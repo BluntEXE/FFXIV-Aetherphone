@@ -457,7 +457,7 @@ internal sealed partial class PhotosApp
                 var customIndex = index - 1;
                 if (customIndex < customAlbums.Count)
                 {
-                    DrawCustomAlbumCard(drawList, rect, customAlbums[customIndex], coverHeight, scale);
+                    DrawCustomAlbumCard(drawList, rect, customAlbums[customIndex], coverHeight, scale, body);
                     continue;
                 }
 
@@ -542,7 +542,7 @@ internal sealed partial class PhotosApp
     }
 
     private void DrawCustomAlbumCard(ImDrawListPtr drawList, Rect rect, CustomAlbum album, float coverHeight,
-        float scale)
+        float scale, Rect screen)
     {
         var coverCoverMax = new Vector2(rect.Max.X, rect.Min.Y + coverHeight);
         var rounding = 16f * scale;
@@ -587,17 +587,11 @@ internal sealed partial class PhotosApp
         Typography.Draw(drawList, new Vector2(rect.Min.X + 2f * scale, textTop + 19f * scale), countLabel, ui.MutedInk,
             TextStyles.Footnote);
 
-        // Menu button
-        var menuCenter = new Vector2(rect.Max.X - 16f * scale, textTop + 9f * scale);
-        var menuHovered = UiInteract.Hover(menuCenter - new Vector2(10f * scale), menuCenter + new Vector2(10f * scale));
-        AppSkin.Icon(drawList, menuCenter, FontAwesomeIcon.EllipsisH.ToIconString(),
-            menuHovered ? ui.TitleInk : ui.MutedInk, 1f);
-        var menuClicked = UiInteract.Click(menuCenter - new Vector2(10f * scale),
-            menuCenter + new Vector2(10f * scale), menuHovered);
-        if (menuClicked)
+        // Right-click to open context menu
+        if (hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
         {
-            albumMenu.Toggle("custom:" + album.Key,
-                new Rect(menuCenter - new Vector2(10f * scale), menuCenter + new Vector2(10f * scale)));
+            var pos = ImGui.GetMousePos();
+            albumMenu.Toggle("custom:" + album.Key, new Rect(pos, pos + new Vector2(1f, 1f)));
         }
 
         // Context menu
@@ -605,24 +599,23 @@ internal sealed partial class PhotosApp
         if (albumMenu.IsOpenFor(menuId))
         {
             albumMenu.Gate();
-            DrawCustomAlbumContextMenu(album.Key);
+            DrawCustomAlbumContextMenu(album.Key, screen);
         }
 
-        // Tap to open (skip if the menu button was just clicked)
-        if (!menuClicked && UiInteract.Click(rect.Min, rect.Max, hovered))
+        // Tap to open
+        if (UiInteract.Click(rect.Min, rect.Max, hovered))
         {
             OpenAlbum(album.Key);
         }
     }
     
-    private void DrawCustomAlbumContextMenu(int key)
+    private void DrawCustomAlbumContextMenu(int key, Rect screen)
     {
         DropdownMenu.Item[] items =
         [
             new(Loc.T(L.Photos.Rename), FontAwesomeIcon.Pen.ToIconString()),
             new(Loc.T(L.Photos.DeleteAlbum), FontAwesomeIcon.Trash.ToIconString(), Danger: true),
         ];
-        var screen = new Rect(Vector2.Zero, ImGui.GetIO().DisplaySize);
         var picked = albumMenu.Draw(screen, frameTheme, items, out var action);
         if (picked < 0)
             return;

@@ -105,6 +105,8 @@ internal sealed partial class PhotosApp : IPhoneApp
             router.Pop(false);
         }
 
+        albumMenu.Gate();
+
         var scale = ImGuiHelpers.GlobalScale;
         var screen = SceneChrome.ScreenFrom(context.Content, context.Theme, scale);
         ui.Backdrop(screen);
