@@ -113,6 +113,8 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public bool YellowPagesAfterDark { get; set; }
     public List<uint> MapFavorites { get; set; } = new();
     public List<RadioStationRecord> RadioFavorites { get; set; } = new();
+    public List<string> CustomAlbumOrder { get; set; } = new();
+    public Dictionary<string, List<string>> CustomAlbumPhotos { get; set; } = new();
     public const int VelvetGateVersion = 1;
     public const int VelvetOnboardVersion = 2;
     public bool VelvetAcknowledgedGate { get; set; }

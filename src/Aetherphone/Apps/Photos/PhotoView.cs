@@ -5,6 +5,7 @@ internal enum PhotoRoute : byte
     Grid,
     Album,
     Viewer,
+    CreateAlbum,
 }
 
 internal readonly struct PhotoView
@@ -25,4 +26,5 @@ internal readonly struct PhotoView
     public static PhotoView Album(int albumKey) => new(PhotoRoute.Album, albumKey);
 
     public static PhotoView Viewer() => new(PhotoRoute.Viewer, 0);
+    public static PhotoView CreateAlbum() => new(PhotoRoute.CreateAlbum, 0);
 }
