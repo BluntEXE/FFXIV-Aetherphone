@@ -190,7 +190,7 @@ internal sealed partial class PhotosApp
                        .Push(ImGuiCol.ButtonActive, accent)
                        .Push(ImGuiCol.Text, new Vector4(1f, 1f, 1f, canCreate ? 1f : 0.72f)))
             {
-                if (ImGui.Button(Loc.T(L.Photos.CreateAlbum), new Vector2(-1f, 38f * scale)) && canCreate)
+                if (ImGui.Button(Loc.T(L.Photos.CreateAlbumButton), new Vector2(-1f, 38f * scale)) && canCreate)
                 {
                     CreateCustomAlbumInternal(newAlbumDraft);
                     newAlbumDraft = string.Empty;

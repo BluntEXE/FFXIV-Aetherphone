@@ -2274,15 +2274,14 @@ internal static class L
         public static readonly LocString Yesterday = new("photos.yesterday", "Yesterday");
         public static readonly LocString OpenFolder = new("photos.openFolder", "Open folder");
         public static readonly LocString CreateAlbum = new("photos.createAlbum", "New Album");
+        public static readonly LocString CreateAlbumButton = new("photos.createAlbumButton", "Create Album");
         public static readonly LocString AlbumName = new("photos.albumName", "Album name");
-        public static readonly LocString AlbumNamePlaceholder = new("photos.albumNamePlaceholder", "My Album");
         public static readonly LocString AddPhotos = new("photos.addPhotos", "Add Photos");
         public static readonly LocString RemoveFromAlbum = new("photos.removeFromAlbum", "Remove from Album");
         public static readonly LocString DeleteAlbum = new("photos.deleteAlbum", "Delete Album");
         public static readonly LocString DeleteAlbumConfirm = new("photos.deleteAlbumConfirm", "Delete {0}?");
         public static readonly LocString DeleteAlbumBody = new("photos.deleteAlbumBody", "Photos in the album won't be deleted.");
-        public static readonly LocString Rename = new("photos.rename", "Rename");
-        public static readonly LocString NoAlbums = new("photos.noAlbums", "No albums yet");
+        public static readonly LocString Rename = new("photos.renameAlbum", "Rename");
         public static readonly LocString EmptyAlbum = new("photos.emptyAlbum", "No photos yet");
         public static readonly LocString AlbumExists = new("photos.albumExists", "An album with this name already exists");
         public static readonly LocString Done = new("photos.done", "Done");
