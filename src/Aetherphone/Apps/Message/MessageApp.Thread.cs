@@ -61,6 +61,15 @@ internal sealed partial class MessageApp
 
         protected override void PopScreen() => app.router.Pop();
 
+        protected override void OpenEncryptionInfo(string threadId)
+        {
+            var conversation = app.store.Conversation;
+            if (conversation is not null)
+            {
+                app.router.Push(MessageRoute.Encryption(conversation.Id));
+            }
+        }
+
         protected override void OnThreadSwitchingFrom(string previousThreadId)
         {
             if (!composer.IsEditing)

@@ -337,6 +337,9 @@ internal sealed partial class AethergramApp : IPhoneApp
             case AethergramScreen.Saved:
                 DrawSaved(area);
                 break;
+            case AethergramScreen.Encryption:
+                threadView.DrawEncryptionScreen(area);
+                break;
             default:
                 DrawRoot(area);
                 break;

@@ -77,6 +77,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public string AethernetToken { get; set; } = string.Empty;
     public string EncryptionKeyCache { get; set; } = string.Empty;
     public string EncryptionKeyCacheUserId { get; set; } = string.Empty;
+    public bool EncryptionRecoveryNudgeDismissed { get; set; }
     public Dictionary<string, int> KnownPeerKeyVersions { get; set; } = new();
     public Dictionary<ulong, CharacterSession> CharacterSessions { get; set; } = new();
     public string LegacyUnclaimedToken { get; set; } = string.Empty;

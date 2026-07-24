@@ -46,6 +46,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     protected readonly ChatComposer composer = new();
     protected readonly ChatSearchController searchController = new();
     protected readonly VoiceNotePlayer voicePlayer = new();
+    protected readonly EncryptionInfoPane encryptionPane;
     private readonly PhotoZoomView imageZoom = new();
     private readonly ConcurrentDictionary<string, byte[]> voiceBytes = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, byte> voiceFetching = new(StringComparer.Ordinal);
@@ -94,6 +95,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         this.wallpaperImages = wallpaperImages;
         this.threadPollSeconds = threadPollSeconds;
         this.typingSendSeconds = typingSendSeconds;
+        encryptionPane = new EncryptionInfoPane(store.Vault, confirm);
         sinceTypingSend = typingSendSeconds;
         pickImage = OpenImagePicker;
         shareLocation = AskShareLocation;
@@ -135,6 +137,10 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     protected virtual IChatTranscriptStoryReplies? StoryReplies => null;
 
     protected abstract void DrawHeader(Rect area, string threadId);
+
+    protected virtual void OpenEncryptionInfo(string threadId)
+    {
+    }
 
     protected virtual void DrawAboveTranscript(ref Rect listRect, string threadId)
     {
@@ -236,6 +242,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
         var listRect = new Rect(new Vector2(area.Min.X, top),
             new Vector2(area.Max.X, area.Max.Y - composerHeight - accessoryHeight));
+        DrawVaultBanner(ref listRect, threadId);
         DrawAboveTranscript(ref listRect, threadId);
         var model = new ChatTranscriptModel
         {
@@ -277,6 +284,49 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             OnSendVoice = sendVoice,
         });
         DrawMessageMenu(area);
+    }
+
+    private void DrawVaultBanner(ref Rect listRect, string threadId)
+    {
+        var state = store.VaultState;
+        if (state == KeyVaultState.Locked)
+        {
+            ChatHeaderControls.DrawBanner(ui, ref listRect, Loc.T(L.Encryption.LockedBanner), ui.MutedInk,
+                () => OpenEncryptionInfo(threadId));
+            return;
+        }
+
+        if (state != KeyVaultState.Unlocked || store.Vault.RecoveryConfigured
+            || configuration.EncryptionRecoveryNudgeDismissed)
+        {
+            return;
+        }
+
+        ChatHeaderControls.DrawPromptBanner(ui, ref listRect, Loc.T(L.Encryption.RecoveryNudgeBanner), ui.MutedInk,
+            () => OpenEncryptionInfo(threadId),
+            () =>
+            {
+                configuration.EncryptionRecoveryNudgeDismissed = true;
+                configuration.Save();
+            });
+    }
+
+    public void DrawEncryptionScreen(Rect area)
+    {
+        var context = new PhoneContext(area, Theme, Navigation);
+        AppHeader.Draw(context, Loc.T(L.Encryption.InfoTitle), BackAction);
+        var scale = ImGuiHelpers.GlobalScale;
+        var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
+        using (AppSurface.Begin(body))
+        {
+            encryptionPane.DrawBody(ui, Theme, store.IsSignedIn, store.EncryptingCurrent);
+            ImGui.Dummy(new Vector2(0f, 30f * scale));
+        }
+    }
+
+    public void DrawEncryptionEmbedded()
+    {
+        encryptionPane.DrawEmbedded(ui, Theme);
     }
 
     private ReadOnlySpan<TranscriptMessage> BuildTranscript(TMessage[] source)
@@ -891,5 +941,6 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     {
         composer.Dispose();
         voicePlayer.Dispose();
+        encryptionPane.Dispose();
     }
 }
