@@ -58,6 +58,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     private readonly Action<string, string, string> editText;
     private readonly Action<string, byte[], int> sendVoice;
     private readonly Func<int> resolveVoiceInput;
+    private string? pendingPrefill;
     private readonly Func<string, bool> canRevealBody;
 
     private volatile string? pendingVoicePlay;
@@ -192,6 +193,10 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     public void GateMenus() => menuController.Gate();
 
+    /// <summary>Queues text for the composer input; applied on the next Draw, and only when the
+    /// composer is empty so a half-typed message is never clobbered.</summary>
+    public void PrefillDraft(string body) => pendingPrefill = body;
+
     public void RequestScrollTo(string messageId) => transcript.RequestScrollTo(messageId);
 
     public void RequestSnapToBottom() => transcript.RequestSnapToBottom();
@@ -222,6 +227,15 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             composer.CancelVoice();
             voicePlayer.Stop();
             OnThreadOpened(threadId);
+        }
+
+        if (pendingPrefill is { } prefill)
+        {
+            pendingPrefill = null;
+            if (composer.Draft.Trim().Length == 0)
+            {
+                composer.Draft = prefill;
+            }
         }
 
         store.NoteThreadViewed(threadId);

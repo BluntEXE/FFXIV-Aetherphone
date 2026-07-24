@@ -547,13 +547,13 @@ internal sealed partial class YellowPagesApp
 
     private void OpenInquiry(AdDto ad)
     {
-        Copy("inquire", AdShare.Compose(ad.Id));
         if (!navigation.IsAvailable(SocialActivity.AethergramApp))
         {
+            Copy("inquire", AdShare.Compose(ad.Id));
             return;
         }
 
-        gramDmLauncher.Request(ad.OwnerId);
+        gramDmLauncher.Request(ad.OwnerId, AdShare.Compose(ad.Id));
         navigation.Open(SocialActivity.AethergramApp);
     }
 

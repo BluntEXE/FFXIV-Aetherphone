@@ -2674,5 +2674,7 @@
   "yellowpages.editAdTitle": "İlanı düzenle",
   "yellowpages.saveChanges": "Değişiklikleri kaydet",
   "yellowpages.inquireAction": "Mesaj gönder",
-  "yellowpages.inquireHint": "İlan sahibiyle sohbet açar. İlan kartı kopyalandı, yapıştırmaya hazır."
+  "yellowpages.inquireHint": "İlan sahibiyle sohbet açar, ilan kartı gönderilmeye hazır şekilde yazı kutusunda bekler.",
+  "yellowpages.viewCount": "{0} görüntülenme",
+  "yellowpages.announceMuster": "Muster'da duyur"
 }

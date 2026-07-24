@@ -2674,5 +2674,7 @@
   "yellowpages.editAdTitle": "Modifier l'annonce",
   "yellowpages.saveChanges": "Enregistrer les modifications",
   "yellowpages.inquireAction": "Envoyer une demande",
-  "yellowpages.inquireHint": "Ouvre une discussion avec l'annonceur. La carte de l'annonce est copiée, prête à coller."
+  "yellowpages.inquireHint": "Ouvre une discussion avec l'annonceur, la carte de l'annonce est prête à envoyer.",
+  "yellowpages.viewCount": "{0} vues",
+  "yellowpages.announceMuster": "Annoncer sur Muster"
 }

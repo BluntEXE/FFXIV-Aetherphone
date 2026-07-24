@@ -2674,5 +2674,7 @@
   "yellowpages.editAdTitle": "编辑广告",
   "yellowpages.saveChanges": "保存修改",
   "yellowpages.inquireAction": "发送咨询",
-  "yellowpages.inquireHint": "打开与发布者的聊天。广告卡片已复制,粘贴即可。"
+  "yellowpages.inquireHint": "打开与发布者的聊天,广告卡片已填入输入框,随时可以发送。",
+  "yellowpages.viewCount": "{0}次浏览",
+  "yellowpages.announceMuster": "在Muster上宣布"
 }

@@ -2674,5 +2674,7 @@
   "yellowpages.editAdTitle": "Editar anuncio",
   "yellowpages.saveChanges": "Guardar cambios",
   "yellowpages.inquireAction": "Enviar una consulta",
-  "yellowpages.inquireHint": "Abre un chat con el anunciante. La tarjeta del anuncio está copiada, lista para pegar."
+  "yellowpages.inquireHint": "Abre un chat con el anunciante con la tarjeta del anuncio lista para enviar.",
+  "yellowpages.viewCount": "{0} visitas",
+  "yellowpages.announceMuster": "Anunciar en Muster"
 }

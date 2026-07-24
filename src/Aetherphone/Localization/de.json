@@ -2674,5 +2674,7 @@
   "yellowpages.editAdTitle": "Anzeige bearbeiten",
   "yellowpages.saveChanges": "Änderungen speichern",
   "yellowpages.inquireAction": "Anfrage senden",
-  "yellowpages.inquireHint": "Öffnet einen Chat mit dem Inserenten. Die Anzeigenkarte ist kopiert und bereit zum Einfügen."
+  "yellowpages.inquireHint": "Öffnet einen Chat mit dem Inserenten, die Anzeigenkarte liegt sendebereit im Eingabefeld.",
+  "yellowpages.viewCount": "{0} Aufrufe",
+  "yellowpages.announceMuster": "Auf Muster ankündigen"
 }

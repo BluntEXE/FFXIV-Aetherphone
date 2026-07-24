@@ -2674,5 +2674,7 @@
   "yellowpages.editAdTitle": "Editar anúncio",
   "yellowpages.saveChanges": "Salvar alterações",
   "yellowpages.inquireAction": "Enviar uma mensagem",
-  "yellowpages.inquireHint": "Abre uma conversa com o anunciante. O cartão do anúncio está copiado, pronto para colar."
+  "yellowpages.inquireHint": "Abre uma conversa com o anunciante com o cartão do anúncio pronto para enviar.",
+  "yellowpages.viewCount": "{0} visualizações",
+  "yellowpages.announceMuster": "Anunciar no Muster"
 }

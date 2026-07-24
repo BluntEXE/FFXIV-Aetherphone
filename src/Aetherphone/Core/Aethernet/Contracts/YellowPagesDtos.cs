@@ -64,6 +64,7 @@ internal sealed record AdDto(
     bool AfterDark,
     string? MediaUrl,
     string[] MediaUrls,
+    int Views,
     bool Saved,
     string Status,
     long CreatedAtUnix,

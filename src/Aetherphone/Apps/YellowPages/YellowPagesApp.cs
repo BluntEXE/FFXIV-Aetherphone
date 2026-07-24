@@ -6,6 +6,7 @@ using Aetherphone.Core.Game;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
+using Aetherphone.Core.Muster;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Photos;
 using Aetherphone.Core.Report;
@@ -32,6 +33,7 @@ internal sealed partial class YellowPagesApp : IPhoneApp
     private readonly YellowPagesLauncher launcher;
     private readonly SocialNotificationService socialNotifications;
     private readonly GramDmLauncher gramDmLauncher;
+    private readonly MusterStore musters;
     private readonly AethernetApi api;
     private readonly GameData gameData;
     private readonly RemoteImageCache images;
@@ -53,15 +55,16 @@ internal sealed partial class YellowPagesApp : IPhoneApp
     private bool lifestreamAvailable;
 
     public YellowPagesApp(YellowPagesStore store, YellowPagesLauncher launcher,
-        SocialNotificationService socialNotifications, GramDmLauncher gramDmLauncher, AethernetApi api,
-        GameData gameData, RemoteImageCache images, LodestoneService lodestone, PhotoLibrary library,
-        WallpaperImageCache wallpaperImages, Configuration configuration, ConfirmService confirm,
-        ReportService report)
+        SocialNotificationService socialNotifications, GramDmLauncher gramDmLauncher, MusterStore musters,
+        AethernetApi api, GameData gameData, RemoteImageCache images, LodestoneService lodestone,
+        PhotoLibrary library, WallpaperImageCache wallpaperImages, Configuration configuration,
+        ConfirmService confirm, ReportService report)
     {
         this.store = store;
         this.launcher = launcher;
         this.socialNotifications = socialNotifications;
         this.gramDmLauncher = gramDmLauncher;
+        this.musters = musters;
         this.api = api;
         this.gameData = gameData;
         this.images = images;

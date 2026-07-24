@@ -215,9 +215,14 @@ internal sealed partial class AethergramApp : IPhoneApp
             stories.RefreshTray();
         }
 
-        if (store.IsSignedIn && dmLauncher.TryConsume(out var threadUserId))
+        if (store.IsSignedIn && dmLauncher.TryConsume(out var threadUserId, out var threadDraft))
         {
             router.Push(AethergramRoute.Thread(threadUserId), false);
+            if (!string.IsNullOrEmpty(threadDraft))
+            {
+                threadView.PrefillDraft(threadDraft);
+            }
+
             return;
         }
 

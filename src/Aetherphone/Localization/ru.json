@@ -2674,5 +2674,7 @@
   "yellowpages.editAdTitle": "Изменить объявление",
   "yellowpages.saveChanges": "Сохранить изменения",
   "yellowpages.inquireAction": "Написать по объявлению",
-  "yellowpages.inquireHint": "Откроет чат с автором. Карточка объявления скопирована и готова к вставке."
+  "yellowpages.inquireHint": "Откроет чат с автором, карточка объявления уже в поле ввода и готова к отправке.",
+  "yellowpages.viewCount": "Просмотров: {0}",
+  "yellowpages.announceMuster": "Объявить в Muster"
 }

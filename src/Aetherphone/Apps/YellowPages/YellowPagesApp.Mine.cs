@@ -3,6 +3,7 @@ using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Muster;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.YellowPages;
 using Aetherphone.Windows.Components;
@@ -150,6 +151,22 @@ internal sealed partial class YellowPagesApp
             }
 
             cursor = openRect.Max.X + gap;
+            if (open && musters.Mine is null && (ad.TerritoryId > 0 || ad.AddressNote.Length > 0))
+            {
+                var announceLabel = Loc.T(L.YellowPages.AnnounceMuster);
+                var announceWidth = Typography.Measure(announceLabel, 0.9f, FontWeight.SemiBold).X + 30f * scale;
+                if (cursor + announceWidth < right - 70f * scale)
+                {
+                    var announceRect = new Rect(new Vector2(cursor, actionTop),
+                        new Vector2(cursor + announceWidth, actionTop + actionHeight));
+                    if (ui.GhostButton(announceRect, announceLabel))
+                    {
+                        AnnounceOnMuster(ad, nowUnix);
+                    }
+
+                    cursor = announceRect.Max.X + gap;
+                }
+            }
         }
 
         var editLabel = Loc.T(L.YellowPages.EditAd);
@@ -185,6 +202,32 @@ internal sealed partial class YellowPagesApp
             new Vector2(right, actionTop + actionHeight)));
     }
 
+    private void AnnounceOnMuster(AdDto ad, long nowUnix)
+    {
+        var duration = (int)Math.Clamp((ad.OpenUntilUnix - nowUnix) / 60L, 30L, 480L);
+        var request = new CreateMusterRequest(
+            MusterCategories.Social,
+            ad.Title,
+            ad.TerritoryId,
+            ad.MapId,
+            ad.MapX,
+            ad.MapY,
+            ad.WorldId,
+            ad.Ward,
+            ad.Plot,
+            0,
+            ad.AddressNote,
+            ad.Region,
+            ad.DataCenterId,
+            0,
+            duration,
+            0,
+            false,
+            true);
+        mineBusyAdId = ad.Id;
+        musters.Create(request, _ => mineBusyAdId = null);
+    }
+
     private void DrawMineDelete(AdDto ad, Rect rect)
     {
         if (ui.DangerGhostButton(rect, Loc.T(L.YellowPages.DeleteAd)))
@@ -216,21 +259,25 @@ internal sealed partial class YellowPagesApp
             return Loc.T(L.YellowPages.HiddenStatus);
         }
 
+        string status;
         if (ad.Status == AdStatuses.Expired || ad.ExpiresAtUnix <= nowUnix)
         {
             color = AppPalettes.YellowPages.MutedInk;
-            return Loc.T(L.YellowPages.Expired);
+            status = Loc.T(L.YellowPages.Expired);
         }
-
-        if (ad.Archetype == AdArchetypes.Place && ad.OpenUntilUnix > nowUnix)
+        else if (ad.Archetype == AdArchetypes.Place && ad.OpenUntilUnix > nowUnix)
         {
             color = AdCard.OpenGreen;
-            return Loc.T(L.YellowPages.OpenClosesAt, TimeText.Clock(ad.OpenUntilUnix));
+            status = Loc.T(L.YellowPages.OpenClosesAt, TimeText.Clock(ad.OpenUntilUnix));
+        }
+        else
+        {
+            var remaining = ad.ExpiresAtUnix - nowUnix;
+            color = remaining <= 86400L ? theme.Danger : ui.Accent;
+            status = AdText.ExpiresLine(ad, nowUnix);
         }
 
-        var remaining = ad.ExpiresAtUnix - nowUnix;
-        color = remaining <= 86400L ? theme.Danger : ui.Accent;
-        return AdText.ExpiresLine(ad, nowUnix);
+        return ad.Views > 0 ? $"{status} · {Loc.T(L.YellowPages.ViewCount, ad.Views)}" : status;
     }
 
     private void DrawSaved(Rect area)

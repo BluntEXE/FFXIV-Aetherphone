@@ -3007,7 +3007,9 @@ internal static class L
         public static readonly LocString EditAdTitle = new("yellowpages.editAdTitle", "Edit ad");
         public static readonly LocString SaveChanges = new("yellowpages.saveChanges", "Save changes");
         public static readonly LocString InquireAction = new("yellowpages.inquireAction", "Send an inquiry");
-        public static readonly LocString InquireHint = new("yellowpages.inquireHint", "Opens a chat with the poster. The ad card is copied, ready to paste.");
+        public static readonly LocString InquireHint = new("yellowpages.inquireHint", "Opens a chat with the poster with the ad card ready to send.");
+        public static readonly LocString ViewCount = new("yellowpages.viewCount", "{0} views");
+        public static readonly LocString AnnounceMuster = new("yellowpages.announceMuster", "Announce on Muster");
         public static readonly LocString AdPreview = new("yellowpages.adPreview", "Yellow Pages ad");
         public static readonly LocString AdUnavailable = new("yellowpages.adUnavailable", "Ad unavailable");
         public static readonly LocString AdOpen = new("yellowpages.adOpen", "Open in Yellow Pages");

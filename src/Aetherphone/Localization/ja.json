@@ -2674,5 +2674,7 @@
   "yellowpages.editAdTitle": "広告を編集",
   "yellowpages.saveChanges": "変更を保存",
   "yellowpages.inquireAction": "問い合わせる",
-  "yellowpages.inquireHint": "掲載者とのチャットを開きます。広告カードはコピー済みで、貼り付けるだけです。"
+  "yellowpages.inquireHint": "掲載者とのチャットが開き、広告カードが送信できる状態で入力欄に入ります。",
+  "yellowpages.viewCount": "閲覧{0}回",
+  "yellowpages.announceMuster": "Musterで告知"
 }
