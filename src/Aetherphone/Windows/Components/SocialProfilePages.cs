@@ -242,7 +242,7 @@ internal sealed class SocialProfilePages
                 openSaved();
             }
 
-            if (ui.PillButton(buttonRect, Loc.T(style.EditProfile), false))
+            if (ui.PillButton(buttonRect, Loc.T(style.EditProfile), false, "socialprofile.pill.editprofile." + user.Id))
             {
                 editLoadedFor = null;
                 openEditProfile();
@@ -278,12 +278,13 @@ internal sealed class SocialProfilePages
                 OpenReport("user", user.Id, Loc.T(L.Report.UserTitle));
             }
 
-            if (hasMessage && ui.PillButton(messageRect, Loc.T(style.MessageLabel!.Value), false))
+            if (hasMessage && ui.PillButton(messageRect, Loc.T(style.MessageLabel!.Value), false,
+                    "socialprofile.pill.message." + user.Id))
             {
                 openMessage!(user.Id);
             }
 
-            if (ui.PillButton(followRect, FollowPillLabel(user), FollowPillFilled(user)))
+            if (ui.PillButton(followRect, FollowPillLabel(user), FollowPillFilled(user), "socialprofile.pill.follow." + user.Id))
             {
                 store.ToggleFollow(user);
             }
@@ -490,7 +491,7 @@ internal sealed class SocialProfilePages
             var changeTop = ImGui.GetCursorScreenPos().Y;
             var changeRect = new Rect(new Vector2(avatarCenter.X - changeWidth * 0.5f, changeTop),
                 new Vector2(avatarCenter.X + changeWidth * 0.5f, changeTop + 30f * scale));
-            if (ui.PillButton(changeRect, Loc.T(style.ChangePhoto), false))
+            if (ui.PillButton(changeRect, Loc.T(style.ChangePhoto), false, "socialprofile.pill.changephoto"))
             {
                 openAvatarComposer();
             }
@@ -701,7 +702,7 @@ internal sealed class SocialProfilePages
             new Rect(
                 new Vector2(origin.X + width - pad - buttonWidth, origin.Y + rowHeight * 0.5f - buttonHeight * 0.5f),
                 new Vector2(origin.X + width - pad, origin.Y + rowHeight * 0.5f + buttonHeight * 0.5f));
-        if (ui.PillButton(buttonRect, FollowPillLabel(user), FollowPillFilled(user)))
+        if (ui.PillButton(buttonRect, FollowPillLabel(user), FollowPillFilled(user), "socialprofile.row.follow." + user.Id))
         {
             store.ToggleFollow(user);
         }
