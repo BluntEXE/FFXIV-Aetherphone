@@ -2998,6 +2998,16 @@ internal static class L
         public static readonly LocString NotifHiddenBody = new("yellowpages.notifHiddenBody", "\"{0}\" was hidden after reports and is pending review.");
         public static readonly LocString NotifExpiringTitle = new("yellowpages.notifExpiringTitle", "Ad expiring");
         public static readonly LocString NotifExpiringBody = new("yellowpages.notifExpiringBody", "\"{0}\" expires within a day. Renew it to keep it listed.");
+        public static readonly LocString NotifExpiringGeneric = new("yellowpages.notifExpiringGeneric", "One of your ads expires within a day. Renew it to keep it listed.");
+        public static readonly LocString NotifHiddenGeneric = new("yellowpages.notifHiddenGeneric", "One of your ads was hidden after reports and is pending review.");
+        public static readonly LocString NotifOpenedTitle = new("yellowpages.notifOpenedTitle", "Open now");
+        public static readonly LocString NotifOpenedBody = new("yellowpages.notifOpenedBody", "\"{0}\" just opened its doors.");
+        public static readonly LocString NotifOpenedGeneric = new("yellowpages.notifOpenedGeneric", "A place you saved is open now.");
+        public static readonly LocString EditAd = new("yellowpages.editAd", "Edit");
+        public static readonly LocString EditAdTitle = new("yellowpages.editAdTitle", "Edit ad");
+        public static readonly LocString SaveChanges = new("yellowpages.saveChanges", "Save changes");
+        public static readonly LocString InquireAction = new("yellowpages.inquireAction", "Send an inquiry");
+        public static readonly LocString InquireHint = new("yellowpages.inquireHint", "Opens a chat with the poster. The ad card is copied, ready to paste.");
         public static readonly LocString AdPreview = new("yellowpages.adPreview", "Yellow Pages ad");
         public static readonly LocString AdUnavailable = new("yellowpages.adUnavailable", "Ad unavailable");
         public static readonly LocString AdOpen = new("yellowpages.adOpen", "Open in Yellow Pages");

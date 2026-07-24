@@ -2664,5 +2664,15 @@
   "yellowpages.notifExpiringBody": "\"{0}\" bir günden kısa sürede dolacak. Listede kalmak için yenile.",
   "yellowpages.adPreview": "Yellow Pages ilanı",
   "yellowpages.adUnavailable": "İlan bulunamıyor",
-  "yellowpages.adOpen": "Yellow Pages'te aç"
+  "yellowpages.adOpen": "Yellow Pages'te aç",
+  "yellowpages.notifExpiringGeneric": "İlanlarından birinin süresi bir günden kısa sürede doluyor. Listede kalmak için yenile.",
+  "yellowpages.notifHiddenGeneric": "İlanlarından biri bildirimler sonrası gizlendi ve incelemeyi bekliyor.",
+  "yellowpages.notifOpenedTitle": "Şimdi açık",
+  "yellowpages.notifOpenedBody": "\"{0}\" az önce kapılarını açtı.",
+  "yellowpages.notifOpenedGeneric": "Kaydettiğin bir mekân az önce açıldı.",
+  "yellowpages.editAd": "Düzenle",
+  "yellowpages.editAdTitle": "İlanı düzenle",
+  "yellowpages.saveChanges": "Değişiklikleri kaydet",
+  "yellowpages.inquireAction": "Mesaj gönder",
+  "yellowpages.inquireHint": "İlan sahibiyle sohbet açar. İlan kartı kopyalandı, yapıştırmaya hazır."
 }

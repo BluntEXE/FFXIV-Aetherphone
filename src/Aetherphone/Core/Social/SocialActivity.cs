@@ -21,9 +21,13 @@ internal static class SocialActivity
     public const int TypeQuote = 13;
     public const int TypeFollowRequest = 14;
     public const int TypeFollowAccept = 15;
+    public const int TypeAdExpiring = 16;
+    public const int TypeAdHidden = 17;
+    public const int TypeAdOpened = 18;
     public const string ChirperApp = "chirper";
     public const string AethergramApp = "aethergram";
     public const string VelvetApp = "velvet";
+    public const string YellowPagesApp = "yellowpages";
 
     public static bool OpensPost(NotificationDto item) =>
         item.Type is TypeLike or TypeComment or TypeCommentLike or TypeMention or TypeCommentMention or TypePhotoTag
@@ -86,6 +90,18 @@ internal static class SocialActivity
                 return string.IsNullOrEmpty(item.Preview) ? Loc.T(L.Moderation.WarningBody) : item.Preview;
             case TypeReportUpdate:
                 return ContentModeration.ReportOutcomeMessage(item.Preview);
+            case TypeAdExpiring:
+                return string.IsNullOrEmpty(item.Preview)
+                    ? Loc.T(L.YellowPages.NotifExpiringGeneric)
+                    : Loc.T(L.YellowPages.NotifExpiringBody, item.Preview);
+            case TypeAdHidden:
+                return string.IsNullOrEmpty(item.Preview)
+                    ? Loc.T(L.YellowPages.NotifHiddenGeneric)
+                    : Loc.T(L.YellowPages.NotifHiddenBody, item.Preview);
+            case TypeAdOpened:
+                return string.IsNullOrEmpty(item.Preview)
+                    ? Loc.T(L.YellowPages.NotifOpenedGeneric)
+                    : Loc.T(L.YellowPages.NotifOpenedBody, item.Preview);
             default:
                 return string.Empty;
         }

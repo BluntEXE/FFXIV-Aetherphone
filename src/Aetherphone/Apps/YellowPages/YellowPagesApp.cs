@@ -6,9 +6,12 @@ using Aetherphone.Core.Game;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
+using Aetherphone.Core.Notifications;
+using Aetherphone.Core.Photos;
 using Aetherphone.Core.Report;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Venues;
+using Aetherphone.Core.Wallpapers;
 using Aetherphone.Core.YellowPages;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -23,17 +26,22 @@ internal sealed partial class YellowPagesApp : IPhoneApp
     public string Id => "yellowpages";
     public string DisplayName => Loc.T(L.Apps.YellowPages);
     public string Glyph => "Yp";
-    public int BadgeCount => 0;
+    public int BadgeCount => socialNotifications.UnseenCount(Id);
 
     private readonly YellowPagesStore store;
     private readonly YellowPagesLauncher launcher;
+    private readonly SocialNotificationService socialNotifications;
+    private readonly GramDmLauncher gramDmLauncher;
     private readonly AethernetApi api;
     private readonly GameData gameData;
     private readonly RemoteImageCache images;
     private readonly LodestoneService lodestone;
+    private readonly PhotoLibrary library;
+    private readonly WallpaperImageCache wallpaperImages;
     private readonly Configuration configuration;
     private readonly ConfirmService confirm;
     private readonly ReportService report;
+    private readonly PhotoViewerOverlay photoViewer = new();
     private readonly AppSkin ui = new(AppPalettes.YellowPages);
     private readonly ViewRouter<YellowPagesRoute> router;
     private readonly RouterDraw<YellowPagesRoute> drawView;
@@ -44,16 +52,22 @@ internal sealed partial class YellowPagesApp : IPhoneApp
     private string copiedKey = string.Empty;
     private bool lifestreamAvailable;
 
-    public YellowPagesApp(YellowPagesStore store, YellowPagesLauncher launcher, AethernetApi api, GameData gameData,
-        RemoteImageCache images, LodestoneService lodestone, Configuration configuration, ConfirmService confirm,
+    public YellowPagesApp(YellowPagesStore store, YellowPagesLauncher launcher,
+        SocialNotificationService socialNotifications, GramDmLauncher gramDmLauncher, AethernetApi api,
+        GameData gameData, RemoteImageCache images, LodestoneService lodestone, PhotoLibrary library,
+        WallpaperImageCache wallpaperImages, Configuration configuration, ConfirmService confirm,
         ReportService report)
     {
         this.store = store;
         this.launcher = launcher;
+        this.socialNotifications = socialNotifications;
+        this.gramDmLauncher = gramDmLauncher;
         this.api = api;
         this.gameData = gameData;
         this.images = images;
         this.lodestone = lodestone;
+        this.library = library;
+        this.wallpaperImages = wallpaperImages;
         this.configuration = configuration;
         this.confirm = confirm;
         this.report = report;
@@ -65,6 +79,7 @@ internal sealed partial class YellowPagesApp : IPhoneApp
     public void OnOpened()
     {
         router.Reset();
+        socialNotifications.MarkSeen(Id);
         lifestreamAvailable = LifestreamBridge.IsAvailable();
         if (launcher.TryConsumeDetail(out var adId))
         {
@@ -109,7 +124,17 @@ internal sealed partial class YellowPagesApp : IPhoneApp
             copiedTimer -= ImGui.GetIO().DeltaTime;
         }
 
+        var picked = Interlocked.Exchange(ref pendingPickedPath, null);
+        if (picked is not null)
+        {
+            AddComposePhoto(picked);
+        }
+
         router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
+        if (photoViewer.Active)
+        {
+            photoViewer.Draw(screen, theme);
+        }
     }
 
     private void DrawView(YellowPagesRoute route, Rect area, int depth)

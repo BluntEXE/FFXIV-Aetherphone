@@ -2664,5 +2664,15 @@
   "yellowpages.notifExpiringBody": "„{0}“ läuft in weniger als einem Tag ab. Verlängere sie, um gelistet zu bleiben.",
   "yellowpages.adPreview": "Yellow-Pages-Anzeige",
   "yellowpages.adUnavailable": "Anzeige nicht verfügbar",
-  "yellowpages.adOpen": "In Yellow Pages öffnen"
+  "yellowpages.adOpen": "In Yellow Pages öffnen",
+  "yellowpages.notifExpiringGeneric": "Eine deiner Anzeigen läuft in weniger als einem Tag ab. Verlängere sie, um gelistet zu bleiben.",
+  "yellowpages.notifHiddenGeneric": "Eine deiner Anzeigen wurde nach Meldungen ausgeblendet und wird geprüft.",
+  "yellowpages.notifOpenedTitle": "Jetzt geöffnet",
+  "yellowpages.notifOpenedBody": "„{0}“ hat gerade geöffnet.",
+  "yellowpages.notifOpenedGeneric": "Ein gemerkter Ort hat gerade geöffnet.",
+  "yellowpages.editAd": "Bearbeiten",
+  "yellowpages.editAdTitle": "Anzeige bearbeiten",
+  "yellowpages.saveChanges": "Änderungen speichern",
+  "yellowpages.inquireAction": "Anfrage senden",
+  "yellowpages.inquireHint": "Öffnet einen Chat mit dem Inserenten. Die Anzeigenkarte ist kopiert und bereit zum Einfügen."
 }

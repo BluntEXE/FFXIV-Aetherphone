@@ -2664,5 +2664,15 @@
   "yellowpages.notifExpiringBody": "«{0}» caduca en menos de un día. Renuévalo para seguir en el tablón.",
   "yellowpages.adPreview": "Anuncio de Yellow Pages",
   "yellowpages.adUnavailable": "Anuncio no disponible",
-  "yellowpages.adOpen": "Abrir en Yellow Pages"
+  "yellowpages.adOpen": "Abrir en Yellow Pages",
+  "yellowpages.notifExpiringGeneric": "Uno de tus anuncios caduca en menos de un día. Renuévalo para seguir en el tablón.",
+  "yellowpages.notifHiddenGeneric": "Uno de tus anuncios fue ocultado tras varias denuncias y espera revisión.",
+  "yellowpages.notifOpenedTitle": "Abierto ahora",
+  "yellowpages.notifOpenedBody": "«{0}» acaba de abrir sus puertas.",
+  "yellowpages.notifOpenedGeneric": "Un lugar que guardaste acaba de abrir.",
+  "yellowpages.editAd": "Editar",
+  "yellowpages.editAdTitle": "Editar anuncio",
+  "yellowpages.saveChanges": "Guardar cambios",
+  "yellowpages.inquireAction": "Enviar una consulta",
+  "yellowpages.inquireHint": "Abre un chat con el anunciante. La tarjeta del anuncio está copiada, lista para pegar."
 }

@@ -6,6 +6,7 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Maps;
 using Aetherphone.Core.Muster;
 using Aetherphone.Core.Report;
+using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Venues;
 using Aetherphone.Core.YellowPages;
@@ -29,6 +30,7 @@ internal sealed partial class YellowPagesApp
     private AdDto? detailFetched;
     private bool detailLoading;
     private bool saveBusy;
+    private int detailPhotoIndex;
 
     private void ResetDetailState()
     {
@@ -36,6 +38,7 @@ internal sealed partial class YellowPagesApp
         detailFetched = null;
         detailLoading = false;
         saveBusy = false;
+        detailPhotoIndex = 0;
     }
 
     private void DrawDetail(Rect area, string adId)
@@ -173,7 +176,13 @@ internal sealed partial class YellowPagesApp
     private void DrawHeroPhoto(ImDrawListPtr drawList, Rect rect, AdDto ad, float scale)
     {
         var rounding = Metrics.Radius.Lg * scale;
-        var texture = images.Get(ad.MediaUrls[0]);
+        if (detailPhotoIndex >= ad.MediaUrls.Length)
+        {
+            detailPhotoIndex = 0;
+        }
+
+        var url = ad.MediaUrls[detailPhotoIndex];
+        var texture = images.Get(url);
         if (texture is null)
         {
             Squircle.Fill(drawList, rect.Min, rect.Max, rounding,
@@ -200,16 +209,42 @@ internal sealed partial class YellowPagesApp
         }
 
         drawList.AddImageRounded(texture.Handle, rect.Min, rect.Max, uv0, uv1, 0xFFFFFFFFu, rounding);
+        var badgeMin = Vector2.Zero;
+        var badgeMax = Vector2.Zero;
         if (ad.MediaUrls.Length > 1)
         {
-            var badge = Loc.T(L.YellowPages.PhotoCount, ad.MediaUrls.Length);
+            var badge = $"{detailPhotoIndex + 1}/{ad.MediaUrls.Length}";
             var badgeSize = Typography.Measure(badge, TextStyles.Caption1);
-            var badgeMax = new Vector2(rect.Max.X - 8f * scale, rect.Max.Y - 8f * scale);
-            var badgeMin = badgeMax - badgeSize - new Vector2(14f * scale, 8f * scale);
+            badgeMax = new Vector2(rect.Max.X - 8f * scale, rect.Max.Y - 8f * scale);
+            badgeMin = badgeMax - badgeSize - new Vector2(14f * scale, 8f * scale);
             Squircle.Fill(drawList, badgeMin, badgeMax, (badgeMax.Y - badgeMin.Y) * 0.5f,
                 ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.55f)));
             Typography.Draw(drawList, badgeMin + new Vector2(7f * scale, 4f * scale), badge,
                 new Vector4(1f, 1f, 1f, 1f), TextStyles.Caption1);
+            var overBadge = ImGui.IsMouseHoveringRect(badgeMin, badgeMax, false);
+            if (overBadge)
+            {
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            }
+
+            if (UiInteract.Click(badgeMin, badgeMax, overBadge))
+            {
+                detailPhotoIndex = (detailPhotoIndex + 1) % ad.MediaUrls.Length;
+                return;
+            }
+        }
+
+        var overBadgeArea = ad.MediaUrls.Length > 1 && ImGui.IsMouseHoveringRect(badgeMin, badgeMax, false);
+        var hovered = !overBadgeArea && UiInteract.Hover(rect.Min, rect.Max);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (UiInteract.Click(rect.Min, rect.Max, hovered))
+        {
+            var viewerUrl = url;
+            photoViewer.Open(() => images.Get(viewerUrl));
         }
     }
 
@@ -449,12 +484,26 @@ internal sealed partial class YellowPagesApp
             return;
         }
 
+        var inquireLabel = JustCopied("inquire") ? Loc.T(L.YellowPages.Copied) : Loc.T(L.YellowPages.InquireAction);
+        if (ui.PillButton(rect, inquireLabel, true))
+        {
+            OpenInquiry(ad);
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, ActionHeight * scale + Metrics.Space.Xs * scale));
+        ui.HelpText(Loc.T(L.YellowPages.InquireHint));
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+
+        var saveOrigin = ImGui.GetCursorScreenPos();
+        var saveRect = new Rect(saveOrigin, new Vector2(saveOrigin.X + width,
+            saveOrigin.Y + LocationActionHeight * scale));
         if (saveBusy)
         {
-            AppSkin.PillButton(rect, ad.Saved ? Loc.T(L.YellowPages.Unsave) : Loc.T(L.YellowPages.Save),
-                !ad.Saved, false, theme);
+            AppSkin.PillButton(saveRect, ad.Saved ? Loc.T(L.YellowPages.Unsave) : Loc.T(L.YellowPages.Save),
+                false, false, theme);
         }
-        else if (ui.PillButton(rect, ad.Saved ? Loc.T(L.YellowPages.Unsave) : Loc.T(L.YellowPages.Save), !ad.Saved))
+        else if (ui.PillButton(saveRect, ad.Saved ? Loc.T(L.YellowPages.Unsave) : Loc.T(L.YellowPages.Save), false))
         {
             saveBusy = true;
             var next = !ad.Saved;
@@ -467,8 +516,8 @@ internal sealed partial class YellowPagesApp
             });
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, ActionHeight * scale + Metrics.Space.Md * scale));
+        ImGui.SetCursorScreenPos(saveOrigin);
+        ImGui.Dummy(new Vector2(width, LocationActionHeight * scale + Metrics.Space.Md * scale));
 
         var shareOrigin = ImGui.GetCursorScreenPos();
         var shareRect = new Rect(shareOrigin, new Vector2(shareOrigin.X + width,
@@ -494,6 +543,18 @@ internal sealed partial class YellowPagesApp
 
         ImGui.SetCursorScreenPos(reportOrigin);
         ImGui.Dummy(new Vector2(width, 34f * scale + Metrics.Space.Md * scale));
+    }
+
+    private void OpenInquiry(AdDto ad)
+    {
+        Copy("inquire", AdShare.Compose(ad.Id));
+        if (!navigation.IsAvailable(SocialActivity.AethergramApp))
+        {
+            return;
+        }
+
+        gramDmLauncher.Request(ad.OwnerId);
+        navigation.Open(SocialActivity.AethergramApp);
     }
 
     private bool IsMineAd(string adId)

@@ -2664,5 +2664,15 @@
   "yellowpages.notifExpiringBody": "「{0}」は1日以内に期限切れです。掲載を続けるには更新してください。",
   "yellowpages.adPreview": "Yellow Pagesの広告",
   "yellowpages.adUnavailable": "広告が見つかりません",
-  "yellowpages.adOpen": "Yellow Pagesで開く"
+  "yellowpages.adOpen": "Yellow Pagesで開く",
+  "yellowpages.notifExpiringGeneric": "広告の1件が1日以内に期限切れになります。掲載を続けるには更新してください。",
+  "yellowpages.notifHiddenGeneric": "広告の1件が通報を受けて非表示になり、審査待ちです。",
+  "yellowpages.notifOpenedTitle": "営業中",
+  "yellowpages.notifOpenedBody": "「{0}」がオープンしました。",
+  "yellowpages.notifOpenedGeneric": "保存した場所がオープンしました。",
+  "yellowpages.editAd": "編集",
+  "yellowpages.editAdTitle": "広告を編集",
+  "yellowpages.saveChanges": "変更を保存",
+  "yellowpages.inquireAction": "問い合わせる",
+  "yellowpages.inquireHint": "掲載者とのチャットを開きます。広告カードはコピー済みで、貼り付けるだけです。"
 }

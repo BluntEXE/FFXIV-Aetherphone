@@ -1,29 +1,29 @@
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
-using Aetherphone.Core.Apps;
-using Aetherphone.Core.Localization;
+using Aetherphone.Core.Media;
 using Aetherphone.Core.Muster;
-using Aetherphone.Core.Notifications;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Core.YellowPages;
 
 /// <summary>Account-scoped in-memory Yellow Pages state. My-ads sync rides the backstop poll; the
-/// warn-first alerts (ad hidden by reports, ad expiring within a day) are derived by diffing consecutive
-/// my-ads snapshots so they survive missed pushes. Never persisted.</summary>
+/// warn-first alerts (ad hidden, expiring, saved place opened) arrive as server notifications through
+/// the social pipeline, so this store only mirrors state. Never persisted.</summary>
 internal sealed class YellowPagesStore : IDisposable
 {
     public const string AppId = "yellowpages";
 
-    private const long ExpiryWarningLeadSeconds = 24L * 3600L;
+    public const int MaxPhotos = 4;
+
+    private const int MaxImageDimension = 1600;
 
     private static readonly TimeSpan ForegroundPollInterval = TimeSpan.FromSeconds(120);
     private static readonly TimeSpan BackgroundPollInterval = TimeSpan.FromSeconds(300);
 
     private readonly AethernetSession session;
     private readonly YellowPagesClient client;
-    private readonly NotificationService notifications;
+    private readonly MediaClient media;
     private readonly Configuration configuration;
     private readonly RealtimeSignalBus signals;
     private readonly PollCadence cadence;
@@ -34,7 +34,6 @@ internal sealed class YellowPagesStore : IDisposable
     private volatile Dictionary<string, AdDto> knownAds = new(StringComparer.Ordinal);
     private volatile bool primed;
     private volatile bool syncing;
-    private long lastMineCheckUnix;
 
     private readonly object chatLock = new();
     private readonly HashSet<string> chatRequested = new(StringComparer.Ordinal);
@@ -60,12 +59,12 @@ internal sealed class YellowPagesStore : IDisposable
     private volatile bool savedHasMore;
     private volatile bool savedLoadedOnce;
 
-    public YellowPagesStore(AethernetSession session, YellowPagesClient client, NotificationService notifications,
+    public YellowPagesStore(AethernetSession session, YellowPagesClient client, MediaClient media,
         Configuration configuration, PhoneVisibility visibility, RealtimeSignalBus signals)
     {
         this.session = session;
         this.client = client;
-        this.notifications = notifications;
+        this.media = media;
         this.configuration = configuration;
         this.signals = signals;
         cadence = new PollCadence(visibility, ForegroundPollInterval, BackgroundPollInterval);
@@ -334,7 +333,7 @@ internal sealed class YellowPagesStore : IDisposable
         });
     }
 
-    public void Create(CreateAdRequest request, Action<AdCreateOutcome> done)
+    public void Create(CreateAdRequest request, IReadOnlyList<string> photoPaths, Action<AdCreateOutcome> done)
     {
         if (!session.IsSignedIn)
         {
@@ -345,7 +344,14 @@ internal sealed class YellowPagesStore : IDisposable
         var status = 0;
         work.Run("ads create", async token =>
         {
-            var created = await client.CreateAsync(request, token, code => status = code).ConfigureAwait(false);
+            var keys = await UploadPhotosAsync(photoPaths, token).ConfigureAwait(false);
+            if (keys is null)
+            {
+                return false;
+            }
+
+            var created = await client.CreateAsync(request with { MediaKeys = keys }, token, code => status = code)
+                .ConfigureAwait(false);
             if (created is null)
             {
                 return false;
@@ -357,7 +363,8 @@ internal sealed class YellowPagesStore : IDisposable
         }, ok => done(ok ? AdCreateOutcome.Created : OutcomeFor(status)));
     }
 
-    public void Update(string adId, CreateAdRequest request, Action<AdCreateOutcome> done)
+    public void Update(string adId, CreateAdRequest request, IReadOnlyList<string> keptUrls,
+        IReadOnlyList<string> photoPaths, Action<AdCreateOutcome> done)
     {
         if (!session.IsSignedIn)
         {
@@ -368,7 +375,21 @@ internal sealed class YellowPagesStore : IDisposable
         var status = 0;
         work.Run("ads update", async token =>
         {
-            var updated = await client.UpdateAsync(adId, request, token, code => status = code).ConfigureAwait(false);
+            var uploaded = await UploadPhotosAsync(photoPaths, token).ConfigureAwait(false);
+            if (uploaded is null)
+            {
+                return false;
+            }
+
+            var mediaKeys = new string[keptUrls.Count + uploaded.Length];
+            for (var index = 0; index < keptUrls.Count; index++)
+            {
+                mediaKeys[index] = keptUrls[index];
+            }
+
+            Array.Copy(uploaded, 0, mediaKeys, keptUrls.Count, uploaded.Length);
+            var updated = await client.UpdateAsync(adId, request with { MediaKeys = mediaKeys }, token,
+                code => status = code).ConfigureAwait(false);
             if (updated is null)
             {
                 return false;
@@ -379,6 +400,36 @@ internal sealed class YellowPagesStore : IDisposable
             MergeKnown(new[] { updated });
             return true;
         }, ok => done(ok ? AdCreateOutcome.Created : OutcomeFor(status)));
+    }
+
+    private async Task<string[]?> UploadPhotosAsync(IReadOnlyList<string> photoPaths, CancellationToken token)
+    {
+        if (photoPaths.Count == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        var keys = new string[photoPaths.Count];
+        for (var index = 0; index < photoPaths.Count; index++)
+        {
+            var baked = ImageProcessor.BakeJpeg(photoPaths[index], MaxImageDimension);
+            var upload = await media.UploadUrlAsync("image/jpeg", "ad", token).ConfigureAwait(false);
+            if (upload is null)
+            {
+                return null;
+            }
+
+            var uploaded = await media.UploadImageAsync(upload.UploadUrl, baked.Bytes, "image/jpeg", token)
+                .ConfigureAwait(false);
+            if (!uploaded)
+            {
+                return null;
+            }
+
+            keys[index] = upload.Key;
+        }
+
+        return keys;
     }
 
     public void Delete(string adId, Action<bool> done)
@@ -530,60 +581,14 @@ internal sealed class YellowPagesStore : IDisposable
         savedHasMore = false;
         savedLoadedOnce = false;
         primed = false;
-        lastMineCheckUnix = 0;
         cadence.Reset();
     }
 
     private void ApplyMine(AdDto[] current)
     {
-        var previous = mine;
-        var previousCheckUnix = lastMineCheckUnix;
-        var wasPrimed = primed;
-        var nowUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-
         mine = current;
         MergeKnown(current);
         primed = true;
-        lastMineCheckUnix = nowUnix;
-
-        if (!wasPrimed)
-        {
-            return;
-        }
-
-        for (var index = 0; index < current.Length; index++)
-        {
-            var ad = current[index];
-            AdDto? before = null;
-            for (var previousIndex = 0; previousIndex < previous.Length; previousIndex++)
-            {
-                if (previous[previousIndex].Id == ad.Id)
-                {
-                    before = previous[previousIndex];
-                    break;
-                }
-            }
-
-            if (ad.Status == AdStatuses.Hidden && before is not null && before.Status != AdStatuses.Hidden)
-            {
-                notifications.Notify(new PhoneNotification(AppId, Loc.T(L.YellowPages.NotifHiddenTitle),
-                    Loc.T(L.YellowPages.NotifHiddenBody, ad.Title), DateTime.Now, AppAccents.For(AppId), ad.Id));
-                continue;
-            }
-
-            if (ad.Status != AdStatuses.Live)
-            {
-                continue;
-            }
-
-            var remaining = ad.ExpiresAtUnix - nowUnix;
-            var remainingAtLastCheck = previousCheckUnix > 0 ? ad.ExpiresAtUnix - previousCheckUnix : long.MaxValue;
-            if (remaining > 0 && remaining <= ExpiryWarningLeadSeconds && remainingAtLastCheck > ExpiryWarningLeadSeconds)
-            {
-                notifications.Notify(new PhoneNotification(AppId, Loc.T(L.YellowPages.NotifExpiringTitle),
-                    Loc.T(L.YellowPages.NotifExpiringBody, ad.Title), DateTime.Now, AppAccents.For(AppId), ad.Id));
-            }
-        }
     }
 
     private void ApplyOpenUntil(string adId, long openUntilUnix)

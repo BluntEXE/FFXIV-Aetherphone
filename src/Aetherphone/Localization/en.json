@@ -2663,5 +2663,15 @@
   "yellowpages.notifExpiringBody": "\"{0}\" expires within a day. Renew it to keep it listed.",
   "yellowpages.adPreview": "Yellow Pages ad",
   "yellowpages.adUnavailable": "Ad unavailable",
-  "yellowpages.adOpen": "Open in Yellow Pages"
+  "yellowpages.adOpen": "Open in Yellow Pages",
+  "yellowpages.notifExpiringGeneric": "One of your ads expires within a day. Renew it to keep it listed.",
+  "yellowpages.notifHiddenGeneric": "One of your ads was hidden after reports and is pending review.",
+  "yellowpages.notifOpenedTitle": "Open now",
+  "yellowpages.notifOpenedBody": "\"{0}\" just opened its doors.",
+  "yellowpages.notifOpenedGeneric": "A place you saved is open now.",
+  "yellowpages.editAd": "Edit",
+  "yellowpages.editAdTitle": "Edit ad",
+  "yellowpages.saveChanges": "Save changes",
+  "yellowpages.inquireAction": "Send an inquiry",
+  "yellowpages.inquireHint": "Opens a chat with the poster. The ad card is copied, ready to paste."
 }

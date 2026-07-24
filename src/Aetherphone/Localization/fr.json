@@ -2664,5 +2664,15 @@
   "yellowpages.notifExpiringBody": "« {0} » expire dans moins d'un jour. Renouvelez-la pour rester visible.",
   "yellowpages.adPreview": "Annonce Yellow Pages",
   "yellowpages.adUnavailable": "Annonce indisponible",
-  "yellowpages.adOpen": "Ouvrir dans Yellow Pages"
+  "yellowpages.adOpen": "Ouvrir dans Yellow Pages",
+  "yellowpages.notifExpiringGeneric": "Une de vos annonces expire dans moins d'un jour. Renouvelez-la pour rester visible.",
+  "yellowpages.notifHiddenGeneric": "Une de vos annonces a été masquée après des signalements et attend un examen.",
+  "yellowpages.notifOpenedTitle": "Ouvert",
+  "yellowpages.notifOpenedBody": "« {0} » vient d'ouvrir ses portes.",
+  "yellowpages.notifOpenedGeneric": "Un lieu que vous gardez vient d'ouvrir.",
+  "yellowpages.editAd": "Modifier",
+  "yellowpages.editAdTitle": "Modifier l'annonce",
+  "yellowpages.saveChanges": "Enregistrer les modifications",
+  "yellowpages.inquireAction": "Envoyer une demande",
+  "yellowpages.inquireHint": "Ouvre une discussion avec l'annonceur. La carte de l'annonce est copiée, prête à coller."
 }

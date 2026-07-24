@@ -155,6 +155,17 @@ internal static class AdText
         return new AdScheduleSlot((int)utc.DayOfWeek, utc.Hour * 60 + utc.Minute, durationMinutes);
     }
 
+    public static void ToLocalSlot(AdScheduleSlot slot, out int localDay, out int localStartMinute)
+    {
+        var nowUtc = DateTime.UtcNow;
+        var daysAhead = Modulo(slot.Day - (int)nowUtc.DayOfWeek, 7);
+        var utcStart = DateTime.SpecifyKind(nowUtc.Date.AddDays(daysAhead).AddMinutes(slot.StartMinute),
+            DateTimeKind.Utc);
+        var local = utcStart.ToLocalTime();
+        localDay = (int)local.DayOfWeek;
+        localStartMinute = local.Hour * 60 + local.Minute;
+    }
+
     private static int MinuteOfWeek(long unixSeconds)
     {
         var moment = DateTimeOffset.FromUnixTimeSeconds(unixSeconds).UtcDateTime;

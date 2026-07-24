@@ -2664,5 +2664,15 @@
   "yellowpages.notifExpiringBody": "\"{0}\" истекает менее чем через день. Продлите, чтобы остаться на доске.",
   "yellowpages.adPreview": "Объявление Yellow Pages",
   "yellowpages.adUnavailable": "Объявление недоступно",
-  "yellowpages.adOpen": "Открыть в Yellow Pages"
+  "yellowpages.adOpen": "Открыть в Yellow Pages",
+  "yellowpages.notifExpiringGeneric": "Одно из ваших объявлений истекает менее чем через день. Продлите, чтобы остаться на доске.",
+  "yellowpages.notifHiddenGeneric": "Одно из ваших объявлений скрыто после жалоб и ждёт проверки.",
+  "yellowpages.notifOpenedTitle": "Открыто",
+  "yellowpages.notifOpenedBody": "\"{0}\" только что открылось.",
+  "yellowpages.notifOpenedGeneric": "Сохранённое место только что открылось.",
+  "yellowpages.editAd": "Изменить",
+  "yellowpages.editAdTitle": "Изменить объявление",
+  "yellowpages.saveChanges": "Сохранить изменения",
+  "yellowpages.inquireAction": "Написать по объявлению",
+  "yellowpages.inquireHint": "Откроет чат с автором. Карточка объявления скопирована и готова к вставке."
 }

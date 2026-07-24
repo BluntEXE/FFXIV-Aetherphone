@@ -152,6 +152,21 @@ internal sealed partial class YellowPagesApp
             cursor = openRect.Max.X + gap;
         }
 
+        var editLabel = Loc.T(L.YellowPages.EditAd);
+        var editWidth = Typography.Measure(editLabel, 0.9f, FontWeight.SemiBold).X + 30f * scale;
+        if (cursor + editWidth < right - 70f * scale)
+        {
+            var editRect = new Rect(new Vector2(cursor, actionTop),
+                new Vector2(cursor + editWidth, actionTop + actionHeight));
+            if (ui.GhostButton(editRect, editLabel))
+            {
+                StartEdit(ad);
+                router.Push(YellowPagesRoute.Compose);
+            }
+
+            cursor = editRect.Max.X + gap;
+        }
+
         var shareLabel = JustCopied(ad.Id) ? Loc.T(L.YellowPages.Copied) : Loc.T(L.YellowPages.ShareAd);
         var shareWidth = Typography.Measure(shareLabel, 0.9f, FontWeight.SemiBold).X + 34f * scale;
         if (cursor + shareWidth < right - 70f * scale)

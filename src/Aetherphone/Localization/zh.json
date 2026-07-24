@@ -2664,5 +2664,15 @@
   "yellowpages.notifExpiringBody": "“{0}”将在一天内过期。续期以继续展示。",
   "yellowpages.adPreview": "Yellow Pages广告",
   "yellowpages.adUnavailable": "广告不可用",
-  "yellowpages.adOpen": "在Yellow Pages中打开"
+  "yellowpages.adOpen": "在Yellow Pages中打开",
+  "yellowpages.notifExpiringGeneric": "你的一条广告将在一天内过期。续期以继续展示。",
+  "yellowpages.notifHiddenGeneric": "你的一条广告因举报被隐藏,正在等待审核。",
+  "yellowpages.notifOpenedTitle": "营业中",
+  "yellowpages.notifOpenedBody": "“{0}”刚刚开门营业。",
+  "yellowpages.notifOpenedGeneric": "你收藏的一个场所刚刚开门。",
+  "yellowpages.editAd": "编辑",
+  "yellowpages.editAdTitle": "编辑广告",
+  "yellowpages.saveChanges": "保存修改",
+  "yellowpages.inquireAction": "发送咨询",
+  "yellowpages.inquireHint": "打开与发布者的聊天。广告卡片已复制,粘贴即可。"
 }

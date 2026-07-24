@@ -2664,5 +2664,15 @@
   "yellowpages.notifExpiringBody": "\"{0}\" expira em menos de um dia. Renove para continuar no mural.",
   "yellowpages.adPreview": "Anúncio do Yellow Pages",
   "yellowpages.adUnavailable": "Anúncio indisponível",
-  "yellowpages.adOpen": "Abrir no Yellow Pages"
+  "yellowpages.adOpen": "Abrir no Yellow Pages",
+  "yellowpages.notifExpiringGeneric": "Um dos seus anúncios expira em menos de um dia. Renove para continuar no mural.",
+  "yellowpages.notifHiddenGeneric": "Um dos seus anúncios foi ocultado após denúncias e aguarda revisão.",
+  "yellowpages.notifOpenedTitle": "Aberto agora",
+  "yellowpages.notifOpenedBody": "\"{0}\" acabou de abrir as portas.",
+  "yellowpages.notifOpenedGeneric": "Um lugar que você salvou acabou de abrir.",
+  "yellowpages.editAd": "Editar",
+  "yellowpages.editAdTitle": "Editar anúncio",
+  "yellowpages.saveChanges": "Salvar alterações",
+  "yellowpages.inquireAction": "Enviar uma mensagem",
+  "yellowpages.inquireHint": "Abre uma conversa com o anunciante. O cartão do anúncio está copiado, pronto para colar."
 }

@@ -4,11 +4,13 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Maps;
 using Aetherphone.Core.Muster;
+using Aetherphone.Core.Platform;
 using Aetherphone.Core.YellowPages;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
+using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.YellowPages;
 
@@ -20,11 +22,20 @@ internal sealed partial class YellowPagesApp
     private const int NoteMaxLength = 80;
     private const int TagsBufferLength = 200;
     private const float ArchetypeCardHeight = 84f;
+    private const int PickerColumns = 3;
 
     private static readonly int[] WeekDays = { 1, 2, 3, 4, 5, 6, 0 };
     private static readonly int[] StartMinutesLocal = { 720, 1020, 1080, 1140, 1200, 1260, 1320, 1380 };
     private static readonly int[] SlotDurationsMinutes = { 60, 120, 180, 240, 360 };
+    private static readonly Vector4 PhotoWhite = new(1f, 1f, 1f, 1f);
+    private static readonly Vector4 AddTileStroke = new(1f, 1f, 1f, 0.18f);
 
+    private readonly List<string> composePhotos = new();
+    private readonly List<string> composeKeptUrls = new();
+    private string? editingAdId;
+    private bool picking;
+    private string[] pickerPaths = Array.Empty<string>();
+    private string? pendingPickedPath;
     private int composeArchetype = -1;
     private int composeCategory;
     private string composeTitle = string.Empty;
@@ -49,14 +60,25 @@ internal sealed partial class YellowPagesApp
 
     private void DrawCompose(Rect area)
     {
+        if (picking)
+        {
+            DrawPhotoPicker(area);
+            return;
+        }
+
         var context = new PhoneContext(area, theme, navigation);
-        AppHeader.Draw(context, Loc.T(L.YellowPages.NewAd), back);
+        AppHeader.Draw(context, Loc.T(editingAdId is null ? L.YellowPages.NewAd : L.YellowPages.EditAdTitle), back);
         if (composeSucceeded)
         {
             composeSucceeded = false;
+            var wasEditing = editingAdId is not null;
             ResetComposeForm();
             router.Pop(false);
-            router.Push(YellowPagesRoute.Mine, false);
+            if (!wasEditing && router.Current.Screen != YellowPagesScreen.Mine)
+            {
+                router.Push(YellowPagesRoute.Mine, false);
+            }
+
             return;
         }
 
@@ -154,10 +176,259 @@ internal sealed partial class YellowPagesApp
                 break;
         }
 
+        DrawComposePhotos(scale);
         ui.ToggleRow(Loc.T(L.YellowPages.AfterDarkToggle), ref composeAfterDark);
         ui.HelpText(Loc.T(L.YellowPages.AfterDarkHint));
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
         DrawComposeSubmit(scale);
+    }
+
+    private void DrawComposePhotos(float scale)
+    {
+        ui.SectionHeading(Loc.T(L.Apps.Photos));
+        var drawList = ImGui.GetWindowDrawList();
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        var gap = Metrics.Space.Sm * scale;
+        var tile = (width - gap * (YellowPagesStore.MaxPhotos - 1)) / YellowPagesStore.MaxPhotos;
+        var rounding = 10f * scale;
+        var total = composeKeptUrls.Count + composePhotos.Count;
+        var slot = 0;
+        var removeKeptIndex = -1;
+        var removeLocalIndex = -1;
+        for (var index = 0; index < composeKeptUrls.Count; index++, slot++)
+        {
+            var min = new Vector2(origin.X + (tile + gap) * slot, origin.Y);
+            if (DrawComposeThumb(drawList, images.Get(composeKeptUrls[index]), min,
+                    min + new Vector2(tile, tile), rounding, scale))
+            {
+                removeKeptIndex = index;
+            }
+        }
+
+        for (var index = 0; index < composePhotos.Count; index++, slot++)
+        {
+            var min = new Vector2(origin.X + (tile + gap) * slot, origin.Y);
+            if (DrawComposeThumb(drawList, wallpaperImages.Get(composePhotos[index]), min,
+                    min + new Vector2(tile, tile), rounding, scale))
+            {
+                removeLocalIndex = index;
+            }
+        }
+
+        if (total < YellowPagesStore.MaxPhotos)
+        {
+            var min = new Vector2(origin.X + (tile + gap) * slot, origin.Y);
+            var max = min + new Vector2(tile, tile);
+            var hovered = ImGui.IsMouseHoveringRect(min, max);
+            Squircle.Fill(drawList, min, max, rounding,
+                ImGui.GetColorU32(hovered ? ui.HoverTint : AppPalettes.YellowPages.FieldSurface));
+            Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(AddTileStroke), 1f);
+            AppSkin.Icon(drawList, (min + max) * 0.5f, FontAwesomeIcon.Plus.ToIconString(),
+                AppPalettes.YellowPages.BodyInk, 0.9f);
+            if (hovered)
+            {
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            }
+
+            if (UiInteract.Click(min, max, hovered))
+            {
+                pickerPaths = library.List();
+                picking = true;
+            }
+        }
+
+        if (removeKeptIndex >= 0)
+        {
+            composeKeptUrls.RemoveAt(removeKeptIndex);
+        }
+
+        if (removeLocalIndex >= 0)
+        {
+            composePhotos.RemoveAt(removeLocalIndex);
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, tile + Metrics.Space.Md * scale));
+    }
+
+    private bool DrawComposeThumb(ImDrawListPtr drawList, Dalamud.Interface.Textures.TextureWraps.IDalamudTextureWrap? texture,
+        Vector2 min, Vector2 max, float rounding, float scale)
+    {
+        if (texture is null)
+        {
+            Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(theme.SurfaceMuted));
+        }
+        else
+        {
+            var (uv0, uv1) = ImageFit.CoverSquare(texture.Size);
+            drawList.AddImageRounded(texture.Handle, min, max, uv0, uv1, 0xFFFFFFFFu, rounding,
+                ImDrawFlags.RoundCornersAll);
+        }
+
+        var badgeRadius = 8.5f * scale;
+        var badgeCenter = new Vector2(max.X - badgeRadius - 2f * scale, min.Y + badgeRadius + 2f * scale);
+        var badgeHovered = ImGui.IsMouseHoveringRect(badgeCenter - new Vector2(badgeRadius, badgeRadius),
+            badgeCenter + new Vector2(badgeRadius, badgeRadius));
+        drawList.AddCircleFilled(badgeCenter, badgeRadius,
+            ImGui.GetColorU32(new Vector4(0f, 0f, 0f, badgeHovered ? 0.9f : 0.62f)), 20);
+        AppSkin.Icon(drawList, badgeCenter, FontAwesomeIcon.Times.ToIconString(), PhotoWhite, 0.6f);
+        if (badgeHovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return UiInteract.Click(badgeCenter - new Vector2(badgeRadius, badgeRadius),
+            badgeCenter + new Vector2(badgeRadius, badgeRadius), badgeHovered);
+    }
+
+    private void DrawPhotoPicker(Rect area)
+    {
+        var context = new PhoneContext(area, theme, navigation);
+        AppHeader.Draw(context, Loc.T(L.Feedback.AddPhotos), () => picking = false);
+        var scale = ImGuiHelpers.GlobalScale;
+        var top = area.Min.Y + AppHeader.Height * scale;
+        var importHeight = 46f * scale;
+        var importRect = new Rect(new Vector2(area.Min.X + 16f * scale, top + 8f * scale),
+            new Vector2(area.Max.X - 16f * scale, top + 8f * scale + importHeight));
+        if (ui.PillButton(importRect, Loc.T(L.Feedback.ImportFromPc), true))
+        {
+            FilePicker.PickImage(Loc.T(L.Feedback.AddPhotos),
+                path => Interlocked.Exchange(ref pendingPickedPath, path));
+        }
+
+        var gridTop = importRect.Max.Y + 12f * scale;
+        var gridRect = new Rect(new Vector2(area.Min.X, gridTop), area.Max);
+        using (AppSurface.Begin(gridRect))
+        {
+            if (pickerPaths.Length == 0)
+            {
+                Typography.DrawCentered(new Vector2(gridRect.Center.X, gridRect.Min.Y + 60f * scale),
+                    Loc.T(L.Feedback.NoGallery), AppPalettes.YellowPages.MutedInk);
+                return;
+            }
+
+            var gap = 6f * scale;
+            var cell = (ScrollLayout.StableContentWidth() - gap * (PickerColumns - 1)) / PickerColumns;
+            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(gap, gap)))
+            {
+                for (var index = 0; index < pickerPaths.Length; index++)
+                {
+                    ImGui.Dummy(new Vector2(cell, cell));
+                    var min = ImGui.GetItemRectMin();
+                    var max = ImGui.GetItemRectMax();
+                    DrawPickerThumbnail(pickerPaths[index], min, max, scale);
+                    if (UiInteract.Click(min, max, UiInteract.Hover(min, max)))
+                    {
+                        AddComposePhoto(pickerPaths[index]);
+                    }
+
+                    if (index % PickerColumns != PickerColumns - 1)
+                    {
+                        ImGui.SameLine();
+                    }
+                }
+            }
+        }
+    }
+
+    private void DrawPickerThumbnail(string path, Vector2 min, Vector2 max, float scale)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var rounding = 10f * scale;
+        var texture = wallpaperImages.Get(path);
+        if (texture is null)
+        {
+            Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(theme.SurfaceMuted));
+            return;
+        }
+
+        var (uv0, uv1) = ImageFit.CoverSquare(texture.Size);
+        drawList.AddImageRounded(texture.Handle, min, max, uv0, uv1, 0xFFFFFFFFu, rounding,
+            ImDrawFlags.RoundCornersAll);
+        if (ImGui.IsItemHovered())
+        {
+            drawList.AddRectFilled(min, max, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.1f)), rounding);
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+    }
+
+    private void AddComposePhoto(string path)
+    {
+        if (string.IsNullOrEmpty(path)
+            || composeKeptUrls.Count + composePhotos.Count >= YellowPagesStore.MaxPhotos)
+        {
+            return;
+        }
+
+        for (var index = 0; index < composePhotos.Count; index++)
+        {
+            if (string.Equals(composePhotos[index], path, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+        }
+
+        composePhotos.Add(path);
+    }
+
+    public void StartEdit(AdDto ad)
+    {
+        ResetComposeForm();
+        editingAdId = ad.Id;
+        composeArchetype = ad.Archetype;
+        composeCategory = ad.Category;
+        composeTitle = ad.Title;
+        composeBody = ad.Body;
+        composeTags = string.Join(", ", ad.Tags);
+        composeAddressNote = ad.AddressNote;
+        composeAfterDark = ad.AfterDark;
+        composeKeptUrls.AddRange(ad.MediaUrls);
+        if (ad.TerritoryId > 0 || ad.Ward > 0)
+        {
+            composeLocation = AdText.Location(ad);
+        }
+
+        if (ad.Archetype == AdArchetypes.Service)
+        {
+            composePriceMode = ad.PriceMode;
+            composePriceText = ad.PriceGil > 0 ? ad.PriceGil.ToString(Loc.Culture) : string.Empty;
+            composeTurnaround = ad.Turnaround;
+        }
+        else if (ad.Archetype == AdArchetypes.Call)
+        {
+            composeSlotsLine = ad.SlotsLine;
+            composeRequirements = ad.Requirements;
+        }
+
+        if (ad.Schedule.Length > 0)
+        {
+            AdText.ToLocalSlot(ad.Schedule[0], out _, out var localStartMinute);
+            composeStartIndex = ClosestIndex(StartMinutesLocal, localStartMinute);
+            composeDurationIndex = ClosestIndex(SlotDurationsMinutes, ad.Schedule[0].DurationMinutes);
+            for (var index = 0; index < ad.Schedule.Length; index++)
+            {
+                AdText.ToLocalSlot(ad.Schedule[index], out var localDay, out _);
+                composeDays[localDay] = true;
+            }
+        }
+    }
+
+    private static int ClosestIndex(int[] values, int target)
+    {
+        var best = 0;
+        var bestDistance = int.MaxValue;
+        for (var index = 0; index < values.Length; index++)
+        {
+            var distance = Math.Abs(values[index] - target);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                best = index;
+            }
+        }
+
+        return best;
     }
 
     private void DrawComposeCategory(float scale)
@@ -358,20 +629,21 @@ internal sealed partial class YellowPagesApp
 
         var rect = new Rect(new Vector2(origin.X, cursorY),
             new Vector2(origin.X + width, cursorY + ActionHeight * scale));
+        var submitLabel = Loc.T(editingAdId is null ? L.YellowPages.PublishAd : L.YellowPages.SaveChanges);
         if (composeBusy)
         {
             LoadingPulse.Spinner(rect.Center, 10f * scale, ui.Accent);
         }
         else if (valid)
         {
-            if (ui.PillButton(rect, Loc.T(L.YellowPages.PublishAd), true))
+            if (ui.PillButton(rect, submitLabel, true))
             {
                 SubmitCompose();
             }
         }
         else
         {
-            AppSkin.PillButton(rect, Loc.T(L.YellowPages.PublishAd), true, false, theme);
+            AppSkin.PillButton(rect, submitLabel, true, false, theme);
         }
 
         ImGui.SetCursorScreenPos(origin);
@@ -481,7 +753,8 @@ internal sealed partial class YellowPagesApp
             null);
         composeBusy = true;
         composeOutcome = null;
-        store.Create(request, outcome =>
+        var photos = composePhotos.ToArray();
+        void Done(AdCreateOutcome outcome)
         {
             composeBusy = false;
             if (outcome == AdCreateOutcome.Created)
@@ -492,11 +765,24 @@ internal sealed partial class YellowPagesApp
             {
                 composeOutcome = outcome;
             }
-        });
+        }
+
+        if (editingAdId is { } adId)
+        {
+            store.Update(adId, request, composeKeptUrls.ToArray(), photos, Done);
+        }
+        else
+        {
+            store.Create(request, photos, Done);
+        }
     }
 
     private void ResetComposeForm()
     {
+        editingAdId = null;
+        composePhotos.Clear();
+        composeKeptUrls.Clear();
+        picking = false;
         composeArchetype = -1;
         composeCategory = AdCategories.VenueNight;
         composeTitle = string.Empty;
