@@ -63,7 +63,7 @@ internal static class AppRegistry
         apps.Add(new PollsApp(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "polls").Polls, services.Installer));
         apps.Add(new AnnouncementsApp(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "announcements").Announcements, services.Notifications, services.Configuration, services.AnnouncementsLauncher));
         apps.Add(new CameraApp(new PhotoCaptureService(), photoLibrary, services.Configuration));
-        apps.Add(new PhotosApp(photoLibrary, services.Confirm));
+        apps.Add(new PhotosApp(photoLibrary, services.Confirm, services.Configuration));
         apps.Add(new SkywatcherApp(services.Weather, services.WeatherControl));
         apps.Add(new VenuesApp(services.Venues, services.Media, services.Http, services.Textures, services.GameData, services.Configuration));
         apps.Add(new MusterApp(services.Musters, services.MusterLauncher, services.Aethernet, services.GameData, services.RemoteImages, services.Lodestone, services.Configuration, services.Confirm, services.Report));
