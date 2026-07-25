@@ -48,15 +48,16 @@ internal sealed partial class PhotosApp : IPhoneApp
     private readonly List<CustomAlbum> customAlbums = new();
     private readonly List<string> customAlbumOrder = new();
     private readonly Dictionary<string, List<string>> customAlbumPhotos = new(StringComparer.OrdinalIgnoreCase);
-    private string[] customAlbumFlat = Array.Empty<string>();
     private readonly DropdownMenu albumMenu = new();
+    private string[] customAlbumFlat = Array.Empty<string>();
+    private Dictionary<int, string[]> cachedCustomAlbumPaths = new();
     private string newAlbumDraft = string.Empty;
     private bool renaming;
     private int renameAlbumKey;
     private string renameAlbumDraft = string.Empty;
-    private bool showAlbumPicker;
-    private int pickerAlbumKey;
     private readonly List<string> pickerSelection = new();
+    private DropdownMenu.Item[]? customAlbumMenuItemsCache;
+    private string? customAlbumMenuItemsLocale;
 
     private PhotoEntry[] entries = Array.Empty<PhotoEntry>();
     private string[] viewerPaths = Array.Empty<string>();
@@ -85,7 +86,6 @@ internal sealed partial class PhotosApp : IPhoneApp
         viewerIndex = 0;
         resetScroll = true;
         renaming = false;
-        showAlbumPicker = false;
         LoadCustomAlbums();
         Refresh();
     }
@@ -126,6 +126,12 @@ internal sealed partial class PhotosApp : IPhoneApp
         if (view.Route == PhotoRoute.CreateAlbum)
         {
             DrawCreateAlbumPage(content);
+            return;
+        }
+
+        if (view.Route == PhotoRoute.AlbumPicker)
+        {
+            DrawAlbumPicker(content, view.AlbumKey);
             return;
         }
 
@@ -244,12 +250,15 @@ internal sealed partial class PhotosApp : IPhoneApp
         var flat = new List<string>();
         for (var i = 0; i < customAlbumOrder.Count; i++)
         {
+            var key = -(i + 2);
             var name = customAlbumOrder[i];
             var photos = customAlbumPhotos[name];
             var start = flat.Count;
             flat.AddRange(photos);
             // Negative keys avoid any collision with MonthAlbum keys (year*100+month, always positive).
-            customAlbums.Add(new CustomAlbum(-(i + 2), start, photos.Count, name));
+            customAlbums.Add(new CustomAlbum(key, start, photos.Count, name));
+            var paths = SortedCustomAlbumPaths(key);
+            cachedCustomAlbumPaths[key] = paths;
         }
 
         customAlbumFlat = flat.ToArray();

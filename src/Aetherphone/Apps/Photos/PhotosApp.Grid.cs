@@ -47,9 +47,10 @@ internal sealed partial class PhotosApp
             return;
         }
 
-        if (entries.Length == 0)
+        if (customAlbums.Count == 0 && entries.Length == 0)
         {
             DrawEmpty(body);
+            DrawNewAlbumFab(body);
             return;
         }
 
@@ -99,12 +100,6 @@ internal sealed partial class PhotosApp
     
     private void DrawCustomAlbumView(Rect area, int key)
     {
-        if (showAlbumPicker && pickerAlbumKey == key)
-        {
-            DrawAlbumPicker(area, key);
-            return;
-        }
-
         var scale = ImGuiHelpers.GlobalScale;
         if (!TryFindCustomAlbum(key, out var album))
         {
@@ -115,14 +110,11 @@ internal sealed partial class PhotosApp
         DrawNavBar(area, album.Name, back);
         if (ui.HeaderAction(area, Loc.T(L.Photos.AddPhotos), entries.Length > 0))
         {
-            pickerAlbumKey = key;
-            showAlbumPicker = true;
-            pickerSelection.Clear();
+            OpenAlbumPicker(key);
         }
 
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
-        var paths = SortedCustomAlbumPaths(key);
-        if (paths.Length == 0)
+        if (!cachedCustomAlbumPaths.TryGetValue(key, out var paths) || paths.Length == 0)
         {
             Typography.DrawCentered(body.Center, Loc.T(L.Photos.EmptyAlbum), ui.MutedInk, TextStyles.Body);
             return;
@@ -131,35 +123,43 @@ internal sealed partial class PhotosApp
         DrawCustomAlbumGrid(body, paths, key);
     }
 
+    private void CloseCreateAlbumPage()
+    {
+        renaming = false;
+        newAlbumDraft = string.Empty;
+        renameAlbumDraft = string.Empty;
+        router.Pop();
+    }
+
     private void DrawCreateAlbumPage(Rect area)
     {
         var scale = ImGuiHelpers.GlobalScale;
 
-        Action cancel = () =>
-        {
-            renaming = false;
-            newAlbumDraft = string.Empty;
-            renameAlbumDraft = string.Empty;
-            router.Pop();
-        };
-
-        DrawNavBar(area, renaming ? Loc.T(L.Photos.Rename) : Loc.T(L.Photos.CreateAlbum), cancel);
+        DrawNavBar(area, renaming ? Loc.T(L.Photos.Rename) : Loc.T(L.Photos.CreateAlbum), CloseCreateAlbumPage);
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         if (renaming)
-            DrawRenameAlbumSheet(body, cancel);
+            DrawRenameAlbumSheet(body, CloseCreateAlbumPage);
         else
-            DrawCreateAlbumSheet(body, cancel);
+            DrawCreateAlbumSheet(body, CloseCreateAlbumPage);
     }
 
-    private void DrawCreateAlbumSheet(Rect body, Action cancel)
+    private void DrawModifyAlbumSheet(
+        Rect body,
+        string label,
+        string buttonLabel,
+        ref string draft,
+        Func<string, bool> canCommit,
+        Action commit,
+        Action cancel,
+        bool showDuplicateHint = false)
     {
         var scale = ImGuiHelpers.GlobalScale;
         ImGui.SetCursorScreenPos(body.Min);
         using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, new Vector2(16f * scale, 8f * scale)))
-        using (ImRaii.Child("##createSheet", body.Size, false, ImGuiWindowFlags.NoBackground))
+        using (ImRaii.Child("##modifyAlbumSheet", body.Size, false, ImGuiWindowFlags.NoBackground))
         {
             using (ImRaii.PushColor(ImGuiCol.Text, ui.MutedInk))
-                Typography.Plain(Loc.T(L.Photos.AlbumName));
+                Typography.Plain(label);
 
             var origin = ImGui.GetCursorScreenPos();
             var width = ImGui.GetContentRegionAvail().X;
@@ -173,32 +173,31 @@ internal sealed partial class PhotosApp
             using (ImRaii.PushColor(ImGuiCol.FrameBg, new Vector4(0f, 0f, 0f, 0f))
                        .Push(ImGuiCol.Text, ui.TitleInk))
             {
-                ImGui.InputText("##newAlbumName", ref newAlbumDraft, 64);
+                ImGui.InputText("##modifyAlbumName", ref draft, 64);
             }
 
             ImGui.SetCursorScreenPos(origin);
             ImGui.Dummy(new Vector2(width, height));
 
             ImGui.Dummy(new Vector2(0f, 18f * scale));
-            var canCreate = newAlbumDraft.Trim().Length > 0
-                && !customAlbumOrder.Contains(newAlbumDraft.Trim(), StringComparer.OrdinalIgnoreCase);
+            var trimmed = draft.Trim();
+            var canProceed = canCommit(trimmed);
 
-            var accent = canCreate ? ui.Accent : Palette.WithAlpha(ui.Accent, 0.4f);
+            var accent = canProceed ? ui.Accent : Palette.WithAlpha(ui.Accent, 0.4f);
             using (ImRaii.PushColor(ImGuiCol.Button, accent)
                        .Push(ImGuiCol.ButtonHovered,
-                           canCreate ? Palette.Mix(ui.Accent, new Vector4(1f, 1f, 1f, 1f), 0.14f) : accent)
+                           canProceed ? Palette.Mix(ui.Accent, new Vector4(1f, 1f, 1f, 1f), 0.14f) : accent)
                        .Push(ImGuiCol.ButtonActive, accent)
-                       .Push(ImGuiCol.Text, new Vector4(1f, 1f, 1f, canCreate ? 1f : 0.72f)))
+                       .Push(ImGuiCol.Text, new Vector4(1f, 1f, 1f, canProceed ? 1f : 0.72f)))
             {
-                if (ImGui.Button(Loc.T(L.Photos.CreateAlbumButton), new Vector2(-1f, 38f * scale)) && canCreate)
+                if (ImGui.Button(buttonLabel, new Vector2(-1f, 38f * scale)) && canProceed)
                 {
-                    CreateCustomAlbumInternal(newAlbumDraft);
-                    newAlbumDraft = string.Empty;
+                    commit();
                     cancel();
                 }
             }
 
-            if (!canCreate && newAlbumDraft.Trim().Length > 0)
+            if (showDuplicateHint && !canProceed && trimmed.Length > 0)
             {
                 ImGui.Dummy(new Vector2(0f, 10f * scale));
                 using (ImRaii.PushColor(ImGuiCol.Text, ui.Palette.Accent))
@@ -206,61 +205,50 @@ internal sealed partial class PhotosApp
             }
         }
     }
+    
+    private void DrawCreateAlbumSheet(Rect body, Action cancel)
+    {
+        DrawModifyAlbumSheet(
+            body,
+            Loc.T(L.Photos.AlbumName),
+            Loc.T(L.Photos.CreateAlbumButton),
+            ref newAlbumDraft,
+            CanModifyAlbum,
+            CommitCreateAlbum,
+            cancel,
+            showDuplicateHint: true
+        );
+    }
+
+    private bool CanModifyAlbum(string name)
+    {
+        return name.Length > 0
+               && !customAlbumOrder.Contains(name, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private void CommitCreateAlbum()
+    {
+        CreateCustomAlbumInternal(newAlbumDraft);
+        newAlbumDraft = string.Empty;
+    }
 
     private void DrawRenameAlbumSheet(Rect body, Action cancel)
     {
-        var scale = ImGuiHelpers.GlobalScale;
-        ImGui.SetCursorScreenPos(body.Min);
-        using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, new Vector2(16f * scale, 8f * scale)))
-        using (ImRaii.Child("##renameSheet", body.Size, false, ImGuiWindowFlags.NoBackground))
-        {
-            using (ImRaii.PushColor(ImGuiCol.Text, ui.MutedInk))
-                Typography.Plain(Loc.T(L.Photos.AlbumName));
+        DrawModifyAlbumSheet(
+            body,
+            Loc.T(L.Photos.AlbumName),
+            Loc.T(L.Photos.Rename),
+            ref renameAlbumDraft,
+            CanModifyAlbum,
+            CommitRenameAlbum,
+            cancel
+        );
+    }
 
-            var origin = ImGui.GetCursorScreenPos();
-            var width = ImGui.GetContentRegionAvail().X;
-            var height = 34f * scale;
-            var drawList = ImGui.GetWindowDrawList();
-            Squircle.Fill(drawList, origin, new Vector2(origin.X + width, origin.Y + height), 9f * scale,
-                ImGui.GetColorU32(ui.FieldSurface));
-            ImGui.SetCursorScreenPos(new Vector2(origin.X + 12f * scale,
-                origin.Y + height * 0.5f - ImGui.GetFrameHeight() * 0.5f));
-            ImGui.SetNextItemWidth(width - 24f * scale);
-            using (ImRaii.PushColor(ImGuiCol.FrameBg, new Vector4(0f, 0f, 0f, 0f))
-                       .Push(ImGuiCol.Text, ui.TitleInk))
-            {
-                ImGui.InputText("##renameAlbumName", ref renameAlbumDraft, 64);
-            }
-
-            ImGui.SetCursorScreenPos(origin);
-            ImGui.Dummy(new Vector2(width, height));
-
-            ImGui.Dummy(new Vector2(0f, 18f * scale));
-            var canRename = renameAlbumDraft.Trim().Length > 0;
-            if (canRename)
-            {
-                var found = customAlbums.FirstOrDefault(c => c.Key == renameAlbumKey);
-                if (found.Name is not null && string.Equals(found.Name, renameAlbumDraft.Trim(), StringComparison.OrdinalIgnoreCase))
-                    canRename = false;
-                else if (found.Name is not null && customAlbumOrder.Contains(renameAlbumDraft.Trim(), StringComparer.OrdinalIgnoreCase))
-                    canRename = false;
-            }
-
-            var accent = canRename ? ui.Accent : Palette.WithAlpha(ui.Accent, 0.4f);
-            using (ImRaii.PushColor(ImGuiCol.Button, accent)
-                       .Push(ImGuiCol.ButtonHovered,
-                           canRename ? Palette.Mix(ui.Accent, new Vector4(1f, 1f, 1f, 1f), 0.14f) : accent)
-                       .Push(ImGuiCol.ButtonActive, accent)
-                       .Push(ImGuiCol.Text, new Vector4(1f, 1f, 1f, canRename ? 1f : 0.72f)))
-            {
-                if (ImGui.Button(Loc.T(L.Photos.Rename), new Vector2(-1f, 38f * scale)) && canRename)
-                {
-                    RenameCustomAlbumInternal(renameAlbumKey, renameAlbumDraft);
-                    renameAlbumDraft = string.Empty;
-                    cancel();
-                }
-            }
-        }
+    private void CommitRenameAlbum()
+    {
+        RenameCustomAlbumInternal(renameAlbumKey, renameAlbumDraft);
+        renameAlbumDraft = string.Empty;
     }
 
     private void DrawEmpty(Rect body) =>
@@ -506,8 +494,8 @@ internal sealed partial class PhotosApp
         {
             drawList.AddRectFilled(rect.Min, coverMax, ImGui.GetColorU32(ui.FieldSurface), rounding,
                 ImDrawFlags.RoundCornersAll);
-            ProgressRing.Sweep(new Vector2(rect.Center.X, rect.Min.Y + coverHeight * 0.5f), 10f * scale, 2f * scale,
-                ui.MutedInk, 900.0, 1.8f, 0.9f);
+            AppSkin.Icon(drawList, new Vector2(rect.Center.X, rect.Min.Y + coverHeight * 0.5f),
+                         FontAwesomeIcon.Images.ToIconString(), ui.MutedInk, 1.2f);
         }
 
         Material.Edge(drawList, rect.Min, coverMax, rounding, scale, hovered ? 1f : 0.7f);
@@ -529,6 +517,7 @@ internal sealed partial class PhotosApp
     }
 
     private void OpenAlbum(int key) => router.Push(PhotoView.Album(key));
+    private void OpenAlbumPicker(int key) => router.Push(PhotoView.AlbumPicker(key));
     
     private void DrawNewAlbumFab(Rect rect)
     {
@@ -587,14 +576,12 @@ internal sealed partial class PhotosApp
         Typography.Draw(drawList, new Vector2(rect.Min.X + 2f * scale, textTop + 19f * scale), countLabel, ui.MutedInk,
             TextStyles.Footnote);
 
-        // Right-click to open context menu
         if (hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
         {
             var pos = ImGui.GetMousePos();
             albumMenu.Toggle("custom:" + album.Key, new Rect(pos, pos + new Vector2(1f, 1f)));
         }
 
-        // Context menu
         var menuId = "custom:" + album.Key;
         if (albumMenu.IsOpenFor(menuId))
         {
@@ -602,20 +589,31 @@ internal sealed partial class PhotosApp
             DrawCustomAlbumContextMenu(album.Key, screen);
         }
 
-        // Tap to open
         if (UiInteract.Click(rect.Min, rect.Max, hovered))
         {
             OpenAlbum(album.Key);
         }
     }
     
+    private ReadOnlySpan<DropdownMenu.Item> GetCustomAlbumMenuItems()
+    {
+        var currentLocale = Loc.Current.Code;
+        if (customAlbumMenuItemsCache is null || customAlbumMenuItemsLocale != currentLocale)
+        {
+            customAlbumMenuItemsCache =
+            [
+                new(Loc.T(L.Photos.Rename), FontAwesomeIcon.Pen.ToIconString()),
+                new(Loc.T(L.Photos.DeleteAlbum), FontAwesomeIcon.Trash.ToIconString(), Danger: true),
+            ];
+            customAlbumMenuItemsLocale = currentLocale;
+        }
+
+        return customAlbumMenuItemsCache;
+    }
+    
     private void DrawCustomAlbumContextMenu(int key, Rect screen)
     {
-        DropdownMenu.Item[] items =
-        [
-            new(Loc.T(L.Photos.Rename), FontAwesomeIcon.Pen.ToIconString()),
-            new(Loc.T(L.Photos.DeleteAlbum), FontAwesomeIcon.Trash.ToIconString(), Danger: true),
-        ];
+        var items = GetCustomAlbumMenuItems();
         var picked = albumMenu.Draw(screen, frameTheme, items, out var action);
         if (picked < 0)
             return;
@@ -650,21 +648,19 @@ internal sealed partial class PhotosApp
         var scale = ImGuiHelpers.GlobalScale;
         if (!TryFindCustomAlbum(key, out var album))
         {
-            showAlbumPicker = false;
+            router.Pop(false);
             return;
         }
 
-        DrawNavBar(area, string.Format(Loc.Culture, "{0} — {1}", album.Name, Loc.T(L.Photos.AddPhotos)), () =>
+        DrawNavBar(area, album.Name, () =>
         {
-            showAlbumPicker = false;
-            pickerSelection.Clear();
+            router.Pop();
         });
 
         if (ui.HeaderAction(area, Loc.T(L.Photos.Done), pickerSelection.Count > 0) && pickerSelection.Count > 0)
         {
             AddPhotosToCustomAlbum(key, pickerSelection.ToArray());
-            showAlbumPicker = false;
-            pickerSelection.Clear();
+            router.Pop();
         }
 
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
@@ -690,7 +686,11 @@ internal sealed partial class PhotosApp
                 return;
 
             var surface = DragScrollHost.Begin(gridKey);
-            surface.JumpToTop();
+            if (resetScroll)
+            {
+                surface.JumpToTop();
+                resetScroll = false;
+            }
 
             var origin = ImGui.GetCursorScreenPos();
             var side = 2f * scale;
@@ -812,8 +812,7 @@ internal sealed partial class PhotosApp
                 {
                     OpenViewerFromPaths(paths, index);
                 }
-
-                // Right-click to remove from album
+                
                 if (hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
                 {
                     var removePath = path;
