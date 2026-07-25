@@ -2135,6 +2135,8 @@
   "polls.votes.one": "{0} vote",
   "polls.votes.other": "{0} votes",
   "announcements.signInRequired": "Sign in to Aethernet in Settings to read announcements",
+  "announcements.signInTitle": "Sign in required",
+  "announcements.newBadge": "NEW",
   "announcements.emptyTitle": "Nothing announced yet",
   "announcements.emptyHint": "News from the Aetherphone team lands here.",
   "announcements.unavailableTitle": "Announcement unavailable",

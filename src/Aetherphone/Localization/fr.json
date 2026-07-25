@@ -2136,6 +2136,8 @@
   "polls.votes.one": "{0} vote",
   "polls.votes.other": "{0} votes",
   "announcements.signInRequired": "Connectez-vous à Aethernet dans les Paramètres pour lire les annonces",
+  "announcements.signInTitle": "Connexion requise",
+  "announcements.newBadge": "NOUVEAU",
   "announcements.emptyTitle": "Aucune annonce pour le moment",
   "announcements.emptyHint": "Les nouvelles de l'équipe Aetherphone apparaîtront ici.",
   "announcements.unavailableTitle": "Annonce indisponible",

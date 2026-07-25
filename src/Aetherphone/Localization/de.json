@@ -2136,6 +2136,8 @@
   "polls.votes.one": "{0} Stimme",
   "polls.votes.other": "{0} Stimmen",
   "announcements.signInRequired": "Melde dich in den Einstellungen bei Aethernet an, um Ankündigungen zu lesen",
+  "announcements.signInTitle": "Anmeldung erforderlich",
+  "announcements.newBadge": "NEU",
   "announcements.emptyTitle": "Noch nichts angekündigt",
   "announcements.emptyHint": "Neuigkeiten vom Aetherphone-Team landen hier.",
   "announcements.unavailableTitle": "Ankündigung nicht verfügbar",

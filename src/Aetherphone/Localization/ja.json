@@ -2136,6 +2136,8 @@
   "polls.votes.one": "{0}票",
   "polls.votes.other": "{0}票",
   "announcements.signInRequired": "お知らせを読むには設定からAethernetにログインしてください",
+  "announcements.signInTitle": "ログインが必要です",
+  "announcements.newBadge": "新着",
   "announcements.emptyTitle": "まだお知らせはありません",
   "announcements.emptyHint": "Aetherphone開発チームからの連絡はここに表示されます。",
   "announcements.unavailableTitle": "お知らせが見つかりません",

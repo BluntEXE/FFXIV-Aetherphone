@@ -2136,6 +2136,8 @@
   "polls.votes.one": "{0} голос",
   "polls.votes.other": "{0} голосов",
   "announcements.signInRequired": "Войдите в Aethernet в Настройках, чтобы читать объявления",
+  "announcements.signInTitle": "Требуется вход",
+  "announcements.newBadge": "НОВОЕ",
   "announcements.emptyTitle": "Пока нет объявлений",
   "announcements.emptyHint": "Новости от команды Aetherphone появятся здесь.",
   "announcements.unavailableTitle": "Объявление недоступно",

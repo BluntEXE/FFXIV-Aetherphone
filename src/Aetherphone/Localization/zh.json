@@ -2136,6 +2136,8 @@
   "polls.votes.one": "{0} 票",
   "polls.votes.other": "{0} 票",
   "announcements.signInRequired": "请在设置中登录Aethernet以阅读公告",
+  "announcements.signInTitle": "需要登录",
+  "announcements.newBadge": "新",
   "announcements.emptyTitle": "暂无公告",
   "announcements.emptyHint": "Aetherphone 团队的消息会出现在这里。",
   "announcements.unavailableTitle": "公告不可用",

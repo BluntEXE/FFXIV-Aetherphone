@@ -2136,6 +2136,8 @@
   "polls.votes.one": "{0} voto",
   "polls.votes.other": "{0} votos",
   "announcements.signInRequired": "Entre no Aethernet em Ajustes para ler os avisos",
+  "announcements.signInTitle": "É necessário entrar",
+  "announcements.newBadge": "NOVO",
   "announcements.emptyTitle": "Nenhum aviso ainda",
   "announcements.emptyHint": "As novidades da equipe do Aetherphone aparecem aqui.",
   "announcements.unavailableTitle": "Aviso indisponível",

@@ -2570,6 +2570,8 @@ internal static class L
     internal static class Announcements
     {
         public static readonly LocString SignInRequired = new("announcements.signInRequired", "Sign in to Aethernet in Settings to read announcements");
+        public static readonly LocString SignInTitle = new("announcements.signInTitle", "Sign in required");
+        public static readonly LocString NewBadge = new("announcements.newBadge", "NEW");
         public static readonly LocString EmptyTitle = new("announcements.emptyTitle", "Nothing announced yet");
         public static readonly LocString EmptyHint = new("announcements.emptyHint", "News from the Aetherphone team lands here.");
         public static readonly LocString UnavailableTitle = new("announcements.unavailableTitle", "Announcement unavailable");

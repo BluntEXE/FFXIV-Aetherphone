@@ -2136,6 +2136,8 @@
   "polls.votes.one": "{0} oy",
   "polls.votes.other": "{0} oy",
   "announcements.signInRequired": "Duyuruları okumak için Ayarlar'dan Aethernet'e giriş yapın",
+  "announcements.signInTitle": "Giriş gerekli",
+  "announcements.newBadge": "YENİ",
   "announcements.emptyTitle": "Henüz duyuru yok",
   "announcements.emptyHint": "Aetherphone ekibinden gelen haberler burada görünecek.",
   "announcements.unavailableTitle": "Duyuru bulunamıyor",

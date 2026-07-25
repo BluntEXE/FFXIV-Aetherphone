@@ -2136,6 +2136,8 @@
   "polls.votes.one": "{0} voto",
   "polls.votes.other": "{0} votos",
   "announcements.signInRequired": "Inicia sesión en Aethernet en Configuración para leer los anuncios",
+  "announcements.signInTitle": "Necesitas iniciar sesión",
+  "announcements.newBadge": "NUEVO",
   "announcements.emptyTitle": "Aún no hay anuncios",
   "announcements.emptyHint": "Las novedades del equipo de Aetherphone aparecerán aquí.",
   "announcements.unavailableTitle": "Anuncio no disponible",
