@@ -3109,6 +3109,16 @@ internal static class L
 
         public static readonly LocString ChirperTitle = new("conduct.chirper.title", "Chirper Community Rules");
         public static readonly LocString ChirperIntro = new("conduct.chirper.intro", "Before you start posting, please read the rules of the community.");
+        public static readonly LocString ChirperAllowedTitle = new("conduct.chirper.allowed.title", "What Is Allowed");
+        public static readonly LocString ChirperAllowedLead = new("conduct.chirper.allowed.lead", "Examples of acceptable content include:");
+        public static readonly LocString[] ChirperAllowedItems =
+        {
+            new("conduct.chirper.allowed.1", "Daily adventures and stories"),
+            new("conduct.chirper.allowed.2", "Roleplay updates and creative writing"),
+            new("conduct.chirper.allowed.3", "Community discussions, questions, and guides"),
+            new("conduct.chirper.allowed.4", "Glamour, screenshots, and achievements"),
+            new("conduct.chirper.allowed.5", "Humor and memes"),
+        };
         public static readonly LocString ChirperAppropriateTitle = new("conduct.chirper.appropriate.title", "Keep It Appropriate");
         public static readonly LocString ChirperAppropriateLead = new("conduct.chirper.appropriate.lead", "Chirper is a public community platform. Do not post or promote:");
         public static readonly LocString[] ChirperAppropriateItems =
@@ -3125,7 +3135,25 @@ internal static class L
             new("conduct.chirper.respect.1", "Harassment or bullying"),
             new("conduct.chirper.respect.2", "Hate speech or slurs"),
             new("conduct.chirper.respect.3", "Threats or targeted abuse"),
-            new("conduct.chirper.respect.4", "Impersonation or misinformation intended to deceive"),
+            new("conduct.chirper.respect.4", "Impersonation of real people or misinformation intended to deceive"),
+        };
+        public static readonly LocString ChirperSpamTitle = new("conduct.chirper.spam.title", "No Spam or Advertising");
+        public static readonly LocString ChirperSpamLead = new("conduct.chirper.spam.lead", "Keep the feed worth browsing. Do not post:");
+        public static readonly LocString[] ChirperSpamItems =
+        {
+            new("conduct.chirper.spam.1", "Repetitive posts or feed flooding"),
+            new("conduct.chirper.spam.2", "Venue, business, or service advertisements: use Yellow Pages instead"),
+            new("conduct.chirper.spam.3", "Engagement manipulation or automated accounts"),
+            new("conduct.chirper.spam.4", "Malicious links, scams, or phishing"),
+        };
+        public static readonly LocString ChirperCreatorsTitle = new("conduct.chirper.creators.title", "Respect Creators");
+        public static readonly LocString ChirperCreatorsLead = new("conduct.chirper.creators.lead", "Only upload content you have the right to share. Do not:");
+        public static readonly LocString[] ChirperCreatorsItems =
+        {
+            new("conduct.chirper.creators.1", "Post stolen or leaked content"),
+            new("conduct.chirper.creators.2", "Remove watermarks or repost commissioned work without permission"),
+            new("conduct.chirper.creators.3", "Claim someone else's creations as your own"),
+            new("conduct.chirper.creators.4", "Post AI-generated content"),
         };
         public static readonly LocString ChirperPrivacyTitle = new("conduct.chirper.privacy.title", "Protect Privacy");
         public static readonly LocString ChirperPrivacyBody = new("conduct.chirper.privacy.body", "Do not share another person's personal information, private conversations, or confidential content without their permission.");
@@ -3145,6 +3173,7 @@ internal static class L
             new("conduct.aethergram.sfw.3", "ERP advertisements or sexual solicitation"),
             new("conduct.aethergram.sfw.4", "Fetish content"),
             new("conduct.aethergram.sfw.5", "Explicit sexual language in posts, profiles, or comments"),
+            new("conduct.aethergram.sfw.6", "Graphic violence or gore"),
         };
         public static readonly LocString AethergramContextTitle = new("conduct.aethergram.context.title", "Context Matters");
         public static readonly LocString AethergramContextLead = new("conduct.aethergram.context.lead", "Some content may be reviewed based on presentation, including:");
@@ -3166,6 +3195,40 @@ internal static class L
             new("conduct.aethergram.allowed.4", "Wedding and event photos"),
             new("conduct.aethergram.allowed.5", "Combat, emotes, and social activities"),
             new("conduct.aethergram.allowed.6", "Romantic content that is not sexual in nature"),
+            new("conduct.aethergram.allowed.7", "Memes"),
+        };
+        public static readonly LocString AethergramIrlTitle = new("conduct.aethergram.irl.title", "In-Game Content Only");
+        public static readonly LocString AethergramIrlBody = new("conduct.aethergram.irl.body", "Aethergram is a place for in-game moments. Do not post real-life photographs or other real-world content. Memes are the exception.");
+        public static readonly LocString AethergramRespectTitle = new("conduct.aethergram.respect.title", "Be Respectful");
+        public static readonly LocString AethergramRespectLead = new("conduct.aethergram.respect.lead", "Treat others with respect. Do not engage in:");
+        public static readonly LocString[] AethergramRespectItems =
+        {
+            new("conduct.aethergram.respect.1", "Harassment or bullying"),
+            new("conduct.aethergram.respect.2", "Hate speech or slurs"),
+            new("conduct.aethergram.respect.3", "Threats or targeted abuse"),
+            new("conduct.aethergram.respect.4", "Harassment through edited or manipulated images"),
+            new("conduct.aethergram.respect.5", "Impersonation of real people or misinformation intended to deceive"),
+        };
+        public static readonly LocString AethergramSpamTitle = new("conduct.aethergram.spam.title", "No Spam or Advertising");
+        public static readonly LocString AethergramSpamLead = new("conduct.aethergram.spam.lead", "Keep the feed worth browsing. Do not post:");
+        public static readonly LocString[] AethergramSpamItems =
+        {
+            new("conduct.aethergram.spam.1", "Repetitive posts or feed flooding"),
+            new("conduct.aethergram.spam.2", "Venue, business, or service advertisements: use Yellow Pages instead"),
+            new("conduct.aethergram.spam.3", "Engagement manipulation or automated accounts"),
+            new("conduct.aethergram.spam.4", "Excessive watermarks or promotional overlays"),
+            new("conduct.aethergram.spam.5", "Malicious links, scams, or phishing"),
+        };
+        public static readonly LocString AethergramPrivacyTitle = new("conduct.aethergram.privacy.title", "Protect Privacy");
+        public static readonly LocString AethergramPrivacyBody = new("conduct.aethergram.privacy.body", "Do not share another person's personal information, private conversations, or confidential content without their permission.");
+        public static readonly LocString AethergramCreatorsTitle = new("conduct.aethergram.creators.title", "Respect Creators");
+        public static readonly LocString AethergramCreatorsLead = new("conduct.aethergram.creators.lead", "Only upload content you have the right to share. Do not:");
+        public static readonly LocString[] AethergramCreatorsItems =
+        {
+            new("conduct.aethergram.creators.1", "Post stolen or leaked content"),
+            new("conduct.aethergram.creators.2", "Remove watermarks or repost commissioned work without permission"),
+            new("conduct.aethergram.creators.3", "Claim someone else's creations as your own"),
+            new("conduct.aethergram.creators.4", "Post AI-generated content"),
         };
         public static readonly LocString AethergramDiscretionTitle = new("conduct.aethergram.discretion.title", "Moderator Discretion");
         public static readonly LocString AethergramDiscretionBody = new("conduct.aethergram.discretion.body", "Moderators will consider the overall context and intent. Content that appears intended to be sexually suggestive or otherwise inappropriate for a safe-for-work platform may be removed at moderator discretion.");
@@ -3174,6 +3237,16 @@ internal static class L
         public static readonly LocString VelvetIntro = new("conduct.velvet.intro", "Velvet is an 18+ space. Before you continue, please read the rules of the community.");
         public static readonly LocString VelvetAdultsTitle = new("conduct.velvet.adults.title", "Adults Only (18+)");
         public static readonly LocString VelvetAdultsBody = new("conduct.velvet.adults.body", "Velvet is for adults aged 18 and above. Any content involving minors, child-like characters (including Lalafell and Kitten Mods), or underage roleplay is strictly prohibited and results in a permanent ban.");
+        public static readonly LocString VelvetAllowedTitle = new("conduct.velvet.allowed.title", "What Is Allowed");
+        public static readonly LocString VelvetAllowedLead = new("conduct.velvet.allowed.lead", "Examples of acceptable content include:");
+        public static readonly LocString[] VelvetAllowedItems =
+        {
+            new("conduct.velvet.allowed.1", "Mature roleplay advertisements"),
+            new("conduct.velvet.allowed.2", "Suggestive screenshots (nudity is allowed)"),
+            new("conduct.velvet.allowed.3", "Adult-oriented discussions"),
+            new("conduct.velvet.allowed.4", "Relationship communities"),
+            new("conduct.velvet.allowed.5", "Character storytelling"),
+        };
         public static readonly LocString VelvetConsentTitle = new("conduct.velvet.consent.title", "Consent First");
         public static readonly LocString VelvetConsentLead = new("conduct.velvet.consent.lead", "Respect other users. Do not engage in:");
         public static readonly LocString[] VelvetConsentItems =
@@ -3219,15 +3292,26 @@ internal static class L
             new("conduct.velvet.creators.1", "Post stolen or leaked content"),
             new("conduct.velvet.creators.2", "Remove watermarks or repost commissioned work without permission"),
             new("conduct.velvet.creators.3", "Claim someone else's creations as your own"),
+            new("conduct.velvet.creators.4", "Post AI-generated content"),
+        };
+        public static readonly LocString VelvetSpamTitle = new("conduct.velvet.spam.title", "No Spam or Scams");
+        public static readonly LocString VelvetSpamLead = new("conduct.velvet.spam.lead", "Keep the feed worth browsing. Do not post:");
+        public static readonly LocString[] VelvetSpamItems =
+        {
+            new("conduct.velvet.spam.1", "Repetitive posts or feed flooding"),
+            new("conduct.velvet.spam.2", "Engagement manipulation or automated accounts"),
+            new("conduct.velvet.spam.3", "Malicious links, scams, or phishing"),
+            new("conduct.velvet.spam.4", "Sale or promotion of illegal services"),
         };
         public static readonly LocString VelvetRespectTitle = new("conduct.velvet.respect.title", "Be Respectful");
-        public static readonly LocString VelvetRespectLead = new("conduct.velvet.respect.lead", "Harassment is prohibited, including:");
+        public static readonly LocString VelvetRespectLead = new("conduct.velvet.respect.lead", "Treat others with respect. Do not engage in:");
         public static readonly LocString[] VelvetRespectItems =
         {
-            new("conduct.velvet.respect.1", "Hate speech or slurs"),
-            new("conduct.velvet.respect.2", "Threats or stalking"),
-            new("conduct.velvet.respect.3", "Targeted harassment or repeated unwanted contact"),
-            new("conduct.velvet.respect.4", "Impersonation of players, moderators, or developers"),
+            new("conduct.velvet.respect.1", "Harassment or bullying"),
+            new("conduct.velvet.respect.2", "Hate speech or slurs"),
+            new("conduct.velvet.respect.3", "Threats or targeted abuse"),
+            new("conduct.velvet.respect.4", "Stalking or repeated unwanted contact"),
+            new("conduct.velvet.respect.5", "Impersonation of real people or misinformation intended to deceive"),
         };
         public static readonly LocString VelvetModerationTitle = new("conduct.velvet.moderation.title", "Respect Moderation");
         public static readonly LocString VelvetModerationBody = new("conduct.velvet.moderation.body", "Do not evade bans, create alternate accounts to avoid enforcement, or harass moderators. Appeals are welcome if made respectfully.");
