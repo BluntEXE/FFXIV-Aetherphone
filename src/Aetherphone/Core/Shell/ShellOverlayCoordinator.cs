@@ -130,7 +130,8 @@ internal sealed class ShellOverlayCoordinator
         }
 
         controlCenter.Draw(screen, theme, delta,
-            !navigation.IsTransitioning && !director.CapturesPointer && !state.IslandCaptures,
+            !navigation.IsTransitioning && !director.CapturesPointer && !state.IslandCaptures &&
+            navigation.Current?.Id != "camera",
             !director.CapturesPointer);
         HoverTooltip.Flush();
         reportOverlay.Draw(screen, theme);

@@ -297,7 +297,7 @@ internal sealed class PhoneShell : IDisposable
         ImGui.SetCursorScreenPos(screen.Min);
         using (ImRaii.Child("chrome", screen.Size, false, ChromeFlags))
         {
-            StatusBar.Draw(screen, theme);
+            StatusBar.Draw(screen, theme, LandscapeActive);
             DrawHomeIndicator(screen, theme);
         }
     }
