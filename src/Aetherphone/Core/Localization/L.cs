@@ -1438,6 +1438,17 @@ internal static class L
         public static readonly LocString XivOpen = new("account.xivOpen", "Open XIVAuth");
         public static readonly LocString XivConnecting = new("account.xivConnecting", "Connecting to XIVAuth…");
         public static readonly LocPlural Followers = new("account.followers", "{0} follower", "{0} followers");
+        public static readonly LocString AccountsSection = new("account.accountsSection", "Accounts");
+        public static readonly LocString AddAccount = new("account.addAccount", "Add account");
+        public static readonly LocString AddAccountTakenTitle = new("account.addAccountTakenTitle", "Already signed in here");
+        public static readonly LocString AddAccountTakenBody = new("account.addAccountTakenBody", "{0} already has an account on this phone. To add another one, log in to that character in the game and sign in from there. It then stays in this list for every character.");
+        public static readonly LocString FollowCharacter = new("account.followCharacter", "Follow current character");
+        public static readonly LocString FollowCharacterHint = new("account.followCharacterHint", "On: the phone uses the account of whichever character you are playing. Off: the account you picked stays active on every character.");
+        public static readonly LocString SwitchHint = new("account.switchHint", "Tap an account to use it right away. Apps, messages and your phone number follow the account you pick.");
+        public static readonly LocString PlayingAs = new("account.playingAs", "Playing {0}, signed in as {1}");
+        public static readonly LocString RemoveAccount = new("account.removeAccount", "Remove");
+        public static readonly LocString RemoveAccountTitle = new("account.removeAccountTitle", "Remove {0}?");
+        public static readonly LocString RemoveAccountBody = new("account.removeAccountBody", "This signs that account out on this phone and takes it off the list. The account itself and everything in it stay safe. Sign in from that character again whenever you want it back.");
         public static readonly LocString AltSignInTitle = new("account.altSignInTitle", "Not signed in on this character");
         public static readonly LocString AltSignInBody = new("account.altSignInBody", "You're now playing {0}. This character isn't signed in to Aethernet, so social apps, messaging, and calls stay empty until you sign in.");
         public static readonly LocString FailDismiss = new("account.fail.dismiss", "Got it");

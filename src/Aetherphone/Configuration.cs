@@ -81,6 +81,8 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public bool EncryptionRecoveryNudgeDismissed { get; set; }
     public Dictionary<string, int> KnownPeerKeyVersions { get; set; } = new();
     public Dictionary<ulong, CharacterSession> CharacterSessions { get; set; } = new();
+    public bool FollowCharacterAccount { get; set; } = true;
+    public ulong PinnedAccountContentId { get; set; }
     public string LegacyUnclaimedToken { get; set; } = string.Empty;
     public string LegacyUnclaimedEncryptionKey { get; set; } = string.Empty;
     public string LegacyUnclaimedEncryptionUserId { get; set; } = string.Empty;

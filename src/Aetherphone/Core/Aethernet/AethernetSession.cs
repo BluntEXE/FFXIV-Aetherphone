@@ -12,6 +12,7 @@ internal sealed class AethernetSession
     private volatile bool banned;
     private volatile string? banReason;
     private ulong activeContentId;
+    private ulong playingContentId;
 
     public AethernetSession(Configuration configuration, IFramework framework)
     {
@@ -33,6 +34,9 @@ internal sealed class AethernetSession
     public UserDto? CurrentUser { get; private set; }
 
     public ulong ActiveContentId => activeContentId;
+    public ulong PlayingContentId => playingContentId;
+    public bool FollowsCharacter => configuration.FollowCharacterAccount;
+    public bool MatchesPlayedCharacter => playingContentId == 0 || playingContentId == activeContentId;
     public bool LegacyClaimPending { get; private set; }
 
     public event Action? Changed;
@@ -52,6 +56,7 @@ internal sealed class AethernetSession
     {
         _ = framework.RunOnFrameworkThread(() =>
         {
+            UseCharacterSlot();
             tokenRejected = false;
             banned = false;
             banReason = null;
@@ -89,8 +94,15 @@ internal sealed class AethernetSession
             configuration.AethernetToken = string.Empty;
             StashActive();
             CurrentUser = null;
+            var wasPinned = !configuration.FollowCharacterAccount;
+            configuration.FollowCharacterAccount = true;
+            configuration.PinnedAccountContentId = 0;
             configuration.Save();
             Changed?.Invoke();
+            if (wasPinned && playingContentId != activeContentId)
+            {
+                SwitchTo(playingContentId);
+            }
         });
     }
 
@@ -153,6 +165,67 @@ internal sealed class AethernetSession
         Changed?.Invoke();
     }
 
+    public void ReportPlayingCharacter(ulong contentId)
+    {
+        playingContentId = contentId;
+    }
+
+    public ulong ResolveTarget(ulong playing) =>
+        AccountSelection.Target(configuration.CharacterSessions, configuration.FollowCharacterAccount,
+            configuration.PinnedAccountContentId, playing);
+
+    public void PinAccount(ulong contentId)
+    {
+        if (contentId == 0)
+        {
+            return;
+        }
+
+        configuration.FollowCharacterAccount = false;
+        configuration.PinnedAccountContentId = contentId;
+        if (contentId == activeContentId)
+        {
+            configuration.Save();
+            return;
+        }
+
+        SwitchTo(contentId);
+    }
+
+    public void UseCharacterAccount()
+    {
+        configuration.FollowCharacterAccount = true;
+        configuration.PinnedAccountContentId = 0;
+        if (playingContentId == activeContentId)
+        {
+            configuration.Save();
+            return;
+        }
+
+        SwitchTo(playingContentId);
+    }
+
+    public void ForgetAccount(ulong contentId)
+    {
+        if (contentId == 0 || contentId == activeContentId)
+        {
+            return;
+        }
+
+        if (configuration.CharacterSessions.TryGetValue(contentId, out var stored))
+        {
+            stored.Token = string.Empty;
+        }
+
+        if (configuration.PinnedAccountContentId == contentId)
+        {
+            configuration.PinnedAccountContentId = 0;
+            configuration.FollowCharacterAccount = true;
+        }
+
+        configuration.Save();
+    }
+
     public void AdoptLegacy(ulong contentId, UserDto user)
     {
         if (contentId != activeContentId || !LegacyClaimPending)
@@ -205,6 +278,27 @@ internal sealed class AethernetSession
         configuration.LegacyUnclaimedEncryptionUserId = string.Empty;
     }
 
+    private void UseCharacterSlot()
+    {
+        configuration.FollowCharacterAccount = true;
+        configuration.PinnedAccountContentId = 0;
+        if (playingContentId == 0 || playingContentId == activeContentId)
+        {
+            return;
+        }
+
+        StashActive();
+        activeContentId = playingContentId;
+        if (configuration.CharacterSessions.TryGetValue(playingContentId, out var stored))
+        {
+            LoadFlat(stored);
+        }
+        else
+        {
+            ClearFlat();
+        }
+    }
+
     private void StashActive()
     {
         if (activeContentId == 0)
@@ -240,6 +334,7 @@ internal sealed class AethernetSession
             snapshot.DisplayName = user.DisplayName;
             snapshot.CharacterName = user.Name;
             snapshot.World = user.World;
+            snapshot.AvatarUrl = user.AvatarUrl ?? string.Empty;
         }
     }
 
