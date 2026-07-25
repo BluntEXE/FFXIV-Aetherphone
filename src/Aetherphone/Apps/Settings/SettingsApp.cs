@@ -73,7 +73,8 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
                 configuration.NotificationVolume = volume;
                 configuration.Save();
             });
-        var notifications = new NotificationsPage(configuration, this, appNotifications, sound, notificationSoundPage);
+        var notifications = new NotificationsPage(configuration, this, appNotifications, sound, notificationSoundPage,
+            services.Installer);
         var ringtonePage = new SoundSettingsPage(sound, L.Settings.Ringtone, FontAwesomeIcon.Music,
             new Vector4(0.95f, 0.40f, 0.65f, 1f), "settings.ringtoneVolume",
             () => configuration.RingtoneSound, token =>

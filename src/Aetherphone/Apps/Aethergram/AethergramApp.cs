@@ -8,6 +8,7 @@ using Aetherphone.Core.Conduct;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Game;
+using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
@@ -133,12 +134,13 @@ internal sealed partial class AethergramApp : IPhoneApp
         GameData gameData, Configuration configuration, SocialNotificationService social,
         NotificationService notifications, HttpService http, KeyVault keyVault,
         ConversationKeyStore conversationKeys, PhoneVisibility visibility, RealtimeSignalBus realtimeSignals,
-        WallpaperImageCache wallpaperImages, ConfirmService confirm, ReportService report, ConductGateService conduct)
+        WallpaperImageCache wallpaperImages, ConfirmService confirm, ReportService report, ConductGateService conduct,
+        AppInstaller installer)
     {
         store = new AethergramStore(session, net.Account, net.Social, net.Grams, net.Safety, net.Media);
         account = net.Account;
         dmStore = new GramDmStore(session, net.GramDm, net.Social, net.Safety, net.Media, notifications, keyVault,
-            conversationKeys, visibility, realtimeSignals);
+            conversationKeys, visibility, realtimeSignals, installer);
         composeMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         commentMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         personPicker = new PersonPicker(store.NewMentionSuggestions());

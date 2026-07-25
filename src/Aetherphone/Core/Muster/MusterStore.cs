@@ -2,6 +2,7 @@ using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Notifications;
 using Dalamud.Plugin.Services;
@@ -23,6 +24,7 @@ internal sealed class MusterStore : IDisposable
     private readonly NotificationService notifications;
     private readonly Configuration configuration;
     private readonly RealtimeSignalBus signals;
+    private readonly AppGate gate;
     private readonly PollCadence cadence;
     private readonly StoreWork work = new("Muster");
 
@@ -53,13 +55,14 @@ internal sealed class MusterStore : IDisposable
     private int directoryGeneration;
 
     public MusterStore(AethernetSession session, MusterClient client, NotificationService notifications,
-        Configuration configuration, PhoneVisibility visibility, RealtimeSignalBus signals)
+        Configuration configuration, PhoneVisibility visibility, RealtimeSignalBus signals, AppGate gate)
     {
         this.session = session;
         this.client = client;
         this.notifications = notifications;
         this.configuration = configuration;
         this.signals = signals;
+        this.gate = gate;
         cadence = new PollCadence(visibility, ForegroundPollInterval, BackgroundPollInterval);
         session.Changed += OnSessionChanged;
         signals.MusterPinged += OnMusterPinged;
@@ -421,7 +424,7 @@ internal sealed class MusterStore : IDisposable
 
     private void OnFrameworkUpdate(IFramework framework)
     {
-        if (!session.IsSignedIn)
+        if (!session.IsSignedIn || !gate.Open)
         {
             primed = false;
             return;

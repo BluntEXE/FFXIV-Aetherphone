@@ -3,6 +3,7 @@ using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Crypto;
+using Aetherphone.Core.Home;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Notifications;
 using Dalamud.Plugin.Services;
@@ -34,6 +35,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     protected readonly MessageCipher cipher;
     private readonly string logTag;
     private readonly NotificationService notifications;
+    private readonly AppGate gate;
     private readonly PollCadence inboxCadence;
     private readonly object messagesLock = new();
     private readonly Dictionary<string, long> inboxLastAt = new();
@@ -73,7 +75,8 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     private string? lastAccountId;
 
     protected ChatThreadStoreBase(string logTag, AethernetSession session, SafetyClient safety, MediaClient media,
-        NotificationService notifications, KeyVault vault, ConversationKeyStore keys, PhoneVisibility visibility)
+        NotificationService notifications, KeyVault vault, ConversationKeyStore keys, PhoneVisibility visibility,
+        AppGate gate)
     {
         this.session = session;
         this.safety = safety;
@@ -82,6 +85,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         this.vault = vault;
         this.keys = keys;
         this.logTag = logTag;
+        this.gate = gate;
         work = new StoreWork(logTag);
         cipher = new MessageCipher(vault, keys);
         messageOrder = CompareByCreatedAt;
@@ -185,7 +189,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     protected abstract PhoneNotification BuildInboxNotification(TThread thread);
 
-    protected virtual bool TickActive => session.IsSignedIn;
+    protected virtual bool TickActive => session.IsSignedIn && gate.Open;
 
     public virtual bool RealtimePushActive => false;
 

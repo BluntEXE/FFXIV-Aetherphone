@@ -7,6 +7,7 @@ using Aetherphone.Core.Conduct;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Game;
+using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
@@ -74,10 +75,10 @@ internal sealed partial class VelvetShell : IPhoneApp
         NotificationService notifications, VelvetLauncher launcher, SocialLauncher socialLauncher, GameData gameData,
         SocialNotificationService social, KeyVault keyVault, ConversationKeyStore conversationKeys,
         PhoneVisibility visibility, RealtimeSignalBus realtimeSignals, WallpaperImageCache wallpaperImages,
-        ConfirmService confirm, ReportService report, ConductGateService conduct)
+        ConfirmService confirm, ReportService report, ConductGateService conduct, AppInstaller installer)
     {
         store = new VelvetStore(session, net.Velvet, net.Account, net.Safety, net.Media, notifications, configuration,
-            keyVault, conversationKeys, visibility, realtimeSignals);
+            keyVault, conversationKeys, visibility, realtimeSignals, installer);
         commentMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         stories = new StoryPresenter(session, net.Grams, net.Media, images, lodestone, VelvetArt.StoryRing, VelvetTheme.Palette,
             new StoryConfirmLabels(L.Velvet.DeleteConfirm, L.Velvet.DeleteCancel, L.Velvet.Saving), confirm,
