@@ -2553,7 +2553,7 @@
   "yellowpages.scopeMyDc": "Benim DC'm",
   "yellowpages.scopeEverywhere": "Her yer",
   "yellowpages.searchLabel": "İlan ara",
-  "yellowpages.openSection": "Şimdi açık",
+  "yellowpages.openSection": "Bu akşam açık",
   "yellowpages.latestSection": "Son ilanlar",
   "yellowpages.loadMore": "Daha fazla yükle",
   "yellowpages.emptyTitle": "Henüz ilan yok",
@@ -2676,5 +2676,8 @@
   "yellowpages.inquireAction": "Mesaj gönder",
   "yellowpages.inquireHint": "İlan sahibiyle sohbet açar, ilan kartı gönderilmeye hazır şekilde yazı kutusunda bekler.",
   "yellowpages.viewCount": "{0} görüntülenme",
-  "yellowpages.announceMuster": "Muster'da duyur"
+  "yellowpages.announceMuster": "Muster'da duyur",
+  "yellowpages.afterDarkConfirmTitle": "After Dark",
+  "yellowpages.afterDarkConfirmBody": "Gezinirken 18+ ilanlar gösterilsin mi? Açmayan herkes için gizli kalırlar ve ilanların kendisi yine müstehcen olamaz.",
+  "yellowpages.afterDarkConfirmYes": "18+ ilanları göster"
 }

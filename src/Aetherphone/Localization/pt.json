@@ -2553,7 +2553,7 @@
   "yellowpages.scopeMyDc": "Meu DC",
   "yellowpages.scopeEverywhere": "Todo lugar",
   "yellowpages.searchLabel": "Buscar anúncios",
-  "yellowpages.openSection": "Aberto agora",
+  "yellowpages.openSection": "Aberto hoje à noite",
   "yellowpages.latestSection": "Anúncios recentes",
   "yellowpages.loadMore": "Carregar mais",
   "yellowpages.emptyTitle": "Nada publicado ainda",
@@ -2676,5 +2676,8 @@
   "yellowpages.inquireAction": "Enviar uma mensagem",
   "yellowpages.inquireHint": "Abre uma conversa com o anunciante com o cartão do anúncio pronto para enviar.",
   "yellowpages.viewCount": "{0} visualizações",
-  "yellowpages.announceMuster": "Anunciar no Muster"
+  "yellowpages.announceMuster": "Anunciar no Muster",
+  "yellowpages.afterDarkConfirmTitle": "After Dark",
+  "yellowpages.afterDarkConfirmBody": "Mostrar anúncios 18+ ao navegar? Eles continuam ocultos para quem não ativou, e os anúncios em si devem continuar sem conteúdo explícito.",
+  "yellowpages.afterDarkConfirmYes": "Mostrar anúncios 18+"
 }

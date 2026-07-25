@@ -2553,7 +2553,7 @@
   "yellowpages.scopeMyDc": "我的大区",
   "yellowpages.scopeEverywhere": "全部",
   "yellowpages.searchLabel": "搜索广告",
-  "yellowpages.openSection": "营业中",
+  "yellowpages.openSection": "今晚营业",
   "yellowpages.latestSection": "最新广告",
   "yellowpages.loadMore": "加载更多",
   "yellowpages.emptyTitle": "还没有广告",
@@ -2676,5 +2676,8 @@
   "yellowpages.inquireAction": "发送咨询",
   "yellowpages.inquireHint": "打开与发布者的聊天,广告卡片已填入输入框,随时可以发送。",
   "yellowpages.viewCount": "{0}次浏览",
-  "yellowpages.announceMuster": "在Muster上宣布"
+  "yellowpages.announceMuster": "在Muster上宣布",
+  "yellowpages.afterDarkConfirmTitle": "After Dark",
+  "yellowpages.afterDarkConfirmBody": "浏览时显示18+广告吗?未开启的人仍然看不到它们,而且广告本身仍不得包含露骨内容。",
+  "yellowpages.afterDarkConfirmYes": "显示18+广告"
 }

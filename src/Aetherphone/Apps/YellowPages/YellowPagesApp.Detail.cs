@@ -152,9 +152,13 @@ internal sealed partial class YellowPagesApp
         Typography.Draw(drawList, new Vector2(origin.X, cursorY), title, AppPalettes.YellowPages.TitleInk,
             TextStyles.Title3);
         cursorY += 28f * scale;
-        Typography.Draw(drawList, new Vector2(origin.X, cursorY), AdText.Identity(ad),
-            AppPalettes.YellowPages.MutedInk, TextStyles.Subheadline);
-        cursorY += 22f * scale;
+        var avatarRadius = 11f * scale;
+        AvatarView.DrawRemote(drawList, new Vector2(origin.X + avatarRadius, cursorY + 9f * scale), avatarRadius,
+            theme, AdText.Identity(ad), string.Empty, ad.OwnerAvatarUrl.Length > 0 ? ad.OwnerAvatarUrl : null,
+            images, lodestone, 0.7f, 32);
+        Typography.Draw(drawList, new Vector2(origin.X + avatarRadius * 2f + 8f * scale, cursorY + 2f * scale),
+            AdText.Identity(ad), AppPalettes.YellowPages.MutedInk, TextStyles.Subheadline);
+        cursorY += 26f * scale;
 
         var statusLine = BuildStatusLine(ad, nowUnix, out var statusColor);
         if (statusLine.Length > 0)

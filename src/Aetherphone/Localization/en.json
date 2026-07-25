@@ -2552,7 +2552,7 @@
   "yellowpages.scopeMyDc": "My DC",
   "yellowpages.scopeEverywhere": "Everywhere",
   "yellowpages.searchLabel": "Search ads",
-  "yellowpages.openSection": "Open now",
+  "yellowpages.openSection": "Open tonight",
   "yellowpages.latestSection": "Latest ads",
   "yellowpages.loadMore": "Load more",
   "yellowpages.emptyTitle": "Nothing listed yet",
@@ -2675,5 +2675,8 @@
   "yellowpages.inquireAction": "Send an inquiry",
   "yellowpages.inquireHint": "Opens a chat with the poster with the ad card ready to send.",
   "yellowpages.viewCount": "{0} views",
-  "yellowpages.announceMuster": "Announce on Muster"
+  "yellowpages.announceMuster": "Announce on Muster",
+  "yellowpages.afterDarkConfirmTitle": "After Dark",
+  "yellowpages.afterDarkConfirmBody": "Show 18+ ads while browsing? They stay hidden for everyone who has not opted in, and the ads themselves must still be non-explicit.",
+  "yellowpages.afterDarkConfirmYes": "Show 18+ ads"
 }

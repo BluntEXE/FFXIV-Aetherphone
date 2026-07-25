@@ -2553,7 +2553,7 @@
   "yellowpages.scopeMyDc": "自分のDC",
   "yellowpages.scopeEverywhere": "すべて",
   "yellowpages.searchLabel": "広告を検索",
-  "yellowpages.openSection": "営業中",
+  "yellowpages.openSection": "今夜営業",
   "yellowpages.latestSection": "新着広告",
   "yellowpages.loadMore": "もっと見る",
   "yellowpages.emptyTitle": "まだ掲載がありません",
@@ -2676,5 +2676,8 @@
   "yellowpages.inquireAction": "問い合わせる",
   "yellowpages.inquireHint": "掲載者とのチャットが開き、広告カードが送信できる状態で入力欄に入ります。",
   "yellowpages.viewCount": "閲覧{0}回",
-  "yellowpages.announceMuster": "Musterで告知"
+  "yellowpages.announceMuster": "Musterで告知",
+  "yellowpages.afterDarkConfirmTitle": "After Dark",
+  "yellowpages.afterDarkConfirmBody": "閲覧時に18+の広告を表示しますか?オプトインしていない人には引き続き非表示で、広告自体は露骨な内容にできません。",
+  "yellowpages.afterDarkConfirmYes": "18+の広告を表示"
 }

@@ -2553,7 +2553,7 @@
   "yellowpages.scopeMyDc": "Мой ДЦ",
   "yellowpages.scopeEverywhere": "Везде",
   "yellowpages.searchLabel": "Поиск объявлений",
-  "yellowpages.openSection": "Открыто сейчас",
+  "yellowpages.openSection": "Открыто сегодня",
   "yellowpages.latestSection": "Свежие объявления",
   "yellowpages.loadMore": "Показать ещё",
   "yellowpages.emptyTitle": "Пока пусто",
@@ -2676,5 +2676,8 @@
   "yellowpages.inquireAction": "Написать по объявлению",
   "yellowpages.inquireHint": "Откроет чат с автором, карточка объявления уже в поле ввода и готова к отправке.",
   "yellowpages.viewCount": "Просмотров: {0}",
-  "yellowpages.announceMuster": "Объявить в Muster"
+  "yellowpages.announceMuster": "Объявить в Muster",
+  "yellowpages.afterDarkConfirmTitle": "After Dark",
+  "yellowpages.afterDarkConfirmBody": "Показывать объявления 18+ при просмотре? Для всех, кто не включил показ, они остаются скрытыми, а сами объявления обязаны оставаться без откровенного контента.",
+  "yellowpages.afterDarkConfirmYes": "Показывать 18+"
 }

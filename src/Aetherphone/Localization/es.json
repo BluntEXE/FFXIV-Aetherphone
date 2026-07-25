@@ -2553,7 +2553,7 @@
   "yellowpages.scopeMyDc": "Mi DC",
   "yellowpages.scopeEverywhere": "Todas partes",
   "yellowpages.searchLabel": "Buscar anuncios",
-  "yellowpages.openSection": "Abierto ahora",
+  "yellowpages.openSection": "Abierto esta noche",
   "yellowpages.latestSection": "Últimos anuncios",
   "yellowpages.loadMore": "Cargar más",
   "yellowpages.emptyTitle": "Nada publicado aún",
@@ -2676,5 +2676,8 @@
   "yellowpages.inquireAction": "Enviar una consulta",
   "yellowpages.inquireHint": "Abre un chat con el anunciante con la tarjeta del anuncio lista para enviar.",
   "yellowpages.viewCount": "{0} visitas",
-  "yellowpages.announceMuster": "Anunciar en Muster"
+  "yellowpages.announceMuster": "Anunciar en Muster",
+  "yellowpages.afterDarkConfirmTitle": "After Dark",
+  "yellowpages.afterDarkConfirmBody": "¿Mostrar anuncios 18+ al navegar? Siguen ocultos para quienes no lo activan, y los anuncios en sí deben seguir sin ser explícitos.",
+  "yellowpages.afterDarkConfirmYes": "Mostrar anuncios 18+"
 }

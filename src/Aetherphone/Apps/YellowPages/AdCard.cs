@@ -47,7 +47,19 @@ internal static class AdCard
         var right = card.Max.X - pad;
         var tileSide = TileSide * scale;
         var tileCenter = new Vector2(left + tileSide * 0.5f, card.Min.Y + pad + tileSide * 0.5f);
-        IconTile.Draw(tileCenter, tileSide, IconTile.Surface(palette.Accent), AdCategories.Icon(ad.Category));
+        var thumb = string.IsNullOrEmpty(ad.MediaUrl) ? null : images.Get(ad.MediaUrl);
+        if (thumb is not null)
+        {
+            var half = new Vector2(tileSide * 0.5f, tileSide * 0.5f);
+            var (uv0, uv1) = ImageFit.CoverSquare(thumb.Size);
+            drawList.AddImageRounded(thumb.Handle, tileCenter - half, tileCenter + half, uv0, uv1, 0xFFFFFFFFu,
+                9f * scale, ImDrawFlags.RoundCornersAll);
+        }
+        else
+        {
+            IconTile.Draw(tileCenter, tileSide, IconTile.Surface(palette.Accent), AdCategories.Icon(ad.Category));
+        }
+
         var textLeft = tileCenter.X + tileSide * 0.5f + 10f * scale;
 
         var status = StatusText(ad, nowUnix, out var statusColor, out var live);

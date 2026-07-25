@@ -17,6 +17,7 @@ internal sealed partial class YellowPagesApp
     private const float ChipHeight = 32f;
     private const double SearchDebounceSeconds = 0.6;
     private const int SectionFallbackRebuildSeconds = 30;
+    private const long OpeningSoonLeadSeconds = 8L * 3600L;
 
     private readonly List<AdDto> openSection = new();
     private readonly List<AdDto> latestSection = new();
@@ -203,7 +204,43 @@ internal sealed partial class YellowPagesApp
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
         }
 
+        DrawAfterDarkToggle(scale);
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
+    }
+
+    private void DrawAfterDarkToggle(float scale)
+    {
+        var afterDark = configuration.YellowPagesAfterDark;
+        ui.ToggleRow(Loc.T(L.YellowPages.AfterDarkToggle), ref afterDark);
+        if (afterDark == configuration.YellowPagesAfterDark)
+        {
+            return;
+        }
+
+        if (!afterDark)
+        {
+            configuration.YellowPagesAfterDark = false;
+            configuration.Save();
+            RefreshBrowse();
+            return;
+        }
+
+        confirm.Ask(new Core.Confirm.ConfirmRequest
+        {
+            Title = Loc.T(L.YellowPages.AfterDarkConfirmTitle),
+            Message = Loc.T(L.YellowPages.AfterDarkConfirmBody),
+            ConfirmLabel = Loc.T(L.YellowPages.AfterDarkConfirmYes),
+            CancelLabel = Loc.T(L.Common.Cancel),
+            BusyLabel = Loc.T(L.Common.Loading),
+            FailedMessage = string.Empty,
+            ConfirmAsync = done =>
+            {
+                configuration.YellowPagesAfterDark = true;
+                configuration.Save();
+                RefreshBrowse();
+                done(true);
+            },
+        });
     }
 
     private int DrawChipFlow(int count, float scale)
@@ -318,6 +355,7 @@ internal sealed partial class YellowPagesApp
         lastDirectory = directory;
         openSection.Clear();
         latestSection.Clear();
+        var upcoming = new List<AdDto>();
         var nextBoundary = long.MaxValue;
         for (var index = 0; index < directory.Length; index++)
         {
@@ -339,12 +377,18 @@ internal sealed partial class YellowPagesApp
                 if (state.NextOpeningUnix > 0)
                 {
                     nextBoundary = Math.Min(nextBoundary, state.NextOpeningUnix);
+                    if (state.NextOpeningUnix - nowUnix <= OpeningSoonLeadSeconds)
+                    {
+                        upcoming.Add(ad);
+                        continue;
+                    }
                 }
             }
 
             latestSection.Add(ad);
         }
 
+        openSection.AddRange(upcoming);
         nextSectionRebuildUnix = nextBoundary == long.MaxValue
             ? nowUnix + SectionFallbackRebuildSeconds
             : Math.Min(nextBoundary, nowUnix + SectionFallbackRebuildSeconds);
