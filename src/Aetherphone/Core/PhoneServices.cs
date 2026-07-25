@@ -7,6 +7,7 @@ using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Games;
+using Aetherphone.Core.Health;
 using Aetherphone.Core.Inventory;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Maps;
@@ -95,6 +96,7 @@ internal sealed class PhoneServices : IDisposable
     public required InventoryCaptureService InventoryCapture { get; init; }
     public required ActivityTracker Activity { get; init; }
     public required ActivityRingNotifier RingNotifier { get; init; }
+    public required HealthTracker Health { get; init; }
     public required CallHub Calls { get; init; }
     public required PhoneVisibility Visibility { get; init; }
     public required RealtimeSignalBus RealtimeSignals { get; init; }
@@ -185,6 +187,7 @@ internal sealed class PhoneServices : IDisposable
         var characterGate = installer.Gate("character");
         var activity = new ActivityTracker(framework, clientState, dutyState, gameData, configDirectory, characterGate);
         var ringNotifier = new ActivityRingNotifier(framework, activity, configuration, notifications, characterGate);
+        var health = new HealthTracker(framework, characterWatch, notifications, configDirectory);
         var realtimeSignals = new RealtimeSignalBus();
         var visibility = new PhoneVisibility();
         var confirm = new ConfirmService();
@@ -259,6 +262,7 @@ internal sealed class PhoneServices : IDisposable
             InventoryCapture = inventoryCapture,
             Activity = activity,
             RingNotifier = ringNotifier,
+            Health = health,
             Calls = calls,
             Visibility = visibility,
             RealtimeSignals = realtimeSignals,
@@ -282,6 +286,7 @@ internal sealed class PhoneServices : IDisposable
         Collections.Dispose();
         InventoryCapture.Dispose();
         RingNotifier.Dispose();
+        Health.Dispose();
         Activity.Dispose();
         Venues.Dispose();
         Musters.Dispose();
