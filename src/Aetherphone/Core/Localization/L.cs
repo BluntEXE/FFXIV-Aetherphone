@@ -2281,10 +2281,13 @@ internal static class L
         public static readonly LocString DeleteAlbum = new("photos.deleteAlbum", "Delete Album");
         public static readonly LocString DeleteAlbumConfirm = new("photos.deleteAlbumConfirm", "Delete {0}?");
         public static readonly LocString DeleteAlbumBody = new("photos.deleteAlbumBody", "Photos in the album won't be deleted.");
-        public static readonly LocString Rename = new("photos.renameAlbum", "Rename");
+        public static readonly LocString Rename = new("photos.renameAlbum", "Rename Album");
         public static readonly LocString EmptyAlbum = new("photos.emptyAlbum", "No photos yet");
         public static readonly LocString AlbumExists = new("photos.albumExists", "An album with this name already exists");
         public static readonly LocString Done = new("photos.done", "Done");
+        public static readonly LocString NoAlbums = new("photos.noAlbums", "No Albums");
+        public static readonly LocString AlbumNamePlaceholder = new("photos.albumNamePlaceholder", "My Album");
+        public static readonly LocString CreateAlbumHint = new("photos.noAlbumsHint", "Take a photo or create an album");
     }
 
     internal static class Skywatcher

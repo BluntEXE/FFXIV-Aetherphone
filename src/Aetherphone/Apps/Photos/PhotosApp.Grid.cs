@@ -49,7 +49,7 @@ internal sealed partial class PhotosApp
 
         if (customAlbums.Count == 0 && entries.Length == 0)
         {
-            DrawEmpty(body);
+            DrawEmptyAlbums(body);
             DrawNewAlbumFab(body);
             return;
         }
@@ -226,7 +226,7 @@ internal sealed partial class PhotosApp
     private bool CanModifyAlbum(string name)
     {
         return name.Length > 0
-               && !customAlbumOrder.Contains(name, StringComparer.OrdinalIgnoreCase);
+               && !ContainsOrdinalIgnoreCase(customAlbumOrder, name);
     }
 
     private void CommitCreateAlbum()
@@ -256,6 +256,9 @@ internal sealed partial class PhotosApp
 
     private void DrawEmpty(Rect body) =>
         EmptyState.Draw(body, ui, FontAwesomeIcon.Image, Loc.T(L.Photos.NoPhotos), Loc.T(L.Photos.UseCameraHint));
+
+    private void DrawEmptyAlbums(Rect body) =>
+        EmptyState.Draw(body, ui, FontAwesomeIcon.Images, Loc.T(L.Photos.NoAlbums), Loc.T(L.Photos.CreateAlbumHint));
 
     private void DrawPhotoGrid(Rect body, int start, int count)
     {
@@ -639,13 +642,16 @@ internal sealed partial class PhotosApp
         var items = GetCustomAlbumMenuItems();
         var picked = albumMenu.Draw(screen, frameTheme, items, out var action);
         if (picked < 0)
+        {
             return;
+        }
 
         if (action == DropdownMenu.RowAction.Delete || (action == DropdownMenu.RowAction.Select && picked == 1))
         {
-            var found = customAlbums.FirstOrDefault(c => c.Key == key);
-            if (found.Name is null)
+            if (!TryFindCustomAlbum(key, out var found))
+            {
                 return;
+            }
             confirm.Ask(new ConfirmRequest
             {
                 Message = Loc.T(L.Photos.DeleteAlbumConfirm, found.Name) + "\n" + Loc.T(L.Photos.DeleteAlbumBody),
@@ -657,9 +663,11 @@ internal sealed partial class PhotosApp
         else if (picked == 0)
         {
             renameAlbumDraft = string.Empty;
-            var found = customAlbums.FirstOrDefault(c => c.Key == key);
+            var found = customAlbums.FirstOrDefault(album => album.Key == key);
             if (found.Name is not null)
+            {
                 renameAlbumDraft = found.Name;
+            }
             router.Push(PhotoView.RenameAlbum(key));
         }
     }
@@ -704,7 +712,9 @@ internal sealed partial class PhotosApp
                    DragScrollHost.ScrollFlags(ImGuiWindowFlags.NoBackground)))
         {
             if (!child)
+            {
                 return;
+            }
 
             var surface = DragScrollHost.Begin(gridKey);
             if (resetScroll)
@@ -733,7 +743,9 @@ internal sealed partial class PhotosApp
                 var top = 6f * scale + rowIndex * (cell + gap);
 
                 if (top + cell < scrollY - margin || top > scrollY + viewHeight + margin)
+                {
                     continue;
+                }
 
                 var min = new Vector2(origin.X + side + column * (cell + gap), origin.Y + top);
                 var max = new Vector2(min.X + cell, min.Y + cell);
@@ -769,9 +781,13 @@ internal sealed partial class PhotosApp
                     if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
                     {
                         if (isSelected)
+                        {
                             RemoveFromPickerSelection(path);
+                        }
                         else
+                        {
                             AddToPickerSelection(path);
+                        }
                     }
                 }
             }
@@ -793,7 +809,9 @@ internal sealed partial class PhotosApp
                    DragScrollHost.ScrollFlags(ImGuiWindowFlags.NoBackground)))
         {
             if (!child)
+            {
                 return;
+            }
 
             var surface = DragScrollHost.Begin(gridKey);
             if (resetScroll)
@@ -819,7 +837,9 @@ internal sealed partial class PhotosApp
                 var top = 6f * scale + rowIndex * (cell + gap);
 
                 if (top + cell < scrollY - margin || top > scrollY + viewHeight + margin)
+                {
                     continue;
+                }
 
                 var min = new Vector2(origin.X + side + column * (cell + gap), origin.Y + top);
                 var max = new Vector2(min.X + cell, min.Y + cell);
@@ -891,4 +911,17 @@ internal sealed partial class PhotosApp
 
     private static string Capitalize(string text) =>
         text.Length == 0 ? text : char.ToUpper(text[0], Loc.Culture) + text.Substring(1);
+    
+    private static bool ContainsOrdinalIgnoreCase(List<string> values, string value)
+    {
+        for (var index = 0; index < values.Count; index++)
+        {
+            if (string.Equals(values[index], value, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
