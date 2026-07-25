@@ -390,7 +390,7 @@ internal sealed class AppSkin
     {
         var scale = ImGuiHelpers.GlobalScale;
         var height = 28f * scale;
-        var width = Typography.Measure(label, 0.9f, FontWeight.SemiBold).X + 26f * scale;
+        var width = Typography.Measure(label, 0.9f, FontWeight.SemiBold).X + height + 6f * scale;
         var max = new Vector2(area.Max.X - 12f * scale, area.Min.Y + AppHeader.Height * scale * 0.5f + height * 0.5f);
         var min = new Vector2(max.X - width, max.Y - height);
         var rect = new Rect(min, max);

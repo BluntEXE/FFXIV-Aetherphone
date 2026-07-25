@@ -480,6 +480,12 @@ internal static class Typography
                 var start = index;
                 while (index < length && segment[index] != ' ' && !IsCjk(segment[index]))
                 {
+                    if (segment[index] == '-')
+                    {
+                        index++;
+                        break;
+                    }
+
                     index++;
                 }
 
