@@ -2058,6 +2058,7 @@ internal static class L
         public static readonly LocString CardSexuality = new("velvet.cardSexuality", "Sexuality");
         public static readonly LocString SexualityStraight = new("velvet.sexualityStraight", "Straight");
         public static readonly LocString SexualityGay = new("velvet.sexualityGay", "Gay");
+        public static readonly LocString SexualityLesbian = new("velvet.sexualityLesbian", "Lesbian");
         public static readonly LocString SexualityBi = new("velvet.sexualityBi", "Bi");
         public static readonly LocString SexualityPan = new("velvet.sexualityPan", "Pan");
         public static readonly LocString SexualityAsexual = new("velvet.sexualityAsexual", "Asexual");
