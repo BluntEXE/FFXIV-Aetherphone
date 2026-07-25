@@ -462,7 +462,7 @@ internal static class Typography
 
             if (builder.Length == 0)
             {
-                builder.Append(token);
+                AppendToken(token, maxWidth, lines, builder);
                 pendingSpace = false;
                 continue;
             }
@@ -480,7 +480,7 @@ internal static class Typography
                 builder.Length -= token.Length + separatorLength;
                 lines.Add(builder.ToString());
                 builder.Clear();
-                builder.Append(token);
+                AppendToken(token, maxWidth, lines, builder);
             }
         }
 
@@ -488,6 +488,57 @@ internal static class Typography
         {
             lines.Add(builder.ToString());
         }
+    }
+
+    private static void AppendToken(string token, float maxWidth, List<string> lines, StringBuilder builder)
+    {
+        if (ImGui.CalcTextSize(token).X <= maxWidth)
+        {
+            builder.Append(token);
+            return;
+        }
+
+        var start = 0;
+        while (start < token.Length)
+        {
+            var count = CharactersThatFit(token, start, maxWidth);
+            if (start + count >= token.Length)
+            {
+                builder.Append(token, start, token.Length - start);
+                return;
+            }
+
+            lines.Add(token.Substring(start, count));
+            start += count;
+        }
+    }
+
+    private static int CharactersThatFit(string token, int start, float maxWidth)
+    {
+        var count = NextBoundary(token, start, 0);
+        while (start + count < token.Length)
+        {
+            var next = NextBoundary(token, start, count);
+            if (ImGui.CalcTextSize(token.Substring(start, next)).X > maxWidth)
+            {
+                break;
+            }
+
+            count = next;
+        }
+
+        return count;
+    }
+
+    private static int NextBoundary(string token, int start, int count)
+    {
+        var advance = count + 1;
+        if (start + advance < token.Length && char.IsHighSurrogate(token[start + count]))
+        {
+            advance++;
+        }
+
+        return advance;
     }
 
     private static string Fit(string text, float maxWidth)

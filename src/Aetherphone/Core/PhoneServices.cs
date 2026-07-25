@@ -87,6 +87,8 @@ internal sealed class PhoneServices : IDisposable
     public required MusterStore Musters { get; init; }
     public required MusterLauncher MusterLauncher { get; init; }
     public required YellowPagesStore YellowPages { get; init; }
+
+    public required AdInquiryStore AdInquiries { get; init; }
     public required YellowPagesLauncher YellowPagesLauncher { get; init; }
     public required AnnouncementsLauncher AnnouncementsLauncher { get; init; }
     public required CollectionsCatalogService Collections { get; init; }
@@ -195,6 +197,8 @@ internal sealed class PhoneServices : IDisposable
             visibility, realtimeSignals, installer.Gate(MusterStore.AppId));
         var yellowPages = new YellowPagesStore(aethernetSession, aethernet.Ads, aethernet.Media, configuration,
             visibility, realtimeSignals, installer.Gate(YellowPagesStore.AppId));
+        var adInquiries = new AdInquiryStore(aethernetSession, aethernet.Ads, keyVault, conversationKeys,
+            visibility, realtimeSignals, installer.Gate(YellowPagesStore.AppId));
         return new PhoneServices
         {
             Installer = installer,
@@ -248,6 +252,7 @@ internal sealed class PhoneServices : IDisposable
             Musters = musters,
             MusterLauncher = new MusterLauncher(),
             YellowPages = yellowPages,
+            AdInquiries = adInquiries,
             YellowPagesLauncher = new YellowPagesLauncher(),
             AnnouncementsLauncher = new AnnouncementsLauncher(),
             Collections = collections,
@@ -281,6 +286,7 @@ internal sealed class PhoneServices : IDisposable
         Venues.Dispose();
         Musters.Dispose();
         YellowPages.Dispose();
+        AdInquiries.Dispose();
         SongPlayer.Dispose();
         SongSearch.Dispose();
         RadioPlayer.Dispose();

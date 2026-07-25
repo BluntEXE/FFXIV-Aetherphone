@@ -15,7 +15,7 @@ internal sealed class YellowPagesStore : IDisposable
 {
     public const string AppId = "yellowpages";
 
-    public const int MaxPhotos = 4;
+    public const int MaxPhotos = 8;
 
     private const int MaxImageDimension = 1600;
 
@@ -87,6 +87,8 @@ internal sealed class YellowPagesStore : IDisposable
     public AdDto[] Directory => directory;
 
     public bool DirectoryLoading => directoryLoading;
+
+    public int DirectoryCategories => directoryCategories;
 
     public bool DirectoryLoadingMore => directoryLoadingMore;
 

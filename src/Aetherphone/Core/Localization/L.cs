@@ -2928,6 +2928,9 @@ internal static class L
         public static readonly LocString ScopeEverywhere = new("yellowpages.scopeEverywhere", "Everywhere");
         public static readonly LocString SearchLabel = new("yellowpages.searchLabel", "Search ads");
         public static readonly LocString OpenSection = new("yellowpages.openSection", "Open tonight");
+        public static readonly LocString BrowseSection = new("yellowpages.browseSection", "Browse by");
+        public static readonly LocString IntentCategories = new("yellowpages.intentCategories", "{0} categories");
+        public static readonly LocString FilterAll = new("yellowpages.filterAll", "All");
         public static readonly LocString LatestSection = new("yellowpages.latestSection", "Latest ads");
         public static readonly LocString LoadMore = new("yellowpages.loadMore", "Load more");
         public static readonly LocString EmptyTitle = new("yellowpages.emptyTitle", "Nothing listed yet");
@@ -2940,7 +2943,8 @@ internal static class L
         public static readonly LocString IntentJoin = new("yellowpages.intentJoin", "Join something");
         public static readonly LocString CategoryVenueNight = new("yellowpages.categoryVenueNight", "Venue nights");
         public static readonly LocString CategoryEventShow = new("yellowpages.categoryEventShow", "Events and shows");
-        public static readonly LocString CategoryMarketFair = new("yellowpages.categoryMarketFair", "Markets and fairs");
+        public static readonly LocString CategoryCasino = new("yellowpages.categoryCasino", "Casinos and game nights");
+        public static readonly LocString CategoryHousingTour = new("yellowpages.categoryHousingTour", "Housing tours and open plots");
         public static readonly LocString CategoryCrafting = new("yellowpages.categoryCrafting", "Crafting and melds");
         public static readonly LocString CategoryGathering = new("yellowpages.categoryGathering", "Gathering");
         public static readonly LocString CategoryGlamour = new("yellowpages.categoryGlamour", "Glamour and design");
@@ -2952,11 +2956,34 @@ internal static class L
         public static readonly LocString CategoryRaidStatic = new("yellowpages.categoryRaidStatic", "Statics and raiding");
         public static readonly LocString CategoryVenueStaff = new("yellowpages.categoryVenueStaff", "Venue staff");
         public static readonly LocString CategoryCommunity = new("yellowpages.categoryCommunity", "Communities");
+        public static readonly LocString CategoryMods = new("yellowpages.categoryMods", "Mods and tools");
+        public static readonly LocString CategoryHousingDesign = new("yellowpages.categoryHousingDesign", "Housing and interior design");
+        public static readonly LocString CategoryWeddings = new("yellowpages.categoryWeddings", "Weddings and ceremonies");
+        public static readonly LocString CategoryWriting = new("yellowpages.categoryWriting", "Writing and RP services");
+        public static readonly LocString ModLinkLabel = new("yellowpages.modLinkLabel", "Mod page link");
+        public static readonly LocString ModLinkHint = new("yellowpages.modLinkHint", "https link to XIV Mod Archive, Heliosphere, Glamour Dresser or GitHub. Mod ads carry a link and photos, never a price.");
+        public static readonly LocString ModLinkAction = new("yellowpages.modLinkAction", "Open the mod page");
+        public static readonly LocString ModLinkCopied = new("yellowpages.modLinkCopied", "Link copied");
+        public static readonly LocString NeedModLink = new("yellowpages.needModLink", "Add a link to the mod page.");
+        public static readonly LocString ModBadge = new("yellowpages.modBadge", "Mod");
+        public static readonly LocString InquiriesTitle = new("yellowpages.inquiriesTitle", "Inquiries");
+        public static readonly LocString NoInquiriesTitle = new("yellowpages.noInquiriesTitle", "No inquiries yet");
+        public static readonly LocString NoInquiriesHint = new("yellowpages.noInquiriesHint", "Questions about your ads, and the ones you asked about, land here.");
+        public static readonly LocString InquiryHint = new("yellowpages.inquiryHint", "Write a message");
+        public static readonly LocString InquiryCount = new("yellowpages.inquiryCount", "{0} inquiries");
+        public static readonly LocString InquiryConsentHint = new("yellowpages.inquiryConsentHint", "Posting an ad is consent to be asked about it, so this reaches the poster even if their messages are closed.");
+        public static readonly LocString InquiryLocked = new("yellowpages.inquiryLocked", "Unlock your encryption key to send inquiries.");
+        public static readonly LocString InquirySendFailed = new("yellowpages.inquirySendFailed", "Could not send. Their encryption keys are not ready yet.");
+        public static readonly LocString InquiryEncrypted = new("yellowpages.inquiryEncrypted", "End to end encrypted");
+        public static readonly LocString NotifInquiryTitle = new("yellowpages.notifInquiryTitle", "New inquiry");
+        public static readonly LocString NotifInquiryBody = new("yellowpages.notifInquiryBody", "Someone messaged you about \"{0}\".");
+        public static readonly LocString NotifInquiryGeneric = new("yellowpages.notifInquiryGeneric", "Someone messaged you about one of your ads.");
         public static readonly LocString PriceAsk = new("yellowpages.priceAsk", "Ask for price");
         public static readonly LocString PriceGil = new("yellowpages.priceGil", "{0} gil");
         public static readonly LocString PriceFrom = new("yellowpages.priceFrom", "from {0} gil");
         public static readonly LocString OpenNow = new("yellowpages.openNow", "Open now");
         public static readonly LocString OpenClosesAt = new("yellowpages.openClosesAt", "Open now · closes {0}");
+        public static readonly LocString ClosesAt = new("yellowpages.closesAt", "closes {0} your time");
         public static readonly LocString OpensAt = new("yellowpages.opensAt", "Opens {0}");
         public static readonly LocString Expired = new("yellowpages.expired", "Expired");
         public static readonly LocString ExpiresDays = new("yellowpages.expiresDays", "Expires in {0}d");
@@ -2966,6 +2993,8 @@ internal static class L
         public static readonly LocString UnavailableTitle = new("yellowpages.unavailableTitle", "Ad unavailable");
         public static readonly LocString UnavailableHint = new("yellowpages.unavailableHint", "This ad expired or was taken down.");
         public static readonly LocString ScheduleSection = new("yellowpages.scheduleSection", "Weekly schedule");
+        public static readonly LocString ScheduleYourTime = new("yellowpages.scheduleYourTime", "Weekly · shown in your time");
+        public static readonly LocString RenewedAgo = new("yellowpages.renewedAgo", "renewed {0}");
         public static readonly LocString RequirementsSection = new("yellowpages.requirementsSection", "Requirements");
         public static readonly LocString WhereSection = new("yellowpages.whereSection", "Where");
         public static readonly LocString WardPlot = new("yellowpages.wardPlot", "Ward {0}, Plot {1}");
@@ -3044,8 +3073,8 @@ internal static class L
         public static readonly LocString EditAd = new("yellowpages.editAd", "Edit");
         public static readonly LocString EditAdTitle = new("yellowpages.editAdTitle", "Edit ad");
         public static readonly LocString SaveChanges = new("yellowpages.saveChanges", "Save changes");
-        public static readonly LocString InquireAction = new("yellowpages.inquireAction", "Send an inquiry");
-        public static readonly LocString InquireHint = new("yellowpages.inquireHint", "Opens a chat with the poster with the ad card ready to send.");
+        public static readonly LocString InquireAction = new("yellowpages.inquireAction", "Message the poster");
+        public static readonly LocString InquireHint = new("yellowpages.inquireHint", "Opens an inquiry here in Yellow Pages, attached to this ad.");
         public static readonly LocString ViewCount = new("yellowpages.viewCount", "{0} views");
         public static readonly LocString AnnounceMuster = new("yellowpages.announceMuster", "Announce on Muster");
         public static readonly LocString AfterDarkConfirmTitle = new("yellowpages.afterDarkConfirmTitle", "After Dark");
@@ -3164,11 +3193,12 @@ internal static class L
 
         public static readonly LocString[] YellowPagesEncouraged =
         {
-            new("conduct.yellowpages.enc.1", "Venue nights, events, and markets with honest schedules"),
+            new("conduct.yellowpages.enc.1", "Venue nights, game nights, and housing tours with honest schedules"),
             new("conduct.yellowpages.enc.2", "Crafting, gathering, portraits, glamour, and performance work for gil"),
             new("conduct.yellowpages.enc.3", "Recruiting for free companies, statics, and venue staff"),
             new("conduct.yellowpages.enc.4", "Clear prices and clear expectations"),
             new("conduct.yellowpages.enc.5", "Letting an ad expire once it is done"),
+            new("conduct.yellowpages.enc.6", "Mod ads that show the work and link to the mod page"),
         };
 
         public static readonly LocString[] YellowPagesNotAllowed =
@@ -3178,6 +3208,7 @@ internal static class L
             new("conduct.yellowpages.no.3", "Explicit content, even behind the After Dark tag"),
             new("conduct.yellowpages.no.4", "Scams, fake listings, or impersonating another venue or crafter"),
             new("conduct.yellowpages.no.5", "Reposting the same ad to dodge the expiry cycle"),
+            new("conduct.yellowpages.no.6", "Selling mods or mod commissions: mod ads link out and carry no price"),
         };
 
         public static readonly LocString PlatformTitle = new("conduct.platform.title", "Platform-wide Standards");

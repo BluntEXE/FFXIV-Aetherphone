@@ -312,6 +312,7 @@ internal sealed class SocialNotificationService : IDisposable
             SocialActivity.TypeAdExpiring => Loc.T(L.YellowPages.NotifExpiringTitle),
             SocialActivity.TypeAdHidden => Loc.T(L.YellowPages.NotifHiddenTitle),
             SocialActivity.TypeAdOpened => Loc.T(L.YellowPages.NotifOpenedTitle),
+            SocialActivity.TypeAdInquiry => Loc.T(L.YellowPages.NotifInquiryTitle),
             _ => null,
         };
     }
