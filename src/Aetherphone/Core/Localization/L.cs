@@ -848,6 +848,14 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release0990 =
+        {
+            new("changelog.r0990.0", "Other players can no longer see your character name or Home World in Chirper, Aethergram, or Velvet; only you can see your own, reported by SHIGYL"),
+            new("changelog.r0990.1", "Profiles now show your region, such as NA or EU, in place of your exact world"),
+            new("changelog.r0990.2", "Searching for people now needs at least four letters and matches from the start of a name, so nobody can sweep the search box to collect profiles"),
+            new("changelog.r0990.3", "New accounts no longer take your character name as their display name or handle; you pick your own while setting up the phone"),
+        };
+
         public static readonly LocString[] Release0989 =
         {
             new("changelog.r0989.0", "Velvet is now hidden on Lalafell characters while a community poll on the matter gathers votes"),
@@ -2003,6 +2011,9 @@ internal static class L
         public static readonly LocString GateConsent =
             new("velvet.gateConsent", "By entering you confirm you are 18 or older. Be kind, be discreet.");
         public static readonly LocString GateEnterAction = new("velvet.gateEnterAction", "Enter");
+        public static readonly LocString UnavailableTitle = new("velvet.unavailableTitle", "Velvet is unavailable");
+        public static readonly LocString UnavailableBody = new("velvet.unavailableBody",
+            "Velvet is an adults only space and is not available on Lalafell characters. If you recently changed your race, this clears once the Lodestone reflects it.");
         public static readonly LocString DiscoveryHeader = new("velvet.discoveryHeader", "Discovery");
         public static readonly LocString DiscoverableHelp =
             new("velvet.discoverableHelp", "When on, your profile can be found by others in Discover.");
@@ -2011,9 +2022,6 @@ internal static class L
         public static readonly LocString WhoFriends = new("velvet.whoFriends", "Friends");
         public static readonly LocString WhoNoOne = new("velvet.whoNoOne", "No one");
         public static readonly LocString WhoHelp =
-        public static readonly LocString UnavailableTitle = new("velvet.unavailableTitle", "Velvet is unavailable");
-        public static readonly LocString UnavailableBody = new("velvet.unavailableBody",
-            "Velvet is an adults only space and is not available on Lalafell characters. If you recently changed your race, this clears once the Lodestone reflects it.");
             new("velvet.whoHelp", "Choose who can send you a one line intro. Friends means friends of friends.");
         public static readonly LocString BlockedNone = new("velvet.blockedNone", "No one blocked.");
         public static readonly LocString ChatsTab = new("velvet.chatsTab", "Chats");
@@ -3024,8 +3032,11 @@ internal static class L
         public static readonly LocString ScheduleHint = new("yellowpages.scheduleHint", "Times are entered in your clock and shown to every reader in theirs.");
         public static readonly LocString DaysLabel = new("yellowpages.daysLabel", "Days");
         public static readonly LocString OpensLabel = new("yellowpages.opensLabel", "Opens at");
+        public static readonly LocString ClosesLabel = new("yellowpages.closesLabel", "Closes at");
         public static readonly LocString DurationLabel = new("yellowpages.durationLabel", "Open for");
         public static readonly LocString DurationHours = new("yellowpages.durationHours", "{0}h");
+        public static readonly LocString DurationMinutes = new("yellowpages.durationMinutes", "{0}m");
+        public static readonly LocString DurationHoursMinutes = new("yellowpages.durationHoursMinutes", "{0}h {1}m");
         public static readonly LocString PriceSection = new("yellowpages.priceSection", "Pricing");
         public static readonly LocString PriceFixed = new("yellowpages.priceFixed", "Fixed price");
         public static readonly LocString PriceFromLabel = new("yellowpages.priceFromLabel", "Starting at");
@@ -3039,6 +3050,7 @@ internal static class L
         public static readonly LocString NeedTitle = new("yellowpages.needTitle", "Give your ad a title.");
         public static readonly LocString NeedBody = new("yellowpages.needBody", "Add a description.");
         public static readonly LocString NeedDataCenter = new("yellowpages.needDataCenter", "Log in to a world first.");
+        public static readonly LocString NeedOpenWindow = new("yellowpages.needOpenWindow", "Keep the doors open for at least {0} minutes.");
         public static readonly LocString PublishAd = new("yellowpages.publishAd", "Publish ad");
         public static readonly LocString ErrorTooMany = new("yellowpages.errorTooMany", "You already have 3 active ads.");
         public static readonly LocString ErrorInvalid = new("yellowpages.errorInvalid", "Something in the ad was rejected. Check the fields and try again.");
