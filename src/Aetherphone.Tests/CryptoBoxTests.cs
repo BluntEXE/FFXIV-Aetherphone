@@ -12,7 +12,6 @@ public sealed class CryptoBoxTests
     {
         var identity = CryptoBox.TryGenerateIdentity();
         Assert.NotNull(identity);
-        using var owned = identity;
         var publicKey = CryptoBox.ExportPublicKey(identity);
         var cek = CryptoBox.GenerateCek();
         var expected = (byte[])cek.Clone();
@@ -30,11 +29,10 @@ public sealed class CryptoBoxTests
     {
         var identity = CryptoBox.TryGenerateIdentity();
         Assert.NotNull(identity);
-        using var owned = identity;
         var pkcs8 = CryptoBox.TryExportPrivateKey(identity);
         Assert.NotNull(pkcs8);
 
-        using var imported = CryptoBox.ImportPrivateKey(pkcs8);
+        var imported = CryptoBox.ImportPrivateKey(pkcs8);
         Assert.NotNull(imported);
         Assert.Equal(CryptoBox.ExportPublicKey(identity), CryptoBox.ExportPublicKey(imported));
     }
@@ -57,7 +55,6 @@ public sealed class CryptoBoxTests
     {
         var identity = CryptoBox.TryGenerateIdentity();
         Assert.NotNull(identity);
-        using var owned = identity;
         var publicKey = CryptoBox.ExportPublicKey(identity);
         var cek = CryptoBox.GenerateCek();
 
@@ -70,7 +67,7 @@ public sealed class CryptoBoxTests
     [Fact]
     public void ManagedP256KeysInteroperateWithPlatformEcdh()
     {
-        using var identity = CryptoBox.TryGenerateIdentity();
+        var identity = CryptoBox.TryGenerateIdentity();
         Assert.NotNull(identity);
         var publicKey = CryptoBox.ExportPublicKey(identity);
         var privateKey = CryptoBox.TryExportPrivateKey(identity);
@@ -88,6 +85,19 @@ public sealed class CryptoBoxTests
 
         var platformWrap = PlatformWrap(cek, publicKey);
         Assert.Equal(cek, CryptoBox.UnwrapCek(platformWrap, identity));
+    }
+
+    [Fact]
+    public void ExistingPlatformPrivateKeyImportsWithSamePublicKey()
+    {
+        using var platformIdentity = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP256);
+        var privateKey = platformIdentity.ExportPkcs8PrivateKey();
+        var expectedPublicKey = Convert.ToBase64String(platformIdentity.ExportSubjectPublicKeyInfo());
+
+        var imported = CryptoBox.ImportPrivateKey(privateKey);
+
+        Assert.NotNull(imported);
+        Assert.Equal(expectedPublicKey, CryptoBox.ExportPublicKey(imported));
     }
 
     private static string PlatformWrap(byte[] cek, string recipientPublicKeyBase64)

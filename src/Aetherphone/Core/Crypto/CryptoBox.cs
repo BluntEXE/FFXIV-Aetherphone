@@ -10,7 +10,7 @@ using Org.BouncyCastle.X509;
 
 namespace Aetherphone.Core.Crypto;
 
-internal sealed class EcPrivateKey : IDisposable
+internal sealed class EcPrivateKey
 {
     internal EcPrivateKey(ECPrivateKeyParameters privateKey, ECPublicKeyParameters publicKey)
     {
@@ -18,23 +18,15 @@ internal sealed class EcPrivateKey : IDisposable
         PublicKey = publicKey;
     }
 
-    internal ECPrivateKeyParameters PrivateKey { get; private set; }
-    internal ECPublicKeyParameters PublicKey { get; private set; }
-
-    public void Dispose()
-    {
-        PrivateKey = null!;
-        PublicKey = null!;
-    }
+    internal ECPrivateKeyParameters PrivateKey { get; }
+    internal ECPublicKeyParameters PublicKey { get; }
 }
 
-internal sealed class EcPublicKey : IDisposable
+internal sealed class EcPublicKey
 {
     internal EcPublicKey(ECPublicKeyParameters publicKey) => PublicKey = publicKey;
 
-    internal ECPublicKeyParameters PublicKey { get; private set; }
-
-    public void Dispose() => PublicKey = null!;
+    internal ECPublicKeyParameters PublicKey { get; }
 }
 
 internal static class CryptoBox
@@ -44,6 +36,7 @@ internal static class CryptoBox
     private const int TagBytes = 16;
     private const string WrapPrefix = "EC1.";
     private static readonly byte[] WrapInfo = Encoding.UTF8.GetBytes("aethernet-cek-v1");
+    private static readonly SecureRandom Random = new();
 
     private static readonly ECNamedDomainParameters P256 = CreateP256Domain();
 
@@ -52,12 +45,12 @@ internal static class CryptoBox
         try
         {
             var generator = new ECKeyPairGenerator();
-            generator.Init(new ECKeyGenerationParameters(P256, new SecureRandom()));
+            generator.Init(new ECKeyGenerationParameters(P256, Random));
             var pair = generator.GenerateKeyPair();
             return new EcPrivateKey((ECPrivateKeyParameters)pair.Private,
                 (ECPublicKeyParameters)pair.Public);
         }
-        catch (Exception)
+        catch (ArgumentException)
         {
             return null;
         }
@@ -75,7 +68,7 @@ internal static class CryptoBox
         {
             return ExportPublicKey(key);
         }
-        catch (Exception)
+        catch (ArgumentException)
         {
             return null;
         }
@@ -90,7 +83,7 @@ internal static class CryptoBox
                 ? new EcPublicKey(publicKey)
                 : null;
         }
-        catch (Exception)
+        catch (Exception exception) when (exception is ArgumentException or IOException or SecurityUtilityException)
         {
             return null;
         }
@@ -102,7 +95,7 @@ internal static class CryptoBox
         {
             return PrivateKeyInfoFactory.CreatePrivateKeyInfo(key.PrivateKey).GetDerEncoded();
         }
-        catch (Exception)
+        catch (ArgumentException)
         {
             return null;
         }
@@ -122,7 +115,7 @@ internal static class CryptoBox
             var publicKey = new ECPublicKeyParameters("ECDH", publicPoint, privateKey.Parameters);
             return new EcPrivateKey(privateKey, publicKey);
         }
-        catch (Exception)
+        catch (Exception exception) when (exception is ArgumentException or IOException or SecurityUtilityException)
         {
             return null;
         }
@@ -166,8 +159,8 @@ internal static class CryptoBox
 
     public static string? WrapCek(byte[] cek, string recipientPublicKeyBase64)
     {
-        using var recipient = ImportPublicKey(recipientPublicKeyBase64);
-        using var ephemeral = TryGenerateIdentity();
+        var recipient = ImportPublicKey(recipientPublicKeyBase64);
+        var ephemeral = TryGenerateIdentity();
         if (recipient is null || ephemeral is null)
         {
             return null;
@@ -233,7 +226,7 @@ internal static class CryptoBox
                 return null;
             }
 
-            using var ephemeral = new EcPublicKey(publicKey);
+            var ephemeral = new EcPublicKey(publicKey);
             var shared = DeriveRawSecret(privateKey, ephemeral);
             var nonce = payload.AsSpan(1 + ephemeralLength, NonceBytes).ToArray();
             var wrapKey = HKDF.DeriveKey(HashAlgorithmName.SHA256, shared, CekBytes, nonce, WrapInfo);
@@ -252,7 +245,8 @@ internal static class CryptoBox
                 CryptographicOperations.ZeroMemory(wrapKey);
             }
         }
-        catch (Exception)
+        catch (Exception exception) when (exception is ArgumentException or IOException or SecurityUtilityException
+                                          or InvalidOperationException or CryptographicException)
         {
             return null;
         }
