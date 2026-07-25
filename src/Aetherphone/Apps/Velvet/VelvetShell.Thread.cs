@@ -63,6 +63,8 @@ internal sealed partial class VelvetShell
 
         protected override void PopScreen() => app.router.Pop();
 
+        protected override void OpenEncryptionInfo(string threadId) => app.router.Push(VelvetView.Encryption);
+
         protected override void BeginReply(string messageId)
         {
             var message = FindMessage(messageId);
@@ -112,7 +114,8 @@ internal sealed partial class VelvetShell
             var scale = ImGuiHelpers.GlobalScale;
             var drawList = ImGui.GetWindowDrawList();
             var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
-            ChatHeaderControls.DrawLock(ui, area, rowCenterY, store.EncryptingCurrent, store.VaultState, () => { });
+            ChatHeaderControls.DrawLock(ui, area, rowCenterY, store.EncryptingCurrent, store.VaultState,
+                () => OpenEncryptionInfo(threadId));
             ChatHeaderControls.DrawSearchToggle(ui, area, rowCenterY, searchController.Open, searchController.Toggle);
             var name = app.ThreadTitle(threadId);
             var avatarHandle = app.ThreadAvatar(threadId, out var monogram, out var presence);

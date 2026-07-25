@@ -41,6 +41,8 @@ const map = {
   feedback: "message-report",
   dev: "terminal-2",
   polls: "chart-bar-popular",
+  muster: "speakerphone",
+  yellowpages: "ad-2",
   message: "messages",
   kupoai: "message-chatbot",
   appstore: "apps",

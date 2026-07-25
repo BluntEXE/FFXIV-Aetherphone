@@ -59,6 +59,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public string AccentName { get; set; } = "Violet";
     public string JobsAccentName { get; set; } = "Blue";
     public List<JobsCustomColor> JobsCustomColors { get; set; } = new();
+    public Dictionary<ulong, List<JobsCategory>> JobsCategoriesByCharacter { get; set; } = new();
     public string LightWallpaperId { get; set; } = "DuskLight";
     public string DarkWallpaperId { get; set; } = "DuskDark";
     public List<CustomWallpaper> CustomWallpapers { get; set; } = new();
@@ -76,6 +77,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public string AethernetToken { get; set; } = string.Empty;
     public string EncryptionKeyCache { get; set; } = string.Empty;
     public string EncryptionKeyCacheUserId { get; set; } = string.Empty;
+    public bool EncryptionRecoveryNudgeDismissed { get; set; }
     public Dictionary<string, int> KnownPeerKeyVersions { get; set; } = new();
     public Dictionary<ulong, CharacterSession> CharacterSessions { get; set; } = new();
     public string LegacyUnclaimedToken { get; set; } = string.Empty;
@@ -105,6 +107,11 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public bool VenueAllDataCenters { get; set; }
     public bool VenueNotifyNewEvents { get; set; } = true;
     public List<string> VenueFavorites { get; set; } = new();
+    public int MusterCategoryFilter { get; set; }
+    public int MusterScope { get; set; }
+    public int YellowPagesCategoryFilter { get; set; }
+    public int YellowPagesScope { get; set; }
+    public bool YellowPagesAfterDark { get; set; }
     public List<uint> MapFavorites { get; set; } = new();
     public List<RadioStationRecord> RadioFavorites { get; set; } = new();
     public const int VelvetGateVersion = 1;

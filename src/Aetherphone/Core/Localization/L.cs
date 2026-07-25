@@ -175,6 +175,8 @@ internal static class L
         public static readonly LocString FindPeople = new("app.findpeople", "Find People");
         public static readonly LocString Feedback = new("app.feedback", "Feedback");
         public static readonly LocString Polls = new("app.polls", "Polls");
+        public static readonly LocString Muster = new("app.muster", "Muster");
+        public static readonly LocString YellowPages = new("app.yellowpages", "Yellow Pages");
         public static readonly LocString Calendar = new("app.calendar", "Calendar");
         public static readonly LocString Notes = new("app.notes", "Notes");
         public static readonly LocString Calculator = new("app.calculator", "Calculator");
@@ -239,6 +241,12 @@ internal static class L
         public static readonly LocString VenuesSub = new("storeCopy.venuesSub", "Nightlife, mapped");
         public static readonly LocString VenuesBody = new("storeCopy.venuesBody",
             "Find player-run venues, opening hours and directions without leaving the game.");
+        public static readonly LocString MusterSub = new("storeCopy.musterSub", "Call a meetup, see who's coming");
+        public static readonly LocString MusterBody = new("storeCopy.musterBody",
+            "Announce a spontaneous meetup with a real map location and watch the RSVPs land with one tap. Your friends always see your musters, everyone else can find the public ones, and it all disappears when the muster ends.");
+        public static readonly LocString YellowPagesSub = new("storeCopy.yellowPagesSub", "Eorzea's classifieds board");
+        public static readonly LocString YellowPagesBody = new("storeCopy.yellowPagesBody",
+            "Post an ad once and reach your whole region: venue nights with schedules and an Open Now switch, gil services with prices up front, and recruitment calls for free companies, statics, and venue staff. Ads expire on their own, so the board never goes stale.");
         public static readonly LocString LinkpearlSub = new("storeCopy.linkpearlSub", "Every channel, one app");
         public static readonly LocString LinkpearlBody = new("storeCopy.linkpearlBody",
             "Linkshells, tells and free company chat gathered into one readable place, with mute controls and search.");
@@ -488,6 +496,120 @@ internal static class L
         public static readonly LocString TryAgain = new("collections.tryAgain", "Try again");
         public static readonly LocString NoResults = new("collections.noResults", "No items match your filters.");
         public static readonly LocString CompletePercent = new("collections.completePercent", "{0}% complete");
+    }
+
+    internal static class Muster
+    {
+        public static readonly LocString NotifStartedTitle = new("muster.notifStartedTitle", "Muster called");
+        public static readonly LocString NotifStartedBody = new("muster.notifStartedBody", "{0} called a muster");
+        public static readonly LocString NotifRsvpTitle = new("muster.notifRsvpTitle", "On their way");
+        public static readonly LocString NotifRsvpBody = new("muster.notifRsvpBody", "{0} is on their way to your muster");
+        public static readonly LocString NotifEndedTitle = new("muster.notifEndedTitle", "Muster called off");
+        public static readonly LocString NotifEndedBody = new("muster.notifEndedBody", "A muster you joined was called off early");
+        public static readonly LocString SetUpAccount = new("muster.setUpAccount", "Set up your account in Settings");
+        public static readonly LocString CategorySocial = new("muster.categorySocial", "Social");
+        public static readonly LocString CategoryRoleplay = new("muster.categoryRoleplay", "Roleplay");
+        public static readonly LocString CategoryPve = new("muster.categoryPve", "PvE");
+        public static readonly LocString CategoryPvp = new("muster.categoryPvp", "PvP");
+        public static readonly LocString CategoryHuntTrain = new("muster.categoryHuntTrain", "Hunt train");
+        public static readonly LocString CategoryTreasureHunt = new("muster.categoryTreasureHunt", "Treasure hunt");
+        public static readonly LocString CategoryDeepDungeon = new("muster.categoryDeepDungeon", "Deep dungeon");
+        public static readonly LocString CategoryFishing = new("muster.categoryFishing", "Fishing");
+        public static readonly LocString CategoryGoldSaucer = new("muster.categoryGoldSaucer", "Gold Saucer");
+        public static readonly LocString CategoryGpose = new("muster.categoryGpose", "Gpose");
+        public static readonly LocString CategoryFates = new("muster.categoryFates", "FATEs");
+        public static readonly LocString CategoryOther = new("muster.categoryOther", "Other");
+        public static readonly LocString RegionNa = new("muster.regionNa", "NA");
+        public static readonly LocString RegionEu = new("muster.regionEu", "EU");
+        public static readonly LocString RegionJp = new("muster.regionJp", "JP");
+        public static readonly LocString RegionOce = new("muster.regionOce", "OCE");
+        public static readonly LocString YourMuster = new("muster.yourMuster", "Your muster");
+        public static readonly LocString StartMuster = new("muster.startMuster", "Start a muster");
+        public static readonly LocString FriendsSection = new("muster.friendsSection", "Friends");
+        public static readonly LocString HappeningNow = new("muster.happeningNow", "Happening now");
+        public static readonly LocString StartingSoon = new("muster.startingSoon", "Starting soon");
+        public static readonly LocString LoadMore = new("muster.loadMore", "Load more");
+        public static readonly LocString EmptyTitle = new("muster.emptyTitle", "No musters right now");
+        public static readonly LocString EmptyHint = new("muster.emptyHint", "Start one and let people know where to find you");
+        public static readonly LocString StartsIn = new("muster.startsIn", "in {0}");
+        public static readonly LocString EndsIn = new("muster.endsIn", "ends in {0}");
+        public static readonly LocString StartsAt = new("muster.startsAt", "starts at {0}");
+        public static readonly LocString RunsFor = new("muster.runsFor", "runs for {0}");
+        public static readonly LocString DurationHoursMinutes = new("muster.durationHoursMinutes", "{0}h {1}m");
+        public static readonly LocString DurationHours = new("muster.durationHours", "{0}h");
+        public static readonly LocString DurationMinutes = new("muster.durationMinutes", "{0}m");
+        public static readonly LocString GoingCount = new("muster.goingCount", "{0} going");
+        public static readonly LocString AtCapacity = new("muster.atCapacity", "at capacity");
+        public static readonly LocString UnavailableTitle = new("muster.unavailableTitle", "Nothing to see here");
+        public static readonly LocString UnavailableHint = new("muster.unavailableHint", "This muster has ended or is unavailable");
+        public static readonly LocString FlagOnMap = new("muster.flagOnMap", "Flag on map");
+        public static readonly LocString CopyDetails = new("muster.copyDetails", "Copy details");
+        public static readonly LocString Copied = new("muster.copied", "Copied");
+        public static readonly LocString OnMyWay = new("muster.onMyWay", "On my way");
+        public static readonly LocString CantMakeIt = new("muster.cantMakeIt", "Can't make it");
+        public static readonly LocString ManageAction = new("muster.manageAction", "Manage");
+        public static readonly LocString ReportTitle = new("muster.reportTitle", "Report muster");
+        public static readonly LocString WhereSection = new("muster.whereSection", "Where");
+        public static readonly LocString NewMuster = new("muster.newMuster", "New muster");
+        public static readonly LocString CategorySection = new("muster.categorySection", "Category");
+        public static readonly LocString DescriptionLabel = new("muster.descriptionLabel", "What's happening");
+        public static readonly LocString UseMyLocation = new("muster.useMyLocation", "Use my location");
+        public static readonly LocString ClearLocation = new("muster.clearLocation", "Clear");
+        public static readonly LocString MeetingSpot = new("muster.meetingSpot", "Meeting spot");
+        public static readonly LocString WhenSection = new("muster.whenSection", "When");
+        public static readonly LocString StartLabel = new("muster.startLabel", "Starts");
+        public static readonly LocString DurationLabel = new("muster.durationLabel", "For");
+        public static readonly LocString Now = new("muster.now", "Now");
+        public static readonly LocString WhoSection = new("muster.whoSection", "Who");
+        public static readonly LocString LimitAttendance = new("muster.limitAttendance", "Limit attendance");
+        public static readonly LocString UnlistWhenFull = new("muster.unlistWhenFull", "Hide from directory when full");
+        public static readonly LocString ListPublicly = new("muster.listPublicly", "List publicly");
+        public static readonly LocString PublicHint = new("muster.publicHint", "Your contacts always see your muster, even when it is not listed publicly.");
+        public static readonly LocString CallIt = new("muster.callIt", "Call the muster");
+        public static readonly LocString NeedWhere = new("muster.needWhere", "Add your location or name a meeting spot");
+        public static readonly LocString NeedDescription = new("muster.needDescription", "Say what you are mustering for");
+        public static readonly LocString ErrorAlreadyHosting = new("muster.errorAlreadyHosting", "You are already hosting a muster");
+        public static readonly LocString ErrorInvalid = new("muster.errorInvalid", "Check the details and try again");
+        public static readonly LocString ErrorRateLimited = new("muster.errorRateLimited", "Too many musters in a row, try again later");
+        public static readonly LocString ErrorFailed = new("muster.errorFailed", "Couldn't start the muster");
+        public static readonly LocString AttendeesSection = new("muster.attendeesSection", "Who's coming");
+        public static readonly LocString NoAttendees = new("muster.noAttendees", "No one yet, give it a moment");
+        public static readonly LocString CapacityLine = new("muster.capacityLine", "{0} of {1} spots filled");
+        public static readonly LocString ListedPublicly = new("muster.listedPublicly", "Listed publicly");
+        public static readonly LocString ListedPrivately = new("muster.listedPrivately", "Contacts only");
+        public static readonly LocString CopyInvite = new("muster.copyInvite", "Copy invite");
+        public static readonly LocString EndMuster = new("muster.endMuster", "End muster");
+        public static readonly LocString EndConfirm = new("muster.endConfirm", "End this muster? It disappears for everyone right away.");
+        public static readonly LocString EndFailed = new("muster.endFailed", "Couldn't end the muster");
+        public static readonly LocString Ending = new("muster.ending", "Ending…");
+        public static readonly LocString NotifNoticeTitle = new("muster.notifNoticeTitle", "Muster update");
+        public static readonly LocString NotifNoticeStarting = new("muster.notifNoticeStarting", "{0}: starting now, come on over");
+        public static readonly LocString NotifNoticeMoved = new("muster.notifNoticeMoved", "{0} moved the meeting spot");
+        public static readonly LocString NotifNoticeWrapping = new("muster.notifNoticeWrapping", "{0} is wrapping up");
+        public static readonly LocString InvitePreview = new("muster.invitePreview", "Muster invite");
+        public static readonly LocString InviteUnavailable = new("muster.inviteUnavailable", "This muster has ended");
+        public static readonly LocString InviteOpen = new("muster.inviteOpen", "View muster");
+        public static readonly LocString ScopeMyDc = new("muster.scopeMyDc", "My DC");
+        public static readonly LocString ScopeRegion = new("muster.scopeRegion", "Region");
+        public static readonly LocString ScopeEverywhere = new("muster.scopeEverywhere", "Everywhere");
+        public static readonly LocString Filters = new("muster.filters", "Filters");
+        public static readonly LocString ClearFilters = new("muster.clearFilters", "Clear");
+        public static readonly LocString Done = new("muster.done", "Done");
+        public static readonly LocString GoingSection = new("muster.goingSection", "You're going");
+        public static readonly LocString DcTravel = new("muster.dcTravel", "DC travel");
+        public static readonly LocString Travel = new("muster.travel", "Travel");
+        public static readonly LocString NoticesSection = new("muster.noticesSection", "Notices");
+        public static readonly LocString NoticeStartingNow = new("muster.noticeStartingNow", "Starting now");
+        public static readonly LocString NoticeMovedSpots = new("muster.noticeMovedSpots", "Moved spots");
+        public static readonly LocString NoticeWrappingUp = new("muster.noticeWrappingUp", "Wrapping up");
+        public static readonly LocString NoticeAgo = new("muster.noticeAgo", "{0} ago");
+        public static readonly LocString StatusRunningLate = new("muster.statusRunningLate", "Running late");
+        public static readonly LocString StatusHere = new("muster.statusHere", "I'm here");
+        public static readonly LocString StatusWhereExactly = new("muster.statusWhereExactly", "Where exactly?");
+        public static readonly LocString InviteToParty = new("muster.inviteToParty", "Invite to party");
+        public static readonly LocString Invited = new("muster.invited", "Invited");
+        public static readonly LocString DifferentDataCenter = new("muster.differentDataCenter", "Different data center");
+        public static readonly LocString NeedDataCenter = new("muster.needDataCenter", "Could not detect your data center");
     }
 
     internal static class Venues
@@ -1319,11 +1441,11 @@ internal static class L
         public static readonly LocString AltSignInBody = new("account.altSignInBody", "You're now playing {0}. This character isn't signed in to Aethernet, so social apps, messaging, and calls stay empty until you sign in.");
         public static readonly LocString FailDismiss = new("account.fail.dismiss", "Got it");
         public static readonly LocString FailCharacterNotFoundTitle = new("account.fail.characterNotFound.title", "Character not found");
-        public static readonly LocString FailCharacterNotFoundBody = new("account.fail.characterNotFound.body", "We couldn't find {0} on {1} in the Lodestone search. In your Character settings, set Character Search to Public, then Verify again.");
+        public static readonly LocString FailCharacterNotFoundBody = new("account.fail.characterNotFound.body", "We couldn't find {0} on {1} in the Lodestone search. Brand-new characters can take up to a day to appear. In your Character settings, set Character Search to Public, then Verify again. Characters on Chinese or Korean servers aren't on the international Lodestone yet, so they can't be verified.");
         public static readonly LocString FailCodeNotFoundTitle = new("account.fail.codeNotFound.title", "Code not saved yet");
         public static readonly LocString FailCodeNotFoundBody = new("account.fail.codeNotFound.body", "We found your character, but the code isn't in your profile yet. Lodestone can take a minute to update after you save. Wait a moment, then Verify again. If it keeps happening, press Cancel below and try again with a new code.");
         public static readonly LocString FailLodestoneUnavailableTitle = new("account.fail.lodestoneUnavailable.title", "Lodestone unavailable");
-        public static readonly LocString FailLodestoneUnavailableBody = new("account.fail.lodestoneUnavailable.body", "The Lodestone didn't respond. This is on Square Enix's side, not yours. Wait a bit, then try again.");
+        public static readonly LocString FailLodestoneUnavailableBody = new("account.fail.lodestoneUnavailable.body", "We couldn't read the Lodestone just now — it sometimes limits lookups during busy hours. This is on Square Enix's side, not yours. Keep the code in your profile and Verify again in a minute or two.");
         public static readonly LocString FailTimeoutTitle = new("account.fail.timeout.title", "Verification timed out");
         public static readonly LocString FailTimeoutBody = new("account.fail.timeout.body", "The Lodestone took too long to respond. Your code is fine, just Verify again in a moment.");
         public static readonly LocString FailChallengeExpiredTitle = new("account.fail.challengeExpired.title", "Code expired");
@@ -1363,9 +1485,10 @@ internal static class L
         public static readonly LocString NewDeviceHint = new("encryption.newDeviceHint", "On a new computer a fresh key is created automatically. Older messages become readable again once your chat partners come online.");
         public static readonly LocString LocalStoreUnavailable = new("encryption.localStoreUnavailable", "This PC can't store the encryption key securely, so a fresh key will be created each session. Older messages become readable again once your chat partners come online.");
         public static readonly LocString LockedBody = new("encryption.lockedBody", "This device doesn't have the encryption key for this account, so messages here can't be read yet. This usually happens after switching to a different computer. Your messages are safe: open Aetherphone on the computer that already has your key, or create a new key here. If you create a new key, older messages become readable again once your chat partners come online.");
-        public static readonly LocString LockedSummary = new("encryption.lockedSummary", "This device needs its encryption key. Open Settings, then Encrypted Chats, to fix it.");
         public static readonly LocString NewKeyButton = new("encryption.newKeyButton", "Create a new key on this device…");
         public static readonly LocString LockedRecoverBody = new("encryption.lockedRecoverBody", "This device doesn't have your encryption key yet. Enter the recovery code you saved to restore your chats here, with your full history.");
+        public static readonly LocString LockedBanner = new("encryption.lockedBanner", "Chats are locked on this device. Tap to unlock.");
+        public static readonly LocString RecoveryNudgeBanner = new("encryption.recoveryNudgeBanner", "Protect your chat history: set up a recovery code");
         public static readonly LocString RecoverySectionTitle = new("encryption.recoverySectionTitle", "Recovery code");
         public static readonly LocString RecoveryNotSetBody = new("encryption.recoveryNotSetBody", "Set up a recovery code so you can restore your chats if you reinstall or move to another PC. Without it, chats on a new PC start fresh.");
         public static readonly LocString RecoverySetupButton = new("encryption.recoverySetupButton", "Set up recovery code…");
@@ -2150,6 +2273,7 @@ internal static class L
         public static readonly LocString Recents = new("photos.recents", "Recents");
         public static readonly LocString Today = new("photos.today", "Today");
         public static readonly LocString Yesterday = new("photos.yesterday", "Yesterday");
+        public static readonly LocString OpenFolder = new("photos.openFolder", "Open folder");
     }
 
     internal static class Skywatcher
@@ -2233,6 +2357,16 @@ internal static class L
         public static readonly LocString UpdateColor = new("jobs.updateColor", "Update");
         public static readonly LocString DeleteColor = new("jobs.deleteColor", "Delete");
         public static readonly LocString DeleteColorConfirm = new("jobs.deleteColorConfirm", "Delete \"{0}\"? This can't be undone.");
+        public static readonly LocString Categories = new("jobs.categories", "Categories");
+        public static readonly LocString NewCategory = new("jobs.newCategory", "New category…");
+        public static readonly LocString NewCategoryTitle = new("jobs.newCategoryTitle", "New category");
+        public static readonly LocString RenameCategory = new("jobs.renameCategory", "Rename category");
+        public static readonly LocString CategoryNamePlaceholder = new("jobs.categoryNamePlaceholder", "Name this category");
+        public static readonly LocString SaveCategory = new("jobs.saveCategory", "Save");
+        public static readonly LocString RemoveFromCategory = new("jobs.removeFromCategory", "Remove from category");
+        public static readonly LocString DeleteCategory = new("jobs.deleteCategory", "Delete");
+        public static readonly LocString DeleteCategoryConfirm = new("jobs.deleteCategoryConfirm", "Delete \"{0}\"? Its gearsets go back to their role sections.");
+        public static readonly LocString EmptyCategory = new("jobs.emptyCategory", "No gearsets here yet. Use a gearset's ··· menu to add one.");
     }
 
     internal static class Inventory
@@ -2749,6 +2883,142 @@ internal static class L
         public static readonly LocString StartUsing = new("setup.startUsing", "Start Using Aetherphone");
     }
 
+    internal static class YellowPages
+    {
+        public static readonly LocString SetUpAccount = new("yellowpages.setUpAccount", "Sign in to browse the classifieds.");
+        public static readonly LocString ScopeRegion = new("yellowpages.scopeRegion", "Region");
+        public static readonly LocString ScopeMyDc = new("yellowpages.scopeMyDc", "My DC");
+        public static readonly LocString ScopeEverywhere = new("yellowpages.scopeEverywhere", "Everywhere");
+        public static readonly LocString SearchLabel = new("yellowpages.searchLabel", "Search ads");
+        public static readonly LocString OpenSection = new("yellowpages.openSection", "Open tonight");
+        public static readonly LocString LatestSection = new("yellowpages.latestSection", "Latest ads");
+        public static readonly LocString LoadMore = new("yellowpages.loadMore", "Load more");
+        public static readonly LocString EmptyTitle = new("yellowpages.emptyTitle", "Nothing listed yet");
+        public static readonly LocString EmptyHint = new("yellowpages.emptyHint", "Widen the scope or clear the filters, or be the first to post an ad.");
+        public static readonly LocString PostAd = new("yellowpages.postAd", "New ad");
+        public static readonly LocString YourAds = new("yellowpages.yourAds", "Your ads");
+        public static readonly LocString YourAdsCount = new("yellowpages.yourAdsCount", "{0} of 3 live");
+        public static readonly LocString IntentGo = new("yellowpages.intentGo", "Go somewhere");
+        public static readonly LocString IntentHire = new("yellowpages.intentHire", "Hire someone");
+        public static readonly LocString IntentJoin = new("yellowpages.intentJoin", "Join something");
+        public static readonly LocString CategoryVenueNight = new("yellowpages.categoryVenueNight", "Venue nights");
+        public static readonly LocString CategoryEventShow = new("yellowpages.categoryEventShow", "Events and shows");
+        public static readonly LocString CategoryMarketFair = new("yellowpages.categoryMarketFair", "Markets and fairs");
+        public static readonly LocString CategoryCrafting = new("yellowpages.categoryCrafting", "Crafting and melds");
+        public static readonly LocString CategoryGathering = new("yellowpages.categoryGathering", "Gathering");
+        public static readonly LocString CategoryGlamour = new("yellowpages.categoryGlamour", "Glamour and design");
+        public static readonly LocString CategoryPortraits = new("yellowpages.categoryPortraits", "Portraits and gpose");
+        public static readonly LocString CategoryPerformance = new("yellowpages.categoryPerformance", "Music and performance");
+        public static readonly LocString CategoryCoaching = new("yellowpages.categoryCoaching", "Carries and coaching");
+        public static readonly LocString CategoryOddJobs = new("yellowpages.categoryOddJobs", "Odd jobs");
+        public static readonly LocString CategoryFreeCompany = new("yellowpages.categoryFreeCompany", "Free companies");
+        public static readonly LocString CategoryRaidStatic = new("yellowpages.categoryRaidStatic", "Statics and raiding");
+        public static readonly LocString CategoryVenueStaff = new("yellowpages.categoryVenueStaff", "Venue staff");
+        public static readonly LocString CategoryCommunity = new("yellowpages.categoryCommunity", "Communities");
+        public static readonly LocString PriceAsk = new("yellowpages.priceAsk", "Ask for price");
+        public static readonly LocString PriceGil = new("yellowpages.priceGil", "{0} gil");
+        public static readonly LocString PriceFrom = new("yellowpages.priceFrom", "from {0} gil");
+        public static readonly LocString OpenNow = new("yellowpages.openNow", "Open now");
+        public static readonly LocString OpenClosesAt = new("yellowpages.openClosesAt", "Open now · closes {0}");
+        public static readonly LocString OpensAt = new("yellowpages.opensAt", "Opens {0}");
+        public static readonly LocString Expired = new("yellowpages.expired", "Expired");
+        public static readonly LocString ExpiresDays = new("yellowpages.expiresDays", "Expires in {0}d");
+        public static readonly LocString ExpiresHours = new("yellowpages.expiresHours", "Expires in {0}h");
+        public static readonly LocString AfterDarkChip = new("yellowpages.afterDarkChip", "18+");
+        public static readonly LocString PhotoCount = new("yellowpages.photoCount", "{0} photos");
+        public static readonly LocString UnavailableTitle = new("yellowpages.unavailableTitle", "Ad unavailable");
+        public static readonly LocString UnavailableHint = new("yellowpages.unavailableHint", "This ad expired or was taken down.");
+        public static readonly LocString ScheduleSection = new("yellowpages.scheduleSection", "Weekly schedule");
+        public static readonly LocString RequirementsSection = new("yellowpages.requirementsSection", "Requirements");
+        public static readonly LocString WhereSection = new("yellowpages.whereSection", "Where");
+        public static readonly LocString WardPlot = new("yellowpages.wardPlot", "Ward {0}, Plot {1}");
+        public static readonly LocString FlagOnMap = new("yellowpages.flagOnMap", "Set map flag");
+        public static readonly LocString CopyDetails = new("yellowpages.copyDetails", "Copy details");
+        public static readonly LocString Copied = new("yellowpages.copied", "Copied");
+        public static readonly LocString Travel = new("yellowpages.travel", "Travel there");
+        public static readonly LocString ManageAction = new("yellowpages.manageAction", "Manage your ads");
+        public static readonly LocString Save = new("yellowpages.save", "Save this ad");
+        public static readonly LocString Unsave = new("yellowpages.unsave", "Remove from saved");
+        public static readonly LocString ShareAd = new("yellowpages.shareAd", "Copy share token");
+        public static readonly LocString ReportTitle = new("yellowpages.reportTitle", "Report this ad");
+        public static readonly LocString NewAd = new("yellowpages.newAd", "New ad");
+        public static readonly LocString WhatPosting = new("yellowpages.whatPosting", "What are you posting?");
+        public static readonly LocString ArchetypePlace = new("yellowpages.archetypePlace", "A place");
+        public static readonly LocString ArchetypePlaceHint = new("yellowpages.archetypePlaceHint", "A venue or event night: address, weekly schedule, and an Open Now switch you flip at the door.");
+        public static readonly LocString ArchetypeService = new("yellowpages.archetypeService", "A service");
+        public static readonly LocString ArchetypeServiceHint = new("yellowpages.archetypeServiceHint", "Work for gil: crafting, portraits, glamour, performance, coaching. Price up front.");
+        public static readonly LocString ArchetypeCall = new("yellowpages.archetypeCall", "A call");
+        public static readonly LocString ArchetypeCallHint = new("yellowpages.archetypeCallHint", "Recruitment: free company, static, venue staff. What you need and how many slots.");
+        public static readonly LocString PostRules = new("yellowpages.postRules", "Ads run 14 days (places 30) and renew with one tap. 3 live ads per account. Gil only.");
+        public static readonly LocString CategorySection = new("yellowpages.categorySection", "Category");
+        public static readonly LocString TitleLabel = new("yellowpages.titleLabel", "Title");
+        public static readonly LocString BodyLabel = new("yellowpages.bodyLabel", "Description");
+        public static readonly LocString TagsLabel = new("yellowpages.tagsLabel", "Tags");
+        public static readonly LocString TagsHint = new("yellowpages.tagsHint", "Comma separated, up to 8. They power search.");
+        public static readonly LocString UseMyLocation = new("yellowpages.useMyLocation", "Use my location");
+        public static readonly LocString ClearLocation = new("yellowpages.clearLocation", "Clear");
+        public static readonly LocString AddressNoteLabel = new("yellowpages.addressNoteLabel", "Address note");
+        public static readonly LocString ScheduleHint = new("yellowpages.scheduleHint", "Times are entered in your clock and shown to every reader in theirs.");
+        public static readonly LocString DaysLabel = new("yellowpages.daysLabel", "Days");
+        public static readonly LocString OpensLabel = new("yellowpages.opensLabel", "Opens at");
+        public static readonly LocString DurationLabel = new("yellowpages.durationLabel", "Open for");
+        public static readonly LocString DurationHours = new("yellowpages.durationHours", "{0}h");
+        public static readonly LocString PriceSection = new("yellowpages.priceSection", "Pricing");
+        public static readonly LocString PriceFixed = new("yellowpages.priceFixed", "Fixed price");
+        public static readonly LocString PriceFromLabel = new("yellowpages.priceFromLabel", "Starting at");
+        public static readonly LocString PriceGilLabel = new("yellowpages.priceGilLabel", "Price in gil");
+        public static readonly LocString TurnaroundLabel = new("yellowpages.turnaroundLabel", "Turnaround");
+        public static readonly LocString CallSection = new("yellowpages.callSection", "Who you need");
+        public static readonly LocString SlotsLabel = new("yellowpages.slotsLabel", "Open slots");
+        public static readonly LocString RequirementsLabel = new("yellowpages.requirementsLabel", "Requirements");
+        public static readonly LocString AfterDarkToggle = new("yellowpages.afterDarkToggle", "After Dark (18+)");
+        public static readonly LocString AfterDarkHint = new("yellowpages.afterDarkHint", "Hidden from readers unless they opt in. Keep the ad itself non-explicit.");
+        public static readonly LocString NeedTitle = new("yellowpages.needTitle", "Give your ad a title.");
+        public static readonly LocString NeedBody = new("yellowpages.needBody", "Add a description.");
+        public static readonly LocString NeedDataCenter = new("yellowpages.needDataCenter", "Log in to a world first.");
+        public static readonly LocString PublishAd = new("yellowpages.publishAd", "Publish ad");
+        public static readonly LocString ErrorTooMany = new("yellowpages.errorTooMany", "You already have 3 active ads.");
+        public static readonly LocString ErrorInvalid = new("yellowpages.errorInvalid", "Something in the ad was rejected. Check the fields and try again.");
+        public static readonly LocString ErrorRateLimited = new("yellowpages.errorRateLimited", "You are posting too fast. Give it a minute.");
+        public static readonly LocString ErrorFailed = new("yellowpages.errorFailed", "Could not publish the ad. Try again.");
+        public static readonly LocString MineHint = new("yellowpages.mineHint", "Ads renew only near expiry, and readers stop seeing them the moment they lapse.");
+        public static readonly LocString NoAdsTitle = new("yellowpages.noAdsTitle", "No ads yet");
+        public static readonly LocString NoAdsHint = new("yellowpages.noAdsHint", "Post a place, a service, or a recruitment call and it runs for weeks.");
+        public static readonly LocString Renew = new("yellowpages.renew", "Renew");
+        public static readonly LocString OpenNowAction = new("yellowpages.openNowAction", "Open up");
+        public static readonly LocString CloseNow = new("yellowpages.closeNow", "Close");
+        public static readonly LocString DeleteAd = new("yellowpages.deleteAd", "Delete");
+        public static readonly LocString DeleteConfirm = new("yellowpages.deleteConfirm", "Delete this ad? Its photos and saves go with it.");
+        public static readonly LocString Deleting = new("yellowpages.deleting", "Deleting");
+        public static readonly LocString DeleteFailed = new("yellowpages.deleteFailed", "Could not delete the ad.");
+        public static readonly LocString HiddenStatus = new("yellowpages.hiddenStatus", "Hidden pending review");
+        public static readonly LocString SavedTitle = new("yellowpages.savedTitle", "Saved ads");
+        public static readonly LocString NoSavedTitle = new("yellowpages.noSavedTitle", "Nothing saved");
+        public static readonly LocString NoSavedHint = new("yellowpages.noSavedHint", "Save an ad and it stays here until it expires.");
+        public static readonly LocString NotifHiddenTitle = new("yellowpages.notifHiddenTitle", "Ad hidden");
+        public static readonly LocString NotifHiddenBody = new("yellowpages.notifHiddenBody", "\"{0}\" was hidden after reports and is pending review.");
+        public static readonly LocString NotifExpiringTitle = new("yellowpages.notifExpiringTitle", "Ad expiring");
+        public static readonly LocString NotifExpiringBody = new("yellowpages.notifExpiringBody", "\"{0}\" expires within a day. Renew it to keep it listed.");
+        public static readonly LocString NotifExpiringGeneric = new("yellowpages.notifExpiringGeneric", "One of your ads expires within a day. Renew it to keep it listed.");
+        public static readonly LocString NotifHiddenGeneric = new("yellowpages.notifHiddenGeneric", "One of your ads was hidden after reports and is pending review.");
+        public static readonly LocString NotifOpenedTitle = new("yellowpages.notifOpenedTitle", "Open now");
+        public static readonly LocString NotifOpenedBody = new("yellowpages.notifOpenedBody", "\"{0}\" just opened its doors.");
+        public static readonly LocString NotifOpenedGeneric = new("yellowpages.notifOpenedGeneric", "A place you saved is open now.");
+        public static readonly LocString EditAd = new("yellowpages.editAd", "Edit");
+        public static readonly LocString EditAdTitle = new("yellowpages.editAdTitle", "Edit ad");
+        public static readonly LocString SaveChanges = new("yellowpages.saveChanges", "Save changes");
+        public static readonly LocString InquireAction = new("yellowpages.inquireAction", "Send an inquiry");
+        public static readonly LocString InquireHint = new("yellowpages.inquireHint", "Opens a chat with the poster with the ad card ready to send.");
+        public static readonly LocString ViewCount = new("yellowpages.viewCount", "{0} views");
+        public static readonly LocString AnnounceMuster = new("yellowpages.announceMuster", "Announce on Muster");
+        public static readonly LocString AfterDarkConfirmTitle = new("yellowpages.afterDarkConfirmTitle", "After Dark");
+        public static readonly LocString AfterDarkConfirmBody = new("yellowpages.afterDarkConfirmBody", "Show 18+ ads while browsing? They stay hidden for everyone who has not opted in, and the ads themselves must still be non-explicit.");
+        public static readonly LocString AfterDarkConfirmYes = new("yellowpages.afterDarkConfirmYes", "Show 18+ ads");
+        public static readonly LocString AdPreview = new("yellowpages.adPreview", "Yellow Pages ad");
+        public static readonly LocString AdUnavailable = new("yellowpages.adUnavailable", "Ad unavailable");
+        public static readonly LocString AdOpen = new("yellowpages.adOpen", "Open in Yellow Pages");
+    }
+
     internal static class Conduct
     {
         public static readonly LocString Eyebrow = new("conduct.eyebrow", "Community Guidelines");
@@ -2826,6 +3096,48 @@ internal static class L
             new("conduct.velvet.no.6", "Harassment"),
             new("conduct.velvet.no.7", "Gore intended to shock"),
             new("conduct.velvet.no.8", "Sale or promotion of illegal services"),
+        };
+
+        public static readonly LocString MusterTitle = new("conduct.muster.title", "Muster Ground Rules");
+        public static readonly LocString MusterIntro = new("conduct.muster.intro", "Musters are players meeting up with players: say what you are doing, where to find you, and when. A few rules keep the directory honest.");
+
+        public static readonly LocString[] MusterEncouraged =
+        {
+            new("conduct.muster.enc.1", "Spontaneous meetups and hangouts"),
+            new("conduct.muster.enc.2", "Hunt trains, map parties, and duty groups"),
+            new("conduct.muster.enc.3", "Roleplay scenes and social gatherings"),
+            new("conduct.muster.enc.4", "Showing up when you say you will"),
+            new("conduct.muster.enc.5", "Ending your muster once it is done"),
+        };
+
+        public static readonly LocString[] MusterNotAllowed =
+        {
+            new("conduct.muster.no.1", "Advertising venues, clubs, or anything with a business behind it"),
+            new("conduct.muster.no.2", "Paid services of any kind, whether gil or real money"),
+            new("conduct.muster.no.3", "NSFW descriptions or meeting spots"),
+            new("conduct.muster.no.4", "Musters aimed at singling out or harassing a player"),
+            new("conduct.muster.no.5", "Fake locations or misleading listings"),
+        };
+
+        public static readonly LocString YellowPagesTitle = new("conduct.yellowpages.title", "Yellow Pages Ground Rules");
+        public static readonly LocString YellowPagesIntro = new("conduct.yellowpages.intro", "Yellow Pages is Eorzea's classifieds board. Posting an ad means other players may contact you about it. A few rules keep the board worth browsing.");
+
+        public static readonly LocString[] YellowPagesEncouraged =
+        {
+            new("conduct.yellowpages.enc.1", "Venue nights, events, and markets with honest schedules"),
+            new("conduct.yellowpages.enc.2", "Crafting, gathering, portraits, glamour, and performance work for gil"),
+            new("conduct.yellowpages.enc.3", "Recruiting for free companies, statics, and venue staff"),
+            new("conduct.yellowpages.enc.4", "Clear prices and clear expectations"),
+            new("conduct.yellowpages.enc.5", "Letting an ad expire once it is done"),
+        };
+
+        public static readonly LocString[] YellowPagesNotAllowed =
+        {
+            new("conduct.yellowpages.no.1", "Anything sold for real money: gil only, always"),
+            new("conduct.yellowpages.no.2", "RMT, gil selling, account services, or third-party boosting shops"),
+            new("conduct.yellowpages.no.3", "Explicit content, even behind the After Dark tag"),
+            new("conduct.yellowpages.no.4", "Scams, fake listings, or impersonating another venue or crafter"),
+            new("conduct.yellowpages.no.5", "Reposting the same ad to dodge the expiry cycle"),
         };
 
         public static readonly LocString PlatformTitle = new("conduct.platform.title", "Platform-wide Standards");

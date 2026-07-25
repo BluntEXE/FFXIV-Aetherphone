@@ -22,6 +22,8 @@ internal sealed class AethernetApi
         Feedback = new FeedbackClient(net);
         Dev = new DevClient(net);
         Polls = new PollsClient(net);
+        Musters = new MusterClient(net);
+        Ads = new YellowPagesClient(net);
     }
 
     public AuthClient Auth { get; }
@@ -38,4 +40,6 @@ internal sealed class AethernetApi
     public FeedbackClient Feedback { get; }
     public DevClient Dev { get; }
     public PollsClient Polls { get; }
+    public MusterClient Musters { get; }
+    public YellowPagesClient Ads { get; }
 }

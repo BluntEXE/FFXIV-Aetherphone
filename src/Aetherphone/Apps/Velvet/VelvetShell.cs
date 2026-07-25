@@ -313,6 +313,9 @@ internal sealed partial class VelvetShell : IPhoneApp
             case VelvetScreenId.DiscoverFilters:
                 DrawDiscoverFilters(area);
                 break;
+            case VelvetScreenId.Encryption:
+                threadView.DrawEncryptionScreen(area);
+                break;
             default:
                 DrawRoot(area);
                 break;
