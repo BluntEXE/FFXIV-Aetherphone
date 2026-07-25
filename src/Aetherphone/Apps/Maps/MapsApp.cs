@@ -24,6 +24,7 @@ internal sealed class MapsApp : IPhoneApp
     public string DisplayName => Loc.T(L.Apps.Maps);
     public string Glyph => "Ma";
     public int BadgeCount => 0;
+    public bool WantsSystemTheme => true;
     private readonly MapData maps;
     private readonly Configuration configuration;
     private readonly List<MapAetheryte> favoriteDestinations = new();

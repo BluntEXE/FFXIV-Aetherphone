@@ -19,6 +19,7 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
     public string Glyph => "S";
     public int BadgeCount => configuration.HasUnseenChangelog ? 1 : 0;
     public bool BadgeAsDot => true;
+    public bool WantsSystemTheme => true;
     private readonly Configuration configuration;
     private readonly ViewRouter<ISettingsPage> router;
     private readonly RouterDraw<ISettingsPage> drawPage;

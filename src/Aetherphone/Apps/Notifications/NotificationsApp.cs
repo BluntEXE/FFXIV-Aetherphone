@@ -18,6 +18,7 @@ internal sealed class NotificationsApp : IPhoneApp
     public string DisplayName => Loc.T(L.Apps.Notifications);
     public string Glyph => "N";
     public int BadgeCount => notifications.UnreadCount;
+    public bool WantsSystemTheme => true;
     private readonly NotificationService notifications;
     private readonly LinkpearlLauncher linkpearlLauncher;
     private readonly VelvetLauncher velvetLauncher;

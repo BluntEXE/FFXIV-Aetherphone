@@ -32,6 +32,7 @@ internal sealed class NotesApp : IPhoneApp
     public string Glyph => "N";
     public Vector4 Accent => AppAccents.For("notes");
     public int BadgeCount => 0;
+    public bool WantsSystemTheme => true;
 
     private readonly Configuration configuration;
     private readonly ConfirmService confirm;

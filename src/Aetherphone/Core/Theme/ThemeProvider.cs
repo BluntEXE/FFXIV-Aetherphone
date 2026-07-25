@@ -20,6 +20,8 @@ internal sealed class ThemeProvider
     public PhoneTheme Chrome => dark;
     public void Apply(Configuration configuration) => Rebuild();
 
+    public PhoneTheme ForApp(bool wantsSystemTheme) => wantsSystemTheme ? Select() : dark;
+
     private void Rebuild()
     {
         var accent = ThemeCatalog.ResolveAccent(configuration.AccentName);
