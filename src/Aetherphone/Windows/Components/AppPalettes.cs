@@ -10,24 +10,6 @@ internal static class AppPalettes
     private static readonly Vector4 GlassField = new(1f, 1f, 1f, 0.10f);
     private static readonly Vector4 DefaultHover = new(1f, 1f, 1f, 0.06f);
 
-    public static readonly AppPalette Health = new()
-    {
-        Accent = AppAccents.For("health"),
-        TitleInk = new(0.99f, 0.95f, 0.96f, 1f),
-        BodyInk = new(0.94f, 0.86f, 0.88f, 0.96f),
-        MutedInk = new(0.80f, 0.68f, 0.72f, 0.85f),
-        HeaderInk = new(0.99f, 0.72f, 0.76f, 0.95f),
-        HeadingInk = new(0.99f, 0.94f, 0.95f, 1f),
-        BackdropTop = new(0.24f, 0.06f, 0.11f, 1f),
-        BackdropBottom = new(0.05f, 0.02f, 0.03f, 1f),
-        BloomTop = new(0.92f, 0.30f, 0.42f, 0.24f),
-        BloomBottom = new(0.50f, 0.12f, 0.20f, 0f),
-        CardFill = GlassFill,
-        CardStroke = GlassStroke,
-        FieldSurface = GlassField,
-        HoverTint = DefaultHover,
-    };
-
     public static readonly AppPalette Chirper = new()
     {
         Accent = AppAccents.For("chirper"),

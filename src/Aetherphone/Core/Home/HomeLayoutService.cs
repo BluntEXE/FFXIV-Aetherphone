@@ -26,7 +26,6 @@ internal sealed class HomeLayoutService
         "clock", "notes", "calculator", "timers",
         "wallet", "dailies", "calendar", "news",
         "character", "notifications", "jobs",
-        "health",
     };
 
     private static readonly string[] DefaultTrailingApps = { "dev" };
