@@ -23,7 +23,7 @@ internal sealed partial class YellowPagesApp
     private void DrawMine(Rect area)
     {
         var context = new PhoneContext(area, theme, navigation);
-        AppHeader.Draw(context, Loc.T(L.YellowPages.YourAds), back);
+        AppHeader.Draw(context, Loc.T(L.YellowPages.YourAds));
         var scale = ImGuiHelpers.GlobalScale;
         var top = area.Min.Y + AppHeader.Height * scale;
         var body = new Rect(new Vector2(area.Min.X, top), area.Max);
@@ -48,13 +48,6 @@ internal sealed partial class YellowPagesApp
             }
 
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
-        }
-
-        if (store.LiveMineCount < 3 && ComposeFab.Draw(body, "##yellowPagesMineFab", ui.Accent,
-                FontAwesomeIcon.Plus.ToIconString(), Loc.T(L.YellowPages.PostAd)))
-        {
-            ResetComposeForm();
-            router.Push(YellowPagesRoute.Compose);
         }
     }
 
@@ -283,7 +276,7 @@ internal sealed partial class YellowPagesApp
     private void DrawSaved(Rect area)
     {
         var context = new PhoneContext(area, theme, navigation);
-        AppHeader.Draw(context, Loc.T(L.YellowPages.SavedTitle), back);
+        AppHeader.Draw(context, Loc.T(L.YellowPages.SavedTitle));
         var scale = ImGuiHelpers.GlobalScale;
         var top = area.Min.Y + AppHeader.Height * scale;
         var body = new Rect(new Vector2(area.Min.X, top), area.Max);

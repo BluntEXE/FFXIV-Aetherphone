@@ -2679,5 +2679,8 @@
   "yellowpages.announceMuster": "Auf Muster ankündigen",
   "yellowpages.afterDarkConfirmTitle": "After Dark",
   "yellowpages.afterDarkConfirmBody": "18+-Anzeigen beim Stöbern zeigen? Sie bleiben für alle ohne Opt-in verborgen, und die Anzeigen selbst müssen jugendfrei bleiben.",
-  "yellowpages.afterDarkConfirmYes": "18+-Anzeigen zeigen"
+  "yellowpages.afterDarkConfirmYes": "18+-Anzeigen zeigen",
+  "yellowpages.browseTab": "Stöbern",
+  "yellowpages.savedTab": "Gemerkt",
+  "yellowpages.mineTab": "Meine"
 }

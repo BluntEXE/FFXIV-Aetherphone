@@ -74,9 +74,10 @@ internal sealed partial class YellowPagesApp
             var wasEditing = editingAdId is not null;
             ResetComposeForm();
             router.Pop(false);
-            if (!wasEditing && router.Current.Screen != YellowPagesScreen.Mine)
+            if (!wasEditing)
             {
-                router.Push(YellowPagesRoute.Mine, false);
+                activeTab = YellowPagesTab.Mine;
+                store.SyncNow();
             }
 
             return;
@@ -88,6 +89,7 @@ internal sealed partial class YellowPagesApp
         using (AppSurface.Begin(body))
         {
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
+            DrawComposeSteps(scale);
             if (composeArchetype < 0)
             {
                 DrawArchetypePicker(scale);
@@ -99,6 +101,28 @@ internal sealed partial class YellowPagesApp
 
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
         }
+    }
+
+    private void DrawComposeSteps(float scale)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        var barWidth = 22f * scale;
+        var barHeight = 4f * scale;
+        var gap = 5f * scale;
+        var left = origin.X + (width - barWidth * 2f - gap) * 0.5f;
+        var activeStep = composeArchetype < 0 ? 0 : 1;
+        for (var index = 0; index < 2; index++)
+        {
+            var min = new Vector2(left + (barWidth + gap) * index, origin.Y);
+            var max = min + new Vector2(barWidth, barHeight);
+            Squircle.Fill(drawList, min, max, barHeight * 0.5f,
+                ImGui.GetColorU32(index == activeStep ? ui.Accent : AppPalettes.YellowPages.FieldSurface));
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, barHeight + Metrics.Space.Md * scale));
     }
 
     private void DrawArchetypePicker(float scale)

@@ -2679,5 +2679,8 @@
   "yellowpages.announceMuster": "Annoncer sur Muster",
   "yellowpages.afterDarkConfirmTitle": "After Dark",
   "yellowpages.afterDarkConfirmBody": "Afficher les annonces 18+ pendant la navigation ? Elles restent cachées pour tous ceux qui n'ont pas opté, et les annonces elles-mêmes doivent rester non explicites.",
-  "yellowpages.afterDarkConfirmYes": "Afficher les annonces 18+"
+  "yellowpages.afterDarkConfirmYes": "Afficher les annonces 18+",
+  "yellowpages.browseTab": "Parcourir",
+  "yellowpages.savedTab": "Gardées",
+  "yellowpages.mineTab": "Mes annonces"
 }

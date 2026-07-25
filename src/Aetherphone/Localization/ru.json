@@ -2679,5 +2679,8 @@
   "yellowpages.announceMuster": "Объявить в Muster",
   "yellowpages.afterDarkConfirmTitle": "After Dark",
   "yellowpages.afterDarkConfirmBody": "Показывать объявления 18+ при просмотре? Для всех, кто не включил показ, они остаются скрытыми, а сами объявления обязаны оставаться без откровенного контента.",
-  "yellowpages.afterDarkConfirmYes": "Показывать 18+"
+  "yellowpages.afterDarkConfirmYes": "Показывать 18+",
+  "yellowpages.browseTab": "Обзор",
+  "yellowpages.savedTab": "Избранное",
+  "yellowpages.mineTab": "Мои"
 }

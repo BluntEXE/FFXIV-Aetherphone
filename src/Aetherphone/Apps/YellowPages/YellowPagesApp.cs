@@ -16,6 +16,7 @@ using Aetherphone.Core.Wallpapers;
 using Aetherphone.Core.YellowPages;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.YellowPages;
@@ -23,6 +24,8 @@ namespace Aetherphone.Apps.YellowPages;
 internal sealed partial class YellowPagesApp : IPhoneApp
 {
     private const float CopiedSeconds = 1.6f;
+    private const float BottomNavHeight = 52f;
+    private const int NavSlotCount = 4;
 
     public string Id => "yellowpages";
     public string DisplayName => Loc.T(L.Apps.YellowPages);
@@ -50,6 +53,7 @@ internal sealed partial class YellowPagesApp : IPhoneApp
     private readonly Action back;
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
+    private YellowPagesTab activeTab = YellowPagesTab.Browse;
     private float copiedTimer;
     private string copiedKey = string.Empty;
     private bool lifestreamAvailable;
@@ -82,6 +86,7 @@ internal sealed partial class YellowPagesApp : IPhoneApp
     public void OnOpened()
     {
         router.Reset();
+        activeTab = YellowPagesTab.Browse;
         socialNotifications.MarkSeen(Id);
         lifestreamAvailable = LifestreamBridge.IsAvailable();
         if (launcher.TryConsumeDetail(out var adId))
@@ -151,15 +156,105 @@ internal sealed partial class YellowPagesApp : IPhoneApp
             case YellowPagesScreen.Compose:
                 DrawCompose(area);
                 break;
-            case YellowPagesScreen.Mine:
-                DrawMine(area);
+            default:
+                DrawRoot(area);
                 break;
-            case YellowPagesScreen.Saved:
-                DrawSaved(area);
+        }
+    }
+
+    private void DrawRoot(Rect area)
+    {
+        var scale = ImGuiHelpers.GlobalScale;
+        var navRect = new Rect(new Vector2(area.Min.X, area.Max.Y - BottomNavHeight * scale), area.Max);
+        var tabArea = new Rect(area.Min, new Vector2(area.Max.X, navRect.Min.Y));
+        switch (activeTab)
+        {
+            case YellowPagesTab.Saved:
+                DrawSaved(tabArea);
+                break;
+            case YellowPagesTab.Mine:
+                DrawMine(tabArea);
                 break;
             default:
-                DrawBrowse(area);
+                DrawBrowse(tabArea);
                 break;
+        }
+
+        DrawBottomNav(navRect);
+    }
+
+    private void DrawBottomNav(Rect bar)
+    {
+        var scale = ImGuiHelpers.GlobalScale;
+        var drawList = ImGui.GetWindowDrawList();
+        drawList.AddLine(bar.Min, new Vector2(bar.Max.X, bar.Min.Y),
+            ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.10f)), 1f);
+        var slot = bar.Width / NavSlotCount;
+        var centerY = bar.Center.Y;
+        DrawNavItem(new Vector2(bar.Min.X + slot * 0.5f, centerY), FontAwesomeIcon.ThLarge,
+            Loc.T(L.YellowPages.BrowseTab), YellowPagesTab.Browse, scale);
+        DrawNavItem(new Vector2(bar.Min.X + slot * 1.5f, centerY), FontAwesomeIcon.Heart,
+            Loc.T(L.YellowPages.SavedTab), YellowPagesTab.Saved, scale);
+        DrawNavPost(new Vector2(bar.Min.X + slot * 2.5f, centerY), scale);
+        DrawNavItem(new Vector2(bar.Min.X + slot * 3.5f, centerY), FontAwesomeIcon.Bullhorn,
+            Loc.T(L.YellowPages.MineTab), YellowPagesTab.Mine, scale);
+    }
+
+    private void DrawNavItem(Vector2 center, FontAwesomeIcon icon, string label, YellowPagesTab tab, float scale)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var active = activeTab == tab;
+        var ink = active ? ui.Accent : AppPalettes.YellowPages.MutedInk;
+        AppSkin.Icon(drawList, center - new Vector2(0f, 8f * scale), icon.ToIconString(), ink, 0.95f);
+        Typography.DrawCentered(drawList, center + new Vector2(0f, 11f * scale), label, ink, 0.62f,
+            active ? FontWeight.SemiBold : FontWeight.Medium);
+        var half = new Vector2(26f * scale, 22f * scale);
+        var hovered = UiInteract.Hover(center - half, center + half);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (!UiInteract.Click(center - half, center + half, hovered) || active)
+        {
+            return;
+        }
+
+        activeTab = tab;
+        switch (tab)
+        {
+            case YellowPagesTab.Saved:
+                store.RefreshSaved();
+                break;
+            case YellowPagesTab.Mine:
+                store.SyncNow();
+                break;
+            default:
+                RefreshBrowse();
+                break;
+        }
+    }
+
+    private void DrawNavPost(Vector2 center, float scale)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var radius = 17f * scale;
+        var hovered = UiInteract.Hover(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
+        var fill = hovered ? Palette.Mix(ui.Accent, new Vector4(1f, 1f, 1f, 1f), 0.12f) : ui.Accent;
+        drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(fill), 40);
+        AppSkin.Icon(drawList, center, FontAwesomeIcon.Plus.ToIconString(), new Vector4(0.11f, 0.08f, 0.02f, 1f),
+            0.95f);
+        HoverTooltip.Show(new Rect(center - new Vector2(radius, radius), center + new Vector2(radius, radius)),
+            Loc.T(L.YellowPages.PostAd), HoverLabelSide.Above);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (UiInteract.Click(center - new Vector2(radius, radius), center + new Vector2(radius, radius), hovered))
+        {
+            ResetComposeForm();
+            router.Push(YellowPagesRoute.Compose);
         }
     }
 

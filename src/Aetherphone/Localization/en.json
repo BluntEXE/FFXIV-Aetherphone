@@ -2678,5 +2678,8 @@
   "yellowpages.announceMuster": "Announce on Muster",
   "yellowpages.afterDarkConfirmTitle": "After Dark",
   "yellowpages.afterDarkConfirmBody": "Show 18+ ads while browsing? They stay hidden for everyone who has not opted in, and the ads themselves must still be non-explicit.",
-  "yellowpages.afterDarkConfirmYes": "Show 18+ ads"
+  "yellowpages.afterDarkConfirmYes": "Show 18+ ads",
+  "yellowpages.browseTab": "Browse",
+  "yellowpages.savedTab": "Saved",
+  "yellowpages.mineTab": "My ads"
 }

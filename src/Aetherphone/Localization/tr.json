@@ -2679,5 +2679,8 @@
   "yellowpages.announceMuster": "Muster'da duyur",
   "yellowpages.afterDarkConfirmTitle": "After Dark",
   "yellowpages.afterDarkConfirmBody": "Gezinirken 18+ ilanlar gösterilsin mi? Açmayan herkes için gizli kalırlar ve ilanların kendisi yine müstehcen olamaz.",
-  "yellowpages.afterDarkConfirmYes": "18+ ilanları göster"
+  "yellowpages.afterDarkConfirmYes": "18+ ilanları göster",
+  "yellowpages.browseTab": "Keşfet",
+  "yellowpages.savedTab": "Kayıtlı",
+  "yellowpages.mineTab": "İlanlarım"
 }

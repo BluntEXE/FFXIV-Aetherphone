@@ -213,33 +213,59 @@ internal sealed partial class YellowPagesApp
         }
 
         drawList.AddImageRounded(texture.Handle, rect.Min, rect.Max, uv0, uv1, 0xFFFFFFFFu, rounding);
-        var badgeMin = Vector2.Zero;
-        var badgeMax = Vector2.Zero;
+        var expandRadius = 13f * scale;
+        var expandCenter = new Vector2(rect.Max.X - expandRadius - 6f * scale, rect.Min.Y + expandRadius + 6f * scale);
+        drawList.AddCircleFilled(expandCenter, expandRadius, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.55f)), 28);
+        AppSkin.Icon(drawList, expandCenter, FontAwesomeIcon.Expand.ToIconString(),
+            new Vector4(1f, 1f, 1f, 0.92f), 0.62f);
+        var expandHalf = new Vector2(expandRadius, expandRadius);
+        var overExpand = ImGui.IsMouseHoveringRect(expandCenter - expandHalf, expandCenter + expandHalf, false);
+        if (overExpand)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (UiInteract.Click(expandCenter - expandHalf, expandCenter + expandHalf, overExpand))
+        {
+            var viewerUrl = url;
+            photoViewer.Open(() => images.Get(viewerUrl));
+            return;
+        }
+
         if (ad.MediaUrls.Length > 1)
         {
-            var badge = $"{detailPhotoIndex + 1}/{ad.MediaUrls.Length}";
-            var badgeSize = Typography.Measure(badge, TextStyles.Caption1);
-            badgeMax = new Vector2(rect.Max.X - 8f * scale, rect.Max.Y - 8f * scale);
-            badgeMin = badgeMax - badgeSize - new Vector2(14f * scale, 8f * scale);
-            Squircle.Fill(drawList, badgeMin, badgeMax, (badgeMax.Y - badgeMin.Y) * 0.5f,
-                ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.55f)));
-            Typography.Draw(drawList, badgeMin + new Vector2(7f * scale, 4f * scale), badge,
-                new Vector4(1f, 1f, 1f, 1f), TextStyles.Caption1);
-            var overBadge = ImGui.IsMouseHoveringRect(badgeMin, badgeMax, false);
-            if (overBadge)
+            var dotGap = 9f * scale;
+            var dotsWidth = dotGap * (ad.MediaUrls.Length - 1);
+            var dotsY = rect.Max.Y - 10f * scale;
+            for (var index = 0; index < ad.MediaUrls.Length; index++)
+            {
+                var dotCenter = new Vector2(rect.Center.X - dotsWidth * 0.5f + dotGap * index, dotsY);
+                drawList.AddCircleFilled(dotCenter, 2.6f * scale,
+                    ImGui.GetColorU32(new Vector4(1f, 1f, 1f, index == detailPhotoIndex ? 1f : 0.45f)), 16);
+            }
+
+            var midX = rect.Center.X;
+            var leftHovered = !overExpand && ImGui.IsMouseHoveringRect(rect.Min, new Vector2(midX, rect.Max.Y), false);
+            var rightHovered = !overExpand
+                && ImGui.IsMouseHoveringRect(new Vector2(midX, rect.Min.Y), rect.Max, false);
+            if (leftHovered || rightHovered)
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             }
 
-            if (UiInteract.Click(badgeMin, badgeMax, overBadge))
+            if (UiInteract.Click(rect.Min, new Vector2(midX, rect.Max.Y), leftHovered))
+            {
+                detailPhotoIndex = (detailPhotoIndex + ad.MediaUrls.Length - 1) % ad.MediaUrls.Length;
+            }
+            else if (UiInteract.Click(new Vector2(midX, rect.Min.Y), rect.Max, rightHovered))
             {
                 detailPhotoIndex = (detailPhotoIndex + 1) % ad.MediaUrls.Length;
-                return;
             }
+
+            return;
         }
 
-        var overBadgeArea = ad.MediaUrls.Length > 1 && ImGui.IsMouseHoveringRect(badgeMin, badgeMax, false);
-        var hovered = !overBadgeArea && UiInteract.Hover(rect.Min, rect.Max);
+        var hovered = !overExpand && UiInteract.Hover(rect.Min, rect.Max);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -317,12 +343,22 @@ internal sealed partial class YellowPagesApp
         var cardHeight = pad * 2f + ad.Schedule.Length * ScheduleRowHeight * scale;
         ui.Card(drawList, origin, new Vector2(origin.X + width, origin.Y + cardHeight),
             Metrics.Radius.Card * scale, elevated: true);
+        var todayLocal = (int)DateTime.Now.DayOfWeek;
+        var dayNames = Loc.Culture.DateTimeFormat.AbbreviatedDayNames;
         for (var index = 0; index < ad.Schedule.Length; index++)
         {
+            var slot = ad.Schedule[index];
             var lineTop = origin.Y + pad + index * ScheduleRowHeight * scale;
-            var line = AdText.ScheduleSlotLine(ad.Schedule[index], nowUnix);
-            Typography.Draw(drawList, new Vector2(origin.X + pad, lineTop), line,
-                AppPalettes.YellowPages.BodyInk, TextStyles.Subheadline);
+            AdText.ToLocalSlot(slot, out var localDay, out _);
+            var startUnix = AdText.NextOccurrenceUnix(slot, nowUnix);
+            var range = $"{TimeText.Clock(startUnix)} - {TimeText.Clock(startUnix + slot.DurationMinutes * 60L)}";
+            var isToday = localDay == todayLocal;
+            var ink = isToday ? AdCard.OpenGreen : AppPalettes.YellowPages.MutedInk;
+            var style = isToday ? TextStyles.SubheadlineEmphasized : TextStyles.Subheadline;
+            Typography.Draw(drawList, new Vector2(origin.X + pad, lineTop), dayNames[localDay], ink, style);
+            var rangeSize = Typography.Measure(range, style);
+            Typography.Draw(drawList, new Vector2(origin.X + width - pad - rangeSize.X, lineTop), range,
+                isToday ? AdCard.OpenGreen : AppPalettes.YellowPages.BodyInk, style);
         }
 
         ImGui.SetCursorScreenPos(origin);
@@ -479,8 +515,8 @@ internal sealed partial class YellowPagesApp
         {
             if (ui.PillButton(rect, Loc.T(L.YellowPages.ManageAction), true))
             {
+                activeTab = YellowPagesTab.Mine;
                 router.Pop(false);
-                router.Push(YellowPagesRoute.Mine);
             }
 
             ImGui.SetCursorScreenPos(origin);
@@ -499,15 +535,21 @@ internal sealed partial class YellowPagesApp
         ui.HelpText(Loc.T(L.YellowPages.InquireHint));
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
 
-        var saveOrigin = ImGui.GetCursorScreenPos();
-        var saveRect = new Rect(saveOrigin, new Vector2(saveOrigin.X + width,
-            saveOrigin.Y + LocationActionHeight * scale));
-        if (saveBusy)
-        {
-            AppSkin.PillButton(saveRect, ad.Saved ? Loc.T(L.YellowPages.Unsave) : Loc.T(L.YellowPages.Save),
-                false, false, theme);
-        }
-        else if (ui.PillButton(saveRect, ad.Saved ? Loc.T(L.YellowPages.Unsave) : Loc.T(L.YellowPages.Save), false))
+        DrawDetailSubActions(ad, width, scale);
+    }
+
+    private void DrawDetailSubActions(AdDto ad, float width, float scale)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var origin = ImGui.GetCursorScreenPos();
+        var height = 34f * scale;
+        var slot = width / 3f;
+        var centerY = origin.Y + height * 0.5f;
+
+        var saveLabel = ad.Saved ? Loc.T(L.YellowPages.Unsave) : Loc.T(L.YellowPages.Save);
+        var saveInk = ad.Saved ? ui.Accent : AppPalettes.YellowPages.BodyInk;
+        if (DrawSubAction(drawList, new Vector2(origin.X + slot * 0.5f, centerY), slot, FontAwesomeIcon.Heart,
+                saveLabel, saveInk, scale) && !saveBusy)
         {
             saveBusy = true;
             var next = !ad.Saved;
@@ -520,33 +562,42 @@ internal sealed partial class YellowPagesApp
             });
         }
 
-        ImGui.SetCursorScreenPos(saveOrigin);
-        ImGui.Dummy(new Vector2(width, LocationActionHeight * scale + Metrics.Space.Md * scale));
-
-        var shareOrigin = ImGui.GetCursorScreenPos();
-        var shareRect = new Rect(shareOrigin, new Vector2(shareOrigin.X + width,
-            shareOrigin.Y + LocationActionHeight * scale));
         var shareLabel = JustCopied("share") ? Loc.T(L.YellowPages.Copied) : Loc.T(L.YellowPages.ShareAd);
-        if (ui.PillButton(shareRect, shareLabel, false))
+        if (DrawSubAction(drawList, new Vector2(origin.X + slot * 1.5f, centerY), slot,
+                FontAwesomeIcon.ShareSquare, shareLabel, AppPalettes.YellowPages.BodyInk, scale))
         {
             Copy("share", AdShare.Compose(ad.Id));
         }
 
-        ImGui.SetCursorScreenPos(shareOrigin);
-        ImGui.Dummy(new Vector2(width, LocationActionHeight * scale + Metrics.Space.Md * scale));
-
-        var reportOrigin = ImGui.GetCursorScreenPos();
-        var reportLabel = Loc.T(L.Report.Action);
-        var reportWidth = Typography.Measure(reportLabel, 0.9f, FontWeight.SemiBold).X + 40f * scale;
-        var reportRect = new Rect(new Vector2(reportOrigin.X + (width - reportWidth) * 0.5f, reportOrigin.Y),
-            new Vector2(reportOrigin.X + (width + reportWidth) * 0.5f, reportOrigin.Y + 34f * scale));
-        if (ui.DangerGhostButton(reportRect, reportLabel))
+        if (DrawSubAction(drawList, new Vector2(origin.X + slot * 2.5f, centerY), slot, FontAwesomeIcon.Flag,
+                Loc.T(L.Report.Action), theme.Danger, scale))
         {
             OpenReport(ad.Id);
         }
 
-        ImGui.SetCursorScreenPos(reportOrigin);
-        ImGui.Dummy(new Vector2(width, 34f * scale + Metrics.Space.Md * scale));
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, height + Metrics.Space.Md * scale));
+    }
+
+    private static bool DrawSubAction(ImDrawListPtr drawList, Vector2 center, float slotWidth,
+        FontAwesomeIcon icon, string label, Vector4 ink, float scale)
+    {
+        var fitted = Typography.FitText(label, slotWidth - 34f * scale, TextStyles.Footnote);
+        var labelSize = Typography.Measure(fitted, TextStyles.Footnote);
+        var iconGap = 7f * scale;
+        var contentWidth = 13f * scale + iconGap + labelSize.X;
+        var left = center.X - contentWidth * 0.5f;
+        AppSkin.Icon(drawList, new Vector2(left + 6f * scale, center.Y), icon.ToIconString(), ink, 0.72f);
+        Typography.Draw(drawList, new Vector2(left + 13f * scale + iconGap, center.Y - labelSize.Y * 0.5f), fitted,
+            ink, TextStyles.Footnote);
+        var half = new Vector2(slotWidth * 0.5f - 4f * scale, 16f * scale);
+        var hovered = UiInteract.Hover(center - half, center + half);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return UiInteract.Click(center - half, center + half, hovered);
     }
 
     private void OpenInquiry(AdDto ad)

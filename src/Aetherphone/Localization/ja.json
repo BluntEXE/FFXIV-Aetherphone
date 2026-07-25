@@ -2679,5 +2679,8 @@
   "yellowpages.announceMuster": "Musterで告知",
   "yellowpages.afterDarkConfirmTitle": "After Dark",
   "yellowpages.afterDarkConfirmBody": "閲覧時に18+の広告を表示しますか?オプトインしていない人には引き続き非表示で、広告自体は露骨な内容にできません。",
-  "yellowpages.afterDarkConfirmYes": "18+の広告を表示"
+  "yellowpages.afterDarkConfirmYes": "18+の広告を表示",
+  "yellowpages.browseTab": "見る",
+  "yellowpages.savedTab": "保存済み",
+  "yellowpages.mineTab": "自分の広告"
 }

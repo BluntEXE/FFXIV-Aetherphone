@@ -3013,6 +3013,9 @@ internal static class L
         public static readonly LocString AfterDarkConfirmTitle = new("yellowpages.afterDarkConfirmTitle", "After Dark");
         public static readonly LocString AfterDarkConfirmBody = new("yellowpages.afterDarkConfirmBody", "Show 18+ ads while browsing? They stay hidden for everyone who has not opted in, and the ads themselves must still be non-explicit.");
         public static readonly LocString AfterDarkConfirmYes = new("yellowpages.afterDarkConfirmYes", "Show 18+ ads");
+        public static readonly LocString BrowseTab = new("yellowpages.browseTab", "Browse");
+        public static readonly LocString SavedTab = new("yellowpages.savedTab", "Saved");
+        public static readonly LocString MineTab = new("yellowpages.mineTab", "My ads");
         public static readonly LocString AdPreview = new("yellowpages.adPreview", "Yellow Pages ad");
         public static readonly LocString AdUnavailable = new("yellowpages.adUnavailable", "Ad unavailable");
         public static readonly LocString AdOpen = new("yellowpages.adOpen", "Open in Yellow Pages");
