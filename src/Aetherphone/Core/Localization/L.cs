@@ -611,6 +611,20 @@ internal static class L
         public static readonly LocString Invited = new("muster.invited", "Invited");
         public static readonly LocString DifferentDataCenter = new("muster.differentDataCenter", "Different data center");
         public static readonly LocString NeedDataCenter = new("muster.needDataCenter", "Could not detect your data center");
+        public static readonly LocString DataCenterSection = new("muster.dataCenterSection", "Data center");
+        public static readonly LocString FilterAll = new("muster.filterAll", "All");
+        public static readonly LocString MyDataCenter = new("muster.myDataCenter", "My data center");
+        public static readonly LocString DataCenterHint = new("muster.dataCenterHint", "Pick which data center the directory reads from.");
+        public static readonly LocString TravelTo = new("muster.travelTo", "Travel to {0}");
+        public static readonly LocString OnThisWorld = new("muster.onThisWorld", "You're on {0}");
+        public static readonly LocString TeleportTo = new("muster.teleportTo", "Teleport to {0}");
+        public static readonly LocString YoureHere = new("muster.youreHere", "You're already here");
+        public static readonly LocString ImGoing = new("muster.imGoing", "I'm going");
+        public static readonly LocString StatGoing = new("muster.statGoing", "Going");
+        public static readonly LocString StatEndsIn = new("muster.statEndsIn", "Ends in");
+        public static readonly LocString StatStartsIn = new("muster.statStartsIn", "Starts in");
+        public static readonly LocString StatSpots = new("muster.statSpots", "Spots left");
+        public static readonly LocString YourStatus = new("muster.yourStatus", "Your status");
     }
 
     internal static class Venues

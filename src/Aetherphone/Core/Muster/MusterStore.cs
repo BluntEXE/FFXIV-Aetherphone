@@ -38,6 +38,9 @@ internal sealed class MusterStore : IDisposable
     private volatile Dictionary<string, MusterDto> knownMusters = new(StringComparer.Ordinal);
     private volatile bool primed;
     private volatile bool syncing;
+    private volatile int currentWorldId;
+    private volatile int currentDataCenterId;
+    private volatile int currentRegionBit;
 
     private readonly object chatLock = new();
     private readonly HashSet<string> chatRequested = new(StringComparer.Ordinal);
@@ -94,6 +97,22 @@ internal sealed class MusterStore : IDisposable
 
     public bool DirectoryLoadedOnce => directoryLoadedOnce;
 
+    public int CurrentWorldId => currentWorldId;
+
+    public int CurrentDataCenterId => currentDataCenterId;
+
+    public int CurrentRegionBit => currentRegionBit;
+
+    public uint CurrentTerritoryId => Plugin.ClientState.TerritoryType;
+
+    public int ScopedDataCenterId =>
+        configuration.MusterDataCenterId != 0 ? configuration.MusterDataCenterId : currentDataCenterId;
+
+    public int ScopedRegionBit =>
+        configuration.MusterDataCenterId != 0
+            ? MusterDataCenters.RegionBitFor(configuration.MusterDataCenterId)
+            : currentRegionBit;
+
     public bool IsGoing(string musterId)
     {
         return goingIds.Contains(musterId);
@@ -139,11 +158,8 @@ internal sealed class MusterStore : IDisposable
         }, () => syncing = false);
     }
 
-    /// <summary>Resolves the persisted scope against the player's current world. Framework thread only,
-    /// so the world read happens here and the captured values carry through paging continuations.</summary>
     private void CaptureScopeFilters()
     {
-        var worldId = MusterWorlds.CurrentWorldId();
         switch (configuration.MusterScope)
         {
             case MusterScopes.Everywhere:
@@ -152,10 +168,10 @@ internal sealed class MusterStore : IDisposable
                 break;
             case MusterScopes.Region:
                 directoryDataCenterId = 0;
-                directoryRegions = MusterCategories.RegionBitForWorld(worldId);
+                directoryRegions = ScopedRegionBit;
                 break;
             default:
-                directoryDataCenterId = MusterWorlds.DataCenterIdForWorld(worldId);
+                directoryDataCenterId = ScopedDataCenterId;
                 directoryRegions = 0;
                 break;
         }
@@ -424,6 +440,7 @@ internal sealed class MusterStore : IDisposable
 
     private void OnFrameworkUpdate(IFramework framework)
     {
+        TrackCurrentWorld();
         if (!session.IsSignedIn || !gate.Open)
         {
             primed = false;
@@ -436,6 +453,19 @@ internal sealed class MusterStore : IDisposable
         }
 
         SyncNow();
+    }
+
+    private void TrackCurrentWorld()
+    {
+        var worldId = (int)MusterWorlds.CurrentWorldId();
+        if (worldId == currentWorldId)
+        {
+            return;
+        }
+
+        currentWorldId = worldId;
+        currentDataCenterId = MusterWorlds.DataCenterIdForWorld((uint)worldId);
+        currentRegionBit = MusterCategories.RegionBitForWorld((uint)worldId);
     }
 
     private void OnSessionChanged()

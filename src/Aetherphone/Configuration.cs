@@ -111,6 +111,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public List<string> VenueFavorites { get; set; } = new();
     public int MusterCategoryFilter { get; set; }
     public int MusterScope { get; set; }
+    public int MusterDataCenterId { get; set; }
     public int YellowPagesCategoryFilter { get; set; }
     public int YellowPagesScope { get; set; }
     public bool YellowPagesAfterDark { get; set; }
