@@ -42,7 +42,7 @@ internal static class L
         public static readonly LocString MentionedChirp = new("social.mentionedChirp", "mentioned you in a chirp");
         public static readonly LocString MentionedPhoto = new("social.mentionedPhoto", "mentioned you in a photo");
         public static readonly LocString MentionedComment = new("social.mentionedComment", "mentioned you in a comment");
-        public static readonly LocString RepostedChirp = new("social.repostedChirp", "reposted your chirp");
+        public static readonly LocString RepostedChirp = new("social.repostedChirp", "rechirped your chirp");
         public static readonly LocString RepostedPhoto = new("social.repostedPhoto", "reposted your photo");
         public static readonly LocString QuotedChirp = new("social.quotedChirp", "quoted your chirp");
         public static readonly LocString QuotedPhoto = new("social.quotedPhoto", "quoted your photo");
@@ -854,6 +854,11 @@ internal static class L
             new("changelog.r0990.1", "Profiles now show your region, such as NA or EU, in place of your exact world"),
             new("changelog.r0990.2", "Searching for people now needs at least four letters and matches from the start of a name, so nobody can sweep the search box to collect profiles"),
             new("changelog.r0990.3", "New accounts no longer take your character name as their display name or handle; you pick your own while setting up the phone"),
+            new("changelog.r0990.4", "Chirper reactions are now full color emoji instead of flat icons"),
+            new("changelog.r0990.5", "Chirper adds seven reactions: fire, skull, sob, bomb, eyes, 100, and question"),
+            new("changelog.r0990.6", "Rechirp notifications now quote the chirp that was rechirped instead of showing a bare line"),
+            new("changelog.r0990.7", "Pressing Enter while tagging someone now picks the highlighted person instead of posting straight away"),
+            new("changelog.r0990.8", "The tag suggestion list no longer opens on top of the home button when it has more than one result"),
         };
 
         public static readonly LocString[] Release0989 =
@@ -1484,7 +1489,7 @@ internal static class L
         public static readonly LocString FailCodeNotFoundTitle = new("account.fail.codeNotFound.title", "Code not saved yet");
         public static readonly LocString FailCodeNotFoundBody = new("account.fail.codeNotFound.body", "We found your character, but the code isn't in your profile yet. Lodestone can take a minute to update after you save. Wait a moment, then Verify again. If it keeps happening, press Cancel below and try again with a new code.");
         public static readonly LocString FailLodestoneUnavailableTitle = new("account.fail.lodestoneUnavailable.title", "Lodestone unavailable");
-        public static readonly LocString FailLodestoneUnavailableBody = new("account.fail.lodestoneUnavailable.body", "We couldn't read the Lodestone just now — it sometimes limits lookups during busy hours. This is on Square Enix's side, not yours. Keep the code in your profile and Verify again in a minute or two.");
+        public static readonly LocString FailLodestoneUnavailableBody = new("account.fail.lodestoneUnavailable.body", "We couldn't read the Lodestone just now: it sometimes limits lookups during busy hours. This is on Square Enix's side, not yours. Keep the code in your profile and Verify again in a minute or two.");
         public static readonly LocString FailTimeoutTitle = new("account.fail.timeout.title", "Verification timed out");
         public static readonly LocString FailTimeoutBody = new("account.fail.timeout.body", "The Lodestone took too long to respond. Your code is fine, just Verify again in a moment.");
         public static readonly LocString FailChallengeExpiredTitle = new("account.fail.challengeExpired.title", "Code expired");
@@ -1762,6 +1767,13 @@ internal static class L
         public static readonly LocString ReactWow = new("chirper.reactWow", "Wow");
         public static readonly LocString ReactSad = new("chirper.reactSad", "Sad");
         public static readonly LocString ReactAngry = new("chirper.reactAngry", "Angry");
+        public static readonly LocString ReactFire = new("chirper.reactFire", "Fire");
+        public static readonly LocString ReactSkull = new("chirper.reactSkull", "Skull");
+        public static readonly LocString ReactSob = new("chirper.reactSob", "Sob");
+        public static readonly LocString ReactBomb = new("chirper.reactBomb", "Bomb");
+        public static readonly LocString ReactEyes = new("chirper.reactEyes", "Eyes");
+        public static readonly LocString ReactHundred = new("chirper.reactHundred", "100");
+        public static readonly LocString ReactQuestion = new("chirper.reactQuestion", "Question");
         public static readonly LocPlural Posts = new("chirper.posts", "{0} post", "{0} posts");
         public static readonly LocPlural Likes = new("chirper.likes", "{0} like", "{0} likes");
         public static readonly LocString DeleteConfirmMessage = new("chirper.deleteConfirmMessage", "Delete this post? This can't be undone.");

@@ -55,11 +55,13 @@ internal sealed class MentionPopup
 
         var left = Math.Clamp(anchor.Min.X, screen.Min.X + 8f * scale,
             MathF.Max(screen.Min.X + 8f * scale, screen.Max.X - 8f * scale - width));
-        var top = anchor.Min.Y - 6f * scale - height;
-        if (top < screen.Min.Y + 8f * scale)
-        {
-            top = anchor.Max.Y + 6f * scale;
-        }
+        var topLimit = screen.Min.Y + 8f * scale;
+        var bottomLimit = screen.Max.Y - Metrics.Size.HomeIndicatorInset * scale;
+        var above = anchor.Min.Y - 6f * scale - height;
+        var below = anchor.Max.Y + 6f * scale;
+        var insideTop = anchor.Min.Y + ImGui.GetTextLineHeightWithSpacing() + 6f * scale;
+        var top = above >= topLimit ? above : (below + height <= bottomLimit ? below : insideTop);
+        top = Math.Clamp(top, topLimit, MathF.Max(topLimit, bottomLimit - height));
 
         var min = new Vector2(left, top);
         var max = new Vector2(left + width, top + height);

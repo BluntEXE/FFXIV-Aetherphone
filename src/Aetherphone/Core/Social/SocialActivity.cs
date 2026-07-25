@@ -69,7 +69,8 @@ internal static class SocialActivity
             case TypePhotoTag:
                 return Loc.T(L.Social.TaggedPhoto);
             case TypeRepost:
-                return Loc.T(isPhoto ? L.Social.RepostedPhoto : L.Social.RepostedChirp);
+                var repostAction = Loc.T(isPhoto ? L.Social.RepostedPhoto : L.Social.RepostedChirp);
+                return string.IsNullOrEmpty(item.Preview) ? repostAction : $"{repostAction}: “{item.Preview}”";
             case TypeQuote:
                 var quoteAction = Loc.T(isPhoto ? L.Social.QuotedPhoto : L.Social.QuotedChirp);
                 return string.IsNullOrEmpty(item.Preview) ? quoteAction : $"{quoteAction}: “{item.Preview}”";
