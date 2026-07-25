@@ -149,19 +149,20 @@ internal sealed partial class YellowPagesApp
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
-        var height = ArchetypeCardHeight * scale;
+        var tileSide = 36f * scale;
+        var textLeft = origin.X + 14f * scale + tileSide + 12f * scale;
+        var hintWidth = origin.X + width - 16f * scale - textLeft;
+        var hintTop = origin.Y + 36f * scale;
+        var hintHeight = Typography.MeasureWrappedBlock(hint, TextStyles.Footnote, hintWidth).Y;
+        var height = MathF.Max(ArchetypeCardHeight * scale, hintTop - origin.Y + hintHeight + 14f * scale);
         var card = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
         var rounding = Metrics.Radius.Lg * scale;
         ui.Card(drawList, card.Min, card.Max, rounding, elevated: true);
-        var tileSide = 36f * scale;
-        var tileCenter = new Vector2(card.Min.X + 14f * scale + tileSide * 0.5f, card.Center.Y);
+        var tileCenter = new Vector2(card.Min.X + 14f * scale + tileSide * 0.5f, card.Min.Y + 14f * scale + tileSide * 0.5f);
         IconTile.Draw(tileCenter, tileSide, IconTile.Surface(ui.Accent), icon);
-        var textLeft = tileCenter.X + tileSide * 0.5f + 12f * scale;
         Typography.Draw(drawList, new Vector2(textLeft, card.Min.Y + 14f * scale), title,
             AppPalettes.YellowPages.TitleInk, TextStyles.Headline);
-        var hintWidth = card.Max.X - 16f * scale - textLeft;
-        Typography.DrawWrappedLeft(new Vector2(textLeft, card.Min.Y + 36f * scale),
-            Typography.FitText(hint, hintWidth * 2f, TextStyles.Footnote), AppPalettes.YellowPages.MutedInk,
+        Typography.DrawWrappedLeft(new Vector2(textLeft, hintTop), hint, AppPalettes.YellowPages.MutedInk,
             TextStyles.Footnote, hintWidth);
         var hovered = UiInteract.Hover(card.Min, card.Max);
         if (hovered)
