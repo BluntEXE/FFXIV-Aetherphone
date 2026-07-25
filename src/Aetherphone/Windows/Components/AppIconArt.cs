@@ -67,9 +67,6 @@ internal static class AppIconArt
             case "tetris":
                 DrawTetris(dl, center, extent, inkColor);
                 return true;
-            case "health":
-                DrawHealth(dl, center, extent, inkColor, holeColor);
-                return true;
             default:
                 return false;
         }
@@ -368,33 +365,6 @@ internal static class AppIconArt
             var blockMin = new Vector2(blockCenter.X - blockExtent, blockCenter.Y - blockExtent);
             var blockMax = new Vector2(blockCenter.X + blockExtent, blockCenter.Y + blockExtent);
             dl.AddRectFilled(blockMin, blockMax, ink, rounding);
-        }
-    }
-
-    private static void DrawHealth(ImDrawListPtr dl, Vector2 center, float extent, uint ink, uint hole)
-    {
-        var lobe = extent * 0.36f;
-        var leftLobe = At(center, extent, -0.34f, -0.24f);
-        var rightLobe = At(center, extent, 0.34f, -0.24f);
-        dl.AddCircleFilled(leftLobe, lobe, ink, 24);
-        dl.AddCircleFilled(rightLobe, lobe, ink, 24);
-        Span<Vector2> heart = stackalloc Vector2[3]
-        {
-            At(center, extent, -0.72f, -0.08f), At(center, extent, 0.72f, -0.08f), At(center, extent, 0f, 0.88f),
-        };
-        FillConvex(dl, ink, heart);
-
-        var y = center.Y + extent * 0.02f;
-        var thickness = extent * 0.13f;
-        Span<Vector2> pulse = stackalloc Vector2[6]
-        {
-            new(center.X - lobe * 1.7f, y), new(center.X - lobe * 0.7f, y),
-            new(center.X - lobe * 0.3f, y - extent * 0.36f), new(center.X + lobe * 0.15f, y + extent * 0.32f),
-            new(center.X + lobe * 0.6f, y), new(center.X + lobe * 1.7f, y),
-        };
-        for (var index = 0; index < pulse.Length - 1; index++)
-        {
-            dl.AddLine(pulse[index], pulse[index + 1], hole, thickness);
         }
     }
 

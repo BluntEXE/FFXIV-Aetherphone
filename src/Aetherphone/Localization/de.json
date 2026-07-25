@@ -2767,8 +2767,8 @@
   "health.noActiveGoals": "Keine aktiven Ziele. Füge welche im Tab „Ziele“ hinzu.",
   "health.streak": "Serie",
   "health.currentStreak": "Aktuelle Serie",
-  "health.streakOneDay": "1 Tag",
-  "health.streakDays": "{0} Tage",
+  "health.streakDays.one": "{0} Tag",
+  "health.streakDays.other": "{0} Tage",
   "health.today": "Heute",
   "health.session": "Sitzung",
   "health.allTime": "Gesamt",
@@ -2938,7 +2938,7 @@
   "health.notifyHydrationTitle": "Flüssigkeit",
   "health.notifyHydrationBody": "Dein Abenteurer hat länger nichts getrunken.",
   "health.notifyGoalTitle": "Ziel erreicht",
-  "health.notifyGoalBody": "{0} — geschafft!",
+  "health.notifyGoalBody": "{0} - geschafft!",
   "health.defaultGoalWalk1000": "1.000 Schritte gehen",
   "health.defaultGoalWalk5000": "5.000 Schritte gehen",
   "health.defaultGoalWalk10000": "10.000 Schritte gehen",
@@ -2968,5 +2968,8 @@
   "storeCopy.healthBody": "Geschätzte Schritte, Distanz, Schwimmen, Flüssigkeit und persönliche Ziele deines Charakters. Ein fiktiver Aktivitäts-Tracker für Rollenspiel und Statistik.",
   "health.heightSourceGame": "Spiel",
   "health.heightSourceManual": "Manuell",
-  "health.heightSourceUnavailable": "Nicht verfügbar"
+  "health.heightSourceUnavailable": "Nicht verfügbar",
+  "app.health": "Gesundheit",
+  "health.mounted": "Reisen im Sattel",
+  "health.flying": "Fliegen"
 }

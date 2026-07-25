@@ -2767,8 +2767,8 @@
   "health.noActiveGoals": "Aktif hedef yok. Hedefler sekmesinden ekle.",
   "health.streak": "Seri",
   "health.currentStreak": "Mevcut seri",
-  "health.streakOneDay": "1 gün",
-  "health.streakDays": "{0} gün",
+  "health.streakDays.one": "{0} gün",
+  "health.streakDays.other": "{0} gün",
   "health.today": "Bugün",
   "health.session": "Oturum",
   "health.allTime": "Tüm zamanlar",
@@ -2938,7 +2938,7 @@
   "health.notifyHydrationTitle": "Sıvı alımı",
   "health.notifyHydrationBody": "Maceracın bir süredir bir şey içmedi.",
   "health.notifyGoalTitle": "Hedef tamamlandı",
-  "health.notifyGoalBody": "{0} — tamamlandı!",
+  "health.notifyGoalBody": "{0} - tamamlandı!",
   "health.defaultGoalWalk1000": "1.000 adım yürü",
   "health.defaultGoalWalk5000": "5.000 adım yürü",
   "health.defaultGoalWalk10000": "10.000 adım yürü",
@@ -2968,5 +2968,8 @@
   "storeCopy.healthBody": "Karakterinin tahmini adımları, mesafesi, yüzmesi, sıvı alımı ve kişisel hedefleri. Rol yapma ve istatistik için kurgusal bir etkinlik takipçisi.",
   "health.heightSourceGame": "Oyun",
   "health.heightSourceManual": "Elle",
-  "health.heightSourceUnavailable": "Kullanılamıyor"
+  "health.heightSourceUnavailable": "Kullanılamıyor",
+  "app.health": "Sağlık",
+  "health.mounted": "Binekle yolculuk",
+  "health.flying": "Uçuş"
 }

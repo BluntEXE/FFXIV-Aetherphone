@@ -2767,8 +2767,8 @@
   "health.noActiveGoals": "没有启用的目标。请在“目标”页添加。",
   "health.streak": "连续天数",
   "health.currentStreak": "当前连续",
-  "health.streakOneDay": "1 天",
-  "health.streakDays": "{0} 天",
+  "health.streakDays.one": "{0} 天",
+  "health.streakDays.other": "{0} 天",
   "health.today": "今天",
   "health.session": "本次",
   "health.allTime": "累计",
@@ -2938,7 +2938,7 @@
   "health.notifyHydrationTitle": "饮水",
   "health.notifyHydrationBody": "你的冒险者最近没有喝水。",
   "health.notifyGoalTitle": "目标达成",
-  "health.notifyGoalBody": "{0} — 完成！",
+  "health.notifyGoalBody": "{0} - 完成！",
   "health.defaultGoalWalk1000": "走 1,000 步",
   "health.defaultGoalWalk5000": "走 5,000 步",
   "health.defaultGoalWalk10000": "走 10,000 步",
@@ -2968,5 +2968,8 @@
   "storeCopy.healthBody": "记录角色的预估步数、距离、游泳、饮水与个人目标。一个用于角色扮演与统计的虚构活动追踪器。",
   "health.heightSourceGame": "游戏",
   "health.heightSourceManual": "手动",
-  "health.heightSourceUnavailable": "不可用"
+  "health.heightSourceUnavailable": "不可用",
+  "app.health": "健康",
+  "health.mounted": "坐骑移动",
+  "health.flying": "飞行"
 }

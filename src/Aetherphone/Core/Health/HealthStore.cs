@@ -76,8 +76,48 @@ internal sealed class HealthStore
         profile.QuietEndHour = Math.Clamp(profile.QuietEndHour, 0, 23);
         profile.QuietStartMinute = Math.Clamp(profile.QuietStartMinute, 0, 59);
         profile.QuietEndMinute = Math.Clamp(profile.QuietEndMinute, 0, 59);
+        profile.AllWalkYalms = Clean(profile.AllWalkYalms);
+        profile.AllRunYalms = Clean(profile.AllRunYalms);
+        profile.AllSwimYalms = Clean(profile.AllSwimYalms);
+        profile.AllDiveYalms = Clean(profile.AllDiveYalms);
+        profile.AllMountYalms = Clean(profile.AllMountYalms);
+        profile.AllFlyYalms = Clean(profile.AllFlyYalms);
+        profile.AllActiveSeconds = Clean(profile.AllActiveSeconds);
+        profile.AllCalories = Clean(profile.AllCalories);
+        profile.AllTeleportYalms = Clean(profile.AllTeleportYalms);
+        profile.AllDrinkMillilitres = Clean(profile.AllDrinkMillilitres);
+        profile.AllDrinks = Math.Max(0, profile.AllDrinks);
+        profile.AllTeleports = Math.Max(0, profile.AllTeleports);
+        profile.RecordStepsInDay = Math.Max(0, profile.RecordStepsInDay);
+        profile.RecordOnFootYalmsInDay = Clean(profile.RecordOnFootYalmsInDay);
+        profile.RecordSwimYalmsInDay = Clean(profile.RecordSwimYalmsInDay);
+        profile.RecordActiveSecondsInDay = Clean(profile.RecordActiveSecondsInDay);
+        profile.LongestOnFootSessionSeconds = Clean(profile.LongestOnFootSessionSeconds);
+        profile.LongestSwimSessionSeconds = Clean(profile.LongestSwimSessionSeconds);
+        profile.LongestTeleportYalms = Clean(profile.LongestTeleportYalms);
+        profile.StreakDays = Math.Max(0, profile.StreakDays);
         profile.Goals ??= new List<HealthGoal>();
         profile.Days ??= new List<HealthDay>();
+        profile.Days.RemoveAll(day => day is null || string.IsNullOrWhiteSpace(day.Date));
+        for (var index = 0; index < profile.Days.Count; index++)
+        {
+            var day = profile.Days[index];
+            day.WalkYalms = Clean(day.WalkYalms);
+            day.RunYalms = Clean(day.RunYalms);
+            day.SwimYalms = Clean(day.SwimYalms);
+            day.DiveYalms = Clean(day.DiveYalms);
+            day.MountYalms = Clean(day.MountYalms);
+            day.FlyYalms = Clean(day.FlyYalms);
+            day.ActiveSeconds = Clean(day.ActiveSeconds);
+            day.Calories = Clean(day.Calories);
+            day.TeleportYalms = Clean(day.TeleportYalms);
+            day.Teleports = Math.Max(0, day.Teleports);
+            day.GoalsCompleted = Math.Max(0, day.GoalsCompleted);
+            day.Drinks ??= new List<HydrationEntry>();
+            day.Drinks.RemoveAll(drink => drink is null || !double.IsFinite(drink.Millilitres) ||
+                                          drink.Millilitres <= 0);
+        }
+
         profile.Goals.RemoveAll(goal => goal is null || goal.Target <= 0);
         for (var index = 0; index < profile.Goals.Count; index++)
         {
@@ -89,6 +129,9 @@ internal sealed class HealthStore
 
         return profile;
     }
+
+    // Saved numbers must never come back NaN, infinite or negative.
+    private static double Clean(double value) => double.IsFinite(value) && value > 0 ? value : 0d;
 
     private string PathFor(ulong contentId) => Path.Combine(root.FullName, contentId.ToString("X16") + ".json");
 }

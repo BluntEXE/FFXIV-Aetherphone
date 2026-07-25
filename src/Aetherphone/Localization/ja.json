@@ -2767,8 +2767,8 @@
   "health.noActiveGoals": "有効な目標がありません。「目標」タブで追加してください。",
   "health.streak": "連続記録",
   "health.currentStreak": "現在の連続記録",
-  "health.streakOneDay": "1日",
-  "health.streakDays": "{0}日",
+  "health.streakDays.one": "{0}日",
+  "health.streakDays.other": "{0}日",
   "health.today": "今日",
   "health.session": "セッション",
   "health.allTime": "累計",
@@ -2938,7 +2938,7 @@
   "health.notifyHydrationTitle": "水分補給",
   "health.notifyHydrationBody": "冒険者はしばらく水分を摂っていません。",
   "health.notifyGoalTitle": "目標達成",
-  "health.notifyGoalBody": "{0} — 達成！",
+  "health.notifyGoalBody": "{0} - 達成！",
   "health.defaultGoalWalk1000": "1,000歩あるく",
   "health.defaultGoalWalk5000": "5,000歩あるく",
   "health.defaultGoalWalk10000": "10,000歩あるく",
@@ -2968,5 +2968,8 @@
   "storeCopy.healthBody": "キャラクターの推定歩数・距離・水泳・水分補給・目標を記録します。ロールプレイと統計のための架空のアクティビティトラッカーです。",
   "health.heightSourceGame": "ゲーム",
   "health.heightSourceManual": "手動",
-  "health.heightSourceUnavailable": "取得不可"
+  "health.heightSourceUnavailable": "取得不可",
+  "app.health": "ヘルス",
+  "health.mounted": "マウント移動",
+  "health.flying": "飛行"
 }

@@ -39,11 +39,37 @@ internal enum HealthGoalScope
     AllTime,
 }
 
+internal static class DrinkKeys
+{
+    public const string Water = "water";
+    public const string Tea = "tea";
+    public const string Coffee = "coffee";
+    public const string Juice = "juice";
+
+    public static readonly string[] All = { Water, Tea, Coffee, Juice };
+}
+
+internal static class GoalKeys
+{
+    public const string Walk1000 = "walk1000";
+    public const string Walk5000 = "walk5000";
+    public const string Walk10000 = "walk10000";
+    public const string WalkMalm = "walkMalm";
+    public const string Swim500 = "swim500";
+    public const string Drinks4 = "drinks4";
+    public const string Active30 = "active30";
+    public const string New = "new";
+}
+
 internal sealed class HydrationEntry
 {
     [JsonProperty("t")] public long Unix { get; set; }
 
-    [JsonProperty("k")] public string Kind { get; set; } = "Water";
+    // Built-in kind key ("water", "tea", ...) resolved at draw time. Empty for custom drinks,
+    // which fall back to the free-text Kind below.
+    [JsonProperty("kk")] public string KindKey { get; set; } = string.Empty;
+
+    [JsonProperty("k")] public string Kind { get; set; } = string.Empty;
 
     [JsonProperty("ml")] public double Millilitres { get; set; }
 }
@@ -51,6 +77,10 @@ internal sealed class HydrationEntry
 internal sealed class HealthGoal
 {
     [JsonProperty("id")] public string Id { get; set; } = Guid.NewGuid().ToString("N");
+
+    // Built-in goal key resolved at draw time. Empty once the user renames the goal, which
+    // makes Name authoritative.
+    [JsonProperty("nk")] public string NameKey { get; set; } = string.Empty;
 
     [JsonProperty("name")] public string Name { get; set; } = string.Empty;
 
@@ -150,6 +180,7 @@ internal sealed class HealthProfile
     [JsonProperty("allTp")] public int AllTeleports { get; set; }
     [JsonProperty("allTpY")] public double AllTeleportYalms { get; set; }
     [JsonProperty("allDrinks")] public int AllDrinks { get; set; }
+    [JsonProperty("allDrinkMl")] public double AllDrinkMillilitres { get; set; }
 
     // Personal records
     [JsonProperty("recSteps")] public long RecordStepsInDay { get; set; }

@@ -151,6 +151,7 @@ internal static class L
     {
         public static readonly LocString Contacts = new("app.contacts", "Contacts");
         public static readonly LocString Character = new("app.character", "Character");
+        public static readonly LocString Health = new("app.health", "Health");
         public static readonly LocString Chirper = new("app.chirper", "Chirper");
         public static readonly LocString Aethergram = new("app.aethergram", "Aethergram");
         public static readonly LocString Velvet = new("app.velvet", "Velvet");
@@ -3275,13 +3276,14 @@ internal static class L
         public static readonly LocString NoActiveGoals = new("health.noActiveGoals", "No active goals. Add some on the Goals tab.");
         public static readonly LocString Streak = new("health.streak", "Streak");
         public static readonly LocString CurrentStreak = new("health.currentStreak", "Current streak");
-        public static readonly LocString StreakOneDay = new("health.streakOneDay", "1 day");
-        public static readonly LocString StreakDays = new("health.streakDays", "{0} days");
+        public static readonly LocPlural StreakDayCount = new("health.streakDays", "{0} day", "{0} days");
         public static readonly LocString Today = new("health.today", "Today");
         public static readonly LocString Session = new("health.session", "Session");
         public static readonly LocString AllTime = new("health.allTime", "All-time");
         public static readonly LocString Swimming = new("health.swimming", "Swimming");
         public static readonly LocString Diving = new("health.diving", "Diving");
+        public static readonly LocString Mounted = new("health.mounted", "Mounted travel");
+        public static readonly LocString Flying = new("health.flying", "Flying");
         public static readonly LocString Teleports = new("health.teleports", "Teleports");
         public static readonly LocString DistanceSkipped = new("health.distanceSkipped", "Distance skipped");
         public static readonly LocString TeleportHint = new("health.teleportHint", "Teleport distance skipped is a same-map straight-line estimate only; cross-zone teleports are counted without distance.");
@@ -3449,7 +3451,7 @@ internal static class L
         public static readonly LocString NotifyHydrationTitle = new("health.notifyHydrationTitle", "Hydration");
         public static readonly LocString NotifyHydrationBody = new("health.notifyHydrationBody", "Your adventurer has not logged a drink recently.");
         public static readonly LocString NotifyGoalTitle = new("health.notifyGoalTitle", "Goal complete");
-        public static readonly LocString NotifyGoalBody = new("health.notifyGoalBody", "{0} — done!");
+        public static readonly LocString NotifyGoalBody = new("health.notifyGoalBody", "{0} - done!");
         public static readonly LocString DefaultGoalWalk1000 = new("health.defaultGoalWalk1000", "Walk 1,000 steps");
         public static readonly LocString DefaultGoalWalk5000 = new("health.defaultGoalWalk5000", "Walk 5,000 steps");
         public static readonly LocString DefaultGoalWalk10000 = new("health.defaultGoalWalk10000", "Walk 10,000 steps");

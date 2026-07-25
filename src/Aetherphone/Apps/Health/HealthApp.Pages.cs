@@ -12,33 +12,53 @@ namespace Aetherphone.Apps.Health;
 
 internal sealed partial class HealthApp
 {
-    private static string[] DrinkKinds => new[]
-    {
-        Loc.T(L.Health.DrinkKindWater), Loc.T(L.Health.DrinkKindTea), Loc.T(L.Health.DrinkKindCoffee),
-        Loc.T(L.Health.DrinkKindJuice),
-    };
+    // Refilled in place each draw so a language change is picked up without allocating.
+    private readonly string[] drinkKinds = new string[4];
+    private readonly string[] unitLabels = new string[3];
+    private readonly string[] scopeLabels = new string[4];
+    private readonly string[] setupSubtitles = new string[SetupSteps];
 
-    private static string[] UnitLabels => new[]
+    private string[] DrinkKinds()
     {
-        Loc.T(L.Health.UnitEorzean), Loc.T(L.Health.UnitMetric), Loc.T(L.Health.UnitImperial),
-    };
+        drinkKinds[0] = Loc.T(L.Health.DrinkKindWater);
+        drinkKinds[1] = Loc.T(L.Health.DrinkKindTea);
+        drinkKinds[2] = Loc.T(L.Health.DrinkKindCoffee);
+        drinkKinds[3] = Loc.T(L.Health.DrinkKindJuice);
+        return drinkKinds;
+    }
 
-    private static string[] ScopeLabels => new[]
+    private string[] UnitLabels()
     {
-        Loc.T(L.Health.ScopeDaily), Loc.T(L.Health.ScopeWeekly), Loc.T(L.Health.ScopeSession),
-        Loc.T(L.Health.ScopeAllTime),
-    };
+        unitLabels[0] = Loc.T(L.Health.UnitEorzean);
+        unitLabels[1] = Loc.T(L.Health.UnitMetric);
+        unitLabels[2] = Loc.T(L.Health.UnitImperial);
+        return unitLabels;
+    }
+
+    private string[] ScopeLabels()
+    {
+        scopeLabels[0] = Loc.T(L.Health.ScopeDaily);
+        scopeLabels[1] = Loc.T(L.Health.ScopeWeekly);
+        scopeLabels[2] = Loc.T(L.Health.ScopeSession);
+        scopeLabels[3] = Loc.T(L.Health.ScopeAllTime);
+        return scopeLabels;
+    }
 
     // ---- Setup (stepped registration wizard) --------------------------------
 
     private const int SetupSteps = 5;
+    private const int GoalTypeCount = (int)HealthGoalType.Calories + 1;
     private int setupStep;
 
-    private static string[] SetupSubtitles => new[]
+    private string[] SetupSubtitles()
     {
-        Loc.T(L.Health.SetupSub1), Loc.T(L.Health.SetupSub2), Loc.T(L.Health.SetupSub3),
-        Loc.T(L.Health.SetupSub4), Loc.T(L.Health.SetupSub5),
-    };
+        setupSubtitles[0] = Loc.T(L.Health.SetupSub1);
+        setupSubtitles[1] = Loc.T(L.Health.SetupSub2);
+        setupSubtitles[2] = Loc.T(L.Health.SetupSub3);
+        setupSubtitles[3] = Loc.T(L.Health.SetupSub4);
+        setupSubtitles[4] = Loc.T(L.Health.SetupSub5);
+        return setupSubtitles;
+    }
 
     private void DrawSetup(float scale)
     {
@@ -50,7 +70,7 @@ internal sealed partial class HealthApp
         Typography.DrawCentered(new Vector2(centerX, origin.Y + 14f * scale), Loc.T(L.Health.WelcomeAdventurer),
             Pal.TitleInk,
             TextStyles.Title2);
-        Typography.DrawCentered(new Vector2(centerX, origin.Y + 40f * scale), SetupSubtitles[setupStep], Pal.MutedInk,
+        Typography.DrawCentered(new Vector2(centerX, origin.Y + 40f * scale), SetupSubtitles()[setupStep], Pal.MutedInk,
             TextStyles.Subheadline);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, 60f * scale));
@@ -109,8 +129,8 @@ internal sealed partial class HealthApp
             tracker.MarkDirty();
         }
 
-        var swim = FloatField(Loc.T(L.Health.SwimmingYalms), "##hp.setup.swim", Profile.DailySwimGoalYalms, 100, 100, 100000,
-            "%.0f", scale);
+        var swim = FloatField(Loc.T(L.Health.SwimmingYalms), "##hp.setup.swim", Profile.DailySwimGoalYalms, 100, 100, 100000, 0,
+            scale);
         if (Math.Abs(swim - Profile.DailySwimGoalYalms) > 0.01)
         {
             Profile.DailySwimGoalYalms = swim;
@@ -133,7 +153,7 @@ internal sealed partial class HealthApp
             Profile.WeightKg is { } kg ? HealthFormat.Weight(kg, U) : Loc.T(L.Health.NotSet));
         ui.Field(Loc.T(L.Health.WeightLabel, WeightUnitLabel()), "##health.setup.weight", ref weightBuffer, 8, false);
         if (WideButton(Loc.T(L.Health.SetWeight), false, scale, 30f) &&
-            double.TryParse(weightBuffer, NumberStyles.Any, CultureInfo.CurrentCulture, out var value) && value > 0)
+            double.TryParse(weightBuffer, NumberStyles.Any, Loc.Culture, out var value) && value > 0)
         {
             Profile.WeightKg = HealthFormat.WeightToKg(value, U);
             tracker.SaveNow();
@@ -156,7 +176,7 @@ internal sealed partial class HealthApp
         ui.LabelValue(Loc.T(L.Health.Height),
             Loc.T(L.Health.HeightWithSource, HealthFormat.Height(tracker.HeightCm, U), HeightSourceLabel()));
         var strideDelta = StepperRow(Loc.T(L.Health.YalmsPerStep),
-            Profile.StrideYalms.ToString("0.00", CultureInfo.CurrentCulture), scale);
+            Profile.StrideYalms.ToString("0.00", Loc.Culture), scale);
         if (strideDelta != 0)
         {
             Profile.StrideYalms = Math.Clamp(Profile.StrideYalms + strideDelta * 0.05, 0.30, 1.50);
@@ -176,7 +196,7 @@ internal sealed partial class HealthApp
     {
         StepLabel(Loc.T(L.Health.Review), scale);
         var card = BeginCard(6, 38f, scale);
-        KeyRow(CardRow(card, 0, 38f, scale), Loc.T(L.Health.Units), UnitLabels[(int)U], scale);
+        KeyRow(CardRow(card, 0, 38f, scale), Loc.T(L.Health.Units), UnitLabels()[(int)U], scale);
         KeyRow(CardRow(card, 1, 38f, scale), Loc.T(L.Health.StepsGoal), HealthFormat.Number(Profile.DailyStepGoal), scale);
         KeyRow(CardRow(card, 2, 38f, scale), Loc.T(L.Health.SwimGoal), Dist(Profile.DailySwimGoalYalms), scale);
         KeyRow(CardRow(card, 3, 38f, scale), Loc.T(L.Health.HydrationGoal),
@@ -233,7 +253,7 @@ internal sealed partial class HealthApp
             Profile.SetupCompleted = true;
             if (Profile.Goals.Count == 0)
             {
-                Profile.Goals = HealthTracker.DefaultGoals();
+                Profile.Goals = HealthTracker.DefaultGoals(Profile.DailySwimGoalYalms);
             }
 
             setupStep = 0;
@@ -269,7 +289,7 @@ internal sealed partial class HealthApp
             var center = new Vector2(cx, cy);
             var done = index <= setupStep;
             drawList.AddCircleFilled(center, radius, done ? accent : idle, 24);
-            Typography.DrawCentered(center, (index + 1).ToString(CultureInfo.InvariantCulture),
+            Typography.DrawCentered(center, (index + 1).ToString(Loc.Culture),
                 done ? new Vector4(1f, 1f, 1f, 1f) : Pal.MutedInk, TextStyles.Caption1);
         }
 
@@ -282,15 +302,17 @@ internal sealed partial class HealthApp
         var player = gameData.LocalPlayer;
         var name = player?.Name.TextValue ?? Loc.T(L.Health.Adventurer);
         var world = player is not null ? gameData.WorldName(player.HomeWorld.RowId) : string.Empty;
-        ReadIdentity(out var race, out var clan);
+        EnsureIdentity();
+        var race = cachedRace;
+        var clan = cachedClan;
         var raceClan = race.Length > 0 && clan.Length > 0
             ? Loc.T(L.Health.RaceClanValue, race, clan)
-            : race.Length > 0 ? race : "—";
+            : race.Length > 0 ? race : "-";
 
         ui.SectionLabel(Loc.T(L.Health.ProfileSummary), TextStyles.FootnoteEmphasized, 4f);
         var card = BeginCard(4, 40f, scale);
         KeyRow(CardRow(card, 0, 40f, scale), Loc.T(L.Health.Name), name, scale);
-        KeyRow(CardRow(card, 1, 40f, scale), Loc.T(L.Health.World), world.Length > 0 ? world : "—", scale);
+        KeyRow(CardRow(card, 1, 40f, scale), Loc.T(L.Health.World), world.Length > 0 ? world : "-", scale);
         KeyRow(CardRow(card, 2, 40f, scale), Loc.T(L.Health.RaceClan), raceClan, scale);
         KeyRow(CardRow(card, 3, 40f, scale), Loc.T(L.Health.Height),
             Loc.T(L.Health.HeightWithSource, HealthFormat.Height(tracker.HeightCm, U), HeightSourceLabel()), scale);
@@ -299,12 +321,14 @@ internal sealed partial class HealthApp
 
     private void KeyRow(Rect row, string label, string value, float scale)
     {
-        var labelSize = Typography.Measure(label, TextStyles.Subheadline);
-        Typography.Draw(new Vector2(row.Min.X, row.Center.Y - labelSize.Y * 0.5f), label, Pal.MutedInk,
-            TextStyles.Subheadline);
         var valueSize = Typography.Measure(value, TextStyles.Headline);
         Typography.Draw(new Vector2(row.Max.X - valueSize.X, row.Center.Y - valueSize.Y * 0.5f), value, Pal.TitleInk,
             TextStyles.Headline);
+        var fitted = Typography.FitText(label, row.Max.X - valueSize.X - row.Min.X - 10f * scale,
+            TextStyles.Subheadline);
+        var labelSize = Typography.Measure(fitted, TextStyles.Subheadline);
+        Typography.Draw(new Vector2(row.Min.X, row.Center.Y - labelSize.Y * 0.5f), fitted, Pal.MutedInk,
+            TextStyles.Subheadline);
     }
 
     private void StepLabel(string text, float scale)
@@ -320,7 +344,7 @@ internal sealed partial class HealthApp
         var min = origin;
         var max = origin + new Vector2(width, height);
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         var fill = selected ? Pal.Accent with { W = 0.18f } : Pal.FieldSurface with { W = Pal.FieldSurface.W * (hovered ? 1.4f : 1f) };
         drawList.AddRectFilled(min, max, ImGui.GetColorU32(fill), 12f * scale);
         if (selected)
@@ -352,7 +376,7 @@ internal sealed partial class HealthApp
 
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height + 8f * scale));
-        return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+        return UiInteract.HoverClick(min, max);
     }
 
     // ---- Hydration ----------------------------------------------------------
@@ -369,18 +393,19 @@ internal sealed partial class HealthApp
 
         if (WideButton(Loc.T(L.Health.DrinkWater), true, scale, 46f))
         {
-            tracker.LogDrink(Loc.T(L.Health.DrinkKindWater), 250);
+            tracker.LogDrink(DrinkKeys.Water, string.Empty, 250);
         }
 
         // Quick drink
         var chipOrigin = ImGui.GetCursorScreenPos();
         var centerY = chipOrigin.Y + 16f * scale;
         var cursorX = chipOrigin.X;
-        for (var index = 0; index < DrinkKinds.Length; index++)
+        var kinds = DrinkKinds();
+        for (var index = 0; index < kinds.Length; index++)
         {
-            if (ui.FlowChip(ref cursorX, centerY, 8f * scale, DrinkKinds[index], false))
+            if (ui.FlowChip(ref cursorX, centerY, 8f * scale, kinds[index], false))
             {
-                tracker.LogDrink(DrinkKinds[index], 250);
+                tracker.LogDrink(DrinkKeys.All[index], string.Empty, 250);
             }
         }
 
@@ -397,7 +422,7 @@ internal sealed partial class HealthApp
 
         if (WideButton(Loc.T(L.Health.LogCustomDrink), false, scale))
         {
-            tracker.LogDrink(customDrinkName.Length > 0 ? customDrinkName : Loc.T(L.Health.DrinkFallback), customDrinkMl);
+            tracker.LogDrink(string.Empty, customDrinkName, customDrinkMl);
         }
 
         if (WideButton(Loc.T(L.Health.UndoLastDrink), false, scale))
@@ -422,9 +447,9 @@ internal sealed partial class HealthApp
             for (var index = day.Drinks.Count - 1; index >= 0; index--)
             {
                 var entry = day.Drinks[index];
-                var time = DateTimeOffset.FromUnixTimeSeconds(entry.Unix).LocalDateTime.ToString("HH:mm",
-                    CultureInfo.InvariantCulture);
-                ui.LabelValue(Loc.T(L.Health.DrinkEntry, time, entry.Kind), HealthFormat.Volume(entry.Millilitres, U));
+                var time = TimeText.Clock(entry.Unix);
+                ui.LabelValue(Loc.T(L.Health.DrinkEntry, time, HealthFormat.DrinkKindName(entry)),
+                    HealthFormat.Volume(entry.Millilitres, U));
             }
         }
 
@@ -496,7 +521,7 @@ internal sealed partial class HealthApp
             else if (WideButton(Loc.T(goal.Enabled ? L.Health.Edit : L.Health.EditDisabled), false, scale, 30f))
             {
                 editingGoalId = goal.Id;
-                goalNameBuffer = goal.Name;
+                goalNameBuffer = HealthFormat.GoalName(goal);
             }
 
             ImGui.Dummy(new Vector2(0f, 6f * scale));
@@ -504,10 +529,10 @@ internal sealed partial class HealthApp
 
         if (WideButton(Loc.T(L.Health.AddGoal), true, scale))
         {
-            var goal = new HealthGoal { Name = Loc.T(L.Health.NewGoal), Type = HealthGoalType.Steps, Target = 1000 };
+            var goal = new HealthGoal { NameKey = GoalKeys.New, Type = HealthGoalType.Steps, Target = 1000 };
             Profile.Goals.Add(goal);
             editingGoalId = goal.Id;
-            goalNameBuffer = goal.Name;
+            goalNameBuffer = HealthFormat.GoalName(goal);
             tracker.SaveNow();
         }
 
@@ -521,7 +546,7 @@ internal sealed partial class HealthApp
                 CancelLabel = Loc.T(L.Health.Cancel),
                 Confirm = () =>
                 {
-                    Profile.Goals = HealthTracker.DefaultGoals();
+                    Profile.Goals = HealthTracker.DefaultGoals(Profile.DailySwimGoalYalms);
                     editingGoalId = null;
                     tracker.SaveNow();
                 },
@@ -540,15 +565,15 @@ internal sealed partial class HealthApp
             tracker.SaveNow();
         }
 
-        var scopeDelta = StepperRow(Loc.T(L.Health.Scope), ScopeLabels[(int)goal.Scope], scale);
+        var scopeDelta = StepperRow(Loc.T(L.Health.Scope), ScopeLabels()[(int)goal.Scope], scale);
         if (scopeDelta != 0)
         {
             goal.Scope = (HealthGoalScope)(((int)goal.Scope + scopeDelta + 4) % 4);
             tracker.SaveNow();
         }
 
-        var target = FloatField(Loc.T(L.Health.Target), "##hp.goalTarget", goal.Target, GoalStep(goal.Type), 1, 10_000_000,
-            "%.0f", scale);
+        var target = FloatField(Loc.T(L.Health.Target), "##hp.goalTarget", goal.Target, GoalStep(goal.Type), 1, 10_000_000, 0,
+            scale);
         if (Math.Abs(target - goal.Target) > 0.001)
         {
             goal.Target = target;
@@ -574,7 +599,12 @@ internal sealed partial class HealthApp
 
         if (WideButton(Loc.T(L.Health.Done), true, scale, 30f))
         {
-            goal.Name = goalNameBuffer.Length > 0 ? goalNameBuffer : Loc.T(L.Health.GoalFallback);
+            var typed = goalNameBuffer.Trim();
+            if (typed.Length > 0 && typed != HealthFormat.GoalName(goal))
+            {
+                goal.Name = typed;
+                goal.NameKey = string.Empty;
+            }
             editingGoalId = null;
             tracker.SaveNow();
         }
@@ -607,8 +637,7 @@ internal sealed partial class HealthApp
 
     private static HealthGoalType Cycle(HealthGoalType type, int delta)
     {
-        var count = Enum.GetValues<HealthGoalType>().Length;
-        return (HealthGoalType)(((int)type + delta + count) % count);
+        return (HealthGoalType)(((int)type + delta + GoalTypeCount) % GoalTypeCount);
     }
 
     // ---- History ------------------------------------------------------------
@@ -638,7 +667,7 @@ internal sealed partial class HealthApp
                 Loc.T(L.Health.Hydration), Loc.T(L.Health.DrinksValue, day.DrinkCount), scale);
             var kcal = Profile.CaloriesEnabled
                 ? Loc.T(L.Health.Kcal, day.Calories.ToString("0", Loc.Culture))
-                : "—";
+                : "-";
             StatRow(CardRow(card, 3, CompactRowHeight, scale), Accent3, FontAwesomeIcon.Fire, Loc.T(L.Health.Energy),
                 kcal, scale);
             EndCard(card, scale);
@@ -649,7 +678,7 @@ internal sealed partial class HealthApp
     {
         return DateTime.TryParseExact(key, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None,
             out var parsed)
-            ? parsed.ToString("ddd, MMM d", CultureInfo.InvariantCulture)
+            ? parsed.ToString("ddd, MMM d", Loc.Culture)
             : key;
     }
 
@@ -698,7 +727,7 @@ internal sealed partial class HealthApp
             Profile.WeightKg is { } kg ? HealthFormat.Weight(kg, U) : Loc.T(L.Health.NotSet), scale);
         PanelField(Loc.T(L.Health.EnterWeight, WeightUnitLabel()), "##health.weight", ref weightBuffer, 8, scale);
         if (WideButton(Loc.T(L.Health.SetWeight), false, scale, 30f) &&
-            double.TryParse(weightBuffer, NumberStyles.Any, CultureInfo.CurrentCulture, out var value) && value > 0)
+            double.TryParse(weightBuffer, NumberStyles.Any, Loc.Culture, out var value) && value > 0)
         {
             Profile.WeightKg = HealthFormat.WeightToKg(value, U);
             tracker.SaveNow();
@@ -724,7 +753,7 @@ internal sealed partial class HealthApp
         EndPanel(scale);
 
         BeginPanel(Loc.T(L.Health.Units), scale);
-        var units = Segmented("health.units", UnitLabels, (int)U, scale);
+        var units = Segmented("health.units", UnitLabels(), (int)U, scale);
         if (units != (int)U)
         {
             Profile.Units = (HealthUnits)units;
@@ -736,7 +765,7 @@ internal sealed partial class HealthApp
 
         BeginPanel(Loc.T(L.Health.StrideLength), scale);
         var strideDelta = StepperRow(Loc.T(L.Health.YalmsPerStep),
-            Profile.StrideYalms.ToString("0.00", CultureInfo.CurrentCulture), scale);
+            Profile.StrideYalms.ToString("0.00", Loc.Culture), scale);
         if (strideDelta != 0)
         {
             Profile.StrideYalms = Math.Clamp(Profile.StrideYalms + strideDelta * 0.05, 0.30, 1.50);
@@ -829,8 +858,10 @@ internal sealed partial class HealthApp
         }
 
         PanelLabel(Loc.T(L.Health.SuggestedTapToUse), scale);
-        foreach (var (label, kg) in WeightSuggestions(cm))
+        var suggestions = WeightSuggestions(cm);
+        for (var index = 0; index < suggestions.Length; index++)
         {
+            var (label, kg) = suggestions[index];
             if (WideButton(Loc.T(L.Health.SuggestionEntry, label, HealthFormat.Weight(kg, U)), false, scale, 30f))
             {
                 Profile.WeightKg = kg;
@@ -851,19 +882,31 @@ internal sealed partial class HealthApp
         ImGui.Dummy(new Vector2(full, 18f * scale));
     }
 
+    private readonly (string Label, double Kg)[] weightSuggestions = new (string, double)[3];
+    private double suggestionHeightCm = -1;
+    private double suggestionBuild = -1;
+
     private (string Label, double Kg)[] WeightSuggestions(double cm)
     {
-        var metres = cm / 100d;
-        var build = RaceBuildFactor();
-        return new (string, double)[]
+        EnsureIdentity();
+        var build = cachedBuild;
+        if (Math.Abs(cm - suggestionHeightCm) > 0.01 || Math.Abs(build - suggestionBuild) > 0.0001)
         {
-            (Loc.T(L.Health.SuggestLean), Math.Round(19.5 * metres * metres * build)),
-            (Loc.T(L.Health.SuggestAverage), Math.Round(23.0 * metres * metres * build)),
-            (Loc.T(L.Health.SuggestSturdy), Math.Round(26.5 * metres * metres * build)),
-        };
+            suggestionHeightCm = cm;
+            suggestionBuild = build;
+            var metres = cm / 100d;
+            weightSuggestions[0].Kg = Math.Round(19.5 * metres * metres * build);
+            weightSuggestions[1].Kg = Math.Round(23.0 * metres * metres * build);
+            weightSuggestions[2].Kg = Math.Round(26.5 * metres * metres * build);
+        }
+
+        weightSuggestions[0].Label = Loc.T(L.Health.SuggestLean);
+        weightSuggestions[1].Label = Loc.T(L.Health.SuggestAverage);
+        weightSuggestions[2].Label = Loc.T(L.Health.SuggestSturdy);
+        return weightSuggestions;
     }
 
-    private double RaceBuildFactor()
+    private double ReadBuildFactor()
     {
         var player = gameData.LocalPlayer;
         if (player is null)
@@ -878,11 +921,11 @@ internal sealed partial class HealthApp
             {
                 return customize[0] switch
                 {
-                    3 => 1.12,  // Lalafell — small but stocky
-                    5 => 1.18,  // Roegadyn — heavy, muscular
-                    7 => 1.20,  // Hrothgar — huge, muscular
-                    2 => 0.95,  // Elezen — slender
-                    8 => 0.93,  // Viera — slender
+                    3 => 1.12,  // Lalafell - small but stocky
+                    5 => 1.18,  // Roegadyn - heavy, muscular
+                    7 => 1.20,  // Hrothgar - huge, muscular
+                    2 => 0.95,  // Elezen - slender
+                    8 => 0.93,  // Viera - slender
                     _ => 1.0,   // Hyur, Miqo'te, Au Ra
                 };
             }
@@ -893,6 +936,25 @@ internal sealed partial class HealthApp
         }
 
         return 1.0;
+    }
+
+    // Appearance sheets are only re-read when the character actually changes.
+    private ulong identityContentId;
+    private string cachedRace = string.Empty;
+    private string cachedClan = string.Empty;
+    private double cachedBuild = 1.0;
+
+    private void EnsureIdentity()
+    {
+        var id = tracker.CharacterId;
+        if (id == identityContentId)
+        {
+            return;
+        }
+
+        identityContentId = id;
+        ReadIdentity(out cachedRace, out cachedClan);
+        cachedBuild = ReadBuildFactor();
     }
 
     private void ReadIdentity(out string race, out string clan)
@@ -930,10 +992,13 @@ internal sealed partial class HealthApp
         var origin = new Vector2(basePos.X + groupPad, basePos.Y);
         var width = full - groupPad * 2f;
         var row = new Rect(origin, origin + new Vector2(width, rowHeight * scale));
-        Typography.Draw(new Vector2(row.Min.X, row.Center.Y - 8f * scale), label, Pal.BodyInk, TextStyles.Subheadline);
         var radius = 13f * scale;
         var plus = new Vector2(row.Max.X - radius, row.Center.Y);
         var minus = new Vector2(row.Max.X - radius - 96f * scale, row.Center.Y);
+        var stepperLabel = Typography.FitText(label, minus.X - radius - row.Min.X - 8f * scale,
+            TextStyles.Subheadline);
+        Typography.Draw(new Vector2(row.Min.X, row.Center.Y - 8f * scale), stepperLabel, Pal.BodyInk,
+            TextStyles.Subheadline);
         var valueCenter = new Vector2((plus.X + minus.X) * 0.5f, row.Center.Y);
         Typography.DrawCentered(valueCenter, value, Pal.TitleInk, 0.95f, FontWeight.SemiBold);
         var delta = 0;
@@ -972,7 +1037,7 @@ internal sealed partial class HealthApp
         UpdateActiveNumber(id);
         if (activeNumberId != id)
         {
-            Typography.DrawCentered(boxCenter, v.ToString(CultureInfo.CurrentCulture), Pal.TitleInk,
+            Typography.DrawCentered(boxCenter, v.ToString(Loc.Culture), Pal.TitleInk,
                 TextStyles.Headline);
         }
 
@@ -982,7 +1047,7 @@ internal sealed partial class HealthApp
     }
 
     private double FloatField(string label, string id, double value, double step, double min, double max,
-        string format, float scale)
+        int decimals, float scale)
     {
         NumberField(label, scale, out var inputPos, out var inputWidth, out var boxCenter, out var dec, out var inc,
             out var basePos, out var full, out var rowHeight);
@@ -994,14 +1059,13 @@ internal sealed partial class HealthApp
         using (ImRaii.PushColor(ImGuiCol.Text, active ? Pal.TitleInk : AppSkin.Transparent))
         {
             ImGui.SetNextItemWidth(inputWidth);
-            ImGui.InputFloat(id, ref v, 0f, 0f, format);
+            ImGui.InputFloat(id, ref v, 0f, 0f, decimals == 0 ? "%.0f" : "%.2f");
         }
 
         UpdateActiveNumber(id);
         if (activeNumberId != id)
         {
-            var decimals = format.Contains(".2") ? "0.00" : format.Contains(".1") ? "0.0" : "0";
-            Typography.DrawCentered(boxCenter, v.ToString(decimals, CultureInfo.CurrentCulture), Pal.TitleInk,
+            Typography.DrawCentered(boxCenter, v.ToString(decimals == 0 ? "0" : "0.00", Loc.Culture), Pal.TitleInk,
                 TextStyles.Headline);
         }
 
@@ -1078,7 +1142,7 @@ internal sealed partial class HealthApp
         if (activeNumberId != id)
         {
             Typography.DrawCentered(new Vector2((boxMin.X + boxMax.X) * 0.5f, centerY),
-                v.ToString(overlayFormat, CultureInfo.CurrentCulture), Pal.TitleInk, TextStyles.Headline);
+                v.ToString(overlayFormat, Loc.Culture), Pal.TitleInk, TextStyles.Headline);
         }
 
         return Math.Clamp(v, min, max);
@@ -1140,11 +1204,10 @@ internal sealed partial class HealthApp
         panelWidth = ImGui.GetContentRegionAvail().X;
         ImGui.Dummy(new Vector2(panelWidth, 10f * scale));
         groupPad = 14f * scale;
-        var origin = ImGui.GetCursorScreenPos();
-        Typography.Draw(new Vector2(origin.X + groupPad, origin.Y),
-            CultureInfo.CurrentCulture.TextInfo.ToUpper(title), Pal.HeaderInk, TextStyles.Caption1);
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(panelWidth, 22f * scale));
+        ImGui.Indent(groupPad);
+        ui.SectionLabel(title, TextStyles.Caption1, 0f);
+        ImGui.Unindent(groupPad);
+        ImGui.Dummy(new Vector2(panelWidth, 4f * scale));
     }
 
     private void EndPanel(float scale)
@@ -1177,9 +1240,10 @@ internal sealed partial class HealthApp
         var width = full - groupPad * 2f;
         var height = 34f * scale;
         var row = new Rect(origin, origin + new Vector2(width, height));
-        Typography.Draw(new Vector2(row.Min.X, row.Center.Y - 8f * scale), label, Pal.BodyInk,
-            TextStyles.Subheadline);
         var trackWidth = 44f * scale;
+        var toggleLabel = Typography.FitText(label, width - trackWidth - 10f * scale, TextStyles.Subheadline);
+        Typography.Draw(new Vector2(row.Min.X, row.Center.Y - 8f * scale), toggleLabel, Pal.BodyInk,
+            TextStyles.Subheadline);
         var trackHeight = 24f * scale;
         var trackMin = new Vector2(row.Max.X - trackWidth, row.Center.Y - trackHeight * 0.5f);
         var trackMax = new Vector2(row.Max.X, row.Center.Y + trackHeight * 0.5f);
@@ -1190,7 +1254,7 @@ internal sealed partial class HealthApp
         var knobX = value ? trackMax.X - knobRadius - 3f * scale : trackMin.X + knobRadius + 3f * scale;
         drawList.AddCircleFilled(new Vector2(knobX, row.Center.Y), knobRadius,
             ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 1f)), 20);
-        var clicked = ImGui.IsMouseHoveringRect(row.Min, row.Max) && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+        var clicked = UiInteract.HoverClick(row.Min, row.Max);
         ImGui.SetCursorScreenPos(basePos);
         ImGui.Dummy(new Vector2(full, height + 6f * scale));
         return clicked ? !value : value;

@@ -2767,8 +2767,8 @@
   "health.noActiveGoals": "Aucun objectif actif. Ajoutes-en dans l'onglet Objectifs.",
   "health.streak": "Série",
   "health.currentStreak": "Série actuelle",
-  "health.streakOneDay": "1 jour",
-  "health.streakDays": "{0} jours",
+  "health.streakDays.one": "{0} jour",
+  "health.streakDays.other": "{0} jours",
   "health.today": "Aujourd'hui",
   "health.session": "Session",
   "health.allTime": "Total",
@@ -2938,7 +2938,7 @@
   "health.notifyHydrationTitle": "Hydratation",
   "health.notifyHydrationBody": "Ton aventurier n'a rien bu depuis un moment.",
   "health.notifyGoalTitle": "Objectif atteint",
-  "health.notifyGoalBody": "{0} — terminé !",
+  "health.notifyGoalBody": "{0} - terminé !",
   "health.defaultGoalWalk1000": "Marcher 1 000 pas",
   "health.defaultGoalWalk5000": "Marcher 5 000 pas",
   "health.defaultGoalWalk10000": "Marcher 10 000 pas",
@@ -2968,5 +2968,8 @@
   "storeCopy.healthBody": "Pas estimés, distance, nage, hydratation et objectifs personnels de ton personnage. Un suivi d'activité fictif pour le RP et les statistiques.",
   "health.heightSourceGame": "Jeu",
   "health.heightSourceManual": "Manuel",
-  "health.heightSourceUnavailable": "Indisponible"
+  "health.heightSourceUnavailable": "Indisponible",
+  "app.health": "Santé",
+  "health.mounted": "Voyage monté",
+  "health.flying": "Vol"
 }

@@ -23,6 +23,8 @@ internal sealed class HealthTracker : IDisposable
 {
     private const long SampleIntervalMs = 100;      // ~10 samples/second
     private const long SaveIntervalMs = 60_000;     // flush at most once per minute of movement
+    private const long GoalCheckIntervalMs = 1000;  // goal scan is ~1 Hz, not every movement sample
+    private const long HeightCheckIntervalMs = 5000; // appearance rarely changes; poll gently
     private const int MaxStoredDays = 60;
     private const double Epsilon = 0.05;            // ignore jitter / standing still (yalms)
     private const double WalkSpeedMax = 4.0;        // yalms/sec below which on-foot counts as walking
@@ -64,6 +66,10 @@ internal sealed class HealthTracker : IDisposable
     // Height + reminders
     private long lastDrinkUnix;
     private long lastReminderMs;
+    private long lastGoalCheckMs;
+    private long lastHeightCheckMs;
+    private string cachedDateKey = string.Empty;
+    private long cachedDateKeyMs;
     private string pausedReason = string.Empty;
 
     public HealthTracker(IFramework framework, CharacterWatch watch, NotificationService notifications,
@@ -73,12 +79,15 @@ internal sealed class HealthTracker : IDisposable
         this.notifications = notifications;
         store = new HealthStore(new DirectoryInfo(Path.Combine(configDirectory.FullName, "Health")));
         SessionStartedUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        // Seed from uptime so the first reminder waits a full interval instead of firing at once.
+        lastReminderMs = Environment.TickCount64;
         ticker = new FrameworkTicker(framework, SampleIntervalMs, OnTick);
         Plugin.ClientState.Logout += OnLogout;
     }
 
     public HealthProfile Profile => profile;
     public bool IsTracking => contentId != 0;
+    public ulong CharacterId => contentId;
     public long SessionStartedUnix { get; private set; }
     public MovementKind CurrentKind { get; private set; }
     public bool IsMoving { get; private set; }
@@ -135,7 +144,7 @@ internal sealed class HealthTracker : IDisposable
 
     public void MarkDirty() => dirty = true;
 
-    public void LogDrink(string kind, double millilitres)
+    public void LogDrink(string kindKey, string customName, double millilitres)
     {
         if (!IsTracking || millilitres <= 0)
         {
@@ -146,10 +155,12 @@ internal sealed class HealthTracker : IDisposable
         day.Drinks.Add(new HydrationEntry
         {
             Unix = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-            Kind = kind,
+            KindKey = kindKey,
+            Kind = customName,
             Millilitres = millilitres,
         });
         profile.AllDrinks++;
+        profile.AllDrinkMillilitres += millilitres;
         sDrinks++;
         sDrinkMl += millilitres;
         lastDrinkUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
@@ -170,15 +181,18 @@ internal sealed class HealthTracker : IDisposable
             return;
         }
 
+        var removed = day.Drinks[day.Drinks.Count - 1];
         day.Drinks.RemoveAt(day.Drinks.Count - 1);
         if (profile.AllDrinks > 0)
         {
             profile.AllDrinks--;
+            profile.AllDrinkMillilitres = Math.Max(0, profile.AllDrinkMillilitres - removed.Millilitres);
         }
 
         if (sDrinks > 0)
         {
             sDrinks--;
+            sDrinkMl = Math.Max(0, sDrinkMl - removed.Millilitres);
         }
 
         SaveNow();
@@ -233,28 +247,26 @@ internal sealed class HealthTracker : IDisposable
     public void ResetAll()
     {
         profile = new HealthProfile { SetupCompleted = profile.SetupCompleted, Units = profile.Units };
-        profile.Goals = DefaultGoals();
+        profile.Goals = DefaultGoals(profile.DailySwimGoalYalms);
         ResetSession();
         hasBaseline = false;
         SaveNow();
     }
 
-    public static List<HealthGoal> DefaultGoals() => new()
+    public static List<HealthGoal> DefaultGoals() => DefaultGoals(500);
+
+    public static List<HealthGoal> DefaultGoals(double swimTarget) => new()
     {
-        new HealthGoal { Name = Loc.T(L.Health.DefaultGoalWalk1000), Type = HealthGoalType.Steps, Target = 1000 },
-        new HealthGoal { Name = Loc.T(L.Health.DefaultGoalWalk5000), Type = HealthGoalType.Steps, Target = 5000 },
-        new HealthGoal { Name = Loc.T(L.Health.DefaultGoalWalk10000), Type = HealthGoalType.Steps, Target = 10000 },
+        new HealthGoal { NameKey = GoalKeys.Walk1000, Type = HealthGoalType.Steps, Target = 1000 },
+        new HealthGoal { NameKey = GoalKeys.Walk5000, Type = HealthGoalType.Steps, Target = 5000 },
+        new HealthGoal { NameKey = GoalKeys.Walk10000, Type = HealthGoalType.Steps, Target = 10000 },
         new HealthGoal
         {
-            Name = Loc.T(L.Health.DefaultGoalWalkMalm), Type = HealthGoalType.OnFootDistance,
-            Target = HealthFormat.YalmsPerMalm,
+            NameKey = GoalKeys.WalkMalm, Type = HealthGoalType.OnFootDistance, Target = HealthFormat.YalmsPerMalm,
         },
-        new HealthGoal { Name = Loc.T(L.Health.DefaultGoalSwim500), Type = HealthGoalType.SwimDistance, Target = 500 },
-        new HealthGoal { Name = Loc.T(L.Health.DefaultGoalDrinks), Type = HealthGoalType.HydrationCount, Target = 4 },
-        new HealthGoal
-        {
-            Name = Loc.T(L.Health.DefaultGoalActive30), Type = HealthGoalType.ActiveTime, Target = 1800,
-        },
+        new HealthGoal { NameKey = GoalKeys.Swim500, Type = HealthGoalType.SwimDistance, Target = swimTarget },
+        new HealthGoal { NameKey = GoalKeys.Drinks4, Type = HealthGoalType.HydrationCount, Target = 4 },
+        new HealthGoal { NameKey = GoalKeys.Active30, Type = HealthGoalType.ActiveTime, Target = 1800 },
     };
 
     // ---- Tracking loop ------------------------------------------------------
@@ -293,7 +305,7 @@ internal sealed class HealthTracker : IDisposable
                 profile = store.Load(contentId);
                 if (profile.Goals.Count == 0 && !profile.SetupCompleted)
                 {
-                    profile.Goals = DefaultGoals();
+                    profile.Goals = DefaultGoals(profile.DailySwimGoalYalms);
                 }
             }
             else
@@ -326,6 +338,11 @@ internal sealed class HealthTracker : IDisposable
 
         RollDayIfNeeded();
         HydrationReminderCheck(now);
+        if (profile.AutoRefreshHeight && now - lastHeightCheckMs > HeightCheckIntervalMs)
+        {
+            lastHeightCheckMs = now;
+            ResolveHeight();
+        }
 
         var player = Plugin.ObjectTable.LocalPlayer;
         var loading = Plugin.Condition[ConditionFlag.BetweenAreas] || Plugin.Condition[ConditionFlag.BetweenAreas51];
@@ -354,7 +371,7 @@ internal sealed class HealthTracker : IDisposable
         {
             RegisterTeleport(cur, curT, curM);
             SetBaseline(cur, curT, curM);
-            SaveNow();
+            dirty = true;
             return;
         }
 
@@ -368,7 +385,7 @@ internal sealed class HealthTracker : IDisposable
         {
             RegisterTeleport(cur, curT, curM, crossOnly: true);
             SetBaseline(cur, curT, curM);
-            SaveNow();
+            dirty = true;
             return;
         }
 
@@ -513,7 +530,7 @@ internal sealed class HealthTracker : IDisposable
         }
 
         UpdateRecords(day);
-        EvaluateGoals(day);
+        EvaluateGoals(day, force: false);
         dirty = true;
     }
 
@@ -594,7 +611,20 @@ internal sealed class HealthTracker : IDisposable
 
     // ---- Day rollover / streak ---------------------------------------------
 
-    private static string DateKey() => DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    private static string BuildDateKey() => DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    // The key is only rebuilt once a second; goal scopes and the day lookup ask for it often.
+    private string DateKey()
+    {
+        var now = Environment.TickCount64;
+        if (cachedDateKey.Length == 0 || now - cachedDateKeyMs >= 1000)
+        {
+            cachedDateKey = BuildDateKey();
+            cachedDateKeyMs = now;
+        }
+
+        return cachedDateKey;
+    }
 
     private HealthDay Today()
     {
@@ -629,7 +659,7 @@ internal sealed class HealthTracker : IDisposable
         var steps = HealthFormat.Steps(latest.OnFootYalms, profile.StrideYalms);
         if (steps >= profile.DailyStepGoal)
         {
-            profile.StreakDays = profile.StreakLastDate == PreviousDateKey(key)
+            profile.StreakDays = profile.StreakLastDate == PreviousDateKey(latest.Date)
                 ? profile.StreakDays + 1
                 : 1;
             profile.StreakLastDate = latest.Date;
@@ -640,7 +670,7 @@ internal sealed class HealthTracker : IDisposable
         }
 
         _ = Today();
-        SaveNow();
+        dirty = true;
     }
 
     private static string PreviousDateKey(string todayKey)
@@ -767,8 +797,17 @@ internal sealed class HealthTracker : IDisposable
         return (GoalValue(goal.Type, goal.Scope), goal.Target);
     }
 
-    private void EvaluateGoals(HealthDay day)
+    private void EvaluateGoals(HealthDay day) => EvaluateGoals(day, force: true);
+
+    private void EvaluateGoals(HealthDay day, bool force)
     {
+        var now = Environment.TickCount64;
+        if (!force && now - lastGoalCheckMs < GoalCheckIntervalMs)
+        {
+            return;
+        }
+
+        lastGoalCheckMs = now;
         for (var index = 0; index < profile.Goals.Count; index++)
         {
             var goal = profile.Goals[index];
@@ -793,7 +832,7 @@ internal sealed class HealthTracker : IDisposable
             day.GoalsCompleted++;
             dirty = true;
             notifications.Notify(new PhoneNotification("health", Loc.T(L.Health.NotifyGoalTitle),
-                Loc.T(L.Health.NotifyGoalBody, goal.Name), DateTime.Now, Accent, "health.goal." + goal.Id));
+                Loc.T(L.Health.NotifyGoalBody, HealthFormat.GoalName(goal)), DateTime.Now, Accent, "health.goal." + goal.Id));
         }
     }
 
@@ -824,7 +863,7 @@ internal sealed class HealthTracker : IDisposable
             profile.AllSwimYalms + profile.AllDiveYalms),
         HealthGoalType.ActiveTime => Scoped(scope, d => d.ActiveSeconds, sActive, profile.AllActiveSeconds),
         HealthGoalType.HydrationCount => Scoped(scope, d => d.DrinkCount, sDrinks, profile.AllDrinks),
-        HealthGoalType.HydrationVolume => Scoped(scope, d => d.DrinkMillilitres, sDrinkMl, WeekSum(d => d.DrinkMillilitres)),
+        HealthGoalType.HydrationVolume => Scoped(scope, d => d.DrinkMillilitres, sDrinkMl, profile.AllDrinkMillilitres),
         HealthGoalType.Teleports => Scoped(scope, d => d.Teleports, sTeleports, profile.AllTeleports),
         HealthGoalType.TeleportDistance => Scoped(scope, d => d.TeleportYalms, sTeleY, profile.AllTeleportYalms),
         HealthGoalType.Calories => Scoped(scope, d => d.Calories, sKcal, profile.AllCalories),

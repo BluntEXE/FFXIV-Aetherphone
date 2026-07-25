@@ -20,11 +20,7 @@ internal sealed partial class HealthApp : IPhoneApp
     private const float CardGap = 12f;
     private const float TileSize = 30f;
 
-    private static string[] Tabs => new[]
-    {
-        Loc.T(L.Health.TabOverview), Loc.T(L.Health.TabActivity), Loc.T(L.Health.TabWater),
-        Loc.T(L.Health.TabGoals), Loc.T(L.Health.TabHistory), Loc.T(L.Health.TabProfile),
-    };
+    private readonly string[] tabOptions = new string[6];
 
     public string Id => "health";
     public string DisplayName => Loc.T(L.Health.Title);
@@ -118,7 +114,13 @@ internal sealed partial class HealthApp : IPhoneApp
     {
         var rect = new Rect(new Vector2(body.Min.X + 10f * scale, body.Min.Y + 4f * scale),
             new Vector2(body.Max.X - 10f * scale, body.Min.Y + 36f * scale));
-        screenIndex = SegmentStrip.Draw("health.tabs", rect, Tabs, screenIndex, Pal);
+        tabOptions[0] = Loc.T(L.Health.TabOverview);
+        tabOptions[1] = Loc.T(L.Health.TabActivity);
+        tabOptions[2] = Loc.T(L.Health.TabWater);
+        tabOptions[3] = Loc.T(L.Health.TabGoals);
+        tabOptions[4] = Loc.T(L.Health.TabHistory);
+        tabOptions[5] = Loc.T(L.Health.TabProfile);
+        screenIndex = SegmentStrip.Draw("health.tabs", rect, tabOptions, screenIndex, Pal);
     }
 
     // ---- Overview -----------------------------------------------------------
@@ -145,7 +147,7 @@ internal sealed partial class HealthApp : IPhoneApp
             HealthFormat.Duration(day.ActiveSeconds), scale);
         var kcal = Profile.CaloriesEnabled && Profile.WeightKg is not null
             ? Loc.T(L.Health.Kcal, day.Calories.ToString("0", Loc.Culture))
-            : "—";
+            : "-";
         StatRow(CardRow(card, 2, RowHeight, scale), Accent3, FontAwesomeIcon.Fire, Loc.T(L.Health.EstEnergy), kcal,
             scale);
         StatRow(CardRow(card, 3, RowHeight, scale), Accent4, FontAwesomeIcon.Tint, Loc.T(L.Health.Hydration),
@@ -174,8 +176,7 @@ internal sealed partial class HealthApp : IPhoneApp
         var streakCard = BeginCard(1, RowHeight, scale);
         StatRow(CardRow(streakCard, 0, RowHeight, scale), Accent1, FontAwesomeIcon.Fire,
             Loc.T(L.Health.CurrentStreak),
-            Profile.StreakDays == 1 ? Loc.T(L.Health.StreakOneDay) : Loc.T(L.Health.StreakDays, Profile.StreakDays),
-            scale);
+            Loc.Plural(L.Health.StreakDayCount, Profile.StreakDays), scale);
         EndCard(streakCard, scale);
     }
 
@@ -209,15 +210,19 @@ internal sealed partial class HealthApp : IPhoneApp
         EndCard(session, scale);
 
         ui.SectionLabel(Loc.T(L.Health.AllTime), TextStyles.FootnoteEmphasized, 6f);
-        var all = BeginCard(4, CompactRowHeight, scale);
+        var all = BeginCard(6, CompactRowHeight, scale);
         StatRow(CardRow(all, 0, CompactRowHeight, scale), Accent1, FontAwesomeIcon.Walking, Loc.T(L.Health.OnFoot),
             Dist(Profile.AllWalkYalms + Profile.AllRunYalms), scale);
         StatRow(CardRow(all, 1, CompactRowHeight, scale), Accent2, FontAwesomeIcon.Swimmer, Loc.T(L.Health.Swimming),
             Dist(Profile.AllSwimYalms), scale);
         StatRow(CardRow(all, 2, CompactRowHeight, scale), Accent3, FontAwesomeIcon.Water, Loc.T(L.Health.Diving),
             Dist(Profile.AllDiveYalms), scale);
-        StatRow(CardRow(all, 3, CompactRowHeight, scale), Accent4, FontAwesomeIcon.LocationArrow, Loc.T(L.Health.Teleports),
-            HealthFormat.Number(Profile.AllTeleports), scale);
+        StatRow(CardRow(all, 3, CompactRowHeight, scale), Accent3, FontAwesomeIcon.Horse, Loc.T(L.Health.Mounted),
+            Dist(Profile.AllMountYalms), scale);
+        StatRow(CardRow(all, 4, CompactRowHeight, scale), Accent3, FontAwesomeIcon.Feather, Loc.T(L.Health.Flying),
+            Dist(Profile.AllFlyYalms), scale);
+        StatRow(CardRow(all, 5, CompactRowHeight, scale), Accent4, FontAwesomeIcon.LocationArrow,
+            Loc.T(L.Health.Teleports), HealthFormat.Number(Profile.AllTeleports), scale);
         EndCard(all, scale);
 
         ui.SectionLabel(Loc.T(L.Health.Teleports), TextStyles.FootnoteEmphasized, 6f);
@@ -243,9 +248,9 @@ internal sealed partial class HealthApp : IPhoneApp
     // ---- Shared drawing helpers --------------------------------------------
 
     private Vector4 Accent1 => Pal.Accent;
-    private static readonly Vector4 Accent2 = new(0.28f, 0.68f, 0.92f, 1f);
-    private static readonly Vector4 Accent3 = new(0.62f, 0.52f, 0.96f, 1f);
-    private static readonly Vector4 Accent4 = new(0.30f, 0.78f, 0.52f, 1f);
+    private static Vector4 Accent2 => AppPalettes.HealthWater;
+    private static Vector4 Accent3 => AppPalettes.HealthEnergy;
+    private static Vector4 Accent4 => AppPalettes.HealthTeleport;
 
     private string Dist(double yalms) => HealthFormat.Distance(yalms, U);
 
@@ -279,12 +284,15 @@ internal sealed partial class HealthApp : IPhoneApp
         var tile = TileSize * scale;
         IconTile.Draw(new Vector2(row.Min.X + tile * 0.5f, row.Center.Y), tile, tint, icon);
         var textLeft = row.Min.X + tile + 12f * scale;
-        var labelSize = Typography.Measure(label, TextStyles.Headline);
-        Typography.Draw(new Vector2(textLeft, row.Center.Y - labelSize.Y * 0.5f), label, Pal.TitleInk,
-            TextStyles.Headline);
+        // Value keeps its width; the label is clipped so long translations cannot overlap it.
         var valueSize = Typography.Measure(value, 1.02f, FontWeight.SemiBold);
         Typography.Draw(new Vector2(row.Max.X - valueSize.X, row.Center.Y - valueSize.Y * 0.5f), value, Pal.TitleInk,
             1.02f, FontWeight.SemiBold);
+        var labelRoom = row.Max.X - valueSize.X - textLeft - 10f * scale;
+        var fitted = Typography.FitText(label, labelRoom, TextStyles.Headline);
+        var labelSize = Typography.Measure(fitted, TextStyles.Headline);
+        Typography.Draw(new Vector2(textLeft, row.Center.Y - labelSize.Y * 0.5f), fitted, Pal.TitleInk,
+            TextStyles.Headline);
     }
 
     private void GoalBar(HealthGoal goal, float scale)
@@ -296,13 +304,14 @@ internal sealed partial class HealthApp : IPhoneApp
         var origin = ImGui.GetCursorScreenPos();
         var height = 46f * scale;
         var drawList = ImGui.GetWindowDrawList();
-        var label = goal.Name;
-        Typography.Draw(new Vector2(origin.X, origin.Y + 2f * scale), label,
-            complete ? Accent4 : Pal.TitleInk, TextStyles.Subheadline);
         var pct = $"{(int)MathF.Round(fraction * 100f)}%";
         var pctSize = Typography.Measure(pct, TextStyles.Footnote);
         Typography.Draw(new Vector2(origin.X + width - pctSize.X, origin.Y + 2f * scale), pct, Pal.MutedInk,
             TextStyles.Footnote);
+        var label = Typography.FitText(HealthFormat.GoalName(goal), width - pctSize.X - 10f * scale,
+            TextStyles.Subheadline);
+        Typography.Draw(new Vector2(origin.X, origin.Y + 2f * scale), label,
+            complete ? Accent4 : Pal.TitleInk, TextStyles.Subheadline);
 
         var barTop = origin.Y + 26f * scale;
         var barMin = new Vector2(origin.X, barTop);

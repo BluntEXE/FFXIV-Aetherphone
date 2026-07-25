@@ -52,7 +52,7 @@ internal static class HealthFormat
         cm = Sane(cm);
         if (cm <= 0)
         {
-            return "—";
+            return "-";
         }
 
         switch (units)
@@ -113,6 +113,32 @@ internal static class HealthFormat
             ? (ml / 1000d).ToString("0.0", Culture) + Loc.T(L.Health.UnitLitre)
             : ml.ToString("0", Culture) + Loc.T(L.Health.UnitMl);
     }
+
+    // ---- Built-in name resolution ------------------------------------------
+
+    // Persisted entries store a key, never a translated string, so the log follows the
+    // current language instead of the one it was written in.
+    public static string DrinkKindName(HydrationEntry entry) => entry.KindKey switch
+    {
+        DrinkKeys.Water => Loc.T(L.Health.DrinkKindWater),
+        DrinkKeys.Tea => Loc.T(L.Health.DrinkKindTea),
+        DrinkKeys.Coffee => Loc.T(L.Health.DrinkKindCoffee),
+        DrinkKeys.Juice => Loc.T(L.Health.DrinkKindJuice),
+        _ => entry.Kind.Length > 0 ? entry.Kind : Loc.T(L.Health.DrinkFallback),
+    };
+
+    public static string GoalName(HealthGoal goal) => goal.NameKey switch
+    {
+        GoalKeys.Walk1000 => Loc.T(L.Health.DefaultGoalWalk1000),
+        GoalKeys.Walk5000 => Loc.T(L.Health.DefaultGoalWalk5000),
+        GoalKeys.Walk10000 => Loc.T(L.Health.DefaultGoalWalk10000),
+        GoalKeys.WalkMalm => Loc.T(L.Health.DefaultGoalWalkMalm),
+        GoalKeys.Swim500 => Loc.T(L.Health.DefaultGoalSwim500),
+        GoalKeys.Drinks4 => Loc.T(L.Health.DefaultGoalDrinks),
+        GoalKeys.Active30 => Loc.T(L.Health.DefaultGoalActive30),
+        GoalKeys.New => Loc.T(L.Health.NewGoal),
+        _ => goal.Name.Length > 0 ? goal.Name : Loc.T(L.Health.GoalFallback),
+    };
 
     // ---- Steps --------------------------------------------------------------
 

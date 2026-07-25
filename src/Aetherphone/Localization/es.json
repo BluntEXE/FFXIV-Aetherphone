@@ -2767,8 +2767,8 @@
   "health.noActiveGoals": "No hay metas activas. Añade algunas en la pestaña Metas.",
   "health.streak": "Racha",
   "health.currentStreak": "Racha actual",
-  "health.streakOneDay": "1 día",
-  "health.streakDays": "{0} días",
+  "health.streakDays.one": "{0} día",
+  "health.streakDays.other": "{0} días",
   "health.today": "Hoy",
   "health.session": "Sesión",
   "health.allTime": "Total",
@@ -2938,7 +2938,7 @@
   "health.notifyHydrationTitle": "Hidratación",
   "health.notifyHydrationBody": "Tu aventurero no ha bebido nada recientemente.",
   "health.notifyGoalTitle": "Meta completada",
-  "health.notifyGoalBody": "{0} — ¡completada!",
+  "health.notifyGoalBody": "{0} - ¡completada!",
   "health.defaultGoalWalk1000": "Caminar 1.000 pasos",
   "health.defaultGoalWalk5000": "Caminar 5.000 pasos",
   "health.defaultGoalWalk10000": "Caminar 10.000 pasos",
@@ -2968,5 +2968,8 @@
   "storeCopy.healthBody": "Pasos estimados, distancia, natación, hidratación y metas personales de tu personaje. Un registro ficticio de actividad para rol y estadísticas.",
   "health.heightSourceGame": "Juego",
   "health.heightSourceManual": "Manual",
-  "health.heightSourceUnavailable": "No disponible"
+  "health.heightSourceUnavailable": "No disponible",
+  "app.health": "Salud",
+  "health.mounted": "Viaje montado",
+  "health.flying": "Vuelo"
 }
