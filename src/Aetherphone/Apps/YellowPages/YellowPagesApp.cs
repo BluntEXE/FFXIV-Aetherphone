@@ -2,6 +2,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
+using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
@@ -45,6 +46,7 @@ internal sealed partial class YellowPagesApp : IPhoneApp
     private readonly Configuration configuration;
     private readonly ConfirmService confirm;
     private readonly ReportService report;
+    private readonly EncryptionInfoPane encryptionPane;
     private readonly PhotoViewerOverlay photoViewer = new();
     private readonly BottomTabBar bottomNav = new();
     private readonly NavTab[] navTabs = new NavTab[5];
@@ -84,6 +86,7 @@ internal sealed partial class YellowPagesApp : IPhoneApp
         this.configuration = configuration;
         this.confirm = confirm;
         this.report = report;
+        encryptionPane = new EncryptionInfoPane(inquiries.Vault, confirm);
         router = new ViewRouter<YellowPagesRoute>(YellowPagesRoute.Browse);
         drawView = DrawView;
         back = () => router.Pop();
@@ -183,6 +186,9 @@ internal sealed partial class YellowPagesApp : IPhoneApp
                 break;
             case YellowPagesScreen.NewInquiry:
                 DrawNewInquiry(area, route.AdId!);
+                break;
+            case YellowPagesScreen.Encryption:
+                DrawEncryptionInfo(area);
                 break;
             case YellowPagesScreen.Compose:
                 DrawCompose(area);
@@ -389,5 +395,6 @@ internal sealed partial class YellowPagesApp : IPhoneApp
 
     public void Dispose()
     {
+        encryptionPane.Dispose();
     }
 }

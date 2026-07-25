@@ -1,6 +1,7 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Linkpearl;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Social;
@@ -175,6 +176,8 @@ internal sealed partial class YellowPagesApp
         var thread = inquiries.Thread(inquiryId);
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, thread is null ? Loc.T(L.YellowPages.InquiriesTitle) : thread.AdTitle, backFromThread);
+        ChatHeaderControls.DrawLock(ui, area, area.Min.Y + AppHeader.Height * scale * 0.5f, inquiries.CanEncrypt,
+            inquiries.VaultState, () => router.Push(YellowPagesRoute.Encryption));
         var top = area.Min.Y + AppHeader.Height * scale;
         var composerTop = area.Max.Y - ComposerHeight * scale;
         var body = new Rect(new Vector2(area.Min.X, top), new Vector2(area.Max.X, composerTop));
@@ -397,6 +400,20 @@ internal sealed partial class YellowPagesApp
 
         inquiryDraft = string.Empty;
         router.Push(YellowPagesRoute.NewInquiry(ad.Id));
+    }
+
+    private void DrawEncryptionInfo(Rect area)
+    {
+        var scale = ImGuiHelpers.GlobalScale;
+        var context = new PhoneContext(area, theme, navigation);
+        AppHeader.Draw(context, Loc.T(L.Encryption.Title), back);
+        var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
+        using (AppSurface.Begin(body))
+        {
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
+            encryptionPane.DrawBody(ui, theme, store.IsSignedIn, inquiries.CanEncrypt);
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
+        }
     }
 
     private void OpenInquiryThread(string inquiryId)

@@ -16,6 +16,7 @@ internal sealed class AdInquiryStore : IDisposable
     private readonly AethernetSession session;
     private readonly YellowPagesClient client;
     private readonly ConversationKeyStore keys;
+    private readonly KeyVault vault;
     private readonly MessageCipher cipher;
     private readonly RealtimeSignalBus signals;
     private readonly AppGate gate;
@@ -37,6 +38,7 @@ internal sealed class AdInquiryStore : IDisposable
         this.session = session;
         this.client = client;
         this.keys = keys;
+        this.vault = vault;
         cipher = new MessageCipher(vault, keys);
         this.signals = signals;
         this.gate = gate;
@@ -49,6 +51,10 @@ internal sealed class AdInquiryStore : IDisposable
     public string MyUserId => session.CurrentUser?.Id ?? string.Empty;
 
     public bool CanEncrypt => cipher.IsUnlocked;
+
+    public KeyVault Vault => vault;
+
+    public KeyVaultState VaultState => vault.State;
 
     public string ScopeFor(string otherUserId) =>
         ConversationKeyStore.AdScope(ConversationKeyStore.Pair(MyUserId, otherUserId));
