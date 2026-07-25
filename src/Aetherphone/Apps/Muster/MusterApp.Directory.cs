@@ -272,7 +272,7 @@ internal sealed partial class MusterApp
         var pad = 13f * scale;
         var avatarRadius = 16f * scale;
         var avatarCenter = new Vector2(card.Min.X + pad + avatarRadius, card.Center.Y);
-        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, muster.HostCharacter, muster.HostWorld,
+        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, MusterText.HostLabel(muster), muster.HostWorld,
             null, images, lodestone, 0.9f, 32);
         var live = muster.StartsAtUnix <= nowUnix;
         var status = live

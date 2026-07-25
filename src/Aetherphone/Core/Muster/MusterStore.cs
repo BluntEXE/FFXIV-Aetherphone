@@ -578,9 +578,9 @@ internal sealed class MusterStore : IDisposable
 
             var body = muster.HostNotice switch
             {
-                MusterNotices.StartingNow => Loc.T(L.Muster.NotifNoticeStarting, muster.HostCharacter),
-                MusterNotices.MovedSpots => Loc.T(L.Muster.NotifNoticeMoved, muster.HostCharacter),
-                _ => Loc.T(L.Muster.NotifNoticeWrapping, muster.HostCharacter),
+                MusterNotices.StartingNow => Loc.T(L.Muster.NotifNoticeStarting, MusterText.HostLabel(muster)),
+                MusterNotices.MovedSpots => Loc.T(L.Muster.NotifNoticeMoved, MusterText.HostLabel(muster)),
+                _ => Loc.T(L.Muster.NotifNoticeWrapping, MusterText.HostLabel(muster)),
             };
             notifications.Notify(new PhoneNotification(AppId, Loc.T(L.Muster.NotifNoticeTitle), body,
                 DateTime.Now, AppAccents.For(AppId), muster.Id));
@@ -605,7 +605,7 @@ internal sealed class MusterStore : IDisposable
             if (!seen)
             {
                 notifications.Notify(new PhoneNotification(AppId, Loc.T(L.Muster.NotifStartedTitle),
-                    Loc.T(L.Muster.NotifStartedBody, muster.HostCharacter), DateTime.Now,
+                    Loc.T(L.Muster.NotifStartedBody, MusterText.HostLabel(muster)), DateTime.Now,
                     AppAccents.For(AppId), muster.Id));
             }
         }

@@ -51,7 +51,7 @@ internal static class MusterCard
         var rowTop = card.Min.Y + pad;
         var avatarRadius = AvatarRadius * scale;
         var avatarCenter = new Vector2(left + avatarRadius, rowTop + IdentityRowHeight * scale * 0.5f);
-        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, muster.HostCharacter, muster.HostWorld,
+        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, MusterText.HostLabel(muster), muster.HostWorld,
             null, images, lodestone, 1.05f, 32);
         drawList.AddCircle(avatarCenter, avatarRadius + 1.5f * scale,
             ImGui.GetColorU32(Palette.WithAlpha(palette.Accent, live ? 0.45f : 0.22f)), 32, 1.4f * scale);

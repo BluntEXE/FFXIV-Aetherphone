@@ -159,14 +159,14 @@ internal sealed partial class MusterApp
         var pad = 16f * scale;
         var avatarRadius = 26f * scale;
         var avatarCenter = new Vector2(card.Min.X + pad + avatarRadius, card.Min.Y + pad + avatarRadius);
-        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, muster.HostCharacter, muster.HostWorld,
+        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, MusterText.HostLabel(muster), muster.HostWorld,
             null, images, lodestone, 1.25f, 40);
         drawList.AddCircle(avatarCenter, avatarRadius + 2f * scale,
             ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.30f)), 40, 1.5f * scale);
 
         var textLeft = avatarCenter.X + avatarRadius + 14f * scale;
         var textRight = card.Max.X - pad;
-        var title = Typography.FitText(muster.HostCharacter, textRight - textLeft, TextStyles.Title2);
+        var title = Typography.FitText(MusterText.HostLabel(muster), textRight - textLeft, TextStyles.Title2);
         Typography.Draw(drawList, new Vector2(textLeft, card.Min.Y + pad + 1f * scale), title,
             AppPalettes.Muster.TitleInk, TextStyles.Title2);
         var identity = Typography.FitText(muster.HostWorld, textRight - textLeft, TextStyles.Subheadline);
