@@ -56,6 +56,7 @@ internal static class AppStoreCatalog
         ["inventory"] = new(L.StoreCopy.InventorySub, L.StoreCopy.InventoryBody, StoreCategory.Adventure),
         ["jobs"] = new(L.StoreCopy.JobsSub, L.StoreCopy.JobsBody, StoreCategory.Adventure),
         ["character"] = new(L.StoreCopy.CharacterSub, L.StoreCopy.CharacterBody, StoreCategory.Adventure),
+        ["health"] = new(L.StoreCopy.HealthSub, L.StoreCopy.HealthBody, StoreCategory.Adventure),
         ["wallet"] = new(L.StoreCopy.WalletSub, L.StoreCopy.WalletBody, StoreCategory.Adventure),
         ["market"] = new(L.StoreCopy.MarketSub, L.StoreCopy.MarketBody, StoreCategory.Adventure),
         ["dailies"] = new(L.StoreCopy.DailiesSub, L.StoreCopy.DailiesBody, StoreCategory.Adventure),
