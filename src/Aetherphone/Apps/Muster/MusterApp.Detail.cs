@@ -280,8 +280,8 @@ internal sealed partial class MusterApp
                     ink = AppPalettes.Muster.MutedInk;
                 }
 
-                var fitted = Typography.FitText(locationLines[index], width - pad * 2f, style);
-                Typography.Draw(drawList, new Vector2(origin.X + pad, lineTop), fitted, ink, style);
+                Marquee.DrawLeftAuto(drawList, "muster.detail.location." + muster.Id + "." + index,
+                    locationLines[index], origin.X + pad, lineTop, width - pad * 2f, style, ink);
             }
 
             consumed = cardHeight + Metrics.Space.Sm * scale;
@@ -298,7 +298,7 @@ internal sealed partial class MusterApp
         {
             var flagRect = new Rect(new Vector2(cursor, actionTop),
                 new Vector2(cursor + slotWidth, actionTop + actionHeight));
-            if (ui.PillButton(flagRect, Loc.T(L.Muster.FlagOnMap), false))
+            if (ui.PillButton(flagRect, Loc.T(L.Muster.FlagOnMap), false, "muster.detail.flagonmap"))
             {
                 var location = MusterText.Location(muster);
                 LocationShare.OpenMap(in location);
@@ -310,7 +310,7 @@ internal sealed partial class MusterApp
         var copyRect = new Rect(new Vector2(cursor, actionTop),
             new Vector2(cursor + slotWidth, actionTop + actionHeight));
         var copyLabel = JustCopied(copyKey) ? Loc.T(L.Muster.Copied) : Loc.T(L.Muster.CopyDetails);
-        if (ui.PillButton(copyRect, copyLabel, false))
+        if (ui.PillButton(copyRect, copyLabel, false, "muster.detail.copydetails"))
         {
             Copy(copyKey, BuildCopySummary(muster));
         }
@@ -322,7 +322,7 @@ internal sealed partial class MusterApp
             var travelRect = new Rect(new Vector2(origin.X, travelTop),
                 new Vector2(origin.X + width, travelTop + actionHeight));
             var travelLabel = JustCopied("travel") ? Loc.T(L.Muster.Copied) : Loc.T(L.Muster.Travel);
-            if (ui.PillButton(travelRect, travelLabel, true))
+            if (ui.PillButton(travelRect, travelLabel, true, "muster.detail.travel"))
             {
                 TravelTo(muster);
             }

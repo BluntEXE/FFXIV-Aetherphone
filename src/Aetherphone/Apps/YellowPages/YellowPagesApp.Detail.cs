@@ -148,29 +148,30 @@ internal sealed partial class YellowPagesApp
             cursorY = heroRect.Max.Y + Metrics.Space.Md * scale;
         }
 
-        var title = Typography.FitText(ad.Title, width, TextStyles.Title3);
-        Typography.Draw(drawList, new Vector2(origin.X, cursorY), title, AppPalettes.YellowPages.TitleInk,
-            TextStyles.Title3);
+        Marquee.DrawLeftAuto(drawList, "yellowpages.detail.title." + ad.Id, ad.Title, origin.X, cursorY, width,
+            TextStyles.Title3, AppPalettes.YellowPages.TitleInk);
         cursorY += 28f * scale;
         var avatarRadius = 11f * scale;
         AvatarView.DrawRemote(drawList, new Vector2(origin.X + avatarRadius, cursorY + 9f * scale), avatarRadius,
             theme, AdText.Identity(ad), string.Empty, ad.OwnerAvatarUrl.Length > 0 ? ad.OwnerAvatarUrl : null,
             images, lodestone, 0.7f, 32);
-        Typography.Draw(drawList, new Vector2(origin.X + avatarRadius * 2f + 8f * scale, cursorY + 2f * scale),
-            AdText.Identity(ad), AppPalettes.YellowPages.MutedInk, TextStyles.Subheadline);
+        var identityLeft = origin.X + avatarRadius * 2f + 8f * scale;
+        Marquee.DrawLeftAuto(drawList, "yellowpages.detail.identity." + ad.Id, AdText.Identity(ad), identityLeft,
+            cursorY + 2f * scale, origin.X + width - identityLeft, TextStyles.Subheadline,
+            AppPalettes.YellowPages.MutedInk);
         cursorY += 26f * scale;
 
         var statusLine = BuildStatusLine(ad, nowUnix, out var statusColor);
         if (statusLine.Length > 0)
         {
-            Typography.Draw(drawList, new Vector2(origin.X, cursorY), statusLine, statusColor,
-                TextStyles.FootnoteEmphasized);
+            Marquee.DrawLeftAuto(drawList, "yellowpages.detail.status." + ad.Id, statusLine, origin.X, cursorY,
+                width, TextStyles.FootnoteEmphasized, statusColor);
             cursorY += 22f * scale;
         }
 
         var metaLine = BuildMetaLine(ad, nowUnix);
-        Typography.Draw(drawList, new Vector2(origin.X, cursorY), metaLine, AppPalettes.YellowPages.MutedInk,
-            TextStyles.Footnote);
+        Marquee.DrawLeftAuto(drawList, "yellowpages.detail.meta." + ad.Id, metaLine, origin.X, cursorY, width,
+            TextStyles.Footnote, AppPalettes.YellowPages.MutedInk);
         cursorY += 22f * scale;
 
         ImGui.SetCursorScreenPos(origin);
