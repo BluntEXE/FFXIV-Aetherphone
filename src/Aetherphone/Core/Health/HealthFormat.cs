@@ -1,0 +1,191 @@
+using System.Globalization;
+using Aetherphone.Core.Localization;
+
+namespace Aetherphone.Core.Health;
+
+internal static class HealthFormat
+{
+    public const double YalmsPerMalm = 1760d;
+
+    // A yalm is treated as roughly one metre for real-world unit display.
+    private const double MetresPerYalm = 1d;
+    private const double FeetPerMetre = 3.28084d;
+    private const double MetresPerMile = 1609.34d;
+    private const double CmPerInch = 2.54d;
+    private const double InchPerFulm = 12d;
+    private const double LbPerKg = 2.2046226d;
+    private const double MlPerFlOz = 29.5735d;
+
+    private static CultureInfo Culture => Loc.Culture;
+
+    // ---- Distance -----------------------------------------------------------
+
+    public static string Distance(double yalms, HealthUnits units)
+    {
+        yalms = Sane(yalms);
+        switch (units)
+        {
+            case HealthUnits.Metric:
+                var metres = yalms * MetresPerYalm;
+                return metres >= 1000d
+                    ? (metres / 1000d).ToString("0.00", Culture) + " km"
+                    : metres.ToString("0", Culture) + " m";
+            case HealthUnits.Imperial:
+                var miMetres = yalms * MetresPerYalm;
+                if (miMetres >= MetresPerMile)
+                {
+                    return (miMetres / MetresPerMile).ToString("0.00", Culture) + " mi";
+                }
+
+                return (miMetres * FeetPerMetre).ToString("0", Culture) + " ft";
+            default:
+                return yalms >= YalmsPerMalm
+                    ? (yalms / YalmsPerMalm).ToString("0.00", Culture) + " malms"
+                    : yalms.ToString("0", Culture) + " yalms";
+        }
+    }
+
+    // ---- Height -------------------------------------------------------------
+
+    public static string Height(double cm, HealthUnits units)
+    {
+        cm = Sane(cm);
+        if (cm <= 0)
+        {
+            return "—";
+        }
+
+        switch (units)
+        {
+            case HealthUnits.Metric:
+                return cm.ToString("0.0", Culture) + " cm";
+            case HealthUnits.Imperial:
+                return FeetInches(cm, "'", "\"");
+            default:
+                return FeetInches(cm, " fulm", " ilm");
+        }
+    }
+
+    private static string FeetInches(double cm, string bigUnit, string smallUnit)
+    {
+        var totalInches = cm / CmPerInch;
+        var big = (int)(totalInches / InchPerFulm);
+        var small = (int)Math.Round(totalInches - big * InchPerFulm);
+        if (small >= 12)
+        {
+            big++;
+            small = 0;
+        }
+
+        return $"{big}{bigUnit} {small}{smallUnit}";
+    }
+
+    // ---- Weight -------------------------------------------------------------
+
+    public static string Weight(double kg, HealthUnits units)
+    {
+        kg = Sane(kg);
+        return units switch
+        {
+            HealthUnits.Metric => kg.ToString("0.0", Culture) + " kg",
+            _ => (kg * LbPerKg).ToString("0", Culture) + (units == HealthUnits.Eorzean ? " ponz" : " lb"),
+        };
+    }
+
+    public static double WeightToKg(double value, HealthUnits units) =>
+        units == HealthUnits.Metric ? value : value / LbPerKg;
+
+    public static double WeightFromKg(double kg, HealthUnits units) =>
+        units == HealthUnits.Metric ? kg : kg * LbPerKg;
+
+    // ---- Volume -------------------------------------------------------------
+
+    public static string Volume(double ml, HealthUnits units)
+    {
+        ml = Sane(ml);
+        if (units == HealthUnits.Imperial)
+        {
+            return (ml / MlPerFlOz).ToString("0", Culture) + " fl oz";
+        }
+
+        return ml >= 1000d ? (ml / 1000d).ToString("0.0", Culture) + " L" : ml.ToString("0", Culture) + " ml";
+    }
+
+    // ---- Steps --------------------------------------------------------------
+
+    public static long Steps(double onFootYalms, double strideYalms)
+    {
+        var stride = strideYalms is > 0.05 and < 10 ? strideYalms : 0.75;
+        return (long)Math.Floor(Sane(onFootYalms) / stride);
+    }
+
+    public static string Number(long value) => value.ToString("N0", Culture);
+
+    public static string Duration(double seconds)
+    {
+        var total = (int)Math.Max(0, seconds);
+        var minutes = total / 60;
+        var hours = minutes / 60;
+        return hours > 0 ? $"{hours}h {minutes % 60}m" : $"{minutes}m";
+    }
+
+    // ---- Calories (fictional, activity-only MET estimate) -------------------
+
+    public static double MetFor(MovementKind kind) => kind switch
+    {
+        MovementKind.Walking => 3.5,
+        MovementKind.Running => 8.0,
+        MovementKind.Swimming => 6.0,
+        MovementKind.Diving => 7.0,
+        _ => 0d,
+    };
+
+    // kcal for a burst of activity: MET * 3.5 * kg / 200 per minute.
+    public static double Calories(MovementKind kind, double seconds, double weightKg)
+    {
+        var met = MetFor(kind);
+        if (met <= 0 || weightKg <= 0 || seconds <= 0)
+        {
+            return 0d;
+        }
+
+        return met * 3.5 * weightKg / 200d * (seconds / 60d);
+    }
+
+    // ---- Height model -------------------------------------------------------
+
+    // FFXIV racial-scaling (RSP) height model, per PlayerSync/Mare's HeightConversion + RspData:
+    // heightCm = factorCm * rsp,  where rsp = lerp(min, max, slider/100).
+    // Keyed by tribe (subrace) + body; tribe ids match FFXIV's Tribe sheet (1..16). The factor is
+    // the height in cm at rsp = 1.0; min/max are the racial slider bounds.
+    private static (double FactorCm, double Min, double Max)? Rsp(uint tribe, bool female) => tribe switch
+    {
+        1 => (female ? 163.8788462 : 174.8692308, 0.960, 1.040),                        // Midlander
+        2 => (female ? 163.8566434 : 174.9580420, 1.056, 1.144),                        // Highlander
+        3 or 4 => (female ? 190.9278152 : 201.9287777, 0.961, 1.039),                   // Elezen (Wildwood/Duskwight)
+        5 or 6 => (91.96966825, 0.945, 1.055),                                          // Lalafell (Plainsfolk/Dunesfolk)
+        7 or 8 => female ? (155.8192308, 0.960, 1.040) : (174.9777778, 0.910, 0.990),   // Miqo'te
+        9 or 10 => female ? (192.0327586, 1.000, 1.160) : (221.9441233, 0.962, 1.038),  // Roegadyn
+        11 or 12 => female ? (156.9267327, 0.930, 1.010) : (174.9322581, 1.160, 1.240), // Au Ra
+        13 or 14 => female ? (187.0450281, 0.986, 1.066) : (219.8884298, 0.892, 0.968), // Hrothgar
+        15 or 16 => female ? (160.8595458, 1.111, 1.189) : (174.8930582, 0.984, 1.066), // Viera
+        _ => null,
+    };
+
+    public static double HeightCm(uint tribeId, bool female, byte heightSlider)
+    {
+        if (Rsp(tribeId, female) is not { } r)
+        {
+            return 0d;
+        }
+
+        var t = Math.Clamp(heightSlider / 100d, 0d, 1d);
+        return r.FactorCm * (r.Min + (r.Max - r.Min) * t);
+    }
+
+    // Rough biomechanical stride: ~0.415 of height. Kept within sensible plugin limits.
+    public static double SuggestStride(double heightCm) =>
+        heightCm > 0 ? Math.Clamp(heightCm * 0.00415d, 0.30d, 1.50d) : 0.75d;
+
+    private static double Sane(double value) => double.IsFinite(value) && value > 0 ? value : 0d;
+}

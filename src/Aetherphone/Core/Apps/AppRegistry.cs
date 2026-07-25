@@ -8,6 +8,7 @@ using Aetherphone.Apps.Collections;
 using Aetherphone.Apps.Dailies;
 using Aetherphone.Apps.Fishing;
 using Aetherphone.Apps.Games;
+using Aetherphone.Apps.Health;
 using Aetherphone.Apps.Inventory;
 using Aetherphone.Apps.Jobs;
 using Aetherphone.Apps.Calculator;
@@ -46,6 +47,7 @@ internal static class AppRegistry
         {
             new LinkpearlApp(services.Messages, services.Linkshells, services.LinkshellMutes, services.LinkpearlNotificationGate, services.ChatBridge, services.LinkshellBridge, services.LinkpearlLauncher, services.Lodestone, services.Notifications, services.GameData, services.Lookup, services.Confirm),
             new ActivityApp(services.GameData, services.Activity, services.Configuration),
+            new HealthApp(services.Health, services.GameData, services.Confirm),
         };
 
         var photoLibrary = new PhotoLibrary(Plugin.PluginInterface.ConfigDirectory);

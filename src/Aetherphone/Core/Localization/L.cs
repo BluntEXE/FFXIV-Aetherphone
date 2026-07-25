@@ -281,6 +281,9 @@ internal static class L
         public static readonly LocString CharacterSub = new("storeCopy.characterSub", "Your day, tracked");
         public static readonly LocString CharacterBody = new("storeCopy.characterBody",
             "Rings, streaks and history for the things you do every day.");
+        public static readonly LocString HealthSub = new("storeCopy.healthSub", "Your adventurer's activity");
+        public static readonly LocString HealthBody = new("storeCopy.healthBody",
+            "Estimated steps, distance, swimming, hydration and personal goals for your character. A fictional activity tracker for roleplay and statistics.");
         public static readonly LocString WalletSub = new("storeCopy.walletSub", "Gil and currencies");
         public static readonly LocString WalletBody = new("storeCopy.walletBody",
             "Every currency you carry, with caps and totals you can actually read.");
