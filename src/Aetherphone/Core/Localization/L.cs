@@ -175,6 +175,7 @@ internal static class L
         public static readonly LocString FindPeople = new("app.findpeople", "Find People");
         public static readonly LocString Feedback = new("app.feedback", "Feedback");
         public static readonly LocString Polls = new("app.polls", "Polls");
+        public static readonly LocString Announcements = new("app.announcements", "Announcements");
         public static readonly LocString Muster = new("app.muster", "Muster");
         public static readonly LocString YellowPages = new("app.yellowpages", "Yellow Pages");
         public static readonly LocString Calendar = new("app.calendar", "Calendar");
@@ -238,6 +239,9 @@ internal static class L
         public static readonly LocString PollsSub = new("storeCopy.pollsSub", "Ask the whole server");
         public static readonly LocString PollsBody = new("storeCopy.pollsBody",
             "Put a question to Eorzea and watch the votes land while you wait.");
+        public static readonly LocString AnnouncementsSub = new("storeCopy.announcementsSub", "Word from the team");
+        public static readonly LocString AnnouncementsBody = new("storeCopy.announcementsBody",
+            "Release notes, downtime warnings and everything else the Aetherphone team wants you to know, delivered straight to your phone.");
         public static readonly LocString VenuesSub = new("storeCopy.venuesSub", "Nightlife, mapped");
         public static readonly LocString VenuesBody = new("storeCopy.venuesBody",
             "Find player-run venues, opening hours and directions without leaving the game.");
@@ -1403,6 +1407,7 @@ internal static class L
         public static readonly LocString VerifyAdded = new("account.verifyAdded", "Verify");
         public static readonly LocString RequestingCode = new("account.requestingCode", "Requesting a code…");
         public static readonly LocString CannotReach = new("account.cannotReach", "Could not reach Aethernet. Is the server running?");
+        public static readonly LocString PhotoRejected = new("account.photoRejected", "That photo could not be saved. Try a different image.");
         public static readonly LocString Verifying = new("account.verifying", "Verifying via Lodestone…");
         public static readonly LocString SignOut = new("account.signOut", "Sign out");
         public static readonly LocString CharacterLabel = new("account.characterLabel", "Character");
@@ -1437,6 +1442,17 @@ internal static class L
         public static readonly LocString XivOpen = new("account.xivOpen", "Open XIVAuth");
         public static readonly LocString XivConnecting = new("account.xivConnecting", "Connecting to XIVAuth…");
         public static readonly LocPlural Followers = new("account.followers", "{0} follower", "{0} followers");
+        public static readonly LocString AccountsSection = new("account.accountsSection", "Accounts");
+        public static readonly LocString AddAccount = new("account.addAccount", "Add account");
+        public static readonly LocString AddAccountTakenTitle = new("account.addAccountTakenTitle", "Already signed in here");
+        public static readonly LocString AddAccountTakenBody = new("account.addAccountTakenBody", "{0} already has an account on this phone. To add another one, log in to that character in the game and sign in from there. It then stays in this list for every character.");
+        public static readonly LocString FollowCharacter = new("account.followCharacter", "Follow current character");
+        public static readonly LocString FollowCharacterHint = new("account.followCharacterHint", "On: the phone uses the account of whichever character you are playing. Off: the account you picked stays active on every character.");
+        public static readonly LocString SwitchHint = new("account.switchHint", "Tap an account to use it right away. Apps, messages and your phone number follow the account you pick.");
+        public static readonly LocString PlayingAs = new("account.playingAs", "Playing {0}, signed in as {1}");
+        public static readonly LocString RemoveAccount = new("account.removeAccount", "Remove");
+        public static readonly LocString RemoveAccountTitle = new("account.removeAccountTitle", "Remove {0}?");
+        public static readonly LocString RemoveAccountBody = new("account.removeAccountBody", "This signs that account out on this phone and takes it off the list. The account itself and everything in it stay safe. Sign in from that character again whenever you want it back.");
         public static readonly LocString AltSignInTitle = new("account.altSignInTitle", "Not signed in on this character");
         public static readonly LocString AltSignInBody = new("account.altSignInBody", "You're now playing {0}. This character isn't signed in to Aethernet, so social apps, messaging, and calls stay empty until you sign in.");
         public static readonly LocString FailDismiss = new("account.fail.dismiss", "Got it");
@@ -2555,6 +2571,15 @@ internal static class L
         public static readonly LocPlural Votes = new("polls.votes", "{0} vote", "{0} votes");
     }
 
+    internal static class Announcements
+    {
+        public static readonly LocString SignInRequired = new("announcements.signInRequired", "Sign in to Aethernet in Settings to read announcements");
+        public static readonly LocString EmptyTitle = new("announcements.emptyTitle", "Nothing announced yet");
+        public static readonly LocString EmptyHint = new("announcements.emptyHint", "News from the Aetherphone team lands here.");
+        public static readonly LocString UnavailableTitle = new("announcements.unavailableTitle", "Announcement unavailable");
+        public static readonly LocString UnavailableHint = new("announcements.unavailableHint", "This announcement was taken down.");
+    }
+
     internal static class Catalogs
     {
         public static readonly LocString AccentViolet = new("catalog.accent.violet", "Violet");
@@ -3014,6 +3039,9 @@ internal static class L
         public static readonly LocString AfterDarkConfirmTitle = new("yellowpages.afterDarkConfirmTitle", "After Dark");
         public static readonly LocString AfterDarkConfirmBody = new("yellowpages.afterDarkConfirmBody", "Show 18+ ads while browsing? They stay hidden for everyone who has not opted in, and the ads themselves must still be non-explicit.");
         public static readonly LocString AfterDarkConfirmYes = new("yellowpages.afterDarkConfirmYes", "Show 18+ ads");
+        public static readonly LocString BrowseTab = new("yellowpages.browseTab", "Browse");
+        public static readonly LocString SavedTab = new("yellowpages.savedTab", "Saved");
+        public static readonly LocString MineTab = new("yellowpages.mineTab", "My ads");
         public static readonly LocString AdPreview = new("yellowpages.adPreview", "Yellow Pages ad");
         public static readonly LocString AdUnavailable = new("yellowpages.adUnavailable", "Ad unavailable");
         public static readonly LocString AdOpen = new("yellowpages.adOpen", "Open in Yellow Pages");

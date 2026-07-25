@@ -1,4 +1,5 @@
 using Aetherphone.Apps.Aethergram;
+using Aetherphone.Apps.Announcements;
 using Aetherphone.Apps.Calendar;
 using Aetherphone.Apps.Camera;
 using Aetherphone.Apps.Chirper;
@@ -60,6 +61,7 @@ internal static class AppRegistry
         apps.Add(new FeedbackApp(services.AethernetSession, feedbackNet.Feedback, feedbackNet.Media, photoLibrary, services.Configuration, services.Confirm, services.WallpaperImages));
         apps.Add(new DevApp(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "dev"), services.Lodestone, services.Configuration, photoLibrary, services.Http, services.RemoteImages, services.Confirm, services.WallpaperImages));
         apps.Add(new PollsApp(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "polls").Polls));
+        apps.Add(new AnnouncementsApp(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "announcements").Announcements, services.Notifications, services.Configuration, services.AnnouncementsLauncher));
         apps.Add(new CameraApp(new PhotoCaptureService(), photoLibrary, services.Configuration));
         apps.Add(new PhotosApp(photoLibrary, services.Confirm));
         apps.Add(new SkywatcherApp(services.Weather, services.WeatherControl));
@@ -81,7 +83,7 @@ internal static class AppRegistry
         apps.Add(new DailiesApp(services.Configuration, services.GameData));
         apps.Add(new FishingApp());
         apps.Add(new GamesApp(services.GameStats));
-        apps.Add(new NotificationsApp(services.Notifications, services.LinkpearlLauncher, services.VelvetLauncher, services.DmLauncher, services.GramDmLauncher, services.SocialLauncher, services.MusterLauncher, services.YellowPagesLauncher));
+        apps.Add(new NotificationsApp(services.Notifications, services.LinkpearlLauncher, services.VelvetLauncher, services.DmLauncher, services.GramDmLauncher, services.SocialLauncher, services.MusterLauncher, services.YellowPagesLauncher, services.AnnouncementsLauncher));
         apps.Add(new SettingsApp(services, photoLibrary));
         var calendarEvents = new CalendarEvents(services.Http, services.AethernetSession);
         apps.Add(new CalendarApp(services.Configuration, calendarEvents, services.Confirm));

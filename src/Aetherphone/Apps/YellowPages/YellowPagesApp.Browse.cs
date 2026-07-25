@@ -12,9 +12,11 @@ namespace Aetherphone.Apps.YellowPages;
 
 internal sealed partial class YellowPagesApp
 {
-    private const float ControlRowHeight = 42f;
-    private const float PinnedCardHeight = 58f;
+    private const float SearchRowHeight = 46f;
     private const float ChipHeight = 32f;
+    private const float RailCardWidth = 118f;
+    private const float RailCardHeight = 134f;
+    private const float RailThumbHeight = 64f;
     private const double SearchDebounceSeconds = 0.6;
     private const int SectionFallbackRebuildSeconds = 30;
     private const long OpeningSoonLeadSeconds = 8L * 3600L;
@@ -23,13 +25,13 @@ internal sealed partial class YellowPagesApp
     private readonly List<AdDto> latestSection = new();
     private readonly string[] chipLabels = new string[AdCategories.Count];
     private readonly bool[] chipActive = new bool[AdCategories.Count];
-    private readonly string[] scopeLabels = new string[3];
     private AdDto[] lastDirectory = Array.Empty<AdDto>();
     private long nextSectionRebuildUnix;
     private string browseSearch = string.Empty;
     private string browseSearchApplied = string.Empty;
     private double browseSearchEditedAt;
     private bool browseOpenNow;
+    private int railStart;
 
     private void DrawBrowse(Rect area)
     {
@@ -37,25 +39,19 @@ internal sealed partial class YellowPagesApp
         var nowUnix = NowUnix();
         DrawBrowseHeader(area, scale);
         var controlsTop = area.Min.Y + AppHeader.Height * scale;
-        DrawScopeRow(area, controlsTop, scale);
-        var body = new Rect(new Vector2(area.Min.X, controlsTop + ControlRowHeight * scale), area.Max);
+        DrawSearchRow(area, controlsTop, scale);
+        var body = new Rect(new Vector2(area.Min.X, controlsTop + SearchRowHeight * scale), area.Max);
         EnsureBrowseSections(nowUnix);
         using (AppSurface.Begin(body))
         {
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
-            DrawSearchField(scale);
-            if (store.Mine.Length > 0)
-            {
-                DrawMinePinned(scale);
-            }
-
-            DrawCategoryFilters(scale);
             if (openSection.Count > 0)
             {
                 ui.SectionHeading(Loc.T(L.YellowPages.OpenSection), 6f);
-                DrawCards(openSection, nowUnix, scale);
+                DrawOpenRail(nowUnix, scale);
             }
 
+            DrawCategoryFilters(scale);
             if (latestSection.Count == 0)
             {
                 DrawBrowseEmpty(body, scale);
@@ -69,13 +65,6 @@ internal sealed partial class YellowPagesApp
 
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
         }
-
-        if (store.LiveMineCount < 3 && ComposeFab.Draw(body, "##yellowPagesPostFab", ui.Accent,
-                FontAwesomeIcon.Plus.ToIconString(), Loc.T(L.YellowPages.PostAd)))
-        {
-            ResetComposeForm();
-            router.Push(YellowPagesRoute.Compose);
-        }
     }
 
     private void DrawBrowseHeader(Rect area, float scale)
@@ -83,13 +72,6 @@ internal sealed partial class YellowPagesApp
         var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
         Typography.DrawCentered(new Vector2(area.Center.X, rowCenterY), DisplayName,
             AppPalettes.YellowPages.TitleInk, 1.3f, FontWeight.Bold);
-        if (ui.IconButton(new Vector2(area.Min.X + 22f * scale, rowCenterY), 14f * scale,
-                FontAwesomeIcon.Heart.ToIconString(), AppPalettes.YellowPages.BodyInk, AppSkin.Transparent, 0.85f))
-        {
-            store.RefreshSaved();
-            router.Push(YellowPagesRoute.Saved);
-        }
-
         var actionCenter = new Vector2(area.Max.X - 22f * scale, rowCenterY);
         if (store.Syncing || store.DirectoryLoading)
         {
@@ -105,27 +87,16 @@ internal sealed partial class YellowPagesApp
         }
     }
 
-    private void DrawScopeRow(Rect area, float top, float scale)
+    private void DrawSearchRow(Rect area, float top, float scale)
     {
         var inset = 16f * scale;
-        var row = new Rect(new Vector2(area.Min.X + inset, top),
-            new Vector2(area.Max.X - inset, top + ControlRowHeight * scale));
-        scopeLabels[0] = Loc.T(L.YellowPages.ScopeRegion);
-        scopeLabels[1] = Loc.T(L.YellowPages.ScopeMyDc);
-        scopeLabels[2] = Loc.T(L.YellowPages.ScopeEverywhere);
-        var selected = Math.Clamp(configuration.YellowPagesScope, AdScopes.Region, AdScopes.Everywhere);
-        var next = SegmentStrip.Draw("##yellowPagesScope", row, scopeLabels, selected, AppPalettes.YellowPages);
-        if (next != selected)
-        {
-            configuration.YellowPagesScope = next;
-            configuration.Save();
-            RefreshBrowse();
-        }
-    }
-
-    private void DrawSearchField(float scale)
-    {
-        ui.Field(Loc.T(L.YellowPages.SearchLabel), "##yellowPagesSearch", ref browseSearch, 60, false);
+        var chipLabel = Loc.T(ScopeLabel());
+        var chipWidth = Typography.Measure(chipLabel, 0.8f, FontWeight.SemiBold).X + 24f * scale;
+        var gap = Metrics.Space.Sm * scale;
+        var searchRect = new Rect(new Vector2(area.Min.X + inset, top + 4f * scale),
+            new Vector2(area.Max.X - inset - chipWidth - gap, top + (SearchRowHeight - 6f) * scale));
+        SearchField.Draw(searchRect, "##yellowPagesSearch", Loc.T(L.YellowPages.SearchLabel), ref browseSearch,
+            AppPalettes.YellowPages, 60);
         if (!string.Equals(browseSearch, browseSearchApplied, StringComparison.Ordinal))
         {
             if (browseSearchEditedAt == 0d)
@@ -141,43 +112,152 @@ internal sealed partial class YellowPagesApp
             }
         }
 
-        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+        var drawList = ImGui.GetWindowDrawList();
+        var chipRect = new Rect(new Vector2(searchRect.Max.X + gap, searchRect.Min.Y),
+            new Vector2(searchRect.Max.X + gap + chipWidth, searchRect.Max.Y));
+        var hovered = UiInteract.Hover(chipRect.Min, chipRect.Max);
+        Squircle.Fill(drawList, chipRect.Min, chipRect.Max, chipRect.Height * 0.5f,
+            ImGui.GetColorU32(hovered ? ui.HoverTint : AppPalettes.YellowPages.FieldSurface));
+        Squircle.Stroke(drawList, chipRect.Min, chipRect.Max, chipRect.Height * 0.5f,
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.45f)), 1f);
+        Typography.DrawCentered(drawList, chipRect.Center, chipLabel, ui.Accent, 0.8f, FontWeight.SemiBold);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (UiInteract.Click(chipRect.Min, chipRect.Max, hovered))
+        {
+            configuration.YellowPagesScope = configuration.YellowPagesScope == AdScopes.Everywhere
+                ? AdScopes.Region
+                : configuration.YellowPagesScope + 1;
+            configuration.Save();
+            RefreshBrowse();
+        }
     }
 
-    private void DrawMinePinned(float scale)
+    private Core.Localization.LocString ScopeLabel()
+    {
+        return configuration.YellowPagesScope switch
+        {
+            AdScopes.DataCenter => L.YellowPages.ScopeMyDc,
+            AdScopes.Everywhere => L.YellowPages.ScopeEverywhere,
+            _ => L.YellowPages.ScopeRegion,
+        };
+    }
+
+    private void DrawOpenRail(long nowUnix, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
-        var height = PinnedCardHeight * scale;
-        var card = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
-        var rounding = Metrics.Radius.Lg * scale;
-        ui.Card(drawList, card.Min, card.Max, rounding, elevated: true);
-        var tileSide = 32f * scale;
-        var tileCenter = new Vector2(card.Min.X + 14f * scale + tileSide * 0.5f, card.Center.Y);
-        IconTile.Draw(tileCenter, tileSide, IconTile.Surface(ui.Accent), FontAwesomeIcon.Bullhorn);
-        var textLeft = tileCenter.X + tileSide * 0.5f + 12f * scale;
-        Typography.Draw(drawList, new Vector2(textLeft, card.Min.Y + 10f * scale), Loc.T(L.YellowPages.YourAds),
-            AppPalettes.YellowPages.TitleInk, TextStyles.Headline);
-        var summary = Loc.T(L.YellowPages.YourAdsCount, store.LiveMineCount);
-        Typography.Draw(drawList, new Vector2(textLeft, card.Min.Y + 31f * scale), summary, ui.Accent,
-            TextStyles.FootnoteEmphasized);
-        AppSkin.Icon(drawList, new Vector2(card.Max.X - 20f * scale, card.Center.Y),
-            FontAwesomeIcon.ChevronRight.ToIconString(), AppPalettes.YellowPages.MutedInk, 0.7f);
-        var hovered = UiInteract.Hover(card.Min, card.Max);
-        if (hovered)
+        var cardWidth = RailCardWidth * scale;
+        var cardHeight = RailCardHeight * scale;
+        var gap = Metrics.Space.Sm * scale;
+        var fit = Math.Max(1, (int)((width + gap) / (cardWidth + gap)));
+        if (railStart > Math.Max(0, openSection.Count - fit))
         {
-            UiInteract.HoverHighlight(drawList, card.Min, card.Max, rounding);
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            railStart = Math.Max(0, openSection.Count - fit);
         }
 
-        if (UiInteract.Click(card.Min, card.Max, hovered))
+        var shown = Math.Min(fit, openSection.Count - railStart);
+        for (var index = 0; index < shown; index++)
         {
-            router.Push(YellowPagesRoute.Mine);
+            var ad = openSection[railStart + index];
+            var min = new Vector2(origin.X + (cardWidth + gap) * index, origin.Y);
+            if (DrawRailCard(drawList, ad, min, new Vector2(min.X + cardWidth, min.Y + cardHeight), nowUnix, scale))
+            {
+                OpenDetail(ad.Id);
+            }
+        }
+
+        if (railStart > 0)
+        {
+            DrawRailChevron(drawList, new Vector2(origin.X + 12f * scale, origin.Y + cardHeight * 0.5f),
+                FontAwesomeIcon.ChevronLeft, () => railStart--, scale);
+        }
+
+        if (railStart + fit < openSection.Count)
+        {
+            DrawRailChevron(drawList, new Vector2(origin.X + width - 12f * scale, origin.Y + cardHeight * 0.5f),
+                FontAwesomeIcon.ChevronRight, () => railStart++, scale);
         }
 
         ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, height + Metrics.Space.Md * scale));
+        ImGui.Dummy(new Vector2(width, cardHeight + Metrics.Space.Md * scale));
+    }
+
+    private bool DrawRailCard(ImDrawListPtr drawList, AdDto ad, Vector2 min, Vector2 max, long nowUnix, float scale)
+    {
+        var rounding = Metrics.Radius.Md * scale;
+        ui.Card(drawList, min, max, rounding, elevated: true);
+        var thumbMax = new Vector2(max.X, min.Y + RailThumbHeight * scale);
+        var thumb = string.IsNullOrEmpty(ad.MediaUrl) ? null : images.Get(ad.MediaUrl);
+        if (thumb is not null)
+        {
+            var (uv0, uv1) = ImageFit.Cover(thumb.Size.X, thumb.Size.Y, max.X - min.X, thumbMax.Y - min.Y);
+            drawList.AddImageRounded(thumb.Handle, min, thumbMax, uv0, uv1, 0xFFFFFFFFu, rounding,
+                ImDrawFlags.RoundCornersTop);
+        }
+        else
+        {
+            Squircle.Fill(drawList, min, thumbMax, rounding,
+                ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.16f)));
+            AppSkin.Icon(drawList, (min + thumbMax) * 0.5f, AdCategories.Icon(ad.Category).ToIconString(),
+                Palette.WithAlpha(ui.Accent, 0.85f), 0.9f);
+        }
+
+        var pad = 8f * scale;
+        var name = Typography.FitText(ad.Title, max.X - min.X - pad * 2f, TextStyles.FootnoteEmphasized);
+        Typography.Draw(drawList, new Vector2(min.X + pad, thumbMax.Y + 6f * scale), name,
+            AppPalettes.YellowPages.TitleInk, TextStyles.FootnoteEmphasized);
+        var state = AdText.OpenState(ad, nowUnix);
+        var statusTop = thumbMax.Y + 26f * scale;
+        if (state.IsOpen)
+        {
+            var label = Loc.T(L.YellowPages.OpenNow);
+            var labelSize = Typography.Measure(label, TextStyles.Caption1);
+            var pillMin = new Vector2(min.X + pad, statusTop);
+            var pillMax = pillMin + labelSize + new Vector2(12f * scale, 5f * scale);
+            Squircle.Fill(drawList, pillMin, pillMax, (pillMax.Y - pillMin.Y) * 0.5f,
+                ImGui.GetColorU32(AdCard.OpenGreen));
+            Typography.Draw(drawList, pillMin + new Vector2(6f * scale, 2.5f * scale), label,
+                new Vector4(0.03f, 0.08f, 0.05f, 1f), TextStyles.Caption1);
+        }
+        else if (state.NextOpeningUnix > 0)
+        {
+            Typography.Draw(drawList, new Vector2(min.X + pad, statusTop),
+                Loc.T(L.YellowPages.OpensAt, TimeText.Clock(state.NextOpeningUnix)), ui.Accent,
+                TextStyles.Caption1);
+        }
+
+        var hovered = UiInteract.Hover(min, max);
+        if (hovered)
+        {
+            UiInteract.HoverHighlight(drawList, min, max, rounding);
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return UiInteract.Click(min, max, hovered);
+    }
+
+    private void DrawRailChevron(ImDrawListPtr drawList, Vector2 center, FontAwesomeIcon icon, Action step,
+        float scale)
+    {
+        var radius = 12f * scale;
+        var hovered = UiInteract.Hover(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
+        drawList.AddCircleFilled(center, radius,
+            ImGui.GetColorU32(new Vector4(0f, 0f, 0f, hovered ? 0.72f : 0.55f)), 28);
+        AppSkin.Icon(drawList, center, icon.ToIconString(), new Vector4(1f, 1f, 1f, 0.92f), 0.62f);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (UiInteract.Click(center - new Vector2(radius, radius), center + new Vector2(radius, radius), hovered))
+        {
+            step();
+        }
     }
 
     private void DrawCategoryFilters(float scale)
@@ -355,6 +435,7 @@ internal sealed partial class YellowPagesApp
         lastDirectory = directory;
         openSection.Clear();
         latestSection.Clear();
+        railStart = 0;
         var upcoming = new List<AdDto>();
         var nextBoundary = long.MaxValue;
         for (var index = 0; index < directory.Length; index++)

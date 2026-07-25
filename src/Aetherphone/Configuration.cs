@@ -49,6 +49,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public long ActivityGoalGil { get; set; } = 50000;
     public bool ScrollWhileIdle { get; set; } = true;
     public bool ShowLodestonePortraits { get; set; } = true;
+    public int LodestoneIdIndexVersion { get; set; }
     public float TextZoom { get; set; } = 1.15f;
     public List<string> FontGlyphLedger { get; set; } = new();
     public float ScreenBrightness { get; set; } = 1f;
@@ -80,6 +81,8 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public bool EncryptionRecoveryNudgeDismissed { get; set; }
     public Dictionary<string, int> KnownPeerKeyVersions { get; set; } = new();
     public Dictionary<ulong, CharacterSession> CharacterSessions { get; set; } = new();
+    public bool FollowCharacterAccount { get; set; } = true;
+    public ulong PinnedAccountContentId { get; set; }
     public string LegacyUnclaimedToken { get; set; } = string.Empty;
     public string LegacyUnclaimedEncryptionKey { get; set; } = string.Empty;
     public string LegacyUnclaimedEncryptionUserId { get; set; } = string.Empty;
@@ -143,6 +146,9 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public Dictionary<ulong, List<string>> MutedLinkshellsByCharacter { get; set; } = new();
     public bool LinkshellMutesPerCharacterMigrated { get; set; }
     public long DevChatLastSeenUnix { get; set; }
+    public long AnnouncementsSeenUnix { get; set; }
+    public long AnnouncementsNotifiedUnix { get; set; }
+    public bool AnnouncementsInitialized { get; set; }
     public bool? Use24HourClock { get; set; }
     public bool TimeZoneManual { get; set; }
     public int ManualUtcOffsetMinutes { get; set; }

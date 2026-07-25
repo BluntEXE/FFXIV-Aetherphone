@@ -42,6 +42,7 @@ internal static class AppAccents
         ["feedback"] = new(0.08f, 0.66f, 0.55f, 1f),
         ["dev"] = new(0.42f, 0.46f, 0.98f, 1f),
         ["polls"] = new(0.56f, 0.44f, 0.96f, 1f),
+        ["announcements"] = new(0.98f, 0.48f, 0.32f, 1f),
         ["muster"] = new(0.94f, 0.55f, 0.20f, 1f),
         ["yellowpages"] = new(0.91f, 0.68f, 0.15f, 1f),
         ["games"] = new(0.32f, 0.78f, 0.50f, 1f),

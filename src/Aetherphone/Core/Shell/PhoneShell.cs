@@ -72,7 +72,7 @@ internal sealed class PhoneShell : IDisposable
         navigation.AppOpened += services.Conduct.NotifyAppOpened;
         var router = new NotificationRouter(navigation, notifications, services.LinkpearlLauncher,
             services.VelvetLauncher, services.DmLauncher, services.GramDmLauncher, services.SocialLauncher,
-            services.MusterLauncher, services.YellowPagesLauncher);
+            services.MusterLauncher, services.YellowPagesLauncher, services.AnnouncementsLauncher);
         MusterChatBridge.Bind(services.Musters, services.MusterLauncher, navigation);
         AdChatBridge.Bind(services.YellowPages, services.YellowPagesLauncher, navigation);
         banner = new NotificationBanner(notifications, VisibleAppId, router);

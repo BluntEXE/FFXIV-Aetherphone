@@ -101,7 +101,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         avatar = new AvatarComposer(() => store.AvatarBusy, store.UpdateAvatar,
             new AvatarComposerLabels(L.Chirper.ChangePhoto, L.Chirper.ImportFromPc, L.Photos.NoPhotos,
                 L.Chirper.MoveAndScale, L.Chirper.Use, L.Chirper.Saving, L.Chirper.GestureHint), library,
-            wallpaperImages);
+            wallpaperImages, confirm, () => store.AvatarFailure);
         router = new ViewRouter<ChirperRoute>(ChirperRoute.Home);
         drawView = DrawView;
         back = () => router.Pop();

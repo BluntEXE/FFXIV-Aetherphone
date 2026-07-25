@@ -426,7 +426,12 @@ internal static class Typography
 
     private static string[] Wrap(string text, float maxWidth)
     {
-        if (maxWidth <= 0f || ImGui.CalcTextSize(text).X <= maxWidth)
+        if (maxWidth <= 0f)
+        {
+            return new[] { text };
+        }
+
+        if (text.IndexOf('\n') < 0 && ImGui.CalcTextSize(text).X <= maxWidth)
         {
             return new[] { text };
         }

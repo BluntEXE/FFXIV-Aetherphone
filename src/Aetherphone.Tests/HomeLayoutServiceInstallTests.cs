@@ -101,6 +101,7 @@ public sealed class HomeLayoutServiceInstallTests
     [Theory]
     [InlineData("appstore")]
     [InlineData("settings")]
+    [InlineData("announcements")]
     public void MandatoryApp_IsAlwaysInstalledAndCannotBeUninstalled(string appId)
     {
         var apps = new List<IPhoneApp> { new FakeApp("a"), new FakeApp(appId) };

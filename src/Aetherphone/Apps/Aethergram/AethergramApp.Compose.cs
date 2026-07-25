@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -67,7 +68,9 @@ internal sealed partial class AethergramApp
         if (composeOutcome == 2)
         {
             composeOutcome = 0;
-            composeStatus = Loc.T(L.Account.CannotReach);
+            composeStatus = composeAvatarMode
+                ? Loc.T(AvatarUpload.Message(store.AvatarFailure))
+                : Loc.T(L.Account.CannotReach);
         }
 
         composeSession.ConsumePendingImport();

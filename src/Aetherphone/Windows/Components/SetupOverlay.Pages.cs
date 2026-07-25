@@ -356,10 +356,11 @@ internal sealed partial class SetupOverlay
         if (result == ImagePickCropEvent.Committed && !avatarBusy && picker.SourcePath.Length > 0)
         {
             avatarBusy = true;
-            AvatarUploader.Upload(account, media, session, picker.SourcePath, picker.Crop, cancellation.Token, uploaded =>
+            AvatarUploader.Upload(account, media, session, picker.SourcePath, picker.Crop, cancellation.Token, outcome =>
             {
                 avatarBusy = false;
-                avatarOutcome = uploaded ? 1 : 2;
+                avatarFailure = outcome;
+                avatarOutcome = outcome == AvatarUploadOutcome.Uploaded ? 1 : 2;
             });
         }
     }

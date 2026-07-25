@@ -100,7 +100,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         avatar = new AvatarComposer(() => store.AvatarBusy, store.UpdateAvatar,
             new AvatarComposerLabels(L.Velvet.ChangePhoto, L.Velvet.ImportFromPc, L.Velvet.NoPhotos,
                 L.Velvet.MoveAndScale, L.Velvet.Use, L.Velvet.Saving, L.Velvet.GestureHint), library,
-            wallpaperImages);
+            wallpaperImages, confirm, () => store.AvatarFailure);
         post = new VelvetPostComposer(store, stories, library, images, lodestone, wallpaperImages);
         router = new ViewRouter<VelvetView>(VelvetView.Root);
         drawView = DrawView;

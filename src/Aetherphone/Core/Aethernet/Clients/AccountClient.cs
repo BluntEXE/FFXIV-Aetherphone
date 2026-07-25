@@ -46,9 +46,10 @@ internal sealed class AccountClient
         });
     }
 
-    public Task<UserDto?> UpdateProfileAsync(UpdateProfileRequest request, CancellationToken token)
+    public Task<UserDto?> UpdateProfileAsync(UpdateProfileRequest request, CancellationToken token,
+        Action<int>? onStatus = null)
     {
-        return net.SendJsonAsync(HttpMethod.Patch, "/me", request, AethernetJsonContext.Default.UpdateProfileRequest, AethernetJsonContext.Default.UserDto, token);
+        return net.SendJsonAsync(HttpMethod.Patch, "/me", request, AethernetJsonContext.Default.UpdateProfileRequest, AethernetJsonContext.Default.UserDto, token, onStatus);
     }
 
     public Task<UserDto?> UpdateTimeZoneAsync(UpdateTimeZoneRequest request, CancellationToken token)
