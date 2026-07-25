@@ -184,9 +184,11 @@ internal sealed class SocialProfilePages
             ? 8f * scale + Typography.MeasureWrapped(followedByLine, innerWidth, TextStyles.Subheadline.Scale)
             : 0f;
         var buttonHeight = 34f * scale;
-        var hasIconRow = user.IsMe && (openConductRules is not null ||
-            (openSettings is not null && style.SettingsLabel is not null) ||
-            (openSaved is not null && style.SavedLabel is not null));
+        var hasIconRow = user.IsMe
+            ? openConductRules is not null ||
+              (openSettings is not null && style.SettingsLabel is not null) ||
+              (openSaved is not null && style.SavedLabel is not null)
+            : true;
         var iconRowHeight = hasIconRow ? buttonHeight + 8f * scale : 0f;
         var textTop = origin.Y + pad + avatarRadius * 2f + 14f * scale + iconRowHeight;
         var cardBottom = textTop + nameH + lineGap + metaH + timeH + bioH + followedByH + pad;
@@ -198,17 +200,17 @@ internal sealed class SocialProfilePages
         avatarLightbox.TryOpen(avatarCenter, avatarRadius, user.AvatarUrl, images);
         var avatarRight = avatarCenter.X + avatarRadius;
         var rightEdge = origin.X + width - pad;
-        var reportReserve = user.IsMe ? 0f : buttonHeight + 10f * scale;
-        var maxButtonAreaWidth = MathF.Max(60f * scale, rightEdge - avatarRight - 14f * scale - reportReserve);
+        var maxButtonAreaWidth = MathF.Max(60f * scale, rightEdge - avatarRight - 14f * scale);
         var primaryLabel = user.IsMe ? Loc.T(style.EditProfile)
             : user.IsFollowing ? Loc.T(style.Following) : Loc.T(style.Follow);
         var primaryLabelWidth = Typography.Measure(primaryLabel, 0.9f, FontWeight.SemiBold).X;
         var buttonWidth = MathF.Min(maxButtonAreaWidth, MathF.Max(122f * scale, primaryLabelWidth + buttonHeight));
         var buttonMax = new Vector2(rightEdge, avatarCenter.Y + buttonHeight * 0.5f);
         var buttonRect = new Rect(new Vector2(buttonMax.X - buttonWidth, buttonMax.Y - buttonHeight), buttonMax);
+        var secondRowY = origin.Y + pad + avatarRadius * 2f + 8f * scale + buttonHeight * 0.5f;
         if (user.IsMe)
         {
-            var iconRowY = buttonMax.Y + 8f * scale + buttonHeight * 0.5f;
+            var iconRowY = secondRowY;
             var iconCenterX = rightEdge - buttonHeight * 0.5f;
             if (openConductRules is not null)
             {
@@ -250,38 +252,32 @@ internal sealed class SocialProfilePages
         }
         else
         {
-            var followRect = buttonRect;
             var hasMessage = openMessage is not null && style.MessageLabel is not null && user.CanMessage;
-            var messageRect = default(Rect);
+            var followRowY = secondRowY - buttonHeight - 8f * scale;
+            var followRect = new Rect(new Vector2(rightEdge - buttonWidth, followRowY - buttonHeight * 0.5f),
+                new Vector2(rightEdge, followRowY + buttonHeight * 0.5f));
+            var cursorX = rightEdge;
             if (hasMessage)
             {
-                var innerRight = origin.X + width - pad;
-                var pillGap = 8f * scale;
-                var iconRoom = buttonHeight + 10f * scale;
-                var available = innerRight - (avatarCenter.X + avatarRadius) - 12f * scale - iconRoom;
-                var followLabelWidth = Typography.Measure(user.IsFollowing ? Loc.T(style.Following) : Loc.T(style.Follow),
-                    0.9f, FontWeight.SemiBold).X;
                 var messageLabelWidth = Typography.Measure(Loc.T(style.MessageLabel!.Value), 0.9f, FontWeight.SemiBold).X;
-                var minPillWidth = MathF.Max(followLabelWidth, messageLabelWidth) + 24f * scale;
-                var pillWidth = MathF.Max(minPillWidth, MathF.Min(buttonWidth, (available - pillGap) * 0.5f));
-                followRect = new Rect(new Vector2(innerRight - pillWidth, buttonMax.Y - buttonHeight),
-                    new Vector2(innerRight, buttonMax.Y));
-                messageRect = new Rect(new Vector2(followRect.Min.X - pillGap - pillWidth, followRect.Min.Y),
-                    new Vector2(followRect.Min.X - pillGap, followRect.Max.Y));
+                var messageMaxWidth = MathF.Max(1f, cursorX - (origin.X + pad) - buttonHeight - 8f * scale);
+                var messageWidth = MathF.Min(messageMaxWidth, messageLabelWidth + buttonHeight);
+                var messageRect = new Rect(new Vector2(cursorX - messageWidth, secondRowY - buttonHeight * 0.5f),
+                    new Vector2(cursorX, secondRowY + buttonHeight * 0.5f));
+                if (ui.PillButton(messageRect, Loc.T(style.MessageLabel!.Value), false,
+                        "socialprofile.pill.message." + user.Id))
+                {
+                    openMessage!(user.Id);
+                }
+
+                cursorX = messageRect.Min.X - 8f * scale;
             }
 
-            var iconAnchorX = hasMessage ? messageRect.Min.X : followRect.Min.X;
-            var reportCenter = new Vector2(iconAnchorX - buttonHeight * 0.5f - 2f * scale, avatarCenter.Y);
+            var reportCenter = new Vector2(cursorX - buttonHeight * 0.5f, secondRowY);
             if (ui.IconButton(reportCenter, buttonHeight * 0.5f, FontAwesomeIcon.Flag.ToIconString(), theme.Danger,
                     Palette.WithAlpha(theme.Danger, 0.16f), 0.9f, Loc.T(L.Report.Action)))
             {
                 OpenReport("user", user.Id, Loc.T(L.Report.UserTitle));
-            }
-
-            if (hasMessage && ui.PillButton(messageRect, Loc.T(style.MessageLabel!.Value), false,
-                    "socialprofile.pill.message." + user.Id))
-            {
-                openMessage!(user.Id);
             }
 
             if (ui.PillButton(followRect, FollowPillLabel(user), FollowPillFilled(user), "socialprofile.pill.follow." + user.Id))
