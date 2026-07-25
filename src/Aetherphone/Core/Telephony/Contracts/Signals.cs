@@ -24,6 +24,17 @@ internal static class SignalType
     public const string VelvetPing = "velvet.ping";
     public const string SocialPing = "social.ping";
     public const string Error = "error";
+
+    // AetherStream watch-along - rides the same wss /rt socket and CallControl envelope as the
+    // call.* signals above (see StreamSignalRouter), not a second connection.
+    public const string StreamState = "stream.state";
+    public const string StreamJoin = "stream.join";
+    public const string StreamLeave = "stream.leave";
+    public const string StreamJoined = "stream.joined";
+    public const string StreamDeclined = "stream.declined";
+    public const string StreamRoster = "stream.roster";
+    public const string StreamLeft = "stream.left";
+    public const string StreamEnded = "stream.ended";
 }
 
 internal static class ParticipantState
@@ -52,4 +63,11 @@ internal sealed record CallControl
     public string? UserId { get; init; }
     public bool? Muted { get; init; }
     public string? Reason { get; init; }
+
+    // stream.* fields - nulls are omitted on the wire and unknown fields are ignored server-side,
+    // so adding these here is backward compatible with the existing call.* parsing above.
+    public string? HostId { get; init; }
+    public string? Url { get; init; }
+    public double? PositionSeconds { get; init; }
+    public bool? Paused { get; init; }
 }

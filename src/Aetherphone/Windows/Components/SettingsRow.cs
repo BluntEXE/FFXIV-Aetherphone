@@ -12,11 +12,16 @@ internal static class SettingsRow
 
     public static bool Bool(Rect row, string label, bool value, PhoneTheme theme)
     {
-        DrawLabel(row, label, theme.TextStrong);
         var scale = ImGuiHelpers.GlobalScale;
         var width = Metrics.Size.ToggleWidth * scale;
         var height = Metrics.Size.ToggleHeight * scale;
         var min = new Vector2(row.Max.X - width, row.Center.Y - height * 0.5f);
+
+        // Toggle reserves its own column first - the label is fit to whatever remains rather
+        // than drawn at full natural width, which previously let a long label run underneath
+        // the toggle it sits next to.
+        var labelWidth = MathF.Max(0f, min.X - Metrics.Space.Md * scale - row.Min.X);
+        DrawLabel(row, Typography.FitText(label, labelWidth, TextStyles.BodyEmphasized), theme.TextStrong);
         return Toggle.Draw(label, new Rect(min, min + new Vector2(width, height)), value, theme);
     }
 

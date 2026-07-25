@@ -7,6 +7,7 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Shell;
 using Aetherphone.Core.Updates;
+using Aetherphone.Core.Video;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows;
 using Dalamud.Game.ClientState.Conditions;
@@ -39,6 +40,8 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IContextMenu ContextMenu { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
     [PluginService] internal static IUnlockState UnlockState { get; private set; } = null!;
+    [PluginService] internal static IGameInteropProvider InteropProvider { get; private set; } = null!;
+    [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
     internal static Plugin Instance { get; private set; } = null!;
     internal static Configuration Cfg { get; private set; } = null!;
     internal static FontService Fonts { get; private set; } = null!;
@@ -50,6 +53,15 @@ public sealed class Plugin : IDalamudPlugin
     private readonly PhoneShell shell;
     private readonly PhoneWindow phoneWindow;
     private readonly AboutWindow aboutWindow;
+    private readonly Guid videoSessionId = Guid.NewGuid();
+    private readonly VideoPlayer video;
+    private readonly ScreenDeviceHandler screenDeviceHandler;
+    private readonly ScreenPenumbraGate screenPenumbraGate;
+    private readonly ScreenController screenController;
+    private readonly AetherStreamQueue videoQueue;
+    private readonly WatchAlongSession watchAlong;
+    private readonly VideoDebugWindow videoDebugWindow;
+    private readonly AetherStreamScreenWindow screenWindow;
     private readonly UpdateChipWindow updateChipWindow;
     private readonly PhoneEmoteController phoneEmote;
     private readonly TimerNotifier timerNotifier;
@@ -85,13 +97,29 @@ public sealed class Plugin : IDalamudPlugin
             EmojiCatalog.Load();
             Wallpapers = services.Wallpapers;
             aboutWindow = new AboutWindow();
-            shell = new PhoneShell(services, AppRegistry.BuildDefault(services, ShowAbout));
+            video = new VideoPlayer();
+            screenDeviceHandler = new ScreenDeviceHandler();
+            screenPenumbraGate = new ScreenPenumbraGate();
+            screenController = new ScreenController(screenDeviceHandler, screenPenumbraGate, videoSessionId,
+                () => Cfg.VideoHideNameplates);
+            screenController.Initialize();
+            videoQueue = new AetherStreamQueue(video, screenController);
+            watchAlong = new WatchAlongSession(services.AethernetSession, Cfg, services.Confirm, video,
+                screenController, videoQueue, services.StreamSignals);
+            Framework.Update += OnVideoFrameworkUpdate;
+            videoDebugWindow = new VideoDebugWindow(video, screenController);
+            screenWindow = new AetherStreamScreenWindow(video);
+            shell = new PhoneShell(services,
+                AppRegistry.BuildDefault(services, ShowAbout, video, screenController, videoQueue, watchAlong,
+                    screenWindow));
             phoneWindow = new PhoneWindow(shell, Cfg);
             Updates = new UpdateCheckService(services.Http, PluginInterface);
             updateChipWindow = new UpdateChipWindow(phoneWindow, Updates, services.Themes);
             windowSystem.AddWindow(phoneWindow);
             windowSystem.AddWindow(updateChipWindow);
             windowSystem.AddWindow(aboutWindow);
+            windowSystem.AddWindow(videoDebugWindow);
+            windowSystem.AddWindow(screenWindow);
             services.Visibility.Bind(() => phoneWindow is { IsOpen: true, IsMinimized: false });
             phoneEmote = new PhoneEmoteController(Cfg, Framework, ObjectTable, Condition, DataManager,
                 () => services.Visibility.IsVisible);
@@ -148,6 +176,7 @@ public sealed class Plugin : IDalamudPlugin
 
         ClientState.Login -= OnLogin;
         Framework.Update -= OnAutoOpenTick;
+        Framework.Update -= OnVideoFrameworkUpdate;
         ContextMenu.OnMenuOpened -= OnMenuOpened;
         CommandManager.RemoveHandler(AepConstants.PrimaryCommand);
         CommandManager.RemoveHandler(AepConstants.AliasCommand);
@@ -159,6 +188,11 @@ public sealed class Plugin : IDalamudPlugin
 
         dtrEntry?.Remove();
         windowSystem.RemoveAllWindows();
+        videoDebugWindow?.Dispose();
+        screenWindow?.Dispose();
+        screenController?.Dispose();
+        watchAlong?.Dispose();
+        video?.Dispose();
         phoneEmote?.Dispose();
         timerNotifier?.Dispose();
         calendarReminders?.Dispose();
@@ -191,6 +225,25 @@ public sealed class Plugin : IDalamudPlugin
         autoOpenPending = true;
         Framework.Update -= OnAutoOpenTick;
         Framework.Update += OnAutoOpenTick;
+    }
+
+    private void OnVideoFrameworkUpdate(IFramework framework)
+    {
+        screenController.OnFrameworkUpdate();
+        videoQueue.OnFrameworkUpdate();
+        watchAlong.OnFrameworkUpdate((float)framework.UpdateDelta.TotalSeconds);
+
+        // The phone never displays video, so nothing in AetherStreamApp's own Draw() ever calls
+        // TryGetFrame - that's correct for the phone, but frames still need to reach the TV
+        // texture continuously, independent of whether the phone or app is even open. This is
+        // the one place that happens. TryGetFrame is a cheap cached-reference read, not a native
+        // mpv call, so polling it every tick (unlike GetProgress/IsIdle) isn't the kind of
+        // per-frame state polling the port plan warns against.
+        var frame = video.TryGetFrame(out var width, out var height);
+        if (frame is not null)
+        {
+            screenController.PushFrame(frame, width, height);
+        }
     }
 
     private void OnAutoOpenTick(IFramework framework)
@@ -232,12 +285,18 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.OpenMainUi -= phoneWindow.ToggleShell;
         ClientState.Login -= OnLogin;
         Framework.Update -= OnAutoOpenTick;
+        Framework.Update -= OnVideoFrameworkUpdate;
         services.Notifications.Changed -= UpdateDtrBadge;
         services.Calls.IncomingCallPresented -= OnIncomingCall;
         ContextMenu.OnMenuOpened -= OnMenuOpened;
         dtrEntry.Remove();
         phoneWindow.PersistPositions();
         windowSystem.RemoveAllWindows();
+        videoDebugWindow.Dispose();
+        screenWindow.Dispose();
+        screenController.Dispose();
+        watchAlong.Dispose();
+        video.Dispose();
         phoneEmote.Dispose();
         timerNotifier.Dispose();
         calendarReminders.Dispose();
@@ -327,6 +386,12 @@ public sealed class Plugin : IDalamudPlugin
         if (argument.Equals("reset", StringComparison.OrdinalIgnoreCase))
         {
             phoneWindow.Recenter();
+            return;
+        }
+
+        if (argument.Equals("videodebug", StringComparison.OrdinalIgnoreCase))
+        {
+            videoDebugWindow.IsOpen = true;
             return;
         }
 

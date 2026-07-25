@@ -69,6 +69,28 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public float MusicVolume { get; set; } = 0.6f;
     public int MusicRepeat { get; set; }
     public bool SoundSettingsMigrated { get; set; }
+    public float VideoVolume { get; set; } = 0.6f;
+    public int VideoMaxQualityHeight { get; set; } = 720;
+    public bool VideoHideNameplates { get; set; } = true;
+    // On by default, matching ShowLodestonePortraits - visible unless the user opts out.
+    public bool VideoShareWatchPresence { get; set; } = true;
+    // Off by default - not measured, mpv has no GPU render path under this project's Wine/RADV
+    // setup, only decode may benefit. See docs/video-pipeline.md in the AlphaChannel repo.
+    public bool VideoHardwareDecoding { get; set; }
+    // Off by default and unsafe by design - only affects direct (non-YouTube) HTTPS URLs under
+    // Wine, where mpv's bundled curl fails TLS verification (likely a Schannel/Wine cert-store
+    // gap, not fixable via a CA bundle file - see Stage 7 investigation notes). Never touches
+    // real Windows.
+    public bool VideoAllowInsecureDirectUrls { get; set; }
+    // Where the projected screen sits in the world - unset (Placed = false) until the player
+    // places it once via the Casting tab. Default size is a believable 16:9 TV, in yalms.
+    public bool VideoScreenPlaced { get; set; }
+    public float VideoScreenPositionX { get; set; }
+    public float VideoScreenPositionY { get; set; }
+    public float VideoScreenPositionZ { get; set; }
+    public float VideoScreenYaw { get; set; }
+    public float VideoScreenWidth { get; set; } = 2.4f;
+    public float VideoScreenHeight { get; set; } = 1.35f;
     public const string DefaultAethernetBaseUrl = "https://api.aetherphone.net";
     private const string LegacyAethernetHost = "ffxiv-aethernet-production.up.railway.app";
     public string AethernetBaseUrl { get; set; } = DefaultAethernetBaseUrl;

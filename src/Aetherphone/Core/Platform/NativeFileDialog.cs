@@ -11,14 +11,20 @@ internal static class NativeFileDialog
     private const int OfnExplorer = 0x00080000;
     private const string ImageFilter = "Images\0*.png;*.jpg;*.jpeg;*.bmp\0All Files\0*.*\0";
     private const string AudioFilter = "Audio\0*.mp3;*.wav\0All Files\0*.*\0";
+    private const string VideoFilter =
+        "Video\0*.mp4;*.mkv;*.webm;*.mov;*.avi;*.flv;*.m4v\0All Files\0*.*\0";
 
     public static Task<string?> OpenImageAsync(string title) => OpenAsync(title, ImageFilter, "[Wallpaper]");
 
     public static Task<string?> OpenAudioAsync(string title) => OpenAsync(title, AudioFilter, "[Sound]");
 
+    public static Task<string?> OpenVideoAsync(string title) => OpenAsync(title, VideoFilter, "[Video]");
+
     public static void PickImage(string title, Action<string> onPicked) => Complete(OpenImageAsync(title), onPicked);
 
     public static void PickAudio(string title, Action<string> onPicked) => Complete(OpenAudioAsync(title), onPicked);
+
+    public static void PickVideo(string title, Action<string> onPicked) => Complete(OpenVideoAsync(title), onPicked);
 
     private static void Complete(Task<string?> dialog, Action<string> onPicked)
     {

@@ -161,6 +161,7 @@ internal static class L
         public static readonly LocString Message = new("app.message", "Message");
         public static readonly LocString Jobs = new("app.jobs", "Jobs");
         public static readonly LocString AppStore = new("app.appstore", "App Store");
+        public static readonly LocString AetherStream = new("app.aetherstream", "AetherStream");
     }
 
     internal static class Store
@@ -1855,6 +1856,101 @@ internal static class L
     internal static class Calculator
     {
         public static readonly LocString Error = new("calculator.error", "Error");
+    }
+
+    internal static class AetherStream
+    {
+        public static readonly LocString TabPlayer = new("aetherstream.tabPlayer", "Player");
+        public static readonly LocString TabQueue = new("aetherstream.tabQueue", "Queue");
+        public static readonly LocString TabCasting = new("aetherstream.tabCasting", "Casting");
+        public static readonly LocString SettingsTitle = new("aetherstream.settingsTitle", "AetherStream Settings");
+
+        public static readonly LocString NothingPlaying = new("aetherstream.nothingPlaying", "Nothing playing");
+        public static readonly LocString UrlHint = new("aetherstream.urlHint", "Paste a video URL or YouTube link");
+        public static readonly LocString BrowseLocalFile = new("aetherstream.browseLocalFile", "Play a local file");
+        public static readonly LocString LocalFileSource = new("aetherstream.localFileSource", "Local file");
+        public static readonly LocString WatchingHostLabel = new("aetherstream.watchingHostLabel", "Host");
+        public static readonly LocString WatchingSectionLabel = new("aetherstream.watchingSectionLabel", "Watching");
+        public static readonly LocString PlayNow = new("aetherstream.playNow", "Play Now");
+        public static readonly LocString AddToQueue = new("aetherstream.addToQueue", "Add to Queue");
+        public static readonly LocString PlayNext = new("aetherstream.playNext", "Play Next");
+        public static readonly LocString ClearQueue = new("aetherstream.clearQueue", "Clear");
+        public static readonly LocString ClearQueueConfirm = new("aetherstream.clearQueueConfirm",
+            "Clear the whole queue and stop playback?");
+        public static readonly LocString Keep = new("aetherstream.keep", "Keep it");
+        public static readonly LocString Stop = new("aetherstream.stop", "Stop");
+        public static readonly LocString Remove = new("aetherstream.remove", "Remove");
+        public static readonly LocString QueueEmpty = new("aetherstream.queueEmpty",
+            "Queue's empty. Add a video from the Player tab.");
+
+        public static readonly LocString PlayerCastingStatus = new("aetherstream.playerCastingStatus",
+            "Casting to the in-game screen");
+        public static readonly LocString CastingTarget = new("aetherstream.castingTarget", "Playing to");
+        public static readonly LocString CastingThisScreen = new("aetherstream.castingThisScreen", "This TV");
+        public static readonly LocString CastingStateNotSummoned = new("aetherstream.castingStateNotSummoned",
+            "No Carbuncle summoned nearby");
+        public static readonly LocString CastingStateAwaitingMaterial = new(
+            "aetherstream.castingStateAwaitingMaterial", "Carbuncle found, applying screen appearance…");
+        public static readonly LocString CastingStateReady = new("aetherstream.castingStateReady", "Ready");
+        public static readonly LocString ApplyCompanionMod = new("aetherstream.applyCompanionMod",
+            "Apply companion appearance mod");
+        public static readonly LocString RefreshDetection = new("aetherstream.refreshDetection",
+            "Reload detection");
+        public static readonly LocString PenumbraUnavailable = new("aetherstream.penumbraUnavailable",
+            "Penumbra unavailable: {0}");
+        public static readonly LocString PenumbraRequired = new("aetherstream.penumbraRequired",
+            "AetherStream requires the Penumbra plugin to show video on the in-game screen.");
+        public static readonly LocString GetPenumbra = new("aetherstream.getPenumbra", "Get Penumbra");
+        public static readonly LocString OpenScreenWindow = new("aetherstream.openScreenWindow", "Open in a window");
+        public static readonly LocString CloseScreenWindow = new("aetherstream.closeScreenWindow", "Close window");
+        public static readonly LocString CastingPlaceHere = new("aetherstream.castingPlaceHere", "Place screen here");
+        public static readonly LocString CastingClearPlacement = new("aetherstream.castingClearPlacement",
+            "Clear placement");
+        public static readonly LocString CastingScreenPlaced = new("aetherstream.castingScreenPlaced", "Placed");
+        public static readonly LocString CastingScreenNotPlaced = new("aetherstream.castingScreenNotPlaced",
+            "Not placed");
+        public static readonly LocString CastingSize = new("aetherstream.castingSize", "Size");
+        public static readonly LocString CastingRotate = new("aetherstream.castingRotate", "Rotate");
+
+        public static readonly LocString SettingsSectionStatus = new("aetherstream.settingsSectionStatus", "Status");
+        public static readonly LocString SettingsSectionPlayback = new("aetherstream.settingsSectionPlayback",
+            "Playback");
+        public static readonly LocString SettingsSectionWatching = new("aetherstream.settingsSectionWatching",
+            "Watching");
+        public static readonly LocString SettingsSectionAdvanced = new("aetherstream.settingsSectionAdvanced",
+            "Advanced");
+        public static readonly LocString SettingsDependencyStatus = new("aetherstream.settingsDependencyStatus",
+            "mpv");
+        public static readonly LocString SettingsDependencyYtdlp = new("aetherstream.settingsDependencyYtdlp",
+            "yt-dlp");
+        public static readonly LocString SettingsDependencyOk = new("aetherstream.settingsDependencyOk", "Ready");
+        public static readonly LocString SettingsScreen = new("aetherstream.settingsScreen", "Screen");
+        public static readonly LocString SettingsHideNameplates = new("aetherstream.settingsHideNameplates",
+            "Hide nameplates");
+        public static readonly LocString SettingsMaxQuality = new("aetherstream.settingsMaxQuality", "Max quality");
+        public static readonly LocString SettingsShareWatchPresence = new(
+            "aetherstream.settingsShareWatchPresence", "Show me as watching");
+        public static readonly LocString SettingsShareWatchPresenceHint = new(
+            "aetherstream.settingsShareWatchPresenceHint",
+            "Off keeps your name out of the watching list on this screen.");
+        public static readonly LocString SettingsHardwareDecoding = new("aetherstream.settingsHardwareDecoding",
+            "Hardware decoding");
+        public static readonly LocString SettingsHardwareDecodingHint = new(
+            "aetherstream.settingsHardwareDecodingHint",
+            "Off is the safe default - there's no GPU render path under Wine either way.");
+        public static readonly LocString SettingsTls = new("aetherstream.settingsTls",
+            "Allow insecure direct video URLs (Wine only)");
+        public static readonly LocString SettingsTlsHint = new("aetherstream.settingsTlsHint",
+            "Unsafe: skips certificate checks for direct links. Leave off unless a link fails to load.");
+
+        public static readonly LocString JoinStream = new("aetherstream.joinStream", "Join a stream");
+        public static readonly LocString JoinSearchHint = new("aetherstream.joinSearchHint", "Search by name");
+        public static readonly LocString StreamUnavailableTitle = new("aetherstream.streamUnavailableTitle",
+            "Stream unavailable");
+        public static readonly LocString StreamUnavailableBody = new("aetherstream.streamUnavailableBody",
+            "That stream can't be joined right now.");
+        public static readonly LocString LeaveStream = new("aetherstream.leaveStream", "Leave stream");
+        public static readonly LocString ViewingStream = new("aetherstream.viewingStream", "Watching with {0}");
     }
 
     internal static class Clock
