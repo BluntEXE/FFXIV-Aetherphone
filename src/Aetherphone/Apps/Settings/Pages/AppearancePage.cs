@@ -46,7 +46,7 @@ internal sealed class AppearancePage : ISettingsPage
         using (AppSurface.Begin(body))
         {
             SettingsSection.Header(Loc.T(L.Settings.Theme), theme);
-            var card = GroupCard.Begin(theme, 3);
+            var card = GroupCard.Begin(theme, 4);
             var modeIndex = SegmentStrip.Draw("settings.themeMode", card.NextRow(), ModeLabels(), CurrentModeIndex(),
                 theme);
             var mode = ModeOrder[modeIndex];
@@ -63,6 +63,12 @@ internal sealed class AppearancePage : ISettingsPage
             {
                 configuration.AccentName = accentName;
                 ApplyTheme();
+            }
+
+            if (SettingsRow.Disclosure(card.NextRow(), Loc.T(L.Settings.PhoneCase),
+                    CatalogLabels.PhoneCase(configuration.PhoneCaseName), theme))
+            {
+                navigator.Open(new PhoneCasePage(configuration, themes));
             }
 
             if (SettingsRow.Disclosure(card.NextRow(), Loc.T(L.Settings.Wallpaper), string.Empty, theme))

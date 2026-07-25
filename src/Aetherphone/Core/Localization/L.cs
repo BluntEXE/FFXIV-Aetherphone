@@ -780,6 +780,7 @@ internal static class L
         public static readonly LocString ThemeDark = new("settings.themeDark", "Dark");
         public static readonly LocString ThemeAuto = new("settings.themeAuto", "Auto");
         public static readonly LocString Accent = new("settings.accent", "Accent");
+        public static readonly LocString PhoneCase = new("settings.phoneCase", "Case");
         public static readonly LocString Wallpaper = new("settings.wallpaper", "Wallpaper");
         public static readonly LocString TextSize = new("settings.textSize", "Text Size");
         public static readonly LocString PhoneSize = new("settings.phoneSize", "Phone Size");
@@ -2617,6 +2618,16 @@ internal static class L
         public static readonly LocString AccentGreen = new("catalog.accent.green", "Green");
         public static readonly LocString AccentPink = new("catalog.accent.pink", "Pink");
         public static readonly LocString AccentAmber = new("catalog.accent.amber", "Amber");
+        public static readonly LocString CaseTitanium = new("catalog.case.titanium", "Titanium");
+        public static readonly LocString CaseGraphite = new("catalog.case.graphite", "Graphite");
+        public static readonly LocString CaseSilver = new("catalog.case.silver", "Silver");
+        public static readonly LocString CaseGold = new("catalog.case.gold", "Gold");
+        public static readonly LocString CaseRose = new("catalog.case.rose", "Rose");
+        public static readonly LocString CaseMidnight = new("catalog.case.midnight", "Midnight");
+        public static readonly LocString CaseJade = new("catalog.case.jade", "Jade");
+        public static readonly LocString CaseCoral = new("catalog.case.coral", "Coral");
+        public static readonly LocString CaseLavender = new("catalog.case.lavender", "Lavender");
+        public static readonly LocString CasePorcelain = new("catalog.case.porcelain", "Porcelain");
         public static readonly LocString RingtonePing = new("catalog.ringtone.ping", "Ping");
         public static readonly LocString RingtoneChime = new("catalog.ringtone.chime", "Chime");
         public static readonly LocString RingtoneBell = new("catalog.ringtone.bell", "Bell");
