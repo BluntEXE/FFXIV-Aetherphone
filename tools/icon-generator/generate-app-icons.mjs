@@ -14,6 +14,7 @@ const map = {
   messages: "message-circle",
   contacts: "address-book",
   character: "user-circle",
+  health: "heartbeat",
   camera: "camera",
   photos: "photo",
   skywatcher: "cloud",
