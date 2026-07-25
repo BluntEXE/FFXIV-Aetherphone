@@ -7,15 +7,15 @@ internal sealed class ControlLayoutService
     public const int Columns = 4;
     private const int SolverRows = 16;
 
-    private readonly ControlRegistry registry;
-    private readonly Configuration configuration;
+    private readonly IControlRegistry registry;
+    private readonly IControlConfiguration configuration;
     private readonly List<ControlSlot> slots = new();
     private readonly List<GridCell> placements = new();
     private readonly HashSet<string> enabled = new();
     private bool placementsDirty = true;
     private int rowsUsed;
 
-    public ControlLayoutService(ControlRegistry registry, Configuration configuration)
+    public ControlLayoutService(IControlRegistry registry, IControlConfiguration configuration)
     {
         this.registry = registry;
         this.configuration = configuration;
@@ -203,6 +203,8 @@ internal sealed class ControlLayoutService
         {
             SeedEnabled(saved);
         }
+
+        enabled.UnionWith(placed);
 
         var all = registry.Modules;
         for (var index = 0; index < all.Count; index++)
