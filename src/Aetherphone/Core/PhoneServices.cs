@@ -1,5 +1,6 @@
 using Aetherphone.Core.Activity;
 using Aetherphone.Core.Aethernet;
+using Aetherphone.Core.Announcements;
 using Aetherphone.Core.Collections;
 using Aetherphone.Core.Conduct;
 using Aetherphone.Core.Confirm;
@@ -87,6 +88,7 @@ internal sealed class PhoneServices : IDisposable
     public required MusterLauncher MusterLauncher { get; init; }
     public required YellowPagesStore YellowPages { get; init; }
     public required YellowPagesLauncher YellowPagesLauncher { get; init; }
+    public required AnnouncementsLauncher AnnouncementsLauncher { get; init; }
     public required CollectionsCatalogService Collections { get; init; }
     public required InventoryCaptureService InventoryCapture { get; init; }
     public required ActivityTracker Activity { get; init; }
@@ -240,6 +242,7 @@ internal sealed class PhoneServices : IDisposable
             MusterLauncher = new MusterLauncher(),
             YellowPages = yellowPages,
             YellowPagesLauncher = new YellowPagesLauncher(),
+            AnnouncementsLauncher = new AnnouncementsLauncher(),
             Collections = collections,
             InventoryCapture = inventoryCapture,
             Activity = activity,

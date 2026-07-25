@@ -145,6 +145,9 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public Dictionary<ulong, List<string>> MutedLinkshellsByCharacter { get; set; } = new();
     public bool LinkshellMutesPerCharacterMigrated { get; set; }
     public long DevChatLastSeenUnix { get; set; }
+    public long AnnouncementsSeenUnix { get; set; }
+    public long AnnouncementsNotifiedUnix { get; set; }
+    public bool AnnouncementsInitialized { get; set; }
     public bool? Use24HourClock { get; set; }
     public bool TimeZoneManual { get; set; }
     public int ManualUtcOffsetMinutes { get; set; }

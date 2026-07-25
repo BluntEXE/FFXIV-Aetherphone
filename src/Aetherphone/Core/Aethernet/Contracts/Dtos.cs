@@ -412,6 +412,17 @@ internal sealed record PollPage(PollDto[] Items);
 
 internal sealed record PollVoteRequest(int Option);
 
+internal sealed record AnnouncementTranslationDto(string Lang, string Title, string Body);
+
+internal sealed record AnnouncementDto(
+    string Id,
+    string Title,
+    string Body,
+    AnnouncementTranslationDto[] Translations,
+    long CreatedAtUnix) : IIdentified;
+
+internal sealed record AnnouncementPage(AnnouncementDto[] Items);
+
 internal sealed record FeedbackDto(
     string Id,
     string AuthorId,

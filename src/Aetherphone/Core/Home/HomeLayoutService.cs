@@ -15,7 +15,7 @@ internal sealed class HomeLayoutService
     private static readonly string[] DefaultFirstPageApps =
     {
         "chirper", "aethergram", "velvet", "polls",
-        "camera", "photos", "feedback", "music",
+        "announcements", "camera", "photos", "feedback", "music",
         "maps", "venues", "games", "market",
         "appstore",
     };
@@ -29,7 +29,7 @@ internal sealed class HomeLayoutService
     };
 
     private static readonly string[] DefaultTrailingApps = { "dev" };
-    private static readonly string[] MandatoryApps = { "appstore", "settings" };
+    private static readonly string[] MandatoryApps = { "appstore", "settings", "announcements" };
 
     private readonly IReadOnlyList<IPhoneApp> apps;
     private readonly WidgetRegistry widgets;

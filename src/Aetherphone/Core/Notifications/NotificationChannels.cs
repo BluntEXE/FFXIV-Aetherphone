@@ -18,6 +18,7 @@ internal static class NotificationChannels
         new("venues", L.Apps.Venues, AppAccents.For("venues")),
         new("muster", L.Apps.Muster, AppAccents.For("muster")),
         new("yellowpages", L.Apps.YellowPages, AppAccents.For("yellowpages")),
+        new("announcements", L.Apps.Announcements, AppAccents.For("announcements")),
         new("timers", L.Apps.Timers, AppAccents.For("timers")),
         new("character", L.Apps.Character, AppAccents.For("character")),
         new("calendar", L.Apps.Calendar, AppAccents.For("calendar")),

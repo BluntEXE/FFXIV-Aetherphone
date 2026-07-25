@@ -39,6 +39,7 @@ internal static class AppStoreCatalog
         ["aethergram"] = new(L.StoreCopy.AethergramSub, L.StoreCopy.AethergramBody, StoreCategory.Social),
         ["velvet"] = new(L.StoreCopy.VelvetSub, L.StoreCopy.VelvetBody, StoreCategory.Social),
         ["polls"] = new(L.StoreCopy.PollsSub, L.StoreCopy.PollsBody, StoreCategory.Social),
+        ["announcements"] = new(L.StoreCopy.AnnouncementsSub, L.StoreCopy.AnnouncementsBody, StoreCategory.Social),
         ["venues"] = new(L.StoreCopy.VenuesSub, L.StoreCopy.VenuesBody, StoreCategory.Social),
         ["muster"] = new(L.StoreCopy.MusterSub, L.StoreCopy.MusterBody, StoreCategory.Social),
         ["yellowpages"] = new(L.StoreCopy.YellowPagesSub, L.StoreCopy.YellowPagesBody, StoreCategory.Social),

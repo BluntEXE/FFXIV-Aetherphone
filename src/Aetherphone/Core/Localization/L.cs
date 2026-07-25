@@ -175,6 +175,7 @@ internal static class L
         public static readonly LocString FindPeople = new("app.findpeople", "Find People");
         public static readonly LocString Feedback = new("app.feedback", "Feedback");
         public static readonly LocString Polls = new("app.polls", "Polls");
+        public static readonly LocString Announcements = new("app.announcements", "Announcements");
         public static readonly LocString Muster = new("app.muster", "Muster");
         public static readonly LocString YellowPages = new("app.yellowpages", "Yellow Pages");
         public static readonly LocString Calendar = new("app.calendar", "Calendar");
@@ -238,6 +239,9 @@ internal static class L
         public static readonly LocString PollsSub = new("storeCopy.pollsSub", "Ask the whole server");
         public static readonly LocString PollsBody = new("storeCopy.pollsBody",
             "Put a question to Eorzea and watch the votes land while you wait.");
+        public static readonly LocString AnnouncementsSub = new("storeCopy.announcementsSub", "Word from the team");
+        public static readonly LocString AnnouncementsBody = new("storeCopy.announcementsBody",
+            "Release notes, downtime warnings and everything else the Aetherphone team wants you to know, delivered straight to your phone.");
         public static readonly LocString VenuesSub = new("storeCopy.venuesSub", "Nightlife, mapped");
         public static readonly LocString VenuesBody = new("storeCopy.venuesBody",
             "Find player-run venues, opening hours and directions without leaving the game.");
@@ -2564,6 +2568,15 @@ internal static class L
         public static readonly LocString EmptySubtitle = new("polls.emptySubtitle", "New polls will land here.");
         public static readonly LocString FinalResults = new("polls.finalResults", "Final results");
         public static readonly LocPlural Votes = new("polls.votes", "{0} vote", "{0} votes");
+    }
+
+    internal static class Announcements
+    {
+        public static readonly LocString SignInRequired = new("announcements.signInRequired", "Sign in to Aethernet in Settings to read announcements");
+        public static readonly LocString EmptyTitle = new("announcements.emptyTitle", "Nothing announced yet");
+        public static readonly LocString EmptyHint = new("announcements.emptyHint", "News from the Aetherphone team lands here.");
+        public static readonly LocString UnavailableTitle = new("announcements.unavailableTitle", "Announcement unavailable");
+        public static readonly LocString UnavailableHint = new("announcements.unavailableHint", "This announcement was taken down.");
     }
 
     internal static class Catalogs
