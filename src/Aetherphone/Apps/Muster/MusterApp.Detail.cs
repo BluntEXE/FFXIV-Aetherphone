@@ -368,8 +368,8 @@ internal sealed partial class MusterApp
                     ink = MusterCard.LiveGreen;
                 }
 
-                var fitted = Typography.FitText(locationLines[index], origin.X + width - pad - textLeft, style);
-                Typography.Draw(drawList, new Vector2(textLeft, lineTop), fitted, ink, style);
+                Marquee.DrawLeftAuto(drawList, "muster.detail.location." + muster.Id + "." + index,
+                    locationLines[index], textLeft, lineTop, origin.X + width - pad - textLeft, style, ink);
             }
 
             consumed = cardHeight + Metrics.Space.Sm * scale;
@@ -383,7 +383,7 @@ internal sealed partial class MusterApp
         {
             var flagRect = new Rect(new Vector2(origin.X, actionTop),
                 new Vector2(origin.X + width, actionTop + actionHeight));
-            if (ui.PillButton(flagRect, Loc.T(L.Muster.FlagOnMap), false))
+            if (ui.PillButton(flagRect, Loc.T(L.Muster.FlagOnMap), false, "muster.detail.flagonmap"))
             {
                 var location = MusterText.Location(muster);
                 LocationShare.OpenMap(in location);
@@ -402,7 +402,7 @@ internal sealed partial class MusterApp
                 : destination.Kind == MusterTravelKind.World
                     ? Loc.T(L.Muster.TravelTo, destination.Name)
                     : Loc.T(L.Muster.TeleportTo, destination.Name);
-            if (ui.PillButton(travelRect, travelLabel, true))
+            if (ui.PillButton(travelRect, travelLabel, true, "muster.detail.travel"))
             {
                 TravelTo(in destination);
             }

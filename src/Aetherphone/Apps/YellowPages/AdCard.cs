@@ -84,12 +84,10 @@ internal static class AdCard
         }
 
         var titleWidth = (status.Length > 0 ? statusLeft - (live ? 20f : 8f) * scale : right) - textLeft;
-        var title = Typography.FitText(ad.Title, titleWidth, TextStyles.Headline);
-        Typography.Draw(drawList, new Vector2(textLeft, body.Min.Y + pad), title, palette.TitleInk,
-            TextStyles.Headline);
-        var identity = Typography.FitText(AdText.Identity(ad), right - textLeft, TextStyles.Footnote);
-        Typography.Draw(drawList, new Vector2(textLeft, body.Min.Y + pad + 21f * scale), identity,
-            palette.MutedInk, TextStyles.Footnote);
+        Marquee.DrawLeftAuto(drawList, "yellowpages.card.title." + ad.Id, ad.Title, textLeft, body.Min.Y + pad,
+            titleWidth, TextStyles.Headline, palette.TitleInk);
+        Marquee.DrawLeftAuto(drawList, "yellowpages.card.identity." + ad.Id, AdText.Identity(ad), textLeft,
+            body.Min.Y + pad + 21f * scale, right - textLeft, TextStyles.Footnote, palette.MutedInk);
 
         var descriptionTop = body.Min.Y + (Pad + IdentityRowHeight) * scale;
         DrawDescription(drawList, ad, left, descriptionTop, card.Width, scale, palette.BodyInk);
@@ -233,8 +231,8 @@ internal static class AdCard
         var category = Loc.T(AdCategories.Label(ad.Category));
         var world = ad.WorldId > 0 ? LocationShare.WorldName((uint)ad.WorldId) : string.Empty;
         var meta = world.Length > 0 ? $"{category} · {world}" : category;
-        var fitted = Typography.FitText(meta, metaRight - left - 8f * scale, TextStyles.Footnote);
-        Typography.Draw(drawList, new Vector2(left, top), fitted, palette.MutedInk, TextStyles.Footnote);
+        Marquee.DrawLeftAuto(drawList, "yellowpages.card.meta." + ad.Id, meta, left, top,
+            MathF.Max(1f, metaRight - left - 8f * scale), TextStyles.Footnote, palette.MutedInk);
     }
 
     private static int DescriptionLines(AdDto ad, float width, float scale, out float lineHeight)
