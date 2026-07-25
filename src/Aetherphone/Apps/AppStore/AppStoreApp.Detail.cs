@@ -154,14 +154,20 @@ internal sealed partial class AppStoreApp
         var cardMin = new Vector2(origin.X, top);
         var cardMax = new Vector2(origin.X + width, top + rowCount * rowHeight);
         ui.Card(drawList, cardMin, cardMax, Metrics.Radius.Card * scale, true);
-        DrawInfoRow(drawList, cardMin, cardMax, 0, rowHeight, Loc.T(L.Store.Developer), Loc.T(L.Store.DeveloperName),
-            scale);
+        DrawInfoRow(drawList, cardMin, cardMax, 0, rowHeight, Loc.T(L.Store.Developer), DeveloperName(app), scale);
         DrawInfoRow(drawList, cardMin, cardMax, 1, rowHeight, Loc.T(L.Store.Category),
             Loc.T(AppStoreCatalog.Name(entry.Category)), scale);
         DrawInfoRow(drawList, cardMin, cardMax, 2, rowHeight, Loc.T(L.Store.Languages),
             Loc.T(L.Store.LanguageCount, LanguageCount), scale);
         return cardMax.Y + Metrics.Space.Xl * scale;
     }
+
+    private static string DeveloperName(IPhoneApp app) => app.Id switch
+    {
+        "health" => "Yozora",
+        "jobs" => "K.I.R.O",
+        _ => Loc.T(L.Store.DeveloperName), // default "Aetherphone"
+    };
 
     private void DrawInfoRow(ImDrawListPtr drawList, Vector2 cardMin, Vector2 cardMax, int index, float rowHeight,
         string label, string value, float scale)
