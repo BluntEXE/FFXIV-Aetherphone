@@ -388,6 +388,7 @@ internal sealed partial class YellowPagesApp
 
     private void AddComposePhoto(string path)
     {
+        picking = false;
         if (string.IsNullOrEmpty(path)
             || composeKeptUrls.Count + composePhotos.Count >= YellowPagesStore.MaxPhotos)
         {
