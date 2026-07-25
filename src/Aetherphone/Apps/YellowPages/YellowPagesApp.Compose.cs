@@ -26,10 +26,13 @@ internal sealed partial class YellowPagesApp
     private const int PickerColumns = 3;
     private const int PhotoColumns = 4;
     private const int LinkMaxLength = 200;
+    private const int MinutesPerDay = 1440;
+    private const int DefaultOpenMinute = 1200;
+    private const int DefaultCloseMinute = 1380;
+    private const int MinOpenMinutes = 15;
+    private const float TimeFieldHeight = 42f;
 
     private static readonly int[] WeekDays = { 1, 2, 3, 4, 5, 6, 0 };
-    private static readonly int[] StartMinutesLocal = { 720, 1020, 1080, 1140, 1200, 1260, 1320, 1380 };
-    private static readonly int[] SlotDurationsMinutes = { 60, 120, 180, 240, 360 };
     private static readonly Vector4 PhotoWhite = new(1f, 1f, 1f, 1f);
     private static readonly Vector4 AddTileStroke = new(1f, 1f, 1f, 0.18f);
 
@@ -47,8 +50,8 @@ internal sealed partial class YellowPagesApp
     private SharedLocation? composeLocation;
     private string composeAddressNote = string.Empty;
     private readonly bool[] composeDays = new bool[7];
-    private int composeStartIndex = 4;
-    private int composeDurationIndex = 2;
+    private int composeOpenMinute = DefaultOpenMinute;
+    private int composeCloseMinute = DefaultCloseMinute;
     private int composePriceMode;
     private string composePriceText = string.Empty;
     private string composeTurnaround = string.Empty;
@@ -442,31 +445,14 @@ internal sealed partial class YellowPagesApp
         if (ad.Schedule.Length > 0)
         {
             AdText.ToLocalSlot(ad.Schedule[0], out _, out var localStartMinute);
-            composeStartIndex = ClosestIndex(StartMinutesLocal, localStartMinute);
-            composeDurationIndex = ClosestIndex(SlotDurationsMinutes, ad.Schedule[0].DurationMinutes);
+            composeOpenMinute = localStartMinute;
+            composeCloseMinute = (localStartMinute + ad.Schedule[0].DurationMinutes) % MinutesPerDay;
             for (var index = 0; index < ad.Schedule.Length; index++)
             {
                 AdText.ToLocalSlot(ad.Schedule[index], out var localDay, out _);
                 composeDays[localDay] = true;
             }
         }
-    }
-
-    private static int ClosestIndex(int[] values, int target)
-    {
-        var best = 0;
-        var bestDistance = int.MaxValue;
-        for (var index = 0; index < values.Length; index++)
-        {
-            var distance = Math.Abs(values[index] - target);
-            if (distance < bestDistance)
-            {
-                bestDistance = distance;
-                best = index;
-            }
-        }
-
-        return best;
     }
 
     private void DrawComposeCategory(float scale)
@@ -570,39 +556,70 @@ internal sealed partial class YellowPagesApp
         }
 
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
-        ui.SectionLabel(Loc.T(L.YellowPages.OpensLabel));
-        for (var index = 0; index < StartMinutesLocal.Length; index++)
-        {
-            chipLabels[index] = TimeText.Clock(NextLocalPreview(StartMinutesLocal[index]));
-            chipActive[index] = index == composeStartIndex;
-        }
-
-        var tappedStart = DrawChipFlow(StartMinutesLocal.Length, scale);
-        if (tappedStart >= 0)
-        {
-            composeStartIndex = tappedStart;
-        }
-
-        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
-        ui.SectionLabel(Loc.T(L.YellowPages.DurationLabel));
-        for (var index = 0; index < SlotDurationsMinutes.Length; index++)
-        {
-            chipLabels[index] = Loc.T(L.YellowPages.DurationHours, SlotDurationsMinutes[index] / 60);
-            chipActive[index] = index == composeDurationIndex;
-        }
-
-        var tappedDuration = DrawChipFlow(SlotDurationsMinutes.Length, scale);
-        if (tappedDuration >= 0)
-        {
-            composeDurationIndex = tappedDuration;
-        }
-
+        composeOpenMinute = DrawTimeField(Loc.T(L.YellowPages.OpensLabel), composeOpenMinute, scale);
+        composeCloseMinute = DrawTimeField(Loc.T(L.YellowPages.ClosesLabel), composeCloseMinute, scale);
+        DrawOpenForRow(scale);
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
     }
 
-    private static DateTime NextLocalPreview(int localMinutes)
+    private int DrawTimeField(string label, int minuteOfDay, float scale)
     {
-        return DateTime.Now.Date.AddMinutes(localMinutes);
+        ui.SectionLabel(label);
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        var height = TimeFieldHeight * scale;
+        var edited = TimeOfDayField.Draw(ui,
+            new Rect(origin, new Vector2(origin.X + width, origin.Y + height)), minuteOfDay, scale);
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, height + Metrics.Space.Sm * scale));
+        return edited;
+    }
+
+    private void DrawOpenForRow(float scale)
+    {
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        var label = Loc.T(L.YellowPages.DurationLabel);
+        var value = DurationText(ComposeOpenMinutes());
+        var valueSize = Typography.Measure(value, TextStyles.FootnoteEmphasized);
+        Typography.Draw(origin, label, AppPalettes.YellowPages.MutedInk, TextStyles.Footnote);
+        Typography.Draw(new Vector2(origin.X + width - valueSize.X, origin.Y), value,
+            AppPalettes.YellowPages.TitleInk, TextStyles.FootnoteEmphasized);
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, valueSize.Y + Metrics.Space.Xs * scale));
+    }
+
+    private int ComposeOpenMinutes()
+    {
+        var span = composeCloseMinute - composeOpenMinute;
+        return span > 0 ? span : span + MinutesPerDay;
+    }
+
+    private static string DurationText(int minutes)
+    {
+        var hours = minutes / 60;
+        var rest = minutes % 60;
+        if (hours == 0)
+        {
+            return Loc.T(L.YellowPages.DurationMinutes, rest);
+        }
+
+        return rest == 0
+            ? Loc.T(L.YellowPages.DurationHours, hours)
+            : Loc.T(L.YellowPages.DurationHoursMinutes, hours, rest);
+    }
+
+    private bool HasComposeDays()
+    {
+        for (var index = 0; index < composeDays.Length; index++)
+        {
+            if (composeDays[index])
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private int DrawChipFlow(int count, float scale)
@@ -697,8 +714,10 @@ internal sealed partial class YellowPagesApp
         var bodyLength = TrimmedLength(composeBody);
         var hasDataCenter = ResolveComposeDataCenter(out _) != 0;
         var needsLink = AdCategories.IsLinkOnly(composeCategory) && TrimmedLength(composeLink) == 0;
+        var shortWindow = composeArchetype == AdArchetypes.Place && HasComposeDays()
+            && ComposeOpenMinutes() < MinOpenMinutes;
         var valid = titleLength > 0 && bodyLength > 0 && composeBody.Length <= BodyMaxLength && hasDataCenter
-            && !needsLink;
+            && !needsLink && !shortWindow;
         var cursorY = origin.Y;
         if (composeOutcome is { } outcome)
         {
@@ -710,7 +729,9 @@ internal sealed partial class YellowPagesApp
         {
             var hint = titleLength == 0 ? Loc.T(L.YellowPages.NeedTitle)
                 : bodyLength == 0 ? Loc.T(L.YellowPages.NeedBody)
-                : needsLink ? Loc.T(L.YellowPages.NeedModLink) : Loc.T(L.YellowPages.NeedDataCenter);
+                : needsLink ? Loc.T(L.YellowPages.NeedModLink)
+                : shortWindow ? Loc.T(L.YellowPages.NeedOpenWindow, MinOpenMinutes)
+                : Loc.T(L.YellowPages.NeedDataCenter);
             Typography.Draw(new Vector2(origin.X, cursorY), hint, AppPalettes.YellowPages.MutedInk,
                 TextStyles.Footnote);
             cursorY += 22f * scale;
@@ -761,14 +782,13 @@ internal sealed partial class YellowPagesApp
             return null;
         }
 
-        var duration = SlotDurationsMinutes[composeDurationIndex];
-        var startMinute = StartMinutesLocal[composeStartIndex];
+        var duration = ComposeOpenMinutes();
         var slots = new List<AdScheduleSlot>(7);
         for (var day = 0; day < composeDays.Length; day++)
         {
             if (composeDays[day])
             {
-                slots.Add(AdText.ToUtcSlot(day, startMinute, duration));
+                slots.Add(AdText.ToUtcSlot(day, composeOpenMinute, duration));
             }
         }
 
@@ -881,8 +901,8 @@ internal sealed partial class YellowPagesApp
         composeLocation = null;
         composeAddressNote = string.Empty;
         Array.Clear(composeDays);
-        composeStartIndex = 4;
-        composeDurationIndex = 2;
+        composeOpenMinute = DefaultOpenMinute;
+        composeCloseMinute = DefaultCloseMinute;
         composePriceMode = 0;
         composePriceText = string.Empty;
         composeTurnaround = string.Empty;
