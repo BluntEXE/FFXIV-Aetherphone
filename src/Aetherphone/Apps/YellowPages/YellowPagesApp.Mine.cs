@@ -74,12 +74,12 @@ internal sealed partial class YellowPagesApp
         var tileCenter = new Vector2(card.Min.X + pad + tileSide * 0.5f, card.Min.Y + pad + tileSide * 0.5f);
         IconTile.Draw(tileCenter, tileSide, IconTile.Surface(ui.Accent), AdCategories.Icon(ad.Category));
         var textLeft = tileCenter.X + tileSide * 0.5f + 10f * scale;
-        var title = Typography.FitText(ad.Title, card.Max.X - pad - textLeft, TextStyles.Headline);
-        Typography.Draw(drawList, new Vector2(textLeft, card.Min.Y + 10f * scale), title,
-            AppPalettes.YellowPages.TitleInk, TextStyles.Headline);
+        var titleWidth = card.Max.X - pad - textLeft;
+        Marquee.DrawLeftAuto(drawList, "yellowpages.mine.title." + ad.Id, ad.Title, textLeft,
+            card.Min.Y + 10f * scale, titleWidth, TextStyles.Headline, AppPalettes.YellowPages.TitleInk);
         var status = MineStatusText(ad, nowUnix, out var statusColor);
-        Typography.Draw(drawList, new Vector2(textLeft, card.Min.Y + 31f * scale), status, statusColor,
-            TextStyles.FootnoteEmphasized);
+        Marquee.DrawLeftAuto(drawList, "yellowpages.mine.status." + ad.Id, status, textLeft,
+            card.Min.Y + 31f * scale, titleWidth, TextStyles.FootnoteEmphasized, statusColor);
 
         var headerRect = new Rect(card.Min, new Vector2(card.Max.X, card.Min.Y + headerHeight));
         var headerHovered = UiInteract.Hover(headerRect.Min, headerRect.Max);
