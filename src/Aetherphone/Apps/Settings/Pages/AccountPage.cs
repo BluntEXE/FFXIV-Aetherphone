@@ -82,7 +82,8 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         this.photoLibrary = photoLibrary;
         this.confirm = confirm;
         this.wallpaperImages = wallpaperImages;
-        flow = new SignInFlow(session, auth);
+        flow = new SignInFlow(session, auth,
+            () => RegionSync.Push(session, account, configuration, gameData, cancellation.Token));
     }
 
     public void Draw(in PhoneContext context, Rect body)

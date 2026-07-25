@@ -536,12 +536,12 @@ internal sealed partial class AethergramApp : IPhoneApp
         var width = ScrollLayout.StableContentWidth();
         var radius = 20f * scale;
         var avatarCenter = new Vector2(origin.X + radius, origin.Y + rowHeight * 0.5f);
-        DrawAvatar(avatarCenter, radius, user.Name, user.World, user.AvatarUrl, 0.95f, 32);
-        var textLeft = avatarCenter.X + radius + 12f * scale;
         var displayName = SocialIdentity.Name(user.DisplayName, user.Handle);
+        DrawAvatar(avatarCenter, radius, displayName, string.Empty, user.AvatarUrl, 0.95f, 32);
+        var textLeft = avatarCenter.X + radius + 12f * scale;
         Typography.Draw(new Vector2(textLeft, origin.Y + 9f * scale), displayName, theme.TextStrong, 1f,
             FontWeight.SemiBold);
-        var regionCode = gameData.RegionCodeForWorld(user.World);
+        var regionCode = SocialRegion.Resolve(user.Region, user.World, gameData);
         Typography.Draw(new Vector2(textLeft, origin.Y + 31f * scale),
             SocialIdentity.ProfileMeta(user.Handle, regionCode), AppPalettes.Aethergram.MutedInk, 0.85f);
         var buttonHeight = 30f * scale;
@@ -837,8 +837,8 @@ internal sealed partial class AethergramApp : IPhoneApp
             AethergramArt.StoryRing(drawList, avatarCenter, ringRadius, scale, authorRing.HasUnseen);
         }
 
-        DrawAvatar(avatarCenter, avatarRadius - 1f * scale, post.AuthorName, post.AuthorWorld, post.AuthorAvatarUrl,
-            0.85f, 32);
+        DrawAvatar(avatarCenter, avatarRadius - 1f * scale, SocialIdentity.Name(post.AuthorDisplayName, post.AuthorHandle),
+            string.Empty, post.AuthorAvatarUrl, 0.85f, 32);
         var nameLeft = avatarCenter.X + avatarRadius + 12f * scale;
         Typography.Draw(new Vector2(nameLeft, origin.Y + pad), displayName, theme.TextStrong, 1f,
             FontWeight.SemiBold);

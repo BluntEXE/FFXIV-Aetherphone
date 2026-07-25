@@ -16,6 +16,7 @@ namespace Aetherphone.Core.Aethernet;
 [JsonSerializable(typeof(UserDto))]
 [JsonSerializable(typeof(UpdateProfileRequest))]
 [JsonSerializable(typeof(UpdateTimeZoneRequest))]
+[JsonSerializable(typeof(UpdateRegionRequest))]
 [JsonSerializable(typeof(CreatePostRequest))]
 [JsonSerializable(typeof(ReactRequest))]
 [JsonSerializable(typeof(MentionDto))]

@@ -173,12 +173,12 @@ internal sealed partial class VelvetShell
                 var model = new VRowModel
                 {
                     Title = DisplayNameOf(user.DisplayName, user.Handle),
-                    Subtitle = SocialIdentity.ProfileMeta(user.Handle, RegionOf(user.World)),
+                    Subtitle = SocialIdentity.ProfileMeta(user.Handle, RegionCodeOf(user)),
                     Height = 60f,
                     Leading = VRowLeading.Avatar,
                     AvatarRadius = 20f,
                     Name = DisplayNameOf(user.DisplayName, user.Handle),
-                    World = user.World,
+                    World = string.Empty,
                     AvatarUrl = user.AvatarUrl,
                     Pill = Loc.T(L.Velvet.Unblock),
                     PillFilled = false,

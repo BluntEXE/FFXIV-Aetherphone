@@ -52,13 +52,16 @@ internal sealed record UserDto(
     int MessagePolicy = 0,
     bool IsPrivate = false,
     bool FollowRequested = false,
-    int PendingFollowRequests = 0) : IIdentified;
+    int PendingFollowRequests = 0,
+    string Region = "") : IIdentified;
 
 internal sealed record UpdateProfileRequest(string? DisplayName, string? Handle, string? Bio, string? AvatarUrl = null);
 
 internal sealed record UpdateMessagePrivacyRequest(int? MessagePolicy);
 
 internal sealed record UpdateTimeZoneRequest(bool? ShareTimeZone, int? UtcOffsetMinutes);
+
+internal sealed record UpdateRegionRequest(string? Region);
 
 internal sealed record UpdateChatPrivacyRequest(bool? ShareReadReceipts, bool? SharePresence);
 

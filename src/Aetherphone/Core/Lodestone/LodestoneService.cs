@@ -58,9 +58,9 @@ internal sealed class LodestoneService : IDisposable
         configuration.Save();
     }
 
-    public string? TryGetCachedId(string name, string world)
+    public string? TryGetCachedId(string? name, string? world)
     {
-        if (name.Length == 0 || world.Length == 0)
+        if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(world))
         {
             return null;
         }
@@ -73,13 +73,13 @@ internal sealed class LodestoneService : IDisposable
         }
     }
 
-    public AvatarHandle Avatar(string name, string world) => Image(name, world, false);
-    public AvatarHandle Portrait(string name, string world) => Image(name, world, true);
+    public AvatarHandle Avatar(string? name, string? world) => Image(name, world, false);
+    public AvatarHandle Portrait(string? name, string? world) => Image(name, world, true);
 
-    public bool TryGetCachedId(string name, string world, out string id)
+    public bool TryGetCachedId(string? name, string? world, out string id)
     {
         id = string.Empty;
-        if (name.Length == 0 || world.Length == 0)
+        if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(world))
         {
             return false;
         }
@@ -116,9 +116,9 @@ internal sealed class LodestoneService : IDisposable
 
     public Task<LodestoneClient?> ClientAsync(CancellationToken token) => EnsureClientAsync(token);
 
-    private AvatarHandle Image(string name, string world, bool fullBody)
+    private AvatarHandle Image(string? name, string? world, bool fullBody)
     {
-        if (!configuration.ShowLodestonePortraits || name.Length == 0 || world.Length == 0)
+        if (!configuration.ShowLodestonePortraits || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(world))
         {
             return AvatarHandle.Disabled;
         }
