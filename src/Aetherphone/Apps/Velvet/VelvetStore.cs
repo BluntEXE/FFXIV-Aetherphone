@@ -15,7 +15,6 @@ namespace Aetherphone.Apps.Velvet;
 
 internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, VelvetThreadDto>
 {
-    private const int AvatarSize = 512;
     private const int PostSize = 1080;
     private readonly VelvetClient client;
     private readonly AccountClient account;
@@ -32,6 +31,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     private volatile VelvetProfileDto? me;
     private volatile bool loadingMe;
     private volatile bool avatarBusy;
+    private volatile AvatarUploadOutcome avatarFailure = AvatarUploadOutcome.Unreachable;
     private volatile bool introBusy;
     private volatile VelvetProfileDto[] discoverResults = Array.Empty<VelvetProfileDto>();
     private volatile bool loadingDiscover;
@@ -104,6 +104,8 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     public VelvetProfileDto? Me => me;
     public bool HasProfile => me is not null;
     public bool AvatarBusy => avatarBusy;
+
+    public AvatarUploadOutcome AvatarFailure => avatarFailure;
     public bool IntroBusy => introBusy;
     public VelvetProfileDto[] DiscoverResults => discoverResults;
     public bool LoadingDiscover => loadingDiscover;
@@ -456,24 +458,9 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         avatarBusy = true;
         work.Run("avatar update", async token =>
         {
-            var baked = ImageProcessor.BakeSquareJpeg(sourcePath, crop, AvatarSize);
-            var upload = await media.UploadUrlAsync("image/jpeg", "avatar", token).ConfigureAwait(false);
-            if (upload is null)
-            {
-                return false;
-            }
-
-            var uploaded = await media.UploadImageAsync(upload.UploadUrl, baked.Bytes, "image/jpeg", token)
-                .ConfigureAwait(false);
-            if (!uploaded)
-            {
-                return false;
-            }
-
-            var updated = await account
-                .UpdateProfileAsync(new UpdateProfileRequest(null, null, null, upload.PublicUrl), token)
-                .ConfigureAwait(false);
-            if (updated is null)
+            var result = await AvatarUpload.RunAsync(account, media, sourcePath, crop, token).ConfigureAwait(false);
+            avatarFailure = result.Outcome;
+            if (!result.Ok)
             {
                 return false;
             }
@@ -481,7 +468,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
             var current = me;
             if (current is not null)
             {
-                me = current with { AvatarUrl = upload.PublicUrl };
+                me = current with { AvatarUrl = result.PublicUrl };
             }
 
             return true;

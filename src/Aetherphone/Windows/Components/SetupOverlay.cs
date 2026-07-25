@@ -80,6 +80,7 @@ internal sealed partial class SetupOverlay : IDisposable
     private bool pickingPhoto;
     private volatile bool avatarBusy;
     private volatile int avatarOutcome;
+    private volatile AvatarUploadOutcome avatarFailure;
 
     public SetupOverlay(AethernetSession session, AethernetApi aethernet, GameData gameData,
         RemoteImageCache images, LodestoneService lodestone, PhotoLibrary photoLibrary,
@@ -205,7 +206,7 @@ internal sealed partial class SetupOverlay : IDisposable
             }
             else
             {
-                confirm.Alert(null, Loc.T(L.Account.CannotReach), Loc.T(L.Account.FailDismiss));
+                confirm.Alert(null, Loc.T(AvatarUpload.Message(avatarFailure)), Loc.T(L.Account.FailDismiss));
             }
         }
     }

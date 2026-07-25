@@ -997,6 +997,7 @@
   "account.verifyAdded": "Verify",
   "account.requestingCode": "Requesting a code…",
   "account.cannotReach": "Could not reach Aethernet. Is the server running?",
+  "account.photoRejected": "That photo could not be saved. Try a different image.",
   "account.verifying": "Verifying via Lodestone…",
   "account.signOut": "Sign out",
   "account.characterLabel": "Character",

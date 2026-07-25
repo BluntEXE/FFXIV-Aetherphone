@@ -1403,6 +1403,7 @@ internal static class L
         public static readonly LocString VerifyAdded = new("account.verifyAdded", "Verify");
         public static readonly LocString RequestingCode = new("account.requestingCode", "Requesting a code…");
         public static readonly LocString CannotReach = new("account.cannotReach", "Could not reach Aethernet. Is the server running?");
+        public static readonly LocString PhotoRejected = new("account.photoRejected", "That photo could not be saved. Try a different image.");
         public static readonly LocString Verifying = new("account.verifying", "Verifying via Lodestone…");
         public static readonly LocString SignOut = new("account.signOut", "Sign out");
         public static readonly LocString CharacterLabel = new("account.characterLabel", "Character");

@@ -275,16 +275,13 @@ internal sealed partial class DevApp : IPhoneApp
         }
     }
 
-    private AvatarHandle AvatarFor(string userId, string? avatarUrl) => lodestone.Remote(userId, ToUri(avatarUrl));
+    private AvatarHandle AvatarFor(string? avatarUrl) => images.Avatar(avatarUrl);
 
     private static string Monogram(string displayName, string handle)
     {
         var source = string.IsNullOrEmpty(displayName) ? handle : displayName;
         return source.Length > 0 ? source[..1].ToUpperInvariant() : "?";
     }
-
-    private static Uri? ToUri(string? url) =>
-        string.IsNullOrEmpty(url) || !Uri.TryCreate(url, UriKind.Absolute, out var uri) ? null : uri;
 
     private struct BubbleEntrance
     {

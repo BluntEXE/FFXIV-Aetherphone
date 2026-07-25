@@ -998,6 +998,7 @@
   "account.verifyAdded": "Überprüfen",
   "account.requestingCode": "Code wird angefordert…",
   "account.cannotReach": "Aethernet nicht erreichbar. Läuft der Server?",
+  "account.photoRejected": "Dieses Foto konnte nicht gespeichert werden. Versuche ein anderes Bild.",
   "account.verifying": "Überprüfung über Lodestone…",
   "account.signOut": "Abmelden",
   "account.characterLabel": "Charakter",

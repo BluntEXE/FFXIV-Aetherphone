@@ -998,6 +998,7 @@
   "account.verifyAdded": "验证",
   "account.requestingCode": "正在请求代码…",
   "account.cannotReach": "无法连接到 Aethernet。服务器正在运行吗？",
+  "account.photoRejected": "无法保存该照片。请尝试其他图片。",
   "account.verifying": "正在通过 Lodestone 验证…",
   "account.signOut": "退出登录",
   "account.characterLabel": "角色",

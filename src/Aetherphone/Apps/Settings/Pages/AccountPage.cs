@@ -227,7 +227,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             confirm));
     }
 
-    private void UploadAvatar(string sourcePath, WallpaperCrop crop, Action<bool> onComplete)
+    private void UploadAvatar(string sourcePath, WallpaperCrop crop, Action<AvatarUploadOutcome> onComplete)
     {
         if (avatarBusy)
         {
@@ -235,10 +235,10 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         }
 
         avatarBusy = true;
-        AvatarUploader.Upload(account, media, session, sourcePath, crop, cancellation.Token, uploaded =>
+        AvatarUploader.Upload(account, media, session, sourcePath, crop, cancellation.Token, outcome =>
         {
             avatarBusy = false;
-            onComplete(uploaded);
+            onComplete(outcome);
         });
     }
 

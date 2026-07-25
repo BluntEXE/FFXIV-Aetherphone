@@ -998,6 +998,7 @@
   "account.verifyAdded": "Doğrula",
   "account.requestingCode": "Kod isteniyor…",
   "account.cannotReach": "Aethernet'e ulaşılamadı. Sunucu çalışıyor mu?",
+  "account.photoRejected": "Bu fotoğraf kaydedilemedi. Farklı bir görsel deneyin.",
   "account.verifying": "Lodestone üzerinden doğrulanıyor…",
   "account.signOut": "Oturumu kapat",
   "account.characterLabel": "Karakter",

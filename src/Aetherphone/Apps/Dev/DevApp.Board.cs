@@ -113,7 +113,7 @@ internal sealed partial class DevApp
         var avatarCenter = new Vector2(origin.X + pad + avatarRadius, metaY + 7f * scale);
         AvatarView.Draw(drawList, avatarCenter, avatarRadius, Accent,
             Monogram(card.CreatedByDisplayName, card.CreatedByHandle), 0.55f,
-            AvatarFor(card.CreatedById, card.CreatedByAvatarUrl), 24);
+            AvatarFor(card.CreatedByAvatarUrl), 24);
         var author = string.IsNullOrEmpty(card.CreatedByDisplayName) ? card.CreatedByHandle : card.CreatedByDisplayName;
         Typography.Draw(new Vector2(avatarCenter.X + avatarRadius + 6f * scale, metaY),
             $"{UiText.Truncate(author, 18)} · {TimeText.Short(card.UpdatedAtUnix)}", AppPalettes.Dev.MutedInk, 0.76f);
@@ -252,7 +252,7 @@ internal sealed partial class DevApp
         var avatarCenter = new Vector2(contentX + avatarRadius, cursorY + metaHeight * 0.5f);
         AvatarView.Draw(drawList, avatarCenter, avatarRadius, Accent,
             Monogram(card.CreatedByDisplayName, card.CreatedByHandle), 0.72f,
-            AvatarFor(card.CreatedById, card.CreatedByAvatarUrl), 32);
+            AvatarFor(card.CreatedByAvatarUrl), 32);
         var metaTextX = avatarCenter.X + avatarRadius + 12f * scale;
         var metaBlockTop = avatarCenter.Y - metaBlockHeight * 0.5f;
         Typography.Draw(new Vector2(metaTextX, metaBlockTop), authorLabel, theme.TextStrong, nameStyle);

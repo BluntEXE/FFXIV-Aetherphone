@@ -998,6 +998,7 @@
   "account.verifyAdded": "確認する",
   "account.requestingCode": "コードをリクエスト中…",
   "account.cannotReach": "Aethernetに接続できませんでした。サーバーが稼働していますか？",
+  "account.photoRejected": "この写真を保存できませんでした。別の画像をお試しください。",
   "account.verifying": "Lodestone経由で確認中…",
   "account.signOut": "サインアウト",
   "account.characterLabel": "キャラクター",

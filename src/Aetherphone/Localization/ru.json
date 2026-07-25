@@ -998,6 +998,7 @@
   "account.verifyAdded": "Подтвердить",
   "account.requestingCode": "Запрос кода…",
   "account.cannotReach": "Не удалось подключиться к Aethernet. Сервер запущен?",
+  "account.photoRejected": "Не удалось сохранить это фото. Попробуйте другое изображение.",
   "account.verifying": "Подтверждение через Lodestone…",
   "account.signOut": "Выйти",
   "account.characterLabel": "Персонаж",

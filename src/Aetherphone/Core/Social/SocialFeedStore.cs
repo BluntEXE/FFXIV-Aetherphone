@@ -22,7 +22,6 @@ internal enum FollowState
 
 internal abstract class SocialFeedStore : IDisposable
 {
-    protected const int AvatarSize = 512;
     protected readonly AethernetSession session;
     protected readonly AccountClient account;
     protected readonly SocialClient client;
@@ -31,6 +30,7 @@ internal abstract class SocialFeedStore : IDisposable
     protected readonly StoreWork work;
     private readonly RetryGate meGate = new(TimeSpan.FromSeconds(30));
     private volatile UserDto? me;
+    private volatile AvatarUploadOutcome avatarFailure = AvatarUploadOutcome.Unreachable;
     protected readonly FeedLane<PostDto> forYouLane = new(ByNewestFirst);
     protected readonly FeedLane<PostDto> followingLane = new(ByNewestFirst);
     private readonly FeedLane<PostDto> savedLane = new(ByNewestFirst);
@@ -140,6 +140,8 @@ internal abstract class SocialFeedStore : IDisposable
     public UserDto[] DiscoverResults => discoverResults;
     public bool Searching => searching;
     public bool Posting => posting;
+
+    public AvatarUploadOutcome AvatarFailure => avatarFailure;
     public UserDto[] UserListResults => userListResults;
     public bool UserListLoading => userListLoading;
     public bool UserListFailed => userListFailed;
@@ -805,24 +807,9 @@ internal abstract class SocialFeedStore : IDisposable
 
     protected async Task<bool> UploadAvatarAsync(string sourcePath, WallpaperCrop crop, CancellationToken token)
     {
-        var baked = ImageProcessor.BakeSquareJpeg(sourcePath, crop, AvatarSize);
-        var upload = await media.UploadUrlAsync("image/jpeg", "avatar", token).ConfigureAwait(false);
-        if (upload is null)
-        {
-            return false;
-        }
-
-        var uploaded = await media.UploadImageAsync(upload.UploadUrl, baked.Bytes, "image/jpeg", token)
-            .ConfigureAwait(false);
-        if (!uploaded)
-        {
-            return false;
-        }
-
-        var updated = await account
-            .UpdateProfileAsync(new UpdateProfileRequest(null, null, null, upload.PublicUrl), token)
-            .ConfigureAwait(false);
-        if (updated is null)
+        var result = await AvatarUpload.RunAsync(account, media, sourcePath, crop, token).ConfigureAwait(false);
+        avatarFailure = result.Outcome;
+        if (result.User is not { } updated)
         {
             return false;
         }

@@ -998,6 +998,7 @@
   "account.verifyAdded": "Verificar",
   "account.requestingCode": "Solicitando um código…",
   "account.cannotReach": "Não foi possível contatar o Aethernet. O servidor está funcionando?",
+  "account.photoRejected": "Não foi possível salvar essa foto. Tente outra imagem.",
   "account.verifying": "Verificando pelo Lodestone…",
   "account.signOut": "Sair",
   "account.characterLabel": "Personagem",

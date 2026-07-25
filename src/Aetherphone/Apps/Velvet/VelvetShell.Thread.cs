@@ -283,7 +283,7 @@ internal sealed partial class VelvetShell
                 var thread = threads[index];
                 monogram = Monogram(thread.OtherDisplayName, thread.OtherHandle);
                 presence = thread.Presence;
-                return lodestone.Remote(thread.OtherUserId, ToUri(thread.OtherAvatarUrl));
+                return images.Avatar(thread.OtherAvatarUrl);
             }
         }
 
@@ -291,7 +291,7 @@ internal sealed partial class VelvetShell
         {
             monogram = Monogram(connection.DisplayName, connection.Handle);
             presence = connection.Presence;
-            return lodestone.Remote(connection.UserId, ToUri(connection.AvatarUrl));
+            return images.Avatar(connection.AvatarUrl);
         }
 
         monogram = "?";
@@ -337,6 +337,4 @@ internal sealed partial class VelvetShell
         return source.Length > 0 ? source[..1].ToUpperInvariant() : "?";
     }
 
-    private static Uri? ToUri(string? url) =>
-        string.IsNullOrEmpty(url) || !Uri.TryCreate(url, UriKind.Absolute, out var uri) ? null : uri;
 }
