@@ -2,6 +2,7 @@ using System.Globalization;
 using Aetherphone.Core;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Health;
+using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -11,22 +12,32 @@ namespace Aetherphone.Apps.Health;
 
 internal sealed partial class HealthApp
 {
-    private static readonly string[] DrinkKinds = { "Water", "Tea", "Coffee", "Juice" };
-    private static readonly string[] UnitLabels = { "Eorzean", "Metric", "Imperial" };
-    private static readonly string[] ScopeLabels = { "Daily", "Weekly", "Session", "All-time" };
+    private static string[] DrinkKinds => new[]
+    {
+        Loc.T(L.Health.DrinkKindWater), Loc.T(L.Health.DrinkKindTea), Loc.T(L.Health.DrinkKindCoffee),
+        Loc.T(L.Health.DrinkKindJuice),
+    };
+
+    private static string[] UnitLabels => new[]
+    {
+        Loc.T(L.Health.UnitEorzean), Loc.T(L.Health.UnitMetric), Loc.T(L.Health.UnitImperial),
+    };
+
+    private static string[] ScopeLabels => new[]
+    {
+        Loc.T(L.Health.ScopeDaily), Loc.T(L.Health.ScopeWeekly), Loc.T(L.Health.ScopeSession),
+        Loc.T(L.Health.ScopeAllTime),
+    };
 
     // ---- Setup (stepped registration wizard) --------------------------------
 
     private const int SetupSteps = 5;
     private int setupStep;
 
-    private static readonly string[] SetupSubtitles =
+    private static string[] SetupSubtitles => new[]
     {
-        "Let's set up your adventurer's health profile.",
-        "Choose your daily expedition goals.",
-        "Optional fictional energy estimates.",
-        "Tune how travel becomes estimated steps.",
-        "Review your profile and begin.",
+        Loc.T(L.Health.SetupSub1), Loc.T(L.Health.SetupSub2), Loc.T(L.Health.SetupSub3),
+        Loc.T(L.Health.SetupSub4), Loc.T(L.Health.SetupSub5),
     };
 
     private void DrawSetup(float scale)
@@ -36,7 +47,8 @@ internal sealed partial class HealthApp
 
         var origin = ImGui.GetCursorScreenPos();
         var centerX = origin.X + width * 0.5f;
-        Typography.DrawCentered(new Vector2(centerX, origin.Y + 14f * scale), "Welcome, Adventurer!", Pal.TitleInk,
+        Typography.DrawCentered(new Vector2(centerX, origin.Y + 14f * scale), Loc.T(L.Health.WelcomeAdventurer),
+            Pal.TitleInk,
             TextStyles.Title2);
         Typography.DrawCentered(new Vector2(centerX, origin.Y + 40f * scale), SetupSubtitles[setupStep], Pal.MutedInk,
             TextStyles.Subheadline);
@@ -59,18 +71,18 @@ internal sealed partial class HealthApp
     private void SetupUnits(float scale)
     {
         DrawSummaryCard(scale);
-        StepLabel("Preferred units", scale);
-        if (RadioRow("Eorzean", "Yalms / Malms / Ponz", U == HealthUnits.Eorzean, scale))
+        StepLabel(Loc.T(L.Health.PreferredUnits), scale);
+        if (RadioRow(Loc.T(L.Health.UnitEorzean), Loc.T(L.Health.UnitEorzeanSub), U == HealthUnits.Eorzean, scale))
         {
             SetUnits(HealthUnits.Eorzean);
         }
 
-        if (RadioRow("Metric", "Metres / km / kg / ml", U == HealthUnits.Metric, scale))
+        if (RadioRow(Loc.T(L.Health.UnitMetric), Loc.T(L.Health.UnitMetricSub), U == HealthUnits.Metric, scale))
         {
             SetUnits(HealthUnits.Metric);
         }
 
-        if (RadioRow("Imperial", "Feet / miles / lb / fl oz", U == HealthUnits.Imperial, scale))
+        if (RadioRow(Loc.T(L.Health.UnitImperial), Loc.T(L.Health.UnitImperialSub), U == HealthUnits.Imperial, scale))
         {
             SetUnits(HealthUnits.Imperial);
         }
@@ -89,15 +101,15 @@ internal sealed partial class HealthApp
 
     private void SetupGoals(float scale)
     {
-        StepLabel("Daily goals", scale);
-        var steps = IntField("Steps", "##hp.setup.steps", Profile.DailyStepGoal, 1000, 1000, 100000, scale);
+        StepLabel(Loc.T(L.Health.DailyGoals), scale);
+        var steps = IntField(Loc.T(L.Health.Steps), "##hp.setup.steps", Profile.DailyStepGoal, 1000, 1000, 100000, scale);
         if (steps != Profile.DailyStepGoal)
         {
             Profile.DailyStepGoal = steps;
             tracker.MarkDirty();
         }
 
-        var swim = FloatField("Swimming (yalms)", "##hp.setup.swim", Profile.DailySwimGoalYalms, 100, 100, 100000,
+        var swim = FloatField(Loc.T(L.Health.SwimmingYalms), "##hp.setup.swim", Profile.DailySwimGoalYalms, 100, 100, 100000,
             "%.0f", scale);
         if (Math.Abs(swim - Profile.DailySwimGoalYalms) > 0.01)
         {
@@ -105,7 +117,7 @@ internal sealed partial class HealthApp
             tracker.MarkDirty();
         }
 
-        var drinks = IntField("Hydration (drinks)", "##hp.setup.drinks", Profile.DailyHydrationGoal, 1, 1, 20, scale);
+        var drinks = IntField(Loc.T(L.Health.HydrationDrinks), "##hp.setup.drinks", Profile.DailyHydrationGoal, 1, 1, 20, scale);
         if (drinks != Profile.DailyHydrationGoal)
         {
             Profile.DailyHydrationGoal = drinks;
@@ -115,11 +127,12 @@ internal sealed partial class HealthApp
 
     private void SetupEnergy(float scale)
     {
-        StepLabel("Fictional energy", scale);
-        ui.HelpText("Character weight is optional and used only for fictional activity-energy estimates.");
-        ui.LabelValue("Current", Profile.WeightKg is { } kg ? HealthFormat.Weight(kg, U) : "not set");
-        ui.Field($"Weight ({WeightUnitLabel()})", "##health.setup.weight", ref weightBuffer, 8, false);
-        if (WideButton("Set weight", false, scale, 30f) &&
+        StepLabel(Loc.T(L.Health.FictionalEnergy), scale);
+        ui.HelpText(Loc.T(L.Health.WeightHint));
+        ui.LabelValue(Loc.T(L.Health.Current),
+            Profile.WeightKg is { } kg ? HealthFormat.Weight(kg, U) : Loc.T(L.Health.NotSet));
+        ui.Field(Loc.T(L.Health.WeightLabel, WeightUnitLabel()), "##health.setup.weight", ref weightBuffer, 8, false);
+        if (WideButton(Loc.T(L.Health.SetWeight), false, scale, 30f) &&
             double.TryParse(weightBuffer, NumberStyles.Any, CultureInfo.CurrentCulture, out var value) && value > 0)
         {
             Profile.WeightKg = HealthFormat.WeightToKg(value, U);
@@ -129,7 +142,7 @@ internal sealed partial class HealthApp
         DrawWeightSuggestions(scale);
 
         var calories = Profile.CaloriesEnabled;
-        ui.ToggleRow("Estimate activity energy", ref calories);
+        ui.ToggleRow(Loc.T(L.Health.EstimateActivityEnergy), ref calories);
         if (calories != Profile.CaloriesEnabled)
         {
             Profile.CaloriesEnabled = calories;
@@ -139,9 +152,10 @@ internal sealed partial class HealthApp
 
     private void SetupMovement(float scale)
     {
-        StepLabel("Movement", scale);
-        ui.LabelValue("Height", $"{HealthFormat.Height(tracker.HeightCm, U)} · {tracker.HeightSource}");
-        var strideDelta = StepperRow("Yalms per step",
+        StepLabel(Loc.T(L.Health.Movement), scale);
+        ui.LabelValue(Loc.T(L.Health.Height),
+            Loc.T(L.Health.HeightWithSource, HealthFormat.Height(tracker.HeightCm, U), HeightSourceLabel()));
+        var strideDelta = StepperRow(Loc.T(L.Health.YalmsPerStep),
             Profile.StrideYalms.ToString("0.00", CultureInfo.CurrentCulture), scale);
         if (strideDelta != 0)
         {
@@ -149,28 +163,30 @@ internal sealed partial class HealthApp
             tracker.MarkDirty();
         }
 
-        if (WideButton("Suggest stride from height", false, scale, 30f))
+        if (WideButton(Loc.T(L.Health.SuggestStrideFromHeight), false, scale, 30f))
         {
             Profile.StrideYalms = HealthFormat.SuggestStride(tracker.HeightCm);
             tracker.SaveNow();
         }
 
-        ui.HelpText("Only walking and running produce estimated steps. Raw distance is stored, so changing stride never loses progress.");
+        ui.HelpText(Loc.T(L.Health.StrideHintSetup));
     }
 
     private void SetupReview(float scale)
     {
-        StepLabel("Review", scale);
+        StepLabel(Loc.T(L.Health.Review), scale);
         var card = BeginCard(6, 38f, scale);
-        KeyRow(CardRow(card, 0, 38f, scale), "Units", UnitLabels[(int)U], scale);
-        KeyRow(CardRow(card, 1, 38f, scale), "Steps goal", HealthFormat.Number(Profile.DailyStepGoal), scale);
-        KeyRow(CardRow(card, 2, 38f, scale), "Swim goal", Dist(Profile.DailySwimGoalYalms), scale);
-        KeyRow(CardRow(card, 3, 38f, scale), "Hydration goal", $"{Profile.DailyHydrationGoal} drinks", scale);
-        KeyRow(CardRow(card, 4, 38f, scale), "Weight",
-            Profile.WeightKg is { } kg ? HealthFormat.Weight(kg, U) : "not set", scale);
-        KeyRow(CardRow(card, 5, 38f, scale), "Energy estimates", Profile.CaloriesEnabled ? "On" : "Off", scale);
+        KeyRow(CardRow(card, 0, 38f, scale), Loc.T(L.Health.Units), UnitLabels[(int)U], scale);
+        KeyRow(CardRow(card, 1, 38f, scale), Loc.T(L.Health.StepsGoal), HealthFormat.Number(Profile.DailyStepGoal), scale);
+        KeyRow(CardRow(card, 2, 38f, scale), Loc.T(L.Health.SwimGoal), Dist(Profile.DailySwimGoalYalms), scale);
+        KeyRow(CardRow(card, 3, 38f, scale), Loc.T(L.Health.HydrationGoal),
+            Loc.T(L.Health.DrinksSuffix, Profile.DailyHydrationGoal), scale);
+        KeyRow(CardRow(card, 4, 38f, scale), Loc.T(L.Health.Weight),
+            Profile.WeightKg is { } kg ? HealthFormat.Weight(kg, U) : Loc.T(L.Health.NotSet), scale);
+        KeyRow(CardRow(card, 5, 38f, scale), Loc.T(L.Health.EnergyEstimates),
+            Loc.T(Profile.CaloriesEnabled ? L.Health.On : L.Health.Off), scale);
         EndCard(card, scale);
-        ui.HelpText("Health tracks fictional activity performed by your FFXIV character. Its values are estimates intended for roleplay and statistics.");
+        ui.HelpText(Loc.T(L.Health.DisclaimerShort));
     }
 
     private void SetupNav(float scale)
@@ -187,12 +203,12 @@ internal sealed partial class HealthApp
             var backRect = new Rect(origin, origin + new Vector2(half, height));
             var nextRect = new Rect(new Vector2(origin.X + half + gap, origin.Y),
                 new Vector2(origin.X + width, origin.Y + height));
-            if (AppSkin.PillButton(backRect, "Back", false, true, ui.Theme))
+            if (AppSkin.PillButton(backRect, Loc.T(L.Health.Back), false, true, ui.Theme))
             {
                 setupStep--;
             }
 
-            if (AppSkin.PillButton(nextRect, last ? "Begin" : "Next", true, true, ui.Theme))
+            if (AppSkin.PillButton(nextRect, Loc.T(last ? L.Health.Begin : L.Health.Next), true, true, ui.Theme))
             {
                 Advance(last);
             }
@@ -200,7 +216,7 @@ internal sealed partial class HealthApp
         else
         {
             var nextRect = new Rect(origin, origin + new Vector2(width, height));
-            if (AppSkin.PillButton(nextRect, "Next", true, true, ui.Theme))
+            if (AppSkin.PillButton(nextRect, Loc.T(L.Health.Next), true, true, ui.Theme))
             {
                 Advance(false);
             }
@@ -264,18 +280,20 @@ internal sealed partial class HealthApp
     private void DrawSummaryCard(float scale)
     {
         var player = gameData.LocalPlayer;
-        var name = player?.Name.TextValue ?? "Adventurer";
+        var name = player?.Name.TextValue ?? Loc.T(L.Health.Adventurer);
         var world = player is not null ? gameData.WorldName(player.HomeWorld.RowId) : string.Empty;
         ReadIdentity(out var race, out var clan);
-        var raceClan = race.Length > 0 && clan.Length > 0 ? $"{race} / {clan}" : race.Length > 0 ? race : "—";
+        var raceClan = race.Length > 0 && clan.Length > 0
+            ? Loc.T(L.Health.RaceClanValue, race, clan)
+            : race.Length > 0 ? race : "—";
 
-        ui.SectionLabel("Profile summary", TextStyles.FootnoteEmphasized, 4f);
+        ui.SectionLabel(Loc.T(L.Health.ProfileSummary), TextStyles.FootnoteEmphasized, 4f);
         var card = BeginCard(4, 40f, scale);
-        KeyRow(CardRow(card, 0, 40f, scale), "Name", name, scale);
-        KeyRow(CardRow(card, 1, 40f, scale), "World", world.Length > 0 ? world : "—", scale);
-        KeyRow(CardRow(card, 2, 40f, scale), "Race / Clan", raceClan, scale);
-        KeyRow(CardRow(card, 3, 40f, scale), "Height", $"{HealthFormat.Height(tracker.HeightCm, U)} · {tracker.HeightSource}",
-            scale);
+        KeyRow(CardRow(card, 0, 40f, scale), Loc.T(L.Health.Name), name, scale);
+        KeyRow(CardRow(card, 1, 40f, scale), Loc.T(L.Health.World), world.Length > 0 ? world : "—", scale);
+        KeyRow(CardRow(card, 2, 40f, scale), Loc.T(L.Health.RaceClan), raceClan, scale);
+        KeyRow(CardRow(card, 3, 40f, scale), Loc.T(L.Health.Height),
+            Loc.T(L.Health.HeightWithSource, HealthFormat.Height(tracker.HeightCm, U), HeightSourceLabel()), scale);
         EndCard(card, scale);
     }
 
@@ -291,7 +309,7 @@ internal sealed partial class HealthApp
 
     private void StepLabel(string text, float scale)
     {
-        ui.SectionLabel($"Step {setupStep + 1} of {SetupSteps}  ·  {text}", TextStyles.FootnoteEmphasized, 8f);
+        ui.SectionLabel(Loc.T(L.Health.StepOf, setupStep + 1, SetupSteps, text), TextStyles.FootnoteEmphasized, 8f);
     }
 
     private bool RadioRow(string title, string subtitle, bool selected, float scale)
@@ -345,13 +363,13 @@ internal sealed partial class HealthApp
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         Typography.DrawCentered(new Vector2(origin.X + width * 0.5f, origin.Y + 14f * scale),
-            $"{day.DrinkCount} / {Profile.DailyHydrationGoal} drinks today", Pal.TitleInk, TextStyles.Title3);
+            Loc.T(L.Health.DrinksToday, day.DrinkCount, Profile.DailyHydrationGoal), Pal.TitleInk, TextStyles.Title3);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, 34f * scale));
 
-        if (WideButton("Drink Water", true, scale, 46f))
+        if (WideButton(Loc.T(L.Health.DrinkWater), true, scale, 46f))
         {
-            tracker.LogDrink("Water", 250);
+            tracker.LogDrink(Loc.T(L.Health.DrinkKindWater), 250);
         }
 
         // Quick drink
@@ -369,35 +387,35 @@ internal sealed partial class HealthApp
         ImGui.SetCursorScreenPos(chipOrigin);
         ImGui.Dummy(new Vector2(width, 40f * scale));
 
-        ui.SectionLabel("Custom drink", TextStyles.FootnoteEmphasized, 6f);
-        ui.Field("Name", "##health.customName", ref customDrinkName, 24, false);
-        var serving = IntField("Serving (ml)", "##hp.water.serving", customDrinkMl, 50, 50, 2000, scale);
+        ui.SectionLabel(Loc.T(L.Health.CustomDrink), TextStyles.FootnoteEmphasized, 6f);
+        ui.Field(Loc.T(L.Health.Name), "##health.customName", ref customDrinkName, 24, false);
+        var serving = IntField(Loc.T(L.Health.ServingMl), "##hp.water.serving", customDrinkMl, 50, 50, 2000, scale);
         if (serving != customDrinkMl)
         {
             customDrinkMl = serving;
         }
 
-        if (WideButton("Log custom drink", false, scale))
+        if (WideButton(Loc.T(L.Health.LogCustomDrink), false, scale))
         {
-            tracker.LogDrink(customDrinkName.Length > 0 ? customDrinkName : "Drink", customDrinkMl);
+            tracker.LogDrink(customDrinkName.Length > 0 ? customDrinkName : Loc.T(L.Health.DrinkFallback), customDrinkMl);
         }
 
-        if (WideButton("Undo last drink", false, scale))
+        if (WideButton(Loc.T(L.Health.UndoLastDrink), false, scale))
         {
             tracker.UndoLastDrink();
         }
 
-        var goalDrinks = IntField("Daily goal (drinks)", "##hp.water.goal", Profile.DailyHydrationGoal, 1, 1, 20, scale);
+        var goalDrinks = IntField(Loc.T(L.Health.DailyGoalDrinks), "##hp.water.goal", Profile.DailyHydrationGoal, 1, 1, 20, scale);
         if (goalDrinks != Profile.DailyHydrationGoal)
         {
             Profile.DailyHydrationGoal = goalDrinks;
             tracker.SaveNow();
         }
 
-        ui.SectionLabel("Today", TextStyles.FootnoteEmphasized, 6f);
+        ui.SectionLabel(Loc.T(L.Health.Today), TextStyles.FootnoteEmphasized, 6f);
         if (day.Drinks.Count == 0)
         {
-            ui.HelpText("No drinks logged yet today.");
+            ui.HelpText(Loc.T(L.Health.NoDrinksToday));
         }
         else
         {
@@ -406,7 +424,7 @@ internal sealed partial class HealthApp
                 var entry = day.Drinks[index];
                 var time = DateTimeOffset.FromUnixTimeSeconds(entry.Unix).LocalDateTime.ToString("HH:mm",
                     CultureInfo.InvariantCulture);
-                ui.LabelValue($"{time}  {entry.Kind}", HealthFormat.Volume(entry.Millilitres, U));
+                ui.LabelValue(Loc.T(L.Health.DrinkEntry, time, entry.Kind), HealthFormat.Volume(entry.Millilitres, U));
             }
         }
 
@@ -415,9 +433,9 @@ internal sealed partial class HealthApp
 
     private void DrawReminderSettings(float scale)
     {
-        ui.SectionLabel("Reminders", TextStyles.FootnoteEmphasized, 8f);
+        ui.SectionLabel(Loc.T(L.Health.Reminders), TextStyles.FootnoteEmphasized, 8f);
         var enabled = Profile.HydrationRemindersEnabled;
-        ui.ToggleRow("Hydration reminders", ref enabled);
+        ui.ToggleRow(Loc.T(L.Health.HydrationReminders), ref enabled);
         if (enabled != Profile.HydrationRemindersEnabled)
         {
             Profile.HydrationRemindersEnabled = enabled;
@@ -429,14 +447,14 @@ internal sealed partial class HealthApp
             return;
         }
 
-        var every = IntField("Every (min)", "##hp.remind.every", Profile.ReminderIntervalMinutes, 5, 1, 720, scale);
+        var every = IntField(Loc.T(L.Health.EveryMinutes), "##hp.remind.every", Profile.ReminderIntervalMinutes, 5, 1, 720, scale);
         if (every != Profile.ReminderIntervalMinutes)
         {
             Profile.ReminderIntervalMinutes = every;
             tracker.SaveNow();
         }
 
-        var (fromHour, fromMinute) = TimeField("Quiet from", "##hp.remind.from", Profile.QuietStartHour,
+        var (fromHour, fromMinute) = TimeField(Loc.T(L.Health.QuietFrom), "##hp.remind.from", Profile.QuietStartHour,
             Profile.QuietStartMinute, scale);
         if (fromHour != Profile.QuietStartHour || fromMinute != Profile.QuietStartMinute)
         {
@@ -445,7 +463,7 @@ internal sealed partial class HealthApp
             tracker.SaveNow();
         }
 
-        var (untilHour, untilMinute) = TimeField("Quiet until", "##hp.remind.until", Profile.QuietEndHour,
+        var (untilHour, untilMinute) = TimeField(Loc.T(L.Health.QuietUntil), "##hp.remind.until", Profile.QuietEndHour,
             Profile.QuietEndMinute, scale);
         if (untilHour != Profile.QuietEndHour || untilMinute != Profile.QuietEndMinute)
         {
@@ -455,7 +473,7 @@ internal sealed partial class HealthApp
         }
 
         var pause = Profile.ReminderPauseInDuties;
-        ui.ToggleRow("Pause during combat / duties", ref pause);
+        ui.ToggleRow(Loc.T(L.Health.PauseDuringDuties), ref pause);
         if (pause != Profile.ReminderPauseInDuties)
         {
             Profile.ReminderPauseInDuties = pause;
@@ -475,7 +493,7 @@ internal sealed partial class HealthApp
             {
                 DrawGoalEditor(goal, scale);
             }
-            else if (WideButton(goal.Enabled ? "Edit" : "Edit (disabled)", false, scale, 30f))
+            else if (WideButton(Loc.T(goal.Enabled ? L.Health.Edit : L.Health.EditDisabled), false, scale, 30f))
             {
                 editingGoalId = goal.Id;
                 goalNameBuffer = goal.Name;
@@ -484,23 +502,23 @@ internal sealed partial class HealthApp
             ImGui.Dummy(new Vector2(0f, 6f * scale));
         }
 
-        if (WideButton("Add goal", true, scale))
+        if (WideButton(Loc.T(L.Health.AddGoal), true, scale))
         {
-            var goal = new HealthGoal { Name = "New goal", Type = HealthGoalType.Steps, Target = 1000 };
+            var goal = new HealthGoal { Name = Loc.T(L.Health.NewGoal), Type = HealthGoalType.Steps, Target = 1000 };
             Profile.Goals.Add(goal);
             editingGoalId = goal.Id;
             goalNameBuffer = goal.Name;
             tracker.SaveNow();
         }
 
-        if (WideButton("Reset to default goals", false, scale))
+        if (WideButton(Loc.T(L.Health.ResetDefaultGoals), false, scale))
         {
             confirm.Ask(new ConfirmRequest
             {
-                Title = "Reset goals",
-                Message = "Replace your goals with the defaults?",
-                ConfirmLabel = "Reset",
-                CancelLabel = "Cancel",
+                Title = Loc.T(L.Health.ResetGoalsTitle),
+                Message = Loc.T(L.Health.ResetGoalsMessage),
+                ConfirmLabel = Loc.T(L.Health.Reset),
+                CancelLabel = Loc.T(L.Health.Cancel),
                 Confirm = () =>
                 {
                     Profile.Goals = HealthTracker.DefaultGoals();
@@ -513,23 +531,23 @@ internal sealed partial class HealthApp
 
     private void DrawGoalEditor(HealthGoal goal, float scale)
     {
-        ui.Field("Name", "##health.goalName", ref goalNameBuffer, 40, false);
+        ui.Field(Loc.T(L.Health.Name), "##health.goalName", ref goalNameBuffer, 40, false);
 
-        var typeDelta = StepperRow("Type", GoalTypeLabel(goal.Type), scale);
+        var typeDelta = StepperRow(Loc.T(L.Health.Type), GoalTypeLabel(goal.Type), scale);
         if (typeDelta != 0)
         {
             goal.Type = Cycle(goal.Type, typeDelta);
             tracker.SaveNow();
         }
 
-        var scopeDelta = StepperRow("Scope", ScopeLabels[(int)goal.Scope], scale);
+        var scopeDelta = StepperRow(Loc.T(L.Health.Scope), ScopeLabels[(int)goal.Scope], scale);
         if (scopeDelta != 0)
         {
             goal.Scope = (HealthGoalScope)(((int)goal.Scope + scopeDelta + 4) % 4);
             tracker.SaveNow();
         }
 
-        var target = FloatField("Target", "##hp.goalTarget", goal.Target, GoalStep(goal.Type), 1, 10_000_000,
+        var target = FloatField(Loc.T(L.Health.Target), "##hp.goalTarget", goal.Target, GoalStep(goal.Type), 1, 10_000_000,
             "%.0f", scale);
         if (Math.Abs(target - goal.Target) > 0.001)
         {
@@ -539,14 +557,14 @@ internal sealed partial class HealthApp
         }
 
         var enabled = goal.Enabled;
-        ui.ToggleRow("Enabled", ref enabled);
+        ui.ToggleRow(Loc.T(L.Health.Enabled), ref enabled);
         if (enabled != goal.Enabled)
         {
             goal.Enabled = enabled;
             tracker.SaveNow();
         }
 
-        if (WideButton("Delete goal", false, scale, 30f))
+        if (WideButton(Loc.T(L.Health.DeleteGoal), false, scale, 30f))
         {
             Profile.Goals.Remove(goal);
             editingGoalId = null;
@@ -554,28 +572,28 @@ internal sealed partial class HealthApp
             return;
         }
 
-        if (WideButton("Done", true, scale, 30f))
+        if (WideButton(Loc.T(L.Health.Done), true, scale, 30f))
         {
-            goal.Name = goalNameBuffer.Length > 0 ? goalNameBuffer : "Goal";
+            goal.Name = goalNameBuffer.Length > 0 ? goalNameBuffer : Loc.T(L.Health.GoalFallback);
             editingGoalId = null;
             tracker.SaveNow();
         }
     }
 
-    private static string GoalTypeLabel(HealthGoalType type) => type switch
+    private static string GoalTypeLabel(HealthGoalType type) => Loc.T(type switch
     {
-        HealthGoalType.Steps => "Steps",
-        HealthGoalType.OnFootDistance => "On-foot distance",
-        HealthGoalType.WalkDistance => "Walking distance",
-        HealthGoalType.RunDistance => "Running distance",
-        HealthGoalType.SwimDistance => "Swimming distance",
-        HealthGoalType.ActiveTime => "Active time",
-        HealthGoalType.HydrationCount => "Drinks logged",
-        HealthGoalType.HydrationVolume => "Drink volume",
-        HealthGoalType.Teleports => "Teleports",
-        HealthGoalType.TeleportDistance => "Teleport distance",
-        _ => "Est. energy",
-    };
+        HealthGoalType.Steps => L.Health.TypeSteps,
+        HealthGoalType.OnFootDistance => L.Health.TypeOnFootDistance,
+        HealthGoalType.WalkDistance => L.Health.TypeWalkingDistance,
+        HealthGoalType.RunDistance => L.Health.TypeRunningDistance,
+        HealthGoalType.SwimDistance => L.Health.TypeSwimmingDistance,
+        HealthGoalType.ActiveTime => L.Health.TypeActiveTime,
+        HealthGoalType.HydrationCount => L.Health.TypeDrinksLogged,
+        HealthGoalType.HydrationVolume => L.Health.TypeDrinkVolume,
+        HealthGoalType.Teleports => L.Health.TypeTeleports,
+        HealthGoalType.TeleportDistance => L.Health.TypeTeleportDistance,
+        _ => L.Health.TypeEnergy,
+    });
 
     private static double GoalStep(HealthGoalType type) => type switch
     {
@@ -600,7 +618,7 @@ internal sealed partial class HealthApp
         var days = Profile.Days;
         if (days.Count == 0)
         {
-            ui.HelpText("No activity recorded yet.");
+            ui.HelpText(Loc.T(L.Health.NoActivity));
             return;
         }
 
@@ -609,17 +627,20 @@ internal sealed partial class HealthApp
         {
             var day = days[index];
             var steps = HealthFormat.Steps(day.OnFootYalms, Profile.StrideYalms);
-            ui.SectionLabel($"{FormatDate(day.Date)}  ·  {day.GoalsCompleted} goals · {day.Teleports} tp",
+            ui.SectionLabel(Loc.T(L.Health.HistoryDayHeader, FormatDate(day.Date), day.GoalsCompleted, day.Teleports),
                 TextStyles.FootnoteEmphasized, 6f);
             var card = BeginCard(4, CompactRowHeight, scale);
             StatRow(CardRow(card, 0, CompactRowHeight, scale), Accent1, FontAwesomeIcon.Walking,
-                $"{HealthFormat.Number(steps)} steps", Dist(day.OnFootYalms), scale);
+                Loc.T(L.Health.StepsValue, HealthFormat.Number(steps)), Dist(day.OnFootYalms), scale);
             StatRow(CardRow(card, 1, CompactRowHeight, scale), Accent2, FontAwesomeIcon.Clock,
-                "Active", HealthFormat.Duration(day.ActiveSeconds), scale);
+                Loc.T(L.Health.Active), HealthFormat.Duration(day.ActiveSeconds), scale);
             StatRow(CardRow(card, 2, CompactRowHeight, scale), Accent4, FontAwesomeIcon.Tint,
-                "Hydration", $"{day.DrinkCount} drinks", scale);
-            var kcal = Profile.CaloriesEnabled ? $"{day.Calories:0} kcal" : "—";
-            StatRow(CardRow(card, 3, CompactRowHeight, scale), Accent3, FontAwesomeIcon.Fire, "Energy", kcal, scale);
+                Loc.T(L.Health.Hydration), Loc.T(L.Health.DrinksValue, day.DrinkCount), scale);
+            var kcal = Profile.CaloriesEnabled
+                ? Loc.T(L.Health.Kcal, day.Calories.ToString("0", Loc.Culture))
+                : "—";
+            StatRow(CardRow(card, 3, CompactRowHeight, scale), Accent3, FontAwesomeIcon.Fire, Loc.T(L.Health.Energy),
+                kcal, scale);
             EndCard(card, scale);
         }
     }
@@ -638,22 +659,23 @@ internal sealed partial class HealthApp
     {
         DrawSummaryCard(scale);
 
-        BeginPanel("Height", scale);
-        InfoRow("Reading", $"{HealthFormat.Height(tracker.HeightCm, U)}  ·  {tracker.HeightSource}", scale);
-        if (WideButton("Refresh height", false, scale, 30f))
+        BeginPanel(Loc.T(L.Health.Height), scale);
+        InfoRow(Loc.T(L.Health.Reading),
+            Loc.T(L.Health.HeightWithSource, HealthFormat.Height(tracker.HeightCm, U), HeightSourceLabel()), scale);
+        if (WideButton(Loc.T(L.Health.RefreshHeight), false, scale, 30f))
         {
             tracker.RefreshHeight();
         }
 
-        var autoHeight = PanelToggle("Auto-refresh on change", Profile.AutoRefreshHeight, scale);
+        var autoHeight = PanelToggle(Loc.T(L.Health.AutoRefreshHeight), Profile.AutoRefreshHeight, scale);
         if (autoHeight != Profile.AutoRefreshHeight)
         {
             Profile.AutoRefreshHeight = autoHeight;
             tracker.SaveNow();
         }
 
-        var manualDelta = StepperRow("Manual override (cm)",
-            Profile.ManualHeightCm is { } m ? $"{m:0.0}" : "off", scale);
+        var manualDelta = StepperRow(Loc.T(L.Health.ManualOverrideCm),
+            Profile.ManualHeightCm is { } m ? m.ToString("0.0", Loc.Culture) : Loc.T(L.Health.OverrideOff), scale);
         if (manualDelta != 0)
         {
             var baseCm = Profile.ManualHeightCm ?? (tracker.HeightCm > 0 ? tracker.HeightCm : 170);
@@ -662,7 +684,7 @@ internal sealed partial class HealthApp
             tracker.SaveNow();
         }
 
-        if (Profile.ManualHeightCm is not null && WideButton("Clear override", false, scale, 30f))
+        if (Profile.ManualHeightCm is not null && WideButton(Loc.T(L.Health.ClearOverride), false, scale, 30f))
         {
             Profile.ManualHeightCm = null;
             tracker.RefreshHeight();
@@ -671,17 +693,18 @@ internal sealed partial class HealthApp
 
         EndPanel(scale);
 
-        BeginPanel("Fictional weight", scale);
-        InfoRow("Current", Profile.WeightKg is { } kg ? HealthFormat.Weight(kg, U) : "not set", scale);
-        PanelField($"Enter weight ({WeightUnitLabel()})", "##health.weight", ref weightBuffer, 8, scale);
-        if (WideButton("Set weight", false, scale, 30f) &&
+        BeginPanel(Loc.T(L.Health.FictionalWeight), scale);
+        InfoRow(Loc.T(L.Health.Current),
+            Profile.WeightKg is { } kg ? HealthFormat.Weight(kg, U) : Loc.T(L.Health.NotSet), scale);
+        PanelField(Loc.T(L.Health.EnterWeight, WeightUnitLabel()), "##health.weight", ref weightBuffer, 8, scale);
+        if (WideButton(Loc.T(L.Health.SetWeight), false, scale, 30f) &&
             double.TryParse(weightBuffer, NumberStyles.Any, CultureInfo.CurrentCulture, out var value) && value > 0)
         {
             Profile.WeightKg = HealthFormat.WeightToKg(value, U);
             tracker.SaveNow();
         }
 
-        if (Profile.WeightKg is not null && WideButton("Clear weight", false, scale, 30f))
+        if (Profile.WeightKg is not null && WideButton(Loc.T(L.Health.ClearWeight), false, scale, 30f))
         {
             Profile.WeightKg = null;
             weightBuffer = string.Empty;
@@ -690,17 +713,17 @@ internal sealed partial class HealthApp
 
         DrawWeightSuggestions(scale);
 
-        var calories = PanelToggle("Estimate activity energy", Profile.CaloriesEnabled, scale);
+        var calories = PanelToggle(Loc.T(L.Health.EstimateActivityEnergy), Profile.CaloriesEnabled, scale);
         if (calories != Profile.CaloriesEnabled)
         {
             Profile.CaloriesEnabled = calories;
             tracker.SaveNow();
         }
 
-        PanelHint("Character weight is optional and used only for fictional activity-energy estimates.", scale);
+        PanelHint(Loc.T(L.Health.WeightHint), scale);
         EndPanel(scale);
 
-        BeginPanel("Units", scale);
+        BeginPanel(Loc.T(L.Health.Units), scale);
         var units = Segmented("health.units", UnitLabels, (int)U, scale);
         if (units != (int)U)
         {
@@ -711,8 +734,8 @@ internal sealed partial class HealthApp
 
         EndPanel(scale);
 
-        BeginPanel("Stride length", scale);
-        var strideDelta = StepperRow("Yalms per step",
+        BeginPanel(Loc.T(L.Health.StrideLength), scale);
+        var strideDelta = StepperRow(Loc.T(L.Health.YalmsPerStep),
             Profile.StrideYalms.ToString("0.00", CultureInfo.CurrentCulture), scale);
         if (strideDelta != 0)
         {
@@ -720,73 +743,80 @@ internal sealed partial class HealthApp
             tracker.SaveNow();
         }
 
-        if (WideButton("Suggest from height", false, scale, 30f))
+        if (WideButton(Loc.T(L.Health.SuggestFromHeight), false, scale, 30f))
         {
             Profile.StrideYalms = HealthFormat.SuggestStride(tracker.HeightCm);
             tracker.SaveNow();
         }
 
-        PanelHint("Only walking and running produce steps. Raw distance is stored, so changing stride never loses progress.", scale);
+        PanelHint(Loc.T(L.Health.StrideHint), scale);
         EndPanel(scale);
 
-        BeginPanel("Tracking status", scale);
-        InfoRow("Status", tracker.TrackingStatus, scale);
+        BeginPanel(Loc.T(L.Health.TrackingStatus), scale);
+        InfoRow(Loc.T(L.Health.Status), tracker.TrackingStatus, scale);
         EndPanel(scale);
 
-        BeginPanel("Reset", scale);
-        if (WideButton("Reset session", false, scale, 30f))
+        BeginPanel(Loc.T(L.Health.ResetSection), scale);
+        if (WideButton(Loc.T(L.Health.ResetSession), false, scale, 30f))
         {
             tracker.ResetSession();
         }
 
-        if (WideButton("Reset today", false, scale, 30f))
+        if (WideButton(Loc.T(L.Health.ResetToday), false, scale, 30f))
         {
-            AskReset("Reset today's activity?", tracker.ResetToday);
+            AskReset(Loc.T(L.Health.ResetTodayConfirm), tracker.ResetToday);
         }
 
-        if (WideButton("Reset today's hydration", false, scale, 30f))
+        if (WideButton(Loc.T(L.Health.ResetTodayHydration), false, scale, 30f))
         {
-            AskReset("Clear today's hydration entries?", tracker.ResetTodayHydration);
+            AskReset(Loc.T(L.Health.ResetTodayHydrationConfirm), tracker.ResetTodayHydration);
         }
 
-        if (WideButton("Reset history", false, scale, 30f))
+        if (WideButton(Loc.T(L.Health.ResetHistory), false, scale, 30f))
         {
-            AskReset("Delete recent activity history?", tracker.ResetHistory);
+            AskReset(Loc.T(L.Health.ResetHistoryConfirm), tracker.ResetHistory);
         }
 
-        if (WideButton("Reset personal records", false, scale, 30f))
+        if (WideButton(Loc.T(L.Health.ResetRecords), false, scale, 30f))
         {
-            AskReset("Reset personal records?", tracker.ResetRecords);
+            AskReset(Loc.T(L.Health.ResetRecordsConfirm), tracker.ResetRecords);
         }
 
-        if (WideButton("Reset all Health data", false, scale, 30f))
+        if (WideButton(Loc.T(L.Health.ResetAll), false, scale, 30f))
         {
-            AskReset("Erase ALL Health data for this character? This cannot be undone.", tracker.ResetAll);
+            AskReset(Loc.T(L.Health.ResetAllConfirm), tracker.ResetAll);
         }
 
         EndPanel(scale);
 
-        PanelHint("Health tracks fictional activity performed by your FFXIV character. Its steps, calories, hydration, and wellness values are estimates intended for roleplay and statistics.", scale);
+        PanelHint(Loc.T(L.Health.Disclaimer), scale);
     }
 
     private void AskReset(string message, Action confirmed)
     {
         confirm.Ask(new ConfirmRequest
         {
-            Title = "Confirm",
+            Title = Loc.T(L.Health.Confirm),
             Message = message,
-            ConfirmLabel = "Reset",
-            CancelLabel = "Cancel",
+            ConfirmLabel = Loc.T(L.Health.Reset),
+            CancelLabel = Loc.T(L.Health.Cancel),
             Confirm = confirmed,
         });
     }
 
-    private string WeightUnitLabel() => U switch
+    private string HeightSourceLabel() => Loc.T(tracker.HeightSource switch
     {
-        HealthUnits.Metric => "kg",
-        HealthUnits.Imperial => "lb",
-        _ => "ponz",
-    };
+        HeightSource.Manual => L.Health.HeightSourceManual,
+        HeightSource.Game => L.Health.HeightSourceGame,
+        _ => L.Health.HeightSourceUnavailable,
+    });
+
+    private string WeightUnitLabel() => Loc.T(U switch
+    {
+        HealthUnits.Metric => L.Health.WeightUnitKg,
+        HealthUnits.Imperial => L.Health.WeightUnitLb,
+        _ => L.Health.WeightUnitPonz,
+    });
 
     // Fictional "normal" weight suggestions derived from the character's height and racial build.
     // These are only tappable hints; weight is never auto-assigned.
@@ -798,10 +828,10 @@ internal sealed partial class HealthApp
             return;
         }
 
-        PanelLabel("Suggested (tap to use)", scale);
+        PanelLabel(Loc.T(L.Health.SuggestedTapToUse), scale);
         foreach (var (label, kg) in WeightSuggestions(cm))
         {
-            if (WideButton($"{label}  ·  {HealthFormat.Weight(kg, U)}", false, scale, 30f))
+            if (WideButton(Loc.T(L.Health.SuggestionEntry, label, HealthFormat.Weight(kg, U)), false, scale, 30f))
             {
                 Profile.WeightKg = kg;
                 weightBuffer = string.Empty;
@@ -809,7 +839,7 @@ internal sealed partial class HealthApp
             }
         }
 
-        PanelHint("Fictional estimates from your character's height and build.", scale);
+        PanelHint(Loc.T(L.Health.SuggestionHint), scale);
     }
 
     private void PanelLabel(string text, float scale)
@@ -827,9 +857,9 @@ internal sealed partial class HealthApp
         var build = RaceBuildFactor();
         return new (string, double)[]
         {
-            ("Lean", Math.Round(19.5 * metres * metres * build)),
-            ("Average", Math.Round(23.0 * metres * metres * build)),
-            ("Sturdy", Math.Round(26.5 * metres * metres * build)),
+            (Loc.T(L.Health.SuggestLean), Math.Round(19.5 * metres * metres * build)),
+            (Loc.T(L.Health.SuggestAverage), Math.Round(23.0 * metres * metres * build)),
+            (Loc.T(L.Health.SuggestSturdy), Math.Round(26.5 * metres * metres * build)),
         };
     }
 

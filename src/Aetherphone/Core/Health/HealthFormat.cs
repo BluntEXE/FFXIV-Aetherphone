@@ -28,20 +28,20 @@ internal static class HealthFormat
             case HealthUnits.Metric:
                 var metres = yalms * MetresPerYalm;
                 return metres >= 1000d
-                    ? (metres / 1000d).ToString("0.00", Culture) + " km"
-                    : metres.ToString("0", Culture) + " m";
+                    ? (metres / 1000d).ToString("0.00", Culture) + Loc.T(L.Health.UnitKm)
+                    : metres.ToString("0", Culture) + Loc.T(L.Health.UnitM);
             case HealthUnits.Imperial:
                 var miMetres = yalms * MetresPerYalm;
                 if (miMetres >= MetresPerMile)
                 {
-                    return (miMetres / MetresPerMile).ToString("0.00", Culture) + " mi";
+                    return (miMetres / MetresPerMile).ToString("0.00", Culture) + Loc.T(L.Health.UnitMi);
                 }
 
-                return (miMetres * FeetPerMetre).ToString("0", Culture) + " ft";
+                return (miMetres * FeetPerMetre).ToString("0", Culture) + Loc.T(L.Health.UnitFt);
             default:
                 return yalms >= YalmsPerMalm
-                    ? (yalms / YalmsPerMalm).ToString("0.00", Culture) + " malms"
-                    : yalms.ToString("0", Culture) + " yalms";
+                    ? (yalms / YalmsPerMalm).ToString("0.00", Culture) + Loc.T(L.Health.UnitMalms)
+                    : yalms.ToString("0", Culture) + Loc.T(L.Health.UnitYalms);
         }
     }
 
@@ -58,11 +58,11 @@ internal static class HealthFormat
         switch (units)
         {
             case HealthUnits.Metric:
-                return cm.ToString("0.0", Culture) + " cm";
+                return cm.ToString("0.0", Culture) + Loc.T(L.Health.UnitCm);
             case HealthUnits.Imperial:
                 return FeetInches(cm, "'", "\"");
             default:
-                return FeetInches(cm, " fulm", " ilm");
+                return FeetInches(cm, Loc.T(L.Health.UnitFulm), Loc.T(L.Health.UnitIlm));
         }
     }
 
@@ -77,7 +77,7 @@ internal static class HealthFormat
             small = 0;
         }
 
-        return $"{big}{bigUnit} {small}{smallUnit}";
+        return Loc.T(L.Health.HeightImperial, big, bigUnit, small, smallUnit);
     }
 
     // ---- Weight -------------------------------------------------------------
@@ -87,8 +87,9 @@ internal static class HealthFormat
         kg = Sane(kg);
         return units switch
         {
-            HealthUnits.Metric => kg.ToString("0.0", Culture) + " kg",
-            _ => (kg * LbPerKg).ToString("0", Culture) + (units == HealthUnits.Eorzean ? " ponz" : " lb"),
+            HealthUnits.Metric => kg.ToString("0.0", Culture) + Loc.T(L.Health.UnitKg),
+            _ => (kg * LbPerKg).ToString("0", Culture) +
+                 Loc.T(units == HealthUnits.Eorzean ? L.Health.UnitPonz : L.Health.UnitLb),
         };
     }
 
@@ -105,10 +106,12 @@ internal static class HealthFormat
         ml = Sane(ml);
         if (units == HealthUnits.Imperial)
         {
-            return (ml / MlPerFlOz).ToString("0", Culture) + " fl oz";
+            return (ml / MlPerFlOz).ToString("0", Culture) + Loc.T(L.Health.UnitFlOz);
         }
 
-        return ml >= 1000d ? (ml / 1000d).ToString("0.0", Culture) + " L" : ml.ToString("0", Culture) + " ml";
+        return ml >= 1000d
+            ? (ml / 1000d).ToString("0.0", Culture) + Loc.T(L.Health.UnitLitre)
+            : ml.ToString("0", Culture) + Loc.T(L.Health.UnitMl);
     }
 
     // ---- Steps --------------------------------------------------------------
@@ -126,7 +129,7 @@ internal static class HealthFormat
         var total = (int)Math.Max(0, seconds);
         var minutes = total / 60;
         var hours = minutes / 60;
-        return hours > 0 ? $"{hours}h {minutes % 60}m" : $"{minutes}m";
+        return hours > 0 ? Loc.T(L.Health.DurationHm, hours, minutes % 60) : Loc.T(L.Health.DurationM, minutes);
     }
 
     // ---- Calories (fictional, activity-only MET estimate) -------------------

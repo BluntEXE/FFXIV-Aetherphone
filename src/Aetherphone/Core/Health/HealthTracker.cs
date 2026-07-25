@@ -1,6 +1,7 @@
 using System.Globalization;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Game;
+using Aetherphone.Core.Localization;
 using Aetherphone.Core.Notifications;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Plugin.Services;
@@ -63,7 +64,7 @@ internal sealed class HealthTracker : IDisposable
     // Height + reminders
     private long lastDrinkUnix;
     private long lastReminderMs;
-    private string pausedReason = "Paused";
+    private string pausedReason = string.Empty;
 
     public HealthTracker(IFramework framework, CharacterWatch watch, NotificationService notifications,
         DirectoryInfo configDirectory)
@@ -90,14 +91,14 @@ internal sealed class HealthTracker : IDisposable
         {
             if (!IsTracking)
             {
-                return "Paused: not logged in";
+                return Loc.T(L.Health.StatusNotLoggedIn);
             }
 
             return CurrentKind switch
             {
-                MovementKind.Swimming or MovementKind.Diving => "Tracking swimming",
-                MovementKind.Walking or MovementKind.Running => "Tracking on-foot movement",
-                _ => pausedReason,
+                MovementKind.Swimming or MovementKind.Diving => Loc.T(L.Health.StatusTrackingSwimming),
+                MovementKind.Walking or MovementKind.Running => Loc.T(L.Health.StatusTrackingOnFoot),
+                _ => pausedReason.Length > 0 ? pausedReason : Loc.T(L.Health.StatusPaused),
             };
         }
     }
@@ -240,13 +241,20 @@ internal sealed class HealthTracker : IDisposable
 
     public static List<HealthGoal> DefaultGoals() => new()
     {
-        new HealthGoal { Name = "Walk 1,000 steps", Type = HealthGoalType.Steps, Target = 1000 },
-        new HealthGoal { Name = "Walk 5,000 steps", Type = HealthGoalType.Steps, Target = 5000 },
-        new HealthGoal { Name = "Walk 10,000 steps", Type = HealthGoalType.Steps, Target = 10000 },
-        new HealthGoal { Name = "Walk 1 malm", Type = HealthGoalType.OnFootDistance, Target = HealthFormat.YalmsPerMalm },
-        new HealthGoal { Name = "Swim 500 yalms", Type = HealthGoalType.SwimDistance, Target = 500 },
-        new HealthGoal { Name = "Log 4 drinks", Type = HealthGoalType.HydrationCount, Target = 4 },
-        new HealthGoal { Name = "Remain active for 30 minutes", Type = HealthGoalType.ActiveTime, Target = 1800 },
+        new HealthGoal { Name = Loc.T(L.Health.DefaultGoalWalk1000), Type = HealthGoalType.Steps, Target = 1000 },
+        new HealthGoal { Name = Loc.T(L.Health.DefaultGoalWalk5000), Type = HealthGoalType.Steps, Target = 5000 },
+        new HealthGoal { Name = Loc.T(L.Health.DefaultGoalWalk10000), Type = HealthGoalType.Steps, Target = 10000 },
+        new HealthGoal
+        {
+            Name = Loc.T(L.Health.DefaultGoalWalkMalm), Type = HealthGoalType.OnFootDistance,
+            Target = HealthFormat.YalmsPerMalm,
+        },
+        new HealthGoal { Name = Loc.T(L.Health.DefaultGoalSwim500), Type = HealthGoalType.SwimDistance, Target = 500 },
+        new HealthGoal { Name = Loc.T(L.Health.DefaultGoalDrinks), Type = HealthGoalType.HydrationCount, Target = 4 },
+        new HealthGoal
+        {
+            Name = Loc.T(L.Health.DefaultGoalActive30), Type = HealthGoalType.ActiveTime, Target = 1800,
+        },
     };
 
     // ---- Tracking loop ------------------------------------------------------
@@ -312,7 +320,7 @@ internal sealed class HealthTracker : IDisposable
         {
             CurrentKind = MovementKind.None;
             IsMoving = false;
-            pausedReason = "Paused: not logged in";
+            pausedReason = Loc.T(L.Health.StatusNotLoggedIn);
             return;
         }
 
@@ -334,7 +342,7 @@ internal sealed class HealthTracker : IDisposable
             hasBaseline = false;
             IsMoving = false;
             CurrentKind = MovementKind.None;
-            pausedReason = player is null ? "Paused: player unavailable" : "Paused: loading";
+            pausedReason = Loc.T(player is null ? L.Health.StatusPlayerUnavailable : L.Health.StatusLoading);
             return;
         }
 
@@ -382,12 +390,12 @@ internal sealed class HealthTracker : IDisposable
         CurrentKind = IsMoving ? kind : MovementKind.None;
         if (!IsMoving)
         {
-            pausedReason = kind switch
+            pausedReason = Loc.T(kind switch
             {
-                MovementKind.Mounted => "Paused: mounted",
-                MovementKind.Flying => "Paused: flying",
-                _ => "Idle",
-            };
+                MovementKind.Mounted => L.Health.StatusMounted,
+                MovementKind.Flying => L.Health.StatusFlying,
+                _ => L.Health.StatusIdle,
+            });
         }
 
         SetBaseline(cur, curT, curM);
@@ -722,8 +730,8 @@ internal sealed class HealthTracker : IDisposable
         }
 
         lastReminderMs = now;
-        notifications.Notify(new PhoneNotification("health", "Hydration",
-            "Your adventurer has not logged a drink recently.", DateTime.Now, Accent, "health.hydration"));
+        notifications.Notify(new PhoneNotification("health", Loc.T(L.Health.NotifyHydrationTitle),
+            Loc.T(L.Health.NotifyHydrationBody), DateTime.Now, Accent, "health.hydration"));
     }
 
     private bool InQuietHours(DateTime now)
@@ -784,8 +792,8 @@ internal sealed class HealthTracker : IDisposable
             goal.CompletedKey = key;
             day.GoalsCompleted++;
             dirty = true;
-            notifications.Notify(new PhoneNotification("health", "Goal complete",
-                $"{goal.Name} — done!", DateTime.Now, Accent, "health.goal." + goal.Id));
+            notifications.Notify(new PhoneNotification("health", Loc.T(L.Health.NotifyGoalTitle),
+                Loc.T(L.Health.NotifyGoalBody, goal.Name), DateTime.Now, Accent, "health.goal." + goal.Id));
         }
     }
 

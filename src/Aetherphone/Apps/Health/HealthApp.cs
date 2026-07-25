@@ -3,6 +3,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Health;
+using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -19,11 +20,14 @@ internal sealed partial class HealthApp : IPhoneApp
     private const float CardGap = 12f;
     private const float TileSize = 30f;
 
-    private static readonly string[] Tabs =
-        { "Overview", "Activity", "Water", "Goals", "History", "Profile" };
+    private static string[] Tabs => new[]
+    {
+        Loc.T(L.Health.TabOverview), Loc.T(L.Health.TabActivity), Loc.T(L.Health.TabWater),
+        Loc.T(L.Health.TabGoals), Loc.T(L.Health.TabHistory), Loc.T(L.Health.TabProfile),
+    };
 
     public string Id => "health";
-    public string DisplayName => "Health";
+    public string DisplayName => Loc.T(L.Health.Title);
     public string Glyph => "He";
     public int BadgeCount => 0;
 
@@ -37,7 +41,7 @@ internal sealed partial class HealthApp : IPhoneApp
 
     // Editable UI buffers
     private string weightBuffer = string.Empty;
-    private string customDrinkName = "Cordial";
+    private string customDrinkName = string.Empty;
     private int customDrinkMl = 250;
     private string? editingGoalId;
     private string goalNameBuffer = string.Empty;
@@ -70,7 +74,7 @@ internal sealed partial class HealthApp : IPhoneApp
         var screen = SceneChrome.ScreenFrom(content, theme, scale);
         ui.Backdrop(screen);
 
-        var title = tracker.IsTracking && !Profile.SetupCompleted ? "Welcome" : "Health";
+        var title = Loc.T(tracker.IsTracking && !Profile.SetupCompleted ? L.Health.Welcome : L.Health.Title);
         var rowCenterY = content.Min.Y + AppHeader.Height * scale * 0.5f;
         Typography.DrawCentered(new Vector2(content.Center.X, rowCenterY), title, Pal.TitleInk, 1.15f,
             FontWeight.SemiBold);
@@ -78,7 +82,7 @@ internal sealed partial class HealthApp : IPhoneApp
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + AppHeader.Height * scale), content.Max);
         if (!tracker.IsTracking)
         {
-            Typography.DrawCentered(body.Center, "Log in to view your adventurer's Health.", Pal.MutedInk);
+            Typography.DrawCentered(body.Center, Loc.T(L.Health.LogInPrompt), Pal.MutedInk);
             return;
         }
 
@@ -129,25 +133,26 @@ internal sealed partial class HealthApp : IPhoneApp
         Typography.DrawCentered(new Vector2(origin.X + width * 0.5f, origin.Y + 26f * scale),
             HealthFormat.Number(steps), Pal.TitleInk, TextStyles.LargeTitle);
         Typography.DrawCentered(new Vector2(origin.X + width * 0.5f, origin.Y + 54f * scale),
-            $"estimated steps today · goal {HealthFormat.Number(Profile.DailyStepGoal)}", Pal.MutedInk,
+            Loc.T(L.Health.StepsTodayCaption, HealthFormat.Number(Profile.DailyStepGoal)), Pal.MutedInk,
             TextStyles.Footnote);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, 74f * scale));
 
         var card = BeginCard(4, RowHeight, scale);
-        StatRow(CardRow(card, 0, RowHeight, scale), Accent1, FontAwesomeIcon.Walking, "On foot",
+        StatRow(CardRow(card, 0, RowHeight, scale), Accent1, FontAwesomeIcon.Walking, Loc.T(L.Health.OnFoot),
             Dist(day.OnFootYalms), scale);
-        StatRow(CardRow(card, 1, RowHeight, scale), Accent2, FontAwesomeIcon.Clock, "Active time",
+        StatRow(CardRow(card, 1, RowHeight, scale), Accent2, FontAwesomeIcon.Clock, Loc.T(L.Health.ActiveTime),
             HealthFormat.Duration(day.ActiveSeconds), scale);
         var kcal = Profile.CaloriesEnabled && Profile.WeightKg is not null
-            ? $"{day.Calories:0} kcal"
+            ? Loc.T(L.Health.Kcal, day.Calories.ToString("0", Loc.Culture))
             : "—";
-        StatRow(CardRow(card, 2, RowHeight, scale), Accent3, FontAwesomeIcon.Fire, "Est. energy", kcal, scale);
-        StatRow(CardRow(card, 3, RowHeight, scale), Accent4, FontAwesomeIcon.Tint, "Hydration",
+        StatRow(CardRow(card, 2, RowHeight, scale), Accent3, FontAwesomeIcon.Fire, Loc.T(L.Health.EstEnergy), kcal,
+            scale);
+        StatRow(CardRow(card, 3, RowHeight, scale), Accent4, FontAwesomeIcon.Tint, Loc.T(L.Health.Hydration),
             $"{day.DrinkCount} / {Profile.DailyHydrationGoal}", scale);
         EndCard(card, scale);
 
-        ui.SectionLabel("Goals", TextStyles.FootnoteEmphasized, 6f);
+        ui.SectionLabel(Loc.T(L.Health.GoalsSection), TextStyles.FootnoteEmphasized, 6f);
         var shown = 0;
         for (var index = 0; index < Profile.Goals.Count && shown < 3; index++)
         {
@@ -162,13 +167,15 @@ internal sealed partial class HealthApp : IPhoneApp
 
         if (shown == 0)
         {
-            ui.HelpText("No active goals. Add some on the Goals tab.");
+            ui.HelpText(Loc.T(L.Health.NoActiveGoals));
         }
 
-        ui.SectionLabel("Streak", TextStyles.FootnoteEmphasized, 6f);
+        ui.SectionLabel(Loc.T(L.Health.Streak), TextStyles.FootnoteEmphasized, 6f);
         var streakCard = BeginCard(1, RowHeight, scale);
-        StatRow(CardRow(streakCard, 0, RowHeight, scale), Accent1, FontAwesomeIcon.Fire, "Current streak",
-            Profile.StreakDays == 1 ? "1 day" : $"{Profile.StreakDays} days", scale);
+        StatRow(CardRow(streakCard, 0, RowHeight, scale), Accent1, FontAwesomeIcon.Fire,
+            Loc.T(L.Health.CurrentStreak),
+            Profile.StreakDays == 1 ? Loc.T(L.Health.StreakOneDay) : Loc.T(L.Health.StreakDays, Profile.StreakDays),
+            scale);
         EndCard(streakCard, scale);
     }
 
@@ -177,58 +184,58 @@ internal sealed partial class HealthApp : IPhoneApp
     private void DrawActivity(float scale)
     {
         var day = Profile.LatestDay ?? new HealthDay();
-        ui.SectionLabel("Today", TextStyles.FootnoteEmphasized, 6f);
+        ui.SectionLabel(Loc.T(L.Health.Today), TextStyles.FootnoteEmphasized, 6f);
         var card = BeginCard(4, CompactRowHeight, scale);
-        StatRow(CardRow(card, 0, CompactRowHeight, scale), Accent1, FontAwesomeIcon.Walking, "On foot",
+        StatRow(CardRow(card, 0, CompactRowHeight, scale), Accent1, FontAwesomeIcon.Walking, Loc.T(L.Health.OnFoot),
             Dist(day.OnFootYalms), scale);
-        StatRow(CardRow(card, 1, CompactRowHeight, scale), Accent2, FontAwesomeIcon.Swimmer, "Swimming",
+        StatRow(CardRow(card, 1, CompactRowHeight, scale), Accent2, FontAwesomeIcon.Swimmer, Loc.T(L.Health.Swimming),
             Dist(day.SwimYalms), scale);
-        StatRow(CardRow(card, 2, CompactRowHeight, scale), Accent3, FontAwesomeIcon.Water, "Diving",
+        StatRow(CardRow(card, 2, CompactRowHeight, scale), Accent3, FontAwesomeIcon.Water, Loc.T(L.Health.Diving),
             Dist(day.DiveYalms), scale);
-        StatRow(CardRow(card, 3, CompactRowHeight, scale), Accent4, FontAwesomeIcon.Clock, "Active time",
+        StatRow(CardRow(card, 3, CompactRowHeight, scale), Accent4, FontAwesomeIcon.Clock, Loc.T(L.Health.ActiveTime),
             HealthFormat.Duration(day.ActiveSeconds), scale);
         EndCard(card, scale);
 
-        ui.SectionLabel("Session", TextStyles.FootnoteEmphasized, 6f);
+        ui.SectionLabel(Loc.T(L.Health.Session), TextStyles.FootnoteEmphasized, 6f);
         var session = BeginCard(4, CompactRowHeight, scale);
-        StatRow(CardRow(session, 0, CompactRowHeight, scale), Accent1, FontAwesomeIcon.Walking, "On foot",
+        StatRow(CardRow(session, 0, CompactRowHeight, scale), Accent1, FontAwesomeIcon.Walking, Loc.T(L.Health.OnFoot),
             Dist(tracker.SessionOnFootYalms), scale);
-        StatRow(CardRow(session, 1, CompactRowHeight, scale), Accent2, FontAwesomeIcon.Swimmer, "Swimming",
+        StatRow(CardRow(session, 1, CompactRowHeight, scale), Accent2, FontAwesomeIcon.Swimmer, Loc.T(L.Health.Swimming),
             Dist(tracker.SessionSwimmingYalms), scale);
-        StatRow(CardRow(session, 2, CompactRowHeight, scale), Accent3, FontAwesomeIcon.Water, "Diving",
+        StatRow(CardRow(session, 2, CompactRowHeight, scale), Accent3, FontAwesomeIcon.Water, Loc.T(L.Health.Diving),
             Dist(tracker.SessionDivingYalms), scale);
-        StatRow(CardRow(session, 3, CompactRowHeight, scale), Accent4, FontAwesomeIcon.Clock, "Active time",
+        StatRow(CardRow(session, 3, CompactRowHeight, scale), Accent4, FontAwesomeIcon.Clock, Loc.T(L.Health.ActiveTime),
             HealthFormat.Duration(tracker.SessionActiveSeconds), scale);
         EndCard(session, scale);
 
-        ui.SectionLabel("All-time", TextStyles.FootnoteEmphasized, 6f);
+        ui.SectionLabel(Loc.T(L.Health.AllTime), TextStyles.FootnoteEmphasized, 6f);
         var all = BeginCard(4, CompactRowHeight, scale);
-        StatRow(CardRow(all, 0, CompactRowHeight, scale), Accent1, FontAwesomeIcon.Walking, "On foot",
+        StatRow(CardRow(all, 0, CompactRowHeight, scale), Accent1, FontAwesomeIcon.Walking, Loc.T(L.Health.OnFoot),
             Dist(Profile.AllWalkYalms + Profile.AllRunYalms), scale);
-        StatRow(CardRow(all, 1, CompactRowHeight, scale), Accent2, FontAwesomeIcon.Swimmer, "Swimming",
+        StatRow(CardRow(all, 1, CompactRowHeight, scale), Accent2, FontAwesomeIcon.Swimmer, Loc.T(L.Health.Swimming),
             Dist(Profile.AllSwimYalms), scale);
-        StatRow(CardRow(all, 2, CompactRowHeight, scale), Accent3, FontAwesomeIcon.Water, "Diving",
+        StatRow(CardRow(all, 2, CompactRowHeight, scale), Accent3, FontAwesomeIcon.Water, Loc.T(L.Health.Diving),
             Dist(Profile.AllDiveYalms), scale);
-        StatRow(CardRow(all, 3, CompactRowHeight, scale), Accent4, FontAwesomeIcon.LocationArrow, "Teleports",
+        StatRow(CardRow(all, 3, CompactRowHeight, scale), Accent4, FontAwesomeIcon.LocationArrow, Loc.T(L.Health.Teleports),
             HealthFormat.Number(Profile.AllTeleports), scale);
         EndCard(all, scale);
 
-        ui.SectionLabel("Teleports", TextStyles.FootnoteEmphasized, 6f);
+        ui.SectionLabel(Loc.T(L.Health.Teleports), TextStyles.FootnoteEmphasized, 6f);
         var tp = BeginCard(2, CompactRowHeight, scale);
-        StatRow(CardRow(tp, 0, CompactRowHeight, scale), Accent3, FontAwesomeIcon.LocationArrow, "Today",
+        StatRow(CardRow(tp, 0, CompactRowHeight, scale), Accent3, FontAwesomeIcon.LocationArrow, Loc.T(L.Health.Today),
             HealthFormat.Number((Profile.LatestDay?.Teleports ?? 0)), scale);
-        StatRow(CardRow(tp, 1, CompactRowHeight, scale), Accent3, FontAwesomeIcon.Route, "Distance skipped",
+        StatRow(CardRow(tp, 1, CompactRowHeight, scale), Accent3, FontAwesomeIcon.Route, Loc.T(L.Health.DistanceSkipped),
             Dist(Profile.AllTeleportYalms), scale);
         EndCard(tp, scale);
-        ui.HelpText("Teleport distance skipped is a same-map straight-line estimate only; cross-zone teleports are counted without distance.");
+        ui.HelpText(Loc.T(L.Health.TeleportHint));
 
-        ui.SectionLabel("Records", TextStyles.FootnoteEmphasized, 6f);
+        ui.SectionLabel(Loc.T(L.Health.Records), TextStyles.FootnoteEmphasized, 6f);
         var rec = BeginCard(3, CompactRowHeight, scale);
-        StatRow(CardRow(rec, 0, CompactRowHeight, scale), Accent1, FontAwesomeIcon.Trophy, "Most steps in a day",
+        StatRow(CardRow(rec, 0, CompactRowHeight, scale), Accent1, FontAwesomeIcon.Trophy, Loc.T(L.Health.MostStepsInDay),
             HealthFormat.Number(Profile.RecordStepsInDay), scale);
-        StatRow(CardRow(rec, 1, CompactRowHeight, scale), Accent2, FontAwesomeIcon.Trophy, "Longest on-foot session",
+        StatRow(CardRow(rec, 1, CompactRowHeight, scale), Accent2, FontAwesomeIcon.Trophy, Loc.T(L.Health.LongestOnFootSession),
             HealthFormat.Duration(Profile.LongestOnFootSessionSeconds), scale);
-        StatRow(CardRow(rec, 2, CompactRowHeight, scale), Accent2, FontAwesomeIcon.Trophy, "Longest swim session",
+        StatRow(CardRow(rec, 2, CompactRowHeight, scale), Accent2, FontAwesomeIcon.Trophy, Loc.T(L.Health.LongestSwimSession),
             HealthFormat.Duration(Profile.LongestSwimSessionSeconds), scale);
         EndCard(rec, scale);
     }
