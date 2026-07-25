@@ -2011,6 +2011,9 @@ internal static class L
         public static readonly LocString WhoFriends = new("velvet.whoFriends", "Friends");
         public static readonly LocString WhoNoOne = new("velvet.whoNoOne", "No one");
         public static readonly LocString WhoHelp =
+        public static readonly LocString UnavailableTitle = new("velvet.unavailableTitle", "Velvet is unavailable");
+        public static readonly LocString UnavailableBody = new("velvet.unavailableBody",
+            "Velvet is an adults only space and is not available on Lalafell characters. If you recently changed your race, this clears once the Lodestone reflects it.");
             new("velvet.whoHelp", "Choose who can send you a one line intro. Friends means friends of friends.");
         public static readonly LocString BlockedNone = new("velvet.blockedNone", "No one blocked.");
         public static readonly LocString ChatsTab = new("velvet.chatsTab", "Chats");

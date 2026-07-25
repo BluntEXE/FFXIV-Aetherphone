@@ -1582,6 +1582,8 @@
   "velvet.likesTitle": "Likes",
   "velvet.noLikes": "Noch keine Likes.",
   "velvet.commentsCount": "Kommentare · {0}",
+  "velvet.unavailableTitle": "Velvet ist nicht verfügbar",
+  "velvet.unavailableBody": "Velvet ist ein Bereich nur für Erwachsene und auf Lalafell-Charakteren nicht verfügbar. Wenn du kürzlich dein Volk geändert hast, verschwindet dies, sobald der Lodestone es übernimmt.",
   "velvet.signedOutTitle": "Velvet ist etwas für die Nacht",
   "velvet.signedOutHint": "Melde dich mit deinem Konto an, um einzutreten.",
   "velvet.obTitleIdentity": "Dein großer Auftritt",

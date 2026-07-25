@@ -32,6 +32,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     private volatile int accountEpoch;
     private volatile VelvetProfileDto? me;
     private volatile bool loadingMe;
+    private volatile bool accessBlocked;
     private volatile bool avatarBusy;
     private volatile AvatarUploadOutcome avatarFailure = AvatarUploadOutcome.Unreachable;
     private volatile bool introBusy;
@@ -104,6 +105,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     public MentionSuggestions NewMentionSuggestions() => new(account, work);
 
     public VelvetProfileDto? Me => me;
+    public bool AccessBlocked => accessBlocked;
     public bool HasProfile => me is not null;
     public bool AvatarBusy => avatarBusy;
 
@@ -181,6 +183,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         accountEpoch++;
         discoverEpoch++;
         me = null;
+        accessBlocked = false;
         meGate.Reset();
         discoverResults = Array.Empty<VelvetProfileDto>();
         discoverCursor = null;
@@ -428,10 +431,21 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         var epoch = accountEpoch;
         work.Run("profile load", async token =>
         {
-            var profile = await client.MeAsync(token).ConfigureAwait(false);
-            if (profile is not null && epoch == accountEpoch)
+            var status = 0;
+            var profile = await client.MeAsync(token, code => status = code).ConfigureAwait(false);
+            if (epoch != accountEpoch)
+            {
+                return;
+            }
+
+            if (profile is not null)
             {
                 me = profile;
+                accessBlocked = false;
+            }
+            else if (status == 403)
+            {
+                accessBlocked = true;
             }
         }, () => loadingMe = false);
     }

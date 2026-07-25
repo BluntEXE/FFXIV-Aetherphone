@@ -176,6 +176,16 @@ internal sealed partial class VelvetShell : IPhoneApp
             return;
         }
 
+        if (IsLalafellCharacter() || store.AccessBlocked)
+        {
+            TourHolds.Hold(Id);
+            store.EnsureMe();
+            TickHeartbeat();
+            EmptyState.Draw(context.Content, ui, FontAwesomeIcon.Ban, Loc.T(L.Velvet.UnavailableTitle),
+                Loc.T(L.Velvet.UnavailableBody));
+            return;
+        }
+
         if (!GateAccepted)
         {
             TourHolds.Hold(Id);

@@ -1577,6 +1577,8 @@
   "velvet.cardKinks": "Kinks",
   "velvet.cardRelationship": "Relationship",
   "velvet.cardTags": "Tags",
+  "velvet.unavailableTitle": "Velvet is unavailable",
+  "velvet.unavailableBody": "Velvet is an adults only space and is not available on Lalafell characters. If you recently changed your race, this clears once the Lodestone reflects it.",
   "velvet.cardLimits": "Limits",
   "velvet.likesTitle": "Likes",
   "velvet.noLikes": "No likes yet.",

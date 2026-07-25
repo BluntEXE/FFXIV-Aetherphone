@@ -1582,6 +1582,8 @@
   "velvet.likesTitle": "Curtidas",
   "velvet.noLikes": "Nenhuma curtida ainda.",
   "velvet.commentsCount": "Comentários · {0}",
+  "velvet.unavailableTitle": "O Velvet não está disponível",
+  "velvet.unavailableBody": "O Velvet é um espaço só para adultos e não está disponível em personagens lalafell. Se você mudou de raça recentemente, isso se resolve assim que o Lodestone refletir a mudança.",
   "velvet.signedOutTitle": "O Velvet é coisa da noite",
   "velvet.signedOutHint": "Faça login na sua conta para entrar.",
   "velvet.obTitleIdentity": "Faça sua entrada",

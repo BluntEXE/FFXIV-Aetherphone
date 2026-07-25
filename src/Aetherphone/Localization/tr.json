@@ -1582,6 +1582,8 @@
   "velvet.likesTitle": "Beğeniler",
   "velvet.noLikes": "Henüz beğeni yok.",
   "velvet.commentsCount": "Yorumlar · {0}",
+  "velvet.unavailableTitle": "Velvet kullanılamıyor",
+  "velvet.unavailableBody": "Velvet yalnızca yetişkinlere özel bir alandır ve Lalafell karakterlerde kullanılamaz. Yakın zamanda ırkını değiştirdiysen, Lodestone güncellenince bu kalkar.",
   "velvet.signedOutTitle": "Velvet hava karardıktan sonra başlar",
   "velvet.signedOutHint": "İçeri adım atmak için hesabına giriş yap.",
   "velvet.obTitleIdentity": "Sahneye çık",

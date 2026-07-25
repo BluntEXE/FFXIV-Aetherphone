@@ -1582,6 +1582,8 @@
   "velvet.likesTitle": "Лайки",
   "velvet.noLikes": "Пока нет лайков.",
   "velvet.commentsCount": "Комментарии · {0}",
+  "velvet.unavailableTitle": "Velvet недоступен",
+  "velvet.unavailableBody": "Velvet предназначен только для взрослых и недоступен на персонажах лалафеллов. Если вы недавно сменили расу, это исчезнет, когда Lodestone отразит изменения.",
   "velvet.signedOutTitle": "Velvet оживает после заката",
   "velvet.signedOutHint": "Войдите в аккаунт, чтобы попасть внутрь.",
   "velvet.obTitleIdentity": "Ваш выход",

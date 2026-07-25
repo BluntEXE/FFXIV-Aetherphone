@@ -1582,6 +1582,8 @@
   "velvet.likesTitle": "いいね",
   "velvet.noLikes": "まだいいねはありません。",
   "velvet.commentsCount": "コメント · {0}",
+  "velvet.unavailableTitle": "Velvetは利用できません",
+  "velvet.unavailableBody": "Velvetは成人向けの空間のため、ララフェルのキャラクターではご利用いただけません。最近種族を変更した場合は、ロードストーンに反映され次第、この表示は解除されます。",
   "velvet.signedOutTitle": "Velvetは夜が更けてから",
   "velvet.signedOutHint": "アカウントにサインインして中へお入りください。",
   "velvet.obTitleIdentity": "華やかに登場しましょう",

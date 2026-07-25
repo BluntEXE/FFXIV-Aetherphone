@@ -1582,6 +1582,8 @@
   "velvet.likesTitle": "J'aime",
   "velvet.noLikes": "Aucun j'aime pour l'instant.",
   "velvet.commentsCount": "Commentaires · {0}",
+  "velvet.unavailableTitle": "Velvet n'est pas disponible",
+  "velvet.unavailableBody": "Velvet est un espace réservé aux adultes et n'est pas disponible sur les personnages lalafell. Si tu as récemment changé de race, cela disparaîtra dès que le Lodestone en tiendra compte.",
   "velvet.signedOutTitle": "Velvet ouvre à la nuit tombée",
   "velvet.signedOutHint": "Connecte-toi à ton compte pour entrer.",
   "velvet.obTitleIdentity": "Fais ton entrée",
