@@ -165,11 +165,23 @@ internal sealed class SoundEffectPlayer : IDisposable
     {
         return Path.GetExtension(path).ToLowerInvariant() switch
         {
-            ".wav" => new WaveFileReader(path),
+            ".wav" => OpenWaveReader(path),
             ".mp3" => new Mp3FileReaderBase(path,
-                frame => new Mp3FrameDecompressor(frame)),
-            _ => throw new NotSupportedException($"Unsupported sound format: {Path.GetExtension(path)}"),
+                waveFormat => new Mp3FrameDecompressor(waveFormat)),
+            _ => new MediaFoundationReader(path),
         };
+    }
+
+    private static WaveStream OpenWaveReader(string path)
+    {
+        var reader = new WaveFileReader(path);
+        if (reader.WaveFormat.Encoding is WaveFormatEncoding.Pcm or WaveFormatEncoding.IeeeFloat)
+        {
+            return reader;
+        }
+
+        reader.Dispose();
+        return new MediaFoundationReader(path);
     }
 
     public void Dispose()
