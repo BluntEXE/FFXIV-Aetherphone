@@ -52,18 +52,35 @@ internal sealed partial class ChirperApp
             }
             else
             {
+                profileVirtualizer.BeginFrame();
                 renderedUnderlyingIds.Clear();
                 for (var index = 0; index < posts.Length; index++)
                 {
-                    if (!renderedUnderlyingIds.Add(posts[index].RepostOfId ?? posts[index].Id))
+                    var post = posts[index];
+                    if (!renderedUnderlyingIds.Add(post.RepostOfId ?? post.Id))
                     {
                         continue;
                     }
 
-                    DrawPost(posts[index]);
+                    if (profileVirtualizer.Skip(post.Id))
+                    {
+                        continue;
+                    }
+
+                    DrawPost(post);
+                    profileVirtualizer.Record(post.Id);
+                }
+
+                if (store.ProfileLoadingMore)
+                {
+                    InfiniteScroll.DrawLoadingRow(body.Center.X, AppPalettes.Chirper.MutedInk);
                 }
 
                 ImGui.Dummy(new Vector2(0f, 24f * scale));
+                if (InfiniteScroll.ReachedBottom() && store.HasMoreProfilePosts && !store.ProfileLoadingMore)
+                {
+                    store.LoadMoreProfilePosts();
+                }
             }
         }
     }

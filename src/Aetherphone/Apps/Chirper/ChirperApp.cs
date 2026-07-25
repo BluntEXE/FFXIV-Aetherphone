@@ -48,6 +48,7 @@ internal sealed partial class ChirperApp : IPhoneApp
     private readonly RichTextCache bodyLayouts = new();
     private readonly RichTextCache commentLayouts = new();
     private readonly FeedVirtualizer feedVirtualizer = new(300f);
+    private readonly FeedVirtualizer profileVirtualizer = new(300f);
     private readonly MentionPopup mentionPopup = new();
     private readonly MentionAutocomplete composeMentions;
     private readonly MentionAutocomplete commentMentions;
