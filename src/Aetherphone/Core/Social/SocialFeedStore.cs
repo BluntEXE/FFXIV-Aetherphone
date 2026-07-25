@@ -122,6 +122,8 @@ internal abstract class SocialFeedStore : IDisposable
 
     public bool LoadingMore(SocialFeedScope scope) => Lane(scope).LoadingMore;
 
+    public ITrimmable FeedSource(SocialFeedScope scope) => Lane(scope);
+
     private FeedLane<PostDto> Lane(SocialFeedScope scope) =>
         scope == SocialFeedScope.ForYou ? forYouLane : followingLane;
 

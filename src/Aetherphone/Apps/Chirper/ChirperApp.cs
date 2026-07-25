@@ -330,7 +330,7 @@ internal sealed partial class ChirperApp : IPhoneApp
             else
             {
                 ImGui.Dummy(new Vector2(0f, FeedTopPadding * ImGuiHelpers.GlobalScale));
-                feedVirtualizer.BeginFrame();
+                feedVirtualizer.BeginFrame(store.FeedSource(scope));
                 renderedUnderlyingIds.Clear();
                 for (var index = 0; index < snapshot.Length; index++)
                 {
@@ -425,7 +425,8 @@ internal sealed partial class ChirperApp : IPhoneApp
             DrawRepostHeader(origin, contentLeft, headerHeight, width, repostBy);
         }
 
-        DrawAvatar(drawList, avatarCenter, radius, post.AuthorName, post.AuthorWorld, post.AuthorAvatarUrl, 0.95f, 48);
+        DrawAvatar(drawList, avatarCenter, radius, SocialIdentity.Name(post.AuthorDisplayName, post.AuthorHandle),
+            string.Empty, post.AuthorAvatarUrl, 0.95f, 48);
         if (UiInteract.HoverClick(avatarCenter - new Vector2(radius, radius), avatarCenter + new Vector2(radius, radius)))
         {
             OpenProfile(post.AuthorId);
@@ -1013,8 +1014,8 @@ internal sealed partial class ChirperApp : IPhoneApp
         var drawList = ImGui.GetWindowDrawList();
         var radius = 15f * scale;
         var avatarCenter = new Vector2(origin.X + radius, origin.Y + radius);
-        DrawAvatar(drawList, avatarCenter, radius, comment.AuthorName, string.Empty, comment.AuthorAvatarUrl, 0.85f,
-            32);
+        DrawAvatar(drawList, avatarCenter, radius, SocialIdentity.Name(comment.AuthorDisplayName, comment.AuthorHandle),
+            string.Empty, comment.AuthorAvatarUrl, 0.85f, 32);
         if (UiInteract.HoverClick(avatarCenter - new Vector2(radius, radius), avatarCenter + new Vector2(radius, radius)))
         {
             OpenProfile(comment.AuthorId);

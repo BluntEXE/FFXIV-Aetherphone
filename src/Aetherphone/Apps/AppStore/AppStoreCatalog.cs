@@ -57,6 +57,7 @@ internal static class AppStoreCatalog
         ["inventory"] = new(L.StoreCopy.InventorySub, L.StoreCopy.InventoryBody, StoreCategory.Adventure),
         ["jobs"] = new(L.StoreCopy.JobsSub, L.StoreCopy.JobsBody, StoreCategory.Adventure),
         ["character"] = new(L.StoreCopy.CharacterSub, L.StoreCopy.CharacterBody, StoreCategory.Adventure),
+        ["health"] = new(L.StoreCopy.HealthSub, L.StoreCopy.HealthBody, StoreCategory.Adventure),
         ["wallet"] = new(L.StoreCopy.WalletSub, L.StoreCopy.WalletBody, StoreCategory.Adventure),
         ["market"] = new(L.StoreCopy.MarketSub, L.StoreCopy.MarketBody, StoreCategory.Adventure),
         ["dailies"] = new(L.StoreCopy.DailiesSub, L.StoreCopy.DailiesBody, StoreCategory.Adventure),
@@ -68,7 +69,6 @@ internal static class AppStoreCatalog
         ["settings"] = new(L.StoreCopy.SettingsSub, L.StoreCopy.SettingsBody, StoreCategory.Tools),
         ["notifications"] = new(L.StoreCopy.NotificationsSub, L.StoreCopy.NotificationsBody, StoreCategory.Tools),
         ["feedback"] = new(L.StoreCopy.FeedbackSub, L.StoreCopy.FeedbackBody, StoreCategory.Tools),
-        ["dev"] = new(L.StoreCopy.DevSub, L.StoreCopy.DevBody, StoreCategory.Tools),
         ["appstore"] = new(L.StoreCopy.StoreSub, L.StoreCopy.StoreBody, StoreCategory.Tools),
     }.ToFrozenDictionary(StringComparer.Ordinal);
 

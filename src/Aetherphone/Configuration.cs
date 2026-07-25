@@ -112,6 +112,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public List<string> VenueFavorites { get; set; } = new();
     public int MusterCategoryFilter { get; set; }
     public int MusterScope { get; set; }
+    public int MusterDataCenterId { get; set; }
     public int YellowPagesCategoryFilter { get; set; }
     public int YellowPagesScope { get; set; }
     public bool YellowPagesAfterDark { get; set; }
@@ -126,7 +127,6 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
 
     public bool IsVelvetOnboarded() => VelvetOnboarded && VelvetOnboardedVersion >= VelvetOnboardVersion;
     public bool VelvetBlurByDefault { get; set; } = true;
-    public bool VelvetShowLalafell { get; set; }
     public List<string> VelvetPinnedThreads { get; set; } = new();
     public List<string> MessagePinnedChats { get; set; } = new();
     public List<string> MessageArchivedChats { get; set; } = new();

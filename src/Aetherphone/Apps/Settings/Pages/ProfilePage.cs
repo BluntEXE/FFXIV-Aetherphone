@@ -109,6 +109,7 @@ internal sealed class ProfilePage : ISettingsPage, IDisposable
         {
             configuration.RegionManual = false;
             configuration.Save();
+            PushRegion();
         }
 
         for (var index = 0; index < SocialRegion.Codes.Length; index++)
@@ -121,6 +122,7 @@ internal sealed class ProfilePage : ISettingsPage, IDisposable
                 configuration.RegionManual = true;
                 configuration.ManualRegion = code;
                 configuration.Save();
+                PushRegion();
             }
         }
 
@@ -184,6 +186,9 @@ internal sealed class ProfilePage : ISettingsPage, IDisposable
         configuration.Save();
         PushTimeZone(null);
     }
+
+    private void PushRegion() =>
+        RegionSync.Push(session, client, configuration, gameData, cancellation.Token);
 
     private void PushTimeZone(bool? share)
     {

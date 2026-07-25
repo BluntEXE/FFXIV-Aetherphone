@@ -8,7 +8,6 @@ internal sealed class AethernetSession
     private readonly Configuration configuration;
     private readonly IFramework framework;
     private volatile bool tokenRejected;
-    private volatile bool hasDevAccess;
     private volatile bool banned;
     private volatile string? banReason;
     private ulong activeContentId;
@@ -28,7 +27,6 @@ internal sealed class AethernetSession
     public string? Token => string.IsNullOrEmpty(configuration.AethernetToken) ? null : configuration.AethernetToken;
     public bool IsSignedIn => Token is not null && !tokenRejected;
     public bool TokenRejected => tokenRejected;
-    public bool HasDevAccess => hasDevAccess && IsSignedIn;
     public bool IsBanned => banned;
     public string? BanReason => banReason;
     public UserDto? CurrentUser { get; private set; }
@@ -40,17 +38,6 @@ internal sealed class AethernetSession
     public bool LegacyClaimPending { get; private set; }
 
     public event Action? Changed;
-
-    public void SetDevAccess(bool granted)
-    {
-        if (hasDevAccess == granted)
-        {
-            return;
-        }
-
-        hasDevAccess = granted;
-        _ = framework.RunOnFrameworkThread(() => Changed?.Invoke());
-    }
 
     public void SignIn(string token, UserDto user)
     {
@@ -87,7 +74,6 @@ internal sealed class AethernetSession
         _ = framework.RunOnFrameworkThread(() =>
         {
             tokenRejected = false;
-            hasDevAccess = false;
             banned = false;
             banReason = null;
             LegacyClaimPending = false;
@@ -114,7 +100,6 @@ internal sealed class AethernetSession
         }
 
         tokenRejected = true;
-        hasDevAccess = false;
         AepLog.Warning("Aethernet token was rejected; sign in again to reconnect.");
         _ = framework.RunOnFrameworkThread(() =>
         {
@@ -128,7 +113,6 @@ internal sealed class AethernetSession
         banned = true;
         banReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
         tokenRejected = true;
-        hasDevAccess = false;
         _ = framework.RunOnFrameworkThread(() =>
         {
             CurrentUser = null;
@@ -146,7 +130,6 @@ internal sealed class AethernetSession
         StashActive();
         activeContentId = contentId;
         tokenRejected = false;
-        hasDevAccess = false;
         banned = false;
         banReason = null;
         CurrentUser = null;

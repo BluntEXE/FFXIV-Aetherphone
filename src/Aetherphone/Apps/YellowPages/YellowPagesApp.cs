@@ -2,6 +2,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
+using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
@@ -24,8 +25,6 @@ namespace Aetherphone.Apps.YellowPages;
 internal sealed partial class YellowPagesApp : IPhoneApp
 {
     private const float CopiedSeconds = 1.6f;
-    private const float BottomNavHeight = 52f;
-    private const int NavSlotCount = 4;
 
     public string Id => "yellowpages";
     public string DisplayName => Loc.T(L.Apps.YellowPages);
@@ -33,6 +32,7 @@ internal sealed partial class YellowPagesApp : IPhoneApp
     public int BadgeCount => socialNotifications.UnseenCount(Id);
 
     private readonly YellowPagesStore store;
+    private readonly AdInquiryStore inquiries;
     private readonly YellowPagesLauncher launcher;
     private readonly SocialNotificationService socialNotifications;
     private readonly GramDmLauncher gramDmLauncher;
@@ -46,11 +46,18 @@ internal sealed partial class YellowPagesApp : IPhoneApp
     private readonly Configuration configuration;
     private readonly ConfirmService confirm;
     private readonly ReportService report;
+    private readonly EncryptionInfoPane encryptionPane;
     private readonly PhotoViewerOverlay photoViewer = new();
+    private readonly BottomTabBar bottomNav = new();
+    private readonly NavTab[] navTabs = new NavTab[5];
+    private readonly DropdownMenu scopeMenu = new();
+    private readonly DropdownMenu.Item[] scopeItems = new DropdownMenu.Item[4];
     private readonly AppSkin ui = new(AppPalettes.YellowPages);
     private readonly ViewRouter<YellowPagesRoute> router;
     private readonly RouterDraw<YellowPagesRoute> drawView;
     private readonly Action back;
+    private readonly Action backToBrowse;
+    private readonly Action backFromThread;
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
     private YellowPagesTab activeTab = YellowPagesTab.Browse;
@@ -58,13 +65,14 @@ internal sealed partial class YellowPagesApp : IPhoneApp
     private string copiedKey = string.Empty;
     private bool lifestreamAvailable;
 
-    public YellowPagesApp(YellowPagesStore store, YellowPagesLauncher launcher,
+    public YellowPagesApp(YellowPagesStore store, AdInquiryStore inquiries, YellowPagesLauncher launcher,
         SocialNotificationService socialNotifications, GramDmLauncher gramDmLauncher, MusterStore musters,
         AethernetApi api, GameData gameData, RemoteImageCache images, LodestoneService lodestone,
         PhotoLibrary library, WallpaperImageCache wallpaperImages, Configuration configuration,
         ConfirmService confirm, ReportService report)
     {
         this.store = store;
+        this.inquiries = inquiries;
         this.launcher = launcher;
         this.socialNotifications = socialNotifications;
         this.gramDmLauncher = gramDmLauncher;
@@ -78,9 +86,21 @@ internal sealed partial class YellowPagesApp : IPhoneApp
         this.configuration = configuration;
         this.confirm = confirm;
         this.report = report;
+        encryptionPane = new EncryptionInfoPane(inquiries.Vault, confirm);
         router = new ViewRouter<YellowPagesRoute>(YellowPagesRoute.Browse);
         drawView = DrawView;
         back = () => router.Pop();
+        backFromThread = () =>
+        {
+            router.Pop();
+            inquiries.Close();
+            inquiries.Refresh();
+        };
+        backToBrowse = () =>
+        {
+            router.Pop();
+            RefreshBrowse();
+        };
     }
 
     public void OnOpened()
@@ -104,6 +124,7 @@ internal sealed partial class YellowPagesApp : IPhoneApp
         router.Reset();
         ResetDetailState();
         ResetComposeForm();
+        scopeMenu.Close();
         copiedTimer = 0f;
     }
 
@@ -138,11 +159,15 @@ internal sealed partial class YellowPagesApp : IPhoneApp
             AddComposePhoto(picked);
         }
 
-        router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
         if (photoViewer.Active)
         {
             photoViewer.Draw(screen, theme);
+            return;
         }
+
+        scopeMenu.Gate();
+        router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
+        DrawScopeMenu(screen);
     }
 
     private void DrawView(YellowPagesRoute route, Rect area, int depth)
@@ -150,8 +175,20 @@ internal sealed partial class YellowPagesApp : IPhoneApp
         ui.Body(area);
         switch (route.Screen)
         {
+            case YellowPagesScreen.Intent:
+                DrawIntent(area, route.Intent);
+                break;
             case YellowPagesScreen.Detail:
                 DrawDetail(area, route.AdId!);
+                break;
+            case YellowPagesScreen.Thread:
+                DrawInquiryThread(area, route.AdId!);
+                break;
+            case YellowPagesScreen.NewInquiry:
+                DrawNewInquiry(area, route.AdId!);
+                break;
+            case YellowPagesScreen.Encryption:
+                DrawEncryptionInfo(area);
                 break;
             case YellowPagesScreen.Compose:
                 DrawCompose(area);
@@ -165,12 +202,15 @@ internal sealed partial class YellowPagesApp : IPhoneApp
     private void DrawRoot(Rect area)
     {
         var scale = ImGuiHelpers.GlobalScale;
-        var navRect = new Rect(new Vector2(area.Min.X, area.Max.Y - BottomNavHeight * scale), area.Max);
+        var navRect = new Rect(new Vector2(area.Min.X, area.Max.Y - BottomTabBar.Height * scale), area.Max);
         var tabArea = new Rect(area.Min, new Vector2(area.Max.X, navRect.Min.Y));
         switch (activeTab)
         {
             case YellowPagesTab.Saved:
                 DrawSaved(tabArea);
+                break;
+            case YellowPagesTab.Inquiries:
+                DrawInquiries(tabArea);
                 break;
             case YellowPagesTab.Mine:
                 DrawMine(tabArea);
@@ -185,37 +225,47 @@ internal sealed partial class YellowPagesApp : IPhoneApp
 
     private void DrawBottomNav(Rect bar)
     {
-        var scale = ImGuiHelpers.GlobalScale;
-        var drawList = ImGui.GetWindowDrawList();
-        drawList.AddLine(bar.Min, new Vector2(bar.Max.X, bar.Min.Y),
-            ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.10f)), 1f);
-        var slot = bar.Width / NavSlotCount;
-        var centerY = bar.Center.Y;
-        DrawNavItem(new Vector2(bar.Min.X + slot * 0.5f, centerY), FontAwesomeIcon.ThLarge,
-            Loc.T(L.YellowPages.BrowseTab), YellowPagesTab.Browse, scale);
-        DrawNavItem(new Vector2(bar.Min.X + slot * 1.5f, centerY), FontAwesomeIcon.Heart,
-            Loc.T(L.YellowPages.SavedTab), YellowPagesTab.Saved, scale);
-        DrawNavPost(new Vector2(bar.Min.X + slot * 2.5f, centerY), scale);
-        DrawNavItem(new Vector2(bar.Min.X + slot * 3.5f, centerY), FontAwesomeIcon.Bullhorn,
-            Loc.T(L.YellowPages.MineTab), YellowPagesTab.Mine, scale);
+        navTabs[0] = new NavTab(FontAwesomeIcon.ThLarge, Loc.T(L.YellowPages.BrowseTab));
+        navTabs[1] = new NavTab(FontAwesomeIcon.Heart, Loc.T(L.YellowPages.SavedTab));
+        navTabs[2] = new NavTab(FontAwesomeIcon.Plus, Loc.T(L.YellowPages.PostAd), 0, true);
+        navTabs[3] = new NavTab(FontAwesomeIcon.Comments, Loc.T(L.YellowPages.InquiriesTitle),
+            inquiries.UnreadTotal);
+        navTabs[4] = new NavTab(FontAwesomeIcon.Bullhorn, Loc.T(L.YellowPages.MineTab), BadgeCount);
+        var tapped = bottomNav.Draw(bar, ui, theme, navTabs, ActiveNavSlot());
+        switch (tapped)
+        {
+            case 0:
+                SelectTab(YellowPagesTab.Browse);
+                break;
+            case 1:
+                SelectTab(YellowPagesTab.Saved);
+                break;
+            case 2:
+                ResetComposeForm();
+                router.Push(YellowPagesRoute.Compose);
+                break;
+            case 3:
+                inquiryAdFilter = null;
+                SelectTab(YellowPagesTab.Inquiries);
+                break;
+            case 4:
+                SelectTab(YellowPagesTab.Mine);
+                break;
+        }
     }
 
-    private void DrawNavItem(Vector2 center, FontAwesomeIcon icon, string label, YellowPagesTab tab, float scale)
-    {
-        var drawList = ImGui.GetWindowDrawList();
-        var active = activeTab == tab;
-        var ink = active ? ui.Accent : AppPalettes.YellowPages.MutedInk;
-        AppSkin.Icon(drawList, center - new Vector2(0f, 8f * scale), icon.ToIconString(), ink, 0.95f);
-        Typography.DrawCentered(drawList, center + new Vector2(0f, 11f * scale), label, ink, 0.62f,
-            active ? FontWeight.SemiBold : FontWeight.Medium);
-        var half = new Vector2(26f * scale, 22f * scale);
-        var hovered = UiInteract.Hover(center - half, center + half);
-        if (hovered)
+    private int ActiveNavSlot() =>
+        activeTab switch
         {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
+            YellowPagesTab.Saved => 1,
+            YellowPagesTab.Inquiries => 3,
+            YellowPagesTab.Mine => 4,
+            _ => 0,
+        };
 
-        if (!UiInteract.Click(center - half, center + half, hovered) || active)
+    private void SelectTab(YellowPagesTab tab)
+    {
+        if (activeTab == tab)
         {
             return;
         }
@@ -226,6 +276,9 @@ internal sealed partial class YellowPagesApp : IPhoneApp
             case YellowPagesTab.Saved:
                 store.RefreshSaved();
                 break;
+            case YellowPagesTab.Inquiries:
+                inquiries.Refresh();
+                break;
             case YellowPagesTab.Mine:
                 store.SyncNow();
                 break;
@@ -235,32 +288,55 @@ internal sealed partial class YellowPagesApp : IPhoneApp
         }
     }
 
-    private void DrawNavPost(Vector2 center, float scale)
+    private void DrawScopeMenu(Rect screen)
     {
-        var drawList = ImGui.GetWindowDrawList();
-        var radius = 17f * scale;
-        var hovered = UiInteract.Hover(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
-        var fill = hovered ? Palette.Mix(ui.Accent, new Vector4(1f, 1f, 1f, 1f), 0.12f) : ui.Accent;
-        drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(fill), 40);
-        AppSkin.Icon(drawList, center, FontAwesomeIcon.Plus.ToIconString(), new Vector4(0.11f, 0.08f, 0.02f, 1f),
-            0.95f);
-        HoverTooltip.Show(new Rect(center - new Vector2(radius, radius), center + new Vector2(radius, radius)),
-            Loc.T(L.YellowPages.PostAd), HoverLabelSide.Above);
-        if (hovered)
+        var scope = configuration.YellowPagesScope;
+        scopeItems[0] = new DropdownMenu.Item(Loc.T(L.YellowPages.ScopeRegion),
+            Selected: scope == AdScopes.Region);
+        scopeItems[1] = new DropdownMenu.Item(Loc.T(L.YellowPages.ScopeMyDc),
+            Selected: scope == AdScopes.DataCenter);
+        scopeItems[2] = new DropdownMenu.Item(Loc.T(L.YellowPages.ScopeEverywhere),
+            Selected: scope == AdScopes.Everywhere);
+        scopeItems[3] = new DropdownMenu.Item(Loc.T(L.YellowPages.AfterDarkConfirmYes),
+            Selected: configuration.YellowPagesAfterDark);
+        var picked = scopeMenu.Draw(screen, theme, scopeItems);
+        if (picked < 0)
         {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            return;
         }
 
-        if (UiInteract.Click(center - new Vector2(radius, radius), center + new Vector2(radius, radius), hovered))
+        if (picked == 3)
         {
-            ResetComposeForm();
-            router.Push(YellowPagesRoute.Compose);
+            ToggleAfterDark();
+            return;
         }
+
+        var next = picked switch
+        {
+            1 => AdScopes.DataCenter,
+            2 => AdScopes.Everywhere,
+            _ => AdScopes.Region,
+        };
+        if (next == scope)
+        {
+            return;
+        }
+
+        configuration.YellowPagesScope = next;
+        configuration.Save();
+        RefreshCurrentList();
     }
 
-    private void RefreshBrowse()
+    private void RefreshCurrentList()
     {
-        store.RefreshDirectory(configuration.YellowPagesCategoryFilter, browseOpenNow, browseSearch);
+        var route = router.Current;
+        if (route.Screen == YellowPagesScreen.Intent)
+        {
+            RefreshIntent(route.Intent);
+            return;
+        }
+
+        RefreshBrowse();
     }
 
     private void OpenDetail(string adId)
@@ -319,5 +395,6 @@ internal sealed partial class YellowPagesApp : IPhoneApp
 
     public void Dispose()
     {
+        encryptionPane.Dispose();
     }
 }

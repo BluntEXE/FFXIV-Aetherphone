@@ -638,19 +638,11 @@ internal sealed partial class VelvetShell
         return filtered;
     }
 
-    private string RegionOf(string world)
-    {
-        if (string.IsNullOrEmpty(world))
-        {
-            return string.Empty;
-        }
-
-        var region = gameData.RegionCodeForWorld(world);
-        return region ?? string.Empty;
-    }
-
     private string RegionCodeOf(VelvetProfileDto profile) =>
-        profile.Region.Length > 0 ? profile.Region : RegionOf(profile.World);
+        SocialRegion.Resolve(profile.Region, profile.World, gameData);
+
+    private string RegionCodeOf(UserDto user) =>
+        SocialRegion.Resolve(user.Region, user.World, gameData);
 
     private static string DisplayNameOf(string displayName, string handle) =>
         string.IsNullOrWhiteSpace(displayName) ? "@" + handle : displayName;

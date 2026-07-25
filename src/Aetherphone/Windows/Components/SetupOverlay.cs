@@ -96,7 +96,8 @@ internal sealed partial class SetupOverlay : IDisposable
         this.navigation = navigation;
         this.configuration = configuration;
         this.confirm = confirm;
-        flow = new SignInFlow(session, aethernet.Auth);
+        flow = new SignInFlow(session, aethernet.Auth,
+            () => RegionSync.Push(session, aethernet.Account, configuration, gameData, cancellation.Token));
         picker = new ImagePickCrop(photoLibrary, wallpaperImages);
     }
 

@@ -151,6 +151,7 @@ internal static class L
     {
         public static readonly LocString Contacts = new("app.contacts", "Contacts");
         public static readonly LocString Character = new("app.character", "Character");
+        public static readonly LocString Health = new("app.health", "Health");
         public static readonly LocString Chirper = new("app.chirper", "Chirper");
         public static readonly LocString Aethergram = new("app.aethergram", "Aethergram");
         public static readonly LocString Velvet = new("app.velvet", "Velvet");
@@ -293,6 +294,9 @@ internal static class L
         public static readonly LocString CharacterSub = new("storeCopy.characterSub", "Your day, tracked");
         public static readonly LocString CharacterBody = new("storeCopy.characterBody",
             "Rings, streaks and history for the things you do every day.");
+        public static readonly LocString HealthSub = new("storeCopy.healthSub", "Your adventurer's activity");
+        public static readonly LocString HealthBody = new("storeCopy.healthBody",
+            "Estimated steps, distance, swimming, hydration and personal goals for your character. A fictional activity tracker for roleplay and statistics.");
         public static readonly LocString WalletSub = new("storeCopy.walletSub", "Gil and currencies");
         public static readonly LocString WalletBody = new("storeCopy.walletBody",
             "Every currency you carry, with caps and totals you can actually read.");
@@ -326,9 +330,6 @@ internal static class L
         public static readonly LocString FeedbackSub = new("storeCopy.feedbackSub", "Tell us what broke");
         public static readonly LocString FeedbackBody = new("storeCopy.feedbackBody",
             "Send a bug report or an idea, with screenshots attached.");
-        public static readonly LocString DevSub = new("storeCopy.devSub", "Behind the curtain");
-        public static readonly LocString DevBody = new("storeCopy.devBody",
-            "Tools for the people building the phone.");
         public static readonly LocString StoreSub = new("storeCopy.storeSub", "Apps for your phone");
         public static readonly LocString StoreBody = new("storeCopy.storeBody",
             "Browse everything the phone can do and put it on your Home Screen.");
@@ -614,6 +615,20 @@ internal static class L
         public static readonly LocString Invited = new("muster.invited", "Invited");
         public static readonly LocString DifferentDataCenter = new("muster.differentDataCenter", "Different data center");
         public static readonly LocString NeedDataCenter = new("muster.needDataCenter", "Could not detect your data center");
+        public static readonly LocString DataCenterSection = new("muster.dataCenterSection", "Data center");
+        public static readonly LocString FilterAll = new("muster.filterAll", "All");
+        public static readonly LocString MyDataCenter = new("muster.myDataCenter", "My data center");
+        public static readonly LocString DataCenterHint = new("muster.dataCenterHint", "Pick which data center the directory reads from.");
+        public static readonly LocString TravelTo = new("muster.travelTo", "Travel to {0}");
+        public static readonly LocString OnThisWorld = new("muster.onThisWorld", "You're on {0}");
+        public static readonly LocString TeleportTo = new("muster.teleportTo", "Teleport to {0}");
+        public static readonly LocString YoureHere = new("muster.youreHere", "You're already here");
+        public static readonly LocString ImGoing = new("muster.imGoing", "I'm going");
+        public static readonly LocString StatGoing = new("muster.statGoing", "Going");
+        public static readonly LocString StatEndsIn = new("muster.statEndsIn", "Ends in");
+        public static readonly LocString StatStartsIn = new("muster.statStartsIn", "Starts in");
+        public static readonly LocString StatSpots = new("muster.statSpots", "Spots left");
+        public static readonly LocString YourStatus = new("muster.yourStatus", "Your status");
     }
 
     internal static class Venues
@@ -1991,16 +2006,6 @@ internal static class L
         public static readonly LocString DiscoveryHeader = new("velvet.discoveryHeader", "Discovery");
         public static readonly LocString DiscoverableHelp =
             new("velvet.discoverableHelp", "When on, your profile can be found by others in Discover.");
-        public static readonly LocString ShowLalafellLabel =
-            new("velvet.showLalafellLabel", "Show Lalafell characters");
-        public static readonly LocString ShowLalafellHelp =
-            new("velvet.showLalafellHelp", "When on, Lalafell profiles can appear in your Discover feed.");
-        public static readonly LocString ShowLalafellConfirmTitle =
-            new("velvet.showLalafellConfirmTitle", "Show Lalafell characters?");
-        public static readonly LocString ShowLalafellConfirmMessage = new("velvet.showLalafellConfirmMessage",
-            "Lalafell profiles will appear in your Discover feed. Are you sure?");
-        public static readonly LocString ShowLalafellConfirmAction =
-            new("velvet.showLalafellConfirmAction", "Show");
         public static readonly LocString WhoCanMessage = new("velvet.whoCanMessage", "Who can message you");
         public static readonly LocString WhoEveryone = new("velvet.whoEveryone", "Everyone");
         public static readonly LocString WhoFriends = new("velvet.whoFriends", "Friends");
@@ -2574,6 +2579,8 @@ internal static class L
     internal static class Announcements
     {
         public static readonly LocString SignInRequired = new("announcements.signInRequired", "Sign in to Aethernet in Settings to read announcements");
+        public static readonly LocString SignInTitle = new("announcements.signInTitle", "Sign in required");
+        public static readonly LocString NewBadge = new("announcements.newBadge", "NEW");
         public static readonly LocString EmptyTitle = new("announcements.emptyTitle", "Nothing announced yet");
         public static readonly LocString EmptyHint = new("announcements.emptyHint", "News from the Aetherphone team lands here.");
         public static readonly LocString UnavailableTitle = new("announcements.unavailableTitle", "Announcement unavailable");
@@ -2916,6 +2923,9 @@ internal static class L
         public static readonly LocString ScopeEverywhere = new("yellowpages.scopeEverywhere", "Everywhere");
         public static readonly LocString SearchLabel = new("yellowpages.searchLabel", "Search ads");
         public static readonly LocString OpenSection = new("yellowpages.openSection", "Open tonight");
+        public static readonly LocString BrowseSection = new("yellowpages.browseSection", "Browse by");
+        public static readonly LocString IntentCategories = new("yellowpages.intentCategories", "{0} categories");
+        public static readonly LocString FilterAll = new("yellowpages.filterAll", "All");
         public static readonly LocString LatestSection = new("yellowpages.latestSection", "Latest ads");
         public static readonly LocString LoadMore = new("yellowpages.loadMore", "Load more");
         public static readonly LocString EmptyTitle = new("yellowpages.emptyTitle", "Nothing listed yet");
@@ -2928,7 +2938,8 @@ internal static class L
         public static readonly LocString IntentJoin = new("yellowpages.intentJoin", "Join something");
         public static readonly LocString CategoryVenueNight = new("yellowpages.categoryVenueNight", "Venue nights");
         public static readonly LocString CategoryEventShow = new("yellowpages.categoryEventShow", "Events and shows");
-        public static readonly LocString CategoryMarketFair = new("yellowpages.categoryMarketFair", "Markets and fairs");
+        public static readonly LocString CategoryCasino = new("yellowpages.categoryCasino", "Casinos and game nights");
+        public static readonly LocString CategoryHousingTour = new("yellowpages.categoryHousingTour", "Housing tours and open plots");
         public static readonly LocString CategoryCrafting = new("yellowpages.categoryCrafting", "Crafting and melds");
         public static readonly LocString CategoryGathering = new("yellowpages.categoryGathering", "Gathering");
         public static readonly LocString CategoryGlamour = new("yellowpages.categoryGlamour", "Glamour and design");
@@ -2940,11 +2951,34 @@ internal static class L
         public static readonly LocString CategoryRaidStatic = new("yellowpages.categoryRaidStatic", "Statics and raiding");
         public static readonly LocString CategoryVenueStaff = new("yellowpages.categoryVenueStaff", "Venue staff");
         public static readonly LocString CategoryCommunity = new("yellowpages.categoryCommunity", "Communities");
+        public static readonly LocString CategoryMods = new("yellowpages.categoryMods", "Mods and tools");
+        public static readonly LocString CategoryHousingDesign = new("yellowpages.categoryHousingDesign", "Housing and interior design");
+        public static readonly LocString CategoryWeddings = new("yellowpages.categoryWeddings", "Weddings and ceremonies");
+        public static readonly LocString CategoryWriting = new("yellowpages.categoryWriting", "Writing and RP services");
+        public static readonly LocString ModLinkLabel = new("yellowpages.modLinkLabel", "Mod page link");
+        public static readonly LocString ModLinkHint = new("yellowpages.modLinkHint", "https link to XIV Mod Archive, Heliosphere, Glamour Dresser or GitHub. Mod ads carry a link and photos, never a price.");
+        public static readonly LocString ModLinkAction = new("yellowpages.modLinkAction", "Open the mod page");
+        public static readonly LocString ModLinkCopied = new("yellowpages.modLinkCopied", "Link copied");
+        public static readonly LocString NeedModLink = new("yellowpages.needModLink", "Add a link to the mod page.");
+        public static readonly LocString ModBadge = new("yellowpages.modBadge", "Mod");
+        public static readonly LocString InquiriesTitle = new("yellowpages.inquiriesTitle", "Inquiries");
+        public static readonly LocString NoInquiriesTitle = new("yellowpages.noInquiriesTitle", "No inquiries yet");
+        public static readonly LocString NoInquiriesHint = new("yellowpages.noInquiriesHint", "Questions about your ads, and the ones you asked about, land here.");
+        public static readonly LocString InquiryHint = new("yellowpages.inquiryHint", "Write a message");
+        public static readonly LocString InquiryCount = new("yellowpages.inquiryCount", "{0} inquiries");
+        public static readonly LocString InquiryConsentHint = new("yellowpages.inquiryConsentHint", "Posting an ad is consent to be asked about it, so this reaches the poster even if their messages are closed.");
+        public static readonly LocString InquiryLocked = new("yellowpages.inquiryLocked", "Unlock your encryption key to send inquiries.");
+        public static readonly LocString InquirySendFailed = new("yellowpages.inquirySendFailed", "Could not send. Their encryption keys are not ready yet.");
+        public static readonly LocString InquiryEncrypted = new("yellowpages.inquiryEncrypted", "End to end encrypted");
+        public static readonly LocString NotifInquiryTitle = new("yellowpages.notifInquiryTitle", "New inquiry");
+        public static readonly LocString NotifInquiryBody = new("yellowpages.notifInquiryBody", "Someone messaged you about \"{0}\".");
+        public static readonly LocString NotifInquiryGeneric = new("yellowpages.notifInquiryGeneric", "Someone messaged you about one of your ads.");
         public static readonly LocString PriceAsk = new("yellowpages.priceAsk", "Ask for price");
         public static readonly LocString PriceGil = new("yellowpages.priceGil", "{0} gil");
         public static readonly LocString PriceFrom = new("yellowpages.priceFrom", "from {0} gil");
         public static readonly LocString OpenNow = new("yellowpages.openNow", "Open now");
         public static readonly LocString OpenClosesAt = new("yellowpages.openClosesAt", "Open now · closes {0}");
+        public static readonly LocString ClosesAt = new("yellowpages.closesAt", "closes {0} your time");
         public static readonly LocString OpensAt = new("yellowpages.opensAt", "Opens {0}");
         public static readonly LocString Expired = new("yellowpages.expired", "Expired");
         public static readonly LocString ExpiresDays = new("yellowpages.expiresDays", "Expires in {0}d");
@@ -2954,6 +2988,8 @@ internal static class L
         public static readonly LocString UnavailableTitle = new("yellowpages.unavailableTitle", "Ad unavailable");
         public static readonly LocString UnavailableHint = new("yellowpages.unavailableHint", "This ad expired or was taken down.");
         public static readonly LocString ScheduleSection = new("yellowpages.scheduleSection", "Weekly schedule");
+        public static readonly LocString ScheduleYourTime = new("yellowpages.scheduleYourTime", "Weekly · shown in your time");
+        public static readonly LocString RenewedAgo = new("yellowpages.renewedAgo", "renewed {0}");
         public static readonly LocString RequirementsSection = new("yellowpages.requirementsSection", "Requirements");
         public static readonly LocString WhereSection = new("yellowpages.whereSection", "Where");
         public static readonly LocString WardPlot = new("yellowpages.wardPlot", "Ward {0}, Plot {1}");
@@ -3032,8 +3068,8 @@ internal static class L
         public static readonly LocString EditAd = new("yellowpages.editAd", "Edit");
         public static readonly LocString EditAdTitle = new("yellowpages.editAdTitle", "Edit ad");
         public static readonly LocString SaveChanges = new("yellowpages.saveChanges", "Save changes");
-        public static readonly LocString InquireAction = new("yellowpages.inquireAction", "Send an inquiry");
-        public static readonly LocString InquireHint = new("yellowpages.inquireHint", "Opens a chat with the poster with the ad card ready to send.");
+        public static readonly LocString InquireAction = new("yellowpages.inquireAction", "Message the poster");
+        public static readonly LocString InquireHint = new("yellowpages.inquireHint", "Opens an inquiry here in Yellow Pages, attached to this ad.");
         public static readonly LocString ViewCount = new("yellowpages.viewCount", "{0} views");
         public static readonly LocString AnnounceMuster = new("yellowpages.announceMuster", "Announce on Muster");
         public static readonly LocString AfterDarkConfirmTitle = new("yellowpages.afterDarkConfirmTitle", "After Dark");
@@ -3152,11 +3188,12 @@ internal static class L
 
         public static readonly LocString[] YellowPagesEncouraged =
         {
-            new("conduct.yellowpages.enc.1", "Venue nights, events, and markets with honest schedules"),
+            new("conduct.yellowpages.enc.1", "Venue nights, game nights, and housing tours with honest schedules"),
             new("conduct.yellowpages.enc.2", "Crafting, gathering, portraits, glamour, and performance work for gil"),
             new("conduct.yellowpages.enc.3", "Recruiting for free companies, statics, and venue staff"),
             new("conduct.yellowpages.enc.4", "Clear prices and clear expectations"),
             new("conduct.yellowpages.enc.5", "Letting an ad expire once it is done"),
+            new("conduct.yellowpages.enc.6", "Mod ads that show the work and link to the mod page"),
         };
 
         public static readonly LocString[] YellowPagesNotAllowed =
@@ -3166,6 +3203,7 @@ internal static class L
             new("conduct.yellowpages.no.3", "Explicit content, even behind the After Dark tag"),
             new("conduct.yellowpages.no.4", "Scams, fake listings, or impersonating another venue or crafter"),
             new("conduct.yellowpages.no.5", "Reposting the same ad to dodge the expiry cycle"),
+            new("conduct.yellowpages.no.6", "Selling mods or mod commissions: mod ads link out and carry no price"),
         };
 
         public static readonly LocString PlatformTitle = new("conduct.platform.title", "Platform-wide Standards");
@@ -3206,5 +3244,229 @@ internal static class L
         public static readonly LocString EnforcementNote = new("conduct.platform.enforcement.note", "Severe violations may bypass warning stages.");
         public static readonly LocString AppealsTitle = new("conduct.platform.appeals.title", "Appeals");
         public static readonly LocString AppealsBody = new("conduct.platform.appeals.body", "If you believe moderation action was taken in error, you may submit an appeal through the Aetherphone Discord support system.");
+    }
+
+    internal static class Health
+    {
+        public static readonly LocString Title = new("health.title", "Health");
+        public static readonly LocString Welcome = new("health.welcome", "Welcome");
+        public static readonly LocString TabOverview = new("health.tabOverview", "Overview");
+        public static readonly LocString TabActivity = new("health.tabActivity", "Activity");
+        public static readonly LocString TabWater = new("health.tabWater", "Water");
+        public static readonly LocString TabGoals = new("health.tabGoals", "Goals");
+        public static readonly LocString TabHistory = new("health.tabHistory", "History");
+        public static readonly LocString TabProfile = new("health.tabProfile", "Profile");
+        public static readonly LocString LogInPrompt = new("health.logInPrompt", "Log in to view your adventurer's Health.");
+        public static readonly LocString StepsTodayCaption = new("health.stepsTodayCaption", "estimated steps today · goal {0}");
+        public static readonly LocString OnFoot = new("health.onFoot", "On foot");
+        public static readonly LocString ActiveTime = new("health.activeTime", "Active time");
+        public static readonly LocString EstEnergy = new("health.estEnergy", "Est. energy");
+        public static readonly LocString Hydration = new("health.hydration", "Hydration");
+        public static readonly LocString Kcal = new("health.kcal", "{0} kcal");
+        public static readonly LocString GoalsSection = new("health.goalsSection", "Goals");
+        public static readonly LocString NoActiveGoals = new("health.noActiveGoals", "No active goals. Add some on the Goals tab.");
+        public static readonly LocString Streak = new("health.streak", "Streak");
+        public static readonly LocString CurrentStreak = new("health.currentStreak", "Current streak");
+        public static readonly LocPlural StreakDayCount = new("health.streakDays", "{0} day", "{0} days");
+        public static readonly LocString Today = new("health.today", "Today");
+        public static readonly LocString Session = new("health.session", "Session");
+        public static readonly LocString AllTime = new("health.allTime", "All-time");
+        public static readonly LocString Swimming = new("health.swimming", "Swimming");
+        public static readonly LocString Diving = new("health.diving", "Diving");
+        public static readonly LocString Mounted = new("health.mounted", "Mounted travel");
+        public static readonly LocString Flying = new("health.flying", "Flying");
+        public static readonly LocString Teleports = new("health.teleports", "Teleports");
+        public static readonly LocString DistanceSkipped = new("health.distanceSkipped", "Distance skipped");
+        public static readonly LocString TeleportHint = new("health.teleportHint", "Teleport distance skipped is a same-map straight-line estimate only; cross-zone teleports are counted without distance.");
+        public static readonly LocString Records = new("health.records", "Records");
+        public static readonly LocString MostStepsInDay = new("health.mostStepsInDay", "Most steps in a day");
+        public static readonly LocString LongestOnFootSession = new("health.longestOnFootSession", "Longest on-foot session");
+        public static readonly LocString LongestSwimSession = new("health.longestSwimSession", "Longest swim session");
+        public static readonly LocString DrinksToday = new("health.drinksToday", "{0} / {1} drinks today");
+        public static readonly LocString DrinkWater = new("health.drinkWater", "Drink Water");
+        public static readonly LocString DrinkKindWater = new("health.drinkKindWater", "Water");
+        public static readonly LocString DrinkKindTea = new("health.drinkKindTea", "Tea");
+        public static readonly LocString DrinkKindCoffee = new("health.drinkKindCoffee", "Coffee");
+        public static readonly LocString DrinkKindJuice = new("health.drinkKindJuice", "Juice");
+        public static readonly LocString CustomDrink = new("health.customDrink", "Custom drink");
+        public static readonly LocString Name = new("health.name", "Name");
+        public static readonly LocString ServingMl = new("health.servingMl", "Serving (ml)");
+        public static readonly LocString LogCustomDrink = new("health.logCustomDrink", "Log custom drink");
+        public static readonly LocString DrinkFallback = new("health.drinkFallback", "Drink");
+        public static readonly LocString UndoLastDrink = new("health.undoLastDrink", "Undo last drink");
+        public static readonly LocString DailyGoalDrinks = new("health.dailyGoalDrinks", "Daily goal (drinks)");
+        public static readonly LocString NoDrinksToday = new("health.noDrinksToday", "No drinks logged yet today.");
+        public static readonly LocString DrinkEntry = new("health.drinkEntry", "{0}  {1}");
+        public static readonly LocString Reminders = new("health.reminders", "Reminders");
+        public static readonly LocString HydrationReminders = new("health.hydrationReminders", "Hydration reminders");
+        public static readonly LocString EveryMinutes = new("health.everyMinutes", "Every (min)");
+        public static readonly LocString QuietFrom = new("health.quietFrom", "Quiet from");
+        public static readonly LocString QuietUntil = new("health.quietUntil", "Quiet until");
+        public static readonly LocString PauseDuringDuties = new("health.pauseDuringDuties", "Pause during combat / duties");
+        public static readonly LocString Edit = new("health.edit", "Edit");
+        public static readonly LocString EditDisabled = new("health.editDisabled", "Edit (disabled)");
+        public static readonly LocString AddGoal = new("health.addGoal", "Add goal");
+        public static readonly LocString NewGoal = new("health.newGoal", "New goal");
+        public static readonly LocString ResetDefaultGoals = new("health.resetDefaultGoals", "Reset to default goals");
+        public static readonly LocString ResetGoalsTitle = new("health.resetGoalsTitle", "Reset goals");
+        public static readonly LocString ResetGoalsMessage = new("health.resetGoalsMessage", "Replace your goals with the defaults?");
+        public static readonly LocString Reset = new("health.reset", "Reset");
+        public static readonly LocString Cancel = new("health.cancel", "Cancel");
+        public static readonly LocString Confirm = new("health.confirm", "Confirm");
+        public static readonly LocString Type = new("health.type", "Type");
+        public static readonly LocString Scope = new("health.scope", "Scope");
+        public static readonly LocString Target = new("health.target", "Target");
+        public static readonly LocString Enabled = new("health.enabled", "Enabled");
+        public static readonly LocString DeleteGoal = new("health.deleteGoal", "Delete goal");
+        public static readonly LocString Done = new("health.done", "Done");
+        public static readonly LocString GoalFallback = new("health.goalFallback", "Goal");
+        public static readonly LocString TypeSteps = new("health.typeSteps", "Steps");
+        public static readonly LocString TypeOnFootDistance = new("health.typeOnFootDistance", "On-foot distance");
+        public static readonly LocString TypeWalkingDistance = new("health.typeWalkingDistance", "Walking distance");
+        public static readonly LocString TypeRunningDistance = new("health.typeRunningDistance", "Running distance");
+        public static readonly LocString TypeSwimmingDistance = new("health.typeSwimmingDistance", "Swimming distance");
+        public static readonly LocString TypeActiveTime = new("health.typeActiveTime", "Active time");
+        public static readonly LocString TypeDrinksLogged = new("health.typeDrinksLogged", "Drinks logged");
+        public static readonly LocString TypeDrinkVolume = new("health.typeDrinkVolume", "Drink volume");
+        public static readonly LocString TypeTeleports = new("health.typeTeleports", "Teleports");
+        public static readonly LocString TypeTeleportDistance = new("health.typeTeleportDistance", "Teleport distance");
+        public static readonly LocString TypeEnergy = new("health.typeEnergy", "Est. energy");
+        public static readonly LocString ScopeDaily = new("health.scopeDaily", "Daily");
+        public static readonly LocString ScopeWeekly = new("health.scopeWeekly", "Weekly");
+        public static readonly LocString ScopeSession = new("health.scopeSession", "Session");
+        public static readonly LocString ScopeAllTime = new("health.scopeAllTime", "All-time");
+        public static readonly LocString NoActivity = new("health.noActivity", "No activity recorded yet.");
+        public static readonly LocString HistoryDayHeader = new("health.historyDayHeader", "{0}  ·  {1} goals · {2} tp");
+        public static readonly LocString StepsValue = new("health.stepsValue", "{0} steps");
+        public static readonly LocString Active = new("health.active", "Active");
+        public static readonly LocString DrinksValue = new("health.drinksValue", "{0} drinks");
+        public static readonly LocString Energy = new("health.energy", "Energy");
+        public static readonly LocString Adventurer = new("health.adventurer", "Adventurer");
+        public static readonly LocString ProfileSummary = new("health.profileSummary", "Profile summary");
+        public static readonly LocString World = new("health.world", "World");
+        public static readonly LocString RaceClan = new("health.raceClan", "Race / Clan");
+        public static readonly LocString RaceClanValue = new("health.raceClanValue", "{0} / {1}");
+        public static readonly LocString Height = new("health.height", "Height");
+        public static readonly LocString Reading = new("health.reading", "Reading");
+        public static readonly LocString HeightSourceGame = new("health.heightSourceGame", "Game");
+        public static readonly LocString HeightSourceManual = new("health.heightSourceManual", "Manual");
+        public static readonly LocString HeightSourceUnavailable = new("health.heightSourceUnavailable", "Unavailable");
+        public static readonly LocString HeightWithSource = new("health.heightWithSource", "{0}  ·  {1}");
+        public static readonly LocString RefreshHeight = new("health.refreshHeight", "Refresh height");
+        public static readonly LocString AutoRefreshHeight = new("health.autoRefreshHeight", "Auto-refresh on change");
+        public static readonly LocString ManualOverrideCm = new("health.manualOverrideCm", "Manual override (cm)");
+        public static readonly LocString OverrideOff = new("health.overrideOff", "off");
+        public static readonly LocString ClearOverride = new("health.clearOverride", "Clear override");
+        public static readonly LocString FictionalWeight = new("health.fictionalWeight", "Fictional weight");
+        public static readonly LocString Current = new("health.current", "Current");
+        public static readonly LocString NotSet = new("health.notSet", "not set");
+        public static readonly LocString EnterWeight = new("health.enterWeight", "Enter weight ({0})");
+        public static readonly LocString WeightLabel = new("health.weightLabel", "Weight ({0})");
+        public static readonly LocString SetWeight = new("health.setWeight", "Set weight");
+        public static readonly LocString ClearWeight = new("health.clearWeight", "Clear weight");
+        public static readonly LocString EstimateActivityEnergy = new("health.estimateActivityEnergy", "Estimate activity energy");
+        public static readonly LocString WeightHint = new("health.weightHint", "Character weight is optional and used only for fictional activity-energy estimates.");
+        public static readonly LocString SuggestedTapToUse = new("health.suggestedTapToUse", "Suggested (tap to use)");
+        public static readonly LocString SuggestionEntry = new("health.suggestionEntry", "{0}  ·  {1}");
+        public static readonly LocString SuggestLean = new("health.suggestLean", "Lean");
+        public static readonly LocString SuggestAverage = new("health.suggestAverage", "Average");
+        public static readonly LocString SuggestSturdy = new("health.suggestSturdy", "Sturdy");
+        public static readonly LocString SuggestionHint = new("health.suggestionHint", "Fictional estimates from your character's height and build.");
+        public static readonly LocString Units = new("health.units", "Units");
+        public static readonly LocString UnitEorzean = new("health.unitEorzean", "Eorzean");
+        public static readonly LocString UnitMetric = new("health.unitMetric", "Metric");
+        public static readonly LocString UnitImperial = new("health.unitImperial", "Imperial");
+        public static readonly LocString UnitEorzeanSub = new("health.unitEorzeanSub", "Yalms / Malms / Ponz");
+        public static readonly LocString UnitMetricSub = new("health.unitMetricSub", "Metres / km / kg / ml");
+        public static readonly LocString UnitImperialSub = new("health.unitImperialSub", "Feet / miles / lb / fl oz");
+        public static readonly LocString StrideLength = new("health.strideLength", "Stride length");
+        public static readonly LocString YalmsPerStep = new("health.yalmsPerStep", "Yalms per step");
+        public static readonly LocString SuggestFromHeight = new("health.suggestFromHeight", "Suggest from height");
+        public static readonly LocString SuggestStrideFromHeight = new("health.suggestStrideFromHeight", "Suggest stride from height");
+        public static readonly LocString StrideHint = new("health.strideHint", "Only walking and running produce steps. Raw distance is stored, so changing stride never loses progress.");
+        public static readonly LocString StrideHintSetup = new("health.strideHintSetup", "Only walking and running produce estimated steps. Raw distance is stored, so changing stride never loses progress.");
+        public static readonly LocString TrackingStatus = new("health.trackingStatus", "Tracking status");
+        public static readonly LocString Status = new("health.status", "Status");
+        public static readonly LocString ResetSection = new("health.resetSection", "Reset");
+        public static readonly LocString ResetSession = new("health.resetSession", "Reset session");
+        public static readonly LocString ResetToday = new("health.resetToday", "Reset today");
+        public static readonly LocString ResetTodayConfirm = new("health.resetTodayConfirm", "Reset today's activity?");
+        public static readonly LocString ResetTodayHydration = new("health.resetTodayHydration", "Reset today's hydration");
+        public static readonly LocString ResetTodayHydrationConfirm = new("health.resetTodayHydrationConfirm", "Clear today's hydration entries?");
+        public static readonly LocString ResetHistory = new("health.resetHistory", "Reset history");
+        public static readonly LocString ResetHistoryConfirm = new("health.resetHistoryConfirm", "Delete recent activity history?");
+        public static readonly LocString ResetRecords = new("health.resetRecords", "Reset personal records");
+        public static readonly LocString ResetRecordsConfirm = new("health.resetRecordsConfirm", "Reset personal records?");
+        public static readonly LocString ResetAll = new("health.resetAll", "Reset all Health data");
+        public static readonly LocString ResetAllConfirm = new("health.resetAllConfirm", "Erase ALL Health data for this character? This cannot be undone.");
+        public static readonly LocString Disclaimer = new("health.disclaimer", "Health tracks fictional activity performed by your FFXIV character. Its steps, calories, hydration, and wellness values are estimates intended for roleplay and statistics.");
+        public static readonly LocString DisclaimerShort = new("health.disclaimerShort", "Health tracks fictional activity performed by your FFXIV character. Its values are estimates intended for roleplay and statistics.");
+        public static readonly LocString WelcomeAdventurer = new("health.welcomeAdventurer", "Welcome, Adventurer!");
+        public static readonly LocString SetupSub1 = new("health.setupSub1", "Let's set up your adventurer's health profile.");
+        public static readonly LocString SetupSub2 = new("health.setupSub2", "Choose your daily expedition goals.");
+        public static readonly LocString SetupSub3 = new("health.setupSub3", "Optional fictional energy estimates.");
+        public static readonly LocString SetupSub4 = new("health.setupSub4", "Tune how travel becomes estimated steps.");
+        public static readonly LocString SetupSub5 = new("health.setupSub5", "Review your profile and begin.");
+        public static readonly LocString StepOf = new("health.stepOf", "Step {0} of {1}  ·  {2}");
+        public static readonly LocString PreferredUnits = new("health.preferredUnits", "Preferred units");
+        public static readonly LocString DailyGoals = new("health.dailyGoals", "Daily goals");
+        public static readonly LocString Steps = new("health.steps", "Steps");
+        public static readonly LocString SwimmingYalms = new("health.swimmingYalms", "Swimming (yalms)");
+        public static readonly LocString HydrationDrinks = new("health.hydrationDrinks", "Hydration (drinks)");
+        public static readonly LocString FictionalEnergy = new("health.fictionalEnergy", "Fictional energy");
+        public static readonly LocString Movement = new("health.movement", "Movement");
+        public static readonly LocString Review = new("health.review", "Review");
+        public static readonly LocString StepsGoal = new("health.stepsGoal", "Steps goal");
+        public static readonly LocString SwimGoal = new("health.swimGoal", "Swim goal");
+        public static readonly LocString HydrationGoal = new("health.hydrationGoal", "Hydration goal");
+        public static readonly LocString Weight = new("health.weight", "Weight");
+        public static readonly LocString EnergyEstimates = new("health.energyEstimates", "Energy estimates");
+        public static readonly LocString On = new("health.on", "On");
+        public static readonly LocString Off = new("health.off", "Off");
+        public static readonly LocString DrinksSuffix = new("health.drinksSuffix", "{0} drinks");
+        public static readonly LocString Back = new("health.back", "Back");
+        public static readonly LocString Begin = new("health.begin", "Begin");
+        public static readonly LocString Next = new("health.next", "Next");
+        public static readonly LocString WeightUnitKg = new("health.weightUnitKg", "kg");
+        public static readonly LocString WeightUnitLb = new("health.weightUnitLb", "lb");
+        public static readonly LocString WeightUnitPonz = new("health.weightUnitPonz", "ponz");
+        public static readonly LocString StatusNotLoggedIn = new("health.statusNotLoggedIn", "Paused: not logged in");
+        public static readonly LocString StatusTrackingSwimming = new("health.statusTrackingSwimming", "Tracking swimming");
+        public static readonly LocString StatusTrackingOnFoot = new("health.statusTrackingOnFoot", "Tracking on-foot movement");
+        public static readonly LocString StatusPaused = new("health.statusPaused", "Paused");
+        public static readonly LocString StatusPlayerUnavailable = new("health.statusPlayerUnavailable", "Paused: player unavailable");
+        public static readonly LocString StatusLoading = new("health.statusLoading", "Paused: loading");
+        public static readonly LocString StatusMounted = new("health.statusMounted", "Paused: mounted");
+        public static readonly LocString StatusFlying = new("health.statusFlying", "Paused: flying");
+        public static readonly LocString StatusIdle = new("health.statusIdle", "Idle");
+        public static readonly LocString NotifyHydrationTitle = new("health.notifyHydrationTitle", "Hydration");
+        public static readonly LocString NotifyHydrationBody = new("health.notifyHydrationBody", "Your adventurer has not logged a drink recently.");
+        public static readonly LocString NotifyGoalTitle = new("health.notifyGoalTitle", "Goal complete");
+        public static readonly LocString NotifyGoalBody = new("health.notifyGoalBody", "{0} - done!");
+        public static readonly LocString DefaultGoalWalk1000 = new("health.defaultGoalWalk1000", "Walk 1,000 steps");
+        public static readonly LocString DefaultGoalWalk5000 = new("health.defaultGoalWalk5000", "Walk 5,000 steps");
+        public static readonly LocString DefaultGoalWalk10000 = new("health.defaultGoalWalk10000", "Walk 10,000 steps");
+        public static readonly LocString DefaultGoalWalkMalm = new("health.defaultGoalWalkMalm", "Walk 1 malm");
+        public static readonly LocString DefaultGoalSwim500 = new("health.defaultGoalSwim500", "Swim 500 yalms");
+        public static readonly LocString DefaultGoalDrinks = new("health.defaultGoalDrinks", "Log 4 drinks");
+        public static readonly LocString DefaultGoalActive30 = new("health.defaultGoalActive30", "Remain active for 30 minutes");
+        public static readonly LocString UnitKm = new("health.unitKm", " km");
+        public static readonly LocString UnitM = new("health.unitM", " m");
+        public static readonly LocString UnitMi = new("health.unitMi", " mi");
+        public static readonly LocString UnitFt = new("health.unitFt", " ft");
+        public static readonly LocString UnitMalms = new("health.unitMalms", " malms");
+        public static readonly LocString UnitYalms = new("health.unitYalms", " yalms");
+        public static readonly LocString UnitCm = new("health.unitCm", " cm");
+        public static readonly LocString UnitFulm = new("health.unitFulm", " fulm");
+        public static readonly LocString UnitIlm = new("health.unitIlm", " ilm");
+        public static readonly LocString UnitKg = new("health.unitKg", " kg");
+        public static readonly LocString UnitPonz = new("health.unitPonz", " ponz");
+        public static readonly LocString UnitLb = new("health.unitLb", " lb");
+        public static readonly LocString UnitFlOz = new("health.unitFlOz", " fl oz");
+        public static readonly LocString UnitLitre = new("health.unitLitre", " L");
+        public static readonly LocString UnitMl = new("health.unitMl", " ml");
+        public static readonly LocString HeightImperial = new("health.heightImperial", "{0}{1} {2}{3}");
+        public static readonly LocString DurationHm = new("health.durationHm", "{0}h {1}m");
+        public static readonly LocString DurationM = new("health.durationM", "{0}m");
     }
 }

@@ -64,7 +64,7 @@ internal sealed partial class VelvetShell
             else
             {
                 Gap(10f);
-                feedVirtualizer.BeginFrame();
+                feedVirtualizer.BeginFrame(store.FeedSource);
                 for (var index = 0; index < feed.Length; index++)
                 {
                     if (feedVirtualizer.Skip(feed[index].Id))

@@ -138,7 +138,9 @@ internal sealed partial class SetupOverlay
         var drawList = ImGui.GetWindowDrawList();
         var scale = ImGuiHelpers.GlobalScale;
         var user = session.CurrentUser;
-        var displayName = user?.DisplayName ?? user?.Name ?? gameData.LocalPlayer?.Name.TextValue ?? string.Empty;
+        var displayName = user is not null && user.DisplayName.Length > 0
+            ? user.DisplayName
+            : user?.Name ?? gameData.LocalPlayer?.Name.TextValue ?? string.Empty;
         var body = Loc.T(L.Setup.SignedInBody, displayName);
         var avatarRadius = 38f * scale;
         var contentHeight = HeaderHeight(screen, body, TextStyles.Body) + 24f * scale + avatarRadius * 2f;

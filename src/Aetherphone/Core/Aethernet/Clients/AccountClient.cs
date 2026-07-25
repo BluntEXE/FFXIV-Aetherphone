@@ -57,6 +57,11 @@ internal sealed class AccountClient
         return net.PostAsync("/me/timezone", request, AethernetJsonContext.Default.UpdateTimeZoneRequest, AethernetJsonContext.Default.UserDto, token);
     }
 
+    public Task<UserDto?> UpdateRegionAsync(string region, CancellationToken token)
+    {
+        return net.PostAsync("/me/region", new UpdateRegionRequest(region), AethernetJsonContext.Default.UpdateRegionRequest, AethernetJsonContext.Default.UserDto, token);
+    }
+
     public Task<UserDto?> UpdateMentionPrivacyAsync(int policy, CancellationToken token)
     {
         return net.PostAsync("/me/mention-privacy", new UpdateMentionPrivacyRequest(policy), AethernetJsonContext.Default.UpdateMentionPrivacyRequest, AethernetJsonContext.Default.UserDto, token);

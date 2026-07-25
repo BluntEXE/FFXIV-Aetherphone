@@ -50,11 +50,6 @@ internal sealed class VelvetClient
         AppendCsv(path, "limitsExclude", TokenCsv(filter.LimitsExclude));
         AppendCsv(path, "profileTags", TokenCsv(filter.TagsInclude));
         AppendCsv(path, "profileTagsExclude", TokenCsv(filter.TagsExclude));
-        if (filter.IncludeLalafell)
-        {
-            path.Append("&includeLalafell=true");
-        }
-
         if (tags.Length > 0)
         {
             path.Append("&tags=").Append(Uri.EscapeDataString(tags));

@@ -169,7 +169,9 @@ internal sealed class SocialProfilePages
         var innerWidth = width - pad * 2f;
         var displayName = SocialIdentity.Name(user.DisplayName, user.Handle);
         var avatarRadius = 40f * scale;
-        var regionCode = user.IsMe ? SocialRegion.EffectiveCode(configuration, gameData) : gameData.RegionCodeForWorld(user.World);
+        var regionCode = user.IsMe
+            ? SocialRegion.EffectiveCode(configuration, gameData)
+            : SocialRegion.Resolve(user.Region, user.World, gameData);
         var metaLine = SocialIdentity.ProfileMeta(user.Handle, regionCode);
         var timeLine = user.UtcOffsetMinutes is { } offsetMinutes ? SocialTimeZone.Describe(offsetMinutes) : string.Empty;
         var lineGap = 3f * scale;
@@ -196,7 +198,9 @@ internal sealed class SocialProfilePages
         var avatarCenter = new Vector2(innerLeft + avatarRadius, origin.Y + pad + avatarRadius);
         drawList.AddCircleFilled(avatarCenter, avatarRadius + 2.5f * scale,
             ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.14f)), 64);
-        DrawAvatar(drawList, avatarCenter, avatarRadius, theme, user.Name, user.World, user.AvatarUrl, 1.5f, 64);
+        var portraitName = user.IsMe ? user.Name : displayName;
+        var portraitWorld = user.IsMe ? user.World : string.Empty;
+        DrawAvatar(drawList, avatarCenter, avatarRadius, theme, portraitName, portraitWorld, user.AvatarUrl, 1.5f, 64);
         avatarLightbox.TryOpen(avatarCenter, avatarRadius, user.AvatarUrl, images);
         var avatarRight = avatarCenter.X + avatarRadius;
         var rightEdge = origin.X + width - pad;
@@ -672,9 +676,11 @@ internal sealed class SocialProfilePages
 
         var radius = 20f * scale;
         var avatarCenter = new Vector2(origin.X + pad + radius, origin.Y + rowHeight * 0.5f);
-        DrawAvatar(drawList, avatarCenter, radius, theme, user.Name, user.World, user.AvatarUrl, 0.95f, 32);
-        var textLeft = avatarCenter.X + radius + 12f * scale;
         var displayName = SocialIdentity.Name(user.DisplayName, user.Handle);
+        var portraitName = user.IsMe ? user.Name : displayName;
+        var portraitWorld = user.IsMe ? user.World : string.Empty;
+        DrawAvatar(drawList, avatarCenter, radius, theme, portraitName, portraitWorld, user.AvatarUrl, 0.95f, 32);
+        var textLeft = avatarCenter.X + radius + 12f * scale;
         var nameTop = style.CardUserRows ? 12f : 9f;
         var subTop = style.CardUserRows ? 33f : 31f;
         var buttonWidth = 96f * scale;
@@ -686,7 +692,9 @@ internal sealed class SocialProfilePages
             new Vector2(textLeft + textMaxWidth, nameY + nameSize.Y));
         Marquee.DrawLeft("socialprofile.row.name." + user.Id, displayName, textLeft, nameY,
             textMaxWidth, new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, nameHovering);
-        var regionCode = user.IsMe ? SocialRegion.EffectiveCode(configuration, gameData) : gameData.RegionCodeForWorld(user.World);
+        var regionCode = user.IsMe
+            ? SocialRegion.EffectiveCode(configuration, gameData)
+            : SocialRegion.Resolve(user.Region, user.World, gameData);
         var sub = SocialIdentity.ProfileMeta(user.Handle, regionCode);
         var subY = origin.Y + subTop * scale;
         var subSize = Typography.Measure(sub, 0.85f);

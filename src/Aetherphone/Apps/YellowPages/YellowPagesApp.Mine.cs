@@ -22,9 +22,8 @@ internal sealed partial class YellowPagesApp
 
     private void DrawMine(Rect area)
     {
-        var context = new PhoneContext(area, theme, navigation);
-        AppHeader.Draw(context, Loc.T(L.YellowPages.YourAds));
         var scale = ImGuiHelpers.GlobalScale;
+        DrawTabTitle(area, Loc.T(L.YellowPages.YourAds), 0f, scale);
         var top = area.Min.Y + AppHeader.Height * scale;
         var body = new Rect(new Vector2(area.Min.X, top), area.Max);
         var mine = store.Mine;
@@ -73,6 +72,30 @@ internal sealed partial class YellowPagesApp
         var status = MineStatusText(ad, nowUnix, out var statusColor);
         Marquee.DrawLeftAuto(drawList, "yellowpages.mine.status." + ad.Id, status, textLeft,
             card.Min.Y + 31f * scale, titleWidth, TextStyles.FootnoteEmphasized, statusColor);
+
+        var inquiryCount = inquiries.CountForAd(ad.Id);
+        if (inquiryCount > 0)
+        {
+            var label = Loc.T(L.YellowPages.InquiryCount, inquiryCount);
+            var labelSize = Typography.Measure(label, TextStyles.Caption1);
+            var pillMin = new Vector2(card.Max.X - pad - labelSize.X - 18f * scale, card.Min.Y + 12f * scale);
+            var pillWidth = DrawPill(drawList, pillMin, label, Palette.WithAlpha(ui.Accent, 0.18f), ui.Accent,
+                TextStyles.Caption1, scale);
+            var pillMax = new Vector2(pillMin.X + pillWidth, pillMin.Y + 24f * scale);
+            var unread = inquiries.UnreadForAd(ad.Id);
+            ActivityBadge.Draw(new Vector2(pillMax.X - 2f * scale, pillMin.Y + 2f * scale), unread, theme, scale);
+            var pillHovered = UiInteract.Hover(pillMin, pillMax);
+            if (pillHovered)
+            {
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            }
+
+            if (UiInteract.Click(pillMin, pillMax, pillHovered))
+            {
+                OpenInquiriesFor(ad.Id);
+                return;
+            }
+        }
 
         var headerRect = new Rect(card.Min, new Vector2(card.Max.X, card.Min.Y + headerHeight));
         var headerHovered = UiInteract.Hover(headerRect.Min, headerRect.Max);
@@ -275,9 +298,8 @@ internal sealed partial class YellowPagesApp
 
     private void DrawSaved(Rect area)
     {
-        var context = new PhoneContext(area, theme, navigation);
-        AppHeader.Draw(context, Loc.T(L.YellowPages.SavedTitle));
         var scale = ImGuiHelpers.GlobalScale;
+        DrawTabTitle(area, Loc.T(L.YellowPages.SavedTitle), 0f, scale);
         var top = area.Min.Y + AppHeader.Height * scale;
         var body = new Rect(new Vector2(area.Min.X, top), area.Max);
         var saved = store.Saved;

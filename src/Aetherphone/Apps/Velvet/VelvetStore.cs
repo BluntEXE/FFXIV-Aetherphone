@@ -3,6 +3,7 @@ using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Crypto;
+using Aetherphone.Core.Home;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Message;
 using Aetherphone.Core.Net;
@@ -21,6 +22,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     private readonly Configuration configuration;
     private readonly RealtimeSignalBus signals;
     private readonly RetryGate meGate = new RetryGate(TimeSpan.FromSeconds(30));
+    private readonly RetryGate userPostsGate = new RetryGate(TimeSpan.FromSeconds(15));
     private readonly FeedLane<VelvetPostDto>[] feedLanes =
     {
         new FeedLane<VelvetPostDto>(ByNewestFirst),
@@ -81,8 +83,8 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
 
     public VelvetStore(AethernetSession session, VelvetClient client, AccountClient account, SafetyClient safety,
         MediaClient media, NotificationService notifications, Configuration configuration, KeyVault vault,
-        ConversationKeyStore keys, PhoneVisibility visibility, RealtimeSignalBus signals)
-        : base("Velvet", session, safety, media, notifications, vault, keys, visibility)
+        ConversationKeyStore keys, PhoneVisibility visibility, RealtimeSignalBus signals, AppInstaller installer)
+        : base("Velvet", session, safety, media, notifications, vault, keys, visibility, installer.Gate("velvet"))
     {
         this.client = client;
         this.account = account;
@@ -141,6 +143,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     public bool FeedLoaded => FeedScope == VelvetFeedScope.All ? feedLoadedAll : feedLoadedConnections;
     public bool HasMoreFeed => ActiveFeedLane.HasMore;
     public bool LoadingMoreFeed => ActiveFeedLane.LoadingMore;
+    public ITrimmable FeedSource => ActiveFeedLane;
     private FeedLane<VelvetPostDto> ActiveFeedLane => feedLanes[feedScope];
     public bool Posting => posting;
     public VelvetPostDto? FetchedPost => fetchedPost;
@@ -644,6 +647,16 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         }
 
         if (userPostsUserId == userId && (userPostsLoaded || userPostsLoading))
+        {
+            return;
+        }
+
+        if (userPostsUserId != userId)
+        {
+            userPostsGate.Reset();
+        }
+
+        if (!userPostsGate.TryPass())
         {
             return;
         }

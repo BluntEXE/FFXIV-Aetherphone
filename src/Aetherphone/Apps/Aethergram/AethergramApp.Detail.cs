@@ -46,7 +46,8 @@ internal sealed partial class AethergramApp
                     authorRing.HasUnseen);
             }
 
-            DrawAvatar(avatarCenter, avatarRadius - 1f * scale, post.AuthorName, post.AuthorWorld, post.AuthorAvatarUrl,
+            DrawAvatar(avatarCenter, avatarRadius - 1f * scale,
+                SocialIdentity.Name(post.AuthorDisplayName, post.AuthorHandle), string.Empty, post.AuthorAvatarUrl,
                 0.85f, 32);
             var nameLeft = avatarCenter.X + avatarRadius + 12f * scale;
             var displayName = SocialIdentity.Name(post.AuthorDisplayName, post.AuthorHandle);
@@ -281,8 +282,8 @@ internal sealed partial class AethergramApp
             1f);
 
         var avatarCenter = new Vector2(avatarCenterX, bubbleTop + avatarRadius + 2f * scale);
-        DrawAvatar(avatarCenter, avatarRadius, comment.AuthorName, string.Empty, comment.AuthorAvatarUrl,
-            0.8f, 28);
+        DrawAvatar(avatarCenter, avatarRadius, SocialIdentity.Name(comment.AuthorDisplayName, comment.AuthorHandle),
+            string.Empty, comment.AuthorAvatarUrl, 0.8f, 28);
 
         var nameTop = bubbleTop + padTop;
         var commentNameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, nameTop),
