@@ -750,17 +750,15 @@ internal sealed partial class YellowPagesApp
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.55f)), 40, 1.4f * scale);
         var textLeft = avatarCenter.X + avatarRadius + 13f * scale;
         var textWidth = origin.X + width - pad - textLeft;
-        var name = Typography.FitText(SocialIdentity.Name(ad.OwnerName, ad.OwnerHandle), textWidth,
-            TextStyles.Headline);
-        Typography.Draw(drawList, new Vector2(textLeft, origin.Y + 13f * scale), name,
-            AppPalettes.YellowPages.TitleInk, TextStyles.Headline);
+        var name = SocialIdentity.Name(ad.OwnerName, ad.OwnerHandle);
+        Marquee.DrawLeftAuto(drawList, "yellowpages.detail.poster.name." + ad.Id, name, textLeft,
+            origin.Y + 13f * scale, textWidth, TextStyles.Headline, AppPalettes.YellowPages.TitleInk);
         var handle = ad.OwnerHandle.Length > 0 ? $"@{ad.OwnerHandle}" : string.Empty;
         var renewed = Loc.T(L.YellowPages.RenewedAgo,
             TimeText.Ago(DateTimeOffset.FromUnixTimeSeconds(ad.RenewedAtUnix)));
         var line = handle.Length > 0 ? $"{handle} · {renewed}" : renewed;
-        Typography.Draw(drawList, new Vector2(textLeft, origin.Y + 34f * scale),
-            Typography.FitText(line, textWidth, TextStyles.Footnote), AppPalettes.YellowPages.MutedInk,
-            TextStyles.Footnote);
+        Marquee.DrawLeftAuto(drawList, "yellowpages.detail.poster.line." + ad.Id, line, textLeft,
+            origin.Y + 34f * scale, textWidth, TextStyles.Footnote, AppPalettes.YellowPages.MutedInk);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height + Metrics.Space.Md * scale));
     }
