@@ -45,7 +45,7 @@ internal static class CurrencyRow
         var iconSize = 36f * scale;
         var gap = 12f * scale;
         var available = width - 44f * scale - (hasIcon ? iconSize + gap : 0f);
-        var amountScale = FitScale(amountText, available, 2.35f, FontWeight.Bold);
+        var amountScale = Typography.FitScale(amountText, available, 2.35f, 1.2f, FontWeight.Bold);
         var amountSize = Typography.Measure(amountText, amountScale, FontWeight.Bold);
         var totalWidth = amountSize.X + (hasIcon ? iconSize + gap : 0f);
         var rowCenterY = min.Y + height * 0.62f;
@@ -167,17 +167,6 @@ internal static class CurrencyRow
 
         var texture = textures.GetFromGameIcon(new GameIconLookup(iconId)).GetWrapOrEmpty();
         drawList.AddImageRounded(texture.Handle, min, max, Vector2.Zero, Vector2.One, 0xFFFFFFFFu, 7f * scale);
-    }
-
-    private static float FitScale(string text, float maxWidth, float maxScale, FontWeight weight)
-    {
-        var candidate = maxScale;
-        while (candidate > 1.2f && Typography.Measure(text, candidate, weight).X > maxWidth)
-        {
-            candidate -= 0.15f;
-        }
-
-        return candidate;
     }
 
     private static string Format(long amount) => amount.ToString("N0", Loc.Culture);

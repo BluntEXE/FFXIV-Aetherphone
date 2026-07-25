@@ -935,9 +935,10 @@ internal sealed partial class AethergramApp : IPhoneApp
 
         if (photos.Length > 1)
         {
-            var dotsCenter = new Vector2(origin.X + width * 0.5f, actionCenterY);
-            var dotsRoom = (bookmarkCenter.X - 20f * scale - dotsCenter.X) * 2f;
-            var available = MathF.Min(dotsRoom, (dotsCenter.X - actionsRight - 10f * scale) * 2f);
+            var dotsLeft = actionsRight + 10f * scale;
+            var dotsRight = bookmarkCenter.X - 20f * scale;
+            var dotsCenter = new Vector2((dotsLeft + dotsRight) * 0.5f, actionCenterY);
+            var available = MathF.Max(0f, dotsRight - dotsLeft);
             PhotoCarousel.DrawDots(drawList, dotsCenter, photos.Length, page, available,
                 AppPalettes.Aethergram.BodyInk);
         }

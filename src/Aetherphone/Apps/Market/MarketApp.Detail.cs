@@ -101,7 +101,8 @@ internal sealed partial class MarketApp
         var priceText = PriceOrDash(min);
         var pillReserve = hasHq
             ? Typography.Measure(Loc.T(L.Common.Nq), 0.82f, FontWeight.SemiBold).X + 18f * scale + 6f * scale +
-              Typography.Measure(Loc.T(L.Common.Hq), 0.82f, FontWeight.SemiBold).X + 18f * scale + 12f * scale
+              Typography.Measure(Loc.T(L.Common.Hq), 0.82f, FontWeight.SemiBold).X + 18f * scale + 12f * scale +
+              12f * scale
             : 0f;
         var priceMaxWidth = MathF.Max(1f, origin.X + width - 16f * scale - pillReserve - textX);
         var priceY = textTop + 26f * scale;
