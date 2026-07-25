@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using System.Globalization;
-using Aetherphone;
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
@@ -49,15 +48,18 @@ internal sealed partial class PhotosApp : IPhoneApp
     private readonly List<string> customAlbumOrder = new();
     private readonly Dictionary<string, List<string>> customAlbumPhotos = new(StringComparer.OrdinalIgnoreCase);
     private readonly DropdownMenu albumMenu = new();
-    private string[] customAlbumFlat = Array.Empty<string>();
     private Dictionary<int, string[]> cachedCustomAlbumPaths = new();
     private string newAlbumDraft = string.Empty;
-    private bool renaming;
-    private int renameAlbumKey;
     private string renameAlbumDraft = string.Empty;
     private readonly List<string> pickerSelection = new();
     private DropdownMenu.Item[]? customAlbumMenuItemsCache;
     private string? customAlbumMenuItemsLocale;
+    private int? pickerMembershipAlbumKey;
+    private HashSet<string> pickerMembership = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, int> pickerSelectionOrder = new(StringComparer.OrdinalIgnoreCase);
+    private DropdownMenu.Item[]? photoMenuItemsCache;
+    private string? photoMenuItemsLocale;
+    private string? photoMenuKey;
 
     private PhotoEntry[] entries = Array.Empty<PhotoEntry>();
     private string[] viewerPaths = Array.Empty<string>();
@@ -85,7 +87,6 @@ internal sealed partial class PhotosApp : IPhoneApp
         viewerPaths = Array.Empty<string>();
         viewerIndex = 0;
         resetScroll = true;
-        renaming = false;
         LoadCustomAlbums();
         Refresh();
     }
@@ -126,6 +127,12 @@ internal sealed partial class PhotosApp : IPhoneApp
         if (view.Route == PhotoRoute.CreateAlbum)
         {
             DrawCreateAlbumPage(content);
+            return;
+        }
+
+        if (view.Route == PhotoRoute.RenameAlbum)
+        {
+            DrawRenameAlbumPage(content, view.AlbumKey);
             return;
         }
 
@@ -188,19 +195,29 @@ internal sealed partial class PhotosApp : IPhoneApp
         Array.Sort(built, static (left, right) => right.Taken.CompareTo(left.Taken));
         entries = built;
         BuildAlbums();
-        PruneCustomAlbumPaths(pathSet);
+        var pruned = PruneCustomAlbumPaths(pathSet);
         BuildCustomAlbums();
-        SaveCustomAlbums();
+        if (pruned)
+            SaveCustomAlbums();
     }
     
-    private void PruneCustomAlbumPaths(HashSet<string> validPaths)
+    private bool PruneCustomAlbumPaths(HashSet<string> validPaths)
     {
+        var removedAny = false;
         foreach (var name in customAlbumOrder)
         {
             if (!customAlbumPhotos.TryGetValue(name, out var photos))
                 continue;
-            photos.RemoveAll(p => !validPaths.Contains(p));
+            for (var index = photos.Count - 1; index >= 0; index--)
+            {
+                if (validPaths.Contains(photos[index]))
+                    continue;
+                photos.RemoveAt(index);
+                removedAny = true;
+            }
         }
+
+        return removedAny;
     }
 
     private void LoadCustomAlbums()
@@ -247,21 +264,16 @@ internal sealed partial class PhotosApp : IPhoneApp
     private void BuildCustomAlbums()
     {
         customAlbums.Clear();
-        var flat = new List<string>();
         for (var i = 0; i < customAlbumOrder.Count; i++)
         {
             var key = -(i + 2);
             var name = customAlbumOrder[i];
-            var photos = customAlbumPhotos[name];
-            var start = flat.Count;
-            flat.AddRange(photos);
-            // Negative keys avoid any collision with MonthAlbum keys (year*100+month, always positive).
-            customAlbums.Add(new CustomAlbum(key, start, photos.Count, name));
+            if (!customAlbumPhotos.TryGetValue(name, out var photos))
+                continue;
+            customAlbums.Add(new CustomAlbum(key, 0, photos.Count, name));
             var paths = SortedCustomAlbumPaths(key);
             cachedCustomAlbumPaths[key] = paths;
         }
-
-        customAlbumFlat = flat.ToArray();
     }
     
     private bool TryFindCustomAlbum(int key, out CustomAlbum result)
@@ -336,6 +348,7 @@ internal sealed partial class PhotosApp : IPhoneApp
         }
         BuildCustomAlbums();
         SaveCustomAlbums();
+        InvalidatePickerMembership();
     }
     
     private void RemovePhotoFromCustomAlbum(int key, string path)
@@ -348,6 +361,7 @@ internal sealed partial class PhotosApp : IPhoneApp
         photos.Remove(path);
         BuildCustomAlbums();
         SaveCustomAlbums();
+        InvalidatePickerMembership();
     }
 
     private string[] SortedCustomAlbumPaths(int key)
@@ -364,6 +378,41 @@ internal sealed partial class PhotosApp : IPhoneApp
             return tb.CompareTo(ta);
         });
         return sorted;
+    }
+    
+    private void EnsurePickerMembership(int albumKey)
+    {
+        if (pickerMembershipAlbumKey == albumKey)
+            return;
+
+        pickerMembership.Clear();
+        var albumName = customAlbums.FirstOrDefault(c => c.Key == albumKey).Name;
+        if (albumName is not null && customAlbumPhotos.TryGetValue(albumName, out var existing))
+            pickerMembership.UnionWith(existing);
+
+        pickerMembershipAlbumKey = albumKey;
+    }
+    
+    private void InvalidatePickerMembership()
+    {
+        pickerMembershipAlbumKey = null;
+    }
+    
+    private void AddToPickerSelection(string path)
+    {
+        pickerSelection.Add(path);
+        pickerSelectionOrder[path] = pickerSelection.Count;
+    }
+    
+    private void RemoveFromPickerSelection(string path)
+    {
+        if (!pickerSelection.Remove(path))
+            return;
+
+        pickerSelectionOrder.Remove(path);
+        // Renumber remaining badges so gaps left by the removed item close up (1, 2, 3, ...).
+        for (var index = 0; index < pickerSelection.Count; index++)
+            pickerSelectionOrder[pickerSelection[index]] = index + 1;
     }
 
     private string[] SlicePaths(int start, int count)
