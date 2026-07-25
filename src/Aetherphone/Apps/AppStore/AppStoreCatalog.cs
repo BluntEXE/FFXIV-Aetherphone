@@ -68,7 +68,6 @@ internal static class AppStoreCatalog
         ["settings"] = new(L.StoreCopy.SettingsSub, L.StoreCopy.SettingsBody, StoreCategory.Tools),
         ["notifications"] = new(L.StoreCopy.NotificationsSub, L.StoreCopy.NotificationsBody, StoreCategory.Tools),
         ["feedback"] = new(L.StoreCopy.FeedbackSub, L.StoreCopy.FeedbackBody, StoreCategory.Tools),
-        ["dev"] = new(L.StoreCopy.DevSub, L.StoreCopy.DevBody, StoreCategory.Tools),
         ["appstore"] = new(L.StoreCopy.StoreSub, L.StoreCopy.StoreBody, StoreCategory.Tools),
     }.ToFrozenDictionary(StringComparer.Ordinal);
 

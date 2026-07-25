@@ -27,7 +27,6 @@ using Aetherphone.Apps.Polls;
 using Aetherphone.Apps.Settings;
 using Aetherphone.Apps.Skywatcher;
 using Aetherphone.Apps.Timers;
-using Aetherphone.Apps.Dev;
 using Aetherphone.Apps.Feedback;
 using Aetherphone.Apps.Velvet;
 using Aetherphone.Apps.Venues;
@@ -53,14 +52,13 @@ internal static class AppRegistry
 
         var photoLibrary = new PhotoLibrary(Plugin.PluginInterface.ConfigDirectory);
         var dmNet = new AethernetApi(services.Http, services.AethernetSession, "dm");
-        apps.Insert(0, new MessageApp(new DirectMessagesStore(services.AethernetSession, dmNet.Chats, dmNet.Safety, dmNet.Media, services.Notifications, services.KeyVault, services.ConversationKeys, services.PeerKeys, services.Visibility, services.RealtimeSignals), contactBook, services.Calls, services.AethernetSession, services.RemoteImages, services.Lodestone, services.DmLauncher, photoLibrary, services.Http, services.Configuration, services.Confirm, services.Report, services.WallpaperImages, services.Musters));
+        apps.Insert(0, new MessageApp(new DirectMessagesStore(services.AethernetSession, dmNet.Chats, dmNet.Safety, dmNet.Media, services.Notifications, services.KeyVault, services.ConversationKeys, services.PeerKeys, services.Visibility, services.RealtimeSignals, services.Installer), contactBook, services.Calls, services.AethernetSession, services.RemoteImages, services.Lodestone, services.DmLauncher, photoLibrary, services.Http, services.Configuration, services.Confirm, services.Report, services.WallpaperImages, services.Musters));
         apps.Add(new ChirperApp(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "chirper"), services.Lodestone, services.RemoteImages, photoLibrary, services.SocialLauncher, services.GameData, services.Configuration, services.SocialNotifications, services.WallpaperImages, services.Confirm, services.Report, services.Conduct));
-        apps.Add(new AethergramApp(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "aethergram"), services.Lodestone, services.RemoteImages, photoLibrary, services.SocialLauncher, services.GramDmLauncher, services.GameData, services.Configuration, services.SocialNotifications, services.Notifications, services.Http, services.KeyVault, services.ConversationKeys, services.Visibility, services.RealtimeSignals, services.WallpaperImages, services.Confirm, services.Report, services.Conduct));
-        apps.Add(new VelvetShell(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "velvet"), services.Lodestone, services.Configuration, photoLibrary, services.Http, services.RemoteImages, services.Notifications, services.VelvetLauncher, services.SocialLauncher, services.GameData, services.SocialNotifications, services.KeyVault, services.ConversationKeys, services.Visibility, services.RealtimeSignals, services.WallpaperImages, services.Confirm, services.Report, services.Conduct));
+        apps.Add(new AethergramApp(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "aethergram"), services.Lodestone, services.RemoteImages, photoLibrary, services.SocialLauncher, services.GramDmLauncher, services.GameData, services.Configuration, services.SocialNotifications, services.Notifications, services.Http, services.KeyVault, services.ConversationKeys, services.Visibility, services.RealtimeSignals, services.WallpaperImages, services.Confirm, services.Report, services.Conduct, services.Installer));
+        apps.Add(new VelvetShell(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "velvet"), services.Lodestone, services.Configuration, photoLibrary, services.Http, services.RemoteImages, services.Notifications, services.VelvetLauncher, services.SocialLauncher, services.GameData, services.SocialNotifications, services.KeyVault, services.ConversationKeys, services.Visibility, services.RealtimeSignals, services.WallpaperImages, services.Confirm, services.Report, services.Conduct, services.Installer));
         var feedbackNet = new AethernetApi(services.Http, services.AethernetSession, "feedback");
         apps.Add(new FeedbackApp(services.AethernetSession, feedbackNet.Feedback, feedbackNet.Media, photoLibrary, services.Configuration, services.Confirm, services.WallpaperImages));
-        apps.Add(new DevApp(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "dev"), services.Lodestone, services.Configuration, photoLibrary, services.Http, services.RemoteImages, services.Confirm, services.WallpaperImages));
-        apps.Add(new PollsApp(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "polls").Polls));
+        apps.Add(new PollsApp(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "polls").Polls, services.Installer));
         apps.Add(new AnnouncementsApp(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "announcements").Announcements, services.Notifications, services.Configuration, services.AnnouncementsLauncher));
         apps.Add(new CameraApp(new PhotoCaptureService(), photoLibrary, services.Configuration));
         apps.Add(new PhotosApp(photoLibrary, services.Confirm));

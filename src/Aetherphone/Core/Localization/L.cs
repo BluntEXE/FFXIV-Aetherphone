@@ -326,9 +326,6 @@ internal static class L
         public static readonly LocString FeedbackSub = new("storeCopy.feedbackSub", "Tell us what broke");
         public static readonly LocString FeedbackBody = new("storeCopy.feedbackBody",
             "Send a bug report or an idea, with screenshots attached.");
-        public static readonly LocString DevSub = new("storeCopy.devSub", "Behind the curtain");
-        public static readonly LocString DevBody = new("storeCopy.devBody",
-            "Tools for the people building the phone.");
         public static readonly LocString StoreSub = new("storeCopy.storeSub", "Apps for your phone");
         public static readonly LocString StoreBody = new("storeCopy.storeBody",
             "Browse everything the phone can do and put it on your Home Screen.");
