@@ -330,7 +330,7 @@ internal sealed partial class ChirperApp : IPhoneApp
             else
             {
                 ImGui.Dummy(new Vector2(0f, FeedTopPadding * ImGuiHelpers.GlobalScale));
-                feedVirtualizer.BeginFrame();
+                feedVirtualizer.BeginFrame(store.FeedSource(scope));
                 renderedUnderlyingIds.Clear();
                 for (var index = 0; index < snapshot.Length; index++)
                 {

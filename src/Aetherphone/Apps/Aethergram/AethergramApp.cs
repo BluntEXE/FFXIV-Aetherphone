@@ -767,7 +767,7 @@ internal sealed partial class AethergramApp : IPhoneApp
             else
             {
                 ImGui.Dummy(new Vector2(0f, 4f * ImGuiHelpers.GlobalScale));
-                feedVirtualizer.BeginFrame();
+                feedVirtualizer.BeginFrame(store.FeedSource(scope));
                 for (var index = 0; index < snapshot.Length; index++)
                 {
                     var post = snapshot[index];
