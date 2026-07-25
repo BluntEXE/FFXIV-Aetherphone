@@ -86,7 +86,7 @@ internal sealed class MediaModule : IControlModule
 
         if (active)
         {
-            DrawTransport(dl, rect.Center.X, rect.Max.Y - pad - 16f * scale, 28f * scale, theme.Accent,
+            DrawTransport(dl, rect.Center.X, rect.Max.Y - pad - 16f * scale, 34f * scale, theme.Accent,
                 theme.TextStrong, opacity, true, hasQueue, interactive, scale);
         }
     }
