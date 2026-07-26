@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
@@ -31,7 +32,7 @@ internal sealed class AdInquiryStore : IDisposable
     private volatile bool sending;
     private string? openThreadId;
     private DateTime nextThreadPoll = DateTime.MinValue;
-    private readonly Dictionary<string, string> scopeCache = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, string> scopeCache = new(StringComparer.Ordinal);
 
     public AdInquiryStore(AethernetSession session, YellowPagesClient client, KeyVault vault,
         ConversationKeyStore keys, PhoneVisibility visibility, RealtimeSignalBus signals, AppGate gate)
@@ -59,14 +60,8 @@ internal sealed class AdInquiryStore : IDisposable
 
     public string ScopeFor(string otherUserId)
     {
-        if (scopeCache.TryGetValue(otherUserId, out var cached))
-        {
-            return cached;
-        }
-
-        var scope = ConversationKeyStore.AdScope(ConversationKeyStore.Pair(MyUserId, otherUserId));
-        scopeCache[otherUserId] = scope;
-        return scope;
+        return scopeCache.GetOrAdd(otherUserId,
+            id => ConversationKeyStore.AdScope(ConversationKeyStore.Pair(MyUserId, id)));
     }
 
     /// <summary>Plaintext for display. Bodies always travel and rest as sealed envelopes.</summary>
