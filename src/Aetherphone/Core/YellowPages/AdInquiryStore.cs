@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
@@ -31,7 +32,7 @@ internal sealed class AdInquiryStore : IDisposable
     private volatile bool sending;
     private string? openThreadId;
     private DateTime nextThreadPoll = DateTime.MinValue;
-    private readonly Dictionary<string, string> scopeCache = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, string> scopeCache = new(StringComparer.Ordinal);
 
     public AdInquiryStore(AethernetSession session, YellowPagesClient client, KeyVault vault,
         ConversationKeyStore keys, PhoneVisibility visibility, RealtimeSignalBus signals, AppGate gate)
@@ -81,9 +82,12 @@ internal sealed class AdInquiryStore : IDisposable
             message.CommitmentTag).Text;
     }
 
+    /// <summary>Preview text for the list row. A deleted last message keeps its envelope version but
+    /// arrives with an empty body, so it must not reach the cipher or it resolves as undecryptable.</summary>
     public string RevealPreview(AdInquiryDto thread)
     {
-        if (thread.LastEncVersion != EnvelopeCodec.VersionEnvelope || thread.LastMessageId is null)
+        if (thread.LastEncVersion != EnvelopeCodec.VersionEnvelope || thread.LastMessageId is null
+            || thread.LastBody.Length == 0)
         {
             return thread.LastBody;
         }
