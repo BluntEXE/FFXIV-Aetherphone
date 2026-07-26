@@ -70,7 +70,6 @@ internal sealed class AdInquiryStore : IDisposable
         return scope;
     }
 
-    /// <summary>Plaintext for display. Bodies always travel and rest as sealed envelopes.</summary>
     public string Reveal(string otherUserId, AdInquiryMessageDto message)
     {
         if (message.EncVersion != EnvelopeCodec.VersionEnvelope)
@@ -82,8 +81,6 @@ internal sealed class AdInquiryStore : IDisposable
             message.CommitmentTag).Text;
     }
 
-    /// <summary>Preview text for the list row. A deleted last message keeps its envelope version but
-    /// arrives with an empty body, so it must not reach the cipher or it resolves as undecryptable.</summary>
     public string RevealPreview(AdInquiryDto thread)
     {
         if (thread.LastEncVersion != EnvelopeCodec.VersionEnvelope || thread.LastMessageId is null
@@ -242,9 +239,34 @@ internal sealed class AdInquiryStore : IDisposable
         });
     }
 
-    /// <summary>Seals a body for the pair, minting the thread key generation when this is the first
-    /// message. Returns null when the vault is locked or the other side has published no key, and the
-    /// caller must not fall back to plaintext: the server rejects anything that is not an envelope.</summary>
+    public void Delete(string inquiryId, string messageId, Action<bool> done)
+    {
+        if (!session.IsSignedIn)
+        {
+            done(false);
+            return;
+        }
+
+        work.Run("inquiry delete", async token =>
+        {
+            var ok = await client.DeleteInquiryMessageAsync(inquiryId, messageId, token).ConfigureAwait(false);
+            if (ok)
+            {
+                messages = Tombstone(messages, messageId);
+            }
+
+            return ok;
+        }, ok =>
+        {
+            if (ok)
+            {
+                Refresh();
+            }
+
+            done(ok);
+        });
+    }
+
     private async Task<EncryptedOutbound?> SealAsync(string otherUserId, string body, CancellationToken token)
     {
         if (!cipher.IsUnlocked)
@@ -264,7 +286,6 @@ internal sealed class AdInquiryStore : IDisposable
             : null;
     }
 
-    /// <summary>Opens or reuses the thread for an ad and posts the first message.</summary>
     public void OpenForAd(string adId, string ownerId, string body, Action<AdInquiryDto?> done)
     {
         if (!session.IsSignedIn)
@@ -385,6 +406,29 @@ internal sealed class AdInquiryStore : IDisposable
         scopeCache.Clear();
         cipher.Clear();
         cadence.Reset();
+    }
+
+    private static AdInquiryMessageDto[] Tombstone(AdInquiryMessageDto[] source, string messageId)
+    {
+        for (var index = 0; index < source.Length; index++)
+        {
+            if (source[index].Id != messageId)
+            {
+                continue;
+            }
+
+            var next = (AdInquiryMessageDto[])source.Clone();
+            next[index] = next[index] with
+            {
+                Body = string.Empty,
+                EncVersion = 0,
+                CommitmentTag = null,
+                Deleted = true,
+            };
+            return next;
+        }
+
+        return source;
     }
 
     private static AdInquiryMessageDto[] Append(AdInquiryMessageDto[] source, AdInquiryMessageDto message)

@@ -106,7 +106,8 @@ internal sealed record AdInquiryMessageDto(
     long CreatedAtUnix,
     long ReadAtUnix,
     int EncVersion = 0,
-    string? CommitmentTag = null) : IIdentified;
+    string? CommitmentTag = null,
+    bool Deleted = false) : IIdentified;
 
 internal sealed record AdInquiryMessagePage(AdInquiryMessageDto[] Items, string? NextCursor);
 

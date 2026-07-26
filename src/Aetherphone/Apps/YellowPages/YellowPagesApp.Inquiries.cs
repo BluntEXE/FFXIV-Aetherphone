@@ -1,6 +1,7 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Linkpearl;
 using Aetherphone.Core.Localization;
@@ -20,8 +21,12 @@ internal sealed partial class YellowPagesApp
     private const float ComposerHeight = 52f;
     private const int InquiryBodyMax = 1000;
 
+    private readonly DropdownMenu inquiryMenu = new();
+    private readonly DropdownMenu.Item[] inquiryMenuItems = new DropdownMenu.Item[2];
+
     private string inquiryDraft = string.Empty;
     private string? inquiryAdFilter;
+    private string inquiryMenuMessageId = string.Empty;
     private bool inquiryBusy;
     private bool inquirySendFailed;
 
@@ -91,6 +96,20 @@ internal sealed partial class YellowPagesApp
         return string.Empty;
     }
 
+    private static bool InquiryAdGone(AdInquiryDto thread) => thread.AdTitle.Length == 0;
+
+    private static string InquiryAdTitle(AdInquiryDto thread) =>
+        InquiryAdGone(thread) ? Loc.T(L.YellowPages.UnavailableTitle) : thread.AdTitle;
+
+    private static FontAwesomeIcon InquiryAdIcon(AdInquiryDto thread) =>
+        InquiryAdGone(thread) ? FontAwesomeIcon.Ban : AdCategories.Icon(thread.AdCategory);
+
+    private string InquiryPreview(AdInquiryDto thread)
+    {
+        var preview = inquiries.RevealPreview(thread);
+        return preview.Length == 0 ? Loc.T(L.Message.DeletedBody) : preview.Replace('\n', ' ');
+    }
+
     private bool DrawInquiryRow(AdInquiryDto thread, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
@@ -114,7 +133,7 @@ internal sealed partial class YellowPagesApp
         else
         {
             IconTile.Draw((thumbMin + thumbMax) * 0.5f, thumbSide, IconTile.Surface(ui.Accent),
-                AdCategories.Icon(thread.AdCategory));
+                InquiryAdIcon(thread));
         }
 
         var textLeft = thumbMax.X + 11f * scale;
@@ -123,7 +142,7 @@ internal sealed partial class YellowPagesApp
         var stampSize = Typography.Measure(stamp, TextStyles.Caption1);
         Typography.Draw(drawList, new Vector2(textRight - stampSize.X, card.Min.Y + 12f * scale), stamp,
             AppPalettes.YellowPages.MutedInk, TextStyles.Caption1);
-        var title = Typography.FitText(thread.AdTitle, textRight - textLeft - stampSize.X - 10f * scale,
+        var title = Typography.FitText(InquiryAdTitle(thread), textRight - textLeft - stampSize.X - 10f * scale,
             TextStyles.SubheadlineEmphasized);
         Typography.Draw(drawList, new Vector2(textLeft, card.Min.Y + 11f * scale), title,
             AppPalettes.YellowPages.TitleInk, TextStyles.SubheadlineEmphasized);
@@ -131,7 +150,7 @@ internal sealed partial class YellowPagesApp
         var whoLine = Typography.FitText(who, textRight - textLeft, TextStyles.Caption1);
         Typography.Draw(drawList, new Vector2(textLeft, card.Min.Y + 30f * scale), whoLine, ui.Accent,
             TextStyles.Caption1);
-        var preview = inquiries.RevealPreview(thread).Replace('\n', ' ');
+        var preview = InquiryPreview(thread);
         var previewWidth = textRight - textLeft - (thread.UnreadCount > 0 ? 26f * scale : 0f);
         Typography.Draw(drawList, new Vector2(textLeft, card.Min.Y + 47f * scale),
             Typography.FitText(preview, previewWidth, TextStyles.Footnote),
@@ -175,7 +194,8 @@ internal sealed partial class YellowPagesApp
         var scale = ImGuiHelpers.GlobalScale;
         var thread = inquiries.Thread(inquiryId);
         var context = new PhoneContext(area, theme, navigation);
-        AppHeader.Draw(context, thread is null ? Loc.T(L.YellowPages.InquiriesTitle) : thread.AdTitle, backFromThread);
+        AppHeader.Draw(context, thread is null ? Loc.T(L.YellowPages.InquiriesTitle) : InquiryAdTitle(thread),
+            backFromThread);
         ChatHeaderControls.DrawLock(ui, area, area.Min.Y + AppHeader.Height * scale * 0.5f, inquiries.CanEncrypt,
             inquiries.VaultState, () => router.Push(YellowPagesRoute.Encryption));
         var top = area.Min.Y + AppHeader.Height * scale;
@@ -198,8 +218,15 @@ internal sealed partial class YellowPagesApp
             {
                 var message = messages[index];
                 var direction = message.SenderId == myId ? MessageDirection.Outgoing : MessageDirection.Incoming;
-                ChatBubble.Draw(new ChatLine(direction, inquiries.Reveal(thread.OtherUserId, message),
+                var line = message.Deleted
+                    ? Loc.T(L.Message.DeletedBody)
+                    : inquiries.Reveal(thread.OtherUserId, message);
+                var requested = ChatBubble.Draw(new ChatLine(direction, line,
                     DateTimeOffset.FromUnixTimeSeconds(message.CreatedAtUnix).LocalDateTime), theme);
+                if (requested && !message.Deleted)
+                {
+                    OpenInquiryMenu(message.Id);
+                }
             }
 
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
@@ -230,17 +257,25 @@ internal sealed partial class YellowPagesApp
         else
         {
             IconTile.Draw((thumbMin + thumbMax) * 0.5f, thumbSide, IconTile.Surface(ui.Accent),
-                AdCategories.Icon(thread.AdCategory));
+                InquiryAdIcon(thread));
         }
 
+        var gone = InquiryAdGone(thread);
         var textLeft = thumbMax.X + 10f * scale;
-        var title = Typography.FitText(thread.AdTitle, max.X - textLeft - 34f * scale, TextStyles.SubheadlineEmphasized);
+        var title = Typography.FitText(InquiryAdTitle(thread), max.X - textLeft - 34f * scale,
+            TextStyles.SubheadlineEmphasized);
         Typography.Draw(drawList, new Vector2(textLeft, min.Y + 10f * scale), title,
             AppPalettes.YellowPages.TitleInk, TextStyles.SubheadlineEmphasized);
         var who = SocialIdentity.Name(thread.OtherName, thread.OtherHandle);
         Typography.Draw(drawList, new Vector2(textLeft, min.Y + 29f * scale),
             Typography.FitText(who, max.X - textLeft - 34f * scale, TextStyles.Caption1),
             AppPalettes.YellowPages.MutedInk, TextStyles.Caption1);
+        if (gone)
+        {
+            listTop = max.Y + Metrics.Space.Xs * scale;
+            return;
+        }
+
         AppSkin.Icon(drawList, new Vector2(max.X - 18f * scale, (min.Y + max.Y) * 0.5f),
             FontAwesomeIcon.ChevronRight.ToIconString(), AppPalettes.YellowPages.MutedInk, 0.7f);
         var hovered = UiInteract.Hover(min, max);
@@ -426,6 +461,80 @@ internal sealed partial class YellowPagesApp
             encryptionPane.DrawBody(ui, theme, store.IsSignedIn, inquiries.CanEncrypt);
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
         }
+    }
+
+    private void OpenInquiryMenu(string messageId)
+    {
+        inquiryMenuMessageId = messageId;
+        var mouse = ImGui.GetMousePos();
+        inquiryMenu.Toggle(messageId, new Rect(mouse, mouse));
+    }
+
+    private void DrawInquiryMenu(Rect screen)
+    {
+        if (!inquiryMenu.IsOpenFor(inquiryMenuMessageId))
+        {
+            return;
+        }
+
+        var message = FindInquiryMessage(inquiryMenuMessageId);
+        if (message is null)
+        {
+            inquiryMenu.Close();
+            return;
+        }
+
+        var mine = message.SenderId == inquiries.MyUserId;
+        inquiryMenuItems[0] = new DropdownMenu.Item(Loc.T(L.Messages.CopyMessage),
+            FontAwesomeIcon.Copy.ToIconString());
+        var count = 1;
+        if (mine)
+        {
+            inquiryMenuItems[1] = new DropdownMenu.Item(Loc.T(L.Message.DeleteAction),
+                FontAwesomeIcon.TrashAlt.ToIconString(), Danger: true);
+            count = 2;
+        }
+
+        var picked = inquiryMenu.Draw(screen, theme, inquiryMenuItems.AsSpan(0, count));
+        if (picked < 0)
+        {
+            return;
+        }
+
+        if (picked == 0)
+        {
+            var thread = inquiries.Thread(message.InquiryId);
+            ImGui.SetClipboardText(thread is null ? message.Body : inquiries.Reveal(thread.OtherUserId, message));
+            return;
+        }
+
+        AskDeleteInquiryMessage(message);
+    }
+
+    private void AskDeleteInquiryMessage(AdInquiryMessageDto message)
+    {
+        confirm.Ask(new ConfirmRequest
+        {
+            Message = Loc.T(L.Message.DeleteConfirm),
+            ConfirmLabel = Loc.T(L.Message.DeleteAction),
+            CancelLabel = Loc.T(L.Common.Cancel),
+            Danger = true,
+            ConfirmAsync = done => inquiries.Delete(message.InquiryId, message.Id, done),
+        });
+    }
+
+    private AdInquiryMessageDto? FindInquiryMessage(string messageId)
+    {
+        var messages = inquiries.Messages;
+        for (var index = 0; index < messages.Length; index++)
+        {
+            if (messages[index].Id == messageId)
+            {
+                return messages[index];
+            }
+        }
+
+        return null;
     }
 
     private void OpenInquiryThread(string inquiryId)

@@ -127,6 +127,12 @@ internal sealed class YellowPagesClient
             AethernetJsonContext.Default.AdInquiryMessageDto, token);
     }
 
+    public Task<bool> DeleteInquiryMessageAsync(string inquiryId, string messageId, CancellationToken token)
+    {
+        return net.SendAsync(HttpMethod.Delete,
+            $"/ads/inquiries/{Uri.EscapeDataString(inquiryId)}/messages/{Uri.EscapeDataString(messageId)}", token);
+    }
+
     public Task<bool> MarkInquiryReadAsync(string inquiryId, CancellationToken token)
     {
         return net.SendAsync(HttpMethod.Post, $"/ads/inquiries/{Uri.EscapeDataString(inquiryId)}/read", token);

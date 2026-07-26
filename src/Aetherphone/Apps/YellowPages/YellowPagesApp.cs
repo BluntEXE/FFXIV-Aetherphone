@@ -97,6 +97,7 @@ internal sealed partial class YellowPagesApp : IPhoneApp
         backFromThread = () =>
         {
             router.Pop();
+            inquiryMenu.Close();
             inquiries.Close();
             inquiries.Refresh();
         };
@@ -129,6 +130,7 @@ internal sealed partial class YellowPagesApp : IPhoneApp
         ResetDetailState();
         ResetComposeForm();
         scopeMenu.Close();
+        inquiryMenu.Close();
         copiedTimer = 0f;
     }
 
@@ -173,8 +175,10 @@ internal sealed partial class YellowPagesApp : IPhoneApp
         }
 
         scopeMenu.Gate();
+        inquiryMenu.Gate();
         router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
         DrawScopeMenu(screen);
+        DrawInquiryMenu(screen);
     }
 
     private void DrawView(YellowPagesRoute route, Rect area, int depth)
