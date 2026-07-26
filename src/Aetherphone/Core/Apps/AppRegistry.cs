@@ -66,8 +66,8 @@ internal static class AppRegistry
         apps.Add(new PhotosApp(photoLibrary, services.Confirm, services.Share, services.Configuration));
         apps.Add(new SkywatcherApp(services.Weather, services.WeatherControl));
         apps.Add(new VenuesApp(services.Venues, services.Media, services.Http, services.Textures, services.GameData, services.Configuration));
-        apps.Add(new MusterApp(services.Musters, services.MusterLauncher, services.Aethernet, services.GameData, services.RemoteImages, services.Lodestone, services.Configuration, services.Confirm, services.Report));
-        apps.Add(new YellowPagesApp(services.YellowPages, services.AdInquiries, services.YellowPagesLauncher, services.SocialNotifications, services.GramDmLauncher, services.Musters, new AethernetApi(services.Http, services.AethernetSession, "yellowpages"), services.GameData, services.RemoteImages, services.Lodestone, photoLibrary, services.WallpaperImages, services.Configuration, services.Confirm, services.Report));
+        apps.Add(new MusterApp(services.Musters, services.MusterLauncher, services.Aethernet, services.GameData, services.RemoteImages, services.Lodestone, services.Configuration, services.Confirm, services.Report, services.Conduct));
+        apps.Add(new YellowPagesApp(services.YellowPages, services.AdInquiries, services.YellowPagesLauncher, services.SocialNotifications, services.GramDmLauncher, services.Musters, new AethernetApi(services.Http, services.AethernetSession, "yellowpages"), services.GameData, services.RemoteImages, services.Lodestone, photoLibrary, services.WallpaperImages, services.Configuration, services.Confirm, services.Report, services.Conduct));
         apps.Add(new MapsApp(services.Maps, services.Configuration));
         apps.Add(new NewsApp(services.News, services.Media, services.Http, services.GameData));
         apps.Add(new CollectionsApp(services.Collections, services.Lodestone, services.Media, services.Http, services.GameData));
