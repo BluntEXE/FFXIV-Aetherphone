@@ -102,6 +102,8 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public List<SongRecord> SongRecents { get; set; } = new();
     public List<PlaylistRecord> Playlists { get; set; } = new();
     public List<GameStatRecord> GameStats { get; set; } = new();
+    public int DailyChallengeStreak { get; set; }
+    public int DailyChallengeLastDay { get; set; }
     public HomeLayout? Home { get; set; }
     public int HomeGridRows { get; set; } = 6;
     public bool ShowAppNames { get; set; } = true;
