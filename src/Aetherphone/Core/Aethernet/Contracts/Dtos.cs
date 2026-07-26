@@ -131,7 +131,7 @@ internal sealed record FeedPage(PostDto[] Items, string? NextCursor);
 
 internal sealed record UserSearchResult(UserDto[] Users);
 
-internal sealed record FeatureFlagsDto(bool Music);
+internal sealed record FeatureFlagsDto(bool Music, Dictionary<string, bool>? Apps);
 
 internal sealed record UserListPage(UserDto[] Items, string? NextCursor);
 

@@ -1,3 +1,4 @@
+using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Sharing;
 
@@ -14,7 +15,7 @@ internal interface IPhoneApp : IDisposable
     bool WantsTransparentScreen => false;
     bool WantsSystemTheme => false;
     Rect? TransparentViewport(Rect screen, float scale) => null;
-    bool IsAvailable => true;
+    bool IsAvailable => AppAvailability.IsEnabled(Id);
     ShareKindSet AcceptedShares => ShareKindSet.None;
     LocString? ShareLabel(ShareKind kind) => null;
     void OnShare(in ShareItem item)

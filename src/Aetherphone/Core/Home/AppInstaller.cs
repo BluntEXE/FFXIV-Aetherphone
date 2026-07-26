@@ -1,3 +1,5 @@
+using Aetherphone.Core.Aethernet;
+
 namespace Aetherphone.Core.Home;
 
 internal sealed class AppInstaller
@@ -19,7 +21,8 @@ internal sealed class AppInstaller
 
     public static bool CanUninstall(string appId) => HomeLayoutService.CanUninstall(appId);
 
-    public bool IsInstalled(string appId) => layout?.IsInstalled(appId) ?? false;
+    public bool IsInstalled(string appId) =>
+        AppAvailability.IsEnabled(appId) && (layout?.IsInstalled(appId) ?? false);
 
     public bool Install(string appId) => layout?.Install(appId) ?? false;
 

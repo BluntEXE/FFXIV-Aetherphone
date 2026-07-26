@@ -98,6 +98,38 @@ public sealed class HomeLayoutServiceInstallTests
             "An installed app that was hidden for a while must come back to Home, not be treated as uninstalled");
     }
 
+    [Fact]
+    public void AppLaunchedByTheServer_ArrivesOnHomeByItself()
+    {
+        var apps = MakeApps();
+        var launched = (FakeApp)apps[2];
+        launched.IsAvailable = false;
+        var configuration = SavedWith("a", "b");
+
+        var layout = BuildLayout(apps, configuration);
+        launched.IsAvailable = true;
+        layout.EnsureCurrent();
+
+        Assert.True(layout.IsInstalled("c"), "An app nobody has seen before should install itself when it launches");
+        Assert.True(PageIndexOf(layout, "c") >= 0);
+    }
+
+    [Fact]
+    public void AppTheUserRemoved_StaysOffHomeWhenTheServerRelaunchesIt()
+    {
+        var apps = MakeApps();
+        var launched = (FakeApp)apps[2];
+        var configuration = SavedWith("a", "b", "c");
+
+        BuildLayout(apps, configuration).Uninstall("c");
+        launched.IsAvailable = false;
+        var layout = BuildLayout(apps, configuration);
+        launched.IsAvailable = true;
+        layout.EnsureCurrent();
+
+        Assert.False(layout.IsInstalled("c"), "An app the user removed must not be resurrected by a server flag");
+    }
+
     [Theory]
     [InlineData("appstore")]
     [InlineData("settings")]

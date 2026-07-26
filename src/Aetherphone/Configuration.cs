@@ -105,6 +105,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public int DailyChallengeStreak { get; set; }
     public int DailyChallengeLastDay { get; set; }
     public HomeLayout? Home { get; set; }
+    public Dictionary<string, bool> AppFlags { get; set; } = new();
     public int HomeGridRows { get; set; } = 6;
     public bool ShowAppNames { get; set; } = true;
     public ControlLayout? ControlPanel { get; set; }

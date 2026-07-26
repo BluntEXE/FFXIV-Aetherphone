@@ -54,7 +54,6 @@ internal sealed partial class MusicApp : IPhoneApp
     };
 
     public string Id => "music";
-    public bool IsAvailable => flags.MusicEnabled;
     public Vector4 Accent => AppAccents.For(Id);
     public string DisplayName => Loc.T(L.Apps.Music);
     public string Glyph => "M";
@@ -66,7 +65,6 @@ internal sealed partial class MusicApp : IPhoneApp
     private readonly PlaylistStore playlists;
     private readonly MediaCache media;
     private readonly HttpService http;
-    private readonly FeatureFlags flags;
     private readonly ConfirmService confirm;
     private readonly Configuration configuration;
     private readonly ArtworkCache artwork;
@@ -119,7 +117,7 @@ internal sealed partial class MusicApp : IPhoneApp
     private float clock;
 
     public MusicApp(RadioService radio, SongSearchService songSearch, PlaybackHub playback, SongHistory history,
-        PlaylistStore playlists, MediaCache media, HttpService http, ITextureProvider textures, FeatureFlags flags,
+        PlaylistStore playlists, MediaCache media, HttpService http, ITextureProvider textures,
         ConfirmService confirm, Configuration configuration)
     {
         this.radio = radio;
@@ -129,7 +127,6 @@ internal sealed partial class MusicApp : IPhoneApp
         this.playlists = playlists;
         this.media = media;
         this.http = http;
-        this.flags = flags;
         this.confirm = confirm;
         this.configuration = configuration;
         artwork = new ArtworkCache(textures);
@@ -768,6 +765,5 @@ internal sealed partial class MusicApp : IPhoneApp
         facetFetch?.Cancel();
         facetFetch?.Dispose();
         artwork.Dispose();
-        flags.Dispose();
     }
 }

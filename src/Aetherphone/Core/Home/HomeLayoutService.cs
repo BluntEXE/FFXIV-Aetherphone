@@ -42,6 +42,8 @@ internal sealed class HomeLayoutService
     private readonly List<HomeTile> overflow = new();
     private readonly bool[] availability;
     private readonly HashSet<string> installed = new();
+    private readonly HashSet<string> known = new();
+    private readonly List<string> revealed = new();
     private int rows;
     private int folderCounter;
     private int widgetCounter;
@@ -91,16 +93,24 @@ internal sealed class HomeLayoutService
         for (var index = 0; index < apps.Count; index++)
         {
             var available = apps[index].IsAvailable;
-            if (availability[index] != available)
+            if (availability[index] == available)
             {
-                availability[index] = available;
-                changed = true;
+                continue;
             }
+
+            if (available && !known.Contains(apps[index].Id))
+            {
+                revealed.Add(apps[index].Id);
+            }
+
+            availability[index] = available;
+            changed = true;
         }
 
         if (changed)
         {
             Load();
+            InstallRevealed();
             return;
         }
 
@@ -490,8 +500,48 @@ internal sealed class HomeLayoutService
         placementsDirty = true;
     }
 
+    private void InstallRevealed()
+    {
+        if (revealed.Count == 0)
+        {
+            return;
+        }
+
+        for (var index = 0; index < revealed.Count; index++)
+        {
+            known.Add(revealed[index]);
+            Install(revealed[index]);
+        }
+
+        revealed.Clear();
+        Save();
+    }
+
+    private void LoadKnown(HomeLayout? saved)
+    {
+        known.Clear();
+        if (saved?.Known is { Count: > 0 } stored)
+        {
+            for (var index = 0; index < stored.Count; index++)
+            {
+                known.Add(stored[index]);
+            }
+
+            return;
+        }
+
+        for (var index = 0; index < apps.Count; index++)
+        {
+            if (apps[index].IsAvailable)
+            {
+                known.Add(apps[index].Id);
+            }
+        }
+    }
+
     private void LoadInstalled(HomeLayout? saved, HashSet<string> placed)
     {
+        LoadKnown(saved);
         installed.Clear();
         if (saved?.Installed is { Count: > 0 } stored)
         {
@@ -809,6 +859,7 @@ internal sealed class HomeLayoutService
 
         SerializePages(layout.Pages);
         layout.Installed = new List<string>(installed);
+        layout.Known = new List<string>(known);
 
         configuration.Home = layout;
         configuration.Save();

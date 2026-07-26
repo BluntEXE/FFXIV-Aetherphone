@@ -67,6 +67,7 @@ internal sealed class PhoneServices : IDisposable
     public required LodestoneService Lodestone { get; init; }
     public required LookupService Lookup { get; init; }
     public required AethernetSession AethernetSession { get; init; }
+    public required AppAvailability Availability { get; init; }
     public required CharacterSessionManager CharacterSwitcher { get; init; }
     public required AethernetApi Aethernet { get; init; }
     public required KeyVault KeyVault { get; init; }
@@ -159,6 +160,7 @@ internal sealed class PhoneServices : IDisposable
         var lodestone = new LodestoneService(configuration, http, media, cacheRoot);
         var lookup = new LookupService(lodestone);
         var aethernetSession = new AethernetSession(configuration, framework);
+        var availability = new AppAvailability(http, aethernetSession, configuration);
         var aethernet = new AethernetApi(http, aethernetSession);
         var keyVault = new KeyVault(configuration, aethernetSession, aethernet.Keys);
         var peerKeys = new PeerKeyDirectory(configuration, aethernet.Keys);
@@ -235,6 +237,7 @@ internal sealed class PhoneServices : IDisposable
             Lodestone = lodestone,
             Lookup = lookup,
             AethernetSession = aethernetSession,
+            Availability = availability,
             CharacterSwitcher = characterSwitcher,
             Aethernet = aethernet,
             KeyVault = keyVault,
@@ -310,6 +313,7 @@ internal sealed class PhoneServices : IDisposable
         Sound.Dispose();
         Media.Dispose();
         RemoteImages.Dispose();
+        Availability.Dispose();
         Http.Dispose();
         Wallpapers.Dispose();
         WallpaperImages.Dispose();
