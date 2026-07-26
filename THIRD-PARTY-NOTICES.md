@@ -47,15 +47,16 @@ itself is resolved separately via YoutubeExplode, already a dependency).
 
 ## AlphaChannel (Voudi)
 
-`src/Aetherphone/Resources/Video/` (the Carbuncle "TV" model, materials,
-textures, animation, and VFX files) and the render-target/screen mechanism in
-`src/Aetherphone/Core/Video/` (companion tracking, the resource-load hooks,
-and the actor VFX invocation) are ported from
-[AlphaChannel](https://github.com/Voudi/AlphaChannel) by Voudi, used with the
-author's permission.
+AetherStream's video/screen engine under `src/Aetherphone/Core/Video/`
+(mpv-backed playback, the D3D11 device/resource-load hooks, the actor VFX
+texture swap, Penumbra IPC, the SNES9x-based emulator renderer, and the
+bundled VFX/texture resources under `src/Aetherphone/Resources/Video/`) is
+ported from [AlphaChannel](https://github.com/Voudi/AlphaChannel) by Voudi,
+used with the author's permission.
 
 - Source: https://github.com/Voudi/AlphaChannel
-- License: GNU General Public License v3.0 or later
+- License: GNU General Public License v3.0 or later; full text reproduced in
+  `src/Aetherphone/Core/Video/AlphaChannel-LICENSE`.
 
 ## Concentus
 

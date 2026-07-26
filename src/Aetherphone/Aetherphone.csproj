@@ -71,5 +71,11 @@
     <PackageReference Include="Vortice.D3DCompiler" Version="3.8.3" />
     <PackageReference Include="Penumbra.Api" Version="5.15.1" />
     <PackageReference Include="YoutubeExplode" Version="6.6.0" />
+    <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
+    <PackageReference Include="SharpDX.D3DCompiler" Version="4.2.0" />
+    <PackageReference Include="SharpDX.XAudio2" Version="4.2.0" />
+    <PackageReference Include="NoireLib" Version="1.8.0.3" />
+    <PackageReference Include="SharpCompress" Version="0.48.1" />
+    <PackageReference Include="ZXing.Net" Version="0.16.11" />
   </ItemGroup>
 </Project>
