@@ -1887,15 +1887,9 @@ internal static class L
             "Casting to the in-game screen");
         public static readonly LocString CastingTarget = new("aetherstream.castingTarget", "Playing to");
         public static readonly LocString CastingThisScreen = new("aetherstream.castingThisScreen", "This TV");
-        public static readonly LocString CastingStateNotSummoned = new("aetherstream.castingStateNotSummoned",
-            "No Carbuncle summoned nearby");
-        public static readonly LocString CastingStateAwaitingMaterial = new(
-            "aetherstream.castingStateAwaitingMaterial", "Carbuncle found, applying screen appearance…");
+        public static readonly LocString CastingStateNotReady = new("aetherstream.castingStateNotReady",
+            "Not ready");
         public static readonly LocString CastingStateReady = new("aetherstream.castingStateReady", "Ready");
-        public static readonly LocString ApplyCompanionMod = new("aetherstream.applyCompanionMod",
-            "Apply companion appearance mod");
-        public static readonly LocString RefreshDetection = new("aetherstream.refreshDetection",
-            "Reload detection");
         public static readonly LocString PenumbraUnavailable = new("aetherstream.penumbraUnavailable",
             "Penumbra unavailable: {0}");
         public static readonly LocString PenumbraRequired = new("aetherstream.penumbraRequired",

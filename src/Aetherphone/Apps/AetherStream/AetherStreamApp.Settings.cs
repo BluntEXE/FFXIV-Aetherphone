@@ -180,8 +180,7 @@ internal sealed partial class AetherStreamApp
     private string ScreenStateText() => screen.State switch
     {
         ScreenState.Ready => Loc.T(L.AetherStream.CastingStateReady),
-        ScreenState.AwaitingMaterial => Loc.T(L.AetherStream.CastingStateAwaitingMaterial),
-        _ => Loc.T(L.AetherStream.CastingStateNotSummoned),
+        _ => Loc.T(L.AetherStream.CastingStateNotReady),
     };
 
     private void DrawQualityRow(Rect row, PhoneTheme theme)

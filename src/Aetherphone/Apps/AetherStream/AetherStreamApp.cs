@@ -158,7 +158,6 @@ internal sealed partial class AetherStreamApp : IPhoneApp
     public void Dispose()
     {
         video.Stop();
-        screen.ClearActive();
         joinWork.Dispose();
     }
 }

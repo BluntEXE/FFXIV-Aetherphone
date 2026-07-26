@@ -33,7 +33,6 @@ internal sealed class WatchAlongSession : IDisposable
     private readonly Configuration configuration;
     private readonly ConfirmService confirm;
     private readonly VideoPlayer video;
-    private readonly ScreenController screen;
     private readonly AetherStreamQueue queue;
     private readonly StreamSignalRouter stream;
 
@@ -45,13 +44,12 @@ internal sealed class WatchAlongSession : IDisposable
     private string? viewingUrl;
 
     public WatchAlongSession(AethernetSession session, Configuration configuration, ConfirmService confirm,
-        VideoPlayer video, ScreenController screen, AetherStreamQueue queue, StreamSignalRouter stream)
+        VideoPlayer video, AetherStreamQueue queue, StreamSignalRouter stream)
     {
         this.session = session;
         this.configuration = configuration;
         this.confirm = confirm;
         this.video = video;
-        this.screen = screen;
         this.queue = queue;
         this.stream = stream;
         stream.Joined += OnJoined;
@@ -173,12 +171,6 @@ internal sealed class WatchAlongSession : IDisposable
     {
         Mode = WatchAlongMode.Viewing;
         Roster = ToParticipants(message.Participants);
-
-        var localPlayer = Plugin.ObjectTable.LocalPlayer;
-        if (localPlayer is not null)
-        {
-            screen.SetActive(localPlayer.EntityId);
-        }
 
         if (message.Url is { Length: > 0 } url)
         {

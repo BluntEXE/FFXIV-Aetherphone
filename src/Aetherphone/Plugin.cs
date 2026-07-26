@@ -101,9 +101,9 @@ public sealed class Plugin : IDalamudPlugin
             aboutWindow = new AboutWindow();
             screenController = new ScreenController(videoSessionId, () => Cfg.VideoHideNameplates);
             video = new VideoPlayer(screenController.Engine);
-            videoQueue = new AetherStreamQueue(video, screenController);
+            videoQueue = new AetherStreamQueue(video);
             watchAlong = new WatchAlongSession(services.AethernetSession, Cfg, services.Confirm, video,
-                screenController, videoQueue, services.StreamSignals);
+                videoQueue, services.StreamSignals);
             Framework.Update += OnVideoFrameworkUpdate;
             videoDebugWindow = new VideoDebugWindow(video, screenController);
             screenWindow = new AetherStreamScreenWindow(video);

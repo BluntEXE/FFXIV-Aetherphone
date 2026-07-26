@@ -36,17 +36,15 @@ internal sealed class AetherStreamQueue
     private const int PollEveryTicks = 30; // roughly twice a second at 60fps, not per-frame
 
     private readonly VideoPlayer video;
-    private readonly ScreenController screen;
     private readonly VideoUrlResolver metadataResolver = new();
     private readonly List<VideoQueueEntry> entries = new();
     private int tickCounter;
     private bool wasIdle = true;
     private bool autoAdvanceArmed;
 
-    public AetherStreamQueue(VideoPlayer video, ScreenController screen)
+    public AetherStreamQueue(VideoPlayer video)
     {
         this.video = video;
-        this.screen = screen;
     }
 
     public IReadOnlyList<VideoQueueEntry> Entries => entries;
@@ -81,7 +79,6 @@ internal sealed class AetherStreamQueue
         entries.Clear();
         Current = null;
         video.Stop();
-        screen.ClearActive();
     }
 
     public void Reorder(int fromIndex, int toIndex)
@@ -105,7 +102,6 @@ internal sealed class AetherStreamQueue
         {
             Current = null;
             video.Stop();
-            screen.ClearActive();
             return;
         }
 
@@ -114,16 +110,6 @@ internal sealed class AetherStreamQueue
         autoAdvanceArmed = false;
         EnrichIfYouTube(Current);
         video.Play(Current.Url);
-
-        // Marks the local player's own companion as the one to trigger the screen VFX on -
-        // without this, video decodes and reaches the screen texture fine (Plugin's own
-        // framework tick pushes frames unconditionally), but the screen itself never actually
-        // appears, since ScreenController only invokes the VFX for whichever entity is "active".
-        var localPlayer = Plugin.ObjectTable.LocalPlayer;
-        if (localPlayer is not null)
-        {
-            screen.SetActive(localPlayer.EntityId);
-        }
     }
 
     private void EnrichIfYouTube(VideoQueueEntry entry)

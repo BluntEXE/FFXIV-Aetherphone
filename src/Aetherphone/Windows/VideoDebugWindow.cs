@@ -1,4 +1,3 @@
-using Aetherphone.Core;
 using Aetherphone.Core.Video;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures;
@@ -7,15 +6,16 @@ using Dalamud.Interface.Windowing;
 
 namespace Aetherphone.Windows;
 
-// Stage 3/6 spike window: decode a local video file, draw it locally, and optionally push it
-// onto the in-game TV model - off the phone shell entirely. No URL handling, no phone UI yet -
-// see docs/port-plan.md.
+// Stage 3/6 spike window: decode a local video file and draw it locally - off the phone shell
+// entirely. No URL handling, no phone UI yet - see docs/port-plan.md. The screen is self-drawn
+// and world-anchored on the local player (port/alphachannel-engine Stage 4) - playing a video here
+// plays it on the in-world screen automatically, there's no separate "send to TV" step or
+// companion to summon first.
 internal sealed class VideoDebugWindow : Window, IDisposable
 {
     private readonly VideoPlayer video;
     private readonly ScreenController screen;
     private string path = string.Empty;
-    private bool sendToTv;
     private IDalamudTextureWrap? texture;
 
     public VideoDebugWindow(VideoPlayer video, ScreenController screen)
@@ -36,7 +36,7 @@ internal sealed class VideoDebugWindow : Window, IDisposable
 
     private void DrawTvSection()
     {
-        ImGui.TextUnformatted("TV (Stage 6)");
+        ImGui.TextUnformatted("Screen");
         ImGui.TextUnformatted($"State: {screen.State}");
         ImGui.TextUnformatted($"Resource hook healthy: {screen.IsHookHealthy}");
 
@@ -48,29 +48,13 @@ internal sealed class VideoDebugWindow : Window, IDisposable
 
         switch (screen.State)
         {
-            case ScreenState.NotSummoned:
-                ImGui.TextColored(new Vector4(1f, 0.8f, 0.3f, 1f),
-                    "No Carbuncle summoned nearby - summon one to play video on it.");
-                break;
-            case ScreenState.AwaitingMaterial:
-                ImGui.TextColored(new Vector4(1f, 0.8f, 0.3f, 1f),
-                    "Carbuncle found, but it doesn't have the screen material yet.");
-                if (ImGui.Button("Apply companion appearance mod"))
-                {
-                    screen.ApplyCompanionAppearance(out var error);
-                    if (error is not null)
-                    {
-                        AepLog.Warning($"[Video] {error}");
-                    }
-                }
-
+            case ScreenState.NotReady:
+                ImGui.TextColored(new Vector4(1f, 0.8f, 0.3f, 1f), "Screen hook not installed yet.");
                 break;
             case ScreenState.Ready:
                 ImGui.TextColored(new Vector4(0.4f, 1f, 0.5f, 1f), "Screen ready.");
                 break;
         }
-
-        ImGui.Checkbox("Send decoded frames to the TV", ref sendToTv);
     }
 
     private void DrawPlaybackSection()
@@ -79,12 +63,6 @@ internal sealed class VideoDebugWindow : Window, IDisposable
         ImGui.SameLine();
         if (ImGui.Button("Play"))
         {
-            var localPlayer = Plugin.ObjectTable.LocalPlayer;
-            if (localPlayer is not null)
-            {
-                screen.SetActive(localPlayer.EntityId);
-            }
-
             video.Play(path);
         }
 
@@ -92,7 +70,6 @@ internal sealed class VideoDebugWindow : Window, IDisposable
         if (ImGui.Button("Stop"))
         {
             video.Stop();
-            screen.ClearActive();
         }
 
         ImGui.Text($"State: {video.State}");
@@ -109,11 +86,6 @@ internal sealed class VideoDebugWindow : Window, IDisposable
         {
             ImGui.TextDisabled("No frame yet.");
             return;
-        }
-
-        if (sendToTv)
-        {
-            screen.PushFrame(frame, width, height);
         }
 
         texture?.Dispose();
@@ -136,7 +108,6 @@ internal sealed class VideoDebugWindow : Window, IDisposable
     public void Dispose()
     {
         video.Stop();
-        screen.ClearActive();
         texture?.Dispose();
         texture = null;
     }
