@@ -37,6 +37,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public Vector2? MinimizedPosition { get; set; }
     public bool DoNotDisturb { get; set; }
     public bool Vibration { get; set; } = true;
+    public bool ImportScreenshots { get; set; } = true;
     public Dictionary<string, AppNotificationSetting> NotificationSettings { get; set; } = new();
     public bool NotifyDailyReset { get; set; }
     public bool NotifyWeeklyReset { get; set; }
