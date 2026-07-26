@@ -2883,6 +2883,7 @@
   "conduct.yellowpages.allowed.3": "Free company, static ve venue personeli alımları",
   "conduct.yellowpages.allowed.4": "Net fiyatlar ve net beklentiler",
   "conduct.yellowpages.allowed.5": "İşi gösteren ve mod sayfasına bağlanan mod ilanları",
+  "conduct.yellowpages.allowed.6": "Yalnızca modla ilgili plugin ilanları, diğerlerinin tamamı hariç",
   "conduct.yellowpages.gil.title": "Yalnızca Gil",
   "conduct.yellowpages.gil.lead": "İlanlar yalnızca gil isteyebilir. Aşağıdakilere asla izin verilmez:",
   "conduct.yellowpages.gil.1": "Gerçek para, hediye kartları veya oyun dışında alınan ödemeler",

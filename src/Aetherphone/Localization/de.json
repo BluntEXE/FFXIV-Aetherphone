@@ -2883,6 +2883,7 @@
   "conduct.yellowpages.allowed.3": "Rekrutierung für Freie Gesellschaften, Statics und Venue-Personal",
   "conduct.yellowpages.allowed.4": "Klare Preise und klare Erwartungen",
   "conduct.yellowpages.allowed.5": "Mod-Anzeigen, die die Arbeit zeigen und zur Mod-Seite verlinken",
+  "conduct.yellowpages.allowed.6": "Plugin-Anzeigen nur, wenn das Plugin Mod-Bezug hat, alle anderen sind ausgeschlossen",
   "conduct.yellowpages.gil.title": "Nur Gil",
   "conduct.yellowpages.gil.lead": "Anzeigen dürfen nur Gil verlangen. Folgendes ist nie erlaubt:",
   "conduct.yellowpages.gil.1": "Echtgeld, Geschenkkarten oder Zahlungen außerhalb des Spiels",

@@ -3620,6 +3620,7 @@ internal static class L
             new("conduct.yellowpages.allowed.3", "Recruiting for free companies, statics, and venue staff"),
             new("conduct.yellowpages.allowed.4", "Clear prices and clear expectations"),
             new("conduct.yellowpages.allowed.5", "Mod ads that show the work and link to the mod page"),
+            new("conduct.yellowpages.allowed.6", "Plugin ads only if the plugin is mod related, all others excluded"),
         };
         public static readonly LocString YellowPagesGilTitle = new("conduct.yellowpages.gil.title", "Gil Only");
         public static readonly LocString YellowPagesGilLead = new("conduct.yellowpages.gil.lead", "Ads may only ask for gil. The following are never allowed:");

@@ -2883,6 +2883,7 @@
   "conduct.yellowpages.allowed.3": "Recrutement pour compagnies libres, statics et personnel de venue",
   "conduct.yellowpages.allowed.4": "Des prix clairs et des attentes claires",
   "conduct.yellowpages.allowed.5": "Des annonces de mods qui montrent le travail et renvoient à la page du mod",
+  "conduct.yellowpages.allowed.6": "Des annonces de plugins uniquement si le plugin est lié aux mods, toutes les autres sont exclues",
   "conduct.yellowpages.gil.title": "Uniquement des gils",
   "conduct.yellowpages.gil.lead": "Les annonces ne peuvent demander que des gils. Ce qui suit n'est jamais autorisé :",
   "conduct.yellowpages.gil.1": "Argent réel, cartes cadeaux ou paiements effectués hors du jeu",

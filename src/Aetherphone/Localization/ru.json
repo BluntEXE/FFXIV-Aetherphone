@@ -2883,6 +2883,7 @@
   "conduct.yellowpages.allowed.3": "Наборы в вольные компании, статики и персонал венью",
   "conduct.yellowpages.allowed.4": "Ясные цены и ясные ожидания",
   "conduct.yellowpages.allowed.5": "Объявления о модах, которые показывают работу и ведут на страницу мода",
+  "conduct.yellowpages.allowed.6": "Объявления о плагинах только если плагин связан с модами, все остальные исключены",
   "conduct.yellowpages.gil.title": "Только гилы",
   "conduct.yellowpages.gil.lead": "В объявлениях можно просить только гилы. Следующее запрещено всегда:",
   "conduct.yellowpages.gil.1": "Реальные деньги, подарочные карты и оплата вне игры",
