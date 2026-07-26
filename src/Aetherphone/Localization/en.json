@@ -695,6 +695,7 @@
   "settings.commandMarket": "Open the market board, optionally searching an item",
   "settings.commandReset": "Move the phone back to the center of the screen",
   "settings.commandTest": "Send a sample notification",
+  "changelog.r0991.0": "Removed a few suggested tags from Velvet, so they no longer appear when you edit your profile or tag a post",
   "changelog.r0990.0": "Added the App Store, a new app where you browse every app on the phone by category, install the ones you want, and remove the ones you do not, with a product page for each",
   "changelog.r0990.1": "Added Muster, a new app for meetups where you post a live announcement with your in-game location, start time, and duration, browse what is happening on your data center, RSVP, travel there in one tap, and keep everyone posted with quick updates; invites can be sent into any chat",
   "changelog.r0990.2": "Added Yellow Pages, a new classifieds board where you post a place, a service, or a call for people, with photos, a housing address, opening hours, and end-to-end encrypted inquiries; ads renew, expire on their own, and share into any chat as a card",

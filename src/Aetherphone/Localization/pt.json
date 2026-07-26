@@ -695,6 +695,7 @@
   "settings.commandMarket": "Abrir o mercado, opcionalmente buscando um item",
   "settings.commandReset": "Mover o telefone de volta ao centro da tela",
   "settings.commandTest": "Enviar uma notificação de teste",
+  "changelog.r0991.0": "Removemos algumas tags sugeridas do Velvet, então elas não aparecem mais ao editar seu perfil ou marcar uma publicação",
   "changelog.r0990.0": "Adicionamos a App Store, uma nova app onde você navega por todas as apps do telefone por categoria, instala as que quiser e remove as que não quiser, com uma página de produto para cada uma",
   "changelog.r0990.1": "Adicionamos o Muster, uma nova app para encontros: você publica um anúncio ao vivo com sua localização no jogo, horário de início e duração, vê o que está rolando no seu data center, confirma presença, viaja até lá com um toque e mantém todo mundo informado com atualizações rápidas; convites podem ser enviados para qualquer conversa",
   "changelog.r0990.2": "Adicionamos o Yellow Pages, um novo mural de classificados onde você anuncia um lugar, um serviço ou uma vaga, com fotos, endereço de moradia, horário de funcionamento e consultas com criptografia de ponta a ponta; os anúncios podem ser renovados, expiram sozinhos e são compartilhados como cartão em qualquer conversa",

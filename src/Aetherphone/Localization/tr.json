@@ -695,6 +695,7 @@
   "settings.commandMarket": "Pazar tahtasını açar, isteğe bağlı eşya araması yapar",
   "settings.commandReset": "Telefonu ekranın ortasına geri getirir",
   "settings.commandTest": "Örnek bir bildirim gönderir",
+  "changelog.r0991.0": "Velvet'ten bazı önerilen etiketler kaldırıldı; artık profilini düzenlerken veya bir gönderiyi etiketlerken görünmüyorlar",
   "changelog.r0990.0": "App Store eklendi: telefondaki tüm uygulamalara kategoriye göre göz atabildiğin, istediklerini kurup istemediklerini kaldırabildiğin ve her biri için ayrı bir tanıtım sayfası olan yeni bir uygulama",
   "changelog.r0990.1": "Muster eklendi: buluşmalar için yeni bir uygulama. Oyun içi konumun, başlangıç saatin ve süresiyle canlı bir duyuru yayınlarsın, veri merkezinde neler olduğunu görürsün, katılacağını bildirirsin, tek dokunuşla oraya gidersin ve kısa güncellemelerle herkesi haberdar edersin; davetler her sohbete gönderilebilir",
   "changelog.r0990.2": "Yellow Pages eklendi: bir mekânı, bir hizmeti ya da bir eleman çağrısını fotoğraflar, ev adresi, çalışma saatleri ve uçtan uca şifreli sorularla yayınladığın yeni bir ilan panosu. İlanlar yenilenir, süresi dolunca kendiliğinden kapanır ve kart olarak her sohbete paylaşılır",

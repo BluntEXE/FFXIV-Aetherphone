@@ -858,6 +858,11 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release0991 =
+        {
+            new("changelog.r0991.0", "Removed a few suggested tags from Velvet, so they no longer appear when you edit your profile or tag a post"),
+        };
+
         public static readonly LocString[] Release0990 =
         {
             new("changelog.r0990.0", "Added the App Store, a new app where you browse every app on the phone by category, install the ones you want, and remove the ones you do not, with a product page for each"),

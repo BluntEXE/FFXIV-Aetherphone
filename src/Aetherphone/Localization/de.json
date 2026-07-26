@@ -695,6 +695,7 @@
   "settings.commandMarket": "Öffnet das Marktbrett, optional mit Gegenstandssuche",
   "settings.commandReset": "Holt das Telefon zurück in die Bildschirmmitte",
   "settings.commandTest": "Sendet eine Beispielbenachrichtigung",
+  "changelog.r0991.0": "Einige vorgeschlagene Tags wurden aus Velvet entfernt und erscheinen nicht mehr, wenn du dein Profil bearbeitest oder einen Beitrag taggst",
   "changelog.r0990.0": "App Store hinzugefügt, eine neue App, in der du alle Apps des Telefons nach Kategorie durchstöberst, die gewünschten installierst und die anderen entfernst, mit einer Produktseite für jede App",
   "changelog.r0990.1": "Muster hinzugefügt, eine neue App für Treffen: Du veröffentlichst eine Live-Ankündigung mit deinem Ort im Spiel, Startzeit und Dauer, siehst, was auf deinem Datenzentrum läuft, sagst zu, reist mit einem Tipp hin und hältst alle mit kurzen Updates auf dem Laufenden; Einladungen lassen sich in jeden Chat schicken",
   "changelog.r0990.2": "Yellow Pages hinzugefügt, ein neues Anzeigenbrett, auf dem du einen Ort, einen Dienst oder einen Aufruf inserierst, mit Fotos, Hausadresse, Öffnungszeiten und Ende-zu-Ende verschlüsselten Anfragen; Anzeigen lassen sich verlängern, laufen von selbst aus und werden als Karte in jeden Chat geteilt",

@@ -695,6 +695,7 @@
   "settings.commandMarket": "Abrir el tablón de mercado, opcionalmente buscando un objeto",
   "settings.commandReset": "Mover el teléfono de vuelta al centro de la pantalla",
   "settings.commandTest": "Enviar una notificación de prueba",
+  "changelog.r0991.0": "Se quitaron algunas etiquetas sugeridas de Velvet, así que ya no aparecen al editar tu perfil ni al etiquetar una publicación",
   "changelog.r0990.0": "Se añadió la App Store, una nueva app donde exploras todas las apps del teléfono por categoría, instalas las que quieras y quitas las que no, con una página de producto para cada una",
   "changelog.r0990.1": "Se añadió Muster, una nueva app para quedadas: publicas un aviso en directo con tu ubicación en el juego, la hora de inicio y la duración, ves lo que pasa en tu centro de datos, confirmas asistencia, viajas allí con un toque y mantienes a todos al día con actualizaciones rápidas; las invitaciones se pueden enviar a cualquier chat",
   "changelog.r0990.2": "Se añadió Yellow Pages, un nuevo tablón de anuncios donde publicas un lugar, un servicio o una llamada de gente, con fotos, dirección de vivienda, horario y consultas cifradas de extremo a extremo; los anuncios se renuevan, caducan solos y se comparten como tarjeta en cualquier chat",
