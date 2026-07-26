@@ -3619,8 +3619,8 @@ internal static class L
             new("conduct.yellowpages.allowed.2", "Crafting, gathering, portraits, glamour, and performance work for gil"),
             new("conduct.yellowpages.allowed.3", "Recruiting for free companies, statics, and venue staff"),
             new("conduct.yellowpages.allowed.4", "Clear prices and clear expectations"),
-            new("conduct.yellowpages.allowed.5", "Mod ads that show the work and link to the mod page"),
-            new("conduct.yellowpages.allowed.6", "Plugin ads only if the plugin is mod related, all others excluded"),
+            new("conduct.yellowpages.allowed.5", "Mod ads that show the work and link to the mod page: SFW mods only, no NSFW mods"),
+            new("conduct.yellowpages.allowed.6", "Plugin ads only for modding and GPose plugins: QoL, UI, and automation are excluded"),
         };
         public static readonly LocString YellowPagesGilTitle = new("conduct.yellowpages.gil.title", "Gil Only");
         public static readonly LocString YellowPagesGilLead = new("conduct.yellowpages.gil.lead", "Ads may only ask for gil. The following are never allowed:");
@@ -3628,7 +3628,7 @@ internal static class L
         {
             new("conduct.yellowpages.gil.1", "Real money, gift cards, or payments taken outside the game"),
             new("conduct.yellowpages.gil.2", "RMT, gil selling, account services, or third-party boosting shops"),
-            new("conduct.yellowpages.gil.3", "Selling mods or mod commissions: mod ads link out and carry no price"),
+            new("conduct.yellowpages.gil.3", "Selling mods, plugins, or commissions for them: those ads link out and carry no price"),
             new("conduct.yellowpages.gil.4", "Trading account access or characters"),
         };
         public static readonly LocString YellowPagesHonestTitle = new("conduct.yellowpages.honest.title", "Honest Listings");
