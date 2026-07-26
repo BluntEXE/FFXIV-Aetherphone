@@ -3407,7 +3407,7 @@ internal static class L
         public static readonly LocString VelvetAllowedLead = new("conduct.velvet.allowed.lead", "Examples of acceptable content include:");
         public static readonly LocString[] VelvetAllowedItems =
         {
-            new("conduct.velvet.allowed.1", "Mature roleplay advertisements"),
+            new("conduct.velvet.allowed.1", "Personal ads looking for mature roleplay"),
             new("conduct.velvet.allowed.2", "Suggestive screenshots (nudity is allowed)"),
             new("conduct.velvet.allowed.3", "Adult-oriented discussions"),
             new("conduct.velvet.allowed.4", "Relationship communities"),
@@ -3465,9 +3465,10 @@ internal static class L
         public static readonly LocString[] VelvetSpamItems =
         {
             new("conduct.velvet.spam.1", "Repetitive posts or feed flooding"),
-            new("conduct.velvet.spam.2", "Engagement manipulation or automated accounts"),
-            new("conduct.velvet.spam.3", "Malicious links, scams, or phishing"),
-            new("conduct.velvet.spam.4", "Sale or promotion of illegal services"),
+            new("conduct.velvet.spam.2", "Venue, business, or service advertisements: use Yellow Pages instead"),
+            new("conduct.velvet.spam.3", "Engagement manipulation or automated accounts"),
+            new("conduct.velvet.spam.4", "Malicious links, scams, or phishing"),
+            new("conduct.velvet.spam.5", "Sale or promotion of illegal services"),
         };
         public static readonly LocString VelvetRespectTitle = new("conduct.velvet.respect.title", "Be Respectful");
         public static readonly LocString VelvetRespectLead = new("conduct.velvet.respect.lead", "Treat others with respect. Do not engage in:");
