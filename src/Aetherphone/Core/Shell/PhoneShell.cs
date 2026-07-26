@@ -88,6 +88,8 @@ internal sealed class PhoneShell : IDisposable
         var banOverlay = new BanOverlay(services.AethernetSession);
         var confirmOverlay = new ConfirmOverlay(services.Confirm);
         var reportOverlay = new ReportOverlay(services.Report);
+        services.Share.Bind(apps, navigation);
+        var shareSheet = new ShareSheet(services.Share);
         var conductOverlay = new ConductGateOverlay(services.Conduct);
         setup = new SetupOverlay(services.AethernetSession, services.Aethernet, services.GameData,
             services.RemoteImages, services.Lodestone, bundle.Photos, services.WallpaperImages, navigation,
@@ -96,7 +98,7 @@ internal sealed class PhoneShell : IDisposable
         transition = new ShellTransitionRenderer(themes, navigation, home, painter);
         morph = new MinimizeMorphView(themes, minimize, minimizedView, notifications, painter);
         overlays = new ShellOverlayCoordinator(configuration, loading, navigation, controlCenter, banner, island,
-            incomingOverlay, banOverlay, confirmOverlay, reportOverlay, conductOverlay, director, setup);
+            incomingOverlay, banOverlay, confirmOverlay, reportOverlay, shareSheet, conductOverlay, director, setup);
     }
 
     public void OnOpened()
