@@ -60,6 +60,7 @@ internal sealed partial class YellowPagesApp
 
     private void DrawDetail(Rect area, string adId)
     {
+        EnsureDetailFetch(adId);
         var ad = ResolveAd(adId);
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, ad is null ? DisplayName : Loc.T(AdCategories.Label(ad.Category)), back);
@@ -68,7 +69,6 @@ internal sealed partial class YellowPagesApp
         var body = new Rect(new Vector2(area.Min.X, top), area.Max);
         if (ad is null)
         {
-            EnsureDetailFetch(adId);
             if (detailLoading)
             {
                 LoadingPulse.Draw(new Vector2(body.Center.X, body.Min.Y + 120f * scale), 13f * scale, ui.Accent,
@@ -106,6 +106,12 @@ internal sealed partial class YellowPagesApp
 
     private AdDto? ResolveAd(string adId)
     {
+        var fetched = detailFetched;
+        if (fetched is not null && fetched.Id == adId)
+        {
+            return fetched;
+        }
+
         var mine = store.Mine;
         for (var index = 0; index < mine.Length; index++)
         {
@@ -133,8 +139,7 @@ internal sealed partial class YellowPagesApp
             }
         }
 
-        var fetched = detailFetched;
-        return fetched is not null && fetched.Id == adId ? fetched : null;
+        return null;
     }
 
     private void EnsureDetailFetch(string adId)
