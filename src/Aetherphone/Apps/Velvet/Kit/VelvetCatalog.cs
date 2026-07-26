@@ -136,8 +136,8 @@ internal static class VelvetSuggestions
 
     public static readonly string[] Kinks =
     {
-        "sadist", "masochist", "predator", "prey", "little", "caregiver", "handler", "pet", "rigger", "rope bunny",
-        "brat", "brat tamer", "master", "slave", "watersports", "gangbang", "vanilla",
+        "sadist", "masochist", "prey", "handler", "pet", "rigger", "rope bunny", "brat", "brat tamer", "master",
+        "slave", "watersports", "gangbang", "vanilla",
     };
 
     public static readonly VelvetTagCategory[] TagCategories =
