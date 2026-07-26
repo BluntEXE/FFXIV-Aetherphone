@@ -31,6 +31,7 @@ internal sealed class AdInquiryStore : IDisposable
     private volatile bool sending;
     private string? openThreadId;
     private DateTime nextThreadPoll = DateTime.MinValue;
+    private readonly Dictionary<string, string> scopeCache = new(StringComparer.Ordinal);
 
     public AdInquiryStore(AethernetSession session, YellowPagesClient client, KeyVault vault,
         ConversationKeyStore keys, PhoneVisibility visibility, RealtimeSignalBus signals, AppGate gate)
@@ -56,8 +57,17 @@ internal sealed class AdInquiryStore : IDisposable
 
     public KeyVaultState VaultState => vault.State;
 
-    public string ScopeFor(string otherUserId) =>
-        ConversationKeyStore.AdScope(ConversationKeyStore.Pair(MyUserId, otherUserId));
+    public string ScopeFor(string otherUserId)
+    {
+        if (scopeCache.TryGetValue(otherUserId, out var cached))
+        {
+            return cached;
+        }
+
+        var scope = ConversationKeyStore.AdScope(ConversationKeyStore.Pair(MyUserId, otherUserId));
+        scopeCache[otherUserId] = scope;
+        return scope;
+    }
 
     /// <summary>Plaintext for display. Bodies always travel and rest as sealed envelopes.</summary>
     public string Reveal(string otherUserId, AdInquiryMessageDto message)
@@ -368,6 +378,7 @@ internal sealed class AdInquiryStore : IDisposable
         messages = Array.Empty<AdInquiryMessageDto>();
         openThreadId = null;
         loadedOnce = false;
+        scopeCache.Clear();
         cipher.Clear();
         cadence.Reset();
     }
