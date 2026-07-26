@@ -30,11 +30,11 @@ internal sealed partial class ChirperApp : IPhoneApp
     private const int MaxPostLength = 300;
     private const float FeedTopPadding = 8f;
     private const int MaxCommentLength = 500;
-    private const float ReactionEmojiWidth = 14f;
+    private const float ReactionEmojiWidth = 18f;
     private const float ReactionEmojiFill = 0.62f;
     private const float ReactionSlotMin = 30f;
     private const float ReactionSlotMax = 34f;
-    private const float ReactionChipHeight = 24f;
+    private const float ReactionChipHeight = 26f;
     private const float ReactionChipGap = 6f;
     private const float ReactionRowGap = 8f;
     public string Id => "chirper";
