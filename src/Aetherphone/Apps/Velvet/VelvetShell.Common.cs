@@ -1,7 +1,10 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Confirm;
+using Aetherphone.Core.Localization;
 using Aetherphone.Core.Report;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
@@ -48,6 +51,74 @@ internal sealed partial class VelvetShell
         {
             Title = title,
             Submit = (reason, done) => store.Report(targetType, targetId, reason, done),
+        });
+    }
+
+    private void DrawPostMenu(Rect area, bool inFeed)
+    {
+        if (menuPost is not { } post || !postMenu.IsOpenFor(post.Id))
+        {
+            return;
+        }
+
+        var mine = store.Me is { } me && me.UserId == post.OwnerId;
+        var count = 0;
+        if (inFeed)
+        {
+            postItems[count++] = new DropdownMenu.Item(Loc.T(L.Velvet.ViewPost),
+                FontAwesomeIcon.Expand.ToIconString());
+        }
+
+        if (mine)
+        {
+            postItems[count++] = new DropdownMenu.Item(Loc.T(L.Velvet.DeleteConfirm),
+                FontAwesomeIcon.Trash.ToIconString(), true);
+        }
+        else
+        {
+            postItems[count++] = new DropdownMenu.Item(Loc.T(L.Velvet.Report),
+                FontAwesomeIcon.Flag.ToIconString(), true);
+            postItems[count++] = new DropdownMenu.Item(Loc.T(L.Velvet.Block),
+                FontAwesomeIcon.Ban.ToIconString(), true);
+        }
+
+        var picked = postMenu.Draw(area, theme, postItems.AsSpan(0, count));
+        if (picked < 0)
+        {
+            return;
+        }
+
+        var viewOffset = inFeed ? 1 : 0;
+        if (inFeed && picked == 0)
+        {
+            OpenPostDetail(post.Id);
+            return;
+        }
+
+        if (mine)
+        {
+            AskDeletePost(post.Id, inFeed ? null : back);
+            return;
+        }
+
+        if (picked == viewOffset)
+        {
+            OpenReport("velvet_post", post.Id, Loc.T(L.Velvet.ReportPost));
+            return;
+        }
+
+        AskBlock(post.OwnerId, DisplayNameOf(post.OwnerDisplayName, post.OwnerHandle));
+    }
+
+    private void AskBlock(string userId, string displayName)
+    {
+        confirm.Ask(new ConfirmRequest
+        {
+            Message = Loc.T(L.Velvet.BlockConfirm, displayName),
+            ConfirmLabel = Loc.T(L.Velvet.Block),
+            CancelLabel = Loc.T(L.Velvet.DeleteCancel),
+            Danger = true,
+            Confirm = () => store.Block(userId, _ => { }),
         });
     }
 }

@@ -153,7 +153,6 @@ internal sealed partial class VelvetShell
                 actionsRight += Typography.Measure(commentText, TextStyles.Callout).X;
             }
 
-            var mine = store.Me is { } me && me.UserId == post.OwnerId;
             var trailingCenter = new Vector2(origin.X + width - 14f * scale, actionsY);
             if (photos.Length > 1)
             {
@@ -164,18 +163,13 @@ internal sealed partial class VelvetShell
                     VelvetTheme.BodyInk);
             }
 
-            if (mine)
+            var trailingRadius = 14f * scale;
+            if (ui.IconButton(trailingCenter, trailingRadius, FontAwesomeIcon.EllipsisH.ToIconString(),
+                    VelvetTheme.BodyInk, AppSkin.Transparent, 1f, Loc.T(L.Velvet.More)))
             {
-                if (ui.IconButton(trailingCenter, 14f * scale, FontAwesomeIcon.Trash.ToIconString(), VelvetTheme.Danger,
-                        VelvetTheme.Alpha(VelvetTheme.Danger, 0.16f), 0.9f, Loc.T(L.Velvet.DeleteConfirm)))
-                {
-                    AskDeletePost(post.Id);
-                }
-            }
-            else if (ui.IconButton(trailingCenter, 14f * scale, FontAwesomeIcon.Flag.ToIconString(), VelvetTheme.Danger,
-                         VelvetTheme.Alpha(VelvetTheme.Danger, 0.16f), 0.9f, Loc.T(L.Velvet.Report)))
-            {
-                OpenReport("velvet_media", post.Id, Loc.T(L.Velvet.ReportPost));
+                menuPost = post;
+                postMenu.Toggle(post.Id, new Rect(trailingCenter - new Vector2(trailingRadius, trailingRadius),
+                    trailingCenter + new Vector2(trailingRadius, trailingRadius)));
             }
 
             ImGui.SetCursorScreenPos(new Vector2(origin.X, actionsY + 20f * scale));
@@ -217,6 +211,7 @@ internal sealed partial class VelvetShell
         }
 
         DrawCommentComposer(new Rect(new Vector2(area.Min.X, area.Max.Y - composerHeight), area.Max), area, postId);
+        DrawPostMenu(area, false);
     }
 
     private void DrawComments(float width, float scale)
@@ -410,7 +405,7 @@ internal sealed partial class VelvetShell
         }
     }
 
-    private void AskDeletePost(string postId)
+    private void AskDeletePost(string postId, Action? deleted = null)
     {
         confirm.Ask(new ConfirmRequest
         {
@@ -423,7 +418,7 @@ internal sealed partial class VelvetShell
             {
                 if (ok)
                 {
-                    router.Pop();
+                    deleted?.Invoke();
                 }
 
                 done(ok);

@@ -188,6 +188,7 @@ internal sealed partial class VelvetShell : IPhoneApp
     public void OnClosed()
     {
         router.Reset();
+        postMenu.Close();
         avatarLightbox.Reset();
         store.ClearDiscover();
         discoverInclude.Clear();
@@ -477,8 +478,15 @@ internal sealed partial class VelvetShell : IPhoneApp
                 RefreshFeed();
             }
 
+            if (picked != (int)activeTab)
+            {
+                postMenu.Close();
+            }
+
             activeTab = (VelvetPage)picked;
         }
+
+        DrawPostMenu(area, true);
     }
 
     private void DrawRichBody(ImDrawListPtr drawList, RichTextLayout layout, Vector2 origin)

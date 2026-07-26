@@ -205,6 +205,16 @@ internal sealed partial class VelvetShell
             OpenProfile(entry.OwnerId);
         }
 
+        var moreCenter = new Vector2(origin.X + width - pad - 6f * scale, avatarCenter.Y);
+        var moreRadius = 14f * scale;
+        if (ui.IconButton(moreCenter, moreRadius, FontAwesomeIcon.EllipsisH.ToIconString(), VelvetTheme.BodyInk,
+                AppSkin.Transparent, 1f, Loc.T(L.Velvet.More)))
+        {
+            menuPost = entry;
+            postMenu.Toggle(entry.Id, new Rect(moreCenter - new Vector2(moreRadius, moreRadius),
+                moreCenter + new Vector2(moreRadius, moreRadius)));
+        }
+
         var photos = PostMedia.Photos(entry.MediaUrls, entry.MediaUrl);
         var result = DrawPostCarousel(drawList,
             new Rect(new Vector2(innerX, imageTop), new Vector2(innerX + innerWidth, imageBottom)), entry, photos,
