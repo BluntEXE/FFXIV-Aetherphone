@@ -50,6 +50,7 @@ internal sealed partial class VelvetShell : IPhoneApp
     private readonly ConductGateService conduct;
     private readonly WallpaperImageCache wallpaperImages;
     private readonly AppSkin ui = new(VelvetTheme.Palette);
+    private readonly RichTextCache feedCaptionLayouts = new();
     private readonly RichTextCache detailBodyLayouts = new();
     private readonly RichTextCache commentLayouts = new();
     private readonly MentionPopup mentionPopup = new();
@@ -104,11 +105,12 @@ internal sealed partial class VelvetShell : IPhoneApp
             new AvatarComposerLabels(L.Velvet.ChangePhoto, L.Velvet.ImportFromPc, L.Velvet.NoPhotos,
                 L.Velvet.MoveAndScale, L.Velvet.Use, L.Velvet.Saving, L.Velvet.GestureHint), library,
             wallpaperImages, confirm, () => store.AvatarFailure);
-        post = new VelvetPostComposer(store, stories, library, images, lodestone, wallpaperImages);
+        post = new VelvetPostComposer(store, stories, library, images, lodestone, wallpaperImages, OpenPostTags);
         router = new ViewRouter<VelvetView>(VelvetView.Root);
         drawView = DrawView;
         back = () => router.Pop();
         threadView = new ThreadView(this);
+        LoadMutes();
     }
 
     public string Id => "velvet";
@@ -159,6 +161,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         {
             store.EnsureMe();
             stories.RefreshTray();
+            ApplyFeedFilters();
         }
 
         if (launcher.TryConsume(out var targetUserId) && GateAccepted && configuration.IsVelvetOnboarded() &&
@@ -187,7 +190,8 @@ internal sealed partial class VelvetShell : IPhoneApp
         router.Reset();
         avatarLightbox.Reset();
         store.ClearDiscover();
-        ClearDiscoverFilters();
+        discoverInclude.Clear();
+        feedInclude.Clear();
         activeTab = VelvetPage.Discover;
         stories.Close();
     }
@@ -352,8 +356,11 @@ internal sealed partial class VelvetShell : IPhoneApp
             case VelvetScreenId.Reactions:
                 threadView.DrawReactions(area, view.Arg ?? string.Empty);
                 break;
-            case VelvetScreenId.DiscoverFilters:
-                DrawDiscoverFilters(area);
+            case VelvetScreenId.Filters:
+                DrawFilters(area);
+                break;
+            case VelvetScreenId.PostTags:
+                DrawPostTags(area);
                 break;
             case VelvetScreenId.Encryption:
                 threadView.DrawEncryptionScreen(area);

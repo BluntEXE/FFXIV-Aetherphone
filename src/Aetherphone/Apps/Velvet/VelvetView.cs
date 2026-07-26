@@ -31,7 +31,8 @@ internal enum VelvetScreenId
     Intro,
     Reactions,
     RequestDetail,
-    DiscoverFilters,
+    Filters,
+    PostTags,
     Encryption,
 }
 
@@ -43,7 +44,8 @@ internal readonly record struct VelvetView(VelvetScreenId Screen, string? Arg = 
     public static readonly VelvetView Settings = new(VelvetScreenId.Settings);
     public static readonly VelvetView Activity = new(VelvetScreenId.Activity);
     public static readonly VelvetView Blocked = new(VelvetScreenId.Blocked);
-    public static readonly VelvetView DiscoverFilters = new(VelvetScreenId.DiscoverFilters);
+    public static readonly VelvetView Filters = new(VelvetScreenId.Filters);
+    public static readonly VelvetView PostTags = new(VelvetScreenId.PostTags);
     public static readonly VelvetView Encryption = new(VelvetScreenId.Encryption);
 
     public static VelvetView Profile(string userId) => new(VelvetScreenId.Profile, userId);

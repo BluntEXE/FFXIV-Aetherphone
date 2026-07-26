@@ -150,6 +150,23 @@ internal static class VelvetSuggestions
             new[] { "para", "multi-para", "literate", "walk-up", "tell-first", "lore-friendly", "canon", "oc",
                 "immersive", "venue" }),
     };
+
+    public static readonly Vector4 KinkHue = new(0.647f, 0.482f, 0.839f, 1f);
+
+    public static readonly VelvetTagCategory[] PostTagCategories = BuildPostTagCategories();
+
+    private static VelvetTagCategory[] BuildPostTagCategories()
+    {
+        var categories = new VelvetTagCategory[TagCategories.Length + 2];
+        categories[0] = new VelvetTagCategory(L.Velvet.CardKinks, KinkHue, Kinks);
+        categories[1] = new VelvetTagCategory(L.Velvet.CardLimits, VelvetTheme.Gold, Limits);
+        for (var index = 0; index < TagCategories.Length; index++)
+        {
+            categories[index + 2] = TagCategories[index];
+        }
+
+        return categories;
+    }
 }
 
 internal readonly record struct VelvetTagCategory(LocString Title, Vector4 Hue, string[] Tags);

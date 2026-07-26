@@ -2107,8 +2107,19 @@ internal static class L
         public static readonly LocString FiltersTitle = new("velvet.filtersTitle", "Filters");
         public static readonly LocString FilterHint =
             new("velvet.filterHint", "Tap once to include, tap again to exclude.");
+        public static readonly LocString FilterMuteHint =
+            new("velvet.filterMuteHint",
+                "Excluded chips are saved and hide matching people and posts everywhere in Velvet.");
+        public static readonly LocString PostTagsTitle = new("velvet.postTagsTitle", "Tags");
+        public static readonly LocString PostTagsEmpty = new("velvet.postTagsEmpty", "Add tags");
+        public static readonly LocString PostTagsHint =
+            new("velvet.postTagsHint", "Tag what this post contains so people can filter it out.");
+        public static readonly LocPlural PostTagsRemaining =
+            new("velvet.postTagsRemaining", "{0} tag left", "{0} tags left");
         public static readonly LocString FeedNone = new("velvet.feedNone", "Nothing shared yet");
         public static readonly LocString FeedNoneHint = new("velvet.feedNoneHint", "Be the first to post.");
+        public static readonly LocString FeedNoneFiltered =
+            new("velvet.feedNoneFiltered", "Your filters are hiding everything here.");
         public static readonly LocString FeedScopeAll = new("velvet.feedScopeAll", "Everyone");
         public static readonly LocString FeedScopeConnections = new("velvet.feedScopeConnections", "Connections");
         public static readonly LocString AudienceConnections = new("velvet.audienceConnections", "Connections only");

@@ -9,6 +9,7 @@ using Aetherphone.Core.Social;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
@@ -23,6 +24,8 @@ internal enum VelvetComposeResult
 
 internal sealed class VelvetPostComposer
 {
+    public const int MaxPostTags = 8;
+
     private readonly VelvetStore store;
     private readonly StoryPresenter stories;
     private readonly RemoteImageCache images;
@@ -31,6 +34,8 @@ internal sealed class VelvetPostComposer
     private readonly MentionAutocomplete captionMentions;
     private readonly EmojiComposer captionEmoji = new();
     private readonly PhotoComposeSession session;
+    private readonly Action openTags;
+    private readonly List<string> tags = new();
     private bool storyMode;
     private PostAspect aspect = PostAspect.Square;
     private readonly string[] aspectLabels = new string[PostAspects.All.Length];
@@ -41,15 +46,35 @@ internal sealed class VelvetPostComposer
     private int audience = VelvetPostAudience.Connections;
 
     public VelvetPostComposer(VelvetStore store, StoryPresenter stories, PhotoLibrary library,
-        RemoteImageCache images, LodestoneService lodestone, WallpaperImageCache wallpaperImages)
+        RemoteImageCache images, LodestoneService lodestone, WallpaperImageCache wallpaperImages, Action openTags)
     {
         this.store = store;
         this.stories = stories;
         this.images = images;
         this.lodestone = lodestone;
+        this.openTags = openTags;
         captionMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         session = new PhotoComposeSession(library, wallpaperImages);
     }
+
+    public int TagCount => tags.Count;
+
+    public bool HasTag(string token) => tags.Contains(token);
+
+    public void ToggleTag(string token)
+    {
+        if (tags.Remove(token))
+        {
+            return;
+        }
+
+        if (tags.Count < MaxPostTags)
+        {
+            tags.Add(token);
+        }
+    }
+
+    public void ClearTags() => tags.Clear();
 
     private static PhotoComposeStyle Style => new(AppPalettes.Velvet.Accent, AppPalettes.Velvet.MutedInk,
         new Vector4(1f, 1f, 1f, 0.10f), AppPalettes.Velvet.Accent, AppPalettes.Velvet.MutedInk, false);
@@ -80,6 +105,7 @@ internal sealed class VelvetPostComposer
         caption = string.Empty;
         status = string.Empty;
         audience = VelvetPostAudience.Connections;
+        tags.Clear();
         captionEmoji.Close();
         session.Open(story);
     }
@@ -231,15 +257,24 @@ internal sealed class VelvetPostComposer
         var audienceHeight = storyMode ? 0f : 30f * scale;
         var audienceGap = storyMode ? 0f : 10f * scale;
         var audienceTop = captionY - audienceGap - audienceHeight;
+        var tagsHeight = storyMode ? 0f : 32f * scale;
+        var tagsGap = storyMode ? 0f : 8f * scale;
+        var tagsTop = audienceTop - tagsGap - tagsHeight;
         var stripHeight = session.SelectedCount > 1 ? 52f * scale : 0f;
         var statusHeight = status.Length > 0 ? 20f * scale : 0f;
         var previewRegion = new Rect(new Vector2(area.Min.X + 16f * scale, top + 12f * scale),
-            new Vector2(area.Max.X - 16f * scale, audienceTop - 12f * scale - stripHeight - statusHeight));
+            new Vector2(area.Max.X - 16f * scale, tagsTop - 12f * scale - stripHeight - statusHeight));
         DrawCaptionPreview(previewRegion, scale);
         if (statusHeight > 0f)
         {
-            Typography.DrawCentered(new Vector2(area.Center.X, audienceTop - 12f * scale), status, context.Theme.Danger,
+            Typography.DrawCentered(new Vector2(area.Center.X, tagsTop - 12f * scale), status, context.Theme.Danger,
                 TextStyles.Footnote);
+        }
+
+        if (!storyMode)
+        {
+            DrawTagsRow(new Rect(new Vector2(area.Min.X + 16f * scale, tagsTop),
+                new Vector2(area.Max.X - 16f * scale, tagsTop + tagsHeight)), scale);
         }
 
         if (stripHeight > 0f)
@@ -295,6 +330,28 @@ internal sealed class VelvetPostComposer
         }
     }
 
+    private void DrawTagsRow(Rect rect, float scale)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var hovered = UiInteract.Hover(rect.Min, rect.Max);
+        Squircle.Fill(drawList, rect.Min, rect.Max, 9f * scale,
+            ImGui.GetColorU32(new Vector4(1f, 1f, 1f, hovered ? 0.16f : 0.10f)));
+        AppSkin.Icon(new Vector2(rect.Min.X + 18f * scale, rect.Center.Y), FontAwesomeIcon.Hashtag.ToIconString(),
+            tags.Count > 0 ? AppPalettes.Velvet.Accent : AppPalettes.Velvet.MutedInk, 0.78f);
+
+        var textLeft = rect.Min.X + 34f * scale;
+        var textWidth = rect.Max.X - textLeft - 14f * scale;
+        var label = tags.Count == 0 ? Loc.T(L.Velvet.PostTagsEmpty) : string.Join(", ", tags);
+        Typography.Draw(new Vector2(textLeft, rect.Center.Y - 8f * scale),
+            Typography.FitText(label, textWidth, TextStyles.Subheadline),
+            tags.Count == 0 ? AppPalettes.Velvet.MutedInk : AppPalettes.Velvet.TitleInk, TextStyles.Subheadline);
+
+        if (UiInteract.Click(rect.Min, rect.Max, hovered))
+        {
+            openTags();
+        }
+    }
+
     private void DrawCaptionPreview(Rect region, float scale)
     {
         var aspect = Aspect;
@@ -336,7 +393,7 @@ internal sealed class VelvetPostComposer
             return;
         }
 
-        store.CreatePost(session.SelectedArray(), session.CropsArray(), aspect, caption, Array.Empty<string>(),
+        store.CreatePost(session.SelectedArray(), session.CropsArray(), aspect, caption, tags.ToArray(),
             audience, ok => outcome = ok ? 1 : 2);
     }
 }

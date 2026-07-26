@@ -34,7 +34,20 @@ internal sealed class VelvetClient
     public Task<VelvetDiscoverPage?> DiscoverAsync(VelvetDiscoverFilter filter, string tags, string region,
         string? cursor, CancellationToken token)
     {
-        var path = new System.Text.StringBuilder("/velvet/discover?lookingFor=").Append(filter.IntentInclude);
+        var path = new System.Text.StringBuilder("/velvet/discover");
+        AppendFilter(path, filter, region);
+        if (tags.Length > 0)
+        {
+            path.Append("&tags=").Append(Uri.EscapeDataString(tags));
+        }
+
+        AppendCursor(path, cursor);
+        return net.GetAsync(path.ToString(), AethernetJsonContext.Default.VelvetDiscoverPage, token);
+    }
+
+    private static void AppendFilter(System.Text.StringBuilder path, VelvetDiscoverFilter filter, string region)
+    {
+        path.Append("?lookingFor=").Append(filter.IntentInclude);
         AppendMask(path, "lookingForExclude", filter.IntentExclude);
         AppendMask(path, "gender", filter.GenderInclude);
         AppendMask(path, "genderExclude", filter.GenderExclude);
@@ -50,22 +63,18 @@ internal sealed class VelvetClient
         AppendCsv(path, "limitsExclude", TokenCsv(filter.LimitsExclude));
         AppendCsv(path, "profileTags", TokenCsv(filter.TagsInclude));
         AppendCsv(path, "profileTagsExclude", TokenCsv(filter.TagsExclude));
-        if (tags.Length > 0)
-        {
-            path.Append("&tags=").Append(Uri.EscapeDataString(tags));
-        }
-
         if (region.Length > 0)
         {
             path.Append("&region=").Append(Uri.EscapeDataString(region));
         }
+    }
 
+    private static void AppendCursor(System.Text.StringBuilder path, string? cursor)
+    {
         if (cursor is not null)
         {
             path.Append("&cursor=").Append(Uri.EscapeDataString(cursor));
         }
-
-        return net.GetAsync(path.ToString(), AethernetJsonContext.Default.VelvetDiscoverPage, token);
     }
 
     private static void AppendMask(System.Text.StringBuilder path, string name, int mask)
@@ -154,15 +163,14 @@ internal sealed class VelvetClient
         return net.GetAsync(path, AethernetJsonContext.Default.VelvetConnectionPage, token);
     }
 
-    public Task<VelvetFeedPage?> FeedAsync(string scope, string? cursor, CancellationToken token)
+    public Task<VelvetFeedPage?> FeedAsync(string scope, VelvetDiscoverFilter filter, string region, string? cursor,
+        CancellationToken token)
     {
-        var path = $"/velvet/feed?scope={Uri.EscapeDataString(scope)}";
-        if (cursor is not null)
-        {
-            path += $"&cursor={Uri.EscapeDataString(cursor)}";
-        }
-
-        return net.GetAsync(path, AethernetJsonContext.Default.VelvetFeedPage, token);
+        var path = new System.Text.StringBuilder("/velvet/feed");
+        AppendFilter(path, filter, region);
+        path.Append("&scope=").Append(Uri.EscapeDataString(scope));
+        AppendCursor(path, cursor);
+        return net.GetAsync(path.ToString(), AethernetJsonContext.Default.VelvetFeedPage, token);
     }
 
     public Task<VelvetPostDto?> PostAsync(string postId, CancellationToken token)

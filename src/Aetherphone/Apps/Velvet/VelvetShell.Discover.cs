@@ -31,7 +31,6 @@ internal sealed partial class VelvetShell
     private string discoverQuery = string.Empty;
     private string discoverApplied = string.Empty;
     private float discoverDebounce;
-    private string discoverRegion = string.Empty;
     private readonly List<VChipModel> activeFilterChips = new();
     private readonly List<int> activeFilterKinds = new();
     private readonly List<int> activeFilterFlags = new();
@@ -51,7 +50,7 @@ internal sealed partial class VelvetShell
         DrawSearchField(searchRect, ref discoverQuery, Loc.T(L.Velvet.SearchPeopleHint));
         var filterRect = new Rect(new Vector2(area.Max.X - pad - buttonSize, searchTop),
             new Vector2(area.Max.X - pad, searchTop + rowHeight));
-        DrawFilterButton(filterRect);
+        DrawFilterButton(filterRect, VelvetPage.Discover);
         UiAnchors.Report("velvet.discover.filter", filterRect);
         TickDiscoverSearch();
 
@@ -64,10 +63,10 @@ internal sealed partial class VelvetShell
         using (AppSurface.Begin(listRect))
         {
             var width = ImGui.GetContentRegionAvail().X;
-            DrawActiveFilters(width);
+            DrawActiveFilters(width, VelvetPage.Discover);
 
             var results = FilterDiscoverByRegion(store.DiscoverResults);
-            if (discoverRegion.Length > 0 && results.Length < RegionFilterFill && store.HasMoreDiscover
+            if (discoverInclude.Region.Length > 0 && results.Length < RegionFilterFill && store.HasMoreDiscover
                 && !store.LoadingDiscover && !store.LoadingMoreDiscover)
             {
                 store.LoadMoreDiscover();
@@ -76,7 +75,7 @@ internal sealed partial class VelvetShell
             if (results.Length == 0)
             {
                 var paging = store.LoadingDiscover || store.LoadingMoreDiscover
-                    || (discoverRegion.Length > 0 && store.HasMoreDiscover);
+                    || (discoverInclude.Region.Length > 0 && store.HasMoreDiscover);
                 var message = paging ? Loc.T(L.Velvet.DiscoverLoading) : Loc.T(L.Velvet.DiscoverNone);
                 var hint = paging ? string.Empty : Loc.T(L.Velvet.DiscoverNoneHint);
                 Typography.DrawCentered(new Vector2(width * 0.5f + listRect.Min.X, listRect.Min.Y + 90f * scale),
@@ -125,11 +124,11 @@ internal sealed partial class VelvetShell
         }
     }
 
-    private void DrawFilterButton(Rect rect)
+    private void DrawFilterButton(Rect rect, VelvetPage surface)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var drawList = ImGui.GetWindowDrawList();
-        var active = DiscoverFilterActive || discoverRegion.Length > 0;
+        var active = IncludeFor(surface).Any || mutes.Any;
         var hovered = UiInteract.Hover(rect.Min, rect.Max);
         var radius = Metrics.Radius.Field * scale;
         var fill = active
@@ -157,16 +156,16 @@ internal sealed partial class VelvetShell
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
             {
-                router.Push(VelvetView.DiscoverFilters);
+                OpenFilters(surface);
             }
         }
     }
 
-    private void DrawActiveFilters(float width)
+    private void DrawActiveFilters(float width, VelvetPage surface)
     {
         var scale = ImGuiHelpers.GlobalScale;
-        var hasRegion = discoverRegion.Length > 0;
-        if (!DiscoverFilterActive && !hasRegion)
+        var include = IncludeFor(surface);
+        if (!include.Any && !mutes.Any)
         {
             Gap(6f);
             return;
@@ -178,9 +177,9 @@ internal sealed partial class VelvetShell
         activeFilterTokens.Clear();
         activeFilterExcluded.Clear();
 
-        if (hasRegion)
+        if (include.Region.Length > 0)
         {
-            AddActiveFilterChip(new VChipModel(discoverRegion, VChipStyle.Tint, VelvetTheme.RegionAccent,
+            AddActiveFilterChip(new VChipModel(include.Region, VChipStyle.Tint, VelvetTheme.RegionAccent,
                 FontAwesomeIcon.Globe, true), RegionChipKind, 0, string.Empty, false);
         }
 
@@ -188,52 +187,50 @@ internal sealed partial class VelvetShell
         for (var index = 0; index < intentDefs.Length; index++)
         {
             var def = intentDefs[index];
-            if ((filterIntentInclude & def.Flag) != 0)
+            if ((include.Intent & def.Flag) != 0)
             {
                 AddActiveFilterChip(new VChipModel(Loc.T(def.Label), VChipStyle.Tint, def.Hue, def.Icon, true),
                     IntentChipKind, def.Flag, string.Empty, false);
             }
 
-            if ((filterIntentExclude & def.Flag) != 0)
+            if ((mutes.Intent & def.Flag) != 0)
             {
                 AddActiveFilterChip(new VChipModel(Loc.T(def.Label), VChipStyle.Tint, VelvetTheme.Danger,
                     FontAwesomeIcon.Ban, true), IntentChipKind, def.Flag, string.Empty, true);
             }
         }
 
-        AddMaskFilterChips(GenderChipKind, filterGenderInclude, filterGenderExclude, VelvetGender.All, GenderLabelOf,
+        AddMaskFilterChips(GenderChipKind, include.Gender, mutes.Gender, VelvetGender.All, GenderLabelOf,
             FontAwesomeIcon.VenusMars);
-        AddMaskFilterChips(SexualityChipKind, filterSexualityInclude, filterSexualityExclude, VelvetSexuality.All,
+        AddMaskFilterChips(SexualityChipKind, include.Sexuality, mutes.Sexuality, VelvetSexuality.All,
             SexualityLabelOf, FontAwesomeIcon.Rainbow);
 
         var statuses = VelvetRelationship.All;
         for (var index = 0; index < statuses.Length; index++)
         {
             var flag = 1 << statuses[index];
-            if ((filterRelationshipInclude & flag) != 0)
+            if ((include.Relationship & flag) != 0)
             {
                 AddActiveFilterChip(new VChipModel(VelvetRelationship.Label(statuses[index]), VChipStyle.Tint,
                     VelvetTheme.Rose, FontAwesomeIcon.HandHoldingHeart, true), RelationshipChipKind, flag,
                     string.Empty, false);
             }
 
-            if ((filterRelationshipExclude & flag) != 0)
+            if ((mutes.Relationship & flag) != 0)
             {
                 AddActiveFilterChip(new VChipModel(VelvetRelationship.Label(statuses[index]), VChipStyle.Tint,
                     VelvetTheme.Danger, FontAwesomeIcon.Ban, true), RelationshipChipKind, flag, string.Empty, true);
             }
         }
 
-        AddTokenFilterChips(RoleChipKind, VelvetSuggestions.Roles, filterRolesInclude, filterRolesExclude,
-            VelvetTheme.Rose);
-        AddTokenFilterChips(KinkChipKind, VelvetSuggestions.Kinks, filterKinksInclude, filterKinksExclude,
-            KinkViolet);
-        AddTokenFilterChips(LimitChipKind, VelvetSuggestions.Limits, filterLimitsInclude, filterLimitsExclude,
-            VelvetTheme.Gold);
+        AddTokenFilterChips(RoleChipKind, VelvetSuggestions.Roles, include.Roles, mutes.Roles, VelvetTheme.Rose);
+        AddTokenFilterChips(KinkChipKind, VelvetSuggestions.Kinks, include.Kinks, mutes.Kinks,
+            VelvetSuggestions.KinkHue);
+        AddTokenFilterChips(LimitChipKind, VelvetSuggestions.Limits, include.Limits, mutes.Limits, VelvetTheme.Gold);
         var tagCategories = VelvetSuggestions.TagCategories;
         for (var index = 0; index < tagCategories.Length; index++)
         {
-            AddTokenFilterChips(TagChipKind, tagCategories[index].Tags, filterTagsInclude, filterTagsExclude,
+            AddTokenFilterChips(TagChipKind, tagCategories[index].Tags, include.Tags, mutes.Tags,
                 tagCategories[index].Hue);
         }
 
@@ -242,9 +239,15 @@ internal sealed partial class VelvetShell
             width, scale);
         if (removed >= 0)
         {
-            RemoveActiveFilter(activeFilterKinds[removed], activeFilterFlags[removed], activeFilterTokens[removed],
-                activeFilterExcluded[removed]);
-            ApplyDiscoverFilters();
+            if (RemoveActiveFilter(include, activeFilterKinds[removed], activeFilterFlags[removed],
+                    activeFilterTokens[removed], activeFilterExcluded[removed]))
+            {
+                ApplyMutesEverywhere();
+            }
+            else
+            {
+                ApplyFilters(surface);
+            }
         }
 
         Gap(10f);
@@ -299,70 +302,41 @@ internal sealed partial class VelvetShell
         activeFilterExcluded.Add(excluded);
     }
 
-    private void RemoveActiveFilter(int kind, int flag, string token, bool excluded)
+    private bool RemoveActiveFilter(VelvetFilterSelection include, int kind, int flag, string token, bool excluded)
     {
+        var target = excluded ? mutes : include;
         switch (kind)
         {
             case RegionChipKind:
-                discoverRegion = string.Empty;
+                include.Region = string.Empty;
                 break;
             case IntentChipKind:
-                if (excluded)
-                {
-                    filterIntentExclude &= ~flag;
-                }
-                else
-                {
-                    filterIntentInclude &= ~flag;
-                }
-
+                target.Intent &= ~flag;
                 break;
             case GenderChipKind:
-                if (excluded)
-                {
-                    filterGenderExclude &= ~flag;
-                }
-                else
-                {
-                    filterGenderInclude &= ~flag;
-                }
-
+                target.Gender &= ~flag;
                 break;
             case SexualityChipKind:
-                if (excluded)
-                {
-                    filterSexualityExclude &= ~flag;
-                }
-                else
-                {
-                    filterSexualityInclude &= ~flag;
-                }
-
+                target.Sexuality &= ~flag;
                 break;
             case RelationshipChipKind:
-                if (excluded)
-                {
-                    filterRelationshipExclude &= ~flag;
-                }
-                else
-                {
-                    filterRelationshipInclude &= ~flag;
-                }
-
+                target.Relationship &= ~flag;
                 break;
             case RoleChipKind:
-                (excluded ? filterRolesExclude : filterRolesInclude).Remove(token);
+                target.Roles.Remove(token);
                 break;
             case KinkChipKind:
-                (excluded ? filterKinksExclude : filterKinksInclude).Remove(token);
+                target.Kinks.Remove(token);
                 break;
             case LimitChipKind:
-                (excluded ? filterLimitsExclude : filterLimitsInclude).Remove(token);
+                target.Limits.Remove(token);
                 break;
             case TagChipKind:
-                (excluded ? filterTagsExclude : filterTagsInclude).Remove(token);
+                target.Tags.Remove(token);
                 break;
         }
+
+        return excluded;
     }
 
     private void DrawPersonCard(VelvetProfileDto profile, VelvetPostDto[] feed)
@@ -606,7 +580,8 @@ internal sealed partial class VelvetShell
 
     private VelvetProfileDto[] FilterDiscoverByRegion(VelvetProfileDto[] source)
     {
-        if (discoverRegion.Length == 0)
+        var region = discoverInclude.Region;
+        if (region.Length == 0)
         {
             return source;
         }
@@ -614,7 +589,7 @@ internal sealed partial class VelvetShell
         var count = 0;
         for (var index = 0; index < source.Length; index++)
         {
-            if (string.Equals(RegionCodeOf(source[index]), discoverRegion, StringComparison.Ordinal))
+            if (string.Equals(RegionCodeOf(source[index]), region, StringComparison.Ordinal))
             {
                 count++;
             }
@@ -629,7 +604,7 @@ internal sealed partial class VelvetShell
         var cursor = 0;
         for (var index = 0; index < source.Length; index++)
         {
-            if (string.Equals(RegionCodeOf(source[index]), discoverRegion, StringComparison.Ordinal))
+            if (string.Equals(RegionCodeOf(source[index]), region, StringComparison.Ordinal))
             {
                 filtered[cursor++] = source[index];
             }

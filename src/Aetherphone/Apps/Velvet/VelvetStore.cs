@@ -71,6 +71,9 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     private volatile bool feedLoadedAll;
     private volatile bool feedLoadedConnections;
     private volatile int feedScope = (int)VelvetFeedScope.All;
+    private volatile VelvetDiscoverFilter feedFilter = VelvetDiscoverFilter.Empty;
+    private volatile string feedRegion = string.Empty;
+    private volatile int feedEpoch;
     private volatile bool posting;
     private volatile VelvetPostDto? fetchedPost;
     private volatile string? fetchingPostId;
@@ -781,6 +784,26 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         feedScope = (int)scope;
     }
 
+    public void SetFeedFilter(VelvetDiscoverFilter filter, string region)
+    {
+        if (feedFilter.Matches(filter) && string.Equals(feedRegion, region, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        feedEpoch++;
+        feedFilter = filter;
+        feedRegion = region;
+        for (var index = 0; index < feedLanes.Length; index++)
+        {
+            feedLanes[index].Clear();
+        }
+
+        feedLoadedAll = false;
+        feedLoadedConnections = false;
+        RefreshFeed();
+    }
+
     public void RefreshFeed()
     {
         if (!session.IsSignedIn)
@@ -790,17 +813,25 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
 
         var scope = FeedScope;
         var lane = feedLanes[(int)scope];
+        var epoch = feedEpoch;
+        var filter = feedFilter;
+        var region = feedRegion;
         lane.Loading = true;
         work.Run("feed", async token =>
         {
-            var page = await client.FeedAsync(ScopeKey(scope), null, token).ConfigureAwait(false);
-            if (page is not null)
+            var page = await client.FeedAsync(ScopeKey(scope), filter, region, null, token).ConfigureAwait(false);
+            if (page is not null && epoch == feedEpoch)
             {
                 lane.ApplyRefresh(page.Items, page.NextCursor);
             }
         }, () =>
         {
             lane.Loading = false;
+            if (epoch != feedEpoch)
+            {
+                return;
+            }
+
             if (scope == VelvetFeedScope.All)
             {
                 feedLoadedAll = true;
@@ -827,11 +858,14 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
             return;
         }
 
+        var epoch = feedEpoch;
+        var filter = feedFilter;
+        var region = feedRegion;
         lane.LoadingMore = true;
         work.Run("feed more", async token =>
         {
-            var page = await client.FeedAsync(ScopeKey(scope), cursor, token).ConfigureAwait(false);
-            if (page is not null)
+            var page = await client.FeedAsync(ScopeKey(scope), filter, region, cursor, token).ConfigureAwait(false);
+            if (page is not null && epoch == feedEpoch)
             {
                 lane.ApplyMore(page.Items, page.NextCursor);
             }

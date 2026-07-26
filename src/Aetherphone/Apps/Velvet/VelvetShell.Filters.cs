@@ -1,6 +1,5 @@
 using Aetherphone.Apps.Velvet.Kit;
 using Aetherphone.Core;
-using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Social;
 using Aetherphone.Windows.Components;
@@ -12,139 +11,128 @@ namespace Aetherphone.Apps.Velvet;
 
 internal sealed partial class VelvetShell
 {
-    private static readonly Vector4 KinkViolet = new(0.647f, 0.482f, 0.839f, 1f);
+    private readonly VelvetFilterSelection mutes = new();
+    private readonly VelvetFilterSelection discoverInclude = new();
+    private readonly VelvetFilterSelection feedInclude = new();
+    private VelvetPage filterSurface = VelvetPage.Discover;
 
-    private int filterIntentInclude;
-    private int filterIntentExclude;
-    private int filterGenderInclude;
-    private int filterGenderExclude;
-    private int filterSexualityInclude;
-    private int filterSexualityExclude;
-    private int filterRelationshipInclude;
-    private int filterRelationshipExclude;
-    private readonly HashSet<string> filterRolesInclude = new();
-    private readonly HashSet<string> filterRolesExclude = new();
-    private readonly HashSet<string> filterKinksInclude = new();
-    private readonly HashSet<string> filterKinksExclude = new();
-    private readonly HashSet<string> filterLimitsInclude = new();
-    private readonly HashSet<string> filterLimitsExclude = new();
-    private readonly HashSet<string> filterTagsInclude = new();
-    private readonly HashSet<string> filterTagsExclude = new();
+    private VelvetFilterSelection IncludeFor(VelvetPage surface) =>
+        surface == VelvetPage.Feed ? feedInclude : discoverInclude;
 
-    private bool DiscoverFilterActive =>
-        filterIntentInclude != 0 || filterIntentExclude != 0
-        || filterGenderInclude != 0 || filterGenderExclude != 0
-        || filterSexualityInclude != 0 || filterSexualityExclude != 0
-        || filterRelationshipInclude != 0 || filterRelationshipExclude != 0
-        || filterRolesInclude.Count > 0 || filterRolesExclude.Count > 0
-        || filterKinksInclude.Count > 0 || filterKinksExclude.Count > 0
-        || filterLimitsInclude.Count > 0 || filterLimitsExclude.Count > 0
-        || filterTagsInclude.Count > 0 || filterTagsExclude.Count > 0;
+    private void LoadMutes() => mutes.LoadFrom(configuration.VelvetMutes);
 
-    private VelvetDiscoverFilter BuildDiscoverFilter() =>
-        new(VelvetIntent.Sanitize(filterIntentInclude), VelvetIntent.Sanitize(filterIntentExclude),
-            VelvetGender.Sanitize(filterGenderInclude), VelvetGender.Sanitize(filterGenderExclude),
-            VelvetSexuality.Sanitize(filterSexualityInclude), VelvetSexuality.Sanitize(filterSexualityExclude),
-            filterRelationshipInclude, filterRelationshipExclude,
-            filterRolesInclude.ToArray(), filterRolesExclude.ToArray(),
-            filterKinksInclude.ToArray(), filterKinksExclude.ToArray(),
-            filterLimitsInclude.ToArray(), filterLimitsExclude.ToArray(),
-            filterTagsInclude.ToArray(), filterTagsExclude.ToArray());
-
-    private void ApplyDiscoverFilters() =>
-        store.RefreshDiscover(BuildDiscoverFilter(), discoverApplied.Trim(), discoverRegion);
-
-    private void ClearDiscoverFilters()
+    private void SaveMutes()
     {
-        filterIntentInclude = 0;
-        filterIntentExclude = 0;
-        filterGenderInclude = 0;
-        filterGenderExclude = 0;
-        filterSexualityInclude = 0;
-        filterSexualityExclude = 0;
-        filterRelationshipInclude = 0;
-        filterRelationshipExclude = 0;
-        filterRolesInclude.Clear();
-        filterRolesExclude.Clear();
-        filterKinksInclude.Clear();
-        filterKinksExclude.Clear();
-        filterLimitsInclude.Clear();
-        filterLimitsExclude.Clear();
-        filterTagsInclude.Clear();
-        filterTagsExclude.Clear();
-        discoverRegion = string.Empty;
+        mutes.SaveInto(configuration.VelvetMutes);
+        configuration.Save();
     }
 
-    private void DrawDiscoverFilters(Rect area)
+    private void ApplyDiscoverFilters() =>
+        store.RefreshDiscover(VelvetFilterSelection.Combine(discoverInclude, mutes), discoverApplied.Trim(),
+            discoverInclude.Region);
+
+    private void ApplyFeedFilters() =>
+        store.SetFeedFilter(VelvetFilterSelection.Combine(feedInclude, mutes), feedInclude.Region);
+
+    private void ApplyFilters(VelvetPage surface)
+    {
+        if (surface == VelvetPage.Feed)
+        {
+            ApplyFeedFilters();
+            return;
+        }
+
+        ApplyDiscoverFilters();
+    }
+
+    private void ApplyMutesEverywhere()
+    {
+        SaveMutes();
+        ApplyDiscoverFilters();
+        ApplyFeedFilters();
+    }
+
+    private void OpenFilters(VelvetPage surface)
+    {
+        filterSurface = surface;
+        router.Push(VelvetView.Filters);
+    }
+
+    private void DrawFilters(Rect area)
     {
         var scale = ImGuiHelpers.GlobalScale;
+        var surface = filterSurface;
+        var include = IncludeFor(surface);
         if (VHeader.Push(area, Loc.T(L.Velvet.FiltersTitle), theme))
         {
             router.Pop();
             return;
         }
 
-        if ((DiscoverFilterActive || discoverRegion.Length > 0) &&
-            ui.HeaderAction(area, Loc.T(L.Velvet.FilterClearAll), true))
+        if ((include.Any || mutes.Any) && ui.HeaderAction(area, Loc.T(L.Velvet.FilterClearAll), true))
         {
-            ClearDiscoverFilters();
-            ApplyDiscoverFilters();
+            include.Clear();
+            mutes.Clear();
+            ApplyMutesEverywhere();
         }
 
-        var changed = false;
+        var changedInclude = false;
+        var changedMutes = false;
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + VHeader.Height * scale), area.Max);
         using (AppSurface.Begin(body))
         {
             Gap(8f);
             ui.HelpText(Loc.T(L.Velvet.FilterHint));
+            Gap(6f);
+            ui.HelpText(Loc.T(L.Velvet.FilterMuteHint));
             Gap(14f);
 
             VSectionHeader.Card(FontAwesomeIcon.Globe, Loc.T(L.Velvet.RegionLabel));
             Gap(8f);
-            changed |= DrawRegionFilterRow();
+            changedInclude |= DrawRegionFilterRow(include);
             Gap(16f);
 
             VSectionHeader.Card(FontAwesomeIcon.Compass, Loc.T(L.Velvet.CardIntent));
             Gap(6f);
-            changed |= DrawIntentFilterChips();
+            DrawIntentFilterChips(include, ref changedInclude, ref changedMutes);
             Gap(16f);
 
             VSectionHeader.Card(FontAwesomeIcon.VenusMars, Loc.T(L.Velvet.CardGender));
             Gap(6f);
-            changed |= DrawGenderFilterChips();
+            DrawGenderFilterChips(include, ref changedInclude, ref changedMutes);
             Gap(16f);
 
             VSectionHeader.Card(FontAwesomeIcon.Rainbow, Loc.T(L.Velvet.CardSexuality));
             Gap(6f);
-            changed |= DrawSexualityFilterChips();
+            DrawSexualityFilterChips(include, ref changedInclude, ref changedMutes);
             Gap(16f);
 
             VSectionHeader.Card(FontAwesomeIcon.Heart, Loc.T(L.Velvet.CardRole));
             Gap(6f);
-            changed |= DrawTriStateTokenChips(VelvetSuggestions.Roles, VelvetTheme.Rose, filterRolesInclude,
-                filterRolesExclude);
+            DrawTriStateTokenChips(VelvetSuggestions.Roles, VelvetTheme.Rose, include.Roles, mutes.Roles,
+                ref changedInclude, ref changedMutes);
             Gap(16f);
 
             VSectionHeader.Card(FontAwesomeIcon.Fire, Loc.T(L.Velvet.CardKinks));
             Gap(6f);
-            changed |= DrawTriStateTokenChips(VelvetSuggestions.Kinks, KinkViolet, filterKinksInclude,
-                filterKinksExclude);
+            DrawTriStateTokenChips(VelvetSuggestions.Kinks, VelvetSuggestions.KinkHue, include.Kinks, mutes.Kinks,
+                ref changedInclude, ref changedMutes);
             Gap(16f);
 
             VSectionHeader.Card(FontAwesomeIcon.ShieldAlt, Loc.T(L.Velvet.CardLimits));
             Gap(6f);
-            changed |= DrawTriStateTokenChips(VelvetSuggestions.Limits, VelvetTheme.Gold, filterLimitsInclude,
-                filterLimitsExclude);
+            DrawTriStateTokenChips(VelvetSuggestions.Limits, VelvetTheme.Gold, include.Limits, mutes.Limits,
+                ref changedInclude, ref changedMutes);
             Gap(16f);
 
             VSectionHeader.Card(FontAwesomeIcon.HandHoldingHeart, Loc.T(L.Velvet.CardRelationship));
             Gap(6f);
-            changed |= DrawRelationshipFilterChips();
+            DrawRelationshipFilterChips(include, ref changedInclude, ref changedMutes);
             Gap(16f);
 
             VSectionHeader.Card(FontAwesomeIcon.Hashtag, Loc.T(L.Velvet.CardTags));
             Gap(6f);
-            changed |= DrawTagsFilterChips();
+            DrawTagsFilterChips(include, ref changedInclude, ref changedMutes);
             Gap(24f);
 
             if (ui.PillButton(Reserve(46f), Loc.T(L.Velvet.FilterDone), true))
@@ -155,13 +143,19 @@ internal sealed partial class VelvetShell
             Gap(40f);
         }
 
-        if (changed)
+        if (changedMutes)
         {
-            ApplyDiscoverFilters();
+            ApplyMutesEverywhere();
+            return;
+        }
+
+        if (changedInclude)
+        {
+            ApplyFilters(surface);
         }
     }
 
-    private bool DrawRegionFilterRow()
+    private bool DrawRegionFilterRow(VelvetFilterSelection include)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var codes = SocialRegion.Codes;
@@ -171,7 +165,7 @@ internal sealed partial class VelvetShell
         for (var index = 0; index < codes.Length; index++)
         {
             labels[index + 1] = codes[index];
-            if (string.Equals(discoverRegion, codes[index], StringComparison.Ordinal))
+            if (string.Equals(include.Region, codes[index], StringComparison.Ordinal))
             {
                 current = index + 1;
             }
@@ -183,11 +177,11 @@ internal sealed partial class VelvetShell
             return false;
         }
 
-        discoverRegion = picked == 0 ? string.Empty : codes[picked - 1];
+        include.Region = picked == 0 ? string.Empty : codes[picked - 1];
         return true;
     }
 
-    private bool DrawIntentFilterChips()
+    private void DrawIntentFilterChips(VelvetFilterSelection include, ref bool changedInclude, ref bool changedMutes)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var width = ImGui.GetContentRegionAvail().X;
@@ -196,21 +190,19 @@ internal sealed partial class VelvetShell
         for (var index = 0; index < defs.Length; index++)
         {
             var def = defs[index];
-            models[index] = TriStateChip(Loc.T(def.Label), def.Hue, filterIntentInclude, filterIntentExclude,
-                def.Flag);
+            models[index] = TriStateChip(Loc.T(def.Label), def.Hue, include.Intent, mutes.Intent, def.Flag);
         }
 
         var clicked = VChipFlow.Draw(models, width, scale);
         if (clicked < 0)
         {
-            return false;
+            return;
         }
 
-        CycleMaskState(ref filterIntentInclude, ref filterIntentExclude, defs[clicked].Flag);
-        return true;
+        CycleMaskState(ref include.Intent, ref mutes.Intent, defs[clicked].Flag, ref changedInclude, ref changedMutes);
     }
 
-    private bool DrawGenderFilterChips()
+    private void DrawGenderFilterChips(VelvetFilterSelection include, ref bool changedInclude, ref bool changedMutes)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var width = ImGui.GetContentRegionAvail().X;
@@ -218,21 +210,21 @@ internal sealed partial class VelvetShell
         var models = new VChipModel[options.Length];
         for (var index = 0; index < options.Length; index++)
         {
-            models[index] = TriStateChip(VelvetGender.Label(options[index]), VelvetTheme.Rose, filterGenderInclude,
-                filterGenderExclude, options[index]);
+            models[index] = TriStateChip(VelvetGender.Label(options[index]), VelvetTheme.Rose, include.Gender,
+                mutes.Gender, options[index]);
         }
 
         var clicked = VChipFlow.Draw(models, width, scale);
         if (clicked < 0)
         {
-            return false;
+            return;
         }
 
-        CycleMaskState(ref filterGenderInclude, ref filterGenderExclude, options[clicked]);
-        return true;
+        CycleMaskState(ref include.Gender, ref mutes.Gender, options[clicked], ref changedInclude, ref changedMutes);
     }
 
-    private bool DrawSexualityFilterChips()
+    private void DrawSexualityFilterChips(VelvetFilterSelection include, ref bool changedInclude,
+        ref bool changedMutes)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var width = ImGui.GetContentRegionAvail().X;
@@ -240,21 +232,22 @@ internal sealed partial class VelvetShell
         var models = new VChipModel[options.Length];
         for (var index = 0; index < options.Length; index++)
         {
-            models[index] = TriStateChip(VelvetSexuality.Label(options[index]), VelvetTheme.Rose,
-                filterSexualityInclude, filterSexualityExclude, options[index]);
+            models[index] = TriStateChip(VelvetSexuality.Label(options[index]), VelvetTheme.Rose, include.Sexuality,
+                mutes.Sexuality, options[index]);
         }
 
         var clicked = VChipFlow.Draw(models, width, scale);
         if (clicked < 0)
         {
-            return false;
+            return;
         }
 
-        CycleMaskState(ref filterSexualityInclude, ref filterSexualityExclude, options[clicked]);
-        return true;
+        CycleMaskState(ref include.Sexuality, ref mutes.Sexuality, options[clicked], ref changedInclude,
+            ref changedMutes);
     }
 
-    private bool DrawRelationshipFilterChips()
+    private void DrawRelationshipFilterChips(VelvetFilterSelection include, ref bool changedInclude,
+        ref bool changedMutes)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var width = ImGui.GetContentRegionAvail().X;
@@ -263,25 +256,24 @@ internal sealed partial class VelvetShell
         for (var index = 0; index < statuses.Length; index++)
         {
             models[index] = TriStateChip(VelvetRelationship.Label(statuses[index]), VelvetTheme.Rose,
-                filterRelationshipInclude, filterRelationshipExclude, 1 << statuses[index]);
+                include.Relationship, mutes.Relationship, 1 << statuses[index]);
         }
 
         var clicked = VChipFlow.Draw(models, width, scale);
         if (clicked < 0)
         {
-            return false;
+            return;
         }
 
-        CycleMaskState(ref filterRelationshipInclude, ref filterRelationshipExclude, 1 << statuses[clicked]);
-        return true;
+        CycleMaskState(ref include.Relationship, ref mutes.Relationship, 1 << statuses[clicked], ref changedInclude,
+            ref changedMutes);
     }
 
-    private bool DrawTagsFilterChips()
+    private void DrawTagsFilterChips(VelvetFilterSelection include, ref bool changedInclude, ref bool changedMutes)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var width = ImGui.GetContentRegionAvail().X;
         var categories = VelvetSuggestions.TagCategories;
-        var changed = false;
         for (var index = 0; index < categories.Length; index++)
         {
             var category = categories[index];
@@ -290,18 +282,17 @@ internal sealed partial class VelvetShell
                 VelvetTheme.Lerp(category.Hue, VelvetTheme.OnAccent, 0.30f), TextStyles.SubheadlineEmphasized);
             ImGui.SetCursorScreenPos(headerOrigin);
             ImGui.Dummy(new Vector2(width, 24f * scale));
-            changed |= DrawTriStateTokenChips(category.Tags, category.Hue, filterTagsInclude, filterTagsExclude);
+            DrawTriStateTokenChips(category.Tags, category.Hue, include.Tags, mutes.Tags, ref changedInclude,
+                ref changedMutes);
             if (index < categories.Length - 1)
             {
                 Gap(12f);
             }
         }
-
-        return changed;
     }
 
-    private bool DrawTriStateTokenChips(string[] options, Vector4 accent, HashSet<string> include,
-        HashSet<string> exclude)
+    private void DrawTriStateTokenChips(string[] options, Vector4 accent, HashSet<string> include,
+        HashSet<string> exclude, ref bool changedInclude, ref bool changedMutes)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var width = ImGui.GetContentRegionAvail().X;
@@ -326,11 +317,10 @@ internal sealed partial class VelvetShell
         var clicked = VChipFlow.Draw(models, width, scale);
         if (clicked < 0)
         {
-            return false;
+            return;
         }
 
-        CycleTokenState(include, exclude, options[clicked]);
-        return true;
+        CycleTokenState(include, exclude, options[clicked], ref changedInclude, ref changedMutes);
     }
 
     private static VChipModel TriStateChip(string label, Vector4 accent, int include, int exclude, int flag)
@@ -348,37 +338,47 @@ internal sealed partial class VelvetShell
         return new VChipModel(label, VChipStyle.Ghost, VelvetTheme.Moonlight);
     }
 
-    private static void CycleMaskState(ref int include, ref int exclude, int flag)
+    private static void CycleMaskState(ref int include, ref int exclude, int flag, ref bool changedInclude,
+        ref bool changedMutes)
     {
         if ((include & flag) != 0)
         {
             include &= ~flag;
             exclude |= flag;
+            changedInclude = true;
+            changedMutes = true;
             return;
         }
 
         if ((exclude & flag) != 0)
         {
             exclude &= ~flag;
+            changedMutes = true;
             return;
         }
 
         include |= flag;
+        changedInclude = true;
     }
 
-    private static void CycleTokenState(HashSet<string> include, HashSet<string> exclude, string token)
+    private static void CycleTokenState(HashSet<string> include, HashSet<string> exclude, string token,
+        ref bool changedInclude, ref bool changedMutes)
     {
         if (include.Remove(token))
         {
             exclude.Add(token);
+            changedInclude = true;
+            changedMutes = true;
             return;
         }
 
         if (exclude.Remove(token))
         {
+            changedMutes = true;
             return;
         }
 
         include.Add(token);
+        changedInclude = true;
     }
 }

@@ -809,17 +809,17 @@ internal sealed partial class AethergramApp : IPhoneApp
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ScrollLayout.StableContentWidth();
-        var pad = 14f * scale;
+        var pad = PostCardMetrics.Pad * scale;
         var innerX = origin.X + pad;
         var innerWidth = width - pad * 2f;
         var displayName = SocialIdentity.Name(post.AuthorDisplayName, post.AuthorHandle);
-        var headerBlock = 40f * scale;
-        var avatarRadius = 18f * scale;
-        var imageTop = origin.Y + pad + headerBlock + 12f * scale;
+        var headerBlock = PostCardMetrics.HeaderBlock * scale;
+        var avatarRadius = PostCardMetrics.AvatarRadius * scale;
+        var imageTop = origin.Y + pad + headerBlock + PostCardMetrics.MediaGap * scale;
         var imageBottom = imageTop + PostAspects.DisplayHeight(innerWidth, post.MediaWidth, post.MediaHeight);
-        var actionsTop = imageBottom + 12f * scale;
-        var actionsHeight = 24f * scale;
-        var textTop = actionsTop + actionsHeight + 10f * scale;
+        var actionsTop = imageBottom + PostCardMetrics.ActionsGap * scale;
+        var actionsHeight = PostCardMetrics.ActionsHeight * scale;
+        var textTop = actionsTop + actionsHeight + PostCardMetrics.TextGap * scale;
         RichTextLayout? captionLayout = null;
         if (post.Text.Length > 0)
         {
@@ -831,10 +831,11 @@ internal sealed partial class AethergramApp : IPhoneApp
 
         var captionHeight = post.Text.Length == 0
             ? 0f
-            : (captionLayout?.Size.Y ?? Typography.MeasureWrapped(post.Text, innerWidth, 0.95f)) + 6f * scale;
+            : (captionLayout?.Size.Y ?? Typography.MeasureWrapped(post.Text, innerWidth, 0.95f)) +
+              PostCardMetrics.CaptionGap * scale;
         var commentsHeight = post.CommentCount > 0 ? 20f * scale : 0f;
         var cardBottom = textTop + captionHeight + commentsHeight + pad;
-        ui.Card(drawList, origin, new Vector2(origin.X + width, cardBottom), 18f * scale);
+        ui.Card(drawList, origin, new Vector2(origin.X + width, cardBottom), PostCardMetrics.Rounding * scale);
         var avatarCenter = new Vector2(innerX + avatarRadius, origin.Y + pad + avatarRadius);
         var ringRadius = avatarRadius + 3f * scale;
         var hasStory = stories.TryRing(post.AuthorId, out var authorRing);
@@ -845,7 +846,7 @@ internal sealed partial class AethergramApp : IPhoneApp
 
         DrawAvatar(avatarCenter, avatarRadius - 1f * scale, SocialIdentity.Name(post.AuthorDisplayName, post.AuthorHandle),
             string.Empty, post.AuthorAvatarUrl, 0.85f, 32);
-        var nameLeft = avatarCenter.X + avatarRadius + 12f * scale;
+        var nameLeft = avatarCenter.X + avatarRadius + PostCardMetrics.NameGap * scale;
         var headerTextRight = origin.X + width - pad - 34f * scale;
         var headerTextMaxWidth = MathF.Max(1f, headerTextRight - nameLeft);
         var cardNameStyle = new TextStyle(1f, FontWeight.SemiBold);
@@ -855,7 +856,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         Marquee.DrawLeft("aethergram.card." + post.Id, displayName, nameLeft, origin.Y + pad, headerTextMaxWidth,
             cardNameStyle, theme.TextStrong, cardNameHovering);
         var subline = SocialIdentity.FeedMeta(post.AuthorHandle, TimeText.Short(post.CreatedAtUnix));
-        var sublineTop = origin.Y + pad + 21f * scale;
+        var sublineTop = origin.Y + pad + PostCardMetrics.SublineTop * scale;
         var sublineSize = Typography.Measure(subline, 0.85f);
         var sublineHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, sublineTop),
             new Vector2(nameLeft + headerTextMaxWidth, sublineTop + sublineSize.Y));
@@ -885,23 +886,24 @@ internal sealed partial class AethergramApp : IPhoneApp
 
         var imageRect = new Rect(new Vector2(innerX, imageTop), new Vector2(innerX + innerWidth, imageBottom));
         var photos = PostMedia.Photos(post.MediaUrls, post.MediaUrl);
-        var page = DrawGramCarousel(imageRect, post, photos, 14f * scale);
+        var page = DrawGramCarousel(imageRect, post, photos, PostCardMetrics.MediaRounding * scale);
         var liked = post.MyReaction >= 0;
         var actionCenterY = actionsTop + actionsHeight * 0.5f;
-        var heartCenter = new Vector2(innerX + 13f * scale, actionCenterY);
-        if (ui.IconButton(heartCenter, 15f * scale, FontAwesomeIcon.Heart.ToIconString(),
+        var iconRadius = PostCardMetrics.ActionIconRadius * scale;
+        var heartCenter = new Vector2(innerX + PostCardMetrics.ActionIconInset * scale, actionCenterY);
+        if (ui.IconButton(heartCenter, iconRadius, FontAwesomeIcon.Heart.ToIconString(),
                 liked ? CommentHeart.LikeRed : AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.25f, Loc.T(L.Aethergram.Like)))
         {
             store.ToggleLike(post);
         }
 
-        var cursorX = heartCenter.X + 20f * scale;
+        var cursorX = heartCenter.X + PostCardMetrics.ActionCountGap * scale;
         if (post.TotalReactions > 0)
         {
             var likeText = post.TotalReactions.ToString(Loc.Culture);
-            Typography.Draw(new Vector2(cursorX, actionCenterY - 8f * scale), likeText, AppPalettes.Aethergram.BodyInk, 0.9f,
-                FontWeight.Medium);
-            cursorX += Typography.Measure(likeText, 0.9f, FontWeight.Medium).X + 14f * scale;
+            Typography.Draw(new Vector2(cursorX, actionCenterY - 8f * scale), likeText, AppPalettes.Aethergram.BodyInk,
+                TextStyles.SubheadlineEmphasized);
+            cursorX += Typography.Measure(likeText, TextStyles.SubheadlineEmphasized).X + 14f * scale;
         }
         else
         {
@@ -909,32 +911,32 @@ internal sealed partial class AethergramApp : IPhoneApp
         }
 
         var commentCenter = new Vector2(cursorX + 6f * scale, actionCenterY);
-        if (ui.IconButton(commentCenter, 15f * scale, FontAwesomeIcon.Comment.ToIconString(), AppPalettes.Aethergram.BodyInk,
-                AppSkin.Transparent, 1.2f, Loc.T(L.Aethergram.Comment)))
+        if (ui.IconButton(commentCenter, iconRadius, FontAwesomeIcon.Comment.ToIconString(),
+                AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.2f, Loc.T(L.Aethergram.Comment)))
         {
             OpenDetail(post, true);
         }
 
-        var actionsRight = commentCenter.X + 20f * scale;
+        var actionsRight = commentCenter.X + PostCardMetrics.ActionCountGap * scale;
         if (post.CommentCount > 0)
         {
             var commentText = post.CommentCount.ToString(Loc.Culture);
             Typography.Draw(new Vector2(actionsRight, actionCenterY - 8f * scale), commentText,
-                AppPalettes.Aethergram.BodyInk, 0.9f, FontWeight.Medium);
-            actionsRight += Typography.Measure(commentText, 0.9f, FontWeight.Medium).X;
+                AppPalettes.Aethergram.BodyInk, TextStyles.SubheadlineEmphasized);
+            actionsRight += Typography.Measure(commentText, TextStyles.SubheadlineEmphasized).X;
         }
 
         var shareCenter = new Vector2(actionsRight + (post.CommentCount > 0 ? 14f : 6f) * scale + 13f * scale,
             actionCenterY);
-        if (ui.IconButton(shareCenter, 15f * scale, FontAwesomeIcon.PaperPlane.ToIconString(),
+        if (ui.IconButton(shareCenter, iconRadius, FontAwesomeIcon.PaperPlane.ToIconString(),
                 AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.15f, Loc.T(L.Aethergram.SendTo)))
         {
             OpenShare(post.Id);
         }
 
-        actionsRight = shareCenter.X + 20f * scale;
+        actionsRight = shareCenter.X + PostCardMetrics.ActionCountGap * scale;
         var bookmarkCenter = new Vector2(origin.X + width - pad - 8f * scale, actionCenterY);
-        if (ui.IconButton(bookmarkCenter, 15f * scale, FontAwesomeIcon.Bookmark.ToIconString(),
+        if (ui.IconButton(bookmarkCenter, iconRadius, FontAwesomeIcon.Bookmark.ToIconString(),
                 post.Saved ? ui.Accent : AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.15f,
                 Loc.T(L.Aethergram.SavedTitle)))
         {
@@ -990,7 +992,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         }
 
         ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, cardBottom - origin.Y + 12f * scale));
+        ImGui.Dummy(new Vector2(width, cardBottom - origin.Y + PostCardMetrics.CardGap * scale));
     }
 
     private int DrawGramCarousel(Rect imageRect, PostDto post, string[] photos, float rounding)
