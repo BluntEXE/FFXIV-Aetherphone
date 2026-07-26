@@ -1,5 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -7,7 +8,8 @@ using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
-internal readonly record struct NavTab(FontAwesomeIcon Icon, string Label, int Badge = 0, bool Raised = false);
+internal readonly record struct NavTab(FontAwesomeIcon Icon, string Label, int Badge = 0, bool Raised = false,
+    string? AnchorKey = null);
 
 internal sealed class BottomTabBar
 {
@@ -46,6 +48,12 @@ internal sealed class BottomTabBar
         for (var index = 0; index < tabs.Length; index++)
         {
             var center = new Vector2(bar.Min.X + slot * (index + 0.5f), bar.Center.Y);
+            if (tabs[index].AnchorKey is { } anchorKey)
+            {
+                var half = new Vector2(HitRadius * scale, HitRadius * scale);
+                UiAnchors.Report(anchorKey, new Rect(center - half, center + half));
+            }
+
             var picked = tabs[index].Raised
                 ? DrawRaised(drawList, ui, tabs[index], center, index, scale)
                 : DrawTab(ui, theme, tabs[index], center, index, index == active, scale);

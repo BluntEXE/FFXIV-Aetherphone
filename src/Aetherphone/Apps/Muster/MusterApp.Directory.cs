@@ -2,6 +2,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Muster;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -93,7 +94,7 @@ internal sealed partial class MusterApp
         }
 
         if (store.Mine is null && ComposeFab.Draw(body, "##musterStartFab", ui.Accent,
-                FontAwesomeIcon.Bullhorn.ToIconString(), Loc.T(L.Muster.StartMuster)))
+                FontAwesomeIcon.Bullhorn.ToIconString(), Loc.T(L.Muster.StartMuster), "muster.start"))
         {
             router.Push(MusterRoute.Create);
         }
@@ -145,6 +146,7 @@ internal sealed partial class MusterApp
         scopeLabels[1] = Loc.T(L.Muster.ScopeRegion);
         scopeLabels[2] = Loc.T(L.Muster.ScopeEverywhere);
         var stripRect = new Rect(row.Min, new Vector2(row.Max.X - pillSide - gap, row.Max.Y));
+        UiAnchors.Report("muster.scope", stripRect);
         var selected = Math.Clamp(configuration.MusterScope, MusterScopes.MyDataCenter, MusterScopes.Everywhere);
         var next = SegmentStrip.Draw("##musterScope", stripRect, scopeLabels, selected, AppPalettes.Muster);
         if (next != selected)
@@ -194,7 +196,8 @@ internal sealed partial class MusterApp
         }
 
         var count = categories.Length + 1;
-        var tapped = categoryRail.Draw(ui, chipLabels.AsSpan(0, count), chipActive.AsSpan(0, count));
+        var tapped = categoryRail.Draw(ui, chipLabels.AsSpan(0, count), chipActive.AsSpan(0, count),
+            "muster.categories");
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
         if (tapped < 0)
         {

@@ -8,6 +8,7 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Muster;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Report;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Venues;
@@ -103,6 +104,7 @@ internal sealed partial class MusterApp : IPhoneApp
         ui.Backdrop(screen);
         if (!store.IsSignedIn)
         {
+            TourHolds.Hold(Id);
             var rowCenterY = context.Content.Min.Y + AppHeader.Height * scale * 0.5f;
             Typography.DrawCentered(new Vector2(context.Content.Center.X, rowCenterY), DisplayName,
                 AppPalettes.Muster.TitleInk, 1.3f, FontWeight.Bold);
@@ -111,6 +113,8 @@ internal sealed partial class MusterApp : IPhoneApp
             Typography.DrawCentered(body.Center, Loc.T(L.Muster.SetUpAccount), AppPalettes.Muster.MutedInk);
             return;
         }
+
+        TourHolds.Release(Id);
 
         if (copiedTimer > 0f)
         {

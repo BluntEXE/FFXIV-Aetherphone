@@ -4,6 +4,7 @@ using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Jobs;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -48,6 +49,7 @@ internal sealed partial class JobsApp : IPhoneApp
     private JobEntry? pendingEquip;
     private float sincePendingEquip;
     private int menuGearsetId = -1;
+    private bool rowAnchorTaken;
 
     public JobsApp(GameData gameData, ITextureProvider textures, Configuration configuration, ConfirmService confirm,
         CharacterWatch characterWatch)
@@ -133,6 +135,7 @@ internal sealed partial class JobsApp : IPhoneApp
         ui.Theme = theme;
         ui.Palette = AppPalettes.JobsFor(Accent);
         ui.Backdrop(SceneChrome.ScreenFrom(content, theme, scale));
+        rowAnchorTaken = false;
         menu.Gate();
         if (pickerOpen || categoryEditorOpen)
         {
@@ -149,10 +152,12 @@ internal sealed partial class JobsApp : IPhoneApp
 
         if (gameData.LocalPlayer is null)
         {
+            TourHolds.Hold(Id);
             Typography.DrawCentered(body.Center, Loc.T(L.Jobs.LogInToView), ui.MutedInk, TextStyles.Subheadline);
         }
         else
         {
+            TourHolds.Release(Id);
             var deltaTime = ImGui.GetIO().DeltaTime;
             sinceRefresh += deltaTime;
             var interval = RefreshIntervalSeconds;
@@ -211,6 +216,7 @@ internal sealed partial class JobsApp : IPhoneApp
         var radius = 15f * scale;
         var buttonCenter = new Vector2(content.Max.X - Metrics.Space.Lg * scale - radius, rowCenterY);
         colorButtonRect = new Rect(buttonCenter - new Vector2(radius, radius), buttonCenter + new Vector2(radius, radius));
+        UiAnchors.Report("jobs.color", colorButtonRect);
         if (ui.IconButton(buttonCenter, radius, FontAwesomeIcon.Palette.ToIconString(), ui.TitleInk,
                 Palette.WithAlpha(ui.TitleInk, 0.12f), 0.55f, Loc.T(L.Jobs.BackgroundColor)))
         {
@@ -225,6 +231,7 @@ internal sealed partial class JobsApp : IPhoneApp
         var categoriesCenter = new Vector2(buttonCenter.X - radius * 2f - 10f * scale, rowCenterY);
         var categoriesRect = new Rect(categoriesCenter - new Vector2(radius, radius),
             categoriesCenter + new Vector2(radius, radius));
+        UiAnchors.Report("jobs.categories", categoriesRect);
         if (ui.IconButton(categoriesCenter, radius, FontAwesomeIcon.FolderPlus.ToIconString(), ui.TitleInk,
                 Palette.WithAlpha(ui.TitleInk, 0.12f), 0.55f, Loc.T(L.Jobs.Categories)))
         {
@@ -323,6 +330,12 @@ internal sealed partial class JobsApp : IPhoneApp
             var rowTop = min.Y + index * rowHeight;
             var rowRect = new Rect(new Vector2(min.X, rowTop), new Vector2(max.X, rowTop + rowHeight));
             var contentRect = new Rect(new Vector2(min.X + padding, rowTop), new Vector2(max.X - padding, rowTop + rowHeight));
+            if (!rowAnchorTaken)
+            {
+                rowAnchorTaken = true;
+                UiAnchors.Report("jobs.row", rowRect);
+            }
+
             DrawJobRow(drawList, rowRect, contentRect, section.Entries[index], scale);
             if (index > 0)
             {

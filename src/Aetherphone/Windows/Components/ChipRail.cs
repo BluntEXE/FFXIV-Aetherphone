@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility;
@@ -18,7 +19,7 @@ internal sealed class ChipRail
     private float dragTravel;
     private float lastMouseX;
 
-    public int Draw(AppSkin ui, ReadOnlySpan<string> labels, ReadOnlySpan<bool> active)
+    public int Draw(AppSkin ui, ReadOnlySpan<string> labels, ReadOnlySpan<bool> active, string? anchorKey = null)
     {
         if (labels.Length == 0)
         {
@@ -27,6 +28,11 @@ internal sealed class ChipRail
 
         var scale = ImGuiHelpers.GlobalScale;
         var row = ReserveRow(scale);
+        if (anchorKey is not null)
+        {
+            UiAnchors.Report(anchorKey, row);
+        }
+
         var gap = Gap * scale;
         var content = SidePad * 2f * scale;
         for (var index = 0; index < labels.Length; index++)

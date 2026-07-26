@@ -4,6 +4,7 @@ using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Health;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -78,18 +79,26 @@ internal sealed partial class HealthApp : IPhoneApp
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + AppHeader.Height * scale), content.Max);
         if (!tracker.IsTracking)
         {
+            TourHolds.Hold(Id);
             Typography.DrawCentered(body.Center, Loc.T(L.Health.LogInPrompt), Pal.MutedInk);
             return;
         }
 
         if (!Profile.SetupCompleted)
         {
+            TourHolds.Hold(Id);
             using (AppSurface.Begin(body))
             {
                 DrawSetup(scale);
             }
 
             return;
+        }
+
+        TourHolds.Release(Id);
+        if (GuideIntents.Consume("health.tab.goals"))
+        {
+            screenIndex = 3;
         }
 
         DrawTabs(body, scale);
@@ -114,6 +123,7 @@ internal sealed partial class HealthApp : IPhoneApp
     {
         var rect = new Rect(new Vector2(body.Min.X + 10f * scale, body.Min.Y + 4f * scale),
             new Vector2(body.Max.X - 10f * scale, body.Min.Y + 36f * scale));
+        UiAnchors.Report("health.tabs", rect);
         tabOptions[0] = Loc.T(L.Health.TabOverview);
         tabOptions[1] = Loc.T(L.Health.TabActivity);
         tabOptions[2] = Loc.T(L.Health.TabWater);
@@ -132,6 +142,7 @@ internal sealed partial class HealthApp : IPhoneApp
 
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
+        UiAnchors.Report("health.today", new Rect(origin, new Vector2(origin.X + width, origin.Y + 74f * scale)));
         Typography.DrawCentered(new Vector2(origin.X + width * 0.5f, origin.Y + 26f * scale),
             HealthFormat.Number(steps), Pal.TitleInk, TextStyles.LargeTitle);
         Typography.DrawCentered(new Vector2(origin.X + width * 0.5f, origin.Y + 54f * scale),

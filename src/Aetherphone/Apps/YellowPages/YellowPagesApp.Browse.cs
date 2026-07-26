@@ -2,6 +2,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.YellowPages;
 using Aetherphone.Windows.Components;
@@ -163,6 +164,7 @@ internal sealed partial class YellowPagesApp
 
     private void DrawScopePillAt(Rect rect, float scale)
     {
+        UiAnchors.Report("yellowpages.scope", rect);
         var drawList = ImGui.GetWindowDrawList();
         var label = ScopePillLabel();
         var hovered = UiInteract.Hover(rect.Min, rect.Max);
@@ -198,6 +200,7 @@ internal sealed partial class YellowPagesApp
         var inset = 16f * scale;
         var searchRect = new Rect(new Vector2(area.Min.X + inset, top + 4f * scale),
             new Vector2(area.Max.X - inset, top + (SearchRowHeight - 6f) * scale));
+        UiAnchors.Report("yellowpages.search", searchRect);
         SearchField.Draw(searchRect, "##yellowPagesSearch", Loc.T(L.YellowPages.SearchLabel), ref browseSearch,
             AppPalettes.YellowPages, 60);
         if (string.Equals(browseSearch, browseSearchApplied, StringComparison.Ordinal))

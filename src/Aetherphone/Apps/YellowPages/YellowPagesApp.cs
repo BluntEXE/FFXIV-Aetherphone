@@ -10,6 +10,7 @@ using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Muster;
 using Aetherphone.Core.Notifications;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Photos;
 using Aetherphone.Core.Report;
 using Aetherphone.Core.Theme;
@@ -141,6 +142,7 @@ internal sealed partial class YellowPagesApp : IPhoneApp
         ui.Backdrop(screen);
         if (!store.IsSignedIn)
         {
+            TourHolds.Hold(Id);
             var rowCenterY = context.Content.Min.Y + AppHeader.Height * scale * 0.5f;
             Typography.DrawCentered(new Vector2(context.Content.Center.X, rowCenterY), DisplayName,
                 AppPalettes.YellowPages.TitleInk, 1.3f, FontWeight.Bold);
@@ -150,6 +152,8 @@ internal sealed partial class YellowPagesApp : IPhoneApp
                 AppPalettes.YellowPages.MutedInk);
             return;
         }
+
+        TourHolds.Release(Id);
 
         if (copiedTimer > 0f)
         {
@@ -230,9 +234,9 @@ internal sealed partial class YellowPagesApp : IPhoneApp
     {
         navTabs[0] = new NavTab(FontAwesomeIcon.ThLarge, Loc.T(L.YellowPages.BrowseTab));
         navTabs[1] = new NavTab(FontAwesomeIcon.Heart, Loc.T(L.YellowPages.SavedTab));
-        navTabs[2] = new NavTab(FontAwesomeIcon.Plus, Loc.T(L.YellowPages.PostAd), 0, true);
+        navTabs[2] = new NavTab(FontAwesomeIcon.Plus, Loc.T(L.YellowPages.PostAd), 0, true, "yellowpages.tab.post");
         navTabs[3] = new NavTab(FontAwesomeIcon.Comments, Loc.T(L.YellowPages.InquiriesTitle),
-            inquiries.UnreadTotal);
+            inquiries.UnreadTotal, AnchorKey: "yellowpages.tab.inquiries");
         navTabs[4] = new NavTab(FontAwesomeIcon.Bullhorn, Loc.T(L.YellowPages.MineTab), BadgeCount);
         var tapped = bottomNav.Draw(bar, ui, theme, navTabs, ActiveNavSlot());
         switch (tapped)

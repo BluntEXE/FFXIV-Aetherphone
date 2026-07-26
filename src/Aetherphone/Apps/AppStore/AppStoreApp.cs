@@ -2,6 +2,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -60,6 +61,7 @@ internal sealed partial class AppStoreApp : IPhoneApp
     private string search = string.Empty;
     private string lastSearch = string.Empty;
     private bool resetScroll;
+    private bool rowAnchorTaken;
 
     public AppStoreApp(AppInstaller installer, IReadOnlyList<IPhoneApp> apps)
     {
@@ -99,6 +101,14 @@ internal sealed partial class AppStoreApp : IPhoneApp
     {
         frameNavigation = context.Navigation;
         ui.Theme = context.Theme;
+        rowAnchorTaken = false;
+        if (GuideIntents.Consume("appstore.tab.apps"))
+        {
+            tab = StoreTab.Apps;
+            resetScroll = true;
+            router.Reset();
+        }
+
         var delta = ImGui.GetIO().DeltaTime;
         AdvanceInstalls(delta);
         var scale = ImGuiHelpers.GlobalScale;
@@ -149,6 +159,7 @@ internal sealed partial class AppStoreApp : IPhoneApp
         {
             var cellMin = new Vector2(area.Min.X + index * cellWidth, area.Min.Y);
             var cellMax = new Vector2(cellMin.X + cellWidth, area.Max.Y);
+            UiAnchors.Report(TabAnchor(order[index]), new Rect(cellMin, cellMax));
             var active = order[index] == tab;
             var hovered = UiInteract.Hover(cellMin, cellMax);
             var ink = active ? ui.Accent : hovered ? ui.TitleInk : ui.MutedInk;
@@ -171,6 +182,13 @@ internal sealed partial class AppStoreApp : IPhoneApp
             router.Reset();
         }
     }
+
+    private static string TabAnchor(StoreTab value) => value switch
+    {
+        StoreTab.Apps => "appstore.tab.apps",
+        StoreTab.Search => "appstore.tab.search",
+        _ => "appstore.tab.today",
+    };
 
     private static FontAwesomeIcon TabIcon(StoreTab value) => value switch
     {
