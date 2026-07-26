@@ -131,7 +131,7 @@ internal sealed partial class YellowPagesApp
         var whoLine = Typography.FitText(who, textRight - textLeft, TextStyles.Caption1);
         Typography.Draw(drawList, new Vector2(textLeft, card.Min.Y + 30f * scale), whoLine, ui.Accent,
             TextStyles.Caption1);
-        var preview = thread.LastBody.Replace('\n', ' ');
+        var preview = inquiries.RevealPreview(thread).Replace('\n', ' ');
         var previewWidth = textRight - textLeft - (thread.UnreadCount > 0 ? 26f * scale : 0f);
         Typography.Draw(drawList, new Vector2(textLeft, card.Min.Y + 47f * scale),
             Typography.FitText(preview, previewWidth, TextStyles.Footnote),
