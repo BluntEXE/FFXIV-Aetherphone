@@ -51,8 +51,12 @@ namespace Aetherphone.Core.Video
 		private GCHandle _updateCallbackHandle;
 		private bool _closed = true;
 		private Thread? _eventThread;
+		private readonly Lock _snapshotLock = new();
+		private IntPtr _latestSnapshot;
 
-		public void Initialize(int width, int height, Texture2D? targetTexture, CancellationTokenSource cancelToken)
+		public void Initialize(int width, int height, Texture2D? targetTexture, CancellationTokenSource cancelToken,
+			bool hardwareDecoding = false, int maxQualityHeight = 1080, bool allowInsecureDirectUrls = false,
+			int initialVolume = 60)
 		{
 			_width = width;
 			_height = height;
@@ -66,18 +70,27 @@ namespace Aetherphone.Core.Video
 
 			_mpvCtx = mpv_create();
 			_ = mpv_set_option_string(_mpvCtx, "vo", "libmpv");
-			_ = mpv_set_option_string(_mpvCtx, "hwdec", "no");
+			// Not measured on this project's Wine/RADV setup - mpv has no GPU render path here
+			// either way, only decode could benefit. Off is the safe default; read fresh here so a
+			// settings change takes effect on the next video, not the current one.
+			_ = mpv_set_option_string(_mpvCtx, "hwdec", hardwareDecoding ? "auto-safe" : "no");
 			_ = mpv_set_option_string(_mpvCtx, "profile", "sw-fast");
 			_ = mpv_set_option_string(_mpvCtx, "ytdl", "yes");
 			_ = mpv_set_option_string(_mpvCtx, "script-opts", $"ytdl_hook-ytdl_path={_resources?.GetLocationYTDLP()}");
-			_ = mpv_set_option_string(_mpvCtx, "ytdl-format", $"bestvideo[height<={VideoEngine.ScreenHeight}][ext=mp4]+bestaudio/best[height<={VideoEngine.ScreenHeight}]");
+			_ = mpv_set_option_string(_mpvCtx, "ytdl-format", $"bestvideo[height<={maxQualityHeight}][ext=mp4]+bestaudio/best[height<={maxQualityHeight}]");
 			_ = mpv_set_option_string(_mpvCtx, "terminal", "yes");
-			_ = mpv_set_option_string(_mpvCtx, "volume", "25");
+			_ = mpv_set_option_string(_mpvCtx, "volume", initialVolume.ToString(System.Globalization.CultureInfo.InvariantCulture));
 			_ = mpv_set_option_string(_mpvCtx, "msg-level", "all=warn,ffmpeg=error");
 			_ = mpv_set_option_string(_mpvCtx, "ytdl-raw-options", "force-ipv4=,hls-use-mpegts=");
 			_ = mpv_set_option_string(_mpvCtx, "idle", "yes");
 			_ = mpv_set_option_string(_mpvCtx, "keep-open", "yes");
-			//_ = mpv_set_option_string(_mpvCtx, "tls-verify", "no"); TODO: Make it optional to disable TLS verification because WINE is a bitch
+			// Wine's own certificate store is essentially empty by default - only disabling
+			// verification worked around it on this project's Wine setup. Never applies on real
+			// Windows, and only when the user has explicitly opted in.
+			if (WineEnvironment.IsWine && allowInsecureDirectUrls)
+			{
+				_ = mpv_set_option_string(_mpvCtx, "tls-verify", "no");
+			}
 			_ = mpv_request_log_messages(_mpvCtx, "warn");
 			_ = mpv_initialize(_mpvCtx);
 
@@ -164,6 +177,11 @@ namespace Aetherphone.Core.Video
 						System.Buffer.MemoryCopy((void*)_bufferPtr, (void*)snapshot, _frameBytes, _frameBytes);
 					}
 
+					lock (_snapshotLock)
+					{
+						_latestSnapshot = snapshot;
+					}
+
 					Texture2D texture = _targetTexture;
 					int width = _width;
 					DxHandler.RunOnRenderThread(RenderKey, () =>
@@ -189,6 +207,11 @@ namespace Aetherphone.Core.Video
 			_closed = true;
 			_cancelToken!.Cancel();
 			DxHandler.CancelRenderThreadWork(RenderKey);
+			lock (_snapshotLock)
+			{
+				_latestSnapshot = IntPtr.Zero;
+			}
+
 			Task.Run(() =>
 			{
 				lock (_mpvLock)
@@ -297,6 +320,26 @@ namespace Aetherphone.Core.Video
 				}
 			}
 		}
+		// A managed copy of the latest decoded frame - for CPU-side consumers (the debug window
+		// and the plain screen-window fallback) alongside the GPU texture upload RenderFrame
+		// already does. Not on the hot path: only copied when actually asked for.
+		public byte[]? TryGetFrame(out int width, out int height)
+		{
+			width = _width;
+			height = _height;
+			lock (_snapshotLock)
+			{
+				if (_latestSnapshot == IntPtr.Zero || _frameBytes == 0)
+				{
+					return null;
+				}
+
+				var frame = new byte[_frameBytes];
+				Marshal.Copy(_latestSnapshot, frame, 0, _frameBytes);
+				return frame;
+			}
+		}
+
 		public double[] GetProperties()
 		{
 			if (_closed)

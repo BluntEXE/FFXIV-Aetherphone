@@ -59,8 +59,6 @@ public sealed class Plugin : IDalamudPlugin
     private readonly AboutWindow aboutWindow;
     private readonly Guid videoSessionId = Guid.NewGuid();
     private readonly VideoPlayer video;
-    private readonly ScreenDeviceHandler screenDeviceHandler;
-    private readonly ScreenPenumbraGate screenPenumbraGate;
     private readonly ScreenController screenController;
     private readonly AetherStreamQueue videoQueue;
     private readonly WatchAlongSession watchAlong;
@@ -101,12 +99,8 @@ public sealed class Plugin : IDalamudPlugin
             EmojiCatalog.Load();
             Wallpapers = services.Wallpapers;
             aboutWindow = new AboutWindow();
-            video = new VideoPlayer();
-            screenDeviceHandler = new ScreenDeviceHandler();
-            screenPenumbraGate = new ScreenPenumbraGate();
-            screenController = new ScreenController(screenDeviceHandler, screenPenumbraGate, videoSessionId,
-                () => Cfg.VideoHideNameplates);
-            screenController.Initialize();
+            screenController = new ScreenController(videoSessionId, () => Cfg.VideoHideNameplates);
+            video = new VideoPlayer(screenController.Engine);
             videoQueue = new AetherStreamQueue(video, screenController);
             watchAlong = new WatchAlongSession(services.AethernetSession, Cfg, services.Confirm, video,
                 screenController, videoQueue, services.StreamSignals);
@@ -236,18 +230,6 @@ public sealed class Plugin : IDalamudPlugin
         screenController.OnFrameworkUpdate();
         videoQueue.OnFrameworkUpdate();
         watchAlong.OnFrameworkUpdate((float)framework.UpdateDelta.TotalSeconds);
-
-        // The phone never displays video, so nothing in AetherStreamApp's own Draw() ever calls
-        // TryGetFrame - that's correct for the phone, but frames still need to reach the TV
-        // texture continuously, independent of whether the phone or app is even open. This is
-        // the one place that happens. TryGetFrame is a cheap cached-reference read, not a native
-        // mpv call, so polling it every tick (unlike GetProgress/IsIdle) isn't the kind of
-        // per-frame state polling the port plan warns against.
-        var frame = video.TryGetFrame(out var width, out var height);
-        if (frame is not null)
-        {
-            screenController.PushFrame(frame, width, height);
-        }
     }
 
     private void OnAutoOpenTick(IFramework framework)

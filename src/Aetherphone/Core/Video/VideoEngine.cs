@@ -69,6 +69,13 @@ internal sealed class VideoEngine : IDisposable
     private bool _isActive; // whether the screen VFX should currently be playing for the local player
     private bool _lastIdle = true;
     private readonly List<string> _recentSnesPaths = [];
+    private int _pendingVolume = 60;
+
+    // Read fresh at Play() time by MpvRenderer.Initialize so a settings change takes effect on
+    // the next video, not the current one - matching how the old VideoPlayer read these.
+    internal bool HardwareDecoding { get; set; }
+    internal int MaxQualityHeight { get; set; } = 720;
+    internal bool AllowInsecureDirectUrls { get; set; }
 
     internal Resources Resources { get; }
     internal InputManager Input { get; }
@@ -104,6 +111,7 @@ internal sealed class VideoEngine : IDisposable
     }
 
     internal bool IsActive => _isActive;
+    internal bool IsHookHealthy => _getResourceSyncHook is { IsDisposed: false };
 
     internal void StopVideo()
     {
@@ -153,7 +161,8 @@ internal sealed class VideoEngine : IDisposable
                 }
 
                 _mpvRenderer = new MpvRenderer();
-                _mpvRenderer.Initialize(ScreenWidth, ScreenHeight, _screenTexture, _renderCancellation);
+                _mpvRenderer.Initialize(ScreenWidth, ScreenHeight, _screenTexture, _renderCancellation,
+                    HardwareDecoding, MaxQualityHeight, AllowInsecureDirectUrls, _pendingVolume);
                 _mpvRenderer.Play(url, playbackPosition, isPlaying);
                 _isActive = true;
                 while (true)
@@ -221,6 +230,7 @@ internal sealed class VideoEngine : IDisposable
 
     internal void SetVolume(int vol)
     {
+        _pendingVolume = Math.Clamp(vol, 0, 100);
         if (_isPlayingSnes)
         {
             _snesRenderer?.SetVolume(vol);
@@ -229,6 +239,18 @@ internal sealed class VideoEngine : IDisposable
         {
             _mpvRenderer?.SetVolume(vol);
         }
+    }
+
+    internal byte[]? TryGetFrame(out int width, out int height)
+    {
+        if (_mpvRenderer is null)
+        {
+            width = ScreenWidth;
+            height = ScreenHeight;
+            return null;
+        }
+
+        return _mpvRenderer.TryGetFrame(out width, out height);
     }
 
     internal string GetMediaTitle()
