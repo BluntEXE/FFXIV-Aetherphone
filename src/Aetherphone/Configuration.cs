@@ -16,6 +16,7 @@ using Aetherphone.Core.Songs;
 using Aetherphone.Core.Telephony;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Venues;
+using Aetherphone.Core.Video;
 using Aetherphone.Core.Wallpapers;
 using Dalamud.Configuration;
 
@@ -91,6 +92,10 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public float VideoScreenYaw { get; set; }
     public float VideoScreenWidth { get; set; } = 2.4f;
     public float VideoScreenHeight { get; set; } = 1.35f;
+    // SNES9x (AlphaChannel port) emulator input mapping and recent-ROM list - ported from
+    // AlphaChannel's own Configuration, which used to be its own separate IPluginConfiguration.
+    public Dictionary<Snes9xInput, string> SnesKeyMappings { get; set; } = new();
+    public List<string> SnesRecentRomPaths { get; set; } = new();
     public const string DefaultAethernetBaseUrl = "https://api.aetherphone.net";
     private const string LegacyAethernetHost = "ffxiv-aethernet-production.up.railway.app";
     public string AethernetBaseUrl { get; set; } = DefaultAethernetBaseUrl;

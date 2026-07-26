@@ -2,47 +2,32 @@ using Dalamud.Plugin.Ipc;
 
 namespace Aetherphone.Core.Video;
 
-public static class ApiProvider
+// Ported from AlphaChannel's ApiProvider (Voudi, GPL-3.0), trimmed along with APIHelper - the
+// SetState/ApplyStateUpdate/ClearState/StateChange gates existed only to receive other players'
+// companion-derived state, which no longer applies. GetState/Version/OnReady/OnDispose remain: a
+// low-cost way for another local Dalamud plugin to ask what AetherStream is currently playing.
+internal static class ApiProvider
 {
     private const int ApiVersionMajor = 1;
     private const int ApiVersionMinor = 0;
 
     private static ICallGateProvider<(int, int)>? _version;
-
     private static ICallGateProvider<string?>? _getState;
-    private static ICallGateProvider<nint, string, object?>? _setState;
-    private static ICallGateProvider<nint, string, object?>? _applyStateUpdate;
-    private static ICallGateProvider<nint, object?>? _clearState;
-    private static ICallGateProvider<string?, string?, object?>? _stateChange;
-
     private static ICallGateProvider<object?>? _onReady;
     private static ICallGateProvider<object?>? _onDispose;
 
-
     public static void Init(APIHelper helper)
     {
-        _version          = Services.PluginInterface.GetIpcProvider<(int, int)>("Aetherphone.AetherStream.Version");
-        _getState         = Services.PluginInterface.GetIpcProvider<string?>("Aetherphone.AetherStream.GetState");
-        _setState         = Services.PluginInterface.GetIpcProvider<nint, string, object?>("Aetherphone.AetherStream.SetState");
-        _applyStateUpdate = Services.PluginInterface.GetIpcProvider<nint, string, object?>("Aetherphone.AetherStream.ApplyStateUpdate");
-        _clearState       = Services.PluginInterface.GetIpcProvider<nint, object?>("Aetherphone.AetherStream.ClearState");
-
-        _stateChange      = Services.PluginInterface.GetIpcProvider<string?, string?, object?>("Aetherphone.AetherStream.StateChange");
-
-        _onReady          = Services.PluginInterface.GetIpcProvider<object?>("Aetherphone.AetherStream.OnReady");
-        _onDispose        = Services.PluginInterface.GetIpcProvider<object?>("Aetherphone.AetherStream.OnDispose");
+        _version   = Plugin.PluginInterface.GetIpcProvider<(int, int)>("Aetherphone.AetherStream.Version");
+        _getState  = Plugin.PluginInterface.GetIpcProvider<string?>("Aetherphone.AetherStream.GetState");
+        _onReady   = Plugin.PluginInterface.GetIpcProvider<object?>("Aetherphone.AetherStream.OnReady");
+        _onDispose = Plugin.PluginInterface.GetIpcProvider<object?>("Aetherphone.AetherStream.OnDispose");
 
         _version.RegisterFunc(() => (ApiVersionMajor, ApiVersionMinor));
         _getState.RegisterFunc(helper.GetLocalState);
-        _setState.RegisterAction(helper.SetRemoteState);
-        _applyStateUpdate.RegisterAction(helper.SetRemoteState);
-        _clearState.RegisterAction(helper.ClearRemoteState);
 
         _onReady.SendMessage();
     }
-
-    public static void NotifyStateChange(string? fullState, string? partialState = null) //Full and partial states are basically the same in this project due to NTP timestamp usage instead of updating states periodically
-        => _stateChange?.SendMessage(fullState, partialState);
 
     public static void DeInit()
     {
@@ -50,14 +35,9 @@ public static class ApiProvider
 
         _version?.UnregisterFunc();
         _getState?.UnregisterFunc();
-        _setState?.UnregisterAction();
-        _applyStateUpdate?.UnregisterAction();
-        _clearState?.UnregisterAction();
 
-        _setState = null;
-        _applyStateUpdate = null;
-        _clearState = null;
-        _stateChange = null;
+        _version = null;
+        _getState = null;
         _onReady = null;
         _onDispose = null;
     }

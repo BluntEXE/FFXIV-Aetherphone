@@ -1,20 +1,39 @@
 using Penumbra.Api.IpcSubscribers;
 using Penumbra.Api.Enums;
-using Dalamud.Game.ClientState.Objects.Types;
-using Dalamud.Game.ClientState.Objects.Enums;
-using NoireLib;
 
 namespace Aetherphone.Core.Video;
 
-public static class PenumbraIPC
+// Ported from AlphaChannel's PenumbraIPC (Voudi, GPL-3.0). RedrawAll used to redraw every
+// summoned Carbuncle-model companion in range; there is no companion anymore, so it redraws the
+// local player instead - the only object the screen VFX is ever attached to. IsAvailable/LastError
+// added (mirroring the old ScreenPenumbraGate this replaces) so the UI can surface a failed IPC
+// call instead of failing silently.
+internal static class PenumbraIPC
 {
     private const string Tag = "AetherStreamTemporaryMod";
+    private const string PluginInternalName = "Penumbra";
 
     private static Guid _collectionId = Guid.Empty;
 
-    private static bool _isTempCollection; 
+    private static bool _isTempCollection;
 
     private static readonly List<string> _keys = [];
+
+    public static bool IsAvailable { get; private set; } = true;
+    public static string? LastError { get; private set; }
+
+    public static bool IsInstalled()
+    {
+        foreach (var plugin in Plugin.PluginInterface.InstalledPlugins)
+        {
+            if (string.Equals(plugin.InternalName, PluginInternalName, StringComparison.Ordinal) && plugin.IsLoaded)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     public static bool CheckTempMod(string key)
     {
@@ -23,12 +42,24 @@ public static class PenumbraIPC
 
     public static void ApplyTempMod(string key, Dictionary<string, string> gamePaths)
     {
-        if(!_keys.Contains(key))
+        if (_keys.Contains(key))
+        {
+            return;
+        }
+
+        try
         {
             if (_collectionId == Guid.Empty)
             {
-                var getCollection = new GetCollectionForObject(Services.PluginInterface);
-				(bool ObjectValid, bool IndividualSet, (Guid Id, string Name) EffectiveCollection) collectionResult = getCollection.Invoke(Services.LocalPlayerIndex);
+                var localIndex = Plugin.ObjectTable.LocalPlayer?.ObjectIndex;
+                if (localIndex is null)
+                {
+                    LastError = "No local player.";
+                    return;
+                }
+
+                var getCollection = new GetCollectionForObject(Plugin.PluginInterface);
+                var collectionResult = getCollection.Invoke(localIndex.Value);
                 if (collectionResult.ObjectValid)
                 {
                     _collectionId = collectionResult.EffectiveCollection.Id;
@@ -36,78 +67,118 @@ public static class PenumbraIPC
                 }
                 else
                 {
-                    var createCollection = new CreateTemporaryCollection(Services.PluginInterface);
+                    var createCollection = new CreateTemporaryCollection(Plugin.PluginInterface);
                     createCollection.Invoke(Tag, Tag, out _collectionId);
 
                     _isTempCollection = true;
                 }
             }
-            
-            var addMod = new AddTemporaryMod(Services.PluginInterface);
+
+            var addMod = new AddTemporaryMod(Plugin.PluginInterface);
             addMod.Invoke(Tag + key, _collectionId, gamePaths, string.Empty, int.MaxValue);
 
-            if(_isTempCollection)
+            if (_isTempCollection)
             {
-                var assign = new AssignTemporaryCollection(Services.PluginInterface);
-                assign.Invoke(_collectionId, Services.LocalPlayerIndex, true);
+                var assign = new AssignTemporaryCollection(Plugin.PluginInterface);
+                assign.Invoke(_collectionId, Plugin.ObjectTable.LocalPlayer!.ObjectIndex, true);
             }
 
             _keys.Add(key);
+            IsAvailable = true;
+            LastError = null;
 
-            Services.Log.Debug("Assigned Temp Mod " + key + " to collection " + _collectionId);
+            AepLog.Debug("Assigned Temp Mod " + key + " to collection " + _collectionId);
+        }
+        catch (Exception exception)
+        {
+            IsAvailable = false;
+            LastError = $"Penumbra IPC failed ({key}): {exception.Message}";
+            AepLog.Warning($"[Video] {LastError}");
         }
     }
 
     public static void RemoveTempMod(string key)
     {
-        if (_collectionId != Guid.Empty && _keys.Contains(key))
+        if (_collectionId == Guid.Empty || !_keys.Contains(key))
         {
-            var assign = new RemoveTemporaryMod(Services.PluginInterface);
+            return;
+        }
+
+        try
+        {
+            var assign = new RemoveTemporaryMod(Plugin.PluginInterface);
             assign.Invoke(Tag + key, _collectionId, int.MaxValue);
             _keys.Remove(key);
-            Services.Log.Debug("Removed Temp Mod " + key);
+            AepLog.Debug("Removed Temp Mod " + key);
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning($"[Video] Failed removing Penumbra temp mod {key}: {exception.Message}");
         }
     }
 
     public static void Redraw(ushort gameObjectIndex)
     {
-        if(gameObjectIndex == ushort.MaxValue)
+        if (gameObjectIndex == ushort.MaxValue)
         {
-            _=NoireService.Framework.RunOnTick(() =>
-            {
-                RedrawAll();
-            });
+            RedrawAll();
+            return;
         }
-        else
+
+        try
         {
-            var redraw = new RedrawObject(Services.PluginInterface);
+            var redraw = new RedrawObject(Plugin.PluginInterface);
             redraw.Invoke(gameObjectIndex, RedrawType.Redraw);
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning($"[Video] Redraw failed: {exception.Message}");
         }
     }
 
     public static void RedrawAll()
     {
-        foreach (ushort item in Services.Objects.Where(x => x is IBattleNpc && x.BaseId == 13498 && x.ObjectKind is ObjectKind.BattleNpc).Select(o => o.ObjectIndex))
+        var localIndex = Plugin.ObjectTable.LocalPlayer?.ObjectIndex;
+        if (localIndex is null)
         {
-            var redraw = new RedrawObject(Services.PluginInterface);
-            redraw.Invoke(item, RedrawType.Redraw);
-            Services.Log.Debug("Redrawing item " + item);
+            return;
         }
-        
+
+        try
+        {
+            var redraw = new RedrawObject(Plugin.PluginInterface);
+            redraw.Invoke(localIndex.Value, RedrawType.Redraw);
+            AepLog.Debug("Redrawing local player " + localIndex.Value);
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning($"[Video] RedrawAll failed: {exception.Message}");
+        }
     }
 
     public static void Dispose()
     {
-        if (Services.PluginInterface == null || _collectionId == Guid.Empty) {return;}
+        if (_collectionId == Guid.Empty)
+        {
+            return;
+        }
 
-        foreach(string key in _keys.ToList())
+        foreach (string key in _keys.ToList())
         {
             RemoveTempMod(key);
         }
-        if(_isTempCollection)
+
+        if (_isTempCollection)
         {
-            var removeCollection = new DeleteTemporaryCollection(Services.PluginInterface);
-            removeCollection.Invoke(_collectionId);
+            try
+            {
+                var removeCollection = new DeleteTemporaryCollection(Plugin.PluginInterface);
+                removeCollection.Invoke(_collectionId);
+            }
+            catch (Exception exception)
+            {
+                AepLog.Warning($"[Video] Failed deleting temp collection: {exception.Message}");
+            }
         }
 
         _collectionId = Guid.Empty;

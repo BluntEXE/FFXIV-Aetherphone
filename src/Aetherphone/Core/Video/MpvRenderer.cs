@@ -3,13 +3,13 @@ using SharpDX.Direct3D11;
 
 namespace Aetherphone.Core.Video
 {
-	public class MpvRenderer : IDisposable
+	internal class MpvRenderer : IDisposable
 	{
 		private const string DLL = "libmpv-2";
-		private static Plugin? _pluginInstance;
-		public static void Setup(Plugin plugin)
+		private static Resources? _resources;
+		public static void Setup(Resources resources)
 		{
-			_pluginInstance = plugin;
+			_resources = resources;
 		}
 		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern IntPtr mpv_create();
 		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern int mpv_initialize(IntPtr ctx);
@@ -69,8 +69,8 @@ namespace Aetherphone.Core.Video
 			_ = mpv_set_option_string(_mpvCtx, "hwdec", "no");
 			_ = mpv_set_option_string(_mpvCtx, "profile", "sw-fast");
 			_ = mpv_set_option_string(_mpvCtx, "ytdl", "yes");
-			_ = mpv_set_option_string(_mpvCtx, "script-opts", $"ytdl_hook-ytdl_path={_pluginInstance?.AssemblyLocationYTDLP}");
-			_ = mpv_set_option_string(_mpvCtx, "ytdl-format", $"bestvideo[height<={Plugin.ScreenHeight}][ext=mp4]+bestaudio/best[height<={Plugin.ScreenHeight}]");
+			_ = mpv_set_option_string(_mpvCtx, "script-opts", $"ytdl_hook-ytdl_path={_resources?.GetLocationYTDLP()}");
+			_ = mpv_set_option_string(_mpvCtx, "ytdl-format", $"bestvideo[height<={VideoEngine.ScreenHeight}][ext=mp4]+bestaudio/best[height<={VideoEngine.ScreenHeight}]");
 			_ = mpv_set_option_string(_mpvCtx, "terminal", "yes");
 			_ = mpv_set_option_string(_mpvCtx, "volume", "25");
 			_ = mpv_set_option_string(_mpvCtx, "msg-level", "all=warn,ffmpeg=error");
@@ -122,7 +122,7 @@ namespace Aetherphone.Core.Video
 
 			_closed = false;
 
-			Services.Log.Debug("[MPV] Video Player started");
+			AepLog.Debug("[MPV] Video Player started");
 		}
 
 		public bool RenderFrame()
@@ -134,11 +134,11 @@ namespace Aetherphone.Core.Video
 			}
 			catch
 			{
-				Services.Log.Debug("[MPV] Video Player stopped");
+				AepLog.Debug("[MPV] Video Player stopped");
 				return false;
 			}
 			if (_closed || _cancelToken!.Token.IsCancellationRequested)
-			{ Services.Log.Debug("[MPV] Video Player stopped"); return false; }
+			{ AepLog.Debug("[MPV] Video Player stopped"); return false; }
 			ulong flags = mpv_render_context_update(_mpvRenderCtx);
 			if ((flags & 1) == 0)
 			{
@@ -174,12 +174,12 @@ namespace Aetherphone.Core.Video
 				}
 				else
 				{
-					Services.Log.Warning($"[MPV] Error rendering frame: RC: {rc} Texture: {_targetTexture}");
+					AepLog.Warning($"[MPV] Error rendering frame: RC: {rc} Texture: {_targetTexture}");
 				}
 			}
 			catch (Exception e)
 			{
-				Services.Log.Warning($"[MPV] Error rendering frame: {e.Message} {e.StackTrace}");
+				AepLog.Warning($"[MPV] Error rendering frame: {e.Message} {e.StackTrace}");
 			}
 			return false;
 		}
@@ -241,7 +241,7 @@ namespace Aetherphone.Core.Video
 		{
 			if (!_closed)
 			{
-				Services.Log.Debug("Playing New Video at " + playbackPosition + " | " + isPlaying);
+				AepLog.Debug("Playing New Video at " + playbackPosition + " | " + isPlaying);
 				lock (_mpvLock)
 				{
 					if(url == string.Empty)
@@ -344,7 +344,7 @@ namespace Aetherphone.Core.Video
 		{
 			if (_closed)
 			{
-				Services.Log.Debug($"[MPV] Seek to {seconds}s ignored: player closed");
+				AepLog.Debug($"[MPV] Seek to {seconds}s ignored: player closed");
 				return;
 			}
 
@@ -352,14 +352,14 @@ namespace Aetherphone.Core.Video
 			{
 				if (_mpvCtx == IntPtr.Zero)
 				{
-					Services.Log.Debug($"[MPV] Seek to {seconds}s ignored: no mpv context");
+					AepLog.Debug($"[MPV] Seek to {seconds}s ignored: no mpv context");
 					return;
 				}
 
 				int rc = mpv_command(_mpvCtx, ["seek", seconds.ToString(System.Globalization.CultureInfo.InvariantCulture), "absolute", null!]);
 				if (rc < 0)
 				{
-					Services.Log.Warning($"[MPV] Seek to {seconds}s failed: rc={rc}");
+					AepLog.Warning($"[MPV] Seek to {seconds}s failed: rc={rc}");
 				}
 			}
 		}
@@ -499,7 +499,7 @@ namespace Aetherphone.Core.Video
 		private void EventLoop()
 		{
 			
-            Services.Log.Verbose("[MPV] event loop started");
+            AepLog.Verbose("[MPV] event loop started");
             try
             {
                 while (!_closed)
@@ -517,7 +517,7 @@ namespace Aetherphone.Core.Video
                             continue;
 
                         case 1: // MPV_EVENT_SHUTDOWN
-                            Services.Log.Verbose("[MPV] SHUTDOWN");
+                            AepLog.Verbose("[MPV] SHUTDOWN");
                             return;
 
                         case 2: // MPV_EVENT_LOG_MESSAGE
@@ -530,31 +530,30 @@ namespace Aetherphone.Core.Video
 									string? text   = Marshal.PtrToStringAnsi(Marshal.ReadIntPtr(dataPtr2 + 16));
 									if(prefix != null && prefix.Contains("ytdl") && level == "error" && text != null && text.Contains("Unsupported URL"))
 									{
-										Services.Log.Warning($"[MPV/{prefix}/{level}] {text?.Trim()}");
-										Plugin.ErrorPopup(text?.Trim());
+										AepLog.Warning($"[MPV/{prefix}/{level}] {text?.Trim()}");
 										Stop();
 									}
-                                    Services.Log.Verbose($"[MPV/{prefix}/{level}] {text?.Trim()}");
+                                    AepLog.Verbose($"[MPV/{prefix}/{level}] {text?.Trim()}");
                                 }
                                 break;
                             }
 
-                        case 3:  Services.Log.Verbose("[MPV] GET_PROPERTY_REPLY"); break;
-                        case 4:  Services.Log.Verbose("[MPV] SET_PROPERTY_REPLY"); break;
-                        case 5:  Services.Log.Verbose("[MPV] COMMAND_REPLY");      break;
-                        case 6:  Services.Log.Verbose("[MPV] START_FILE");         break;
+                        case 3:  AepLog.Verbose("[MPV] GET_PROPERTY_REPLY"); break;
+                        case 4:  AepLog.Verbose("[MPV] SET_PROPERTY_REPLY"); break;
+                        case 5:  AepLog.Verbose("[MPV] COMMAND_REPLY");      break;
+                        case 6:  AepLog.Verbose("[MPV] START_FILE");         break;
                         
                         case 7: // MPV_EVENT_END_FILE
 								break;
                         
-                        case 8:  Services.Log.Verbose("[MPV] FILE_LOADED");      break;
-                        case 14: Services.Log.Verbose("[MPV] CLIENT_MESSAGE");   break;
-                        case 15: Services.Log.Verbose("[MPV] VIDEO_RECONFIG");   break;
-                        case 16: Services.Log.Verbose("[MPV] AUDIO_RECONFIG");   break;
-                        case 17: Services.Log.Verbose("[MPV] SEEK");             break;
-                        case 18: Services.Log.Verbose("[MPV] PLAYBACK_RESTART"); break;
-                        case 19: Services.Log.Verbose("[MPV] PROPERTY_CHANGE");  break;
-                        case 22: Services.Log.Verbose("[MPV] HOOK");             break;
+                        case 8:  AepLog.Verbose("[MPV] FILE_LOADED");      break;
+                        case 14: AepLog.Verbose("[MPV] CLIENT_MESSAGE");   break;
+                        case 15: AepLog.Verbose("[MPV] VIDEO_RECONFIG");   break;
+                        case 16: AepLog.Verbose("[MPV] AUDIO_RECONFIG");   break;
+                        case 17: AepLog.Verbose("[MPV] SEEK");             break;
+                        case 18: AepLog.Verbose("[MPV] PLAYBACK_RESTART"); break;
+                        case 19: AepLog.Verbose("[MPV] PROPERTY_CHANGE");  break;
+                        case 22: AepLog.Verbose("[MPV] HOOK");             break;
 
                         default:
                             break;
@@ -563,11 +562,11 @@ namespace Aetherphone.Core.Video
             }
             catch (Exception e)
             {
-                Services.Log.Verbose($"[MPV] event loop crashed: {e.Message}\n{e.StackTrace}");
+                AepLog.Verbose($"[MPV] event loop crashed: {e.Message}\n{e.StackTrace}");
             }
             finally
             {
-                Services.Log.Verbose("[MPV] event loop ended");
+                AepLog.Verbose("[MPV] event loop ended");
             }
             
 		}

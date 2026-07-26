@@ -5,7 +5,7 @@ namespace Aetherphone.Core.Video;
 
 internal sealed class InputManager
 {
-	private readonly Plugin _plugin;
+	private readonly WndProcKeyUpReader _windowKeyUpReader;
 
 	internal Dictionary<Snes9xInput, string> SnesKeyMap { get; } = [];
 	private readonly Dictionary<VirtualKey, bool> _heldState = [];
@@ -22,14 +22,14 @@ internal sealed class InputManager
 		RightStickRight = 0x800000
 	}
 
-	internal InputManager(Plugin plugin)
+	internal InputManager(WndProcKeyUpReader windowKeyUpReader)
 	{
-		_plugin = plugin;
+		_windowKeyUpReader = windowKeyUpReader;
 
 		List<Snes9xInput> keyOrder = [Snes9xInput.UP, Snes9xInput.DOWN, Snes9xInput.LEFT, Snes9xInput.RIGHT, Snes9xInput.A, Snes9xInput.B, Snes9xInput.X, Snes9xInput.Y, Snes9xInput.L, Snes9xInput.R, Snes9xInput.START, Snes9xInput.SELECT];
 		foreach (Snes9xInput key in keyOrder)
 		{
-			SnesKeyMap.Add(key, plugin.Config.KeyMappings.TryGetValue(key, out string? vk) ? (vk ?? VirtualKey.NO_KEY.ToString()) : VirtualKey.NO_KEY.ToString());
+			SnesKeyMap.Add(key, Plugin.Cfg.SnesKeyMappings.TryGetValue(key, out string? vk) ? (vk ?? VirtualKey.NO_KEY.ToString()) : VirtualKey.NO_KEY.ToString());
 		}
 	}
 
@@ -70,13 +70,13 @@ internal sealed class InputManager
 	{
 		if (gamePadButton < 0x10000)
 		{
-			return Services.GamepadState.Raw((GamepadButtons)(ushort)gamePadButton) != 0;
+			return Plugin.GamepadState.Raw((GamepadButtons)(ushort)gamePadButton) != 0;
 		}
 
 		bool leftStick = gamePadButton < 0x100000;
 		var button = (GamePadSticks)gamePadButton;
-		float x = leftStick ? Services.GamepadState.LeftStick.X : Services.GamepadState.RightStick.X;
-		float y = leftStick ? Services.GamepadState.LeftStick.Y : Services.GamepadState.RightStick.Y;
+		float x = leftStick ? Plugin.GamepadState.LeftStick.X : Plugin.GamepadState.RightStick.X;
+		float y = leftStick ? Plugin.GamepadState.LeftStick.Y : Plugin.GamepadState.RightStick.Y;
 		if (x == 0 && y == 0) { return false; }
 
 		float ratio = Math.Min(Math.Abs(x), Math.Abs(y)) / Math.Max(Math.Abs(x), Math.Abs(y));
@@ -93,9 +93,9 @@ internal sealed class InputManager
 
 	internal bool TryDetectInput(out string keyName)
 	{
-		foreach (VirtualKey vk in Services.KeyState.GetValidVirtualKeys())
+		foreach (VirtualKey vk in Plugin.KeyState.GetValidVirtualKeys())
 		{
-			if (Services.KeyState[vk] && IsSnesKeyMappable(vk))
+			if (Plugin.KeyState[vk] && IsSnesKeyMappable(vk))
 			{
 				keyName = vk.ToString();
 				return true;
@@ -120,18 +120,18 @@ internal sealed class InputManager
 			if (SnesKeyMap[existing].Equals(keyName, StringComparison.OrdinalIgnoreCase))
 			{
 				SnesKeyMap[existing] = VirtualKey.NO_KEY.ToString();
-				_plugin.Config.KeyMappings[existing] = VirtualKey.NO_KEY.ToString();
+				Plugin.Cfg.SnesKeyMappings[existing] = VirtualKey.NO_KEY.ToString();
 				break;
 			}
 		}
 		SnesKeyMap[input] = keyName;
-		_plugin.Config.KeyMappings[input] = keyName;
-		_plugin.Config.Save();
+		Plugin.Cfg.SnesKeyMappings[input] = keyName;
+		Plugin.Cfg.Save();
 	}
 
 	internal void OnFrameworkUpdate(bool isPlayingSnes, bool controlsEnabled, Snes9xRenderer? snesRenderer)
 	{
-		HashSet<int> keyUpEvents = _plugin.WindowKeyUpReader.Consume();
+		HashSet<int> keyUpEvents = _windowKeyUpReader.Consume();
 
 		if (!isPlayingSnes || !controlsEnabled)
 		{
@@ -146,7 +146,7 @@ internal sealed class InputManager
 				&& Enum.TryParse(virtualKeyString, out VirtualKey virtualKey)
 				&& IsSnesKeyMappable(virtualKey))
 			{
-				bool pressed = Services.KeyState[virtualKey];
+				bool pressed = Plugin.KeyState[virtualKey];
 				_heldState.TryGetValue(virtualKey, out bool held);
 				if (pressed) { held = true; }
 				if (keyUpEvents.Contains((int)virtualKey)) { held = false; }
@@ -154,7 +154,7 @@ internal sealed class InputManager
 				snesRenderer?.SetButton(0, (int)key, held);
 				if (pressed)
 				{
-					Services.KeyState[virtualKey] = false;
+					Plugin.KeyState[virtualKey] = false;
 				}
 			}
 			else if (SnesKeyMap.TryGetValue(key, out string? gamePadString)

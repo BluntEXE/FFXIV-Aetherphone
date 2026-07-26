@@ -9,7 +9,7 @@ using ZXing.QrCode.Internal;
 
 namespace Aetherphone.Core.Video;
 
-public sealed class TextureTranslate
+internal sealed class TextureTranslate
 {
     private readonly ConvertTextureData _convert;
 
@@ -122,7 +122,7 @@ public sealed class TextureTranslate
 
     private byte[] DecodeTexToRgba(string path, out int width, out int height)
     {
-        var tex = Services.Data.GameData.GetFileFromDisk<TexFile>(path);
+        var tex = Plugin.DataManager.GameData.GetFileFromDisk<TexFile>(path);
         width  = tex.Header.Width;
         height = tex.Header.Height;
         return tex.ImageData;

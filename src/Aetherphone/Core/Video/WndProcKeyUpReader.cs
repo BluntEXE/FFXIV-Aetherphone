@@ -5,7 +5,7 @@ using Dalamud.Plugin.Services;
 namespace Aetherphone.Core.Video;
 
 //Reading KeyUp Events from the window itself since Dalamud is consuming the entire KeyState when disabling KeyDown
-public class WndProcKeyUpReader : IDisposable
+internal class WndProcKeyUpReader : IDisposable
 {
     [DllImport("user32.dll")]
     private static extern IntPtr GetWindowLongPtrW(IntPtr hWnd, int nIndex);

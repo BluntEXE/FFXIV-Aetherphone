@@ -13,7 +13,7 @@ using SharpDX.XAudio2;
 
 namespace Aetherphone.Core.Video
 {
-internal sealed class Snes9xRenderer(Plugin plugin) : IDisposable
+internal sealed class Snes9xRenderer : IDisposable
 	{
 		private const uint RETRO_DEVICE_JOYPAD = 1;
 
@@ -30,7 +30,8 @@ internal sealed class Snes9xRenderer(Plugin plugin) : IDisposable
 		private static IntPtr _romPathPtr;
 		private static string _srmPath = string.Empty;
 
-		private readonly Plugin _plugin = plugin;
+		private readonly string? _assemblyLocationSnes;
+		private readonly string _romsDirectory;
 		private readonly short[,] _input = new short[2, 16];
 		private readonly Lock _lock = new();
 
@@ -42,6 +43,12 @@ internal sealed class Snes9xRenderer(Plugin plugin) : IDisposable
 		private volatile bool _running;
 		private bool _coreInited;
 		private double _fps = 60.0;
+
+		internal Snes9xRenderer(string? assemblyLocationSnes, string romsDirectory)
+		{
+			_assemblyLocationSnes = assemblyLocationSnes;
+			_romsDirectory = romsDirectory;
+		}
 
 		#region native loading (manual, so the DLL can be unloaded for a clean re-init)
 		//Global c++ state, not safe to init twice in one process, un/load dll during runtime with native lib to avoid dangling
@@ -107,7 +114,7 @@ internal sealed class Snes9xRenderer(Plugin plugin) : IDisposable
 
 			if (_lib != IntPtr.Zero)
 			{
-				Services.Log.Debug($"[SNES9X] diag: freeing native dll, _lib={_lib}");
+				AepLog.Debug($"[SNES9X] diag: freeing native dll, _lib={_lib}");
 				NativeLibrary.Free(_lib);
 				_lib = IntPtr.Zero;
 			}
@@ -190,12 +197,12 @@ internal sealed class Snes9xRenderer(Plugin plugin) : IDisposable
 			{
 				Unload();
 			}
-			Services.Log.Debug("Starting: " + romPath);
+			AepLog.Debug("Starting: " + romPath);
 			lock (_lock)
 			{
-				if (_plugin.AssemblyLocationSnes == null)
+				if (_assemblyLocationSnes == null)
 				{
-					Services.Log.Error("[SNES9X] core dll path not set");
+					AepLog.Error("[SNES9X] core dll path not set");
 					return false;
 				}
 
@@ -203,18 +210,18 @@ internal sealed class Snes9xRenderer(Plugin plugin) : IDisposable
 				_cancel = new CancellationTokenSource();
 
 				_targetTexture = targetTexture;
-				Services.Log.Debug($"[SNES9X] diag: using target texture, null={_targetTexture == null}");
+				AepLog.Debug($"[SNES9X] diag: using target texture, null={_targetTexture == null}");
 
 				if (_targetTexture != null && DxHandler.Device != null)
 				{
-					Services.Log.Debug("[SNES9X] diag: constructing CrtLottesScaler");
+					AepLog.Debug("[SNES9X] diag: constructing CrtLottesScaler");
 					_scaler = new CrtLottesScaler(DxHandler.Device, _targetTexture);
-					Services.Log.Debug("[SNES9X] diag: CrtLottesScaler constructed");
+					AepLog.Debug("[SNES9X] diag: CrtLottesScaler constructed");
 				}
 
-				Services.Log.Debug($"[SNES9X] diag: loading native dll, prior _lib={_lib}");
-				LoadNative(_plugin.AssemblyLocationSnes);
-				Services.Log.Debug($"[SNES9X] diag: native dll loaded, _lib={_lib}");
+				AepLog.Debug($"[SNES9X] diag: loading native dll, prior _lib={_lib}");
+				LoadNative(_assemblyLocationSnes);
+				AepLog.Debug($"[SNES9X] diag: native dll loaded, _lib={_lib}");
 
 				_setEnvironment(_envCb);
 				_setVideoRefresh(_videoCb);
@@ -222,16 +229,16 @@ internal sealed class Snes9xRenderer(Plugin plugin) : IDisposable
 				_setAudioSampleBatch(_audioBatchCb);
 				_setInputPoll(_inputPollCb);
 				_setInputState(_inputStateCb);
-				Services.Log.Debug("[SNES9X] diag: callbacks set, calling retro_init");
+				AepLog.Debug("[SNES9X] diag: callbacks set, calling retro_init");
 
 				_init();
-				Services.Log.Debug("[SNES9X] diag: retro_init returned");
+				AepLog.Debug("[SNES9X] diag: retro_init returned");
 				_coreInited = true;
 
 				_getSystemInfo(out RetroSystemInfo si);
-				Services.Log.Debug($"[SNES9X] core {Marshal.PtrToStringAnsi(si.Library_name)} {Marshal.PtrToStringAnsi(si.Library_version)}");
+				AepLog.Debug($"[SNES9X] core {Marshal.PtrToStringAnsi(si.Library_name)} {Marshal.PtrToStringAnsi(si.Library_version)}");
 
-				Services.Log.Debug($"[SNES9X] need_fullpath={si.Need_fullpath}, romPath={romPath}");
+				AepLog.Debug($"[SNES9X] need_fullpath={si.Need_fullpath}, romPath={romPath}");
 				var info = new RetroGameInfo();
 				IntPtr dataPtr = IntPtr.Zero;
 				try
@@ -255,7 +262,7 @@ internal sealed class Snes9xRenderer(Plugin plugin) : IDisposable
 
 					if (!_loadGame(ref info))
 					{
-						Services.Log.Error("[SNES9X] retro_load_game failed");
+						AepLog.Error("[SNES9X] retro_load_game failed");
 						TeardownLocked();
 						return false;
 					}
@@ -278,7 +285,7 @@ internal sealed class Snes9xRenderer(Plugin plugin) : IDisposable
 				
 				SetVolume(25);
 
-				Services.Log.Debug($"[SNES9X] loaded {Path.GetFileName(romPath)} @ {_fps:0.##}fps, {av.Timing.Sample_rate:0}Hz");
+				AepLog.Debug($"[SNES9X] loaded {Path.GetFileName(romPath)} @ {_fps:0.##}fps, {av.Timing.Sample_rate:0}Hz");
 			}
 
 			_running = true;
@@ -311,22 +318,22 @@ internal sealed class Snes9xRenderer(Plugin plugin) : IDisposable
 			if (_coreInited)
 			{
 				SaveSramIfChanged();
-				Services.Log.Debug("[SNES9X] calling unload_game");
+				AepLog.Debug("[SNES9X] calling unload_game");
 				try { 
 					_unloadGame();
 				}
-				catch (Exception e) { Services.Log.Error($"[SNES9X] unload_game threw: {e}"); }
+				catch (Exception e) { AepLog.Error($"[SNES9X] unload_game threw: {e}"); }
 
 				try { _deinit(); }
-				catch (Exception e) { Services.Log.Error($"[SNES9X] deinit threw: {e}"); }
+				catch (Exception e) { AepLog.Error($"[SNES9X] deinit threw: {e}"); }
 				_coreInited = false;
-				Services.Log.Debug("[SNES9X] diag: retro_deinit returned");
+				AepLog.Debug("[SNES9X] diag: retro_deinit returned");
 			}
 
 			_audio?.Dispose(); _audio = null;
 			_scaler?.Dispose(); _scaler = null;
 			_targetTexture = null;
-			Services.Log.Debug("[SNES9X] diag: scaler disposed");
+			AepLog.Debug("[SNES9X] diag: scaler disposed");
 
 			FreeNative();
 
@@ -341,7 +348,7 @@ internal sealed class Snes9xRenderer(Plugin plugin) : IDisposable
 		{
 			if (_sysDirPtr == IntPtr.Zero)
 			{
-				_sysDirPtr = Marshal.StringToHGlobalAnsi(_plugin.ROMSLocationSnesDir);
+				_sysDirPtr = Marshal.StringToHGlobalAnsi(_romsDirectory);
 			}
 			return _sysDirPtr;
 		}
@@ -440,7 +447,7 @@ internal sealed class Snes9xRenderer(Plugin plugin) : IDisposable
 					{
 						return true;
 					}
-					Services.Log.Warning($"[SNES9X] core requested unsupported pixel format {fmt}");
+					AepLog.Warning($"[SNES9X] core requested unsupported pixel format {fmt}");
 					return false;
 				case ENV_GET_CAN_DUPE:
 					Marshal.WriteByte(data, 1);
@@ -775,7 +782,7 @@ internal sealed class Snes9xRenderer(Plugin plugin) : IDisposable
 
 				ctx.OutputMerger.SetRenderTargets(_rtv);
 				ctx.ClearRenderTargetView(_rtv, new RawColor4(0, 0, 0, 1));
-				float arW = Plugin.ScreenHeight * 4f / 3f;
+				float arW = VideoEngine.ScreenHeight * 4f / 3f;
 				float x = (_dstW - arW) / 2f;
 				ctx.Rasterizer.SetViewport(x, 0, arW, _dstH);
 				ctx.Rasterizer.State = null;

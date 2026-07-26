@@ -41,7 +41,7 @@ internal static class DxHandler
 		nint* vtable = *(nint**)swapChainPtr;
 		nint presentAddress = vtable[8]; //IDXGISwapChain::Present
 
-		_presentHook = Services.InteropProvider.HookFromAddress<PresentDelegate>(presentAddress, PresentDetour);
+		_presentHook = Plugin.InteropProvider.HookFromAddress<PresentDelegate>(presentAddress, PresentDetour);
 		_presentHook.Enable();
 	}
 
@@ -57,7 +57,7 @@ internal static class DxHandler
 				}
 				catch (Exception e)
 				{
-					Services.Log.Error($"[DxHandler] Render-thread callback '{key}' failed: {e}");
+					AepLog.Error($"[DxHandler] Render-thread callback '{key}' failed: {e}");
 				}
 			}
 		}

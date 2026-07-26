@@ -13,7 +13,9 @@ namespace Aetherphone.Core.Video;
 internal sealed class Resources : IDisposable
 {
 	private readonly HttpClient _httpClient;
-	private readonly Plugin _plugin;
+	private readonly Guid _sessionId;
+	private readonly string _pluginDir;
+	private readonly string _configDir;
 
 	internal string[] MpvCheckResult { get; private set; } = [string.Empty, string.Empty];
 	internal string[] YtdlpCheckResult { get; private set; } = [string.Empty, string.Empty];
@@ -22,12 +24,16 @@ internal sealed class Resources : IDisposable
 
 	internal long CurrentTimeNTPNormalizedMilliseconds => _ntpTimeOffset > 0 ? _ntpTimeOffset + (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _sysTimeOffset) : DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
+	internal string RomsDirectory => Path.Combine(_configDir, "roms");
 
-	internal Resources(Plugin plugin)
+
+	internal Resources(Guid sessionId)
 	{
 		_httpClient = new HttpClient();
 		_httpClient.DefaultRequestHeaders.Add("User-Agent", "AetherphoneAetherStreamUpdater/1.0");
-		_plugin = plugin;
+		_sessionId = sessionId;
+		_pluginDir = Plugin.PluginInterface.AssemblyLocation.DirectoryName ?? string.Empty;
+		_configDir = Plugin.PluginInterface.ConfigDirectory.FullName;
 
 		Initialize();
 	}
@@ -42,13 +48,13 @@ internal sealed class Resources : IDisposable
 				File.Delete(path);
 			}
 		}
-		Directory.GetFiles(Path.Combine(_plugin.PluginDir, "resources"), "alphachannelscreentex_*.atex").ToList().ForEach(File.Delete);
-		Directory.GetFiles(Path.Combine(_plugin.PluginDir, "resources"), "alphachannelscreen_*.avfx").ToList().ForEach(File.Delete);
-		Directory.GetFiles(Path.Combine(_plugin.PluginDir, "resources"), "snesscreentex_*.atex").ToList().ForEach(File.Delete);
-		Directory.GetFiles(Path.Combine(_plugin.PluginDir, "resources"), "snesscreen_*.avfx").ToList().ForEach(File.Delete);
-		Directory.GetFiles(Path.Combine(_plugin.PluginDir, "resources"), "tvqr_*.avfx").ToList().ForEach(File.Delete);
+		var resourceDir = Path.Combine(_pluginDir, "Resources", "Video");
+		Directory.GetFiles(resourceDir, "alphachannelscreentex_*.atex").ToList().ForEach(File.Delete);
+		Directory.GetFiles(resourceDir, "aetherstreamscreen_*.avfx").ToList().ForEach(File.Delete);
+		Directory.GetFiles(resourceDir, "snesscreentex_*.atex").ToList().ForEach(File.Delete);
+		Directory.GetFiles(resourceDir, "snesscreen_*.avfx").ToList().ForEach(File.Delete);
 
-		var modDir = new GetModDirectory(Services.PluginInterface);
+		var modDir = new GetModDirectory(Plugin.PluginInterface);
         string dir = modDir.Invoke();
         string alphachanneltempdir = Path.Combine(dir, "AetherStreamTemp");
 		if (Directory.Exists(alphachanneltempdir))
@@ -68,7 +74,7 @@ internal sealed class Resources : IDisposable
     {
 		var finalPaths = new Dictionary<string, string>();
 		
-        var getDir = new GetModDirectory(Services.PluginInterface);
+        var getDir = new GetModDirectory(Plugin.PluginInterface);
         string dir = getDir.Invoke();
         string alphachanneltempdir = Path.Combine(dir, "AetherStreamTemp");
         Directory.CreateDirectory(Path.Combine(dir, "AetherStreamTemp"));
@@ -89,9 +95,9 @@ internal sealed class Resources : IDisposable
 
 	private void Initialize()
 	{
-		if(!Directory.Exists(Path.Combine(_plugin.ConfigDir, "roms")))
+		if(!Directory.Exists(Path.Combine(_configDir, "roms")))
 		{
-			Directory.CreateDirectory(Path.Combine(_plugin.ConfigDir, "roms"));
+			Directory.CreateDirectory(Path.Combine(_configDir, "roms"));
 		}
 		_=GetNtpUtcAsync().ContinueWith(task =>
 		{
@@ -99,61 +105,41 @@ internal sealed class Resources : IDisposable
 			if (task.IsCompletedSuccessfully)
 			{
 				_ntpTimeOffset = task.GetResultSafely();
-				Services.Log.Debug("Received NTP Time Offset: " + (_ntpTimeOffset - DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()) + " ms.");
+				AepLog.Debug("Received NTP Time Offset: " + (_ntpTimeOffset - DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()) + " ms.");
 			}
 			_sysTimeOffset = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 		}).ContinueWith(_ =>
 		{
 			//Check for MPV Updates
-			_plugin.LibResources.CheckMPVAsync().ContinueWith(task =>
+			CheckMPVAsync().ContinueWith(task =>
 			{
 				if (!task.IsCompletedSuccessfully)
 				{
-					Services.Log.Error("Failed to check for MPV updates: " + task.Exception?.ToString());
+					AepLog.Error("Failed to check for MPV updates: " + task.Exception?.ToString());
 				}
 			});
 		}).ContinueWith(_=>
 		{
 			//Check for YTDLP Updates
-			_plugin.LibResources.CheckYTDLPAsync().ContinueWith(task =>
+			CheckYTDLPAsync().ContinueWith(task =>
 			{
 				if (!task.IsCompletedSuccessfully)
 				{
-					Services.Log.Error("Failed to check for YTDLP updates: " + task.Exception?.ToString());
+					AepLog.Error("Failed to check for YTDLP updates: " + task.Exception?.ToString());
 				}
 			});
 		});
 	}
 
-	internal Dictionary<string, string> LoadPenumbraQRResources()
-	{
-		Dictionary<string, string> paths = [];
-
-		string oldPath = Path.Combine(_plugin.PluginDir, "resources", "carbuncle/tv_qr.tex");
-		if (File.Exists(oldPath))
-		{
-			string path = Path.Combine(_plugin.PluginDir, "resources", "tvqr_"+_plugin.PluginSessionGUID+".tex");
-			
-			File.Copy(oldPath, path, true);
-
-			paths.Add(PenumbraWatcher.WatchFor, path);
-		}
-		else
-		{
-			throw new FileNotFoundException($"Required resource not found: {oldPath}");
-		}
-
-		return FixTempCopyGamePaths(paths); //just return paths after the bug is fixed
-	}
-
 	internal Dictionary<string, string> LoadPenumbraScreenResources()
 	{
 		Dictionary<string, string> paths = [];
+		var resourceDir = Path.Combine(_pluginDir, "Resources", "Video");
 
-		string oldPath = Path.Combine(_plugin.PluginDir, "resources", "alphachannelscreentex.atex");
+		string oldPath = Path.Combine(resourceDir, "alphachannelscreentex.atex");
 		if (File.Exists(oldPath))
 		{
-			string path = Path.Combine(_plugin.PluginDir, "resources", "alphachannelscreentex_"+_plugin.PluginSessionGUID+".atex");
+			string path = Path.Combine(resourceDir, "alphachannelscreentex_"+_sessionId+".atex");
 			File.Copy(oldPath, path, true);
 			paths.Add("chara/monster/m7002/obj/body/b0001/vfx/texture/alphachannelscreentex.atex", path);
 		}
@@ -162,34 +148,34 @@ internal sealed class Resources : IDisposable
 			throw new FileNotFoundException($"Required resource not found: {oldPath}");
 		}
 
-		oldPath = Path.Combine(_plugin.PluginDir, "resources", "alphachannelscreen.avfx");
+		oldPath = Path.Combine(resourceDir, "aetherstreamscreen.avfx");
 		if (File.Exists(oldPath))
 		{
-			string path = Path.Combine(_plugin.PluginDir, "resources", "alphachannelscreen_"+_plugin.PluginSessionGUID+".avfx");
+			string path = Path.Combine(resourceDir, "aetherstreamscreen_"+_sessionId+".avfx");
 			File.Copy(oldPath, path, true);
-			paths.Add("chara/monster/m7002/obj/body/b0001/vfx/texture/alphachannelscreen_"+_plugin.PluginSessionGUID+".avfx", path);
+			paths.Add("chara/monster/m7002/obj/body/b0001/vfx/texture/aetherstreamscreen_"+_sessionId+".avfx", path);
 		}
 		else
 		{
 			throw new FileNotFoundException($"Required resource not found: {oldPath}");
 		}
 
-		oldPath = Path.Combine(_plugin.PluginDir, "resources", "snesscreen.avfx");
+		oldPath = Path.Combine(resourceDir, "snesscreen.avfx");
 		if (File.Exists(oldPath))
 		{
-			string path = Path.Combine(_plugin.PluginDir, "resources", "snesscreen_"+_plugin.PluginSessionGUID+".avfx");
+			string path = Path.Combine(resourceDir, "snesscreen_"+_sessionId+".avfx");
 			File.Copy(oldPath, path, true);
-			paths.Add("chara/monster/m7002/obj/body/b0001/vfx/texture/snesscreen_"+_plugin.PluginSessionGUID+".avfx", path);
+			paths.Add("chara/monster/m7002/obj/body/b0001/vfx/texture/snesscreen_"+_sessionId+".avfx", path);
 		}
 		else
 		{
 			throw new FileNotFoundException($"Required resource not found: {oldPath}");
 		}
 
-		oldPath = Path.Combine(_plugin.PluginDir, "resources", "snesscreentex.atex");
+		oldPath = Path.Combine(resourceDir, "snesscreentex.atex");
 		if (File.Exists(oldPath))
 		{
-			string path = Path.Combine(_plugin.PluginDir, "resources", "snesscreentex_"+_plugin.PluginSessionGUID+".atex");
+			string path = Path.Combine(resourceDir, "snesscreentex_"+_sessionId+".atex");
 			File.Copy(oldPath, path, true);
 			paths.Add("chara/monster/m7002/obj/body/b0001/vfx/texture/snesscreentex.atex", path);
 		}
@@ -202,55 +188,10 @@ internal sealed class Resources : IDisposable
 		//UPDATE: actually, this needs to be used because the sync aborts sending the other mods at the time of loading these rescources
 	}
 
-	internal Dictionary<string, string> LoadPenumbraModResources()
-	{
-		Dictionary<string, string> paths = new () {
-			{"chara/monster/m7002/animation/a0001/bt_common/resident/monster.pap", "carbuncle/monster.pap"}, //Carbuncle Files
-			{"chara/monster/m7002/obj/body/b0001/material/v0001/mt_m7002b0001_a.mtrl", "carbuncle/mt_m7002b0001_a.mtrl"},
-			{"chara/monster/m7002/obj/body/b0001/material/v0002/mt_m7002b0001_a.mtrl", "carbuncle/mt_m7002b0001_a.mtrl"},
-			{"chara/monster/m7002/obj/body/b0001/material/v0003/mt_m7002b0001_a.mtrl", "carbuncle/mt_m7002b0001_a.mtrl"},
-			{"chara/monster/m7002/obj/body/b0001/material/v0004/mt_m7002b0001_a.mtrl", "carbuncle/mt_m7002b0001_a.mtrl"},
-			{"chara/monster/m7002/obj/body/b0001/material/v0005/mt_m7002b0001_a.mtrl", "carbuncle/mt_m7002b0001_a.mtrl"},
-			{"chara/monster/m7002/obj/body/b0001/material/v0006/mt_m7002b0001_a.mtrl", "carbuncle/mt_m7002b0001_a.mtrl"},
-			{"chara/monster/m7002/obj/body/b0001/material/v0001/mt_m7002b0001_b.mtrl", "carbuncle/mt_m7002b0001_b.mtrl"},
-			{"chara/monster/m7002/obj/body/b0001/material/v0002/mt_m7002b0001_b.mtrl", "carbuncle/mt_m7002b0001_b.mtrl"},
-			{"chara/monster/m7002/obj/body/b0001/material/v0003/mt_m7002b0001_b.mtrl", "carbuncle/mt_m7002b0001_b.mtrl"},
-			{"chara/monster/m7002/obj/body/b0001/material/v0004/mt_m7002b0001_b.mtrl", "carbuncle/mt_m7002b0001_b.mtrl"},
-			{"chara/monster/m7002/obj/body/b0001/material/v0005/mt_m7002b0001_b.mtrl", "carbuncle/mt_m7002b0001_b.mtrl"},
-			{"chara/monster/m7002/obj/body/b0001/material/v0006/mt_m7002b0001_b.mtrl", "carbuncle/mt_m7002b0001_b.mtrl"},
-			{"chara/monster/m7002/obj/body/b0001/model/m7002b0001.mdl", "carbuncle/m7002b0001.mdl"},
-			{"chara/monster/m7002/obj/body/b0001/texture/tv_id.tex", "carbuncle/tv_id.tex"},
-			{"chara/monster/m7002/obj/body/b0001/texture/tv_n.tex", "carbuncle/tv_n.tex"},
-			{"chara/monster/m7002/obj/body/b0001/texture/tv_d.tex", "carbuncle/tv_d.tex"},
-			{"chara/monster/m7002/obj/body/b0001/texture/tv_s.tex", "carbuncle/tv_id.tex"},
-			{"chara/monster/m7002/obj/body/b0001/vfx/texture/flas001bt.atex", "carbuncle/flas001bt.atex"},
-			{"chara/monster/m7002/obj/body/b0001/vfx/texture/pk_x001a_h.atex", "carbuncle/pk_x001a_h.atex"},
-			{"chara/monster/m7002/obj/body/b0001/vfx/texture/glow002bf.atex", "carbuncle/glow002bf.atex"},
-			{"chara/monster/m7002/obj/body/b0001/vfx/texture/flas001ct.atex", "carbuncle/flas001bt.atex"},
-			{"chara/monster/m7002/obj/body/b0001/texture/unknown_b_id_1400445740.tex", "carbuncle/tv_id.tex"},
-			{"chara/monster/m7002/obj/body/b0001/texture/unknown_b_n_1400445740.tex", "carbuncle/tv_n.tex"},
-			{"chara/monster/m7002/obj/body/b0001/texture/unknown_b_s_1400445740.tex", "carbuncle/tv_id.tex"}
-		};
-		foreach(string key in paths.Keys)
-		{
-			string fullPath = Path.Combine(_plugin.PluginDir, "resources", paths[key]);
-			if (!File.Exists(fullPath))
-			{
-				throw new FileNotFoundException($"Required resource not found: {fullPath}");
-			}
-			else
-			{
-				paths[key] = Path.Combine(_plugin.PluginDir, "resources", paths[key]);
-			}
-		}
-
-		return FixTempCopyGamePaths(paths); //just return paths after the bug is fixed
-	}
-
 	internal string? GetLocationMPV()
 	{
 		string filenameStart = "mpv-dev-lgpl-x86_64-";
-		string? dir = Directory.GetDirectories(_plugin.ConfigDir, $"{filenameStart}*").FirstOrDefault();
+		string? dir = Directory.GetDirectories(_configDir, $"{filenameStart}*").FirstOrDefault();
 		if (dir != null)
 		{
 			return dir + "/libmpv-2.dll";
@@ -264,7 +205,7 @@ internal sealed class Resources : IDisposable
 	internal string? GetLocationYTDLP()
 	{
 		string filenameStart = "yt-dlp";
-		string? dir = Directory.GetDirectories(_plugin.ConfigDir, $"{filenameStart}*").FirstOrDefault();
+		string? dir = Directory.GetDirectories(_configDir, $"{filenameStart}*").FirstOrDefault();
 		if (dir != null)
 		{
 			return dir + "/yt-dlp.exe";
@@ -278,10 +219,10 @@ internal sealed class Resources : IDisposable
 	internal string? GetLocationSNES9X()
 	{
 		string directoryName = "snes9x";
-		string? dir = Directory.GetDirectories(_plugin.ConfigDir, $"{directoryName}*").FirstOrDefault();
+		string? dir = Directory.GetDirectories(_configDir, $"{directoryName}*").FirstOrDefault();
 		if (dir != null)
 		{
-			string file = Path.Combine(_plugin.ConfigDir, directoryName, "snes9x_libretro.dll");
+			string file = Path.Combine(_configDir, directoryName, "snes9x_libretro.dll");
 			if(File.Exists(file))
 			{
 				return file;
@@ -289,7 +230,7 @@ internal sealed class Resources : IDisposable
 		}
 		else
 		{
-			Directory.CreateDirectory(Path.Combine(_plugin.ConfigDir, "snes9x"));
+			Directory.CreateDirectory(Path.Combine(_configDir, "snes9x"));
 		}
 		
 		return null;
@@ -300,14 +241,14 @@ internal sealed class Resources : IDisposable
 		string filenameStart = "mpv-dev-lgpl-x86_64-";
 		string filenameEnd = ".7z";
 		string url = "https://api.github.com/repos/zhongfly/mpv-winbuild/releases/latest";
-		MpvCheckResult = await CheckForUpdateAsync(_plugin.ConfigDir, filenameStart, filenameEnd, url);
+		MpvCheckResult = await CheckForUpdateAsync(_configDir, filenameStart, filenameEnd, url);
 	}
 	private async Task CheckYTDLPAsync()
 	{
 		string filenameStart = "yt-dlp.exe";
 		string filenameEnd = ".exe";
 		string url = "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest";
-		YtdlpCheckResult = await CheckForUpdateAsync(_plugin.ConfigDir, filenameStart, filenameEnd, url);
+		YtdlpCheckResult = await CheckForUpdateAsync(_configDir, filenameStart, filenameEnd, url);
 	}
 	internal async Task<bool> DownloadMPVAsync()
 	{
@@ -315,7 +256,7 @@ internal sealed class Resources : IDisposable
 		string filenameEnd = ".7z";
 		string downloadURL = MpvCheckResult[0];
 		string folderName = MpvCheckResult[1];
-		return await UpdateAsync(_plugin.ConfigDir, filenameStart, filenameEnd, downloadURL, folderName);
+		return await UpdateAsync(_configDir, filenameStart, filenameEnd, downloadURL, folderName);
 	}
 	internal async Task<bool> DownloadYTDLPAsync()
 	{
@@ -323,7 +264,7 @@ internal sealed class Resources : IDisposable
 		string filenameEnd = ".exe";
 		string downloadURL = YtdlpCheckResult[0];
 		string folderName = YtdlpCheckResult[1];
-		return await UpdateAsync(_plugin.ConfigDir, filenameStart, filenameEnd, downloadURL, folderName);
+		return await UpdateAsync(_configDir, filenameStart, filenameEnd, downloadURL, folderName);
 	}
 	private async Task<string[]> CheckForUpdateAsync(string configDir, string nameStartsWith, string nameEndsWith, string checkURL)
 	{
@@ -347,7 +288,7 @@ internal sealed class Resources : IDisposable
 			}
 
 			string downloadURL = asset["browser_download_url"]!.Value<string>()!;
-			Services.Log.Warning("Found Update: " + downloadURL);
+			AepLog.Warning("Found Update: " + downloadURL);
 			return [downloadURL, folderName];
 		}
 		catch
@@ -360,14 +301,14 @@ internal sealed class Resources : IDisposable
 	{
 		try
 		{
-			Services.Log.Debug("Downloading Update: " + downloadURL);
+			AepLog.Debug("Downloading Update: " + downloadURL);
 			string tempFile = Path.GetTempFileName() + nameEndsWith;
 			var response = await _httpClient.GetAsync(downloadURL, HttpCompletionOption.ResponseHeadersRead);
 			await using (var fs = File.OpenWrite(tempFile))
 			{
 				await response.Content.CopyToAsync(fs);
 			}
-			Services.Log.Debug("Finished Downloading " + downloadURL);
+			AepLog.Debug("Finished Downloading " + downloadURL);
 			if (nameEndsWith == ".7z")
 			{
 				string localFolder = Path.Combine(configDir, Path.GetRandomFileName());
@@ -424,7 +365,7 @@ internal sealed class Resources : IDisposable
 		}
 		catch (Exception e)
 		{
-			Services.Log.Error($"Error updating {nameStartsWith}: {e.Message} {e.StackTrace}");
+			AepLog.Error($"Error updating {nameStartsWith}: {e.Message} {e.StackTrace}");
 			return false;
 		}
 	}
@@ -441,7 +382,7 @@ internal sealed class Resources : IDisposable
 				await response.Content.CopyToAsync(fs);
 			}
 
-			string localFolder = Path.Combine(_plugin.ConfigDir, directoryName);
+			string localFolder = Path.Combine(_configDir, directoryName);
 			Directory.CreateDirectory(localFolder);
 			using (var archive = ArchiveFactory.OpenArchive(temp))
 			{
@@ -494,11 +435,18 @@ internal sealed class Resources : IDisposable
 
 	internal static class NativeLoader
 	{
-		private static Plugin? _plugin;
+		private static Resources? _resources;
+		private static bool _registered;
 
-		internal static void Register(Plugin plugin)
+		internal static void Register(Resources resources)
 		{
-			_plugin = plugin;
+			_resources = resources;
+			if (_registered)
+			{
+				return;
+			}
+
+			_registered = true;
 			NativeLibrary.SetDllImportResolver(typeof(NativeLoader).Assembly, Resolve);
 		}
 
@@ -507,7 +455,10 @@ internal sealed class Resources : IDisposable
 			switch (name)
 			{
 				case "libmpv-2":
-					return TryLoad(_plugin?.AssemblyLocationMPV, "MPV");
+					// Queried fresh rather than cached at startup - mpv-winbuild may still be
+					// downloading (see CheckMPVAsync/DownloadMPVAsync) the first time this
+					// resolves.
+					return TryLoad(_resources?.GetLocationMPV(), "MPV");
 				default:
 					return IntPtr.Zero;
 			}
@@ -519,7 +470,7 @@ internal sealed class Resources : IDisposable
 			{
 				return handle;
 			}
-			Services.Log.Error($"[{tag}] Failed to load native lib from: {location}");
+			AepLog.Error($"[{tag}] Failed to load native lib from: {location}");
 			return IntPtr.Zero;
 		}
 	}
