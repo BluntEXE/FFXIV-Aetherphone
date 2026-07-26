@@ -31,7 +31,7 @@ internal static class ConductRules
     {
         AppId = "chirper",
         Version = 2,
-        CountdownSeconds = 60f,
+        CountdownSeconds = 45f,
         Icon = FontAwesomeIcon.Comments,
         Title = L.Conduct.ChirperTitle,
         Intro = L.Conduct.ChirperIntro,
@@ -60,7 +60,7 @@ internal static class ConductRules
     {
         AppId = "aethergram",
         Version = 2,
-        CountdownSeconds = 60f,
+        CountdownSeconds = 50f,
         Icon = FontAwesomeIcon.Camera,
         Title = L.Conduct.AethergramTitle,
         Intro = L.Conduct.AethergramIntro,
@@ -126,7 +126,7 @@ internal static class ConductRules
     {
         AppId = "muster",
         Version = 2,
-        CountdownSeconds = 60f,
+        CountdownSeconds = 40f,
         Icon = FontAwesomeIcon.Bullhorn,
         Title = L.Conduct.MusterTitle,
         Intro = L.Conduct.MusterIntro,
@@ -157,7 +157,7 @@ internal static class ConductRules
     {
         AppId = "yellowpages",
         Version = 2,
-        CountdownSeconds = 60f,
+        CountdownSeconds = 45f,
         Icon = FontAwesomeIcon.AddressBook,
         Title = L.Conduct.YellowPagesTitle,
         Intro = L.Conduct.YellowPagesIntro,
