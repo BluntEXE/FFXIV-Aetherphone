@@ -83,7 +83,7 @@ internal static class CryptoBox
                 ? new EcPublicKey(publicKey)
                 : null;
         }
-        catch (Exception exception) when (exception is ArgumentException or IOException or SecurityUtilityException)
+        catch (Exception)
         {
             return null;
         }
@@ -115,7 +115,7 @@ internal static class CryptoBox
             var publicKey = new ECPublicKeyParameters("ECDH", publicPoint, privateKey.Parameters);
             return new EcPrivateKey(privateKey, publicKey);
         }
-        catch (Exception exception) when (exception is ArgumentException or IOException or SecurityUtilityException)
+        catch (Exception)
         {
             return null;
         }
@@ -246,7 +246,8 @@ internal static class CryptoBox
             }
         }
         catch (Exception exception) when (exception is ArgumentException or IOException or SecurityUtilityException
-                                          or InvalidOperationException or CryptographicException)
+                                          or InvalidOperationException or InvalidCastException or FormatException
+                                          or CryptographicException)
         {
             return null;
         }

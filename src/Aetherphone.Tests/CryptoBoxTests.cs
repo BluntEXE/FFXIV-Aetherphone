@@ -100,6 +100,31 @@ public sealed class CryptoBoxTests
         Assert.Equal(expectedPublicKey, CryptoBox.ExportPublicKey(imported));
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("AA==")]
+    public void ImportPublicKeyRejectsMalformedKeys(string encoded)
+    {
+        Assert.Null(CryptoBox.ImportPublicKey(encoded));
+    }
+
+    [Fact]
+    public void ImportPrivateKeyRejectsEmptyKey()
+    {
+        Assert.Null(CryptoBox.ImportPrivateKey([]));
+    }
+
+    [Fact]
+    public void UnwrapCekRejectsMalformedEphemeralKey()
+    {
+        var identity = CryptoBox.TryGenerateIdentity();
+        Assert.NotNull(identity);
+        var payload = new byte[1 + 1 + 12 + CryptoBox.CekBytes + 16];
+        payload[0] = 1;
+
+        Assert.Null(CryptoBox.UnwrapCek("EC1." + Convert.ToBase64String(payload), identity));
+    }
+
     private static string PlatformWrap(byte[] cek, string recipientPublicKeyBase64)
     {
         using var recipient = ECDiffieHellman.Create();
