@@ -1918,6 +1918,14 @@ internal static class L
         public static readonly LocString SettingsDependencyYtdlp = new("aetherstream.settingsDependencyYtdlp",
             "yt-dlp");
         public static readonly LocString SettingsDependencyOk = new("aetherstream.settingsDependencyOk", "Ready");
+        public static readonly LocString SettingsDependencyNotInstalled = new(
+            "aetherstream.settingsDependencyNotInstalled", "Not installed");
+        public static readonly LocString SettingsDependencyUpdateAvailable = new(
+            "aetherstream.settingsDependencyUpdateAvailable", "Update available");
+        public static readonly LocString SettingsDownloadMpv = new("aetherstream.settingsDownloadMpv",
+            "Download mpv");
+        public static readonly LocString SettingsDownloadYtdlp = new("aetherstream.settingsDownloadYtdlp",
+            "Download yt-dlp");
         public static readonly LocString SettingsScreen = new("aetherstream.settingsScreen", "Screen");
         public static readonly LocString SettingsHideNameplates = new("aetherstream.settingsHideNameplates",
             "Hide nameplates");

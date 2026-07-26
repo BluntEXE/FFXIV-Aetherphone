@@ -51,6 +51,9 @@ internal sealed partial class AetherStreamApp : IPhoneApp
     private readonly AetherStreamScreenWindow screenWindow;
     private readonly AccountClient joinAccount;
     private readonly StoreWork joinWork = new("aetherstream.join");
+    private readonly StoreWork dependencyWork = new("aetherstream.dependencies");
+    private bool mpvDownloading;
+    private bool ytdlpDownloading;
     private readonly AppSkin ui = new(AppPalettes.Dev with { Accent = AppAccents.For("aetherstream") });
     private readonly ViewRouter<AetherStreamScreen> router = new(AetherStreamScreen.Main);
     private readonly string[] tabOptions = new string[3];
@@ -159,5 +162,6 @@ internal sealed partial class AetherStreamApp : IPhoneApp
     {
         video.Stop();
         joinWork.Dispose();
+        dependencyWork.Dispose();
     }
 }

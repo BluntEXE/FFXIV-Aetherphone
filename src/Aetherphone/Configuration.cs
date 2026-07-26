@@ -83,15 +83,6 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     // gap, not fixable via a CA bundle file - see Stage 7 investigation notes). Never touches
     // real Windows.
     public bool VideoAllowInsecureDirectUrls { get; set; }
-    // Where the projected screen sits in the world - unset (Placed = false) until the player
-    // places it once via the Casting tab. Default size is a believable 16:9 TV, in yalms.
-    public bool VideoScreenPlaced { get; set; }
-    public float VideoScreenPositionX { get; set; }
-    public float VideoScreenPositionY { get; set; }
-    public float VideoScreenPositionZ { get; set; }
-    public float VideoScreenYaw { get; set; }
-    public float VideoScreenWidth { get; set; } = 2.4f;
-    public float VideoScreenHeight { get; set; } = 1.35f;
     // SNES9x (AlphaChannel port) emulator input mapping and recent-ROM list - ported from
     // AlphaChannel's own Configuration, which used to be its own separate IPluginConfiguration.
     public Dictionary<Snes9xInput, string> SnesKeyMappings { get; set; } = new();

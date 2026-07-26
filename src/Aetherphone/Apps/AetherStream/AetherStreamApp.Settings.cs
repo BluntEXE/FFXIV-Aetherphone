@@ -11,11 +11,12 @@ namespace Aetherphone.Apps.AetherStream;
 
 internal sealed partial class AetherStreamApp
 {
-    // Capped at 1080p, not YouTube's actual ceiling - the TV's own screen texture is a fixed
-    // 1920x1080 (VideoRenderTarget.ScreenWidth/Height), so anything higher would just be
-    // downscaled into the same buffer by mpv for no visible gain, at the cost of extra bandwidth
-    // and decode work. 720p+ now resolves via adaptive video+audio streams, not muxed-only - see
-    // VideoUrlResolver.
+    // Capped at 1080p, not YouTube's actual ceiling - the screen's own texture is a fixed
+    // 1920x1080 (VideoEngine.ScreenWidth/Height), so anything higher would just be downscaled
+    // into the same buffer by mpv for no visible gain, at the cost of extra bandwidth and decode
+    // work. Enforced via mpv's own ytdl-format option (see MpvRenderer.Initialize), not a
+    // separate resolver - AlphaChannel's engine resolves YouTube itself through mpv's bundled
+    // ytdl_hook/yt-dlp.
     private static readonly int[] QualityOptions = { 144, 240, 360, 480, 720, 1080 };
     private readonly DropdownMenu qualityMenu = new();
     private Rect qualityRowRect;
@@ -37,16 +38,16 @@ internal sealed partial class AetherStreamApp
         var top = area.Min.Y + AppHeader.Height * scale + Metrics.Space.Sm * scale;
         var content = new Rect(new Vector2(area.Min.X + margin, top), new Vector2(area.Max.X - margin, area.Max.Y));
 
-        VideoNativeLibrary.EnsureYtdlpChecked();
+        var resources = screen.Engine.Resources;
 
         using (AppSurface.Begin(content))
         {
             SettingsSection.Header(Loc.T(L.AetherStream.SettingsSectionStatus), accentedTheme);
             var statusCard = GroupCard.Begin(accentedTheme, 3);
             SettingsRow.Info(statusCard.NextRow(), Loc.T(L.AetherStream.SettingsDependencyStatus),
-                DependencyStatusText(VideoNativeLibrary.LoadError), accentedTheme);
+                MpvStatusText(resources), accentedTheme);
             SettingsRow.Info(statusCard.NextRow(), Loc.T(L.AetherStream.SettingsDependencyYtdlp),
-                DependencyStatusText(VideoNativeLibrary.YtdlpError), accentedTheme);
+                YtdlpStatusText(resources), accentedTheme);
             if (SettingsRow.Disclosure(statusCard.NextRow(), Loc.T(L.AetherStream.SettingsScreen), ScreenStateText(),
                     accentedTheme))
             {
@@ -55,6 +56,45 @@ internal sealed partial class AetherStreamApp
             }
 
             statusCard.End();
+
+            if (NeedsMpvDownload(resources) || NeedsYtdlpDownload(resources))
+            {
+                ImGui.Dummy(new Vector2(0f, 8f * scale));
+                var buttonHeight = 34f * scale;
+                var buttonTop = ImGui.GetCursorScreenPos().Y;
+
+                if (NeedsMpvDownload(resources))
+                {
+                    var mpvRect = new Rect(new Vector2(content.Min.X, buttonTop),
+                        new Vector2(content.Max.X, buttonTop + buttonHeight));
+                    if (SmallButton(mpvRect, Loc.T(L.AetherStream.SettingsDownloadMpv), !mpvDownloading, scale))
+                    {
+                        mpvDownloading = true;
+                        dependencyWork.Run("download mpv", async token =>
+                        {
+                            await resources.DownloadMPVAsync().ConfigureAwait(false);
+                        }, () => mpvDownloading = false);
+                    }
+
+                    buttonTop += buttonHeight + 8f * scale;
+                }
+
+                if (NeedsYtdlpDownload(resources))
+                {
+                    var ytdlpRect = new Rect(new Vector2(content.Min.X, buttonTop),
+                        new Vector2(content.Max.X, buttonTop + buttonHeight));
+                    if (SmallButton(ytdlpRect, Loc.T(L.AetherStream.SettingsDownloadYtdlp), !ytdlpDownloading, scale))
+                    {
+                        ytdlpDownloading = true;
+                        dependencyWork.Run("download yt-dlp", async token =>
+                        {
+                            await resources.DownloadYTDLPAsync().ConfigureAwait(false);
+                        }, () => ytdlpDownloading = false);
+                    }
+                }
+
+                ImGui.SetCursorScreenPos(new Vector2(content.Min.X, buttonTop + buttonHeight));
+            }
 
             ImGui.Dummy(new Vector2(0f, 12f * scale));
             SettingsSection.Header(Loc.T(L.AetherStream.SettingsSectionPlayback), accentedTheme);
@@ -174,8 +214,39 @@ internal sealed partial class AetherStreamApp
         };
     }
 
-    private static string DependencyStatusText(string? loadError) =>
-        loadError ?? Loc.T(L.AetherStream.SettingsDependencyOk);
+    // Unlike the old bundled Native/libmpv-2.dll this replaces, AlphaChannel's engine downloads
+    // mpv-winbuild and yt-dlp itself into Dalamud's plugin config directory the first time it
+    // checks (see Resources.Initialize/CheckMPVAsync/CheckYTDLPAsync) - it only checks though,
+    // the actual download needs an explicit call, which is what these rows/buttons are for.
+    private static string MpvStatusText(Resources resources)
+    {
+        if (resources.GetLocationMPV() is null)
+        {
+            return Loc.T(L.AetherStream.SettingsDependencyNotInstalled);
+        }
+
+        return resources.MpvCheckResult[0].Length > 0
+            ? Loc.T(L.AetherStream.SettingsDependencyUpdateAvailable)
+            : Loc.T(L.AetherStream.SettingsDependencyOk);
+    }
+
+    private static string YtdlpStatusText(Resources resources)
+    {
+        if (resources.GetLocationYTDLP() is null)
+        {
+            return Loc.T(L.AetherStream.SettingsDependencyNotInstalled);
+        }
+
+        return resources.YtdlpCheckResult[0].Length > 0
+            ? Loc.T(L.AetherStream.SettingsDependencyUpdateAvailable)
+            : Loc.T(L.AetherStream.SettingsDependencyOk);
+    }
+
+    private static bool NeedsMpvDownload(Resources resources) =>
+        resources.GetLocationMPV() is null || resources.MpvCheckResult[0].Length > 0;
+
+    private static bool NeedsYtdlpDownload(Resources resources) =>
+        resources.GetLocationYTDLP() is null || resources.YtdlpCheckResult[0].Length > 0;
 
     private string ScreenStateText() => screen.State switch
     {
