@@ -625,6 +625,10 @@ internal static class L
         public static readonly LocString TravelTo = new("muster.travelTo", "Travel to {0}");
         public static readonly LocString OnThisWorld = new("muster.onThisWorld", "You're on {0}");
         public static readonly LocString TeleportTo = new("muster.teleportTo", "Teleport to {0}");
+        public static readonly LocString TravelBusy = new("muster.travelBusy", "Lifestream is busy right now");
+        public static readonly LocString TravelNotAttuned = new("muster.travelNotAttuned", "You haven't attuned to {0} yet");
+        public static readonly LocString TravelBlocked = new("muster.travelBlocked", "You can't teleport right now");
+        public static readonly LocString TravelNoWorld = new("muster.travelNoWorld", "You can't travel to {0} from here");
         public static readonly LocString YoureHere = new("muster.youreHere", "You're already here");
         public static readonly LocString ImGoing = new("muster.imGoing", "I'm going");
         public static readonly LocString StatGoing = new("muster.statGoing", "Going");

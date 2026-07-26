@@ -202,7 +202,7 @@ internal sealed partial class VenuesApp
                 }
                 else
                 {
-                    ImGui.SetClipboardText($"/li {venue.TeleportCode}");
+                    ImGui.SetClipboardText(LifestreamBridge.TravelCommand(venue.TeleportCode!));
                 }
             }
 

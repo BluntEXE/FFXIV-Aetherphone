@@ -20,6 +20,7 @@ namespace Aetherphone.Apps.Muster;
 internal sealed partial class MusterApp : IPhoneApp
 {
     private const float CopiedSeconds = 1.6f;
+    private const float NoticeSeconds = 6f;
 
     public string Id => "muster";
     public string DisplayName => Loc.T(L.Apps.Muster);
@@ -45,6 +46,7 @@ internal sealed partial class MusterApp : IPhoneApp
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
     private float copiedTimer;
+    private float travelNoticeTimer;
     private string copiedKey = string.Empty;
     private bool lifestreamAvailable;
 
@@ -113,6 +115,11 @@ internal sealed partial class MusterApp : IPhoneApp
         if (copiedTimer > 0f)
         {
             copiedTimer -= ImGui.GetIO().DeltaTime;
+        }
+
+        if (travelNoticeTimer > 0f)
+        {
+            travelNoticeTimer -= ImGui.GetIO().DeltaTime;
         }
 
         if (invitedTimer > 0f)

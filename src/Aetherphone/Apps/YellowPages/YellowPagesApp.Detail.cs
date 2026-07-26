@@ -784,13 +784,14 @@ internal sealed partial class YellowPagesApp
             return;
         }
 
-        if (lifestreamAvailable)
+        var outcome = LifestreamBridge.TravelToWorld((uint)ad.WorldId, worldName);
+        lifestreamAvailable = outcome != LifestreamOutcome.NotInstalled;
+        if (outcome == LifestreamOutcome.Started)
         {
-            LifestreamBridge.Travel(worldName);
             return;
         }
 
-        Copy("travel", $"/li {worldName}");
+        Copy("travel", LifestreamBridge.TravelCommand(worldName));
     }
 
     private void DrawDetailActions(AdDto ad, float scale)

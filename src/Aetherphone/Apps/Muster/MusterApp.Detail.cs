@@ -37,6 +37,7 @@ internal sealed partial class MusterApp
     private bool detailRsvpToggled;
     private bool rsvpBusy;
     private bool statusBusy;
+    private string travelNotice = string.Empty;
 
     private void ResetDetailState()
     {
@@ -46,6 +47,8 @@ internal sealed partial class MusterApp
         detailRsvpToggled = false;
         rsvpBusy = false;
         statusBusy = false;
+        travelNotice = string.Empty;
+        travelNoticeTimer = 0f;
     }
 
     private void DrawDetail(Rect area, string musterId)
@@ -330,7 +333,7 @@ internal sealed partial class MusterApp
 
         var destination = includeTravel
             ? MusterTravel.Resolve(muster, store.CurrentWorldId, store.CurrentTerritoryId)
-            : new MusterDestination(MusterTravelKind.None, string.Empty);
+            : default;
         var alreadyThere = destination.Kind == MusterTravelKind.AlreadyThere;
         if (alreadyThere)
         {
@@ -408,22 +411,57 @@ internal sealed partial class MusterApp
             }
 
             actionsHeight += (actionsHeight > 0f ? gap : 0f) + actionHeight;
+            actionsHeight += DrawTravelNotice(origin.X, travelTop + actionHeight, width, scale);
         }
 
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, consumed + actionsHeight + Metrics.Space.Lg * scale));
     }
 
+    private float DrawTravelNotice(float left, float top, float width, float scale)
+    {
+        if (travelNoticeTimer <= 0f || travelNotice.Length == 0)
+        {
+            return 0f;
+        }
+
+        var pad = Metrics.Space.Md * scale;
+        var textWidth = width - pad * 2f;
+        var gap = Metrics.Space.Xs * scale;
+        Typography.DrawWrappedLeft(new Vector2(left + pad, top + gap), travelNotice, theme.Danger,
+            TextStyles.Footnote, textWidth);
+        return gap + Typography.MeasureWrappedBlock(travelNotice, TextStyles.Footnote, textWidth).Y;
+    }
+
     private void TravelTo(in MusterDestination destination)
     {
-        if (lifestreamAvailable)
+        travelNotice = string.Empty;
+        travelNoticeTimer = 0f;
+        var outcome = MusterTravel.Go(in destination);
+        lifestreamAvailable = outcome != LifestreamOutcome.NotInstalled;
+        if (outcome == LifestreamOutcome.Started)
         {
-            MusterTravel.Go(in destination);
             return;
         }
 
-        Copy("travel", MusterTravel.Command(in destination));
+        if (outcome == LifestreamOutcome.NotInstalled)
+        {
+            Copy("travel", MusterTravel.Command(in destination));
+            return;
+        }
+
+        travelNotice = TravelNotice(outcome, in destination);
+        travelNoticeTimer = NoticeSeconds;
     }
+
+    private static string TravelNotice(LifestreamOutcome outcome, in MusterDestination destination) =>
+        outcome switch
+        {
+            LifestreamOutcome.Busy => Loc.T(L.Muster.TravelBusy),
+            LifestreamOutcome.NotAttuned => Loc.T(L.Muster.TravelNotAttuned, destination.GatewayName),
+            LifestreamOutcome.WorldUnreachable => Loc.T(L.Muster.TravelNoWorld, destination.Name),
+            _ => Loc.T(L.Muster.TravelBlocked),
+        };
 
     private void DrawDetailActions(MusterDto muster, float scale)
     {

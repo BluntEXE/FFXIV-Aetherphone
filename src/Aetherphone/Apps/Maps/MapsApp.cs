@@ -350,14 +350,13 @@ internal sealed class MapsApp : IPhoneApp
 
     private void Teleport(MapAetheryte aetheryte)
     {
+        lifestreamAvailable = LifestreamBridge.TeleportToAetheryte(aetheryte.RowId) != LifestreamOutcome.NotInstalled;
         if (lifestreamAvailable)
         {
-            LifestreamBridge.TravelToAetheryte(aetheryte.Name);
+            return;
         }
-        else
-        {
-            ImGui.SetClipboardText(LifestreamBridge.AetheryteCommand(aetheryte.Name));
-        }
+
+        ImGui.SetClipboardText(LifestreamBridge.AetheryteCommand(aetheryte.Name));
     }
 
     private void ToggleFavorite(uint rowId)
