@@ -30,6 +30,9 @@ internal static class L
         public static readonly LocString SaveToGallery = new("common.saveToGallery", "Save to gallery");
         public static readonly LocString SavedToGallery = new("common.savedToGallery", "Saved to gallery");
         public static readonly LocString NoPhotos = new("common.noPhotos", "No photos in your gallery yet");
+        public static readonly LocString FileKindImages = new("common.fileKindImages", "Images");
+        public static readonly LocString FileKindAudio = new("common.fileKindAudio", "Audio");
+        public static readonly LocString FileKindAll = new("common.fileKindAll", "All files");
     }
 
     internal static class Social
@@ -147,7 +150,7 @@ internal static class L
         public static readonly LocString WarningBody = new("moderation.warningBody", "A moderator reviewed your activity. Please follow the community guidelines. Repeated violations can lead to a ban.");
         public static readonly LocString ReportUpdateTitle = new("moderation.reportUpdateTitle", "Report update");
         public static readonly LocString ReportResolvedBody = new("moderation.reportResolvedBody", "Thanks for your report. We reviewed it and took action.");
-        public static readonly LocString ReportDismissedBody = new("moderation.reportDismissedBody", "Thanks for your report. We reviewed it and found nothing that breaks the rules this time.");
+        public static readonly LocString ReportDismissedBody = new("moderation.reportDismissedBody", "Thanks for your report. Our moderators reviewed it and took the appropriate action.");
     }
 
     internal static class Apps
@@ -802,12 +805,15 @@ internal static class L
         public static readonly LocString NotificationsOff = new("settings.notificationsOff", "Off");
         public static readonly LocString SoundDefault = new("settings.soundDefault", "Default");
         public static readonly LocString Immersion = new("settings.immersion", "Immersion");
+        public static readonly LocString Behavior = new("settings.behavior", "Behavior");
         public static readonly LocString ScrollWhileIdle = new("settings.scrollWhileIdle", "Scroll while idle");
         public static readonly LocString ScrollWhileIdleHint = new("settings.scrollWhileIdleHint", "Your character scrolls through their phone (Tomescroll emote) while standing still and out of combat. Does nothing if you haven't unlocked the emote.");
         public static readonly LocString ShowInGpose = new("settings.showInGpose", "Show in Group Pose");
         public static readonly LocString ShowInGposeHint = new("settings.showInGposeHint", "Keep the phone available while you're in Group Pose, so you can open it during photo shoots. Turn it off to keep your screen clear for screenshots.");
         public static readonly LocString ImportScreenshots = new("settings.importScreenshots", "Import screenshots");
         public static readonly LocString ImportScreenshotsHint = new("settings.importScreenshotsHint", "Copy screenshots you take into the Photos gallery, including ones from ReShade and GShade. Only shots taken while the phone is running are copied, and the originals stay where they are.");
+        public static readonly LocString NativeFileDialog = new("settings.nativeFileDialog", "Use the Windows file browser");
+        public static readonly LocString NativeFileDialogHint = new("settings.nativeFileDialogHint", "Pick photos and sounds with the Windows file browser. Turn it off if importing a file crashes your game.");
         public static readonly LocString OpenOnStartup = new("settings.openOnStartup", "Open at startup");
         public static readonly LocString OpenMinimized = new("settings.openMinimized", "Open minimized");
         public static readonly LocString StartupHint = new("settings.startupHint", "Open the phone automatically when you log in. Open minimized shows it as a small dock that you tap to expand.");
@@ -858,6 +864,17 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release0992 =
+        {
+            new("changelog.r0992.0", "Fixed the view count on Yellow Pages ads, which always stayed at zero, so opening an ad now counts as a view"),
+            new("changelog.r0992.1", "Added a menu to every post in Velvet, in the feed and on the post itself, so you can open it, report it, block whoever posted it, or delete your own"),
+            new("changelog.r0992.2", "Rebuilt the profile page in Chirper and Aethergram: the name and handle now sit beside the photo, the buttons share a single row, and the empty gaps are gone"),
+            new("changelog.r0992.3", "Removed one more suggested tag from Velvet, so it no longer shows up when you edit your profile or tag a post"),
+            new("changelog.r0992.4", "Brought back the Windows file browser when you pick a photo or a sound, so it remembers your folders and shows thumbnails again"),
+            new("changelog.r0992.5", "Added a switch in Settings under Behavior that swaps it for a simple browser inside the phone, which turns itself on if picking a file could crash your game"),
+            new("changelog.r0992.6", "Split the Immersion settings in two, so the window, screenshot, and startup options now live on a new Behavior page"),
+        };
+
         public static readonly LocString[] Release0991 =
         {
             new("changelog.r0991.0", "Removed a few suggested tags from Velvet, so they no longer appear when you edit your profile or tag a post"),
@@ -2167,6 +2184,11 @@ internal static class L
         public static readonly LocString Report = new("velvet.report", "Report");
         public static readonly LocString ReportProfile = new("velvet.reportProfile", "Report profile");
         public static readonly LocString ReportPost = new("velvet.reportPost", "Report post");
+        public static readonly LocString More = new("velvet.more", "More");
+        public static readonly LocString ViewPost = new("velvet.viewPost", "View post");
+        public static readonly LocString BlockConfirm =
+            new("velvet.blockConfirm",
+                "Block {0}? You won't see each other in Velvet, and any connection between you is removed.");
         public static readonly LocString IntroduceYourself = new("velvet.introduceYourself", "Introduce yourself");
         public static readonly LocString CardIdentity = new("velvet.cardIdentity", "Identity");
         public static readonly LocString CardAbout = new("velvet.cardAbout", "About");

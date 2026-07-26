@@ -1,11 +1,12 @@
+using Aetherphone.Core.Localization;
 using Dalamud.Interface.ImGuiFileDialog;
 
 namespace Aetherphone.Core.Platform;
 
 internal static class FilePicker
 {
-    private const string ImageFilters = "Images{.png,.jpg,.jpeg,.bmp},.*";
-    private const string AudioFilters = "Audio{.mp3,.wav},.*";
+    private const string ImageExtensions = "{.png,.jpg,.jpeg,.bmp},.*";
+    private const string AudioExtensions = "{.mp3,.wav},.*";
     private static readonly FileDialogManager Manager = new();
 
     public static void Draw()
@@ -15,13 +16,29 @@ internal static class FilePicker
 
     public static void PickImage(string title, Action<string> onPicked)
     {
-        Open(title, ImageFilters, ExistingFolder(Environment.SpecialFolder.MyPictures), onPicked);
+        if (UsesNativeDialog)
+        {
+            NativeFileDialog.PickImage(title, onPicked);
+            return;
+        }
+
+        Open(title, Loc.T(L.Common.FileKindImages) + ImageExtensions,
+            ExistingFolder(Environment.SpecialFolder.MyPictures), onPicked);
     }
 
     public static void PickAudio(string title, Action<string> onPicked)
     {
-        Open(title, AudioFilters, ExistingFolder(Environment.SpecialFolder.MyMusic), onPicked);
+        if (UsesNativeDialog)
+        {
+            NativeFileDialog.PickAudio(title, onPicked);
+            return;
+        }
+
+        Open(title, Loc.T(L.Common.FileKindAudio) + AudioExtensions,
+            ExistingFolder(Environment.SpecialFolder.MyMusic), onPicked);
     }
+
+    private static bool UsesNativeDialog => Plugin.Cfg?.UseNativeFileDialog ?? NativeFileDialog.IsSupported;
 
     private static void Open(string title, string filters, string startPath, Action<string> onPicked)
     {
