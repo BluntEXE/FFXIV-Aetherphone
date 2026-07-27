@@ -242,8 +242,10 @@ internal sealed partial class MusterApp
         }
 
         var statusText = $"{status} · {Loc.T(L.Muster.GoingCount, mine.RsvpCount)}";
-        Typography.Draw(drawList, new Vector2(statusLeft, card.Min.Y + 38f * scale), statusText,
-            live ? MusterCard.LiveGreen : AppPalettes.Muster.BodyInk, TextStyles.SubheadlineEmphasized);
+        var statusMaxWidth = card.Max.X - 32f * scale - statusLeft;
+        Marquee.DrawLeftAuto(drawList, "muster.pinned.status." + mine.Id, statusText, statusLeft,
+            card.Min.Y + 38f * scale, statusMaxWidth, TextStyles.SubheadlineEmphasized,
+            live ? MusterCard.LiveGreen : AppPalettes.Muster.BodyInk);
         AppSkin.Icon(drawList, new Vector2(card.Max.X - 20f * scale, card.Center.Y),
             FontAwesomeIcon.ChevronRight.ToIconString(), AppPalettes.Muster.MutedInk, 0.7f);
         if (hovered)

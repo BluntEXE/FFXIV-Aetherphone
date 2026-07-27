@@ -371,9 +371,10 @@ internal sealed partial class YellowPagesApp
                     TextStyles.SubheadlineEmphasized, scale);
             if (trailing.Length > 0)
             {
-                var fitted = Typography.FitText(trailing, innerWidth - pillWidth - 12f * scale, TextStyles.Footnote);
-                Typography.Draw(drawList, new Vector2(left + pillWidth + 12f * scale, cursorY + 8f * scale),
-                    fitted, AppPalettes.YellowPages.MutedInk, TextStyles.Footnote);
+                var trailingMaxWidth = MathF.Max(1f, innerWidth - pillWidth - 12f * scale);
+                Marquee.DrawLeftAuto(drawList, "yellowpages.detail.trailing." + ad.Id, trailing,
+                    left + pillWidth + 12f * scale, cursorY + 8f * scale, trailingMaxWidth, TextStyles.Footnote,
+                    AppPalettes.YellowPages.MutedInk);
             }
 
             cursorY += 38f * scale;
@@ -535,22 +536,25 @@ internal sealed partial class YellowPagesApp
         var cursorX = origin.X;
         var lineTop = origin.Y;
         var fill = Palette.WithAlpha(ui.Accent, 0.12f);
+        var maxLabelWidth = width - 18f * scale;
         for (var index = 0; index < ad.Tags.Length; index++)
         {
-            var label = ad.Tags[index];
-            var labelSize = Typography.Measure(label, TextStyles.Footnote);
-            var pillWidth = labelSize.X + 18f * scale;
-            var pillHeight = labelSize.Y + 8f * scale;
+            var tag = ad.Tags[index];
+            var labelSize = Typography.Measure(tag, TextStyles.Footnote);
+            var labelWidth = MathF.Min(labelSize.X, maxLabelWidth);
+            var pillWidth = labelWidth + 18f * scale;
             if (cursorX + pillWidth > origin.X + width && cursorX > origin.X)
             {
                 cursorX = origin.X;
                 lineTop += rowHeight + gap;
             }
 
-            var pillTop = new Vector2(cursorX, lineTop);
-            DrawPill(drawList, pillTop, label, fill, Palette.WithAlpha(ui.Accent, 0.92f), TextStyles.Footnote, scale);
-            Squircle.Stroke(drawList, pillTop, pillTop + new Vector2(pillWidth, pillHeight), pillHeight * 0.5f,
-                ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.30f)), 1f);
+            var pillMin = new Vector2(cursorX, lineTop);
+            var pillMax = pillMin + new Vector2(pillWidth, labelSize.Y + 8f * scale);
+            Squircle.Fill(drawList, pillMin, pillMax, (pillMax.Y - pillMin.Y) * 0.5f, ImGui.GetColorU32(fill));
+            Marquee.DrawLeftAuto(drawList, "yellowpages.detail.tag." + ad.Id + "." + index, tag,
+                pillMin.X + 9f * scale, pillMin.Y + 4f * scale, labelWidth, TextStyles.Footnote,
+                Palette.WithAlpha(ui.Accent, 0.92f));
             cursorX += pillWidth + gap;
         }
 
@@ -713,7 +717,7 @@ internal sealed partial class YellowPagesApp
         var copyRect = new Rect(new Vector2(cursor, actionTop),
             new Vector2(cursor + slotWidth, actionTop + actionHeight));
         var copyLabel = JustCopied("detail") ? Loc.T(L.YellowPages.Copied) : Loc.T(L.YellowPages.CopyDetails);
-        if (ui.PillButton(copyRect, copyLabel, false))
+        if (ui.PillButton(copyRect, copyLabel, false, "yellowpages.detail.copybtn." + ad.Id))
         {
             Copy("detail", BuildCopySummary(ad));
         }
@@ -727,7 +731,7 @@ internal sealed partial class YellowPagesApp
         var travelRect = new Rect(new Vector2(inner.Min.X, travelTop),
             new Vector2(inner.Max.X, travelTop + actionHeight));
         var travelLabel = JustCopied("travel") ? Loc.T(L.YellowPages.Copied) : Loc.T(L.YellowPages.Travel);
-        if (ui.PillButton(travelRect, travelLabel, true))
+        if (ui.PillButton(travelRect, travelLabel, true, "yellowpages.detail.travelbtn." + ad.Id))
         {
             TravelTo(ad);
         }
@@ -880,13 +884,14 @@ internal sealed partial class YellowPagesApp
             ImGui.GetColorU32(new Vector4(1f, 1f, 1f, hovered ? 0.38f : 0.24f)), 1.4f * scale);
         var iconWidth = 15f * scale;
         var iconGap = 9f * scale;
-        var fitted = Typography.FitText(label, rect.Width - iconWidth - iconGap - rect.Height, TextStyles.Headline);
-        var labelSize = Typography.Measure(fitted, TextStyles.Headline);
-        var left = rect.Center.X - (labelSize.X + iconGap + iconWidth) * 0.5f;
+        var labelMaxWidth = MathF.Max(1f, rect.Width - iconWidth - iconGap - rect.Height);
+        var labelSize = Typography.Measure(label, TextStyles.Headline);
+        var clampedLabelWidth = MathF.Min(labelSize.X, labelMaxWidth);
+        var left = rect.Center.X - (clampedLabelWidth + iconGap + iconWidth) * 0.5f;
         AppSkin.Icon(drawList, new Vector2(left + iconWidth * 0.5f, rect.Center.Y), icon.ToIconString(),
             PrimaryActionInk, 0.78f);
-        Typography.Draw(drawList, new Vector2(left + iconWidth + iconGap, rect.Center.Y - labelSize.Y * 0.5f),
-            fitted, PrimaryActionInk, TextStyles.Headline);
+        Marquee.DrawLeft(drawList, "yellowpages.detail.primaryaction." + label, label, left + iconWidth + iconGap,
+            rect.Center.Y - labelSize.Y * 0.5f, labelMaxWidth, TextStyles.Headline, PrimaryActionInk, hovered);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -905,12 +910,14 @@ internal sealed partial class YellowPagesApp
             ImGui.GetColorU32(Palette.WithAlpha(AppPalettes.YellowPages.MutedInk, 0.28f)), 1f);
         var iconWidth = 14f * scale;
         var iconGap = 9f * scale;
+        var labelMaxWidth = MathF.Max(1f, rect.Width - iconWidth - iconGap - rect.Height);
         var labelSize = Typography.Measure(label, TextStyles.Headline);
-        var left = rect.Center.X - (labelSize.X + iconGap + iconWidth) * 0.5f;
+        var clampedLabelWidth = MathF.Min(labelSize.X, labelMaxWidth);
+        var left = rect.Center.X - (clampedLabelWidth + iconGap + iconWidth) * 0.5f;
         AppSkin.Icon(drawList, new Vector2(left + iconWidth * 0.5f, rect.Center.Y),
             FontAwesomeIcon.Lock.ToIconString(), AppPalettes.YellowPages.MutedInk, 0.72f);
-        Typography.Draw(drawList, new Vector2(left + iconWidth + iconGap, rect.Center.Y - labelSize.Y * 0.5f),
-            label, AppPalettes.YellowPages.MutedInk, TextStyles.Headline);
+        Marquee.DrawLeftAuto(drawList, "yellowpages.detail.lockedaction." + label, label, left + iconWidth + iconGap,
+            rect.Center.Y - labelSize.Y * 0.5f, labelMaxWidth, TextStyles.Headline, AppPalettes.YellowPages.MutedInk);
     }
 
     private void DrawDetailSubActions(AdDto ad, float width, float scale)
@@ -971,14 +978,15 @@ internal sealed partial class YellowPagesApp
                 ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.55f)), 1f);
         }
 
-        var fitted = Typography.FitText(label, slotWidth - 40f * scale, TextStyles.Footnote);
-        var labelSize = Typography.Measure(fitted, TextStyles.Footnote);
+        var labelMaxWidth = MathF.Max(1f, slotWidth - 40f * scale);
+        var labelSize = Typography.Measure(label, TextStyles.Footnote);
+        var clampedLabelWidth = MathF.Min(labelSize.X, labelMaxWidth);
         var iconGap = 8f * scale;
-        var contentWidth = 14f * scale + iconGap + labelSize.X;
+        var contentWidth = 14f * scale + iconGap + clampedLabelWidth;
         var left = center.X - contentWidth * 0.5f;
         AppSkin.Icon(drawList, new Vector2(left + 7f * scale, center.Y), icon.ToIconString(), ink, 0.78f);
-        Typography.Draw(drawList, new Vector2(left + 14f * scale + iconGap, center.Y - labelSize.Y * 0.5f), fitted,
-            ink, TextStyles.Footnote);
+        Marquee.DrawLeft(drawList, "yellowpages.detail.subaction." + label, label, left + 14f * scale + iconGap,
+            center.Y - labelSize.Y * 0.5f, labelMaxWidth, TextStyles.Footnote, ink, hovered);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

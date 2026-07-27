@@ -217,7 +217,9 @@ internal sealed partial class AethergramApp
             var name = app.ThreadTitle(threadId);
             var avatarHandle = app.ThreadAvatar(threadId, out var monogram, out var presence);
             var avatarRadius = 18f * scale;
+            var nameCap = MathF.Max(40f * scale, area.Width * 0.42f);
             var nameSize = Typography.Measure(name, 1f, FontWeight.SemiBold);
+            nameSize.X = MathF.Min(nameSize.X, nameCap);
             var gap = 9f * scale;
             var groupWidth = avatarRadius * 2f + gap + nameSize.X;
             var startX = MathF.Max(area.Center.X - groupWidth * 0.5f, area.Min.X + 48f * scale);
@@ -226,23 +228,36 @@ internal sealed partial class AethergramApp
             app.PresenceDot(drawList, new Vector2(avatarCenter.X + avatarRadius - 3f * scale,
                 avatarCenter.Y + avatarRadius - 3f * scale), presence);
             var nameLeft = avatarCenter.X + avatarRadius + gap;
+            var maxNameRight = area.Max.X - ChatHeaderControls.ReservedRightWidth * scale;
+            nameCap = MathF.Max(1f, MathF.Min(nameCap, maxNameRight - nameLeft));
+            var titleId = "aethergramapp.thread.title." + threadId;
             var offset = app.ThreadOffset(threadId);
             var textWidth = nameSize.X;
             if (offset is { } minutes)
             {
                 var timeText = SocialTimeZone.Describe(minutes);
                 var subSize = Typography.Measure(timeText, 0.72f, FontWeight.Regular);
+                subSize.X = MathF.Min(subSize.X, nameCap);
                 var gapY = 1f * scale;
                 var stackTop = rowCenterY - (nameSize.Y + gapY + subSize.Y) * 0.5f;
-                Typography.Draw(new Vector2(nameLeft, stackTop), name, Theme.TextStrong, 1f, FontWeight.SemiBold);
-                Typography.Draw(new Vector2(nameLeft, stackTop + nameSize.Y + gapY), timeText,
-                    AppPalettes.Aethergram.MutedInk, 0.72f);
+                var titleHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, stackTop),
+                    new Vector2(nameLeft + nameCap, stackTop + nameSize.Y));
+                Marquee.DrawLeft(titleId, name, nameLeft, stackTop, nameCap, new TextStyle(1f, FontWeight.SemiBold),
+                    Theme.TextStrong, titleHovering);
+                var subTop = stackTop + nameSize.Y + gapY;
+                var subHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, subTop),
+                    new Vector2(nameLeft + nameCap, subTop + subSize.Y));
+                Marquee.DrawLeft(titleId + ".sub", timeText, nameLeft, subTop, nameCap,
+                    new TextStyle(0.72f, FontWeight.Regular), AppPalettes.Aethergram.MutedInk, subHovering);
                 textWidth = MathF.Max(nameSize.X, subSize.X);
             }
             else
             {
-                Typography.Draw(new Vector2(nameLeft, rowCenterY - nameSize.Y * 0.5f), name, Theme.TextStrong, 1f,
-                    FontWeight.SemiBold);
+                var soloTop = rowCenterY - nameSize.Y * 0.5f;
+                var titleHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, soloTop),
+                    new Vector2(nameLeft + nameCap, soloTop + nameSize.Y));
+                Marquee.DrawLeft(titleId, name, nameLeft, soloTop, nameCap,
+                    new TextStyle(1f, FontWeight.SemiBold), Theme.TextStrong, titleHovering);
             }
 
             var hitMin = new Vector2(avatarCenter.X - avatarRadius, area.Min.Y);

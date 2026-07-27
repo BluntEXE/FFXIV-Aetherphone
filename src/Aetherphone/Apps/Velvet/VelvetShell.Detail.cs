@@ -272,10 +272,9 @@ internal sealed partial class VelvetShell
         if (time.Length > 0)
         {
             var timeMaxWidth = MathF.Max(1f, wrapWidth - nameWidth - 40f * scale);
-            var clippedTime = Typography.FitText(time, timeMaxWidth, TextStyles.Footnote);
-            Typography.Draw(new Vector2(textLeft + nameWidth + 8f * scale, origin.Y + 1f * scale), clippedTime,
-                VelvetTheme.MutedInk, TextStyles.Footnote);
-            var timeWidth = Typography.Measure(clippedTime, TextStyles.Footnote).X;
+            var timeWidth = Marquee.DrawLeftAuto("velvet.comment.time." + comment.Id, time,
+                textLeft + nameWidth + 8f * scale, origin.Y + 1f * scale, timeMaxWidth, TextStyles.Footnote,
+                VelvetTheme.MutedInk);
             CommentReviewTag.Draw(
                 new Vector2(textLeft + nameWidth + 8f * scale + timeWidth + 8f * scale, origin.Y + 1f * scale),
                 textLeft + wrapWidth, comment.ScanStatus, 0.8f);

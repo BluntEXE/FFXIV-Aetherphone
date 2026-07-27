@@ -96,17 +96,40 @@ internal sealed class WaterSortApp : IMiniGame
         }
 
         var rowY = body.Min.Y + 30f * scale;
-        GameHud.Pill(new Vector2(body.Center.X - 48f * scale, rowY), Loc.T(L.Games.Level),
-            GameNumber.Label(currentLevel), Accent, theme);
-        GameHud.Pill(new Vector2(body.Center.X + 48f * scale, rowY), Loc.T(L.Games.Moves),
-            GameNumber.Label(board.Moves), Accent, theme);
-        if (GameHud.Button(new Vector2(body.Min.X + 36f * scale, rowY), new Vector2(58f * scale, 28f * scale),
+        var levelLabel = Loc.T(L.Games.Level);
+        var levelText = GameNumber.Label(currentLevel);
+        var movesLabel = Loc.T(L.Games.Moves);
+        var movesText = GameNumber.Label(board.Moves);
+        var levelWidth = GameHud.PillWidth(levelLabel, levelText);
+        var movesWidth = GameHud.PillWidth(movesLabel, movesText);
+
+        var undoWidth = 58f * scale;
+        var edgeMargin = 6f * scale;
+        var undoCenterX = body.Min.X + edgeMargin + undoWidth * 0.5f;
+        var restartRadius = 16f * scale;
+        var restartCenterX = body.Max.X - edgeMargin - restartRadius;
+
+        var pillGap = 12f * scale;
+        var slotMargin = 10f * scale;
+        var middleLeft = undoCenterX + undoWidth * 0.5f + slotMargin;
+        var middleRight = restartCenterX - restartRadius - slotMargin;
+        var groupWidth = levelWidth + pillGap + movesWidth;
+        var clampMin = middleLeft + groupWidth * 0.5f;
+        var clampMax = middleRight - groupWidth * 0.5f;
+        var groupCenter = clampMin <= clampMax
+            ? Math.Clamp(body.Center.X, clampMin, clampMax)
+            : (middleLeft + middleRight) * 0.5f;
+        var levelX = groupCenter - groupWidth * 0.5f + levelWidth * 0.5f;
+        var movesX = groupCenter + groupWidth * 0.5f - movesWidth * 0.5f;
+        GameHud.Pill(new Vector2(levelX, rowY), levelLabel, levelText, Accent, theme);
+        GameHud.Pill(new Vector2(movesX, rowY), movesLabel, movesText, Accent, theme);
+        if (GameHud.Button(new Vector2(undoCenterX, rowY), new Vector2(undoWidth, 28f * scale),
                 Loc.T(L.Games.Undo), theme.SurfaceMuted, theme))
         {
             board.Undo();
         }
 
-        if (GameHud.RestartButton(new Vector2(body.Max.X - 20f * scale, rowY), 16f * scale, theme))
+        if (GameHud.RestartButton(new Vector2(restartCenterX, rowY), restartRadius, theme))
         {
             StartLevel(currentLevel);
             return;

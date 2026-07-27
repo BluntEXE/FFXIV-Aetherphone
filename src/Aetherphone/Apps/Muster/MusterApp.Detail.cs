@@ -169,12 +169,12 @@ internal sealed partial class MusterApp
 
         var textLeft = avatarCenter.X + avatarRadius + 14f * scale;
         var textRight = card.Max.X - pad;
-        var title = Typography.FitText(MusterText.HostLabel(muster), textRight - textLeft, TextStyles.Title2);
-        Typography.Draw(drawList, new Vector2(textLeft, card.Min.Y + pad + 1f * scale), title,
-            AppPalettes.Muster.TitleInk, TextStyles.Title2);
-        var identity = Typography.FitText(muster.HostWorld, textRight - textLeft, TextStyles.Subheadline);
-        Typography.Draw(drawList, new Vector2(textLeft, card.Min.Y + pad + 28f * scale), identity,
-            AppPalettes.Muster.BodyInk, TextStyles.Subheadline);
+        Marquee.DrawLeftAuto(drawList, "muster.detail.hero.name." + muster.Id, MusterText.HostLabel(muster),
+            textLeft, card.Min.Y + pad + 1f * scale, textRight - textLeft, TextStyles.Title2,
+            AppPalettes.Muster.TitleInk);
+        Marquee.DrawLeftAuto(drawList, "muster.detail.hero.world." + muster.Id, muster.HostWorld, textLeft,
+            card.Min.Y + pad + 28f * scale, textRight - textLeft, TextStyles.Subheadline,
+            AppPalettes.Muster.BodyInk);
 
         var badgeLabel = live ? Loc.T(L.Common.Live)
             : Loc.T(L.Muster.StartsIn, MusterText.Span(muster.StartsAtUnix - nowUnix));
