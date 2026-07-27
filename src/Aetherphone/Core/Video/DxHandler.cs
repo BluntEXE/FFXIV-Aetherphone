@@ -12,6 +12,10 @@ internal static class DxHandler
 
 	private static readonly ConcurrentDictionary<string, Action> _pendingRenderWork = new();
 
+	//Fires every Present call, unlike RunOnRenderThread's one-shot queue - for subscribers that need to
+	//redraw every frame (e.g. a world-space overlay) rather than react to a single freshly-produced frame.
+	internal static event Action? OnPresent;
+
 	private unsafe delegate int PresentDelegate(void* swapChain, uint syncInterval, uint flags);
 	private static Hook<PresentDelegate>? _presentHook;
 
@@ -62,6 +66,15 @@ internal static class DxHandler
 			}
 		}
 
+		try
+		{
+			OnPresent?.Invoke();
+		}
+		catch (Exception e)
+		{
+			AepLog.Error($"[DxHandler] OnPresent subscriber failed: {e}");
+		}
+
 		return _presentHook!.Original(swapChain, syncInterval, flags);
 	}
 
@@ -71,6 +84,7 @@ internal static class DxHandler
 		_presentHook?.Dispose();
 		_presentHook = null;
 		_pendingRenderWork.Clear();
+		OnPresent = null;
 
 		Device = null; //Do not dispose this device, as it's owned by the game process.
 	}

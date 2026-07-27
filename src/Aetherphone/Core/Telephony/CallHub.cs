@@ -372,6 +372,12 @@ internal sealed class CallHub : IDisposable
             return;
         }
 
+        if (!configuration.CallsEnabled)
+        {
+            router.Send(new CallControl { Type = SignalType.Decline, CallId = message.CallId, Reason = "unavailable" });
+            return;
+        }
+
         var busy = false;
         lock (gate)
         {
@@ -740,14 +746,17 @@ internal sealed class CallHub : IDisposable
 
     private void Reconcile()
     {
-        if (configuration.CallsEnabled && session.IsSignedIn)
-        {
-            router.Start();
-        }
-        else
+        if (!session.IsSignedIn)
         {
             EndCall(CallEndReason.None);
             router.Stop();
+            return;
+        }
+
+        router.Start();
+        if (!configuration.CallsEnabled)
+        {
+            EndCall(CallEndReason.None);
         }
     }
 

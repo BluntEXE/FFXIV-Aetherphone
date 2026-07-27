@@ -37,23 +37,14 @@ internal sealed class VideoDebugWindow : Window, IDisposable
     private void DrawTvSection()
     {
         ImGui.TextUnformatted("Screen");
-        ImGui.TextUnformatted($"State: {screen.State}");
-        ImGui.TextUnformatted($"Resource hook healthy: {screen.IsHookHealthy}");
-
-        if (!screen.PenumbraGate.IsAvailable)
+        if (screen.Engine.IsActive)
         {
-            ImGui.TextColored(new Vector4(1f, 0.4f, 0.4f, 1f),
-                $"Penumbra unavailable: {screen.PenumbraGate.LastError}");
+            ImGui.TextColored(new Vector4(0.4f, 1f, 0.5f, 1f), "Active.");
+            ImGui.TextUnformatted($"Position: {screen.Engine.ScreenPosition} Yaw: {screen.Engine.ScreenYaw:0.00} Scale: {screen.Engine.ScreenScale:0.00}");
         }
-
-        switch (screen.State)
+        else
         {
-            case ScreenState.NotReady:
-                ImGui.TextColored(new Vector4(1f, 0.8f, 0.3f, 1f), "Screen hook not installed yet.");
-                break;
-            case ScreenState.Ready:
-                ImGui.TextColored(new Vector4(0.4f, 1f, 0.5f, 1f), "Screen ready.");
-                break;
+            ImGui.TextColored(new Vector4(1f, 0.8f, 0.3f, 1f), "Idle.");
         }
     }
 

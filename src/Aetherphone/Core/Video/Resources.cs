@@ -3,7 +3,6 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using Dalamud.Utility;
-using Penumbra.Api.IpcSubscribers;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using Newtonsoft.Json.Linq;
@@ -13,8 +12,6 @@ namespace Aetherphone.Core.Video;
 internal sealed class Resources : IDisposable
 {
 	private readonly HttpClient _httpClient;
-	private readonly Guid _sessionId;
-	private readonly string _pluginDir;
 	private readonly string _configDir;
 
 	internal string[] MpvCheckResult { get; private set; } = [string.Empty, string.Empty];
@@ -27,12 +24,10 @@ internal sealed class Resources : IDisposable
 	internal string RomsDirectory => Path.Combine(_configDir, "roms");
 
 
-	internal Resources(Guid sessionId)
+	internal Resources()
 	{
 		_httpClient = new HttpClient();
 		_httpClient.DefaultRequestHeaders.Add("User-Agent", "AetherphoneAetherStreamUpdater/1.0");
-		_sessionId = sessionId;
-		_pluginDir = Plugin.PluginInterface.AssemblyLocation.DirectoryName ?? string.Empty;
 		_configDir = Plugin.PluginInterface.ConfigDirectory.FullName;
 
 		Initialize();
@@ -41,57 +36,8 @@ internal sealed class Resources : IDisposable
 	public void Dispose()
 	{
 		_httpClient.Dispose();
-		foreach(string path in _tempGamePaths)
-		{
-			if (File.Exists(path))
-			{
-				File.Delete(path);
-			}
-		}
-		var resourceDir = Path.Combine(_pluginDir, "Resources", "Video");
-		Directory.GetFiles(resourceDir, "alphachannelscreentex_*.atex").ToList().ForEach(File.Delete);
-		Directory.GetFiles(resourceDir, "aetherstreamscreen_*.avfx").ToList().ForEach(File.Delete);
-		Directory.GetFiles(resourceDir, "snesscreentex_*.atex").ToList().ForEach(File.Delete);
-		Directory.GetFiles(resourceDir, "snesscreen_*.avfx").ToList().ForEach(File.Delete);
-
-		var modDir = new GetModDirectory(Plugin.PluginInterface);
-        string dir = modDir.Invoke();
-        string alphachanneltempdir = Path.Combine(dir, "AetherStreamTemp");
-		if (Directory.Exists(alphachanneltempdir))
-		{
-			foreach (string file in Directory.GetFiles(alphachanneltempdir))
-			{
-				try { File.Delete(file); } catch { }
-			}
-			Directory.Delete(alphachanneltempdir);
-		}
 		GC.SuppressFinalize(this);
 	}
-
-	/* TO BE REMOVED JUST FOR DEBUGGING PENUMBRA NOT SYNCING TEMPMODS */
-    private readonly List<string> _tempGamePaths = [];
-    private Dictionary<string, string> FixTempCopyGamePaths(Dictionary<string, string> gamePaths)
-    {
-		var finalPaths = new Dictionary<string, string>();
-		
-        var getDir = new GetModDirectory(Plugin.PluginInterface);
-        string dir = getDir.Invoke();
-        string alphachanneltempdir = Path.Combine(dir, "AetherStreamTemp");
-        Directory.CreateDirectory(Path.Combine(dir, "AetherStreamTemp"));
-        foreach(string ingamePath in gamePaths.Keys)
-        {
-			string realPath = gamePaths[ingamePath];
-			string newPath = Path.Combine(alphachanneltempdir, Path.GetFileName(realPath));
-
-			File.Copy(realPath, newPath, true);
-
-			finalPaths.Add(ingamePath, newPath);
-			
-        }
-		_tempGamePaths.AddRange(finalPaths.Values);
-
-		return finalPaths;
-    }
 
 	private void Initialize()
 	{
@@ -129,63 +75,6 @@ internal sealed class Resources : IDisposable
 				}
 			});
 		});
-	}
-
-	internal Dictionary<string, string> LoadPenumbraScreenResources()
-	{
-		Dictionary<string, string> paths = [];
-		var resourceDir = Path.Combine(_pluginDir, "Resources", "Video");
-
-		string oldPath = Path.Combine(resourceDir, "alphachannelscreentex.atex");
-		if (File.Exists(oldPath))
-		{
-			string path = Path.Combine(resourceDir, "alphachannelscreentex_"+_sessionId+".atex");
-			File.Copy(oldPath, path, true);
-			paths.Add("chara/monster/m7002/obj/body/b0001/vfx/texture/alphachannelscreentex.atex", path);
-		}
-		else
-		{
-			throw new FileNotFoundException($"Required resource not found: {oldPath}");
-		}
-
-		oldPath = Path.Combine(resourceDir, "aetherstreamscreen.avfx");
-		if (File.Exists(oldPath))
-		{
-			string path = Path.Combine(resourceDir, "aetherstreamscreen_"+_sessionId+".avfx");
-			File.Copy(oldPath, path, true);
-			paths.Add("chara/monster/m7002/obj/body/b0001/vfx/texture/aetherstreamscreen_"+_sessionId+".avfx", path);
-		}
-		else
-		{
-			throw new FileNotFoundException($"Required resource not found: {oldPath}");
-		}
-
-		oldPath = Path.Combine(resourceDir, "snesscreen.avfx");
-		if (File.Exists(oldPath))
-		{
-			string path = Path.Combine(resourceDir, "snesscreen_"+_sessionId+".avfx");
-			File.Copy(oldPath, path, true);
-			paths.Add("chara/monster/m7002/obj/body/b0001/vfx/texture/snesscreen_"+_sessionId+".avfx", path);
-		}
-		else
-		{
-			throw new FileNotFoundException($"Required resource not found: {oldPath}");
-		}
-
-		oldPath = Path.Combine(resourceDir, "snesscreentex.atex");
-		if (File.Exists(oldPath))
-		{
-			string path = Path.Combine(resourceDir, "snesscreentex_"+_sessionId+".atex");
-			File.Copy(oldPath, path, true);
-			paths.Add("chara/monster/m7002/obj/body/b0001/vfx/texture/snesscreentex.atex", path);
-		}
-		else
-		{
-			throw new FileNotFoundException($"Required resource not found: {oldPath}");
-		}
-
-		return FixTempCopyGamePaths(paths); //no need to fix bug here since these wont need to get synced to others anyways, only use the clients vfx for the screen
-		//UPDATE: actually, this needs to be used because the sync aborts sending the other mods at the time of loading these rescources
 	}
 
 	internal string? GetLocationMPV()

@@ -1,32 +1,48 @@
-using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using Dalamud.Hooking;
-using FFXIVClientStructs.FFXIV.Client.Graphics.Kernel;
-using FFXIVClientStructs.FFXIV.Client.System.Resource;
-using FFXIVClientStructs.FFXIV.Client.System.Resource.Handle;
-using InteropGenerator.Runtime;
-using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 
 namespace Aetherphone.Core.Video;
 
 // Ported from AlphaChannel's Core (Voudi, GPL-3.0), with the companion/minion tracking removed -
-// see port/alphachannel-engine Stage 4. AlphaChannel's actual working display trick is kept as-is:
-// GetResourceSync/TexOnLoad hook a live D3D11 texture into an already-rendering particle VFX
-// (chara/monster/m7002/.../aetherstreamscreen_{session}.avfx), which is what actually renders
-// in-game. That VFX is now invoked directly on the local player character instead of a summoned
-// Carbuncle, so there is exactly one target and no per-owner tracking, appearance mod, or summon
-// step at all.
+// see port/alphachannel-engine Stage 4. Screen mounting itself is ported again from AlphaChannel's
+// later revamp (tag v1.1.20260725.1088, "Revamp screen to not use VFX" / "Removed need for
+// carbuncle, added screen positions in settings"): the VFX/Penumbra/actor-attach approach
+// (chara/monster/m7002/.../aetherstreamscreen_{session}.avfx cast on the local player) is gone
+// entirely, replaced by ScreenPainter drawing a textured quad directly at an absolute world
+// position/yaw/scale - independent of any game object, so it no longer rides along on the player's
+// own body.
 internal sealed class VideoEngine : IDisposable
 {
     internal const int ScreenWidth = 1920;
     internal const int ScreenHeight = 1080;
 
-    private readonly Guid _sessionId;
-    private readonly Dictionary<string, string> _screenPenumbraPaths;
-    private readonly ConcurrentDictionary<nint, ShaderResourceView> _views = new();
+    //Default placement for a freshly (re)spawned screen: 2 units in front of the local player, facing
+    //back towards them. Matches AlphaChannel's SpawnScreenInFrontOfLocalPlayer 1:1.
+    private const float DefaultScreenSpawnDistance = 2.0f;
+    private const float DefaultScreenHeightOffset = 1.0f;
+
+    //Aetherphone addition on top of the upstream port - upstream's Scale field had no bounds at all.
+    internal const float MinScreenScale = 0.1f;
+    internal const float MaxScreenScale = 8.0f;
+
+    //Aetherphone addition - how far the Casting tab's X/Y/Z sliders reach out from ScreenSpawnAnchor in
+    //either direction. Position itself is unbounded (it's a world coordinate), but a slider needs a
+    //visible min/max to be a slider at all, so it's capped relative to wherever the screen was last
+    //placed on purpose (spawn/recenter/preset apply) rather than relative to some arbitrary world origin.
+    internal const float ScreenPositionSliderRange = 10f;
+
+    private readonly ScreenPainter _screenPainter;
+    private readonly List<ScreenPositionPreset> _screenPresets = [];
+
+    internal Vector3 ScreenPosition { get; private set; }
+    internal float ScreenYaw { get; private set; }
+    internal float ScreenScale { get; private set; } = 1.0f;
+
+    //Center the Casting tab's position sliders around - updated only on a deliberate re-placement
+    //(spawn/recenter/preset apply), never while just dragging the sliders themselves, so the window
+    //doesn't shrink out from under the slider mid-drag.
+    internal Vector3 ScreenSpawnAnchor { get; private set; }
 
     private MpvRenderer? _mpvRenderer;
     private Snes9xRenderer? _snesRenderer;
@@ -66,7 +82,7 @@ internal sealed class VideoEngine : IDisposable
 
     private bool _isPlayingSnes;
     private bool _snesControlsEnabled;
-    private bool _isActive; // whether the screen VFX should currently be playing for the local player
+    private bool _isActive; // whether the screen should currently be drawing for the local player
     private bool _lastIdle = true;
     private readonly List<string> _recentSnesPaths = [];
     private int _pendingVolume = 60;
@@ -81,15 +97,12 @@ internal sealed class VideoEngine : IDisposable
     internal InputManager Input { get; }
     internal WndProcKeyUpReader WindowKeyUpReader { get; }
 
-    internal unsafe VideoEngine(Guid sessionId)
+    internal VideoEngine()
     {
-        _sessionId = sessionId;
-
-        Resources = new Resources(sessionId);
+        Resources = new Resources();
         Resources.NativeLoader.Register(Resources);
         MpvRenderer.Setup(Resources);
         DxHandler.Initialise(Plugin.PluginInterface);
-        _screenPenumbraPaths = Resources.LoadPenumbraScreenResources();
 
         WindowKeyUpReader = new WndProcKeyUpReader(Plugin.PluginInterface.UiBuilder.WindowHandlePtr,
             Plugin.InteropProvider);
@@ -97,21 +110,13 @@ internal sealed class VideoEngine : IDisposable
 
         _screenTexture = new Texture2D(DxHandler.Device, ScreenTextureDescription);
         _snesScreenTexture = new Texture2D(DxHandler.Device, SnesTextureDescription);
-
-        _getResourceSyncHook = Plugin.InteropProvider.HookFromAddress<ResourceManager.Delegates.GetResourceSync>(
-            ResourceManager.Addresses.GetResourceSync.Value, GetResourceSyncDetour);
-        _textureOnLoadHook = Plugin.InteropProvider.HookFromAddress<Texture.Delegates.InitializeContents>(
-            Texture.Addresses.InitializeContents.Value, TexOnLoadDetour);
-        nint actorVfxCreateAddress = Plugin.SigScanner.ScanText(ActorVfxCreateSig);
-        _actorVfxCreate = Marshal.GetDelegateForFunctionPointer<ActorVfxCreateDelegate>(actorVfxCreateAddress);
-
-        _getResourceSyncHook.Enable();
+        _screenPainter = new ScreenPainter();
 
         _recentSnesPaths.AddRange(Plugin.Cfg.SnesRecentRomPaths);
+        _screenPresets.AddRange(Plugin.Cfg.ScreenPresets);
     }
 
     internal bool IsActive => _isActive;
-    internal bool IsHookHealthy => _getResourceSyncHook is { IsDisposed: false };
 
     internal void StopVideo()
     {
@@ -127,7 +132,7 @@ internal sealed class VideoEngine : IDisposable
             _mpvRenderer = null;
         }
 
-        PenumbraIPC.RemoveTempMod("screenvfx");
+        _screenPainter.SetTarget(null);
     }
 
     internal void PlayVideo(string url, int playbackPosition = 0, bool isPlaying = true)
@@ -136,6 +141,8 @@ internal sealed class VideoEngine : IDisposable
         {
             return;
         }
+
+        AssignScreenForSession(_screenTexture);
 
         Task.Run(async () =>
         {
@@ -288,6 +295,7 @@ internal sealed class VideoEngine : IDisposable
 
             AddSnesPath(path);
             _snesControlsEnabled = true;
+            AssignScreenForSession(_snesScreenTexture);
             _isPlayingSnes = _snesRenderer.Load(_snesScreenTexture, path);
             _isActive = true;
             AepLog.Debug("Starting ROM");
@@ -333,11 +341,6 @@ internal sealed class VideoEngine : IDisposable
         {
             bool idle = GetIdle();
             _lastIdle = idle;
-            RefreshActorVfx(localPlayer.Address);
-        }
-        else if (localPlayer is not null && _isActive && IsPlayingSnes())
-        {
-            RefreshActorVfx(localPlayer.Address);
         }
         else
         {
@@ -347,154 +350,107 @@ internal sealed class VideoEngine : IDisposable
         Input.OnFrameworkUpdate(_isPlayingSnes, _snesControlsEnabled, _snesRenderer);
     }
 
-    // Ported from AlphaChannel's Core.RefreshActorVFX (Voudi, GPL-3.0), but always invoked with
-    // the local player as both caster and target - there is no companion to point it at instead.
-    // Called every tick while active so the VFX (which has a finite duration/loop) keeps replaying.
-    private void RefreshActorVfx(nint localPlayerAddr)
+    //Places the screen 2 units in front of (and slightly above) the local player, facing the way
+    //they're facing. Called when a genuinely new session starts (see AssignScreenForSession), and
+    //re-callable any time via RecenterScreen() as a one-tap "lost track of it" reset.
+    private void SpawnScreenInFrontOfLocalPlayer()
     {
-        if (!PenumbraIPC.CheckTempMod("screenvfx"))
+        var localPlayer = Plugin.ObjectTable.LocalPlayer;
+        if (localPlayer is null)
         {
-            PenumbraIPC.ApplyTempMod("screenvfx", _screenPenumbraPaths);
             return;
         }
 
-        lock (_screenTextureLock)
+        float yaw = localPlayer.Rotation;
+        Vector3 forward = Vector3.Transform(Vector3.UnitZ, Quaternion.CreateFromAxisAngle(Vector3.UnitY, yaw));
+
+        var position = localPlayer.Position + forward * DefaultScreenSpawnDistance + new Vector3(0, DefaultScreenHeightOffset, 0);
+        ScreenSpawnAnchor = position;
+        SetScreenTransform(position, yaw + MathF.PI, 1.0f); //Face back towards the player, not away from them.
+    }
+
+    //One-tap reset for when the screen has drifted out of view/reach - re-spawns it in front of the
+    //player exactly like a fresh session would, without touching playback.
+    internal void RecenterScreen() => SpawnScreenInFrontOfLocalPlayer();
+
+    //Live, unsaved position/yaw/scale edit from the Casting tab - only meaningful while the screen is
+    //active. Scale is clamped to [MinScreenScale, MaxScreenScale] here rather than at each call site,
+    //so drag/slider widgets in the UI can't push it out of range through fast mouse movement.
+    internal void SetScreenTransform(Vector3 position, float yaw, float scale)
+    {
+        ScreenPosition = position;
+        ScreenYaw = yaw;
+        ScreenScale = Math.Clamp(scale, MinScreenScale, MaxScreenScale);
+
+        if (_isActive)
         {
-            var path = _isPlayingSnes
-                ? $"chara/monster/m7002/obj/body/b0001/vfx/texture/snesscreen_{_sessionId}.avfx"
-                : $"chara/monster/m7002/obj/body/b0001/vfx/texture/aetherstreamscreen_{_sessionId}.avfx";
-            _actorVfxCreate?.Invoke(path, localPlayerAddr, localPlayerAddr, -1, (char)0, 0, (char)0);
+            _screenPainter.SetTransform(ScreenPosition, ScreenYaw, ScreenScale);
         }
     }
 
-    //https://github.com/0ceal0t/Dalamud-VFXEditor/blob/main/VFXEditor/Interop/Constants.cs
-    private const string ActorVfxCreateSig = "40 53 55 56 57 48 81 EC ?? ?? ?? ?? 0F 29 B4 24 ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 84 24 ?? ?? ?? ?? 0F B6 AC 24 ?? ?? ?? ?? 0F 28 F3 49 8B F8";
-    private delegate IntPtr ActorVfxCreateDelegate(string path, IntPtr a2, IntPtr a3, float a4, char a5, ushort a6, char a7);
-    private readonly ActorVfxCreateDelegate _actorVfxCreate;
+    internal List<ScreenPositionPreset> GetScreenPresets() => [.. _screenPresets];
 
-    private readonly Hook<ResourceManager.Delegates.GetResourceSync> _getResourceSyncHook;
-    private readonly Hook<Texture.Delegates.InitializeContents> _textureOnLoadHook;
-
-    private unsafe ResourceHandle* GetResourceSyncDetour(ResourceManager* thisPtr, ResourceCategory* category, uint* type, uint* hash, CStringPointer path, void* unknown, void* unkDebugPtr, uint unkDebugInt)
+    internal void SaveScreenPreset(string name)
     {
-        if (path.ToString().Contains("chara/monster/m7002/obj/body/b0001/vfx/texture/alphachannelscreentex"))
+        if (string.IsNullOrWhiteSpace(name))
         {
-            _texCase = 1;
-        }
-        else if (path.ToString().Contains("chara/monster/m7002/obj/body/b0001/vfx/texture/snesscreentex"))
-        {
-            _texCase = 2;
+            return;
         }
 
-        if (_texCase > 0)
+        _screenPresets.RemoveAll(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        _screenPresets.Add(new ScreenPositionPreset
         {
-            _textureOnLoadHook.Enable(); //Enable Texturehook only for the duration of the specific Resource Load, as hooking Textures from Kernel is unsafe and expensive
-            ResourceHandle* ret = _getResourceSyncHook.Original(thisPtr, category, type, hash, path, unknown, unkDebugPtr, unkDebugInt);
-            _textureOnLoadHook.Disable();
-            _texCase = 0;
-            return ret;
-        }
+            Name = name, X = ScreenPosition.X, Y = ScreenPosition.Y, Z = ScreenPosition.Z, Yaw = ScreenYaw,
+            Scale = ScreenScale,
+        });
 
-        return _getResourceSyncHook.Original(thisPtr, category, type, hash, path, unknown, unkDebugPtr, unkDebugInt);
+        Plugin.Cfg.ScreenPresets = _screenPresets;
+        Plugin.Cfg.Save();
     }
 
-    private readonly Lock _screenTextureLock = new();
-    private int _texCase;
-
-    private unsafe bool TexOnLoadDetour(Texture* thisPtr, void* contents)
+    internal void RemoveScreenPreset(string name)
     {
-        try
+        _screenPresets.RemoveAll(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        Plugin.Cfg.ScreenPresets = _screenPresets;
+        Plugin.Cfg.Save();
+    }
+
+    internal void ApplyScreenPreset(ScreenPositionPreset preset)
+    {
+        var position = new Vector3(preset.X, preset.Y, preset.Z);
+        ScreenSpawnAnchor = position; //Re-center the position sliders on the spot just jumped to.
+        SetScreenTransform(position, preset.Yaw, preset.Scale);
+    }
+
+    // Applied when watching someone else's AetherStream over WatchAlongSession and their host
+    // client publishes a screen transform (see StreamSignalRouter.PublishState/CallControl's
+    // ScreenX/Y/Z/Yaw/Scale). There is no shared/networked 3D object - this just makes the local
+    // ScreenPainter draw at the same coordinates the host is using, same as any other placement.
+    internal void ApplyRemoteScreenTransform(Vector3 position, float yaw, float scale)
+    {
+        ScreenSpawnAnchor = position; //Re-center the position sliders on the host's spot too.
+        SetScreenTransform(position, yaw, scale);
+    }
+
+    //Hands the painter its texture and, if this is a genuinely new session (the screen was idle),
+    //spawns it 2 units in front of the local player. Continuing/switching content on an
+    //already-active screen must not reset a position the user placed by hand.
+    private void AssignScreenForSession(Texture2D screenTexture)
+    {
+        bool isNewSession = !_isActive;
+        _screenPainter.SetTarget(screenTexture);
+
+        if (isNewSession)
         {
-            if (thisPtr == null)
-            {
-                return _textureOnLoadHook.Original(thisPtr, contents);
-            }
-
-            uint w, h;
-            try
-            {
-                w = thisPtr->ActualWidth;
-                h = thisPtr->ActualHeight;
-            }
-            catch { return _textureOnLoadHook.Original(thisPtr, contents); }
-
-            if (w != ScreenWidth || h != ScreenHeight)
-            {
-                return _textureOnLoadHook.Original(thisPtr, contents);
-            }
-
-            bool tex = _textureOnLoadHook.Original(thisPtr, contents);
-            if (!tex)
-            {
-                return tex;
-            }
-
-            lock (_screenTextureLock)
-            {
-                var texture = _texCase == 2 ? _snesScreenTexture : _screenTexture;
-
-                if (texture is not { IsDisposed: false })
-                {
-                    AepLog.Debug("New Texture detected, but our own texture is disposed, skipping");
-                    return tex;
-                }
-
-                if (DxHandler.Device is not { IsDisposed: false })
-                {
-                    return tex;
-                }
-
-                nint key = (nint)thisPtr;
-
-                if (_views.TryGetValue(key, out var oldView) && (nint)thisPtr->D3D11Texture2D == texture.NativePointer)
-                {
-                    AepLog.Debug("New Texture detected, but already hooked, skipping");
-                    //Detected view on this
-                    return tex;
-                }
-
-                AepLog.Debug("New Texture detected, assigning...");
-
-                var newView = new ShaderResourceView(DxHandler.Device, texture,
-                    new ShaderResourceViewDescription
-                    {
-                        Format = texture.Description.Format,
-                        Dimension = ShaderResourceViewDimension.Texture2D,
-                        Texture2D = { MipLevels = texture.Description.MipLevels },
-                    });
-
-                _views[key] = newView;
-
-                Marshal.AddRef(texture.NativePointer);
-                Marshal.AddRef(newView.NativePointer);
-
-                thisPtr->D3D11Texture2D = (void*)texture.NativePointer;
-                thisPtr->D3D11ShaderResourceView = (void*)newView.NativePointer;
-            }
-
-            return tex;
-        }
-        catch (Exception ex)
-        {
-            AepLog.Error(ex.ToString());
-            return false;
+            SpawnScreenInFrontOfLocalPlayer();
         }
     }
 
     public void Dispose()
     {
-        PenumbraIPC.Dispose();
-
         _mpvRenderer?.Dispose();
         _snesRenderer?.Dispose();
-
-        _textureOnLoadHook.Disable();
-        _textureOnLoadHook.Dispose();
-        _getResourceSyncHook.Dispose();
-
-        //Do not clean up Texture2D and ShaderResourceView as they may still be part of the currently running VFX
-        //Instead just let it stay in the game until it eventually closes, its not growing anyway
-        _views.Clear();
+        _screenPainter.Dispose();
 
         WindowKeyUpReader.Dispose();
         Resources.Dispose();

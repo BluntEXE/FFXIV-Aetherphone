@@ -48,11 +48,10 @@ itself is resolved separately via YoutubeExplode, already a dependency).
 ## AlphaChannel (Voudi)
 
 AetherStream's video/screen engine under `src/Aetherphone/Core/Video/`
-(mpv-backed playback, the D3D11 device/resource-load hooks, the actor VFX
-texture swap, Penumbra IPC, the SNES9x-based emulator renderer, and the
-bundled VFX/texture resources under `src/Aetherphone/Resources/Video/`) is
-ported from [AlphaChannel](https://github.com/Voudi/AlphaChannel) by Voudi,
-used with the author's permission.
+(mpv-backed playback, the world-anchored ScreenPainter D3D11 quad renderer,
+and the SNES9x-based emulator renderer) is ported from
+[AlphaChannel](https://github.com/Voudi/AlphaChannel) by Voudi, used with the
+author's permission.
 
 - Source: https://github.com/Voudi/AlphaChannel
 - License: GNU General Public License v3.0 or later; full text reproduced in
