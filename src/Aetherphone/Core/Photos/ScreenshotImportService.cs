@@ -7,11 +7,15 @@ internal sealed class ScreenshotImportService : IDisposable
     private const int SettleAttempts = 20;
     private const int SettleDelayMilliseconds = 300;
     private const int SeenCapacity = 512;
+    private const int BurstLimit = 20;
+    private static readonly TimeSpan BurstWindow = TimeSpan.FromSeconds(5);
 
     private readonly PhotoLibrary library;
     private readonly Configuration configuration;
     private readonly List<FileSystemWatcher> watchers = new();
     private readonly HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Queue<string> seenOrder = new();
+    private readonly ImportBurstGuard burstGuard = new(BurstLimit, BurstWindow);
     private volatile bool disposed;
 
     public ScreenshotImportService(PhotoLibrary library, Configuration configuration)
@@ -53,14 +57,27 @@ internal sealed class ScreenshotImportService : IDisposable
 
         lock (seen)
         {
-            if (seen.Count > SeenCapacity)
+            if (burstGuard.IsTripped)
             {
-                seen.Clear();
+                return;
+            }
+
+            if (!burstGuard.Allow(DateTime.UtcNow))
+            {
+                AepLog.Warning(
+                    $"[Screenshots] saw {BurstLimit}+ new files within {BurstWindow.TotalSeconds}s, pausing automatic import for this session");
+                return;
             }
 
             if (!seen.Add(path))
             {
                 return;
+            }
+
+            seenOrder.Enqueue(path);
+            if (seenOrder.Count > SeenCapacity)
+            {
+                seen.Remove(seenOrder.Dequeue());
             }
         }
 
