@@ -718,10 +718,8 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
                     : raw;
                 if (bytes is not null)
                 {
-                    using var image = SixLabors.ImageSharp.Image.Load<SixLabors.ImageSharp.PixelFormats.Rgba32>(bytes);
-                    var pixels = new byte[image.Width * image.Height * 4];
-                    image.CopyPixelDataTo(pixels);
-                    library.Save(pixels, image.Width, image.Height);
+                    var (pixels, width, height) = ImageProcessor.DecodeRgba32(bytes);
+                    library.Save(pixels, width, height);
                     succeeded = true;
                 }
             }

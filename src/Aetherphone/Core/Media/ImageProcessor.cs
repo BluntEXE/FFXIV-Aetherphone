@@ -4,6 +4,7 @@ using Dalamud.Interface.Textures;
 using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Plugin.Services;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -28,27 +29,13 @@ internal static class ImageProcessor
 {
     private const int JpegQuality = 88;
 
-    // Rgba32 buffer is Width*Height*4 bytes; cap keeps that under ~256MB and
-    // keeps Width*Height*4 from overflowing int32 (see DecodeToTextureAsync).
-    private const long MaxDecodePixels = 64L * 1024 * 1024;
-
-    static ImageProcessor()
-    {
-        if (MaxDecodePixels * 4 > int.MaxValue)
-        {
-            throw new InvalidOperationException(
-                $"{nameof(MaxDecodePixels)} is too large: Width*Height*4 would overflow int32.");
-        }
-    }
+    private const long MaxDecodePixels = 4096L * 4096L;
+    private static readonly DecoderOptions SingleFrame = new() { MaxFrames = 1 };
 
     private static void EnsureDecodable(Stream stream)
     {
         var info = Image.Identify(stream);
         stream.Position = 0;
-        if (info is null)
-        {
-            throw new InvalidImageContentException("Unrecognized image format.");
-        }
 
         if ((long)info.Width * info.Height > MaxDecodePixels)
         {
@@ -71,7 +58,7 @@ internal static class ImageProcessor
     public static BakedImage BakeCroppedJpeg(string sourcePath, WallpaperCrop crop, int targetWidth, int targetHeight)
     {
         EnsureDecodable(sourcePath);
-        using var image = Image.Load(sourcePath);
+        using var image = Image.Load(SingleFrame, sourcePath);
         var size = new Vector2(image.Width, image.Height);
         var aspect = (float)targetWidth / targetHeight;
         var clamped = crop.Clamped(size, aspect);
@@ -89,7 +76,7 @@ internal static class ImageProcessor
     public static BakedImage BakeJpeg(string sourcePath, int maxDimension)
     {
         EnsureDecodable(sourcePath);
-        using var image = Image.Load(sourcePath);
+        using var image = Image.Load(SingleFrame, sourcePath);
         var width = image.Width;
         var height = image.Height;
         if (width > maxDimension || height > maxDimension)
@@ -105,18 +92,39 @@ internal static class ImageProcessor
         return new BakedImage(stream.ToArray(), width, height);
     }
 
+    private static (byte[] Pixels, int Length, int Width, int Height) DecodeRgba32Pooled(Stream stream)
+    {
+        EnsureDecodable(stream);
+        using var image = Image.Load<Rgba32>(SingleFrame, stream);
+        var length = checked(image.Width * image.Height * 4);
+        var buffer = ArrayPool<byte>.Shared.Rent(length);
+        image.CopyPixelDataTo(buffer.AsSpan(0, length));
+        return (buffer, length, image.Width, image.Height);
+    }
+
+    public static (byte[] Pixels, int Width, int Height) DecodeRgba32(byte[] bytes)
+    {
+        using var stream = new MemoryStream(bytes);
+        var (pooled, length, width, height) = DecodeRgba32Pooled(stream);
+        try
+        {
+            var pixels = new byte[length];
+            pooled.AsSpan(0, length).CopyTo(pixels);
+            return (pixels, width, height);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(pooled);
+        }
+    }
+
     public static async Task<IDalamudTextureWrap> DecodeToTextureAsync(ITextureProvider textures, byte[] bytes,
         string tag, CancellationToken token)
     {
         var (pixels, length, width, height) = await Task.Run(() =>
         {
             using var stream = new MemoryStream(bytes);
-            EnsureDecodable(stream);
-            using var image = Image.Load<Rgba32>(stream);
-            var length = checked(image.Width * image.Height * 4);
-            var buffer = ArrayPool<byte>.Shared.Rent(length);
-            image.CopyPixelDataTo(buffer.AsSpan(0, length));
-            return (buffer, length, image.Width, image.Height);
+            return DecodeRgba32Pooled(stream);
         }, token).ConfigureAwait(false);
 
         try
