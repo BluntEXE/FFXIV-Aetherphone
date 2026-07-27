@@ -185,14 +185,12 @@ internal sealed class FeedbackApp : IPhoneApp
         if (draft.Length == 0)
         {
             var placeholderPos = new Vector2(inputX + 4f * scale, inputTop + 2f * scale);
-            var wrapRight = inputX + inputWidth - 4f * scale - ImGui.GetWindowPos().X;
+            using (Typography.WrapAt(inputX + inputWidth - 4f * scale))
             using (Plugin.Fonts.Push(1.15f))
             using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Feedback.MutedInk))
             {
                 ImGui.SetCursorScreenPos(placeholderPos);
-                ImGui.PushTextWrapPos(wrapRight);
                 Typography.Plain(Loc.T(L.Feedback.Placeholder));
-                ImGui.PopTextWrapPos();
             }
         }
 

@@ -472,15 +472,12 @@ internal sealed partial class ChirperApp : IPhoneApp
         if (post.Text.Length > 0 && bodyLayout is null)
         {
             ImGui.SetCursorScreenPos(new Vector2(contentLeft, textTop));
-            var wrapPos = contentRight - ImGui.GetWindowPos().X;
-            ImGui.PushTextWrapPos(wrapPos);
+            using (Typography.WrapAt(contentRight))
             using (Plugin.Fonts.Push(1.05f))
             using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Chirper.BodyInk))
             {
                 Typography.Wrapped(post.Text);
             }
-
-            ImGui.PopTextWrapPos();
         }
         else if (bodyLayout is not null)
         {
@@ -953,14 +950,13 @@ internal sealed partial class ChirperApp : IPhoneApp
         {
             ImGui.PushClipRect(min, max, true);
             ImGui.SetCursorScreenPos(new Vector2(min.X + innerPad, min.Y + innerPad + nameSize.Y + 4f * scale));
-            ImGui.PushTextWrapPos(min.X + innerPad + innerWidth - ImGui.GetWindowPos().X);
+            using (Typography.WrapAt(min.X + innerPad + innerWidth))
             using (Plugin.Fonts.Push(0.9f))
             using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Chirper.BodyInk))
             {
                 Typography.Wrapped(quoted.Text);
             }
 
-            ImGui.PopTextWrapPos();
             ImGui.PopClipRect();
         }
 
@@ -1154,13 +1150,11 @@ internal sealed partial class ChirperApp : IPhoneApp
         var commentLayout = commentLayouts.LayoutFor(comment.Id, comment.Text, comment.Mentions, commentRight - textLeft);
         if (commentLayout is null)
         {
-            ImGui.PushTextWrapPos(commentRight - ImGui.GetWindowPos().X);
+            using (Typography.WrapAt(commentRight))
             using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Chirper.BodyInk))
             {
                 Typography.Wrapped(comment.Text);
             }
-
-            ImGui.PopTextWrapPos();
         }
         else
         {

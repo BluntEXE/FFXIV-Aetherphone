@@ -959,14 +959,12 @@ internal sealed partial class AethergramApp : IPhoneApp
             if (captionLayout is null)
             {
                 ImGui.SetCursorScreenPos(new Vector2(innerX, y));
-                ImGui.PushTextWrapPos(innerX + innerWidth - ImGui.GetWindowPos().X);
+                using (Typography.WrapAt(innerX + innerWidth))
                 using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Aethergram.BodyInk))
                 using (Plugin.Fonts.Push(0.95f))
                 {
                     Typography.Wrapped(post.Text);
                 }
-
-                ImGui.PopTextWrapPos();
             }
             else
             {

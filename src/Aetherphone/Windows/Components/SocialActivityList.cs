@@ -93,14 +93,12 @@ internal static class SocialActivityList
         if (body.Length > 0)
         {
             ImGui.SetCursorScreenPos(new Vector2(textLeft, textTop + actorSize.Y + 4f * scale));
-            ImGui.PushTextWrapPos(textRight - ImGui.GetWindowPos().X);
+            using (Typography.WrapAt(textRight))
             using (Plugin.Fonts.Push(0.88f))
             using (ImRaii.PushColor(ImGuiCol.Text, palette.BodyInk))
             {
                 Typography.Wrapped(body);
             }
-
-            ImGui.PopTextWrapPos();
         }
 
         if (UiInteract.HoverClick(origin, rowMax))

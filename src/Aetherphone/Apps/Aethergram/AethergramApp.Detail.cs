@@ -189,14 +189,12 @@ internal sealed partial class AethergramApp
 
                 if (captionLayout is null)
                 {
-                    ImGui.PushTextWrapPos(origin.X + width - ImGui.GetWindowPos().X);
+                    using (Typography.WrapAt(origin.X + width))
                     using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Aethergram.BodyInk))
                     using (Plugin.Fonts.Push(0.9f))
                     {
                         Typography.Wrapped(post.Text);
                     }
-
-                    ImGui.PopTextWrapPos();
                 }
                 else
                 {
@@ -308,14 +306,12 @@ internal sealed partial class AethergramApp
         ImGui.SetCursorScreenPos(new Vector2(textLeft, textTop));
         if (commentLayout is null)
         {
-            ImGui.PushTextWrapPos(textRight - ImGui.GetWindowPos().X);
+            using (Typography.WrapAt(textRight))
             using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Aethergram.BodyInk))
             using (Plugin.Fonts.Push(0.9f))
             {
                 Typography.Wrapped(comment.Text);
             }
-
-            ImGui.PopTextWrapPos();
         }
         else
         {

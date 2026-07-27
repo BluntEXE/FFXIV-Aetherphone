@@ -286,14 +286,12 @@ internal sealed partial class VelvetShell
 
         if (commentLayout is null)
         {
-            ImGui.PushTextWrapPos(textLeft + wrapWidth - ImGui.GetWindowPos().X);
+            using (Typography.WrapAt(textLeft + wrapWidth))
             using (ImRaii.PushColor(ImGuiCol.Text, VelvetTheme.BodyInk))
             using (Plugin.Fonts.Push(0.9f))
             {
                 Typography.Wrapped(comment.Text);
             }
-
-            ImGui.PopTextWrapPos();
         }
         else
         {

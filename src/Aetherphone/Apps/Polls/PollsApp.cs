@@ -170,15 +170,12 @@ internal sealed class PollsApp : IPhoneApp
         }
 
         ImGui.SetCursorScreenPos(new Vector2(contentLeft, origin.Y + pad));
-        var wrapPos = contentRight - ImGui.GetWindowPos().X;
-        ImGui.PushTextWrapPos(wrapPos);
+        using (Typography.WrapAt(contentRight))
         using (Plugin.Fonts.Push(1.08f, FontWeight.SemiBold))
         using (ImRaii.PushColor(ImGuiCol.Text, ui.TitleInk))
         {
             Typography.Wrapped(text.Question);
         }
-
-        ImGui.PopTextWrapPos();
 
         var motion = MotionFor(poll);
         var deltaSeconds = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
@@ -245,15 +242,12 @@ internal sealed class PollsApp : IPhoneApp
         var labelWidth = countLeft - labelLeft - CountGap * scale;
 
         ImGui.SetCursorScreenPos(new Vector2(labelLeft, top + RowTopPad * scale));
-        var wrapPos = labelLeft + labelWidth - ImGui.GetWindowPos().X;
-        ImGui.PushTextWrapPos(wrapPos);
+        using (Typography.WrapAt(labelLeft + labelWidth))
         using (Plugin.Fonts.Push(OptionFontScale, weight))
         using (ImRaii.PushColor(ImGuiCol.Text, Palette.WithAlpha(labelInk, inkAlpha)))
         {
             Typography.Wrapped(optionLabel);
         }
-
-        ImGui.PopTextWrapPos();
 
         Typography.Draw(new Vector2(countLeft, firstLineCenterY - countSize.Y * 0.5f), count,
             Palette.WithAlpha(ui.MutedInk, inkAlpha), CountFontScale, FontWeight.Medium);

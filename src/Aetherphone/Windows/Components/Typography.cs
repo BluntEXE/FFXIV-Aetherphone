@@ -68,6 +68,21 @@ internal static class Typography
         ImGui.TextWrapped(text);
     }
 
+    public static WrapScope WrapAt(float screenRight) => new(screenRight);
+
+    public readonly struct WrapScope : IDisposable
+    {
+        public WrapScope(float screenRight)
+        {
+            ImGui.PushTextWrapPos(screenRight - ImGui.GetWindowPos().X);
+        }
+
+        public void Dispose()
+        {
+            ImGui.PopTextWrapPos();
+        }
+    }
+
     public static Vector2 Measure(string text, float scale = 1f) => Measure(text, scale, FontWeight.Regular);
     public static Vector2 Measure(string text, in TextStyle style) => Measure(text, style.Scale, style.Weight);
 

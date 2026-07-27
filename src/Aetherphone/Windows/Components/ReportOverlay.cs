@@ -307,12 +307,11 @@ internal sealed class ReportOverlay
         FontWeight weight = FontWeight.Regular)
     {
         ImGui.SetCursorScreenPos(position);
+        using (Typography.WrapAt(position.X + width))
         using (Plugin.Fonts.Push(fontScale, weight))
         using (ImRaii.PushColor(ImGuiCol.Text, color))
         {
-            ImGui.PushTextWrapPos(position.X + width - ImGui.GetWindowPos().X);
             Typography.Wrapped(text);
-            ImGui.PopTextWrapPos();
         }
     }
 }
