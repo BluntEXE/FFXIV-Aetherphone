@@ -1890,21 +1890,21 @@ internal static class L
         public static readonly LocString CastingStateNotReady = new("aetherstream.castingStateNotReady",
             "Not ready");
         public static readonly LocString CastingStateReady = new("aetherstream.castingStateReady", "Ready");
-        public static readonly LocString PenumbraUnavailable = new("aetherstream.penumbraUnavailable",
-            "Penumbra unavailable: {0}");
-        public static readonly LocString PenumbraRequired = new("aetherstream.penumbraRequired",
-            "AetherStream requires the Penumbra plugin to show video on the in-game screen.");
-        public static readonly LocString GetPenumbra = new("aetherstream.getPenumbra", "Get Penumbra");
         public static readonly LocString OpenScreenWindow = new("aetherstream.openScreenWindow", "Open in a window");
         public static readonly LocString CloseScreenWindow = new("aetherstream.closeScreenWindow", "Close window");
-        public static readonly LocString CastingPlaceHere = new("aetherstream.castingPlaceHere", "Place screen here");
-        public static readonly LocString CastingClearPlacement = new("aetherstream.castingClearPlacement",
-            "Clear placement");
-        public static readonly LocString CastingScreenPlaced = new("aetherstream.castingScreenPlaced", "Placed");
-        public static readonly LocString CastingScreenNotPlaced = new("aetherstream.castingScreenNotPlaced",
-            "Not placed");
-        public static readonly LocString CastingSize = new("aetherstream.castingSize", "Size");
+        public static readonly LocString CastingScreenPositionHeader = new(
+            "aetherstream.castingScreenPositionHeader", "Screen Position");
+        public static readonly LocString CastingScreenPositionHint = new(
+            "aetherstream.castingScreenPositionHint", "Start playback to move and resize the screen.");
+        public static readonly LocString CastingPresetNameHint = new("aetherstream.castingPresetNameHint",
+            "Preset name...");
+        public static readonly LocString CastingSavePreset = new("aetherstream.castingSavePreset", "Save Preset");
+        public static readonly LocString CastingSavedPresets = new("aetherstream.castingSavedPresets",
+            "Saved Presets");
+        public static readonly LocString CastingScale = new("aetherstream.castingScale", "Scale");
         public static readonly LocString CastingRotate = new("aetherstream.castingRotate", "Rotate");
+        public static readonly LocString CastingRecenter = new("aetherstream.castingRecenter",
+            "Recenter in front of me");
 
         public static readonly LocString SettingsSectionStatus = new("aetherstream.settingsSectionStatus", "Status");
         public static readonly LocString SettingsSectionPlayback = new("aetherstream.settingsSectionPlayback",
@@ -1947,6 +1947,8 @@ internal static class L
 
         public static readonly LocString JoinStream = new("aetherstream.joinStream", "Join a stream");
         public static readonly LocString JoinSearchHint = new("aetherstream.joinSearchHint", "Search by name");
+        public static readonly LocString JoinNearbyHeader = new("aetherstream.joinNearbyHeader",
+            "Streaming nearby");
         public static readonly LocString StreamUnavailableTitle = new("aetherstream.streamUnavailableTitle",
             "Stream unavailable");
         public static readonly LocString StreamUnavailableBody = new("aetherstream.streamUnavailableBody",

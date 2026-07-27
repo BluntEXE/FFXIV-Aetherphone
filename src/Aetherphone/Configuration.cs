@@ -22,6 +22,21 @@ using Dalamud.Configuration;
 
 namespace Aetherphone;
 
+// Ported from AlphaChannel's Configuration (Voudi, GPL-3.0, tag v1.1.20260725.1088) - a saved world
+// position/scale for the AetherStream screen (VideoEngine.ScreenPosition/ScreenYaw/ScreenScale), so the
+// user can jump back to a spot without re-placing it by hand every time. Yaw is an Aetherphone addition
+// on top of the upstream preset shape (which only carried X/Y/Z/Scale) - rotation is user-adjustable here.
+[Serializable]
+internal sealed class ScreenPositionPreset
+{
+    public string Name { get; set; } = "";
+    public float X { get; set; }
+    public float Y { get; set; }
+    public float Z { get; set; }
+    public float Yaw { get; set; }
+    public float Scale { get; set; } = 1.0f;
+}
+
 [Serializable]
 internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
 {
@@ -83,6 +98,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     // gap, not fixable via a CA bundle file - see Stage 7 investigation notes). Never touches
     // real Windows.
     public bool VideoAllowInsecureDirectUrls { get; set; }
+    public List<ScreenPositionPreset> ScreenPresets { get; set; } = new();
     // SNES9x (AlphaChannel port) emulator input mapping and recent-ROM list - ported from
     // AlphaChannel's own Configuration, which used to be its own separate IPluginConfiguration.
     public Dictionary<Snes9xInput, string> SnesKeyMappings { get; set; } = new();

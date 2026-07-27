@@ -6,20 +6,23 @@ using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
+using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.AetherStream;
 
 internal sealed partial class AetherStreamApp
 {
+    private string screenPresetName = "";
+
     // Only one target exists right now (Stage 7 scope - see spec's "Render target" section), so
     // this shows that single screen plainly rather than a "1 of N" list implying more should be
     // here. Watch-party features (viewer lists, handing control to another player) are out of
     // scope until the networking question is settled - this tab has nothing referencing them.
     //
-    // The screen is self-drawn and world-anchored on the local player - no companion/minion to
-    // summon, so there's no "awaiting material"/"apply appearance mod" step anymore (port/
-    // alphachannel-engine Stage 4). State just reflects whether the engine's resource hook and
-    // Penumbra are both up and running.
+    // The screen is a world-anchored quad drawn by ScreenPainter (ported from AlphaChannel's
+    // v1.1.20260725.1088 revamp, replacing the earlier VFX/companion/Penumbra mounting - see
+    // port/alphachannel-engine Stage 4 and the ScreenPainter port that followed it), so State just
+    // reflects whether the engine is currently drawing anything at all.
     private void DrawCastingTab(Rect body, float scale)
     {
         var margin = Metrics.Space.Lg * scale;
@@ -44,36 +47,20 @@ internal sealed partial class AetherStreamApp
         Typography.Draw(new Vector2(textLeft, card.Min.Y + 62f * scale), StateLabel(), StateColor(),
             TextStyles.Subheadline);
 
-        var bodyTop = card.Max.Y + 12f * scale;
+        var bodyTop = card.Max.Y + 16f * scale;
 
-        // Checked live every draw, not cached - Dalamud's InstalledPlugins reflects a fresh
-        // install immediately, so this prompt clears itself on the next frame once Penumbra is
-        // loaded, with no explicit "reload" step needed.
-        if (!PenumbraIPC.IsInstalled())
-        {
-            Typography.DrawWrappedLeft(new Vector2(content.Min.X, bodyTop), Loc.T(L.AetherStream.PenumbraRequired),
-                Palette.WithAlpha(theme.Danger, 0.9f), TextStyles.Footnote, content.Width);
-            bodyTop += 36f * scale;
+        Typography.Draw(new Vector2(content.Min.X, bodyTop), Loc.T(L.AetherStream.CastingScreenPositionHeader),
+            ui.TitleInk, TextStyles.FootnoteEmphasized);
+        bodyTop += 22f * scale;
 
-            var getPenumbraRect = new Rect(new Vector2(content.Min.X, bodyTop),
-                new Vector2(content.Min.X + 140f * scale, bodyTop + 32f * scale));
-            if (SmallButton(getPenumbraRect, Loc.T(L.AetherStream.GetPenumbra), true, scale))
-            {
-                UrlActions.OpenInBrowser("https://github.com/xivdev/Penumbra");
-            }
+        bodyTop = screen.Engine.IsActive
+            ? DrawScreenPositionEditor(content, bodyTop, scale)
+            : DrawScreenPositionHint(content, bodyTop, scale);
 
-            bodyTop += 32f * scale + 12f * scale;
-        }
-        else if (!screen.PenumbraGate.IsAvailable)
-        {
-            Typography.DrawWrappedLeft(new Vector2(content.Min.X, bodyTop),
-                Loc.T(L.AetherStream.PenumbraUnavailable, screen.PenumbraGate.LastError ?? string.Empty),
-                Palette.WithAlpha(theme.Danger, 0.9f), TextStyles.Footnote, content.Width);
-            bodyTop += 40f * scale;
-        }
+        bodyTop += 12f * scale;
 
         // A second, independent render option - a plain resizable, movable window showing the
-        // same decoded frames, for whenever the in-world VFX path isn't what's wanted.
+        // same decoded frames, for whenever the in-world quad isn't what's wanted.
         var windowRect = new Rect(new Vector2(content.Min.X, bodyTop), new Vector2(content.Max.X, bodyTop + 38f * scale));
         var windowLabel = screenWindow.IsOpen ? Loc.T(L.AetherStream.CloseScreenWindow) : Loc.T(L.AetherStream.OpenScreenWindow);
         if (SmallButton(windowRect, windowLabel, true, scale))
@@ -91,15 +78,138 @@ internal sealed partial class AetherStreamApp
         }
     }
 
-    private Vector4 StateColor() => screen.State switch
+    private float DrawScreenPositionHint(Rect content, float bodyTop, float scale)
     {
-        ScreenState.Ready => new Vector4(0.4f, 1f, 0.5f, 1f),
-        _ => ui.MutedInk,
-    };
+        Typography.DrawWrappedLeft(new Vector2(content.Min.X, bodyTop), Loc.T(L.AetherStream.CastingScreenPositionHint),
+            ui.MutedInk, TextStyles.Footnote, content.Width);
+        return bodyTop + 32f * scale;
+    }
 
-    private string StateLabel() => screen.State switch
+    // X/Y/Z/Scale fields + named presets, ported from AlphaChannel's ControlWindow.
+    // DrawScreenPositionSettings (Voudi, GPL-3.0, tag v1.1.20260725.1088) - raw ImGui widgets
+    // rather than a dedicated component since this is a one-off field, same precedent as
+    // MarketApp.Detail.cs's alert-threshold InputInt. DragFloat/SliderFloat/SliderAngle instead of
+    // upstream's plain InputFloat text boxes - click-and-drag to adjust live is far more fluid than
+    // typing a number and pressing enter, and a bounded slider for Scale/Rotate makes the [0.1x, 8x]
+    // range and the full turn discoverable instead of a blank text box.
+    private float DrawScreenPositionEditor(Rect content, float bodyTop, float scale)
     {
-        ScreenState.Ready => Loc.T(L.AetherStream.CastingStateReady),
-        _ => Loc.T(L.AetherStream.CastingStateNotReady),
-    };
+        var pos = screen.Engine.ScreenPosition;
+        var yaw = screen.Engine.ScreenYaw;
+        var positionScale = screen.Engine.ScreenScale;
+        var transformChanged = false;
+
+        ImGui.SetCursorScreenPos(new Vector2(content.Min.X, bodyTop));
+        var fieldWidth = (content.Width - 16f * scale) / 3f;
+        var anchor = screen.Engine.ScreenSpawnAnchor;
+        const float range = VideoEngine.ScreenPositionSliderRange;
+        using (ImRaii.PushColor(ImGuiCol.FrameBg, ImGui.GetColorU32(ui.FieldSurface)))
+        using (ImRaii.PushColor(ImGuiCol.Text, ui.TitleInk))
+        {
+            ImGui.SetNextItemWidth(fieldWidth);
+            transformChanged |= ImGui.SliderFloat("X##aetherstreamScreenPosX", ref pos.X,
+                anchor.X - range, anchor.X + range, "%.1f");
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(fieldWidth);
+            transformChanged |= ImGui.SliderFloat("Y##aetherstreamScreenPosY", ref pos.Y,
+                anchor.Y - range, anchor.Y + range, "%.1f");
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(fieldWidth);
+            transformChanged |= ImGui.SliderFloat("Z##aetherstreamScreenPosZ", ref pos.Z,
+                anchor.Z - range, anchor.Z + range, "%.1f");
+        }
+
+        bodyTop += ImGui.GetFrameHeightWithSpacing() + 4f * scale;
+
+        ImGui.SetCursorScreenPos(new Vector2(content.Min.X, bodyTop));
+        var wideFieldWidth = (content.Width - 8f * scale) * 0.5f;
+        using (ImRaii.PushColor(ImGuiCol.FrameBg, ImGui.GetColorU32(ui.FieldSurface)))
+        using (ImRaii.PushColor(ImGuiCol.Text, ui.TitleInk))
+        {
+            ImGui.SetNextItemWidth(wideFieldWidth);
+            transformChanged |= ImGui.SliderFloat(Loc.T(L.AetherStream.CastingScale) + "##aetherstreamScreenScale",
+                ref positionScale, VideoEngine.MinScreenScale, VideoEngine.MaxScreenScale, "%.1fx");
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(wideFieldWidth);
+            transformChanged |= ImGui.SliderAngle(Loc.T(L.AetherStream.CastingRotate) + "##aetherstreamScreenYaw",
+                ref yaw, -360f, 360f);
+        }
+
+        if (transformChanged)
+        {
+            screen.Engine.SetScreenTransform(pos, yaw, positionScale);
+        }
+
+        bodyTop += ImGui.GetFrameHeightWithSpacing() + 4f * scale;
+
+        var recenterRect = new Rect(new Vector2(content.Min.X, bodyTop), new Vector2(content.Max.X, bodyTop + 32f * scale));
+        if (SmallButton(recenterRect, Loc.T(L.AetherStream.CastingRecenter), true, scale))
+        {
+            screen.Engine.RecenterScreen();
+        }
+
+        bodyTop = recenterRect.Max.Y + 10f * scale;
+
+        var presetNameRect = new Rect(new Vector2(content.Min.X, bodyTop),
+            new Vector2(content.Min.X + 150f * scale, bodyTop + 32f * scale));
+        ImGui.SetCursorScreenPos(presetNameRect.Min);
+        ImGui.SetNextItemWidth(presetNameRect.Width);
+        using (ImRaii.PushColor(ImGuiCol.FrameBg, ImGui.GetColorU32(ui.FieldSurface)))
+        using (ImRaii.PushColor(ImGuiCol.Text, ui.TitleInk))
+        {
+            ImGui.InputTextWithHint("##aetherstreamScreenPresetName", Loc.T(L.AetherStream.CastingPresetNameHint),
+                ref screenPresetName, 50);
+        }
+
+        var savePresetRect = new Rect(new Vector2(presetNameRect.Max.X + 8f * scale, bodyTop),
+            new Vector2(content.Max.X, bodyTop + 32f * scale));
+        if (SmallButton(savePresetRect, Loc.T(L.AetherStream.CastingSavePreset), !string.IsNullOrWhiteSpace(screenPresetName), scale)
+            && !string.IsNullOrWhiteSpace(screenPresetName))
+        {
+            screen.Engine.SaveScreenPreset(screenPresetName);
+            screenPresetName = "";
+        }
+
+        bodyTop = savePresetRect.Max.Y + 12f * scale;
+
+        var presets = screen.Engine.GetScreenPresets();
+        if (presets.Count == 0)
+        {
+            return bodyTop;
+        }
+
+        Typography.Draw(new Vector2(content.Min.X, bodyTop), Loc.T(L.AetherStream.CastingSavedPresets), ui.MutedInk,
+            TextStyles.Caption1);
+        bodyTop += 20f * scale;
+
+        foreach (var preset in presets)
+        {
+            var removeSize = 28f * scale;
+            var applyRect = new Rect(new Vector2(content.Min.X, bodyTop),
+                new Vector2(content.Max.X - removeSize - 8f * scale, bodyTop + 30f * scale));
+            if (SmallButton(applyRect, preset.Name, true, scale))
+            {
+                screen.Engine.ApplyScreenPreset(preset);
+            }
+
+            var removeCenter = new Vector2(content.Max.X - removeSize * 0.5f, bodyTop + 15f * scale);
+            if (ui.IconButton(removeCenter, removeSize * 0.5f, FontAwesomeIcon.Times.ToIconString(), theme.Danger,
+                    Palette.WithAlpha(theme.Danger, 0.14f), 0.85f))
+            {
+                screen.Engine.RemoveScreenPreset(preset.Name);
+            }
+
+            bodyTop = applyRect.Max.Y + 6f * scale;
+        }
+
+        return bodyTop;
+    }
+
+    private Vector4 StateColor() => screen.Engine.IsActive
+        ? new Vector4(0.4f, 1f, 0.5f, 1f)
+        : ui.MutedInk;
+
+    private string StateLabel() => screen.Engine.IsActive
+        ? Loc.T(L.AetherStream.CastingStateReady)
+        : Loc.T(L.AetherStream.CastingStateNotReady);
 }

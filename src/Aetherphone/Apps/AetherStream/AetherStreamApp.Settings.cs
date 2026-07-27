@@ -248,11 +248,9 @@ internal sealed partial class AetherStreamApp
     private static bool NeedsYtdlpDownload(Resources resources) =>
         resources.GetLocationYTDLP() is null || resources.YtdlpCheckResult[0].Length > 0;
 
-    private string ScreenStateText() => screen.State switch
-    {
-        ScreenState.Ready => Loc.T(L.AetherStream.CastingStateReady),
-        _ => Loc.T(L.AetherStream.CastingStateNotReady),
-    };
+    private string ScreenStateText() => screen.Engine.IsActive
+        ? Loc.T(L.AetherStream.CastingStateReady)
+        : Loc.T(L.AetherStream.CastingStateNotReady);
 
     private void DrawQualityRow(Rect row, PhoneTheme theme)
     {

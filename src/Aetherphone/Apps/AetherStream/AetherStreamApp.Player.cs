@@ -32,7 +32,7 @@ internal sealed partial class AetherStreamApp
         // would otherwise just get clipped off the bottom with no way to reach it.
         using (AppSurface.Begin(body))
         {
-            var isCasting = screen.State == ScreenState.Ready && queue.Current is not null;
+            var isCasting = screen.Engine.IsActive && queue.Current is not null;
             var watchers = watchAlong.Watching();
 
             var bodyTop = content.Min.Y;
@@ -104,6 +104,7 @@ internal sealed partial class AetherStreamApp
 
         if (SmallButton(rect, Loc.T(L.AetherStream.JoinStream), true, scale))
         {
+            nearbyRefreshTimer = NearbyRefreshIntervalSeconds; // Refresh immediately, not on next tick.
             router.Push(AetherStreamScreen.Join);
         }
     }
