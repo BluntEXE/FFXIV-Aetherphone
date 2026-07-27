@@ -43,7 +43,6 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
     [PluginService] internal static IUnlockState UnlockState { get; private set; } = null!;
     [PluginService] internal static IGameInteropProvider InteropProvider { get; private set; } = null!;
-    [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
     [PluginService] internal static IKeyState KeyState { get; private set; } = null!;
     [PluginService] internal static IGamepadState GamepadState { get; private set; } = null!;
     internal static Plugin Instance { get; private set; } = null!;
@@ -57,7 +56,6 @@ public sealed class Plugin : IDalamudPlugin
     private readonly PhoneShell shell;
     private readonly PhoneWindow phoneWindow;
     private readonly AboutWindow aboutWindow;
-    private readonly Guid videoSessionId = Guid.NewGuid();
     private readonly VideoPlayer video;
     private readonly ScreenController screenController;
     private readonly AetherStreamQueue videoQueue;
@@ -99,11 +97,11 @@ public sealed class Plugin : IDalamudPlugin
             EmojiCatalog.Load();
             Wallpapers = services.Wallpapers;
             aboutWindow = new AboutWindow();
-            screenController = new ScreenController(videoSessionId, () => Cfg.VideoHideNameplates);
+            screenController = new ScreenController(() => Cfg.VideoHideNameplates);
             video = new VideoPlayer(screenController.Engine);
             videoQueue = new AetherStreamQueue(video);
             watchAlong = new WatchAlongSession(services.AethernetSession, Cfg, services.Confirm, video,
-                videoQueue, services.StreamSignals);
+                videoQueue, services.StreamSignals, screenController);
             Framework.Update += OnVideoFrameworkUpdate;
             videoDebugWindow = new VideoDebugWindow(video, screenController);
             screenWindow = new AetherStreamScreenWindow(video);

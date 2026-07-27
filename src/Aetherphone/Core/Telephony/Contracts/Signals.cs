@@ -35,6 +35,12 @@ internal static class SignalType
     public const string StreamRoster = "stream.roster";
     public const string StreamLeft = "stream.left";
     public const string StreamEnded = "stream.ended";
+
+    // Zone-scoped discovery, deliberately separate from StreamJoin's mutual-contact/block-gated
+    // path - a client asks "what's live in my current territory" and the server answers with
+    // whoever is currently hosting in that same TerritoryId, no contact relationship required.
+    public const string StreamNearby = "stream.nearby";
+    public const string StreamNearbyRoster = "stream.nearby.roster";
 }
 
 internal static class ParticipantState
@@ -53,6 +59,11 @@ internal sealed record ParticipantInfo(
     string State,
     bool Muted);
 
+// One entry in a stream.nearby.roster response - a currently-hosting user in the same territory
+// as the requester. Deliberately just enough to show and join with, not a full ParticipantInfo
+// (there's no call slot/mute state for someone you haven't joined yet).
+internal sealed record NearbyStreamInfo(string HostId, string Name, string World, string DisplayName);
+
 internal sealed record CallControl
 {
     public string Type { get; init; } = string.Empty;
@@ -70,4 +81,22 @@ internal sealed record CallControl
     public string? Url { get; init; }
     public double? PositionSeconds { get; init; }
     public bool? Paused { get; init; }
+
+    // The host's AetherStream world-anchored screen transform (VideoEngine.ScreenPosition/
+    // ScreenYaw/ScreenScale) - optional, omitted entirely if the host's screen isn't active. Each
+    // viewer's own client applies this to their own local ScreenPainter (see
+    // VideoEngine.ApplyRemoteScreenTransform) - there is no shared/networked 3D object, every
+    // Aetherphone client just draws its own copy at the same coordinates.
+    public float? ScreenX { get; init; }
+    public float? ScreenY { get; init; }
+    public float? ScreenZ { get; init; }
+    public float? ScreenYaw { get; init; }
+    public float? ScreenScale { get; init; }
+
+    // Zone-scoped discovery (stream.nearby / stream.nearby.roster). TerritoryId does double duty:
+    // sent by a host alongside stream.state so the server knows which zone their stream is "in",
+    // and sent by a would-be viewer on stream.nearby to ask "what's live in this zone". The server
+    // is the only thing that ever compares the two - the client just reports its own current one.
+    public uint? TerritoryId { get; init; }
+    public NearbyStreamInfo[]? NearbyStreams { get; init; }
 }
