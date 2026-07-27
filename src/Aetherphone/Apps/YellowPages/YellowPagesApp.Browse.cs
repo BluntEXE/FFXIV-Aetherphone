@@ -418,9 +418,22 @@ internal sealed partial class YellowPagesApp
         return UiInteract.Click(min, max, hovered);
     }
 
+    private static readonly Dictionary<string, string[]> IntentLabelWords = new();
+
+    private static string[] WordsOf(string label)
+    {
+        if (!IntentLabelWords.TryGetValue(label, out var words))
+        {
+            words = label.Split(' ');
+            IntentLabelWords[label] = words;
+        }
+
+        return words;
+    }
+
     private static TextStyle FitLabelStyle(string label, float maxWidth, in TextStyle style)
     {
-        var words = label.Split(' ');
+        var words = WordsOf(label);
         var widestWord = string.Empty;
         var widestWidth = 0f;
         for (var index = 0; index < words.Length; index++)

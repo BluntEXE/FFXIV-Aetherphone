@@ -113,7 +113,7 @@ internal static class HoverTooltip
         var viewport = ImGui.GetMainViewport();
         var left = viewport.Pos.X + margin;
         var right = viewport.Pos.X + viewport.Size.X - margin;
-        var maxTextWidth = right - left - 2f * padX;
+        var maxTextWidth = MathF.Min(right - left, 420f * scale) - 2f * padX;
         var lineSize = Typography.Measure(label, style);
         var wrapped = maxTextWidth > 0f && lineSize.X > maxTextWidth;
         var textSize = wrapped ? Typography.MeasureWrappedBlock(label, style, maxTextWidth) : lineSize;

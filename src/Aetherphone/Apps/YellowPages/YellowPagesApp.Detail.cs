@@ -556,7 +556,10 @@ internal sealed partial class YellowPagesApp
 
             var pillMin = new Vector2(cursorX, lineTop);
             var pillMax = pillMin + new Vector2(pillWidth, labelSize.Y + 8f * scale);
-            Squircle.Fill(drawList, pillMin, pillMax, (pillMax.Y - pillMin.Y) * 0.5f, ImGui.GetColorU32(fill));
+            var pillRadius = (pillMax.Y - pillMin.Y) * 0.5f;
+            Squircle.Fill(drawList, pillMin, pillMax, pillRadius, ImGui.GetColorU32(fill));
+            Squircle.Stroke(drawList, pillMin, pillMax, pillRadius,
+                ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.30f)), 1f);
             Marquee.DrawLeftAuto(drawList, "yellowpages.detail.tag." + ad.Id + "." + index, tag,
                 pillMin.X + 9f * scale, pillMin.Y + 4f * scale, labelWidth, TextStyles.Footnote,
                 Palette.WithAlpha(ui.Accent, 0.92f));

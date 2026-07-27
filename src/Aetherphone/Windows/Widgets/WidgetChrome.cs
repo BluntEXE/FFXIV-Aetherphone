@@ -85,7 +85,9 @@ internal static class WidgetChrome
             for (var index = 0; index < text.Length; index++)
             {
                 buffer[0] = text[index];
-                width += ImGui.CalcTextSize(new string(buffer)).X + tracking;
+                width += ImGui.CalcTextSize(new string(buffer)).X;
+                if (index < text.Length - 1)
+                    width += tracking;
             }
 
             return width;
