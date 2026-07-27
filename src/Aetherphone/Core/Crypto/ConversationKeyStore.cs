@@ -720,6 +720,11 @@ internal sealed class ConversationKeyStore
             if (cek is not null)
             {
                 generations[wrap.Generation] = cek;
+                AepLog.Info($"[Encryption] unwrapped key for {scopeId} generation {wrap.Generation}.");
+            }
+            else
+            {
+                AepLog.Warning($"[Encryption] failed to unwrap key for {scopeId} generation {wrap.Generation}.");
             }
         }
     }
@@ -729,6 +734,7 @@ internal sealed class ConversationKeyStore
         var generations = keysByScope.GetOrAdd(scopeId, _ => new ConcurrentDictionary<int, byte[]>());
         generations[generation] = cek;
         currentGenerations[scopeId] = generation;
+        AepLog.Info($"[Encryption] created key generation {generation} for {scopeId}.");
     }
 
     private void OnVaultChanged()
