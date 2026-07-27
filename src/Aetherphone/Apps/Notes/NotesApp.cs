@@ -266,16 +266,15 @@ internal sealed class NotesApp : IPhoneApp
         var hasDue = reminder.DueAt.HasValue;
         var titleY = hasDue ? row.Center.Y - 16f * scale : row.Center.Y - 9f * scale;
         var title = reminder.Title.Length > 0 ? reminder.Title : Loc.T(L.Notes.ReminderHint);
-        var rowHovered = UiInteract.Hover(textRect.Min, textRect.Max);
-        Marquee.DrawLeft("notes.reminderRow.title." + reminder.Id, title, textLeft, titleY, textRect.Width,
-            TextStyles.Body, titleInk, rowHovered);
+        Marquee.DrawLeftAuto("notes.reminderRow.title." + reminder.Id, title, textLeft, titleY, textRect.Width,
+            TextStyles.Body, titleInk);
         if (hasDue)
         {
             var due = reminder.DueAt!.Value;
             var overdue = !reminder.Done && due < DateTime.Now;
             var dueColor = overdue ? theme.Danger : ui.MutedInk;
-            Typography.Draw(new Vector2(textLeft, row.Center.Y + 4f * scale), DueLabel(due), dueColor,
-                TextStyles.Footnote);
+            Marquee.DrawLeftAuto("notes.reminderRow.due." + reminder.Id, DueLabel(due), textLeft,
+                row.Center.Y + 4f * scale, textRect.Width, TextStyles.Footnote, dueColor);
         }
 
         if (UiInteract.HoverClick(textRect.Min, textRect.Max))

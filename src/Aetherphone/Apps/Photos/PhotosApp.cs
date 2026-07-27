@@ -169,12 +169,21 @@ internal sealed partial class PhotosApp : IPhoneApp
         return new Rect(min, max);
     }
 
-    private void DrawNavBar(Rect area, string title, Action? onBack)
+    private void DrawNavBar(Rect area, string title, Action? onBack, float rightReserve = 0f)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
-        var fitted = Typography.FitText(title, area.Width - 96f * scale, TextStyles.Title3);
-        Typography.DrawCentered(new Vector2(area.Center.X, rowCenterY), fitted, ui.TitleInk, TextStyles.Title3);
+        if (rightReserve > 0f)
+        {
+            AppHeader.DrawTitleWithReserve(area, "photos.navbar.title", title, rightReserve, ui.TitleInk, scale,
+                TextStyles.Title3);
+        }
+        else
+        {
+            var fitted = Typography.FitText(title, area.Width - 96f * scale, TextStyles.Title3);
+            Typography.DrawCentered(new Vector2(area.Center.X, rowCenterY), fitted, ui.TitleInk, TextStyles.Title3);
+        }
+
         if (onBack is null)
         {
             return;

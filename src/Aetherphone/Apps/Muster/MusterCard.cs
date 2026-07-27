@@ -236,10 +236,9 @@ internal static class MusterCard
         AppSkin.Icon(drawList, new Vector2(left + 5f * scale, centerY), FontAwesomeIcon.MapMarkerAlt.ToIconString(),
             Palette.WithAlpha(palette.MutedInk, 0.85f), 0.58f);
         var placeLeft = left + 15f * scale;
-        var fitted = Typography.FitText(place, metaRight - placeLeft, TextStyles.Subheadline);
-        var placeSize = Typography.Measure(fitted, TextStyles.Subheadline);
-        Typography.Draw(drawList, new Vector2(placeLeft, centerY - placeSize.Y * 0.5f), fitted, palette.MutedInk,
-            TextStyles.Subheadline);
+        var placeSize = Typography.Measure(place, TextStyles.Subheadline);
+        Marquee.DrawLeftAuto(drawList, "muster.card.place." + muster.Id, place, placeLeft,
+            centerY - placeSize.Y * 0.5f, metaRight - placeLeft, TextStyles.Subheadline, palette.MutedInk);
     }
 
     private static int DescriptionLines(MusterDto muster, float width, float scale, out float lineHeight)

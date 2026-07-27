@@ -194,8 +194,10 @@ internal sealed partial class YellowPagesApp
         var scale = ImGuiHelpers.GlobalScale;
         var thread = inquiries.Thread(inquiryId);
         var context = new PhoneContext(area, theme, navigation);
-        AppHeader.Draw(context, thread is null ? Loc.T(L.YellowPages.InquiriesTitle) : InquiryAdTitle(thread),
-            backFromThread);
+        AppHeader.Draw(context, string.Empty, backFromThread);
+        var title = thread is null ? Loc.T(L.YellowPages.InquiriesTitle) : InquiryAdTitle(thread);
+        AppHeader.DrawTitleWithReserve(area, "yellowpages.inquiries.title." + inquiryId, title,
+            ChatHeaderControls.ReservedRightWidth * scale, theme.TextStrong, scale);
         ChatHeaderControls.DrawLock(ui, area, area.Min.Y + AppHeader.Height * scale * 0.5f, inquiries.CanEncrypt,
             inquiries.VaultState, () => router.Push(YellowPagesRoute.Encryption));
         var top = area.Min.Y + AppHeader.Height * scale;
