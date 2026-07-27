@@ -28,6 +28,41 @@ internal static class ImageProcessor
 {
     private const int JpegQuality = 88;
 
+    // Rgba32 buffer is Width*Height*4 bytes; cap keeps that under ~256MB and
+    // keeps Width*Height*4 from overflowing int32 (see DecodeToTextureAsync).
+    private const long MaxDecodePixels = 64L * 1024 * 1024;
+
+    static ImageProcessor()
+    {
+        if (MaxDecodePixels * 4 > int.MaxValue)
+        {
+            throw new InvalidOperationException(
+                $"{nameof(MaxDecodePixels)} is too large: Width*Height*4 would overflow int32.");
+        }
+    }
+
+    private static void EnsureDecodable(Stream stream)
+    {
+        var info = Image.Identify(stream);
+        stream.Position = 0;
+        if (info is null)
+        {
+            throw new InvalidImageContentException("Unrecognized image format.");
+        }
+
+        if ((long)info.Width * info.Height > MaxDecodePixels)
+        {
+            throw new InvalidImageContentException(
+                $"Image dimensions {info.Width}x{info.Height} exceed the {MaxDecodePixels} pixel limit.");
+        }
+    }
+
+    private static void EnsureDecodable(string path)
+    {
+        using var stream = File.OpenRead(path);
+        EnsureDecodable(stream);
+    }
+
     public static BakedImage BakeSquareJpeg(string sourcePath, WallpaperCrop crop, int target)
     {
         return BakeCroppedJpeg(sourcePath, crop, target, target);
@@ -35,6 +70,7 @@ internal static class ImageProcessor
 
     public static BakedImage BakeCroppedJpeg(string sourcePath, WallpaperCrop crop, int targetWidth, int targetHeight)
     {
+        EnsureDecodable(sourcePath);
         using var image = Image.Load(sourcePath);
         var size = new Vector2(image.Width, image.Height);
         var aspect = (float)targetWidth / targetHeight;
@@ -52,6 +88,7 @@ internal static class ImageProcessor
 
     public static BakedImage BakeJpeg(string sourcePath, int maxDimension)
     {
+        EnsureDecodable(sourcePath);
         using var image = Image.Load(sourcePath);
         var width = image.Width;
         var height = image.Height;
@@ -73,8 +110,10 @@ internal static class ImageProcessor
     {
         var (pixels, length, width, height) = await Task.Run(() =>
         {
-            using var image = Image.Load<Rgba32>(bytes);
-            var length = image.Width * image.Height * 4;
+            using var stream = new MemoryStream(bytes);
+            EnsureDecodable(stream);
+            using var image = Image.Load<Rgba32>(stream);
+            var length = checked(image.Width * image.Height * 4);
             var buffer = ArrayPool<byte>.Shared.Rent(length);
             image.CopyPixelDataTo(buffer.AsSpan(0, length));
             return (buffer, length, image.Width, image.Height);
