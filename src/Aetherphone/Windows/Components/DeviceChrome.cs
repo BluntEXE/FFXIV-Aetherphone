@@ -162,7 +162,7 @@ internal static class DeviceChrome
         }
 
         Squircle.FillOutsideCorners(ImGui.GetWindowDrawList(), screen.Min, screen.Max, radius,
-            ImGui.GetColorU32(theme.BezelOuter));
+            ImGui.GetColorU32(theme.Case.Frame));
     }
 
     public static void DrawWallpaper(Rect screen, PhoneTheme theme)
