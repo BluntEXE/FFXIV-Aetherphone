@@ -24,7 +24,8 @@ internal sealed class CameraApp : IPhoneApp
     private const float ReticleDuration = 1.1f;
     private const float PressDuration = 0.18f;
     private const int SquareModeIndex = 0;
-    private const int CaptureDelayFrames = 3;
+    private const float CaptureDelaySeconds = 0.05f;
+    private const float ShutterCooldownSeconds = 0.5f;
     private const int CaptureWatchdogTicks = 30;
     private static readonly LocString[] Modes = { L.Camera.ModeSquare, L.Camera.ModePhoto };
 
@@ -68,7 +69,7 @@ internal sealed class CameraApp : IPhoneApp
     private float reticleAge = ReticleDuration + 1f;
     private Vector2 reticlePos;
     private IDalamudTextureWrap? lastShot;
-    private int captureCountdown;
+    private readonly ShutterGate shutterGate = new(CaptureDelaySeconds, ShutterCooldownSeconds);
     private int captureWatchdogTicks;
     private Rect pendingCaptureRect;
     private bool captureHooksAttached;
@@ -153,13 +154,9 @@ internal sealed class CameraApp : IPhoneApp
             reticleAge += delta;
         }
 
-        if (captureCountdown > 0)
+        if (shutterGate.Tick(delta))
         {
-            captureCountdown--;
-            if (captureCountdown == 0)
-            {
-                CompleteCapture();
-            }
+            CompleteCapture();
         }
     }
 
@@ -304,7 +301,7 @@ internal sealed class CameraApp : IPhoneApp
 
     private void Shoot(Rect captureRect)
     {
-        if (captureCountdown > 0)
+        if (!shutterGate.TryStart())
         {
             return;
         }
@@ -318,7 +315,6 @@ internal sealed class CameraApp : IPhoneApp
         pendingCaptureRect = captureRect;
         AttachCaptureHooks();
         Plugin.NamePlateGui.RequestRedraw();
-        captureCountdown = CaptureDelayFrames;
     }
 
     private void CompleteCapture()
@@ -369,7 +365,7 @@ internal sealed class CameraApp : IPhoneApp
 
     private void DetachCaptureHooks()
     {
-        captureCountdown = 0;
+        shutterGate.Cancel();
         if (!captureHooksAttached)
         {
             return;
