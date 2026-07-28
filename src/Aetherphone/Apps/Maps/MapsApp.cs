@@ -122,13 +122,13 @@ internal sealed class MapsApp : IPhoneApp
         var textMaxWidth = MathF.Max(1f, cardMax.X - 14f * scale - textLeft);
         var zoneY = cardMin.Y + 14f * scale;
         var zoneSize = Typography.Measure(zoneName, TextStyles.Headline);
-        var zoneHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, zoneY),
+        var zoneHovering = UiInteract.Hover(new Vector2(textLeft, zoneY),
             new Vector2(textLeft + textMaxWidth, zoneY + zoneSize.Y));
         Marquee.DrawLeft("maps.location.zone", zoneName, textLeft, zoneY, textMaxWidth,
             TextStyles.Headline, frameTheme.TextStrong, zoneHovering);
         var regionY = cardMin.Y + 36f * scale;
         var regionSize = Typography.Measure(regionName, TextStyles.Footnote);
-        var regionHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, regionY),
+        var regionHovering = UiInteract.Hover(new Vector2(textLeft, regionY),
             new Vector2(textLeft + textMaxWidth, regionY + regionSize.Y));
         Marquee.DrawLeft("maps.location.region", regionName, textLeft, regionY, textMaxWidth,
             TextStyles.Footnote, frameTheme.TextMuted, regionHovering);
@@ -266,7 +266,7 @@ internal sealed class MapsApp : IPhoneApp
         var height = ExpansionHeaderHeight * scale;
         var min = origin;
         var max = new Vector2(origin.X + width, origin.Y + height);
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         var drawList = ImGui.GetWindowDrawList();
         if (hovered)
         {
@@ -315,7 +315,7 @@ internal sealed class MapsApp : IPhoneApp
         var textRight = row.Max.X - 14f * scale;
         var textMaxWidth = MathF.Max(1f, textRight - textLeft);
         var labelSize = Typography.Measure(aetheryte.Name, TextStyles.Body);
-        var textHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, row.Min.Y), new Vector2(textRight, row.Max.Y));
+        var textHovering = UiInteract.Hover(new Vector2(textLeft, row.Min.Y), new Vector2(textRight, row.Max.Y));
         Marquee.DrawLeft("maps.destination." + aetheryte.RowId, aetheryte.Name, textLeft,
             row.Center.Y - labelSize.Y * 0.5f, textMaxWidth, TextStyles.Body, frameTheme.TextStrong, textHovering);
         var arrowTip = new Vector2(row.Max.X, row.Center.Y);

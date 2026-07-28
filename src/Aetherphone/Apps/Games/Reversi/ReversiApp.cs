@@ -1,3 +1,4 @@
+using Aetherphone.Windows.Components;
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
@@ -266,13 +267,12 @@ internal sealed class ReversiApp : IMiniGame
 
     private int HitTest(GameGrid grid)
     {
-        var mouse = ImGui.GetMousePos();
-        if (!grid.Bounds.Contains(mouse))
+        if (!UiInteract.Hover(grid.Bounds.Min, grid.Bounds.Max))
         {
             return -1;
         }
 
-        var local = mouse - grid.Origin;
+        var local = ImGui.GetMousePos() - grid.Origin;
         var column = (int)(local.X / grid.Pitch);
         var row = (int)(local.Y / grid.Pitch);
         if (column < 0 || column >= ReversiBoard.Size || row < 0 || row >= ReversiBoard.Size)

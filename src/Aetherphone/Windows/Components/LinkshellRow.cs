@@ -35,7 +35,7 @@ internal static class LinkshellRow
         var bellCenter = new Vector2(max.X - 22f * scale, min.Y + Height * scale * 0.5f);
         var bellMin = bellCenter - new Vector2(bellRadius, bellRadius);
         var bellMax = bellCenter + new Vector2(bellRadius, bellRadius);
-        var bellHovered = ImGui.IsMouseHoveringRect(bellMin, bellMax);
+        var bellHovered = UiInteract.Hover(bellMin, bellMax);
 
         var hovered = UiInteract.Hover(min, max);
         var rowActive = hovered && !bellHovered;
@@ -70,7 +70,7 @@ internal static class LinkshellRow
             ? min.Y + Height * scale * 0.5f - titleSize.Y * 0.5f
             : min.Y + 11f * scale;
         var titleMaxWidth = textRight - 4f * scale - textLeft;
-        var titleHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, titleY),
+        var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleY),
             new Vector2(textLeft + titleMaxWidth, titleY + titleSize.Y));
         Marquee.DrawLeft("linkshellrow.title." + channel.Key, label, textLeft, titleY,
             titleMaxWidth, TextStyles.Headline, theme.TextStrong, titleHovering);
@@ -106,7 +106,7 @@ internal static class LinkshellRow
             var previewY = min.Y + 34f * scale;
             var previewMaxWidth = previewRight - textLeft;
             var previewSize = Typography.Measure(preview, TextStyles.Subheadline);
-            var previewHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, previewY),
+            var previewHovering = UiInteract.Hover(new Vector2(textLeft, previewY),
                 new Vector2(textLeft + previewMaxWidth, previewY + previewSize.Y));
             Marquee.DrawLeft("linkshellrow.preview." + channel.Key, preview, textLeft, previewY,
                 previewMaxWidth, TextStyles.Subheadline, theme.TextMuted, previewHovering);

@@ -515,7 +515,7 @@ internal sealed partial class SetupOverlay
         bool live)
     {
         var scale = ImGuiHelpers.GlobalScale;
-        var hovered = live && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = live && UiInteract.Hover(rect.Min, rect.Max);
         var radius = 14f * scale;
         var fill = hovered ? Fade(accent, 0.16f * alpha) : Fade(CardFill, alpha);
         Squircle.Fill(drawList, rect.Min, rect.Max, radius, ImGui.GetColorU32(fill));
@@ -671,7 +671,7 @@ internal sealed partial class SetupOverlay
         bool live, bool enabled = true)
     {
         var scale = ImGuiHelpers.GlobalScale;
-        var hovered = live && enabled && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = live && enabled && UiInteract.Hover(rect.Min, rect.Max);
         var fill = hovered ? Palette.Mix(accent, Vector4.One, 0.14f) : accent;
         Squircle.Fill(drawList, rect.Min, rect.Max, 15f * scale,
             ImGui.GetColorU32(Fade(fill, (enabled ? 1f : 0.4f) * alpha)));
@@ -688,7 +688,7 @@ internal sealed partial class SetupOverlay
     private static bool Secondary(ImDrawListPtr drawList, Rect rect, string label, float alpha, bool live)
     {
         var scale = ImGuiHelpers.GlobalScale;
-        var hovered = live && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = live && UiInteract.Hover(rect.Min, rect.Max);
         var fill = hovered ? 0.16f : 0.09f;
         Squircle.Fill(drawList, rect.Min, rect.Max, 15f * scale,
             ImGui.GetColorU32(new Vector4(1f, 1f, 1f, fill * alpha)));
@@ -707,7 +707,7 @@ internal sealed partial class SetupOverlay
         var scale = ImGuiHelpers.GlobalScale;
         var size = Typography.Measure(label, TextStyles.SubheadlineEmphasized);
         var padding = new Vector2(10f * scale, 8f * scale);
-        var hovered = live && ImGui.IsMouseHoveringRect(center - size * 0.5f - padding, center + size * 0.5f + padding);
+        var hovered = live && UiInteract.Hover(center - size * 0.5f - padding, center + size * 0.5f + padding);
         var ink = hovered ? Palette.Mix(accent, Vector4.One, 0.25f) : accent;
         Typography.DrawCentered(drawList, center, label, Fade(ink, alpha), TextStyles.SubheadlineEmphasized);
         if (hovered)

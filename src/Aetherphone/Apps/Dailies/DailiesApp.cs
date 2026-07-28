@@ -317,7 +317,7 @@ internal sealed class DailiesApp : IPhoneApp
         var name = Loc.T(item.Label);
         var sublabel = BuildSublabel(item, utcNow);
         var nameColor = complete && tappable ? AppPalettes.Dailies.MutedInk : AppPalettes.Dailies.TitleInk;
-        var textHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, band.Min.Y), new Vector2(textRight, band.Max.Y));
+        var textHovering = UiInteract.Hover(new Vector2(textLeft, band.Min.Y), new Vector2(textRight, band.Max.Y));
 
         if (sublabel.Length > 0)
         {

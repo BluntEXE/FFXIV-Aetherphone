@@ -225,7 +225,7 @@ internal sealed class ImagePickCrop
 
     private void HandleGestures(Rect preview, Vector2 size, Vector2 visible)
     {
-        var hovering = ImGui.IsMouseHoveringRect(preview.Min, preview.Max);
+        var hovering = UiInteract.Hover(preview.Min, preview.Max);
         if (hovering)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -286,7 +286,7 @@ internal sealed class ImagePickCrop
     private static bool Pill(Rect rect, string label, bool filled, Vector4 accent, PhoneTheme theme)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = UiInteract.Hover(rect.Min, rect.Max);
         var radius = rect.Height * 0.5f;
         var fill = filled
             ? (hovered ? Palette.Mix(accent, theme.TextStrong, 0.12f) : accent)

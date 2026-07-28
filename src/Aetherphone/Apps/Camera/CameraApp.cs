@@ -1,3 +1,4 @@
+using Aetherphone.Windows.Components;
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -391,7 +392,7 @@ internal sealed class CameraApp : IPhoneApp
         }
 
         var mouse = ImGui.GetMousePos();
-        if (!viewfinder.Contains(mouse))
+        if (!UiInteract.Hover(viewfinder.Min, viewfinder.Max))
         {
             return;
         }

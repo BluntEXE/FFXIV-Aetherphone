@@ -123,7 +123,7 @@ internal sealed partial class MessageApp
         var rightReserve = isOwner ? Typography.Measure(ownerLabel, TextStyles.Footnote).X + pad
             : canRemove ? 28f * scale : 0f;
         var labelMaxWidth = MathF.Max(1f, origin.X + width - pad - rightReserve - textLeft);
-        var rowHovering = ImGui.IsMouseHoveringRect(origin, new Vector2(origin.X + width, origin.Y + rowHeight));
+        var rowHovering = UiInteract.Hover(origin, new Vector2(origin.X + width, origin.Y + rowHeight));
         Marquee.DrawLeft("messageapp.groupinfo.member." + member.UserId, label, textLeft,
             origin.Y + rowHeight * 0.5f - 9f * scale, labelMaxWidth, new TextStyle(1f, FontWeight.SemiBold),
             theme.TextStrong, rowHovering);

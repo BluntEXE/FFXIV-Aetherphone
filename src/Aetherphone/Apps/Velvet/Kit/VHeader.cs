@@ -39,7 +39,7 @@ internal static class VHeader
         var center = new Vector2(area.Min.X + 16f * scale, midY);
         var hitMin = new Vector2(area.Min.X, area.Min.Y);
         var hitMax = new Vector2(area.Min.X + 46f * scale, area.Min.Y + Height * scale);
-        var hovered = ImGui.IsMouseHoveringRect(hitMin, hitMax);
+        var hovered = UiInteract.Hover(hitMin, hitMax);
         var back = BackButton.Draw("velvet.back", center, 15f * scale, VelvetTheme.TitleInk, hovered, scale,
             shadow: true);
         var fittedTitle = Typography.FitText(title, area.Width - 92f * scale, TextStyles.Title3);

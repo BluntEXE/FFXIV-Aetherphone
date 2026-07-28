@@ -147,8 +147,7 @@ internal sealed class BeatApp : IMiniGame
             return;
         }
 
-        var mouse = ImGui.GetMousePos();
-        if (!field.Contains(mouse))
+        if (!UiInteract.Hover(field.Min, field.Max))
         {
             return;
         }
@@ -160,7 +159,7 @@ internal sealed class BeatApp : IMiniGame
         }
 
         var laneWidth = BeatRenderer.LaneWidthOf(field);
-        var lane = (int)((mouse.X - field.Min.X) / laneWidth);
+        var lane = (int)((ImGui.GetMousePos().X - field.Min.X) / laneWidth);
         if (lane < 0)
         {
             lane = 0;

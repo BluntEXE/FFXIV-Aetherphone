@@ -229,7 +229,7 @@ internal sealed partial class MessageApp
             var maxNameRight = area.Max.X - ChatHeaderControls.ReservedRightWidth * scale;
             nameCap = MathF.Max(1f, MathF.Min(nameCap, maxNameRight - nameLeft));
             var titleId = "messageapp.thread.title." + (conversation?.Id ?? "self");
-            var titleHovering = ImGui.IsMouseHoveringRect(new Vector2(avatarCenter.X - avatarRadius, area.Min.Y),
+            var titleHovering = UiInteract.Hover(new Vector2(avatarCenter.X - avatarRadius, area.Min.Y),
                 new Vector2(nameLeft + nameCap, area.Min.Y + AppHeader.Height * scale));
             if (isGroup && conversation is not null)
             {

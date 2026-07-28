@@ -1,3 +1,4 @@
+using Aetherphone.Windows.Components;
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
@@ -137,11 +138,11 @@ internal sealed class WaterSortApp : IMiniGame
 
     private void HandleClick(Rect area, float scale)
     {
-        var mouse = ImGui.GetMousePos();
         var hoveredTube = -1;
         for (var tube = 0; tube < board.TubeCount; tube++)
         {
-            if (WaterSortRenderer.TubeRect(area, tube, board.TubeCount, scale).Contains(mouse))
+            var tubeRect = WaterSortRenderer.TubeRect(area, tube, board.TubeCount, scale);
+            if (UiInteract.Hover(tubeRect.Min, tubeRect.Max))
             {
                 hoveredTube = tube;
                 break;

@@ -102,7 +102,7 @@ internal sealed class NonogramApp : IMiniGame
         var area = new Rect(new Vector2(body.Min.X + 6f * scale, body.Min.Y + 96f * scale),
             new Vector2(body.Max.X - 6f * scale, body.Max.Y - 8f * scale));
         var layout = NonogramRenderer.Layout(area, board, scale);
-        var hoveredCell = ResolveHover(layout);
+        var hoveredCell = ResolveHover(layout, area);
         if (!board.Solved)
         {
             HandleInput(hoveredCell);
@@ -150,10 +150,14 @@ internal sealed class NonogramApp : IMiniGame
             GameNumber.Label(board.FilledRemaining()), Accent, theme);
     }
 
-    private int ResolveHover(NonogramLayout layout)
+    private int ResolveHover(NonogramLayout layout, Rect area)
     {
-        var mouse = ImGui.GetMousePos();
-        var index = layout.HitTest(mouse, board.Size);
+        if (!UiInteract.Hover(area.Min, area.Max))
+        {
+            return -1;
+        }
+
+        var index = layout.HitTest(ImGui.GetMousePos(), board.Size);
         if (index >= 0)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

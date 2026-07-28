@@ -102,7 +102,7 @@ internal sealed class ChipRail
 
     private void HandleDrag(Rect row)
     {
-        if (ImGui.IsMouseHoveringRect(row.Min, row.Max) && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        if (UiInteract.Hover(row.Min, row.Max) && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
             dragging = true;
             dragTravel = 0f;

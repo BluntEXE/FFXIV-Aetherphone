@@ -19,7 +19,7 @@ internal static class AppHeader
             FontWeight.SemiBold);
         var hitMin = new Vector2(content.Min.X, content.Min.Y);
         var hitMax = new Vector2(content.Min.X + 44f * scale, content.Min.Y + Height * scale);
-        var hovered = ImGui.IsMouseHoveringRect(hitMin, hitMax);
+        var hovered = UiInteract.Hover(hitMin, hitMax);
         var center = new Vector2(content.Min.X + 13f * scale, rowCenterY);
         var clicked = BackButton.Draw("appheader.back", center, 15f * scale, theme.Accent, hovered, scale);
         if (!clicked)

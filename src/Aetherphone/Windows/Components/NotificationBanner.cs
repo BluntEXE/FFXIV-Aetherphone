@@ -77,7 +77,7 @@ internal sealed class NotificationBanner : IDisposable
         }
 
         var bounds = CurrentBounds(screen, ImGuiHelpers.GlobalScale, out _);
-        return ImGui.IsMouseHoveringRect(bounds.Min, bounds.Max);
+        return UiInteract.Hover(bounds.Min, bounds.Max);
     }
 
     public void Advance(float deltaSeconds)
@@ -151,7 +151,7 @@ internal sealed class NotificationBanner : IDisposable
 
         var scale = ImGuiHelpers.GlobalScale;
         var bounds = CurrentBounds(screen, scale, out var opacity);
-        var hovered = stage != Stage.Exit && ImGui.IsMouseHoveringRect(bounds.Min, bounds.Max);
+        var hovered = stage != Stage.Exit && UiInteract.Hover(bounds.Min, bounds.Max);
         if (hovered || dragging)
         {
             holdPaused = true;

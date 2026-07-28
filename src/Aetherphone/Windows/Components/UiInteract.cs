@@ -15,10 +15,20 @@ internal static class UiInteract
     private static Vector2 pendingTapMax;
     private static Vector2 pendingTapWindowPos;
     private static bool hasPendingTap;
+    private static bool windowHovered = true;
+    private static int windowHoveredFrame = -1;
 
     public static void BlockThisFrame() => blockedFrame = ImGui.GetFrameCount();
 
     public static bool InputBlocked => blockedFrame == ImGui.GetFrameCount();
+
+    public static void SetWindowHovered(bool hovered)
+    {
+        windowHovered = hovered;
+        windowHoveredFrame = ImGui.GetFrameCount();
+    }
+
+    private static bool WindowHovered => windowHoveredFrame != ImGui.GetFrameCount() || windowHovered;
 
     /// <summary>Discards the in-flight tap without activating it (called when a drag starts).</summary>
     public static void CancelPendingTap() => hasPendingTap = false;
@@ -27,7 +37,7 @@ internal static class UiInteract
     {
         overlayRect = rect;
         overlayFrame = ImGui.GetFrameCount();
-        return !InputBlocked && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        return !InputBlocked && WindowHovered && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
     }
 
     private static bool MouseOverOverlay =>
@@ -35,7 +45,10 @@ internal static class UiInteract
         ImGui.IsMouseHoveringRect(overlayRect.Min, overlayRect.Max, false);
 
     public static bool Hover(Vector2 min, Vector2 max) =>
-        !InputBlocked && !MouseOverOverlay && ImGui.IsMouseHoveringRect(min, max);
+        !InputBlocked && !MouseOverOverlay && WindowHovered && ImGui.IsMouseHoveringRect(min, max);
+
+    public static bool Hover(Vector2 min, Vector2 max, bool clip) =>
+        !InputBlocked && !MouseOverOverlay && WindowHovered && ImGui.IsMouseHoveringRect(min, max, clip);
 
     /// <summary>
     /// Release-triggered activation for a rect the caller has already hover-tested, so a drag can
@@ -51,6 +64,7 @@ internal static class UiInteract
     /// </remarks>
     public static bool Click(Vector2 min, Vector2 max, bool hovered)
     {
+        hovered = hovered && WindowHovered;
         if (!ImGui.IsMouseDown(ImGuiMouseButton.Left) && !ImGui.IsMouseReleased(ImGuiMouseButton.Left))
         {
             hasPendingTap = false;

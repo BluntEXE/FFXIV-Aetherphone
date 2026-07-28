@@ -110,7 +110,7 @@ internal sealed class AvatarLightbox
             return;
         }
 
-        if (ImGui.IsMouseHoveringRect(area.Min, area.Max) && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        if (UiInteract.Hover(area.Min, area.Max) && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
             Close();
         }

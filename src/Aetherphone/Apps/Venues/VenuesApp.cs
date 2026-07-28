@@ -235,7 +235,7 @@ internal sealed partial class VenuesApp : IPhoneApp
         var deltaSeconds = io.DeltaTime;
         var mouseX = io.MousePos.X;
         var down = ImGui.IsMouseDown(ImGuiMouseButton.Left);
-        var hovering = ImGui.IsMouseHoveringRect(bar.Min, bar.Max);
+        var hovering = UiInteract.Hover(bar.Min, bar.Max);
         var shouldBlock = false;
 
         if (chipsPressed)

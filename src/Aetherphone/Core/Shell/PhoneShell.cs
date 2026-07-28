@@ -324,7 +324,7 @@ internal sealed class PhoneShell : IDisposable
         UiAnchors.Report("chrome.home", new Rect(min, max));
         var hitMin = new Vector2(min.X - 24f * scale, min.Y - 16f * scale);
         var hitMax = new Vector2(max.X + 24f * scale, max.Y + 16f * scale);
-        var hovered = ImGui.IsMouseHoveringRect(hitMin, hitMax);
+        var hovered = UiInteract.Hover(hitMin, hitMax);
         var usable = !navigation.AtHome && !navigation.IsTransitioning;
         var actionable = usable && (hovered || indicatorPressActive);
         var color = actionable ? theme.TextStrong : Palette.WithAlpha(theme.TextStrong, 0.55f);

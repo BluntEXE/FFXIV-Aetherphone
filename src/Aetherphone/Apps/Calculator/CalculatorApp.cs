@@ -123,7 +123,7 @@ internal sealed class CalculatorApp : IPhoneApp
                 var entry = history[index];
                 var origin = ImGui.GetCursorScreenPos();
                 var row = new Rect(origin, new Vector2(origin.X + width, origin.Y + rowHeight));
-                var hovered = ImGui.IsMouseHoveringRect(row.Min, row.Max);
+                var hovered = UiInteract.Hover(row.Min, row.Max);
                 if (hovered)
                 {
                     Squircle.Fill(drawList, row.Min, row.Max, 6f * scale,
@@ -253,7 +253,7 @@ internal sealed class CalculatorApp : IPhoneApp
         var min = new Vector2(left, top);
         var max = new Vector2(left + button * 2f + gap, top + button);
         var center = new Vector2((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f);
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         var fill = hovered ? Palette.Mix(DigitBg, White, 0.14f) : DigitBg;
         var drawList = ImGui.GetWindowDrawList();
         Squircle.Fill(drawList, min, max, radius, ImGui.GetColorU32(fill));
@@ -281,7 +281,7 @@ internal sealed class CalculatorApp : IPhoneApp
     {
         var min = center - new Vector2(radius, radius);
         var max = center + new Vector2(radius, radius);
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         var fill = hovered ? Palette.Mix(background, White, 0.14f) : background;
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(fill), 40);

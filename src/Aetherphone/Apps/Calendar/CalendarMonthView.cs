@@ -193,7 +193,7 @@ internal static class CalendarMonthView
         var height = NavHeight * scale * 0.68f;
         var max = new Vector2(rightLimitX - gapX, navY + NavHeight * scale * 0.5f + height * 0.5f);
         var min = new Vector2(max.X - textSize.X - padX * 2f, max.Y - height);
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         Squircle.Fill(drawList, min, max, height * 0.5f,
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, hovered ? 0.24f : 0.14f)));
         Typography.DrawCentered(drawList, (min + max) * 0.5f, todayText, ui.Accent, feScale, feWeight);
@@ -212,7 +212,7 @@ internal static class CalendarMonthView
         var min = new Vector2(origin.X + 4f * scale, origin.Y);
         var max = new Vector2(min.X + 30f * scale, min.Y + NavHeight * scale);
         var mid = (min + max) * 0.5f;
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         if (hovered)
         {
             Squircle.Fill(drawList, min, max, (max.Y - min.Y) * 0.5f, ImGui.GetColorU32(ui.HoverTint));

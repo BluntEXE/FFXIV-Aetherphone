@@ -443,13 +443,13 @@ internal sealed partial class CollectionsApp
         {
             var nameY = row.Center.Y - 16f * scale;
             var nameSize = Typography.Measure(item.Name, TextStyles.BodyEmphasized);
-            var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, nameY),
+            var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
                 new Vector2(textLeft + textWidth, nameY + nameSize.Y));
             Marquee.DrawLeft("collections.item." + item.Id, item.Name, textLeft, nameY,
                 textWidth, TextStyles.BodyEmphasized, ui.TitleInk, nameHovering);
             var subY = row.Center.Y + 4f * scale;
             var subSize = Typography.Measure(subtitle, TextStyles.Footnote);
-            var subHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, subY),
+            var subHovering = UiInteract.Hover(new Vector2(textLeft, subY),
                 new Vector2(textLeft + textWidth, subY + subSize.Y));
             Marquee.DrawLeft("collections.item.sub." + item.Id, subtitle, textLeft, subY, textWidth,
                 TextStyles.Footnote, ui.MutedInk, subHovering);
@@ -458,7 +458,7 @@ internal sealed partial class CollectionsApp
         {
             var nameSize = Typography.Measure(item.Name, TextStyles.BodyEmphasized);
             var nameY = row.Center.Y - nameSize.Y * 0.5f;
-            var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, nameY),
+            var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
                 new Vector2(textLeft + textWidth, nameY + nameSize.Y));
             Marquee.DrawLeft("collections.item." + item.Id, item.Name, textLeft, nameY,
                 textWidth, TextStyles.BodyEmphasized, ui.TitleInk, nameHovering);
@@ -638,7 +638,7 @@ internal sealed partial class CollectionsApp
             var centerY = (rowMin.Y + rowMax.Y) * 0.5f;
             var label = index == 0 ? Loc.T(L.Collections.AllSources) : sourceList[index - 1];
             var selected = index == sourceIndex;
-            var hovered = ImGui.IsMouseHoveringRect(rowMin, rowMax);
+            var hovered = UiInteract.Hover(rowMin, rowMax);
             if (hovered)
             {
                 Squircle.Fill(drawList, rowMin, rowMax, 9f * scale, ImGui.GetColorU32(ui.HoverTint));
@@ -670,8 +670,8 @@ internal sealed partial class CollectionsApp
             return;
         }
 
-        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !ImGui.IsMouseHoveringRect(min, max, false) &&
-            !ImGui.IsMouseHoveringRect(sourceMenuAnchor.Min, sourceMenuAnchor.Max, false))
+        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !UiInteract.Hover(min, max, false) &&
+            !UiInteract.Hover(sourceMenuAnchor.Min, sourceMenuAnchor.Max, false))
         {
             sourceMenuOpen = false;
         }

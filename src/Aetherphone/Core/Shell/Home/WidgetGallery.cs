@@ -83,7 +83,7 @@ internal sealed class WidgetGallery
         var closeCenter = new Vector2(sheet.Max.X - 26f * scale, sheet.Min.Y + 33f * scale);
         var closeRadius = 12f * scale;
         var hovered = interactive &&
-                      ImGui.IsMouseHoveringRect(closeCenter - new Vector2(closeRadius), closeCenter + new Vector2(closeRadius));
+                      UiInteract.Hover(closeCenter - new Vector2(closeRadius), closeCenter + new Vector2(closeRadius));
         drawList.AddCircleFilled(closeCenter, closeRadius,
             ImGui.GetColorU32(new Vector4(1f, 1f, 1f, hovered ? 0.22f : 0.13f)), 24);
         var arm = closeRadius * 0.42f;
@@ -192,7 +192,7 @@ internal sealed class WidgetGallery
         {
             var chip = new Rect(new Vector2(left, cursorY), new Vector2(left + widths[index], cursorY + chipHeight));
             var isSelected = options[index] == selected;
-            var hovered = interactive && ImGui.IsMouseHoveringRect(chip.Min, chip.Max);
+            var hovered = interactive && UiInteract.Hover(chip.Min, chip.Max);
             var fill = isSelected
                 ? theme.Accent
                 : new Vector4(1f, 1f, 1f, hovered ? 0.16f : 0.10f);
@@ -222,7 +222,7 @@ internal sealed class WidgetGallery
         var height = 32f * scale;
         var button = new Rect(new Vector2(view.Center.X - width * 0.5f, cursorY),
             new Vector2(view.Center.X + width * 0.5f, cursorY + height));
-        var hovered = interactive && ImGui.IsMouseHoveringRect(button.Min, button.Max);
+        var hovered = interactive && UiInteract.Hover(button.Min, button.Max);
         Squircle.Fill(drawList, button.Min, button.Max, height * 0.5f,
             ImGui.GetColorU32(Palette.WithAlpha(theme.Accent, hovered ? 1f : 0.9f)));
         Typography.DrawCentered(drawList, button.Center, label, new Vector4(1f, 1f, 1f, 1f),

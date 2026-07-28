@@ -204,7 +204,7 @@ internal sealed class PollsApp : IPhoneApp
         var interactive = !poll.Closed;
         var rowMin = new Vector2(left - 8f * scale, top - 4f * scale);
         var rowMax = new Vector2(left + width + 8f * scale, top + height);
-        var hovered = interactive && ImGui.IsMouseHoveringRect(rowMin, rowMax);
+        var hovered = interactive && UiInteract.Hover(rowMin, rowMax);
         if (hovered)
         {
             Squircle.Fill(drawList, rowMin, rowMax, 12f * scale, ImGui.GetColorU32(ui.HoverTint));

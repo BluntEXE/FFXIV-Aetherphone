@@ -120,8 +120,7 @@ internal static class HomeTileView
     {
         var radius = 9f * scale;
         var dl = ImGui.GetWindowDrawList();
-        var hovered =
-            ImGui.IsMouseHoveringRect(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
+        var hovered = UiInteract.Hover(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
         dl.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(theme.TextStrong, hovered ? 1f : 0.88f)),
             24);
         var arm = radius * 0.4f;

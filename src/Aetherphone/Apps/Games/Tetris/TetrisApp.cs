@@ -1,3 +1,4 @@
+using Aetherphone.Windows.Components;
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
@@ -111,7 +112,7 @@ internal sealed class TetrisApp : IMiniGame
             new Vector2(body.Min.X + 12f * scale + slotSize, slotTop + slotSize));
         var nextRect = new Rect(new Vector2(body.Max.X - 12f * scale - slotSize, slotTop),
             new Vector2(body.Max.X - 12f * scale, slotTop + slotSize));
-        var holdHovered = ImGui.IsMouseHoveringRect(holdRect.Min, holdRect.Max);
+        var holdHovered = UiInteract.Hover(holdRect.Min, holdRect.Max);
         renderer.DrawHoldSlot(board, holdRect, theme, Accent, holdHovered, scale);
         if (holdHovered)
         {

@@ -130,7 +130,8 @@ internal sealed class StackApp : IMiniGame
             return;
         }
 
-        if (board.State == StackState.Over || !ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        if (board.State == StackState.Over || !ImGui.IsMouseClicked(ImGuiMouseButton.Left) ||
+            !UiInteract.Hover(area.Min, area.Max))
         {
             return;
         }

@@ -69,7 +69,7 @@ internal sealed class ShareSheet
                 return;
             }
 
-            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !ImGui.IsMouseHoveringRect(panel.Min, panel.Max))
+            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !UiInteract.Hover(panel.Min, panel.Max))
             {
                 service.Dismiss();
             }
@@ -148,7 +148,7 @@ internal sealed class ShareSheet
         Vector2 cellMin, float cellWidth, float cellHeight, float scale, float opacity, bool interactive)
     {
         var cellMax = cellMin + new Vector2(cellWidth, cellHeight);
-        var hovered = interactive && ImGui.IsMouseHoveringRect(cellMin, cellMax);
+        var hovered = interactive && UiInteract.Hover(cellMin, cellMax);
         var tileSize = TileSize * scale;
         var tileCenter = new Vector2(cellMin.X + cellWidth * 0.5f, cellMin.Y + tileSize * 0.5f);
         var tileMin = new Vector2(tileCenter.X - tileSize * 0.5f, tileCenter.Y - tileSize * 0.5f);

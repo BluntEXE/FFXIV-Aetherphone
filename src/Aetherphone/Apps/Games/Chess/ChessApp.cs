@@ -250,13 +250,12 @@ internal sealed class ChessApp : IMiniGame
 
     private int ResolveHover()
     {
-        var mouse = ImGui.GetMousePos();
-        if (!layout.Bounds.Contains(mouse))
+        if (!UiInteract.Hover(layout.Bounds.Min, layout.Bounds.Max))
         {
             return -1;
         }
 
-        var square = layout.HitTest(mouse);
+        var square = layout.HitTest(ImGui.GetMousePos());
         if (square >= 0)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -608,7 +607,7 @@ internal sealed class ChessApp : IMiniGame
         var drawList = ImGui.GetWindowDrawList();
         var min = center - new Vector2(radius, radius);
         var max = center + new Vector2(radius, radius);
-        var hovered = enabled && ImGui.IsMouseHoveringRect(min, max);
+        var hovered = enabled && UiInteract.Hover(min, max);
         Material.Frosted(drawList, min, max, radius, scale, enabled ? 0.92f : 0.55f);
         if (hovered)
         {

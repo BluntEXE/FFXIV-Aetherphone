@@ -25,7 +25,7 @@ internal sealed class SideButton
         var scale = ImGuiHelpers.GlobalScale;
         var hitMin = new Vector2(bounds.Min.X - 8f * scale, bounds.Min.Y - 8f * scale);
         var hitMax = new Vector2(bounds.Max.X + 4f * scale, bounds.Max.Y + 8f * scale);
-        var hovered = ImGui.IsMouseHoveringRect(hitMin, hitMax);
+        var hovered = UiInteract.Hover(hitMin, hitMax);
         var action = SideButtonAction.None;
         if (hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {

@@ -98,7 +98,7 @@ internal sealed class IncomingCallOverlay
         var dl = ImGui.GetWindowDrawList();
         var scale = ImGuiHelpers.GlobalScale;
         var hovered = live &&
-                      ImGui.IsMouseHoveringRect(center - new Vector2(radius, radius),
+                      UiInteract.Hover(center - new Vector2(radius, radius),
                           center + new Vector2(radius, radius));
         var color = hovered ? Palette.Mix(fill, Ink, 0.14f) : fill;
         dl.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(color, alpha)), 40);

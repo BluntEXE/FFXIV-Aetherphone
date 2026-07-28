@@ -113,7 +113,7 @@ internal static class NavigationBar
     {
         var hitMin = new Vector2(content.Min.X, content.Min.Y);
         var hitMax = new Vector2(content.Min.X + 44f * scale, barBottom);
-        var hovered = ImGui.IsMouseHoveringRect(hitMin, hitMax);
+        var hovered = UiInteract.Hover(hitMin, hitMax);
         var center = new Vector2(content.Min.X + 13f * scale, (content.Min.Y + barBottom) * 0.5f);
         if (!BackButton.Draw("navbar.back", center, 15f * scale, palette.Chevron, hovered, scale))
         {

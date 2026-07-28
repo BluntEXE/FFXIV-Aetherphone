@@ -298,7 +298,7 @@ internal sealed partial class MusicApp
             }
 
             if (interactive && ImGui.IsMouseClicked(ImGuiMouseButton.Left) &&
-                !ImGui.IsMouseHoveringRect(cardMin, cardMax))
+                !UiInteract.Hover(cardMin, cardMax))
             {
                 if (overlay == OverlayMode.Name)
                 {
@@ -617,14 +617,14 @@ internal sealed partial class MusicApp
         var textWidth = max.X - trailing - textLeft;
         var songTitleY = min.Y + 10f * scale;
         var songTitleSize = Typography.Measure(song.Title, TextStyles.BodyEmphasized);
-        var songTitleHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, songTitleY),
+        var songTitleHovering = UiInteract.Hover(new Vector2(textLeft, songTitleY),
             new Vector2(textLeft + textWidth, songTitleY + songTitleSize.Y));
         Marquee.DrawLeft("music.playlistSongRow.title." + song.VideoId + "." + index, song.Title, textLeft,
             songTitleY, textWidth, TextStyles.BodyEmphasized, current ? ui.Accent : ui.TitleInk, songTitleHovering);
         var songSub = SongRowSubtitle(song);
         var songSubY = min.Y + 34f * scale;
         var songSubSize = Typography.Measure(songSub, TextStyles.Caption1);
-        var songSubHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, songSubY),
+        var songSubHovering = UiInteract.Hover(new Vector2(textLeft, songSubY),
             new Vector2(textLeft + textWidth, songSubY + songSubSize.Y));
         Marquee.DrawLeft("music.playlistSongRow.subtitle." + song.VideoId + "." + index, songSub,
             textLeft, songSubY, textWidth, TextStyles.Caption1, ui.MutedInk, songSubHovering);

@@ -1,3 +1,4 @@
+using Aetherphone.Windows.Components;
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
@@ -240,9 +241,9 @@ internal sealed class Twenty48App : IMiniGame
 
     private void HandleSwipe(GameGrid grid)
     {
-        var mouse = ImGui.GetMousePos();
         var bounds = grid.Bounds;
-        if (ImGui.IsMouseDown(ImGuiMouseButton.Left) && bounds.Contains(mouse) && !swipeActive)
+        var mouse = ImGui.GetMousePos();
+        if (ImGui.IsMouseDown(ImGuiMouseButton.Left) && UiInteract.Hover(bounds.Min, bounds.Max) && !swipeActive)
         {
             swipeActive = true;
             swipeStart = mouse;

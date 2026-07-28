@@ -64,7 +64,7 @@ internal static class ControlTile
         var radius = MathF.Min(rect.Width, rect.Height * 0.5f) * 0.44f;
         var result = Math.Clamp(value, 0f, 1f);
         released = false;
-        var hovered = interactive && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = interactive && UiInteract.Hover(rect.Min, rect.Max);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -112,11 +112,11 @@ internal static class ControlTile
 
     private static bool Pressed(Rect rect, bool interactive) =>
         interactive && armed && ImGui.IsMouseDown(ImGuiMouseButton.Left) &&
-        ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        UiInteract.Hover(rect.Min, rect.Max);
 
     private static bool Release(Rect rect, bool interactive, out bool hovered)
     {
-        hovered = interactive && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        hovered = interactive && UiInteract.Hover(rect.Min, rect.Max);
         if (!interactive)
         {
             return false;

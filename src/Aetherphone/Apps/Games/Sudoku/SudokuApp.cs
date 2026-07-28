@@ -176,13 +176,12 @@ internal sealed class SudokuApp : IMiniGame
 
     private int ResolveHover()
     {
-        var mouse = ImGui.GetMousePos();
-        if (!layout.Bounds.Contains(mouse))
+        if (!UiInteract.Hover(layout.Bounds.Min, layout.Bounds.Max))
         {
             return -1;
         }
 
-        var cell = layout.HitTest(mouse);
+        var cell = layout.HitTest(ImGui.GetMousePos());
         if (cell >= 0)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

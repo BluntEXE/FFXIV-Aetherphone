@@ -1,3 +1,4 @@
+using Aetherphone.Windows.Components;
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
@@ -259,15 +260,15 @@ internal sealed class SimonApp : IMiniGame
 
     private int PadHitTest(GameGrid grid)
     {
-        var mouse = ImGui.GetMousePos();
-        if (!grid.Bounds.Contains(mouse))
+        if (!UiInteract.Hover(grid.Bounds.Min, grid.Bounds.Max))
         {
             return -1;
         }
 
         for (var pad = 0; pad < SimonBoard.PadCount; pad++)
         {
-            if (SimonRenderer.PadRect(grid, pad).Contains(mouse))
+            var padRect = SimonRenderer.PadRect(grid, pad);
+            if (UiInteract.Hover(padRect.Min, padRect.Max))
             {
                 return pad;
             }

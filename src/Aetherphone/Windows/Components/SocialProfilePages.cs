@@ -696,7 +696,7 @@ internal sealed class SocialProfilePages
         var textMaxWidth = origin.X + width - pad - buttonWidth - 10f * scale - textLeft;
         var nameY = origin.Y + nameTop * scale;
         var nameSize = Typography.Measure(displayName, 1f, FontWeight.SemiBold);
-        var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, nameY),
+        var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
             new Vector2(textLeft + textMaxWidth, nameY + nameSize.Y));
         Marquee.DrawLeft("socialprofile.row.name." + user.Id, displayName, textLeft, nameY,
             textMaxWidth, new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, nameHovering);
@@ -706,7 +706,7 @@ internal sealed class SocialProfilePages
         var sub = SocialIdentity.ProfileMeta(user.Handle, regionCode);
         var subY = origin.Y + subTop * scale;
         var subSize = Typography.Measure(sub, 0.85f);
-        var subHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, subY),
+        var subHovering = UiInteract.Hover(new Vector2(textLeft, subY),
             new Vector2(textLeft + textMaxWidth, subY + subSize.Y));
         Marquee.DrawLeft("socialprofile.row.sub." + user.Id, sub, textLeft, subY,
             textMaxWidth, new TextStyle(0.85f, FontWeight.Regular), style.Palette.MutedInk, subHovering);

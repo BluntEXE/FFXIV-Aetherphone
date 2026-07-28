@@ -280,7 +280,7 @@ internal sealed partial class SetupOverlay : IDisposable
         var scale = ImGuiHelpers.GlobalScale;
         var center = new Vector2(screen.Min.X + 26f * scale, screen.Min.Y + 30f * scale);
         var half = 16f * scale;
-        var hovered = live && ImGui.IsMouseHoveringRect(center - new Vector2(half, half),
+        var hovered = live && UiInteract.Hover(center - new Vector2(half, half),
             center + new Vector2(half, half));
         var ink = hovered ? InkStrong : InkMuted;
         AppSkin.Icon(drawList, center, FontAwesomeIcon.ChevronLeft.ToIconString(), ink with { W = ink.W * alpha },

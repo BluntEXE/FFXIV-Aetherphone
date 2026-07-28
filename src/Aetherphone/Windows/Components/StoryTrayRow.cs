@@ -95,7 +95,7 @@ internal sealed class StoryTrayRow
 
     private void HandleDrag(Rect row)
     {
-        var hovering = ImGui.IsMouseHoveringRect(row.Min, row.Max);
+        var hovering = UiInteract.Hover(row.Min, row.Max);
         if (hovering && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
             dragging = true;

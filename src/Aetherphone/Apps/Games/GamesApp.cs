@@ -300,7 +300,7 @@ internal sealed class GamesApp : IPhoneApp
         var drawList = ImGui.GetWindowDrawList();
         var hitMin = new Vector2(row.Min.X - Metrics.Space.Lg * scale, row.Min.Y);
         var hitMax = new Vector2(row.Max.X + Metrics.Space.Lg * scale, row.Max.Y);
-        var hovered = ImGui.IsMouseHoveringRect(hitMin, hitMax);
+        var hovered = UiInteract.Hover(hitMin, hitMax);
         if (hovered)
         {
             drawList.AddRectFilled(hitMin, hitMax, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.045f)),
@@ -332,7 +332,7 @@ internal sealed class GamesApp : IPhoneApp
         var textMaxWidth = MathF.Max(1f, row.Max.X - pillWidth - 8f * scale - textX);
         var titleY = row.Center.Y - 17f * scale;
         var titleSize = Typography.Measure(game.Title, TextStyles.Headline);
-        var titleHovering = ImGui.IsMouseHoveringRect(new Vector2(textX, titleY),
+        var titleHovering = UiInteract.Hover(new Vector2(textX, titleY),
             new Vector2(textX + textMaxWidth, titleY + titleSize.Y));
         Marquee.DrawLeft("games.row.title." + game.Id, game.Title, textX, titleY, textMaxWidth,
             TextStyles.Headline, theme.TextStrong, titleHovering);
@@ -340,7 +340,7 @@ internal sealed class GamesApp : IPhoneApp
         var subtitle = string.IsNullOrEmpty(best) ? game.Genre : $"{Loc.T(L.Games.Best)} · {best}";
         var subtitleY = row.Center.Y + 2f * scale;
         var subtitleSize = Typography.Measure(subtitle, TextStyles.Footnote);
-        var subtitleHovering = ImGui.IsMouseHoveringRect(new Vector2(textX, subtitleY),
+        var subtitleHovering = UiInteract.Hover(new Vector2(textX, subtitleY),
             new Vector2(textX + textMaxWidth, subtitleY + subtitleSize.Y));
         Marquee.DrawLeft("games.row.subtitle." + game.Id, subtitle, textX, subtitleY, textMaxWidth,
             TextStyles.Footnote, theme.TextMuted, subtitleHovering);
@@ -356,7 +356,7 @@ internal sealed class GamesApp : IPhoneApp
         var pillHeight = 26f * scale;
         var pillMax = new Vector2(row.Max.X, row.Center.Y + pillHeight * 0.5f);
         var pillMin = new Vector2(row.Max.X - pillWidth, row.Center.Y - pillHeight * 0.5f);
-        var pillHovered = ImGui.IsMouseHoveringRect(pillMin, pillMax);
+        var pillHovered = UiInteract.Hover(pillMin, pillMax);
         Squircle.Fill(drawList, pillMin, pillMax, pillHeight * 0.5f,
             ImGui.GetColorU32(accent with { W = pillHovered ? 0.32f : 0.18f }));
         Typography.DrawCentered((pillMin + pillMax) * 0.5f, label, GamePalette.Lighten(accent, 0.38f),
@@ -371,7 +371,7 @@ internal sealed class GamesApp : IPhoneApp
         }
 
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = UiInteract.Hover(rect.Min, rect.Max);
         var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
         var target = pressed ? 0.975f :
             hovered ? 1.012f : 1f;
@@ -413,13 +413,13 @@ internal sealed class GamesApp : IPhoneApp
             TextStyles.Caption2);
         var heroTitleY = center.Y - 18f * scale;
         var heroTitleSize = Typography.Measure(game.Title, TextStyles.Title2);
-        var heroTitleHovering = ImGui.IsMouseHoveringRect(new Vector2(textX, heroTitleY),
+        var heroTitleHovering = UiInteract.Hover(new Vector2(textX, heroTitleY),
             new Vector2(textX + heroTextMaxWidth, heroTitleY + heroTitleSize.Y));
         Marquee.DrawLeft("games.hero.title." + game.Id, game.Title, textX, heroTitleY, heroTextMaxWidth,
             TextStyles.Title2, ink, heroTitleHovering);
         var heroGenreY = center.Y + 8f * scale;
         var heroGenreSize = Typography.Measure(game.Genre, TextStyles.Footnote);
-        var heroGenreHovering = ImGui.IsMouseHoveringRect(new Vector2(textX, heroGenreY),
+        var heroGenreHovering = UiInteract.Hover(new Vector2(textX, heroGenreY),
             new Vector2(textX + heroTextMaxWidth, heroGenreY + heroGenreSize.Y));
         Marquee.DrawLeft("games.hero.genre." + game.Id, game.Genre, textX, heroGenreY, heroTextMaxWidth,
             TextStyles.Footnote, ink with { W = 0.72f }, heroGenreHovering);

@@ -155,13 +155,12 @@ internal sealed class FlowApp : IMiniGame
 
     private int ResolveHover(GameGrid grid)
     {
-        var mouse = ImGui.GetMousePos();
-        if (!grid.Bounds.Contains(mouse))
+        if (!grid.Bounds.Contains(ImGui.GetMousePos()))
         {
             return -1;
         }
 
-        var local = mouse - grid.Origin;
+        var local = ImGui.GetMousePos() - grid.Origin;
         var column = (int)(local.X / grid.Pitch);
         var row = (int)(local.Y / grid.Pitch);
         if (column < 0 || column >= board.Columns || row < 0 || row >= board.Rows)
@@ -181,7 +180,10 @@ internal sealed class FlowApp : IMiniGame
 
         if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
-            board.Press(hovered);
+            if (UiInteract.Hover(grid.Bounds.Min, grid.Bounds.Max))
+            {
+                board.Press(hovered);
+            }
         }
         else if (ImGui.IsMouseDown(ImGuiMouseButton.Left) && board.ActiveColor >= 0)
         {

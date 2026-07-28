@@ -85,7 +85,7 @@ internal static class SocialActivityList
         DrawTypeBadge(drawList, avatarCenter + new Vector2(radius - 4f * scale, radius - 4f * scale), item.Type,
             theme, scale);
         var textTop = origin.Y + (rowHeight - contentHeight) * 0.5f;
-        var rowHovering = ImGui.IsMouseHoveringRect(origin, rowMax);
+        var rowHovering = UiInteract.Hover(origin, rowMax);
         Marquee.DrawLeft("socialactivity.actor." + item.Id, actorLabel, textLeft, textTop, textWidth,
             new TextStyle(0.95f, FontWeight.SemiBold), theme.TextStrong, rowHovering);
         Typography.Draw(new Vector2(origin.X + width - pad - timeSize.X, textTop + 2f * scale), timeText,
