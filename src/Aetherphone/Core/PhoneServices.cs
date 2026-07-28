@@ -214,7 +214,7 @@ internal sealed class PhoneServices : IDisposable
             visibility, realtimeSignals, installer.Gate(MusterStore.AppId));
         var yellowPages = new YellowPagesStore(aethernetSession, aethernet.Ads, aethernet.Media, configuration,
             visibility, realtimeSignals, installer.Gate(YellowPagesStore.AppId));
-        var adInquiries = new AdInquiryStore(aethernetSession, aethernet.Ads, keyVault, conversationKeys,
+        var adInquiries = new AdInquiryStore(aethernetSession, aethernet.Ads, aethernet.Safety, keyVault, conversationKeys,
             visibility, realtimeSignals, installer.Gate(YellowPagesStore.AppId));
         return new PhoneServices
         {

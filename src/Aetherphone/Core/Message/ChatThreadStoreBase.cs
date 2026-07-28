@@ -6,6 +6,7 @@ using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Notifications;
+using Aetherphone.Core.Report;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Core.Message;
@@ -1059,54 +1060,33 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     public void ReportMessage(string messageId, string? reason, Action<bool> onComplete)
     {
-        var snapshot = messages;
-        var targetIndex = -1;
-        for (var index = 0; index < snapshot.Length; index++)
-        {
-            if (snapshot[index].Id == messageId)
-            {
-                targetIndex = index;
-                break;
-            }
-        }
-
-        if (targetIndex < 0)
+        if (!ReportReveals.TryCollect(messages, messageId, RevealForReport, out var revealed))
         {
             onComplete(false);
             return;
         }
 
-        var reveals = new List<RevealedMessageDto>(6);
-        AppendReveal(reveals, snapshot[targetIndex]);
-        for (var index = targetIndex - 1; index >= 0 && reveals.Count < 6; index--)
-        {
-            AppendReveal(reveals, snapshot[index]);
-        }
-
-        var revealed = reveals.Count > 0 && reveals[0].MessageId == messageId ? reveals.ToArray() : null;
         work.Run("report message", async token =>
             await safety.ReportAsync(ReportTargetType, messageId, reason, token, revealed).ConfigureAwait(false),
             onComplete);
     }
 
-    private void AppendReveal(List<RevealedMessageDto> reveals, TMessage message)
+    private RevealedMessageDto? RevealForReport(TMessage message)
     {
         if (!ShouldRevealForReport(message))
         {
-            return;
+            return null;
         }
 
-        if (MessageEncVersionOf(message) == 0)
+        if (MessageEncVersionOf(message) == EnvelopeCodec.VersionPlaintext)
         {
-            reveals.Add(new RevealedMessageDto(message.Id, MessageBodyOf(message), null));
-            return;
+            return new RevealedMessageDto(message.Id, MessageBodyOf(message), null);
         }
 
         var state = DecryptionState(message.Id);
-        if (state.State == DmBodyState.Decrypted)
-        {
-            reveals.Add(new RevealedMessageDto(message.Id, state.Text, state.FrankingKey));
-        }
+        return state.State == DmBodyState.Decrypted
+            ? new RevealedMessageDto(message.Id, state.Text, state.FrankingKey)
+            : null;
     }
 
     public void Dispose()
