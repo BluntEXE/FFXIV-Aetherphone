@@ -1606,6 +1606,8 @@ internal static class L
         public static readonly LocString RemoveAccountBody = new("account.removeAccountBody", "This signs that account out on this phone and takes it off the list. The account itself and everything in it stay safe. Sign in from that character again whenever you want it back.");
         public static readonly LocString AltSignInTitle = new("account.altSignInTitle", "Not signed in on this character");
         public static readonly LocString AltSignInBody = new("account.altSignInBody", "You're now playing {0}. This character isn't signed in to Aethernet, so social apps, messaging, and calls stay empty until you sign in.");
+        public static readonly LocString SignedOutTitle = new("account.signedOutTitle", "Signed out");
+        public static readonly LocString SignedOutBody = new("account.signedOutBody", "Your Aethernet session ended, so social apps, messaging, and calls stay empty. Open Settings and sign in again to reconnect.");
         public static readonly LocString FailDismiss = new("account.fail.dismiss", "Got it");
         public static readonly LocString FailCharacterNotFoundTitle = new("account.fail.characterNotFound.title", "Character not found");
         public static readonly LocString FailCharacterNotFoundBody = new("account.fail.characterNotFound.body", "We couldn't find {0} on {1} in the Lodestone search. Brand-new characters can take up to a day to appear. In your Character settings, set Character Search to Public, then Verify again. Characters on Chinese or Korean servers aren't on the international Lodestone yet, so they can't be verified.");

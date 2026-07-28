@@ -24,6 +24,7 @@ internal sealed class CharacterSessionManager : IDisposable
     private volatile bool claiming;
     private bool hasHadAccount;
     private bool started;
+    private bool signOutAnnounced;
 
     public CharacterSessionManager(IFramework framework, AethernetSession session, AccountClient account,
         GameData gameData, Configuration configuration, ConfirmService confirm)
@@ -85,6 +86,30 @@ internal sealed class CharacterSessionManager : IDisposable
         {
             FlushSignInPrompt();
         }
+
+        FlushSignOutAlert();
+    }
+
+    public static bool ShouldAnnounceSignOut(bool banned, bool hasHadAccount, ulong contentId, bool announced)
+    {
+        return !banned && hasHadAccount && contentId != 0 && !announced;
+    }
+
+    private void FlushSignOutAlert()
+    {
+        if (!session.TokenRejected)
+        {
+            signOutAnnounced = false;
+            return;
+        }
+
+        if (!ShouldAnnounceSignOut(session.IsBanned, hasHadAccount, lastContentId, signOutAnnounced))
+        {
+            return;
+        }
+
+        signOutAnnounced = true;
+        confirm.Alert(Loc.T(L.Account.SignedOutTitle), Loc.T(L.Account.SignedOutBody), Loc.T(L.Account.FailDismiss));
     }
 
     private void FlushSignInPrompt()

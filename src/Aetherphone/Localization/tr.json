@@ -1256,6 +1256,8 @@
   "account.removeAccountBody": "Bu hesabın telefondaki oturumunu kapatır ve listeden çıkarır. Hesabın kendisi ve içindeki her şey güvende kalır. Geri istediğinde o karakterle yeniden giriş yap.",
   "account.altSignInTitle": "Bu karakterle giriş yapılmadı",
   "account.altSignInBody": "Şu anda {0} ile oynuyorsun. Bu karakter Aethernet'e giriş yapmadı, bu yüzden giriş yapana kadar sosyal uygulamalar, mesajlaşma ve aramalar boş kalır.",
+  "account.signedOutTitle": "Oturum kapatıldı",
+  "account.signedOutBody": "Aethernet oturumun sona erdi, bu yüzden sosyal uygulamalar, mesajlaşma ve aramalar boş kalır. Ayarlar'ı açıp tekrar giriş yaparak bağlanabilirsin.",
   "account.fail.dismiss": "Anladım",
   "account.fail.characterNotFound.title": "Karakter bulunamadı",
   "account.fail.characterNotFound.body": "Lodestone aramasında {1} sunucusundaki {0} bulunamadı. Yeni oluşturulan karakterlerin görünmesi bir günü bulabilir. Karakter ayarlarından Karakter Aramasını Herkese Açık yap, sonra tekrar doğrula. Çin veya Kore sunucularındaki karakterler uluslararası Lodestone'da yer almadığı için şimdilik doğrulanamıyor.",
