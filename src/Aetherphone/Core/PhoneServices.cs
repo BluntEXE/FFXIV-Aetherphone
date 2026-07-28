@@ -52,6 +52,8 @@ internal sealed class PhoneServices : IDisposable
     public required SocialNotificationService SocialNotifications { get; init; }
     public required ModerationNoticeService ModerationNotices { get; init; }
     public required ModerationNoticePresenter ModerationPresenter { get; init; }
+    public required ModerationNoticeArchive ModerationArchive { get; init; }
+    public required SafetyLauncher SafetyLauncher { get; init; }
     public required SoundService Sound { get; init; }
     public required MessageStore Messages { get; init; }
     public required ChatBridge ChatBridge { get; init; }
@@ -206,6 +208,8 @@ internal sealed class PhoneServices : IDisposable
         var moderationNotices = new ModerationNoticeService(aethernetSession, aethernet.Account, framework,
             visibility, realtimeSignals);
         var moderationPresenter = new ModerationNoticePresenter(moderationNotices, confirm, notifications, framework);
+        var moderationArchive = new ModerationNoticeArchive(aethernetSession, aethernet.Account);
+        var safetyLauncher = new SafetyLauncher();
         var musters = new MusterStore(aethernetSession, aethernet.Musters, notifications, configuration,
             visibility, realtimeSignals, installer.Gate(MusterStore.AppId));
         var yellowPages = new YellowPagesStore(aethernetSession, aethernet.Ads, aethernet.Media, configuration,
@@ -227,6 +231,8 @@ internal sealed class PhoneServices : IDisposable
             SocialNotifications = socialNotifications,
             ModerationNotices = moderationNotices,
             ModerationPresenter = moderationPresenter,
+            ModerationArchive = moderationArchive,
+            SafetyLauncher = safetyLauncher,
             Sound = sound,
             Messages = messages,
             ChatBridge = chatBridge,

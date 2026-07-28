@@ -3379,5 +3379,13 @@
   "moderation.notice.moderatorNote": "Moderatörden: {0}",
   "moderation.notice.warningConsequence": "Lütfen topluluk kurallarına uy. Aynı kuralın tekrar tekrar ihlal edilmesi geçici bir askıya almaya yol açabilir.",
   "moderation.notice.thanksTitle": "Herkesi gözettiğin için teşekkürler",
-  "moderation.notice.thanksBody": "Moderatörlerimiz bildirimini inceledi ve gereken yapıldı. Senin gibi bildirimler Aethernet'i güvenli tutuyor ve her birini okuyoruz. Zaman ayırdığın için teşekkür ederiz."
+  "moderation.notice.thanksBody": "Moderatörlerimiz bildirimini inceledi ve gereken yapıldı. Senin gibi bildirimler Aethernet'i güvenli tutuyor ve her birini okuyoruz. Zaman ayırdığın için teşekkür ederiz.",
+  "safety.title": "Moderasyon ve güvenlik",
+  "safety.summary": "Uyarılar ve kaldırmalar",
+  "safety.unreadSummary": "{0} okunmamış",
+  "safety.empty": "Burada bir şey yok. Hesabına dair bir moderatör işlemi yapılmamış.",
+  "safety.signInPrompt": "Hesabına ait moderasyon bildirimlerini görmek için giriş yap.",
+  "safety.retentionHint": "Bildirimler, okunmuş olsun ya da olmasın 180 gün burada kalır.",
+  "safety.loadOlder": "Daha eski bildirimleri yükle",
+  "safety.postedOn": "{0} paylaşmıştın"
 }

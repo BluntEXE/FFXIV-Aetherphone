@@ -126,6 +126,18 @@ internal static class L
         public static readonly LocString DeleteFailed = new("story.deleteFailed", "Couldn't delete the story");
     }
 
+    internal static class Safety
+    {
+        public static readonly LocString Title = new("safety.title", "Moderation and safety");
+        public static readonly LocString Summary = new("safety.summary", "Warnings and removals");
+        public static readonly LocString UnreadSummary = new("safety.unreadSummary", "{0} unread");
+        public static readonly LocString Empty = new("safety.empty", "Nothing here. No moderator has acted on your account.");
+        public static readonly LocString SignInPrompt = new("safety.signInPrompt", "Sign in to see moderation notices for your account.");
+        public static readonly LocString RetentionHint = new("safety.retentionHint", "Notices stay here for 180 days, whether or not you have read them.");
+        public static readonly LocString LoadOlder = new("safety.loadOlder", "Load older notices");
+        public static readonly LocString PostedOn = new("safety.postedOn", "You posted it {0}");
+    }
+
     internal static class Moderation
     {
         public static readonly LocString InReview = new("moderation.inReview", "In review");

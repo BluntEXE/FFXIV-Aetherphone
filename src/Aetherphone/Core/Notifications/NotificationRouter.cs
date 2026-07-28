@@ -1,6 +1,7 @@
 using Aetherphone.Core.Announcements;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Linkpearl;
+using Aetherphone.Core.Moderation;
 using Aetherphone.Core.Muster;
 using Aetherphone.Core.YellowPages;
 
@@ -16,6 +17,7 @@ internal sealed class NotificationRouter
     private const string MusterAppId = "muster";
     private const string YellowPagesAppId = "yellowpages";
     private const string AnnouncementsAppId = "announcements";
+    private const string SettingsAppId = "settings";
     private const int TypeLike = 0;
     private const int TypeComment = 1;
     private const int TypeFollow = 2;
@@ -39,11 +41,12 @@ internal sealed class NotificationRouter
     private readonly MusterLauncher musterLauncher;
     private readonly YellowPagesLauncher yellowPagesLauncher;
     private readonly AnnouncementsLauncher announcementsLauncher;
+    private readonly SafetyLauncher safetyLauncher;
 
     public NotificationRouter(INavigator navigation, NotificationService notifications, LinkpearlLauncher linkpearlLauncher,
         VelvetLauncher velvetLauncher, DmLauncher dmLauncher, GramDmLauncher gramDmLauncher, SocialLauncher socialLauncher,
         MusterLauncher musterLauncher, YellowPagesLauncher yellowPagesLauncher,
-        AnnouncementsLauncher announcementsLauncher)
+        AnnouncementsLauncher announcementsLauncher, SafetyLauncher safetyLauncher)
     {
         this.navigation = navigation;
         this.notifications = notifications;
@@ -55,6 +58,7 @@ internal sealed class NotificationRouter
         this.musterLauncher = musterLauncher;
         this.yellowPagesLauncher = yellowPagesLauncher;
         this.announcementsLauncher = announcementsLauncher;
+        this.safetyLauncher = safetyLauncher;
     }
 
     public void Open(PhoneNotification notification)
@@ -102,6 +106,10 @@ internal sealed class NotificationRouter
         else if (notification.AppId == AnnouncementsAppId && !string.IsNullOrEmpty(notification.GroupKey))
         {
             announcementsLauncher.RequestDetail(notification.GroupKey);
+        }
+        else if (notification.AppId == SettingsAppId)
+        {
+            safetyLauncher.Request();
         }
         else if (SocialLinkFor(notification) is { } link)
         {

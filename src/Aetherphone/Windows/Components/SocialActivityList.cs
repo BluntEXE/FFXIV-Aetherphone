@@ -22,7 +22,7 @@ internal static class SocialActivityList
         var count = 0;
         for (var index = 0; index < items.Length; index++)
         {
-            if (items[index].App == app)
+            if (Shows(items[index], app))
             {
                 count++;
             }
@@ -40,7 +40,7 @@ internal static class SocialActivityList
             ImGui.Dummy(new Vector2(0f, 6f * scale));
             for (var index = 0; index < items.Length; index++)
             {
-                if (items[index].App == app)
+                if (Shows(items[index], app))
                 {
                     DrawRow(items[index], ui, palette, theme, images, lodestone, openActor, openPost);
                 }
@@ -52,6 +52,11 @@ internal static class SocialActivityList
                 loadOlder();
             }
         }
+    }
+
+    private static bool Shows(NotificationDto item, string app)
+    {
+        return item.App == app && !SocialActivity.IsModerationNotice(item.Type);
     }
 
     private static void DrawRow(NotificationDto item, AppSkin ui, AppPalette palette, PhoneTheme theme,

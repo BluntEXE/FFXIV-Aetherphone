@@ -1,6 +1,7 @@
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Moderation;
+using Aetherphone.Core.Social;
 using Xunit;
 
 namespace Aetherphone.Tests;
@@ -105,6 +106,28 @@ public sealed class ModerationNoticeTests
         var body = ModerationNoticeText.Body(Notice(kind: ModerationNoticeKinds.ReportOutcome));
         Assert.Contains("has been handled", body);
         Assert.DoesNotContain("action has been taken", body);
+    }
+
+    [Fact]
+    public void ModerationRowsAreKeptOutOfTheSocialActivityTabs()
+    {
+        Assert.True(SocialActivity.IsModerationNotice(SocialActivity.TypePostRemoved));
+        Assert.True(SocialActivity.IsModerationNotice(SocialActivity.TypeWarning));
+        Assert.True(SocialActivity.IsModerationNotice(SocialActivity.TypeReportUpdate));
+        Assert.False(SocialActivity.IsModerationNotice(SocialActivity.TypeLike));
+        Assert.False(SocialActivity.IsModerationNotice(SocialActivity.TypeComment));
+        Assert.False(SocialActivity.IsModerationNotice(SocialActivity.TypeAdHidden));
+    }
+
+    [Fact]
+    public void TheSafetyLauncherFiresOnceAndThenGoesQuiet()
+    {
+        var launcher = new SafetyLauncher();
+        Assert.False(launcher.TryConsume());
+
+        launcher.Request();
+        Assert.True(launcher.TryConsume());
+        Assert.False(launcher.TryConsume());
     }
 
     [Fact]

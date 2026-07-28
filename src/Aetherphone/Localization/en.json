@@ -3379,5 +3379,13 @@
   "moderation.notice.moderatorNote": "From the moderator: {0}",
   "moderation.notice.warningConsequence": "Please follow the community guidelines. Repeated breaks of the same rule can lead to a temporary suspension.",
   "moderation.notice.thanksTitle": "Thanks for looking out for everyone",
-  "moderation.notice.thanksBody": "Our moderators reviewed your report and it has been handled. Reports like yours are what keep Aethernet safe, and we read every single one. Thank you for taking the time."
+  "moderation.notice.thanksBody": "Our moderators reviewed your report and it has been handled. Reports like yours are what keep Aethernet safe, and we read every single one. Thank you for taking the time.",
+  "safety.title": "Moderation and safety",
+  "safety.summary": "Warnings and removals",
+  "safety.unreadSummary": "{0} unread",
+  "safety.empty": "Nothing here. No moderator has acted on your account.",
+  "safety.signInPrompt": "Sign in to see moderation notices for your account.",
+  "safety.retentionHint": "Notices stay here for 180 days, whether or not you have read them.",
+  "safety.loadOlder": "Load older notices",
+  "safety.postedOn": "You posted it {0}"
 }

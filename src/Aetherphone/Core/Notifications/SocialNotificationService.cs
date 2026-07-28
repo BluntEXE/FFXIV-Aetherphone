@@ -200,7 +200,7 @@ internal sealed class SocialNotificationService : IDisposable
         for (var index = items.Length - 1; index >= 0; index--)
         {
             var item = items[index];
-            if (IsModerationNotice(item.Type) || !installer.IsInstalled(item.App))
+            if (SocialActivity.IsModerationNotice(item.Type) || !installer.IsInstalled(item.App))
             {
                 continue;
             }
@@ -248,13 +248,6 @@ internal sealed class SocialNotificationService : IDisposable
         }
 
         return kept;
-    }
-
-    private static bool IsModerationNotice(int type)
-    {
-        return type is SocialActivity.TypePostRemoved
-            or SocialActivity.TypeWarning
-            or SocialActivity.TypeReportUpdate;
     }
 
     private void Present(NotificationDto item)
