@@ -1,4 +1,3 @@
-using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
@@ -30,7 +29,6 @@ internal sealed class PhoneShell : IDisposable
     private const float ShakeAmplitude = 3f;
     private static readonly TimeSpan ScreenVisibleGrace = TimeSpan.FromSeconds(0.5);
 
-    private readonly AethernetSession session;
     private readonly Configuration configuration;
     private readonly LoadingScreen loading;
     private readonly WallpaperLibrary wallpapers;
@@ -59,7 +57,6 @@ internal sealed class PhoneShell : IDisposable
 
     public PhoneShell(PhoneServices services, AppBundle bundle)
     {
-        session = services.AethernetSession;
         configuration = services.Configuration;
         loading = services.Loading;
         wallpapers = services.Wallpapers;
@@ -233,11 +230,6 @@ internal sealed class PhoneShell : IDisposable
                 configuration.LockPosition = !configuration.LockPosition;
                 configuration.Save();
             }
-        }
-
-        if (!session.IsSignedIn && !navigation.AtHome)
-        {
-            navigation.GoHome();
         }
 
         SyncCallNavigation();
