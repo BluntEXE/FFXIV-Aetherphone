@@ -51,7 +51,7 @@ internal static class WidgetChrome
         var upper = Loc.Culture.TextInfo.ToUpper(text);
         var tinted = color with { W = color.W * opacity };
         var tracking = EyebrowTracking * scale;
-        var fullWidth = MeasureTrackedWidth(upper, EyebrowFontScale, FontWeight.SemiBold, tracking);
+        var fullWidth = EyebrowWidth(text, scale);
         var height = EyebrowHeight();
         var hovering = ImGui.IsMouseHoveringRect(position, position + new Vector2(MathF.Min(fullWidth, maxWidth), height));
         if (fullWidth <= maxWidth)
@@ -74,24 +74,6 @@ internal static class WidgetChrome
             true);
         Tracked(drawList, position with { X = position.X - offset }, upper, tinted, EyebrowFontScale, FontWeight.SemiBold, tracking);
         drawList.PopClipRect();
-    }
-
-    private static float MeasureTrackedWidth(string text, float fontScale, FontWeight weight, float tracking)
-    {
-        using (Plugin.Fonts.Push(fontScale, weight))
-        {
-            var width = 0f;
-            Span<char> buffer = stackalloc char[1];
-            for (var index = 0; index < text.Length; index++)
-            {
-                buffer[0] = text[index];
-                width += ImGui.CalcTextSize(new string(buffer)).X;
-                if (index < text.Length - 1)
-                    width += tracking;
-            }
-
-            return width;
-        }
     }
 
     public static void Tracked(ImDrawListPtr drawList, Vector2 position, string text, Vector4 color, float fontScale,

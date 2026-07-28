@@ -250,7 +250,7 @@ internal sealed class BreakoutApp : IMiniGame
         var lastLife = board.Lives == 1;
         var radius = 4f * scale;
         var origin = new Vector2(body.Min.X + 22f * scale, rowY);
-        for (var life = 0; life < 3; life++)
+        for (var life = 0; life < BreakoutBoard.StartingLives; life++)
         {
             var center = new Vector2(origin.X, origin.Y + (life - 1) * radius * 3.2f);
             if (life >= board.Lives)

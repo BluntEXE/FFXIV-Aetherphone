@@ -78,8 +78,8 @@ internal sealed partial class VelvetShell
             var textWidth = width - HeroTextInset * 2f * scale;
             var lineTop = avatarCenter.Y + radius + 16f * scale;
             var badgeSpace = user.Verified ? 24f * scale : 0f;
-            var displayName = Typography.FitText(name, textWidth - badgeSpace, TextStyles.Title1);
-            var nameSize = Typography.Measure(displayName, TextStyles.Title1);
+            var nameWidth = MathF.Min(Typography.Measure(name, TextStyles.Title1).X, textWidth - badgeSpace);
+            var nameSize = new Vector2(nameWidth, Typography.Measure(name, TextStyles.Title1).Y);
             var nameX = centerX - (nameSize.X + badgeSpace) * 0.5f;
             var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(nameX, lineTop),
                 new Vector2(nameX + nameSize.X, lineTop + nameSize.Y));

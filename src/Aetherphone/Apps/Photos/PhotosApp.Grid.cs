@@ -108,7 +108,7 @@ internal sealed partial class PhotosApp
         }
 
         var addPhotosLabel = Loc.T(L.Photos.AddPhotos);
-        var addPhotosWidth = Typography.Measure(addPhotosLabel, 0.9f, FontWeight.SemiBold).X + 28f * scale + 6f * scale;
+        var addPhotosWidth = AppSkin.HeaderActionWidth(addPhotosLabel);
         DrawNavBar(area, album.Name, back, addPhotosWidth + 12f * scale + 12f * scale);
         if (ui.HeaderAction(area, addPhotosLabel, entries.Length > 0))
         {

@@ -24,6 +24,8 @@ internal sealed partial class YellowPagesApp
     private const int SectionFallbackRebuildSeconds = 30;
     private const long OpeningSoonLeadSeconds = 8L * 3600L;
 
+    private static readonly Dictionary<string, string[]> IntentLabelWords = new();
+
     private readonly List<AdDto> openSection = new();
     private readonly List<AdDto> latestSection = new();
     private readonly ChipRail intentRail = new();
@@ -417,8 +419,6 @@ internal sealed partial class YellowPagesApp
 
         return UiInteract.Click(min, max, hovered);
     }
-
-    private static readonly Dictionary<string, string[]> IntentLabelWords = new();
 
     private static string[] WordsOf(string label)
     {
