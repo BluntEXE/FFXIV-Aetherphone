@@ -39,8 +39,10 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     private readonly PollCadence inboxCadence;
     private readonly object messagesLock = new();
     private readonly Dictionary<string, long> inboxLastAt = new();
+    private static readonly TimeSpan MediaUrlFailureRetryFor = TimeSpan.FromMinutes(2);
     private readonly ConcurrentDictionary<string, string> dmMediaUrls = new();
     private readonly ConcurrentDictionary<string, byte> dmMediaLoading = new();
+    private readonly ConcurrentDictionary<string, DateTime> dmMediaFailed = new();
     private readonly Comparison<TMessage> messageOrder;
 
     private volatile TThread[] threadList = Array.Empty<TThread>();
@@ -115,6 +117,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         inboxPrimed = false;
         currentKeyStatus = ChatKeyStatus.None;
         dmMediaUrls.Clear();
+        dmMediaFailed.Clear();
         cipher.Clear();
         OnCipherCleared();
         vaultRefreshRequested = false;
@@ -1024,6 +1027,16 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
             return url;
         }
 
+        if (dmMediaFailed.TryGetValue(messageId, out var failedAtUtc))
+        {
+            if (DateTime.UtcNow - failedAtUtc < MediaUrlFailureRetryFor)
+            {
+                return null;
+            }
+
+            dmMediaFailed.TryRemove(messageId, out _);
+        }
+
         if (!dmMediaLoading.TryAdd(messageId, 0))
         {
             return null;
@@ -1035,6 +1048,10 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
             if (result is not null)
             {
                 dmMediaUrls[messageId] = result;
+            }
+            else
+            {
+                dmMediaFailed[messageId] = DateTime.UtcNow;
             }
         }, () => dmMediaLoading.TryRemove(messageId, out _));
         return null;
