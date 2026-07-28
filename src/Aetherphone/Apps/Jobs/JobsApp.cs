@@ -217,7 +217,8 @@ internal sealed partial class JobsApp : IPhoneApp
         var categoriesCenter = new Vector2(buttonCenter.X - radius * 2f - 10f * scale, rowCenterY);
         var clusterLeftEdge = (hasCategories ? categoriesCenter.X : buttonCenter.X) - radius;
         var rightReserve = content.Max.X - clusterLeftEdge + 8f * scale;
-        AppHeader.DrawTitleWithReserve(content, "jobs.header.title", DisplayName, rightReserve, ui.TitleInk, scale);
+        AppHeader.DrawTitleWithReserve(content, "jobs.header.title", DisplayName, rightReserve, ui.TitleInk, scale,
+            leftReserve: 0f);
 
         colorButtonRect = new Rect(buttonCenter - new Vector2(radius, radius), buttonCenter + new Vector2(radius, radius));
         UiAnchors.Report("jobs.color", colorButtonRect);
@@ -386,13 +387,12 @@ internal sealed partial class JobsApp : IPhoneApp
         var textRight = noteRight -
                         (note.Length == 0 ? 0f : Typography.Measure(note, TextStyles.Caption2).X + 28f * scale);
         var maxTextWidth = MathF.Max(1f, textRight - textLeft);
-        var rowId = job.Kind == JobEntryKind.Gearset ? "jobs.row.gearset." + job.GearsetId : "jobs.row.class." + job.ClassJobId;
-        Marquee.DrawLeftAuto(drawList, rowId + ".name", job.Name, textLeft, contentRect.Min.Y + 12f * scale,
+        Marquee.DrawLeftAuto(drawList, job.NameRowId, job.Name, textLeft, contentRect.Min.Y + 12f * scale,
             maxTextWidth, TextStyles.Headline, ui.TitleInk);
         var subtitle = job.ItemLevel >= 0
             ? Loc.T(L.Jobs.LevelItemLevel, job.Abbreviation, job.Level, job.ItemLevel)
             : Loc.T(L.Jobs.LevelOnly, job.Abbreviation, job.Level);
-        Marquee.DrawLeftAuto(drawList, rowId + ".sub", subtitle, textLeft, contentRect.Min.Y + 36f * scale,
+        Marquee.DrawLeftAuto(drawList, job.SubRowId, subtitle, textLeft, contentRect.Min.Y + 36f * scale,
             maxTextWidth, TextStyles.Footnote, ui.MutedInk);
 
         var noteCenter = new Vector2(noteRight, contentRect.Center.Y);

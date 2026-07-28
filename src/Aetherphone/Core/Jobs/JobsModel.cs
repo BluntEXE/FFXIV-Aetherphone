@@ -33,6 +33,9 @@ internal sealed class JobEntry
         ItemLevel = itemLevel;
         IconId = iconId;
         IsActive = isActive;
+        var rowId = kind == JobEntryKind.Gearset ? "jobs.row.gearset." + gearsetId : "jobs.row.class." + classJobId;
+        NameRowId = rowId + ".name";
+        SubRowId = rowId + ".sub";
     }
 
     public JobEntryKind Kind { get; }
@@ -41,6 +44,8 @@ internal sealed class JobEntry
     public string Abbreviation { get; }
     public string Name { get; }
     public int Level { get; }
+    public string NameRowId { get; }
+    public string SubRowId { get; }
 
     /// <summary>-1 when the item level is unknown (a class with no gearset that isn't currently active).</summary>
     public int ItemLevel { get; }

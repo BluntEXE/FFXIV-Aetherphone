@@ -38,10 +38,10 @@ internal static class AppHeader
     }
 
     public static void DrawTitleWithReserve(Rect area, string id, string title, float rightReserve, Vector4 color,
-        float scale)
+        float scale, float leftReserve = 44f)
     {
         var rowCenterY = area.Min.Y + Height * scale * 0.5f;
-        var leftLimit = area.Min.X + 44f * scale;
+        var leftLimit = area.Min.X + leftReserve * scale;
         var rightLimit = area.Max.X - rightReserve;
         var maxWidth = MathF.Max(1f, rightLimit - leftLimit);
         var titleSize = Typography.Measure(title, 1.15f, FontWeight.SemiBold);
