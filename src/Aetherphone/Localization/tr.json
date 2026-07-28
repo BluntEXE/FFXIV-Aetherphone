@@ -701,6 +701,8 @@
   "settings.commandMarket": "Pazar tahtasını açar, isteğe bağlı eşya araması yapar",
   "settings.commandReset": "Telefonu ekranın ortasına geri getirir",
   "settings.commandTest": "Örnek bir bildirim gönderir",
+  "changelog.r0994.0": "Oturum kapalıyken uygulamaların açılır açılmaz kapanıp sizi ana ekrana döndürmesi düzeltildi",
+  "changelog.r0994.1": "Ayarlar da aynı şekilde kapanıyor ve yeniden oturum açmanın hiçbir yolu kalmıyordu: artık Ayarlar'ı açıp tekrar oturum açabilirsiniz",
   "changelog.r0993.0": "Oturum kapalıyken telefon artık hiçbir ağ isteği göndermiyor; başlık ekranından çalışan arka plan denemeleri de buna dahil",
   "changelog.r0993.1": "Yüklenemeyen fotoğraf ve sesli mesajların durmadan yeniden denemesi düzeltildi; telefon artık yeniden denemeden önce birkaç dakika bekliyor",
   "changelog.r0993.2": "Velvet yorumlarının metni yanlış genişlikte kaydırması düzeltildi",

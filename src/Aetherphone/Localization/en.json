@@ -701,6 +701,8 @@
   "settings.commandMarket": "Open the market board, optionally searching an item",
   "settings.commandReset": "Move the phone back to the center of the screen",
   "settings.commandTest": "Send a sample notification",
+  "changelog.r0994.0": "Fixed apps closing the instant you opened them and returning you to the home screen while you were signed out",
+  "changelog.r0994.1": "Fixed Settings closing the same way, which had left no way to sign back in; you can now open Settings and sign in again",
   "changelog.r0993.0": "Stopped the phone from making any network requests while you are signed out, including the background retries that used to run from the title screen",
   "changelog.r0993.1": "Fixed photos and voice notes that fail to load retrying nonstop; the phone now waits a couple of minutes before trying again",
   "changelog.r0993.2": "Fixed Velvet comments wrapping their text at the wrong width",

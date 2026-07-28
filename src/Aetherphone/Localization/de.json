@@ -701,6 +701,8 @@
   "settings.commandMarket": "Öffnet das Marktbrett, optional mit Gegenstandssuche",
   "settings.commandReset": "Holt das Telefon zurück in die Bildschirmmitte",
   "settings.commandTest": "Sendet eine Beispielbenachrichtigung",
+  "changelog.r0994.0": "Apps schließen sich nicht mehr sofort nach dem Öffnen und werfen dich zurück auf den Startbildschirm, während du abgemeldet bist",
+  "changelog.r0994.1": "Die Einstellungen schlossen sich genauso, sodass keine erneute Anmeldung möglich war: Du kannst die Einstellungen jetzt wieder öffnen und dich anmelden",
   "changelog.r0993.0": "Das Telefon sendet keine Netzwerkanfragen mehr, solange du abgemeldet bist, einschließlich der Hintergrundversuche, die vom Titelbildschirm aus liefen",
   "changelog.r0993.1": "Fotos und Sprachnachrichten, die nicht geladen werden konnten, versuchen es nicht mehr pausenlos erneut: Das Telefon wartet jetzt ein paar Minuten bis zum nächsten Versuch",
   "changelog.r0993.2": "Velvet-Kommentare brechen ihren Text nicht mehr an der falschen Breite um",

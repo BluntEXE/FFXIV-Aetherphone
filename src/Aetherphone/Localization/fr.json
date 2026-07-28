@@ -701,6 +701,8 @@
   "settings.commandMarket": "Ouvre l'hôtel des ventes, avec recherche d'objet en option",
   "settings.commandReset": "Ramène le téléphone au centre de l'écran",
   "settings.commandTest": "Envoie une notification d'exemple",
+  "changelog.r0994.0": "Correction des applications qui se fermaient dès leur ouverture et vous renvoyaient à l'écran d'accueil quand vous étiez déconnecté",
+  "changelog.r0994.1": "Les Réglages se fermaient de la même façon, ce qui ne laissait aucun moyen de se reconnecter : vous pouvez désormais ouvrir les Réglages et vous reconnecter",
   "changelog.r0993.0": "Le téléphone n'envoie plus aucune requête réseau quand vous êtes déconnecté, y compris les tentatives en arrière-plan qui tournaient depuis l'écran titre",
   "changelog.r0993.1": "Les photos et les messages vocaux qui échouent à se charger ne réessaient plus sans arrêt : le téléphone attend désormais quelques minutes avant de réessayer",
   "changelog.r0993.2": "Les commentaires Velvet ne coupent plus leur texte à la mauvaise largeur",

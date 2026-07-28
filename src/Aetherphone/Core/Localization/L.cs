@@ -901,6 +901,12 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release0994 =
+        {
+            new("changelog.r0994.0", "Fixed apps closing the instant you opened them and returning you to the home screen while you were signed out"),
+            new("changelog.r0994.1", "Fixed Settings closing the same way, which had left no way to sign back in; you can now open Settings and sign in again"),
+        };
+
         public static readonly LocString[] Release0993 =
         {
             new("changelog.r0993.0", "Stopped the phone from making any network requests while you are signed out, including the background retries that used to run from the title screen"),

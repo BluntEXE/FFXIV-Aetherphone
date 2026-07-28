@@ -701,6 +701,8 @@
   "settings.commandMarket": "Abrir el tablón de mercado, opcionalmente buscando un objeto",
   "settings.commandReset": "Mover el teléfono de vuelta al centro de la pantalla",
   "settings.commandTest": "Enviar una notificación de prueba",
+  "changelog.r0994.0": "Se corrigió que las aplicaciones se cerraran nada más abrirlas y te devolvieran a la pantalla de inicio mientras tenías la sesión cerrada",
+  "changelog.r0994.1": "Los Ajustes se cerraban igual, lo que dejaba sin manera de volver a iniciar sesión: ahora puedes abrir los Ajustes e iniciar sesión de nuevo",
   "changelog.r0993.0": "El teléfono ya no envía ninguna solicitud de red mientras tienes la sesión cerrada, incluidos los reintentos en segundo plano que se ejecutaban desde la pantalla de título",
   "changelog.r0993.1": "Las fotos y los mensajes de voz que fallan al cargar ya no lo reintentan sin parar: el teléfono ahora espera unos minutos antes de volver a intentarlo",
   "changelog.r0993.2": "Los comentarios de Velvet ya no ajustan su texto con el ancho equivocado",
