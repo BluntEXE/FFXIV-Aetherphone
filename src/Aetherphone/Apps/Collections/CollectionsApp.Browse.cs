@@ -638,7 +638,7 @@ internal sealed partial class CollectionsApp
             var centerY = (rowMin.Y + rowMax.Y) * 0.5f;
             var label = index == 0 ? Loc.T(L.Collections.AllSources) : sourceList[index - 1];
             var selected = index == sourceIndex;
-            var hovered = UiInteract.Hover(rowMin, rowMax);
+            var hovered = UiInteract.HoverWindowOnly(rowMin, rowMax);
             if (hovered)
             {
                 Squircle.Fill(drawList, rowMin, rowMax, 9f * scale, ImGui.GetColorU32(ui.HoverTint));
@@ -670,8 +670,8 @@ internal sealed partial class CollectionsApp
             return;
         }
 
-        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !UiInteract.Hover(min, max, false) &&
-            !UiInteract.Hover(sourceMenuAnchor.Min, sourceMenuAnchor.Max, false))
+        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !UiInteract.HoverWindowOnly(min, max, false) &&
+            !UiInteract.HoverWindowOnly(sourceMenuAnchor.Min, sourceMenuAnchor.Max, false))
         {
             sourceMenuOpen = false;
         }

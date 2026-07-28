@@ -69,7 +69,7 @@ internal sealed class ShareSheet
                 return;
             }
 
-            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !UiInteract.Hover(panel.Min, panel.Max))
+            if (UiInteract.ClickedOutside(panel.Min, panel.Max))
             {
                 service.Dismiss();
             }

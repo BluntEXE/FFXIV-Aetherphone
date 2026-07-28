@@ -22,7 +22,7 @@ internal sealed class DragTracker
         }
 
         var position = ImGui.GetMousePos();
-        if (!UiInteract.Hover(startZone.Min, startZone.Max))
+        if (!UiInteract.HoverWindowOnly(startZone.Min, startZone.Max))
         {
             return false;
         }

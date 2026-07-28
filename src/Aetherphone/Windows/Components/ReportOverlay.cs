@@ -90,8 +90,7 @@ internal sealed class ReportOverlay
                 return;
             }
 
-            if (!service.Busy && ImGui.IsMouseClicked(ImGuiMouseButton.Left) &&
-                !UiInteract.Hover(cardRect.Min, cardRect.Max))
+            if (!service.Busy && UiInteract.ClickedOutside(cardRect.Min, cardRect.Max))
             {
                 service.Dismiss();
             }

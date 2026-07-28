@@ -297,8 +297,7 @@ internal sealed partial class MusicApp
                 DrawPickCard(drawList, cardRect, scale, interactive);
             }
 
-            if (interactive && ImGui.IsMouseClicked(ImGuiMouseButton.Left) &&
-                !UiInteract.Hover(cardMin, cardMax))
+            if (interactive && UiInteract.ClickedOutside(cardMin, cardMax))
             {
                 if (overlay == OverlayMode.Name)
                 {

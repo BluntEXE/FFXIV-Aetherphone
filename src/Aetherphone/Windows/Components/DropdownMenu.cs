@@ -156,8 +156,8 @@ internal sealed class DropdownMenu
                 cursorRight -= actionSlot;
             }
 
-            var rowHovered = UiInteract.Hover(rowMin, rowMax);
-            var editHovered = item.CanEdit && editRect is { } er && UiInteract.Hover(er.Min, er.Max);
+            var rowHovered = UiInteract.HoverWindowOnly(rowMin, rowMax);
+            var editHovered = item.CanEdit && editRect is { } er && UiInteract.HoverWindowOnly(er.Min, er.Max);
             if (rowHovered)
             {
                 Squircle.Fill(drawList, rowMin, rowMax, 9f * scale,
@@ -210,7 +210,7 @@ internal sealed class DropdownMenu
             return clicked;
         }
 
-        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !UiInteract.Hover(min, max, false) &&
+        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !UiInteract.HoverWindowOnly(min, max, false) &&
             ImGui.GetFrameCount() != openedFrame)
         {
             Close();

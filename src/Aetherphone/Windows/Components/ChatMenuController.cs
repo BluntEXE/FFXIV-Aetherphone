@@ -225,7 +225,7 @@ internal sealed class ChatMenuController
             var center = new Vector2(min.X + padding + slot * (index + 0.5f), (min.Y + max.Y) * 0.5f);
             var hitMin = new Vector2(center.X - slot * 0.5f, min.Y);
             var hitMax = new Vector2(center.X + slot * 0.5f, max.Y);
-            var hovered = UiInteract.Hover(hitMin, hitMax);
+            var hovered = UiInteract.HoverWindowOnly(hitMin, hitMax);
             if (token == myReaction)
             {
                 drawList.AddCircleFilled(center, 14f * scale,

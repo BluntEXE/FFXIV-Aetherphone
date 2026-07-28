@@ -47,6 +47,27 @@ internal static class UiInteract
     public static bool Hover(Vector2 min, Vector2 max) =>
         !InputBlocked && !MouseOverOverlay && WindowHovered && ImGui.IsMouseHoveringRect(min, max);
 
+    /// <summary>
+    /// <see cref="Hover(Vector2, Vector2)"/> without the <see cref="InputBlocked"/> or
+    /// <see cref="MouseOverOverlay"/> gates, for content that is itself the reason those gates are set
+    /// this frame: a dropdown/picker drawn while its host calls <see cref="BlockThisFrame"/>, or a drag
+    /// start zone that must stay live independent of another overlay's reservation.
+    /// </summary>
+    public static bool HoverWindowOnly(Vector2 min, Vector2 max) => WindowHovered && ImGui.IsMouseHoveringRect(min, max);
+
+    public static bool HoverWindowOnly(Vector2 min, Vector2 max, bool clip) =>
+        WindowHovered && ImGui.IsMouseHoveringRect(min, max, clip);
+
+    /// <summary>
+    /// True when the left mouse button was just clicked inside this phone window but outside
+    /// <paramref name="min"/>/<paramref name="max"/> — the standard "tap outside to dismiss" test.
+    /// Unlike a negated <see cref="Hover"/>, requiring <see cref="WindowHovered"/> directly means a
+    /// click that lands in an unrelated window (where <see cref="WindowHovered"/> is false) can't be
+    /// mistaken for an outside-click on an overlay it never touched.
+    /// </summary>
+    public static bool ClickedOutside(Vector2 min, Vector2 max) =>
+        WindowHovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !ImGui.IsMouseHoveringRect(min, max);
+
     public static bool Hover(Vector2 min, Vector2 max, bool clip) =>
         !InputBlocked && !MouseOverOverlay && WindowHovered && ImGui.IsMouseHoveringRect(min, max, clip);
 

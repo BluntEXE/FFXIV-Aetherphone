@@ -73,8 +73,7 @@ internal sealed class ConfirmOverlay
             {
                 service.CancelActive();
             }
-            else if (!service.Busy && ImGui.IsMouseClicked(ImGuiMouseButton.Left) &&
-                     !UiInteract.Hover(cardRect.Min, cardRect.Max))
+            else if (!service.Busy && UiInteract.ClickedOutside(cardRect.Min, cardRect.Max))
             {
                 service.CancelActive();
             }

@@ -159,8 +159,7 @@ internal sealed class PersonPicker
         }
 
         if (ImGui.GetFrameCount() > openedFrame + 1
-            && ImGui.IsMouseClicked(ImGuiMouseButton.Left)
-            && !UiInteract.Hover(min, max))
+            && UiInteract.ClickedOutside(min, max))
         {
             Close();
             return null;
