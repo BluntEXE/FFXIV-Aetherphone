@@ -2,7 +2,6 @@ using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
-using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Social;
@@ -24,7 +23,6 @@ internal sealed class SocialNotificationService : IDisposable
     };
 
     private readonly AethernetSession session;
-    private readonly ConfirmService confirm;
     private readonly AppInstaller installer;
     private readonly AccountClient client;
     private readonly NotificationService notifications;
@@ -41,10 +39,9 @@ internal sealed class SocialNotificationService : IDisposable
 
     public SocialNotificationService(AethernetSession session, AccountClient client, NotificationService notifications,
         Configuration configuration, IFramework framework, PhoneVisibility visibility, RealtimeSignalBus signals,
-        ConfirmService confirm, AppInstaller installer)
+        AppInstaller installer)
     {
         this.session = session;
-        this.confirm = confirm;
         this.installer = installer;
         this.client = client;
         this.notifications = notifications;
@@ -200,26 +197,15 @@ internal sealed class SocialNotificationService : IDisposable
     private void Ingest(NotificationDto[] items)
     {
         var wasPrimed = primed;
-        var moderationMarker = configuration.ModerationNoticeSeenUnix;
-        var moderationSeeded = moderationMarker != 0;
-        var newestModeration = moderationMarker;
         for (var index = items.Length - 1; index >= 0; index--)
         {
             var item = items[index];
-            var isModeration = IsModerationNotice(item.Type);
-            if (isModeration && item.CreatedAtUnix > newestModeration)
-            {
-                newestModeration = item.CreatedAtUnix;
-            }
-
-            if (!isModeration && !installer.IsInstalled(item.App))
+            if (IsModerationNotice(item.Type) || !installer.IsInstalled(item.App))
             {
                 continue;
             }
 
-            var freshModeration = isModeration && moderationSeeded && item.CreatedAtUnix > moderationMarker;
-            var freshSession = wasPrimed && !seenIds.Contains(item.Id);
-            if (freshModeration || freshSession)
+            if (wasPrimed && !seenIds.Contains(item.Id))
             {
                 Present(item);
             }
@@ -229,12 +215,6 @@ internal sealed class SocialNotificationService : IDisposable
         for (var index = 0; index < items.Length; index++)
         {
             seenIds.Add(items[index].Id);
-        }
-
-        if (newestModeration > configuration.ModerationNoticeSeenUnix)
-        {
-            configuration.ModerationNoticeSeenUnix = newestModeration;
-            configuration.Save();
         }
 
         latest = KeepInstalled(items);
@@ -285,8 +265,7 @@ internal sealed class SocialNotificationService : IDisposable
             return;
         }
 
-        var moderationTitle = ModerationTitle(item);
-        var title = moderationTitle ?? AdTitle(item) ?? SocialActivity.ActorLabel(item);
+        var title = AdTitle(item) ?? SocialActivity.ActorLabel(item);
         var groupKey = item.App == SocialActivity.YellowPagesApp ? item.PostId : null;
         notifications.Notify(new PhoneNotification(item.App, title, body, DateTime.Now,
             AccentFor(item.App), groupKey)
@@ -295,14 +274,6 @@ internal sealed class SocialNotificationService : IDisposable
             PostId = item.PostId,
             SocialType = item.Type,
         });
-
-        if (moderationTitle is not null)
-        {
-            var alertBody = item.Type == SocialActivity.TypePostRemoved
-                ? $"{body}\n\n{Loc.T(L.Moderation.RemovedFooter)}"
-                : body;
-            confirm.Alert(moderationTitle, alertBody, Loc.T(L.Moderation.RemovedDismiss));
-        }
     }
 
     private static string? AdTitle(NotificationDto item)
@@ -313,19 +284,6 @@ internal sealed class SocialNotificationService : IDisposable
             SocialActivity.TypeAdHidden => Loc.T(L.YellowPages.NotifHiddenTitle),
             SocialActivity.TypeAdOpened => Loc.T(L.YellowPages.NotifOpenedTitle),
             SocialActivity.TypeAdInquiry => Loc.T(L.YellowPages.NotifInquiryTitle),
-            _ => null,
-        };
-    }
-
-    private static string? ModerationTitle(NotificationDto item)
-    {
-        return item.Type switch
-        {
-            SocialActivity.TypePostRemoved => Loc.T(string.IsNullOrEmpty(item.CommentId)
-                ? L.Moderation.RemovedTitle
-                : L.Moderation.RemovedCommentTitle),
-            SocialActivity.TypeWarning => Loc.T(L.Moderation.WarningTitle),
-            SocialActivity.TypeReportUpdate => Loc.T(L.Moderation.ReportUpdateTitle),
             _ => null,
         };
     }

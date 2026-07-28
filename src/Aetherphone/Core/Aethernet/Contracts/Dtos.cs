@@ -396,6 +396,31 @@ internal sealed record NotificationDto(
 
 internal sealed record NotificationPage(NotificationDto[] Items, string? NextCursor = null);
 
+internal sealed record ModerationNoticeDto(
+    string Id,
+    int Kind,
+    string App,
+    string Surface,
+    string ContentType,
+    string? ContentId,
+    string ContentExcerpt,
+    int MediaCount,
+    string RuleCode,
+    string RuleTitle,
+    string RuleSummary,
+    string ReasonCode,
+    string ModeratorNote,
+    string Detail,
+    long? ContentCreatedAtUnix,
+    long? BanUntilUnix,
+    long CreatedAtUnix,
+    bool Acknowledged) : IIdentified;
+
+internal sealed record ModerationNoticePage(
+    ModerationNoticeDto[] Items,
+    int PendingCount,
+    string? NextCursor = null);
+
 internal sealed record CreateFeedbackRequest(string Text, string[] ImageKeys);
 
 internal sealed record PollTranslationDto(string Lang, string Question, string[] Options);
