@@ -30,24 +30,27 @@ internal static class ImageProcessor
     private const int JpegQuality = 88;
 
     private const long MaxDecodePixels = 4096L * 4096L;
+    private const long MaxLocalDecodePixels = 8192L * 8192L;
     private static readonly DecoderOptions SingleFrame = new() { MaxFrames = 1 };
 
-    private static void EnsureDecodable(Stream stream)
+    private static void EnsureDecodable(Stream stream, long maxPixels)
     {
         var info = Image.Identify(stream);
         stream.Position = 0;
 
-        if ((long)info.Width * info.Height > MaxDecodePixels)
+        if ((long)info.Width * info.Height > maxPixels)
         {
             throw new InvalidImageContentException(
-                $"Image dimensions {info.Width}x{info.Height} exceed the {MaxDecodePixels} pixel limit.");
+                $"Image dimensions {info.Width}x{info.Height} exceed the {maxPixels} pixel limit.");
         }
     }
+
+    private static void EnsureDecodable(Stream stream) => EnsureDecodable(stream, MaxDecodePixels);
 
     private static void EnsureDecodable(string path)
     {
         using var stream = File.OpenRead(path);
-        EnsureDecodable(stream);
+        EnsureDecodable(stream, MaxLocalDecodePixels);
     }
 
     public static BakedImage BakeSquareJpeg(string sourcePath, WallpaperCrop crop, int target)
@@ -105,17 +108,12 @@ internal static class ImageProcessor
     public static (byte[] Pixels, int Width, int Height) DecodeRgba32(byte[] bytes)
     {
         using var stream = new MemoryStream(bytes);
-        var (pooled, length, width, height) = DecodeRgba32Pooled(stream);
-        try
-        {
-            var pixels = new byte[length];
-            pooled.AsSpan(0, length).CopyTo(pixels);
-            return (pixels, width, height);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(pooled);
-        }
+        EnsureDecodable(stream);
+        using var image = Image.Load<Rgba32>(SingleFrame, stream);
+        var length = checked(image.Width * image.Height * 4);
+        var pixels = new byte[length];
+        image.CopyPixelDataTo(pixels);
+        return (pixels, image.Width, image.Height);
     }
 
     public static async Task<IDalamudTextureWrap> DecodeToTextureAsync(ITextureProvider textures, byte[] bytes,
