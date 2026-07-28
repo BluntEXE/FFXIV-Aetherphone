@@ -864,6 +864,14 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release0993 =
+        {
+            new("changelog.r0993.0", "Stopped the phone from making any network requests while you are signed out, including the background retries that used to run from the title screen"),
+            new("changelog.r0993.1", "Fixed photos and voice notes that fail to load retrying nonstop; the phone now waits a couple of minutes before trying again"),
+            new("changelog.r0993.2", "Fixed Velvet comments wrapping their text at the wrong width"),
+            new("changelog.r0993.3", "Backend maintenance and optimizations"),
+        };
+
         public static readonly LocString[] Release0992 =
         {
             new("changelog.r0992.0", "Fixed the view count on Yellow Pages ads, which always stayed at zero, so opening an ad now counts as a view"),
