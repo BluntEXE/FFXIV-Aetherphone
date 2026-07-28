@@ -2,6 +2,7 @@ using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Moderation;
 using Aetherphone.Core.Social;
+using Aetherphone.Windows.Components;
 using Xunit;
 
 namespace Aetherphone.Tests;
@@ -128,6 +129,22 @@ public sealed class ModerationNoticeTests
         launcher.Request();
         Assert.True(launcher.TryConsume());
         Assert.False(launcher.TryConsume());
+    }
+
+    [Fact]
+    public void OnlyASuspensionWithAnExpiryReadsAsTemporary()
+    {
+        var until = DateTimeOffset.UtcNow.AddDays(3).ToUnixTimeSeconds();
+        Assert.True(BanOverlay.IsTemporary(
+            new SuspensionDto("GEN-HARASSMENT", "Harassment", "Targeted bullying.", string.Empty, until, false)));
+
+        Assert.False(BanOverlay.IsTemporary(
+            new SuspensionDto("GEN-HARASSMENT", "Harassment", "Targeted bullying.", string.Empty, null, true)));
+
+        Assert.False(BanOverlay.IsTemporary(
+            new SuspensionDto(string.Empty, string.Empty, string.Empty, string.Empty, null, false)));
+
+        Assert.False(BanOverlay.IsTemporary(null));
     }
 
     [Fact]

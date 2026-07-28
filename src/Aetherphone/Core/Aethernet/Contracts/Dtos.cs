@@ -8,7 +8,21 @@ internal sealed record VerifyRequest(string ChallengeId);
 
 internal sealed record AuthResponse(string Token, UserDto User);
 
-internal sealed record VerifyResponse(bool Ok, string? Reason, string? Token, UserDto? User, string? BanReason = null);
+internal sealed record SuspensionDto(
+    string RuleCode,
+    string RuleTitle,
+    string RuleSummary,
+    string Note,
+    long? UntilUnix,
+    bool Permanent);
+
+internal sealed record VerifyResponse(
+    bool Ok,
+    string? Reason,
+    string? Token,
+    UserDto? User,
+    string? BanReason = null,
+    SuspensionDto? Suspension = null);
 
 internal sealed record XivAuthStartRequest(string Name, string World);
 

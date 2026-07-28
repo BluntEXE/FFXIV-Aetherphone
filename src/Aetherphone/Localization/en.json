@@ -3387,5 +3387,7 @@
   "safety.signInPrompt": "Sign in to see moderation notices for your account.",
   "safety.retentionHint": "Notices stay here for 180 days, whether or not you have read them.",
   "safety.loadOlder": "Load older notices",
-  "safety.postedOn": "You posted it {0}"
+  "safety.postedOn": "You posted it {0}",
+  "account.ban.timeoutTitle": "Account suspended for now",
+  "account.ban.lifts": "You can sign in again after {0}. Nothing you posted was deleted by this suspension."
 }

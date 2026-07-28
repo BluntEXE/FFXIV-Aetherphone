@@ -3387,5 +3387,7 @@
   "safety.signInPrompt": "Hesabına ait moderasyon bildirimlerini görmek için giriş yap.",
   "safety.retentionHint": "Bildirimler, okunmuş olsun ya da olmasın 180 gün burada kalır.",
   "safety.loadOlder": "Daha eski bildirimleri yükle",
-  "safety.postedOn": "{0} paylaşmıştın"
+  "safety.postedOn": "{0} paylaşmıştın",
+  "account.ban.timeoutTitle": "Hesabın şimdilik askıya alındı",
+  "account.ban.lifts": "{0} tarihinden sonra yeniden giriş yapabilirsin. Bu askıya alma nedeniyle paylaştığın hiçbir içerik silinmedi."
 }
