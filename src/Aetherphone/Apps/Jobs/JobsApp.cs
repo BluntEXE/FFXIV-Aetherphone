@@ -211,10 +211,15 @@ internal sealed partial class JobsApp : IPhoneApp
     private void DrawHeader(Rect content, float scale)
     {
         var rowCenterY = content.Min.Y + AppHeader.Height * scale * 0.5f;
-        Typography.DrawCentered(new Vector2(content.Center.X, rowCenterY), DisplayName, ui.TitleInk, 1.15f,
-            FontWeight.SemiBold);
         var radius = 15f * scale;
         var buttonCenter = new Vector2(content.Max.X - Metrics.Space.Lg * scale - radius, rowCenterY);
+        var hasCategories = gameData.LocalPlayer is not null;
+        var categoriesCenter = new Vector2(buttonCenter.X - radius * 2f - 10f * scale, rowCenterY);
+        var clusterLeftEdge = (hasCategories ? categoriesCenter.X : buttonCenter.X) - radius;
+        var rightReserve = content.Max.X - clusterLeftEdge + 8f * scale;
+        AppHeader.DrawTitleWithReserve(content, "jobs.header.title", DisplayName, rightReserve, ui.TitleInk, scale,
+            leftReserve: 0f);
+
         colorButtonRect = new Rect(buttonCenter - new Vector2(radius, radius), buttonCenter + new Vector2(radius, radius));
         UiAnchors.Report("jobs.color", colorButtonRect);
         if (ui.IconButton(buttonCenter, radius, FontAwesomeIcon.Palette.ToIconString(), ui.TitleInk,
@@ -223,12 +228,11 @@ internal sealed partial class JobsApp : IPhoneApp
             menu.Toggle(ColorMenuId, colorButtonRect);
         }
 
-        if (gameData.LocalPlayer is null)
+        if (!hasCategories)
         {
             return;
         }
 
-        var categoriesCenter = new Vector2(buttonCenter.X - radius * 2f - 10f * scale, rowCenterY);
         var categoriesRect = new Rect(categoriesCenter - new Vector2(radius, radius),
             categoriesCenter + new Vector2(radius, radius));
         UiAnchors.Report("jobs.categories", categoriesRect);
@@ -382,15 +386,14 @@ internal sealed partial class JobsApp : IPhoneApp
         var noteRight = hasMenu ? menuCenter.X - menuRadius - 8f * scale : contentRect.Max.X;
         var textRight = noteRight -
                         (note.Length == 0 ? 0f : Typography.Measure(note, TextStyles.Caption2).X + 28f * scale);
-        var name = Typography.FitText(job.Name, textRight - textLeft, TextStyles.Headline);
-        Typography.Draw(drawList, new Vector2(textLeft, contentRect.Min.Y + 12f * scale), name, ui.TitleInk,
-            TextStyles.Headline);
+        var maxTextWidth = MathF.Max(1f, textRight - textLeft);
+        Marquee.DrawLeftAuto(drawList, job.NameRowId, job.Name, textLeft, contentRect.Min.Y + 12f * scale,
+            maxTextWidth, TextStyles.Headline, ui.TitleInk);
         var subtitle = job.ItemLevel >= 0
             ? Loc.T(L.Jobs.LevelItemLevel, job.Abbreviation, job.Level, job.ItemLevel)
             : Loc.T(L.Jobs.LevelOnly, job.Abbreviation, job.Level);
-        var fittedSubtitle = Typography.FitText(subtitle, textRight - textLeft, TextStyles.Footnote);
-        Typography.Draw(drawList, new Vector2(textLeft, contentRect.Min.Y + 36f * scale), fittedSubtitle, ui.MutedInk,
-            TextStyles.Footnote);
+        Marquee.DrawLeftAuto(drawList, job.SubRowId, subtitle, textLeft, contentRect.Min.Y + 36f * scale,
+            maxTextWidth, TextStyles.Footnote, ui.MutedInk);
 
         var noteCenter = new Vector2(noteRight, contentRect.Center.Y);
         if (job.IsActive)
