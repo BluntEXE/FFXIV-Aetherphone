@@ -14,7 +14,12 @@ internal static class ShiftRow
     public static ShiftRowAction Draw(Rect row, VenueSyncShift shift, bool isOpen, string? roleName,
         PhoneTheme theme, string idSuffix)
     {
-        var titleText = isOpen ? (roleName ?? "Open Shift") : $"Shift · {shift.Status}";
+        var titleText = isOpen ? (roleName ?? "Open Shift") : shift.Status switch
+        {
+            "ACTIVE" => "Active Shift",
+            "COMPLETED" => "Completed Shift",
+            _ => "Upcoming Shift",
+        };
         var timeText = FormatTimeRange(shift.ScheduledStart, shift.ScheduledEnd);
 
         // Independent hover per line — this is the deliberate fix for a known bug class in
