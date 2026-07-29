@@ -20,6 +20,7 @@ internal sealed partial class VenueSyncApp : IPhoneApp
     private readonly GameData gameData;
     private readonly ViewRouter<VenueSyncRoute> router;
     private readonly RouterDraw<VenueSyncRoute> drawView;
+    private readonly Action back;
 
     // Populated at the top of Draw() and reused by sub-screens so they don't need to
     // reconstruct PhoneContext themselves — mirrors the pattern used by VenuesApp/FeedbackApp.
@@ -35,6 +36,7 @@ internal sealed partial class VenueSyncApp : IPhoneApp
         this.gameData = gameData;
         router = new ViewRouter<VenueSyncRoute>(VenueSyncRoute.Dashboard);
         drawView = DrawView;
+        back = () => router.Pop();
     }
 
     public void OnOpened()
@@ -63,8 +65,11 @@ internal sealed partial class VenueSyncApp : IPhoneApp
             case VenueSyncRoute.Dashboard:
                 DrawDashboard(area);
                 break;
+            case VenueSyncRoute.Shifts:
+                DrawShifts(area);
+                break;
             default:
-                // Shifts/Sales/Settings screens land in later tasks (Task 8+); nothing to draw yet.
+                // Sales/Settings screens land in later tasks; nothing to draw yet.
                 break;
         }
     }
