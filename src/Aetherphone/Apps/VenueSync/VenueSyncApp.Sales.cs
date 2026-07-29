@@ -12,6 +12,7 @@ internal sealed partial class VenueSyncApp
     private string? salesServicesLoadedForVenueId;
     private List<VenueSyncService> salesServices = new();
     private int salesSelectedServiceIndex = -1;
+    private bool salesServicePickerExpanded;
     private string salesCustomerName = string.Empty;
     private string salesAmountText = string.Empty;
     private string? salesError;
@@ -25,6 +26,7 @@ internal sealed partial class VenueSyncApp
         {
             salesServicesLoadedForVenueId = configuration.VenueSyncSelectedVenueId;
             salesSelectedServiceIndex = -1;
+            salesServicePickerExpanded = false;
             if (string.IsNullOrEmpty(configuration.VenueSyncSelectedVenueId))
             {
                 salesServices = new();
@@ -38,7 +40,7 @@ internal sealed partial class VenueSyncApp
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         using (AppSurface.Begin(body))
         {
-            var rowCount = (salesError is not null ? 5 : 4) + salesServices.Count;
+            var rowCount = (salesError is not null ? 5 : 4) + (salesServicePickerExpanded ? salesServices.Count : 0);
             var card = GroupCard.Begin(theme, rowCount, Metrics.Size.Row);
 
             var serviceLabel = salesSelectedServiceIndex >= 0 && salesSelectedServiceIndex < salesServices.Count
@@ -46,17 +48,26 @@ internal sealed partial class VenueSyncApp
                 : "Select a service";
             if (SettingsRow.Disclosure(card.NextRow(), "Service", serviceLabel, theme))
             {
-                _ = LoadSalesServicesAsync();
+                if (salesServices.Count == 0)
+                {
+                    _ = LoadSalesServicesAsync();
+                }
+
+                salesServicePickerExpanded = !salesServicePickerExpanded;
             }
 
-            for (var i = 0; i < salesServices.Count; i++)
+            if (salesServicePickerExpanded)
             {
-                var service = salesServices[i];
-                var selected = i == salesSelectedServiceIndex;
-                if (SettingsRow.Selectable(card.NextRow(), service.Name, selected, theme,
-                        $"venuesync.sales.service-{service.Id}"))
+                for (var i = 0; i < salesServices.Count; i++)
                 {
-                    salesSelectedServiceIndex = i;
+                    var service = salesServices[i];
+                    var selected = i == salesSelectedServiceIndex;
+                    if (SettingsRow.Selectable(card.NextRow(), service.Name, selected, theme,
+                            $"venuesync.sales.service-{service.Id}"))
+                    {
+                        salesSelectedServiceIndex = i;
+                        salesServicePickerExpanded = false;
+                    }
                 }
             }
 
