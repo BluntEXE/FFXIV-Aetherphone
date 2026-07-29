@@ -107,7 +107,11 @@ internal sealed partial class VenueSyncApp
                     errorRow.Center.Y - 10f * scale, errorRow.Width, TextStyles.Caption1, theme.Danger);
             }
 
-            if (AppSkin.PillButton(card.NextRow(), "Log Sale", filled: true, theme))
+            var submitRow = card.NextRow();
+            var submitButtonHeight = Metrics.Size.FieldHeight * scale;
+            var submitButtonRect = new Rect(new Vector2(submitRow.Min.X, submitRow.Center.Y - submitButtonHeight * 0.5f),
+                new Vector2(submitRow.Max.X, submitRow.Center.Y + submitButtonHeight * 0.5f));
+            if (AppSkin.PillButton(submitButtonRect, "Log Sale", filled: true, theme))
             {
                 _ = SubmitSaleAsync();
             }

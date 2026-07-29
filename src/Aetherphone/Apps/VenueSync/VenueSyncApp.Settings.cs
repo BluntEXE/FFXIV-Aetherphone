@@ -31,11 +31,12 @@ internal sealed partial class VenueSyncApp
         {
             SettingsSection.Header("API KEY", theme);
 
-            var apiKeyCard = GroupCard.Begin(theme, 1, Metrics.Size.FieldHeight);
+            var apiKeyCard = GroupCard.Begin(theme, 1, Metrics.Size.Row);
             var keyRow = apiKeyCard.NextRow();
             var eyeWidth = 60f * scale;
+            var eyeHeight = Metrics.Size.FieldHeight * scale;
             var fieldWidth = MathF.Max(1f, keyRow.Width - eyeWidth - Metrics.Space.Sm * scale);
-            ImGui.SetCursorScreenPos(keyRow.Min);
+            ImGui.SetCursorScreenPos(new Vector2(keyRow.Min.X, keyRow.Center.Y - ImGui.GetFrameHeight() * 0.5f));
             ImGui.SetNextItemWidth(fieldWidth);
             var flags = settingsKeyVisible ? ImGuiInputTextFlags.None : ImGuiInputTextFlags.Password;
             if (ImGui.InputTextWithHint("##sync-api-key", "API key (vm_...)", ref settingsKeyInput, 128, flags))
@@ -44,14 +45,18 @@ internal sealed partial class VenueSyncApp
                 configuration.Save();
             }
 
-            var eyeRow = new Rect(new Vector2(keyRow.Min.X + fieldWidth + Metrics.Space.Sm * scale, keyRow.Min.Y),
-                keyRow.Max);
+            var eyeRow = new Rect(
+                new Vector2(keyRow.Min.X + fieldWidth + Metrics.Space.Sm * scale, keyRow.Center.Y - eyeHeight * 0.5f),
+                new Vector2(keyRow.Max.X, keyRow.Center.Y + eyeHeight * 0.5f));
             if (AppSkin.PillButton(eyeRow, settingsKeyVisible ? "Hide" : "Show", filled: false, theme))
             {
                 settingsKeyVisible = !settingsKeyVisible;
             }
 
             apiKeyCard.End();
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+            SettingsSection.Hint("Get your API key from your venue's dashboard on the website, under Staff Access.",
+                theme);
 
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
 
@@ -119,7 +124,11 @@ internal sealed partial class VenueSyncApp
             var characterCard = GroupCard.Begin(theme, 2, Metrics.Size.Row);
             SettingsRow.Info(characterCard.NextRow(), "Character", $"{localName} @ {localWorld}", theme);
             var linkLabel = settingsCharacterLinkStatus ?? "Link this character";
-            if (AppSkin.PillButton(characterCard.NextRow(), linkLabel, filled: true, theme))
+            var linkRow = characterCard.NextRow();
+            var linkButtonHeight = Metrics.Size.FieldHeight * scale;
+            var linkButtonRect = new Rect(new Vector2(linkRow.Min.X, linkRow.Center.Y - linkButtonHeight * 0.5f),
+                new Vector2(linkRow.Max.X, linkRow.Center.Y + linkButtonHeight * 0.5f));
+            if (AppSkin.PillButton(linkButtonRect, linkLabel, filled: true, theme))
             {
                 _ = LinkCharacterAsync(localName, localWorld);
             }
