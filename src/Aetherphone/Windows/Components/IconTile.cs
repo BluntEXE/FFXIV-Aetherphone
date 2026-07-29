@@ -14,7 +14,11 @@ internal static class IconTile
         var half = size * 0.5f;
         Squircle.Fill(drawList, center - new Vector2(half, half), center + new Vector2(half, half),
             size * Metrics.Radius.TileFactor, ImGui.GetColorU32(tint));
-        ProgressRing.CenterIcon(center, icon, new Vector4(1f, 1f, 1f, 1f), size * 0.50f);
+        // Draw-list overload, not the cursor-based one: that variant calls SetCursorScreenPos +
+        // ImGui.TextUnformatted internally, silently moving ImGui's real layout cursor — a known
+        // bug class in this codebase when mixed with Rect-based manual row layout (rows here are
+        // positioned entirely via GroupCard's own math, never via ImGui's auto-layout cursor).
+        ProgressRing.CenterIcon(drawList, center, icon, new Vector4(1f, 1f, 1f, 1f), size * 0.50f);
     }
 
     public static Vector4 Surface(Vector4 accent)
