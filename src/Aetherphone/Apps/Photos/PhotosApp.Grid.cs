@@ -107,8 +107,10 @@ internal sealed partial class PhotosApp
             return;
         }
 
-        DrawNavBar(area, album.Name, back);
-        if (ui.HeaderAction(area, Loc.T(L.Photos.AddPhotos), entries.Length > 0))
+        var addPhotosLabel = Loc.T(L.Photos.AddPhotos);
+        var addPhotosWidth = AppSkin.HeaderActionWidth(addPhotosLabel);
+        DrawNavBar(area, album.Name, back, addPhotosWidth + 12f * scale + 12f * scale);
+        if (ui.HeaderAction(area, addPhotosLabel, entries.Length > 0))
         {
             OpenAlbumPicker(key);
         }
@@ -579,9 +581,8 @@ internal sealed partial class PhotosApp
         }
 
         var textTop = coverCoverMax.Y + 7f * scale;
-        var name = Typography.FitText(album.Name, rect.Width - 4f * scale, TextStyles.SubheadlineEmphasized);
-        Typography.Draw(drawList, new Vector2(rect.Min.X + 2f * scale, textTop), name, ui.TitleInk,
-            TextStyles.SubheadlineEmphasized);
+        Marquee.DrawLeft("photos.customAlbumCard." + album.Key, album.Name, rect.Min.X + 2f * scale, textTop,
+            rect.Width - 4f * scale, TextStyles.SubheadlineEmphasized, ui.TitleInk, hovered);
         var countLabel = Loc.Plural(L.Photos.Count, album.Count);
         Typography.Draw(drawList, new Vector2(rect.Min.X + 2f * scale, textTop + 19f * scale), countLabel, ui.MutedInk,
             TextStyles.Footnote);

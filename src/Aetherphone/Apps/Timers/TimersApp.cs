@@ -219,20 +219,18 @@ internal sealed class TimersApp : IPhoneApp
         var textLeft = row.Min.X + tile + 12f * scale;
         var textRight = valueRight - valueSize.X - 12f * scale;
         var textMaxWidth = MathF.Max(1f, textRight - textLeft);
-        var rowHovering = UiInteract.Hover(new Vector2(textLeft, row.Min.Y), new Vector2(textRight, row.Max.Y));
         if (sublabel.Length > 0)
         {
-            Marquee.DrawLeft(id, name, textLeft, row.Center.Y - 16f * scale, textMaxWidth,
-                TextStyles.Headline, AppPalettes.Timers.TitleInk, rowHovering);
-            var sublabelText = Typography.FitText(sublabel, textMaxWidth, TextStyles.Footnote);
-            Typography.Draw(new Vector2(textLeft, row.Center.Y + 5f * scale), sublabelText, AppPalettes.Timers.MutedInk,
-                TextStyles.Footnote);
+            Marquee.DrawLeftAuto(id, name, textLeft, row.Center.Y - 16f * scale, textMaxWidth,
+                TextStyles.Headline, AppPalettes.Timers.TitleInk);
+            Marquee.DrawLeftAuto(id + ".sub", sublabel, textLeft, row.Center.Y + 5f * scale, textMaxWidth,
+                TextStyles.Footnote, AppPalettes.Timers.MutedInk);
         }
         else
         {
             var nameSize = Typography.Measure(name, TextStyles.Headline);
-            Marquee.DrawLeft(id, name, textLeft, row.Center.Y - nameSize.Y * 0.5f, textMaxWidth,
-                TextStyles.Headline, AppPalettes.Timers.TitleInk, rowHovering);
+            Marquee.DrawLeftAuto(id, name, textLeft, row.Center.Y - nameSize.Y * 0.5f, textMaxWidth,
+                TextStyles.Headline, AppPalettes.Timers.TitleInk);
         }
     }
 

@@ -78,10 +78,13 @@ internal sealed partial class VelvetShell
             var textWidth = width - HeroTextInset * 2f * scale;
             var lineTop = avatarCenter.Y + radius + 16f * scale;
             var badgeSpace = user.Verified ? 24f * scale : 0f;
-            var displayName = Typography.FitText(name, textWidth - badgeSpace, TextStyles.Title1);
-            var nameSize = Typography.Measure(displayName, TextStyles.Title1);
+            var nameWidth = MathF.Min(Typography.Measure(name, TextStyles.Title1).X, textWidth - badgeSpace);
+            var nameSize = new Vector2(nameWidth, Typography.Measure(name, TextStyles.Title1).Y);
             var nameX = centerX - (nameSize.X + badgeSpace) * 0.5f;
-            Typography.Draw(new Vector2(nameX, lineTop), displayName, VelvetTheme.TitleInk, TextStyles.Title1);
+            var nameHovering = UiInteract.Hover(new Vector2(nameX, lineTop),
+                new Vector2(nameX + nameSize.X, lineTop + nameSize.Y));
+            Marquee.DrawLeft("velvet.profile.name." + user.UserId, name, nameX, lineTop, nameSize.X,
+                TextStyles.Title1, VelvetTheme.TitleInk, nameHovering);
             if (user.Verified)
             {
                 DrawVerifiedBadge(drawList, new Vector2(nameX + nameSize.X + 13f * scale, lineTop + nameSize.Y * 0.5f),

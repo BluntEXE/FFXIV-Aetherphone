@@ -229,18 +229,22 @@ internal sealed partial class MessageApp
             var maxNameRight = area.Max.X - ChatHeaderControls.ReservedRightWidth * scale;
             nameCap = MathF.Max(1f, MathF.Min(nameCap, maxNameRight - nameLeft));
             var titleId = "messageapp.thread.title." + (conversation?.Id ?? "self");
-            var titleHovering = UiInteract.Hover(new Vector2(avatarCenter.X - avatarRadius, area.Min.Y),
-                new Vector2(nameLeft + nameCap, area.Min.Y + AppHeader.Height * scale));
             if (isGroup && conversation is not null)
             {
                 var sub = Loc.T(L.DirectMessages.MembersCount, conversation.MemberCount);
                 var subSize = Typography.Measure(sub, 0.72f, FontWeight.Regular);
+                subSize.X = MathF.Min(subSize.X, nameCap);
                 var gapY = 1f * scale;
                 var stackTop = rowCenterY - (nameSize.Y + gapY + subSize.Y) * 0.5f;
+                var titleHovering = UiInteract.Hover(new Vector2(nameLeft, stackTop),
+                    new Vector2(nameLeft + nameCap, stackTop + nameSize.Y));
                 Marquee.DrawLeft(titleId, name, nameLeft, stackTop, nameCap, new TextStyle(1f, FontWeight.SemiBold),
                     Theme.TextStrong, titleHovering);
-                Typography.Draw(new Vector2(nameLeft, stackTop + nameSize.Y + gapY), sub,
-                    AppPalettes.Message.MutedInk, 0.72f);
+                var subTop = stackTop + nameSize.Y + gapY;
+                var subHovering = UiInteract.Hover(new Vector2(nameLeft, subTop),
+                    new Vector2(nameLeft + nameCap, subTop + subSize.Y));
+                Marquee.DrawLeft(titleId + ".sub", sub, nameLeft, subTop, nameCap,
+                    new TextStyle(0.72f, FontWeight.Regular), AppPalettes.Message.MutedInk, subHovering);
                 var hitMin = new Vector2(avatarCenter.X - avatarRadius, area.Min.Y);
                 var hitMax = new Vector2(nameLeft + MathF.Max(nameSize.X, subSize.X),
                     area.Min.Y + AppHeader.Height * scale);
@@ -255,16 +259,26 @@ internal sealed partial class MessageApp
                 if (presence.Length > 0)
                 {
                     var subSize = Typography.Measure(presence, 0.72f, FontWeight.Regular);
+                    subSize.X = MathF.Min(subSize.X, nameCap);
                     var gapY = 1f * scale;
                     var stackTop = rowCenterY - (nameSize.Y + gapY + subSize.Y) * 0.5f;
+                    var titleHovering = UiInteract.Hover(new Vector2(nameLeft, stackTop),
+                        new Vector2(nameLeft + nameCap, stackTop + nameSize.Y));
                     Marquee.DrawLeft(titleId, name, nameLeft, stackTop, nameCap,
                         new TextStyle(1f, FontWeight.SemiBold), Theme.TextStrong, titleHovering);
-                    Typography.Draw(new Vector2(nameLeft, stackTop + nameSize.Y + gapY), presence,
-                        conversation!.Presence == 1 ? ui.Accent : AppPalettes.Message.MutedInk, 0.72f);
+                    var subTop = stackTop + nameSize.Y + gapY;
+                    var subHovering = UiInteract.Hover(new Vector2(nameLeft, subTop),
+                        new Vector2(nameLeft + nameCap, subTop + subSize.Y));
+                    Marquee.DrawLeft(titleId + ".sub", presence, nameLeft, subTop, nameCap,
+                        new TextStyle(0.72f, FontWeight.Regular),
+                        conversation!.Presence == 1 ? ui.Accent : AppPalettes.Message.MutedInk, subHovering);
                 }
                 else
                 {
-                    Marquee.DrawLeft(titleId, name, nameLeft, rowCenterY - nameSize.Y * 0.5f, nameCap,
+                    var soloTop = rowCenterY - nameSize.Y * 0.5f;
+                    var titleHovering = UiInteract.Hover(new Vector2(nameLeft, soloTop),
+                        new Vector2(nameLeft + nameCap, soloTop + nameSize.Y));
+                    Marquee.DrawLeft(titleId, name, nameLeft, soloTop, nameCap,
                         new TextStyle(1f, FontWeight.SemiBold), Theme.TextStrong, titleHovering);
                 }
 

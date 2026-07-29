@@ -117,7 +117,7 @@ internal sealed partial class CollectionsApp
         var nameTop = rect.Max.Y - pad - 36f * scale;
         var rawVerticalRingRadius = (nameTop - 6f * scale - rect.Min.Y - pad) * 0.5f;
         var iconRight = rect.Min.X + pad + tileSize;
-        var horizontalGap = 18f * scale;
+        var horizontalGap = 8f * scale;
         var rawHorizontalRingRadius = (rect.Max.X - pad - iconRight - horizontalGap) * 0.5f;
         var maxRingRadius = MathF.Max(8f * scale, MathF.Min(rawVerticalRingRadius, rawHorizontalRingRadius));
         DrawTileRing(rect, summary, progress, pad, scale, maxRingRadius);
@@ -145,8 +145,8 @@ internal sealed partial class CollectionsApp
             return;
         }
 
-        var radius = MathF.Min(23f * scale, maxRadius);
-        var thickness = 4.2f * scale;
+        var radius = MathF.Min(25f * scale, maxRadius);
+        var thickness = 4.4f * scale;
         var center = new Vector2(rect.Max.X - pad - radius, rect.Min.Y + pad + radius);
         var track = Palette.WithAlpha(ui.TitleInk, 0.14f);
         if (progress is null)

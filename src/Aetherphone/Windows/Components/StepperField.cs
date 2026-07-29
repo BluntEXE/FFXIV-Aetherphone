@@ -10,7 +10,7 @@ internal static class StepperField
     {
         var drawList = ImGui.GetWindowDrawList();
         ui.Card(drawList, rect.Min, rect.Max, Metrics.Radius.Md * scale);
-        var chevronWidth = 34f * scale;
+        var chevronWidth = MathF.Min(34f * scale, rect.Width * 0.3f);
         var leftRect = new Rect(rect.Min, new Vector2(rect.Min.X + chevronWidth, rect.Max.Y));
         var rightRect = new Rect(new Vector2(rect.Max.X - chevronWidth, rect.Min.Y), rect.Max);
         if (DrawChevron(ui, drawList, leftRect, "<", scale))

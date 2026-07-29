@@ -295,15 +295,13 @@ internal sealed partial class HealthApp : IPhoneApp
         var tile = TileSize * scale;
         IconTile.Draw(new Vector2(row.Min.X + tile * 0.5f, row.Center.Y), tile, tint, icon);
         var textLeft = row.Min.X + tile + 12f * scale;
-        // Value keeps its width; the label is clipped so long translations cannot overlap it.
         var valueSize = Typography.Measure(value, 1.02f, FontWeight.SemiBold);
         Typography.Draw(new Vector2(row.Max.X - valueSize.X, row.Center.Y - valueSize.Y * 0.5f), value, Pal.TitleInk,
             1.02f, FontWeight.SemiBold);
-        var labelRoom = row.Max.X - valueSize.X - textLeft - 10f * scale;
-        var fitted = Typography.FitText(label, labelRoom, TextStyles.Headline);
-        var labelSize = Typography.Measure(fitted, TextStyles.Headline);
-        Typography.Draw(new Vector2(textLeft, row.Center.Y - labelSize.Y * 0.5f), fitted, Pal.TitleInk,
-            TextStyles.Headline);
+        var labelRoom = MathF.Max(1f, row.Max.X - valueSize.X - textLeft - 10f * scale);
+        var labelSize = Typography.Measure(label, TextStyles.Headline);
+        Marquee.DrawLeftAuto("health.statrow." + label, label, textLeft, row.Center.Y - labelSize.Y * 0.5f,
+            labelRoom, TextStyles.Headline, Pal.TitleInk);
     }
 
     private void GoalBar(HealthGoal goal, float scale)

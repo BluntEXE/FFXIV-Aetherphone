@@ -149,11 +149,12 @@ internal sealed partial class AethergramApp
                 store.SetSaved(post.Id, !post.Saved);
             }
 
-            if (photos.Length > 1)
+            if (photos.Length > 1 && configuration.PhoneScale >= PhoneSizeCatalog.DefaultScale)
             {
-                var dotsCenter = new Vector2(origin.X + width * 0.5f, actionsY);
-                var available = MathF.Min((bookmarkCenter.X - 16f * scale - dotsCenter.X) * 2f,
-                    (dotsCenter.X - actionsRight - 10f * scale) * 2f);
+                var dotsLeft = actionsRight + 10f * scale;
+                var dotsRight = bookmarkCenter.X - 16f * scale;
+                var dotsCenter = new Vector2((dotsLeft + dotsRight) * 0.5f, actionsY);
+                var available = MathF.Max(0f, dotsRight - dotsLeft);
                 PhotoCarousel.DrawDots(ImGui.GetWindowDrawList(), dotsCenter, photos.Length, page, available,
                     AppPalettes.Aethergram.BodyInk);
             }

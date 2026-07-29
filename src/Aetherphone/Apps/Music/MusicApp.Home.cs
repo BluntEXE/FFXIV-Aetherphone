@@ -142,23 +142,37 @@ internal sealed partial class MusicApp
                 ? Palette.WithAlpha(ui.Accent, 0.16f)
                 : Palette.WithAlpha(ui.TitleInk, hovered ? 0.13f : 0.07f);
             Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(fill));
+            var showAuthor = configuration.PhoneScale >= PhoneSizeCatalog.DefaultScale;
             var artMax = new Vector2(min.X + chipHeight, max.Y);
             DrawCover(drawList, min, artMax, song.ThumbnailUrl, song.Title, rounding);
             var textLeft = artMax.X + 10f * scale;
             var trailing = current ? 26f * scale : 10f * scale;
             var textWidth = max.X - trailing - textLeft;
-            var chipTitleY = min.Y + 9f * scale;
-            var chipTitleSize = Typography.Measure(song.Title, TextStyles.FootnoteEmphasized);
-            var chipTitleHovering = UiInteract.Hover(new Vector2(textLeft, chipTitleY),
-                new Vector2(textLeft + textWidth, chipTitleY + chipTitleSize.Y));
-            Marquee.DrawLeft("music.recentChip.title." + song.VideoId, song.Title, textLeft, chipTitleY,
-                textWidth, TextStyles.FootnoteEmphasized, current ? ui.Accent : ui.TitleInk, chipTitleHovering);
-            var chipAuthorY = min.Y + 28f * scale;
-            var chipAuthorSize = Typography.Measure(song.Author, TextStyles.Caption1);
-            var chipAuthorHovering = UiInteract.Hover(new Vector2(textLeft, chipAuthorY),
-                new Vector2(textLeft + textWidth, chipAuthorY + chipAuthorSize.Y));
-            Marquee.DrawLeft("music.recentChip.author." + song.VideoId, song.Author, textLeft, chipAuthorY,
-                textWidth, TextStyles.Caption1, ui.MutedInk, chipAuthorHovering);
+            if (showAuthor)
+            {
+                var chipTitleY = min.Y + 9f * scale;
+                var chipTitleSize = Typography.Measure(song.Title, TextStyles.FootnoteEmphasized);
+                var chipTitleHovering = UiInteract.Hover(new Vector2(textLeft, chipTitleY),
+                    new Vector2(textLeft + textWidth, chipTitleY + chipTitleSize.Y));
+                Marquee.DrawLeft("music.recentChip.title." + song.VideoId, song.Title, textLeft, chipTitleY,
+                    textWidth, TextStyles.FootnoteEmphasized, current ? ui.Accent : ui.TitleInk, chipTitleHovering);
+                var chipAuthorY = min.Y + 28f * scale;
+                var chipAuthorSize = Typography.Measure(song.Author, TextStyles.Caption1);
+                var chipAuthorHovering = UiInteract.Hover(new Vector2(textLeft, chipAuthorY),
+                    new Vector2(textLeft + textWidth, chipAuthorY + chipAuthorSize.Y));
+                Marquee.DrawLeft("music.recentChip.author." + song.VideoId, song.Author, textLeft, chipAuthorY,
+                    textWidth, TextStyles.Caption1, ui.MutedInk, chipAuthorHovering);
+            }
+            else
+            {
+                var chipTitleY = min.Y + (chipHeight - Typography.Measure(song.Title, TextStyles.Caption1).Y) * 0.5f;
+                var chipTitleSize = Typography.Measure(song.Title, TextStyles.Caption1);
+                var chipTitleHovering = UiInteract.Hover(new Vector2(textLeft, chipTitleY),
+                    new Vector2(textLeft + textWidth, chipTitleY + chipTitleSize.Y));
+                Marquee.DrawLeft("music.recentChip.title." + song.VideoId, song.Title, textLeft, chipTitleY,
+                    textWidth, TextStyles.Caption1, current ? ui.Accent : ui.TitleInk, chipTitleHovering);
+            }
+
             if (current)
             {
                 Equalizer.Draw(drawList, new Vector2(max.X - 15f * scale, (min.Y + max.Y) * 0.5f), scale,

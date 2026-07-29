@@ -57,10 +57,12 @@ internal static class LinkshellRow
         var last = thread?.Last;
         var unread = thread?.Unread ?? 0;
         var hasUnread = unread > 0;
+        var timeReserve = 0f;
         if (last is not null)
         {
             var time = TimeText.Short(thread!.LastActivity);
             var timeSize = Typography.Measure(time, TextStyles.Caption1);
+            timeReserve = timeSize.X + 8f * scale;
             Typography.Draw(new Vector2(textRight - timeSize.X, min.Y + 13f * scale), time,
                 hasUnread && !muted ? theme.Accent : theme.TextMuted, TextStyles.Caption1);
         }
@@ -69,7 +71,7 @@ internal static class LinkshellRow
         var titleY = last is null
             ? min.Y + Height * scale * 0.5f - titleSize.Y * 0.5f
             : min.Y + 11f * scale;
-        var titleMaxWidth = textRight - 4f * scale - textLeft;
+        var titleMaxWidth = textRight - 4f * scale - textLeft - timeReserve;
         var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleY),
             new Vector2(textLeft + titleMaxWidth, titleY + titleSize.Y));
         Marquee.DrawLeft("linkshellrow.title." + channel.Key, label, textLeft, titleY,

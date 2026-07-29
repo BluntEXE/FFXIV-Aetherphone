@@ -196,14 +196,12 @@ internal sealed class FishingApp : IPhoneApp
                 Accent.BlueSoft, 12f * scale);
             var nameLeft = innerLeft + 22f * scale;
             var rowAvailableWidth = MathF.Max(1f, innerRight - nameLeft);
-            var name = Typography.FitText(fish.Name, rowAvailableWidth * 0.55f, TextStyles.SubheadlineEmphasized);
-            Typography.Draw(new Vector2(nameLeft, rowCenterY - 8f * scale), name, ui.BodyInk,
-                TextStyles.SubheadlineEmphasized);
-            var nameWidth = Typography.Measure(name, TextStyles.SubheadlineEmphasized).X;
+            var nameMaxWidth = rowAvailableWidth * 0.55f;
+            var nameWidth = Marquee.DrawLeftAuto("fishing.hero.bluefish." + index + ".name", fish.Name, nameLeft,
+                rowCenterY - 8f * scale, nameMaxWidth, TextStyles.SubheadlineEmphasized, ui.BodyInk);
             var baitMaxWidth = MathF.Max(1f, innerRight - (nameLeft + nameWidth + 8f * scale));
-            var bait = Typography.FitText(fish.Bait, baitMaxWidth, TextStyles.Footnote);
-            Typography.Draw(new Vector2(nameLeft + nameWidth + 8f * scale, rowCenterY - 6f * scale), bait,
-                ui.MutedInk, TextStyles.Footnote);
+            Marquee.DrawLeftAuto("fishing.hero.bluefish." + index + ".bait", fish.Bait, nameLeft + nameWidth + 8f * scale,
+                rowCenterY - 6f * scale, baitMaxWidth, TextStyles.Footnote, ui.MutedInk);
         }
     }
 

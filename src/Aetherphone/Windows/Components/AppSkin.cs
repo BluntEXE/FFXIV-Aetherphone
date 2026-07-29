@@ -386,11 +386,18 @@ internal sealed class AppSkin
         ImGui.Dummy(new Vector2(width, height));
     }
 
+    public static float HeaderActionWidth(string label)
+    {
+        var scale = ImGuiHelpers.GlobalScale;
+        var height = 28f * scale;
+        return Typography.Measure(label, 0.9f, FontWeight.SemiBold).X + height + 6f * scale;
+    }
+
     public bool HeaderAction(Rect area, string label, bool enabled)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var height = 28f * scale;
-        var width = Typography.Measure(label, 0.9f, FontWeight.SemiBold).X + height + 6f * scale;
+        var width = HeaderActionWidth(label);
         var max = new Vector2(area.Max.X - 12f * scale, area.Min.Y + AppHeader.Height * scale * 0.5f + height * 0.5f);
         var min = new Vector2(max.X - width, max.Y - height);
         var rect = new Rect(min, max);

@@ -943,7 +943,7 @@ internal sealed partial class AethergramApp : IPhoneApp
             store.SetSaved(post.Id, !post.Saved);
         }
 
-        if (photos.Length > 1)
+        if (photos.Length > 1 && configuration.PhoneScale >= PhoneSizeCatalog.DefaultScale)
         {
             var dotsLeft = actionsRight + 10f * scale;
             var dotsRight = bookmarkCenter.X - 20f * scale;

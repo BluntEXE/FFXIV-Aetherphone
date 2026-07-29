@@ -132,7 +132,7 @@ internal static class Marquee
         drawList.PopClipRect();
     }
 
-    private static float Offset(string id, float overflow)
+    internal static float Offset(string id, float overflow)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var travelSeconds = overflow / (Speed * scale);
