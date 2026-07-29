@@ -16,6 +16,10 @@ internal struct GroupCard
     private readonly float startY;
     private readonly int rowCount;
     private int rowIndex;
+    private float lastRowTop;
+    private float lastRowBottom;
+    private int lastRowIndex;
+    private int lastRowSpan;
 
     private GroupCard(PhoneTheme theme, float scale, float rowHeight, float left, float right, float startY,
         int rowCount)
@@ -28,6 +32,10 @@ internal struct GroupCard
         this.startY = startY;
         this.rowCount = rowCount;
         rowIndex = 0;
+        lastRowTop = startY;
+        lastRowBottom = startY;
+        lastRowIndex = 0;
+        lastRowSpan = 0;
     }
 
     public static GroupCard Begin(PhoneTheme theme, int rowCount, float rowHeight = DefaultRowHeight)
@@ -53,10 +61,46 @@ internal struct GroupCard
                 ImGui.GetColorU32(theme.Separator), Metrics.Stroke.Hairline);
         }
 
+        lastRowIndex = rowIndex;
+        lastRowSpan = rowSpan;
+        lastRowTop = rowTop;
+        lastRowBottom = rowTop + rowSpan * rowHeight * scale;
         rowIndex += rowSpan;
         var padding = Metrics.Space.Lg * scale;
         return new Rect(new Vector2(left + padding, rowTop),
             new Vector2(right - padding, rowTop + rowSpan * rowHeight * scale));
+    }
+
+    // Draws the hover/press overlay for the row most recently returned by NextRow, full-bleed to
+    // the card's own edges (not inset by row padding) so the highlight covers the entire row with
+    // no visible gap — and rounded to match the card's corner radius only where the row actually
+    // touches the card's rounded top/bottom edge, so a square corner never pokes past the card's
+    // squircle outline on the first/last row.
+    public void DrawHoverHighlight(Vector4 color)
+    {
+        var dl = ImGui.GetWindowDrawList();
+        var min = new Vector2(left, lastRowTop);
+        var max = new Vector2(right, lastRowBottom);
+        var packed = ImGui.GetColorU32(color);
+        var radius = Metrics.Radius.Md * scale;
+        var isFirst = lastRowIndex == 0;
+        var isLast = lastRowIndex + lastRowSpan >= rowCount;
+        if (isFirst && isLast)
+        {
+            Squircle.Fill(dl, min, max, radius, packed);
+        }
+        else if (isFirst)
+        {
+            Squircle.FillCap(dl, min, max, radius, packed, top: true);
+        }
+        else if (isLast)
+        {
+            Squircle.FillCap(dl, min, max, radius, packed, top: false);
+        }
+        else
+        {
+            dl.AddRectFilled(min, max, packed);
+        }
     }
 
     public void End()

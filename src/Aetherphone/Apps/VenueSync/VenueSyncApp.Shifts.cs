@@ -49,7 +49,8 @@ internal sealed partial class VenueSyncApp
             if (activeShift is not null)
             {
                 var activeCard = GroupCard.Begin(theme, 1, ShiftRow.Height);
-                var action = ShiftRow.Draw(activeCard.NextRow(), activeShift, isOpen: false, roleName: null, theme,
+                var activeRow = activeCard.NextRow();
+                var action = ShiftRow.Draw(activeCard, activeRow, activeShift, isOpen: false, roleName: null, theme,
                     "active");
                 HandleShiftAction(action, activeShift.Id);
                 activeCard.End();
@@ -69,7 +70,8 @@ internal sealed partial class VenueSyncApp
                         ScheduledEnd = open.ScheduledEnd,
                         Status = "OPEN",
                     };
-                    var action = ShiftRow.Draw(openCard.NextRow(), shim, isOpen: true, open.RoleName, theme,
+                    var openRow = openCard.NextRow();
+                    var action = ShiftRow.Draw(openCard, openRow, shim, isOpen: true, open.RoleName, theme,
                         $"open-{open.Id}");
                     HandleShiftAction(action, open.Id);
                 }
@@ -84,7 +86,8 @@ internal sealed partial class VenueSyncApp
                 var upcomingCard = GroupCard.Begin(theme, upcomingShifts.Count, ShiftRow.Height);
                 foreach (var scheduled in upcomingShifts)
                 {
-                    var action = ShiftRow.Draw(upcomingCard.NextRow(), scheduled, isOpen: false, null, theme,
+                    var upcomingRow = upcomingCard.NextRow();
+                    var action = ShiftRow.Draw(upcomingCard, upcomingRow, scheduled, isOpen: false, null, theme,
                         $"upcoming-{scheduled.Id}");
                     HandleShiftAction(action, scheduled.Id);
                 }

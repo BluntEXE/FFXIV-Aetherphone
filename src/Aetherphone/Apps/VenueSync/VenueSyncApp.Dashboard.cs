@@ -132,15 +132,17 @@ internal sealed partial class VenueSyncApp
         var openShiftsCount = state.Shifts?.OpenShifts.Count ?? 0;
         var card = GroupCard.Begin(theme, 2, ActionRowHeight);
 
-        if (DrawActionRow(card.NextRow(), FontAwesomeIcon.Coins, theme.Accent, "Log a Sale",
+        var logSaleRow = card.NextRow();
+        if (DrawActionRow(card, logSaleRow, FontAwesomeIcon.Coins, theme.Accent, "Log a Sale",
                 "Record a transaction", null, "venuesync.dashboard.logsale"))
         {
             router.Push(VenueSyncRoute.Sales);
         }
 
         var upcomingSubtitle = openShiftsCount == 0 ? "None open right now" : "Tap to view and claim";
-        if (DrawActionRow(card.NextRow(), FontAwesomeIcon.Clock, theme.Accent, "Upcoming Shifts", upcomingSubtitle,
-                openShiftsCount.ToString(), "venuesync.dashboard.upcoming"))
+        var upcomingRow = card.NextRow();
+        if (DrawActionRow(card, upcomingRow, FontAwesomeIcon.Clock, theme.Accent, "Upcoming Shifts",
+                upcomingSubtitle, openShiftsCount.ToString(), "venuesync.dashboard.upcoming"))
         {
             router.Push(VenueSyncRoute.Shifts);
         }
@@ -154,17 +156,20 @@ internal sealed partial class VenueSyncApp
         var sessionRow = new Rect(origin, new Vector2(origin.X + width, origin.Y + ActionRowHeight * scale));
         var count = state.SessionSalesCount;
         var sessionValue = count == 0 ? "No sales yet" : $"{count} sale{(count == 1 ? "" : "s")} · {state.SessionSalesTotal:N0}g";
-        DrawActionRow(sessionRow, FontAwesomeIcon.Coins, theme.TextMuted, "This Session", sessionValue, null,
-            "venuesync.dashboard.session", clickable: false);
+        DrawActionRow(default, sessionRow, FontAwesomeIcon.Coins, theme.TextMuted, "This Session", sessionValue,
+            null, "venuesync.dashboard.session", clickable: false);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, ActionRowHeight * scale));
     }
 
     // Content row matching Jobs' DrawJobRow (Apps/Jobs/JobsApp.cs:351-425): icon tile, a bold
     // primary title, a muted secondary subtitle beneath it, an optional small trailing count, and
-    // a hover overlay over the whole row when it's clickable.
-    private bool DrawActionRow(Rect row, FontAwesomeIcon icon, Vector4 tint, string title, string subtitle,
-        string? trailingCount, string idSuffix, bool clickable = true)
+    // a hover overlay over the whole row when it's clickable. The overlay is drawn via
+    // GroupCard.DrawHoverHighlight so it's full-bleed to the card edges and corner-rounded to
+    // match, rather than a plain square AddRectFilled inset by the row's own padding. `card` is
+    // unused (and may be `default`) when `clickable` is false, since the highlight never draws.
+    private bool DrawActionRow(GroupCard card, Rect row, FontAwesomeIcon icon, Vector4 tint, string title,
+        string subtitle, string? trailingCount, string idSuffix, bool clickable = true)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var drawList = ImGui.GetWindowDrawList();
@@ -172,7 +177,7 @@ internal sealed partial class VenueSyncApp
         if (hovered)
         {
             var alpha = ImGui.IsMouseDown(ImGuiMouseButton.Left) ? 0.14f : 0.07f;
-            drawList.AddRectFilled(row.Min, row.Max, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, alpha)));
+            card.DrawHoverHighlight(new Vector4(1f, 1f, 1f, alpha));
         }
 
         var iconSize = 42f * scale;

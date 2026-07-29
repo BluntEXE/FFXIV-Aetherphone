@@ -12,12 +12,14 @@ internal enum ShiftRowAction { None, ClockIn, ClockOut, Claim }
 
 // Mirrors Jobs' DrawJobRow (Apps/Jobs/JobsApp.cs:351-425): icon tile on the left, a two-tier
 // title/subtitle stack, a hover overlay over the row, and an accent-tinted status pill for state
-// that isn't already conveyed by the action button's color.
+// that isn't already conveyed by the action button's color. The hover overlay itself is drawn via
+// GroupCard.DrawHoverHighlight so it's full-bleed to the card edges and corner-rounded to match,
+// instead of the plain square AddRectFilled Jobs uses over its own (non-GroupCard) row bounds.
 internal static class ShiftRow
 {
     public const float Height = 64f;
 
-    public static ShiftRowAction Draw(Rect row, VenueSyncShift shift, bool isOpen, string? roleName,
+    public static ShiftRowAction Draw(GroupCard card, Rect row, VenueSyncShift shift, bool isOpen, string? roleName,
         PhoneTheme theme, string idSuffix)
     {
         var scale = ImGuiHelpers.GlobalScale;
@@ -46,7 +48,7 @@ internal static class ShiftRow
         if (rowHovered)
         {
             var alpha = ImGui.IsMouseDown(ImGuiMouseButton.Left) ? 0.14f : 0.07f;
-            drawList.AddRectFilled(row.Min, row.Max, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, alpha)));
+            card.DrawHoverHighlight(new Vector4(1f, 1f, 1f, alpha));
         }
 
         var iconSize = 42f * scale;
