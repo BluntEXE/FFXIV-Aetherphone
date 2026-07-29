@@ -176,7 +176,8 @@ internal sealed record StoryDto(
     long ExpiresAtUnix,
     bool Seen,
     int ViewCount,
-    string ScanStatus = "clean") : IIdentified;
+    string ScanStatus = "clean",
+    int AuthorBadges = 0) : IIdentified;
 
 internal sealed record StoryRingDto(
     string AuthorId,
@@ -186,7 +187,8 @@ internal sealed record StoryRingDto(
     bool IsMe,
     bool HasUnseen,
     int Count,
-    long LatestAtUnix);
+    long LatestAtUnix,
+    int AuthorBadges = 0);
 
 internal sealed record StoryTray(StoryRingDto[] Rings);
 
@@ -197,7 +199,8 @@ internal sealed record StoryViewerDto(
     string DisplayName,
     string Handle,
     string? AvatarUrl,
-    long ViewedAtUnix);
+    long ViewedAtUnix,
+    int Badges = 0);
 
 internal sealed record StoryViewersPage(StoryViewerDto[] Items, int Total);
 

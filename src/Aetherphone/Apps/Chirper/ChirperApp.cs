@@ -939,14 +939,14 @@ internal sealed partial class ChirperApp : IPhoneApp
         var nameSize = Typography.Measure(name, 0.85f, FontWeight.SemiBold);
         var nameHovering = UiInteract.Hover(new Vector2(min.X + innerPad, min.Y + innerPad),
             new Vector2(min.X + innerPad + nameMaxWidth, min.Y + innerPad + nameSize.Y));
-        UserName.Draw("chirper.quote.author." + hostId, rawName, quoted.AuthorBadges, min.X + innerPad,
-            min.Y + innerPad, nameMaxWidth, new TextStyle(0.85f, FontWeight.SemiBold), theme.TextStrong, nameHovering,
-            theme);
+        var drawnNameWidth = UserName.Draw("chirper.quote.author." + hostId, rawName, quoted.AuthorBadges,
+            min.X + innerPad, min.Y + innerPad, nameMaxWidth, new TextStyle(0.85f, FontWeight.SemiBold),
+            theme.TextStrong, nameHovering, theme);
         var meta = SocialIdentity.FeedMeta(quoted.AuthorHandle, TimeText.Short(quoted.CreatedAtUnix));
-        var metaMaxWidth = MathF.Max(1f, innerWidth - nameSize.X - 6f * scale);
+        var metaMaxWidth = MathF.Max(1f, innerWidth - drawnNameWidth - 6f * scale);
         var clippedMeta = Typography.FitText(meta, metaMaxWidth, 0.8f, FontWeight.Regular);
         var metaSize = Typography.Measure(clippedMeta, 0.8f);
-        Typography.Draw(new Vector2(min.X + innerPad + nameSize.X + 6f * scale,
+        Typography.Draw(new Vector2(min.X + innerPad + drawnNameWidth + 6f * scale,
             min.Y + innerPad + (nameSize.Y - metaSize.Y) * 0.5f), clippedMeta, AppPalettes.Chirper.MutedInk, 0.8f);
         if (quoted.Text.Length > 0)
         {
@@ -1131,12 +1131,13 @@ internal sealed partial class ChirperApp : IPhoneApp
         var nameSize = Typography.Measure(displayName, 0.95f, FontWeight.SemiBold);
         var nameHovering = UiInteract.Hover(new Vector2(textLeft, origin.Y),
             new Vector2(textLeft + nameMaxWidth, origin.Y + nameSize.Y));
-        UserName.Draw("chirper.comment.author." + comment.Id, rawDisplayName, comment.AuthorBadges, textLeft,
-            origin.Y, nameMaxWidth, new TextStyle(0.95f, FontWeight.SemiBold), theme.TextStrong, nameHovering, theme);
+        var drawnNameWidth = UserName.Draw("chirper.comment.author." + comment.Id, rawDisplayName,
+            comment.AuthorBadges, textLeft, origin.Y, nameMaxWidth, new TextStyle(0.95f, FontWeight.SemiBold),
+            theme.TextStrong, nameHovering, theme);
         var meta = comment.AuthorHandle.Length > 0
             ? $"@{comment.AuthorHandle} · {TimeText.Short(comment.CreatedAtUnix)}"
             : TimeText.Short(comment.CreatedAtUnix);
-        var metaLeft = textLeft + nameSize.X + 7f * scale;
+        var metaLeft = textLeft + drawnNameWidth + 7f * scale;
         var metaMaxWidth = MathF.Max(1f, commentRight - metaLeft - 34f * scale);
         var metaFullSize = Typography.Measure(meta, 0.85f);
         var metaY = origin.Y + (nameSize.Y - metaFullSize.Y) * 0.5f;

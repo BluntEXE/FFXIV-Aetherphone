@@ -393,6 +393,7 @@ internal sealed partial class VelvetShell
                     World = string.Empty,
                     AvatarUrl = user.AvatarUrl,
                     RoleBadges = user.Badges,
+                    UserId = user.Id,
                 };
                 if (VRow.Draw(in model, ui, theme, images, lodestone) == VRowHit.Body)
                 {

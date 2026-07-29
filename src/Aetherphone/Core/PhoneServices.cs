@@ -209,8 +209,7 @@ internal sealed class PhoneServices : IDisposable
         var socialNotifications = new SocialNotificationService(aethernetSession, aethernet.Account, notifications, configuration, framework, visibility, realtimeSignals, installer);
         var moderationNotices = new ModerationNoticeService(aethernetSession, aethernet.Account, framework,
             visibility, realtimeSignals);
-        var accountState = new AccountStateService(aethernetSession, aethernet.Account, framework,
-            visibility, realtimeSignals);
+        var accountState = new AccountStateService(aethernetSession, aethernet.Account, framework, visibility);
         var moderationPresenter = new ModerationNoticePresenter(moderationNotices, confirm, notifications, framework);
         var moderationArchive = new ModerationNoticeArchive(aethernetSession, aethernet.Account);
         var safetyLauncher = new SafetyLauncher();
