@@ -68,8 +68,11 @@ internal sealed partial class VenueSyncApp : IPhoneApp
             case VenueSyncRoute.Shifts:
                 DrawShifts(area);
                 break;
+            case VenueSyncRoute.Sales:
+                DrawSales(area);
+                break;
             default:
-                // Sales/Settings screens land in later tasks; nothing to draw yet.
+                // Settings screen lands in a later task; nothing to draw yet.
                 break;
         }
     }
