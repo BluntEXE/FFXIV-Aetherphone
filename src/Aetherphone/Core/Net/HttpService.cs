@@ -87,27 +87,28 @@ internal sealed class HttpService : IDisposable
     }
 
     public async Task<T?> GetJsonAsync<T>(string url, JsonTypeInfo<T> typeInfo, string? bearer, CancellationToken token,
-        Action<int>? onStatus = null, string? appScope = null)
+        Action<int>? onStatus = null, string? appScope = null, string? apiKey = null)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        return await SendForJsonAsync(request, typeInfo, bearer, onStatus, appScope, token).ConfigureAwait(false);
+        return await SendForJsonAsync(request, typeInfo, bearer, onStatus, appScope, token, apiKey).ConfigureAwait(false);
     }
 
     public Task<TResponse?> PostJsonAsync<TRequest, TResponse>(string url, TRequest body,
         JsonTypeInfo<TRequest> requestInfo, JsonTypeInfo<TResponse> responseInfo, string? bearer,
-        CancellationToken token, Action<int>? onStatus = null, string? appScope = null)
+        CancellationToken token, Action<int>? onStatus = null, string? appScope = null, string? apiKey = null)
     {
-        return SendJsonAsync(HttpMethod.Post, url, body, requestInfo, responseInfo, bearer, token, onStatus, appScope);
+        return SendJsonAsync(HttpMethod.Post, url, body, requestInfo, responseInfo, bearer, token, onStatus, appScope,
+            apiKey);
     }
 
     public async Task<TResponse?> SendJsonAsync<TRequest, TResponse>(HttpMethod method, string url, TRequest body,
         JsonTypeInfo<TRequest> requestInfo, JsonTypeInfo<TResponse> responseInfo, string? bearer,
-        CancellationToken token, Action<int>? onStatus = null, string? appScope = null)
+        CancellationToken token, Action<int>? onStatus = null, string? appScope = null, string? apiKey = null)
     {
         using var request = new HttpRequestMessage(method, url);
         var payload = JsonSerializer.Serialize(body, requestInfo);
         request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
-        return await SendForJsonAsync(request, responseInfo, bearer, onStatus, appScope, token).ConfigureAwait(false);
+        return await SendForJsonAsync(request, responseInfo, bearer, onStatus, appScope, token, apiKey).ConfigureAwait(false);
     }
 
     public async Task<TResponse?> RequestJsonAsync<TResponse>(HttpMethod method, string url,
@@ -226,7 +227,7 @@ internal sealed class HttpService : IDisposable
     }
 
     private async Task<T?> SendForJsonAsync<T>(HttpRequestMessage request, JsonTypeInfo<T> typeInfo, string? bearer,
-        Action<int>? onStatus, string? appScope, CancellationToken token)
+        Action<int>? onStatus, string? appScope, CancellationToken token, string? apiKey = null)
     {
         if (IsPaused(request.RequestUri))
         {
@@ -234,7 +235,7 @@ internal sealed class HttpService : IDisposable
             return default;
         }
 
-        ApplyHeaders(request, bearer, appScope);
+        ApplyHeaders(request, bearer, appScope, apiKey);
         var cacheKey = request.Method == HttpMethod.Get
             ? EtagCache.Key(bearer, appScope, request.RequestUri)
             : null;
@@ -292,7 +293,7 @@ internal sealed class HttpService : IDisposable
         }
     }
 
-    private static void ApplyHeaders(HttpRequestMessage request, string? bearer, string? appScope)
+    private static void ApplyHeaders(HttpRequestMessage request, string? bearer, string? appScope, string? apiKey = null)
     {
         if (!string.IsNullOrEmpty(bearer))
         {
@@ -302,6 +303,11 @@ internal sealed class HttpService : IDisposable
         if (!string.IsNullOrEmpty(appScope))
         {
             request.Headers.TryAddWithoutValidation("X-Aep-App", appScope);
+        }
+
+        if (!string.IsNullOrEmpty(apiKey))
+        {
+            request.Headers.TryAddWithoutValidation("x-api-key", apiKey);
         }
     }
 
