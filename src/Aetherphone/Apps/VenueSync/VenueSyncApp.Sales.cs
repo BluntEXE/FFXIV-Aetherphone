@@ -9,7 +9,7 @@ namespace Aetherphone.Apps.VenueSync;
 
 internal sealed partial class VenueSyncApp
 {
-    private bool salesServicesLoaded;
+    private string? salesServicesLoadedForVenueId;
     private List<VenueSyncService> salesServices = new();
     private int salesSelectedServiceIndex = -1;
     private string salesCustomerName = string.Empty;
@@ -21,24 +21,43 @@ internal sealed partial class VenueSyncApp
         var scale = ImGuiHelpers.GlobalScale;
         AppHeader.Draw(new PhoneContext(area, theme, navigation), "Log a Sale", back);
 
-        if (!salesServicesLoaded)
+        if (salesServicesLoadedForVenueId != configuration.VenueSyncSelectedVenueId)
         {
-            salesServicesLoaded = true;
-            _ = LoadSalesServicesAsync();
+            salesServicesLoadedForVenueId = configuration.VenueSyncSelectedVenueId;
+            salesSelectedServiceIndex = -1;
+            if (string.IsNullOrEmpty(configuration.VenueSyncSelectedVenueId))
+            {
+                salesServices = new();
+            }
+            else
+            {
+                _ = LoadSalesServicesAsync();
+            }
         }
 
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         using (AppSurface.Begin(body))
         {
-            var rowCount = salesError is not null ? 5 : 4;
+            var rowCount = (salesError is not null ? 5 : 4) + salesServices.Count;
             var card = GroupCard.Begin(theme, rowCount, Metrics.Size.Row);
 
             var serviceLabel = salesSelectedServiceIndex >= 0 && salesSelectedServiceIndex < salesServices.Count
                 ? salesServices[salesSelectedServiceIndex].Name
                 : "Select a service";
-            if (SettingsRow.Disclosure(card.NextRow(), "Service", serviceLabel, theme) && salesServices.Count > 0)
+            if (SettingsRow.Disclosure(card.NextRow(), "Service", serviceLabel, theme))
             {
-                salesSelectedServiceIndex = (salesSelectedServiceIndex + 1) % salesServices.Count;
+                _ = LoadSalesServicesAsync();
+            }
+
+            for (var i = 0; i < salesServices.Count; i++)
+            {
+                var service = salesServices[i];
+                var selected = i == salesSelectedServiceIndex;
+                if (SettingsRow.Selectable(card.NextRow(), service.Name, selected, theme,
+                        $"venuesync.sales.service-{service.Id}"))
+                {
+                    salesSelectedServiceIndex = i;
+                }
             }
 
             var customerRow = card.NextRow();
