@@ -3355,6 +3355,8 @@
   "share.noTargets": "No apps can open this yet",
   "settings.importScreenshots": "Import screenshots",
   "settings.importScreenshotsHint": "Copy screenshots you take into the Photos gallery, including ones from ReShade and GShade. Only shots taken while the phone is running are copied, and the originals stay where they are.",
+  "social.roleVerified": "Verified",
+  "social.rolePatreon": "Patreon member",
   "social.aspectSquare": "Square",
   "social.aspectPortrait": "Portrait",
   "social.aspectLandscape": "Landscape",

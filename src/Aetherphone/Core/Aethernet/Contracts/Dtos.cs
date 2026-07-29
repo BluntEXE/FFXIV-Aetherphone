@@ -67,7 +67,8 @@ internal sealed record UserDto(
     bool IsPrivate = false,
     bool FollowRequested = false,
     int PendingFollowRequests = 0,
-    string Region = "") : IIdentified;
+    string Region = "",
+    int Badges = 0) : IIdentified;
 
 internal sealed record UpdateProfileRequest(string? DisplayName, string? Handle, string? Bio, string? AvatarUrl = null);
 
@@ -139,7 +140,8 @@ internal sealed record PostDto(
     PostDto? ReferencedPost = null,
     int RepostCount = 0,
     bool MyReposted = false,
-    bool Saved = false) : IIdentified;
+    bool Saved = false,
+    int AuthorBadges = 0) : IIdentified;
 
 internal sealed record FeedPage(PostDto[] Items, string? NextCursor);
 
@@ -212,7 +214,8 @@ internal sealed record CommentDto(
     int LikeCount,
     bool Liked,
     MentionDto[]? Mentions = null,
-    string ScanStatus = "clean") : IIdentified;
+    string ScanStatus = "clean",
+    int AuthorBadges = 0) : IIdentified;
 
 internal sealed record CreateCommentRequest(string Text);
 

@@ -3355,6 +3355,8 @@
   "share.noTargets": "Noch keine App kann das öffnen",
   "settings.importScreenshots": "Screenshots importieren",
   "settings.importScreenshotsHint": "Kopiert deine Screenshots in die Fotos-Galerie, auch die von ReShade und GShade. Es werden nur Aufnahmen kopiert, die bei laufendem Telefon entstehen; die Originale bleiben, wo sie sind.",
+  "social.roleVerified": "Verifiziert",
+  "social.rolePatreon": "Patreon-Mitglied",
   "social.aspectSquare": "Quadrat",
   "social.aspectPortrait": "Hochformat",
   "social.aspectLandscape": "Querformat",

@@ -3355,6 +3355,8 @@
   "share.noTargets": "Bunu açabilecek uygulama yok",
   "settings.importScreenshots": "Ekran görüntülerini içe aktar",
   "settings.importScreenshotsHint": "Aldığın ekran görüntülerini Fotoğraflar galerisine kopyalar, ReShade ve GShade'den gelenler dahil. Yalnızca telefon çalışırken alınanlar kopyalanır, orijinaller yerinde kalır.",
+  "social.roleVerified": "Doğrulanmış",
+  "social.rolePatreon": "Patreon üyesi",
   "social.aspectSquare": "Kare",
   "social.aspectPortrait": "Dikey",
   "social.aspectLandscape": "Yatay",

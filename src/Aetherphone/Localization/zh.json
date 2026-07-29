@@ -3355,6 +3355,8 @@
   "share.noTargets": "暂时没有应用可以打开",
   "settings.importScreenshots": "导入截图",
   "settings.importScreenshotsHint": "把你拍下的截图复制到“照片”图库，包括 ReShade 和 GShade 的截图。只复制手机运行期间拍摄的截图，原文件保持不动。",
+  "social.roleVerified": "已认证",
+  "social.rolePatreon": "Patreon 会员",
   "social.aspectSquare": "方形",
   "social.aspectPortrait": "竖版",
   "social.aspectLandscape": "横版",

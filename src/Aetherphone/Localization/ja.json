@@ -3355,6 +3355,8 @@
   "share.noTargets": "これを開けるアプリがまだありません",
   "settings.importScreenshots": "スクリーンショットを取り込む",
   "settings.importScreenshotsHint": "撮影したスクリーンショットを写真ギャラリーにコピーします。ReShadeやGShadeのものも含みます。コピーされるのは電話の起動中に撮影した分だけで、元のファイルはそのまま残ります。",
+  "social.roleVerified": "認証済み",
+  "social.rolePatreon": "Patreonメンバー",
   "social.aspectSquare": "正方形",
   "social.aspectPortrait": "縦長",
   "social.aspectLandscape": "横長",

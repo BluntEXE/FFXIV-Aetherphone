@@ -853,8 +853,8 @@ internal sealed partial class AethergramApp : IPhoneApp
         var cardNameHeight = Typography.Measure(displayName, cardNameStyle).Y;
         var cardNameHovering = UiInteract.Hover(new Vector2(nameLeft, origin.Y + pad),
             new Vector2(nameLeft + headerTextMaxWidth, origin.Y + pad + cardNameHeight));
-        Marquee.DrawLeft("aethergram.card." + post.Id, displayName, nameLeft, origin.Y + pad, headerTextMaxWidth,
-            cardNameStyle, theme.TextStrong, cardNameHovering);
+        UserName.Draw("aethergram.card." + post.Id, displayName, post.AuthorBadges, nameLeft, origin.Y + pad,
+            headerTextMaxWidth, cardNameStyle, theme.TextStrong, cardNameHovering, theme);
         var subline = SocialIdentity.FeedMeta(post.AuthorHandle, TimeText.Short(post.CreatedAtUnix));
         var sublineTop = origin.Y + pad + PostCardMetrics.SublineTop * scale;
         var sublineSize = Typography.Measure(subline, 0.85f);

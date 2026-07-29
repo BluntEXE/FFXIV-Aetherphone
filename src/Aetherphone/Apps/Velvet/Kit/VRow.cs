@@ -42,6 +42,7 @@ internal struct VRowModel
     public bool PillFilled;
     public bool PillEnabled;
     public int Badge;
+    public int RoleBadges;
     public string Time;
     public bool Chevron;
     public bool Decline;
@@ -164,8 +165,8 @@ internal static class VRow
         if (subtitleText.Length == 0)
         {
             var titleSize = Typography.Measure(titleText, TextStyles.Headline);
-            Marquee.DrawLeft("vrow.title." + titleText, titleText, textLeft, centerY - titleSize.Y * 0.5f,
-                innerWidth, TextStyles.Headline, VelvetTheme.TitleInk, hovered);
+            UserName.Draw(drawList, "vrow.title." + titleText, titleText, model.RoleBadges, textLeft,
+                centerY - titleSize.Y * 0.5f, innerWidth, TextStyles.Headline, VelvetTheme.TitleInk, hovered, false);
         }
         else
         {
@@ -173,8 +174,8 @@ internal static class VRow
             var titleSize = Typography.Measure(titleText, TextStyles.Headline);
             var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleY),
                 new Vector2(textLeft + innerWidth, titleY + titleSize.Y));
-            Marquee.DrawLeft("vrow.title." + titleText, titleText, textLeft, titleY, innerWidth,
-                TextStyles.Headline, VelvetTheme.TitleInk, titleHovering);
+            UserName.Draw(drawList, "vrow.title." + titleText, titleText, model.RoleBadges, textLeft, titleY,
+                innerWidth, TextStyles.Headline, VelvetTheme.TitleInk, titleHovering, false);
             var subtitleY = centerY + 3f * scale;
             var subtitleSize = Typography.Measure(subtitleText, TextStyles.Subheadline);
             var subtitleHovering = UiInteract.Hover(new Vector2(textLeft, subtitleY),

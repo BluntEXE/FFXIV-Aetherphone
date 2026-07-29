@@ -3355,6 +3355,8 @@
   "share.noTargets": "Ninguna app puede abrir esto todavía",
   "settings.importScreenshots": "Importar capturas",
   "settings.importScreenshotsHint": "Copia tus capturas de pantalla a la galería de Fotos, incluidas las de ReShade y GShade. Solo se copian las tomadas mientras el teléfono está en marcha, y los originales se quedan donde están.",
+  "social.roleVerified": "Verificado",
+  "social.rolePatreon": "Miembro de Patreon",
   "social.aspectSquare": "Cuadrado",
   "social.aspectPortrait": "Vertical",
   "social.aspectLandscape": "Horizontal",

@@ -60,8 +60,8 @@ internal sealed partial class AethergramApp
             var headerNameY = avatarCenter.Y - (headerNameSize.Y + headerTextGap + headerMetaSize.Y) * 0.5f;
             var headerNameHovering = UiInteract.Hover(new Vector2(nameLeft, headerNameY),
                 new Vector2(nameLeft + headerTextMaxWidth, headerNameY + headerNameSize.Y));
-            Marquee.DrawLeft("aethergram.detail.header." + post.Id, displayName, nameLeft, headerNameY,
-                headerTextMaxWidth, headerNameStyle, theme.TextStrong, headerNameHovering);
+            UserName.Draw("aethergram.detail.header." + post.Id, displayName, post.AuthorBadges, nameLeft,
+                headerNameY, headerTextMaxWidth, headerNameStyle, theme.TextStrong, headerNameHovering, theme);
             var headerMetaTop = headerNameY + headerNameSize.Y + headerTextGap;
             var headerMetaHovering = UiInteract.Hover(new Vector2(nameLeft, headerMetaTop),
                 new Vector2(nameLeft + headerTextMaxWidth, headerMetaTop + headerMetaSize.Y));
@@ -176,9 +176,9 @@ internal sealed partial class AethergramApp
                 var captionNameSize = Typography.Measure(displayName, 0.9f, FontWeight.SemiBold);
                 var captionNameHovering = UiInteract.Hover(captionPos,
                     new Vector2(captionPos.X + captionNameMaxWidth, captionPos.Y + captionNameSize.Y));
-                var nameWidth = Marquee.DrawLeft("aethergram.detail.captionname." + post.Id, displayName,
-                    captionPos.X, captionPos.Y, captionNameMaxWidth, new TextStyle(0.9f, FontWeight.SemiBold),
-                    theme.TextStrong, captionNameHovering);
+                var nameWidth = UserName.Draw("aethergram.detail.captionname." + post.Id, displayName,
+                    post.AuthorBadges, captionPos.X, captionPos.Y, captionNameMaxWidth,
+                    new TextStyle(0.9f, FontWeight.SemiBold), theme.TextStrong, captionNameHovering, theme);
                 var captionLeft = captionPos.X + nameWidth + 6f * scale;
                 ImGui.SetCursorScreenPos(new Vector2(captionLeft, captionPos.Y));
                 RichTextLayout? captionLayout;
@@ -288,8 +288,8 @@ internal sealed partial class AethergramApp
         var nameTop = bubbleTop + padTop;
         var commentNameHovering = UiInteract.Hover(new Vector2(textLeft, nameTop),
             new Vector2(textRight, nameTop + nameHeight));
-        var nameWidth = Marquee.DrawLeft("aethergram.comment." + comment.Id, displayName, textLeft, nameTop,
-            textRight - textLeft, commentNameStyle, theme.TextStrong, commentNameHovering);
+        var nameWidth = UserName.Draw("aethergram.comment." + comment.Id, displayName, comment.AuthorBadges, textLeft,
+            nameTop, textRight - textLeft, commentNameStyle, theme.TextStrong, commentNameHovering, theme);
         var meta = TimeText.Short(comment.CreatedAtUnix);
         var metaSize = Typography.Measure(meta, 0.8f);
         var metaLeft = textLeft + nameWidth + 8f * scale;

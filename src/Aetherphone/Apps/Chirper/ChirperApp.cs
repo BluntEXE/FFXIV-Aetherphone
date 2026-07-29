@@ -447,8 +447,9 @@ internal sealed partial class ChirperApp : IPhoneApp
 
         var nameHovering = UiInteract.Hover(new Vector2(contentLeft, contentTop + pad),
             new Vector2(contentLeft + nameMaxWidth, contentTop + pad + nameSize.Y));
-        var drawnNameWidth = Marquee.DrawLeft("chirper.post.author." + post.Id, rawDisplayName, contentLeft,
-            contentTop + pad, nameMaxWidth, new TextStyle(1.05f, FontWeight.SemiBold), theme.TextStrong, nameHovering);
+        var drawnNameWidth = UserName.Draw("chirper.post.author." + post.Id, rawDisplayName, post.AuthorBadges,
+            contentLeft, contentTop + pad, nameMaxWidth, new TextStyle(1.05f, FontWeight.SemiBold), theme.TextStrong,
+            nameHovering, theme);
         var meta = SocialIdentity.FeedMeta(post.AuthorHandle, TimeText.Short(post.CreatedAtUnix));
         if (ContentModeration.IsInReview(post.ScanStatus))
         {
@@ -938,8 +939,9 @@ internal sealed partial class ChirperApp : IPhoneApp
         var nameSize = Typography.Measure(name, 0.85f, FontWeight.SemiBold);
         var nameHovering = UiInteract.Hover(new Vector2(min.X + innerPad, min.Y + innerPad),
             new Vector2(min.X + innerPad + nameMaxWidth, min.Y + innerPad + nameSize.Y));
-        Marquee.DrawLeft("chirper.quote.author." + hostId, rawName, min.X + innerPad, min.Y + innerPad,
-            nameMaxWidth, new TextStyle(0.85f, FontWeight.SemiBold), theme.TextStrong, nameHovering);
+        UserName.Draw("chirper.quote.author." + hostId, rawName, quoted.AuthorBadges, min.X + innerPad,
+            min.Y + innerPad, nameMaxWidth, new TextStyle(0.85f, FontWeight.SemiBold), theme.TextStrong, nameHovering,
+            theme);
         var meta = SocialIdentity.FeedMeta(quoted.AuthorHandle, TimeText.Short(quoted.CreatedAtUnix));
         var metaMaxWidth = MathF.Max(1f, innerWidth - nameSize.X - 6f * scale);
         var clippedMeta = Typography.FitText(meta, metaMaxWidth, 0.8f, FontWeight.Regular);
@@ -1129,8 +1131,8 @@ internal sealed partial class ChirperApp : IPhoneApp
         var nameSize = Typography.Measure(displayName, 0.95f, FontWeight.SemiBold);
         var nameHovering = UiInteract.Hover(new Vector2(textLeft, origin.Y),
             new Vector2(textLeft + nameMaxWidth, origin.Y + nameSize.Y));
-        Marquee.DrawLeft("chirper.comment.author." + comment.Id, rawDisplayName, textLeft, origin.Y,
-            nameMaxWidth, new TextStyle(0.95f, FontWeight.SemiBold), theme.TextStrong, nameHovering);
+        UserName.Draw("chirper.comment.author." + comment.Id, rawDisplayName, comment.AuthorBadges, textLeft,
+            origin.Y, nameMaxWidth, new TextStyle(0.95f, FontWeight.SemiBold), theme.TextStrong, nameHovering, theme);
         var meta = comment.AuthorHandle.Length > 0
             ? $"@{comment.AuthorHandle} · {TimeText.Short(comment.CreatedAtUnix)}"
             : TimeText.Short(comment.CreatedAtUnix);

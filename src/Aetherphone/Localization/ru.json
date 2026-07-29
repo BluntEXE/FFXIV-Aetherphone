@@ -3355,6 +3355,8 @@
   "share.noTargets": "Пока ни одно приложение не может это открыть",
   "settings.importScreenshots": "Импортировать скриншоты",
   "settings.importScreenshotsHint": "Копирует ваши скриншоты в галерею «Фото», включая снимки из ReShade и GShade. Копируются только те, что сделаны при запущенном телефоне, а оригиналы остаются на месте.",
+  "social.roleVerified": "Подтверждён",
+  "social.rolePatreon": "Участник Patreon",
   "social.aspectSquare": "Квадрат",
   "social.aspectPortrait": "Портрет",
   "social.aspectLandscape": "Пейзаж",
