@@ -215,8 +215,7 @@ internal sealed partial class JobsApp : IPhoneApp
         var buttonCenter = new Vector2(content.Max.X - Metrics.Space.Lg * scale - radius, rowCenterY);
         var hasCategories = gameData.LocalPlayer is not null;
         var categoriesCenter = new Vector2(buttonCenter.X - radius * 2f - 10f * scale, rowCenterY);
-        var clusterLeftEdge = (hasCategories ? categoriesCenter.X : buttonCenter.X) - radius;
-        var rightReserve = content.Max.X - clusterLeftEdge + 8f * scale;
+        var rightReserve = content.Max.X - (categoriesCenter.X - radius) + 8f * scale;
         AppHeader.DrawTitleWithReserve(content, "jobs.header.title", DisplayName, rightReserve, ui.TitleInk, scale,
             leftReserve: 0f);
 
