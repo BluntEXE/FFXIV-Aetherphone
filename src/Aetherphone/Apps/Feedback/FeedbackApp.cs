@@ -185,14 +185,12 @@ internal sealed class FeedbackApp : IPhoneApp
         if (draft.Length == 0)
         {
             var placeholderPos = new Vector2(inputX + 4f * scale, inputTop + 2f * scale);
-            var wrapRight = inputX + inputWidth - 4f * scale - ImGui.GetWindowPos().X;
+            using (Typography.WrapAt(inputX + inputWidth - 4f * scale))
             using (Plugin.Fonts.Push(1.15f))
             using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Feedback.MutedInk))
             {
                 ImGui.SetCursorScreenPos(placeholderPos);
-                ImGui.PushTextWrapPos(wrapRight);
                 Typography.Plain(Loc.T(L.Feedback.Placeholder));
-                ImGui.PopTextWrapPos();
             }
         }
 
@@ -267,7 +265,7 @@ internal sealed class FeedbackApp : IPhoneApp
 
         var badgeRadius = 8.5f * scale;
         var badgeCenter = new Vector2(max.X - badgeRadius - 2f * scale, min.Y + badgeRadius + 2f * scale);
-        var badgeHovered = ImGui.IsMouseHoveringRect(badgeCenter - new Vector2(badgeRadius, badgeRadius),
+        var badgeHovered = UiInteract.Hover(badgeCenter - new Vector2(badgeRadius, badgeRadius),
             badgeCenter + new Vector2(badgeRadius, badgeRadius));
         drawList.AddCircleFilled(badgeCenter, badgeRadius,
             ImGui.GetColorU32(new Vector4(0f, 0f, 0f, badgeHovered ? 0.9f : 0.62f)), 20);
@@ -283,7 +281,7 @@ internal sealed class FeedbackApp : IPhoneApp
 
     private bool DrawAddTile(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding, float scale)
     {
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         Squircle.Fill(drawList, min, max, rounding,
             ImGui.GetColorU32(hovered ? ui.HoverTint : AppPalettes.Feedback.FieldSurface));
         Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(AddTileStroke), 1f);

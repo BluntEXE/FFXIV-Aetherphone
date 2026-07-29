@@ -1,6 +1,7 @@
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Home;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Core.Shell.Home;
@@ -146,7 +147,7 @@ internal sealed class HomeInteractionController
     private void HandlePress(Rect content, in HomeMetrics metrics, INavigator navigation, float delta)
     {
         var mouse = ImGui.GetMousePos();
-        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && content.Contains(mouse))
+        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && UiInteract.Hover(content.Min, content.Max))
         {
             if (editing && HandleEditChromeClick(content, metrics, mouse))
             {
@@ -568,7 +569,7 @@ internal sealed class HomeInteractionController
         hoverPos = ImGui.GetMousePos();
         var active = motion.Interactive && !editing && dragTile is null && settleTile is null &&
                      !folder.Active && !gallery.Active && !sizeMenu.Active && !pager.Dragging &&
-                     content.Contains(hoverPos);
+                     UiInteract.Hover(content.Min, content.Max);
         magnifyGate.Step(active ? 1f : 0f, MagnifyFadeTime, delta);
     }
 

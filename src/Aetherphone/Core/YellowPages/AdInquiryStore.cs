@@ -4,6 +4,7 @@ using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Home;
+using Aetherphone.Core.Report;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Core.YellowPages;
@@ -14,8 +15,11 @@ internal sealed class AdInquiryStore : IDisposable
     private static readonly TimeSpan BackgroundPollInterval = TimeSpan.FromSeconds(180);
     private static readonly TimeSpan ThreadPollInterval = TimeSpan.FromSeconds(4);
 
+    private const string ReportTargetType = "ad_message";
+
     private readonly AethernetSession session;
     private readonly YellowPagesClient client;
+    private readonly SafetyClient safety;
     private readonly ConversationKeyStore keys;
     private readonly KeyVault vault;
     private readonly MessageCipher cipher;
@@ -34,11 +38,12 @@ internal sealed class AdInquiryStore : IDisposable
     private DateTime nextThreadPoll = DateTime.MinValue;
     private readonly ConcurrentDictionary<string, string> scopeCache = new(StringComparer.Ordinal);
 
-    public AdInquiryStore(AethernetSession session, YellowPagesClient client, KeyVault vault,
+    public AdInquiryStore(AethernetSession session, YellowPagesClient client, SafetyClient safety, KeyVault vault,
         ConversationKeyStore keys, PhoneVisibility visibility, RealtimeSignalBus signals, AppGate gate)
     {
         this.session = session;
         this.client = client;
+        this.safety = safety;
         this.keys = keys;
         this.vault = vault;
         cipher = new MessageCipher(vault, keys);
@@ -79,6 +84,41 @@ internal sealed class AdInquiryStore : IDisposable
 
         return cipher.ResolveBody(ScopeFor(otherUserId), message.Id, message.Body, message.SenderId,
             message.CommitmentTag).Text;
+    }
+
+    public void ReportMessage(string otherUserId, string messageId, string? reason, Action<bool> onComplete)
+    {
+        var snapshot = messages;
+        var scope = ScopeFor(otherUserId);
+        if (!ReportReveals.TryCollect(snapshot, messageId,
+                message => RevealForReport(scope, message), out var revealed))
+        {
+            onComplete(false);
+            return;
+        }
+
+        work.Run("report inquiry message",
+            async token => await safety.ReportAsync(ReportTargetType, messageId, reason, token, revealed)
+                .ConfigureAwait(false),
+            onComplete);
+    }
+
+    private RevealedMessageDto? RevealForReport(string scope, AdInquiryMessageDto message)
+    {
+        if (message.Deleted)
+        {
+            return null;
+        }
+
+        if (message.EncVersion == EnvelopeCodec.VersionPlaintext)
+        {
+            return new RevealedMessageDto(message.Id, message.Body, null);
+        }
+
+        var body = cipher.ResolveBody(scope, message.Id, message.Body, message.SenderId, message.CommitmentTag);
+        return body.State == DmBodyState.Decrypted
+            ? new RevealedMessageDto(message.Id, body.Text, body.FrankingKey)
+            : null;
     }
 
     public string RevealPreview(AdInquiryDto thread)

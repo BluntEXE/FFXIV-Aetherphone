@@ -184,7 +184,7 @@ internal sealed partial class LinkpearlApp
     private static bool DrawResultRow(Rect row, PhoneTheme theme, float scale, string title, string subtitle,
         AvatarHandle image)
     {
-        var hovered = ImGui.IsMouseHoveringRect(row.Min, row.Max);
+        var hovered = UiInteract.Hover(row.Min, row.Max);
         var drawList = ImGui.GetWindowDrawList();
         var avatarRadius = 20f * scale;
         var avatarCenter = new Vector2(row.Min.X + avatarRadius, row.Center.Y);
@@ -194,7 +194,7 @@ internal sealed partial class LinkpearlApp
         var textMaxWidth = MathF.Max(1f, textRight - textX);
         var titleY = row.Center.Y - 16f * scale;
         var titleSize = Typography.Measure(title, 0.95f, FontWeight.Medium);
-        var titleHovering = ImGui.IsMouseHoveringRect(new Vector2(textX, titleY),
+        var titleHovering = UiInteract.Hover(new Vector2(textX, titleY),
             new Vector2(textX + textMaxWidth, titleY + titleSize.Y));
         Marquee.DrawLeft("linkpearl.result." + title + "." + subtitle, title, textX, titleY,
             textMaxWidth, new TextStyle(0.95f, FontWeight.Medium), theme.TextStrong, titleHovering);
@@ -202,7 +202,7 @@ internal sealed partial class LinkpearlApp
         {
             var subtitleY = row.Center.Y + 3f * scale;
             var subtitleSize = Typography.Measure(subtitle, 0.8f, FontWeight.Regular);
-            var subtitleHovering = ImGui.IsMouseHoveringRect(new Vector2(textX, subtitleY),
+            var subtitleHovering = UiInteract.Hover(new Vector2(textX, subtitleY),
                 new Vector2(textX + textMaxWidth, subtitleY + subtitleSize.Y));
             Marquee.DrawLeft("linkpearl.result.sub." + title + "." + subtitle, subtitle, textX,
                 subtitleY, textMaxWidth, new TextStyle(0.8f, FontWeight.Regular), theme.TextMuted,
@@ -475,7 +475,7 @@ internal sealed partial class LinkpearlApp
     {
         var style = new TextStyle(0.86f, FontWeight.Regular);
         var maxWidth = MathF.Max(1f, row.Width);
-        var hovering = ImGui.IsMouseHoveringRect(row.Min, row.Max);
+        var hovering = UiInteract.Hover(row.Min, row.Max);
         Marquee.DrawLeft("linkpearl.slogan." + slogan, slogan, row.Min.X, row.Center.Y - Typography.Measure(slogan, style).Y * 0.5f,
             maxWidth, style, theme.TextMuted, hovering);
     }
@@ -547,7 +547,7 @@ internal sealed partial class LinkpearlApp
         var box = 16f * scale;
         var min = center - new Vector2(box, box);
         var max = center + new Vector2(box, box);
-        var hovered = enabled && ImGui.IsMouseHoveringRect(min, max);
+        var hovered = enabled && UiInteract.Hover(min, max);
         var color = enabled ? (hovered ? theme.TextStrong : theme.Accent) : Palette.WithAlpha(theme.TextMuted, 0.35f);
         ProgressRing.CenterIcon(center, icon, color, 16f * scale);
         if (!enabled)

@@ -250,7 +250,7 @@ internal sealed partial class MessageApp
         var nameTop = origin.Y + 12f * scale;
         var contactName = ContactBook.DisplayLabel(contact);
         var nameSize = Typography.Measure(contactName, 1f, FontWeight.SemiBold);
-        var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, nameTop),
+        var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameTop),
             new Vector2(textLeft + textWidth, nameTop + nameSize.Y));
         Marquee.DrawLeft("messageapp.contacts.name." + contact.UserId, contactName, textLeft, nameTop, textWidth,
             new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, nameHovering);
@@ -335,14 +335,13 @@ internal sealed partial class MessageApp
         var top = area.Min.Y + AppHeader.Height * scale + 12f * scale;
         var textWidth = area.Width - sideInset * 2f;
         ImGui.SetCursorScreenPos(new Vector2(area.Min.X + sideInset, top));
-        ImGui.PushTextWrapPos(area.Min.X + sideInset + textWidth - ImGui.GetWindowPos().X);
+        using (Typography.WrapAt(area.Min.X + sideInset + textWidth))
         using (Plugin.Fonts.Push(TextStyles.Callout.Scale))
         using (ImRaii.PushColor(ImGuiCol.Text, ui.BodyInk))
         {
             Typography.Wrapped(Loc.T(L.Friends.NewNumberBody));
         }
 
-        ImGui.PopTextWrapPos();
         var afterBody = ImGui.GetItemRectMax().Y + 18f * scale;
 
         var request = contacts.NumberChange;

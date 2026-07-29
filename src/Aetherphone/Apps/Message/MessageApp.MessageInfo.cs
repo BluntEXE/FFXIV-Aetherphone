@@ -230,7 +230,7 @@ internal sealed partial class MessageApp
         var textLeft = avatarCenter.X + radius + 12f * scale;
         var stampWidth = stamp.Length > 0 ? Typography.Measure(stamp, 0.80f).X + 10f * scale : 0f;
         var labelMaxWidth = MathF.Max(1f, origin.X + width - pad - 26f * scale - stampWidth - textLeft);
-        var rowHovering = ImGui.IsMouseHoveringRect(origin, new Vector2(origin.X + width, origin.Y + rowHeight));
+        var rowHovering = UiInteract.Hover(origin, new Vector2(origin.X + width, origin.Y + rowHeight));
         Marquee.DrawLeft("messageapp.messageinfo.member." + member.UserId, label, textLeft,
             origin.Y + rowHeight * 0.5f - 9f * scale, labelMaxWidth, new TextStyle(1f, FontWeight.SemiBold),
             theme.TextStrong, rowHovering);

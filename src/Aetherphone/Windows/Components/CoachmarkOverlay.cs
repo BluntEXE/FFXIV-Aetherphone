@@ -321,7 +321,7 @@ internal sealed class CoachmarkOverlay
         }
 
         dl.PopClipRect();
-        if (isTap && live && hole is { } tapHole && ImGui.IsMouseHoveringRect(tapHole.Min, tapHole.Max))
+        if (isTap && live && hole is { } tapHole && UiInteract.Hover(tapHole.Min, tapHole.Max))
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
@@ -485,7 +485,7 @@ internal sealed class CoachmarkOverlay
         var min = center - half;
         var max = center + half;
         var radius = size.Y * 0.5f;
-        var hovered = live && ImGui.IsMouseHoveringRect(min, max);
+        var hovered = live && UiInteract.Hover(min, max);
         var fill = hovered ? Palette.Mix(accent, Vector4.One, 0.14f) : accent;
         Squircle.Fill(dl, min, max, radius, ImGui.GetColorU32(fill with { W = fill.W * alpha }));
         Typography.DrawCentered(dl, center, label, Ink with { W = contentAlpha }, TextStyles.Headline);

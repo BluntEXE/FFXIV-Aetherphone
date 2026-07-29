@@ -236,12 +236,12 @@ internal sealed partial class MessageApp
                 subSize.X = MathF.Min(subSize.X, nameCap);
                 var gapY = 1f * scale;
                 var stackTop = rowCenterY - (nameSize.Y + gapY + subSize.Y) * 0.5f;
-                var titleHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, stackTop),
+                var titleHovering = UiInteract.Hover(new Vector2(nameLeft, stackTop),
                     new Vector2(nameLeft + nameCap, stackTop + nameSize.Y));
                 Marquee.DrawLeft(titleId, name, nameLeft, stackTop, nameCap, new TextStyle(1f, FontWeight.SemiBold),
                     Theme.TextStrong, titleHovering);
                 var subTop = stackTop + nameSize.Y + gapY;
-                var subHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, subTop),
+                var subHovering = UiInteract.Hover(new Vector2(nameLeft, subTop),
                     new Vector2(nameLeft + nameCap, subTop + subSize.Y));
                 Marquee.DrawLeft(titleId + ".sub", sub, nameLeft, subTop, nameCap,
                     new TextStyle(0.72f, FontWeight.Regular), AppPalettes.Message.MutedInk, subHovering);
@@ -262,12 +262,12 @@ internal sealed partial class MessageApp
                     subSize.X = MathF.Min(subSize.X, nameCap);
                     var gapY = 1f * scale;
                     var stackTop = rowCenterY - (nameSize.Y + gapY + subSize.Y) * 0.5f;
-                    var titleHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, stackTop),
+                    var titleHovering = UiInteract.Hover(new Vector2(nameLeft, stackTop),
                         new Vector2(nameLeft + nameCap, stackTop + nameSize.Y));
                     Marquee.DrawLeft(titleId, name, nameLeft, stackTop, nameCap,
                         new TextStyle(1f, FontWeight.SemiBold), Theme.TextStrong, titleHovering);
                     var subTop = stackTop + nameSize.Y + gapY;
-                    var subHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, subTop),
+                    var subHovering = UiInteract.Hover(new Vector2(nameLeft, subTop),
                         new Vector2(nameLeft + nameCap, subTop + subSize.Y));
                     Marquee.DrawLeft(titleId + ".sub", presence, nameLeft, subTop, nameCap,
                         new TextStyle(0.72f, FontWeight.Regular),
@@ -276,7 +276,7 @@ internal sealed partial class MessageApp
                 else
                 {
                     var soloTop = rowCenterY - nameSize.Y * 0.5f;
-                    var titleHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, soloTop),
+                    var titleHovering = UiInteract.Hover(new Vector2(nameLeft, soloTop),
                         new Vector2(nameLeft + nameCap, soloTop + nameSize.Y));
                     Marquee.DrawLeft(titleId, name, nameLeft, soloTop, nameCap,
                         new TextStyle(1f, FontWeight.SemiBold), Theme.TextStrong, titleHovering);

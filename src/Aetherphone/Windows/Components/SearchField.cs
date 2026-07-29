@@ -94,7 +94,7 @@ internal static class SearchField
             return;
         }
 
-        var hovered = ImGui.IsMouseHoveringRect(clearCenter - new Vector2(clearRadius, clearRadius),
+        var hovered = UiInteract.Hover(clearCenter - new Vector2(clearRadius, clearRadius),
             clearCenter + new Vector2(clearRadius, clearRadius));
         drawList.AddCircleFilled(clearCenter, clearRadius,
             ImGui.GetColorU32(hovered ? mutedInk : clearFill), 16);

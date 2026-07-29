@@ -5,6 +5,7 @@ using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Linkpearl;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Report;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.YellowPages;
@@ -489,15 +490,13 @@ internal sealed partial class YellowPagesApp
         var mine = message.SenderId == inquiries.MyUserId;
         inquiryMenuItems[0] = new DropdownMenu.Item(Loc.T(L.Messages.CopyMessage),
             FontAwesomeIcon.Copy.ToIconString());
-        var count = 1;
-        if (mine)
-        {
-            inquiryMenuItems[1] = new DropdownMenu.Item(Loc.T(L.Message.DeleteAction),
-                FontAwesomeIcon.TrashAlt.ToIconString(), Danger: true);
-            count = 2;
-        }
+        inquiryMenuItems[1] = mine
+            ? new DropdownMenu.Item(Loc.T(L.Message.DeleteAction),
+                FontAwesomeIcon.TrashAlt.ToIconString(), Danger: true)
+            : new DropdownMenu.Item(Loc.T(L.Encryption.ReportMessageAction),
+                FontAwesomeIcon.Flag.ToIconString(), Danger: true);
 
-        var picked = inquiryMenu.Draw(screen, theme, inquiryMenuItems.AsSpan(0, count));
+        var picked = inquiryMenu.Draw(screen, theme, inquiryMenuItems.AsSpan(0, 2));
         if (picked < 0)
         {
             return;
@@ -510,7 +509,28 @@ internal sealed partial class YellowPagesApp
             return;
         }
 
-        AskDeleteInquiryMessage(message);
+        if (mine)
+        {
+            AskDeleteInquiryMessage(message);
+            return;
+        }
+
+        OpenReportInquiryMessage(message);
+    }
+
+    private void OpenReportInquiryMessage(AdInquiryMessageDto message)
+    {
+        if (inquiries.Thread(message.InquiryId) is not { } thread)
+        {
+            return;
+        }
+
+        report.Open(new ReportPrompt
+        {
+            Title = Loc.T(L.Encryption.ReportMessageAction),
+            Disclosure = Loc.T(L.Encryption.ReportDisclosure),
+            Submit = (reason, done) => inquiries.ReportMessage(thread.OtherUserId, message.Id, reason, done),
+        });
     }
 
     private void AskDeleteInquiryMessage(AdInquiryMessageDto message)

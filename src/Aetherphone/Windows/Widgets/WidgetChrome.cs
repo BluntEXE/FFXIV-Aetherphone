@@ -53,7 +53,7 @@ internal static class WidgetChrome
         var tracking = EyebrowTracking * scale;
         var fullWidth = EyebrowWidth(text, scale);
         var height = EyebrowHeight();
-        var hovering = ImGui.IsMouseHoveringRect(position, position + new Vector2(MathF.Min(fullWidth, maxWidth), height));
+        var hovering = UiInteract.Hover(position, position + new Vector2(MathF.Min(fullWidth, maxWidth), height));
         if (fullWidth <= maxWidth)
         {
             Tracked(drawList, position, upper, tinted, EyebrowFontScale, FontWeight.SemiBold, tracking);

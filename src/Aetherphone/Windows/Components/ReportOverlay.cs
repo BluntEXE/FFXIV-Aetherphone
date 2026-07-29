@@ -90,8 +90,7 @@ internal sealed class ReportOverlay
                 return;
             }
 
-            if (!service.Busy && ImGui.IsMouseClicked(ImGuiMouseButton.Left) &&
-                !ImGui.IsMouseHoveringRect(cardRect.Min, cardRect.Max))
+            if (!service.Busy && UiInteract.ClickedOutside(cardRect.Min, cardRect.Max))
             {
                 service.Dismiss();
             }
@@ -213,7 +212,7 @@ internal sealed class ReportOverlay
         bool interactive)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = interactive && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = interactive && UiInteract.Hover(rect.Min, rect.Max);
         var fill = hovered ? Palette.Mix(theme.SurfaceMuted, theme.TextStrong, 0.06f) : theme.SurfaceMuted;
         Squircle.Fill(drawList, rect.Min, rect.Max, 12f * s, ImGui.GetColorU32(Palette.WithAlpha(fill, opacity)));
         Squircle.Stroke(drawList, rect.Min, rect.Max, 12f * s,
@@ -255,7 +254,7 @@ internal sealed class ReportOverlay
                 var textSize = Typography.Measure(service.ReasonDraft, FieldTextScale * cardScale);
                 var textLeft = rect.Min.X + 14f * s;
                 var textMaxWidth = rect.Max.X - 14f * s - textLeft;
-                var reasonHovering = ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+                var reasonHovering = UiInteract.Hover(rect.Min, rect.Max);
                 Marquee.DrawLeft("reportoverlay.reason", service.ReasonDraft, textLeft,
                     rect.Center.Y - textSize.Y * 0.5f, textMaxWidth, new TextStyle(FieldTextScale * cardScale,
                         FontWeight.Regular), Palette.WithAlpha(theme.TextStrong, opacity), reasonHovering);
@@ -307,12 +306,11 @@ internal sealed class ReportOverlay
         FontWeight weight = FontWeight.Regular)
     {
         ImGui.SetCursorScreenPos(position);
+        using (Typography.WrapAt(position.X + width))
         using (Plugin.Fonts.Push(fontScale, weight))
         using (ImRaii.PushColor(ImGuiCol.Text, color))
         {
-            ImGui.PushTextWrapPos(position.X + width - ImGui.GetWindowPos().X);
             Typography.Wrapped(text);
-            ImGui.PopTextWrapPos();
         }
     }
 }

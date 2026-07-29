@@ -151,8 +151,7 @@ internal sealed class BubbleShooterApp : IMiniGame
 
     private Vector2 ComputeAim(Rect field, float factor)
     {
-        var mouse = ImGui.GetMousePos();
-        var mouseNorm = (mouse - field.Min) / factor;
+        var mouseNorm = (ImGui.GetMousePos() - field.Min) / factor;
         var direction = mouseNorm - board.LauncherPosition;
         if (direction.LengthSquared() < 0.0001f)
         {
@@ -169,8 +168,7 @@ internal sealed class BubbleShooterApp : IMiniGame
 
     private void HandleInput(Rect field, float factor, float scale, Vector2 aim)
     {
-        var mouse = ImGui.GetMousePos();
-        if (!field.Contains(mouse))
+        if (!UiInteract.Hover(field.Min, field.Max))
         {
             return;
         }

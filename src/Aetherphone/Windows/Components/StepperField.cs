@@ -29,7 +29,7 @@ internal static class StepperField
 
     private static bool DrawChevron(AppSkin ui, ImDrawListPtr drawList, Rect rect, string chevron, float scale)
     {
-        if (ImGui.IsMouseHoveringRect(rect.Min, rect.Max))
+        if (UiInteract.Hover(rect.Min, rect.Max))
         {
             Squircle.Fill(drawList, rect.Min, rect.Max, Metrics.Radius.Sm * scale, ImGui.GetColorU32(ui.HoverTint));
         }

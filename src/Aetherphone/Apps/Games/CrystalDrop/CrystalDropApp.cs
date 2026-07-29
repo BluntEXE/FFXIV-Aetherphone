@@ -127,17 +127,17 @@ internal sealed class CrystalDropApp : IMiniGame
             return;
         }
 
-        var mouse = ImGui.GetMousePos();
-        if (body.Contains(mouse))
+        var bodyHovered = UiInteract.Hover(body.Min, body.Max);
+        if (bodyHovered)
         {
-            pointerX = (mouse.X - jar.Min.X) / jar.Width;
+            pointerX = (ImGui.GetMousePos().X - jar.Min.X) / jar.Width;
             if (board.CanDrop)
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             }
         }
 
-        if (!ImGui.IsMouseClicked(ImGuiMouseButton.Left) || !body.Contains(mouse))
+        if (!ImGui.IsMouseClicked(ImGuiMouseButton.Left) || !bodyHovered)
         {
             return;
         }

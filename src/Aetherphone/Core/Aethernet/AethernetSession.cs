@@ -10,6 +10,7 @@ internal sealed class AethernetSession
     private volatile bool tokenRejected;
     private volatile bool banned;
     private volatile string? banReason;
+    private volatile SuspensionDto? suspension;
     private ulong activeContentId;
     private ulong playingContentId;
 
@@ -29,6 +30,7 @@ internal sealed class AethernetSession
     public bool TokenRejected => tokenRejected;
     public bool IsBanned => banned;
     public string? BanReason => banReason;
+    public SuspensionDto? Suspension => suspension;
     public UserDto? CurrentUser { get; private set; }
 
     public ulong ActiveContentId => activeContentId;
@@ -47,6 +49,7 @@ internal sealed class AethernetSession
             tokenRejected = false;
             banned = false;
             banReason = null;
+        suspension = null;
             LegacyClaimPending = false;
             configuration.AethernetToken = token;
             CurrentUser = user;
@@ -76,6 +79,7 @@ internal sealed class AethernetSession
             tokenRejected = false;
             banned = false;
             banReason = null;
+        suspension = null;
             LegacyClaimPending = false;
             configuration.AethernetToken = string.Empty;
             StashActive();
@@ -108,10 +112,11 @@ internal sealed class AethernetSession
         });
     }
 
-    public void ReportBanned(string? reason)
+    public void ReportBanned(string? reason, SuspensionDto? details = null)
     {
         banned = true;
         banReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
+        suspension = details;
         tokenRejected = true;
         _ = framework.RunOnFrameworkThread(() =>
         {
@@ -132,6 +137,7 @@ internal sealed class AethernetSession
         tokenRejected = false;
         banned = false;
         banReason = null;
+        suspension = null;
         CurrentUser = null;
         LegacyClaimPending = false;
         if (contentId != 0 && configuration.CharacterSessions.TryGetValue(contentId, out var stored))
@@ -226,6 +232,7 @@ internal sealed class AethernetSession
         tokenRejected = false;
         banned = false;
         banReason = null;
+        suspension = null;
         CurrentUser = user;
         StashActive();
         configuration.Save();

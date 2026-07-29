@@ -225,7 +225,7 @@ internal sealed partial class MessageApp
         var textWidth = markerRight - 8f * scale - textLeft;
         var titleTop = origin.Y + 12f * scale;
         var titleSize = Typography.Measure(title, 1f, FontWeight.SemiBold);
-        var titleHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, titleTop),
+        var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleTop),
             new Vector2(textLeft + textWidth, titleTop + titleSize.Y));
         Marquee.DrawLeft("messageapp.chats.title." + item.Id, title, textLeft, titleTop, textWidth,
             new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, titleHovering);

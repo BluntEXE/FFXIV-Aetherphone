@@ -126,6 +126,18 @@ internal static class L
         public static readonly LocString DeleteFailed = new("story.deleteFailed", "Couldn't delete the story");
     }
 
+    internal static class Safety
+    {
+        public static readonly LocString Title = new("safety.title", "Moderation and safety");
+        public static readonly LocString Summary = new("safety.summary", "Warnings and removals");
+        public static readonly LocString UnreadSummary = new("safety.unreadSummary", "{0} unread");
+        public static readonly LocString Empty = new("safety.empty", "Nothing here. No moderator has acted on your account.");
+        public static readonly LocString SignInPrompt = new("safety.signInPrompt", "Sign in to see moderation notices for your account.");
+        public static readonly LocString RetentionHint = new("safety.retentionHint", "Notices stay here for 180 days, whether or not you have read them.");
+        public static readonly LocString LoadOlder = new("safety.loadOlder", "Load older notices");
+        public static readonly LocString PostedOn = new("safety.postedOn", "You posted it {0}");
+    }
+
     internal static class Moderation
     {
         public static readonly LocString InReview = new("moderation.inReview", "In review");
@@ -151,6 +163,31 @@ internal static class L
         public static readonly LocString ReportUpdateTitle = new("moderation.reportUpdateTitle", "Report update");
         public static readonly LocString ReportResolvedBody = new("moderation.reportResolvedBody", "Thanks for your report. We reviewed it and took action.");
         public static readonly LocString ReportDismissedBody = new("moderation.reportDismissedBody", "Thanks for your report. Our moderators reviewed it and took the appropriate action.");
+
+        public static readonly LocString NoticeRemovedChirp = new("moderation.notice.removedChirp", "Your chirp was removed");
+        public static readonly LocString NoticeRemovedGram = new("moderation.notice.removedGram", "Your gram was removed");
+        public static readonly LocString NoticeRemovedVelvetPost = new("moderation.notice.removedVelvetPost", "Your Velvet post was removed");
+        public static readonly LocString NoticeRemovedStory = new("moderation.notice.removedStory", "Your story was removed");
+        public static readonly LocString NoticeRemovedComment = new("moderation.notice.removedComment", "Your comment was removed");
+        public static readonly LocString NoticeRemovedAd = new("moderation.notice.removedAd", "Your ad was removed");
+        public static readonly LocString NoticeRemovedMuster = new("moderation.notice.removedMuster", "Your muster was removed");
+        public static readonly LocString NoticeRemovedMessage = new("moderation.notice.removedMessage", "A message you sent was removed");
+        public static readonly LocString NoticeRemovedContent = new("moderation.notice.removedContent", "Something you posted was removed");
+        public static readonly LocString NoticeAvatarRemoved = new("moderation.notice.avatarRemoved", "Your profile picture was removed");
+        public static readonly LocString NoticeProfileCleared = new("moderation.notice.profileCleared", "Part of your profile was cleared");
+        public static readonly LocString NoticeProfileClearedFields = new("moderation.notice.profileClearedFields", "Cleared: {0}");
+        public static readonly LocString NoticeSuspendedTitle = new("moderation.notice.suspendedTitle", "Your account was suspended");
+        public static readonly LocString NoticeSuspendedFor = new("moderation.notice.suspendedFor", "You cannot sign in until {0}.");
+        public static readonly LocString NoticeSuspendedPermanent = new("moderation.notice.suspendedPermanent", "This suspension does not expire on its own.");
+        public static readonly LocString NoticeSignedOutTitle = new("moderation.notice.signedOutTitle", "A moderator signed you out");
+        public static readonly LocString NoticeSignedOutBody = new("moderation.notice.signedOutBody", "Your sessions were ended on every device. Your account is fine and nothing was removed.");
+        public static readonly LocString NoticeQuoted = new("moderation.notice.quoted", "You posted: “{0}”");
+        public static readonly LocString NoticeQuotedPhotos = new("moderation.notice.quotedPhotos", "{0} attached");
+        public static readonly LocString NoticePhotoCount = new("moderation.notice.photoCount", "{0} photo(s)");
+        public static readonly LocString NoticeModeratorNote = new("moderation.notice.moderatorNote", "From the moderator: {0}");
+        public static readonly LocString NoticeWarningConsequence = new("moderation.notice.warningConsequence", "Please follow the community guidelines. Repeated breaks of the same rule can lead to a temporary suspension.");
+        public static readonly LocString NoticeThanksTitle = new("moderation.notice.thanksTitle", "Thanks for looking out for everyone");
+        public static readonly LocString NoticeThanksBody = new("moderation.notice.thanksBody", "Our moderators reviewed your report and it has been handled. Reports like yours are what keep Aethernet safe, and we read every single one. Thank you for taking the time.");
     }
 
     internal static class Apps
@@ -864,6 +901,20 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release0994 =
+        {
+            new("changelog.r0994.0", "Fixed apps closing the instant you opened them and returning you to the home screen while you were signed out"),
+            new("changelog.r0994.1", "Fixed Settings closing the same way, which had left no way to sign back in; you can now open Settings and sign in again"),
+        };
+
+        public static readonly LocString[] Release0993 =
+        {
+            new("changelog.r0993.0", "Stopped the phone from making any network requests while you are signed out, including the background retries that used to run from the title screen"),
+            new("changelog.r0993.1", "Fixed photos and voice notes that fail to load retrying nonstop; the phone now waits a couple of minutes before trying again"),
+            new("changelog.r0993.2", "Fixed Velvet comments wrapping their text at the wrong width"),
+            new("changelog.r0993.3", "Backend maintenance and optimizations"),
+        };
+
         public static readonly LocString[] Release0992 =
         {
             new("changelog.r0992.0", "Fixed the view count on Yellow Pages ads, which always stayed at zero, so opening an ad now counts as a view"),
@@ -1598,6 +1649,8 @@ internal static class L
         public static readonly LocString RemoveAccountBody = new("account.removeAccountBody", "This signs that account out on this phone and takes it off the list. The account itself and everything in it stay safe. Sign in from that character again whenever you want it back.");
         public static readonly LocString AltSignInTitle = new("account.altSignInTitle", "Not signed in on this character");
         public static readonly LocString AltSignInBody = new("account.altSignInBody", "You're now playing {0}. This character isn't signed in to Aethernet, so social apps, messaging, and calls stay empty until you sign in.");
+        public static readonly LocString SignedOutTitle = new("account.signedOutTitle", "Signed out");
+        public static readonly LocString SignedOutBody = new("account.signedOutBody", "Your Aethernet session ended, so social apps, messaging, and calls stay empty. Open Settings and sign in again to reconnect.");
         public static readonly LocString FailDismiss = new("account.fail.dismiss", "Got it");
         public static readonly LocString FailCharacterNotFoundTitle = new("account.fail.characterNotFound.title", "Character not found");
         public static readonly LocString FailCharacterNotFoundBody = new("account.fail.characterNotFound.body", "We couldn't find {0} on {1} in the Lodestone search. Brand-new characters can take up to a day to appear. In your Character settings, set Character Search to Public, then Verify again. Characters on Chinese or Korean servers aren't on the international Lodestone yet, so they can't be verified.");
@@ -1614,6 +1667,8 @@ internal static class L
         public static readonly LocString BanScreenTitle = new("account.ban.title", "Account suspended");
         public static readonly LocString BanScreenBody = new("account.ban.body", "This character has been banned from Aethernet and can no longer sign in.");
         public static readonly LocString BanScreenReason = new("account.ban.reason", "Reason: {0}");
+        public static readonly LocString BanScreenTimeoutTitle = new("account.ban.timeoutTitle", "Account suspended for now");
+        public static readonly LocString BanScreenLifts = new("account.ban.lifts", "You can sign in again after {0}. Nothing you posted was deleted by this suspension.");
         public static readonly LocString BanScreenContact = new("account.ban.contact", "If you believe this is a mistake, contact support.");
         public static readonly LocString FailRateLimitedTitle = new("account.fail.rateLimited.title", "Too many attempts");
         public static readonly LocString FailRateLimitedBody = new("account.fail.rateLimited.body", "You've tried a few times in a row. Wait a minute, then try again.");

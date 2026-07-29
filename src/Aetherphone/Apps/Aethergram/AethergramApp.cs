@@ -851,14 +851,14 @@ internal sealed partial class AethergramApp : IPhoneApp
         var headerTextMaxWidth = MathF.Max(1f, headerTextRight - nameLeft);
         var cardNameStyle = new TextStyle(1f, FontWeight.SemiBold);
         var cardNameHeight = Typography.Measure(displayName, cardNameStyle).Y;
-        var cardNameHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, origin.Y + pad),
+        var cardNameHovering = UiInteract.Hover(new Vector2(nameLeft, origin.Y + pad),
             new Vector2(nameLeft + headerTextMaxWidth, origin.Y + pad + cardNameHeight));
         Marquee.DrawLeft("aethergram.card." + post.Id, displayName, nameLeft, origin.Y + pad, headerTextMaxWidth,
             cardNameStyle, theme.TextStrong, cardNameHovering);
         var subline = SocialIdentity.FeedMeta(post.AuthorHandle, TimeText.Short(post.CreatedAtUnix));
         var sublineTop = origin.Y + pad + PostCardMetrics.SublineTop * scale;
         var sublineSize = Typography.Measure(subline, 0.85f);
-        var sublineHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, sublineTop),
+        var sublineHovering = UiInteract.Hover(new Vector2(nameLeft, sublineTop),
             new Vector2(nameLeft + headerTextMaxWidth, sublineTop + sublineSize.Y));
         Marquee.DrawLeft("aethergram.card.sub." + post.Id, subline, nameLeft, sublineTop, headerTextMaxWidth,
             new TextStyle(0.85f, FontWeight.Regular), AppPalettes.Aethergram.MutedInk, sublineHovering);
@@ -959,14 +959,12 @@ internal sealed partial class AethergramApp : IPhoneApp
             if (captionLayout is null)
             {
                 ImGui.SetCursorScreenPos(new Vector2(innerX, y));
-                ImGui.PushTextWrapPos(innerX + innerWidth - ImGui.GetWindowPos().X);
+                using (Typography.WrapAt(innerX + innerWidth))
                 using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Aethergram.BodyInk))
                 using (Plugin.Fonts.Push(0.95f))
                 {
                     Typography.Wrapped(post.Text);
                 }
-
-                ImGui.PopTextWrapPos();
             }
             else
             {
@@ -1027,7 +1025,7 @@ internal sealed partial class AethergramApp : IPhoneApp
 
     private void HandleLikeGesture(Rect imageRect, PostDto post, string[] photos, int page)
     {
-        if (!ImGui.IsMouseHoveringRect(imageRect.Min, imageRect.Max))
+        if (!UiInteract.Hover(imageRect.Min, imageRect.Max))
         {
             return;
         }

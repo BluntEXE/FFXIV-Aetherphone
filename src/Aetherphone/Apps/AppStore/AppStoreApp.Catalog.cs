@@ -79,7 +79,7 @@ internal sealed partial class AppStoreApp
         var labelLeft = card.Min.X + pad;
         var labelTop = card.Max.Y - 28f * scale;
         var labelSize = Typography.Measure(label, TextStyles.Headline);
-        var labelHovering = ImGui.IsMouseHoveringRect(new Vector2(labelLeft, labelTop),
+        var labelHovering = UiInteract.Hover(new Vector2(labelLeft, labelTop),
             new Vector2(labelLeft + MathF.Min(labelSize.X, maxLabelWidth), labelTop + labelSize.Y));
         Marquee.DrawLeft("appstore.category.label.shadow." + category, label, labelLeft, labelTop + 1f * scale,
             maxLabelWidth, TextStyles.Headline, CardInkShadow, labelHovering);

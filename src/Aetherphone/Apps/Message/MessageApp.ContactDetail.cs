@@ -268,7 +268,7 @@ internal sealed partial class MessageApp
         var labelSize = Typography.Measure(label, TextStyles.Footnote);
         Typography.Draw(new Vector2(left, centerY - 8f * scale), label, ui.MutedInk, TextStyles.Footnote);
         var valueMaxWidth = MathF.Max(1f, right - left - labelSize.X - 10f * scale);
-        var valueHovering = ImGui.IsMouseHoveringRect(new Vector2(right - valueMaxWidth, top),
+        var valueHovering = UiInteract.Hover(new Vector2(right - valueMaxWidth, top),
             new Vector2(right, top + rowHeight));
         Marquee.DrawRight(label + ":value", value, right, centerY - Typography.Measure(value, TextStyles.Subheadline).Y * 0.5f,
             valueMaxWidth, TextStyles.Subheadline, ui.BodyInk, valueHovering);

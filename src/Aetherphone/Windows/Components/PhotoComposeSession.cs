@@ -326,7 +326,7 @@ internal sealed class PhotoComposeSession
 
     private void HandleCropGestures(Rect preview, Vector2 size, Vector2 visible, float aspect)
     {
-        var hovering = ImGui.IsMouseHoveringRect(preview.Min, preview.Max);
+        var hovering = UiInteract.Hover(preview.Min, preview.Max);
         if (hovering)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

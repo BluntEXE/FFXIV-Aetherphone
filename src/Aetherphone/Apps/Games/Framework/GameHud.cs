@@ -70,7 +70,7 @@ internal static class GameHud
         var drawList = ImGui.GetWindowDrawList();
         var min = center - new Vector2(radius, radius);
         var max = center + new Vector2(radius, radius);
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         Material.Frosted(drawList, min, max, radius, scale, hovered ? 1f : 0.92f);
         if (hovered)
         {
@@ -88,7 +88,7 @@ internal static class GameHud
         var scale = ImGuiHelpers.GlobalScale;
         var drawList = ImGui.GetWindowDrawList();
         var hoverHalf = size * 0.5f;
-        var hovered = ImGui.IsMouseHoveringRect(center - hoverHalf, center + hoverHalf);
+        var hovered = UiInteract.Hover(center - hoverHalf, center + hoverHalf);
         var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
         var visualScale = pressed ? 0.955f : 1f;
         var half = hoverHalf * visualScale;

@@ -81,13 +81,13 @@ internal sealed partial class VelvetShell
             var nameMaxWidth = origin.X + width - 14f * scale - nameLeft;
             var authorY = avatarCenter.Y - 13f * scale;
             var authorSize = Typography.Measure(authorName, TextStyles.Headline);
-            var authorHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, authorY),
+            var authorHovering = UiInteract.Hover(new Vector2(nameLeft, authorY),
                 new Vector2(nameLeft + nameMaxWidth, authorY + authorSize.Y));
             Marquee.DrawLeft("velvet.detail.author." + post.Id, authorName, nameLeft,
                 authorY, nameMaxWidth, TextStyles.Headline, VelvetTheme.TitleInk, authorHovering);
             var ownerSubY = avatarCenter.Y + 3f * scale;
             var ownerSubSize = Typography.Measure(ownerSub, TextStyles.Subheadline);
-            var ownerSubHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, ownerSubY),
+            var ownerSubHovering = UiInteract.Hover(new Vector2(nameLeft, ownerSubY),
                 new Vector2(nameLeft + nameMaxWidth, ownerSubY + ownerSubSize.Y));
             Marquee.DrawLeft("velvet.detail.ownersub." + post.Id, ownerSub, nameLeft, ownerSubY,
                 nameMaxWidth, TextStyles.Subheadline, VelvetTheme.MutedInk, ownerSubHovering);
@@ -259,7 +259,7 @@ internal sealed partial class VelvetShell
         var textLeft = avatarCenter.X + avatarRadius + 10f * scale;
         var wrapWidth = origin.X + width - 28f * scale - textLeft;
         var nameMaxWidth = wrapWidth * 0.55f;
-        var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, origin.Y),
+        var nameHovering = UiInteract.Hover(new Vector2(textLeft, origin.Y),
             new Vector2(textLeft + nameMaxWidth, origin.Y + 16f * scale));
         var nameWidth = Marquee.DrawLeft("velvet.comment.author." + comment.Id, authorName, textLeft, origin.Y,
             nameMaxWidth, TextStyles.SubheadlineEmphasized, VelvetTheme.TitleInk, nameHovering);
@@ -285,14 +285,12 @@ internal sealed partial class VelvetShell
 
         if (commentLayout is null)
         {
-            ImGui.PushTextWrapPos(textLeft + wrapWidth);
+            using (Typography.WrapAt(textLeft + wrapWidth))
             using (ImRaii.PushColor(ImGuiCol.Text, VelvetTheme.BodyInk))
             using (Plugin.Fonts.Push(0.9f))
             {
                 Typography.Wrapped(comment.Text);
             }
-
-            ImGui.PopTextWrapPos();
         }
         else
         {

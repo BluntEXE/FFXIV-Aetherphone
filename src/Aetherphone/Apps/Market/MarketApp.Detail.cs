@@ -267,7 +267,7 @@ internal sealed partial class MarketApp
         var height = 42f * scale;
         var min = origin;
         var max = new Vector2(origin.X + width, origin.Y + height);
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
         var fill = pressed ? Palette.Mix(frameTheme.Accent, new Vector4(0f, 0f, 0f, 1f), 0.14f) :
             hovered ? Palette.Mix(frameTheme.Accent, frameTheme.TextStrong, 0.10f) : frameTheme.Accent;
@@ -409,7 +409,7 @@ internal sealed partial class MarketApp
     {
         var scale = ImGuiHelpers.GlobalScale;
         var box = 14f * scale;
-        var hovered = ImGui.IsMouseHoveringRect(center - new Vector2(box, box), center + new Vector2(box, box));
+        var hovered = UiInteract.Hover(center - new Vector2(box, box), center + new Vector2(box, box));
         var glyph = icon.ToIconString();
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {

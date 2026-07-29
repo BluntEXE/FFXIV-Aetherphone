@@ -171,13 +171,13 @@ internal static class VRow
         {
             var titleY = centerY - 15f * scale;
             var titleSize = Typography.Measure(titleText, TextStyles.Headline);
-            var titleHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, titleY),
+            var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleY),
                 new Vector2(textLeft + innerWidth, titleY + titleSize.Y));
             Marquee.DrawLeft("vrow.title." + titleText, titleText, textLeft, titleY, innerWidth,
                 TextStyles.Headline, VelvetTheme.TitleInk, titleHovering);
             var subtitleY = centerY + 3f * scale;
             var subtitleSize = Typography.Measure(subtitleText, TextStyles.Subheadline);
-            var subtitleHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, subtitleY),
+            var subtitleHovering = UiInteract.Hover(new Vector2(textLeft, subtitleY),
                 new Vector2(textLeft + innerWidth, subtitleY + subtitleSize.Y));
             Marquee.DrawLeft("vrow.subtitle." + subtitleText, subtitleText, textLeft, subtitleY,
                 innerWidth, TextStyles.Subheadline, VelvetTheme.MutedInk, subtitleHovering);

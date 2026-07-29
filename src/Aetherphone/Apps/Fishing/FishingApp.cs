@@ -121,7 +121,7 @@ internal sealed class FishingApp : IPhoneApp
         IconTile.Draw(tileCenter, tile, tint, TimeOfDayIcon(plan.TimeOfDay));
 
         var titleMaxWidth = innerRight - tile - 10f * scale - innerLeft;
-        var titleHovering = ImGui.IsMouseHoveringRect(new Vector2(innerLeft, min.Y + 30f * scale),
+        var titleHovering = UiInteract.Hover(new Vector2(innerLeft, min.Y + 30f * scale),
             new Vector2(innerLeft + titleMaxWidth, min.Y + 58f * scale));
         Marquee.DrawLeft("fishing.hero." + plan.RouteName, plan.RouteName, innerLeft, min.Y + 34f * scale,
             titleMaxWidth, TextStyles.Title2, ui.TitleInk, titleHovering);
@@ -286,7 +286,7 @@ internal sealed class FishingApp : IPhoneApp
         {
             var nameSize = Typography.Measure(plan.RouteName, TextStyles.Headline);
             var nameY = row.Center.Y - nameSize.Y * 0.5f;
-            var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, nameY),
+            var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
                 new Vector2(textLeft + rowMaxWidth, nameY + nameSize.Y));
             Marquee.DrawLeft(rowId, plan.RouteName,
                 textLeft, nameY, rowMaxWidth, TextStyles.Headline, ui.TitleInk, nameHovering);
@@ -295,7 +295,7 @@ internal sealed class FishingApp : IPhoneApp
         {
             var nameY = row.Center.Y - 18f * scale;
             var nameSize = Typography.Measure(plan.RouteName, TextStyles.Headline);
-            var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, nameY),
+            var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
                 new Vector2(textLeft + rowMaxWidth, nameY + nameSize.Y));
             Marquee.DrawLeft(rowId, plan.RouteName, textLeft, nameY,
                 rowMaxWidth, TextStyles.Headline, ui.TitleInk, nameHovering);
@@ -306,7 +306,7 @@ internal sealed class FishingApp : IPhoneApp
             var blueFishMaxWidth = MathF.Max(1f, textRight - blueFishLeft);
             var blueFishNames = BlueFishNames(plan);
             var blueFishSize = Typography.Measure(blueFishNames, TextStyles.Footnote);
-            var blueFishHovering = ImGui.IsMouseHoveringRect(new Vector2(blueFishLeft, blueFishY),
+            var blueFishHovering = UiInteract.Hover(new Vector2(blueFishLeft, blueFishY),
                 new Vector2(blueFishLeft + blueFishMaxWidth, blueFishY + blueFishSize.Y));
             Marquee.DrawLeft(rowId + ".sub", blueFishNames, blueFishLeft, blueFishY, blueFishMaxWidth,
                 TextStyles.Footnote, ui.MutedInk, blueFishHovering);

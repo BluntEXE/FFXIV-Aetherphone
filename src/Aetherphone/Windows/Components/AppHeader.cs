@@ -19,7 +19,7 @@ internal static class AppHeader
             FontWeight.SemiBold);
         var hitMin = new Vector2(content.Min.X, content.Min.Y);
         var hitMax = new Vector2(content.Min.X + 44f * scale, content.Min.Y + Height * scale);
-        var hovered = ImGui.IsMouseHoveringRect(hitMin, hitMax);
+        var hovered = UiInteract.Hover(hitMin, hitMax);
         var center = new Vector2(content.Min.X + 13f * scale, rowCenterY);
         var clicked = BackButton.Draw("appheader.back", center, 15f * scale, theme.Accent, hovered, scale);
         if (!clicked)
@@ -38,11 +38,11 @@ internal static class AppHeader
     }
 
     public static void DrawTitleWithReserve(Rect area, string id, string title, float rightReserve, Vector4 color,
-        float scale, TextStyle? style = null)
+        float scale, TextStyle? style = null, float leftReserve = 44f)
     {
         var titleStyle = style ?? new TextStyle(1.15f, FontWeight.SemiBold);
         var rowCenterY = area.Min.Y + Height * scale * 0.5f;
-        var leftLimit = area.Min.X + 44f * scale;
+        var leftLimit = area.Min.X + leftReserve * scale;
         var rightLimit = area.Max.X - rightReserve;
         var maxWidth = MathF.Max(1f, rightLimit - leftLimit);
         var titleSize = Typography.Measure(title, titleStyle);

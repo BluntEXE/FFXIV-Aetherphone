@@ -92,7 +92,7 @@ internal sealed class FolderOverlay
         {
             DrawContents(panel, metrics, theme, navigation, current, editing, currentPage, columns, pad, iconSize,
                 cellWidth, cellHeight, headerHeight);
-            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !panel.Contains(ImGui.GetMousePos()))
+            if (UiInteract.ClickedOutside(panel.Min, panel.Max, false))
             {
                 RequestClose();
             }
@@ -120,7 +120,7 @@ internal sealed class FolderOverlay
         var gridView = new Rect(new Vector2(panel.Min.X, gridTop), panel.Max);
         var drawList = ImGui.GetWindowDrawList();
         drawList.PushClipRect(gridView.Min, gridView.Max, true);
-        if (ImGui.IsMouseHoveringRect(gridView.Min, gridView.Max))
+        if (UiInteract.Hover(gridView.Min, gridView.Max))
         {
             scrollY -= ImGui.GetIO().MouseWheel * 40f * scale;
         }
@@ -160,7 +160,7 @@ internal sealed class FolderOverlay
                     return;
                 }
             }
-            else if (ImGui.IsMouseHoveringRect(iconRect.Min, iconRect.Max))
+            else if (UiInteract.Hover(iconRect.Min, iconRect.Max))
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                 if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))

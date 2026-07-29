@@ -81,7 +81,7 @@ internal sealed partial class VelvetShell
             var nameWidth = MathF.Min(Typography.Measure(name, TextStyles.Title1).X, textWidth - badgeSpace);
             var nameSize = new Vector2(nameWidth, Typography.Measure(name, TextStyles.Title1).Y);
             var nameX = centerX - (nameSize.X + badgeSpace) * 0.5f;
-            var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(nameX, lineTop),
+            var nameHovering = UiInteract.Hover(new Vector2(nameX, lineTop),
                 new Vector2(nameX + nameSize.X, lineTop + nameSize.Y));
             Marquee.DrawLeft("velvet.profile.name." + user.UserId, name, nameX, lineTop, nameSize.X,
                 TextStyles.Title1, VelvetTheme.TitleInk, nameHovering);

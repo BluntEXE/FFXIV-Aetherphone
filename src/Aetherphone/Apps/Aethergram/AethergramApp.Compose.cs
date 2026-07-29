@@ -491,7 +491,7 @@ internal sealed partial class AethergramApp
             var nameTop = avatarCenter.Y - 8f * scale;
             var nameMaxWidth = MathF.Max(1f, card.Max.X - padding - nameLeft);
             var nameHeight = Typography.Measure(displayName, nameStyle).Y;
-            var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, nameTop),
+            var nameHovering = UiInteract.Hover(new Vector2(nameLeft, nameTop),
                 new Vector2(nameLeft + nameMaxWidth, nameTop + nameHeight));
             Marquee.DrawLeft("aethergram.compose.author." + me.Handle, displayName, nameLeft, nameTop, nameMaxWidth,
                 nameStyle, theme.TextStrong, nameHovering);
@@ -554,7 +554,7 @@ internal sealed partial class AethergramApp
     {
         var scale = ImGuiHelpers.GlobalScale;
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = enabled && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
         var radius = rect.Height * 0.5f;
         var fill = enabled
             ? (hovered ? Palette.Mix(Accent, theme.TextStrong, 0.12f) : Accent)

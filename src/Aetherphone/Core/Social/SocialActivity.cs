@@ -30,6 +30,9 @@ internal static class SocialActivity
     public const string VelvetApp = "velvet";
     public const string YellowPagesApp = "yellowpages";
 
+    public static bool IsModerationNotice(int type) =>
+        type is TypePostRemoved or TypeWarning or TypeReportUpdate;
+
     public static bool OpensPost(NotificationDto item) =>
         item.Type is TypeLike or TypeComment or TypeCommentLike or TypeMention or TypeCommentMention or TypePhotoTag
             or TypeRepost or TypeQuote

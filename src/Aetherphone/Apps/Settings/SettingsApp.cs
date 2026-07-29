@@ -2,6 +2,7 @@ using Aetherphone.Apps.Settings.Pages;
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Moderation;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Photos;
 using Aetherphone.Core.Sharing;
@@ -31,6 +32,8 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
     private PhoneTheme frameTheme = PhoneTheme.Default;
     private INavigator frameNavigation = null!;
     private readonly AccountPage accountPage;
+    private readonly SafetyPage safetyPage;
+    private readonly SafetyLauncher safetyLauncher;
     private readonly NamePage namePage;
     private readonly ProfilePage profilePage;
     private readonly EncryptionPage encryptionPage;
@@ -96,6 +99,8 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
                 configuration.RingtoneVolume = volume;
                 configuration.Save();
             });
+        safetyPage = new SafetyPage(aethernetSession, services.ModerationArchive, this);
+        safetyLauncher = services.SafetyLauncher;
         var commands = new CommandsPage();
         privacyPage = new PrivacyPage(configuration, aethernetSession, aethernet.Account, aethernet.Safety,
             confirm);
@@ -107,7 +112,7 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
             new SettingsGroup(new ISettingsPage[] { appearance, language, immersion, behavior, tutorials },
                 L.Settings.GeneralFooter),
             new SettingsGroup(new ISettingsPage[] { callsPage, notifications, ringtonePage }, L.Settings.AlertsFooter),
-            new SettingsGroup(new ISettingsPage[] { commands, privacyPage, tagsMentionsPage, changelogPage, about }),
+            new SettingsGroup(new ISettingsPage[] { commands, privacyPage, tagsMentionsPage, safetyPage, changelogPage, about }),
         };
         router = new ViewRouter<ISettingsPage>(
             new RootSettingsPage(this, groups, aethernetSession, remoteImages, lodestone, accountPage));
@@ -186,6 +191,12 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
     public void Draw(in PhoneContext context)
     {
         ConsumeSharedWallpaper();
+        if (safetyLauncher.TryConsume())
+        {
+            router.Reset();
+            router.Push(safetyPage);
+        }
+
         frameTheme = context.Theme;
         frameNavigation = context.Navigation;
         router.Draw(context.Content, context.Theme.AppBackground, ImGui.GetIO().DeltaTime, drawPage);

@@ -110,7 +110,7 @@ internal sealed partial class MessageApp
         var textMaxWidth = MathF.Max(1f, iconCenterX - 12f * scale - textLeft);
         var titleTop = origin.Y + rowHeight * 0.5f - 9f * scale;
         var titleSize = Typography.Measure(title, 1f, FontWeight.SemiBold);
-        var titleHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, titleTop),
+        var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleTop),
             new Vector2(textLeft + textMaxWidth, titleTop + titleSize.Y));
         Marquee.DrawLeft("picker.row." + item.Id, title, textLeft, titleTop, textMaxWidth,
             new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, titleHovering);

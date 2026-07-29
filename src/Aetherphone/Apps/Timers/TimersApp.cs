@@ -241,7 +241,7 @@ internal sealed class TimersApp : IPhoneApp
         var min = new Vector2(row.Max.X - width, row.Center.Y - height * 0.5f);
         var labelMaxWidth = MathF.Max(1f, min.X - 8f * scale - row.Min.X);
         var labelSize = Typography.Measure(label, TextStyles.Body);
-        var labelHovering = ImGui.IsMouseHoveringRect(new Vector2(row.Min.X, row.Center.Y - labelSize.Y * 0.5f),
+        var labelHovering = UiInteract.Hover(new Vector2(row.Min.X, row.Center.Y - labelSize.Y * 0.5f),
             new Vector2(row.Min.X + labelMaxWidth, row.Center.Y + labelSize.Y * 0.5f));
         Marquee.DrawLeft(label, label, row.Min.X, row.Center.Y - labelSize.Y * 0.5f, labelMaxWidth, TextStyles.Body,
             AppPalettes.Timers.BodyInk, labelHovering);

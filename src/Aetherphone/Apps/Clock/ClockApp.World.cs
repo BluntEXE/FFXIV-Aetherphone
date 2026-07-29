@@ -149,7 +149,7 @@ internal sealed partial class ClockApp
         var scale = ImGuiHelpers.GlobalScale;
         var added = configuration.WorldClocks.Exists(entry => entry.TimeZoneId == city.TimeZoneId &&
                                                               entry.City == city.City);
-        var hovering = ImGui.IsMouseHoveringRect(row.Min, row.Max);
+        var hovering = UiInteract.Hover(row.Min, row.Max);
         var textMaxWidth = MathF.Max(1f, row.Max.X - 34f * scale - row.Min.X);
         Marquee.DrawLeft("clock.cityPicker.name." + city.City, city.City, row.Min.X, row.Center.Y - 16f * scale,
             textMaxWidth, TextStyles.Headline, ui.TitleInk, hovering);

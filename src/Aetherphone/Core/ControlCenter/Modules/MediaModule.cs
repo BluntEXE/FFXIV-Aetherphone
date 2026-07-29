@@ -73,7 +73,7 @@ internal sealed class MediaModule : IControlModule
         var titleCenterY = MathF.Min(artRect.Max.Y + 16f * scale, contentBottom);
         var titleSize = Typography.Measure(title, TextStyles.Headline);
         var titleTopY = titleCenterY - titleSize.Y * 0.5f;
-        var titleHovering = ImGui.IsMouseHoveringRect(new Vector2(rect.Center.X - textWidth * 0.5f, titleTopY),
+        var titleHovering = UiInteract.Hover(new Vector2(rect.Center.X - textWidth * 0.5f, titleTopY),
             new Vector2(rect.Center.X + textWidth * 0.5f, titleTopY + titleSize.Y));
         Marquee.DrawCentered(dl, "media.large.title", title, rect.Center.X, titleTopY, textWidth, TextStyles.Headline,
             Palette.WithAlpha(theme.TextStrong, opacity), titleHovering);
@@ -106,13 +106,13 @@ internal sealed class MediaModule : IControlModule
         {
             var titleY = centerY - 19f * scale;
             var titleSize = Typography.Measure(title, TextStyles.Headline);
-            var titleHovering = ImGui.IsMouseHoveringRect(new Vector2(left, titleY),
+            var titleHovering = UiInteract.Hover(new Vector2(left, titleY),
                 new Vector2(left + width, titleY + titleSize.Y));
             Marquee.DrawLeft(dl, "media.bar.title", title, left, titleY, width, TextStyles.Headline,
                 Palette.WithAlpha(theme.TextStrong, opacity), titleHovering);
             var subtitleY = centerY + 3f * scale;
             var subtitleSize = Typography.Measure(subtitle, TextStyles.Footnote);
-            var subtitleHovering = ImGui.IsMouseHoveringRect(new Vector2(left, subtitleY),
+            var subtitleHovering = UiInteract.Hover(new Vector2(left, subtitleY),
                 new Vector2(left + width, subtitleY + subtitleSize.Y));
             Marquee.DrawLeft(dl, "media.bar.subtitle", subtitle, left, subtitleY, width, TextStyles.Footnote,
                 Palette.WithAlpha(theme.TextMuted, opacity), subtitleHovering);
@@ -121,7 +121,7 @@ internal sealed class MediaModule : IControlModule
 
         var soloY = centerY - 10f * scale;
         var soloSize = Typography.Measure(title, TextStyles.Headline);
-        var soloHovering = ImGui.IsMouseHoveringRect(new Vector2(left, soloY),
+        var soloHovering = UiInteract.Hover(new Vector2(left, soloY),
             new Vector2(left + width, soloY + soloSize.Y));
         Marquee.DrawLeft(dl, "media.bar.title", title, left, soloY, width, TextStyles.Headline,
             Palette.WithAlpha(theme.TextStrong, opacity), soloHovering);

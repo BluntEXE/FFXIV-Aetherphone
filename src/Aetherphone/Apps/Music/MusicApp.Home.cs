@@ -152,13 +152,13 @@ internal sealed partial class MusicApp
             {
                 var chipTitleY = min.Y + 9f * scale;
                 var chipTitleSize = Typography.Measure(song.Title, TextStyles.FootnoteEmphasized);
-                var chipTitleHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, chipTitleY),
+                var chipTitleHovering = UiInteract.Hover(new Vector2(textLeft, chipTitleY),
                     new Vector2(textLeft + textWidth, chipTitleY + chipTitleSize.Y));
                 Marquee.DrawLeft("music.recentChip.title." + song.VideoId, song.Title, textLeft, chipTitleY,
                     textWidth, TextStyles.FootnoteEmphasized, current ? ui.Accent : ui.TitleInk, chipTitleHovering);
                 var chipAuthorY = min.Y + 28f * scale;
                 var chipAuthorSize = Typography.Measure(song.Author, TextStyles.Caption1);
-                var chipAuthorHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, chipAuthorY),
+                var chipAuthorHovering = UiInteract.Hover(new Vector2(textLeft, chipAuthorY),
                     new Vector2(textLeft + textWidth, chipAuthorY + chipAuthorSize.Y));
                 Marquee.DrawLeft("music.recentChip.author." + song.VideoId, song.Author, textLeft, chipAuthorY,
                     textWidth, TextStyles.Caption1, ui.MutedInk, chipAuthorHovering);
@@ -167,7 +167,7 @@ internal sealed partial class MusicApp
             {
                 var chipTitleY = min.Y + (chipHeight - Typography.Measure(song.Title, TextStyles.Caption1).Y) * 0.5f;
                 var chipTitleSize = Typography.Measure(song.Title, TextStyles.Caption1);
-                var chipTitleHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, chipTitleY),
+                var chipTitleHovering = UiInteract.Hover(new Vector2(textLeft, chipTitleY),
                     new Vector2(textLeft + textWidth, chipTitleY + chipTitleSize.Y));
                 Marquee.DrawLeft("music.recentChip.title." + song.VideoId, song.Title, textLeft, chipTitleY,
                     textWidth, TextStyles.Caption1, current ? ui.Accent : ui.TitleInk, chipTitleHovering);
@@ -248,13 +248,13 @@ internal sealed partial class MusicApp
             var textWidth = cardWidth - 2f * scale;
             var featTitleY = artMax.Y + 6f * scale;
             var featTitleSize = Typography.Measure(song.Title, TextStyles.FootnoteEmphasized);
-            var featTitleHovering = ImGui.IsMouseHoveringRect(new Vector2(artMin.X, featTitleY),
+            var featTitleHovering = UiInteract.Hover(new Vector2(artMin.X, featTitleY),
                 new Vector2(artMin.X + textWidth, featTitleY + featTitleSize.Y));
             Marquee.DrawLeft("music.featured.title." + song.VideoId, song.Title, artMin.X, featTitleY,
                 textWidth, TextStyles.FootnoteEmphasized, current ? ui.Accent : ui.TitleInk, featTitleHovering);
             var featAuthorY = artMax.Y + 24f * scale;
             var featAuthorSize = Typography.Measure(song.Author, TextStyles.Caption1);
-            var featAuthorHovering = ImGui.IsMouseHoveringRect(new Vector2(artMin.X, featAuthorY),
+            var featAuthorHovering = UiInteract.Hover(new Vector2(artMin.X, featAuthorY),
                 new Vector2(artMin.X + textWidth, featAuthorY + featAuthorSize.Y));
             Marquee.DrawLeft("music.featured.author." + song.VideoId, song.Author, artMin.X, featAuthorY,
                 textWidth, TextStyles.Caption1, ui.MutedInk, featAuthorHovering);
@@ -450,14 +450,14 @@ internal sealed partial class MusicApp
         var textWidth = max.X - trailing - textLeft;
         var stationNameY = min.Y + 10f * scale;
         var stationNameSize = Typography.Measure(station.Name, TextStyles.BodyEmphasized);
-        var stationNameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, stationNameY),
+        var stationNameHovering = UiInteract.Hover(new Vector2(textLeft, stationNameY),
             new Vector2(textLeft + textWidth, stationNameY + stationNameSize.Y));
         Marquee.DrawLeft("music.stationRow.name." + station.StreamUrl, station.Name, textLeft, stationNameY,
             textWidth, TextStyles.BodyEmphasized, current ? ui.Accent : ui.TitleInk, stationNameHovering);
         var stationSub = StationSubtitle(station);
         var stationSubY = min.Y + 34f * scale;
         var stationSubSize = Typography.Measure(stationSub, TextStyles.Caption1);
-        var stationSubHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, stationSubY),
+        var stationSubHovering = UiInteract.Hover(new Vector2(textLeft, stationSubY),
             new Vector2(textLeft + textWidth, stationSubY + stationSubSize.Y));
         Marquee.DrawLeft("music.stationRow.subtitle." + station.StreamUrl, stationSub, textLeft,
             stationSubY, textWidth, TextStyles.Caption1, ui.MutedInk, stationSubHovering);

@@ -101,8 +101,7 @@ internal sealed class ControlGallery
             }
         }
 
-        if (interactive && !openedThisFrame && ImGui.IsMouseClicked(ImGuiMouseButton.Left) &&
-            !panel.Contains(ImGui.GetMousePos()))
+        if (interactive && !openedThisFrame && UiInteract.ClickedOutside(panel.Min, panel.Max, false))
         {
             Close();
         }
@@ -113,7 +112,7 @@ internal sealed class ControlGallery
     private static bool DrawRow(ImDrawListPtr dl, Rect row, IControlModule module, PhoneTheme theme, float scale,
         float alpha, bool interactive)
     {
-        var hovered = interactive && ImGui.IsMouseHoveringRect(row.Min, row.Max);
+        var hovered = interactive && UiInteract.Hover(row.Min, row.Max);
         if (hovered)
         {
             Squircle.Fill(dl, row.Min, row.Max, 16f * scale, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.08f * alpha)));
@@ -140,7 +139,7 @@ internal sealed class ControlGallery
     private static bool IconButton(ImDrawListPtr dl, Rect rect, FontAwesomeIcon icon, PhoneTheme theme, float alpha,
         bool interactive)
     {
-        var hovered = interactive && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = interactive && UiInteract.Hover(rect.Min, rect.Max);
         var bg = hovered ? 0.16f : 0.10f;
         Squircle.Fill(dl, rect.Min, rect.Max, rect.Width * 0.5f,
             ImGui.GetColorU32(new Vector4(1f, 1f, 1f, bg * alpha)));
