@@ -92,7 +92,7 @@ internal sealed class FolderOverlay
         {
             DrawContents(panel, metrics, theme, navigation, current, editing, currentPage, columns, pad, iconSize,
                 cellWidth, cellHeight, headerHeight);
-            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !panel.Contains(ImGui.GetMousePos()))
+            if (UiInteract.ClickedOutside(panel.Min, panel.Max, false))
             {
                 RequestClose();
             }

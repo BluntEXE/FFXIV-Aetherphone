@@ -65,7 +65,7 @@ internal sealed class WidgetGallery
         DrawHeader(drawList, sheet, theme, scale, interactive);
         DrawItems(drawList, sheet, theme, scale, delta, interactive);
         drawList.PopClipRect();
-        if (interactive && ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !sheet.Contains(ImGui.GetMousePos()))
+        if (interactive && UiInteract.ClickedOutside(sheet.Min, sheet.Max, false))
         {
             Close();
         }
@@ -106,7 +106,7 @@ internal sealed class WidgetGallery
         var contentTop = sheet.Min.Y + HeaderUnits * scale;
         var view = new Rect(new Vector2(sheet.Min.X, contentTop), sheet.Max);
         drawList.PushClipRect(view.Min, view.Max, true);
-        if (interactive && view.Contains(ImGui.GetMousePos()))
+        if (interactive && UiInteract.HoverWindowOnly(view.Min, view.Max, false))
         {
             scrollY -= ImGui.GetIO().MouseWheel * 46f * scale;
         }

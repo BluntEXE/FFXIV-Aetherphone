@@ -192,8 +192,7 @@ internal sealed partial class JobsApp
             return;
         }
 
-        var clickedOutside = pickedPreset < 0 && PickerClicked() &&
-                             !new Rect(min, max).Contains(ImGui.GetMousePos());
+        var clickedOutside = pickedPreset < 0 && UiInteract.ClickedOutside(min, max, false);
         if (ImGui.IsKeyPressed(ImGuiKey.Escape) || ImGui.IsKeyPressed(ImGuiKey.Enter) || clickedOutside)
         {
             CloseColorPicker();

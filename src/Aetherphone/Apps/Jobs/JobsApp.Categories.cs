@@ -271,7 +271,7 @@ internal sealed partial class JobsApp
             return;
         }
 
-        var clickedOutside = CategoryEditorClicked() && !new Rect(min, max).Contains(ImGui.GetMousePos());
+        var clickedOutside = UiInteract.ClickedOutside(min, max, false);
         if (ImGui.IsKeyPressed(ImGuiKey.Escape) || clickedOutside)
         {
             CloseCategoryEditor();

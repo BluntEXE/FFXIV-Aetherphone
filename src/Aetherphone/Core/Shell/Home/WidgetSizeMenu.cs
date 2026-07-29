@@ -91,8 +91,7 @@ internal sealed class WidgetSizeMenu
             handled = true;
         }
 
-        if (!handled && !openedThisFrame && ImGui.IsMouseClicked(ImGuiMouseButton.Left) &&
-            !scaled.Contains(ImGui.GetMousePos()))
+        if (!handled && !openedThisFrame && UiInteract.ClickedOutside(scaled.Min, scaled.Max, false))
         {
             Close();
         }

@@ -318,7 +318,7 @@ internal sealed class NotificationCenter
         else
         {
             scroller.Tick(deltaSeconds);
-            if (interactive && listArea.Contains(ImGui.GetMousePos()))
+            if (interactive && UiInteract.HoverWindowOnly(listArea.Min, listArea.Max, false))
             {
                 var wheel = ImGui.GetIO().MouseWheel;
                 if (wheel != 0f)

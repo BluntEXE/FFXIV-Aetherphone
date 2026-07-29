@@ -101,8 +101,7 @@ internal sealed class ControlGallery
             }
         }
 
-        if (interactive && !openedThisFrame && ImGui.IsMouseClicked(ImGuiMouseButton.Left) &&
-            !panel.Contains(ImGui.GetMousePos()))
+        if (interactive && !openedThisFrame && UiInteract.ClickedOutside(panel.Min, panel.Max, false))
         {
             Close();
         }
