@@ -54,21 +54,30 @@ internal struct GroupCard
     public Rect NextRow(int rowSpan = 1)
     {
         var rowTop = startY + rowIndex * rowHeight * scale;
-        if (rowIndex > 0)
+        var rowBottom = rowTop + rowSpan * rowHeight * scale;
+
+        // Draw the separator that sits below this row (i.e. above the *next* row) now, while
+        // entering this row, rather than waiting for the next NextRow() call to draw it as "above
+        // me". Callers draw each row's content (including any DrawHoverHighlight fill) *after*
+        // NextRow() returns, so a separator drawn lazily on the following call would land in the
+        // draw list — and thus render on top of — a hover fill already painted for this row,
+        // producing a stray line across it. Drawing it here instead guarantees every separator is
+        // in the draw list before either of its adjacent rows' content/hover fill, so a hover fill
+        // always paints over it, on whichever row is hovered.
+        if (rowIndex + rowSpan < rowCount)
         {
             var separatorX = left + Metrics.Space.Lg * scale;
-            ImGui.GetWindowDrawList().AddLine(new Vector2(separatorX, rowTop), new Vector2(right, rowTop),
+            ImGui.GetWindowDrawList().AddLine(new Vector2(separatorX, rowBottom), new Vector2(right, rowBottom),
                 ImGui.GetColorU32(theme.Separator), Metrics.Stroke.Hairline);
         }
 
         lastRowIndex = rowIndex;
         lastRowSpan = rowSpan;
         lastRowTop = rowTop;
-        lastRowBottom = rowTop + rowSpan * rowHeight * scale;
+        lastRowBottom = rowBottom;
         rowIndex += rowSpan;
         var padding = Metrics.Space.Lg * scale;
-        return new Rect(new Vector2(left + padding, rowTop),
-            new Vector2(right - padding, rowTop + rowSpan * rowHeight * scale));
+        return new Rect(new Vector2(left + padding, rowTop), new Vector2(right - padding, rowBottom));
     }
 
     // Draws the hover/press overlay for the row most recently returned by NextRow, full-bleed to
