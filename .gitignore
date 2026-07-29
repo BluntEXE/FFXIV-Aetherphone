@@ -7,3 +7,5 @@ docs/
 
 # Node tooling (tools/icon-generator)
 node_modules/
+
+.superpowers/
