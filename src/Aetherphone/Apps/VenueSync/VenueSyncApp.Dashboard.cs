@@ -46,7 +46,7 @@ internal sealed partial class VenueSyncApp
         var height = StatusCardHeight * scale;
         var card = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
         var dl = ImGui.GetWindowDrawList();
-        Squircle.Fill(dl, card.Min, card.Max, Metrics.Radius.Card * scale, ImGui.GetColorU32(theme.GroupedCard));
+        ui.Card(dl, card.Min, card.Max, Metrics.Radius.Lg * scale, elevated: true);
 
         var pad = Metrics.Space.Lg * scale;
         var activeShift = FindActiveShift();

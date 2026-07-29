@@ -3,6 +3,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.VenueSync;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Apps.VenueSync;
@@ -26,6 +27,11 @@ internal sealed partial class VenueSyncApp : IPhoneApp
     // reconstruct PhoneContext themselves — mirrors the pattern used by VenuesApp/FeedbackApp.
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
+
+    // AppSkin instance for content-app conventions (SectionHeading, EmptyState, hero Card) —
+    // mirrors the Notes/Calendar pattern of deriving a palette from the live PhoneTheme rather
+    // than a hardcoded per-app palette.
+    private readonly AppSkin ui = new(AppPalettes.VenueSync(PhoneTheme.Default));
 
     public VenueSyncApp(VenueSyncApiClient client, VenueSyncState state, Configuration configuration,
         GameData gameData)
@@ -54,6 +60,8 @@ internal sealed partial class VenueSyncApp : IPhoneApp
     {
         theme = context.Theme;
         navigation = context.Navigation;
+        ui.Theme = theme;
+        ui.Palette = AppPalettes.VenueSync(theme);
         state.EnsureShiftsFresh(false);
         router.Draw(context.Content, theme.AppBackground, ImGui.GetIO().DeltaTime, drawView);
     }

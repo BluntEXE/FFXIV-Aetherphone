@@ -3,6 +3,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.VenueSync;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.VenueSync;
@@ -38,6 +39,13 @@ internal sealed partial class VenueSyncApp
             }
 
             var activeShift = state.Shifts.Shifts.FirstOrDefault(s => s.Status == "ACTIVE");
+            var upcomingShifts = state.Shifts.Shifts.Where(s => s.Status == "SCHEDULED").ToList();
+            if (activeShift is null && state.Shifts.OpenShifts.Count == 0 && upcomingShifts.Count == 0)
+            {
+                EmptyState.Draw(body, ui, FontAwesomeIcon.Clock, "No Shifts", "Nothing scheduled right now.");
+                return;
+            }
+
             if (activeShift is not null)
             {
                 var activeCard = GroupCard.Begin(theme, 1, ShiftRow.Height);
@@ -50,7 +58,7 @@ internal sealed partial class VenueSyncApp
 
             if (state.Shifts.OpenShifts.Count > 0)
             {
-                SettingsSection.Header("OPEN — CLAIM", theme);
+                ui.SectionHeading("OPEN — CLAIM");
                 var openCard = GroupCard.Begin(theme, state.Shifts.OpenShifts.Count, ShiftRow.Height);
                 foreach (var open in state.Shifts.OpenShifts)
                 {
@@ -70,10 +78,9 @@ internal sealed partial class VenueSyncApp
                 ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
             }
 
-            var upcomingShifts = state.Shifts.Shifts.Where(s => s.Status == "SCHEDULED").ToList();
             if (upcomingShifts.Count > 0)
             {
-                SettingsSection.Header("UPCOMING", theme);
+                ui.SectionHeading("UPCOMING");
                 var upcomingCard = GroupCard.Begin(theme, upcomingShifts.Count, ShiftRow.Height);
                 foreach (var scheduled in upcomingShifts)
                 {
