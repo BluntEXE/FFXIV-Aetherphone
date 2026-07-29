@@ -204,6 +204,7 @@ internal abstract class SocialFeedStore : IDisposable
 
     public void EnsureMe()
     {
+        ReconcileAccountBadges();
         if (!session.IsSignedIn || me is not null || loadingMe)
         {
             return;
@@ -223,6 +224,18 @@ internal abstract class SocialFeedStore : IDisposable
                 me = profile;
             }
         }, () => loadingMe = false);
+    }
+
+    private void ReconcileAccountBadges()
+    {
+        var current = me;
+        var signedInUser = session.CurrentUser;
+        if (current is null || signedInUser is null || current.Badges == signedInUser.Badges)
+        {
+            return;
+        }
+
+        me = current with { Badges = signedInUser.Badges };
     }
 
     public void RefreshFeed(SocialFeedScope scope)

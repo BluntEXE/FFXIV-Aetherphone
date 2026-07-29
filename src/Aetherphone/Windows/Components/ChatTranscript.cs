@@ -88,12 +88,14 @@ internal readonly struct TranscriptMessage
     public readonly int ReplyKind;
     public readonly int DurationSecs;
     public readonly TranscriptReaction[] Reactions;
+    public readonly int SenderBadges;
 
     public TranscriptMessage(string id, string senderId, string body, int kind, long createdAtUnix, int mediaWidth,
         int mediaHeight, long? readAtUnix, string senderName, Vector4 senderTint, byte flags = 0,
         string? replyToId = null, string replySenderName = "", string replyBody = "", int replyKind = 0,
-        int durationSecs = 0, TranscriptReaction[]? reactions = null)
+        int durationSecs = 0, TranscriptReaction[]? reactions = null, int senderBadges = 0)
     {
+        SenderBadges = senderBadges;
         Id = id;
         SenderId = senderId;
         Body = body;
@@ -306,7 +308,7 @@ internal sealed class ChatTranscript
 
                 if (model.IsGroup && !grouped && message.SenderId != model.MyUserId)
                 {
-                    DrawSenderLabel(message);
+                    DrawSenderLabel(message, model.Theme);
                 }
 
                 if (message.Kind == KindImage)
@@ -452,7 +454,7 @@ internal sealed class ChatTranscript
         }
     }
 
-    private static void DrawSenderLabel(TranscriptMessage message)
+    private static void DrawSenderLabel(TranscriptMessage message, PhoneTheme theme)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var origin = ImGui.GetCursorScreenPos();
@@ -461,8 +463,8 @@ internal sealed class ChatTranscript
         var rect = new Vector2(textLeft, origin.Y);
         var hovering = UiInteract.Hover(rect, new Vector2(rect.X + maxWidth, rect.Y + 16f * scale));
         var name = FirstName(message.SenderName);
-        Marquee.DrawLeft("chattranscript.sender." + message.Id, name, textLeft, origin.Y, maxWidth,
-            new TextStyle(0.78f, FontWeight.SemiBold), message.SenderTint, hovering);
+        UserName.Draw("chattranscript.sender." + message.Id, name, message.SenderBadges, textLeft, origin.Y, maxWidth,
+            new TextStyle(0.78f, FontWeight.SemiBold), message.SenderTint, hovering, theme);
         ImGui.SetCursorScreenPos(new Vector2(origin.X, origin.Y + 16f * scale));
     }
 

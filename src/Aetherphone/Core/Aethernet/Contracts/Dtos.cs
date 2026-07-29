@@ -411,7 +411,8 @@ internal sealed record NotificationDto(
     string? ActorAvatarUrl,
     string? Preview,
     long CreatedAtUnix,
-    string? CommentId = null) : IIdentified;
+    string? CommentId = null,
+    int ActorBadges = 0) : IIdentified;
 
 internal sealed record NotificationPage(NotificationDto[] Items, string? NextCursor = null);
 
@@ -531,7 +532,8 @@ internal sealed record ConversationMemberDto(
     string? AvatarUrl,
     int Role,
     bool IsActive,
-    long? LastReadAtUnix = null);
+    long? LastReadAtUnix = null,
+    int Badges = 0);
 
 internal sealed record ChatMessageDto(
     string Id,
@@ -558,7 +560,8 @@ internal sealed record ChatMessageDto(
     bool Forwarded = false,
     int DurationSecs = 0,
     ReactionSummaryDto[]? Reactions = null,
-    long? EditedAtUnix = null) : IIdentified;
+    long? EditedAtUnix = null,
+    int SenderBadges = 0) : IIdentified;
 
 internal sealed record ReactionSummaryDto(string Token, int Count, bool Mine);
 

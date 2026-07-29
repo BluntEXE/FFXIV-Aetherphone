@@ -51,6 +51,8 @@ internal sealed class PhoneServices : IDisposable
     public required NotificationService Notifications { get; init; }
     public required SocialNotificationService SocialNotifications { get; init; }
     public required ModerationNoticeService ModerationNotices { get; init; }
+
+    public required AccountStateService AccountState { get; init; }
     public required ModerationNoticePresenter ModerationPresenter { get; init; }
     public required ModerationNoticeArchive ModerationArchive { get; init; }
     public required SafetyLauncher SafetyLauncher { get; init; }
@@ -207,6 +209,8 @@ internal sealed class PhoneServices : IDisposable
         var socialNotifications = new SocialNotificationService(aethernetSession, aethernet.Account, notifications, configuration, framework, visibility, realtimeSignals, installer);
         var moderationNotices = new ModerationNoticeService(aethernetSession, aethernet.Account, framework,
             visibility, realtimeSignals);
+        var accountState = new AccountStateService(aethernetSession, aethernet.Account, framework,
+            visibility, realtimeSignals);
         var moderationPresenter = new ModerationNoticePresenter(moderationNotices, confirm, notifications, framework);
         var moderationArchive = new ModerationNoticeArchive(aethernetSession, aethernet.Account);
         var safetyLauncher = new SafetyLauncher();
@@ -230,6 +234,7 @@ internal sealed class PhoneServices : IDisposable
             Notifications = notifications,
             SocialNotifications = socialNotifications,
             ModerationNotices = moderationNotices,
+            AccountState = accountState,
             ModerationPresenter = moderationPresenter,
             ModerationArchive = moderationArchive,
             SafetyLauncher = safetyLauncher,
@@ -303,6 +308,7 @@ internal sealed class PhoneServices : IDisposable
         SocialNotifications.Dispose();
         ModerationPresenter.Dispose();
         ModerationNotices.Dispose();
+        AccountState.Dispose();
         KeyVault.Dispose();
         Calls.Dispose();
         Collections.Dispose();

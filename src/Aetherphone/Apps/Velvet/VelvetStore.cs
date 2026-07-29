@@ -420,6 +420,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
 
     public void EnsureMe()
     {
+        ReconcileAccountBadges();
         if (!session.IsSignedIn || me is not null || loadingMe)
         {
             return;
@@ -451,6 +452,18 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
                 accessBlocked = true;
             }
         }, () => loadingMe = false);
+    }
+
+    private void ReconcileAccountBadges()
+    {
+        var current = me;
+        var signedInUser = session.CurrentUser;
+        if (current is null || signedInUser is null || current.Badges == signedInUser.Badges)
+        {
+            return;
+        }
+
+        me = current with { Badges = signedInUser.Badges };
     }
 
     public void AcceptGate(int gateVersion, Action<bool> onComplete)
