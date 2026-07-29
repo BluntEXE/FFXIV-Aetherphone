@@ -48,7 +48,7 @@ internal sealed partial class VenueSyncApp
 
             if (activeShift is not null)
             {
-                var activeCard = GroupCard.Begin(theme, 1, ShiftRow.Height);
+                var activeCard = GroupCard.Begin(theme, 1, ShiftRow.Height, showSeparators: false);
                 var activeRow = activeCard.NextRow();
                 var action = ShiftRow.Draw(activeCard, activeRow, activeShift, isOpen: false, roleName: null, theme,
                     "active");
@@ -60,7 +60,7 @@ internal sealed partial class VenueSyncApp
             if (state.Shifts.OpenShifts.Count > 0)
             {
                 ui.SectionHeading("OPEN — CLAIM");
-                var openCard = GroupCard.Begin(theme, state.Shifts.OpenShifts.Count, ShiftRow.Height);
+                var openCard = GroupCard.Begin(theme, state.Shifts.OpenShifts.Count, ShiftRow.Height, showSeparators: false);
                 foreach (var open in state.Shifts.OpenShifts)
                 {
                     var shim = new VenueSyncShift
@@ -83,7 +83,7 @@ internal sealed partial class VenueSyncApp
             if (upcomingShifts.Count > 0)
             {
                 ui.SectionHeading("UPCOMING");
-                var upcomingCard = GroupCard.Begin(theme, upcomingShifts.Count, ShiftRow.Height);
+                var upcomingCard = GroupCard.Begin(theme, upcomingShifts.Count, ShiftRow.Height, showSeparators: false);
                 foreach (var scheduled in upcomingShifts)
                 {
                     var upcomingRow = upcomingCard.NextRow();

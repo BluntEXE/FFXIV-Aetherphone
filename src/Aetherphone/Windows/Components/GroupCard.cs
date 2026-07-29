@@ -15,6 +15,7 @@ internal struct GroupCard
     private readonly float right;
     private readonly float startY;
     private readonly int rowCount;
+    private readonly bool showSeparators;
     private readonly float[] callTops;
     private readonly float[] callBottoms;
     private readonly bool[] callHovered;
@@ -27,7 +28,7 @@ internal struct GroupCard
     private int lastCallIndex;
 
     private GroupCard(PhoneTheme theme, float scale, float rowHeight, float left, float right, float startY,
-        int rowCount)
+        int rowCount, bool showSeparators)
     {
         this.theme = theme;
         this.scale = scale;
@@ -36,6 +37,7 @@ internal struct GroupCard
         this.right = right;
         this.startY = startY;
         this.rowCount = rowCount;
+        this.showSeparators = showSeparators;
         // Sized to rowCount: worst case every NextRow() call has rowSpan == 1, so the number of
         // calls (and thus boundaries to track) never exceeds rowCount.
         callTops = new float[rowCount];
@@ -50,7 +52,8 @@ internal struct GroupCard
         lastCallIndex = 0;
     }
 
-    public static GroupCard Begin(PhoneTheme theme, int rowCount, float rowHeight = DefaultRowHeight)
+    public static GroupCard Begin(PhoneTheme theme, int rowCount, float rowHeight = DefaultRowHeight,
+        bool showSeparators = true)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var origin = ImGui.GetCursorScreenPos();
@@ -60,7 +63,7 @@ internal struct GroupCard
         var dl = ImGui.GetWindowDrawList();
         Squircle.Fill(dl, origin, cardMax, Metrics.Radius.Md * scale, ImGui.GetColorU32(theme.GroupedCard));
         Material.EdgeSquircle(dl, origin, cardMax, Metrics.Radius.Md * scale, scale);
-        return new GroupCard(theme, scale, rowHeight, origin.X, right, origin.Y, rowCount);
+        return new GroupCard(theme, scale, rowHeight, origin.X, right, origin.Y, rowCount, showSeparators);
     }
 
     public Rect NextRow(int rowSpan = 1)
@@ -130,19 +133,22 @@ internal struct GroupCard
         // call index is ever marked hovered, so this draws exactly the same separators as before —
         // just later in the frame's draw list, which is visually identical since nothing else
         // renders in between that this reordering could affect.
-        var dl = ImGui.GetWindowDrawList();
-        var separatorX = left + Metrics.Space.Lg * scale;
-        var separatorColor = ImGui.GetColorU32(theme.Separator);
-        for (var i = 0; i < callCount - 1; i++)
+        if (showSeparators)
         {
-            if (callHovered[i] || callHovered[i + 1])
+            var dl = ImGui.GetWindowDrawList();
+            var separatorX = left + Metrics.Space.Lg * scale;
+            var separatorColor = ImGui.GetColorU32(theme.Separator);
+            for (var i = 0; i < callCount - 1; i++)
             {
-                continue;
-            }
+                if (callHovered[i] || callHovered[i + 1])
+                {
+                    continue;
+                }
 
-            var boundaryY = callBottoms[i];
-            dl.AddLine(new Vector2(separatorX, boundaryY), new Vector2(right, boundaryY), separatorColor,
-                Metrics.Stroke.Hairline);
+                var boundaryY = callBottoms[i];
+                dl.AddLine(new Vector2(separatorX, boundaryY), new Vector2(right, boundaryY), separatorColor,
+                    Metrics.Stroke.Hairline);
+            }
         }
 
         ImGui.SetCursorScreenPos(new Vector2(left, startY));

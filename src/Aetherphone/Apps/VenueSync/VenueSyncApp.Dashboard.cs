@@ -130,7 +130,7 @@ internal sealed partial class VenueSyncApp
     private void DrawActionsCard(float scale)
     {
         var openShiftsCount = state.Shifts?.OpenShifts.Count ?? 0;
-        var card = GroupCard.Begin(theme, 2, ActionRowHeight);
+        var card = GroupCard.Begin(theme, 2, ActionRowHeight, showSeparators: false);
 
         var logSaleRow = card.NextRow();
         if (DrawActionRow(card, logSaleRow, FontAwesomeIcon.Coins, theme.Accent, "Log a Sale",
