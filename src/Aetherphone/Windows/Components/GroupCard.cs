@@ -95,36 +95,27 @@ internal struct GroupCard
 
     // Draws the hover/press overlay for the row most recently returned by NextRow, full-bleed to
     // the card's own edges (not inset by row padding) so the highlight covers the entire row with
-    // no visible gap — and rounded to match the card's corner radius only where the row actually
-    // touches the card's rounded top/bottom edge, so a square corner never pokes past the card's
-    // squircle outline on the first/last row.
+    // no visible gap. Previously this branched on first/last row and used Squircle.FillCap, which
+    // draws the flat body and the rounded-corner cap as two separate overlapping fills (a 1.5px
+    // double-blend zone, intentional so no seam shows between them) — fine for opaque fills, but a
+    // low-alpha translucent hover color painted twice over that strip comes out visibly darker/
+    // lighter than the rest of the fill, a faint line at exactly the boundary between the flat body
+    // and the rounded cap. Instead, draw the CARD's own true shape once (same min/max/radius Begin
+    // used) and clip it to just this row's bounds — the visible slice is naturally correct at outer
+    // corners (it's the real card outline) and a perfectly clean cut at row boundaries (clipping
+    // hides pixels, it doesn't blend two fills together), so there's nothing left to double-paint.
     public void DrawHoverHighlight(Vector4 color)
     {
         callHovered[lastCallIndex] = true;
 
         var dl = ImGui.GetWindowDrawList();
-        var min = new Vector2(left, lastRowTop);
-        var max = new Vector2(right, lastRowBottom);
         var packed = ImGui.GetColorU32(color);
         var radius = Metrics.Radius.Md * scale;
-        var isFirst = lastRowIndex == 0;
-        var isLast = lastRowIndex + lastRowSpan >= rowCount;
-        if (isFirst && isLast)
-        {
-            Squircle.Fill(dl, min, max, radius, packed);
-        }
-        else if (isFirst)
-        {
-            Squircle.FillCap(dl, min, max, radius, packed, top: true);
-        }
-        else if (isLast)
-        {
-            Squircle.FillCap(dl, min, max, radius, packed, top: false);
-        }
-        else
-        {
-            dl.AddRectFilled(min, max, packed);
-        }
+        var cardMin = new Vector2(left, startY);
+        var cardMax = new Vector2(right, startY + rowCount * rowHeight * scale);
+        dl.PushClipRect(new Vector2(left, lastRowTop), new Vector2(right, lastRowBottom), true);
+        Squircle.Fill(dl, cardMin, cardMax, radius, packed);
+        dl.PopClipRect();
     }
 
     public void End()
