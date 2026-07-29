@@ -459,7 +459,7 @@ internal sealed class ChatTranscript
         var textLeft = origin.X + 4f * scale;
         var maxWidth = ScrollLayout.StableContentWidth() - 4f * scale;
         var rect = new Vector2(textLeft, origin.Y);
-        var hovering = ImGui.IsMouseHoveringRect(rect, new Vector2(rect.X + maxWidth, rect.Y + 16f * scale));
+        var hovering = UiInteract.Hover(rect, new Vector2(rect.X + maxWidth, rect.Y + 16f * scale));
         var name = FirstName(message.SenderName);
         Marquee.DrawLeft("chattranscript.sender." + message.Id, name, textLeft, origin.Y, maxWidth,
             new TextStyle(0.78f, FontWeight.SemiBold), message.SenderTint, hovering);
@@ -1756,8 +1756,7 @@ internal sealed class ChatTranscript
         return space > 0 ? name.Substring(0, space) : name;
     }
 
-    private static bool Hovering(Vector2 min, Vector2 max) =>
-        !UiInteract.InputBlocked && ImGui.IsMouseHoveringRect(min, max);
+    private static bool Hovering(Vector2 min, Vector2 max) => UiInteract.Hover(min, max);
 
     private readonly struct BubbleStamp
     {

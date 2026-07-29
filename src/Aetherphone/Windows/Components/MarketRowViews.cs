@@ -28,7 +28,7 @@ internal static class MarketRowViews
         var scale = ImGuiHelpers.GlobalScale;
         var drawList = ImGui.GetWindowDrawList();
         var openRight = row.Max.X - 56f * scale;
-        if (ImGui.IsMouseHoveringRect(row.Min, new Vector2(openRight, row.Max.Y)))
+        if (UiInteract.Hover(row.Min, new Vector2(openRight, row.Max.Y)))
         {
             DrawRowHighlight(drawList, new Rect(row.Min, new Vector2(openRight, row.Max.Y)),
                 ImGui.IsMouseDown(ImGuiMouseButton.Left), scale);
@@ -63,7 +63,7 @@ internal static class MarketRowViews
         var topY = row.Min.Y + 9f * scale;
         var textMaxWidth = MathF.Max(1f, dotCenter.X - 8f * scale - textX);
         var nameSize = Typography.Measure(alert.ItemName, TextStyles.Body);
-        var nameHovered = ImGui.IsMouseHoveringRect(new Vector2(textX, topY),
+        var nameHovered = UiInteract.Hover(new Vector2(textX, topY),
             new Vector2(textX + textMaxWidth, topY + nameSize.Y));
         Marquee.DrawLeft(rowId + ".name", alert.ItemName, textX, topY, textMaxWidth,
             TextStyles.Body, theme.TextStrong, nameHovered);
@@ -72,7 +72,7 @@ internal static class MarketRowViews
             $"{arrow} {MarketFormat.Gil(alert.Threshold)} · {alert.ScopeName}{(alert.HqOnly ? $" · {Loc.T(L.Common.Hq)}" : string.Empty)}";
         var subSize = Typography.Measure(sub, 0.82f);
         var subTop = row.Max.Y - 9f * scale - subSize.Y;
-        var subHovered = ImGui.IsMouseHoveringRect(new Vector2(textX, subTop),
+        var subHovered = UiInteract.Hover(new Vector2(textX, subTop),
             new Vector2(textX + textMaxWidth, subTop + subSize.Y));
         Marquee.DrawLeft(rowId + ".sub", sub, textX, subTop,
             textMaxWidth, new TextStyle(0.82f, FontWeight.Regular), theme.TextMuted, subHovered);

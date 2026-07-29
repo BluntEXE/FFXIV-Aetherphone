@@ -224,7 +224,7 @@ internal static class ConfirmDialog
         float opacity, ConfirmButtonTone tone = ConfirmButtonTone.Neutral, string? id = null)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = enabled && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
         var radius = rect.Height * 0.5f;
         Vector4 fill;
         Vector4 textColor;

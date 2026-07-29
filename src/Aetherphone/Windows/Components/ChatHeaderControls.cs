@@ -58,7 +58,7 @@ internal static class ChatHeaderControls
         drawList.AddRectFilled(min, max, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.14f)));
         Typography.DrawCentered(drawList, new Vector2((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f),
             text, mutedInk, 0.76f, FontWeight.Medium);
-        if (ImGui.IsMouseHoveringRect(min, max) && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        if (UiInteract.Hover(min, max) && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
             onDismiss();
         }
@@ -82,11 +82,11 @@ internal static class ChatHeaderControls
             FontAwesomeIcon.Times.ToIconString(), mutedInk, 0.6f);
         if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
-            if (ImGui.IsMouseHoveringRect(dismissMin, max))
+            if (UiInteract.Hover(dismissMin, max))
             {
                 onDismiss();
             }
-            else if (ImGui.IsMouseHoveringRect(min, max))
+            else if (UiInteract.Hover(min, max))
             {
                 onOpen();
             }

@@ -182,14 +182,14 @@ internal sealed partial class VelvetShell
         var headerTextMaxWidth = MathF.Max(1f, headerTextRight - nameLeft);
         var nameTop = origin.Y + pad;
         var nameSize = Typography.Measure(authorName, TextStyles.Headline);
-        var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, nameTop),
+        var nameHovering = UiInteract.Hover(new Vector2(nameLeft, nameTop),
             new Vector2(nameLeft + headerTextMaxWidth, nameTop + nameSize.Y));
         Marquee.DrawLeft("velvet.feed.author." + entry.Id, authorName, nameLeft, nameTop,
             headerTextMaxWidth, TextStyles.Headline, VelvetTheme.TitleInk, nameHovering);
         var ownerSub = SocialIdentity.FeedMeta(entry.OwnerHandle, TimeText.Short(entry.CreatedAtUnix));
         var ownerSubY = nameTop + PostCardMetrics.SublineTop * scale;
         var ownerSubSize = Typography.Measure(ownerSub, TextStyles.Subheadline);
-        var ownerSubHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, ownerSubY),
+        var ownerSubHovering = UiInteract.Hover(new Vector2(nameLeft, ownerSubY),
             new Vector2(nameLeft + headerTextMaxWidth, ownerSubY + ownerSubSize.Y));
         Marquee.DrawLeft("velvet.feed.ownersub." + entry.Id, ownerSub, nameLeft, ownerSubY,
             headerTextMaxWidth, TextStyles.Subheadline, VelvetTheme.MutedInk, ownerSubHovering);

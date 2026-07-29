@@ -179,7 +179,7 @@ internal sealed class NewsApp : IPhoneApp
         for (var index = 0; index < count; index++)
         {
             var row = card.NextRow();
-            var hovered = ImGui.IsMouseHoveringRect(row.Min, row.Max);
+            var hovered = UiInteract.Hover(row.Min, row.Max);
             if (category == NewsCategory.Maintenance)
             {
                 DrawMaintenanceRow(row, items[index], scale, hovered);
@@ -401,7 +401,7 @@ internal sealed class NewsApp : IPhoneApp
 
         var box = 14f * scale;
         UiAnchors.Report("news.refresh", new Rect(center - new Vector2(box, box), center + new Vector2(box, box)));
-        var hovered = ImGui.IsMouseHoveringRect(center - new Vector2(box, box), center + new Vector2(box, box));
+        var hovered = UiInteract.Hover(center - new Vector2(box, box), center + new Vector2(box, box));
         var glyph = FontAwesomeIcon.Sync.ToIconString();
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
@@ -435,7 +435,7 @@ internal sealed class NewsApp : IPhoneApp
 
     private void InteractCard(Rect rect, float rounding, string url, ImDrawListPtr drawList)
     {
-        var hovered = ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = UiInteract.Hover(rect.Min, rect.Max);
         if (hovered)
         {
             var pressed = ImGui.IsMouseDown(ImGuiMouseButton.Left);

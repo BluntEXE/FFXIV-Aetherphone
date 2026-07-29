@@ -31,7 +31,7 @@ internal sealed class EmojiComposer
     {
         var min = center - new Vector2(radius, radius);
         var max = center + new Vector2(radius, radius);
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         var color = open ? activeColor : hovered ? ui.Theme.TextStrong : idleColor;
         AppSkin.Icon(center, FontAwesomeIcon.Smile.ToIconString(), color, 0.95f);
         HoverTooltip.Show(new Rect(min, max), tooltip, side);

@@ -127,7 +127,7 @@ internal sealed class WidgetSizeMenu
             new Vector2(panel.Max.X - 4f * scale, top + rowHeight));
         rowIndex++;
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = ImGui.IsMouseHoveringRect(row.Min, row.Max);
+        var hovered = UiInteract.Hover(row.Min, row.Max);
         if (hovered)
         {
             Squircle.Fill(drawList, row.Min, row.Max, 11f * scale,

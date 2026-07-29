@@ -4,6 +4,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Games;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility;
 
@@ -175,7 +176,7 @@ internal sealed class PairsApp : IMiniGame
                 var half = fullCell.Size * 0.5f * pop;
                 var cell = new Rect(fullCell.Center - half, fullCell.Center + half);
                 var hovered = phase == Phase.Selecting && board.CanReveal(index) && flipProgress[index] < 0.02f &&
-                              ImGui.IsMouseHoveringRect(cell.Min, cell.Max);
+                              UiInteract.Hover(cell.Min, cell.Max);
                 var shakeX = shakePhase[index] > 0f
                     ? MathF.Sin(shakePhase[index] * MathF.PI * 8f) * 5f * scale * shakePhase[index]
                     : 0f;

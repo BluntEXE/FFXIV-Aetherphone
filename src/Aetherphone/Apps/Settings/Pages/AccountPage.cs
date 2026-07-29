@@ -204,14 +204,14 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         var avatarExtent = new Vector2(radius, radius);
         var avatarMin = avatarCenter - avatarExtent;
         var avatarMax = avatarCenter + avatarExtent;
-        var avatarHovered = ImGui.IsMouseHoveringRect(avatarMin, avatarMax);
+        var avatarHovered = UiInteract.Hover(avatarMin, avatarMax);
         var changeLabel = Loc.T(L.Account.ChangePhoto);
         var changeSize = Typography.Measure(changeLabel, TextStyles.Subheadline);
         var changeCenter = new Vector2(centerX, avatarCenter.Y + radius + 12f * scale + changeSize.Y * 0.5f);
         var changePadding = new Vector2(6f * scale, 4f * scale);
         var changeMin = changeCenter - changeSize * 0.5f - changePadding;
         var changeMax = changeCenter + changeSize * 0.5f + changePadding;
-        var changeHovered = ImGui.IsMouseHoveringRect(changeMin, changeMax);
+        var changeHovered = UiInteract.Hover(changeMin, changeMax);
         var changeInk = changeHovered ? Palette.Mix(theme.Accent, theme.TextStrong, 0.25f) : theme.Accent;
         Typography.DrawCentered(changeCenter, changeLabel, changeInk, TextStyles.Subheadline);
         var photoHovered = avatarHovered || changeHovered;
@@ -809,7 +809,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         var height = 52f * scale;
         var start = ImGui.GetCursorScreenPos();
         var max = new Vector2(start.X + width, start.Y + height);
-        var hovered = ImGui.IsMouseHoveringRect(start, max);
+        var hovered = UiInteract.Hover(start, max);
         var radius = 14f * scale;
         var background = hovered ? Palette.Mix(theme.GroupedCard, theme.Accent, 0.14f) : theme.GroupedCard;
         Squircle.Fill(drawList, start, max, radius, ImGui.GetColorU32(background));

@@ -445,7 +445,7 @@ internal sealed partial class ChirperApp : IPhoneApp
             OpenProfile(post.AuthorId);
         }
 
-        var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(contentLeft, contentTop + pad),
+        var nameHovering = UiInteract.Hover(new Vector2(contentLeft, contentTop + pad),
             new Vector2(contentLeft + nameMaxWidth, contentTop + pad + nameSize.Y));
         var drawnNameWidth = Marquee.DrawLeft("chirper.post.author." + post.Id, rawDisplayName, contentLeft,
             contentTop + pad, nameMaxWidth, new TextStyle(1.05f, FontWeight.SemiBold), theme.TextStrong, nameHovering);
@@ -459,7 +459,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         var metaMaxWidth = MathF.Max(1f, headerRight - metaLeft);
         var metaSize = Typography.Measure(Typography.FitText(meta, metaMaxWidth, 0.95f, FontWeight.Regular), 0.95f);
         var metaTop = contentTop + pad + (nameSize.Y - metaSize.Y) * 0.5f;
-        var metaHovering = ImGui.IsMouseHoveringRect(new Vector2(metaLeft, metaTop),
+        var metaHovering = UiInteract.Hover(new Vector2(metaLeft, metaTop),
             new Vector2(metaLeft + metaMaxWidth, metaTop + metaSize.Y));
         Marquee.DrawLeft("chirper.post.meta." + post.Id, meta, metaLeft, metaTop, metaMaxWidth,
             new TextStyle(0.95f, FontWeight.Regular), AppPalettes.Chirper.MutedInk, metaHovering);
@@ -883,7 +883,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         var unavailableText = Loc.T(L.Chirper.Unavailable);
         var unavailableMaxWidth = MathF.Max(1f, width - pad * 2f);
         var unavailableSize = Typography.Measure(unavailableText, 0.9f);
-        var unavailableHovering = ImGui.IsMouseHoveringRect(new Vector2(origin.X + pad, origin.Y + pad),
+        var unavailableHovering = UiInteract.Hover(new Vector2(origin.X + pad, origin.Y + pad),
             new Vector2(origin.X + pad + unavailableMaxWidth, origin.Y + pad + unavailableSize.Y));
         Marquee.DrawLeft("chirper.card.unavailable", unavailableText, origin.X + pad, origin.Y + pad,
             unavailableMaxWidth, new TextStyle(0.9f, FontWeight.Regular), AppPalettes.Chirper.MutedInk,
@@ -923,7 +923,7 @@ internal sealed partial class ChirperApp : IPhoneApp
             var unavailableText = Loc.T(L.Chirper.Unavailable);
             var unavailableMaxWidth = MathF.Max(1f, width - innerPad * 2f);
             var unavailableSize = Typography.Measure(unavailableText, 0.85f);
-            var unavailableHovering = ImGui.IsMouseHoveringRect(new Vector2(min.X + innerPad, min.Y + innerPad),
+            var unavailableHovering = UiInteract.Hover(new Vector2(min.X + innerPad, min.Y + innerPad),
                 new Vector2(min.X + innerPad + unavailableMaxWidth, min.Y + innerPad + unavailableSize.Y));
             Marquee.DrawLeft("chirper.quoted.unavailable", unavailableText, min.X + innerPad, min.Y + innerPad,
                 unavailableMaxWidth, new TextStyle(0.85f, FontWeight.Regular), AppPalettes.Chirper.MutedInk,
@@ -936,7 +936,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         var nameMaxWidth = innerWidth * 0.55f;
         var name = Typography.FitText(rawName, nameMaxWidth, 0.85f, FontWeight.SemiBold);
         var nameSize = Typography.Measure(name, 0.85f, FontWeight.SemiBold);
-        var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(min.X + innerPad, min.Y + innerPad),
+        var nameHovering = UiInteract.Hover(new Vector2(min.X + innerPad, min.Y + innerPad),
             new Vector2(min.X + innerPad + nameMaxWidth, min.Y + innerPad + nameSize.Y));
         Marquee.DrawLeft("chirper.quote.author." + hostId, rawName, min.X + innerPad, min.Y + innerPad,
             nameMaxWidth, new TextStyle(0.85f, FontWeight.SemiBold), theme.TextStrong, nameHovering);
@@ -1127,7 +1127,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         var nameMaxWidth = headerWidth * 0.55f;
         var displayName = Typography.FitText(rawDisplayName, nameMaxWidth, 0.95f, FontWeight.SemiBold);
         var nameSize = Typography.Measure(displayName, 0.95f, FontWeight.SemiBold);
-        var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, origin.Y),
+        var nameHovering = UiInteract.Hover(new Vector2(textLeft, origin.Y),
             new Vector2(textLeft + nameMaxWidth, origin.Y + nameSize.Y));
         Marquee.DrawLeft("chirper.comment.author." + comment.Id, rawDisplayName, textLeft, origin.Y,
             nameMaxWidth, new TextStyle(0.95f, FontWeight.SemiBold), theme.TextStrong, nameHovering);
@@ -1138,7 +1138,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         var metaMaxWidth = MathF.Max(1f, commentRight - metaLeft - 34f * scale);
         var metaFullSize = Typography.Measure(meta, 0.85f);
         var metaY = origin.Y + (nameSize.Y - metaFullSize.Y) * 0.5f;
-        var metaHovering = ImGui.IsMouseHoveringRect(new Vector2(metaLeft, metaY),
+        var metaHovering = UiInteract.Hover(new Vector2(metaLeft, metaY),
             new Vector2(metaLeft + metaMaxWidth, metaY + metaFullSize.Y));
         var metaWidth = Marquee.DrawLeft("chirper.comment.meta." + comment.Id, meta, metaLeft, metaY, metaMaxWidth,
             new TextStyle(0.85f, FontWeight.Regular), AppPalettes.Chirper.MutedInk, metaHovering);

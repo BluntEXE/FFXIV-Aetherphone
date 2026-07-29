@@ -247,7 +247,7 @@ internal sealed partial class YellowPagesApp
         var expandCenter = new Vector2(rect.Max.X - expandRadius - 10f * scale,
             rect.Min.Y + expandRadius + 10f * scale);
         var expandHalf = new Vector2(expandRadius, expandRadius);
-        var overExpand = ImGui.IsMouseHoveringRect(expandCenter - expandHalf, expandCenter + expandHalf, false);
+        var overExpand = UiInteract.Hover(expandCenter - expandHalf, expandCenter + expandHalf, false);
         drawList.AddCircleFilled(expandCenter, expandRadius,
             ImGui.GetColorU32(new Vector4(0f, 0f, 0f, overExpand ? 0.78f : 0.55f)), 28);
         if (overExpand)
@@ -274,9 +274,9 @@ internal sealed partial class YellowPagesApp
         {
             DrawHeroDots(drawList, rect, photos.Length, scale);
             var midX = rect.Center.X;
-            var leftHovered = !overExpand && ImGui.IsMouseHoveringRect(rect.Min, new Vector2(midX, touchMax.Y), false);
+            var leftHovered = !overExpand && UiInteract.Hover(rect.Min, new Vector2(midX, touchMax.Y), false);
             var rightHovered = !overExpand
-                && ImGui.IsMouseHoveringRect(new Vector2(midX, rect.Min.Y), touchMax, false);
+                && UiInteract.Hover(new Vector2(midX, rect.Min.Y), touchMax, false);
             if (leftHovered || rightHovered)
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

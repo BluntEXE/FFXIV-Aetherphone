@@ -67,7 +67,7 @@ internal sealed class MentionPopup
 
         var min = new Vector2(left, top);
         var max = new Vector2(left + width, top + height);
-        autocomplete.PointerOver = ImGui.IsMouseHoveringRect(min, max);
+        autocomplete.PointerOver = UiInteract.Hover(min, max);
         Elevation.Floating(drawList, min, max, 14f * scale, scale);
         Squircle.Fill(drawList, min, max, 14f * scale,
             ImGui.GetColorU32(Palette.WithAlpha(theme.GroupedCard, MathF.Min(0.98f, theme.GroupedCard.W + 0.4f) * alpha)));
@@ -88,7 +88,7 @@ internal sealed class MentionPopup
             var row = rows[index];
             var rowMin = new Vector2(min.X + padY, min.Y + padY + index * rowHeight);
             var rowMax = new Vector2(max.X - padY, rowMin.Y + rowHeight);
-            var hovered = ImGui.IsMouseHoveringRect(rowMin, rowMax);
+            var hovered = UiInteract.Hover(rowMin, rowMax);
             if (hovered || index == autocomplete.SelectedIndex)
             {
                 Squircle.Fill(drawList, rowMin, rowMax, 9f * scale,
@@ -114,14 +114,14 @@ internal sealed class MentionPopup
             var name = SocialIdentity.Name(row.DisplayName, row.Handle);
             var nameY = rowMin.Y + 6f * scale;
             var nameSize = Typography.Measure(name, 0.92f, FontWeight.SemiBold);
-            var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, nameY),
+            var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
                 new Vector2(textLeft + textMaxWidth, nameY + nameSize.Y));
             Marquee.DrawLeft(drawList, "mentionpopup.name." + row.Handle, name, textLeft, nameY, textMaxWidth,
                 new TextStyle(0.92f, FontWeight.SemiBold), Palette.WithAlpha(theme.TextStrong, alpha), nameHovering);
             var handleText = "@" + row.Handle;
             var handleY = nameY + nameSize.Y;
             var handleSize = Typography.Measure(handleText, 0.82f, FontWeight.Regular);
-            var handleHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, handleY),
+            var handleHovering = UiInteract.Hover(new Vector2(textLeft, handleY),
                 new Vector2(textLeft + textMaxWidth, handleY + handleSize.Y));
             Marquee.DrawLeft(drawList, "mentionpopup.handle." + row.Handle, handleText,
                 textLeft, handleY, textMaxWidth, new TextStyle(0.82f, FontWeight.Regular),

@@ -160,7 +160,7 @@ internal sealed partial class LinkpearlApp
         var min = center - new Vector2(radius, radius);
         var max = center + new Vector2(radius, radius);
         var paused = notificationGate.Paused;
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         var color = paused ? context.Theme.Accent : hovered ? context.Theme.TextStrong : context.Theme.TextMuted;
         ProgressRing.CenterIcon(ImGui.GetWindowDrawList(), center,
             paused ? FontAwesomeIcon.BellSlash : FontAwesomeIcon.Bell, color, 15f * scale);
@@ -220,7 +220,7 @@ internal sealed partial class LinkpearlApp
         var radius = 16f * scale;
         var min = center - new Vector2(radius, radius);
         var max = center + new Vector2(radius, radius);
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         ProgressRing.CenterIcon(ImGui.GetWindowDrawList(), center, FontAwesomeIcon.TrashAlt,
             hovered ? frameTheme.Danger : frameTheme.TextMuted, 15f * scale);
         if (hovered)
@@ -295,7 +295,7 @@ internal sealed partial class LinkpearlApp
         var min = center - new Vector2(radius, radius);
         var max = center + new Vector2(radius, radius);
         var muted = mutes.IsMuted(channel);
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         var color = muted ? frameTheme.Accent : hovered ? frameTheme.TextStrong : frameTheme.TextMuted;
         ProgressRing.CenterIcon(ImGui.GetWindowDrawList(), center,
             muted ? FontAwesomeIcon.BellSlash : FontAwesomeIcon.Bell, color, 15f * scale);
@@ -397,7 +397,7 @@ internal sealed partial class LinkpearlApp
         ProgressRing.CenterIcon(sendCenter, FontAwesomeIcon.ArrowUp, new Vector4(1f, 1f, 1f, 1f), sendDiameter * 0.46f);
         var sendMin = sendCenter - new Vector2(sendDiameter * 0.5f, sendDiameter * 0.5f);
         var sendMax = sendCenter + new Vector2(sendDiameter * 0.5f, sendDiameter * 0.5f);
-        if (hasText && ImGui.IsMouseHoveringRect(sendMin, sendMax))
+        if (hasText && UiInteract.Hover(sendMin, sendMax))
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))

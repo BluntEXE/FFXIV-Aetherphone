@@ -53,7 +53,7 @@ internal static class SwatchStrip
 
             var min = center - new Vector2(radius, radius);
             var max = center + new Vector2(radius, radius);
-            if (!ImGui.IsMouseHoveringRect(min, max))
+            if (!UiInteract.Hover(min, max))
             {
                 continue;
             }

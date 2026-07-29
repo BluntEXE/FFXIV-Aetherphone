@@ -124,14 +124,14 @@ internal sealed partial class MusicApp
         var textWidth = max.X - trailing - textLeft;
         var searchTitleY = min.Y + 10f * scale;
         var searchTitleSize = Typography.Measure(song.Title, TextStyles.BodyEmphasized);
-        var searchTitleHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, searchTitleY),
+        var searchTitleHovering = UiInteract.Hover(new Vector2(textLeft, searchTitleY),
             new Vector2(textLeft + textWidth, searchTitleY + searchTitleSize.Y));
         Marquee.DrawLeft("music.searchRow.title." + song.VideoId, song.Title, textLeft, searchTitleY,
             textWidth, TextStyles.BodyEmphasized, current ? ui.Accent : ui.TitleInk, searchTitleHovering);
         var searchSub = SongRowSubtitle(song);
         var searchSubY = min.Y + 34f * scale;
         var searchSubSize = Typography.Measure(searchSub, TextStyles.Caption1);
-        var searchSubHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, searchSubY),
+        var searchSubHovering = UiInteract.Hover(new Vector2(textLeft, searchSubY),
             new Vector2(textLeft + textWidth, searchSubY + searchSubSize.Y));
         Marquee.DrawLeft("music.searchRow.subtitle." + song.VideoId, searchSub, textLeft,
             searchSubY, textWidth, TextStyles.Caption1, ui.MutedInk, searchSubHovering);

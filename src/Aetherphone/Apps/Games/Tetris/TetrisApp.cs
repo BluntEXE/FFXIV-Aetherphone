@@ -3,6 +3,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility;
 
@@ -111,7 +112,7 @@ internal sealed class TetrisApp : IMiniGame
             new Vector2(body.Min.X + 12f * scale + slotSize, slotTop + slotSize));
         var nextRect = new Rect(new Vector2(body.Max.X - 12f * scale - slotSize, slotTop),
             new Vector2(body.Max.X - 12f * scale, slotTop + slotSize));
-        var holdHovered = ImGui.IsMouseHoveringRect(holdRect.Min, holdRect.Max);
+        var holdHovered = UiInteract.Hover(holdRect.Min, holdRect.Max);
         renderer.DrawHoldSlot(board, holdRect, theme, Accent, holdHovered, scale);
         if (holdHovered)
         {

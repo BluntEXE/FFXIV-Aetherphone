@@ -154,7 +154,7 @@ internal sealed partial class AnnouncementsApp
         Typography.Draw(drawList, new Vector2(stampLeft, footerCenterY - stampSize.Y * 0.5f), stamp, ui.MutedInk,
             TextStyles.Footnote);
 
-        var hovered = ImGui.IsMouseHoveringRect(origin, cardMax);
+        var hovered = UiInteract.Hover(origin, cardMax);
         DrawChevron(drawList, new Vector2(cardMax.X - pad, footerCenterY), 5f * scale, Metrics.Stroke.Thin * scale,
             hovered ? ui.TitleInk : Palette.WithAlpha(ui.MutedInk, 0.7f));
         if (hovered)

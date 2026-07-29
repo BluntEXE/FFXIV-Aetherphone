@@ -1,9 +1,10 @@
 using Aetherphone.Apps.Games.Framework;
-using Aetherphone.Core.Animation;
 using Aetherphone.Core;
+using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility;
 
@@ -181,13 +182,12 @@ internal sealed class WhackApp : IMiniGame
 
     private int HoleHit(GameGrid grid)
     {
-        var mouse = ImGui.GetMousePos();
-        if (!grid.Bounds.Contains(mouse))
+        if (!UiInteract.Hover(grid.Bounds.Min, grid.Bounds.Max))
         {
             return -1;
         }
 
-        var local = mouse - grid.Origin;
+        var local = ImGui.GetMousePos() - grid.Origin;
         var column = (int)(local.X / grid.Pitch);
         var row = (int)(local.Y / grid.Pitch);
         if (column < 0 || column >= WhackBoard.Columns || row < 0 || row >= WhackBoard.Rows)

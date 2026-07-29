@@ -42,6 +42,6 @@ internal static class Scrubber
         var midY = track.Center.Y;
         var hitMin = new Vector2(track.Min.X - 6f * scale, midY - 14f * scale);
         var hitMax = new Vector2(track.Max.X + 6f * scale, midY + 14f * scale);
-        return ImGui.IsMouseHoveringRect(hitMin, hitMax);
+        return UiInteract.Hover(hitMin, hitMax);
     }
 }

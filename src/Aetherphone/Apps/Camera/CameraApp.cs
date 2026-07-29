@@ -3,6 +3,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Photos;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.Gui.NamePlate;
 using Dalamud.Interface.Textures;
@@ -391,7 +392,7 @@ internal sealed class CameraApp : IPhoneApp
         }
 
         var mouse = ImGui.GetMousePos();
-        if (!viewfinder.Contains(mouse))
+        if (!UiInteract.Hover(viewfinder.Min, viewfinder.Max))
         {
             return;
         }

@@ -1,9 +1,10 @@
 using Aetherphone.Apps.Games.Framework;
-using Aetherphone.Core.Animation;
 using Aetherphone.Core;
+using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility;
 
@@ -155,9 +156,8 @@ internal sealed class BreakoutApp : IMiniGame
 
     private void HandleInput(Rect field, float factor)
     {
-        var mouse = ImGui.GetMousePos();
-        board.SetPaddle((mouse.X - field.Min.X) / factor);
-        if (board.Attached && ImGui.IsMouseClicked(ImGuiMouseButton.Left) && field.Contains(mouse))
+        board.SetPaddle((ImGui.GetMousePos().X - field.Min.X) / factor);
+        if (board.Attached && ImGui.IsMouseClicked(ImGuiMouseButton.Left) && UiInteract.Hover(field.Min, field.Max))
         {
             board.Launch();
         }

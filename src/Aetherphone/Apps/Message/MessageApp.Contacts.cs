@@ -250,7 +250,7 @@ internal sealed partial class MessageApp
         var nameTop = origin.Y + 12f * scale;
         var contactName = ContactBook.DisplayLabel(contact);
         var nameSize = Typography.Measure(contactName, 1f, FontWeight.SemiBold);
-        var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, nameTop),
+        var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameTop),
             new Vector2(textLeft + textWidth, nameTop + nameSize.Y));
         Marquee.DrawLeft("messageapp.contacts.name." + contact.UserId, contactName, textLeft, nameTop, textWidth,
             new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, nameHovering);

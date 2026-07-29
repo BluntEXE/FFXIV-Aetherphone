@@ -333,7 +333,7 @@ internal sealed class StoryViewerOverlay
         {
             AppSkin.Icon(sendCenter, FontAwesomeIcon.PaperPlane.ToIconString(), new Vector4(1f, 1f, 1f, 0.95f), 1f);
             var hit = new Vector2(14f * scale, 14f * scale);
-            if (ImGui.IsMouseHoveringRect(sendCenter - hit, sendCenter + hit))
+            if (UiInteract.Hover(sendCenter - hit, sendCenter + hit))
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                 if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
@@ -377,7 +377,7 @@ internal sealed class StoryViewerOverlay
             var center = new Vector2(barMin.X + slot * (emojiIndex + 0.5f), rowCenterY);
             var half = side * 0.5f;
             var hovered = eased > 0.5f
-                && ImGui.IsMouseHoveringRect(center - new Vector2(half, half), center + new Vector2(half, half));
+                && UiInteract.Hover(center - new Vector2(half, half), center + new Vector2(half, half));
             var drawHalf = hovered ? half * 1.15f : half;
             EmojiImages.TryDraw(drawList, QuickEmojiFiles[emojiIndex], center - new Vector2(drawHalf, drawHalf),
                 center + new Vector2(drawHalf, drawHalf), tint);
@@ -520,7 +520,7 @@ internal sealed class StoryViewerOverlay
         var stamp = TimeText.Short(viewer.ViewedAtUnix);
         var stampSize = Typography.Measure(stamp, TextStyles.Caption1);
         var nameMaxWidth = MathF.Max(1f, origin.X + width - stampSize.X - 16f * scale - left);
-        var rowHovering = ImGui.IsMouseHoveringRect(origin, new Vector2(origin.X + width, origin.Y + height));
+        var rowHovering = UiInteract.Hover(origin, new Vector2(origin.X + width, origin.Y + height));
         var nameSize = Typography.Measure(name, TextStyles.Subheadline);
         Marquee.DrawLeft("storyviewer.name." + viewer.Handle, name, left, center.Y - nameSize.Y * 0.5f,
             nameMaxWidth, TextStyles.Subheadline, theme.TextStrong, rowHovering);
@@ -532,13 +532,13 @@ internal sealed class StoryViewerOverlay
 
     private void HandleInput(Rect area, float delta, bool imageReady, Rect replyZone)
     {
-        var hovering = ImGui.IsMouseHoveringRect(area.Min, area.Max);
+        var hovering = UiInteract.Hover(area.Min, area.Max);
         if (hovering && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
             pressStartedAt = ImGui.GetTime();
             pressOrigin = ImGui.GetIO().MousePos;
             pressInReplyZone = replyPrompt is not null
-                && ImGui.IsMouseHoveringRect(replyZone.Min, replyZone.Max);
+                && UiInteract.Hover(replyZone.Min, replyZone.Max);
         }
 
         var down = ImGui.IsMouseDown(ImGuiMouseButton.Left);
@@ -716,7 +716,7 @@ internal sealed class StoryViewerOverlay
         var stamp = TimeText.Short(story.CreatedAtUnix);
         var stampWidth = Typography.Measure(stamp, TextStyles.Footnote).X;
         var nameMaxWidth = MathF.Max(1f, row.Max.X - closeReserve - stampWidth - 8f * scale - left);
-        var headerHovering = ImGui.IsMouseHoveringRect(row.Min, row.Max);
+        var headerHovering = UiInteract.Hover(row.Min, row.Max);
         var nameSize = Typography.Measure(authorLabel, TextStyles.SubheadlineEmphasized);
         var nameWidth = Marquee.DrawLeft("storyviewer.header.author." + authorLabel, authorLabel, left,
             row.Center.Y - nameSize.Y * 0.5f, nameMaxWidth, TextStyles.SubheadlineEmphasized,

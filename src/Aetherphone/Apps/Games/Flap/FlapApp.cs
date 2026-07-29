@@ -145,7 +145,7 @@ internal sealed class FlapApp : IMiniGame
             return;
         }
 
-        if (!ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        if (!ImGui.IsMouseClicked(ImGuiMouseButton.Left) || !UiInteract.Hover(area.Min, area.Max))
         {
             return;
         }

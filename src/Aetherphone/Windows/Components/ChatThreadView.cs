@@ -938,7 +938,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             lodestone, 0.85f, 32);
         var textLeft = avatarCenter.X + radius + 12f * scale;
         var labelMaxWidth = MathF.Max(1f, origin.X + width - pad - 40f * scale - textLeft);
-        var rowHovering = ImGui.IsMouseHoveringRect(origin, rowMax);
+        var rowHovering = UiInteract.Hover(origin, rowMax);
         if (mine)
         {
             Marquee.DrawLeft("chatthread.reactor." + reactor.UserId, label, textLeft, origin.Y + 10f * scale,

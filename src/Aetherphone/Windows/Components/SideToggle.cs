@@ -12,7 +12,7 @@ internal static class SideToggle
         var scale = ImGuiHelpers.GlobalScale;
         var hitMin = new Vector2(bounds.Min.X - 8f * scale, bounds.Min.Y - 6f * scale);
         var hitMax = new Vector2(bounds.Max.X + 4f * scale, bounds.Max.Y + 6f * scale);
-        var hovered = ImGui.IsMouseHoveringRect(hitMin, hitMax);
+        var hovered = UiInteract.Hover(hitMin, hitMax);
         var press = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left) ? 1f : 0f;
         HardwareButton.Draw(ImGui.GetWindowDrawList(), bounds, theme, RailSide.Left, hovered, press, active ? 1f : 0f);
         if (hovered)

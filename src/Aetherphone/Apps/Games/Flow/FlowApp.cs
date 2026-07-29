@@ -181,7 +181,10 @@ internal sealed class FlowApp : IMiniGame
 
         if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
-            board.Press(hovered);
+            if (UiInteract.Hover(grid.Bounds.Min, grid.Bounds.Max))
+            {
+                board.Press(hovered);
+            }
         }
         else if (ImGui.IsMouseDown(ImGuiMouseButton.Left) && board.ActiveColor >= 0)
         {

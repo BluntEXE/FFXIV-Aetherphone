@@ -423,7 +423,7 @@ internal sealed partial class ActivityApp : IPhoneApp
         var minusCenter = new Vector2(row.Max.X - radius - 106f * scale, row.Center.Y);
         var valueCenter = new Vector2((plusCenter.X + minusCenter.X) * 0.5f, row.Center.Y);
         var labelMaxWidth = MathF.Max(1f, minusCenter.X - radius - 12f * scale - row.Min.X);
-        var labelHovering = ImGui.IsMouseHoveringRect(new Vector2(row.Min.X, row.Min.Y),
+        var labelHovering = UiInteract.Hover(new Vector2(row.Min.X, row.Min.Y),
             new Vector2(row.Min.X + labelMaxWidth, row.Max.Y));
         Marquee.DrawLeft("activity.goalrow." + label, label, row.Min.X, row.Center.Y - 8f * scale, labelMaxWidth,
             TextStyles.Subheadline, AppPalettes.Activity.BodyInk, labelHovering);

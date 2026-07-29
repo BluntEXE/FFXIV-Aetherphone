@@ -76,7 +76,7 @@ internal static class SegmentStrip
             var center = new Vector2(trackMin.X + (index + 0.5f) * segmentWidth, row.Center.Y);
             var proximity = 1f - Math.Clamp(MathF.Abs(position - index), 0f, 1f);
             var color = Vector4.Lerp(mutedInk, activeInk, proximity);
-            var hovering = ImGui.IsMouseHoveringRect(segmentMin, segmentMax);
+            var hovering = UiInteract.Hover(segmentMin, segmentMax);
             var labelHeight = Typography.Measure(options[index], textScale, FontWeight.SemiBold).Y;
             Marquee.DrawCentered(id + "." + index, options[index], center.X, center.Y - labelHeight * 0.5f,
                 labelMaxWidth, new TextStyle(textScale, FontWeight.SemiBold), color, hovering);

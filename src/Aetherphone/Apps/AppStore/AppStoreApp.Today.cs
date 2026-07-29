@@ -83,7 +83,7 @@ internal sealed partial class AppStoreApp
             Palette.WithAlpha(new Vector4(1f, 1f, 1f, 1f), 0.78f), TextStyles.Caption1);
         var nameY = card.Min.Y + pad + 20f * scale;
         var nameMaxWidth = card.Width - pad * 2f;
-        var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(card.Min.X + pad, nameY),
+        var nameHovering = UiInteract.Hover(new Vector2(card.Min.X + pad, nameY),
             new Vector2(card.Min.X + pad + nameMaxWidth, nameY + Typography.Measure(app.DisplayName, TextStyles.Title1).Y));
         Marquee.DrawLeft("appstore.today.name." + app.Id, app.DisplayName, card.Min.X + pad, nameY, nameMaxWidth,
             TextStyles.Title1, new Vector4(1f, 1f, 1f, 1f), nameHovering);

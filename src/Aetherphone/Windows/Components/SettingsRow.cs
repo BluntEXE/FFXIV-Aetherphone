@@ -33,14 +33,14 @@ internal static class SettingsRow
         var labelCap = MathF.Max(1f, available - valueFullSize.X);
         var labelSize = Typography.Measure(label, TextStyles.BodyEmphasized);
         var labelY = row.Center.Y - labelSize.Y * 0.5f;
-        var labelHovered = ImGui.IsMouseHoveringRect(new Vector2(row.Min.X, row.Min.Y),
+        var labelHovered = UiInteract.Hover(new Vector2(row.Min.X, row.Min.Y),
             new Vector2(row.Min.X + labelCap, row.Max.Y));
         var rowId = id ?? label;
         var labelWidth = Marquee.DrawLeft(rowId, label, row.Min.X, labelY, labelCap, TextStyles.BodyEmphasized,
             theme.TextStrong, labelHovered);
         var valueMaxWidth = MathF.Max(1f, available - labelWidth);
         var valueY = row.Center.Y - valueFullSize.Y * 0.5f;
-        var valueHovered = ImGui.IsMouseHoveringRect(new Vector2(row.Max.X - valueMaxWidth, row.Min.Y),
+        var valueHovered = UiInteract.Hover(new Vector2(row.Max.X - valueMaxWidth, row.Min.Y),
             new Vector2(row.Max.X, row.Max.Y));
         Marquee.DrawRight(rowId + ":infoValue", value, row.Max.X, valueY, valueMaxWidth, TextStyles.Body,
             theme.TextMuted, valueHovered);
@@ -171,7 +171,7 @@ internal static class SettingsRow
 
         var labelSize = Typography.Measure(label, TextStyles.BodyEmphasized);
         var labelY = row.Center.Y - labelSize.Y * 0.5f;
-        var labelHovered = ImGui.IsMouseHoveringRect(new Vector2(labelStartX, row.Min.Y),
+        var labelHovered = UiInteract.Hover(new Vector2(labelStartX, row.Min.Y),
             new Vector2(labelStartX + labelCap, row.Max.Y));
         var labelWidth = Marquee.DrawLeft(rowId, label, labelStartX, labelY, labelCap, TextStyles.BodyEmphasized,
             theme.TextStrong, labelHovered);
@@ -184,7 +184,7 @@ internal static class SettingsRow
         var valueMaxWidth = MathF.Max(1f, valueBoxRight - labelStartX - labelWidth - midGap);
         var valueSize = Typography.Measure(value, TextStyles.Body);
         var valueY = row.Center.Y - valueSize.Y * 0.5f;
-        var valueHovered = ImGui.IsMouseHoveringRect(new Vector2(valueBoxRight - valueMaxWidth, row.Min.Y),
+        var valueHovered = UiInteract.Hover(new Vector2(valueBoxRight - valueMaxWidth, row.Min.Y),
             new Vector2(valueBoxRight, row.Max.Y));
         Marquee.DrawRight(rowId + ":value", value, valueBoxRight, valueY, valueMaxWidth, TextStyles.Body,
             theme.TextMuted, valueHovered);
