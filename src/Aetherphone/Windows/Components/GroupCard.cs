@@ -15,11 +15,16 @@ internal struct GroupCard
     private readonly float right;
     private readonly float startY;
     private readonly int rowCount;
+    private readonly float[] callTops;
+    private readonly float[] callBottoms;
+    private readonly bool[] callHovered;
     private int rowIndex;
+    private int callCount;
     private float lastRowTop;
     private float lastRowBottom;
     private int lastRowIndex;
     private int lastRowSpan;
+    private int lastCallIndex;
 
     private GroupCard(PhoneTheme theme, float scale, float rowHeight, float left, float right, float startY,
         int rowCount)
@@ -31,11 +36,18 @@ internal struct GroupCard
         this.right = right;
         this.startY = startY;
         this.rowCount = rowCount;
+        // Sized to rowCount: worst case every NextRow() call has rowSpan == 1, so the number of
+        // calls (and thus boundaries to track) never exceeds rowCount.
+        callTops = new float[rowCount];
+        callBottoms = new float[rowCount];
+        callHovered = new bool[rowCount];
         rowIndex = 0;
+        callCount = 0;
         lastRowTop = startY;
         lastRowBottom = startY;
         lastRowIndex = 0;
         lastRowSpan = 0;
+        lastCallIndex = 0;
     }
 
     public static GroupCard Begin(PhoneTheme theme, int rowCount, float rowHeight = DefaultRowHeight)
@@ -56,20 +68,17 @@ internal struct GroupCard
         var rowTop = startY + rowIndex * rowHeight * scale;
         var rowBottom = rowTop + rowSpan * rowHeight * scale;
 
-        // Draw the separator that sits below this row (i.e. above the *next* row) now, while
-        // entering this row, rather than waiting for the next NextRow() call to draw it as "above
-        // me". Callers draw each row's content (including any DrawHoverHighlight fill) *after*
-        // NextRow() returns, so a separator drawn lazily on the following call would land in the
-        // draw list — and thus render on top of — a hover fill already painted for this row,
-        // producing a stray line across it. Drawing it here instead guarantees every separator is
-        // in the draw list before either of its adjacent rows' content/hover fill, so a hover fill
-        // always paints over it, on whichever row is hovered.
-        if (rowIndex + rowSpan < rowCount)
-        {
-            var separatorX = left + Metrics.Space.Lg * scale;
-            ImGui.GetWindowDrawList().AddLine(new Vector2(separatorX, rowBottom), new Vector2(right, rowBottom),
-                ImGui.GetColorU32(theme.Separator), Metrics.Stroke.Hairline);
-        }
+        // Separators are no longer drawn here. A separator sitting between two rows can never be
+        // made to line up pixel-perfectly with whichever adjacent row's hover fill happens to be
+        // drawn (rounded-corner "cap" fills go through Squircle's AA convex-fill path, which feathers
+        // its edges by roughly half a pixel — enough for the hairline beneath/above it to peek
+        // through no matter the draw order). Instead we record this row's bounds and defer every
+        // boundary separator to End(), where we skip drawing it if either adjacent row was hovered
+        // this frame — so a separator and a hover fill can never visually coexist at a boundary.
+        callTops[callCount] = rowTop;
+        callBottoms[callCount] = rowBottom;
+        lastCallIndex = callCount;
+        callCount++;
 
         lastRowIndex = rowIndex;
         lastRowSpan = rowSpan;
@@ -87,6 +96,8 @@ internal struct GroupCard
     // squircle outline on the first/last row.
     public void DrawHoverHighlight(Vector4 color)
     {
+        callHovered[lastCallIndex] = true;
+
         var dl = ImGui.GetWindowDrawList();
         var min = new Vector2(left, lastRowTop);
         var max = new Vector2(right, lastRowBottom);
@@ -114,6 +125,26 @@ internal struct GroupCard
 
     public void End()
     {
+        // Draw every row-boundary separator now, skipping any boundary where either adjacent row
+        // was hover-highlighted this frame. For consumers that never call DrawHoverHighlight, no
+        // call index is ever marked hovered, so this draws exactly the same separators as before —
+        // just later in the frame's draw list, which is visually identical since nothing else
+        // renders in between that this reordering could affect.
+        var dl = ImGui.GetWindowDrawList();
+        var separatorX = left + Metrics.Space.Lg * scale;
+        var separatorColor = ImGui.GetColorU32(theme.Separator);
+        for (var i = 0; i < callCount - 1; i++)
+        {
+            if (callHovered[i] || callHovered[i + 1])
+            {
+                continue;
+            }
+
+            var boundaryY = callBottoms[i];
+            dl.AddLine(new Vector2(separatorX, boundaryY), new Vector2(right, boundaryY), separatorColor,
+                Metrics.Stroke.Hairline);
+        }
+
         ImGui.SetCursorScreenPos(new Vector2(left, startY));
         ImGui.Dummy(new Vector2(right - left, rowCount * rowHeight * scale));
     }
