@@ -12,6 +12,7 @@ internal sealed partial class VenueSyncApp
     private string settingsKeyInput = string.Empty;
     private bool settingsKeyVisible;
     private List<VenueSyncVenue> settingsVenues = new();
+    private bool settingsVenuePickerExpanded;
     private string? settingsError;
     private string? settingsCharacterLinkStatus;
 
@@ -57,22 +58,32 @@ internal sealed partial class VenueSyncApp
             var venueLabel = string.IsNullOrEmpty(configuration.VenueSyncSelectedVenueName)
                 ? "Select venue"
                 : configuration.VenueSyncSelectedVenueName;
-            var venueCard = GroupCard.Begin(theme, 1 + settingsVenues.Count, Metrics.Size.Row);
+            var venueCard = GroupCard.Begin(theme, 1 + (settingsVenuePickerExpanded ? settingsVenues.Count : 0),
+                Metrics.Size.Row);
             if (SettingsRow.Disclosure(venueCard.NextRow(), "Venue", venueLabel, theme))
             {
-                _ = LoadVenuesAsync();
+                if (settingsVenues.Count == 0)
+                {
+                    _ = LoadVenuesAsync();
+                }
+
+                settingsVenuePickerExpanded = !settingsVenuePickerExpanded;
             }
 
-            foreach (var venue in settingsVenues)
+            if (settingsVenuePickerExpanded)
             {
-                var selected = venue.Id == configuration.VenueSyncSelectedVenueId;
-                if (SettingsRow.Selectable(venueCard.NextRow(), venue.Name, selected, theme,
-                        $"venuesync.settings.venue-{venue.Id}"))
+                foreach (var venue in settingsVenues)
                 {
-                    configuration.VenueSyncSelectedVenueId = venue.Id;
-                    configuration.VenueSyncSelectedVenueName = venue.Name;
-                    configuration.Save();
-                    state.EnsureShiftsFresh(true);
+                    var selected = venue.Id == configuration.VenueSyncSelectedVenueId;
+                    if (SettingsRow.Selectable(venueCard.NextRow(), venue.Name, selected, theme,
+                            $"venuesync.settings.venue-{venue.Id}"))
+                    {
+                        configuration.VenueSyncSelectedVenueId = venue.Id;
+                        configuration.VenueSyncSelectedVenueName = venue.Name;
+                        configuration.Save();
+                        state.EnsureShiftsFresh(true);
+                        settingsVenuePickerExpanded = false;
+                    }
                 }
             }
 
