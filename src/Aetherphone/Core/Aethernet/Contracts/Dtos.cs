@@ -233,7 +233,7 @@ internal sealed record VelvetProfileDto(
     string UserId,
     string DisplayName,
     string Handle,
-    bool Verified,
+    int Badges,
     string Intro,
     string Pronouns,
     string Dynamic,
@@ -292,7 +292,8 @@ internal sealed record VelvetPostDto(
     string ScanStatus = "clean",
     string[]? MediaUrls = null,
     MentionDto[]? Mentions = null,
-    int Audience = 0) : IIdentified;
+    int Audience = 0,
+    int OwnerBadges = 0) : IIdentified;
 
 internal sealed record VelvetFeedPage(VelvetPostDto[] Items, string? NextCursor);
 
@@ -319,7 +320,8 @@ internal sealed record VelvetCommentDto(
     int LikeCount,
     bool Liked,
     MentionDto[]? Mentions = null,
-    string ScanStatus = "clean") : IIdentified;
+    string ScanStatus = "clean",
+    int AuthorBadges = 0) : IIdentified;
 
 internal sealed record VelvetCommentPage(VelvetCommentDto[] Items, string? NextCursor);
 

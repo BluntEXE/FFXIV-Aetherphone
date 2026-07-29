@@ -142,6 +142,7 @@ internal sealed partial class VelvetShell
                     Name = DisplayNameOf(user.DisplayName, user.Handle),
                     World = string.Empty,
                     AvatarUrl = user.AvatarUrl,
+                    RoleBadges = user.Badges,
                     Pill = Loc.T(L.Velvet.Unblock),
                     PillFilled = false,
                     PillEnabled = true,

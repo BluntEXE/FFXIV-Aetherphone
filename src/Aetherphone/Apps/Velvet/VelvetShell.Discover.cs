@@ -435,13 +435,8 @@ internal sealed partial class VelvetShell
         var nameY = card.Max.Y - pad - 58f * scale;
         var nameHovered = UiInteract.Hover(new Vector2(textLeft, nameY),
             new Vector2(textLeft + nameMaxWidth, nameY + nameSize.Y));
-        Marquee.DrawLeft("velvet.discover.name." + profile.UserId, name, textLeft, nameY, nameMaxWidth,
-            TextStyles.Title2, VelvetTheme.TitleInk, nameHovered);
-        if (profile.Verified)
-        {
-            DrawVerifiedBadge(drawList, new Vector2(textLeft + MathF.Min(nameSize.X, nameMaxWidth) + 12f * scale,
-                nameY + nameSize.Y * 0.5f), scale);
-        }
+        UserName.Draw(drawList, "velvet.discover.name." + profile.UserId, name, profile.Badges, textLeft, nameY,
+            nameMaxWidth, TextStyles.Title2, VelvetTheme.TitleInk, nameHovered, false);
 
         var metaY = card.Max.Y - pad - 34f * scale;
         var metaSize = Typography.Measure(SocialIdentity.ProfileMeta(profile.Handle, region), TextStyles.Subheadline);
