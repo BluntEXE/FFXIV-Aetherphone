@@ -29,9 +29,9 @@ internal static class ImageProcessor
 {
     private const int JpegQuality = 88;
 
-    private const long MaxDecodePixels = 4096L * 4096L;
-    private const long MaxLocalDecodePixels = 8192L * 8192L;
-    private static readonly DecoderOptions SingleFrame = new() { MaxFrames = 1 };
+    public const long MaxDecodePixels = 4096L * 4096L;
+    public const long MaxLocalDecodePixels = 8192L * 8192L;
+    internal static readonly DecoderOptions SingleFrame = new() { MaxFrames = 1 };
 
     private static void EnsureDecodable(Stream stream, long maxPixels)
     {
@@ -45,12 +45,12 @@ internal static class ImageProcessor
         }
     }
 
-    private static void EnsureDecodable(Stream stream) => EnsureDecodable(stream, MaxDecodePixels);
-
-    private static void EnsureDecodable(string path)
+    private static Image<Rgba32> LoadRgba32(Stream stream, long maxPixels, out int length)
     {
-        using var stream = File.OpenRead(path);
-        EnsureDecodable(stream, MaxLocalDecodePixels);
+        EnsureDecodable(stream, maxPixels);
+        var image = Image.Load<Rgba32>(SingleFrame, stream);
+        length = checked(image.Width * image.Height * 4);
+        return image;
     }
 
     public static BakedImage BakeSquareJpeg(string sourcePath, WallpaperCrop crop, int target)
@@ -60,8 +60,9 @@ internal static class ImageProcessor
 
     public static BakedImage BakeCroppedJpeg(string sourcePath, WallpaperCrop crop, int targetWidth, int targetHeight)
     {
-        EnsureDecodable(sourcePath);
-        using var image = Image.Load(SingleFrame, sourcePath);
+        using var sourceStream = File.OpenRead(sourcePath);
+        EnsureDecodable(sourceStream, MaxLocalDecodePixels);
+        using var image = Image.Load(SingleFrame, sourceStream);
         var size = new Vector2(image.Width, image.Height);
         var aspect = (float)targetWidth / targetHeight;
         var clamped = crop.Clamped(size, aspect);
@@ -78,8 +79,9 @@ internal static class ImageProcessor
 
     public static BakedImage BakeJpeg(string sourcePath, int maxDimension)
     {
-        EnsureDecodable(sourcePath);
-        using var image = Image.Load(SingleFrame, sourcePath);
+        using var sourceStream = File.OpenRead(sourcePath);
+        EnsureDecodable(sourceStream, MaxLocalDecodePixels);
+        using var image = Image.Load(SingleFrame, sourceStream);
         var width = image.Width;
         var height = image.Height;
         if (width > maxDimension || height > maxDimension)
@@ -95,11 +97,9 @@ internal static class ImageProcessor
         return new BakedImage(stream.ToArray(), width, height);
     }
 
-    private static (byte[] Pixels, int Length, int Width, int Height) DecodeRgba32Pooled(Stream stream)
+    private static (byte[] Pixels, int Length, int Width, int Height) DecodeRgba32Pooled(Stream stream, long maxPixels)
     {
-        EnsureDecodable(stream);
-        using var image = Image.Load<Rgba32>(SingleFrame, stream);
-        var length = checked(image.Width * image.Height * 4);
+        using var image = LoadRgba32(stream, maxPixels, out var length);
         var buffer = ArrayPool<byte>.Shared.Rent(length);
         image.CopyPixelDataTo(buffer.AsSpan(0, length));
         return (buffer, length, image.Width, image.Height);
@@ -108,21 +108,19 @@ internal static class ImageProcessor
     public static (byte[] Pixels, int Width, int Height) DecodeRgba32(byte[] bytes)
     {
         using var stream = new MemoryStream(bytes);
-        EnsureDecodable(stream);
-        using var image = Image.Load<Rgba32>(SingleFrame, stream);
-        var length = checked(image.Width * image.Height * 4);
+        using var image = LoadRgba32(stream, MaxDecodePixels, out var length);
         var pixels = new byte[length];
         image.CopyPixelDataTo(pixels);
         return (pixels, image.Width, image.Height);
     }
 
     public static async Task<IDalamudTextureWrap> DecodeToTextureAsync(ITextureProvider textures, byte[] bytes,
-        string tag, CancellationToken token)
+        string tag, long maxPixels, CancellationToken token)
     {
         var (pixels, length, width, height) = await Task.Run(() =>
         {
             using var stream = new MemoryStream(bytes);
-            return DecodeRgba32Pooled(stream);
+            return DecodeRgba32Pooled(stream, maxPixels);
         }, token).ConfigureAwait(false);
 
         try

@@ -653,8 +653,8 @@ internal sealed partial class PhotosApp : IPhoneApp
                 await File.WriteAllBytesAsync(thumbnailPath, bytes, token).ConfigureAwait(false);
             }
 
-            var wrap = await ImageProcessor.DecodeToTextureAsync(Plugin.TextureProvider, bytes, "thumb:" + path, token)
-                .ConfigureAwait(false);
+            var wrap = await ImageProcessor.DecodeToTextureAsync(Plugin.TextureProvider, bytes, "thumb:" + path,
+                ImageProcessor.MaxDecodePixels, token).ConfigureAwait(false);
             if (!thumbnails.TryAdd(path, wrap))
             {
                 wrap.Dispose();
@@ -680,8 +680,8 @@ internal sealed partial class PhotosApp : IPhoneApp
         {
             var token = cancellation.Token;
             var bytes = await File.ReadAllBytesAsync(path, token).ConfigureAwait(false);
-            var wrap = await ImageProcessor.DecodeToTextureAsync(Plugin.TextureProvider, bytes, path, token)
-                .ConfigureAwait(false);
+            var wrap = await ImageProcessor.DecodeToTextureAsync(Plugin.TextureProvider, bytes, path,
+                ImageProcessor.MaxLocalDecodePixels, token).ConfigureAwait(false);
             if (!fullImages.TryAdd(path, wrap))
             {
                 wrap.Dispose();

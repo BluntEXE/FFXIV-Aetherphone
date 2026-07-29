@@ -319,7 +319,7 @@ internal sealed class WallpaperLibrary : IDisposable
             var token = cancellation.Token;
             var bytes = await File.ReadAllBytesAsync(path, token).ConfigureAwait(false);
             var wrap = await ImageProcessor.DecodeToTextureAsync(textures, bytes, $"Aetherphone.Wallpaper.{path}",
-                token).ConfigureAwait(false);
+                ImageProcessor.MaxLocalDecodePixels, token).ConfigureAwait(false);
             RecordBrightness(path, bytes);
             if (!ready.TryAdd(path, wrap))
             {
@@ -354,7 +354,7 @@ internal sealed class WallpaperLibrary : IDisposable
 
     private static float MeasureBrightness(byte[] bytes)
     {
-        using var image = Image.Load<Rgba32>(bytes);
+        using var image = Image.Load<Rgba32>(ImageProcessor.SingleFrame, bytes);
         image.Mutate(context => context.Resize(BrightnessSampleSize, BrightnessSampleSize));
         var lumaSum = 0f;
         var brightCount = 0;
