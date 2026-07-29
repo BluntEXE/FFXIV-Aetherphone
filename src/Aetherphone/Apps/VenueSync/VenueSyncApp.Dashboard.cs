@@ -71,7 +71,7 @@ internal sealed partial class VenueSyncApp
             // Fire-and-forget convenience action only — Task 8's Shifts screen owns the
             // authoritative clock-in/out UI with full error handling, so no inline error
             // display is needed here.
-            if (SettingsRow.Action(button, "Clock Out", theme.Danger, theme))
+            if (AppSkin.DangerPillButton(button, "Clock Out", theme))
             {
                 var shiftId = activeShift.Id;
                 _ = ClockOutFireAndForget(shiftId);

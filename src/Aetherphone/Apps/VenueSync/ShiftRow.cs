@@ -31,10 +31,11 @@ internal static class ShiftRow
         Marquee.DrawLeftAuto($"shiftrow-time-{idSuffix}", timeText, row.Min.X, row.Min.Y + 20f, row.Width * 0.65f,
             TextStyles.Caption1, theme.TextMuted);
 
-        var actionRect = new Rect(new Vector2(row.Max.X - 80f, row.Min.Y + 12f), new Vector2(row.Max.X, row.Min.Y + 40f));
+        var actionRect = new Rect(new Vector2(row.Max.X - 88f, row.Min.Y + 12f), new Vector2(row.Max.X, row.Min.Y + 40f));
         var label = isOpen ? "Claim" : shift.Status == "ACTIVE" ? "Clock Out" : "Clock In";
-        var clicked = SettingsRow.Action(actionRect, label,
-            isOpen ? theme.Accent : shift.Status == "ACTIVE" ? theme.Danger : theme.Accent, theme);
+        var clicked = !isOpen && shift.Status == "ACTIVE"
+            ? AppSkin.DangerPillButton(actionRect, label, theme)
+            : AppSkin.PillButton(actionRect, label, filled: true, theme);
 
         if (!clicked) return ShiftRowAction.None;
         if (isOpen) return ShiftRowAction.Claim;

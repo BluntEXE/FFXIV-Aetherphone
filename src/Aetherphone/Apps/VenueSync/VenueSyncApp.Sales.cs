@@ -27,50 +27,55 @@ internal sealed partial class VenueSyncApp
             _ = LoadSalesServicesAsync();
         }
 
-        var cursorY = area.Min.Y + AppHeader.Height * scale;
-        var left = area.Min.X + Metrics.Space.Lg * scale;
-        var right = area.Max.X - Metrics.Space.Lg * scale;
-        var width = MathF.Max(1f, right - left);
-
-        var serviceLabel = salesSelectedServiceIndex >= 0 && salesSelectedServiceIndex < salesServices.Count
-            ? salesServices[salesSelectedServiceIndex].Name
-            : "Select a service";
-        var serviceRow = new Rect(new Vector2(left, cursorY), new Vector2(right, cursorY + Metrics.Size.Row * scale));
-        if (SettingsRow.Disclosure(serviceRow, "Service", serviceLabel, theme) && salesServices.Count > 0)
+        var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
+        using (AppSurface.Begin(body))
         {
-            salesSelectedServiceIndex = (salesSelectedServiceIndex + 1) % salesServices.Count;
+            var rowCount = salesError is not null ? 5 : 4;
+            var card = GroupCard.Begin(theme, rowCount, Metrics.Size.Row);
+
+            var serviceLabel = salesSelectedServiceIndex >= 0 && salesSelectedServiceIndex < salesServices.Count
+                ? salesServices[salesSelectedServiceIndex].Name
+                : "Select a service";
+            if (SettingsRow.Disclosure(card.NextRow(), "Service", serviceLabel, theme) && salesServices.Count > 0)
+            {
+                salesSelectedServiceIndex = (salesSelectedServiceIndex + 1) % salesServices.Count;
+            }
+
+            var customerRow = card.NextRow();
+            ImGui.SetCursorScreenPos(new Vector2(customerRow.Min.X,
+                customerRow.Center.Y - Metrics.Size.FieldHeight * scale * 0.5f));
+            ImGui.SetNextItemWidth(customerRow.Width);
+            ImGui.InputTextWithHint("##sales-customer", "Customer (optional)", ref salesCustomerName, 64);
+
+            var amountRow = card.NextRow();
+            ImGui.SetCursorScreenPos(new Vector2(amountRow.Min.X,
+                amountRow.Center.Y - Metrics.Size.FieldHeight * scale * 0.5f));
+            ImGui.SetNextItemWidth(amountRow.Width);
+            ImGui.InputTextWithHint("##sales-amount", "Amount (gil)", ref salesAmountText, 12,
+                ImGuiInputTextFlags.CharsDecimal);
+
+            if (salesError is not null)
+            {
+                var errorRow = card.NextRow();
+                Marquee.DrawLeftAuto("venuesync.sales.error", $"{salesError} — tap Log Sale to retry", errorRow.Min.X,
+                    errorRow.Center.Y - 10f * scale, errorRow.Width, TextStyles.Caption1, theme.Danger);
+            }
+
+            if (AppSkin.PillButton(card.NextRow(), "Log Sale", filled: true, theme))
+            {
+                _ = SubmitSaleAsync();
+            }
+
+            card.End();
+
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
+
+            var summaryOrigin = ImGui.GetCursorScreenPos();
+            var summaryWidth = ImGui.GetContentRegionAvail().X;
+            var summaryRect = new Rect(summaryOrigin,
+                new Vector2(summaryOrigin.X + summaryWidth, summaryOrigin.Y + SaleSummaryRow.Height * scale));
+            SaleSummaryRow.Draw(summaryRect, state.SessionSalesCount, state.SessionSalesTotal, theme);
         }
-
-        cursorY += Metrics.Size.Row * scale + Metrics.Space.Sm * scale;
-
-        ImGui.SetCursorScreenPos(new Vector2(left, cursorY));
-        ImGui.SetNextItemWidth(width);
-        ImGui.InputTextWithHint("##sales-customer", "Customer (optional)", ref salesCustomerName, 64);
-        cursorY += Metrics.Size.FieldHeight * scale + Metrics.Space.Sm * scale;
-
-        ImGui.SetCursorScreenPos(new Vector2(left, cursorY));
-        ImGui.SetNextItemWidth(width);
-        ImGui.InputTextWithHint("##sales-amount", "Amount (gil)", ref salesAmountText, 12,
-            ImGuiInputTextFlags.CharsDecimal);
-        cursorY += Metrics.Size.FieldHeight * scale + Metrics.Space.Md * scale;
-
-        if (salesError is not null)
-        {
-            Marquee.DrawLeftAuto("venuesync.sales.error", $"{salesError} — tap Log Sale to retry", left, cursorY,
-                width, TextStyles.Caption1, theme.Danger);
-            cursorY += 20f * scale + Metrics.Space.Sm * scale;
-        }
-
-        var submitRow = new Rect(new Vector2(left, cursorY), new Vector2(right, cursorY + Metrics.Size.Row * scale));
-        if (SettingsRow.Action(submitRow, "Log Sale", theme.Accent, theme))
-        {
-            _ = SubmitSaleAsync();
-        }
-
-        cursorY += Metrics.Size.Row * scale + Metrics.Space.Lg * scale;
-
-        var summaryRect = new Rect(new Vector2(left, cursorY), new Vector2(right, cursorY + SaleSummaryRow.Height * scale));
-        SaleSummaryRow.Draw(summaryRect, state.SessionSalesCount, state.SessionSalesTotal, theme);
     }
 
     private async Task LoadSalesServicesAsync()
