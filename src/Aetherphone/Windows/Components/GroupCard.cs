@@ -57,8 +57,9 @@ internal struct GroupCard
     {
         var scale = ImGuiHelpers.GlobalScale;
         var origin = ImGui.GetCursorScreenPos();
+        origin.Y = MathF.Round(origin.Y);
         var right = origin.X + ImGui.GetContentRegionAvail().X;
-        var height = rowCount * rowHeight * scale;
+        var height = MathF.Round(rowCount * rowHeight * scale);
         var cardMax = new Vector2(right, origin.Y + height);
         var dl = ImGui.GetWindowDrawList();
         Squircle.Fill(dl, origin, cardMax, Metrics.Radius.Md * scale, ImGui.GetColorU32(theme.GroupedCard));
@@ -68,8 +69,8 @@ internal struct GroupCard
 
     public Rect NextRow(int rowSpan = 1)
     {
-        var rowTop = startY + rowIndex * rowHeight * scale;
-        var rowBottom = rowTop + rowSpan * rowHeight * scale;
+        var rowTop = MathF.Round(startY + rowIndex * rowHeight * scale);
+        var rowBottom = MathF.Round(rowTop + rowSpan * rowHeight * scale);
 
         // Separators are no longer drawn here. A separator sitting between two rows can never be
         // made to line up pixel-perfectly with whichever adjacent row's hover fill happens to be
