@@ -3,6 +3,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.VenueSync;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.VenueSync;
@@ -72,10 +73,25 @@ internal sealed partial class VenueSyncApp
             }
 
             var customerRow = card.NextRow();
+            var targetButtonWidth = 36f * scale;
+            var customerFieldWidth = MathF.Max(1f,
+                customerRow.Width - targetButtonWidth - Metrics.Space.Sm * scale);
             ImGui.SetCursorScreenPos(new Vector2(customerRow.Min.X,
                 customerRow.Center.Y - Metrics.Size.FieldHeight * scale * 0.5f));
-            ImGui.SetNextItemWidth(customerRow.Width);
+            ImGui.SetNextItemWidth(customerFieldWidth);
             ImGui.InputTextWithHint("##sales-customer", "Customer (optional)", ref salesCustomerName, 64);
+
+            var targetButtonCenter = new Vector2(customerRow.Max.X - targetButtonWidth * 0.5f, customerRow.Center.Y);
+            if (AppSkin.IconButton(targetButtonCenter, targetButtonWidth * 0.5f,
+                    FontAwesomeIcon.Crosshairs.ToIconString(), theme.TextMuted, theme.GroupedCard, 0.6f, theme,
+                    "Use current target"))
+            {
+                var name = Plugin.TargetManager.Target?.Name.TextValue;
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    salesCustomerName = name;
+                }
+            }
 
             var amountRow = card.NextRow();
             ImGui.SetCursorScreenPos(new Vector2(amountRow.Min.X,
