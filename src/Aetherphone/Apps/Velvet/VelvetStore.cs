@@ -95,6 +95,15 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         this.configuration = configuration;
         this.signals = signals;
         signals.VelvetPinged += OnVelvetPinged;
+        signals.ConnectedChanged += OnRealtimeConnected;
+    }
+
+    private void OnRealtimeConnected(bool active)
+    {
+        if (active)
+        {
+            InboxCadence.RequestImmediate();
+        }
     }
 
     public override bool RealtimePushActive => signals.RealtimeActive;
@@ -1349,5 +1358,6 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     protected override void DisposeCore()
     {
         signals.VelvetPinged -= OnVelvetPinged;
+        signals.ConnectedChanged -= OnRealtimeConnected;
     }
 }

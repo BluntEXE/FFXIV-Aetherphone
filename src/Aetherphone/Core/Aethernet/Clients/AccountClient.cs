@@ -123,6 +123,12 @@ internal sealed class AccountClient
         return net.GetAsync(path, AethernetJsonContext.Default.NotificationPage, token);
     }
 
+    public Task<NotificationReadResult?> MarkNotificationsReadAsync(long upToUnix, string? app, CancellationToken token)
+    {
+        return net.PostAsync("/notifications/read", new NotificationReadRequest(upToUnix, app),
+            AethernetJsonContext.Default.NotificationReadRequest, AethernetJsonContext.Default.NotificationReadResult, token);
+    }
+
     public Task<ModerationNoticePage?> NoticesAsync(string? cursor, CancellationToken token)
     {
         var path = cursor is null ? "/notices" : $"/notices?cursor={Uri.EscapeDataString(cursor)}";

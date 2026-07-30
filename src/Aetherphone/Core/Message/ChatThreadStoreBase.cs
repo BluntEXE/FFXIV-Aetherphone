@@ -39,7 +39,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     private readonly AppGate gate;
     private readonly PollCadence inboxCadence;
     private readonly object messagesLock = new();
-    private readonly Dictionary<string, long> inboxLastAt = new();
+    private readonly Dictionary<string, InboxMark> inboxMarks = new();
     private static readonly TimeSpan MediaUrlFailureRetryFor = TimeSpan.FromMinutes(2);
     private readonly ConcurrentDictionary<string, string> dmMediaUrls = new();
     private readonly ConcurrentDictionary<string, byte> dmMediaLoading = new();
@@ -100,13 +100,17 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     private void OnSessionAccountChanged()
     {
+        // A sign-out blip must keep the inbox watermarks, or every message that
+        // arrived during the blip is absorbed without a notification; only a
+        // real account switch resets them.
         var accountId = session.CurrentUser?.Id;
-        if (string.Equals(accountId, lastAccountId, StringComparison.Ordinal))
+        if (accountId is null || string.Equals(accountId, lastAccountId, StringComparison.Ordinal))
         {
             return;
         }
 
         lastAccountId = accountId;
+        inboxMarks.Clear();
         threadList = Array.Empty<TThread>();
         threadListLoaded = false;
         currentThreadId = null;
@@ -298,7 +302,6 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     {
         if (!TickActive)
         {
-            inboxPrimed = false;
             vaultRefreshRequested = false;
             pendingOpenThreadId = null;
             if (threadList.Length > 0 || messages.Length > 0 || currentThreadId is not null)
@@ -316,7 +319,10 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         var now = DateTime.UtcNow;
         EnsureCurrentThreadKeysFresh(now);
         ResumePendingThreadOpen(now);
-        if (!inboxCadence.Due(now))
+
+        // Checking the in-flight guard before Due keeps a ping that lands during
+        // a poll pending instead of silently consuming it.
+        if (inboxPolling || !inboxCadence.Due(now))
         {
             return;
         }
@@ -421,6 +427,8 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         }, () => inboxPolling = false);
     }
 
+    private readonly record struct InboxMark(long LastMessageAt, int Unread);
+
     private void RaiseInboxNotifications(TThread[] items)
     {
         var primed = inboxPrimed;
@@ -429,13 +437,27 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
             var item = items[index];
             var key = ThreadKeyOf(item);
             var lastMessageAt = ThreadLastMessageAtOf(item);
-            var previous = inboxLastAt.GetValueOrDefault(key, 0L);
-            inboxLastAt[key] = lastMessageAt;
-            if (!primed || lastMessageAt <= previous || ThreadUnreadCountOf(item) <= 0 || IsThreadMuted(item))
+            var unread = ThreadUnreadCountOf(item);
+            var previous = inboxMarks.GetValueOrDefault(key);
+
+            // Deliberate suppressions (baseline pass, muted threads, the thread
+            // being on screen) advance the watermark; transient ones (unread not
+            // yet reported, equal-timestamp races) must not, or the message can
+            // never notify on a later poll.
+            if (!primed || IsThreadMuted(item))
+            {
+                inboxMarks[key] = new InboxMark(lastMessageAt, unread);
+                continue;
+            }
+
+            var isNew = lastMessageAt > previous.LastMessageAt
+                || (lastMessageAt == previous.LastMessageAt && unread > previous.Unread);
+            if (!isNew || unread <= 0)
             {
                 continue;
             }
 
+            inboxMarks[key] = new InboxMark(lastMessageAt, unread);
             if (viewingThreadKey == key && DateTime.UtcNow - lastViewingUtc < ViewingGrace)
             {
                 continue;

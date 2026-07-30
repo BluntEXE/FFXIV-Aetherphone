@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Animation;
 using Aetherphone.Core.Collections;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Onboarding;
@@ -627,7 +628,10 @@ internal sealed partial class CollectionsApp
         var height = visible * rowHeight + pad * 2f;
         var min = new Vector2(sourceMenuAnchor.Min.X, menuTop);
         var max = new Vector2(sourceMenuAnchor.Max.X, menuTop + height);
-        UiInteract.HoverOverlay(new Rect(min, max));
+        if (!InputShield.Active)
+        {
+            UiInteract.HoverOverlay(new Rect(min, max));
+        }
         Elevation.Floating(drawList, min, max, 14f * scale, scale);
         Material.Frosted(drawList, min, max, 14f * scale, scale);
         var clicked = -1;

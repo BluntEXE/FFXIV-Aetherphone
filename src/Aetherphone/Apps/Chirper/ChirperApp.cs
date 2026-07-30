@@ -41,7 +41,7 @@ internal sealed partial class ChirperApp : IPhoneApp
     public Vector4 Accent => AppAccents.For(Id);
     public string DisplayName => Loc.T(L.Apps.Chirper);
     public string Glyph => "Ch";
-    public int BadgeCount => 0;
+    public int BadgeCount => social.UnseenCount(Id);
     private readonly ChirperStore store;
     private readonly SocialLauncher launcher;
     private readonly GameData gameData;

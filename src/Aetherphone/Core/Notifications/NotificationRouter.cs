@@ -31,8 +31,11 @@ internal sealed class NotificationRouter
     private const int TypeQuote = 13;
     private const int TypeFollowRequest = 14;
     private const int TypeFollowAccept = 15;
+    private const int TypeMissedCall = 20;
+    private const string CallGroupPrefix = "call:";
     private readonly INavigator navigation;
     private readonly NotificationService notifications;
+    private readonly SocialNotificationService socialNotifications;
     private readonly LinkpearlLauncher linkpearlLauncher;
     private readonly VelvetLauncher velvetLauncher;
     private readonly DmLauncher dmLauncher;
@@ -43,13 +46,15 @@ internal sealed class NotificationRouter
     private readonly AnnouncementsLauncher announcementsLauncher;
     private readonly SafetyLauncher safetyLauncher;
 
-    public NotificationRouter(INavigator navigation, NotificationService notifications, LinkpearlLauncher linkpearlLauncher,
+    public NotificationRouter(INavigator navigation, NotificationService notifications,
+        SocialNotificationService socialNotifications, LinkpearlLauncher linkpearlLauncher,
         VelvetLauncher velvetLauncher, DmLauncher dmLauncher, GramDmLauncher gramDmLauncher, SocialLauncher socialLauncher,
         MusterLauncher musterLauncher, YellowPagesLauncher yellowPagesLauncher,
         AnnouncementsLauncher announcementsLauncher, SafetyLauncher safetyLauncher)
     {
         this.navigation = navigation;
         this.notifications = notifications;
+        this.socialNotifications = socialNotifications;
         this.linkpearlLauncher = linkpearlLauncher;
         this.velvetLauncher = velvetLauncher;
         this.dmLauncher = dmLauncher;
@@ -63,6 +68,11 @@ internal sealed class NotificationRouter
 
     public void Open(PhoneNotification notification)
     {
+        if (notification.SocialType >= 0)
+        {
+            socialNotifications.AcknowledgeUpTo(notification.AppId, notification.CreatedAtUnix);
+        }
+
         if (!navigation.IsAvailable(notification.AppId))
         {
             notifications.RemoveGroup(notification.StackKey);
@@ -82,11 +92,18 @@ internal sealed class NotificationRouter
                 linkpearlLauncher.Request(notification.Title, notification.GroupKey);
             }
         }
-        else if (notification.AppId == DmAppId && !string.IsNullOrEmpty(notification.GroupKey))
+        else if (notification.AppId == DmAppId && notification.GroupKey is { } dmKey
+                 && dmKey.StartsWith(CallGroupPrefix, StringComparison.Ordinal))
+        {
+            dmLauncher.RequestCalls();
+        }
+        else if (notification.AppId == DmAppId && notification.SocialType < 0
+                 && !string.IsNullOrEmpty(notification.GroupKey))
         {
             dmLauncher.RequestConversation(notification.GroupKey);
         }
-        else if (notification.AppId == VelvetAppId && !string.IsNullOrEmpty(notification.GroupKey))
+        else if (notification.AppId == VelvetAppId && notification.SocialType < 0
+                 && !string.IsNullOrEmpty(notification.GroupKey))
         {
             velvetLauncher.Request(notification.GroupKey);
         }

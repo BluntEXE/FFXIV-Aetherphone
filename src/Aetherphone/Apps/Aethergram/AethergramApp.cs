@@ -51,7 +51,7 @@ internal sealed partial class AethergramApp : IPhoneApp
     public Vector4 Accent => AppAccents.For(Id);
     public string DisplayName => Loc.T(L.Apps.Aethergram);
     public string Glyph => "Ag";
-    public int BadgeCount => dmStore.UnreadCount;
+    public int BadgeCount => dmStore.UnreadCount + social.UnseenCount(Id);
     public ShareKindSet AcceptedShares => store.IsSignedIn ? ShareKindSet.Photo : ShareKindSet.None;
     private const string ScopeMenuId = "scope";
     private readonly Dictionary<SocialFeedScope, PullToRefresh> pullToRefresh = new()

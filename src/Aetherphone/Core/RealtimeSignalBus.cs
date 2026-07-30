@@ -9,6 +9,7 @@ internal sealed class RealtimeSignalBus
     public event Action? GramPinged;
     public event Action? SocialPinged;
     public event Action? MusterPinged;
+    public event Action? AnnouncementsPinged;
     public event Action<bool>? ConnectedChanged;
 
     public bool RealtimeActive => realtimeActive;
@@ -47,5 +48,10 @@ internal sealed class RealtimeSignalBus
     public void PublishMuster()
     {
         MusterPinged?.Invoke();
+    }
+
+    public void PublishAnnouncements()
+    {
+        AnnouncementsPinged?.Invoke();
     }
 }

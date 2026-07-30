@@ -26,9 +26,12 @@ internal sealed class CallHub : IDisposable
     private readonly AppGate installed;
     private readonly object gate = new();
     private CallState state = CallState.Idle;
+    private const int MissedCallSocialType = 20;
+
     private Guid callId;
     private ParticipantInfo[] roster = Array.Empty<ParticipantInfo>();
     private ParticipantInfo? incomingFrom;
+    private string? realtimeAccountId;
     private CallContact? dialingTo;
     private float ringTimer;
     private float stateTimer;
@@ -78,8 +81,19 @@ internal sealed class CallHub : IDisposable
         router.EndedReceived += HandleEnded;
         router.HandledElsewhereReceived += HandleHandledElsewhere;
         router.ConnectedChanged += OnConnectedChanged;
+        notifications.Added += OnNotificationAdded;
         session.Changed += Reconcile;
         Reconcile();
+    }
+
+    private void OnNotificationAdded(PhoneNotification notification)
+    {
+        if (notification.SocialType != MissedCallSocialType || string.IsNullOrEmpty(notification.ActorId))
+        {
+            return;
+        }
+
+        log.NoteServerMissed(notification.ActorId, notification.Title);
     }
 
     public void SetEnabled(bool value)
@@ -266,7 +280,10 @@ internal sealed class CallHub : IDisposable
 
         router.Send(new CallControl { Type = SignalType.Decline, CallId = id });
         EndCall(CallEndReason.None);
-        LogMissed(from, notify: timedOut);
+        if (timedOut)
+        {
+            LogMissed(from);
+        }
     }
 
     public void Hangup() => Leave(CallEndReason.None);
@@ -374,6 +391,7 @@ internal sealed class CallHub : IDisposable
         if (!configuration.CallsEnabled || !installed.Open)
         {
             router.Send(new CallControl { Type = SignalType.Decline, CallId = message.CallId, Reason = "unavailable" });
+            LogMissed(message.From);
             return;
         }
 
@@ -398,13 +416,16 @@ internal sealed class CallHub : IDisposable
         if (busy)
         {
             router.Send(new CallControl { Type = SignalType.Decline, CallId = message.CallId, Reason = "busy" });
-            LogMissed(message.From, notify: true);
+            LogMissed(message.From);
             return;
         }
 
         sound.StartCallRing();
         notifications.Notify(new PhoneNotification("message", message.From.DisplayName, Loc.T(L.Phone.IncomingCallBody), DateTime.Now,
-            Accent));
+            Accent, "call:" + message.From.UserId)
+        {
+            ChannelId = NotificationChannels.PhoneChannel,
+        });
         IncomingCallPresented?.Invoke();
     }
 
@@ -515,7 +536,7 @@ internal sealed class CallHub : IDisposable
         if (matched)
         {
             EndCall(CallEndReason.None);
-            LogMissed(missedFrom, notify: true);
+            LogMissed(missedFrom);
         }
     }
 
@@ -564,7 +585,7 @@ internal sealed class CallHub : IDisposable
         if (abandonRinging)
         {
             EndCall(CallEndReason.None);
-            LogMissed(missedFrom, notify: false);
+            LogMissed(missedFrom);
         }
     }
 
@@ -728,7 +749,9 @@ internal sealed class CallHub : IDisposable
         }
     }
 
-    private void LogMissed(ParticipantInfo? from, bool notify)
+    // The missed-call banner comes from the server's notification row, so the
+    // local seam only records the call log entry; notifying here would double up.
+    private void LogMissed(ParticipantInfo? from)
     {
         if (from is null)
         {
@@ -736,11 +759,6 @@ internal sealed class CallHub : IDisposable
         }
 
         log.Add(new CallContact(from.UserId, from.Name, from.World, from.DisplayName), CallDirection.Missed);
-        if (notify)
-        {
-            notifications.Notify(new PhoneNotification("message", from.DisplayName, Loc.T(L.Phone.MissedCallBody),
-                DateTime.Now, Accent));
-        }
     }
 
     private void Reconcile()
@@ -748,10 +766,22 @@ internal sealed class CallHub : IDisposable
         if (!session.IsSignedIn)
         {
             EndCall(CallEndReason.None);
+            realtimeAccountId = null;
             router.Stop();
             return;
         }
 
+        // The socket authenticates with the bearer captured at connect time, so
+        // an in-app account switch must tear it down or every ping keeps flowing
+        // to the previous account.
+        var accountId = session.CurrentUser?.Id;
+        if (realtimeAccountId is not null && !string.Equals(accountId, realtimeAccountId, StringComparison.Ordinal))
+        {
+            EndCall(CallEndReason.None);
+            router.Stop();
+        }
+
+        realtimeAccountId = accountId;
         router.Start();
         if (!configuration.CallsEnabled)
         {
@@ -768,6 +798,7 @@ internal sealed class CallHub : IDisposable
         router.EndedReceived -= HandleEnded;
         router.HandledElsewhereReceived -= HandleHandledElsewhere;
         router.ConnectedChanged -= OnConnectedChanged;
+        notifications.Added -= OnNotificationAdded;
         session.Changed -= Reconcile;
         CallSession? toDispose;
         lock (gate)

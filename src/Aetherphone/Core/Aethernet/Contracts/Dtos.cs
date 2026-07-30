@@ -414,9 +414,18 @@ internal sealed record NotificationDto(
     string? Preview,
     long CreatedAtUnix,
     string? CommentId = null,
-    int ActorBadges = 0) : IIdentified;
+    int ActorBadges = 0,
+    bool Read = false) : IIdentified;
 
-internal sealed record NotificationPage(NotificationDto[] Items, string? NextCursor = null);
+internal sealed record NotificationPage(
+    NotificationDto[] Items,
+    string? NextCursor = null,
+    int UnreadCount = 0,
+    Dictionary<string, int>? UnreadByApp = null);
+
+internal sealed record NotificationReadRequest(long UpToUnix, string? App = null);
+
+internal sealed record NotificationReadResult(int Marked, int Unread);
 
 internal sealed record ModerationNoticeDto(
     string Id,

@@ -29,6 +29,15 @@ internal sealed class DirectMessagesStore : ChatThreadStoreBase<ChatMessageDto, 
         this.peers = peers;
         this.signals = signals;
         signals.ChatPinged += OnChatPinged;
+        signals.ConnectedChanged += OnRealtimeConnected;
+    }
+
+    private void OnRealtimeConnected(bool active)
+    {
+        if (active)
+        {
+            InboxCadence.RequestImmediate();
+        }
     }
 
     public override bool RealtimePushActive => signals.RealtimeActive;
@@ -540,5 +549,6 @@ internal sealed class DirectMessagesStore : ChatThreadStoreBase<ChatMessageDto, 
     protected override void DisposeCore()
     {
         signals.ChatPinged -= OnChatPinged;
+        signals.ConnectedChanged -= OnRealtimeConnected;
     }
 }

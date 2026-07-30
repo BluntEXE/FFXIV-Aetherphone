@@ -91,6 +91,11 @@ internal sealed class ControlCenter
             return;
         }
 
+        if (UiInteract.HoverWindowOnly(screen.Min, screen.Max, false))
+        {
+            UiInteract.ReportGestureSurface();
+        }
+
         var scale = ImGuiHelpers.GlobalScale;
         var dl = ImGui.GetForegroundDrawList();
         var height = screen.Height;

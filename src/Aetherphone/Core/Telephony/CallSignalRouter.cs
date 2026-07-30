@@ -61,6 +61,9 @@ internal sealed class CallSignalRouter : IDisposable
             case SignalType.MusterPing:
                 signals.PublishMuster();
                 return;
+            case SignalType.AnnouncePing:
+                signals.PublishAnnouncements();
+                return;
         }
 
         var target = message.Type switch

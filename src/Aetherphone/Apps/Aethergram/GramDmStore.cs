@@ -32,6 +32,15 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
         this.social = social;
         this.signals = signals;
         signals.GramPinged += OnGramPinged;
+        signals.ConnectedChanged += OnRealtimeConnected;
+    }
+
+    private void OnRealtimeConnected(bool active)
+    {
+        if (active)
+        {
+            InboxCadence.RequestImmediate();
+        }
     }
 
     public override bool RealtimePushActive => signals.RealtimeActive;
@@ -488,5 +497,6 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
     protected override void DisposeCore()
     {
         signals.GramPinged -= OnGramPinged;
+        signals.ConnectedChanged -= OnRealtimeConnected;
     }
 }

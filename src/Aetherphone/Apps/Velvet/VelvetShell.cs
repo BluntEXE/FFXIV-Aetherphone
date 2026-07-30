@@ -121,7 +121,7 @@ internal sealed partial class VelvetShell : IPhoneApp
 
     public string Glyph => "Ve";
 
-    public int BadgeCount => store.UnreadCount + store.RequestCount;
+    public int BadgeCount => store.UnreadCount + store.RequestCount + social.UnseenCount(Id);
 
     public ShareKindSet AcceptedShares =>
         GateAccepted && store.IsSignedIn && configuration.IsVelvetOnboarded()

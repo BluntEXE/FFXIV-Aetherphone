@@ -1,3 +1,4 @@
+using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
@@ -23,16 +24,25 @@ internal sealed class AnnouncementsStore : IDisposable
     private volatile AnnouncementDto[] announcements = Array.Empty<AnnouncementDto>();
     private volatile bool loading;
     private volatile bool loadedOnce;
+    private volatile bool pingRefreshRequested;
     private DateTime lastBackgroundRefreshUtc = DateTime.MinValue;
+    private readonly RealtimeSignalBus signals;
 
     public AnnouncementsStore(AethernetSession session, AnnouncementsClient client,
-        NotificationService notifications, Configuration configuration)
+        NotificationService notifications, Configuration configuration, RealtimeSignalBus signals)
     {
         this.session = session;
         this.client = client;
         this.notifications = notifications;
         this.configuration = configuration;
+        this.signals = signals;
+        signals.AnnouncementsPinged += OnAnnouncementsPinged;
         Plugin.Framework.Update += OnFrameworkUpdate;
+    }
+
+    private void OnAnnouncementsPinged()
+    {
+        pingRefreshRequested = true;
     }
 
     public bool IsSignedIn => session.IsSignedIn;
@@ -148,11 +158,12 @@ internal sealed class AnnouncementsStore : IDisposable
         }
 
         var now = DateTime.UtcNow;
-        if (now - lastBackgroundRefreshUtc < BackgroundRefreshInterval)
+        if (!pingRefreshRequested && now - lastBackgroundRefreshUtc < BackgroundRefreshInterval)
         {
             return;
         }
 
+        pingRefreshRequested = false;
         lastBackgroundRefreshUtc = now;
         Refresh();
     }
@@ -173,6 +184,7 @@ internal sealed class AnnouncementsStore : IDisposable
 
     public void Dispose()
     {
+        signals.AnnouncementsPinged -= OnAnnouncementsPinged;
         Plugin.Framework.Update -= OnFrameworkUpdate;
         work.Dispose();
     }

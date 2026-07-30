@@ -70,13 +70,13 @@ internal sealed class PhoneShell : IDisposable
         director = new OnboardingDirector(navigation);
         navigation.AppOpened += director.OnAppOpened;
         navigation.AppOpened += services.Conduct.NotifyAppOpened;
-        var router = new NotificationRouter(navigation, notifications, services.LinkpearlLauncher,
-            services.VelvetLauncher, services.DmLauncher, services.GramDmLauncher, services.SocialLauncher,
-            services.MusterLauncher, services.YellowPagesLauncher, services.AnnouncementsLauncher,
-            services.SafetyLauncher);
+        var router = new NotificationRouter(navigation, notifications, services.SocialNotifications,
+            services.LinkpearlLauncher, services.VelvetLauncher, services.DmLauncher, services.GramDmLauncher,
+            services.SocialLauncher, services.MusterLauncher, services.YellowPagesLauncher,
+            services.AnnouncementsLauncher, services.SafetyLauncher);
         MusterChatBridge.Bind(services.Musters, services.MusterLauncher, navigation);
         AdChatBridge.Bind(services.YellowPages, services.YellowPagesLauncher, navigation);
-        banner = new NotificationBanner(notifications, VisibleAppId, router);
+        banner = new NotificationBanner(notifications, VisibleAppId, PhoneVisible, router);
         banner.Shown += OnBannerShown;
         var island = new DynamicIsland(services.Playback, calls);
         var controlCenter = new ControlCenter(configuration, themes, services.Playback, calls, navigation,
@@ -158,9 +158,11 @@ internal sealed class PhoneShell : IDisposable
         }
     }
 
+    private bool PhoneVisible() => DateTime.UtcNow - lastVisibleDrawUtc < ScreenVisibleGrace;
+
     private string? VisibleAppId()
     {
-        if (DateTime.UtcNow - lastVisibleDrawUtc >= ScreenVisibleGrace)
+        if (!PhoneVisible())
         {
             return null;
         }

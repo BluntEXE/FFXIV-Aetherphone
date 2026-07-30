@@ -20,6 +20,7 @@ internal sealed class SocialNotificationService : IDisposable
         SocialActivity.AethergramApp,
         SocialActivity.VelvetApp,
         SocialActivity.YellowPagesApp,
+        SocialActivity.MessageApp,
     };
 
     private readonly AethernetSession session;
@@ -33,6 +34,7 @@ internal sealed class SocialNotificationService : IDisposable
     private readonly CancellationTokenSource cancellation = new();
     private readonly HashSet<string> seenIds = new();
     private volatile NotificationDto[] latest = Array.Empty<NotificationDto>();
+    private volatile Dictionary<string, int>? serverUnread;
     private volatile bool polling;
     private volatile bool primed;
     private string? lastAccountId;
@@ -50,21 +52,38 @@ internal sealed class SocialNotificationService : IDisposable
         this.signals = signals;
         cadence = new PollCadence(visibility, ForegroundPollInterval, BackgroundPollInterval);
         signals.SocialPinged += cadence.RequestImmediate;
+        signals.ConnectedChanged += OnRealtimeConnected;
         session.Changed += OnSessionChanged;
         framework.Update += OnFrameworkTick;
     }
 
+    private void OnRealtimeConnected(bool active)
+    {
+        // Every ping sent while the socket was down is gone; resync instead of
+        // waiting out the backstop interval.
+        if (active)
+        {
+            cadence.RequestImmediate();
+        }
+    }
+
     private void OnSessionChanged()
     {
+        // A sign-out blip (relog, AFK logout, transient 401) must not reset the
+        // seen state, or everything that arrived during the blip is absorbed
+        // silently; only a real account switch starts fresh.
         var accountId = session.CurrentUser?.Id;
-        if (string.Equals(accountId, lastAccountId, StringComparison.Ordinal))
+        if (accountId is null || string.Equals(accountId, lastAccountId, StringComparison.Ordinal))
         {
             return;
         }
 
         lastAccountId = accountId;
         latest = Array.Empty<NotificationDto>();
+        serverUnread = null;
+        seenIds.Clear();
         primed = false;
+        cadence.RequestImmediate();
     }
 
     public NotificationDto[] Latest => latest;
@@ -86,8 +105,14 @@ internal sealed class SocialNotificationService : IDisposable
 
     public int UnseenCount(string app)
     {
+        var counts = serverUnread;
+        if (counts is not null)
+        {
+            return counts.GetValueOrDefault(app, 0);
+        }
+
         var items = latest;
-        configuration.SocialActivitySeenUnix.TryGetValue(app, out var seenUnix);
+        var seenUnix = SeenUnix(app);
         var count = 0;
         for (var index = 0; index < items.Length; index++)
         {
@@ -112,22 +137,99 @@ internal sealed class SocialNotificationService : IDisposable
             }
         }
 
-        configuration.SocialActivitySeenUnix.TryGetValue(app, out var seenUnix);
-        if (newest <= seenUnix)
+        notifications.RemoveSocial(app);
+        var counts = serverUnread;
+        if (counts is not null && counts.GetValueOrDefault(app, 0) > 0)
+        {
+            var updated = new Dictionary<string, int>(counts);
+            updated[app] = 0;
+            serverUnread = updated;
+        }
+
+        if (newest <= SeenUnix(app))
         {
             return;
         }
 
-        configuration.SocialActivitySeenUnix[app] = newest;
+        configuration.SocialActivitySeenUnix[SeenKey(app)] = newest;
         configuration.Save();
+        AcknowledgeRead(newest, app);
+    }
+
+    public void AcknowledgeUpTo(string app, long upToUnix)
+    {
+        if (upToUnix <= 0)
+        {
+            return;
+        }
+
+        if (upToUnix > SeenUnix(app))
+        {
+            configuration.SocialActivitySeenUnix[SeenKey(app)] = upToUnix;
+            configuration.Save();
+        }
+
+        var counts = serverUnread;
+        if (counts is not null)
+        {
+            var items = latest;
+            var remaining = 0;
+            for (var index = 0; index < items.Length; index++)
+            {
+                if (items[index].App == app && !items[index].Read && items[index].CreatedAtUnix > upToUnix)
+                {
+                    remaining++;
+                }
+            }
+
+            var updated = new Dictionary<string, int>(counts);
+            updated[app] = remaining;
+            serverUnread = updated;
+        }
+
+        AcknowledgeRead(upToUnix, app);
+    }
+
+    private string SeenKey(string app)
+    {
+        var accountId = lastAccountId;
+        return string.IsNullOrEmpty(accountId) ? app : accountId + ":" + app;
+    }
+
+    private long SeenUnix(string app)
+    {
+        if (configuration.SocialActivitySeenUnix.TryGetValue(SeenKey(app), out var value))
+        {
+            return value;
+        }
+
+        return configuration.SocialActivitySeenUnix.GetValueOrDefault(app, 0L);
+    }
+
+    private void AcknowledgeRead(long upToUnix, string? app)
+    {
+        var token = cancellation.Token;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await client.MarkNotificationsReadAsync(upToUnix, app, token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                AepLog.Warning($"[Notifications] read ack failed: {exception.Message}");
+            }
+        });
     }
 
     public void RefreshNow()
     {
         if (session.IsSignedIn && AnyServedAppInstalled())
         {
-            cadence.Mark(DateTime.UtcNow);
-            Poll();
+            cadence.RequestImmediate();
         }
     }
 
@@ -148,12 +250,12 @@ internal sealed class SocialNotificationService : IDisposable
     {
         if (!session.IsSignedIn || !AnyServedAppInstalled())
         {
-            primed = false;
-            latest = Array.Empty<NotificationDto>();
             return;
         }
 
-        if (!cadence.Due(DateTime.UtcNow))
+        // Checking the in-flight guard before Due keeps a ping that lands during
+        // a poll pending instead of silently consuming it.
+        if (polling || !cadence.Due(DateTime.UtcNow))
         {
             return;
         }
@@ -177,6 +279,7 @@ internal sealed class SocialNotificationService : IDisposable
                 var page = await client.NotificationsAsync(token).ConfigureAwait(false);
                 if (page is not null)
                 {
+                    serverUnread = page.UnreadByApp;
                     Ingest(page.Items);
                 }
             }
@@ -205,7 +308,7 @@ internal sealed class SocialNotificationService : IDisposable
                 continue;
             }
 
-            if (wasPrimed && !seenIds.Contains(item.Id))
+            if (wasPrimed && !item.Read && !seenIds.Contains(item.Id))
             {
                 Present(item);
             }
@@ -259,14 +362,37 @@ internal sealed class SocialNotificationService : IDisposable
         }
 
         var title = AdTitle(item) ?? SocialActivity.ActorLabel(item);
-        var groupKey = item.App == SocialActivity.YellowPagesApp ? item.PostId : null;
         notifications.Notify(new PhoneNotification(item.App, title, body, DateTime.Now,
-            AccentFor(item.App), groupKey)
+            AccentFor(item.App), GroupKeyFor(item))
         {
             ActorId = item.ActorId,
             PostId = item.PostId,
             SocialType = item.Type,
+            CreatedAtUnix = item.CreatedAtUnix,
+            ChannelId = item.Type == SocialActivity.TypeMissedCall ? NotificationChannels.PhoneChannel : null,
         });
+    }
+
+    private static string GroupKeyFor(NotificationDto item)
+    {
+        if (item.App == SocialActivity.YellowPagesApp)
+        {
+            return item.PostId ?? item.Id;
+        }
+
+        if (item.Type == SocialActivity.TypeMissedCall)
+        {
+            return "call:" + item.ActorId;
+        }
+
+        // Activity on one post stacks together, so the router's tap-to-open
+        // clears exactly the group whose target the user is now viewing.
+        if (!string.IsNullOrEmpty(item.PostId))
+        {
+            return item.App + ":post:" + item.PostId;
+        }
+
+        return item.App + ":" + item.Type + ":" + item.ActorId;
     }
 
     private static string? AdTitle(NotificationDto item)
@@ -288,6 +414,7 @@ internal sealed class SocialNotificationService : IDisposable
             SocialActivity.AethergramApp => AppAccents.For(SocialActivity.AethergramApp),
             SocialActivity.VelvetApp => AppAccents.For(SocialActivity.VelvetApp),
             SocialActivity.YellowPagesApp => AppAccents.For(SocialActivity.YellowPagesApp),
+            SocialActivity.MessageApp => AppAccents.For(SocialActivity.MessageApp),
             _ => AppAccents.For(SocialActivity.ChirperApp),
         };
     }
@@ -296,6 +423,7 @@ internal sealed class SocialNotificationService : IDisposable
     {
         session.Changed -= OnSessionChanged;
         signals.SocialPinged -= cadence.RequestImmediate;
+        signals.ConnectedChanged -= OnRealtimeConnected;
         framework.Update -= OnFrameworkTick;
         cancellation.Cancel();
         cancellation.Dispose();

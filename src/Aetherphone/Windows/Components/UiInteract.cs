@@ -17,6 +17,7 @@ internal static class UiInteract
     private static bool hasPendingTap;
     private static bool windowHovered = true;
     private static int windowHoveredFrame = -1;
+    private static int gestureSurfaceFrame = -1;
 
     public static void BlockThisFrame() => blockedFrame = ImGui.GetFrameCount();
 
@@ -32,6 +33,15 @@ internal static class UiInteract
 
     /// <summary>Discards the in-flight tap without activating it (called when a drag starts).</summary>
     public static void CancelPendingTap() => hasPendingTap = false;
+
+    /// <summary>Marks the pointer as resting on a tap/drag surface this frame.</summary>
+    public static void ReportGestureSurface() => gestureSurfaceFrame = ImGui.GetFrameCount();
+
+    /// <summary>
+    /// Reads as true for one frame past the last report, because the window's PreDraw runs before the
+    /// surface redraws and needs the previous frame's answer to suppress an ImGui window move.
+    /// </summary>
+    public static bool PointerOverGestureSurface => ImGui.GetFrameCount() - gestureSurfaceFrame <= 1;
 
     public static bool HoverOverlay(Rect rect)
     {

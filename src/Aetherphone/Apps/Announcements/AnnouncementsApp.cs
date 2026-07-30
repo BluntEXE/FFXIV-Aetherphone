@@ -41,9 +41,9 @@ internal sealed partial class AnnouncementsApp : IPhoneApp
     private bool resetScroll;
 
     public AnnouncementsApp(AethernetSession session, AnnouncementsClient client, NotificationService notifications,
-        Configuration configuration, AnnouncementsLauncher launcher)
+        Configuration configuration, AnnouncementsLauncher launcher, RealtimeSignalBus signals)
     {
-        store = new AnnouncementsStore(session, client, notifications, configuration);
+        store = new AnnouncementsStore(session, client, notifications, configuration, signals);
         this.launcher = launcher;
         router = new ViewRouter<AnnouncementsRoute>(AnnouncementsRoute.List);
         drawView = DrawView;

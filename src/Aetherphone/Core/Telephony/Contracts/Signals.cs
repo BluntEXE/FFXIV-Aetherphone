@@ -25,6 +25,7 @@ internal static class SignalType
     public const string GramPing = "gram.ping";
     public const string SocialPing = "social.ping";
     public const string MusterPing = "muster.ping";
+    public const string AnnouncePing = "announce.ping";
     public const string Error = "error";
 }
 

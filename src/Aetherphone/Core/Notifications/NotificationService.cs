@@ -22,6 +22,7 @@ internal sealed class NotificationService : IDisposable
     public Func<string, bool>? AppAvailability { get; set; }
     public event Action? Changed;
     public event Action<PhoneNotification>? Presented;
+    public event Action<PhoneNotification>? Added;
 
     public NotificationService(SoundService sound, Configuration configuration, AppInstaller installer,
         IFramework framework)
@@ -41,12 +42,50 @@ internal sealed class NotificationService : IDisposable
             return;
         }
 
+        RemoveApp(appId);
+    }
+
+    public void RemoveSocial(string appId)
+    {
+        var removed = false;
+        for (var index = recent.Count - 1; index >= 0; index--)
+        {
+            if (recent[index].SocialType < 0 || !string.Equals(recent[index].AppId, appId, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (!recent[index].Read)
+            {
+                UnreadCount--;
+            }
+
+            recent.RemoveAt(index);
+            removed = true;
+        }
+
+        if (!removed)
+        {
+            return;
+        }
+
+        ClampUnread();
+        Changed?.Invoke();
+    }
+
+    public void RemoveApp(string appId)
+    {
         var removed = false;
         for (var index = recent.Count - 1; index >= 0; index--)
         {
             if (!string.Equals(recent[index].AppId, appId, StringComparison.Ordinal))
             {
                 continue;
+            }
+
+            if (!recent[index].Read)
+            {
+                UnreadCount--;
             }
 
             recent.RemoveAt(index);
@@ -79,33 +118,42 @@ internal sealed class NotificationService : IDisposable
     {
         if (!installer.IsInstalled(notification.AppId))
         {
+            AepLog.Warning($"[Notifications] dropped {notification.AppId}/{notification.StackKey}: app not installed");
             return;
         }
 
-        if (!configuration.IsAppNotificationEnabled(notification.AppId))
+        if (!configuration.IsAppNotificationEnabled(notification.SettingsKey))
         {
             return;
         }
 
         if (AppAvailability is { } available && !available(notification.AppId))
         {
+            AepLog.Warning($"[Notifications] dropped {notification.AppId}/{notification.StackKey}: app unavailable");
             return;
         }
 
         var stamped = notification with { Id = ++sequence };
+        stamped.Read = false;
         recent.Add(stamped);
         if (recent.Count > MaxRetained)
         {
+            if (!recent[0].Read)
+            {
+                UnreadCount--;
+            }
+
             recent.RemoveAt(0);
         }
 
         UnreadCount++;
+        Added?.Invoke(stamped);
         if (!configuration.DoNotDisturb)
         {
             Presented?.Invoke(stamped);
             if (ShouldPlaySound(stamped.StackKey))
             {
-                sound.PlayNotification(notification.AppId);
+                sound.PlayNotification(notification.SettingsKey);
             }
         }
 
@@ -153,6 +201,11 @@ internal sealed class NotificationService : IDisposable
             return;
         }
 
+        for (var index = 0; index < recent.Count; index++)
+        {
+            recent[index].Read = true;
+        }
+
         UnreadCount = 0;
         Changed?.Invoke();
     }
@@ -164,6 +217,11 @@ internal sealed class NotificationService : IDisposable
             if (recent[index].Id != id)
             {
                 continue;
+            }
+
+            if (!recent[index].Read)
+            {
+                UnreadCount--;
             }
 
             recent.RemoveAt(index);
@@ -181,6 +239,11 @@ internal sealed class NotificationService : IDisposable
             if (recent[index].StackKey != stackKey)
             {
                 continue;
+            }
+
+            if (!recent[index].Read)
+            {
+                UnreadCount--;
             }
 
             recent.RemoveAt(index);
