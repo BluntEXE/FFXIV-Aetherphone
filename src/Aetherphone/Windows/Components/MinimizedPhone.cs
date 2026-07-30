@@ -94,11 +94,8 @@ internal sealed class MinimizedPhone : IDisposable
 
     public static void DrawShell(ImDrawListPtr dl, in Geometry geometry, PhoneTheme theme)
     {
-        Squircle.Fill(dl, geometry.Body.Min, geometry.Body.Max, geometry.Rounding, ImGui.GetColorU32(theme.FrameMetal));
-        Squircle.Fill(dl, geometry.Screen.Min, geometry.Screen.Max, geometry.ScreenRounding,
-            ImGui.GetColorU32(theme.ScreenBase));
-        DeviceChrome.RailFinish(dl, geometry.Body, geometry.Screen, geometry.Rounding, geometry.ScreenRounding,
-            ImGuiHelpers.GlobalScale);
+        DeviceChrome.DrawShell(dl, geometry.Body, geometry.Screen, geometry.Rounding, geometry.ScreenRounding,
+            ImGuiHelpers.GlobalScale, theme.Case, theme.ScreenBase);
     }
 
     public static void DrawFace(ImDrawListPtr dl, in Geometry geometry, PhoneTheme theme, float scale, float alpha,
@@ -136,11 +133,12 @@ internal sealed class MinimizedPhone : IDisposable
         }
 
         var label = unread > 99 ? "99+" : unread.ToString(Loc.Culture);
-        var radius = body.Width * 0.20f;
+        var radius = body.Width * 0.17f;
         var center = new Vector2(body.Min.X + radius * 0.7f, body.Min.Y + radius * 0.7f);
         dl.AddCircleFilled(center, radius + 1.5f * scale, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.95f * alpha)), 24);
         dl.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(BadgeTone, alpha)), 24);
-        Typography.DrawCentered(dl, center, label, new Vector4(1f, 1f, 1f, alpha), 0.66f, FontWeight.Bold);
+        var labelSize = Typography.Measure(label, 0.66f, FontWeight.Bold);
+        Typography.Draw(dl, center - labelSize * 0.5f, label, new Vector4(1f, 1f, 1f, alpha), 0.66f, FontWeight.Bold);
     }
 
     private void OnPresented(PhoneNotification _)

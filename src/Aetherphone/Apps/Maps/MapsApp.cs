@@ -24,6 +24,7 @@ internal sealed class MapsApp : IPhoneApp
     public string DisplayName => Loc.T(L.Apps.Maps);
     public string Glyph => "Ma";
     public int BadgeCount => 0;
+    public bool WantsSystemTheme => true;
     private readonly MapData maps;
     private readonly Configuration configuration;
     private readonly List<MapAetheryte> favoriteDestinations = new();
@@ -118,10 +119,19 @@ internal sealed class MapsApp : IPhoneApp
         var pinCenter = new Vector2(cardMin.X + 28f * scale, cardMin.Y + LocationCardHeight * scale * 0.5f);
         MapGlyphs.Pin(drawList, pinCenter, 12f * scale, frameTheme.Accent);
         var textLeft = pinCenter.X + 24f * scale;
-        Typography.Draw(new Vector2(textLeft, cardMin.Y + 14f * scale), zoneName, frameTheme.TextStrong,
-            TextStyles.Headline);
-        Typography.Draw(new Vector2(textLeft, cardMin.Y + 36f * scale), regionName, frameTheme.TextMuted,
-            TextStyles.Footnote);
+        var textMaxWidth = MathF.Max(1f, cardMax.X - 14f * scale - textLeft);
+        var zoneY = cardMin.Y + 14f * scale;
+        var zoneSize = Typography.Measure(zoneName, TextStyles.Headline);
+        var zoneHovering = UiInteract.Hover(new Vector2(textLeft, zoneY),
+            new Vector2(textLeft + textMaxWidth, zoneY + zoneSize.Y));
+        Marquee.DrawLeft("maps.location.zone", zoneName, textLeft, zoneY, textMaxWidth,
+            TextStyles.Headline, frameTheme.TextStrong, zoneHovering);
+        var regionY = cardMin.Y + 36f * scale;
+        var regionSize = Typography.Measure(regionName, TextStyles.Footnote);
+        var regionHovering = UiInteract.Hover(new Vector2(textLeft, regionY),
+            new Vector2(textLeft + textMaxWidth, regionY + regionSize.Y));
+        Marquee.DrawLeft("maps.location.region", regionName, textLeft, regionY, textMaxWidth,
+            TextStyles.Footnote, frameTheme.TextMuted, regionHovering);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, LocationCardHeight * scale + 4f * scale));
     }
@@ -256,7 +266,7 @@ internal sealed class MapsApp : IPhoneApp
         var height = ExpansionHeaderHeight * scale;
         var min = origin;
         var max = new Vector2(origin.X + width, origin.Y + height);
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         var drawList = ImGui.GetWindowDrawList();
         if (hovered)
         {
@@ -266,9 +276,12 @@ internal sealed class MapsApp : IPhoneApp
         var disclosureCenter = new Vector2(min.X + 19f * scale, min.Y + height * 0.5f);
         var ink = hovered ? frameTheme.TextStrong : frameTheme.TextMuted;
         MapGlyphs.Disclosure(drawList, disclosureCenter, 5f * scale, 2.2f * scale, expanded, ink);
-        var titleSize = Typography.Measure(expansion.Name, TextStyles.Headline);
-        Typography.Draw(new Vector2(disclosureCenter.X + 16f * scale, min.Y + height * 0.5f - titleSize.Y * 0.5f),
-            expansion.Name, frameTheme.TextStrong, TextStyles.Headline);
+        var titleLeft = disclosureCenter.X + 16f * scale;
+        var titleMaxWidth = MathF.Max(1f, max.X - 16f * scale - titleLeft);
+        var titleText = Typography.FitText(expansion.Name, titleMaxWidth, TextStyles.Headline);
+        var titleSize = Typography.Measure(titleText, TextStyles.Headline);
+        Typography.Draw(new Vector2(titleLeft, min.Y + height * 0.5f - titleSize.Y * 0.5f),
+            titleText, frameTheme.TextStrong, TextStyles.Headline);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height));
         if (hovered)
@@ -287,8 +300,8 @@ internal sealed class MapsApp : IPhoneApp
         var starCenter = new Vector2(row.Min.X + starRadius, row.Center.Y);
         var starMin = new Vector2(row.Min.X, row.Min.Y);
         var starMax = new Vector2(starCenter.X + starRadius + 6f * scale, row.Max.Y);
-        var starHovered = ImGui.IsMouseHoveringRect(starMin, starMax);
-        var rowHovered = ImGui.IsMouseHoveringRect(row.Min, row.Max);
+        var starHovered = UiInteract.Hover(starMin, starMax);
+        var rowHovered = UiInteract.Hover(row.Min, row.Max);
         var actionHovered = rowHovered && !starHovered;
         if (actionHovered)
         {
@@ -299,14 +312,17 @@ internal sealed class MapsApp : IPhoneApp
         MapGlyphs.Star(drawList, starCenter, starRadius, isFavorite, FavoriteStar,
             Palette.WithAlpha(frameTheme.TextMuted, 0.6f), scale);
         var textLeft = starCenter.X + starRadius + 12f * scale;
+        var textRight = row.Max.X - 14f * scale;
+        var textMaxWidth = MathF.Max(1f, textRight - textLeft);
         var labelSize = Typography.Measure(aetheryte.Name, TextStyles.Body);
-        Typography.Draw(new Vector2(textLeft, row.Center.Y - labelSize.Y * 0.5f), aetheryte.Name, frameTheme.TextStrong,
-            TextStyles.Body);
+        var textHovering = UiInteract.Hover(new Vector2(textLeft, row.Min.Y), new Vector2(textRight, row.Max.Y));
+        Marquee.DrawLeft("maps.destination." + aetheryte.RowId, aetheryte.Name, textLeft,
+            row.Center.Y - labelSize.Y * 0.5f, textMaxWidth, TextStyles.Body, frameTheme.TextStrong, textHovering);
         var arrowTip = new Vector2(row.Max.X, row.Center.Y);
         MapGlyphs.ChevronRight(arrowTip, 6f * scale, 2.2f * scale,
             actionHovered ? frameTheme.Accent : frameTheme.TextMuted);
         var starClicked = UiInteract.Click(starMin, starMax, starHovered);
-        var rowClicked = UiInteract.Click(row.Min, row.Max, rowHovered);
+        var rowClicked = !starHovered && UiInteract.Click(row.Min, row.Max, rowHovered);
         if (starHovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -334,14 +350,13 @@ internal sealed class MapsApp : IPhoneApp
 
     private void Teleport(MapAetheryte aetheryte)
     {
+        lifestreamAvailable = LifestreamBridge.TeleportToAetheryte(aetheryte.RowId) != LifestreamOutcome.NotInstalled;
         if (lifestreamAvailable)
         {
-            LifestreamBridge.TravelToAetheryte(aetheryte.Name);
+            return;
         }
-        else
-        {
-            ImGui.SetClipboardText(LifestreamBridge.AetheryteCommand(aetheryte.Name));
-        }
+
+        ImGui.SetClipboardText(LifestreamBridge.AetheryteCommand(aetheryte.Name));
     }
 
     private void ToggleFavorite(uint rowId)
@@ -362,7 +377,9 @@ internal sealed class MapsApp : IPhoneApp
     private void DrawEmptyState(string message)
     {
         var scale = ImGuiHelpers.GlobalScale;
-        Typography.Draw(ImGui.GetCursorScreenPos() + new Vector2(4f * scale, 16f * scale), message,
+        var maxWidth = MathF.Max(1f, ImGui.GetContentRegionAvail().X - 8f * scale);
+        var clipped = Typography.FitText(message, maxWidth, TextStyles.Footnote);
+        Typography.Draw(ImGui.GetCursorScreenPos() + new Vector2(4f * scale, 16f * scale), clipped,
             frameTheme.TextMuted, TextStyles.Footnote);
         ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().X, 40f * scale));
     }

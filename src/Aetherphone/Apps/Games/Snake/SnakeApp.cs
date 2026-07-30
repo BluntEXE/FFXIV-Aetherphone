@@ -95,7 +95,8 @@ internal sealed class SnakeApp : IMiniGame
         particles.Update(deltaSeconds);
         fx.Update(deltaSeconds);
         eatPulse = MathF.Max(0f, eatPulse - deltaSeconds * 3.4f);
-        if (board.State == SnakeState.Ready && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        if (board.State == SnakeState.Ready && ImGui.IsMouseClicked(ImGuiMouseButton.Left) &&
+            UiInteract.Hover(area.Min, area.Max))
         {
             board.Begin(mouse);
         }

@@ -161,7 +161,7 @@ internal sealed partial class ClockApp : IPhoneApp
     private bool DrawPillButton(Rect rect, string label, Vector4 fill, Vector4 ink)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = UiInteract.Hover(rect.Min, rect.Max);
         var shown = hovered ? Palette.Mix(fill, new Vector4(1f, 1f, 1f, 1f), 0.12f) : fill;
         Squircle.Fill(drawList, rect.Min, rect.Max, rect.Height * 0.5f, ImGui.GetColorU32(shown));
         Typography.DrawCentered(drawList, rect.Center, label, ink, TextStyles.Headline.Scale, TextStyles.Headline.Weight);

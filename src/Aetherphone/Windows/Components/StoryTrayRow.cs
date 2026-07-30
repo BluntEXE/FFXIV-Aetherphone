@@ -78,6 +78,7 @@ internal sealed class StoryTrayRow
         }
 
         drawList.PopClipRect();
+        ImGui.SetCursorScreenPos(new Vector2(row.Min.X, row.Max.Y));
     }
 
     // Only the height is taken from the layout. The band itself spans the scroll container edge to edge
@@ -94,7 +95,7 @@ internal sealed class StoryTrayRow
 
     private void HandleDrag(Rect row)
     {
-        var hovering = ImGui.IsMouseHoveringRect(row.Min, row.Max);
+        var hovering = UiInteract.Hover(row.Min, row.Max);
         if (hovering && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
             dragging = true;

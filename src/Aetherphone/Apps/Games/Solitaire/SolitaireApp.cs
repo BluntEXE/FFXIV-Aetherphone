@@ -3,6 +3,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility;
 
@@ -97,7 +98,7 @@ internal sealed class SolitaireApp : IMiniGame
         var dropTarget = SolitaireHit.None;
         if (!finished)
         {
-            dropTarget = HandleInput(layout, scale);
+            dropTarget = HandleInput(layout, area, scale);
         }
 
         renderer.Draw(board, layout, theme, Accent, scale, grabSource, dropTarget);
@@ -136,10 +137,10 @@ internal sealed class SolitaireApp : IMiniGame
         }
     }
 
-    private SolitaireHit HandleInput(in SolitaireLayout layout, float scale)
+    private SolitaireHit HandleInput(in SolitaireLayout layout, Rect area, float scale)
     {
         var mouse = ImGui.GetMousePos();
-        if (grabCount == 0 && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        if (grabCount == 0 && ImGui.IsMouseClicked(ImGuiMouseButton.Left) && UiInteract.Hover(area.Min, area.Max))
         {
             var hit = layout.Hit(mouse);
             if (hit.Kind == SolitairePileKind.Stock)

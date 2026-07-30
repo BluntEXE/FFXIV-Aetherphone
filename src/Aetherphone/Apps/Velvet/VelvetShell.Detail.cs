@@ -77,17 +77,28 @@ internal sealed partial class VelvetShell
                 ownerSub = ownerSub.Length > 0 ? ownerSub + " · " + ownerTime : ownerTime;
             }
 
-            Typography.Draw(new Vector2(nameLeft, avatarCenter.Y - 13f * scale), authorName, VelvetTheme.TitleInk,
-                TextStyles.Headline);
-            Typography.Draw(new Vector2(nameLeft, avatarCenter.Y + 3f * scale), ownerSub, VelvetTheme.MutedInk,
-                TextStyles.Subheadline);
-            if (UiInteract.HoverClick(origin, new Vector2(origin.X + width * 0.7f, origin.Y + headerHeight)))
+            var headerRect = new Rect(origin, new Vector2(origin.X + width * 0.7f, origin.Y + headerHeight));
+            var nameMaxWidth = origin.X + width - 14f * scale - nameLeft;
+            var authorY = avatarCenter.Y - 13f * scale;
+            var authorSize = Typography.Measure(authorName, TextStyles.Headline);
+            var authorHovering = UiInteract.Hover(new Vector2(nameLeft, authorY),
+                new Vector2(nameLeft + nameMaxWidth, authorY + authorSize.Y));
+            Marquee.DrawLeft("velvet.detail.author." + post.Id, authorName, nameLeft,
+                authorY, nameMaxWidth, TextStyles.Headline, VelvetTheme.TitleInk, authorHovering);
+            var ownerSubY = avatarCenter.Y + 3f * scale;
+            var ownerSubSize = Typography.Measure(ownerSub, TextStyles.Subheadline);
+            var ownerSubHovering = UiInteract.Hover(new Vector2(nameLeft, ownerSubY),
+                new Vector2(nameLeft + nameMaxWidth, ownerSubY + ownerSubSize.Y));
+            Marquee.DrawLeft("velvet.detail.ownersub." + post.Id, ownerSub, nameLeft, ownerSubY,
+                nameMaxWidth, TextStyles.Subheadline, VelvetTheme.MutedInk, ownerSubHovering);
+            if (UiInteract.HoverClick(headerRect.Min, headerRect.Max))
             {
                 OpenProfile(post.OwnerId);
             }
 
+            var imageHeight = PostAspects.DisplayHeight(width, post.MediaWidth, post.MediaHeight);
             var imageRect = new Rect(new Vector2(origin.X, origin.Y + headerHeight),
-                new Vector2(origin.X + width, origin.Y + headerHeight + width));
+                new Vector2(origin.X + width, origin.Y + headerHeight + imageHeight));
             var photos = PostMedia.Photos(post.MediaUrls, post.MediaUrl);
             var result = DrawPostCarousel(drawList, imageRect, post, photos, Metrics.Radius.Md * scale);
             if (result.Tapped && !UiInteract.InputBlocked && result.Index < photos.Length)
@@ -142,7 +153,6 @@ internal sealed partial class VelvetShell
                 actionsRight += Typography.Measure(commentText, TextStyles.Callout).X;
             }
 
-            var mine = store.Me is { } me && me.UserId == post.OwnerId;
             var trailingCenter = new Vector2(origin.X + width - 14f * scale, actionsY);
             if (photos.Length > 1)
             {
@@ -153,18 +163,13 @@ internal sealed partial class VelvetShell
                     VelvetTheme.BodyInk);
             }
 
-            if (mine)
+            var trailingRadius = 14f * scale;
+            if (ui.IconButton(trailingCenter, trailingRadius, FontAwesomeIcon.EllipsisH.ToIconString(),
+                    VelvetTheme.BodyInk, AppSkin.Transparent, 1f, Loc.T(L.Velvet.More)))
             {
-                if (ui.IconButton(trailingCenter, 14f * scale, FontAwesomeIcon.Trash.ToIconString(), VelvetTheme.Danger,
-                        VelvetTheme.Alpha(VelvetTheme.Danger, 0.16f), 0.9f, Loc.T(L.Velvet.DeleteConfirm)))
-                {
-                    AskDeletePost(post.Id);
-                }
-            }
-            else if (ui.IconButton(trailingCenter, 14f * scale, FontAwesomeIcon.Flag.ToIconString(), VelvetTheme.Danger,
-                         VelvetTheme.Alpha(VelvetTheme.Danger, 0.16f), 0.9f, Loc.T(L.Velvet.Report)))
-            {
-                OpenReport("velvet_media", post.Id, Loc.T(L.Velvet.ReportPost));
+                menuPost = post;
+                postMenu.Toggle(post.Id, new Rect(trailingCenter - new Vector2(trailingRadius, trailingRadius),
+                    trailingCenter + new Vector2(trailingRadius, trailingRadius)));
             }
 
             ImGui.SetCursorScreenPos(new Vector2(origin.X, actionsY + 20f * scale));
@@ -206,6 +211,7 @@ internal sealed partial class VelvetShell
         }
 
         DrawCommentComposer(new Rect(new Vector2(area.Min.X, area.Max.Y - composerHeight), area.Max), area, postId);
+        DrawPostMenu(area, false);
     }
 
     private void DrawComments(float width, float scale)
@@ -252,14 +258,18 @@ internal sealed partial class VelvetShell
             images, lodestone, -1);
         var textLeft = avatarCenter.X + avatarRadius + 10f * scale;
         var wrapWidth = origin.X + width - 28f * scale - textLeft;
-        Typography.Draw(new Vector2(textLeft, origin.Y), authorName, VelvetTheme.TitleInk, TextStyles.SubheadlineEmphasized);
-        var nameWidth = Typography.Measure(authorName, TextStyles.SubheadlineEmphasized).X;
+        var nameMaxWidth = wrapWidth * 0.55f;
+        var nameHovering = UiInteract.Hover(new Vector2(textLeft, origin.Y),
+            new Vector2(textLeft + nameMaxWidth, origin.Y + 16f * scale));
+        var nameWidth = Marquee.DrawLeft("velvet.comment.author." + comment.Id, authorName, textLeft, origin.Y,
+            nameMaxWidth, TextStyles.SubheadlineEmphasized, VelvetTheme.TitleInk, nameHovering);
         var time = TimeText.Short(comment.CreatedAtUnix);
         if (time.Length > 0)
         {
-            Typography.Draw(new Vector2(textLeft + nameWidth + 8f * scale, origin.Y + 1f * scale), time,
-                VelvetTheme.MutedInk, TextStyles.Footnote);
-            var timeWidth = Typography.Measure(time, TextStyles.Footnote).X;
+            var timeMaxWidth = MathF.Max(1f, wrapWidth - nameWidth - 40f * scale);
+            var timeWidth = Marquee.DrawLeftAuto("velvet.comment.time." + comment.Id, time,
+                textLeft + nameWidth + 8f * scale, origin.Y + 1f * scale, timeMaxWidth, TextStyles.Footnote,
+                VelvetTheme.MutedInk);
             CommentReviewTag.Draw(
                 new Vector2(textLeft + nameWidth + 8f * scale + timeWidth + 8f * scale, origin.Y + 1f * scale),
                 textLeft + wrapWidth, comment.ScanStatus, 0.8f);
@@ -275,14 +285,12 @@ internal sealed partial class VelvetShell
 
         if (commentLayout is null)
         {
-            ImGui.PushTextWrapPos(textLeft + wrapWidth);
+            using (Typography.WrapAt(textLeft + wrapWidth))
             using (ImRaii.PushColor(ImGuiCol.Text, VelvetTheme.BodyInk))
             using (Plugin.Fonts.Push(0.9f))
             {
                 Typography.Wrapped(comment.Text);
             }
-
-            ImGui.PopTextWrapPos();
         }
         else
         {
@@ -376,12 +384,12 @@ internal sealed partial class VelvetShell
                 var model = new VRowModel
                 {
                     Title = DisplayNameOf(user.DisplayName, user.Handle),
-                    Subtitle = SocialIdentity.ProfileMeta(user.Handle, RegionOf(user.World)),
+                    Subtitle = SocialIdentity.ProfileMeta(user.Handle, RegionCodeOf(user)),
                     Height = 60f,
                     Leading = VRowLeading.Avatar,
                     AvatarRadius = 20f,
                     Name = DisplayNameOf(user.DisplayName, user.Handle),
-                    World = user.World,
+                    World = string.Empty,
                     AvatarUrl = user.AvatarUrl,
                 };
                 if (VRow.Draw(in model, ui, theme, images, lodestone) == VRowHit.Body)
@@ -394,7 +402,7 @@ internal sealed partial class VelvetShell
         }
     }
 
-    private void AskDeletePost(string postId)
+    private void AskDeletePost(string postId, Action? deleted = null)
     {
         confirm.Ask(new ConfirmRequest
         {
@@ -407,7 +415,7 @@ internal sealed partial class VelvetShell
             {
                 if (ok)
                 {
-                    router.Pop();
+                    deleted?.Invoke();
                 }
 
                 done(ok);

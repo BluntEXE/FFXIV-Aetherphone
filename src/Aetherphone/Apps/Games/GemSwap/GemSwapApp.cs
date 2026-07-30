@@ -273,7 +273,7 @@ internal sealed class GemSwapApp : IMiniGame
     private void HandleInput(GameGrid grid, float deltaSeconds)
     {
         var mouse = ImGui.GetMousePos();
-        if (!grid.Bounds.Contains(mouse) || !ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        if (!UiInteract.Hover(grid.Bounds.Min, grid.Bounds.Max) || !ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
             UpdateHoverCursor(grid, mouse);
             return;
@@ -288,7 +288,8 @@ internal sealed class GemSwapApp : IMiniGame
         }
 
         var index = row * GemSwapBoard.Columns + column;
-        if (!grid.Cell(column, row).Contains(mouse))
+        var cell = grid.Cell(column, row);
+        if (!UiInteract.Hover(cell.Min, cell.Max))
         {
             return;
         }
@@ -323,7 +324,7 @@ internal sealed class GemSwapApp : IMiniGame
 
     private void UpdateHoverCursor(GameGrid grid, Vector2 mouse)
     {
-        if (grid.Bounds.Contains(mouse))
+        if (UiInteract.Hover(grid.Bounds.Min, grid.Bounds.Max))
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }

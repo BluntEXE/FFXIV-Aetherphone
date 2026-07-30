@@ -82,7 +82,7 @@ internal sealed class WallpaperCropPage : ISettingsPage
 
     private void HandleGestures(Rect preview, Vector2 size, float aspect, Vector2 visible)
     {
-        var hovering = ImGui.IsMouseHoveringRect(preview.Min, preview.Max);
+        var hovering = UiInteract.Hover(preview.Min, preview.Max);
         if (hovering)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -164,7 +164,7 @@ internal sealed class WallpaperCropPage : ISettingsPage
     {
         var dl = ImGui.GetWindowDrawList();
         var rounding = 12f * scale;
-        var hovered = enabled && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
         var fill = primary ? theme.Accent : theme.SurfaceMuted;
         if (!enabled)
         {

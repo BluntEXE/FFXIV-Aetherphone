@@ -90,8 +90,7 @@ internal sealed class ReportOverlay
                 return;
             }
 
-            if (!service.Busy && ImGui.IsMouseClicked(ImGuiMouseButton.Left) &&
-                !ImGui.IsMouseHoveringRect(cardRect.Min, cardRect.Max))
+            if (!service.Busy && UiInteract.ClickedOutside(cardRect.Min, cardRect.Max))
             {
                 service.Dismiss();
             }
@@ -140,7 +139,8 @@ internal sealed class ReportOverlay
 
         var titleColor = Palette.WithAlpha(theme.TextStrong, opacity);
         Typography.DrawCentered(drawList, new Vector2(cardRect.Center.X, cardMin.Y + pad + titleHeight * 0.5f),
-            prompt.Title, titleColor, TitleScale * cardScale, FontWeight.Bold);
+            Typography.FitText(prompt.Title, innerWidth, TitleScale * cardScale, FontWeight.Bold), titleColor,
+            TitleScale * cardScale, FontWeight.Bold);
         var y = cardMin.Y + pad + titleHeight + TitleGap * s;
         var left = cardMin.X + pad;
         if (service.Sent)
@@ -212,7 +212,7 @@ internal sealed class ReportOverlay
         bool interactive)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = interactive && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = interactive && UiInteract.Hover(rect.Min, rect.Max);
         var fill = hovered ? Palette.Mix(theme.SurfaceMuted, theme.TextStrong, 0.06f) : theme.SurfaceMuted;
         Squircle.Fill(drawList, rect.Min, rect.Max, 12f * s, ImGui.GetColorU32(Palette.WithAlpha(fill, opacity)));
         Squircle.Stroke(drawList, rect.Min, rect.Max, 12f * s,
@@ -222,8 +222,10 @@ internal sealed class ReportOverlay
             ? Loc.T(ReportCategories.All[service.CategoryIndex].Label)
             : Loc.T(L.Report.CategoryHint);
         var ink = hasCategory ? theme.TextStrong : theme.TextMuted;
-        var labelSize = Typography.Measure(label, FieldTextScale * cardScale, FontWeight.Medium);
-        Typography.Draw(drawList, new Vector2(rect.Min.X + 14f * s, rect.Center.Y - labelSize.Y * 0.5f), label,
+        var labelMaxWidth = rect.Max.X - 30f * s - (rect.Min.X + 14f * s);
+        var fittedLabel = Typography.FitText(label, labelMaxWidth, FieldTextScale * cardScale, FontWeight.Medium);
+        var labelSize = Typography.Measure(fittedLabel, FieldTextScale * cardScale, FontWeight.Medium);
+        Typography.Draw(drawList, new Vector2(rect.Min.X + 14f * s, rect.Center.Y - labelSize.Y * 0.5f), fittedLabel,
             Palette.WithAlpha(ink, opacity), FieldTextScale * cardScale, FontWeight.Medium);
         AppSkin.Icon(drawList, new Vector2(rect.Max.X - 18f * s, rect.Center.Y),
             FontAwesomeIcon.ChevronDown.ToIconString(), Palette.WithAlpha(theme.TextMuted, opacity), 0.72f);
@@ -250,9 +252,12 @@ internal sealed class ReportOverlay
             if (service.ReasonDraft.Length > 0)
             {
                 var textSize = Typography.Measure(service.ReasonDraft, FieldTextScale * cardScale);
-                Typography.Draw(drawList, new Vector2(rect.Min.X + 14f * s, rect.Center.Y - textSize.Y * 0.5f),
-                    UiText.Truncate(service.ReasonDraft, 40), Palette.WithAlpha(theme.TextStrong, opacity),
-                    FieldTextScale * cardScale);
+                var textLeft = rect.Min.X + 14f * s;
+                var textMaxWidth = rect.Max.X - 14f * s - textLeft;
+                var reasonHovering = UiInteract.Hover(rect.Min, rect.Max);
+                Marquee.DrawLeft("reportoverlay.reason", service.ReasonDraft, textLeft,
+                    rect.Center.Y - textSize.Y * 0.5f, textMaxWidth, new TextStyle(FieldTextScale * cardScale,
+                        FontWeight.Regular), Palette.WithAlpha(theme.TextStrong, opacity), reasonHovering);
             }
 
             return;
@@ -301,12 +306,11 @@ internal sealed class ReportOverlay
         FontWeight weight = FontWeight.Regular)
     {
         ImGui.SetCursorScreenPos(position);
+        using (Typography.WrapAt(position.X + width))
         using (Plugin.Fonts.Push(fontScale, weight))
         using (ImRaii.PushColor(ImGuiCol.Text, color))
         {
-            ImGui.PushTextWrapPos(position.X + width - ImGui.GetWindowPos().X);
             Typography.Wrapped(text);
-            ImGui.PopTextWrapPos();
         }
     }
 }

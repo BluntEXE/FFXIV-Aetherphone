@@ -38,7 +38,7 @@ internal sealed class PhotoZoomView
     }
 
     public void Draw(Rect stage, IDalamudTextureWrap texture, PhoneTheme theme, float rounding,
-        bool showButtons = true)
+        bool showButtons = true, Rect? controls = null)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
@@ -60,14 +60,14 @@ internal sealed class PhotoZoomView
         drawList.PopClipRect();
         if (showButtons)
         {
-            DrawButtons(stage, size, theme, scale);
+            DrawButtons(stage, controls ?? stage, size, theme, scale);
         }
     }
 
     private void HandleInput(Rect stage, Vector2 size)
     {
         var mouse = ImGui.GetMousePos();
-        var hovering = ImGui.IsMouseHoveringRect(stage.Min, stage.Max);
+        var hovering = UiInteract.Hover(stage.Min, stage.Max);
         if (hovering)
         {
             var wheel = ImGui.GetIO().MouseWheel;
@@ -140,12 +140,12 @@ internal sealed class PhotoZoomView
     private static float FitScale(Rect stage, Vector2 size) =>
         MathF.Min(stage.Width / MathF.Max(size.X, 1f), stage.Height / MathF.Max(size.Y, 1f));
 
-    private void DrawButtons(Rect stage, Vector2 size, PhoneTheme theme, float scale)
+    private void DrawButtons(Rect stage, Rect controls, Vector2 size, PhoneTheme theme, float scale)
     {
         var radius = ButtonRadiusUnits * scale;
         var gap = 10f * scale;
-        var centerX = stage.Max.X - radius - 12f * scale;
-        var outCenter = new Vector2(centerX, stage.Max.Y - radius - 12f * scale);
+        var centerX = controls.Max.X - radius - 12f * scale;
+        var outCenter = new Vector2(centerX, controls.Max.Y - radius - 12f * scale);
         var inCenter = new Vector2(centerX, outCenter.Y - radius * 2f - gap);
         if (ZoomButton(inCenter, radius, true, targetZoom < MaxZoom - 0.01f, theme, scale))
         {
@@ -163,7 +163,7 @@ internal sealed class PhotoZoomView
     {
         var drawList = ImGui.GetWindowDrawList();
         var hovered = enabled &&
-                      ImGui.IsMouseHoveringRect(center - new Vector2(radius, radius),
+                      UiInteract.Hover(center - new Vector2(radius, radius),
                           center + new Vector2(radius, radius));
         var alpha = enabled ? hovered ? 0.30f : 0.20f : 0.10f;
         drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, alpha)), 32);

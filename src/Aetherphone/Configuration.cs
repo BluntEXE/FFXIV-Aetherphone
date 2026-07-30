@@ -12,6 +12,7 @@ using Aetherphone.Core.Jobs;
 using Aetherphone.Core.Market;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Radio;
+using Aetherphone.Core.Social;
 using Aetherphone.Core.Songs;
 using Aetherphone.Core.Telephony;
 using Aetherphone.Core.Theme;
@@ -38,7 +39,7 @@ internal sealed class ScreenPositionPreset
 }
 
 [Serializable]
-internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
+internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, IControlConfiguration
 {
     public int Version { get; set; } = 1;
     public bool OpenOnStartup { get; set; } = true;
@@ -53,6 +54,8 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public Vector2? MinimizedPosition { get; set; }
     public bool DoNotDisturb { get; set; }
     public bool Vibration { get; set; } = true;
+    public bool ImportScreenshots { get; set; } = true;
+    public bool? UseNativeFileDialog { get; set; }
     public Dictionary<string, AppNotificationSetting> NotificationSettings { get; set; } = new();
     public bool NotifyDailyReset { get; set; }
     public bool NotifyWeeklyReset { get; set; }
@@ -65,15 +68,19 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public long ActivityGoalGil { get; set; } = 50000;
     public bool ScrollWhileIdle { get; set; } = true;
     public bool ShowLodestonePortraits { get; set; } = true;
+    public int LodestoneIdIndexVersion { get; set; }
     public float TextZoom { get; set; } = 1.15f;
     public List<string> FontGlyphLedger { get; set; } = new();
     public float ScreenBrightness { get; set; } = 1f;
     public float PhoneScale { get; set; } = 1.25f;
+    public bool CameraLandscape { get; set; }
     public string Language { get; set; } = string.Empty;
     public ThemeMode ThemeMode { get; set; } = ThemeMode.Dark;
     public string AccentName { get; set; } = "Violet";
+    public string PhoneCaseName { get; set; } = "Titanium";
     public string JobsAccentName { get; set; } = "Blue";
     public List<JobsCustomColor> JobsCustomColors { get; set; } = new();
+    public Dictionary<ulong, List<JobsCategory>> JobsCategoriesByCharacter { get; set; } = new();
     public string LightWallpaperId { get; set; } = "DuskLight";
     public string DarkWallpaperId { get; set; } = "DuskDark";
     public List<CustomWallpaper> CustomWallpapers { get; set; } = new();
@@ -109,8 +116,11 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public string AethernetToken { get; set; } = string.Empty;
     public string EncryptionKeyCache { get; set; } = string.Empty;
     public string EncryptionKeyCacheUserId { get; set; } = string.Empty;
+    public bool EncryptionRecoveryNudgeDismissed { get; set; }
     public Dictionary<string, int> KnownPeerKeyVersions { get; set; } = new();
     public Dictionary<ulong, CharacterSession> CharacterSessions { get; set; } = new();
+    public bool FollowCharacterAccount { get; set; } = true;
+    public ulong PinnedAccountContentId { get; set; }
     public string LegacyUnclaimedToken { get; set; } = string.Empty;
     public string LegacyUnclaimedEncryptionKey { get; set; } = string.Empty;
     public string LegacyUnclaimedEncryptionUserId { get; set; } = string.Empty;
@@ -128,8 +138,12 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public List<SongRecord> SongRecents { get; set; } = new();
     public List<PlaylistRecord> Playlists { get; set; } = new();
     public List<GameStatRecord> GameStats { get; set; } = new();
+    public int DailyChallengeStreak { get; set; }
+    public int DailyChallengeLastDay { get; set; }
     public HomeLayout? Home { get; set; }
+    public Dictionary<string, bool> AppFlags { get; set; } = new();
     public int HomeGridRows { get; set; } = 6;
+    public bool ShowAppNames { get; set; } = true;
     public ControlLayout? ControlPanel { get; set; }
     public bool ControlPanelRepacked { get; set; }
     public VenueTimeFilter VenueTimeFilter { get; set; } = VenueTimeFilter.LiveNow;
@@ -137,8 +151,16 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public bool VenueAllDataCenters { get; set; }
     public bool VenueNotifyNewEvents { get; set; } = true;
     public List<string> VenueFavorites { get; set; } = new();
+    public int MusterCategoryFilter { get; set; }
+    public int MusterScope { get; set; }
+    public int MusterDataCenterId { get; set; }
+    public int YellowPagesCategoryFilter { get; set; }
+    public int YellowPagesScope { get; set; }
+    public bool YellowPagesAfterDark { get; set; }
     public List<uint> MapFavorites { get; set; } = new();
     public List<RadioStationRecord> RadioFavorites { get; set; } = new();
+    public List<string> CustomAlbumOrder { get; set; } = new();
+    public Dictionary<string, List<string>> CustomAlbumPhotos { get; set; } = new();
     public const int VelvetGateVersion = 1;
     public const int VelvetOnboardVersion = 2;
     public bool VelvetAcknowledgedGate { get; set; }
@@ -148,6 +170,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
 
     public bool IsVelvetOnboarded() => VelvetOnboarded && VelvetOnboardedVersion >= VelvetOnboardVersion;
     public bool VelvetBlurByDefault { get; set; } = true;
+    public VelvetMutePreferences VelvetMutes { get; set; } = new();
     public List<string> VelvetPinnedThreads { get; set; } = new();
     public List<string> MessagePinnedChats { get; set; } = new();
     public List<string> MessageArchivedChats { get; set; } = new();
@@ -161,12 +184,14 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
     public bool MessagesMergeMigrated { get; set; }
     public bool MessagesPerCharacterMigrated { get; set; }
     public Dictionary<string, long> SocialActivitySeenUnix { get; set; } = new();
-    public long ModerationNoticeSeenUnix { get; set; }
     public Dictionary<string, int> ConductAcknowledged { get; set; } = new();
     public List<string> MutedLinkshells { get; set; } = new();
     public Dictionary<ulong, List<string>> MutedLinkshellsByCharacter { get; set; } = new();
     public bool LinkshellMutesPerCharacterMigrated { get; set; }
     public long DevChatLastSeenUnix { get; set; }
+    public long AnnouncementsSeenUnix { get; set; }
+    public long AnnouncementsNotifiedUnix { get; set; }
+    public bool AnnouncementsInitialized { get; set; }
     public bool? Use24HourClock { get; set; }
     public bool TimeZoneManual { get; set; }
     public int ManualUtcOffsetMinutes { get; set; }
@@ -505,7 +530,11 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
             return true;
         }
 
+#if DEBUG
+        return false;
+#else
         return parsed.IsLoopback;
+#endif
     }
 
     public void Save()
@@ -518,4 +547,6 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration
 
         _ = Plugin.Framework.RunOnFrameworkThread(() => Plugin.PluginInterface.SavePluginConfig(this));
     }
+
+    public void SaveNow() => Plugin.PluginInterface.SavePluginConfig(this);
 }

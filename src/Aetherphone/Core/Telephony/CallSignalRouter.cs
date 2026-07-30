@@ -52,8 +52,14 @@ internal sealed class CallSignalRouter : IDisposable
             case SignalType.VelvetPing:
                 signals.PublishVelvet();
                 return;
+            case SignalType.GramPing:
+                signals.PublishGram();
+                return;
             case SignalType.SocialPing:
                 signals.PublishSocial();
+                return;
+            case SignalType.MusterPing:
+                signals.PublishMuster();
                 return;
         }
 

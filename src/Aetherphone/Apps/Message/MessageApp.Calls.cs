@@ -180,9 +180,12 @@ internal sealed partial class MessageApp
         var missed = entry.Direction == CallDirection.Missed;
         var textLeft = avatarCenter.X + radius + 14f * scale;
         var textWidth = actionLeft - textLeft;
-        Typography.Draw(new Vector2(textLeft, origin.Y + 13f * scale),
-            Typography.FitText(title, textWidth, TextStyles.Headline), missed ? theme.Danger : ui.TitleInk,
-            TextStyles.Headline);
+        var titleTop = origin.Y + 13f * scale;
+        var titleSize = Typography.Measure(title, TextStyles.Headline);
+        var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleTop),
+            new Vector2(textLeft + textWidth, titleTop + titleSize.Y));
+        Marquee.DrawLeft("messageapp.calls.title." + entry.UserId + entry.TimestampUnix, title, textLeft, titleTop,
+            textWidth, TextStyles.Headline, missed ? theme.Danger : ui.TitleInk, titleHovering);
         var directionIcon = entry.Direction == CallDirection.Outgoing
             ? FontAwesomeIcon.ArrowUp
             : FontAwesomeIcon.ArrowDown;
@@ -504,7 +507,7 @@ internal sealed partial class MessageApp
         var scale = ImGuiHelpers.GlobalScale;
         var min = center - new Vector2(radius, radius);
         var max = center + new Vector2(radius, radius);
-        var hovered = enabled && ImGui.IsMouseHoveringRect(min, max);
+        var hovered = enabled && UiInteract.Hover(min, max);
         var baseFill = hovered ? Palette.Mix(fill, White, 0.14f) : fill;
         var fillAlpha = enabled ? MathF.Max(baseFill.W, 0.16f) : baseFill.W * 0.4f;
         drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(baseFill, fillAlpha)), 40);

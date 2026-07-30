@@ -7,6 +7,7 @@ using Aetherphone.Core.Conduct;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Game;
+using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
@@ -15,6 +16,8 @@ using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Photos;
 using Aetherphone.Core.Report;
+using Aetherphone.Core.Sharing;
+using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;
@@ -40,11 +43,14 @@ internal sealed partial class VelvetShell : IPhoneApp
     private readonly HttpService http;
     private readonly RemoteImageCache images;
     private readonly SocialNotificationService social;
+    private readonly SocialActivityFeed activityFeed;
+    private readonly Action loadOlderActivity;
     private readonly ConfirmService confirm;
     private readonly ReportService report;
     private readonly ConductGateService conduct;
     private readonly WallpaperImageCache wallpaperImages;
     private readonly AppSkin ui = new(VelvetTheme.Palette);
+    private readonly RichTextCache feedCaptionLayouts = new();
     private readonly RichTextCache detailBodyLayouts = new();
     private readonly RichTextCache commentLayouts = new();
     private readonly MentionPopup mentionPopup = new();
@@ -56,6 +62,7 @@ internal sealed partial class VelvetShell : IPhoneApp
     private readonly PullToRefresh pullToRefresh = new();
     private readonly AvatarComposer avatar;
     private readonly VelvetPostComposer post;
+    private string? pendingSharedPhoto;
     private readonly ViewRouter<VelvetView> router;
     private readonly RouterDraw<VelvetView> drawView;
     private readonly Action back;
@@ -71,10 +78,10 @@ internal sealed partial class VelvetShell : IPhoneApp
         NotificationService notifications, VelvetLauncher launcher, SocialLauncher socialLauncher, GameData gameData,
         SocialNotificationService social, KeyVault keyVault, ConversationKeyStore conversationKeys,
         PhoneVisibility visibility, RealtimeSignalBus realtimeSignals, WallpaperImageCache wallpaperImages,
-        ConfirmService confirm, ReportService report, ConductGateService conduct)
+        ConfirmService confirm, ReportService report, ConductGateService conduct, AppInstaller installer)
     {
         store = new VelvetStore(session, net.Velvet, net.Account, net.Safety, net.Media, notifications, configuration,
-            keyVault, conversationKeys, visibility, realtimeSignals);
+            keyVault, conversationKeys, visibility, realtimeSignals, installer);
         commentMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         stories = new StoryPresenter(session, net.Grams, net.Media, images, lodestone, VelvetArt.StoryRing, VelvetTheme.Palette,
             new StoryConfirmLabels(L.Velvet.DeleteConfirm, L.Velvet.DeleteCancel, L.Velvet.Saving), confirm,
@@ -88,6 +95,8 @@ internal sealed partial class VelvetShell : IPhoneApp
         this.http = http;
         this.images = images;
         this.social = social;
+        activityFeed = new SocialActivityFeed(SocialActivity.VelvetApp, session, net.Account);
+        loadOlderActivity = activityFeed.LoadOlder;
         this.confirm = confirm;
         this.report = report;
         this.conduct = conduct;
@@ -95,12 +104,13 @@ internal sealed partial class VelvetShell : IPhoneApp
         avatar = new AvatarComposer(() => store.AvatarBusy, store.UpdateAvatar,
             new AvatarComposerLabels(L.Velvet.ChangePhoto, L.Velvet.ImportFromPc, L.Velvet.NoPhotos,
                 L.Velvet.MoveAndScale, L.Velvet.Use, L.Velvet.Saving, L.Velvet.GestureHint), library,
-            wallpaperImages);
-        post = new VelvetPostComposer(store, stories, library, images, lodestone, wallpaperImages);
+            wallpaperImages, confirm, () => store.AvatarFailure);
+        post = new VelvetPostComposer(store, stories, library, images, lodestone, wallpaperImages, OpenPostTags);
         router = new ViewRouter<VelvetView>(VelvetView.Root);
         drawView = DrawView;
         back = () => router.Pop();
         threadView = new ThreadView(this);
+        LoadMutes();
     }
 
     public string Id => "velvet";
@@ -113,26 +123,32 @@ internal sealed partial class VelvetShell : IPhoneApp
 
     public int BadgeCount => store.UnreadCount + store.RequestCount;
 
-    public bool IsAvailable => !IsLalafellCharacter();
+    public ShareKindSet AcceptedShares =>
+        GateAccepted && store.IsSignedIn && configuration.IsVelvetOnboarded()
+            ? ShareKindSet.Photo
+            : ShareKindSet.None;
 
-    private bool IsLalafellCharacter()
+    public void OnShare(in ShareItem item)
     {
-        const byte lalafellRaceId = 3;
-        if (!Plugin.Framework.IsInFrameworkUpdateThread)
+        if (item.Kind != ShareKind.Photo)
         {
-            return cachedLalafell;
+            return;
         }
 
-        var local = gameData.LocalPlayer;
-        if (local is null)
+        pendingSharedPhoto = item.LocalPath;
+    }
+
+    private void ConsumeSharedPhoto()
+    {
+        var path = pendingSharedPhoto;
+        if (string.IsNullOrEmpty(path))
         {
-            return cachedLalafell;
+            return;
         }
 
-        var customize = local.Customize;
-        var raceIndex = (int)CustomizeIndex.Race;
-        cachedLalafell = customize.Length > raceIndex && customize[raceIndex] == lalafellRaceId;
-        return cachedLalafell;
+        pendingSharedPhoto = null;
+        post.OpenWith(path);
+        router.Push(VelvetView.Compose);
     }
 
     public void OnOpened()
@@ -145,6 +161,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         {
             store.EnsureMe();
             stories.RefreshTray();
+            ApplyFeedFilters();
         }
 
         if (launcher.TryConsume(out var targetUserId) && GateAccepted && configuration.IsVelvetOnboarded() &&
@@ -171,9 +188,11 @@ internal sealed partial class VelvetShell : IPhoneApp
     public void OnClosed()
     {
         router.Reset();
+        postMenu.Close();
         avatarLightbox.Reset();
         store.ClearDiscover();
-        filterSheet.Close();
+        discoverInclude.Clear();
+        feedInclude.Clear();
         activeTab = VelvetPage.Discover;
         stories.Close();
     }
@@ -189,6 +208,16 @@ internal sealed partial class VelvetShell : IPhoneApp
             TourHolds.Hold(Id);
             EmptyState.Draw(context.Content, ui, FontAwesomeIcon.Moon, Loc.T(L.Velvet.SignedOutTitle),
                 Loc.T(L.Velvet.SignedOutHint));
+            return;
+        }
+
+        if (IsLalafellCharacter() || store.AccessBlocked)
+        {
+            TourHolds.Hold(Id);
+            store.EnsureMe();
+            TickHeartbeat();
+            EmptyState.Draw(context.Content, ui, FontAwesomeIcon.Ban, Loc.T(L.Velvet.UnavailableTitle),
+                Loc.T(L.Velvet.UnavailableBody));
             return;
         }
 
@@ -212,6 +241,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         GateMenus();
         var screen = SceneChrome.ScreenFrom(context.Content, theme, ImGuiHelpers.GlobalScale);
         ui.Backdrop(screen);
+        ConsumeSharedPhoto();
         stories.Advance();
         if (photoViewer.Active)
         {
@@ -253,8 +283,28 @@ internal sealed partial class VelvetShell : IPhoneApp
         if (sinceHeartbeat >= HeartbeatSeconds)
         {
             sinceHeartbeat = 0f;
-            store.Heartbeat();
+            store.Heartbeat(SocialRegion.EffectiveCode(configuration, gameData), IsLalafellCharacter());
         }
+    }
+
+    private bool IsLalafellCharacter()
+    {
+        const byte lalafellRaceId = 3;
+        if (!Plugin.Framework.IsInFrameworkUpdateThread)
+        {
+            return cachedLalafell;
+        }
+
+        var local = gameData.LocalPlayer;
+        if (local is null)
+        {
+            return cachedLalafell;
+        }
+
+        var customize = local.Customize;
+        var raceIndex = (int)CustomizeIndex.Race;
+        cachedLalafell = customize.Length > raceIndex && customize[raceIndex] == lalafellRaceId;
+        return cachedLalafell;
     }
 
     private void DrawView(VelvetView view, Rect area, int depth)
@@ -307,6 +357,15 @@ internal sealed partial class VelvetShell : IPhoneApp
             case VelvetScreenId.Reactions:
                 threadView.DrawReactions(area, view.Arg ?? string.Empty);
                 break;
+            case VelvetScreenId.Filters:
+                DrawFilters(area);
+                break;
+            case VelvetScreenId.PostTags:
+                DrawPostTags(area);
+                break;
+            case VelvetScreenId.Encryption:
+                threadView.DrawEncryptionScreen(area);
+                break;
             default:
                 DrawRoot(area);
                 break;
@@ -352,6 +411,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         };
         if (VHeader.Root(headerRect, title, theme, 0))
         {
+            activityFeed.Invalidate();
             router.Push(VelvetView.Activity);
         }
 
@@ -393,11 +453,6 @@ internal sealed partial class VelvetShell : IPhoneApp
                 break;
         }
 
-        if (activeTab == VelvetPage.Discover)
-        {
-            DrawDiscoverFilterSheet(area);
-        }
-
         var messageBadge = store.UnreadCount + store.RequestCount;
         var tabs = new[]
         {
@@ -423,12 +478,15 @@ internal sealed partial class VelvetShell : IPhoneApp
                 RefreshFeed();
             }
 
-            activeTab = (VelvetPage)picked;
-            if (activeTab != VelvetPage.Discover)
+            if (picked != (int)activeTab)
             {
-                filterSheet.Close();
+                postMenu.Close();
             }
+
+            activeTab = (VelvetPage)picked;
         }
+
+        DrawPostMenu(area, true);
     }
 
     private void DrawRichBody(ImDrawListPtr drawList, RichTextLayout layout, Vector2 origin)
@@ -448,7 +506,6 @@ internal sealed partial class VelvetShell : IPhoneApp
             return;
         }
 
-        filterSheet.Close();
         store.OpenProfile(userId);
         router.Push(VelvetView.Profile(userId));
     }
@@ -460,7 +517,6 @@ internal sealed partial class VelvetShell : IPhoneApp
             return;
         }
 
-        filterSheet.Close();
         activeTab = VelvetPage.Messages;
         router.Push(VelvetView.Thread(userId));
     }

@@ -18,6 +18,7 @@ internal sealed partial class VelvetShell
     private int onboardStep;
     private int onboardIntent;
     private int onboardGender;
+    private int onboardSexuality;
     private int onboardWho;
     private string onboardName = string.Empty;
     private string onboardHandle = string.Empty;
@@ -26,6 +27,7 @@ internal sealed partial class VelvetShell
     private bool onboardAvatarEditing;
     private readonly List<string> onboardTags = new();
     private readonly List<string> onboardRole = new();
+    private readonly List<string> onboardKinks = new();
 
     private void DrawOnboarding(Rect area)
     {
@@ -36,6 +38,7 @@ internal sealed partial class VelvetShell
             onboardName = seed.DisplayName;
             onboardHandle = seed.Handle;
             onboardGender = VelvetGender.Sanitize(seed.Gender);
+            onboardSexuality = VelvetSexuality.Sanitize(seed.Sexuality);
             onboardSeeded = true;
         }
 
@@ -276,7 +279,7 @@ internal sealed partial class VelvetShell
         var textLeft = tileMax.X + 14f * scale;
         var textWidth = rect.Max.X - 46f * scale - textLeft;
         var blurb = Typography.FitText(Loc.T(def.Blurb), textWidth, TextStyles.Subheadline);
-        var label = Loc.T(def.Label);
+        var label = Typography.FitText(Loc.T(def.Label), textWidth, TextStyles.Headline);
         var labelSize = Typography.Measure(label, TextStyles.Headline);
         var blurbSize = Typography.Measure(blurb, TextStyles.Subheadline);
         var textTop = rect.Center.Y - (labelSize.Y + 3f * scale + blurbSize.Y) * 0.5f;
@@ -326,13 +329,23 @@ internal sealed partial class VelvetShell
             DrawGenderPicker(ref onboardGender);
             Gap(18f);
 
+            VSectionHeader.Card(FontAwesomeIcon.Rainbow, Loc.T(L.Velvet.CardSexuality));
+            Gap(6f);
+            DrawSexualityPicker(ref onboardSexuality);
+            Gap(18f);
+
             if (VelvetIntent.IncludesErp(onboardIntent))
             {
                 VSectionHeader.Card(FontAwesomeIcon.Heart, Loc.T(L.Velvet.YourRole));
                 Gap(4f);
                 ui.HelpText(Loc.T(L.Velvet.RoleErpHelp));
                 Gap(8f);
-                DrawCategoryPicker(VelvetSuggestions.DynamicCategories, onboardRole);
+                DrawTagFlow(VelvetSuggestions.Roles, onboardRole, VelvetTheme.Rose);
+                Gap(18f);
+
+                VSectionHeader.Card(FontAwesomeIcon.Fire, Loc.T(L.Velvet.CardKinks));
+                Gap(8f);
+                DrawTagFlow(VelvetSuggestions.Kinks, onboardKinks, new Vector4(0.647f, 0.482f, 0.839f, 1f));
                 Gap(18f);
             }
 
@@ -396,12 +409,12 @@ internal sealed partial class VelvetShell
 
         var textLeft = center.X + radius + 16f * scale;
         var textWidth = rect.Max.X - 16f * scale - textLeft;
-        var name = Typography.FitText(DisplayNameOf(onboardName, onboardHandle), textWidth, TextStyles.Headline);
-        var intent = Typography.FitText(VelvetIntent.Summary(onboardIntent), textWidth, TextStyles.Subheadline);
-        Typography.Draw(new Vector2(textLeft, rect.Center.Y - 20f * scale), name, VelvetTheme.TitleInk,
-            TextStyles.Headline);
-        Typography.Draw(new Vector2(textLeft, rect.Center.Y + 3f * scale), intent, VelvetTheme.RoseInk,
-            TextStyles.Subheadline);
+        var name = DisplayNameOf(onboardName, onboardHandle);
+        var intent = VelvetIntent.Summary(onboardIntent);
+        Marquee.DrawLeftAuto("velvet.onboard.summary.name", name, textLeft, rect.Center.Y - 20f * scale, textWidth,
+            TextStyles.Headline, VelvetTheme.TitleInk);
+        Marquee.DrawLeftAuto("velvet.onboard.summary.intent", intent, textLeft, rect.Center.Y + 3f * scale, textWidth,
+            TextStyles.Subheadline, VelvetTheme.RoseInk);
     }
 
     private void FinishOnboarding()
@@ -410,11 +423,13 @@ internal sealed partial class VelvetShell
         configuration.VelvetOnboardedVersion = Configuration.VelvetOnboardVersion;
         configuration.Save();
 
-        var role = VelvetIntent.IncludesErp(onboardIntent) ? onboardRole.ToArray() : Array.Empty<string>();
+        var includesErp = VelvetIntent.IncludesErp(onboardIntent);
+        var role = includesErp ? onboardRole.ToArray() : Array.Empty<string>();
+        var kinks = includesErp ? onboardKinks.ToArray() : Array.Empty<string>();
         var dynamic = VelvetTags.Join(role);
         var request = new UpdateVelvetProfileRequest(onboardIntro.Trim(), null, dynamic, onboardTags.ToArray(), null,
             VelvetIntent.Sanitize(onboardIntent), null, onboardDiscoverable, onboardWho,
-            VelvetGender.Sanitize(onboardGender));
+            VelvetGender.Sanitize(onboardGender), VelvetSexuality.Sanitize(onboardSexuality), kinks);
 
         var me = store.Me;
         var identityChanged = me is not null &&

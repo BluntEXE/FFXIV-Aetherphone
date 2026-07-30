@@ -26,7 +26,7 @@ internal static class HoverButton
         var scale = ImGuiHelpers.GlobalScale;
         var min = new Vector2(center.X - radius, center.Y - radius);
         var max = new Vector2(center.X + radius, center.Y + radius);
-        var hovered = interactive && ImGui.IsMouseHoveringRect(min, max);
+        var hovered = interactive && UiInteract.Hover(min, max);
         var eased = Step(id, hovered, delta);
         var grow = 1f + GrowAmount * eased;
         var scaledRadius = radius * grow;

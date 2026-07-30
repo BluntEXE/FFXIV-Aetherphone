@@ -18,7 +18,8 @@ internal sealed partial class MarketApp
     {
         var scale = ImGuiHelpers.GlobalScale;
         var context = new PhoneContext(area, frameTheme, frameNavigation);
-        AppHeader.Draw(context, MarketFormat.Clip(view.Name, 18), backToList);
+        AppHeader.Draw(context, string.Empty, backToList);
+        DrawHeaderTitle(area, view.Name);
         DrawHeaderButtons(area, view, out var forceRefresh);
         var scope = CurrentScope;
         if (!scope.IsValid)
@@ -71,15 +72,31 @@ internal sealed partial class MarketApp
         var drawList = ImGui.GetWindowDrawList();
         var iconSize = 56f * scale;
         var leftPad = 14f * scale;
-        var cardHeight = iconSize + 24f * scale;
+        var pillHeight = 26f * scale;
+        var pillRowGap = 8f * scale;
+        var bottomPad = 12f * scale;
         var cardRounding = 14f * scale;
+        var tileRounding = 13f * scale;
+
+        var iconMin = new Vector2(origin.X + leftPad, origin.Y + 12f * scale);
+        var iconMax = iconMin + new Vector2(iconSize, iconSize);
+        var textX = iconMax.X + 14f * scale;
+        var textTop = iconMin.Y + 4f * scale;
+        var priceY = textTop + 26f * scale;
+        var min = snapshot.Min(hq);
+        var priceText = PriceOrDash(min);
+        var priceFullSize = Typography.Measure(priceText, 1.4f, FontWeight.SemiBold);
+        var cheapestLabel = hq ? Loc.T(L.Market.CheapestHq) : Loc.T(L.Market.Cheapest);
+        var labelSize = Typography.Measure(cheapestLabel, 0.78f, FontWeight.Regular);
+        var labelY = priceY + priceFullSize.Y + 2f * scale;
+        var pillY = labelY + labelSize.Y + pillRowGap;
+        var contentBottom = hasHq ? pillY + pillHeight : labelY + labelSize.Y;
+        var cardHeight = MathF.Max(iconSize + 24f * scale, contentBottom - origin.Y + bottomPad);
+
         var cardMin = new Vector2(origin.X, origin.Y);
         var cardMax = new Vector2(origin.X + width, origin.Y + cardHeight);
         Squircle.Fill(drawList, cardMin, cardMax, cardRounding, ImGui.GetColorU32(frameTheme.GroupedCard));
         Material.EdgeSquircle(drawList, cardMin, cardMax, cardRounding, scale);
-        var tileRounding = 13f * scale;
-        var iconMin = new Vector2(origin.X + leftPad, origin.Y + (cardHeight - iconSize) * 0.5f);
-        var iconMax = iconMin + new Vector2(iconSize, iconSize);
         Elevation.Card(drawList, iconMin, iconMax, tileRounding, scale, 0.5f);
         Squircle.Fill(drawList, iconMin, iconMax, tileRounding, ImGui.GetColorU32(AppPalettes.Market.CardFill));
         if (view.IconId != 0)
@@ -91,32 +108,23 @@ internal sealed partial class MarketApp
         }
 
         Material.EdgeSquircle(drawList, iconMin, iconMax, tileRounding, scale);
-        var textX = iconMax.X + 14f * scale;
-        var textTop = iconMin.Y + 4f * scale;
-        Typography.Draw(new Vector2(textX, textTop), MarketFormat.Clip(view.Name, 18), frameTheme.TextStrong,
-            TextStyles.Title3);
-        var min = snapshot.Min(hq);
-        var priceText = PriceOrDash(min);
-        var priceSize = Typography.Measure(priceText, 1.4f, FontWeight.SemiBold);
-        Typography.Draw(new Vector2(textX, textTop + 26f * scale), priceText, AppPalettes.Market.Accent, 1.4f,
-            FontWeight.SemiBold);
-        var cheapestLabel = hq ? Loc.T(L.Market.CheapestHq) : Loc.T(L.Market.Cheapest);
-        Typography.Draw(
-            new Vector2(textX + priceSize.X + 8f * scale, textTop + 28f * scale + priceSize.Y * 0.5f - 6f * scale),
-            cheapestLabel, frameTheme.TextMuted, 0.78f);
+        var titleMaxWidth = MathF.Max(1f, origin.X + width - 16f * scale - textX);
+        Marquee.DrawLeftAuto("market.detail.hero." + view.ItemId, view.Name, textX, textTop, titleMaxWidth,
+            TextStyles.Title3, frameTheme.TextStrong);
+        var priceMaxWidth = MathF.Max(1f, origin.X + width - 16f * scale - textX);
+        Marquee.DrawLeftAuto("market.detail.price." + view.ItemId, priceText, textX, priceY,
+            priceMaxWidth, new TextStyle(1.4f, FontWeight.SemiBold), AppPalettes.Market.Accent);
+        var labelMaxWidth = MathF.Max(1f, origin.X + width - 16f * scale - textX);
+        Marquee.DrawLeftAuto("market.detail.cheapest." + view.ItemId, cheapestLabel, textX, labelY, labelMaxWidth,
+            new TextStyle(0.78f, FontWeight.Regular), frameTheme.TextMuted);
         if (hasHq)
         {
             var pillGap = 6f * scale;
-            var pillHeight = 26f * scale;
-            var nqWidth = Typography.Measure(Loc.T(L.Common.Nq), 0.82f, FontWeight.SemiBold).X + 18f * scale;
-            var hqWidth = Typography.Measure(Loc.T(L.Common.Hq), 0.82f, FontWeight.SemiBold).X + 18f * scale;
-            var pillY = iconMax.Y - pillHeight - 2f * scale;
-            var pillTotalWidth = nqWidth + pillGap + hqWidth;
-            var pillStartX = origin.X + width - 16f * scale - pillTotalWidth;
-            var nqRect = new Rect(new Vector2(pillStartX, pillY),
-                new Vector2(pillStartX + nqWidth, pillY + pillHeight));
-            var hqRect = new Rect(new Vector2(pillStartX + nqWidth + pillGap, pillY),
-                new Vector2(pillStartX + nqWidth + pillGap + hqWidth, pillY + pillHeight));
+            var nqWidth = Typography.Measure(Loc.T(L.Common.Nq), 0.82f, FontWeight.SemiBold).X + pillHeight + 6f * scale;
+            var hqWidth = Typography.Measure(Loc.T(L.Common.Hq), 0.82f, FontWeight.SemiBold).X + pillHeight + 6f * scale;
+            var nqRect = new Rect(new Vector2(textX, pillY), new Vector2(textX + nqWidth, pillY + pillHeight));
+            var hqRect = new Rect(new Vector2(textX + nqWidth + pillGap, pillY),
+                new Vector2(textX + nqWidth + pillGap + hqWidth, pillY + pillHeight));
             if (ui.PillButton(nqRect, Loc.T(L.Common.Nq), !showHq))
             {
                 SetQuality(false);
@@ -259,7 +267,7 @@ internal sealed partial class MarketApp
         var height = 42f * scale;
         var min = origin;
         var max = new Vector2(origin.X + width, origin.Y + height);
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
         var fill = pressed ? Palette.Mix(frameTheme.Accent, new Vector4(0f, 0f, 0f, 1f), 0.14f) :
             hovered ? Palette.Mix(frameTheme.Accent, frameTheme.TextStrong, 0.10f) : frameTheme.Accent;
@@ -375,6 +383,13 @@ internal sealed partial class MarketApp
         card.End();
     }
 
+    private void DrawHeaderTitle(Rect area, string name)
+    {
+        var scale = ImGuiHelpers.GlobalScale;
+        AppHeader.DrawTitleWithReserve(area, "market.detail.header." + name, name, 64f * scale, frameTheme.TextStrong,
+            scale);
+    }
+
     private void DrawHeaderButtons(Rect area, MarketView view, out bool forceRefresh)
     {
         var scale = ImGuiHelpers.GlobalScale;
@@ -394,7 +409,7 @@ internal sealed partial class MarketApp
     {
         var scale = ImGuiHelpers.GlobalScale;
         var box = 14f * scale;
-        var hovered = ImGui.IsMouseHoveringRect(center - new Vector2(box, box), center + new Vector2(box, box));
+        var hovered = UiInteract.Hover(center - new Vector2(box, box), center + new Vector2(box, box));
         var glyph = icon.ToIconString();
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {

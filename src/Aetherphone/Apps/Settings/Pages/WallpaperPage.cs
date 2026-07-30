@@ -52,7 +52,7 @@ internal sealed class WallpaperPage : ISettingsPage
         this.wallpapers = wallpapers;
         this.wallpaperImages = wallpaperImages;
         assign = Assign;
-        editingDark = wallpapers.Darkness >= 0.5f;
+        editingDark = wallpapers.ThemeDarkness >= 0.5f;
     }
 
     public void Draw(in PhoneContext context, Rect body)
@@ -137,7 +137,7 @@ internal sealed class WallpaperPage : ISettingsPage
             return;
         }
 
-        if (ImGui.IsMouseHoveringRect(rect.Min, new Vector2(rect.Max.X, rect.Max.Y + 24f * scale)))
+        if (UiInteract.Hover(rect.Min, new Vector2(rect.Max.X, rect.Max.Y + 24f * scale)))
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
@@ -242,7 +242,7 @@ internal sealed class WallpaperPage : ISettingsPage
         var extent = new Vector2(radius, radius);
         var min = center - extent;
         var max = center + extent;
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         dl.AddCircleFilled(center, radius, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, hovered ? 0.72f : 0.55f)), 24);
         var arm = 4f * scale;
         var ink = ImGui.GetColorU32(hovered ? theme.Danger : new Vector4(1f, 1f, 1f, 0.9f));
@@ -273,8 +273,8 @@ internal sealed class WallpaperPage : ISettingsPage
         var optionsTop = optionsBottom - rowHeight * 2f;
         var cardMin = new Vector2(left, optionsTop);
         var cardMax = new Vector2(right, cancelTop + rowHeight);
-        var overCard = ImGui.IsMouseHoveringRect(cardMin, cardMax);
-        if (canDismiss && !overCard && ImGui.IsMouseHoveringRect(body.Min, body.Max) &&
+        var overCard = UiInteract.Hover(cardMin, cardMax);
+        if (canDismiss && !overCard && UiInteract.Hover(body.Min, body.Max) &&
             ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
             overlay = Overlay.None;
@@ -313,7 +313,7 @@ internal sealed class WallpaperPage : ISettingsPage
 
     private static bool DrawSheetRow(Rect rect, string label, Vector4 color)
     {
-        var hovered = ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = UiInteract.Hover(rect.Min, rect.Max);
         if (hovered)
         {
             ImGui.GetWindowDrawList().AddRectFilled(rect.Min, rect.Max,
@@ -417,7 +417,7 @@ internal sealed class WallpaperPage : ISettingsPage
         var dl = ImGui.GetWindowDrawList();
         var radius = 12f * scale;
         var hovered =
-            ImGui.IsMouseHoveringRect(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
+            UiInteract.Hover(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
         var arm = 5f * scale;
         var ink = ImGui.GetColorU32(hovered ? theme.TextStrong : theme.TextMuted);
         dl.AddLine(new Vector2(center.X - arm, center.Y - arm), new Vector2(center.X + arm, center.Y + arm), ink,
@@ -434,7 +434,7 @@ internal sealed class WallpaperPage : ISettingsPage
 
     private void LaunchFileDialog()
     {
-        NativeFileDialog.PickImage(Loc.T(L.Wallpaper.Add), path => Interlocked.Exchange(ref pendingFilePath, path));
+        FilePicker.PickImage(Loc.T(L.Wallpaper.Add), path => Interlocked.Exchange(ref pendingFilePath, path));
     }
 
     private string ActiveSelectedId() => editingDark ? configuration.DarkWallpaperId : configuration.LightWallpaperId;

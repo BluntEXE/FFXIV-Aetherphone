@@ -39,7 +39,7 @@ internal static class StatusBar
         return cachedTime;
     }
 
-    public static void Draw(Rect screen, PhoneTheme theme)
+    public static void Draw(Rect screen, PhoneTheme theme, bool landscape)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var rowCenterY = screen.Min.Y + 22f * scale;
@@ -47,7 +47,10 @@ internal static class StatusBar
         var localTime = CurrentTime();
         var timeSize = Typography.Measure(localTime, TimeScale, TimeWeight);
         var island = BaseIsland(screen);
-        DeviceChrome.DrawIsland(island, theme);
+        if (!landscape)
+        {
+            DeviceChrome.DrawIsland(island, theme);
+        }
         var earGap = EarGap * scale;
         var timeLeft = MathF.Min(screen.Min.X + TimePadding * scale,
             island.Min.X - earGap - timeSize.X - DndWidth(scale));

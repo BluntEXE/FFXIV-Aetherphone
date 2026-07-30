@@ -17,9 +17,11 @@ internal struct ChatComposerModel
     public bool Sending;
     public bool CanImage;
     public bool CanVoice;
+    public bool CanLocation;
     public bool CanHandleEscape;
     public Func<int> ResolveVoiceInput;
     public Action<string> OnPickImage;
+    public Action<string> OnShareLocation;
     public Action<string, string, string?> OnSendText;
     public Action<string, string, string> OnEditText;
     public Action<string, byte[], int> OnSendVoice;
@@ -164,7 +166,7 @@ internal sealed class ChatComposer : IDisposable
         var emojiCenter = new Vector2(pillMin.X + iconRadius + 5f * scale, area.Center.Y);
         var emojiMin = emojiCenter - new Vector2(iconRadius, iconRadius);
         var emojiMax = emojiCenter + new Vector2(iconRadius, iconRadius);
-        var emojiHovered = ImGui.IsMouseHoveringRect(emojiMin, emojiMax);
+        var emojiHovered = UiInteract.Hover(emojiMin, emojiMax);
         var emojiColor = emojiOpen ? ui.Accent : emojiHovered ? theme.TextStrong : ui.MutedInk;
         AppSkin.Icon(emojiCenter, FontAwesomeIcon.Smile.ToIconString(), emojiColor, 0.95f);
         HoverTooltip.Show(new Rect(emojiMin, emojiMax), Loc.T(L.Common.Emoji), HoverLabelSide.Above);
@@ -178,12 +180,13 @@ internal sealed class ChatComposer : IDisposable
         }
 
         var textRight = pillMax.X - 14f * scale;
+        var trailingIconX = pillMax.X - iconRadius - 5f * scale;
         if (model.CanImage)
         {
-            var pictureCenter = new Vector2(pillMax.X - iconRadius - 5f * scale, area.Center.Y);
+            var pictureCenter = new Vector2(trailingIconX, area.Center.Y);
             var pictureMin = pictureCenter - new Vector2(iconRadius, iconRadius);
             var pictureMax = pictureCenter + new Vector2(iconRadius, iconRadius);
-            var pictureHovered = ImGui.IsMouseHoveringRect(pictureMin, pictureMax);
+            var pictureHovered = UiInteract.Hover(pictureMin, pictureMax);
             AppSkin.Icon(pictureCenter, FontAwesomeIcon.Image.ToIconString(),
                 pictureHovered ? theme.TextStrong : ui.MutedInk, 0.95f);
             HoverTooltip.Show(new Rect(pictureMin, pictureMax), Loc.T(L.Velvet.SendPicture), HoverLabelSide.Above);
@@ -196,7 +199,30 @@ internal sealed class ChatComposer : IDisposable
                 }
             }
 
+            trailingIconX = pictureMin.X - iconRadius - 4f * scale;
             textRight = pictureMin.X - 6f * scale;
+        }
+
+        if (model.CanLocation)
+        {
+            var locationCenter = new Vector2(trailingIconX, area.Center.Y);
+            var locationMin = locationCenter - new Vector2(iconRadius, iconRadius);
+            var locationMax = locationCenter + new Vector2(iconRadius, iconRadius);
+            var locationHovered = UiInteract.Hover(locationMin, locationMax);
+            AppSkin.Icon(locationCenter, FontAwesomeIcon.MapMarkerAlt.ToIconString(),
+                locationHovered ? theme.TextStrong : ui.MutedInk, 0.95f);
+            HoverTooltip.Show(new Rect(locationMin, locationMax), Loc.T(L.Message.ShareLocation),
+                HoverLabelSide.Above);
+            if (locationHovered)
+            {
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+                {
+                    model.OnShareLocation(model.ConversationId);
+                }
+            }
+
+            textRight = locationMin.X - 6f * scale;
         }
 
         var textLeft = emojiMax.X + 4f * scale;

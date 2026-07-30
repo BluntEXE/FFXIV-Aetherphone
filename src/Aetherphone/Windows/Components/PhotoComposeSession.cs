@@ -88,7 +88,7 @@ internal sealed class PhotoComposeSession
 
     public void LaunchImportDialog(string title)
     {
-        NativeFileDialog.PickImage(title, path => Interlocked.Exchange(ref pendingPickedPath, path));
+        FilePicker.PickImage(title, path => Interlocked.Exchange(ref pendingPickedPath, path));
     }
 
     public void ConsumePendingImport()
@@ -282,13 +282,14 @@ internal sealed class PhotoComposeSession
         }
     }
 
-    public void DrawCropCanvas(Rect area, float scale, float aspect, in PhotoComposeStyle style, string gestureHint)
+    public void DrawCropCanvas(Rect area, float scale, float aspect, in PhotoComposeStyle style, string gestureHint,
+        float footerReserve = 0f)
     {
         var deltaSeconds = MathF.Min(ImGui.GetIO().DeltaTime, 0.1f);
         var drawList = ImGui.GetWindowDrawList();
         var top = area.Min.Y + AppHeader.Height * scale;
         var stageRect = new Rect(new Vector2(area.Min.X + 16f * scale, top + 12f * scale),
-            new Vector2(area.Max.X - 16f * scale, area.Max.Y - 96f * scale));
+            new Vector2(area.Max.X - 16f * scale, area.Max.Y - (96f + footerReserve) * scale));
         var preview = ImageFit.CenteredRect(stageRect, aspect);
         var rounding = 18f * scale;
         var texture = wallpaperImages.Get(CurrentPath);
@@ -325,7 +326,7 @@ internal sealed class PhotoComposeSession
 
     private void HandleCropGestures(Rect preview, Vector2 size, Vector2 visible, float aspect)
     {
-        var hovering = ImGui.IsMouseHoveringRect(preview.Min, preview.Max);
+        var hovering = UiInteract.Hover(preview.Min, preview.Max);
         if (hovering)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

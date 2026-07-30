@@ -108,9 +108,14 @@ internal static class VRow
             rightEdge -= 22f * scale;
         }
 
+        var overControl = false;
         if (model.Decline)
         {
-            if (ui.IconButton(new Vector2(rightEdge - 10f * scale, centerY), 13f * scale,
+            var declineCenter = new Vector2(rightEdge - 10f * scale, centerY);
+            var declineRadius = 13f * scale;
+            var declineHit = new Vector2(declineRadius, declineRadius);
+            overControl |= UiInteract.Hover(declineCenter - declineHit, declineCenter + declineHit);
+            if (ui.IconButton(declineCenter, declineRadius,
                     FontAwesomeIcon.Times.ToIconString(), VelvetTheme.MutedInk, AppSkin.Transparent, 0.9f))
             {
                 hit = VRowHit.Decline;
@@ -127,6 +132,7 @@ internal static class VRow
                 new Vector2(rightEdge, centerY + pillHeight * 0.5f));
             if (model.PillEnabled)
             {
+                overControl |= UiInteract.Hover(pillRect.Min, pillRect.Max);
                 if (ui.PillButton(pillRect, model.Pill, model.PillFilled))
                 {
                     hit = VRowHit.Pill;
@@ -157,22 +163,27 @@ internal static class VRow
         var innerWidth = MathF.Max(10f * scale, textRight - textLeft);
         if (subtitleText.Length == 0)
         {
-            var title = Typography.FitText(titleText, innerWidth, TextStyles.Headline);
-            var titleSize = Typography.Measure(title, TextStyles.Headline);
-            Typography.Draw(new Vector2(textLeft, centerY - titleSize.Y * 0.5f), title, VelvetTheme.TitleInk,
-                TextStyles.Headline);
+            var titleSize = Typography.Measure(titleText, TextStyles.Headline);
+            Marquee.DrawLeft("vrow.title." + titleText, titleText, textLeft, centerY - titleSize.Y * 0.5f,
+                innerWidth, TextStyles.Headline, VelvetTheme.TitleInk, hovered);
         }
         else
         {
-            var title = Typography.FitText(titleText, innerWidth, TextStyles.Headline);
-            Typography.Draw(new Vector2(textLeft, centerY - 15f * scale), title, VelvetTheme.TitleInk,
-                TextStyles.Headline);
-            var subtitle = Typography.FitText(subtitleText, innerWidth, TextStyles.Subheadline);
-            Typography.Draw(new Vector2(textLeft, centerY + 3f * scale), subtitle, VelvetTheme.MutedInk,
-                TextStyles.Subheadline);
+            var titleY = centerY - 15f * scale;
+            var titleSize = Typography.Measure(titleText, TextStyles.Headline);
+            var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleY),
+                new Vector2(textLeft + innerWidth, titleY + titleSize.Y));
+            Marquee.DrawLeft("vrow.title." + titleText, titleText, textLeft, titleY, innerWidth,
+                TextStyles.Headline, VelvetTheme.TitleInk, titleHovering);
+            var subtitleY = centerY + 3f * scale;
+            var subtitleSize = Typography.Measure(subtitleText, TextStyles.Subheadline);
+            var subtitleHovering = UiInteract.Hover(new Vector2(textLeft, subtitleY),
+                new Vector2(textLeft + innerWidth, subtitleY + subtitleSize.Y));
+            Marquee.DrawLeft("vrow.subtitle." + subtitleText, subtitleText, textLeft, subtitleY,
+                innerWidth, TextStyles.Subheadline, VelvetTheme.MutedInk, subtitleHovering);
         }
 
-        if (hit == VRowHit.None && UiInteract.Click(min, max, hovered))
+        if (hit == VRowHit.None && !overControl && UiInteract.Click(min, max, hovered))
         {
             hit = VRowHit.Body;
         }

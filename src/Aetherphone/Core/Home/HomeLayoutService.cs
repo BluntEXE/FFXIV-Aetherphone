@@ -15,7 +15,7 @@ internal sealed class HomeLayoutService
     private static readonly string[] DefaultFirstPageApps =
     {
         "chirper", "aethergram", "velvet", "polls",
-        "camera", "photos", "feedback", "music",
+        "announcements", "camera", "photos", "feedback", "music",
         "maps", "venues", "games", "market",
         "appstore",
     };
@@ -26,10 +26,10 @@ internal sealed class HomeLayoutService
         "clock", "notes", "calculator", "timers",
         "wallet", "dailies", "calendar", "news",
         "character", "notifications", "jobs",
+        "health",
     };
 
-    private static readonly string[] DefaultTrailingApps = { "dev" };
-    private static readonly string[] MandatoryApps = { "appstore", "settings" };
+    private static readonly string[] MandatoryApps = { "appstore", "settings", "announcements" };
 
     private readonly IReadOnlyList<IPhoneApp> apps;
     private readonly WidgetRegistry widgets;
@@ -42,6 +42,8 @@ internal sealed class HomeLayoutService
     private readonly List<HomeTile> overflow = new();
     private readonly bool[] availability;
     private readonly HashSet<string> installed = new();
+    private readonly HashSet<string> known = new();
+    private readonly List<string> revealed = new();
     private int rows;
     private int folderCounter;
     private int widgetCounter;
@@ -91,16 +93,24 @@ internal sealed class HomeLayoutService
         for (var index = 0; index < apps.Count; index++)
         {
             var available = apps[index].IsAvailable;
-            if (availability[index] != available)
+            if (availability[index] == available)
             {
-                availability[index] = available;
-                changed = true;
+                continue;
             }
+
+            if (available && !known.Contains(apps[index].Id))
+            {
+                revealed.Add(apps[index].Id);
+            }
+
+            availability[index] = available;
+            changed = true;
         }
 
         if (changed)
         {
             Load();
+            InstallRevealed();
             return;
         }
 
@@ -251,6 +261,8 @@ internal sealed class HomeLayoutService
         Save();
     }
 
+    public event Action<string>? InstalledChanged;
+
     public bool IsInstalled(string appId) => installed.Contains(appId);
 
     public static bool CanUninstall(string appId)
@@ -275,6 +287,7 @@ internal sealed class HomeLayoutService
 
         Append(HomeTile.ForApp(app));
         Commit();
+        InstalledChanged?.Invoke(appId);
         return true;
     }
 
@@ -286,8 +299,25 @@ internal sealed class HomeLayoutService
         }
 
         DetachApp(appId);
+        DropWidgetsOfUninstalledApps();
         Commit();
+        InstalledChanged?.Invoke(appId);
         return true;
+    }
+
+    private void DropWidgetsOfUninstalledApps()
+    {
+        for (var page = 0; page < pages.Count; page++)
+        {
+            var tiles = pages[page];
+            for (var index = tiles.Count - 1; index >= 0; index--)
+            {
+                if (tiles[index].Widget is { } widget && !installed.Contains(widget.AppId))
+                {
+                    tiles.RemoveAt(index);
+                }
+            }
+        }
     }
 
     private void DetachApp(string appId)
@@ -460,11 +490,6 @@ internal sealed class HomeLayoutService
             SeedDefaultLayout(placed);
         }
 
-        if (saved is null)
-        {
-            AppendTrailingDefaults();
-        }
-
         if (pages.Count == 0)
         {
             pages.Add(new List<HomeTile>());
@@ -475,8 +500,48 @@ internal sealed class HomeLayoutService
         placementsDirty = true;
     }
 
+    private void InstallRevealed()
+    {
+        if (revealed.Count == 0)
+        {
+            return;
+        }
+
+        for (var index = 0; index < revealed.Count; index++)
+        {
+            known.Add(revealed[index]);
+            Install(revealed[index]);
+        }
+
+        revealed.Clear();
+        Save();
+    }
+
+    private void LoadKnown(HomeLayout? saved)
+    {
+        known.Clear();
+        if (saved?.Known is { Count: > 0 } stored)
+        {
+            for (var index = 0; index < stored.Count; index++)
+            {
+                known.Add(stored[index]);
+            }
+
+            return;
+        }
+
+        for (var index = 0; index < apps.Count; index++)
+        {
+            if (apps[index].IsAvailable)
+            {
+                known.Add(apps[index].Id);
+            }
+        }
+    }
+
     private void LoadInstalled(HomeLayout? saved, HashSet<string> placed)
     {
+        LoadKnown(saved);
         installed.Clear();
         if (saved?.Installed is { Count: > 0 } stored)
         {
@@ -511,6 +576,8 @@ internal sealed class HomeLayoutService
         {
             Append(HomeTile.ForApp(queue[index]));
         }
+
+        DropWidgetsOfUninstalledApps();
     }
 
     private void SeedInstalled(HomeLayout? saved)
@@ -633,10 +700,6 @@ internal sealed class HomeLayoutService
         AppendSeedApps(secondPage, DefaultSecondPageApps, placed);
         pages.Add(firstPage);
         pages.Add(secondPage);
-        for (var index = 0; index < DefaultTrailingApps.Length; index++)
-        {
-            placed.Add(DefaultTrailingApps[index]);
-        }
     }
 
     private void AppendSeedApps(List<HomeTile> page, string[] ids, HashSet<string> placed)
@@ -646,17 +709,6 @@ internal sealed class HomeLayoutService
             if (byId.TryGetValue(ids[index], out var app) && app.IsAvailable && placed.Add(app.Id))
             {
                 page.Add(HomeTile.ForApp(app));
-            }
-        }
-    }
-
-    private void AppendTrailingDefaults()
-    {
-        for (var index = 0; index < DefaultTrailingApps.Length; index++)
-        {
-            if (byId.TryGetValue(DefaultTrailingApps[index], out var app) && app.IsAvailable)
-            {
-                Append(HomeTile.ForApp(app));
             }
         }
     }
@@ -807,6 +859,7 @@ internal sealed class HomeLayoutService
 
         SerializePages(layout.Pages);
         layout.Installed = new List<string>(installed);
+        layout.Known = new List<string>(known);
 
         configuration.Home = layout;
         configuration.Save();

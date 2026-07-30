@@ -179,7 +179,7 @@ internal sealed class NewsApp : IPhoneApp
         for (var index = 0; index < count; index++)
         {
             var row = card.NextRow();
-            var hovered = ImGui.IsMouseHoveringRect(row.Min, row.Max);
+            var hovered = UiInteract.Hover(row.Min, row.Max);
             if (category == NewsCategory.Maintenance)
             {
                 DrawMaintenanceRow(row, items[index], scale, hovered);
@@ -315,9 +315,8 @@ internal sealed class NewsApp : IPhoneApp
     {
         var titleY = row.Min.Y + 10f * scale;
         var maxTitleWidth = row.Width - 24f * scale;
-        var clippedTitle = PixelEllipsize(item.Title, maxTitleWidth, RowTitleScale, FontWeight.Medium);
-        Typography.Draw(new Vector2(row.Min.X, titleY), clippedTitle, theme.TextStrong, RowTitleScale,
-            FontWeight.Medium);
+        Marquee.DrawLeft("news.simpleRow." + item.Url, item.Title, row.Min.X, titleY, maxTitleWidth,
+            new TextStyle(RowTitleScale, FontWeight.Medium), theme.TextStrong, hovered);
         Typography.Draw(new Vector2(row.Min.X, titleY + 23f * scale), TimeText.Ago(item.Time), theme.TextMuted,
             MetaScale, FontWeight.Regular);
         DrawChevronRight(new Vector2(row.Max.X, row.Center.Y), 6f * scale, 2.2f * scale,
@@ -335,9 +334,8 @@ internal sealed class NewsApp : IPhoneApp
         var rightPadding = 8f * scale;
         var pillReserved = pillInfo.hasPill ? pillInfo.width + 12f * scale + rightPadding : rightPadding + 4f * scale;
         var maxTitleWidth = row.Width - pillReserved;
-        var clippedTitle = PixelEllipsize(item.Title, maxTitleWidth, RowTitleScale, FontWeight.Medium);
-        Typography.Draw(new Vector2(row.Min.X, titleY), clippedTitle, theme.TextStrong, RowTitleScale,
-            FontWeight.Medium);
+        Marquee.DrawLeft("news.maintenanceRow." + item.Url, item.Title, row.Min.X, titleY, maxTitleWidth,
+            new TextStyle(RowTitleScale, FontWeight.Medium), theme.TextStrong, hovered);
         var sub = item.Start is { } start && item.End is { } end
             ? NewsFormat.Window(start, end)
             : TimeText.Ago(item.Time);
@@ -403,7 +401,7 @@ internal sealed class NewsApp : IPhoneApp
 
         var box = 14f * scale;
         UiAnchors.Report("news.refresh", new Rect(center - new Vector2(box, box), center + new Vector2(box, box)));
-        var hovered = ImGui.IsMouseHoveringRect(center - new Vector2(box, box), center + new Vector2(box, box));
+        var hovered = UiInteract.Hover(center - new Vector2(box, box), center + new Vector2(box, box));
         var glyph = FontAwesomeIcon.Sync.ToIconString();
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
@@ -437,7 +435,7 @@ internal sealed class NewsApp : IPhoneApp
 
     private void InteractCard(Rect rect, float rounding, string url, ImDrawListPtr drawList)
     {
-        var hovered = ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = UiInteract.Hover(rect.Min, rect.Max);
         if (hovered)
         {
             var pressed = ImGui.IsMouseDown(ImGuiMouseButton.Left);

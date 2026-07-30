@@ -4,6 +4,7 @@ using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
@@ -47,9 +48,9 @@ internal sealed class PollsApp : IPhoneApp
     private INavigator navigation = null!;
     private float sinceRefresh;
 
-    public PollsApp(AethernetSession session, PollsClient client)
+    public PollsApp(AethernetSession session, PollsClient client, AppInstaller installer)
     {
-        store = new PollsStore(session, client);
+        store = new PollsStore(session, client, installer.Gate("polls"));
     }
 
     public void OnOpened()
@@ -169,15 +170,12 @@ internal sealed class PollsApp : IPhoneApp
         }
 
         ImGui.SetCursorScreenPos(new Vector2(contentLeft, origin.Y + pad));
-        var wrapPos = contentRight - ImGui.GetWindowPos().X;
-        ImGui.PushTextWrapPos(wrapPos);
+        using (Typography.WrapAt(contentRight))
         using (Plugin.Fonts.Push(1.08f, FontWeight.SemiBold))
         using (ImRaii.PushColor(ImGuiCol.Text, ui.TitleInk))
         {
             Typography.Wrapped(text.Question);
         }
-
-        ImGui.PopTextWrapPos();
 
         var motion = MotionFor(poll);
         var deltaSeconds = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
@@ -206,7 +204,7 @@ internal sealed class PollsApp : IPhoneApp
         var interactive = !poll.Closed;
         var rowMin = new Vector2(left - 8f * scale, top - 4f * scale);
         var rowMax = new Vector2(left + width + 8f * scale, top + height);
-        var hovered = interactive && ImGui.IsMouseHoveringRect(rowMin, rowMax);
+        var hovered = interactive && UiInteract.Hover(rowMin, rowMax);
         if (hovered)
         {
             Squircle.Fill(drawList, rowMin, rowMax, 12f * scale, ImGui.GetColorU32(ui.HoverTint));
@@ -244,15 +242,12 @@ internal sealed class PollsApp : IPhoneApp
         var labelWidth = countLeft - labelLeft - CountGap * scale;
 
         ImGui.SetCursorScreenPos(new Vector2(labelLeft, top + RowTopPad * scale));
-        var wrapPos = labelLeft + labelWidth - ImGui.GetWindowPos().X;
-        ImGui.PushTextWrapPos(wrapPos);
+        using (Typography.WrapAt(labelLeft + labelWidth))
         using (Plugin.Fonts.Push(OptionFontScale, weight))
         using (ImRaii.PushColor(ImGuiCol.Text, Palette.WithAlpha(labelInk, inkAlpha)))
         {
             Typography.Wrapped(optionLabel);
         }
-
-        ImGui.PopTextWrapPos();
 
         Typography.Draw(new Vector2(countLeft, firstLineCenterY - countSize.Y * 0.5f), count,
             Palette.WithAlpha(ui.MutedInk, inkAlpha), CountFontScale, FontWeight.Medium);

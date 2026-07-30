@@ -6,6 +6,7 @@ using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
+using Aetherphone.Core.Maps;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Message;
 using Aetherphone.Core.Net;
@@ -45,16 +46,21 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     protected readonly ChatComposer composer = new();
     protected readonly ChatSearchController searchController = new();
     protected readonly VoiceNotePlayer voicePlayer = new();
+    protected readonly EncryptionInfoPane encryptionPane;
     private readonly PhotoZoomView imageZoom = new();
+    private static readonly TimeSpan VoiceFailureRetryFor = TimeSpan.FromMinutes(2);
     private readonly ConcurrentDictionary<string, byte[]> voiceBytes = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, byte> voiceFetching = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, DateTime> voiceFailed = new(StringComparer.Ordinal);
     private readonly float threadPollSeconds;
     private readonly float typingSendSeconds;
     private readonly Action<string> pickImage;
+    private readonly Action<string> shareLocation;
     private readonly Action<string, string, string?> sendText;
     private readonly Action<string, string, string> editText;
     private readonly Action<string, byte[], int> sendVoice;
     private readonly Func<int> resolveVoiceInput;
+    private string? pendingPrefill;
     private readonly Func<string, bool> canRevealBody;
 
     private volatile string? pendingVoicePlay;
@@ -92,8 +98,10 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         this.wallpaperImages = wallpaperImages;
         this.threadPollSeconds = threadPollSeconds;
         this.typingSendSeconds = typingSendSeconds;
+        encryptionPane = new EncryptionInfoPane(store.Vault, confirm);
         sinceTypingSend = typingSendSeconds;
         pickImage = OpenImagePicker;
+        shareLocation = AskShareLocation;
         sendText = ComposerSendText;
         editText = ComposerEditText;
         sendVoice = ComposerSendVoice;
@@ -127,7 +135,15 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     protected virtual bool IsGroupThread => false;
 
+    protected virtual IChatTranscriptPostCards? PostCards => null;
+
+    protected virtual IChatTranscriptStoryReplies? StoryReplies => null;
+
     protected abstract void DrawHeader(Rect area, string threadId);
+
+    protected virtual void OpenEncryptionInfo(string threadId)
+    {
+    }
 
     protected virtual void DrawAboveTranscript(ref Rect listRect, string threadId)
     {
@@ -179,6 +195,10 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     public void GateMenus() => menuController.Gate();
 
+    /// <summary>Queues text for the composer input; applied on the next Draw, and only when the
+    /// composer is empty so a half-typed message is never clobbered.</summary>
+    public void PrefillDraft(string body) => pendingPrefill = body;
+
     public void RequestScrollTo(string messageId) => transcript.RequestScrollTo(messageId);
 
     public void RequestSnapToBottom() => transcript.RequestSnapToBottom();
@@ -211,6 +231,15 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             OnThreadOpened(threadId);
         }
 
+        if (pendingPrefill is { } prefill)
+        {
+            pendingPrefill = null;
+            if (composer.Draft.Trim().Length == 0)
+            {
+                composer.Draft = prefill;
+            }
+        }
+
         store.NoteThreadViewed(threadId);
         TickThread(threadId);
         DrawHeader(area, threadId);
@@ -229,6 +258,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
         var listRect = new Rect(new Vector2(area.Min.X, top),
             new Vector2(area.Max.X, area.Max.Y - composerHeight - accessoryHeight));
+        DrawVaultBanner(ref listRect, threadId);
         DrawAboveTranscript(ref listRect, threadId);
         var model = new ChatTranscriptModel
         {
@@ -248,6 +278,8 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             Interactions = this,
             Voice = this,
             Paging = this,
+            PostCards = PostCards,
+            StoryReplies = StoryReplies,
         };
         transcript.Draw(listRect, model);
         composer.Draw(new Rect(new Vector2(area.Min.X, area.Max.Y - composerHeight), area.Max), new ChatComposerModel
@@ -258,14 +290,59 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             Sending = store.Sending,
             CanImage = true,
             CanVoice = true,
+            CanLocation = true,
             CanHandleEscape = !searchController.Open,
             ResolveVoiceInput = resolveVoiceInput,
             OnPickImage = pickImage,
+            OnShareLocation = shareLocation,
             OnSendText = sendText,
             OnEditText = editText,
             OnSendVoice = sendVoice,
         });
         DrawMessageMenu(area);
+    }
+
+    private void DrawVaultBanner(ref Rect listRect, string threadId)
+    {
+        var state = store.VaultState;
+        if (state == KeyVaultState.Locked)
+        {
+            ChatHeaderControls.DrawBanner(ui, ref listRect, Loc.T(L.Encryption.LockedBanner), ui.MutedInk,
+                () => OpenEncryptionInfo(threadId));
+            return;
+        }
+
+        if (state != KeyVaultState.Unlocked || store.Vault.RecoveryConfigured
+            || configuration.EncryptionRecoveryNudgeDismissed)
+        {
+            return;
+        }
+
+        ChatHeaderControls.DrawPromptBanner(ui, ref listRect, Loc.T(L.Encryption.RecoveryNudgeBanner), ui.MutedInk,
+            () => OpenEncryptionInfo(threadId),
+            () =>
+            {
+                configuration.EncryptionRecoveryNudgeDismissed = true;
+                configuration.Save();
+            });
+    }
+
+    public void DrawEncryptionScreen(Rect area)
+    {
+        var context = new PhoneContext(area, Theme, Navigation);
+        AppHeader.Draw(context, Loc.T(L.Encryption.InfoTitle), BackAction);
+        var scale = ImGuiHelpers.GlobalScale;
+        var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
+        using (AppSurface.Begin(body))
+        {
+            encryptionPane.DrawBody(ui, Theme, store.IsSignedIn, store.EncryptingCurrent);
+            ImGui.Dummy(new Vector2(0f, 30f * scale));
+        }
+    }
+
+    public void DrawEncryptionEmbedded()
+    {
+        encryptionPane.DrawEmbedded(ui, Theme);
     }
 
     private ReadOnlySpan<TranscriptMessage> BuildTranscript(TMessage[] source)
@@ -342,7 +419,8 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             return;
         }
 
-        menuController.Open(messageId, SenderIdOf(message) == MyUserId, KindOf(message));
+        var kind = ChatText.EffectiveKind(BodyOf(message), KindOf(message));
+        menuController.Open(messageId, SenderIdOf(message) == MyUserId, kind);
     }
 
     private void DrawMessageMenu(Rect area)
@@ -374,7 +452,8 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     protected void BeginEdit(string messageId)
     {
         var message = FindMessage(messageId);
-        if (message is null || KindOf(message) != 0 || IsDeleted(message))
+        if (message is null || IsDeleted(message)
+            || ChatText.EffectiveKind(BodyOf(message), KindOf(message)) != 0)
         {
             return;
         }
@@ -406,6 +485,46 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             Title = Loc.T(L.Encryption.ReportMessageAction),
             Disclosure = Loc.T(L.Encryption.ReportDisclosure),
             Submit = (reason, done) => store.ReportMessage(messageId, reason, done),
+        });
+    }
+
+    private void AskShareLocation(string threadId)
+    {
+        var captured = LocationShare.Capture();
+        if (captured is not { } location)
+        {
+            confirm.Alert(null, Loc.T(L.Message.LocationUnavailable), Loc.T(L.Account.FailDismiss));
+            return;
+        }
+
+        var summary = LocationShare.Summary(location);
+        var prompt = Loc.T(L.Message.ShareLocationConfirm);
+        confirm.Ask(new ConfirmRequest
+        {
+            Title = Loc.T(L.Message.ShareLocation),
+            Message = summary.Length > 0 ? $"{prompt}\n{summary}" : prompt,
+            ConfirmLabel = Loc.T(L.Velvet.Send),
+            CancelLabel = Loc.T(L.Common.Cancel),
+            Danger = false,
+            FailedMessage = Loc.T(L.Message.LocationSendFailed),
+            ConfirmAsync = done =>
+            {
+                if (store.Sending)
+                {
+                    done(false);
+                    return;
+                }
+
+                store.SendMessage(threadId, LocationShare.Compose(location), sent =>
+                {
+                    if (sent)
+                    {
+                        transcript.RequestSnapToBottom();
+                    }
+
+                    done(sent);
+                });
+            },
         });
     }
 
@@ -452,6 +571,16 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             return;
         }
 
+        if (voiceFailed.TryGetValue(messageId, out var failedAtUtc))
+        {
+            if (DateTime.UtcNow - failedAtUtc < VoiceFailureRetryFor)
+            {
+                return;
+            }
+
+            voiceFailed.TryRemove(messageId, out _);
+        }
+
         var url = store.DmMediaUrl(messageId);
         if (url is null || !voiceFetching.TryAdd(messageId, 0))
         {
@@ -465,26 +594,39 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             try
             {
                 var data = await http.GetBytesAsync(new Uri(url), CancellationToken.None).ConfigureAwait(false);
-                if (data is not null)
-                {
-                    var plain = message is not null && IsEncrypted(message)
+                var plain = data is null
+                    ? null
+                    : message is not null && IsEncrypted(message)
                         ? DecryptSealed(message, threadId, data)
                         : data;
-                    if (plain is not null)
-                    {
-                        voiceBytes[messageId] = plain;
-                    }
+                if (plain is not null)
+                {
+                    voiceBytes[messageId] = plain;
+                }
+                else
+                {
+                    MarkVoiceFailed(messageId);
                 }
             }
             catch (Exception exception)
             {
                 AepLog.Warning($"Voice note download failed: {exception.Message}");
+                MarkVoiceFailed(messageId);
             }
             finally
             {
                 voiceFetching.TryRemove(messageId, out _);
             }
         });
+    }
+
+    private void MarkVoiceFailed(string messageId)
+    {
+        voiceFailed[messageId] = DateTime.UtcNow;
+        if (pendingVoicePlay == messageId)
+        {
+            pendingVoicePlay = null;
+        }
     }
 
     private void PumpPendingVoice()
@@ -652,7 +794,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             new Vector2(area.Max.X - 16f * scale, top + 8f * scale + importHeight));
         if (ui.PillButton(importRect, ImportLabel, true))
         {
-            NativeFileDialog.PickImage(PickerTitle, path => Interlocked.Exchange(ref pendingPickedPath, path));
+            FilePicker.PickImage(PickerTitle, path => Interlocked.Exchange(ref pendingPickedPath, path));
         }
 
         var gridRect = new Rect(new Vector2(area.Min.X, importRect.Max.Y + 12f * scale), area.Max);
@@ -795,17 +937,21 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         AvatarView.DrawRemote(drawList, avatarCenter, radius, Theme, label, string.Empty, reactor.AvatarUrl, images,
             lodestone, 0.85f, 32);
         var textLeft = avatarCenter.X + radius + 12f * scale;
+        var labelMaxWidth = MathF.Max(1f, origin.X + width - pad - 40f * scale - textLeft);
+        var rowHovering = UiInteract.Hover(origin, rowMax);
         if (mine)
         {
-            Typography.Draw(new Vector2(textLeft, origin.Y + 10f * scale), label, Theme.TextStrong, 1f,
-                FontWeight.SemiBold);
-            Typography.Draw(new Vector2(textLeft, origin.Y + 31f * scale), Loc.T(L.Message.TapToRemove), ui.MutedInk,
+            Marquee.DrawLeft("chatthread.reactor." + reactor.UserId, label, textLeft, origin.Y + 10f * scale,
+                labelMaxWidth, new TextStyle(1f, FontWeight.SemiBold), Theme.TextStrong, rowHovering);
+            Typography.Draw(new Vector2(textLeft, origin.Y + 31f * scale),
+                Typography.FitText(Loc.T(L.Message.TapToRemove), labelMaxWidth, TextStyles.Footnote), ui.MutedInk,
                 TextStyles.Footnote);
         }
         else
         {
-            Typography.Draw(new Vector2(textLeft, origin.Y + rowHeight * 0.5f - 9f * scale), label, Theme.TextStrong,
-                1f, FontWeight.SemiBold);
+            Marquee.DrawLeft("chatthread.reactor." + reactor.UserId, label, textLeft,
+                origin.Y + rowHeight * 0.5f - 9f * scale, labelMaxWidth, new TextStyle(1f, FontWeight.SemiBold),
+                Theme.TextStrong, rowHovering);
         }
 
         var tokenColor = ReactionArt.Color(reactor.Token);
@@ -838,5 +984,6 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     {
         composer.Dispose();
         voicePlayer.Dispose();
+        encryptionPane.Dispose();
     }
 }

@@ -1,8 +1,12 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Announcements;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Linkpearl;
+using Aetherphone.Core.Moderation;
+using Aetherphone.Core.Muster;
 using Aetherphone.Core.Notifications;
+using Aetherphone.Core.YellowPages;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Windows.Components;
 using Dalamud.Interface.Utility;
@@ -15,21 +19,34 @@ internal sealed class NotificationsApp : IPhoneApp
     public string DisplayName => Loc.T(L.Apps.Notifications);
     public string Glyph => "N";
     public int BadgeCount => notifications.UnreadCount;
+    public bool WantsSystemTheme => true;
     private readonly NotificationService notifications;
     private readonly LinkpearlLauncher linkpearlLauncher;
     private readonly VelvetLauncher velvetLauncher;
     private readonly DmLauncher dmLauncher;
+    private readonly GramDmLauncher gramDmLauncher;
     private readonly SocialLauncher socialLauncher;
+    private readonly MusterLauncher musterLauncher;
+    private readonly YellowPagesLauncher yellowPagesLauncher;
+    private readonly AnnouncementsLauncher announcementsLauncher;
+    private readonly SafetyLauncher safetyLauncher;
     private NotificationCenter? center;
 
     public NotificationsApp(NotificationService notifications, LinkpearlLauncher linkpearlLauncher,
-        VelvetLauncher velvetLauncher, DmLauncher dmLauncher, SocialLauncher socialLauncher)
+        VelvetLauncher velvetLauncher, DmLauncher dmLauncher, GramDmLauncher gramDmLauncher,
+        SocialLauncher socialLauncher, MusterLauncher musterLauncher, YellowPagesLauncher yellowPagesLauncher,
+        AnnouncementsLauncher announcementsLauncher, SafetyLauncher safetyLauncher)
     {
         this.notifications = notifications;
         this.linkpearlLauncher = linkpearlLauncher;
         this.velvetLauncher = velvetLauncher;
         this.dmLauncher = dmLauncher;
+        this.gramDmLauncher = gramDmLauncher;
         this.socialLauncher = socialLauncher;
+        this.musterLauncher = musterLauncher;
+        this.yellowPagesLauncher = yellowPagesLauncher;
+        this.announcementsLauncher = announcementsLauncher;
+        this.safetyLauncher = safetyLauncher;
     }
 
     public void OnOpened()
@@ -45,7 +62,8 @@ internal sealed class NotificationsApp : IPhoneApp
         AppHeader.Draw(context, DisplayName);
         center ??= new NotificationCenter(notifications,
             new NotificationRouter(context.Navigation, notifications, linkpearlLauncher, velvetLauncher, dmLauncher,
-                socialLauncher));
+                gramDmLauncher, socialLauncher, musterLauncher, yellowPagesLauncher, announcementsLauncher,
+                safetyLauncher));
         var scale = ImGuiHelpers.GlobalScale;
         var content = context.Content;
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + AppHeader.Height * scale), content.Max);

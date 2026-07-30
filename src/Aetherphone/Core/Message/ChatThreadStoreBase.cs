@@ -3,8 +3,10 @@ using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Crypto;
+using Aetherphone.Core.Home;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Notifications;
+using Aetherphone.Core.Report;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Core.Message;
@@ -16,11 +18,14 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     protected const int DmImageMaxDimension = 1280;
     protected const int ImageMediaKind = 1;
     protected const int VoiceMediaKind = 3;
+    protected const int PostShareKind = 4;
+    protected const int StoryReplyKind = 5;
     private static readonly TimeSpan ForegroundInboxPollInterval = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan BackgroundInboxPollInterval = TimeSpan.FromSeconds(120);
     private static readonly TimeSpan ViewingGrace = TimeSpan.FromSeconds(4);
     private static readonly TimeSpan VaultRetryInterval = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan KeyStatusRetryInterval = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan ThreadReopenCooldown = TimeSpan.FromSeconds(3);
 
     protected readonly AethernetSession session;
     protected readonly SafetyClient safety;
@@ -31,11 +36,14 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     protected readonly MessageCipher cipher;
     private readonly string logTag;
     private readonly NotificationService notifications;
+    private readonly AppGate gate;
     private readonly PollCadence inboxCadence;
     private readonly object messagesLock = new();
     private readonly Dictionary<string, long> inboxLastAt = new();
+    private static readonly TimeSpan MediaUrlFailureRetryFor = TimeSpan.FromMinutes(2);
     private readonly ConcurrentDictionary<string, string> dmMediaUrls = new();
     private readonly ConcurrentDictionary<string, byte> dmMediaLoading = new();
+    private readonly ConcurrentDictionary<string, DateTime> dmMediaFailed = new();
     private readonly Comparison<TMessage> messageOrder;
 
     private volatile TThread[] threadList = Array.Empty<TThread>();
@@ -49,6 +57,9 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     private volatile bool loadingThread;
     private volatile bool refreshingThread;
     private volatile bool refreshingTyping;
+    private volatile string? pendingOpenThreadId;
+    private volatile string? lastOpenedThreadId;
+    private DateTime lastThreadOpenUtc = DateTime.MinValue;
     private int pollFailureStreak;
     private DateTime pollBackoffUntilUtc = DateTime.MinValue;
     private volatile bool sending;
@@ -64,9 +75,11 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     private volatile bool keyStatusRefreshing;
     private DateTime lastKeyStatusUtc = DateTime.MinValue;
     private volatile ChatKeyStatus currentKeyStatus = ChatKeyStatus.None;
+    private string? lastAccountId;
 
     protected ChatThreadStoreBase(string logTag, AethernetSession session, SafetyClient safety, MediaClient media,
-        NotificationService notifications, KeyVault vault, ConversationKeyStore keys, PhoneVisibility visibility)
+        NotificationService notifications, KeyVault vault, ConversationKeyStore keys, PhoneVisibility visibility,
+        AppGate gate)
     {
         this.session = session;
         this.safety = safety;
@@ -75,12 +88,41 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         this.vault = vault;
         this.keys = keys;
         this.logTag = logTag;
+        this.gate = gate;
         work = new StoreWork(logTag);
         cipher = new MessageCipher(vault, keys);
         messageOrder = CompareByCreatedAt;
         inboxCadence = new PollCadence(visibility, ForegroundInboxPollInterval, BackgroundInboxPollInterval);
         vault.Changed += OnVaultChanged;
+        session.Changed += OnSessionAccountChanged;
         Plugin.Framework.Update += OnFrameworkTick;
+    }
+
+    private void OnSessionAccountChanged()
+    {
+        var accountId = session.CurrentUser?.Id;
+        if (string.Equals(accountId, lastAccountId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        lastAccountId = accountId;
+        threadList = Array.Empty<TThread>();
+        threadListLoaded = false;
+        currentThreadId = null;
+        pendingOpenThreadId = null;
+        messages = Array.Empty<TMessage>();
+        olderCursor = null;
+        hasMoreOlder = false;
+        otherTyping = false;
+        inboxPrimed = false;
+        currentKeyStatus = ChatKeyStatus.None;
+        dmMediaUrls.Clear();
+        dmMediaFailed.Clear();
+        cipher.Clear();
+        OnCipherCleared();
+        vaultRefreshRequested = false;
+        OnAccountSwitched();
     }
 
     protected readonly record struct MessagePage(TMessage[] Items, string? NextCursor);
@@ -151,7 +193,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     protected abstract PhoneNotification BuildInboxNotification(TThread thread);
 
-    protected virtual bool TickActive => session.IsSignedIn;
+    protected virtual bool TickActive => session.IsSignedIn && gate.Open;
 
     public virtual bool RealtimePushActive => false;
 
@@ -160,6 +202,10 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     protected virtual bool ShouldRevealForReport(TMessage message) => true;
 
     protected virtual void OnCipherCleared()
+    {
+    }
+
+    protected virtual void OnAccountSwitched()
     {
     }
 
@@ -182,6 +228,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     public bool Sending => sending;
     public bool OtherTyping => otherTyping;
     public KeyVaultState VaultState => vault.State;
+    public KeyVault Vault => vault;
     public ChatKeyStatus CurrentKeyStatus => currentKeyStatus;
     public bool EncryptingCurrent => cipher.IsUnlocked && currentKeyStatus.CanEncrypt;
 
@@ -253,6 +300,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         {
             inboxPrimed = false;
             vaultRefreshRequested = false;
+            pendingOpenThreadId = null;
             if (threadList.Length > 0 || messages.Length > 0 || currentThreadId is not null)
             {
                 threadList = Array.Empty<TThread>();
@@ -267,6 +315,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         EnsureVaultRefreshed();
         var now = DateTime.UtcNow;
         EnsureCurrentThreadKeysFresh(now);
+        ResumePendingThreadOpen(now);
         if (!inboxCadence.Due(now))
         {
             return;
@@ -427,6 +476,12 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
             return;
         }
 
+        if (IsRedundantReopen(id))
+        {
+            currentThreadId = id;
+            return;
+        }
+
         currentThreadId = id;
         OnThreadOpening(id);
         messages = Array.Empty<TMessage>();
@@ -434,9 +489,30 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         hasMoreOlder = false;
         loadingOlder = false;
         otherTyping = false;
-        loadingThread = true;
         currentKeyStatus = ChatKeyStatus.None;
         lastKeyStatusUtc = DateTime.UtcNow;
+        BeginThreadOpen(id);
+    }
+
+    private bool IsRedundantReopen(string id)
+    {
+        return currentThreadId is null
+            && id == lastOpenedThreadId
+            && DateTime.UtcNow - lastThreadOpenUtc < ThreadReopenCooldown;
+    }
+
+    private void BeginThreadOpen(string id)
+    {
+        if (DateTime.UtcNow < pollBackoffUntilUtc)
+        {
+            pendingOpenThreadId = id;
+            return;
+        }
+
+        pendingOpenThreadId = null;
+        lastOpenedThreadId = id;
+        lastThreadOpenUtc = DateTime.UtcNow;
+        loadingThread = true;
         work.Run("thread open", async token =>
         {
             await PrefetchThreadAsync(id, token).ConfigureAwait(false);
@@ -447,6 +523,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
             }
 
             var page = await FetchMessagesPageAsync(id, null, token).ConfigureAwait(false);
+            NotePollResult(page is not null);
             if (currentThreadId == id && page is not null)
             {
                 messages = DecorateMessages(id, page.Value.Items);
@@ -460,6 +537,22 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
                 loadingThread = false;
             }
         });
+    }
+
+    private void ResumePendingThreadOpen(DateTime now)
+    {
+        if (pendingOpenThreadId is not { } pending || loadingThread || now < pollBackoffUntilUtc)
+        {
+            return;
+        }
+
+        if (currentThreadId != pending)
+        {
+            pendingOpenThreadId = null;
+            return;
+        }
+
+        BeginThreadOpen(pending);
     }
 
     public void RefreshThread()
@@ -935,6 +1028,16 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
             return url;
         }
 
+        if (dmMediaFailed.TryGetValue(messageId, out var failedAtUtc))
+        {
+            if (DateTime.UtcNow - failedAtUtc < MediaUrlFailureRetryFor)
+            {
+                return null;
+            }
+
+            dmMediaFailed.TryRemove(messageId, out _);
+        }
+
         if (!dmMediaLoading.TryAdd(messageId, 0))
         {
             return null;
@@ -947,66 +1050,50 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
             {
                 dmMediaUrls[messageId] = result;
             }
+            else
+            {
+                dmMediaFailed[messageId] = DateTime.UtcNow;
+            }
         }, () => dmMediaLoading.TryRemove(messageId, out _));
         return null;
     }
 
     public void ReportMessage(string messageId, string? reason, Action<bool> onComplete)
     {
-        var snapshot = messages;
-        var targetIndex = -1;
-        for (var index = 0; index < snapshot.Length; index++)
-        {
-            if (snapshot[index].Id == messageId)
-            {
-                targetIndex = index;
-                break;
-            }
-        }
-
-        if (targetIndex < 0)
+        if (!ReportReveals.TryCollect(messages, messageId, RevealForReport, out var revealed))
         {
             onComplete(false);
             return;
         }
 
-        var reveals = new List<RevealedMessageDto>(6);
-        AppendReveal(reveals, snapshot[targetIndex]);
-        for (var index = targetIndex - 1; index >= 0 && reveals.Count < 6; index--)
-        {
-            AppendReveal(reveals, snapshot[index]);
-        }
-
-        var revealed = reveals.Count > 0 && reveals[0].MessageId == messageId ? reveals.ToArray() : null;
         work.Run("report message", async token =>
             await safety.ReportAsync(ReportTargetType, messageId, reason, token, revealed).ConfigureAwait(false),
             onComplete);
     }
 
-    private void AppendReveal(List<RevealedMessageDto> reveals, TMessage message)
+    private RevealedMessageDto? RevealForReport(TMessage message)
     {
         if (!ShouldRevealForReport(message))
         {
-            return;
+            return null;
         }
 
-        if (MessageEncVersionOf(message) == 0)
+        if (MessageEncVersionOf(message) == EnvelopeCodec.VersionPlaintext)
         {
-            reveals.Add(new RevealedMessageDto(message.Id, MessageBodyOf(message), null));
-            return;
+            return new RevealedMessageDto(message.Id, MessageBodyOf(message), null);
         }
 
         var state = DecryptionState(message.Id);
-        if (state.State == DmBodyState.Decrypted)
-        {
-            reveals.Add(new RevealedMessageDto(message.Id, state.Text, state.FrankingKey));
-        }
+        return state.State == DmBodyState.Decrypted
+            ? new RevealedMessageDto(message.Id, state.Text, state.FrankingKey)
+            : null;
     }
 
     public void Dispose()
     {
         DisposeCore();
         vault.Changed -= OnVaultChanged;
+        session.Changed -= OnSessionAccountChanged;
         Plugin.Framework.Update -= OnFrameworkTick;
         work.Dispose();
     }

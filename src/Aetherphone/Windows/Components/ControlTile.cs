@@ -15,7 +15,7 @@ internal static class ControlTile
     public static void CancelPress() => armed = false;
 
     public static bool Toggle(ImDrawListPtr dl, Rect rect, FontAwesomeIcon icon, string label, bool active,
-        Vector4 accent, PhoneTheme theme, float opacity, bool interactive)
+        Vector4 accent, PhoneTheme theme, float opacity, bool interactive, bool showLabel = true)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var radius = MathF.Min(rect.Width, rect.Height) * 0.30f;
@@ -26,14 +26,34 @@ internal static class ControlTile
             : new Vector4(1f, 1f, 1f, (hovered ? 0.19f : 0.11f) * press * opacity);
         Squircle.Fill(dl, rect.Min, rect.Max, radius, ImGui.GetColorU32(fill));
         Material.EdgeSquircle(dl, rect.Min, rect.Max, radius, scale, opacity);
+        var labelMaxWidth = rect.Width - 20f * scale;
+        var lines = Typography.WrapText(label, TextStyles.FootnoteEmphasized, labelMaxWidth);
+        var lineCount = lines.Length;
+        var blockHeight = lineCount * Typography.LineHeight(TextStyles.FootnoteEmphasized);
+        var iconBottomForFit = rect.Min.Y + rect.Height * 0.34f + MathF.Min(rect.Height, rect.Width) * 0.26f;
+        var labelAvailableHeight = rect.Max.Y - 6f * scale - (iconBottomForFit + 4f * scale);
+        var fitsLabel = showLabel && lineCount <= 2 && blockHeight <= labelAvailableHeight;
         var iconColor = Palette.WithAlpha(active ? new Vector4(1f, 1f, 1f, 1f) : theme.TextStrong, opacity);
-        var iconCenter = new Vector2(rect.Center.X, rect.Min.Y + rect.Height * 0.34f);
-        ProgressRing.CenterIcon(dl, iconCenter, icon, iconColor, MathF.Min(rect.Height, rect.Width) * 0.26f);
-        var labelColor = active
-            ? new Vector4(1f, 1f, 1f, opacity)
-            : Palette.WithAlpha(theme.TextStrong, opacity * 0.85f);
-        Typography.DrawWrappedCentered(dl, new Vector2(rect.Center.X, rect.Max.Y - rect.Height * 0.26f), label,
-            labelColor, TextStyles.FootnoteEmphasized, rect.Width - 20f * scale);
+        var iconCenter = fitsLabel
+            ? new Vector2(rect.Center.X, rect.Min.Y + rect.Height * 0.34f)
+            : rect.Center;
+        var iconRadius = MathF.Min(rect.Height, rect.Width) * 0.26f;
+        ProgressRing.CenterIcon(dl, iconCenter, icon, iconColor, iconRadius);
+        if (fitsLabel)
+        {
+            var labelColor = active
+                ? new Vector4(1f, 1f, 1f, opacity)
+                : Palette.WithAlpha(theme.TextStrong, opacity * 0.85f);
+            var blockBottom = rect.Max.Y - 6f * scale;
+            var blockCenterY = blockBottom - blockHeight * 0.5f;
+            Typography.DrawWrappedCentered(dl, new Vector2(rect.Center.X, blockCenterY), label, labelColor,
+                TextStyles.FootnoteEmphasized, labelMaxWidth);
+        }
+        else
+        {
+            HoverTooltip.Show(rect, label, HoverLabelSide.Below);
+        }
+
         return released;
     }
 
@@ -44,7 +64,7 @@ internal static class ControlTile
         var radius = MathF.Min(rect.Width, rect.Height * 0.5f) * 0.44f;
         var result = Math.Clamp(value, 0f, 1f);
         released = false;
-        var hovered = interactive && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = interactive && UiInteract.Hover(rect.Min, rect.Max);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -92,11 +112,11 @@ internal static class ControlTile
 
     private static bool Pressed(Rect rect, bool interactive) =>
         interactive && armed && ImGui.IsMouseDown(ImGuiMouseButton.Left) &&
-        ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        UiInteract.Hover(rect.Min, rect.Max);
 
     private static bool Release(Rect rect, bool interactive, out bool hovered)
     {
-        hovered = interactive && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        hovered = interactive && UiInteract.Hover(rect.Min, rect.Max);
         if (!interactive)
         {
             return false;

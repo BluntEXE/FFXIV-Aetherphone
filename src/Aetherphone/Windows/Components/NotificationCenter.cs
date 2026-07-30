@@ -250,7 +250,7 @@ internal sealed class NotificationCenter
         var pillHeight = 26f * scale;
         var pillMax = new Vector2(bar.Max.X, bar.Center.Y + pillHeight * 0.5f);
         var pillMin = new Vector2(pillMax.X - textSize.X - padX * 2f, bar.Center.Y - pillHeight * 0.5f);
-        var hovered = interactive && ImGui.IsMouseHoveringRect(pillMin, pillMax);
+        var hovered = interactive && UiInteract.Hover(pillMin, pillMax);
         var fill = hovered ? theme.Surface : theme.GroupedCard;
         Squircle.Fill(dl, pillMin, pillMax, pillHeight * 0.5f,
             ImGui.GetColorU32(fill with { W = fill.W * opacity }));
@@ -318,7 +318,7 @@ internal sealed class NotificationCenter
         else
         {
             scroller.Tick(deltaSeconds);
-            if (interactive && listArea.Contains(ImGui.GetMousePos()))
+            if (interactive && UiInteract.HoverWindowOnly(listArea.Min, listArea.Max, false))
             {
                 var wheel = ImGui.GetIO().MouseWheel;
                 if (wheel != 0f)
@@ -418,7 +418,7 @@ internal sealed class NotificationCenter
                 new Vector2(blockOrigin.X + width, blockOrigin.Y + HeaderHeight * scale));
             DrawHeader(dl, headerRect, group.Items[0].Title, theme, scale, progress * opacity);
             if (interactive && state.Expanded && progress > 0.5f &&
-                ImGui.IsMouseHoveringRect(headerRect.Min, headerRect.Max))
+                UiInteract.Hover(headerRect.Min, headerRect.Max))
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                 if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
@@ -431,13 +431,15 @@ internal sealed class NotificationCenter
 
     private void DrawHeader(ImDrawListPtr dl, Rect rect, string title, PhoneTheme theme, float scale, float opacity)
     {
-        var titleSize = Typography.Measure(title, TextStyles.FootnoteEmphasized);
-        Typography.Draw(dl, new Vector2(rect.Min.X + 6f * scale, rect.Center.Y - titleSize.Y * 0.5f), title,
-            Palette.WithAlpha(theme.TextMuted, opacity), TextStyles.FootnoteEmphasized.Scale,
-            TextStyles.FootnoteEmphasized.Weight);
         var label = Loc.T(L.Notifications.ShowLess);
         var labelSize = Typography.Measure(label, TextStyles.Footnote);
         var labelPos = new Vector2(rect.Max.X - 6f * scale - labelSize.X, rect.Center.Y - labelSize.Y * 0.5f);
+        var titleMaxWidth = MathF.Max(1f, labelPos.X - 14f * scale - (rect.Min.X + 6f * scale));
+        var clippedTitle = Typography.FitText(title, titleMaxWidth, TextStyles.FootnoteEmphasized);
+        var titleSize = Typography.Measure(clippedTitle, TextStyles.FootnoteEmphasized);
+        Typography.Draw(dl, new Vector2(rect.Min.X + 6f * scale, rect.Center.Y - titleSize.Y * 0.5f), clippedTitle,
+            Palette.WithAlpha(theme.TextMuted, opacity), TextStyles.FootnoteEmphasized.Scale,
+            TextStyles.FootnoteEmphasized.Weight);
         Typography.Draw(dl, labelPos, label, Palette.WithAlpha(theme.Accent, opacity), TextStyles.Footnote.Scale,
             TextStyles.Footnote.Weight);
         var chevronTip = new Vector2(labelPos.X - 10f * scale, rect.Center.Y - 1f * scale);
@@ -479,12 +481,12 @@ internal sealed class NotificationCenter
         if (!drag.Active && interactive)
         {
             var mouse = ImGui.GetMousePos();
-            if (interactionBounds.Contains(mouse))
+            if (UiInteract.Hover(interactionBounds.Min, interactionBounds.Max))
             {
                 for (var index = 0; index < candidates.Count; index++)
                 {
                     var candidate = candidates[index];
-                    if (!candidate.Rect.Contains(mouse))
+                    if (!UiInteract.Hover(candidate.Rect.Min, candidate.Rect.Max))
                     {
                         continue;
                     }

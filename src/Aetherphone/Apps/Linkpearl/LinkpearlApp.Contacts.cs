@@ -264,7 +264,7 @@ internal sealed partial class LinkpearlApp
         var center = new Vector2(content.Max.X - 14f * scale, content.Min.Y + AppHeader.Height * scale * 0.5f);
         UiAnchors.Report("contacts.refresh", new Rect(center - new Vector2(16f * scale, 16f * scale),
             center + new Vector2(16f * scale, 16f * scale)));
-        var hovered = ImGui.IsMouseHoveringRect(center - new Vector2(16f * scale, 16f * scale),
+        var hovered = UiInteract.Hover(center - new Vector2(16f * scale, 16f * scale),
             center + new Vector2(16f * scale, 16f * scale));
         var glyph = FontAwesomeIcon.Sync.ToIconString();
         using (ImRaii.PushFont(UiBuilder.IconFont))

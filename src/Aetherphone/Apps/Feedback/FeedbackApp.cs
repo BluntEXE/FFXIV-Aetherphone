@@ -96,6 +96,10 @@ internal sealed class FeedbackApp : IPhoneApp
         DrawScreen(content);
     }
 
+    private void DrawFeedbackHeaderTitle(Rect area, string title, float rightReserve, float scale) =>
+        AppHeader.DrawTitleWithReserve(area, "feedback.header." + title, title, rightReserve, theme.TextStrong,
+            scale);
+
     private void DrawScreen(Rect area)
     {
         if (composeOutcome == 1)
@@ -110,12 +114,16 @@ internal sealed class FeedbackApp : IPhoneApp
 
         var scale = ImGuiHelpers.GlobalScale;
         var headerContext = new PhoneContext(area, theme, navigation);
-        AppHeader.Draw(headerContext, Loc.T(L.Feedback.SendFeedback), navigation.Back);
+        var sendLabel = store.Posting ? Loc.T(L.Feedback.Sending) : Loc.T(L.Feedback.Send);
+        var buttonReserve = sent
+            ? 0f
+            : Typography.Measure(sendLabel, 0.9f, FontWeight.SemiBold).X + 26f * scale + 20f * scale;
+        AppHeader.Draw(headerContext, string.Empty, navigation.Back);
+        DrawFeedbackHeaderTitle(area, Loc.T(L.Feedback.SendFeedback), buttonReserve, scale);
 
         if (!sent)
         {
             var canSend = !string.IsNullOrWhiteSpace(draft) && !store.Posting && CooldownRemaining() == 0;
-            var sendLabel = store.Posting ? Loc.T(L.Feedback.Sending) : Loc.T(L.Feedback.Send);
             ReportSendAnchor(area, sendLabel, scale);
             if (ui.HeaderAction(area, sendLabel, canSend))
             {
@@ -177,14 +185,12 @@ internal sealed class FeedbackApp : IPhoneApp
         if (draft.Length == 0)
         {
             var placeholderPos = new Vector2(inputX + 4f * scale, inputTop + 2f * scale);
-            var wrapRight = inputX + inputWidth - 4f * scale - ImGui.GetWindowPos().X;
+            using (Typography.WrapAt(inputX + inputWidth - 4f * scale))
             using (Plugin.Fonts.Push(1.15f))
             using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Feedback.MutedInk))
             {
                 ImGui.SetCursorScreenPos(placeholderPos);
-                ImGui.PushTextWrapPos(wrapRight);
                 Typography.Plain(Loc.T(L.Feedback.Placeholder));
-                ImGui.PopTextWrapPos();
             }
         }
 
@@ -203,8 +209,11 @@ internal sealed class FeedbackApp : IPhoneApp
         if (cooldown > 0)
         {
             var notice = Loc.T(L.Feedback.Cooldown, FormatCooldown(cooldown));
-            Typography.Draw(new Vector2(origin.X + 2f * scale,
-                area.Max.Y - footerHeight * 0.5f - Typography.Measure(notice, 0.85f).Y * 0.5f), notice,
+            var noticeLeft = origin.X + 2f * scale;
+            var noticeMaxWidth = MathF.Max(1f, area.Max.X - 8f * scale - counterSize.X - noticeLeft);
+            var clippedNotice = Typography.FitText(notice, noticeMaxWidth, 0.85f, FontWeight.Regular);
+            Typography.Draw(new Vector2(noticeLeft,
+                area.Max.Y - footerHeight * 0.5f - Typography.Measure(clippedNotice, 0.85f).Y * 0.5f), clippedNotice,
                 AppPalettes.Feedback.MutedInk, 0.85f);
         }
     }
@@ -256,7 +265,7 @@ internal sealed class FeedbackApp : IPhoneApp
 
         var badgeRadius = 8.5f * scale;
         var badgeCenter = new Vector2(max.X - badgeRadius - 2f * scale, min.Y + badgeRadius + 2f * scale);
-        var badgeHovered = ImGui.IsMouseHoveringRect(badgeCenter - new Vector2(badgeRadius, badgeRadius),
+        var badgeHovered = UiInteract.Hover(badgeCenter - new Vector2(badgeRadius, badgeRadius),
             badgeCenter + new Vector2(badgeRadius, badgeRadius));
         drawList.AddCircleFilled(badgeCenter, badgeRadius,
             ImGui.GetColorU32(new Vector4(0f, 0f, 0f, badgeHovered ? 0.9f : 0.62f)), 20);
@@ -272,7 +281,7 @@ internal sealed class FeedbackApp : IPhoneApp
 
     private bool DrawAddTile(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding, float scale)
     {
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         Squircle.Fill(drawList, min, max, rounding,
             ImGui.GetColorU32(hovered ? ui.HoverTint : AppPalettes.Feedback.FieldSurface));
         Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(AddTileStroke), 1f);
@@ -382,7 +391,7 @@ internal sealed class FeedbackApp : IPhoneApp
 
     private void LaunchFileDialog()
     {
-        NativeFileDialog.PickImage(Loc.T(L.Feedback.AddPhotos), path => Interlocked.Exchange(ref pendingPickedPath, path));
+        FilePicker.PickImage(Loc.T(L.Feedback.AddPhotos), path => Interlocked.Exchange(ref pendingPickedPath, path));
     }
 
     private void DrawThankYou(Rect area)

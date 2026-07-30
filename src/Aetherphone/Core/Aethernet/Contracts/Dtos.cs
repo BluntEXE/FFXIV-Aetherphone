@@ -8,7 +8,21 @@ internal sealed record VerifyRequest(string ChallengeId);
 
 internal sealed record AuthResponse(string Token, UserDto User);
 
-internal sealed record VerifyResponse(bool Ok, string? Reason, string? Token, UserDto? User, string? BanReason = null);
+internal sealed record SuspensionDto(
+    string RuleCode,
+    string RuleTitle,
+    string RuleSummary,
+    string Note,
+    long? UntilUnix,
+    bool Permanent);
+
+internal sealed record VerifyResponse(
+    bool Ok,
+    string? Reason,
+    string? Token,
+    UserDto? User,
+    string? BanReason = null,
+    SuspensionDto? Suspension = null);
 
 internal sealed record XivAuthStartRequest(string Name, string World);
 
@@ -44,13 +58,30 @@ internal sealed record UserDto(
     bool SharePresence = true,
     int MentionPolicy = 0,
     int TagPolicy = 0,
-    bool RequireTagApproval = false) : IIdentified;
+    bool RequireTagApproval = false,
+    bool FollowsYou = false,
+    int FollowedByCount = 0,
+    string[]? FollowedByPreview = null,
+    bool CanMessage = false,
+    int MessagePolicy = 0,
+    bool IsPrivate = false,
+    bool FollowRequested = false,
+    int PendingFollowRequests = 0,
+    string Region = "") : IIdentified;
 
 internal sealed record UpdateProfileRequest(string? DisplayName, string? Handle, string? Bio, string? AvatarUrl = null);
 
+internal sealed record UpdateMessagePrivacyRequest(int? MessagePolicy);
+
 internal sealed record UpdateTimeZoneRequest(bool? ShareTimeZone, int? UtcOffsetMinutes);
 
+internal sealed record UpdateRegionRequest(string? Region);
+
 internal sealed record UpdateChatPrivacyRequest(bool? ShareReadReceipts, bool? SharePresence);
+
+internal sealed record UpdateAccountPrivacyRequest(bool? IsPrivate);
+
+internal sealed record FollowResultDto(bool Following, bool Requested);
 
 internal sealed record CreatePostRequest(string Text, string? QuotedPostId = null);
 
@@ -107,13 +138,14 @@ internal sealed record PostDto(
     string? QuotedPostId = null,
     PostDto? ReferencedPost = null,
     int RepostCount = 0,
-    bool MyReposted = false) : IIdentified;
+    bool MyReposted = false,
+    bool Saved = false) : IIdentified;
 
 internal sealed record FeedPage(PostDto[] Items, string? NextCursor);
 
 internal sealed record UserSearchResult(UserDto[] Users);
 
-internal sealed record FeatureFlagsDto(bool Music);
+internal sealed record FeatureFlagsDto(bool Music, Dictionary<string, bool>? Apps);
 
 internal sealed record UserListPage(UserDto[] Items, string? NextCursor);
 
@@ -215,7 +247,10 @@ internal sealed record VelvetProfileDto(
     long GateAckAtUnix,
     bool ShareTimeZone = true,
     int? UtcOffsetMinutes = null,
-    int WhoCanMessage = 0);
+    int WhoCanMessage = 0,
+    int Sexuality = 0,
+    string[]? Kinks = null,
+    string Region = "");
 
 internal sealed record UpdateVelvetProfileRequest(
     string? Intro,
@@ -227,7 +262,9 @@ internal sealed record UpdateVelvetProfileRequest(
     int? RelationshipStatus,
     bool? Discoverable,
     int? WhoCanMessage = null,
-    int? Gender = null);
+    int? Gender = null,
+    int? Sexuality = null,
+    string[]? Kinks = null);
 
 internal sealed record GateAcceptRequest(int GateVersion);
 
@@ -251,9 +288,12 @@ internal sealed record VelvetPostDto(
     int CommentCount,
     string ScanStatus = "clean",
     string[]? MediaUrls = null,
-    MentionDto[]? Mentions = null) : IIdentified;
+    MentionDto[]? Mentions = null,
+    int Audience = 0) : IIdentified;
 
 internal sealed record VelvetFeedPage(VelvetPostDto[] Items, string? NextCursor);
+
+internal sealed record VelvetUserPostsPage(VelvetPostDto[] Items, int TotalCount, string? NextCursor);
 
 internal sealed record CreateVelvetPostRequest(
     string MediaKey,
@@ -261,7 +301,8 @@ internal sealed record CreateVelvetPostRequest(
     int Height,
     string Caption,
     string[] Tags,
-    string[]? MediaKeys = null);
+    string[]? MediaKeys = null,
+    int Audience = 0);
 
 internal sealed record VelvetCommentDto(
     string Id,
@@ -367,7 +408,32 @@ internal sealed record NotificationDto(
     long CreatedAtUnix,
     string? CommentId = null) : IIdentified;
 
-internal sealed record NotificationPage(NotificationDto[] Items);
+internal sealed record NotificationPage(NotificationDto[] Items, string? NextCursor = null);
+
+internal sealed record ModerationNoticeDto(
+    string Id,
+    int Kind,
+    string App,
+    string Surface,
+    string ContentType,
+    string? ContentId,
+    string ContentExcerpt,
+    int MediaCount,
+    string RuleCode,
+    string RuleTitle,
+    string RuleSummary,
+    string ReasonCode,
+    string ModeratorNote,
+    string Detail,
+    long? ContentCreatedAtUnix,
+    long? BanUntilUnix,
+    long CreatedAtUnix,
+    bool Acknowledged) : IIdentified;
+
+internal sealed record ModerationNoticePage(
+    ModerationNoticeDto[] Items,
+    int PendingCount,
+    string? NextCursor = null);
 
 internal sealed record CreateFeedbackRequest(string Text, string[] ImageKeys);
 
@@ -388,6 +454,17 @@ internal sealed record PollPage(PollDto[] Items);
 
 internal sealed record PollVoteRequest(int Option);
 
+internal sealed record AnnouncementTranslationDto(string Lang, string Title, string Body);
+
+internal sealed record AnnouncementDto(
+    string Id,
+    string Title,
+    string Body,
+    AnnouncementTranslationDto[] Translations,
+    long CreatedAtUnix) : IIdentified;
+
+internal sealed record AnnouncementPage(AnnouncementDto[] Items);
+
 internal sealed record FeedbackDto(
     string Id,
     string AuthorId,
@@ -398,45 +475,6 @@ internal sealed record FeedbackDto(
     string? AuthorAvatarUrl,
     string Text,
     long CreatedAtUnix) : IIdentified;
-
-internal sealed record DevBoardCardDto(
-    string Id,
-    string Title,
-    string Body,
-    int Status,
-    int SortOrder,
-    string CreatedById,
-    string CreatedByDisplayName,
-    string CreatedByHandle,
-    string? CreatedByAvatarUrl,
-    long CreatedAtUnix,
-    long UpdatedAtUnix) : IIdentified;
-
-internal sealed record DevBoardCards(DevBoardCardDto[] Items);
-
-internal sealed record CreateDevCardRequest(string Title, string Body);
-
-internal sealed record UpdateDevCardRequest(string? Title, string? Body);
-
-internal sealed record MoveDevCardRequest(int Status, string? BeforeId);
-
-internal sealed record DevChatMessageDto(
-    string Id,
-    string SenderId,
-    string SenderDisplayName,
-    string SenderHandle,
-    string? SenderAvatarUrl,
-    string Body,
-    int Kind,
-    int MediaWidth,
-    int MediaHeight,
-    long CreatedAtUnix) : IIdentified;
-
-internal sealed record DevChatPage(DevChatMessageDto[] Items, string? NextCursor);
-
-internal sealed record SendDevChatMessageRequest(string Body, string? MediaKey = null, int MediaWidth = 0, int MediaHeight = 0);
-
-internal sealed record DevMediaUrlDto(string Url, long ExpiresAtUnix);
 
 internal sealed record ContactDto(
     string UserId,

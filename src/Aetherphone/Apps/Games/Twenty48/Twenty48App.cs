@@ -3,6 +3,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility;
 
@@ -240,9 +241,9 @@ internal sealed class Twenty48App : IMiniGame
 
     private void HandleSwipe(GameGrid grid)
     {
-        var mouse = ImGui.GetMousePos();
         var bounds = grid.Bounds;
-        if (ImGui.IsMouseDown(ImGuiMouseButton.Left) && bounds.Contains(mouse) && !swipeActive)
+        var mouse = ImGui.GetMousePos();
+        if (ImGui.IsMouseDown(ImGuiMouseButton.Left) && UiInteract.Hover(bounds.Min, bounds.Max) && !swipeActive)
         {
             swipeActive = true;
             swipeStart = mouse;

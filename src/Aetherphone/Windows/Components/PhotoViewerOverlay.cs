@@ -66,7 +66,7 @@ internal sealed class PhotoViewerOverlay
         var rowCenterY = contentTop + AppHeader.Height * scale * 0.5f;
         var hitMin = new Vector2(contentLeft, contentTop);
         var hitMax = new Vector2(contentLeft + 44f * scale, headerBottom);
-        var hovered = ImGui.IsMouseHoveringRect(hitMin, hitMax);
+        var hovered = UiInteract.Hover(hitMin, hitMax);
         var backCenter = new Vector2(contentLeft + 13f * scale, rowCenterY);
         if (BackButton.Draw("photoviewer.back", backCenter, 15f * scale, new Vector4(1f, 1f, 1f, 0.95f), hovered, scale,
                 shadow: true))

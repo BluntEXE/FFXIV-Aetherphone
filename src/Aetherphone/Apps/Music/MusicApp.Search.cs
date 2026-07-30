@@ -122,12 +122,21 @@ internal sealed partial class MusicApp
         var trailing = current ? 32f * scale : showAdd ? 40f * scale : 10f * scale;
         var textLeft = artMax.X + 12f * scale;
         var textWidth = max.X - trailing - textLeft;
-        var title = Typography.FitText(song.Title, textWidth, TextStyles.BodyEmphasized);
-        Typography.Draw(new Vector2(textLeft, min.Y + 10f * scale), title, current ? ui.Accent : ui.TitleInk,
-            TextStyles.BodyEmphasized);
-        var subtitle = Typography.FitText(SongRowSubtitle(song), textWidth, TextStyles.Caption1);
-        Typography.Draw(new Vector2(textLeft, min.Y + 34f * scale), subtitle, ui.MutedInk, TextStyles.Caption1);
+        var searchTitleY = min.Y + 10f * scale;
+        var searchTitleSize = Typography.Measure(song.Title, TextStyles.BodyEmphasized);
+        var searchTitleHovering = UiInteract.Hover(new Vector2(textLeft, searchTitleY),
+            new Vector2(textLeft + textWidth, searchTitleY + searchTitleSize.Y));
+        Marquee.DrawLeft("music.searchRow.title." + song.VideoId, song.Title, textLeft, searchTitleY,
+            textWidth, TextStyles.BodyEmphasized, current ? ui.Accent : ui.TitleInk, searchTitleHovering);
+        var searchSub = SongRowSubtitle(song);
+        var searchSubY = min.Y + 34f * scale;
+        var searchSubSize = Typography.Measure(searchSub, TextStyles.Caption1);
+        var searchSubHovering = UiInteract.Hover(new Vector2(textLeft, searchSubY),
+            new Vector2(textLeft + textWidth, searchSubY + searchSubSize.Y));
+        Marquee.DrawLeft("music.searchRow.subtitle." + song.VideoId, searchSub, textLeft,
+            searchSubY, textWidth, TextStyles.Caption1, ui.MutedInk, searchSubHovering);
         var addClicked = false;
+        var overAdd = false;
         if (current)
         {
             Equalizer.Draw(drawList, new Vector2(max.X - 18f * scale, min.Y + rowHeight * 0.5f), scale, 17f * scale,
@@ -135,7 +144,11 @@ internal sealed partial class MusicApp
         }
         else if (showAdd)
         {
-            addClicked = ui.IconButton(new Vector2(max.X - 22f * scale, min.Y + rowHeight * 0.5f), 15f * scale,
+            var addCenter = new Vector2(max.X - 22f * scale, min.Y + rowHeight * 0.5f);
+            var addRadius = 15f * scale;
+            var addHit = new Vector2(addRadius, addRadius);
+            overAdd = UiInteract.Hover(addCenter - addHit, addCenter + addHit);
+            addClicked = ui.IconButton(addCenter, addRadius,
                 FontAwesomeIcon.Plus.ToIconString(), ui.MutedInk, AppSkin.Transparent, 0.82f, Loc.T(L.Music.AddToPlaylist));
         }
 
@@ -147,7 +160,7 @@ internal sealed partial class MusicApp
             return;
         }
 
-        if (!UiInteract.Click(min, max, hovered))
+        if (overAdd || !UiInteract.Click(min, max, hovered))
         {
             return;
         }

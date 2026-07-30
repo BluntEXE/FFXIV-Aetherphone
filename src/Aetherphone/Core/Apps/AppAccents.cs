@@ -17,6 +17,7 @@ internal static class AppAccents
         ["aethergram"] = new(0.92f, 0.30f, 0.38f, 1f),
         ["velvet"] = new(0.898f, 0.102f, 0.357f, 1f),
         ["character"] = new(0.98f, 0.22f, 0.36f, 1f),
+        ["health"] = new(0.60f, 0.85f, 0.28f, 1f),
         ["camera"] = new(0.70f, 0.72f, 0.78f, 1f),
         ["photos"] = new(0.95f, 0.62f, 0.25f, 1f),
         ["collections"] = new(0.36f, 0.62f, 0.96f, 1f),
@@ -43,6 +44,9 @@ internal static class AppAccents
         ["dev"] = new(0.42f, 0.46f, 0.98f, 1f),
         ["aetherstream"] = new(0.29f, 0.20f, 0.72f, 1f),
         ["polls"] = new(0.56f, 0.44f, 0.96f, 1f),
+        ["announcements"] = new(0.98f, 0.48f, 0.32f, 1f),
+        ["muster"] = new(0.94f, 0.55f, 0.20f, 1f),
+        ["yellowpages"] = new(0.91f, 0.68f, 0.15f, 1f),
         ["games"] = new(0.32f, 0.78f, 0.50f, 1f),
         ["memory"] = new(0.92f, 0.74f, 0.34f, 1f),
         ["bubbles"] = new(0.30f, 0.82f, 0.74f, 1f),
@@ -60,6 +64,13 @@ internal static class AppAccents
         ["tetris"] = new(0.52f, 0.78f, 0.98f, 1f),
         ["reversi"] = new(0.36f, 0.78f, 0.56f, 1f),
         ["minesweeper"] = new(0.40f, 0.68f, 0.98f, 1f),
+        ["sudoku"] = new(0.44f, 0.58f, 0.94f, 1f),
+        ["chess"] = new(0.82f, 0.66f, 0.42f, 1f),
+        ["stack"] = new(0.36f, 0.72f, 0.98f, 1f),
+        ["crystaldrop"] = new(0.66f, 0.50f, 0.98f, 1f),
+        ["beat"] = new(0.96f, 0.36f, 0.62f, 1f),
+        ["blade"] = new(0.86f, 0.42f, 0.30f, 1f),
+        ["trivia"] = new(0.30f, 0.72f, 0.86f, 1f),
     }.ToFrozenDictionary();
 
     public static Vector4 For(string id) => Accents.TryGetValue(id, out var accent) ? accent : Fallback;
