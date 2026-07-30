@@ -10,16 +10,24 @@ internal enum AccountBadges
     None = 0,
     Verified = 1 << 0,
     Patreon = 1 << 1,
+    Management = 1 << 2,
+    Moderator = 1 << 3,
+    Developer = 1 << 4,
+    Supporter = 1 << 5,
 }
 
-internal readonly record struct RoleBadge(RoleKind Kind, FontAwesomeIcon Glyph, LocString Tooltip);
+internal readonly record struct RoleBadge(AccountBadges Flag, RoleKind Kind, FontAwesomeIcon Glyph, LocString Tooltip);
 
 internal static class RoleBadges
 {
     private static readonly RoleBadge[] ByPrecedence =
     {
-        new(RoleKind.Verified, FontAwesomeIcon.CheckCircle, L.Social.RoleVerified),
-        new(RoleKind.Patreon, FontAwesomeIcon.Star, L.Social.RolePatreon),
+        new(AccountBadges.Management, RoleKind.Management, FontAwesomeIcon.Crown, L.Social.RoleManagement),
+        new(AccountBadges.Developer, RoleKind.Developer, FontAwesomeIcon.Code, L.Social.RoleDeveloper),
+        new(AccountBadges.Moderator, RoleKind.Moderator, FontAwesomeIcon.Gavel, L.Social.RoleModerator),
+        new(AccountBadges.Verified, RoleKind.Verified, FontAwesomeIcon.CheckCircle, L.Social.RoleVerified),
+        new(AccountBadges.Patreon, RoleKind.Patreon, FontAwesomeIcon.Star, L.Social.RolePatreon),
+        new(AccountBadges.Supporter, RoleKind.Supporter, FontAwesomeIcon.HandHoldingHeart, L.Social.RoleSupporter),
     };
 
     public static RoleBadge? Top(int badges)
@@ -27,7 +35,7 @@ internal static class RoleBadges
         var held = (AccountBadges)badges;
         for (var index = 0; index < ByPrecedence.Length; index++)
         {
-            if (Held(held, ByPrecedence[index].Kind))
+            if ((held & ByPrecedence[index].Flag) != 0)
             {
                 return ByPrecedence[index];
             }
@@ -42,7 +50,7 @@ internal static class RoleBadges
         var count = 0;
         for (var index = 0; index < ByPrecedence.Length; index++)
         {
-            if (Held(held, ByPrecedence[index].Kind))
+            if ((held & ByPrecedence[index].Flag) != 0)
             {
                 count++;
             }
@@ -57,7 +65,7 @@ internal static class RoleBadges
         var seen = 0;
         for (var index = 0; index < ByPrecedence.Length; index++)
         {
-            if (!Held(held, ByPrecedence[index].Kind))
+            if ((held & ByPrecedence[index].Flag) == 0)
             {
                 continue;
             }
@@ -71,15 +79,5 @@ internal static class RoleBadges
         }
 
         return default;
-    }
-
-    private static bool Held(AccountBadges badges, RoleKind kind)
-    {
-        return kind switch
-        {
-            RoleKind.Verified => (badges & AccountBadges.Verified) != 0,
-            RoleKind.Patreon => (badges & AccountBadges.Patreon) != 0,
-            _ => false,
-        };
     }
 }

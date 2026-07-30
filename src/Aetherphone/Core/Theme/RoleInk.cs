@@ -3,16 +3,28 @@ namespace Aetherphone.Core.Theme;
 internal enum RoleKind
 {
     None = 0,
+    Management,
+    Developer,
+    Moderator,
     Verified,
     Patreon,
+    Supporter,
 }
 
 internal static class RoleInk
 {
+    private static readonly Vector4 ManagementDark = new(0.78f, 0.58f, 1.00f, 1.00f);
+    private static readonly Vector4 ManagementLight = new(0.44f, 0.18f, 0.76f, 1.00f);
+    private static readonly Vector4 DeveloperDark = new(0.35f, 0.84f, 0.86f, 1.00f);
+    private static readonly Vector4 DeveloperLight = new(0.03f, 0.44f, 0.50f, 1.00f);
+    private static readonly Vector4 ModeratorDark = new(0.46f, 0.86f, 0.56f, 1.00f);
+    private static readonly Vector4 ModeratorLight = new(0.09f, 0.48f, 0.20f, 1.00f);
     private static readonly Vector4 VerifiedDark = new(0.40f, 0.68f, 0.98f, 1.00f);
     private static readonly Vector4 VerifiedLight = new(0.05f, 0.42f, 0.85f, 1.00f);
     private static readonly Vector4 PatreonDark = new(0.98f, 0.76f, 0.35f, 1.00f);
     private static readonly Vector4 PatreonLight = new(0.66f, 0.42f, 0.02f, 1.00f);
+    private static readonly Vector4 SupporterDark = new(0.98f, 0.56f, 0.72f, 1.00f);
+    private static readonly Vector4 SupporterLight = new(0.70f, 0.13f, 0.38f, 1.00f);
     private static readonly Vector4 NeutralDark = new(0.97f, 0.97f, 0.98f, 1.00f);
     private static readonly Vector4 NeutralLight = new(0.10f, 0.10f, 0.11f, 1.00f);
 
@@ -22,8 +34,12 @@ internal static class RoleInk
     {
         return kind switch
         {
+            RoleKind.Management => light ? ManagementLight : ManagementDark,
+            RoleKind.Developer => light ? DeveloperLight : DeveloperDark,
+            RoleKind.Moderator => light ? ModeratorLight : ModeratorDark,
             RoleKind.Verified => light ? VerifiedLight : VerifiedDark,
             RoleKind.Patreon => light ? PatreonLight : PatreonDark,
+            RoleKind.Supporter => light ? SupporterLight : SupporterDark,
             _ => light ? NeutralLight : NeutralDark,
         };
     }
