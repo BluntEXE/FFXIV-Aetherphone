@@ -187,8 +187,7 @@ internal sealed record StoryRingDto(
     bool IsMe,
     bool HasUnseen,
     int Count,
-    long LatestAtUnix,
-    int AuthorBadges = 0);
+    long LatestAtUnix);
 
 internal sealed record StoryTray(StoryRingDto[] Rings);
 
