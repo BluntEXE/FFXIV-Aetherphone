@@ -13,7 +13,7 @@ internal static class ContactRow
     {
         var scale = ImGuiHelpers.GlobalScale;
         var dl = ImGui.GetWindowDrawList();
-        var hovered = ImGui.IsMouseHoveringRect(row.Min, row.Max);
+        var hovered = UiInteract.Hover(row.Min, row.Max);
         var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
         if (hovered)
         {
@@ -36,13 +36,13 @@ internal static class ContactRow
         var textMaxWidth = subtitleRight - textLeft;
         var nameY = row.Min.Y + 9f * scale;
         var nameSize = Typography.Measure(friend.Name, TextStyles.Headline);
-        var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, nameY),
+        var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
             new Vector2(textLeft + textMaxWidth, nameY + nameSize.Y));
         Marquee.DrawLeft("contactrow.name." + friend.Name, friend.Name, textLeft, nameY,
             textMaxWidth, TextStyles.Headline, nameColor, nameHovering);
         var subtitleY = row.Min.Y + 30f * scale;
         var subtitleSize = Typography.Measure(subtitle, TextStyles.Subheadline);
-        var subtitleHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, subtitleY),
+        var subtitleHovering = UiInteract.Hover(new Vector2(textLeft, subtitleY),
             new Vector2(textLeft + textMaxWidth, subtitleY + subtitleSize.Y));
         Marquee.DrawLeft("contactrow.subtitle." + friend.Name, subtitle, textLeft, subtitleY,
             textMaxWidth, TextStyles.Subheadline, theme.TextMuted, subtitleHovering);

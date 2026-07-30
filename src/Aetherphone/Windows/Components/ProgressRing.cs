@@ -126,7 +126,7 @@ internal static class ProgressRing
         var dl = ImGui.GetWindowDrawList();
         var min = c - new Vector2(radius, radius);
         var max = c + new Vector2(radius, radius);
-        var hovered = enabled && ImGui.IsMouseHoveringRect(min, max);
+        var hovered = enabled && UiInteract.Hover(min, max);
         var accent = Accent.Violet;
         var thickness = 4.5f * ImGuiHelpers.GlobalScale;
         if (enabled)

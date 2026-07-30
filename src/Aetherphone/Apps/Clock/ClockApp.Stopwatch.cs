@@ -146,7 +146,7 @@ internal sealed partial class ClockApp
         var drawList = ImGui.GetWindowDrawList();
         var min = center - new Vector2(radius, radius);
         var max = center + new Vector2(radius, radius);
-        var hovered = enabled && ImGui.IsMouseHoveringRect(min, max);
+        var hovered = enabled && UiInteract.Hover(min, max);
         var shown = enabled ? color : Palette.WithAlpha(color, 0.4f);
         drawList.AddCircleFilled(center, radius,
             ImGui.GetColorU32(Palette.WithAlpha(shown, hovered ? 0.34f : 0.22f)), 40);

@@ -126,18 +126,16 @@ internal sealed partial class MusterApp
             statusLeft += 14f * scale;
         }
 
-        var fittedStatus = Typography.FitText(status, max.X - 16f * scale - statusLeft,
-            TextStyles.SubheadlineEmphasized);
-        Typography.Draw(drawList, new Vector2(statusLeft, origin.Y + 40f * scale), fittedStatus,
-            live ? MusterCard.LiveGreen : AppPalettes.Muster.BodyInk, TextStyles.SubheadlineEmphasized);
+        Marquee.DrawLeftAuto(drawList, "muster.manage.status." + mine.Id, status, statusLeft,
+            origin.Y + 40f * scale, max.X - 16f * scale - statusLeft, TextStyles.SubheadlineEmphasized,
+            live ? MusterCard.LiveGreen : AppPalettes.Muster.BodyInk);
         var capacity = mine.MaxAttendees > 0
             ? Loc.T(L.Muster.CapacityLine, mine.RsvpCount, mine.MaxAttendees)
             : Loc.T(L.Muster.GoingCount, mine.RsvpCount);
         var listed = mine.IsPublic ? Loc.T(L.Muster.ListedPublicly) : Loc.T(L.Muster.ListedPrivately);
         var meta = $"{capacity} · {listed}";
-        var fitted = Typography.FitText(meta, max.X - 16f * scale - textLeft, TextStyles.Subheadline);
-        Typography.Draw(drawList, new Vector2(textLeft, origin.Y + 64f * scale), fitted,
-            AppPalettes.Muster.MutedInk, TextStyles.Subheadline);
+        Marquee.DrawLeftAuto(drawList, "muster.manage.meta." + mine.Id, meta, textLeft, origin.Y + 64f * scale,
+            max.X - 16f * scale - textLeft, TextStyles.Subheadline, AppPalettes.Muster.MutedInk);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height + Metrics.Space.Md * scale));
     }

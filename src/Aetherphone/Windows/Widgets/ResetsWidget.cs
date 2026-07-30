@@ -67,12 +67,10 @@ internal sealed class ResetsWidget : IHomeWidget
     {
         DrawRing(context, center, radius, next, utcNow, period, color);
         var upperLabel = Loc.Culture.TextInfo.ToUpper(label);
-        var trackingBudget = MathF.Max(1f, maxLabelWidth - 1.6f * context.Scale * MathF.Max(0, upperLabel.Length - 1));
-        var clippedLabel = Typography.FitText(upperLabel, trackingBudget, 0.66f, FontWeight.SemiBold);
-        var labelWidth = WidgetChrome.EyebrowWidth(clippedLabel, context.Scale);
-        WidgetChrome.Eyebrow(context.DrawList, new Vector2(center.X - labelWidth * 0.5f,
-            center.Y + radius + 11f * context.Scale), clippedLabel, context.Theme.TextMuted, context.Scale,
-            context.Opacity);
+        var labelWidth = MathF.Min(maxLabelWidth, WidgetChrome.EyebrowWidth(upperLabel, context.Scale));
+        WidgetChrome.EyebrowMarquee(context.DrawList, "timers.resets." + label, upperLabel,
+            new Vector2(center.X - labelWidth * 0.5f, center.Y + radius + 11f * context.Scale), labelWidth,
+            context.Theme.TextMuted, context.Scale, context.Opacity);
     }
 
     private static void DrawRing(in WidgetContext context, Vector2 center, float radius, DateTime next,

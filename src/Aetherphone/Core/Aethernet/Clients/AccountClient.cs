@@ -122,4 +122,15 @@ internal sealed class AccountClient
 
         return net.GetAsync(path, AethernetJsonContext.Default.NotificationPage, token);
     }
+
+    public Task<ModerationNoticePage?> NoticesAsync(string? cursor, CancellationToken token)
+    {
+        var path = cursor is null ? "/notices" : $"/notices?cursor={Uri.EscapeDataString(cursor)}";
+        return net.GetAsync(path, AethernetJsonContext.Default.ModerationNoticePage, token);
+    }
+
+    public Task<bool> AcknowledgeNoticeAsync(string noticeId, CancellationToken token)
+    {
+        return net.SendAsync(HttpMethod.Post, $"/notices/{Uri.EscapeDataString(noticeId)}/ack", token);
+    }
 }

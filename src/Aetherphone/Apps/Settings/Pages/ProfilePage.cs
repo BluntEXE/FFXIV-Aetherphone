@@ -158,7 +158,7 @@ internal sealed class ProfilePage : ISettingsPage, IDisposable
     private static bool StepperButton(ImDrawListPtr drawList, Vector2 min, float size, string glyph, PhoneTheme theme)
     {
         var max = min + new Vector2(size, size);
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         var fill = hovered
             ? Palette.Mix(theme.GroupedCard, theme.Accent, 0.35f)
             : Palette.WithAlpha(theme.TextStrong, 0.10f);

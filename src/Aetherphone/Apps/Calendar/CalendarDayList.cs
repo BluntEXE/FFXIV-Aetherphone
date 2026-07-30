@@ -54,7 +54,7 @@ internal static class CalendarDayList
             var cardHeight = Math.Max(textHeight + CardPaddingY * 2f * scale, 40f * scale);
             var cardMax = new Vector2(cardMin.X + contentWidth, cardMin.Y + cardHeight);
             var clickable = !string.IsNullOrEmpty(dayEvent.Url);
-            var cardHovered = ImGui.IsMouseHoveringRect(cardMin, cardMax);
+            var cardHovered = UiInteract.Hover(cardMin, cardMax);
             var hovered = clickable && cardHovered;
 
             ui.Card(drawList, cardMin, cardMax, CardRounding * scale);
@@ -101,7 +101,7 @@ internal static class CalendarDayList
         var center = new Vector2(cardMax.X - AccentBarInset * scale - radius, cardMax.Y - AccentBarInset * scale - radius + 2f * scale);
         var min = center - new Vector2(radius, radius);
         var max = center + new Vector2(radius, radius);
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

@@ -50,7 +50,7 @@ internal static class Marquee
         float maxWidth, in TextStyle style, Vector4 color)
     {
         var size = Typography.Measure(fullText, style);
-        var hovering = ImGui.IsMouseHoveringRect(new Vector2(boxLeft, y),
+        var hovering = UiInteract.Hover(new Vector2(boxLeft, y),
             new Vector2(boxLeft + MathF.Min(size.X, maxWidth), y + size.Y));
         return DrawLeft(drawList, id, fullText, boxLeft, y, maxWidth, style, color, hovering);
     }
@@ -63,7 +63,7 @@ internal static class Marquee
         float maxWidth, in TextStyle style, Vector4 color)
     {
         var size = Typography.Measure(fullText, style);
-        var hovering = ImGui.IsMouseHoveringRect(new Vector2(boxRight - MathF.Min(size.X, maxWidth), y),
+        var hovering = UiInteract.Hover(new Vector2(boxRight - MathF.Min(size.X, maxWidth), y),
             new Vector2(boxRight, y + size.Y));
         DrawRight(drawList, id, fullText, boxRight, y, maxWidth, style, color, hovering);
     }
@@ -77,7 +77,7 @@ internal static class Marquee
     {
         var size = Typography.Measure(fullText, style);
         var clampedWidth = MathF.Min(size.X, maxWidth);
-        var hovering = ImGui.IsMouseHoveringRect(new Vector2(centerX - clampedWidth * 0.5f, y),
+        var hovering = UiInteract.Hover(new Vector2(centerX - clampedWidth * 0.5f, y),
             new Vector2(centerX + clampedWidth * 0.5f, y + size.Y));
         DrawCentered(drawList, id, fullText, centerX, y, maxWidth, style, color, hovering);
     }
@@ -132,7 +132,7 @@ internal static class Marquee
         drawList.PopClipRect();
     }
 
-    private static float Offset(string id, float overflow)
+    internal static float Offset(string id, float overflow)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var travelSeconds = overflow / (Speed * scale);

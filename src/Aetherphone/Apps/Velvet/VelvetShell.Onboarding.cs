@@ -409,12 +409,12 @@ internal sealed partial class VelvetShell
 
         var textLeft = center.X + radius + 16f * scale;
         var textWidth = rect.Max.X - 16f * scale - textLeft;
-        var name = Typography.FitText(DisplayNameOf(onboardName, onboardHandle), textWidth, TextStyles.Headline);
-        var intent = Typography.FitText(VelvetIntent.Summary(onboardIntent), textWidth, TextStyles.Subheadline);
-        Typography.Draw(new Vector2(textLeft, rect.Center.Y - 20f * scale), name, VelvetTheme.TitleInk,
-            TextStyles.Headline);
-        Typography.Draw(new Vector2(textLeft, rect.Center.Y + 3f * scale), intent, VelvetTheme.RoseInk,
-            TextStyles.Subheadline);
+        var name = DisplayNameOf(onboardName, onboardHandle);
+        var intent = VelvetIntent.Summary(onboardIntent);
+        Marquee.DrawLeftAuto("velvet.onboard.summary.name", name, textLeft, rect.Center.Y - 20f * scale, textWidth,
+            TextStyles.Headline, VelvetTheme.TitleInk);
+        Marquee.DrawLeftAuto("velvet.onboard.summary.intent", intent, textLeft, rect.Center.Y + 3f * scale, textWidth,
+            TextStyles.Subheadline, VelvetTheme.RoseInk);
     }
 
     private void FinishOnboarding()

@@ -58,7 +58,7 @@ internal static class PhotosChrome
         var drawList = ImGui.GetWindowDrawList();
         var radius = 18f * scale;
         var hovered =
-            ImGui.IsMouseHoveringRect(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
+            UiInteract.Hover(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
         drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, hovered ? 0.5f : 0.34f)), 28);
         return Chevron(center, color, pointsLeft, scale) || Tapped(hovered);
     }
@@ -68,7 +68,7 @@ internal static class PhotosChrome
         var drawList = ImGui.GetWindowDrawList();
         var radius = 16f * scale;
         var hovered =
-            ImGui.IsMouseHoveringRect(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
+            UiInteract.Hover(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
         var ink = ImGui.GetColorU32(hovered ? color : color with { W = 0.85f });
         var size = Metrics.Space.Xs * scale;
         var direction = pointsLeft ? -1f : 1f;
@@ -83,7 +83,7 @@ internal static class PhotosChrome
         var drawList = ImGui.GetWindowDrawList();
         var radius = 17f * scale;
         var hovered =
-            ImGui.IsMouseHoveringRect(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
+            UiInteract.Hover(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
         drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, hovered ? 0.5f : 0.32f)), 28);
         var color = theme.Danger;
         var ink = ImGui.GetColorU32(hovered ? color : color with { W = 0.9f });
@@ -105,7 +105,7 @@ internal static class PhotosChrome
         var drawList = ImGui.GetWindowDrawList();
         var radius = 17f * scale;
         var hovered =
-            ImGui.IsMouseHoveringRect(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
+            UiInteract.Hover(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
         drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, hovered ? 0.5f : 0.32f)), 28);
         var ink = ImGui.GetColorU32(hovered ? color : color with { W = 0.9f });
         var extent = 7f * scale;

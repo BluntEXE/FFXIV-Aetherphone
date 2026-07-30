@@ -250,7 +250,7 @@ internal sealed class NotificationCenter
         var pillHeight = 26f * scale;
         var pillMax = new Vector2(bar.Max.X, bar.Center.Y + pillHeight * 0.5f);
         var pillMin = new Vector2(pillMax.X - textSize.X - padX * 2f, bar.Center.Y - pillHeight * 0.5f);
-        var hovered = interactive && ImGui.IsMouseHoveringRect(pillMin, pillMax);
+        var hovered = interactive && UiInteract.Hover(pillMin, pillMax);
         var fill = hovered ? theme.Surface : theme.GroupedCard;
         Squircle.Fill(dl, pillMin, pillMax, pillHeight * 0.5f,
             ImGui.GetColorU32(fill with { W = fill.W * opacity }));
@@ -318,7 +318,7 @@ internal sealed class NotificationCenter
         else
         {
             scroller.Tick(deltaSeconds);
-            if (interactive && listArea.Contains(ImGui.GetMousePos()))
+            if (interactive && UiInteract.HoverWindowOnly(listArea.Min, listArea.Max, false))
             {
                 var wheel = ImGui.GetIO().MouseWheel;
                 if (wheel != 0f)
@@ -418,7 +418,7 @@ internal sealed class NotificationCenter
                 new Vector2(blockOrigin.X + width, blockOrigin.Y + HeaderHeight * scale));
             DrawHeader(dl, headerRect, group.Items[0].Title, theme, scale, progress * opacity);
             if (interactive && state.Expanded && progress > 0.5f &&
-                ImGui.IsMouseHoveringRect(headerRect.Min, headerRect.Max))
+                UiInteract.Hover(headerRect.Min, headerRect.Max))
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                 if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
@@ -481,12 +481,12 @@ internal sealed class NotificationCenter
         if (!drag.Active && interactive)
         {
             var mouse = ImGui.GetMousePos();
-            if (interactionBounds.Contains(mouse))
+            if (UiInteract.Hover(interactionBounds.Min, interactionBounds.Max))
             {
                 for (var index = 0; index < candidates.Count; index++)
                 {
                     var candidate = candidates[index];
-                    if (!candidate.Rect.Contains(mouse))
+                    if (!UiInteract.Hover(candidate.Rect.Min, candidate.Rect.Max))
                     {
                         continue;
                     }

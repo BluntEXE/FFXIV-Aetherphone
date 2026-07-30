@@ -20,7 +20,7 @@ internal static class QuickAction
         var labelSize = Typography.Measure(label, TextStyles.Caption1);
         var hitMin = new Vector2(center.X - radius, center.Y - radius);
         var hitMax = new Vector2(center.X + radius, center.Y + radius + LabelGap * scale + labelSize.Y);
-        var hovered = ImGui.IsMouseHoveringRect(hitMin, hitMax);
+        var hovered = UiInteract.Hover(hitMin, hitMax);
         var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
         var deltaSeconds = MathF.Min(ImGui.GetIO().DeltaTime, 0.1f);
         if (!Scales.TryGetValue(id, out var spring))

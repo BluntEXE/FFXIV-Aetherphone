@@ -195,7 +195,7 @@ internal sealed class NotesApp : IPhoneApp
         var titleText = hasTitle ? title : Loc.T(L.Notes.Untitled);
         var titleY = row.Min.Y + 12f * scale;
         var titleSize = Typography.Measure(titleText, TextStyles.Headline);
-        var titleHovering = ImGui.IsMouseHoveringRect(new Vector2(row.Min.X, titleY),
+        var titleHovering = UiInteract.Hover(new Vector2(row.Min.X, titleY),
             new Vector2(row.Min.X + row.Width, titleY + titleSize.Y));
         Marquee.DrawLeft("notes.noteRow.title." + note.Id, titleText, row.Min.X, titleY, row.Width,
             TextStyles.Headline, hasTitle ? ui.TitleInk : ui.MutedInk, titleHovering);
@@ -205,7 +205,7 @@ internal sealed class NotesApp : IPhoneApp
         var secondLine = preview.Length > 0 ? $"{meta}  {preview}" : (hasTitle ? meta : Loc.T(L.Notes.NoAdditionalText));
         var subY = row.Min.Y + 36f * scale;
         var subSize = Typography.Measure(secondLine, TextStyles.Footnote);
-        var subHovering = ImGui.IsMouseHoveringRect(new Vector2(row.Min.X, subY),
+        var subHovering = UiInteract.Hover(new Vector2(row.Min.X, subY),
             new Vector2(row.Min.X + row.Width, subY + subSize.Y));
         Marquee.DrawLeft("notes.noteRow.sub." + note.Id, secondLine, row.Min.X, subY, row.Width,
             TextStyles.Footnote, ui.MutedInk, subHovering);
@@ -266,16 +266,15 @@ internal sealed class NotesApp : IPhoneApp
         var hasDue = reminder.DueAt.HasValue;
         var titleY = hasDue ? row.Center.Y - 16f * scale : row.Center.Y - 9f * scale;
         var title = reminder.Title.Length > 0 ? reminder.Title : Loc.T(L.Notes.ReminderHint);
-        var rowHovered = UiInteract.Hover(textRect.Min, textRect.Max);
-        Marquee.DrawLeft("notes.reminderRow.title." + reminder.Id, title, textLeft, titleY, textRect.Width,
-            TextStyles.Body, titleInk, rowHovered);
+        Marquee.DrawLeftAuto("notes.reminderRow.title." + reminder.Id, title, textLeft, titleY, textRect.Width,
+            TextStyles.Body, titleInk);
         if (hasDue)
         {
             var due = reminder.DueAt!.Value;
             var overdue = !reminder.Done && due < DateTime.Now;
             var dueColor = overdue ? theme.Danger : ui.MutedInk;
-            Typography.Draw(new Vector2(textLeft, row.Center.Y + 4f * scale), DueLabel(due), dueColor,
-                TextStyles.Footnote);
+            Marquee.DrawLeftAuto("notes.reminderRow.due." + reminder.Id, DueLabel(due), textLeft,
+                row.Center.Y + 4f * scale, textRect.Width, TextStyles.Footnote, dueColor);
         }
 
         if (UiInteract.HoverClick(textRect.Min, textRect.Max))
@@ -482,7 +481,7 @@ internal sealed class NotesApp : IPhoneApp
         var labelLeft = rect.Min.X + Metrics.Space.Md * scale;
         var labelMaxWidth = MathF.Max(1f, min.X - 8f * scale - labelLeft);
         var labelSize = Typography.Measure(label, TextStyles.Body);
-        var labelHovering = ImGui.IsMouseHoveringRect(new Vector2(labelLeft, rect.Center.Y - labelSize.Y * 0.5f),
+        var labelHovering = UiInteract.Hover(new Vector2(labelLeft, rect.Center.Y - labelSize.Y * 0.5f),
             new Vector2(labelLeft + labelMaxWidth, rect.Center.Y + labelSize.Y * 0.5f));
         Marquee.DrawLeft("notes.remind.label", label, labelLeft, rect.Center.Y - 9f * scale, labelMaxWidth,
             TextStyles.Body, ui.TitleInk, labelHovering);
@@ -492,7 +491,7 @@ internal sealed class NotesApp : IPhoneApp
     private bool DrawSaveButton(Rect rect, string label, bool enabled)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = enabled && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
         var fill = !enabled ? Palette.WithAlpha(ui.Accent, 0.35f) :
             hovered ? Palette.Mix(ui.Accent, new Vector4(0f, 0f, 0f, 1f), 0.12f) : ui.Accent;
         Squircle.Fill(drawList, rect.Min, rect.Max, rect.Height * 0.5f, ImGui.GetColorU32(fill));

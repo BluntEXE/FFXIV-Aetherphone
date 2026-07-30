@@ -18,7 +18,7 @@ internal static class ConversationRow
         var width = ImGui.GetContentRegionAvail().X;
         var min = origin;
         var max = new Vector2(origin.X + width, origin.Y + Height * scale);
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
         var dl = ImGui.GetWindowDrawList();
         if (hovered)
@@ -43,7 +43,7 @@ internal static class ConversationRow
         var nameMaxWidth = textRight - timeSize.X - 8f * scale - textLeft;
         var nameY = min.Y + 11f * scale;
         var nameSize = Typography.Measure(conversation.Contact, TextStyles.Headline);
-        var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, nameY),
+        var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
             new Vector2(textLeft + nameMaxWidth, nameY + nameSize.Y));
         Marquee.DrawLeft("conversationrow.name." + conversation.Contact, conversation.Contact, textLeft,
             nameY, nameMaxWidth, TextStyles.Headline, theme.TextStrong, nameHovering);
@@ -67,7 +67,7 @@ internal static class ConversationRow
         var previewY = min.Y + 34f * scale;
         var previewMaxWidth = previewRight - textLeft;
         var previewSize = Typography.Measure(preview, TextStyles.Subheadline);
-        var previewHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, previewY),
+        var previewHovering = UiInteract.Hover(new Vector2(textLeft, previewY),
             new Vector2(textLeft + previewMaxWidth, previewY + previewSize.Y));
         Marquee.DrawLeft("conversationrow.preview." + conversation.Contact, preview, textLeft, previewY,
             previewMaxWidth, TextStyles.Subheadline, theme.TextMuted, previewHovering);

@@ -176,14 +176,14 @@ internal sealed partial class MusicApp
         var caption = Loc.Culture.TextInfo.ToUpper(Loc.T(L.Music.PlayingFrom));
         var captionY = barCenterY - 8f * scale;
         var captionSize = Typography.Measure(caption, TextStyles.Caption2);
-        var captionHovering = ImGui.IsMouseHoveringRect(new Vector2(textCenterX - textMaxWidth * 0.5f, captionY),
+        var captionHovering = UiInteract.Hover(new Vector2(textCenterX - textMaxWidth * 0.5f, captionY),
             new Vector2(textCenterX + textMaxWidth * 0.5f, captionY + captionSize.Y));
         Marquee.DrawCentered("music.sheetTopBar.caption", caption, textCenterX, captionY, textMaxWidth,
             TextStyles.Caption2, ui.HeaderInk, captionHovering);
         var source = playSource.Length > 0 ? playSource : DisplayName;
         var sourceY = barCenterY + 8f * scale;
         var sourceSize = Typography.Measure(source, TextStyles.FootnoteEmphasized);
-        var sourceHovering = ImGui.IsMouseHoveringRect(new Vector2(textCenterX - textMaxWidth * 0.5f, sourceY),
+        var sourceHovering = UiInteract.Hover(new Vector2(textCenterX - textMaxWidth * 0.5f, sourceY),
             new Vector2(textCenterX + textMaxWidth * 0.5f, sourceY + sourceSize.Y));
         Marquee.DrawCentered("music.sheetTopBar.source", source, textCenterX, sourceY, textMaxWidth,
             TextStyles.FootnoteEmphasized, ui.TitleInk, sourceHovering);

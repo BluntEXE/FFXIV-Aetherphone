@@ -296,7 +296,7 @@ internal sealed partial class MessageApp
             lodestone, 0.85f, 32);
         var textLeft = avatarCenter.X + radius + 12f * scale;
         var textMaxWidth = MathF.Max(1f, origin.X + width - pad - 28f * scale - textLeft);
-        var rowHovering = ImGui.IsMouseHoveringRect(origin, new Vector2(origin.X + width, origin.Y + rowHeight));
+        var rowHovering = UiInteract.Hover(origin, new Vector2(origin.X + width, origin.Y + rowHeight));
         Marquee.DrawLeft("messageapp.encryption.member." + member.UserId, label, textLeft, origin.Y + 10f * scale,
             textMaxWidth, new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, rowHovering);
         Typography.Draw(new Vector2(textLeft, origin.Y + 31f * scale),

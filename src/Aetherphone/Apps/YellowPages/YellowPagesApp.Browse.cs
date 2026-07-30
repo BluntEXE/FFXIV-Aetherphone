@@ -24,6 +24,8 @@ internal sealed partial class YellowPagesApp
     private const int SectionFallbackRebuildSeconds = 30;
     private const long OpeningSoonLeadSeconds = 8L * 3600L;
 
+    private static readonly Dictionary<string, string[]> IntentLabelWords = new();
+
     private readonly List<AdDto> openSection = new();
     private readonly List<AdDto> latestSection = new();
     private readonly ChipRail intentRail = new();
@@ -61,7 +63,8 @@ internal sealed partial class YellowPagesApp
             DrawIntentTiles(scale);
             if (latestSection.Count == 0)
             {
-                DrawBrowseEmpty(body, scale);
+                var remaining = new Rect(new Vector2(body.Min.X, ImGui.GetCursorScreenPos().Y), body.Max);
+                DrawBrowseEmpty(remaining, scale);
             }
             else
             {
@@ -79,8 +82,12 @@ internal sealed partial class YellowPagesApp
         var scale = ImGuiHelpers.GlobalScale;
         EnsureDirectoryFilter(YellowPagesScreen.Intent, IntentMask(intent));
         var context = new PhoneContext(area, theme, navigation);
-        AppHeader.Draw(context, Loc.T(AdIntents.Label(intent)), backToBrowse);
-        DrawScopePill(area, scale);
+        AppHeader.Draw(context, string.Empty, backToBrowse);
+        var scopePillRect = ScopePillRect(new Vector2(area.Max.X - 16f * scale,
+            area.Min.Y + AppHeader.Height * scale * 0.5f), scale);
+        AppHeader.DrawTitleWithReserve(area, "yellowpages.intent.title." + intent, Loc.T(AdIntents.Label(intent)),
+            area.Max.X - scopePillRect.Min.X + 8f * scale, theme.TextStrong, scale);
+        DrawScopePillAt(scopePillRect, scale);
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         var loading = DirectoryStale();
         var directory = loading ? Array.Empty<AdDto>() : store.Directory;
@@ -141,10 +148,10 @@ internal sealed partial class YellowPagesApp
     {
         var inset = 16f * scale;
         var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
-        var fitted = Typography.FitText(title, area.Width - inset * 2f - rightReserve, TextStyles.Title2);
-        var titleSize = Typography.Measure(fitted, TextStyles.Title2);
-        Typography.Draw(new Vector2(area.Min.X + inset, rowCenterY - titleSize.Y * 0.5f), fitted,
-            AppPalettes.YellowPages.TitleInk, TextStyles.Title2);
+        var maxWidth = MathF.Max(1f, area.Width - inset * 2f - rightReserve);
+        var titleY = rowCenterY - Typography.Measure(title, TextStyles.Title2).Y * 0.5f;
+        Marquee.DrawLeftAuto("yellowpages.tabtitle." + title, title, area.Min.X + inset, titleY, maxWidth,
+            TextStyles.Title2, AppPalettes.YellowPages.TitleInk);
     }
 
     private void DrawScopePill(Rect area, float scale)
@@ -294,12 +301,11 @@ internal sealed partial class YellowPagesApp
         }
 
         var pad = 10f * scale;
-        var name = Typography.FitText(ad.Title, max.X - min.X - pad * 2f, TextStyles.SubheadlineEmphasized);
-        Typography.Draw(drawList, new Vector2(min.X + pad, thumbMax.Y + 9f * scale), name,
-            AppPalettes.YellowPages.TitleInk, TextStyles.SubheadlineEmphasized);
-        var place = Typography.FitText(AdText.PlaceLine(ad), max.X - min.X - pad * 2f, TextStyles.Caption1);
-        Typography.Draw(drawList, new Vector2(min.X + pad, thumbMax.Y + 28f * scale), place,
-            AppPalettes.YellowPages.MutedInk, TextStyles.Caption1);
+        var railTextWidth = max.X - min.X - pad * 2f;
+        Marquee.DrawLeftAuto(drawList, "yellowpages.rail.title." + ad.Id, ad.Title, min.X + pad, thumbMax.Y + 9f * scale,
+            railTextWidth, TextStyles.SubheadlineEmphasized, AppPalettes.YellowPages.TitleInk);
+        Marquee.DrawLeftAuto(drawList, "yellowpages.rail.place." + ad.Id, AdText.PlaceLine(ad), min.X + pad,
+            thumbMax.Y + 28f * scale, railTextWidth, TextStyles.Caption1, AppPalettes.YellowPages.MutedInk);
         var state = AdText.OpenState(ad, nowUnix);
         var statusTop = thumbMax.Y + 46f * scale;
         if (state.IsOpen)
@@ -366,11 +372,18 @@ internal sealed partial class YellowPagesApp
         var gap = Metrics.Space.Sm * scale;
         var tileWidth = (width - gap * (intents.Length - 1)) / intents.Length;
         var tileHeight = IntentTileHeight * scale;
+        var textWidth = tileWidth - 12f * scale;
+        var labelStyle = TextStyles.SubheadlineEmphasized;
+        for (var index = 0; index < intents.Length; index++)
+        {
+            labelStyle = FitLabelStyle(Loc.T(AdIntents.Label(intents[index])), textWidth, labelStyle);
+        }
+
         for (var index = 0; index < intents.Length; index++)
         {
             var min = new Vector2(origin.X + (tileWidth + gap) * index, origin.Y);
             var max = new Vector2(min.X + tileWidth, min.Y + tileHeight);
-            if (DrawIntentTile(drawList, intents[index], min, max, tileWidth, scale))
+            if (DrawIntentTile(drawList, intents[index], min, max, tileWidth, labelStyle, scale))
             {
                 OpenIntent(intents[index]);
             }
@@ -381,7 +394,7 @@ internal sealed partial class YellowPagesApp
     }
 
     private bool DrawIntentTile(ImDrawListPtr drawList, int intent, Vector2 min, Vector2 max, float tileWidth,
-        float scale)
+        in TextStyle labelStyle, float scale)
     {
         var rounding = Metrics.Radius.Card * scale;
         ui.Card(drawList, min, max, rounding, elevated: true);
@@ -390,11 +403,13 @@ internal sealed partial class YellowPagesApp
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.18f)), 32);
         AppSkin.Icon(drawList, glyphCenter, IntentIcon(intent).ToIconString(), ui.Accent, 0.92f);
         var textWidth = tileWidth - 12f * scale;
-        Typography.DrawWrappedCentered(drawList, Loc.T(AdIntents.Label(intent)), TextStyles.FootnoteEmphasized,
-            AppPalettes.YellowPages.TitleInk, new Vector2(glyphCenter.X, min.Y + 50f * scale), textWidth);
+        var label = Loc.T(AdIntents.Label(intent));
+        Typography.DrawWrappedCentered(drawList, label, labelStyle, AppPalettes.YellowPages.TitleInk,
+            new Vector2(glyphCenter.X, min.Y + 50f * scale), textWidth);
         var count = Loc.T(L.YellowPages.IntentCategories, AdCategories.ForIntent(intent).Length);
-        Typography.DrawCentered(drawList, new Vector2(glyphCenter.X, max.Y - 15f * scale), count,
-            AppPalettes.YellowPages.MutedInk, TextStyles.Caption1);
+        var countSize = Typography.Measure(count, TextStyles.Footnote);
+        Marquee.DrawCenteredAuto(drawList, "yellowpages.intenttile.count." + intent, count, glyphCenter.X,
+            max.Y - 15f * scale - countSize.Y * 0.5f, textWidth, TextStyles.Footnote, AppPalettes.YellowPages.MutedInk);
         var hovered = UiInteract.Hover(min, max);
         if (hovered)
         {
@@ -403,6 +418,40 @@ internal sealed partial class YellowPagesApp
         }
 
         return UiInteract.Click(min, max, hovered);
+    }
+
+    private static string[] WordsOf(string label)
+    {
+        if (!IntentLabelWords.TryGetValue(label, out var words))
+        {
+            words = label.Split(' ');
+            IntentLabelWords[label] = words;
+        }
+
+        return words;
+    }
+
+    private static TextStyle FitLabelStyle(string label, float maxWidth, in TextStyle style)
+    {
+        var words = WordsOf(label);
+        var widestWord = string.Empty;
+        var widestWidth = 0f;
+        for (var index = 0; index < words.Length; index++)
+        {
+            var width = Typography.Measure(words[index], style).X;
+            if (width > widestWidth)
+            {
+                widestWidth = width;
+                widestWord = words[index];
+            }
+        }
+
+        if (widestWidth <= maxWidth)
+        {
+            return style;
+        }
+
+        return style with { Scale = Typography.FitScale(widestWord, maxWidth, style.Scale, 0.6f, style.Weight) };
     }
 
     private static FontAwesomeIcon IntentIcon(int intent) =>

@@ -22,7 +22,7 @@ internal static class SocialActivityList
         var count = 0;
         for (var index = 0; index < items.Length; index++)
         {
-            if (items[index].App == app)
+            if (Shows(items[index], app))
             {
                 count++;
             }
@@ -40,7 +40,7 @@ internal static class SocialActivityList
             ImGui.Dummy(new Vector2(0f, 6f * scale));
             for (var index = 0; index < items.Length; index++)
             {
-                if (items[index].App == app)
+                if (Shows(items[index], app))
                 {
                     DrawRow(items[index], ui, palette, theme, images, lodestone, openActor, openPost);
                 }
@@ -52,6 +52,11 @@ internal static class SocialActivityList
                 loadOlder();
             }
         }
+    }
+
+    private static bool Shows(NotificationDto item, string app)
+    {
+        return item.App == app && !SocialActivity.IsModerationNotice(item.Type);
     }
 
     private static void DrawRow(NotificationDto item, AppSkin ui, AppPalette palette, PhoneTheme theme,
@@ -85,7 +90,7 @@ internal static class SocialActivityList
         DrawTypeBadge(drawList, avatarCenter + new Vector2(radius - 4f * scale, radius - 4f * scale), item.Type,
             theme, scale);
         var textTop = origin.Y + (rowHeight - contentHeight) * 0.5f;
-        var rowHovering = ImGui.IsMouseHoveringRect(origin, rowMax);
+        var rowHovering = UiInteract.Hover(origin, rowMax);
         Marquee.DrawLeft("socialactivity.actor." + item.Id, actorLabel, textLeft, textTop, textWidth,
             new TextStyle(0.95f, FontWeight.SemiBold), theme.TextStrong, rowHovering);
         Typography.Draw(new Vector2(origin.X + width - pad - timeSize.X, textTop + 2f * scale), timeText,
@@ -93,14 +98,12 @@ internal static class SocialActivityList
         if (body.Length > 0)
         {
             ImGui.SetCursorScreenPos(new Vector2(textLeft, textTop + actorSize.Y + 4f * scale));
-            ImGui.PushTextWrapPos(textRight - ImGui.GetWindowPos().X);
+            using (Typography.WrapAt(textRight))
             using (Plugin.Fonts.Push(0.88f))
             using (ImRaii.PushColor(ImGuiCol.Text, palette.BodyInk))
             {
                 Typography.Wrapped(body);
             }
-
-            ImGui.PopTextWrapPos();
         }
 
         if (UiInteract.HoverClick(origin, rowMax))

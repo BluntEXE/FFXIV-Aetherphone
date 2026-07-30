@@ -117,7 +117,7 @@ internal sealed partial class CollectionsApp
         var nameTop = rect.Max.Y - pad - 36f * scale;
         var rawVerticalRingRadius = (nameTop - 6f * scale - rect.Min.Y - pad) * 0.5f;
         var iconRight = rect.Min.X + pad + tileSize;
-        var horizontalGap = 18f * scale;
+        var horizontalGap = 8f * scale;
         var rawHorizontalRingRadius = (rect.Max.X - pad - iconRight - horizontalGap) * 0.5f;
         var maxRingRadius = MathF.Max(8f * scale, MathF.Min(rawVerticalRingRadius, rawHorizontalRingRadius));
         DrawTileRing(rect, summary, progress, pad, scale, maxRingRadius);
@@ -145,8 +145,8 @@ internal sealed partial class CollectionsApp
             return;
         }
 
-        var radius = MathF.Min(23f * scale, maxRadius);
-        var thickness = 4.2f * scale;
+        var radius = MathF.Min(25f * scale, maxRadius);
+        var thickness = 4.4f * scale;
         var center = new Vector2(rect.Max.X - pad - radius, rect.Min.Y + pad + radius);
         var track = Palette.WithAlpha(ui.TitleInk, 0.14f);
         if (progress is null)
@@ -443,13 +443,13 @@ internal sealed partial class CollectionsApp
         {
             var nameY = row.Center.Y - 16f * scale;
             var nameSize = Typography.Measure(item.Name, TextStyles.BodyEmphasized);
-            var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, nameY),
+            var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
                 new Vector2(textLeft + textWidth, nameY + nameSize.Y));
             Marquee.DrawLeft("collections.item." + item.Id, item.Name, textLeft, nameY,
                 textWidth, TextStyles.BodyEmphasized, ui.TitleInk, nameHovering);
             var subY = row.Center.Y + 4f * scale;
             var subSize = Typography.Measure(subtitle, TextStyles.Footnote);
-            var subHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, subY),
+            var subHovering = UiInteract.Hover(new Vector2(textLeft, subY),
                 new Vector2(textLeft + textWidth, subY + subSize.Y));
             Marquee.DrawLeft("collections.item.sub." + item.Id, subtitle, textLeft, subY, textWidth,
                 TextStyles.Footnote, ui.MutedInk, subHovering);
@@ -458,7 +458,7 @@ internal sealed partial class CollectionsApp
         {
             var nameSize = Typography.Measure(item.Name, TextStyles.BodyEmphasized);
             var nameY = row.Center.Y - nameSize.Y * 0.5f;
-            var nameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, nameY),
+            var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
                 new Vector2(textLeft + textWidth, nameY + nameSize.Y));
             Marquee.DrawLeft("collections.item." + item.Id, item.Name, textLeft, nameY,
                 textWidth, TextStyles.BodyEmphasized, ui.TitleInk, nameHovering);
@@ -638,7 +638,7 @@ internal sealed partial class CollectionsApp
             var centerY = (rowMin.Y + rowMax.Y) * 0.5f;
             var label = index == 0 ? Loc.T(L.Collections.AllSources) : sourceList[index - 1];
             var selected = index == sourceIndex;
-            var hovered = ImGui.IsMouseHoveringRect(rowMin, rowMax);
+            var hovered = UiInteract.HoverWindowOnly(rowMin, rowMax);
             if (hovered)
             {
                 Squircle.Fill(drawList, rowMin, rowMax, 9f * scale, ImGui.GetColorU32(ui.HoverTint));
@@ -670,8 +670,8 @@ internal sealed partial class CollectionsApp
             return;
         }
 
-        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !ImGui.IsMouseHoveringRect(min, max, false) &&
-            !ImGui.IsMouseHoveringRect(sourceMenuAnchor.Min, sourceMenuAnchor.Max, false))
+        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !UiInteract.HoverWindowOnly(min, max, false) &&
+            !UiInteract.HoverWindowOnly(sourceMenuAnchor.Min, sourceMenuAnchor.Max, false))
         {
             sourceMenuOpen = false;
         }

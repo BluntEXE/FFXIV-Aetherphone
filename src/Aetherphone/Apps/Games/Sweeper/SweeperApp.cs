@@ -141,12 +141,12 @@ internal sealed class SweeperApp : IMiniGame
 
     private int ResolveHover(GameGrid grid)
     {
-        var mouse = ImGui.GetMousePos();
-        if (!grid.Bounds.Contains(mouse))
+        if (!UiInteract.Hover(grid.Bounds.Min, grid.Bounds.Max))
         {
             return -1;
         }
 
+        var mouse = ImGui.GetMousePos();
         var local = mouse - grid.Origin;
         var column = (int)(local.X / grid.Pitch);
         var row = (int)(local.Y / grid.Pitch);
@@ -157,7 +157,7 @@ internal sealed class SweeperApp : IMiniGame
 
         var index = row * board.Columns + column;
         var cell = grid.Cell(column, row);
-        return cell.Contains(mouse) ? index : -1;
+        return UiInteract.Hover(cell.Min, cell.Max) ? index : -1;
     }
 
     private void HandleInput(int hoveredIndex, GameGrid grid)

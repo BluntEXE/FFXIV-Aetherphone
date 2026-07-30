@@ -1,7 +1,9 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
+using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Moderation;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -25,6 +27,11 @@ internal sealed class BanOverlay
     }
 
     public bool IsActive => session.IsBanned;
+
+    public static bool IsTemporary(SuspensionDto? suspension)
+    {
+        return suspension is { Permanent: false, UntilUnix: not null };
+    }
 
     public void Draw(Rect screen, PhoneTheme theme)
     {
@@ -71,21 +78,44 @@ internal sealed class BanOverlay
                 ImGui.GetColorU32(Palette.WithAlpha(theme.Danger, alpha)), glyph);
         }
 
+        var suspension = session.Suspension;
+        var temporary = IsTemporary(suspension);
+
         var y = iconCenter.Y + iconRadius + 28f * scale;
-        y += Typography.DrawWrappedCentered(new Vector2(centerX, y), Loc.T(L.Account.BanScreenTitle),
+        y += Typography.DrawWrappedCentered(new Vector2(centerX, y),
+            Loc.T(temporary ? L.Account.BanScreenTimeoutTitle : L.Account.BanScreenTitle),
             Palette.WithAlpha(theme.TextStrong, alpha), new TextStyle(1.5f, FontWeight.SemiBold), maxWidth);
 
         var bodyStyle = new TextStyle(1f, FontWeight.Regular);
         y += 14f * scale;
-        y += Typography.DrawWrappedCentered(new Vector2(centerX, y), Loc.T(L.Account.BanScreenBody),
+        y += Typography.DrawWrappedCentered(new Vector2(centerX, y),
+            temporary
+                ? Loc.T(L.Account.BanScreenLifts, ModerationNoticeText.LiftMoment(suspension!.UntilUnix!.Value))
+                : Loc.T(L.Account.BanScreenBody),
             Palette.WithAlpha(theme.TextMuted, alpha), bodyStyle, maxWidth);
 
-        var reason = session.BanReason;
+        var rule = suspension is null ? string.Empty : suspension.RuleTitle;
+        var reason = rule.Length > 0 ? rule : session.BanReason;
         if (!string.IsNullOrWhiteSpace(reason))
         {
             y += 12f * scale;
             y += Typography.DrawWrappedCentered(new Vector2(centerX, y), Loc.T(L.Account.BanScreenReason, reason),
                 Palette.WithAlpha(theme.TextStrong, 0.85f * alpha), bodyStyle, maxWidth);
+        }
+
+        if (suspension is not null && suspension.RuleSummary.Length > 0)
+        {
+            y += 8f * scale;
+            y += Typography.DrawWrappedCentered(new Vector2(centerX, y), suspension.RuleSummary,
+                Palette.WithAlpha(theme.TextMuted, 0.85f * alpha), new TextStyle(0.9f, FontWeight.Regular), maxWidth);
+        }
+
+        if (suspension is not null && suspension.Note.Length > 0)
+        {
+            y += 10f * scale;
+            y += Typography.DrawWrappedCentered(new Vector2(centerX, y),
+                Loc.T(L.Moderation.NoticeModeratorNote, suspension.Note),
+                Palette.WithAlpha(theme.TextStrong, 0.8f * alpha), new TextStyle(0.9f, FontWeight.Regular), maxWidth);
         }
 
         y += 18f * scale;

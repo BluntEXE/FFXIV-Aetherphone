@@ -54,7 +54,7 @@ internal static class SubmitField
             return submitted;
         }
 
-        var hovered = ImGui.IsMouseHoveringRect(clearCenter - new Vector2(clearRadius, clearRadius),
+        var hovered = UiInteract.Hover(clearCenter - new Vector2(clearRadius, clearRadius),
             clearCenter + new Vector2(clearRadius, clearRadius));
         drawList.AddCircleFilled(clearCenter, clearRadius,
             ImGui.GetColorU32(hovered ? theme.TextMuted : theme.SurfaceMuted), 16);

@@ -360,21 +360,19 @@ internal sealed partial class ActivityApp : IPhoneApp
         var textLeft = row.Min.X + tile + 12f * scale;
         var valueSize = Typography.Measure(value, 1.02f, FontWeight.SemiBold);
         var textMaxWidth = MathF.Max(1f, row.Max.X - 10f * scale - valueSize.X - textLeft);
+        var rowId = "activity.statrow." + label;
         if (detail is { Length: > 0 })
         {
-            var clippedLabel = Typography.FitText(label, textMaxWidth, TextStyles.Headline);
-            var clippedDetail = Typography.FitText(detail, textMaxWidth, TextStyles.Footnote);
-            Typography.Draw(new Vector2(textLeft, row.Center.Y - 16f * scale), clippedLabel,
-                AppPalettes.Activity.TitleInk, TextStyles.Headline);
-            Typography.Draw(new Vector2(textLeft, row.Center.Y + 5f * scale), clippedDetail,
-                AppPalettes.Activity.MutedInk, TextStyles.Footnote);
+            Marquee.DrawLeftAuto(rowId, label, textLeft, row.Center.Y - 16f * scale, textMaxWidth,
+                TextStyles.Headline, AppPalettes.Activity.TitleInk);
+            Marquee.DrawLeftAuto(rowId + ".detail", detail, textLeft, row.Center.Y + 5f * scale, textMaxWidth,
+                TextStyles.Footnote, AppPalettes.Activity.MutedInk);
         }
         else
         {
-            var clippedLabel = Typography.FitText(label, textMaxWidth, TextStyles.Headline);
-            var labelSize = Typography.Measure(clippedLabel, TextStyles.Headline);
-            Typography.Draw(new Vector2(textLeft, row.Center.Y - labelSize.Y * 0.5f), clippedLabel,
-                AppPalettes.Activity.TitleInk, TextStyles.Headline);
+            var labelSize = Typography.Measure(label, TextStyles.Headline);
+            Marquee.DrawLeftAuto(rowId, label, textLeft, row.Center.Y - labelSize.Y * 0.5f, textMaxWidth,
+                TextStyles.Headline, AppPalettes.Activity.TitleInk);
         }
 
         Typography.Draw(new Vector2(row.Max.X - valueSize.X, row.Center.Y - valueSize.Y * 0.5f), value, valueInk,
@@ -423,7 +421,7 @@ internal sealed partial class ActivityApp : IPhoneApp
         var minusCenter = new Vector2(row.Max.X - radius - 106f * scale, row.Center.Y);
         var valueCenter = new Vector2((plusCenter.X + minusCenter.X) * 0.5f, row.Center.Y);
         var labelMaxWidth = MathF.Max(1f, minusCenter.X - radius - 12f * scale - row.Min.X);
-        var labelHovering = ImGui.IsMouseHoveringRect(new Vector2(row.Min.X, row.Min.Y),
+        var labelHovering = UiInteract.Hover(new Vector2(row.Min.X, row.Min.Y),
             new Vector2(row.Min.X + labelMaxWidth, row.Max.Y));
         Marquee.DrawLeft("activity.goalrow." + label, label, row.Min.X, row.Center.Y - 8f * scale, labelMaxWidth,
             TextStyles.Subheadline, AppPalettes.Activity.BodyInk, labelHovering);

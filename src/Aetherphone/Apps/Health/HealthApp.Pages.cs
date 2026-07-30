@@ -321,14 +321,16 @@ internal sealed partial class HealthApp
 
     private void KeyRow(Rect row, string label, string value, float scale)
     {
-        var valueSize = Typography.Measure(value, TextStyles.Headline);
-        Typography.Draw(new Vector2(row.Max.X - valueSize.X, row.Center.Y - valueSize.Y * 0.5f), value, Pal.TitleInk,
-            TextStyles.Headline);
-        var fitted = Typography.FitText(label, row.Max.X - valueSize.X - row.Min.X - 10f * scale,
-            TextStyles.Subheadline);
-        var labelSize = Typography.Measure(fitted, TextStyles.Subheadline);
-        Typography.Draw(new Vector2(row.Min.X, row.Center.Y - labelSize.Y * 0.5f), fitted, Pal.MutedInk,
-            TextStyles.Subheadline);
+        var minLabelWidth = row.Width * 0.35f;
+        var valueNaturalSize = Typography.Measure(value, TextStyles.Headline);
+        var valueMaxWidth = MathF.Max(1f,
+            MathF.Min(valueNaturalSize.X, row.Width - minLabelWidth - 10f * scale));
+        Marquee.DrawRightAuto("health.keyrow.value." + label, value, row.Max.X,
+            row.Center.Y - valueNaturalSize.Y * 0.5f, valueMaxWidth, TextStyles.Headline, Pal.TitleInk);
+        var labelMaxWidth = MathF.Max(1f, row.Width - valueMaxWidth - 10f * scale);
+        var labelSize = Typography.Measure(label, TextStyles.Subheadline);
+        Marquee.DrawLeftAuto("health.keyrow.label." + label, label, row.Min.X, row.Center.Y - labelSize.Y * 0.5f,
+            labelMaxWidth, TextStyles.Subheadline, Pal.MutedInk);
     }
 
     private void StepLabel(string text, float scale)
@@ -1096,9 +1098,6 @@ internal sealed partial class HealthApp
         var frameHeight = ImGui.GetFrameHeight();
         rowHeight = frameHeight + 10f * scale;
         var centerY = basePos.Y + rowHeight * 0.5f;
-        var labelSize = Typography.Measure(label, TextStyles.Subheadline);
-        Typography.Draw(new Vector2(origin.X, centerY - labelSize.Y * 0.5f), label, Pal.BodyInk,
-            TextStyles.Subheadline);
 
         var radius = 13f * scale;
         var gap = 8f * scale;
@@ -1108,6 +1107,12 @@ internal sealed partial class HealthApp
         var inputRight = plusCenter.X - radius - gap;
         var inputLeft = inputRight - inputWidth;
         var minusCenter = new Vector2(inputLeft - gap - radius, centerY);
+
+        var labelMaxWidth = MathF.Max(1f, minusCenter.X - radius - gap - origin.X);
+        var labelSize = Typography.Measure(label, TextStyles.Subheadline);
+        Marquee.DrawLeftAuto("health.numberfield.label." + label, label, origin.X, centerY - labelSize.Y * 0.5f,
+            labelMaxWidth, TextStyles.Subheadline, Pal.BodyInk);
+
         dec = ui.IconButton(minusCenter, radius, FontAwesomeIcon.Minus.ToIconString(), Pal.TitleInk,
             Pal.FieldSurface, 0.5f);
         inc = ui.IconButton(plusCenter, radius, FontAwesomeIcon.Plus.ToIconString(), Pal.TitleInk,

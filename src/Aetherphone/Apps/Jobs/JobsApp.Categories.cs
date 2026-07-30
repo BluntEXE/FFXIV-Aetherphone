@@ -271,7 +271,7 @@ internal sealed partial class JobsApp
             return;
         }
 
-        var clickedOutside = CategoryEditorClicked() && !new Rect(min, max).Contains(ImGui.GetMousePos());
+        var clickedOutside = UiInteract.ClickedOutside(min, max, false);
         if (ImGui.IsKeyPressed(ImGuiKey.Escape) || clickedOutside)
         {
             CloseCategoryEditor();
@@ -312,7 +312,7 @@ internal sealed partial class JobsApp
     private void DrawCategorySaveButton(ImDrawListPtr drawList, Rect rect, PhoneTheme theme, float scale)
     {
         var enabled = categoryEditorName.Trim().Length > 0;
-        var hovered = enabled && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = enabled && UiInteract.HoverWindowOnly(rect.Min, rect.Max);
         var fill = !enabled
             ? Palette.WithAlpha(theme.TextMuted, 0.2f)
             : hovered

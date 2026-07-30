@@ -13,6 +13,7 @@ using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Maps;
 using Aetherphone.Core.Market;
 using Aetherphone.Core.Media;
+using Aetherphone.Core.Moderation;
 using Aetherphone.Core.Muster;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Linkpearl;
@@ -49,6 +50,10 @@ internal sealed class PhoneServices : IDisposable
     public required WeatherControl WeatherControl { get; init; }
     public required NotificationService Notifications { get; init; }
     public required SocialNotificationService SocialNotifications { get; init; }
+    public required ModerationNoticeService ModerationNotices { get; init; }
+    public required ModerationNoticePresenter ModerationPresenter { get; init; }
+    public required ModerationNoticeArchive ModerationArchive { get; init; }
+    public required SafetyLauncher SafetyLauncher { get; init; }
     public required SoundService Sound { get; init; }
     public required MessageStore Messages { get; init; }
     public required ChatBridge ChatBridge { get; init; }
@@ -199,12 +204,17 @@ internal sealed class PhoneServices : IDisposable
             confirm, installer.Gate("message"));
         var characterSwitcher = new CharacterSessionManager(framework, aethernetSession, aethernet.Account,
             gameData, configuration, confirm);
-        var socialNotifications = new SocialNotificationService(aethernetSession, aethernet.Account, notifications, configuration, framework, visibility, realtimeSignals, confirm, installer);
+        var socialNotifications = new SocialNotificationService(aethernetSession, aethernet.Account, notifications, configuration, framework, visibility, realtimeSignals, installer);
+        var moderationNotices = new ModerationNoticeService(aethernetSession, aethernet.Account, framework,
+            visibility, realtimeSignals);
+        var moderationPresenter = new ModerationNoticePresenter(moderationNotices, confirm, notifications, framework);
+        var moderationArchive = new ModerationNoticeArchive(aethernetSession, aethernet.Account);
+        var safetyLauncher = new SafetyLauncher();
         var musters = new MusterStore(aethernetSession, aethernet.Musters, notifications, configuration,
             visibility, realtimeSignals, installer.Gate(MusterStore.AppId));
         var yellowPages = new YellowPagesStore(aethernetSession, aethernet.Ads, aethernet.Media, configuration,
             visibility, realtimeSignals, installer.Gate(YellowPagesStore.AppId));
-        var adInquiries = new AdInquiryStore(aethernetSession, aethernet.Ads, keyVault, conversationKeys,
+        var adInquiries = new AdInquiryStore(aethernetSession, aethernet.Ads, aethernet.Safety, keyVault, conversationKeys,
             visibility, realtimeSignals, installer.Gate(YellowPagesStore.AppId));
         return new PhoneServices
         {
@@ -219,6 +229,10 @@ internal sealed class PhoneServices : IDisposable
             WeatherControl = weatherControl,
             Notifications = notifications,
             SocialNotifications = socialNotifications,
+            ModerationNotices = moderationNotices,
+            ModerationPresenter = moderationPresenter,
+            ModerationArchive = moderationArchive,
+            SafetyLauncher = safetyLauncher,
             Sound = sound,
             Messages = messages,
             ChatBridge = chatBridge,
@@ -287,6 +301,8 @@ internal sealed class PhoneServices : IDisposable
         CharacterWatch.Dispose();
         WeatherControl.Dispose();
         SocialNotifications.Dispose();
+        ModerationPresenter.Dispose();
+        ModerationNotices.Dispose();
         KeyVault.Dispose();
         Calls.Dispose();
         Collections.Dispose();

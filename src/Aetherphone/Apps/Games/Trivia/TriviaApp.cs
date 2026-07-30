@@ -142,11 +142,11 @@ internal sealed class TriviaApp : IMiniGame
             return -1;
         }
 
-        var mouse = ImGui.GetMousePos();
         var hovered = -1;
         for (var index = 0; index < TriviaBoard.Options; index++)
         {
-            if (!TriviaRenderer.OptionRect(area, index, scale).Contains(mouse))
+            var optionRect = TriviaRenderer.OptionRect(area, index, scale);
+            if (!UiInteract.Hover(optionRect.Min, optionRect.Max))
             {
                 continue;
             }
@@ -174,7 +174,6 @@ internal sealed class TriviaApp : IMiniGame
 
     private int HandlePicker(Rect area, float scale)
     {
-        var mouse = ImGui.GetMousePos();
         var hovered = -1;
         for (var index = 0; index < TriviaBoard.PickableCount; index++)
         {
@@ -183,7 +182,8 @@ internal sealed class TriviaApp : IMiniGame
                 continue;
             }
 
-            if (!TriviaRenderer.CategoryRect(area, index, scale).Contains(mouse))
+            var categoryRect = TriviaRenderer.CategoryRect(area, index, scale);
+            if (!UiInteract.Hover(categoryRect.Min, categoryRect.Max))
             {
                 continue;
             }

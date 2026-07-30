@@ -58,12 +58,12 @@ internal sealed partial class AethergramApp
             var headerMetaSize = Typography.Measure(headerMeta, 0.78f);
             var headerTextGap = 3f * scale;
             var headerNameY = avatarCenter.Y - (headerNameSize.Y + headerTextGap + headerMetaSize.Y) * 0.5f;
-            var headerNameHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, headerNameY),
+            var headerNameHovering = UiInteract.Hover(new Vector2(nameLeft, headerNameY),
                 new Vector2(nameLeft + headerTextMaxWidth, headerNameY + headerNameSize.Y));
             Marquee.DrawLeft("aethergram.detail.header." + post.Id, displayName, nameLeft, headerNameY,
                 headerTextMaxWidth, headerNameStyle, theme.TextStrong, headerNameHovering);
             var headerMetaTop = headerNameY + headerNameSize.Y + headerTextGap;
-            var headerMetaHovering = ImGui.IsMouseHoveringRect(new Vector2(nameLeft, headerMetaTop),
+            var headerMetaHovering = UiInteract.Hover(new Vector2(nameLeft, headerMetaTop),
                 new Vector2(nameLeft + headerTextMaxWidth, headerMetaTop + headerMetaSize.Y));
             Marquee.DrawLeft("aethergram.detail.headermeta." + post.Id, headerMeta, nameLeft, headerMetaTop,
                 headerTextMaxWidth, new TextStyle(0.78f, FontWeight.Regular), AppPalettes.Aethergram.MutedInk,
@@ -149,11 +149,12 @@ internal sealed partial class AethergramApp
                 store.SetSaved(post.Id, !post.Saved);
             }
 
-            if (photos.Length > 1)
+            if (photos.Length > 1 && configuration.PhoneScale >= PhoneSizeCatalog.DefaultScale)
             {
-                var dotsCenter = new Vector2(origin.X + width * 0.5f, actionsY);
-                var available = MathF.Min((bookmarkCenter.X - 16f * scale - dotsCenter.X) * 2f,
-                    (dotsCenter.X - actionsRight - 10f * scale) * 2f);
+                var dotsLeft = actionsRight + 10f * scale;
+                var dotsRight = bookmarkCenter.X - 16f * scale;
+                var dotsCenter = new Vector2((dotsLeft + dotsRight) * 0.5f, actionsY);
+                var available = MathF.Max(0f, dotsRight - dotsLeft);
                 PhotoCarousel.DrawDots(ImGui.GetWindowDrawList(), dotsCenter, photos.Length, page, available,
                     AppPalettes.Aethergram.BodyInk);
             }
@@ -173,7 +174,7 @@ internal sealed partial class AethergramApp
                 var captionPos = ImGui.GetCursorScreenPos();
                 var captionNameMaxWidth = width * 0.5f;
                 var captionNameSize = Typography.Measure(displayName, 0.9f, FontWeight.SemiBold);
-                var captionNameHovering = ImGui.IsMouseHoveringRect(captionPos,
+                var captionNameHovering = UiInteract.Hover(captionPos,
                     new Vector2(captionPos.X + captionNameMaxWidth, captionPos.Y + captionNameSize.Y));
                 var nameWidth = Marquee.DrawLeft("aethergram.detail.captionname." + post.Id, displayName,
                     captionPos.X, captionPos.Y, captionNameMaxWidth, new TextStyle(0.9f, FontWeight.SemiBold),
@@ -189,14 +190,12 @@ internal sealed partial class AethergramApp
 
                 if (captionLayout is null)
                 {
-                    ImGui.PushTextWrapPos(origin.X + width - ImGui.GetWindowPos().X);
+                    using (Typography.WrapAt(origin.X + width))
                     using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Aethergram.BodyInk))
                     using (Plugin.Fonts.Push(0.9f))
                     {
                         Typography.Wrapped(post.Text);
                     }
-
-                    ImGui.PopTextWrapPos();
                 }
                 else
                 {
@@ -287,7 +286,7 @@ internal sealed partial class AethergramApp
             string.Empty, comment.AuthorAvatarUrl, 0.8f, 28);
 
         var nameTop = bubbleTop + padTop;
-        var commentNameHovering = ImGui.IsMouseHoveringRect(new Vector2(textLeft, nameTop),
+        var commentNameHovering = UiInteract.Hover(new Vector2(textLeft, nameTop),
             new Vector2(textRight, nameTop + nameHeight));
         var nameWidth = Marquee.DrawLeft("aethergram.comment." + comment.Id, displayName, textLeft, nameTop,
             textRight - textLeft, commentNameStyle, theme.TextStrong, commentNameHovering);
@@ -308,14 +307,12 @@ internal sealed partial class AethergramApp
         ImGui.SetCursorScreenPos(new Vector2(textLeft, textTop));
         if (commentLayout is null)
         {
-            ImGui.PushTextWrapPos(textRight - ImGui.GetWindowPos().X);
+            using (Typography.WrapAt(textRight))
             using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Aethergram.BodyInk))
             using (Plugin.Fonts.Push(0.9f))
             {
                 Typography.Wrapped(comment.Text);
             }
-
-            ImGui.PopTextWrapPos();
         }
         else
         {

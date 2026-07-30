@@ -67,7 +67,7 @@ internal sealed class PhotoZoomView
     private void HandleInput(Rect stage, Vector2 size)
     {
         var mouse = ImGui.GetMousePos();
-        var hovering = ImGui.IsMouseHoveringRect(stage.Min, stage.Max);
+        var hovering = UiInteract.Hover(stage.Min, stage.Max);
         if (hovering)
         {
             var wheel = ImGui.GetIO().MouseWheel;
@@ -163,7 +163,7 @@ internal sealed class PhotoZoomView
     {
         var drawList = ImGui.GetWindowDrawList();
         var hovered = enabled &&
-                      ImGui.IsMouseHoveringRect(center - new Vector2(radius, radius),
+                      UiInteract.Hover(center - new Vector2(radius, radius),
                           center + new Vector2(radius, radius));
         var alpha = enabled ? hovered ? 0.30f : 0.20f : 0.10f;
         drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, alpha)), 32);

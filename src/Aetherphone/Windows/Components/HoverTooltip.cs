@@ -110,10 +110,10 @@ internal static class HoverTooltip
         var padX = 11f * scale;
         var padY = 7f * scale;
         var margin = 8f * scale;
-        var windowLeft = ImGui.GetWindowPos().X;
-        var left = windowLeft + ImGui.GetWindowContentRegionMin().X + margin;
-        var right = windowLeft + ImGui.GetWindowContentRegionMax().X - margin;
-        var maxTextWidth = right - left - 2f * padX;
+        var viewport = ImGui.GetMainViewport();
+        var left = viewport.Pos.X + margin;
+        var right = viewport.Pos.X + viewport.Size.X - margin;
+        var maxTextWidth = MathF.Min(right - left, 420f * scale) - 2f * padX;
         var lineSize = Typography.Measure(label, style);
         var wrapped = maxTextWidth > 0f && lineSize.X > maxTextWidth;
         var textSize = wrapped ? Typography.MeasureWrappedBlock(label, style, maxTextWidth) : lineSize;
@@ -141,7 +141,7 @@ internal static class HoverTooltip
         }
         else
         {
-            Typography.DrawCentered(dl, center, label, color, style);
+            Typography.Draw(dl, center - lineSize * 0.5f, label, color, style);
         }
     }
 

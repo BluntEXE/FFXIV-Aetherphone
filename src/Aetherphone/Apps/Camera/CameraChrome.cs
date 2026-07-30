@@ -72,7 +72,7 @@ internal static class CameraChrome
         var min = center - half;
         var max = center + half;
         UiAnchors.Report("camera.flash", new Rect(min, max));
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         var rounding = Metrics.Radius.Field * scale;
         var fill = flashEnabled
             ? SelectedMode
@@ -97,7 +97,7 @@ internal static class CameraChrome
         var half = new Vector2(16f * scale, 16f * scale);
         var min = center - half;
         var max = center + half;
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         var rounding = Metrics.Radius.Field * scale;
         var fill = landscapeEnabled
             ? SelectedMode
@@ -261,7 +261,7 @@ internal static class CameraChrome
             Typography.DrawCentered(labelCenter, Loc.T(modes[index]), color, modeScale);
             var hitMin = new Vector2(cursorX - gap * 0.4f, rowCenterY - 14f * scale);
             var hitMax = new Vector2(cursorX + widths[index] + gap * 0.4f, rowCenterY + 14f * scale);
-            if (!selected && ImGui.IsMouseHoveringRect(hitMin, hitMax))
+            if (!selected && UiInteract.Hover(hitMin, hitMax))
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                 if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
@@ -296,7 +296,7 @@ internal static class CameraChrome
             Typography.DrawCentered(new Vector2(columnCenterX, cursorY), Loc.T(modes[index]), color, modeScale);
             var hitMin = new Vector2(columnCenterX - halfWidth, cursorY - rowHeight * 0.5f);
             var hitMax = new Vector2(columnCenterX + halfWidth, cursorY + rowHeight * 0.5f);
-            if (!selected && ImGui.IsMouseHoveringRect(hitMin, hitMax))
+            if (!selected && UiInteract.Hover(hitMin, hitMax))
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                 if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
@@ -317,7 +317,7 @@ internal static class CameraChrome
         var outerRadius = ShutterRadius * scale;
         UiAnchors.Report("camera.shutter",
             new Rect(center - new Vector2(outerRadius, outerRadius), center + new Vector2(outerRadius, outerRadius)));
-        var hovered = ImGui.IsMouseHoveringRect(center - new Vector2(outerRadius, outerRadius),
+        var hovered = UiInteract.Hover(center - new Vector2(outerRadius, outerRadius),
             center + new Vector2(outerRadius, outerRadius));
         dl.AddCircle(center, outerRadius, ImGui.GetColorU32(ShutterRing), 48, 3f * scale);
         var innerRadius = (outerRadius - Metrics.Space.Xs * scale) * (1f - 0.16f * shutterPress);
@@ -338,7 +338,7 @@ internal static class CameraChrome
         var half = 22f * scale;
         var min = center - new Vector2(half, half);
         var max = center + new Vector2(half, half);
-        var hovered = ImGui.IsMouseHoveringRect(min, max);
+        var hovered = UiInteract.Hover(min, max);
         var rounding = Metrics.Radius.Sm * scale;
         if (lastShot is { } shot)
         {
@@ -368,7 +368,7 @@ internal static class CameraChrome
         var dl = ImGui.GetWindowDrawList();
         var radius = 19f * scale;
         var hovered =
-            ImGui.IsMouseHoveringRect(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
+            UiInteract.Hover(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
         if (gridEnabled || hovered)
         {
             var bg = gridEnabled ? new Vector4(1f, 1f, 1f, 0.16f) : new Vector4(1f, 1f, 1f, 0.08f);

@@ -56,7 +56,7 @@ internal static class ChatBubble
             var dl = ImGui.GetWindowDrawList();
             var headerLeft = screenOrigin.X + gutter + padding;
             var headerMaxWidth = screenOrigin.X + available - padding - headerLeft;
-            var headerHovering = ImGui.IsMouseHoveringRect(new Vector2(headerLeft, screenOrigin.Y),
+            var headerHovering = UiInteract.Hover(new Vector2(headerLeft, screenOrigin.Y),
                 new Vector2(headerLeft + headerMaxWidth, screenOrigin.Y + headerHeight));
             Marquee.DrawLeft("chatbubble.sender." + senderName, senderName, headerLeft, screenOrigin.Y,
                 headerMaxWidth, TextStyles.Caption1, group.SenderColor, headerHovering);
@@ -77,8 +77,7 @@ internal static class ChatBubble
             ImGui.SetCursorPos(new Vector2(start.X + offsetX, bubbleTop));
             var bubbleScreen = ImGui.GetCursorScreenPos();
             var bubbleEnd = bubbleScreen + new Vector2(bubbleWidth, bubbleHeight);
-            contextRequested = !UiInteract.InputBlocked && ImGui.IsMouseHoveringRect(bubbleScreen, bubbleEnd)
-                && ImGui.IsMouseClicked(ImGuiMouseButton.Right);
+            contextRequested = UiInteract.Hover(bubbleScreen, bubbleEnd) && ImGui.IsMouseClicked(ImGuiMouseButton.Right);
             Squircle.Fill(ImGui.GetWindowDrawList(), bubbleScreen,
                 bubbleScreen + new Vector2(bubbleWidth, bubbleHeight), 13f * scale, ImGui.GetColorU32(fillColor));
             if (linkLayout is null)

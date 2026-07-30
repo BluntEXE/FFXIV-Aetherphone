@@ -130,7 +130,8 @@ internal sealed class BladeApp : IMiniGame
             return;
         }
 
-        if (board.State == BladeState.Over || !ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        if (board.State == BladeState.Over || !ImGui.IsMouseClicked(ImGuiMouseButton.Left) ||
+            !UiInteract.Hover(area.Min, area.Max))
         {
             return;
         }

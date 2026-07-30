@@ -256,7 +256,7 @@ internal sealed partial class YellowPagesApp
         {
             var min = PhotoSlot(origin, slot, tile, gap);
             var max = min + new Vector2(tile, tile);
-            var hovered = ImGui.IsMouseHoveringRect(min, max);
+            var hovered = UiInteract.Hover(min, max);
             Squircle.Fill(drawList, min, max, rounding,
                 ImGui.GetColorU32(hovered ? ui.HoverTint : AppPalettes.YellowPages.FieldSurface));
             Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(AddTileStroke), 1f);
@@ -309,7 +309,7 @@ internal sealed partial class YellowPagesApp
 
         var badgeRadius = 8.5f * scale;
         var badgeCenter = new Vector2(max.X - badgeRadius - 2f * scale, min.Y + badgeRadius + 2f * scale);
-        var badgeHovered = ImGui.IsMouseHoveringRect(badgeCenter - new Vector2(badgeRadius, badgeRadius),
+        var badgeHovered = UiInteract.Hover(badgeCenter - new Vector2(badgeRadius, badgeRadius),
             badgeCenter + new Vector2(badgeRadius, badgeRadius));
         drawList.AddCircleFilled(badgeCenter, badgeRadius,
             ImGui.GetColorU32(new Vector4(0f, 0f, 0f, badgeHovered ? 0.9f : 0.62f)), 20);

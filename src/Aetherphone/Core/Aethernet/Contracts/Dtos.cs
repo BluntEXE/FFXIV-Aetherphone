@@ -8,7 +8,21 @@ internal sealed record VerifyRequest(string ChallengeId);
 
 internal sealed record AuthResponse(string Token, UserDto User);
 
-internal sealed record VerifyResponse(bool Ok, string? Reason, string? Token, UserDto? User, string? BanReason = null);
+internal sealed record SuspensionDto(
+    string RuleCode,
+    string RuleTitle,
+    string RuleSummary,
+    string Note,
+    long? UntilUnix,
+    bool Permanent);
+
+internal sealed record VerifyResponse(
+    bool Ok,
+    string? Reason,
+    string? Token,
+    UserDto? User,
+    string? BanReason = null,
+    SuspensionDto? Suspension = null);
 
 internal sealed record XivAuthStartRequest(string Name, string World);
 
@@ -395,6 +409,31 @@ internal sealed record NotificationDto(
     string? CommentId = null) : IIdentified;
 
 internal sealed record NotificationPage(NotificationDto[] Items, string? NextCursor = null);
+
+internal sealed record ModerationNoticeDto(
+    string Id,
+    int Kind,
+    string App,
+    string Surface,
+    string ContentType,
+    string? ContentId,
+    string ContentExcerpt,
+    int MediaCount,
+    string RuleCode,
+    string RuleTitle,
+    string RuleSummary,
+    string ReasonCode,
+    string ModeratorNote,
+    string Detail,
+    long? ContentCreatedAtUnix,
+    long? BanUntilUnix,
+    long CreatedAtUnix,
+    bool Acknowledged) : IIdentified;
+
+internal sealed record ModerationNoticePage(
+    ModerationNoticeDto[] Items,
+    int PendingCount,
+    string? NextCursor = null);
 
 internal sealed record CreateFeedbackRequest(string Text, string[] ImageKeys);
 

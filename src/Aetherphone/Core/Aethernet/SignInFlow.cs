@@ -110,7 +110,7 @@ internal sealed class SignInFlow : IDisposable
                 status = string.Empty;
                 if (reason == VerifyFailure.Banned)
                 {
-                    session.ReportBanned(result.BanReason);
+                    session.ReportBanned(result.BanReason, result.Suspension);
                 }
                 else
                 {
@@ -220,7 +220,7 @@ internal sealed class SignInFlow : IDisposable
             status = string.Empty;
             if (reason == VerifyFailure.Banned)
             {
-                session.ReportBanned(result.BanReason);
+                session.ReportBanned(result.BanReason, result.Suspension);
             }
             else
             {
