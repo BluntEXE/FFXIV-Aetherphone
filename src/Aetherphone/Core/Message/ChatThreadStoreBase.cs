@@ -100,9 +100,6 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     private void OnSessionAccountChanged()
     {
-        // A sign-out blip must keep the inbox watermarks, or every message that
-        // arrived during the blip is absorbed without a notification; only a
-        // real account switch resets them.
         var accountId = session.CurrentUser?.Id;
         if (accountId is null || string.Equals(accountId, lastAccountId, StringComparison.Ordinal))
         {
@@ -320,8 +317,6 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         EnsureCurrentThreadKeysFresh(now);
         ResumePendingThreadOpen(now);
 
-        // Checking the in-flight guard before Due keeps a ping that lands during
-        // a poll pending instead of silently consuming it.
         if (inboxPolling || !inboxCadence.Due(now))
         {
             return;
@@ -440,10 +435,6 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
             var unread = ThreadUnreadCountOf(item);
             var previous = inboxMarks.GetValueOrDefault(key);
 
-            // Deliberate suppressions (baseline pass, muted threads, the thread
-            // being on screen) advance the watermark; transient ones (unread not
-            // yet reported, equal-timestamp races) must not, or the message can
-            // never notify on a later poll.
             if (!primed || IsThreadMuted(item))
             {
                 inboxMarks[key] = new InboxMark(lastMessageAt, unread);

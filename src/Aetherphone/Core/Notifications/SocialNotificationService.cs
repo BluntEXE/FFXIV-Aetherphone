@@ -59,8 +59,6 @@ internal sealed class SocialNotificationService : IDisposable
 
     private void OnRealtimeConnected(bool active)
     {
-        // Every ping sent while the socket was down is gone; resync instead of
-        // waiting out the backstop interval.
         if (active)
         {
             cadence.RequestImmediate();
@@ -69,9 +67,6 @@ internal sealed class SocialNotificationService : IDisposable
 
     private void OnSessionChanged()
     {
-        // A sign-out blip (relog, AFK logout, transient 401) must not reset the
-        // seen state, or everything that arrived during the blip is absorbed
-        // silently; only a real account switch starts fresh.
         var accountId = session.CurrentUser?.Id;
         if (accountId is null || string.Equals(accountId, lastAccountId, StringComparison.Ordinal))
         {
@@ -253,8 +248,6 @@ internal sealed class SocialNotificationService : IDisposable
             return;
         }
 
-        // Checking the in-flight guard before Due keeps a ping that lands during
-        // a poll pending instead of silently consuming it.
         if (polling || !cadence.Due(DateTime.UtcNow))
         {
             return;
@@ -385,8 +378,6 @@ internal sealed class SocialNotificationService : IDisposable
             return "call:" + item.ActorId;
         }
 
-        // Activity on one post stacks together, so the router's tap-to-open
-        // clears exactly the group whose target the user is now viewing.
         if (!string.IsNullOrEmpty(item.PostId))
         {
             return item.App + ":post:" + item.PostId;

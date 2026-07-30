@@ -13,8 +13,6 @@ internal static class ThemeCatalog
 
     public const string DefaultCaseName = "Titanium";
 
-    // The bare phone, then the art cases worn over it. A case is artwork now, not a tint, so the only
-    // colour entry is the default chassis you get with no case on.
     private static readonly PhoneCase[] BuiltInCases =
     {
         PhoneCase.Color(DefaultCaseName, new Vector4(0.145f, 0.145f, 0.170f, 1f)),

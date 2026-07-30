@@ -99,9 +99,6 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         signals.ConnectedChanged += OnRealtimeConnected;
     }
 
-    // A connect request arrives as a social notification, not a Velvet DM ping, and
-    // the requests list is what both the Messages tab badge and the Requests segment
-    // count read from. Without this it stays empty until that screen is drawn.
     private void OnSocialPinged()
     {
         if (TickActive)

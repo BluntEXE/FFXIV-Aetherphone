@@ -105,7 +105,6 @@ internal sealed class GameData
         return false;
     }
 
-    /// <summary>Every ClassJob row belonging to the given ClassJobCategory (e.g. Disciple of the Hand/Land).</summary>
     public uint[] ClassJobIdsInCategory(uint classJobCategoryId)
     {
         classJobIdsByCategory ??= new Dictionary<uint, uint[]>();
@@ -128,7 +127,6 @@ internal sealed class GameData
         return cached;
     }
 
-    /// <summary>The framed class/job icon the Character window and gear set list draw, one row per ClassJob.</summary>
     public static uint JobIconId(uint classJobId) => classJobId == 0 ? 0u : FramedJobIconBaseId + classJobId;
 
     public int JobExpArrayIndex(uint rowId)

@@ -749,8 +749,6 @@ internal sealed class CallHub : IDisposable
         }
     }
 
-    // The missed-call banner comes from the server's notification row, so the
-    // local seam only records the call log entry; notifying here would double up.
     private void LogMissed(ParticipantInfo? from)
     {
         if (from is null)
@@ -771,9 +769,6 @@ internal sealed class CallHub : IDisposable
             return;
         }
 
-        // The socket authenticates with the bearer captured at connect time, so
-        // an in-app account switch must tear it down or every ping keeps flowing
-        // to the previous account.
         var accountId = session.CurrentUser?.Id;
         if (realtimeAccountId is not null && !string.Equals(accountId, realtimeAccountId, StringComparison.Ordinal))
         {

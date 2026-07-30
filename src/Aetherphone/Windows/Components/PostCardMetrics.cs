@@ -1,10 +1,5 @@
 namespace Aetherphone.Windows.Components;
 
-/// <summary>
-/// Sizing tokens shared by every social feed post card (Aethergram, Velvet) so the cards stay
-/// identical in padding, media rhythm and action button size. Unscaled pixels: multiply by
-/// <c>ImGuiHelpers.GlobalScale</c> at the call site.
-/// </summary>
 internal static class PostCardMetrics
 {
     public const float Pad = 14f;

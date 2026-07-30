@@ -6,12 +6,6 @@ using Aetherphone.Core.Wallpapers;
 
 namespace Aetherphone.Core.Social;
 
-/// <summary>
-/// Owns the story tray and the currently opened author's stories.
-/// Marking a story seen is fire and forget, so the ring state is also tracked locally: an author is
-/// held as seen only up to the story timestamp that was actually watched, which lets a newly posted
-/// story light the ring again before the next tray fetch lands.
-/// </summary>
 internal sealed class StoryStore : IDisposable
 {
     public const int StoryWidth = 1080;
@@ -74,10 +68,6 @@ internal sealed class StoryStore : IDisposable
     public int ViewersTotal => viewersTotal;
     public bool ViewersLoading => viewersLoading;
 
-    /// <summary>
-    /// Loads who watched one of your own stories. Keyed by story id so stepping to the next story
-    /// clears the previous list rather than showing the wrong viewers under a new photo.
-    /// </summary>
     public void LoadViewers(string storyId)
     {
         if (viewersStoryId == storyId)

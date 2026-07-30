@@ -12,7 +12,6 @@ namespace Aetherphone.Apps.Health;
 
 internal sealed partial class HealthApp
 {
-    // Refilled in place each draw so a language change is picked up without allocating.
     private readonly string[] drinkKinds = new string[4];
     private readonly string[] unitLabels = new string[3];
     private readonly string[] scopeLabels = new string[4];
@@ -43,8 +42,6 @@ internal sealed partial class HealthApp
         scopeLabels[3] = Loc.T(L.Health.ScopeAllTime);
         return scopeLabels;
     }
-
-    // ---- Setup (stepped registration wizard) --------------------------------
 
     private const int SetupSteps = 5;
     private const int GoalTypeCount = (int)HealthGoalType.Calories + 1;
@@ -381,8 +378,6 @@ internal sealed partial class HealthApp
         return UiInteract.HoverClick(min, max);
     }
 
-    // ---- Hydration ----------------------------------------------------------
-
     private void DrawHydration(float scale)
     {
         var day = Profile.LatestDay ?? new HealthDay();
@@ -398,7 +393,6 @@ internal sealed partial class HealthApp
             tracker.LogDrink(DrinkKeys.Water, string.Empty, 250);
         }
 
-        // Quick drink
         var chipOrigin = ImGui.GetCursorScreenPos();
         var centerY = chipOrigin.Y + 16f * scale;
         var cursorX = chipOrigin.X;
@@ -507,8 +501,6 @@ internal sealed partial class HealthApp
             tracker.SaveNow();
         }
     }
-
-    // ---- Goals --------------------------------------------------------------
 
     private void DrawGoals(float scale)
     {
@@ -642,8 +634,6 @@ internal sealed partial class HealthApp
         return (HealthGoalType)(((int)type + delta + GoalTypeCount) % GoalTypeCount);
     }
 
-    // ---- History ------------------------------------------------------------
-
     private void DrawHistory(float scale)
     {
         var days = Profile.Days;
@@ -683,8 +673,6 @@ internal sealed partial class HealthApp
             ? parsed.ToString("ddd, MMM d", Loc.Culture)
             : key;
     }
-
-    // ---- Profile / Settings -------------------------------------------------
 
     private void DrawProfile(float scale)
     {
@@ -849,8 +837,6 @@ internal sealed partial class HealthApp
         _ => L.Health.WeightUnitPonz,
     });
 
-    // Fictional "normal" weight suggestions derived from the character's height and racial build.
-    // These are only tappable hints; weight is never auto-assigned.
     private void DrawWeightSuggestions(float scale)
     {
         var cm = tracker.HeightCm;
@@ -923,24 +909,22 @@ internal sealed partial class HealthApp
             {
                 return customize[0] switch
                 {
-                    3 => 1.12,  // Lalafell - small but stocky
-                    5 => 1.18,  // Roegadyn - heavy, muscular
-                    7 => 1.20,  // Hrothgar - huge, muscular
-                    2 => 0.95,  // Elezen - slender
-                    8 => 0.93,  // Viera - slender
-                    _ => 1.0,   // Hyur, Miqo'te, Au Ra
+                    3 => 1.12,
+                    5 => 1.18,
+                    7 => 1.20,
+                    2 => 0.95,
+                    8 => 0.93,
+                    _ => 1.0,
                 };
             }
         }
         catch
         {
-            // Appearance unreadable; use a neutral build.
         }
 
         return 1.0;
     }
 
-    // Appearance sheets are only re-read when the character actually changes.
     private ulong identityContentId;
     private string cachedRace = string.Empty;
     private string cachedClan = string.Empty;
@@ -981,11 +965,8 @@ internal sealed partial class HealthApp
         }
         catch
         {
-            // Appearance not readable right now; identity stays blank.
         }
     }
-
-    // ---- Small controls -----------------------------------------------------
 
     private int StepperRow(string label, string value, float scale, float rowHeight = 40f)
     {
@@ -1125,7 +1106,6 @@ internal sealed partial class HealthApp
         inputPos = boxMin;
     }
 
-    // A single centered numeric box (no label, no steppers); used to compose fields like TimeField.
     private int IntBox(string id, float inputLeft, float centerY, float inputWidth, float frameHeight, int value,
         int min, int max, string overlayFormat, float scale)
     {
@@ -1153,7 +1133,6 @@ internal sealed partial class HealthApp
         return Math.Clamp(v, min, max);
     }
 
-    // Label on the left; two centered HH / MM boxes separated by a colon on the right.
     private (int Hour, int Minute) TimeField(string label, string id, int hour, int minute, float scale)
     {
         var full = ImGui.GetContentRegionAvail().X;
@@ -1194,8 +1173,6 @@ internal sealed partial class HealthApp
         ImGui.Dummy(new Vector2(full, (rowHeight + 6f) * scale));
         return result;
     }
-
-    // ---- Card panels ------
 
     private Vector2 panelStart;
     private float panelWidth;

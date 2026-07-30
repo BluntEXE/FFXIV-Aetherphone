@@ -195,8 +195,6 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     public void GateMenus() => menuController.Gate();
 
-    /// <summary>Queues text for the composer input; applied on the next Draw, and only when the
-    /// composer is empty so a half-typed message is never clobbered.</summary>
     public void PrefillDraft(string body) => pendingPrefill = body;
 
     public void RequestScrollTo(string messageId) => transcript.RequestScrollTo(messageId);

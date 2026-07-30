@@ -8,13 +8,10 @@ internal static class CaseArt
 {
     private const uint Opaque = 0xFFFFFFFFu;
 
-    /// <summary>Free space around the phone body, as a fraction of body width, where a case may hang charms,
-    /// ears, straps or a figure past the silhouette. Matches the margin baked into the art canvas.</summary>
     public const float MarginFraction = 0.25f;
 
     public static bool IsLandscape(Rect body) => body.Width > body.Height;
 
-    /// <summary>The art quad: the phone body plus the overflow margin the canvas reserves around it.</summary>
     public static Rect RectFor(Rect body)
     {
         var margin = body.Width * MarginFraction;
@@ -23,8 +20,6 @@ internal static class CaseArt
 
     public static void Quad(ImDrawListPtr drawList, ImTextureID texture, Rect art, bool landscape, uint tint)
     {
-        // Overflow art lies outside the phone window, which ImGui would otherwise clip away. Escaping to the
-        // viewport keeps the window its own size, so the margin costs no screen space and eats no clicks.
         drawList.PushClipRectFullScreen();
         Draw(drawList, texture, art, landscape, tint);
         drawList.PopClipRect();
@@ -65,7 +60,6 @@ internal static class CaseArt
             return;
         }
 
-        // Replaces the clip rather than intersecting, so a band region outside the window still draws.
         drawList.PushClipRect(clip.Min, clip.Max, false);
         Draw(drawList, texture, art, landscape, Opaque);
         drawList.PopClipRect();

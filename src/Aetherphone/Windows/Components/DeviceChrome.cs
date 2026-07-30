@@ -10,8 +10,6 @@ internal static class DeviceChrome
 {
     private const float ChamferFraction = 0.4f;
 
-    // The mask is the sole definition of the screen corner, so it grows slightly past the nominal box to
-    // guarantee it covers content at every sub-pixel phase.
     private const float MaskGrow = 0.5f;
 
     public static Rect BodyRect(Rect window, PhoneTheme theme)

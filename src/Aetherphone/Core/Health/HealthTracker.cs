@@ -21,14 +21,14 @@ internal enum MovementKind
 
 internal sealed class HealthTracker : IDisposable
 {
-    private const long SampleIntervalMs = 100;      // ~10 samples/second
-    private const long SaveIntervalMs = 60_000;     // flush at most once per minute of movement
-    private const long GoalCheckIntervalMs = 1000;  // goal scan is ~1 Hz, not every movement sample
-    private const long HeightCheckIntervalMs = 5000; // appearance rarely changes; poll gently
+    private const long SampleIntervalMs = 100;
+    private const long SaveIntervalMs = 60_000;
+    private const long GoalCheckIntervalMs = 1000;
+    private const long HeightCheckIntervalMs = 5000;
     private const int MaxStoredDays = 60;
-    private const double Epsilon = 0.05;            // ignore jitter / standing still (yalms)
-    private const double WalkSpeedMax = 4.0;        // yalms/sec below which on-foot counts as walking
-    private const double MaxFootPerSec = 25.0;      // above sprint, rejects teleport jumps
+    private const double Epsilon = 0.05;
+    private const double WalkSpeedMax = 4.0;
+    private const double MaxFootPerSec = 25.0;
     private const double MaxMountPerSec = 60.0;
     private const double MaxSwimPerSec = 20.0;
 
@@ -46,24 +46,20 @@ internal sealed class HealthTracker : IDisposable
     private bool dirty;
     private bool loggedError;
 
-    // Baseline / discontinuity state
     private Vector3 lastPos;
     private uint lastTerritory, lastMap;
     private bool hasBaseline;
     private bool wasLoggedIn;
 
-    // Session (memory only; reset on reload / character switch)
     private double sWalk, sRun, sSwim, sDive, sMount, sFly, sActive, sKcal, sDrinkMl;
     private int sTeleports, sDrinks;
     private double sTeleY;
     private double onFootSessionSeconds, swimSessionSeconds;
 
-    // Pending teleport captured at a loading transition
     private Vector3 tpOrigin;
     private uint tpOriginTerritory, tpOriginMap;
     private bool pendingTeleport;
 
-    // Height + reminders
     private long lastDrinkUnix;
     private long lastReminderMs;
     private long lastGoalCheckMs;
@@ -79,7 +75,6 @@ internal sealed class HealthTracker : IDisposable
         this.notifications = notifications;
         store = new HealthStore(new DirectoryInfo(Path.Combine(configDirectory.FullName, "Health")));
         SessionStartedUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        // Seed from uptime so the first reminder waits a full interval instead of firing at once.
         lastReminderMs = Environment.TickCount64;
         ticker = new FrameworkTicker(framework, SampleIntervalMs, OnTick);
         Plugin.ClientState.Logout += OnLogout;
@@ -112,7 +107,6 @@ internal sealed class HealthTracker : IDisposable
         }
     }
 
-    // Session read-outs used by the UI
     public double SessionOnFootYalms => sWalk + sRun;
     public double SessionSwimYalms => sSwim + sDive;
     public double SessionSwimmingYalms => sSwim;
@@ -127,8 +121,6 @@ internal sealed class HealthTracker : IDisposable
         ticker.Dispose();
         SaveNow();
     }
-
-    // ---- Public mutations ---------------------------------------------------
 
     public void SaveNow()
     {
@@ -268,8 +260,6 @@ internal sealed class HealthTracker : IDisposable
         new HealthGoal { NameKey = GoalKeys.Drinks4, Type = HealthGoalType.HydrationCount, Target = 4 },
         new HealthGoal { NameKey = GoalKeys.Active30, Type = HealthGoalType.ActiveTime, Target = 1800 },
     };
-
-    // ---- Tracking loop ------------------------------------------------------
 
     private void OnTick()
     {
@@ -443,7 +433,6 @@ internal sealed class HealthTracker : IDisposable
 
         if (c[ConditionFlag.Mounted] || c[ConditionFlag.RidingPillion])
         {
-            // Auto-transport (chocobo porters, ferries) reports BeingMoved and is excluded.
             return c[ConditionFlag.BeingMoved] ? MovementKind.None : MovementKind.Mounted;
         }
 
@@ -454,7 +443,7 @@ internal sealed class HealthTracker : IDisposable
             return MovementKind.None;
         }
 
-        return MovementKind.Walking; // refined to Running by speed in Accumulate
+        return MovementKind.Walking;
     }
 
     private static double MaxSpeed(MovementKind kind) => kind switch
@@ -584,7 +573,6 @@ internal sealed class HealthTracker : IDisposable
             return;
         }
 
-        // Same coordinate space only: straight-line horizontal estimate, never exact path.
         if (tpOriginTerritory == curT && tpOriginMap == curM)
         {
             var d = Horizontal(tpOrigin, cur);
@@ -609,11 +597,8 @@ internal sealed class HealthTracker : IDisposable
         hasBaseline = true;
     }
 
-    // ---- Day rollover / streak ---------------------------------------------
-
     private static string BuildDateKey() => DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-    // The key is only rebuilt once a second; goal scopes and the day lookup ask for it often.
     private string DateKey()
     {
         var now = Environment.TickCount64;
@@ -655,7 +640,6 @@ internal sealed class HealthTracker : IDisposable
             return;
         }
 
-        // A new day began: fold the previous day into the streak before opening today.
         var steps = HealthFormat.Steps(latest.OnFootYalms, profile.StrideYalms);
         if (steps >= profile.DailyStepGoal)
         {
@@ -680,8 +664,6 @@ internal sealed class HealthTracker : IDisposable
             ? parsed.AddDays(-1).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
             : string.Empty;
     }
-
-    // ---- Height -------------------------------------------------------------
 
     private void ResolveHeight()
     {
@@ -725,8 +707,6 @@ internal sealed class HealthTracker : IDisposable
         HeightCm = 0;
         HeightSource = HeightSource.Unavailable;
     }
-
-    // ---- Hydration reminders ------------------------------------------------
 
     private void HydrationReminderCheck(long now)
     {
@@ -789,8 +769,6 @@ internal sealed class HealthTracker : IDisposable
                c[ConditionFlag.WatchingCutscene] || c[ConditionFlag.OccupiedInCutSceneEvent] ||
                c[ConditionFlag.BetweenAreas];
     }
-
-    // ---- Goals --------------------------------------------------------------
 
     public (double Current, double Target) GoalProgress(HealthGoal goal)
     {
@@ -898,8 +876,6 @@ internal sealed class HealthTracker : IDisposable
 
         return sum;
     }
-
-    // ---- Helpers ------------------------------------------------------------
 
     private void OnLogout(int type, int code)
     {

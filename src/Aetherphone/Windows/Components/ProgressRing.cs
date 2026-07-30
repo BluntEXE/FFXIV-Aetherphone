@@ -139,7 +139,6 @@ internal static class ProgressRing
             enabled ? Palette.WithAlpha(accent, hovered ? 1f : 0.78f) : Palette.WithAlpha(ChromeInk.Border, 0.85f));
         var glyph = enabled ? FontAwesomeIcon.Play : FontAwesomeIcon.Lock;
         var glyphCol = enabled ? (hovered ? ChromeInk.TextStrong : Accent.VioletSoft) : ChromeInk.TextMuted;
-        // A play triangle is visually heavier on its left edge; nudge right so it reads centred.
         var nudge = enabled ? new Vector2(radius * 0.07f, 0f) : Vector2.Zero;
         CenterIcon(c + nudge, glyph, glyphCol, radius * (enabled ? 0.78f : 0.62f));
         ImGui.SetCursorScreenPos(min);

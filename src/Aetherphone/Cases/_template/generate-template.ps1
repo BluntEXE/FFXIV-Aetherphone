@@ -1,7 +1,3 @@
-# Regenerates ArtCaseTemplate.svg from the chassis fractions in Core/Theme/ChassisMetrics.cs.
-# Run from this directory after changing any fraction there, then re-export the PSD guides.
-# SVG path data is locale-independent, so number formatting must not follow the machine's culture.
-
 [System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::InvariantCulture
 
 $CanvasWidth = 1500.0
@@ -9,11 +5,8 @@ $CanvasHeight = 2755.0
 $Exponent = 4.2
 $Segments = 64
 
-# Fractions of window width, from ChassisMetrics. Divided by (1 - 2*Rail) to become fractions of body width,
-# because the art canvas covers the body (the phone silhouette), not the window.
 $RailFraction = 0.0195
 $BodySpan = 1.0 - 2.0 * $RailFraction
-# Free space around the phone for charms, ears, straps and figures. The body itself stays 1000 x 2255.
 $Margin = 250.0
 $BodyWidth = $CanvasWidth - 2.0 * $Margin
 $BodyRight = $CanvasWidth - $Margin
@@ -62,8 +55,6 @@ $screenPath = Squircle-Path ($Margin + $Metal + $Glass) ($Margin + $Metal + $Gla
 function Button-Rect {
     param([double]$topFraction, [double]$heightFraction, [string]$edge, [string]$label)
 
-    # Buttons protrude outside the body and bite only 2 design px into it. At XXL the body is 480.5 design px
-    # wide, so that is 2 * 1000 / 480.5 canvas px.
     $top = $Margin + $topFraction * ($BodyBottom - $Margin)
     $height = $heightFraction * ($BodyBottom - $Margin)
     $depth = 2.0 * $BodyWidth / 480.5

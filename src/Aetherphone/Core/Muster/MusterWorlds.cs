@@ -2,8 +2,6 @@ using Lumina.Excel.Sheets;
 
 namespace Aetherphone.Core.Muster;
 
-/// <summary>World sheet lookups for muster reachability: home-world names arrive as strings on the wire,
-/// while data-center scoping and party invites need row ids. Read on the framework thread only.</summary>
 internal static class MusterWorlds
 {
     private static Dictionary<string, (ushort WorldId, int DataCenterId)>? byName;

@@ -5,7 +5,6 @@ using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
-/// <summary>Pull-to-refresh gesture for a list inside an <see cref="AppSurface"/>; one instance per list.</summary>
 internal sealed class PullToRefresh
 {
     private const float ArmThreshold = 64f;

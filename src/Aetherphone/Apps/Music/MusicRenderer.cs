@@ -8,11 +8,6 @@ using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Music;
 
-/// <summary>
-/// Pure drawing for the Music surface: cover art with a name-derived gradient fallback, the round
-/// play/pause button, the seek/volume slider and the pull-down chevron. State stays in
-/// <see cref="MusicApp"/>.
-/// </summary>
 internal static class MusicRenderer
 {
     private const float PressSmoothTime = 0.09f;

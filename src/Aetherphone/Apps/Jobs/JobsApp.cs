@@ -85,8 +85,6 @@ internal sealed partial class JobsApp : IPhoneApp
         ResolvePendingEquip();
     }
 
-    // Equipping only asks the game to switch: the gearset index and the player's job still read the old values for
-    // several frames, so the row that was clicked is polled until it actually turns active instead of once up front.
     private void ResolvePendingEquip()
     {
         if (pendingEquip is null)

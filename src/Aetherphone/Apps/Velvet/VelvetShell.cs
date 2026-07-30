@@ -121,9 +121,6 @@ internal sealed partial class VelvetShell : IPhoneApp
 
     public string Glyph => "Ve";
 
-    // Connect requests already surface through RequestCount, and Velvet has no
-    // activity screen to read the rest, so counting social activity here would
-    // double up and never clear.
     public int BadgeCount => store.UnreadCount + store.RequestCount;
 
     public ShareKindSet AcceptedShares =>

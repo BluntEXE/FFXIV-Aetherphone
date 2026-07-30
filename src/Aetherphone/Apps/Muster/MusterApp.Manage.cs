@@ -307,8 +307,6 @@ internal sealed partial class MusterApp
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
     }
 
-    // Moved spots captures the host's live location on the framework thread (tap handler); on a failed
-    // capture the notice still goes out with zeroed fields and the server keeps the previous spot.
     private void SendNotice(int notice)
     {
         noticeBusy = true;

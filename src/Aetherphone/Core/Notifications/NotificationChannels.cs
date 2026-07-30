@@ -7,8 +7,6 @@ internal readonly record struct NotificationChannel(string AppId, LocString Name
 
 internal static class NotificationChannels
 {
-    // Deliberately absent from the catalog so call alerts can never be muted by
-    // a per-app toggle; unlisted channels are always enabled.
     public const string PhoneChannel = "phone";
 
     public static readonly IReadOnlyList<NotificationChannel> All = new NotificationChannel[]

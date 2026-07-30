@@ -7,11 +7,6 @@ using Dalamud.Interface.Textures.TextureWraps;
 
 namespace Aetherphone.Apps.Camera;
 
-/// <summary>
-/// Pure rendering for the Camera surface. Owns the viewfinder chrome (top bar, viewfinder overlays,
-/// tray controls, flash). State and input decisions stay in <see cref="CameraApp"/>; each interactive
-/// method returns whether it was clicked so the app can mutate its own state.
-/// </summary>
 internal enum CameraBarAction
 {
     None,

@@ -630,8 +630,6 @@ internal sealed class ChessApp : IMiniGame
         };
     }
 
-    // Measured on the starting position through the early middlegame: depth 4 lands under 100ms and
-    // depth 5 peaks near two seconds, so the budgets cap the tail rather than the typical search.
     private static long BudgetFor(int difficulty)
     {
         return difficulty switch

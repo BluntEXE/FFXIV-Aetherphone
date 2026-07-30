@@ -22,8 +22,6 @@ internal sealed partial class PhotosApp : IPhoneApp
     private const long ThumbnailBudgetBytes = 48L * 1024 * 1024;
     private const long FullImageBudgetBytes = 96L * 1024 * 1024;
     private const float SegmentHeight = 34f;
-    // Negative keys avoid any collision with MonthAlbum keys (year*100+month, always positive).
-    // Starting at -2 rather than -1 additionally keeps clear of PhotoView.RecentsKey (-1).
     private const int FirstCustomAlbumId = 2;
 
     public string Id => "photos";
@@ -491,7 +489,6 @@ internal sealed partial class PhotosApp : IPhoneApp
         }
 
         pickerSelectionOrder.Remove(path);
-        // Renumber remaining badges so gaps left by the removed item close up (1, 2, 3, ...).
         for (var index = 0; index < pickerSelection.Count; index++)
         {
             pickerSelectionOrder[pickerSelection[index]] = index + 1;

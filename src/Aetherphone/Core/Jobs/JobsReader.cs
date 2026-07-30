@@ -8,10 +8,9 @@ namespace Aetherphone.Core.Jobs;
 
 internal static unsafe class JobsReader
 {
-    // ClassJobCategory sheet rows for the divisions the Character window groups by.
-    private const uint WarCategoryId = 30; // "Disciple of War"
-    private const uint LandCategoryId = 32; // "Disciple of the Land"
-    private const uint HandCategoryId = 33; // "Disciple of the Hand"
+    private const uint WarCategoryId = 30;
+    private const uint LandCategoryId = 32;
+    private const uint HandCategoryId = 33;
     private const int RoleCount = 7;
 
     public static JobSection[] Build(GameData gameData, IReadOnlyList<JobsCategory> categories)
@@ -140,10 +139,6 @@ internal static unsafe class JobsReader
         }
     }
 
-    /// <summary>
-    /// Hand/Land classes the player has levelled but never saved a gearset for. They are listed for completeness,
-    /// but the game only switches classes by equipping a gearset, so there is nothing to click.
-    /// </summary>
     private static void BuildClassEntries(GameData gameData, Span<short> levels,
         List<(JobEntry Entry, byte UiPriority)>[] buckets, HashSet<uint> gearsetJobIds, uint classJobCategoryId,
         int bucketIndex)
@@ -200,10 +195,6 @@ internal static unsafe class JobsReader
         return true;
     }
 
-    // JobType splits the combat roles the way the in-game job guide does, but it reads 0 for the base classes
-    // (Gladiator, Archer, Arcanist and friends), which would drop their gearsets entirely. Those fall back to
-    // Role, which cannot tell physical from magical ranged: the Disciple of War/Magic category settles that.
-    // Hand and Land read 0 for both, so their category has to be matched before either check.
     private static int BucketFor(byte jobType, byte role, uint classJobCategoryId)
     {
         if (classJobCategoryId == HandCategoryId)

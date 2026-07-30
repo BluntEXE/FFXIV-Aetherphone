@@ -31,16 +31,10 @@ internal static class UiInteract
 
     private static bool WindowHovered => windowHoveredFrame != ImGui.GetFrameCount() || windowHovered;
 
-    /// <summary>Discards the in-flight tap without activating it (called when a drag starts).</summary>
     public static void CancelPendingTap() => hasPendingTap = false;
 
-    /// <summary>Marks the pointer as resting on a tap/drag surface this frame.</summary>
     public static void ReportGestureSurface() => gestureSurfaceFrame = ImGui.GetFrameCount();
 
-    /// <summary>
-    /// Reads as true for one frame past the last report, because the window's PreDraw runs before the
-    /// surface redraws and needs the previous frame's answer to suppress an ImGui window move.
-    /// </summary>
     public static bool PointerOverGestureSurface => ImGui.GetFrameCount() - gestureSurfaceFrame <= 1;
 
     public static bool HoverOverlay(Rect rect)
@@ -57,24 +51,11 @@ internal static class UiInteract
     public static bool Hover(Vector2 min, Vector2 max) =>
         !InputBlocked && !MouseOverOverlay && WindowHovered && ImGui.IsMouseHoveringRect(min, max);
 
-    /// <summary>
-    /// <see cref="Hover(Vector2, Vector2)"/> without the <see cref="InputBlocked"/> or
-    /// <see cref="MouseOverOverlay"/> gates, for content that is itself the reason those gates are set
-    /// this frame: a dropdown/picker drawn while its host calls <see cref="BlockThisFrame"/>, or a drag
-    /// start zone that must stay live independent of another overlay's reservation.
-    /// </summary>
     public static bool HoverWindowOnly(Vector2 min, Vector2 max) => WindowHovered && ImGui.IsMouseHoveringRect(min, max);
 
     public static bool HoverWindowOnly(Vector2 min, Vector2 max, bool clip) =>
         WindowHovered && ImGui.IsMouseHoveringRect(min, max, clip);
 
-    /// <summary>
-    /// True when the left mouse button was just clicked inside this phone window but outside
-    /// <paramref name="min"/>/<paramref name="max"/> — the standard "tap outside to dismiss" test.
-    /// Unlike a negated <see cref="Hover"/>, requiring <see cref="WindowHovered"/> directly means a
-    /// click that lands in an unrelated window (where <see cref="WindowHovered"/> is false) can't be
-    /// mistaken for an outside-click on an overlay it never touched.
-    /// </summary>
     public static bool ClickedOutside(Vector2 min, Vector2 max) =>
         WindowHovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !ImGui.IsMouseHoveringRect(min, max);
 
@@ -84,18 +65,6 @@ internal static class UiInteract
     public static bool Hover(Vector2 min, Vector2 max, bool clip) =>
         !InputBlocked && !MouseOverOverlay && WindowHovered && ImGui.IsMouseHoveringRect(min, max, clip);
 
-    /// <summary>
-    /// Release-triggered activation for a rect the caller has already hover-tested, so a drag can
-    /// cancel the pending tap before it fires. Pass the same rect <paramref name="hovered"/> was
-    /// computed from.
-    /// </summary>
-    /// <remarks>
-    /// The press is claimed by the rect itself, held in the window's content space so that scrolling
-    /// or a fling between press and release cannot hand the tap to whichever rect drifted under the
-    /// pointer. When rects overlap, the last one to claim on the press frame owns it, matching the
-    /// draw order that put it on top. Content space follows the window, so the claim is dropped when
-    /// the window itself moves: dragging an unlocked phone by one of its controls is a move, not a tap.
-    /// </remarks>
     public static bool Click(Vector2 min, Vector2 max, bool hovered)
     {
         hovered = hovered && WindowHovered;
@@ -136,14 +105,8 @@ internal static class UiInteract
     private static bool Claimed(Vector2 corner, Vector2 claim) =>
         MathF.Abs(corner.X - claim.X) <= RectMatchEpsilon && MathF.Abs(corner.Y - claim.Y) <= RectMatchEpsilon;
 
-    /// <summary>
-    /// <see cref="Click(Vector2, Vector2, bool)"/> gated by the standard <see cref="Hover"/> test.
-    /// </summary>
     public static bool Click(Vector2 min, Vector2 max) => Click(min, max, Hover(min, max));
 
-    /// <summary>
-    /// <see cref="Click(Vector2, Vector2, bool)"/> plus the hand cursor while hovered.
-    /// </summary>
     public static bool HoverClick(Vector2 min, Vector2 max)
     {
         var hovering = Hover(min, max);

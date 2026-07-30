@@ -13,8 +13,6 @@ using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Aethergram;
 
-// The post detail view: comments, comment composer, the profile view, and moderation actions
-// (report / delete). Split from the main feed for readability.
 internal sealed partial class AethergramApp
 {
     private void DrawDetail(Rect area, string postId)

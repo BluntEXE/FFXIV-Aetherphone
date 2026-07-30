@@ -1,11 +1,3 @@
-# Generates a template-conformant art case PNG (plus its picker thumb).
-# Reference implementation of the spec in README.md: it is what a hand-painted case must match
-# geometrically. Hand-painted art replaces these; the geometry does not change.
-#
-#   .\generate-case.ps1 -Id Ironworks -Style Tech   -Top '#8a97a6' -Bottom '#252c36' -Accent '#5ad2ff'
-#   .\generate-case.ps1 -Id Emberforge -Style Ornate -Top '#e0b356' -Bottom '#6b4415' -Accent '#123054'
-#   .\generate-case.ps1 -Id Voidsent  -Style Neon   -Top '#2a1f4a' -Bottom '#0d0a1c' -Accent '#d94ae8'
-
 param(
     [Parameter(Mandatory = $true)][string]$Id,
     [Parameter(Mandatory = $true)][ValidateSet('Tech', 'Ornate', 'Neon', 'Armor', 'Weave', 'Stone')][string]$Style,
@@ -13,9 +5,6 @@ param(
     [Parameter(Mandatory = $true)][string]$Bottom,
     [Parameter(Mandatory = $true)][string]$Accent,
 
-    # Exploration knobs. MetalFraction is the band width as a fraction of window width and must match
-    # ChassisMetrics.ArtMetalFraction for anything that ships; override it only to preview what a wider
-    # bezel would buy. OutDir keeps such previews out of the shipped Cases folder.
     [double]$MetalFraction = 0.0365,
     [string]$OutDir
 )
@@ -35,7 +24,6 @@ public static class CaseBaker
     const double Exponent = 4.2;
     const int Canvas = 1500;
     const int CanvasHeight = 2755;
-    // Free space around the phone for charms, ears, straps and figures. The body itself stays 1000 x 2255.
     const int Margin = 250;
     const int BodyX1 = Canvas - Margin - 1;
     const int BodyY1 = CanvasHeight - Margin - 1;
@@ -44,8 +32,6 @@ public static class CaseBaker
 
     static double Metal, Glass, BodyBox, Bleed;
 
-    // Inside when (1-a)^4.2 + (1-b)^4.2 <= 1, with a,b the normalised position inside the corner box.
-    // This is the closed form of the curve Squircle.BuildUnitCorner traces.
     static bool Inside(double x, double y, double x0, double y0, double x1, double y1, double box)
     {
         if (x < x0 || y < y0 || x > x1 || y > y1) { return false; }
@@ -70,9 +56,6 @@ public static class CaseBaker
         return (double)hits / (Samples * Samples);
     }
 
-    // How far the point sits inside the silhouette, measured along the inward normal of the squircle
-    // family rather than to the rect edges, so ornament bands stay parallel to the curve at the corners.
-    // Straight regions are exact; corner boxes bisect the inset that puts the point on the curve.
     static double InsetDepth(double x, double y)
     {
         double cornerX = Math.Min(x - Margin, BodyX1 - x);
@@ -95,7 +78,6 @@ public static class CaseBaker
 
     static double Clamp01(double v) { return v < 0.0 ? 0.0 : (v > 1.0 ? 1.0 : v); }
 
-    // Soft band centred on c with half-width w, used for grooves, inlays and neon runs.
     static double Band(double t, double c, double w)
     {
         double d = Math.Abs(t - c) / w;
@@ -127,7 +109,6 @@ public static class CaseBaker
         double t = Clamp01(depth / Metal);
         Rgb c = top.Mix(bottom, Clamp01((y - Margin) / (BodyY1 - Margin)));
 
-        // Perimeter parameter: run along the long axis on the sides, the short axis on top and bottom.
         double cornerX = Math.Min(x - Margin, BodyX1 - x);
         double cornerY = Math.Min(y - Margin, BodyY1 - y);
         bool vertical = cornerX < cornerY;
@@ -137,10 +118,10 @@ public static class CaseBaker
 
         if (style == "Tech")
         {
-            c = c.Lift(0.55 * Band(t, 0.05, 0.10));            // outer chamfer catch-light
-            c = c.Lift(-0.55 * Band(t, 0.36, 0.09));           // panel seam
-            c = c.Lift(-0.45 * Band(t, 0.82, 0.09));           // inner seam
-            c = c.Lift(0.18 * Band(t, 0.62, 0.14));            // raised centre rail
+            c = c.Lift(0.55 * Band(t, 0.05, 0.10));
+            c = c.Lift(-0.55 * Band(t, 0.36, 0.09));
+            c = c.Lift(-0.45 * Band(t, 0.82, 0.09));
+            c = c.Lift(0.18 * Band(t, 0.62, 0.14));
             double runLit = inCorner ? 1.0 : Pulse(run, 260.0, 0.62);
             c = c.Mix(accent, 0.85 * Band(t, 0.50, 0.075) * runLit);
             c = c.Mix(accent, 0.30 * Band(t, 0.50, 0.20) * runLit);
@@ -149,31 +130,30 @@ public static class CaseBaker
         }
         else if (style == "Ornate")
         {
-            c = c.Lift(0.62 * Band(t, 0.06, 0.11));            // gold outer bevel
-            c = c.Lift(0.34 * Band(t, 0.93, 0.09));            // gold inner lip
+            c = c.Lift(0.62 * Band(t, 0.06, 0.11));
+            c = c.Lift(0.34 * Band(t, 0.93, 0.09));
             double inlay = Band(t, 0.50, 0.30);
-            c = c.Mix(accent, 0.92 * inlay);                   // dark enamel channel
+            c = c.Mix(accent, 0.92 * inlay);
             c = c.Lift(-0.30 * Band(t, 0.29, 0.06));
             c = c.Lift(-0.30 * Band(t, 0.71, 0.06));
             if (!inCorner)
             {
                 double rune = Pulse(run, 118.0, 0.30) * Band(t, 0.50, 0.20);
-                c = c.Lift(0.55 * rune);                        // engraved ticks in the channel
+                c = c.Lift(0.55 * rune);
             }
             double gem = Clamp01(1.0 - Math.Max(cornerX, cornerY) / (BodyBox * 0.42));
             c = c.Mix(accent, 0.85 * gem);
-            c = c.Lift(0.75 * Clamp01(gem * 2.0 - 1.2));       // gem catch-light
+            c = c.Lift(0.75 * Clamp01(gem * 2.0 - 1.2));
         }
         else if (style == "Armor")
         {
-            // Rugged shell: two rails around a recessed grip channel, thickening into corner bumpers.
             c = c.Lift(0.30 * Band(t, 0.10, 0.16));
             c = c.Lift(0.22 * Band(t, 0.90, 0.13));
             c = c.Lift(-0.45 * Band(t, 0.50, 0.26));
             if (!inCorner)
             {
                 double rib = Pulse(run, 74.0, 0.46) * Band(t, 0.50, 0.24);
-                c = c.Lift(0.34 * rib);                        // grip ribs
+                c = c.Lift(0.34 * rib);
             }
             double bumper = Clamp01(1.0 - Math.Max(cornerX, cornerY) / (BodyBox * 0.72));
             c = c.Lift(0.20 * bumper);
@@ -182,36 +162,29 @@ public static class CaseBaker
         }
         else if (style == "Weave")
         {
-            // Carbon twill as crossed diagonals rather than woven cells. A cell grid needs to be finer
-            // than the 38px band to read as carbon, which puts it under the aliasing floor; crossed
-            // sines give the same weave at a frequency the band can actually carry. Keyed to x and y,
-            // because a weave runs in a fixed direction across the material, not around the frame.
-            // Quantised to discrete steps: continuous tone is the worst case for PNG and pushed this
-            // case past its size budget on its own. Posterised threads also read more like carbon.
             double diag = Math.Sin((x + y) * 0.26) + Math.Sin((x - y) * 0.26);
             c = c.Lift(0.095 * Math.Round(diag));
             double sheen = Math.Exp(-Math.Pow(((x + y) % 900.0 - 450.0) / 220.0, 2.0));
-            c = c.Lift(0.26 * sheen);                          // diagonal gloss sweep
+            c = c.Lift(0.26 * sheen);
             c = c.Lift(0.40 * Band(t, 0.06, 0.10));
-            c = c.Mix(accent, 0.85 * Band(t, 0.50, 0.045));    // lacquered pinstripe
+            c = c.Mix(accent, 0.85 * Band(t, 0.50, 0.045));
             c = c.Lift(-0.35 * Band(t, 0.95, 0.07));
         }
         else if (style == "Stone")
         {
-            // Marble: veins from summed sines of position, so they wander instead of repeating.
             double vein = Math.Sin(x * 0.0113 + Math.Sin(y * 0.0071) * 3.1)
                         + 0.62 * Math.Sin(y * 0.0169 + 1.3)
                         + 0.28 * Math.Sin((x + y) * 0.0091 - 0.7);
             c = c.Lift(-0.42 * Clamp01(1.0 - Math.Abs(vein) / 0.20));
             c = c.Lift(-0.14 * Clamp01(1.0 - Math.Abs(vein - 1.1) / 0.45));
-            c = c.Mix(accent, 0.90 * Band(t, 0.05, 0.09));     // gold leaf outer edge
-            c = c.Mix(accent, 0.70 * Band(t, 0.95, 0.07));     // gold leaf inner edge
-            c = c.Lift(0.30 * Band(t, 0.50, 0.30));            // polished crown
+            c = c.Mix(accent, 0.90 * Band(t, 0.05, 0.09));
+            c = c.Mix(accent, 0.70 * Band(t, 0.95, 0.07));
+            c = c.Lift(0.30 * Band(t, 0.50, 0.30));
         }
         else
         {
             c = c.Lift(0.30 * Band(t, 0.05, 0.09));
-            c = c.Lift(-0.40 * Band(t, 0.45, 0.16));           // recessed trough the neon sits in
+            c = c.Lift(-0.40 * Band(t, 0.45, 0.16));
             double runLit = inCorner ? 1.0 : Pulse(run, 340.0, 0.52);
             c = c.Mix(accent, 0.95 * Band(t, 0.27, 0.055) * runLit);
             c = c.Mix(accent, 0.38 * Band(t, 0.27, 0.17) * runLit);
@@ -221,18 +194,10 @@ public static class CaseBaker
             c = c.Mix(accent, 0.50 * cornerReach);
         }
 
-        // Directional edge light the engine no longer draws for art cases: bright top and left,
-        // dim bottom and right.
         double rim = Band(t, 0.0, 0.16);
         bool bright = x - Margin <= BodyX1 - x && y - Margin <= BodyY1 - y;
         c = c.Lift(bright ? rim * 0.30 : -rim * 0.28);
 
-        // Past the cutout these pixels are invisible and exist only to bleed colour outward. Collapsing
-        // them to the flat gradient keeps the bleed intact and stops fine ornament from tripling the
-        // file size on 85% of the canvas that nobody ever sees.
-        // Inward, ornament must survive the whole band before it can flatten. Outward, only the 8px bleed
-        // matters, so it collapses almost immediately -- otherwise a fine pattern is computed across the
-        // entire overflow margin and the file size doubles for pixels that are fully transparent.
         var fade = depth < 0.0
             ? Clamp01((-depth - 8.0) / 12.0)
             : Clamp01((depth - (Metal + Bleed + 8.0)) / 18.0);
@@ -242,7 +207,6 @@ public static class CaseBaker
     public static void Bake(string fullPath, string thumbPath, string style, int topArgb, int bottomArgb,
         int accentArgb, double metalFraction)
     {
-        // Chassis fractions are of the phone body, which is the canvas minus the overflow margin.
         double span = 1.0 - 2.0 * RailFraction;
         double bodyWidth = Canvas - 2.0 * Margin;
         Metal = metalFraction / span * bodyWidth;
@@ -268,8 +232,6 @@ public static class CaseBaker
         {
             for (int x = 0; x < Canvas; x++)
             {
-                // Colour is written for every pixel, including fully transparent ones, so it bleeds past
-                // both alpha edges and bilinear filtering cannot produce halos.
                 Rgb c = Shade(style, x, y, InsetDepth(x, y), top, bottom, accent);
                 double body = Coverage(x, y, Margin, Margin, BodyX1, BodyY1, BodyBox);
                 double cut = Coverage(x, y, cutX0, cutY0, cutX1, cutY1, cutBox);
@@ -287,8 +249,6 @@ public static class CaseBaker
         bitmap.Save(fullPath, ImageFormat.Png);
         bitmap.Dispose();
 
-        // Box-filtered by hand: GDI+ interop is not reachable from an inline compile, and averaging
-        // channels straight is correct because RGB is valid even under alpha 0.
         const int Shrink = 4;
         int thumbWidth = Canvas / Shrink, thumbHeight = CanvasHeight / Shrink;
         var thumb = new Bitmap(thumbWidth, thumbHeight, PixelFormat.Format32bppArgb);

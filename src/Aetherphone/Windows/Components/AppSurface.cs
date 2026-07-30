@@ -31,13 +31,10 @@ internal static class AppSurface
             this.surface = surface;
         }
 
-        /// <summary>How far this surface is pulled past its top edge, in pixels.</summary>
         public readonly float Pull => surface.Pull;
 
-        /// <summary>Whether the pointer is dragging this surface right now.</summary>
         public readonly bool Dragging => surface.Dragging;
 
-        /// <summary>Snaps this surface back to the top, dropping any drag, momentum, or pull.</summary>
         public readonly void JumpToTop() => surface.JumpToTop();
 
         public void Dispose()

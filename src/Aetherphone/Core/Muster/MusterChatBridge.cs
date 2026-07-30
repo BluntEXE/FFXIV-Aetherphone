@@ -5,8 +5,6 @@ namespace Aetherphone.Core.Muster;
 
 internal readonly record struct MusterChatResolution(MusterDto? Muster, bool Missed);
 
-/// <summary>Lets the shared chat transcript resolve and open muster invite bubbles without every DM app
-/// threading the store through its model. Bound once by the shell, cleared on dispose.</summary>
 internal static class MusterChatBridge
 {
     private static MusterStore? store;

@@ -14,11 +14,6 @@ using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
 
-/// <summary>
-/// Fullscreen story player: segmented progress, timed auto advance, tap left/right to step,
-/// press and hold to pause, drag down to dismiss. Draws over the whole app like
-/// <see cref="PhotoViewerOverlay"/> rather than routing, so the app returns early while it is active.
-/// </summary>
 internal readonly record struct StoryViewers(StoryViewerDto[] Items, int Total, bool Loading);
 
 internal readonly record struct StoryReplyPrompt(LocString Hint, Action<StoryDto, string> Send);
@@ -177,11 +172,6 @@ internal sealed class StoryViewerOverlay
         viewersSource = null;
     }
 
-    /// <param name="suspended">
-    /// Holds the story on screen and ignores input while something modal is above the viewer, such as
-    /// the delete confirmation. Without it the timer keeps running underneath and can advance off, or
-    /// close, the very story being acted on.
-    /// </param>
     public void Draw(Rect area, PhoneTheme theme, bool suspended = false)
     {
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
@@ -254,10 +244,6 @@ internal sealed class StoryViewerOverlay
         return new Rect(new Vector2(stage.Min.X, barTop - rowRise), stage.Max);
     }
 
-    /// <summary>
-    /// Stacks the caption above the seen pill against the bottom of the stage under one scrim, so the two
-    /// cannot land on top of each other the way separately bottom-anchored blocks did.
-    /// </summary>
     private void DrawFooter(ImDrawListPtr drawList, Rect stage, StoryDto story, float scale, float delta,
         float bottomInset)
     {
@@ -407,14 +393,8 @@ internal sealed class StoryViewerOverlay
         prompt.Send(story, trimmed);
     }
 
-    // The eye and count only exist on your own story: the server reports ViewCount as zero to anyone
-    // who is not the author, so this would silently read "0" for everyone else.
     private bool ShowSeenPill => canDelete && viewersSource is not null;
 
-    /// <summary>
-    /// The chip sits on an arbitrary photo, so hover has to read against both a bright and a dark backdrop:
-    /// the fill deepens, a hairline ring fades in, and the ink lifts to full white together.
-    /// </summary>
     private void DrawSeenPill(ImDrawListPtr drawList, Vector2 origin, StoryDto story, float height, float scale,
         float delta)
     {

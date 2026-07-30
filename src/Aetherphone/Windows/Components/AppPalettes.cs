@@ -28,7 +28,6 @@ internal static class AppPalettes
         HoverTint = DefaultHover,
     };
 
-    // Supporting row tints for the Health cards, kept beside the palette they belong to.
     public static readonly Vector4 HealthWater = new(0.28f, 0.68f, 0.92f, 1f);
     public static readonly Vector4 HealthEnergy = new(0.96f, 0.62f, 0.24f, 1f);
     public static readonly Vector4 HealthTeleport = new(0.62f, 0.52f, 0.96f, 1f);
@@ -429,7 +428,6 @@ internal static class AppPalettes
         HoverTint = DefaultHover,
     };
 
-    /// <summary>The Jobs app lets the user pick its accent, so its palette is derived rather than fixed.</summary>
     public static AppPalette JobsFor(Vector4 accent) => new()
     {
         Accent = accent,

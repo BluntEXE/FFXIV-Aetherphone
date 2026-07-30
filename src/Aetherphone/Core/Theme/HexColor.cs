@@ -18,7 +18,6 @@ internal static class HexColor
         return true;
     }
 
-    /// <summary>Formats as 6 hex digits without a leading '#'.</summary>
     public static string ToDigits(Vector4 color)
     {
         var r = (int)Math.Clamp(MathF.Round(color.X * 255f), 0f, 255f);

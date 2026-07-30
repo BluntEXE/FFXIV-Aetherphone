@@ -47,9 +47,6 @@ internal sealed class CallLogStore
         configuration.Save();
     }
 
-    // Server missed-call notifications also land here so calls missed while
-    // offline still reach the log; a recent matching local entry means the
-    // client already logged this one itself.
     public void NoteServerMissed(string userId, string displayName)
     {
         if (string.IsNullOrEmpty(userId))

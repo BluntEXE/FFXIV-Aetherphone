@@ -15,8 +15,6 @@ using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Aethergram;
 
-// The compose / avatar creation flow (pick, crop, caption, share). Kept in its own partial so the
-// main AethergramApp.cs stays focused on the feed and app orchestration.
 internal sealed partial class AethergramApp
 {
     private const float AspectPickerReserve = 42f;
