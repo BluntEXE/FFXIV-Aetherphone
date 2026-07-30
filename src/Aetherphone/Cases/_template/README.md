@@ -73,14 +73,35 @@ in the SVG; a rounded-rectangle tool will not match and the mismatch shows as a 
 reads flat next to the default chassis. Bright along the top and left, dim along the bottom and right,
 roughly 4-8 px.
 
-**Ornament on the band belongs in the four corner boxes.** The straight edges are overlaid by hardware
-buttons, which bite about 4 canvas px in at these spans (fractions of the long side):
+**Ornament on the band belongs in the four corner boxes**, because the straight edges carry the hardware
+buttons.
 
-| Button | Span | Portrait edge | Landscape edge |
-|---|---|---|---|
-| Mute | 0.205 - 0.287 | left | bottom |
-| Side | 0.250 - 0.358 | right | top |
-| Lock | 0.315 - 0.397 | left | bottom |
+### Hardware buttons
+
+**Do not paint them.** The plugin draws all three procedurally, on top of your artwork, every frame. A
+painted button would sit under a real one and read as a double.
+
+They are not flat shapes — each is a recessed housing, a rounded body with a lit crown and a shaded
+flank, a specular highlight that brightens on hover, a 1.5 px press travel, and an accent seam that
+lights up when the toggle is on. None of that can come from a static image, which is why it stays
+procedural.
+
+**Their colour comes from the tint you declare at handover, not from your PNG.** The body is that tint
+lightened slightly, the housing is the glass tone. So a white case that declares a dark tint gets dark
+buttons that look wrong against it. Match the tint to your metal.
+
+Exact footprints, in canvas pixels. Each is 24.5 px wide: 20.3 px in the margin outside the body, and
+4.2 px biting into the band.
+
+| Button | X span | Y span | Portrait edge | Landscape edge |
+|---|---|---|---|---|
+| Mute | 229.7 - 254.2 | 712.3 - 897.2 | left | bottom |
+| Side | 1245.8 - 1270.3 | 813.8 - 1057.3 | right | top |
+| Lock | 229.7 - 254.2 | 960.3 - 1145.2 | left | bottom |
+
+The housing extends a further ~5 px above and below each span. Everything inside these rectangles is
+covered, so leave them plain — but you *can* paint around them, and a raised bump or a moulded button
+cover in the margin beside a button is a good use of the space.
 
 **In camera mode the whole image rotates 90 degrees clockwise.** Overflow art rotates with it, so a charm
 hanging off the left in portrait hangs off the bottom in landscape. Make it read either way, or keep

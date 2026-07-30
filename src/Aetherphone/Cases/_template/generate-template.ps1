@@ -55,12 +55,16 @@ $screenPath = Squircle-Path ($Margin + $Metal + $Glass) ($Margin + $Metal + $Gla
 function Button-Rect {
     param([double]$topFraction, [double]$heightFraction, [string]$edge, [string]$label)
 
+    # A button sits mostly in the overflow margin: it spans the rail gutter outside the body and bites only
+    # 2 design px into the band. The engine draws it over the art, so this whole footprint gets covered.
     $top = $Margin + $topFraction * ($BodyBottom - $Margin)
     $height = $heightFraction * ($BodyBottom - $Margin)
-    $depth = 2.0 * $BodyWidth / 480.5
-    $x = if ($edge -eq "left") { $Margin } else { $BodyRight - $depth }
+    $rail = 0.0195 / $BodySpan * $BodyWidth
+    $bite = 2.0 * $BodyWidth / 480.5
+    $width = $rail + $bite
+    $x = if ($edge -eq "left") { $Margin - $rail } else { $BodyRight - $bite }
     return "<rect x='{0:F1}' y='{1:F1}' width='{2:F1}' height='{3:F1}' class='button'/><text x='{4:F1}' y='{5:F1}' class='tag'>{6}</text>" -f `
-        $x, $top, $depth, $height, ($(if ($edge -eq "left") { $depth + 8 } else { $CanvasWidth - $depth - 90 })), ($top + $height * 0.5), $label
+        $x, $top, $width, $height, ($(if ($edge -eq "left") { $x - 96 } else { $x + $width + 12 })), ($top + $height * 0.5), $label
 }
 
 $mute = Button-Rect 0.205 0.082 "left" "mute"
