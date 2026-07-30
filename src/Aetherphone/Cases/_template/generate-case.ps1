@@ -33,8 +33,12 @@ using System.Runtime.InteropServices;
 public static class CaseBaker
 {
     const double Exponent = 4.2;
-    const int Canvas = 1000;
-    const int CanvasHeight = 2255;
+    const int Canvas = 1500;
+    const int CanvasHeight = 2755;
+    // Free space around the phone for charms, ears, straps and figures. The body itself stays 1000 x 2255.
+    const int Margin = 250;
+    const int BodyX1 = Canvas - Margin - 1;
+    const int BodyY1 = CanvasHeight - Margin - 1;
     const double RailFraction = 0.0195;
     const int Samples = 3;
 
@@ -71,8 +75,9 @@ public static class CaseBaker
     // Straight regions are exact; corner boxes bisect the inset that puts the point on the curve.
     static double InsetDepth(double x, double y)
     {
-        double cornerX = Math.Min(x, Canvas - 1 - x);
-        double cornerY = Math.Min(y, CanvasHeight - 1 - y);
+        double cornerX = Math.Min(x - Margin, BodyX1 - x);
+        double cornerY = Math.Min(y - Margin, BodyY1 - y);
+        if (cornerX < 0.0 || cornerY < 0.0) { return Math.Min(cornerX, cornerY); }
         if (cornerX >= BodyBox || cornerY >= BodyBox) { return Math.Min(cornerX, cornerY); }
 
         double low = 0.0, high = BodyBox;
@@ -120,13 +125,13 @@ public static class CaseBaker
     static Rgb Shade(string style, double x, double y, double depth, Rgb top, Rgb bottom, Rgb accent)
     {
         double t = Clamp01(depth / Metal);
-        Rgb c = top.Mix(bottom, Clamp01(y / (CanvasHeight - 1)));
+        Rgb c = top.Mix(bottom, Clamp01((y - Margin) / (BodyY1 - Margin)));
 
         // Perimeter parameter: run along the long axis on the sides, the short axis on top and bottom.
-        bool vertical = Math.Min(x, Canvas - 1 - x) < Math.Min(y, CanvasHeight - 1 - y);
-        double run = vertical ? y : x;
-        double cornerX = Math.Min(x, Canvas - 1 - x);
-        double cornerY = Math.Min(y, CanvasHeight - 1 - y);
+        double cornerX = Math.Min(x - Margin, BodyX1 - x);
+        double cornerY = Math.Min(y - Margin, BodyY1 - y);
+        bool vertical = cornerX < cornerY;
+        double run = vertical ? y - Margin : x - Margin;
         bool inCorner = cornerX < BodyBox && cornerY < BodyBox;
         double cornerReach = inCorner ? Clamp01(1.0 - Math.Max(cornerX, cornerY) / BodyBox) : 0.0;
 
@@ -183,8 +188,8 @@ public static class CaseBaker
             // because a weave runs in a fixed direction across the material, not around the frame.
             // Quantised to discrete steps: continuous tone is the worst case for PNG and pushed this
             // case past its size budget on its own. Posterised threads also read more like carbon.
-            double diag = Math.Sin((x + y) * 0.40) + Math.Sin((x - y) * 0.40);
-            c = c.Lift(0.085 * (Math.Round(diag * 2.0) / 2.0));
+            double diag = Math.Sin((x + y) * 0.26) + Math.Sin((x - y) * 0.26);
+            c = c.Lift(0.095 * Math.Round(diag));
             double sheen = Math.Exp(-Math.Pow(((x + y) % 900.0 - 450.0) / 220.0, 2.0));
             c = c.Lift(0.26 * sheen);                          // diagonal gloss sweep
             c = c.Lift(0.40 * Band(t, 0.06, 0.10));
@@ -219,27 +224,34 @@ public static class CaseBaker
         // Directional edge light the engine no longer draws for art cases: bright top and left,
         // dim bottom and right.
         double rim = Band(t, 0.0, 0.16);
-        bool bright = x <= Canvas - 1 - x && y <= CanvasHeight - 1 - y;
+        bool bright = x - Margin <= BodyX1 - x && y - Margin <= BodyY1 - y;
         c = c.Lift(bright ? rim * 0.30 : -rim * 0.28);
 
         // Past the cutout these pixels are invisible and exist only to bleed colour outward. Collapsing
         // them to the flat gradient keeps the bleed intact and stops fine ornament from tripling the
         // file size on 85% of the canvas that nobody ever sees.
-        double fade = Clamp01((depth - (Metal + Bleed + 8.0)) / 18.0);
-        return fade <= 0.0 ? c : c.Mix(top.Mix(bottom, Clamp01(y / (CanvasHeight - 1.0))), fade);
+        // Inward, ornament must survive the whole band before it can flatten. Outward, only the 8px bleed
+        // matters, so it collapses almost immediately -- otherwise a fine pattern is computed across the
+        // entire overflow margin and the file size doubles for pixels that are fully transparent.
+        var fade = depth < 0.0
+            ? Clamp01((-depth - 8.0) / 12.0)
+            : Clamp01((depth - (Metal + Bleed + 8.0)) / 18.0);
+        return fade <= 0.0 ? c : c.Mix(top.Mix(bottom, Clamp01((y - Margin) / (BodyY1 - Margin))), fade);
     }
 
     public static void Bake(string fullPath, string thumbPath, string style, int topArgb, int bottomArgb,
         int accentArgb, double metalFraction)
     {
+        // Chassis fractions are of the phone body, which is the canvas minus the overflow margin.
         double span = 1.0 - 2.0 * RailFraction;
-        Metal = metalFraction / span * Canvas;
-        Glass = 0.0155 / span * Canvas;
-        BodyBox = 0.1548 / span * Canvas;
+        double bodyWidth = Canvas - 2.0 * Margin;
+        Metal = metalFraction / span * bodyWidth;
+        Glass = 0.0155 / span * bodyWidth;
+        BodyBox = 0.1548 / span * bodyWidth;
         Bleed = 10.0;
 
-        double cutX0 = Metal + Bleed, cutY0 = Metal + Bleed;
-        double cutX1 = Canvas - Metal - Bleed, cutY1 = CanvasHeight - Metal - Bleed;
+        double cutX0 = Margin + Metal + Bleed, cutY0 = Margin + Metal + Bleed;
+        double cutX1 = BodyX1 - Metal - Bleed, cutY1 = BodyY1 - Metal - Bleed;
         double cutBox = BodyBox - Metal - Bleed;
 
         Rgb top = Rgb.Of(Color.FromArgb(topArgb));
@@ -259,7 +271,7 @@ public static class CaseBaker
                 // Colour is written for every pixel, including fully transparent ones, so it bleeds past
                 // both alpha edges and bilinear filtering cannot produce halos.
                 Rgb c = Shade(style, x, y, InsetDepth(x, y), top, bottom, accent);
-                double body = Coverage(x, y, 0, 0, Canvas - 1, CanvasHeight - 1, BodyBox);
+                double body = Coverage(x, y, Margin, Margin, BodyX1, BodyY1, BodyBox);
                 double cut = Coverage(x, y, cutX0, cutY0, cutX1, cutY1, cutBox);
 
                 int index = y * stride + x * 4;

@@ -13,12 +13,14 @@ internal static class PhoneCasePreview
     public static void Draw(ImDrawListPtr drawList, Rect body, PhoneCase option, PhoneTheme theme, float scale)
     {
         var finish = new CaseFinish(option.Tint);
-        var chassis = ChassisGeometry.Preview(body, option.Kind);
+        // Shrink so the overflow margin fits inside the tile instead of spilling over its neighbours.
+        var inner = option.Kind == PhoneCaseKind.Art ? Shrink(body, 1f + 2f * CaseArt.MarginFraction) : body;
+        var chassis = ChassisGeometry.Preview(inner, option.Kind);
         if (option.Kind == PhoneCaseKind.Art && PhoneCaseTextures.Thumb(option.TextureId) is { } thumb)
         {
             Squircle.Fill(drawList, chassis.Body.Min, chassis.Body.Max, chassis.BodyRadius,
                 ImGui.GetColorU32(finish.Frame));
-            CaseArt.Quad(drawList, thumb, chassis.Body, false, CaseArt.Tint(1f));
+            CaseArt.Quad(drawList, thumb, CaseArt.RectFor(chassis.Body), false, CaseArt.Tint(1f));
             Squircle.Fill(drawList, chassis.Glass.Min, chassis.Glass.Max, chassis.GlassRadius,
                 ImGui.GetColorU32(finish.Glass));
             Squircle.Fill(drawList, chassis.Screen.Min, chassis.Screen.Max, chassis.ScreenRadius,
@@ -30,6 +32,13 @@ internal static class PhoneCasePreview
         }
 
         DrawIsland(drawList, chassis.Screen, finish);
+    }
+
+    private static Rect Shrink(Rect rect, float factor)
+    {
+        var size = rect.Size / factor;
+        var center = rect.Center;
+        return new Rect(center - size * 0.5f, center + size * 0.5f);
     }
 
     private static void DrawIsland(ImDrawListPtr drawList, Rect screen, in CaseFinish finish)

@@ -66,7 +66,8 @@ internal static class DeviceChrome
         var paintMetal = true;
         if (theme.WantsCaseArt && PhoneCaseTextures.Skin(theme.CaseTextureId) is { } bandTexture)
         {
-            CaseArt.QuadExcluding(dl, bandTexture, chassis.Body, band, CaseArt.IsLandscape(chassis.Body));
+            CaseArt.QuadExcluding(dl, bandTexture, CaseArt.RectFor(chassis.Body), band,
+                CaseArt.IsLandscape(chassis.Body));
             paintMetal = false;
         }
 
@@ -114,7 +115,8 @@ internal static class DeviceChrome
                 ImGui.GetColorU32(theme.FrameMetal));
         }
 
-        CaseArt.Quad(dl, texture, chassis.Body, CaseArt.IsLandscape(chassis.Body), CaseArt.Tint(artAlpha));
+        CaseArt.Quad(dl, texture, CaseArt.RectFor(chassis.Body), CaseArt.IsLandscape(chassis.Body),
+            CaseArt.Tint(artAlpha));
         Squircle.Fill(dl, chassis.Glass.Min, chassis.Glass.Max, chassis.GlassRadius, ImGui.GetColorU32(theme.Glass));
         Squircle.Fill(dl, chassis.Screen.Min, chassis.Screen.Max, chassis.ScreenRadius,
             ImGui.GetColorU32(theme.ScreenBase));

@@ -33,6 +33,7 @@ internal static class CatalogLabels
             "Bulwark" => Loc.T(L.Catalogs.CaseBulwark),
             "Carbonweave" => Loc.T(L.Catalogs.CaseCarbonweave),
             "Alabaster" => Loc.T(L.Catalogs.CaseAlabaster),
+            "Silkie" => Loc.T(L.Catalogs.CaseSilkie),
             _ => identifier,
         };
 
