@@ -31,7 +31,7 @@ internal static class NameEffects
             RoleKind.Patreon => NameEffectKind.Sweep,
             RoleKind.Moderator => NameEffectKind.Glint,
             RoleKind.Developer => NameEffectKind.Ripple,
-            RoleKind.Supporter => NameEffectKind.Breath,
+            RoleKind.Support => NameEffectKind.Breath,
             RoleKind.Verified => NameEffectKind.Gradient,
             _ => NameEffectKind.None,
         };

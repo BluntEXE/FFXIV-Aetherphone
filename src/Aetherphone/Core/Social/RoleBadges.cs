@@ -13,7 +13,7 @@ internal enum AccountBadges
     Management = 1 << 2,
     Moderator = 1 << 3,
     Developer = 1 << 4,
-    Supporter = 1 << 5,
+    Support = 1 << 5,
     Contributor = 1 << 6,
 }
 
@@ -27,7 +27,7 @@ internal static class RoleBadges
         new(AccountBadges.Moderator, RoleKind.Moderator, FontAwesomeIcon.Gavel, L.Social.RoleModerator),
         new(AccountBadges.Patreon, RoleKind.Patreon, FontAwesomeIcon.Star, L.Social.RolePatreon),
         new(AccountBadges.Developer, RoleKind.Developer, FontAwesomeIcon.Code, L.Social.RoleDeveloper),
-        new(AccountBadges.Supporter, RoleKind.Supporter, FontAwesomeIcon.HandHoldingHeart, L.Social.RoleSupporter),
+        new(AccountBadges.Support, RoleKind.Support, FontAwesomeIcon.HandHoldingHeart, L.Social.RoleSupport),
         new(AccountBadges.Contributor, RoleKind.Contributor, FontAwesomeIcon.PuzzlePiece, L.Social.RoleContributor),
         new(AccountBadges.Verified, RoleKind.Verified, FontAwesomeIcon.CheckCircle, L.Social.RoleVerified),
     };

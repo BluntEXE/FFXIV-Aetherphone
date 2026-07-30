@@ -8,7 +8,7 @@ internal enum RoleKind
     Moderator,
     Verified,
     Patreon,
-    Supporter,
+    Support,
     Contributor,
 }
 
@@ -17,7 +17,7 @@ internal static class RoleInk
     private static readonly Vector4 ManagementBase = new(0.4275f, 0.2039f, 0.4118f, 1.00f);
     private static readonly Vector4 ModeratorBase = new(0.8784f, 0.4627f, 0.1490f, 1.00f);
     private static readonly Vector4 DeveloperBase = new(0.2706f, 0.2706f, 0.6667f, 1.00f);
-    private static readonly Vector4 SupporterBase = new(0.1255f, 0.4000f, 0.5804f, 1.00f);
+    private static readonly Vector4 SupportBase = new(0.0000f, 1.0000f, 0.4471f, 1.00f);
     private static readonly Vector4 PatreonBase = new(0.9098f, 0.1216f, 0.3843f, 1.00f);
     private static readonly Vector4 VerifiedBase = new(0.2039f, 0.5961f, 0.8588f, 1.00f);
     private static readonly Vector4 ContributorBase = new(0.1843f, 0.7647f, 0.4392f, 1.00f);
@@ -61,7 +61,7 @@ internal static class RoleInk
             RoleKind.Management => ManagementBase,
             RoleKind.Moderator => ModeratorBase,
             RoleKind.Developer => DeveloperBase,
-            RoleKind.Supporter => SupporterBase,
+            RoleKind.Support => SupportBase,
             RoleKind.Patreon => PatreonBase,
             RoleKind.Verified => VerifiedBase,
             RoleKind.Contributor => ContributorBase,
