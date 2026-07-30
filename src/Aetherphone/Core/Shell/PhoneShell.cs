@@ -196,8 +196,9 @@ internal sealed class PhoneShell : IDisposable
         device = device.Translate(new Vector2(shake.Advance(delta), 0f));
         wallpapers.StepDayNight(delta);
         var theme = themes.Chrome;
-        var screen = DeviceChrome.ScreenRect(device, theme);
-        DeviceChrome.DrawBody(device, theme, TransparentBand(screen));
+        var chassis = DeviceChrome.Chassis(device, theme);
+        var screen = chassis.Screen;
+        DeviceChrome.DrawBody(chassis, theme, TransparentBand(screen));
         loading.Advance(delta);
         navigation.Advance(delta);
         if (!navigation.IsTransitioning)
@@ -209,7 +210,7 @@ internal sealed class PhoneShell : IDisposable
         calls.Advance(delta);
         if (!loading.IsActive)
         {
-            switch (sideButton.Update(DeviceChrome.SideButtonRect(device), theme, delta))
+            switch (sideButton.Update(DeviceChrome.SideButtonRect(device, chassis), theme, delta))
             {
                 case SideButtonAction.Minimize:
                     minimize.BeginCollapse();
@@ -219,14 +220,14 @@ internal sealed class PhoneShell : IDisposable
                     break;
             }
 
-            if (SideToggle.Update(DeviceChrome.MuteButtonRect(device), theme, configuration.DoNotDisturb,
+            if (SideToggle.Update(DeviceChrome.MuteButtonRect(device, chassis), theme, configuration.DoNotDisturb,
                     Loc.T(configuration.DoNotDisturb ? L.Plugin.DndDisableHint : L.Plugin.DndEnableHint)))
             {
                 configuration.DoNotDisturb = !configuration.DoNotDisturb;
                 configuration.Save();
             }
 
-            if (SideToggle.Update(DeviceChrome.LockButtonRect(device), theme, configuration.LockPosition,
+            if (SideToggle.Update(DeviceChrome.LockButtonRect(device, chassis), theme, configuration.LockPosition,
                     Loc.T(configuration.LockPosition ? L.Plugin.UnlockPositionHint : L.Plugin.LockPositionHint)))
             {
                 configuration.LockPosition = !configuration.LockPosition;
@@ -238,22 +239,18 @@ internal sealed class PhoneShell : IDisposable
         var state = overlays.Assess(screen);
         director.Advance(delta, state.Busy, navigation.AtHome, navigation.Current?.Id);
         UiAnchors.BeginFrame(director.WantsAnchors);
-        UiAnchors.Report("chrome.lock", DeviceChrome.LockButtonRect(device));
-        UiAnchors.Report("chrome.minimize", DeviceChrome.SideButtonRect(device));
+        UiAnchors.Report("chrome.lock", DeviceChrome.LockButtonRect(device, chassis));
+        UiAnchors.Report("chrome.minimize", DeviceChrome.SideButtonRect(device, chassis));
         UiAnchors.Report("chrome.controlcenter",
             new Rect(screen.Min, new Vector2(screen.Max.X, screen.Min.Y + 44f * ImGuiHelpers.GlobalScale)));
         using (InputShield.Engage(state.ShieldBase || director.CapturesPointer))
         {
-            DrawContent(screen, theme);
-            if (!navigation.AtHome || navigation.IsTransitioning)
-            {
-                DeviceChrome.MaskScreenCorners(screen, theme);
-            }
-
+            DrawContent(chassis, theme);
+            DeviceChrome.MaskScreenCorners(ImGui.GetWindowDrawList(), chassis, theme, ImGuiHelpers.GlobalScale);
             DrawChrome(screen, theme);
         }
 
-        overlays.DrawOverlays(screen, theme, delta, state);
+        overlays.DrawOverlays(chassis, theme, delta, state);
     }
 
     private Rect? TransparentBand(Rect screen)
@@ -287,15 +284,15 @@ internal sealed class PhoneShell : IDisposable
         lastCallState = state;
     }
 
-    private void DrawContent(Rect screen, PhoneTheme theme)
+    private void DrawContent(in ChassisGeometry chassis, PhoneTheme theme)
     {
         if (navigation.IsTransitioning)
         {
-            transition.Draw(screen, theme);
+            transition.Draw(chassis.Screen, chassis.ScreenRadius, theme);
             return;
         }
 
-        painter.PaintCurrent(screen, theme, HomeMotion.Rest);
+        painter.PaintCurrent(chassis.Screen, chassis.ScreenRadius, theme, HomeMotion.Rest);
     }
 
     private void DrawChrome(Rect screen, PhoneTheme theme)

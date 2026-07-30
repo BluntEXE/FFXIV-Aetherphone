@@ -22,33 +22,33 @@ internal sealed class ShellScreenPainter
         this.home = home;
     }
 
-    public void PaintCurrent(Rect screen, PhoneTheme theme, in HomeMotion motion)
+    public void PaintCurrent(Rect screen, float screenRadius, PhoneTheme theme, in HomeMotion motion)
     {
         if (navigation.AtHome)
         {
-            PaintHome(screen, theme, motion);
+            PaintHome(screen, screenRadius, theme, motion);
             return;
         }
 
         using (ImRaii.PushId(navigation.Current!.Id))
         {
-            PaintApp(screen, theme, navigation.Current!);
+            PaintApp(screen, screenRadius, theme, navigation.Current!);
         }
     }
 
-    public void PaintHome(Rect screen, PhoneTheme theme, in HomeMotion motion)
+    public void PaintHome(Rect screen, float screenRadius, PhoneTheme theme, in HomeMotion motion)
     {
-        DeviceChrome.DrawWallpaper(screen, theme, motion);
-        DeviceChrome.DrawHomeScrim(screen, theme);
+        DeviceChrome.DrawWallpaper(screen, screenRadius, theme, motion);
+        DeviceChrome.DrawHomeScrim(screen, screenRadius, theme);
         home.Draw(screen, ContentRect(screen, theme), theme, navigation, motion);
     }
 
-    public void PaintApp(Rect screen, PhoneTheme theme, IPhoneApp app)
+    public void PaintApp(Rect screen, float screenRadius, PhoneTheme theme, IPhoneApp app)
     {
         var content = themes.ForApp(app.WantsSystemTheme);
         if (!app.WantsTransparentScreen)
         {
-            DeviceChrome.FillScreen(screen, theme, content.AppBackground);
+            DeviceChrome.FillScreen(screen, screenRadius, content.AppBackground);
         }
 
         var contentRect = ContentRect(screen, theme);

@@ -28,7 +28,7 @@ internal sealed class ShellTransitionRenderer
 
     public void ResetPrepared() => zoomPreparedFor = null;
 
-    public void Draw(Rect screen, PhoneTheme theme)
+    public void Draw(Rect screen, float screenRadius, PhoneTheme theme)
     {
         var cover = navigation.MotionProgress;
         var height = screen.Height;
@@ -36,16 +36,16 @@ internal sealed class ShellTransitionRenderer
         var under = navigation.MotionUnder;
         if (under is null && !over.WantsTransparentScreen)
         {
-            DrawZoomTransition(screen, theme, over);
+            DrawZoomTransition(screen, screenRadius, theme, over);
             return;
         }
 
         var overOffset = new Vector2(0f, (1f - cover) * height);
         var underDim = cover * TransitionTiming.ShellDimMax;
         LayerPainter underPaint = under is null
-            ? target => painter.PaintHome(target, theme, new HomeMotion(1f, default, 0f, false))
-            : target => painter.PaintApp(target, theme, under);
-        LayerPainter overPaint = target => painter.PaintApp(target, theme, over);
+            ? target => painter.PaintHome(target, screenRadius, theme, new HomeMotion(1f, default, 0f, false))
+            : target => painter.PaintApp(target, screenRadius, theme, under);
+        LayerPainter overPaint = target => painter.PaintApp(target, screenRadius, theme, over);
         if (over.WantsTransparentScreen || (under?.WantsTransparentScreen ?? false))
         {
             var band = new Rect(screen.Min, new Vector2(screen.Max.X, screen.Min.Y + overOffset.Y));
@@ -61,7 +61,7 @@ internal sealed class ShellTransitionRenderer
         SceneCompositor.Composite(screen, underLayer, overLayer);
     }
 
-    private void DrawZoomTransition(Rect screen, PhoneTheme theme, IPhoneApp over)
+    private void DrawZoomTransition(Rect screen, float screenRadius, PhoneTheme theme, IPhoneApp over)
     {
         var raw = Math.Clamp(navigation.MotionProgress, 0f, 1f);
         var content = ShellScreenPainter.ContentRect(screen, theme);
@@ -76,8 +76,8 @@ internal sealed class ShellTransitionRenderer
         var rest = navigation.MotionOrigin ?? home.RevealRect(over.Id, content) ?? CenterOrigin(content);
         var motion = new HomeMotion(1f + TransitionTiming.HomeZoomDepth * recede, rest.Center, recede, false);
         SceneCompositor.DrawLayer(screen, new SceneCompositor.Layer("home", Vector2.Zero,
-            TransitionTiming.HomeRecedeDim * recede, target => painter.PaintHome(target, theme, motion), default,
-            true));
+            TransitionTiming.HomeRecedeDim * recede,
+            target => painter.PaintHome(target, screenRadius, theme, motion), default, true));
         var warped = motion.Warp(rest);
         var card = new Rect(Vector2.Lerp(warped.Min, screen.Min, raw), Vector2.Lerp(warped.Max, screen.Max, raw));
         if (card.Width < 4f || card.Height < 4f)
@@ -87,16 +87,16 @@ internal sealed class ShellTransitionRenderer
 
         var scale = ImGuiHelpers.GlobalScale;
         var iconRadius = MathF.Min(MathF.Min(rest.Width, rest.Height) * 0.26f, 24f * scale);
-        var rounding = iconRadius + (theme.ScreenRounding * scale - iconRadius) * raw;
+        var rounding = iconRadius + (screenRadius - iconRadius) * raw;
         var shellDrawList = ImGui.GetWindowDrawList();
         var elevation = Easing.Clamp01(raw * 2.4f);
-        Elevation.Floating(shellDrawList, card.Min, card.Max, rounding, scale, elevation);
-        DrawZoomCard(screen, theme, over, rest, card, rounding, raw);
+        Elevation.Squircle(shellDrawList, card.Min, card.Max, rounding, scale, elevation);
+        DrawZoomCard(screen, screenRadius, theme, over, rest, card, rounding, raw);
         Material.EdgeSquircle(ImGui.GetWindowDrawList(), card.Min, card.Max, rounding, scale, elevation);
     }
 
-    private void DrawZoomCard(Rect screen, PhoneTheme theme, IPhoneApp over, Rect rest, Rect card, float rounding,
-        float raw)
+    private void DrawZoomCard(Rect screen, float screenRadius, PhoneTheme theme, IPhoneApp over, Rect rest, Rect card,
+        float rounding, float raw)
     {
         const ImGuiWindowFlags cardFlags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse |
                                            ImGuiWindowFlags.NoBackground;
@@ -115,7 +115,7 @@ internal sealed class ShellTransitionRenderer
                     screen.Max + offset + new Vector2(0f, rise));
                 using (ImRaii.PushId(over.Id))
                 {
-                    painter.PaintApp(target, theme, over);
+                    painter.PaintApp(target, screenRadius, theme, over);
                 }
             }
 

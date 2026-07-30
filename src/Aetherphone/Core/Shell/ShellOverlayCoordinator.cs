@@ -84,8 +84,9 @@ internal sealed class ShellOverlayCoordinator
         return new ShellOverlayState(setupActive, confirming, islandCaptures, busy, shieldBase);
     }
 
-    public void DrawOverlays(Rect screen, PhoneTheme theme, float delta, in ShellOverlayState state)
+    public void DrawOverlays(in ChassisGeometry chassis, PhoneTheme theme, float delta, in ShellOverlayState state)
     {
+        var screen = chassis.Screen;
         if (state.SetupActive)
         {
             setup.Draw(screen, theme, delta, !loading.IsActive && !state.Confirming);
@@ -94,6 +95,7 @@ internal sealed class ShellOverlayCoordinator
         if (loading.IsActive)
         {
             loading.Draw(screen, theme);
+            DeviceChrome.SealScreen(chassis, theme, configuration.ScreenBrightness);
             return;
         }
 
@@ -101,7 +103,7 @@ internal sealed class ShellOverlayCoordinator
         {
             HoverTooltip.Flush();
             banOverlay.Draw(screen, theme);
-            DeviceChrome.DrawBrightnessVeil(screen, theme, configuration.ScreenBrightness);
+            DeviceChrome.SealScreen(chassis, theme, configuration.ScreenBrightness);
             return;
         }
 
@@ -109,7 +111,7 @@ internal sealed class ShellOverlayCoordinator
         {
             HoverTooltip.Flush();
             confirmOverlay.Draw(screen, theme);
-            DeviceChrome.DrawBrightnessVeil(screen, theme, configuration.ScreenBrightness);
+            DeviceChrome.SealScreen(chassis, theme, configuration.ScreenBrightness);
             return;
         }
 
@@ -144,6 +146,6 @@ internal sealed class ShellOverlayCoordinator
         confirmOverlay.Draw(screen, theme);
         director.Draw(screen, theme);
         conductOverlay.Draw(screen, theme);
-        DeviceChrome.DrawBrightnessVeil(screen, theme, configuration.ScreenBrightness);
+        DeviceChrome.SealScreen(chassis, theme, configuration.ScreenBrightness);
     }
 }
