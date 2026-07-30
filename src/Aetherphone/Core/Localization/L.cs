@@ -32,6 +32,7 @@ internal static class L
         public static readonly LocString NoPhotos = new("common.noPhotos", "No photos in your gallery yet");
         public static readonly LocString FileKindImages = new("common.fileKindImages", "Images");
         public static readonly LocString FileKindAudio = new("common.fileKindAudio", "Audio");
+        public static readonly LocString FileKindVideo = new("common.fileKindVideo", "Video");
         public static readonly LocString FileKindAll = new("common.fileKindAll", "All files");
     }
 

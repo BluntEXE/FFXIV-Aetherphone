@@ -54,7 +54,7 @@ internal sealed partial class AetherStreamApp : IPhoneApp
     private readonly StoreWork dependencyWork = new("aetherstream.dependencies");
     private bool mpvDownloading;
     private bool ytdlpDownloading;
-    private readonly AppSkin ui = new(AppPalettes.Dev with { Accent = AppAccents.For("aetherstream") });
+    private readonly AppSkin ui = new(AppPalettes.AetherStream);
     private readonly ViewRouter<AetherStreamScreen> router = new(AetherStreamScreen.Main);
     private readonly string[] tabOptions = new string[3];
     private AetherStreamTab activeTab;

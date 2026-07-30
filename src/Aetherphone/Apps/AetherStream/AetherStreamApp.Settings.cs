@@ -189,8 +189,7 @@ internal sealed partial class AetherStreamApp
         return new PhoneTheme
         {
             BezelOuter = baseTheme.BezelOuter,
-            FrameMetal = baseTheme.FrameMetal,
-            RailMetal = baseTheme.RailMetal,
+            Case = baseTheme.Case,
             ScreenBase = baseTheme.ScreenBase,
             LightWallpaperId = baseTheme.LightWallpaperId,
             DarkWallpaperId = baseTheme.DarkWallpaperId,
