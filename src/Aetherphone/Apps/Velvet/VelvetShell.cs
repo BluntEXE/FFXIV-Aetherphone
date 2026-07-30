@@ -160,6 +160,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         if (GateAccepted && store.IsSignedIn)
         {
             store.EnsureMe();
+            store.RefreshRequests();
             stories.RefreshTray();
             ApplyFeedFilters();
         }

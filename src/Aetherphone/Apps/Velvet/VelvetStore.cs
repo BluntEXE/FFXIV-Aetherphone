@@ -95,7 +95,19 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         this.configuration = configuration;
         this.signals = signals;
         signals.VelvetPinged += OnVelvetPinged;
+        signals.SocialPinged += OnSocialPinged;
         signals.ConnectedChanged += OnRealtimeConnected;
+    }
+
+    // A connect request arrives as a social notification, not a Velvet DM ping, and
+    // the requests list is what both the Messages tab badge and the Requests segment
+    // count read from. Without this it stays empty until that screen is drawn.
+    private void OnSocialPinged()
+    {
+        if (TickActive)
+        {
+            RefreshRequests();
+        }
     }
 
     private void OnRealtimeConnected(bool active)
@@ -728,7 +740,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
 
     public void RefreshRequests()
     {
-        if (!session.IsSignedIn)
+        if (!session.IsSignedIn || loadingRequests)
         {
             return;
         }
@@ -1358,6 +1370,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     protected override void DisposeCore()
     {
         signals.VelvetPinged -= OnVelvetPinged;
+        signals.SocialPinged -= OnSocialPinged;
         signals.ConnectedChanged -= OnRealtimeConnected;
     }
 }
