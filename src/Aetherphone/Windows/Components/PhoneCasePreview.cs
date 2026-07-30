@@ -10,11 +10,25 @@ internal static class PhoneCasePreview
     private const float IslandHeightFraction = 0.030f;
     private const float IslandTopFraction = 0.028f;
 
-    public static void Draw(ImDrawListPtr drawList, Rect body, Vector4 caseColor, PhoneTheme theme, float scale)
+    public static void Draw(ImDrawListPtr drawList, Rect body, PhoneCase option, PhoneTheme theme, float scale)
     {
-        var finish = new CaseFinish(caseColor);
-        var chassis = ChassisGeometry.Preview(body);
-        DeviceChrome.DrawShell(drawList, chassis, scale, finish, theme.ScreenBase);
+        var finish = new CaseFinish(option.Tint);
+        var chassis = ChassisGeometry.Preview(body, option.Kind);
+        if (option.Kind == PhoneCaseKind.Art && PhoneCaseTextures.Thumb(option.TextureId) is { } thumb)
+        {
+            Squircle.Fill(drawList, chassis.Body.Min, chassis.Body.Max, chassis.BodyRadius,
+                ImGui.GetColorU32(finish.Frame));
+            CaseArt.Quad(drawList, thumb, chassis.Body, false, CaseArt.Tint(1f));
+            Squircle.Fill(drawList, chassis.Glass.Min, chassis.Glass.Max, chassis.GlassRadius,
+                ImGui.GetColorU32(finish.Glass));
+            Squircle.Fill(drawList, chassis.Screen.Min, chassis.Screen.Max, chassis.ScreenRadius,
+                ImGui.GetColorU32(theme.ScreenBase));
+        }
+        else
+        {
+            DeviceChrome.DrawShell(drawList, chassis, scale, finish, theme.ScreenBase);
+        }
+
         DrawIsland(drawList, chassis.Screen, finish);
     }
 

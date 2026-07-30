@@ -634,6 +634,8 @@
   "settings.themeAuto": "Auto",
   "settings.accent": "Accent",
   "settings.phoneCase": "Case",
+  "settings.caseColors": "Colors",
+  "settings.caseArtwork": "Artwork",
   "settings.wallpaper": "Wallpaper",
   "settings.textSize": "Text Size",
   "settings.phoneSize": "Phone Size",

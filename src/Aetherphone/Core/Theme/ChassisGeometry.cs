@@ -7,9 +7,6 @@ internal readonly struct ChassisGeometry
     private const float PuckRoundingFraction = 0.300f;
     private const float PuckMetalFraction = 0.030f;
     private const float PuckGlassFraction = 0.060f;
-    private const float PreviewRoundingFraction = 0.155f;
-    private const float PreviewMetalFraction = 0.020f;
-    private const float PreviewGlassFraction = 0.035f;
 
     public readonly Rect Body;
     public readonly Rect Glass;
@@ -50,9 +47,11 @@ internal readonly struct ChassisGeometry
             Easing.Lerp(theme.MetalWidth * scale, body.Width * PuckMetalFraction, eased),
             Easing.Lerp(theme.GlassWidth * scale, body.Width * PuckGlassFraction, eased));
 
-    public static ChassisGeometry Preview(Rect body) =>
-        new(body, body.Width * PreviewRoundingFraction, body.Width * PreviewMetalFraction,
-            body.Width * PreviewGlassFraction);
+    public static ChassisGeometry Preview(Rect body, PhoneCaseKind kind)
+    {
+        var metrics = ChassisMetrics.ForBody(kind, body.Width);
+        return new ChassisGeometry(body, metrics.DeviceRounding, metrics.MetalWidth, metrics.GlassWidth);
+    }
 
     private static float SnapBand(float width, float limit)
     {

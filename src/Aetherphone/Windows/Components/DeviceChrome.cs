@@ -53,23 +53,36 @@ internal static class DeviceChrome
         var dl = ImGui.GetWindowDrawList();
         if (transparentBand is not { } band)
         {
-            DrawShell(dl, chassis, scale, theme.Case, theme.ScreenBase);
+            DrawShell(dl, chassis, scale, theme, 1f);
             return chassis.Screen;
         }
 
-        var frame = ImGui.GetColorU32(theme.FrameMetal);
         var glass = ImGui.GetColorU32(theme.Glass);
         var screenBase = ImGui.GetColorU32(theme.ScreenBase);
+        var frame = ImGui.GetColorU32(theme.FrameMetal);
+        var paintMetal = true;
+        if (theme.WantsCaseArt && PhoneCaseTextures.Skin(theme.CaseTextureId) is { } bandTexture)
+        {
+            CaseArt.QuadExcluding(dl, bandTexture, chassis.Body, band, CaseArt.IsLandscape(chassis.Body));
+            paintMetal = false;
+        }
+
         if (band.Min.Y <= chassis.Screen.Min.Y + 0.5f && band.Max.Y >= chassis.Screen.Max.Y - 0.5f)
         {
-            DrawViewportBodySideways(dl, chassis, band, frame, glass, screenBase);
+            DrawViewportBodySideways(dl, chassis, band, frame, glass, screenBase, paintMetal);
         }
         else
         {
-            DrawViewportBody(dl, chassis, band, frame, glass, screenBase);
+            DrawViewportBody(dl, chassis, band, frame, glass, screenBase, paintMetal);
         }
 
-        RailFinish(dl, chassis, scale, theme.Case);
+        if (paintMetal)
+        {
+            RailFinish(dl, chassis, scale, theme.Case);
+            return chassis.Screen;
+        }
+
+        ScreenRecess(dl, chassis, scale);
         return chassis.Screen;
     }
 
@@ -82,32 +95,65 @@ internal static class DeviceChrome
         RailFinish(dl, chassis, scale, finish);
     }
 
+    public static void DrawShell(ImDrawListPtr dl, in ChassisGeometry chassis, float scale, PhoneTheme theme,
+        float artAlpha)
+    {
+        var skin = artAlpha > 0.001f && theme.WantsCaseArt ? PhoneCaseTextures.Skin(theme.CaseTextureId) : null;
+        if (skin is not { } texture)
+        {
+            DrawShell(dl, chassis, scale, theme.Case, theme.ScreenBase);
+            return;
+        }
+
+        if (artAlpha < 0.999f)
+        {
+            Squircle.Fill(dl, chassis.Body.Min, chassis.Body.Max, chassis.BodyRadius,
+                ImGui.GetColorU32(theme.FrameMetal));
+        }
+
+        CaseArt.Quad(dl, texture, chassis.Body, CaseArt.IsLandscape(chassis.Body), CaseArt.Tint(artAlpha));
+        Squircle.Fill(dl, chassis.Glass.Min, chassis.Glass.Max, chassis.GlassRadius, ImGui.GetColorU32(theme.Glass));
+        Squircle.Fill(dl, chassis.Screen.Min, chassis.Screen.Max, chassis.ScreenRadius,
+            ImGui.GetColorU32(theme.ScreenBase));
+        var step = ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.55f));
+        Squircle.Stroke(dl, chassis.Glass.Min, chassis.Glass.Max, chassis.GlassRadius, step, 1f * scale);
+        ScreenRecess(dl, chassis, scale);
+    }
+
     private static void DrawViewportBody(ImDrawListPtr dl, in ChassisGeometry chassis, Rect band, uint frame,
-        uint glass, uint screenBase)
+        uint glass, uint screenBase, bool paintMetal)
     {
         var screen = chassis.Screen;
         var top = Math.Clamp(band.Min.Y, screen.Min.Y, screen.Max.Y);
         var bottom = Math.Clamp(band.Max.Y, top, screen.Max.Y);
-        CapPair(dl, chassis.Body, chassis.BodyRadius, top, bottom, frame);
+        if (paintMetal)
+        {
+            CapPair(dl, chassis.Body, chassis.BodyRadius, top, bottom, frame);
+            dl.AddRectFilled(new Vector2(chassis.Body.Min.X, top), new Vector2(chassis.Glass.Min.X, bottom), frame);
+            dl.AddRectFilled(new Vector2(chassis.Glass.Max.X, top), new Vector2(chassis.Body.Max.X, bottom), frame);
+        }
+
         CapPair(dl, chassis.Glass, chassis.GlassRadius, top, bottom, glass);
         CapPair(dl, screen, chassis.ScreenRadius, top, bottom, screenBase);
-        dl.AddRectFilled(new Vector2(chassis.Body.Min.X, top), new Vector2(chassis.Glass.Min.X, bottom), frame);
-        dl.AddRectFilled(new Vector2(chassis.Glass.Max.X, top), new Vector2(chassis.Body.Max.X, bottom), frame);
         dl.AddRectFilled(new Vector2(chassis.Glass.Min.X, top), new Vector2(screen.Min.X, bottom), glass);
         dl.AddRectFilled(new Vector2(screen.Max.X, top), new Vector2(chassis.Glass.Max.X, bottom), glass);
     }
 
     private static void DrawViewportBodySideways(ImDrawListPtr dl, in ChassisGeometry chassis, Rect band, uint frame,
-        uint glass, uint screenBase)
+        uint glass, uint screenBase, bool paintMetal)
     {
         var screen = chassis.Screen;
         var left = Math.Clamp(band.Min.X, screen.Min.X, screen.Max.X);
         var right = Math.Clamp(band.Max.X, left, screen.Max.X);
-        SideCapPair(dl, chassis.Body, chassis.BodyRadius, left, right, frame);
+        if (paintMetal)
+        {
+            SideCapPair(dl, chassis.Body, chassis.BodyRadius, left, right, frame);
+            dl.AddRectFilled(new Vector2(left, chassis.Body.Min.Y), new Vector2(right, chassis.Glass.Min.Y), frame);
+            dl.AddRectFilled(new Vector2(left, chassis.Glass.Max.Y), new Vector2(right, chassis.Body.Max.Y), frame);
+        }
+
         SideCapPair(dl, chassis.Glass, chassis.GlassRadius, left, right, glass);
         SideCapPair(dl, screen, chassis.ScreenRadius, left, right, screenBase);
-        dl.AddRectFilled(new Vector2(left, chassis.Body.Min.Y), new Vector2(right, chassis.Glass.Min.Y), frame);
-        dl.AddRectFilled(new Vector2(left, chassis.Glass.Max.Y), new Vector2(right, chassis.Body.Max.Y), frame);
         dl.AddRectFilled(new Vector2(left, chassis.Glass.Min.Y), new Vector2(right, screen.Min.Y), glass);
         dl.AddRectFilled(new Vector2(left, screen.Max.Y), new Vector2(right, chassis.Glass.Max.Y), glass);
     }
@@ -129,6 +175,11 @@ internal static class DeviceChrome
         Chamfer(dl, chassis, scale, finish);
         var step = ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.55f));
         Squircle.Stroke(dl, chassis.Glass.Min, chassis.Glass.Max, chassis.GlassRadius, step, 1f * scale);
+        ScreenRecess(dl, chassis, scale);
+    }
+
+    private static void ScreenRecess(ImDrawListPtr dl, in ChassisGeometry chassis, float scale)
+    {
         var recess = ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.5f));
         Squircle.Stroke(dl, chassis.Screen.Min, chassis.Screen.Max, chassis.ScreenRadius, recess, 1.4f * scale);
     }

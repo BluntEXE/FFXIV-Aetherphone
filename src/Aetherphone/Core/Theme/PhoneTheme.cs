@@ -3,6 +3,8 @@ namespace Aetherphone.Core.Theme;
 internal sealed class PhoneTheme
 {
     public required CaseFinish Case { get; init; }
+    public required PhoneCaseKind CaseKind { get; init; }
+    public required string CaseTextureId { get; init; }
     public required Vector4 ScreenBase { get; init; }
     public Vector4 FrameMetal => Case.Frame;
     public Vector4 RailMetal => Case.Rail;
@@ -30,11 +32,13 @@ internal sealed class PhoneTheme
     public float BezelThickness => MetalWidth + GlassWidth;
     public float ScreenRounding => MathF.Max(DeviceRounding - MetalWidth - GlassWidth, 0f);
 
-    public static PhoneTheme Dark(Vector4 accent, Vector4 caseColor, in ChassisMetrics chassis,
+    public static PhoneTheme Dark(Vector4 accent, PhoneCase phoneCase, in ChassisMetrics chassis,
         string lightWallpaperId, string darkWallpaperId) =>
         new()
         {
-            Case = new CaseFinish(caseColor),
+            Case = new CaseFinish(phoneCase.Tint),
+            CaseKind = phoneCase.Kind,
+            CaseTextureId = phoneCase.TextureId,
             ScreenBase = new Vector4(0.06f, 0.06f, 0.10f, 1f),
             LightWallpaperId = lightWallpaperId,
             DarkWallpaperId = darkWallpaperId,
@@ -58,11 +62,13 @@ internal sealed class PhoneTheme
             SidePadding = 16f,
         };
 
-    public static PhoneTheme Light(Vector4 accent, Vector4 caseColor, in ChassisMetrics chassis,
+    public static PhoneTheme Light(Vector4 accent, PhoneCase phoneCase, in ChassisMetrics chassis,
         string lightWallpaperId, string darkWallpaperId) =>
         new()
         {
-            Case = new CaseFinish(caseColor),
+            Case = new CaseFinish(phoneCase.Tint),
+            CaseKind = phoneCase.Kind,
+            CaseTextureId = phoneCase.TextureId,
             ScreenBase = new Vector4(0.90f, 0.90f, 0.93f, 1f),
             LightWallpaperId = lightWallpaperId,
             DarkWallpaperId = darkWallpaperId,
@@ -88,4 +94,6 @@ internal sealed class PhoneTheme
 
     public static PhoneTheme Default { get; } = Dark(new Vector4(0.55f, 0.45f, 0.95f, 1f),
         ThemeCatalog.ResolveCase(ThemeCatalog.DefaultCaseName), ChassisMetrics.Default, "DuskLight", "DuskDark");
+
+    public bool WantsCaseArt => CaseKind == PhoneCaseKind.Art && CaseTextureId.Length > 0;
 }

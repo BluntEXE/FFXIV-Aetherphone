@@ -3,9 +3,11 @@ namespace Aetherphone.Core.Theme;
 internal readonly struct ChassisMetrics
 {
     private const float RailFraction = 0.0195f;
-    private const float MetalFraction = 0.0115f;
-    private const float GlassFraction = 0.0135f;
     private const float ScreenRoundingFraction = 0.1028f;
+    private const float ColorMetalFraction = 0.0115f;
+    private const float ColorGlassFraction = 0.0135f;
+    private const float ArtMetalFraction = 0.0365f;
+    private const float ArtGlassFraction = 0.0155f;
 
     public readonly float RailWidth;
     public readonly float MetalWidth;
@@ -20,13 +22,18 @@ internal readonly struct ChassisMetrics
         DeviceRounding = deviceRounding;
     }
 
-    public static ChassisMetrics For(float deviceWidth)
+    public static ChassisMetrics For(PhoneCaseKind kind, float deviceWidth)
     {
-        var metal = MetalFraction * deviceWidth;
-        var glass = GlassFraction * deviceWidth;
+        var art = kind == PhoneCaseKind.Art;
+        var metal = (art ? ArtMetalFraction : ColorMetalFraction) * deviceWidth;
+        var glass = (art ? ArtGlassFraction : ColorGlassFraction) * deviceWidth;
         return new ChassisMetrics(RailFraction * deviceWidth, metal, glass,
             ScreenRoundingFraction * deviceWidth + metal + glass);
     }
 
-    public static ChassisMetrics Default => For(PhoneSizeCatalog.SizeFor(PhoneSizeCatalog.DefaultScale).X);
+    public static ChassisMetrics ForBody(PhoneCaseKind kind, float bodyWidth) =>
+        For(kind, bodyWidth / (1f - 2f * RailFraction));
+
+    public static ChassisMetrics Default =>
+        For(PhoneCaseKind.Color, PhoneSizeCatalog.SizeFor(PhoneSizeCatalog.DefaultScale).X);
 }

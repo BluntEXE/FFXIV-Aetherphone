@@ -1,0 +1,104 @@
+# Regenerates ArtCaseTemplate.svg from the chassis fractions in Core/Theme/ChassisMetrics.cs.
+# Run from this directory after changing any fraction there, then re-export the PSD guides.
+# SVG path data is locale-independent, so number formatting must not follow the machine's culture.
+
+[System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::InvariantCulture
+
+$CanvasWidth = 1000.0
+$CanvasHeight = 2255.0
+$Exponent = 4.2
+$Segments = 64
+
+# Fractions of window width, from ChassisMetrics. Divided by (1 - 2*Rail) to become fractions of body width,
+# because the art canvas covers the body (the phone silhouette), not the window.
+$RailFraction = 0.0195
+$BodySpan = 1.0 - 2.0 * $RailFraction
+$Metal = 0.0365 / $BodySpan * $CanvasWidth
+$Glass = 0.0155 / $BodySpan * $CanvasWidth
+$BodyRadius = 0.1548 / $BodySpan * $CanvasWidth
+$Bleed = 10.0
+
+function Squircle-Path {
+    param([double]$x0, [double]$y0, [double]$x1, [double]$y1, [double]$box)
+
+    $power = 2.0 / $Exponent
+    $points = New-Object System.Collections.Generic.List[string]
+    $corners = @(
+        @{ cx = $x0 + $box; cy = $y0 + $box; sx = -1; sy = -1; rev = $false },
+        @{ cx = $x1 - $box; cy = $y0 + $box; sx = 1; sy = -1; rev = $true },
+        @{ cx = $x1 - $box; cy = $y1 - $box; sx = 1; sy = 1; rev = $false },
+        @{ cx = $x0 + $box; cy = $y1 - $box; sx = -1; sy = 1; rev = $true }
+    )
+
+    foreach ($corner in $corners) {
+        $range = 0..$Segments
+        if ($corner.rev) { $range = $Segments..0 }
+        foreach ($index in $range) {
+            $angle = [Math]::PI * 0.5 * $index / $Segments
+            $px = [Math]::Pow([Math]::Max([Math]::Cos($angle), 0.0), $power)
+            $py = [Math]::Pow([Math]::Max([Math]::Sin($angle), 0.0), $power)
+            $x = $corner.cx + $corner.sx * $px * $box
+            $y = $corner.cy + $corner.sy * $py * $box
+            $points.Add(("{0:F2},{1:F2}" -f $x, $y))
+        }
+    }
+
+    return "M " + ($points -join " L ") + " Z"
+}
+
+$bodyPath = Squircle-Path 0 0 $CanvasWidth $CanvasHeight $BodyRadius
+$glassPath = Squircle-Path $Metal $Metal ($CanvasWidth - $Metal) ($CanvasHeight - $Metal) ($BodyRadius - $Metal)
+$cutoutPath = Squircle-Path ($Metal + $Bleed) ($Metal + $Bleed) ($CanvasWidth - $Metal - $Bleed) `
+    ($CanvasHeight - $Metal - $Bleed) ($BodyRadius - $Metal - $Bleed)
+$screenPath = Squircle-Path ($Metal + $Glass) ($Metal + $Glass) ($CanvasWidth - $Metal - $Glass) `
+    ($CanvasHeight - $Metal - $Glass) ($BodyRadius - $Metal - $Glass)
+
+function Button-Rect {
+    param([double]$topFraction, [double]$heightFraction, [string]$edge, [string]$label)
+
+    # Buttons protrude outside the body and bite only 2 design px into it. At XXL the body is 480.5 design px
+    # wide, so that is 2 * 1000 / 480.5 canvas px.
+    $top = $topFraction * $CanvasHeight
+    $height = $heightFraction * $CanvasHeight
+    $depth = 2.0 * $CanvasWidth / 480.5
+    $x = if ($edge -eq "left") { 0.0 } else { $CanvasWidth - $depth }
+    return "<rect x='{0:F1}' y='{1:F1}' width='{2:F1}' height='{3:F1}' class='button'/><text x='{4:F1}' y='{5:F1}' class='tag'>{6}</text>" -f `
+        $x, $top, $depth, $height, ($(if ($edge -eq "left") { $depth + 8 } else { $CanvasWidth - $depth - 90 })), ($top + $height * 0.5), $label
+}
+
+$mute = Button-Rect 0.205 0.082 "left" "mute"
+$side = Button-Rect 0.250 0.108 "right" "side"
+$lock = Button-Rect 0.315 0.082 "left" "lock"
+
+$svg = @"
+<svg xmlns="http://www.w3.org/2000/svg" width="$CanvasWidth" height="$CanvasHeight" viewBox="0 0 $CanvasWidth $CanvasHeight">
+  <style>
+    .guide { fill: none; stroke-width: 3; }
+    .body { stroke: #22c55e; }
+    .glass { stroke: #38bdf8; }
+    .cutout { stroke: #f43f5e; stroke-dasharray: 18 12; }
+    .screen { stroke: #a855f7; }
+    .button { fill: #f59e0b; fill-opacity: 0.35; }
+    .tag { fill: #94a3b8; font: 26px sans-serif; }
+    .note { fill: #64748b; font: 30px sans-serif; }
+  </style>
+  <rect width="100%" height="100%" fill="#0b1020"/>
+  <path class="guide body" d="$bodyPath"/>
+  <path class="guide glass" d="$glassPath"/>
+  <path class="guide cutout" d="$cutoutPath"/>
+  <path class="guide screen" d="$screenPath"/>
+  $mute
+  $side
+  $lock
+  <text x="40" y="80" class="note">PAINT BETWEEN GREEN AND RED</text>
+  <text x="40" y="130" class="note">green silhouette / blue glass edge / red alpha cutout / purple screen</text>
+</svg>
+"@
+
+Set-Content -Path (Join-Path $PSScriptRoot "ArtCaseTemplate.svg") -Value $svg -Encoding UTF8
+"metal        {0:F2}" -f $Metal
+"glass        {0:F2}" -f $Glass
+"body box     {0:F2}" -f $BodyRadius
+"glass box    {0:F2}" -f ($BodyRadius - $Metal)
+"cutout box   {0:F2}" -f ($BodyRadius - $Metal - $Bleed)
+"screen box   {0:F2}" -f ($BodyRadius - $Metal - $Glass)

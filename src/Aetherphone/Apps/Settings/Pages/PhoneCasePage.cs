@@ -35,32 +35,65 @@ internal sealed class PhoneCasePage : ISettingsPage
         var theme = context.Theme;
         var scale = ImGuiHelpers.GlobalScale;
         var gap = 12f * scale;
-        var cases = ThemeCatalog.Cases;
+        var sectioned = HasKind(PhoneCaseKind.Art);
         using (AppSurface.Begin(body))
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(gap, gap)))
         {
+            DrawGrid(PhoneCaseKind.Color, Loc.T(L.Settings.CaseColors), sectioned, theme, scale, gap);
+            DrawGrid(PhoneCaseKind.Art, Loc.T(L.Settings.CaseArtwork), sectioned, theme, scale, gap);
+        }
+    }
+
+    private static bool HasKind(PhoneCaseKind kind)
+    {
+        var cases = ThemeCatalog.Cases;
+        for (var index = 0; index < cases.Count; index++)
+        {
+            if (cases[index].Kind == kind)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void DrawGrid(PhoneCaseKind kind, string header, bool sectioned, PhoneTheme theme, float scale, float gap)
+    {
+        var cases = ThemeCatalog.Cases;
+        var shown = 0;
+        for (var index = 0; index < cases.Count; index++)
+        {
+            if (cases[index].Kind != kind)
+            {
+                continue;
+            }
+
+            if (shown == 0 && sectioned)
+            {
+                SettingsSection.Header(header, theme);
+            }
+
             var cellWidth = (ScrollLayout.StableContentWidth() - gap * (Columns - 1)) / Columns;
             var cellHeight = cellWidth / DeviceAspect + LabelHeight * scale;
-            for (var index = 0; index < cases.Count; index++)
+            using (ImRaii.PushId($"{kind}{index}"))
             {
-                using (ImRaii.PushId(index))
-                {
-                    ImGui.Dummy(new Vector2(cellWidth, cellHeight));
-                    DrawTile(cases[index], new Rect(ImGui.GetItemRectMin(), ImGui.GetItemRectMax()), theme, scale);
-                }
+                ImGui.Dummy(new Vector2(cellWidth, cellHeight));
+                DrawTile(cases[index], new Rect(ImGui.GetItemRectMin(), ImGui.GetItemRectMax()), theme, scale);
+            }
 
-                if (index % Columns != Columns - 1)
-                {
-                    ImGui.SameLine();
-                }
+            shown++;
+            if (shown % Columns != 0)
+            {
+                ImGui.SameLine();
             }
         }
     }
 
-    private void DrawTile(NamedColor option, Rect cell, PhoneTheme theme, float scale)
+    private void DrawTile(PhoneCase option, Rect cell, PhoneTheme theme, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var selected = option.Name == configuration.PhoneCaseName;
+        var selected = option.Id == configuration.PhoneCaseName;
         var device = new Rect(cell.Min, new Vector2(cell.Max.X, cell.Max.Y - LabelHeight * scale));
         var hovered = UiInteract.Hover(cell.Min, cell.Max);
         if (selected)
@@ -68,14 +101,14 @@ internal sealed class PhoneCasePage : ISettingsPage
             Elevation.Floating(drawList, device.Min, device.Max, device.Width * 0.155f, scale, 0.7f);
         }
 
-        PhoneCasePreview.Draw(drawList, device, option.Color, theme, scale * PreviewScale);
+        PhoneCasePreview.Draw(drawList, device, option, theme, scale * PreviewScale);
         if (selected)
         {
             Squircle.Stroke(drawList, device.Min, device.Max, device.Width * 0.155f,
                 ImGui.GetColorU32(theme.Accent), 2.5f * scale);
         }
 
-        var label = CatalogLabels.PhoneCase(option.Name);
+        var label = CatalogLabels.PhoneCase(option.Id);
         var labelColor = selected ? theme.Accent : theme.TextMuted;
         var labelStyle = selected ? TextStyles.SubheadlineEmphasized : TextStyles.Subheadline;
         Typography.DrawWrappedCentered(drawList, new Vector2(cell.Center.X, device.Max.Y + LabelHeight * scale * 0.5f),
@@ -87,7 +120,7 @@ internal sealed class PhoneCasePage : ISettingsPage
 
         if (!selected && UiInteract.Click(cell.Min, cell.Max, hovered))
         {
-            Apply(option.Name);
+            Apply(option.Id);
         }
     }
 

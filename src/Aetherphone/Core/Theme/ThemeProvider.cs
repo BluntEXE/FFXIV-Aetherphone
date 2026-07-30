@@ -25,11 +25,11 @@ internal sealed class ThemeProvider
     private void Rebuild()
     {
         var accent = ThemeCatalog.ResolveAccent(configuration.AccentName);
-        var caseColor = ThemeCatalog.ResolveCase(configuration.PhoneCaseName);
-        var chassis = ChassisMetrics.For(PhoneSizeCatalog.SizeFor(configuration.PhoneScale).X);
-        light = PhoneTheme.Light(accent, caseColor, chassis, configuration.LightWallpaperId,
+        var phoneCase = ThemeCatalog.ResolveCase(configuration.PhoneCaseName);
+        var chassis = ChassisMetrics.For(phoneCase.Kind, PhoneSizeCatalog.SizeFor(configuration.PhoneScale).X);
+        light = PhoneTheme.Light(accent, phoneCase, chassis, configuration.LightWallpaperId,
             configuration.DarkWallpaperId);
-        dark = PhoneTheme.Dark(accent, caseColor, chassis, configuration.LightWallpaperId,
+        dark = PhoneTheme.Dark(accent, phoneCase, chassis, configuration.LightWallpaperId,
             configuration.DarkWallpaperId);
     }
 

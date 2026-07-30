@@ -113,15 +113,38 @@ public sealed class ChassisGeometryTests
     [Fact]
     public void MediumPhoneReproducesLegacyChassisNumbers()
     {
-        var chassis = ChassisMetrics.For(360f);
+        var chassis = ChassisMetrics.For(PhoneCaseKind.Color, 360f);
         Assert.Equal(9f, chassis.MetalWidth + chassis.GlassWidth, 0.05f);
         Assert.Equal(46f, chassis.DeviceRounding, 0.05f);
         Assert.Equal(7f, chassis.RailWidth, 0.05f);
     }
 
+    [Fact]
+    public void ArtCasesShareScreenRoundingButThickenTheBezel()
+    {
+        var color = ChassisMetrics.For(PhoneCaseKind.Color, 360f);
+        var art = ChassisMetrics.For(PhoneCaseKind.Art, 360f);
+        var colorScreen = color.DeviceRounding - color.MetalWidth - color.GlassWidth;
+        var artScreen = art.DeviceRounding - art.MetalWidth - art.GlassWidth;
+        Assert.Equal(colorScreen, artScreen, Tolerance);
+        Assert.True(art.MetalWidth > color.MetalWidth * 2f);
+        Assert.Equal(color.RailWidth, art.RailWidth, Tolerance);
+    }
+
+    [Fact]
+    public void BodyMetricsRoundTripThroughRailInset()
+    {
+        var window = ChassisMetrics.For(PhoneCaseKind.Art, 360f);
+        var bodyWidth = 360f - 2f * window.RailWidth;
+        var body = ChassisMetrics.ForBody(PhoneCaseKind.Art, bodyWidth);
+        Assert.Equal(window.MetalWidth, body.MetalWidth, Tolerance);
+        Assert.Equal(window.DeviceRounding, body.DeviceRounding, Tolerance);
+    }
+
     private static PhoneTheme ThemeFor(float deviceWidth) =>
-        PhoneTheme.Dark(new Vector4(0.55f, 0.45f, 0.95f, 1f), new Vector4(0.145f, 0.145f, 0.170f, 1f),
-            ChassisMetrics.For(deviceWidth), "DuskLight", "DuskDark");
+        PhoneTheme.Dark(new Vector4(0.55f, 0.45f, 0.95f, 1f),
+            PhoneCase.Color("Titanium", new Vector4(0.145f, 0.145f, 0.170f, 1f)),
+            ChassisMetrics.For(PhoneCaseKind.Color, deviceWidth), "DuskLight", "DuskDark");
 
     private static ChassisGeometry Device(float width, float height, float scale)
     {

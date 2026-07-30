@@ -835,6 +835,8 @@ internal static class L
         public static readonly LocString ThemeAuto = new("settings.themeAuto", "Auto");
         public static readonly LocString Accent = new("settings.accent", "Accent");
         public static readonly LocString PhoneCase = new("settings.phoneCase", "Case");
+        public static readonly LocString CaseColors = new("settings.caseColors", "Colors");
+        public static readonly LocString CaseArtwork = new("settings.caseArtwork", "Artwork");
         public static readonly LocString Wallpaper = new("settings.wallpaper", "Wallpaper");
         public static readonly LocString TextSize = new("settings.textSize", "Text Size");
         public static readonly LocString PhoneSize = new("settings.phoneSize", "Phone Size");
