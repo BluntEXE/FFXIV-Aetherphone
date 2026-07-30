@@ -13,7 +13,10 @@ namespace Aetherphone.Apps.Settings.Pages;
 internal sealed class PhoneCasePage : ISettingsPage
 {
     private const int Columns = 3;
-    private const float DeviceAspect = 0.462f;
+
+    // Width over height of the phone body, which is what the preview draws. Not the window aspect: the
+    // body is inset by the button rail on X only.
+    private const float DeviceAspect = 0.443f;
     private const float LabelHeight = 36f;
     private const float PreviewScale = 0.55f;
 
@@ -35,43 +38,27 @@ internal sealed class PhoneCasePage : ISettingsPage
         var theme = context.Theme;
         var scale = ImGuiHelpers.GlobalScale;
         var gap = 12f * scale;
+        var cases = ThemeCatalog.Cases;
         using (AppSurface.Begin(body))
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(gap, gap)))
         {
-            DrawGrid(PhoneCaseKind.Color, null, theme, scale, gap);
-            DrawGrid(PhoneCaseKind.Art, Loc.T(L.Settings.CaseArtwork), theme, scale, gap);
-        }
-    }
-
-    private void DrawGrid(PhoneCaseKind kind, string? header, PhoneTheme theme, float scale, float gap)
-    {
-        var cases = ThemeCatalog.Cases;
-        var shown = 0;
-        for (var index = 0; index < cases.Count; index++)
-        {
-            if (cases[index].Kind != kind)
-            {
-                continue;
-            }
-
-            if (shown == 0 && header is not null)
-            {
-                SettingsSection.Header(header, theme);
-            }
-            else if (shown % Columns != 0)
-            {
-                ImGui.SameLine();
-            }
-
+            // Measured once, before any SameLine: the available width shrinks as a row fills, so measuring
+            // per tile makes every tile narrower than the one before it.
             var cellWidth = (ScrollLayout.StableContentWidth() - gap * (Columns - 1)) / Columns;
             var cellHeight = cellWidth / DeviceAspect + LabelHeight * scale;
-            using (ImRaii.PushId($"{kind}{index}"))
+            for (var index = 0; index < cases.Count; index++)
             {
-                ImGui.Dummy(new Vector2(cellWidth, cellHeight));
-                DrawTile(cases[index], new Rect(ImGui.GetItemRectMin(), ImGui.GetItemRectMax()), theme, scale);
-            }
+                if (index % Columns != 0)
+                {
+                    ImGui.SameLine();
+                }
 
-            shown++;
+                using (ImRaii.PushId(index))
+                {
+                    ImGui.Dummy(new Vector2(cellWidth, cellHeight));
+                    DrawTile(cases[index], new Rect(ImGui.GetItemRectMin(), ImGui.GetItemRectMax()), theme, scale);
+                }
+            }
         }
     }
 
