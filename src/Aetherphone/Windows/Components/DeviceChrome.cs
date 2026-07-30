@@ -9,7 +9,10 @@ namespace Aetherphone.Windows.Components;
 internal static class DeviceChrome
 {
     private const float ChamferFraction = 0.4f;
-    private const float MaskBias = 0.5f;
+
+    // The mask is the sole definition of the screen corner, so it grows slightly past the nominal box to
+    // guarantee it covers content at every sub-pixel phase.
+    private const float MaskGrow = 0.5f;
 
     public static Rect BodyRect(Rect window, PhoneTheme theme)
     {
@@ -227,7 +230,7 @@ internal static class DeviceChrome
     public static void MaskScreenCorners(ImDrawListPtr dl, in ChassisGeometry chassis, PhoneTheme theme, float scale)
     {
         Squircle.FillOutsideCorners(dl, chassis.Screen.Min, chassis.Screen.Max, chassis.ScreenRadius,
-            ImGui.GetColorU32(theme.Glass), MaskBias * scale);
+            ImGui.GetColorU32(theme.Glass), MaskGrow * scale);
     }
 
     public static void SealScreen(in ChassisGeometry chassis, PhoneTheme theme, float brightness)

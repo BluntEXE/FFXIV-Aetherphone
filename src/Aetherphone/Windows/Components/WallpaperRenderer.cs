@@ -36,6 +36,20 @@ internal static class WallpaperRenderer
 
         var (uv0, uv1) = entry.Crop.ComputeUv(library.SizeOfPath(entry.FilePath), aspect);
         var tint = alpha >= 1f ? 0xFFFFFFFFu : ImGui.GetColorU32(new Vector4(1f, 1f, 1f, alpha));
-        Squircle.FillImage(drawList, handle, shape.Min, shape.Max, radius, quad.Min, quad.Max, uv0, uv1, tint);
+
+        // Drawn as a plain rect on purpose. The screen corner is carved by DeviceChrome.MaskScreenCorners
+        // immediately after content, so shaping the image itself would only add a second curve to disagree
+        // with. The clip is what keeps an oversized zoom quad inside the screen.
+        var clipped = quad.Min != shape.Min || quad.Max != shape.Max;
+        if (clipped)
+        {
+            drawList.PushClipRect(shape.Min, shape.Max, true);
+        }
+
+        drawList.AddImage(handle, quad.Min, quad.Max, uv0, uv1, tint);
+        if (clipped)
+        {
+            drawList.PopClipRect();
+        }
     }
 }

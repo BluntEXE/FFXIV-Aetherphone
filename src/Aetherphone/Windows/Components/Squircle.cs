@@ -27,29 +27,6 @@ internal static class Squircle
         drawList.PathFillConvex(color);
     }
 
-    public static void FillImage(ImDrawListPtr drawList, ImTextureID texture, Vector2 min, Vector2 max, float radius,
-        Vector2 quadMin, Vector2 quadMax, Vector2 uv0, Vector2 uv1, uint tint)
-    {
-        if (max.X - min.X <= 0f || max.Y - min.Y <= 0f)
-        {
-            return;
-        }
-
-        var box = CornerBox(min, max, radius);
-        if (box <= DegenerateBox)
-        {
-            drawList.AddImage(texture, min, max, uv0, uv1, tint);
-            return;
-        }
-
-        drawList.PushTextureID(texture);
-        var vertexStart = drawList.VtxBuffer.Size;
-        TracePath(drawList, min, max, box);
-        drawList.PathFillConvex(tint);
-        ImGuiP.ShadeVertsLinearUV(drawList, vertexStart, drawList.VtxBuffer.Size, quadMin, quadMax, uv0, uv1, true);
-        drawList.PopTextureID();
-    }
-
     public static void Stroke(ImDrawListPtr drawList, Vector2 min, Vector2 max, float radius, uint color,
         float thickness)
     {
@@ -95,9 +72,10 @@ internal static class Squircle
     }
 
     public static void FillOutsideCorners(ImDrawListPtr drawList, Vector2 min, Vector2 max, float radius, uint color,
-        float bias)
+        float grow)
     {
-        var box = MathF.Max(CornerBox(min, max, radius) - bias, 0f);
+        var limit = MathF.Min(max.X - min.X, max.Y - min.Y) * 0.5f;
+        var box = MathF.Min(CornerBox(min, max, radius) + MathF.Max(grow, 0f), MathF.Max(limit, 0f));
         if (box <= DegenerateBox)
         {
             return;

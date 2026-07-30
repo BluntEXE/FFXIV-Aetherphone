@@ -80,6 +80,7 @@ internal sealed class MinimizeMorphView
             painter.PaintCurrent(target, fullRadius, theme, shrink);
             Squircle.Fill(ImGui.GetWindowDrawList(), screen.Min, screen.Max, rounding, veil);
         });
+        DeviceChrome.MaskScreenCorners(ImGui.GetWindowDrawList(), geometry, theme, ImGuiHelpers.GlobalScale);
     }
 
     private static HomeMotion ShrinkMotion(Rect fullScreen, Rect target)
