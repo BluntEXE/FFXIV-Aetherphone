@@ -2868,6 +2868,9 @@ internal static class L
         public static readonly LocString CaseIronworks = new("catalog.case.ironworks", "Ironworks");
         public static readonly LocString CaseEmberforge = new("catalog.case.emberforge", "Emberforge");
         public static readonly LocString CaseVoidsent = new("catalog.case.voidsent", "Voidsent");
+        public static readonly LocString CaseBulwark = new("catalog.case.bulwark", "Bulwark");
+        public static readonly LocString CaseCarbonweave = new("catalog.case.carbonweave", "Carbonweave");
+        public static readonly LocString CaseAlabaster = new("catalog.case.alabaster", "Alabaster");
         public static readonly LocString RingtonePing = new("catalog.ringtone.ping", "Ping");
         public static readonly LocString RingtoneChime = new("catalog.ringtone.chime", "Chime");
         public static readonly LocString RingtoneBell = new("catalog.ringtone.bell", "Bell");

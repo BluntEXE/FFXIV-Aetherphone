@@ -30,6 +30,9 @@ internal static class CatalogLabels
             "Ironworks" => Loc.T(L.Catalogs.CaseIronworks),
             "Emberforge" => Loc.T(L.Catalogs.CaseEmberforge),
             "Voidsent" => Loc.T(L.Catalogs.CaseVoidsent),
+            "Bulwark" => Loc.T(L.Catalogs.CaseBulwark),
+            "Carbonweave" => Loc.T(L.Catalogs.CaseCarbonweave),
+            "Alabaster" => Loc.T(L.Catalogs.CaseAlabaster),
             _ => identifier,
         };
 

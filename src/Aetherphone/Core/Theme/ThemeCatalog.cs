@@ -21,6 +21,9 @@ internal static class ThemeCatalog
         PhoneCase.Art("Ironworks", new Vector4(0.335f, 0.375f, 0.421f, 1f)),
         PhoneCase.Art("Emberforge", new Vector4(0.473f, 0.259f, 0.088f, 1f)),
         PhoneCase.Art("Voidsent", new Vector4(0.190f, 0.122f, 0.361f, 1f)),
+        PhoneCase.Art("Bulwark", new Vector4(0.224f, 0.249f, 0.277f, 1f)),
+        PhoneCase.Art("Carbonweave", new Vector4(0.122f, 0.133f, 0.153f, 1f)),
+        PhoneCase.Art("Alabaster", new Vector4(0.826f, 0.798f, 0.751f, 1f)),
     };
 
     public static IReadOnlyList<PhoneCase> Cases { get; } = BuiltInCases;

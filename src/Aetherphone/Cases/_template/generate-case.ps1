@@ -8,7 +8,7 @@
 
 param(
     [Parameter(Mandatory = $true)][string]$Id,
-    [Parameter(Mandatory = $true)][ValidateSet('Tech', 'Ornate', 'Neon')][string]$Style,
+    [Parameter(Mandatory = $true)][ValidateSet('Tech', 'Ornate', 'Neon', 'Armor', 'Weave', 'Stone')][string]$Style,
     [Parameter(Mandatory = $true)][string]$Top,
     [Parameter(Mandatory = $true)][string]$Bottom,
     [Parameter(Mandatory = $true)][string]$Accent,
@@ -159,6 +159,50 @@ public static class CaseBaker
             c = c.Mix(accent, 0.85 * gem);
             c = c.Lift(0.75 * Clamp01(gem * 2.0 - 1.2));       // gem catch-light
         }
+        else if (style == "Armor")
+        {
+            // Rugged shell: two rails around a recessed grip channel, thickening into corner bumpers.
+            c = c.Lift(0.30 * Band(t, 0.10, 0.16));
+            c = c.Lift(0.22 * Band(t, 0.90, 0.13));
+            c = c.Lift(-0.45 * Band(t, 0.50, 0.26));
+            if (!inCorner)
+            {
+                double rib = Pulse(run, 74.0, 0.46) * Band(t, 0.50, 0.24);
+                c = c.Lift(0.34 * rib);                        // grip ribs
+            }
+            double bumper = Clamp01(1.0 - Math.Max(cornerX, cornerY) / (BodyBox * 0.72));
+            c = c.Lift(0.20 * bumper);
+            c = c.Mix(accent, 0.80 * Clamp01(bumper * 1.9 - 1.0));
+            c = c.Mix(accent, 0.55 * Band(t, 0.50, 0.07) * cornerReach);
+        }
+        else if (style == "Weave")
+        {
+            // Carbon twill as crossed diagonals rather than woven cells. A cell grid needs to be finer
+            // than the 38px band to read as carbon, which puts it under the aliasing floor; crossed
+            // sines give the same weave at a frequency the band can actually carry. Keyed to x and y,
+            // because a weave runs in a fixed direction across the material, not around the frame.
+            // Quantised to discrete steps: continuous tone is the worst case for PNG and pushed this
+            // case past its size budget on its own. Posterised threads also read more like carbon.
+            double diag = Math.Sin((x + y) * 0.40) + Math.Sin((x - y) * 0.40);
+            c = c.Lift(0.085 * (Math.Round(diag * 2.0) / 2.0));
+            double sheen = Math.Exp(-Math.Pow(((x + y) % 900.0 - 450.0) / 220.0, 2.0));
+            c = c.Lift(0.26 * sheen);                          // diagonal gloss sweep
+            c = c.Lift(0.40 * Band(t, 0.06, 0.10));
+            c = c.Mix(accent, 0.85 * Band(t, 0.50, 0.045));    // lacquered pinstripe
+            c = c.Lift(-0.35 * Band(t, 0.95, 0.07));
+        }
+        else if (style == "Stone")
+        {
+            // Marble: veins from summed sines of position, so they wander instead of repeating.
+            double vein = Math.Sin(x * 0.0113 + Math.Sin(y * 0.0071) * 3.1)
+                        + 0.62 * Math.Sin(y * 0.0169 + 1.3)
+                        + 0.28 * Math.Sin((x + y) * 0.0091 - 0.7);
+            c = c.Lift(-0.42 * Clamp01(1.0 - Math.Abs(vein) / 0.20));
+            c = c.Lift(-0.14 * Clamp01(1.0 - Math.Abs(vein - 1.1) / 0.45));
+            c = c.Mix(accent, 0.90 * Band(t, 0.05, 0.09));     // gold leaf outer edge
+            c = c.Mix(accent, 0.70 * Band(t, 0.95, 0.07));     // gold leaf inner edge
+            c = c.Lift(0.30 * Band(t, 0.50, 0.30));            // polished crown
+        }
         else
         {
             c = c.Lift(0.30 * Band(t, 0.05, 0.09));
@@ -176,7 +220,13 @@ public static class CaseBaker
         // dim bottom and right.
         double rim = Band(t, 0.0, 0.16);
         bool bright = x <= Canvas - 1 - x && y <= CanvasHeight - 1 - y;
-        return c.Lift(bright ? rim * 0.30 : -rim * 0.28);
+        c = c.Lift(bright ? rim * 0.30 : -rim * 0.28);
+
+        // Past the cutout these pixels are invisible and exist only to bleed colour outward. Collapsing
+        // them to the flat gradient keeps the bleed intact and stops fine ornament from tripling the
+        // file size on 85% of the canvas that nobody ever sees.
+        double fade = Clamp01((depth - (Metal + Bleed + 8.0)) / 18.0);
+        return fade <= 0.0 ? c : c.Mix(top.Mix(bottom, Clamp01(y / (CanvasHeight - 1.0))), fade);
     }
 
     public static void Bake(string fullPath, string thumbPath, string style, int topArgb, int bottomArgb,
