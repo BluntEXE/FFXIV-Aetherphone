@@ -14,6 +14,7 @@ internal enum AccountBadges
     Moderator = 1 << 3,
     Developer = 1 << 4,
     Supporter = 1 << 5,
+    Contributor = 1 << 6,
 }
 
 internal readonly record struct RoleBadge(AccountBadges Flag, RoleKind Kind, FontAwesomeIcon Glyph, LocString Tooltip);
@@ -23,11 +24,12 @@ internal static class RoleBadges
     private static readonly RoleBadge[] ByPrecedence =
     {
         new(AccountBadges.Management, RoleKind.Management, FontAwesomeIcon.Crown, L.Social.RoleManagement),
-        new(AccountBadges.Developer, RoleKind.Developer, FontAwesomeIcon.Code, L.Social.RoleDeveloper),
         new(AccountBadges.Moderator, RoleKind.Moderator, FontAwesomeIcon.Gavel, L.Social.RoleModerator),
-        new(AccountBadges.Verified, RoleKind.Verified, FontAwesomeIcon.CheckCircle, L.Social.RoleVerified),
         new(AccountBadges.Patreon, RoleKind.Patreon, FontAwesomeIcon.Star, L.Social.RolePatreon),
+        new(AccountBadges.Developer, RoleKind.Developer, FontAwesomeIcon.Code, L.Social.RoleDeveloper),
         new(AccountBadges.Supporter, RoleKind.Supporter, FontAwesomeIcon.HandHoldingHeart, L.Social.RoleSupporter),
+        new(AccountBadges.Contributor, RoleKind.Contributor, FontAwesomeIcon.PuzzlePiece, L.Social.RoleContributor),
+        new(AccountBadges.Verified, RoleKind.Verified, FontAwesomeIcon.CheckCircle, L.Social.RoleVerified),
     };
 
     public static RoleBadge? Top(int badges)

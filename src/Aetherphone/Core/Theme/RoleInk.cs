@@ -9,6 +9,7 @@ internal enum RoleKind
     Verified,
     Patreon,
     Supporter,
+    Contributor,
 }
 
 internal static class RoleInk
@@ -25,6 +26,8 @@ internal static class RoleInk
     private static readonly Vector4 PatreonLight = new(0.66f, 0.42f, 0.02f, 1.00f);
     private static readonly Vector4 SupporterDark = new(0.98f, 0.56f, 0.72f, 1.00f);
     private static readonly Vector4 SupporterLight = new(0.70f, 0.13f, 0.38f, 1.00f);
+    private static readonly Vector4 ContributorDark = new(0.76f, 0.85f, 0.40f, 1.00f);
+    private static readonly Vector4 ContributorLight = new(0.38f, 0.47f, 0.06f, 1.00f);
     private static readonly Vector4 NeutralDark = new(0.97f, 0.97f, 0.98f, 1.00f);
     private static readonly Vector4 NeutralLight = new(0.10f, 0.10f, 0.11f, 1.00f);
 
@@ -40,6 +43,7 @@ internal static class RoleInk
             RoleKind.Verified => light ? VerifiedLight : VerifiedDark,
             RoleKind.Patreon => light ? PatreonLight : PatreonDark,
             RoleKind.Supporter => light ? SupporterLight : SupporterDark,
+            RoleKind.Contributor => light ? ContributorLight : ContributorDark,
             _ => light ? NeutralLight : NeutralDark,
         };
     }

@@ -15,12 +15,13 @@ public sealed class RoleBadgeTests
     private const int Moderator = (int)AccountBadges.Moderator;
     private const int Developer = (int)AccountBadges.Developer;
     private const int Supporter = (int)AccountBadges.Supporter;
+    private const int Contributor = (int)AccountBadges.Contributor;
     private const int Both = Verified | Patreon;
 
     private static readonly RoleKind[] ExpectedPrecedence =
     {
-        RoleKind.Management, RoleKind.Developer, RoleKind.Moderator,
-        RoleKind.Verified, RoleKind.Patreon, RoleKind.Supporter,
+        RoleKind.Management, RoleKind.Moderator, RoleKind.Patreon, RoleKind.Developer,
+        RoleKind.Supporter, RoleKind.Contributor, RoleKind.Verified,
     };
 
     [Fact]
@@ -38,12 +39,12 @@ public sealed class RoleBadgeTests
     }
 
     [Fact]
-    public void VerifiedOutranksPatreonWhenBothAreHeld()
+    public void PatreonOutranksVerifiedWhenBothAreHeld()
     {
-        Assert.Equal(RoleKind.Verified, RoleBadges.Top(Both)!.Value.Kind);
+        Assert.Equal(RoleKind.Patreon, RoleBadges.Top(Both)!.Value.Kind);
         Assert.Equal(2, RoleBadges.Count(Both));
-        Assert.Equal(RoleKind.Verified, RoleBadges.At(Both, 0).Kind);
-        Assert.Equal(RoleKind.Patreon, RoleBadges.At(Both, 1).Kind);
+        Assert.Equal(RoleKind.Patreon, RoleBadges.At(Both, 0).Kind);
+        Assert.Equal(RoleKind.Verified, RoleBadges.At(Both, 1).Kind);
     }
 
     [Fact]
@@ -54,9 +55,9 @@ public sealed class RoleBadgeTests
     }
 
     [Fact]
-    public void StaffRolesOutrankIdentityWhichOutranksPerks()
+    public void EveryBadgeSortsIntoTheAgreedPrecedence()
     {
-        const int everything = Management | Developer | Moderator | Verified | Patreon | Supporter;
+        const int everything = Management | Developer | Moderator | Verified | Patreon | Supporter | Contributor;
 
         Assert.Equal(ExpectedPrecedence.Length, RoleBadges.Count(everything));
         for (var index = 0; index < ExpectedPrecedence.Length; index++)
@@ -70,7 +71,7 @@ public sealed class RoleBadgeTests
     [Fact]
     public void EveryBadgeHasItsOwnGlyphAndColour()
     {
-        var all = new[] { Management, Developer, Moderator, Verified, Patreon, Supporter };
+        var all = new[] { Management, Developer, Moderator, Verified, Patreon, Supporter, Contributor };
         var glyphs = new HashSet<FontAwesomeIcon>();
         var darkInks = new HashSet<Vector4>();
         foreach (var badges in all)
@@ -91,6 +92,7 @@ public sealed class RoleBadgeTests
         Assert.Equal(RoleKind.Developer, RoleBadges.Top(Developer)!.Value.Kind);
         Assert.Equal(RoleKind.Moderator, RoleBadges.Top(Moderator)!.Value.Kind);
         Assert.Equal(RoleKind.Supporter, RoleBadges.Top(Supporter)!.Value.Kind);
+        Assert.Equal(RoleKind.Contributor, RoleBadges.Top(Contributor)!.Value.Kind);
     }
 
     [Fact]
@@ -106,7 +108,7 @@ public sealed class RoleBadgeTests
     [Fact]
     public void EveryBadgeCarriesAGlyphAndATooltipKey()
     {
-        foreach (var badges in new[] { Management, Developer, Moderator, Verified, Patreon, Supporter })
+        foreach (var badges in new[] { Management, Developer, Moderator, Verified, Patreon, Supporter, Contributor })
         {
             var badge = RoleBadges.Top(badges)!.Value;
             Assert.NotEqual(default, badge.Glyph);
