@@ -1,14 +1,23 @@
-# Generates a template-conformant art case PNG (plus its picker thumb) from three colours.
+# Generates a template-conformant art case PNG (plus its picker thumb).
 # Reference implementation of the spec in README.md: it is what a hand-painted case must match
 # geometrically. Hand-painted art replaces these; the geometry does not change.
 #
-#   .\generate-case.ps1 -Id Ironworks -Top '#6b7280' -Bottom '#374151' -Accent '#93c5fd'
+#   .\generate-case.ps1 -Id Ironworks -Style Tech   -Top '#8a97a6' -Bottom '#252c36' -Accent '#5ad2ff'
+#   .\generate-case.ps1 -Id Emberforge -Style Ornate -Top '#e0b356' -Bottom '#6b4415' -Accent '#123054'
+#   .\generate-case.ps1 -Id Voidsent  -Style Neon   -Top '#2a1f4a' -Bottom '#0d0a1c' -Accent '#d94ae8'
 
 param(
     [Parameter(Mandatory = $true)][string]$Id,
+    [Parameter(Mandatory = $true)][ValidateSet('Tech', 'Ornate', 'Neon')][string]$Style,
     [Parameter(Mandatory = $true)][string]$Top,
     [Parameter(Mandatory = $true)][string]$Bottom,
-    [Parameter(Mandatory = $true)][string]$Accent
+    [Parameter(Mandatory = $true)][string]$Accent,
+
+    # Exploration knobs. MetalFraction is the band width as a fraction of window width and must match
+    # ChassisMetrics.ArtMetalFraction for anything that ships; override it only to preview what a wider
+    # bezel would buy. OutDir keeps such previews out of the shipped Cases folder.
+    [double]$MetalFraction = 0.0365,
+    [string]$OutDir
 )
 
 [System.Threading.Thread]::CurrentThread.CurrentCulture = [System.Globalization.CultureInfo]::InvariantCulture
@@ -29,8 +38,10 @@ public static class CaseBaker
     const double RailFraction = 0.0195;
     const int Samples = 3;
 
-    // Inside the shape when (1-a)^4.2 + (1-b)^4.2 <= 1, with a,b the normalised position inside the
-    // corner box. This is the closed form of the curve Squircle.BuildUnitCorner traces.
+    static double Metal, Glass, BodyBox, Bleed;
+
+    // Inside when (1-a)^4.2 + (1-b)^4.2 <= 1, with a,b the normalised position inside the corner box.
+    // This is the closed form of the curve Squircle.BuildUnitCorner traces.
     static bool Inside(double x, double y, double x0, double y0, double x1, double y1, double box)
     {
         if (x < x0 || y < y0 || x > x1 || y > y1) { return false; }
@@ -49,29 +60,141 @@ public static class CaseBaker
         {
             for (int sx = 0; sx < Samples; sx++)
             {
-                double x = px + (sx + 0.5) / Samples;
-                double y = py + (sy + 0.5) / Samples;
-                if (Inside(x, y, x0, y0, x1, y1, box)) { hits++; }
+                if (Inside(px + (sx + 0.5) / Samples, py + (sy + 0.5) / Samples, x0, y0, x1, y1, box)) { hits++; }
             }
         }
         return (double)hits / (Samples * Samples);
     }
 
+    // How far the point sits inside the silhouette, measured along the inward normal of the squircle
+    // family rather than to the rect edges, so ornament bands stay parallel to the curve at the corners.
+    // Straight regions are exact; corner boxes bisect the inset that puts the point on the curve.
+    static double InsetDepth(double x, double y)
+    {
+        double cornerX = Math.Min(x, Canvas - 1 - x);
+        double cornerY = Math.Min(y, CanvasHeight - 1 - y);
+        if (cornerX >= BodyBox || cornerY >= BodyBox) { return Math.Min(cornerX, cornerY); }
+
+        double low = 0.0, high = BodyBox;
+        for (int step = 0; step < 14; step++)
+        {
+            double mid = (low + high) * 0.5;
+            double box = BodyBox - mid;
+            double a = box <= 0.0 ? 1.0 : (cornerX - mid) / box;
+            double b = box <= 0.0 ? 1.0 : (cornerY - mid) / box;
+            double f = Math.Pow(1.0 - Math.Min(a, 1.0), Exponent) + Math.Pow(1.0 - Math.Min(b, 1.0), Exponent) - 1.0;
+            if (f < 0.0) { low = mid; } else { high = mid; }
+        }
+        return low;
+    }
+
     static double Clamp01(double v) { return v < 0.0 ? 0.0 : (v > 1.0 ? 1.0 : v); }
 
-    public static void Bake(string fullPath, string thumbPath, int topArgb, int bottomArgb, int accentArgb)
+    // Soft band centred on c with half-width w, used for grooves, inlays and neon runs.
+    static double Band(double t, double c, double w)
+    {
+        double d = Math.Abs(t - c) / w;
+        return d >= 1.0 ? 0.0 : (1.0 - d * d) * (1.0 - d * d);
+    }
+
+    static double Pulse(double v, double period, double duty)
+    {
+        double phase = v / period;
+        phase -= Math.Floor(phase);
+        return phase < duty ? 1.0 : 0.0;
+    }
+
+    struct Rgb
+    {
+        public double R, G, B;
+        public Rgb(double r, double g, double b) { R = r; G = g; B = b; }
+        public static Rgb Of(Color c) { return new Rgb(c.R, c.G, c.B); }
+        public Rgb Mix(Rgb o, double k) { return new Rgb(R + (o.R - R) * k, G + (o.G - G) * k, B + (o.B - B) * k); }
+        public Rgb Lift(double k)
+        {
+            if (k >= 0.0) { return new Rgb(R + (255 - R) * k, G + (255 - G) * k, B + (255 - B) * k); }
+            return new Rgb(R * (1.0 + k), G * (1.0 + k), B * (1.0 + k));
+        }
+    }
+
+    static Rgb Shade(string style, double x, double y, double depth, Rgb top, Rgb bottom, Rgb accent)
+    {
+        double t = Clamp01(depth / Metal);
+        Rgb c = top.Mix(bottom, Clamp01(y / (CanvasHeight - 1)));
+
+        // Perimeter parameter: run along the long axis on the sides, the short axis on top and bottom.
+        bool vertical = Math.Min(x, Canvas - 1 - x) < Math.Min(y, CanvasHeight - 1 - y);
+        double run = vertical ? y : x;
+        double cornerX = Math.Min(x, Canvas - 1 - x);
+        double cornerY = Math.Min(y, CanvasHeight - 1 - y);
+        bool inCorner = cornerX < BodyBox && cornerY < BodyBox;
+        double cornerReach = inCorner ? Clamp01(1.0 - Math.Max(cornerX, cornerY) / BodyBox) : 0.0;
+
+        if (style == "Tech")
+        {
+            c = c.Lift(0.55 * Band(t, 0.05, 0.10));            // outer chamfer catch-light
+            c = c.Lift(-0.55 * Band(t, 0.36, 0.09));           // panel seam
+            c = c.Lift(-0.45 * Band(t, 0.82, 0.09));           // inner seam
+            c = c.Lift(0.18 * Band(t, 0.62, 0.14));            // raised centre rail
+            double runLit = inCorner ? 1.0 : Pulse(run, 260.0, 0.62);
+            c = c.Mix(accent, 0.85 * Band(t, 0.50, 0.075) * runLit);
+            c = c.Mix(accent, 0.30 * Band(t, 0.50, 0.20) * runLit);
+            if (!inCorner) { c = c.Mix(accent, 0.75 * Band(t, 0.20, 0.055) * Pulse(run + 90.0, 260.0, 0.09)); }
+            c = c.Mix(accent, 0.55 * cornerReach * Band(t, 0.50, 0.28));
+        }
+        else if (style == "Ornate")
+        {
+            c = c.Lift(0.62 * Band(t, 0.06, 0.11));            // gold outer bevel
+            c = c.Lift(0.34 * Band(t, 0.93, 0.09));            // gold inner lip
+            double inlay = Band(t, 0.50, 0.30);
+            c = c.Mix(accent, 0.92 * inlay);                   // dark enamel channel
+            c = c.Lift(-0.30 * Band(t, 0.29, 0.06));
+            c = c.Lift(-0.30 * Band(t, 0.71, 0.06));
+            if (!inCorner)
+            {
+                double rune = Pulse(run, 118.0, 0.30) * Band(t, 0.50, 0.20);
+                c = c.Lift(0.55 * rune);                        // engraved ticks in the channel
+            }
+            double gem = Clamp01(1.0 - Math.Max(cornerX, cornerY) / (BodyBox * 0.42));
+            c = c.Mix(accent, 0.85 * gem);
+            c = c.Lift(0.75 * Clamp01(gem * 2.0 - 1.2));       // gem catch-light
+        }
+        else
+        {
+            c = c.Lift(0.30 * Band(t, 0.05, 0.09));
+            c = c.Lift(-0.40 * Band(t, 0.45, 0.16));           // recessed trough the neon sits in
+            double runLit = inCorner ? 1.0 : Pulse(run, 340.0, 0.52);
+            c = c.Mix(accent, 0.95 * Band(t, 0.27, 0.055) * runLit);
+            c = c.Mix(accent, 0.38 * Band(t, 0.27, 0.17) * runLit);
+            double inner = inCorner ? 1.0 : Pulse(run + 170.0, 340.0, 0.40);
+            c = c.Mix(accent, 0.90 * Band(t, 0.70, 0.05) * inner);
+            c = c.Mix(accent, 0.30 * Band(t, 0.70, 0.16) * inner);
+            c = c.Mix(accent, 0.50 * cornerReach);
+        }
+
+        // Directional edge light the engine no longer draws for art cases: bright top and left,
+        // dim bottom and right.
+        double rim = Band(t, 0.0, 0.16);
+        bool bright = x <= Canvas - 1 - x && y <= CanvasHeight - 1 - y;
+        return c.Lift(bright ? rim * 0.30 : -rim * 0.28);
+    }
+
+    public static void Bake(string fullPath, string thumbPath, string style, int topArgb, int bottomArgb,
+        int accentArgb, double metalFraction)
     {
         double span = 1.0 - 2.0 * RailFraction;
-        double metal = 0.0365 / span * Canvas;
-        double glass = 0.0155 / span * Canvas;
-        double bodyBox = 0.1548 / span * Canvas;
-        double bleed = 10.0;
+        Metal = metalFraction / span * Canvas;
+        Glass = 0.0155 / span * Canvas;
+        BodyBox = 0.1548 / span * Canvas;
+        Bleed = 10.0;
 
-        double cutX0 = metal + bleed, cutY0 = metal + bleed;
-        double cutX1 = Canvas - metal - bleed, cutY1 = CanvasHeight - metal - bleed;
-        double cutBox = bodyBox - metal - bleed;
+        double cutX0 = Metal + Bleed, cutY0 = Metal + Bleed;
+        double cutX1 = Canvas - Metal - Bleed, cutY1 = CanvasHeight - Metal - Bleed;
+        double cutBox = BodyBox - Metal - Bleed;
 
-        Color top = Color.FromArgb(topArgb), bottom = Color.FromArgb(bottomArgb), accent = Color.FromArgb(accentArgb);
+        Rgb top = Rgb.Of(Color.FromArgb(topArgb));
+        Rgb bottom = Rgb.Of(Color.FromArgb(bottomArgb));
+        Rgb accent = Rgb.Of(Color.FromArgb(accentArgb));
 
         var bitmap = new Bitmap(Canvas, CanvasHeight, PixelFormat.Format32bppArgb);
         var rect = new Rectangle(0, 0, Canvas, CanvasHeight);
@@ -81,66 +204,34 @@ public static class CaseBaker
 
         for (int y = 0; y < CanvasHeight; y++)
         {
-            double vertical = (double)y / (CanvasHeight - 1);
             for (int x = 0; x < Canvas; x++)
             {
-                // RGB is computed for every pixel, including fully transparent ones, so the colour
-                // bleeds past both alpha edges and bilinear filtering cannot produce halos.
-                double r = top.R + (bottom.R - top.R) * vertical;
-                double g = top.G + (bottom.G - top.G) * vertical;
-                double b = top.B + (bottom.B - top.B) * vertical;
-
-                double fromLeft = x, fromRight = Canvas - 1 - x;
-                double fromTop = y, fromBottom = CanvasHeight - 1 - y;
-                double edge = Math.Min(Math.Min(fromLeft, fromRight), Math.Min(fromTop, fromBottom));
-
-                // Edge light: bright along top and left, dim along bottom and right, per the spec.
-                double rim = Clamp01(1.0 - edge / 7.0);
-                bool brightSide = fromLeft <= fromRight && fromTop <= fromBottom;
-                double lift = brightSide ? rim * 0.55 : -rim * 0.30;
-                r += (255 - r) * Math.Max(lift, 0.0) + r * Math.Min(lift, 0.0);
-                g += (255 - g) * Math.Max(lift, 0.0) + g * Math.Min(lift, 0.0);
-                b += (255 - b) * Math.Max(lift, 0.0) + b * Math.Min(lift, 0.0);
-
-                // Accent glow in the four corner boxes, which are the only region never overlaid by a
-                // hardware button in either orientation.
-                double cornerX = Math.Min(x, Canvas - 1 - x);
-                double cornerY = Math.Min(y, CanvasHeight - 1 - y);
-                if (cornerX < bodyBox && cornerY < bodyBox)
-                {
-                    double reach = 1.0 - Math.Max(cornerX, cornerY) / bodyBox;
-                    double glow = Clamp01(reach) * Clamp01(1.0 - edge / metal) * 0.7;
-                    r += (accent.R - r) * glow;
-                    g += (accent.G - g) * glow;
-                    b += (accent.B - b) * glow;
-                }
-
-                double body = Coverage(x, y, 0, 0, Canvas - 1, CanvasHeight - 1, bodyBox);
+                // Colour is written for every pixel, including fully transparent ones, so it bleeds past
+                // both alpha edges and bilinear filtering cannot produce halos.
+                Rgb c = Shade(style, x, y, InsetDepth(x, y), top, bottom, accent);
+                double body = Coverage(x, y, 0, 0, Canvas - 1, CanvasHeight - 1, BodyBox);
                 double cut = Coverage(x, y, cutX0, cutY0, cutX1, cutY1, cutBox);
-                double alpha = body * (1.0 - cut);
 
                 int index = y * stride + x * 4;
-                buffer[index + 0] = (byte)Math.Round(Clamp01(b / 255.0) * 255.0);
-                buffer[index + 1] = (byte)Math.Round(Clamp01(g / 255.0) * 255.0);
-                buffer[index + 2] = (byte)Math.Round(Clamp01(r / 255.0) * 255.0);
-                buffer[index + 3] = (byte)Math.Round(Clamp01(alpha) * 255.0);
+                buffer[index + 0] = (byte)Math.Round(Clamp01(c.B / 255.0) * 255.0);
+                buffer[index + 1] = (byte)Math.Round(Clamp01(c.G / 255.0) * 255.0);
+                buffer[index + 2] = (byte)Math.Round(Clamp01(c.R / 255.0) * 255.0);
+                buffer[index + 3] = (byte)Math.Round(Clamp01(body * (1.0 - cut)) * 255.0);
             }
         }
 
         Marshal.Copy(buffer, 0, data.Scan0, buffer.Length);
         bitmap.UnlockBits(data);
         bitmap.Save(fullPath, ImageFormat.Png);
-
         bitmap.Dispose();
 
-        // Box-filtered by hand rather than through Graphics.DrawImage: GDI+ interop is not reachable from
-        // an inline compile, and averaging channels straight is correct here because RGB is valid even
-        // under alpha 0, so transparent pixels cannot drag the edges dark.
+        // Box-filtered by hand: GDI+ interop is not reachable from an inline compile, and averaging
+        // channels straight is correct because RGB is valid even under alpha 0.
         const int Shrink = 4;
         int thumbWidth = Canvas / Shrink, thumbHeight = CanvasHeight / Shrink;
         var thumb = new Bitmap(thumbWidth, thumbHeight, PixelFormat.Format32bppArgb);
-        var thumbRect = new Rectangle(0, 0, thumbWidth, thumbHeight);
-        var thumbData = thumb.LockBits(thumbRect, ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+        var thumbData = thumb.LockBits(new Rectangle(0, 0, thumbWidth, thumbHeight), ImageLockMode.WriteOnly,
+            PixelFormat.Format32bppArgb);
         byte[] thumbBuffer = new byte[thumbData.Stride * thumbHeight];
 
         for (int y = 0; y < thumbHeight; y++)
@@ -153,10 +244,7 @@ public static class CaseBaker
                     for (int sx = 0; sx < Shrink; sx++)
                     {
                         int src = (y * Shrink + sy) * stride + (x * Shrink + sx) * 4;
-                        b += buffer[src + 0];
-                        g += buffer[src + 1];
-                        r += buffer[src + 2];
-                        a += buffer[src + 3];
+                        b += buffer[src + 0]; g += buffer[src + 1]; r += buffer[src + 2]; a += buffer[src + 3];
                     }
                 }
 
@@ -193,10 +281,11 @@ function ToArgb([string]$hex) {
     return ([int](0xFF -shl 24)) -bor ($r -shl 16) -bor ($g -shl 8) -bor $b
 }
 
-$outDir = Split-Path -Parent $PSScriptRoot
-$full = Join-Path $outDir "$Id.png"
-$thumb = Join-Path $outDir "$Id.thumb.png"
+$target = if ($OutDir) { $OutDir } else { Split-Path -Parent $PSScriptRoot }
+$full = Join-Path $target "$Id.png"
+$thumb = Join-Path $target "$Id.thumb.png"
 
-[CaseBaker]::Bake($full, $thumb, (ToArgb $Top), (ToArgb $Bottom), (ToArgb $Accent))
+[CaseBaker]::Bake($full, $thumb, $Style, (ToArgb $Top), (ToArgb $Bottom), (ToArgb $Accent), $MetalFraction)
 
-"{0,-14} {1,8:N0} KB   thumb {2,6:N0} KB" -f $Id, ((Get-Item $full).Length / 1KB), ((Get-Item $thumb).Length / 1KB)
+"{0,-12} {1,-7} {2,7:N0} KB   thumb {3,5:N0} KB" -f $Id, $Style, ((Get-Item $full).Length / 1KB),
+    ((Get-Item $thumb).Length / 1KB)
