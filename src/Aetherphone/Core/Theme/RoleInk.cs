@@ -14,39 +14,83 @@ internal enum RoleKind
 
 internal static class RoleInk
 {
-    private static readonly Vector4 ManagementDark = new(0.78f, 0.58f, 1.00f, 1.00f);
-    private static readonly Vector4 ManagementLight = new(0.44f, 0.18f, 0.76f, 1.00f);
-    private static readonly Vector4 DeveloperDark = new(0.35f, 0.84f, 0.86f, 1.00f);
-    private static readonly Vector4 DeveloperLight = new(0.03f, 0.44f, 0.50f, 1.00f);
-    private static readonly Vector4 ModeratorDark = new(0.46f, 0.86f, 0.56f, 1.00f);
-    private static readonly Vector4 ModeratorLight = new(0.09f, 0.48f, 0.20f, 1.00f);
-    private static readonly Vector4 VerifiedDark = new(0.40f, 0.68f, 0.98f, 1.00f);
-    private static readonly Vector4 VerifiedLight = new(0.05f, 0.42f, 0.85f, 1.00f);
-    private static readonly Vector4 PatreonDark = new(0.98f, 0.76f, 0.35f, 1.00f);
-    private static readonly Vector4 PatreonLight = new(0.66f, 0.42f, 0.02f, 1.00f);
-    private static readonly Vector4 SupporterDark = new(0.98f, 0.56f, 0.72f, 1.00f);
-    private static readonly Vector4 SupporterLight = new(0.70f, 0.13f, 0.38f, 1.00f);
-    private static readonly Vector4 ContributorDark = new(0.76f, 0.85f, 0.40f, 1.00f);
-    private static readonly Vector4 ContributorLight = new(0.38f, 0.47f, 0.06f, 1.00f);
+    private static readonly Vector4 ManagementBase = new(0.4275f, 0.2039f, 0.4118f, 1.00f);
+    private static readonly Vector4 ModeratorBase = new(0.8784f, 0.4627f, 0.1490f, 1.00f);
+    private static readonly Vector4 DeveloperBase = new(0.2706f, 0.2706f, 0.6667f, 1.00f);
+    private static readonly Vector4 SupporterBase = new(0.1255f, 0.4000f, 0.5804f, 1.00f);
+    private static readonly Vector4 PatreonBase = new(0.9098f, 0.1216f, 0.3843f, 1.00f);
+    private static readonly Vector4 VerifiedBase = new(0.2039f, 0.5961f, 0.8588f, 1.00f);
+    private static readonly Vector4 ContributorBase = new(0.1843f, 0.7647f, 0.4392f, 1.00f);
     private static readonly Vector4 NeutralDark = new(0.97f, 0.97f, 0.98f, 1.00f);
     private static readonly Vector4 NeutralLight = new(0.10f, 0.10f, 0.11f, 1.00f);
+
+    private const float MinDarkLuminance = 0.42f;
+    private const float MaxLightLuminance = 0.34f;
+    private const float DarkHighlightLift = 1.22f;
+    private const float LightHighlightLift = 0.72f;
 
     public static bool IsLight(PhoneTheme theme) => Palette.Luminance(theme.AppBackground) > 0.5f;
 
     public static Vector4 For(RoleKind kind, bool light)
     {
-        return kind switch
+        var brand = Brand(kind);
+        if (brand.W <= 0f)
         {
-            RoleKind.Management => light ? ManagementLight : ManagementDark,
-            RoleKind.Developer => light ? DeveloperLight : DeveloperDark,
-            RoleKind.Moderator => light ? ModeratorLight : ModeratorDark,
-            RoleKind.Verified => light ? VerifiedLight : VerifiedDark,
-            RoleKind.Patreon => light ? PatreonLight : PatreonDark,
-            RoleKind.Supporter => light ? SupporterLight : SupporterDark,
-            RoleKind.Contributor => light ? ContributorLight : ContributorDark,
-            _ => light ? NeutralLight : NeutralDark,
-        };
+            return light ? NeutralLight : NeutralDark;
+        }
+
+        return light ? Darkened(brand, MaxLightLuminance) : Lifted(brand, MinDarkLuminance);
     }
 
     public static Vector4 For(RoleKind kind, PhoneTheme theme) => For(kind, IsLight(theme));
+
+    public static Vector4 Highlight(RoleKind kind, bool light)
+    {
+        var fill = For(kind, light);
+        var lift = light ? LightHighlightLift : DarkHighlightLift;
+        return new Vector4(MathF.Min(1f, fill.X * lift), MathF.Min(1f, fill.Y * lift), MathF.Min(1f, fill.Z * lift),
+            fill.W);
+    }
+
+    public static Vector4 Highlight(RoleKind kind, PhoneTheme theme) => Highlight(kind, IsLight(theme));
+
+    private static Vector4 Brand(RoleKind kind)
+    {
+        return kind switch
+        {
+            RoleKind.Management => ManagementBase,
+            RoleKind.Moderator => ModeratorBase,
+            RoleKind.Developer => DeveloperBase,
+            RoleKind.Supporter => SupporterBase,
+            RoleKind.Patreon => PatreonBase,
+            RoleKind.Verified => VerifiedBase,
+            RoleKind.Contributor => ContributorBase,
+            _ => default,
+        };
+    }
+
+    private static Vector4 Lifted(Vector4 color, float floor)
+    {
+        var luminance = Palette.Luminance(color);
+        if (luminance >= floor)
+        {
+            return color;
+        }
+
+        var scale = floor / MathF.Max(luminance, 0.0001f);
+        return new Vector4(MathF.Min(1f, color.X * scale), MathF.Min(1f, color.Y * scale),
+            MathF.Min(1f, color.Z * scale), color.W);
+    }
+
+    private static Vector4 Darkened(Vector4 color, float ceiling)
+    {
+        var luminance = Palette.Luminance(color);
+        if (luminance <= ceiling)
+        {
+            return color;
+        }
+
+        var scale = ceiling / MathF.Max(luminance, 0.0001f);
+        return new Vector4(color.X * scale, color.Y * scale, color.Z * scale, color.W);
+    }
 }

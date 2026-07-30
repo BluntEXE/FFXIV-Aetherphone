@@ -36,25 +36,27 @@ internal static class UserName
         float maxWidth, in TextStyle style, Vector4 nameInk, bool hovering, bool light, int maxBadges = 1)
     {
         var shown = Math.Min(RoleBadges.Count(badges), maxBadges);
+        var lineHeight = LineHeight(style);
         var ink = nameInk;
+        var effect = default(TextEffect);
         if (shown > 0)
         {
             var top = RoleBadges.Top(badges);
             if (top.HasValue)
             {
                 ink = RoleInk.For(top.Value.Kind, light);
+                effect = NameEffects.For(top.Value.Kind, light);
             }
         }
 
         var reserve = Reserve(badges, style, maxBadges);
         var textWidth = MathF.Max(1f, maxWidth - reserve);
-        var drawn = Marquee.DrawLeft(drawList, id, name, boxLeft, y, textWidth, style, ink, hovering);
+        var drawn = Marquee.DrawLeft(drawList, id, name, boxLeft, y, textWidth, style, ink, hovering, effect);
         if (shown == 0)
         {
             return drawn;
         }
 
-        var lineHeight = LineHeight(style);
         var glyphHeight = lineHeight * GlyphFraction;
         var gap = lineHeight * GapFraction;
         var centerY = y + lineHeight * 0.5f;

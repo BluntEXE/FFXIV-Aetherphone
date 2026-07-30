@@ -4,6 +4,19 @@ namespace Aetherphone.Windows.Components;
 
 internal readonly record struct TextStyle(float Scale, FontWeight Weight);
 
+internal enum NameEffectKind
+{
+    None = 0,
+    Gradient,
+    Breath,
+    Ripple,
+    Flow,
+    Glint,
+    Sweep,
+}
+
+internal readonly record struct TextEffect(NameEffectKind Kind, Vector4 Crest, float Phase);
+
 internal static class TextStyles
 {
     public static readonly TextStyle LargeTitle = new(1.90f, FontWeight.Bold);
