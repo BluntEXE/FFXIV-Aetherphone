@@ -13,18 +13,14 @@ internal static class ThemeCatalog
 
     public const string DefaultCaseName = "Titanium";
 
+    // The bare phone, then the art cases worn over it. A case is artwork now, not a tint, so the only
+    // colour entry is the default chassis you get with no case on.
     private static readonly PhoneCase[] BuiltInCases =
     {
         PhoneCase.Color(DefaultCaseName, new Vector4(0.145f, 0.145f, 0.170f, 1f)),
-        PhoneCase.Color("Graphite", new Vector4(0.085f, 0.085f, 0.095f, 1f)),
-        PhoneCase.Color("Silver", new Vector4(0.700f, 0.710f, 0.745f, 1f)),
-        PhoneCase.Color("Gold", new Vector4(0.660f, 0.530f, 0.300f, 1f)),
-        PhoneCase.Color("Rose", new Vector4(0.720f, 0.500f, 0.480f, 1f)),
-        PhoneCase.Color("Midnight", new Vector4(0.105f, 0.135f, 0.255f, 1f)),
-        PhoneCase.Color("Jade", new Vector4(0.115f, 0.265f, 0.215f, 1f)),
-        PhoneCase.Color("Coral", new Vector4(0.740f, 0.310f, 0.280f, 1f)),
-        PhoneCase.Color("Lavender", new Vector4(0.480f, 0.420f, 0.680f, 1f)),
-        PhoneCase.Color("Porcelain", new Vector4(0.880f, 0.880f, 0.905f, 1f)),
+        PhoneCase.Art("Ironworks", new Vector4(0.335f, 0.375f, 0.421f, 1f)),
+        PhoneCase.Art("Emberforge", new Vector4(0.473f, 0.259f, 0.088f, 1f)),
+        PhoneCase.Art("Voidsent", new Vector4(0.190f, 0.122f, 0.361f, 1f)),
     };
 
     public static IReadOnlyList<PhoneCase> Cases { get; } = BuiltInCases;

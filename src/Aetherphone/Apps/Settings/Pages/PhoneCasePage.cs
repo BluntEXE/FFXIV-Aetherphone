@@ -35,30 +35,15 @@ internal sealed class PhoneCasePage : ISettingsPage
         var theme = context.Theme;
         var scale = ImGuiHelpers.GlobalScale;
         var gap = 12f * scale;
-        var sectioned = HasKind(PhoneCaseKind.Art);
         using (AppSurface.Begin(body))
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(gap, gap)))
         {
-            DrawGrid(PhoneCaseKind.Color, Loc.T(L.Settings.CaseColors), sectioned, theme, scale, gap);
-            DrawGrid(PhoneCaseKind.Art, Loc.T(L.Settings.CaseArtwork), sectioned, theme, scale, gap);
+            DrawGrid(PhoneCaseKind.Color, null, theme, scale, gap);
+            DrawGrid(PhoneCaseKind.Art, Loc.T(L.Settings.CaseArtwork), theme, scale, gap);
         }
     }
 
-    private static bool HasKind(PhoneCaseKind kind)
-    {
-        var cases = ThemeCatalog.Cases;
-        for (var index = 0; index < cases.Count; index++)
-        {
-            if (cases[index].Kind == kind)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private void DrawGrid(PhoneCaseKind kind, string header, bool sectioned, PhoneTheme theme, float scale, float gap)
+    private void DrawGrid(PhoneCaseKind kind, string? header, PhoneTheme theme, float scale, float gap)
     {
         var cases = ThemeCatalog.Cases;
         var shown = 0;
@@ -69,9 +54,13 @@ internal sealed class PhoneCasePage : ISettingsPage
                 continue;
             }
 
-            if (shown == 0 && sectioned)
+            if (shown == 0 && header is not null)
             {
                 SettingsSection.Header(header, theme);
+            }
+            else if (shown % Columns != 0)
+            {
+                ImGui.SameLine();
             }
 
             var cellWidth = (ScrollLayout.StableContentWidth() - gap * (Columns - 1)) / Columns;
@@ -83,10 +72,6 @@ internal sealed class PhoneCasePage : ISettingsPage
             }
 
             shown++;
-            if (shown % Columns != 0)
-            {
-                ImGui.SameLine();
-            }
         }
     }
 

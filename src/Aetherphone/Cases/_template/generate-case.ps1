@@ -131,23 +131,59 @@ public static class CaseBaker
         bitmap.UnlockBits(data);
         bitmap.Save(fullPath, ImageFormat.Png);
 
-        int thumbWidth = Canvas / 4, thumbHeight = CanvasHeight / 4;
+        bitmap.Dispose();
+
+        // Box-filtered by hand rather than through Graphics.DrawImage: GDI+ interop is not reachable from
+        // an inline compile, and averaging channels straight is correct here because RGB is valid even
+        // under alpha 0, so transparent pixels cannot drag the edges dark.
+        const int Shrink = 4;
+        int thumbWidth = Canvas / Shrink, thumbHeight = CanvasHeight / Shrink;
         var thumb = new Bitmap(thumbWidth, thumbHeight, PixelFormat.Format32bppArgb);
-        using (var graphics = Graphics.FromImage(thumb))
+        var thumbRect = new Rectangle(0, 0, thumbWidth, thumbHeight);
+        var thumbData = thumb.LockBits(thumbRect, ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+        byte[] thumbBuffer = new byte[thumbData.Stride * thumbHeight];
+
+        for (int y = 0; y < thumbHeight; y++)
         {
-            graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-            graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-            graphics.Clear(Color.Transparent);
-            graphics.DrawImage(bitmap, 0, 0, thumbWidth, thumbHeight);
+            for (int x = 0; x < thumbWidth; x++)
+            {
+                int b = 0, g = 0, r = 0, a = 0;
+                for (int sy = 0; sy < Shrink; sy++)
+                {
+                    for (int sx = 0; sx < Shrink; sx++)
+                    {
+                        int src = (y * Shrink + sy) * stride + (x * Shrink + sx) * 4;
+                        b += buffer[src + 0];
+                        g += buffer[src + 1];
+                        r += buffer[src + 2];
+                        a += buffer[src + 3];
+                    }
+                }
+
+                int count = Shrink * Shrink;
+                int dst = y * thumbData.Stride + x * 4;
+                thumbBuffer[dst + 0] = (byte)(b / count);
+                thumbBuffer[dst + 1] = (byte)(g / count);
+                thumbBuffer[dst + 2] = (byte)(r / count);
+                thumbBuffer[dst + 3] = (byte)(a / count);
+            }
         }
+
+        Marshal.Copy(thumbBuffer, 0, thumbData.Scan0, thumbBuffer.Length);
+        thumb.UnlockBits(thumbData);
         thumb.Save(thumbPath, ImageFormat.Png);
         thumb.Dispose();
-        bitmap.Dispose();
     }
 }
 '@
 
-Add-Type -TypeDefinition $source -ReferencedAssemblies System.Drawing, System.Drawing.Primitives
+$references = @(
+    [System.Drawing.Bitmap].Assembly.Location,
+    [System.Drawing.Color].Assembly.Location,
+    [System.Runtime.InteropServices.Marshal].Assembly.Location
+) | Sort-Object -Unique
+
+Add-Type -TypeDefinition $source -ReferencedAssemblies $references
 
 function ToArgb([string]$hex) {
     $clean = $hex.TrimStart('#')

@@ -27,15 +27,9 @@ internal static class CatalogLabels
         identifier switch
         {
             "Titanium" => Loc.T(L.Catalogs.CaseTitanium),
-            "Graphite" => Loc.T(L.Catalogs.CaseGraphite),
-            "Silver" => Loc.T(L.Catalogs.CaseSilver),
-            "Gold" => Loc.T(L.Catalogs.CaseGold),
-            "Rose" => Loc.T(L.Catalogs.CaseRose),
-            "Midnight" => Loc.T(L.Catalogs.CaseMidnight),
-            "Jade" => Loc.T(L.Catalogs.CaseJade),
-            "Coral" => Loc.T(L.Catalogs.CaseCoral),
-            "Lavender" => Loc.T(L.Catalogs.CaseLavender),
-            "Porcelain" => Loc.T(L.Catalogs.CasePorcelain),
+            "Ironworks" => Loc.T(L.Catalogs.CaseIronworks),
+            "Emberforge" => Loc.T(L.Catalogs.CaseEmberforge),
+            "Voidsent" => Loc.T(L.Catalogs.CaseVoidsent),
             _ => identifier,
         };
 
