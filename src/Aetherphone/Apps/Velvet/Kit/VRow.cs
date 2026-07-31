@@ -143,7 +143,8 @@ internal static class VRow
             else
             {
                 Squircle.Fill(drawList, pillRect.Min, pillRect.Max, pillHeight * 0.5f, VelvetTheme.PlumWell.Packed());
-                Typography.DrawCentered(pillRect.Center, model.Pill, VelvetTheme.MutedInk, 0.9f, FontWeight.SemiBold);
+                Typography.DrawCentered(drawList, pillRect.Center, model.Pill, VelvetTheme.MutedInk, 0.9f,
+                    FontWeight.SemiBold);
             }
 
             rightEdge -= pillWidth + Metrics.Space.Sm * scale;
@@ -152,8 +153,8 @@ internal static class VRow
         if (timeText.Length > 0)
         {
             var timeSize = Typography.Measure(timeText, TextStyles.Caption1);
-            Typography.Draw(new Vector2(rightEdge - timeSize.X, min.Y + 12f * scale), timeText, VelvetTheme.MutedInk,
-                TextStyles.Caption1);
+            Typography.Draw(drawList, new Vector2(rightEdge - timeSize.X, min.Y + 12f * scale), timeText,
+                VelvetTheme.MutedInk, TextStyles.Caption1);
         }
 
         if (model.Badge > 0)
