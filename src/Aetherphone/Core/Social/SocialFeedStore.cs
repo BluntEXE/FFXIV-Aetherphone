@@ -47,8 +47,6 @@ internal abstract class SocialFeedStore : IDisposable
     private volatile bool profileLoading;
     private volatile bool profileFailed;
     private volatile bool profileRevalidating;
-    private DateTime profileFetchedAt;
-    private static readonly TimeSpan ProfileRevalidateAfter = TimeSpan.FromSeconds(20);
     private volatile string? detailPostId;
     private volatile CommentDto[] detailComments = Array.Empty<CommentDto>();
     private volatile string? commentsCursor;
@@ -758,8 +756,7 @@ internal abstract class SocialFeedStore : IDisposable
     {
         if (profileUserId == userId && (profileUser is not null || profileLoading))
         {
-            if (profileUser is not null && !profileLoading && !profileRevalidating
-                && DateTime.UtcNow - profileFetchedAt > ProfileRevalidateAfter)
+            if (profileUser is not null && !profileLoading && !profileRevalidating)
             {
                 RevalidateProfile(userId);
             }
@@ -793,8 +790,6 @@ internal abstract class SocialFeedStore : IDisposable
                 {
                     profileLane.ApplyRefresh(posts.Items, posts.NextCursor);
                 }
-
-                profileFetchedAt = DateTime.UtcNow;
             }
         }, () =>
         {
@@ -820,7 +815,6 @@ internal abstract class SocialFeedStore : IDisposable
             if (user is not null)
             {
                 profileUser = user;
-                profileFetchedAt = DateTime.UtcNow;
             }
 
             if (posts is not null)

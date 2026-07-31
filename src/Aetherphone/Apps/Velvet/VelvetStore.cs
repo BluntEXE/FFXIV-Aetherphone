@@ -58,6 +58,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     private volatile VelvetProfileDto? profileUser;
     private volatile bool profileLoading;
     private volatile bool profileFailed;
+    private volatile bool profileRevalidating;
     private volatile string? userPostsUserId;
     private volatile VelvetPostDto[] userPosts = Array.Empty<VelvetPostDto>();
     private volatile int userPostsTotal;
@@ -961,6 +962,11 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     {
         if (profileUserId == userId && (profileUser is not null || profileLoading))
         {
+            if (profileUser is not null && !profileLoading && !profileRevalidating)
+            {
+                RevalidateProfile(userId);
+            }
+
             return;
         }
 
@@ -991,6 +997,24 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
                 profileLoading = false;
             }
         });
+    }
+
+    private void RevalidateProfile(string userId)
+    {
+        profileRevalidating = true;
+        work.Run("profile revalidate", async token =>
+        {
+            var user = await client.UserAsync(userId, token).ConfigureAwait(false);
+            if (profileUserId != userId)
+            {
+                return;
+            }
+
+            if (user is not null)
+            {
+                profileUser = user;
+            }
+        }, () => profileRevalidating = false);
     }
 
     public void Connect(string userId)
