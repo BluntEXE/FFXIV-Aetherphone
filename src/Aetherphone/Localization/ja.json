@@ -1767,6 +1767,8 @@
   "velvet.feedScopeConnections": "つながり",
   "velvet.audienceConnections": "つながりのみ",
   "velvet.audiencePublic": "Velvetの全員",
+  "velvet.makePublic": "全員に公開",
+  "velvet.makeConnections": "つながりのみに制限",
   "velvet.imageUnavailable": "画像を表示できません",
   "velvet.gateTagline": "スイートの中にある、18歳以上限定のプライベートな一角。月明かりの下、急がず、あなたのままで。",
   "velvet.gateConsent": "入場することで、18歳以上であることを確認したものとみなされます。思いやりを持って、慎重に。",

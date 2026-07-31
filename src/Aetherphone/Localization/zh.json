@@ -1767,6 +1767,8 @@
   "velvet.feedScopeConnections": "联系人",
   "velvet.audienceConnections": "仅联系人",
   "velvet.audiencePublic": "Velvet 上的所有人",
+  "velvet.makePublic": "向所有人公开",
+  "velvet.makeConnections": "仅限联系人",
   "velvet.imageUnavailable": "图片不可用",
   "velvet.gateTagline": "套件中一处仅限成人的私密角落。月光之下，不慌不忙，属于你。",
   "velvet.gateConsent": "进入即表示你确认自己已满18岁。请友善待人，注意分寸。",

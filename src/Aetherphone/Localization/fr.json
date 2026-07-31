@@ -1767,6 +1767,8 @@
   "velvet.feedScopeConnections": "Connexions",
   "velvet.audienceConnections": "Connexions uniquement",
   "velvet.audiencePublic": "Tout le monde sur Velvet",
+  "velvet.makePublic": "Partager avec tout le monde",
+  "velvet.makeConnections": "Limiter aux connexions",
   "velvet.imageUnavailable": "Image indisponible",
   "velvet.gateTagline": "Un coin privé de la suite, réservé aux adultes. Sous la lune, sans hâte, rien qu'à toi.",
   "velvet.gateConsent": "En entrant, tu confirmes avoir 18 ans ou plus. Sois bienveillant·e, sois discret·ète.",

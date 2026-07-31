@@ -1215,6 +1215,19 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
             async token => await client.DeletePostAsync(postId, token).ConfigureAwait(false));
     }
 
+    public void SetPostAudience(VelvetPostDto post, int audience)
+    {
+        AcceptPostEverywhere(post with { Audience = audience });
+        work.Run("post audience", async token =>
+        {
+            var result = await client.SetPostAudienceAsync(post.Id, audience, token).ConfigureAwait(false);
+            if (result is not null)
+            {
+                AcceptPostEverywhere(result);
+            }
+        });
+    }
+
     public void ToggleReaction(VelvetPostDto post, int kind)
     {
         var target = post.MyReaction == kind ? -1 : kind;
@@ -1238,6 +1251,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
             feedLanes[laneIndex].Items = CopyOnWrite.Replace(feedLanes[laneIndex].Items, post);
         }
 
+        userPosts = CopyOnWrite.Replace(userPosts, post);
         if (fetchedPost?.Id == post.Id)
         {
             fetchedPost = post;

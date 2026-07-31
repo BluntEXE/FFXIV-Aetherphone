@@ -1767,6 +1767,8 @@
   "velvet.feedScopeConnections": "Bağlantılar",
   "velvet.audienceConnections": "Yalnızca bağlantılar",
   "velvet.audiencePublic": "Velvet'teki herkes",
+  "velvet.makePublic": "Herkesle paylaş",
+  "velvet.makeConnections": "Yalnızca bağlantılarla sınırla",
   "velvet.imageUnavailable": "Görsel kullanılamıyor",
   "velvet.gateTagline": "Paketin özel, sadece yetişkinlere açık köşesi. Ay ışığında, acelesiz, tamamen senin.",
   "velvet.gateConsent": "Girerek 18 yaşından büyük olduğunu onaylıyorsun. Nazik ol, ölçülü ol.",

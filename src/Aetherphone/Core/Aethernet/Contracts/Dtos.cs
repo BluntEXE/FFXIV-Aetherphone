@@ -310,6 +310,8 @@ internal sealed record CreateVelvetPostRequest(
     string[]? MediaKeys = null,
     int Audience = 0);
 
+internal sealed record UpdateVelvetPostAudienceRequest(int Audience);
+
 internal sealed record VelvetCommentDto(
     string Id,
     string PostId,

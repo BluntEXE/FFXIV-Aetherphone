@@ -2213,6 +2213,8 @@ internal static class L
         public static readonly LocString FeedScopeConnections = new("velvet.feedScopeConnections", "Connections");
         public static readonly LocString AudienceConnections = new("velvet.audienceConnections", "Connections only");
         public static readonly LocString AudiencePublic = new("velvet.audiencePublic", "Everyone on Velvet");
+        public static readonly LocString MakePublic = new("velvet.makePublic", "Share with everyone");
+        public static readonly LocString MakeConnections = new("velvet.makeConnections", "Limit to connections");
         public static readonly LocString ImageUnavailable = new("velvet.imageUnavailable", "Image unavailable");
         public static readonly LocString GateTagline =
             new("velvet.gateTagline", "A private, adults only corner of the suite. Moonlit, unhurried, yours.");

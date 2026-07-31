@@ -188,6 +188,11 @@ internal sealed class VelvetClient
         return net.SendAsync(HttpMethod.Delete, $"/velvet/posts/{Uri.EscapeDataString(postId)}", token);
     }
 
+    public Task<VelvetPostDto?> SetPostAudienceAsync(string postId, int audience, CancellationToken token)
+    {
+        return net.SendJsonAsync(HttpMethod.Put, $"/velvet/posts/{Uri.EscapeDataString(postId)}/audience", new UpdateVelvetPostAudienceRequest(audience), AethernetJsonContext.Default.UpdateVelvetPostAudienceRequest, AethernetJsonContext.Default.VelvetPostDto, token);
+    }
+
     public Task<VelvetPostDto?> ReactAsync(string postId, int kind, CancellationToken token)
     {
         return net.SendJsonAsync(HttpMethod.Put, $"/velvet/posts/{Uri.EscapeDataString(postId)}/reaction", new ReactRequest(kind), AethernetJsonContext.Default.ReactRequest, AethernetJsonContext.Default.VelvetPostDto, token);

@@ -1767,6 +1767,8 @@
   "velvet.feedScopeConnections": "Verbindungen",
   "velvet.audienceConnections": "Nur Verbindungen",
   "velvet.audiencePublic": "Alle auf Velvet",
+  "velvet.makePublic": "Mit allen teilen",
+  "velvet.makeConnections": "Auf Verbindungen beschränken",
   "velvet.imageUnavailable": "Bild nicht verfügbar",
   "velvet.gateTagline": "Eine private 18+ Ecke der Suite. Mondbeschienen, unaufgeregt, deine.",
   "velvet.gateConsent": "Mit dem Betreten bestätigst du, dass du 18 oder älter bist. Sei nett, sei diskret.",
