@@ -1662,6 +1662,7 @@
   "velvet.discoverableLabel": "Appear in Discover",
   "velvet.save": "Save",
   "velvet.saving": "Saving…",
+  "velvet.saveFailed": "Couldn't save your profile. Check your connection and try again.",
   "velvet.newPost": "New Post",
   "velvet.share": "Share",
   "velvet.captionHint": "Write a caption…",

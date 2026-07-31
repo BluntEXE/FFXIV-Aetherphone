@@ -264,6 +264,7 @@ internal sealed class HttpService : IDisposable
 
             if (!response.IsSuccessStatusCode)
             {
+                AepLog.Warning($"HTTP {request.Method} {request.RequestUri} returned {(int)response.StatusCode}");
                 return default;
             }
 

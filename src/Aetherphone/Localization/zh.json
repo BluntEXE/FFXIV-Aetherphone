@@ -1662,6 +1662,7 @@
   "velvet.discoverableLabel": "在“发现”中显示自己",
   "velvet.save": "保存",
   "velvet.saving": "保存中…",
+  "velvet.saveFailed": "无法保存你的个人资料。请检查网络连接后重试。",
   "velvet.newPost": "发布新动态",
   "velvet.share": "分享",
   "velvet.captionHint": "写下说明…",

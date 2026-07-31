@@ -1662,6 +1662,7 @@
   "velvet.discoverableLabel": "In Entdecken erscheinen",
   "velvet.save": "Speichern",
   "velvet.saving": "Wird gespeichert…",
+  "velvet.saveFailed": "Dein Profil konnte nicht gespeichert werden. Prüfe deine Verbindung und versuch es erneut.",
   "velvet.newPost": "Neuer Beitrag",
   "velvet.share": "Teilen",
   "velvet.captionHint": "Bildunterschrift schreiben…",

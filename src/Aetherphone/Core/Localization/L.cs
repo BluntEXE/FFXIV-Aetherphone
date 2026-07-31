@@ -2099,6 +2099,7 @@ internal static class L
         public static readonly LocString DiscoverableLabel = new("velvet.discoverableLabel", "Appear in Discover");
         public static readonly LocString Save = new("velvet.save", "Save");
         public static readonly LocString Saving = new("velvet.saving", "Saving…");
+        public static readonly LocString SaveFailed = new("velvet.saveFailed", "Couldn't save your profile. Check your connection and try again.");
         public static readonly LocString NewPost = new("velvet.newPost", "New Post");
         public static readonly LocString Share = new("velvet.share", "Share");
         public static readonly LocString CaptionHint = new("velvet.captionHint", "Write a caption…");

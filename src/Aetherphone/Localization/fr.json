@@ -1662,6 +1662,7 @@
   "velvet.discoverableLabel": "Apparaître dans Découvrir",
   "velvet.save": "Enregistrer",
   "velvet.saving": "Enregistrement…",
+  "velvet.saveFailed": "Impossible d'enregistrer ton profil. Vérifie ta connexion et réessaie.",
   "velvet.newPost": "Nouvelle publication",
   "velvet.share": "Partager",
   "velvet.captionHint": "Écrire une légende…",
