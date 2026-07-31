@@ -250,6 +250,7 @@ internal sealed partial class AethergramApp
 
     private void DrawComposeCaption(Rect area)
     {
+        personPicker.Gate();
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, ComposeTitle, () => composeSession.LoadCropStage(composeSession.SelectedCount - 1));
         var scale = ImGuiHelpers.GlobalScale;
@@ -296,8 +297,6 @@ internal sealed partial class AethergramApp
         {
             PlaceComposeTag(pickedPerson);
         }
-
-        personPicker.Gate();
 
         var busy = ComposePosting;
         if (DrawShareBar(shareRect, busy ? Loc.T(L.Aethergram.Sharing) : Loc.T(L.Aethergram.Share), !busy))

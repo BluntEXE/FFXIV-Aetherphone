@@ -410,7 +410,7 @@ internal sealed class StoryViewerOverlay
         var max = new Vector2(origin.X + padding * 2f + iconWidth + iconGap + size.X, origin.Y + height);
         var radius = height * 0.5f;
         var centerY = origin.Y + height * 0.5f;
-        var hovered = UiInteract.Hover(origin, max);
+        var hovered = !sheetOpen && UiInteract.Hover(origin, max);
         seenHover.Step(hovered ? 1f : 0f, SeenHoverSmoothTime, delta);
         var hover = Math.Clamp(seenHover.Value, 0f, 1f);
         var press = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left) ? 0.1f : 0f;
@@ -427,7 +427,12 @@ internal sealed class StoryViewerOverlay
             ink, 0.8f);
         Typography.Draw(new Vector2(origin.X + padding + iconWidth + iconGap, centerY - size.Y * 0.5f), label, ink,
             TextStyles.FootnoteEmphasized);
-        if (UiInteract.HoverClick(origin, max))
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (UiInteract.Click(origin, max, hovered))
         {
             sheetOpen = true;
         }
@@ -443,14 +448,14 @@ internal sealed class StoryViewerOverlay
 
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddRectFilled(area.Min, area.Max, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.5f * reveal)));
-        if (UiInteract.HoverClick(area.Min, area.Max))
+        var height = area.Height * SheetHeightFraction;
+        var top = area.Max.Y - height * Easing.EaseOutQuint(reveal);
+        var panel = new Rect(new Vector2(area.Min.X, top), area.Max);
+        if (UiInteract.ClickedOutside(panel.Min, panel.Max, false))
         {
             sheetOpen = false;
         }
 
-        var height = area.Height * SheetHeightFraction;
-        var top = area.Max.Y - height * Easing.EaseOutQuint(reveal);
-        var panel = new Rect(new Vector2(area.Min.X, top), area.Max);
         var rounding = Metrics.Radius.Lg * scale;
         Squircle.Fill(drawList, panel.Min, new Vector2(panel.Max.X, panel.Max.Y + rounding), rounding,
             ImGui.GetColorU32(theme.Surface));
