@@ -607,6 +607,15 @@ internal sealed class SocialProfilePages
                     DrawUserRow(snapshot[index], theme);
                 }
 
+                if (store.UserListLoadingMore)
+                {
+                    InfiniteScroll.DrawLoadingRow(listRect.Center.X, style.Palette.MutedInk);
+                }
+                else if (store.HasMoreUserList && InfiniteScroll.ReachedBottom())
+                {
+                    store.LoadMoreUserList();
+                }
+
                 ImGui.Dummy(new Vector2(0f, 12f * scale));
             }
         }

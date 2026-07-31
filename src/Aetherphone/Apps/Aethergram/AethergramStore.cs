@@ -27,8 +27,8 @@ internal sealed class AethergramStore : SocialFeedStore
     protected override Task<FeedPage?> FetchProfilePostsAsync(string userId, string? cursor, CancellationToken token) =>
         grams.UserGramsAsync(userId, cursor, token);
 
-    protected override Task<FeedPage?> FetchTaggedPostsAsync(string userId, CancellationToken token) =>
-        grams.UserTaggedAsync(userId, token);
+    protected override Task<FeedPage?> FetchTaggedPostsAsync(string userId, string? cursor, CancellationToken token) =>
+        grams.UserTaggedAsync(userId, cursor, token);
 
     public void CreateGram(string[] sourcePaths, WallpaperCrop[] crops, PostAspect aspect, string caption,
         PhotoTagInput[]? photoTags, Action<bool> onComplete)

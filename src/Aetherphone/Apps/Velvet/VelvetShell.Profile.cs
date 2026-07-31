@@ -333,6 +333,18 @@ internal sealed partial class VelvetShell
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, gridHeight));
 
+        if (serverGallery)
+        {
+            if (store.UserPostsLoadingMore)
+            {
+                InfiniteScroll.DrawLoadingRow(origin.X + width * 0.5f, VelvetTheme.MutedInk);
+            }
+            else if (store.HasMoreUserPosts && InfiniteScroll.ReachedBottom())
+            {
+                store.LoadMoreUserPosts();
+            }
+        }
+
         if (!isMe && !connected && totalCount > owned.Count)
         {
             Gap(12f);

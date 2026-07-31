@@ -47,6 +47,8 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     private readonly Comparison<TMessage> messageOrder;
 
     private volatile TThread[] threadList = Array.Empty<TThread>();
+    private volatile string? threadListCursor;
+    private volatile bool loadingMoreThreads;
     private volatile bool loadingThreadList;
     private volatile bool threadListLoaded;
     private volatile string? currentThreadId;
@@ -109,6 +111,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         lastAccountId = accountId;
         inboxMarks.Clear();
         threadList = Array.Empty<TThread>();
+        threadListCursor = null;
         threadListLoaded = false;
         currentThreadId = null;
         pendingOpenThreadId = null;
@@ -128,6 +131,8 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     protected readonly record struct MessagePage(TMessage[] Items, string? NextCursor);
 
+    protected readonly record struct ThreadListPage(TThread[] Items, string? NextCursor);
+
     protected abstract string ImageUploadScope { get; }
 
     protected abstract string VoiceUploadScope { get; }
@@ -140,7 +145,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     protected abstract Task<ChatKeyStatus> EnsureThreadKeysAsync(string threadId, CancellationToken token);
 
-    protected abstract Task<TThread[]?> FetchThreadListAsync(CancellationToken token);
+    protected abstract Task<ThreadListPage?> FetchThreadListAsync(string? cursor, CancellationToken token);
 
     protected abstract Task<MessagePage?> FetchMessagesPageAsync(string threadId, string? cursor,
         CancellationToken token);
@@ -247,6 +252,8 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     protected bool LoadingThreadList => loadingThreadList;
     protected bool ThreadListLoaded => threadListLoaded;
+    public bool LoadingMoreThreads => loadingMoreThreads;
+    public bool HasMoreThreads => threadListCursor is not null;
 
     protected TMessage[] MessageItems
     {
@@ -304,6 +311,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
             if (threadList.Length > 0 || messages.Length > 0 || currentThreadId is not null)
             {
                 threadList = Array.Empty<TThread>();
+                threadListCursor = null;
                 messages = Array.Empty<TMessage>();
                 currentThreadId = null;
                 threadListLoaded = false;
@@ -412,14 +420,56 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         inboxPolling = true;
         work.Run("inbox poll", async token =>
         {
-            var items = await FetchThreadListAsync(token).ConfigureAwait(false);
-            if (items is not null)
+            var page = await FetchThreadListAsync(null, token).ConfigureAwait(false);
+            if (page is not null)
             {
-                var decorated = DecorateThreadList(items);
-                threadList = decorated;
+                var decorated = DecorateThreadList(page.Value.Items);
+                AcceptThreadListHead(decorated, page.Value.NextCursor);
                 RaiseInboxNotifications(decorated);
             }
         }, () => inboxPolling = false);
+    }
+
+    private void AcceptThreadListHead(TThread[] decorated, string? nextCursor)
+    {
+        var current = threadList;
+        if (current.Length == 0)
+        {
+            threadList = decorated;
+            threadListCursor = nextCursor;
+            return;
+        }
+
+        threadList = IdentifiedMerge.MergeById(current, decorated, CompareThreadsByRecency);
+    }
+
+    private int CompareThreadsByRecency(TThread left, TThread right)
+    {
+        var byTime = ThreadLastMessageAtOf(right).CompareTo(ThreadLastMessageAtOf(left));
+        return byTime != 0 ? byTime : string.CompareOrdinal(right.Id, left.Id);
+    }
+
+    public void LoadMoreThreads()
+    {
+        var cursor = threadListCursor;
+        if (!session.IsSignedIn || cursor is null || loadingMoreThreads || loadingThreadList)
+        {
+            return;
+        }
+
+        loadingMoreThreads = true;
+        work.Run("threads more", async token =>
+        {
+            var page = await FetchThreadListAsync(cursor, token).ConfigureAwait(false);
+            if (page is null)
+            {
+                return;
+            }
+
+            var decorated = DecorateThreadList(page.Value.Items);
+            threadList = IdentifiedMerge.MergeById(threadList, decorated, CompareThreadsByRecency);
+            threadListCursor = page.Value.NextCursor;
+        }, () => loadingMoreThreads = false);
     }
 
     private readonly record struct InboxMark(long LastMessageAt, int Unread);
@@ -470,10 +520,10 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         loadingThreadList = true;
         work.Run("threads", async token =>
         {
-            var items = await FetchThreadListAsync(token).ConfigureAwait(false);
-            if (items is not null)
+            var page = await FetchThreadListAsync(null, token).ConfigureAwait(false);
+            if (page is not null)
             {
-                threadList = DecorateThreadList(items);
+                AcceptThreadListHead(DecorateThreadList(page.Value.Items), page.Value.NextCursor);
             }
         }, () =>
         {

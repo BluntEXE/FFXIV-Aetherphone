@@ -14,7 +14,8 @@ using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
 
-internal readonly record struct StoryViewers(StoryViewerDto[] Items, int Total, bool Loading);
+internal readonly record struct StoryViewers(StoryViewerDto[] Items, int Total, bool Loading,
+    bool HasMore = false, bool LoadingMore = false);
 
 internal readonly record struct StoryReplyPrompt(LocString Hint, Action<StoryDto, string> Send);
 
@@ -65,6 +66,7 @@ internal sealed class StoryViewerOverlay
     private Action<StoryDto>? onDelete;
     private Action? onExhausted;
     private Func<StoryDto, StoryViewers>? viewersSource;
+    private Action? viewersLoadMore;
     private Func<bool>? onNextGroup;
     private Func<bool>? onPreviousGroup;
     private bool awaitingGroup;
@@ -88,7 +90,7 @@ internal sealed class StoryViewerOverlay
     public void Open(StoryDto[] items, string label, string? avatarUrl, Action<StoryDto> seen, bool mine = false,
         Action<StoryDto>? delete = null, Func<StoryDto, StoryViewers>? viewers = null, Action? exhausted = null,
         Func<bool>? nextGroup = null, Func<bool>? previousGroup = null, bool startAtEnd = false,
-        StoryReplyPrompt? reply = null)
+        StoryReplyPrompt? reply = null, Action? loadMoreViewers = null)
     {
         stories = items;
         authorLabel = label;
@@ -97,6 +99,7 @@ internal sealed class StoryViewerOverlay
         onSeen = seen;
         onDelete = delete;
         viewersSource = viewers;
+        viewersLoadMore = loadMoreViewers;
         onExhausted = exhausted;
         onNextGroup = nextGroup;
         onPreviousGroup = previousGroup;
@@ -170,6 +173,7 @@ internal sealed class StoryViewerOverlay
         onPreviousGroup = null;
         replyPrompt = null;
         viewersSource = null;
+        viewersLoadMore = null;
     }
 
     public void Draw(Rect area, PhoneTheme theme, bool suspended = false)
@@ -474,7 +478,16 @@ internal sealed class StoryViewerOverlay
                 DrawViewerRow(viewers.Items[index], theme, scale);
             }
 
-            if (viewers.Items.Length < viewers.Total)
+            if (viewers.LoadingMore)
+            {
+                InfiniteScroll.DrawLoadingRow(listRect.Center.X, theme.TextMuted);
+            }
+            else if (viewers.HasMore && viewersLoadMore is not null && InfiniteScroll.ReachedBottom())
+            {
+                viewersLoadMore();
+            }
+
+            if (viewers.HasMore && viewers.Items.Length < viewers.Total)
             {
                 Typography.DrawCentered(
                     new Vector2(listRect.Center.X, ImGui.GetCursorScreenPos().Y + 14f * scale),

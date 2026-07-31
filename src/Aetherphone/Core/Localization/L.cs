@@ -1970,6 +1970,7 @@ internal static class L
         public static readonly LocString DeleteComment = new("chirper.deleteComment", "Delete comment");
         public static readonly LocString PostTitle = new("chirper.postTitle", "Post");
         public static readonly LocString NoComments = new("chirper.noComments", "No replies yet. Start the conversation");
+        public static readonly LocString EarlierComments = new("chirper.earlierComments", "View earlier replies");
         public static readonly LocString AddComment = new("chirper.addComment", "Add a reply…");
         public static readonly LocString RepliesTitle = new("chirper.repliesTitle", "Replies");
         public static readonly LocString ChirpsTitle = new("chirper.chirpsTitle", "Chirps");
@@ -2010,6 +2011,7 @@ internal static class L
         public static readonly LocString PostTitle = new("aethergram.postTitle", "Post");
         public static readonly LocString CommentsTitle = new("aethergram.comments", "Comments");
         public static readonly LocString NoComments = new("aethergram.noComments", "No comments yet");
+        public static readonly LocString EarlierComments = new("aethergram.earlierComments", "View earlier comments");
         public static readonly LocString AddComment = new("aethergram.addComment", "Add a comment…");
         public static readonly LocString ProfileError = new("aethergram.profileError", "Couldn't load this profile");
         public static readonly LocString EditProfile = new("aethergram.editProfile", "Edit Profile");
@@ -2213,6 +2215,8 @@ internal static class L
         public static readonly LocString FeedScopeConnections = new("velvet.feedScopeConnections", "Connections");
         public static readonly LocString AudienceConnections = new("velvet.audienceConnections", "Connections only");
         public static readonly LocString AudiencePublic = new("velvet.audiencePublic", "Everyone on Velvet");
+        public static readonly LocString MakePublic = new("velvet.makePublic", "Share with everyone");
+        public static readonly LocString MakeConnections = new("velvet.makeConnections", "Limit to connections");
         public static readonly LocString ImageUnavailable = new("velvet.imageUnavailable", "Image unavailable");
         public static readonly LocString GateTagline =
             new("velvet.gateTagline", "A private, adults only corner of the suite. Moonlit, unhurried, yours.");
@@ -3292,6 +3296,7 @@ internal static class L
         public static readonly LocString NeedModLink = new("yellowpages.needModLink", "Add a link to the mod page.");
         public static readonly LocString ModBadge = new("yellowpages.modBadge", "Mod");
         public static readonly LocString InquiriesTitle = new("yellowpages.inquiriesTitle", "Inquiries");
+        public static readonly LocString EarlierMessages = new("yellowpages.earlierMessages", "View earlier messages");
         public static readonly LocString NoInquiriesTitle = new("yellowpages.noInquiriesTitle", "No inquiries yet");
         public static readonly LocString NoInquiriesHint = new("yellowpages.noInquiriesHint", "Questions about your ads, and the ones you asked about, land here.");
         public static readonly LocString InquiryHint = new("yellowpages.inquiryHint", "Write a message");

@@ -109,18 +109,29 @@ internal sealed class SocialActivityFeed
     {
         if (cursor is null)
         {
-            items = page.Items;
+            var current = items;
+            if (current.Length == 0)
+            {
+                items = page.Items;
+                nextCursor = page.NextCursor;
+            }
+            else
+            {
+                items = IdentifiedMerge.MergeById(current, page.Items, ByNewestFirst);
+            }
         }
         else
         {
-            var current = items;
-            var merged = new NotificationDto[current.Length + page.Items.Length];
-            current.CopyTo(merged, 0);
-            page.Items.CopyTo(merged, current.Length);
-            items = merged;
+            items = IdentifiedMerge.MergeById(items, page.Items, ByNewestFirst);
+            nextCursor = page.NextCursor;
         }
 
-        nextCursor = page.NextCursor;
         loaded = true;
+    }
+
+    private static int ByNewestFirst(NotificationDto left, NotificationDto right)
+    {
+        var byTime = right.CreatedAtUnix.CompareTo(left.CreatedAtUnix);
+        return byTime != 0 ? byTime : string.CompareOrdinal(right.Id, left.Id);
     }
 }

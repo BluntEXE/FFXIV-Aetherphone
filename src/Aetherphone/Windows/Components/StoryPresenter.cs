@@ -138,7 +138,7 @@ internal sealed class StoryPresenter : IDisposable
             ? Loc.T(L.Story.YourStory)
             : SocialIdentity.Name(ring.AuthorDisplayName, ring.AuthorHandle);
         viewer.Open(items, label, ring.AuthorAvatarUrl, stories.MarkSeen, ring.IsMe, AskDelete, viewersSource,
-            null, nextGroup, previousGroup, openAtEnd, ring.IsMe ? null : replyPrompt);
+            null, nextGroup, previousGroup, openAtEnd, ring.IsMe ? null : replyPrompt, stories.LoadMoreViewers);
     }
 
     private bool TryAdvanceGroup() => TryOpenAdjacentRing(1);
@@ -193,7 +193,8 @@ internal sealed class StoryPresenter : IDisposable
     private StoryViewers ViewersFor(StoryDto story)
     {
         stories.LoadViewers(story.Id);
-        return new StoryViewers(stories.Viewers, stories.ViewersTotal, stories.ViewersLoading);
+        return new StoryViewers(stories.Viewers, stories.ViewersTotal, stories.ViewersLoading,
+            stories.HasMoreViewers, stories.ViewersLoadingMore);
     }
 
     private void SyncViewerItems()

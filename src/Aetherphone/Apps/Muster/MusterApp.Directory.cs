@@ -384,6 +384,11 @@ internal sealed partial class MusterApp
             return;
         }
 
+        if (!store.DirectoryLoadingMore && InfiniteScroll.ReachedBottom())
+        {
+            store.LoadMoreDirectory();
+        }
+
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var height = 36f * scale;
