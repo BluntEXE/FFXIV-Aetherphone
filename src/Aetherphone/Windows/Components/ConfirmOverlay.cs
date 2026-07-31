@@ -18,6 +18,8 @@ internal sealed class ConfirmOverlay
     private readonly ConfirmService service;
     private Spring reveal;
     private ConfirmRequest? shown;
+    private ConfirmRequest? armedRequest;
+    private int openedFrame;
 
     public ConfirmOverlay(ConfirmService service)
     {
@@ -32,6 +34,15 @@ internal sealed class ConfirmOverlay
         if (active is not null)
         {
             shown = active;
+            if (!ReferenceEquals(active, armedRequest))
+            {
+                armedRequest = active;
+                openedFrame = ImGui.GetFrameCount();
+            }
+        }
+        else
+        {
+            armedRequest = null;
         }
 
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
@@ -73,7 +84,8 @@ internal sealed class ConfirmOverlay
             {
                 service.CancelActive();
             }
-            else if (!service.Busy && UiInteract.ClickedOutside(cardRect.Min, cardRect.Max))
+            else if (!service.Busy && ImGui.GetFrameCount() != openedFrame &&
+                     UiInteract.ClickedOutside(cardRect.Min, cardRect.Max))
             {
                 service.CancelActive();
             }

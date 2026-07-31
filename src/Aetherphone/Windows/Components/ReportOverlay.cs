@@ -39,6 +39,8 @@ internal sealed class ReportOverlay
     private readonly DropdownMenu.Item[] categoryItems = new DropdownMenu.Item[ReportCategories.All.Length];
     private Spring reveal;
     private ReportPrompt? shown;
+    private ReportPrompt? armedPrompt;
+    private int openedFrame;
 
     public ReportOverlay(ReportService service)
     {
@@ -53,10 +55,19 @@ internal sealed class ReportOverlay
         if (active is not null)
         {
             shown = active;
+            if (!ReferenceEquals(active, armedPrompt))
+            {
+                armedPrompt = active;
+                openedFrame = ImGui.GetFrameCount();
+            }
         }
-        else if (categoryMenu.Open)
+        else
         {
-            categoryMenu.Close();
+            armedPrompt = null;
+            if (categoryMenu.Open)
+            {
+                categoryMenu.Close();
+            }
         }
 
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
@@ -91,7 +102,8 @@ internal sealed class ReportOverlay
                 return;
             }
 
-            if (!service.Busy && UiInteract.ClickedOutside(cardRect.Min, cardRect.Max))
+            if (!service.Busy && ImGui.GetFrameCount() != openedFrame &&
+                UiInteract.ClickedOutside(cardRect.Min, cardRect.Max))
             {
                 service.Dismiss();
             }

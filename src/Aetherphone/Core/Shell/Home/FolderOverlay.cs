@@ -20,6 +20,7 @@ internal sealed class FolderOverlay
     private Rect origin;
     private string nameBuffer = string.Empty;
     private float scrollY;
+    private int openedFrame;
 
     public FolderOverlay(HomeLayoutService layout)
     {
@@ -37,6 +38,7 @@ internal sealed class FolderOverlay
         origin = originRect;
         nameBuffer = tile.FolderName;
         scrollY = 0f;
+        openedFrame = ImGui.GetFrameCount();
     }
 
     public void RequestClose()
@@ -92,7 +94,7 @@ internal sealed class FolderOverlay
         {
             DrawContents(panel, metrics, theme, navigation, current, editing, currentPage, columns, pad, iconSize,
                 cellWidth, cellHeight, headerHeight);
-            if (UiInteract.ClickedOutside(panel.Min, panel.Max, false))
+            if (ImGui.GetFrameCount() != openedFrame && UiInteract.ClickedOutside(panel.Min, panel.Max, false))
             {
                 RequestClose();
             }

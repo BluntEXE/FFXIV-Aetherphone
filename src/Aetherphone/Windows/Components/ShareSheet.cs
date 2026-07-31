@@ -30,6 +30,8 @@ internal sealed class ShareSheet
     private readonly ShareService service;
     private Spring reveal;
     private ShareKind shownKind;
+    private bool wasPending;
+    private int openedFrame;
 
     public ShareSheet(ShareService service)
     {
@@ -46,6 +48,13 @@ internal sealed class ShareSheet
         {
             shownKind = current.Kind;
         }
+
+        if (pending && !wasPending)
+        {
+            openedFrame = ImGui.GetFrameCount();
+        }
+
+        wasPending = pending;
 
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
         reveal.Step(pending ? 1f : 0f, RevealSmoothTime, delta);
@@ -69,7 +78,7 @@ internal sealed class ShareSheet
                 return;
             }
 
-            if (UiInteract.ClickedOutside(panel.Min, panel.Max))
+            if (ImGui.GetFrameCount() != openedFrame && UiInteract.ClickedOutside(panel.Min, panel.Max))
             {
                 service.Dismiss();
             }
