@@ -45,6 +45,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
     private readonly AethernetSession session;
     private readonly AuthClient auth;
     private readonly AccountClient account;
+    private readonly AccountStateService accountState;
     private readonly MediaClient media;
     private readonly GameData gameData;
     private readonly RemoteImageCache images;
@@ -62,16 +63,19 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
     private int accountIdsStamp = -1;
     private volatile bool avatarBusy;
     private bool meRequested;
+    private int lastDrawnFrame = -2;
 
     public AccountPage(Configuration configuration, AethernetSession session, AuthClient auth, AccountClient account,
-        MediaClient media, GameData gameData, RemoteImageCache images, LodestoneService lodestone,
-        ISettingsNavigator navigator, NamePage namePage, ISettingsPage profilePage, ISettingsPage encryptionPage,
-        PhotoLibrary photoLibrary, ConfirmService confirm, WallpaperImageCache wallpaperImages)
+        AccountStateService accountState, MediaClient media, GameData gameData, RemoteImageCache images,
+        LodestoneService lodestone, ISettingsNavigator navigator, NamePage namePage, ISettingsPage profilePage,
+        ISettingsPage encryptionPage, PhotoLibrary photoLibrary, ConfirmService confirm,
+        WallpaperImageCache wallpaperImages)
     {
         this.configuration = configuration;
         this.session = session;
         this.auth = auth;
         this.account = account;
+        this.accountState = accountState;
         this.media = media;
         this.gameData = gameData;
         this.images = images;
@@ -89,6 +93,13 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
 
     public void Draw(in PhoneContext context, Rect body)
     {
+        var frame = ImGui.GetFrameCount();
+        if (frame - lastDrawnFrame > 1)
+        {
+            accountState.RefreshNow();
+        }
+
+        lastDrawnFrame = frame;
         var theme = context.Theme;
         using (AppSurface.Begin(body))
         {

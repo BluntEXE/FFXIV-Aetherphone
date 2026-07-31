@@ -65,8 +65,8 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
         encryptionPage = new EncryptionPage(aethernetSession, keyVault, confirm);
         namePage = new NamePage(aethernetSession, aethernet.Account, this);
         accountPage = new AccountPage(configuration, aethernetSession, aethernet.Auth, aethernet.Account,
-            aethernet.Media, gameData, remoteImages, lodestone, this, namePage, profilePage, encryptionPage,
-            photoLibrary, confirm, wallpaperImages);
+            services.AccountState, aethernet.Media, gameData, remoteImages, lodestone, this, namePage, profilePage,
+            encryptionPage, photoLibrary, confirm, wallpaperImages);
         var appearance = new AppearancePage(configuration, themes, this, photoLibrary, confirm, wallpapers,
             wallpaperImages);
         var language = new LanguagePage(configuration);
