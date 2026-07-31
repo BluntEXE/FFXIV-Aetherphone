@@ -1679,6 +1679,7 @@ internal static class L
         public static readonly LocString BanScreenTimeoutTitle = new("account.ban.timeoutTitle", "Account suspended for now");
         public static readonly LocString BanScreenLifts = new("account.ban.lifts", "You can sign in again after {0}. Nothing you posted was deleted by this suspension.");
         public static readonly LocString BanScreenContact = new("account.ban.contact", "If you believe this is a mistake, contact support.");
+        public static readonly LocString BanScreenSocialLocked = new("account.ban.socialLocked", "Social apps are locked, but the rest of the phone still works.");
         public static readonly LocString FailRateLimitedTitle = new("account.fail.rateLimited.title", "Too many attempts");
         public static readonly LocString FailRateLimitedBody = new("account.fail.rateLimited.body", "You've tried a few times in a row. Wait a minute, then try again.");
         public static readonly LocString FailNetworkTitle = new("account.fail.network.title", "Can't reach Aethernet");

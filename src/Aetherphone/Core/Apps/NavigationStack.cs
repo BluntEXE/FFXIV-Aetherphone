@@ -1,5 +1,6 @@
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Home;
+using Aetherphone.Core.Moderation;
 
 namespace Aetherphone.Core.Apps;
 
@@ -14,6 +15,7 @@ internal sealed class NavigationStack : INavigator
 {
     private readonly IReadOnlyList<IPhoneApp> apps;
     private readonly AppInstaller installer;
+    private readonly SuspensionGate suspensions;
     private readonly Stack<IPhoneApp> history = new();
     private Spring cover;
     private float coverTarget;
@@ -25,10 +27,11 @@ internal sealed class NavigationStack : INavigator
     private Rect? pendingOrigin;
     private Rect? motionOrigin;
 
-    public NavigationStack(IReadOnlyList<IPhoneApp> apps, AppInstaller installer)
+    public NavigationStack(IReadOnlyList<IPhoneApp> apps, AppInstaller installer, SuspensionGate suspensions)
     {
         this.apps = apps;
         this.installer = installer;
+        this.suspensions = suspensions;
     }
 
     public event Action<string>? AppOpened;
@@ -66,6 +69,12 @@ internal sealed class NavigationStack : INavigator
 
     public void OpenApp(IPhoneApp app)
     {
+        if (suspensions.Blocks(app.Id))
+        {
+            suspensions.ReportBlocked();
+            return;
+        }
+
         if (motion == ShellMotion.None && ReferenceEquals(current, app))
         {
             NotifyOpened(app);

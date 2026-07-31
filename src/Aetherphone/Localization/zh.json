@@ -1279,6 +1279,7 @@
   "account.ban.body": "该角色已被 Aethernet 封禁，无法再登录。",
   "account.ban.reason": "原因：{0}",
   "account.ban.contact": "如果你认为这是误判，请联系客服。",
+  "account.ban.socialLocked": "社交应用已锁定，但手机的其他功能仍可正常使用。",
   "account.fail.rateLimited.title": "尝试次数过多",
   "account.fail.rateLimited.body": "你连续尝试了多次。请等待一分钟后再试。",
   "account.fail.network.title": "无法连接 Aethernet",

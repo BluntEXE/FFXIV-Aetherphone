@@ -1279,6 +1279,7 @@
   "account.ban.body": "Ce personnage a été banni d'Aethernet et ne peut plus se connecter.",
   "account.ban.reason": "Motif : {0}",
   "account.ban.contact": "Si vous pensez qu'il s'agit d'une erreur, contactez le support.",
+  "account.ban.socialLocked": "Les applications sociales sont verrouillées, mais le reste du téléphone continue de fonctionner.",
   "account.fail.rateLimited.title": "Trop de tentatives",
   "account.fail.rateLimited.body": "Vous avez essayé plusieurs fois de suite. Attendez une minute, puis réessayez.",
   "account.fail.network.title": "Aethernet injoignable",

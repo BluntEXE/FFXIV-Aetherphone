@@ -1279,6 +1279,7 @@
   "account.ban.body": "Этот персонаж заблокирован в Aethernet и больше не может войти.",
   "account.ban.reason": "Причина: {0}",
   "account.ban.contact": "Если вы считаете это ошибкой, обратитесь в поддержку.",
+  "account.ban.socialLocked": "Социальные приложения заблокированы, но остальные функции телефона по-прежнему работают.",
   "account.fail.rateLimited.title": "Слишком много попыток",
   "account.fail.rateLimited.body": "Вы попробовали несколько раз подряд. Подождите минуту и попробуйте снова.",
   "account.fail.network.title": "Не удаётся подключиться к Aethernet",

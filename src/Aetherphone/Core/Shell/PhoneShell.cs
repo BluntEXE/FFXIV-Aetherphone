@@ -3,6 +3,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Moderation;
 using Aetherphone.Core.Muster;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Onboarding;
@@ -48,6 +49,7 @@ internal sealed class PhoneShell : IDisposable
     private readonly MinimizeMorphView morph;
     private readonly ShellOverlayCoordinator overlays;
     private readonly HomeScreen home;
+    private readonly SuspensionGate suspensions;
     private NotificationShake shake = new(ShakeDuration, ShakeFrequency, ShakeAmplitude);
     private bool closeRequested;
     private bool indicatorPressActive;
@@ -65,7 +67,8 @@ internal sealed class PhoneShell : IDisposable
         widgets = bundle.Widgets;
         calls = services.Calls;
         var notifications = services.Notifications;
-        navigation = new NavigationStack(apps, services.Installer);
+        suspensions = new SuspensionGate(services.AethernetSession);
+        navigation = new NavigationStack(apps, services.Installer, suspensions);
         notifications.AppAvailability = navigation.IsAvailable;
         director = new OnboardingDirector(navigation);
         navigation.AppOpened += director.OnAppOpened;
@@ -87,6 +90,7 @@ internal sealed class PhoneShell : IDisposable
         navigation.ReturningHome += home.PrepareReveal;
         var incomingOverlay = new IncomingCallOverlay(calls);
         var banOverlay = new BanOverlay(services.AethernetSession);
+        suspensions.Blocked += banOverlay.Present;
         var confirmOverlay = new ConfirmOverlay(services.Confirm);
         var reportOverlay = new ReportOverlay(services.Report);
         services.Share.Bind(apps, navigation);
@@ -204,6 +208,10 @@ internal sealed class PhoneShell : IDisposable
         if (!navigation.IsTransitioning)
         {
             transition.ResetPrepared();
+            if (navigation.Current is { } blockedApp && suspensions.Blocks(blockedApp.Id))
+            {
+                navigation.GoHome();
+            }
         }
 
         banner.Advance(delta);

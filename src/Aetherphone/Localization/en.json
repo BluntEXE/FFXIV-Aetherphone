@@ -1279,6 +1279,7 @@
   "account.ban.body": "This character has been banned from Aethernet and can no longer sign in.",
   "account.ban.reason": "Reason: {0}",
   "account.ban.contact": "If you believe this is a mistake, contact support.",
+  "account.ban.socialLocked": "Social apps are locked, but the rest of the phone still works.",
   "account.fail.rateLimited.title": "Too many attempts",
   "account.fail.rateLimited.body": "You've tried a few times in a row. Wait a minute, then try again.",
   "account.fail.network.title": "Can't reach Aethernet",

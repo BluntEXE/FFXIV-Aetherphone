@@ -1279,6 +1279,7 @@
   "account.ban.body": "Este personaje ha sido vetado de Aethernet y ya no puede iniciar sesión.",
   "account.ban.reason": "Motivo: {0}",
   "account.ban.contact": "Si crees que es un error, contacta con soporte.",
+  "account.ban.socialLocked": "Las apps sociales están bloqueadas, pero el resto del teléfono sigue funcionando.",
   "account.fail.rateLimited.title": "Demasiados intentos",
   "account.fail.rateLimited.body": "Lo has intentado varias veces seguidas. Espera un minuto y vuelve a intentarlo.",
   "account.fail.network.title": "No se puede conectar con Aethernet",

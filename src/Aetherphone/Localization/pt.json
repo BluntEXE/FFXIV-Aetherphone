@@ -1279,6 +1279,7 @@
   "account.ban.body": "Este personagem foi banido do Aethernet e não pode mais entrar.",
   "account.ban.reason": "Motivo: {0}",
   "account.ban.contact": "Se acha que isso é um engano, fale com o suporte.",
+  "account.ban.socialLocked": "Os apps sociais estão bloqueados, mas o resto do telefone continua funcionando.",
   "account.fail.rateLimited.title": "Tentativas demais",
   "account.fail.rateLimited.body": "Você tentou várias vezes seguidas. Espere um minuto e tente de novo.",
   "account.fail.network.title": "Não foi possível contatar o Aethernet",

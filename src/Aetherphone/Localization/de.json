@@ -1279,6 +1279,7 @@
   "account.ban.body": "Dieser Charakter wurde von Aethernet gesperrt und kann sich nicht mehr anmelden.",
   "account.ban.reason": "Grund: {0}",
   "account.ban.contact": "Wenn du das für einen Fehler hältst, wende dich an den Support.",
+  "account.ban.socialLocked": "Soziale Apps sind gesperrt, aber der Rest des Telefons funktioniert weiter.",
   "account.fail.rateLimited.title": "Zu viele Versuche",
   "account.fail.rateLimited.body": "Du hast es mehrmals hintereinander versucht. Warte eine Minute und versuche es dann erneut.",
   "account.fail.network.title": "Aethernet nicht erreichbar",

@@ -1279,6 +1279,7 @@
   "account.ban.body": "このキャラクターは Aethernet から利用停止となり、サインインできません。",
   "account.ban.reason": "理由: {0}",
   "account.ban.contact": "誤りだと思われる場合は、サポートまでご連絡ください。",
+  "account.ban.socialLocked": "ソーシャルアプリはロックされていますが、それ以外の機能は引き続き利用できます。",
   "account.fail.rateLimited.title": "試行回数が多すぎます",
   "account.fail.rateLimited.body": "短時間に何度も試行されました。1分ほど待ってからもう一度お試しください。",
   "account.fail.network.title": "Aethernetに接続できません",

@@ -1279,6 +1279,7 @@
   "account.ban.body": "Bu karakter Aethernet'ten yasaklandı ve artık giriş yapamaz.",
   "account.ban.reason": "Sebep: {0}",
   "account.ban.contact": "Bunun bir hata olduğunu düşünüyorsan destek ekibiyle iletişime geç.",
+  "account.ban.socialLocked": "Sosyal uygulamalar kilitli, ancak telefonun geri kalanı çalışmaya devam ediyor.",
   "account.fail.rateLimited.title": "Çok fazla deneme",
   "account.fail.rateLimited.body": "Arka arkaya birkaç kez denedin. Bir dakika bekleyip tekrar dene.",
   "account.fail.network.title": "Aethernet'e ulaşılamıyor",
