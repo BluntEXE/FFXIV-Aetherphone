@@ -4,9 +4,10 @@ namespace Aetherphone.Core.Moderation;
 
 internal sealed class SuspensionGate
 {
-    private static readonly string[] SocialAppIds =
+    private static readonly string[] GatedAppIds =
     {
         "message", "chirper", "aethergram", "velvet", "muster", "yellowpages",
+        "announcements", "polls",
     };
 
     private readonly AethernetSession session;
@@ -25,9 +26,9 @@ internal sealed class SuspensionGate
             return false;
         }
 
-        for (var index = 0; index < SocialAppIds.Length; index++)
+        for (var index = 0; index < GatedAppIds.Length; index++)
         {
-            if (string.Equals(appId, SocialAppIds[index], StringComparison.Ordinal))
+            if (string.Equals(appId, GatedAppIds[index], StringComparison.Ordinal))
             {
                 return true;
             }
