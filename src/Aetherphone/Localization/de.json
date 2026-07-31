@@ -1246,6 +1246,8 @@
   "account.followers.one": "{0} Abonnent",
   "account.followers.other": "{0} Abonnenten",
   "account.accountsSection": "Konten",
+  "account.badgesSection": "Abzeichen",
+  "account.badgesHint": "Abzeichen werden vom Aetherphone-Team vergeben. Schaltest du eines aus, sehen es andere nicht mehr, ebenso wenig die Namensfarbe und die Effekte. Du kannst es jederzeit wieder einschalten.",
   "account.addAccount": "Konto hinzufügen",
   "account.addAccountTakenTitle": "Hier bereits angemeldet",
   "account.addAccountTakenBody": "{0} hat auf diesem Telefon schon ein Konto. Um ein weiteres hinzuzufügen, logge dich im Spiel mit diesem Charakter ein und melde dich dort an. Danach bleibt es für jeden Charakter in dieser Liste.",

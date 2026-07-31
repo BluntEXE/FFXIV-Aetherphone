@@ -1246,6 +1246,8 @@
   "account.followers.one": "{0} abonné",
   "account.followers.other": "{0} abonnés",
   "account.accountsSection": "Comptes",
+  "account.badgesSection": "Badges",
+  "account.badgesHint": "Les badges sont attribués par l'équipe Aetherphone. En désactiver un le masque pour tout le monde, ainsi que la couleur du nom et ses effets. Vous pouvez le réactiver quand vous voulez.",
   "account.addAccount": "Ajouter un compte",
   "account.addAccountTakenTitle": "Déjà connecté ici",
   "account.addAccountTakenBody": "{0} a déjà un compte sur ce téléphone. Pour en ajouter un autre, connectez-vous avec ce personnage dans le jeu et inscrivez-vous depuis là. Il reste ensuite dans cette liste pour tous les personnages.",

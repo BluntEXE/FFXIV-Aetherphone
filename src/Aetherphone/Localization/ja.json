@@ -1246,6 +1246,8 @@
   "account.followers.one": "{0} フォロワー",
   "account.followers.other": "{0} フォロワー",
   "account.accountsSection": "アカウント",
+  "account.badgesSection": "バッジ",
+  "account.badgesHint": "バッジはAetherphoneチームから付与されます。オフにすると、名前の色やエフェクトも含めて誰からも見えなくなります。いつでもオンに戻せます。",
   "account.addAccount": "アカウントを追加",
   "account.addAccountTakenTitle": "すでにサインイン済みです",
   "account.addAccountTakenBody": "{0}はこのフォンにすでにアカウントがあります。別のアカウントを追加するには、ゲームでそのキャラクターにログインし、そこからサインインしてください。追加後はどのキャラクターでもこのリストに残ります。",

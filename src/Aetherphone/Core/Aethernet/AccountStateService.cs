@@ -90,7 +90,7 @@ internal sealed class AccountStateService : IDisposable
             return false;
         }
 
-        return current.Badges != fresh.Badges;
+        return current.Badges != fresh.Badges || current.GrantedBadges != fresh.GrantedBadges;
     }
 
     public void Dispose()

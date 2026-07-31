@@ -68,9 +68,12 @@ internal sealed record UserDto(
     bool FollowRequested = false,
     int PendingFollowRequests = 0,
     string Region = "",
-    int Badges = 0) : IIdentified;
+    int Badges = 0,
+    int GrantedBadges = 0) : IIdentified;
 
 internal sealed record UpdateProfileRequest(string? DisplayName, string? Handle, string? Bio, string? AvatarUrl = null);
+
+internal sealed record UpdateBadgeLoadoutRequest(int Equipped);
 
 internal sealed record UpdateMessagePrivacyRequest(int? MessagePolicy);
 
