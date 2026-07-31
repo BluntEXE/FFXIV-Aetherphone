@@ -12,7 +12,6 @@ jobs:
       - name: Post commits to Discord
         env:
           WEBHOOK_URL: ${{ secrets.COMMITS_WEBHOOK_URL }}
-          PING_ROLE_ID: ${{ vars.COMMITS_PING_ROLE_ID }}
           ICON: https://raw.githubusercontent.com/XeldarAlz/FFXIV-Aetherphone/master/src/Aetherphone/Images/Icon.png
         run: |
           set -euo pipefail
@@ -27,7 +26,7 @@ jobs:
             exit 0
           fi
 
-          jq -n --arg icon "$ICON" --arg role "${PING_ROLE_ID:-}" --slurpfile e "$GITHUB_EVENT_PATH" '
+          jq -n --arg icon "$ICON" --slurpfile e "$GITHUB_EVENT_PATH" '
             $e[0] as $ev
             | ($ev.ref | sub("^refs/heads/"; "")) as $branch
             | ($ev.commits | length) as $total
@@ -40,7 +39,7 @@ jobs:
                  then $lines + ["... and " + (($total - 10) | tostring) + " more"]
                  else $lines
                end) as $lines
-            | ({
+            | {
                 username: "Aetherphone",
                 avatar_url: $icon,
                 embeds: [{
@@ -53,10 +52,6 @@ jobs:
                   timestamp: $ev.head_commit.timestamp
                 }]
               }
-              + (if $role == "" then {} else {
-                  content: ("<@&" + $role + ">"),
-                  allowed_mentions: { roles: [$role] }
-                } end))
           ' > payload.json
 
           curl -fsS -H 'Content-Type: application/json; charset=utf-8' -d @payload.json "$WEBHOOK_URL" > /dev/null
