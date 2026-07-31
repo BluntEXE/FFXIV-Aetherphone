@@ -68,14 +68,13 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public string LightWallpaperId { get; set; } = "DuskLight";
     public string DarkWallpaperId { get; set; } = "DuskDark";
     public List<CustomWallpaper> CustomWallpapers { get; set; } = new();
-    public uint RingtoneId { get; set; } = 7;
-    public string RingtoneSound { get; set; } = SoundTokens.DefaultGame;
-    public string NotificationSound { get; set; } = SoundTokens.DefaultGame;
+    public string RingtoneSound { get; set; } = SoundTokens.Default;
+    public string NotificationSound { get; set; } = SoundTokens.Default;
     public float RingtoneVolume { get; set; } = 0.8f;
     public float NotificationVolume { get; set; } = 0.8f;
     public float MusicVolume { get; set; } = 0.6f;
     public int MusicRepeat { get; set; }
-    public bool SoundSettingsMigrated { get; set; }
+    public bool GameSoundsCleared { get; set; }
     public const string DefaultAethernetBaseUrl = "https://api.aetherphone.net";
     private const string LegacyAethernetHost = "ffxiv-aethernet-production.up.railway.app";
     public string AethernetBaseUrl { get; set; } = DefaultAethernetBaseUrl;
@@ -437,23 +436,31 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
 
     public void MigrateSoundSettings()
     {
-        if (SoundSettingsMigrated)
+        if (GameSoundsCleared)
         {
             return;
         }
 
-        RingtoneSound = SoundTokens.Game(RingtoneId);
-        NotificationSound = SoundTokens.Game(RingtoneId);
+        if (SoundTokens.TryUpgradeLegacy(RingtoneSound, out var ringtone))
+        {
+            RingtoneSound = ringtone;
+        }
+
+        if (SoundTokens.TryUpgradeLegacy(NotificationSound, out var notification))
+        {
+            NotificationSound = notification;
+        }
+
         foreach (var pair in NotificationSettings)
         {
             var setting = pair.Value;
-            if (setting.SoundId.HasValue && string.IsNullOrEmpty(setting.Sound))
+            if (SoundTokens.TryUpgradeLegacy(setting.Sound, out var appSound))
             {
-                setting.Sound = SoundTokens.Game(setting.SoundId.Value);
+                setting.Sound = appSound.Length == 0 ? null : appSound;
             }
         }
 
-        SoundSettingsMigrated = true;
+        GameSoundsCleared = true;
         Save();
     }
 

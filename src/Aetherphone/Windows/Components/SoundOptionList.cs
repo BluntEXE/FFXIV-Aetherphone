@@ -17,13 +17,14 @@ internal static class SoundOptionList
             onSelect(null);
         }
 
+        var effective = includeDefault && currentToken is null ? null : sound.Resolve(currentToken);
         for (var index = 0; index < options.Count; index++)
         {
-            var option = options[index];
-            var selected = string.Equals(currentToken, option.Token, StringComparison.Ordinal);
-            if (SettingsRow.Selectable(card.NextRow(), sound.Label(option.Token), selected, theme))
+            var token = options[index];
+            var selected = string.Equals(effective, token, StringComparison.Ordinal);
+            if (SettingsRow.Selectable(card.NextRow(), sound.Label(token), selected, theme))
             {
-                onSelect(option.Token);
+                onSelect(token);
             }
         }
 

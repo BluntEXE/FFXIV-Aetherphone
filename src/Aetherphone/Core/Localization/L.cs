@@ -2892,11 +2892,6 @@ internal static class L
         public static readonly LocString CaseVesperine = new("catalog.case.vesperine", "Vesperine");
         public static readonly LocString CaseWhiskerlune = new("catalog.case.whiskerlune", "Whiskerlune");
         public static readonly LocString CaseSilkie = new("catalog.case.silkie", "Silkie");
-        public static readonly LocString RingtonePing = new("catalog.ringtone.ping", "Ping");
-        public static readonly LocString RingtoneChime = new("catalog.ringtone.chime", "Chime");
-        public static readonly LocString RingtoneBell = new("catalog.ringtone.bell", "Bell");
-        public static readonly LocString RingtoneAlert = new("catalog.ringtone.alert", "Alert");
-        public static readonly LocString RingtoneKnock = new("catalog.ringtone.knock", "Knock");
         public static readonly LocString RingtoneSilent = new("catalog.ringtone.silent", "Silent");
         public static readonly LocString RadioLofi = new("catalog.radio.lofi", "Lofi");
         public static readonly LocString RadioChillout = new("catalog.radio.chillout", "Chillout");

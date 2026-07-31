@@ -1,6 +1,4 @@
 using Aetherphone.Core.Localization;
-using Dalamud.Plugin.Services;
-using FFXIVClientStructs.FFXIV.Client.UI;
 
 namespace Aetherphone.Core.Notifications;
 
@@ -9,40 +7,30 @@ internal sealed class SoundService : IDisposable
     private readonly Configuration configuration;
     private readonly SoundLibrary library;
     private readonly SoundEffectPlayer player;
-    private readonly IFramework framework;
-    private volatile bool callRingLooping;
 
-    public SoundService(Configuration configuration, SoundLibrary library, SoundEffectPlayer player,
-        IFramework framework)
+    public SoundService(Configuration configuration, SoundLibrary library, SoundEffectPlayer player)
     {
         this.configuration = configuration;
         this.library = library;
         this.player = player;
-        this.framework = framework;
     }
 
-    public IReadOnlyList<SoundOption> Options => library.Options;
+    public IReadOnlyList<string> Options => library.Options;
 
-    public string Label(string token)
+    public string Resolve(string? token) => library.Resolve(token);
+
+    public string Label(string? token)
     {
-        if (SoundTokens.TryFile(token, out var fileName))
-        {
-            return SoundLibrary.PrettyFileName(fileName);
-        }
-
-        if (SoundTokens.TryGame(token, out var soundId))
-        {
-            var label = CatalogLabels.Ringtone(soundId);
-            return string.IsNullOrEmpty(label) ? Loc.T(L.Catalogs.RingtonePing) : label;
-        }
-
-        return string.Empty;
+        var resolved = library.Resolve(token);
+        return SoundTokens.TryFile(resolved, out var fileName)
+            ? SoundLibrary.PrettyFileName(fileName)
+            : Loc.T(L.Catalogs.RingtoneSilent);
     }
 
-    public void Preview(string token, float volume)
+    public void Preview(string? token, float volume)
     {
         player.StopOneShots();
-        Play(token, volume, false);
+        Play(token, volume);
     }
 
     public void StopPreview() => player.StopOneShots();
@@ -50,66 +38,36 @@ internal sealed class SoundService : IDisposable
     public string AddUserFile(string sourcePath) => library.AddUserFile(sourcePath);
 
     public void PlayNotification(string appId) =>
-        Play(configuration.ResolveNotificationToken(appId), configuration.NotificationVolume, false);
+        Play(configuration.ResolveNotificationToken(appId), configuration.NotificationVolume);
 
     public void StartCallRing()
     {
-        var token = configuration.RingtoneSound;
-        if (SoundTokens.TryFile(token, out var fileName) && library.TryResolvePath(fileName, out var path))
+        if (TryResolvePath(configuration.RingtoneSound, out var path))
         {
-            callRingLooping = true;
             player.PlayLoop(path, configuration.RingtoneVolume);
-            return;
         }
-
-        callRingLooping = false;
-        PlayGameSound(SoundTokens.TryGame(token, out var soundId) ? soundId : SoundTokens.DefaultGameSoundId);
     }
 
-    public void PulseCallRing()
+    public void StopCallRing() => player.StopLoop();
+
+    private void Play(string? token, float volume)
     {
-        if (callRingLooping)
+        if (TryResolvePath(token, out var path))
         {
-            return;
+            player.PlayOnce(path, volume);
         }
-
-        var token = configuration.RingtoneSound;
-        PlayGameSound(SoundTokens.TryGame(token, out var soundId) ? soundId : SoundTokens.DefaultGameSoundId);
     }
 
-    public void StopCallRing()
+    private bool TryResolvePath(string? token, out string path)
     {
-        callRingLooping = false;
-        player.StopLoop();
-    }
-
-    private void Play(string token, float volume, bool loop)
-    {
-        if (SoundTokens.TryFile(token, out var fileName) && library.TryResolvePath(fileName, out var path))
+        var resolved = library.Resolve(token);
+        if (SoundTokens.TryFile(resolved, out var fileName))
         {
-            if (loop)
-            {
-                player.PlayLoop(path, volume);
-            }
-            else
-            {
-                player.PlayOnce(path, volume);
-            }
-
-            return;
+            return library.TryResolvePath(fileName, out path);
         }
 
-        PlayGameSound(SoundTokens.TryGame(token, out var soundId) ? soundId : SoundTokens.DefaultGameSoundId);
-    }
-
-    private void PlayGameSound(uint soundId)
-    {
-        if (soundId == 0)
-        {
-            return;
-        }
-
-        _ = framework.RunOnFrameworkThread(() => UIGlobals.PlayChatSoundEffect(soundId));
+        path = string.Empty;
+        return false;
     }
 
     public void Dispose() => player.Dispose();

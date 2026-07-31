@@ -137,7 +137,7 @@ internal sealed class PhoneServices : IDisposable
             Path.Combine(Plugin.PluginInterface.AssemblyLocation.DirectoryName ?? string.Empty, "Sounds"));
         var soundUserDirectory = new DirectoryInfo(Path.Combine(configDirectory.FullName, "Sounds"));
         var soundLibrary = new SoundLibrary(soundBundledDirectory, soundUserDirectory);
-        var sound = new SoundService(configuration, soundLibrary, new SoundEffectPlayer(), framework);
+        var sound = new SoundService(configuration, soundLibrary, new SoundEffectPlayer());
         var notifications = new NotificationService(sound, configuration, installer, framework);
         var characterWatch = new CharacterWatch(framework);
         var messageArchive = new MessageArchive(new DirectoryInfo(Path.Combine(configDirectory.FullName, "Messages")));

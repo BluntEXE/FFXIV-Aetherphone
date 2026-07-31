@@ -48,18 +48,6 @@ internal static class CatalogLabels
             _ => identifier,
         };
 
-    public static string Ringtone(uint soundId) =>
-        soundId switch
-        {
-            7 => Loc.T(L.Catalogs.RingtonePing),
-            1 => Loc.T(L.Catalogs.RingtoneChime),
-            3 => Loc.T(L.Catalogs.RingtoneBell),
-            10 => Loc.T(L.Catalogs.RingtoneAlert),
-            16 => Loc.T(L.Catalogs.RingtoneKnock),
-            0 => Loc.T(L.Catalogs.RingtoneSilent),
-            _ => string.Empty,
-        };
-
     public static string RadioCategory(string identifier) =>
         identifier switch
         {

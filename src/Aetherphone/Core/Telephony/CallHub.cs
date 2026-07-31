@@ -10,7 +10,6 @@ namespace Aetherphone.Core.Telephony;
 
 internal sealed class CallHub : IDisposable
 {
-    private const float RingIntervalSeconds = 3f;
     private const float IncomingTimeoutSeconds = 60f;
     private const float DialingTimeoutSeconds = 60f;
     private const long ReconnectGraceMs = 20_000;
@@ -33,7 +32,6 @@ internal sealed class CallHub : IDisposable
     private ParticipantInfo? incomingFrom;
     private string? realtimeAccountId;
     private CallContact? dialingTo;
-    private float ringTimer;
     private float stateTimer;
     private long connectionLostTicks;
     private volatile bool callScreenRequested;
@@ -323,7 +321,6 @@ internal sealed class CallHub : IDisposable
 
     public void Advance(float deltaSeconds)
     {
-        var ring = false;
         var declineTimeout = false;
         var dialTimeout = false;
         var reconnectTimeout = false;
@@ -338,13 +335,6 @@ internal sealed class CallHub : IDisposable
             if (state == CallState.Ringing)
             {
                 stateTimer += deltaSeconds;
-                ringTimer += deltaSeconds;
-                if (ringTimer >= RingIntervalSeconds)
-                {
-                    ringTimer = 0f;
-                    ring = true;
-                }
-
                 if (stateTimer >= IncomingTimeoutSeconds)
                 {
                     declineTimeout = true;
@@ -364,11 +354,6 @@ internal sealed class CallHub : IDisposable
         {
             EndCall(CallEndReason.ConnectionLost);
             return;
-        }
-
-        if (ring)
-        {
-            sound.PulseCallRing();
         }
 
         if (declineTimeout)
@@ -409,7 +394,6 @@ internal sealed class CallHub : IDisposable
                 incomingFrom = message.From;
                 roster = message.Participants ?? new[] { message.From };
                 stateTimer = 0f;
-                ringTimer = RingIntervalSeconds;
             }
         }
 
@@ -702,7 +686,6 @@ internal sealed class CallHub : IDisposable
         incomingFrom = null;
         dialingTo = null;
         connectionLostTicks = 0;
-        ringTimer = 0f;
         stateTimer = 0f;
         return audio.TakeLocked();
     }
