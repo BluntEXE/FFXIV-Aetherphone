@@ -68,12 +68,14 @@ internal sealed class NavigationStack : INavigator
     {
         if (motion == ShellMotion.None && ReferenceEquals(current, app))
         {
+            NotifyOpened(app);
             return;
         }
 
         if (motion == ShellMotion.Dismiss && ReferenceEquals(motionOver, app))
         {
             ReverseToPresent();
+            NotifyOpened(app);
             return;
         }
 
@@ -86,9 +88,14 @@ internal sealed class NavigationStack : INavigator
         }
 
         current = app;
+        NotifyOpened(app);
+        BeginPresent(app, under);
+    }
+
+    private void NotifyOpened(IPhoneApp app)
+    {
         app.OnOpened();
         AppOpened?.Invoke(app.Id);
-        BeginPresent(app, under);
     }
 
     public bool IsAvailable(string appId)
@@ -106,11 +113,6 @@ internal sealed class NavigationStack : INavigator
 
     public void Open(string appId)
     {
-        if (current?.Id == appId && motion == ShellMotion.None)
-        {
-            return;
-        }
-
         if (!installer.IsInstalled(appId))
         {
             return;

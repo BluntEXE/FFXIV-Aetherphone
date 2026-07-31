@@ -165,14 +165,14 @@ internal sealed partial class VelvetShell : IPhoneApp
             ApplyFeedFilters();
         }
 
-        if (launcher.TryConsume(out var targetUserId) && GateAccepted && configuration.IsVelvetOnboarded() &&
-            store.IsSignedIn)
+        if (GateAccepted && configuration.IsVelvetOnboarded() && store.IsSignedIn &&
+            launcher.TryConsume(out var targetUserId))
         {
             OpenThread(targetUserId);
         }
 
-        if (socialLauncher.TryConsume(Id, out var link) && GateAccepted && configuration.IsVelvetOnboarded() &&
-            store.IsSignedIn)
+        if (GateAccepted && configuration.IsVelvetOnboarded() && store.IsSignedIn &&
+            socialLauncher.TryConsume(Id, out var link))
         {
             if (link.Kind == SocialLinkKind.Profile)
             {
