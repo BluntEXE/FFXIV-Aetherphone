@@ -71,6 +71,15 @@ internal sealed partial class AethergramApp
                     }
                 }
 
+                if (dmStore.LoadingMoreThreads)
+                {
+                    InfiniteScroll.DrawLoadingRow(listRect.Center.X, AppPalettes.Aethergram.MutedInk);
+                }
+                else if (dmStore.HasMoreThreads && InfiniteScroll.ReachedBottom())
+                {
+                    dmStore.LoadMoreThreads();
+                }
+
                 ImGui.Dummy(new Vector2(0f, 24f * scale));
             }
         }

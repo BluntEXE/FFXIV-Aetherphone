@@ -530,6 +530,15 @@ internal sealed partial class AethergramApp : IPhoneApp
                 DrawFollowRequestRow(snapshot[index]);
             }
 
+            if (store.FollowRequestsLoadingMore)
+            {
+                InfiniteScroll.DrawLoadingRow(listRect.Center.X, AppPalettes.Aethergram.MutedInk);
+            }
+            else if (store.HasMoreFollowRequests && InfiniteScroll.ReachedBottom())
+            {
+                store.LoadMoreFollowRequests();
+            }
+
             ImGui.Dummy(new Vector2(0f, 12f * scale));
         }
     }
@@ -602,16 +611,8 @@ internal sealed partial class AethergramApp : IPhoneApp
             }
 
             ImGui.Dummy(new Vector2(0f, 8f * scale));
-            DrawProfileGrid(posts, L.Aethergram.SavedEmpty);
-            if (store.SavedLoadingMore)
-            {
-                InfiniteScroll.DrawLoadingRow(listRect.Center.X, AppPalettes.Aethergram.MutedInk);
-            }
-
-            if (InfiniteScroll.ReachedBottom() && store.HasMoreSaved && !store.SavedLoadingMore)
-            {
-                store.LoadMoreSaved();
-            }
+            DrawProfileGrid(posts, L.Aethergram.SavedEmpty, store.HasMoreSaved, store.SavedLoadingMore,
+                store.LoadMoreSaved);
         }
     }
 

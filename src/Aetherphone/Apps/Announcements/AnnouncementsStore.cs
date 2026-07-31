@@ -22,6 +22,9 @@ internal sealed class AnnouncementsStore : IDisposable
     private readonly StoreWork work = new StoreWork("Announcements");
 
     private volatile AnnouncementDto[] announcements = Array.Empty<AnnouncementDto>();
+    private volatile string? announcementsCursor;
+    private volatile bool loadingMore;
+    private volatile bool pagedDeeper;
     private volatile bool loading;
     private volatile bool loadedOnce;
     private volatile bool pingRefreshRequested;
@@ -50,6 +53,10 @@ internal sealed class AnnouncementsStore : IDisposable
     public AnnouncementDto[] Announcements => announcements;
 
     public bool Loading => loading;
+
+    public bool LoadingMore => loadingMore;
+
+    public bool HasMore => announcementsCursor is not null;
 
     public bool LoadedOnce => loadedOnce;
 
@@ -90,16 +97,54 @@ internal sealed class AnnouncementsStore : IDisposable
         loading = true;
         work.Run("announcements refresh", async token =>
         {
-            var page = await client.ListAsync(token).ConfigureAwait(false);
+            var page = await client.ListAsync(null, token).ConfigureAwait(false);
             if (page is null)
             {
                 return;
             }
 
-            announcements = page.Items;
+            if (pagedDeeper)
+            {
+                announcements = IdentifiedMerge.MergeById(announcements, page.Items, ByNewestFirst);
+            }
+            else
+            {
+                announcements = page.Items;
+                announcementsCursor = page.NextCursor;
+            }
+
             loadedOnce = true;
             Announce(page.Items);
         }, () => loading = false);
+    }
+
+    public void LoadMore()
+    {
+        var cursor = announcementsCursor;
+        if (!session.IsSignedIn || cursor is null || loadingMore || loading)
+        {
+            return;
+        }
+
+        loadingMore = true;
+        pagedDeeper = true;
+        work.Run("announcements more", async token =>
+        {
+            var page = await client.ListAsync(cursor, token).ConfigureAwait(false);
+            if (page is null)
+            {
+                return;
+            }
+
+            announcements = IdentifiedMerge.MergeById(announcements, page.Items, ByNewestFirst);
+            announcementsCursor = page.NextCursor;
+        }, () => loadingMore = false);
+    }
+
+    private static int ByNewestFirst(AnnouncementDto left, AnnouncementDto right)
+    {
+        var byTime = right.CreatedAtUnix.CompareTo(left.CreatedAtUnix);
+        return byTime != 0 ? byTime : string.CompareOrdinal(right.Id, left.Id);
     }
 
     public void MarkAllSeen()

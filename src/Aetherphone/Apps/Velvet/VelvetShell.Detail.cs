@@ -206,7 +206,7 @@ internal sealed partial class VelvetShell
                 DrawDisplayTokens(post.Tags, VChipStyle.Tint, VelvetTheme.Rose);
             }
 
-            DrawComments(width, scale);
+            DrawComments(post.CommentCount, width, scale);
             Gap(20f);
         }
 
@@ -214,14 +214,16 @@ internal sealed partial class VelvetShell
         DrawPostMenu(area, false);
     }
 
-    private void DrawComments(float width, float scale)
+    private void DrawComments(int totalCount, float width, float scale)
     {
         Gap(10f);
         var linePos = ImGui.GetCursorScreenPos();
         ImGui.GetWindowDrawList().AddLine(linePos, new Vector2(linePos.X + width, linePos.Y),
             VelvetTheme.Divider.Packed(), 1f);
         Gap(14f);
-        var count = store.DetailComments.Length;
+        var count = store.HasMoreComments
+            ? Math.Max(totalCount, store.DetailComments.Length)
+            : store.DetailComments.Length;
         VSectionHeader.Bar(count > 0 ? Loc.T(L.Velvet.CommentsCount, count) : Loc.T(L.Velvet.Comments));
         if (store.LoadingComments)
         {
@@ -243,6 +245,15 @@ internal sealed partial class VelvetShell
         for (var index = 0; index < comments.Length; index++)
         {
             DrawCommentRow(comments[index], scale);
+        }
+
+        if (store.CommentsLoadingMore)
+        {
+            InfiniteScroll.DrawLoadingRow(ImGui.GetCursorScreenPos().X + width * 0.5f, VelvetTheme.MutedInk);
+        }
+        else if (store.HasMoreComments && InfiniteScroll.ReachedBottom())
+        {
+            store.LoadMoreComments();
         }
     }
 
@@ -399,6 +410,15 @@ internal sealed partial class VelvetShell
                 {
                     OpenProfile(user.Id);
                 }
+            }
+
+            if (store.LikersLoadingMore)
+            {
+                InfiniteScroll.DrawLoadingRow(body.Center.X, VelvetTheme.MutedInk);
+            }
+            else if (store.HasMoreLikers && InfiniteScroll.ReachedBottom())
+            {
+                store.LoadMoreLikers();
             }
 
             Gap(40f);

@@ -1080,9 +1080,10 @@ internal sealed partial class ChirperApp : IPhoneApp
             }
 
             var comments = store.DetailComments;
+            var commentTotal = store.HasMoreComments ? Math.Max(post.CommentCount, comments.Length) : comments.Length;
             ImGui.Dummy(new Vector2(0f, 2f * scale));
-            ui.SectionHeading(comments.Length > 0
-                ? $"{Loc.T(L.Chirper.RepliesTitle)} · {comments.Length}"
+            ui.SectionHeading(commentTotal > 0
+                ? $"{Loc.T(L.Chirper.RepliesTitle)} · {commentTotal}"
                 : Loc.T(L.Chirper.RepliesTitle));
             if (comments.Length == 0)
             {
@@ -1095,6 +1096,7 @@ internal sealed partial class ChirperApp : IPhoneApp
             }
             else
             {
+                DrawEarlierCommentsRow();
                 for (var index = 0; index < comments.Length; index++)
                 {
                     DrawComment(comments[index]);
@@ -1291,6 +1293,42 @@ internal sealed partial class ChirperApp : IPhoneApp
         {
             OpenProfile(layout.Mentions[hit.TargetIndex].UserId);
         }
+    }
+
+    private void DrawEarlierCommentsRow()
+    {
+        var scale = ImGuiHelpers.GlobalScale;
+        if (store.CommentsLoadingMore)
+        {
+            InfiniteScroll.DrawLoadingRow(
+                ImGui.GetCursorScreenPos().X + ImGui.GetContentRegionAvail().X * 0.5f,
+                AppPalettes.Chirper.MutedInk);
+            return;
+        }
+
+        if (!store.HasMoreComments)
+        {
+            return;
+        }
+
+        var label = Loc.T(L.Chirper.EarlierComments);
+        var origin = ImGui.GetCursorScreenPos();
+        var pos = new Vector2(origin.X + 2f * scale, origin.Y);
+        var size = Typography.Measure(label, 0.85f, FontWeight.Medium);
+        var hovered = UiInteract.Hover(pos, pos + size);
+        Typography.Draw(pos, label, hovered ? theme.Accent : AppPalettes.Chirper.MutedInk, 0.85f, FontWeight.Medium);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (UiInteract.Click(pos, pos + size, hovered))
+        {
+            store.LoadMoreComments();
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(size.X, size.Y + 12f * scale));
     }
 
     private void DrawLikersLink(PostDto post)

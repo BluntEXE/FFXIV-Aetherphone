@@ -53,6 +53,11 @@ internal sealed partial class VelvetShell
             store.RefreshThreads();
         }
 
+        if (!store.ConnectionsLoaded && !store.LoadingConnections)
+        {
+            store.RefreshConnections();
+        }
+
         var threads = store.Threads;
         if (threads.Length == 0)
         {
@@ -88,6 +93,15 @@ internal sealed partial class VelvetShell
             {
                 OpenThread(thread.OtherUserId);
             }
+        }
+
+        if (store.LoadingMoreThreads)
+        {
+            InfiniteScroll.DrawLoadingRow(listRect.Center.X, VelvetTheme.MutedInk);
+        }
+        else if (store.HasMoreThreads && InfiniteScroll.ReachedBottom())
+        {
+            store.LoadMoreThreads();
         }
 
         Gap(40f);

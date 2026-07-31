@@ -187,11 +187,11 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
         await keys.HydrateGramAsync(token).ConfigureAwait(false);
     }
 
-    protected override async Task<GramThreadDto[]?> FetchThreadListAsync(CancellationToken token)
+    protected override async Task<ThreadListPage?> FetchThreadListAsync(string? cursor, CancellationToken token)
     {
         await EnsureGramHydratedAsync(token).ConfigureAwait(false);
-        var page = await client.ThreadsAsync(null, token).ConfigureAwait(false);
-        return page?.Items;
+        var page = await client.ThreadsAsync(cursor, token).ConfigureAwait(false);
+        return page is null ? null : new ThreadListPage(page.Items, page.NextCursor);
     }
 
     protected override async Task<MessagePage?> FetchMessagesPageAsync(string threadId, string? cursor,

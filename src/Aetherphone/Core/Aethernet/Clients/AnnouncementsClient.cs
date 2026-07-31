@@ -11,8 +11,14 @@ internal sealed class AnnouncementsClient
         this.net = net;
     }
 
-    public Task<AnnouncementPage?> ListAsync(CancellationToken token)
+    public Task<AnnouncementPage?> ListAsync(string? cursor, CancellationToken token)
     {
-        return net.GetAsync("/announcements", AethernetJsonContext.Default.AnnouncementPage, token);
+        var path = "/announcements";
+        if (cursor is not null)
+        {
+            path += $"?cursor={Uri.EscapeDataString(cursor)}";
+        }
+
+        return net.GetAsync(path, AethernetJsonContext.Default.AnnouncementPage, token);
     }
 }

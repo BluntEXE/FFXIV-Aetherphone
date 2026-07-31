@@ -13,9 +13,11 @@ namespace Aetherphone.Apps.Aethergram;
 
 internal sealed partial class AethergramApp
 {
-    private void DrawProfileGrid() => DrawProfileGrid(store.ProfilePosts, L.Aethergram.Empty);
+    private void DrawProfileGrid() => DrawProfileGrid(store.ProfilePosts, L.Aethergram.Empty,
+        store.HasMoreProfilePosts, store.ProfileLoadingMore, store.LoadMoreProfilePosts);
 
-    private void DrawProfileGrid(PostDto[] posts, LocString emptyMessage)
+    private void DrawProfileGrid(PostDto[] posts, LocString emptyMessage, bool hasMore, bool loadingMore,
+        Action loadMore)
     {
         var scale = ImGuiHelpers.GlobalScale;
         if (posts.Length == 0)
@@ -26,6 +28,7 @@ internal sealed partial class AethergramApp
             return;
         }
 
+        var gridCenterX = ImGui.GetCursorScreenPos().X + ScrollLayout.StableContentWidth() * 0.5f;
         var gap = 3f * scale;
         var cell = (ScrollLayout.StableContentWidth() - gap * (GridColumns - 1)) / GridColumns;
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(gap, gap)))
@@ -46,6 +49,16 @@ internal sealed partial class AethergramApp
                     ImGui.SameLine();
                 }
             }
+        }
+
+        ImGui.NewLine();
+        if (loadingMore)
+        {
+            InfiniteScroll.DrawLoadingRow(gridCenterX, AppPalettes.Aethergram.MutedInk);
+        }
+        else if (hasMore && InfiniteScroll.ReachedBottom())
+        {
+            loadMore();
         }
 
         ImGui.Dummy(new Vector2(0f, 24f * scale));

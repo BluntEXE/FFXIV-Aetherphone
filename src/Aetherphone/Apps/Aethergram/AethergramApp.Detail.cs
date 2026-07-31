@@ -216,8 +216,9 @@ internal sealed partial class AethergramApp
                 ImGui.GetColorU32(theme.Separator), 1f);
             ImGui.Dummy(new Vector2(0f, 14f * scale));
             var comments = store.DetailComments;
-            ui.SectionHeading(comments.Length > 0
-                ? $"{Loc.T(L.Aethergram.CommentsTitle)} · {comments.Length}"
+            var commentTotal = store.HasMoreComments ? Math.Max(post.CommentCount, comments.Length) : comments.Length;
+            ui.SectionHeading(commentTotal > 0
+                ? $"{Loc.T(L.Aethergram.CommentsTitle)} · {commentTotal}"
                 : Loc.T(L.Aethergram.CommentsTitle));
             if (comments.Length == 0 && !store.DetailLoading)
             {
@@ -226,6 +227,7 @@ internal sealed partial class AethergramApp
             }
             else
             {
+                DrawEarlierCommentsRow();
                 for (var index = 0; index < comments.Length; index++)
                 {
                     DrawComment(comments[index]);
@@ -237,6 +239,43 @@ internal sealed partial class AethergramApp
 
         DrawCommentComposer(new Rect(new Vector2(area.Min.X, area.Max.Y - composerHeight), area.Max), area, postId);
         DrawPostMenu(area, false);
+    }
+
+    private void DrawEarlierCommentsRow()
+    {
+        var scale = ImGuiHelpers.GlobalScale;
+        if (store.CommentsLoadingMore)
+        {
+            InfiniteScroll.DrawLoadingRow(
+                ImGui.GetCursorScreenPos().X + ScrollLayout.StableContentWidth() * 0.5f,
+                AppPalettes.Aethergram.MutedInk);
+            return;
+        }
+
+        if (!store.HasMoreComments)
+        {
+            return;
+        }
+
+        var label = Loc.T(L.Aethergram.EarlierComments);
+        var origin = ImGui.GetCursorScreenPos();
+        var pos = new Vector2(origin.X + 5f * scale, origin.Y);
+        var size = Typography.Measure(label, 0.85f, FontWeight.Medium);
+        var hovered = UiInteract.Hover(pos, pos + size);
+        Typography.Draw(pos, label, hovered ? theme.Accent : AppPalettes.Aethergram.MutedInk, 0.85f,
+            FontWeight.Medium);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (UiInteract.Click(pos, pos + size, hovered))
+        {
+            store.LoadMoreComments();
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(size.X, size.Y + 12f * scale));
     }
 
     private void DrawComment(CommentDto comment)
@@ -432,7 +471,8 @@ internal sealed partial class AethergramApp
             else
             {
                 store.EnsureTaggedPosts(userId);
-                DrawProfileGrid(store.TaggedPosts, L.PhotoTag.NoTagged);
+                DrawProfileGrid(store.TaggedPosts, L.PhotoTag.NoTagged,
+                    store.HasMoreTagged, store.TaggedLoadingMore, store.LoadMoreTaggedPosts);
             }
         }
     }

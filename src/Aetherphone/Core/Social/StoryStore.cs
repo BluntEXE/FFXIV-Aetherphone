@@ -24,6 +24,8 @@ internal sealed class StoryStore : IDisposable
     private volatile StoryViewerDto[] viewers = Array.Empty<StoryViewerDto>();
     private volatile string? viewersStoryId;
     private volatile int viewersTotal;
+    private volatile string? viewersCursor;
+    private volatile bool viewersLoadingMore;
     private volatile bool trayLoading;
     private volatile bool groupLoading;
     private volatile bool viewersLoading;
@@ -67,6 +69,8 @@ internal sealed class StoryStore : IDisposable
     public StoryViewerDto[] Viewers => viewers;
     public int ViewersTotal => viewersTotal;
     public bool ViewersLoading => viewersLoading;
+    public bool ViewersLoadingMore => viewersLoadingMore;
+    public bool HasMoreViewers => viewersCursor is not null;
 
     public void LoadViewers(string storyId)
     {
@@ -78,16 +82,75 @@ internal sealed class StoryStore : IDisposable
         viewersStoryId = storyId;
         viewers = Array.Empty<StoryViewerDto>();
         viewersTotal = 0;
+        viewersCursor = null;
         viewersLoading = true;
         work.Run("story viewers", async token =>
         {
-            var page = await client.StoryViewersAsync(storyId, token).ConfigureAwait(false);
+            var page = await client.StoryViewersAsync(storyId, null, token).ConfigureAwait(false);
             if (page is not null && viewersStoryId == storyId)
             {
                 viewers = page.Items;
                 viewersTotal = page.Total;
+                viewersCursor = page.NextCursor;
             }
         }, () => viewersLoading = false);
+    }
+
+    public void LoadMoreViewers()
+    {
+        var storyId = viewersStoryId;
+        var cursor = viewersCursor;
+        if (storyId is null || cursor is null || viewersLoadingMore || viewersLoading)
+        {
+            return;
+        }
+
+        viewersLoadingMore = true;
+        work.Run("story viewers more", async token =>
+        {
+            var page = await client.StoryViewersAsync(storyId, cursor, token).ConfigureAwait(false);
+            if (page is null || viewersStoryId != storyId)
+            {
+                return;
+            }
+
+            viewers = AppendViewers(viewers, page.Items);
+            viewersTotal = page.Total;
+            viewersCursor = page.NextCursor;
+        }, () => viewersLoadingMore = false);
+    }
+
+    private static StoryViewerDto[] AppendViewers(StoryViewerDto[] source, StoryViewerDto[] incoming)
+    {
+        if (incoming.Length == 0)
+        {
+            return source;
+        }
+
+        var existing = new HashSet<string>(source.Length, StringComparer.Ordinal);
+        for (var index = 0; index < source.Length; index++)
+        {
+            existing.Add(source[index].UserId);
+        }
+
+        var fresh = new List<StoryViewerDto>(incoming.Length);
+        for (var index = 0; index < incoming.Length; index++)
+        {
+            if (!existing.Contains(incoming[index].UserId))
+            {
+                fresh.Add(incoming[index]);
+            }
+        }
+
+        if (fresh.Count == 0)
+        {
+            return source;
+        }
+
+        var result = new StoryViewerDto[source.Length + fresh.Count];
+        Array.Copy(source, result, source.Length);
+        fresh.CopyTo(result, source.Length);
+        return result;
     }
 
     public void ClearViewers()
@@ -95,6 +158,7 @@ internal sealed class StoryStore : IDisposable
         viewersStoryId = null;
         viewers = Array.Empty<StoryViewerDto>();
         viewersTotal = 0;
+        viewersCursor = null;
     }
 
     public bool HasOwnRing

@@ -56,6 +56,7 @@ internal sealed class NewsApp : IPhoneApp
     private int categoryIndex;
     private bool forceRefresh;
     private bool resetScroll;
+    private int visibleItems = MaxItems;
 
     public NewsApp(NewsService news, MediaCache media, HttpService http, GameData gameData)
     {
@@ -96,6 +97,7 @@ internal sealed class NewsApp : IPhoneApp
             categoryIndex = selected;
             resetScroll = true;
             forceRefresh = false;
+            visibleItems = MaxItems;
         }
 
         var category = NewsCategories.All[categoryIndex];
@@ -122,7 +124,12 @@ internal sealed class NewsApp : IPhoneApp
                 resetScroll = false;
             }
 
-            DrawFeed(entry.Items, Math.Min(entry.Items.Length, MaxItems), category, scale);
+            var count = Math.Min(entry.Items.Length, visibleItems);
+            DrawFeed(entry.Items, count, category, scale);
+            if (entry.Items.Length > count && InfiniteScroll.ReachedBottom())
+            {
+                visibleItems += MaxItems;
+            }
         }
     }
 

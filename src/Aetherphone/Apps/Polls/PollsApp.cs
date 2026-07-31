@@ -102,6 +102,15 @@ internal sealed class PollsApp : IPhoneApp
                 DrawPollCard(polls[index], scale, index == 0);
                 ImGui.Dummy(new Vector2(0f, 12f * scale));
             }
+
+            if (store.LoadingMore)
+            {
+                InfiniteScroll.DrawLoadingRow(body.Center.X, ui.MutedInk);
+            }
+            else if (store.HasMore && InfiniteScroll.ReachedBottom())
+            {
+                store.LoadMore();
+            }
         }
     }
 

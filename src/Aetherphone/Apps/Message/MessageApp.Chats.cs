@@ -73,6 +73,15 @@ internal sealed partial class MessageApp
                     DrawConversationRow(regular[index], scale, pinned: false);
                 }
 
+                if (store.LoadingMoreThreads)
+                {
+                    InfiniteScroll.DrawLoadingRow(listRect.Center.X, AppPalettes.Message.MutedInk);
+                }
+                else if (store.HasMoreThreads && InfiniteScroll.ReachedBottom())
+                {
+                    store.LoadMoreThreads();
+                }
+
                 ImGui.Dummy(new Vector2(0f, 72f * scale));
             }
         }

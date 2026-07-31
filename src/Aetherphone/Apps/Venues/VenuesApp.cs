@@ -22,6 +22,7 @@ internal sealed partial class VenuesApp : IPhoneApp
     private const float SegmentTrackHeight = 38f;
     private const float ChipRowHeight = 44f;
     private const int MaxCards = 80;
+    private int visibleCards = MaxCards;
     public string Id => "venues";
     public string DisplayName => Loc.T(L.Apps.Venues);
     public string Glyph => "V";
@@ -289,7 +290,12 @@ internal sealed partial class VenuesApp : IPhoneApp
 
         var scale = ImGuiHelpers.GlobalScale;
         var nowUtc = DateTime.UtcNow;
-        var count = Math.Min(filtered.Count, MaxCards);
+        if (filtered.Count <= MaxCards)
+        {
+            visibleCards = MaxCards;
+        }
+
+        var count = Math.Min(filtered.Count, visibleCards);
         for (var index = 0; index < count; index++)
         {
             var venue = filtered[index];
@@ -313,12 +319,17 @@ internal sealed partial class VenuesApp : IPhoneApp
             ImGui.Dummy(new Vector2(width, (VenueCard.Height + VenueCard.Gap) * scale));
         }
 
-        if (filtered.Count > MaxCards)
+        if (filtered.Count > count)
         {
+            if (InfiniteScroll.ReachedBottom())
+            {
+                visibleCards += MaxCards;
+            }
+
             var origin = ImGui.GetCursorScreenPos();
             var width = ImGui.GetContentRegionAvail().X;
             Typography.DrawCentered(new Vector2(origin.X + width * 0.5f, origin.Y + 8f * scale),
-                Loc.T(L.Venues.MoreCount, filtered.Count - MaxCards), AppPalettes.Venues.MutedInk,
+                Loc.T(L.Venues.MoreCount, filtered.Count - count), AppPalettes.Venues.MutedInk,
                 TextStyles.Footnote);
             ImGui.SetCursorScreenPos(origin);
             ImGui.Dummy(new Vector2(width, 30f * scale));

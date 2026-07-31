@@ -201,7 +201,7 @@ internal sealed record StoryViewerDto(
     long ViewedAtUnix,
     int Badges = 0);
 
-internal sealed record StoryViewersPage(StoryViewerDto[] Items, int Total);
+internal sealed record StoryViewersPage(StoryViewerDto[] Items, int Total, string? NextCursor = null);
 
 internal sealed record CommentDto(
     string Id,
@@ -469,7 +469,7 @@ internal sealed record PollDto(
     long CreatedAtUnix,
     bool Closed) : IIdentified;
 
-internal sealed record PollPage(PollDto[] Items);
+internal sealed record PollPage(PollDto[] Items, string? NextCursor = null);
 
 internal sealed record PollVoteRequest(int Option);
 
@@ -482,7 +482,7 @@ internal sealed record AnnouncementDto(
     AnnouncementTranslationDto[] Translations,
     long CreatedAtUnix) : IIdentified;
 
-internal sealed record AnnouncementPage(AnnouncementDto[] Items);
+internal sealed record AnnouncementPage(AnnouncementDto[] Items, string? NextCursor = null);
 
 internal sealed record FeedbackDto(
     string Id,
