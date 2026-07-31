@@ -292,8 +292,9 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         var labelSize = Typography.Measure(label, TextStyles.BodyEmphasized);
         Marquee.DrawLeftAuto(rowId, label, labelLeft, row.Center.Y - labelSize.Y * 0.5f, labelMaxWidth,
             TextStyles.BodyEmphasized, theme.TextStrong);
-        return Toggle.Draw(rowId + ".toggle", new Rect(toggleMin, toggleMin + new Vector2(toggleWidth, toggleHeight)),
-            equipped, theme);
+        var next = Toggle.Draw(rowId + ".toggle",
+            new Rect(toggleMin, toggleMin + new Vector2(toggleWidth, toggleHeight)), equipped, theme);
+        return next != equipped;
     }
 
     private void ToggleBadge(UserDto user, in RoleBadge badge)
