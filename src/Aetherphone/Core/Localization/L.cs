@@ -2188,6 +2188,7 @@ internal static class L
         public static readonly LocString CatTone = new("velvet.catTone", "Tone");
         public static readonly LocString CatPace = new("velvet.catPace", "Pace");
         public static readonly LocString CatStyle = new("velvet.catStyle", "Style");
+        public static readonly LocString CatOther = new("velvet.catOther", "Other");
         public static readonly LocString DiscoverLoading = new("velvet.discoverLoading", "Looking for people…");
         public static readonly LocString DiscoverNone = new("velvet.discoverNone", "No one here yet.");
         public static readonly LocString DiscoverNoneHint =

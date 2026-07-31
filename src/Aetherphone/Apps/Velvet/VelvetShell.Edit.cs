@@ -115,17 +115,17 @@ internal sealed partial class VelvetShell
 
             VSectionHeader.Card(FontAwesomeIcon.Heart, Loc.T(L.Velvet.CardRole));
             Gap(6f);
-            DrawTagFlow(VelvetSuggestions.Roles, editRole, VelvetTheme.Rose);
+            DrawTagFlow(VelvetSuggestions.Roles, editRole, VelvetTheme.Rose, true);
             Gap(16f);
 
             VSectionHeader.Card(FontAwesomeIcon.Fire, Loc.T(L.Velvet.CardKinks));
             Gap(6f);
-            DrawTagFlow(VelvetSuggestions.Kinks, editKinks, new Vector4(0.647f, 0.482f, 0.839f, 1f));
+            DrawTagFlow(VelvetSuggestions.Kinks, editKinks, new Vector4(0.647f, 0.482f, 0.839f, 1f), true);
             Gap(16f);
 
             VSectionHeader.Card(FontAwesomeIcon.ShieldAlt, Loc.T(L.Velvet.CardLimits));
             Gap(6f);
-            DrawTagFlow(VelvetSuggestions.Limits, editLimits, VelvetTheme.Gold);
+            DrawTagFlow(VelvetSuggestions.Limits, editLimits, VelvetTheme.Gold, true);
             Gap(16f);
 
             VSectionHeader.Card(FontAwesomeIcon.HandHoldingHeart, Loc.T(L.Velvet.CardRelationship));

@@ -1747,6 +1747,7 @@
   "velvet.catTone": "Tone",
   "velvet.catPace": "Pace",
   "velvet.catStyle": "Style",
+  "velvet.catOther": "Other",
   "velvet.discoverLoading": "Looking for people…",
   "velvet.discoverNone": "No one here yet.",
   "velvet.discoverNoneHint": "Try clearing filters or check back later.",
