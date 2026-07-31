@@ -27,23 +27,6 @@ internal static class CatalogLabels
         identifier switch
         {
             "Titanium" => Loc.T(L.Catalogs.CaseTitanium),
-            "Foxtail" => Loc.T(L.Catalogs.CaseFoxtail),
-            "Frostnip" => Loc.T(L.Catalogs.CaseFrostnip),
-            "Nacrelle" => Loc.T(L.Catalogs.CaseNacrelle),
-            "Verdigry" => Loc.T(L.Catalogs.CaseVerdigry),
-            "Voltpup" => Loc.T(L.Catalogs.CaseVoltpup),
-            "Aetherite" => Loc.T(L.Catalogs.CaseAetherite),
-            "Chocorunner" => Loc.T(L.Catalogs.CaseChocorunner),
-            "Gembuncle" => Loc.T(L.Catalogs.CaseGembuncle),
-            "Ironsworn" => Loc.T(L.Catalogs.CaseIronsworn),
-            "Kuponuff" => Loc.T(L.Catalogs.CaseKuponuff),
-            "Prickletot" => Loc.T(L.Catalogs.CasePrickletot),
-            "Amourette" => Loc.T(L.Catalogs.CaseAmourette),
-            "Barkleigh" => Loc.T(L.Catalogs.CaseBarkleigh),
-            "Emberlash" => Loc.T(L.Catalogs.CaseEmberlash),
-            "Tidecaller" => Loc.T(L.Catalogs.CaseTidecaller),
-            "Vesperine" => Loc.T(L.Catalogs.CaseVesperine),
-            "Whiskerlune" => Loc.T(L.Catalogs.CaseWhiskerlune),
             "Silkie" => Loc.T(L.Catalogs.CaseSilkie),
             _ => identifier,
         };
