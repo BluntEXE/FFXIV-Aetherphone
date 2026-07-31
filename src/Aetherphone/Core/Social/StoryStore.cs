@@ -14,6 +14,7 @@ internal sealed class StoryStore : IDisposable
     private readonly AethernetSession session;
     private readonly GramClient client;
     private readonly MediaClient media;
+    private readonly RealtimeSignalBus signals;
     private readonly StoreWork work;
     private readonly object seenLock = new();
     private readonly HashSet<string> seenStoryIds = new(StringComparer.Ordinal);
@@ -32,13 +33,27 @@ internal sealed class StoryStore : IDisposable
     private volatile bool posting;
     private string? lastAccountId;
 
-    public StoryStore(AethernetSession session, GramClient client, MediaClient media, string logTag)
+    public StoryStore(AethernetSession session, GramClient client, MediaClient media, RealtimeSignalBus signals,
+        string logTag)
     {
         this.session = session;
         this.client = client;
         this.media = media;
+        this.signals = signals;
         work = new StoreWork(logTag);
         session.Changed += OnSessionChanged;
+        signals.ContentRemoved += OnContentRemoved;
+    }
+
+    private void OnContentRemoved(ContentRemovalSignal removal)
+    {
+        if (!string.Equals(removal.Kind, ContentRemovalKinds.Story, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        RemoveOpenStory(removal.ContentId);
+        RefreshTray();
     }
 
     private void OnSessionChanged()
@@ -371,6 +386,7 @@ internal sealed class StoryStore : IDisposable
     public void Dispose()
     {
         session.Changed -= OnSessionChanged;
+        signals.ContentRemoved -= OnContentRemoved;
         work.Dispose();
     }
 }

@@ -41,9 +41,10 @@ internal sealed class StoryPresenter : IDisposable
 
     public StoryPresenter(AethernetSession session, GramClient client, MediaClient media, RemoteImageCache images,
         LodestoneService lodestone, StoryRingPainter painter, AppPalette palette, StoryConfirmLabels labels,
-        ConfirmService confirm, string logTag, Action onCompose, StoryReplyHooks? reply = null)
+        ConfirmService confirm, RealtimeSignalBus signals, string logTag, Action onCompose,
+        StoryReplyHooks? reply = null)
     {
-        stories = new StoryStore(session, client, media, logTag);
+        stories = new StoryStore(session, client, media, signals, logTag);
         tray = new StoryTrayRow(images, lodestone);
         viewer = new StoryViewerOverlay(images, lodestone);
         this.painter = painter;

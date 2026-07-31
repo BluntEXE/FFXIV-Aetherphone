@@ -20,6 +20,7 @@ internal static class SignalType
     public const string Ended = "call.ended";
     public const string Handled = "call.handled";
     public const string Unavailable = "call.unavailable";
+    public const string ContentRemoved = "content.removed";
     public const string ChatPing = "chat.ping";
     public const string VelvetPing = "velvet.ping";
     public const string GramPing = "gram.ping";
@@ -55,4 +56,8 @@ internal sealed record CallControl
     public string? UserId { get; init; }
     public bool? Muted { get; init; }
     public string? Reason { get; init; }
+    public string? App { get; init; }
+    public string? ContentKind { get; init; }
+    public string? ContentId { get; init; }
+    public string? ParentId { get; init; }
 }

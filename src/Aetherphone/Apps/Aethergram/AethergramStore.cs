@@ -1,3 +1,4 @@
+using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
@@ -15,8 +16,8 @@ internal sealed class AethergramStore : SocialFeedStore
     private readonly GramClient grams;
 
     public AethergramStore(AethernetSession session, AccountClient account, SocialClient client, GramClient grams,
-        SafetyClient safety, MediaClient media)
-        : base(session, account, client, safety, media, "Aethergram")
+        SafetyClient safety, MediaClient media, RealtimeSignalBus signals)
+        : base(session, account, client, safety, media, signals, "Aethergram")
     {
         this.grams = grams;
     }

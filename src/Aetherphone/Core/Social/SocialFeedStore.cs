@@ -27,6 +27,7 @@ internal abstract class SocialFeedStore : IDisposable
     protected readonly SocialClient client;
     protected readonly SafetyClient safety;
     protected readonly MediaClient media;
+    protected readonly RealtimeSignalBus signals;
     protected readonly StoreWork work;
     private readonly RetryGate meGate = new(TimeSpan.FromSeconds(30));
     private volatile UserDto? me;
@@ -74,6 +75,7 @@ internal abstract class SocialFeedStore : IDisposable
         SocialClient client,
         SafetyClient safety,
         MediaClient media,
+        RealtimeSignalBus signals,
         string logTag)
     {
         this.session = session;
@@ -81,8 +83,24 @@ internal abstract class SocialFeedStore : IDisposable
         this.client = client;
         this.safety = safety;
         this.media = media;
+        this.signals = signals;
         work = new StoreWork(logTag);
         session.Changed += OnSessionChanged;
+        signals.ContentRemoved += OnContentRemoved;
+    }
+
+    private void OnContentRemoved(ContentRemovalSignal removal)
+    {
+        if (string.Equals(removal.Kind, ContentRemovalKinds.Post, StringComparison.Ordinal))
+        {
+            RemovePost(removal.ContentId);
+            return;
+        }
+
+        if (string.Equals(removal.Kind, ContentRemovalKinds.Comment, StringComparison.Ordinal))
+        {
+            detailComments = CopyOnWrite.RemoveById(detailComments, removal.ContentId);
+        }
     }
 
     private void OnSessionChanged()
@@ -1019,10 +1037,14 @@ internal abstract class SocialFeedStore : IDisposable
         forYouLane.Items = CopyOnWrite.RemoveById(forYouLane.Items, postId);
         followingLane.Items = CopyOnWrite.RemoveById(followingLane.Items, postId);
         profileLane.Items = CopyOnWrite.RemoveById(profileLane.Items, postId);
+        savedLane.Items = CopyOnWrite.RemoveById(savedLane.Items, postId);
+        taggedLane.Items = CopyOnWrite.RemoveById(taggedLane.Items, postId);
         if (detailPost is { } current && current.Id == postId)
         {
             detailPost = null;
             detailPostId = null;
+            detailComments = Array.Empty<CommentDto>();
+            commentsCursor = null;
         }
     }
 
@@ -1088,6 +1110,7 @@ internal abstract class SocialFeedStore : IDisposable
     public void Dispose()
     {
         session.Changed -= OnSessionChanged;
+        signals.ContentRemoved -= OnContentRemoved;
         work.Dispose();
     }
 }

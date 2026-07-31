@@ -142,7 +142,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         WallpaperImageCache wallpaperImages, ConfirmService confirm, ReportService report, ConductGateService conduct,
         AppInstaller installer)
     {
-        store = new AethergramStore(session, net.Account, net.Social, net.Grams, net.Safety, net.Media);
+        store = new AethergramStore(session, net.Account, net.Social, net.Grams, net.Safety, net.Media, realtimeSignals);
         account = net.Account;
         dmStore = new GramDmStore(session, net.GramDm, net.Social, net.Safety, net.Media, notifications, keyVault,
             conversationKeys, visibility, realtimeSignals, installer);
@@ -151,7 +151,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         personPicker = new PersonPicker(store.NewMentionSuggestions());
         stories = new StoryPresenter(session, net.Grams, net.Media, images, lodestone, AethergramArt.StoryRing,
             AppPalettes.Aethergram, new StoryConfirmLabels(L.Aethergram.DeleteConfirm, L.Aethergram.DeleteCancel,
-                L.Aethergram.Saving), confirm, "Aethergram stories", StartStoryCompose,
+                L.Aethergram.Saving), confirm, realtimeSignals, "Aethergram stories", StartStoryCompose,
             new StoryReplyHooks(L.Aethergram.ReplyToStory, dmStore.SendStoryReply, OpenThread));
         this.launcher = launcher;
         this.dmLauncher = dmLauncher;

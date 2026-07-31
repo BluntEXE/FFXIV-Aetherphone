@@ -104,6 +104,21 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         signals.VelvetPinged += OnVelvetPinged;
         signals.SocialPinged += OnSocialPinged;
         signals.ConnectedChanged += OnRealtimeConnected;
+        signals.ContentRemoved += OnContentRemoved;
+    }
+
+    private void OnContentRemoved(ContentRemovalSignal removal)
+    {
+        if (string.Equals(removal.Kind, ContentRemovalKinds.Post, StringComparison.Ordinal))
+        {
+            RemovePost(removal.ContentId);
+            return;
+        }
+
+        if (string.Equals(removal.Kind, ContentRemovalKinds.Comment, StringComparison.Ordinal))
+        {
+            detailComments = CopyOnWrite.RemoveById(detailComments, removal.ContentId);
+        }
     }
 
     private void OnSocialPinged()
@@ -1497,6 +1512,26 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         {
             feedLanes[laneIndex].Items = CopyOnWrite.RemoveById(feedLanes[laneIndex].Items, postId);
         }
+
+        var remainingUserPosts = CopyOnWrite.RemoveById(userPosts, postId);
+        if (!ReferenceEquals(remainingUserPosts, userPosts))
+        {
+            userPosts = remainingUserPosts;
+            userPostsTotal = Math.Max(0, userPostsTotal - 1);
+        }
+
+        if (fetchedPost is { } current && current.Id == postId)
+        {
+            fetchedPost = null;
+            fetchingPostId = null;
+        }
+
+        if (detailPostId == postId)
+        {
+            detailPostId = null;
+            detailComments = Array.Empty<VelvetCommentDto>();
+            commentsCursor = null;
+        }
     }
 
     protected override void DisposeCore()
@@ -1504,5 +1539,6 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         signals.VelvetPinged -= OnVelvetPinged;
         signals.SocialPinged -= OnSocialPinged;
         signals.ConnectedChanged -= OnRealtimeConnected;
+        signals.ContentRemoved -= OnContentRemoved;
     }
 }
