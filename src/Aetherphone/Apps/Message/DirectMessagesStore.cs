@@ -45,7 +45,7 @@ internal sealed class DirectMessagesStore : ChatThreadStoreBase<ChatMessageDto, 
     private void OnChatPinged()
     {
         InboxCadence.RequestImmediate();
-        RefreshThread();
+        RefreshThreadIfVisible();
     }
 
     public ConversationDto[] Conversations => ThreadListItems;

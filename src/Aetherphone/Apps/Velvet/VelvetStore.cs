@@ -142,7 +142,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     private void OnVelvetPinged()
     {
         InboxCadence.RequestImmediate();
-        RefreshThread();
+        RefreshThreadIfVisible();
     }
 
     public MentionSuggestions NewMentionSuggestions() => new(account, work);

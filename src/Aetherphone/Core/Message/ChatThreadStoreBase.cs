@@ -623,6 +623,22 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         BeginThreadOpen(pending);
     }
 
+    public void RefreshThreadIfVisible()
+    {
+        var current = currentThreadId;
+        if (current is null || !string.Equals(viewingThreadKey, current, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        if (DateTime.UtcNow - lastViewingUtc > ViewingGrace)
+        {
+            return;
+        }
+
+        RefreshThread();
+    }
+
     public void RefreshThread()
     {
         var current = currentThreadId;
