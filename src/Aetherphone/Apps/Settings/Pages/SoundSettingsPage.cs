@@ -12,6 +12,7 @@ namespace Aetherphone.Apps.Settings.Pages;
 internal sealed class SoundSettingsPage : ISettingsPage
 {
     private readonly SoundService sound;
+    private readonly SoundKind kind;
     private readonly LocString title;
     private readonly FontAwesomeIcon icon;
     private readonly Vector4 tint;
@@ -22,11 +23,12 @@ internal sealed class SoundSettingsPage : ISettingsPage
     private readonly Action<float> setVolume;
     private readonly SoundImport import = new();
 
-    public SoundSettingsPage(SoundService sound, LocString title, FontAwesomeIcon icon,
+    public SoundSettingsPage(SoundService sound, SoundKind kind, LocString title, FontAwesomeIcon icon,
         Vector4 tint, string segmentId, Func<string> getToken, Action<string> setToken,
         Func<float> getVolume, Action<float> setVolume)
     {
         this.sound = sound;
+        this.kind = kind;
         this.title = title;
         this.icon = icon;
         this.tint = tint;
@@ -38,7 +40,7 @@ internal sealed class SoundSettingsPage : ISettingsPage
     }
 
     public string Title => Loc.T(title);
-    public string Summary => sound.Label(getToken());
+    public string Summary => sound.Label(kind, getToken());
     public FontAwesomeIcon Icon => icon;
     public Vector4 Tint => tint;
 
@@ -54,7 +56,7 @@ internal sealed class SoundSettingsPage : ISettingsPage
         using (AppSurface.Begin(body))
         {
             SettingsSection.Header(Loc.T(L.Settings.Sound), theme);
-            SoundOptionList.Draw(theme, sound, getToken(), false, Select);
+            SoundOptionList.Draw(theme, sound, kind, getToken(), false, Select);
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
             SettingsSection.Header(Loc.T(L.Settings.Volume), theme);
             var volumeCard = GroupCard.Begin(theme, 1);
@@ -65,7 +67,7 @@ internal sealed class SoundSettingsPage : ISettingsPage
             if (MathF.Abs(volume - getVolume()) > 0.001f)
             {
                 setVolume(volume);
-                sound.Preview(getToken(), volume);
+                sound.Preview(kind, getToken(), volume);
             }
 
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
@@ -89,16 +91,16 @@ internal sealed class SoundSettingsPage : ISettingsPage
         }
 
         setToken(token);
-        sound.Preview(token, getVolume());
+        sound.Preview(kind, token, getVolume());
     }
 
     private void TryImport(string path)
     {
         try
         {
-            var token = sound.AddUserFile(path);
+            var token = sound.AddUserFile(kind, path);
             setToken(token);
-            sound.Preview(token, getVolume());
+            sound.Preview(kind, token, getVolume());
         }
         catch (Exception exception)
         {

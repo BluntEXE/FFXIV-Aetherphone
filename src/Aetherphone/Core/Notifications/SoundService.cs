@@ -5,44 +5,47 @@ namespace Aetherphone.Core.Notifications;
 internal sealed class SoundService : IDisposable
 {
     private readonly Configuration configuration;
-    private readonly SoundLibrary library;
+    private readonly SoundLibrary ringtones;
+    private readonly SoundLibrary notifications;
     private readonly SoundEffectPlayer player;
 
-    public SoundService(Configuration configuration, SoundLibrary library, SoundEffectPlayer player)
+    public SoundService(Configuration configuration, SoundLibrary ringtones, SoundLibrary notifications,
+        SoundEffectPlayer player)
     {
         this.configuration = configuration;
-        this.library = library;
+        this.ringtones = ringtones;
+        this.notifications = notifications;
         this.player = player;
     }
 
-    public IReadOnlyList<string> Options => library.Options;
+    public IReadOnlyList<string> Options(SoundKind kind) => For(kind).Options;
 
-    public string Resolve(string? token) => library.Resolve(token);
+    public string Resolve(SoundKind kind, string? token) => For(kind).Resolve(token);
 
-    public string Label(string? token)
+    public string Label(SoundKind kind, string? token)
     {
-        var resolved = library.Resolve(token);
+        var resolved = For(kind).Resolve(token);
         return SoundTokens.TryFile(resolved, out var fileName)
             ? SoundLibrary.PrettyFileName(fileName)
             : Loc.T(L.Catalogs.RingtoneSilent);
     }
 
-    public void Preview(string? token, float volume)
+    public void Preview(SoundKind kind, string? token, float volume)
     {
         player.StopOneShots();
-        Play(token, volume);
+        Play(kind, token, volume);
     }
 
     public void StopPreview() => player.StopOneShots();
 
-    public string AddUserFile(string sourcePath) => library.AddUserFile(sourcePath);
+    public string AddUserFile(SoundKind kind, string sourcePath) => For(kind).AddUserFile(sourcePath);
 
     public void PlayNotification(string appId) =>
-        Play(configuration.ResolveNotificationToken(appId), configuration.NotificationVolume);
+        Play(SoundKind.Notification, configuration.ResolveNotificationToken(appId), configuration.NotificationVolume);
 
     public void StartCallRing()
     {
-        if (TryResolvePath(configuration.RingtoneSound, out var path))
+        if (TryResolvePath(SoundKind.Ringtone, configuration.RingtoneSound, out var path))
         {
             player.PlayLoop(path, configuration.RingtoneVolume);
         }
@@ -50,16 +53,19 @@ internal sealed class SoundService : IDisposable
 
     public void StopCallRing() => player.StopLoop();
 
-    private void Play(string? token, float volume)
+    private SoundLibrary For(SoundKind kind) => kind == SoundKind.Ringtone ? ringtones : notifications;
+
+    private void Play(SoundKind kind, string? token, float volume)
     {
-        if (TryResolvePath(token, out var path))
+        if (TryResolvePath(kind, token, out var path))
         {
             player.PlayOnce(path, volume);
         }
     }
 
-    private bool TryResolvePath(string? token, out string path)
+    private bool TryResolvePath(SoundKind kind, string? token, out string path)
     {
+        var library = For(kind);
         var resolved = library.Resolve(token);
         if (SoundTokens.TryFile(resolved, out var fileName))
         {

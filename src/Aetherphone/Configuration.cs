@@ -68,8 +68,8 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public string LightWallpaperId { get; set; } = "DuskLight";
     public string DarkWallpaperId { get; set; } = "DuskDark";
     public List<CustomWallpaper> CustomWallpapers { get; set; } = new();
-    public string RingtoneSound { get; set; } = SoundTokens.Default;
-    public string NotificationSound { get; set; } = SoundTokens.Default;
+    public string RingtoneSound { get; set; } = SoundLibrary.BundledRingtoneToken;
+    public string NotificationSound { get; set; } = SoundLibrary.BundledNotificationToken;
     public float RingtoneVolume { get; set; } = 0.8f;
     public float NotificationVolume { get; set; } = 0.8f;
     public float MusicVolume { get; set; } = 0.6f;
@@ -443,12 +443,12 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
 
         if (SoundTokens.TryUpgradeLegacy(RingtoneSound, out var ringtone))
         {
-            RingtoneSound = ringtone;
+            RingtoneSound = ringtone.Length == 0 ? SoundLibrary.BundledRingtoneToken : ringtone;
         }
 
         if (SoundTokens.TryUpgradeLegacy(NotificationSound, out var notification))
         {
-            NotificationSound = notification;
+            NotificationSound = notification.Length == 0 ? SoundLibrary.BundledNotificationToken : notification;
         }
 
         foreach (var pair in NotificationSettings)

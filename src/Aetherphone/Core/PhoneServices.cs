@@ -133,11 +133,14 @@ internal sealed class PhoneServices : IDisposable
         var weather = new WeatherService(dataManager, clientState);
         var weatherControl = new WeatherControl(weather, framework, clientState, condition,
             installer.Gate("skywatcher"));
-        var soundBundledDirectory = new DirectoryInfo(
-            Path.Combine(Plugin.PluginInterface.AssemblyLocation.DirectoryName ?? string.Empty, "Sounds"));
-        var soundUserDirectory = new DirectoryInfo(Path.Combine(configDirectory.FullName, "Sounds"));
-        var soundLibrary = new SoundLibrary(soundBundledDirectory, soundUserDirectory);
-        var sound = new SoundService(configuration, soundLibrary, new SoundEffectPlayer());
+        var soundBundledRoot = Path.Combine(Plugin.PluginInterface.AssemblyLocation.DirectoryName ?? string.Empty,
+            "Sounds");
+        var soundUserRoot = Path.Combine(configDirectory.FullName, "Sounds");
+        var ringtoneLibrary = new SoundLibrary(new DirectoryInfo(Path.Combine(soundBundledRoot, "Ringtones")),
+            new DirectoryInfo(Path.Combine(soundUserRoot, "Ringtones")));
+        var notificationLibrary = new SoundLibrary(new DirectoryInfo(Path.Combine(soundBundledRoot, "Notifications")),
+            new DirectoryInfo(Path.Combine(soundUserRoot, "Notifications")));
+        var sound = new SoundService(configuration, ringtoneLibrary, notificationLibrary, new SoundEffectPlayer());
         var notifications = new NotificationService(sound, configuration, installer, framework);
         var characterWatch = new CharacterWatch(framework);
         var messageArchive = new MessageArchive(new DirectoryInfo(Path.Combine(configDirectory.FullName, "Messages")));
