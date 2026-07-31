@@ -64,7 +64,7 @@ internal sealed class MinimizedPhone : IDisposable
 
     public static void DrawShell(ImDrawListPtr dl, in ChassisGeometry geometry, PhoneTheme theme)
     {
-        DeviceChrome.DrawShell(dl, geometry, ImGuiHelpers.GlobalScale, theme.Case, theme.ScreenBase);
+        DeviceChrome.DrawShell(dl, geometry, ImGuiHelpers.GlobalScale, theme, 1f);
     }
 
     public static void DrawFace(ImDrawListPtr dl, in ChassisGeometry geometry, PhoneTheme theme, float scale,

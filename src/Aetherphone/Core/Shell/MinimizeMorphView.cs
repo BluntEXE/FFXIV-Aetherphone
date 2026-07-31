@@ -10,7 +10,6 @@ namespace Aetherphone.Core.Shell;
 
 internal sealed class MinimizeMorphView
 {
-    private const float ArtFadeProgress = 0.18f;
     private readonly ThemeProvider themes;
     private readonly MinimizeTransition minimize;
     private readonly MinimizedPhone minimizedView;
@@ -52,7 +51,7 @@ internal sealed class MinimizeMorphView
 
         var shell = ImGui.GetWindowDrawList();
         Elevation.Squircle(shell, geometry.Body.Min, geometry.Body.Max, geometry.BodyRadius, scale, eased);
-        DeviceChrome.DrawShell(shell, geometry, scale, theme, 1f - Math.Clamp(eased / ArtFadeProgress, 0f, 1f));
+        DeviceChrome.DrawShell(shell, geometry, scale, theme, 1f);
         RevealMorphContent(DeviceChrome.Chassis(device, theme), theme, geometry, eased);
 
         var raw = Math.Clamp((eased - 0.5f) / 0.4f, 0f, 1f);
