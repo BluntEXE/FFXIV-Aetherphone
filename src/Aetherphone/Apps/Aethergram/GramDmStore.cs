@@ -361,6 +361,10 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
 
     protected override string MessageBodyOf(GramMessageDto message) => message.Body;
 
+    protected override int MessageKindOf(GramMessageDto message) => message.Kind;
+
+    protected override string MessageSenderIdOf(GramMessageDto message) => message.SenderId;
+
     protected override ReactionSummaryDto[]? ReactionsOf(GramMessageDto message) => message.Reactions;
 
     protected override GramMessageDto WithReactions(GramMessageDto message, ReactionSummaryDto[]? reactions) =>

@@ -1329,7 +1329,7 @@
   "encryption.safetyChanged": "Der Sicherheitsschlüssel von {0} hat sich geändert.",
   "encryption.encryptedIndicator": "Ende-zu-Ende-verschlüsselt",
   "encryption.plaintextIndicator": "Nicht verschlüsselt",
-  "encryption.reportDisclosure": "Diese Nachricht und bis zu 5 vorherige Nachrichten werden den Moderatoren entschlüsselt übermittelt.",
+  "encryption.reportDisclosure": "Diese Nachricht und bis zu 5 vorherige Nachrichten, einschließlich Fotos und Sprachnachrichten, werden den Moderatoren entschlüsselt übermittelt.",
   "encryption.reportMessageAction": "Nachricht melden",
   "encryption.copyTextAction": "Text kopieren",
   "encryption.infoTitle": "Verschlüsselung",

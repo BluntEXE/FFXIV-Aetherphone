@@ -20,6 +20,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     protected const int VoiceMediaKind = 3;
     protected const int PostShareKind = 4;
     protected const int StoryReplyKind = 5;
+    private const string ReportEvidenceUploadScope = "report-evidence";
     private static readonly TimeSpan ForegroundInboxPollInterval = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan BackgroundInboxPollInterval = TimeSpan.FromSeconds(120);
     private static readonly TimeSpan ViewingGrace = TimeSpan.FromSeconds(4);
@@ -174,6 +175,10 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     protected abstract int MessageEncVersionOf(TMessage message);
 
     protected abstract string MessageBodyOf(TMessage message);
+
+    protected abstract int MessageKindOf(TMessage message);
+
+    protected abstract string MessageSenderIdOf(TMessage message);
 
     protected abstract ReactionSummaryDto[]? ReactionsOf(TMessage message);
 
@@ -1123,15 +1128,108 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     public void ReportMessage(string messageId, string? reason, Action<bool> onComplete)
     {
-        if (!ReportReveals.TryCollect(messages, messageId, RevealForReport, out var revealed))
+        var snapshot = messages;
+        var threadId = currentThreadId;
+        if (!ReportReveals.TryCollect(snapshot, messageId, RevealForReport, out var revealed))
         {
             onComplete(false);
             return;
         }
 
         work.Run("report message", async token =>
-            await safety.ReportAsync(ReportTargetType, messageId, reason, token, revealed).ConfigureAwait(false),
-            onComplete);
+        {
+            var evidence = await AttachMediaEvidenceAsync(threadId, snapshot, revealed, token).ConfigureAwait(false);
+            return await safety.ReportAsync(ReportTargetType, messageId, reason, token, evidence).ConfigureAwait(false);
+        }, onComplete);
+    }
+
+    private async Task<RevealedMessageDto[]?> AttachMediaEvidenceAsync(string? threadId, TMessage[] snapshot,
+        RevealedMessageDto[]? revealed, CancellationToken token)
+    {
+        if (revealed is null || threadId is null)
+        {
+            return revealed;
+        }
+
+        var updated = revealed;
+        for (var index = 0; index < revealed.Length; index++)
+        {
+            var uploaded = await UploadMediaEvidenceAsync(threadId, snapshot, revealed[index].MessageId, token)
+                .ConfigureAwait(false);
+            if (uploaded is not { } evidence)
+            {
+                continue;
+            }
+
+            if (ReferenceEquals(updated, revealed))
+            {
+                updated = (RevealedMessageDto[])revealed.Clone();
+            }
+
+            updated[index] = revealed[index] with
+            {
+                MediaKey = evidence.Key,
+                MediaContentType = evidence.ContentType,
+            };
+        }
+
+        return updated;
+    }
+
+    private async Task<(string Key, string ContentType)?> UploadMediaEvidenceAsync(string threadId,
+        TMessage[] snapshot, string messageId, CancellationToken token)
+    {
+        TMessage? message = null;
+        for (var index = 0; index < snapshot.Length; index++)
+        {
+            if (snapshot[index].Id == messageId)
+            {
+                message = snapshot[index];
+                break;
+            }
+        }
+
+        if (message is null || MessageEncVersionOf(message) != EnvelopeCodec.VersionEnvelope)
+        {
+            return null;
+        }
+
+        var kind = MessageKindOf(message);
+        if (kind != ImageMediaKind && kind != VoiceMediaKind)
+        {
+            return null;
+        }
+
+        var url = await FetchMediaUrlRequestAsync(messageId, token).ConfigureAwait(false);
+        if (url is null || !cipher.TryGetGeneration(messageId, out var generation))
+        {
+            return null;
+        }
+
+        var sealedBytes = await media.DownloadAsync(new Uri(url), token).ConfigureAwait(false);
+        if (sealedBytes is null)
+        {
+            return null;
+        }
+
+        var plain = cipher.TryDecryptMedia(ScopeFor(threadId), generation, sealedBytes, MessageSenderIdOf(message),
+            kind);
+        if (plain is null)
+        {
+            AepLog.Warning($"[{logTag}] report evidence skipped: media decrypt failed ({messageId})");
+            return null;
+        }
+
+        var contentType = kind == VoiceMediaKind ? "audio/wav" : "image/jpeg";
+        var upload = await media.UploadUrlAsync(contentType, ReportEvidenceUploadScope, token).ConfigureAwait(false);
+        if (upload is null
+            || !await media.UploadImageAsync(upload.UploadUrl, plain, contentType, token).ConfigureAwait(false))
+        {
+            AepLog.Warning($"[{logTag}] report evidence skipped: upload failed ({messageId})");
+            return null;
+        }
+
+        return (upload.Key, contentType);
     }
 
     private RevealedMessageDto? RevealForReport(TMessage message)

@@ -1329,7 +1329,7 @@
   "encryption.safetyChanged": "La clave de seguridad de {0} ha cambiado.",
   "encryption.encryptedIndicator": "Cifrado de extremo a extremo",
   "encryption.plaintextIndicator": "Sin cifrar",
-  "encryption.reportDisclosure": "Este mensaje y hasta 5 mensajes anteriores se compartirán descifrados con los moderadores.",
+  "encryption.reportDisclosure": "Este mensaje y hasta 5 mensajes anteriores, incluidas las fotos y notas de voz, se compartirán descifrados con los moderadores.",
   "encryption.reportMessageAction": "Denunciar mensaje",
   "encryption.copyTextAction": "Copiar texto",
   "encryption.infoTitle": "Cifrado",

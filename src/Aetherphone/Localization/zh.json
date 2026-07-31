@@ -1329,7 +1329,7 @@
   "encryption.safetyChanged": "{0} 的安全密钥已更改。",
   "encryption.encryptedIndicator": "端到端加密",
   "encryption.plaintextIndicator": "未加密",
-  "encryption.reportDisclosure": "此消息以及之前最多 5 条消息将以解密形式提交给管理员。",
+  "encryption.reportDisclosure": "此消息以及之前最多 5 条消息（包括照片和语音消息）将以解密形式提交给管理员。",
   "encryption.reportMessageAction": "举报消息",
   "encryption.copyTextAction": "复制文本",
   "encryption.infoTitle": "加密",

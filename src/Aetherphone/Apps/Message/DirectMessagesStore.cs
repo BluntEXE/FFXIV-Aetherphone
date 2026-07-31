@@ -149,6 +149,10 @@ internal sealed class DirectMessagesStore : ChatThreadStoreBase<ChatMessageDto, 
 
     protected override string MessageBodyOf(ChatMessageDto message) => message.Body;
 
+    protected override int MessageKindOf(ChatMessageDto message) => message.Kind;
+
+    protected override string MessageSenderIdOf(ChatMessageDto message) => message.SenderId;
+
     protected override ReactionSummaryDto[]? ReactionsOf(ChatMessageDto message) => message.Reactions;
 
     protected override ChatMessageDto WithReactions(ChatMessageDto message, ReactionSummaryDto[]? reactions) =>

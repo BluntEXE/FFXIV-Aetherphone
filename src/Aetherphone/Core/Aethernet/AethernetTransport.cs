@@ -112,6 +112,11 @@ internal sealed class AethernetTransport
         return http.PutBytesAsync(uri, content, contentType, token, UploadBearerFor(uri));
     }
 
+    public Task<byte[]?> GetBytesAsync(Uri uri, CancellationToken token)
+    {
+        return http.GetBytesAsync(uri, token);
+    }
+
     private string? UploadBearerFor(Uri uri)
     {
         if (!Uri.TryCreate(Session.BaseUrl, UriKind.Absolute, out var baseUri))

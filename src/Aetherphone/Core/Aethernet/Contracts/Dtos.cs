@@ -223,7 +223,12 @@ internal sealed record CreateCommentRequest(string Text);
 
 internal sealed record CommentPage(CommentDto[] Items, string? NextCursor);
 
-internal sealed record RevealedMessageDto(string MessageId, string PlainText, string? FrankingKey);
+internal sealed record RevealedMessageDto(
+    string MessageId,
+    string PlainText,
+    string? FrankingKey,
+    string? MediaKey = null,
+    string? MediaContentType = null);
 
 internal sealed record ReportRequest(
     string TargetType,

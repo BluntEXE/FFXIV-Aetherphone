@@ -1329,7 +1329,7 @@
   "encryption.safetyChanged": "{0} adlı kişinin güvenlik anahtarı değişti.",
   "encryption.encryptedIndicator": "Uçtan uca şifreli",
   "encryption.plaintextIndicator": "Şifrelenmemiş",
-  "encryption.reportDisclosure": "Bu mesaj ve önceki en fazla 5 mesaj, şifresi çözülmüş olarak moderatörlerle paylaşılacak.",
+  "encryption.reportDisclosure": "Bu mesaj ve önceki en fazla 5 mesaj, fotoğraflar ve sesli mesajlar dahil, şifresi çözülmüş olarak moderatörlerle paylaşılacak.",
   "encryption.reportMessageAction": "Mesajı bildir",
   "encryption.copyTextAction": "Metni kopyala",
   "encryption.infoTitle": "Şifreleme",

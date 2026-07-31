@@ -326,6 +326,10 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
 
     protected override string MessageBodyOf(VelvetMessageDto message) => message.Body;
 
+    protected override int MessageKindOf(VelvetMessageDto message) => message.Kind;
+
+    protected override string MessageSenderIdOf(VelvetMessageDto message) => message.SenderId;
+
     protected override ReactionSummaryDto[]? ReactionsOf(VelvetMessageDto message) => message.Reactions;
 
     protected override VelvetMessageDto WithReactions(VelvetMessageDto message, ReactionSummaryDto[]? reactions) =>

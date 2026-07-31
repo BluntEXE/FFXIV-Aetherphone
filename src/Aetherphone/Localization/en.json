@@ -1329,7 +1329,7 @@
   "encryption.safetyChanged": "{0}'s security key changed.",
   "encryption.encryptedIndicator": "End-to-end encrypted",
   "encryption.plaintextIndicator": "Not encrypted",
-  "encryption.reportDisclosure": "This message and up to 5 previous messages will be shared with the moderators, decrypted.",
+  "encryption.reportDisclosure": "This message and up to 5 previous messages, including photos and voice notes, will be shared with the moderators, decrypted.",
   "encryption.reportMessageAction": "Report message",
   "encryption.copyTextAction": "Copy text",
   "encryption.infoTitle": "Encryption",
