@@ -23,6 +23,7 @@ internal static class AppAccents
         ["collections"] = new(0.36f, 0.62f, 0.96f, 1f),
         ["skywatcher"] = new(0.28f, 0.68f, 0.92f, 1f),
         ["venues"] = new(0.93f, 0.28f, 0.55f, 1f),
+        ["venue-sync"] = new(0.00f, 0.706f, 1.00f, 1f),
         ["maps"] = new(0.20f, 0.62f, 0.86f, 1f),
         ["news"] = new(0.96f, 0.44f, 0.27f, 1f),
         ["market"] = new(0.92f, 0.62f, 0.18f, 1f),

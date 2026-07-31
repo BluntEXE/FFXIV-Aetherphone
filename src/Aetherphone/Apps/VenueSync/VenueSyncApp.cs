@@ -11,8 +11,8 @@ namespace Aetherphone.Apps.VenueSync;
 internal sealed partial class VenueSyncApp : IPhoneApp
 {
     public string Id => "venue-sync";
-    public string DisplayName => "Venue Sync";
-    public string Glyph => "Vs";
+    public string DisplayName => "Venue Manager";
+    public string Glyph => "VM";
     public int BadgeCount => 0;
 
     private readonly VenueSyncApiClient client;
