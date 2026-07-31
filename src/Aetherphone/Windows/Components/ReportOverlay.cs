@@ -82,6 +82,7 @@ internal sealed class ReportOverlay
             drawList.AddRectFilled(screen.Min, screen.Max,
                 ImGui.GetColorU32(new Vector4(0f, 0f, 0f, MaxDim * opacity)));
             var menuWasOpen = categoryMenu.Open;
+            categoryMenu.Gate();
             var interactive = active is not null && opacity > 0.5f && !menuWasOpen;
             var cardRect = DrawCard(screen, theme, shown, opacity, cardScale, interactive);
             DrawCategoryMenu(screen, theme);
