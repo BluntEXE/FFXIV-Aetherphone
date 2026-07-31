@@ -215,6 +215,13 @@ internal sealed partial class YellowPagesApp
         var body = new Rect(new Vector2(area.Min.X, top), new Vector2(area.Max.X, composerTop));
         if (thread is null)
         {
+            if (!inquiries.LoadedOnce)
+            {
+                LoadingPulse.Draw(body.Center, 13f * scale, ui.Accent, AppPalettes.YellowPages.MutedInk,
+                    Loc.T(L.Common.Loading));
+                return;
+            }
+
             EmptyState.Draw(body, ui, FontAwesomeIcon.Comments, Loc.T(L.YellowPages.UnavailableTitle),
                 Loc.T(L.YellowPages.UnavailableHint));
             return;
@@ -600,11 +607,11 @@ internal sealed partial class YellowPagesApp
         return null;
     }
 
-    private void OpenInquiryThread(string inquiryId)
+    private void OpenInquiryThread(string inquiryId, bool animate = true)
     {
         inquiryDraft = string.Empty;
         inquiries.Open(inquiryId);
-        router.Push(YellowPagesRoute.Thread(inquiryId));
+        router.Push(YellowPagesRoute.Thread(inquiryId), animate);
     }
 
     private void OpenInquiriesFor(string adId)

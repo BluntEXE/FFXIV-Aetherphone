@@ -31,6 +31,7 @@ internal sealed class NotificationRouter
     private const int TypeQuote = 13;
     private const int TypeFollowRequest = 14;
     private const int TypeFollowAccept = 15;
+    private const int TypeAdInquiry = 19;
     private const int TypeMissedCall = 20;
     private const string CallGroupPrefix = "call:";
     private readonly INavigator navigation;
@@ -115,6 +116,11 @@ internal sealed class NotificationRouter
         else if (notification.AppId == MusterAppId && !string.IsNullOrEmpty(notification.GroupKey))
         {
             musterLauncher.RequestDetail(notification.GroupKey);
+        }
+        else if (notification.AppId == YellowPagesAppId && notification.SocialType == TypeAdInquiry
+                 && !string.IsNullOrEmpty(notification.GroupKey))
+        {
+            yellowPagesLauncher.RequestInquiry(notification.GroupKey);
         }
         else if (notification.AppId == YellowPagesAppId && !string.IsNullOrEmpty(notification.GroupKey))
         {
