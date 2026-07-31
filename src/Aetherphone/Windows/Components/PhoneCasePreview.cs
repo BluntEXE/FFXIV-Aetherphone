@@ -13,13 +13,13 @@ internal static class PhoneCasePreview
     public static void Draw(ImDrawListPtr drawList, Rect body, PhoneCase option, PhoneTheme theme, float scale)
     {
         var finish = new CaseFinish(option.Tint);
-        var inner = option.Kind == PhoneCaseKind.Art ? Shrink(body, 1f + 2f * CaseArt.MarginFraction) : body;
+        var inner = Shrink(body, 1f + 2f * CaseArt.MarginFraction);
         var chassis = ChassisGeometry.Preview(inner, option.Kind);
         if (option.Kind == PhoneCaseKind.Art && PhoneCaseTextures.Thumb(option.TextureId) is { } thumb)
         {
             Squircle.Fill(drawList, chassis.Body.Min, chassis.Body.Max, chassis.BodyRadius,
                 ImGui.GetColorU32(finish.Frame));
-            CaseArt.Quad(drawList, thumb, CaseArt.RectFor(chassis.Body), false, CaseArt.Tint(1f));
+            CaseArt.QuadClipped(drawList, thumb, CaseArt.RectFor(chassis.Body), false, CaseArt.Tint(1f));
             Squircle.Fill(drawList, chassis.Glass.Min, chassis.Glass.Max, chassis.GlassRadius,
                 ImGui.GetColorU32(finish.Glass));
             Squircle.Fill(drawList, chassis.Screen.Min, chassis.Screen.Max, chassis.ScreenRadius,

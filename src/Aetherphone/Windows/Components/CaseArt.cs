@@ -21,11 +21,11 @@ internal static class CaseArt
     public static void Quad(ImDrawListPtr drawList, ImTextureID texture, Rect art, bool landscape, uint tint)
     {
         drawList.PushClipRectFullScreen();
-        Draw(drawList, texture, art, landscape, tint);
+        QuadClipped(drawList, texture, art, landscape, tint);
         drawList.PopClipRect();
     }
 
-    private static void Draw(ImDrawListPtr drawList, ImTextureID texture, Rect art, bool landscape, uint tint)
+    public static void QuadClipped(ImDrawListPtr drawList, ImTextureID texture, Rect art, bool landscape, uint tint)
     {
         if (!landscape)
         {
@@ -61,7 +61,7 @@ internal static class CaseArt
         }
 
         drawList.PushClipRect(clip.Min, clip.Max, false);
-        Draw(drawList, texture, art, landscape, Opaque);
+        QuadClipped(drawList, texture, art, landscape, Opaque);
         drawList.PopClipRect();
     }
 }
