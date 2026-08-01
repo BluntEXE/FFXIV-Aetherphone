@@ -912,6 +912,40 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release0995 =
+        {
+            new("changelog.r0995.0", "The phone has a new body: a machined metal frame and a glass band, with one curve shared by the screen, the glass, and every case"),
+            new("changelog.r0995.1", "Cases are now hand-painted art instead of flat tints, starting with Titanium and Silkie; the Silkie design was made by Nui"),
+            new("changelog.r0995.2", "Case art can spill past the edge of the phone, and it stays visible while the phone is minimized"),
+            new("changelog.r0995.3", "The phone now ships with its own ringtones and notification sounds, and calls and notifications each pick from their own library"),
+            new("changelog.r0995.4", "Accounts can now carry badges such as Verified, Support, Contributor, and Patreon member, shown as a glyph and a colored name across the social apps, each with its own animated effect; more information about badges will be shared in the near future"),
+            new("changelog.r0995.5", "Settings lists your badges under your account, and you can unequip any badge you would rather not show"),
+            new("changelog.r0995.6", "Reporting a message now attaches its photo or voice note to the report as evidence"),
+            new("changelog.r0995.7", "Posts, comments, and stories removed by moderation now disappear from every phone right away"),
+            new("changelog.r0995.8", "A suspension now locks only the social apps; the rest of the phone keeps working"),
+            new("changelog.r0995.9", "Comments, galleries, likers, story viewers, inboxes, and other long lists now load more as you scroll instead of stopping at the first batch"),
+            new("changelog.r0995.10", "A Velvet post's audience can be changed after posting, from the menu on the post"),
+            new("changelog.r0995.11", "The Support Aetherphone button in Settings moved under the account section"),
+            new("changelog.r0995.12", "Fixed an issue where old tags could still be seen on Velvet profiles"),
+            new("changelog.r0995.13", "Tags that are no longer offered now appear as removable chips when you edit your Velvet profile, so you can clear them off"),
+            new("changelog.r0995.14", "Fixed an issue where notifications could stop appearing, or could not be dismissed or turned off"),
+            new("changelog.r0995.15", "Fixed tapping a notification doing nothing when its app was already open"),
+            new("changelog.r0995.16", "Fixed conversations being marked as read while you were not looking at them"),
+            new("changelog.r0995.17", "Fixed profiles showing an outdated copy: they now refresh every time you open one"),
+            new("changelog.r0995.18", "Fixed the Velvet profile editor staying open after a save and saying nothing when saving failed"),
+            new("changelog.r0995.19", "Fixed a freshly created Velvet post not showing in your profile gallery until the next refresh"),
+            new("changelog.r0995.20", "Fixed Discover cards in Velvet stacking on top of each other"),
+            new("changelog.r0995.21", "Fixed the Velvet request count lagging behind and counting requests it could not show"),
+            new("changelog.r0995.22", "Fixed Yellow Pages inquiry notifications not opening the conversation"),
+            new("changelog.r0995.23", "Fixed clicks passing through one window into whatever sat behind it, contributed by Ehno"),
+            new("changelog.r0995.24", "Fixed taps leaking through the emoji picker, mention popups, and report categories to the buttons underneath"),
+            new("changelog.r0995.25", "Fixed cut-off text, hover scrolling, and overlapping layouts across many screens, contributed by Ehno"),
+            new("changelog.r0995.26", "Fixed the Jobs header shifting when the categories button hides, with long titles scrolling instead of clipping, contributed by Ehno"),
+            new("changelog.r0995.27", "Fixed very large images being able to exhaust memory: images are now checked and capped before they are decoded, contributed by BluntEXE"),
+            new("changelog.r0995.28", "Fixed long confirmation popup titles being cut off instead of wrapping"),
+            new("changelog.r0995.29", "Fixed icons sitting slightly off-center in round buttons"),
+        };
+
         public static readonly LocString[] Release0994 =
         {
             new("changelog.r0994.0", "Fixed apps closing the instant you opened them and returning you to the home screen while you were signed out"),
