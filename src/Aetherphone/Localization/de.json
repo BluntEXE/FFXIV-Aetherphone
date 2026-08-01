@@ -1279,7 +1279,6 @@
   "account.xivConnecting": "Verbinde mit XIVAuth…",
   "account.patreonSection": "Patreon",
   "account.patreonLink": "Patreon verknüpfen",
-  "account.patreonLinkSummary": "Vorteile freischalten",
   "account.patreonHint": "Unterstütze Aetherphone auf Patreon und verknüpfe dein Konto, um deine Mitgliedsvorteile freizuschalten. Die Vorteile folgen automatisch deiner Mitgliedschaft.",
   "account.patreonWaitingBody": "Wir haben Patreon in deinem Browser geöffnet. Bestätige dort die Verknüpfung — diese Seite aktualisiert sich von selbst, sobald es fertig ist.",
   "account.patreonOpen": "Patreon öffnen",

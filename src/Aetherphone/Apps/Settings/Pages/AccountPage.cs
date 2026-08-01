@@ -413,7 +413,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         var linkCard = GroupCard.Begin(theme, 1);
         var tint = RoleInk.For(RoleKind.Patreon, RoleInk.IsLight(theme));
         if (SettingsRow.Link(linkCard.NextRow(), FontAwesomeIcon.Star, tint, Loc.T(L.Account.PatreonLink),
-                Loc.T(L.Account.PatreonLinkSummary), theme) && !patreonFlow.Busy)
+                string.Empty, theme) && !patreonFlow.Busy)
         {
             patreonFlow.Start();
         }

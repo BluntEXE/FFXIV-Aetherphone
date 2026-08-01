@@ -1686,7 +1686,6 @@ internal static class L
         public static readonly LocString XivConnecting = new("account.xivConnecting", "Connecting to XIVAuth…");
         public static readonly LocString PatreonSection = new("account.patreonSection", "Patreon");
         public static readonly LocString PatreonLink = new("account.patreonLink", "Link Patreon");
-        public static readonly LocString PatreonLinkSummary = new("account.patreonLinkSummary", "Unlock member perks");
         public static readonly LocString PatreonHint = new("account.patreonHint", "Back Aetherphone on Patreon and link your account to unlock your member perks. Perks follow your membership automatically.");
         public static readonly LocString PatreonWaitingBody = new("account.patreonWaitingBody", "We opened Patreon in your browser. Approve the link there — this page updates on its own once it's done.");
         public static readonly LocString PatreonOpen = new("account.patreonOpen", "Open Patreon");

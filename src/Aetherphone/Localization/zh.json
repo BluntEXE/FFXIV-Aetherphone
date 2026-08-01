@@ -1279,7 +1279,6 @@
   "account.xivConnecting": "正在连接 XIVAuth…",
   "account.patreonSection": "Patreon",
   "account.patreonLink": "关联 Patreon",
-  "account.patreonLinkSummary": "解锁会员特权",
   "account.patreonHint": "在 Patreon 上支持 Aetherphone 并关联账号,即可解锁会员特权。特权会随你的会员状态自动更新。",
   "account.patreonWaitingBody": "我们已在浏览器中打开 Patreon。请在那里确认关联 — 完成后此页面会自动更新。",
   "account.patreonOpen": "打开 Patreon",

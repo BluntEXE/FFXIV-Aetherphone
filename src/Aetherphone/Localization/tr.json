@@ -1279,7 +1279,6 @@
   "account.xivConnecting": "XIVAuth'a bağlanılıyor…",
   "account.patreonSection": "Patreon",
   "account.patreonLink": "Patreon'u bağla",
-  "account.patreonLinkSummary": "Üye ayrıcalıklarını aç",
   "account.patreonHint": "Patreon'da Aetherphone'a destek ol ve üye ayrıcalıklarını açmak için hesabını bağla. Ayrıcalıklar üyeliğini otomatik olarak takip eder.",
   "account.patreonWaitingBody": "Patreon'u tarayıcında açtık. Bağlantıyı orada onayla — işlem bitince bu sayfa kendiliğinden güncellenir.",
   "account.patreonOpen": "Patreon'u aç",

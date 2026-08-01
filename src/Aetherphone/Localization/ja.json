@@ -1279,7 +1279,6 @@
   "account.xivConnecting": "XIVAuthに接続中…",
   "account.patreonSection": "Patreon",
   "account.patreonLink": "Patreonを連携",
-  "account.patreonLinkSummary": "メンバー特典を解放",
   "account.patreonHint": "PatreonでAetherphoneを支援し、アカウントを連携するとメンバー特典が解放されます。特典はメンバーシップに合わせて自動的に更新されます。",
   "account.patreonWaitingBody": "ブラウザでPatreonを開きました。そちらで連携を承認してください — 完了するとこのページは自動的に更新されます。",
   "account.patreonOpen": "Patreonを開く",

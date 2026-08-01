@@ -1279,7 +1279,6 @@
   "account.xivConnecting": "Connecting to XIVAuth…",
   "account.patreonSection": "Patreon",
   "account.patreonLink": "Link Patreon",
-  "account.patreonLinkSummary": "Unlock member perks",
   "account.patreonHint": "Back Aetherphone on Patreon and link your account to unlock your member perks. Perks follow your membership automatically.",
   "account.patreonWaitingBody": "We opened Patreon in your browser. Approve the link there — this page updates on its own once it's done.",
   "account.patreonOpen": "Open Patreon",
