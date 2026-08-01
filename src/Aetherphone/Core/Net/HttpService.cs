@@ -14,8 +14,8 @@ internal sealed class HttpService : IDisposable
     private const long MaxResponseBytes = 32 * 1024 * 1024;
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(20);
     private static readonly TimeSpan UploadTimeout = TimeSpan.FromSeconds(60);
-    private static readonly TimeSpan DefaultRateLimitPause = TimeSpan.FromSeconds(60);
-    private static readonly TimeSpan MaxRateLimitPause = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan DefaultRateLimitPause = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan MaxRateLimitPause = TimeSpan.FromSeconds(30);
     private readonly HttpClient client;
     private readonly EtagCache etagCache = new();
     private readonly ConcurrentDictionary<string, long> pausedHostsUntilTicks = new(StringComparer.OrdinalIgnoreCase);
