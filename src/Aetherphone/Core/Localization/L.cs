@@ -945,6 +945,9 @@ internal static class L
             new("changelog.r0995.27", "Fixed very large images being able to exhaust memory: images are now checked and capped before they are decoded, contributed by BluntEXE"),
             new("changelog.r0995.28", "Fixed long confirmation popup titles being cut off instead of wrapping"),
             new("changelog.r0995.29", "Fixed icons sitting slightly off-center in round buttons"),
+            new("changelog.r0995.30", "The network now gives every account far more headroom, so sending several messages in a row no longer trips a rate limit"),
+            new("changelog.r0995.31", "A rare network pause now lasts seconds instead of minutes"),
+            new("changelog.r0995.32", "A small capsule under the clock counts down any network pause, so the phone never goes quiet without saying why"),
         };
 
         public static readonly LocString[] Release0994 =
