@@ -171,7 +171,7 @@ internal sealed class PhoneServices : IDisposable
         var imageRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "images"));
         var imageDisk = new DiskCache(imageRoot, 128L * 1024 * 1024);
         var remoteImages = new RemoteImageCache(http, imageDisk);
-        var pluginCatalog = new PluginCatalog(remoteImages);
+        var pluginCatalog = new PluginCatalog(remoteImages, http, imageDisk);
         var lodestone = new LodestoneService(configuration, http, media, cacheRoot);
         var lookup = new LookupService(lodestone);
         var aethernetSession = new AethernetSession(configuration, framework);

@@ -1,4 +1,6 @@
+using System.Collections.Concurrent;
 using Aetherphone.Core.Media;
+using Aetherphone.Core.Net;
 using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Plugin;
 
@@ -22,20 +24,28 @@ internal sealed class PluginEntry
 internal sealed class PluginCatalog
 {
     private const string OwnInternalName = "Aetherphone";
+    private const long RecheckIntervalMilliseconds = 1000;
+    private const string DistRepoRoot = "https://raw.githubusercontent.com/goatcorp/PluginDistD17/main";
+    private static readonly string[] DistChannels = { "stable", "testing/live" };
+    private static readonly TimeSpan IconMaxAge = TimeSpan.FromDays(30);
 
     private readonly RemoteImageCache images;
+    private readonly HttpService http;
+    private readonly DiskCache disk;
     private readonly List<PluginEntry> entries = new();
     private readonly Dictionary<string, PluginEntry> byName = new(StringComparer.OrdinalIgnoreCase);
-    private const long RecheckIntervalMilliseconds = 1000;
+    private readonly ConcurrentDictionary<string, byte> iconless = new(StringComparer.OrdinalIgnoreCase);
 
     private int lastPluginCount = -1;
     private int lastCommandCount = -1;
     private long nextRecheckTick;
     private bool dirty = true;
 
-    public PluginCatalog(RemoteImageCache images)
+    public PluginCatalog(RemoteImageCache images, HttpService http, DiskCache disk)
     {
         this.images = images;
+        this.http = http;
+        this.disk = disk;
     }
 
     public IReadOnlyList<PluginEntry> Entries
@@ -62,7 +72,119 @@ internal sealed class PluginCatalog
     public IDalamudTextureWrap? Icon(string internalName)
     {
         var entry = Find(internalName);
-        return entry is null || entry.IconUrl.Length == 0 ? null : images.Get(entry.IconUrl);
+        if (entry is null)
+        {
+            return null;
+        }
+
+        if (entry.IconUrl.Length > 0)
+        {
+            return images.Get(entry.IconUrl);
+        }
+
+        if (iconless.ContainsKey(entry.InternalName))
+        {
+            return null;
+        }
+
+        var name = entry.InternalName;
+        return images.GetKeyed(string.Concat("pluginicon:", name), token => FetchFallbackIconAsync(name, token));
+    }
+
+    private async Task<byte[]?> FetchFallbackIconAsync(string internalName, CancellationToken token)
+    {
+        var shipped = ReadShippedIcon(internalName);
+        if (shipped is not null)
+        {
+            return shipped;
+        }
+
+        for (var index = 0; index < DistChannels.Length; index++)
+        {
+            var url = string.Concat(DistRepoRoot, "/", DistChannels[index], "/", internalName, "/images/icon.png");
+            var cached = disk.Get(url, IconMaxAge);
+            if (cached is not null && LooksLikeImage(cached))
+            {
+                return cached;
+            }
+
+            var bytes = await http.GetBytesAsync(new Uri(url), token).ConfigureAwait(false);
+            if (bytes is null || !LooksLikeImage(bytes))
+            {
+                continue;
+            }
+
+            disk.Set(url, bytes);
+            return bytes;
+        }
+
+        iconless.TryAdd(internalName, 0);
+        return null;
+    }
+
+    private static byte[]? ReadShippedIcon(string internalName)
+    {
+        try
+        {
+            var launcherRoot =
+                Path.GetDirectoryName(Path.GetDirectoryName(Plugin.PluginInterface.ConfigDirectory.FullName));
+            if (launcherRoot is null)
+            {
+                return null;
+            }
+
+            var pluginRoot = Path.Combine(launcherRoot, "installedPlugins", internalName);
+            if (!Directory.Exists(pluginRoot))
+            {
+                return null;
+            }
+
+            var versions = Directory.GetDirectories(pluginRoot);
+            Array.Sort(versions, static (first, second) =>
+                Directory.GetLastWriteTimeUtc(second).CompareTo(Directory.GetLastWriteTimeUtc(first)));
+            for (var index = 0; index < versions.Length; index++)
+            {
+                var files = Directory.GetFiles(versions[index], "icon.png", SearchOption.AllDirectories);
+                if (files.Length == 0)
+                {
+                    continue;
+                }
+
+                var bytes = File.ReadAllBytes(files[0]);
+                if (LooksLikeImage(bytes))
+                {
+                    return bytes;
+                }
+            }
+
+            return null;
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning($"Reading the shipped icon of {internalName} failed: {exception.Message}");
+            return null;
+        }
+    }
+
+    private static bool LooksLikeImage(byte[] bytes)
+    {
+        if (bytes.Length < 12)
+        {
+            return false;
+        }
+
+        if (bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47)
+        {
+            return true;
+        }
+
+        if (bytes[0] == 0xFF && bytes[1] == 0xD8)
+        {
+            return true;
+        }
+
+        return bytes[0] == (byte)'R' && bytes[1] == (byte)'I' && bytes[2] == (byte)'F' && bytes[3] == (byte)'F' &&
+               bytes[8] == (byte)'W' && bytes[9] == (byte)'E' && bytes[10] == (byte)'B' && bytes[11] == (byte)'P';
     }
 
     public static bool TryOpenMainUi(string internalName)
