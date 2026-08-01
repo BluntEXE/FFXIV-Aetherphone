@@ -16,7 +16,7 @@ internal static class SupportButton
     private const double HeartbeatMs = 1500.0;
     private const double SheenMs = 3200.0;
 
-    public static bool Draw(string label, PhoneTheme theme)
+    public static bool Draw(string label, PhoneTheme theme, string? hint = null)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var drawList = ImGui.GetWindowDrawList();
@@ -57,6 +57,11 @@ internal static class SupportButton
 
         ImGui.SetCursorScreenPos(slotOrigin);
         ImGui.Dummy(new Vector2(available, size.Y + glowPad * 2f));
+        if (hint is not null)
+        {
+            HoverTooltip.Show(new Rect(origin, end), hint);
+        }
+
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

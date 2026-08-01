@@ -64,6 +64,12 @@ internal sealed class RootSettingsPage : ISettingsPage
                 navigator.Open(accountPage);
             }
 
+            ImGui.Dummy(new Vector2(0f, 20f * scale));
+            if (SupportButton.Draw(Loc.T(L.Settings.SupportAetherphone), theme, Loc.T(L.Settings.SupportHint)))
+            {
+                UrlActions.OpenInBrowser(AepConstants.PatreonUrl);
+            }
+
             for (var groupIndex = 0; groupIndex < groups.Count; groupIndex++)
             {
                 ImGui.Dummy(new Vector2(0f, (groupIndex == 0 ? 20f : 14f) * scale));
@@ -93,14 +99,6 @@ internal sealed class RootSettingsPage : ISettingsPage
                 }
             }
 
-            ImGui.Dummy(new Vector2(0f, 20f * scale));
-            if (SupportButton.Draw(Loc.T(L.Settings.SupportAetherphone), theme))
-            {
-                UrlActions.OpenInBrowser(AepConstants.PatreonUrl);
-            }
-
-            ImGui.Dummy(new Vector2(0f, 6f * scale));
-            SettingsSection.Hint(Loc.T(L.Settings.SupportHint), theme);
             ImGui.Dummy(new Vector2(0f, 22f * scale));
             DrawVersion(theme);
             ImGui.Dummy(new Vector2(0f, 14f * scale));
