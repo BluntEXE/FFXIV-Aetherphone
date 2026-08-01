@@ -913,6 +913,13 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release0996 =
+        {
+            new("changelog.r0996.0", "You can now link your Patreon account from the account section in Settings"),
+            new("changelog.r0996.1", "Linking grants your member perks automatically, including the Patreon member badge, and they follow your membership as it changes"),
+            new("changelog.r0996.2", "Settings shows whether your membership is active once linked, and you can unlink Patreon at any time"),
+        };
+
         public static readonly LocString[] Release0995 =
         {
             new("changelog.r0995.0", "The phone has a new body: a machined metal frame and a glass band, with one curve shared by the screen, the glass, and every case"),
@@ -1687,7 +1694,7 @@ internal static class L
         public static readonly LocString PatreonSection = new("account.patreonSection", "Patreon");
         public static readonly LocString PatreonLink = new("account.patreonLink", "Link Patreon");
         public static readonly LocString PatreonHint = new("account.patreonHint", "Back Aetherphone on Patreon and link your account to unlock your member perks. Perks follow your membership automatically.");
-        public static readonly LocString PatreonWaitingBody = new("account.patreonWaitingBody", "We opened Patreon in your browser. Approve the link there — this page updates on its own once it's done.");
+        public static readonly LocString PatreonWaitingBody = new("account.patreonWaitingBody", "We opened Patreon in your browser. Approve the link there. This page updates on its own once it's done.");
         public static readonly LocString PatreonOpen = new("account.patreonOpen", "Open Patreon");
         public static readonly LocString PatreonStatusLabel = new("account.patreonStatusLabel", "Membership");
         public static readonly LocString PatreonLinkedActive = new("account.patreonLinkedActive", "Active");
