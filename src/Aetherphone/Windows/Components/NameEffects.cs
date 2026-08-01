@@ -38,6 +38,7 @@ internal static class NameEffects
             RoleKind.Developer => NameEffectKind.Ripple,
             RoleKind.Support => NameEffectKind.Breath,
             RoleKind.Aide => NameEffectKind.Wave,
+            RoleKind.Aurelia => NameEffectKind.Wave,
             RoleKind.Verified => NameEffectKind.Gradient,
             _ => NameEffectKind.None,
         };

@@ -46,6 +46,7 @@ internal static class L
         public static readonly LocString RoleSupport = new("social.roleSupport", "Support");
         public static readonly LocString RoleContributor = new("social.roleContributor", "Contributor");
         public static readonly LocString RoleAide = new("social.roleAide", "Aide");
+        public static readonly LocString RoleAurelia = new("social.roleAurelia", "Aurelia");
         public static readonly LocString AspectSquare = new("social.aspectSquare", "Square");
         public static readonly LocString AspectPortrait = new("social.aspectPortrait", "Portrait");
         public static readonly LocString AspectLandscape = new("social.aspectLandscape", "Landscape");

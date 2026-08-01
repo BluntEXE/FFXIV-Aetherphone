@@ -11,6 +11,7 @@ internal enum RoleKind
     Support,
     Contributor,
     Aide,
+    Aurelia,
 }
 
 internal static class RoleInk
@@ -25,6 +26,8 @@ internal static class RoleInk
     private static readonly Vector4 AideBase = new(0.9804f, 0.5373f, 0.7137f, 1.00f);
     private static readonly Vector4 AideCrestBase = new(1.0000f, 1.0000f, 1.0000f, 1.00f);
     private static readonly Vector4 AideTroughBase = new(0.3569f, 0.8078f, 0.9804f, 1.00f);
+    private static readonly Vector4 AureliaBase = new(0.8588f, 0.7373f, 0.3412f, 1.00f);
+    private static readonly Vector4 AureliaDarkBase = new(0.0000f, 0.0000f, 0.0000f, 1.00f);
     private static readonly Vector4 NeutralDark = new(0.97f, 0.97f, 0.98f, 1.00f);
     private static readonly Vector4 NeutralLight = new(0.10f, 0.10f, 0.11f, 1.00f);
 
@@ -60,23 +63,28 @@ internal static class RoleInk
 
     public static Vector4 WaveCrest(RoleKind kind, bool light)
     {
-        if (kind != RoleKind.Aide)
+        return kind switch
         {
-            return Highlight(kind, light);
-        }
-
-        return light ? Darkened(AideCrestBase, MaxLightLuminance) : AideCrestBase;
+            RoleKind.Aide => light ? Darkened(AideCrestBase, MaxLightLuminance) : AideCrestBase,
+            RoleKind.Aurelia => AureliaDark(light),
+            _ => Highlight(kind, light),
+        };
     }
 
     public static Vector4 WaveTrough(RoleKind kind, bool light)
     {
-        if (kind != RoleKind.Aide)
+        return kind switch
         {
-            return For(kind, light);
-        }
-
-        return light ? Darkened(AideTroughBase, MaxLightLuminance) : Lifted(AideTroughBase, MinDarkLuminance);
+            RoleKind.Aide => light
+                ? Darkened(AideTroughBase, MaxLightLuminance)
+                : Lifted(AideTroughBase, MinDarkLuminance),
+            RoleKind.Aurelia => AureliaDark(light),
+            _ => For(kind, light),
+        };
     }
+
+    private static Vector4 AureliaDark(bool light) =>
+        light ? AureliaDarkBase : Raised(AureliaDarkBase, MinDarkLuminance);
 
     private static Vector4 Brand(RoleKind kind)
     {
@@ -90,6 +98,7 @@ internal static class RoleInk
             RoleKind.Verified => VerifiedBase,
             RoleKind.Contributor => ContributorBase,
             RoleKind.Aide => AideBase,
+            RoleKind.Aurelia => AureliaBase,
             _ => default,
         };
     }
@@ -105,6 +114,17 @@ internal static class RoleInk
         var scale = floor / MathF.Max(luminance, 0.0001f);
         return new Vector4(MathF.Min(1f, color.X * scale), MathF.Min(1f, color.Y * scale),
             MathF.Min(1f, color.Z * scale), color.W);
+    }
+
+    private static Vector4 Raised(Vector4 color, float floor)
+    {
+        var luminance = Palette.Luminance(color);
+        if (luminance >= floor)
+        {
+            return color;
+        }
+
+        return Palette.Lighten(color, (floor - luminance) / MathF.Max(1f - luminance, 0.0001f));
     }
 
     private static Vector4 Darkened(Vector4 color, float ceiling)

@@ -130,6 +130,7 @@ internal static class ModerationNoticeText
             "supporter" => L.Social.RoleSupport,
             "contributor" => L.Social.RoleContributor,
             "aide" => L.Social.RoleAide,
+            "aurelia" => L.Social.RoleAurelia,
             "verified" => L.Social.RoleVerified,
             _ => null,
         };
