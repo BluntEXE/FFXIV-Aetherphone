@@ -176,7 +176,6 @@ internal sealed class PhoneShell : IDisposable
 
     public void Draw(Rect device)
     {
-        Motion.BeginFrame(Plugin.PluginInterface.UiBuilder.ShouldUseReducedMotion);
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
         minimize.Advance(delta);
         if (minimize.Phase != MinimizePhase.None)

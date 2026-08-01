@@ -13,8 +13,7 @@ internal static class NameEffects
 
     public static TextEffect For(RoleKind role, bool light)
     {
-        var assigned = KindFor(role);
-        var kind = Motion.Reduced ? Settled(assigned) : assigned;
+        var kind = KindFor(role);
         if (kind == NameEffectKind.None)
         {
             return default;
@@ -34,19 +33,6 @@ internal static class NameEffects
             RoleKind.Support => NameEffectKind.Breath,
             RoleKind.Verified => NameEffectKind.Gradient,
             _ => NameEffectKind.None,
-        };
-    }
-
-    private static NameEffectKind Settled(NameEffectKind kind)
-    {
-        return kind switch
-        {
-            NameEffectKind.Breath => NameEffectKind.None,
-            NameEffectKind.Sweep => NameEffectKind.None,
-            NameEffectKind.Glint => NameEffectKind.None,
-            NameEffectKind.Flow => NameEffectKind.Gradient,
-            NameEffectKind.Ripple => NameEffectKind.Gradient,
-            _ => kind,
         };
     }
 
