@@ -3516,5 +3516,9 @@
   "shortcuts.usePluginIcon": "Использовать значок плагина",
   "shortcuts.limitReached": "Можно хранить до {0} быстрых команд.",
   "shortcuts.ok": "OK",
-  "shortcuts.stepLimitReached": "В одной команде может быть до {0} шагов."
+  "shortcuts.stepLimitReached": "В одной команде может быть до {0} шагов.",
+  "shortcuts.addLink": "Ссылка",
+  "shortcuts.urlHint": "https://example.com",
+  "shortcuts.kindOpenUrl": "ОТКРЫТЬ ССЫЛКУ",
+  "shortcuts.runLinkRejected": "Не удалось открыть эту ссылку"
 }

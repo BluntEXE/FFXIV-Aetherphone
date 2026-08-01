@@ -3516,5 +3516,9 @@
   "shortcuts.usePluginIcon": "Plugin-Symbol verwenden",
   "shortcuts.limitReached": "Du kannst bis zu {0} Kurzbefehle behalten.",
   "shortcuts.ok": "OK",
-  "shortcuts.stepLimitReached": "Ein Kurzbefehl fasst bis zu {0} Schritte."
+  "shortcuts.stepLimitReached": "Ein Kurzbefehl fasst bis zu {0} Schritte.",
+  "shortcuts.addLink": "Link",
+  "shortcuts.urlHint": "https://example.com",
+  "shortcuts.kindOpenUrl": "LINK ÖFFNEN",
+  "shortcuts.runLinkRejected": "Dieser Link konnte nicht geöffnet werden"
 }

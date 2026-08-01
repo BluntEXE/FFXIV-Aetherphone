@@ -92,16 +92,33 @@ internal sealed partial class ShortcutsApp
 
     private static bool HasRunnableStep(ShortcutEntry entry)
     {
+        var runnable = false;
         for (var index = 0; index < entry.Steps.Count; index++)
         {
             var step = entry.Steps[index];
+            if (step.Kind == ShortcutStepKind.OpenUrl)
+            {
+                if (step.Text.Trim().Length == 0)
+                {
+                    continue;
+                }
+
+                if (!ShortcutCommandText.IsWebUrl(step.Text))
+                {
+                    return false;
+                }
+
+                runnable = true;
+                continue;
+            }
+
             if (step.Kind != ShortcutStepKind.Command || step.Text.Trim().Length > 0)
             {
-                return true;
+                runnable = true;
             }
         }
 
-        return false;
+        return runnable;
     }
 
     private void DrawEditorIdentity(float scale)
@@ -240,16 +257,25 @@ internal sealed partial class ShortcutsApp
             return;
         }
 
+        var isLink = step.Kind == ShortcutStepKind.OpenUrl;
+        var malformed = isLink && step.Text.Trim().Length > 0 && !ShortcutCommandText.IsWebUrl(step.Text);
         Squircle.Fill(drawList, rect.Min, rect.Max, Metrics.Radius.Field * scale, ImGui.GetColorU32(ui.FieldSurface));
+        if (malformed)
+        {
+            Squircle.Stroke(drawList, rect.Min, rect.Max, Metrics.Radius.Field * scale,
+                ImGui.GetColorU32(Palette.WithAlpha(theme.Danger, 0.75f)), 1.4f * scale);
+        }
+
         ImGui.SetCursorScreenPos(new Vector2(rect.Min.X + Metrics.Space.Md * scale,
             rect.Center.Y - ImGui.GetFrameHeight() * 0.5f));
         ImGui.SetNextItemWidth(rect.Width - Metrics.Space.Md * 2f * scale);
         var text = step.Text;
         Plugin.Fonts.NoticeText(text);
+        var hint = isLink ? Loc.T(L.Shortcuts.UrlHint) : Loc.T(L.Shortcuts.CommandHint);
         using (ImRaii.PushColor(ImGuiCol.FrameBg, AppSkin.Transparent))
-        using (ImRaii.PushColor(ImGuiCol.Text, ui.TitleInk))
+        using (ImRaii.PushColor(ImGuiCol.Text, malformed ? theme.Danger : ui.TitleInk))
         {
-            if (ImGui.InputTextWithHint("##shortcut.step" + index, Loc.T(L.Shortcuts.CommandHint), ref text,
+            if (ImGui.InputTextWithHint("##shortcut.step" + index, hint, ref text,
                     ShortcutStore.CommandMaxLength, ImGuiInputTextFlags.None))
             {
                 step.Text = text;
@@ -270,7 +296,8 @@ internal sealed partial class ShortcutsApp
         var width = ImGui.GetContentRegionAvail().X;
         var height = 34f * scale;
         var gap = Metrics.Space.Sm * scale;
-        var buttonWidth = (width - gap * 2f) / 3f;
+        var buttonWidth = (width - gap) * 0.5f;
+        var secondRowY = origin.Y + height + gap;
 
         var commandRect = new Rect(origin, new Vector2(origin.X + buttonWidth, origin.Y + height));
         if (ui.PillButton(commandRect, Loc.T(L.Shortcuts.AddCommand), false))
@@ -285,16 +312,23 @@ internal sealed partial class ShortcutsApp
             draft.Steps.Add(new ShortcutStep { Kind = ShortcutStepKind.Wait, Seconds = 1f });
         }
 
-        var openMin = new Vector2(waitMin.X + buttonWidth + gap, origin.Y);
-        var openRect = new Rect(openMin, new Vector2(openMin.X + buttonWidth, origin.Y + height));
+        var openMin = new Vector2(origin.X, secondRowY);
+        var openRect = new Rect(openMin, new Vector2(openMin.X + buttonWidth, secondRowY + height));
         if (ui.PillButton(openRect, Loc.T(L.Shortcuts.AddOpen), false))
         {
             pluginQuery = string.Empty;
             router.Push(ShortcutsScreen.PluginPicker);
         }
 
+        var linkMin = new Vector2(origin.X + buttonWidth + gap, secondRowY);
+        var linkRect = new Rect(linkMin, new Vector2(linkMin.X + buttonWidth, secondRowY + height));
+        if (ui.PillButton(linkRect, Loc.T(L.Shortcuts.AddLink), false))
+        {
+            draft.Steps.Add(new ShortcutStep { Kind = ShortcutStepKind.OpenUrl });
+        }
+
         ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, height + Metrics.Space.Lg * scale));
+        ImGui.Dummy(new Vector2(width, height * 2f + gap + Metrics.Space.Lg * scale));
         ui.HelpText(Loc.T(L.Shortcuts.StepsHint));
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
     }
@@ -375,16 +409,18 @@ internal sealed partial class ShortcutsApp
         for (var index = entry.Steps.Count - 1; index >= 0; index--)
         {
             var step = entry.Steps[index];
-            if (step.Kind == ShortcutStepKind.Command && step.Text.Trim().Length == 0)
+            if (step.Kind != ShortcutStepKind.Command && step.Kind != ShortcutStepKind.OpenUrl)
+            {
+                continue;
+            }
+
+            if (step.Text.Trim().Length == 0)
             {
                 entry.Steps.RemoveAt(index);
                 continue;
             }
 
-            if (step.Kind == ShortcutStepKind.Command)
-            {
-                step.Text = step.Text.Trim();
-            }
+            step.Text = step.Text.Trim();
         }
     }
 
@@ -417,6 +453,7 @@ internal sealed partial class ShortcutsApp
     {
         ShortcutStepKind.Wait => Loc.T(L.Shortcuts.KindWait),
         ShortcutStepKind.OpenPlugin => Loc.T(L.Shortcuts.KindOpenPlugin),
+        ShortcutStepKind.OpenUrl => Loc.T(L.Shortcuts.KindOpenUrl),
         _ => Loc.T(L.Shortcuts.KindCommand),
     };
 

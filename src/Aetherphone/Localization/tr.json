@@ -3516,5 +3516,9 @@
   "shortcuts.usePluginIcon": "Eklenti simgesini kullan",
   "shortcuts.limitReached": "En fazla {0} kısayol tutabilirsiniz.",
   "shortcuts.ok": "Tamam",
-  "shortcuts.stepLimitReached": "Bir kısayol en fazla {0} adım tutabilir."
+  "shortcuts.stepLimitReached": "Bir kısayol en fazla {0} adım tutabilir.",
+  "shortcuts.addLink": "Bağlantı",
+  "shortcuts.urlHint": "https://example.com",
+  "shortcuts.kindOpenUrl": "BAĞLANTI AÇ",
+  "shortcuts.runLinkRejected": "Bu bağlantı açılamadı"
 }

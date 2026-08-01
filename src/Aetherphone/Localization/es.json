@@ -3516,5 +3516,9 @@
   "shortcuts.usePluginIcon": "Usar el icono del plugin",
   "shortcuts.limitReached": "Puedes guardar hasta {0} atajos.",
   "shortcuts.ok": "OK",
-  "shortcuts.stepLimitReached": "Un atajo admite hasta {0} pasos."
+  "shortcuts.stepLimitReached": "Un atajo admite hasta {0} pasos.",
+  "shortcuts.addLink": "Enlace",
+  "shortcuts.urlHint": "https://example.com",
+  "shortcuts.kindOpenUrl": "ABRIR ENLACE",
+  "shortcuts.runLinkRejected": "No se pudo abrir ese enlace"
 }

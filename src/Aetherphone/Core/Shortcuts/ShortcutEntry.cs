@@ -13,6 +13,7 @@ internal enum ShortcutStepKind : byte
     Command,
     Wait,
     OpenPlugin,
+    OpenUrl,
 }
 
 [Serializable]

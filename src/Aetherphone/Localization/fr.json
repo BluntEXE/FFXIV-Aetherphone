@@ -3516,5 +3516,9 @@
   "shortcuts.usePluginIcon": "Utiliser l'icône du plugin",
   "shortcuts.limitReached": "Vous pouvez conserver jusqu'à {0} raccourcis.",
   "shortcuts.ok": "OK",
-  "shortcuts.stepLimitReached": "Un raccourci accepte jusqu’à {0} étapes."
+  "shortcuts.stepLimitReached": "Un raccourci accepte jusqu’à {0} étapes.",
+  "shortcuts.addLink": "Lien",
+  "shortcuts.urlHint": "https://example.com",
+  "shortcuts.kindOpenUrl": "OUVRIR UN LIEN",
+  "shortcuts.runLinkRejected": "Ce lien n'a pas pu être ouvert"
 }

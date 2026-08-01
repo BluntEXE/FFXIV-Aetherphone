@@ -7,6 +7,29 @@ internal static class ShortcutCommandText
     private const string WaitOpen = "<wait.";
     private const string WaitCommand = "/wait";
 
+    public static bool IsWebUrl(string text) => TryParseWebUrl(text, out _);
+
+    public static bool TryParseWebUrl(string text, out Uri parsed)
+    {
+        parsed = null!;
+        var trimmed = text.Trim();
+        if (trimmed.Length == 0 || !Uri.TryCreate(trimmed, UriKind.Absolute, out var candidate))
+        {
+            return false;
+        }
+
+        if (candidate.Scheme != Uri.UriSchemeHttp && candidate.Scheme != Uri.UriSchemeHttps ||
+            candidate.Host.Length == 0)
+        {
+            return false;
+        }
+
+        parsed = candidate;
+        return true;
+    }
+
+    public static string HostOf(string text) => TryParseWebUrl(text, out var parsed) ? parsed.Host : text.Trim();
+
     public static string Split(string text, out float wait)
     {
         wait = 0f;

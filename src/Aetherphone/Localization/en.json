@@ -3516,5 +3516,9 @@
   "shortcuts.usePluginIcon": "Use the plugin icon",
   "shortcuts.limitReached": "You can keep up to {0} shortcuts.",
   "shortcuts.ok": "OK",
-  "shortcuts.stepLimitReached": "A shortcut can hold up to {0} steps."
+  "shortcuts.stepLimitReached": "A shortcut can hold up to {0} steps.",
+  "shortcuts.addLink": "Link",
+  "shortcuts.urlHint": "https://example.com",
+  "shortcuts.kindOpenUrl": "OPEN LINK",
+  "shortcuts.runLinkRejected": "That link could not be opened"
 }

@@ -283,6 +283,10 @@ internal static class L
         public static readonly LocString AddCommand = new("shortcuts.addCommand", "Command");
         public static readonly LocString AddWait = new("shortcuts.addWait", "Wait");
         public static readonly LocString AddOpen = new("shortcuts.addOpen", "Open");
+        public static readonly LocString AddLink = new("shortcuts.addLink", "Link");
+        public static readonly LocString UrlHint = new("shortcuts.urlHint", "https://example.com");
+        public static readonly LocString KindOpenUrl = new("shortcuts.kindOpenUrl", "OPEN LINK");
+        public static readonly LocString RunLinkRejected = new("shortcuts.runLinkRejected", "That link could not be opened");
         public static readonly LocString CommandHint = new("shortcuts.commandHint", "/emote or any command");
         public static readonly LocString WaitSeconds = new("shortcuts.waitSeconds", "{0} seconds");
         public static readonly LocString KindCommand = new("shortcuts.kindCommand", "COMMAND");

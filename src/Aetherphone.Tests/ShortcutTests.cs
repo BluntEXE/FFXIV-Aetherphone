@@ -186,6 +186,46 @@ public sealed class ShortcutHomeTileTests
         };
 }
 
+public sealed class ShortcutWebUrlTests
+{
+    [Theory]
+    [InlineData("https://example.com")]
+    [InlineData("http://example.com/path?a=1#frag")]
+    [InlineData("  https://xivapi.com/  ")]
+    [InlineData("HTTPS://EXAMPLE.COM")]
+    public void WebUrls_AreAccepted(string url)
+    {
+        Assert.True(ShortcutCommandText.IsWebUrl(url));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("example.com")]
+    [InlineData("file:///C:/Windows/System32/cmd.exe")]
+    [InlineData("javascript:alert(1)")]
+    [InlineData("ftp://example.com")]
+    [InlineData("C:\\Windows\\System32\\cmd.exe")]
+    [InlineData("https://")]
+    [InlineData("mailto:someone@example.com")]
+    public void NonWebOrLocalTargets_AreRejected(string url)
+    {
+        Assert.False(ShortcutCommandText.IsWebUrl(url));
+    }
+
+    [Fact]
+    public void HostOf_ReducesAUrlToItsHost()
+    {
+        Assert.Equal("example.com", ShortcutCommandText.HostOf("https://example.com/some/long/path"));
+    }
+
+    [Fact]
+    public void HostOf_LeavesUnparseableTextAlone()
+    {
+        Assert.Equal("not a url", ShortcutCommandText.HostOf("  not a url  "));
+    }
+}
+
 public sealed class ShortcutEntryCopyTests
 {
     [Fact]

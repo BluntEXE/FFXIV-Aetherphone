@@ -1,4 +1,5 @@
 using Aetherphone.Core.Linkpearl;
+using Aetherphone.Windows;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Core.Shortcuts;
@@ -9,6 +10,7 @@ internal enum ShortcutRunOutcome : byte
     Cancelled,
     CommandRejected,
     PluginUnavailable,
+    LinkRejected,
 }
 
 internal sealed class ShortcutRunner : IDisposable
@@ -157,9 +159,31 @@ internal sealed class ShortcutRunner : IDisposable
 
                 wait = StepGapSeconds;
                 return true;
+            case ShortcutStepKind.OpenUrl:
+                return OpenLink(step.Text, out failure);
             default:
                 return ExecuteCommand(step, out failure);
         }
+    }
+
+    private bool OpenLink(string url, out ShortcutRunOutcome failure)
+    {
+        failure = ShortcutRunOutcome.Completed;
+        var opened = true;
+        UrlActions.OpenInBrowser(url.Trim(), exception =>
+        {
+            opened = false;
+            AepLog.Warning($"Shortcut \"{runningName}\" could not open {url}: {exception.Message}");
+        });
+
+        if (!opened)
+        {
+            failure = ShortcutRunOutcome.LinkRejected;
+            return false;
+        }
+
+        wait = StepGapSeconds;
+        return true;
     }
 
     private bool ExecuteCommand(ShortcutStep step, out ShortcutRunOutcome failure)

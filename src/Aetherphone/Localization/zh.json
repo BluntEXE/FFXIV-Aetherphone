@@ -3516,5 +3516,9 @@
   "shortcuts.usePluginIcon": "使用插件图标",
   "shortcuts.limitReached": "最多可保存 {0} 个快捷指令。",
   "shortcuts.ok": "好",
-  "shortcuts.stepLimitReached": "一个快捷指令最多可包含 {0} 个步骤。"
+  "shortcuts.stepLimitReached": "一个快捷指令最多可包含 {0} 个步骤。",
+  "shortcuts.addLink": "链接",
+  "shortcuts.urlHint": "https://example.com",
+  "shortcuts.kindOpenUrl": "打开链接",
+  "shortcuts.runLinkRejected": "无法打开该链接"
 }

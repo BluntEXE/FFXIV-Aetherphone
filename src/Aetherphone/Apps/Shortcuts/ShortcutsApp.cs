@@ -190,6 +190,7 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         {
             ShortcutRunOutcome.Completed => Loc.T(L.Shortcuts.RunDone, ranName),
             ShortcutRunOutcome.PluginUnavailable => Loc.T(L.Shortcuts.RunPluginMissing),
+            ShortcutRunOutcome.LinkRejected => Loc.T(L.Shortcuts.RunLinkRejected),
             _ => Loc.T(L.Shortcuts.RunRejected),
         };
 
@@ -287,6 +288,7 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         var lead = first.Kind switch
         {
             ShortcutStepKind.OpenPlugin => Loc.T(L.Shortcuts.StepOpenNamed, catalog.DisplayName(first.Text)),
+            ShortcutStepKind.OpenUrl => Loc.T(L.Shortcuts.StepOpenNamed, ShortcutCommandText.HostOf(first.Text)),
             ShortcutStepKind.Wait => Loc.T(L.Shortcuts.StepWaitNamed, Seconds(first.Seconds)),
             _ => first.Text,
         };

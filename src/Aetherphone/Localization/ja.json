@@ -3516,5 +3516,9 @@
   "shortcuts.usePluginIcon": "プラグインのアイコンを使う",
   "shortcuts.limitReached": "ショートカットは{0}件まで保存できます。",
   "shortcuts.ok": "OK",
-  "shortcuts.stepLimitReached": "1つのショートカットには最大{0}ステップまで登録できます。"
+  "shortcuts.stepLimitReached": "1つのショートカットには最大{0}ステップまで登録できます。",
+  "shortcuts.addLink": "リンク",
+  "shortcuts.urlHint": "https://example.com",
+  "shortcuts.kindOpenUrl": "リンクを開く",
+  "shortcuts.runLinkRejected": "このリンクを開けませんでした"
 }
