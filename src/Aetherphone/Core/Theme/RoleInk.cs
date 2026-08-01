@@ -14,6 +14,30 @@ internal enum RoleKind
     Aurelia,
 }
 
+internal readonly record struct WaveRamp(Vector4 Start, Vector4 Quarter, Vector4 Half, Vector4 ThreeQuarter)
+{
+    public Vector4 Sample(float phase)
+    {
+        var wrapped = phase - MathF.Floor(phase);
+        if (wrapped < 0.25f)
+        {
+            return Vector4.Lerp(Start, Quarter, wrapped * 4f);
+        }
+
+        if (wrapped < 0.50f)
+        {
+            return Vector4.Lerp(Quarter, Half, (wrapped - 0.25f) * 4f);
+        }
+
+        if (wrapped < 0.75f)
+        {
+            return Vector4.Lerp(Half, ThreeQuarter, (wrapped - 0.50f) * 4f);
+        }
+
+        return Vector4.Lerp(ThreeQuarter, Start, (wrapped - 0.75f) * 4f);
+    }
+}
+
 internal static class RoleInk
 {
     private static readonly Vector4 ManagementBase = new(0.4275f, 0.2039f, 0.4118f, 1.00f);
@@ -24,8 +48,10 @@ internal static class RoleInk
     private static readonly Vector4 VerifiedBase = new(0.2039f, 0.5961f, 0.8588f, 1.00f);
     private static readonly Vector4 ContributorBase = new(0.1843f, 0.7647f, 0.4392f, 1.00f);
     private static readonly Vector4 AideBase = new(0.9804f, 0.5373f, 0.7137f, 1.00f);
-    private static readonly Vector4 AideCrestBase = new(1.0000f, 1.0000f, 1.0000f, 1.00f);
-    private static readonly Vector4 AideTroughBase = new(0.3569f, 0.8078f, 0.9804f, 1.00f);
+    private static readonly Vector4 BlossomPale = new(0.9333f, 0.8078f, 1.0000f, 1.00f);
+    private static readonly Vector4 BlossomMagenta = new(0.9922f, 0.4118f, 0.9765f, 1.00f);
+    private static readonly Vector4 BlossomRose = new(0.7922f, 0.3647f, 0.5255f, 1.00f);
+    private static readonly Vector4 BlossomBlush = new(0.9961f, 0.7490f, 0.7529f, 1.00f);
     private static readonly Vector4 AureliaBase = new(0.8588f, 0.7373f, 0.3412f, 1.00f);
     private static readonly Vector4 AureliaDarkBase = new(0.0000f, 0.0000f, 0.0000f, 1.00f);
     private static readonly Vector4 NeutralDark = new(0.97f, 0.97f, 0.98f, 1.00f);
@@ -61,30 +87,27 @@ internal static class RoleInk
 
     public static Vector4 Highlight(RoleKind kind, PhoneTheme theme) => Highlight(kind, IsLight(theme));
 
-    public static Vector4 WaveCrest(RoleKind kind, bool light)
+    public static WaveRamp Ramp(RoleKind kind, bool light)
     {
         return kind switch
         {
-            RoleKind.Aide => light ? Darkened(AideCrestBase, MaxLightLuminance) : AideCrestBase,
-            RoleKind.Aurelia => AureliaDark(light),
-            _ => Highlight(kind, light),
+            RoleKind.Aide => new WaveRamp(Clamped(BlossomPale, light), Clamped(BlossomMagenta, light),
+                Clamped(BlossomRose, light), Clamped(BlossomBlush, light)),
+            RoleKind.Aurelia => new WaveRamp(Clamped(AureliaDarkBase, light), Clamped(AureliaBase, light),
+                Clamped(AureliaDarkBase, light), Clamped(AureliaBase, light)),
+            _ => new WaveRamp(For(kind, light), Highlight(kind, light), For(kind, light), Highlight(kind, light)),
         };
     }
 
-    public static Vector4 WaveTrough(RoleKind kind, bool light)
+    private static Vector4 Clamped(Vector4 color, bool light)
     {
-        return kind switch
+        if (light)
         {
-            RoleKind.Aide => light
-                ? Darkened(AideTroughBase, MaxLightLuminance)
-                : Lifted(AideTroughBase, MinDarkLuminance),
-            RoleKind.Aurelia => AureliaDark(light),
-            _ => For(kind, light),
-        };
-    }
+            return Darkened(color, MaxLightLuminance);
+        }
 
-    private static Vector4 AureliaDark(bool light) =>
-        light ? AureliaDarkBase : Raised(AureliaDarkBase, MinDarkLuminance);
+        return Raised(Lifted(color, MinDarkLuminance), MinDarkLuminance);
+    }
 
     private static Vector4 Brand(RoleKind kind)
     {

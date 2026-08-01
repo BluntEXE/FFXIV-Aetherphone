@@ -309,7 +309,7 @@ internal static class Typography
             Vector4 tint;
             if (effect.Kind == NameEffectKind.Wave)
             {
-                tint = FlagRamp(effect.Trough, color, effect.Crest, center * WaveSpan - effect.Phase);
+                tint = effect.Ramp.Sample(center * WaveSpan - effect.Phase);
             }
             else
             {
@@ -327,27 +327,6 @@ internal static class Typography
             drawList.AddText(font, fontSize, position, ImGui.GetColorU32(tint), text);
             drawList.PopClipRect();
         }
-    }
-
-    private static Vector4 FlagRamp(Vector4 trough, Vector4 mid, Vector4 crest, float phase)
-    {
-        var wrapped = phase - MathF.Floor(phase);
-        if (wrapped < 0.25f)
-        {
-            return Vector4.Lerp(trough, mid, wrapped * 4f);
-        }
-
-        if (wrapped < 0.50f)
-        {
-            return Vector4.Lerp(mid, crest, (wrapped - 0.25f) * 4f);
-        }
-
-        if (wrapped < 0.75f)
-        {
-            return Vector4.Lerp(crest, mid, (wrapped - 0.50f) * 4f);
-        }
-
-        return Vector4.Lerp(mid, trough, (wrapped - 0.75f) * 4f);
     }
 
     private static float Wave(float phase) => (MathF.Sin(phase * MathF.Tau) + 1f) * 0.5f;

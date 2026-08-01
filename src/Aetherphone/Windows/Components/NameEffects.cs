@@ -22,7 +22,7 @@ internal static class NameEffects
 
         if (kind == NameEffectKind.Wave)
         {
-            return new TextEffect(kind, RoleInk.WaveCrest(role, light), Phase(kind), RoleInk.WaveTrough(role, light));
+            return new TextEffect(kind, RoleInk.Highlight(role, light), Phase(kind), RoleInk.Ramp(role, light));
         }
 
         return new TextEffect(kind, RoleInk.Highlight(role, light), Phase(kind));

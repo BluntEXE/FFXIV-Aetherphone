@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Theme;
 
 namespace Aetherphone.Windows.Components;
 
@@ -16,7 +17,7 @@ internal enum NameEffectKind
     Wave,
 }
 
-internal readonly record struct TextEffect(NameEffectKind Kind, Vector4 Crest, float Phase, Vector4 Trough = default);
+internal readonly record struct TextEffect(NameEffectKind Kind, Vector4 Crest, float Phase, WaveRamp Ramp = default);
 
 internal static class TextStyles
 {
