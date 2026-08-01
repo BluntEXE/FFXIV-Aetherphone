@@ -144,4 +144,21 @@ internal sealed class AccountClient
     {
         return net.SendAsync(HttpMethod.Post, $"/notices/{Uri.EscapeDataString(noticeId)}/ack", token);
     }
+
+    public Task<PatreonLinkStartResponse?> StartPatreonLinkAsync(CancellationToken token, Action<int>? onStatus = null)
+    {
+        return net.RequestAsync(HttpMethod.Post, "/patreon/link/start",
+            AethernetJsonContext.Default.PatreonLinkStartResponse, token, onStatus);
+    }
+
+    public Task<PatreonLinkStatusResponse?> PatreonLinkStatusAsync(CancellationToken token, Action<int>? onStatus = null)
+    {
+        return net.GetAsync("/patreon/link", AethernetJsonContext.Default.PatreonLinkStatusResponse, token, onStatus);
+    }
+
+    public Task<PatreonLinkStatusResponse?> UnlinkPatreonAsync(CancellationToken token)
+    {
+        return net.RequestAsync(HttpMethod.Delete, "/patreon/link",
+            AethernetJsonContext.Default.PatreonLinkStatusResponse, token);
+    }
 }

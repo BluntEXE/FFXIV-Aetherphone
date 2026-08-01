@@ -75,6 +75,16 @@ internal sealed record UpdateProfileRequest(string? DisplayName, string? Handle,
 
 internal sealed record UpdateBadgeLoadoutRequest(int Equipped);
 
+internal sealed record PatreonLinkStartResponse(bool Ok, string? Reason, string? Url, int ExpiresInSeconds);
+
+internal sealed record PatreonLinkStatusResponse(
+    bool Available,
+    bool Linked,
+    string? PatronStatus,
+    int EntitledCents,
+    bool Entitled,
+    long? LinkedAtUnix);
+
 internal sealed record UpdateMessagePrivacyRequest(int? MessagePolicy);
 
 internal sealed record UpdateTimeZoneRequest(bool? ShareTimeZone, int? UtcOffsetMinutes);

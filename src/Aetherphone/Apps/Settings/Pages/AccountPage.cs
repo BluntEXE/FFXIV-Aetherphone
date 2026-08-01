@@ -58,6 +58,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
     private readonly ConfirmService confirm;
     private readonly WallpaperImageCache wallpaperImages;
     private readonly SignInFlow flow;
+    private readonly PatreonLinkFlow patreonFlow;
     private readonly CancellationTokenSource cancellation = new();
     private readonly List<ulong> accountIds = new();
     private int accountIdsStamp = -1;
@@ -89,6 +90,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         this.wallpaperImages = wallpaperImages;
         flow = new SignInFlow(session, auth,
             () => RegionSync.Push(session, account, configuration, gameData, cancellation.Token));
+        patreonFlow = new PatreonLinkFlow(account, accountState.RefreshNow);
     }
 
     public void Draw(in PhoneContext context, Rect body)
@@ -116,7 +118,26 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             {
                 ShowFailureAlert(failureReason);
             }
+
+            if (patreonFlow.ConsumeLinked())
+            {
+                confirm.Alert(Loc.T(L.Account.PatreonLinkedTitle), Loc.T(L.Account.PatreonLinkedBody),
+                    Loc.T(L.Account.FailDismiss));
+            }
+
+            if (patreonFlow.ConsumeFailure() is { } patreonFailure)
+            {
+                ShowPatreonFailureAlert(patreonFailure);
+            }
         }
+    }
+
+    private void ShowPatreonFailureAlert(string failureReason)
+    {
+        var body = failureReason == PatreonLinkFlow.FailureNetwork
+            ? Loc.T(L.Account.FailNetworkBody)
+            : Loc.T(L.Account.PatreonFailedBody);
+        confirm.Alert(Loc.T(L.Account.PatreonFailedTitle), body, Loc.T(L.Account.FailDismiss));
     }
 
     private void ShowFailureAlert(string failureReason)
@@ -160,6 +181,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         details.End();
 
         DrawBadgesSection(user, theme, scale);
+        DrawPatreonSection(theme, scale);
         ImGui.Dummy(new Vector2(0f, 14f * scale));
         var links = GroupCard.Begin(theme, 3);
         if (SettingsRow.Link(links.NextRow(), namePage.Icon, namePage.Tint, namePage.Title, namePage.Summary, theme))
@@ -330,6 +352,86 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             {
                 AepLog.Warning($"Badge loadout update failed: {exception.Message}");
             }
+        });
+    }
+
+    private void DrawPatreonSection(PhoneTheme theme, float scale)
+    {
+        patreonFlow.EnsureStatus();
+        var status = patreonFlow.Status;
+        if (status is null || !status.Available)
+        {
+            return;
+        }
+
+        ImGui.Dummy(new Vector2(0f, 14f * scale));
+        SettingsSection.Header(Loc.T(L.Account.PatreonSection), theme);
+        if (patreonFlow.Waiting)
+        {
+            using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
+            {
+                Typography.Wrapped(Loc.T(L.Account.PatreonWaitingBody));
+            }
+
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
+            var spacing = 8f * scale;
+            var half = (ImGui.GetContentRegionAvail().X - spacing) * 0.5f;
+            if (Button(Loc.T(L.Account.PatreonOpen), theme, half))
+            {
+                patreonFlow.OpenAgain();
+            }
+
+            ImGui.SameLine(0f, spacing);
+            if (Button(Loc.T(L.Common.Cancel), theme, half))
+            {
+                patreonFlow.Cancel();
+            }
+
+            return;
+        }
+
+        if (status.Linked)
+        {
+            var card = GroupCard.Begin(theme, 2);
+            SettingsRow.Info(card.NextRow(), Loc.T(L.Account.PatreonStatusLabel),
+                Loc.T(status.Entitled ? L.Account.PatreonLinkedActive : L.Account.PatreonLinkedInactive), theme);
+            if (SettingsRow.Action(card.NextRow(), Loc.T(L.Account.PatreonUnlink), theme.Danger, theme))
+            {
+                AskUnlinkPatreon();
+            }
+
+            card.End();
+            if (!status.Entitled)
+            {
+                ImGui.Dummy(new Vector2(0f, 8f * scale));
+                SettingsSection.Hint(Loc.T(L.Account.PatreonInactiveHint), theme);
+            }
+
+            return;
+        }
+
+        var linkCard = GroupCard.Begin(theme, 1);
+        var tint = RoleInk.For(RoleKind.Patreon, RoleInk.IsLight(theme));
+        if (SettingsRow.Link(linkCard.NextRow(), FontAwesomeIcon.Star, tint, Loc.T(L.Account.PatreonLink),
+                Loc.T(L.Account.PatreonLinkSummary), theme) && !patreonFlow.Busy)
+        {
+            patreonFlow.Start();
+        }
+
+        linkCard.End();
+        ImGui.Dummy(new Vector2(0f, 8f * scale));
+        SettingsSection.Hint(Loc.T(L.Account.PatreonHint), theme);
+    }
+
+    private void AskUnlinkPatreon()
+    {
+        confirm.Ask(new ConfirmRequest
+        {
+            Title = Loc.T(L.Account.PatreonUnlinkTitle),
+            Message = Loc.T(L.Account.PatreonUnlinkBody),
+            ConfirmLabel = Loc.T(L.Account.PatreonUnlink),
+            CancelLabel = Loc.T(L.Common.Cancel),
+            Confirm = patreonFlow.Unlink,
         });
     }
 
@@ -1039,6 +1141,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
     {
         cancellation.Cancel();
         flow.Dispose();
+        patreonFlow.Dispose();
         cancellation.Dispose();
     }
 }
