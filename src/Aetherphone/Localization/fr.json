@@ -3476,5 +3476,7 @@
   "aetherstream.kickedBody": "L'hôte vous a retiré de la diffusion.",
   "aetherstream.watchingKick": "Retirer",
   "aetherstream.startParty": "Démarrer une soirée",
-  "aetherstream.endParty": "Terminer la soirée"
+  "aetherstream.endParty": "Terminer la soirée",
+  "aetherstream.settingsUpdateMpv": "Mettre à jour mpv",
+  "aetherstream.settingsUpdateYtdlp": "Mettre à jour yt-dlp"
 }

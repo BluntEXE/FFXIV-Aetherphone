@@ -2379,6 +2379,10 @@ internal static class L
             "Download mpv");
         public static readonly LocString SettingsDownloadYtdlp = new("aetherstream.settingsDownloadYtdlp",
             "Download yt-dlp");
+        public static readonly LocString SettingsUpdateMpv = new("aetherstream.settingsUpdateMpv",
+            "Update mpv");
+        public static readonly LocString SettingsUpdateYtdlp = new("aetherstream.settingsUpdateYtdlp",
+            "Update yt-dlp");
         public static readonly LocString SettingsScreen = new("aetherstream.settingsScreen", "Screen");
         public static readonly LocString SettingsHideNameplates = new("aetherstream.settingsHideNameplates",
             "Hide nameplates");

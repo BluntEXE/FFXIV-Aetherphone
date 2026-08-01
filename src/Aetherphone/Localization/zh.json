@@ -3476,5 +3476,7 @@
   "aetherstream.kickedBody": "主持人已将你移出直播。",
   "aetherstream.watchingKick": "移除",
   "aetherstream.startParty": "开始聚会",
-  "aetherstream.endParty": "结束聚会"
+  "aetherstream.endParty": "结束聚会",
+  "aetherstream.settingsUpdateMpv": "更新 mpv",
+  "aetherstream.settingsUpdateYtdlp": "更新 yt-dlp"
 }

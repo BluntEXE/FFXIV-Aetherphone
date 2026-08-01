@@ -3476,5 +3476,7 @@
   "aetherstream.kickedBody": "Хост удалил вас из стрима.",
   "aetherstream.watchingKick": "Удалить",
   "aetherstream.startParty": "Начать вечеринку",
-  "aetherstream.endParty": "Завершить вечеринку"
+  "aetherstream.endParty": "Завершить вечеринку",
+  "aetherstream.settingsUpdateMpv": "Обновить mpv",
+  "aetherstream.settingsUpdateYtdlp": "Обновить yt-dlp"
 }

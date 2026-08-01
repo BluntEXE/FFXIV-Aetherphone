@@ -3476,5 +3476,7 @@
   "aetherstream.kickedBody": "ホストがあなたを配信から削除しました。",
   "aetherstream.watchingKick": "削除",
   "aetherstream.startParty": "パーティーを始める",
-  "aetherstream.endParty": "パーティーを終了"
+  "aetherstream.endParty": "パーティーを終了",
+  "aetherstream.settingsUpdateMpv": "mpvを更新",
+  "aetherstream.settingsUpdateYtdlp": "yt-dlpを更新"
 }

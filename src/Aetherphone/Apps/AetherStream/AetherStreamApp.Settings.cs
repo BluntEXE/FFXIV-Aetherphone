@@ -67,12 +67,29 @@ internal sealed partial class AetherStreamApp
                 {
                     var mpvRect = new Rect(new Vector2(content.Min.X, buttonTop),
                         new Vector2(content.Max.X, buttonTop + buttonHeight));
-                    if (SmallButton(mpvRect, Loc.T(L.AetherStream.SettingsDownloadMpv), !mpvDownloading, scale))
+                    var mpvLabel = resources.GetLocationMPV() is null
+                        ? Loc.T(L.AetherStream.SettingsDownloadMpv)
+                        : Loc.T(L.AetherStream.SettingsUpdateMpv);
+                    if (SmallButton(mpvRect, mpvLabel, !mpvDownloading, scale))
                     {
                         mpvDownloading = true;
                         dependencyWork.Run("download mpv", async token =>
                         {
-                            await resources.DownloadMPVAsync().ConfigureAwait(false);
+                            // MpvCheckResult can still be empty here: the initial check fired at
+                            // Resources construction may not have finished yet, or may have
+                            // failed outright (no network yet at plugin load, GitHub rate limit).
+                            // Re-running it before downloading means a tap always either starts a
+                            // real download or retries the check, never hands DownloadMPVAsync an
+                            // empty URL (that used to throw straight into HttpClient).
+                            if (resources.MpvCheckResult[0].Length == 0)
+                            {
+                                await resources.CheckMPVAsync().ConfigureAwait(false);
+                            }
+
+                            if (resources.MpvCheckResult[0].Length > 0)
+                            {
+                                await resources.DownloadMPVAsync().ConfigureAwait(false);
+                            }
                         }, () => mpvDownloading = false);
                     }
 
@@ -83,12 +100,25 @@ internal sealed partial class AetherStreamApp
                 {
                     var ytdlpRect = new Rect(new Vector2(content.Min.X, buttonTop),
                         new Vector2(content.Max.X, buttonTop + buttonHeight));
-                    if (SmallButton(ytdlpRect, Loc.T(L.AetherStream.SettingsDownloadYtdlp), !ytdlpDownloading, scale))
+                    var ytdlpLabel = resources.GetLocationYTDLP() is null
+                        ? Loc.T(L.AetherStream.SettingsDownloadYtdlp)
+                        : Loc.T(L.AetherStream.SettingsUpdateYtdlp);
+                    if (SmallButton(ytdlpRect, ytdlpLabel, !ytdlpDownloading, scale))
                     {
                         ytdlpDownloading = true;
                         dependencyWork.Run("download yt-dlp", async token =>
                         {
-                            await resources.DownloadYTDLPAsync().ConfigureAwait(false);
+                            // Same "retry the check first if it's empty" reasoning as the mpv
+                            // button above.
+                            if (resources.YtdlpCheckResult[0].Length == 0)
+                            {
+                                await resources.CheckYTDLPAsync().ConfigureAwait(false);
+                            }
+
+                            if (resources.YtdlpCheckResult[0].Length > 0)
+                            {
+                                await resources.DownloadYTDLPAsync().ConfigureAwait(false);
+                            }
                         }, () => ytdlpDownloading = false);
                     }
                 }

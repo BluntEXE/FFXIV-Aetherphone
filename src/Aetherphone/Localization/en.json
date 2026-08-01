@@ -3476,5 +3476,7 @@
   "aetherstream.kickedBody": "The host removed you from the stream.",
   "aetherstream.watchingKick": "Remove",
   "aetherstream.startParty": "Start a Party",
-  "aetherstream.endParty": "End Party"
+  "aetherstream.endParty": "End Party",
+  "aetherstream.settingsUpdateMpv": "Update mpv",
+  "aetherstream.settingsUpdateYtdlp": "Update yt-dlp"
 }

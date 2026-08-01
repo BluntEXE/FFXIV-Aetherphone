@@ -3476,5 +3476,7 @@
   "aetherstream.kickedBody": "Ev sahibi seni yayından çıkardı.",
   "aetherstream.watchingKick": "Çıkar",
   "aetherstream.startParty": "Parti başlat",
-  "aetherstream.endParty": "Partiyi bitir"
+  "aetherstream.endParty": "Partiyi bitir",
+  "aetherstream.settingsUpdateMpv": "mpv'yi güncelle",
+  "aetherstream.settingsUpdateYtdlp": "yt-dlp'yi güncelle"
 }

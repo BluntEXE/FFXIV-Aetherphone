@@ -3476,5 +3476,7 @@
   "aetherstream.kickedBody": "El anfitrión te expulsó de la transmisión.",
   "aetherstream.watchingKick": "Expulsar",
   "aetherstream.startParty": "Iniciar una fiesta",
-  "aetherstream.endParty": "Terminar la fiesta"
+  "aetherstream.endParty": "Terminar la fiesta",
+  "aetherstream.settingsUpdateMpv": "Actualizar mpv",
+  "aetherstream.settingsUpdateYtdlp": "Actualizar yt-dlp"
 }

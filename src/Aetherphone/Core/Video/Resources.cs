@@ -56,22 +56,37 @@ internal sealed class Resources : IDisposable
 			_sysTimeOffset = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 		}).ContinueWith(_ =>
 		{
-			//Check for MPV Updates
+			//Check for MPV Updates, then auto-download in the background if one was found - a
+			//tester never has to visit Settings at all for mpv to become ready. The Settings
+			//page's own button (see AetherStreamApp.Settings.cs) stays as a manual fallback for
+			//when this attempt hits a network hiccup at plugin load.
 			CheckMPVAsync().ContinueWith(task =>
 			{
 				if (!task.IsCompletedSuccessfully)
 				{
 					AepLog.Error("Failed to check for MPV updates: " + task.Exception?.ToString());
+					return;
+				}
+
+				if (MpvCheckResult[0].Length > 0)
+				{
+					_ = DownloadMPVAsync();
 				}
 			});
 		}).ContinueWith(_=>
 		{
-			//Check for YTDLP Updates
+			//Check for YTDLP Updates - same auto-download reasoning as the MPV check above.
 			CheckYTDLPAsync().ContinueWith(task =>
 			{
 				if (!task.IsCompletedSuccessfully)
 				{
 					AepLog.Error("Failed to check for YTDLP updates: " + task.Exception?.ToString());
+					return;
+				}
+
+				if (YtdlpCheckResult[0].Length > 0)
+				{
+					_ = DownloadYTDLPAsync();
 				}
 			});
 		});
@@ -125,26 +140,37 @@ internal sealed class Resources : IDisposable
 		return null;
 	}
 
-	private async Task CheckMPVAsync()
+	internal async Task CheckMPVAsync()
 	{
 		string filenameStart = "mpv-dev-lgpl-x86_64-";
 		string filenameEnd = ".7z";
 		string url = "https://api.github.com/repos/zhongfly/mpv-winbuild/releases/latest";
 		MpvCheckResult = await CheckForUpdateAsync(_configDir, filenameStart, filenameEnd, url);
 	}
-	private async Task CheckYTDLPAsync()
+	internal async Task CheckYTDLPAsync()
 	{
 		string filenameStart = "yt-dlp.exe";
 		string filenameEnd = ".exe";
 		string url = "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest";
 		YtdlpCheckResult = await CheckForUpdateAsync(_configDir, filenameStart, filenameEnd, url);
 	}
+	// downloadURL is empty either because CheckForUpdateAsync already found the local folder up
+	// to date, or because the check itself failed (rate limit, no network yet at plugin load) and
+	// fell back to its empty-result default - either way there is nothing to fetch, and calling
+	// HttpClient.GetAsync with an empty URI throws. Callers (AetherStreamApp.Settings) already
+	// re-run the check first when this is empty, but this guard stays as the actual line that
+	// can never hand HttpClient an invalid request.
 	internal async Task<bool> DownloadMPVAsync()
 	{
 		string filenameStart = "mpv-dev-lgpl-x86_64-";
 		string filenameEnd = ".7z";
 		string downloadURL = MpvCheckResult[0];
 		string folderName = MpvCheckResult[1];
+		if (downloadURL.Length == 0)
+		{
+			return false;
+		}
+
 		return await UpdateAsync(_configDir, filenameStart, filenameEnd, downloadURL, folderName);
 	}
 	internal async Task<bool> DownloadYTDLPAsync()
@@ -153,6 +179,11 @@ internal sealed class Resources : IDisposable
 		string filenameEnd = ".exe";
 		string downloadURL = YtdlpCheckResult[0];
 		string folderName = YtdlpCheckResult[1];
+		if (downloadURL.Length == 0)
+		{
+			return false;
+		}
+
 		return await UpdateAsync(_configDir, filenameStart, filenameEnd, downloadURL, folderName);
 	}
 	private async Task<string[]> CheckForUpdateAsync(string configDir, string nameStartsWith, string nameEndsWith, string checkURL)
@@ -180,8 +211,9 @@ internal sealed class Resources : IDisposable
 			AepLog.Warning("Found Update: " + downloadURL);
 			return [downloadURL, folderName];
 		}
-		catch
+		catch (Exception exception)
 		{
+			AepLog.Warning("Failed to check for update (" + checkURL + "): " + exception);
 			return [string.Empty, string.Empty];
 		}
 	}
