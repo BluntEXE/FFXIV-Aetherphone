@@ -111,16 +111,30 @@ internal sealed partial class AetherStreamApp
 
             ImGui.Dummy(new Vector2(0f, 12f * scale));
             SettingsSection.Header(Loc.T(L.AetherStream.SettingsSectionWatching), accentedTheme);
-            var watchingCard = GroupCard.Begin(accentedTheme, 1);
+            var watchingCard = GroupCard.Begin(accentedTheme, 2);
             var sharePresence = SettingsRow.Bool(watchingCard.NextRow(),
                 Loc.T(L.AetherStream.SettingsShareWatchPresence), configuration.VideoShareWatchPresence,
+                accentedTheme);
+            // Speculative host-approval extension (see WatchAlongSession.PendingRequests) - the
+            // toggle itself is always safe to show/flip even before the server supports it, since
+            // it just adds an ignored field to stream.state until the server actually reads it.
+            var approvalRequired = SettingsRow.Bool(watchingCard.NextRow(),
+                Loc.T(L.AetherStream.SettingsApprovalRequired), configuration.VideoStreamApprovalRequired,
                 accentedTheme);
             watchingCard.End();
             ImGui.Dummy(new Vector2(0f, 8f * scale));
             SettingsSection.Hint(Loc.T(L.AetherStream.SettingsShareWatchPresenceHint), accentedTheme);
+            ImGui.Dummy(new Vector2(0f, 4f * scale));
+            SettingsSection.Hint(Loc.T(L.AetherStream.SettingsApprovalRequiredHint), accentedTheme);
             if (sharePresence != configuration.VideoShareWatchPresence)
             {
                 configuration.VideoShareWatchPresence = sharePresence;
+                configuration.Save();
+            }
+
+            if (approvalRequired != configuration.VideoStreamApprovalRequired)
+            {
+                configuration.VideoStreamApprovalRequired = approvalRequired;
                 configuration.Save();
             }
 

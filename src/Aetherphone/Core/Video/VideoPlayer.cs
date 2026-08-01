@@ -83,6 +83,16 @@ internal sealed class VideoPlayer : IDisposable
 
     public (float Position, float Duration, bool Paused) GetProgress()
     {
+        // engine.LastError is only ever set from PlayVideo's detached background task, well after
+        // Play() itself already optimistically set State = Playing and returned - this is the
+        // first point afterward where that failure becomes visible, since GetProgress is polled
+        // every frame by the Player tab and on every WatchAlongSession.OnState update.
+        if (State != VideoPlaybackState.Idle && engine.LastError is { } error && LastError != error)
+        {
+            State = VideoPlaybackState.Failed;
+            LastError = error;
+        }
+
         var info = engine.GetInfo();
         return ((float)info[0], (float)info[1], engine.GetPaused());
     }

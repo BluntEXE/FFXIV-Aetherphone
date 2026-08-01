@@ -38,6 +38,20 @@ internal sealed class ScreenPositionPreset
     public float Scale { get; set; } = 1.0f;
 }
 
+// A saved AetherStreamQueue.VideoQueueEntry (Url/Title/Source/Duration/ThumbnailUrl) - kept as its
+// own DTO rather than serializing VideoQueueEntry directly so Configuration doesn't couple to
+// AetherStreamQueue's internals (it also carries a Guid Id and mutable fields that don't belong
+// in a saved record).
+[Serializable]
+internal sealed class VideoQueueRecord
+{
+    public string Url { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string Source { get; set; } = "";
+    public double? DurationSeconds { get; set; }
+    public string? ThumbnailUrl { get; set; }
+}
+
 [Serializable]
 internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, IControlConfiguration
 {
@@ -105,7 +119,16 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     // gap, not fixable via a CA bundle file - see Stage 7 investigation notes). Never touches
     // real Windows.
     public bool VideoAllowInsecureDirectUrls { get; set; }
+    // Off by default (Open mode) - matches current server behavior exactly, since there's no
+    // server-side approval flow yet (see WatchAlongSession.PendingRequests / stream.joinRequest).
+    // Turning this on just adds an extra field to the host's stream.state; a server that doesn't
+    // understand it yet ignores it per the envelope's own "unknown fields ignored" contract.
+    public bool VideoStreamApprovalRequired { get; set; }
     public List<ScreenPositionPreset> ScreenPresets { get; set; } = new();
+    // The upcoming queue (AetherStreamQueue.Entries), so a relog or plugin reload mid watch-party
+    // doesn't lose what was lined up. What was actively Current isn't included here - see
+    // AetherStreamQueue's constructor doc comment.
+    public List<VideoQueueRecord> VideoQueue { get; set; } = new();
     // SNES9x (AlphaChannel port) emulator input mapping and recent-ROM list - ported from
     // AlphaChannel's own Configuration, which used to be its own separate IPluginConfiguration.
     public Dictionary<Snes9xInput, string> SnesKeyMappings { get; set; } = new();

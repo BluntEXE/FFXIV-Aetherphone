@@ -49,6 +49,15 @@ internal sealed partial class AetherStreamApp
 
         var bodyTop = card.Max.Y + 16f * scale;
 
+        // Speculative host-approval extension (see WatchAlongSession.PendingRequests) - this
+        // block only ever draws anything if the server actually sent a stream.joinRequest, which
+        // it doesn't yet. Sits above screen placement since a pending join is more time-sensitive.
+        if (watchAlong.IsHosting && watchAlong.PendingRequests.Count > 0)
+        {
+            bodyTop = DrawPendingRequests(content, bodyTop, scale);
+            bodyTop += 12f * scale;
+        }
+
         Typography.Draw(new Vector2(content.Min.X, bodyTop), Loc.T(L.AetherStream.CastingScreenPositionHeader),
             ui.TitleInk, TextStyles.FootnoteEmphasized);
         bodyTop += 22f * scale;
@@ -70,11 +79,62 @@ internal sealed partial class AetherStreamApp
 
         bodyTop = windowRect.Max.Y + 12f * scale;
 
-        var stopRect = new Rect(new Vector2(content.Min.X, bodyTop), new Vector2(content.Max.X, bodyTop + 38f * scale));
-        var canStop = queue.Current is not null || video.State != VideoPlaybackState.Idle;
-        if (SmallButton(stopRect, Loc.T(L.AetherStream.Stop), canStop, scale, danger: true) && canStop)
+        // Same "Leave, not Stop" reasoning as DrawCastingStatus in the Player tab - queue.Clear()
+        // would desync a viewer's local screen from the host's without actually leaving the
+        // session.
+        if (!watchAlong.IsViewing)
         {
-            queue.Clear();
+            var stopRect = new Rect(new Vector2(content.Min.X, bodyTop), new Vector2(content.Max.X, bodyTop + 38f * scale));
+            var canStop = queue.Current is not null || video.State != VideoPlaybackState.Idle;
+            if (SmallButton(stopRect, Loc.T(L.AetherStream.Stop), canStop, scale, danger: true) && canStop)
+            {
+                queue.Clear();
+            }
+        }
+    }
+
+    private float DrawPendingRequests(Rect content, float bodyTop, float scale)
+    {
+        Typography.Draw(new Vector2(content.Min.X, bodyTop), Loc.T(L.AetherStream.CastingPendingRequestsHeader),
+            ui.TitleInk, TextStyles.FootnoteEmphasized);
+        bodyTop += 22f * scale;
+
+        var rowHeight = 40f * scale;
+        foreach (var request in watchAlong.PendingRequests)
+        {
+            var rowRect = new Rect(new Vector2(content.Min.X, bodyTop), new Vector2(content.Max.X, bodyTop + rowHeight));
+            DrawPendingRequestRow(rowRect, request, scale);
+            bodyTop = rowRect.Max.Y + 6f * scale;
+        }
+
+        return bodyTop;
+    }
+
+    private void DrawPendingRequestRow(Rect rect, PendingJoinRequest request, float scale)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        Squircle.Fill(drawList, rect.Min, rect.Max, 8f * scale, ImGui.GetColorU32(ui.FieldSurface));
+
+        var denyRect = new Rect(new Vector2(rect.Max.X - 76f * scale, rect.Min.Y + 5f * scale),
+            new Vector2(rect.Max.X - 6f * scale, rect.Max.Y - 5f * scale));
+        var approveRect = new Rect(new Vector2(denyRect.Min.X - 76f * scale, rect.Min.Y + 5f * scale),
+            new Vector2(denyRect.Min.X - 6f * scale, rect.Max.Y - 5f * scale));
+
+        var textLeft = rect.Min.X + 10f * scale;
+        var textWidth = approveRect.Min.X - 8f * scale - textLeft;
+        Typography.Draw(new Vector2(textLeft, rect.Center.Y - 14f * scale), Ellipsize(request.DisplayName, textWidth),
+            ui.TitleInk, TextStyles.Body);
+        Typography.Draw(new Vector2(textLeft, rect.Center.Y + 2f * scale),
+            Ellipsize($"{request.Name}  ·  {request.World}", textWidth), ui.MutedInk, TextStyles.Caption1);
+
+        if (SmallButton(denyRect, Loc.T(L.AetherStream.CastingDeny), true, scale, danger: true))
+        {
+            watchAlong.DenyRequest(request.UserId);
+        }
+
+        if (SmallButton(approveRect, Loc.T(L.AetherStream.CastingApprove), true, scale))
+        {
+            watchAlong.ApproveRequest(request.UserId);
         }
     }
 

@@ -20,6 +20,11 @@ internal sealed partial class AetherStreamApp
     private float joinDebounce;
     private UserDto[] joinResults = Array.Empty<UserDto>();
     private bool joinSearching;
+    // Distinguishes "the request came back with zero matches" from "the request itself failed"
+    // (bad status, timeout, exception) - AccountClient.SearchAsync returns null either way, which
+    // used to render identically to a genuine empty search. See HttpService.SendForJsonAsync's
+    // new non-2xx log line for the server-side half of this same gap.
+    private bool joinSearchFailed;
     private float nearbyRefreshTimer = NearbyRefreshIntervalSeconds; // due immediately on first draw
 
     // Two ways onto someone's screen: search-by-person (mutual-contact/block checks happen
@@ -75,7 +80,9 @@ internal sealed partial class AetherStreamApp
 
             if (joinResults.Length == 0 && (joinQuery.Trim().Length > 0 || nearby.Count == 0))
             {
-                var message = joinSearching ? Loc.T(L.Social.MentionSearching) : Loc.T(L.PhotoTag.NoPeople);
+                var message = joinSearching ? Loc.T(L.Social.MentionSearching)
+                    : joinSearchFailed ? Loc.T(L.AetherStream.JoinSearchFailed)
+                    : Loc.T(L.PhotoTag.NoPeople);
                 Typography.DrawCentered(new Vector2(listRect.Center.X, cursorY + 40f * scale), message,
                     accentedTheme.TextMuted, TextStyles.Subheadline.Scale);
             }
@@ -169,6 +176,7 @@ internal sealed partial class AetherStreamApp
             joinApplied = string.Empty;
             joinResults = Array.Empty<UserDto>();
             joinSearching = false;
+            joinSearchFailed = false;
             return;
         }
 
@@ -186,13 +194,15 @@ internal sealed partial class AetherStreamApp
         joinDebounce = 0f;
         joinApplied = trimmed;
         joinSearching = true;
+        joinSearchFailed = false;
         joinWork.Run("join search", async token =>
         {
             var result = await joinAccount.SearchAsync(trimmed, token).ConfigureAwait(false);
-            if (result is not null)
-            {
-                joinResults = result.Users;
-            }
+            // A null result means the request itself failed (see AccountClient.SearchAsync /
+            // HttpService.SendForJsonAsync) - clear any stale prior results instead of leaving
+            // them on screen, and flag it separately from a genuine zero-match search.
+            joinResults = result?.Users ?? Array.Empty<UserDto>();
+            joinSearchFailed = result is null;
         }, () => joinSearching = false);
     }
 }

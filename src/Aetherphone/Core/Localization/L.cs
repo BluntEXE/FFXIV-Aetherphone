@@ -2329,12 +2329,15 @@ internal static class L
             "Clear the whole queue and stop playback?");
         public static readonly LocString Keep = new("aetherstream.keep", "Keep it");
         public static readonly LocString Stop = new("aetherstream.stop", "Stop");
+        public static readonly LocString Resync = new("aetherstream.resync", "Resync");
         public static readonly LocString Remove = new("aetherstream.remove", "Remove");
         public static readonly LocString QueueEmpty = new("aetherstream.queueEmpty",
             "Queue's empty. Add a video from the Player tab.");
 
         public static readonly LocString PlayerCastingStatus = new("aetherstream.playerCastingStatus",
             "Casting to the in-game screen");
+        public static readonly LocString PlayerCastingWaiting = new("aetherstream.playerCastingWaiting",
+            "Waiting for the next video");
         public static readonly LocString CastingTarget = new("aetherstream.castingTarget", "Playing to");
         public static readonly LocString CastingThisScreen = new("aetherstream.castingThisScreen", "This TV");
         public static readonly LocString CastingStateNotReady = new("aetherstream.castingStateNotReady",
@@ -2385,6 +2388,11 @@ internal static class L
         public static readonly LocString SettingsShareWatchPresenceHint = new(
             "aetherstream.settingsShareWatchPresenceHint",
             "Off keeps your name out of the watching list on this screen.");
+        public static readonly LocString SettingsApprovalRequired = new("aetherstream.settingsApprovalRequired",
+            "Require approval to join");
+        public static readonly LocString SettingsApprovalRequiredHint = new(
+            "aetherstream.settingsApprovalRequiredHint",
+            "New viewers must be approved by you before they can watch. Applies the next time you go live.");
         public static readonly LocString SettingsHardwareDecoding = new("aetherstream.settingsHardwareDecoding",
             "Hardware decoding");
         public static readonly LocString SettingsHardwareDecodingHint = new(
@@ -2397,6 +2405,8 @@ internal static class L
 
         public static readonly LocString JoinStream = new("aetherstream.joinStream", "Join a stream");
         public static readonly LocString JoinSearchHint = new("aetherstream.joinSearchHint", "Search by name");
+        public static readonly LocString JoinSearchFailed = new("aetherstream.joinSearchFailed",
+            "Couldn't reach the server. Check your connection and try again.");
         public static readonly LocString JoinNearbyHeader = new("aetherstream.joinNearbyHeader",
             "Streaming nearby");
         public static readonly LocString StreamUnavailableTitle = new("aetherstream.streamUnavailableTitle",
@@ -2405,6 +2415,39 @@ internal static class L
             "That stream can't be joined right now.");
         public static readonly LocString LeaveStream = new("aetherstream.leaveStream", "Leave stream");
         public static readonly LocString ViewingStream = new("aetherstream.viewingStream", "Watching with {0}");
+
+        public static readonly LocString JoinDeniedTitle = new("aetherstream.joinDeniedTitle", "Request declined");
+        public static readonly LocString JoinDeniedBody = new("aetherstream.joinDeniedBody",
+            "The host declined your request to join.");
+        public static readonly LocString JoinWaitingApproval = new("aetherstream.joinWaitingApproval",
+            "Waiting for approval...");
+        public static readonly LocString CastingPendingRequestsHeader = new(
+            "aetherstream.castingPendingRequestsHeader", "Waiting to join");
+        public static readonly LocString CastingApprove = new("aetherstream.castingApprove", "Approve");
+        public static readonly LocString CastingDeny = new("aetherstream.castingDeny", "Deny");
+
+        public static readonly LocString SuggestToHost = new("aetherstream.suggestToHost", "Suggest to Host");
+        public static readonly LocString QueueSuggestionsHeader = new("aetherstream.queueSuggestionsHeader",
+            "Suggestions from viewers");
+        public static readonly LocString QueueSuggestionAdd = new("aetherstream.queueSuggestionAdd", "Add");
+        public static readonly LocString QueueSuggestionDismiss = new("aetherstream.queueSuggestionDismiss",
+            "Dismiss");
+        public static readonly LocString QueueSuggestionAcceptedTitle = new(
+            "aetherstream.queueSuggestionAcceptedTitle", "Added to queue");
+        public static readonly LocString QueueSuggestionAcceptedBody = new(
+            "aetherstream.queueSuggestionAcceptedBody", "The host added your suggestion to the queue.");
+        public static readonly LocString QueueSuggestionDeniedTitle = new(
+            "aetherstream.queueSuggestionDeniedTitle", "Suggestion not added");
+        public static readonly LocString QueueSuggestionDeniedBody = new(
+            "aetherstream.queueSuggestionDeniedBody", "The host didn't add your suggestion.");
+
+        public static readonly LocString KickedTitle = new("aetherstream.kickedTitle", "Removed from stream");
+        public static readonly LocString KickedBody = new("aetherstream.kickedBody",
+            "The host removed you from the stream.");
+        public static readonly LocString WatchingKick = new("aetherstream.watchingKick", "Remove");
+
+        public static readonly LocString StartParty = new("aetherstream.startParty", "Start a Party");
+        public static readonly LocString EndParty = new("aetherstream.endParty", "End Party");
     }
 
     internal static class Clock

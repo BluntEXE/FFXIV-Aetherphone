@@ -42,18 +42,41 @@ internal sealed class AetherStreamQueue
     private bool wasIdle = true;
     private bool autoAdvanceArmed;
 
+    // Restores the upcoming list (not whatever was actively Current - that doesn't survive a
+    // reload anyway, since the mpv session behind it is gone) from Configuration, so a relog or
+    // plugin reload mid watch-party doesn't wipe out what was queued up.
     public AetherStreamQueue(VideoPlayer video)
     {
         this.video = video;
+        var persisted = Plugin.Cfg.VideoQueue;
+        for (var recordIndex = 0; recordIndex < persisted.Count; recordIndex++)
+        {
+            var record = persisted[recordIndex];
+            entries.Add(new VideoQueueEntry(record.Url, record.Title, record.Source,
+                record.DurationSeconds is { } seconds ? TimeSpan.FromSeconds(seconds) : null, record.ThumbnailUrl));
+        }
     }
 
     public IReadOnlyList<VideoQueueEntry> Entries => entries;
     public VideoQueueEntry? Current { get; private set; }
 
+    // Builds a display-only entry for a URL, enriched the same way a real queue entry would be,
+    // without touching entries or Current - used by WatchAlongSession to show what a viewer is
+    // watching. Current specifically must stay untouched here: OnFrameworkUpdate's Viewing branch
+    // treats any non-null Current as "the user queued something locally, leave the stream", so
+    // populating it from the sync path itself would immediately self-trigger a Leave().
+    public VideoQueueEntry CreateDisplayEntry(string url)
+    {
+        var entry = new VideoQueueEntry(url, url, string.Empty, null, null);
+        EnrichIfYouTube(entry);
+        return entry;
+    }
+
     public void Add(VideoQueueEntry entry)
     {
         entries.Add(entry);
         EnrichIfYouTube(entry);
+        Persist();
     }
 
     public void PlayNow(VideoQueueEntry entry)
@@ -61,7 +84,7 @@ internal sealed class AetherStreamQueue
         entries.Remove(entry);
         entries.Insert(0, entry);
         EnrichIfYouTube(entry);
-        Advance();
+        Advance(); // Persists on our behalf - see Advance's own Persist call.
     }
 
     public void PlayNext(VideoQueueEntry entry)
@@ -70,15 +93,21 @@ internal sealed class AetherStreamQueue
         var insertAt = Current is null ? 0 : Math.Min(1, entries.Count);
         entries.Insert(insertAt, entry);
         EnrichIfYouTube(entry);
+        Persist();
     }
 
-    public void Remove(VideoQueueEntry entry) => entries.Remove(entry);
+    public void Remove(VideoQueueEntry entry)
+    {
+        entries.Remove(entry);
+        Persist();
+    }
 
     public void Clear()
     {
         entries.Clear();
         Current = null;
         video.Stop();
+        Persist();
     }
 
     public void Reorder(int fromIndex, int toIndex)
@@ -92,6 +121,27 @@ internal sealed class AetherStreamQueue
         var item = entries[fromIndex];
         entries.RemoveAt(fromIndex);
         entries.Insert(toIndex, item);
+        Persist();
+    }
+
+    private void Persist()
+    {
+        var records = new List<VideoQueueRecord>(entries.Count);
+        for (var entryIndex = 0; entryIndex < entries.Count; entryIndex++)
+        {
+            var entry = entries[entryIndex];
+            records.Add(new VideoQueueRecord
+            {
+                Url = entry.Url,
+                Title = entry.Title,
+                Source = entry.Source,
+                DurationSeconds = entry.Duration?.TotalSeconds,
+                ThumbnailUrl = entry.ThumbnailUrl,
+            });
+        }
+
+        Plugin.Cfg.VideoQueue = records;
+        Plugin.Cfg.Save();
     }
 
     // Plays the next queued entry now, whether or not something was already playing - used both
@@ -100,8 +150,13 @@ internal sealed class AetherStreamQueue
     {
         if (entries.Count == 0)
         {
+            // Deliberately does NOT call video.Stop() - that deactivates the in-world screen
+            // entirely (VideoEngine._isActive = false), which reads as the screen just
+            // vanishing mid watch-party. Leaving it alone keeps the screen up, frozen on the
+            // last frame (mpv's own keep-open=yes), as a "waiting for the next video" state.
+            // Clear() is the explicit-close path for when the user actually wants it gone.
             Current = null;
-            video.Stop();
+            Persist();
             return;
         }
 
@@ -110,6 +165,7 @@ internal sealed class AetherStreamQueue
         autoAdvanceArmed = false;
         EnrichIfYouTube(Current);
         video.Play(Current.Url);
+        Persist();
     }
 
     private void EnrichIfYouTube(VideoQueueEntry entry)
@@ -135,6 +191,7 @@ internal sealed class AetherStreamQueue
         entry.Source = metadata.Source;
         entry.Duration = metadata.Duration;
         entry.ThumbnailUrl = metadata.ThumbnailUrl;
+        Persist(); // Keep the saved copy in sync so a reload doesn't fall back to a bare URL title.
     }
 
     public void OnFrameworkUpdate()

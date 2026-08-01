@@ -30,8 +30,63 @@ internal sealed partial class AetherStreamApp
         var controlsHeight = 84f * scale;
         DrawQueueControls(new Rect(content.Min, new Vector2(content.Max.X, content.Min.Y + controlsHeight)), scale);
 
-        var listRect = new Rect(new Vector2(content.Min.X, content.Min.Y + controlsHeight + 8f * scale), content.Max);
+        var listTop = content.Min.Y + controlsHeight + 8f * scale;
+
+        // Speculative shared-queue extension (see WatchAlongSession.PendingQueueSuggestions) -
+        // this block only ever draws anything if the server actually sent a stream.queueSuggestion,
+        // which it doesn't yet.
+        if (watchAlong.IsHosting && watchAlong.PendingQueueSuggestions.Count > 0)
+        {
+            listTop = DrawQueueSuggestions(content, listTop, scale);
+        }
+
+        var listRect = new Rect(new Vector2(content.Min.X, listTop), content.Max);
         DrawQueueList(listRect, scale);
+    }
+
+    private float DrawQueueSuggestions(Rect content, float top, float scale)
+    {
+        Typography.Draw(new Vector2(content.Min.X, top), Loc.T(L.AetherStream.QueueSuggestionsHeader), ui.MutedInk,
+            TextStyles.Caption1);
+        top += 20f * scale;
+
+        var rowHeight = 40f * scale;
+        foreach (var suggestion in watchAlong.PendingQueueSuggestions)
+        {
+            var rowRect = new Rect(new Vector2(content.Min.X, top), new Vector2(content.Max.X, top + rowHeight));
+            DrawQueueSuggestionRow(rowRect, suggestion, scale);
+            top = rowRect.Max.Y + 6f * scale;
+        }
+
+        return top + 6f * scale;
+    }
+
+    private void DrawQueueSuggestionRow(Rect rect, QueueSuggestion suggestion, float scale)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        Squircle.Fill(drawList, rect.Min, rect.Max, 8f * scale, ImGui.GetColorU32(ui.FieldSurface));
+
+        var dismissRect = new Rect(new Vector2(rect.Max.X - 76f * scale, rect.Min.Y + 5f * scale),
+            new Vector2(rect.Max.X - 6f * scale, rect.Max.Y - 5f * scale));
+        var addRect = new Rect(new Vector2(dismissRect.Min.X - 66f * scale, rect.Min.Y + 5f * scale),
+            new Vector2(dismissRect.Min.X - 6f * scale, rect.Max.Y - 5f * scale));
+
+        var textLeft = rect.Min.X + 10f * scale;
+        var textRight = addRect.Min.X - 10f * scale;
+        Typography.Draw(new Vector2(textLeft, rect.Center.Y - 14f * scale),
+            Ellipsize(suggestion.DisplayName, textRight - textLeft), ui.TitleInk, TextStyles.Body);
+        Typography.Draw(new Vector2(textLeft, rect.Center.Y + 2f * scale),
+            Ellipsize(suggestion.Url, textRight - textLeft), ui.MutedInk, TextStyles.Caption1);
+
+        if (SmallButton(dismissRect, Loc.T(L.AetherStream.QueueSuggestionDismiss), true, scale, danger: true))
+        {
+            watchAlong.DenyQueueSuggestion(suggestion.SuggestionId);
+        }
+
+        if (SmallButton(addRect, Loc.T(L.AetherStream.QueueSuggestionAdd), true, scale))
+        {
+            watchAlong.ApproveQueueSuggestion(suggestion.SuggestionId);
+        }
     }
 
     private void DrawQueueControls(Rect rect, float scale)

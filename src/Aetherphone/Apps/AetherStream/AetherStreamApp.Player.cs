@@ -32,7 +32,24 @@ internal sealed partial class AetherStreamApp
         // would otherwise just get clipped off the bottom with no way to reach it.
         using (AppSurface.Begin(body))
         {
-            var isCasting = screen.Engine.IsActive && queue.Current is not null;
+            // Temporary diagnostic for the Player-tab scroll bug (wheel + kinetic drag both
+            // reported dead while Lock Position is on) - remove once confirmed fixed. Fires only
+            // on actual wheel/click activity so it doesn't spam the log every frame.
+            var scrollIo = ImGui.GetIO();
+            if (scrollIo.MouseWheel != 0f || (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && ImGui.IsWindowHovered()))
+            {
+                AepLog.Info($"[PlayerScroll] wheel={scrollIo.MouseWheel:F2} scrollY={ImGui.GetScrollY():F1} " +
+                    $"scrollMaxY={ImGui.GetScrollMaxY():F1} lockPosition={configuration.LockPosition} " +
+                    $"dragEnabled={DragScrollHost.Enabled} windowHovered={ImGui.IsWindowHovered()}");
+            }
+
+            // Screen stays active (and this row keeps showing) between videos now - see
+            // AetherStreamQueue.Advance's doc comment on why natural queue-end no longer
+            // deactivates the screen. "Nothing current" covers exactly that "waiting for the next
+            // video" gap - checks ViewingEntry too, since a viewer's queue.Current is never set
+            // (see DrawNowPlaying's own note) and would otherwise always read as waiting.
+            var isCasting = screen.Engine.IsActive;
+            var hasCurrent = watchAlong.IsViewing ? watchAlong.ViewingEntry is not null : queue.Current is not null;
             var watchers = watchAlong.Watching();
 
             var bodyTop = content.Min.Y;
@@ -40,7 +57,7 @@ internal sealed partial class AetherStreamApp
             {
                 var castingRect = new Rect(new Vector2(content.Min.X, bodyTop),
                     new Vector2(content.Max.X, bodyTop + CastingRowHeight * scale));
-                DrawCastingStatus(castingRect, scale);
+                DrawCastingStatus(castingRect, scale, !hasCurrent);
                 bodyTop = castingRect.Max.Y + 10f * scale;
             }
 
@@ -94,7 +111,18 @@ internal sealed partial class AetherStreamApp
     {
         if (watchAlong.IsViewing)
         {
-            if (SmallButton(rect, Loc.T(L.AetherStream.LeaveStream), true, scale, danger: true))
+            // Resync alongside Leave - a manual safety valve for when drift/lag makes playback or
+            // screen placement look off, instead of waiting on the next heartbeat.
+            var viewingHalf = rect.Width * 0.5f - 5f * scale;
+            var resyncRect = new Rect(rect.Min, new Vector2(rect.Min.X + viewingHalf, rect.Max.Y));
+            var leaveRect = new Rect(new Vector2(rect.Max.X - viewingHalf, rect.Min.Y), rect.Max);
+
+            if (SmallButton(resyncRect, Loc.T(L.AetherStream.Resync), true, scale))
+            {
+                watchAlong.ResyncNow();
+            }
+
+            if (SmallButton(leaveRect, Loc.T(L.AetherStream.LeaveStream), true, scale, danger: true))
             {
                 watchAlong.Leave();
             }
@@ -102,7 +130,44 @@ internal sealed partial class AetherStreamApp
             return;
         }
 
-        if (SmallButton(rect, Loc.T(L.AetherStream.JoinStream), true, scale))
+        if (watchAlong.IsAwaitingApproval)
+        {
+            // Speculative host-approval extension - only ever true if the server actually sent a
+            // stream.joinPending, which it doesn't yet (see WatchAlongSession.OnJoinPending).
+            // Tapping this just cancels the request, same Leave() the button above uses.
+            if (SmallButton(rect, Loc.T(L.AetherStream.JoinWaitingApproval), true, scale, danger: true))
+            {
+                watchAlong.Leave();
+            }
+
+            return;
+        }
+
+        if (watchAlong.IsHosting)
+        {
+            // "Function like a party" - a room open via OpenParty() doesn't need a queued video to
+            // stay alive, so ending it needs its own explicit action rather than just waiting for
+            // the queue to empty (see WatchAlongSession's partyOpen).
+            if (SmallButton(rect, Loc.T(L.AetherStream.EndParty), true, scale, danger: true))
+            {
+                watchAlong.Leave();
+            }
+
+            return;
+        }
+
+        // Neither hosting nor viewing - two separate entry points side by side: start your own
+        // room (works with nothing queued yet) or join someone else's.
+        var half = rect.Width * 0.5f - 5f * scale;
+        var startRect = new Rect(rect.Min, new Vector2(rect.Min.X + half, rect.Max.Y));
+        var joinRect = new Rect(new Vector2(rect.Max.X - half, rect.Min.Y), rect.Max);
+
+        if (SmallButton(startRect, Loc.T(L.AetherStream.StartParty), true, scale))
+        {
+            watchAlong.OpenParty();
+        }
+
+        if (SmallButton(joinRect, Loc.T(L.AetherStream.JoinStream), true, scale))
         {
             nearbyRefreshTimer = NearbyRefreshIntervalSeconds; // Refresh immediately, not on next tick.
             router.Push(AetherStreamScreen.Join);
@@ -120,18 +185,29 @@ internal sealed partial class AetherStreamApp
     // count (that's the Watching section below, a separate opt-in feature with its own toggle).
     // Reuses SmallButton/the stop action already built for the Casting tab rather than a second
     // copy - this is the same "turn the screen off" action from a second entry point.
-    private void DrawCastingStatus(Rect rect, float scale)
+    private void DrawCastingStatus(Rect rect, float scale, bool waiting)
     {
         var drawList = ImGui.GetWindowDrawList();
         Squircle.Fill(drawList, rect.Min, rect.Max, 10f * scale, ImGui.GetColorU32(ui.FieldSurface));
 
+        var dotColor = waiting ? new Vector4(1f, 0.8f, 0.3f, 1f) : new Vector4(0.4f, 1f, 0.5f, 1f);
         var dotCenter = new Vector2(rect.Min.X + 18f * scale, rect.Center.Y);
-        drawList.AddCircleFilled(dotCenter, 4f * scale, ImGui.GetColorU32(new Vector4(0.4f, 1f, 0.5f, 1f)), 16);
+        drawList.AddCircleFilled(dotCenter, 4f * scale, ImGui.GetColorU32(dotColor), 16);
 
+        var label = waiting ? Loc.T(L.AetherStream.PlayerCastingWaiting) : Loc.T(L.AetherStream.PlayerCastingStatus);
         var textLeft = dotCenter.X + 12f * scale;
-        var textSize = Typography.Measure(Loc.T(L.AetherStream.PlayerCastingStatus), TextStyles.Subheadline);
+        var textSize = Typography.Measure(label, TextStyles.Subheadline);
         Typography.Draw(new Vector2(textLeft, rect.Center.Y - textSize.Y * 0.5f),
-            Loc.T(L.AetherStream.PlayerCastingStatus), ui.TitleInk, TextStyles.Subheadline);
+            label, ui.TitleInk, TextStyles.Subheadline);
+
+        // Hidden entirely while viewing someone else's stream - this row now shows for a viewer
+        // too (isCasting no longer requires queue.Current, see DrawPlayerTab), but queue.Clear()
+        // would desync their local screen from the host's without actually leaving the session.
+        // Leave (see DrawJoinRow) is the correct exit for a viewer.
+        if (watchAlong.IsViewing)
+        {
+            return;
+        }
 
         var stopRect = new Rect(new Vector2(rect.Max.X - 84f * scale, rect.Min.Y + 6f * scale),
             new Vector2(rect.Max.X - 12f * scale, rect.Max.Y - 6f * scale));
@@ -146,7 +222,11 @@ internal sealed partial class AetherStreamApp
     // the layout you asked for over the concept art's own side-by-side arrangement.
     private void DrawNowPlaying(Rect rect, float scale)
     {
-        var current = queue.Current;
+        // A viewer's own queue.Current never gets touched by the sync path (see
+        // WatchAlongSession.ViewingEntry's doc comment) - use the display-only mirror instead so
+        // the card actually reflects what's playing instead of reading "Nothing playing" the
+        // whole time.
+        var current = watchAlong.IsViewing ? watchAlong.ViewingEntry : queue.Current;
         var title = current?.Title ?? Loc.T(L.AetherStream.NothingPlaying);
         Typography.Draw(rect.Min, title, ui.TitleInk, TextStyles.Headline);
 
@@ -192,8 +272,6 @@ internal sealed partial class AetherStreamApp
     // until a real roster exists. The roster is already host-first; watchers[0] is always the host.
     private void DrawWatching(Rect rect, IReadOnlyList<WatchAlongParticipant> watchers, float scale)
     {
-        var drawList = ImGui.GetWindowDrawList();
-        var avatarRadius = 18f * scale;
         var rowHeight = WatchingRowHeight * scale;
         var headerHeight = WatchingHeaderHeight * scale;
         var y = rect.Min.Y;
@@ -201,7 +279,10 @@ internal sealed partial class AetherStreamApp
         Typography.Draw(new Vector2(rect.Min.X, y), Loc.T(L.AetherStream.WatchingHostLabel), ui.MutedInk,
             TextStyles.Caption1);
         y += headerHeight;
-        DrawWatchingRow(drawList, rect.Min.X, y, avatarRadius, rowHeight, watchers[0]);
+        // The host's own row (watchers[0]) never gets a kick control regardless of IsHosting -
+        // that's you, not something to remove.
+        DrawWatchingRow(new Rect(new Vector2(rect.Min.X, y), new Vector2(rect.Max.X, y + rowHeight)), watchers[0],
+            false, scale);
         y += rowHeight;
 
         if (watchers.Count <= 1)
@@ -213,25 +294,45 @@ internal sealed partial class AetherStreamApp
         Typography.Draw(new Vector2(rect.Min.X, y), Loc.T(L.AetherStream.WatchingSectionLabel), ui.MutedInk,
             TextStyles.Caption1);
         y += headerHeight;
+        // Speculative host-kick extension (see WatchAlongSession.KickParticipant) - the button
+        // itself is harmless to show even before the server supports it, since the request is
+        // only ever a no-op until then; canKick is still gated on IsHosting so a viewer never
+        // sees a control for an action they have no authority to take anyway.
+        var canKick = watchAlong.IsHosting;
         for (var index = 1; index < watchers.Count; index++)
         {
-            DrawWatchingRow(drawList, rect.Min.X, y, avatarRadius, rowHeight, watchers[index]);
+            DrawWatchingRow(new Rect(new Vector2(rect.Min.X, y), new Vector2(rect.Max.X, y + rowHeight)),
+                watchers[index], canKick, scale);
             y += rowHeight;
         }
     }
 
-    private void DrawWatchingRow(ImDrawListPtr drawList, float x, float rowTop, float avatarRadius, float rowHeight,
-        WatchAlongParticipant participant)
+    private void DrawWatchingRow(Rect row, WatchAlongParticipant participant, bool canKick, float scale)
     {
-        var scale = ImGuiHelpers.GlobalScale;
-        var centerY = rowTop + rowHeight * 0.5f;
-        var avatarCenter = new Vector2(x + avatarRadius, centerY);
+        var drawList = ImGui.GetWindowDrawList();
+        var avatarRadius = 18f * scale;
+        var centerY = row.Center.Y;
+        var avatarCenter = new Vector2(row.Min.X + avatarRadius, centerY);
         AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, participant.Name, participant.World,
             participant.AvatarUrl, remoteImages, lodestone, 0.7f, 20);
 
-        var nameSize = Typography.Measure(participant.DisplayName, TextStyles.Body);
-        Typography.Draw(new Vector2(avatarCenter.X + avatarRadius + 12f * scale, centerY - nameSize.Y * 0.5f),
-            participant.DisplayName, ui.TitleInk, TextStyles.Body);
+        var textLeft = avatarCenter.X + avatarRadius + 12f * scale;
+        var textRight = row.Max.X;
+        if (canKick)
+        {
+            var kickRect = new Rect(new Vector2(row.Max.X - 64f * scale, row.Min.Y + 8f * scale),
+                new Vector2(row.Max.X - 4f * scale, row.Max.Y - 8f * scale));
+            if (SmallButton(kickRect, Loc.T(L.AetherStream.WatchingKick), true, scale, danger: true))
+            {
+                watchAlong.KickParticipant(participant.UserId);
+            }
+
+            textRight = kickRect.Min.X - 8f * scale;
+        }
+
+        var name = Ellipsize(participant.DisplayName, textRight - textLeft);
+        var nameSize = Typography.Measure(name, TextStyles.Body);
+        Typography.Draw(new Vector2(textLeft, centerY - nameSize.Y * 0.5f), name, ui.TitleInk, TextStyles.Body);
     }
 
     // Mirrors DrawWatching's own layout math (host label + host row, then - only when there's
@@ -256,6 +357,11 @@ internal sealed partial class AetherStreamApp
 
     private void DrawProgress(Rect rect, float scale)
     {
+        // While watching someone else's stream, playback is entirely host-controlled - the next
+        // stream.state would just override a local scrub/pause within moments anyway, so block the
+        // interaction here instead of letting it silently snap back and look broken. Volume is
+        // deliberately exempt (see DrawVolume) - that's a personal preference, not playback state.
+        var interactive = !watchAlong.IsViewing;
         var (position, duration, _) = video.GetProgress();
         var normalized = duration > 0f ? Math.Clamp(position / duration, 0f, 1f) : 0f;
         var track = new Rect(new Vector2(rect.Min.X + 46f * scale, rect.Center.Y - 2f * scale),
@@ -264,8 +370,9 @@ internal sealed partial class AetherStreamApp
         // Stage 0 established seeking is cheap on this pipeline - mpv's own "seek <pos>
         // absolute" command, not a reload (docs/video-pipeline.md §3 in the AlphaChannel repo) -
         // so this scrubs live rather than only previewing a target and committing on release.
-        var updated = Scrubber.Draw(track, normalized, ui.Accent, Palette.WithAlpha(ui.MutedInk, 0.3f), 1f);
-        if (Scrubber.IsHovered(track) && ImGui.IsMouseDown(ImGuiMouseButton.Left) && duration > 0f)
+        var updated = Scrubber.Draw(track, normalized, ui.Accent, Palette.WithAlpha(ui.MutedInk, 0.3f),
+            interactive ? 1f : 0.4f);
+        if (interactive && Scrubber.IsHovered(track) && ImGui.IsMouseDown(ImGuiMouseButton.Left) && duration > 0f)
         {
             video.Seek(updated * duration);
         }
@@ -280,11 +387,17 @@ internal sealed partial class AetherStreamApp
 
     private void DrawTransport(Rect rect, float scale)
     {
+        // See DrawProgress's note - transport is host-controlled while watching someone else's
+        // stream. queue.Advance() specifically also needs blocking here: tapping it while Viewing
+        // could populate queue.Current from a stale local queue, which OnFrameworkUpdate's own
+        // "local queue action wins" rule would then read as the user choosing to leave the stream.
+        var interactive = !watchAlong.IsViewing;
+        var transportAlpha = interactive ? 1f : 0.4f;
         var centerY = rect.Center.Y;
         var centerX = rect.Center.X;
         var (_, _, paused) = video.GetProgress();
 
-        if (ui.IconButton(new Vector2(centerX - 132f * scale, centerY), 16f * scale,
+        if (interactive && ui.IconButton(new Vector2(centerX - 132f * scale, centerY), 16f * scale,
                 FontAwesomeIcon.UndoAlt.ToIconString(), ui.TitleInk, AppSkin.Transparent, 0.6f))
         {
             var (position, _, _) = video.GetProgress();
@@ -292,7 +405,7 @@ internal sealed partial class AetherStreamApp
         }
 
         if (TransportButton.Draw(new Vector2(centerX - 66f * scale, centerY), 18f * scale, TransportAction.Previous,
-                ui.TitleInk, Palette.WithAlpha(ui.TitleInk, 0.85f), 1f, true))
+                ui.TitleInk, Palette.WithAlpha(ui.TitleInk, 0.85f), transportAlpha, interactive) && interactive)
         {
             queue.Advance();
         }
@@ -303,20 +416,21 @@ internal sealed partial class AetherStreamApp
         var playAction = paused ? TransportAction.Play : TransportAction.Pause;
         var centerRadius = 22f * scale;
         var centerPoint = new Vector2(centerX, centerY);
-        ImGui.GetWindowDrawList().AddCircleFilled(centerPoint, centerRadius, ImGui.GetColorU32(ui.Accent), 32);
-        if (TransportButton.Draw(centerPoint, centerRadius, playAction, ui.Accent, new Vector4(1f, 1f, 1f, 1f), 1f,
-                true))
+        ImGui.GetWindowDrawList().AddCircleFilled(centerPoint, centerRadius,
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, transportAlpha)), 32);
+        if (TransportButton.Draw(centerPoint, centerRadius, playAction, ui.Accent, new Vector4(1f, 1f, 1f, 1f),
+                transportAlpha, interactive) && interactive)
         {
             video.Pause(!paused);
         }
 
         if (TransportButton.Draw(new Vector2(centerX + 66f * scale, centerY), 18f * scale, TransportAction.Next,
-                ui.TitleInk, Palette.WithAlpha(ui.TitleInk, 0.85f), 1f, true))
+                ui.TitleInk, Palette.WithAlpha(ui.TitleInk, 0.85f), transportAlpha, interactive) && interactive)
         {
             queue.Advance();
         }
 
-        if (ui.IconButton(new Vector2(centerX + 132f * scale, centerY), 16f * scale,
+        if (interactive && ui.IconButton(new Vector2(centerX + 132f * scale, centerY), 16f * scale,
                 FontAwesomeIcon.RedoAlt.ToIconString(), ui.TitleInk, AppSkin.Transparent, 0.6f))
         {
             var (position, _, _) = video.GetProgress();
@@ -386,21 +500,40 @@ internal sealed partial class AetherStreamApp
             }
         }
 
-        var toggleTop = fieldRect.Max.Y + 10f * scale;
-        var toggleRow = new Rect(new Vector2(rect.Min.X, toggleTop), new Vector2(rect.Max.X, toggleTop + 30f * scale));
-        var half = toggleRow.Width * 0.5f - 5f * scale;
-        var playNowRect = new Rect(toggleRow.Min, new Vector2(toggleRow.Min.X + half, toggleRow.Max.Y));
-        var queueRect = new Rect(new Vector2(toggleRow.Max.X - half, toggleRow.Min.Y), toggleRow.Max);
-        DrawModeButton(playNowRect, Loc.T(L.AetherStream.PlayNow), !queueOnAdd, scale);
-        DrawModeButton(queueRect, Loc.T(L.AetherStream.AddToQueue), queueOnAdd, scale);
+        // While watching someone else's stream, this field proposes a suggestion to the host
+        // instead of touching the local queue directly - queue.Add/PlayNow would populate
+        // queue.Current, which OnFrameworkUpdate's "local action wins" rule already treats as the
+        // user choosing to leave the stream. The Play Now/Add to Queue choice is meaningless here
+        // (there's no local queue position to pick), so it's hidden entirely rather than shown
+        // disabled.
+        var suggesting = watchAlong.IsViewing;
+        var submitTop = fieldRect.Max.Y + 10f * scale;
+        if (!suggesting)
+        {
+            var toggleRow = new Rect(new Vector2(rect.Min.X, submitTop), new Vector2(rect.Max.X, submitTop + 30f * scale));
+            var half = toggleRow.Width * 0.5f - 5f * scale;
+            var playNowRect = new Rect(toggleRow.Min, new Vector2(toggleRow.Min.X + half, toggleRow.Max.Y));
+            var queueRect = new Rect(new Vector2(toggleRow.Max.X - half, toggleRow.Min.Y), toggleRow.Max);
+            DrawModeButton(playNowRect, Loc.T(L.AetherStream.PlayNow), !queueOnAdd, scale);
+            DrawModeButton(queueRect, Loc.T(L.AetherStream.AddToQueue), queueOnAdd, scale);
+            submitTop = toggleRow.Max.Y + 10f * scale;
+        }
 
-        var submitTop = toggleRow.Max.Y + 10f * scale;
         var enabled = urlInput.Trim().Length > 0;
         var submitRect = new Rect(new Vector2(rect.Min.X, submitTop), new Vector2(rect.Max.X, submitTop + 38f * scale));
-        var submitLabel = queueOnAdd ? Loc.T(L.AetherStream.AddToQueue) : Loc.T(L.AetherStream.PlayNow);
+        var submitLabel = suggesting ? Loc.T(L.AetherStream.SuggestToHost)
+            : queueOnAdd ? Loc.T(L.AetherStream.AddToQueue) : Loc.T(L.AetherStream.PlayNow);
         if (DrawSubmitButton(submitRect, submitLabel, enabled) && enabled)
         {
-            SubmitUrl();
+            if (suggesting)
+            {
+                watchAlong.SuggestQueueItem(urlInput.Trim());
+                urlInput = string.Empty;
+            }
+            else
+            {
+                SubmitUrl();
+            }
         }
     }
 

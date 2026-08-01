@@ -118,6 +118,12 @@ internal sealed class VideoEngine : IDisposable
 
     internal bool IsActive => _isActive;
 
+    // Set only from PlayVideo's background task on a genuine init/decode failure (e.g. mpv/yt-dlp
+    // never downloaded, so mpv_create() throws DllNotFoundException) - VideoPlayer polls this from
+    // GetProgress() to flip its own State/LastError, since PlayVideo itself returns long before
+    // the failure is known and its caller's try/catch never sees it.
+    internal string? LastError { get; private set; }
+
     internal void StopVideo()
     {
         _isActive = false;
@@ -142,6 +148,7 @@ internal sealed class VideoEngine : IDisposable
             return;
         }
 
+        LastError = null;
         AssignScreenForSession(_screenTexture);
 
         Task.Run(async () =>
@@ -164,6 +171,13 @@ internal sealed class VideoEngine : IDisposable
                 {
                     _mpvRenderer.Play(url, playbackPosition, isPlaying);
                     _isActive = true;
+                    // AssignScreenForSession's SpawnScreenInFrontOfLocalPlayer already computed
+                    // ScreenPosition/Yaw/Scale synchronously above, but SetScreenTransform only
+                    // pushes into the painter while _isActive is true - which it wasn't yet at
+                    // that point on a genuinely new session. Push it now that it actually is, or
+                    // the screen stays parked at the painter's stale/default transform until the
+                    // next unrelated SetScreenTransform call happens to fire.
+                    _screenPainter.SetTransform(ScreenPosition, ScreenYaw, ScreenScale);
                     return;
                 }
 
@@ -172,6 +186,7 @@ internal sealed class VideoEngine : IDisposable
                     HardwareDecoding, MaxQualityHeight, AllowInsecureDirectUrls, _pendingVolume);
                 _mpvRenderer.Play(url, playbackPosition, isPlaying);
                 _isActive = true;
+                _screenPainter.SetTransform(ScreenPosition, ScreenYaw, ScreenScale);
                 while (true)
                 {
                     if (!_mpvRenderer.RenderFrame())
@@ -185,6 +200,7 @@ internal sealed class VideoEngine : IDisposable
             catch (Exception e)
             {
                 AepLog.Error($"[MPV] Generic error: {e.Message} {e.StackTrace}");
+                LastError = e.Message;
             }
         });
     }
