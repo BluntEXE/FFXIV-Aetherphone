@@ -15,6 +15,7 @@ internal enum AccountBadges
     Developer = 1 << 4,
     Support = 1 << 5,
     Contributor = 1 << 6,
+    Aide = 1 << 7,
 }
 
 internal readonly record struct RoleBadge(AccountBadges Flag, RoleKind Kind, FontAwesomeIcon Glyph, LocString Tooltip);
@@ -25,6 +26,7 @@ internal static class RoleBadges
     {
         new(AccountBadges.Management, RoleKind.Management, FontAwesomeIcon.Crown, L.Social.RoleManagement),
         new(AccountBadges.Moderator, RoleKind.Moderator, FontAwesomeIcon.Gavel, L.Social.RoleModerator),
+        new(AccountBadges.Aide, RoleKind.Aide, FontAwesomeIcon.Heart, L.Social.RoleAide),
         new(AccountBadges.Patreon, RoleKind.Patreon, FontAwesomeIcon.Star, L.Social.RolePatreon),
         new(AccountBadges.Developer, RoleKind.Developer, FontAwesomeIcon.Code, L.Social.RoleDeveloper),
         new(AccountBadges.Support, RoleKind.Support, FontAwesomeIcon.HandHoldingHeart, L.Social.RoleSupport),

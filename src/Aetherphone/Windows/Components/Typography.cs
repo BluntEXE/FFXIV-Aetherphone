@@ -222,6 +222,7 @@ internal static class Typography
     private const float GlintBandFraction = 0.16f;
     private const float GlintActiveFraction = 0.30f;
     private const float RippleCrests = 2.5f;
+    private const float WaveSpan = 1.0f;
     private const int GradientSlices = 12;
 
     private readonly record struct SweepTier(float WidthScale, float AlphaScale);
@@ -305,19 +306,48 @@ internal static class Typography
             var left = position.X + width * sliceIndex / GradientSlices;
             var right = position.X + width * (sliceIndex + 1) / GradientSlices;
             var center = (sliceIndex + 0.5f) / GradientSlices;
-            var factor = effect.Kind switch
+            Vector4 tint;
+            if (effect.Kind == NameEffectKind.Wave)
             {
-                NameEffectKind.Flow => Triangle(center + effect.Phase),
-                NameEffectKind.Ripple => Wave(center * RippleCrests + effect.Phase),
-                _ => center,
-            };
+                tint = FlagRamp(effect.Trough, color, effect.Crest, center * WaveSpan - effect.Phase);
+            }
+            else
+            {
+                var factor = effect.Kind switch
+                {
+                    NameEffectKind.Flow => Triangle(center + effect.Phase),
+                    NameEffectKind.Ripple => Wave(center * RippleCrests + effect.Phase),
+                    _ => center,
+                };
 
-            var tint = Vector4.Lerp(color, effect.Crest, factor);
+                tint = Vector4.Lerp(color, effect.Crest, factor);
+            }
 
             drawList.PushClipRect(new Vector2(left, top), new Vector2(right, bottom), true);
             drawList.AddText(font, fontSize, position, ImGui.GetColorU32(tint), text);
             drawList.PopClipRect();
         }
+    }
+
+    private static Vector4 FlagRamp(Vector4 trough, Vector4 mid, Vector4 crest, float phase)
+    {
+        var wrapped = phase - MathF.Floor(phase);
+        if (wrapped < 0.25f)
+        {
+            return Vector4.Lerp(trough, mid, wrapped * 4f);
+        }
+
+        if (wrapped < 0.50f)
+        {
+            return Vector4.Lerp(mid, crest, (wrapped - 0.25f) * 4f);
+        }
+
+        if (wrapped < 0.75f)
+        {
+            return Vector4.Lerp(crest, mid, (wrapped - 0.50f) * 4f);
+        }
+
+        return Vector4.Lerp(mid, trough, (wrapped - 0.75f) * 4f);
     }
 
     private static float Wave(float phase) => (MathF.Sin(phase * MathF.Tau) + 1f) * 0.5f;

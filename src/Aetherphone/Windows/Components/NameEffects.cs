@@ -10,6 +10,7 @@ internal static class NameEffects
     private const double GlintPeriod = 3000.0;
     private const double FlowPeriod = 4200.0;
     private const double RipplePeriod = 3600.0;
+    private const double WavePeriod = 2400.0;
 
     public static TextEffect For(RoleKind role, bool light)
     {
@@ -17,6 +18,11 @@ internal static class NameEffects
         if (kind == NameEffectKind.None)
         {
             return default;
+        }
+
+        if (kind == NameEffectKind.Wave)
+        {
+            return new TextEffect(kind, RoleInk.WaveCrest(role, light), Phase(kind), RoleInk.WaveTrough(role, light));
         }
 
         return new TextEffect(kind, RoleInk.Highlight(role, light), Phase(kind));
@@ -31,6 +37,7 @@ internal static class NameEffects
             RoleKind.Moderator => NameEffectKind.Glint,
             RoleKind.Developer => NameEffectKind.Ripple,
             RoleKind.Support => NameEffectKind.Breath,
+            RoleKind.Aide => NameEffectKind.Wave,
             RoleKind.Verified => NameEffectKind.Gradient,
             _ => NameEffectKind.None,
         };
@@ -45,6 +52,7 @@ internal static class NameEffects
             NameEffectKind.Glint => Pulse.Phase(GlintPeriod),
             NameEffectKind.Flow => Pulse.Phase(FlowPeriod),
             NameEffectKind.Ripple => Pulse.Phase(RipplePeriod),
+            NameEffectKind.Wave => Pulse.Phase(WavePeriod),
             _ => 0f,
         };
     }

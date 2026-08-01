@@ -13,9 +13,10 @@ internal enum NameEffectKind
     Flow,
     Glint,
     Sweep,
+    Wave,
 }
 
-internal readonly record struct TextEffect(NameEffectKind Kind, Vector4 Crest, float Phase);
+internal readonly record struct TextEffect(NameEffectKind Kind, Vector4 Crest, float Phase, Vector4 Trough = default);
 
 internal static class TextStyles
 {

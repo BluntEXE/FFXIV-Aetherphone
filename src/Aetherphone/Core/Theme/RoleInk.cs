@@ -10,6 +10,7 @@ internal enum RoleKind
     Patreon,
     Support,
     Contributor,
+    Aide,
 }
 
 internal static class RoleInk
@@ -21,6 +22,9 @@ internal static class RoleInk
     private static readonly Vector4 PatreonBase = new(0.9098f, 0.1216f, 0.3843f, 1.00f);
     private static readonly Vector4 VerifiedBase = new(0.2039f, 0.5961f, 0.8588f, 1.00f);
     private static readonly Vector4 ContributorBase = new(0.1843f, 0.7647f, 0.4392f, 1.00f);
+    private static readonly Vector4 AideBase = new(0.9804f, 0.5373f, 0.7137f, 1.00f);
+    private static readonly Vector4 AideCrestBase = new(1.0000f, 1.0000f, 1.0000f, 1.00f);
+    private static readonly Vector4 AideTroughBase = new(0.3569f, 0.8078f, 0.9804f, 1.00f);
     private static readonly Vector4 NeutralDark = new(0.97f, 0.97f, 0.98f, 1.00f);
     private static readonly Vector4 NeutralLight = new(0.10f, 0.10f, 0.11f, 1.00f);
 
@@ -54,6 +58,26 @@ internal static class RoleInk
 
     public static Vector4 Highlight(RoleKind kind, PhoneTheme theme) => Highlight(kind, IsLight(theme));
 
+    public static Vector4 WaveCrest(RoleKind kind, bool light)
+    {
+        if (kind != RoleKind.Aide)
+        {
+            return Highlight(kind, light);
+        }
+
+        return light ? Darkened(AideCrestBase, MaxLightLuminance) : AideCrestBase;
+    }
+
+    public static Vector4 WaveTrough(RoleKind kind, bool light)
+    {
+        if (kind != RoleKind.Aide)
+        {
+            return For(kind, light);
+        }
+
+        return light ? Darkened(AideTroughBase, MaxLightLuminance) : Lifted(AideTroughBase, MinDarkLuminance);
+    }
+
     private static Vector4 Brand(RoleKind kind)
     {
         return kind switch
@@ -65,6 +89,7 @@ internal static class RoleInk
             RoleKind.Patreon => PatreonBase,
             RoleKind.Verified => VerifiedBase,
             RoleKind.Contributor => ContributorBase,
+            RoleKind.Aide => AideBase,
             _ => default,
         };
     }
