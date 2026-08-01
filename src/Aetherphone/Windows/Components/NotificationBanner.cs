@@ -66,6 +66,8 @@ internal sealed class NotificationBanner : IDisposable
 
     public event Action? Shown;
 
+    public bool IsVisible => stage != Stage.Idle;
+
     public bool CapturesPointer(Rect screen)
     {
         if (stage is Stage.Idle or Stage.Exit || active is null)

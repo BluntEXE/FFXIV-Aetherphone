@@ -224,6 +224,7 @@
   "common.fileKindImages": "Images",
   "common.fileKindAudio": "Audio",
   "common.fileKindAll": "All files",
+  "common.rateLimited": "Too many requests. Retrying in {0}s",
   "message.threadEmpty": "Say hello",
   "social.likedChirp": "liked your chirp",
   "social.likedPhoto": "liked your photo",

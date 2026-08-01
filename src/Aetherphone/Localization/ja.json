@@ -224,6 +224,7 @@
   "common.fileKindImages": "画像",
   "common.fileKindAudio": "オーディオ",
   "common.fileKindAll": "すべてのファイル",
+  "common.rateLimited": "リクエストが多すぎます。{0}秒後に再試行します",
   "message.threadEmpty": "挨拶してみましょう",
   "social.likedChirp": "あなたのチャープにいいねしました",
   "social.likedPhoto": "あなたの写真にいいねしました",

@@ -33,6 +33,7 @@ internal static class L
         public static readonly LocString FileKindImages = new("common.fileKindImages", "Images");
         public static readonly LocString FileKindAudio = new("common.fileKindAudio", "Audio");
         public static readonly LocString FileKindAll = new("common.fileKindAll", "All files");
+        public static readonly LocString RateLimited = new("common.rateLimited", "Too many requests. Retrying in {0}s");
     }
 
     internal static class Social

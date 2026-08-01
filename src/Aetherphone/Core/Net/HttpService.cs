@@ -306,6 +306,17 @@ internal sealed class HttpService : IDisposable
         }
     }
 
+    public TimeSpan PauseRemaining(string host)
+    {
+        if (host.Length == 0 || !pausedHostsUntilTicks.TryGetValue(host, out var untilTicks))
+        {
+            return TimeSpan.Zero;
+        }
+
+        var remainingTicks = untilTicks - DateTime.UtcNow.Ticks;
+        return remainingTicks > 0 ? TimeSpan.FromTicks(remainingTicks) : TimeSpan.Zero;
+    }
+
     private bool IsPaused(Uri? uri)
     {
         if (uri is null || !pausedHostsUntilTicks.TryGetValue(uri.Host, out var untilTicks))

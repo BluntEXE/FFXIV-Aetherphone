@@ -224,6 +224,7 @@
   "common.fileKindImages": "Imágenes",
   "common.fileKindAudio": "Audio",
   "common.fileKindAll": "Todos los archivos",
+  "common.rateLimited": "Demasiadas solicitudes. Reintento en {0}s",
   "message.threadEmpty": "Di hola",
   "social.likedChirp": "le gustó tu chirp",
   "social.likedPhoto": "le gustó tu foto",

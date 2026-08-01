@@ -31,6 +31,7 @@ internal sealed class ShellOverlayCoordinator
     private readonly ControlCenter controlCenter;
     private readonly NotificationBanner banner;
     private readonly DynamicIsland island;
+    private readonly RateLimitPill rateLimitPill;
     private readonly IncomingCallOverlay incomingOverlay;
     private readonly BanOverlay banOverlay;
     private readonly ConfirmOverlay confirmOverlay;
@@ -41,7 +42,7 @@ internal sealed class ShellOverlayCoordinator
     private readonly SetupOverlay setup;
 
     public ShellOverlayCoordinator(Configuration configuration, LoadingScreen loading, NavigationStack navigation,
-        ControlCenter controlCenter, NotificationBanner banner, DynamicIsland island,
+        ControlCenter controlCenter, NotificationBanner banner, DynamicIsland island, RateLimitPill rateLimitPill,
         IncomingCallOverlay incomingOverlay, BanOverlay banOverlay, ConfirmOverlay confirmOverlay,
         ReportOverlay reportOverlay, ShareSheet shareSheet, ConductGateOverlay conductOverlay,
         OnboardingDirector director, SetupOverlay setup)
@@ -52,6 +53,7 @@ internal sealed class ShellOverlayCoordinator
         this.controlCenter = controlCenter;
         this.banner = banner;
         this.island = island;
+        this.rateLimitPill = rateLimitPill;
         this.incomingOverlay = incomingOverlay;
         this.banOverlay = banOverlay;
         this.confirmOverlay = confirmOverlay;
@@ -114,6 +116,11 @@ internal sealed class ShellOverlayCoordinator
             if (!controlCenter.IsActive)
             {
                 island.Draw(screen, theme, navigation, navigation.Current?.Id);
+            }
+
+            if (!banner.IsVisible && !controlCenter.IsActive)
+            {
+                rateLimitPill.Draw(screen, theme, delta);
             }
 
             incomingOverlay.Draw(screen, theme);

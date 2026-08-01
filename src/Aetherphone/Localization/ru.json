@@ -224,6 +224,7 @@
   "common.fileKindImages": "Изображения",
   "common.fileKindAudio": "Аудио",
   "common.fileKindAll": "Все файлы",
+  "common.rateLimited": "Слишком много запросов. Повтор через {0} с",
   "message.threadEmpty": "Скажите привет",
   "social.likedChirp": "оценил(а) вашу запись",
   "social.likedPhoto": "оценил(а) ваше фото",

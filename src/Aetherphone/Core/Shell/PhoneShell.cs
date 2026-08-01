@@ -82,6 +82,7 @@ internal sealed class PhoneShell : IDisposable
         banner = new NotificationBanner(notifications, VisibleAppId, PhoneVisible, router);
         banner.Shown += OnBannerShown;
         var island = new DynamicIsland(services.Playback, calls);
+        var rateLimitPill = new RateLimitPill(services.Http, services.AethernetSession);
         var controlCenter = new ControlCenter(configuration, themes, services.Playback, calls, navigation,
             notifications, router);
         minimizedView = new MinimizedPhone(notifications, configuration);
@@ -103,7 +104,8 @@ internal sealed class PhoneShell : IDisposable
         transition = new ShellTransitionRenderer(themes, navigation, home, painter);
         morph = new MinimizeMorphView(themes, minimize, minimizedView, notifications, painter);
         overlays = new ShellOverlayCoordinator(configuration, loading, navigation, controlCenter, banner, island,
-            incomingOverlay, banOverlay, confirmOverlay, reportOverlay, shareSheet, conductOverlay, director, setup);
+            rateLimitPill, incomingOverlay, banOverlay, confirmOverlay, reportOverlay, shareSheet, conductOverlay,
+            director, setup);
     }
 
     public void OnOpened()
