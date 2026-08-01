@@ -1,4 +1,5 @@
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Shortcuts;
 
 namespace Aetherphone.Core.Home;
 
@@ -23,7 +24,7 @@ internal sealed class HomeLayoutService
     private static readonly string[] DefaultSecondPageApps =
     {
         "skywatcher", "collections", "inventory", "fishing",
-        "clock", "notes", "calculator", "timers",
+        "clock", "notes", "calculator", "timers", "shortcuts",
         "wallet", "dailies", "calendar", "news",
         "character", "notifications", "jobs",
         "health",
@@ -33,6 +34,7 @@ internal sealed class HomeLayoutService
 
     private readonly IReadOnlyList<IPhoneApp> apps;
     private readonly WidgetRegistry widgets;
+    private readonly IShortcutSource shortcuts;
     private readonly IHomeConfiguration configuration;
     private readonly Dictionary<string, IPhoneApp> byId = new();
     private readonly List<List<HomeTile>> pages = new();
@@ -49,10 +51,12 @@ internal sealed class HomeLayoutService
     private int widgetCounter;
     private bool placementsDirty = true;
 
-    public HomeLayoutService(IReadOnlyList<IPhoneApp> apps, WidgetRegistry widgets, IHomeConfiguration configuration)
+    public HomeLayoutService(IReadOnlyList<IPhoneApp> apps, WidgetRegistry widgets, IShortcutSource shortcuts,
+        IHomeConfiguration configuration)
     {
         this.apps = apps;
         this.widgets = widgets;
+        this.shortcuts = shortcuts;
         this.configuration = configuration;
         availability = new bool[apps.Count];
         rows = ClampRows(configuration.HomeGridRows);
@@ -210,8 +214,8 @@ internal sealed class HomeLayoutService
 
     public void MakeFolder(HomeTile target, HomeTile dragged)
     {
-        if (ReferenceEquals(target, dragged) || target.IsWidget || dragged.IsWidget ||
-            target.IsFolder && dragged.IsFolder)
+        if (ReferenceEquals(target, dragged) || target.IsWidget || dragged.IsWidget || target.IsShortcut ||
+            dragged.IsShortcut || target.IsFolder && dragged.IsFolder)
         {
             return;
         }
@@ -353,6 +357,59 @@ internal sealed class HomeLayoutService
                 }
             }
         }
+    }
+
+    public bool HasShortcut(Guid id)
+    {
+        for (var page = 0; page < pages.Count; page++)
+        {
+            var tiles = pages[page];
+            for (var index = 0; index < tiles.Count; index++)
+            {
+                if (tiles[index].Shortcut?.Id == id)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public bool AddShortcut(Guid id)
+    {
+        if (HasShortcut(id) || shortcuts.Find(id) is not { } shortcut)
+        {
+            return false;
+        }
+
+        Append(HomeTile.ForShortcut(shortcut));
+        Commit();
+        return true;
+    }
+
+    public bool RemoveShortcut(Guid id)
+    {
+        var removed = false;
+        for (var page = 0; page < pages.Count; page++)
+        {
+            var tiles = pages[page];
+            for (var index = tiles.Count - 1; index >= 0; index--)
+            {
+                if (tiles[index].Shortcut?.Id == id)
+                {
+                    tiles.RemoveAt(index);
+                    removed = true;
+                }
+            }
+        }
+
+        if (removed)
+        {
+            Commit();
+        }
+
+        return removed;
     }
 
     public void SetFolderTint(HomeTile folder, string tint)
@@ -666,6 +723,16 @@ internal sealed class HomeLayoutService
                 : HomeTile.ForFolder(NextFolderKey(), item.FolderName, contents, item.FolderTint);
         }
 
+        if (string.Equals(item.Kind, "shortcut", StringComparison.Ordinal))
+        {
+            if (!Guid.TryParse(item.ShortcutId, out var shortcutId) || shortcuts.Find(shortcutId) is not { } shortcut)
+            {
+                return null;
+            }
+
+            return HomeTile.ForShortcut(shortcut);
+        }
+
         if (string.Equals(item.Kind, "widget", StringComparison.Ordinal))
         {
             if (!widgets.TryGet(item.WidgetId, out var widget) || !widgets.IsAvailable(widget))
@@ -934,6 +1001,11 @@ internal sealed class HomeLayoutService
                 WidgetId = tile.Widget!.Id,
                 WidgetSize = WidgetSizes.Serialize(tile.Size),
             };
+        }
+
+        if (tile.IsShortcut)
+        {
+            return new HomeItem { Kind = "shortcut", ShortcutId = tile.Shortcut!.Id.ToString("N") };
         }
 
         if (tile.IsFolder)

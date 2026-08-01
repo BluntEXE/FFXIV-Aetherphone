@@ -25,6 +25,7 @@ using Aetherphone.Core.Radio;
 using Aetherphone.Core.Report;
 using Aetherphone.Core.Sharing;
 using Aetherphone.Core.Shell;
+using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Songs;
 using Aetherphone.Core.Telephony;
 using Aetherphone.Core.Theme;
@@ -71,6 +72,9 @@ internal sealed class PhoneServices : IDisposable
     public required HttpService Http { get; init; }
     public required MediaCache Media { get; init; }
     public required RemoteImageCache RemoteImages { get; init; }
+    public required PluginCatalog PluginCatalog { get; init; }
+    public required ShortcutStore Shortcuts { get; init; }
+    public required ShortcutRunner ShortcutRunner { get; init; }
     public required LodestoneService Lodestone { get; init; }
     public required LookupService Lookup { get; init; }
     public required AethernetSession AethernetSession { get; init; }
@@ -167,6 +171,7 @@ internal sealed class PhoneServices : IDisposable
         var imageRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "images"));
         var imageDisk = new DiskCache(imageRoot, 128L * 1024 * 1024);
         var remoteImages = new RemoteImageCache(http, imageDisk);
+        var pluginCatalog = new PluginCatalog(remoteImages);
         var lodestone = new LodestoneService(configuration, http, media, cacheRoot);
         var lookup = new LookupService(lodestone);
         var aethernetSession = new AethernetSession(configuration, framework);
@@ -256,6 +261,9 @@ internal sealed class PhoneServices : IDisposable
             Http = http,
             Media = media,
             RemoteImages = remoteImages,
+            PluginCatalog = pluginCatalog,
+            Shortcuts = new ShortcutStore(configuration, pluginCatalog),
+            ShortcutRunner = new ShortcutRunner(),
             Lodestone = lodestone,
             Lookup = lookup,
             AethernetSession = aethernetSession,
@@ -337,6 +345,7 @@ internal sealed class PhoneServices : IDisposable
         Notifications.Dispose();
         Sound.Dispose();
         Media.Dispose();
+        ShortcutRunner.Dispose();
         RemoteImages.Dispose();
         Availability.Dispose();
         Http.Dispose();

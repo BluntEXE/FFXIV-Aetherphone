@@ -86,8 +86,9 @@ internal sealed class PhoneShell : IDisposable
         var controlCenter = new ControlCenter(configuration, themes, services.Playback, calls, navigation,
             notifications, router);
         minimizedView = new MinimizedPhone(notifications, configuration);
-        home = new HomeScreen(apps, bundle.Widgets, configuration);
+        home = new HomeScreen(apps, bundle.Widgets, services.Shortcuts, services.ShortcutRunner, configuration);
         services.Installer.Bind(home.Layout);
+        services.Shortcuts.Bind(home.Layout);
         navigation.ReturningHome += home.PrepareReveal;
         var incomingOverlay = new IncomingCallOverlay(calls);
         var banOverlay = new BanOverlay(services.AethernetSession);

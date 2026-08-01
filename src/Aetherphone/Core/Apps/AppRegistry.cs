@@ -26,6 +26,7 @@ using Aetherphone.Apps.Notifications;
 using Aetherphone.Apps.Photos;
 using Aetherphone.Apps.Polls;
 using Aetherphone.Apps.Settings;
+using Aetherphone.Apps.Shortcuts;
 using Aetherphone.Apps.Skywatcher;
 using Aetherphone.Apps.Timers;
 using Aetherphone.Apps.Feedback;
@@ -79,6 +80,7 @@ internal static class AppRegistry
         apps.Add(new ClockApp(services.Configuration, services.Confirm));
         apps.Add(new NotesApp(services.Configuration, services.Confirm));
         apps.Add(new CalculatorApp());
+        apps.Add(new ShortcutsApp(services.Shortcuts, services.ShortcutRunner, services.Confirm));
         apps.Add(new TimersApp(services.Configuration));
         apps.Add(new DailiesApp(services.Configuration, services.GameData));
         apps.Add(new FishingApp());

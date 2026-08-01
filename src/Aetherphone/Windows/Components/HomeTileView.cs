@@ -1,7 +1,9 @@
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Home;
+using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
@@ -35,6 +37,14 @@ internal static class HomeTileView
         {
             DrawBadge(center, size, app.BadgeCount, app.BadgeAsDot, theme, scale);
         }
+    }
+
+    public static void DrawShortcut(Vector2 center, float size, ShortcutEntry shortcut, IDalamudTextureWrap? icon,
+        PhoneTheme theme, float drawScale, float labelAlpha, bool showLabels, float labelWidth, float zoom = 1f)
+    {
+        var scale = ImGuiHelpers.GlobalScale * zoom;
+        ShortcutArt.DrawSurface(ImGui.GetWindowDrawList(), center, size * drawScale, shortcut, icon, scale);
+        DrawLabel(center, size, shortcut.Name, theme, scale, labelAlpha, showLabels, labelWidth, zoom);
     }
 
     public static void DrawFolder(Vector2 center, float size, HomeTile folder, PhoneTheme theme, float drawScale,

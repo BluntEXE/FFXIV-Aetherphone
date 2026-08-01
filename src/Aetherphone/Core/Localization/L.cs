@@ -243,6 +243,70 @@ internal static class L
         public static readonly LocString Message = new("app.message", "Message");
         public static readonly LocString Jobs = new("app.jobs", "Jobs");
         public static readonly LocString AppStore = new("app.appstore", "App Store");
+        public static readonly LocString Shortcuts = new("app.shortcuts", "Shortcuts");
+    }
+
+    internal static class Shortcuts
+    {
+        public static readonly LocString TabShortcuts = new("shortcuts.tabShortcuts", "Shortcuts");
+        public static readonly LocString TabPlugins = new("shortcuts.tabPlugins", "Plugins");
+        public static readonly LocString NewShortcut = new("shortcuts.newShortcut", "New Shortcut");
+        public static readonly LocString EditShortcut = new("shortcuts.editShortcut", "Edit Shortcut");
+        public static readonly LocString Untitled = new("shortcuts.untitled", "Untitled");
+        public static readonly LocString LibraryEmpty = new("shortcuts.libraryEmpty", "No shortcuts yet");
+        public static readonly LocString LibraryEmptyHint = new("shortcuts.libraryEmptyHint", "Tap + to build one, or open the Plugins tab.");
+        public static readonly LocString NoSteps = new("shortcuts.noSteps", "No steps");
+        public static readonly LocString MoreSteps = new("shortcuts.moreSteps", "+{0} more");
+        public static readonly LocString StepOpenNamed = new("shortcuts.stepOpenNamed", "Open {0}");
+        public static readonly LocString StepWaitNamed = new("shortcuts.stepWaitNamed", "Wait {0}s");
+        public static readonly LocString Running = new("shortcuts.running", "Running");
+        public static readonly LocString RunDone = new("shortcuts.runDone", "Ran {0}");
+        public static readonly LocString RunRejected = new("shortcuts.runRejected", "The game refused that command");
+        public static readonly LocString RunPluginMissing = new("shortcuts.runPluginMissing", "That plugin is not loaded");
+        public static readonly LocString SearchPlugins = new("shortcuts.searchPlugins", "Search plugins and commands");
+        public static readonly LocString NoPluginsFound = new("shortcuts.noPluginsFound", "No plugins match that search.");
+        public static readonly LocString PluginDisabled = new("shortcuts.pluginDisabled", "Disabled");
+        public static readonly LocString PluginCommandCount = new("shortcuts.pluginCommandCount", "{0} commands");
+        public static readonly LocString PluginBy = new("shortcuts.pluginBy", "by {0}");
+        public static readonly LocString AddToHome = new("shortcuts.addToHome", "Add to Home");
+        public static readonly LocString OpenPlugin = new("shortcuts.openPlugin", "Open");
+        public static readonly LocString PluginSettings = new("shortcuts.pluginSettings", "Settings");
+        public static readonly LocString Commands = new("shortcuts.commands", "Commands");
+        public static readonly LocString CommandsHint = new("shortcuts.commandsHint", "Tap + on a command to start a shortcut from it.");
+        public static readonly LocString NoCommands = new("shortcuts.noCommands", "This plugin registers no commands.");
+        public static readonly LocString NewFromCommand = new("shortcuts.newFromCommand", "New shortcut from this");
+        public static readonly LocString ChoosePlugin = new("shortcuts.choosePlugin", "Choose Plugin");
+        public static readonly LocString NameHint = new("shortcuts.nameHint", "Shortcut name");
+        public static readonly LocString Appearance = new("shortcuts.appearance", "Appearance");
+        public static readonly LocString Steps = new("shortcuts.steps", "Steps");
+        public static readonly LocString StepsHint = new("shortcuts.stepsHint", "Commands run in order, exactly as if you typed them. Game macro waits like <wait.2> are honored.");
+        public static readonly LocString AddCommand = new("shortcuts.addCommand", "Command");
+        public static readonly LocString AddWait = new("shortcuts.addWait", "Wait");
+        public static readonly LocString AddOpen = new("shortcuts.addOpen", "Open");
+        public static readonly LocString CommandHint = new("shortcuts.commandHint", "/emote or any command");
+        public static readonly LocString WaitSeconds = new("shortcuts.waitSeconds", "{0} seconds");
+        public static readonly LocString KindCommand = new("shortcuts.kindCommand", "COMMAND");
+        public static readonly LocString KindWait = new("shortcuts.kindWait", "WAIT");
+        public static readonly LocString KindOpenPlugin = new("shortcuts.kindOpenPlugin", "OPEN PLUGIN");
+        public static readonly LocString MoveUp = new("shortcuts.moveUp", "Move up");
+        public static readonly LocString MoveDown = new("shortcuts.moveDown", "Move down");
+        public static readonly LocString RemoveStep = new("shortcuts.removeStep", "Remove step");
+        public static readonly LocString Options = new("shortcuts.options", "Options");
+        public static readonly LocString ShowOnHome = new("shortcuts.showOnHome", "Show on Home Screen");
+        public static readonly LocString TestRun = new("shortcuts.testRun", "Run Now");
+        public static readonly LocString Save = new("shortcuts.save", "Save");
+        public static readonly LocString Edit = new("shortcuts.edit", "Edit");
+        public static readonly LocString DeleteShortcut = new("shortcuts.deleteShortcut", "Delete Shortcut");
+        public static readonly LocString DeleteConfirm = new("shortcuts.deleteConfirm", "Delete this shortcut?");
+        public static readonly LocString Delete = new("shortcuts.delete", "Delete");
+        public static readonly LocString KeepIt = new("shortcuts.keepIt", "Keep");
+        public static readonly LocString Color = new("shortcuts.color", "Color");
+        public static readonly LocString CustomColor = new("shortcuts.customColor", "Custom color");
+        public static readonly LocString Symbol = new("shortcuts.symbol", "Symbol");
+        public static readonly LocString UsePluginIcon = new("shortcuts.usePluginIcon", "Use the plugin icon");
+        public static readonly LocString LimitReached = new("shortcuts.limitReached", "You can keep up to {0} shortcuts.");
+        public static readonly LocString StepLimitReached = new("shortcuts.stepLimitReached", "A shortcut can hold up to {0} steps.");
+        public static readonly LocString Ok = new("shortcuts.ok", "OK");
     }
 
     internal static class Store
@@ -375,6 +439,9 @@ internal static class L
         public static readonly LocString ClockSub = new("storeCopy.clockSub", "Eorzea and local");
         public static readonly LocString ClockBody = new("storeCopy.clockBody",
             "World clock, alarms and Eorzea time side by side.");
+        public static readonly LocString ShortcutsSub = new("storeCopy.shortcutsSub", "One tap, many commands");
+        public static readonly LocString ShortcutsBody = new("storeCopy.shortcutsBody",
+            "Turn any run of commands into a home screen icon, and pin your other plugins next to them.");
         public static readonly LocString CalculatorSub = new("storeCopy.calculatorSub", "Numbers, fast");
         public static readonly LocString CalculatorBody = new("storeCopy.calculatorBody",
             "A calculator that stays out of your way.");

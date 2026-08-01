@@ -464,6 +464,24 @@ internal static class AppPalettes
         HoverTint = DefaultHover,
     };
 
+    public static readonly AppPalette Shortcuts = new()
+    {
+        Accent = AppAccents.For("shortcuts"),
+        TitleInk = new(0.97f, 0.96f, 1f, 1f),
+        BodyInk = new(0.89f, 0.87f, 0.97f, 0.96f),
+        MutedInk = new(0.70f, 0.68f, 0.84f, 0.85f),
+        HeaderInk = new(0.78f, 0.72f, 0.99f, 0.95f),
+        HeadingInk = new(0.97f, 0.96f, 1f, 1f),
+        BackdropTop = new(0.11f, 0.08f, 0.20f, 1f),
+        BackdropBottom = new(0.03f, 0.02f, 0.05f, 1f),
+        BloomTop = new(0.55f, 0.38f, 0.96f, 0.22f),
+        BloomBottom = new(0.26f, 0.18f, 0.52f, 0f),
+        CardFill = GlassFill,
+        CardStroke = GlassStroke,
+        FieldSurface = GlassField,
+        HoverTint = DefaultHover,
+    };
+
     public static readonly AppPalette Timers = new()
     {
         Accent = AppAccents.For("timers"),
