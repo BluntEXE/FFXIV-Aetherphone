@@ -1164,6 +1164,12 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
                 return false;
             }
 
+            if (userPostsLoaded && userPostsUserId == MyUserId)
+            {
+                userPosts = CopyOnWrite.Prepend(userPosts, created);
+                userPostsTotal++;
+            }
+
             return true;
         }, onComplete, () => posting = false);
     }
