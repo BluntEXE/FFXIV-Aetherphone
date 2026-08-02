@@ -145,9 +145,8 @@ internal sealed partial class AetherStreamApp
             var sharePresence = SettingsRow.Bool(watchingCard.NextRow(),
                 Loc.T(L.AetherStream.SettingsShareWatchPresence), configuration.VideoShareWatchPresence,
                 accentedTheme);
-            // Speculative host-approval extension (see WatchAlongSession.PendingRequests) - the
-            // toggle itself is always safe to show/flip even before the server supports it, since
-            // it just adds an ignored field to stream.state until the server actually reads it.
+            // See WatchAlongSession.PendingRequests. Layers on top of the mutual-contact + block
+            // gate, it does not replace it - a non-contact still can't reach the host either way.
             var approvalRequired = SettingsRow.Bool(watchingCard.NextRow(),
                 Loc.T(L.AetherStream.SettingsApprovalRequired), configuration.VideoStreamApprovalRequired,
                 accentedTheme);

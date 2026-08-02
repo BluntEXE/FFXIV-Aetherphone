@@ -32,9 +32,7 @@ internal sealed partial class AetherStreamApp
 
         var listTop = content.Min.Y + controlsHeight + 8f * scale;
 
-        // Speculative shared-queue extension (see WatchAlongSession.PendingQueueSuggestions) -
-        // this block only ever draws anything if the server actually sent a stream.queueSuggestion,
-        // which it doesn't yet.
+        // See WatchAlongSession.PendingQueueSuggestions.
         if (watchAlong.IsHosting && watchAlong.PendingQueueSuggestions.Count > 0)
         {
             listTop = DrawQueueSuggestions(content, listTop, scale);

@@ -15,14 +15,15 @@ internal sealed record WatchAlongParticipant(string UserId, string Name, string 
 // Shape mirrors Telephony's NearbyStreamInfo, same reasoning as WatchAlongParticipant above.
 internal sealed record NearbyStream(string HostId, string Name, string World, string DisplayName);
 
-// A viewer awaiting the host's approve/deny decision, per the speculative host-approval extension
-// (see SignalType.StreamJoinRequest's doc comment) - only ever populated if the server actually
-// sends stream.joinRequest, which it doesn't yet.
+// A viewer awaiting the host's approve/deny decision (see SignalType.StreamJoinRequest's doc
+// comment). Name/World always arrive empty here - the server has never carried real name/world in
+// the From it sends on stream.joinRequest, only DisplayName (same as call.incoming) - keep them on
+// the record for shape-parity with WatchAlongParticipant, but render DisplayName only.
 internal sealed record PendingJoinRequest(string UserId, string Name, string World, string DisplayName);
 
-// A viewer's proposed queue URL awaiting the host's approve/deny decision, per the speculative
-// shared-queue extension (see SignalType.StreamQueueSuggest's doc comment) - only ever populated
-// if the server actually sends stream.queueSuggestion, which it doesn't yet.
+// A viewer's proposed queue URL awaiting the host's approve/deny decision (see
+// SignalType.StreamQueueSuggest's doc comment). Same empty-Name/World caveat as PendingJoinRequest
+// above applies to stream.queueSuggestion's From too.
 internal sealed record QueueSuggestion(string SuggestionId, string UserId, string Name, string World,
     string DisplayName, string Url);
 
@@ -111,6 +112,7 @@ internal sealed class WatchAlongSession : IDisposable
         stream.Joined += OnJoined;
         stream.Declined += OnDeclined;
         stream.RosterReceived += OnRoster;
+        stream.LeftReceived += OnLeft;
         stream.StateReceived += OnState;
         stream.Ended += OnEnded;
         stream.NearbyReceived += OnNearby;
@@ -132,15 +134,11 @@ internal sealed class WatchAlongSession : IDisposable
     // comment on why writing this into the queue itself would be unsafe.
     public VideoQueueEntry? ViewingEntry { get; private set; }
 
-    // Speculative host-approval extension state (see PendingJoinRequest's doc comment) - both
-    // stay permanently empty/false unless the server actually sends stream.joinRequest/
-    // stream.joinPending, which it doesn't yet.
+    // Host-approval extension state (see PendingJoinRequest's doc comment).
     public bool IsAwaitingApproval { get; private set; }
     public IReadOnlyList<PendingJoinRequest> PendingRequests { get; private set; } = Array.Empty<PendingJoinRequest>();
 
-    // Speculative shared-queue extension state (see QueueSuggestion's doc comment) - stays
-    // permanently empty unless the server actually sends stream.queueSuggestion, which it
-    // doesn't yet.
+    // Shared-queue extension state (see QueueSuggestion's doc comment).
     public IReadOnlyList<QueueSuggestion> PendingQueueSuggestions { get; private set; } =
         Array.Empty<QueueSuggestion>();
 
@@ -228,18 +226,14 @@ internal sealed class WatchAlongSession : IDisposable
         Interlocked.Exchange(ref pendingStateSync, null);
     }
 
-    // Host only - decide a pending join request. Speculative extension: harmless no-op call if
-    // PendingRequests is empty, since that only happens when the server never sent a
-    // stream.joinRequest to respond to in the first place.
+    // Host only - decide a pending join request.
     public void ApproveRequest(string userId)
     {
         stream.Approve(userId);
         RemovePendingRequest(userId);
     }
 
-    // Viewer only - propose a URL for the host's queue. Speculative extension: safe to call any
-    // time, but only ever reaches anyone once the server actually relays stream.queueSuggest to
-    // the host.
+    // Viewer only - propose a URL for the host's queue.
     public void SuggestQueueItem(string url)
     {
         stream.SuggestQueueItem(url, Guid.NewGuid().ToString());
@@ -267,10 +261,9 @@ internal sealed class WatchAlongSession : IDisposable
         RemoveQueueSuggestion(suggestionId);
     }
 
-    // Host only - force-remove a participant. Speculative extension: sends the request either
-    // way, but only ever actually removes anyone once the server supports stream.kick. No local
-    // roster change here - the authoritative stream.roster broadcast that follows (once the
-    // server supports this) already updates Roster the same way any other departure does.
+    // Host only - force-remove a participant. No local roster change here - the authoritative
+    // stream.roster broadcast that follows already updates Roster the same way any other
+    // departure does.
     public void KickParticipant(string userId)
     {
         stream.Kick(userId);
@@ -300,6 +293,27 @@ internal sealed class WatchAlongSession : IDisposable
         foreach (var existing in PendingQueueSuggestions)
         {
             if (existing.SuggestionId != suggestionId)
+            {
+                updated.Add(existing);
+            }
+        }
+
+        PendingQueueSuggestions = updated;
+    }
+
+    // A single viewer can have more than one suggestion outstanding (unlike join requests, which
+    // are one-per-user) - see OnLeft, which is the only caller.
+    private void RemoveQueueSuggestionsByUser(string userId)
+    {
+        if (PendingQueueSuggestions.Count == 0)
+        {
+            return;
+        }
+
+        var updated = new List<QueueSuggestion>(PendingQueueSuggestions.Count);
+        foreach (var existing in PendingQueueSuggestions)
+        {
+            if (existing.UserId != userId)
             {
                 updated.Add(existing);
             }
@@ -490,10 +504,10 @@ internal sealed class WatchAlongSession : IDisposable
 
         if (message.Reason == "denied")
         {
-            // Speculative host-approval extension - unlike "full"/"unavailable" this reason is
-            // unambiguous (the host looked at the request and said no), so it earns its own
-            // message instead of the deliberately generic one below. Never sent by the server
-            // today, since it can only ever result from a stream.deny call it doesn't support.
+            // Unlike "full"/"unavailable" this reason is unambiguous (the host looked at the
+            // request and said no), so it earns its own message instead of the deliberately
+            // generic one below. Deny is not sticky server-side - a denied user may ask again,
+            // throttled only by the 2s join cooldown.
             confirm.Alert(Loc.T(L.AetherStream.JoinDeniedTitle), Loc.T(L.AetherStream.JoinDeniedBody),
                 Loc.T(L.Phone.OutcomeDismiss));
             return;
@@ -516,10 +530,10 @@ internal sealed class WatchAlongSession : IDisposable
         AepLog.Info($"[WatchAlong] roster update: {Roster.Count} participant(s): {names} " +
             $"(VideoShareWatchPresence={configuration.VideoShareWatchPresence}, signedIn={session.IsSignedIn})");
 
-        // Defensive tidy-up for the speculative host-approval extension: if someone we still
-        // thought was pending shows up in the authoritative roster (approved through some path
-        // other than our own ApproveRequest call), drop them from PendingRequests too rather than
-        // leaving a stale approve/deny row for someone already in.
+        // Defensive tidy-up: if someone we still thought was pending shows up in the authoritative
+        // roster (approved through some path other than our own ApproveRequest call), drop them
+        // from PendingRequests too rather than leaving a stale approve/deny row for someone
+        // already in.
         if (PendingRequests.Count > 0)
         {
             foreach (var participant in Roster)
@@ -529,11 +543,26 @@ internal sealed class WatchAlongSession : IDisposable
         }
     }
 
-    // Host only: the server telling us someone wants to join while ApprovalRequired is on.
-    // Speculative extension - only meaningful while we're actually hosting; a stray one arriving
-    // after we've already stopped (a race with our own stream.leave) is ignored rather than
-    // resurrecting a request list for a stream that no longer exists. Never sent by the server
-    // today.
+    // Host only: the server telling us a pending requester (or queue suggester) dropped or
+    // withdrew before we decided on them - stream.roster (handled above) already reflects the
+    // room's actual membership, but says nothing about PendingRequests/PendingQueueSuggestions,
+    // which would otherwise leave a stale approve/deny row that no-ops. The server forgets a
+    // suggestion the same way on the suggester's departure (see SignalType.StreamQueueSuggest's
+    // doc comment), so clearing it here just mirrors what the server already did.
+    private void OnLeft(CallControl message)
+    {
+        if (Mode != WatchAlongMode.Hosting || message.UserId is not { } userId)
+        {
+            return;
+        }
+
+        RemovePendingRequest(userId);
+        RemoveQueueSuggestionsByUser(userId);
+    }
+
+    // Host only: the server telling us someone wants to join while ApprovalRequired is on. A
+    // stray one arriving after we've already stopped (a race with our own stream.leave) is
+    // ignored rather than resurrecting a request list for a stream that no longer exists.
     private void OnJoinRequested(CallControl message)
     {
         if (Mode != WatchAlongMode.Hosting || message.From is not { } from)
@@ -555,9 +584,9 @@ internal sealed class WatchAlongSession : IDisposable
     }
 
     // Viewer only: the server acknowledging our stream.join is waiting on the host's decision,
-    // instead of the immediate stream.joined/stream.declined verdict Open mode gives today.
-    // Resolved by whichever of those two eventually follows (or stream.ended if the host stops
-    // streaming first). Speculative extension - never sent by the server today.
+    // instead of the immediate stream.joined/stream.declined verdict Open mode gives when
+    // approval isn't required. Resolved by whichever of those two eventually follows (or
+    // stream.ended if the host stops streaming first).
     private void OnJoinPending(CallControl message)
     {
         if (Mode != WatchAlongMode.None)
@@ -568,8 +597,8 @@ internal sealed class WatchAlongSession : IDisposable
         IsAwaitingApproval = true;
     }
 
-    // Host only: a viewer proposed a URL for the queue. Speculative extension - same "only while
-    // actually hosting" reasoning as OnJoinRequested. Never sent by the server today.
+    // Host only: a viewer proposed a URL for the queue. Same "only while actually hosting"
+    // reasoning as OnJoinRequested.
     private void OnQueueSuggested(CallControl message)
     {
         if (Mode != WatchAlongMode.Hosting || message.From is not { } from
@@ -591,9 +620,9 @@ internal sealed class WatchAlongSession : IDisposable
         PendingQueueSuggestions = updated;
     }
 
-    // Viewer only: the host's verdict on a suggestion this client made. Speculative extension -
-    // never sent by the server today. Reason reuses the same "accepted"/"denied" convention as
-    // stream.declined's Reason field rather than adding a dedicated bool.
+    // Viewer only: the host's verdict on a suggestion this client made. Reason reuses the same
+    // "accepted"/"denied" convention as stream.declined's Reason field rather than adding a
+    // dedicated bool.
     private void OnQueueSuggestionResult(CallControl message)
     {
         if (message.Reason == "accepted")
@@ -746,7 +775,6 @@ internal sealed class WatchAlongSession : IDisposable
 
     // Viewer only: the host removed us specifically - distinct from OnEnded ("room is gone for
     // everyone"), so it gets its own message instead of the generic stream-unavailable one.
-    // Speculative extension - never sent by the server today.
     private void OnKicked(CallControl message)
     {
         if (Mode == WatchAlongMode.Viewing)
@@ -790,6 +818,7 @@ internal sealed class WatchAlongSession : IDisposable
         stream.Joined -= OnJoined;
         stream.Declined -= OnDeclined;
         stream.RosterReceived -= OnRoster;
+        stream.LeftReceived -= OnLeft;
         stream.StateReceived -= OnState;
         stream.Ended -= OnEnded;
         stream.NearbyReceived -= OnNearby;

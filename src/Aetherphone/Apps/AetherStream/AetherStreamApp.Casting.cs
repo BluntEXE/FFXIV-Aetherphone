@@ -49,9 +49,8 @@ internal sealed partial class AetherStreamApp
 
         var bodyTop = card.Max.Y + 16f * scale;
 
-        // Speculative host-approval extension (see WatchAlongSession.PendingRequests) - this
-        // block only ever draws anything if the server actually sent a stream.joinRequest, which
-        // it doesn't yet. Sits above screen placement since a pending join is more time-sensitive.
+        // See WatchAlongSession.PendingRequests. Sits above screen placement since a pending
+        // join is more time-sensitive.
         if (watchAlong.IsHosting && watchAlong.PendingRequests.Count > 0)
         {
             bodyTop = DrawPendingRequests(content, bodyTop, scale);
@@ -120,12 +119,13 @@ internal sealed partial class AetherStreamApp
         var approveRect = new Rect(new Vector2(denyRect.Min.X - 76f * scale, rect.Min.Y + 5f * scale),
             new Vector2(denyRect.Min.X - 6f * scale, rect.Max.Y - 5f * scale));
 
+        // DisplayName only - the server never carries real name/world on stream.joinRequest (see
+        // PendingJoinRequest's doc comment), so a Name/World caption line here would always
+        // render empty. Single line, vertically centered instead of stacked with a second row.
         var textLeft = rect.Min.X + 10f * scale;
         var textWidth = approveRect.Min.X - 8f * scale - textLeft;
-        Typography.Draw(new Vector2(textLeft, rect.Center.Y - 14f * scale), Ellipsize(request.DisplayName, textWidth),
+        Typography.Draw(new Vector2(textLeft, rect.Center.Y - 8f * scale), Ellipsize(request.DisplayName, textWidth),
             ui.TitleInk, TextStyles.Body);
-        Typography.Draw(new Vector2(textLeft, rect.Center.Y + 2f * scale),
-            Ellipsize($"{request.Name}  ·  {request.World}", textWidth), ui.MutedInk, TextStyles.Caption1);
 
         if (SmallButton(denyRect, Loc.T(L.AetherStream.CastingDeny), true, scale, danger: true))
         {

@@ -132,9 +132,9 @@ internal sealed partial class AetherStreamApp
 
         if (watchAlong.IsAwaitingApproval)
         {
-            // Speculative host-approval extension - only ever true if the server actually sent a
-            // stream.joinPending, which it doesn't yet (see WatchAlongSession.OnJoinPending).
-            // Tapping this just cancels the request, same Leave() the button above uses.
+            // True while waiting on the host's approve/deny decision (see
+            // WatchAlongSession.OnJoinPending). Tapping this just cancels the request, same
+            // Leave() the button above uses.
             if (SmallButton(rect, Loc.T(L.AetherStream.JoinWaitingApproval), true, scale, danger: true))
             {
                 watchAlong.Leave();
@@ -294,10 +294,8 @@ internal sealed partial class AetherStreamApp
         Typography.Draw(new Vector2(rect.Min.X, y), Loc.T(L.AetherStream.WatchingSectionLabel), ui.MutedInk,
             TextStyles.Caption1);
         y += headerHeight;
-        // Speculative host-kick extension (see WatchAlongSession.KickParticipant) - the button
-        // itself is harmless to show even before the server supports it, since the request is
-        // only ever a no-op until then; canKick is still gated on IsHosting so a viewer never
-        // sees a control for an action they have no authority to take anyway.
+        // See WatchAlongSession.KickParticipant. Gated on IsHosting so a viewer never sees a
+        // control for an action they have no authority to take.
         var canKick = watchAlong.IsHosting;
         for (var index = 1; index < watchers.Count; index++)
         {

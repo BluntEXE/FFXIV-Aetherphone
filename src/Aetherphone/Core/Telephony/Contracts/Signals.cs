@@ -38,38 +38,38 @@ internal static class SignalType
     public const string StreamLeft = "stream.left";
     public const string StreamEnded = "stream.ended";
 
-    // Speculative host-approval extension (approve/deny each join instead of today's automatic
-    // contact-check accept/decline) - requested from the backend but NOT confirmed deployed as of
-    // this writing. Wiring these message types is safe regardless: if the server never sends
-    // stream.joinRequest/stream.joinPending, these cases are simply never hit and every client
-    // behaves exactly like today's Open-mode flow. See WatchAlongSession.PendingRequests/
+    // Host-approval extension (approve/deny each join instead of the automatic contact-check
+    // accept/decline that runs when ApprovalRequired is unset/false) - live on the dev backend as
+    // of commit 95f3acd. Approval layers on top of the mutual-contact + block gate, it does not
+    // replace it; a non-contact still can't reach the host. Deny is not sticky - a denied user may
+    // ask again, throttled only by the 2s join cooldown. See WatchAlongSession.PendingRequests/
     // IsAwaitingApproval and CallControl.ApprovalRequired below.
     public const string StreamJoinRequest = "stream.joinRequest";
     public const string StreamApprove = "stream.approve";
     public const string StreamDeny = "stream.deny";
     public const string StreamJoinPending = "stream.joinPending";
 
-    // Speculative shared-queue extension, same "safe until the backend ships it" reasoning as the
-    // join-approval family above. A viewer proposes a URL; the server relays it to the host only
-    // (stream.queueSuggestion); the host approves (adds it to their own local queue - see
-    // WatchAlongSession.ApproveQueueSuggestion, there is no server-tracked shared queue, playback
-    // sync of whatever the host eventually plays already works via stream.state) or denies it;
-    // either way the server tells the original suggester the outcome
-    // (stream.queueSuggestionResult, Reason "accepted"/"denied", same reused-Reason pattern as
-    // stream.declined). Not confirmed deployed - these cases are simply never hit if the server
-    // never sends stream.queueSuggestion/stream.queueSuggestionResult.
+    // Shared-queue extension, live on the dev backend as of commit 95f3acd. A viewer proposes a
+    // URL; the server relays it to the host only (stream.queueSuggestion); the host approves (adds
+    // it to their own local queue - see WatchAlongSession.ApproveQueueSuggestion, there is no
+    // server-tracked shared queue, playback sync of whatever the host eventually plays already
+    // works via stream.state) or denies it; either way the server tells the original suggester the
+    // outcome (stream.queueSuggestionResult, Reason "accepted"/"denied", same reused-Reason
+    // pattern as stream.declined). The server has no queue of its own either - it only remembers
+    // suggestionId -> who asked, long enough to route the verdict back, and forgets it on the
+    // verdict or when that viewer leaves (see WatchAlongSession.OnLeft).
     public const string StreamQueueSuggest = "stream.queueSuggest";
     public const string StreamQueueSuggestion = "stream.queueSuggestion";
     public const string StreamQueueApprove = "stream.queueApprove";
     public const string StreamQueueDeny = "stream.queueDeny";
     public const string StreamQueueSuggestionResult = "stream.queueSuggestionResult";
 
-    // Speculative host-kick extension, same "safe until the backend ships it" reasoning as the
-    // families above. Host targets a specific participant by UserId; the server is expected to
-    // force-remove them from the room (a stream.roster broadcast to everyone else already covers
-    // reflecting that removal - no new signal needed there) and tell the removed viewer
+    // Host-kick extension, live on the dev backend as of commit 95f3acd. Host targets a specific
+    // participant by UserId; the server force-removes them from the room (a stream.roster
+    // broadcast to everyone else covers reflecting that removal) and tells the removed viewer
     // specifically via stream.kicked, distinct from stream.ended ("room is gone for everyone")
-    // since a kick only affects the one person. Not confirmed deployed.
+    // since a kick only affects the one person. A kicked user can't rejoin that room while it
+    // lives - the retry comes back as stream.declined{reason:"denied"}.
     public const string StreamKick = "stream.kick";
     public const string StreamKicked = "stream.kicked";
 
@@ -119,17 +119,15 @@ internal sealed record CallControl
     public double? PositionSeconds { get; init; }
     public bool? Paused { get; init; }
 
-    // Part of the speculative host-approval extension (see StreamJoinRequest et al. above) - sent
-    // by the host alongside every stream.state so the server knows whether to auto-decide joins
-    // (false/omitted, today's only behavior) or hold them for stream.approve/stream.deny (true).
-    // A server that doesn't understand this field yet just ignores it per the envelope's own
-    // "unknown fields ignored" contract.
+    // Part of the host-approval extension (see StreamJoinRequest et al. above) - sent by the host
+    // alongside every stream.state so the server knows whether to auto-decide joins (false/omitted)
+    // or hold them for stream.approve/stream.deny (true).
     public bool? ApprovalRequired { get; init; }
 
-    // Part of the speculative shared-queue extension (see StreamQueueSuggest et al. above) -
-    // client-generated (Guid.NewGuid().ToString() on the suggesting viewer's side) since a single
-    // viewer can have more than one suggestion pending at once, unlike join requests which are
-    // naturally one-per-user.
+    // Part of the shared-queue extension (see StreamQueueSuggest et al. above) - client-generated
+    // (Guid.NewGuid().ToString() on the suggesting viewer's side) since a single viewer can have
+    // more than one suggestion pending at once, unlike join requests which are naturally
+    // one-per-user. Max 64 chars; a viewer cannot reuse another viewer's suggestionId.
     public string? SuggestionId { get; init; }
 
     // The host's AetherStream world-anchored screen transform (VideoEngine.ScreenPosition/
