@@ -1012,6 +1012,8 @@ internal static class L
                 "Phone Size in Settings is a slider now, so you can pick any size instead of six fixed ones"),
             new("changelog.r0997.2",
                 "The whole screen scales with the phone, so text and icons grow with it instead of staying small"),
+            new("changelog.r0997.3",
+                "Text Size is a slider too now, and it goes down to 70 percent for people who want smaller text"),
         };
 
         public static readonly LocString[] Release0996 =

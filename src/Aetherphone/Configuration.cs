@@ -54,10 +54,10 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool ScrollWhileIdle { get; set; } = true;
     public bool ShowLodestonePortraits { get; set; } = true;
     public int LodestoneIdIndexVersion { get; set; }
-    public float TextZoom { get; set; } = 1.15f;
+    public float TextZoom { get; set; } = 1.0f;
     public List<string> FontGlyphLedger { get; set; } = new();
     public float ScreenBrightness { get; set; } = 1f;
-    public float PhoneScale { get; set; } = 1.25f;
+    public float PhoneScale { get; set; } = PhoneSizeCatalog.DefaultWidth / PhoneSizeCatalog.DesignWidth;
     public float PhoneWidth { get; set; }
     public bool CameraLandscape { get; set; }
     public string Language { get; set; } = string.Empty;
@@ -221,7 +221,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
             return;
         }
 
-        PhoneWidth = PhoneSizeCatalog.Clamp(MathF.Round(PhoneScale * PhoneSizeCatalog.DesignWidth));
+        PhoneWidth = PhoneSizeCatalog.WidthForScale(PhoneScale);
         Save();
     }
 

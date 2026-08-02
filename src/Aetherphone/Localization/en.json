@@ -705,6 +705,7 @@
   "changelog.r0997.0": "You can now resize the phone by dragging the bottom right corner of its frame",
   "changelog.r0997.1": "Phone Size in Settings is a slider now, so you can pick any size instead of six fixed ones",
   "changelog.r0997.2": "The whole screen scales with the phone, so text and icons grow with it instead of staying small",
+  "changelog.r0997.3": "Text Size is a slider too now, and it goes down to 70 percent for people who want smaller text",
   "changelog.r0996.0": "You can now link your Patreon account from the account section in Settings",
   "changelog.r0996.1": "Linking grants your member perks automatically, including the Patreon member badge, and they follow your membership as it changes",
   "changelog.r0996.2": "Settings shows whether your membership is active once linked, and you can unlink Patreon at any time",

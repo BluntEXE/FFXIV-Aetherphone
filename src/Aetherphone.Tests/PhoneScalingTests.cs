@@ -85,6 +85,33 @@ public sealed class PhoneScalingTests
         Assert.Equal(423f, PhoneSizeCatalog.Snap(423f));
     }
 
+    [Fact]
+    public void TextZoomSnapKeepsTheLegacySteps()
+    {
+        Assert.Equal(1.0f, TextZoomCatalog.Snap(1.005f), 0.0001f);
+        Assert.Equal(1.15f, TextZoomCatalog.Snap(1.16f), 0.0001f);
+        Assert.Equal(1.3f, TextZoomCatalog.Snap(1.29f), 0.0001f);
+        Assert.Equal(1.5f, TextZoomCatalog.Snap(1.49f), 0.0001f);
+        Assert.Equal(1.22f, TextZoomCatalog.Snap(1.221f), 0.0001f);
+    }
+
+    [Fact]
+    public void FreshInstallDefaultsMatchTheShippedSizes()
+    {
+        var fresh = new Aetherphone.Configuration();
+        var width = PhoneSizeCatalog.WidthForScale(fresh.PhoneScale);
+        Assert.Equal(PhoneSizeCatalog.DefaultWidth, width, 0.5f);
+        Assert.Equal(1.35f, PhoneSizeCatalog.ZoomFor(width), 0.005f);
+        Assert.Equal(1.0f, fresh.TextZoom, 0.0001f);
+    }
+
+    [Fact]
+    public void TextZoomStaysInsideTheBakedRange()
+    {
+        Assert.Equal(TextZoomCatalog.MinimumZoom, TextZoomCatalog.Clamp(0.4f));
+        Assert.Equal(TextZoomCatalog.MaximumZoom, TextZoomCatalog.Clamp(9f));
+    }
+
     private static float BezelWidth(in ChassisGeometry chassis) => chassis.Screen.Min.X - chassis.Body.Min.X;
 
     private static ChassisGeometry ChassisFor(float width, float globalScale)

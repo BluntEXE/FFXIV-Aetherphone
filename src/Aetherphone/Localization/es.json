@@ -705,6 +705,7 @@
   "changelog.r0997.0": "Ahora puedes cambiar el tamaño del teléfono arrastrando la esquina inferior derecha de su marco",
   "changelog.r0997.1": "Tamaño del teléfono en Ajustes ahora es un control deslizante, así que puedes elegir cualquier tamaño en lugar de seis fijos",
   "changelog.r0997.2": "Toda la pantalla escala con el teléfono, así que el texto y los iconos crecen con él en lugar de quedarse pequeños",
+  "changelog.r0997.3": "Tamaño del texto también es un control deslizante ahora, y baja hasta el 70 por ciento si quieres texto más pequeño",
   "changelog.r0996.0": "Ahora puedes vincular tu cuenta de Patreon desde la sección de tu cuenta en los Ajustes",
   "changelog.r0996.1": "Al vincular, tus ventajas de miembro se desbloquean automáticamente, incluida la insignia de Miembro de Patreon, y siguen tu membresía cuando cambia",
   "changelog.r0996.2": "Tras vincular, los Ajustes muestran si tu membresía está activa, y puedes desvincular Patreon en cualquier momento",

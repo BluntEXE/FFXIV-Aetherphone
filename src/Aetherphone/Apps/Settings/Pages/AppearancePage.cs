@@ -85,16 +85,8 @@ internal sealed class AppearancePage : ISettingsPage
             card.End();
             SettingsSection.Header(Loc.T(L.Settings.TextSize), theme);
             var zoomCard = GroupCard.Begin(theme, 1);
-            var zoomIndex = SegmentStrip.Draw("settings.textZoom", zoomCard.NextRow(), TextZoomCatalog.Labels,
-                TextZoomCatalog.IndexOf(configuration.TextZoom), theme);
+            DrawTextSizeSlider(zoomCard.NextRow(), theme);
             zoomCard.End();
-            var zoom = TextZoomCatalog.Scales[zoomIndex];
-            if (MathF.Abs(zoom - configuration.TextZoom) > 0.001f)
-            {
-                configuration.TextZoom = zoom;
-                Plugin.Fonts.SetZoom(zoom);
-                configuration.Save();
-            }
 
             SettingsSection.Header(Loc.T(L.Settings.PhoneSize), theme);
             var sizeCard = GroupCard.Begin(theme, 1);
@@ -119,13 +111,11 @@ internal sealed class AppearancePage : ISettingsPage
 
     private void DrawPhoneSizeSlider(Rect row, PhoneTheme theme)
     {
-        var scale = UiScale.Current;
-        var readout = SizeReadoutColumn * scale + Metrics.Space.Md * scale;
         var smallest = PhoneSizeCatalog.MinimumWidth;
         var largest = MathF.Max(PhoneBounds.ClampWidth(PhoneSizeCatalog.MaximumWidth), smallest + 1f);
         var span = largest - smallest;
         var effective = PhoneBounds.ClampWidth(configuration.PhoneWidth);
-        var slider = Slider.Draw("settings.phoneSize", row, (effective - smallest) / span, theme, 0f, readout);
+        var slider = DrawSettingSlider("settings.phoneSize", row, theme, (effective - smallest) / span);
         var width = PhoneSizeCatalog.Snap(PhoneBounds.ClampWidth(smallest + slider.Value * span));
         if ((slider.Dragging || slider.Released) && MathF.Abs(width - configuration.PhoneWidth) > 0.01f)
         {
@@ -137,8 +127,40 @@ internal sealed class AppearancePage : ISettingsPage
             configuration.Save();
         }
 
-        var shown = PhoneBounds.ClampWidth(configuration.PhoneWidth);
-        var text = $"{(int)MathF.Round(PhoneSizeCatalog.ZoomFor(shown) * 100f)}%";
+        DrawPercentReadout(row, theme, PhoneSizeCatalog.ZoomFor(PhoneBounds.ClampWidth(configuration.PhoneWidth)));
+    }
+
+    private void DrawTextSizeSlider(Rect row, PhoneTheme theme)
+    {
+        const float smallest = TextZoomCatalog.MinimumZoom;
+        const float span = TextZoomCatalog.MaximumZoom - TextZoomCatalog.MinimumZoom;
+        var effective = TextZoomCatalog.Clamp(configuration.TextZoom);
+        var slider = DrawSettingSlider("settings.textZoom", row, theme, (effective - smallest) / span);
+        var zoom = TextZoomCatalog.Snap(TextZoomCatalog.Clamp(smallest + slider.Value * span));
+        if ((slider.Dragging || slider.Released) && MathF.Abs(zoom - configuration.TextZoom) > 0.001f)
+        {
+            configuration.TextZoom = zoom;
+            Plugin.Fonts.SetZoom(zoom);
+        }
+
+        if (slider.Released)
+        {
+            configuration.Save();
+        }
+
+        DrawPercentReadout(row, theme, TextZoomCatalog.Clamp(configuration.TextZoom));
+    }
+
+    private static Slider.Result DrawSettingSlider(string id, Rect row, PhoneTheme theme, float normalized)
+    {
+        var scale = UiScale.Current;
+        return Slider.Draw(id, row, normalized, theme, 0f,
+            SizeReadoutColumn * scale + Metrics.Space.Md * scale);
+    }
+
+    private static void DrawPercentReadout(Rect row, PhoneTheme theme, float fraction)
+    {
+        var text = $"{(int)MathF.Round(fraction * 100f)}%";
         var size = Typography.Measure(text, TextStyles.Body);
         Typography.Draw(new Vector2(row.Max.X - size.X, row.Center.Y - size.Y * 0.5f), text, theme.TextMuted,
             TextStyles.Body);
