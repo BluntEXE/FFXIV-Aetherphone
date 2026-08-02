@@ -150,7 +150,12 @@ internal sealed class NotificationService : IDisposable
         Added?.Invoke(stamped);
         if (!configuration.DoNotDisturb)
         {
-            Presented?.Invoke(stamped);
+            var appSetting = configuration.NotificationSettingFor(notification.SettingsKey);
+            if (configuration.ShowNotificationToasts && appSetting.ShowToasts)
+            {
+                Presented?.Invoke(stamped);
+            }
+
             if (ShouldPlaySound(stamped.StackKey))
             {
                 sound.PlayNotification(notification.SettingsKey);

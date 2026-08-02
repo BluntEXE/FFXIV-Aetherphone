@@ -35,13 +35,25 @@ internal sealed class AppNotificationPage : ISettingsPage
         using (AppSurface.Begin(body))
         {
             SettingsSection.Header(Loc.T(L.Common.Alerts), theme);
-            var card = GroupCard.Begin(theme, 1);
+            var appSetting = configuration.NotificationSettingFor(channel.AppId);
             var wasEnabled = configuration.IsAppNotificationEnabled(channel.AppId);
+            var card = GroupCard.Begin(theme, wasEnabled ? 2 : 1);
             var enabled = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.AllowNotifications), wasEnabled, theme);
+            
+            if (enabled)
+            {
+                var showToasts = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.ShowToasts), appSetting.ShowToasts, theme);
+                if (showToasts != appSetting.ShowToasts)
+                {
+                    appSetting.ShowToasts = showToasts;
+                    configuration.Save();
+                }
+            }
+            
             card.End();
             if (enabled != wasEnabled)
             {
-                configuration.NotificationSettingFor(channel.AppId).Enabled = enabled;
+                appSetting.Enabled = enabled;
                 configuration.Save();
             }
 

@@ -922,6 +922,9 @@ internal static class L
         public static readonly LocString DoNotDisturb = new("settings.doNotDisturb", "Do Not Disturb");
         public static readonly LocString Vibration = new("settings.vibration", "Vibration");
         public static readonly LocString VibrationHint = new("settings.vibrationHint", "The phone shakes briefly when a notification arrives.");
+        public static readonly LocString ShowNotificationToasts = new("settings.showNotificationToasts", "Show Notification Toasts");
+        public static readonly LocString ShowNotificationToastsHint = new("settings.showNotificationToastsHint", "Display banner notifications at the top of the screen.");
+        public static readonly LocString ShowToasts = new("settings.showToasts", "Show Toasts");
         public static readonly LocString NotificationApps = new("settings.notificationApps", "Apps");
         public static readonly LocString AllowNotifications = new("settings.allowNotifications", "Allow Notifications");
         public static readonly LocString NotificationsOff = new("settings.notificationsOff", "Off");

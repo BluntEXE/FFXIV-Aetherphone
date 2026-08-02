@@ -41,7 +41,7 @@ internal sealed class NotificationsPage : ISettingsPage
         using (AppSurface.Begin(body))
         {
             SettingsSection.Header(Loc.T(L.Common.Alerts), theme);
-            var alerts = GroupCard.Begin(theme, 3);
+            var alerts = GroupCard.Begin(theme, configuration.DoNotDisturb ? 1 : 4);
             var doNotDisturb = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Settings.DoNotDisturb),
                 configuration.DoNotDisturb, theme);
             if (doNotDisturb != configuration.DoNotDisturb)
@@ -50,24 +50,32 @@ internal sealed class NotificationsPage : ISettingsPage
                 configuration.Save();
             }
 
-            var vibration = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Settings.Vibration),
-                configuration.Vibration, theme);
-            if (vibration != configuration.Vibration)
+            if (!configuration.DoNotDisturb)
             {
-                configuration.Vibration = vibration;
-                configuration.Save();
-            }
+                var showNotificationToasts = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Settings.ShowNotificationToasts),
+                    configuration.ShowNotificationToasts, theme, null, Loc.T(L.Settings.ShowNotificationToastsHint));
+                if (showNotificationToasts != configuration.ShowNotificationToasts)
+                {
+                    configuration.ShowNotificationToasts = showNotificationToasts;
+                    configuration.Save();
+                }
 
-            if (SettingsRow.Disclosure(alerts.NextRow(), Loc.T(L.Settings.NotificationSound),
-                    sound.Label(SoundKind.Notification, configuration.NotificationSound), theme))
-            {
-                navigator.Open(soundPage);
+                var vibration = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Settings.Vibration),
+                    configuration.Vibration, theme, null, Loc.T(L.Settings.VibrationHint));
+                if (vibration != configuration.Vibration)
+                {
+                    configuration.Vibration = vibration;
+                    configuration.Save();
+                }
+
+                if (SettingsRow.Disclosure(alerts.NextRow(), Loc.T(L.Settings.NotificationSound),
+                        sound.Label(SoundKind.Notification, configuration.NotificationSound), theme))
+                {
+                    navigator.Open(soundPage);
+                }
             }
 
             alerts.End();
-
-            ImGui.Dummy(new Vector2(0f, 8f * scale));
-            SettingsSection.Hint(Loc.T(L.Settings.VibrationHint), theme);
 
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
             SettingsSection.Header(Loc.T(L.Settings.NotificationApps), theme);
