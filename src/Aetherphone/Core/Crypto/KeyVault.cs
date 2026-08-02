@@ -105,7 +105,6 @@ internal sealed class KeyVault : IDisposable
                 && string.Equals(CryptoBox.ExportPublicKey(privateKey), bundle.PublicKey, StringComparison.Ordinal))
             {
                 EnsureLocalCachePersisted();
-                AepLog.Info($"[Encryption] key already unlocked in memory matches server (version {bundle.KeyVersion}).");
                 SetState(KeyVaultState.Unlocked);
                 return;
             }
@@ -113,7 +112,6 @@ internal sealed class KeyVault : IDisposable
             ClearKey();
             if (TryLoadLocalCache(bundle))
             {
-                AepLog.Info($"[Encryption] unlocked key from local cache (version {bundle.KeyVersion}).");
                 SetState(KeyVaultState.Unlocked);
                 return;
             }
@@ -187,7 +185,6 @@ internal sealed class KeyVault : IDisposable
             }
 
             serverBundle = stored;
-            AepLog.Info($"[Encryption] recovery code created for key version {stored.KeyVersion}.");
             return code;
         }
         finally
@@ -236,7 +233,6 @@ internal sealed class KeyVault : IDisposable
             privateKey = imported;
             StoreLocalCache(pkcs8);
             CryptographicOperations.ZeroMemory(pkcs8);
-            AepLog.Info($"[Encryption] key recovered from recovery code (version {bundle.KeyVersion}).");
             SetState(KeyVaultState.Unlocked);
             return true;
         }
@@ -293,7 +289,6 @@ internal sealed class KeyVault : IDisposable
             CryptographicOperations.ZeroMemory(pkcs8);
         }
 
-        AepLog.Info($"[Encryption] provisioned new key for this account (version {stored.KeyVersion}).");
         SetState(KeyVaultState.Unlocked);
         return true;
     }
