@@ -342,7 +342,32 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 
+        if (argument.Equals("run", StringComparison.OrdinalIgnoreCase) ||
+            argument.StartsWith("run ", StringComparison.OrdinalIgnoreCase))
+        {
+            RunShortcut(argument.Length > 4 ? argument.Substring(4).Trim() : string.Empty);
+            return;
+        }
+
         phoneWindow.ToggleShell();
+    }
+
+    private void RunShortcut(string name)
+    {
+        if (name.Length == 0)
+        {
+            ChatGui.Print(Loc.T(L.Plugin.RunUsage));
+            return;
+        }
+
+        var shortcut = services.Shortcuts.FindByName(name);
+        if (shortcut is null)
+        {
+            ChatGui.Print(Loc.T(L.Plugin.ShortcutNotFound, name));
+            return;
+        }
+
+        services.ShortcutRunner.Run(shortcut);
     }
 
     private void OnIncomingCall()

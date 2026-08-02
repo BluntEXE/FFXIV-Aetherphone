@@ -44,6 +44,26 @@ internal sealed class ShortcutStore : IShortcutSource
         return null;
     }
 
+    public ShortcutEntry? FindByName(string name)
+    {
+        var wanted = name.Trim();
+        if (wanted.Length == 0)
+        {
+            return null;
+        }
+
+        var shortcuts = configuration.Shortcuts;
+        for (var index = 0; index < shortcuts.Count; index++)
+        {
+            if (string.Equals(shortcuts[index].Name, wanted, StringComparison.OrdinalIgnoreCase))
+            {
+                return shortcuts[index];
+            }
+        }
+
+        return null;
+    }
+
     public void Add(ShortcutEntry entry)
     {
         if (AtCapacity)

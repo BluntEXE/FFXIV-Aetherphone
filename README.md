@@ -71,8 +71,10 @@ Tick **Enabled**, click **+**, then **Save and Close**. Open `/xlplugins` → **
 |---|---|
 | `/phone` | Toggle the phone |
 | `/aetherphone` | Alias for `/phone` |
-| `/phone about` | Open credits / links |
+| `/phone run <name>` | Run a shortcut by name, so it can sit on a hotbar macro |
+| `/phone market [item]` | Open the market board, searching for an item if you name one |
 | `/phone reset` | Recenter the phone on screen |
+| `/phone test` | Send a sample notification |
 
 ## Community
 

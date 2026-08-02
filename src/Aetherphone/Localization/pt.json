@@ -2448,7 +2448,7 @@
   "time.inMinutes": "em {0}min",
   "time.inHours": "em {0}h",
   "time.inHoursMinutes": "em {0}h {1}min",
-  "plugin.commandHelp": "Mostra ou oculta o Aetherphone. /phone market [item] abre o painel de mercado, /phone reset recentraliza o telefone, /phone test envia uma notificação de exemplo.",
+  "plugin.commandHelp": "Mostra ou oculta o Aetherphone. /phone run [atalho] executa um atalho, /phone market [item] abre o painel de mercado, /phone reset recentraliza o telefone, /phone test envia uma notificação de exemplo.",
   "plugin.commandHelpAlias": "Atalho para /phone.",
   "plugin.searchTheMarket": "Buscar no Mercado",
   "plugin.sideButtonHint": "Toque para minimizar · Segure para desligar",
@@ -3530,5 +3530,15 @@
   "shortcuts.pasteMacro": "Colar macro",
   "shortcuts.pasteEmpty": "Não há texto de macro na área de transferência.",
   "shortcuts.duplicate": "Duplicar",
-  "shortcuts.copyName": "{0} cópia"
+  "shortcuts.copyName": "{0} cópia",
+  "shortcuts.share": "Compartilhar",
+  "shortcuts.copied": "Copiado",
+  "shortcuts.importShortcut": "Importar atalho",
+  "shortcuts.importAdd": "Adicionar aos meus atalhos",
+  "shortcuts.importWillRun": "Este atalho vai executar",
+  "shortcuts.importBadCode": "Isso não é um código de atalho do Aetherphone.",
+  "shortcuts.importMalformed": "Esse código de atalho está danificado ou é grande demais.",
+  "shortcuts.importUnsafeLink": "Esse código contém um link que não é http nem https.",
+  "plugin.runUsage": "Digite /phone run seguido do nome de um atalho.",
+  "plugin.shortcutNotFound": "Nenhum atalho chamado {0}."
 }

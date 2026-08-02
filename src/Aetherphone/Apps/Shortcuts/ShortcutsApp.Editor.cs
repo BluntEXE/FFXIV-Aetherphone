@@ -256,7 +256,8 @@ internal sealed partial class ShortcutsApp
         if (step.Kind == ShortcutStepKind.Wait)
         {
             StepperField.Draw(ui, rect, Loc.T(L.Shortcuts.WaitSeconds, Seconds(step.Seconds)), scale,
-                () => step.Seconds = MathF.Max(0.1f, MathF.Round((step.Seconds - 0.5f) * 10f) / 10f),
+                () => step.Seconds = MathF.Max(ShortcutRunner.MinWaitSeconds,
+                    MathF.Round((step.Seconds - 0.5f) * 10f) / 10f),
                 () => step.Seconds = MathF.Min(ShortcutRunner.MaxWaitSeconds,
                     MathF.Round((step.Seconds + 0.5f) * 10f) / 10f));
             return;
@@ -394,16 +395,24 @@ internal sealed partial class ShortcutsApp
             return;
         }
 
-        var duplicateOrigin = ImGui.GetCursorScreenPos();
-        var duplicateRect = new Rect(duplicateOrigin,
-            new Vector2(duplicateOrigin.X + width, duplicateOrigin.Y + height));
+        var pairOrigin = ImGui.GetCursorScreenPos();
+        var gap = Metrics.Space.Sm * scale;
+        var halfWidth = (width - gap) * 0.5f;
+        var duplicateRect = new Rect(pairOrigin, new Vector2(pairOrigin.X + halfWidth, pairOrigin.Y + height));
         if (ui.PillButton(duplicateRect, Loc.T(L.Shortcuts.Duplicate), false))
         {
             DuplicateDraft();
             return;
         }
 
-        ImGui.SetCursorScreenPos(duplicateOrigin);
+        var shareMin = new Vector2(pairOrigin.X + halfWidth + gap, pairOrigin.Y);
+        var shareRect = new Rect(shareMin, new Vector2(shareMin.X + halfWidth, pairOrigin.Y + height));
+        if (ui.PillButton(shareRect, Loc.T(copiedClock > 0f ? L.Shortcuts.Copied : L.Shortcuts.Share), false))
+        {
+            CopyDraftCode();
+        }
+
+        ImGui.SetCursorScreenPos(pairOrigin);
         ImGui.Dummy(new Vector2(width, height + Metrics.Space.Sm * scale));
 
         var deleteOrigin = ImGui.GetCursorScreenPos();

@@ -1,7 +1,9 @@
 using System.Numerics;
+using System.Text;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Shortcuts;
+using Dalamud.Interface;
 using Xunit;
 
 namespace Aetherphone.Tests;
@@ -150,6 +152,150 @@ public sealed class ShortcutMacroTests
         Assert.False(truncated);
         Assert.Empty(steps);
     }
+}
+
+public sealed class ShortcutCodeTests
+{
+    [Fact]
+    public void ACode_RoundTripsEveryStepKind()
+    {
+        var source = new ShortcutEntry { Name = "Ride", Glyph = (int)FontAwesomeIcon.Horse, Tint = "3355ff" };
+        source.Steps.Add(new ShortcutStep { Kind = ShortcutStepKind.Command, Text = "/mount \"Company Chocobo\"" });
+        source.Steps.Add(new ShortcutStep { Kind = ShortcutStepKind.Wait, Seconds = 2.5f });
+        source.Steps.Add(new ShortcutStep { Kind = ShortcutStepKind.OpenUrl, Text = "https://example.com/a?b=1" });
+
+        Assert.True(ShortcutCode.TryDecode(ShortcutCode.Encode(source), out var decoded, out var error));
+
+        Assert.Equal(ShortcutCodeError.None, error);
+        Assert.Equal("Ride", decoded.Name);
+        Assert.Equal((int)FontAwesomeIcon.Horse, decoded.Glyph);
+        Assert.NotEmpty(decoded.Tint);
+        Assert.Equal(3, decoded.Steps.Count);
+        Assert.Equal("/mount \"Company Chocobo\"", decoded.Steps[0].Text);
+        Assert.Equal(ShortcutStepKind.Wait, decoded.Steps[1].Kind);
+        Assert.Equal(2.5f, decoded.Steps[1].Seconds);
+        Assert.Equal("https://example.com/a?b=1", decoded.Steps[2].Text);
+    }
+
+    [Fact]
+    public void ADecodedCode_IsANewShortcutRatherThanTheOriginal()
+    {
+        var source = new ShortcutEntry { Name = "Ride" };
+        source.Steps.Add(new ShortcutStep { Kind = ShortcutStepKind.Command, Text = "/mount" });
+
+        Assert.True(ShortcutCode.TryDecode(ShortcutCode.Encode(source), out var decoded, out _));
+        Assert.NotEqual(source.Id, decoded.Id);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("hello there")]
+    [InlineData("AEPS1.")]
+    [InlineData("AEPS9.abcd")]
+    public void TextThatIsNotACode_IsRejectedAsSuch(string text)
+    {
+        Assert.False(ShortcutCode.TryDecode(text, out _, out var error));
+        Assert.Equal(ShortcutCodeError.NotACode, error);
+    }
+
+    [Fact]
+    public void ACodeWithAGarbagePayload_IsMalformed()
+    {
+        Assert.False(ShortcutCode.TryDecode(ShortcutCode.Prefix + "not base64 !!", out _, out var error));
+        Assert.Equal(ShortcutCodeError.Malformed, error);
+    }
+
+    [Fact]
+    public void ACodeWhoseLinkIsNotWeb_IsRefused()
+    {
+        var code = CodeFor("{\"name\":\"Trap\",\"steps\":[{\"kind\":3,\"text\":\"file:///C:/Windows/System32/cmd.exe\"}]}");
+
+        Assert.False(ShortcutCode.TryDecode(code, out _, out var error));
+        Assert.Equal(ShortcutCodeError.UnsafeLink, error);
+    }
+
+    [Fact]
+    public void ACodeWithAnUnknownStepKind_IsMalformed()
+    {
+        var code = CodeFor("{\"name\":\"Odd\",\"steps\":[{\"kind\":9,\"text\":\"/say hi\"}]}");
+
+        Assert.False(ShortcutCode.TryDecode(code, out _, out var error));
+        Assert.Equal(ShortcutCodeError.Malformed, error);
+    }
+
+    [Fact]
+    public void ACodeWithNoName_IsMalformed()
+    {
+        var code = CodeFor("{\"name\":\"  \",\"steps\":[{\"kind\":0,\"text\":\"/say hi\"}]}");
+
+        Assert.False(ShortcutCode.TryDecode(code, out _, out var error));
+        Assert.Equal(ShortcutCodeError.Malformed, error);
+    }
+
+    [Fact]
+    public void ACodeWithNoUsableSteps_IsMalformed()
+    {
+        var code = CodeFor("{\"name\":\"Empty\",\"steps\":[{\"kind\":0,\"text\":\"   \"}]}");
+
+        Assert.False(ShortcutCode.TryDecode(code, out _, out var error));
+        Assert.Equal(ShortcutCodeError.Malformed, error);
+    }
+
+    [Fact]
+    public void ACodeOverTheStepCap_IsMalformed()
+    {
+        var source = new ShortcutEntry { Name = "Long" };
+        for (var index = 0; index < ShortcutStore.MaxSteps + 1; index++)
+        {
+            source.Steps.Add(new ShortcutStep { Kind = ShortcutStepKind.Command, Text = "/say " + index });
+        }
+
+        Assert.False(ShortcutCode.TryDecode(ShortcutCode.Encode(source), out _, out var error));
+        Assert.Equal(ShortcutCodeError.Malformed, error);
+    }
+
+    [Fact]
+    public void ACodeWithAnOverlongCommand_IsMalformed()
+    {
+        var code = CodeFor("{\"name\":\"Long\",\"steps\":[{\"kind\":0,\"text\":\"" +
+                           new string('a', ShortcutStore.CommandMaxLength + 1) + "\"}]}");
+
+        Assert.False(ShortcutCode.TryDecode(code, out _, out var error));
+        Assert.Equal(ShortcutCodeError.Malformed, error);
+    }
+
+    [Fact]
+    public void AnUnknownGlyph_FallsBackToTheMonogram()
+    {
+        var code = CodeFor("{\"name\":\"Odd\",\"glyph\":999999,\"steps\":[{\"kind\":0,\"text\":\"/say hi\"}]}");
+
+        Assert.True(ShortcutCode.TryDecode(code, out var decoded, out _));
+        Assert.Equal(0, decoded.Glyph);
+    }
+
+    [Fact]
+    public void AWaitBeyondTheCap_IsClamped()
+    {
+        var code = CodeFor("{\"name\":\"Slow\",\"steps\":[{\"kind\":1,\"seconds\":9999}]}");
+
+        Assert.True(ShortcutCode.TryDecode(code, out var decoded, out _));
+        Assert.Equal(ShortcutRunner.MaxWaitSeconds, decoded.Steps[0].Seconds);
+    }
+
+    [Fact]
+    public void ACodeWrappedAcrossLines_StillDecodes()
+    {
+        var source = new ShortcutEntry { Name = "Ride" };
+        source.Steps.Add(new ShortcutStep { Kind = ShortcutStepKind.Command, Text = "/mount" });
+        var wrapped = ShortcutCode.Encode(source).Insert(ShortcutCode.Prefix.Length + 4, "\n");
+
+        Assert.True(ShortcutCode.TryDecode(wrapped, out var decoded, out _));
+        Assert.Equal("/mount", decoded.Steps[0].Text);
+    }
+
+    private static string CodeFor(string json) =>
+        ShortcutCode.Prefix + Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
 }
 
 public sealed class ShortcutHomeTileTests

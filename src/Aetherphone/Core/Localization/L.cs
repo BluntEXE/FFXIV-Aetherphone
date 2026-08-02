@@ -309,6 +309,14 @@ internal static class L
         public static readonly LocString Save = new("shortcuts.save", "Save");
         public static readonly LocString Edit = new("shortcuts.edit", "Edit");
         public static readonly LocString Duplicate = new("shortcuts.duplicate", "Duplicate");
+        public static readonly LocString Share = new("shortcuts.share", "Share");
+        public static readonly LocString Copied = new("shortcuts.copied", "Copied");
+        public static readonly LocString ImportShortcut = new("shortcuts.importShortcut", "Import Shortcut");
+        public static readonly LocString ImportAdd = new("shortcuts.importAdd", "Add to My Shortcuts");
+        public static readonly LocString ImportWillRun = new("shortcuts.importWillRun", "This shortcut will run");
+        public static readonly LocString ImportBadCode = new("shortcuts.importBadCode", "That is not an Aetherphone shortcut code.");
+        public static readonly LocString ImportMalformed = new("shortcuts.importMalformed", "That shortcut code is damaged or too large.");
+        public static readonly LocString ImportUnsafeLink = new("shortcuts.importUnsafeLink", "That code holds a link that is not http or https.");
         public static readonly LocString CopyName = new("shortcuts.copyName", "{0} copy");
         public static readonly LocString DeleteShortcut = new("shortcuts.deleteShortcut", "Delete Shortcut");
         public static readonly LocString DeleteConfirm = new("shortcuts.deleteConfirm", "Delete this shortcut?");
@@ -2961,8 +2969,10 @@ internal static class L
 
     internal static class Plugin
     {
-        public static readonly LocString CommandHelp =new("plugin.commandHelp", "Toggle the Aetherphone. /phone market [item] opens the market board, /phone reset recenters the phone, /phone test sends a sample notification.");
+        public static readonly LocString CommandHelp =new("plugin.commandHelp", "Toggle the Aetherphone. /phone run [shortcut] runs a shortcut, /phone market [item] opens the market board, /phone reset recenters the phone, /phone test sends a sample notification.");
         public static readonly LocString CommandHelpAlias = new("plugin.commandHelpAlias", "Alias for /phone.");
+        public static readonly LocString RunUsage = new("plugin.runUsage", "Type /phone run followed by a shortcut name.");
+        public static readonly LocString ShortcutNotFound = new("plugin.shortcutNotFound", "No shortcut named {0}.");
         public static readonly LocString SearchTheMarket = new("plugin.searchTheMarket", "Search the Market");
         public static readonly LocString SideButtonHint = new("plugin.sideButtonHint", "Tap to minimize · Hold to turn off");
         public static readonly LocString MaximizeHint = new("plugin.maximizeHint", "Maximize");

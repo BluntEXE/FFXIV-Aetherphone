@@ -2,8 +2,6 @@ namespace Aetherphone.Core.Shortcuts;
 
 internal static class ShortcutMacro
 {
-    private const float MinWaitSeconds = 0.1f;
-
     public static int Append(string text, List<ShortcutStep> steps, int limit, out bool truncated)
     {
         truncated = false;
@@ -42,7 +40,7 @@ internal static class ShortcutMacro
             return new ShortcutStep
             {
                 Kind = ShortcutStepKind.Wait,
-                Seconds = Math.Clamp(wait, MinWaitSeconds, ShortcutRunner.MaxWaitSeconds),
+                Seconds = Math.Clamp(wait, ShortcutRunner.MinWaitSeconds, ShortcutRunner.MaxWaitSeconds),
             };
         }
 

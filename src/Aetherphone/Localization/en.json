@@ -2448,7 +2448,7 @@
   "time.inMinutes": "in {0}m",
   "time.inHours": "in {0}h",
   "time.inHoursMinutes": "in {0}h {1}m",
-  "plugin.commandHelp": "Toggle the Aetherphone. /phone market [item] opens the market board, /phone reset recenters the phone, /phone test sends a sample notification.",
+  "plugin.commandHelp": "Toggle the Aetherphone. /phone run [shortcut] runs a shortcut, /phone market [item] opens the market board, /phone reset recenters the phone, /phone test sends a sample notification.",
   "plugin.commandHelpAlias": "Alias for /phone.",
   "plugin.searchTheMarket": "Search the Market",
   "plugin.sideButtonHint": "Tap to minimize · Hold to turn off",
@@ -3530,5 +3530,15 @@
   "shortcuts.pasteMacro": "Paste Macro",
   "shortcuts.pasteEmpty": "There is no macro text on the clipboard.",
   "shortcuts.duplicate": "Duplicate",
-  "shortcuts.copyName": "{0} copy"
+  "shortcuts.copyName": "{0} copy",
+  "shortcuts.share": "Share",
+  "shortcuts.copied": "Copied",
+  "shortcuts.importShortcut": "Import Shortcut",
+  "shortcuts.importAdd": "Add to My Shortcuts",
+  "shortcuts.importWillRun": "This shortcut will run",
+  "shortcuts.importBadCode": "That is not an Aetherphone shortcut code.",
+  "shortcuts.importMalformed": "That shortcut code is damaged or too large.",
+  "shortcuts.importUnsafeLink": "That code holds a link that is not http or https.",
+  "plugin.runUsage": "Type /phone run followed by a shortcut name.",
+  "plugin.shortcutNotFound": "No shortcut named {0}."
 }

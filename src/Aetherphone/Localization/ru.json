@@ -2448,7 +2448,7 @@
   "time.inMinutes": "через {0}мин",
   "time.inHours": "через {0}ч",
   "time.inHoursMinutes": "через {0}ч {1}мин",
-  "plugin.commandHelp": "Переключить Aetherphone. /phone market [предмет] открывает рынок, /phone reset возвращает телефон в центр, /phone test отправляет тестовое уведомление.",
+  "plugin.commandHelp": "Переключить Aetherphone. /phone run [команда] запускает быструю команду, /phone market [предмет] открывает рынок, /phone reset возвращает телефон в центр, /phone test отправляет тестовое уведомление.",
   "plugin.commandHelpAlias": "Псевдоним для /phone.",
   "plugin.searchTheMarket": "Искать на рынке",
   "plugin.sideButtonHint": "Нажмите, чтобы свернуть · Удерживайте, чтобы выключить",
@@ -3530,5 +3530,15 @@
   "shortcuts.pasteMacro": "Вставить макрос",
   "shortcuts.pasteEmpty": "В буфере обмена нет текста макроса.",
   "shortcuts.duplicate": "Дублировать",
-  "shortcuts.copyName": "{0} копия"
+  "shortcuts.copyName": "{0} копия",
+  "shortcuts.share": "Поделиться",
+  "shortcuts.copied": "Скопировано",
+  "shortcuts.importShortcut": "Импорт команды",
+  "shortcuts.importAdd": "Добавить к моим командам",
+  "shortcuts.importWillRun": "Эта команда выполнит",
+  "shortcuts.importBadCode": "Это не код быстрой команды Aetherphone.",
+  "shortcuts.importMalformed": "Этот код повреждён или слишком велик.",
+  "shortcuts.importUnsafeLink": "В этом коде есть ссылка, которая не http и не https.",
+  "plugin.runUsage": "Введите /phone run и название быстрой команды.",
+  "plugin.shortcutNotFound": "Нет быстрой команды с названием {0}."
 }

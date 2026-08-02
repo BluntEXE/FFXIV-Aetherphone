@@ -2448,7 +2448,7 @@
   "time.inMinutes": "{0}分後",
   "time.inHours": "{0}時間後",
   "time.inHoursMinutes": "{0}時間{1}分後",
-  "plugin.commandHelp": "Aetherphoneを切り替えます。「/phone market [アイテム名]」でマーケットボードを開く、「/phone reset」で電話を中央に戻す、「/phone test」でサンプル通知を送信します。",
+  "plugin.commandHelp": "Aetherphoneを切り替えます。「/phone run [ショートカット名]」でショートカットを実行、「/phone market [アイテム名]」でマーケットボードを開く、「/phone reset」で電話を中央に戻す、「/phone test」でサンプル通知を送信します。",
   "plugin.commandHelpAlias": "/phone のエイリアス",
   "plugin.searchTheMarket": "マーケットを検索",
   "plugin.sideButtonHint": "タップで最小化 · 長押しでオフ",
@@ -3530,5 +3530,15 @@
   "shortcuts.pasteMacro": "マクロを貼り付け",
   "shortcuts.pasteEmpty": "クリップボードにマクロのテキストがありません。",
   "shortcuts.duplicate": "複製",
-  "shortcuts.copyName": "{0} のコピー"
+  "shortcuts.copyName": "{0} のコピー",
+  "shortcuts.share": "共有",
+  "shortcuts.copied": "コピーしました",
+  "shortcuts.importShortcut": "ショートカットを取り込む",
+  "shortcuts.importAdd": "自分のショートカットに追加",
+  "shortcuts.importWillRun": "このショートカットの内容",
+  "shortcuts.importBadCode": "これはAetherphoneのショートカットコードではありません。",
+  "shortcuts.importMalformed": "このショートカットコードは壊れているか大きすぎます。",
+  "shortcuts.importUnsafeLink": "このコードにはhttpでもhttpsでもないリンクが含まれています。",
+  "plugin.runUsage": "「/phone run ショートカット名」と入力してください。",
+  "plugin.shortcutNotFound": "{0}という名前のショートカットはありません。"
 }

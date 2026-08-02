@@ -2448,7 +2448,7 @@
   "time.inMinutes": "{0} dk içinde",
   "time.inHours": "{0} sa içinde",
   "time.inHoursMinutes": "{0} sa {1} dk içinde",
-  "plugin.commandHelp": "Aetherphone'u açar/kapatır. /phone market [eşya] pazar tahtasını açar, /phone reset telefonu ortalar, /phone test örnek bir bildirim gönderir.",
+  "plugin.commandHelp": "Aetherphone'u açar/kapatır. /phone run [kısayol] bir kısayolu çalıştırır, /phone market [eşya] pazar tahtasını açar, /phone reset telefonu ortalar, /phone test örnek bir bildirim gönderir.",
   "plugin.commandHelpAlias": "/phone için takma ad.",
   "plugin.searchTheMarket": "Pazarda Ara",
   "plugin.sideButtonHint": "Küçültmek için dokun · Kapatmak için basılı tut",
@@ -3530,5 +3530,15 @@
   "shortcuts.pasteMacro": "Makro yapıştır",
   "shortcuts.pasteEmpty": "Panoda makro metni yok.",
   "shortcuts.duplicate": "Çoğalt",
-  "shortcuts.copyName": "{0} kopya"
+  "shortcuts.copyName": "{0} kopya",
+  "shortcuts.share": "Paylaş",
+  "shortcuts.copied": "Kopyalandı",
+  "shortcuts.importShortcut": "Kısayol içe aktar",
+  "shortcuts.importAdd": "Kısayollarıma ekle",
+  "shortcuts.importWillRun": "Bu kısayol şunları çalıştıracak",
+  "shortcuts.importBadCode": "Bu bir Aetherphone kısayol kodu değil.",
+  "shortcuts.importMalformed": "Bu kısayol kodu bozuk veya fazla büyük.",
+  "shortcuts.importUnsafeLink": "Bu kodda http veya https olmayan bir bağlantı var.",
+  "plugin.runUsage": "/phone run yazıp bir kısayol adı ekleyin.",
+  "plugin.shortcutNotFound": "{0} adında bir kısayol yok."
 }

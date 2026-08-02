@@ -43,6 +43,7 @@ internal readonly struct ShortcutRunView
 internal sealed class ShortcutRunner : IDisposable
 {
     public const float MaxWaitSeconds = 60f;
+    public const float MinWaitSeconds = 0.1f;
     private const float StepGapSeconds = 0.05f;
 
     private static readonly ConditionFlag[] ChatSwallowedConditions =

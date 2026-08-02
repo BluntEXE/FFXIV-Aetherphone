@@ -2448,7 +2448,7 @@
   "time.inMinutes": "{0}分钟后",
   "time.inHours": "{0}小时后",
   "time.inHoursMinutes": "{0}小时{1}分钟后",
-  "plugin.commandHelp": "切换 Aetherphone 的显示。/phone market [物品] 打开市场，/phone reset 将手机移至屏幕中央，/phone test 发送测试通知。",
+  "plugin.commandHelp": "切换 Aetherphone 的显示。/phone run [快捷指令] 运行快捷指令，/phone market [物品] 打开市场，/phone reset 将手机移至屏幕中央，/phone test 发送测试通知。",
   "plugin.commandHelpAlias": "/phone 的快捷命令。",
   "plugin.searchTheMarket": "搜索市场",
   "plugin.sideButtonHint": "点击最小化 · 长按关机",
@@ -3530,5 +3530,15 @@
   "shortcuts.pasteMacro": "粘贴宏",
   "shortcuts.pasteEmpty": "剪贴板中没有宏文本。",
   "shortcuts.duplicate": "复制",
-  "shortcuts.copyName": "{0} 副本"
+  "shortcuts.copyName": "{0} 副本",
+  "shortcuts.share": "分享",
+  "shortcuts.copied": "已复制",
+  "shortcuts.importShortcut": "导入快捷指令",
+  "shortcuts.importAdd": "添加到我的快捷指令",
+  "shortcuts.importWillRun": "该快捷指令将执行",
+  "shortcuts.importBadCode": "这不是 Aetherphone 快捷指令代码。",
+  "shortcuts.importMalformed": "该快捷指令代码已损坏或过大。",
+  "shortcuts.importUnsafeLink": "该代码含有非 http 或 https 的链接。",
+  "plugin.runUsage": "请输入 /phone run 加上快捷指令名称。",
+  "plugin.shortcutNotFound": "没有名为 {0} 的快捷指令。"
 }

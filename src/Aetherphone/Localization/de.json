@@ -2448,7 +2448,7 @@
   "time.inMinutes": "in {0} Min.",
   "time.inHours": "in {0} Std.",
   "time.inHoursMinutes": "in {0} Std. {1} Min.",
-  "plugin.commandHelp": "Aetherphone ein- oder ausblenden. /phone market [Gegenstand] öffnet das Marktbrett, /phone reset zentriert das Telefon, /phone test sendet eine Beispielbenachrichtigung.",
+  "plugin.commandHelp": "Aetherphone ein- oder ausblenden. /phone run [Kurzbefehl] führt einen Kurzbefehl aus, /phone market [Gegenstand] öffnet das Marktbrett, /phone reset zentriert das Telefon, /phone test sendet eine Beispielbenachrichtigung.",
   "plugin.commandHelpAlias": "Alias für /phone.",
   "plugin.searchTheMarket": "Im Markt suchen",
   "plugin.sideButtonHint": "Tippen zum Minimieren · Halten zum Ausschalten",
@@ -3530,5 +3530,15 @@
   "shortcuts.pasteMacro": "Makro einfügen",
   "shortcuts.pasteEmpty": "In der Zwischenablage steht kein Makrotext.",
   "shortcuts.duplicate": "Duplizieren",
-  "shortcuts.copyName": "{0} Kopie"
+  "shortcuts.copyName": "{0} Kopie",
+  "shortcuts.share": "Teilen",
+  "shortcuts.copied": "Kopiert",
+  "shortcuts.importShortcut": "Kurzbefehl importieren",
+  "shortcuts.importAdd": "Zu meinen Kurzbefehlen",
+  "shortcuts.importWillRun": "Dieser Kurzbefehl führt aus",
+  "shortcuts.importBadCode": "Das ist kein Aetherphone-Kurzbefehlcode.",
+  "shortcuts.importMalformed": "Dieser Kurzbefehlcode ist beschädigt oder zu groß.",
+  "shortcuts.importUnsafeLink": "Dieser Code enthält einen Link, der weder http noch https ist.",
+  "plugin.runUsage": "Gib /phone run gefolgt vom Namen eines Kurzbefehls ein.",
+  "plugin.shortcutNotFound": "Kein Kurzbefehl mit dem Namen {0}."
 }

@@ -2448,7 +2448,7 @@
   "time.inMinutes": "dans {0} min",
   "time.inHours": "dans {0} h",
   "time.inHoursMinutes": "dans {0} h {1} min",
-  "plugin.commandHelp": "Affiche ou masque l'Aetherphone. /phone market [objet] ouvre l'hôtel des ventes, /phone reset recentre le téléphone, /phone test envoie une notification d'exemple.",
+  "plugin.commandHelp": "Affiche ou masque l'Aetherphone. /phone run [raccourci] lance un raccourci, /phone market [objet] ouvre l'hôtel des ventes, /phone reset recentre le téléphone, /phone test envoie une notification d'exemple.",
   "plugin.commandHelpAlias": "Alias de /phone.",
   "plugin.searchTheMarket": "Rechercher sur le marché",
   "plugin.sideButtonHint": "Appuyer pour réduire · Maintenir pour éteindre",
@@ -3530,5 +3530,15 @@
   "shortcuts.pasteMacro": "Coller une macro",
   "shortcuts.pasteEmpty": "Le presse-papiers ne contient aucun texte de macro.",
   "shortcuts.duplicate": "Dupliquer",
-  "shortcuts.copyName": "{0} copie"
+  "shortcuts.copyName": "{0} copie",
+  "shortcuts.share": "Partager",
+  "shortcuts.copied": "Copié",
+  "shortcuts.importShortcut": "Importer un raccourci",
+  "shortcuts.importAdd": "Ajouter à mes raccourcis",
+  "shortcuts.importWillRun": "Ce raccourci exécutera",
+  "shortcuts.importBadCode": "Ceci n'est pas un code de raccourci Aetherphone.",
+  "shortcuts.importMalformed": "Ce code de raccourci est endommagé ou trop volumineux.",
+  "shortcuts.importUnsafeLink": "Ce code contient un lien qui n'est ni http ni https.",
+  "plugin.runUsage": "Tapez /phone run suivi du nom d'un raccourci.",
+  "plugin.shortcutNotFound": "Aucun raccourci nommé {0}."
 }

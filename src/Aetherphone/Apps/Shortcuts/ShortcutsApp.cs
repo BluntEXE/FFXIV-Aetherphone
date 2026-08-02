@@ -20,6 +20,7 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         Appearance,
         Plugin,
         PluginPicker,
+        Import,
     }
 
     private const float RowHeight = 62f;
@@ -67,6 +68,7 @@ internal sealed partial class ShortcutsApp : IPhoneApp
     {
         router.Reset();
         draft = null;
+        importEntry = null;
     }
 
     public void Draw(in PhoneContext context)
@@ -76,6 +78,11 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         ui.Theme = context.Theme;
 
         var delta = ImGui.GetIO().DeltaTime;
+        if (copiedClock > 0f)
+        {
+            copiedClock -= delta;
+        }
+
         var scale = ImGuiHelpers.GlobalScale;
         var screen = SceneChrome.ScreenFrom(context.Content, context.Theme, scale);
         ui.Backdrop(screen);
@@ -99,6 +106,9 @@ internal sealed partial class ShortcutsApp : IPhoneApp
                 return;
             case ShortcutsScreen.PluginPicker:
                 DrawPluginPicker(area, scale);
+                return;
+            case ShortcutsScreen.Import:
+                DrawImport(area, scale);
                 return;
             default:
                 DrawHome(area, scale);
@@ -160,6 +170,13 @@ internal sealed partial class ShortcutsApp : IPhoneApp
                 Palette.WithAlpha(ui.TitleInk, 0.12f), 0.6f, Loc.T(L.Shortcuts.NewShortcut)))
         {
             StartNewShortcut();
+        }
+
+        var importCenter = new Vector2(buttonCenter.X - radius * 2.4f, centerY);
+        if (ui.IconButton(importCenter, radius, FontAwesomeIcon.FileImport.ToIconString(), ui.MutedInk,
+                AppSkin.Transparent, 0.58f, Loc.T(L.Shortcuts.ImportShortcut)))
+        {
+            BeginImport();
         }
     }
 
