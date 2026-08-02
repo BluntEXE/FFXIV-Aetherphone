@@ -16,7 +16,7 @@ internal sealed class SoundSettingsPage : ISettingsPage
     private readonly LocString title;
     private readonly FontAwesomeIcon icon;
     private readonly Vector4 tint;
-    private readonly string segmentId;
+    private readonly string sliderId;
     private readonly Func<string> getToken;
     private readonly Action<string> setToken;
     private readonly Func<float> getVolume;
@@ -24,7 +24,7 @@ internal sealed class SoundSettingsPage : ISettingsPage
     private readonly SoundImport import = new();
 
     public SoundSettingsPage(SoundService sound, SoundKind kind, LocString title, FontAwesomeIcon icon,
-        Vector4 tint, string segmentId, Func<string> getToken, Action<string> setToken,
+        Vector4 tint, string sliderId, Func<string> getToken, Action<string> setToken,
         Func<float> getVolume, Action<float> setVolume)
     {
         this.sound = sound;
@@ -32,7 +32,7 @@ internal sealed class SoundSettingsPage : ISettingsPage
         this.title = title;
         this.icon = icon;
         this.tint = tint;
-        this.segmentId = segmentId;
+        this.sliderId = sliderId;
         this.getToken = getToken;
         this.setToken = setToken;
         this.getVolume = getVolume;
@@ -53,21 +53,24 @@ internal sealed class SoundSettingsPage : ISettingsPage
             TryImport(importedPath);
         }
 
-        using (AppSurface.Begin(body))
+        using (var surface = AppSurface.Begin(body))
         {
             SettingsSection.Header(Loc.T(L.Settings.Sound), theme);
             SoundOptionList.Draw(theme, sound, kind, getToken(), false, Select);
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
             SettingsSection.Header(Loc.T(L.Settings.Volume), theme);
             var volumeCard = GroupCard.Begin(theme, 1);
-            var volumeIndex = SegmentStrip.Draw(segmentId, volumeCard.NextRow(), VolumeCatalog.Labels,
-                VolumeCatalog.IndexOf(getVolume()), theme);
+            var volume = VolumeSlider.Draw(sliderId, volumeCard.NextRow(), getVolume(), theme);
             volumeCard.End();
-            var volume = VolumeCatalog.Scales[volumeIndex];
-            if (MathF.Abs(volume - getVolume()) > 0.001f)
+            if (volume.Dragging)
             {
-                setVolume(volume);
-                sound.Preview(kind, getToken(), volume);
+                surface.CancelDrag();
+            }
+
+            if (volume.Released && MathF.Abs(volume.Value - getVolume()) > 0.001f)
+            {
+                setVolume(volume.Value);
+                sound.Preview(kind, getToken(), volume.Value);
             }
 
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));

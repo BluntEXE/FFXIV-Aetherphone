@@ -37,6 +37,8 @@ internal static class AppSurface
 
         public readonly void JumpToTop() => surface.JumpToTop();
 
+        public readonly void CancelDrag() => surface.CancelDrag();
+
         public void Dispose()
         {
             child.Dispose();
