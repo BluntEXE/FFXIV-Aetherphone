@@ -269,6 +269,7 @@ Animated components (the `Toggle` knob, `ConfirmOverlay` reveal) use `Spring` (s
 | Draw a person's picture | `AvatarView` |
 | Take multiline text input | `SoftWrapField.Multiline` |
 | Add a search box | `SearchField` |
+| Let someone pick a color | `ColorField.Draw` (shade square plus hue rail) |
 | Add depth behind a card | `Elevation.Card` + `Squircle.Fill` |
 | Space or round anything | `Metrics` tokens times `UiScale.Current` |
 

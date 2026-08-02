@@ -63,6 +63,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public string Language { get; set; } = string.Empty;
     public ThemeMode ThemeMode { get; set; } = ThemeMode.Dark;
     public string AccentName { get; set; } = "Violet";
+    public string AccentCustomHex { get; set; } = string.Empty;
     public string PhoneCaseName { get; set; } = "Titanium";
     public string JobsAccentName { get; set; } = "Blue";
     public List<JobsCustomColor> JobsCustomColors { get; set; } = new();

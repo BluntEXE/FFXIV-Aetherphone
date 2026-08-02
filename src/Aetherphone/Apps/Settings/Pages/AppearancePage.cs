@@ -50,7 +50,7 @@ internal sealed class AppearancePage : ISettingsPage
             SettingsSection.Header(Loc.T(L.Settings.Theme), theme);
             var accentLabel = Loc.T(L.Settings.Accent);
             var cardWidth = ImGui.GetContentRegionAvail().X - 2f * Metrics.Space.Lg * UiScale.Current;
-            var accentStacked = SwatchStrip.NeedsTwoRows(accentLabel, ThemeCatalog.Accents.Count, cardWidth);
+            var accentStacked = SwatchStrip.NeedsTwoRows(accentLabel, ThemeCatalog.Accents.Count + 1, cardWidth);
             var card = GroupCard.Begin(theme, accentStacked ? 5 : 4);
             var modeIndex = SegmentStrip.Draw("settings.themeMode", card.NextRow(), ModeLabels(), CurrentModeIndex(),
                 theme);
@@ -61,13 +61,22 @@ internal sealed class AppearancePage : ISettingsPage
                 ApplyTheme();
             }
 
+            var customAccent = ThemeCatalog.IsCustomAccent(configuration.AccentName);
             var accentIndex = SwatchStrip.Draw(card.NextRow(accentStacked ? 2 : 1), accentLabel, ThemeCatalog.Accents,
-                ThemeCatalog.IndexOf(ThemeCatalog.Accents, configuration.AccentName), theme, accentStacked);
-            var accentName = ThemeCatalog.Accents[accentIndex].Name;
-            if (accentName != configuration.AccentName)
+                customAccent ? -1 : ThemeCatalog.IndexOf(ThemeCatalog.Accents, configuration.AccentName), theme,
+                accentStacked, ThemeCatalog.ResolveAccent(configuration.AccentName), customAccent);
+            if (accentIndex == ThemeCatalog.Accents.Count)
             {
-                configuration.AccentName = accentName;
-                ApplyTheme();
+                navigator.Open(new AccentPage(configuration, themes));
+            }
+            else if (accentIndex >= 0)
+            {
+                var accentName = ThemeCatalog.Accents[accentIndex].Name;
+                if (accentName != configuration.AccentName)
+                {
+                    configuration.AccentName = accentName;
+                    ApplyTheme();
+                }
             }
 
             if (SettingsRow.Disclosure(card.NextRow(), Loc.T(L.Settings.PhoneCase),

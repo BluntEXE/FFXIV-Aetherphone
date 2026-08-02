@@ -21,7 +21,12 @@ internal static class ThemeCatalog
 
     public static IReadOnlyList<PhoneCase> Cases { get; } = BuiltInCases;
 
-    public static Vector4 ResolveAccent(string name) => Accents[IndexOf(Accents, name)].Color;
+    public static bool IsCustomAccent(string name) => name.Length > 0 && name[0] == '#';
+
+    public static Vector4 ResolveAccent(string name) =>
+        IsCustomAccent(name) && HexColor.TryParse(name, out var custom)
+            ? custom
+            : Accents[IndexOf(Accents, name)].Color;
 
     public static PhoneCase ResolveCase(string id) => Cases[IndexOf(Cases, id)];
 

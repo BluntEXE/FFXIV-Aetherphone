@@ -930,6 +930,7 @@ internal static class L
         public static readonly LocString ThemeDark = new("settings.themeDark", "Dark");
         public static readonly LocString ThemeAuto = new("settings.themeAuto", "Auto");
         public static readonly LocString Accent = new("settings.accent", "Accent");
+        public static readonly LocString AccentCustom = new("settings.accentCustom", "Custom");
         public static readonly LocString PhoneCase = new("settings.phoneCase", "Case");
         public static readonly LocString Wallpaper = new("settings.wallpaper", "Wallpaper");
         public static readonly LocString TextSize = new("settings.textSize", "Text Size");
@@ -1014,6 +1015,8 @@ internal static class L
                 "The whole screen scales with the phone, so text and icons grow with it instead of staying small"),
             new("changelog.r0997.3",
                 "Text Size is a slider too now, and it goes down to 70 percent for people who want smaller text"),
+            new("changelog.r0997.4",
+                "Accent is a full color picker now, so you can use any color you like instead of the five presets"),
         };
 
         public static readonly LocString[] Release0996 =
