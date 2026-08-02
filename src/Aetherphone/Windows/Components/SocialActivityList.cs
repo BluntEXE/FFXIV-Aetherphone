@@ -7,7 +7,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -18,7 +17,7 @@ internal static class SocialActivityList
         string app, RemoteImageCache images, LodestoneService lodestone, Action<NotificationDto> openActor,
         Action<NotificationDto> openPost, Action? loadOlder = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var count = 0;
         for (var index = 0; index < items.Length; index++)
         {
@@ -63,7 +62,7 @@ internal static class SocialActivityList
         RemoteImageCache images, LodestoneService lodestone, Action<NotificationDto> openActor,
         Action<NotificationDto> openPost)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
@@ -91,8 +90,8 @@ internal static class SocialActivityList
             theme, scale);
         var textTop = origin.Y + (rowHeight - contentHeight) * 0.5f;
         var rowHovering = UiInteract.Hover(origin, rowMax);
-        Marquee.DrawLeft("socialactivity.actor." + item.Id, actorLabel, textLeft, textTop, textWidth,
-            new TextStyle(0.95f, FontWeight.SemiBold), theme.TextStrong, rowHovering);
+        UserName.Draw(drawList, "socialactivity.actor." + item.Id, actorLabel, item.ActorBadges, textLeft, textTop,
+            textWidth, new TextStyle(0.95f, FontWeight.SemiBold), theme.TextStrong, rowHovering, theme);
         Typography.Draw(new Vector2(origin.X + width - pad - timeSize.X, textTop + 2f * scale), timeText,
             palette.MutedInk, 0.78f);
         if (body.Length > 0)

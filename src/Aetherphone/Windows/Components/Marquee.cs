@@ -1,5 +1,4 @@
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -14,13 +13,17 @@ internal static class Marquee
         DrawLeft(ImGui.GetWindowDrawList(), id, fullText, boxLeft, y, maxWidth, style, color, hovering);
 
     public static float DrawLeft(ImDrawListPtr drawList, string id, string fullText, float boxLeft, float y,
-        float maxWidth, in TextStyle style, Vector4 color, bool hovering)
+        float maxWidth, in TextStyle style, Vector4 color, bool hovering) =>
+        DrawLeft(drawList, id, fullText, boxLeft, y, maxWidth, style, color, hovering, default);
+
+    public static float DrawLeft(ImDrawListPtr drawList, string id, string fullText, float boxLeft, float y,
+        float maxWidth, in TextStyle style, Vector4 color, bool hovering, in TextEffect effect)
     {
         var fullSize = Typography.Measure(fullText, style);
         if (fullSize.X <= maxWidth)
         {
             Elapsed.Remove(id);
-            Typography.Draw(drawList, new Vector2(boxLeft, y), fullText, color, style);
+            Typography.Draw(drawList, new Vector2(boxLeft, y), fullText, color, style, effect);
             return fullSize.X;
         }
 
@@ -29,15 +32,15 @@ internal static class Marquee
         if (!hovering)
         {
             Elapsed.Remove(id);
-            Typography.Draw(drawList, new Vector2(boxLeft, y), clipped, color, style);
+            Typography.Draw(drawList, new Vector2(boxLeft, y), clipped, color, style, effect);
             return clippedWidth;
         }
 
         var offset = Offset(id, fullSize.X - clippedWidth);
-        var slack = 4f * ImGuiHelpers.GlobalScale;
+        var slack = 4f * UiScale.Current;
         drawList.PushClipRect(new Vector2(boxLeft, y - slack), new Vector2(boxLeft + clippedWidth, y + fullSize.Y + slack),
             true);
-        Typography.Draw(drawList, new Vector2(boxLeft - offset, y), fullText, color, style);
+        Typography.Draw(drawList, new Vector2(boxLeft - offset, y), fullText, color, style, effect);
         drawList.PopClipRect();
         return clippedWidth;
     }
@@ -126,7 +129,7 @@ internal static class Marquee
 
         var offset = Offset(id, fullSize.X - clippedWidth);
         var boxLeft = boxRight - clippedWidth;
-        var slack = 4f * ImGuiHelpers.GlobalScale;
+        var slack = 4f * UiScale.Current;
         drawList.PushClipRect(new Vector2(boxLeft, y - slack), new Vector2(boxRight, y + fullSize.Y + slack), true);
         Typography.Draw(drawList, new Vector2(boxLeft - offset, y), fullText, color, style);
         drawList.PopClipRect();
@@ -134,7 +137,7 @@ internal static class Marquee
 
     internal static float Offset(string id, float overflow)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var travelSeconds = overflow / (Speed * scale);
         var cycle = DwellSeconds * 2f + travelSeconds * 2f;
         var deltaSeconds = MathF.Min(ImGui.GetIO().DeltaTime, 0.1f);

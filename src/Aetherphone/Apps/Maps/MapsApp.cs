@@ -8,7 +8,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Core.Venues;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Maps;
 
@@ -76,7 +75,7 @@ internal sealed class MapsApp : IPhoneApp
     {
         var context = new PhoneContext(area, frameTheme, frameNavigation);
         AppHeader.Draw(context, DisplayName);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var pad = 16f * scale;
         var top = area.Min.Y + AppHeader.Height * scale;
         var searchBar = new Rect(new Vector2(area.Min.X + pad, top),
@@ -103,7 +102,7 @@ internal sealed class MapsApp : IPhoneApp
 
     private void DrawLocationCard()
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var location = maps.CurrentLocation();
         var zoneName = location.Zone.Length > 0 ? location.Zone : Loc.T(L.Maps.Unknown);
         var regionName = location.Region.Length > 0 ? location.Region : Loc.T(L.Maps.Unknown);
@@ -259,7 +258,7 @@ internal sealed class MapsApp : IPhoneApp
 
     private bool DrawExpansionHeader(MapExpansion expansion, bool expanded)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ImGui.Dummy(new Vector2(0f, 12f * scale));
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
@@ -294,7 +293,7 @@ internal sealed class MapsApp : IPhoneApp
 
     private void DrawDestinationRow(Rect row, MapAetheryte aetheryte)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var starRadius = 9f * scale;
         var starCenter = new Vector2(row.Min.X + starRadius, row.Center.Y);
@@ -376,7 +375,7 @@ internal sealed class MapsApp : IPhoneApp
 
     private void DrawEmptyState(string message)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var maxWidth = MathF.Max(1f, ImGui.GetContentRegionAvail().X - 8f * scale);
         var clipped = Typography.FitText(message, maxWidth, TextStyles.Footnote);
         Typography.Draw(ImGui.GetCursorScreenPos() + new Vector2(4f * scale, 16f * scale), clipped,

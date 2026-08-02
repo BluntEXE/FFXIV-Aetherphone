@@ -7,7 +7,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Message;
 
@@ -35,7 +34,7 @@ internal sealed partial class MessageApp
             store.RefreshConversations();
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var searchHeight = 52f * scale;
         SearchField.DrawSubmit(new Rect(area.Min, new Vector2(area.Max.X, area.Min.Y + searchHeight)),
             "##messageFilter", Loc.T(L.Phone.FilterHint), ref filter, AppPalettes.Message);
@@ -71,6 +70,15 @@ internal sealed partial class MessageApp
                 for (var index = 0; index < regular.Count; index++)
                 {
                     DrawConversationRow(regular[index], scale, pinned: false);
+                }
+
+                if (store.LoadingMoreThreads)
+                {
+                    InfiniteScroll.DrawLoadingRow(listRect.Center.X, AppPalettes.Message.MutedInk);
+                }
+                else if (store.HasMoreThreads && InfiniteScroll.ReachedBottom())
+                {
+                    store.LoadMoreThreads();
                 }
 
                 ImGui.Dummy(new Vector2(0f, 72f * scale));
@@ -110,7 +118,7 @@ internal sealed partial class MessageApp
 
     private void DrawArchived(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, Loc.T(L.Message.Archived), back);
         var top = area.Min.Y + AppHeader.Height * scale;

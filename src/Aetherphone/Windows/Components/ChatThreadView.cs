@@ -19,7 +19,6 @@ using Aetherphone.Core.Wallpapers;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Textures.TextureWraps;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -195,8 +194,6 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     public void GateMenus() => menuController.Gate();
 
-    /// <summary>Queues text for the composer input; applied on the next Draw, and only when the
-    /// composer is empty so a half-typed message is never clobbered.</summary>
     public void PrefillDraft(string body) => pendingPrefill = body;
 
     public void RequestScrollTo(string messageId) => transcript.RequestScrollTo(messageId);
@@ -243,7 +240,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         store.NoteThreadViewed(threadId);
         TickThread(threadId);
         DrawHeader(area, threadId);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var composerHeight = 56f * scale;
         var accessoryHeight = composer.AccessoryHeight;
@@ -331,7 +328,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     {
         var context = new PhoneContext(area, Theme, Navigation);
         AppHeader.Draw(context, Loc.T(L.Encryption.InfoTitle), BackAction);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         using (AppSurface.Begin(body))
         {
@@ -682,7 +679,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             imageZoom.Reset();
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddRectFilled(area.Min, area.Max, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.94f)));
         var headerHeight = AppHeader.Height * scale;
@@ -743,10 +740,8 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
                     : raw;
                 if (bytes is not null)
                 {
-                    using var image = SixLabors.ImageSharp.Image.Load<SixLabors.ImageSharp.PixelFormats.Rgba32>(bytes);
-                    var pixels = new byte[image.Width * image.Height * 4];
-                    image.CopyPixelDataTo(pixels);
-                    library.Save(pixels, image.Width, image.Height);
+                    var (pixels, width, height) = ImageProcessor.DecodeRgba32(bytes);
+                    library.Save(pixels, width, height);
                     succeeded = true;
                 }
             }
@@ -787,7 +782,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var importHeight = 46f * scale;
         var importRect = new Rect(new Vector2(area.Min.X + 16f * scale, top + 8f * scale),
@@ -880,7 +875,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     public void DrawReactions(Rect area, string messageId)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, Theme, Navigation);
         AppHeader.Draw(context, Loc.T(L.Message.ReactionsTitle), BackAction);
         if (reactorsFor != messageId)

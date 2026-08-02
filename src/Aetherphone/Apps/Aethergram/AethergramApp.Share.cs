@@ -4,7 +4,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Social;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Aethergram;
 
@@ -25,7 +24,7 @@ internal sealed partial class AethergramApp
     {
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, Loc.T(L.Aethergram.SendTo), back);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (!dmStore.ThreadsLoaded && !dmStore.LoadingThreads)
         {
             dmStore.RefreshThreads();
@@ -122,7 +121,7 @@ internal sealed partial class AethergramApp
     private void DrawShareRow(string postId, string userId, string title, string monogram, string? avatarUrl,
         bool canMessage)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ScrollLayout.StableContentWidth();

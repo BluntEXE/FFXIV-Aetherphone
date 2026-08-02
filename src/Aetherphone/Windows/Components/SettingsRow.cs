@@ -2,7 +2,6 @@ using Aetherphone.Core;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -12,7 +11,7 @@ internal static class SettingsRow
 
     public static bool Bool(Rect row, string label, bool value, PhoneTheme theme, string? id = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = Metrics.Size.ToggleWidth * scale;
         var height = Metrics.Size.ToggleHeight * scale;
         var min = new Vector2(row.Max.X - width, row.Center.Y - height * 0.5f);
@@ -26,7 +25,7 @@ internal static class SettingsRow
 
     public static void Info(Rect row, string label, string value, PhoneTheme theme, string? id = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var gap = 12f * scale;
         var available = row.Width - gap;
         var valueFullSize = Typography.Measure(value, TextStyles.Body);
@@ -49,7 +48,7 @@ internal static class SettingsRow
     public static bool Link(Rect row, FontAwesomeIcon icon, Vector4 tint, string label, string value, PhoneTheme theme,
         bool badge = false, string? id = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var hovered = UiInteract.Hover(row.Min, row.Max);
         var dl = ImGui.GetWindowDrawList();
         if (hovered)
@@ -90,7 +89,7 @@ internal static class SettingsRow
     public static bool AppLink(Rect row, string appId, Vector4 tint, string label, string value, PhoneTheme theme,
         string? id = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var hovered = UiInteract.Hover(row.Min, row.Max);
         var dl = ImGui.GetWindowDrawList();
         if (hovered)
@@ -130,7 +129,7 @@ internal static class SettingsRow
 
     public static bool Disclosure(Rect row, string label, string value, PhoneTheme theme, string? id = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var hovered = UiInteract.Hover(row.Min, row.Max);
         if (hovered)
         {
@@ -192,7 +191,7 @@ internal static class SettingsRow
 
     public static bool Selectable(Rect row, string label, bool selected, PhoneTheme theme, string? id = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var hovered = UiInteract.Hover(row.Min, row.Max);
         if (hovered)
         {
@@ -243,7 +242,7 @@ internal static class SettingsRow
 
     private static void DrawRowHighlight(Rect row, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var pressed = ImGui.IsMouseDown(ImGuiMouseButton.Left);
         var min = new Vector2(row.Min.X - 10f * scale, row.Min.Y + 3f * scale);
         var max = new Vector2(row.Max.X + 10f * scale, row.Max.Y - 3f * scale);

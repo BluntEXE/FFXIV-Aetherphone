@@ -10,7 +10,6 @@ using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Settings.Pages;
 
@@ -52,7 +51,7 @@ internal sealed class RootSettingsPage : ISettingsPage
 
     public void Draw(in PhoneContext context, Rect body)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         using (AppSurface.Begin(body))
         {
@@ -62,6 +61,12 @@ internal sealed class RootSettingsPage : ISettingsPage
             if (accountOpened)
             {
                 navigator.Open(accountPage);
+            }
+
+            ImGui.Dummy(new Vector2(0f, 20f * scale));
+            if (SupportButton.Draw(Loc.T(L.Settings.SupportAetherphone), theme, Loc.T(L.Settings.SupportHint)))
+            {
+                UrlActions.OpenInBrowser(AepConstants.PatreonUrl);
             }
 
             for (var groupIndex = 0; groupIndex < groups.Count; groupIndex++)
@@ -93,14 +98,6 @@ internal sealed class RootSettingsPage : ISettingsPage
                 }
             }
 
-            ImGui.Dummy(new Vector2(0f, 20f * scale));
-            if (SupportButton.Draw(Loc.T(L.Settings.SupportAetherphone), theme))
-            {
-                UrlActions.OpenInBrowser(AepConstants.PatreonUrl);
-            }
-
-            ImGui.Dummy(new Vector2(0f, 6f * scale));
-            SettingsSection.Hint(Loc.T(L.Settings.SupportHint), theme);
             ImGui.Dummy(new Vector2(0f, 22f * scale));
             DrawVersion(theme);
             ImGui.Dummy(new Vector2(0f, 14f * scale));

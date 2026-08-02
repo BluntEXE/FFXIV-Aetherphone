@@ -5,7 +5,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -49,7 +48,7 @@ internal sealed class EncryptionInfoPane : IDisposable
 
     private void DrawHero(AppSkin ui, PhoneTheme theme, bool signedIn, bool encrypted)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
@@ -86,7 +85,7 @@ internal sealed class EncryptionInfoPane : IDisposable
 
     private void DrawSummary(AppSkin ui, bool signedIn, bool encrypted)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var maxWidth = width - 40f * scale;
@@ -130,7 +129,7 @@ internal sealed class EncryptionInfoPane : IDisposable
 
     private void DrawLockedSection(AppSkin ui, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (actions.Vault.RecoveryConfigured)
         {
             DrawSectionLabel(ui, Loc.T(L.Encryption.RecoveryCodeLabel));
@@ -151,7 +150,7 @@ internal sealed class EncryptionInfoPane : IDisposable
 
     private void DrawRecoverySection(AppSkin ui)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var configured = actions.Vault.RecoveryConfigured;
         DrawSectionLabel(ui, Loc.T(L.Encryption.RecoverySectionTitle));
         DrawWrapped(ui, configured
@@ -169,7 +168,7 @@ internal sealed class EncryptionInfoPane : IDisposable
 
     private void DrawGeneratedCode(AppSkin ui, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         ImGui.Dummy(new Vector2(0f, 8f * scale));
         DrawWrapped(ui, Loc.T(L.Encryption.RecoverySaveTitle), theme.TextStrong);
@@ -198,7 +197,7 @@ internal sealed class EncryptionInfoPane : IDisposable
 
     private void DrawCodeInput(AppSkin ui, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var height = 38f * scale;
@@ -225,13 +224,13 @@ internal sealed class EncryptionInfoPane : IDisposable
             return;
         }
 
-        ImGui.Dummy(new Vector2(0f, 8f * ImGuiHelpers.GlobalScale));
+        ImGui.Dummy(new Vector2(0f, 8f * UiScale.Current));
         DrawWrapped(ui, message);
     }
 
     private static void DrawSectionLabel(AppSkin ui, string label)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         Typography.Draw(new Vector2(origin.X + 2f * scale, origin.Y), label, ui.MutedInk,
             TextStyles.FootnoteEmphasized);
@@ -246,7 +245,7 @@ internal sealed class EncryptionInfoPane : IDisposable
 
     private static void DrawWrapped(AppSkin ui, string text, Vector4 color)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var height = Typography.DrawWrappedLeft(origin, text, color, TextStyles.Footnote, width - 4f * scale);
@@ -256,7 +255,7 @@ internal sealed class EncryptionInfoPane : IDisposable
 
     private static bool DrawButton(AppSkin ui, string label, bool filled)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var height = 40f * scale;

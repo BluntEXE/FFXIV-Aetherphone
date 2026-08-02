@@ -9,13 +9,13 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Photos;
+using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
 using Dalamud.Interface;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Settings.Pages;
@@ -44,6 +44,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
     private readonly AethernetSession session;
     private readonly AuthClient auth;
     private readonly AccountClient account;
+    private readonly AccountStateService accountState;
     private readonly MediaClient media;
     private readonly GameData gameData;
     private readonly RemoteImageCache images;
@@ -56,21 +57,25 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
     private readonly ConfirmService confirm;
     private readonly WallpaperImageCache wallpaperImages;
     private readonly SignInFlow flow;
+    private readonly PatreonLinkFlow patreonFlow;
     private readonly CancellationTokenSource cancellation = new();
     private readonly List<ulong> accountIds = new();
     private int accountIdsStamp = -1;
     private volatile bool avatarBusy;
     private bool meRequested;
+    private int lastDrawnFrame = -2;
 
     public AccountPage(Configuration configuration, AethernetSession session, AuthClient auth, AccountClient account,
-        MediaClient media, GameData gameData, RemoteImageCache images, LodestoneService lodestone,
-        ISettingsNavigator navigator, NamePage namePage, ISettingsPage profilePage, ISettingsPage encryptionPage,
-        PhotoLibrary photoLibrary, ConfirmService confirm, WallpaperImageCache wallpaperImages)
+        AccountStateService accountState, MediaClient media, GameData gameData, RemoteImageCache images,
+        LodestoneService lodestone, ISettingsNavigator navigator, NamePage namePage, ISettingsPage profilePage,
+        ISettingsPage encryptionPage, PhotoLibrary photoLibrary, ConfirmService confirm,
+        WallpaperImageCache wallpaperImages)
     {
         this.configuration = configuration;
         this.session = session;
         this.auth = auth;
         this.account = account;
+        this.accountState = accountState;
         this.media = media;
         this.gameData = gameData;
         this.images = images;
@@ -84,10 +89,18 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         this.wallpaperImages = wallpaperImages;
         flow = new SignInFlow(session, auth,
             () => RegionSync.Push(session, account, configuration, gameData, cancellation.Token));
+        patreonFlow = new PatreonLinkFlow(account, accountState.RefreshNow);
     }
 
     public void Draw(in PhoneContext context, Rect body)
     {
+        var frame = ImGui.GetFrameCount();
+        if (frame - lastDrawnFrame > 1)
+        {
+            accountState.RefreshNow();
+        }
+
+        lastDrawnFrame = frame;
         var theme = context.Theme;
         using (AppSurface.Begin(body))
         {
@@ -104,7 +117,26 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             {
                 ShowFailureAlert(failureReason);
             }
+
+            if (patreonFlow.ConsumeLinked())
+            {
+                confirm.Alert(Loc.T(L.Account.PatreonLinkedTitle), Loc.T(L.Account.PatreonLinkedBody),
+                    Loc.T(L.Account.FailDismiss));
+            }
+
+            if (patreonFlow.ConsumeFailure() is { } patreonFailure)
+            {
+                ShowPatreonFailureAlert(patreonFailure);
+            }
         }
+    }
+
+    private void ShowPatreonFailureAlert(string failureReason)
+    {
+        var body = failureReason == PatreonLinkFlow.FailureNetwork
+            ? Loc.T(L.Account.FailNetworkBody)
+            : Loc.T(L.Account.PatreonFailedBody);
+        confirm.Alert(Loc.T(L.Account.PatreonFailedTitle), body, Loc.T(L.Account.FailDismiss));
     }
 
     private void ShowFailureAlert(string failureReason)
@@ -121,7 +153,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             StartMe();
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var user = session.CurrentUser;
         if (user is null)
         {
@@ -147,6 +179,8 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         SettingsRow.Info(details.NextRow(), Loc.T(L.Account.HomeWorldLabel), user.World, theme);
         details.End();
 
+        DrawBadgesSection(user, theme, scale);
+        DrawPatreonSection(theme, scale);
         ImGui.Dummy(new Vector2(0f, 14f * scale));
         var links = GroupCard.Begin(theme, 3);
         if (SettingsRow.Link(links.NextRow(), namePage.Icon, namePage.Tint, namePage.Title, namePage.Summary, theme))
@@ -228,12 +262,176 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         }
 
         var nameY = changeCenter.Y + changeSize.Y * 0.5f + 18f * scale;
-        var title = Typography.FitText(user.DisplayName, width - 24f * scale, TextStyles.Title2);
-        Typography.DrawCentered(new Vector2(centerX, nameY), title, theme.TextStrong, TextStyles.Title2);
+        var nameStyle = TextStyles.Title2;
+        var badgeCount = RoleBadges.Count(user.Badges);
+        var reserve = UserName.Reserve(user.Badges, nameStyle, badgeCount);
+        var nameSize = Typography.Measure(user.DisplayName, nameStyle);
+        var nameWidth = MathF.Min(nameSize.X, MathF.Max(1f, width - 24f * scale - reserve));
+        UserName.DrawAuto(drawList, "account.header.name", user.DisplayName, user.Badges,
+            centerX - (nameWidth + reserve) * 0.5f, nameY - nameSize.Y * 0.5f, nameWidth + reserve, nameStyle,
+            theme.TextStrong, theme, badgeCount);
         Typography.DrawCentered(new Vector2(centerX, nameY + 24f * scale), $"{user.Name}@{user.World}",
             theme.TextMuted, TextStyles.Subheadline);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, nameY + 34f * scale - origin.Y));
+    }
+
+    private void DrawBadgesSection(UserDto user, PhoneTheme theme, float scale)
+    {
+        var badgeCount = RoleBadges.Count(user.GrantedBadges);
+        if (badgeCount == 0)
+        {
+            return;
+        }
+
+        ImGui.Dummy(new Vector2(0f, 14f * scale));
+        SettingsSection.Header(Loc.T(L.Account.BadgesSection), theme);
+        var card = GroupCard.Begin(theme, badgeCount);
+        var toggled = default(RoleBadge?);
+        for (var index = 0; index < badgeCount; index++)
+        {
+            var badge = RoleBadges.At(user.GrantedBadges, index);
+            var equipped = (user.Badges & (int)badge.Flag) != 0;
+            if (DrawBadgeRow(card.NextRow(), badge, equipped, theme, scale))
+            {
+                toggled = badge;
+            }
+        }
+
+        card.End();
+        ImGui.Dummy(new Vector2(0f, 8f * scale));
+        SettingsSection.Hint(Loc.T(L.Account.BadgesHint), theme);
+        if (toggled is { } flipped)
+        {
+            ToggleBadge(user, flipped);
+        }
+    }
+
+    private static bool DrawBadgeRow(Rect row, in RoleBadge badge, bool equipped, PhoneTheme theme, float scale)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var ink = RoleInk.For(badge.Kind, RoleInk.IsLight(theme));
+        var glyphSize = 16f * scale;
+        ProgressRing.CenterIcon(drawList, new Vector2(row.Min.X + glyphSize * 0.5f, row.Center.Y), badge.Glyph, ink,
+            glyphSize);
+        var label = Loc.T(badge.Tooltip);
+        var rowId = "account.badge." + badge.Kind;
+        var toggleWidth = Metrics.Size.ToggleWidth * scale;
+        var toggleHeight = Metrics.Size.ToggleHeight * scale;
+        var toggleMin = new Vector2(row.Max.X - toggleWidth, row.Center.Y - toggleHeight * 0.5f);
+        var labelLeft = row.Min.X + glyphSize + 10f * scale;
+        var labelMaxWidth = MathF.Max(1f, toggleMin.X - 10f * scale - labelLeft);
+        var labelSize = Typography.Measure(label, TextStyles.BodyEmphasized);
+        Marquee.DrawLeftAuto(rowId, label, labelLeft, row.Center.Y - labelSize.Y * 0.5f, labelMaxWidth,
+            TextStyles.BodyEmphasized, theme.TextStrong);
+        var next = Toggle.Draw(rowId + ".toggle",
+            new Rect(toggleMin, toggleMin + new Vector2(toggleWidth, toggleHeight)), equipped, theme);
+        return next != equipped;
+    }
+
+    private void ToggleBadge(UserDto user, in RoleBadge badge)
+    {
+        var desired = (user.Badges ^ (int)badge.Flag) & user.GrantedBadges;
+        session.SetUser(user with { Badges = desired });
+        var token = cancellation.Token;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var fresh = await account.UpdateBadgesAsync(desired, token).ConfigureAwait(false);
+                if (fresh is not null)
+                {
+                    session.SetUser(fresh);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                AepLog.Warning($"Badge loadout update failed: {exception.Message}");
+            }
+        });
+    }
+
+    private void DrawPatreonSection(PhoneTheme theme, float scale)
+    {
+        patreonFlow.EnsureStatus();
+        var status = patreonFlow.Status;
+        if (status is null || !status.Available)
+        {
+            return;
+        }
+
+        ImGui.Dummy(new Vector2(0f, 14f * scale));
+        SettingsSection.Header(Loc.T(L.Account.PatreonSection), theme);
+        if (patreonFlow.Waiting)
+        {
+            using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
+            {
+                Typography.Wrapped(Loc.T(L.Account.PatreonWaitingBody));
+            }
+
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
+            var spacing = 8f * scale;
+            var half = (ImGui.GetContentRegionAvail().X - spacing) * 0.5f;
+            if (Button(Loc.T(L.Account.PatreonOpen), theme, half))
+            {
+                patreonFlow.OpenAgain();
+            }
+
+            ImGui.SameLine(0f, spacing);
+            if (Button(Loc.T(L.Common.Cancel), theme, half))
+            {
+                patreonFlow.Cancel();
+            }
+
+            return;
+        }
+
+        if (status.Linked)
+        {
+            var card = GroupCard.Begin(theme, 2);
+            SettingsRow.Info(card.NextRow(), Loc.T(L.Account.PatreonStatusLabel),
+                Loc.T(status.Entitled ? L.Account.PatreonLinkedActive : L.Account.PatreonLinkedInactive), theme);
+            if (SettingsRow.Action(card.NextRow(), Loc.T(L.Account.PatreonUnlink), theme.Danger, theme))
+            {
+                AskUnlinkPatreon();
+            }
+
+            card.End();
+            if (!status.Entitled)
+            {
+                ImGui.Dummy(new Vector2(0f, 8f * scale));
+                SettingsSection.Hint(Loc.T(L.Account.PatreonInactiveHint), theme);
+            }
+
+            return;
+        }
+
+        var linkCard = GroupCard.Begin(theme, 1);
+        var tint = RoleInk.For(RoleKind.Patreon, RoleInk.IsLight(theme));
+        if (SettingsRow.Link(linkCard.NextRow(), FontAwesomeIcon.Star, tint, Loc.T(L.Account.PatreonLink),
+                string.Empty, theme) && !patreonFlow.Busy)
+        {
+            patreonFlow.Start();
+        }
+
+        linkCard.End();
+        ImGui.Dummy(new Vector2(0f, 8f * scale));
+        SettingsSection.Hint(Loc.T(L.Account.PatreonHint), theme);
+    }
+
+    private void AskUnlinkPatreon()
+    {
+        confirm.Ask(new ConfirmRequest
+        {
+            Title = Loc.T(L.Account.PatreonUnlinkTitle),
+            Message = Loc.T(L.Account.PatreonUnlinkBody),
+            ConfirmLabel = Loc.T(L.Account.PatreonUnlink),
+            CancelLabel = Loc.T(L.Common.Cancel),
+            Confirm = patreonFlow.Unlink,
+        });
     }
 
     private void DrawCharacterMismatch(UserDto user, PhoneTheme theme, float scale)
@@ -621,7 +819,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         {
             Typography.DrawCentered(
                 new Vector2(ImGui.GetContentRegionAvail().X * 0.5f + ImGui.GetCursorScreenPos().X,
-                    ImGui.GetCursorScreenPos().Y + 80f * ImGuiHelpers.GlobalScale), Loc.T(L.Account.LogInFirst),
+                    ImGui.GetCursorScreenPos().Y + 80f * UiScale.Current), Loc.T(L.Account.LogInFirst),
                 theme.TextMuted);
             return;
         }
@@ -638,7 +836,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var name = player.Name.TextValue;
         var world = gameData.WorldName(gameData.LocalHomeWorldId);
         var ready = !flow.Busy && name.Length > 0 && world.Length > 0;
@@ -674,7 +872,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
 
     private void DrawXivAuthStep(PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ImGui.Dummy(new Vector2(0f, 4f * scale));
         using (Plugin.Fonts.Push(1.3f, FontWeight.SemiBold))
         {
@@ -723,7 +921,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
 
     private void DrawVerifyStep(PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ImGui.Dummy(new Vector2(0f, 4f * scale));
         using (Plugin.Fonts.Push(1.3f, FontWeight.SemiBold))
         {
@@ -782,7 +980,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
 
     private static void DrawIdentityCard(string name, string world, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var width = ImGui.GetContentRegionAvail().X;
         var padding = 12f * scale;
@@ -803,7 +1001,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
 
     private static bool DrawCodeCard(PhoneTheme theme, string value)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var width = ImGui.GetContentRegionAvail().X;
         var height = 52f * scale;
@@ -830,7 +1028,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
 
     private static void DrawStepRow(string number, string text, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var lineHeight = ImGui.GetTextLineHeight();
         var lineStep = lineHeight + 3f * scale;
@@ -870,7 +1068,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             return;
         }
 
-        ImGui.Dummy(new Vector2(0f, 8f * ImGuiHelpers.GlobalScale));
+        ImGui.Dummy(new Vector2(0f, 8f * UiScale.Current));
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
         {
             Typography.Wrapped(message);
@@ -912,7 +1110,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
                    .Push(ImGuiCol.ButtonHovered, Palette.Mix(theme.GroupedCard, theme.Accent, 0.35f))
                    .Push(ImGuiCol.ButtonActive, theme.Accent).Push(ImGuiCol.Text, theme.TextStrong))
         {
-            return ImGui.Button(label, new Vector2(width, 34f * ImGuiHelpers.GlobalScale));
+            return ImGui.Button(label, new Vector2(width, 34f * UiScale.Current));
         }
     }
 
@@ -923,7 +1121,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
                    .Push(ImGuiCol.ButtonActive, Palette.Mix(theme.Accent, new Vector4(0f, 0f, 0f, 1f), 0.18f))
                    .Push(ImGuiCol.Text, new Vector4(1f, 1f, 1f, 1f)))
         {
-            return ImGui.Button(label, new Vector2(-1f, 38f * ImGuiHelpers.GlobalScale));
+            return ImGui.Button(label, new Vector2(-1f, 38f * UiScale.Current));
         }
     }
 
@@ -934,7 +1132,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
                    .Push(ImGuiCol.ButtonActive, Palette.WithAlpha(theme.TextStrong, 0.14f))
                    .Push(ImGuiCol.Text, theme.TextMuted))
         {
-            return ImGui.Button(label, new Vector2(-1f, 32f * ImGuiHelpers.GlobalScale));
+            return ImGui.Button(label, new Vector2(-1f, 32f * UiScale.Current));
         }
     }
 
@@ -942,6 +1140,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
     {
         cancellation.Cancel();
         flow.Dispose();
+        patreonFlow.Dispose();
         cancellation.Dispose();
     }
 }

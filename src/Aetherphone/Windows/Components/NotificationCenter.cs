@@ -6,7 +6,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -25,7 +24,8 @@ internal sealed class NotificationCenter
     private const float SwipeMaxReveal = 96f;
     private const float SwipeRightClamp = 10f;
     private const float SwipeCommitFraction = 0.42f;
-    private const float TapSlop = 6f;
+    private const float TapSlop = 10f;
+    private const float FailedSwipeTapFraction = 0.15f;
     private const float DragAxisThreshold = 6f;
     private const float ExpandSmoothTime = 0.26f;
     private const float SwipeSmoothTime = 0.18f;
@@ -55,6 +55,7 @@ internal sealed class NotificationCenter
     private long animId;
     private string animKey = string.Empty;
     private bool animGroup;
+    private PhoneNotification? animNotification;
     private Spring animOffset;
     private float animTarget;
 
@@ -75,6 +76,7 @@ internal sealed class NotificationCenter
         scrollGesture = false;
         axisLocked = false;
         animActive = false;
+        animNotification = null;
         states.Clear();
         groups.Clear();
         groupLookup.Clear();
@@ -83,13 +85,13 @@ internal sealed class NotificationCenter
 
     public void Draw(in PhoneContext context, Rect body)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         DrawCore(ImGui.GetWindowDrawList(), body, context.Theme, scale, 16f * scale, 1f, true);
     }
 
     public void DrawOverlay(ImDrawListPtr dl, Rect area, PhoneTheme theme, float opacity, bool interactive)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         DrawCore(dl, area, theme, scale, 0f, opacity, interactive);
     }
 
@@ -231,6 +233,12 @@ internal sealed class NotificationCenter
 
     private void PerformRemoval()
     {
+        if (animNotification is { } dismissed)
+        {
+            router.Acknowledge(dismissed);
+            animNotification = null;
+        }
+
         if (animGroup)
         {
             notifications.RemoveGroup(animKey);
@@ -266,6 +274,7 @@ internal sealed class NotificationCenter
         ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
+            router.AcknowledgeAll();
             notifications.Clear();
             Reset();
         }
@@ -302,7 +311,7 @@ internal sealed class NotificationCenter
                 MathF.Abs(delta.Y) >= DragAxisThreshold * scale))
             {
                 axisLocked = true;
-                scrollGesture = DragScrollHost.Enabled && MathF.Abs(delta.Y) > MathF.Abs(delta.X);
+                scrollGesture = MathF.Abs(delta.Y) > MathF.Abs(delta.X);
             }
 
             if (scrollGesture)
@@ -343,6 +352,11 @@ internal sealed class NotificationCenter
 
         scrollY = Math.Clamp(scrollY, 0f, maxScroll);
         interactionBounds = listArea;
+        if (interactive && (drag.Active || UiInteract.HoverWindowOnly(listArea.Min, listArea.Max, false)))
+        {
+            UiInteract.ReportGestureSurface();
+        }
+
         candidates.Clear();
         dl.PushClipRect(listArea.Min, listArea.Max, true);
         var y = listArea.Min.Y - scrollY;
@@ -520,6 +534,7 @@ internal sealed class NotificationCenter
 
     private void BeginDrag(in Candidate candidate)
     {
+        UiInteract.CancelPendingTap();
         if (animActive && animGroup == candidate.IsGroup &&
             (candidate.IsGroup ? animKey == candidate.Key : animId == candidate.Id))
         {
@@ -540,17 +555,21 @@ internal sealed class NotificationCenter
     private void ResolveGesture(Vector2 totalDelta, float scale)
     {
         var slop = TapSlop * scale;
-        if (MathF.Abs(totalDelta.X) < slop && MathF.Abs(totalDelta.Y) < slop)
+        var commit = totalDelta.X <= -dragWidth * SwipeCommitFraction;
+        var tapped = !commit && MathF.Abs(totalDelta.Y) < slop &&
+                     MathF.Abs(totalDelta.X) < dragWidth * FailedSwipeTapFraction;
+        if (tapped)
         {
+            swipeOffset = 0f;
             HandleTap();
             dragNotification = null;
             return;
         }
 
-        var commit = totalDelta.X <= -dragWidth * SwipeCommitFraction;
         animGroup = dragGroup;
         animKey = dragKey;
         animId = dragId;
+        animNotification = commit ? dragNotification : null;
         animRemoving = commit;
         animTarget = commit ? -(dragWidth + 40f * scale) : 0f;
         animOffset.SnapTo(swipeOffset);

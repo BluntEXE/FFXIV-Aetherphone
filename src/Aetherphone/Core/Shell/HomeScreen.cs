@@ -2,9 +2,9 @@ using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Shell.Home;
+using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Core.Shell;
 
@@ -21,15 +21,16 @@ internal sealed class HomeScreen
     private readonly HomeChrome chrome;
     private readonly Configuration configuration;
 
-    public HomeScreen(IReadOnlyList<IPhoneApp> apps, WidgetRegistry widgets, Configuration configuration)
+    public HomeScreen(IReadOnlyList<IPhoneApp> apps, WidgetRegistry widgets, ShortcutStore shortcuts,
+        ShortcutRunner runner, Configuration configuration)
     {
         this.configuration = configuration;
-        layout = new HomeLayoutService(apps, widgets, configuration);
+        layout = new HomeLayoutService(apps, widgets, shortcuts, configuration);
         folder = new FolderOverlay(layout);
         sizeMenu = new WidgetSizeMenu(layout);
         gallery = new WidgetGallery(layout, widgets);
-        interaction = new HomeInteractionController(layout, widgets, pager, folder, sizeMenu, gallery, poses);
-        renderer = new HomeGridRenderer(layout, pager, poses, interaction);
+        interaction = new HomeInteractionController(layout, widgets, pager, folder, sizeMenu, gallery, poses, runner);
+        renderer = new HomeGridRenderer(layout, pager, poses, interaction, shortcuts);
         chrome = new HomeChrome(pager, interaction);
     }
 
@@ -43,7 +44,7 @@ internal sealed class HomeScreen
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
         interaction.Advance(delta);
         var editReserve = interaction.Editing && motion.Interactive ? HomeMetrics.EditToolbarBandUnits : 0f;
-        var metrics = HomeMetrics.Compute(content, HomeLayoutService.Columns, layout.Rows, ImGuiHelpers.GlobalScale,
+        var metrics = HomeMetrics.Compute(content, HomeLayoutService.Columns, layout.Rows, UiScale.Current,
             motion, editReserve);
         pager.Step(delta, interaction.DisplayPageCount());
         var chromeAlpha = Math.Clamp(1f - motion.Progress * 1.6f, 0f, 1f);
@@ -90,7 +91,7 @@ internal sealed class HomeScreen
 
     public Rect? RevealRect(string appId, Rect content)
     {
-        var metrics = HomeMetrics.Compute(content, HomeLayoutService.Columns, layout.Rows, ImGuiHelpers.GlobalScale,
+        var metrics = HomeMetrics.Compute(content, HomeLayoutService.Columns, layout.Rows, UiScale.Current,
             HomeMotion.Rest);
         var dock = layout.Dock;
         for (var index = 0; index < dock.Count; index++)

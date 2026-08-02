@@ -41,9 +41,10 @@ internal sealed class StoryPresenter : IDisposable
 
     public StoryPresenter(AethernetSession session, GramClient client, MediaClient media, RemoteImageCache images,
         LodestoneService lodestone, StoryRingPainter painter, AppPalette palette, StoryConfirmLabels labels,
-        ConfirmService confirm, string logTag, Action onCompose, StoryReplyHooks? reply = null)
+        ConfirmService confirm, RealtimeSignalBus signals, string logTag, Action onCompose,
+        StoryReplyHooks? reply = null)
     {
-        stories = new StoryStore(session, client, media, logTag);
+        stories = new StoryStore(session, client, media, signals, logTag);
         tray = new StoryTrayRow(images, lodestone);
         viewer = new StoryViewerOverlay(images, lodestone);
         this.painter = painter;
@@ -138,7 +139,7 @@ internal sealed class StoryPresenter : IDisposable
             ? Loc.T(L.Story.YourStory)
             : SocialIdentity.Name(ring.AuthorDisplayName, ring.AuthorHandle);
         viewer.Open(items, label, ring.AuthorAvatarUrl, stories.MarkSeen, ring.IsMe, AskDelete, viewersSource,
-            null, nextGroup, previousGroup, openAtEnd, ring.IsMe ? null : replyPrompt);
+            null, nextGroup, previousGroup, openAtEnd, ring.IsMe ? null : replyPrompt, stories.LoadMoreViewers);
     }
 
     private bool TryAdvanceGroup() => TryOpenAdjacentRing(1);
@@ -193,7 +194,8 @@ internal sealed class StoryPresenter : IDisposable
     private StoryViewers ViewersFor(StoryDto story)
     {
         stories.LoadViewers(story.Id);
-        return new StoryViewers(stories.Viewers, stories.ViewersTotal, stories.ViewersLoading);
+        return new StoryViewers(stories.Viewers, stories.ViewersTotal, stories.ViewersLoading,
+            stories.HasMoreViewers, stories.ViewersLoadingMore);
     }
 
     private void SyncViewerItems()

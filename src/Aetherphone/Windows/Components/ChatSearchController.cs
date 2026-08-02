@@ -2,7 +2,6 @@ using Aetherphone.Core;
 using Aetherphone.Core.Localization;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -63,7 +62,7 @@ internal sealed class ChatSearchController
     {
         var ui = model.Ui;
         var theme = ui.Theme;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddLine(new Vector2(area.Min.X, area.Max.Y), area.Max, ImGui.GetColorU32(theme.Separator), 1f);
         var fieldHeight = FieldHeight * scale;

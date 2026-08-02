@@ -3,7 +3,6 @@ using Aetherphone.Core;
 using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -20,7 +19,7 @@ internal sealed partial class VelvetShell
 
     private void DrawGate(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var screen = SceneChrome.ScreenFrom(area, theme, scale);
         ui.Backdrop(screen);
         var drawList = ImGui.GetWindowDrawList();
@@ -66,9 +65,12 @@ internal sealed partial class VelvetShell
         stories.RefreshTray();
     }
 
+    private VelvetTagCategory[]? orphanUnionSource;
+    private string[] orphanUnion = Array.Empty<string>();
+
     private void DrawCategoryPicker(VelvetTagCategory[] categories, List<string> target)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         for (var index = 0; index < categories.Length; index++)
         {
             DrawTagCategory(categories[index], target);
@@ -77,26 +79,40 @@ internal sealed partial class VelvetShell
                 ImGui.Dummy(new Vector2(0f, 18f * scale));
             }
         }
+
+        var union = CategoryUnion(categories);
+        if (!HasUnlisted(target, union))
+        {
+            return;
+        }
+
+        ImGui.Dummy(new Vector2(0f, 18f * scale));
+        DrawTagCategoryHeader(Loc.T(L.Velvet.CatOther), VelvetTheme.Moonlight);
+        DrawTagFlow(Array.Empty<string>(), target, VelvetTheme.Moonlight, true, union);
     }
 
     private void DrawTagCategory(in VelvetTagCategory category, List<string> selected)
     {
-        var scale = ImGuiHelpers.GlobalScale;
-        var width = ImGui.GetContentRegionAvail().X;
-
-        var headerOrigin = ImGui.GetCursorScreenPos();
-        Typography.Draw(headerOrigin,
-            Typography.FitText(Loc.Culture.TextInfo.ToUpper(Loc.T(category.Title)), width, TextStyles.SubheadlineEmphasized),
-            VelvetTheme.Lerp(category.Hue, VelvetTheme.OnAccent, 0.30f), TextStyles.SubheadlineEmphasized);
-        ImGui.SetCursorScreenPos(headerOrigin);
-        ImGui.Dummy(new Vector2(width, 26f * scale));
-
+        DrawTagCategoryHeader(Loc.T(category.Title), category.Hue);
         DrawTagFlow(category.Tags, selected, category.Hue);
     }
 
-    private void DrawTagFlow(string[] options, List<string> selected, Vector4 hue)
+    private static void DrawTagCategoryHeader(string title, Vector4 hue)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
+        var width = ImGui.GetContentRegionAvail().X;
+        var headerOrigin = ImGui.GetCursorScreenPos();
+        Typography.Draw(headerOrigin,
+            Typography.FitText(Loc.Culture.TextInfo.ToUpper(title), width, TextStyles.SubheadlineEmphasized),
+            VelvetTheme.Lerp(hue, VelvetTheme.OnAccent, 0.30f), TextStyles.SubheadlineEmphasized);
+        ImGui.SetCursorScreenPos(headerOrigin);
+        ImGui.Dummy(new Vector2(width, 26f * scale));
+    }
+
+    private void DrawTagFlow(string[] options, List<string> selected, Vector4 hue, bool showUnlisted = false,
+        string[]? universe = null)
+    {
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var origin = ImGui.GetCursorScreenPos();
         var height = 40f * scale;
@@ -105,6 +121,7 @@ internal sealed partial class VelvetShell
         var x = origin.X;
         var y = origin.Y;
         var toggled = -1;
+        string? removed = null;
         for (var index = 0; index < options.Length; index++)
         {
             var tag = options[index];
@@ -124,6 +141,34 @@ internal sealed partial class VelvetShell
             x += chipWidth + chipGap;
         }
 
+        if (showUnlisted)
+        {
+            var known = universe ?? options;
+            for (var index = 0; index < selected.Count; index++)
+            {
+                var tag = selected[index];
+                if (ContainsTag(known, tag))
+                {
+                    continue;
+                }
+
+                var chipWidth = Typography.Measure(tag, TextStyles.Callout).X + 32f * scale;
+                if (x + chipWidth > origin.X + width && x > origin.X)
+                {
+                    x = origin.X;
+                    y += height + rowGap;
+                }
+
+                if (DrawTagPill(new Vector2(x, y), new Vector2(chipWidth, height), tag, VelvetTheme.Moonlight,
+                        true, scale))
+                {
+                    removed = tag;
+                }
+
+                x += chipWidth + chipGap;
+            }
+        }
+
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, y + height - origin.Y));
 
@@ -135,6 +180,66 @@ internal sealed partial class VelvetShell
                 selected.Add(tag);
             }
         }
+        else if (removed is not null)
+        {
+            selected.Remove(removed);
+        }
+    }
+
+    private static bool ContainsTag(string[] tags, string tag)
+    {
+        for (var index = 0; index < tags.Length; index++)
+        {
+            if (string.Equals(tags[index], tag, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool HasUnlisted(List<string> selected, string[] known)
+    {
+        for (var index = 0; index < selected.Count; index++)
+        {
+            if (!ContainsTag(known, selected[index]))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private string[] CategoryUnion(VelvetTagCategory[] categories)
+    {
+        if (ReferenceEquals(orphanUnionSource, categories))
+        {
+            return orphanUnion;
+        }
+
+        var count = 0;
+        for (var index = 0; index < categories.Length; index++)
+        {
+            count += categories[index].Tags.Length;
+        }
+
+        var union = new string[count];
+        var cursor = 0;
+        for (var index = 0; index < categories.Length; index++)
+        {
+            var tags = categories[index].Tags;
+            for (var tagIndex = 0; tagIndex < tags.Length; tagIndex++)
+            {
+                union[cursor] = tags[tagIndex];
+                cursor++;
+            }
+        }
+
+        orphanUnionSource = categories;
+        orphanUnion = union;
+        return union;
     }
 
     private static bool DrawTagPill(Vector2 min, Vector2 size, string label, Vector4 hue, bool selected, float scale)

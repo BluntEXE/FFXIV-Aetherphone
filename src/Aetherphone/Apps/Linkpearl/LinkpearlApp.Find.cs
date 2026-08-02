@@ -7,7 +7,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Linkpearl;
 
@@ -42,7 +41,7 @@ internal sealed partial class LinkpearlApp
 
     private void DrawFindTab(Rect content)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = frameTheme;
         var pad = 16f * scale;
         var segmentRow = new Rect(new Vector2(content.Min.X + pad, content.Min.Y),
@@ -223,7 +222,7 @@ internal sealed partial class LinkpearlApp
     {
         var context = new PhoneContext(area, frameTheme, frameNavigation);
         AppHeader.Draw(context, Loc.T(L.FindPeople.CharacterTitle), backToList);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = frameTheme;
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         var result = lookup.CharacterDetail(route.LookupId, route.LookupName, route.LookupWorld, forceDetail);
@@ -388,7 +387,7 @@ internal sealed partial class LinkpearlApp
     {
         var context = new PhoneContext(area, frameTheme, frameNavigation);
         AppHeader.Draw(context, Loc.T(L.FindPeople.FreeCompanyTitle), backToList);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = frameTheme;
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         var result = lookup.FreeCompanyDetail(route.LookupId, forceDetail);

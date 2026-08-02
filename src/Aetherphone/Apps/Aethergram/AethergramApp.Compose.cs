@@ -10,13 +10,10 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Aethergram;
 
-// The compose / avatar creation flow (pick, crop, caption, share). Kept in its own partial so the
-// main AethergramApp.cs stays focused on the feed and app orchestration.
 internal sealed partial class AethergramApp
 {
     private const float AspectPickerReserve = 42f;
@@ -128,7 +125,7 @@ internal sealed partial class AethergramApp
 
     private void DrawComposePick(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, theme, navigation);
         var showNext = !composeAvatarMode && !composeStoryMode;
         var nextLabel = Loc.T(L.Common.Next);
@@ -176,7 +173,7 @@ internal sealed partial class AethergramApp
 
     private void DrawComposeCrop(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var multi = !composeAvatarMode && composeSession.SelectedCount > 1;
         var title = multi
             ? Loc.T(L.Common.PhotoStep, composeSession.CropIndex + 1, composeSession.SelectedCount)
@@ -196,7 +193,7 @@ internal sealed partial class AethergramApp
         }
 
         var reserve = ComposeAllowsAspectChoice ? AspectPickerReserve : 0f;
-        composeSession.DrawCropCanvas(area, ImGuiHelpers.GlobalScale, ComposeAspect, ComposeStyle,
+        composeSession.DrawCropCanvas(area, UiScale.Current, ComposeAspect, ComposeStyle,
             Loc.T(L.Aethergram.GestureHint), reserve);
         if (ComposeAllowsAspectChoice)
         {
@@ -252,9 +249,10 @@ internal sealed partial class AethergramApp
 
     private void DrawComposeCaption(Rect area)
     {
+        personPicker.Gate();
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, ComposeTitle, () => composeSession.LoadCropStage(composeSession.SelectedCount - 1));
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var margin = 16f * scale;
         var top = area.Min.Y + AppHeader.Height * scale;
         var shareHeight = 46f * scale;
@@ -298,8 +296,6 @@ internal sealed partial class AethergramApp
         {
             PlaceComposeTag(pickedPerson);
         }
-
-        personPicker.Gate();
 
         var busy = ComposePosting;
         if (DrawShareBar(shareRect, busy ? Loc.T(L.Aethergram.Sharing) : Loc.T(L.Aethergram.Share), !busy))
@@ -552,7 +548,7 @@ internal sealed partial class AethergramApp
 
     private bool DrawShareBar(Rect rect, string label, bool enabled)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
         var radius = rect.Height * 0.5f;

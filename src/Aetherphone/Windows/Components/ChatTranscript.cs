@@ -9,7 +9,6 @@ using Aetherphone.Core.YellowPages;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Textures.TextureWraps;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -88,12 +87,14 @@ internal readonly struct TranscriptMessage
     public readonly int ReplyKind;
     public readonly int DurationSecs;
     public readonly TranscriptReaction[] Reactions;
+    public readonly int SenderBadges;
 
     public TranscriptMessage(string id, string senderId, string body, int kind, long createdAtUnix, int mediaWidth,
         int mediaHeight, long? readAtUnix, string senderName, Vector4 senderTint, byte flags = 0,
         string? replyToId = null, string replySenderName = "", string replyBody = "", int replyKind = 0,
-        int durationSecs = 0, TranscriptReaction[]? reactions = null)
+        int durationSecs = 0, TranscriptReaction[]? reactions = null, int senderBadges = 0)
     {
+        SenderBadges = senderBadges;
         Id = id;
         SenderId = senderId;
         Body = body;
@@ -243,7 +244,7 @@ internal sealed class ChatTranscript
 
     public void Draw(Rect listRect, in ChatTranscriptModel model)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var delta = ImGui.GetIO().DeltaTime;
         var tailId = model.Messages.Length > 0 ? model.Messages[model.Messages.Length - 1].Id : null;
         entrances.Sync(model.ThreadId, model.Messages.Length, tailId, delta, model.Loading);
@@ -306,7 +307,7 @@ internal sealed class ChatTranscript
 
                 if (model.IsGroup && !grouped && message.SenderId != model.MyUserId)
                 {
-                    DrawSenderLabel(message);
+                    DrawSenderLabel(message, model.Theme);
                 }
 
                 if (message.Kind == KindImage)
@@ -378,7 +379,7 @@ internal sealed class ChatTranscript
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (ImGui.GetScrollMaxY() <= 0f || ImGui.GetScrollY() > LoadOlderThreshold * scale)
         {
             return;
@@ -415,7 +416,7 @@ internal sealed class ChatTranscript
 
     private void DrawOlderLoading(Rect listRect, in ChatTranscriptModel model)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var dotRadius = 2.6f * scale;
         var dotGap = 6f * scale;
@@ -433,7 +434,7 @@ internal sealed class ChatTranscript
 
     private void SyncFollow(string threadId)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (followThreadId == threadId)
         {
             followBottom = ImGui.GetScrollY() >= ImGui.GetScrollMaxY() - 4f * scale;
@@ -452,23 +453,23 @@ internal sealed class ChatTranscript
         }
     }
 
-    private static void DrawSenderLabel(TranscriptMessage message)
+    private static void DrawSenderLabel(TranscriptMessage message, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var textLeft = origin.X + 4f * scale;
         var maxWidth = ScrollLayout.StableContentWidth() - 4f * scale;
         var rect = new Vector2(textLeft, origin.Y);
         var hovering = UiInteract.Hover(rect, new Vector2(rect.X + maxWidth, rect.Y + 16f * scale));
         var name = FirstName(message.SenderName);
-        Marquee.DrawLeft("chattranscript.sender." + message.Id, name, textLeft, origin.Y, maxWidth,
-            new TextStyle(0.78f, FontWeight.SemiBold), message.SenderTint, hovering);
+        UserName.Draw("chattranscript.sender." + message.Id, name, message.SenderBadges, textLeft, origin.Y, maxWidth,
+            new TextStyle(0.78f, FontWeight.SemiBold), message.SenderTint, hovering, theme);
         ImGui.SetCursorScreenPos(new Vector2(origin.X, origin.Y + 16f * scale));
     }
 
     private void DrawSystemMessage(TranscriptMessage message, in ChatTranscriptModel model)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var available = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
         var textSize = Typography.Measure(message.Body, 0.74f, FontWeight.Medium);
@@ -485,7 +486,7 @@ internal sealed class ChatTranscript
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var available = ScrollLayout.StableContentWidth();
         var textSize = Typography.Measure(label, 0.72f, FontWeight.Medium);
@@ -502,7 +503,7 @@ internal sealed class ChatTranscript
 
     private void DrawTextBubble(TranscriptMessage message, int index, in ChatTranscriptModel model)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var mine = message.SenderId == model.MyUserId;
         var deleted = (message.Flags & TranscriptFlags.Deleted) != 0;
         var drawList = ImGui.GetWindowDrawList();
@@ -630,7 +631,7 @@ internal sealed class ChatTranscript
     private void DrawPostCardBubble(TranscriptMessage message, int index, in ChatPostCard card,
         IChatTranscriptPostCards cards, in ChatTranscriptModel model)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var mine = message.SenderId == model.MyUserId;
         var drawList = ImGui.GetWindowDrawList();
         var available = ScrollLayout.StableContentWidth();
@@ -766,7 +767,7 @@ internal sealed class ChatTranscript
     private void DrawLocationBubble(TranscriptMessage message, int index, in SharedLocation location,
         in ChatTranscriptModel model)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var mine = message.SenderId == model.MyUserId;
         var placeholder = (message.Flags & TranscriptFlags.Placeholder) != 0;
         var drawList = ImGui.GetWindowDrawList();
@@ -898,7 +899,7 @@ internal sealed class ChatTranscript
 
     private void DrawMusterBubble(TranscriptMessage message, int index, string musterId, in ChatTranscriptModel model)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var mine = message.SenderId == model.MyUserId;
         var placeholder = (message.Flags & TranscriptFlags.Placeholder) != 0;
         var drawList = ImGui.GetWindowDrawList();
@@ -1042,7 +1043,7 @@ internal sealed class ChatTranscript
 
     private void DrawAdBubble(TranscriptMessage message, int index, string adId, in ChatTranscriptModel model)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var mine = message.SenderId == model.MyUserId;
         var placeholder = (message.Flags & TranscriptFlags.Placeholder) != 0;
         var drawList = ImGui.GetWindowDrawList();
@@ -1213,7 +1214,7 @@ internal sealed class ChatTranscript
     private void DrawStoryReplyContext(in TranscriptMessage message, in ChatStoryReplyContext context,
         IChatTranscriptStoryReplies replies, in ChatTranscriptModel model)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var mine = message.SenderId == model.MyUserId;
         var drawList = ImGui.GetWindowDrawList();
         var available = ScrollLayout.StableContentWidth();
@@ -1362,7 +1363,7 @@ internal sealed class ChatTranscript
 
     private void DrawVoiceBubble(TranscriptMessage message, int index, in ChatTranscriptModel model)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var mine = message.SenderId == model.MyUserId;
         var drawList = ImGui.GetWindowDrawList();
         var available = ScrollLayout.StableContentWidth();
@@ -1453,7 +1454,7 @@ internal sealed class ChatTranscript
 
     private void DrawImageBubble(TranscriptMessage message, int index, in ChatTranscriptModel model)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var mine = message.SenderId == model.MyUserId;
         var drawList = ImGui.GetWindowDrawList();
         var available = ScrollLayout.StableContentWidth();
@@ -1560,7 +1561,7 @@ internal sealed class ChatTranscript
 
     private void DrawTypingBubble(float reveal, in ChatTranscriptModel model)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         typingPhase += ImGui.GetIO().DeltaTime;
         if (typingPhase > 1000f)
         {
@@ -1614,7 +1615,7 @@ internal sealed class ChatTranscript
     private void DrawQuote(ImDrawListPtr drawList, in TranscriptMessage message, in QuoteMeasure quote,
         Vector2 origin, float width, in BubblePop fx, bool mine, in ChatTranscriptModel model)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var quoteMin = origin;
         var quoteMax = origin + new Vector2(width, quote.Height);
         var scaledMin = fx.Apply(quoteMin);

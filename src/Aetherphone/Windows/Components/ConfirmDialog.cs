@@ -1,7 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -36,7 +35,7 @@ internal static class ConfirmDialog
     {
         canceled = false;
         confirmed = false;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var s = scale * cardScale;
         var drawList = ImGui.GetWindowDrawList();
         var pad = CardPadding * s;
@@ -48,7 +47,8 @@ internal static class ConfirmDialog
         var titleScale = TitleScale * cardScale;
         var messageScale = MessageScale * cardScale;
 
-        var titleHeight = hasTitle ? Typography.Measure(title!, titleScale, FontWeight.Bold).Y : 0f;
+        var titleStyle = new TextStyle(titleScale, FontWeight.Bold);
+        var titleHeight = hasTitle ? Typography.MeasureWrappedBlock(title!, titleStyle, wrapWidth).Y : 0f;
         var lineHeight = WrapMessage(message, wrapWidth, messageScale, FontWeight.Medium);
         var lineStep = lineHeight + LineLeading * s;
         var lineCount = LineBuffer.Count;
@@ -76,9 +76,7 @@ internal static class ConfirmDialog
         if (hasTitle)
         {
             var titleColor = new Vector4(theme.TextStrong.X, theme.TextStrong.Y, theme.TextStrong.Z, opacity);
-            Typography.DrawCentered(drawList, new Vector2(centerX, cursorY + titleHeight * 0.5f),
-                Typography.FitText(title!, wrapWidth, titleScale, FontWeight.Bold), titleColor,
-                titleScale, FontWeight.Bold);
+            Typography.DrawWrappedCentered(new Vector2(centerX, cursorY), title!, titleColor, titleStyle, wrapWidth);
             cursorY += titleHeight + TitleGap * s;
         }
 
@@ -96,7 +94,7 @@ internal static class ConfirmDialog
         }
 
         var buttonY = cardMax.Y - pad - buttonHeight;
-        if (acknowledge)
+        if (acknowledge || string.IsNullOrEmpty(cancelLabel))
         {
             var acknowledgeRect = new Rect(new Vector2(cardMin.X + pad, buttonY),
                 new Vector2(cardMax.X - pad, buttonY + buttonHeight));

@@ -4,7 +4,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet.Kit;
 
@@ -14,7 +13,7 @@ internal static class VHeader
 
     public static bool Root(Rect area, string title, PhoneTheme theme, int bellBadge)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var midY = area.Min.Y + Height * scale * 0.5f;
         Marquee.DrawLeftAuto("vheader.root." + title, title, area.Min.X + 4f * scale,
@@ -33,7 +32,7 @@ internal static class VHeader
 
     public static bool Push(Rect area, string title, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var midY = area.Min.Y + Height * scale * 0.5f;
         var center = new Vector2(area.Min.X + 16f * scale, midY);
         var hitMin = new Vector2(area.Min.X, area.Min.Y);

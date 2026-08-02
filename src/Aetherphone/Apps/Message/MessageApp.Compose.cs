@@ -6,7 +6,6 @@ using Aetherphone.Core.Telephony;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Message;
@@ -22,7 +21,7 @@ internal sealed partial class MessageApp
 
     private void DrawNewChat(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, Loc.T(L.DirectMessages.NewMessage), back);
         var top = area.Min.Y + AppHeader.Height * scale;
@@ -240,7 +239,7 @@ internal sealed partial class MessageApp
 
     private bool PillField(Rect rect, string imguiId, string hint, ref string value, int maxLength)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         Squircle.Fill(drawList, rect.Min, rect.Max, (rect.Max.Y - rect.Min.Y) * 0.5f,
             ImGui.GetColorU32(ui.FieldSurface));

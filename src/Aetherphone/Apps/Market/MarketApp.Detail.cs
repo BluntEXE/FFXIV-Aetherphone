@@ -7,7 +7,6 @@ using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Textures;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Market;
@@ -16,7 +15,7 @@ internal sealed partial class MarketApp
 {
     private void DrawDetail(Rect area, MarketView view)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, frameTheme, frameNavigation);
         AppHeader.Draw(context, string.Empty, backToList);
         DrawHeaderTitle(area, view.Name);
@@ -66,7 +65,7 @@ internal sealed partial class MarketApp
 
     private void DrawHero(MarketView view, MarketSnapshot snapshot, bool hq, bool hasHq)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var origin = ImGui.GetCursorScreenPos();
         var drawList = ImGui.GetWindowDrawList();
@@ -192,7 +191,7 @@ internal sealed partial class MarketApp
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ImGui.Dummy(new Vector2(0f, 8f * scale));
         DrawThresholdField();
         ImGui.Dummy(new Vector2(0f, 8f * scale));
@@ -228,7 +227,7 @@ internal sealed partial class MarketApp
 
     private void DrawThresholdField()
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
@@ -260,7 +259,7 @@ internal sealed partial class MarketApp
 
     private bool DrawPrimaryButton(string label)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
@@ -297,7 +296,7 @@ internal sealed partial class MarketApp
         }
 
         ui.SectionHeading(Loc.T(L.Market.Trend), 14f);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var origin = ImGui.GetCursorScreenPos();
         var height = 60f * scale;
@@ -385,14 +384,14 @@ internal sealed partial class MarketApp
 
     private void DrawHeaderTitle(Rect area, string name)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         AppHeader.DrawTitleWithReserve(area, "market.detail.header." + name, name, 64f * scale, frameTheme.TextStrong,
             scale);
     }
 
     private void DrawHeaderButtons(Rect area, MarketView view, out bool forceRefresh)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var midY = area.Min.Y + AppHeader.Height * scale * 0.5f;
         var starCenter = new Vector2(area.Max.X - 18f * scale, midY);
         var refreshCenter = new Vector2(area.Max.X - 46f * scale, midY);
@@ -407,7 +406,7 @@ internal sealed partial class MarketApp
 
     private bool IconButton(Vector2 center, FontAwesomeIcon icon, Vector4 color)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var box = 14f * scale;
         var hovered = UiInteract.Hover(center - new Vector2(box, box), center + new Vector2(box, box));
         var glyph = icon.ToIconString();

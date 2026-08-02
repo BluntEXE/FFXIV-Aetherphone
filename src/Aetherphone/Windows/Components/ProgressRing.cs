@@ -2,7 +2,6 @@ using Aetherphone.Core.Animation;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -81,7 +80,7 @@ internal static class ProgressRing
         var bs = Typography.Measure(big, bigStyle);
         var hasSmall = !string.IsNullOrEmpty(small);
         var ss = hasSmall ? Typography.Measure(small!, TextStyles.Footnote) : Vector2.Zero;
-        var gap = hasSmall ? 2f * ImGuiHelpers.GlobalScale : 0f;
+        var gap = hasSmall ? 2f * UiScale.Current : 0f;
         var top = c.Y - (bs.Y + gap + ss.Y) * 0.5f;
         Typography.Draw(new Vector2(c.X - bs.X * 0.5f, top), big, bigCol, bigStyle);
         if (hasSmall)
@@ -99,10 +98,24 @@ internal static class ProgressRing
             var baseSize = ImGui.GetFontSize();
             var measured = ImGui.CalcTextSize(glyph);
             var scale = measured.Y > 0f ? targetHeight / measured.Y : 1f;
-            var size = measured * scale;
-            dl.AddText(font, baseSize * scale, new Vector2(c.X - size.X * 0.5f, c.Y - size.Y * 0.5f),
-                ImGui.GetColorU32(col), glyph);
+            var drawSize = baseSize * scale;
+            dl.AddText(font, drawSize, GlyphPen(font, glyph[0], c, drawSize, measured * scale), ImGui.GetColorU32(col),
+                glyph);
         }
+    }
+
+    private static unsafe Vector2 GlyphPen(ImFontPtr font, char codepoint, Vector2 center, float drawSize,
+        Vector2 lineSize)
+    {
+        ImFontGlyphPtr found = font.FindGlyph(codepoint);
+        if (found.IsNull || font.FontSize <= 0f)
+        {
+            return center - lineSize * 0.5f;
+        }
+
+        var ratio = drawSize / font.FontSize;
+        return new Vector2(center.X - (found.X0 + found.X1) * 0.5f * ratio,
+            center.Y - (found.Y0 + found.Y1) * 0.5f * ratio);
     }
 
     public static void CenterIcon(Vector2 c, FontAwesomeIcon icon, Vector4 col, float targetHeight)
@@ -128,7 +141,7 @@ internal static class ProgressRing
         var max = c + new Vector2(radius, radius);
         var hovered = enabled && UiInteract.Hover(min, max);
         var accent = Accent.Violet;
-        var thickness = 4.5f * ImGuiHelpers.GlobalScale;
+        var thickness = 4.5f * UiScale.Current;
         if (enabled)
             Glow(c, radius, accent, 0.85f + (hovered ? 1.0f : 0f) + 0.55f * Pulse.Wave(Pulse.Breath));
         dl.AddCircleFilled(c, radius - thickness * 0.5f,
@@ -139,7 +152,6 @@ internal static class ProgressRing
             enabled ? Palette.WithAlpha(accent, hovered ? 1f : 0.78f) : Palette.WithAlpha(ChromeInk.Border, 0.85f));
         var glyph = enabled ? FontAwesomeIcon.Play : FontAwesomeIcon.Lock;
         var glyphCol = enabled ? (hovered ? ChromeInk.TextStrong : Accent.VioletSoft) : ChromeInk.TextMuted;
-        // A play triangle is visually heavier on its left edge; nudge right so it reads centred.
         var nudge = enabled ? new Vector2(radius * 0.07f, 0f) : Vector2.Zero;
         CenterIcon(c + nudge, glyph, glyphCol, radius * (enabled ? 0.78f : 0.62f));
         ImGui.SetCursorScreenPos(min);

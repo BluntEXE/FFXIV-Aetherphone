@@ -3,7 +3,6 @@ using Aetherphone.Core.Animation;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -73,7 +72,7 @@ internal sealed class DropdownMenu
             return -1;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetForegroundDrawList();
         var reveal = Easing.EaseOutQuint(Math.Clamp((float)((ImGui.GetTime() - openedAt) / RevealSeconds), 0f, 1f));
         var alpha = Easing.SmoothStep(Math.Clamp(reveal / 0.7f, 0f, 1f));
@@ -139,9 +138,6 @@ internal sealed class DropdownMenu
             var rowMax = new Vector2(max.X - padY, rowMin.Y + rowHeight * revealScale);
             var centerY = (rowMin.Y + rowMax.Y) * 0.5f;
 
-            // Reserved slots are laid out right-to-left so every row's icons line up regardless of that
-            // row's own capabilities: checkmark, then edit. Delete has no icon of its own: it is a right-click
-            // anywhere on the row (confirmed by the caller before anything is actually removed).
             var cursorRight = rowMax.X - 10f * scale;
             if (anySelected)
             {

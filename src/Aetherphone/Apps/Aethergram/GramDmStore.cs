@@ -32,6 +32,15 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
         this.social = social;
         this.signals = signals;
         signals.GramPinged += OnGramPinged;
+        signals.ConnectedChanged += OnRealtimeConnected;
+    }
+
+    private void OnRealtimeConnected(bool active)
+    {
+        if (active)
+        {
+            InboxCadence.RequestImmediate();
+        }
     }
 
     public override bool RealtimePushActive => signals.RealtimeActive;
@@ -39,7 +48,7 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
     private void OnGramPinged()
     {
         InboxCadence.RequestImmediate();
-        RefreshThread();
+        RefreshThreadIfVisible();
     }
 
     public GramThreadDto[] Threads => ThreadListItems;
@@ -178,11 +187,11 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
         await keys.HydrateGramAsync(token).ConfigureAwait(false);
     }
 
-    protected override async Task<GramThreadDto[]?> FetchThreadListAsync(CancellationToken token)
+    protected override async Task<ThreadListPage?> FetchThreadListAsync(string? cursor, CancellationToken token)
     {
         await EnsureGramHydratedAsync(token).ConfigureAwait(false);
-        var page = await client.ThreadsAsync(null, token).ConfigureAwait(false);
-        return page?.Items;
+        var page = await client.ThreadsAsync(cursor, token).ConfigureAwait(false);
+        return page is null ? null : new ThreadListPage(page.Items, page.NextCursor);
     }
 
     protected override async Task<MessagePage?> FetchMessagesPageAsync(string threadId, string? cursor,
@@ -352,6 +361,10 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
 
     protected override string MessageBodyOf(GramMessageDto message) => message.Body;
 
+    protected override int MessageKindOf(GramMessageDto message) => message.Kind;
+
+    protected override string MessageSenderIdOf(GramMessageDto message) => message.SenderId;
+
     protected override ReactionSummaryDto[]? ReactionsOf(GramMessageDto message) => message.Reactions;
 
     protected override GramMessageDto WithReactions(GramMessageDto message, ReactionSummaryDto[]? reactions) =>
@@ -488,5 +501,6 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
     protected override void DisposeCore()
     {
         signals.GramPinged -= OnGramPinged;
+        signals.ConnectedChanged -= OnRealtimeConnected;
     }
 }

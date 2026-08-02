@@ -4,7 +4,6 @@ using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -39,7 +38,7 @@ internal sealed class BottomTabBar
             hover = new Spring[tabs.Length];
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddLine(bar.Min, new Vector2(bar.Max.X, bar.Min.Y),
             ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.10f)), 1f);

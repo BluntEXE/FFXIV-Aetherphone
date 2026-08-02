@@ -10,7 +10,6 @@ using Aetherphone.Core.YellowPages;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.YellowPages;
 
@@ -45,7 +44,7 @@ internal static class AdCard
     public static bool Draw(Rect card, AdDto ad, RemoteImageCache images, LodestoneService lodestone,
         PhoneTheme theme, AppSkin ui, long nowUnix)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var rounding = Metrics.Radius.Lg * scale;
         var palette = ui.Palette;

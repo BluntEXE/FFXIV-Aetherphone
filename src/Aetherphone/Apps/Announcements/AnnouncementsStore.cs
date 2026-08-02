@@ -1,3 +1,4 @@
+using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
@@ -21,18 +22,30 @@ internal sealed class AnnouncementsStore : IDisposable
     private readonly StoreWork work = new StoreWork("Announcements");
 
     private volatile AnnouncementDto[] announcements = Array.Empty<AnnouncementDto>();
+    private volatile string? announcementsCursor;
+    private volatile bool loadingMore;
+    private volatile bool pagedDeeper;
     private volatile bool loading;
     private volatile bool loadedOnce;
+    private volatile bool pingRefreshRequested;
     private DateTime lastBackgroundRefreshUtc = DateTime.MinValue;
+    private readonly RealtimeSignalBus signals;
 
     public AnnouncementsStore(AethernetSession session, AnnouncementsClient client,
-        NotificationService notifications, Configuration configuration)
+        NotificationService notifications, Configuration configuration, RealtimeSignalBus signals)
     {
         this.session = session;
         this.client = client;
         this.notifications = notifications;
         this.configuration = configuration;
+        this.signals = signals;
+        signals.AnnouncementsPinged += OnAnnouncementsPinged;
         Plugin.Framework.Update += OnFrameworkUpdate;
+    }
+
+    private void OnAnnouncementsPinged()
+    {
+        pingRefreshRequested = true;
     }
 
     public bool IsSignedIn => session.IsSignedIn;
@@ -40,6 +53,10 @@ internal sealed class AnnouncementsStore : IDisposable
     public AnnouncementDto[] Announcements => announcements;
 
     public bool Loading => loading;
+
+    public bool LoadingMore => loadingMore;
+
+    public bool HasMore => announcementsCursor is not null;
 
     public bool LoadedOnce => loadedOnce;
 
@@ -80,16 +97,54 @@ internal sealed class AnnouncementsStore : IDisposable
         loading = true;
         work.Run("announcements refresh", async token =>
         {
-            var page = await client.ListAsync(token).ConfigureAwait(false);
+            var page = await client.ListAsync(null, token).ConfigureAwait(false);
             if (page is null)
             {
                 return;
             }
 
-            announcements = page.Items;
+            if (pagedDeeper)
+            {
+                announcements = IdentifiedMerge.MergeById(announcements, page.Items, ByNewestFirst);
+            }
+            else
+            {
+                announcements = page.Items;
+                announcementsCursor = page.NextCursor;
+            }
+
             loadedOnce = true;
             Announce(page.Items);
         }, () => loading = false);
+    }
+
+    public void LoadMore()
+    {
+        var cursor = announcementsCursor;
+        if (!session.IsSignedIn || cursor is null || loadingMore || loading)
+        {
+            return;
+        }
+
+        loadingMore = true;
+        pagedDeeper = true;
+        work.Run("announcements more", async token =>
+        {
+            var page = await client.ListAsync(cursor, token).ConfigureAwait(false);
+            if (page is null)
+            {
+                return;
+            }
+
+            announcements = IdentifiedMerge.MergeById(announcements, page.Items, ByNewestFirst);
+            announcementsCursor = page.NextCursor;
+        }, () => loadingMore = false);
+    }
+
+    private static int ByNewestFirst(AnnouncementDto left, AnnouncementDto right)
+    {
+        var byTime = right.CreatedAtUnix.CompareTo(left.CreatedAtUnix);
+        return byTime != 0 ? byTime : string.CompareOrdinal(right.Id, left.Id);
     }
 
     public void MarkAllSeen()
@@ -148,11 +203,12 @@ internal sealed class AnnouncementsStore : IDisposable
         }
 
         var now = DateTime.UtcNow;
-        if (now - lastBackgroundRefreshUtc < BackgroundRefreshInterval)
+        if (!pingRefreshRequested && now - lastBackgroundRefreshUtc < BackgroundRefreshInterval)
         {
             return;
         }
 
+        pingRefreshRequested = false;
         lastBackgroundRefreshUtc = now;
         Refresh();
     }
@@ -173,6 +229,7 @@ internal sealed class AnnouncementsStore : IDisposable
 
     public void Dispose()
     {
+        signals.AnnouncementsPinged -= OnAnnouncementsPinged;
         Plugin.Framework.Update -= OnFrameworkUpdate;
         work.Dispose();
     }

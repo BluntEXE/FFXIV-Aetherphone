@@ -5,18 +5,21 @@ namespace Aetherphone.Windows.Components;
 internal static class Squircle
 {
     private const float Exponent = 4.2f;
-    private const float Fullness = 1.10f;
-    private const int CornerSegments = 8;
+    private const int MinCornerSegments = 6;
+    private const int MaxCornerSegments = 24;
+    private const float SegmentError = 0.25f;
     private const float MinSegmentSquared = 0.01f;
-    private static readonly Vector2[] UnitCorner = BuildUnitCorner();
-    private static readonly Vector2[] PathScratch = new Vector2[(CornerSegments + 1) * 4];
+    private const float CapOverlap = 1.5f;
+    private const float DegenerateBox = 0.5f;
+    private static readonly Vector2[][] UnitCorners = BuildUnitCorners();
+    private static readonly Vector2[] PathScratch = new Vector2[(MaxCornerSegments + 1) * 4 + 4];
 
     public static void Fill(ImDrawListPtr drawList, Vector2 min, Vector2 max, float radius, uint color)
     {
         var box = CornerBox(min, max, radius);
-        if (box <= 1.5f)
+        if (box <= DegenerateBox)
         {
-            drawList.AddRectFilled(min, max, color, MathF.Max(0f, radius), ImDrawFlags.RoundCornersAll);
+            drawList.AddRectFilled(min, max, color);
             return;
         }
 
@@ -28,9 +31,9 @@ internal static class Squircle
         float thickness)
     {
         var box = CornerBox(min, max, radius);
-        if (box <= 1.5f)
+        if (box <= DegenerateBox)
         {
-            drawList.AddRect(min, max, color, MathF.Max(0f, radius), ImDrawFlags.RoundCornersAll, thickness);
+            drawList.AddRect(min, max, color, 0f, ImDrawFlags.None, thickness);
             return;
         }
 
@@ -41,13 +44,13 @@ internal static class Squircle
     public static void StrokeCorner(ImDrawListPtr drawList, Vector2 min, Vector2 max, float radius, int quadrant,
         Vector4 startColor, Vector4 endColor, float thickness)
     {
-        var box = MathF.Max(0f, MathF.Min(radius, MathF.Min(max.X - min.X, max.Y - min.Y) * 0.5f));
-        if (box <= 0.5f)
+        var box = CornerBox(min, max, radius);
+        if (box <= DegenerateBox)
         {
             return;
         }
 
-        var corner = UnitCorner;
+        var corner = CornerFor(box);
         var center = quadrant switch
         {
             0 => new Vector2(min.X + box, min.Y + box),
@@ -68,10 +71,12 @@ internal static class Squircle
         }
     }
 
-    public static void FillOutsideCorners(ImDrawListPtr drawList, Vector2 min, Vector2 max, float radius, uint color)
+    public static void FillOutsideCorners(ImDrawListPtr drawList, Vector2 min, Vector2 max, float radius, uint color,
+        float grow)
     {
-        var box = CornerBox(min, max, radius);
-        if (box <= 0.5f)
+        var limit = MathF.Min(max.X - min.X, max.Y - min.Y) * 0.5f;
+        var box = MathF.Min(CornerBox(min, max, radius) + MathF.Max(grow, 0f), MathF.Max(limit, 0f));
+        if (box <= DegenerateBox)
         {
             return;
         }
@@ -85,7 +90,7 @@ internal static class Squircle
     private static void FillCorner(ImDrawListPtr drawList, Vector2 apex, Vector2 anchor, float box, float signX,
         float signY, uint color)
     {
-        var corner = UnitCorner;
+        var corner = CornerFor(box);
         drawList.PathClear();
         drawList.PathLineTo(apex);
         for (var index = 0; index < corner.Length; index++)
@@ -94,20 +99,21 @@ internal static class Squircle
             drawList.PathLineTo(new Vector2(anchor.X + signX * point.X * box, anchor.Y + signY * point.Y * box));
         }
 
+        var flags = drawList.Flags;
+        drawList.Flags = flags & ~ImDrawListFlags.AntiAliasedFill;
         drawList.PathFillConvex(color);
+        drawList.Flags = flags;
     }
 
     public static void FillCap(ImDrawListPtr drawList, Vector2 min, Vector2 max, float radius, uint color, bool top)
     {
         var box = CornerBox(min, max, radius);
-        if (box <= 1.5f)
+        if (box <= DegenerateBox)
         {
-            drawList.AddRectFilled(min, max, color, MathF.Max(0f, radius),
-                top ? ImDrawFlags.RoundCornersTop : ImDrawFlags.RoundCornersBottom);
+            drawList.AddRectFilled(min, max, color);
             return;
         }
 
-        const float overlap = 1.5f;
         if (top)
         {
             var bodyTop = min.Y + box;
@@ -125,7 +131,7 @@ internal static class Squircle
             }
         }
 
-        TraceCapPath(drawList, min, max, box, top, overlap);
+        TraceCapPath(drawList, min, max, box, top);
         drawList.PathFillConvex(color);
     }
 
@@ -133,14 +139,12 @@ internal static class Squircle
         bool left)
     {
         var box = CornerBox(min, max, radius);
-        if (box <= 1.5f)
+        if (box <= DegenerateBox)
         {
-            drawList.AddRectFilled(min, max, color, MathF.Max(0f, radius),
-                left ? ImDrawFlags.RoundCornersLeft : ImDrawFlags.RoundCornersRight);
+            drawList.AddRectFilled(min, max, color);
             return;
         }
 
-        const float overlap = 1.5f;
         if (left)
         {
             var bodyLeft = min.X + box;
@@ -158,7 +162,7 @@ internal static class Squircle
             }
         }
 
-        TraceSideCapPath(drawList, min, max, box, left, overlap);
+        TraceSideCapPath(drawList, min, max, box, left);
         drawList.PathFillConvex(color);
     }
 
@@ -166,33 +170,32 @@ internal static class Squircle
         uint topColor, uint bottomColor)
     {
         var box = CornerBox(min, max, radius);
-        if (box <= 1.5f)
+        if (box <= DegenerateBox)
         {
             drawList.AddRectFilledMultiColor(min, max, topColor, topColor, bottomColor, bottomColor);
             return;
         }
 
-        const float overlap = 1.5f;
         var capTop = min.Y + box;
         var capBottom = max.Y - box;
-        var left = min.X - overlap;
-        var right = max.X + overlap;
+        var left = min.X - CapOverlap;
+        var right = max.X + CapOverlap;
 
-        drawList.PushClipRect(new Vector2(left, min.Y - overlap), new Vector2(right, capTop), true);
-        TraceCapPath(drawList, min, max, box, true, overlap);
+        drawList.PushClipRect(new Vector2(left, min.Y - CapOverlap), new Vector2(right, capTop), true);
+        TraceCapPath(drawList, min, max, box, true);
         drawList.PathFillConvex(topColor);
         drawList.PopClipRect();
 
         if (capBottom > capTop)
         {
             drawList.PushClipRect(new Vector2(left, capTop), new Vector2(right, capBottom), true);
-            drawList.AddRectFilledMultiColor(new Vector2(min.X, capTop - overlap),
-                new Vector2(max.X, capBottom + overlap), topColor, topColor, bottomColor, bottomColor);
+            drawList.AddRectFilledMultiColor(new Vector2(min.X, capTop - CapOverlap),
+                new Vector2(max.X, capBottom + CapOverlap), topColor, topColor, bottomColor, bottomColor);
             drawList.PopClipRect();
         }
 
-        drawList.PushClipRect(new Vector2(left, capBottom), new Vector2(right, max.Y + overlap), true);
-        TraceCapPath(drawList, min, max, box, false, overlap);
+        drawList.PushClipRect(new Vector2(left, capBottom), new Vector2(right, max.Y + CapOverlap), true);
+        TraceCapPath(drawList, min, max, box, false);
         drawList.PathFillConvex(bottomColor);
         drawList.PopClipRect();
     }
@@ -200,50 +203,78 @@ internal static class Squircle
     private static float CornerBox(Vector2 min, Vector2 max, float radius)
     {
         var limit = MathF.Min(max.X - min.X, max.Y - min.Y) * 0.5f;
-        return MathF.Max(0f, MathF.Min(radius * Fullness, limit));
+        return MathF.Max(0f, MathF.Min(radius, limit));
     }
 
     private static void TracePath(ImDrawListPtr drawList, Vector2 min, Vector2 max, float box)
     {
-        var corner = UnitCorner;
-        var topLeft = new Vector2(min.X + box, min.Y + box);
-        var topRight = new Vector2(max.X - box, min.Y + box);
-        var bottomRight = new Vector2(max.X - box, max.Y - box);
-        var bottomLeft = new Vector2(min.X + box, max.Y - box);
         var count = 0;
+        AppendCorner(new Vector2(min.X + box, min.Y + box), -1f, -1f, box, false, ref count);
+        AppendCorner(new Vector2(max.X - box, min.Y + box), 1f, -1f, box, true, ref count);
+        AppendCorner(new Vector2(max.X - box, max.Y - box), 1f, 1f, box, false, ref count);
+        AppendCorner(new Vector2(min.X + box, max.Y - box), -1f, 1f, box, true, ref count);
+        EmitScratch(drawList, count, true);
+    }
+
+    private static void TraceCapPath(ImDrawListPtr drawList, Vector2 min, Vector2 max, float box, bool top)
+    {
+        var count = 0;
+        if (top)
+        {
+            AppendDistinct(new Vector2(min.X, min.Y + box + CapOverlap), ref count);
+            AppendCorner(new Vector2(min.X + box, min.Y + box), -1f, -1f, box, false, ref count);
+            AppendCorner(new Vector2(max.X - box, min.Y + box), 1f, -1f, box, true, ref count);
+            AppendDistinct(new Vector2(max.X, min.Y + box + CapOverlap), ref count);
+            EmitScratch(drawList, count, false);
+            return;
+        }
+
+        AppendDistinct(new Vector2(max.X, max.Y - box - CapOverlap), ref count);
+        AppendCorner(new Vector2(max.X - box, max.Y - box), 1f, 1f, box, false, ref count);
+        AppendCorner(new Vector2(min.X + box, max.Y - box), -1f, 1f, box, true, ref count);
+        AppendDistinct(new Vector2(min.X, max.Y - box - CapOverlap), ref count);
+        EmitScratch(drawList, count, false);
+    }
+
+    private static void TraceSideCapPath(ImDrawListPtr drawList, Vector2 min, Vector2 max, float box, bool left)
+    {
+        var count = 0;
+        if (left)
+        {
+            AppendDistinct(new Vector2(min.X + box + CapOverlap, min.Y), ref count);
+            AppendCorner(new Vector2(min.X + box, min.Y + box), -1f, -1f, box, true, ref count);
+            AppendCorner(new Vector2(min.X + box, max.Y - box), -1f, 1f, box, false, ref count);
+            AppendDistinct(new Vector2(min.X + box + CapOverlap, max.Y), ref count);
+            EmitScratch(drawList, count, false);
+            return;
+        }
+
+        AppendDistinct(new Vector2(max.X - box - CapOverlap, max.Y), ref count);
+        AppendCorner(new Vector2(max.X - box, max.Y - box), 1f, 1f, box, true, ref count);
+        AppendCorner(new Vector2(max.X - box, min.Y + box), 1f, -1f, box, false, ref count);
+        AppendDistinct(new Vector2(max.X - box - CapOverlap, min.Y), ref count);
+        EmitScratch(drawList, count, false);
+    }
+
+    private static void AppendCorner(Vector2 anchor, float signX, float signY, float box, bool reverse, ref int count)
+    {
+        var corner = CornerFor(box);
+        if (reverse)
+        {
+            for (var index = corner.Length - 1; index >= 0; index--)
+            {
+                var point = corner[index];
+                AppendDistinct(new Vector2(anchor.X + signX * point.X * box, anchor.Y + signY * point.Y * box),
+                    ref count);
+            }
+
+            return;
+        }
+
         for (var index = 0; index < corner.Length; index++)
         {
             var point = corner[index];
-            AppendDistinct(new Vector2(topLeft.X - point.X * box, topLeft.Y - point.Y * box), ref count);
-        }
-
-        for (var index = corner.Length - 1; index >= 0; index--)
-        {
-            var point = corner[index];
-            AppendDistinct(new Vector2(topRight.X + point.X * box, topRight.Y - point.Y * box), ref count);
-        }
-
-        for (var index = 0; index < corner.Length; index++)
-        {
-            var point = corner[index];
-            AppendDistinct(new Vector2(bottomRight.X + point.X * box, bottomRight.Y + point.Y * box), ref count);
-        }
-
-        for (var index = corner.Length - 1; index >= 0; index--)
-        {
-            var point = corner[index];
-            AppendDistinct(new Vector2(bottomLeft.X - point.X * box, bottomLeft.Y + point.Y * box), ref count);
-        }
-
-        while (count > 1 && Vector2.DistanceSquared(PathScratch[count - 1], PathScratch[0]) < MinSegmentSquared)
-        {
-            count--;
-        }
-
-        drawList.PathClear();
-        for (var index = 0; index < count; index++)
-        {
-            drawList.PathLineTo(PathScratch[index]);
+            AppendDistinct(new Vector2(anchor.X + signX * point.X * box, anchor.Y + signY * point.Y * box), ref count);
         }
     }
 
@@ -258,101 +289,52 @@ internal static class Squircle
         count++;
     }
 
-    private static void TraceCapPath(ImDrawListPtr drawList, Vector2 min, Vector2 max, float box, bool top,
-        float overlap)
+    private static void EmitScratch(ImDrawListPtr drawList, int count, bool closed)
     {
+        while (closed && count > 1 && Vector2.DistanceSquared(PathScratch[count - 1], PathScratch[0]) < MinSegmentSquared)
+        {
+            count--;
+        }
+
         drawList.PathClear();
-        var corner = UnitCorner;
-        if (top)
+        for (var index = 0; index < count; index++)
         {
-            var topLeft = new Vector2(min.X + box, min.Y + box);
-            var topRight = new Vector2(max.X - box, min.Y + box);
-            drawList.PathLineTo(new Vector2(min.X, min.Y + box + overlap));
-            for (var index = 0; index < corner.Length; index++)
-            {
-                var point = corner[index];
-                drawList.PathLineTo(new Vector2(topLeft.X - point.X * box, topLeft.Y - point.Y * box));
-            }
-
-            for (var index = corner.Length - 1; index >= 0; index--)
-            {
-                var point = corner[index];
-                drawList.PathLineTo(new Vector2(topRight.X + point.X * box, topRight.Y - point.Y * box));
-            }
-
-            drawList.PathLineTo(new Vector2(max.X, min.Y + box + overlap));
-            return;
+            drawList.PathLineTo(PathScratch[index]);
         }
-
-        var bottomRight = new Vector2(max.X - box, max.Y - box);
-        var bottomLeft = new Vector2(min.X + box, max.Y - box);
-        drawList.PathLineTo(new Vector2(max.X, max.Y - box - overlap));
-        for (var index = 0; index < corner.Length; index++)
-        {
-            var point = corner[index];
-            drawList.PathLineTo(new Vector2(bottomRight.X + point.X * box, bottomRight.Y + point.Y * box));
-        }
-
-        for (var index = corner.Length - 1; index >= 0; index--)
-        {
-            var point = corner[index];
-            drawList.PathLineTo(new Vector2(bottomLeft.X - point.X * box, bottomLeft.Y + point.Y * box));
-        }
-
-        drawList.PathLineTo(new Vector2(min.X, max.Y - box - overlap));
     }
 
-    private static void TraceSideCapPath(ImDrawListPtr drawList, Vector2 min, Vector2 max, float box, bool left,
-        float overlap)
+    private static Vector2[] CornerFor(float box) => UnitCorners[SegmentsFor(box) - MinCornerSegments];
+
+    private static int SegmentsFor(float box)
     {
-        drawList.PathClear();
-        var corner = UnitCorner;
-        if (left)
+        if (box <= 1f)
         {
-            var topLeft = new Vector2(min.X + box, min.Y + box);
-            var bottomLeft = new Vector2(min.X + box, max.Y - box);
-            drawList.PathLineTo(new Vector2(min.X + box + overlap, min.Y));
-            for (var index = corner.Length - 1; index >= 0; index--)
-            {
-                var point = corner[index];
-                drawList.PathLineTo(new Vector2(topLeft.X - point.X * box, topLeft.Y - point.Y * box));
-            }
-
-            for (var index = 0; index < corner.Length; index++)
-            {
-                var point = corner[index];
-                drawList.PathLineTo(new Vector2(bottomLeft.X - point.X * box, bottomLeft.Y + point.Y * box));
-            }
-
-            drawList.PathLineTo(new Vector2(min.X + box + overlap, max.Y));
-            return;
+            return MinCornerSegments;
         }
 
-        var topRight = new Vector2(max.X - box, min.Y + box);
-        var bottomRight = new Vector2(max.X - box, max.Y - box);
-        drawList.PathLineTo(new Vector2(max.X - box - overlap, max.Y));
-        for (var index = corner.Length - 1; index >= 0; index--)
-        {
-            var point = corner[index];
-            drawList.PathLineTo(new Vector2(bottomRight.X + point.X * box, bottomRight.Y + point.Y * box));
-        }
-
-        for (var index = 0; index < corner.Length; index++)
-        {
-            var point = corner[index];
-            drawList.PathLineTo(new Vector2(topRight.X + point.X * box, topRight.Y - point.Y * box));
-        }
-
-        drawList.PathLineTo(new Vector2(max.X - box - overlap, min.Y));
+        var cosine = MathF.Max(1f - SegmentError / box, -1f);
+        var count = (int)MathF.Ceiling(MathF.PI * 0.5f / MathF.Acos(cosine));
+        return Math.Clamp(count, MinCornerSegments, MaxCornerSegments);
     }
 
-    private static Vector2[] BuildUnitCorner()
+    private static Vector2[][] BuildUnitCorners()
     {
-        var points = new Vector2[CornerSegments + 1];
+        var table = new Vector2[MaxCornerSegments - MinCornerSegments + 1][];
+        for (var segments = MinCornerSegments; segments <= MaxCornerSegments; segments++)
+        {
+            table[segments - MinCornerSegments] = BuildUnitCorner(segments);
+        }
+
+        return table;
+    }
+
+    private static Vector2[] BuildUnitCorner(int segments)
+    {
+        var points = new Vector2[segments + 1];
         var power = 2f / Exponent;
-        for (var index = 0; index <= CornerSegments; index++)
+        for (var index = 0; index <= segments; index++)
         {
-            var angle = MathF.PI * 0.5f * index / CornerSegments;
+            var angle = MathF.PI * 0.5f * index / segments;
             var cosine = MathF.Max(MathF.Cos(angle), 0f);
             var sine = MathF.Max(MathF.Sin(angle), 0f);
             points[index] = new Vector2(MathF.Pow(cosine, power), MathF.Pow(sine, power));

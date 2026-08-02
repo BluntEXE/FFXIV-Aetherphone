@@ -5,7 +5,6 @@ using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Calculator;
 
@@ -39,7 +38,7 @@ internal sealed class CalculatorApp : IPhoneApp
 
     public void Draw(in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ui.Theme = context.Theme;
         ui.Palette = AppPalettes.Calculator;
         var content = context.Content;

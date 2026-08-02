@@ -2,7 +2,6 @@ using Aetherphone.Core;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -24,7 +23,7 @@ internal static class SearchField
     public static bool DrawSubmit(Rect bar, string imguiId, string hint, ref string text, Vector4 fieldSurface,
         Vector4 mutedInk, Vector4 titleInk, int maxLength, float sideInset)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var pillMin = new Vector2(bar.Min.X + sideInset * scale, bar.Min.Y + 9f * scale);
         var pillMax = new Vector2(bar.Max.X - sideInset * scale, bar.Max.Y - 9f * scale);
@@ -56,7 +55,7 @@ internal static class SearchField
     public static void Draw(Rect bar, string imguiId, string hint, ref string text, Vector4 fieldSurface,
         Vector4 mutedInk, Vector4 titleInk, Vector4 clearFill, Vector4 clearCross, int maxLength)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var pillMin = new Vector2(bar.Min.X, bar.Center.Y - PillHalfHeight * scale);
         var pillMax = new Vector2(bar.Max.X, bar.Center.Y + PillHalfHeight * scale);

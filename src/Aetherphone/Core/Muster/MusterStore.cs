@@ -9,9 +9,6 @@ using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Core.Muster;
 
-/// <summary>Account-scoped in-memory muster state. Every muster.ping and reconnect triggers a full-replace
-/// sync fetch; notifications are derived by diffing consecutive snapshots, so a missed push degrades to the
-/// backstop poll instead of a lost alert. Never persisted, so no stale hosting markers survive a restart.</summary>
 internal sealed class MusterStore : IDisposable
 {
     public const string AppId = "muster";
@@ -118,8 +115,6 @@ internal sealed class MusterStore : IDisposable
         return goingIds.Contains(musterId);
     }
 
-    /// <summary>The caller's own quickchat status for a muster they are attending; local echo only,
-    /// the server never plays it back to its author.</summary>
     public int MyStatus(string musterId)
     {
         return myStatusByMusterId.TryGetValue(musterId, out var status) ? status : MusterStatuses.OnMyWay;
@@ -230,8 +225,6 @@ internal sealed class MusterStore : IDisposable
         }, () => directoryLoadingMore = false);
     }
 
-    /// <summary>Resolves a chat invite token without re-fetching per frame: the first call queues one
-    /// fetch, later calls read the cache. A miss is remembered so ended invites never retry.</summary>
     public MusterChatResolution ResolveForChat(string musterId)
     {
         if (knownMusters.TryGetValue(musterId, out var known))

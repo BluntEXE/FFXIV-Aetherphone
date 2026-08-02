@@ -4,7 +4,6 @@ using Aetherphone.Core.Media;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -59,7 +58,7 @@ internal sealed class ChatComposer : IDisposable
     public bool Recording => recorder.Recording;
 
     public float AccessoryHeight => replyTargetId is not null || editTargetId is not null
-        ? AccessoryBarHeight * ImGuiHelpers.GlobalScale
+        ? AccessoryBarHeight * UiScale.Current
         : 0f;
 
     public void BeginReply(string messageId, string senderName, string preview)
@@ -152,7 +151,7 @@ internal sealed class ChatComposer : IDisposable
     {
         var ui = model.Ui;
         var theme = ui.Theme;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddLine(area.Min, new Vector2(area.Max.X, area.Min.Y), ImGui.GetColorU32(theme.Separator), 1f);
         var buttonRadius = 18f * scale;
@@ -312,7 +311,7 @@ internal sealed class ChatComposer : IDisposable
 
     private void DrawEmojiPanel(Rect composerArea, in ChatComposerModel model)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var height = 250f * scale;
         var bottom = composerArea.Min.Y - AccessoryHeight;
         var panel = new Rect(new Vector2(composerArea.Min.X, bottom - height),
@@ -334,7 +333,7 @@ internal sealed class ChatComposer : IDisposable
     {
         var ui = model.Ui;
         var theme = ui.Theme;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddLine(area.Min, new Vector2(area.Max.X, area.Min.Y), ImGui.GetColorU32(theme.Separator), 1f);
         var cancelCenter = new Vector2(area.Min.X + 28f * scale, area.Center.Y);
@@ -386,7 +385,7 @@ internal sealed class ChatComposer : IDisposable
     {
         var ui = model.Ui;
         var theme = ui.Theme;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddRectFilled(area.Min, area.Max, ImGui.GetColorU32(BarFill));
         drawList.AddLine(area.Min, new Vector2(area.Max.X, area.Min.Y), ImGui.GetColorU32(theme.Separator), 1f);
@@ -414,7 +413,7 @@ internal sealed class ChatComposer : IDisposable
     {
         var ui = model.Ui;
         var theme = ui.Theme;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddRectFilled(area.Min, area.Max, ImGui.GetColorU32(BarFill));
         drawList.AddLine(area.Min, new Vector2(area.Max.X, area.Min.Y), ImGui.GetColorU32(theme.Separator), 1f);

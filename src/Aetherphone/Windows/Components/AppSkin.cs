@@ -3,7 +3,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -45,13 +44,13 @@ internal sealed class AppSkin
 
     public void Backdrop(Rect screen)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         PaintGradient(ImGui.GetWindowDrawList(), screen, screen, Theme.ScreenRounding * scale);
     }
 
     public void Body(Rect area)
     {
-        var frame = SceneChrome.ScreenFrom(area, Theme, ImGuiHelpers.GlobalScale);
+        var frame = SceneChrome.ScreenFrom(area, Theme, UiScale.Current);
         PaintGradient(ImGui.GetWindowDrawList(), area, frame, 0f);
     }
 
@@ -71,7 +70,7 @@ internal sealed class AppSkin
     {
         if (elevated)
         {
-            var scale = ImGuiHelpers.GlobalScale;
+            var scale = UiScale.Current;
             var shadow = new Vector2(0f, 2f * scale);
             drawList.AddRectFilled(min + shadow, max + shadow, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.24f)),
                 rounding);
@@ -104,13 +103,14 @@ internal sealed class AppSkin
         var maxLabelWidth = MathF.Max(1f, rect.Width - rect.Height);
         var fittedLabel = Typography.FitText(label, maxLabelWidth, 0.9f, FontWeight.SemiBold);
         var textSize = Typography.Measure(fittedLabel, 0.9f, FontWeight.SemiBold);
-        Typography.Draw(rect.Center - textSize * 0.5f, fittedLabel, theme.TextMuted, 0.9f, FontWeight.SemiBold);
+        Typography.Draw(drawList, rect.Center - textSize * 0.5f, fittedLabel, theme.TextMuted, 0.9f,
+            FontWeight.SemiBold);
         return false;
     }
 
     public bool FlowChip(ref float cursorX, float centerY, float gap, string label, bool active)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var textSize = Typography.Measure(label, 0.85f, FontWeight.Medium);
         var height = 32f * scale;
@@ -123,8 +123,8 @@ internal sealed class AppSkin
             : (hovered ? HoverFill : Palette.FieldSurface);
         Squircle.Fill(drawList, min, max, height * 0.5f, ImGui.GetColorU32(fill));
         var ink = active ? White : hovered ? Palette.TitleInk : Palette.BodyInk;
-        Typography.Draw(new Vector2(min.X + (width - textSize.X) * 0.5f, centerY - textSize.Y * 0.5f), label, ink,
-            0.85f, FontWeight.Medium);
+        Typography.Draw(drawList, new Vector2(min.X + (width - textSize.X) * 0.5f, centerY - textSize.Y * 0.5f),
+            label, ink, 0.85f, FontWeight.Medium);
         cursorX = max.X + gap;
         if (hovered)
         {
@@ -137,7 +137,7 @@ internal sealed class AppSkin
     public static bool FlowChip(ref float cursorX, float centerY, float gap, string label, bool active,
         PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var textSize = Typography.Measure(label, 0.8f, FontWeight.Medium);
         var height = 28f * scale;
@@ -148,8 +148,8 @@ internal sealed class AppSkin
         var fill = active ? Core.Theme.Palette.WithAlpha(theme.Accent, 0.92f) : theme.GroupedCard;
         Squircle.Fill(drawList, min, max, height * 0.5f, ImGui.GetColorU32(fill));
         var ink = active || hovered ? theme.TextStrong : theme.TextMuted;
-        Typography.Draw(new Vector2(min.X + (width - textSize.X) * 0.5f, centerY - textSize.Y * 0.5f), label, ink,
-            0.8f, FontWeight.Medium);
+        Typography.Draw(drawList, new Vector2(min.X + (width - textSize.X) * 0.5f, centerY - textSize.Y * 0.5f),
+            label, ink, 0.8f, FontWeight.Medium);
         cursorX = max.X + gap;
         if (hovered)
         {
@@ -182,7 +182,7 @@ internal sealed class AppSkin
         {
             var fittedLabel = Typography.FitText(label, maxLabelWidth, 0.9f, FontWeight.SemiBold);
             var textSize = Typography.Measure(fittedLabel, 0.9f, FontWeight.SemiBold);
-            Typography.Draw(rect.Center - textSize * 0.5f, fittedLabel, ink, 0.9f, FontWeight.SemiBold);
+            Typography.Draw(drawList, rect.Center - textSize * 0.5f, fittedLabel, ink, 0.9f, FontWeight.SemiBold);
         }
 
         if (hovered)
@@ -203,7 +203,7 @@ internal sealed class AppSkin
         var fill = hovered ? Core.Theme.Palette.Mix(theme.Danger, theme.TextStrong, 0.12f) : theme.Danger;
         Squircle.Fill(drawList, rect.Min, rect.Max, radius, ImGui.GetColorU32(fill));
         var textSize = Typography.Measure(label, 0.9f, FontWeight.SemiBold);
-        Typography.Draw(rect.Center - textSize * 0.5f, label, White, 0.9f, FontWeight.SemiBold);
+        Typography.Draw(drawList, rect.Center - textSize * 0.5f, label, White, 0.9f, FontWeight.SemiBold);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -228,7 +228,7 @@ internal sealed class AppSkin
             ImGui.GetColorU32(Core.Theme.Palette.WithAlpha(danger, 0.55f)), 1.4f);
         var ink = Core.Theme.Palette.Mix(danger, White, 0.18f);
         var textSize = Typography.Measure(label, 0.9f, FontWeight.SemiBold);
-        Typography.Draw(rect.Center - textSize * 0.5f, label, ink, 0.9f, FontWeight.SemiBold);
+        Typography.Draw(drawList, rect.Center - textSize * 0.5f, label, ink, 0.9f, FontWeight.SemiBold);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -254,7 +254,7 @@ internal sealed class AppSkin
 
         Squircle.Stroke(drawList, rect.Min, rect.Max, radius, ImGui.GetColorU32(GhostStroke), 1f);
         var textSize = Typography.Measure(label, 0.9f, FontWeight.SemiBold);
-        Typography.Draw(rect.Center - textSize * 0.5f, label, titleInk, 0.9f, FontWeight.SemiBold);
+        Typography.Draw(drawList, rect.Center - textSize * 0.5f, label, titleInk, 0.9f, FontWeight.SemiBold);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -321,7 +321,7 @@ internal sealed class AppSkin
 
     public void ToggleRow(string label, ref bool value)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var height = 34f * scale;
@@ -353,7 +353,7 @@ internal sealed class AppSkin
 
     public void Field(string label, string id, ref string value, int maxLength, bool multiline, float heightUnscaled)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         using (ImRaii.PushColor(ImGuiCol.Text, Palette.MutedInk))
         {
             Typography.Plain(label);
@@ -388,14 +388,14 @@ internal sealed class AppSkin
 
     public static float HeaderActionWidth(string label)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var height = 28f * scale;
         return Typography.Measure(label, 0.9f, FontWeight.SemiBold).X + height + 6f * scale;
     }
 
     public bool HeaderAction(Rect area, string label, bool enabled)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var height = 28f * scale;
         var width = HeaderActionWidth(label);
         var max = new Vector2(area.Max.X - 12f * scale, area.Min.Y + AppHeader.Height * scale * 0.5f + height * 0.5f);
@@ -424,7 +424,7 @@ internal sealed class AppSkin
 
     public void SectionLabel(string label, in TextStyle style, float gapPixels)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         using (Plugin.Fonts.Push(style.Scale, style.Weight))
         using (ImRaii.PushColor(ImGuiCol.Text, Palette.HeaderInk))
         {
@@ -436,7 +436,7 @@ internal sealed class AppSkin
 
     public void SectionHeading(string label, float topPadPixels = 0f)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var drawList = ImGui.GetWindowDrawList();
         var topPad = topPadPixels * scale;

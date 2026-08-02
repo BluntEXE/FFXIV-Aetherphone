@@ -35,6 +35,7 @@ internal static class AppAccents
         ["calendar"] = new(1.00f, 0.231f, 0.188f, 1f),
         ["notes"] = new(1.00f, 0.79f, 0.16f, 1f),
         ["calculator"] = new(1.00f, 0.62f, 0.10f, 1f),
+        ["shortcuts"] = new(0.62f, 0.44f, 0.98f, 1f),
         ["dailies"] = new(0.36f, 0.78f, 0.62f, 1f),
         ["fishing"] = new(0.24f, 0.62f, 0.86f, 1f),
         ["notifications"] = new(0.80f, 0.16f, 0.24f, 1f),

@@ -31,6 +31,8 @@ internal sealed class ShellOverlayCoordinator
     private readonly ControlCenter controlCenter;
     private readonly NotificationBanner banner;
     private readonly DynamicIsland island;
+    private readonly RateLimitPill rateLimitPill;
+    private readonly ShortcutRunPill shortcutPill;
     private readonly IncomingCallOverlay incomingOverlay;
     private readonly BanOverlay banOverlay;
     private readonly ConfirmOverlay confirmOverlay;
@@ -41,10 +43,10 @@ internal sealed class ShellOverlayCoordinator
     private readonly SetupOverlay setup;
 
     public ShellOverlayCoordinator(Configuration configuration, LoadingScreen loading, NavigationStack navigation,
-        ControlCenter controlCenter, NotificationBanner banner, DynamicIsland island,
-        IncomingCallOverlay incomingOverlay, BanOverlay banOverlay, ConfirmOverlay confirmOverlay,
-        ReportOverlay reportOverlay, ShareSheet shareSheet, ConductGateOverlay conductOverlay,
-        OnboardingDirector director, SetupOverlay setup)
+        ControlCenter controlCenter, NotificationBanner banner, DynamicIsland island, RateLimitPill rateLimitPill,
+        ShortcutRunPill shortcutPill, IncomingCallOverlay incomingOverlay, BanOverlay banOverlay,
+        ConfirmOverlay confirmOverlay, ReportOverlay reportOverlay, ShareSheet shareSheet,
+        ConductGateOverlay conductOverlay, OnboardingDirector director, SetupOverlay setup)
     {
         this.configuration = configuration;
         this.loading = loading;
@@ -52,6 +54,8 @@ internal sealed class ShellOverlayCoordinator
         this.controlCenter = controlCenter;
         this.banner = banner;
         this.island = island;
+        this.rateLimitPill = rateLimitPill;
+        this.shortcutPill = shortcutPill;
         this.incomingOverlay = incomingOverlay;
         this.banOverlay = banOverlay;
         this.confirmOverlay = confirmOverlay;
@@ -64,9 +68,9 @@ internal sealed class ShellOverlayCoordinator
 
     public ShellOverlayState Assess(Rect screen)
     {
-        var banned = !loading.IsActive && banOverlay.IsActive;
-        var conductActive = !loading.IsActive && !banned && conductOverlay.Captures;
-        var setupActive = !banned && setup.IsActive;
+        var banNotice = !loading.IsActive && banOverlay.IsActive;
+        var conductActive = !loading.IsActive && !banNotice && conductOverlay.Captures;
+        var setupActive = setup.IsActive;
         var confirming = !loading.IsActive &&
                          (confirmOverlay.CapturesPointer || reportOverlay.CapturesPointer ||
                           shareSheet.CapturesPointer);
@@ -74,51 +78,52 @@ internal sealed class ShellOverlayCoordinator
         var overlaysCapture = controlCenterCaptures && !director.WantsControlCenter;
         var ringing = !loading.IsActive && incomingOverlay.IsRinging;
         var islandCaptures = !loading.IsActive && !controlCenterCaptures && !ringing && !confirming &&
-                             !setupActive && !conductActive &&
+                             !setupActive && !conductActive && !banNotice &&
                              (island.CapturesPointer(screen) ||
-                              (!director.CapturesPointer && banner.CapturesPointer(screen)));
+                              (!director.CapturesPointer &&
+                               (banner.CapturesPointer(screen) || shortcutPill.CapturesPointer())));
         var busy = loading.IsActive || overlaysCapture || ringing || confirming || navigation.IsTransitioning ||
-                   setupActive || banned || conductActive;
+                   setupActive || banNotice || conductActive;
         var shieldBase = loading.IsActive || islandCaptures || controlCenterCaptures || ringing || confirming ||
-                         setupActive || banned || conductActive;
+                         setupActive || banNotice || conductActive;
         return new ShellOverlayState(setupActive, confirming, islandCaptures, busy, shieldBase);
     }
 
-    public void DrawOverlays(Rect screen, PhoneTheme theme, float delta, in ShellOverlayState state)
+    public void DrawOverlays(in ChassisGeometry chassis, PhoneTheme theme, float delta, in ShellOverlayState state)
     {
+        var screen = chassis.Screen;
         if (state.SetupActive)
         {
-            setup.Draw(screen, theme, delta, !loading.IsActive && !state.Confirming);
+            setup.Draw(screen, theme, delta, !loading.IsActive && !state.Confirming && !banOverlay.IsActive);
         }
 
         if (loading.IsActive)
         {
             loading.Draw(screen, theme);
-            return;
-        }
-
-        if (banOverlay.IsActive)
-        {
-            HoverTooltip.Flush();
-            banOverlay.Draw(screen, theme);
-            DeviceChrome.DrawBrightnessVeil(screen, theme, configuration.ScreenBrightness);
+            DeviceChrome.SealScreen(chassis, theme, configuration.ScreenBrightness);
             return;
         }
 
         if (state.SetupActive)
         {
             HoverTooltip.Flush();
+            banOverlay.Draw(screen, theme);
             confirmOverlay.Draw(screen, theme);
-            DeviceChrome.DrawBrightnessVeil(screen, theme, configuration.ScreenBrightness);
+            DeviceChrome.SealScreen(chassis, theme, configuration.ScreenBrightness);
             return;
         }
 
         if (!director.CapturesPointer)
         {
-            banner.Draw(screen, theme);
             if (!controlCenter.IsActive)
             {
+                banner.Draw(screen, theme);
                 island.Draw(screen, theme, navigation, navigation.Current?.Id);
+                shortcutPill.Draw(screen, theme, delta, banner.IsVisible);
+                if (!banner.IsVisible && !shortcutPill.IsVisible)
+                {
+                    rateLimitPill.Draw(screen, theme, delta);
+                }
             }
 
             incomingOverlay.Draw(screen, theme);
@@ -136,7 +141,7 @@ internal sealed class ShellOverlayCoordinator
 
         controlCenter.Draw(screen, theme, delta,
             !navigation.IsTransitioning && !director.CapturesPointer && !state.IslandCaptures &&
-            navigation.Current?.Id != "camera",
+            !banOverlay.IsActive && navigation.Current?.Id != "camera",
             !director.CapturesPointer);
         HoverTooltip.Flush();
         shareSheet.Draw(screen, theme);
@@ -144,6 +149,7 @@ internal sealed class ShellOverlayCoordinator
         confirmOverlay.Draw(screen, theme);
         director.Draw(screen, theme);
         conductOverlay.Draw(screen, theme);
-        DeviceChrome.DrawBrightnessVeil(screen, theme, configuration.ScreenBrightness);
+        banOverlay.Draw(screen, theme);
+        DeviceChrome.SealScreen(chassis, theme, configuration.ScreenBrightness);
     }
 }

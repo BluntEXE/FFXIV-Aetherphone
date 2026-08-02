@@ -5,7 +5,6 @@ using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -39,10 +38,10 @@ internal sealed class MinimizedPhone : IDisposable
 
     public MinimizedAction Draw(Rect device, PhoneTheme theme, float delta)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Global;
         var frame = device.Translate(new Vector2(shake.Advance(delta), 0f));
         var dl = ImGui.GetForegroundDrawList();
-        var geometry = Geometry.From(frame.Inset(scale));
+        var geometry = ChassisGeometry.Puck(frame.Inset(scale));
         DrawShell(dl, geometry, theme);
         var action = MinimizedAction.None;
         if (HoverButton.Circle(dl, "minimized.expand", geometry.Screen.Center, ExpandRadius(geometry.Screen),
@@ -62,44 +61,13 @@ internal sealed class MinimizedPhone : IDisposable
         return action;
     }
 
-    public readonly struct Geometry
+    public static void DrawShell(ImDrawListPtr dl, in ChassisGeometry geometry, PhoneTheme theme)
     {
-        public readonly Rect Body;
-        public readonly Rect Screen;
-        public readonly float Rounding;
-        public readonly float ScreenRounding;
-
-        private Geometry(Rect body, Rect screen, float rounding, float screenRounding)
-        {
-            Body = body;
-            Screen = screen;
-            Rounding = rounding;
-            ScreenRounding = screenRounding;
-        }
-
-        public static Geometry From(Rect body)
-        {
-            var rounding = body.Width * 0.30f;
-            var bezel = body.Width * 0.09f;
-            var screen = body.Inset(bezel);
-            return new Geometry(body, screen, rounding, MathF.Max(rounding - bezel, 0f));
-        }
-
-        public static Geometry Lerp(Rect body, float bezel, float rounding)
-        {
-            var screen = body.Inset(bezel);
-            return new Geometry(body, screen, rounding, MathF.Max(rounding - bezel, 0f));
-        }
+        DeviceChrome.DrawShell(dl, geometry, UiScale.Global, theme, 1f);
     }
 
-    public static void DrawShell(ImDrawListPtr dl, in Geometry geometry, PhoneTheme theme)
-    {
-        DeviceChrome.DrawShell(dl, geometry.Body, geometry.Screen, geometry.Rounding, geometry.ScreenRounding,
-            ImGuiHelpers.GlobalScale, theme.Case, theme.ScreenBase);
-    }
-
-    public static void DrawFace(ImDrawListPtr dl, in Geometry geometry, PhoneTheme theme, float scale, float alpha,
-        int unread)
+    public static void DrawFace(ImDrawListPtr dl, in ChassisGeometry geometry, PhoneTheme theme, float scale,
+        float alpha, int unread)
     {
         if (alpha <= 0.001f)
         {

@@ -3,7 +3,6 @@ using Aetherphone.Core.Animation;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures.TextureWraps;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -40,7 +39,7 @@ internal sealed class PhotoZoomView
     public void Draw(Rect stage, IDalamudTextureWrap texture, PhoneTheme theme, float rounding,
         bool showButtons = true, Rect? controls = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
         var size = texture.Size;
         HandleInput(stage, size);

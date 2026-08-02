@@ -5,7 +5,6 @@ using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Calendar;
 
@@ -21,7 +20,7 @@ internal static class CalendarMonthView
     public static float Draw(AppSkin ui, Rect area, float targetHeight, ref int monthOffset,
         ref DateTime selectedDate, FrozenDictionary<long, ParsedEvent[]> events)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var referenceDate = DateTime.Today.AddMonths(monthOffset);
         var firstOfMonth = new DateTime(referenceDate.Year, referenceDate.Month, 1);

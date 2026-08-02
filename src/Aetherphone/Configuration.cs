@@ -12,6 +12,7 @@ using Aetherphone.Core.Jobs;
 using Aetherphone.Core.Market;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Radio;
+using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Songs;
 using Aetherphone.Core.Telephony;
@@ -53,14 +54,16 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool ScrollWhileIdle { get; set; } = true;
     public bool ShowLodestonePortraits { get; set; } = true;
     public int LodestoneIdIndexVersion { get; set; }
-    public float TextZoom { get; set; } = 1.15f;
+    public float TextZoom { get; set; } = 1.0f;
     public List<string> FontGlyphLedger { get; set; } = new();
     public float ScreenBrightness { get; set; } = 1f;
-    public float PhoneScale { get; set; } = 1.25f;
+    public float PhoneScale { get; set; } = PhoneSizeCatalog.DefaultWidth / PhoneSizeCatalog.DesignWidth;
+    public float PhoneWidth { get; set; }
     public bool CameraLandscape { get; set; }
     public string Language { get; set; } = string.Empty;
     public ThemeMode ThemeMode { get; set; } = ThemeMode.Dark;
     public string AccentName { get; set; } = "Violet";
+    public string AccentCustomHex { get; set; } = string.Empty;
     public string PhoneCaseName { get; set; } = "Titanium";
     public string JobsAccentName { get; set; } = "Blue";
     public List<JobsCustomColor> JobsCustomColors { get; set; } = new();
@@ -68,14 +71,13 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public string LightWallpaperId { get; set; } = "DuskLight";
     public string DarkWallpaperId { get; set; } = "DuskDark";
     public List<CustomWallpaper> CustomWallpapers { get; set; } = new();
-    public uint RingtoneId { get; set; } = 7;
-    public string RingtoneSound { get; set; } = SoundTokens.DefaultGame;
-    public string NotificationSound { get; set; } = SoundTokens.DefaultGame;
+    public string RingtoneSound { get; set; } = SoundLibrary.BundledRingtoneToken;
+    public string NotificationSound { get; set; } = SoundLibrary.BundledNotificationToken;
     public float RingtoneVolume { get; set; } = 0.8f;
     public float NotificationVolume { get; set; } = 0.8f;
     public float MusicVolume { get; set; } = 0.6f;
     public int MusicRepeat { get; set; }
-    public bool SoundSettingsMigrated { get; set; }
+    public bool GameSoundsCleared { get; set; }
     public const string DefaultAethernetBaseUrl = "https://api.aetherphone.net";
     private const string LegacyAethernetHost = "ffxiv-aethernet-production.up.railway.app";
     public string AethernetBaseUrl { get; set; } = DefaultAethernetBaseUrl;
@@ -150,6 +152,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool MessagesMergeMigrated { get; set; }
     public bool MessagesPerCharacterMigrated { get; set; }
     public Dictionary<string, long> SocialActivitySeenUnix { get; set; } = new();
+    public Dictionary<string, long> PendingNotificationAcks { get; set; } = new();
     public Dictionary<string, int> ConductAcknowledged { get; set; } = new();
     public List<string> MutedLinkshells { get; set; } = new();
     public Dictionary<ulong, List<string>> MutedLinkshellsByCharacter { get; set; } = new();
@@ -166,6 +169,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public long LastFeedbackSentUnix { get; set; }
     public List<CalendarCustomEvent> CalendarCustomEvents { get; set; } = new();
     public List<PhoneNote> Notes { get; set; } = new();
+    public List<ShortcutEntry> Shortcuts { get; set; } = new();
     public List<ReminderItem> Reminders { get; set; } = new();
     public List<WorldClockEntry> WorldClocks { get; set; } = new();
     public List<AlarmEntry> Alarms { get; set; } = new();
@@ -208,6 +212,17 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
         }
 
         SetupCompleted = true;
+        Save();
+    }
+
+    public void MigratePhoneWidth()
+    {
+        if (PhoneWidth > 0f)
+        {
+            return;
+        }
+
+        PhoneWidth = PhoneSizeCatalog.WidthForScale(PhoneScale);
         Save();
     }
 
@@ -437,23 +452,31 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
 
     public void MigrateSoundSettings()
     {
-        if (SoundSettingsMigrated)
+        if (GameSoundsCleared)
         {
             return;
         }
 
-        RingtoneSound = SoundTokens.Game(RingtoneId);
-        NotificationSound = SoundTokens.Game(RingtoneId);
+        if (SoundTokens.TryUpgradeLegacy(RingtoneSound, out var ringtone))
+        {
+            RingtoneSound = ringtone.Length == 0 ? SoundLibrary.BundledRingtoneToken : ringtone;
+        }
+
+        if (SoundTokens.TryUpgradeLegacy(NotificationSound, out var notification))
+        {
+            NotificationSound = notification.Length == 0 ? SoundLibrary.BundledNotificationToken : notification;
+        }
+
         foreach (var pair in NotificationSettings)
         {
             var setting = pair.Value;
-            if (setting.SoundId.HasValue && string.IsNullOrEmpty(setting.Sound))
+            if (SoundTokens.TryUpgradeLegacy(setting.Sound, out var appSound))
             {
-                setting.Sound = SoundTokens.Game(setting.SoundId.Value);
+                setting.Sound = appSound.Length == 0 ? null : appSound;
             }
         }
 
-        SoundSettingsMigrated = true;
+        GameSoundsCleared = true;
         Save();
     }
 

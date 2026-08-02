@@ -10,7 +10,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Announcements;
 
@@ -41,9 +40,9 @@ internal sealed partial class AnnouncementsApp : IPhoneApp
     private bool resetScroll;
 
     public AnnouncementsApp(AethernetSession session, AnnouncementsClient client, NotificationService notifications,
-        Configuration configuration, AnnouncementsLauncher launcher)
+        Configuration configuration, AnnouncementsLauncher launcher, RealtimeSignalBus signals)
     {
-        store = new AnnouncementsStore(session, client, notifications, configuration);
+        store = new AnnouncementsStore(session, client, notifications, configuration, signals);
         this.launcher = launcher;
         router = new ViewRouter<AnnouncementsRoute>(AnnouncementsRoute.List);
         drawView = DrawView;
@@ -76,7 +75,7 @@ internal sealed partial class AnnouncementsApp : IPhoneApp
         navigation = context.Navigation;
         ui.Theme = theme;
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var screen = SceneChrome.ScreenFrom(context.Content, theme, scale);
         ui.Backdrop(screen);
 

@@ -61,6 +61,17 @@ internal sealed class CallSignalRouter : IDisposable
             case SignalType.MusterPing:
                 signals.PublishMuster();
                 return;
+            case SignalType.AnnouncePing:
+                signals.PublishAnnouncements();
+                return;
+            case SignalType.ContentRemoved:
+                if (message.ContentId is { Length: > 0 } removedContentId)
+                {
+                    signals.PublishContentRemoved(
+                        new ContentRemovalSignal(message.App, message.ContentKind, removedContentId, message.ParentId));
+                }
+
+                return;
         }
 
         var target = message.Type switch

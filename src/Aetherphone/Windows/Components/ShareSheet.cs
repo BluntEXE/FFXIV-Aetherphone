@@ -5,7 +5,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Sharing;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -30,6 +29,8 @@ internal sealed class ShareSheet
     private readonly ShareService service;
     private Spring reveal;
     private ShareKind shownKind;
+    private bool wasPending;
+    private int openedFrame;
 
     public ShareSheet(ShareService service)
     {
@@ -46,6 +47,13 @@ internal sealed class ShareSheet
         {
             shownKind = current.Kind;
         }
+
+        if (pending && !wasPending)
+        {
+            openedFrame = ImGui.GetFrameCount();
+        }
+
+        wasPending = pending;
 
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
         reveal.Step(pending ? 1f : 0f, RevealSmoothTime, delta);
@@ -69,7 +77,7 @@ internal sealed class ShareSheet
                 return;
             }
 
-            if (UiInteract.ClickedOutside(panel.Min, panel.Max))
+            if (ImGui.GetFrameCount() != openedFrame && UiInteract.ClickedOutside(panel.Min, panel.Max))
             {
                 service.Dismiss();
             }
@@ -78,7 +86,7 @@ internal sealed class ShareSheet
 
     private Rect DrawPanel(Rect screen, PhoneTheme theme, float opacity, float slide, bool interactive)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var targets = service.Targets;
         var pad = Metrics.Space.Xl * scale;

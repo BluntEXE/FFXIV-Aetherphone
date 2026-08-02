@@ -9,7 +9,6 @@ using Aetherphone.Core.Notifications;
 using Aetherphone.Core.YellowPages;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Windows.Components;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Notifications;
 
@@ -21,6 +20,7 @@ internal sealed class NotificationsApp : IPhoneApp
     public int BadgeCount => notifications.UnreadCount;
     public bool WantsSystemTheme => true;
     private readonly NotificationService notifications;
+    private readonly SocialNotificationService socialNotifications;
     private readonly LinkpearlLauncher linkpearlLauncher;
     private readonly VelvetLauncher velvetLauncher;
     private readonly DmLauncher dmLauncher;
@@ -32,12 +32,14 @@ internal sealed class NotificationsApp : IPhoneApp
     private readonly SafetyLauncher safetyLauncher;
     private NotificationCenter? center;
 
-    public NotificationsApp(NotificationService notifications, LinkpearlLauncher linkpearlLauncher,
+    public NotificationsApp(NotificationService notifications, SocialNotificationService socialNotifications,
+        LinkpearlLauncher linkpearlLauncher,
         VelvetLauncher velvetLauncher, DmLauncher dmLauncher, GramDmLauncher gramDmLauncher,
         SocialLauncher socialLauncher, MusterLauncher musterLauncher, YellowPagesLauncher yellowPagesLauncher,
         AnnouncementsLauncher announcementsLauncher, SafetyLauncher safetyLauncher)
     {
         this.notifications = notifications;
+        this.socialNotifications = socialNotifications;
         this.linkpearlLauncher = linkpearlLauncher;
         this.velvetLauncher = velvetLauncher;
         this.dmLauncher = dmLauncher;
@@ -51,6 +53,7 @@ internal sealed class NotificationsApp : IPhoneApp
 
     public void OnOpened()
     {
+        socialNotifications.AcknowledgeAll();
         notifications.MarkAllRead();
         center?.Reset();
     }
@@ -61,10 +64,10 @@ internal sealed class NotificationsApp : IPhoneApp
     {
         AppHeader.Draw(context, DisplayName);
         center ??= new NotificationCenter(notifications,
-            new NotificationRouter(context.Navigation, notifications, linkpearlLauncher, velvetLauncher, dmLauncher,
-                gramDmLauncher, socialLauncher, musterLauncher, yellowPagesLauncher, announcementsLauncher,
-                safetyLauncher));
-        var scale = ImGuiHelpers.GlobalScale;
+            new NotificationRouter(context.Navigation, notifications, socialNotifications, linkpearlLauncher,
+                velvetLauncher, dmLauncher, gramDmLauncher, socialLauncher, musterLauncher, yellowPagesLauncher,
+                announcementsLauncher, safetyLauncher));
+        var scale = UiScale.Current;
         var content = context.Content;
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + AppHeader.Height * scale), content.Max);
         UiAnchors.Report("notifications.list", body);

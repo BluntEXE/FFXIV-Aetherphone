@@ -8,7 +8,6 @@ using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Photos;
@@ -18,7 +17,7 @@ internal sealed partial class PhotosApp
     private void DrawRoot(Rect area)
     {
         DrawNavBar(area, DisplayName, null);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var pad = 14f * scale;
         var top = area.Min.Y + AppHeader.Height * scale;
         var segBar = new Rect(new Vector2(area.Min.X + pad, top + 4f * scale),
@@ -60,7 +59,7 @@ internal sealed partial class PhotosApp
 
     private void DrawAlbum(Rect area, int key)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         int start;
         int count;
         string title;
@@ -100,7 +99,7 @@ internal sealed partial class PhotosApp
     
     private void DrawCustomAlbumView(Rect area, int key)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (!TryFindCustomAlbum(key, out var album))
         {
             router.Pop(false);
@@ -134,7 +133,7 @@ internal sealed partial class PhotosApp
 
     private void DrawCreateAlbumPage(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         DrawNavBar(area, Loc.T(L.Photos.CreateAlbum), CloseModifyAlbumPage);
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         DrawCreateAlbumSheet(body, CloseModifyAlbumPage);
@@ -142,7 +141,7 @@ internal sealed partial class PhotosApp
     
     private void DrawRenameAlbumPage(Rect area, int albumKey)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         DrawNavBar(area, Loc.T(L.Photos.Rename), CloseModifyAlbumPage);
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         DrawRenameAlbumSheet(body, albumKey, CloseModifyAlbumPage);
@@ -158,7 +157,7 @@ internal sealed partial class PhotosApp
         Action cancel,
         bool showDuplicateHint = false)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ImGui.SetCursorScreenPos(body.Min);
         using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, new Vector2(16f * scale, 8f * scale)))
         using (ImRaii.Child("##modifyAlbumSheet", body.Size, false, ImGuiWindowFlags.NoBackground))
@@ -264,7 +263,7 @@ internal sealed partial class PhotosApp
 
     private void DrawPhotoGrid(Rect body, int start, int count)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var gridKey = ImGui.GetID("##photoGrid");
         ImGui.SetCursorScreenPos(body.Min);
         using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, Vector2.Zero))
@@ -406,7 +405,7 @@ internal sealed partial class PhotosApp
 
     private void DrawAlbumsGrid(Rect body)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var albumsKey = ImGui.GetID("##photoAlbums");
         ImGui.SetCursorScreenPos(body.Min);
         using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, new Vector2(14f * scale, 6f * scale)))
@@ -674,7 +673,7 @@ internal sealed partial class PhotosApp
     
     private void DrawAlbumPicker(Rect area, int key)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (!TryFindCustomAlbum(key, out var album))
         {
             router.Pop(false);
@@ -704,7 +703,7 @@ internal sealed partial class PhotosApp
     
     private void DrawAlbumPickerGrid(Rect body, int albumKey)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var gridKey = ImGui.GetID("##albumPicker");
         ImGui.SetCursorScreenPos(body.Min);
         using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, Vector2.Zero))
@@ -801,7 +800,7 @@ internal sealed partial class PhotosApp
         
     private void DrawCustomAlbumGrid(Rect body, string[] paths, int albumKey)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var gridKey = ImGui.GetID("##customAlbumGrid");
         ImGui.SetCursorScreenPos(body.Min);
         using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, Vector2.Zero))

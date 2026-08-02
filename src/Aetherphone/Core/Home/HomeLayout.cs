@@ -27,4 +27,5 @@ internal sealed class HomeItem
     public List<string> AppIds { get; set; } = new();
     public string WidgetId { get; set; } = string.Empty;
     public string WidgetSize { get; set; } = string.Empty;
+    public string ShortcutId { get; set; } = string.Empty;
 }

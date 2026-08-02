@@ -8,7 +8,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Interface;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Settings.Pages;
@@ -110,7 +109,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
 
     private void DrawUnavailable(PhoneTheme theme)
     {
-        ImGui.Dummy(new Vector2(0f, 8f * ImGuiHelpers.GlobalScale));
+        ImGui.Dummy(new Vector2(0f, 8f * UiScale.Current));
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
         {
             Typography.Wrapped(Loc.T(L.Encryption.NotSignedIn));
@@ -119,7 +118,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
 
     private void DrawUnsupported(PhoneTheme theme)
     {
-        ImGui.Dummy(new Vector2(0f, 8f * ImGuiHelpers.GlobalScale));
+        ImGui.Dummy(new Vector2(0f, 8f * UiScale.Current));
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
         {
             Typography.Wrapped(Loc.T(L.Encryption.UnsupportedBody));
@@ -128,7 +127,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
 
     private void DrawProvisioning(PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ImGui.Dummy(new Vector2(0f, 8f * scale));
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
         {
@@ -146,7 +145,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ImGui.Dummy(new Vector2(0f, 8f * scale));
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
         {
@@ -162,7 +161,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
 
     private void DrawLockedRecover(PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ImGui.Dummy(new Vector2(0f, 8f * scale));
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
         {
@@ -187,7 +186,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
 
     private void DrawCodeInput(PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
         {
             Typography.Plain(Loc.T(L.Encryption.RecoveryCodeLabel));
@@ -213,7 +212,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
 
     private void DrawGeneratedCode(PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ImGui.Dummy(new Vector2(0f, 8f * scale));
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextStrong))
         {
@@ -254,7 +253,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
 
     private void DrawRecoverySection(PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ImGui.Dummy(new Vector2(0f, 14f * scale));
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextStrong))
         {
@@ -281,7 +280,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
 
     private void DrawActive(PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ImGui.Dummy(new Vector2(0f, 6f * scale));
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
         {
@@ -320,7 +319,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
             return;
         }
 
-        ImGui.Dummy(new Vector2(0f, 8f * ImGuiHelpers.GlobalScale));
+        ImGui.Dummy(new Vector2(0f, 8f * UiScale.Current));
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
         {
             Typography.Wrapped(message);
@@ -333,7 +332,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
                    .Push(ImGuiCol.ButtonHovered, Palette.Mix(theme.GroupedCard, theme.Accent, 0.35f))
                    .Push(ImGuiCol.ButtonActive, theme.Accent).Push(ImGuiCol.Text, theme.TextStrong))
         {
-            return ImGui.Button(label, new Vector2(-1f, 34f * ImGuiHelpers.GlobalScale));
+            return ImGui.Button(label, new Vector2(-1f, 34f * UiScale.Current));
         }
     }
 

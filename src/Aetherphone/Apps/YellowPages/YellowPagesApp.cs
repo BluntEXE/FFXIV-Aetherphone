@@ -20,7 +20,6 @@ using Aetherphone.Core.YellowPages;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.YellowPages;
 
@@ -114,7 +113,13 @@ internal sealed partial class YellowPagesApp : IPhoneApp
         activeTab = YellowPagesTab.Browse;
         socialNotifications.MarkSeen(Id);
         lifestreamAvailable = LifestreamBridge.IsAvailable();
-        if (launcher.TryConsumeDetail(out var adId))
+        if (launcher.TryConsumeInquiry(out var inquiryId))
+        {
+            activeTab = YellowPagesTab.Inquiries;
+            inquiries.Refresh();
+            OpenInquiryThread(inquiryId, false);
+        }
+        else if (launcher.TryConsumeDetail(out var adId))
         {
             ResetDetailState();
             router.Push(YellowPagesRoute.Detail(adId), false);
@@ -139,7 +144,7 @@ internal sealed partial class YellowPagesApp : IPhoneApp
         theme = context.Theme;
         navigation = context.Navigation;
         ui.Theme = theme;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var screen = SceneChrome.ScreenFrom(context.Content, theme, scale);
         ui.Backdrop(screen);
         if (!store.IsSignedIn)
@@ -212,7 +217,7 @@ internal sealed partial class YellowPagesApp : IPhoneApp
 
     private void DrawRoot(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var navRect = new Rect(new Vector2(area.Min.X, area.Max.Y - BottomTabBar.Height * scale), area.Max);
         var tabArea = new Rect(area.Min, new Vector2(area.Max.X, navRect.Min.Y));
         switch (activeTab)

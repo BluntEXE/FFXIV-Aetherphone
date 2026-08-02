@@ -10,7 +10,6 @@ using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Polls;
@@ -70,7 +69,7 @@ internal sealed class PollsApp : IPhoneApp
         ui.Theme = theme;
 
         var area = context.Content;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var screen = SceneChrome.ScreenFrom(area, theme, scale);
         ui.Backdrop(screen);
         ui.Body(area);
@@ -101,6 +100,15 @@ internal sealed class PollsApp : IPhoneApp
             {
                 DrawPollCard(polls[index], scale, index == 0);
                 ImGui.Dummy(new Vector2(0f, 12f * scale));
+            }
+
+            if (store.LoadingMore)
+            {
+                InfiniteScroll.DrawLoadingRow(body.Center.X, ui.MutedInk);
+            }
+            else if (store.HasMore && InfiniteScroll.ReachedBottom())
+            {
+                store.LoadMore();
             }
         }
     }

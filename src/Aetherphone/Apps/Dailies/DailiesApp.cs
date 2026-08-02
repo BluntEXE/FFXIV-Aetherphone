@@ -9,7 +9,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Dailies;
 
@@ -143,7 +142,7 @@ internal sealed class DailiesApp : IPhoneApp
             cadenceIndex = 1;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         var utcNow = DateTime.UtcNow;
 
@@ -384,7 +383,7 @@ internal sealed class DailiesApp : IPhoneApp
     private static void DrawCheck(Vector2 center, float radius, bool complete, bool readOnly, Vector4 accent)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
 
         if (complete)
         {

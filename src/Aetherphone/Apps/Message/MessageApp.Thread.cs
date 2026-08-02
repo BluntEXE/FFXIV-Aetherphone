@@ -7,7 +7,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Message;
 
@@ -192,7 +191,7 @@ internal sealed partial class MessageApp
             var isGroup = conversation?.IsGroup ?? false;
             var context = new PhoneContext(area, Theme, Navigation);
             AppHeader.Draw(context, string.Empty, BackAction);
-            var scale = ImGuiHelpers.GlobalScale;
+            var scale = UiScale.Current;
             var drawList = ImGui.GetWindowDrawList();
             var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
             ChatHeaderControls.DrawLock(ui, area, rowCenterY, store.EncryptingCurrent, store.VaultState,
@@ -345,7 +344,7 @@ internal sealed partial class MessageApp
                 mapped[index] = new TranscriptMessage(message.Id, message.SenderId, message.Body, message.Kind,
                     message.CreatedAtUnix, message.MediaWidth, message.MediaHeight, message.ReadAtUnix, senderName,
                     tint, MessageFlags(message), message.ReplyToId, replySender, replyBody, replyKind,
-                    message.DurationSecs, reactions);
+                    message.DurationSecs, reactions, message.SenderBadges);
             }
 
             return mapped;

@@ -8,7 +8,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -18,7 +17,7 @@ internal sealed partial class VelvetShell
 
     private void DrawProfile(Rect area, string userId)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var user = store.ProfileUserId == userId ? store.ProfileUser : null;
         var title = user != null ? DisplayNameOf(user.DisplayName, user.Handle) : Loc.T(L.Velvet.ProfileTitle);
         if (VHeader.Push(area, title, theme))
@@ -58,7 +57,7 @@ internal sealed partial class VelvetShell
 
     private void DrawProfileBody(Rect body, VelvetProfileDto user)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var isMe = store.Me?.UserId == user.UserId;
         var connected = isMe || user.ConnectionState == VelvetConnectionState.Connected;
         using (AppSurface.Begin(body))
@@ -77,19 +76,14 @@ internal sealed partial class VelvetShell
 
             var textWidth = width - HeroTextInset * 2f * scale;
             var lineTop = avatarCenter.Y + radius + 16f * scale;
-            var badgeSpace = user.Verified ? 24f * scale : 0f;
+            var badgeSpace = UserName.Reserve(user.Badges, TextStyles.Title1, 2);
             var nameWidth = MathF.Min(Typography.Measure(name, TextStyles.Title1).X, textWidth - badgeSpace);
             var nameSize = new Vector2(nameWidth, Typography.Measure(name, TextStyles.Title1).Y);
             var nameX = centerX - (nameSize.X + badgeSpace) * 0.5f;
             var nameHovering = UiInteract.Hover(new Vector2(nameX, lineTop),
                 new Vector2(nameX + nameSize.X, lineTop + nameSize.Y));
-            Marquee.DrawLeft("velvet.profile.name." + user.UserId, name, nameX, lineTop, nameSize.X,
-                TextStyles.Title1, VelvetTheme.TitleInk, nameHovering);
-            if (user.Verified)
-            {
-                DrawVerifiedBadge(drawList, new Vector2(nameX + nameSize.X + 13f * scale, lineTop + nameSize.Y * 0.5f),
-                    scale);
-            }
+            UserName.Draw(drawList, "velvet.profile.name." + user.UserId, name, user.Badges, nameX, lineTop,
+                nameSize.X + badgeSpace, TextStyles.Title1, VelvetTheme.TitleInk, nameHovering, false, 2);
 
             lineTop += nameSize.Y + 4f * scale;
             var region = RegionCodeOf(user);
@@ -253,19 +247,9 @@ internal sealed partial class VelvetShell
         });
     }
 
-    private static void DrawVerifiedBadge(ImDrawListPtr drawList, Vector2 center, float scale)
-    {
-        drawList.AddCircleFilled(center, 8f * scale, VelvetTheme.Rose.Packed(), 20);
-        var ink = VelvetTheme.OnAccent.Packed();
-        drawList.AddLine(new Vector2(center.X - 3.4f * scale, center.Y + 0.4f * scale),
-            new Vector2(center.X - 1f * scale, center.Y + 2.8f * scale), ink, 1.6f * scale);
-        drawList.AddLine(new Vector2(center.X - 1f * scale, center.Y + 2.8f * scale),
-            new Vector2(center.X + 3.6f * scale, center.Y - 2.6f * scale), ink, 1.6f * scale);
-    }
-
     private void DrawGallery(VelvetProfileDto user, bool isMe, bool connected)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         store.EnsureUserPosts(user.UserId);
         var serverGallery = store.UserPostsUserId == user.UserId && store.UserPostsLoaded;
         List<VelvetPostDto> owned;
@@ -348,6 +332,18 @@ internal sealed partial class VelvetShell
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, gridHeight));
 
+        if (serverGallery)
+        {
+            if (store.UserPostsLoadingMore)
+            {
+                InfiniteScroll.DrawLoadingRow(origin.X + width * 0.5f, VelvetTheme.MutedInk);
+            }
+            else if (store.HasMoreUserPosts && InfiniteScroll.ReachedBottom())
+            {
+                store.LoadMoreUserPosts();
+            }
+        }
+
         if (!isMe && !connected && totalCount > owned.Count)
         {
             Gap(12f);
@@ -360,7 +356,7 @@ internal sealed partial class VelvetShell
 
     private void DrawLockedGallery(string name, float width, int totalCount)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         const int columns = 3;
         var cellGap = 6f * scale;
         var cell = (width - cellGap * (columns - 1)) / columns;
@@ -440,7 +436,7 @@ internal sealed partial class VelvetShell
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var models = new VChipModel[tokens.Length];
         for (var index = 0; index < tokens.Length; index++)

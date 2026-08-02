@@ -8,8 +8,6 @@ namespace Aetherphone.Core.YellowPages;
 
 internal readonly record struct AdOpenState(bool IsOpen, long ClosesAtUnix, long NextOpeningUnix);
 
-/// <summary>Formatting and schedule math for ads. Schedules are stored as UTC weekly slots; every
-/// user-facing time renders through TimeText so it lands in the viewer's clock.</summary>
 internal static class AdText
 {
     private const int MinutesPerWeek = 7 * 1440;
@@ -144,8 +142,6 @@ internal static class AdText
         return nowUnix - nowUnix % 60 + untilStart * 60L;
     }
 
-    /// <summary>Converts a slot the user picked in their local clock into the UTC weekly slot the wire
-    /// stores. Anchored on the next occurrence, so DST shifts only drift future weeks by the usual hour.</summary>
     public static AdScheduleSlot ToUtcSlot(int localDay, int localStartMinute, int durationMinutes)
     {
         var nowLocal = DateTime.Now;

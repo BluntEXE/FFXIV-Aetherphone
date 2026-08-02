@@ -5,7 +5,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.AppStore;
 
@@ -17,7 +16,7 @@ internal sealed partial class AppStoreApp
 
     private void DrawDetail(Rect area, string appId)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var app = Find(appId);
         if (app is null)
         {
@@ -169,7 +168,7 @@ internal sealed partial class AppStoreApp
     {
         "health" => "Yozora",
         "jobs" => "K.I.R.O",
-        _ => Loc.T(L.Store.DeveloperName), // default "Aetherphone"
+        _ => Loc.T(L.Store.DeveloperName),
     };
 
     private void DrawInfoRow(ImDrawListPtr drawList, Vector2 cardMin, Vector2 cardMax, int index, float rowHeight,

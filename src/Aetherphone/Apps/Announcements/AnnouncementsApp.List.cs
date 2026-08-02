@@ -7,7 +7,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Announcements;
 
@@ -26,7 +25,7 @@ internal sealed partial class AnnouncementsApp
 
     private void DrawList(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, DisplayName, navigation.Back);
 
@@ -63,6 +62,15 @@ internal sealed partial class AnnouncementsApp
                 previousUnix = announcement.CreatedAtUnix;
                 DrawCard(announcement, scale, index == 0 ? MaxLeadLines : MaxPreviewLines, index == 0);
                 ImGui.Dummy(new Vector2(0f, CardGap * scale));
+            }
+
+            if (store.LoadingMore)
+            {
+                InfiniteScroll.DrawLoadingRow(body.Center.X, ui.MutedInk);
+            }
+            else if (store.HasMore && InfiniteScroll.ReachedBottom())
+            {
+                store.LoadMore();
             }
 
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));

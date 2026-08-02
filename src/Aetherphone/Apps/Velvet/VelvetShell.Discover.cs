@@ -7,7 +7,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Velvet;
@@ -39,7 +38,7 @@ internal sealed partial class VelvetShell
 
     private void DrawDiscover(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var pad = Metrics.Space.Lg * scale;
         var searchTop = area.Min.Y + 8f * scale;
         var rowHeight = 36f * scale;
@@ -126,7 +125,7 @@ internal sealed partial class VelvetShell
 
     private void DrawFilterButton(Rect rect, VelvetPage surface)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var active = IncludeFor(surface).Any || mutes.Any;
         var hovered = UiInteract.Hover(rect.Min, rect.Max);
@@ -163,7 +162,7 @@ internal sealed partial class VelvetShell
 
     private void DrawActiveFilters(float width, VelvetPage surface)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var include = IncludeFor(surface);
         if (!include.Any && !mutes.Any)
         {
@@ -341,7 +340,7 @@ internal sealed partial class VelvetShell
 
     private void DrawPersonCard(VelvetProfileDto profile, VelvetPostDto[] feed)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ScrollLayout.StableContentWidth();
         var name = DisplayNameOf(profile.DisplayName, profile.Handle);
         var region = RegionCodeOf(profile);
@@ -407,7 +406,7 @@ internal sealed partial class VelvetShell
             Squircle.Fill(drawList, badgeMin, badgeMax, 12f * scale, new Vector4(0.03f, 0.01f, 0.06f, 0.55f).Packed());
             AppSkin.Icon(new Vector2(badgeMin.X + 13f * scale, (badgeMin.Y + badgeMax.Y) * 0.5f),
                 FontAwesomeIcon.Lock.ToIconString(), VelvetTheme.RoseInk, 0.52f);
-            Typography.Draw(new Vector2(badgeMin.X + 23f * scale, badgeMin.Y + 5f * scale), badgeText,
+            Typography.Draw(drawList, new Vector2(badgeMin.X + 23f * scale, badgeMin.Y + 5f * scale), badgeText,
                 VelvetTheme.OnAccent, TextStyles.Footnote);
         }
 
@@ -425,7 +424,8 @@ internal sealed partial class VelvetShell
         {
             Squircle.Fill(drawList, pillRect.Min, pillRect.Max, pillHeight * 0.5f,
                 new Vector4(0.03f, 0.01f, 0.06f, 0.7f).Packed());
-            Typography.DrawCentered(pillRect.Center, cta.Label, VelvetTheme.MutedInk, 0.85f, FontWeight.SemiBold);
+            Typography.DrawCentered(drawList, pillRect.Center, cta.Label, VelvetTheme.MutedInk, 0.85f,
+                FontWeight.SemiBold);
         }
 
         var textLeft = card.Min.X + pad;
@@ -435,13 +435,8 @@ internal sealed partial class VelvetShell
         var nameY = card.Max.Y - pad - 58f * scale;
         var nameHovered = UiInteract.Hover(new Vector2(textLeft, nameY),
             new Vector2(textLeft + nameMaxWidth, nameY + nameSize.Y));
-        Marquee.DrawLeft("velvet.discover.name." + profile.UserId, name, textLeft, nameY, nameMaxWidth,
-            TextStyles.Title2, VelvetTheme.TitleInk, nameHovered);
-        if (profile.Verified)
-        {
-            DrawVerifiedBadge(drawList, new Vector2(textLeft + MathF.Min(nameSize.X, nameMaxWidth) + 12f * scale,
-                nameY + nameSize.Y * 0.5f), scale);
-        }
+        UserName.Draw(drawList, "velvet.discover.name." + profile.UserId, name, profile.Badges, textLeft, nameY,
+            nameMaxWidth, TextStyles.Title2, VelvetTheme.TitleInk, nameHovered, false);
 
         var metaY = card.Max.Y - pad - 34f * scale;
         var metaSize = Typography.Measure(SocialIdentity.ProfileMeta(profile.Handle, region), TextStyles.Subheadline);
@@ -493,7 +488,7 @@ internal sealed partial class VelvetShell
             var monogram = fallbackName.Length > 0 ? fallbackName[..1].ToUpperInvariant() : "?";
             var monogramCenter = new Vector2((min.X + max.X) * 0.5f, min.Y + (max.Y - min.Y) * 0.40f);
             ProgressRing.Glow(monogramCenter, (max.X - min.X) * 0.22f, VelvetTheme.Alpha(VelvetTheme.Rose, 0.28f), 0.5f);
-            Typography.DrawCentered(monogramCenter, monogram, VelvetTheme.Alpha(VelvetTheme.Moonlight, 0.7f),
+            Typography.DrawCentered(drawList, monogramCenter, monogram, VelvetTheme.Alpha(VelvetTheme.Moonlight, 0.7f),
                 TextStyles.LargeTitle);
             return;
         }
@@ -550,7 +545,7 @@ internal sealed partial class VelvetShell
 
     private void DrawSearchField(Rect rect, ref string value, string hint)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         Squircle.Fill(drawList, rect.Min, rect.Max, Metrics.Radius.Field * scale, VelvetTheme.PlumWell.Packed());
         AppSkin.Icon(new Vector2(rect.Min.X + 16f * scale, rect.Center.Y), FontAwesomeIcon.Search.ToIconString(),

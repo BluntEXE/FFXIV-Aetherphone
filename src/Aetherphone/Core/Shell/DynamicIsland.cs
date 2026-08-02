@@ -7,7 +7,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Core.Shell;
@@ -106,7 +105,7 @@ internal sealed class DynamicIsland
     private void DrawContent(Rect screen, PhoneTheme theme, INavigator navigation, CallView view, float presenceValue,
         float delta, string? foregroundAppId)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var rest = StatusBar.BaseIsland(screen);
         var compact = Expand(rest, CompactPadX * scale, CompactPadY * scale);
         var expanded = ExpandedBounds(screen, rest, scale);
@@ -130,7 +129,7 @@ internal sealed class DynamicIsland
                 0.24f * expandEased);
         }
 
-        drawList.AddRectFilled(bounds.Min, bounds.Max, ImGui.GetColorU32(theme.BezelOuter), rounding);
+        drawList.AddRectFilled(bounds.Min, bounds.Max, ImGui.GetColorU32(theme.Glass), rounding);
         drawList.AddRect(bounds.Min, bounds.Max,
             ImGui.GetColorU32(Palette.WithAlpha(accent, (0.16f + 0.44f * expandEased) * presenceValue)), rounding,
             ImDrawFlags.RoundCornersAll, 1.5f * scale);
@@ -179,7 +178,7 @@ internal sealed class DynamicIsland
         var centerX = float.Lerp(bounds.Max.X - radius, bounds.Max.X + BubbleGap * scale + radius, splitValue);
         var center = new Vector2(centerX, bounds.Center.Y);
         lastBubble = new Rect(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
-        drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(theme.BezelOuter, alpha)), 32);
+        drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(theme.Glass, alpha)), 32);
         drawList.AddCircle(center, radius, ImGui.GetColorU32(Palette.WithAlpha(MusicAccent, 0.30f * alpha)), 32,
             1.4f * scale);
         Equalizer.Draw(drawList, new Vector2(center.X + 5f * scale, center.Y), scale, radius * 0.66f, clock,

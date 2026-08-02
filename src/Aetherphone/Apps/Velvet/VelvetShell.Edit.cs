@@ -6,7 +6,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -25,6 +24,8 @@ internal sealed partial class VelvetShell
     private readonly List<string> editTags = new();
     private readonly List<string> editLimits = new();
     private volatile bool editBusy;
+    private volatile bool editSaveSucceeded;
+    private volatile bool editSaveFailed;
     private bool avatarEditing;
 
     private void BeginEditProfile()
@@ -51,12 +52,14 @@ internal sealed partial class VelvetShell
         editTags.AddRange(me.Tags);
         editLimits.Clear();
         editLimits.AddRange(me.Limits);
+        editSaveSucceeded = false;
+        editSaveFailed = false;
         avatarEditing = false;
     }
 
     private void DrawEditProfile(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (avatarEditing)
         {
             var context = new PhoneContext(area, theme, navigation);
@@ -65,6 +68,13 @@ internal sealed partial class VelvetShell
                 avatarEditing = false;
             }
 
+            return;
+        }
+
+        if (editSaveSucceeded)
+        {
+            editSaveSucceeded = false;
+            router.Pop(false);
             return;
         }
 
@@ -82,6 +92,13 @@ internal sealed partial class VelvetShell
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + VHeader.Height * scale), area.Max);
         using (AppSurface.Begin(body))
         {
+            if (editSaveFailed)
+            {
+                Gap(10f);
+                WrapText(Loc.T(L.Velvet.SaveFailed), VelvetTheme.Danger, TextStyles.Callout);
+                Gap(4f);
+            }
+
             Gap(8f);
             DrawEditAvatar();
             Gap(14f);
@@ -115,17 +132,17 @@ internal sealed partial class VelvetShell
 
             VSectionHeader.Card(FontAwesomeIcon.Heart, Loc.T(L.Velvet.CardRole));
             Gap(6f);
-            DrawTagFlow(VelvetSuggestions.Roles, editRole, VelvetTheme.Rose);
+            DrawTagFlow(VelvetSuggestions.Roles, editRole, VelvetTheme.Rose, true);
             Gap(16f);
 
             VSectionHeader.Card(FontAwesomeIcon.Fire, Loc.T(L.Velvet.CardKinks));
             Gap(6f);
-            DrawTagFlow(VelvetSuggestions.Kinks, editKinks, new Vector4(0.647f, 0.482f, 0.839f, 1f));
+            DrawTagFlow(VelvetSuggestions.Kinks, editKinks, new Vector4(0.647f, 0.482f, 0.839f, 1f), true);
             Gap(16f);
 
             VSectionHeader.Card(FontAwesomeIcon.ShieldAlt, Loc.T(L.Velvet.CardLimits));
             Gap(6f);
-            DrawTagFlow(VelvetSuggestions.Limits, editLimits, VelvetTheme.Gold);
+            DrawTagFlow(VelvetSuggestions.Limits, editLimits, VelvetTheme.Gold, true);
             Gap(16f);
 
             VSectionHeader.Card(FontAwesomeIcon.HandHoldingHeart, Loc.T(L.Velvet.CardRelationship));
@@ -144,7 +161,7 @@ internal sealed partial class VelvetShell
 
     private void DrawEditAvatar()
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var block = Reserve(160f);
         var drawList = ImGui.GetWindowDrawList();
         var radius = 46f * scale;
@@ -180,7 +197,7 @@ internal sealed partial class VelvetShell
 
     private void DrawIntentEditor()
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var models = new VChipModel[VelvetIntent.All.Length];
         for (var index = 0; index < models.Length; index++)
@@ -200,7 +217,7 @@ internal sealed partial class VelvetShell
 
     private void DrawGenderPicker(ref int gender)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var options = VelvetGender.All;
         var models = new VChipModel[options.Length];
@@ -221,7 +238,7 @@ internal sealed partial class VelvetShell
 
     private void DrawSexualityPicker(ref int sexuality)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var options = VelvetSexuality.All;
         var models = new VChipModel[options.Length];
@@ -242,7 +259,7 @@ internal sealed partial class VelvetShell
 
     private void DrawRelationshipEditor()
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var options = VelvetRelationship.All;
         var models = new VChipModel[options.Length];
@@ -269,6 +286,7 @@ internal sealed partial class VelvetShell
         }
 
         editBusy = true;
+        editSaveFailed = false;
         var me = store.Me;
         var identityChanged = me is not null &&
             (editDisplayName.Trim() != me.DisplayName || editHandle.Trim() != me.Handle);
@@ -280,11 +298,26 @@ internal sealed partial class VelvetShell
         if (identityChanged)
         {
             store.UpdateIdentity(editDisplayName.Trim(), editHandle.Trim(),
-                _ => store.UpdateProfile(request, _ => editBusy = false));
+                identitySaved => store.UpdateProfile(request,
+                    profileSaved => CompleteSave(identitySaved && profileSaved)));
         }
         else
         {
-            store.UpdateProfile(request, _ => editBusy = false);
+            store.UpdateProfile(request, CompleteSave);
         }
+    }
+
+    private void CompleteSave(bool succeeded)
+    {
+        if (succeeded)
+        {
+            editSaveSucceeded = true;
+        }
+        else
+        {
+            editSaveFailed = true;
+        }
+
+        editBusy = false;
     }
 }

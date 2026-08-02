@@ -182,9 +182,53 @@ internal sealed class ModerationNoticeService : IDisposable
             return;
         }
 
+        PublishContentRemovals(pending, unread);
         pending = unread.ToArray();
         _ = framework.RunOnFrameworkThread(() => Changed?.Invoke());
     }
+
+    private void PublishContentRemovals(ModerationNoticeDto[] previous, List<ModerationNoticeDto> unread)
+    {
+        for (var index = 0; index < unread.Count; index++)
+        {
+            var notice = unread[index];
+            if (notice.Kind != ModerationNoticeKinds.ContentRemoved
+                || notice.ContentId is not { Length: > 0 } contentId
+                || ContainsNotice(previous, notice.Id))
+            {
+                continue;
+            }
+
+            if (RemovalKindFor(notice.ContentType) is not { } removalKind)
+            {
+                continue;
+            }
+
+            signals.PublishContentRemoved(new ContentRemovalSignal(notice.App, removalKind, contentId, null));
+        }
+    }
+
+    private static bool ContainsNotice(ModerationNoticeDto[] notices, string noticeId)
+    {
+        for (var index = 0; index < notices.Length; index++)
+        {
+            if (string.Equals(notices[index].Id, noticeId, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static string? RemovalKindFor(string contentType) =>
+        contentType switch
+        {
+            "chirp" or "gram" or "velvet_post" => ContentRemovalKinds.Post,
+            "comment" or "velvet_comment" => ContentRemovalKinds.Comment,
+            "story" => ContentRemovalKinds.Story,
+            _ => null,
+        };
 
     private bool Matches(List<ModerationNoticeDto> candidate)
     {

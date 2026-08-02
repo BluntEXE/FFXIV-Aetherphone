@@ -5,7 +5,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Settings.Pages;
@@ -37,7 +36,7 @@ internal sealed class NotificationsPage : ISettingsPage
     public void Draw(in PhoneContext context, Rect body)
     {
         var theme = context.Theme;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         using (AppSurface.Begin(body))
         {
             SettingsSection.Header(Loc.T(L.Common.Alerts), theme);
@@ -59,7 +58,7 @@ internal sealed class NotificationsPage : ISettingsPage
             }
 
             if (SettingsRow.Disclosure(alerts.NextRow(), Loc.T(L.Settings.NotificationSound),
-                    sound.Label(configuration.NotificationSound), theme))
+                    sound.Label(SoundKind.Notification, configuration.NotificationSound), theme))
             {
                 navigator.Open(soundPage);
             }
@@ -114,6 +113,6 @@ internal sealed class NotificationsPage : ISettingsPage
             return Loc.T(L.Settings.NotificationsOff);
         }
 
-        return sound.Label(configuration.ResolveNotificationToken(appId));
+        return sound.Label(SoundKind.Notification, configuration.ResolveNotificationToken(appId));
     }
 }

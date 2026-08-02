@@ -1,7 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -105,8 +104,8 @@ internal static class HoverTooltip
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
-        var style = TextStyles.SubheadlineEmphasized;
+        var scale = UiScale.Current;
+        var style = TextStyles.BodyEmphasized;
         var padX = 11f * scale;
         var padY = 7f * scale;
         var margin = 8f * scale;

@@ -1,4 +1,3 @@
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Core.Animation;
 
@@ -24,12 +23,6 @@ internal struct NotificationShake
 
     public float Advance(float delta)
     {
-        if (Motion.Reduced)
-        {
-            remaining = 0f;
-            return 0f;
-        }
-
         if (remaining <= 0f)
         {
             return 0f;
@@ -37,6 +30,6 @@ internal struct NotificationShake
 
         remaining = MathF.Max(0f, remaining - delta);
         var falloff = remaining / duration;
-        return MathF.Sin(remaining * frequency) * amplitude * ImGuiHelpers.GlobalScale * falloff;
+        return MathF.Sin(remaining * frequency) * amplitude * UiScale.Current * falloff;
     }
 }

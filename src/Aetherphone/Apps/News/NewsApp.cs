@@ -10,7 +10,6 @@ using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.News;
@@ -56,6 +55,7 @@ internal sealed class NewsApp : IPhoneApp
     private int categoryIndex;
     private bool forceRefresh;
     private bool resetScroll;
+    private int visibleItems = MaxItems;
 
     public NewsApp(NewsService news, MediaCache media, HttpService http, GameData gameData)
     {
@@ -79,7 +79,7 @@ internal sealed class NewsApp : IPhoneApp
         theme = context.Theme;
         ui.Theme = theme;
         var area = context.Content;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var screen = SceneChrome.ScreenFrom(area, theme, scale);
         ui.Backdrop(screen);
         AppHeader.Draw(context, DisplayName);
@@ -96,6 +96,7 @@ internal sealed class NewsApp : IPhoneApp
             categoryIndex = selected;
             resetScroll = true;
             forceRefresh = false;
+            visibleItems = MaxItems;
         }
 
         var category = NewsCategories.All[categoryIndex];
@@ -122,7 +123,12 @@ internal sealed class NewsApp : IPhoneApp
                 resetScroll = false;
             }
 
-            DrawFeed(entry.Items, Math.Min(entry.Items.Length, MaxItems), category, scale);
+            var count = Math.Min(entry.Items.Length, visibleItems);
+            DrawFeed(entry.Items, count, category, scale);
+            if (entry.Items.Length > count && InfiniteScroll.ReachedBottom())
+            {
+                visibleItems += MaxItems;
+            }
         }
     }
 
@@ -451,7 +457,7 @@ internal sealed class NewsApp : IPhoneApp
     }
 
     private static void DrawSpinner(Vector2 center, float radius, Vector4 color) =>
-        ProgressRing.Sweep(center, radius, 2.4f * ImGuiHelpers.GlobalScale, color, 900.0, 1.8f, 0.95f);
+        ProgressRing.Sweep(center, radius, 2.4f * UiScale.Current, color, 900.0, 1.8f, 0.95f);
 
     private static void DrawChevronRight(Vector2 tip, float size, float thickness, Vector4 color)
     {

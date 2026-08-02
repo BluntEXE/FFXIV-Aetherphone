@@ -8,6 +8,7 @@ using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Photos;
 using Aetherphone.Core.Platform;
 using Aetherphone.Core.Shell;
+using Aetherphone.Core.Theme;
 using Aetherphone.Core.Updates;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows;
@@ -80,13 +81,15 @@ public sealed class Plugin : IDalamudPlugin
             Cfg.MigrateMessage();
             Cfg.MigrateMessagesMerge();
             Cfg.MigrateSetupCompleted();
+            Cfg.MigratePhoneWidth();
             Cfg.MigrateControlPanelRepack();
             Cfg.MigrateCharacterSessions();
             InitializeLocalization();
             Device = new DeviceStatus(ClientState, ObjectTable, DataManager);
             services = PhoneServices.Build(Cfg, ChatGui, DataManager, ObjectTable, ClientState, Framework, DutyState,
                 TextureProvider, PluginInterface.ConfigDirectory, UnlockState, Condition);
-            Fonts = new FontService(PluginInterface, Cfg, services.Loading, Cfg.TextZoom);
+            Fonts = new FontService(PluginInterface, Cfg, services.Loading, Cfg.TextZoom,
+                PhoneSizeCatalog.ZoomFor(Cfg.PhoneWidth));
             EmojiCatalog.Load();
             Wallpapers = services.Wallpapers;
             var bundle = AppRegistry.BuildDefault(services);
@@ -342,7 +345,32 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 
+        if (argument.Equals("run", StringComparison.OrdinalIgnoreCase) ||
+            argument.StartsWith("run ", StringComparison.OrdinalIgnoreCase))
+        {
+            RunShortcut(argument.Length > 4 ? argument.Substring(4).Trim() : string.Empty);
+            return;
+        }
+
         phoneWindow.ToggleShell();
+    }
+
+    private void RunShortcut(string name)
+    {
+        if (name.Length == 0)
+        {
+            ChatGui.Print(Loc.T(L.Plugin.RunUsage));
+            return;
+        }
+
+        var shortcut = services.Shortcuts.FindByName(name);
+        if (shortcut is null)
+        {
+            ChatGui.Print(Loc.T(L.Plugin.ShortcutNotFound, name));
+            return;
+        }
+
+        services.ShortcutRunner.Run(shortcut);
     }
 
     private void OnIncomingCall()

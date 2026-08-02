@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Animation;
 using Aetherphone.Core.Collections;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Onboarding;
@@ -6,7 +7,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Collections;
 
@@ -15,7 +15,7 @@ internal sealed partial class CollectionsApp
     private void DrawRoot(Rect area)
     {
         DrawNavBar(area, DisplayName, null);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         using (AppSurface.Begin(body))
         {
@@ -31,7 +31,7 @@ internal sealed partial class CollectionsApp
 
     private void DrawLinkHint()
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var drawList = ImGui.GetWindowDrawList();
@@ -56,7 +56,7 @@ internal sealed partial class CollectionsApp
 
     private void DrawCategoryTiles()
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var available = ImGui.GetContentRegionAvail().Y;
@@ -193,7 +193,7 @@ internal sealed partial class CollectionsApp
     private void DrawCategory(Rect area, CollectionCategory category)
     {
         DrawNavBar(area, CategoryLabel(category), back);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var pad = 16f * scale;
         var top = area.Min.Y + AppHeader.Height * scale;
         contentBottom = area.Max.Y;
@@ -291,7 +291,7 @@ internal sealed partial class CollectionsApp
 
     private void DrawSummary(CatalogEntry entry, OwnedEntry? owned)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var drawList = ImGui.GetWindowDrawList();
@@ -357,7 +357,7 @@ internal sealed partial class CollectionsApp
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var maxWidth = width - 8f * scale;
@@ -381,7 +381,7 @@ internal sealed partial class CollectionsApp
 
     private void DrawList(CollectionCategory category, OwnedEntry? owned, int start, int end)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var rowHeight = RowHeight * scale;
         var count = end - start;
         var origin = ImGui.GetCursorScreenPos();
@@ -486,7 +486,7 @@ internal sealed partial class CollectionsApp
 
     private void DrawPager(int totalPages)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var height = PagerHeight * scale;
@@ -567,7 +567,7 @@ internal sealed partial class CollectionsApp
 
     private void DrawSourceDropdownButton(Rect bar)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var height = DropdownHeight * scale;
         var min = new Vector2(bar.Min.X, bar.Center.Y - height * 0.5f);
@@ -615,7 +615,7 @@ internal sealed partial class CollectionsApp
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var pad = 6f * scale;
         var rowHeight = MenuRowHeight * scale;
@@ -627,7 +627,10 @@ internal sealed partial class CollectionsApp
         var height = visible * rowHeight + pad * 2f;
         var min = new Vector2(sourceMenuAnchor.Min.X, menuTop);
         var max = new Vector2(sourceMenuAnchor.Max.X, menuTop + height);
-        UiInteract.HoverOverlay(new Rect(min, max));
+        if (!InputShield.Active)
+        {
+            UiInteract.HoverOverlay(new Rect(min, max));
+        }
         Elevation.Floating(drawList, min, max, 14f * scale, scale);
         Material.Frosted(drawList, min, max, 14f * scale, scale);
         var clicked = -1;
@@ -700,7 +703,7 @@ internal sealed partial class CollectionsApp
 
     private void DrawFailed(Rect body, CollectionCategory category)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         EmptyState.Draw(body, ui, FontAwesomeIcon.CloudDownloadAlt, Loc.T(L.Collections.Failed), string.Empty);
         var label = Loc.T(L.Collections.TryAgain);
         var width = Typography.Measure(label, TextStyles.BodyEmphasized).X + 44f * scale;
@@ -715,7 +718,7 @@ internal sealed partial class CollectionsApp
 
     private void DrawSpinnerState(Rect body)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var center = body.Center;
         LoadingPulse.Draw(new Vector2(center.X, center.Y - 14f * scale), 13f * scale, ui.Accent, ui.MutedInk,
             Loc.T(L.Common.Loading));

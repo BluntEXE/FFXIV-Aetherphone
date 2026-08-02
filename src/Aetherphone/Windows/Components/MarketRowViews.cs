@@ -4,7 +4,6 @@ using Aetherphone.Core.Market;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures;
-using Dalamud.Interface.Utility;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Windows.Components;
@@ -25,7 +24,7 @@ internal static class MarketRowViews
         PhoneTheme theme)
     {
         var rowId = "marketrow.alert." + index;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var openRight = row.Max.X - 56f * scale;
         if (UiInteract.Hover(row.Min, new Vector2(openRight, row.Max.Y)))
@@ -103,7 +102,7 @@ internal static class MarketRowViews
 
     public static bool ItemRow(Rect row, MarketItemRef item, long minPrice, ITextureProvider textures, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var hovered = UiInteract.Hover(row.Min, row.Max);
         var drawList = ImGui.GetWindowDrawList();
         if (hovered)
@@ -149,7 +148,7 @@ internal static class MarketRowViews
 
     public static void ListingRow(Rect row, in MarketListing listing, bool multiWorld, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var topY = row.Min.Y + 9f * scale;
         var unit = MarketFormat.Gil(listing.PricePerUnit);
         Typography.Draw(new Vector2(row.Min.X, topY), unit, theme.TextStrong, 1.05f);
@@ -172,7 +171,7 @@ internal static class MarketRowViews
 
     public static void SaleRow(Rect row, in MarketSale sale, bool multiWorld, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var topY = row.Min.Y + 9f * scale;
         var price = MarketFormat.Gil(sale.PricePerUnit);
         Typography.Draw(new Vector2(row.Min.X, topY), price, theme.TextStrong, 1.05f);

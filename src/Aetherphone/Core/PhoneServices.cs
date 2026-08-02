@@ -25,6 +25,7 @@ using Aetherphone.Core.Radio;
 using Aetherphone.Core.Report;
 using Aetherphone.Core.Sharing;
 using Aetherphone.Core.Shell;
+using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Songs;
 using Aetherphone.Core.Telephony;
 using Aetherphone.Core.Theme;
@@ -51,6 +52,8 @@ internal sealed class PhoneServices : IDisposable
     public required NotificationService Notifications { get; init; }
     public required SocialNotificationService SocialNotifications { get; init; }
     public required ModerationNoticeService ModerationNotices { get; init; }
+
+    public required AccountStateService AccountState { get; init; }
     public required ModerationNoticePresenter ModerationPresenter { get; init; }
     public required ModerationNoticeArchive ModerationArchive { get; init; }
     public required SafetyLauncher SafetyLauncher { get; init; }
@@ -69,6 +72,9 @@ internal sealed class PhoneServices : IDisposable
     public required HttpService Http { get; init; }
     public required MediaCache Media { get; init; }
     public required RemoteImageCache RemoteImages { get; init; }
+    public required PluginCatalog PluginCatalog { get; init; }
+    public required ShortcutStore Shortcuts { get; init; }
+    public required ShortcutRunner ShortcutRunner { get; init; }
     public required LodestoneService Lodestone { get; init; }
     public required LookupService Lookup { get; init; }
     public required AethernetSession AethernetSession { get; init; }
@@ -131,11 +137,14 @@ internal sealed class PhoneServices : IDisposable
         var weather = new WeatherService(dataManager, clientState);
         var weatherControl = new WeatherControl(weather, framework, clientState, condition,
             installer.Gate("skywatcher"));
-        var soundBundledDirectory = new DirectoryInfo(
-            Path.Combine(Plugin.PluginInterface.AssemblyLocation.DirectoryName ?? string.Empty, "Sounds"));
-        var soundUserDirectory = new DirectoryInfo(Path.Combine(configDirectory.FullName, "Sounds"));
-        var soundLibrary = new SoundLibrary(soundBundledDirectory, soundUserDirectory);
-        var sound = new SoundService(configuration, soundLibrary, new SoundEffectPlayer(), framework);
+        var soundBundledRoot = Path.Combine(Plugin.PluginInterface.AssemblyLocation.DirectoryName ?? string.Empty,
+            "Sounds");
+        var soundUserRoot = Path.Combine(configDirectory.FullName, "Sounds");
+        var ringtoneLibrary = new SoundLibrary(new DirectoryInfo(Path.Combine(soundBundledRoot, "Ringtones")),
+            new DirectoryInfo(Path.Combine(soundUserRoot, "Ringtones")));
+        var notificationLibrary = new SoundLibrary(new DirectoryInfo(Path.Combine(soundBundledRoot, "Notifications")),
+            new DirectoryInfo(Path.Combine(soundUserRoot, "Notifications")));
+        var sound = new SoundService(configuration, ringtoneLibrary, notificationLibrary, new SoundEffectPlayer());
         var notifications = new NotificationService(sound, configuration, installer, framework);
         var characterWatch = new CharacterWatch(framework);
         var messageArchive = new MessageArchive(new DirectoryInfo(Path.Combine(configDirectory.FullName, "Messages")));
@@ -162,6 +171,7 @@ internal sealed class PhoneServices : IDisposable
         var imageRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "images"));
         var imageDisk = new DiskCache(imageRoot, 128L * 1024 * 1024);
         var remoteImages = new RemoteImageCache(http, imageDisk);
+        var pluginCatalog = new PluginCatalog(remoteImages, http, imageDisk);
         var lodestone = new LodestoneService(configuration, http, media, cacheRoot);
         var lookup = new LookupService(lodestone);
         var aethernetSession = new AethernetSession(configuration, framework);
@@ -207,7 +217,9 @@ internal sealed class PhoneServices : IDisposable
         var socialNotifications = new SocialNotificationService(aethernetSession, aethernet.Account, notifications, configuration, framework, visibility, realtimeSignals, installer);
         var moderationNotices = new ModerationNoticeService(aethernetSession, aethernet.Account, framework,
             visibility, realtimeSignals);
-        var moderationPresenter = new ModerationNoticePresenter(moderationNotices, confirm, notifications, framework);
+        var accountState = new AccountStateService(aethernetSession, aethernet.Account, framework, visibility);
+        var moderationPresenter = new ModerationNoticePresenter(moderationNotices, confirm, notifications,
+            accountState, framework);
         var moderationArchive = new ModerationNoticeArchive(aethernetSession, aethernet.Account);
         var safetyLauncher = new SafetyLauncher();
         var musters = new MusterStore(aethernetSession, aethernet.Musters, notifications, configuration,
@@ -230,6 +242,7 @@ internal sealed class PhoneServices : IDisposable
             Notifications = notifications,
             SocialNotifications = socialNotifications,
             ModerationNotices = moderationNotices,
+            AccountState = accountState,
             ModerationPresenter = moderationPresenter,
             ModerationArchive = moderationArchive,
             SafetyLauncher = safetyLauncher,
@@ -248,6 +261,9 @@ internal sealed class PhoneServices : IDisposable
             Http = http,
             Media = media,
             RemoteImages = remoteImages,
+            PluginCatalog = pluginCatalog,
+            Shortcuts = new ShortcutStore(configuration, pluginCatalog),
+            ShortcutRunner = new ShortcutRunner(clientState, condition),
             Lodestone = lodestone,
             Lookup = lookup,
             AethernetSession = aethernetSession,
@@ -303,6 +319,7 @@ internal sealed class PhoneServices : IDisposable
         SocialNotifications.Dispose();
         ModerationPresenter.Dispose();
         ModerationNotices.Dispose();
+        AccountState.Dispose();
         KeyVault.Dispose();
         Calls.Dispose();
         Collections.Dispose();
@@ -328,6 +345,7 @@ internal sealed class PhoneServices : IDisposable
         Notifications.Dispose();
         Sound.Dispose();
         Media.Dispose();
+        ShortcutRunner.Dispose();
         RemoteImages.Dispose();
         Availability.Dispose();
         Http.Dispose();

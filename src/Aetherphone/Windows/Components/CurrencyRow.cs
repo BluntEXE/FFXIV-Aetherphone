@@ -4,7 +4,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Core.Wallet;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures;
-using Dalamud.Interface.Utility;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Windows.Components;
@@ -22,7 +21,7 @@ internal static class CurrencyRow
 
     public static Rect Hero(WalletEntry gil, ITextureProvider textures, in AppPalette palette)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var width = ImGui.GetContentRegionAvail().X;
         var origin = ImGui.GetCursorScreenPos();
@@ -67,7 +66,7 @@ internal static class CurrencyRow
     public static void Draw(Rect band, Rect content, WalletEntry entry, ITextureProvider textures,
         in AppPalette palette, float cardRounding, bool roundTop, bool roundBottom)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         DrawHover(drawList, band, cardRounding, roundTop, roundBottom, scale);
 

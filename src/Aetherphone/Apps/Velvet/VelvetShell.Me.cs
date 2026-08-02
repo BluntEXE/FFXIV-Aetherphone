@@ -6,7 +6,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Social;
 using Aetherphone.Windows.Components;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -30,7 +29,7 @@ internal sealed partial class VelvetShell
 
     private void DrawSettings(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (VHeader.Push(area, Loc.T(L.Velvet.Settings), theme))
         {
             router.Pop();
@@ -105,7 +104,7 @@ internal sealed partial class VelvetShell
 
     private void DrawBlocked(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (VHeader.Push(area, Loc.T(L.Velvet.Blocked), theme))
         {
             router.Pop();
@@ -142,6 +141,8 @@ internal sealed partial class VelvetShell
                     Name = DisplayNameOf(user.DisplayName, user.Handle),
                     World = string.Empty,
                     AvatarUrl = user.AvatarUrl,
+                    RoleBadges = user.Badges,
+                    UserId = user.Id,
                     Pill = Loc.T(L.Velvet.Unblock),
                     PillFilled = false,
                     PillEnabled = true,

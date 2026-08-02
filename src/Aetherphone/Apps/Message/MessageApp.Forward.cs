@@ -6,7 +6,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Message;
 
@@ -39,7 +38,7 @@ internal sealed partial class MessageApp
 
     private ConversationDto? DrawConversationPicker(Rect area, string title, ref string filter)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, title, back);
         var top = area.Min.Y + AppHeader.Height * scale;

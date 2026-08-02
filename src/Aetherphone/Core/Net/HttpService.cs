@@ -14,8 +14,8 @@ internal sealed class HttpService : IDisposable
     private const long MaxResponseBytes = 32 * 1024 * 1024;
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(20);
     private static readonly TimeSpan UploadTimeout = TimeSpan.FromSeconds(60);
-    private static readonly TimeSpan DefaultRateLimitPause = TimeSpan.FromSeconds(60);
-    private static readonly TimeSpan MaxRateLimitPause = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan DefaultRateLimitPause = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan MaxRateLimitPause = TimeSpan.FromSeconds(30);
     private readonly HttpClient client;
     private readonly EtagCache etagCache = new();
     private readonly ConcurrentDictionary<string, long> pausedHostsUntilTicks = new(StringComparer.OrdinalIgnoreCase);
@@ -264,6 +264,7 @@ internal sealed class HttpService : IDisposable
 
             if (!response.IsSuccessStatusCode)
             {
+                AepLog.Warning($"HTTP {request.Method} {request.RequestUri} returned {(int)response.StatusCode}");
                 return default;
             }
 
@@ -303,6 +304,17 @@ internal sealed class HttpService : IDisposable
         {
             request.Headers.TryAddWithoutValidation("X-Aep-App", appScope);
         }
+    }
+
+    public TimeSpan PauseRemaining(string host)
+    {
+        if (host.Length == 0 || !pausedHostsUntilTicks.TryGetValue(host, out var untilTicks))
+        {
+            return TimeSpan.Zero;
+        }
+
+        var remainingTicks = untilTicks - DateTime.UtcNow.Ticks;
+        return remainingTicks > 0 ? TimeSpan.FromTicks(remainingTicks) : TimeSpan.Zero;
     }
 
     private bool IsPaused(Uri? uri)

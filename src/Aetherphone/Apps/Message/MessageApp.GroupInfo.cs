@@ -7,7 +7,6 @@ using Aetherphone.Core.Telephony;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Message;
 
@@ -18,7 +17,7 @@ internal sealed partial class MessageApp
 
     private void DrawGroupInfo(Rect area, string conversationId)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, Loc.T(L.DirectMessages.Details), back);
         var conversation = store.Conversation;
@@ -155,7 +154,7 @@ internal sealed partial class MessageApp
 
     private void DrawAddMembers(Rect area, string conversationId)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, Loc.T(L.DirectMessages.AddPeople), back);
         var top = area.Min.Y + AppHeader.Height * scale;

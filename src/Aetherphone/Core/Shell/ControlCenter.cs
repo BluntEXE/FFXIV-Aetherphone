@@ -11,7 +11,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Core.Shell;
 
@@ -44,6 +43,7 @@ internal sealed class ControlCenter
     private readonly PlaybackHub playback;
     private readonly INavigator navigation;
     private readonly NotificationService notifications;
+    private readonly NotificationRouter router;
     private readonly NotificationCenter notificationCenter;
     private readonly ControlRegistry registry;
     private readonly ControlLayoutService layout;
@@ -70,6 +70,7 @@ internal sealed class ControlCenter
         this.playback = playback;
         this.navigation = navigation;
         this.notifications = notifications;
+        this.router = router;
         notificationCenter = new NotificationCenter(notifications, router, Dismiss);
         registry = new ControlRegistry(configuration, themes, playback, calls, navigation, Dismiss);
         layout = new ControlLayoutService(registry, configuration);
@@ -91,7 +92,12 @@ internal sealed class ControlCenter
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        if (UiInteract.HoverWindowOnly(screen.Min, screen.Max, false))
+        {
+            UiInteract.ReportGestureSurface();
+        }
+
+        var scale = UiScale.Current;
         var dl = ImGui.GetForegroundDrawList();
         var height = screen.Height;
         var rounding = theme.ScreenRounding * scale;
@@ -573,6 +579,7 @@ internal sealed class ControlCenter
     {
         open = true;
         target = 1f;
+        router.AcknowledgeAll();
         notifications.MarkAllRead();
         notificationCenter.Reset();
     }
@@ -589,7 +596,7 @@ internal sealed class ControlCenter
 
     private void HandleGesture(Rect screen, float delta, bool gesturesEnabled, bool allowDismiss)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var height = screen.Height;
         var openDistance = height * OpenFraction;
         var fling = FlingVelocity * scale;

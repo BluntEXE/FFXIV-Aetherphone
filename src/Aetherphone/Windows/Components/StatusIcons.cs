@@ -2,7 +2,6 @@ using Aetherphone.Core;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -27,7 +26,7 @@ internal static class StatusIcons
 
     public static void Draw(Rect screen, PhoneTheme theme, float rowCenterY, float minClusterLeft)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var device = Plugin.Device;
         var clusterWidth = MeasureWidth(scale, device.BatteryPercent);
         var nubRight = screen.Max.X - RightPadding * scale;
@@ -63,7 +62,7 @@ internal static class StatusIcons
 
     private static float DrawBattery(PhoneTheme theme, float rowCenterY, float nubRight, int percent, bool charging)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dl = ImGui.GetWindowDrawList();
         var nubWidth = NubWidth * scale;
         var nubHeight = 4.5f * scale;
@@ -91,7 +90,7 @@ internal static class StatusIcons
 
     private static float DrawBatteryLabel(PhoneTheme theme, float rowCenterY, float batteryLeft, int percent)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var label = percent + "%";
         var size = Typography.Measure(label, LabelScale);
         var position = new Vector2(batteryLeft - LabelGap * scale - size.X, rowCenterY - size.Y * 0.5f);
@@ -101,7 +100,7 @@ internal static class StatusIcons
 
     private static void DrawSignal(PhoneTheme theme, float rowCenterY, float labelLeft, int bars)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dl = ImGui.GetWindowDrawList();
         var barWidth = BarWidth * scale;
         var barGap = BarGap * scale;

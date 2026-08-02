@@ -9,17 +9,12 @@ using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
 
-/// <summary>
-/// Fullscreen story player: segmented progress, timed auto advance, tap left/right to step,
-/// press and hold to pause, drag down to dismiss. Draws over the whole app like
-/// <see cref="PhotoViewerOverlay"/> rather than routing, so the app returns early while it is active.
-/// </summary>
-internal readonly record struct StoryViewers(StoryViewerDto[] Items, int Total, bool Loading);
+internal readonly record struct StoryViewers(StoryViewerDto[] Items, int Total, bool Loading,
+    bool HasMore = false, bool LoadingMore = false);
 
 internal readonly record struct StoryReplyPrompt(LocString Hint, Action<StoryDto, string> Send);
 
@@ -70,6 +65,7 @@ internal sealed class StoryViewerOverlay
     private Action<StoryDto>? onDelete;
     private Action? onExhausted;
     private Func<StoryDto, StoryViewers>? viewersSource;
+    private Action? viewersLoadMore;
     private Func<bool>? onNextGroup;
     private Func<bool>? onPreviousGroup;
     private bool awaitingGroup;
@@ -93,7 +89,7 @@ internal sealed class StoryViewerOverlay
     public void Open(StoryDto[] items, string label, string? avatarUrl, Action<StoryDto> seen, bool mine = false,
         Action<StoryDto>? delete = null, Func<StoryDto, StoryViewers>? viewers = null, Action? exhausted = null,
         Func<bool>? nextGroup = null, Func<bool>? previousGroup = null, bool startAtEnd = false,
-        StoryReplyPrompt? reply = null)
+        StoryReplyPrompt? reply = null, Action? loadMoreViewers = null)
     {
         stories = items;
         authorLabel = label;
@@ -102,6 +98,7 @@ internal sealed class StoryViewerOverlay
         onSeen = seen;
         onDelete = delete;
         viewersSource = viewers;
+        viewersLoadMore = loadMoreViewers;
         onExhausted = exhausted;
         onNextGroup = nextGroup;
         onPreviousGroup = previousGroup;
@@ -175,13 +172,9 @@ internal sealed class StoryViewerOverlay
         onPreviousGroup = null;
         replyPrompt = null;
         viewersSource = null;
+        viewersLoadMore = null;
     }
 
-    /// <param name="suspended">
-    /// Holds the story on screen and ignores input while something modal is above the viewer, such as
-    /// the delete confirmation. Without it the timer keeps running underneath and can advance off, or
-    /// close, the very story being acted on.
-    /// </param>
     public void Draw(Rect area, PhoneTheme theme, bool suspended = false)
     {
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
@@ -203,7 +196,7 @@ internal sealed class StoryViewerOverlay
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var dim = 0.97f * eased * (1f - Math.Clamp(dragOffset / (DismissDragDistance * 2f), 0f, 0.45f));
         drawList.AddRectFilled(area.Min, area.Max, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, dim)));
@@ -254,10 +247,6 @@ internal sealed class StoryViewerOverlay
         return new Rect(new Vector2(stage.Min.X, barTop - rowRise), stage.Max);
     }
 
-    /// <summary>
-    /// Stacks the caption above the seen pill against the bottom of the stage under one scrim, so the two
-    /// cannot land on top of each other the way separately bottom-anchored blocks did.
-    /// </summary>
     private void DrawFooter(ImDrawListPtr drawList, Rect stage, StoryDto story, float scale, float delta,
         float bottomInset)
     {
@@ -407,14 +396,8 @@ internal sealed class StoryViewerOverlay
         prompt.Send(story, trimmed);
     }
 
-    // The eye and count only exist on your own story: the server reports ViewCount as zero to anyone
-    // who is not the author, so this would silently read "0" for everyone else.
     private bool ShowSeenPill => canDelete && viewersSource is not null;
 
-    /// <summary>
-    /// The chip sits on an arbitrary photo, so hover has to read against both a bright and a dark backdrop:
-    /// the fill deepens, a hairline ring fades in, and the ink lifts to full white together.
-    /// </summary>
     private void DrawSeenPill(ImDrawListPtr drawList, Vector2 origin, StoryDto story, float height, float scale,
         float delta)
     {
@@ -426,7 +409,7 @@ internal sealed class StoryViewerOverlay
         var max = new Vector2(origin.X + padding * 2f + iconWidth + iconGap + size.X, origin.Y + height);
         var radius = height * 0.5f;
         var centerY = origin.Y + height * 0.5f;
-        var hovered = UiInteract.Hover(origin, max);
+        var hovered = !sheetOpen && UiInteract.Hover(origin, max);
         seenHover.Step(hovered ? 1f : 0f, SeenHoverSmoothTime, delta);
         var hover = Math.Clamp(seenHover.Value, 0f, 1f);
         var press = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left) ? 0.1f : 0f;
@@ -443,7 +426,12 @@ internal sealed class StoryViewerOverlay
             ink, 0.8f);
         Typography.Draw(new Vector2(origin.X + padding + iconWidth + iconGap, centerY - size.Y * 0.5f), label, ink,
             TextStyles.FootnoteEmphasized);
-        if (UiInteract.HoverClick(origin, max))
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (UiInteract.Click(origin, max, hovered))
         {
             sheetOpen = true;
         }
@@ -459,14 +447,14 @@ internal sealed class StoryViewerOverlay
 
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddRectFilled(area.Min, area.Max, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.5f * reveal)));
-        if (UiInteract.HoverClick(area.Min, area.Max))
+        var height = area.Height * SheetHeightFraction;
+        var top = area.Max.Y - height * Easing.EaseOutQuint(reveal);
+        var panel = new Rect(new Vector2(area.Min.X, top), area.Max);
+        if (UiInteract.ClickedOutside(panel.Min, panel.Max, false))
         {
             sheetOpen = false;
         }
 
-        var height = area.Height * SheetHeightFraction;
-        var top = area.Max.Y - height * Easing.EaseOutQuint(reveal);
-        var panel = new Rect(new Vector2(area.Min.X, top), area.Max);
         var rounding = Metrics.Radius.Lg * scale;
         Squircle.Fill(drawList, panel.Min, new Vector2(panel.Max.X, panel.Max.Y + rounding), rounding,
             ImGui.GetColorU32(theme.Surface));
@@ -494,7 +482,16 @@ internal sealed class StoryViewerOverlay
                 DrawViewerRow(viewers.Items[index], theme, scale);
             }
 
-            if (viewers.Items.Length < viewers.Total)
+            if (viewers.LoadingMore)
+            {
+                InfiniteScroll.DrawLoadingRow(listRect.Center.X, theme.TextMuted);
+            }
+            else if (viewers.HasMore && viewersLoadMore is not null && InfiniteScroll.ReachedBottom())
+            {
+                viewersLoadMore();
+            }
+
+            if (viewers.HasMore && viewers.Items.Length < viewers.Total)
             {
                 Typography.DrawCentered(
                     new Vector2(listRect.Center.X, ImGui.GetCursorScreenPos().Y + 14f * scale),
@@ -522,8 +519,8 @@ internal sealed class StoryViewerOverlay
         var nameMaxWidth = MathF.Max(1f, origin.X + width - stampSize.X - 16f * scale - left);
         var rowHovering = UiInteract.Hover(origin, new Vector2(origin.X + width, origin.Y + height));
         var nameSize = Typography.Measure(name, TextStyles.Subheadline);
-        Marquee.DrawLeft("storyviewer.name." + viewer.Handle, name, left, center.Y - nameSize.Y * 0.5f,
-            nameMaxWidth, TextStyles.Subheadline, theme.TextStrong, rowHovering);
+        UserName.Draw("storyviewer.name." + viewer.Handle, name, viewer.Badges, left,
+            center.Y - nameSize.Y * 0.5f, nameMaxWidth, TextStyles.Subheadline, theme.TextStrong, rowHovering, theme);
         Typography.Draw(new Vector2(origin.X + width - stampSize.X - 6f * scale, center.Y - stampSize.Y * 0.5f), stamp,
             theme.TextMuted, TextStyles.Caption1);
         ImGui.SetCursorScreenPos(origin);
@@ -546,7 +543,7 @@ internal sealed class StoryViewerOverlay
         if (down && hovering && !pressInReplyZone)
         {
             var travel = ImGui.GetIO().MousePos.Y - pressOrigin.Y;
-            dragOffset = MathF.Max(0f, travel / ImGuiHelpers.GlobalScale);
+            dragOffset = MathF.Max(0f, travel / UiScale.Current);
             holding = heldFor >= HoldPauseSeconds && dragOffset < 8f;
         }
         else
@@ -718,9 +715,9 @@ internal sealed class StoryViewerOverlay
         var nameMaxWidth = MathF.Max(1f, row.Max.X - closeReserve - stampWidth - 8f * scale - left);
         var headerHovering = UiInteract.Hover(row.Min, row.Max);
         var nameSize = Typography.Measure(authorLabel, TextStyles.SubheadlineEmphasized);
-        var nameWidth = Marquee.DrawLeft("storyviewer.header.author." + authorLabel, authorLabel, left,
-            row.Center.Y - nameSize.Y * 0.5f, nameMaxWidth, TextStyles.SubheadlineEmphasized,
-            new Vector4(1f, 1f, 1f, 0.98f), headerHovering);
+        var nameWidth = UserName.Draw("storyviewer.header.author." + authorLabel, authorLabel, story.AuthorBadges,
+            left, row.Center.Y - nameSize.Y * 0.5f, nameMaxWidth, TextStyles.SubheadlineEmphasized,
+            new Vector4(1f, 1f, 1f, 0.98f), headerHovering, false);
         Typography.Draw(new Vector2(left + nameWidth + 8f * scale, row.Center.Y - nameSize.Y * 0.5f + 1f * scale),
             stamp, new Vector4(1f, 1f, 1f, 0.6f), TextStyles.Footnote);
 

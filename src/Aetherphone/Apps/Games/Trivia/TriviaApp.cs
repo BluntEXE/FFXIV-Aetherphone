@@ -7,7 +7,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Apps.Games.Trivia;
@@ -67,7 +66,7 @@ internal sealed class TriviaApp : IMiniGame
 
     public void Draw(in GameContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         var body = context.Body;
         var deltaSeconds = fx.ScaleDelta(context.DeltaSeconds);

@@ -7,7 +7,6 @@ using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -111,7 +110,7 @@ internal sealed partial class VelvetShell
         {
             var context = new PhoneContext(area, Theme, Navigation);
             AppHeader.Draw(context, string.Empty, BackAction);
-            var scale = ImGuiHelpers.GlobalScale;
+            var scale = UiScale.Current;
             var drawList = ImGui.GetWindowDrawList();
             var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
             ChatHeaderControls.DrawLock(ui, area, rowCenterY, store.EncryptingCurrent, store.VaultState,

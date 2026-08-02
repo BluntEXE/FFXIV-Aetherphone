@@ -7,7 +7,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 using Dalamud.Interface;
@@ -68,7 +67,7 @@ internal sealed class WallpaperPage : ISettingsPage
         var theme = context.Theme;
         var overlayAtFrameStart = overlay;
         var interactive = overlay == Overlay.None;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var previewHeight = 198f * scale;
         var previewRegion = new Rect(body.Min, new Vector2(body.Max.X, body.Min.Y + previewHeight));
         var gridRegion = new Rect(new Vector2(body.Min.X, body.Min.Y + previewHeight), body.Max);
@@ -97,7 +96,7 @@ internal sealed class WallpaperPage : ISettingsPage
 
     private void DrawAppearancePreviews(Rect region, PhoneTheme theme, bool interactive)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var aspect = TileAspect();
         var cardHeight = 148f * scale;
         var cardWidth = cardHeight * aspect;
@@ -116,7 +115,7 @@ internal sealed class WallpaperPage : ISettingsPage
     private void DrawAppearanceCard(Rect rect, bool isDark, string selectedId, string label, PhoneTheme theme,
         bool interactive)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dl = ImGui.GetWindowDrawList();
         var rounding = 22f * scale;
         var active = editingDark == isDark;
@@ -149,7 +148,7 @@ internal sealed class WallpaperPage : ISettingsPage
 
     private void DrawGrid(Rect region, PhoneTheme theme, bool interactive)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var aspect = TileAspect();
         var entries = wallpapers.Entries;
         var gap = 10f * scale;
@@ -188,7 +187,7 @@ internal sealed class WallpaperPage : ISettingsPage
     private void DrawWallpaperTile(WallpaperEntry entry, Vector2 min, Vector2 max, PhoneTheme theme, bool interactive,
         bool clicked)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dl = ImGui.GetWindowDrawList();
         var rounding = 16f * scale;
         var rect = new Rect(min, max);
@@ -211,7 +210,7 @@ internal sealed class WallpaperPage : ISettingsPage
 
     private void DrawAddTile(Vector2 min, Vector2 max, PhoneTheme theme, bool clicked)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dl = ImGui.GetWindowDrawList();
         var rounding = 16f * scale;
         var hovered = ImGui.IsItemHovered();
@@ -236,7 +235,7 @@ internal sealed class WallpaperPage : ISettingsPage
 
     private static bool DrawDeleteBadge(Vector2 center, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dl = ImGui.GetWindowDrawList();
         var radius = 11f * scale;
         var extent = new Vector2(radius, radius);
@@ -260,7 +259,7 @@ internal sealed class WallpaperPage : ISettingsPage
 
     private void DrawSheet(Rect body, PhoneTheme theme, bool canDismiss)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dl = ImGui.GetWindowDrawList();
         dl.AddRectFilled(body.Min, body.Max, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.5f)), 0f);
         var rowHeight = 52f * scale;
@@ -317,7 +316,7 @@ internal sealed class WallpaperPage : ISettingsPage
         if (hovered)
         {
             ImGui.GetWindowDrawList().AddRectFilled(rect.Min, rect.Max,
-                ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.06f)), 16f * ImGuiHelpers.GlobalScale);
+                ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.06f)), 16f * UiScale.Current);
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
@@ -327,7 +326,7 @@ internal sealed class WallpaperPage : ISettingsPage
 
     private void DrawPhotoPicker(Rect body, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dl = ImGui.GetWindowDrawList();
         dl.AddRectFilled(body.Min, body.Max, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.5f)), 0f);
         var pad = 10f * scale;
@@ -394,7 +393,7 @@ internal sealed class WallpaperPage : ISettingsPage
     private void DrawPhotoThumb(string path, Vector2 min, Vector2 max, PhoneTheme theme)
     {
         var dl = ImGui.GetWindowDrawList();
-        var rounding = 10f * ImGuiHelpers.GlobalScale;
+        var rounding = 10f * UiScale.Current;
         var texture = wallpaperImages.Get(path);
         if (texture is null)
         {
@@ -413,7 +412,7 @@ internal sealed class WallpaperPage : ISettingsPage
 
     private static bool DrawCloseBadge(Vector2 center, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dl = ImGui.GetWindowDrawList();
         var radius = 12f * scale;
         var hovered =

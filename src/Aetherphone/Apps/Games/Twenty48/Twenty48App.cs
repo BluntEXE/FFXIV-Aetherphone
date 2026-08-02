@@ -5,7 +5,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Games.Twenty48;
 
@@ -82,7 +81,7 @@ internal sealed class Twenty48App : IMiniGame
     public void Draw(in GameContext context)
     {
         var deltaSeconds = context.DeltaSeconds;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         var body = context.Body;
         if (loadedBest == 0)
@@ -175,7 +174,7 @@ internal sealed class Twenty48App : IMiniGame
 
     private void OnSlideResolved(GameGrid grid)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         for (var index = 0; index < Twenty48Board.CellCount; index++)
         {
             if (!board.Merged(index))
@@ -211,9 +210,9 @@ internal sealed class Twenty48App : IMiniGame
         fx.AddTrauma(value >= Twenty48Board.WinValue ? 0.7f : 0.4f);
         fx.AddText(GameNumber.Label(value) + "!", center, color, 1.6f);
         fx.Shockwave(center, grid.Pitch * 1.6f, GamePalette.Lighten(color, 0.3f), 0.6f, 3.4f);
-        particles.Burst(center, value >= Twenty48Board.WinValue ? 60 : 34, color, 320f * ImGuiHelpers.GlobalScale, 4f,
+        particles.Burst(center, value >= Twenty48Board.WinValue ? 60 : 34, color, 320f * UiScale.Current, 4f,
             0.9f, 360f);
-        particles.Sparkle(center, 16, new Vector4(1f, 0.95f, 0.7f, 1f), 220f * ImGuiHelpers.GlobalScale, 2.8f, 0.9f);
+        particles.Sparkle(center, 16, new Vector4(1f, 0.95f, 0.7f, 1f), 220f * UiScale.Current, 2.8f, 0.9f);
     }
 
     private void CheckEndState()
@@ -263,7 +262,7 @@ internal sealed class Twenty48App : IMiniGame
     private void ResolveSwipe(Vector2 mouse)
     {
         var delta = mouse - swipeStart;
-        var threshold = 18f * ImGuiHelpers.GlobalScale;
+        var threshold = 18f * UiScale.Current;
         if (MathF.Abs(delta.X) < threshold && MathF.Abs(delta.Y) < threshold)
         {
             return;

@@ -8,7 +8,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Linkpearl;
@@ -38,7 +37,7 @@ internal sealed partial class LinkpearlApp
         }
 
         trackedThread = null;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var segRowHeight = 40f * scale;
         var segRow = new Rect(new Vector2(content.Min.X + 14f * scale, content.Min.Y),
             new Vector2(content.Max.X - 14f * scale, content.Min.Y + segRowHeight));
@@ -153,7 +152,7 @@ internal sealed partial class LinkpearlApp
 
     private bool DrawNotificationPauseButton(in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         var center = new Vector2(content.Max.X - 22f * scale, content.Min.Y + AppHeader.Height * scale * 0.5f);
         var radius = 16f * scale;
@@ -192,7 +191,7 @@ internal sealed partial class LinkpearlApp
         using (AppSurface.Begin(bubbles))
         {
             SyncFollow(conversation);
-            ImGui.Dummy(new Vector2(0f, 8f * ImGuiHelpers.GlobalScale));
+            ImGui.Dummy(new Vector2(0f, 8f * UiScale.Current));
             var lines = conversation.Lines;
             for (var index = 0; index < lines.Count; index++)
             {
@@ -202,7 +201,7 @@ internal sealed partial class LinkpearlApp
                 }
             }
 
-            ImGui.Dummy(new Vector2(0f, 8f * ImGuiHelpers.GlobalScale));
+            ImGui.Dummy(new Vector2(0f, 8f * UiScale.Current));
             if (followBottom)
             {
                 ImGui.SetScrollHereY(1f);
@@ -215,7 +214,7 @@ internal sealed partial class LinkpearlApp
 
     private bool DrawDeleteHistoryButton(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var center = new Vector2(area.Max.X - 22f * scale, area.Min.Y + AppHeader.Height * scale * 0.5f);
         var radius = 16f * scale;
         var min = center - new Vector2(radius, radius);
@@ -266,7 +265,7 @@ internal sealed partial class LinkpearlApp
         using (AppSurface.Begin(bubbles))
         {
             SyncFollow(thread);
-            ImGui.Dummy(new Vector2(0f, 8f * ImGuiHelpers.GlobalScale));
+            ImGui.Dummy(new Vector2(0f, 8f * UiScale.Current));
             var lines = thread.Lines;
             for (var index = 0; index < lines.Count; index++)
             {
@@ -276,7 +275,7 @@ internal sealed partial class LinkpearlApp
                 }
             }
 
-            ImGui.Dummy(new Vector2(0f, 8f * ImGuiHelpers.GlobalScale));
+            ImGui.Dummy(new Vector2(0f, 8f * UiScale.Current));
             if (followBottom)
             {
                 ImGui.SetScrollHereY(1f);
@@ -289,7 +288,7 @@ internal sealed partial class LinkpearlApp
 
     private bool DrawMuteButton(Rect area, LinkshellChannel channel)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var center = new Vector2(area.Max.X - 22f * scale, area.Min.Y + AppHeader.Height * scale * 0.5f);
         var radius = 16f * scale;
         var min = center - new Vector2(radius, radius);
@@ -334,7 +333,7 @@ internal sealed partial class LinkpearlApp
 
     private Rect BubbleArea(Rect area, out Rect composerBar)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var composerHeight = 52f * scale;
         composerBar = new Rect(new Vector2(area.Min.X, area.Max.Y - composerHeight), area.Max);
@@ -343,7 +342,7 @@ internal sealed partial class LinkpearlApp
 
     private void SyncFollow(object thread)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (ReferenceEquals(trackedThread, thread))
         {
             followBottom = ImGui.GetScrollY() >= ImGui.GetScrollMaxY() - 4f * scale;
@@ -363,7 +362,7 @@ internal sealed partial class LinkpearlApp
 
     private void DrawComposer(Rect bar, PhoneTheme theme, Action<string> send)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dl = ImGui.GetWindowDrawList();
         var pillMin = new Vector2(bar.Min.X, bar.Min.Y + 7f * scale);
         var pillMax = new Vector2(bar.Max.X, bar.Max.Y - 7f * scale);

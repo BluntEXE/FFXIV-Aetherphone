@@ -11,7 +11,6 @@ using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Settings;
 
@@ -65,8 +64,8 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
         encryptionPage = new EncryptionPage(aethernetSession, keyVault, confirm);
         namePage = new NamePage(aethernetSession, aethernet.Account, this);
         accountPage = new AccountPage(configuration, aethernetSession, aethernet.Auth, aethernet.Account,
-            aethernet.Media, gameData, remoteImages, lodestone, this, namePage, profilePage, encryptionPage,
-            photoLibrary, confirm, wallpaperImages);
+            services.AccountState, aethernet.Media, gameData, remoteImages, lodestone, this, namePage, profilePage,
+            encryptionPage, photoLibrary, confirm, wallpaperImages);
         var appearance = new AppearancePage(configuration, themes, this, photoLibrary, confirm, wallpapers,
             wallpaperImages);
         var language = new LanguagePage(configuration);
@@ -75,7 +74,7 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
         var tutorials = new TutorialsPage(configuration);
         var callsPage = new CallsPage(calls, configuration);
         var appNotifications = new AppNotificationPage(configuration, sound);
-        var notificationSoundPage = new SoundSettingsPage(sound, L.Settings.NotificationSound,
+        var notificationSoundPage = new SoundSettingsPage(sound, SoundKind.Notification, L.Settings.NotificationSound,
             FontAwesomeIcon.Bell, new Vector4(0.98f, 0.27f, 0.25f, 1f), "settings.notificationVolume",
             () => configuration.NotificationSound, token =>
             {
@@ -88,7 +87,7 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
             });
         var notifications = new NotificationsPage(configuration, this, appNotifications, sound, notificationSoundPage,
             services.Installer);
-        var ringtonePage = new SoundSettingsPage(sound, L.Settings.Ringtone, FontAwesomeIcon.Music,
+        var ringtonePage = new SoundSettingsPage(sound, SoundKind.Ringtone, L.Settings.Ringtone, FontAwesomeIcon.Music,
             new Vector4(0.95f, 0.40f, 0.65f, 1f), "settings.ringtoneVolume",
             () => configuration.RingtoneSound, token =>
             {
@@ -213,7 +212,7 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
 
         var onBack = depth > 1 ? popBack : null;
         AppHeader.Draw(context, page.Title, onBack);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         page.Draw(context, body);
     }

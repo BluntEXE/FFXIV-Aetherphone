@@ -27,14 +27,17 @@ internal abstract class SocialFeedStore : IDisposable
     protected readonly SocialClient client;
     protected readonly SafetyClient safety;
     protected readonly MediaClient media;
+    protected readonly RealtimeSignalBus signals;
     protected readonly StoreWork work;
     private readonly RetryGate meGate = new(TimeSpan.FromSeconds(30));
     private volatile UserDto? me;
     private volatile AvatarUploadOutcome avatarFailure = AvatarUploadOutcome.Unreachable;
-    protected readonly FeedLane<PostDto> forYouLane = new(ByNewestFirst);
-    protected readonly FeedLane<PostDto> followingLane = new(ByNewestFirst);
+    protected readonly FeedLane<PostDto> forYouLane = new(ByNewestFirst, ByCreatedAtUnix);
+    protected readonly FeedLane<PostDto> followingLane = new(ByNewestFirst, ByCreatedAtUnix);
     private readonly FeedLane<PostDto> savedLane = new(ByNewestFirst);
     private volatile UserDto[] followRequests = Array.Empty<UserDto>();
+    private volatile string? followRequestsCursor;
+    private volatile bool followRequestsLoadingMore;
     private volatile bool followRequestsLoading;
     private volatile bool followRequestsLoaded;
     protected readonly FeedLane<PostDto> profileLane = new(ByNewestFirst);
@@ -45,10 +48,10 @@ internal abstract class SocialFeedStore : IDisposable
     private volatile bool profileLoading;
     private volatile bool profileFailed;
     private volatile bool profileRevalidating;
-    private DateTime profileFetchedAt;
-    private static readonly TimeSpan ProfileRevalidateAfter = TimeSpan.FromSeconds(20);
     private volatile string? detailPostId;
     private volatile CommentDto[] detailComments = Array.Empty<CommentDto>();
+    private volatile string? commentsCursor;
+    private volatile bool commentsLoadingMore;
     private volatile bool detailLoading;
     private volatile bool commenting;
     private volatile UserDto[] discoverResults = Array.Empty<UserDto>();
@@ -56,11 +59,14 @@ internal abstract class SocialFeedStore : IDisposable
     private volatile bool loadingMe;
     private volatile string? userListKey;
     private volatile UserDto[] userListResults = Array.Empty<UserDto>();
+    private volatile string? userListCursor;
+    private volatile bool userListLoadingMore;
     private volatile bool userListLoading;
     private volatile bool userListFailed;
-    private volatile PostDto[] taggedPosts = Array.Empty<PostDto>();
+    private UserListKind userListKind;
+    private volatile string? userListSourceId;
+    private readonly FeedLane<PostDto> taggedLane = new(ByNewestFirst);
     private volatile string? taggedUserId;
-    private volatile bool taggedLoading;
     private string? lastAccountId;
 
     protected SocialFeedStore(
@@ -69,6 +75,7 @@ internal abstract class SocialFeedStore : IDisposable
         SocialClient client,
         SafetyClient safety,
         MediaClient media,
+        RealtimeSignalBus signals,
         string logTag)
     {
         this.session = session;
@@ -76,8 +83,24 @@ internal abstract class SocialFeedStore : IDisposable
         this.client = client;
         this.safety = safety;
         this.media = media;
+        this.signals = signals;
         work = new StoreWork(logTag);
         session.Changed += OnSessionChanged;
+        signals.ContentRemoved += OnContentRemoved;
+    }
+
+    private void OnContentRemoved(ContentRemovalSignal removal)
+    {
+        if (string.Equals(removal.Kind, ContentRemovalKinds.Post, StringComparison.Ordinal))
+        {
+            RemovePost(removal.ContentId);
+            return;
+        }
+
+        if (string.Equals(removal.Kind, ContentRemovalKinds.Comment, StringComparison.Ordinal))
+        {
+            detailComments = CopyOnWrite.RemoveById(detailComments, removal.ContentId);
+        }
     }
 
     private void OnSessionChanged()
@@ -101,11 +124,14 @@ internal abstract class SocialFeedStore : IDisposable
         profileFailed = false;
         detailPostId = null;
         detailComments = Array.Empty<CommentDto>();
+        commentsCursor = null;
         discoverResults = Array.Empty<UserDto>();
         userListKey = null;
         userListResults = Array.Empty<UserDto>();
+        userListCursor = null;
         savedLane.Clear();
         followRequests = Array.Empty<UserDto>();
+        followRequestsCursor = null;
         followRequestsLoaded = false;
         ClearTagged();
     }
@@ -139,6 +165,8 @@ internal abstract class SocialFeedStore : IDisposable
     public bool ProfileFailed => profileFailed;
     public PostDto? DetailPost => detailPost;
     public CommentDto[] DetailComments => detailComments;
+    public bool HasMoreComments => commentsCursor is not null;
+    public bool CommentsLoadingMore => commentsLoadingMore;
     public bool DetailLoading => detailLoading;
     public bool Commenting => commenting;
     public UserDto[] DiscoverResults => discoverResults;
@@ -148,12 +176,18 @@ internal abstract class SocialFeedStore : IDisposable
     public AvatarUploadOutcome AvatarFailure => avatarFailure;
     public UserDto[] UserListResults => userListResults;
     public bool UserListLoading => userListLoading;
+    public bool UserListLoadingMore => userListLoadingMore;
+    public bool HasMoreUserList => userListCursor is not null;
     public bool UserListFailed => userListFailed;
     public UserDto[] FollowRequests => followRequests;
     public bool FollowRequestsLoading => followRequestsLoading;
+    public bool FollowRequestsLoadingMore => followRequestsLoadingMore;
+    public bool HasMoreFollowRequests => followRequestsCursor is not null;
 
     public int PendingFollowRequestCount =>
-        followRequestsLoaded ? followRequests.Length : Me?.PendingFollowRequests ?? 0;
+        followRequestsLoaded && followRequestsCursor is null
+            ? followRequests.Length
+            : Math.Max(followRequests.Length, Me?.PendingFollowRequests ?? 0);
 
     public PostDto[] SavedPosts => savedLane.Items;
     public bool SavedLoading => savedLane.Loading;
@@ -169,41 +203,64 @@ internal abstract class SocialFeedStore : IDisposable
 
     protected abstract Task<FeedPage?> FetchProfilePostsAsync(string userId, string? cursor, CancellationToken token);
 
-    protected virtual Task<FeedPage?> FetchTaggedPostsAsync(string userId, CancellationToken token) =>
+    protected virtual Task<FeedPage?> FetchTaggedPostsAsync(string userId, string? cursor, CancellationToken token) =>
         Task.FromResult<FeedPage?>(null);
 
-    public PostDto[] TaggedPosts => taggedPosts;
+    public PostDto[] TaggedPosts => taggedLane.Items;
 
-    public bool TaggedLoading => taggedLoading;
+    public bool TaggedLoading => taggedLane.Loading;
+    public bool TaggedLoadingMore => taggedLane.LoadingMore;
+    public bool HasMoreTagged => taggedLane.HasMore;
 
     public void EnsureTaggedPosts(string userId)
     {
-        if (!session.IsSignedIn || taggedLoading || string.Equals(taggedUserId, userId, StringComparison.Ordinal))
+        if (!session.IsSignedIn || taggedLane.Loading || string.Equals(taggedUserId, userId, StringComparison.Ordinal))
         {
             return;
         }
 
         taggedUserId = userId;
-        taggedPosts = Array.Empty<PostDto>();
-        taggedLoading = true;
+        taggedLane.Clear();
+        taggedLane.Loading = true;
         work.Run("tagged load", async token =>
         {
-            var page = await FetchTaggedPostsAsync(userId, token).ConfigureAwait(false);
+            var page = await FetchTaggedPostsAsync(userId, null, token).ConfigureAwait(false);
             if (page is not null && string.Equals(taggedUserId, userId, StringComparison.Ordinal))
             {
-                taggedPosts = page.Items;
+                taggedLane.ApplyRefresh(page.Items, page.NextCursor);
             }
-        }, () => taggedLoading = false);
+        }, () => taggedLane.Loading = false);
+    }
+
+    public void LoadMoreTaggedPosts()
+    {
+        var userId = taggedUserId;
+        var cursor = taggedLane.Cursor;
+        if (!session.IsSignedIn || userId is null || cursor is null || taggedLane.LoadingMore || taggedLane.Loading)
+        {
+            return;
+        }
+
+        taggedLane.LoadingMore = true;
+        work.Run("tagged more", async token =>
+        {
+            var page = await FetchTaggedPostsAsync(userId, cursor, token).ConfigureAwait(false);
+            if (page is not null && string.Equals(taggedUserId, userId, StringComparison.Ordinal))
+            {
+                taggedLane.ApplyMore(page.Items, page.NextCursor);
+            }
+        }, () => taggedLane.LoadingMore = false);
     }
 
     protected void ClearTagged()
     {
         taggedUserId = null;
-        taggedPosts = Array.Empty<PostDto>();
+        taggedLane.Clear();
     }
 
     public void EnsureMe()
     {
+        ReconcileAccountBadges();
         if (!session.IsSignedIn || me is not null || loadingMe)
         {
             return;
@@ -223,6 +280,18 @@ internal abstract class SocialFeedStore : IDisposable
                 me = profile;
             }
         }, () => loadingMe = false);
+    }
+
+    private void ReconcileAccountBadges()
+    {
+        var current = me;
+        var signedInUser = session.CurrentUser;
+        if (current is null || signedInUser is null || current.Badges == signedInUser.Badges)
+        {
+            return;
+        }
+
+        me = current with { Badges = signedInUser.Badges };
     }
 
     public void RefreshFeed(SocialFeedScope scope)
@@ -275,6 +344,8 @@ internal abstract class SocialFeedStore : IDisposable
         return byTime != 0 ? byTime : string.CompareOrdinal(right.Id, left.Id);
     }
 
+    private static long ByCreatedAtUnix(PostDto post) => post.CreatedAtUnix;
+
     public void OpenDetail(PostDto post) => LoadDetail(post.Id, post);
 
     public void OpenDetailById(string postId) => LoadDetail(postId, null);
@@ -284,6 +355,7 @@ internal abstract class SocialFeedStore : IDisposable
         detailPostId = postId;
         detailPost = cached;
         detailComments = Array.Empty<CommentDto>();
+        commentsCursor = null;
         detailLoading = true;
         work.Run("detail load", async token =>
         {
@@ -303,6 +375,7 @@ internal abstract class SocialFeedStore : IDisposable
             if (detailPostId == postId && page is not null)
             {
                 detailComments = CopyOnWrite.Reversed(page.Items);
+                commentsCursor = page.NextCursor;
             }
         }, () =>
         {
@@ -311,6 +384,29 @@ internal abstract class SocialFeedStore : IDisposable
                 detailLoading = false;
             }
         });
+    }
+
+    public void LoadMoreComments()
+    {
+        var postId = detailPostId;
+        var cursor = commentsCursor;
+        if (!session.IsSignedIn || postId is null || cursor is null || commentsLoadingMore || detailLoading)
+        {
+            return;
+        }
+
+        commentsLoadingMore = true;
+        work.Run("comments more", async token =>
+        {
+            var page = await client.CommentsAsync(postId, cursor, token).ConfigureAwait(false);
+            if (page is null || detailPostId != postId)
+            {
+                return;
+            }
+
+            detailComments = CopyOnWrite.PrependOlderPage(detailComments, page.Items);
+            commentsCursor = page.NextCursor;
+        }, () => commentsLoadingMore = false);
     }
 
     public void AddComment(string postId, string text, Action<bool> onComplete)
@@ -489,10 +585,40 @@ internal abstract class SocialFeedStore : IDisposable
             if (page is not null)
             {
                 followRequests = page.Items;
+                followRequestsCursor = page.NextCursor;
                 followRequestsLoaded = true;
-                SyncPendingFollowRequests(page.Items.Length);
+                if (page.NextCursor is null)
+                {
+                    SyncPendingFollowRequests(page.Items.Length);
+                }
             }
         }, () => followRequestsLoading = false);
+    }
+
+    public void LoadMoreFollowRequests()
+    {
+        var cursor = followRequestsCursor;
+        if (!session.IsSignedIn || cursor is null || followRequestsLoadingMore || followRequestsLoading)
+        {
+            return;
+        }
+
+        followRequestsLoadingMore = true;
+        work.Run("follow requests more", async token =>
+        {
+            var page = await client.RequestsAsync(cursor, token).ConfigureAwait(false);
+            if (page is null)
+            {
+                return;
+            }
+
+            followRequests = CopyOnWrite.AppendPageById(followRequests, page.Items);
+            followRequestsCursor = page.NextCursor;
+            if (page.NextCursor is null)
+            {
+                SyncPendingFollowRequests(followRequests.Length);
+            }
+        }, () => followRequestsLoadingMore = false);
     }
 
     public void AcceptFollowRequest(UserDto requester)
@@ -588,7 +714,7 @@ internal abstract class SocialFeedStore : IDisposable
         forYouLane.Items = MapSaved(forYouLane.Items, postId, saved);
         followingLane.Items = MapSaved(followingLane.Items, postId, saved);
         profileLane.Items = MapSaved(profileLane.Items, postId, saved);
-        taggedPosts = MapSaved(taggedPosts, postId, saved);
+        taggedLane.Items = MapSaved(taggedLane.Items, postId, saved);
         savedLane.Items = saved
             ? MapSaved(savedLane.Items, postId, true)
             : CopyOnWrite.RemoveById(savedLane.Items, postId);
@@ -634,7 +760,7 @@ internal abstract class SocialFeedStore : IDisposable
         forYouLane.Items = CopyOnWrite.RemoveWhere(forYouLane.Items, post => post.AuthorId == userId);
         followingLane.Items = CopyOnWrite.RemoveWhere(followingLane.Items, post => post.AuthorId == userId);
         profileLane.Items = CopyOnWrite.RemoveWhere(profileLane.Items, post => post.AuthorId == userId);
-        taggedPosts = CopyOnWrite.RemoveWhere(taggedPosts, post => post.AuthorId == userId);
+        taggedLane.Items = CopyOnWrite.RemoveWhere(taggedLane.Items, post => post.AuthorId == userId);
         detailComments = CopyOnWrite.RemoveWhere(detailComments, comment => comment.AuthorId == userId);
         discoverResults = CopyOnWrite.RemoveWhere(discoverResults, user => user.Id == userId);
         if (detailPost is { } current && current.AuthorId == userId)
@@ -648,8 +774,7 @@ internal abstract class SocialFeedStore : IDisposable
     {
         if (profileUserId == userId && (profileUser is not null || profileLoading))
         {
-            if (profileUser is not null && !profileLoading && !profileRevalidating
-                && DateTime.UtcNow - profileFetchedAt > ProfileRevalidateAfter)
+            if (profileUser is not null && !profileLoading && !profileRevalidating)
             {
                 RevalidateProfile(userId);
             }
@@ -683,8 +808,6 @@ internal abstract class SocialFeedStore : IDisposable
                 {
                     profileLane.ApplyRefresh(posts.Items, posts.NextCursor);
                 }
-
-                profileFetchedAt = DateTime.UtcNow;
             }
         }, () =>
         {
@@ -710,7 +833,6 @@ internal abstract class SocialFeedStore : IDisposable
             if (user is not null)
             {
                 profileUser = user;
-                profileFetchedAt = DateTime.UtcNow;
             }
 
             if (posts is not null)
@@ -760,19 +882,16 @@ internal abstract class SocialFeedStore : IDisposable
             return;
         }
 
+        userListKind = kind;
+        userListSourceId = sourceId;
         userListKey = key;
         userListResults = Array.Empty<UserDto>();
+        userListCursor = null;
         userListFailed = false;
         userListLoading = true;
         work.Run("user list", async token =>
         {
-            var page = kind switch
-            {
-                UserListKind.Followers => await client.FollowersAsync(sourceId, null, token).ConfigureAwait(false),
-                UserListKind.Following => await client.FollowingAsync(sourceId, null, token).ConfigureAwait(false),
-                UserListKind.Mutuals => await client.MutualFollowersAsync(sourceId, null, token).ConfigureAwait(false),
-                _ => await client.PostLikersAsync(sourceId, null, token).ConfigureAwait(false),
-            };
+            var page = await FetchUserListPageAsync(kind, sourceId, null, token).ConfigureAwait(false);
             if (userListKey != key)
             {
                 return;
@@ -785,6 +904,7 @@ internal abstract class SocialFeedStore : IDisposable
             else
             {
                 userListResults = page.Items;
+                userListCursor = page.NextCursor;
             }
         }, () =>
         {
@@ -794,6 +914,42 @@ internal abstract class SocialFeedStore : IDisposable
             }
         });
     }
+
+    public void LoadMoreUserList()
+    {
+        var key = userListKey;
+        var sourceId = userListSourceId;
+        var cursor = userListCursor;
+        if (!session.IsSignedIn || key is null || sourceId is null || cursor is null
+            || userListLoadingMore || userListLoading)
+        {
+            return;
+        }
+
+        var kind = userListKind;
+        userListLoadingMore = true;
+        work.Run("user list more", async token =>
+        {
+            var page = await FetchUserListPageAsync(kind, sourceId, cursor, token).ConfigureAwait(false);
+            if (page is null || userListKey != key)
+            {
+                return;
+            }
+
+            userListResults = CopyOnWrite.AppendPageById(userListResults, page.Items);
+            userListCursor = page.NextCursor;
+        }, () => userListLoadingMore = false);
+    }
+
+    private async Task<UserListPage?> FetchUserListPageAsync(
+        UserListKind kind, string sourceId, string? cursor, CancellationToken token) =>
+        kind switch
+        {
+            UserListKind.Followers => await client.FollowersAsync(sourceId, cursor, token).ConfigureAwait(false),
+            UserListKind.Following => await client.FollowingAsync(sourceId, cursor, token).ConfigureAwait(false),
+            UserListKind.Mutuals => await client.MutualFollowersAsync(sourceId, cursor, token).ConfigureAwait(false),
+            _ => await client.PostLikersAsync(sourceId, cursor, token).ConfigureAwait(false),
+        };
 
     public void UpdateProfile(string? displayName, string? handle, string? bio, Action<bool, string> onResult)
     {
@@ -881,10 +1037,14 @@ internal abstract class SocialFeedStore : IDisposable
         forYouLane.Items = CopyOnWrite.RemoveById(forYouLane.Items, postId);
         followingLane.Items = CopyOnWrite.RemoveById(followingLane.Items, postId);
         profileLane.Items = CopyOnWrite.RemoveById(profileLane.Items, postId);
+        savedLane.Items = CopyOnWrite.RemoveById(savedLane.Items, postId);
+        taggedLane.Items = CopyOnWrite.RemoveById(taggedLane.Items, postId);
         if (detailPost is { } current && current.Id == postId)
         {
             detailPost = null;
             detailPostId = null;
+            detailComments = Array.Empty<CommentDto>();
+            commentsCursor = null;
         }
     }
 
@@ -907,7 +1067,7 @@ internal abstract class SocialFeedStore : IDisposable
         forYouLane.Items = MapFollowByAuthor(forYouLane.Items, userId, following);
         followingLane.Items = MapFollowByAuthor(followingLane.Items, userId, following);
         profileLane.Items = MapFollowByAuthor(profileLane.Items, userId, following);
-        taggedPosts = MapFollowByAuthor(taggedPosts, userId, following);
+        taggedLane.Items = MapFollowByAuthor(taggedLane.Items, userId, following);
         savedLane.Items = MapFollowByAuthor(savedLane.Items, userId, following);
         if (detailPost is { } post && post.AuthorId == userId && post.IsFollowing != following)
         {
@@ -950,6 +1110,7 @@ internal abstract class SocialFeedStore : IDisposable
     public void Dispose()
     {
         session.Changed -= OnSessionChanged;
+        signals.ContentRemoved -= OnContentRemoved;
         work.Dispose();
     }
 }

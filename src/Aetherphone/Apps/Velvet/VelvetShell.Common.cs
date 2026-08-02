@@ -5,7 +5,6 @@ using Aetherphone.Core.Report;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Velvet;
@@ -14,7 +13,7 @@ internal sealed partial class VelvetShell
 {
     private static Rect Reserve(float heightUnscaled)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var rect = new Rect(origin, new Vector2(origin.X + width, origin.Y + heightUnscaled * scale));
@@ -24,7 +23,7 @@ internal sealed partial class VelvetShell
 
     private static void Gap(float pixels)
     {
-        ImGui.Dummy(new Vector2(0f, pixels * ImGuiHelpers.GlobalScale));
+        ImGui.Dummy(new Vector2(0f, pixels * UiScale.Current));
     }
 
     private static Rect AnchorBox(Vector2 center, float half)
@@ -71,6 +70,9 @@ internal sealed partial class VelvetShell
 
         if (mine)
         {
+            var isPublic = post.Audience == VelvetPostAudience.Public;
+            postItems[count++] = new DropdownMenu.Item(Loc.T(isPublic ? L.Velvet.MakeConnections : L.Velvet.MakePublic),
+                (isPublic ? FontAwesomeIcon.Lock : FontAwesomeIcon.Globe).ToIconString());
             postItems[count++] = new DropdownMenu.Item(Loc.T(L.Velvet.DeleteConfirm),
                 FontAwesomeIcon.Trash.ToIconString(), true);
         }
@@ -97,6 +99,15 @@ internal sealed partial class VelvetShell
 
         if (mine)
         {
+            if (picked == viewOffset)
+            {
+                var nextAudience = post.Audience == VelvetPostAudience.Public
+                    ? VelvetPostAudience.Connections
+                    : VelvetPostAudience.Public;
+                store.SetPostAudience(post, nextAudience);
+                return;
+            }
+
             AskDeletePost(post.Id, inFeed ? null : back);
             return;
         }

@@ -5,7 +5,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Settings.Pages;
@@ -13,7 +12,8 @@ namespace Aetherphone.Apps.Settings.Pages;
 internal sealed class PhoneCasePage : ISettingsPage
 {
     private const int Columns = 3;
-    private const float DeviceAspect = 0.462f;
+
+    private const float DeviceAspect = 0.443f;
     private const float LabelHeight = 36f;
     private const float PreviewScale = 0.55f;
 
@@ -33,7 +33,7 @@ internal sealed class PhoneCasePage : ISettingsPage
     public void Draw(in PhoneContext context, Rect body)
     {
         var theme = context.Theme;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var gap = 12f * scale;
         var cases = ThemeCatalog.Cases;
         using (AppSurface.Begin(body))
@@ -43,24 +43,24 @@ internal sealed class PhoneCasePage : ISettingsPage
             var cellHeight = cellWidth / DeviceAspect + LabelHeight * scale;
             for (var index = 0; index < cases.Count; index++)
             {
+                if (index % Columns != 0)
+                {
+                    ImGui.SameLine();
+                }
+
                 using (ImRaii.PushId(index))
                 {
                     ImGui.Dummy(new Vector2(cellWidth, cellHeight));
                     DrawTile(cases[index], new Rect(ImGui.GetItemRectMin(), ImGui.GetItemRectMax()), theme, scale);
                 }
-
-                if (index % Columns != Columns - 1)
-                {
-                    ImGui.SameLine();
-                }
             }
         }
     }
 
-    private void DrawTile(NamedColor option, Rect cell, PhoneTheme theme, float scale)
+    private void DrawTile(PhoneCase option, Rect cell, PhoneTheme theme, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var selected = option.Name == configuration.PhoneCaseName;
+        var selected = option.Id == configuration.PhoneCaseName;
         var device = new Rect(cell.Min, new Vector2(cell.Max.X, cell.Max.Y - LabelHeight * scale));
         var hovered = UiInteract.Hover(cell.Min, cell.Max);
         if (selected)
@@ -68,14 +68,14 @@ internal sealed class PhoneCasePage : ISettingsPage
             Elevation.Floating(drawList, device.Min, device.Max, device.Width * 0.155f, scale, 0.7f);
         }
 
-        PhoneCasePreview.Draw(drawList, device, option.Color, theme, scale * PreviewScale);
+        PhoneCasePreview.Draw(drawList, device, option, theme, scale * PreviewScale);
         if (selected)
         {
             Squircle.Stroke(drawList, device.Min, device.Max, device.Width * 0.155f,
                 ImGui.GetColorU32(theme.Accent), 2.5f * scale);
         }
 
-        var label = CatalogLabels.PhoneCase(option.Name);
+        var label = CatalogLabels.PhoneCase(option.Id);
         var labelColor = selected ? theme.Accent : theme.TextMuted;
         var labelStyle = selected ? TextStyles.SubheadlineEmphasized : TextStyles.Subheadline;
         Typography.DrawWrappedCentered(drawList, new Vector2(cell.Center.X, device.Max.Y + LabelHeight * scale * 0.5f),
@@ -87,7 +87,7 @@ internal sealed class PhoneCasePage : ISettingsPage
 
         if (!selected && UiInteract.Click(cell.Min, cell.Max, hovered))
         {
-            Apply(option.Name);
+            Apply(option.Id);
         }
     }
 

@@ -70,7 +70,7 @@ internal sealed class AppAvailability : IDisposable
 
     private void EnsureFresh()
     {
-        if (Environment.TickCount64 < Volatile.Read(ref nextFetchTick) ||
+        if (session.IsBanned || Environment.TickCount64 < Volatile.Read(ref nextFetchTick) ||
             Interlocked.Exchange(ref fetching, 1) == 1)
         {
             return;

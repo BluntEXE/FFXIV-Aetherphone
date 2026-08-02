@@ -150,9 +150,6 @@ internal sealed class ChessEngine
         return PickMove(moves, results, count, bestIndex, best, slack);
     }
 
-    // Root moves are searched with alpha set to best - slack, so a move that fails low is only
-    // known to be no better than that bound. Only scores strictly above it are exact, which is why
-    // the best move is carried separately instead of being recovered by comparing against the bound.
     private ChessMove PickMove(ReadOnlySpan<ChessMove> moves, ReadOnlySpan<int> results, int count, int bestIndex,
         int best, int slack)
     {

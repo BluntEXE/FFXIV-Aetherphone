@@ -6,20 +6,30 @@ namespace Aetherphone.Core.Linkpearl;
 
 internal static unsafe class ChatSender
 {
-    public static bool TrySend(string message)
+    public static bool TrySend(string message) => Send(message, requireClean: true);
+
+    public static bool TrySendSanitised(string message) => Send(message, requireClean: false);
+
+    private static bool Send(string message, bool requireClean)
     {
         if (string.IsNullOrEmpty(message))
         {
             return false;
         }
 
-        var bytes = Encoding.UTF8.GetBytes(message);
+        var payload = requireClean ? message : Sanitise(message).Trim();
+        if (payload.Length == 0)
+        {
+            return false;
+        }
+
+        var bytes = Encoding.UTF8.GetBytes(payload);
         if (bytes.Length == 0 || bytes.Length > 500)
         {
             return false;
         }
 
-        if (message.Length != Sanitise(message).Length)
+        if (requireClean && payload.Length != Sanitise(payload).Length)
         {
             return false;
         }

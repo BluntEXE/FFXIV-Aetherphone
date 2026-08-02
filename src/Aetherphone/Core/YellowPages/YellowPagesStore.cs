@@ -8,9 +8,6 @@ using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Core.YellowPages;
 
-/// <summary>Account-scoped in-memory Yellow Pages state. My-ads sync rides the backstop poll; the
-/// warn-first alerts (ad hidden, expiring, saved place opened) arrive as server notifications through
-/// the social pipeline, so this store only mirrors state. Never persisted.</summary>
 internal sealed class YellowPagesStore : IDisposable
 {
     public const string AppId = "yellowpages";
@@ -140,8 +137,6 @@ internal sealed class YellowPagesStore : IDisposable
         }, () => syncing = false);
     }
 
-    /// <summary>Resolves the persisted scope against the player's current world. Framework thread only,
-    /// so the world read happens here and the captured values carry through paging continuations.</summary>
     private void CaptureScopeFilters()
     {
         var worldId = MusterWorlds.CurrentWorldId();
@@ -267,8 +262,6 @@ internal sealed class YellowPagesStore : IDisposable
         }, () => savedLoading = false);
     }
 
-    /// <summary>Resolves a chat ad token without re-fetching per frame: the first call queues one fetch,
-    /// later calls read the cache. A miss is remembered so dead tokens never retry.</summary>
     public AdChatResolution ResolveForChat(string adId)
     {
         if (knownAds.TryGetValue(adId, out var known))

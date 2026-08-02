@@ -8,7 +8,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Music;
@@ -35,6 +34,7 @@ internal sealed partial class MusicApp
     private OverlayMode overlay = OverlayMode.None;
     private OverlayMode lastOverlay = OverlayMode.Pick;
     private Spring overlayPresence;
+    private int overlayOpenedFrame;
     private Song pendingSong;
     private bool nameIsRename;
     private string nameTargetId = string.Empty;
@@ -55,6 +55,12 @@ internal sealed partial class MusicApp
         return count == 1 ? Loc.T(L.Music.SongOne) : string.Format(Loc.T(L.Music.SongsMany), count);
     }
 
+    private void ShowOverlay(OverlayMode mode)
+    {
+        overlay = mode;
+        overlayOpenedFrame = ImGui.GetFrameCount();
+    }
+
     private void OpenPicker(in Song song)
     {
         if (string.IsNullOrEmpty(song.VideoId))
@@ -64,7 +70,7 @@ internal sealed partial class MusicApp
 
         pendingSong = song;
         playlistMenu.Close();
-        overlay = OverlayMode.Pick;
+        ShowOverlay(OverlayMode.Pick);
     }
 
     private void OpenPlaylist(string id)
@@ -79,7 +85,7 @@ internal sealed partial class MusicApp
         nameTargetId = string.Empty;
         nameDraft = string.Empty;
         focusNameField = true;
-        overlay = OverlayMode.Name;
+        ShowOverlay(OverlayMode.Name);
     }
 
     private void BeginCreateFromHome()
@@ -89,7 +95,7 @@ internal sealed partial class MusicApp
         nameTargetId = string.Empty;
         nameDraft = string.Empty;
         focusNameField = true;
-        overlay = OverlayMode.Name;
+        ShowOverlay(OverlayMode.Name);
     }
 
     private void BeginRenamePlaylist(string id)
@@ -104,7 +110,7 @@ internal sealed partial class MusicApp
         nameTargetId = id;
         nameDraft = record.Name;
         focusNameField = true;
-        overlay = OverlayMode.Name;
+        ShowOverlay(OverlayMode.Name);
     }
 
     private void CommitName()
@@ -128,7 +134,7 @@ internal sealed partial class MusicApp
         if (!string.IsNullOrEmpty(pendingSong.VideoId))
         {
             playlists.Add(id, pendingSong);
-            overlay = OverlayMode.Pick;
+            ShowOverlay(OverlayMode.Pick);
             return;
         }
 
@@ -139,7 +145,13 @@ internal sealed partial class MusicApp
     private void CancelName()
     {
         nameDraft = string.Empty;
-        overlay = !nameIsRename && !string.IsNullOrEmpty(pendingSong.VideoId) ? OverlayMode.Pick : OverlayMode.None;
+        if (!nameIsRename && !string.IsNullOrEmpty(pendingSong.VideoId))
+        {
+            ShowOverlay(OverlayMode.Pick);
+            return;
+        }
+
+        overlay = OverlayMode.None;
     }
 
     private void DismissOverlay(bool snap)
@@ -297,7 +309,8 @@ internal sealed partial class MusicApp
                 DrawPickCard(drawList, cardRect, scale, interactive);
             }
 
-            if (interactive && UiInteract.ClickedOutside(cardMin, cardMax))
+            if (interactive && ImGui.GetFrameCount() != overlayOpenedFrame &&
+                UiInteract.ClickedOutside(cardMin, cardMax))
             {
                 if (overlay == OverlayMode.Name)
                 {
@@ -493,7 +506,7 @@ internal sealed partial class MusicApp
 
     private void DrawPlaylistDetail(in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         if (playlists.Find(selectedPlaylistId) is not { } record)
         {

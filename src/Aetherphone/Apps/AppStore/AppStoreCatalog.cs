@@ -66,6 +66,7 @@ internal static class AppStoreCatalog
         ["timers"] = new(L.StoreCopy.TimersSub, L.StoreCopy.TimersBody, StoreCategory.Work),
         ["clock"] = new(L.StoreCopy.ClockSub, L.StoreCopy.ClockBody, StoreCategory.Work),
         ["calculator"] = new(L.StoreCopy.CalculatorSub, L.StoreCopy.CalculatorBody, StoreCategory.Work),
+        ["shortcuts"] = new(L.StoreCopy.ShortcutsSub, L.StoreCopy.ShortcutsBody, StoreCategory.Tools),
         ["settings"] = new(L.StoreCopy.SettingsSub, L.StoreCopy.SettingsBody, StoreCategory.Tools),
         ["notifications"] = new(L.StoreCopy.NotificationsSub, L.StoreCopy.NotificationsBody, StoreCategory.Tools),
         ["feedback"] = new(L.StoreCopy.FeedbackSub, L.StoreCopy.FeedbackBody, StoreCategory.Tools),

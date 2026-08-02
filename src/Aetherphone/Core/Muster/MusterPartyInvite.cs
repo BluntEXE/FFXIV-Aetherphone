@@ -2,8 +2,6 @@ using FFXIVClientStructs.FFXIV.Client.UI.Info;
 
 namespace Aetherphone.Core.Muster;
 
-/// <summary>Cross-world party invites by character name and home world. The game only routes invites
-/// inside one data center, so callers gate on <see cref="CanInvite"/> first. Framework thread only.</summary>
 internal static unsafe class MusterPartyInvite
 {
     public static bool CanInvite(string worldName)

@@ -9,7 +9,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Velvet;
@@ -23,7 +22,7 @@ internal sealed partial class VelvetShell
     {
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, Loc.T(L.Velvet.Post), back);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var body = new Rect(new Vector2(area.Min.X, top), area.Max);
         var feed = store.Feed;
@@ -83,8 +82,8 @@ internal sealed partial class VelvetShell
             var authorSize = Typography.Measure(authorName, TextStyles.Headline);
             var authorHovering = UiInteract.Hover(new Vector2(nameLeft, authorY),
                 new Vector2(nameLeft + nameMaxWidth, authorY + authorSize.Y));
-            Marquee.DrawLeft("velvet.detail.author." + post.Id, authorName, nameLeft,
-                authorY, nameMaxWidth, TextStyles.Headline, VelvetTheme.TitleInk, authorHovering);
+            UserName.Draw("velvet.detail.author." + post.Id, authorName, post.OwnerBadges, nameLeft,
+                authorY, nameMaxWidth, TextStyles.Headline, VelvetTheme.TitleInk, authorHovering, false);
             var ownerSubY = avatarCenter.Y + 3f * scale;
             var ownerSubSize = Typography.Measure(ownerSub, TextStyles.Subheadline);
             var ownerSubHovering = UiInteract.Hover(new Vector2(nameLeft, ownerSubY),
@@ -206,7 +205,7 @@ internal sealed partial class VelvetShell
                 DrawDisplayTokens(post.Tags, VChipStyle.Tint, VelvetTheme.Rose);
             }
 
-            DrawComments(width, scale);
+            DrawComments(post.CommentCount, width, scale);
             Gap(20f);
         }
 
@@ -214,14 +213,16 @@ internal sealed partial class VelvetShell
         DrawPostMenu(area, false);
     }
 
-    private void DrawComments(float width, float scale)
+    private void DrawComments(int totalCount, float width, float scale)
     {
         Gap(10f);
         var linePos = ImGui.GetCursorScreenPos();
         ImGui.GetWindowDrawList().AddLine(linePos, new Vector2(linePos.X + width, linePos.Y),
             VelvetTheme.Divider.Packed(), 1f);
         Gap(14f);
-        var count = store.DetailComments.Length;
+        var count = store.HasMoreComments
+            ? Math.Max(totalCount, store.DetailComments.Length)
+            : store.DetailComments.Length;
         VSectionHeader.Bar(count > 0 ? Loc.T(L.Velvet.CommentsCount, count) : Loc.T(L.Velvet.Comments));
         if (store.LoadingComments)
         {
@@ -244,6 +245,15 @@ internal sealed partial class VelvetShell
         {
             DrawCommentRow(comments[index], scale);
         }
+
+        if (store.CommentsLoadingMore)
+        {
+            InfiniteScroll.DrawLoadingRow(ImGui.GetCursorScreenPos().X + width * 0.5f, VelvetTheme.MutedInk);
+        }
+        else if (store.HasMoreComments && InfiniteScroll.ReachedBottom())
+        {
+            store.LoadMoreComments();
+        }
     }
 
     private void DrawCommentRow(VelvetCommentDto comment, float scale)
@@ -261,8 +271,9 @@ internal sealed partial class VelvetShell
         var nameMaxWidth = wrapWidth * 0.55f;
         var nameHovering = UiInteract.Hover(new Vector2(textLeft, origin.Y),
             new Vector2(textLeft + nameMaxWidth, origin.Y + 16f * scale));
-        var nameWidth = Marquee.DrawLeft("velvet.comment.author." + comment.Id, authorName, textLeft, origin.Y,
-            nameMaxWidth, TextStyles.SubheadlineEmphasized, VelvetTheme.TitleInk, nameHovering);
+        var nameWidth = UserName.Draw("velvet.comment.author." + comment.Id, authorName, comment.AuthorBadges,
+            textLeft, origin.Y, nameMaxWidth, TextStyles.SubheadlineEmphasized, VelvetTheme.TitleInk, nameHovering,
+            false);
         var time = TimeText.Short(comment.CreatedAtUnix);
         if (time.Length > 0)
         {
@@ -352,7 +363,7 @@ internal sealed partial class VelvetShell
 
     private void DrawLikers(Rect area, string postId)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (VHeader.Push(area, Loc.T(L.Velvet.LikesTitle), theme))
         {
             router.Pop();
@@ -391,11 +402,22 @@ internal sealed partial class VelvetShell
                     Name = DisplayNameOf(user.DisplayName, user.Handle),
                     World = string.Empty,
                     AvatarUrl = user.AvatarUrl,
+                    RoleBadges = user.Badges,
+                    UserId = user.Id,
                 };
                 if (VRow.Draw(in model, ui, theme, images, lodestone) == VRowHit.Body)
                 {
                     OpenProfile(user.Id);
                 }
+            }
+
+            if (store.LikersLoadingMore)
+            {
+                InfiniteScroll.DrawLoadingRow(body.Center.X, VelvetTheme.MutedInk);
+            }
+            else if (store.HasMoreLikers && InfiniteScroll.ReachedBottom())
+            {
+                store.LoadMoreLikers();
             }
 
             Gap(40f);

@@ -10,7 +10,6 @@ using Aetherphone.Core.Venues;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Muster;
 
@@ -56,7 +55,7 @@ internal sealed partial class MusterApp
         var muster = ResolveMuster(musterId);
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, muster is null ? DisplayName : Loc.T(MusterCategories.Label(muster.Category)), back);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var body = new Rect(new Vector2(area.Min.X, top), area.Max);
         if (muster is null)
@@ -169,9 +168,9 @@ internal sealed partial class MusterApp
 
         var textLeft = avatarCenter.X + avatarRadius + 14f * scale;
         var textRight = card.Max.X - pad;
-        Marquee.DrawLeftAuto(drawList, "muster.detail.hero.name." + muster.Id, MusterText.HostLabel(muster),
-            textLeft, card.Min.Y + pad + 1f * scale, textRight - textLeft, TextStyles.Title2,
-            AppPalettes.Muster.TitleInk);
+        UserName.DrawAuto(drawList, "muster.detail.hero.name." + muster.Id, MusterText.HostLabel(muster),
+            muster.HostBadges, textLeft, card.Min.Y + pad + 1f * scale, textRight - textLeft, TextStyles.Title2,
+            AppPalettes.Muster.TitleInk, theme);
         Marquee.DrawLeftAuto(drawList, "muster.detail.hero.world." + muster.Id, muster.HostWorld, textLeft,
             card.Min.Y + pad + 28f * scale, textRight - textLeft, TextStyles.Subheadline,
             AppPalettes.Muster.BodyInk);
