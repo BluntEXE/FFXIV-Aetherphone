@@ -41,8 +41,9 @@ internal sealed class MinimizeMorphView
         minimizedView.IsShowing = false;
         var scale = UiScale.Current;
         var theme = themes.Chrome;
+        var puckScale = UiScale.Global;
         var startBody = DeviceChrome.BodyRect(device, theme);
-        var endBody = MinimizedRect(device, scale).Inset(scale);
+        var endBody = MinimizedRect(device, puckScale).Inset(puckScale);
         var eased = minimize.EasedProgress;
         var body = new Rect(Vector2.Lerp(startBody.Min, endBody.Min, eased),
             Vector2.Lerp(startBody.Max, endBody.Max, eased));
@@ -55,7 +56,7 @@ internal sealed class MinimizeMorphView
 
         var raw = Math.Clamp((eased - 0.5f) / 0.4f, 0f, 1f);
         var glyphAlpha = raw * raw * (3f - 2f * raw);
-        MinimizedPhone.DrawFace(ImGui.GetForegroundDrawList(), geometry, theme, scale, glyphAlpha,
+        MinimizedPhone.DrawFace(ImGui.GetForegroundDrawList(), geometry, theme, puckScale, glyphAlpha,
             notifications.UnreadCount);
     }
 
@@ -96,7 +97,7 @@ internal sealed class MinimizeMorphView
     private bool DrawFace(Rect device, float delta)
     {
         minimizedView.IsShowing = true;
-        var mini = MinimizedRect(device, UiScale.Current);
+        var mini = MinimizedRect(device, UiScale.Global);
         switch (minimizedView.Draw(mini, themes.Chrome, delta))
         {
             case MinimizedAction.Expand:

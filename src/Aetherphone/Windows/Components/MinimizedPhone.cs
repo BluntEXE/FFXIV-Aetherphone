@@ -38,7 +38,7 @@ internal sealed class MinimizedPhone : IDisposable
 
     public MinimizedAction Draw(Rect device, PhoneTheme theme, float delta)
     {
-        var scale = UiScale.Current;
+        var scale = UiScale.Global;
         var frame = device.Translate(new Vector2(shake.Advance(delta), 0f));
         var dl = ImGui.GetForegroundDrawList();
         var geometry = ChassisGeometry.Puck(frame.Inset(scale));
@@ -63,7 +63,7 @@ internal sealed class MinimizedPhone : IDisposable
 
     public static void DrawShell(ImDrawListPtr dl, in ChassisGeometry geometry, PhoneTheme theme)
     {
-        DeviceChrome.DrawShell(dl, geometry, UiScale.Current, theme, 1f);
+        DeviceChrome.DrawShell(dl, geometry, UiScale.Global, theme, 1f);
     }
 
     public static void DrawFace(ImDrawListPtr dl, in ChassisGeometry geometry, PhoneTheme theme, float scale,

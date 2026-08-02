@@ -121,7 +121,7 @@ internal sealed class PhoneWindow : Window
         Plugin.Fonts.SetPhoneZoom(zoom);
         var phase = shell.MinimizePhase;
         var minimized = phase == MinimizePhase.Minimized;
-        var size = minimized ? MinimizeTransition.MinimizedSize * zoom : OrientedSize(width);
+        var size = minimized ? MinimizeTransition.MinimizedSize : OrientedSize(width);
         Size = size;
         SizeCondition = ImGuiCond.Always;
         var locked = !minimized && configuration.LockPosition;
