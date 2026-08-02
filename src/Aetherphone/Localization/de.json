@@ -3524,5 +3524,11 @@
   "shortcuts.runStep": "Schritt {0} von {1}",
   "shortcuts.runHolding": "Warten auf das Spiel",
   "shortcuts.runNotLoggedIn": "Melde dich an, um das auszuführen",
-  "shortcuts.runGameBusy": "Das Spiel blieb beschäftigt, daher wurde abgebrochen"
+  "shortcuts.runGameBusy": "Das Spiel blieb beschäftigt, daher wurde abgebrochen",
+  "shortcuts.searchShortcuts": "Deine Kurzbefehle durchsuchen",
+  "shortcuts.noMatches": "Keine Kurzbefehle passen zu dieser Suche.",
+  "shortcuts.pasteMacro": "Makro einfügen",
+  "shortcuts.pasteEmpty": "In der Zwischenablage steht kein Makrotext.",
+  "shortcuts.duplicate": "Duplizieren",
+  "shortcuts.copyName": "{0} Kopie"
 }

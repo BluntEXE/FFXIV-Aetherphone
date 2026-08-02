@@ -3524,5 +3524,11 @@
   "shortcuts.runStep": "第 {0} 步，共 {1} 步",
   "shortcuts.runHolding": "正在等待游戏",
   "shortcuts.runNotLoggedIn": "请先登录再运行",
-  "shortcuts.runGameBusy": "游戏一直处于忙碌状态，已停止"
+  "shortcuts.runGameBusy": "游戏一直处于忙碌状态，已停止",
+  "shortcuts.searchShortcuts": "搜索你的快捷指令",
+  "shortcuts.noMatches": "没有匹配该搜索的快捷指令。",
+  "shortcuts.pasteMacro": "粘贴宏",
+  "shortcuts.pasteEmpty": "剪贴板中没有宏文本。",
+  "shortcuts.duplicate": "复制",
+  "shortcuts.copyName": "{0} 副本"
 }

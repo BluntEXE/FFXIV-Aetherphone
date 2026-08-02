@@ -3524,5 +3524,11 @@
   "shortcuts.runStep": "Adım {0} / {1}",
   "shortcuts.runHolding": "Oyun bekleniyor",
   "shortcuts.runNotLoggedIn": "Bunu çalıştırmak için oturum açın",
-  "shortcuts.runGameBusy": "Oyun meşgul kaldığı için durduruldu"
+  "shortcuts.runGameBusy": "Oyun meşgul kaldığı için durduruldu",
+  "shortcuts.searchShortcuts": "Kısayollarında ara",
+  "shortcuts.noMatches": "Bu aramayla eşleşen kısayol yok.",
+  "shortcuts.pasteMacro": "Makro yapıştır",
+  "shortcuts.pasteEmpty": "Panoda makro metni yok.",
+  "shortcuts.duplicate": "Çoğalt",
+  "shortcuts.copyName": "{0} kopya"
 }

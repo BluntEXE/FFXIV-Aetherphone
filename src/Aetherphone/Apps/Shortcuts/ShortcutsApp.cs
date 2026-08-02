@@ -42,6 +42,7 @@ internal sealed partial class ShortcutsApp : IPhoneApp
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
     private int activeTab;
+    private string libraryQuery = string.Empty;
 
     public ShortcutsApp(ShortcutStore store, ShortcutRunner runner, ConfirmService confirm)
     {
@@ -59,6 +60,7 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         router.Reset();
         catalog.Invalidate();
         pluginQuery = string.Empty;
+        libraryQuery = string.Empty;
     }
 
     public void OnClosed()
@@ -126,6 +128,15 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         }
 
         var body = new Rect(new Vector2(content.Min.X, bodyTop), content.Max);
+        if (store.All.Count > 0)
+        {
+            var searchRow = new Rect(new Vector2(content.Min.X + margin, bodyTop),
+                new Vector2(content.Max.X - margin, bodyTop + 36f * scale));
+            SearchField.Draw(searchRow, "##shortcuts.librarySearch", Loc.T(L.Shortcuts.SearchShortcuts),
+                ref libraryQuery, ui.Palette);
+            body = new Rect(new Vector2(content.Min.X, searchRow.Max.Y + Metrics.Space.Sm * scale), content.Max);
+        }
+
         using (AppSurface.Begin(body))
         {
             DrawLibrary(body, scale);
@@ -161,14 +172,60 @@ internal sealed partial class ShortcutsApp : IPhoneApp
             return;
         }
 
-        var run = runner.Snapshot();
-        var card = GroupCard.Begin(theme, shortcuts.Count, RowHeight);
+        var matches = 0;
         for (var index = 0; index < shortcuts.Count; index++)
         {
-            DrawShortcutRow(card.NextRow(), shortcuts[index], run, scale);
+            if (Matches(shortcuts[index], libraryQuery))
+            {
+                matches++;
+            }
+        }
+
+        if (matches == 0)
+        {
+            Typography.DrawCentered(new Vector2(body.Center.X, body.Min.Y + 60f * scale),
+                Loc.T(L.Shortcuts.NoMatches), ui.MutedInk, TextStyles.Subheadline);
+            return;
+        }
+
+        var run = runner.Snapshot();
+        var card = GroupCard.Begin(theme, matches, RowHeight);
+        for (var index = 0; index < shortcuts.Count; index++)
+        {
+            var entry = shortcuts[index];
+            if (!Matches(entry, libraryQuery))
+            {
+                continue;
+            }
+
+            DrawShortcutRow(card.NextRow(), entry, run, scale);
         }
 
         card.End();
+    }
+
+    private static bool Matches(ShortcutEntry entry, string query)
+    {
+        var trimmed = query.Trim();
+        if (trimmed.Length == 0)
+        {
+            return true;
+        }
+
+        if (entry.Name.Contains(trimmed, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        for (var index = 0; index < entry.Steps.Count; index++)
+        {
+            if (entry.Steps[index].Text.Contains(trimmed, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void DrawEmptyLibrary(Rect body, float scale)

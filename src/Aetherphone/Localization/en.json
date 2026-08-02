@@ -3524,5 +3524,11 @@
   "shortcuts.runStep": "Step {0} of {1}",
   "shortcuts.runHolding": "Waiting for the game",
   "shortcuts.runNotLoggedIn": "Log in to run this",
-  "shortcuts.runGameBusy": "The game stayed busy, so it stopped"
+  "shortcuts.runGameBusy": "The game stayed busy, so it stopped",
+  "shortcuts.searchShortcuts": "Search your shortcuts",
+  "shortcuts.noMatches": "No shortcuts match that search.",
+  "shortcuts.pasteMacro": "Paste Macro",
+  "shortcuts.pasteEmpty": "There is no macro text on the clipboard.",
+  "shortcuts.duplicate": "Duplicate",
+  "shortcuts.copyName": "{0} copy"
 }

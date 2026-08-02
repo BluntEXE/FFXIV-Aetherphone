@@ -3524,5 +3524,11 @@
   "shortcuts.runStep": "Paso {0} de {1}",
   "shortcuts.runHolding": "Esperando al juego",
   "shortcuts.runNotLoggedIn": "Inicia sesión para ejecutarlo",
-  "shortcuts.runGameBusy": "El juego siguió ocupado, así que se detuvo"
+  "shortcuts.runGameBusy": "El juego siguió ocupado, así que se detuvo",
+  "shortcuts.searchShortcuts": "Busca tus atajos",
+  "shortcuts.noMatches": "Ningún atajo coincide con esa búsqueda.",
+  "shortcuts.pasteMacro": "Pegar macro",
+  "shortcuts.pasteEmpty": "No hay texto de macro en el portapapeles.",
+  "shortcuts.duplicate": "Duplicar",
+  "shortcuts.copyName": "{0} copia"
 }

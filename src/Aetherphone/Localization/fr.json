@@ -3524,5 +3524,11 @@
   "shortcuts.runStep": "Étape {0} sur {1}",
   "shortcuts.runHolding": "En attente du jeu",
   "shortcuts.runNotLoggedIn": "Connectez-vous pour lancer ceci",
-  "shortcuts.runGameBusy": "Le jeu est resté occupé, l'exécution s'est arrêtée"
+  "shortcuts.runGameBusy": "Le jeu est resté occupé, l'exécution s'est arrêtée",
+  "shortcuts.searchShortcuts": "Rechercher vos raccourcis",
+  "shortcuts.noMatches": "Aucun raccourci ne correspond à cette recherche.",
+  "shortcuts.pasteMacro": "Coller une macro",
+  "shortcuts.pasteEmpty": "Le presse-papiers ne contient aucun texte de macro.",
+  "shortcuts.duplicate": "Dupliquer",
+  "shortcuts.copyName": "{0} copie"
 }

@@ -3524,5 +3524,11 @@
   "shortcuts.runStep": "Etapa {0} de {1}",
   "shortcuts.runHolding": "Aguardando o jogo",
   "shortcuts.runNotLoggedIn": "Entre na conta para executar isto",
-  "shortcuts.runGameBusy": "O jogo continuou ocupado, então parou"
+  "shortcuts.runGameBusy": "O jogo continuou ocupado, então parou",
+  "shortcuts.searchShortcuts": "Busque seus atalhos",
+  "shortcuts.noMatches": "Nenhum atalho corresponde a essa busca.",
+  "shortcuts.pasteMacro": "Colar macro",
+  "shortcuts.pasteEmpty": "Não há texto de macro na área de transferência.",
+  "shortcuts.duplicate": "Duplicar",
+  "shortcuts.copyName": "{0} cópia"
 }

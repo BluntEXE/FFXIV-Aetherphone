@@ -3524,5 +3524,11 @@
   "shortcuts.runStep": "ステップ {0}/{1}",
   "shortcuts.runHolding": "ゲームの待機中",
   "shortcuts.runNotLoggedIn": "実行するにはログインしてください",
-  "shortcuts.runGameBusy": "ゲームがビジー状態のままだったため停止しました"
+  "shortcuts.runGameBusy": "ゲームがビジー状態のままだったため停止しました",
+  "shortcuts.searchShortcuts": "ショートカットを検索",
+  "shortcuts.noMatches": "その検索に一致するショートカットはありません。",
+  "shortcuts.pasteMacro": "マクロを貼り付け",
+  "shortcuts.pasteEmpty": "クリップボードにマクロのテキストがありません。",
+  "shortcuts.duplicate": "複製",
+  "shortcuts.copyName": "{0} のコピー"
 }

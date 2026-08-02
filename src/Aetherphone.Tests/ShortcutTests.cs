@@ -63,6 +63,95 @@ public sealed class ShortcutCommandTextTests
     }
 }
 
+public sealed class ShortcutMacroTests
+{
+    [Fact]
+    public void EachLineOfAMacro_BecomesAStepInOrder()
+    {
+        var steps = new List<ShortcutStep>();
+
+        var added = ShortcutMacro.Append("/mount \"Company Chocobo\"\n/sit", steps, 30, out var truncated);
+
+        Assert.Equal(2, added);
+        Assert.False(truncated);
+        Assert.Equal("/mount \"Company Chocobo\"", steps[0].Text);
+        Assert.Equal("/sit", steps[1].Text);
+        Assert.All(steps, step => Assert.Equal(ShortcutStepKind.Command, step.Kind));
+    }
+
+    [Fact]
+    public void ABareWaitLine_BecomesAWaitStep()
+    {
+        var steps = new List<ShortcutStep>();
+
+        ShortcutMacro.Append("/wait 3", steps, 30, out _);
+
+        Assert.Single(steps);
+        Assert.Equal(ShortcutStepKind.Wait, steps[0].Kind);
+        Assert.Equal(3f, steps[0].Seconds);
+    }
+
+    [Fact]
+    public void AnInlineWait_StaysWithItsCommand()
+    {
+        var steps = new List<ShortcutStep>();
+
+        ShortcutMacro.Append("/ac \"Fire\" <wait.2>", steps, 30, out _);
+
+        Assert.Single(steps);
+        Assert.Equal(ShortcutStepKind.Command, steps[0].Kind);
+        Assert.Equal("/ac \"Fire\" <wait.2>", steps[0].Text);
+    }
+
+    [Fact]
+    public void BlankLinesAndWindowsEndings_AreIgnored()
+    {
+        var steps = new List<ShortcutStep>();
+
+        var added = ShortcutMacro.Append("/one\r\n\r\n  \r\n/two\r\n", steps, 30, out _);
+
+        Assert.Equal(2, added);
+        Assert.Equal("/one", steps[0].Text);
+        Assert.Equal("/two", steps[1].Text);
+    }
+
+    [Fact]
+    public void APasteThatOverflowsTheStepCap_StopsAndReportsIt()
+    {
+        var steps = new List<ShortcutStep>();
+
+        var added = ShortcutMacro.Append("/one\n/two\n/three", steps, 2, out var truncated);
+
+        Assert.Equal(2, added);
+        Assert.True(truncated);
+        Assert.Equal(2, steps.Count);
+    }
+
+    [Fact]
+    public void PastingOntoExistingSteps_AppendsRatherThanReplaces()
+    {
+        var steps = new List<ShortcutStep> { new() { Kind = ShortcutStepKind.Command, Text = "/first" } };
+
+        ShortcutMacro.Append("/second", steps, 30, out _);
+
+        Assert.Equal(2, steps.Count);
+        Assert.Equal("/first", steps[0].Text);
+        Assert.Equal("/second", steps[1].Text);
+    }
+
+    [Fact]
+    public void AnEmptyClipboard_AddsNothingAndIsNotATruncation()
+    {
+        var steps = new List<ShortcutStep>();
+
+        var added = ShortcutMacro.Append("   \n\n", steps, 30, out var truncated);
+
+        Assert.Equal(0, added);
+        Assert.False(truncated);
+        Assert.Empty(steps);
+    }
+}
+
 public sealed class ShortcutHomeTileTests
 {
     [Fact]

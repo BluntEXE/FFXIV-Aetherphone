@@ -23,6 +23,17 @@ internal sealed partial class ShortcutsApp
     private string iconPluginOption = string.Empty;
     private int pendingStepRemoval = -1;
 
+    private void Warn(string message)
+    {
+        confirm.Ask(new ConfirmRequest
+        {
+            Message = message,
+            ConfirmLabel = Loc.T(L.Shortcuts.Ok),
+            CancelLabel = string.Empty,
+            Confirm = () => { },
+        });
+    }
+
     private bool WarnIfFull()
     {
         if (!store.AtCapacity)
@@ -30,13 +41,7 @@ internal sealed partial class ShortcutsApp
             return false;
         }
 
-        confirm.Ask(new ConfirmRequest
-        {
-            Message = Loc.T(L.Shortcuts.LimitReached, ShortcutStore.MaxShortcuts),
-            ConfirmLabel = Loc.T(L.Shortcuts.Ok),
-            CancelLabel = string.Empty,
-            Confirm = () => { },
-        });
+        Warn(Loc.T(L.Shortcuts.LimitReached, ShortcutStore.MaxShortcuts));
         return true;
     }
 
@@ -327,10 +332,33 @@ internal sealed partial class ShortcutsApp
             draft.Steps.Add(new ShortcutStep { Kind = ShortcutStepKind.OpenUrl });
         }
 
+        var pasteMin = new Vector2(origin.X, secondRowY + height + gap);
+        var pasteRect = new Rect(pasteMin, new Vector2(origin.X + width, pasteMin.Y + height));
+        if (ui.PillButton(pasteRect, Loc.T(L.Shortcuts.PasteMacro), false))
+        {
+            PasteMacro();
+        }
+
         ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, height * 2f + gap + Metrics.Space.Lg * scale));
+        ImGui.Dummy(new Vector2(width, height * 3f + gap * 2f + Metrics.Space.Lg * scale));
         ui.HelpText(Loc.T(L.Shortcuts.StepsHint));
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
+    }
+
+    private void PasteMacro()
+    {
+        var added = ShortcutMacro.Append(ImGui.GetClipboardText(), draft!.Steps, ShortcutStore.MaxSteps,
+            out var truncated);
+        if (truncated)
+        {
+            Warn(Loc.T(L.Shortcuts.StepLimitReached, ShortcutStore.MaxSteps));
+            return;
+        }
+
+        if (added == 0)
+        {
+            Warn(Loc.T(L.Shortcuts.PasteEmpty));
+        }
     }
 
     private void DrawEditorOptions(float scale)
@@ -365,6 +393,18 @@ internal sealed partial class ShortcutsApp
         {
             return;
         }
+
+        var duplicateOrigin = ImGui.GetCursorScreenPos();
+        var duplicateRect = new Rect(duplicateOrigin,
+            new Vector2(duplicateOrigin.X + width, duplicateOrigin.Y + height));
+        if (ui.PillButton(duplicateRect, Loc.T(L.Shortcuts.Duplicate), false))
+        {
+            DuplicateDraft();
+            return;
+        }
+
+        ImGui.SetCursorScreenPos(duplicateOrigin);
+        ImGui.Dummy(new Vector2(width, height + Metrics.Space.Sm * scale));
 
         var deleteOrigin = ImGui.GetCursorScreenPos();
         var deleteRect = new Rect(deleteOrigin, new Vector2(deleteOrigin.X + width, deleteOrigin.Y + height));
@@ -402,6 +442,30 @@ internal sealed partial class ShortcutsApp
         draft = null;
         draftId = Guid.Empty;
         router.Pop();
+    }
+
+    private void DuplicateDraft()
+    {
+        if (draft is null || WarnIfFull())
+        {
+            return;
+        }
+
+        var copy = draft.Copy();
+        copy.Name = CopyName(draft.Name);
+        PruneEmptySteps(copy);
+        store.Add(copy);
+        draft = copy.Copy();
+        draftId = copy.Id;
+        draftPinned = false;
+    }
+
+    private static string CopyName(string name)
+    {
+        var candidate = Loc.T(L.Shortcuts.CopyName, ShortcutRunText.Name(name).Trim());
+        return candidate.Length <= ShortcutStore.NameMaxLength
+            ? candidate
+            : candidate.Substring(0, ShortcutStore.NameMaxLength);
     }
 
     private static void PruneEmptySteps(ShortcutEntry entry)

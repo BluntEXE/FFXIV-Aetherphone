@@ -3524,5 +3524,11 @@
   "shortcuts.runStep": "Шаг {0} из {1}",
   "shortcuts.runHolding": "Ожидание игры",
   "shortcuts.runNotLoggedIn": "Войдите в игру, чтобы запустить это",
-  "shortcuts.runGameBusy": "Игра оставалась занята, выполнение остановлено"
+  "shortcuts.runGameBusy": "Игра оставалась занята, выполнение остановлено",
+  "shortcuts.searchShortcuts": "Поиск по быстрым командам",
+  "shortcuts.noMatches": "Нет быстрых команд по этому запросу.",
+  "shortcuts.pasteMacro": "Вставить макрос",
+  "shortcuts.pasteEmpty": "В буфере обмена нет текста макроса.",
+  "shortcuts.duplicate": "Дублировать",
+  "shortcuts.copyName": "{0} копия"
 }

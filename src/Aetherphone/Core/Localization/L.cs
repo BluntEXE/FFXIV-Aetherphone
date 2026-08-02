@@ -269,6 +269,8 @@ internal static class L
         public static readonly LocString RunGameBusy = new("shortcuts.runGameBusy", "The game stayed busy, so it stopped");
         public static readonly LocString SearchPlugins = new("shortcuts.searchPlugins", "Search plugins and commands");
         public static readonly LocString NoPluginsFound = new("shortcuts.noPluginsFound", "No plugins match that search.");
+        public static readonly LocString SearchShortcuts = new("shortcuts.searchShortcuts", "Search your shortcuts");
+        public static readonly LocString NoMatches = new("shortcuts.noMatches", "No shortcuts match that search.");
         public static readonly LocString PluginDisabled = new("shortcuts.pluginDisabled", "Disabled");
         public static readonly LocString PluginCommandCount = new("shortcuts.pluginCommandCount", "{0} commands");
         public static readonly LocString PluginBy = new("shortcuts.pluginBy", "by {0}");
@@ -288,6 +290,8 @@ internal static class L
         public static readonly LocString AddWait = new("shortcuts.addWait", "Wait");
         public static readonly LocString AddOpen = new("shortcuts.addOpen", "Open");
         public static readonly LocString AddLink = new("shortcuts.addLink", "Link");
+        public static readonly LocString PasteMacro = new("shortcuts.pasteMacro", "Paste Macro");
+        public static readonly LocString PasteEmpty = new("shortcuts.pasteEmpty", "There is no macro text on the clipboard.");
         public static readonly LocString UrlHint = new("shortcuts.urlHint", "https://example.com");
         public static readonly LocString KindOpenUrl = new("shortcuts.kindOpenUrl", "OPEN LINK");
         public static readonly LocString RunLinkRejected = new("shortcuts.runLinkRejected", "That link could not be opened");
@@ -304,6 +308,8 @@ internal static class L
         public static readonly LocString TestRun = new("shortcuts.testRun", "Run Now");
         public static readonly LocString Save = new("shortcuts.save", "Save");
         public static readonly LocString Edit = new("shortcuts.edit", "Edit");
+        public static readonly LocString Duplicate = new("shortcuts.duplicate", "Duplicate");
+        public static readonly LocString CopyName = new("shortcuts.copyName", "{0} copy");
         public static readonly LocString DeleteShortcut = new("shortcuts.deleteShortcut", "Delete Shortcut");
         public static readonly LocString DeleteConfirm = new("shortcuts.deleteConfirm", "Delete this shortcut?");
         public static readonly LocString Delete = new("shortcuts.delete", "Delete");
