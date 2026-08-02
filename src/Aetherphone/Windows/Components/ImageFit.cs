@@ -6,15 +6,19 @@ namespace Aetherphone.Windows.Components;
 
 internal static class ImageFit
 {
-    // Draws a photo contain-fit inside frame (using the uv0/uv1 window's own aspect, not frame's).
-    // No backdrop fill of any kind - whatever was already drawn behind frame (the app's own
-    // background) shows through the gap on a mismatched aspect. Returns the actual drawn image
-    // rect (frame is what's requested; this is what actually holds the sharp image) since callers
-    // that overlay content on the photo itself (tag pins, a hit-test) need it, not the wider frame.
+    public static readonly Vector4 LetterboxFill = new(0f, 0f, 0f, 1f);
+
+    // Draws a photo contain-fit inside frame (using the uv0/uv1 window's own aspect, not frame's),
+    // backed by a solid black fill so a mismatched aspect never shows raw frame background through
+    // the gap. Returns the actual drawn image rect (frame is what's requested; this is what
+    // actually holds the sharp image) since callers that overlay content on the photo itself (tag
+    // pins, a hit-test) need it, not the wider frame.
     public static Rect DrawLetterboxed(ImDrawListPtr drawList, IDalamudTextureWrap texture, Rect frame, Vector2 uv0,
         Vector2 uv1, float rounding)
     {
         var size = texture.Size;
+        drawList.AddRectFilled(frame.Min, frame.Max, ImGui.GetColorU32(LetterboxFill), rounding,
+            ImDrawFlags.RoundCornersAll);
         var imageRect = CenteredRect(frame, VisibleAspect(uv0, uv1, size));
         drawList.AddImageRounded(texture.Handle, imageRect.Min, imageRect.Max, uv0, uv1, 0xFFFFFFFFu, rounding,
             ImDrawFlags.RoundCornersAll);
