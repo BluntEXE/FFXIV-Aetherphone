@@ -32,11 +32,6 @@ internal sealed class PhotoComposeSession
     public const int GridColumns = 3;
     private const float CropSmoothTime = 0.10f;
 
-    // Shared with app-layer preview/carousel rendering (see AethergramApp.Compose.cs,
-    // VelvetPostComposer.cs, and the feed/detail carousels) so a letterboxed photo looks the same
-    // fill everywhere it can appear, not just in the interactive crop canvas.
-    public static readonly Vector4 LetterboxFill = new(0f, 0f, 0f, 0.5f);
-
     private readonly PhotoLibrary library;
     private readonly WallpaperImageCache wallpaperImages;
     private readonly List<string> selected = new();
@@ -356,11 +351,7 @@ internal sealed class PhotoComposeSession
         var centerY = centerYSpring.Step(targetCenterY, CropSmoothTime, deltaSeconds);
         var crop = new WallpaperCrop(zoom, centerX, centerY).Clamped(size, aspect, currentMinZoom);
         var (uv0, uv1) = crop.ComputeUv(size, aspect);
-        Squircle.Fill(drawList, preview.Min, preview.Max, rounding, ImGui.GetColorU32(LetterboxFill));
-        var visibleAspect = ImageFit.VisibleAspect(uv0, uv1, size);
-        var imageRect = ImageFit.CenteredRect(preview, visibleAspect);
-        drawList.AddImageRounded(texture.Handle, imageRect.Min, imageRect.Max, uv0, uv1, 0xFFFFFFFFu, rounding,
-            ImDrawFlags.RoundCornersAll);
+        ImageFit.DrawLetterboxed(drawList, texture, preview, uv0, uv1, rounding);
         if (style.EdgeFrame)
         {
             Material.EdgeSquircle(drawList, preview.Min, preview.Max, rounding, scale);

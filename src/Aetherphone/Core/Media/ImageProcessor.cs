@@ -33,9 +33,11 @@ internal static class ImageProcessor
     public const long MaxLocalDecodePixels = 8192L * 8192L;
     internal static readonly DecoderOptions SingleFrame = new() { MaxFrames = 1 };
 
-    // Matches PhotoComposeSession's LetterboxFill (opaque here - JPEG has no alpha channel to
-    // blend a translucent fill against).
-    private static readonly Rgba32 LetterboxColor = new(18, 18, 18, 255);
+    // The gap around a contain-fit photo (see BakeCroppedJpeg) is filled with a blurred, darkened,
+    // cover-cropped copy of the same photo instead of a plain color - matches Instagram's own
+    // treatment for a photo whose aspect doesn't match its post's frame.
+    private const float LetterboxBlurSigma = 24f;
+    private const float LetterboxBrightness = 0.55f;
 
     private static void EnsureDecodable(Stream stream, long maxPixels)
     {
@@ -103,12 +105,15 @@ internal static class ImageProcessor
             return new BakedImage(stream.ToArray(), targetWidth, targetHeight);
         }
 
+        using var backdrop = image.Clone(context => context
+            .Resize(new ResizeOptions { Size = new Size(targetWidth, targetHeight), Mode = ResizeMode.Crop })
+            .GaussianBlur(LetterboxBlurSigma)
+            .Brightness(LetterboxBrightness));
         image.Mutate(context => context.Resize(containedWidth, containedHeight));
-        using var canvas = new Image<Rgba32>(targetWidth, targetHeight, LetterboxColor);
         var pasteX = (targetWidth - containedWidth) / 2;
         var pasteY = (targetHeight - containedHeight) / 2;
-        canvas.Mutate(context => context.DrawImage(image, new Point(pasteX, pasteY), 1f));
-        canvas.SaveAsJpeg(stream, new JpegEncoder { Quality = JpegQuality });
+        backdrop.Mutate(context => context.DrawImage(image, new Point(pasteX, pasteY), 1f));
+        backdrop.SaveAsJpeg(stream, new JpegEncoder { Quality = JpegQuality });
         return new BakedImage(stream.ToArray(), targetWidth, targetHeight);
     }
 

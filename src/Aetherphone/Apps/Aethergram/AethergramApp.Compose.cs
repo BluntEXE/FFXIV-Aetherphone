@@ -459,14 +459,9 @@ internal sealed partial class AethergramApp
             return;
         }
 
-        // Backdrop first, then contain-fit the image inside it - a photo whose own aspect
-        // differs from the shared container (see ComposeContainerAspect) shows letterboxed
-        // instead of being restretched to fill the frame.
-        Squircle.Fill(drawList, preview.Min, preview.Max, rounding,
-            ImGui.GetColorU32(PhotoComposeSession.LetterboxFill));
-        var imageRect = ImageFit.CenteredRect(preview, ImageFit.VisibleAspect(uv0, uv1, texture.Size));
-        drawList.AddImageRounded(texture.Handle, imageRect.Min, imageRect.Max, uv0, uv1, 0xFFFFFFFFu, rounding,
-            ImDrawFlags.RoundCornersAll);
+        // A photo whose own aspect differs from the shared container (see ComposeContainerAspect)
+        // shows letterboxed instead of being restretched to fill the frame.
+        var imageRect = ImageFit.DrawLetterboxed(drawList, texture, preview, uv0, uv1, rounding);
         Material.EdgeSquircle(drawList, preview.Min, preview.Max, rounding, scale);
         if (composeTagMode && !composeStoryMode)
         {

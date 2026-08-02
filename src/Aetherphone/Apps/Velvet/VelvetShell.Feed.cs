@@ -334,11 +334,7 @@ internal sealed partial class VelvetShell
         }
         else if (contain)
         {
-            Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(PhotoComposeSession.LetterboxFill));
-            var imageAspect = texture.Size.Y > 0f ? texture.Size.X / texture.Size.Y : 1f;
-            var imageRect = ImageFit.CenteredRect(new Rect(min, max), imageAspect);
-            drawList.AddImageRounded(texture.Handle, imageRect.Min, imageRect.Max, Vector2.Zero, Vector2.One,
-                0xFFFFFFFFu, rounding, ImDrawFlags.RoundCornersAll);
+            ImageFit.DrawLetterboxed(drawList, texture, new Rect(min, max), Vector2.Zero, Vector2.One, rounding);
         }
         else
         {
