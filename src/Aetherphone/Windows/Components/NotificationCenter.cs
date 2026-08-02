@@ -56,6 +56,7 @@ internal sealed class NotificationCenter
     private long animId;
     private string animKey = string.Empty;
     private bool animGroup;
+    private PhoneNotification? animNotification;
     private Spring animOffset;
     private float animTarget;
 
@@ -76,6 +77,7 @@ internal sealed class NotificationCenter
         scrollGesture = false;
         axisLocked = false;
         animActive = false;
+        animNotification = null;
         states.Clear();
         groups.Clear();
         groupLookup.Clear();
@@ -232,6 +234,14 @@ internal sealed class NotificationCenter
 
     private void PerformRemoval()
     {
+        // Swiping a card away is the player saying they are done with it, so the
+        // server has to hear about it too or the next poll relights the badge.
+        if (animNotification is { } dismissed)
+        {
+            router.Acknowledge(dismissed);
+            animNotification = null;
+        }
+
         if (animGroup)
         {
             notifications.RemoveGroup(animKey);
@@ -267,6 +277,7 @@ internal sealed class NotificationCenter
         ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
+            router.AcknowledgeAll();
             notifications.Clear();
             Reset();
         }
@@ -561,6 +572,7 @@ internal sealed class NotificationCenter
         animGroup = dragGroup;
         animKey = dragKey;
         animId = dragId;
+        animNotification = commit ? dragNotification : null;
         animRemoving = commit;
         animTarget = commit ? -(dragWidth + 40f * scale) : 0f;
         animOffset.SnapTo(swipeOffset);

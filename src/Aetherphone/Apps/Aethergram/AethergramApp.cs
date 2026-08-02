@@ -649,8 +649,8 @@ internal sealed partial class AethergramApp : IPhoneApp
                 profile.SearchDraft = string.Empty;
                 break;
             case AethergramTab.Activity:
-                social.RefreshNow();
                 social.MarkSeen(Id);
+                social.RefreshNow();
                 activityFeed.Invalidate();
                 store.RefreshFollowRequests();
                 break;

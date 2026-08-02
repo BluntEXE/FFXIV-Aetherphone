@@ -67,6 +67,18 @@ internal sealed class NotificationRouter
         this.safetyLauncher = safetyLauncher;
     }
 
+    public void AcknowledgeAll() => socialNotifications.AcknowledgeAll();
+
+    public void Acknowledge(PhoneNotification notification)
+    {
+        if (notification.SocialType < 0)
+        {
+            return;
+        }
+
+        socialNotifications.AcknowledgeUpTo(notification.AppId, notification.CreatedAtUnix);
+    }
+
     public void Open(PhoneNotification notification)
     {
         if (notification.SocialType >= 0)

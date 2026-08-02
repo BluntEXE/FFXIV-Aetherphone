@@ -54,6 +54,7 @@ internal sealed class NotificationsApp : IPhoneApp
 
     public void OnOpened()
     {
+        socialNotifications.AcknowledgeAll();
         notifications.MarkAllRead();
         center?.Reset();
     }

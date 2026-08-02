@@ -291,8 +291,8 @@ internal sealed partial class ChirperApp : IPhoneApp
 
     private void OpenActivity()
     {
-        social.RefreshNow();
         social.MarkSeen(Id);
+        social.RefreshNow();
         activityFeed.Invalidate();
         router.Push(ChirperRoute.Activity);
     }
