@@ -46,6 +46,13 @@ internal sealed partial class AethergramApp
 
     private bool ComposeAllowsAspectChoice => !composeStoryMode && !composeAvatarMode;
 
+    // Reveal-fit (see PhotoComposeSession.DrawCropCanvas's allowReveal) only applies to Portrait -
+    // Square and Landscape stay a plain cover crop, matching how they behaved before this existed.
+    private bool ComposeCropAllowsReveal => ComposeAllowsAspectChoice && composeSession.CurrentAspect == PostAspect.Portrait;
+
+    private bool ComposePreviewAllowsReveal => !composeStoryMode && !composeAvatarMode
+        && composeSession.AspectAt(composeSession.ClampedPreviewIndex) == PostAspect.Portrait;
+
     private string ComposeTitle => composeAvatarMode ? Loc.T(L.Aethergram.NewAvatar)
         : composeStoryMode ? Loc.T(L.Story.NewStory)
         : Loc.T(L.Aethergram.NewPost);
@@ -214,7 +221,7 @@ internal sealed partial class AethergramApp
 
         var reserve = ComposeAllowsAspectChoice ? AspectPickerReserve : 0f;
         composeSession.DrawCropCanvas(area, ImGuiHelpers.GlobalScale, ComposeCropAspect, ComposeStyle,
-            Loc.T(L.Aethergram.GestureHint), reserve, ComposeAllowsAspectChoice);
+            Loc.T(L.Aethergram.GestureHint), reserve, ComposeCropAllowsReveal);
         if (ComposeAllowsAspectChoice)
         {
             DrawAspectPicker(area, scale);
@@ -452,7 +459,8 @@ internal sealed partial class AethergramApp
             new Vector2(preview.Max.X + 2f * scale, preview.Max.Y + 8f * scale), rounding + 2f * scale,
             ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.32f)));
         var index = composeSession.ClampedPreviewIndex;
-        if (!composeSession.TryGetPreviewUv(ComposePreviewAspect, out var texture, out var uv0, out var uv1))
+        if (!composeSession.TryGetPreviewUv(ComposePreviewAspect, ComposePreviewAllowsReveal, out var texture,
+            out var uv0, out var uv1))
         {
             Squircle.Fill(drawList, preview.Min, preview.Max, rounding, ImGui.GetColorU32(theme.SurfaceMuted));
             Typography.DrawCentered(preview.Center, Loc.T(L.Common.Loading), AppPalettes.Aethergram.MutedInk);

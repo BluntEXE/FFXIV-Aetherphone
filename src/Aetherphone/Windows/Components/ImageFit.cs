@@ -6,25 +6,15 @@ namespace Aetherphone.Windows.Components;
 
 internal static class ImageFit
 {
-    // A dimmed, cover-cropped copy of the same photo fills the frame behind a contain-fit image
-    // (see DrawLetterboxed), instead of a plain color - the closest a real-time ImGui draw can get
-    // to Instagram's own blurred-backdrop treatment without a render-to-texture blur pass, which
-    // this codebase has no infrastructure for. ImageProcessor.BakeCroppedJpeg does the equivalent
-    // for the actual uploaded/saved image, where a real Gaussian blur is available.
-    public static readonly Vector4 BackdropTint = new(0.35f, 0.35f, 0.35f, 1f);
-
-    // Draws a photo contain-fit inside frame (using the uv0/uv1 window's own aspect, not frame's),
-    // backed by a dimmed cover-fill copy of the whole photo so a mismatched aspect never shows raw
-    // frame background through the gap. Returns the actual drawn image rect (frame is what's
-    // requested; this is what actually holds the sharp image) since callers that overlay content
-    // on the photo itself (tag pins, a hit-test) need it, not the wider backdrop rect.
+    // Draws a photo contain-fit inside frame (using the uv0/uv1 window's own aspect, not frame's).
+    // No backdrop fill of any kind - whatever was already drawn behind frame (the app's own
+    // background) shows through the gap on a mismatched aspect. Returns the actual drawn image
+    // rect (frame is what's requested; this is what actually holds the sharp image) since callers
+    // that overlay content on the photo itself (tag pins, a hit-test) need it, not the wider frame.
     public static Rect DrawLetterboxed(ImDrawListPtr drawList, IDalamudTextureWrap texture, Rect frame, Vector2 uv0,
         Vector2 uv1, float rounding)
     {
         var size = texture.Size;
-        var (backdropUv0, backdropUv1) = Cover(size.X, size.Y, frame.Width, frame.Height);
-        drawList.AddImageRounded(texture.Handle, frame.Min, frame.Max, backdropUv0, backdropUv1,
-            ImGui.GetColorU32(BackdropTint), rounding, ImDrawFlags.RoundCornersAll);
         var imageRect = CenteredRect(frame, VisibleAspect(uv0, uv1, size));
         drawList.AddImageRounded(texture.Handle, imageRect.Min, imageRect.Max, uv0, uv1, 0xFFFFFFFFu, rounding,
             ImDrawFlags.RoundCornersAll);

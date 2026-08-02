@@ -53,8 +53,12 @@ internal sealed class AethergramStore : SocialFeedStore
             for (var index = 0; index < sourcePaths.Length; index++)
             {
                 var (bakedWidth, bakedHeight) = PostAspects.Size(aspects[index], GramSize);
-                var minZoom = WallpaperCrop.MinZoomToReveal(ImageProcessor.ReadSize(sourcePaths[index]),
-                    (float)bakedWidth / bakedHeight);
+                // Reveal-fit only applies to Portrait - Square and Landscape stay a plain cover
+                // crop, matching how they baked before this existed.
+                var minZoom = aspects[index] == PostAspect.Portrait
+                    ? WallpaperCrop.MinZoomToReveal(ImageProcessor.ReadSize(sourcePaths[index]),
+                        (float)bakedWidth / bakedHeight)
+                    : WallpaperCrop.MinZoom;
                 var baked = ImageProcessor.BakeCroppedJpeg(sourcePaths[index], crops[index], bakedWidth, bakedHeight,
                     minZoom);
                 var upload = await media.UploadUrlAsync("image/jpeg", "gram", token).ConfigureAwait(false);

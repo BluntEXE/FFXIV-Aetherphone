@@ -96,6 +96,13 @@ internal sealed class VelvetPostComposer
         ? ContainerAspect
         : PostAspects.Ratio(session.AspectAt(session.ClampedPreviewIndex));
 
+    // Reveal-fit (see PhotoComposeSession.DrawCropCanvas's allowReveal) only applies to Portrait -
+    // Square and Landscape stay a plain cover crop, matching how they behaved before this existed.
+    private bool CropAllowsReveal => !storyMode && session.CurrentAspect == PostAspect.Portrait;
+
+    private bool PreviewAllowsReveal =>
+        !storyMode && session.AspectAt(session.ClampedPreviewIndex) == PostAspect.Portrait;
+
     private string Title => storyMode ? Loc.T(L.Story.NewStory) : Loc.T(L.Velvet.NewPost);
 
     private bool Posting => storyMode ? stories.Posting : store.Posting;
@@ -220,7 +227,7 @@ internal sealed class VelvetPostComposer
         }
 
         var reserve = storyMode ? 0f : AspectPickerReserve;
-        session.DrawCropCanvas(area, scale, CropAspect, Style, Loc.T(L.Velvet.GestureHint), reserve, !storyMode);
+        session.DrawCropCanvas(area, scale, CropAspect, Style, Loc.T(L.Velvet.GestureHint), reserve, CropAllowsReveal);
         if (!storyMode)
         {
             DrawAspectPicker(area, scale);
@@ -373,7 +380,7 @@ internal sealed class VelvetPostComposer
 
         var rounding = 18f * scale;
         var drawList = ImGui.GetWindowDrawList();
-        if (!session.TryGetPreviewUv(PreviewAspect, out var texture, out var uv0, out var uv1))
+        if (!session.TryGetPreviewUv(PreviewAspect, PreviewAllowsReveal, out var texture, out var uv0, out var uv1))
         {
             Squircle.Fill(drawList, preview.Min, preview.Max, rounding,
                 ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.10f)));
