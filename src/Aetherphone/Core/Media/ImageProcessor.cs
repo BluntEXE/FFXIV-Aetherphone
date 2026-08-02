@@ -36,8 +36,8 @@ internal static class ImageProcessor
     // The gap around a contain-fit photo (see BakeCroppedJpeg) - only Portrait ever reveals below
     // a cover crop (see the aspects[index] == PostAspect.Portrait checks in
     // AethergramStore.CreateGram / VelvetStore.CreatePost), so this is the only case that ever
-    // needs a fill. Plain and light rather than a color that reads as a "black bar".
-    private static readonly Rgba32 LetterboxColor = new(240, 240, 240, 255);
+    // needs a fill. Matches ImageFit.LetterboxFill, the live-preview equivalent.
+    private static readonly Rgba32 LetterboxColor = new(0, 0, 0, 255);
 
     private static void EnsureDecodable(Stream stream, long maxPixels)
     {
