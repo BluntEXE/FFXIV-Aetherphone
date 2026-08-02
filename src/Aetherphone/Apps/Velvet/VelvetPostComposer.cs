@@ -37,7 +37,6 @@ internal sealed class VelvetPostComposer
     private readonly Action openTags;
     private readonly List<string> tags = new();
     private bool storyMode;
-    private PostAspect aspect = PostAspect.Square;
     private readonly string[] aspectLabels = new string[PostAspects.All.Length];
     private volatile int outcome;
     private bool closeRequested;
@@ -81,9 +80,21 @@ internal sealed class VelvetPostComposer
 
     private const float AspectPickerReserve = 42f;
 
-    private float Aspect => storyMode
+    // The frame the currently-active crop step draws into - see
+    // AethergramApp.Compose.cs's ComposeCropAspect for the matching reasoning.
+    private float CropAspect => storyMode
         ? (float)StoryStore.StoryWidth / StoryStore.StoryHeight
-        : PostAspects.Ratio(aspect);
+        : PostAspects.Ratio(session.CurrentAspect);
+
+    // The shared container frame for the caption/review screen - see
+    // AethergramApp.Compose.cs's ComposeContainerAspect for the matching reasoning.
+    private float ContainerAspect => storyMode
+        ? (float)StoryStore.StoryWidth / StoryStore.StoryHeight
+        : PostAspects.Ratio(session.ContainerAspect);
+
+    private float PreviewAspect => storyMode
+        ? ContainerAspect
+        : PostAspects.Ratio(session.AspectAt(session.ClampedPreviewIndex));
 
     private string Title => storyMode ? Loc.T(L.Story.NewStory) : Loc.T(L.Velvet.NewPost);
 
@@ -99,7 +110,6 @@ internal sealed class VelvetPostComposer
     public void Open(bool story = false)
     {
         storyMode = story;
-        aspect = PostAspect.Square;
         outcome = 0;
         closeRequested = false;
         caption = string.Empty;
@@ -210,7 +220,7 @@ internal sealed class VelvetPostComposer
         }
 
         var reserve = storyMode ? 0f : AspectPickerReserve;
-        session.DrawCropCanvas(area, scale, Aspect, Style, Loc.T(L.Velvet.GestureHint), reserve);
+        session.DrawCropCanvas(area, scale, CropAspect, Style, Loc.T(L.Velvet.GestureHint), reserve, !storyMode);
         if (!storyMode)
         {
             DrawAspectPicker(area, scale);
@@ -228,11 +238,12 @@ internal sealed class VelvetPostComposer
             aspectLabels[index] = Loc.T(AspectLabels.For(PostAspects.All[index]));
         }
 
+        var current = session.CurrentAspect;
         var picked = SegmentStrip.Draw("velvet.compose.aspect", row, aspectLabels,
-            Array.IndexOf(PostAspects.All, aspect), VelvetTheme.Palette);
+            Array.IndexOf(PostAspects.All, current), VelvetTheme.Palette);
         if (picked >= 0 && picked < PostAspects.All.Length)
         {
-            aspect = PostAspects.All[picked];
+            session.SetAspect(session.CropIndex, PostAspects.All[picked]);
         }
     }
 
@@ -354,8 +365,7 @@ internal sealed class VelvetPostComposer
 
     private void DrawCaptionPreview(Rect region, float scale)
     {
-        var aspect = Aspect;
-        var preview = ImageFit.CenteredRect(region, aspect);
+        var preview = ImageFit.CenteredRect(region, ContainerAspect);
         if (preview.Width <= 0f)
         {
             return;
@@ -363,7 +373,7 @@ internal sealed class VelvetPostComposer
 
         var rounding = 18f * scale;
         var drawList = ImGui.GetWindowDrawList();
-        if (!session.TryGetPreviewUv(aspect, out var texture, out var uv0, out var uv1))
+        if (!session.TryGetPreviewUv(PreviewAspect, out var texture, out var uv0, out var uv1))
         {
             Squircle.Fill(drawList, preview.Min, preview.Max, rounding,
                 ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.10f)));
@@ -371,7 +381,12 @@ internal sealed class VelvetPostComposer
             return;
         }
 
-        drawList.AddImageRounded(texture.Handle, preview.Min, preview.Max, uv0, uv1, 0xFFFFFFFFu, rounding,
+        // Backdrop first, then contain-fit - a photo whose own aspect differs from the shared
+        // container (see ContainerAspect) shows letterboxed instead of restretched.
+        Squircle.Fill(drawList, preview.Min, preview.Max, rounding,
+            ImGui.GetColorU32(PhotoComposeSession.LetterboxFill));
+        var imageRect = ImageFit.CenteredRect(preview, ImageFit.VisibleAspect(uv0, uv1, texture.Size));
+        drawList.AddImageRounded(texture.Handle, imageRect.Min, imageRect.Max, uv0, uv1, 0xFFFFFFFFu, rounding,
             ImDrawFlags.RoundCornersAll);
         if (UiInteract.HoverClick(preview.Min, preview.Max))
         {
@@ -393,7 +408,7 @@ internal sealed class VelvetPostComposer
             return;
         }
 
-        store.CreatePost(session.SelectedArray(), session.CropsArray(), aspect, caption, tags.ToArray(),
-            audience, ok => outcome = ok ? 1 : 2);
+        store.CreatePost(session.SelectedArray(), session.CropsArray(), session.AspectsArray(), caption,
+            tags.ToArray(), audience, ok => outcome = ok ? 1 : 2);
     }
 }
