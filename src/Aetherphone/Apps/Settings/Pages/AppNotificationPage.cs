@@ -40,12 +40,12 @@ internal sealed class AppNotificationPage : ISettingsPage
             var card = GroupCard.Begin(theme, wasEnabled ? 2 : 1);
             var enabled = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.AllowNotifications), wasEnabled, theme);
             
-            if (enabled)
+            if (wasEnabled)
             {
-                var showToasts = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.ShowToasts), appSetting.ShowToasts, theme);
-                if (showToasts != appSetting.ShowToasts)
+                var showNotificationBanner = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.ShowNotificationBanner), appSetting.ShowNotificationBanner, theme);
+                if (showNotificationBanner != appSetting.ShowNotificationBanner)
                 {
-                    appSetting.ShowToasts = showToasts;
+                    appSetting.ShowNotificationBanner = showNotificationBanner;
                     configuration.Save();
                 }
             }
@@ -57,7 +57,7 @@ internal sealed class AppNotificationPage : ISettingsPage
                 configuration.Save();
             }
 
-            if (!enabled)
+            if (!wasEnabled)
             {
                 return;
             }

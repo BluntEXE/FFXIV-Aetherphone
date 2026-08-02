@@ -112,7 +112,7 @@ internal sealed class MinimizedPhone : IDisposable
 
     private void OnVibration(PhoneNotification _)
     {
-        if (IsShowing && configuration.Vibration)
+        if (IsShowing)
         {
             shake.Trigger();
         }

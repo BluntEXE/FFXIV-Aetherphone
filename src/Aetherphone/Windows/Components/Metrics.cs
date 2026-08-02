@@ -31,6 +31,8 @@ internal static class Metrics
         public const float FieldMultiline = 88f;
         public const float ToggleWidth = 46f;
         public const float ToggleHeight = 28f;
+        public const float HintIconHeight = 22f;
+        public const float HintIconGap = 16f;
         public const float IconTile = 28f;
         public const float HeroRing = 56f;
         public const float HomeIndicatorInset = 34f;

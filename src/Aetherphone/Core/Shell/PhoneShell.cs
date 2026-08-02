@@ -158,12 +158,24 @@ internal sealed class PhoneShell : IDisposable
 
     public void ForceMinimized() => minimize.SnapMinimized();
 
-    private void OnVibration(PhoneNotification _)
+    private void OnVibration(PhoneNotification notification)
     {
-        if (minimize.Phase == MinimizePhase.None && configuration.Vibration)
+        if (minimize.Phase != MinimizePhase.None)
         {
-            shake.Trigger();
+            return;
         }
+
+        if (!PhoneVisible())
+        {
+            return;
+        }
+
+        if (VisibleAppId() == notification.AppId)
+        {
+            return;
+        }
+
+        shake.Trigger();
     }
 
     private bool PhoneVisible() => DateTime.UtcNow - lastVisibleDrawUtc < ScreenVisibleGrace;

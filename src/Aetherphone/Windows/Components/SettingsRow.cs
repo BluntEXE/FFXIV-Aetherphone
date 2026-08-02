@@ -10,36 +10,32 @@ internal static class SettingsRow
 {
     private static readonly Vector4 GlyphInk = new(1f, 1f, 1f, 1f);
 
-    public static bool Bool(Rect row, string label, bool value, PhoneTheme theme, string? id = null, string? hint = null)
+    public static bool Bool(Rect row, string label, bool value, PhoneTheme theme, string? id = null, string? hint = null, bool dimmed = false)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var width = Metrics.Size.ToggleWidth * scale;
         var height = Metrics.Size.ToggleHeight * scale;
         var toggleMin = new Vector2(row.Max.X - width, row.Center.Y - height * 0.5f);
-        
-        var iconHeight = 22f * scale;
-        var iconGap = 8f * scale;
-        var reservedSpace = hint != null ? iconHeight + iconGap : 0f;
+
+        var iconHeight = Metrics.Size.HintIconHeight * scale;
+        var iconGap = Metrics.Size.HintIconGap * scale;
+        var reservedSpace = hint != null ? iconHeight + iconGap: 0f;
         var labelMaxWidth = MathF.Max(1f, toggleMin.X - 10f * scale - row.Min.X - reservedSpace);
-        
+
         var labelSize = Typography.Measure(label, TextStyles.BodyEmphasized);
         var rowId = id ?? label;
         var labelWidth = Marquee.DrawLeftAuto(rowId, label, row.Min.X, row.Center.Y - labelSize.Y * 0.5f, labelMaxWidth,
-            TextStyles.BodyEmphasized, theme.TextStrong);
-        
+            TextStyles.BodyEmphasized, dimmed ? theme.TextMuted : theme.TextStrong);
+
         if (hint != null)
         {
-            var iconCenter = new Vector2(row.Min.X + labelWidth + iconGap + iconHeight * 0.5f, row.Center.Y);
-            var hitRadius = iconHeight * 0.5f + 2f * scale;
-            var hitRect = new Rect(iconCenter - new Vector2(hitRadius, hitRadius),
-                iconCenter + new Vector2(hitRadius, hitRadius));
+            var hintIconX = row.Min.X + labelWidth + iconGap;
+            var hintIconY = row.Center.Y;
+            var hintIconPosition = new Vector2(hintIconX, hintIconY);
             
-            var dl = ImGui.GetWindowDrawList();
-            ProgressRing.CenterIcon(dl, iconCenter, FontAwesomeIcon.QuestionCircle, theme.TextMuted, iconHeight);
-            
-            HoverTooltip.Show(hitRect, hint);
+            HintIcon.Draw(hintIconPosition, hint, theme, scale);
         }
-        
+
         return Toggle.Draw(rowId, new Rect(toggleMin, toggleMin + new Vector2(width, height)), value, theme);
     }
 
@@ -147,7 +143,7 @@ internal static class SettingsRow
         return UiInteract.Click(row.Min, row.Max, hovered);
     }
 
-    public static bool Disclosure(Rect row, string label, string value, PhoneTheme theme, string? id = null)
+    public static bool Disclosure(Rect row, string label, string value, PhoneTheme theme, string? id = null, bool dimmed = false)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var hovered = UiInteract.Hover(row.Min, row.Max);
@@ -162,7 +158,7 @@ internal static class SettingsRow
         var midGap = 8f * scale;
         var available = chevronTip.X - chevronWidth - chevronGap - row.Min.X;
         DrawTwoColumnText(row, label, value, theme, row.Min.X, chevronTip.X - chevronWidth - chevronGap, available,
-            midGap, id);
+            midGap, id, dimmed);
         DrawChevronRight(chevronTip, chevronWidth, 2.2f * scale, theme.TextMuted);
 
         if (hovered)
@@ -174,7 +170,7 @@ internal static class SettingsRow
     }
 
     private static void DrawTwoColumnText(Rect row, string label, string value, PhoneTheme theme, float labelStartX,
-        float valueBoxRight, float available, float midGap, string? id = null)
+        float valueBoxRight, float available, float midGap, string? id = null, bool dimmed = false)
     {
         var rowId = id ?? label;
         float labelCap;
@@ -193,7 +189,7 @@ internal static class SettingsRow
         var labelHovered = UiInteract.Hover(new Vector2(labelStartX, row.Min.Y),
             new Vector2(labelStartX + labelCap, row.Max.Y));
         var labelWidth = Marquee.DrawLeft(rowId, label, labelStartX, labelY, labelCap, TextStyles.BodyEmphasized,
-            theme.TextStrong, labelHovered);
+            dimmed ? theme.TextMuted : theme.TextStrong, labelHovered);
 
         if (string.IsNullOrEmpty(value))
         {
