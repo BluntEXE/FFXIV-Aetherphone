@@ -23,16 +23,7 @@ internal sealed partial class ShortcutsApp
     private string iconPluginOption = string.Empty;
     private int pendingStepRemoval = -1;
 
-    private void Warn(string message)
-    {
-        confirm.Ask(new ConfirmRequest
-        {
-            Message = message,
-            ConfirmLabel = Loc.T(L.Shortcuts.Ok),
-            CancelLabel = string.Empty,
-            Confirm = () => { },
-        });
-    }
+    private void Warn(string message) => confirm.Alert(null, message, Loc.T(L.Shortcuts.Ok));
 
     private bool WarnIfFull()
     {

@@ -95,7 +95,7 @@ internal static class ConfirmDialog
         }
 
         var buttonY = cardMax.Y - pad - buttonHeight;
-        if (acknowledge)
+        if (acknowledge || string.IsNullOrEmpty(cancelLabel))
         {
             var acknowledgeRect = new Rect(new Vector2(cardMin.X + pad, buttonY),
                 new Vector2(cardMax.X - pad, buttonY + buttonHeight));
