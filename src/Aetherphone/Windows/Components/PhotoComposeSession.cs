@@ -475,7 +475,10 @@ internal sealed class PhotoComposeSession
     // expected to contain-fit the returned uv window into its own frame (see
     // ImageFit.VisibleAspect/CenteredRect) rather than stretch it, the same way DrawCropCanvas
     // does, so a photo whose own aspect differs from the container still shows undistorted.
-    public bool TryGetPreviewUv(float aspect, out IDalamudTextureWrap texture, out Vector2 uv0, out Vector2 uv1)
+    // allowReveal mirrors DrawCropCanvas's own flag - only Portrait ever reveals below a cover
+    // crop; Square and Landscape (and avatar/story, which never call this with true) stay cover.
+    public bool TryGetPreviewUv(float aspect, bool allowReveal, out IDalamudTextureWrap texture, out Vector2 uv0,
+        out Vector2 uv1)
     {
         var index = ClampedPreviewIndex;
         var loaded = wallpaperImages.Get(index < selected.Count ? selected[index] : string.Empty);
@@ -488,7 +491,7 @@ internal sealed class PhotoComposeSession
         }
 
         texture = loaded;
-        var minZoom = WallpaperCrop.MinZoomToReveal(loaded.Size, aspect);
+        var minZoom = allowReveal ? WallpaperCrop.MinZoomToReveal(loaded.Size, aspect) : WallpaperCrop.MinZoom;
         var crop = crops[index].Clamped(loaded.Size, aspect, minZoom);
         (uv0, uv1) = crop.ComputeUv(loaded.Size, aspect);
         return true;
