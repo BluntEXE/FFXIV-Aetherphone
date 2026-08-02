@@ -32,7 +32,7 @@ internal sealed class MinimizedPhone : IDisposable
     {
         this.notifications = notifications;
         this.configuration = configuration;
-        notifications.Presented += OnPresented;
+        notifications.Vibration += OnVibration;
     }
 
     public bool IsShowing { get; set; }
@@ -110,7 +110,7 @@ internal sealed class MinimizedPhone : IDisposable
         Typography.Draw(dl, center - labelSize * 0.5f, label, new Vector4(1f, 1f, 1f, alpha), 0.66f, FontWeight.Bold);
     }
 
-    private void OnPresented(PhoneNotification _)
+    private void OnVibration(PhoneNotification _)
     {
         if (IsShowing && configuration.Vibration)
         {
@@ -118,5 +118,5 @@ internal sealed class MinimizedPhone : IDisposable
         }
     }
 
-    public void Dispose() => notifications.Presented -= OnPresented;
+    public void Dispose() => notifications.Vibration -= OnVibration;
 }
