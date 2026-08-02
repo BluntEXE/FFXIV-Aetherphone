@@ -203,7 +203,7 @@ internal sealed class RecipeApp : IPhoneApp
     public void Draw(in PhoneContext context)
     {
         ui.Theme = context.Theme;
-        var screen = SceneChrome.ScreenFrom(context.Content, context.Theme, ImGuiHelpers.GlobalScale);
+        var screen = SceneChrome.ScreenFrom(context.Content, context.Theme, UiScale.Current);
         ui.Backdrop(screen);
         router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
     }

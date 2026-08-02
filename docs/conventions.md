@@ -118,7 +118,7 @@ Aetherphone draws with Dear ImGui, an immediate mode UI library: nothing is reta
 Full detail with examples lives in [UI toolkit](ui-toolkit.md); this is the checklist form.
 
 - **All text goes through the typography ladder.** Pick a TextStyle from TextStyles (LargeTitle down to Caption2) and draw with the Typography helpers. Never hand-pick a font scale for a screen.
-- **Metrics tokens over pixel literals.** Spacing, radii, and control sizes come from Metrics.Space, Metrics.Radius, Metrics.Size, and Metrics.Stroke. Every pixel value, token or not, is multiplied by `ImGuiHelpers.GlobalScale` so the phone scales with Dalamud's global UI scale.
+- **Metrics tokens over pixel literals.** Spacing, radii, and control sizes come from Metrics.Space, Metrics.Radius, Metrics.Size, and Metrics.Stroke. Every pixel value, token or not, is multiplied by `UiScale.Current` so the phone scales with both Dalamud's global UI scale and the user's chosen phone size. Never read `ImGuiHelpers.GlobalScale` directly: `UiScale.cs` is the only place allowed to, and CI fails the build on any other use.
 - **Text wraps, it never overflows.** Use Typography.Wrapped, Typography.DrawWrappedLeft, or Typography.FitText. Clipped or overlapping text is a bug, always.
 - **One pannable chip rail, never a chip wall.** A row of filter chips is a single horizontally draggable ChipRail. Chips never wrap to a second line.
 - **Free input over preset chips.** When the user enters a value, let them enter any value. TimeOfDayField (src/Aetherphone/Windows/Components/TimeOfDayField.cs) steps hours and minutes across the whole day rather than offering a handful of preset times.

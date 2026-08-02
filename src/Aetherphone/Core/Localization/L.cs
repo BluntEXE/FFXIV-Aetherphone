@@ -1004,6 +1004,16 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release0997 =
+        {
+            new("changelog.r0997.0",
+                "You can now resize the phone by dragging the bottom right corner of its frame"),
+            new("changelog.r0997.1",
+                "Phone Size in Settings is a slider now, so you can pick any size instead of six fixed ones"),
+            new("changelog.r0997.2",
+                "The whole screen scales with the phone, so text and icons grow with it instead of staying small"),
+        };
+
         public static readonly LocString[] Release0996 =
         {
             new("changelog.r0996.0", "You can now link your Patreon account from the account section in Settings"),

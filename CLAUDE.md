@@ -37,7 +37,7 @@ Types in use: feat, fix, docs, chore, refactor, ci, plus occasional perf, style,
 - File-scoped namespaces, 4-space indent, LF endings, var preferred (see .editorconfig).
 - sealed by default; const and readonly wherever possible; structs and arrays over heavy collections; ref structs where they fit.
 - Zero async void; await every awaitable; fire-and-forget from draw code uses an explicit discard: `_ = Task.Run(...)`.
-- All text through TextStyles and Typography; spacing through Metrics tokens times ImGuiHelpers.GlobalScale; text wraps and never overflows.
+- All text through TextStyles and Typography; spacing through Metrics tokens times UiScale.Current; text wraps and never overflows.
 - All clock text through TimeText.Clock (src/Aetherphone/Core/Localization/TimeText.cs); never hand-format "HH:mm".
 - Motion uses Spring (critically damped, no overshoot); bouncy easing is games-only.
 - One pannable ChipRail for chip rows, never a wrapping chip wall; prefer free input over preset chips.
