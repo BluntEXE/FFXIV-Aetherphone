@@ -55,7 +55,6 @@ internal sealed class HealthStore
         }
     }
 
-    // Guard against corrupt, missing, NaN, infinite, or negative saved values.
     private static HealthProfile Sanitize(HealthProfile profile)
     {
         profile.StrideYalms = profile.StrideYalms is > 0.05 and < 10 ? profile.StrideYalms : 0.75;
@@ -130,7 +129,6 @@ internal sealed class HealthStore
         return profile;
     }
 
-    // Saved numbers must never come back NaN, infinite or negative.
     private static double Clean(double value) => double.IsFinite(value) && value > 0 ? value : 0d;
 
     private string PathFor(ulong contentId) => Path.Combine(root.FullName, contentId.ToString("X16") + ".json");

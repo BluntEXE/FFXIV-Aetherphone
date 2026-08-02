@@ -6,11 +6,6 @@ using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
-/// <summary>
-/// The shared "hero" progress ring used at the top of summary apps (Dailies, Timers): a glowing
-/// accent ring with a value-or-icon centre and a title + subtitle beneath it, reserving a fixed
-/// block of vertical space. Callers supply the fraction, palette inks and labels.
-/// </summary>
 internal static class HeroRing
 {
     private const float CenterOffsetY = 86f;

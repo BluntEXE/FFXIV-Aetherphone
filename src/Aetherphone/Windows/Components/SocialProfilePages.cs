@@ -221,8 +221,8 @@ internal sealed class SocialProfilePages
         DrawAvatar(drawList, avatarCenter, avatarRadius, theme, portraitName, portraitWorld, user.AvatarUrl, 1.5f, 64);
         avatarLightbox.TryOpen(avatarCenter, avatarRadius, user.AvatarUrl, images);
         var textY = headTop + (headHeight - identityHeight) * 0.5f;
-        Marquee.DrawLeftAuto("socialprofile.name." + user.Id, displayName, identityLeft, textY, identityWidth,
-            TextStyles.Title2, theme.TextStrong);
+        UserName.DrawAuto(drawList, "socialprofile.name." + user.Id, displayName, user.Badges, identityLeft, textY,
+            identityWidth, TextStyles.Title2, theme.TextStrong, theme, 2);
         textY += nameHeight;
         if (metaHeight > 0f)
         {
@@ -607,6 +607,15 @@ internal sealed class SocialProfilePages
                     DrawUserRow(snapshot[index], theme);
                 }
 
+                if (store.UserListLoadingMore)
+                {
+                    InfiniteScroll.DrawLoadingRow(listRect.Center.X, style.Palette.MutedInk);
+                }
+                else if (store.HasMoreUserList && InfiniteScroll.ReachedBottom())
+                {
+                    store.LoadMoreUserList();
+                }
+
                 ImGui.Dummy(new Vector2(0f, 12f * scale));
             }
         }
@@ -698,8 +707,8 @@ internal sealed class SocialProfilePages
         var nameSize = Typography.Measure(displayName, 1f, FontWeight.SemiBold);
         var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
             new Vector2(textLeft + textMaxWidth, nameY + nameSize.Y));
-        Marquee.DrawLeft("socialprofile.row.name." + user.Id, displayName, textLeft, nameY,
-            textMaxWidth, new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, nameHovering);
+        UserName.Draw(drawList, "socialprofile.row.name." + user.Id, displayName, user.Badges, textLeft, nameY,
+            textMaxWidth, new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, nameHovering, theme);
         var regionCode = user.IsMe
             ? SocialRegion.EffectiveCode(configuration, gameData)
             : SocialRegion.Resolve(user.Region, user.World, gameData);

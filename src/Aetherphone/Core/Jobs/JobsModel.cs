@@ -47,7 +47,6 @@ internal sealed class JobEntry
     public string NameRowId { get; }
     public string SubRowId { get; }
 
-    /// <summary>-1 when the item level is unknown (a class with no gearset that isn't currently active).</summary>
     public int ItemLevel { get; }
     public uint IconId { get; }
     public bool IsActive { get; }
@@ -71,7 +70,6 @@ internal sealed class JobSection
         Entries = entries;
     }
 
-    /// <summary>Index into the character's category list, or -1 for the built-in role sections.</summary>
     public int CategoryIndex { get; }
 
     public LocString RoleTitle { get; }

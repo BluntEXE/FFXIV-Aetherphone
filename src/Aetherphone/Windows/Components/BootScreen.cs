@@ -50,7 +50,7 @@ internal static class BootScreen
     public static void DrawBackdrop(ImDrawListPtr dl, Rect screen, PhoneTheme theme, float alpha, float rounding)
     {
         var baseColor = new Vector4(0.015f, 0.019f, 0.038f, alpha);
-        dl.AddRectFilled(screen.Min, screen.Max, ImGui.GetColorU32(baseColor), rounding);
+        Squircle.Fill(dl, screen.Min, screen.Max, rounding, ImGui.GetColorU32(baseColor));
         var breath = 0.8f + 0.2f * Pulse.Wave(5200);
         dl.PushClipRect(screen.Min, screen.Max, true);
         for (var ring = 3; ring >= 1; ring--)

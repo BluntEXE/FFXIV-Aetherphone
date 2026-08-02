@@ -8,11 +8,6 @@ using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Photos;
 
-/// <summary>
-/// Pure rendering for the Photos surface: grid thumbnails, the viewer scrims and its interactive
-/// glyphs (navigation arrows, trash). Texture loading, routing, album grouping and delete logic stay
-/// in <see cref="PhotosApp"/>; interactive glyphs return whether they were tapped.
-/// </summary>
 internal static class PhotosChrome
 {
     private const float ThumbRounding = 7f;

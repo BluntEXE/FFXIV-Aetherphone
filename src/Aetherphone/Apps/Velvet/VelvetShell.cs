@@ -85,7 +85,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         commentMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         stories = new StoryPresenter(session, net.Grams, net.Media, images, lodestone, VelvetArt.StoryRing, VelvetTheme.Palette,
             new StoryConfirmLabels(L.Velvet.DeleteConfirm, L.Velvet.DeleteCancel, L.Velvet.Saving), confirm,
-            "Velvet stories", StartStoryCompose);
+            realtimeSignals, "Velvet stories", StartStoryCompose);
         this.launcher = launcher;
         this.socialLauncher = socialLauncher;
         this.lodestone = lodestone;
@@ -160,18 +160,19 @@ internal sealed partial class VelvetShell : IPhoneApp
         if (GateAccepted && store.IsSignedIn)
         {
             store.EnsureMe();
+            store.RefreshRequests();
             stories.RefreshTray();
             ApplyFeedFilters();
         }
 
-        if (launcher.TryConsume(out var targetUserId) && GateAccepted && configuration.IsVelvetOnboarded() &&
-            store.IsSignedIn)
+        if (GateAccepted && configuration.IsVelvetOnboarded() && store.IsSignedIn &&
+            launcher.TryConsume(out var targetUserId))
         {
             OpenThread(targetUserId);
         }
 
-        if (socialLauncher.TryConsume(Id, out var link) && GateAccepted && configuration.IsVelvetOnboarded() &&
-            store.IsSignedIn)
+        if (GateAccepted && configuration.IsVelvetOnboarded() && store.IsSignedIn &&
+            socialLauncher.TryConsume(Id, out var link))
         {
             if (link.Kind == SocialLinkKind.Profile)
             {

@@ -39,7 +39,7 @@ internal static class Material
             return;
         }
 
-        drawList.AddRectFilled(min, max, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, dim)), rounding);
+        Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, dim)));
     }
 
     public static void Glass(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding, Vector4 ink,

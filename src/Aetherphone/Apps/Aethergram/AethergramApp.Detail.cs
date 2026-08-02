@@ -13,8 +13,6 @@ using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Aethergram;
 
-// The post detail view: comments, comment composer, the profile view, and moderation actions
-// (report / delete). Split from the main feed for readability.
 internal sealed partial class AethergramApp
 {
     private void DrawDetail(Rect area, string postId)
@@ -60,8 +58,8 @@ internal sealed partial class AethergramApp
             var headerNameY = avatarCenter.Y - (headerNameSize.Y + headerTextGap + headerMetaSize.Y) * 0.5f;
             var headerNameHovering = UiInteract.Hover(new Vector2(nameLeft, headerNameY),
                 new Vector2(nameLeft + headerTextMaxWidth, headerNameY + headerNameSize.Y));
-            Marquee.DrawLeft("aethergram.detail.header." + post.Id, displayName, nameLeft, headerNameY,
-                headerTextMaxWidth, headerNameStyle, theme.TextStrong, headerNameHovering);
+            UserName.Draw("aethergram.detail.header." + post.Id, displayName, post.AuthorBadges, nameLeft,
+                headerNameY, headerTextMaxWidth, headerNameStyle, theme.TextStrong, headerNameHovering, theme);
             var headerMetaTop = headerNameY + headerNameSize.Y + headerTextGap;
             var headerMetaHovering = UiInteract.Hover(new Vector2(nameLeft, headerMetaTop),
                 new Vector2(nameLeft + headerTextMaxWidth, headerMetaTop + headerMetaSize.Y));
@@ -176,9 +174,9 @@ internal sealed partial class AethergramApp
                 var captionNameSize = Typography.Measure(displayName, 0.9f, FontWeight.SemiBold);
                 var captionNameHovering = UiInteract.Hover(captionPos,
                     new Vector2(captionPos.X + captionNameMaxWidth, captionPos.Y + captionNameSize.Y));
-                var nameWidth = Marquee.DrawLeft("aethergram.detail.captionname." + post.Id, displayName,
-                    captionPos.X, captionPos.Y, captionNameMaxWidth, new TextStyle(0.9f, FontWeight.SemiBold),
-                    theme.TextStrong, captionNameHovering);
+                var nameWidth = UserName.Draw("aethergram.detail.captionname." + post.Id, displayName,
+                    post.AuthorBadges, captionPos.X, captionPos.Y, captionNameMaxWidth,
+                    new TextStyle(0.9f, FontWeight.SemiBold), theme.TextStrong, captionNameHovering, theme);
                 var captionLeft = captionPos.X + nameWidth + 6f * scale;
                 ImGui.SetCursorScreenPos(new Vector2(captionLeft, captionPos.Y));
                 RichTextLayout? captionLayout;
@@ -218,8 +216,9 @@ internal sealed partial class AethergramApp
                 ImGui.GetColorU32(theme.Separator), 1f);
             ImGui.Dummy(new Vector2(0f, 14f * scale));
             var comments = store.DetailComments;
-            ui.SectionHeading(comments.Length > 0
-                ? $"{Loc.T(L.Aethergram.CommentsTitle)} · {comments.Length}"
+            var commentTotal = store.HasMoreComments ? Math.Max(post.CommentCount, comments.Length) : comments.Length;
+            ui.SectionHeading(commentTotal > 0
+                ? $"{Loc.T(L.Aethergram.CommentsTitle)} · {commentTotal}"
                 : Loc.T(L.Aethergram.CommentsTitle));
             if (comments.Length == 0 && !store.DetailLoading)
             {
@@ -228,6 +227,7 @@ internal sealed partial class AethergramApp
             }
             else
             {
+                DrawEarlierCommentsRow();
                 for (var index = 0; index < comments.Length; index++)
                 {
                     DrawComment(comments[index]);
@@ -239,6 +239,43 @@ internal sealed partial class AethergramApp
 
         DrawCommentComposer(new Rect(new Vector2(area.Min.X, area.Max.Y - composerHeight), area.Max), area, postId);
         DrawPostMenu(area, false);
+    }
+
+    private void DrawEarlierCommentsRow()
+    {
+        var scale = ImGuiHelpers.GlobalScale;
+        if (store.CommentsLoadingMore)
+        {
+            InfiniteScroll.DrawLoadingRow(
+                ImGui.GetCursorScreenPos().X + ScrollLayout.StableContentWidth() * 0.5f,
+                AppPalettes.Aethergram.MutedInk);
+            return;
+        }
+
+        if (!store.HasMoreComments)
+        {
+            return;
+        }
+
+        var label = Loc.T(L.Aethergram.EarlierComments);
+        var origin = ImGui.GetCursorScreenPos();
+        var pos = new Vector2(origin.X + 5f * scale, origin.Y);
+        var size = Typography.Measure(label, 0.85f, FontWeight.Medium);
+        var hovered = UiInteract.Hover(pos, pos + size);
+        Typography.Draw(pos, label, hovered ? theme.Accent : AppPalettes.Aethergram.MutedInk, 0.85f,
+            FontWeight.Medium);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (UiInteract.Click(pos, pos + size, hovered))
+        {
+            store.LoadMoreComments();
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(size.X, size.Y + 12f * scale));
     }
 
     private void DrawComment(CommentDto comment)
@@ -288,8 +325,8 @@ internal sealed partial class AethergramApp
         var nameTop = bubbleTop + padTop;
         var commentNameHovering = UiInteract.Hover(new Vector2(textLeft, nameTop),
             new Vector2(textRight, nameTop + nameHeight));
-        var nameWidth = Marquee.DrawLeft("aethergram.comment." + comment.Id, displayName, textLeft, nameTop,
-            textRight - textLeft, commentNameStyle, theme.TextStrong, commentNameHovering);
+        var nameWidth = UserName.Draw("aethergram.comment." + comment.Id, displayName, comment.AuthorBadges, textLeft,
+            nameTop, textRight - textLeft, commentNameStyle, theme.TextStrong, commentNameHovering, theme);
         var meta = TimeText.Short(comment.CreatedAtUnix);
         var metaSize = Typography.Measure(meta, 0.8f);
         var metaLeft = textLeft + nameWidth + 8f * scale;
@@ -434,7 +471,8 @@ internal sealed partial class AethergramApp
             else
             {
                 store.EnsureTaggedPosts(userId);
-                DrawProfileGrid(store.TaggedPosts, L.PhotoTag.NoTagged);
+                DrawProfileGrid(store.TaggedPosts, L.PhotoTag.NoTagged,
+                    store.HasMoreTagged, store.TaggedLoadingMore, store.LoadMoreTaggedPosts);
             }
         }
     }

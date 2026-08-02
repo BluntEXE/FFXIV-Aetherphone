@@ -30,7 +30,7 @@ internal sealed class NotificationBanner : IDisposable
     private const float IconSize = 38f;
     private const float TextGap = 11f;
     private const float BodyOffset = 20f;
-    private const float DragSlop = 5f;
+    private const float DragSlop = 10f;
     private const float DismissDistance = 16f;
     private const float DismissVelocity = 700f;
     private const float DownwardGive = 26f;
@@ -38,6 +38,7 @@ internal sealed class NotificationBanner : IDisposable
 
     private readonly NotificationService notifications;
     private readonly Func<string?> currentAppId;
+    private readonly Func<bool> phoneVisible;
     private readonly NotificationRouter router;
     private readonly Queue<PhoneNotification> pending = new();
     private Spring enter;
@@ -47,22 +48,25 @@ internal sealed class NotificationBanner : IDisposable
     private float holdElapsed;
     private bool holdPaused;
     private bool dragging;
-    private bool dragMoved;
     private float dragStartY;
     private float dragOffset;
     private float dragLastY;
     private float dragVelocity;
     private float exitFromOffset;
 
-    public NotificationBanner(NotificationService notifications, Func<string?> currentAppId, NotificationRouter router)
+    public NotificationBanner(NotificationService notifications, Func<string?> currentAppId, Func<bool> phoneVisible,
+        NotificationRouter router)
     {
         this.notifications = notifications;
         this.currentAppId = currentAppId;
+        this.phoneVisible = phoneVisible;
         this.router = router;
         notifications.Presented += OnPresented;
     }
 
     public event Action? Shown;
+
+    public bool IsVisible => stage != Stage.Idle;
 
     public bool CapturesPointer(Rect screen)
     {
@@ -180,7 +184,6 @@ internal sealed class NotificationBanner : IDisposable
         if (hovered && !dragging && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
             dragging = true;
-            dragMoved = false;
             dragStartY = mouse.Y;
             dragLastY = mouse.Y;
             dragVelocity = 0f;
@@ -201,13 +204,12 @@ internal sealed class NotificationBanner : IDisposable
 
             dragLastY = mouse.Y;
             var moved = mouse.Y - dragStartY;
-            dragMoved = dragMoved || MathF.Abs(moved) > DragSlop * scale;
             dragOffset = moved < 0f ? moved : Rubber(moved, scale);
             return;
         }
 
         dragging = false;
-        if (!dragMoved)
+        if (MathF.Abs(mouse.Y - dragStartY) < DragSlop * scale)
         {
             router.Open(notification);
             BeginExit();
@@ -297,6 +299,11 @@ internal sealed class NotificationBanner : IDisposable
 
     private void OnPresented(PhoneNotification notification)
     {
+        if (!phoneVisible())
+        {
+            return;
+        }
+
         if (currentAppId() == notification.AppId)
         {
             return;

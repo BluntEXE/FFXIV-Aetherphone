@@ -65,6 +65,15 @@ internal sealed partial class AnnouncementsApp
                 ImGui.Dummy(new Vector2(0f, CardGap * scale));
             }
 
+            if (store.LoadingMore)
+            {
+                InfiniteScroll.DrawLoadingRow(body.Center.X, ui.MutedInk);
+            }
+            else if (store.HasMore && InfiniteScroll.ReachedBottom())
+            {
+                store.LoadMore();
+            }
+
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
         }
     }

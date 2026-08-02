@@ -297,8 +297,9 @@ internal sealed partial class MessageApp
         var textLeft = avatarCenter.X + radius + 12f * scale;
         var textMaxWidth = MathF.Max(1f, origin.X + width - pad - 28f * scale - textLeft);
         var rowHovering = UiInteract.Hover(origin, new Vector2(origin.X + width, origin.Y + rowHeight));
-        Marquee.DrawLeft("messageapp.encryption.member." + member.UserId, label, textLeft, origin.Y + 10f * scale,
-            textMaxWidth, new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, rowHovering);
+        UserName.Draw(drawList, "messageapp.encryption.member." + member.UserId, label, member.Badges, textLeft,
+            origin.Y + 10f * scale, textMaxWidth, new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong,
+            rowHovering, theme);
         Typography.Draw(new Vector2(textLeft, origin.Y + 31f * scale),
             Loc.T(hasKey ? L.Encryption.MemberReady : L.Encryption.MemberNoKey), ui.MutedInk, TextStyles.Footnote);
         AppSkin.Icon(new Vector2(origin.X + width - pad - 8f * scale, origin.Y + rowHeight * 0.5f),

@@ -340,12 +340,12 @@ internal sealed partial class VelvetShell
                 Gap(4f);
                 ui.HelpText(Loc.T(L.Velvet.RoleErpHelp));
                 Gap(8f);
-                DrawTagFlow(VelvetSuggestions.Roles, onboardRole, VelvetTheme.Rose);
+                DrawTagFlow(VelvetSuggestions.Roles, onboardRole, VelvetTheme.Rose, true);
                 Gap(18f);
 
                 VSectionHeader.Card(FontAwesomeIcon.Fire, Loc.T(L.Velvet.CardKinks));
                 Gap(8f);
-                DrawTagFlow(VelvetSuggestions.Kinks, onboardKinks, new Vector4(0.647f, 0.482f, 0.839f, 1f));
+                DrawTagFlow(VelvetSuggestions.Kinks, onboardKinks, new Vector4(0.647f, 0.482f, 0.839f, 1f), true);
                 Gap(18f);
             }
 

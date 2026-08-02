@@ -44,7 +44,7 @@ internal static class HardwareButton
         var min = new Vector2(bounds.Min.X, bounds.Min.Y - pad);
         var max = new Vector2(bounds.Max.X, bounds.Max.Y + pad);
         var rounding = MathF.Min(max.X - min.X, max.Y - min.Y) * 0.5f;
-        Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(Palette.Lighten(theme.BezelOuter, 0.06f)));
+        Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(Palette.Lighten(theme.Glass, 0.06f)));
         Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.55f)), 1f * scale);
     }
 

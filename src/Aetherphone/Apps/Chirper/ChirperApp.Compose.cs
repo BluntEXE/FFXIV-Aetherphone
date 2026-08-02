@@ -9,8 +9,6 @@ using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Chirper;
 
-// The compose flow: the compose card behind the shared ComposeFab. The body field wraps and stays
-// within its limit through the shared SoftWrapField. Split from the main feed for readability.
 internal sealed partial class ChirperApp
 {
     private void DrawCompose(Rect area)

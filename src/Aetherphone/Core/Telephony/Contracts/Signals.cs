@@ -20,11 +20,13 @@ internal static class SignalType
     public const string Ended = "call.ended";
     public const string Handled = "call.handled";
     public const string Unavailable = "call.unavailable";
+    public const string ContentRemoved = "content.removed";
     public const string ChatPing = "chat.ping";
     public const string VelvetPing = "velvet.ping";
     public const string GramPing = "gram.ping";
     public const string SocialPing = "social.ping";
     public const string MusterPing = "muster.ping";
+    public const string AnnouncePing = "announce.ping";
     public const string Error = "error";
 
     // AetherStream watch-along - rides the same wss /rt socket and CallControl envelope as the
@@ -147,4 +149,11 @@ internal sealed record CallControl
     // is the only thing that ever compares the two - the client just reports its own current one.
     public uint? TerritoryId { get; init; }
     public NearbyStreamInfo[]? NearbyStreams { get; init; }
+
+    // content.removed fields - moderation broadcast when a post/comment/etc is taken down while
+    // someone is viewing it.
+    public string? App { get; init; }
+    public string? ContentKind { get; init; }
+    public string? ContentId { get; init; }
+    public string? ParentId { get; init; }
 }

@@ -169,7 +169,7 @@ internal sealed partial class AppStoreApp
     {
         "health" => "Yozora",
         "jobs" => "K.I.R.O",
-        _ => Loc.T(L.Store.DeveloperName), // default "Aetherphone"
+        _ => Loc.T(L.Store.DeveloperName),
     };
 
     private void DrawInfoRow(ImDrawListPtr drawList, Vector2 cardMin, Vector2 cardMax, int index, float rowHeight,

@@ -8,6 +8,7 @@ using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Muster;
 using Aetherphone.Core.Net;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Photos;
 using Aetherphone.Core.Report;
@@ -56,6 +57,7 @@ internal sealed partial class MessageApp : IPhoneApp
     private readonly ReportService report;
     private readonly WallpaperImageCache wallpaperImages;
     private readonly MusterStore musters;
+    private readonly SocialNotificationService socialNotifications;
     private readonly AppSkin ui = new(AppPalettes.Message);
     private readonly AvatarLightbox avatarLightbox = new();
     private readonly ViewRouter<MessageRoute> router;
@@ -72,8 +74,9 @@ internal sealed partial class MessageApp : IPhoneApp
     public MessageApp(DirectMessagesStore store, ContactBook contacts, CallHub calls, AethernetSession session,
         RemoteImageCache images, LodestoneService lodestone, DmLauncher launcher, PhotoLibrary library,
         HttpService http, Configuration configuration, ConfirmService confirm, ReportService report,
-        WallpaperImageCache wallpaperImages, MusterStore musters)
+        WallpaperImageCache wallpaperImages, MusterStore musters, SocialNotificationService socialNotifications)
     {
+        this.socialNotifications = socialNotifications;
         this.store = store;
         this.contacts = contacts;
         this.calls = calls;
@@ -103,7 +106,11 @@ internal sealed partial class MessageApp : IPhoneApp
         addError = string.Empty;
         contacts.Refresh(force: true);
         store.RefreshConversations();
-        if (launcher.TryConsumeConversation(out var conversationId))
+        if (launcher.TryConsumeCalls())
+        {
+            activeTab = MessageTab.Calls;
+        }
+        else if (launcher.TryConsumeConversation(out var conversationId))
         {
             router.Push(MessageRoute.Thread(conversationId), false);
         }

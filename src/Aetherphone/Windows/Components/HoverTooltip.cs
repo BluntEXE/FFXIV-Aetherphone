@@ -106,7 +106,7 @@ internal static class HoverTooltip
         }
 
         var scale = ImGuiHelpers.GlobalScale;
-        var style = TextStyles.SubheadlineEmphasized;
+        var style = TextStyles.BodyEmphasized;
         var padX = 11f * scale;
         var padY = 7f * scale;
         var margin = 8f * scale;

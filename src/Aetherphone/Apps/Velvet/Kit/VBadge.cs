@@ -21,8 +21,8 @@ internal static class VBadge
         var min = new Vector2(rightCenter.X - width, rightCenter.Y - height * 0.5f);
         var max = new Vector2(rightCenter.X, rightCenter.Y + height * 0.5f);
         Squircle.Fill(drawList, min, max, height * 0.5f, (danger ? VelvetTheme.Danger : VelvetTheme.Rose).Packed());
-        Typography.DrawCentered(new Vector2((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f), text, VelvetTheme.OnAccent,
-            TextStyles.Caption1);
+        Typography.DrawCentered(drawList, new Vector2((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f), text,
+            VelvetTheme.OnAccent, TextStyles.Caption1);
     }
 
     public static void Dot(ImDrawListPtr drawList, Vector2 center, Vector4 color)

@@ -29,6 +29,15 @@ internal sealed class DirectMessagesStore : ChatThreadStoreBase<ChatMessageDto, 
         this.peers = peers;
         this.signals = signals;
         signals.ChatPinged += OnChatPinged;
+        signals.ConnectedChanged += OnRealtimeConnected;
+    }
+
+    private void OnRealtimeConnected(bool active)
+    {
+        if (active)
+        {
+            InboxCadence.RequestImmediate();
+        }
     }
 
     public override bool RealtimePushActive => signals.RealtimeActive;
@@ -36,7 +45,7 @@ internal sealed class DirectMessagesStore : ChatThreadStoreBase<ChatMessageDto, 
     private void OnChatPinged()
     {
         InboxCadence.RequestImmediate();
-        RefreshThread();
+        RefreshThreadIfVisible();
     }
 
     public ConversationDto[] Conversations => ThreadListItems;
@@ -83,10 +92,10 @@ internal sealed class DirectMessagesStore : ChatThreadStoreBase<ChatMessageDto, 
     protected override Task<ChatKeyStatus> EnsureThreadKeysAsync(string threadId, CancellationToken token) =>
         keys.EnsureChatKeysAsync(threadId, token);
 
-    protected override async Task<ConversationDto[]?> FetchThreadListAsync(CancellationToken token)
+    protected override async Task<ThreadListPage?> FetchThreadListAsync(string? cursor, CancellationToken token)
     {
-        var page = await client.ConversationsAsync(token).ConfigureAwait(false);
-        return page?.Items;
+        var page = await client.ConversationsAsync(cursor, token).ConfigureAwait(false);
+        return page is null ? null : new ThreadListPage(page.Items, page.NextCursor);
     }
 
     protected override async Task<MessagePage?> FetchMessagesPageAsync(string threadId, string? cursor,
@@ -139,6 +148,10 @@ internal sealed class DirectMessagesStore : ChatThreadStoreBase<ChatMessageDto, 
     protected override int MessageEncVersionOf(ChatMessageDto message) => message.EncVersion;
 
     protected override string MessageBodyOf(ChatMessageDto message) => message.Body;
+
+    protected override int MessageKindOf(ChatMessageDto message) => message.Kind;
+
+    protected override string MessageSenderIdOf(ChatMessageDto message) => message.SenderId;
 
     protected override ReactionSummaryDto[]? ReactionsOf(ChatMessageDto message) => message.Reactions;
 
@@ -540,5 +553,6 @@ internal sealed class DirectMessagesStore : ChatThreadStoreBase<ChatMessageDto, 
     protected override void DisposeCore()
     {
         signals.ChatPinged -= OnChatPinged;
+        signals.ConnectedChanged -= OnRealtimeConnected;
     }
 }

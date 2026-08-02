@@ -104,7 +104,8 @@ internal sealed class AppSkin
         var maxLabelWidth = MathF.Max(1f, rect.Width - rect.Height);
         var fittedLabel = Typography.FitText(label, maxLabelWidth, 0.9f, FontWeight.SemiBold);
         var textSize = Typography.Measure(fittedLabel, 0.9f, FontWeight.SemiBold);
-        Typography.Draw(rect.Center - textSize * 0.5f, fittedLabel, theme.TextMuted, 0.9f, FontWeight.SemiBold);
+        Typography.Draw(drawList, rect.Center - textSize * 0.5f, fittedLabel, theme.TextMuted, 0.9f,
+            FontWeight.SemiBold);
         return false;
     }
 
@@ -123,8 +124,8 @@ internal sealed class AppSkin
             : (hovered ? HoverFill : Palette.FieldSurface);
         Squircle.Fill(drawList, min, max, height * 0.5f, ImGui.GetColorU32(fill));
         var ink = active ? White : hovered ? Palette.TitleInk : Palette.BodyInk;
-        Typography.Draw(new Vector2(min.X + (width - textSize.X) * 0.5f, centerY - textSize.Y * 0.5f), label, ink,
-            0.85f, FontWeight.Medium);
+        Typography.Draw(drawList, new Vector2(min.X + (width - textSize.X) * 0.5f, centerY - textSize.Y * 0.5f),
+            label, ink, 0.85f, FontWeight.Medium);
         cursorX = max.X + gap;
         if (hovered)
         {
@@ -148,8 +149,8 @@ internal sealed class AppSkin
         var fill = active ? Core.Theme.Palette.WithAlpha(theme.Accent, 0.92f) : theme.GroupedCard;
         Squircle.Fill(drawList, min, max, height * 0.5f, ImGui.GetColorU32(fill));
         var ink = active || hovered ? theme.TextStrong : theme.TextMuted;
-        Typography.Draw(new Vector2(min.X + (width - textSize.X) * 0.5f, centerY - textSize.Y * 0.5f), label, ink,
-            0.8f, FontWeight.Medium);
+        Typography.Draw(drawList, new Vector2(min.X + (width - textSize.X) * 0.5f, centerY - textSize.Y * 0.5f),
+            label, ink, 0.8f, FontWeight.Medium);
         cursorX = max.X + gap;
         if (hovered)
         {
@@ -182,7 +183,7 @@ internal sealed class AppSkin
         {
             var fittedLabel = Typography.FitText(label, maxLabelWidth, 0.9f, FontWeight.SemiBold);
             var textSize = Typography.Measure(fittedLabel, 0.9f, FontWeight.SemiBold);
-            Typography.Draw(rect.Center - textSize * 0.5f, fittedLabel, ink, 0.9f, FontWeight.SemiBold);
+            Typography.Draw(drawList, rect.Center - textSize * 0.5f, fittedLabel, ink, 0.9f, FontWeight.SemiBold);
         }
 
         if (hovered)
@@ -203,7 +204,7 @@ internal sealed class AppSkin
         var fill = hovered ? Core.Theme.Palette.Mix(theme.Danger, theme.TextStrong, 0.12f) : theme.Danger;
         Squircle.Fill(drawList, rect.Min, rect.Max, radius, ImGui.GetColorU32(fill));
         var textSize = Typography.Measure(label, 0.9f, FontWeight.SemiBold);
-        Typography.Draw(rect.Center - textSize * 0.5f, label, White, 0.9f, FontWeight.SemiBold);
+        Typography.Draw(drawList, rect.Center - textSize * 0.5f, label, White, 0.9f, FontWeight.SemiBold);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -228,7 +229,7 @@ internal sealed class AppSkin
             ImGui.GetColorU32(Core.Theme.Palette.WithAlpha(danger, 0.55f)), 1.4f);
         var ink = Core.Theme.Palette.Mix(danger, White, 0.18f);
         var textSize = Typography.Measure(label, 0.9f, FontWeight.SemiBold);
-        Typography.Draw(rect.Center - textSize * 0.5f, label, ink, 0.9f, FontWeight.SemiBold);
+        Typography.Draw(drawList, rect.Center - textSize * 0.5f, label, ink, 0.9f, FontWeight.SemiBold);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -254,7 +255,7 @@ internal sealed class AppSkin
 
         Squircle.Stroke(drawList, rect.Min, rect.Max, radius, ImGui.GetColorU32(GhostStroke), 1f);
         var textSize = Typography.Measure(label, 0.9f, FontWeight.SemiBold);
-        Typography.Draw(rect.Center - textSize * 0.5f, label, titleInk, 0.9f, FontWeight.SemiBold);
+        Typography.Draw(drawList, rect.Center - textSize * 0.5f, label, titleInk, 0.9f, FontWeight.SemiBold);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

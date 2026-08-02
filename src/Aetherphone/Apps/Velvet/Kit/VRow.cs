@@ -42,6 +42,8 @@ internal struct VRowModel
     public bool PillFilled;
     public bool PillEnabled;
     public int Badge;
+    public int RoleBadges;
+    public string? UserId;
     public string Time;
     public bool Chevron;
     public bool Decline;
@@ -141,7 +143,8 @@ internal static class VRow
             else
             {
                 Squircle.Fill(drawList, pillRect.Min, pillRect.Max, pillHeight * 0.5f, VelvetTheme.PlumWell.Packed());
-                Typography.DrawCentered(pillRect.Center, model.Pill, VelvetTheme.MutedInk, 0.9f, FontWeight.SemiBold);
+                Typography.DrawCentered(drawList, pillRect.Center, model.Pill, VelvetTheme.MutedInk, 0.9f,
+                    FontWeight.SemiBold);
             }
 
             rightEdge -= pillWidth + Metrics.Space.Sm * scale;
@@ -150,8 +153,8 @@ internal static class VRow
         if (timeText.Length > 0)
         {
             var timeSize = Typography.Measure(timeText, TextStyles.Caption1);
-            Typography.Draw(new Vector2(rightEdge - timeSize.X, min.Y + 12f * scale), timeText, VelvetTheme.MutedInk,
-                TextStyles.Caption1);
+            Typography.Draw(drawList, new Vector2(rightEdge - timeSize.X, min.Y + 12f * scale), timeText,
+                VelvetTheme.MutedInk, TextStyles.Caption1);
         }
 
         if (model.Badge > 0)
@@ -161,11 +164,12 @@ internal static class VRow
 
         var textRight = rightEdge - Metrics.Space.Sm * scale;
         var innerWidth = MathF.Max(10f * scale, textRight - textLeft);
+        var titleKey = "vrow.title." + (model.UserId ?? titleText);
         if (subtitleText.Length == 0)
         {
             var titleSize = Typography.Measure(titleText, TextStyles.Headline);
-            Marquee.DrawLeft("vrow.title." + titleText, titleText, textLeft, centerY - titleSize.Y * 0.5f,
-                innerWidth, TextStyles.Headline, VelvetTheme.TitleInk, hovered);
+            UserName.Draw(drawList, titleKey, titleText, model.RoleBadges, textLeft,
+                centerY - titleSize.Y * 0.5f, innerWidth, TextStyles.Headline, VelvetTheme.TitleInk, hovered, false);
         }
         else
         {
@@ -173,8 +177,8 @@ internal static class VRow
             var titleSize = Typography.Measure(titleText, TextStyles.Headline);
             var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleY),
                 new Vector2(textLeft + innerWidth, titleY + titleSize.Y));
-            Marquee.DrawLeft("vrow.title." + titleText, titleText, textLeft, titleY, innerWidth,
-                TextStyles.Headline, VelvetTheme.TitleInk, titleHovering);
+            UserName.Draw(drawList, titleKey, titleText, model.RoleBadges, textLeft, titleY,
+                innerWidth, TextStyles.Headline, VelvetTheme.TitleInk, titleHovering, false);
             var subtitleY = centerY + 3f * scale;
             var subtitleSize = Typography.Measure(subtitleText, TextStyles.Subheadline);
             var subtitleHovering = UiInteract.Hover(new Vector2(textLeft, subtitleY),

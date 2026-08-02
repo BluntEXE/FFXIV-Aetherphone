@@ -12,6 +12,7 @@ using Aetherphone.Core.Jobs;
 using Aetherphone.Core.Market;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Radio;
+using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Songs;
 using Aetherphone.Core.Telephony;
@@ -98,9 +99,8 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public string LightWallpaperId { get; set; } = "DuskLight";
     public string DarkWallpaperId { get; set; } = "DuskDark";
     public List<CustomWallpaper> CustomWallpapers { get; set; } = new();
-    public uint RingtoneId { get; set; } = 7;
-    public string RingtoneSound { get; set; } = SoundTokens.DefaultGame;
-    public string NotificationSound { get; set; } = SoundTokens.DefaultGame;
+    public string RingtoneSound { get; set; } = SoundLibrary.BundledRingtoneToken;
+    public string NotificationSound { get; set; } = SoundLibrary.BundledNotificationToken;
     public float RingtoneVolume { get; set; } = 0.8f;
     public float NotificationVolume { get; set; } = 0.8f;
     public float MusicVolume { get; set; } = 0.6f;
@@ -119,10 +119,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     // gap, not fixable via a CA bundle file - see Stage 7 investigation notes). Never touches
     // real Windows.
     public bool VideoAllowInsecureDirectUrls { get; set; }
-    // Off by default (Open mode) - matches current server behavior exactly, since there's no
-    // server-side approval flow yet (see WatchAlongSession.PendingRequests / stream.joinRequest).
-    // Turning this on just adds an extra field to the host's stream.state; a server that doesn't
-    // understand it yet ignores it per the envelope's own "unknown fields ignored" contract.
+    // Off by default (Open mode) - see WatchAlongSession.PendingRequests / stream.joinRequest.
     public bool VideoStreamApprovalRequired { get; set; }
     public List<ScreenPositionPreset> ScreenPresets { get; set; } = new();
     // The upcoming queue (AetherStreamQueue.Entries), so a relog or plugin reload mid watch-party
@@ -133,6 +130,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     // AlphaChannel's own Configuration, which used to be its own separate IPluginConfiguration.
     public Dictionary<Snes9xInput, string> SnesKeyMappings { get; set; } = new();
     public List<string> SnesRecentRomPaths { get; set; } = new();
+    public bool GameSoundsCleared { get; set; }
     public const string DefaultAethernetBaseUrl = "https://api.aetherphone.net";
     private const string LegacyAethernetHost = "ffxiv-aethernet-production.up.railway.app";
     public string AethernetBaseUrl { get; set; } = DefaultAethernetBaseUrl;
@@ -223,6 +221,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public long LastFeedbackSentUnix { get; set; }
     public List<CalendarCustomEvent> CalendarCustomEvents { get; set; } = new();
     public List<PhoneNote> Notes { get; set; } = new();
+    public List<ShortcutEntry> Shortcuts { get; set; } = new();
     public List<ReminderItem> Reminders { get; set; } = new();
     public List<WorldClockEntry> WorldClocks { get; set; } = new();
     public List<AlarmEntry> Alarms { get; set; } = new();
@@ -494,23 +493,31 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
 
     public void MigrateSoundSettings()
     {
-        if (SoundSettingsMigrated)
+        if (GameSoundsCleared)
         {
             return;
         }
 
-        RingtoneSound = SoundTokens.Game(RingtoneId);
-        NotificationSound = SoundTokens.Game(RingtoneId);
+        if (SoundTokens.TryUpgradeLegacy(RingtoneSound, out var ringtone))
+        {
+            RingtoneSound = ringtone.Length == 0 ? SoundLibrary.BundledRingtoneToken : ringtone;
+        }
+
+        if (SoundTokens.TryUpgradeLegacy(NotificationSound, out var notification))
+        {
+            NotificationSound = notification.Length == 0 ? SoundLibrary.BundledNotificationToken : notification;
+        }
+
         foreach (var pair in NotificationSettings)
         {
             var setting = pair.Value;
-            if (setting.SoundId.HasValue && string.IsNullOrEmpty(setting.Sound))
+            if (SoundTokens.TryUpgradeLegacy(setting.Sound, out var appSound))
             {
-                setting.Sound = SoundTokens.Game(setting.SoundId.Value);
+                setting.Sound = appSound.Length == 0 ? null : appSound;
             }
         }
 
-        SoundSettingsMigrated = true;
+        GameSoundsCleared = true;
         Save();
     }
 

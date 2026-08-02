@@ -346,6 +346,11 @@ internal sealed partial class YellowPagesApp
 
                 if (store.SavedHasMore && !store.SavedLoading)
                 {
+                    if (InfiniteScroll.ReachedBottom())
+                    {
+                        store.LoadMoreSaved();
+                    }
+
                     var origin = ImGui.GetCursorScreenPos();
                     var width = ImGui.GetContentRegionAvail().X;
                     var label = Loc.T(L.YellowPages.LoadMore);

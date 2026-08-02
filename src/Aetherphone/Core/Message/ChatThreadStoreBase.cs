@@ -20,6 +20,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     protected const int VoiceMediaKind = 3;
     protected const int PostShareKind = 4;
     protected const int StoryReplyKind = 5;
+    private const string ReportEvidenceUploadScope = "report-evidence";
     private static readonly TimeSpan ForegroundInboxPollInterval = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan BackgroundInboxPollInterval = TimeSpan.FromSeconds(120);
     private static readonly TimeSpan ViewingGrace = TimeSpan.FromSeconds(4);
@@ -39,7 +40,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     private readonly AppGate gate;
     private readonly PollCadence inboxCadence;
     private readonly object messagesLock = new();
-    private readonly Dictionary<string, long> inboxLastAt = new();
+    private readonly Dictionary<string, InboxMark> inboxMarks = new();
     private static readonly TimeSpan MediaUrlFailureRetryFor = TimeSpan.FromMinutes(2);
     private readonly ConcurrentDictionary<string, string> dmMediaUrls = new();
     private readonly ConcurrentDictionary<string, byte> dmMediaLoading = new();
@@ -47,6 +48,8 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     private readonly Comparison<TMessage> messageOrder;
 
     private volatile TThread[] threadList = Array.Empty<TThread>();
+    private volatile string? threadListCursor;
+    private volatile bool loadingMoreThreads;
     private volatile bool loadingThreadList;
     private volatile bool threadListLoaded;
     private volatile string? currentThreadId;
@@ -101,13 +104,15 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     private void OnSessionAccountChanged()
     {
         var accountId = session.CurrentUser?.Id;
-        if (string.Equals(accountId, lastAccountId, StringComparison.Ordinal))
+        if (accountId is null || string.Equals(accountId, lastAccountId, StringComparison.Ordinal))
         {
             return;
         }
 
         lastAccountId = accountId;
+        inboxMarks.Clear();
         threadList = Array.Empty<TThread>();
+        threadListCursor = null;
         threadListLoaded = false;
         currentThreadId = null;
         pendingOpenThreadId = null;
@@ -127,6 +132,8 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     protected readonly record struct MessagePage(TMessage[] Items, string? NextCursor);
 
+    protected readonly record struct ThreadListPage(TThread[] Items, string? NextCursor);
+
     protected abstract string ImageUploadScope { get; }
 
     protected abstract string VoiceUploadScope { get; }
@@ -139,7 +146,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     protected abstract Task<ChatKeyStatus> EnsureThreadKeysAsync(string threadId, CancellationToken token);
 
-    protected abstract Task<TThread[]?> FetchThreadListAsync(CancellationToken token);
+    protected abstract Task<ThreadListPage?> FetchThreadListAsync(string? cursor, CancellationToken token);
 
     protected abstract Task<MessagePage?> FetchMessagesPageAsync(string threadId, string? cursor,
         CancellationToken token);
@@ -168,6 +175,10 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     protected abstract int MessageEncVersionOf(TMessage message);
 
     protected abstract string MessageBodyOf(TMessage message);
+
+    protected abstract int MessageKindOf(TMessage message);
+
+    protected abstract string MessageSenderIdOf(TMessage message);
 
     protected abstract ReactionSummaryDto[]? ReactionsOf(TMessage message);
 
@@ -246,6 +257,8 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     protected bool LoadingThreadList => loadingThreadList;
     protected bool ThreadListLoaded => threadListLoaded;
+    public bool LoadingMoreThreads => loadingMoreThreads;
+    public bool HasMoreThreads => threadListCursor is not null;
 
     protected TMessage[] MessageItems
     {
@@ -298,12 +311,12 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     {
         if (!TickActive)
         {
-            inboxPrimed = false;
             vaultRefreshRequested = false;
             pendingOpenThreadId = null;
             if (threadList.Length > 0 || messages.Length > 0 || currentThreadId is not null)
             {
                 threadList = Array.Empty<TThread>();
+                threadListCursor = null;
                 messages = Array.Empty<TMessage>();
                 currentThreadId = null;
                 threadListLoaded = false;
@@ -316,7 +329,8 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         var now = DateTime.UtcNow;
         EnsureCurrentThreadKeysFresh(now);
         ResumePendingThreadOpen(now);
-        if (!inboxCadence.Due(now))
+
+        if (inboxPolling || !inboxCadence.Due(now))
         {
             return;
         }
@@ -411,15 +425,59 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         inboxPolling = true;
         work.Run("inbox poll", async token =>
         {
-            var items = await FetchThreadListAsync(token).ConfigureAwait(false);
-            if (items is not null)
+            var page = await FetchThreadListAsync(null, token).ConfigureAwait(false);
+            if (page is not null)
             {
-                var decorated = DecorateThreadList(items);
-                threadList = decorated;
+                var decorated = DecorateThreadList(page.Value.Items);
+                AcceptThreadListHead(decorated, page.Value.NextCursor);
                 RaiseInboxNotifications(decorated);
             }
         }, () => inboxPolling = false);
     }
+
+    private void AcceptThreadListHead(TThread[] decorated, string? nextCursor)
+    {
+        var current = threadList;
+        if (current.Length == 0)
+        {
+            threadList = decorated;
+            threadListCursor = nextCursor;
+            return;
+        }
+
+        threadList = IdentifiedMerge.MergeById(current, decorated, CompareThreadsByRecency);
+    }
+
+    private int CompareThreadsByRecency(TThread left, TThread right)
+    {
+        var byTime = ThreadLastMessageAtOf(right).CompareTo(ThreadLastMessageAtOf(left));
+        return byTime != 0 ? byTime : string.CompareOrdinal(right.Id, left.Id);
+    }
+
+    public void LoadMoreThreads()
+    {
+        var cursor = threadListCursor;
+        if (!session.IsSignedIn || cursor is null || loadingMoreThreads || loadingThreadList)
+        {
+            return;
+        }
+
+        loadingMoreThreads = true;
+        work.Run("threads more", async token =>
+        {
+            var page = await FetchThreadListAsync(cursor, token).ConfigureAwait(false);
+            if (page is null)
+            {
+                return;
+            }
+
+            var decorated = DecorateThreadList(page.Value.Items);
+            threadList = IdentifiedMerge.MergeById(threadList, decorated, CompareThreadsByRecency);
+            threadListCursor = page.Value.NextCursor;
+        }, () => loadingMoreThreads = false);
+    }
+
+    private readonly record struct InboxMark(long LastMessageAt, int Unread);
 
     private void RaiseInboxNotifications(TThread[] items)
     {
@@ -429,13 +487,23 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
             var item = items[index];
             var key = ThreadKeyOf(item);
             var lastMessageAt = ThreadLastMessageAtOf(item);
-            var previous = inboxLastAt.GetValueOrDefault(key, 0L);
-            inboxLastAt[key] = lastMessageAt;
-            if (!primed || lastMessageAt <= previous || ThreadUnreadCountOf(item) <= 0 || IsThreadMuted(item))
+            var unread = ThreadUnreadCountOf(item);
+            var previous = inboxMarks.GetValueOrDefault(key);
+
+            if (!primed || IsThreadMuted(item))
+            {
+                inboxMarks[key] = new InboxMark(lastMessageAt, unread);
+                continue;
+            }
+
+            var isNew = lastMessageAt > previous.LastMessageAt
+                || (lastMessageAt == previous.LastMessageAt && unread > previous.Unread);
+            if (!isNew || unread <= 0)
             {
                 continue;
             }
 
+            inboxMarks[key] = new InboxMark(lastMessageAt, unread);
             if (viewingThreadKey == key && DateTime.UtcNow - lastViewingUtc < ViewingGrace)
             {
                 continue;
@@ -457,10 +525,10 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         loadingThreadList = true;
         work.Run("threads", async token =>
         {
-            var items = await FetchThreadListAsync(token).ConfigureAwait(false);
-            if (items is not null)
+            var page = await FetchThreadListAsync(null, token).ConfigureAwait(false);
+            if (page is not null)
             {
-                threadList = DecorateThreadList(items);
+                AcceptThreadListHead(DecorateThreadList(page.Value.Items), page.Value.NextCursor);
             }
         }, () =>
         {
@@ -553,6 +621,22 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         }
 
         BeginThreadOpen(pending);
+    }
+
+    public void RefreshThreadIfVisible()
+    {
+        var current = currentThreadId;
+        if (current is null || !string.Equals(viewingThreadKey, current, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        if (DateTime.UtcNow - lastViewingUtc > ViewingGrace)
+        {
+            return;
+        }
+
+        RefreshThread();
     }
 
     public void RefreshThread()
@@ -1060,15 +1144,108 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     public void ReportMessage(string messageId, string? reason, Action<bool> onComplete)
     {
-        if (!ReportReveals.TryCollect(messages, messageId, RevealForReport, out var revealed))
+        var snapshot = messages;
+        var threadId = currentThreadId;
+        if (!ReportReveals.TryCollect(snapshot, messageId, RevealForReport, out var revealed))
         {
             onComplete(false);
             return;
         }
 
         work.Run("report message", async token =>
-            await safety.ReportAsync(ReportTargetType, messageId, reason, token, revealed).ConfigureAwait(false),
-            onComplete);
+        {
+            var evidence = await AttachMediaEvidenceAsync(threadId, snapshot, revealed, token).ConfigureAwait(false);
+            return await safety.ReportAsync(ReportTargetType, messageId, reason, token, evidence).ConfigureAwait(false);
+        }, onComplete);
+    }
+
+    private async Task<RevealedMessageDto[]?> AttachMediaEvidenceAsync(string? threadId, TMessage[] snapshot,
+        RevealedMessageDto[]? revealed, CancellationToken token)
+    {
+        if (revealed is null || threadId is null)
+        {
+            return revealed;
+        }
+
+        var updated = revealed;
+        for (var index = 0; index < revealed.Length; index++)
+        {
+            var uploaded = await UploadMediaEvidenceAsync(threadId, snapshot, revealed[index].MessageId, token)
+                .ConfigureAwait(false);
+            if (uploaded is not { } evidence)
+            {
+                continue;
+            }
+
+            if (ReferenceEquals(updated, revealed))
+            {
+                updated = (RevealedMessageDto[])revealed.Clone();
+            }
+
+            updated[index] = revealed[index] with
+            {
+                MediaKey = evidence.Key,
+                MediaContentType = evidence.ContentType,
+            };
+        }
+
+        return updated;
+    }
+
+    private async Task<(string Key, string ContentType)?> UploadMediaEvidenceAsync(string threadId,
+        TMessage[] snapshot, string messageId, CancellationToken token)
+    {
+        TMessage? message = null;
+        for (var index = 0; index < snapshot.Length; index++)
+        {
+            if (snapshot[index].Id == messageId)
+            {
+                message = snapshot[index];
+                break;
+            }
+        }
+
+        if (message is null || MessageEncVersionOf(message) != EnvelopeCodec.VersionEnvelope)
+        {
+            return null;
+        }
+
+        var kind = MessageKindOf(message);
+        if (kind != ImageMediaKind && kind != VoiceMediaKind)
+        {
+            return null;
+        }
+
+        var url = await FetchMediaUrlRequestAsync(messageId, token).ConfigureAwait(false);
+        if (url is null || !cipher.TryGetGeneration(messageId, out var generation))
+        {
+            return null;
+        }
+
+        var sealedBytes = await media.DownloadAsync(new Uri(url), token).ConfigureAwait(false);
+        if (sealedBytes is null)
+        {
+            return null;
+        }
+
+        var plain = cipher.TryDecryptMedia(ScopeFor(threadId), generation, sealedBytes, MessageSenderIdOf(message),
+            kind);
+        if (plain is null)
+        {
+            AepLog.Warning($"[{logTag}] report evidence skipped: media decrypt failed ({messageId})");
+            return null;
+        }
+
+        var contentType = kind == VoiceMediaKind ? "audio/wav" : "image/jpeg";
+        var upload = await media.UploadUrlAsync(contentType, ReportEvidenceUploadScope, token).ConfigureAwait(false);
+        if (upload is null
+            || !await media.UploadImageAsync(upload.UploadUrl, plain, contentType, token).ConfigureAwait(false))
+        {
+            AepLog.Warning($"[{logTag}] report evidence skipped: upload failed ({messageId})");
+            return null;
+        }
+
+        return (upload.Key, contentType);
     }
 
     private RevealedMessageDto? RevealForReport(TMessage message)

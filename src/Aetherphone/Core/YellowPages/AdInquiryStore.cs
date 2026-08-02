@@ -30,7 +30,11 @@ internal sealed class AdInquiryStore : IDisposable
 
     private string? lastAccountId;
     private volatile AdInquiryDto[] threads = Array.Empty<AdInquiryDto>();
+    private volatile string? threadsCursor;
+    private volatile bool threadsLoadingMore;
     private volatile AdInquiryMessageDto[] messages = Array.Empty<AdInquiryMessageDto>();
+    private volatile string? messagesCursor;
+    private volatile bool messagesLoadingOlder;
     private volatile bool loading;
     private volatile bool loadedOnce;
     private volatile bool sending;
@@ -135,7 +139,15 @@ internal sealed class AdInquiryStore : IDisposable
 
     public AdInquiryDto[] Threads => threads;
 
+    public bool ThreadsLoadingMore => threadsLoadingMore;
+
+    public bool HasMoreThreads => threadsCursor is not null;
+
     public AdInquiryMessageDto[] Messages => messages;
+
+    public bool MessagesLoadingOlder => messagesLoadingOlder;
+
+    public bool HasOlderMessages => messagesCursor is not null;
 
     public bool Loading => loading;
 
@@ -218,16 +230,45 @@ internal sealed class AdInquiryStore : IDisposable
             var page = await client.InquiriesAsync(null, token).ConfigureAwait(false);
             if (page is not null)
             {
-                threads = page.Items;
+                var wasEmpty = threads.Length == 0;
+                threads = IdentifiedMerge.MergeById(threads, page.Items, ByNewestActivity);
+                if (wasEmpty)
+                {
+                    threadsCursor = page.NextCursor;
+                }
+
                 loadedOnce = true;
             }
         }, () => loading = false);
+    }
+
+    public void LoadMoreThreads()
+    {
+        var cursor = threadsCursor;
+        if (!session.IsSignedIn || cursor is null || threadsLoadingMore || loading)
+        {
+            return;
+        }
+
+        threadsLoadingMore = true;
+        work.Run("inquiries more", async token =>
+        {
+            var page = await client.InquiriesAsync(cursor, token).ConfigureAwait(false);
+            if (page is null)
+            {
+                return;
+            }
+
+            threads = IdentifiedMerge.MergeById(threads, page.Items, ByNewestActivity);
+            threadsCursor = page.NextCursor;
+        }, () => threadsLoadingMore = false);
     }
 
     public void Open(string inquiryId)
     {
         openThreadId = inquiryId;
         messages = Array.Empty<AdInquiryMessageDto>();
+        messagesCursor = null;
         nextThreadPoll = DateTime.MinValue;
         HydrateKeys();
         FetchMessages(inquiryId);
@@ -238,6 +279,7 @@ internal sealed class AdInquiryStore : IDisposable
     {
         openThreadId = null;
         messages = Array.Empty<AdInquiryMessageDto>();
+        messagesCursor = null;
     }
 
     public void Send(string inquiryId, string otherUserId, string body, Action<bool> done)
@@ -372,9 +414,49 @@ internal sealed class AdInquiryStore : IDisposable
             var page = await client.InquiryMessagesAsync(inquiryId, null, token).ConfigureAwait(false);
             if (page is not null && openThreadId == inquiryId)
             {
-                messages = page.Items;
+                var wasEmpty = messages.Length == 0;
+                messages = IdentifiedMerge.MergeById(messages, page.Items, ByOldestFirst);
+                if (wasEmpty)
+                {
+                    messagesCursor = page.NextCursor;
+                }
             }
         });
+    }
+
+    public void LoadOlderMessages()
+    {
+        var inquiryId = openThreadId;
+        var cursor = messagesCursor;
+        if (!session.IsSignedIn || inquiryId is null || cursor is null || messagesLoadingOlder)
+        {
+            return;
+        }
+
+        messagesLoadingOlder = true;
+        work.Run("inquiry messages older", async token =>
+        {
+            var page = await client.InquiryMessagesAsync(inquiryId, cursor, token).ConfigureAwait(false);
+            if (page is null || openThreadId != inquiryId)
+            {
+                return;
+            }
+
+            messages = IdentifiedMerge.MergeById(messages, page.Items, ByOldestFirst);
+            messagesCursor = page.NextCursor;
+        }, () => messagesLoadingOlder = false);
+    }
+
+    private static int ByNewestActivity(AdInquiryDto left, AdInquiryDto right)
+    {
+        var byTime = right.LastMessageAtUnix.CompareTo(left.LastMessageAtUnix);
+        return byTime != 0 ? byTime : string.CompareOrdinal(right.Id, left.Id);
+    }
+
+    private static int ByOldestFirst(AdInquiryMessageDto left, AdInquiryMessageDto right)
+    {
+        var byTime = left.CreatedAtUnix.CompareTo(right.CreatedAtUnix);
+        return byTime != 0 ? byTime : string.CompareOrdinal(left.Id, right.Id);
     }
 
     private void MarkRead(string inquiryId)
@@ -440,7 +522,9 @@ internal sealed class AdInquiryStore : IDisposable
 
         lastAccountId = accountId;
         threads = Array.Empty<AdInquiryDto>();
+        threadsCursor = null;
         messages = Array.Empty<AdInquiryMessageDto>();
+        messagesCursor = null;
         openThreadId = null;
         loadedOnce = false;
         scopeCache.Clear();

@@ -2,6 +2,7 @@ using Aetherphone.Core.Animation;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Onboarding;
+using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -14,15 +15,17 @@ internal sealed class HomeGridRenderer
     private readonly Pager pager;
     private readonly TilePoseCache poses;
     private readonly HomeInteractionController interaction;
+    private readonly ShortcutStore shortcuts;
     private bool widgetAnchorReported;
 
     public HomeGridRenderer(HomeLayoutService layout, Pager pager, TilePoseCache poses,
-        HomeInteractionController interaction)
+        HomeInteractionController interaction, ShortcutStore shortcuts)
     {
         this.layout = layout;
         this.pager = pager;
         this.poses = poses;
         this.interaction = interaction;
+        this.shortcuts = shortcuts;
     }
 
     public void DrawPages(in HomeMetrics metrics, PhoneTheme theme, float delta, float labelAlpha, bool showLabels,
@@ -110,6 +113,21 @@ internal sealed class HomeGridRenderer
             ReportWidgetAnchor(rect, motion);
             if (interaction.RemoveBadgesLive(motion) &&
                 HomeTileView.RemoveBadge(new Vector2(rect.Min.X + 4f * scale, rect.Min.Y + 4f * scale), scale, theme))
+            {
+                layout.RemoveTile(tile);
+                interaction.ConsumeEditGesture();
+            }
+
+            return;
+        }
+
+        if (tile.IsShortcut)
+        {
+            HomeTileView.DrawShortcut(center, rect.Width, tile.Shortcut!, shortcuts.Icon(tile.Shortcut!), theme,
+                interaction.TapScale(tile) * interaction.Magnify(center, metrics.CellWidth),
+                labelAlpha, showLabels, metrics.CellWidth, zoom);
+            if (interaction.RemoveBadgesLive(motion) &&
+                HomeTileView.RemoveBadge(new Vector2(rect.Min.X + 2f * scale, rect.Min.Y + 2f * scale), scale, theme))
             {
                 layout.RemoveTile(tile);
                 interaction.ConsumeEditGesture();
@@ -254,6 +272,13 @@ internal sealed class HomeGridRenderer
         var iconHalf = metrics.IconSize * 0.5f * scale;
         Elevation.Icon(drawList, position - new Vector2(iconHalf), position + new Vector2(iconHalf),
             metrics.IconSize * scale * 0.26f, metrics.IconSize * scale * 0.5f);
+        if (tile.IsShortcut)
+        {
+            HomeTileView.DrawShortcut(position, metrics.IconSize, tile.Shortcut!, shortcuts.Icon(tile.Shortcut!), theme,
+                scale, 0f, true, metrics.CellWidth);
+            return;
+        }
+
         if (tile.IsFolder)
         {
             HomeTileView.DrawFolder(position, metrics.IconSize, tile, theme, scale, 0f, true, Loc.T(L.Home.NewFolder),

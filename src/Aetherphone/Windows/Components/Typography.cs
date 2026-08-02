@@ -218,6 +218,125 @@ internal static class Typography
         }
     }
 
+    private const float SweepBandFraction = 0.34f;
+    private const float GlintBandFraction = 0.16f;
+    private const float GlintActiveFraction = 0.30f;
+    private const float RippleCrests = 2.5f;
+    private const float WaveSpan = 1.0f;
+    private const int GradientSlices = 12;
+
+    private readonly record struct SweepTier(float WidthScale, float AlphaScale);
+
+    private static readonly SweepTier[] SweepTiers =
+    {
+        new(1.00f, 0.28f),
+        new(0.58f, 0.58f),
+        new(0.26f, 1.00f),
+    };
+
+    public static void Draw(ImDrawListPtr drawList, Vector2 position, string text, Vector4 color, in TextStyle style,
+        in TextEffect effect)
+    {
+        if (effect.Kind == NameEffectKind.None)
+        {
+            Draw(drawList, position, text, color, style.Scale, style.Weight);
+            return;
+        }
+
+        using (Plugin.Fonts.Push(style.Scale, style.Weight))
+        {
+            Plugin.Fonts.NoticeText(text);
+            var font = ImGui.GetFont();
+            var fontSize = ImGui.GetFontSize();
+            var size = ImGui.CalcTextSize(text);
+            if (effect.Kind == NameEffectKind.Breath)
+            {
+                var lit = Vector4.Lerp(color, effect.Crest, Wave(effect.Phase));
+                drawList.AddText(font, fontSize, position, ImGui.GetColorU32(lit), text);
+                return;
+            }
+
+            drawList.AddText(font, fontSize, position, ImGui.GetColorU32(color), text);
+            var top = position.Y - size.Y * 0.5f;
+            var bottom = position.Y + size.Y * 1.5f;
+            if (effect.Kind == NameEffectKind.Sweep || effect.Kind == NameEffectKind.Glint)
+            {
+                DrawCrest(drawList, font, fontSize, position, text, size.X, effect, top, bottom);
+                return;
+            }
+
+            DrawSlices(drawList, font, fontSize, position, text, size.X, color, effect, top, bottom);
+        }
+    }
+
+    private static void DrawCrest(ImDrawListPtr drawList, ImFontPtr font, float fontSize, Vector2 position,
+        string text, float width, in TextEffect effect, float top, float bottom)
+    {
+        var glint = effect.Kind == NameEffectKind.Glint;
+        var travel = effect.Phase;
+        if (glint)
+        {
+            if (effect.Phase >= GlintActiveFraction)
+            {
+                return;
+            }
+
+            travel = effect.Phase / GlintActiveFraction;
+        }
+
+        var band = MathF.Max(1f, width * (glint ? GlintBandFraction : SweepBandFraction));
+        var center = position.X - band * 0.5f + (width + band) * travel;
+        for (var tierIndex = 0; tierIndex < SweepTiers.Length; tierIndex++)
+        {
+            var tier = SweepTiers[tierIndex];
+            var halfWidth = band * tier.WidthScale * 0.5f;
+            var crest = new Vector4(effect.Crest.X, effect.Crest.Y, effect.Crest.Z,
+                effect.Crest.W * tier.AlphaScale);
+            drawList.PushClipRect(new Vector2(center - halfWidth, top), new Vector2(center + halfWidth, bottom), true);
+            drawList.AddText(font, fontSize, position, ImGui.GetColorU32(crest), text);
+            drawList.PopClipRect();
+        }
+    }
+
+    private static void DrawSlices(ImDrawListPtr drawList, ImFontPtr font, float fontSize, Vector2 position,
+        string text, float width, Vector4 color, in TextEffect effect, float top, float bottom)
+    {
+        for (var sliceIndex = 0; sliceIndex < GradientSlices; sliceIndex++)
+        {
+            var left = position.X + width * sliceIndex / GradientSlices;
+            var right = position.X + width * (sliceIndex + 1) / GradientSlices;
+            var center = (sliceIndex + 0.5f) / GradientSlices;
+            Vector4 tint;
+            if (effect.Kind == NameEffectKind.Wave)
+            {
+                tint = effect.Ramp.Sample(center * WaveSpan - effect.Phase);
+            }
+            else
+            {
+                var factor = effect.Kind switch
+                {
+                    NameEffectKind.Flow => Triangle(center + effect.Phase),
+                    NameEffectKind.Ripple => Wave(center * RippleCrests + effect.Phase),
+                    _ => center,
+                };
+
+                tint = Vector4.Lerp(color, effect.Crest, factor);
+            }
+
+            drawList.PushClipRect(new Vector2(left, top), new Vector2(right, bottom), true);
+            drawList.AddText(font, fontSize, position, ImGui.GetColorU32(tint), text);
+            drawList.PopClipRect();
+        }
+    }
+
+    private static float Wave(float phase) => (MathF.Sin(phase * MathF.Tau) + 1f) * 0.5f;
+
+    private static float Triangle(float phase)
+    {
+        var wrapped = phase - MathF.Floor(phase);
+        return 1f - MathF.Abs(wrapped * 2f - 1f);
+    }
+
     public static void DrawCentered(Vector2 center, string text, Vector4 color, float scale = 1f) =>
         DrawCentered(center, text, color, scale, FontWeight.Regular);
 

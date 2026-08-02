@@ -5,8 +5,6 @@ namespace Aetherphone.Core.YellowPages;
 
 internal readonly record struct AdChatResolution(AdDto? Ad, bool Missed);
 
-/// <summary>Lets the shared chat transcript resolve and open Yellow Pages ad bubbles without every DM app
-/// threading the store through its model. Bound once by the shell, cleared on dispose.</summary>
 internal static class AdChatBridge
 {
     private static YellowPagesStore? store;

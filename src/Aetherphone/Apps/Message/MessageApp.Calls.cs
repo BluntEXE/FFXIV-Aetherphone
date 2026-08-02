@@ -2,6 +2,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Social;
 using Aetherphone.Core.Telephony;
 using Aetherphone.Core.Telephony.Contracts;
 using Aetherphone.Core.Theme;
@@ -95,6 +96,7 @@ internal sealed partial class MessageApp
         }
 
         calls.MarkLogSeen();
+        socialNotifications.MarkSeen(SocialActivity.MessageApp);
         var log = calls.CallLog;
         if (log.Length == 0)
         {

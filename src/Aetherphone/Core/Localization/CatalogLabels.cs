@@ -27,28 +27,8 @@ internal static class CatalogLabels
         identifier switch
         {
             "Titanium" => Loc.T(L.Catalogs.CaseTitanium),
-            "Graphite" => Loc.T(L.Catalogs.CaseGraphite),
-            "Silver" => Loc.T(L.Catalogs.CaseSilver),
-            "Gold" => Loc.T(L.Catalogs.CaseGold),
-            "Rose" => Loc.T(L.Catalogs.CaseRose),
-            "Midnight" => Loc.T(L.Catalogs.CaseMidnight),
-            "Jade" => Loc.T(L.Catalogs.CaseJade),
-            "Coral" => Loc.T(L.Catalogs.CaseCoral),
-            "Lavender" => Loc.T(L.Catalogs.CaseLavender),
-            "Porcelain" => Loc.T(L.Catalogs.CasePorcelain),
+            "Silkie" => Loc.T(L.Catalogs.CaseSilkie),
             _ => identifier,
-        };
-
-    public static string Ringtone(uint soundId) =>
-        soundId switch
-        {
-            7 => Loc.T(L.Catalogs.RingtonePing),
-            1 => Loc.T(L.Catalogs.RingtoneChime),
-            3 => Loc.T(L.Catalogs.RingtoneBell),
-            10 => Loc.T(L.Catalogs.RingtoneAlert),
-            16 => Loc.T(L.Catalogs.RingtoneKnock),
-            0 => Loc.T(L.Catalogs.RingtoneSilent),
-            _ => string.Empty,
         };
 
     public static string RadioCategory(string identifier) =>

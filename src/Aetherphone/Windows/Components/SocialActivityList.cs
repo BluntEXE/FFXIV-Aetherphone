@@ -91,8 +91,8 @@ internal static class SocialActivityList
             theme, scale);
         var textTop = origin.Y + (rowHeight - contentHeight) * 0.5f;
         var rowHovering = UiInteract.Hover(origin, rowMax);
-        Marquee.DrawLeft("socialactivity.actor." + item.Id, actorLabel, textLeft, textTop, textWidth,
-            new TextStyle(0.95f, FontWeight.SemiBold), theme.TextStrong, rowHovering);
+        UserName.Draw(drawList, "socialactivity.actor." + item.Id, actorLabel, item.ActorBadges, textLeft, textTop,
+            textWidth, new TextStyle(0.95f, FontWeight.SemiBold), theme.TextStrong, rowHovering, theme);
         Typography.Draw(new Vector2(origin.X + width - pad - timeSize.X, textTop + 2f * scale), timeText,
             palette.MutedInk, 0.78f);
         if (body.Length > 0)

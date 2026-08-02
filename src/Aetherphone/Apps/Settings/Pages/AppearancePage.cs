@@ -105,6 +105,7 @@ internal sealed class AppearancePage : ISettingsPage
             if (MathF.Abs(phoneScale - configuration.PhoneScale) > 0.001f)
             {
                 configuration.PhoneScale = phoneScale;
+                themes.Apply(configuration);
                 configuration.Save();
             }
 

@@ -51,7 +51,7 @@ internal sealed partial class AethergramApp : IPhoneApp
     public Vector4 Accent => AppAccents.For(Id);
     public string DisplayName => Loc.T(L.Apps.Aethergram);
     public string Glyph => "Ag";
-    public int BadgeCount => dmStore.UnreadCount;
+    public int BadgeCount => dmStore.UnreadCount + social.UnseenCount(Id);
     public ShareKindSet AcceptedShares => store.IsSignedIn ? ShareKindSet.Photo : ShareKindSet.None;
     private const string ScopeMenuId = "scope";
     private readonly Dictionary<SocialFeedScope, PullToRefresh> pullToRefresh = new()
@@ -142,7 +142,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         WallpaperImageCache wallpaperImages, ConfirmService confirm, ReportService report, ConductGateService conduct,
         AppInstaller installer)
     {
-        store = new AethergramStore(session, net.Account, net.Social, net.Grams, net.Safety, net.Media);
+        store = new AethergramStore(session, net.Account, net.Social, net.Grams, net.Safety, net.Media, realtimeSignals);
         account = net.Account;
         dmStore = new GramDmStore(session, net.GramDm, net.Social, net.Safety, net.Media, notifications, keyVault,
             conversationKeys, visibility, realtimeSignals, installer);
@@ -151,7 +151,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         personPicker = new PersonPicker(store.NewMentionSuggestions());
         stories = new StoryPresenter(session, net.Grams, net.Media, images, lodestone, AethergramArt.StoryRing,
             AppPalettes.Aethergram, new StoryConfirmLabels(L.Aethergram.DeleteConfirm, L.Aethergram.DeleteCancel,
-                L.Aethergram.Saving), confirm, "Aethergram stories", StartStoryCompose,
+                L.Aethergram.Saving), confirm, realtimeSignals, "Aethergram stories", StartStoryCompose,
             new StoryReplyHooks(L.Aethergram.ReplyToStory, dmStore.SendStoryReply, OpenThread));
         this.launcher = launcher;
         this.dmLauncher = dmLauncher;
@@ -530,6 +530,15 @@ internal sealed partial class AethergramApp : IPhoneApp
                 DrawFollowRequestRow(snapshot[index]);
             }
 
+            if (store.FollowRequestsLoadingMore)
+            {
+                InfiniteScroll.DrawLoadingRow(listRect.Center.X, AppPalettes.Aethergram.MutedInk);
+            }
+            else if (store.HasMoreFollowRequests && InfiniteScroll.ReachedBottom())
+            {
+                store.LoadMoreFollowRequests();
+            }
+
             ImGui.Dummy(new Vector2(0f, 12f * scale));
         }
     }
@@ -602,16 +611,8 @@ internal sealed partial class AethergramApp : IPhoneApp
             }
 
             ImGui.Dummy(new Vector2(0f, 8f * scale));
-            DrawProfileGrid(posts, L.Aethergram.SavedEmpty);
-            if (store.SavedLoadingMore)
-            {
-                InfiniteScroll.DrawLoadingRow(listRect.Center.X, AppPalettes.Aethergram.MutedInk);
-            }
-
-            if (InfiniteScroll.ReachedBottom() && store.HasMoreSaved && !store.SavedLoadingMore)
-            {
-                store.LoadMoreSaved();
-            }
+            DrawProfileGrid(posts, L.Aethergram.SavedEmpty, store.HasMoreSaved, store.SavedLoadingMore,
+                store.LoadMoreSaved);
         }
     }
 
@@ -853,8 +854,8 @@ internal sealed partial class AethergramApp : IPhoneApp
         var cardNameHeight = Typography.Measure(displayName, cardNameStyle).Y;
         var cardNameHovering = UiInteract.Hover(new Vector2(nameLeft, origin.Y + pad),
             new Vector2(nameLeft + headerTextMaxWidth, origin.Y + pad + cardNameHeight));
-        Marquee.DrawLeft("aethergram.card." + post.Id, displayName, nameLeft, origin.Y + pad, headerTextMaxWidth,
-            cardNameStyle, theme.TextStrong, cardNameHovering);
+        UserName.Draw("aethergram.card." + post.Id, displayName, post.AuthorBadges, nameLeft, origin.Y + pad,
+            headerTextMaxWidth, cardNameStyle, theme.TextStrong, cardNameHovering, theme);
         var subline = SocialIdentity.FeedMeta(post.AuthorHandle, TimeText.Short(post.CreatedAtUnix));
         var sublineTop = origin.Y + pad + PostCardMetrics.SublineTop * scale;
         var sublineSize = Typography.Measure(subline, 0.85f);

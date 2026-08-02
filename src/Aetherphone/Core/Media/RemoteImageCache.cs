@@ -132,7 +132,7 @@ internal sealed class RemoteImageCache : IDisposable
             }
 
             var wrap = await ImageProcessor.DecodeToTextureAsync(Plugin.TextureProvider, bytes,
-                $"Aetherphone.Img.{key}", token).ConfigureAwait(false);
+                $"Aetherphone.Img.{key}", ImageProcessor.MaxDecodePixels, token).ConfigureAwait(false);
             if (!ready.TryAdd(key, wrap))
             {
                 wrap.Dispose();

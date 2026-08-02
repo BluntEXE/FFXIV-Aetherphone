@@ -47,11 +47,11 @@ internal sealed class FontService : IDisposable
 
     private static readonly ushort[] BaseGlyphRanges =
     {
-        0x0020, 0x00FF, // Basic Latin and Latin-1 Supplement
-        0x0100, 0x017F, // Latin Extended-A for European name accents and Turkish glyphs
-        0x2000, 0x206F, // General Punctuation: ellipsis, em dash, curly quotes
-        0x2200, 0x22FF, // Mathematical Operators for the market alert glyphs
-        0x25A0, 0x27BF, // Geometric Shapes, Misc Symbols, Dingbats for game and gender glyphs
+        0x0020, 0x00FF,
+        0x0100, 0x017F,
+        0x2000, 0x206F,
+        0x2200, 0x22FF,
+        0x25A0, 0x27BF,
     };
 
     private const float TrackingThreshold = 1.20f;
@@ -186,9 +186,6 @@ internal sealed class FontService : IDisposable
         }
     }
 
-    // Emulates OS-level font fallback on ImGui's static atlas: any character drawn through the phone
-    // that no baked range covers is remembered per weight/size bucket, baked into the atlas on the
-    // next debounced rebuild, and persisted so it renders instantly in later sessions.
     public void NoticeText(ReadOnlySpan<char> text)
     {
         if (text.IsEmpty)

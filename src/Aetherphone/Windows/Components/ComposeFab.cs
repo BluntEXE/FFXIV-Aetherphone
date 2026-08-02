@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Animation;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
@@ -28,7 +29,7 @@ internal static class ComposeFab
         }
 
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = UiInteract.HoverOverlay(fabRect);
+        var hovered = !InputShield.Active && UiInteract.HoverOverlay(fabRect);
         drawList.AddCircleFilled(center + new Vector2(0f, 2f * scale), radius,
             ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.30f)), 32);
         drawList.AddCircleFilled(center, radius,

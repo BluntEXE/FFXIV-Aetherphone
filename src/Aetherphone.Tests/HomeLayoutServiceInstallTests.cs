@@ -256,7 +256,7 @@ public sealed class HomeLayoutServiceInstallTests
 
     private static HomeLayoutService BuildLayout(List<IPhoneApp> apps, FakeHomeConfiguration configuration,
         params IHomeWidget[] widgets) =>
-        new(apps, new WidgetRegistry(widgets, apps), configuration);
+        new(apps, new WidgetRegistry(widgets, apps), new FakeShortcutSource(), configuration);
 
     private static FakeHomeConfiguration SavedWith(params string[] appIds)
     {

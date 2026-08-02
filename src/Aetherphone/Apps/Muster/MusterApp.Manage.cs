@@ -263,10 +263,10 @@ internal sealed partial class MusterApp
         }
 
         var nameLeft = avatarCenter.X + avatarRadius + 11f * scale;
-        var fitted = Typography.FitText(identity, cursorRight - 4f * scale - nameLeft, TextStyles.BodyEmphasized);
-        var nameSize = Typography.Measure(fitted, TextStyles.BodyEmphasized);
-        Typography.Draw(drawList, new Vector2(nameLeft, centerY - nameSize.Y * 0.5f), fitted,
-            AppPalettes.Muster.TitleInk, TextStyles.BodyEmphasized);
+        var nameSize = Typography.Measure(identity, TextStyles.BodyEmphasized);
+        UserName.DrawAuto(drawList, "muster.attendee." + attendee.UserId, identity, attendee.Badges, nameLeft,
+            centerY - nameSize.Y * 0.5f, cursorRight - 4f * scale - nameLeft, TextStyles.BodyEmphasized,
+            AppPalettes.Muster.TitleInk, theme);
     }
 
     private static string StatusLabel(int status) =>
@@ -307,8 +307,6 @@ internal sealed partial class MusterApp
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
     }
 
-    // Moved spots captures the host's live location on the framework thread (tap handler); on a failed
-    // capture the notice still goes out with zeroed fields and the server keeps the previous spot.
     private void SendNotice(int notice)
     {
         noticeBusy = true;

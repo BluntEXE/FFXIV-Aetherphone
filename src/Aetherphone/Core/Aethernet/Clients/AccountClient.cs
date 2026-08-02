@@ -77,6 +77,11 @@ internal sealed class AccountClient
         return net.PostAsync("/me/chat-privacy", request, AethernetJsonContext.Default.UpdateChatPrivacyRequest, AethernetJsonContext.Default.UserDto, token);
     }
 
+    public Task<UserDto?> UpdateBadgesAsync(int equipped, CancellationToken token)
+    {
+        return net.PostAsync("/me/badges", new UpdateBadgeLoadoutRequest(equipped), AethernetJsonContext.Default.UpdateBadgeLoadoutRequest, AethernetJsonContext.Default.UserDto, token);
+    }
+
     public Task<UserDto?> UpdateAccountPrivacyAsync(bool isPrivate, CancellationToken token)
     {
         return net.PostAsync("/me/account-privacy", new UpdateAccountPrivacyRequest(isPrivate), AethernetJsonContext.Default.UpdateAccountPrivacyRequest, AethernetJsonContext.Default.UserDto, token);
@@ -123,6 +128,12 @@ internal sealed class AccountClient
         return net.GetAsync(path, AethernetJsonContext.Default.NotificationPage, token);
     }
 
+    public Task<NotificationReadResult?> MarkNotificationsReadAsync(long upToUnix, string? app, CancellationToken token)
+    {
+        return net.PostAsync("/notifications/read", new NotificationReadRequest(upToUnix, app),
+            AethernetJsonContext.Default.NotificationReadRequest, AethernetJsonContext.Default.NotificationReadResult, token);
+    }
+
     public Task<ModerationNoticePage?> NoticesAsync(string? cursor, CancellationToken token)
     {
         var path = cursor is null ? "/notices" : $"/notices?cursor={Uri.EscapeDataString(cursor)}";
@@ -132,5 +143,22 @@ internal sealed class AccountClient
     public Task<bool> AcknowledgeNoticeAsync(string noticeId, CancellationToken token)
     {
         return net.SendAsync(HttpMethod.Post, $"/notices/{Uri.EscapeDataString(noticeId)}/ack", token);
+    }
+
+    public Task<PatreonLinkStartResponse?> StartPatreonLinkAsync(CancellationToken token, Action<int>? onStatus = null)
+    {
+        return net.RequestAsync(HttpMethod.Post, "/patreon/link/start",
+            AethernetJsonContext.Default.PatreonLinkStartResponse, token, onStatus);
+    }
+
+    public Task<PatreonLinkStatusResponse?> PatreonLinkStatusAsync(CancellationToken token, Action<int>? onStatus = null)
+    {
+        return net.GetAsync("/patreon/link", AethernetJsonContext.Default.PatreonLinkStatusResponse, token, onStatus);
+    }
+
+    public Task<PatreonLinkStatusResponse?> UnlinkPatreonAsync(CancellationToken token)
+    {
+        return net.RequestAsync(HttpMethod.Delete, "/patreon/link",
+            AethernetJsonContext.Default.PatreonLinkStatusResponse, token);
     }
 }

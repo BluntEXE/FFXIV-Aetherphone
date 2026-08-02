@@ -73,7 +73,8 @@ internal sealed record AdDto(
     long CreatedAtUnix,
     long RenewedAtUnix,
     long ExpiresAtUnix,
-    bool AllowInquiries = true) : IIdentified;
+    bool AllowInquiries = true,
+    int OwnerBadges = 0) : IIdentified;
 
 internal sealed record AdPage(AdDto[] Items, string? NextCursor);
 

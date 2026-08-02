@@ -1,3 +1,4 @@
+using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
@@ -14,15 +15,17 @@ internal sealed class ModerationNoticePresenter : IDisposable
     private readonly ModerationNoticeService notices;
     private readonly ConfirmService confirm;
     private readonly NotificationService notifications;
+    private readonly AccountStateService accountState;
     private readonly IFramework framework;
     private readonly HashSet<string> presented = new(StringComparer.Ordinal);
 
     public ModerationNoticePresenter(ModerationNoticeService notices, ConfirmService confirm,
-        NotificationService notifications, IFramework framework)
+        NotificationService notifications, AccountStateService accountState, IFramework framework)
     {
         this.notices = notices;
         this.confirm = confirm;
         this.notifications = notifications;
+        this.accountState = accountState;
         this.framework = framework;
         framework.Update += OnFrameworkTick;
     }
@@ -69,6 +72,11 @@ internal sealed class ModerationNoticePresenter : IDisposable
 
     private void Present(ModerationNoticeDto notice)
     {
+        if (notice.Kind == ModerationNoticeKinds.BadgeGranted)
+        {
+            accountState.RefreshNow();
+        }
+
         var title = ModerationNoticeText.Title(notice);
         var body = ModerationNoticeText.Body(notice);
 

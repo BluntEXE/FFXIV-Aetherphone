@@ -71,6 +71,9 @@ internal sealed partial class VelvetShell
 
         if (mine)
         {
+            var isPublic = post.Audience == VelvetPostAudience.Public;
+            postItems[count++] = new DropdownMenu.Item(Loc.T(isPublic ? L.Velvet.MakeConnections : L.Velvet.MakePublic),
+                (isPublic ? FontAwesomeIcon.Lock : FontAwesomeIcon.Globe).ToIconString());
             postItems[count++] = new DropdownMenu.Item(Loc.T(L.Velvet.DeleteConfirm),
                 FontAwesomeIcon.Trash.ToIconString(), true);
         }
@@ -97,6 +100,15 @@ internal sealed partial class VelvetShell
 
         if (mine)
         {
+            if (picked == viewOffset)
+            {
+                var nextAudience = post.Audience == VelvetPostAudience.Public
+                    ? VelvetPostAudience.Connections
+                    : VelvetPostAudience.Public;
+                store.SetPostAudience(post, nextAudience);
+                return;
+            }
+
             AskDeletePost(post.Id, inFeed ? null : back);
             return;
         }

@@ -14,13 +14,15 @@ internal static class ModerationNoticeKinds
     public const int Suspended = 4;
     public const int SignedOut = 5;
     public const int ReportOutcome = 6;
+    public const int BadgeGranted = 7;
 }
 
 internal static class ModerationNoticeText
 {
     public static bool IsBlocking(ModerationNoticeDto notice)
     {
-        return notice.Kind != ModerationNoticeKinds.ReportOutcome;
+        return notice.Kind != ModerationNoticeKinds.ReportOutcome
+            && notice.Kind != ModerationNoticeKinds.BadgeGranted;
     }
 
     public static string Title(ModerationNoticeDto notice)
@@ -33,6 +35,7 @@ internal static class ModerationNoticeText
             ModerationNoticeKinds.ProfileTextCleared => Loc.T(L.Moderation.NoticeProfileCleared),
             ModerationNoticeKinds.Suspended => Loc.T(L.Moderation.NoticeSuspendedTitle),
             ModerationNoticeKinds.SignedOut => Loc.T(L.Moderation.NoticeSignedOutTitle),
+            ModerationNoticeKinds.BadgeGranted => Loc.T(L.Moderation.NoticeBadgeTitle),
             _ => Loc.T(L.Moderation.NoticeThanksTitle),
         };
     }
@@ -42,6 +45,11 @@ internal static class ModerationNoticeText
         if (notice.Kind == ModerationNoticeKinds.ReportOutcome)
         {
             return Loc.T(L.Moderation.NoticeThanksBody);
+        }
+
+        if (notice.Kind == ModerationNoticeKinds.BadgeGranted)
+        {
+            return BadgeBody(notice);
         }
 
         if (notice.Kind == ModerationNoticeKinds.SignedOut)
@@ -78,6 +86,54 @@ internal static class ModerationNoticeText
 
         Append(body, Loc.T(L.Moderation.RemovedFooter));
         return body.ToString();
+    }
+
+    private static string BadgeBody(ModerationNoticeDto notice)
+    {
+        var names = BadgeNames(notice.Detail);
+        if (names.Count == 0)
+        {
+            return Loc.T(L.Moderation.NoticeBadgeBodyFallback);
+        }
+
+        if (names.Count == 1)
+        {
+            return Loc.T(L.Moderation.NoticeBadgeBodyOne, names[0]);
+        }
+
+        return Loc.T(L.Moderation.NoticeBadgeBodyMany, string.Join(", ", names));
+    }
+
+    private static List<string> BadgeNames(string detail)
+    {
+        var keys = detail.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var names = new List<string>(keys.Length);
+        for (var index = 0; index < keys.Length; index++)
+        {
+            if (BadgeNameFor(keys[index]) is { } name)
+            {
+                names.Add(Loc.T(name));
+            }
+        }
+
+        return names;
+    }
+
+    private static LocString? BadgeNameFor(string key)
+    {
+        return key switch
+        {
+            "management" => L.Social.RoleManagement,
+            "moderator" => L.Social.RoleModerator,
+            "patreon" => L.Social.RolePatreon,
+            "developer" => L.Social.RoleDeveloper,
+            "supporter" => L.Social.RoleSupport,
+            "contributor" => L.Social.RoleContributor,
+            "aide" => L.Social.RoleAide,
+            "aurelia" => L.Social.RoleAurelia,
+            "verified" => L.Social.RoleVerified,
+            _ => null,
+        };
     }
 
     private static void AppendRule(StringBuilder body, ModerationNoticeDto notice)

@@ -19,6 +19,7 @@ internal sealed class WidgetGallery
     private bool open;
     private float scrollY;
     private int targetPage;
+    private int openedFrame;
 
     public WidgetGallery(HomeLayoutService layout, WidgetRegistry widgets)
     {
@@ -33,6 +34,7 @@ internal sealed class WidgetGallery
         open = true;
         targetPage = pageIndex;
         scrollY = 0f;
+        openedFrame = ImGui.GetFrameCount();
     }
 
     public void Close() => open = false;
@@ -65,7 +67,8 @@ internal sealed class WidgetGallery
         DrawHeader(drawList, sheet, theme, scale, interactive);
         DrawItems(drawList, sheet, theme, scale, delta, interactive);
         drawList.PopClipRect();
-        if (interactive && UiInteract.ClickedOutside(sheet.Min, sheet.Max, false))
+        if (interactive && ImGui.GetFrameCount() != openedFrame &&
+            UiInteract.ClickedOutside(sheet.Min, sheet.Max, false))
         {
             Close();
         }

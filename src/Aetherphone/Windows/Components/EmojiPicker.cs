@@ -37,6 +37,7 @@ internal sealed class EmojiPicker
             return null;
         }
 
+        UiInteract.HoverOverlay(area);
         var scale = ImGuiHelpers.GlobalScale;
         var theme = ui.Theme;
         string? picked = null;
@@ -114,7 +115,13 @@ internal sealed class EmojiPicker
                     iconMin + new Vector2(glyph, glyph), 0xFFFFFFFF);
             }
 
-            if (UiInteract.HoverClick(cellMin, cellMax))
+            var cellHovered = !UiInteract.InputBlocked && UiInteract.HoverWindowOnly(cellMin, cellMax);
+            if (cellHovered)
+            {
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            }
+
+            if (UiInteract.Click(cellMin, cellMax, cellHovered))
             {
                 category = index;
                 search = string.Empty;
@@ -128,7 +135,15 @@ internal sealed class EmojiPicker
         drawList.AddCircleFilled(center, radius * 0.7f, ImGui.GetColorU32(ToneSwatches[tone]), 20);
         drawList.AddCircle(center, radius * 0.7f, ImGui.GetColorU32(Palette.WithAlpha(ui.Theme.TextStrong, 0.35f)), 20,
             1f);
-        if (UiInteract.HoverClick(center - new Vector2(radius, radius), center + new Vector2(radius, radius)))
+        var swatchMin = center - new Vector2(radius, radius);
+        var swatchMax = center + new Vector2(radius, radius);
+        var swatchHovered = !UiInteract.InputBlocked && UiInteract.HoverWindowOnly(swatchMin, swatchMax);
+        if (swatchHovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (UiInteract.Click(swatchMin, swatchMax, swatchHovered))
         {
             tone = (tone + 1) % ToneSwatches.Length;
         }
@@ -220,7 +235,7 @@ internal sealed class EmojiPicker
                     var glyph = glyphs[view[slot]];
                     var min = new Vector2(origin.X + column * stride, origin.Y + rowTop);
                     var max = min + new Vector2(cell, cell);
-                    var hovered = UiInteract.Hover(min, max);
+                    var hovered = !UiInteract.InputBlocked && UiInteract.HoverWindowOnly(min, max);
                     if (hovered)
                     {
                         Squircle.Fill(drawList, min, max, 8f * scale,

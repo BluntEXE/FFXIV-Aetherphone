@@ -80,7 +80,7 @@ public sealed class HomeLayoutServicePlacementTests
     }
 
     private static HomeLayoutService BuildLayout(List<IPhoneApp> apps, FakeHomeConfiguration configuration) =>
-        new(apps, new WidgetRegistry(Array.Empty<IHomeWidget>(), apps), configuration);
+        new(apps, new WidgetRegistry(Array.Empty<IHomeWidget>(), apps), new FakeShortcutSource(), configuration);
 
     private static FakeHomeConfiguration ConfigurationWith(HomePage page) =>
         new()

@@ -114,7 +114,13 @@ internal sealed partial class YellowPagesApp : IPhoneApp
         activeTab = YellowPagesTab.Browse;
         socialNotifications.MarkSeen(Id);
         lifestreamAvailable = LifestreamBridge.IsAvailable();
-        if (launcher.TryConsumeDetail(out var adId))
+        if (launcher.TryConsumeInquiry(out var inquiryId))
+        {
+            activeTab = YellowPagesTab.Inquiries;
+            inquiries.Refresh();
+            OpenInquiryThread(inquiryId, false);
+        }
+        else if (launcher.TryConsumeDetail(out var adId))
         {
             ResetDetailState();
             router.Push(YellowPagesRoute.Detail(adId), false);

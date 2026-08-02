@@ -66,6 +66,15 @@ internal sealed partial class YellowPagesApp
                 DrawInquiriesEmpty(body, scale);
             }
 
+            if (inquiries.ThreadsLoadingMore)
+            {
+                InfiniteScroll.DrawLoadingRow(body.Center.X, AppPalettes.YellowPages.MutedInk);
+            }
+            else if (inquiries.HasMoreThreads && InfiniteScroll.ReachedBottom())
+            {
+                inquiries.LoadMoreThreads();
+            }
+
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
         }
     }
@@ -206,6 +215,13 @@ internal sealed partial class YellowPagesApp
         var body = new Rect(new Vector2(area.Min.X, top), new Vector2(area.Max.X, composerTop));
         if (thread is null)
         {
+            if (!inquiries.LoadedOnce)
+            {
+                LoadingPulse.Draw(body.Center, 13f * scale, ui.Accent, AppPalettes.YellowPages.MutedInk,
+                    Loc.T(L.Common.Loading));
+                return;
+            }
+
             EmptyState.Draw(body, ui, FontAwesomeIcon.Comments, Loc.T(L.YellowPages.UnavailableTitle),
                 Loc.T(L.YellowPages.UnavailableHint));
             return;
@@ -215,6 +231,15 @@ internal sealed partial class YellowPagesApp
         var list = new Rect(new Vector2(area.Min.X, listTop), new Vector2(area.Max.X, composerTop));
         using (AppSurface.Begin(list))
         {
+            if (inquiries.MessagesLoadingOlder)
+            {
+                InfiniteScroll.DrawLoadingRow(list.Center.X, AppPalettes.YellowPages.MutedInk);
+            }
+            else if (inquiries.HasOlderMessages)
+            {
+                DrawEarlierMessagesRow(scale);
+            }
+
             var messages = inquiries.Messages;
             var myId = inquiries.MyUserId;
             for (var index = 0; index < messages.Length; index++)
@@ -237,6 +262,29 @@ internal sealed partial class YellowPagesApp
 
         DrawInquiryComposer(new Rect(new Vector2(area.Min.X, composerTop), area.Max), inquiryId,
             thread.OtherUserId, scale);
+    }
+
+    private void DrawEarlierMessagesRow(float scale)
+    {
+        var label = Loc.T(L.YellowPages.EarlierMessages);
+        var width = ImGui.GetContentRegionAvail().X;
+        var size = Typography.Measure(label, TextStyles.Footnote);
+        var origin = ImGui.GetCursorScreenPos();
+        var pos = new Vector2(origin.X + (width - size.X) * 0.5f, origin.Y + 4f * scale);
+        var hovered = UiInteract.Hover(pos, pos + size);
+        Typography.Draw(pos, label, hovered ? ui.Accent : AppPalettes.YellowPages.MutedInk, TextStyles.Footnote);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (UiInteract.Click(pos, pos + size, hovered))
+        {
+            inquiries.LoadOlderMessages();
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(0f, size.Y + 12f * scale));
     }
 
     private void DrawThreadAdCard(AdInquiryDto thread, Rect body, float scale, out float listTop)
@@ -559,11 +607,11 @@ internal sealed partial class YellowPagesApp
         return null;
     }
 
-    private void OpenInquiryThread(string inquiryId)
+    private void OpenInquiryThread(string inquiryId, bool animate = true)
     {
         inquiryDraft = string.Empty;
         inquiries.Open(inquiryId);
-        router.Push(YellowPagesRoute.Thread(inquiryId));
+        router.Push(YellowPagesRoute.Thread(inquiryId), animate);
     }
 
     private void OpenInquiriesFor(string adId)

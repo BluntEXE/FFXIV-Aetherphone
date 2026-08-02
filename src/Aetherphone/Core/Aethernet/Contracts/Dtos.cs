@@ -67,9 +67,23 @@ internal sealed record UserDto(
     bool IsPrivate = false,
     bool FollowRequested = false,
     int PendingFollowRequests = 0,
-    string Region = "") : IIdentified;
+    string Region = "",
+    int Badges = 0,
+    int GrantedBadges = 0) : IIdentified;
 
 internal sealed record UpdateProfileRequest(string? DisplayName, string? Handle, string? Bio, string? AvatarUrl = null);
+
+internal sealed record UpdateBadgeLoadoutRequest(int Equipped);
+
+internal sealed record PatreonLinkStartResponse(bool Ok, string? Reason, string? Url, int ExpiresInSeconds);
+
+internal sealed record PatreonLinkStatusResponse(
+    bool Available,
+    bool Linked,
+    string? PatronStatus,
+    int EntitledCents,
+    bool Entitled,
+    long? LinkedAtUnix);
 
 internal sealed record UpdateMessagePrivacyRequest(int? MessagePolicy);
 
@@ -139,7 +153,8 @@ internal sealed record PostDto(
     PostDto? ReferencedPost = null,
     int RepostCount = 0,
     bool MyReposted = false,
-    bool Saved = false) : IIdentified;
+    bool Saved = false,
+    int AuthorBadges = 0) : IIdentified;
 
 internal sealed record FeedPage(PostDto[] Items, string? NextCursor);
 
@@ -174,7 +189,8 @@ internal sealed record StoryDto(
     long ExpiresAtUnix,
     bool Seen,
     int ViewCount,
-    string ScanStatus = "clean") : IIdentified;
+    string ScanStatus = "clean",
+    int AuthorBadges = 0) : IIdentified;
 
 internal sealed record StoryRingDto(
     string AuthorId,
@@ -195,9 +211,10 @@ internal sealed record StoryViewerDto(
     string DisplayName,
     string Handle,
     string? AvatarUrl,
-    long ViewedAtUnix);
+    long ViewedAtUnix,
+    int Badges = 0);
 
-internal sealed record StoryViewersPage(StoryViewerDto[] Items, int Total);
+internal sealed record StoryViewersPage(StoryViewerDto[] Items, int Total, string? NextCursor = null);
 
 internal sealed record CommentDto(
     string Id,
@@ -212,13 +229,19 @@ internal sealed record CommentDto(
     int LikeCount,
     bool Liked,
     MentionDto[]? Mentions = null,
-    string ScanStatus = "clean") : IIdentified;
+    string ScanStatus = "clean",
+    int AuthorBadges = 0) : IIdentified;
 
 internal sealed record CreateCommentRequest(string Text);
 
 internal sealed record CommentPage(CommentDto[] Items, string? NextCursor);
 
-internal sealed record RevealedMessageDto(string MessageId, string PlainText, string? FrankingKey);
+internal sealed record RevealedMessageDto(
+    string MessageId,
+    string PlainText,
+    string? FrankingKey,
+    string? MediaKey = null,
+    string? MediaContentType = null);
 
 internal sealed record ReportRequest(
     string TargetType,
@@ -230,7 +253,7 @@ internal sealed record VelvetProfileDto(
     string UserId,
     string DisplayName,
     string Handle,
-    bool Verified,
+    int Badges,
     string Intro,
     string Pronouns,
     string Dynamic,
@@ -289,7 +312,8 @@ internal sealed record VelvetPostDto(
     string ScanStatus = "clean",
     string[]? MediaUrls = null,
     MentionDto[]? Mentions = null,
-    int Audience = 0) : IIdentified;
+    int Audience = 0,
+    int OwnerBadges = 0) : IIdentified;
 
 internal sealed record VelvetFeedPage(VelvetPostDto[] Items, string? NextCursor);
 
@@ -304,6 +328,8 @@ internal sealed record CreateVelvetPostRequest(
     string[]? MediaKeys = null,
     int Audience = 0);
 
+internal sealed record UpdateVelvetPostAudienceRequest(int Audience);
+
 internal sealed record VelvetCommentDto(
     string Id,
     string PostId,
@@ -316,7 +342,8 @@ internal sealed record VelvetCommentDto(
     int LikeCount,
     bool Liked,
     MentionDto[]? Mentions = null,
-    string ScanStatus = "clean") : IIdentified;
+    string ScanStatus = "clean",
+    int AuthorBadges = 0) : IIdentified;
 
 internal sealed record VelvetCommentPage(VelvetCommentDto[] Items, string? NextCursor);
 
@@ -406,9 +433,19 @@ internal sealed record NotificationDto(
     string? ActorAvatarUrl,
     string? Preview,
     long CreatedAtUnix,
-    string? CommentId = null) : IIdentified;
+    string? CommentId = null,
+    int ActorBadges = 0,
+    bool Read = false) : IIdentified;
 
-internal sealed record NotificationPage(NotificationDto[] Items, string? NextCursor = null);
+internal sealed record NotificationPage(
+    NotificationDto[] Items,
+    string? NextCursor = null,
+    int UnreadCount = 0,
+    Dictionary<string, int>? UnreadByApp = null);
+
+internal sealed record NotificationReadRequest(long UpToUnix, string? App = null);
+
+internal sealed record NotificationReadResult(int Marked, int Unread);
 
 internal sealed record ModerationNoticeDto(
     string Id,
@@ -450,7 +487,7 @@ internal sealed record PollDto(
     long CreatedAtUnix,
     bool Closed) : IIdentified;
 
-internal sealed record PollPage(PollDto[] Items);
+internal sealed record PollPage(PollDto[] Items, string? NextCursor = null);
 
 internal sealed record PollVoteRequest(int Option);
 
@@ -463,7 +500,7 @@ internal sealed record AnnouncementDto(
     AnnouncementTranslationDto[] Translations,
     long CreatedAtUnix) : IIdentified;
 
-internal sealed record AnnouncementPage(AnnouncementDto[] Items);
+internal sealed record AnnouncementPage(AnnouncementDto[] Items, string? NextCursor = null);
 
 internal sealed record FeedbackDto(
     string Id,
@@ -526,7 +563,8 @@ internal sealed record ConversationMemberDto(
     string? AvatarUrl,
     int Role,
     bool IsActive,
-    long? LastReadAtUnix = null);
+    long? LastReadAtUnix = null,
+    int Badges = 0);
 
 internal sealed record ChatMessageDto(
     string Id,
@@ -553,7 +591,8 @@ internal sealed record ChatMessageDto(
     bool Forwarded = false,
     int DurationSecs = 0,
     ReactionSummaryDto[]? Reactions = null,
-    long? EditedAtUnix = null) : IIdentified;
+    long? EditedAtUnix = null,
+    int SenderBadges = 0) : IIdentified;
 
 internal sealed record ReactionSummaryDto(string Token, int Count, bool Mine);
 

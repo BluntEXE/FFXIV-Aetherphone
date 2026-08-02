@@ -2,6 +2,7 @@ using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Shell.Home;
+using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility;
@@ -21,15 +22,16 @@ internal sealed class HomeScreen
     private readonly HomeChrome chrome;
     private readonly Configuration configuration;
 
-    public HomeScreen(IReadOnlyList<IPhoneApp> apps, WidgetRegistry widgets, Configuration configuration)
+    public HomeScreen(IReadOnlyList<IPhoneApp> apps, WidgetRegistry widgets, ShortcutStore shortcuts,
+        ShortcutRunner runner, Configuration configuration)
     {
         this.configuration = configuration;
-        layout = new HomeLayoutService(apps, widgets, configuration);
+        layout = new HomeLayoutService(apps, widgets, shortcuts, configuration);
         folder = new FolderOverlay(layout);
         sizeMenu = new WidgetSizeMenu(layout);
         gallery = new WidgetGallery(layout, widgets);
-        interaction = new HomeInteractionController(layout, widgets, pager, folder, sizeMenu, gallery, poses);
-        renderer = new HomeGridRenderer(layout, pager, poses, interaction);
+        interaction = new HomeInteractionController(layout, widgets, pager, folder, sizeMenu, gallery, poses, runner);
+        renderer = new HomeGridRenderer(layout, pager, poses, interaction, shortcuts);
         chrome = new HomeChrome(pager, interaction);
     }
 

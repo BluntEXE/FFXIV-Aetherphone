@@ -65,8 +65,6 @@ internal sealed class HydrationEntry
 {
     [JsonProperty("t")] public long Unix { get; set; }
 
-    // Built-in kind key ("water", "tea", ...) resolved at draw time. Empty for custom drinks,
-    // which fall back to the free-text Kind below.
     [JsonProperty("kk")] public string KindKey { get; set; } = string.Empty;
 
     [JsonProperty("k")] public string Kind { get; set; } = string.Empty;
@@ -78,8 +76,6 @@ internal sealed class HealthGoal
 {
     [JsonProperty("id")] public string Id { get; set; } = Guid.NewGuid().ToString("N");
 
-    // Built-in goal key resolved at draw time. Empty once the user renames the goal, which
-    // makes Name authoritative.
     [JsonProperty("nk")] public string NameKey { get; set; } = string.Empty;
 
     [JsonProperty("name")] public string Name { get; set; } = string.Empty;
@@ -92,7 +88,6 @@ internal sealed class HealthGoal
 
     [JsonProperty("enabled")] public bool Enabled { get; set; } = true;
 
-    // Scope key (e.g. the date) this goal was last completed for; prevents duplicate notifications.
     [JsonProperty("done")] public string CompletedKey { get; set; } = string.Empty;
 }
 
@@ -149,7 +144,6 @@ internal sealed class HealthProfile
 {
     [JsonProperty("version")] public int Version { get; set; } = 1;
 
-    // Profile / setup
     [JsonProperty("setup")] public bool SetupCompleted { get; set; }
     [JsonProperty("units")] public HealthUnits Units { get; set; } = HealthUnits.Eorzean;
     [JsonProperty("manualHeightCm")] public double? ManualHeightCm { get; set; }
@@ -158,17 +152,14 @@ internal sealed class HealthProfile
     [JsonProperty("stride")] public double StrideYalms { get; set; } = 0.75;
     [JsonProperty("autoHeight")] public bool AutoRefreshHeight { get; set; } = true;
 
-    // Daily targets used by the Overview rings and the default goals
     [JsonProperty("goalSteps")] public int DailyStepGoal { get; set; } = 10000;
     [JsonProperty("goalSwim")] public double DailySwimGoalYalms { get; set; } = 500;
     [JsonProperty("goalDrinks")] public int DailyHydrationGoal { get; set; } = 4;
 
     [JsonProperty("goalList")] public List<HealthGoal> Goals { get; set; } = new();
 
-    // History (most recent last). Trimmed to a bounded window by the tracker.
     [JsonProperty("days")] public List<HealthDay> Days { get; set; } = new();
 
-    // All-time totals (yalms / seconds / count)
     [JsonProperty("allWalk")] public double AllWalkYalms { get; set; }
     [JsonProperty("allRun")] public double AllRunYalms { get; set; }
     [JsonProperty("allSwim")] public double AllSwimYalms { get; set; }
@@ -182,7 +173,6 @@ internal sealed class HealthProfile
     [JsonProperty("allDrinks")] public int AllDrinks { get; set; }
     [JsonProperty("allDrinkMl")] public double AllDrinkMillilitres { get; set; }
 
-    // Personal records
     [JsonProperty("recSteps")] public long RecordStepsInDay { get; set; }
     [JsonProperty("recOnFoot")] public double RecordOnFootYalmsInDay { get; set; }
     [JsonProperty("recSwim")] public double RecordSwimYalmsInDay { get; set; }
@@ -191,11 +181,9 @@ internal sealed class HealthProfile
     [JsonProperty("recSwimSession")] public double LongestSwimSessionSeconds { get; set; }
     [JsonProperty("recTeleport")] public double LongestTeleportYalms { get; set; }
 
-    // Streak of consecutive days that met the daily step goal
     [JsonProperty("streak")] public int StreakDays { get; set; }
     [JsonProperty("streakDate")] public string StreakLastDate { get; set; } = string.Empty;
 
-    // Hydration reminders
     [JsonProperty("remind")] public bool HydrationRemindersEnabled { get; set; }
     [JsonProperty("remindMins")] public int ReminderIntervalMinutes { get; set; } = 120;
     [JsonProperty("quietStart")] public int QuietStartHour { get; set; } = 22;

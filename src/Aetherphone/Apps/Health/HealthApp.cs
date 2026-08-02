@@ -36,7 +36,6 @@ internal sealed partial class HealthApp : IPhoneApp
     private int screenIndex;
     private float groupPad;
 
-    // Editable UI buffers
     private string weightBuffer = string.Empty;
     private string customDrinkName = string.Empty;
     private int customDrinkMl = 250;
@@ -133,8 +132,6 @@ internal sealed partial class HealthApp : IPhoneApp
         screenIndex = SegmentStrip.Draw("health.tabs", rect, tabOptions, screenIndex, Pal);
     }
 
-    // ---- Overview -----------------------------------------------------------
-
     private void DrawOverview(float scale)
     {
         var day = tracker.Profile.LatestDay ?? new HealthDay();
@@ -190,8 +187,6 @@ internal sealed partial class HealthApp : IPhoneApp
             Loc.Plural(L.Health.StreakDayCount, Profile.StreakDays), scale);
         EndCard(streakCard, scale);
     }
-
-    // ---- Activity -----------------------------------------------------------
 
     private void DrawActivity(float scale)
     {
@@ -255,8 +250,6 @@ internal sealed partial class HealthApp : IPhoneApp
             HealthFormat.Duration(Profile.LongestSwimSessionSeconds), scale);
         EndCard(rec, scale);
     }
-
-    // ---- Shared drawing helpers --------------------------------------------
 
     private Vector4 Accent1 => Pal.Accent;
     private static Vector4 Accent2 => AppPalettes.HealthWater;
@@ -337,7 +330,6 @@ internal sealed partial class HealthApp : IPhoneApp
         ImGui.Dummy(new Vector2(width, height));
     }
 
-    // Full-width pill button; returns true when clicked.
     private bool WideButton(string label, bool filled, float scale, float heightUnscaled = 40f)
     {
         var full = ImGui.GetContentRegionAvail().X;

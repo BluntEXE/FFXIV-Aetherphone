@@ -121,7 +121,8 @@ internal sealed class PhoneWindow : Window
         Size = size;
         SizeCondition = ImGuiCond.Always;
         var locked = !minimized && configuration.LockPosition;
-        Flags = locked || (!minimized && shell.HomeEditing)
+        var holdStill = !minimized && (shell.HomeEditing || Components.UiInteract.PointerOverGestureSurface);
+        Flags = locked || holdStill
             ? BaseFlags | ImGuiWindowFlags.NoMove
             : BaseFlags;
         Components.DragScrollHost.Enabled = locked;

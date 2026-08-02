@@ -29,7 +29,7 @@ internal static class ReportReveals
         if (resolve(messages[targetIndex]) is not { } target)
         {
             revealed = null;
-            return true;
+            return false;
         }
 
         var reveals = new List<RevealedMessageDto>(Limit) { target };

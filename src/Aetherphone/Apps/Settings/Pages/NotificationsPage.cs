@@ -59,7 +59,7 @@ internal sealed class NotificationsPage : ISettingsPage
             }
 
             if (SettingsRow.Disclosure(alerts.NextRow(), Loc.T(L.Settings.NotificationSound),
-                    sound.Label(configuration.NotificationSound), theme))
+                    sound.Label(SoundKind.Notification, configuration.NotificationSound), theme))
             {
                 navigator.Open(soundPage);
             }
@@ -114,6 +114,6 @@ internal sealed class NotificationsPage : ISettingsPage
             return Loc.T(L.Settings.NotificationsOff);
         }
 
-        return sound.Label(configuration.ResolveNotificationToken(appId));
+        return sound.Label(SoundKind.Notification, configuration.ResolveNotificationToken(appId));
     }
 }

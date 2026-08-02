@@ -1,6 +1,7 @@
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Home;
+using Aetherphone.Core.Shortcuts;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 
@@ -33,6 +34,7 @@ internal sealed class HomeInteractionController
     private readonly WidgetSizeMenu sizeMenu;
     private readonly WidgetGallery gallery;
     private readonly TilePoseCache poses;
+    private readonly ShortcutRunner runner;
 
     private bool pressActive;
     private Vector2 pressPos;
@@ -71,7 +73,8 @@ internal sealed class HomeInteractionController
     private Spring settleY;
 
     public HomeInteractionController(HomeLayoutService layout, WidgetRegistry widgets, Pager pager,
-        FolderOverlay folder, WidgetSizeMenu sizeMenu, WidgetGallery gallery, TilePoseCache poses)
+        FolderOverlay folder, WidgetSizeMenu sizeMenu, WidgetGallery gallery, TilePoseCache poses,
+        ShortcutRunner runner)
     {
         this.layout = layout;
         this.widgets = widgets;
@@ -80,6 +83,7 @@ internal sealed class HomeInteractionController
         this.sizeMenu = sizeMenu;
         this.gallery = gallery;
         this.poses = poses;
+        this.runner = runner;
     }
 
     public bool Editing => editing;
@@ -262,6 +266,16 @@ internal sealed class HomeInteractionController
             return;
         }
 
+        if (pressTile.IsShortcut)
+        {
+            if (!editing)
+            {
+                runner.Run(pressTile.Shortcut!);
+            }
+
+            return;
+        }
+
         if (pressTile.IsFolder)
         {
             folder.Open(pressTile, rect);
@@ -422,13 +436,13 @@ internal sealed class HomeInteractionController
 
         var tiles = layout.Page(dragPage);
         var cells = layout.Placements(dragPage);
-        if (!dragTile!.IsWidget)
+        if (!dragTile!.IsWidget && !dragTile.IsShortcut)
         {
             var radius = metrics.IconSize * 0.42f;
             for (var index = 0; index < tiles.Count && index < cells.Count; index++)
             {
                 var candidate = tiles[index];
-                if (ReferenceEquals(candidate, dragTile) || candidate.IsWidget ||
+                if (ReferenceEquals(candidate, dragTile) || candidate.IsWidget || candidate.IsShortcut ||
                     candidate.IsFolder && dragTile.IsFolder)
                 {
                     continue;

@@ -121,7 +121,7 @@ internal sealed class PersonPicker
                 break;
             }
 
-            var rowHovered = UiInteract.Hover(rowMin, rowMax);
+            var rowHovered = UiInteract.HoverWindowOnly(rowMin, rowMax);
             if (rowHovered)
             {
                 Squircle.Fill(drawList, rowMin, rowMax, 9f * scale,
@@ -144,14 +144,14 @@ internal sealed class PersonPicker
             var name = SocialIdentity.Name(row.DisplayName, row.Handle);
             var nameY = rowMin.Y + 6f * scale;
             var nameSize = Typography.Measure(name, 0.95f, FontWeight.SemiBold);
-            var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
+            var nameHovering = UiInteract.HoverWindowOnly(new Vector2(textLeft, nameY),
                 new Vector2(textLeft + textMaxWidth, nameY + nameSize.Y));
             Marquee.DrawLeft("personpicker.name." + row.Handle, name, textLeft, nameY, textMaxWidth,
                 new TextStyle(0.95f, FontWeight.SemiBold), theme.TextStrong, nameHovering);
             var handleText = "@" + row.Handle;
             var handleY = nameY + nameSize.Y;
             var handleSize = Typography.Measure(handleText, 0.82f, FontWeight.Regular);
-            var handleHovering = UiInteract.Hover(new Vector2(textLeft, handleY),
+            var handleHovering = UiInteract.HoverWindowOnly(new Vector2(textLeft, handleY),
                 new Vector2(textLeft + textMaxWidth, handleY + handleSize.Y));
             Marquee.DrawLeft("personpicker.handle." + row.Handle, handleText,
                 textLeft, handleY, textMaxWidth, new TextStyle(0.82f, FontWeight.Regular),
