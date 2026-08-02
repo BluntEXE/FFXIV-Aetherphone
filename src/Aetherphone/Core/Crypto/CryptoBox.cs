@@ -36,7 +36,7 @@ internal static class CryptoBox
     private const int TagBytes = 16;
     private const string WrapPrefix = "EC1.";
     private static readonly byte[] WrapInfo = Encoding.UTF8.GetBytes("aethernet-cek-v1");
-    private static readonly SecureRandom Random = new();
+    private static readonly SecureRandom SecureRandomSource = new();
 
     private static readonly ECNamedDomainParameters P256 = CreateP256Domain();
 
@@ -45,12 +45,12 @@ internal static class CryptoBox
         try
         {
             var generator = new ECKeyPairGenerator();
-            generator.Init(new ECKeyGenerationParameters(P256, Random));
+            generator.Init(new ECKeyGenerationParameters(P256, SecureRandomSource));
             var pair = generator.GenerateKeyPair();
             return new EcPrivateKey((ECPrivateKeyParameters)pair.Private,
                 (ECPublicKeyParameters)pair.Public);
         }
-        catch (ArgumentException)
+        catch (Exception)
         {
             return null;
         }
@@ -68,7 +68,7 @@ internal static class CryptoBox
         {
             return ExportPublicKey(key);
         }
-        catch (ArgumentException)
+        catch (Exception)
         {
             return null;
         }
@@ -95,7 +95,7 @@ internal static class CryptoBox
         {
             return PrivateKeyInfoFactory.CreatePrivateKeyInfo(key.PrivateKey).GetDerEncoded();
         }
-        catch (ArgumentException)
+        catch (Exception)
         {
             return null;
         }

@@ -19,6 +19,7 @@ internal sealed class ConversationKeyStore
     private readonly KeyVault vault;
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<int, byte[]>> keysByScope = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, int> currentGenerations = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<(string ScopeId, int Generation), byte> failedUnwraps = new();
 
     public ConversationKeyStore(KeysClient client, KeyVault vault)
     {
@@ -75,6 +76,7 @@ internal sealed class ConversationKeyStore
     {
         keysByScope.Clear();
         currentGenerations.Clear();
+        failedUnwraps.Clear();
     }
 
     public async Task HydrateAsync(CancellationToken token)
@@ -716,6 +718,12 @@ internal sealed class ConversationKeyStore
                 continue;
             }
 
+            var failureKey = (scopeId, wrap.Generation);
+            if (failedUnwraps.ContainsKey(failureKey))
+            {
+                continue;
+            }
+
             var cek = vault.UnwrapCek(wrap.WrappedKey);
             if (cek is not null)
             {
@@ -723,6 +731,7 @@ internal sealed class ConversationKeyStore
             }
             else
             {
+                failedUnwraps[failureKey] = 0;
                 AepLog.Warning($"[Encryption] failed to unwrap key for {scopeId} generation {wrap.Generation}.");
             }
         }

@@ -172,16 +172,49 @@ internal sealed class SoundEffectPlayer : IDisposable
         };
     }
 
+    private static readonly Guid PcmSubFormat = new("00000001-0000-0010-8000-00aa00389b71");
+    private static readonly Guid IeeeFloatSubFormat = new("00000003-0000-0010-8000-00aa00389b71");
+
     private static WaveStream OpenWaveReader(string path)
     {
-        var reader = new WaveFileReader(path);
-        if (reader.WaveFormat.Encoding is WaveFormatEncoding.Pcm or WaveFormatEncoding.IeeeFloat)
+        WaveFileReader reader;
+        try
+        {
+            reader = new WaveFileReader(path);
+        }
+        catch (FormatException)
+        {
+            return new MediaFoundationReader(path);
+        }
+
+        if (IsSupportedPcmFormat(reader.WaveFormat))
         {
             return reader;
         }
 
         reader.Dispose();
         return new MediaFoundationReader(path);
+    }
+
+    private static bool IsSupportedPcmFormat(WaveFormat format)
+    {
+        if (format.Encoding is WaveFormatEncoding.Pcm or WaveFormatEncoding.IeeeFloat)
+        {
+            return true;
+        }
+
+        if (format.Encoding is not WaveFormatEncoding.Extensible)
+        {
+            return false;
+        }
+
+        if (format is not WaveFormatExtraData extraData || extraData.ExtraData.Length < 22)
+        {
+            return false;
+        }
+
+        var subFormat = new Guid(extraData.ExtraData[6..22]);
+        return subFormat == PcmSubFormat || subFormat == IeeeFloatSubFormat;
     }
 
     public void Dispose()
