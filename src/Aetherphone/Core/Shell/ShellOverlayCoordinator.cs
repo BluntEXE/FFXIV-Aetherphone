@@ -112,15 +112,14 @@ internal sealed class ShellOverlayCoordinator
 
         if (!director.CapturesPointer)
         {
-            banner.Draw(screen, theme);
             if (!controlCenter.IsActive)
             {
+                banner.Draw(screen, theme);
                 island.Draw(screen, theme, navigation, navigation.Current?.Id);
-            }
-
-            if (!banner.IsVisible && !controlCenter.IsActive)
-            {
-                rateLimitPill.Draw(screen, theme, delta);
+                if (!banner.IsVisible)
+                {
+                    rateLimitPill.Draw(screen, theme, delta);
+                }
             }
 
             incomingOverlay.Draw(screen, theme);

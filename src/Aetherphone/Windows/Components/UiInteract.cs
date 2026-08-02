@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Animation;
 using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Windows.Components;
@@ -19,7 +20,15 @@ internal static class UiInteract
     private static int windowHoveredFrame = -1;
     private static int gestureSurfaceFrame = -1;
 
-    public static void BlockThisFrame() => blockedFrame = ImGui.GetFrameCount();
+    public static void BlockThisFrame()
+    {
+        if (InputShield.Active)
+        {
+            return;
+        }
+
+        blockedFrame = ImGui.GetFrameCount();
+    }
 
     public static bool InputBlocked => blockedFrame == ImGui.GetFrameCount();
 
@@ -39,6 +48,11 @@ internal static class UiInteract
 
     public static bool HoverOverlay(Rect rect)
     {
+        if (InputShield.Active)
+        {
+            return false;
+        }
+
         overlayRect = rect;
         overlayFrame = ImGui.GetFrameCount();
         return !InputBlocked && WindowHovered && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);

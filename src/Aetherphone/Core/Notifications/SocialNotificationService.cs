@@ -111,9 +111,6 @@ internal sealed class SocialNotificationService : IDisposable
             return UnreadAfter(app, SeenUnix(app));
         }
 
-        // A queued ack has not reached the server yet, so its unread counts still
-        // describe rows the player already cleared. Fall back to what we can see
-        // locally until the ack confirms, or the badge would keep coming back.
         var pending = PendingAckWatermark(app);
         if (pending > 0)
         {
@@ -160,15 +157,11 @@ internal sealed class SocialNotificationService : IDisposable
             configuration.Save();
         }
 
-        // Callers draw this every frame, so only queue when something is actually
-        // outstanding. Clearing the local count above is what disarms the repeats.
         if (!advances && !hadServerUnread)
         {
             return;
         }
 
-        // The rows we cannot see are still unread on the server: acking only up to
-        // the newest row on page one would leave the badge lit with nothing behind it.
         EnqueueAck(app, advances ? newest : NowUnix());
     }
 
@@ -321,7 +314,7 @@ internal sealed class SocialNotificationService : IDisposable
         });
     }
 
-    private void ConfirmAck(string key, long watermark) => acks.Confirm(key, watermark);
+    private void ConfirmAck(string key, long watermark) => acks.ConfirmSent(key, watermark);
 
     public void RefreshNow()
     {

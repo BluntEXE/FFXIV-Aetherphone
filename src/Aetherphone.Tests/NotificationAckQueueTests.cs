@@ -34,7 +34,7 @@ public sealed class NotificationAckQueueTests
         Assert.Equal("chirper", app);
         Assert.Equal(100, watermark);
 
-        Assert.True(queue.Confirm(key, watermark));
+        Assert.True(queue.ConfirmSent(key, watermark));
         Assert.Empty(pending);
     }
 
@@ -81,7 +81,7 @@ public sealed class NotificationAckQueueTests
         var key = NotificationAckQueue.KeyFor(Account, "chirper");
         queue.Enqueue(Account, "chirper", 300);
 
-        Assert.False(queue.Confirm(key, 100));
+        Assert.False(queue.ConfirmSent(key, 100));
         Assert.Equal(300, pending[key]);
     }
 
@@ -138,7 +138,7 @@ public sealed class NotificationAckQueueTests
         queue.Enqueue(Other, "chirper", 200);
 
         Assert.True(queue.TryPeek(Account, out var key, out _, out var watermark));
-        queue.Confirm(key, watermark);
+        queue.ConfirmSent(key, watermark);
 
         Assert.Single(pending);
         Assert.Equal(200, queue.WatermarkFor(Other, "chirper"));

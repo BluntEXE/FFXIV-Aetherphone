@@ -234,8 +234,6 @@ internal sealed class NotificationCenter
 
     private void PerformRemoval()
     {
-        // Swiping a card away is the player saying they are done with it, so the
-        // server has to hear about it too or the next poll relights the badge.
         if (animNotification is { } dismissed)
         {
             router.Acknowledge(dismissed);

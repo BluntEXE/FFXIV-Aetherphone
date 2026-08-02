@@ -1,8 +1,5 @@
 namespace Aetherphone.Core.Notifications;
 
-// Read acks are the only thing that makes "seen" outlive a restart, and the transport
-// reports a rate-limited host as an empty result rather than an error. Anything queued
-// here therefore survives on disk until the server confirms it.
 internal sealed class NotificationAckQueue
 {
     public const string GlobalScope = "*";
@@ -113,11 +110,9 @@ internal sealed class NotificationAckQueue
         return false;
     }
 
-    // A newer ack may have been queued while this one was in flight; dropping it would
-    // lose the higher watermark, so only retire the entry we actually sent.
-    public bool Confirm(string key, long watermark)
+    public bool ConfirmSent(string key, long sentWatermark)
     {
-        if (!pending.TryGetValue(key, out var current) || current > watermark)
+        if (!pending.TryGetValue(key, out var queued) || queued > sentWatermark)
         {
             return false;
         }
