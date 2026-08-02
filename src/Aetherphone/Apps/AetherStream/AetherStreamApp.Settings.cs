@@ -231,8 +231,9 @@ internal sealed partial class AetherStreamApp
         var accent = AppAccents.For("aetherstream");
         return new PhoneTheme
         {
-            BezelOuter = baseTheme.BezelOuter,
             Case = baseTheme.Case,
+            CaseKind = baseTheme.CaseKind,
+            CaseTextureId = baseTheme.CaseTextureId,
             ScreenBase = baseTheme.ScreenBase,
             LightWallpaperId = baseTheme.LightWallpaperId,
             DarkWallpaperId = baseTheme.DarkWallpaperId,
@@ -247,9 +248,10 @@ internal sealed partial class AetherStreamApp
             TextMuted = baseTheme.TextMuted,
             Accent = accent,
             Danger = baseTheme.Danger,
+            RailWidth = baseTheme.RailWidth,
+            MetalWidth = baseTheme.MetalWidth,
+            GlassWidth = baseTheme.GlassWidth,
             DeviceRounding = baseTheme.DeviceRounding,
-            BezelThickness = baseTheme.BezelThickness,
-            ScreenRounding = baseTheme.ScreenRounding,
             TopZoneHeight = baseTheme.TopZoneHeight,
             BottomZoneHeight = baseTheme.BottomZoneHeight,
             SidePadding = baseTheme.SidePadding,
