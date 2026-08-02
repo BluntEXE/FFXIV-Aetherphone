@@ -38,4 +38,19 @@ internal static class ImageFit
 
     public static (Vector2 Uv0, Vector2 Uv1) CoverSquare(Vector2 imageSize) =>
         Cover(imageSize.X, imageSize.Y, 1f, 1f);
+
+    // The aspect ratio of a uv sub-window (Cover's output, or WallpaperCrop.ComputeUv's) once
+    // mapped back onto real image pixels - used to contain-fit that window into a frame with
+    // CenteredRect instead of stretching it to fill the frame outright.
+    public static float VisibleAspect(Vector2 uv0, Vector2 uv1, Vector2 imageSize)
+    {
+        if (imageSize.X <= 0f || imageSize.Y <= 0f)
+        {
+            return 1f;
+        }
+
+        var width = (uv1.X - uv0.X) * imageSize.X;
+        var height = (uv1.Y - uv0.Y) * imageSize.Y;
+        return height > 0f ? width / height : 1f;
+    }
 }
