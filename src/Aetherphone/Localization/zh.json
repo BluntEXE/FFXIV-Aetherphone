@@ -3520,5 +3520,9 @@
   "shortcuts.addLink": "链接",
   "shortcuts.urlHint": "https://example.com",
   "shortcuts.kindOpenUrl": "打开链接",
-  "shortcuts.runLinkRejected": "无法打开该链接"
+  "shortcuts.runLinkRejected": "无法打开该链接",
+  "shortcuts.runStep": "第 {0} 步，共 {1} 步",
+  "shortcuts.runHolding": "正在等待游戏",
+  "shortcuts.runNotLoggedIn": "请先登录再运行",
+  "shortcuts.runGameBusy": "游戏一直处于忙碌状态，已停止"
 }

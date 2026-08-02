@@ -3520,5 +3520,9 @@
   "shortcuts.addLink": "Bağlantı",
   "shortcuts.urlHint": "https://example.com",
   "shortcuts.kindOpenUrl": "BAĞLANTI AÇ",
-  "shortcuts.runLinkRejected": "Bu bağlantı açılamadı"
+  "shortcuts.runLinkRejected": "Bu bağlantı açılamadı",
+  "shortcuts.runStep": "Adım {0} / {1}",
+  "shortcuts.runHolding": "Oyun bekleniyor",
+  "shortcuts.runNotLoggedIn": "Bunu çalıştırmak için oturum açın",
+  "shortcuts.runGameBusy": "Oyun meşgul kaldığı için durduruldu"
 }

@@ -1,3 +1,4 @@
+using System.Numerics;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Shortcuts;
@@ -266,6 +267,93 @@ public sealed class ShortcutEntryCopyTests
         Assert.Equal("New", target.Name);
         Assert.Single(target.Steps);
         Assert.Equal("/three", target.Steps[0].Text);
+    }
+}
+
+public sealed class ShortcutHoldTests
+{
+    [Fact]
+    public void AnUnblockedStep_RunsStraightAway()
+    {
+        var hold = new ShortcutHold();
+
+        Assert.Equal(ShortcutHoldOutcome.Ready, hold.Advance(false, 0.016f));
+        Assert.False(hold.IsWaiting);
+    }
+
+    [Fact]
+    public void ABlockedStep_WaitsInsteadOfFailing()
+    {
+        var hold = new ShortcutHold();
+
+        Assert.Equal(ShortcutHoldOutcome.Waiting, hold.Advance(true, 1f));
+        Assert.True(hold.IsWaiting);
+    }
+
+    [Fact]
+    public void ABlockThatClears_ReleasesTheStepAndForgetsTheWait()
+    {
+        var hold = new ShortcutHold();
+        hold.Advance(true, 5f);
+
+        Assert.Equal(ShortcutHoldOutcome.Ready, hold.Advance(false, 0.016f));
+        Assert.False(hold.IsWaiting);
+    }
+
+    [Fact]
+    public void ABlockThatNeverClears_ExpiresInsteadOfHangingForever()
+    {
+        var hold = new ShortcutHold();
+        var outcome = ShortcutHoldOutcome.Ready;
+        for (var second = 0; second < 60 && outcome != ShortcutHoldOutcome.Expired; second++)
+        {
+            outcome = hold.Advance(true, 1f);
+        }
+
+        Assert.Equal(ShortcutHoldOutcome.Expired, outcome);
+    }
+
+    [Fact]
+    public void AnExpiredHold_StartsCleanForTheNextRun()
+    {
+        var hold = new ShortcutHold();
+
+        hold.Advance(true, ShortcutHold.MaxSeconds);
+
+        Assert.False(hold.IsWaiting);
+    }
+}
+
+public sealed class ShortcutGameGateTests
+{
+    [Fact]
+    public void OnlyCommandSteps_WaitOnTheGame()
+    {
+        Assert.True(ShortcutRunner.NeedsGame(ShortcutStepKind.Command));
+        Assert.False(ShortcutRunner.NeedsGame(ShortcutStepKind.Wait));
+        Assert.False(ShortcutRunner.NeedsGame(ShortcutStepKind.OpenPlugin));
+        Assert.False(ShortcutRunner.NeedsGame(ShortcutStepKind.OpenUrl));
+    }
+}
+
+public sealed class ShortcutRunViewTests
+{
+    [Fact]
+    public void AnIdleView_IsNotRunning()
+    {
+        var view = new ShortcutRunView(Guid.Empty, string.Empty, Vector4.Zero, 1, 0, false);
+
+        Assert.False(view.IsRunning);
+        Assert.Equal(0f, view.Progress);
+    }
+
+    [Fact]
+    public void ProgressTracksTheStepThroughTheQueue()
+    {
+        var view = new ShortcutRunView(Guid.NewGuid(), "Ride", Vector4.One, 2, 4, false);
+
+        Assert.True(view.IsRunning);
+        Assert.Equal(0.5f, view.Progress);
     }
 }
 

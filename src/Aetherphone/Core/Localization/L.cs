@@ -263,6 +263,10 @@ internal static class L
         public static readonly LocString RunDone = new("shortcuts.runDone", "Ran {0}");
         public static readonly LocString RunRejected = new("shortcuts.runRejected", "The game refused that command");
         public static readonly LocString RunPluginMissing = new("shortcuts.runPluginMissing", "That plugin is not loaded");
+        public static readonly LocString RunStep = new("shortcuts.runStep", "Step {0} of {1}");
+        public static readonly LocString RunHolding = new("shortcuts.runHolding", "Waiting for the game");
+        public static readonly LocString RunNotLoggedIn = new("shortcuts.runNotLoggedIn", "Log in to run this");
+        public static readonly LocString RunGameBusy = new("shortcuts.runGameBusy", "The game stayed busy, so it stopped");
         public static readonly LocString SearchPlugins = new("shortcuts.searchPlugins", "Search plugins and commands");
         public static readonly LocString NoPluginsFound = new("shortcuts.noPluginsFound", "No plugins match that search.");
         public static readonly LocString PluginDisabled = new("shortcuts.pluginDisabled", "Disabled");

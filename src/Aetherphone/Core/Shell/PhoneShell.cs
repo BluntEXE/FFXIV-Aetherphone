@@ -38,6 +38,7 @@ internal sealed class PhoneShell : IDisposable
     private readonly WidgetRegistry widgets;
     private readonly NavigationStack navigation;
     private readonly NotificationBanner banner;
+    private readonly ShortcutRunPill shortcutPill;
     private readonly MinimizedPhone minimizedView;
     private readonly MinimizeTransition minimize = new();
     private readonly SideButton sideButton = new();
@@ -83,6 +84,7 @@ internal sealed class PhoneShell : IDisposable
         banner.Shown += OnBannerShown;
         var island = new DynamicIsland(services.Playback, calls);
         var rateLimitPill = new RateLimitPill(services.Http, services.AethernetSession);
+        shortcutPill = new ShortcutRunPill(services.ShortcutRunner);
         var controlCenter = new ControlCenter(configuration, themes, services.Playback, calls, navigation,
             notifications, router);
         minimizedView = new MinimizedPhone(notifications, configuration);
@@ -105,8 +107,8 @@ internal sealed class PhoneShell : IDisposable
         transition = new ShellTransitionRenderer(themes, navigation, home, painter);
         morph = new MinimizeMorphView(themes, minimize, minimizedView, notifications, painter);
         overlays = new ShellOverlayCoordinator(configuration, loading, navigation, controlCenter, banner, island,
-            rateLimitPill, incomingOverlay, banOverlay, confirmOverlay, reportOverlay, shareSheet, conductOverlay,
-            director, setup);
+            rateLimitPill, shortcutPill, incomingOverlay, banOverlay, confirmOverlay, reportOverlay, shareSheet,
+            conductOverlay, director, setup);
     }
 
     public void OnOpened()
@@ -378,6 +380,7 @@ internal sealed class PhoneShell : IDisposable
         AdChatBridge.Clear();
         banner.Shown -= OnBannerShown;
         banner.Dispose();
+        shortcutPill.Dispose();
         minimizedView.Dispose();
         setup.Dispose();
         for (var index = 0; index < apps.Count; index++)

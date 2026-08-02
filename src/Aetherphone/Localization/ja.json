@@ -3520,5 +3520,9 @@
   "shortcuts.addLink": "リンク",
   "shortcuts.urlHint": "https://example.com",
   "shortcuts.kindOpenUrl": "リンクを開く",
-  "shortcuts.runLinkRejected": "このリンクを開けませんでした"
+  "shortcuts.runLinkRejected": "このリンクを開けませんでした",
+  "shortcuts.runStep": "ステップ {0}/{1}",
+  "shortcuts.runHolding": "ゲームの待機中",
+  "shortcuts.runNotLoggedIn": "実行するにはログインしてください",
+  "shortcuts.runGameBusy": "ゲームがビジー状態のままだったため停止しました"
 }

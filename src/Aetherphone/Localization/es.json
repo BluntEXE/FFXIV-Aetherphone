@@ -3520,5 +3520,9 @@
   "shortcuts.addLink": "Enlace",
   "shortcuts.urlHint": "https://example.com",
   "shortcuts.kindOpenUrl": "ABRIR ENLACE",
-  "shortcuts.runLinkRejected": "No se pudo abrir ese enlace"
+  "shortcuts.runLinkRejected": "No se pudo abrir ese enlace",
+  "shortcuts.runStep": "Paso {0} de {1}",
+  "shortcuts.runHolding": "Esperando al juego",
+  "shortcuts.runNotLoggedIn": "Inicia sesión para ejecutarlo",
+  "shortcuts.runGameBusy": "El juego siguió ocupado, así que se detuvo"
 }

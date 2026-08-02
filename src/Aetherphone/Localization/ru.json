@@ -3520,5 +3520,9 @@
   "shortcuts.addLink": "Ссылка",
   "shortcuts.urlHint": "https://example.com",
   "shortcuts.kindOpenUrl": "ОТКРЫТЬ ССЫЛКУ",
-  "shortcuts.runLinkRejected": "Не удалось открыть эту ссылку"
+  "shortcuts.runLinkRejected": "Не удалось открыть эту ссылку",
+  "shortcuts.runStep": "Шаг {0} из {1}",
+  "shortcuts.runHolding": "Ожидание игры",
+  "shortcuts.runNotLoggedIn": "Войдите в игру, чтобы запустить это",
+  "shortcuts.runGameBusy": "Игра оставалась занята, выполнение остановлено"
 }

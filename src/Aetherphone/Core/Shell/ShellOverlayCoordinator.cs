@@ -32,6 +32,7 @@ internal sealed class ShellOverlayCoordinator
     private readonly NotificationBanner banner;
     private readonly DynamicIsland island;
     private readonly RateLimitPill rateLimitPill;
+    private readonly ShortcutRunPill shortcutPill;
     private readonly IncomingCallOverlay incomingOverlay;
     private readonly BanOverlay banOverlay;
     private readonly ConfirmOverlay confirmOverlay;
@@ -43,9 +44,9 @@ internal sealed class ShellOverlayCoordinator
 
     public ShellOverlayCoordinator(Configuration configuration, LoadingScreen loading, NavigationStack navigation,
         ControlCenter controlCenter, NotificationBanner banner, DynamicIsland island, RateLimitPill rateLimitPill,
-        IncomingCallOverlay incomingOverlay, BanOverlay banOverlay, ConfirmOverlay confirmOverlay,
-        ReportOverlay reportOverlay, ShareSheet shareSheet, ConductGateOverlay conductOverlay,
-        OnboardingDirector director, SetupOverlay setup)
+        ShortcutRunPill shortcutPill, IncomingCallOverlay incomingOverlay, BanOverlay banOverlay,
+        ConfirmOverlay confirmOverlay, ReportOverlay reportOverlay, ShareSheet shareSheet,
+        ConductGateOverlay conductOverlay, OnboardingDirector director, SetupOverlay setup)
     {
         this.configuration = configuration;
         this.loading = loading;
@@ -54,6 +55,7 @@ internal sealed class ShellOverlayCoordinator
         this.banner = banner;
         this.island = island;
         this.rateLimitPill = rateLimitPill;
+        this.shortcutPill = shortcutPill;
         this.incomingOverlay = incomingOverlay;
         this.banOverlay = banOverlay;
         this.confirmOverlay = confirmOverlay;
@@ -78,7 +80,8 @@ internal sealed class ShellOverlayCoordinator
         var islandCaptures = !loading.IsActive && !controlCenterCaptures && !ringing && !confirming &&
                              !setupActive && !conductActive && !banNotice &&
                              (island.CapturesPointer(screen) ||
-                              (!director.CapturesPointer && banner.CapturesPointer(screen)));
+                              (!director.CapturesPointer &&
+                               (banner.CapturesPointer(screen) || shortcutPill.CapturesPointer())));
         var busy = loading.IsActive || overlaysCapture || ringing || confirming || navigation.IsTransitioning ||
                    setupActive || banNotice || conductActive;
         var shieldBase = loading.IsActive || islandCaptures || controlCenterCaptures || ringing || confirming ||
@@ -116,7 +119,8 @@ internal sealed class ShellOverlayCoordinator
             {
                 banner.Draw(screen, theme);
                 island.Draw(screen, theme, navigation, navigation.Current?.Id);
-                if (!banner.IsVisible)
+                shortcutPill.Draw(screen, theme, delta, banner.IsVisible);
+                if (!banner.IsVisible && !shortcutPill.IsVisible)
                 {
                     rateLimitPill.Draw(screen, theme, delta);
                 }

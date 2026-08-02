@@ -263,7 +263,7 @@ internal sealed class PhoneServices : IDisposable
             RemoteImages = remoteImages,
             PluginCatalog = pluginCatalog,
             Shortcuts = new ShortcutStore(configuration, pluginCatalog),
-            ShortcutRunner = new ShortcutRunner(),
+            ShortcutRunner = new ShortcutRunner(clientState, condition),
             Lodestone = lodestone,
             Lookup = lookup,
             AethernetSession = aethernetSession,

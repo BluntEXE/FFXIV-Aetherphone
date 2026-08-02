@@ -23,7 +23,6 @@ internal sealed partial class ShortcutsApp : IPhoneApp
     }
 
     private const float RowHeight = 62f;
-    private const float FlashSeconds = 2.6f;
 
     public string Id => "shortcuts";
     public string DisplayName => Loc.T(L.Apps.Shortcuts);
@@ -43,9 +42,6 @@ internal sealed partial class ShortcutsApp : IPhoneApp
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
     private int activeTab;
-    private float flashClock;
-    private ShortcutRunOutcome flashOutcome;
-    private string flashName = string.Empty;
 
     public ShortcutsApp(ShortcutStore store, ShortcutRunner runner, ConfirmService confirm)
     {
@@ -56,7 +52,6 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         router = new ViewRouter<ShortcutsScreen>(ShortcutsScreen.Home);
         drawView = DrawView;
         back = GoBack;
-        runner.Finished += OnRunFinished;
     }
 
     public void OnOpened()
@@ -72,18 +67,6 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         draft = null;
     }
 
-    private void OnRunFinished(Guid id, string name, ShortcutRunOutcome outcome)
-    {
-        if (outcome == ShortcutRunOutcome.Cancelled)
-        {
-            return;
-        }
-
-        flashOutcome = outcome;
-        flashName = name;
-        flashClock = FlashSeconds;
-    }
-
     public void Draw(in PhoneContext context)
     {
         theme = context.Theme;
@@ -91,11 +74,6 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         ui.Theme = context.Theme;
 
         var delta = ImGui.GetIO().DeltaTime;
-        if (flashClock > 0f)
-        {
-            flashClock -= delta;
-        }
-
         var scale = ImGuiHelpers.GlobalScale;
         var screen = SceneChrome.ScreenFrom(context.Content, context.Theme, scale);
         ui.Backdrop(screen);
@@ -150,7 +128,6 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         var body = new Rect(new Vector2(content.Min.X, bodyTop), content.Max);
         using (AppSurface.Begin(body))
         {
-            DrawFlash(scale);
             DrawLibrary(body, scale);
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
         }
@@ -175,46 +152,6 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         }
     }
 
-    private void DrawFlash(float scale)
-    {
-        if (flashClock <= 0f)
-        {
-            return;
-        }
-
-        var alpha = Math.Clamp(flashClock / 0.5f, 0f, 1f);
-        var success = flashOutcome == ShortcutRunOutcome.Completed;
-        var tint = success ? ui.Accent : theme.Danger;
-        var ranName = flashName.Length > 0 ? flashName : Loc.T(L.Shortcuts.Untitled);
-        var label = flashOutcome switch
-        {
-            ShortcutRunOutcome.Completed => Loc.T(L.Shortcuts.RunDone, ranName),
-            ShortcutRunOutcome.PluginUnavailable => Loc.T(L.Shortcuts.RunPluginMissing),
-            ShortcutRunOutcome.LinkRejected => Loc.T(L.Shortcuts.RunLinkRejected),
-            _ => Loc.T(L.Shortcuts.RunRejected),
-        };
-
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var height = 34f * scale;
-        var drawList = ImGui.GetWindowDrawList();
-        var min = origin;
-        var max = new Vector2(origin.X + width, origin.Y + height);
-        Squircle.Fill(drawList, min, max, height * 0.5f,
-            ImGui.GetColorU32(Palette.WithAlpha(tint, 0.20f * alpha)));
-        var icon = success ? FontAwesomeIcon.Check : FontAwesomeIcon.ExclamationCircle;
-        AppSkin.Icon(new Vector2(min.X + 18f * scale, min.Y + height * 0.5f), icon.ToIconString(),
-            Palette.WithAlpha(tint, alpha), 0.8f);
-        var textLeft = min.X + 34f * scale;
-        var fitted = Typography.FitText(label, max.X - textLeft - 12f * scale, TextStyles.Footnote.Scale,
-            TextStyles.Footnote.Weight);
-        var textSize = Typography.Measure(fitted, TextStyles.Footnote);
-        Typography.Draw(drawList, new Vector2(textLeft, min.Y + height * 0.5f - textSize.Y * 0.5f), fitted,
-            Palette.WithAlpha(ui.TitleInk, alpha), TextStyles.Footnote.Scale, TextStyles.Footnote.Weight);
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, height + Metrics.Space.Sm * scale));
-    }
-
     private void DrawLibrary(Rect body, float scale)
     {
         var shortcuts = store.All;
@@ -224,10 +161,11 @@ internal sealed partial class ShortcutsApp : IPhoneApp
             return;
         }
 
+        var run = runner.Snapshot();
         var card = GroupCard.Begin(theme, shortcuts.Count, RowHeight);
         for (var index = 0; index < shortcuts.Count; index++)
         {
-            DrawShortcutRow(card.NextRow(), shortcuts[index], scale);
+            DrawShortcutRow(card.NextRow(), shortcuts[index], run, scale);
         }
 
         card.End();
@@ -244,7 +182,7 @@ internal sealed partial class ShortcutsApp : IPhoneApp
             ui.MutedInk, TextStyles.Footnote);
     }
 
-    private void DrawShortcutRow(Rect row, ShortcutEntry entry, float scale)
+    private void DrawShortcutRow(Rect row, ShortcutEntry entry, in ShortcutRunView run, float scale)
     {
         var tile = 38f * scale;
         var tileCenter = new Vector2(row.Min.X + tile * 0.5f, row.Center.Y);
@@ -255,11 +193,11 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         var textLeft = row.Min.X + tile + Metrics.Space.Md * scale;
         var textWidth = MathF.Max(1f, editCenter.X - editRadius - 8f * scale - textLeft);
 
-        var running = runner.IsRunning && runner.RunningId == entry.Id;
-        var name = entry.Name.Length > 0 ? entry.Name : Loc.T(L.Shortcuts.Untitled);
+        var running = run.IsRunning && run.Id == entry.Id;
+        var name = ShortcutRunText.Name(entry.Name);
         Marquee.DrawLeftAuto("shortcuts.row." + entry.Id, name, textLeft, row.Center.Y - 16f * scale, textWidth,
             TextStyles.Headline, ui.TitleInk);
-        var subtitle = running ? Loc.T(L.Shortcuts.Running) : Summarise(entry);
+        var subtitle = running ? ShortcutRunText.Status(run) : Summarise(entry);
         Marquee.DrawLeftAuto("shortcuts.row.sub." + entry.Id, subtitle, textLeft, row.Center.Y + 5f * scale, textWidth,
             TextStyles.Footnote, running ? ui.Accent : ui.MutedInk);
 
@@ -305,6 +243,5 @@ internal sealed partial class ShortcutsApp : IPhoneApp
 
     public void Dispose()
     {
-        runner.Finished -= OnRunFinished;
     }
 }

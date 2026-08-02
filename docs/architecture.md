@@ -149,6 +149,7 @@ The shell's cast, all in `src/Aetherphone/Core/Shell/`:
 | `ShellOverlayCoordinator` | Decides overlay visibility, z-order, and pointer capture |
 | `MinimizeTransition` / `MinimizeMorphView` | Phone-to-puck collapse state and rendering |
 | `RateLimitPill` | Small pill shown when the backend rate limiter pushes back |
+| `ShortcutRunPill` | Progress and stop button for the running shortcut, plus its outcome |
 
 ### Loading screen
 
@@ -156,10 +157,12 @@ When the window opens full size, `PhoneShell.OnOpened` calls `loading.BeginSessi
 
 ### Overlays and z-order
 
-The overlay model is plain ImGui: **later draw calls appear on top**, so the call order in `ShellOverlayCoordinator.DrawOverlays` is the z-order. From bottom to top: notification banner, dynamic island, rate limit pill, incoming call overlay, control center, share sheet, report overlay, confirm overlay, onboarding director, conduct gate, ban overlay. Two special cases sit outside that list:
+The overlay model is plain ImGui: **later draw calls appear on top**, so the call order in `ShellOverlayCoordinator.DrawOverlays` is the z-order. From bottom to top: notification banner, dynamic island, shortcut run pill, rate limit pill, incoming call overlay, control center, share sheet, report overlay, confirm overlay, onboarding director, conduct gate, ban overlay. Two special cases sit outside that list:
 
 - While `LoadingScreen.IsActive`, `DrawOverlays` draws the boot screen and returns early, so nothing else can appear above it.
 - `DeviceChrome.SealScreen` always runs last. It draws the screen corner mask and the brightness veil on `ImGui.GetForegroundDrawList()`, which renders above every ImGui window, so no content can ever poke outside the rounded screen.
+
+The banner and the two pills all sit in the same strip under the island, so they take turns rather than stack: the notification banner wins, then `ShortcutRunPill`, then `RateLimitPill`. `ShortcutRunPill` is the only one of the three that takes input (its stop button), so it joins the banner in the pointer-capture term that `Assess` folds into `IslandCaptures`.
 
 `Assess` runs before content each frame and returns a `ShellOverlayState` (`Busy`, `ShieldBase`, and friends). `PhoneShell` wraps content drawing in `InputShield.Engage(...)` (src/Aetherphone/Core/Animation/InputShield.cs) so that when any overlay owns the pointer, the layers underneath stop reacting to hover and clicks even though they still draw.
 
