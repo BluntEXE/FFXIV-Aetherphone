@@ -1118,13 +1118,9 @@ internal sealed partial class AethergramApp : IPhoneApp
             // compose time (see AethergramStore.CreateGram), which can differ from this post's
             // shared carousel container when photos in the same post used different aspects -
             // covering here would crop it a second time. When the aspects do match (the common
-            // case, including every pre-existing post), imageRect equals rect exactly and the
-            // backdrop fill below is fully covered, so this is a no-op visually.
-            Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(PhotoComposeSession.LetterboxFill));
-            var imageAspect = texture.Size.Y > 0f ? texture.Size.X / texture.Size.Y : 1f;
-            var imageRect = ImageFit.CenteredRect(rect, imageAspect);
-            drawList.AddImageRounded(texture.Handle, imageRect.Min, imageRect.Max, Vector2.Zero, Vector2.One,
-                0xFFFFFFFFu, rounding, ImDrawFlags.RoundCornersAll);
+            // case, including every pre-existing post), the drawn image fills rect exactly and
+            // the backdrop is fully covered, so this is a no-op visually.
+            ImageFit.DrawLetterboxed(drawList, texture, rect, Vector2.Zero, Vector2.One, rounding);
         }
 
         ModerationOverlay.Draw(drawList, rect.Min, rect.Max, rounding, scanStatus);
