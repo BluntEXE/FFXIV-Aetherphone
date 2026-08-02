@@ -1008,15 +1008,25 @@ internal static class L
         public static readonly LocString[] Release0997 =
         {
             new("changelog.r0997.0",
-                "You can now resize the phone by dragging the bottom right corner of its frame"),
+                "Added Shortcuts, a new app that turns a run of commands into a single tap and pins it to the home screen"),
             new("changelog.r0997.1",
-                "Phone Size in Settings is a slider now, so you can pick any size instead of six fixed ones"),
+                "You can now resize the phone by dragging the bottom right corner of its frame"),
             new("changelog.r0997.2",
-                "The whole screen scales with the phone, so text and icons grow with it instead of staying small"),
+                "Phone Size in Settings is a slider now, so you can pick any size instead of six fixed ones"),
             new("changelog.r0997.3",
-                "Text Size is a slider too now, and it goes down to 70 percent for people who want smaller text"),
+                "The whole screen scales with the phone, so text and icons grow with it instead of staying small"),
             new("changelog.r0997.4",
+                "Text Size is a slider too now, and it goes down to 70 percent for people who want smaller text"),
+            new("changelog.r0997.5",
                 "Accent is a full color picker now, so you can use any color you like instead of the five presets"),
+            new("changelog.r0997.6",
+                "Ringtone volume and notification volume are sliders now, so you can pick any level instead of four fixed steps"),
+            new("changelog.r0997.7",
+                "The minimized phone now stays the same size whatever size the phone itself is"),
+            new("changelog.r0997.8",
+                "Fixed notifications coming back after you cleared them, and badges staying lit after everything had been read"),
+            new("changelog.r0997.9",
+                "Fixed taps in the Control Center doing nothing while a menu or picker was open in the app behind it"),
         };
 
         public static readonly LocString[] Release0996 =
