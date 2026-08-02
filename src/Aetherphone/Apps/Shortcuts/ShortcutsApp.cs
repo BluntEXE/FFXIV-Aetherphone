@@ -172,9 +172,9 @@ internal sealed partial class ShortcutsApp : IPhoneApp
             StartNewShortcut();
         }
 
-        var importCenter = new Vector2(buttonCenter.X - radius * 2.4f, centerY);
-        if (ui.IconButton(importCenter, radius, FontAwesomeIcon.FileImport.ToIconString(), ui.MutedInk,
-                AppSkin.Transparent, 0.58f, Loc.T(L.Shortcuts.ImportShortcut)))
+        var importCenter = new Vector2(buttonCenter.X - radius * 2.6f, centerY);
+        if (ui.IconButton(importCenter, radius, FontAwesomeIcon.FileImport.ToIconString(), ui.TitleInk,
+                Palette.WithAlpha(ui.TitleInk, 0.12f), 0.6f, Loc.T(L.Shortcuts.ImportShortcut)))
         {
             BeginImport();
         }
