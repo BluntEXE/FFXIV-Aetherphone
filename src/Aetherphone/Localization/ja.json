@@ -2455,6 +2455,7 @@
   "plugin.maximizeHint": "最大化",
   "plugin.lockPositionHint": "位置をロック",
   "plugin.unlockPositionHint": "位置のロックを解除",
+  "plugin.resizeHint": "ドラッグしてサイズ変更",
   "plugin.dndEnableHint": "おやすみモードをオンにする",
   "plugin.dndDisableHint": "おやすみモードをオフにする",
   "plugin.updateChip": "{0} に更新",

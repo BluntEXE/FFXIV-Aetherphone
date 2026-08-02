@@ -7,7 +7,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -37,7 +36,7 @@ internal sealed class StoryTrayRow
     public void Draw(PhoneTheme theme, AppPalette palette, StoryRingDto[] rings, bool hasOwnStory,
         StoryRingPainter painter, Action onAddStory, Action<StoryRingDto> onOpenRing)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var tile = TileWidth * scale;
         var slots = rings.Length + (hasOwnStory ? 0 : 1);
         if (slots == 0)

@@ -2,7 +2,6 @@ using Aetherphone.Core.Animation;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -81,7 +80,7 @@ internal static class ProgressRing
         var bs = Typography.Measure(big, bigStyle);
         var hasSmall = !string.IsNullOrEmpty(small);
         var ss = hasSmall ? Typography.Measure(small!, TextStyles.Footnote) : Vector2.Zero;
-        var gap = hasSmall ? 2f * ImGuiHelpers.GlobalScale : 0f;
+        var gap = hasSmall ? 2f * UiScale.Current : 0f;
         var top = c.Y - (bs.Y + gap + ss.Y) * 0.5f;
         Typography.Draw(new Vector2(c.X - bs.X * 0.5f, top), big, bigCol, bigStyle);
         if (hasSmall)
@@ -142,7 +141,7 @@ internal static class ProgressRing
         var max = c + new Vector2(radius, radius);
         var hovered = enabled && UiInteract.Hover(min, max);
         var accent = Accent.Violet;
-        var thickness = 4.5f * ImGuiHelpers.GlobalScale;
+        var thickness = 4.5f * UiScale.Current;
         if (enabled)
             Glow(c, radius, accent, 0.85f + (hovered ? 1.0f : 0f) + 0.55f * Pulse.Wave(Pulse.Breath));
         dl.AddCircleFilled(c, radius - thickness * 0.5f,

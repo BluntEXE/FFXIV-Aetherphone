@@ -9,7 +9,6 @@ using Aetherphone.Core.Notifications;
 using Aetherphone.Core.YellowPages;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Windows.Components;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Notifications;
 
@@ -68,7 +67,7 @@ internal sealed class NotificationsApp : IPhoneApp
             new NotificationRouter(context.Navigation, notifications, socialNotifications, linkpearlLauncher,
                 velvetLauncher, dmLauncher, gramDmLauncher, socialLauncher, musterLauncher, yellowPagesLauncher,
                 announcementsLauncher, safetyLauncher));
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + AppHeader.Height * scale), content.Max);
         UiAnchors.Report("notifications.list", body);

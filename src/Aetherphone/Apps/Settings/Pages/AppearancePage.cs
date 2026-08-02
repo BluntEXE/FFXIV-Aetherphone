@@ -9,7 +9,6 @@ using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Settings.Pages;
 
@@ -20,6 +19,7 @@ internal sealed class AppearancePage : ISettingsPage
     public FontAwesomeIcon Icon => FontAwesomeIcon.Palette;
     public Vector4 Tint => new(0.55f, 0.45f, 0.95f, 1f);
     public string? GuideAnchor => "settings.row.appearance";
+    private const float SizeReadoutColumn = 46f;
     private static readonly ThemeMode[] ModeOrder = { ThemeMode.Light, ThemeMode.Dark, ThemeMode.Auto };
     private readonly Configuration configuration;
     private readonly ThemeProvider themes;
@@ -49,7 +49,7 @@ internal sealed class AppearancePage : ISettingsPage
         {
             SettingsSection.Header(Loc.T(L.Settings.Theme), theme);
             var accentLabel = Loc.T(L.Settings.Accent);
-            var cardWidth = ImGui.GetContentRegionAvail().X - 2f * Metrics.Space.Lg * ImGuiHelpers.GlobalScale;
+            var cardWidth = ImGui.GetContentRegionAvail().X - 2f * Metrics.Space.Lg * UiScale.Current;
             var accentStacked = SwatchStrip.NeedsTwoRows(accentLabel, ThemeCatalog.Accents.Count, cardWidth);
             var card = GroupCard.Begin(theme, accentStacked ? 5 : 4);
             var modeIndex = SegmentStrip.Draw("settings.themeMode", card.NextRow(), ModeLabels(), CurrentModeIndex(),
@@ -98,16 +98,8 @@ internal sealed class AppearancePage : ISettingsPage
 
             SettingsSection.Header(Loc.T(L.Settings.PhoneSize), theme);
             var sizeCard = GroupCard.Begin(theme, 1);
-            var sizeIndex = SegmentStrip.Draw("settings.phoneSize", sizeCard.NextRow(), PhoneSizeCatalog.Labels,
-                PhoneSizeCatalog.IndexOf(configuration.PhoneScale), theme);
+            DrawPhoneSizeSlider(sizeCard.NextRow(), theme);
             sizeCard.End();
-            var phoneScale = PhoneSizeCatalog.Scales[sizeIndex];
-            if (MathF.Abs(phoneScale - configuration.PhoneScale) > 0.001f)
-            {
-                configuration.PhoneScale = phoneScale;
-                themes.Apply(configuration);
-                configuration.Save();
-            }
 
             SettingsSection.Header(Loc.T(L.Settings.ClockFormat), theme);
             var clockCard = GroupCard.Begin(theme, 1);
@@ -123,6 +115,33 @@ internal sealed class AppearancePage : ISettingsPage
 
             DrawHomeSection(theme);
         }
+    }
+
+    private void DrawPhoneSizeSlider(Rect row, PhoneTheme theme)
+    {
+        var scale = UiScale.Current;
+        var readout = SizeReadoutColumn * scale + Metrics.Space.Md * scale;
+        var smallest = PhoneSizeCatalog.MinimumWidth;
+        var largest = MathF.Max(PhoneBounds.ClampWidth(PhoneSizeCatalog.MaximumWidth), smallest + 1f);
+        var span = largest - smallest;
+        var effective = PhoneBounds.ClampWidth(configuration.PhoneWidth);
+        var slider = Slider.Draw("settings.phoneSize", row, (effective - smallest) / span, theme, 0f, readout);
+        var width = PhoneSizeCatalog.Snap(PhoneBounds.ClampWidth(smallest + slider.Value * span));
+        if ((slider.Dragging || slider.Released) && MathF.Abs(width - configuration.PhoneWidth) > 0.01f)
+        {
+            configuration.PhoneWidth = width;
+        }
+
+        if (slider.Released)
+        {
+            configuration.Save();
+        }
+
+        var shown = PhoneBounds.ClampWidth(configuration.PhoneWidth);
+        var text = $"{(int)MathF.Round(PhoneSizeCatalog.ZoomFor(shown) * 100f)}%";
+        var size = Typography.Measure(text, TextStyles.Body);
+        Typography.Draw(new Vector2(row.Max.X - size.X, row.Center.Y - size.Y * 0.5f), text, theme.TextMuted,
+            TextStyles.Body);
     }
 
     private void DrawHomeSection(PhoneTheme theme)

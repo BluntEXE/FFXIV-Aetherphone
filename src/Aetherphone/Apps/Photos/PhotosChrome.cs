@@ -4,7 +4,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures.TextureWraps;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Photos;
 
@@ -15,7 +14,7 @@ internal static class PhotosChrome
     public static void Thumbnail(ImDrawListPtr drawList, IDalamudTextureWrap? texture, Vector2 min, Vector2 max,
         bool hovered, Vector4 placeholder)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var rounding = ThumbRounding * scale;
         if (texture is null)
         {

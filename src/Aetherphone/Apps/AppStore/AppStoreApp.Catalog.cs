@@ -4,7 +4,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.AppStore;
 
@@ -20,7 +19,7 @@ internal sealed partial class AppStoreApp
 
     private void DrawCatalogTab(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         DrawLargeTitle(area, Loc.T(L.Store.Apps), null);
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + (HeaderHeight - 18f) * scale), area.Max);
         using (var surface = AppSurface.Begin(body))
@@ -127,7 +126,7 @@ internal sealed partial class AppStoreApp
 
     private void DrawCategoryView(Rect area, StoreCategory category)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         DrawNavBar(area, Loc.T(AppStoreCatalog.Name(category)), scale);
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         using (AppSurface.Begin(body))
@@ -147,7 +146,7 @@ internal sealed partial class AppStoreApp
 
     private void DrawSearchTab(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         DrawLargeTitle(area, Loc.T(L.Store.Search), null);
         var barTop = area.Min.Y + (HeaderHeight - 12f) * scale;
         var bar = new Rect(new Vector2(area.Min.X + Metrics.Space.Lg * scale, barTop),

@@ -2,7 +2,6 @@ using Aetherphone.Core;
 using Aetherphone.Core.Shell.Home;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -14,16 +13,16 @@ internal static class DeviceChrome
 
     public static Rect BodyRect(Rect window, PhoneTheme theme)
     {
-        var rail = theme.RailWidth * ImGuiHelpers.GlobalScale;
+        var rail = theme.RailWidth * UiScale.Current;
         return new Rect(new Vector2(window.Min.X + rail, window.Min.Y), new Vector2(window.Max.X - rail, window.Max.Y));
     }
 
     public static ChassisGeometry Chassis(Rect window, PhoneTheme theme) =>
-        ChassisGeometry.Device(window, theme, ImGuiHelpers.GlobalScale);
+        ChassisGeometry.Device(window, theme, UiScale.Current);
 
     public static Rect SideButtonRect(Rect window, in ChassisGeometry chassis)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var device = chassis.Body;
         var top = device.Min.Y + device.Height * 0.250f;
         var height = device.Height * 0.108f;
@@ -32,7 +31,7 @@ internal static class DeviceChrome
 
     public static Rect MuteButtonRect(Rect window, in ChassisGeometry chassis)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var device = chassis.Body;
         var top = device.Min.Y + device.Height * 0.205f;
         var height = device.Height * 0.082f;
@@ -41,7 +40,7 @@ internal static class DeviceChrome
 
     public static Rect LockButtonRect(Rect window, in ChassisGeometry chassis)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var device = chassis.Body;
         var top = device.Min.Y + device.Height * 0.315f;
         var height = device.Height * 0.082f;
@@ -50,7 +49,7 @@ internal static class DeviceChrome
 
     public static Rect DrawBody(in ChassisGeometry chassis, PhoneTheme theme, Rect? transparentBand = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dl = ImGui.GetWindowDrawList();
         if (transparentBand is not { } band)
         {
@@ -235,7 +234,7 @@ internal static class DeviceChrome
 
     public static void SealScreen(in ChassisGeometry chassis, PhoneTheme theme, float brightness)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dl = ImGui.GetForegroundDrawList();
         MaskScreenCorners(dl, chassis, theme, scale);
         DrawBrightnessVeil(dl, chassis, brightness);

@@ -2455,6 +2455,7 @@
   "plugin.maximizeHint": "Agrandir",
   "plugin.lockPositionHint": "Verrouiller la position",
   "plugin.unlockPositionHint": "Déverrouiller la position",
+  "plugin.resizeHint": "Glisser pour redimensionner",
   "plugin.dndEnableHint": "Activer Ne pas déranger",
   "plugin.dndDisableHint": "Désactiver Ne pas déranger",
   "plugin.updateChip": "Mettre à jour vers {0}",

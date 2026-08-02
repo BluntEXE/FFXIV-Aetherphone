@@ -4,7 +4,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Radio;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Music;
 
@@ -87,7 +86,7 @@ internal sealed partial class MusicApp
 
     private void DrawFacetPicker(in PhoneContext context, bool isCountry)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         DrawTopBar(context, Loc.T(isCountry ? L.Music.FilterCountry : L.Music.FilterLanguage), CloseFacetPicker);
         var barRect = SearchBarRect(content, scale);

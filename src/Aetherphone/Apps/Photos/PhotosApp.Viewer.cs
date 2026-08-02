@@ -3,7 +3,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Sharing;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Photos;
 
@@ -14,7 +13,7 @@ internal sealed partial class PhotosApp
 
     private void DrawViewer(Rect screen)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (viewerPaths.Length == 0)
         {
             router.Pop(false);

@@ -4,7 +4,6 @@ using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures.TextureWraps;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -15,7 +14,7 @@ internal static class HomeTileView
     public static void DrawApp(Vector2 center, float size, IPhoneApp app, PhoneTheme theme, float drawScale,
         float labelAlpha, bool showLabels, float labelWidth, float zoom = 1f)
     {
-        var scale = ImGuiHelpers.GlobalScale * zoom;
+        var scale = UiScale.Current * zoom;
         var dl = ImGui.GetWindowDrawList();
         var drawHalf = size * 0.5f * drawScale;
         var drawMin = new Vector2(center.X - drawHalf, center.Y - drawHalf);
@@ -42,7 +41,7 @@ internal static class HomeTileView
     public static void DrawShortcut(Vector2 center, float size, ShortcutEntry shortcut, IDalamudTextureWrap? icon,
         PhoneTheme theme, float drawScale, float labelAlpha, bool showLabels, float labelWidth, float zoom = 1f)
     {
-        var scale = ImGuiHelpers.GlobalScale * zoom;
+        var scale = UiScale.Current * zoom;
         ShortcutArt.DrawSurface(ImGui.GetWindowDrawList(), center, size * drawScale, shortcut, icon, scale);
         DrawLabel(center, size, shortcut.Name, theme, scale, labelAlpha, showLabels, labelWidth, zoom);
     }
@@ -50,7 +49,7 @@ internal static class HomeTileView
     public static void DrawFolder(Vector2 center, float size, HomeTile folder, PhoneTheme theme, float drawScale,
         float labelAlpha, bool showLabels, string fallbackName, float labelWidth, float zoom = 1f)
     {
-        var scale = ImGuiHelpers.GlobalScale * zoom;
+        var scale = UiScale.Current * zoom;
         var dl = ImGui.GetWindowDrawList();
         var drawHalf = size * 0.5f * drawScale;
         var min = new Vector2(center.X - drawHalf, center.Y - drawHalf);

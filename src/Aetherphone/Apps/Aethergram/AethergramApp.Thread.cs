@@ -9,7 +9,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures.TextureWraps;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Aethergram;
 
@@ -170,7 +169,7 @@ internal sealed partial class AethergramApp
                 return;
             }
 
-            var scale = ImGuiHelpers.GlobalScale;
+            var scale = UiScale.Current;
             var drawList = ImGui.GetWindowDrawList();
             var margin = 12f * scale;
             var pad = 14f * scale;
@@ -208,7 +207,7 @@ internal sealed partial class AethergramApp
         {
             var context = new PhoneContext(area, Theme, Navigation);
             AppHeader.Draw(context, string.Empty, BackAction);
-            var scale = ImGuiHelpers.GlobalScale;
+            var scale = UiScale.Current;
             var drawList = ImGui.GetWindowDrawList();
             var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
             ChatHeaderControls.DrawLock(ui, area, rowCenterY, store.EncryptingCurrent, store.VaultState,
@@ -349,7 +348,7 @@ internal sealed partial class AethergramApp
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         drawList.AddCircleFilled(center, 5f * scale, ImGui.GetColorU32(AppPalettes.Aethergram.BackdropBottom), 16);
         drawList.AddCircleFilled(center, 3.5f * scale, ImGui.GetColorU32(ui.Accent), 16);
     }

@@ -7,7 +7,6 @@ using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Venues;
@@ -28,7 +27,7 @@ internal sealed partial class VenuesApp
 
     private void DrawDetail(Rect area, VenueEvent venue)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var body = new Rect(new Vector2(area.Min.X, top), area.Max);
         using (AppSurface.Begin(body))
@@ -80,7 +79,7 @@ internal sealed partial class VenuesApp
 
     private void DrawHero(Rect body, VenueEvent venue)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var cursor = ImGui.GetCursorScreenPos();
         var topPad = Metrics.Space.Sm * scale;
@@ -181,7 +180,7 @@ internal sealed partial class VenuesApp
 
     private void DrawActions(VenueEvent venue)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var origin = ImGui.GetCursorScreenPos();
         var height = ActionHeight * scale;
@@ -237,7 +236,7 @@ internal sealed partial class VenuesApp
 
     private bool ActionPill(Rect rect, FontAwesomeIcon icon, string label, bool filled)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var hovered = UiInteract.Hover(rect.Min, rect.Max);
         var radius = rect.Height * 0.5f;
@@ -265,7 +264,7 @@ internal sealed partial class VenuesApp
 
     private void DrawInfo(VenueEvent venue)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ui.SectionHeading(Loc.T(L.Venues.Details));
         var rows = 1;
         if (venue.World.Length > 0 || venue.DataCenter.Length > 0)
@@ -330,7 +329,7 @@ internal sealed partial class VenuesApp
     private void InfoRow(ImDrawListPtr drawList, Vector2 cardOrigin, float cardWidth, int rowIndex, int rowCount,
         FontAwesomeIcon icon, Vector4 tint, string label, string value)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var rowHeight = InfoRowHeight * scale;
         var rowTop = cardOrigin.Y + rowIndex * rowHeight;
         var centerY = rowTop + rowHeight * 0.5f;
@@ -365,7 +364,7 @@ internal sealed partial class VenuesApp
         }
 
         ui.SectionHeading(Loc.T(L.Venues.Tags));
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
@@ -401,7 +400,7 @@ internal sealed partial class VenuesApp
         }
 
         ui.SectionHeading(Loc.T(L.Venues.About));
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         using (Plugin.Fonts.Push(1f))
         using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Venues.BodyInk))
         {

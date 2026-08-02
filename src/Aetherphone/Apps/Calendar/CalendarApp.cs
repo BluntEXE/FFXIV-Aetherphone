@@ -8,7 +8,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Calendar;
@@ -71,7 +70,7 @@ internal sealed class CalendarApp : IPhoneApp
 
     public void Draw(in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         theme = context.Theme;
         navigation = context.Navigation;
@@ -85,7 +84,7 @@ internal sealed class CalendarApp : IPhoneApp
 
     private void DrawView(CalendarScreen screen, Rect area, int depth)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ui.Body(area);
         if (screen == CalendarScreen.AddEvent)
         {

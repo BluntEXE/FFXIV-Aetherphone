@@ -2455,6 +2455,7 @@
   "plugin.maximizeHint": "Büyüt",
   "plugin.lockPositionHint": "Konumu kilitle",
   "plugin.unlockPositionHint": "Konum kilidini aç",
+  "plugin.resizeHint": "Boyutlandırmak için sürükleyin",
   "plugin.dndEnableHint": "Rahatsız etme modunu aç",
   "plugin.dndDisableHint": "Rahatsız etme modunu kapat",
   "plugin.updateChip": "{0} sürümüne güncelle",

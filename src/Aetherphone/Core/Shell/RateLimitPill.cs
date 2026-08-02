@@ -6,7 +6,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Core.Shell;
 
@@ -50,7 +49,7 @@ internal sealed class RateLimitPill
             lastSeconds = Math.Max(1, (int)Math.Ceiling(remaining.TotalSeconds));
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var label = Loc.T(L.Common.RateLimited, lastSeconds);
         var textSize = Typography.Measure(label, TextScale);
         var iconSize = textSize.Y * 0.86f;

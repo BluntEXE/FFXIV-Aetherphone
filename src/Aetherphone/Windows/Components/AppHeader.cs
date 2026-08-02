@@ -1,7 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -11,7 +10,7 @@ internal static class AppHeader
 
     public static void Draw(in PhoneContext context, string title, Action? onBack = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         var theme = context.Theme;
         var rowCenterY = content.Min.Y + Height * scale * 0.5f;

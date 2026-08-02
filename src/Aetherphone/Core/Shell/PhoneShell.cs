@@ -14,7 +14,6 @@ using Aetherphone.Core.Wallpapers;
 using Aetherphone.Core.YellowPages;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Core.Shell;
@@ -42,6 +41,7 @@ internal sealed class PhoneShell : IDisposable
     private readonly MinimizedPhone minimizedView;
     private readonly MinimizeTransition minimize = new();
     private readonly SideButton sideButton = new();
+    private readonly ResizeGrip resizeGrip = new();
     private readonly CallHub calls;
     private readonly OnboardingDirector director;
     private readonly SetupOverlay setup;
@@ -245,6 +245,17 @@ internal sealed class PhoneShell : IDisposable
                 configuration.LockPosition = !configuration.LockPosition;
                 configuration.Save();
             }
+
+            var resized = resizeGrip.Update(chassis, PhoneBounds.ClampWidth(configuration.PhoneWidth), delta);
+            if (resized.Adjusting && MathF.Abs(resized.Width - configuration.PhoneWidth) > 0.01f)
+            {
+                configuration.PhoneWidth = resized.Width;
+            }
+
+            if (resized.Committed)
+            {
+                configuration.Save();
+            }
         }
 
         SyncCallNavigation();
@@ -254,11 +265,11 @@ internal sealed class PhoneShell : IDisposable
         UiAnchors.Report("chrome.lock", DeviceChrome.LockButtonRect(device, chassis));
         UiAnchors.Report("chrome.minimize", DeviceChrome.SideButtonRect(device, chassis));
         UiAnchors.Report("chrome.controlcenter",
-            new Rect(screen.Min, new Vector2(screen.Max.X, screen.Min.Y + 44f * ImGuiHelpers.GlobalScale)));
+            new Rect(screen.Min, new Vector2(screen.Max.X, screen.Min.Y + 44f * UiScale.Current)));
         using (InputShield.Engage(state.ShieldBase || director.CapturesPointer))
         {
             DrawContent(chassis, theme);
-            DeviceChrome.MaskScreenCorners(ImGui.GetWindowDrawList(), chassis, theme, ImGuiHelpers.GlobalScale);
+            DeviceChrome.MaskScreenCorners(ImGui.GetWindowDrawList(), chassis, theme, UiScale.Current);
             DrawChrome(screen, theme);
         }
 
@@ -267,7 +278,7 @@ internal sealed class PhoneShell : IDisposable
 
     private Rect? TransparentBand(Rect screen)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (navigation.IsTransitioning)
         {
             return navigation.MotionOver.TransparentViewport(screen, scale) ??
@@ -319,7 +330,7 @@ internal sealed class PhoneShell : IDisposable
 
     private void DrawHomeIndicator(Rect screen, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = 112f * scale;
         var height = 5f * scale;
         var center = new Vector2(screen.Center.X, screen.Max.Y - 14f * scale);

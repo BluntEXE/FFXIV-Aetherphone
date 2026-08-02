@@ -1,6 +1,5 @@
 using Aetherphone.Core.Social;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -48,7 +47,7 @@ internal sealed class FeedVirtualizer
     {
         var cursor = ImGui.GetCursorScreenPos();
         rowStartY = cursor.Y;
-        var margin = cullMargin * ImGuiHelpers.GlobalScale;
+        var margin = cullMargin * UiScale.Current;
         if (rows.TryGetValue(rowId, out var row) && row.Revision == revision
             && (cursor.Y > windowBottom + margin || cursor.Y + row.Height < windowTop - margin))
         {

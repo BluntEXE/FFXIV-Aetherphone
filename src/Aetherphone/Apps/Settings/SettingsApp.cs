@@ -11,7 +11,6 @@ using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Settings;
 
@@ -213,7 +212,7 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
 
         var onBack = depth > 1 ? popBack : null;
         AppHeader.Draw(context, page.Title, onBack);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         page.Draw(context, body);
     }

@@ -1,7 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -36,7 +35,7 @@ internal static class ConfirmDialog
     {
         canceled = false;
         confirmed = false;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var s = scale * cardScale;
         var drawList = ImGui.GetWindowDrawList();
         var pad = CardPadding * s;

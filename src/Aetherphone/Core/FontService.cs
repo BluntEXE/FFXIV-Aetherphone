@@ -74,6 +74,7 @@ internal sealed class FontService : IDisposable
     private ushort[] glyphRanges;
     private IFontHandle[,] handles;
     private float zoom;
+    private float phoneZoom;
     private float renderScale;
     private int pushDepth;
     private long ledgerDirtySince;
@@ -81,7 +82,7 @@ internal sealed class FontService : IDisposable
     private int generation;
 
     public FontService(IDalamudPluginInterface pluginInterface, Configuration configuration, LoadingScreen loading,
-        float zoom)
+        float zoom, float phoneZoom)
     {
         this.configuration = configuration;
         this.loading = loading;
@@ -89,7 +90,8 @@ internal sealed class FontService : IDisposable
         fontDirectory = Path.Combine(pluginInterface.AssemblyLocation.DirectoryName ?? string.Empty, "Fonts");
         baseSize = UiBuilder.DefaultFontSizePx;
         this.zoom = zoom;
-        renderScale = zoom / MaxZoom;
+        this.phoneZoom = phoneZoom;
+        renderScale = zoom * phoneZoom / MaxZoom;
         bucketCount = WeightFiles.Length * SizeMultipliers.Length;
         defaultBucket = BucketIndex(FontWeight.Regular, NearestSize(1f));
         ledger = new HashSet<ushort>[bucketCount];
@@ -137,7 +139,23 @@ internal sealed class FontService : IDisposable
         }
 
         zoom = value;
-        renderScale = zoom / MaxZoom;
+        ApplyZoom();
+    }
+
+    public void SetPhoneZoom(float value)
+    {
+        if (MathF.Abs(value - phoneZoom) < 0.001f)
+        {
+            return;
+        }
+
+        phoneZoom = value;
+        ApplyZoom();
+    }
+
+    private void ApplyZoom()
+    {
+        renderScale = zoom * phoneZoom / MaxZoom;
         ApplyRenderScale();
     }
 

@@ -11,7 +11,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -163,7 +162,7 @@ internal sealed class SocialProfilePages
 
     public void DrawProfileHeader(UserDto user, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
@@ -273,7 +272,7 @@ internal sealed class SocialProfilePages
 
     private void DrawProfileActions(UserDto user, PhoneTheme theme, float left, float right, float top, float height)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var gap = Metrics.Space.Sm * scale;
         var centerY = top + height * 0.5f;
         var trailing = right;
@@ -352,7 +351,7 @@ internal sealed class SocialProfilePages
             activate();
         }
 
-        return rightEdge - diameter - Metrics.Space.Sm * ImGuiHelpers.GlobalScale;
+        return rightEdge - diameter - Metrics.Space.Sm * UiScale.Current;
     }
 
     private string FollowPillLabel(UserDto user) => SocialFeedStore.FollowStateOf(user) switch
@@ -368,7 +367,7 @@ internal sealed class SocialProfilePages
 
     private void DrawProfileStats(UserDto user, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
@@ -424,7 +423,7 @@ internal sealed class SocialProfilePages
     private void DrawStatColumn(float left, float columnWidth, float centerY, PhoneTheme theme, string value,
         string label)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var center = left + columnWidth * 0.5f;
         Typography.DrawCentered(new Vector2(center, centerY - 10f * scale), value, theme.TextStrong, 1.25f,
             FontWeight.Bold);
@@ -446,7 +445,7 @@ internal sealed class SocialProfilePages
         var me = store.Me ?? (store.ProfileUser is { IsMe: true } self ? self : null);
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, Loc.T(style.EditProfile), back);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var body = new Rect(new Vector2(area.Min.X, top), area.Max);
         if (me is null)
@@ -523,7 +522,7 @@ internal sealed class SocialProfilePages
 
     private void DrawHandleField(PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         using (ImRaii.PushColor(ImGuiCol.Text, style.Palette.MutedInk))
         {
             Typography.Plain(Loc.T(style.HandleLabel));
@@ -585,7 +584,7 @@ internal sealed class SocialProfilePages
         store.OpenUserList(sourceId, kind);
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, UserListTitle(kind), back);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var listRect = new Rect(new Vector2(area.Min.X, top), area.Max);
         var snapshot = store.UserListResults;
@@ -680,7 +679,7 @@ internal sealed class SocialProfilePages
 
     public void DrawUserRow(UserDto user, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var rowHeight = 58f * scale;
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
@@ -750,7 +749,7 @@ internal sealed class SocialProfilePages
 
     public void DrawSearchResults(Rect listRect, PhoneTheme theme, bool topPadding)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var snapshot = store.DiscoverResults;
         using (AppSurface.Begin(listRect))
         {

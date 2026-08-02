@@ -2455,6 +2455,7 @@
   "plugin.maximizeHint": "Развернуть",
   "plugin.lockPositionHint": "Зафиксировать позицию",
   "plugin.unlockPositionHint": "Разблокировать позицию",
+  "plugin.resizeHint": "Потяните, чтобы изменить размер",
   "plugin.dndEnableHint": "Включить режим «Не беспокоить»",
   "plugin.dndDisableHint": "Выключить режим «Не беспокоить»",
   "plugin.updateChip": "Обновить до {0}",

@@ -7,7 +7,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Core.Shell;
@@ -106,7 +105,7 @@ internal sealed class DynamicIsland
     private void DrawContent(Rect screen, PhoneTheme theme, INavigator navigation, CallView view, float presenceValue,
         float delta, string? foregroundAppId)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var rest = StatusBar.BaseIsland(screen);
         var compact = Expand(rest, CompactPadX * scale, CompactPadY * scale);
         var expanded = ExpandedBounds(screen, rest, scale);

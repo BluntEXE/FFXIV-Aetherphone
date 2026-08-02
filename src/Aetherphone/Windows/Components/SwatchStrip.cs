@@ -1,7 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -9,7 +8,7 @@ internal static class SwatchStrip
 {
     public static bool NeedsTwoRows(string label, int optionCount, float availableWidth)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var radius = 11f * scale;
         var gap = 12f * scale;
         var swatchWidth = optionCount * (radius * 2f + gap) - gap;
@@ -20,7 +19,7 @@ internal static class SwatchStrip
     public static int Draw(Rect row, string label, IReadOnlyList<NamedColor> options, int selected, PhoneTheme theme,
         bool stacked)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var radius = 11f * scale;
         var gap = 12f * scale;
         var step = radius * 2f + gap;

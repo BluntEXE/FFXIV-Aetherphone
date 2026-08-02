@@ -7,7 +7,6 @@ using Aetherphone.Core.Platform;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Wallpapers;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -99,7 +98,7 @@ internal sealed class ImagePickCrop
         var theme = context.Theme;
         var cancelled = false;
         AppHeader.Draw(context, labels.PickTitle, () => cancelled = true);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var importHeight = 46f * scale;
         var importRect = new Rect(new Vector2(area.Min.X + 16f * scale, top + 8f * scale),
@@ -185,7 +184,7 @@ internal sealed class ImagePickCrop
         var theme = context.Theme;
         AppHeader.Draw(context, labels.CropTitle, () => cropStage = false);
         var committed = HeaderAction(area, busy ? labels.BusyLabel : labels.UseLabel, !busy, accent, theme);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var deltaSeconds = MathF.Min(ImGui.GetIO().DeltaTime, 0.1f);
         var drawList = ImGui.GetWindowDrawList();
         var top = area.Min.Y + AppHeader.Height * scale;
@@ -275,7 +274,7 @@ internal sealed class ImagePickCrop
 
     private static bool HeaderAction(Rect area, string label, bool enabled, Vector4 accent, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var height = 28f * scale;
         var width = Typography.Measure(label, 0.9f, FontWeight.SemiBold).X + 26f * scale;
         var max = new Vector2(area.Max.X - 12f * scale, area.Min.Y + AppHeader.Height * scale * 0.5f + height * 0.5f);

@@ -2,7 +2,6 @@ using Aetherphone.Core.Animation;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -15,7 +14,7 @@ internal static class QuickAction
     public static bool Draw(string id, Vector2 center, float radius, FontAwesomeIcon icon, Vector4 tint, string label,
         PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var labelSize = Typography.Measure(label, TextStyles.Caption1);
         var hitMin = new Vector2(center.X - radius, center.Y - radius);

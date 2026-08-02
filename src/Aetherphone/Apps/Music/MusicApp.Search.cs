@@ -5,7 +5,6 @@ using Aetherphone.Core.Songs;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Music;
 
@@ -20,7 +19,7 @@ internal sealed partial class MusicApp
 
     private void DrawSearch(in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         DrawTopBar(context, Loc.T(L.Common.Search), GoToHome);
         var barRect = SearchBarRect(content, scale);

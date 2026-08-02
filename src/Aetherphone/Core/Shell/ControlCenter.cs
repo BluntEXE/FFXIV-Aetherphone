@@ -11,7 +11,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Core.Shell;
 
@@ -98,7 +97,7 @@ internal sealed class ControlCenter
             UiInteract.ReportGestureSurface();
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dl = ImGui.GetForegroundDrawList();
         var height = screen.Height;
         var rounding = theme.ScreenRounding * scale;
@@ -597,7 +596,7 @@ internal sealed class ControlCenter
 
     private void HandleGesture(Rect screen, float delta, bool gesturesEnabled, bool allowDismiss)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var height = screen.Height;
         var openDistance = height * OpenFraction;
         var fling = FlingVelocity * scale;

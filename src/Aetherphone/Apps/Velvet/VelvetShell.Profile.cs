@@ -8,7 +8,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -18,7 +17,7 @@ internal sealed partial class VelvetShell
 
     private void DrawProfile(Rect area, string userId)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var user = store.ProfileUserId == userId ? store.ProfileUser : null;
         var title = user != null ? DisplayNameOf(user.DisplayName, user.Handle) : Loc.T(L.Velvet.ProfileTitle);
         if (VHeader.Push(area, title, theme))
@@ -58,7 +57,7 @@ internal sealed partial class VelvetShell
 
     private void DrawProfileBody(Rect body, VelvetProfileDto user)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var isMe = store.Me?.UserId == user.UserId;
         var connected = isMe || user.ConnectionState == VelvetConnectionState.Connected;
         using (AppSurface.Begin(body))
@@ -250,7 +249,7 @@ internal sealed partial class VelvetShell
 
     private void DrawGallery(VelvetProfileDto user, bool isMe, bool connected)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         store.EnsureUserPosts(user.UserId);
         var serverGallery = store.UserPostsUserId == user.UserId && store.UserPostsLoaded;
         List<VelvetPostDto> owned;
@@ -357,7 +356,7 @@ internal sealed partial class VelvetShell
 
     private void DrawLockedGallery(string name, float width, int totalCount)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         const int columns = 3;
         var cellGap = 6f * scale;
         var cell = (width - cellGap * (columns - 1)) / columns;
@@ -437,7 +436,7 @@ internal sealed partial class VelvetShell
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var models = new VChipModel[tokens.Length];
         for (var index = 0; index < tokens.Length; index++)

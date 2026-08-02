@@ -1,7 +1,6 @@
 using Aetherphone.Core;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -9,7 +8,7 @@ internal static class EmptyState
 {
     public static void Draw(Rect body, AppSkin ui, FontAwesomeIcon icon, string title, string hint)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var centerX = body.Center.X;
         var baseY = body.Center.Y - 40f * scale;
         var drawList = ImGui.GetWindowDrawList();

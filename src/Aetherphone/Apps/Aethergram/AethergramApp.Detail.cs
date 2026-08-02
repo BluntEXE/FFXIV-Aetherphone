@@ -8,7 +8,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Aethergram;
@@ -20,7 +19,7 @@ internal sealed partial class AethergramApp
         var post = store.DetailPost;
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, Loc.T(L.Aethergram.PostTitle), back);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         if (post is null || post.Id != postId)
         {
@@ -147,7 +146,7 @@ internal sealed partial class AethergramApp
                 store.SetSaved(post.Id, !post.Saved);
             }
 
-            if (photos.Length > 1 && configuration.PhoneScale >= PhoneSizeCatalog.DefaultScale)
+            if (photos.Length > 1)
             {
                 var dotsLeft = actionsRight + 10f * scale;
                 var dotsRight = bookmarkCenter.X - 16f * scale;
@@ -243,7 +242,7 @@ internal sealed partial class AethergramApp
 
     private void DrawEarlierCommentsRow()
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (store.CommentsLoadingMore)
         {
             InfiniteScroll.DrawLoadingRow(
@@ -280,7 +279,7 @@ internal sealed partial class AethergramApp
 
     private void DrawComment(CommentDto comment)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ScrollLayout.StableContentWidth();
@@ -417,7 +416,7 @@ internal sealed partial class AethergramApp
             : SocialIdentity.Name(user.DisplayName, user.Handle);
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, title, back);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         DrawProfileBody(new Rect(new Vector2(area.Min.X, top), area.Max), userId);
     }
@@ -451,7 +450,7 @@ internal sealed partial class AethergramApp
                 return;
             }
 
-            var scale = ImGuiHelpers.GlobalScale;
+            var scale = UiScale.Current;
             var tabRow = new Rect(
                 new Vector2(ImGui.GetCursorScreenPos().X + 14f * scale, ImGui.GetCursorScreenPos().Y + 4f * scale),
                 new Vector2(ImGui.GetCursorScreenPos().X + ImGui.GetContentRegionAvail().X - 14f * scale,
@@ -479,7 +478,7 @@ internal sealed partial class AethergramApp
 
     private void DrawPrivateProfileNotice()
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;

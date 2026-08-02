@@ -5,7 +5,6 @@ using Aetherphone.Core.Report;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -113,7 +112,7 @@ internal sealed class ReportOverlay
     private Rect DrawCard(Rect screen, PhoneTheme theme, ReportPrompt prompt, float opacity, float cardScale,
         bool interactive)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var s = scale * cardScale;
         var drawList = ImGui.GetWindowDrawList();
         var pad = CardPadding * s;

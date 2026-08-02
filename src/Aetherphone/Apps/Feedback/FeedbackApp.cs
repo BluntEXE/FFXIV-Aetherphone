@@ -12,7 +12,6 @@ using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Feedback;
@@ -77,7 +76,7 @@ internal sealed class FeedbackApp : IPhoneApp
         ui.Theme = theme;
 
         var content = context.Content;
-        var screen = SceneChrome.ScreenFrom(content, theme, ImGuiHelpers.GlobalScale);
+        var screen = SceneChrome.ScreenFrom(content, theme, UiScale.Current);
         ui.Backdrop(screen);
         ui.Body(content);
 
@@ -112,7 +111,7 @@ internal sealed class FeedbackApp : IPhoneApp
             configuration.Save();
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var headerContext = new PhoneContext(area, theme, navigation);
         var sendLabel = store.Posting ? Loc.T(L.Feedback.Sending) : Loc.T(L.Feedback.Send);
         var buttonReserve = sent
@@ -148,7 +147,7 @@ internal sealed class FeedbackApp : IPhoneApp
 
     private void DrawFeedbackCard(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
@@ -298,7 +297,7 @@ internal sealed class FeedbackApp : IPhoneApp
     {
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, Loc.T(L.Feedback.AddPhotos), () => picking = false);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var importHeight = 46f * scale;
         var importRect = new Rect(new Vector2(area.Min.X + 16f * scale, top + 8f * scale),
@@ -396,7 +395,7 @@ internal sealed class FeedbackApp : IPhoneApp
 
     private void DrawThankYou(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;

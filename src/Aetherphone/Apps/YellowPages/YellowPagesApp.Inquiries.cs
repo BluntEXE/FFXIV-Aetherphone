@@ -12,7 +12,6 @@ using Aetherphone.Core.YellowPages;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.YellowPages;
 
@@ -33,7 +32,7 @@ internal sealed partial class YellowPagesApp
 
     private void DrawInquiries(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         DrawTabTitle(area, Loc.T(L.YellowPages.InquiriesTitle), 0f, scale);
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         var threads = inquiries.Threads;
@@ -201,7 +200,7 @@ internal sealed partial class YellowPagesApp
 
     private void DrawInquiryThread(Rect area, string inquiryId)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var thread = inquiries.Thread(inquiryId);
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, string.Empty, backFromThread);
@@ -391,7 +390,7 @@ internal sealed partial class YellowPagesApp
 
     private void DrawNewInquiry(Rect area, string adId)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var ad = ResolveAd(adId);
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, ad?.Title ?? Loc.T(L.YellowPages.InquireAction), back);
@@ -502,7 +501,7 @@ internal sealed partial class YellowPagesApp
 
     private void DrawEncryptionInfo(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, Loc.T(L.Encryption.Title), back);
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);

@@ -9,7 +9,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Aethergram;
 
@@ -27,7 +26,7 @@ internal sealed partial class AethergramApp
     {
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, Loc.T(L.Aethergram.InboxTitle), back);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (!dmStore.ThreadsLoaded && !dmStore.LoadingThreads)
         {
             dmStore.RefreshThreads();
@@ -89,7 +88,7 @@ internal sealed partial class AethergramApp
 
     private void DrawInboxSegments(Rect rect, string chatsLabel, string requestsLabel)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         ui.Card(drawList, rect.Min, rect.Max, rect.Height * 0.5f);
         var segmentWidth = rect.Width * 0.5f;
@@ -148,7 +147,7 @@ internal sealed partial class AethergramApp
 
     private void DrawInboxRow(GramThreadDto thread)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ScrollLayout.StableContentWidth();

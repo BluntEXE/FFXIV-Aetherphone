@@ -4,7 +4,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Core.Shell;
 
@@ -71,7 +70,7 @@ internal sealed class ShortcutRunPill : IDisposable
 
     private void DrawPill(Rect screen, PhoneTheme theme, in ShortcutRunView view, float alpha)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var running = view.IsRunning;
         var accent = running ? view.Accent : outcomeAccent;
         var failed = !running && outcome != ShortcutRunOutcome.Completed;

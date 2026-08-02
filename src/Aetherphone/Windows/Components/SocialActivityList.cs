@@ -7,7 +7,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -18,7 +17,7 @@ internal static class SocialActivityList
         string app, RemoteImageCache images, LodestoneService lodestone, Action<NotificationDto> openActor,
         Action<NotificationDto> openPost, Action? loadOlder = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var count = 0;
         for (var index = 0; index < items.Length; index++)
         {
@@ -63,7 +62,7 @@ internal static class SocialActivityList
         RemoteImageCache images, LodestoneService lodestone, Action<NotificationDto> openActor,
         Action<NotificationDto> openPost)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;

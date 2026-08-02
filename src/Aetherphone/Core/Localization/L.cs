@@ -2978,6 +2978,7 @@ internal static class L
         public static readonly LocString MaximizeHint = new("plugin.maximizeHint", "Maximize");
         public static readonly LocString LockPositionHint = new("plugin.lockPositionHint", "Lock position");
         public static readonly LocString UnlockPositionHint = new("plugin.unlockPositionHint", "Unlock position");
+        public static readonly LocString ResizeHint = new("plugin.resizeHint", "Drag to resize");
         public static readonly LocString DndEnableHint = new("plugin.dndEnableHint", "Turn on Do Not Disturb");
         public static readonly LocString DndDisableHint = new("plugin.dndDisableHint", "Turn off Do Not Disturb");
         public static readonly LocString UpdateChip = new("plugin.updateChip", "Update to {0}");

@@ -6,7 +6,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -31,7 +30,7 @@ internal sealed partial class VelvetShell
 
     private void DrawOnboarding(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         store.EnsureMe();
         if (!onboardSeeded && store.Me is { } seed)
         {
@@ -85,7 +84,7 @@ internal sealed partial class VelvetShell
 
     private void DrawOnboardChrome(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
 
         var trackWidth = MathF.Min(area.Width - 96f * scale, 240f * scale);
@@ -134,7 +133,7 @@ internal sealed partial class VelvetShell
 
     private void DrawOnboardFooter(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var buttonWidth = MathF.Min(area.Width - 44f * scale, 320f * scale);
         var buttonHeight = 50f * scale;
         var left = area.Center.X - buttonWidth * 0.5f;
@@ -198,7 +197,7 @@ internal sealed partial class VelvetShell
 
     private void DrawOnboardAvatar()
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var block = Reserve(150f);
         var drawList = ImGui.GetWindowDrawList();
         var radius = 52f * scale;
@@ -256,7 +255,7 @@ internal sealed partial class VelvetShell
 
     private bool DrawOnboardIntentCard(Rect rect, in VelvetIntentDef def, bool selected)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var hovered = UiInteract.Hover(rect.Min, rect.Max);
         var radius = Metrics.Radius.Card * scale;
@@ -360,7 +359,7 @@ internal sealed partial class VelvetShell
 
     private void DrawOnboardReadyStep(Rect body)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         using (AppSurface.Begin(body))
         {
             Gap(6f);
@@ -396,7 +395,7 @@ internal sealed partial class VelvetShell
 
     private void DrawOnboardSummaryCard()
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var rect = Reserve(84f);
         var drawList = ImGui.GetWindowDrawList();
         ui.Card(drawList, rect.Min, rect.Max, Metrics.Radius.Card * scale, true);

@@ -8,7 +8,6 @@ using Aetherphone.Core.YellowPages;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.YellowPages;
 
@@ -42,7 +41,7 @@ internal sealed partial class YellowPagesApp
 
     private void DrawBrowse(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var nowUnix = NowUnix();
         EnsureDirectoryFilter(YellowPagesScreen.Browse, 0);
         DrawBrowseHeader(area, scale);
@@ -79,7 +78,7 @@ internal sealed partial class YellowPagesApp
 
     private void DrawIntent(Rect area, int intent)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         EnsureDirectoryFilter(YellowPagesScreen.Intent, IntentMask(intent));
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, string.Empty, backToBrowse);

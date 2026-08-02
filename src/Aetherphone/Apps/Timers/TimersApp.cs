@@ -7,7 +7,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Timers;
 
@@ -61,7 +60,7 @@ internal sealed class TimersApp : IPhoneApp
             Refresh();
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         var utcNow = DateTime.UtcNow;
 
@@ -206,7 +205,7 @@ internal sealed class TimersApp : IPhoneApp
         string value, Vector4 valueColor, string? idOverride = null)
     {
         var id = "timers.row." + (idOverride ?? name);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var tile = TileSize * scale;
         var tileCenter = new Vector2(row.Min.X + tile * 0.5f, row.Center.Y);
         IconTile.Draw(tileCenter, tile, tint, icon);

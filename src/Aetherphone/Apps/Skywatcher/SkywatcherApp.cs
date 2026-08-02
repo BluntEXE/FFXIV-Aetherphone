@@ -8,7 +8,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Skywatcher;
@@ -68,7 +67,7 @@ internal sealed partial class SkywatcherApp : IPhoneApp
             Refresh();
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         var content = context.Content;
         var screen = SceneChrome.ScreenFrom(content, theme, scale);
@@ -279,7 +278,7 @@ internal sealed partial class SkywatcherApp : IPhoneApp
     {
         var kind = WeatherSky.Classify(window.Weather.EnglishKey);
         var isDay = IsDayWindow(window);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var half = radius + 3f * scale;
         var chip = new Rect(new Vector2(center.X - half, center.Y - half),
             new Vector2(center.X + half, center.Y + half));

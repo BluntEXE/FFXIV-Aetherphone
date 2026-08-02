@@ -2,7 +2,6 @@ using Aetherphone.Core;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -26,7 +25,7 @@ internal sealed class ChipRail
             return -1;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var row = ReserveRow(scale);
         if (anchorKey is not null)
         {
@@ -115,7 +114,7 @@ internal sealed class ChipRail
             var travel = mouseX - lastMouseX;
             lastMouseX = mouseX;
             dragTravel += MathF.Abs(travel);
-            if (dragTravel > DragSlop * ImGuiHelpers.GlobalScale)
+            if (dragTravel > DragSlop * UiScale.Current)
             {
                 offset -= travel;
             }

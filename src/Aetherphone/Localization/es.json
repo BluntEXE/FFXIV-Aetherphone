@@ -2455,6 +2455,7 @@
   "plugin.maximizeHint": "Maximizar",
   "plugin.lockPositionHint": "Bloquear posición",
   "plugin.unlockPositionHint": "Desbloquear posición",
+  "plugin.resizeHint": "Arrastra para redimensionar",
   "plugin.dndEnableHint": "Activar No molestar",
   "plugin.dndDisableHint": "Desactivar No molestar",
   "plugin.updateChip": "Actualizar a {0}",

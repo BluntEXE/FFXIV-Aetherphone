@@ -6,7 +6,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -93,7 +92,7 @@ internal sealed class ConductGateOverlay
 
     private void DrawPanel(Rect screen, PhoneTheme theme, ConductGate gate, float opacity, bool interactive)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var accent = AppAccents.For(gate.AppId);
         var drawList = ImGui.GetWindowDrawList();
         var reviewing = service.ActiveIsReview;
@@ -141,7 +140,7 @@ internal sealed class ConductGateOverlay
 
     private void DrawCloseButton(Vector2 center, PhoneTheme theme, float opacity, bool interactive)
     {
-        var pressed = AppSkin.IconButton(center, CloseRadius * ImGuiHelpers.GlobalScale,
+        var pressed = AppSkin.IconButton(center, CloseRadius * UiScale.Current,
             FontAwesomeIcon.Times.ToIconString(), Palette.WithAlpha(theme.TextStrong, opacity),
             Palette.WithAlpha(theme.TextStrong, 0.10f * opacity), 0.5f, theme);
         if (pressed && interactive && opacity > 0.5f)
@@ -153,7 +152,7 @@ internal sealed class ConductGateOverlay
     private static float DrawHeader(Rect panel, PhoneTheme theme, ConductGate gate, Vector4 accent, float opacity,
         float centerX, float innerWidth, float pad)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
 
         var tileSize = 48f * scale;
@@ -182,7 +181,7 @@ internal sealed class ConductGateOverlay
 
     private void DrawRules(Rect listRect, PhoneTheme theme, ConductGate gate, Vector4 accent, float opacity)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (listRect.Height <= 0f)
         {
             return;
@@ -223,7 +222,7 @@ internal sealed class ConductGateOverlay
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var toneColor = section.Tone switch
         {
             ConductTone.Encouraged => EncouragedColor,
@@ -364,7 +363,7 @@ internal sealed class ConductGateOverlay
 
     private static void DrawNote(string text, float width, PhoneTheme theme, float opacity)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var inset = 4f * scale;
         var height = Typography.DrawWrappedLeft(new Vector2(origin.X + inset, origin.Y), text,
@@ -376,7 +375,7 @@ internal sealed class ConductGateOverlay
     private void DrawFooter(PhoneTheme theme, ConductGate gate, Vector4 accent, float opacity, bool interactive,
         float centerX, float innerLeft, float innerWidth, float footerTop, string ack, float ackHeight)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
 
         Typography.DrawWrappedCentered(new Vector2(centerX, footerTop), ack,

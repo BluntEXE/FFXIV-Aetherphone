@@ -8,7 +8,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -19,7 +18,7 @@ internal sealed partial class VelvetShell
 
     private void DrawFeed(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (!store.FeedLoaded && !store.LoadingFeed)
         {
             store.RefreshFeed();
@@ -131,7 +130,7 @@ internal sealed partial class VelvetShell
 
     private void DrawPostCard(VelvetPostDto entry, float width)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var pad = PostCardMetrics.Pad * scale;

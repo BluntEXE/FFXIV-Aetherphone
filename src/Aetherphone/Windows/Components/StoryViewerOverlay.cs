@@ -9,7 +9,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -197,7 +196,7 @@ internal sealed class StoryViewerOverlay
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var dim = 0.97f * eased * (1f - Math.Clamp(dragOffset / (DismissDragDistance * 2f), 0f, 0.45f));
         drawList.AddRectFilled(area.Min, area.Max, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, dim)));
@@ -544,7 +543,7 @@ internal sealed class StoryViewerOverlay
         if (down && hovering && !pressInReplyZone)
         {
             var travel = ImGui.GetIO().MousePos.Y - pressOrigin.Y;
-            dragOffset = MathF.Max(0f, travel / ImGuiHelpers.GlobalScale);
+            dragOffset = MathF.Max(0f, travel / UiScale.Current);
             holding = heldFor >= HoldPauseSeconds && dragOffset < 8f;
         }
         else

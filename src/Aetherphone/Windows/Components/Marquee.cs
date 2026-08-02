@@ -1,5 +1,4 @@
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -38,7 +37,7 @@ internal static class Marquee
         }
 
         var offset = Offset(id, fullSize.X - clippedWidth);
-        var slack = 4f * ImGuiHelpers.GlobalScale;
+        var slack = 4f * UiScale.Current;
         drawList.PushClipRect(new Vector2(boxLeft, y - slack), new Vector2(boxLeft + clippedWidth, y + fullSize.Y + slack),
             true);
         Typography.Draw(drawList, new Vector2(boxLeft - offset, y), fullText, color, style, effect);
@@ -130,7 +129,7 @@ internal static class Marquee
 
         var offset = Offset(id, fullSize.X - clippedWidth);
         var boxLeft = boxRight - clippedWidth;
-        var slack = 4f * ImGuiHelpers.GlobalScale;
+        var slack = 4f * UiScale.Current;
         drawList.PushClipRect(new Vector2(boxLeft, y - slack), new Vector2(boxRight, y + fullSize.Y + slack), true);
         Typography.Draw(drawList, new Vector2(boxLeft - offset, y), fullText, color, style);
         drawList.PopClipRect();
@@ -138,7 +137,7 @@ internal static class Marquee
 
     internal static float Offset(string id, float overflow)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var travelSeconds = overflow / (Speed * scale);
         var cycle = DwellSeconds * 2f + travelSeconds * 2f;
         var deltaSeconds = MathF.Min(ImGui.GetIO().DeltaTime, 0.1f);

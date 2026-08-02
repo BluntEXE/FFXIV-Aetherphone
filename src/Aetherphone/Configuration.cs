@@ -58,6 +58,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public List<string> FontGlyphLedger { get; set; } = new();
     public float ScreenBrightness { get; set; } = 1f;
     public float PhoneScale { get; set; } = 1.25f;
+    public float PhoneWidth { get; set; }
     public bool CameraLandscape { get; set; }
     public string Language { get; set; } = string.Empty;
     public ThemeMode ThemeMode { get; set; } = ThemeMode.Dark;
@@ -210,6 +211,17 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
         }
 
         SetupCompleted = true;
+        Save();
+    }
+
+    public void MigratePhoneWidth()
+    {
+        if (PhoneWidth > 0f)
+        {
+            return;
+        }
+
+        PhoneWidth = PhoneSizeCatalog.Clamp(MathF.Round(PhoneScale * PhoneSizeCatalog.DesignWidth));
         Save();
     }
 

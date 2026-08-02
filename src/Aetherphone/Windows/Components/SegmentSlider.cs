@@ -1,6 +1,5 @@
 using Aetherphone.Core;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -14,7 +13,7 @@ internal static class SegmentSlider
         Squircle.Fill(drawList, rect.Min, rect.Max, radius, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.08f)));
         var target = selected == 1 ? 1f : 0f;
         animation += (target - animation) * MathF.Min(1f, ImGui.GetIO().DeltaTime * 14f);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var half = rect.Width * 0.5f;
         var pad = 3f * scale;
         var thumbMinX = rect.Min.X + pad + animation * half;
@@ -43,7 +42,7 @@ internal static class SegmentSlider
     {
         var ink = active ? new Vector4(1f, 1f, 1f, 1f) : mutedInk;
         var weight = active ? FontWeight.SemiBold : FontWeight.Medium;
-        var maxWidth = MathF.Max(1f, rect.Width - 12f * ImGuiHelpers.GlobalScale);
+        var maxWidth = MathF.Max(1f, rect.Width - 12f * UiScale.Current);
         var fitted = Typography.FitText(label, maxWidth, 0.9f, weight);
         Typography.DrawCentered(rect.Center, fitted, ink, 0.9f, weight);
     }

@@ -2455,6 +2455,7 @@
   "plugin.maximizeHint": "最大化",
   "plugin.lockPositionHint": "锁定位置",
   "plugin.unlockPositionHint": "解锁位置",
+  "plugin.resizeHint": "拖动以调整大小",
   "plugin.dndEnableHint": "开启免打扰",
   "plugin.dndDisableHint": "关闭免打扰",
   "plugin.updateChip": "更新到 {0}",

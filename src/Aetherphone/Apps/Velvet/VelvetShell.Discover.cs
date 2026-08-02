@@ -7,7 +7,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Velvet;
@@ -39,7 +38,7 @@ internal sealed partial class VelvetShell
 
     private void DrawDiscover(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var pad = Metrics.Space.Lg * scale;
         var searchTop = area.Min.Y + 8f * scale;
         var rowHeight = 36f * scale;
@@ -126,7 +125,7 @@ internal sealed partial class VelvetShell
 
     private void DrawFilterButton(Rect rect, VelvetPage surface)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var active = IncludeFor(surface).Any || mutes.Any;
         var hovered = UiInteract.Hover(rect.Min, rect.Max);
@@ -163,7 +162,7 @@ internal sealed partial class VelvetShell
 
     private void DrawActiveFilters(float width, VelvetPage surface)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var include = IncludeFor(surface);
         if (!include.Any && !mutes.Any)
         {
@@ -341,7 +340,7 @@ internal sealed partial class VelvetShell
 
     private void DrawPersonCard(VelvetProfileDto profile, VelvetPostDto[] feed)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ScrollLayout.StableContentWidth();
         var name = DisplayNameOf(profile.DisplayName, profile.Handle);
         var region = RegionCodeOf(profile);
@@ -546,7 +545,7 @@ internal sealed partial class VelvetShell
 
     private void DrawSearchField(Rect rect, ref string value, string hint)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         Squircle.Fill(drawList, rect.Min, rect.Max, Metrics.Radius.Field * scale, VelvetTheme.PlumWell.Packed());
         AppSkin.Icon(new Vector2(rect.Min.X + 16f * scale, rect.Center.Y), FontAwesomeIcon.Search.ToIconString(),

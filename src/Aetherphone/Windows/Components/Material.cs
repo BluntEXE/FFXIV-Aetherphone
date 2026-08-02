@@ -1,5 +1,4 @@
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -19,7 +18,7 @@ internal static class Material
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var tint = ImGui.GetColorU32(accent with { W = strength });
         var clear = ImGui.GetColorU32(accent with { W = 0f });
         var capBottom = min.Y + rounding + scale;

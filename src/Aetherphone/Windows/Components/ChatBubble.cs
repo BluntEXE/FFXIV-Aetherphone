@@ -3,7 +3,6 @@ using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Linkpearl;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -31,7 +30,7 @@ internal static class ChatBubble
     public static bool Draw(ChatLine line, PhoneTheme theme, float entrance = 1f, GroupBubble group = default)
     {
         var contextRequested = false;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var available = ImGui.GetContentRegionAvail().X;
         var padding = 10f * scale;
         var outgoing = line.Direction == MessageDirection.Outgoing;

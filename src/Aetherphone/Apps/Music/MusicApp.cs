@@ -11,7 +11,6 @@ using Aetherphone.Core.Songs;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Apps.Music;
@@ -174,7 +173,7 @@ internal sealed partial class MusicApp : IPhoneApp
             sheetPresence.SnapTo(0f);
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         miniPresence.Step(playback.IsActive && !nowPlayingOpen ? 1f : 0f, MiniSmoothTime, delta);
         sheetPresence.Step(nowPlayingOpen ? 1f : 0f, SheetSmoothTime, delta);
@@ -227,7 +226,7 @@ internal sealed partial class MusicApp : IPhoneApp
 
     private void DrawTopBar(in PhoneContext context, string title, Action? onBack)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         var rowCenterY = content.Min.Y + TopBarHeight * scale * 0.5f;
         var textLeft = content.Min.X + (onBack is null ? 16f * scale : 38f * scale);

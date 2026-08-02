@@ -33,7 +33,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Apps.Games;
@@ -224,7 +223,7 @@ internal sealed class GamesApp : IPhoneApp
     {
         var game = currentGame!;
         AppHeader.Draw(context, game.Title, back);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + HeaderHeight * scale), content.Max);
         using (AppSurface.Begin(body))
@@ -237,7 +236,7 @@ internal sealed class GamesApp : IPhoneApp
     private void DrawLauncher(in PhoneContext context)
     {
         AppHeader.Draw(context, DisplayName);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + HeaderHeight * scale), content.Max);
         using (AppSurface.Begin(body))

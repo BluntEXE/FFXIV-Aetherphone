@@ -1,7 +1,6 @@
 using System.Text;
 using Aetherphone.Core;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -366,7 +365,7 @@ internal static class Typography
     private static float AutoWrapWidth(float centerX)
     {
         var windowLeft = ImGui.GetWindowPos().X;
-        var margin = 8f * ImGuiHelpers.GlobalScale;
+        var margin = 8f * UiScale.Current;
         var left = windowLeft + ImGui.GetWindowContentRegionMin().X + margin;
         var right = windowLeft + ImGui.GetWindowContentRegionMax().X - margin;
         var half = MathF.Min(centerX - left, right - centerX);

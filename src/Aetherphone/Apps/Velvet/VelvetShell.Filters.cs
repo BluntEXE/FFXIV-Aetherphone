@@ -5,7 +5,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -60,7 +59,7 @@ internal sealed partial class VelvetShell
 
     private void DrawFilters(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var surface = filterSurface;
         var include = IncludeFor(surface);
         if (VHeader.Push(area, Loc.T(L.Velvet.FiltersTitle), theme))
@@ -157,7 +156,7 @@ internal sealed partial class VelvetShell
 
     private bool DrawRegionFilterRow(VelvetFilterSelection include)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var codes = SocialRegion.Codes;
         var labels = new string[codes.Length + 1];
         labels[0] = Loc.T(L.Velvet.RegionAny);
@@ -183,7 +182,7 @@ internal sealed partial class VelvetShell
 
     private void DrawIntentFilterChips(VelvetFilterSelection include, ref bool changedInclude, ref bool changedMutes)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var defs = VelvetIntent.All;
         var models = new VChipModel[defs.Length];
@@ -204,7 +203,7 @@ internal sealed partial class VelvetShell
 
     private void DrawGenderFilterChips(VelvetFilterSelection include, ref bool changedInclude, ref bool changedMutes)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var options = VelvetGender.All;
         var models = new VChipModel[options.Length];
@@ -226,7 +225,7 @@ internal sealed partial class VelvetShell
     private void DrawSexualityFilterChips(VelvetFilterSelection include, ref bool changedInclude,
         ref bool changedMutes)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var options = VelvetSexuality.All;
         var models = new VChipModel[options.Length];
@@ -249,7 +248,7 @@ internal sealed partial class VelvetShell
     private void DrawRelationshipFilterChips(VelvetFilterSelection include, ref bool changedInclude,
         ref bool changedMutes)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var statuses = VelvetRelationship.All;
         var models = new VChipModel[statuses.Length];
@@ -271,7 +270,7 @@ internal sealed partial class VelvetShell
 
     private void DrawTagsFilterChips(VelvetFilterSelection include, ref bool changedInclude, ref bool changedMutes)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var categories = VelvetSuggestions.TagCategories;
         for (var index = 0; index < categories.Length; index++)
@@ -294,7 +293,7 @@ internal sealed partial class VelvetShell
     private void DrawTriStateTokenChips(string[] options, Vector4 accent, HashSet<string> include,
         HashSet<string> exclude, ref bool changedInclude, ref bool changedMutes)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var models = new VChipModel[options.Length];
         for (var index = 0; index < options.Length; index++)

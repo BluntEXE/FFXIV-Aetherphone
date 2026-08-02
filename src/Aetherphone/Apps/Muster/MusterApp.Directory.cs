@@ -7,7 +7,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Muster;
 
@@ -36,7 +35,7 @@ internal sealed partial class MusterApp
 
     private void DrawDirectory(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var nowUnix = NowUnix();
         var currentDataCenterId = store.CurrentDataCenterId;
         DrawDirectoryHeader(area, scale);
