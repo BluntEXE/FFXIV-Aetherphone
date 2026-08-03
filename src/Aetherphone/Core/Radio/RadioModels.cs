@@ -52,14 +52,15 @@ internal readonly struct RadioStation : IEquatable<RadioStation>
     public readonly string Country;
     public readonly string Uuid;
     public readonly string CommunityId;
+    public readonly string ArtworkUrl;
 
     public RadioStation(string name, string streamUrl, string codec, int bitrate, string country, string uuid)
-        : this(name, streamUrl, codec, bitrate, country, uuid, string.Empty)
+        : this(name, streamUrl, codec, bitrate, country, uuid, string.Empty, string.Empty)
     {
     }
 
     public RadioStation(string name, string streamUrl, string codec, int bitrate, string country, string uuid,
-        string communityId)
+        string communityId, string artworkUrl)
     {
         Name = name;
         StreamUrl = streamUrl;
@@ -68,6 +69,7 @@ internal readonly struct RadioStation : IEquatable<RadioStation>
         Country = country;
         Uuid = uuid;
         CommunityId = communityId;
+        ArtworkUrl = artworkUrl;
     }
 
     public bool IsCommunity => !string.IsNullOrEmpty(CommunityId);

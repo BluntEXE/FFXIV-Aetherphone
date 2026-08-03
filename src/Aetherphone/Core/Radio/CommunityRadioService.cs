@@ -135,7 +135,8 @@ internal sealed class CommunityRadioService : IDisposable
 
     public static RadioStation ToStation(CommunityStationDto station)
     {
-        return new RadioStation(station.Name, station.StreamUrl, "MP3", 0, string.Empty, string.Empty, station.Id);
+        return new RadioStation(station.Name, station.StreamUrl, "MP3", 0, string.Empty, string.Empty, station.Id,
+            station.ArtworkUrl);
     }
 
     public static RadioStation[] ToQueue(CommunityStationDto[] source)
