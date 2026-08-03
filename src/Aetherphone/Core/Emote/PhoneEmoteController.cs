@@ -20,7 +20,16 @@ internal sealed class PhoneEmoteController : IDisposable
     {
         ConditionFlag.InCombat, ConditionFlag.BetweenAreas, ConditionFlag.BetweenAreas51,
         ConditionFlag.OccupiedInCutSceneEvent, ConditionFlag.WatchingCutscene, ConditionFlag.WatchingCutscene78,
-        ConditionFlag.OccupiedInQuestEvent, ConditionFlag.Casting,
+        ConditionFlag.OccupiedInQuestEvent, ConditionFlag.Casting, ConditionFlag.OccupiedInEvent,
+        ConditionFlag.Gathering, ConditionFlag.Crafting, ConditionFlag.TradeOpen, ConditionFlag.ExecutingCraftingAction,
+        ConditionFlag.Unconscious, ConditionFlag.MeldingMateria, ConditionFlag.OperatingSiegeMachine,
+        ConditionFlag.CarryingItem, ConditionFlag.CarryingObject, ConditionFlag.Mounting, ConditionFlag.Mounting71,
+        ConditionFlag.ParticipatingInCustomMatch, ConditionFlag.PlayingLordOfVerminion, ConditionFlag.ChocoboRacing,
+        ConditionFlag.PlayingMiniGame, ConditionFlag.Performing, ConditionFlag.Transformed,
+        ConditionFlag.UsingHousingFunctions, ConditionFlag.Occupied, ConditionFlag.Occupied30, ConditionFlag.Occupied33,
+        ConditionFlag.Occupied38, ConditionFlag.Occupied39, ConditionFlag.OccupiedSummoningBell,
+        ConditionFlag.ExecutingGatheringAction, ConditionFlag.PreparingToCraft, ConditionFlag.BeingMoved,
+        ConditionFlag.LoggingOut, ConditionFlag.Fishing,
     };
 
     private readonly Configuration configuration;
