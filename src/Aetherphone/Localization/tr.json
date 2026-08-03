@@ -1453,6 +1453,7 @@
   "music.communityEmpty": "Henüz topluluk istasyonu yok",
   "music.communityEmptySub": "Biri istasyon açtığında burada görünür",
   "music.listeningCount": "{0} dinliyor",
+  "music.watchOnTwitch": "Twitch'te izle",
   "music.offAir": "Yayında değil",
   "music.hostedBy": "Sunan: {0}",
   "music.listenLive": "Canlı dinle",

@@ -389,9 +389,49 @@ internal sealed partial class MusicApp
         ImGui.Dummy(new Vector2(width, buttonHeight + 16f * scale));
     }
 
+    private const int TwitchLinkKind = 0;
+
+    private static string LinkUrl(CommunityStationDto station, int kind)
+    {
+        for (var index = 0; index < station.Links.Length; index++)
+        {
+            if (station.Links[index].Kind == kind)
+            {
+                return station.Links[index].Url;
+            }
+        }
+
+        return string.Empty;
+    }
+
+    /// A broadcaster who streams on Twitch wants their audience there, not here, so their channel
+    /// gets a real button rather than one pill among seven. It opens Twitch and plays nothing.
+    private void DrawWatchOnTwitch(float scale, CommunityStationDto station)
+    {
+        var url = LinkUrl(station, TwitchLinkKind);
+        if (url.Length == 0)
+        {
+            return;
+        }
+
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        var buttonWidth = MathF.Min(width - 32f * scale, 220f * scale);
+        var buttonMin = new Vector2(origin.X + (width - buttonWidth) * 0.5f, origin.Y);
+        var buttonRect = new Rect(buttonMin, buttonMin + new Vector2(buttonWidth, 36f * scale));
+        if (ui.GhostButton(buttonRect, Loc.T(L.Music.WatchOnTwitch)))
+        {
+            Dalamud.Utility.Util.OpenLink(url);
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, 46f * scale));
+    }
+
     private void DrawStationBody(float scale, CommunityStationDto station)
     {
         var width = ImGui.GetContentRegionAvail().X;
+        DrawWatchOnTwitch(scale, station);
         var track = NowPlayingFor(station);
         if (track.Length > 0)
         {
@@ -457,7 +497,7 @@ internal sealed partial class MusicApp
         for (var index = 0; index < station.Links.Length; index++)
         {
             var link = station.Links[index];
-            if (link.Kind < 0 || link.Kind >= LinkLabels.Length)
+            if (link.Kind < 0 || link.Kind >= LinkLabels.Length || link.Kind == TwitchLinkKind)
             {
                 continue;
             }

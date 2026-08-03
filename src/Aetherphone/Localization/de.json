@@ -1453,6 +1453,7 @@
   "music.communityEmpty": "Noch keine Community-Sender",
   "music.communityEmptySub": "Sobald jemand einen Sender eröffnet, erscheint er hier",
   "music.listeningCount": "{0} hören zu",
+  "music.watchOnTwitch": "Auf Twitch ansehen",
   "music.offAir": "Nicht auf Sendung",
   "music.hostedBy": "Moderiert von {0}",
   "music.listenLive": "Live hören",

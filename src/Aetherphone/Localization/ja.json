@@ -1453,6 +1453,7 @@
   "music.communityEmpty": "コミュニティ局はまだありません",
   "music.communityEmptySub": "誰かが局を開くと、ここに表示されます",
   "music.listeningCount": "{0}人が視聴中",
+  "music.watchOnTwitch": "Twitchで見る",
   "music.offAir": "放送休止中",
   "music.hostedBy": "{0} が配信",
   "music.listenLive": "ライブを聴く",
