@@ -217,7 +217,7 @@ internal sealed class RadioPlayer : IDisposable
         var attempt = 0;
         while (!token.IsCancellationRequested)
         {
-            var stable = StreamOnce(station.StreamUrl, token, workerSession);
+            var stable = StreamOnce(station.StreamUrl, station.Codec, token, workerSession);
             if (token.IsCancellationRequested || !station.IsCommunity)
             {
                 return;
@@ -244,7 +244,7 @@ internal sealed class RadioPlayer : IDisposable
         }
     }
 
-    private bool StreamOnce(string url, CancellationToken token, int workerSession)
+    private bool StreamOnce(string url, string declaredCodec, CancellationToken token, int workerSession)
     {
         IWavePlayer? output = null;
         VolumeSampleProvider? volumeProvider = null;
@@ -268,7 +268,7 @@ internal sealed class RadioPlayer : IDisposable
 
             response.EnsureSuccessStatusCode();
             using var network = response.Content.ReadAsStream(token);
-            decoder = new Mp3StreamDecoder(network);
+            decoder = StreamDecoders.Create(response.Content.Headers.ContentType?.MediaType, declaredCodec, network);
             while (!token.IsCancellationRequested)
             {
                 if (buffer is not null && buffer.BufferedDuration > BackpressureThreshold)
