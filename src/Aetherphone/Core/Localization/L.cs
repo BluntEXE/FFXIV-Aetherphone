@@ -1986,6 +1986,18 @@ internal static class L
         public static readonly LocString Paused = new("music.paused", "Paused");
         public static readonly LocString ConnectionLost = new("music.connectionLost", "Connection lost");
         public static readonly LocString Reconnecting = new("music.reconnecting", "Reconnecting…");
+        public static readonly LocString CommunityRadio = new("music.communityRadio", "Community Radio");
+        public static readonly LocString CommunityEmpty = new("music.communityEmpty", "No community stations yet");
+        public static readonly LocString CommunityEmptySub = new("music.communityEmptySub",
+            "When someone opens a station, it shows up here");
+        public static readonly LocString ListeningCount = new("music.listeningCount", "{0} listening");
+        public static readonly LocString OffAir = new("music.offAir", "Off air");
+        public static readonly LocString HostedBy = new("music.hostedBy", "Hosted by {0}");
+        public static readonly LocString ListenLive = new("music.listenLive", "Listen live");
+        public static readonly LocString StopListening = new("music.stopListening", "Stop");
+        public static readonly LocString ReportStation = new("music.reportStation", "Report station");
+        public static readonly LocString ReportStationTitle = new("music.reportStationTitle",
+            "Report this station");
         public static readonly LocString CouldntPlay = new("music.couldntPlay", "Couldn't play this track");
         public static readonly LocString NowPlayingState = new("music.nowPlayingState", "Now playing");
         public static readonly LocString PlaybackFailed = new("music.playbackFailed", "Playback failed");

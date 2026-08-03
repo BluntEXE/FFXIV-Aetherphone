@@ -1,8 +1,8 @@
 namespace Aetherphone.Core.Aethernet.Contracts;
 
-internal sealed record RadioLinkDto(int Kind, string Url);
+internal sealed record CommunityLinkDto(int Kind, string Url);
 
-internal sealed record RadioStationDto(
+internal sealed record CommunityStationDto(
     string Id,
     string OwnerId,
     string OwnerDisplayName,
@@ -15,23 +15,23 @@ internal sealed record RadioStationDto(
     string[] Tags,
     string ArtworkUrl,
     string StreamUrl,
-    RadioLinkDto[] Links,
+    CommunityLinkDto[] Links,
     bool IsLive,
     int Listeners,
     string NowPlaying,
     long LastLiveAtUnix,
     long CreatedAtUnix);
 
-internal sealed record RadioStationPage(RadioStationDto[] Items, string? NextCursor);
+internal sealed record CommunityStationPage(CommunityStationDto[] Items, string? NextCursor);
 
-internal sealed record UpdateRadioStationRequest(
+internal sealed record UpdateCommunityStationRequest(
     string Name,
     string Description,
     string[]? Tags,
-    RadioLinkDto[]? Links,
+    CommunityLinkDto[]? Links,
     string? MediaKey);
 
-internal sealed record RadioCredentialsDto(
+internal sealed record CommunityCredentialsDto(
     string Host,
     int Port,
     string Mount,
@@ -41,4 +41,4 @@ internal sealed record RadioCredentialsDto(
     int Bitrate,
     int SampleRate);
 
-internal sealed record MyRadioStationDto(RadioStationDto Station, RadioCredentialsDto Credentials);
+internal sealed record MyCommunityStationDto(CommunityStationDto Station, CommunityCredentialsDto Credentials);

@@ -157,10 +157,10 @@ namespace Aetherphone.Core.Aethernet;
 [JsonSerializable(typeof(ConversationKeysDto))]
 [JsonSerializable(typeof(ConversationWrapsDto))]
 [JsonSerializable(typeof(MyConversationKeysDto))]
-[JsonSerializable(typeof(RadioStationDto))]
-[JsonSerializable(typeof(RadioStationPage))]
-[JsonSerializable(typeof(UpdateRadioStationRequest))]
-[JsonSerializable(typeof(MyRadioStationDto))]
+[JsonSerializable(typeof(CommunityStationDto))]
+[JsonSerializable(typeof(CommunityStationPage))]
+[JsonSerializable(typeof(UpdateCommunityStationRequest))]
+[JsonSerializable(typeof(MyCommunityStationDto))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
 internal sealed partial class AethernetJsonContext : JsonSerializerContext
 {

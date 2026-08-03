@@ -40,6 +40,7 @@ internal sealed partial class MusicApp
             DrawShelfHeading(Loc.T(L.Music.YourPlaylists), scale);
             DrawPlaylistShelf(scale, gridWidth);
             DrawFavoriteRadioStationsSection(Loc.T(L.Music.FavoriteStations), scale);
+            DrawCommunitySection(scale);
             DrawRadioHeading(scale);
             DrawCategoryGrid(scale, gridWidth);
             ImGui.Dummy(new Vector2(0f, 10f * scale));

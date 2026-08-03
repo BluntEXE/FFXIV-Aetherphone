@@ -11,27 +11,27 @@ internal sealed class RadioClient
         this.net = net;
     }
 
-    public Task<RadioStationPage?> StationsAsync(CancellationToken token)
+    public Task<CommunityStationPage?> StationsAsync(CancellationToken token)
     {
-        return net.GetAsync("/radio/stations", AethernetJsonContext.Default.RadioStationPage, token);
+        return net.GetAsync("/radio/stations", AethernetJsonContext.Default.CommunityStationPage, token);
     }
 
-    public Task<RadioStationDto?> StationAsync(string stationId, CancellationToken token)
+    public Task<CommunityStationDto?> StationAsync(string stationId, CancellationToken token)
     {
         return net.GetAsync($"/radio/stations/{Uri.EscapeDataString(stationId)}",
-            AethernetJsonContext.Default.RadioStationDto, token);
+            AethernetJsonContext.Default.CommunityStationDto, token);
     }
 
-    public Task<MyRadioStationDto?> MineAsync(CancellationToken token)
+    public Task<MyCommunityStationDto?> MineAsync(CancellationToken token)
     {
-        return net.GetAsync("/radio/mine", AethernetJsonContext.Default.MyRadioStationDto, token);
+        return net.GetAsync("/radio/mine", AethernetJsonContext.Default.MyCommunityStationDto, token);
     }
 
-    public Task<MyRadioStationDto?> UpdateMineAsync(UpdateRadioStationRequest request, CancellationToken token,
+    public Task<MyCommunityStationDto?> UpdateMineAsync(UpdateCommunityStationRequest request, CancellationToken token,
         Action<int>? statusSink = null)
     {
         return net.SendJsonAsync(HttpMethod.Put, "/radio/mine", request,
-            AethernetJsonContext.Default.UpdateRadioStationRequest, AethernetJsonContext.Default.MyRadioStationDto,
+            AethernetJsonContext.Default.UpdateCommunityStationRequest, AethernetJsonContext.Default.MyCommunityStationDto,
             token, statusSink);
     }
 }
