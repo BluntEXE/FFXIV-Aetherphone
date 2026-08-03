@@ -248,10 +248,10 @@ internal sealed class RadioPlayer : IDisposable
     {
         IWavePlayer? output = null;
         VolumeSampleProvider? volumeProvider = null;
-        IMp3FrameDecompressor? decompressor = null;
+        IStreamDecoder? decoder = null;
         BufferedWaveProvider? buffer = null;
         HttpResponseMessage? response = null;
-        var decoded = new byte[16384 * 4];
+        var decoded = new byte[Mp3StreamDecoder.MaxDecodedBytes];
         var playingSinceTick = 0L;
         try
         {
@@ -268,7 +268,7 @@ internal sealed class RadioPlayer : IDisposable
 
             response.EnsureSuccessStatusCode();
             using var network = response.Content.ReadAsStream(token);
-            var source = new ReadFullyStream(network);
+            decoder = new Mp3StreamDecoder(network);
             while (!token.IsCancellationRequested)
             {
                 if (buffer is not null && buffer.BufferedDuration > BackpressureThreshold)
@@ -282,32 +282,17 @@ internal sealed class RadioPlayer : IDisposable
                     continue;
                 }
 
-                Mp3Frame? frame;
-                try
-                {
-                    frame = Mp3Frame.LoadFromStream(source);
-                }
-                catch (EndOfStreamException)
+                var count = decoder.Read(decoded);
+                if (count <= 0)
                 {
                     break;
                 }
 
-                if (frame is null)
+                buffer ??= new BufferedWaveProvider(decoder.WaveFormat)
                 {
-                    break;
-                }
-
-                if (decompressor is null)
-                {
-                    decompressor = CreateDecompressor(frame);
-                    buffer = new BufferedWaveProvider(decompressor.OutputFormat)
-                    {
-                        BufferDuration = BufferDuration, DiscardOnBufferOverflow = true,
-                    };
-                }
-
-                var count = decompressor.DecompressFrame(frame, decoded, 0);
-                buffer!.AddSamples(decoded, 0, count);
+                    BufferDuration = BufferDuration, DiscardOnBufferOverflow = true,
+                };
+                buffer.AddSamples(decoded, 0, count);
                 if (output is null && buffer.BufferedDuration >= PrebufferThreshold)
                 {
                     volumeProvider = new VolumeSampleProvider(buffer.ToSampleProvider()) { Volume = volume };
@@ -341,7 +326,7 @@ internal sealed class RadioPlayer : IDisposable
         {
             output?.Stop();
             output?.Dispose();
-            decompressor?.Dispose();
+            decoder?.Dispose();
             lock (gate)
             {
                 if (ReferenceEquals(activeResponse, response))
@@ -356,59 +341,9 @@ internal sealed class RadioPlayer : IDisposable
         return playingSinceTick != 0L && Environment.TickCount64 - playingSinceTick >= StableSessionMilliseconds;
     }
 
-    private static IMp3FrameDecompressor CreateDecompressor(Mp3Frame frame)
-    {
-        var format = new Mp3WaveFormat(frame.SampleRate, frame.ChannelMode == ChannelMode.Mono ? 1 : 2,
-            frame.FrameLength, frame.BitRate);
-        return new AcmMp3FrameDecompressor(format);
-    }
-
     public void Dispose()
     {
         Stop();
         client.Dispose();
     }
-}
-
-internal sealed class ReadFullyStream : Stream
-{
-    private readonly Stream source;
-
-    public ReadFullyStream(Stream source)
-    {
-        this.source = source;
-    }
-
-    public override bool CanRead => true;
-    public override bool CanSeek => false;
-    public override bool CanWrite => false;
-    public override long Length => throw new NotSupportedException();
-
-    public override long Position
-    {
-        get => 0;
-        set => throw new NotSupportedException();
-    }
-
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        var total = 0;
-        while (total < count)
-        {
-            var read = source.Read(buffer, offset + total, count - total);
-            if (read == 0)
-            {
-                break;
-            }
-
-            total += read;
-        }
-
-        return total;
-    }
-
-    public override void Flush() => throw new NotSupportedException();
-    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-    public override void SetLength(long value) => throw new NotSupportedException();
-    public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 }
