@@ -28,6 +28,7 @@ internal sealed partial class MusicApp : IPhoneApp
         PlaylistDetail,
         Community,
         Station,
+        MyStation,
     }
 
     private const float TopBarHeight = 46f;
@@ -233,6 +234,9 @@ internal sealed partial class MusicApp : IPhoneApp
                 break;
             case View.Station:
                 DrawStationPage(context);
+                break;
+            case View.MyStation:
+                DrawMyStation(context);
                 break;
             default:
                 DrawHome(context);

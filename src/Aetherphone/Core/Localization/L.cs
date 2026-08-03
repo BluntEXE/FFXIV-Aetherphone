@@ -1998,6 +1998,25 @@ internal static class L
         public static readonly LocString ReportStation = new("music.reportStation", "Report station");
         public static readonly LocString ReportStationTitle = new("music.reportStationTitle",
             "Report this station");
+        public static readonly LocString MyStation = new("music.myStation", "My station");
+        public static readonly LocString OnAir = new("music.onAir", "On air");
+        public static readonly LocString StationNameLabel = new("music.stationNameLabel", "Station name");
+        public static readonly LocString StationDescriptionLabel = new("music.stationDescriptionLabel", "Description");
+        public static readonly LocString StationLinksLabel = new("music.stationLinksLabel", "Links");
+        public static readonly LocString StationSave = new("music.stationSave", "Save changes");
+        public static readonly LocString StationSaved = new("music.stationSaved", "Saved");
+        public static readonly LocString StationSaveFailed = new("music.stationSaveFailed", "Could not save");
+        public static readonly LocString StationBroadcast = new("music.stationBroadcast", "Broadcast settings");
+        public static readonly LocString StationServer = new("music.stationServer", "Server");
+        public static readonly LocString StationPort = new("music.stationPort", "Port");
+        public static readonly LocString StationMount = new("music.stationMount", "Mount");
+        public static readonly LocString StationUser = new("music.stationUser", "User");
+        public static readonly LocString StationPassword = new("music.stationPassword", "Password");
+        public static readonly LocString StationFormat = new("music.stationFormat", "Format");
+        public static readonly LocString StationCopied = new("music.stationCopied", "Copied");
+        public static readonly LocString StationHelp = new("music.stationHelp",
+            "Paste these into butt, or Rocket Broadcaster if you want to stream your desktop audio. "
+            + "MP3 only: other formats connect fine and reach listeners as silence.");
         public static readonly LocString CouldntPlay = new("music.couldntPlay", "Couldn't play this track");
         public static readonly LocString NowPlayingState = new("music.nowPlayingState", "Now playing");
         public static readonly LocString PlaybackFailed = new("music.playbackFailed", "Playback failed");

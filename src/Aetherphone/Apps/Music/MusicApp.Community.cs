@@ -112,7 +112,9 @@ internal sealed partial class MusicApp
         var scale = UiScale.Current;
         var content = context.Content;
         community.EnsureFresh(true);
+        community.EnsureMine();
         DrawTopBar(context, Loc.T(L.Music.CommunityRadio), GoToHome);
+        DrawMyStationEntry(content, scale);
         var body = ScrollBody(content, scale);
         var stations = community.Stations;
         if (stations.Length == 0)
@@ -130,6 +132,21 @@ internal sealed partial class MusicApp
             }
 
             ImGui.Dummy(new Vector2(0f, 10f * scale));
+        }
+    }
+
+    private void DrawMyStationEntry(Rect content, float scale)
+    {
+        if (!community.OwnsStation)
+        {
+            return;
+        }
+
+        var center = new Vector2(content.Max.X - 26f * scale, content.Min.Y + TopBarHeight * scale * 0.5f);
+        if (ui.IconButton(center, 16f * scale, FontAwesomeIcon.BroadcastTower.ToIconString(), ui.TitleInk,
+                AppSkin.Transparent, 0.8f, Loc.T(L.Music.MyStation)))
+        {
+            OpenMyStation();
         }
     }
 
