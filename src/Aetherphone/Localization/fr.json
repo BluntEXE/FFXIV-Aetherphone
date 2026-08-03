@@ -1448,6 +1448,7 @@
   "music.buffering": "Mise en mémoire…",
   "music.paused": "En pause",
   "music.connectionLost": "Connexion perdue",
+  "music.reconnecting": "Reconnexion…",
   "music.couldntPlay": "Impossible de lire ce titre",
   "music.nowPlayingState": "En cours de lecture",
   "music.playbackFailed": "Échec de la lecture",

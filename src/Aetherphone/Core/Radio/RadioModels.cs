@@ -51,8 +51,15 @@ internal readonly struct RadioStation : IEquatable<RadioStation>
     public readonly int Bitrate;
     public readonly string Country;
     public readonly string Uuid;
+    public readonly string CommunityId;
 
     public RadioStation(string name, string streamUrl, string codec, int bitrate, string country, string uuid)
+        : this(name, streamUrl, codec, bitrate, country, uuid, string.Empty)
+    {
+    }
+
+    public RadioStation(string name, string streamUrl, string codec, int bitrate, string country, string uuid,
+        string communityId)
     {
         Name = name;
         StreamUrl = streamUrl;
@@ -60,14 +67,27 @@ internal readonly struct RadioStation : IEquatable<RadioStation>
         Bitrate = bitrate;
         Country = country;
         Uuid = uuid;
+        CommunityId = communityId;
     }
 
-    public bool Equals(RadioStation other) => other.StreamUrl == StreamUrl;
+    public bool IsCommunity => !string.IsNullOrEmpty(CommunityId);
+
+    // Community stations keep their identity across a listen token or host change, so they compare
+    // by station id; directory stations have no id and the stream url is all they ever had.
+    public bool Equals(RadioStation other)
+    {
+        if (IsCommunity || other.IsCommunity)
+        {
+            return string.Equals(CommunityId, other.CommunityId, StringComparison.Ordinal);
+        }
+
+        return other.StreamUrl == StreamUrl;
+    }
 
     public override bool Equals(object? obj) => obj is RadioStation station && Equals(station);
 
     public override int GetHashCode() =>
-        HashCode.Combine(StreamUrl);
+        IsCommunity ? HashCode.Combine(CommunityId) : HashCode.Combine(StreamUrl);
 }
 
 internal readonly struct RadioPage

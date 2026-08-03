@@ -150,6 +150,7 @@ internal sealed class PlaybackHub
         return state switch
         {
             RadioPlaybackState.Buffering => Loc.T(L.Music.Buffering),
+            RadioPlaybackState.Reconnecting => Loc.T(L.Music.Reconnecting),
             RadioPlaybackState.Playing => Loc.T(L.Music.NowPlayingState),
             RadioPlaybackState.Paused => Loc.T(L.Music.Paused),
             RadioPlaybackState.Failed => Loc.T(L.Music.ConnectionLost),

@@ -1448,6 +1448,7 @@
   "music.buffering": "缓冲中…",
   "music.paused": "已暂停",
   "music.connectionLost": "连接丢失",
+  "music.reconnecting": "正在重新连接…",
   "music.couldntPlay": "无法播放此曲目",
   "music.nowPlayingState": "正在播放",
   "music.playbackFailed": "播放失败",

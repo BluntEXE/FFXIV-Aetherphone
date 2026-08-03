@@ -1448,6 +1448,7 @@
   "music.buffering": "Буферизация…",
   "music.paused": "На паузе",
   "music.connectionLost": "Соединение потеряно",
+  "music.reconnecting": "Переподключение…",
   "music.couldntPlay": "Не удалось воспроизвести этот трек",
   "music.nowPlayingState": "Сейчас играет",
   "music.playbackFailed": "Ошибка воспроизведения",

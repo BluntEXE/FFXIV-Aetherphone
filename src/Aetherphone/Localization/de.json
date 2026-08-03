@@ -1448,6 +1448,7 @@
   "music.buffering": "Puffern…",
   "music.paused": "Pausiert",
   "music.connectionLost": "Verbindung verloren",
+  "music.reconnecting": "Verbindung wird wiederhergestellt…",
   "music.couldntPlay": "Dieser Titel konnte nicht abgespielt werden",
   "music.nowPlayingState": "Wird gespielt",
   "music.playbackFailed": "Wiedergabe fehlgeschlagen",

@@ -1448,6 +1448,7 @@
   "music.buffering": "バッファリング中…",
   "music.paused": "一時停止中",
   "music.connectionLost": "接続が失われました",
+  "music.reconnecting": "再接続しています…",
   "music.couldntPlay": "このトラックを再生できませんでした",
   "music.nowPlayingState": "再生中",
   "music.playbackFailed": "再生に失敗しました",

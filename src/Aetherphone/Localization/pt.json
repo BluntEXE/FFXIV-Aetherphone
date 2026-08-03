@@ -1448,6 +1448,7 @@
   "music.buffering": "Carregando…",
   "music.paused": "Pausado",
   "music.connectionLost": "Conexão perdida",
+  "music.reconnecting": "Reconectando…",
   "music.couldntPlay": "Não foi possível reproduzir esta faixa",
   "music.nowPlayingState": "Tocando agora",
   "music.playbackFailed": "Falha na reprodução",

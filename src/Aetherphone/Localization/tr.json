@@ -1448,6 +1448,7 @@
   "music.buffering": "Arabelleğe alınıyor…",
   "music.paused": "Duraklatıldı",
   "music.connectionLost": "Bağlantı koptu",
+  "music.reconnecting": "Yeniden bağlanılıyor…",
   "music.couldntPlay": "Bu parça çalınamadı",
   "music.nowPlayingState": "Şimdi çalıyor",
   "music.playbackFailed": "Oynatma başarısız",

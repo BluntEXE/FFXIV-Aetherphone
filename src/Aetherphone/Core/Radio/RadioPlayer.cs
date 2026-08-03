@@ -10,6 +10,7 @@ internal enum RadioPlaybackState : byte
     Playing,
     Paused,
     Failed,
+    Reconnecting,
 }
 
 internal sealed class RadioPlayer : IDisposable
@@ -18,6 +19,8 @@ internal sealed class RadioPlayer : IDisposable
     private static readonly TimeSpan PrebufferThreshold = TimeSpan.FromSeconds(2);
     private static readonly TimeSpan BackpressureThreshold = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(20);
+    private static readonly int[] ReconnectDelaysMilliseconds = { 1000, 2000, 5000, 10000, 20000, 20000 };
+    private const long StableSessionMilliseconds = 30000;
     private readonly HttpClient client;
     private readonly object gate = new();
     private CancellationTokenSource? cancellation;
@@ -107,9 +110,8 @@ internal sealed class RadioPlayer : IDisposable
             state = RadioPlaybackState.Buffering;
             cancellation = new CancellationTokenSource();
             var token = cancellation.Token;
-            var url = station.StreamUrl;
             var workerSession = session;
-            worker = new Thread(() => Stream(url, token, workerSession))
+            worker = new Thread(() => Stream(station, token, workerSession))
             {
                 IsBackground = true, Name = "Aetherphone.Radio",
             };
@@ -130,7 +132,8 @@ internal sealed class RadioPlayer : IDisposable
 
     public void Pause()
     {
-        if (state is not (RadioPlaybackState.Buffering or RadioPlaybackState.Playing))
+        if (state is not (RadioPlaybackState.Buffering or RadioPlaybackState.Playing
+            or RadioPlaybackState.Reconnecting))
         {
             return;
         }
@@ -206,7 +209,42 @@ internal sealed class RadioPlayer : IDisposable
         }
     }
 
-    private void Stream(string url, CancellationToken token, int workerSession)
+    // A community DJ's connection blips far more often than a professional station's, and every
+    // blip ends the stream for every listener, so community mounts get retried while the station
+    // is still meant to be on air. Directory stations keep the original one shot behaviour.
+    private void Stream(RadioStation station, CancellationToken token, int workerSession)
+    {
+        var attempt = 0;
+        while (!token.IsCancellationRequested)
+        {
+            var stable = StreamOnce(station.StreamUrl, token, workerSession);
+            if (token.IsCancellationRequested || !station.IsCommunity)
+            {
+                return;
+            }
+
+            if (stable)
+            {
+                attempt = 0;
+            }
+
+            if (attempt >= ReconnectDelaysMilliseconds.Length)
+            {
+                TrySetState(workerSession, RadioPlaybackState.Failed);
+                return;
+            }
+
+            TrySetState(workerSession, RadioPlaybackState.Reconnecting);
+            if (token.WaitHandle.WaitOne(ReconnectDelaysMilliseconds[attempt]))
+            {
+                return;
+            }
+
+            attempt++;
+        }
+    }
+
+    private bool StreamOnce(string url, CancellationToken token, int workerSession)
     {
         IWavePlayer? output = null;
         VolumeSampleProvider? volumeProvider = null;
@@ -214,6 +252,7 @@ internal sealed class RadioPlayer : IDisposable
         BufferedWaveProvider? buffer = null;
         HttpResponseMessage? response = null;
         var decoded = new byte[16384 * 4];
+        var playingSinceTick = 0L;
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
@@ -224,7 +263,7 @@ internal sealed class RadioPlayer : IDisposable
             }
             if (!TryPublishResponse(response, workerSession))
             {
-                return;
+                return false;
             }
 
             response.EnsureSuccessStatusCode();
@@ -275,6 +314,7 @@ internal sealed class RadioPlayer : IDisposable
                     output = AudioOutputFactory.Create();
                     output.Init(volumeProvider, true);
                     output.Play();
+                    playingSinceTick = Environment.TickCount64;
                     TrySetState(workerSession, RadioPlaybackState.Playing);
                 }
 
@@ -312,6 +352,8 @@ internal sealed class RadioPlayer : IDisposable
 
             response?.Dispose();
         }
+
+        return playingSinceTick != 0L && Environment.TickCount64 - playingSinceTick >= StableSessionMilliseconds;
     }
 
     private static IMp3FrameDecompressor CreateDecompressor(Mp3Frame frame)

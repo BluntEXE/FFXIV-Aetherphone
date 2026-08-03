@@ -1985,6 +1985,7 @@ internal static class L
         public static readonly LocString Buffering = new("music.buffering", "Buffering…");
         public static readonly LocString Paused = new("music.paused", "Paused");
         public static readonly LocString ConnectionLost = new("music.connectionLost", "Connection lost");
+        public static readonly LocString Reconnecting = new("music.reconnecting", "Reconnecting…");
         public static readonly LocString CouldntPlay = new("music.couldntPlay", "Couldn't play this track");
         public static readonly LocString NowPlayingState = new("music.nowPlayingState", "Now playing");
         public static readonly LocString PlaybackFailed = new("music.playbackFailed", "Playback failed");

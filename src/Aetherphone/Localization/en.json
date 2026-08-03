@@ -1448,6 +1448,7 @@
   "music.buffering": "Buffering…",
   "music.paused": "Paused",
   "music.connectionLost": "Connection lost",
+  "music.reconnecting": "Reconnecting…",
   "music.couldntPlay": "Couldn't play this track",
   "music.nowPlayingState": "Now playing",
   "music.playbackFailed": "Playback failed",
