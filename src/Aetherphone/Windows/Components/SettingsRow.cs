@@ -29,8 +29,9 @@ internal static class SettingsRow
         var gap = 12f * scale;
         var available = row.Width - gap;
         var valueFullSize = Typography.Measure(value, TextStyles.Body);
-        var labelCap = MathF.Max(1f, available - valueFullSize.X);
         var labelSize = Typography.Measure(label, TextStyles.BodyEmphasized);
+        var labelFloor = MathF.Min(labelSize.X, available * 0.55f);
+        var labelCap = Math.Clamp(available - valueFullSize.X, labelFloor, available);
         var labelY = row.Center.Y - labelSize.Y * 0.5f;
         var labelHovered = UiInteract.Hover(new Vector2(row.Min.X, row.Min.Y),
             new Vector2(row.Min.X + labelCap, row.Max.Y));

@@ -167,6 +167,7 @@ internal sealed partial class AppStoreApp
     private static string DeveloperName(IPhoneApp app) => app.Id switch
     {
         "health" => "Yozora",
+        "housing" => "Yozora",
         "jobs" => "K.I.R.O",
         _ => Loc.T(L.Store.DeveloperName),
     };

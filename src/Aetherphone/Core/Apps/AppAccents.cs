@@ -70,6 +70,7 @@ internal static class AppAccents
         ["beat"] = new(0.96f, 0.36f, 0.62f, 1f),
         ["blade"] = new(0.86f, 0.42f, 0.30f, 1f),
         ["trivia"] = new(0.30f, 0.72f, 0.86f, 1f),
+        ["housing"] = new(0.36f, 0.70f, 0.52f, 1f),
     }.ToFrozenDictionary();
 
     public static Vector4 For(string id) => Accents.TryGetValue(id, out var accent) ? accent : Fallback;

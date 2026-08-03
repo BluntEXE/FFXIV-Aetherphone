@@ -8,6 +8,7 @@ using Aetherphone.Core.ControlCenter;
 using Aetherphone.Core.Dailies;
 using Aetherphone.Core.Games;
 using Aetherphone.Core.Home;
+using Aetherphone.Core.Housing;
 using Aetherphone.Core.Jobs;
 using Aetherphone.Core.Market;
 using Aetherphone.Core.Notifications;
@@ -126,6 +127,26 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public int YellowPagesScope { get; set; }
     public bool YellowPagesAfterDark { get; set; }
     public List<uint> MapFavorites { get; set; } = new();
+    public uint HousingWorldId { get; set; }
+    public uint HousingDistrictId { get; set; } = 339u;
+    public int HousingWard { get; set; } = HousingDefaults.DefaultWard;
+    public bool HousingFollowCurrentWorld { get; set; }
+    public bool HousingAutoRefresh { get; set; } = true;
+    public int HousingRefreshMinutes { get; set; } = HousingDefaults.RefreshMinutes;
+    public bool HousingRefreshFloorApplied { get; set; }
+    public int HousingLiveMinutes { get; set; } = 15;
+    public int HousingRecentMinutes { get; set; } = 60;
+    public bool HousingNotifyEntry { get; set; } = true;
+    public bool HousingNotifyResults { get; set; } = true;
+    public int HousingReminderMinutes { get; set; } = HousingDefaults.ReminderMinutes;
+    public bool HousingFilterSmall { get; set; } = true;
+    public bool HousingFilterMedium { get; set; } = true;
+    public bool HousingFilterLarge { get; set; } = true;
+    public bool HousingShowAllPlots { get; set; }
+    public int HousingListSort { get; set; }
+    public bool HousingMapHintDismissed { get; set; }
+    public List<HousingWatchRecord> HousingWatched { get; set; } = new();
+    public List<HousingReminderRecord> HousingReminders { get; set; } = new();
     public List<RadioStationRecord> RadioFavorites { get; set; } = new();
     public List<string> CustomAlbumOrder { get; set; } = new();
     public Dictionary<string, List<string>> CustomAlbumPhotos { get; set; } = new();
@@ -235,6 +256,22 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
 
         ControlPanel = null;
         ControlPanelRepacked = true;
+        Save();
+    }
+
+    public void MigrateHousingRefreshFloor()
+    {
+        if (HousingRefreshFloorApplied)
+        {
+            return;
+        }
+
+        HousingRefreshFloorApplied = true;
+        if (HousingRefreshMinutes < HousingDefaults.RefreshMinutes)
+        {
+            HousingRefreshMinutes = HousingDefaults.RefreshMinutes;
+        }
+
         Save();
     }
 
