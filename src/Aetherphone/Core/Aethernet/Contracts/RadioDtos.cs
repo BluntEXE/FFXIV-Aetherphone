@@ -20,10 +20,7 @@ internal sealed record CommunityStationDto(
     int Listeners,
     string NowPlaying,
     long LastLiveAtUnix,
-    long CreatedAtUnix,
-    int Kind = 0,
-    string TwitchLogin = "",
-    string WatchUrl = "");
+    long CreatedAtUnix);
 
 internal sealed record CommunityStationPage(CommunityStationDto[] Items, string? NextCursor);
 
