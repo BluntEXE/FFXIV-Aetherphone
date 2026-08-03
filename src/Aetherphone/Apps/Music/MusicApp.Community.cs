@@ -295,19 +295,11 @@ internal sealed partial class MusicApp
         Typography.Draw(drawList, new Vector2(origin.X + (width - nameSize.X) * 0.5f, origin.Y), name, ui.TitleInk,
             TextStyles.Title2);
 
-        var hostLabel = station.OwnerHandle.Length > 0
-            ? string.Format(Loc.T(L.Music.HostedBy), "@" + station.OwnerHandle)
-            : string.Empty;
-        var hostY = origin.Y + nameSize.Y + 4f * scale;
-        if (hostLabel.Length > 0)
-        {
-            var host = Typography.FitText(hostLabel, width, TextStyles.Caption1);
-            var hostSize = Typography.Measure(host, TextStyles.Caption1);
-            Typography.Draw(drawList, new Vector2(origin.X + (width - hostSize.X) * 0.5f, hostY), host, ui.MutedInk,
-                TextStyles.Caption1);
-        }
+        var hostY = origin.Y + nameSize.Y + 6f * scale;
+        DrawHost(drawList, station, origin.X, hostY, width, scale);
 
-        var statusY = hostY + 20f * scale;
+        // The host row is as tall as its avatar, so status clears the full diameter, not the text.
+        var statusY = hostY + 28f * scale;
         var statusText = station.IsLive
             ? string.Format(Loc.T(L.Music.ListeningCount), station.Listeners)
             : Loc.T(L.Music.OffAir);
@@ -318,6 +310,51 @@ internal sealed partial class MusicApp
 
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, statusY - origin.Y + statusSize.Y + 12f * scale));
+    }
+
+    /// A raw handle names nobody. The directory already carries the owner's display name, avatar and
+    /// badges, so the page shows the person rather than their id.
+    private void DrawHost(ImDrawListPtr drawList, CommunityStationDto station, float left, float top, float width,
+        float scale)
+    {
+        var display = station.OwnerDisplayName.Length > 0
+            ? station.OwnerDisplayName
+            : station.OwnerHandle.Length > 0
+                ? "@" + station.OwnerHandle
+                : string.Empty;
+        if (display.Length == 0)
+        {
+            return;
+        }
+
+        var label = string.Format(Loc.T(L.Music.HostedBy), display);
+        var radius = 11f * scale;
+        var gap = 7f * scale;
+        var available = width - 32f * scale - radius * 2f - gap;
+        var fitted = Typography.FitText(label, available, TextStyles.Caption1);
+        var textWidth = Typography.Measure(fitted, TextStyles.Caption1).X
+            + UserName.Reserve(station.OwnerBadges, TextStyles.Caption1);
+        var rowLeft = left + (width - (radius * 2f + gap + textWidth)) * 0.5f;
+        var center = new Vector2(rowLeft + radius, top + radius);
+
+        if (station.OwnerAvatarUrl.Length > 0 && Thumb(station.OwnerAvatarUrl).Texture is { } avatar)
+        {
+            drawList.AddImageRounded(avatar.Handle, center - new Vector2(radius, radius),
+                center + new Vector2(radius, radius), Vector2.Zero, Vector2.One, 0xFFFFFFFFu, radius,
+                ImDrawFlags.RoundCornersAll);
+        }
+        else
+        {
+            drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ui.FieldSurface), 24);
+            var initials = Initials.Of(display);
+            var initialsSize = Typography.Measure(initials, TextStyles.Caption2);
+            Typography.Draw(drawList, new Vector2(center.X - initialsSize.X * 0.5f, center.Y - initialsSize.Y * 0.5f),
+                initials, ui.MutedInk, TextStyles.Caption2);
+        }
+
+        UserName.DrawAuto(drawList, "music.station.host", fitted, station.OwnerBadges,
+            rowLeft + radius * 2f + gap, top + radius - Typography.Measure(fitted, TextStyles.Caption1).Y * 0.5f,
+            available, TextStyles.Caption1, ui.MutedInk, theme);
     }
 
     private void DrawStationActions(float scale, CommunityStationDto station)
