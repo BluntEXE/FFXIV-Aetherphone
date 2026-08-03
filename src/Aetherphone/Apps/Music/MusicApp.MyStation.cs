@@ -2,7 +2,11 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Media;
+using Aetherphone.Core.Photos;
+using Aetherphone.Core.Radio;
 using Aetherphone.Core.Theme;
+using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -28,11 +32,96 @@ internal sealed partial class MusicApp
     private volatile bool stationSaveDone;
     private float stationCopiedClock = float.NegativeInfinity;
     private int stationCopiedRow = -1;
+    private ImagePickCrop? artworkPicker;
+    private volatile bool artworkSaving;
+    private volatile int artworkOutcome;
 
     private void OpenMyStation()
     {
         LoadStationDrafts();
         router.Push(View.MyStation);
+    }
+
+    private void OpenStationArtwork()
+    {
+        artworkPicker ??= new ImagePickCrop(photoLibrary, wallpaperImages);
+        artworkPicker.Open();
+        artworkOutcome = 0;
+        router.Push(View.StationArtwork);
+    }
+
+    private void DrawStationArtwork(in PhoneContext context)
+    {
+        if (artworkPicker is null || community.Mine is null)
+        {
+            router.Pop();
+            return;
+        }
+
+        if (artworkOutcome == 1)
+        {
+            artworkOutcome = 0;
+            router.Pop();
+            return;
+        }
+
+        if (artworkOutcome == 2)
+        {
+            artworkOutcome = 0;
+            confirm.Alert(null, Loc.T(L.Account.CannotReach), Loc.T(L.Account.FailDismiss));
+        }
+
+        var labels = new ImagePickCropLabels(Loc.T(L.Music.StationArtwork), Loc.T(L.Account.ImportFromPc),
+            Loc.T(L.Photos.NoPhotos), Loc.T(L.Account.MoveAndScale), Loc.T(L.Account.Use), Loc.T(L.Account.Saving),
+            Loc.T(L.Account.GestureHint));
+        var result = artworkPicker.Draw(context.Content, context, labels, ui.Accent, artworkSaving);
+        if (result == ImagePickCropEvent.Cancelled)
+        {
+            router.Pop();
+            return;
+        }
+
+        if (result == ImagePickCropEvent.Committed && !artworkSaving && artworkPicker.SourcePath.Length > 0)
+        {
+            UploadStationArtwork(artworkPicker.SourcePath, artworkPicker.Crop);
+        }
+    }
+
+    private void UploadStationArtwork(string sourcePath, WallpaperCrop crop)
+    {
+        artworkSaving = true;
+        var request = CurrentStationRequest();
+        var pickedPath = sourcePath;
+        var pickedCrop = crop;
+        _ = Task.Run(async () =>
+        {
+            var ok = await StationArtworkUpload
+                .RunAsync(aethernet.Media, community, request, pickedPath, pickedCrop, CancellationToken.None)
+                .ConfigureAwait(false);
+            artworkSaving = false;
+            artworkOutcome = ok ? 1 : 2;
+            if (ok)
+            {
+                LoadStationDrafts();
+            }
+        });
+    }
+
+    private UpdateCommunityStationRequest CurrentStationRequest()
+    {
+        var links = new List<CommunityLinkDto>(linkDrafts.Length);
+        for (var index = 0; index < linkDrafts.Length; index++)
+        {
+            var url = linkDrafts[index].Trim();
+            if (url.Length > 0)
+            {
+                links.Add(new CommunityLinkDto(index, url));
+            }
+        }
+
+        var tags = community.Mine?.Station.Tags ?? Array.Empty<string>();
+        return new UpdateCommunityStationRequest(stationNameDraft.Trim(), stationDescriptionDraft.Trim(), tags,
+            links.ToArray(), null);
     }
 
     private void LoadStationDrafts()
@@ -83,6 +172,7 @@ internal sealed partial class MusicApp
         {
             ImGui.Dummy(new Vector2(0f, 8f * scale));
             DrawStationStatusLine(scale, mine.Station);
+            DrawArtworkRow(scale, mine.Station);
             DrawFieldLabel(scale, Loc.T(L.Music.StationNameLabel));
             DrawStationField(scale, "##stationName", ref stationNameDraft, StationNameMaxLength);
             DrawFieldLabel(scale, Loc.T(L.Music.StationDescriptionLabel));
@@ -112,6 +202,28 @@ internal sealed partial class MusicApp
             station.IsLive ? ui.Accent : ui.MutedInk, TextStyles.Callout);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, 26f * scale));
+    }
+
+    private void DrawArtworkRow(float scale, CommunityStationDto station)
+    {
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        var drawList = ImGui.GetWindowDrawList();
+        var coverSize = 64f * scale;
+        var coverMin = new Vector2(origin.X + 16f * scale, origin.Y);
+        DrawStationArt(drawList, coverMin, coverMin + new Vector2(coverSize, coverSize), station, 12f * scale);
+
+        var buttonMin = new Vector2(coverMin.X + coverSize + 14f * scale, origin.Y + (coverSize - 36f * scale) * 0.5f);
+        var buttonRect = new Rect(buttonMin,
+            new Vector2(MathF.Min(buttonMin.X + 170f * scale, origin.X + width - 16f * scale),
+                buttonMin.Y + 36f * scale));
+        if (ui.GhostButton(buttonRect, Loc.T(L.Music.StationArtwork)) && !artworkSaving)
+        {
+            OpenStationArtwork();
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, coverSize + 12f * scale));
     }
 
     private void DrawFieldLabel(float scale, string label)

@@ -1999,6 +1999,7 @@ internal static class L
         public static readonly LocString ReportStationTitle = new("music.reportStationTitle",
             "Report this station");
         public static readonly LocString MyStation = new("music.myStation", "My station");
+        public static readonly LocString StationArtwork = new("music.stationArtwork", "Artwork");
         public static readonly LocString OnAir = new("music.onAir", "On air");
         public static readonly LocString StationNameLabel = new("music.stationNameLabel", "Station name");
         public static readonly LocString StationDescriptionLabel = new("music.stationDescriptionLabel", "Description");

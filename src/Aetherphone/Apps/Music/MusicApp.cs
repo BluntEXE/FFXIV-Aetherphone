@@ -6,8 +6,11 @@ using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Net;
 using Aetherphone.Core.Playback;
+using Aetherphone.Core.Media;
+using Aetherphone.Core.Photos;
 using Aetherphone.Core.Radio;
 using Aetherphone.Core.Report;
+using Aetherphone.Core.Wallpapers;
 using Aetherphone.Core.Songs;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
@@ -29,6 +32,7 @@ internal sealed partial class MusicApp : IPhoneApp
         Community,
         Station,
         MyStation,
+        StationArtwork,
     }
 
     private const float TopBarHeight = 46f;
@@ -71,6 +75,8 @@ internal sealed partial class MusicApp : IPhoneApp
     private readonly AethernetApi aethernet;
     private readonly CommunityRadioService community;
     private readonly ReportService report;
+    private readonly PhotoLibrary photoLibrary;
+    private readonly WallpaperImageCache wallpaperImages;
     private readonly ConfirmService confirm;
     private readonly Configuration configuration;
     private readonly ArtworkCache artwork;
@@ -124,10 +130,13 @@ internal sealed partial class MusicApp : IPhoneApp
 
     public MusicApp(RadioService radio, SongSearchService songSearch, PlaybackHub playback, SongHistory history,
         PlaylistStore playlists, MediaCache media, HttpService http, ITextureProvider textures,
-        AethernetApi aethernet, ReportService report, ConfirmService confirm, Configuration configuration)
+        AethernetApi aethernet, ReportService report, PhotoLibrary photoLibrary,
+        WallpaperImageCache wallpaperImages, ConfirmService confirm, Configuration configuration)
     {
         this.aethernet = aethernet;
         this.report = report;
+        this.photoLibrary = photoLibrary;
+        this.wallpaperImages = wallpaperImages;
         community = new CommunityRadioService(aethernet);
         this.radio = radio;
         this.songSearch = songSearch;
@@ -237,6 +246,9 @@ internal sealed partial class MusicApp : IPhoneApp
                 break;
             case View.MyStation:
                 DrawMyStation(context);
+                break;
+            case View.StationArtwork:
+                DrawStationArtwork(context);
                 break;
             default:
                 DrawHome(context);
