@@ -29,6 +29,7 @@ internal sealed class RadioPlayer : IDisposable
     private int session;
     private volatile RadioPlaybackState state = RadioPlaybackState.Stopped;
     private volatile string currentStation = string.Empty;
+    private volatile string nowPlaying = string.Empty;
     private RadioStation currentStationInfo;
     private float volume = 0.6f;
     private RadioStation[] queue = Array.Empty<RadioStation>();
@@ -43,6 +44,10 @@ internal sealed class RadioPlayer : IDisposable
 
     public RadioPlaybackState State => state;
     public string CurrentStation => currentStation;
+
+    /// The track the station says it is playing, from the metadata spliced into the stream. Empty
+    /// when the station sends none, which plenty do.
+    public string NowPlaying => nowPlaying;
 
     public RadioStation CurrentStationInfo
     {
@@ -107,6 +112,7 @@ internal sealed class RadioPlayer : IDisposable
         {
             currentStation = station.Name;
             currentStationInfo = station;
+            nowPlaying = string.Empty;
             state = RadioPlaybackState.Buffering;
             cancellation = new CancellationTokenSource();
             var token = cancellation.Token;
@@ -124,6 +130,7 @@ internal sealed class RadioPlayer : IDisposable
         Suspend();
         state = RadioPlaybackState.Stopped;
         currentStation = string.Empty;
+        nowPlaying = string.Empty;
         lock (gate)
         {
             currentStationInfo = default;
@@ -244,6 +251,31 @@ internal sealed class RadioPlayer : IDisposable
         }
     }
 
+    private Stream WrapMetadata(Stream network, HttpResponseMessage response, int workerSession)
+    {
+        if (!response.Headers.TryGetValues(IcyMetadataStream.IntervalHeader, out var values))
+        {
+            return network;
+        }
+
+        var interval = IcyMetadataStream.ParseInterval(values.FirstOrDefault());
+        if (interval <= 0)
+        {
+            return network;
+        }
+
+        return new IcyMetadataStream(network, interval, title =>
+        {
+            lock (gate)
+            {
+                if (workerSession == session)
+                {
+                    nowPlaying = title;
+                }
+            }
+        });
+    }
+
     private bool StreamOnce(string url, string declaredCodec, CancellationToken token, int workerSession)
     {
         IWavePlayer? output = null;
@@ -256,6 +288,7 @@ internal sealed class RadioPlayer : IDisposable
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.TryAddWithoutValidation(IcyMetadataStream.RequestHeader, "1");
             using (var connectTimeout = CancellationTokenSource.CreateLinkedTokenSource(token))
             {
                 connectTimeout.CancelAfter(ConnectTimeout);
@@ -268,7 +301,8 @@ internal sealed class RadioPlayer : IDisposable
 
             response.EnsureSuccessStatusCode();
             using var network = response.Content.ReadAsStream(token);
-            decoder = StreamDecoders.Create(response.Content.Headers.ContentType?.MediaType, declaredCodec, network);
+            var audio = WrapMetadata(network, response, workerSession);
+            decoder = StreamDecoders.Create(response.Content.Headers.ContentType?.MediaType, declaredCodec, audio);
             while (!token.IsCancellationRequested)
             {
                 if (buffer is not null && buffer.BufferedDuration > BackpressureThreshold)

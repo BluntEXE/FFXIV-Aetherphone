@@ -195,7 +195,8 @@ internal sealed partial class MusicApp
         var statusY = min.Y + 33f * scale;
         DrawLiveMark(drawList, new Vector2(textLeft, statusY), scale, station, textWidth);
 
-        var subtitle = station.IsLive && station.NowPlaying.Length > 0 ? station.NowPlaying : station.Description;
+        var nowPlaying = NowPlayingFor(station);
+        var subtitle = nowPlaying.Length > 0 ? nowPlaying : station.Description;
         if (subtitle.Length > 0)
         {
             var fittedSubtitle = Typography.FitText(subtitle, textWidth, TextStyles.Caption1);
@@ -354,9 +355,10 @@ internal sealed partial class MusicApp
     private void DrawStationBody(float scale, CommunityStationDto station)
     {
         var width = ImGui.GetContentRegionAvail().X;
-        if (station.IsLive && station.NowPlaying.Length > 0)
+        var track = NowPlayingFor(station);
+        if (track.Length > 0)
         {
-            DrawStationParagraph(scale, station.NowPlaying, ui.Accent, TextStyles.Callout, width);
+            DrawStationParagraph(scale, track, ui.Accent, TextStyles.Callout, width);
         }
 
         if (station.Description.Length > 0)
@@ -387,6 +389,18 @@ internal sealed partial class MusicApp
             wrapWidth);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height + 12f * scale));
+    }
+
+    /// While we are the one playing, the stream's own metadata beats the directory snapshot, which
+    /// is up to ten seconds behind and blank for stations the server sees no title for.
+    private string NowPlayingFor(CommunityStationDto station)
+    {
+        if (IsCurrentCommunityStation(station) && playback.RadioNowPlaying.Length > 0)
+        {
+            return playback.RadioNowPlaying;
+        }
+
+        return station.IsLive ? station.NowPlaying : string.Empty;
     }
 
     private void DrawStationLinks(float scale, CommunityStationDto station)
