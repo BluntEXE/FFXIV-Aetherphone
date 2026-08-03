@@ -21,23 +21,32 @@ internal sealed class Mp3StreamDecoder : IStreamDecoder
 
     public int Read(byte[] buffer)
     {
-        Mp3Frame? frame;
-        try
+        // Zero decoded bytes is not the end of the stream: the ACM decoder returns nothing while it
+        // primes on the first frames, so keep pulling frames until one produces audio.
+        while (true)
         {
-            frame = Mp3Frame.LoadFromStream(source);
-        }
-        catch (EndOfStreamException)
-        {
-            return 0;
-        }
+            Mp3Frame? frame;
+            try
+            {
+                frame = Mp3Frame.LoadFromStream(source);
+            }
+            catch (EndOfStreamException)
+            {
+                return 0;
+            }
 
-        if (frame is null)
-        {
-            return 0;
-        }
+            if (frame is null)
+            {
+                return 0;
+            }
 
-        decompressor ??= CreateDecompressor(frame);
-        return decompressor.DecompressFrame(frame, buffer, 0);
+            decompressor ??= CreateDecompressor(frame);
+            var decoded = decompressor.DecompressFrame(frame, buffer, 0);
+            if (decoded > 0)
+            {
+                return decoded;
+            }
+        }
     }
 
     private static IMp3FrameDecompressor CreateDecompressor(Mp3Frame frame)
