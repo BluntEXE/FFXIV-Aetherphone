@@ -1453,6 +1453,8 @@
   "music.communityEmpty": "Пока нет общественных станций",
   "music.communityEmptySub": "Когда кто-то откроет станцию, она появится здесь",
   "music.listeningCount": "Слушают: {0}",
+  "music.watchingCount": "Смотрят: {0}",
+  "music.watchOnTwitch": "Смотреть на Twitch",
   "music.offAir": "Не в эфире",
   "music.hostedBy": "Ведущий: {0}",
   "music.listenLive": "Слушать эфир",

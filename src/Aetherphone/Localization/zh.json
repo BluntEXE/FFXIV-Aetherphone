@@ -1453,6 +1453,8 @@
   "music.communityEmpty": "还没有社区电台",
   "music.communityEmptySub": "有人开设电台后会显示在这里",
   "music.listeningCount": "{0} 人正在收听",
+  "music.watchingCount": "{0} 人正在观看",
+  "music.watchOnTwitch": "在 Twitch 观看",
   "music.offAir": "未播出",
   "music.hostedBy": "主持人：{0}",
   "music.listenLive": "收听直播",

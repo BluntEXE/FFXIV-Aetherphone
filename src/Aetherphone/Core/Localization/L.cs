@@ -1991,6 +1991,8 @@ internal static class L
         public static readonly LocString CommunityEmptySub = new("music.communityEmptySub",
             "When someone opens a station, it shows up here");
         public static readonly LocString ListeningCount = new("music.listeningCount", "{0} listening");
+        public static readonly LocString WatchingCount = new("music.watchingCount", "{0} watching");
+        public static readonly LocString WatchOnTwitch = new("music.watchOnTwitch", "Watch on Twitch");
         public static readonly LocString OffAir = new("music.offAir", "Off air");
         public static readonly LocString HostedBy = new("music.hostedBy", "Hosted by {0}");
         public static readonly LocString ListenLive = new("music.listenLive", "Listen live");

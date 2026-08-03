@@ -1453,6 +1453,8 @@
   "music.communityEmpty": "Aucune station communautaire",
   "music.communityEmptySub": "Quand quelqu'un ouvre une station, elle apparaît ici",
   "music.listeningCount": "{0} à l'écoute",
+  "music.watchingCount": "{0} regardent",
+  "music.watchOnTwitch": "Voir sur Twitch",
   "music.offAir": "Hors antenne",
   "music.hostedBy": "Animée par {0}",
   "music.listenLive": "Écouter en direct",

@@ -23,7 +23,11 @@ internal sealed partial class MusicApp
         "Twitch", "YouTube", "Discord", "Bluesky", "X", "Ko-fi", "Patreon",
     };
 
+    private const int StationKindTwitch = 1;
+
     private string viewedStationId = string.Empty;
+
+    private static bool IsTwitch(CommunityStationDto station) => station.Kind == StationKindTwitch;
 
     private void OpenCommunity()
     {
@@ -244,7 +248,8 @@ internal sealed partial class MusicApp
         var dotRadius = 3.5f * scale;
         var dotCenter = new Vector2(origin.X + dotRadius, origin.Y + 7f * scale);
         drawList.AddCircleFilled(dotCenter, dotRadius, ImGui.GetColorU32(ui.Accent));
-        var label = string.Format(Loc.T(L.Music.ListeningCount), station.Listeners);
+        var label = string.Format(Loc.T(IsTwitch(station) ? L.Music.WatchingCount : L.Music.ListeningCount),
+            station.Listeners);
         var textLeft = dotCenter.X + dotRadius + 6f * scale;
         var fitted = Typography.FitText(label, available - (textLeft - origin.X), TextStyles.Caption1);
         Typography.Draw(drawList, new Vector2(textLeft, origin.Y), fitted, ui.Accent, TextStyles.Caption1);
@@ -308,7 +313,8 @@ internal sealed partial class MusicApp
 
         var statusY = hostY + 20f * scale;
         var statusText = station.IsLive
-            ? string.Format(Loc.T(L.Music.ListeningCount), station.Listeners)
+            ? string.Format(Loc.T(IsTwitch(station) ? L.Music.WatchingCount : L.Music.ListeningCount),
+                station.Listeners)
             : Loc.T(L.Music.OffAir);
         var status = Typography.FitText(statusText, width, TextStyles.Subheadline);
         var statusSize = Typography.Measure(status, TextStyles.Subheadline);
@@ -327,24 +333,37 @@ internal sealed partial class MusicApp
         var buttonWidth = MathF.Min(width - 32f * scale, 220f * scale);
         var buttonMin = new Vector2(origin.X + (width - buttonWidth) * 0.5f, origin.Y);
         var buttonRect = new Rect(buttonMin, buttonMin + new Vector2(buttonWidth, buttonHeight));
-        var current = IsCurrentCommunityStation(station);
-        var label = current ? Loc.T(L.Music.StopListening) : Loc.T(L.Music.ListenLive);
-        var enabled = station.IsLive || current;
-        if (enabled && ui.PillButton(buttonRect, label, !current, "music.station.play"))
+        if (IsTwitch(station))
         {
-            if (current)
+            // Twitch audio cannot be decoded by the radio player yet, so the station page sends the
+            // listener to the channel rather than pretending to play something.
+            if (ui.PillButton(buttonRect, Loc.T(L.Music.WatchOnTwitch), station.IsLive, "music.station.watch")
+                && station.WatchUrl.Length > 0)
             {
-                playback.Stop();
-            }
-            else
-            {
-                PlayCommunityStation(station);
+                Dalamud.Utility.Util.OpenLink(station.WatchUrl);
             }
         }
-
-        if (!enabled)
+        else
         {
-            ui.PillButton(buttonRect, label, false, "music.station.playDisabled");
+            var current = IsCurrentCommunityStation(station);
+            var label = current ? Loc.T(L.Music.StopListening) : Loc.T(L.Music.ListenLive);
+            var enabled = station.IsLive || current;
+            if (enabled && ui.PillButton(buttonRect, label, !current, "music.station.play"))
+            {
+                if (current)
+                {
+                    playback.Stop();
+                }
+                else
+                {
+                    PlayCommunityStation(station);
+                }
+            }
+
+            if (!enabled)
+            {
+                ui.PillButton(buttonRect, label, false, "music.station.playDisabled");
+            }
         }
 
         ImGui.SetCursorScreenPos(origin);
