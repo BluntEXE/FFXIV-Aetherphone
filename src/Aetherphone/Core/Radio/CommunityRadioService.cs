@@ -16,7 +16,8 @@ internal sealed class CommunityRadioService : IDisposable
     private volatile bool loading;
     private volatile bool loaded;
     private volatile bool mineChecked;
-    private long nextFetchTick;
+    private long lastFetchTick = long.MinValue / 2;
+    private long retryAfterTick;
     private int fetching;
     private int fetchingMine;
 
@@ -49,9 +50,19 @@ internal sealed class CommunityRadioService : IDisposable
         }
     }
 
+    // The interval belongs to the caller, not to whoever fetched last. Storing a single "next fetch"
+    // stamp let a background refresh from the home screen schedule five minutes out and then hold the
+    // radio screens to that, so a station could go live and the list would keep saying off air.
     public void EnsureFresh(bool active)
     {
-        if (Environment.TickCount64 < Volatile.Read(ref nextFetchTick))
+        var now = Environment.TickCount64;
+        if (now < Volatile.Read(ref retryAfterTick))
+        {
+            return;
+        }
+
+        var interval = active ? ActiveIntervalMilliseconds : IdleIntervalMilliseconds;
+        if (now - Volatile.Read(ref lastFetchTick) < interval)
         {
             return;
         }
@@ -66,8 +77,9 @@ internal sealed class CommunityRadioService : IDisposable
             return;
         }
 
+        Volatile.Write(ref retryAfterTick, 0);
         loading = !loaded;
-        _ = FetchAsync(active, cancellation.Token);
+        _ = FetchAsync(cancellation.Token);
     }
 
     public void EnsureMine()
@@ -91,7 +103,7 @@ internal sealed class CommunityRadioService : IDisposable
             }
 
             mine = updated;
-            Volatile.Write(ref nextFetchTick, 0);
+            Volatile.Write(ref lastFetchTick, long.MinValue / 2);
             return true;
         }
         catch (OperationCanceledException)
@@ -137,7 +149,7 @@ internal sealed class CommunityRadioService : IDisposable
         return queue;
     }
 
-    private async Task FetchAsync(bool active, CancellationToken token)
+    private async Task FetchAsync(CancellationToken token)
     {
         try
         {
@@ -146,12 +158,11 @@ internal sealed class CommunityRadioService : IDisposable
             {
                 stations = items;
                 loaded = true;
-                Volatile.Write(ref nextFetchTick, Environment.TickCount64
-                    + (active ? ActiveIntervalMilliseconds : IdleIntervalMilliseconds));
+                Volatile.Write(ref lastFetchTick, Environment.TickCount64);
                 return;
             }
 
-            Volatile.Write(ref nextFetchTick, Environment.TickCount64 + RetryIntervalMilliseconds);
+            Volatile.Write(ref retryAfterTick, Environment.TickCount64 + RetryIntervalMilliseconds);
         }
         catch (OperationCanceledException)
         {
@@ -159,7 +170,7 @@ internal sealed class CommunityRadioService : IDisposable
         catch (Exception exception)
         {
             AepLog.Warning($"[Radio] community fetch failed: {exception.Message}");
-            Volatile.Write(ref nextFetchTick, Environment.TickCount64 + RetryIntervalMilliseconds);
+            Volatile.Write(ref retryAfterTick, Environment.TickCount64 + RetryIntervalMilliseconds);
         }
         finally
         {
