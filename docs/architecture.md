@@ -53,7 +53,7 @@ The constructor runs, in order:
 4. `PhoneServices.Build(...)` constructs every shared service (next section).
 5. `Fonts = new FontService(...)` builds the Inter font atlas at every weight and size bucket.
 6. `AppRegistry.BuildDefault(services)` constructs every app into an `AppBundle` (apps, home widgets, photo library).
-7. `new PhoneShell(services, bundle)` and `new PhoneWindow(shell, Cfg)` build the UI, and both windows (`PhoneWindow`, `UpdateChipWindow`) are added to a Dalamud `WindowSystem`, the helper that tracks window open state and calls each window's draw methods.
+7. `new PhoneShell(services, bundle)` and `new PhoneWindow(shell, Cfg)` build the UI, and the three windows (`PhoneWindow`, `UpdateChipWindow`, `PhotoWindow`) are added to a Dalamud `WindowSystem`, the helper that tracks window open state and calls each window's draw methods.
 8. Background services start: `PhoneEmoteController`, `TimerNotifier`, `CalendarReminderService`, `ClockAlarmService`, `ReminderService`, `ScreenshotImportService`, character session watchers, and `CallHub`.
 9. Chat commands `/phone` and `/aetherphone` (see `AepConstants`), a server info bar entry (`IDtrBar`), and a context menu hook are registered.
 10. `PluginInterface.UiBuilder.Draw += windowSystem.Draw` wires the whole UI into Dalamud's ImGui frame.
@@ -127,9 +127,11 @@ Other things `PhoneWindow` handles:
 - Minimized mode swaps the size to `MinimizeTransition.MinimizedSize * zoom` (a small puck) and lerps the position between the saved maximized and minimized spots while the morph runs.
 - Landscape (camera app only) animates a blend between the portrait size and its transpose in `OrientedSize()`; the content is transposed, never rotated.
 - Separate maximized and minimized positions persist in `Configuration.MaximizedPosition` / `MinimizedPosition` via `PersistPositions()`.
-- `Draw()` pushes the base font, reserves the full content region with `ImGui.Dummy`, wraps the region in a `Rect`, and hands it to `shell.Draw(device)`. Apart from `UpdateChipWindow` below, nothing else in the codebase talks to the `Window` API.
+- `Draw()` pushes the base font, reserves the full content region with `ImGui.Dummy`, wraps the region in a `Rect`, and hands it to `shell.Draw(device)`. Apart from the two windows below, nothing else in the codebase talks to the `Window` API.
 
-`UpdateChipWindow` (src/Aetherphone/Windows/UpdateChipWindow.cs) is the only other window: a small chip shown when a plugin update is available.
+`UpdateChipWindow` (src/Aetherphone/Windows/UpdateChipWindow.cs) is a small chip shown under the phone when a plugin update is available.
+
+`PhotoWindow` (src/Aetherphone/Windows/PhotoWindow.cs) is the photo pop-out: an ordinary resizable Dalamud window that shows one image fitted to its content region. `PhotoZoomView` draws the button that opens it (top of the zoom stack), every fullscreen photo viewer returns that click to its caller, and the caller hands `Plugin.PhotoWindow.Open` a `Func<IDalamudTextureWrap?>` so the window re-resolves the texture from its cache every frame instead of holding a wrap that eviction could free. It sizes itself to the image aspect the first frame the texture resolves, then leaves the size alone.
 
 ## The shell layer (Core/Shell)
 

@@ -51,6 +51,7 @@ public sealed class Plugin : IDalamudPlugin
     internal static WallpaperLibrary Wallpapers { get; private set; } = null!;
     internal static DeviceStatus Device { get; private set; } = null!;
     internal static UpdateCheckService Updates { get; private set; } = null!;
+    internal static PhotoWindow PhotoWindow { get; private set; } = null!;
     private readonly WindowSystem windowSystem = new(AepConstants.Name);
     private readonly PhoneServices services;
     private readonly PhoneShell shell;
@@ -99,8 +100,10 @@ public sealed class Plugin : IDalamudPlugin
             phoneWindow = new PhoneWindow(shell, Cfg);
             Updates = new UpdateCheckService(services.Http, PluginInterface);
             updateChipWindow = new UpdateChipWindow(phoneWindow, Updates, services.Themes);
+            PhotoWindow = new PhotoWindow(services.Themes);
             windowSystem.AddWindow(phoneWindow);
             windowSystem.AddWindow(updateChipWindow);
+            windowSystem.AddWindow(PhotoWindow);
             services.Visibility.Bind(() => phoneWindow is { IsOpen: true, IsMinimized: false });
             phoneEmote = new PhoneEmoteController(Cfg, Framework, ObjectTable, Condition, DataManager,
                 () => services.Visibility.IsVisible);

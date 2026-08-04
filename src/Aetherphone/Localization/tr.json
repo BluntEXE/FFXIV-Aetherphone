@@ -208,6 +208,8 @@
   "common.hq": "HQ",
   "common.nq": "NQ",
   "common.openInBrowser": "Tarayıcıda açmak için tıklayın",
+  "common.openInWindow": "Pencerede aç",
+  "common.photoWindow": "Fotoğraf",
   "common.next": "İleri",
   "common.photoCounter": "{0}/{1}",
   "common.photoStep": "Fotoğraf {0}/{1}",

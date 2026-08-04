@@ -29,7 +29,10 @@ internal sealed partial class PhotosApp
         var texture = GetFull(path) ?? thumbnails.Get(path);
         if (texture is not null)
         {
-            zoomView.Draw(screen, texture, frameTheme, 0f, controls: safe);
+            if (zoomView.Draw(screen, texture, frameTheme, 0f, controls: safe))
+            {
+                Plugin.PhotoWindow.Open(() => GetFull(path) ?? thumbnails.Get(path));
+            }
         }
         else
         {

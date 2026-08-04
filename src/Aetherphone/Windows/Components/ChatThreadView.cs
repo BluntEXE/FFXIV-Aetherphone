@@ -694,7 +694,10 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         }
         else
         {
-            imageZoom.Draw(new Rect(fitMin, fitMax), texture, Theme, 10f * scale);
+            if (imageZoom.Draw(new Rect(fitMin, fitMax), texture, Theme, 10f * scale))
+            {
+                Plugin.PhotoWindow.Open(() => ResolveThreadImage(messageId));
+            }
         }
 
         var context = new PhoneContext(area, Theme, Navigation);

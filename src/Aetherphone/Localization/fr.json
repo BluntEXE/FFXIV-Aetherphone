@@ -208,6 +208,8 @@
   "common.hq": "HQ",
   "common.nq": "NQ",
   "common.openInBrowser": "Cliquez pour ouvrir dans le navigateur",
+  "common.openInWindow": "Ouvrir dans une fenêtre",
+  "common.photoWindow": "Photo",
   "common.next": "Suivant",
   "common.photoCounter": "{0}/{1}",
   "common.photoStep": "Photo {0} sur {1}",

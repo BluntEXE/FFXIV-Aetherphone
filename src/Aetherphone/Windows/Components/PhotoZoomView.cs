@@ -1,5 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
+using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures.TextureWraps;
@@ -36,7 +37,7 @@ internal sealed class PhotoZoomView
         dragging = false;
     }
 
-    public void Draw(Rect stage, IDalamudTextureWrap texture, PhoneTheme theme, float rounding,
+    public bool Draw(Rect stage, IDalamudTextureWrap texture, PhoneTheme theme, float rounding,
         bool showButtons = true, Rect? controls = null)
     {
         var scale = UiScale.Current;
@@ -57,10 +58,12 @@ internal sealed class PhotoZoomView
         drawList.AddImageRounded(texture.Handle, min, max, Vector2.Zero, Vector2.One, 0xFFFFFFFFu,
             MathF.Max(restRounding, 0.5f), ImDrawFlags.RoundCornersAll);
         drawList.PopClipRect();
-        if (showButtons)
+        if (!showButtons)
         {
-            DrawButtons(stage, controls ?? stage, size, theme, scale);
+            return false;
         }
+
+        return DrawButtons(stage, controls ?? stage, size, theme, scale);
     }
 
     private void HandleInput(Rect stage, Vector2 size)
@@ -139,13 +142,14 @@ internal sealed class PhotoZoomView
     private static float FitScale(Rect stage, Vector2 size) =>
         MathF.Min(stage.Width / MathF.Max(size.X, 1f), stage.Height / MathF.Max(size.Y, 1f));
 
-    private void DrawButtons(Rect stage, Rect controls, Vector2 size, PhoneTheme theme, float scale)
+    private bool DrawButtons(Rect stage, Rect controls, Vector2 size, PhoneTheme theme, float scale)
     {
         var radius = ButtonRadiusUnits * scale;
         var gap = 10f * scale;
         var centerX = controls.Max.X - radius - 12f * scale;
         var outCenter = new Vector2(centerX, controls.Max.Y - radius - 12f * scale);
         var inCenter = new Vector2(centerX, outCenter.Y - radius * 2f - gap);
+        var popOutCenter = new Vector2(centerX, inCenter.Y - radius * 2f - gap);
         if (ZoomButton(inCenter, radius, true, targetZoom < MaxZoom - 0.01f, theme, scale))
         {
             ZoomAround(stage, stage.Center, targetZoom * ButtonStep, size);
@@ -155,6 +159,8 @@ internal sealed class PhotoZoomView
         {
             ZoomAround(stage, stage.Center, targetZoom / ButtonStep, size);
         }
+
+        return PopOutButton(popOutCenter, radius, scale);
     }
 
     private static bool ZoomButton(Vector2 center, float radius, bool zoomIn, bool enabled, PhoneTheme theme,
@@ -164,9 +170,7 @@ internal sealed class PhotoZoomView
         var hovered = enabled &&
                       UiInteract.Hover(center - new Vector2(radius, radius),
                           center + new Vector2(radius, radius));
-        var alpha = enabled ? hovered ? 0.30f : 0.20f : 0.10f;
-        drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, alpha)), 32);
-        drawList.AddCircle(center, radius, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.16f)), 32, 1f * scale);
+        ButtonFace(drawList, center, radius, enabled ? hovered ? 0.30f : 0.20f : 0.10f, scale);
         var arm = radius * 0.44f;
         var ink = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, enabled ? 0.95f : 0.4f));
         drawList.AddLine(center - new Vector2(arm, 0f), center + new Vector2(arm, 0f), ink, 2f * scale);
@@ -181,5 +185,37 @@ internal sealed class PhotoZoomView
         }
 
         return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+    }
+
+    private static bool PopOutButton(Vector2 center, float radius, float scale)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var corner = new Vector2(radius, radius);
+        var hovered = UiInteract.Hover(center - corner, center + corner);
+        ButtonFace(drawList, center, radius, hovered ? 0.30f : 0.20f, scale);
+        var ink = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.95f));
+        var extent = radius * 0.42f;
+        var thickness = 1.7f * scale;
+        var frameMin = new Vector2(center.X - extent, center.Y - extent * 0.28f);
+        var frameMax = new Vector2(center.X + extent * 0.28f, center.Y + extent);
+        drawList.AddRect(frameMin, frameMax, ink, 2f * scale, ImDrawFlags.RoundCornersAll, thickness);
+        var tip = new Vector2(center.X + extent, center.Y - extent);
+        drawList.AddLine(new Vector2(center.X - extent * 0.06f, center.Y + extent * 0.06f), tip, ink, thickness);
+        drawList.AddLine(tip, new Vector2(center.X + extent * 0.18f, center.Y - extent), ink, thickness);
+        drawList.AddLine(tip, new Vector2(center.X + extent, center.Y - extent * 0.18f), ink, thickness);
+        HoverTooltip.Show(new Rect(center - corner, center + corner), Loc.T(L.Common.OpenInWindow),
+            HoverLabelSide.Above);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+    }
+
+    private static void ButtonFace(ImDrawListPtr drawList, Vector2 center, float radius, float alpha, float scale)
+    {
+        drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, alpha)), 32);
+        drawList.AddCircle(center, radius, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.16f)), 32, 1f * scale);
     }
 }

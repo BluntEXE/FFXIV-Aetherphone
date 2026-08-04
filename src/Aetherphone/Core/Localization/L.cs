@@ -17,6 +17,8 @@ internal static class L
         public static readonly LocString Hq = new("common.hq", "HQ");
         public static readonly LocString Nq = new("common.nq", "NQ");
         public static readonly LocString OpenInBrowser = new("common.openInBrowser", "Click to open in browser");
+        public static readonly LocString OpenInWindow = new("common.openInWindow", "Open in a window");
+        public static readonly LocString PhotoWindow = new("common.photoWindow", "Photo");
         public static readonly LocString Next = new("common.next", "Next");
         public static readonly LocString PhotoCounter = new("common.photoCounter", "{0}/{1}");
         public static readonly LocString PhotoStep = new("common.photoStep", "Photo {0} of {1}");

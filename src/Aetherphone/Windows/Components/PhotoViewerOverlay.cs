@@ -54,7 +54,11 @@ internal sealed class PhotoViewerOverlay
         var texture = source?.Invoke();
         if (texture is not null)
         {
-            zoomView.Draw(stage, texture, theme, Metrics.Radius.Sm * scale, open && eased > 0.9f);
+            if (zoomView.Draw(stage, texture, theme, Metrics.Radius.Sm * scale, open && eased > 0.9f) &&
+                source is not null)
+            {
+                Plugin.PhotoWindow.Open(source);
+            }
         }
         else
         {
