@@ -22,6 +22,7 @@ internal sealed class NotificationService : IDisposable
     public Func<string, bool>? AppAvailability { get; set; }
     public event Action? Changed;
     public event Action<PhoneNotification>? Presented;
+    public event Action<PhoneNotification>? Vibration;
     public event Action<PhoneNotification>? Added;
 
     public NotificationService(SoundService sound, Configuration configuration, AppInstaller installer,
@@ -150,7 +151,17 @@ internal sealed class NotificationService : IDisposable
         Added?.Invoke(stamped);
         if (!configuration.DoNotDisturb)
         {
-            Presented?.Invoke(stamped);
+            if (configuration.ShowNotificationBanner &&
+                configuration.ShouldShowNotificationBanner(notification.SettingsKey))
+            {
+                Presented?.Invoke(stamped);
+            }
+
+            if (configuration.Vibration)
+            {
+                Vibration?.Invoke(stamped);
+            }
+
             if (ShouldPlaySound(stamped.StackKey))
             {
                 sound.PlayNotification(notification.SettingsKey);

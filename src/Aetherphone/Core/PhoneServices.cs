@@ -8,6 +8,7 @@ using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Games;
 using Aetherphone.Core.Health;
+using Aetherphone.Core.Housing;
 using Aetherphone.Core.Inventory;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Maps;
@@ -46,6 +47,8 @@ internal sealed class PhoneServices : IDisposable
     public required GameData GameData { get; init; }
     public required CharacterWatch CharacterWatch { get; init; }
     public required MapData Maps { get; init; }
+    public required HousingService Housing { get; init; }
+    public required HousingReminderService HousingReminders { get; init; }
     public required ITextureProvider Textures { get; init; }
     public required WeatherService Weather { get; init; }
     public required WeatherControl WeatherControl { get; init; }
@@ -211,6 +214,13 @@ internal sealed class PhoneServices : IDisposable
         var health = new HealthTracker(framework, characterWatch, notifications, configDirectory);
         var realtimeSignals = new RealtimeSignalBus();
         var visibility = new PhoneVisibility();
+        var housingCacheRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "housing"));
+        var housingGate = installer.Gate(HousingService.AppId);
+        var housingGameMaps = new HousingGameMaps(dataManager, textures);
+        var housing = new HousingService(http, configuration, gameData, framework, housingGameMaps, visibility,
+            housingCacheRoot, housingGate);
+        var housingReminders = new HousingReminderService(configuration, framework, notifications, housing.Watch,
+            housingGate);
         var confirm = new ConfirmService();
         var calls = new CallHub(configuration, aethernetSession, notifications, sound, playback, realtimeSignals,
             confirm, installer.Gate("message"));
@@ -238,6 +248,8 @@ internal sealed class PhoneServices : IDisposable
             GameData = gameData,
             CharacterWatch = characterWatch,
             Maps = maps,
+            Housing = housing,
+            HousingReminders = housingReminders,
             Textures = textures,
             Weather = weather,
             WeatherControl = weatherControl,
@@ -330,6 +342,8 @@ internal sealed class PhoneServices : IDisposable
         RingNotifier.Dispose();
         Health.Dispose();
         Activity.Dispose();
+        HousingReminders.Dispose();
+        Housing.Dispose();
         Venues.Dispose();
         Musters.Dispose();
         YellowPages.Dispose();

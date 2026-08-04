@@ -10,6 +10,7 @@ using Aetherphone.Apps.Dailies;
 using Aetherphone.Apps.Fishing;
 using Aetherphone.Apps.Games;
 using Aetherphone.Apps.Health;
+using Aetherphone.Apps.Housing;
 using Aetherphone.Apps.Inventory;
 using Aetherphone.Apps.Jobs;
 using Aetherphone.Apps.Calculator;
@@ -90,6 +91,7 @@ internal static class AppRegistry
         var calendarEvents = new CalendarEvents(services.Http, services.AethernetSession);
         apps.Add(new CalendarApp(services.Configuration, calendarEvents, services.Confirm));
         apps.Add(new AppStoreApp(services.Installer, apps));
+        apps.Add(new HousingApp(services.Housing, services.Configuration, services.Confirm));
 
         return new AppBundle
         {

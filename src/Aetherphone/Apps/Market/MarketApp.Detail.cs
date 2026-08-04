@@ -108,8 +108,16 @@ internal sealed partial class MarketApp
 
         Material.EdgeSquircle(drawList, iconMin, iconMax, tileRounding, scale);
         var titleMaxWidth = MathF.Max(1f, origin.X + width - 16f * scale - textX);
-        Marquee.DrawLeftAuto("market.detail.hero." + view.ItemId, view.Name, textX, textTop, titleMaxWidth,
-            TextStyles.Title3, frameTheme.TextStrong);
+        var titleId = "market.detail.hero." + view.ItemId;
+        var titleSize = Typography.Measure(view.Name, TextStyles.Title3);
+        Marquee.DrawLeft(titleId, view.Name, textX, textTop, titleMaxWidth, TextStyles.Title3,
+            frameTheme.TextStrong, false);
+        if (titleSize.X > titleMaxWidth)
+        {
+            HoverTooltip.Show(titleId,
+                new Rect(new Vector2(textX, textTop), new Vector2(textX + titleMaxWidth, textTop + titleSize.Y)),
+                view.Name);
+        }
         var priceMaxWidth = MathF.Max(1f, origin.X + width - 16f * scale - textX);
         Marquee.DrawLeftAuto("market.detail.price." + view.ItemId, priceText, textX, priceY,
             priceMaxWidth, new TextStyle(1.4f, FontWeight.SemiBold), AppPalettes.Market.Accent);
