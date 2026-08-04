@@ -26,7 +26,7 @@ internal sealed partial class VelvetShell
             return;
         }
 
-        if (user != null && store.Me?.UserId != user.UserId)
+        if (user != null && store.Me?.UserId != user.UserId && !AlreadyReported(user.UserId))
         {
             var flagCenter = new Vector2(area.Max.X - 22f * scale, area.Min.Y + VHeader.Height * scale * 0.5f);
             if (ui.IconButton(flagCenter, 15f * scale, FontAwesomeIcon.Flag.ToIconString(), VelvetTheme.MutedInk,
@@ -230,6 +230,14 @@ internal sealed partial class VelvetShell
                         Gap(10f);
                     }
 
+                    if (ui.GhostButton(Reserve(42f), Loc.T(L.Velvet.NotInterested)))
+                    {
+                        store.HideFromDiscover(user.UserId);
+                        router.Pop();
+                        return;
+                    }
+
+                    Gap(10f);
                     if (ui.DangerGhostButton(Reserve(42f), Loc.T(L.Velvet.Block)))
                     {
                         AskBlock(user.UserId, DisplayNameOf(user.DisplayName, user.Handle));

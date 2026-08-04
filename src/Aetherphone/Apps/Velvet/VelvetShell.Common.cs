@@ -49,9 +49,19 @@ internal sealed partial class VelvetShell
         report.Open(new ReportPrompt
         {
             Title = title,
-            Submit = (reason, done) => store.Report(targetType, targetId, reason, done),
+            Submit = (reason, done) => store.Report(targetType, targetId, reason, succeeded =>
+            {
+                if (succeeded)
+                {
+                    reportedTargets.Add(targetId);
+                }
+
+                done(succeeded);
+            }),
         });
     }
+
+    private bool AlreadyReported(string targetId) => reportedTargets.Contains(targetId);
 
     private void DrawPostMenu(Rect area, bool inFeed)
     {

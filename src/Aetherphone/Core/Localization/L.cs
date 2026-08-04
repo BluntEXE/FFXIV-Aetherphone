@@ -2617,6 +2617,11 @@ internal static class L
         public static readonly LocString Share = new("velvet.share", "Share");
         public static readonly LocString CaptionHint = new("velvet.captionHint", "Write a caption…");
         public static readonly LocString Block = new("velvet.block", "Block");
+        public static readonly LocString NotInterested = new("velvet.notInterested", "Not interested");
+        public static readonly LocString DiscardEdits =
+            new("velvet.discardEdits", "You have changes you have not saved yet. Leave without saving them?");
+        public static readonly LocString DiscardEditsConfirm = new("velvet.discardEditsConfirm", "Discard changes");
+        public static readonly LocString KeepEditing = new("velvet.keepEditing", "Keep editing");
         public static readonly LocString Blocked = new("velvet.blocked", "Blocked");
         public static readonly LocString Unblock = new("velvet.unblock", "Unblock");
         public static readonly LocString Like = new("velvet.like", "Like");

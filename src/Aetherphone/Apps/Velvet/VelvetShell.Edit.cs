@@ -2,6 +2,7 @@ using Aetherphone.Apps.Velvet.Kit;
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -80,7 +81,19 @@ internal sealed partial class VelvetShell
 
         if (VHeader.Push(area, Loc.T(L.Velvet.EditProfile), theme))
         {
-            router.Pop();
+            if (!HasUnsavedEdits())
+            {
+                router.Pop();
+                return;
+            }
+
+            confirm.Ask(new ConfirmRequest
+            {
+                Message = Loc.T(L.Velvet.DiscardEdits),
+                ConfirmLabel = Loc.T(L.Velvet.DiscardEditsConfirm),
+                CancelLabel = Loc.T(L.Velvet.KeepEditing),
+                Confirm = () => router.Pop(),
+            });
             return;
         }
 
@@ -276,6 +289,46 @@ internal sealed partial class VelvetShell
         {
             editRelationship = options[clicked];
         }
+    }
+
+    private bool HasUnsavedEdits()
+    {
+        if (store.Me is not { } me)
+        {
+            return false;
+        }
+
+        return !string.Equals(editDisplayName, me.DisplayName, StringComparison.Ordinal)
+               || !string.Equals(editHandle, me.Handle, StringComparison.Ordinal)
+               || !string.Equals(editIntro, me.Intro, StringComparison.Ordinal)
+               || !string.Equals(editPronouns, me.Pronouns, StringComparison.Ordinal)
+               || editGender != VelvetGender.Sanitize(me.Gender)
+               || editSexuality != VelvetSexuality.Sanitize(me.Sexuality)
+               || editIntent != VelvetIntent.Sanitize(me.LookingFor)
+               || editRelationship != me.RelationshipStatus
+               || Differs(editRole, VelvetTags.Parse(me.Dynamic))
+               || Differs(editKinks, me.Kinks)
+               || Differs(editTags, me.Tags)
+               || Differs(editLimits, me.Limits);
+    }
+
+    private static bool Differs(List<string> edited, IReadOnlyList<string>? saved)
+    {
+        var count = saved?.Count ?? 0;
+        if (edited.Count != count)
+        {
+            return true;
+        }
+
+        for (var index = 0; index < edited.Count; index++)
+        {
+            if (!string.Equals(edited[index], saved![index], StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void SaveProfile()
