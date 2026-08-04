@@ -1315,8 +1315,6 @@
   "account.accountsSection": "Accounts",
   "account.badgesSection": "Badges",
   "account.badgesHint": "Badges are granted by the Aetherphone team. Turning one off hides it from everyone, along with its name color and effects. Turn it back on whenever you like.",
-  "account.communityBadgesSection": "Community badges",
-  "account.communityBadgesHint": "These badges come from events and community programs. Turning one off hides it from everyone. You can turn it back on any time.",
   "account.addAccount": "Add account",
   "account.addAccountTakenTitle": "Already signed in here",
   "account.addAccountTakenBody": "{0} already has an account on this phone. To add another one, log in to that character in the game and sign in from there. It then stays in this list for every character.",

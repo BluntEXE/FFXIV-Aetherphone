@@ -1315,8 +1315,6 @@
   "account.accountsSection": "Contas",
   "account.badgesSection": "Emblemas",
   "account.badgesHint": "Os emblemas são concedidos pela equipe do Aetherphone. Ao desativar um, ele deixa de aparecer para todos, junto com a cor do nome e os efeitos. Você pode reativá-lo quando quiser.",
-  "account.communityBadgesSection": "Insígnias da comunidade",
-  "account.communityBadgesHint": "Estas insígnias vêm de eventos e programas da comunidade. Ao desativar uma, ninguém a verá até que você a reative.",
   "account.addAccount": "Adicionar conta",
   "account.addAccountTakenTitle": "Você já entrou aqui",
   "account.addAccountTakenBody": "{0} já tem uma conta neste telefone. Para adicionar outra, entre com esse personagem no jogo e faça login por lá. Depois ela fica nesta lista para todos os personagens.",

@@ -181,7 +181,6 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         SettingsRow.Info(details.NextRow(), Loc.T(L.Account.HomeWorldLabel), user.World, theme);
         details.End();
 
-        DrawBadgesSection(user, theme, scale);
         DrawCommunityBadgesSection(theme, scale);
         DrawPatreonSection(theme, scale);
         ImGui.Dummy(new Vector2(0f, 14f * scale));
@@ -266,7 +265,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
 
         var nameY = changeCenter.Y + changeSize.Y * 0.5f + 18f * scale;
         var nameStyle = TextStyles.Title2;
-        var badgeCount = RoleBadges.Count(user.Badges);
+        var badgeCount = Math.Max(RoleBadges.Count(user.Badges), user.ProfileBadges?.Length ?? 0);
         var reserve = UserName.Reserve(user.Badges, user.ProfileBadges, nameStyle, badgeCount);
         var nameSize = Typography.Measure(user.DisplayName, nameStyle);
         var nameWidth = MathF.Min(nameSize.X, MathF.Max(1f, width - 24f * scale - reserve));
@@ -279,59 +278,6 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         ImGui.Dummy(new Vector2(width, nameY + 34f * scale - origin.Y));
     }
 
-    private void DrawBadgesSection(UserDto user, PhoneTheme theme, float scale)
-    {
-        var badgeCount = RoleBadges.Count(user.GrantedBadges);
-        if (badgeCount == 0)
-        {
-            return;
-        }
-
-        ImGui.Dummy(new Vector2(0f, 14f * scale));
-        SettingsSection.Header(Loc.T(L.Account.BadgesSection), theme);
-        var card = GroupCard.Begin(theme, badgeCount);
-        var toggled = default(RoleBadge?);
-        for (var index = 0; index < badgeCount; index++)
-        {
-            var badge = RoleBadges.At(user.GrantedBadges, index);
-            var equipped = (user.Badges & (int)badge.Flag) != 0;
-            if (DrawBadgeRow(card.NextRow(), badge, equipped, theme, scale))
-            {
-                toggled = badge;
-            }
-        }
-
-        card.End();
-        ImGui.Dummy(new Vector2(0f, 8f * scale));
-        SettingsSection.Hint(Loc.T(L.Account.BadgesHint), theme);
-        if (toggled is { } flipped)
-        {
-            ToggleBadge(user, flipped);
-        }
-    }
-
-    private static bool DrawBadgeRow(Rect row, in RoleBadge badge, bool equipped, PhoneTheme theme, float scale)
-    {
-        var drawList = ImGui.GetWindowDrawList();
-        var ink = RoleInk.For(badge.Kind, RoleInk.IsLight(theme));
-        var glyphSize = 16f * scale;
-        ProgressRing.CenterIcon(drawList, new Vector2(row.Min.X + glyphSize * 0.5f, row.Center.Y), badge.Glyph, ink,
-            glyphSize);
-        var label = Loc.T(badge.Tooltip);
-        var rowId = "account.badge." + badge.Kind;
-        var toggleWidth = Metrics.Size.ToggleWidth * scale;
-        var toggleHeight = Metrics.Size.ToggleHeight * scale;
-        var toggleMin = new Vector2(row.Max.X - toggleWidth, row.Center.Y - toggleHeight * 0.5f);
-        var labelLeft = row.Min.X + glyphSize + 10f * scale;
-        var labelMaxWidth = MathF.Max(1f, toggleMin.X - 10f * scale - labelLeft);
-        var labelSize = Typography.Measure(label, TextStyles.BodyEmphasized);
-        Marquee.DrawLeftAuto(rowId, label, labelLeft, row.Center.Y - labelSize.Y * 0.5f, labelMaxWidth,
-            TextStyles.BodyEmphasized, theme.TextStrong);
-        var next = Toggle.Draw(rowId + ".toggle",
-            new Rect(toggleMin, toggleMin + new Vector2(toggleWidth, toggleHeight)), equipped, theme);
-        return next != equipped;
-    }
-
     private void DrawCommunityBadgesSection(PhoneTheme theme, float scale)
     {
         RequestCommunityBadges();
@@ -342,7 +288,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         }
 
         ImGui.Dummy(new Vector2(0f, 14f * scale));
-        SettingsSection.Header(Loc.T(L.Account.CommunityBadgesSection), theme);
+        SettingsSection.Header(Loc.T(L.Account.BadgesSection), theme);
         var card = GroupCard.Begin(theme, badges.Length);
         var light = RoleInk.IsLight(theme);
         var toggledIndex = -1;
@@ -356,7 +302,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
 
         card.End();
         ImGui.Dummy(new Vector2(0f, 8f * scale));
-        SettingsSection.Hint(Loc.T(L.Account.CommunityBadgesHint), theme);
+        SettingsSection.Hint(Loc.T(L.Account.BadgesHint), theme);
         if (toggledIndex >= 0)
         {
             ToggleCommunityBadge(toggledIndex);
@@ -452,31 +398,6 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             {
                 AepLog.Warning($"Badge visibility update failed: {exception.Message}");
                 badges[index] = badge;
-            }
-        });
-    }
-
-    private void ToggleBadge(UserDto user, in RoleBadge badge)
-    {
-        var desired = (user.Badges ^ (int)badge.Flag) & user.GrantedBadges;
-        session.SetUser(user with { Badges = desired });
-        var token = cancellation.Token;
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                var fresh = await account.UpdateBadgesAsync(desired, token).ConfigureAwait(false);
-                if (fresh is not null)
-                {
-                    session.SetUser(fresh);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception exception)
-            {
-                AepLog.Warning($"Badge loadout update failed: {exception.Message}");
             }
         });
     }

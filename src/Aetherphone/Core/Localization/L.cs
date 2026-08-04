@@ -2088,8 +2088,6 @@ internal static class L
         public static readonly LocString AccountsSection = new("account.accountsSection", "Accounts");
         public static readonly LocString BadgesSection = new("account.badgesSection", "Badges");
         public static readonly LocString BadgesHint = new("account.badgesHint", "Badges are granted by the Aetherphone team. Turning one off hides it from everyone, along with its name color and effects. Turn it back on whenever you like.");
-        public static readonly LocString CommunityBadgesSection = new("account.communityBadgesSection", "Community badges");
-        public static readonly LocString CommunityBadgesHint = new("account.communityBadgesHint", "These badges come from events and community programs. Turning one off hides it from everyone. You can turn it back on any time.");
         public static readonly LocString AddAccount = new("account.addAccount", "Add account");
         public static readonly LocString AddAccountTakenTitle = new("account.addAccountTakenTitle", "Already signed in here");
         public static readonly LocString AddAccountTakenBody = new("account.addAccountTakenBody", "{0} already has an account on this phone. To add another one, log in to that character in the game and sign in from there. It then stays in this list for every character.");

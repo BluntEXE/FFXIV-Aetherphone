@@ -41,13 +41,14 @@ internal static class UserName
 
     public static float Reserve(int badges, string[]? badgeIds, in TextStyle style, int maxBadges = 1)
     {
-        var reserve = Reserve(badges, style, maxBadges);
-        if (communityCatalog is not null)
-        {
-            reserve += BadgeStrip.Reserve(badgeIds, style, maxBadges);
-        }
+        return CatalogServes(badgeIds)
+            ? BadgeStrip.Reserve(badgeIds, style, maxBadges)
+            : Reserve(badges, style, maxBadges);
+    }
 
-        return reserve;
+    private static bool CatalogServes(string[]? badgeIds)
+    {
+        return communityCatalog is not null && communityImages is not null && badgeIds is { Length: > 0 };
     }
 
     public static float Draw(string id, string name, int badges, float boxLeft, float y, float maxWidth,
@@ -77,18 +78,21 @@ internal static class UserName
         float boxLeft, float y, float maxWidth, in TextStyle style, Vector4 nameInk, bool hovering, bool light,
         int maxBadges = 1)
     {
-        var catalog = communityCatalog;
-        var images = communityImages;
-        if (catalog is null || images is null)
-        {
-            badgeIds = null;
-        }
-
-        var shown = Math.Min(RoleBadges.Count(badges), maxBadges);
+        var fromCatalog = CatalogServes(badgeIds);
+        var shown = fromCatalog ? 0 : Math.Min(RoleBadges.Count(badges), maxBadges);
         var lineHeight = LineHeight(style);
         var ink = nameInk;
         var effect = default(TextEffect);
-        if (shown > 0)
+        if (fromCatalog)
+        {
+            var community = communityCatalog!.Find(badgeIds![0]);
+            if (community is not null)
+            {
+                ink = RoleInk.For(community.Colors[0], light);
+                effect = NameEffects.For(community, light);
+            }
+        }
+        else if (shown > 0)
         {
             var top = RoleBadges.Top(badges);
             if (top.HasValue)
@@ -97,48 +101,36 @@ internal static class UserName
                 effect = NameEffects.For(top.Value.Kind, light);
             }
         }
-        else if (badgeIds is not null && badgeIds.Length > 0)
-        {
-            var community = catalog!.Find(badgeIds[0]);
-            if (community is not null)
-            {
-                ink = RoleInk.For(community.Colors[0], light);
-                effect = NameEffects.For(community, light);
-            }
-        }
 
         var reserve = Reserve(badges, badgeIds, style, maxBadges);
         var textWidth = MathF.Max(1f, maxWidth - reserve);
         var drawn = Marquee.DrawLeft(drawList, id, name, boxLeft, y, textWidth, style, ink, hovering, effect);
-        var legacyReserve = Reserve(badges, style, maxBadges);
 
-        if (shown > 0)
+        if (fromCatalog)
         {
-            var glyphHeight = lineHeight * GlyphFraction;
-            var gap = lineHeight * GapFraction;
-            var centerY = y + lineHeight * 0.5f;
-            var cursor = boxLeft + drawn + gap;
-
-            for (var index = 0; index < shown; index++)
-            {
-                var badge = RoleBadges.At(badges, index);
-                var center = new Vector2(cursor + glyphHeight * 0.5f, centerY);
-                ProgressRing.CenterIcon(drawList, center, badge.Glyph, RoleInk.For(badge.Kind, light), glyphHeight);
-
-                var half = glyphHeight * 0.5f;
-                HoverTooltip.Show(id + ".badge." + index,
-                    new Rect(new Vector2(center.X - half, center.Y - half),
-                        new Vector2(center.X + half, center.Y + half)),
-                    Loc.T(badge.Tooltip));
-
-                cursor += glyphHeight + gap;
-            }
+            BadgeStrip.Draw(drawList, id, badgeIds, communityCatalog!, communityImages!, boxLeft + drawn, y, style,
+                light, maxBadges);
+            return drawn + reserve;
         }
 
-        if (badgeIds is not null && badgeIds.Length > 0)
+        var glyphHeight = lineHeight * GlyphFraction;
+        var gap = lineHeight * GapFraction;
+        var centerY = y + lineHeight * 0.5f;
+        var cursor = boxLeft + drawn + gap;
+
+        for (var index = 0; index < shown; index++)
         {
-            BadgeStrip.Draw(drawList, id, badgeIds, catalog!, images!, boxLeft + drawn + legacyReserve, y, style,
-                light, maxBadges);
+            var badge = RoleBadges.At(badges, index);
+            var center = new Vector2(cursor + glyphHeight * 0.5f, centerY);
+            ProgressRing.CenterIcon(drawList, center, badge.Glyph, RoleInk.For(badge.Kind, light), glyphHeight);
+
+            var half = glyphHeight * 0.5f;
+            HoverTooltip.Show(id + ".badge." + index,
+                new Rect(new Vector2(center.X - half, center.Y - half),
+                    new Vector2(center.X + half, center.Y + half)),
+                Loc.T(badge.Tooltip));
+
+            cursor += glyphHeight + gap;
         }
 
         return drawn + reserve;
