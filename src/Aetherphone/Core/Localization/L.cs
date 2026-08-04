@@ -588,6 +588,9 @@ internal static class L
         public static readonly LocString StarredTitle = new("message.starredTitle", "Starred messages");
         public static readonly LocString NoStarred = new("message.noStarred", "No starred messages yet");
         public static readonly LocString ReactionsTitle = new("message.reactionsTitle", "Reactions");
+        public static readonly LocString ReactionAdd = new("message.reactionAdd", "React with this");
+        public static readonly LocString HostingMuster = new("message.hostingMuster", "Hosting a meetup, open it");
+        public static readonly LocString ReactionRemove = new("message.reactionRemove", "Remove your reaction");
         public static readonly LocString TapToRemove = new("message.tapToRemove", "Click to remove");
         public static readonly LocString DraftPrefix = new("message.draftPrefix", "Draft:");
         public static readonly LocString PresenceOnline = new("message.presenceOnline", "online");

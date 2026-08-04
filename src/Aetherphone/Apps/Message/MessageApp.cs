@@ -56,6 +56,7 @@ internal sealed partial class MessageApp : IPhoneApp
     private readonly ReportService report;
     private readonly WallpaperImageCache wallpaperImages;
     private readonly MusterStore musters;
+    private readonly MusterLauncher musterLauncher;
     private readonly SocialNotificationService socialNotifications;
     private readonly AppSkin ui = new(AppPalettes.Message);
     private readonly AvatarLightbox avatarLightbox = new();
@@ -73,9 +74,11 @@ internal sealed partial class MessageApp : IPhoneApp
     public MessageApp(DirectMessagesStore store, ContactBook contacts, CallHub calls, AethernetSession session,
         RemoteImageCache images, LodestoneService lodestone, DmLauncher launcher, PhotoLibrary library,
         HttpService http, Configuration configuration, ConfirmService confirm, ReportService report,
-        WallpaperImageCache wallpaperImages, MusterStore musters, SocialNotificationService socialNotifications)
+        WallpaperImageCache wallpaperImages, MusterStore musters, MusterLauncher musterLauncher,
+        SocialNotificationService socialNotifications)
     {
         this.socialNotifications = socialNotifications;
+        this.musterLauncher = musterLauncher;
         this.store = store;
         this.contacts = contacts;
         this.calls = calls;

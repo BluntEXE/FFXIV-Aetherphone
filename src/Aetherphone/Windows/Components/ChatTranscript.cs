@@ -467,6 +467,14 @@ internal sealed class ChatTranscript
         var name = FirstName(message.SenderName);
         UserName.Draw("chattranscript.sender." + message.Id, name, message.SenderBadges, message.SenderBadgeIds, textLeft, origin.Y, maxWidth,
             new TextStyle(0.78f, FontWeight.SemiBold), message.SenderTint, hovering, theme);
+        if (!string.Equals(name, message.SenderName, StringComparison.Ordinal))
+        {
+            var nameWidth = MathF.Min(maxWidth, Typography.Measure(name, new TextStyle(0.78f, FontWeight.SemiBold)).X);
+            HoverTooltip.Show("chattranscript.senderfull." + message.Id,
+                new Rect(rect, new Vector2(rect.X + nameWidth, rect.Y + 16f * scale)), message.SenderName,
+                HoverLabelSide.Above);
+        }
+
         ImGui.SetCursorScreenPos(new Vector2(origin.X, origin.Y + 16f * scale));
     }
 
@@ -1352,6 +1360,8 @@ internal sealed class ChatTranscript
             if (model.Interactions is { } interactions && Hovering(chipMin, chipMax))
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                HoverTooltip.Show(new Rect(chipMin, chipMax),
+                    Loc.T(reaction.Mine ? L.Message.ReactionRemove : L.Message.ReactionAdd), HoverLabelSide.Above);
                 if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
                 {
                     interactions.OnReactionClick(message.Id, reaction.Mine ? string.Empty : reaction.Token);
