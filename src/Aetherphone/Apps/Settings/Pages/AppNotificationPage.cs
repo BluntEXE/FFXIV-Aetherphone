@@ -39,17 +39,18 @@ internal sealed class AppNotificationPage : ISettingsPage
             var wasEnabled = configuration.IsAppNotificationEnabled(channel.AppId);
             var card = GroupCard.Begin(theme, wasEnabled ? 2 : 1);
             var enabled = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.AllowNotifications), wasEnabled, theme);
-            
+
             if (wasEnabled)
             {
-                var showNotificationBanner = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.ShowNotificationBanner), appSetting.ShowNotificationBanner, theme);
+                var showNotificationBanner = SettingsRow.Bool(card.NextRow(),
+                    Loc.T(L.Settings.ShowNotificationBanner), appSetting.ShowNotificationBanner, theme);
                 if (showNotificationBanner != appSetting.ShowNotificationBanner)
                 {
                     appSetting.ShowNotificationBanner = showNotificationBanner;
                     configuration.Save();
                 }
             }
-            
+
             card.End();
             if (enabled != wasEnabled)
             {

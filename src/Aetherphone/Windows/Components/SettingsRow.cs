@@ -10,7 +10,8 @@ internal static class SettingsRow
 {
     private static readonly Vector4 GlyphInk = new(1f, 1f, 1f, 1f);
 
-    public static bool Bool(Rect row, string label, bool value, PhoneTheme theme, string? id = null, string? hint = null, bool dimmed = false)
+    public static bool Bool(Rect row, string label, bool value, PhoneTheme theme, string? id = null,
+        string? hint = null, bool dimmed = false)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var width = Metrics.Size.ToggleWidth * scale;
@@ -19,7 +20,7 @@ internal static class SettingsRow
 
         var iconHeight = Metrics.Size.HintIconHeight * scale;
         var iconGap = Metrics.Size.HintIconGap * scale;
-        var reservedSpace = hint != null ? iconHeight + iconGap: 0f;
+        var reservedSpace = hint != null ? iconHeight + iconGap : 0f;
         var labelMaxWidth = MathF.Max(1f, toggleMin.X - 10f * scale - row.Min.X - reservedSpace);
 
         var labelSize = Typography.Measure(label, TextStyles.BodyEmphasized);
@@ -29,11 +30,8 @@ internal static class SettingsRow
 
         if (hint != null)
         {
-            var hintIconX = row.Min.X + labelWidth + iconGap;
-            var hintIconY = row.Center.Y;
-            var hintIconPosition = new Vector2(hintIconX, hintIconY);
-            
-            HintIcon.Draw(hintIconPosition, hint, theme, scale);
+            var hintIconCenter = new Vector2(row.Min.X + labelWidth + iconGap, row.Center.Y);
+            HintIcon.Draw(hintIconCenter, hint, theme, scale);
         }
 
         return Toggle.Draw(rowId, new Rect(toggleMin, toggleMin + new Vector2(width, height)), value, theme);
@@ -143,7 +141,8 @@ internal static class SettingsRow
         return UiInteract.Click(row.Min, row.Max, hovered);
     }
 
-    public static bool Disclosure(Rect row, string label, string value, PhoneTheme theme, string? id = null, bool dimmed = false)
+    public static bool Disclosure(Rect row, string label, string value, PhoneTheme theme, string? id = null,
+        bool dimmed = false)
     {
         var scale = ImGuiHelpers.GlobalScale;
         var hovered = UiInteract.Hover(row.Min, row.Max);

@@ -151,7 +151,8 @@ internal sealed class NotificationService : IDisposable
         Added?.Invoke(stamped);
         if (!configuration.DoNotDisturb)
         {
-            if (configuration.ShowNotificationBanner && configuration.ShouldShowNotificationBanner(notification.SettingsKey))
+            if (configuration.ShowNotificationBanner &&
+                configuration.ShouldShowNotificationBanner(notification.SettingsKey))
             {
                 Presented?.Invoke(stamped);
             }

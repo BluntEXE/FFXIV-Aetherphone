@@ -51,7 +51,8 @@ internal sealed class NotificationsPage : ISettingsPage
             }
 
             var showNotificationBanner = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Settings.ShowNotificationBanner),
-                configuration.ShowNotificationBanner, theme, null, Loc.T(L.Settings.ShowNotificationBannerHint), dimmed: doNotDisturb);
+                configuration.ShowNotificationBanner, theme, null, Loc.T(L.Settings.ShowNotificationBannerHint),
+                dimmed: doNotDisturb);
             if (showNotificationBanner != configuration.ShowNotificationBanner)
             {
                 configuration.ShowNotificationBanner = showNotificationBanner;
