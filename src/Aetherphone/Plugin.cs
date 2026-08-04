@@ -90,6 +90,8 @@ public sealed class Plugin : IDalamudPlugin
             Device = new DeviceStatus(ClientState, ObjectTable, DataManager);
             services = PhoneServices.Build(Cfg, ChatGui, DataManager, ObjectTable, ClientState, Framework, DutyState,
                 TextureProvider, PluginInterface.ConfigDirectory, UnlockState, Condition);
+            FilePicker.ProblemReporter = message =>
+                services.Confirm.Alert(null, message, Loc.T(L.Common.Close));
             Fonts = new FontService(PluginInterface, Cfg, services.Loading, Cfg.TextZoom,
                 PhoneSizeCatalog.ZoomFor(Cfg.PhoneWidth));
             EmojiCatalog.Load();

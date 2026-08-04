@@ -72,6 +72,13 @@ internal sealed partial class PhotosApp
             return;
         }
 
+        if (customAlbums.Count > 0 &&
+            PhotosChrome.AddToAlbum(new Vector2(safe.Max.X - 96f * scale, rowCenterY), White, scale))
+        {
+            router.Push(PhotoView.AddToAlbum());
+            return;
+        }
+
         if (viewerPaths.Length <= 1)
         {
             return;

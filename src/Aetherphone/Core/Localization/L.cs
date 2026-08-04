@@ -14,6 +14,8 @@ internal static class L
         public static readonly LocString Retry = new("common.retry", "Retry");
         public static readonly LocString Copied = new("common.copied", "Copied");
         public static readonly LocString LoadFailed = new("common.loadFailed", "Could not load");
+        public static readonly LocString FileNotDownloaded =
+            new("common.fileNotDownloaded", "That file is stored online and is not on this PC yet. Open it once in File Explorer to download it, then pick it again.");
         public static readonly LocString LoadFailedHint =
             new("common.loadFailedHint", "Check your connection and try again.");
         public static readonly LocString Close = new("common.close", "Close");
@@ -1114,6 +1116,7 @@ internal static class L
         public static readonly LocString Calls = new("phone.calls", "Calls");
         public static readonly LocString EnablePhoneCalls = new("phone.enablePhoneCalls", "Enable Phone Calls");
         public static readonly LocString Microphone = new("phone.microphone", "Microphone");
+        public static readonly LocString Speaker = new("phone.speaker", "Speaker");
         public static readonly LocString SystemDefault = new("phone.systemDefault", "System default");
         public static readonly LocString DeviceFallback = new("phone.deviceFallback", "Microphone {0}");
         public static readonly LocString AudioHint = new("phone.audioHint", "Audio plays on your system default output device. Use headphones to avoid echo. A device change applies to your next call.");
@@ -3039,6 +3042,9 @@ internal static class L
         public static readonly LocString CreateAlbumButton = new("photos.createAlbumButton", "Create Album");
         public static readonly LocString AlbumName = new("photos.albumName", "Album name");
         public static readonly LocString AddPhotos = new("photos.addPhotos", "Add Photos");
+        public static readonly LocString AddToAlbum = new("photos.addToAlbum", "Add to Album");
+        public static readonly LocString AlreadyInAllAlbums =
+            new("photos.alreadyInAllAlbums", "This photo is already in every album");
         public static readonly LocString RemoveFromAlbum = new("photos.removeFromAlbum", "Remove from Album");
         public static readonly LocString DeleteAlbum = new("photos.deleteAlbum", "Delete Album");
         public static readonly LocString DeleteAlbumConfirm = new("photos.deleteAlbumConfirm", "Delete {0}?");

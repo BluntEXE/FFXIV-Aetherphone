@@ -95,6 +95,29 @@ internal static class PhotosChrome
         return Tapped(hovered);
     }
 
+    public static bool AddToAlbum(Vector2 center, Vector4 color, float scale)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var radius = 17f * scale;
+        var bounds = new Rect(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
+        var hovered = UiInteract.Hover(bounds.Min, bounds.Max);
+        drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, hovered ? 0.5f : 0.32f)), 28);
+        var ink = ImGui.GetColorU32(hovered ? color : color with { W = 0.9f });
+        var extent = 6.5f * scale;
+        var thickness = Metrics.Stroke.Thin * scale;
+        var boxMin = new Vector2(center.X - extent, center.Y - extent);
+        var boxMax = new Vector2(center.X + extent * 0.35f, center.Y + extent * 0.35f);
+        drawList.AddRect(boxMin, boxMax, ink, 2f * scale, ImDrawFlags.RoundCornersAll, thickness);
+        var plusCenter = new Vector2(center.X + extent * 0.55f, center.Y + extent * 0.55f);
+        var arm = extent * 0.5f;
+        drawList.AddLine(new Vector2(plusCenter.X - arm, plusCenter.Y), new Vector2(plusCenter.X + arm, plusCenter.Y),
+            ink, thickness);
+        drawList.AddLine(new Vector2(plusCenter.X, plusCenter.Y - arm), new Vector2(plusCenter.X, plusCenter.Y + arm),
+            ink, thickness);
+        HoverTooltip.Show(bounds, Loc.T(L.Photos.AddToAlbum));
+        return Tapped(hovered);
+    }
+
     public static bool Share(Vector2 center, Vector4 color, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();

@@ -7,7 +7,8 @@ internal enum PhotoRoute : byte
     Viewer,
     CreateAlbum,
     RenameAlbum,
-    AlbumPicker
+    AlbumPicker,
+    AddToAlbum
 }
 
 internal readonly struct PhotoView
@@ -31,4 +32,5 @@ internal readonly struct PhotoView
     public static PhotoView Viewer() => new(PhotoRoute.Viewer, 0);
     public static PhotoView CreateAlbum() => new(PhotoRoute.CreateAlbum, 0);
     public static PhotoView RenameAlbum(int albumKey) => new(PhotoRoute.RenameAlbum, albumKey);
+    public static PhotoView AddToAlbum() => new(PhotoRoute.AddToAlbum, 0);
 }

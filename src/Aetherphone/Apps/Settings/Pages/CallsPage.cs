@@ -61,6 +61,29 @@ internal sealed class CallsPage : ISettingsPage
             }
 
             micCard.End();
+
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
+            SettingsSection.Header(Loc.T(L.Phone.Speaker), theme);
+            var outputs = AudioDevices.OutputNames();
+            var currentOutput = configuration.CallOutputDevice;
+            var speakerCard = GroupCard.Begin(theme, outputs.Length + 1);
+            if (SettingsRow.Selectable(speakerCard.NextRow(), Loc.T(L.Phone.SystemDefault),
+                    string.IsNullOrEmpty(currentOutput), theme))
+            {
+                SetOutput(string.Empty);
+            }
+
+            for (var index = 0; index < outputs.Length; index++)
+            {
+                var name = outputs[index];
+                if (SettingsRow.Selectable(speakerCard.NextRow(), DeviceLabel(name, index), currentOutput == name,
+                        theme))
+                {
+                    SetOutput(name);
+                }
+            }
+
+            speakerCard.End();
             ImGui.Dummy(new Vector2(0f, 10f * scale));
             using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
             {
@@ -79,6 +102,17 @@ internal sealed class CallsPage : ISettingsPage
         }
 
         configuration.CallInputDevice = name;
+        configuration.Save();
+    }
+
+    private void SetOutput(string name)
+    {
+        if (configuration.CallOutputDevice == name)
+        {
+            return;
+        }
+
+        configuration.CallOutputDevice = name;
         configuration.Save();
     }
 

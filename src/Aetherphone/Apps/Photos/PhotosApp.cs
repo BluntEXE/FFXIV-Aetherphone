@@ -148,6 +148,12 @@ internal sealed partial class PhotosApp : IPhoneApp
             return;
         }
 
+        if (view.Route == PhotoRoute.AddToAlbum)
+        {
+            DrawAddToAlbumPage(content);
+            return;
+        }
+
         if (view.Route == PhotoRoute.Album)
         {
             DrawAlbum(content, view.AlbumKey);

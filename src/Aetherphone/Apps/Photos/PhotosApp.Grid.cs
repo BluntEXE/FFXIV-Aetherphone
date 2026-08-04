@@ -149,6 +149,61 @@ internal sealed partial class PhotosApp
         DrawRenameAlbumSheet(body, albumKey, CloseModifyAlbumPage);
     }
 
+    private void DrawAddToAlbumPage(Rect area)
+    {
+        var scale = UiScale.Current;
+        DrawNavBar(area, Loc.T(L.Photos.AddToAlbum), () => router.Pop());
+        if (viewerPaths.Length == 0 || viewerIndex < 0 || viewerIndex >= viewerPaths.Length)
+        {
+            router.Pop();
+            return;
+        }
+
+        var path = viewerPaths[viewerIndex];
+        var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
+        using (AppSurface.Begin(body))
+        {
+            var available = 0;
+            for (var index = 0; index < customAlbums.Count; index++)
+            {
+                if (!AlbumContains(customAlbums[index], path))
+                {
+                    available++;
+                }
+            }
+
+            if (available == 0)
+            {
+                EmptyState.Draw(body, ui, FontAwesomeIcon.Images, Loc.T(L.Photos.AlreadyInAllAlbums),
+                    Loc.T(L.Photos.CreateAlbumHint));
+                return;
+            }
+
+            var card = GroupCard.Begin(frameTheme, available);
+            for (var index = 0; index < customAlbums.Count; index++)
+            {
+                var album = customAlbums[index];
+                if (AlbumContains(album, path))
+                {
+                    continue;
+                }
+
+                if (SettingsRow.Disclosure(card.NextRow(), album.Name, Loc.Plural(L.Photos.Count, album.Count),
+                        frameTheme))
+                {
+                    AddPhotosToCustomAlbum(album.Key, new[] { path });
+                    router.Pop();
+                    return;
+                }
+            }
+
+            card.End();
+        }
+    }
+
+    private bool AlbumContains(CustomAlbum album, string path) =>
+        customAlbumPhotos.TryGetValue(album.Name, out var photos) && ContainsOrdinalIgnoreCase(photos, path);
+
     private void DrawModifyAlbumSheet(
         Rect body,
         string label,
