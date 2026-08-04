@@ -43,13 +43,13 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     protected readonly ChatTranscript transcript = new();
     protected readonly ChatMenuController menuController = new();
     protected readonly ChatComposer composer = new();
-    private readonly Dictionary<string, string> sessionDrafts = new(StringComparer.Ordinal);
-    private volatile string? failedSendText;
-    private volatile string? failedSendThreadId;
     protected readonly ChatSearchController searchController = new();
     protected readonly VoiceNotePlayer voicePlayer = new();
     protected readonly EncryptionInfoPane encryptionPane;
     private readonly PhotoZoomView imageZoom = new();
+    private readonly Dictionary<string, string> sessionDrafts = new(StringComparer.Ordinal);
+    private volatile string? failedSendThreadId;
+    private volatile string? failedSendText;
     private static readonly TimeSpan VoiceFailureRetryFor = TimeSpan.FromMinutes(2);
     private readonly ConcurrentDictionary<string, byte[]> voiceBytes = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, byte> voiceFetching = new(StringComparer.Ordinal);
@@ -557,7 +557,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     private void ComposerEditText(string threadId, string editId, string text)
     {
-        store.EditMessage(threadId, editId, text, succeeded => NoteSendOutcome(succeeded, threadId, text));
+        store.EditMessage(threadId, editId, text, _ => { });
         lastTypingDraft = string.Empty;
         OnDraftConsumed(threadId);
     }
