@@ -1497,6 +1497,7 @@
   "messages.resumeNotifications": "Benachrichtigungen fortsetzen",
   "messages.copyMessage": "Nachricht kopieren",
   "messages.copyName": "Namen kopieren",
+  "messages.sendFailed": "Nachricht konnte nicht gesendet werden. Prüfe auf nicht unterstützte Zeichen.",
   "character.logInToView": "Melde dich an, um deinen Charakter zu sehen",
   "character.activity": "Aktivität",
   "character.today": "Heute",

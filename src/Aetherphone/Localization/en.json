@@ -1497,6 +1497,7 @@
   "messages.resumeNotifications": "Resume notifications",
   "messages.copyMessage": "Copy message",
   "messages.copyName": "Copy name",
+  "messages.sendFailed": "Couldn't send that message. Check for unsupported characters.",
   "character.logInToView": "Log in to view your character",
   "character.activity": "Activity",
   "character.today": "Today",

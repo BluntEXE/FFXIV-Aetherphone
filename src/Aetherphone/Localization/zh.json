@@ -1497,6 +1497,7 @@
   "messages.resumeNotifications": "恢复通知",
   "messages.copyMessage": "复制消息",
   "messages.copyName": "复制名字",
+  "messages.sendFailed": "消息发送失败。请检查是否含有不支持的字符。",
   "character.logInToView": "登录后查看你的角色",
   "character.activity": "活跃度",
   "character.today": "今天",

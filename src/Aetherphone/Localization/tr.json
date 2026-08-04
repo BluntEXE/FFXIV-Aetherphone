@@ -1497,6 +1497,7 @@
   "messages.resumeNotifications": "Bildirimleri sürdür",
   "messages.copyMessage": "Mesajı kopyala",
   "messages.copyName": "Adı kopyala",
+  "messages.sendFailed": "Mesaj gönderilemedi. Desteklenmeyen karakterler var mı kontrol et.",
   "character.logInToView": "Karakterini görmek için oturum aç",
   "character.activity": "Etkinlik",
   "character.today": "Bugün",

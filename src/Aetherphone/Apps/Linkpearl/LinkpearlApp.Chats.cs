@@ -14,6 +14,9 @@ namespace Aetherphone.Apps.Linkpearl;
 
 internal sealed partial class LinkpearlApp
 {
+    private const long SendFailedNoticeMilliseconds = 4000;
+    private const float NoticeTextScale = 0.78f;
+
     private readonly ChatEntranceTracker entrance = new();
     private readonly string[] chatSegmentLabels = new string[2];
     private readonly List<LinkshellEntry> roster = new();
@@ -23,6 +26,7 @@ internal sealed partial class LinkpearlApp
     private bool followBottom;
     private bool snapToBottom;
     private bool composerFocus;
+    private long sendFailedAtMilliseconds;
 
     private void DrawChatsTab(Rect content)
     {
@@ -208,7 +212,8 @@ internal sealed partial class LinkpearlApp
             }
         }
 
-        DrawComposer(composerBar, frameTheme, text => bridge.Send(conversation, text));
+        DrawComposer(composerBar, frameTheme, text => bridge.Send(conversation, text),
+            ChatBridge.ComposerBudget(conversation));
         DrawChatMenu(area);
     }
 
@@ -282,7 +287,8 @@ internal sealed partial class LinkpearlApp
             }
         }
 
-        DrawComposer(composerBar, frameTheme, text => linkshellBridge.Send(thread, text));
+        DrawComposer(composerBar, frameTheme, text => linkshellBridge.Send(thread, text),
+            LinkshellBridge.ComposerBudget(thread));
         DrawChatMenu(area);
     }
 
@@ -360,10 +366,11 @@ internal sealed partial class LinkpearlApp
         }
     }
 
-    private void DrawComposer(Rect bar, PhoneTheme theme, Action<string> send)
+    private void DrawComposer(Rect bar, PhoneTheme theme, Func<string, bool> send, int budget)
     {
         var scale = UiScale.Current;
         var dl = ImGui.GetWindowDrawList();
+        DrawSendFailure(bar, theme, scale);
         var pillMin = new Vector2(bar.Min.X, bar.Min.Y + 7f * scale);
         var pillMax = new Vector2(bar.Max.X, bar.Max.Y - 7f * scale);
         dl.AddRectFilled(pillMin, pillMax, ImGui.GetColorU32(theme.GroupedCard), (pillMax.Y - pillMin.Y) * 0.5f);
@@ -382,7 +389,7 @@ internal sealed partial class LinkpearlApp
         using (ImRaii.PushColor(ImGuiCol.FrameBg, new Vector4(0f, 0f, 0f, 0f)))
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextStrong))
         {
-            if (ImGui.InputTextWithHint("##composer", Loc.T(L.Messages.Placeholder), ref draft, 480,
+            if (ImGui.InputTextWithHint("##composer", Loc.T(L.Messages.Placeholder), ref draft, budget,
                     ImGuiInputTextFlags.EnterReturnsTrue))
             {
                 submitted = true;
@@ -407,11 +414,38 @@ internal sealed partial class LinkpearlApp
 
         if (submitted && hasText)
         {
-            send(draft);
-            draft = string.Empty;
-            snapToBottom = true;
+            if (send(draft))
+            {
+                draft = string.Empty;
+                snapToBottom = true;
+                sendFailedAtMilliseconds = 0;
+            }
+            else
+            {
+                sendFailedAtMilliseconds = Environment.TickCount64;
+            }
+
             composerFocus = true;
         }
+    }
+
+    private void DrawSendFailure(Rect bar, PhoneTheme theme, float scale)
+    {
+        if (sendFailedAtMilliseconds == 0 ||
+            Environment.TickCount64 - sendFailedAtMilliseconds >= SendFailedNoticeMilliseconds)
+        {
+            return;
+        }
+
+        var drawList = ImGui.GetForegroundDrawList();
+        var text = Loc.T(L.Messages.SendFailed);
+        var size = Typography.Measure(text, NoticeTextScale);
+        var padding = new Vector2(10f * scale, 5f * scale);
+        var center = new Vector2((bar.Min.X + bar.Max.X) * 0.5f, bar.Min.Y - size.Y * 0.5f - padding.Y - 4f * scale);
+        var min = center - size * 0.5f - padding;
+        var max = center + size * 0.5f + padding;
+        drawList.AddRectFilled(min, max, ImGui.GetColorU32(theme.GroupedCard), (max.Y - min.Y) * 0.5f);
+        Typography.DrawCentered(drawList, center, text, theme.Danger, NoticeTextScale);
     }
 
     private static string FirstName(string name)

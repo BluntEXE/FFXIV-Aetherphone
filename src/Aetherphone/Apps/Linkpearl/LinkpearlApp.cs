@@ -109,6 +109,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         chatMenu.Close();
         router.Reset();
         draft = string.Empty;
+        sendFailedAtMilliseconds = 0;
         trackedThread = null;
         ResetContactsState();
         ResetFindState();

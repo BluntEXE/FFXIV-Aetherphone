@@ -1,3 +1,4 @@
+using System.Text;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Notifications;
@@ -32,15 +33,18 @@ internal sealed class LinkshellBridge : IDisposable
         chatGui.ChatMessage += OnChatMessage;
     }
 
-    public void Send(LinkshellThread thread, string text)
+    public static int ComposerBudget(LinkshellThread thread) =>
+        Math.Max(0, ChatSender.MaxBytes - Encoding.UTF8.GetByteCount(thread.Channel.Command) - 1);
+
+    public bool Send(LinkshellThread thread, string text)
     {
         var trimmed = text.Trim();
         if (trimmed.Length == 0)
         {
-            return;
+            return false;
         }
 
-        ChatSender.TrySend($"{thread.Channel.Command} {trimmed}");
+        return ChatSender.TrySend($"{thread.Channel.Command} {trimmed}");
     }
 
     private void OnChatMessage(IHandleableChatMessage message)

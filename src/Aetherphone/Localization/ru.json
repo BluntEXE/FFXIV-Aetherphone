@@ -1497,6 +1497,7 @@
   "messages.resumeNotifications": "Возобновить уведомления",
   "messages.copyMessage": "Копировать сообщение",
   "messages.copyName": "Копировать имя",
+  "messages.sendFailed": "Не удалось отправить сообщение. Проверьте, нет ли неподдерживаемых символов.",
   "character.logInToView": "Войдите, чтобы увидеть персонажа",
   "character.activity": "Активность",
   "character.today": "Сегодня",

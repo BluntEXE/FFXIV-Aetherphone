@@ -1497,6 +1497,7 @@
   "messages.resumeNotifications": "通知を再開",
   "messages.copyMessage": "メッセージをコピー",
   "messages.copyName": "名前をコピー",
+  "messages.sendFailed": "メッセージを送信できませんでした。使用できない文字がないか確認してください。",
   "character.logInToView": "ログインしてキャラクターを見る",
   "character.activity": "アクティビティ",
   "character.today": "今日",

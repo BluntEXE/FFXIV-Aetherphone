@@ -1497,6 +1497,7 @@
   "messages.resumeNotifications": "Reanudar notificaciones",
   "messages.copyMessage": "Copiar mensaje",
   "messages.copyName": "Copiar nombre",
+  "messages.sendFailed": "No se pudo enviar el mensaje. Comprueba si hay caracteres no admitidos.",
   "character.logInToView": "Inicia sesión para ver tu personaje",
   "character.activity": "Actividad",
   "character.today": "Hoy",
