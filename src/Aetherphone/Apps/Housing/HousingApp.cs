@@ -351,7 +351,7 @@ internal sealed partial class HousingApp : IPhoneApp
         var districts = HousingDistricts.All;
         for (var index = 0; index < districts.Count; index++)
         {
-            menuItems.Add(new DropdownMenu.Item(districts[index].Name, string.Empty, false,
+            menuItems.Add(new DropdownMenu.Item(HousingDistricts.DisplayName(districts[index].Id), string.Empty, false,
                 districts[index].Id == housing.DistrictId));
         }
 

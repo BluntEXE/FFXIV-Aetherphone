@@ -146,7 +146,7 @@ internal sealed partial class HousingApp
         }
 
         if (HousingChrome.Selector(districtRect, Loc.T(L.Housing.DistrictLabel),
-                HousingDistricts.Resolve(housing.DistrictId).ShortName, ui, false))
+                HousingDistricts.ShortDisplayName(housing.DistrictId), ui, false))
         {
             OpenDistrictMenu(districtRect);
         }

@@ -39,7 +39,7 @@ internal sealed partial class HousingApp
             Typography.Draw(drawList, new Vector2(left, y), Typography.FitText(title, width, TextStyles.Title2),
                 ui.TitleInk, TextStyles.Title2);
             y += Typography.LineHeight(TextStyles.Title2) + 2f * scale;
-            var place = HousingFormat.Place(HousingDistricts.Name(key.DistrictId), key.Ward);
+            var place = HousingFormat.Place(HousingDistricts.DisplayName(key.DistrictId), key.Ward);
             Typography.Draw(drawList, new Vector2(left, y),
                 Typography.FitText(string.Concat(housing.WorldNameOf(key.WorldId), " · ", place), width,
                     TextStyles.Subheadline),

@@ -234,7 +234,7 @@ internal sealed partial class HousingApp
                 reminderPickerOpen = false;
                 ShowToast(Loc.T(L.Housing.ReminderConfirmed, HousingFormat.LeadTime(minutes),
                     HousingFormat.PhaseLabel(plot.Phase),
-                    HousingFormat.Place(HousingDistricts.Name(plot.Key.DistrictId), plot.Key.Ward),
+                    HousingFormat.Place(HousingDistricts.DisplayName(plot.Key.DistrictId), plot.Key.Ward),
                     plot.Key.Plot));
             }
             else

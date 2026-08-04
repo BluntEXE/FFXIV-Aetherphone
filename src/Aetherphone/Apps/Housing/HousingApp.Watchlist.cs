@@ -100,7 +100,7 @@ internal sealed partial class HousingApp
             TextStyles.BodyEmphasized);
         var worldName = record.WorldName.Length > 0 ? record.WorldName : housing.WorldNameOf(record.WorldId);
         var place = string.Concat(worldName, " · ",
-            HousingFormat.Place(HousingDistricts.Name(record.DistrictId), record.Ward));
+            HousingFormat.Place(HousingDistricts.DisplayName(record.DistrictId), record.Ward));
         Typography.Draw(drawList, new Vector2(textLeft, row.Min.Y + 26f * scale),
             Typography.FitText(place, textRight - textLeft, TextStyles.Footnote), frameTheme.TextMuted,
             TextStyles.Footnote);

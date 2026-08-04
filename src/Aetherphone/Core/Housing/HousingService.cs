@@ -125,7 +125,7 @@ internal sealed class HousingService : IDisposable
         return string.IsNullOrEmpty(name) ? worldId.ToString(CultureInfo.InvariantCulture) : name;
     }
 
-    public string DistrictName => HousingDistricts.Resolve(configuration.HousingDistrictId).Name;
+    public string DistrictName => HousingDistricts.DisplayName(configuration.HousingDistrictId);
 
     public bool HasWorldSelected => WorldId != 0;
 

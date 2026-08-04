@@ -231,6 +231,6 @@ internal static class HousingFormat
 
     public static string LeadTime(int minutes) =>
         minutes >= 60 && minutes % 60 == 0
-            ? Loc.T(L.Housing.LeadHours, minutes / 60)
-            : Loc.T(L.Housing.LeadMinutes, minutes);
+            ? Loc.Plural(L.Housing.LeadHours, minutes / 60)
+            : Loc.Plural(L.Housing.LeadMinutes, minutes);
 }

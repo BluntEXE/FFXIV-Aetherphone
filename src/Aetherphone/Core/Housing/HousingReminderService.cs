@@ -70,8 +70,7 @@ internal sealed class HousingReminderService : IDisposable
 
     private void Deliver(HousingReminderRecord reminder, DateTime nowUtc)
     {
-        var district = HousingDistricts.Resolve(reminder.DistrictId);
-        var place = HousingFormat.Place(district.Name, reminder.Ward);
+        var place = HousingFormat.Place(HousingDistricts.DisplayName(reminder.DistrictId), reminder.Ward);
         var remaining = HousingFormat.Remaining(reminder.PhaseEndUtc, nowUtc) ?? TimeSpan.Zero;
         var countdown = HousingFormat.Countdown(remaining);
         var phase = (HousingLotteryPhase)reminder.Phase;
