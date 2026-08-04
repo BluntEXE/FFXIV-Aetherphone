@@ -31,6 +31,8 @@ internal sealed class ConductGateOverlay
     private const float ChipSize = 26f;
     private const float SectionGap = 12f;
     private const float ItemGap = 7f;
+    private const float EndOfRulesFraction = 0.99f;
+    private const float MinimumReadSeconds = 4f;
 
     private static readonly Vector4 EncouragedColor = new(0.34f, 0.74f, 0.48f, 1f);
 
@@ -40,6 +42,8 @@ internal sealed class ConductGateOverlay
     private bool wasActive;
     private bool scrollTopPending;
     private float elapsed;
+    private bool reachedEnd;
+    private float readProgress;
 
     public ConductGateOverlay(ConductGateService service)
     {
@@ -55,6 +59,8 @@ internal sealed class ConductGateOverlay
         {
             shown = active;
             elapsed = 0f;
+            reachedEnd = false;
+            readProgress = 0f;
             scrollTopPending = true;
         }
 
@@ -206,6 +212,25 @@ internal sealed class ConductGateOverlay
             }
 
             ImGui.Dummy(new Vector2(width, 4f * scale));
+            TrackReading();
+        }
+    }
+
+    private void TrackReading()
+    {
+        var maxScroll = ImGui.GetScrollMaxY();
+        if (maxScroll <= 0.001f)
+        {
+            readProgress = 1f;
+            reachedEnd = true;
+            return;
+        }
+
+        var fraction = Math.Clamp(ImGui.GetScrollY() / maxScroll, 0f, 1f);
+        readProgress = MathF.Max(readProgress, fraction);
+        if (fraction >= EndOfRulesFraction)
+        {
+            reachedEnd = true;
         }
     }
 
@@ -386,17 +411,20 @@ internal sealed class ConductGateOverlay
         var barMax = new Vector2(innerLeft + innerWidth, barY + BarHeight * scale);
         Squircle.Fill(drawList, barMin, barMax, BarHeight * scale * 0.5f,
             ImGui.GetColorU32(Palette.WithAlpha(theme.TextStrong, 0.10f * opacity)));
-        var progress = gate.CountdownSeconds <= 0.001f ? 1f : Math.Clamp(elapsed / gate.CountdownSeconds, 0f, 1f);
+        var progress = reachedEnd ? 1f : readProgress;
         if (progress > 0.001f)
         {
             Squircle.Fill(drawList, barMin, new Vector2(innerLeft + innerWidth * progress, barMax.Y),
                 BarHeight * scale * 0.5f, ImGui.GetColorU32(Palette.WithAlpha(accent, opacity)));
         }
 
-        var remaining = MathF.Max(0f, gate.CountdownSeconds - elapsed);
-        var ready = remaining <= 0.001f;
-        var seconds = (int)MathF.Ceiling(remaining);
-        var label = ready ? Loc.T(L.Conduct.AgreeAction) : Loc.T(L.Conduct.WaitAction, seconds);
+        var floorRemaining = MathF.Max(0f, MinimumReadSeconds - elapsed);
+        var ready = reachedEnd && floorRemaining <= 0.001f;
+        var label = ready
+            ? Loc.T(L.Conduct.AgreeAction)
+            : reachedEnd
+                ? Loc.T(L.Conduct.WaitAction, (int)MathF.Ceiling(floorRemaining))
+                : Loc.T(L.Conduct.ReadToEndAction);
         var buttonY = barMax.Y + BarGap * scale;
         var buttonRect = new Rect(new Vector2(innerLeft, buttonY),
             new Vector2(innerLeft + innerWidth, buttonY + ButtonHeight * scale));

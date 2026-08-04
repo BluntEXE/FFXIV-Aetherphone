@@ -147,6 +147,7 @@
   "conduct.acknowledge": "これらのルールを読み、理解しました。ルールに違反した場合、アカウントが停止または凍結される可能性があることに同意します。",
   "conduct.agreeAction": "理解して同意する",
   "conduct.waitAction": "ルールをお読みください… {0}",
+  "conduct.readToEndAction": "最後までスクロールすると続行できます",
   "conduct.chirper.title": "Chirper コミュニティルール",
   "conduct.chirper.intro": "投稿を始める前に、コミュニティのルールをお読みください。",
   "conduct.aethergram.title": "Aethergram コミュニティルール",

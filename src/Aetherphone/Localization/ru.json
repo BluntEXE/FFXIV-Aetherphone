@@ -147,6 +147,7 @@
   "conduct.acknowledge": "Я прочитал эти правила и понимаю их. Я согласен, что их нарушение может привести к блокировке или бану учётной записи.",
   "conduct.agreeAction": "Я понимаю и согласен",
   "conduct.waitAction": "Пожалуйста, прочитайте правила… {0}",
+  "conduct.readToEndAction": "Пролистайте до конца, чтобы продолжить",
   "conduct.chirper.title": "Правила сообщества Chirper",
   "conduct.chirper.intro": "Прежде чем начать публиковать, ознакомьтесь с правилами сообщества.",
   "conduct.aethergram.title": "Правила сообщества Aethergram",

@@ -3934,6 +3934,7 @@ internal static class L
         public static readonly LocString Acknowledge = new("conduct.acknowledge", "I have read and understood these rules. I accept that breaking them may get my account suspended or banned.");
         public static readonly LocString AgreeAction = new("conduct.agreeAction", "I understand and agree");
         public static readonly LocString WaitAction = new("conduct.waitAction", "Please read the rules… {0}");
+        public static readonly LocString ReadToEndAction = new("conduct.readToEndAction", "Scroll to the end to continue");
 
         public static readonly LocString ChirperTitle = new("conduct.chirper.title", "Chirper Community Rules");
         public static readonly LocString ChirperIntro = new("conduct.chirper.intro", "Before you start posting, please read the rules of the community.");

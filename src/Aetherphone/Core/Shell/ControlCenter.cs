@@ -612,12 +612,25 @@ internal sealed class ControlCenter
                 }
 
                 drag.Begin(topBand);
+                if (drag.Active)
+                {
+                    var fraction = Math.Clamp(drag.Delta.Y / openDistance, 0f, 1f);
+                    offset.SnapTo(fraction);
+                    target = fraction;
+                }
             }
 
-            if (drag.Released(out var totalDelta, out _) && MathF.Abs(totalDelta.X) < TapSlop * scale &&
-                MathF.Abs(totalDelta.Y) < TapSlop * scale)
+            if (drag.Released(out var totalDelta, out var velocity))
             {
-                Open();
+                var tapped = MathF.Abs(totalDelta.X) < TapSlop * scale && MathF.Abs(totalDelta.Y) < TapSlop * scale;
+                if (tapped || totalDelta.Y / openDistance > CommitFraction || velocity > fling)
+                {
+                    Open();
+                }
+                else
+                {
+                    target = 0f;
+                }
             }
         }
         else if (allowDismiss)

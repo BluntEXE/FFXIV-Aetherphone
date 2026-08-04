@@ -147,6 +147,7 @@
   "conduct.acknowledge": "我已阅读并理解这些规则。我接受违反规则可能导致我的账号被暂停或封禁。",
   "conduct.agreeAction": "我已了解并同意",
   "conduct.waitAction": "请阅读规则… {0}",
+  "conduct.readToEndAction": "滚动到底部以继续",
   "conduct.chirper.title": "Chirper 社区规则",
   "conduct.chirper.intro": "在开始发布之前，请阅读社区规则。",
   "conduct.aethergram.title": "Aethergram 社区规则",

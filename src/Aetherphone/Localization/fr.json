@@ -147,6 +147,7 @@
   "conduct.acknowledge": "J'ai lu et compris ces règles. J'accepte que leur non-respect puisse entraîner la suspension ou le bannissement de mon compte.",
   "conduct.agreeAction": "J'ai compris et j'accepte",
   "conduct.waitAction": "Lisez les règles… {0}",
+  "conduct.readToEndAction": "Faites défiler jusqu’à la fin pour continuer",
   "conduct.chirper.title": "Règles de la communauté Chirper",
   "conduct.chirper.intro": "Avant de publier, veuillez lire les règles de la communauté.",
   "conduct.aethergram.title": "Règles de la communauté Aethergram",

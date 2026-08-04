@@ -147,6 +147,7 @@
   "conduct.acknowledge": "Bu kuralları okudum ve anladım. Kuralları çiğnemem durumunda hesabımın askıya alınabileceğini veya yasaklanabileceğini kabul ediyorum.",
   "conduct.agreeAction": "Anladım ve kabul ediyorum",
   "conduct.waitAction": "Lütfen kuralları okuyun… {0}",
+  "conduct.readToEndAction": "Devam etmek için sona kaydır",
   "conduct.chirper.title": "Chirper Topluluk Kuralları",
   "conduct.chirper.intro": "Paylaşım yapmaya başlamadan önce lütfen topluluk kurallarını okuyun.",
   "conduct.aethergram.title": "Aethergram Topluluk Kuralları",
