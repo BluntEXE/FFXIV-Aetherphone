@@ -9,6 +9,7 @@ namespace Aetherphone.Windows.Components;
 internal sealed class PhotoViewerOverlay
 {
     private const float RevealSmoothTime = 0.15f;
+    private const float BottomInset = 16f;
     private readonly PhotoZoomView zoomView = new();
     private Aetherphone.Core.Animation.Spring reveal;
     private Func<IDalamudTextureWrap?>? source;
@@ -47,14 +48,17 @@ internal sealed class PhotoViewerOverlay
         var contentTop = area.Min.Y + theme.TopZoneHeight * scale;
         var contentLeft = area.Min.X + theme.SidePadding * scale;
         var headerBottom = contentTop + AppHeader.Height * scale;
+        var controlsBottom = area.Max.Y - BottomInset * scale;
         var stageTarget = new Rect(new Vector2(area.Min.X, headerBottom),
-            new Vector2(area.Max.X, area.Max.Y - 16f * scale));
+            new Vector2(area.Max.X, controlsBottom - PhotoZoomView.ControlBandUnits * scale));
         var stageHalf = stageTarget.Size * 0.5f * grow;
         var stage = new Rect(stageTarget.Center - stageHalf, stageTarget.Center + stageHalf);
+        var controls = new Rect(new Vector2(stageTarget.Min.X, stageTarget.Max.Y),
+            new Vector2(stageTarget.Max.X, controlsBottom));
         var texture = source?.Invoke();
         if (texture is not null)
         {
-            if (zoomView.Draw(stage, texture, theme, Metrics.Radius.Sm * scale, open && eased > 0.9f) &&
+            if (zoomView.Draw(stage, texture, theme, Metrics.Radius.Sm * scale, open && eased > 0.9f, controls) &&
                 source is not null)
             {
                 Plugin.PhotoWindow.Open(source);

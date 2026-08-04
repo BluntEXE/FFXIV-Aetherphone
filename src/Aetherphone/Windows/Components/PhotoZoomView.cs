@@ -16,6 +16,11 @@ internal sealed class PhotoZoomView
     private const float WheelStep = 0.16f;
     private const float SmoothTime = 0.12f;
     private const float ButtonRadiusUnits = 17f;
+    private const float ButtonGapUnits = 10f;
+    private const float ButtonMarginUnits = 12f;
+    private const float PopOutGapUnits = 18f;
+
+    public const float ControlBandUnits = 52f;
 
     private Spring zoom = new(1f);
     private Spring panX;
@@ -145,11 +150,12 @@ internal sealed class PhotoZoomView
     private bool DrawButtons(Rect stage, Rect controls, Vector2 size, PhoneTheme theme, float scale)
     {
         var radius = ButtonRadiusUnits * scale;
-        var gap = 10f * scale;
-        var centerX = controls.Max.X - radius - 12f * scale;
-        var outCenter = new Vector2(centerX, controls.Max.Y - radius - 12f * scale);
-        var inCenter = new Vector2(centerX, outCenter.Y - radius * 2f - gap);
-        var popOutCenter = new Vector2(centerX, inCenter.Y - radius * 2f - gap);
+        var gap = ButtonGapUnits * scale;
+        var margin = ButtonMarginUnits * scale;
+        var centerY = controls.Max.Y - radius - margin;
+        var inCenter = new Vector2(controls.Max.X - radius - margin, centerY);
+        var outCenter = new Vector2(inCenter.X - radius * 2f - gap, centerY);
+        var popOutCenter = new Vector2(outCenter.X - radius * 2f - PopOutGapUnits * scale, centerY);
         if (ZoomButton(inCenter, radius, true, targetZoom < MaxZoom - 0.01f, theme, scale))
         {
             ZoomAround(stage, stage.Center, targetZoom * ButtonStep, size);

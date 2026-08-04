@@ -684,8 +684,10 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         drawList.AddRectFilled(area.Min, area.Max, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.94f)));
         var headerHeight = AppHeader.Height * scale;
         var footerHeight = 60f * scale;
+        var controlsBottom = area.Max.Y - footerHeight;
         var fitMin = new Vector2(area.Min.X + 8f * scale, area.Min.Y + headerHeight);
-        var fitMax = new Vector2(area.Max.X - 8f * scale, area.Max.Y - footerHeight);
+        var fitMax = new Vector2(area.Max.X - 8f * scale,
+            controlsBottom - PhotoZoomView.ControlBandUnits * scale);
         var texture = ResolveThreadImage(messageId);
         if (texture is null)
         {
@@ -694,7 +696,8 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         }
         else
         {
-            if (imageZoom.Draw(new Rect(fitMin, fitMax), texture, Theme, 10f * scale))
+            var controls = new Rect(new Vector2(fitMin.X, fitMax.Y), new Vector2(fitMax.X, controlsBottom));
+            if (imageZoom.Draw(new Rect(fitMin, fitMax), texture, Theme, 10f * scale, true, controls))
             {
                 Plugin.PhotoWindow.Open(() => ResolveThreadImage(messageId));
             }
