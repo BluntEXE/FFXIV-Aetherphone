@@ -62,10 +62,10 @@ internal static class MarketRowViews
         var topY = row.Min.Y + 9f * scale;
         var textMaxWidth = MathF.Max(1f, dotCenter.X - 8f * scale - textX);
         var nameSize = Typography.Measure(alert.ItemName, TextStyles.Body);
-        var nameHovered = UiInteract.Hover(new Vector2(textX, topY),
-            new Vector2(textX + textMaxWidth, topY + nameSize.Y));
-        Marquee.DrawLeft(rowId + ".name", alert.ItemName, textX, topY, textMaxWidth,
-            TextStyles.Body, theme.TextStrong, nameHovered);
+        var nameId = rowId + ".name";
+        var nameClipped = nameSize.X > textMaxWidth;
+        Marquee.DrawLeft(nameId, alert.ItemName, textX, topY, textMaxWidth,
+            TextStyles.Body, theme.TextStrong, false);
         var arrow = alert.Below ? "≤" : "≥";
         var sub =
             $"{arrow} {MarketFormat.Gil(alert.Threshold)} · {alert.ScopeName}{(alert.HqOnly ? $" · {Loc.T(L.Common.Hq)}" : string.Empty)}";
@@ -87,6 +87,11 @@ internal static class MarketRowViews
 
         var rowHitMax = new Vector2(dotCenter.X - 8f * scale, row.Max.Y);
         var rowHovered = UiInteract.Hover(row.Min, rowHitMax);
+        if (nameClipped)
+        {
+            HoverTooltip.Show(nameId, new Rect(row.Min, rowHitMax), alert.ItemName, HoverLabelSide.Above);
+        }
+
         if (rowHovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -134,9 +139,14 @@ internal static class MarketRowViews
         var nameLeft = iconMax.X + 12f * scale;
         var nameMaxWidth = MathF.Max(1f, chevronTip.X - rightReserve - nameLeft);
         var nameSize = Typography.Measure(item.Name);
-        Marquee.DrawLeft("marketrow.item.name." + item.Name, item.Name, nameLeft, row.Center.Y - nameSize.Y * 0.5f,
-            nameMaxWidth, TextStyles.Body, theme.TextStrong, hovered);
+        var rowId = ItemRowId(item.Id);
+        Marquee.DrawLeft(rowId, item.Name, nameLeft, row.Center.Y - nameSize.Y * 0.5f,
+            nameMaxWidth, TextStyles.Body, theme.TextStrong, false);
         DrawChevronRight(chevronTip, 6f * scale, 2.2f * scale, theme.TextMuted);
+        if (nameSize.X > nameMaxWidth)
+        {
+            HoverTooltip.Show(rowId, row, item.Name, HoverLabelSide.Above);
+        }
 
         if (hovered)
         {
@@ -215,6 +225,20 @@ internal static class MarketRowViews
 
         SubCache[key] = result;
         return result;
+    }
+
+    private static readonly Dictionary<uint, string> ItemRowIds = new();
+
+    private static string ItemRowId(uint itemId)
+    {
+        if (ItemRowIds.TryGetValue(itemId, out var cached))
+        {
+            return cached;
+        }
+
+        var rowId = "marketrow.item." + itemId.ToString();
+        ItemRowIds[itemId] = rowId;
+        return rowId;
     }
 
     private static float HqBadgeWidth(float scale) =>
