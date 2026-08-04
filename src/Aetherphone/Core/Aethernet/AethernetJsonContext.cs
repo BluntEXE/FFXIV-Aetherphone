@@ -143,6 +143,7 @@ namespace Aetherphone.Core.Aethernet;
 [JsonSerializable(typeof(UpdateChatPrivacyRequest))]
 [JsonSerializable(typeof(UpdateAccountPrivacyRequest))]
 [JsonSerializable(typeof(UpdateBadgeLoadoutRequest))]
+[JsonSerializable(typeof(BadgeTranslationDto))]
 [JsonSerializable(typeof(BadgeDescriptorDto))]
 [JsonSerializable(typeof(BadgeCatalogDto))]
 [JsonSerializable(typeof(AwardedBadgesDto))]

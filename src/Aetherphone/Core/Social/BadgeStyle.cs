@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Numerics;
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Interface;
 
@@ -8,7 +9,8 @@ namespace Aetherphone.Core.Social;
 
 internal sealed record BadgeStyle(
     string Id,
-    string Name,
+    string BaseName,
+    BadgeTranslationDto[]? Translations,
     FontAwesomeIcon Glyph,
     string AssetUrl,
     Vector4[] Colors,
@@ -19,11 +21,35 @@ internal sealed record BadgeStyle(
 
     private static readonly Vector4[] WhiteOnly = { new(1f, 1f, 1f, 1f) };
 
+    public string Name
+    {
+        get
+        {
+            if (Translations is null)
+            {
+                return BaseName;
+            }
+
+            var code = Loc.Current.Code;
+            for (var index = 0; index < Translations.Length; index++)
+            {
+                var translation = Translations[index];
+                if (translation.Lang == code && !string.IsNullOrEmpty(translation.Name))
+                {
+                    return translation.Name;
+                }
+            }
+
+            return BaseName;
+        }
+    }
+
     public static BadgeStyle From(BadgeDescriptorDto descriptor)
     {
         return new BadgeStyle(
             descriptor.Id,
             descriptor.Name,
+            descriptor.Translations,
             (FontAwesomeIcon)ParseHex(descriptor.Icon, FallbackGlyph),
             descriptor.AssetUrl,
             ParseColors(descriptor.Colors),

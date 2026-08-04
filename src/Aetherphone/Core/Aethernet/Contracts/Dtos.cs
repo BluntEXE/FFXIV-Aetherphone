@@ -76,6 +76,8 @@ internal sealed record UpdateProfileRequest(string? DisplayName, string? Handle,
 
 internal sealed record UpdateBadgeLoadoutRequest(int Equipped);
 
+internal sealed record BadgeTranslationDto(string Lang, string Name);
+
 internal sealed record BadgeDescriptorDto(
     string Id,
     string Name,
@@ -85,6 +87,7 @@ internal sealed record BadgeDescriptorDto(
     string[]? Colors = null,
     string Effect = "none",
     string[]? Platforms = null,
+    BadgeTranslationDto[]? Translations = null,
     bool? Hidden = null);
 
 internal sealed record BadgeCatalogDto(BadgeDescriptorDto[] Badges);
