@@ -148,7 +148,7 @@ internal sealed class HomeLayoutService
 
     public void MoveTile(HomeTile tile, int targetPage, GridCell cell)
     {
-        if (targetPage < 0 || targetPage >= pages.Count)
+        if (targetPage < 0 || targetPage > pages.Count)
         {
             return;
         }
@@ -156,6 +156,11 @@ internal sealed class HomeLayoutService
         if (!Detach(tile))
         {
             return;
+        }
+
+        if (targetPage == pages.Count)
+        {
+            pages.Add(new List<HomeTile>());
         }
 
         tile.Cell = cell;
@@ -166,14 +171,18 @@ internal sealed class HomeLayoutService
     public bool TryResolveDrop(int page, HomeTile tile, GridCell desired, out GridCell cell)
     {
         cell = HomeGridSolver.Unassigned;
-        if (page < 0 || page >= pages.Count)
+        if (page < 0 || page > pages.Count)
         {
             return false;
         }
 
         Span<bool> occupied = stackalloc bool[HomeGridSolver.MaxCells];
         occupied.Clear();
-        Occupy(occupied, pages[page], tile);
+        if (page < pages.Count)
+        {
+            Occupy(occupied, pages[page], tile);
+        }
+
         return HomeGridSolver.TryFindFree(occupied, Columns, rows, tile.ColumnSpan, tile.RowSpan, desired, out cell);
     }
 

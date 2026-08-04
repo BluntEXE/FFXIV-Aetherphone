@@ -36,7 +36,7 @@ internal sealed class HomeGridRenderer
         drawList.PushClipRect(metrics.Content.Min, new Vector2(metrics.Content.Max.X, metrics.DockBar.Min.Y), true);
         var scroll = pager.Value;
         var first = Math.Max(0, (int)MathF.Floor(scroll) - 1);
-        var last = Math.Min(layout.PageCount - 1, (int)MathF.Ceiling(scroll) + 1);
+        var last = Math.Min(interaction.DisplayPageCount() - 1, (int)MathF.Ceiling(scroll) + 1);
         for (var page = first; page <= last; page++)
         {
             DrawPage(metrics, theme, page, delta, labelAlpha, showLabels, motion);
@@ -48,10 +48,15 @@ internal sealed class HomeGridRenderer
     private void DrawPage(in HomeMetrics metrics, PhoneTheme theme, int page, float delta, float labelAlpha,
         bool showLabels, in HomeMotion motion)
     {
+        DrawDropTarget(metrics, theme, page, labelAlpha);
+        if (page >= layout.PageCount)
+        {
+            return;
+        }
+
         var tiles = layout.Page(page);
         var cells = layout.Placements(page);
         var pageOffset = new Vector2(metrics.PageOffsetX(page, pager.Value), 0f);
-        DrawDropTarget(metrics, theme, page, labelAlpha);
         for (var index = 0; index < tiles.Count && index < cells.Count; index++)
         {
             var tile = tiles[index];

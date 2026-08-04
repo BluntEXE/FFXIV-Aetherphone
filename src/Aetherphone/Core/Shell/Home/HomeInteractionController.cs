@@ -101,7 +101,7 @@ internal sealed class HomeInteractionController
 
     public void Advance(float delta) => editClock += delta;
 
-    public int DisplayPageCount() => layout.PageCount;
+    public int DisplayPageCount() => dragTile is null ? layout.PageCount : layout.PageCount + 1;
 
     public void Suspend()
     {
@@ -412,7 +412,7 @@ internal sealed class HomeInteractionController
                 edgeDwell = 0f;
             }
         }
-        else if (mouse.X > content.Max.X - edge && dragPage < layout.PageCount - 1)
+        else if (mouse.X > content.Max.X - edge && dragPage < DisplayPageCount() - 1)
         {
             edgeDwell += delta;
             if (edgeDwell > EdgeFlipSeconds)
@@ -430,7 +430,7 @@ internal sealed class HomeInteractionController
         folderTarget = null;
         if (dragPage >= layout.PageCount)
         {
-            dropValid = false;
+            dropValid = layout.TryResolveDrop(dragPage, dragTile!, HoveredCell(metrics), out dropCell);
             return;
         }
 
