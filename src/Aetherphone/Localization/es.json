@@ -1315,6 +1315,8 @@
   "account.accountsSection": "Cuentas",
   "account.badgesSection": "Insignias",
   "account.badgesHint": "Las insignias las concede el equipo de Aetherphone. Al desactivar una, deja de verse para todos, junto con el color del nombre y sus efectos. Puedes volver a activarla cuando quieras.",
+  "account.communityBadgesSection": "Insignias de la comunidad",
+  "account.communityBadgesHint": "Estas insignias provienen de eventos y programas de la comunidad. Si desactivas una, nadie la verá hasta que vuelvas a activarla.",
   "account.addAccount": "Añadir cuenta",
   "account.addAccountTakenTitle": "Ya has iniciado sesión aquí",
   "account.addAccountTakenBody": "{0} ya tiene una cuenta en este teléfono. Para añadir otra, entra con ese personaje en el juego e inicia sesión desde ahí. Después se queda en esta lista para todos los personajes.",

@@ -82,6 +82,21 @@ internal sealed class AccountClient
         return net.PostAsync("/me/badges", new UpdateBadgeLoadoutRequest(equipped), AethernetJsonContext.Default.UpdateBadgeLoadoutRequest, AethernetJsonContext.Default.UserDto, token);
     }
 
+    public Task<BadgeCatalogDto?> BadgeCatalogAsync(CancellationToken token)
+    {
+        return net.GetAsync("/badges/catalog", AethernetJsonContext.Default.BadgeCatalogDto, token);
+    }
+
+    public Task<AwardedBadgesDto?> AwardedBadgesAsync(CancellationToken token)
+    {
+        return net.GetAsync("/me/badges/awarded", AethernetJsonContext.Default.AwardedBadgesDto, token);
+    }
+
+    public Task<BadgeDescriptorDto?> SetBadgeVisibilityAsync(string badgeId, bool hidden, CancellationToken token)
+    {
+        return net.PostAsync("/me/badges/awarded/" + badgeId, new UpdateBadgeVisibilityRequest(hidden), AethernetJsonContext.Default.UpdateBadgeVisibilityRequest, AethernetJsonContext.Default.BadgeDescriptorDto, token);
+    }
+
     public Task<UserDto?> UpdateAccountPrivacyAsync(bool isPrivate, CancellationToken token)
     {
         return net.PostAsync("/me/account-privacy", new UpdateAccountPrivacyRequest(isPrivate), AethernetJsonContext.Default.UpdateAccountPrivacyRequest, AethernetJsonContext.Default.UserDto, token);

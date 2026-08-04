@@ -1315,6 +1315,8 @@
   "account.accountsSection": "账号",
   "account.badgesSection": "徽章",
   "account.badgesHint": "徽章由 Aetherphone 团队授予。关闭后，所有人都看不到该徽章，名字颜色和特效也会一并消失。随时可以重新开启。",
+  "account.communityBadgesSection": "社区徽章",
+  "account.communityBadgesHint": "这些徽章来自活动和社区项目。关闭后其他人将无法看到。你可以随时重新开启。",
   "account.addAccount": "添加账号",
   "account.addAccountTakenTitle": "此角色已登录",
   "account.addAccountTakenBody": "{0} 在这台手机上已经有账号了。要添加其他账号，请在游戏中登录该角色并从那里登录。之后它会一直留在这个列表里，任何角色都能使用。",

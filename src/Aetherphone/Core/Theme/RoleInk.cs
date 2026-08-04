@@ -77,6 +77,11 @@ internal static class RoleInk
 
     public static Vector4 For(RoleKind kind, PhoneTheme theme) => For(kind, IsLight(theme));
 
+    public static Vector4 For(Vector4 brand, bool light)
+    {
+        return light ? Darkened(brand, MaxLightLuminance) : Lifted(brand, MinDarkLuminance);
+    }
+
     public static Vector4 Highlight(RoleKind kind, bool light)
     {
         var fill = For(kind, light);

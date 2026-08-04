@@ -69,11 +69,29 @@ internal sealed record UserDto(
     int PendingFollowRequests = 0,
     string Region = "",
     int Badges = 0,
-    int GrantedBadges = 0) : IIdentified;
+    int GrantedBadges = 0,
+    string[]? ProfileBadges = null) : IIdentified;
 
 internal sealed record UpdateProfileRequest(string? DisplayName, string? Handle, string? Bio, string? AvatarUrl = null);
 
 internal sealed record UpdateBadgeLoadoutRequest(int Equipped);
+
+internal sealed record BadgeDescriptorDto(
+    string Id,
+    string Name,
+    string Icon,
+    string AssetIcon = "",
+    string AssetUrl = "",
+    string[]? Colors = null,
+    string Effect = "none",
+    string[]? Platforms = null,
+    bool? Hidden = null);
+
+internal sealed record BadgeCatalogDto(BadgeDescriptorDto[] Badges);
+
+internal sealed record AwardedBadgesDto(BadgeDescriptorDto[] Badges);
+
+internal sealed record UpdateBadgeVisibilityRequest(bool Hidden);
 
 internal sealed record PatreonLinkStartResponse(bool Ok, string? Reason, string? Url, int ExpiresInSeconds);
 

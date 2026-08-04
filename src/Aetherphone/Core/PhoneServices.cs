@@ -75,6 +75,8 @@ internal sealed class PhoneServices : IDisposable
     public required HttpService Http { get; init; }
     public required MediaCache Media { get; init; }
     public required RemoteImageCache RemoteImages { get; init; }
+
+    public required Social.BadgeCatalogStore BadgeCatalog { get; init; }
     public required PluginCatalog PluginCatalog { get; init; }
     public required ShortcutStore Shortcuts { get; init; }
     public required ShortcutRunner ShortcutRunner { get; init; }
@@ -183,6 +185,7 @@ internal sealed class PhoneServices : IDisposable
         var availability = new AppAvailability(http, aethernetSession, configuration);
         var aethernet = new AethernetApi(http, aethernetSession);
         var keyVault = new KeyVault(configuration, aethernetSession, aethernet.Keys);
+        var badgeCatalog = new Social.BadgeCatalogStore(aethernetSession, aethernet.Account);
         var peerKeys = new PeerKeyDirectory(configuration, aethernet.Keys);
         var conversationKeys = new ConversationKeyStore(aethernet.Keys, keyVault);
         var marketIndex = new MarketItemIndex(dataManager);
@@ -275,6 +278,7 @@ internal sealed class PhoneServices : IDisposable
             Http = http,
             Media = media,
             RemoteImages = remoteImages,
+            BadgeCatalog = badgeCatalog,
             PluginCatalog = pluginCatalog,
             Shortcuts = new ShortcutStore(configuration, pluginCatalog),
             ShortcutRunner = new ShortcutRunner(clientState, condition),
@@ -364,6 +368,7 @@ internal sealed class PhoneServices : IDisposable
         Media.Dispose();
         ShortcutRunner.Dispose();
         RemoteImages.Dispose();
+        BadgeCatalog.Dispose();
         Availability.Dispose();
         Http.Dispose();
         Wallpapers.Dispose();

@@ -104,6 +104,51 @@ internal static class ProgressRing
         }
     }
 
+    public static void CenterIconRamp(ImDrawListPtr dl, Vector2 c, FontAwesomeIcon icon, Vector4[] colors, bool light,
+        float targetHeight)
+    {
+        if (colors.Length <= 1)
+        {
+            var single = colors.Length == 1 ? RoleInk.For(colors[0], light) : new Vector4(1f, 1f, 1f, 1f);
+            CenterIcon(dl, c, icon, single, targetHeight);
+            return;
+        }
+
+        var glyph = icon.ToIconString();
+        using (ImRaii.PushFont(UiBuilder.IconFont))
+        {
+            var font = ImGui.GetFont();
+            var baseSize = ImGui.GetFontSize();
+            var measured = ImGui.CalcTextSize(glyph);
+            var scale = measured.Y > 0f ? targetHeight / measured.Y : 1f;
+            var drawSize = baseSize * scale;
+            var lineSize = measured * scale;
+            var pen = GlyphPen(font, glyph[0], c, drawSize, lineSize);
+            var left = c.X - lineSize.X * 0.5f;
+            var top = c.Y - targetHeight;
+            var bottom = c.Y + targetHeight;
+
+            const int rampSlices = 8;
+            for (var sliceIndex = 0; sliceIndex < rampSlices; sliceIndex++)
+            {
+                var clipLeft = left + lineSize.X * sliceIndex / rampSlices;
+                var clipRight = left + lineSize.X * (sliceIndex + 1) / rampSlices;
+                var sample = SampleRamp(colors, (sliceIndex + 0.5f) / rampSlices);
+                var tint = RoleInk.For(sample, light);
+                dl.PushClipRect(new Vector2(clipLeft, top), new Vector2(clipRight, bottom), true);
+                dl.AddText(font, drawSize, pen, ImGui.GetColorU32(tint), glyph);
+                dl.PopClipRect();
+            }
+        }
+    }
+
+    private static Vector4 SampleRamp(Vector4[] colors, float position)
+    {
+        var scaled = position * (colors.Length - 1);
+        var lower = Math.Clamp((int)scaled, 0, colors.Length - 2);
+        return Vector4.Lerp(colors[lower], colors[lower + 1], scaled - lower);
+    }
+
     private static unsafe Vector2 GlyphPen(ImFontPtr font, char codepoint, Vector2 center, float drawSize,
         Vector2 lineSize)
     {

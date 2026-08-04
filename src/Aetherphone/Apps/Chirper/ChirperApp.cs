@@ -92,7 +92,8 @@ internal sealed partial class ChirperApp : IPhoneApp
     public ChirperApp(AethernetSession session, AethernetApi net, LodestoneService lodestone,
         RemoteImageCache images, PhotoLibrary library, SocialLauncher launcher, GameData gameData,
         Configuration configuration, SocialNotificationService social, WallpaperImageCache wallpaperImages,
-        ConfirmService confirm, ReportService report, ConductGateService conduct, RealtimeSignalBus realtimeSignals)
+        ConfirmService confirm, ReportService report, ConductGateService conduct, RealtimeSignalBus realtimeSignals,
+        BadgeCatalogStore badgeCatalog)
     {
         store = new ChirperStore(session, net.Account, net.Social, net.Safety, net.Media, realtimeSignals);
         composeMentions = new MentionAutocomplete(store.NewMentionSuggestions());
@@ -144,7 +145,7 @@ internal sealed partial class ChirperApp : IPhoneApp
             DeleteFailed = L.Chirper.DeleteFailed,
             DeleteCommentConfirmMessage = L.Chirper.DeleteCommentConfirmMessage,
             DeleteCommentFailed = L.Chirper.DeleteCommentFailed,
-        }, images, lodestone, avatarLightbox, configuration, gameData, confirm, report,
+        }, images, badgeCatalog, lodestone, avatarLightbox, configuration, gameData, confirm, report,
             () => router.Push(ChirperRoute.EditProfile), OpenAvatarComposer, OpenProfile, OpenUserList, back,
             null);
     }

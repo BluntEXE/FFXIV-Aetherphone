@@ -139,7 +139,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         NotificationService notifications, HttpService http, KeyVault keyVault,
         ConversationKeyStore conversationKeys, PhoneVisibility visibility, RealtimeSignalBus realtimeSignals,
         WallpaperImageCache wallpaperImages, ConfirmService confirm, ReportService report, ConductGateService conduct,
-        AppInstaller installer)
+        AppInstaller installer, BadgeCatalogStore badgeCatalog)
     {
         store = new AethergramStore(session, net.Account, net.Social, net.Grams, net.Safety, net.Media, realtimeSignals);
         account = net.Account;
@@ -204,7 +204,7 @@ internal sealed partial class AethergramApp : IPhoneApp
             MessageLabel = L.Aethergram.MessageButton,
             SettingsLabel = L.Aethergram.Settings,
             SavedLabel = L.Aethergram.SavedTitle,
-        }, images, lodestone, avatarLightbox, configuration, gameData, confirm, report,
+        }, images, badgeCatalog, lodestone, avatarLightbox, configuration, gameData, confirm, report,
             () => router.Push(AethergramRoute.EditProfile), () => StartCompose(true), OpenProfile, OpenUserList, back,
             null, OpenThread, () => router.Push(AethergramRoute.Settings), OpenSaved);
         threadView = new ThreadView(this);

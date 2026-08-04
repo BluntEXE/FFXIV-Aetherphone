@@ -1315,6 +1315,8 @@
   "account.accountsSection": "Hesaplar",
   "account.badgesSection": "Rozetler",
   "account.badgesHint": "Rozetleri Aetherphone ekibi verir. Birini kapattığında isim rengi ve efektleriyle birlikte kimse göremez. İstediğin zaman geri açabilirsin.",
+  "account.communityBadgesSection": "Topluluk rozetleri",
+  "account.communityBadgesHint": "Bu rozetler etkinliklerden ve topluluk programlarından gelir. Birini kapattığında kimse göremez. İstediğin zaman geri açabilirsin.",
   "account.addAccount": "Hesap ekle",
   "account.addAccountTakenTitle": "Burada zaten giriş yaptın",
   "account.addAccountTakenBody": "{0} bu telefonda zaten bir hesaba sahip. Başka bir hesap eklemek için oyunda o karakterle giriş yap ve hesabı oradan aç. Sonrasında her karakter için bu listede kalır.",

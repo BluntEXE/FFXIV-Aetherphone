@@ -62,6 +62,7 @@ internal sealed class SocialProfilePages
     private readonly AppSkin ui;
     private readonly SocialProfileStyle style;
     private readonly RemoteImageCache images;
+    private readonly BadgeCatalogStore badgeCatalog;
     private readonly LodestoneService lodestone;
     private readonly AvatarLightbox avatarLightbox;
     private readonly Configuration configuration;
@@ -87,7 +88,8 @@ internal sealed class SocialProfilePages
     private volatile int editOutcome;
 
     public SocialProfilePages(SocialFeedStore store, AppSkin ui, SocialProfileStyle style, RemoteImageCache images,
-        LodestoneService lodestone, AvatarLightbox avatarLightbox, Configuration configuration, GameData gameData,
+        BadgeCatalogStore badgeCatalog, LodestoneService lodestone, AvatarLightbox avatarLightbox,
+        Configuration configuration, GameData gameData,
         ConfirmService confirm, ReportService report, Action openEditProfile, Action openAvatarComposer,
         Action<string> openProfile, Action<string, UserListKind> openUserList, Action back,
         Action? openConductRules, Action<string>? openMessage = null, Action? openSettings = null,
@@ -97,6 +99,7 @@ internal sealed class SocialProfilePages
         this.ui = ui;
         this.style = style;
         this.images = images;
+        this.badgeCatalog = badgeCatalog;
         this.lodestone = lodestone;
         this.avatarLightbox = avatarLightbox;
         this.configuration = configuration;
@@ -220,8 +223,12 @@ internal sealed class SocialProfilePages
         DrawAvatar(drawList, avatarCenter, avatarRadius, theme, portraitName, portraitWorld, user.AvatarUrl, 1.5f, 64);
         avatarLightbox.TryOpen(avatarCenter, avatarRadius, user.AvatarUrl, images);
         var textY = headTop + (headHeight - identityHeight) * 0.5f;
-        UserName.DrawAuto(drawList, "socialprofile.name." + user.Id, displayName, user.Badges, identityLeft, textY,
-            identityWidth, TextStyles.Title2, theme.TextStrong, theme, 2);
+        var communityReserve = BadgeStrip.Reserve(user.ProfileBadges, TextStyles.Title2);
+        var identityDrawn = UserName.DrawAuto(drawList, "socialprofile.name." + user.Id, displayName, user.Badges,
+            identityLeft, textY, MathF.Max(1f, identityWidth - communityReserve), TextStyles.Title2, theme.TextStrong,
+            theme, 2);
+        BadgeStrip.Draw(drawList, "socialprofile.name." + user.Id, user.ProfileBadges, badgeCatalog, images,
+            identityLeft + identityDrawn, textY, TextStyles.Title2, RoleInk.IsLight(theme));
         textY += nameHeight;
         if (metaHeight > 0f)
         {
