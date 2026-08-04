@@ -169,8 +169,8 @@ internal sealed partial class MusterApp
         var textLeft = avatarCenter.X + avatarRadius + 14f * scale;
         var textRight = card.Max.X - pad;
         UserName.DrawAuto(drawList, "muster.detail.hero.name." + muster.Id, MusterText.HostLabel(muster),
-            muster.HostBadges, textLeft, card.Min.Y + pad + 1f * scale, textRight - textLeft, TextStyles.Title2,
-            AppPalettes.Muster.TitleInk, theme);
+            muster.HostBadges, muster.HostBadgeIds, textLeft, card.Min.Y + pad + 1f * scale, textRight - textLeft,
+            TextStyles.Title2, AppPalettes.Muster.TitleInk, theme);
         Marquee.DrawLeftAuto(drawList, "muster.detail.hero.world." + muster.Id, muster.HostWorld, textLeft,
             card.Min.Y + pad + 28f * scale, textRight - textLeft, TextStyles.Subheadline,
             AppPalettes.Muster.BodyInk);

@@ -88,13 +88,16 @@ internal readonly struct TranscriptMessage
     public readonly int DurationSecs;
     public readonly TranscriptReaction[] Reactions;
     public readonly int SenderBadges;
+    public readonly string[]? SenderBadgeIds;
 
     public TranscriptMessage(string id, string senderId, string body, int kind, long createdAtUnix, int mediaWidth,
         int mediaHeight, long? readAtUnix, string senderName, Vector4 senderTint, byte flags = 0,
         string? replyToId = null, string replySenderName = "", string replyBody = "", int replyKind = 0,
-        int durationSecs = 0, TranscriptReaction[]? reactions = null, int senderBadges = 0)
+        int durationSecs = 0, TranscriptReaction[]? reactions = null, int senderBadges = 0,
+        string[]? senderBadgeIds = null)
     {
         SenderBadges = senderBadges;
+        SenderBadgeIds = senderBadgeIds;
         Id = id;
         SenderId = senderId;
         Body = body;
@@ -462,7 +465,7 @@ internal sealed class ChatTranscript
         var rect = new Vector2(textLeft, origin.Y);
         var hovering = UiInteract.Hover(rect, new Vector2(rect.X + maxWidth, rect.Y + 16f * scale));
         var name = FirstName(message.SenderName);
-        UserName.Draw("chattranscript.sender." + message.Id, name, message.SenderBadges, textLeft, origin.Y, maxWidth,
+        UserName.Draw("chattranscript.sender." + message.Id, name, message.SenderBadges, message.SenderBadgeIds, textLeft, origin.Y, maxWidth,
             new TextStyle(0.78f, FontWeight.SemiBold), message.SenderTint, hovering, theme);
         ImGui.SetCursorScreenPos(new Vector2(origin.X, origin.Y + 16f * scale));
     }

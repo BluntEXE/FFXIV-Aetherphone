@@ -263,7 +263,7 @@ internal sealed partial class MusterApp
 
         var nameLeft = avatarCenter.X + avatarRadius + 11f * scale;
         var nameSize = Typography.Measure(identity, TextStyles.BodyEmphasized);
-        UserName.DrawAuto(drawList, "muster.attendee." + attendee.UserId, identity, attendee.Badges, nameLeft,
+        UserName.DrawAuto(drawList, "muster.attendee." + attendee.UserId, identity, attendee.Badges, attendee.BadgeIds, nameLeft,
             centerY - nameSize.Y * 0.5f, cursorRight - 4f * scale - nameLeft, TextStyles.BodyEmphasized,
             AppPalettes.Muster.TitleInk, theme);
     }

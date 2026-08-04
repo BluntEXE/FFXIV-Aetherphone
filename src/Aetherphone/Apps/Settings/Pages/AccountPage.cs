@@ -267,10 +267,10 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         var nameY = changeCenter.Y + changeSize.Y * 0.5f + 18f * scale;
         var nameStyle = TextStyles.Title2;
         var badgeCount = RoleBadges.Count(user.Badges);
-        var reserve = UserName.Reserve(user.Badges, nameStyle, badgeCount);
+        var reserve = UserName.Reserve(user.Badges, user.ProfileBadges, nameStyle, badgeCount);
         var nameSize = Typography.Measure(user.DisplayName, nameStyle);
         var nameWidth = MathF.Min(nameSize.X, MathF.Max(1f, width - 24f * scale - reserve));
-        UserName.DrawAuto(drawList, "account.header.name", user.DisplayName, user.Badges,
+        UserName.DrawAuto(drawList, "account.header.name", user.DisplayName, user.Badges, user.ProfileBadges,
             centerX - (nameWidth + reserve) * 0.5f, nameY - nameSize.Y * 0.5f, nameWidth + reserve, nameStyle,
             theme.TextStrong, theme, badgeCount);
         Typography.DrawCentered(new Vector2(centerX, nameY + 24f * scale), $"{user.Name}@{user.World}",

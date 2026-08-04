@@ -82,7 +82,7 @@ internal sealed partial class VelvetShell
             var authorSize = Typography.Measure(authorName, TextStyles.Headline);
             var authorHovering = UiInteract.Hover(new Vector2(nameLeft, authorY),
                 new Vector2(nameLeft + nameMaxWidth, authorY + authorSize.Y));
-            UserName.Draw("velvet.detail.author." + post.Id, authorName, post.OwnerBadges, nameLeft,
+            UserName.Draw("velvet.detail.author." + post.Id, authorName, post.OwnerBadges, post.OwnerBadgeIds, nameLeft,
                 authorY, nameMaxWidth, TextStyles.Headline, VelvetTheme.TitleInk, authorHovering, false);
             var ownerSubY = avatarCenter.Y + 3f * scale;
             var ownerSubSize = Typography.Measure(ownerSub, TextStyles.Subheadline);
@@ -271,7 +271,7 @@ internal sealed partial class VelvetShell
         var nameMaxWidth = wrapWidth * 0.55f;
         var nameHovering = UiInteract.Hover(new Vector2(textLeft, origin.Y),
             new Vector2(textLeft + nameMaxWidth, origin.Y + 16f * scale));
-        var nameWidth = UserName.Draw("velvet.comment.author." + comment.Id, authorName, comment.AuthorBadges,
+        var nameWidth = UserName.Draw("velvet.comment.author." + comment.Id, authorName, comment.AuthorBadges, comment.AuthorBadgeIds,
             textLeft, origin.Y, nameMaxWidth, TextStyles.SubheadlineEmphasized, VelvetTheme.TitleInk, nameHovering,
             false);
         var time = TimeText.Short(comment.CreatedAtUnix);
@@ -403,6 +403,7 @@ internal sealed partial class VelvetShell
                     World = string.Empty,
                     AvatarUrl = user.AvatarUrl,
                     RoleBadges = user.Badges,
+                    RoleBadgeIds = user.ProfileBadges,
                     UserId = user.Id,
                 };
                 if (VRow.Draw(in model, ui, theme, images, lodestone) == VRowHit.Body)

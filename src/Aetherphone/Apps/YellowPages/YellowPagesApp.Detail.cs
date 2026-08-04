@@ -762,7 +762,7 @@ internal sealed partial class YellowPagesApp
         var textLeft = avatarCenter.X + avatarRadius + 13f * scale;
         var textWidth = origin.X + width - pad - textLeft;
         UserName.DrawAuto(drawList, "yellowpages.owner." + ad.Id, SocialIdentity.Name(ad.OwnerName, ad.OwnerHandle),
-            ad.OwnerBadges, textLeft, origin.Y + 13f * scale, textWidth, TextStyles.Headline,
+            ad.OwnerBadges, ad.OwnerBadgeIds, textLeft, origin.Y + 13f * scale, textWidth, TextStyles.Headline,
             AppPalettes.YellowPages.TitleInk, theme);
         var handle = ad.OwnerHandle.Length > 0 ? $"@{ad.OwnerHandle}" : string.Empty;
         var renewed = Loc.T(L.YellowPages.RenewedAgo,

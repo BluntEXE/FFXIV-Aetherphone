@@ -139,7 +139,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         NotificationService notifications, HttpService http, KeyVault keyVault,
         ConversationKeyStore conversationKeys, PhoneVisibility visibility, RealtimeSignalBus realtimeSignals,
         WallpaperImageCache wallpaperImages, ConfirmService confirm, ReportService report, ConductGateService conduct,
-        AppInstaller installer, BadgeCatalogStore badgeCatalog)
+        AppInstaller installer)
     {
         store = new AethergramStore(session, net.Account, net.Social, net.Grams, net.Safety, net.Media, realtimeSignals);
         account = net.Account;
@@ -204,7 +204,7 @@ internal sealed partial class AethergramApp : IPhoneApp
             MessageLabel = L.Aethergram.MessageButton,
             SettingsLabel = L.Aethergram.Settings,
             SavedLabel = L.Aethergram.SavedTitle,
-        }, images, badgeCatalog, lodestone, avatarLightbox, configuration, gameData, confirm, report,
+        }, images, lodestone, avatarLightbox, configuration, gameData, confirm, report,
             () => router.Push(AethergramRoute.EditProfile), () => StartCompose(true), OpenProfile, OpenUserList, back,
             null, OpenThread, () => router.Push(AethergramRoute.Settings), OpenSaved);
         threadView = new ThreadView(this);
@@ -853,7 +853,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         var cardNameHeight = Typography.Measure(displayName, cardNameStyle).Y;
         var cardNameHovering = UiInteract.Hover(new Vector2(nameLeft, origin.Y + pad),
             new Vector2(nameLeft + headerTextMaxWidth, origin.Y + pad + cardNameHeight));
-        UserName.Draw("aethergram.card." + post.Id, displayName, post.AuthorBadges, nameLeft, origin.Y + pad,
+        UserName.Draw("aethergram.card." + post.Id, displayName, post.AuthorBadges, post.AuthorBadgeIds, nameLeft, origin.Y + pad,
             headerTextMaxWidth, cardNameStyle, theme.TextStrong, cardNameHovering, theme);
         var subline = SocialIdentity.FeedMeta(post.AuthorHandle, TimeText.Short(post.CreatedAtUnix));
         var sublineTop = origin.Y + pad + PostCardMetrics.SublineTop * scale;

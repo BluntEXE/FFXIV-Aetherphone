@@ -519,7 +519,7 @@ internal sealed class StoryViewerOverlay
         var nameMaxWidth = MathF.Max(1f, origin.X + width - stampSize.X - 16f * scale - left);
         var rowHovering = UiInteract.Hover(origin, new Vector2(origin.X + width, origin.Y + height));
         var nameSize = Typography.Measure(name, TextStyles.Subheadline);
-        UserName.Draw("storyviewer.name." + viewer.Handle, name, viewer.Badges, left,
+        UserName.Draw("storyviewer.name." + viewer.Handle, name, viewer.Badges, viewer.BadgeIds, left,
             center.Y - nameSize.Y * 0.5f, nameMaxWidth, TextStyles.Subheadline, theme.TextStrong, rowHovering, theme);
         Typography.Draw(new Vector2(origin.X + width - stampSize.X - 6f * scale, center.Y - stampSize.Y * 0.5f), stamp,
             theme.TextMuted, TextStyles.Caption1);
@@ -715,7 +715,7 @@ internal sealed class StoryViewerOverlay
         var nameMaxWidth = MathF.Max(1f, row.Max.X - closeReserve - stampWidth - 8f * scale - left);
         var headerHovering = UiInteract.Hover(row.Min, row.Max);
         var nameSize = Typography.Measure(authorLabel, TextStyles.SubheadlineEmphasized);
-        var nameWidth = UserName.Draw("storyviewer.header.author." + authorLabel, authorLabel, story.AuthorBadges,
+        var nameWidth = UserName.Draw("storyviewer.header.author." + authorLabel, authorLabel, story.AuthorBadges, story.AuthorBadgeIds,
             left, row.Center.Y - nameSize.Y * 0.5f, nameMaxWidth, TextStyles.SubheadlineEmphasized,
             new Vector4(1f, 1f, 1f, 0.98f), headerHovering, false);
         Typography.Draw(new Vector2(left + nameWidth + 8f * scale, row.Center.Y - nameSize.Y * 0.5f + 1f * scale),

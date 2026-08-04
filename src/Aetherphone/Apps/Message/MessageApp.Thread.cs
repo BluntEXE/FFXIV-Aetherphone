@@ -344,7 +344,7 @@ internal sealed partial class MessageApp
                 mapped[index] = new TranscriptMessage(message.Id, message.SenderId, message.Body, message.Kind,
                     message.CreatedAtUnix, message.MediaWidth, message.MediaHeight, message.ReadAtUnix, senderName,
                     tint, MessageFlags(message), message.ReplyToId, replySender, replyBody, replyKind,
-                    message.DurationSecs, reactions, message.SenderBadges);
+                    message.DurationSecs, reactions, message.SenderBadges, message.SenderBadgeIds);
             }
 
             return mapped;

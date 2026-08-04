@@ -435,7 +435,7 @@ internal sealed partial class VelvetShell
         var nameY = card.Max.Y - pad - 58f * scale;
         var nameHovered = UiInteract.Hover(new Vector2(textLeft, nameY),
             new Vector2(textLeft + nameMaxWidth, nameY + nameSize.Y));
-        UserName.Draw(drawList, "velvet.discover.name." + profile.UserId, name, profile.Badges, textLeft, nameY,
+        UserName.Draw(drawList, "velvet.discover.name." + profile.UserId, name, profile.Badges, profile.BadgeIds, textLeft, nameY,
             nameMaxWidth, TextStyles.Title2, VelvetTheme.TitleInk, nameHovered, false);
 
         var metaY = card.Max.Y - pad - 34f * scale;

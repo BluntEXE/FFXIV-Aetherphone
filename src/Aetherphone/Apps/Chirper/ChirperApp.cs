@@ -92,8 +92,7 @@ internal sealed partial class ChirperApp : IPhoneApp
     public ChirperApp(AethernetSession session, AethernetApi net, LodestoneService lodestone,
         RemoteImageCache images, PhotoLibrary library, SocialLauncher launcher, GameData gameData,
         Configuration configuration, SocialNotificationService social, WallpaperImageCache wallpaperImages,
-        ConfirmService confirm, ReportService report, ConductGateService conduct, RealtimeSignalBus realtimeSignals,
-        BadgeCatalogStore badgeCatalog)
+        ConfirmService confirm, ReportService report, ConductGateService conduct, RealtimeSignalBus realtimeSignals)
     {
         store = new ChirperStore(session, net.Account, net.Social, net.Safety, net.Media, realtimeSignals);
         composeMentions = new MentionAutocomplete(store.NewMentionSuggestions());
@@ -145,7 +144,7 @@ internal sealed partial class ChirperApp : IPhoneApp
             DeleteFailed = L.Chirper.DeleteFailed,
             DeleteCommentConfirmMessage = L.Chirper.DeleteCommentConfirmMessage,
             DeleteCommentFailed = L.Chirper.DeleteCommentFailed,
-        }, images, badgeCatalog, lodestone, avatarLightbox, configuration, gameData, confirm, report,
+        }, images, lodestone, avatarLightbox, configuration, gameData, confirm, report,
             () => router.Push(ChirperRoute.EditProfile), OpenAvatarComposer, OpenProfile, OpenUserList, back,
             null);
     }
@@ -447,7 +446,7 @@ internal sealed partial class ChirperApp : IPhoneApp
 
         var nameHovering = UiInteract.Hover(new Vector2(contentLeft, contentTop + pad),
             new Vector2(contentLeft + nameMaxWidth, contentTop + pad + nameSize.Y));
-        var drawnNameWidth = UserName.Draw("chirper.post.author." + post.Id, rawDisplayName, post.AuthorBadges,
+        var drawnNameWidth = UserName.Draw("chirper.post.author." + post.Id, rawDisplayName, post.AuthorBadges, post.AuthorBadgeIds,
             contentLeft, contentTop + pad, nameMaxWidth, new TextStyle(1.05f, FontWeight.SemiBold), theme.TextStrong,
             nameHovering, theme);
         var meta = SocialIdentity.FeedMeta(post.AuthorHandle, TimeText.Short(post.CreatedAtUnix));
@@ -939,7 +938,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         var nameSize = Typography.Measure(name, 0.85f, FontWeight.SemiBold);
         var nameHovering = UiInteract.Hover(new Vector2(min.X + innerPad, min.Y + innerPad),
             new Vector2(min.X + innerPad + nameMaxWidth, min.Y + innerPad + nameSize.Y));
-        var drawnNameWidth = UserName.Draw("chirper.quote.author." + hostId, rawName, quoted.AuthorBadges,
+        var drawnNameWidth = UserName.Draw("chirper.quote.author." + hostId, rawName, quoted.AuthorBadges, quoted.AuthorBadgeIds,
             min.X + innerPad, min.Y + innerPad, nameMaxWidth, new TextStyle(0.85f, FontWeight.SemiBold),
             theme.TextStrong, nameHovering, theme);
         var meta = SocialIdentity.FeedMeta(quoted.AuthorHandle, TimeText.Short(quoted.CreatedAtUnix));
@@ -1134,8 +1133,8 @@ internal sealed partial class ChirperApp : IPhoneApp
         var nameHovering = UiInteract.Hover(new Vector2(textLeft, origin.Y),
             new Vector2(textLeft + nameMaxWidth, origin.Y + nameSize.Y));
         var drawnNameWidth = UserName.Draw("chirper.comment.author." + comment.Id, rawDisplayName,
-            comment.AuthorBadges, textLeft, origin.Y, nameMaxWidth, new TextStyle(0.95f, FontWeight.SemiBold),
-            theme.TextStrong, nameHovering, theme);
+            comment.AuthorBadges, comment.AuthorBadgeIds, textLeft, origin.Y, nameMaxWidth,
+            new TextStyle(0.95f, FontWeight.SemiBold), theme.TextStrong, nameHovering, theme);
         var meta = comment.AuthorHandle.Length > 0
             ? $"@{comment.AuthorHandle} · {TimeText.Short(comment.CreatedAtUnix)}"
             : TimeText.Short(comment.CreatedAtUnix);

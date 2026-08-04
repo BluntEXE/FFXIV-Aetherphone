@@ -42,6 +42,7 @@ internal struct VRowModel
     public bool PillEnabled;
     public int Badge;
     public int RoleBadges;
+    public string[]? RoleBadgeIds;
     public string? UserId;
     public string Time;
     public bool Chevron;
@@ -167,7 +168,7 @@ internal static class VRow
         if (subtitleText.Length == 0)
         {
             var titleSize = Typography.Measure(titleText, TextStyles.Headline);
-            UserName.Draw(drawList, titleKey, titleText, model.RoleBadges, textLeft,
+            UserName.Draw(drawList, titleKey, titleText, model.RoleBadges, model.RoleBadgeIds, textLeft,
                 centerY - titleSize.Y * 0.5f, innerWidth, TextStyles.Headline, VelvetTheme.TitleInk, hovered, false);
         }
         else
@@ -176,7 +177,7 @@ internal static class VRow
             var titleSize = Typography.Measure(titleText, TextStyles.Headline);
             var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleY),
                 new Vector2(textLeft + innerWidth, titleY + titleSize.Y));
-            UserName.Draw(drawList, titleKey, titleText, model.RoleBadges, textLeft, titleY,
+            UserName.Draw(drawList, titleKey, titleText, model.RoleBadges, model.RoleBadgeIds, textLeft, titleY,
                 innerWidth, TextStyles.Headline, VelvetTheme.TitleInk, titleHovering, false);
             var subtitleY = centerY + 3f * scale;
             var subtitleSize = Typography.Measure(subtitleText, TextStyles.Subheadline);

@@ -57,7 +57,7 @@ internal sealed partial class AethergramApp
             var headerNameY = avatarCenter.Y - (headerNameSize.Y + headerTextGap + headerMetaSize.Y) * 0.5f;
             var headerNameHovering = UiInteract.Hover(new Vector2(nameLeft, headerNameY),
                 new Vector2(nameLeft + headerTextMaxWidth, headerNameY + headerNameSize.Y));
-            UserName.Draw("aethergram.detail.header." + post.Id, displayName, post.AuthorBadges, nameLeft,
+            UserName.Draw("aethergram.detail.header." + post.Id, displayName, post.AuthorBadges, post.AuthorBadgeIds, nameLeft,
                 headerNameY, headerTextMaxWidth, headerNameStyle, theme.TextStrong, headerNameHovering, theme);
             var headerMetaTop = headerNameY + headerNameSize.Y + headerTextGap;
             var headerMetaHovering = UiInteract.Hover(new Vector2(nameLeft, headerMetaTop),
@@ -174,7 +174,7 @@ internal sealed partial class AethergramApp
                 var captionNameHovering = UiInteract.Hover(captionPos,
                     new Vector2(captionPos.X + captionNameMaxWidth, captionPos.Y + captionNameSize.Y));
                 var nameWidth = UserName.Draw("aethergram.detail.captionname." + post.Id, displayName,
-                    post.AuthorBadges, captionPos.X, captionPos.Y, captionNameMaxWidth,
+                    post.AuthorBadges, post.AuthorBadgeIds, captionPos.X, captionPos.Y, captionNameMaxWidth,
                     new TextStyle(0.9f, FontWeight.SemiBold), theme.TextStrong, captionNameHovering, theme);
                 var captionLeft = captionPos.X + nameWidth + 6f * scale;
                 ImGui.SetCursorScreenPos(new Vector2(captionLeft, captionPos.Y));
@@ -324,7 +324,7 @@ internal sealed partial class AethergramApp
         var nameTop = bubbleTop + padTop;
         var commentNameHovering = UiInteract.Hover(new Vector2(textLeft, nameTop),
             new Vector2(textRight, nameTop + nameHeight));
-        var nameWidth = UserName.Draw("aethergram.comment." + comment.Id, displayName, comment.AuthorBadges, textLeft,
+        var nameWidth = UserName.Draw("aethergram.comment." + comment.Id, displayName, comment.AuthorBadges, comment.AuthorBadgeIds, textLeft,
             nameTop, textRight - textLeft, commentNameStyle, theme.TextStrong, commentNameHovering, theme);
         var meta = TimeText.Short(comment.CreatedAtUnix);
         var metaSize = Typography.Measure(meta, 0.8f);

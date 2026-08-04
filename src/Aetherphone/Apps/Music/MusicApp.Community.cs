@@ -427,7 +427,7 @@ internal sealed partial class MusicApp
         var available = width - 32f * scale - radius * 2f - gap;
         var fitted = Typography.FitText(label, available, TextStyles.Caption1);
         var textWidth = Typography.Measure(fitted, TextStyles.Caption1).X
-            + UserName.Reserve(station.OwnerBadges, TextStyles.Caption1);
+            + UserName.Reserve(station.OwnerBadges, station.OwnerBadgeIds, TextStyles.Caption1);
         var rowLeft = left + (width - (radius * 2f + gap + textWidth)) * 0.5f;
         var center = new Vector2(rowLeft + radius, top + radius);
 
@@ -446,7 +446,7 @@ internal sealed partial class MusicApp
                 initials, ui.MutedInk, TextStyles.Caption2);
         }
 
-        UserName.DrawAuto(drawList, "music.station.host", fitted, station.OwnerBadges,
+        UserName.DrawAuto(drawList, "music.station.host", fitted, station.OwnerBadges, station.OwnerBadgeIds,
             rowLeft + radius * 2f + gap, top + radius - Typography.Measure(fitted, TextStyles.Caption1).Y * 0.5f,
             available, TextStyles.Caption1, ui.MutedInk, theme);
     }

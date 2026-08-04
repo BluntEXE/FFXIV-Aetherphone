@@ -92,6 +92,14 @@ internal static class RoleInk
 
     public static Vector4 Highlight(RoleKind kind, PhoneTheme theme) => Highlight(kind, IsLight(theme));
 
+    public static Vector4 Highlight(Vector4 brand, bool light)
+    {
+        var fill = For(brand, light);
+        var lift = light ? LightHighlightLift : DarkHighlightLift;
+        return new Vector4(MathF.Min(1f, fill.X * lift), MathF.Min(1f, fill.Y * lift), MathF.Min(1f, fill.Z * lift),
+            fill.W);
+    }
+
     public static WaveRamp Ramp(RoleKind kind, bool light)
     {
         return kind switch
