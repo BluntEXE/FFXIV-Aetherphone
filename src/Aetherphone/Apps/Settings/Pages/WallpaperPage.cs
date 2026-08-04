@@ -195,7 +195,8 @@ internal sealed class WallpaperPage : ISettingsPage
         WallpaperRenderer.DrawSingle(dl, rect, rounding, entry, TileAspect(), 1f, theme.SurfaceMuted);
         dl.AddRect(min, max, ImGui.GetColorU32(selected ? theme.Accent : theme.Separator), rounding,
             ImDrawFlags.RoundCornersAll, selected ? 2.5f * scale : 1f);
-        if (entry.Kind == WallpaperKind.Custom && interactive &&
+        var overTile = UiInteract.Hover(min, max);
+        if (entry.Kind == WallpaperKind.Custom && interactive && overTile &&
             DrawDeleteBadge(new Vector2(max.X - 14f * scale, min.Y + 14f * scale), theme))
         {
             RemoveCustom(entry.Id);

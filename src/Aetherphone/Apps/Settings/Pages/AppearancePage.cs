@@ -105,7 +105,7 @@ internal sealed class AppearancePage : ISettingsPage
             SettingsSection.Header(Loc.T(L.Settings.ClockFormat), theme);
             var clockCard = GroupCard.Begin(theme, 1);
             var use24Hour = SettingsRow.Bool(clockCard.NextRow(), Loc.T(L.Settings.Use24HourClock),
-                TimeText.Use24Hour, theme);
+                TimeText.Use24Hour, theme, null, TimeText.Clock(DateTime.Now));
             clockCard.End();
             if (use24Hour != TimeText.Use24Hour)
             {

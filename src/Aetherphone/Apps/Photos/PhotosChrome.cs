@@ -51,9 +51,10 @@ internal static class PhotosChrome
     {
         var drawList = ImGui.GetWindowDrawList();
         var radius = 18f * scale;
-        var hovered =
-            UiInteract.Hover(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
+        var bounds = new Rect(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
+        var hovered = UiInteract.Hover(bounds.Min, bounds.Max);
         drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, hovered ? 0.5f : 0.34f)), 28);
+        HoverTooltip.Show(bounds, Loc.T(pointsLeft ? L.Common.Previous : L.Common.Next));
         return Chevron(center, color, pointsLeft, scale) || Tapped(hovered);
     }
 

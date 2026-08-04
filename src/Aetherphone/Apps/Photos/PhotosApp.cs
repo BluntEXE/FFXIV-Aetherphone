@@ -89,7 +89,7 @@ internal sealed partial class PhotosApp : IPhoneApp
     public void OnOpened()
     {
         router.Reset();
-        segment = 0;
+        segment = Math.Clamp(configuration.PhotosSegment, 0, 1);
         viewerPaths = Array.Empty<string>();
         viewerIndex = 0;
         resetScroll = true;

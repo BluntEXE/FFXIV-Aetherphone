@@ -130,6 +130,7 @@ public sealed class Plugin : IDalamudPlugin
             PluginInterface.UiBuilder.Draw += windowSystem.Draw;
             PluginInterface.UiBuilder.Draw += FilePicker.Draw;
             PluginInterface.UiBuilder.OpenMainUi += phoneWindow.ToggleShell;
+            PluginInterface.UiBuilder.OpenConfigUi += phoneWindow.OpenSettings;
             PluginInterface.UiBuilder.DisableGposeUiHide = Cfg.ShowInGpose;
             ClientState.Login += OnLogin;
 
@@ -160,6 +161,7 @@ public sealed class Plugin : IDalamudPlugin
         if (phoneWindow is not null)
         {
             PluginInterface.UiBuilder.OpenMainUi -= phoneWindow.ToggleShell;
+            PluginInterface.UiBuilder.OpenConfigUi -= phoneWindow.OpenSettings;
         }
 
         ClientState.Login -= OnLogin;
@@ -247,6 +249,7 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.Draw -= windowSystem.Draw;
         PluginInterface.UiBuilder.Draw -= FilePicker.Draw;
         PluginInterface.UiBuilder.OpenMainUi -= phoneWindow.ToggleShell;
+        PluginInterface.UiBuilder.OpenConfigUi -= phoneWindow.OpenSettings;
         ClientState.Login -= OnLogin;
         Framework.Update -= OnAutoOpenTick;
         services.Notifications.Changed -= UpdateDtrBadge;

@@ -506,6 +506,12 @@ internal sealed class NotificationCenter
                     }
 
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                    if (ImGui.IsMouseClicked(ImGuiMouseButton.Right))
+                    {
+                        SlideOut(candidate, UiScale.Current);
+                        break;
+                    }
+
                     if (drag.Begin(candidate.Rect))
                     {
                         BeginDrag(candidate);
@@ -530,6 +536,20 @@ internal sealed class NotificationCenter
                 ResolveGesture(totalDelta, scale);
             }
         }
+    }
+
+    private void SlideOut(in Candidate candidate, float scale)
+    {
+        animGroup = candidate.IsGroup;
+        animKey = candidate.Key;
+        animId = candidate.Id;
+        animNotification = candidate.Notification;
+        animRemoving = true;
+        animTarget = -(candidate.Width + 40f * scale);
+        animOffset.SnapTo(0f);
+        animActive = true;
+        swipeOffset = 0f;
+        dragNotification = null;
     }
 
     private void BeginDrag(in Candidate candidate)

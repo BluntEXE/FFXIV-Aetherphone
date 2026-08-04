@@ -215,6 +215,7 @@
   "common.openInBrowser": "点击在浏览器中打开",
   "common.openInWindow": "在窗口中打开",
   "common.next": "下一步",
+  "common.previous": "上一个",
   "common.photoCounter": "{0}/{1}",
   "common.photoStep": "第 {0} 张，共 {1} 张",
   "common.photoLimit": "最多可以添加 {0} 张照片",

@@ -215,6 +215,7 @@
   "common.openInBrowser": "Haz clic para abrir en el navegador",
   "common.openInWindow": "Abrir en una ventana",
   "common.next": "Siguiente",
+  "common.previous": "Anterior",
   "common.photoCounter": "{0}/{1}",
   "common.photoStep": "Foto {0} de {1}",
   "common.photoLimit": "Puedes añadir hasta {0} fotos",

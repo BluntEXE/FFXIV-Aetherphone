@@ -36,7 +36,7 @@ internal sealed partial class MessageApp
 
         var scale = UiScale.Current;
         var searchHeight = 52f * scale;
-        SearchField.DrawSubmit(new Rect(area.Min, new Vector2(area.Max.X, area.Min.Y + searchHeight)),
+        SearchField.Draw(new Rect(area.Min, new Vector2(area.Max.X, area.Min.Y + searchHeight)),
             "##messageFilter", Loc.T(L.Phone.FilterHint), ref filter, AppPalettes.Message);
         var chipsHeight = 38f * scale;
         DrawChatFilterChips(new Rect(new Vector2(area.Min.X, area.Min.Y + searchHeight),

@@ -148,6 +148,21 @@ internal sealed class PhoneShell : IDisposable
 
     public bool MinimizedResting => minimize.MinimizedResting;
 
+    private static bool BezelDoubleClicked(Rect device, in ChassisGeometry chassis)
+    {
+        if (!ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left) || ImGui.IsAnyItemHovered())
+        {
+            return false;
+        }
+
+        var mouse = ImGui.GetMousePos();
+        var onDevice = mouse.X >= device.Min.X && mouse.X <= device.Max.X &&
+                       mouse.Y >= device.Min.Y && mouse.Y <= device.Max.Y;
+        var onScreen = mouse.X >= chassis.Screen.Min.X && mouse.X <= chassis.Screen.Max.X &&
+                       mouse.Y >= chassis.Screen.Min.Y && mouse.Y <= chassis.Screen.Max.Y;
+        return onDevice && !onScreen;
+    }
+
     public bool HomeEditing => home.Editing && navigation.Current is null;
 
     public bool LandscapeActive => configuration.CameraLandscape && minimize.Phase == MinimizePhase.None &&
@@ -245,6 +260,11 @@ internal sealed class PhoneShell : IDisposable
                 case SideButtonAction.Close:
                     closeRequested = true;
                     break;
+            }
+
+            if (BezelDoubleClicked(device, chassis))
+            {
+                minimize.BeginCollapse();
             }
 
             if (SideToggle.Update(DeviceChrome.MuteButtonRect(device, chassis), theme, configuration.DoNotDisturb,

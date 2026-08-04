@@ -28,6 +28,7 @@ internal sealed class EmojiPicker
     private int lastCategory = -1;
     private int tone;
     private bool resetScroll;
+    private int lastDrawnFrame = -1;
 
     public string? Draw(Rect area, in AppSkin ui)
     {
@@ -66,7 +67,9 @@ internal sealed class EmojiPicker
             var searchTop = tabsTop + rowHeight + 6f * scale;
             var searchRect = new Rect(new Vector2(innerLeft, searchTop),
                 new Vector2(innerRight, searchTop + rowHeight));
-            SearchField.Draw(searchRect, "##emojiSearch", Loc.T(L.Common.Search), ref search, theme);
+            var appearing = ImGui.GetFrameCount() - lastDrawnFrame > 1;
+            lastDrawnFrame = ImGui.GetFrameCount();
+            SearchField.Draw(searchRect, "##emojiSearch", Loc.T(L.Common.Search), ref search, theme, 100, appearing);
 
             RebuildViewIfNeeded();
 

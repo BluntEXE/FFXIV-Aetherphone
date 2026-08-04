@@ -43,9 +43,9 @@ internal static class SearchField
     }
 
     public static void Draw(Rect bar, string imguiId, string hint, ref string text, PhoneTheme theme,
-        int maxLength = 100) =>
+        int maxLength = 100, bool focus = false) =>
         Draw(bar, imguiId, hint, ref text, theme.GroupedCard, theme.TextMuted, theme.TextStrong, theme.SurfaceMuted,
-            theme.AppBackground, maxLength);
+            theme.AppBackground, maxLength, focus);
 
     public static void Draw(Rect bar, string imguiId, string hint, ref string text, in AppPalette palette,
         int maxLength = 100) =>
@@ -53,7 +53,8 @@ internal static class SearchField
             new Vector4(1f, 1f, 1f, 0.14f), palette.BackdropBottom, maxLength);
 
     public static void Draw(Rect bar, string imguiId, string hint, ref string text, Vector4 fieldSurface,
-        Vector4 mutedInk, Vector4 titleInk, Vector4 clearFill, Vector4 clearCross, int maxLength)
+        Vector4 mutedInk, Vector4 titleInk, Vector4 clearFill, Vector4 clearCross, int maxLength,
+        bool focus = false)
     {
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
@@ -82,6 +83,11 @@ internal static class SearchField
         ImGui.SetNextItemWidth(inputRight - inputLeft);
         Plugin.Fonts.NoticeText(hint);
         Plugin.Fonts.NoticeText(text);
+        if (focus)
+        {
+            ImGui.SetKeyboardFocusHere();
+        }
+
         using (ImRaii.PushColor(ImGuiCol.FrameBg, new Vector4(0f, 0f, 0f, 0f)))
         using (ImRaii.PushColor(ImGuiCol.Text, titleInk))
         {

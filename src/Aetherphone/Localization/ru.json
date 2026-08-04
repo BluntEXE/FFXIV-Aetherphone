@@ -215,6 +215,7 @@
   "common.openInBrowser": "Нажмите, чтобы открыть в браузере",
   "common.openInWindow": "Открыть в окне",
   "common.next": "Далее",
+  "common.previous": "Назад",
   "common.photoCounter": "{0}/{1}",
   "common.photoStep": "Фото {0} из {1}",
   "common.photoLimit": "Можно добавить не более {0} фото",

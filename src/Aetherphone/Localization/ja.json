@@ -215,6 +215,7 @@
   "common.openInBrowser": "クリックしてブラウザで開く",
   "common.openInWindow": "ウィンドウで開く",
   "common.next": "次へ",
+  "common.previous": "前へ",
   "common.photoCounter": "{0}/{1}",
   "common.photoStep": "写真 {0}/{1}",
   "common.photoLimit": "写真は{0}枚まで追加できます",

@@ -215,6 +215,7 @@
   "common.openInBrowser": "Tarayıcıda açmak için tıklayın",
   "common.openInWindow": "Pencerede aç",
   "common.next": "İleri",
+  "common.previous": "Önceki",
   "common.photoCounter": "{0}/{1}",
   "common.photoStep": "Fotoğraf {0}/{1}",
   "common.photoLimit": "En fazla {0} fotoğraf ekleyebilirsiniz",

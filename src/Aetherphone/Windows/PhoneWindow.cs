@@ -91,6 +91,13 @@ internal sealed class PhoneWindow : Window
         IsOpen = true;
     }
 
+    public void OpenSettings()
+    {
+        Maximize();
+        IsOpen = true;
+        shell.OpenApp("settings");
+    }
+
     private void RequestPosition(Vector2? target)
     {
         if (target is not { } position)

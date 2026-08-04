@@ -28,6 +28,8 @@ internal sealed partial class PhotosApp
         if (picked != segment)
         {
             segment = picked;
+            configuration.PhotosSegment = picked;
+            configuration.Save();
             resetScroll = true;
         }
 
