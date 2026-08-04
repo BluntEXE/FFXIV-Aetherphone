@@ -137,13 +137,18 @@ internal sealed partial class VelvetShell
                 }
             }
 
-            Gap(24f);
-            DrawGallery(user, isMe, connected);
+            if (user.Intro.Length > 0)
+            {
+                Gap(20f);
+                VSectionHeader.Bar(Loc.T(L.Velvet.CardAbout));
+                Gap(4f);
+                WrapText(user.Intro, VelvetTheme.BodyInk, TextStyles.Body);
+            }
 
             var genderLabels = VelvetGender.Labels(user.Gender);
             if (genderLabels.Length > 0)
             {
-                Gap(20f);
+                Gap(18f);
                 VSectionHeader.Bar(Loc.T(L.Velvet.CardGender));
                 Gap(4f);
                 DrawDisplayTokens(genderLabels, VChipStyle.Tint, VelvetTheme.Rose);
@@ -156,14 +161,6 @@ internal sealed partial class VelvetShell
                 VSectionHeader.Bar(Loc.T(L.Velvet.CardSexuality));
                 Gap(4f);
                 DrawDisplayTokens(sexualityLabels, VChipStyle.Tint, VelvetTheme.Rose);
-            }
-
-            if (user.Intro.Length > 0)
-            {
-                Gap(20f);
-                VSectionHeader.Bar(Loc.T(L.Velvet.CardAbout));
-                Gap(4f);
-                WrapText(user.Intro, VelvetTheme.BodyInk, TextStyles.Body);
             }
 
             if (VelvetIntent.IncludesErp(user.LookingFor) && user.Dynamic.Length > 0)
@@ -198,6 +195,9 @@ internal sealed partial class VelvetShell
                 Gap(4f);
                 DrawDisplayTokens(user.Limits, VChipStyle.Outline, VelvetTheme.Gold);
             }
+
+            Gap(24f);
+            DrawGallery(user, isMe, connected);
 
             if (!isMe)
             {
