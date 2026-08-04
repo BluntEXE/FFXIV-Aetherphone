@@ -11,7 +11,7 @@ public sealed class KeyDistributionTrustTests
     [Fact]
     public void WrapMintedFromOnlyAPublicKeyUnwrapsSuccessfully()
     {
-        using var victim = CryptoBox.TryGenerateIdentity()!;
+        var victim = CryptoBox.TryGenerateIdentity()!;
         var victimPublicKey = CryptoBox.ExportPublicKey(victim);
         var keyChosenByWhoeverServesTheWrap = CryptoBox.GenerateCek();
 
