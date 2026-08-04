@@ -152,6 +152,7 @@ internal sealed class ShellOverlayCoordinator
         if (state.SetupActive)
         {
             HoverTooltip.Flush();
+            CopyToast.Flush();
             banOverlay.Draw(screen, theme);
             confirmOverlay.Draw(screen, theme);
             DeviceChrome.SealScreen(chassis, theme, configuration.ScreenBrightness);
@@ -190,6 +191,7 @@ internal sealed class ShellOverlayCoordinator
             !banOverlay.IsActive && navigation.Current?.Id != "camera",
             !director.CapturesPointer);
         HoverTooltip.Flush();
+        CopyToast.Flush();
         shareSheet.Draw(screen, theme);
         reportOverlay.Draw(screen, theme);
         confirmOverlay.Draw(screen, theme);

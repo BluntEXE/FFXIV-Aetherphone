@@ -150,7 +150,8 @@ internal sealed class NotificationService : IDisposable
 
         UnreadCount++;
         Added?.Invoke(stamped);
-        if (!configuration.DoNotDisturb && !(configuration.QuietWhileBusy && PlayerBusy.Now))
+        if (Plugin.ClientState.IsLoggedIn && !configuration.DoNotDisturb &&
+            !(configuration.QuietWhileBusy && PlayerBusy.Now))
         {
             if (configuration.ShowNotificationBanner &&
                 configuration.ShouldShowNotificationBanner(notification.SettingsKey))

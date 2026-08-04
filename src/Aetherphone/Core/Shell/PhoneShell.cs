@@ -210,6 +210,7 @@ internal sealed class PhoneShell : IDisposable
             }
 
             HoverTooltip.Flush();
+            CopyToast.Flush();
             return;
         }
 

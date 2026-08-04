@@ -601,6 +601,23 @@ internal sealed partial class PhotosApp
         Typography.Draw(drawList, new Vector2(rect.Min.X + 2f * scale, textTop + 19f * scale), countLabel, ui.MutedInk,
             TextStyles.Footnote);
 
+        var badgeRadius = 12f * scale;
+        var badgeCenter = new Vector2(coverCoverMax.X - badgeRadius - 5f * scale,
+            rect.Min.Y + badgeRadius + 5f * scale);
+        var overBadge = false;
+        if (hovered || albumMenu.IsOpenFor("custom:" + album.Key))
+        {
+            overBadge = UiInteract.Hover(badgeCenter - new Vector2(badgeRadius, badgeRadius),
+                badgeCenter + new Vector2(badgeRadius, badgeRadius));
+            if (ui.IconButton(badgeCenter, badgeRadius, FontAwesomeIcon.EllipsisH.ToIconString(), ui.TitleInk,
+                    Palette.WithAlpha(new Vector4(0f, 0f, 0f, 1f), 0.45f), 0.8f))
+            {
+                var badgeRect = new Rect(badgeCenter - new Vector2(badgeRadius, badgeRadius),
+                    badgeCenter + new Vector2(badgeRadius, badgeRadius));
+                albumMenu.Toggle("custom:" + album.Key, badgeRect);
+            }
+        }
+
         if (hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
         {
             var pos = ImGui.GetMousePos();
@@ -614,7 +631,7 @@ internal sealed partial class PhotosApp
             DrawCustomAlbumContextMenu(album.Key, screen);
         }
 
-        if (UiInteract.Click(rect.Min, rect.Max, hovered))
+        if (UiInteract.Click(rect.Min, rect.Max, hovered && !overBadge))
         {
             OpenAlbum(album.Key);
         }
