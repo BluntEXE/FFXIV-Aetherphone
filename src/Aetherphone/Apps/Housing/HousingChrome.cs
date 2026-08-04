@@ -19,7 +19,8 @@ internal static class HousingChrome
     private static readonly Vector4 Transparent = new(0f, 0f, 0f, 0f);
 
     public static bool Hover(Vector2 min, Vector2 max, bool overlay) =>
-        overlay ? ImGui.IsMouseHoveringRect(min, max) : UiInteract.Hover(min, max);
+        overlay ? UiInteract.HoverWindowOnly(min, max) : UiInteract.Hover(min, max);
+
     public static float SelectorHeight(float scale) =>
         Typography.LineHeight(TextStyles.Caption2) + Typography.LineHeight(TextStyles.SubheadlineEmphasized) +
         11f * scale;
