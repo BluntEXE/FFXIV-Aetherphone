@@ -2453,6 +2453,8 @@
   "games.waterSort": "Água e Tubos",
   "games.saved": "Salvo",
   "games.next": "Próxima",
+  "games.paused": "Pausado",
+  "games.pausedHint": "Clique no telefone para continuar",
   "games.lines": "Linhas",
   "games.level": "Nível",
   "games.moves": "Movimentos",

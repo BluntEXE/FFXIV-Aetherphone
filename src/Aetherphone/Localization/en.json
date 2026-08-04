@@ -2453,6 +2453,8 @@
   "games.waterSort": "Water Sort",
   "games.saved": "Saved",
   "games.next": "Next",
+  "games.paused": "Paused",
+  "games.pausedHint": "Click the phone to carry on",
   "games.lines": "Lines",
   "games.level": "Level",
   "games.moves": "Moves",

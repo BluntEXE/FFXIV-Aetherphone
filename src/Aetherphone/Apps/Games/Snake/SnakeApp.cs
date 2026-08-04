@@ -30,6 +30,8 @@ internal sealed class SnakeApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Snake);
+    public bool RunsOnAClock => true;
+
     public string Genre => Loc.T(L.Games.GenreArcade);
     public void Open()
     {

@@ -2453,6 +2453,8 @@
   "games.waterSort": "水排序",
   "games.saved": "保留",
   "games.next": "下一个",
+  "games.paused": "已暂停",
+  "games.pausedHint": "点击手机以继续",
   "games.lines": "行数",
   "games.level": "等级",
   "games.moves": "步数",

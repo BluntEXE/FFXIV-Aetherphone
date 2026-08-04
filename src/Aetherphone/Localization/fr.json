@@ -2453,6 +2453,8 @@
   "games.waterSort": "Tri d'eau",
   "games.saved": "Enregistré",
   "games.next": "Suivant",
+  "games.paused": "En pause",
+  "games.pausedHint": "Cliquez sur le téléphone pour continuer",
   "games.lines": "Lignes",
   "games.level": "Niveau",
   "games.moves": "Coups",

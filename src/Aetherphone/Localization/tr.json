@@ -2453,6 +2453,8 @@
   "games.waterSort": "Su Ayır",
   "games.saved": "Kaydedildi",
   "games.next": "Sıradaki",
+  "games.paused": "Duraklatıldı",
+  "games.pausedHint": "Devam etmek için telefona tıkla",
   "games.lines": "Satır",
   "games.level": "Seviye",
   "games.moves": "Hamle",

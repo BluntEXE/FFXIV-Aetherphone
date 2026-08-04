@@ -3248,6 +3248,8 @@ internal static class L
         public static readonly LocString WaterSort = new("games.waterSort", "Water Sort");
         public static readonly LocString Saved = new("games.saved", "Saved");
         public static readonly LocString Next = new("games.next", "Next");
+        public static readonly LocString Paused = new("games.paused", "Paused");
+        public static readonly LocString PausedHint = new("games.pausedHint", "Click the phone to carry on");
         public static readonly LocString Lines = new("games.lines", "Lines");
         public static readonly LocString Level = new("games.level", "Level");
         public static readonly LocString Moves = new("games.moves", "Moves");

@@ -36,6 +36,8 @@ internal sealed class BreakoutApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Breakout);
+    public bool RunsOnAClock => true;
+
     public string Genre => Loc.T(L.Games.GenreArcade);
     public void Open()
     {

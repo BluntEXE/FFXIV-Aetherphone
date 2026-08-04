@@ -2453,6 +2453,8 @@
   "games.waterSort": "ウォーターソート",
   "games.saved": "ホールド",
   "games.next": "次",
+  "games.paused": "一時停止中",
+  "games.pausedHint": "スマホをクリックすると再開します",
   "games.lines": "ライン",
   "games.level": "レベル",
   "games.moves": "手数",
