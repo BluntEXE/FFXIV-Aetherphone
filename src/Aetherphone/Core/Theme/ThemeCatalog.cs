@@ -17,6 +17,9 @@ internal static class ThemeCatalog
     {
         PhoneCase.Color(DefaultCaseName, new Vector4(0.145f, 0.145f, 0.170f, 1f)),
         PhoneCase.Art("Silkie", new Vector4(1.000f, 0.922f, 0.918f, 1f)),
+        PhoneCase.Art("FatCat", new Vector4(0.753f, 0.708f, 0.648f, 1f)),
+        PhoneCase.Art("CosmicEX", new Vector4(0.160f, 0.160f, 0.197f, 1f)),
+        PhoneCase.Art("Caduceus", new Vector4(0.427f, 0.411f, 0.217f, 1f)),
     };
 
     public static IReadOnlyList<PhoneCase> Cases { get; } = BuiltInCases;

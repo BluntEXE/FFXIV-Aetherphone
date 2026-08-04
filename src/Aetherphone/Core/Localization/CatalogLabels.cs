@@ -28,6 +28,9 @@ internal static class CatalogLabels
         {
             "Titanium" => Loc.T(L.Catalogs.CaseTitanium),
             "Silkie" => Loc.T(L.Catalogs.CaseSilkie),
+            "FatCat" => Loc.T(L.Catalogs.CaseFatCat),
+            "CosmicEX" => Loc.T(L.Catalogs.CaseCosmicEx),
+            "Caduceus" => Loc.T(L.Catalogs.CaseCaduceus),
             _ => identifier,
         };
 
