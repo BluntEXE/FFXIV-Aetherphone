@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Aetherphone.Core.Game;
 using Aetherphone.Core.Home;
 using Dalamud.Plugin.Services;
 
@@ -149,7 +150,7 @@ internal sealed class NotificationService : IDisposable
 
         UnreadCount++;
         Added?.Invoke(stamped);
-        if (!configuration.DoNotDisturb)
+        if (!configuration.DoNotDisturb && !(configuration.QuietWhileBusy && PlayerBusy.Now))
         {
             if (configuration.ShowNotificationBanner &&
                 configuration.ShouldShowNotificationBanner(notification.SettingsKey))

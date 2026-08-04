@@ -85,16 +85,6 @@ internal sealed partial class MessageApp
 
         protected override void OnDraftConsumed(string threadId) => ClearDraft(threadId);
 
-        public override void OnAppClosed()
-        {
-            if (!composer.IsEditing && store.CurrentThreadId is { } openConversation)
-            {
-                SaveDraft(openConversation);
-            }
-
-            base.OnAppClosed();
-        }
-
         private void SaveDraft(string conversationId)
         {
             var trimmed = composer.Draft.Trim();

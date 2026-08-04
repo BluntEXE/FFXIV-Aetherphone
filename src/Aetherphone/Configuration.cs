@@ -39,6 +39,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public Vector2? MaximizedPosition { get; set; }
     public Vector2? MinimizedPosition { get; set; }
     public bool DoNotDisturb { get; set; }
+    public bool QuietWhileBusy { get; set; } = true;
     public bool Vibration { get; set; } = true;
     public bool ShowNotificationBanner { get; set; } = true;
     public bool ImportScreenshots { get; set; } = true;

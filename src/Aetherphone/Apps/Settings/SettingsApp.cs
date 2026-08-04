@@ -104,7 +104,7 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
         privacyPage = new PrivacyPage(configuration, aethernetSession, aethernet.Account, aethernet.Safety,
             confirm);
         tagsMentionsPage = new TagsMentionsPage(aethernetSession, aethernet.Account, this);
-        var about = new AboutPage();
+        var about = new AboutPage(configuration);
         changelogPage = new ChangelogPage(configuration);
         var groups = new[]
         {

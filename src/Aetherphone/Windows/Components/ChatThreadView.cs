@@ -43,6 +43,9 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     protected readonly ChatTranscript transcript = new();
     protected readonly ChatMenuController menuController = new();
     protected readonly ChatComposer composer = new();
+    private readonly Dictionary<string, string> sessionDrafts = new(StringComparer.Ordinal);
+    private volatile string? failedSendText;
+    private volatile string? failedSendThreadId;
     protected readonly ChatSearchController searchController = new();
     protected readonly VoiceNotePlayer voicePlayer = new();
     protected readonly EncryptionInfoPane encryptionPane;
@@ -152,15 +155,25 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     protected virtual void OnThreadSwitchingFrom(string previousThreadId)
     {
+        if (composer.IsEditing)
+        {
+            return;
+        }
+
+        var draft = composer.Draft.Trim();
+        if (draft.Length == 0)
+        {
+            sessionDrafts.Remove(previousThreadId);
+            return;
+        }
+
+        sessionDrafts[previousThreadId] = composer.Draft;
     }
 
-    protected virtual void OnThreadOpened(string threadId)
-    {
-    }
+    protected virtual void OnThreadOpened(string threadId) =>
+        composer.Draft = sessionDrafts.GetValueOrDefault(threadId, string.Empty);
 
-    protected virtual void OnDraftConsumed(string threadId)
-    {
-    }
+    protected virtual void OnDraftConsumed(string threadId) => sessionDrafts.Remove(threadId);
 
     protected abstract TranscriptMessage[] MapTranscript(TMessage[] source);
 
@@ -204,6 +217,11 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     public virtual void OnAppClosed()
     {
+        if (store.CurrentThreadId is { } openThreadId)
+        {
+            OnThreadSwitchingFrom(openThreadId);
+        }
+
         composer.CancelVoice();
         voicePlayer.Stop();
         searchController.Close();
@@ -238,6 +256,8 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
                 composer.Draft = prefill;
             }
         }
+
+        RestoreFailedSend(threadId);
 
         store.NoteThreadViewed(threadId);
         TickThread(threadId);
@@ -529,7 +549,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     private void ComposerSendText(string threadId, string text, string? replyToId)
     {
-        store.SendMessage(threadId, text, _ => { }, replyToId);
+        store.SendMessage(threadId, text, succeeded => NoteSendOutcome(succeeded, threadId, text), replyToId);
         transcript.RequestSnapToBottom();
         lastTypingDraft = string.Empty;
         OnDraftConsumed(threadId);
@@ -537,9 +557,36 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     private void ComposerEditText(string threadId, string editId, string text)
     {
-        store.EditMessage(threadId, editId, text, _ => { });
+        store.EditMessage(threadId, editId, text, succeeded => NoteSendOutcome(succeeded, threadId, text));
         lastTypingDraft = string.Empty;
         OnDraftConsumed(threadId);
+    }
+
+    private void NoteSendOutcome(bool succeeded, string threadId, string text)
+    {
+        if (succeeded)
+        {
+            return;
+        }
+
+        failedSendThreadId = threadId;
+        failedSendText = text;
+    }
+
+    private void RestoreFailedSend(string threadId)
+    {
+        var text = failedSendText;
+        if (text is null || failedSendThreadId != threadId)
+        {
+            return;
+        }
+
+        failedSendText = null;
+        failedSendThreadId = null;
+        if (composer.Draft.Length == 0)
+        {
+            composer.Draft = text;
+        }
     }
 
     private void ComposerSendVoice(string threadId, byte[] wavBytes, int durationSecs)

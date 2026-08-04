@@ -40,12 +40,21 @@ internal sealed class NotificationsPage : ISettingsPage
         using (AppSurface.Begin(body))
         {
             SettingsSection.Header(Loc.T(L.Common.Alerts), theme);
-            var alerts = GroupCard.Begin(theme, 4);
+            var alerts = GroupCard.Begin(theme, 5);
             var doNotDisturb = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Settings.DoNotDisturb),
                 configuration.DoNotDisturb, theme);
             if (doNotDisturb != configuration.DoNotDisturb)
             {
                 configuration.DoNotDisturb = doNotDisturb;
+                configuration.Save();
+            }
+
+            var quietWhileBusy = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Settings.QuietWhileBusy),
+                configuration.QuietWhileBusy, theme, null, Loc.T(L.Settings.QuietWhileBusyHint),
+                dimmed: doNotDisturb);
+            if (quietWhileBusy != configuration.QuietWhileBusy)
+            {
+                configuration.QuietWhileBusy = quietWhileBusy;
                 configuration.Save();
             }
 
