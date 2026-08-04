@@ -23,7 +23,7 @@ internal sealed class PhoneEmoteController : IDisposable
         ConditionFlag.OccupiedInQuestEvent, ConditionFlag.Casting, ConditionFlag.OccupiedInEvent,
         ConditionFlag.Gathering, ConditionFlag.Crafting, ConditionFlag.TradeOpen, ConditionFlag.ExecutingCraftingAction,
         ConditionFlag.Unconscious, ConditionFlag.MeldingMateria, ConditionFlag.OperatingSiegeMachine,
-        ConditionFlag.CarryingItem, ConditionFlag.CarryingObject, ConditionFlag.Mounting, ConditionFlag.Mounting71,
+        ConditionFlag.CarryingItem, ConditionFlag.CarryingObject, ConditionFlag.EditingPortrait,
         ConditionFlag.ParticipatingInCustomMatch, ConditionFlag.PlayingLordOfVerminion, ConditionFlag.ChocoboRacing,
         ConditionFlag.PlayingMiniGame, ConditionFlag.Performing, ConditionFlag.Transformed,
         ConditionFlag.UsingHousingFunctions, ConditionFlag.Occupied, ConditionFlag.Occupied30, ConditionFlag.Occupied33,
@@ -72,14 +72,15 @@ internal sealed class PhoneEmoteController : IDisposable
             return;
         }
 
+        var now = Environment.TickCount64;
         var player = objectTable.LocalPlayer;
         if (player is null || IsBlocked())
         {
             hasSample = false;
+            lastCastMilliseconds = now;
             return;
         }
 
-        var now = Environment.TickCount64;
         if (IsBusy(player.Address))
         {
             lastCastMilliseconds = now;
