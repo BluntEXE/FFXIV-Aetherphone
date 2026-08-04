@@ -18,6 +18,8 @@ internal static class UiInteract
     private static bool hasPendingTap;
     private static bool windowHovered = true;
     private static int windowHoveredFrame = -1;
+    private static bool windowFocused = true;
+    private static int windowFocusedFrame = -1;
     private static int gestureSurfaceFrame = -1;
 
     public static void BlockThisFrame()
@@ -39,6 +41,14 @@ internal static class UiInteract
     }
 
     private static bool WindowHovered => windowHoveredFrame != ImGui.GetFrameCount() || windowHovered;
+
+    public static void SetWindowFocused(bool focused)
+    {
+        windowFocused = focused;
+        windowFocusedFrame = ImGui.GetFrameCount();
+    }
+
+    public static bool WindowFocused => windowFocusedFrame != ImGui.GetFrameCount() || windowFocused;
 
     public static void CancelPendingTap() => hasPendingTap = false;
 

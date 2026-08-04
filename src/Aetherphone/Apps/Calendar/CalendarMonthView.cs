@@ -17,6 +17,12 @@ internal static class CalendarMonthView
     private const float NumberCenterFraction = 0.34f;
     private const float DotRowFraction = 0.72f;
 
+    private static readonly LocString[] WeekdayInitials =
+    {
+        L.Calendar.WeekSun, L.Calendar.WeekMon, L.Calendar.WeekTue, L.Calendar.WeekWed,
+        L.Calendar.WeekThu, L.Calendar.WeekFri, L.Calendar.WeekSat,
+    };
+
     public static float Draw(AppSkin ui, Rect area, float targetHeight, ref int monthOffset,
         ref DateTime selectedDate, FrozenDictionary<long, ParsedEvent[]> events)
     {
@@ -25,8 +31,9 @@ internal static class CalendarMonthView
         var referenceDate = DateTime.Today.AddMonths(monthOffset);
         var firstOfMonth = new DateTime(referenceDate.Year, referenceDate.Month, 1);
         var daysInMonth = DateTime.DaysInMonth(referenceDate.Year, referenceDate.Month);
-        var firstDayOfWeek = (int)firstOfMonth.DayOfWeek;
-        var totalCells = firstDayOfWeek + daysInMonth;
+        var weekStart = (int)Loc.Culture.DateTimeFormat.FirstDayOfWeek;
+        var leadingBlanks = ((int)firstOfMonth.DayOfWeek - weekStart + 7) % 7;
+        var totalCells = leadingBlanks + daysInMonth;
         var totalRows = (int)MathF.Ceiling(totalCells / 7f);
         var today = DateTime.Today;
 
@@ -42,7 +49,7 @@ internal static class CalendarMonthView
             ref monthOffset, ref selectedDate, today);
 
         var dayHeaderY = origin.Y;
-        DrawDayHeaders(ui, drawList, origin, cellWidth, dayHeaderY, scale);
+        DrawDayHeaders(ui, drawList, origin, cellWidth, dayHeaderY, scale, weekStart);
 
         var gridTop = dayHeaderY + DayHeaderHeight * scale;
         UiAnchors.Report("calendar.grid",
@@ -62,7 +69,7 @@ internal static class CalendarMonthView
             for (var column = 0; column < 7; column++)
             {
                 var dayIndex = row * 7 + column;
-                var cellDay = dayIndex - firstDayOfWeek + 1;
+                var cellDay = dayIndex - leadingBlanks + 1;
                 var isCurrentMonth = cellDay >= 1 && cellDay <= daysInMonth;
                 var cellX = origin.X + column * cellWidth;
                 var cellY = rowTop;
@@ -225,25 +232,19 @@ internal static class CalendarMonthView
     }
 
     private static void DrawDayHeaders(AppSkin ui, ImDrawListPtr drawList, Vector2 origin, float cellWidth,
-        float topY, float scale)
+        float topY, float scale, int weekStart)
     {
-        var headers = new[]
-        {
-            Loc.T(L.Calendar.WeekSun), Loc.T(L.Calendar.WeekMon), Loc.T(L.Calendar.WeekTue),
-            Loc.T(L.Calendar.WeekWed), Loc.T(L.Calendar.WeekThu), Loc.T(L.Calendar.WeekFri),
-            Loc.T(L.Calendar.WeekSat),
-        };
-
         var c2Scale = TextStyles.FootnoteEmphasized.Scale;
         var c2Weight = TextStyles.FootnoteEmphasized.Weight;
 
-        for (var column = 0; column < headers.Length; column++)
+        for (var column = 0; column < WeekdayInitials.Length; column++)
         {
+            var weekday = (column + weekStart) % WeekdayInitials.Length;
             var cellX = origin.X + column * cellWidth;
-            var headerColor = column == 0 ? ui.Accent : ui.MutedInk;
+            var headerColor = weekday == (int)DayOfWeek.Sunday ? ui.Accent : ui.MutedInk;
             Typography.DrawCentered(drawList,
                 new Vector2(cellX + cellWidth * 0.5f, topY + DayHeaderHeight * scale * 0.5f),
-                headers[column], headerColor, c2Scale, c2Weight);
+                Loc.T(WeekdayInitials[weekday]), headerColor, c2Scale, c2Weight);
         }
     }
 

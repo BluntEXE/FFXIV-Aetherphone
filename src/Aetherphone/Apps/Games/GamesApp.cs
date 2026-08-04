@@ -228,7 +228,7 @@ internal sealed class GamesApp : IPhoneApp
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + HeaderHeight * scale), content.Max);
         using (AppSurface.Begin(body))
         {
-            var deltaSeconds = MathF.Min(ImGui.GetIO().DeltaTime, 0.1f);
+            var deltaSeconds = GameFocus.Active ? MathF.Min(ImGui.GetIO().DeltaTime, 0.1f) : 0f;
             game.Draw(new GameContext(body, context.Theme, stats, deltaSeconds));
         }
     }

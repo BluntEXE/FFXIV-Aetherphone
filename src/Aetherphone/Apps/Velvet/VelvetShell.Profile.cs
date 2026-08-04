@@ -223,7 +223,7 @@ internal sealed partial class VelvetShell
 
                     if (ui.DangerGhostButton(Reserve(42f), Loc.T(L.Velvet.Block)))
                     {
-                        store.Block(user.UserId, _ => { });
+                        AskBlock(user.UserId, DisplayNameOf(user.DisplayName, user.Handle));
                     }
                 }
             }

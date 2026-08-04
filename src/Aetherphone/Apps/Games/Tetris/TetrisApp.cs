@@ -270,7 +270,7 @@ internal sealed class TetrisApp : IMiniGame
 
     private void HandleKeyboard()
     {
-        if (!ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows))
+        if (!GameFocus.Active)
         {
             return;
         }

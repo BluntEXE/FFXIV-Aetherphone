@@ -220,6 +220,7 @@ internal sealed class PhoneWindow : Window
         LastSize = ImGui.GetWindowSize();
         Components.UiInteract.SetWindowHovered(ImGui.IsWindowHovered(
             ImGuiHoveredFlags.ChildWindows | ImGuiHoveredFlags.AllowWhenBlockedByActiveItem));
+        Components.UiInteract.SetWindowFocused(ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows));
         Plugin.Updates.Poll();
         using (Plugin.Fonts.Push(1f))
         {

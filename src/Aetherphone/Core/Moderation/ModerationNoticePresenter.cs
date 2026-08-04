@@ -80,10 +80,11 @@ internal sealed class ModerationNoticePresenter : IDisposable
         var title = ModerationNoticeText.Title(notice);
         var body = ModerationNoticeText.Body(notice);
 
+        notifications.Notify(new PhoneNotification(SettingsAppId, title, body, DateTime.Now,
+            AppAccents.For(SettingsAppId), notice.Id));
+
         if (!ModerationNoticeText.IsBlocking(notice))
         {
-            notifications.Notify(new PhoneNotification(SettingsAppId, title, body, DateTime.Now,
-                AppAccents.For(SettingsAppId), notice.Id));
             notices.Acknowledge(notice);
             return;
         }

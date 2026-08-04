@@ -37,6 +37,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     private volatile AvatarUploadOutcome avatarFailure = AvatarUploadOutcome.Unreachable;
     private volatile bool introBusy;
     private volatile VelvetProfileDto[] discoverResults = Array.Empty<VelvetProfileDto>();
+    private volatile string[] hiddenFromDiscover = Array.Empty<string>();
     private volatile bool loadingDiscover;
     private volatile bool discoverLoaded;
     private volatile string? discoverCursor;
@@ -233,6 +234,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         accessBlocked = false;
         meGate.Reset();
         discoverResults = Array.Empty<VelvetProfileDto>();
+        hiddenFromDiscover = Array.Empty<string>();
         discoverCursor = null;
         discoverLoaded = false;
         discoverFilter = VelvetDiscoverFilter.Empty;
@@ -614,7 +616,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
             var page = await client.DiscoverAsync(filter, tags, region, null, token).ConfigureAwait(false);
             if (page is not null && epoch == discoverEpoch)
             {
-                discoverResults = page.Users;
+                discoverResults = WithoutHidden(page.Users);
                 discoverCursor = page.NextCursor;
             }
         }, () =>
@@ -645,10 +647,39 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
                 .ConfigureAwait(false);
             if (page is not null && epoch == discoverEpoch)
             {
-                discoverResults = AppendUniqueDiscover(discoverResults, page.Users);
+                discoverResults = AppendUniqueDiscover(discoverResults, WithoutHidden(page.Users));
                 discoverCursor = page.NextCursor;
             }
         }, () => loadingMoreDiscover = false);
+    }
+
+    private VelvetProfileDto[] WithoutHidden(VelvetProfileDto[] incoming)
+    {
+        var hidden = hiddenFromDiscover;
+        if (hidden.Length == 0)
+        {
+            return incoming;
+        }
+
+        var kept = new VelvetProfileDto[incoming.Length];
+        var count = 0;
+        for (var index = 0; index < incoming.Length; index++)
+        {
+            if (Array.IndexOf(hidden, incoming[index].UserId) < 0)
+            {
+                kept[count] = incoming[index];
+                count++;
+            }
+        }
+
+        if (count == incoming.Length)
+        {
+            return incoming;
+        }
+
+        var trimmed = new VelvetProfileDto[count];
+        Array.Copy(kept, trimmed, count);
+        return trimmed;
     }
 
     private static VelvetProfileDto[] AppendUniqueDiscover(VelvetProfileDto[] existing, VelvetProfileDto[] incoming)
@@ -1092,7 +1123,40 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     {
         blockedLoaded = false;
         ForgetConnection(userId, VelvetConnectionState.Blocked);
+        HideFromDiscover(userId);
         work.Run("block", async token => await safety.BlockAsync(userId, token).ConfigureAwait(false), onComplete);
+    }
+
+    public void HideFromDiscover(string userId)
+    {
+        var hidden = hiddenFromDiscover;
+        if (Array.IndexOf(hidden, userId) < 0)
+        {
+            var grown = new string[hidden.Length + 1];
+            Array.Copy(hidden, grown, hidden.Length);
+            grown[hidden.Length] = userId;
+            hiddenFromDiscover = grown;
+        }
+
+        discoverResults = RemoveDiscover(discoverResults, userId);
+    }
+
+    private static VelvetProfileDto[] RemoveDiscover(VelvetProfileDto[] source, string userId)
+    {
+        for (var index = 0; index < source.Length; index++)
+        {
+            if (source[index].UserId != userId)
+            {
+                continue;
+            }
+
+            var trimmed = new VelvetProfileDto[source.Length - 1];
+            Array.Copy(source, trimmed, index);
+            Array.Copy(source, index + 1, trimmed, index, source.Length - index - 1);
+            return trimmed;
+        }
+
+        return source;
     }
 
     public void Unblock(string userId)

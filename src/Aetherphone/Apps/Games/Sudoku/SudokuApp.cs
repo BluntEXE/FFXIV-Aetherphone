@@ -201,7 +201,7 @@ internal sealed class SudokuApp : IMiniGame
 
     private void HandleKeyboard(float scale)
     {
-        if (!ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows))
+        if (!GameFocus.Active)
         {
             return;
         }
