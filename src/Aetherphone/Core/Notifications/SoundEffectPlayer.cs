@@ -166,14 +166,25 @@ internal sealed class SoundEffectPlayer : IDisposable
         return Path.GetExtension(path).ToLowerInvariant() switch
         {
             ".wav" => OpenWaveReader(path),
-            ".mp3" => new Mp3FileReaderBase(path,
-                waveFormat => new Mp3FrameDecompressor(waveFormat)),
+            ".mp3" => OpenMp3Reader(path),
             _ => new MediaFoundationReader(path),
         };
     }
 
     private static readonly Guid PcmSubFormat = new("00000001-0000-0010-8000-00aa00389b71");
     private static readonly Guid IeeeFloatSubFormat = new("00000003-0000-0010-8000-00aa00389b71");
+
+    private static WaveStream OpenMp3Reader(string path)
+    {
+        try
+        {
+            return new Mp3FileReaderBase(path, waveFormat => new Mp3FrameDecompressor(waveFormat));
+        }
+        catch (Exception)
+        {
+            return new MediaFoundationReader(path);
+        }
+    }
 
     private static WaveStream OpenWaveReader(string path)
     {
@@ -182,7 +193,7 @@ internal sealed class SoundEffectPlayer : IDisposable
         {
             reader = new WaveFileReader(path);
         }
-        catch (FormatException)
+        catch (Exception)
         {
             return new MediaFoundationReader(path);
         }
