@@ -2110,6 +2110,7 @@
   "home.widgets": "Виджеты",
   "home.addWidget": "Добавить виджет",
   "home.remove": "Удалить",
+  "home.removeConfirm": "Убрать {0} с главного экрана? Приложение можно вернуть из библиотеки приложений.",
   "home.sizeSmall": "Маленький",
   "home.sizeMedium": "Средний",
   "home.sizeLarge": "Большой",

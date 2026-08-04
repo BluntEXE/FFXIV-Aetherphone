@@ -2,6 +2,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
+using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Core.Shell;
 
@@ -89,6 +90,51 @@ internal sealed class ShellOverlayCoordinator
         return new ShellOverlayState(setupActive, confirming, islandCaptures, busy, shieldBase);
     }
 
+    private void HandleEscape()
+    {
+        if (banOverlay.IsActive || conductOverlay.Captures || setup.IsActive || director.CapturesPointer)
+        {
+            return;
+        }
+
+        if (!confirmOverlay.CapturesPointer && !reportOverlay.CapturesPointer && !shareSheet.CapturesPointer &&
+            !controlCenter.IsActive)
+        {
+            return;
+        }
+
+        if (!UiInteract.WindowFocused)
+        {
+            return;
+        }
+
+        ImGui.SetNextFrameWantCaptureKeyboard(true);
+        if (!ImGui.IsKeyPressed(ImGuiKey.Escape))
+        {
+            return;
+        }
+
+        if (confirmOverlay.CapturesPointer)
+        {
+            confirmOverlay.CancelActive();
+            return;
+        }
+
+        if (reportOverlay.CapturesPointer)
+        {
+            reportOverlay.Dismiss();
+            return;
+        }
+
+        if (shareSheet.CapturesPointer)
+        {
+            shareSheet.Dismiss();
+            return;
+        }
+
+        controlCenter.Dismiss();
+    }
+
     public void DrawOverlays(in ChassisGeometry chassis, PhoneTheme theme, float delta, in ShellOverlayState state)
     {
         var screen = chassis.Screen;
@@ -139,6 +185,7 @@ internal sealed class ShellOverlayCoordinator
             controlCenter.Dismiss();
         }
 
+        HandleEscape();
         controlCenter.Draw(screen, theme, delta,
             !navigation.IsTransitioning && !director.CapturesPointer && !state.IslandCaptures &&
             !banOverlay.IsActive && navigation.Current?.Id != "camera",

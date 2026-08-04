@@ -2110,6 +2110,7 @@
   "home.widgets": "Widgets",
   "home.addWidget": "Ajouter le widget",
   "home.remove": "Supprimer",
+  "home.removeConfirm": "Retirer {0} de l’écran d’accueil ? Vous pourrez la remettre depuis la bibliothèque d’applications.",
   "home.sizeSmall": "Petit",
   "home.sizeMedium": "Moyen",
   "home.sizeLarge": "Grand",

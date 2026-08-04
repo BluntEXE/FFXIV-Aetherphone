@@ -2110,6 +2110,7 @@
   "home.widgets": "Widgets",
   "home.addWidget": "Añadir widget",
   "home.remove": "Eliminar",
+  "home.removeConfirm": "¿Quitar {0} de la pantalla de inicio? Puedes volver a añadirla desde la biblioteca de apps.",
   "home.sizeSmall": "Pequeño",
   "home.sizeMedium": "Mediano",
   "home.sizeLarge": "Grande",

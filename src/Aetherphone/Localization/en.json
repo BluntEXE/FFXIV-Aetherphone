@@ -2110,6 +2110,7 @@
   "home.widgets": "Widgets",
   "home.addWidget": "Add Widget",
   "home.remove": "Remove",
+  "home.removeConfirm": "Remove {0} from the Home Screen? You can add it back from the App Library.",
   "home.sizeSmall": "Small",
   "home.sizeMedium": "Medium",
   "home.sizeLarge": "Large",

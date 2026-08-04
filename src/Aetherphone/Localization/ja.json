@@ -2110,6 +2110,7 @@
   "home.widgets": "ウィジェット",
   "home.addWidget": "ウィジェットを追加",
   "home.remove": "削除",
+  "home.removeConfirm": "{0} をホーム画面から削除しますか? Appライブラリからいつでも戻せます。",
   "home.sizeSmall": "小",
   "home.sizeMedium": "中",
   "home.sizeLarge": "大",

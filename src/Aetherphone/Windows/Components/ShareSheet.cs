@@ -39,6 +39,8 @@ internal sealed class ShareSheet
 
     public bool CapturesPointer => service.Pending is not null || !reveal.IsResting(0f, 0.001f, 0.005f);
 
+    public void Dismiss() => service.Dismiss();
+
     public void Draw(Rect screen, PhoneTheme theme)
     {
         var offer = service.Pending;

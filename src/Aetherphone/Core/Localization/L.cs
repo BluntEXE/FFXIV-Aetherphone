@@ -2991,6 +2991,8 @@ internal static class L
         public static readonly LocString Widgets = new("home.widgets", "Widgets");
         public static readonly LocString AddWidget = new("home.addWidget", "Add Widget");
         public static readonly LocString Remove = new("home.remove", "Remove");
+        public static readonly LocString RemoveConfirm =
+            new("home.removeConfirm", "Remove {0} from the Home Screen? You can add it back from the App Library.");
         public static readonly LocString SizeSmall = new("home.sizeSmall", "Small");
         public static readonly LocString SizeMedium = new("home.sizeMedium", "Medium");
         public static readonly LocString SizeLarge = new("home.sizeLarge", "Large");

@@ -1,4 +1,6 @@
 using Aetherphone.Core.Animation;
+using Aetherphone.Core.Apps;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Onboarding;
@@ -16,16 +18,18 @@ internal sealed class HomeGridRenderer
     private readonly TilePoseCache poses;
     private readonly HomeInteractionController interaction;
     private readonly ShortcutStore shortcuts;
+    private readonly ConfirmService confirm;
     private bool widgetAnchorReported;
 
     public HomeGridRenderer(HomeLayoutService layout, Pager pager, TilePoseCache poses,
-        HomeInteractionController interaction, ShortcutStore shortcuts)
+        HomeInteractionController interaction, ShortcutStore shortcuts, ConfirmService confirm)
     {
         this.layout = layout;
         this.pager = pager;
         this.poses = poses;
         this.interaction = interaction;
         this.shortcuts = shortcuts;
+        this.confirm = confirm;
     }
 
     public void DrawPages(in HomeMetrics metrics, PhoneTheme theme, float delta, float labelAlpha, bool showLabels,
@@ -163,11 +167,23 @@ internal sealed class HomeGridRenderer
         if (interaction.RemoveBadgesLive(motion) && HomeLayoutService.CanUninstall(tile.App!.Id) &&
             HomeTileView.RemoveBadge(new Vector2(rect.Min.X + 2f * scale, rect.Min.Y + 2f * scale), scale, theme))
         {
-            layout.Uninstall(tile.App!.Id);
+            AskUninstall(tile.App!);
             interaction.ConsumeEditGesture();
         }
 
         ReportIconAnchor(tile, center, rect.Width, motion);
+    }
+
+    private void AskUninstall(IPhoneApp app)
+    {
+        var appId = app.Id;
+        confirm.Ask(new ConfirmRequest
+        {
+            Message = Loc.T(L.Home.RemoveConfirm, app.DisplayName),
+            ConfirmLabel = Loc.T(L.Home.Remove),
+            CancelLabel = Loc.T(L.Common.Cancel),
+            Confirm = () => layout.Uninstall(appId),
+        });
     }
 
     private static Rect ScaleRect(Rect rect, float factor)
@@ -227,6 +243,12 @@ internal sealed class HomeGridRenderer
             HomeTileView.DrawApp(rect.Center + jiggle, rect.Width, tile.App!, theme,
                 interaction.TapScale(tile) * interaction.Magnify(rect.Center, metrics.CellWidth), 0f, true, 0f,
                 motion.Zoom);
+            if (!interaction.Editing && dragTile is null)
+            {
+                HoverTooltip.Show(string.Concat("dock:", tile.Key), rect, tile.App!.DisplayName,
+                    HoverLabelSide.Above);
+            }
+
             ReportIconAnchor(tile, rect.Center, rect.Width, motion);
         }
     }

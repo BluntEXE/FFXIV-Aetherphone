@@ -2110,6 +2110,7 @@
   "home.widgets": "Widget'lar",
   "home.addWidget": "Widget Ekle",
   "home.remove": "Kaldır",
+  "home.removeConfirm": "{0} ana ekrandan kaldirilsin mi? Uygulama kitapligindan geri ekleyebilirsin.",
   "home.sizeSmall": "Küçük",
   "home.sizeMedium": "Orta",
   "home.sizeLarge": "Büyük",

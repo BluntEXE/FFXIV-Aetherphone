@@ -2110,6 +2110,7 @@
   "home.widgets": "小组件",
   "home.addWidget": "添加小组件",
   "home.remove": "移除",
+  "home.removeConfirm": "要将 {0} 从主屏幕移除吗? 你可以随时从 App 资源库中重新添加。",
   "home.sizeSmall": "小",
   "home.sizeMedium": "中",
   "home.sizeLarge": "大",

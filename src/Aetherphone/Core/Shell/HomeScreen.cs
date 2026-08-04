@@ -1,5 +1,6 @@
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Shell.Home;
 using Aetherphone.Core.Shortcuts;
@@ -22,7 +23,7 @@ internal sealed class HomeScreen
     private readonly Configuration configuration;
 
     public HomeScreen(IReadOnlyList<IPhoneApp> apps, WidgetRegistry widgets, ShortcutStore shortcuts,
-        ShortcutRunner runner, Configuration configuration)
+        ShortcutRunner runner, Configuration configuration, ConfirmService confirm)
     {
         this.configuration = configuration;
         layout = new HomeLayoutService(apps, widgets, shortcuts, configuration);
@@ -30,7 +31,7 @@ internal sealed class HomeScreen
         sizeMenu = new WidgetSizeMenu(layout);
         gallery = new WidgetGallery(layout, widgets);
         interaction = new HomeInteractionController(layout, widgets, pager, folder, sizeMenu, gallery, poses, runner);
-        renderer = new HomeGridRenderer(layout, pager, poses, interaction, shortcuts);
+        renderer = new HomeGridRenderer(layout, pager, poses, interaction, shortcuts, confirm);
         chrome = new HomeChrome(pager, interaction);
     }
 

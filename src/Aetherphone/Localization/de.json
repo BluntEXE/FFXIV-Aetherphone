@@ -2110,6 +2110,7 @@
   "home.widgets": "Widgets",
   "home.addWidget": "Widget hinzufügen",
   "home.remove": "Entfernen",
+  "home.removeConfirm": "{0} vom Home-Bildschirm entfernen? Du kannst die App jederzeit aus der App-Mediathek zurückholen.",
   "home.sizeSmall": "Klein",
   "home.sizeMedium": "Mittel",
   "home.sizeLarge": "Groß",
