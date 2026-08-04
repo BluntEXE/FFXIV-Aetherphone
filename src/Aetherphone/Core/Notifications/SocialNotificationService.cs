@@ -504,6 +504,7 @@ internal sealed class SocialNotificationService : IDisposable
             SocialActivity.VelvetApp => AppAccents.For(SocialActivity.VelvetApp),
             SocialActivity.YellowPagesApp => AppAccents.For(SocialActivity.YellowPagesApp),
             SocialActivity.MessageApp => AppAccents.For(SocialActivity.MessageApp),
+            SocialActivity.MusicApp => AppAccents.For(SocialActivity.MusicApp),
             _ => AppAccents.For(SocialActivity.ChirperApp),
         };
     }

@@ -100,6 +100,8 @@ internal sealed class PhoneServices : IDisposable
     public required VenuesService Venues { get; init; }
     public required MusterStore Musters { get; init; }
     public required MusterLauncher MusterLauncher { get; init; }
+
+    public required RadioLauncher RadioLauncher { get; init; }
     public required YellowPagesStore YellowPages { get; init; }
 
     public required AdInquiryStore AdInquiries { get; init; }
@@ -289,6 +291,7 @@ internal sealed class PhoneServices : IDisposable
             Venues = venues,
             Musters = musters,
             MusterLauncher = new MusterLauncher(),
+            RadioLauncher = new RadioLauncher(),
             YellowPages = yellowPages,
             AdInquiries = adInquiries,
             YellowPagesLauncher = new YellowPagesLauncher(),

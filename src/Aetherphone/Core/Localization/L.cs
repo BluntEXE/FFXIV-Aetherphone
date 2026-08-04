@@ -1999,12 +1999,28 @@ internal static class L
         public static readonly LocString ReportStation = new("music.reportStation", "Report station");
         public static readonly LocString ReportStationTitle = new("music.reportStationTitle",
             "Report this station");
+        public static readonly LocString FollowStation = new("music.followStation", "Follow");
+        public static readonly LocString FollowingStation = new("music.followingStation", "Following");
+        public static readonly LocPlural StationFollowers =
+            new("music.stationFollowers", "{0} follower", "{0} followers");
+        public static readonly LocString NotifLiveBody = new("music.notifLiveBody", "is live on {0}");
+        public static readonly LocString NotifLiveGeneric = new("music.notifLiveGeneric", "is live now");
         public static readonly LocString MyStation = new("music.myStation", "My station");
         public static readonly LocString StationArtwork = new("music.stationArtwork", "Artwork");
         public static readonly LocString OnAir = new("music.onAir", "On air");
         public static readonly LocString StationNameLabel = new("music.stationNameLabel", "Station name");
         public static readonly LocString StationDescriptionLabel = new("music.stationDescriptionLabel", "Description");
         public static readonly LocString StationLinksLabel = new("music.stationLinksLabel", "Links");
+        public static readonly LocString StationTagsLabel =
+            new("music.stationTagsLabel", "Tags (up to 5, separated by commas)");
+        public static readonly LocString StationTagsHint = new("music.stationTagsHint", "lofi, jazz, chill");
+        public static readonly LocString AllTags = new("music.allTags", "All");
+        public static readonly LocString NextBroadcast = new("music.nextBroadcast", "Next broadcast {0}");
+        public static readonly LocString ScheduleLabel = new("music.scheduleLabel", "Next broadcast");
+        public static readonly LocString ScheduleNone = new("music.scheduleNone", "No broadcast scheduled");
+        public static readonly LocString ScheduleRepeat = new("music.scheduleRepeat", "Repeat weekly");
+        public static readonly LocString ScheduleClear = new("music.scheduleClear", "Clear");
+        public static readonly LocString CommunityMatches = new("music.communityMatches", "Community stations");
         public static readonly LocString StationSave = new("music.stationSave", "Save changes");
         public static readonly LocString StationSaved = new("music.stationSaved", "Saved");
         public static readonly LocString StationSaveFailed = new("music.stationSaveFailed", "Could not save");
@@ -3021,6 +3037,7 @@ internal static class L
         public static readonly LocString DaysAgo = new("time.daysAgo", "{0}d ago");
         public static readonly LocString Today = new("time.today", "Today");
         public static readonly LocString Yesterday = new("time.yesterday", "Yesterday");
+        public static readonly LocString Tomorrow = new("time.tomorrow", "Tomorrow");
         public static readonly LocString InMinutes = new("time.inMinutes", "in {0}m");
         public static readonly LocString InHours = new("time.inHours", "in {0}h");
         public static readonly LocString InHoursMinutes = new("time.inHoursMinutes", "in {0}h {1}m");

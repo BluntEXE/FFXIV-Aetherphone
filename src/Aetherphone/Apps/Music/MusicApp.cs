@@ -73,6 +73,7 @@ internal sealed partial class MusicApp : IPhoneApp
     private readonly MediaCache media;
     private readonly HttpService http;
     private readonly AethernetApi aethernet;
+    private readonly RadioLauncher launcher;
     private readonly CommunityRadioService community;
     private readonly ReportService report;
     private readonly PhotoLibrary photoLibrary;
@@ -131,9 +132,11 @@ internal sealed partial class MusicApp : IPhoneApp
     public MusicApp(RadioService radio, SongSearchService songSearch, PlaybackHub playback, SongHistory history,
         PlaylistStore playlists, MediaCache media, HttpService http, ITextureProvider textures,
         AethernetApi aethernet, ReportService report, PhotoLibrary photoLibrary,
-        WallpaperImageCache wallpaperImages, ConfirmService confirm, Configuration configuration)
+        WallpaperImageCache wallpaperImages, ConfirmService confirm, Configuration configuration,
+        RadioLauncher launcher)
     {
         this.aethernet = aethernet;
+        this.launcher = launcher;
         this.report = report;
         this.photoLibrary = photoLibrary;
         this.wallpaperImages = wallpaperImages;
@@ -166,6 +169,14 @@ internal sealed partial class MusicApp : IPhoneApp
         featured = Array.Empty<Song>();
         featuredFetch?.Cancel();
         LoadFavoriteRadioStations();
+        if (launcher.TryConsumeStation(out var stationId))
+        {
+            viewedStationId = stationId;
+            community.EnsureFresh(true);
+            router.Push(View.Station, false);
+            return;
+        }
+
         community.EnsureFresh(false);
     }
 

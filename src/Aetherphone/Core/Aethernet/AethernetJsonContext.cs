@@ -161,6 +161,8 @@ namespace Aetherphone.Core.Aethernet;
 [JsonSerializable(typeof(CommunityStationPage))]
 [JsonSerializable(typeof(UpdateCommunityStationRequest))]
 [JsonSerializable(typeof(MyCommunityStationDto))]
+[JsonSerializable(typeof(RadioFollowResultDto))]
+[JsonSerializable(typeof(RadioTrackPage))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
 internal sealed partial class AethernetJsonContext : JsonSerializerContext
 {

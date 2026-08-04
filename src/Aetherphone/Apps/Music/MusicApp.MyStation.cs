@@ -18,14 +18,22 @@ internal sealed partial class MusicApp
     private const int StationNameMaxLength = 40;
     private const int StationDescriptionMaxLength = 300;
     private const int StationLinkMaxLength = 200;
+    private const int StationTagsMaxLength = 140;
     private const float FieldHeight = 44f;
     private const float DescriptionHeight = 92f;
     private const float CredentialRowHeight = 34f;
     private const float CopiedNoticeSeconds = 1.6f;
 
     private readonly string[] linkDrafts = new string[LinkLabels.Length];
+    private readonly ChipRail scheduleRail = new();
+    private readonly string[] scheduleLabels = new string[8];
+    private readonly bool[] scheduleActive = new bool[8];
     private string stationNameDraft = string.Empty;
     private string stationDescriptionDraft = string.Empty;
+    private string stationTagsDraft = string.Empty;
+    private int scheduleDayDraft = -1;
+    private int scheduleMinuteDraft = 21 * 60;
+    private bool scheduleRepeatDraft = true;
     private bool stationDraftLoaded;
     private volatile bool stationSaving;
     private volatile bool stationSaveFailed;
@@ -119,9 +127,58 @@ internal sealed partial class MusicApp
             }
         }
 
-        var tags = community.Mine?.Station.Tags ?? Array.Empty<string>();
-        return new UpdateCommunityStationRequest(stationNameDraft.Trim(), stationDescriptionDraft.Trim(), tags,
-            links.ToArray(), null);
+        return new UpdateCommunityStationRequest(stationNameDraft.Trim(), stationDescriptionDraft.Trim(),
+            ParseTags(stationTagsDraft), links.ToArray(), null, ScheduleUnix(), scheduleRepeatDraft);
+    }
+
+    private long ScheduleUnix()
+    {
+        if (scheduleDayDraft < 0)
+        {
+            return 0L;
+        }
+
+        var now = DateTime.Now;
+        var days = ((scheduleDayDraft - (int)now.DayOfWeek) + 7) % 7;
+        var slot = now.Date.AddDays(days).AddMinutes(scheduleMinuteDraft);
+        if (slot <= now)
+        {
+            slot = slot.AddDays(7);
+        }
+
+        return new DateTimeOffset(slot).ToUnixTimeSeconds();
+    }
+
+    private void LoadScheduleDraft(CommunityStationDto station)
+    {
+        if (station.NextBroadcastAtUnix <= 0)
+        {
+            scheduleDayDraft = -1;
+            scheduleMinuteDraft = 21 * 60;
+            scheduleRepeatDraft = true;
+            return;
+        }
+
+        var local = DateTimeOffset.FromUnixTimeSeconds(station.NextBroadcastAtUnix).ToLocalTime();
+        scheduleDayDraft = (int)local.DayOfWeek;
+        scheduleMinuteDraft = local.Hour * 60 + local.Minute;
+        scheduleRepeatDraft = station.RepeatsWeekly;
+    }
+
+    private static string[] ParseTags(string draft)
+    {
+        var parts = draft.Split(',');
+        var tags = new List<string>(parts.Length);
+        for (var index = 0; index < parts.Length; index++)
+        {
+            var tag = parts[index].Trim();
+            if (tag.Length > 0)
+            {
+                tags.Add(tag);
+            }
+        }
+
+        return tags.ToArray();
     }
 
     private void LoadStationDrafts()
@@ -133,6 +190,8 @@ internal sealed partial class MusicApp
 
         stationNameDraft = mine.Station.Name;
         stationDescriptionDraft = mine.Station.Description;
+        stationTagsDraft = string.Join(", ", mine.Station.Tags);
+        LoadScheduleDraft(mine.Station);
         for (var index = 0; index < linkDrafts.Length; index++)
         {
             linkDrafts[index] = string.Empty;
@@ -177,6 +236,10 @@ internal sealed partial class MusicApp
             DrawStationField(scale, "##stationName", ref stationNameDraft, StationNameMaxLength);
             DrawFieldLabel(scale, Loc.T(L.Music.StationDescriptionLabel));
             DrawStationDescription(scale);
+            DrawFieldLabel(scale, Loc.T(L.Music.StationTagsLabel));
+            DrawStationTags(scale);
+            DrawFieldLabel(scale, Loc.T(L.Music.ScheduleLabel));
+            DrawScheduleEditor(scale);
             DrawFieldLabel(scale, Loc.T(L.Music.StationLinksLabel));
             for (var index = 0; index < linkDrafts.Length; index++)
             {
@@ -236,16 +299,87 @@ internal sealed partial class MusicApp
         ImGui.Dummy(new Vector2(width, 28f * scale));
     }
 
-    private void DrawStationField(float scale, string id, ref string draft, int maxLength)
+    private void DrawStationField(float scale, string id, ref string draft, int maxLength, string hint = "")
     {
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var fieldMin = new Vector2(origin.X + 16f * scale, origin.Y);
         var fieldRect = new Rect(fieldMin, new Vector2(origin.X + width - 16f * scale,
             origin.Y + FieldHeight * scale));
-        SubmitField.Draw(fieldRect, id, string.Empty, ref draft, theme, maxLength);
+        SubmitField.Draw(fieldRect, id, hint, ref draft, theme, maxLength);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, (FieldHeight + 8f) * scale));
+    }
+
+    private void DrawStationTags(float scale)
+    {
+        DrawStationField(scale, "##stationTags", ref stationTagsDraft, StationTagsMaxLength,
+            Loc.T(L.Music.StationTagsHint));
+    }
+
+    private void DrawScheduleEditor(float scale)
+    {
+        DrawScheduleDayRail(scale);
+        if (scheduleDayDraft < 0)
+        {
+            DrawScheduleSummary(scale, Loc.T(L.Music.ScheduleNone), ui.MutedInk);
+            return;
+        }
+
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        var fieldWidth = width - 32f * scale;
+        var timeRect = new Rect(new Vector2(origin.X + 16f * scale, origin.Y),
+            new Vector2(origin.X + 16f * scale + fieldWidth, origin.Y + FieldHeight * scale));
+        scheduleMinuteDraft = TimeOfDayField.Draw(ui, timeRect, scheduleMinuteDraft, scale);
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, (FieldHeight + 10f) * scale));
+
+        DrawScheduleRepeatRow(scale);
+        DrawScheduleSummary(scale, TimeText.FutureMoment(ScheduleUnix()), ui.Accent);
+    }
+
+    private void DrawScheduleDayRail(float scale)
+    {
+        scheduleLabels[0] = Loc.T(L.Music.ScheduleClear);
+        scheduleActive[0] = scheduleDayDraft < 0;
+        var names = Loc.Culture.DateTimeFormat.AbbreviatedDayNames;
+        for (var day = 0; day < 7; day++)
+        {
+            scheduleLabels[day + 1] = Loc.Culture.TextInfo.ToTitleCase(names[day]);
+            scheduleActive[day + 1] = scheduleDayDraft == day;
+        }
+
+        var tapped = scheduleRail.Draw(ui, scheduleLabels.AsSpan(), scheduleActive.AsSpan());
+        ImGui.Dummy(new Vector2(0f, 8f * scale));
+        if (tapped >= 0)
+        {
+            scheduleDayDraft = tapped == 0 ? -1 : tapped - 1;
+        }
+    }
+
+    private void DrawScheduleRepeatRow(float scale)
+    {
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        Typography.Draw(ImGui.GetWindowDrawList(), new Vector2(origin.X + 16f * scale, origin.Y + 6f * scale),
+            Loc.T(L.Music.ScheduleRepeat), ui.BodyInk, TextStyles.Callout);
+        var toggleWidth = 46f * scale;
+        var toggleMin = new Vector2(origin.X + width - 16f * scale - toggleWidth, origin.Y);
+        var toggleRect = new Rect(toggleMin, toggleMin + new Vector2(toggleWidth, 26f * scale));
+        scheduleRepeatDraft = Toggle.Draw("music.schedule.repeat", toggleRect, scheduleRepeatDraft, theme);
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, 36f * scale));
+    }
+
+    private void DrawScheduleSummary(float scale, string text, Vector4 color)
+    {
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        Typography.Draw(ImGui.GetWindowDrawList(), new Vector2(origin.X + 16f * scale, origin.Y), text, color,
+            TextStyles.Caption1);
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, 24f * scale));
     }
 
     private void DrawLinkField(float scale, int kind)
@@ -288,7 +422,7 @@ internal sealed partial class MusicApp
         var label = stationSaving ? Loc.T(L.Common.Loading) : Loc.T(L.Music.StationSave);
         if (ui.PillButton(buttonRect, label, true, "music.station.save") && !stationSaving)
         {
-            SaveStation(station);
+            SaveStation();
         }
 
         var noticeY = buttonRect.Max.Y + 6f * scale;
@@ -306,24 +440,12 @@ internal sealed partial class MusicApp
         ImGui.Dummy(new Vector2(width, 74f * scale));
     }
 
-    private void SaveStation(CommunityStationDto station)
+    private void SaveStation()
     {
-        var links = new List<CommunityLinkDto>(linkDrafts.Length);
-        for (var index = 0; index < linkDrafts.Length; index++)
-        {
-            var url = linkDrafts[index].Trim();
-            if (url.Length > 0)
-            {
-                links.Add(new CommunityLinkDto(index, url));
-            }
-        }
-
-        var request = new UpdateCommunityStationRequest(stationNameDraft.Trim(), stationDescriptionDraft.Trim(),
-            station.Tags, links.ToArray(), null);
         stationSaving = true;
         stationSaveFailed = false;
         stationSaveDone = false;
-        _ = SaveStationAsync(request);
+        _ = SaveStationAsync(CurrentStationRequest());
     }
 
     private async Task SaveStationAsync(UpdateCommunityStationRequest request)

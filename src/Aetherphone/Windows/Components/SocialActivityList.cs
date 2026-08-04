@@ -138,6 +138,7 @@ internal static class SocialActivityList
             SocialActivity.TypeQuote => (FontAwesomeIcon.QuoteRight.ToIconString(), theme.Accent),
             SocialActivity.TypeFollowRequest => (FontAwesomeIcon.UserClock.ToIconString(), theme.Accent),
             SocialActivity.TypeFollowAccept => (FontAwesomeIcon.UserCheck.ToIconString(), theme.Accent),
+            SocialActivity.TypeRadioLive => (FontAwesomeIcon.BroadcastTower.ToIconString(), theme.Accent),
             _ => (FontAwesomeIcon.Bell.ToIconString(), theme.Accent),
         };
         var badgeRadius = 8f * scale;

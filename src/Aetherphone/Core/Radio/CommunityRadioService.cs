@@ -16,6 +16,9 @@ internal sealed class CommunityRadioService : IDisposable
     private volatile bool loading;
     private volatile bool loaded;
     private volatile bool mineChecked;
+    private volatile RadioTrackDto[] tracks = Array.Empty<RadioTrackDto>();
+    private volatile bool tracksLoading;
+    private volatile string tracksStationId = string.Empty;
     private long lastFetchTick = long.MinValue / 2;
     private long retryAfterTick;
     private int fetching;
@@ -114,6 +117,107 @@ internal sealed class CommunityRadioService : IDisposable
         {
             AepLog.Warning($"[Radio] station update failed: {exception.Message}");
             return false;
+        }
+    }
+
+    public void ToggleFollow(CommunityStationDto station)
+    {
+        var wanted = !station.IsFollowing;
+        var followers = Math.Max(0, station.Followers + (wanted ? 1 : -1));
+        Replace(station.Id, station with { IsFollowing = wanted, Followers = followers });
+        _ = FollowAsync(station.Id, wanted, station);
+    }
+
+    private async Task FollowAsync(string stationId, bool follow, CommunityStationDto previous)
+    {
+        try
+        {
+            var result = await api.Radio.FollowAsync(stationId, follow, cancellation.Token).ConfigureAwait(false);
+            if (result is null)
+            {
+                Replace(stationId, previous);
+                return;
+            }
+
+            if (TryFind(stationId, out var current))
+            {
+                Replace(stationId, current with { IsFollowing = result.Following, Followers = result.Followers });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning($"[Radio] follow failed: {exception.Message}");
+            Replace(stationId, previous);
+        }
+    }
+
+    private void Replace(string stationId, CommunityStationDto updated)
+    {
+        var snapshot = stations;
+        for (var index = 0; index < snapshot.Length; index++)
+        {
+            if (!string.Equals(snapshot[index].Id, stationId, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var copy = new CommunityStationDto[snapshot.Length];
+            Array.Copy(snapshot, copy, snapshot.Length);
+            copy[index] = updated;
+            stations = copy;
+            return;
+        }
+    }
+
+    public RadioTrackDto[] Tracks => tracks;
+    public bool TracksLoading => tracksLoading;
+
+    public void EnsureTracks(string stationId)
+    {
+        if (string.Equals(tracksStationId, stationId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        tracksStationId = stationId;
+        tracks = Array.Empty<RadioTrackDto>();
+        tracksLoading = true;
+        _ = FetchTracksAsync(stationId, cancellation.Token);
+    }
+
+    public void ForgetTracks()
+    {
+        tracksStationId = string.Empty;
+        tracks = Array.Empty<RadioTrackDto>();
+        tracksLoading = false;
+    }
+
+    private async Task FetchTracksAsync(string stationId, CancellationToken token)
+    {
+        try
+        {
+            var page = await api.Radio.TracksAsync(stationId, token).ConfigureAwait(false);
+            if (string.Equals(tracksStationId, stationId, StringComparison.Ordinal))
+            {
+                tracks = page?.Items ?? Array.Empty<RadioTrackDto>();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning($"[Radio] tracklist fetch failed: {exception.Message}");
+        }
+        finally
+        {
+            if (string.Equals(tracksStationId, stationId, StringComparison.Ordinal))
+            {
+                tracksLoading = false;
+            }
         }
     }
 

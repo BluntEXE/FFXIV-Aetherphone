@@ -6,6 +6,7 @@ using Aetherphone.Core.Linkpearl;
 using Aetherphone.Core.Moderation;
 using Aetherphone.Core.Muster;
 using Aetherphone.Core.Notifications;
+using Aetherphone.Core.Radio;
 using Aetherphone.Core.YellowPages;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Windows.Components;
@@ -30,14 +31,16 @@ internal sealed class NotificationsApp : IPhoneApp
     private readonly YellowPagesLauncher yellowPagesLauncher;
     private readonly AnnouncementsLauncher announcementsLauncher;
     private readonly SafetyLauncher safetyLauncher;
+    private readonly RadioLauncher radioLauncher;
     private NotificationCenter? center;
 
     public NotificationsApp(NotificationService notifications, SocialNotificationService socialNotifications,
         LinkpearlLauncher linkpearlLauncher,
         VelvetLauncher velvetLauncher, DmLauncher dmLauncher, GramDmLauncher gramDmLauncher,
         SocialLauncher socialLauncher, MusterLauncher musterLauncher, YellowPagesLauncher yellowPagesLauncher,
-        AnnouncementsLauncher announcementsLauncher, SafetyLauncher safetyLauncher)
+        AnnouncementsLauncher announcementsLauncher, SafetyLauncher safetyLauncher, RadioLauncher radioLauncher)
     {
+        this.radioLauncher = radioLauncher;
         this.notifications = notifications;
         this.socialNotifications = socialNotifications;
         this.linkpearlLauncher = linkpearlLauncher;
@@ -66,7 +69,7 @@ internal sealed class NotificationsApp : IPhoneApp
         center ??= new NotificationCenter(notifications,
             new NotificationRouter(context.Navigation, notifications, socialNotifications, linkpearlLauncher,
                 velvetLauncher, dmLauncher, gramDmLauncher, socialLauncher, musterLauncher, yellowPagesLauncher,
-                announcementsLauncher, safetyLauncher));
+                announcementsLauncher, safetyLauncher, radioLauncher));
         var scale = UiScale.Current;
         var content = context.Content;
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + AppHeader.Height * scale), content.Max);

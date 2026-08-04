@@ -34,4 +34,17 @@ internal sealed class RadioClient
             AethernetJsonContext.Default.UpdateCommunityStationRequest, AethernetJsonContext.Default.MyCommunityStationDto,
             token, statusSink);
     }
+
+    public Task<RadioTrackPage?> TracksAsync(string stationId, CancellationToken token)
+    {
+        return net.GetAsync($"/radio/stations/{Uri.EscapeDataString(stationId)}/tracks",
+            AethernetJsonContext.Default.RadioTrackPage, token);
+    }
+
+    public Task<RadioFollowResultDto?> FollowAsync(string stationId, bool follow, CancellationToken token)
+    {
+        var method = follow ? HttpMethod.Post : HttpMethod.Delete;
+        return net.RequestAsync(method, $"/radio/stations/{Uri.EscapeDataString(stationId)}/follow",
+            AethernetJsonContext.Default.RadioFollowResultDto, token);
+    }
 }

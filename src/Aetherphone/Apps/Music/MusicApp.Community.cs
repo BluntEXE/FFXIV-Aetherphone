@@ -23,12 +23,34 @@ internal sealed partial class MusicApp
         "Twitch", "YouTube", "Discord", "Bluesky", "X", "Ko-fi", "Patreon",
     };
 
+    private const int MaxStationTags = 5;
+    private const int RecentTrackRows = 12;
+    private const float TrackRowHeight = 34f;
+
+    private readonly ChipRail tagRail = new();
+    private readonly ChipRail stationTagRail = new();
+    private readonly string[] tagFilterLabels = new string[MaxStationTags * 8 + 1];
+    private readonly bool[] tagFilterActive = new bool[MaxStationTags * 8 + 1];
+    private readonly List<string> knownTags = new();
+    private readonly List<CommunityStationDto> filteredStations = new();
     private string viewedStationId = string.Empty;
+    private string tagFilter = string.Empty;
 
     private void OpenCommunity()
     {
         community.Refresh();
         router.Push(View.Community);
+    }
+
+    private void OpenCommunityWithTag(string tag)
+    {
+        tagFilter = tag;
+        tagRail.Reset();
+        router.Pop();
+        if (!router.Current.Equals(View.Community))
+        {
+            router.Push(View.Community);
+        }
     }
 
     private void OpenStationPage(CommunityStationDto station)
@@ -123,16 +145,82 @@ internal sealed partial class MusicApp
             return;
         }
 
+        ApplyTagFilter(stations);
         using (AppSurface.Begin(body))
         {
             ImGui.Dummy(new Vector2(0f, 6f * scale));
-            for (var index = 0; index < stations.Length; index++)
+            DrawTagFilterRail(scale, stations);
+            for (var index = 0; index < filteredStations.Count; index++)
             {
-                DrawCommunityRow(scale, stations[index]);
+                DrawCommunityRow(scale, filteredStations[index]);
             }
 
             ImGui.Dummy(new Vector2(0f, 10f * scale));
         }
+    }
+
+    private void ApplyTagFilter(CommunityStationDto[] stations)
+    {
+        filteredStations.Clear();
+        for (var index = 0; index < stations.Length; index++)
+        {
+            if (tagFilter.Length == 0 || HasTag(stations[index], tagFilter))
+            {
+                filteredStations.Add(stations[index]);
+            }
+        }
+    }
+
+    private static bool HasTag(CommunityStationDto station, string tag)
+    {
+        for (var index = 0; index < station.Tags.Length; index++)
+        {
+            if (string.Equals(station.Tags[index], tag, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void DrawTagFilterRail(float scale, CommunityStationDto[] stations)
+    {
+        knownTags.Clear();
+        for (var index = 0; index < stations.Length && knownTags.Count < tagFilterLabels.Length - 1; index++)
+        {
+            var tags = stations[index].Tags;
+            for (var tagIndex = 0; tagIndex < tags.Length; tagIndex++)
+            {
+                if (tags[tagIndex].Length > 0 && !knownTags.Contains(tags[tagIndex]))
+                {
+                    knownTags.Add(tags[tagIndex]);
+                }
+            }
+        }
+
+        if (knownTags.Count == 0)
+        {
+            return;
+        }
+
+        tagFilterLabels[0] = Loc.T(L.Music.AllTags);
+        tagFilterActive[0] = tagFilter.Length == 0;
+        for (var index = 0; index < knownTags.Count; index++)
+        {
+            tagFilterLabels[index + 1] = knownTags[index];
+            tagFilterActive[index + 1] = string.Equals(knownTags[index], tagFilter, StringComparison.OrdinalIgnoreCase);
+        }
+
+        var count = knownTags.Count + 1;
+        var tapped = tagRail.Draw(ui, tagFilterLabels.AsSpan(0, count), tagFilterActive.AsSpan(0, count));
+        ImGui.Dummy(new Vector2(0f, 6f * scale));
+        if (tapped < 0)
+        {
+            return;
+        }
+
+        tagFilter = tapped == 0 || tagFilterActive[tapped] ? string.Empty : knownTags[tapped - 1];
     }
 
     private void DrawMyStationEntry(Rect content, float scale)
@@ -196,7 +284,12 @@ internal sealed partial class MusicApp
         DrawLiveMark(drawList, new Vector2(textLeft, statusY), scale, station, textWidth);
 
         var nowPlaying = NowPlayingFor(station);
-        var subtitle = nowPlaying.Length > 0 ? nowPlaying : station.Description;
+        var subtitle = nowPlaying.Length > 0 ? nowPlaying : ScheduleLine(station);
+        if (subtitle.Length == 0)
+        {
+            subtitle = station.Description;
+        }
+
         if (subtitle.Length > 0)
         {
             var fittedSubtitle = Typography.FitText(subtitle, textWidth, TextStyles.Caption1);
@@ -263,6 +356,7 @@ internal sealed partial class MusicApp
             return;
         }
 
+        community.EnsureTracks(station.Id);
         DrawTopBar(context, station.Name, PopToCommunity);
         var body = ScrollBody(content, scale);
         using (AppSurface.Begin(body))
@@ -302,7 +396,7 @@ internal sealed partial class MusicApp
         var statusY = hostY + 28f * scale;
         var statusText = station.IsLive
             ? string.Format(Loc.T(L.Music.ListeningCount), station.Listeners)
-            : Loc.T(L.Music.OffAir);
+            : OffAirStatus(station);
         var status = Typography.FitText(statusText, width, TextStyles.Subheadline);
         var statusSize = Typography.Measure(status, TextStyles.Subheadline);
         Typography.Draw(drawList, new Vector2(origin.X + (width - statusSize.X) * 0.5f, statusY), status,
@@ -357,6 +451,27 @@ internal sealed partial class MusicApp
             available, TextStyles.Caption1, ui.MutedInk, theme);
     }
 
+    private static string OffAirStatus(CommunityStationDto station)
+    {
+        var offAir = Loc.T(L.Music.OffAir);
+        if (station.Followers == 0)
+        {
+            return offAir;
+        }
+
+        return offAir + " · " + Loc.Plural(L.Music.StationFollowers, station.Followers);
+    }
+
+    private static string ScheduleLine(CommunityStationDto station)
+    {
+        if (station.NextBroadcastAtUnix <= 0)
+        {
+            return string.Empty;
+        }
+
+        return string.Format(Loc.T(L.Music.NextBroadcast), TimeText.FutureMoment(station.NextBroadcastAtUnix));
+    }
+
     private void DrawStationActions(float scale, CommunityStationDto station)
     {
         var origin = ImGui.GetCursorScreenPos();
@@ -385,8 +500,20 @@ internal sealed partial class MusicApp
             ui.PillButton(buttonRect, label, false, "music.station.playDisabled");
         }
 
+        var owned = community.Mine is { } mine && string.Equals(mine.Station.Id, station.Id, StringComparison.Ordinal);
+        if (!owned)
+        {
+            var followMin = new Vector2(buttonMin.X, buttonRect.Max.Y + 8f * scale);
+            var followRect = new Rect(followMin, followMin + new Vector2(buttonWidth, 36f * scale));
+            var followLabel = station.IsFollowing ? Loc.T(L.Music.FollowingStation) : Loc.T(L.Music.FollowStation);
+            if (ui.GhostButton(followRect, followLabel))
+            {
+                community.ToggleFollow(station);
+            }
+        }
+
         ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, buttonHeight + 16f * scale));
+        ImGui.Dummy(new Vector2(width, buttonHeight + (owned ? 16f : 60f) * scale));
     }
 
     private const int TwitchLinkKind = 0;
@@ -432,10 +559,16 @@ internal sealed partial class MusicApp
     {
         var width = ImGui.GetContentRegionAvail().X;
         DrawWatchOnTwitch(scale, station);
+        DrawStationTagRail(scale, station);
         var track = NowPlayingFor(station);
         if (track.Length > 0)
         {
             DrawStationParagraph(scale, track, ui.Accent, TextStyles.Callout, width);
+        }
+
+        if (!station.IsLive && ScheduleLine(station) is { Length: > 0 } schedule)
+        {
+            DrawStationParagraph(scale, schedule, ui.TitleInk, TextStyles.Callout, width);
         }
 
         if (station.Description.Length > 0)
@@ -444,6 +577,7 @@ internal sealed partial class MusicApp
         }
 
         DrawStationLinks(scale, station);
+        DrawRecentTracks(scale, width);
 
         var reportOrigin = ImGui.GetCursorScreenPos();
         var reportWidth = MathF.Min(width - 32f * scale, 200f * scale);
@@ -456,6 +590,90 @@ internal sealed partial class MusicApp
 
         ImGui.SetCursorScreenPos(reportOrigin);
         ImGui.Dummy(new Vector2(width, 50f * scale));
+    }
+
+    private void DrawStationTagRail(float scale, CommunityStationDto station)
+    {
+        if (station.Tags.Length == 0)
+        {
+            return;
+        }
+
+        var count = Math.Min(station.Tags.Length, MaxStationTags);
+        for (var index = 0; index < count; index++)
+        {
+            tagFilterLabels[index] = station.Tags[index];
+            tagFilterActive[index] = false;
+        }
+
+        var tapped = stationTagRail.Draw(ui, tagFilterLabels.AsSpan(0, count), tagFilterActive.AsSpan(0, count));
+        ImGui.Dummy(new Vector2(0f, 8f * scale));
+        if (tapped >= 0)
+        {
+            OpenCommunityWithTag(station.Tags[tapped]);
+        }
+    }
+
+    private void DrawRecentTracks(float scale, float width)
+    {
+        var recent = community.Tracks;
+        if (recent.Length == 0)
+        {
+            return;
+        }
+
+        var origin = ImGui.GetCursorScreenPos();
+        Typography.Draw(ImGui.GetWindowDrawList(), new Vector2(origin.X + 16f * scale, origin.Y + 10f * scale),
+            Loc.T(L.Music.RecentlyPlayed), ui.MutedInk, TextStyles.Caption1);
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, 32f * scale));
+
+        var shown = Math.Min(recent.Length, RecentTrackRows);
+        for (var index = 0; index < shown; index++)
+        {
+            DrawTrackRow(scale, recent[index], index);
+        }
+    }
+
+    private void DrawTrackRow(float scale, RadioTrackDto track, int index)
+    {
+        var rowHeight = TrackRowHeight * scale;
+        var width = ImGui.GetContentRegionAvail().X;
+        var origin = ImGui.GetCursorScreenPos();
+        var min = origin;
+        var max = new Vector2(origin.X + width, origin.Y + rowHeight);
+        var drawList = ImGui.GetWindowDrawList();
+        var hovered = UiInteract.Hover(min, max);
+        if (hovered)
+        {
+            Squircle.Fill(drawList, min, max, 8f * scale, ImGui.GetColorU32(ui.HoverTint));
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        var stamp = TimeText.Clock(track.PlayedAtUnix);
+        var stampWidth = Typography.Measure(stamp, TextStyles.Caption2).X;
+        var textLeft = min.X + 16f * scale;
+        var textWidth = max.X - 16f * scale - stampWidth - 10f * scale - textLeft;
+        var title = Typography.FitText(track.Title, textWidth, TextStyles.Subheadline);
+        Typography.Draw(drawList, new Vector2(textLeft, min.Y + 8f * scale), title, ui.BodyInk,
+            TextStyles.Subheadline);
+        Typography.Draw(drawList, new Vector2(max.X - 16f * scale - stampWidth, min.Y + 10f * scale), stamp,
+            ui.MutedInk, TextStyles.Caption2);
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, rowHeight));
+        if (UiInteract.Click(min, max, hovered))
+        {
+            SearchForTrack(track.Title);
+        }
+    }
+
+    private void SearchForTrack(string title)
+    {
+        searchDraft = title;
+        BeginSearch(title);
+        router.Reset();
+        router.Push(View.Search, false);
     }
 
     private void DrawStationParagraph(float scale, string text, Vector4 color, TextStyle style, float width)

@@ -76,7 +76,7 @@ internal static class AppRegistry
         apps.Add(new WalletApp(services.GameData, services.Textures));
         apps.Add(new InventoryApp(services.InventoryCapture, services.GameData, services.Textures));
         apps.Add(new JobsApp(services.GameData, services.Textures, services.Configuration, services.Confirm, services.CharacterWatch));
-        apps.Add(new MusicApp(services.Radio, services.SongSearch, services.Playback, services.SongHistory, services.Playlists, services.Media, services.Http, services.Textures, services.Aethernet, services.Report, photoLibrary, services.WallpaperImages, services.Confirm, services.Configuration));
+        apps.Add(new MusicApp(services.Radio, services.SongSearch, services.Playback, services.SongHistory, services.Playlists, services.Media, services.Http, services.Textures, services.Aethernet, services.Report, photoLibrary, services.WallpaperImages, services.Confirm, services.Configuration, services.RadioLauncher));
         apps.Add(new ClockApp(services.Configuration, services.Confirm));
         apps.Add(new NotesApp(services.Configuration, services.Confirm));
         apps.Add(new CalculatorApp());
@@ -85,7 +85,7 @@ internal static class AppRegistry
         apps.Add(new DailiesApp(services.Configuration, services.GameData));
         apps.Add(new FishingApp());
         apps.Add(new GamesApp(services.GameStats, services.GameData, services.Textures));
-        apps.Add(new NotificationsApp(services.Notifications, services.SocialNotifications, services.LinkpearlLauncher, services.VelvetLauncher, services.DmLauncher, services.GramDmLauncher, services.SocialLauncher, services.MusterLauncher, services.YellowPagesLauncher, services.AnnouncementsLauncher, services.SafetyLauncher));
+        apps.Add(new NotificationsApp(services.Notifications, services.SocialNotifications, services.LinkpearlLauncher, services.VelvetLauncher, services.DmLauncher, services.GramDmLauncher, services.SocialLauncher, services.MusterLauncher, services.YellowPagesLauncher, services.AnnouncementsLauncher, services.SafetyLauncher, services.RadioLauncher));
         apps.Add(new SettingsApp(services, photoLibrary));
         var calendarEvents = new CalendarEvents(services.Http, services.AethernetSession);
         apps.Add(new CalendarApp(services.Configuration, calendarEvents, services.Confirm));

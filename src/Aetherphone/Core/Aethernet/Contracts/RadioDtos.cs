@@ -20,7 +20,17 @@ internal sealed record CommunityStationDto(
     int Listeners,
     string NowPlaying,
     long LastLiveAtUnix,
-    long CreatedAtUnix);
+    long CreatedAtUnix,
+    bool IsFollowing,
+    int Followers,
+    long NextBroadcastAtUnix,
+    bool RepeatsWeekly);
+
+internal sealed record RadioFollowResultDto(bool Following, int Followers);
+
+internal sealed record RadioTrackDto(string Title, long PlayedAtUnix);
+
+internal sealed record RadioTrackPage(RadioTrackDto[] Items);
 
 internal sealed record CommunityStationPage(CommunityStationDto[] Items, string? NextCursor);
 
@@ -29,7 +39,9 @@ internal sealed record UpdateCommunityStationRequest(
     string Description,
     string[]? Tags,
     CommunityLinkDto[]? Links,
-    string? MediaKey);
+    string? MediaKey,
+    long? NextBroadcastAtUnix,
+    bool? RepeatsWeekly);
 
 internal sealed record CommunityCredentialsDto(
     string Host,
