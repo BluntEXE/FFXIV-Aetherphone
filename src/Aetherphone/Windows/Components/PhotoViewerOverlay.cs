@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
@@ -13,13 +14,15 @@ internal sealed class PhotoViewerOverlay
     private readonly PhotoZoomView zoomView = new();
     private Aetherphone.Core.Animation.Spring reveal;
     private Func<IDalamudTextureWrap?>? source;
+    private IPhoneApp? owner;
     private bool open;
 
     public bool Active => open || reveal.Value > 0.01f;
 
-    public void Open(Func<IDalamudTextureWrap?> textureSource)
+    public void Open(IPhoneApp app, Func<IDalamudTextureWrap?> textureSource)
     {
         source = textureSource;
+        owner = app;
         zoomView.Reset();
         open = true;
     }
@@ -36,6 +39,7 @@ internal sealed class PhotoViewerOverlay
             if (!open)
             {
                 source = null;
+                owner = null;
             }
 
             return;
@@ -59,9 +63,9 @@ internal sealed class PhotoViewerOverlay
         if (texture is not null)
         {
             if (zoomView.Draw(stage, texture, theme, Metrics.Radius.Sm * scale, open && eased > 0.9f, controls) &&
-                source is not null)
+                source is not null && owner is not null)
             {
-                Plugin.PhotoWindow.Open(source);
+                Plugin.PhotoWindow.Open(source, owner);
             }
         }
         else

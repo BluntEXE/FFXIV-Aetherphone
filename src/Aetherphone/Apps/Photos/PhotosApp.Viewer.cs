@@ -31,7 +31,7 @@ internal sealed partial class PhotosApp
         {
             if (zoomView.Draw(screen, texture, frameTheme, 0f, controls: safe))
             {
-                Plugin.PhotoWindow.Open(() => GetFull(path) ?? thumbnails.Get(path));
+                Plugin.PhotoWindow.Open(() => GetFull(path) ?? thumbnails.Get(path), this);
             }
         }
         else

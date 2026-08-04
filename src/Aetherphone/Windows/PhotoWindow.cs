@@ -1,5 +1,5 @@
 using Aetherphone.Core;
-using Aetherphone.Core.Localization;
+using Aetherphone.Core.Apps;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -19,6 +19,7 @@ internal sealed class PhotoWindow : Window
 
     private readonly ThemeProvider themes;
     private Func<IDalamudTextureWrap?>? source;
+    private IPhoneApp? owner;
     private bool fitPending;
 
     public PhotoWindow(ThemeProvider themes)
@@ -32,19 +33,24 @@ internal sealed class PhotoWindow : Window
         };
     }
 
-    public void Open(Func<IDalamudTextureWrap?> textureSource)
+    public void Open(Func<IDalamudTextureWrap?> textureSource, IPhoneApp app)
     {
         source = textureSource;
+        owner = app;
         fitPending = true;
         IsOpen = true;
         BringToFront();
     }
 
-    public override void OnClose() => source = null;
+    public override void OnClose()
+    {
+        source = null;
+        owner = null;
+    }
 
     public override void PreDraw()
     {
-        WindowName = $"{AepConstants.Name}: {Loc.T(L.Common.PhotoWindow)}{WindowId}";
+        WindowName = $"{owner?.DisplayName ?? AepConstants.Name}{WindowId}";
         Size = null;
         if (!fitPending)
         {

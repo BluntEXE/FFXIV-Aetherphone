@@ -1069,7 +1069,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         }
 
         pendingViewUrl = null;
-        photoViewer.Open(() => images.Get(url));
+        photoViewer.Open(this, () => images.Get(url));
     }
 
     private void DrawLikeBurst(Rect imageRect, string postId)

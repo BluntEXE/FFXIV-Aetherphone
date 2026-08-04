@@ -29,6 +29,7 @@ internal sealed partial class VelvetShell
         }
 
         protected override PhoneTheme Theme => app.theme;
+        protected override IPhoneApp Owner => app;
         protected override INavigator Navigation => app.navigation;
         protected override Action BackAction => app.back;
         protected override string MyUserId => app.store.Me?.UserId ?? string.Empty;

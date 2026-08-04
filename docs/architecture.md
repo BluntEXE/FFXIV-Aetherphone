@@ -131,7 +131,7 @@ Other things `PhoneWindow` handles:
 
 `UpdateChipWindow` (src/Aetherphone/Windows/UpdateChipWindow.cs) is a small chip shown under the phone when a plugin update is available.
 
-`PhotoWindow` (src/Aetherphone/Windows/PhotoWindow.cs) is the photo pop-out: an ordinary resizable Dalamud window that shows one image fitted to its content region. `PhotoZoomView` draws the button that opens it (top of the zoom stack), every fullscreen photo viewer returns that click to its caller, and the caller hands `Plugin.PhotoWindow.Open` a `Func<IDalamudTextureWrap?>` so the window re-resolves the texture from its cache every frame instead of holding a wrap that eviction could free. It sizes itself to the image aspect the first frame the texture resolves, then leaves the size alone.
+`PhotoWindow` (src/Aetherphone/Windows/PhotoWindow.cs) is the photo pop-out: an ordinary resizable Dalamud window that shows one image fitted to its content region. `PhotoZoomView` draws the button that opens it (leftmost in the control row), every fullscreen photo viewer returns that click to its caller, and the caller hands `Plugin.PhotoWindow.Open` a `Func<IDalamudTextureWrap?>` plus the `IPhoneApp` it came from. The texture source means the window re-resolves from the cache every frame instead of holding a wrap that eviction could free; the app supplies the window title, read as `DisplayName` every frame so it follows a language switch. It sizes itself to the image aspect the first frame the texture resolves, then leaves the size alone.
 
 ## The shell layer (Core/Shell)
 

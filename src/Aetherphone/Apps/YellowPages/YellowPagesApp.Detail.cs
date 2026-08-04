@@ -264,7 +264,7 @@ internal sealed partial class YellowPagesApp
         if (UiInteract.Click(expandCenter - expandHalf, expandCenter + expandHalf, overExpand))
         {
             var viewerUrl = url;
-            photoViewer.Open(() => images.Get(viewerUrl));
+            photoViewer.Open(this, () => images.Get(viewerUrl));
             return;
         }
 
@@ -302,7 +302,7 @@ internal sealed partial class YellowPagesApp
         if (UiInteract.Click(rect.Min, touchMax, hovered))
         {
             var viewerUrl = url;
-            photoViewer.Open(() => images.Get(viewerUrl));
+            photoViewer.Open(this, () => images.Get(viewerUrl));
         }
     }
 

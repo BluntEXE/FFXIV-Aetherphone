@@ -103,7 +103,7 @@ internal sealed partial class VelvetShell
             if (result.Tapped && !UiInteract.InputBlocked && result.Index < photos.Length)
             {
                 var mediaUrl = photos[result.Index];
-                photoViewer.Open(() => images.Get(mediaUrl));
+                photoViewer.Open(this, () => images.Get(mediaUrl));
             }
 
             var actionsY = imageRect.Max.Y + 22f * scale;

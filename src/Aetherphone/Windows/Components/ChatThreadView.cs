@@ -110,6 +110,8 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     protected abstract PhoneTheme Theme { get; }
 
+    protected abstract IPhoneApp Owner { get; }
+
     protected abstract INavigator Navigation { get; }
 
     protected abstract Action BackAction { get; }
@@ -699,7 +701,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             var controls = new Rect(new Vector2(fitMin.X, fitMax.Y), new Vector2(fitMax.X, controlsBottom));
             if (imageZoom.Draw(new Rect(fitMin, fitMax), texture, Theme, 10f * scale, true, controls))
             {
-                Plugin.PhotoWindow.Open(() => ResolveThreadImage(messageId));
+                Plugin.PhotoWindow.Open(() => ResolveThreadImage(messageId), Owner);
             }
         }
 
