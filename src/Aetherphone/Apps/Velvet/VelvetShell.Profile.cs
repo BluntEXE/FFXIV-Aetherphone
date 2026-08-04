@@ -43,6 +43,15 @@ internal sealed partial class VelvetShell
             {
                 Typography.DrawCentered(body.Center, Loc.T(L.Common.Loading), VelvetTheme.MutedInk, TextStyles.Callout);
             }
+            else if (store.ProfileFailed)
+            {
+                if (EmptyState.Draw(body, ui, FontAwesomeIcon.CloudDownloadAlt,
+                        Loc.T(L.Velvet.ProfileUnavailable), Loc.T(L.Velvet.ProfileUnavailableHint),
+                        Loc.T(L.Common.Retry)))
+                {
+                    store.OpenProfile(userId);
+                }
+            }
             else
             {
                 EmptyState.Draw(body, ui, FontAwesomeIcon.User, Loc.T(L.Velvet.ProfileUnavailable),

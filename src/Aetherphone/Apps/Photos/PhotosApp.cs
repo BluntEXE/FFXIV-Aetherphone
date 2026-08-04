@@ -70,6 +70,7 @@ internal sealed partial class PhotosApp : IPhoneApp
     private int viewerIndex;
     private int segment;
     private bool resetScroll;
+    private bool focusAlbumName;
     private PhoneTheme frameTheme = PhoneTheme.Default;
     private INavigator frameNavigation = null!;
 

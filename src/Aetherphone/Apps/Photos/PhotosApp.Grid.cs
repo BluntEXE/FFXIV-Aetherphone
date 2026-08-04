@@ -174,10 +174,18 @@ internal sealed partial class PhotosApp
             ImGui.SetCursorScreenPos(new Vector2(origin.X + 12f * scale,
                 origin.Y + height * 0.5f - ImGui.GetFrameHeight() * 0.5f));
             ImGui.SetNextItemWidth(width - 24f * scale);
+            if (focusAlbumName)
+            {
+                focusAlbumName = false;
+                ImGui.SetKeyboardFocusHere();
+            }
+
+            bool submitted;
             using (ImRaii.PushColor(ImGuiCol.FrameBg, new Vector4(0f, 0f, 0f, 0f))
                        .Push(ImGuiCol.Text, ui.TitleInk))
             {
-                ImGui.InputText("##modifyAlbumName", ref draft, 64);
+                submitted = ImGui.InputText("##modifyAlbumName", ref draft, 64,
+                    ImGuiInputTextFlags.EnterReturnsTrue);
             }
 
             ImGui.SetCursorScreenPos(origin);
@@ -194,7 +202,7 @@ internal sealed partial class PhotosApp
                        .Push(ImGuiCol.ButtonActive, accent)
                        .Push(ImGuiCol.Text, new Vector4(1f, 1f, 1f, canProceed ? 1f : 0.72f)))
             {
-                if (ImGui.Button(buttonLabel, new Vector2(-1f, 38f * scale)) && canProceed)
+                if ((ImGui.Button(buttonLabel, new Vector2(-1f, 38f * scale)) || submitted) && canProceed)
                 {
                     commit();
                     cancel();
@@ -255,8 +263,14 @@ internal sealed partial class PhotosApp
         renameAlbumDraft = string.Empty;
     }
 
-    private void DrawEmpty(Rect body) =>
-        EmptyState.Draw(body, ui, FontAwesomeIcon.Image, Loc.T(L.Photos.NoPhotos), Loc.T(L.Photos.UseCameraHint));
+    private void DrawEmpty(Rect body)
+    {
+        if (EmptyState.Draw(body, ui, FontAwesomeIcon.Image, Loc.T(L.Photos.NoPhotos),
+                Loc.T(L.Photos.UseCameraHint), Loc.T(L.Apps.Camera)))
+        {
+            frameNavigation.Open("camera");
+        }
+    }
 
     private void DrawEmptyAlbums(Rect body) =>
         EmptyState.Draw(body, ui, FontAwesomeIcon.Images, Loc.T(L.Photos.NoAlbums), Loc.T(L.Photos.CreateAlbumHint));
@@ -537,6 +551,7 @@ internal sealed partial class PhotosApp
                              Loc.T(L.Photos.CreateAlbum), "photos.newAlbum"))
         {
             newAlbumDraft = string.Empty;
+            focusAlbumName = true;
             router.Push(PhotoView.CreateAlbum());
         }
     }
@@ -667,6 +682,7 @@ internal sealed partial class PhotosApp
             {
                 renameAlbumDraft = found.Name;
             }
+            focusAlbumName = true;
             router.Push(PhotoView.RenameAlbum(key));
         }
     }

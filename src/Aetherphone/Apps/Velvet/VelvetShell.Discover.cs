@@ -85,6 +85,21 @@ internal sealed partial class VelvetShell
                         hint, VelvetTheme.MutedInk, TextStyles.Subheadline);
                 }
 
+                if (!paging && discoverInclude.Any)
+                {
+                    var buttonWidth = 168f * scale;
+                    var buttonTop = listRect.Min.Y + 150f * scale;
+                    var buttonRect = new Rect(
+                        new Vector2(width * 0.5f + listRect.Min.X - buttonWidth * 0.5f, buttonTop),
+                        new Vector2(width * 0.5f + listRect.Min.X + buttonWidth * 0.5f, buttonTop + 38f * scale));
+                    if (ConfirmDialog.DrawPillButton(buttonRect, Loc.T(L.Velvet.FilterClearAll), true, theme, 1f, 1f,
+                            ConfirmButtonTone.Primary, "velvet.discover.clearFilters"))
+                    {
+                        discoverInclude.Clear();
+                        ApplyFilters(VelvetPage.Discover);
+                    }
+                }
+
                 return;
             }
 

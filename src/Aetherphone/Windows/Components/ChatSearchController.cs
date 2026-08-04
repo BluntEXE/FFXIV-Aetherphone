@@ -80,10 +80,17 @@ internal sealed class ChatSearchController
             focus = false;
         }
 
+        bool submitted;
         using (ImRaii.PushColor(ImGuiCol.FrameBg, new Vector4(0f, 0f, 0f, 0f)))
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextStrong))
         {
-            ImGui.InputTextWithHint("##threadSearch", Loc.T(L.Common.Search), ref query, QueryMaxLength);
+            submitted = ImGui.InputTextWithHint("##threadSearch", Loc.T(L.Common.Search), ref query, QueryMaxLength,
+                ImGuiInputTextFlags.EnterReturnsTrue);
+        }
+
+        if (submitted)
+        {
+            focus = true;
         }
 
         Sync(model.Messages, model.ScrollTo);
@@ -98,8 +105,8 @@ internal sealed class ChatSearchController
         Typography.Draw(new Vector2(upCenter.X - buttonRadius - 4f * scale - countSize.X,
             area.Center.Y - countSize.Y * 0.5f), countText, ui.MutedInk, TextStyles.Footnote);
         var hasMatches = matches.Count > 0;
-        if (ui.IconButton(upCenter, buttonRadius, FontAwesomeIcon.ChevronUp.ToIconString(),
-                hasMatches ? ui.BodyInk : ui.MutedInk, AppSkin.Transparent, 0.85f) && hasMatches)
+        if ((ui.IconButton(upCenter, buttonRadius, FontAwesomeIcon.ChevronUp.ToIconString(),
+                hasMatches ? ui.BodyInk : ui.MutedInk, AppSkin.Transparent, 0.85f) || submitted) && hasMatches)
         {
             index = (index - 1 + matches.Count) % matches.Count;
             model.ScrollTo(matches[index]);
