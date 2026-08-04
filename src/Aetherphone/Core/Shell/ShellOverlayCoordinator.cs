@@ -103,12 +103,11 @@ internal sealed class ShellOverlayCoordinator
             return;
         }
 
-        if (!UiInteract.WindowFocused)
+        if (UiInteract.WindowFocused)
         {
-            return;
+            ImGui.SetNextFrameWantCaptureKeyboard(true);
         }
 
-        ImGui.SetNextFrameWantCaptureKeyboard(true);
         if (!ImGui.IsKeyPressed(ImGuiKey.Escape))
         {
             return;
