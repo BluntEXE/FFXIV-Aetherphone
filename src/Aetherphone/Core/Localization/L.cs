@@ -973,7 +973,7 @@ internal static class L
         public static readonly LocString FilterEligibility = new("housing.filterEligibility", "Who can buy");
         public static readonly LocString FilterDivision = new("housing.filterDivision", "Division");
         public static readonly LocString FilterData = new("housing.filterData", "Data");
-        public static readonly LocString FilterOtherPhases = new("housing.filterOtherPhases", "Other phases");
+        public static readonly LocString FilterOtherPhases = new("housing.filterOtherPhases", "Other");
         public static readonly LocString FilterFreshOnly = new("housing.filterFreshOnly", "Fresh scans only");
         public static readonly LocString FilterWatchedOnly = new("housing.filterWatchedOnly", "Watched plots only");
         public static readonly LocString FilterMaxEntries = new("housing.filterMaxEntries", "Max reported entries");

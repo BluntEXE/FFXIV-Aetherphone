@@ -3681,7 +3681,7 @@
   "housing.filterEligibility": "Who can buy",
   "housing.filterDivision": "Division",
   "housing.filterData": "Data",
-  "housing.filterOtherPhases": "Other phases",
+  "housing.filterOtherPhases": "Other",
   "housing.filterFreshOnly": "Fresh scans only",
   "housing.filterWatchedOnly": "Watched plots only",
   "housing.filterMaxEntries": "Max reported entries",
