@@ -153,7 +153,7 @@ internal sealed partial class HousingApp
         var detailsRect = rects[2];
         if (HousingChrome.PillButton(watchRect, watchLabel, watched, ui, false))
         {
-            var nowWatched = housing.Watch.ToggleWatch(plot, housing.WorldName);
+            var nowWatched = housing.Watch.ToggleWatch(plot, housing.WorldNameOf(plot.Key.WorldId));
             ShowToast(Loc.T(nowWatched ? L.Housing.Watching : L.Housing.Unwatch));
             InvalidateCache();
         }
@@ -227,14 +227,15 @@ internal sealed partial class HousingApp
         if (HousingChrome.PillButton(confirmRect, confirmLabel, true, ui, true))
         {
             var minutes = choices[Math.Clamp(reminderChoice, 0, choices.Length - 1)];
-            if (housing.Watch.SetReminder(plot, housing.WorldName, minutes))
+            if (housing.Watch.SetReminder(plot, housing.WorldNameOf(plot.Key.WorldId), minutes))
             {
                 configuration.HousingReminderMinutes = minutes;
                 configuration.Save();
                 reminderPickerOpen = false;
                 ShowToast(Loc.T(L.Housing.ReminderConfirmed, HousingFormat.LeadTime(minutes),
-                    HousingFormat.PhaseLabel(plot.Phase).ToLower(Loc.Culture),
-                    HousingFormat.Place(housing.DistrictName, plot.Key.Ward), plot.Key.Plot));
+                    HousingFormat.PhaseLabel(plot.Phase),
+                    HousingFormat.Place(HousingDistricts.Name(plot.Key.DistrictId), plot.Key.Ward),
+                    plot.Key.Plot));
             }
             else
             {

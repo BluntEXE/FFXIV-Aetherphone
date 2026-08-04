@@ -148,11 +148,16 @@ internal static class HousingFormat
         return Loc.T(L.Housing.AgeDays, (int)age.TotalDays);
     }
 
-    public static string ExactLocalTime(DateTime utcMoment) =>
-        utcMoment == default
-            ? Loc.T(L.Housing.TimeUnknown)
-            : DateTime.SpecifyKind(utcMoment, DateTimeKind.Utc).ToLocalTime()
-                .ToString("d MMM yyyy HH:mm", Loc.Culture);
+    public static string ExactLocalTime(DateTime utcMoment)
+    {
+        if (utcMoment == default)
+        {
+            return Loc.T(L.Housing.TimeUnknown);
+        }
+
+        var local = DateTime.SpecifyKind(utcMoment, DateTimeKind.Utc).ToLocalTime();
+        return local.ToString("d MMM yyyy", Loc.Culture) + " " + TimeText.Clock(local);
+    }
 
     public static string Price(long gil) =>
         gil <= 0L ? Loc.T(L.Housing.NotReported) : Loc.T(L.Housing.PriceGil, gil.ToString("N0", Loc.Culture));

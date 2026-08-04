@@ -1,5 +1,3 @@
-using Aetherphone.Core;
-using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Apps.Housing;
@@ -25,16 +23,6 @@ internal static class HousingGlyphs
         drawList.AddRectFilled(doorMin, doorMax, packedHole, radius * 0.10f);
     }
 
-    public static void Placard(ImDrawListPtr drawList, Rect bounds, Vector4 board, Vector4 edge, float scale)
-    {
-        var rounding = 4f * scale;
-        Squircle.Fill(drawList, bounds.Min, bounds.Max, rounding, ImGui.GetColorU32(board));
-        Squircle.Stroke(drawList, bounds.Min, bounds.Max, rounding, ImGui.GetColorU32(edge), Metrics.Stroke.Hairline);
-        var hangY = bounds.Min.Y - 3f * scale;
-        drawList.AddLine(new Vector2(bounds.Center.X - bounds.Width * 0.22f, hangY),
-            new Vector2(bounds.Center.X + bounds.Width * 0.22f, hangY), ImGui.GetColorU32(edge), 1f * scale);
-    }
-
     public static void Circle(ImDrawListPtr drawList, Vector2 center, float radius, uint fill) =>
         drawList.AddCircleFilled(center, radius, fill, 28);
 
@@ -55,33 +43,6 @@ internal static class HousingGlyphs
         Span<Vector2> points = stackalloc Vector2[6];
         FillHexagonPoints(points, center, radius);
         Fill(drawList, fill, points);
-    }
-
-    public static void HexagonOutline(ImDrawListPtr drawList, Vector2 center, float radius, uint color,
-        float thickness)
-    {
-        Span<Vector2> points = stackalloc Vector2[6];
-        FillHexagonPoints(points, center, radius);
-        for (var index = 0; index < points.Length; index++)
-        {
-            drawList.AddLine(points[index], points[(index + 1) % points.Length], color, thickness);
-        }
-    }
-
-    public static void DiamondOutline(ImDrawListPtr drawList, Vector2 center, float radius, uint color,
-        float thickness)
-    {
-        Span<Vector2> points = stackalloc Vector2[4]
-        {
-            new(center.X, center.Y - radius),
-            new(center.X + radius, center.Y),
-            new(center.X, center.Y + radius),
-            new(center.X - radius, center.Y),
-        };
-        for (var index = 0; index < points.Length; index++)
-        {
-            drawList.AddLine(points[index], points[(index + 1) % points.Length], color, thickness);
-        }
     }
 
     public static void DashedRing(ImDrawListPtr drawList, Vector2 center, float radius, uint color, float thickness,

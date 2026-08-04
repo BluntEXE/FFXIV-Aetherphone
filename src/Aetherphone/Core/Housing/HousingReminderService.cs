@@ -64,6 +64,8 @@ internal sealed class HousingReminderService : IDisposable
             Deliver(reminder, nowUtc);
             watch.MarkNotified(reminder);
         }
+
+        watch.PruneFiredReminders(nowUtc);
     }
 
     private void Deliver(HousingReminderRecord reminder, DateTime nowUtc)

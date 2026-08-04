@@ -107,24 +107,22 @@ internal sealed class HousingService : IDisposable
 
     public int Ward => HousingDistricts.ClampWard(DistrictId, configuration.HousingWard);
 
-    public string WorldName
+    public string WorldName => WorldNameOf(configuration.HousingWorldId);
+
+    public string WorldNameOf(uint worldId)
     {
-        get
+        if (worldId == 0)
         {
-            var id = configuration.HousingWorldId;
-            if (id == 0)
-            {
-                return string.Empty;
-            }
-
-            if (TryFindWorld(id, out var world))
-            {
-                return world.Name;
-            }
-
-            var name = gameData.WorldName(id);
-            return string.IsNullOrEmpty(name) ? id.ToString(CultureInfo.InvariantCulture) : name;
+            return string.Empty;
         }
+
+        if (TryFindWorld(worldId, out var world))
+        {
+            return world.Name;
+        }
+
+        var name = gameData.WorldName(worldId);
+        return string.IsNullOrEmpty(name) ? worldId.ToString(CultureInfo.InvariantCulture) : name;
     }
 
     public string DistrictName => HousingDistricts.Resolve(configuration.HousingDistrictId).Name;

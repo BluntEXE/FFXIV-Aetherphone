@@ -11,12 +11,9 @@ internal readonly struct HousingPlan
     {
         this.district = district;
         active = district?.For(subdivision);
-        ShowsSubdivision = district is not null && subdivision && district.HasSubdivision;
     }
 
     public bool HasDivisions => district is { HasSubdivision: true };
-
-    public bool ShowsSubdivision { get; }
 
     public HousingGameMap? Map => active;
 
@@ -33,7 +30,6 @@ internal readonly struct HousingPlan
 
     public Vector2 PositionOf(int plotNumber) =>
         TryGetPoint(plotNumber, out var normalized) ? normalized : new Vector2(0.5f, 0.5f);
-    public bool Covers(int plotNumber) => active is not null && active.TryGetPoint(plotNumber, out _);
     public int PlotCount => active?.Plots.Count ?? 0;
     public Vector2 PlotAt(int index) => active!.Plots[index].NormalizedPosition;
 }

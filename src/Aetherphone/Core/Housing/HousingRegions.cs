@@ -31,17 +31,4 @@ internal static class HousingRegions
         !string.IsNullOrEmpty(dataCenterName) && ByDataCenter.TryGetValue(dataCenterName, out var region)
             ? region
             : Unknown;
-
-    public static int OrderOf(string region)
-    {
-        for (var index = 0; index < Order.Count; index++)
-        {
-            if (string.Equals(Order[index], region, StringComparison.OrdinalIgnoreCase))
-            {
-                return index;
-            }
-        }
-
-        return Order.Count;
-    }
 }

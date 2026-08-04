@@ -41,7 +41,8 @@ internal sealed partial class HousingApp
             y += Typography.LineHeight(TextStyles.Title2) + 2f * scale;
             var place = HousingFormat.Place(HousingDistricts.Name(key.DistrictId), key.Ward);
             Typography.Draw(drawList, new Vector2(left, y),
-                Typography.FitText(string.Concat(housing.WorldName, " · ", place), width, TextStyles.Subheadline),
+                Typography.FitText(string.Concat(housing.WorldNameOf(key.WorldId), " · ", place), width,
+                    TextStyles.Subheadline),
                 ui.MutedInk, TextStyles.Subheadline);
             y += Typography.LineHeight(TextStyles.Subheadline) + 10f * scale;
 
@@ -135,7 +136,7 @@ internal sealed partial class HousingApp
             var mapRect = actionRects[1];
             if (plot is not null && HousingChrome.PillButton(watchRect, watchLabel, watched, ui))
             {
-                housing.Watch.ToggleWatch(plot, housing.WorldName);
+                housing.Watch.ToggleWatch(plot, housing.WorldNameOf(plot.Key.WorldId));
                 InvalidateCache();
             }
             else if (plot is null && HousingChrome.PillButton(watchRect, watchLabel, true, ui))

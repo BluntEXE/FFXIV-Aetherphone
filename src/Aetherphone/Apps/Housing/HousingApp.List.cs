@@ -82,6 +82,12 @@ internal sealed partial class HousingApp
 
     private void OpenFromList(HousingPlot plot)
     {
+        if (plot.Key.WorldId != housing.WorldId || plot.Key.DistrictId != housing.DistrictId)
+        {
+            Push(HousingRoute.Details, plot.Key);
+            return;
+        }
+
         if (plot.Key.Ward != housing.Ward)
         {
             housing.SelectWard(plot.Key.Ward);

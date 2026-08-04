@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace Aetherphone.Core.Housing;
 
-internal sealed class HousingCache : IHousingDataProvider
+internal sealed class HousingCache
 {
     private static readonly TimeSpan WorldListMaxAge = TimeSpan.FromDays(30);
     private static readonly TimeSpan DistrictMaxAge = TimeSpan.FromDays(7);
@@ -15,15 +15,7 @@ internal sealed class HousingCache : IHousingDataProvider
         this.root = root;
     }
 
-    public HousingProviderKind Kind => HousingProviderKind.Cache;
-
     public string DisplayName => "Saved housing data";
-
-    public Task<IReadOnlyList<HousingWorld>?> GetWorldsAsync(CancellationToken token) =>
-        Task.FromResult(ReadWorlds());
-
-    public Task<HousingDistrictSnapshot?> GetDistrictAsync(uint worldId, uint districtId, CancellationToken token) =>
-        Task.FromResult(Read(worldId, districtId));
 
     public IReadOnlyList<HousingWorld>? ReadWorlds()
     {

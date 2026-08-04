@@ -98,7 +98,7 @@ internal sealed partial class HousingApp
         Typography.Draw(drawList, new Vector2(textLeft, row.Min.Y + 8f * scale),
             Typography.FitText(title, textRight - textLeft, TextStyles.BodyEmphasized), frameTheme.TextStrong,
             TextStyles.BodyEmphasized);
-        var worldName = record.WorldName.Length > 0 ? record.WorldName : housing.WorldName;
+        var worldName = record.WorldName.Length > 0 ? record.WorldName : housing.WorldNameOf(record.WorldId);
         var place = string.Concat(worldName, " · ",
             HousingFormat.Place(HousingDistricts.Name(record.DistrictId), record.Ward));
         Typography.Draw(drawList, new Vector2(textLeft, row.Min.Y + 26f * scale),

@@ -40,19 +40,6 @@ internal static class HousingDistricts
 
     public static string Name(uint districtId) => TryGet(districtId, out var district) ? district.Name : string.Empty;
 
-    public static int IndexOf(uint districtId)
-    {
-        for (var index = 0; index < All.Count; index++)
-        {
-            if (All[index].Id == districtId)
-            {
-                return index;
-            }
-        }
-
-        return 0;
-    }
-
     public static int ClampWard(uint districtId, int ward)
     {
         var wards = Resolve(districtId).Wards;

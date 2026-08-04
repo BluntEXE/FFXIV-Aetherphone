@@ -35,6 +35,24 @@ internal sealed class HousingWatchStore
         }
     }
 
+    public int FiredReminderCount
+    {
+        get
+        {
+            var reminders = configuration.HousingReminders;
+            var count = 0;
+            for (var index = 0; index < reminders.Count; index++)
+            {
+                if (reminders[index].Notified)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+    }
+
     public bool IsWatched(HousingPlotKey key) => watchedKeys.Contains(key);
 
     public bool ToggleWatch(HousingPlot plot, string worldName)
@@ -312,6 +330,29 @@ internal sealed class HousingWatchStore
 
         reminder.Notified = true;
         Commit();
+    }
+
+    public void PruneFiredReminders(DateTime nowUtc)
+    {
+        var reminders = configuration.HousingReminders;
+        var cutoff = ToUnix(nowUtc);
+        var removed = false;
+        for (var index = reminders.Count - 1; index >= 0; index--)
+        {
+            var reminder = reminders[index];
+            if (!reminder.Notified || reminder.PhaseEndUnix <= 0L || reminder.PhaseEndUnix > cutoff)
+            {
+                continue;
+            }
+
+            reminders.RemoveAt(index);
+            removed = true;
+        }
+
+        if (removed)
+        {
+            Commit();
+        }
     }
 
     private static HousingPlot? FindPlot(HousingDistrictSnapshot snapshot, HousingPlotKey key)

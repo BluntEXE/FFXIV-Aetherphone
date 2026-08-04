@@ -2,7 +2,7 @@ using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Housing;
 
-internal sealed class HousingRestProvider : IHousingDataProvider
+internal sealed class HousingRestProvider
 {
     private const int PhaseEntry = 1;
     private const int PhaseResults = 2;
