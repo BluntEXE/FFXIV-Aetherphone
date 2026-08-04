@@ -24,6 +24,7 @@ internal static class NotificationChannels
         new("timers", L.Apps.Timers, AppAccents.For("timers")),
         new("character", L.Apps.Character, AppAccents.For("character")),
         new("health", L.Apps.Health, AppAccents.For("health")),
+        new("housing", L.Apps.Housing, AppAccents.For("housing")),
         new("calendar", L.Apps.Calendar, AppAccents.For("calendar")),
         new("clock", L.Apps.Clock, AppAccents.For("clock")),
         new("notes", L.Apps.Notes, AppAccents.For("notes")),
