@@ -40,6 +40,8 @@ internal sealed partial class MarketApp : IPhoneApp
     private readonly string[] alertDirLabels = new string[2];
     private int scopeIndex = -1;
     private bool showHq;
+    private bool autoHq;
+    private uint autoHqItemId;
     private string search = string.Empty;
     private string lastSearch = " ";
     private bool lastIndexReady;

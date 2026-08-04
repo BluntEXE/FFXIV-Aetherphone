@@ -2273,6 +2273,8 @@
   "market.updated": "更新",
   "market.vendorNpc": "ショップ (NPC)",
   "market.cheaper": "安価",
+  "market.cheaperOn": "{0} のほうが安い",
+  "market.afterTax": "税{0}%後の受取額（{1}）",
   "market.priceAlert": "価格アラート",
   "market.addAnotherAlert": "別のアラートを追加",
   "market.setPriceAlert": "価格アラートを設定",

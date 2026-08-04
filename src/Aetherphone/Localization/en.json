@@ -2273,6 +2273,8 @@
   "market.updated": "Updated",
   "market.vendorNpc": "Vendor (NPC)",
   "market.cheaper": "cheaper",
+  "market.cheaperOn": "Cheaper on {0}",
+  "market.afterTax": "You keep after {0}% tax ({1})",
   "market.priceAlert": "Price alert",
   "market.addAnotherAlert": "Add another alert",
   "market.setPriceAlert": "Set a price alert",

@@ -3189,6 +3189,8 @@ internal static class L
         public static readonly LocString Updated = new("market.updated", "Updated");
         public static readonly LocString VendorNpc = new("market.vendorNpc", "Vendor (NPC)");
         public static readonly LocString Cheaper = new("market.cheaper", "cheaper");
+        public static readonly LocString CheaperOn = new("market.cheaperOn", "Cheaper on {0}");
+        public static readonly LocString AfterTax = new("market.afterTax", "You keep after {0}% tax ({1})");
         public static readonly LocString PriceAlert = new("market.priceAlert", "Price alert");
         public static readonly LocString AddAnotherAlert = new("market.addAnotherAlert", "Add another alert");
         public static readonly LocString SetPriceAlert = new("market.setPriceAlert", "Set a price alert");

@@ -2273,6 +2273,8 @@
   "market.updated": "Güncellendi",
   "market.vendorNpc": "Satıcı (NPC)",
   "market.cheaper": "daha ucuz",
+  "market.cheaperOn": "{0} sunucusunda daha ucuz",
+  "market.afterTax": "{0}% vergi sonrası kalan ({1})",
   "market.priceAlert": "Fiyat uyarısı",
   "market.addAnotherAlert": "Başka bir uyarı ekle",
   "market.setPriceAlert": "Fiyat uyarısı ayarla",

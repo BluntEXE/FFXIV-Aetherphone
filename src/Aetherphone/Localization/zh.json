@@ -2273,6 +2273,8 @@
   "market.updated": "已更新",
   "market.vendorNpc": "商人 (NPC)",
   "market.cheaper": "更便宜",
+  "market.cheaperOn": "{0} 更便宜",
+  "market.afterTax": "扣除 {0}% 税后所得（{1}）",
   "market.priceAlert": "价格提醒",
   "market.addAnotherAlert": "添加其他提醒",
   "market.setPriceAlert": "设置价格提醒",

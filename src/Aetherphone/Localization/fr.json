@@ -2273,6 +2273,8 @@
   "market.updated": "Mis à jour",
   "market.vendorNpc": "Marchand (PNJ)",
   "market.cheaper": "moins cher",
+  "market.cheaperOn": "Moins cher sur {0}",
+  "market.afterTax": "Net après {0}% de taxe ({1})",
   "market.priceAlert": "Alerte de prix",
   "market.addAnotherAlert": "Ajouter une autre alerte",
   "market.setPriceAlert": "Définir une alerte de prix",
