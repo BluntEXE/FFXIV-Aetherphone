@@ -52,6 +52,7 @@ internal sealed class MusterStore : IDisposable
     private volatile bool directoryLoadingMore;
     private volatile bool directoryHasMore;
     private volatile bool directoryLoadedOnce;
+    private volatile bool directoryFailed;
     private int directoryGeneration;
 
     public MusterStore(AethernetSession session, MusterClient client, NotificationService notifications,
@@ -93,6 +94,8 @@ internal sealed class MusterStore : IDisposable
     public bool DirectoryHasMore => directoryHasMore;
 
     public bool DirectoryLoadedOnce => directoryLoadedOnce;
+
+    public bool DirectoryFailed => directoryFailed;
 
     public int CurrentWorldId => currentWorldId;
 
@@ -180,6 +183,7 @@ internal sealed class MusterStore : IDisposable
         }
 
         directoryLoading = true;
+        directoryFailed = false;
         CaptureScopeFilters();
         var dataCenterId = directoryDataCenterId;
         var regions = directoryRegions;
@@ -188,14 +192,22 @@ internal sealed class MusterStore : IDisposable
         {
             var page = await client.DirectoryAsync(configuration.MusterCategoryFilter,
                 regions, dataCenterId, null, token).ConfigureAwait(false);
-            if (page is not null && generation == Volatile.Read(ref directoryGeneration))
+            if (generation != Volatile.Read(ref directoryGeneration))
             {
-                directory = page.Items;
-                directoryCursor = page.NextCursor;
-                directoryHasMore = page.NextCursor is not null;
-                directoryLoadedOnce = true;
-                MergeKnown(page.Items);
+                return;
             }
+
+            if (page is null)
+            {
+                directoryFailed = true;
+                return;
+            }
+
+            directory = page.Items;
+            directoryCursor = page.NextCursor;
+            directoryHasMore = page.NextCursor is not null;
+            directoryLoadedOnce = true;
+            MergeKnown(page.Items);
         }, () => directoryLoading = false);
     }
 
@@ -488,6 +500,7 @@ internal sealed class MusterStore : IDisposable
         directoryCursor = null;
         directoryHasMore = false;
         directoryLoadedOnce = false;
+        directoryFailed = false;
         primed = false;
         cadence.Reset();
     }

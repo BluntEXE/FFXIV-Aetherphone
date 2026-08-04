@@ -424,6 +424,17 @@ internal sealed partial class MusterApp
             return;
         }
 
+        if (store.DirectoryFailed)
+        {
+            if (EmptyState.Draw(body, ui, FontAwesomeIcon.CloudDownloadAlt, Loc.T(L.Common.LoadFailed),
+                    Loc.T(L.Common.LoadFailedHint), Loc.T(L.Common.Retry)))
+            {
+                store.RefreshDirectory();
+            }
+
+            return;
+        }
+
         if (store.Mine is not null)
         {
             return;

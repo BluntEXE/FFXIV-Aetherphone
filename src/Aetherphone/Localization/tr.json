@@ -205,6 +205,8 @@
   "common.cancel": "İptal",
   "common.retry": "Tekrar dene",
   "common.copied": "Kopyalandı",
+  "common.loadFailed": "Yüklenemedi",
+  "common.loadFailedHint": "Bağlantını kontrol edip tekrar dene.",
   "common.close": "Kapat",
   "common.alerts": "Uyarılar",
   "common.live": "CANLI",

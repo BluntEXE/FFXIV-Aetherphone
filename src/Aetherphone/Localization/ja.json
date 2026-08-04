@@ -205,6 +205,8 @@
   "common.cancel": "キャンセル",
   "common.retry": "再試行",
   "common.copied": "コピーしました",
+  "common.loadFailed": "読み込めませんでした",
+  "common.loadFailedHint": "接続を確認してもう一度お試しください。",
   "common.close": "閉じる",
   "common.alerts": "アラート",
   "common.live": "LIVE",

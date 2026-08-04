@@ -205,6 +205,8 @@
   "common.cancel": "Отмена",
   "common.retry": "Повторить",
   "common.copied": "Скопировано",
+  "common.loadFailed": "Не удалось загрузить",
+  "common.loadFailedHint": "Проверьте подключение и повторите попытку.",
   "common.close": "Закрыть",
   "common.alerts": "Оповещения",
   "common.live": "В ЭФИРЕ",

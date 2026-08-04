@@ -205,6 +205,8 @@
   "common.cancel": "Annuler",
   "common.retry": "Réessayer",
   "common.copied": "Copié",
+  "common.loadFailed": "Chargement impossible",
+  "common.loadFailedHint": "Vérifiez votre connexion et réessayez.",
   "common.close": "Fermer",
   "common.alerts": "Alertes",
   "common.live": "DIRECT",

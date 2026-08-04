@@ -205,6 +205,8 @@
   "common.cancel": "Cancelar",
   "common.retry": "Tentar de novo",
   "common.copied": "Copiado",
+  "common.loadFailed": "Não foi possível carregar",
+  "common.loadFailedHint": "Verifique sua conexão e tente de novo.",
   "common.close": "Fechar",
   "common.alerts": "Alertas",
   "common.live": "AO VIVO",

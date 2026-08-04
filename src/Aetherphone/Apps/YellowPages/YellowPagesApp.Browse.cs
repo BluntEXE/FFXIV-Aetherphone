@@ -576,6 +576,17 @@ internal sealed partial class YellowPagesApp
             return;
         }
 
+        if (store.DirectoryFailed)
+        {
+            if (EmptyState.Draw(body, ui, FontAwesomeIcon.CloudDownloadAlt, Loc.T(L.Common.LoadFailed),
+                    Loc.T(L.Common.LoadFailedHint), Loc.T(L.Common.Retry)))
+            {
+                RefreshBrowse();
+            }
+
+            return;
+        }
+
         EmptyState.Draw(body, ui, FontAwesomeIcon.Bullhorn, Loc.T(L.YellowPages.EmptyTitle),
             Loc.T(L.YellowPages.EmptyHint));
     }

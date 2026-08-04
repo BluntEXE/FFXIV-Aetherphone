@@ -13,6 +13,9 @@ internal static class L
         public static readonly LocString Cancel = new("common.cancel", "Cancel");
         public static readonly LocString Retry = new("common.retry", "Retry");
         public static readonly LocString Copied = new("common.copied", "Copied");
+        public static readonly LocString LoadFailed = new("common.loadFailed", "Could not load");
+        public static readonly LocString LoadFailedHint =
+            new("common.loadFailedHint", "Check your connection and try again.");
         public static readonly LocString Close = new("common.close", "Close");
         public static readonly LocString Alerts = new("common.alerts", "Alerts");
         public static readonly LocString Live = new("common.live", "LIVE");

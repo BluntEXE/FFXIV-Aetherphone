@@ -205,6 +205,8 @@
   "common.cancel": "Cancel",
   "common.retry": "Retry",
   "common.copied": "Copied",
+  "common.loadFailed": "Could not load",
+  "common.loadFailedHint": "Check your connection and try again.",
   "common.close": "Close",
   "common.alerts": "Alerts",
   "common.live": "LIVE",
