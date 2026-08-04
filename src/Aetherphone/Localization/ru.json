@@ -645,6 +645,8 @@
   "settings.doNotDisturb": "Не беспокоить",
   "settings.vibration": "Вибрация",
   "settings.vibrationHint": "Телефон коротко вздрагивает при поступлении уведомления.",
+  "settings.showNotificationBanner": "Показывать всплывающие уведомления",
+  "settings.showNotificationBannerHint": "Отображает баннеры уведомлений в верхней части экрана.",
   "settings.notificationApps": "Приложения",
   "settings.allowNotifications": "Разрешить уведомления",
   "settings.notificationsOff": "Выкл.",

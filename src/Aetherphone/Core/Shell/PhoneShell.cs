@@ -36,6 +36,7 @@ internal sealed class PhoneShell : IDisposable
     private readonly IReadOnlyList<IPhoneApp> apps;
     private readonly WidgetRegistry widgets;
     private readonly NavigationStack navigation;
+    private readonly NotificationService notifications;
     private readonly NotificationBanner banner;
     private readonly ShortcutRunPill shortcutPill;
     private readonly MinimizedPhone minimizedView;
@@ -67,7 +68,7 @@ internal sealed class PhoneShell : IDisposable
         apps = bundle.Apps;
         widgets = bundle.Widgets;
         calls = services.Calls;
-        var notifications = services.Notifications;
+        notifications = services.Notifications;
         suspensions = new SuspensionGate(services.AethernetSession);
         navigation = new NavigationStack(apps, services.Installer, suspensions);
         notifications.AppAvailability = navigation.IsAvailable;
@@ -81,7 +82,7 @@ internal sealed class PhoneShell : IDisposable
         MusterChatBridge.Bind(services.Musters, services.MusterLauncher, navigation);
         AdChatBridge.Bind(services.YellowPages, services.YellowPagesLauncher, navigation);
         banner = new NotificationBanner(notifications, VisibleAppId, PhoneVisible, router);
-        banner.Shown += OnBannerShown;
+        notifications.Vibration += OnVibration;
         var island = new DynamicIsland(services.Playback, calls);
         var rateLimitPill = new RateLimitPill(services.Http, services.AethernetSession);
         shortcutPill = new ShortcutRunPill(services.ShortcutRunner);
@@ -159,12 +160,24 @@ internal sealed class PhoneShell : IDisposable
 
     public void ForceMinimized() => minimize.SnapMinimized();
 
-    private void OnBannerShown()
+    private void OnVibration(PhoneNotification notification)
     {
-        if (minimize.Phase == MinimizePhase.None && configuration.Vibration)
+        if (minimize.Phase != MinimizePhase.None)
         {
-            shake.Trigger();
+            return;
         }
+
+        if (!PhoneVisible())
+        {
+            return;
+        }
+
+        if (VisibleAppId() == notification.AppId)
+        {
+            return;
+        }
+
+        shake.Trigger();
     }
 
     private bool PhoneVisible() => DateTime.UtcNow - lastVisibleDrawUtc < ScreenVisibleGrace;
@@ -389,7 +402,7 @@ internal sealed class PhoneShell : IDisposable
     {
         MusterChatBridge.Clear();
         AdChatBridge.Clear();
-        banner.Shown -= OnBannerShown;
+        notifications.Vibration -= OnVibration;
         banner.Dispose();
         shortcutPill.Dispose();
         minimizedView.Dispose();

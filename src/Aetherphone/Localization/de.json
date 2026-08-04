@@ -645,6 +645,8 @@
   "settings.doNotDisturb": "Nicht stören",
   "settings.vibration": "Vibration",
   "settings.vibrationHint": "Das Telefon vibriert kurz, wenn eine Benachrichtigung eintrifft.",
+  "settings.showNotificationBanner": "Benachrichtigungsbanner anzeigen",
+  "settings.showNotificationBannerHint": "Zeigt Benachrichtigungsbanner oben auf dem Bildschirm an.",
   "settings.notificationApps": "Apps",
   "settings.allowNotifications": "Mitteilungen erlauben",
   "settings.notificationsOff": "Aus",

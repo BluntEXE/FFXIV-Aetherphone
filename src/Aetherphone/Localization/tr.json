@@ -645,6 +645,8 @@
   "settings.doNotDisturb": "Rahatsız etme",
   "settings.vibration": "Titreşim",
   "settings.vibrationHint": "Bir bildirim geldiğinde telefon kısaca titrer.",
+  "settings.showNotificationBanner": "Bildirim Bannerlarını Göster",
+  "settings.showNotificationBannerHint": "Ekranın üst kısmında banner bildirimleri görüntüler.",
   "settings.notificationApps": "Uygulamalar",
   "settings.allowNotifications": "Bildirimlere İzin Ver",
   "settings.notificationsOff": "Kapalı",

@@ -63,8 +63,6 @@ internal sealed class NotificationBanner : IDisposable
         notifications.Presented += OnPresented;
     }
 
-    public event Action? Shown;
-
     public bool IsVisible => stage != Stage.Idle;
 
     public bool CapturesPointer(Rect screen)
@@ -312,7 +310,6 @@ internal sealed class NotificationBanner : IDisposable
         {
             active = notification;
             holdElapsed = 0f;
-            Shown?.Invoke();
             return;
         }
 
@@ -323,7 +320,6 @@ internal sealed class NotificationBanner : IDisposable
         }
 
         pending.Enqueue(notification);
-        Shown?.Invoke();
         if (stage == Stage.Idle)
         {
             BeginNext();

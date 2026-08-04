@@ -645,6 +645,8 @@
   "settings.doNotDisturb": "Não perturbe",
   "settings.vibration": "Vibração",
   "settings.vibrationHint": "O telefone vibra rapidamente quando uma notificação chega.",
+  "settings.showNotificationBanner": "Mostrar notificações em banner",
+  "settings.showNotificationBannerHint": "Exibe notificações em banner no topo da tela.",
   "settings.notificationApps": "Apps",
   "settings.allowNotifications": "Permitir notificações",
   "settings.notificationsOff": "Desativado",

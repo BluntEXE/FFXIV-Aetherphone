@@ -40,6 +40,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public Vector2? MinimizedPosition { get; set; }
     public bool DoNotDisturb { get; set; }
     public bool Vibration { get; set; } = true;
+    public bool ShowNotificationBanner { get; set; } = true;
     public bool ImportScreenshots { get; set; } = true;
     public bool? UseNativeFileDialog { get; set; }
     public Dictionary<string, AppNotificationSetting> NotificationSettings { get; set; } = new();
@@ -479,6 +480,9 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
 
     public bool IsAppNotificationEnabled(string appId) =>
         !NotificationSettings.TryGetValue(appId, out var setting) || setting.Enabled;
+
+    public bool ShouldShowNotificationBanner(string appId) =>
+        !NotificationSettings.TryGetValue(appId, out var setting) || setting.ShowNotificationBanner;
 
     public string? AppSoundOverride(string appId) =>
         NotificationSettings.TryGetValue(appId, out var setting) && !string.IsNullOrEmpty(setting.Sound)

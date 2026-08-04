@@ -645,6 +645,8 @@
   "settings.doNotDisturb": "Do Not Disturb",
   "settings.vibration": "Vibration",
   "settings.vibrationHint": "The phone shakes briefly when a notification arrives.",
+  "settings.showNotificationBanner": "Show Notification Banner",
+  "settings.showNotificationBannerHint": "Display banner notifications at the top of the screen.",
   "settings.notificationApps": "Apps",
   "settings.allowNotifications": "Allow Notifications",
   "settings.notificationsOff": "Off",
