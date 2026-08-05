@@ -1296,7 +1296,7 @@ internal static class L
             new("changelog.r0998.1",
                 "Added Community Radio to Music, with more details coming soon"),
             new("changelog.r0998.2",
-                "Added new phone cases, contributed by Silkie, Zivyl, Remi, and BURIALBUNNY"),
+                "Added new phone cases, contributed by Silkie, Zivyl, Remi, and Rania"),
             new("changelog.r0998.3",
                 "Badges have been completely reworked: they are now granted or earned under certain conditions, with the details on the Discord server"),
             new("changelog.r0998.4",
