@@ -14,6 +14,8 @@ You need the .NET 10 SDK. The plugin requires Dalamud at runtime; CI pulls a Dal
 
 Load the built plugin via `/xlsettings` -> **Experimental** -> **Dev Plugin Locations**, pointing at `src/Aetherphone/bin/Release/Aetherphone.dll`.
 
+A `Debug` build produces a separate side-by-side plugin instead: `src/Aetherphone/bin/Debug/AetherphoneDev.dll`, loaded as `AetherphoneDev`, opened with `/phonedev`, with its own config and pointed at the development Aethernet instance. Register whichever path you build.
+
 ## Project layout
 
 - `src/Aetherphone/Core/`: the device platform: app framework and navigation, theming, messaging, notifications, character/contacts, game data readers, and the shared services (networking, crypto, media, localization) the apps build on.

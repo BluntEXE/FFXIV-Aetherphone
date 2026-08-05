@@ -58,18 +58,22 @@ The build needs the Dalamud assemblies described above. If XIVLauncher has run o
 
 The output lands in `src/Aetherphone/bin/Release/`: the loadable `Aetherphone.dll` plus a packaged `Aetherphone/latest.zip` that the release pipeline ships. Asset folders (`Fonts`, `Icons`, `Emoji`, `Cases`, `Localization`, `Wallpapers`, `Sounds`) are copied next to the dll by the `<Content>` items in `src/Aetherphone/Aetherphone.csproj`.
 
-### Why Release, not Debug?
+### Release or Debug?
 
-Build `Release`. It is the configuration that CONTRIBUTING.md, CI, and the release workflow all use, and (next section) it is the path you register with Dalamud. The dev plugin location is a fixed file path: if you later run a `Debug` build, the output goes to `bin/Debug/` instead, the file at the registered `bin/Release/` path never changes, and the game silently keeps loading your previous build. Sticking to `-c Release` for the whole dev loop avoids that trap.
+Build `Release` for the plugin end users get. It is the configuration that CONTRIBUTING.md, CI, and the release workflow all use, and (next section) it is the path you register with Dalamud.
+
+`Debug` builds a second plugin that installs alongside it. The output is `src/Aetherphone/bin/Debug/AetherphoneDev.dll`, Dalamud sees it as the separate plugin `AetherphoneDev`, it answers `/phonedev` and `/aetherphonedev`, and it keeps its own Dalamud config, so it never touches the settings of your normal install. It also talks to the development Aethernet instance instead of production.
+
+Either way the dev plugin location is a fixed file path, so register the configuration you actually build. Build the other one and the game silently keeps loading your previous plugin.
 
 ## Load it in the game
 
 1. Launch the game through XIVLauncher.
 2. Type `/xlsettings` in chat to open Dalamud's settings.
 3. Open the **Experimental** tab and find **Dev Plugin Locations**.
-4. Add the full path to your built dll, ending in `src/Aetherphone/bin/Release/Aetherphone.dll`, and save.
+4. Add the full path to your built dll, ending in `src/Aetherphone/bin/Release/Aetherphone.dll`, and save. For a Debug build, use `src/Aetherphone/bin/Debug/AetherphoneDev.dll` instead; both paths can be registered at once.
 5. Open the plugin installer with `/xlplugins`. Aetherphone now appears as a dev plugin; enable it.
-6. Type `/phone`. The phone opens.
+6. Type `/phone`. The phone opens. A Debug build answers `/phonedev` instead.
 
 ## Chat commands
 
@@ -147,7 +151,7 @@ So CI is your local build with the Dalamud dependency fetched explicitly. If `do
 
 ## Gotchas
 
-- **A Debug build never reaches the game.** The dev plugin location points at `bin/Release/Aetherphone.dll`; `dotnet build` without `-c Release` writes to `bin/Debug/` and Dalamud keeps loading your stale Release dll with no error anywhere.
+- **Debug and Release are two different plugins.** Release writes `bin/Release/Aetherphone.dll`, Debug writes `bin/Debug/AetherphoneDev.dll`. Dalamud loads whichever path you registered, so building the other configuration leaves the game on your previous build with no error anywhere.
 - **NuGet restore is locked.** `Directory.Build.props` sets `RestorePackagesWithLockFile`, and CI restores with `--locked-mode`. If you add or bump a `PackageReference`, run `dotnet restore` locally so `packages.lock.json` updates and gets committed, or CI fails at the restore step.
 - **Version lives in three places.** Bumping `<Version>` in `Directory.Build.props` without updating `AssemblyVersion` and `TestingAssemblyVersion` in `repo.json` fails the CI guards job before the build even starts.
 - **Unknown command arguments are silent.** `OnCommand` in `Plugin.cs` treats anything that is not `test`, `reset`, or `market` as a plain toggle, so a typo like `/phone rset` opens or closes the phone instead of erroring.

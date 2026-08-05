@@ -112,7 +112,7 @@ Read [CONTRIBUTING.md](../CONTRIBUTING.md) at the repo root for the pull request
 
 ## Gotchas
 
-- Dev plugin loading points at a fixed dll path. If you registered `src/Aetherphone/bin/Release/Aetherphone.dll` in Dalamud and then build with `-c Debug`, the output goes to `bin/Debug/` and the game silently keeps loading your previous Release build.
+- Dev plugin loading points at a fixed dll path. Release builds `bin/Release/Aetherphone.dll`, Debug builds the side-by-side `bin/Debug/AetherphoneDev.dll` (`/phonedev`, its own config, development Aethernet instance). Build the configuration you did not register and the game silently keeps loading your previous plugin.
 - Bundled asset folders (Fonts, Emoji, Icons, Images, Sounds, Wallpapers, Cases, Localization) are copied to the build output by `<Content>` items in src/Aetherphone/Aetherphone.csproj. Editing an asset file does nothing in game until you rebuild.
 - These docs cover the client only. The Aethernet backend lives in a separate repository, so server behavior can change without any commit here; where a doc and the code disagree, the code wins.
 
