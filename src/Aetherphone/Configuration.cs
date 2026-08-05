@@ -84,7 +84,11 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public float MusicVolume { get; set; } = 0.6f;
     public int MusicRepeat { get; set; }
     public bool GameSoundsCleared { get; set; }
+    #if DEBUG
+    public const string DefaultAethernetBaseUrl = "https://aethernet-dev-production.up.railway.app";
+    #else
     public const string DefaultAethernetBaseUrl = "https://api.aetherphone.net";
+    #endif
     private const string LegacyAethernetHost = "ffxiv-aethernet-production.up.railway.app";
     public string AethernetBaseUrl { get; set; } = DefaultAethernetBaseUrl;
     public string AethernetToken { get; set; } = string.Empty;

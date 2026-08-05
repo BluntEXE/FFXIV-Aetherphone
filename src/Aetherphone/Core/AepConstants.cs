@@ -2,7 +2,11 @@ namespace Aetherphone.Core;
 
 internal static class AepConstants
 {
+    #if DEBUG
+    public const string Name = "AetherphoneDev";
+    #else
     public const string Name = "Aetherphone";
+    #endif
     public const string PrimaryCommand = "/phone";
     public const string AliasCommand = "/aetherphone";
     public const string DiscordUrl = "https://discord.gg/3HbJCscMyS";
