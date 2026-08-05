@@ -221,7 +221,7 @@ internal sealed partial class VelvetShell
 
         var hint = me?.AvatarUrl is { Length: > 0 } ? Loc.T(L.Velvet.ChangePhoto) : Loc.T(L.Velvet.AddPhoto);
         var hintSize = Typography.Measure(hint, TextStyles.Footnote);
-        Typography.Draw(new Vector2(center.X - hintSize.X * 0.5f, center.Y + radius + 12f * scale), hint,
+        Typography.Draw(drawList, new Vector2(center.X - hintSize.X * 0.5f, center.Y + radius + 12f * scale), hint,
             VelvetTheme.RoseInk, TextStyles.Footnote);
 
         if (hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
