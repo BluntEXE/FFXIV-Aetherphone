@@ -33,9 +33,8 @@ internal static class ShortcutArt
         if (icon is not null)
         {
             var half = size * 0.5f;
-            drawList.AddImageRounded(icon.Handle, new Vector2(center.X - half, center.Y - half),
-                new Vector2(center.X + half, center.Y + half), Vector2.Zero, Vector2.One, 0xFFFFFFFFu,
-                size * RadiusFactor, ImDrawFlags.RoundCornersAll);
+            Squircle.FillImage(drawList, new Vector2(center.X - half, center.Y - half),
+                new Vector2(center.X + half, center.Y + half), size * RadiusFactor, icon.Handle, 0xFFFFFFFFu);
             return;
         }
 

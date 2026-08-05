@@ -27,6 +27,54 @@ internal static class Squircle
         drawList.PathFillConvex(color);
     }
 
+    public static void FillImage(ImDrawListPtr drawList, Vector2 min, Vector2 max, float radius, ImTextureID texture,
+        uint tint)
+    {
+        var box = CornerBox(min, max, radius);
+        if (box <= DegenerateBox)
+        {
+            drawList.AddImage(texture, min, max, Vector2.Zero, Vector2.One, tint);
+            return;
+        }
+
+        drawList.AddDrawCmd();
+        var firstCommand = drawList.CmdBuffer.Size - 1;
+        var firstVertex = drawList.VtxBuffer.Size;
+        TracePath(drawList, min, max, box);
+        drawList.PathFillConvex(tint);
+        MapLinearUv(drawList, firstVertex, min, max);
+        BindTexture(drawList, firstCommand, texture);
+        drawList.AddDrawCmd();
+    }
+
+    private static void BindTexture(ImDrawListPtr drawList, int firstCommand, ImTextureID texture)
+    {
+        var commands = drawList.CmdBuffer;
+        for (var index = firstCommand; index < commands.Size; index++)
+        {
+            ref var command = ref commands.Ref(index);
+            command.TextureId = texture;
+        }
+    }
+
+    private static void MapLinearUv(ImDrawListPtr drawList, int firstVertex, Vector2 min, Vector2 max)
+    {
+        var width = max.X - min.X;
+        var height = max.Y - min.Y;
+        if (width <= 0f || height <= 0f)
+        {
+            return;
+        }
+
+        var vertices = drawList.VtxBuffer.AsSpan();
+        for (var index = firstVertex; index < vertices.Length; index++)
+        {
+            ref var vertex = ref vertices[index];
+            vertex.Uv = new Vector2(Math.Clamp((vertex.Pos.X - min.X) / width, 0f, 1f),
+                Math.Clamp((vertex.Pos.Y - min.Y) / height, 0f, 1f));
+        }
+    }
+
     public static void Stroke(ImDrawListPtr drawList, Vector2 min, Vector2 max, float radius, uint color,
         float thickness)
     {

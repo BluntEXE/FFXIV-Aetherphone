@@ -173,8 +173,8 @@ internal sealed partial class ShortcutsApp
         var icon = catalog.Icon(entry.InternalName);
         if (icon is not null)
         {
-            drawList.AddImageRounded(icon.Handle, min, max, Vector2.Zero, Vector2.One,
-                entry.Loaded ? 0xFFFFFFFFu : 0x80FFFFFFu, radius, ImDrawFlags.RoundCornersAll);
+            Squircle.FillImage(drawList, min, max, radius, icon.Handle,
+                entry.Loaded ? 0xFFFFFFFFu : 0x80FFFFFFu);
             return;
         }
 
