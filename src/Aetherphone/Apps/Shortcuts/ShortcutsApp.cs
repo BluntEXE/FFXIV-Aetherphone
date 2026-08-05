@@ -53,6 +53,9 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         router = new ViewRouter<ShortcutsScreen>(ShortcutsScreen.Home);
         drawView = DrawView;
         back = GoBack;
+        openPluginDetail = OpenPluginDetail;
+        pickStepPlugin = AddOpenPluginStep;
+        pickIconPlugin = UsePluginIcon;
     }
 
     public void OnOpened()
