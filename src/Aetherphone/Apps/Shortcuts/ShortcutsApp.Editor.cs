@@ -20,7 +20,6 @@ internal sealed partial class ShortcutsApp
     private Guid draftId = Guid.Empty;
     private bool draftPinned;
     private string hexBuffer = string.Empty;
-    private string iconPluginOption = string.Empty;
     private int pendingStepRemoval = -1;
 
     private void Warn(string message) => confirm.Alert(null, message, Loc.T(L.Shortcuts.Ok));
@@ -313,8 +312,7 @@ internal sealed partial class ShortcutsApp
         var openRect = new Rect(openMin, new Vector2(openMin.X + buttonWidth, secondRowY + height));
         if (ui.PillButton(openRect, Loc.T(L.Shortcuts.AddOpen), false))
         {
-            pluginQuery = string.Empty;
-            router.Push(ShortcutsScreen.PluginPicker);
+            OpenPluginPicker(false);
         }
 
         var linkMin = new Vector2(origin.X + buttonWidth + gap, secondRowY);
@@ -524,27 +522,7 @@ internal sealed partial class ShortcutsApp
     private void OpenAppearance()
     {
         hexBuffer = draft!.Tint;
-        iconPluginOption = ResolveIconPluginOption(draft);
         router.Push(ShortcutsScreen.Appearance);
-    }
-
-    private static string ResolveIconPluginOption(ShortcutEntry entry)
-    {
-        if (entry.IconPlugin.Length > 0)
-        {
-            return entry.IconPlugin;
-        }
-
-        for (var index = 0; index < entry.Steps.Count; index++)
-        {
-            var step = entry.Steps[index];
-            if (step.Kind == ShortcutStepKind.OpenPlugin && step.Text.Length > 0)
-            {
-                return step.Text;
-            }
-        }
-
-        return string.Empty;
     }
 
     private void DrawAppearance(Rect content, float scale)
@@ -630,32 +608,8 @@ internal sealed partial class ShortcutsApp
     private void DrawGlyphSection(ShortcutEntry entry, float scale)
     {
         ui.SectionLabel(Loc.T(L.Shortcuts.Symbol), TextStyles.FootnoteEmphasized, 6f);
-        if (iconPluginOption.Length > 0)
-        {
-            var card = GroupCard.Begin(theme, 1, Metrics.Size.Row);
-            var row = card.NextRow();
-            var toggleWidth = Metrics.Size.ToggleWidth * scale;
-            var toggleHeight = Metrics.Size.ToggleHeight * scale;
-            var toggleMin = new Vector2(row.Max.X - toggleWidth, row.Center.Y - toggleHeight * 0.5f);
-            var label = Loc.T(L.Shortcuts.UsePluginIcon);
-            var labelSize = Typography.Measure(label, TextStyles.Body);
-            Typography.Draw(new Vector2(row.Min.X, row.Center.Y - labelSize.Y * 0.5f), label, ui.TitleInk,
-                TextStyles.Body);
-            var usesPluginIcon = entry.IconPlugin.Length > 0;
-            var wanted = Toggle.Draw("shortcuts.usePluginIcon",
-                new Rect(toggleMin, toggleMin + new Vector2(toggleWidth, toggleHeight)), usesPluginIcon, theme);
-            card.End();
-            if (wanted != usesPluginIcon)
-            {
-                entry.IconPlugin = wanted ? iconPluginOption : string.Empty;
-            }
-
-            ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
-            if (entry.IconPlugin.Length > 0)
-            {
-                return;
-            }
-        }
+        var usesPluginIcon = entry.IconPlugin.Length > 0;
+        DrawIconPluginRow(entry, usesPluginIcon, scale);
 
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
@@ -672,7 +626,7 @@ internal sealed partial class ShortcutsApp
             var min = center - new Vector2(tile * 0.5f);
             var max = center + new Vector2(tile * 0.5f);
             var glyph = index == 0 ? 0 : (int)ShortcutPalette.Glyphs[index - 1];
-            var active = entry.Glyph == glyph;
+            var active = !usesPluginIcon && entry.Glyph == glyph;
             Squircle.Fill(drawList, min, max, tile * 0.28f,
                 ImGui.GetColorU32(active ? Palette.WithAlpha(ui.Accent, 0.32f) : ui.FieldSurface));
             if (active)
@@ -699,5 +653,22 @@ internal sealed partial class ShortcutsApp
 
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, rows * cell));
+    }
+
+    private void DrawIconPluginRow(ShortcutEntry entry, bool usesPluginIcon, float scale)
+    {
+        var card = GroupCard.Begin(theme, 1, Metrics.Size.Row);
+        var value = usesPluginIcon
+            ? catalog.DisplayName(entry.IconPlugin)
+            : Loc.T(L.Shortcuts.PluginIconNone);
+        var picked = SettingsRow.Disclosure(card.NextRow(), Loc.T(L.Shortcuts.PluginIcon), value, theme,
+            "shortcuts.iconPlugin");
+        card.End();
+        if (picked)
+        {
+            OpenPluginPicker(true);
+        }
+
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
     }
 }

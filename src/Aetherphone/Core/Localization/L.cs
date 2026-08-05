@@ -296,6 +296,7 @@ internal static class L
         public static readonly LocString NoCommands = new("shortcuts.noCommands", "This plugin registers no commands.");
         public static readonly LocString NewFromCommand = new("shortcuts.newFromCommand", "New shortcut from this");
         public static readonly LocString ChoosePlugin = new("shortcuts.choosePlugin", "Choose Plugin");
+        public static readonly LocString ChooseIcon = new("shortcuts.chooseIcon", "Choose Icon");
         public static readonly LocString NameHint = new("shortcuts.nameHint", "Shortcut name");
         public static readonly LocString Appearance = new("shortcuts.appearance", "Appearance");
         public static readonly LocString Steps = new("shortcuts.steps", "Steps");
@@ -339,7 +340,8 @@ internal static class L
         public static readonly LocString Color = new("shortcuts.color", "Color");
         public static readonly LocString CustomColor = new("shortcuts.customColor", "Custom color");
         public static readonly LocString Symbol = new("shortcuts.symbol", "Symbol");
-        public static readonly LocString UsePluginIcon = new("shortcuts.usePluginIcon", "Use the plugin icon");
+        public static readonly LocString PluginIcon = new("shortcuts.pluginIcon", "Plugin icon");
+        public static readonly LocString PluginIconNone = new("shortcuts.pluginIconNone", "None");
         public static readonly LocString LimitReached = new("shortcuts.limitReached", "You can keep up to {0} shortcuts.");
         public static readonly LocString StepLimitReached = new("shortcuts.stepLimitReached", "A shortcut can hold up to {0} steps.");
         public static readonly LocString Ok = new("shortcuts.ok", "OK");
