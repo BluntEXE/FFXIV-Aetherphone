@@ -41,11 +41,8 @@ internal static class ThemeCatalog
         PhoneCase.Art("UldahGradient", new Vector4(0.334f, 0.222f, 0.115f, 1f)),
         PhoneCase.Art("VampFataleGradient", new Vector4(0.482f, 0.136f, 0.227f, 1f)),
         PhoneCase.Art("WickedThunderGradient", new Vector4(0.662f, 0.571f, 0.718f, 1f)),
-        PhoneCase.Art("Silkie", new Vector4(1.000f, 0.919f, 0.915f, 1f)),
-        PhoneCase.Art("FatCat", new Vector4(0.758f, 0.715f, 0.657f, 1f)),
         PhoneCase.Art("CosmicEX", new Vector4(0.141f, 0.141f, 0.172f, 1f)),
         PhoneCase.Art("Caduceus", new Vector4(0.414f, 0.398f, 0.209f, 1f)),
-        PhoneCase.Art("MagicalGirl", new Vector4(0.899f, 0.580f, 0.718f, 1f)),
     };
 
     public static IReadOnlyList<PhoneCase> Cases { get; } = BuiltInCases;

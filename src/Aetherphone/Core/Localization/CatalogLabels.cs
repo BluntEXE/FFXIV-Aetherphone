@@ -52,11 +52,8 @@ internal static class CatalogLabels
             "UldahGradient" => Loc.T(L.Catalogs.CaseUldah),
             "VampFataleGradient" => Loc.T(L.Catalogs.CaseVampFatale),
             "WickedThunderGradient" => Loc.T(L.Catalogs.CaseWickedThunder),
-            "Silkie" => Loc.T(L.Catalogs.CaseSilkie),
-            "FatCat" => Loc.T(L.Catalogs.CaseFatCat),
             "CosmicEX" => Loc.T(L.Catalogs.CaseCosmicEx),
             "Caduceus" => Loc.T(L.Catalogs.CaseCaduceus),
-            "MagicalGirl" => Loc.T(L.Catalogs.CaseMagicalGirl),
             _ => identifier,
         };
 
