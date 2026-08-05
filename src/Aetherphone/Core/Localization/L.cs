@@ -3433,8 +3433,11 @@ internal static class L
         public static readonly LocString CaseUldah = new("catalog.case.uldahgradient", "Ul'dah");
         public static readonly LocString CaseVampFatale = new("catalog.case.vampfatalegradient", "Vamp Fatale");
         public static readonly LocString CaseWickedThunder = new("catalog.case.wickedthundergradient", "Wicked Thunder");
+        public static readonly LocString CaseSilkie = new("catalog.case.silkie", "Silkie");
+        public static readonly LocString CaseFatCat = new("catalog.case.fatcat", "Fat Cat");
         public static readonly LocString CaseCosmicEx = new("catalog.case.cosmicex", "Cosmic EX");
         public static readonly LocString CaseCaduceus = new("catalog.case.caduceus", "Caduceus");
+        public static readonly LocString CaseMagicalGirl = new("catalog.case.magicalgirl", "Magical Girl");
         public static readonly LocString RingtoneSilent = new("catalog.ringtone.silent", "Silent");
         public static readonly LocString RadioLofi = new("catalog.radio.lofi", "Lofi");
         public static readonly LocString RadioChillout = new("catalog.radio.chillout", "Chillout");
