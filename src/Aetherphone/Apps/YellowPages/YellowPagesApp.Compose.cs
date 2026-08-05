@@ -726,9 +726,9 @@ internal sealed partial class YellowPagesApp
         var cursorY = origin.Y;
         if (composeOutcome is { } outcome)
         {
-            Typography.Draw(new Vector2(origin.X, cursorY), OutcomeText(outcome), theme.Danger,
-                TextStyles.FootnoteEmphasized);
-            cursorY += 22f * scale;
+            var outcomeHeight = Typography.DrawWrappedLeft(new Vector2(origin.X, cursorY), OutcomeText(outcome),
+                theme.Danger, TextStyles.FootnoteEmphasized, width);
+            cursorY += outcomeHeight + Metrics.Space.Xs * scale;
         }
         else if (!valid)
         {
