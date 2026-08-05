@@ -187,6 +187,7 @@ internal sealed class PhoneServices : IDisposable
         var keyVault = new KeyVault(configuration, aethernetSession, aethernet.Keys);
         var badgeCatalog = new Social.BadgeCatalogStore(aethernetSession, aethernet.Account);
         Windows.Components.UserName.Configure(badgeCatalog, remoteImages);
+        Moderation.ModerationNoticeText.Configure(badgeCatalog);
         var peerKeys = new PeerKeyDirectory(configuration, aethernet.Keys);
         var conversationKeys = new ConversationKeyStore(aethernet.Keys, keyVault);
         var marketIndex = new MarketItemIndex(dataManager);
@@ -370,6 +371,7 @@ internal sealed class PhoneServices : IDisposable
         ShortcutRunner.Dispose();
         RemoteImages.Dispose();
         Windows.Components.UserName.Reset();
+        Moderation.ModerationNoticeText.Reset();
         BadgeCatalog.Dispose();
         Availability.Dispose();
         Http.Dispose();

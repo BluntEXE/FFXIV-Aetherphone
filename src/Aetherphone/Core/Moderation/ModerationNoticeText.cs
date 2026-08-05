@@ -19,6 +19,18 @@ internal static class ModerationNoticeKinds
 
 internal static class ModerationNoticeText
 {
+    private static BadgeCatalogStore? badgeCatalog;
+
+    public static void Configure(BadgeCatalogStore catalog)
+    {
+        badgeCatalog = catalog;
+    }
+
+    public static void Reset()
+    {
+        badgeCatalog = null;
+    }
+
     public static bool IsBlocking(ModerationNoticeDto notice)
     {
         return notice.Kind != ModerationNoticeKinds.ReportOutcome
@@ -113,6 +125,10 @@ internal static class ModerationNoticeText
             if (BadgeNameFor(keys[index]) is { } name)
             {
                 names.Add(Loc.T(name));
+            }
+            else if (badgeCatalog?.Find(keys[index]) is { } style)
+            {
+                names.Add(style.Name);
             }
         }
 
