@@ -737,9 +737,9 @@ internal sealed partial class YellowPagesApp
                 : needsLink ? Loc.T(L.YellowPages.NeedModLink)
                 : shortWindow ? Loc.T(L.YellowPages.NeedOpenWindow, MinOpenMinutes)
                 : Loc.T(L.YellowPages.NeedDataCenter);
-            Typography.Draw(new Vector2(origin.X, cursorY), hint, AppPalettes.YellowPages.MutedInk,
-                TextStyles.Footnote);
-            cursorY += 22f * scale;
+            var hintHeight = Typography.DrawWrappedLeft(new Vector2(origin.X, cursorY), hint,
+                AppPalettes.YellowPages.MutedInk, TextStyles.Footnote, width);
+            cursorY += hintHeight + Metrics.Space.Xs * scale;
         }
 
         var rect = new Rect(new Vector2(origin.X, cursorY),
