@@ -295,20 +295,23 @@ internal sealed partial class AethergramApp : IPhoneApp
 
         var navRect = new Rect(new Vector2(area.Min.X, area.Max.Y - BottomNavHeight * scale), area.Max);
         var tabArea = new Rect(contentArea.Min, new Vector2(area.Max.X, navRect.Min.Y));
-        switch (activeTab)
+        using (ImRaii.PushId((int)activeTab))
         {
-            case AethergramTab.Search:
-                DrawSearchTab(tabArea);
-                break;
-            case AethergramTab.Activity:
-                DrawActivityTab(tabArea);
-                break;
-            case AethergramTab.Profile:
-                DrawProfileTab(tabArea);
-                break;
-            default:
-                DrawFeedTab(tabArea);
-                break;
+            switch (activeTab)
+            {
+                case AethergramTab.Search:
+                    DrawSearchTab(tabArea);
+                    break;
+                case AethergramTab.Activity:
+                    DrawActivityTab(tabArea);
+                    break;
+                case AethergramTab.Profile:
+                    DrawProfileTab(tabArea);
+                    break;
+                default:
+                    DrawFeedTab(tabArea);
+                    break;
+            }
         }
 
         DrawBottomNav(navRect);
