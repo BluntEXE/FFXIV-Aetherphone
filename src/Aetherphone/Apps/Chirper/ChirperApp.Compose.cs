@@ -25,6 +25,7 @@ internal sealed partial class ChirperApp
             quoteTargetId = null;
             store.RefreshFeed(SocialFeedScope.ForYou);
             store.RefreshFeed(SocialFeedScope.Following);
+            feedScrollTopPending = true;
             router.Pop();
             return;
         }
