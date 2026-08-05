@@ -72,7 +72,7 @@ internal sealed class ModerationNoticePresenter : IDisposable
 
     private void Present(ModerationNoticeDto notice)
     {
-        if (notice.Kind == ModerationNoticeKinds.BadgeGranted)
+        if (notice.Kind == ModerationNoticeKinds.BadgeGranted || notice.Kind == ModerationNoticeKinds.BadgeRevoked)
         {
             accountState.RefreshNow();
         }

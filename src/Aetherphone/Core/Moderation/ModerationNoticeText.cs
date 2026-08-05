@@ -15,6 +15,7 @@ internal static class ModerationNoticeKinds
     public const int SignedOut = 5;
     public const int ReportOutcome = 6;
     public const int BadgeGranted = 7;
+    public const int BadgeRevoked = 8;
 }
 
 internal static class ModerationNoticeText
@@ -34,7 +35,8 @@ internal static class ModerationNoticeText
     public static bool IsBlocking(ModerationNoticeDto notice)
     {
         return notice.Kind != ModerationNoticeKinds.ReportOutcome
-            && notice.Kind != ModerationNoticeKinds.BadgeGranted;
+            && notice.Kind != ModerationNoticeKinds.BadgeGranted
+            && notice.Kind != ModerationNoticeKinds.BadgeRevoked;
     }
 
     public static string Title(ModerationNoticeDto notice)
@@ -48,6 +50,7 @@ internal static class ModerationNoticeText
             ModerationNoticeKinds.Suspended => Loc.T(L.Moderation.NoticeSuspendedTitle),
             ModerationNoticeKinds.SignedOut => Loc.T(L.Moderation.NoticeSignedOutTitle),
             ModerationNoticeKinds.BadgeGranted => Loc.T(L.Moderation.NoticeBadgeTitle),
+            ModerationNoticeKinds.BadgeRevoked => Loc.T(L.Moderation.NoticeBadgeRevokedTitle),
             _ => Loc.T(L.Moderation.NoticeThanksTitle),
         };
     }
@@ -59,7 +62,7 @@ internal static class ModerationNoticeText
             return Loc.T(L.Moderation.NoticeThanksBody);
         }
 
-        if (notice.Kind == ModerationNoticeKinds.BadgeGranted)
+        if (notice.Kind == ModerationNoticeKinds.BadgeGranted || notice.Kind == ModerationNoticeKinds.BadgeRevoked)
         {
             return BadgeBody(notice);
         }
@@ -102,18 +105,20 @@ internal static class ModerationNoticeText
 
     private static string BadgeBody(ModerationNoticeDto notice)
     {
+        var revoked = notice.Kind == ModerationNoticeKinds.BadgeRevoked;
         var names = BadgeNames(notice.Detail);
         if (names.Count == 0)
         {
-            return Loc.T(L.Moderation.NoticeBadgeBodyFallback);
+            return Loc.T(revoked ? L.Moderation.NoticeBadgeRevokedBodyFallback : L.Moderation.NoticeBadgeBodyFallback);
         }
 
         if (names.Count == 1)
         {
-            return Loc.T(L.Moderation.NoticeBadgeBodyOne, names[0]);
+            return Loc.T(revoked ? L.Moderation.NoticeBadgeRevokedBodyOne : L.Moderation.NoticeBadgeBodyOne, names[0]);
         }
 
-        return Loc.T(L.Moderation.NoticeBadgeBodyMany, string.Join(", ", names));
+        return Loc.T(revoked ? L.Moderation.NoticeBadgeRevokedBodyMany : L.Moderation.NoticeBadgeBodyMany,
+            string.Join(", ", names));
     }
 
     private static List<string> BadgeNames(string detail)
