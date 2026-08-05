@@ -19,11 +19,11 @@ internal static class ThemeCatalog
         PhoneCase.Art("Black", new Vector4(0.158f, 0.158f, 0.158f, 1f)),
         PhoneCase.Art("Blue", new Vector4(0.330f, 0.551f, 0.962f, 1f)),
         PhoneCase.Art("Green", new Vector4(0.254f, 0.766f, 0.460f, 1f)),
-        PhoneCase.Art("Grey", new Vector4(0.215f, 0.215f, 0.215f, 1f)),
-        PhoneCase.Art("Lavender", new Vector4(0.287f, 0.261f, 0.346f, 1f)),
+        PhoneCase.Art("Grey", new Vector4(0.227f, 0.227f, 0.227f, 1f)),
+        PhoneCase.Art("Lavender", new Vector4(0.304f, 0.276f, 0.368f, 1f)),
         PhoneCase.Art("Pink", new Vector4(0.930f, 0.414f, 0.646f, 1f)),
         PhoneCase.Art("Purple", new Vector4(0.551f, 0.460f, 0.930f, 1f)),
-        PhoneCase.Art("Teal", new Vector4(0.207f, 0.387f, 0.429f, 1f)),
+        PhoneCase.Art("Teal", new Vector4(0.219f, 0.409f, 0.455f, 1f)),
         PhoneCase.Art("White", new Vector4(0.892f, 0.892f, 0.892f, 1f)),
         PhoneCase.Art("Yellow", new Vector4(0.941f, 0.646f, 0.254f, 1f)),
         PhoneCase.Art("BlackCatGradient", new Vector4(0.379f, 0.254f, 0.325f, 1f)),
@@ -39,7 +39,7 @@ internal static class ThemeCatalog
         PhoneCase.Art("FatCat", new Vector4(0.753f, 0.708f, 0.648f, 1f)),
         PhoneCase.Art("CosmicEX", new Vector4(0.160f, 0.160f, 0.197f, 1f)),
         PhoneCase.Art("Caduceus", new Vector4(0.414f, 0.398f, 0.209f, 1f)),
-        PhoneCase.Art("MagicalGirl", new Vector4(0.898f, 0.571f, 0.709f, 1f)),
+        PhoneCase.Art("MagicalGirl", new Vector4(0.897f, 0.569f, 0.707f, 1f)),
     };
 
     public static IReadOnlyList<PhoneCase> Cases { get; } = BuiltInCases;
