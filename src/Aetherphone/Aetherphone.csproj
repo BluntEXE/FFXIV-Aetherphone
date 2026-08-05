@@ -11,6 +11,11 @@
     <DalamudLibPath>$(DALAMUD_HOME)/</DalamudLibPath>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <TargetName>AetherphoneDev</TargetName>
+    <ProjectDepsFileName>AetherphoneDev.deps.json</ProjectDepsFileName>
+  </PropertyGroup>
+
   <ItemGroup>
     <Content Include="Images\Icon.png" Condition="Exists('Images\Icon.png')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

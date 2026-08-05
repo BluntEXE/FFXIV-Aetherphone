@@ -1,0 +1,17 @@
+<Project>
+
+  <!--
+    Replaces DalamudPackager's own Debug/Release defaults, which are skipped
+    once this file exists. Both configurations package and zip: Release ships
+    Aetherphone, Debug ships the side-by-side AetherphoneDev dev plugin.
+  -->
+
+  <Target Name="PackagePlugin" AfterTargets="Build">
+    <DalamudPackager
+      ProjectDir="$(ProjectDir)"
+      OutputPath="$(OutputPath)"
+      AssemblyName="$(TargetName)"
+      MakeZip="true" />
+  </Target>
+
+</Project>
