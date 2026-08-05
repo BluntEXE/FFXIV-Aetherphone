@@ -61,23 +61,6 @@
         "resolved": "13.0.4",
         "contentHash": "pdgNNMai3zv51W5aq268sujXUyx7SNdE2bj1wZcWjAQrKMFZV260lbqYop1d2GM67JI1huLRwxo9ZqnfF/lC6A=="
       },
-      "NoireLib": {
-        "type": "Direct",
-        "requested": "[1.8.0.3, )",
-        "resolved": "1.8.0.3",
-        "contentHash": "ISm38lwDNff3qWlHAebA3Ha33Ix0WibSsPgWq8DwDPbkdnh+SJJbFsyaOSAqTGy04s6KNm5n1gTiF5rJBipRxQ==",
-        "dependencies": {
-          "Castle.Core": "5.2.1",
-          "Newtonsoft.Json": "13.0.4",
-          "System.Data.SQLite": "2.0.3"
-        }
-      },
-      "Penumbra.Api": {
-        "type": "Direct",
-        "requested": "[5.15.1, )",
-        "resolved": "5.15.1",
-        "contentHash": "3ikk0zIOaLm2n3nZRQpW3xaRQ2cq/TOOEApNUjYXolqbyvCrZVGXhdQulcssNUbo0AMQ81l+cf7OfqRceeRBcg=="
-      },
       "SharpCompress": {
         "type": "Direct",
         "requested": "[0.48.1, )",
@@ -157,24 +140,10 @@
           "JsonExtensions": "1.2.0"
         }
       },
-      "ZXing.Net": {
-        "type": "Direct",
-        "requested": "[0.16.11, )",
-        "resolved": "0.16.11",
-        "contentHash": "OZfAVu88hl87BffQ+rlWCj/vLvAhhCK4QnFaoveeF/MY8SjHNSYBQ3qyUEWlPKNgBQGh1syXhCDg10vUnCsqkg=="
-      },
       "AngleSharp": {
         "type": "Transitive",
         "resolved": "1.4.0",
         "contentHash": "6ph8mpaQx0KL0COYRt0kI8MB9gSp1PtKijKMhJU//+aVFgKAJLKDesG/+26JSaVCOrHNgPf12wpfoyRcMYOeXg=="
-      },
-      "Castle.Core": {
-        "type": "Transitive",
-        "resolved": "5.2.1",
-        "contentHash": "wHARzQA695jwwKreOzNsq54KiGqKP38tv8hi8e2FXDEC/sA6BtrX90tVPDkOfVu13PbEzr00TCV8coikl+D1Iw==",
-        "dependencies": {
-          "System.Diagnostics.EventLog": "6.0.0"
-        }
       },
       "HtmlAgilityPack": {
         "type": "Transitive",
@@ -241,16 +210,6 @@
         "dependencies": {
           "SharpGen.Runtime": "2.4.2-beta"
         }
-      },
-      "System.Data.SQLite": {
-        "type": "Transitive",
-        "resolved": "2.0.3",
-        "contentHash": "5I9dVqmHp1v0dhco21btIRkUE47zHSy4t6bRLwIO6nGZ1mxGIL1f1yp1zWI/AAZFfdUz7n6RrH1hyi/6EhlIeQ=="
-      },
-      "System.Diagnostics.EventLog": {
-        "type": "Transitive",
-        "resolved": "6.0.0",
-        "contentHash": "lcyUiXTsETK2ALsZrX+nWuHSIQeazhqPphLfaRxzdGaG93+0kELqpgEHtwWOlQe7+jSFnKwaCAgL4kjeZCQJnw=="
       },
       "Vortice.DirectX": {
         "type": "Transitive",

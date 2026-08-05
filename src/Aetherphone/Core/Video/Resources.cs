@@ -149,7 +149,7 @@ internal sealed class Resources : IDisposable
 	}
 	internal async Task CheckYTDLPAsync()
 	{
-		string filenameStart = "yt-dlp.exe";
+		string filenameStart = "yt-dlp_x86.exe";
 		string filenameEnd = ".exe";
 		string url = "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest";
 		YtdlpCheckResult = await CheckForUpdateAsync(_configDir, filenameStart, filenameEnd, url);
