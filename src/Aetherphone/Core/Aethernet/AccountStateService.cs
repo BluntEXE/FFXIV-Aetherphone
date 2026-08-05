@@ -90,7 +90,29 @@ internal sealed class AccountStateService : IDisposable
             return false;
         }
 
-        return current.Badges != fresh.Badges || current.GrantedBadges != fresh.GrantedBadges;
+        return current.Badges != fresh.Badges
+            || current.GrantedBadges != fresh.GrantedBadges
+            || !SameBadgeIds(current.ProfileBadges, fresh.ProfileBadges);
+    }
+
+    private static bool SameBadgeIds(string[]? current, string[]? fresh)
+    {
+        var currentLength = current?.Length ?? 0;
+        var freshLength = fresh?.Length ?? 0;
+        if (currentLength != freshLength)
+        {
+            return false;
+        }
+
+        for (var index = 0; index < currentLength; index++)
+        {
+            if (!string.Equals(current![index], fresh![index], StringComparison.Ordinal))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public void Dispose()

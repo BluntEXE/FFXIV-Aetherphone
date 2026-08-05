@@ -64,6 +64,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
     private volatile bool avatarBusy;
     private volatile BadgeStyle[]? communityBadges;
     private bool communityBadgesRequested;
+    private UserDto? communityBadgesUser;
     private bool meRequested;
     private int lastDrawnFrame = -2;
 
@@ -100,6 +101,13 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         if (frame - lastDrawnFrame > 1)
         {
             accountState.RefreshNow();
+            communityBadgesRequested = false;
+        }
+
+        if (!ReferenceEquals(communityBadgesUser, session.CurrentUser))
+        {
+            communityBadgesUser = session.CurrentUser;
+            communityBadgesRequested = false;
         }
 
         lastDrawnFrame = frame;
