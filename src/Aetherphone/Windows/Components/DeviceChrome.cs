@@ -21,7 +21,7 @@ internal static class DeviceChrome
     {
         var scale = UiScale.Current;
         var device = chassis.Body;
-        if (device.Width > device.Height)
+        if (device.IsLandscape())
         {
             var left = device.Min.X + device.Width * 0.250f;
             var width = device.Width * 0.108f;
@@ -37,7 +37,7 @@ internal static class DeviceChrome
     {
         var scale = UiScale.Current;
         var device = chassis.Body;
-        if (device.Width > device.Height)
+        if (device.IsLandscape())
         {
             var left = device.Min.X + device.Width * 0.205f;
             var width = device.Width * 0.082f;
@@ -53,7 +53,7 @@ internal static class DeviceChrome
     {
         var scale = UiScale.Current;
         var device = chassis.Body;
-        if (device.Width > device.Height)
+        if (device.IsLandscape())
         {
             var left = device.Min.X + device.Width * 0.315f;
             var width = device.Width * 0.082f;
@@ -82,7 +82,7 @@ internal static class DeviceChrome
         if (theme.WantsCaseArt && PhoneCaseTextures.Skin(theme.CaseTextureId) is { } bandTexture)
         {
             CaseArt.QuadExcluding(dl, bandTexture, CaseArt.RectFor(chassis.Body), band,
-                CaseArt.IsLandscape(chassis.Body));
+                chassis.Body.IsLandscape());
             paintMetal = false;
         }
 
@@ -130,7 +130,7 @@ internal static class DeviceChrome
                 ImGui.GetColorU32(theme.FrameMetal));
         }
 
-        CaseArt.Quad(dl, texture, CaseArt.RectFor(chassis.Body), CaseArt.IsLandscape(chassis.Body),
+        CaseArt.Quad(dl, texture, CaseArt.RectFor(chassis.Body), chassis.Body.IsLandscape(),
             CaseArt.Tint(artAlpha));
         Squircle.Fill(dl, chassis.Glass.Min, chassis.Glass.Max, chassis.GlassRadius, ImGui.GetColorU32(theme.Glass));
         Squircle.Fill(dl, chassis.Screen.Min, chassis.Screen.Max, chassis.ScreenRadius,

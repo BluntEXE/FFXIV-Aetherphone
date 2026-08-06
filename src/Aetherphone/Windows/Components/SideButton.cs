@@ -68,7 +68,7 @@ internal sealed class SideButton
     private static void DrawButton(Rect bounds, PhoneTheme theme, bool hovered, float progress, bool pressing)
     {
         var press = pressing ? 0.35f + 0.65f * progress : 0f;
-        var side = bounds.Width > bounds.Height ? RailSide.Top : RailSide.Right;
+        var side = bounds.IsLandscape() ? RailSide.Top : RailSide.Right;
         HardwareButton.Draw(ImGui.GetWindowDrawList(), bounds, theme, side, hovered, press, 0f);
     }
 }

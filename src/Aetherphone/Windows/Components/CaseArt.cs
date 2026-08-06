@@ -10,8 +10,6 @@ internal static class CaseArt
 
     public const float MarginFraction = 0.25f;
 
-    public static bool IsLandscape(Rect body) => body.Width > body.Height;
-
     public static Rect RectFor(Rect body)
     {
         var margin = MathF.Min(body.Width, body.Height) * MarginFraction;

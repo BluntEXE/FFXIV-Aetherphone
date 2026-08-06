@@ -39,7 +39,7 @@ internal readonly struct ChassisGeometry
     public static Rect BodyRect(Rect window, PhoneTheme theme, float scale)
     {
         var rail = theme.RailWidth * scale;
-        if (window.Width > window.Height)
+        if (window.IsLandscape())
         {
             return new Rect(new Vector2(window.Min.X, window.Min.Y + rail),
                 new Vector2(window.Max.X, window.Max.Y - rail));

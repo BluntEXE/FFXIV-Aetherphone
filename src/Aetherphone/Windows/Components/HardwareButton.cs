@@ -48,7 +48,7 @@ internal static class HardwareButton
     private static void Boss(ImDrawListPtr drawList, Rect bounds, PhoneTheme theme, float scale)
     {
         var pad = 2.4f * scale;
-        var horizontal = bounds.Width > bounds.Height;
+        var horizontal = bounds.IsLandscape();
         var min = horizontal
             ? new Vector2(bounds.Min.X - pad, bounds.Min.Y)
             : new Vector2(bounds.Min.X, bounds.Min.Y - pad);
