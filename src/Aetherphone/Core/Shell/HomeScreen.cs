@@ -27,7 +27,7 @@ internal sealed class HomeScreen
     {
         this.configuration = configuration;
         layout = new HomeLayoutService(apps, widgets, shortcuts, configuration);
-        folder = new FolderOverlay(layout);
+        folder = new FolderOverlay(layout, shortcuts, runner);
         sizeMenu = new WidgetSizeMenu(layout);
         gallery = new WidgetGallery(layout, widgets);
         interaction = new HomeInteractionController(layout, widgets, pager, folder, sizeMenu, gallery, poses, runner);
@@ -131,9 +131,9 @@ internal sealed class HomeScreen
             return tile.Widget!.AppId == appId;
         }
 
-        for (var index = 0; index < tile.Apps.Count; index++)
+        for (var index = 0; index < tile.Members.Count; index++)
         {
-            if (tile.Apps[index].Id == appId)
+            if (tile.Members[index].App?.Id == appId)
             {
                 return true;
             }

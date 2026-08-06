@@ -149,7 +149,7 @@ internal sealed class HomeGridRenderer
         {
             HomeTileView.DrawFolder(center, rect.Width, tile, theme,
                 interaction.TapScale(tile) * interaction.Magnify(center, metrics.CellWidth),
-                labelAlpha, showLabels, Loc.T(L.Home.NewFolder), metrics.CellWidth, zoom);
+                labelAlpha, showLabels, Loc.T(L.Home.NewFolder), metrics.CellWidth, zoom, shortcuts.Icon);
             if (interaction.RemoveBadgesLive(motion) &&
                 HomeTileView.RemoveBadge(new Vector2(rect.Min.X + 2f * scale, rect.Min.Y + 2f * scale), scale, theme))
             {
@@ -309,7 +309,7 @@ internal sealed class HomeGridRenderer
         if (tile.IsFolder)
         {
             HomeTileView.DrawFolder(position, metrics.IconSize, tile, theme, scale, 0f, true, Loc.T(L.Home.NewFolder),
-                metrics.CellWidth);
+                metrics.CellWidth, 1f, shortcuts.Icon);
             return;
         }
 
