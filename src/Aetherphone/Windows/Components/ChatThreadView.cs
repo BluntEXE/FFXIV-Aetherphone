@@ -19,7 +19,6 @@ using Aetherphone.Core.Wallpapers;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Textures.TextureWraps;
-using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
 
@@ -859,26 +858,36 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
             const int columns = 3;
             var gap = 6f * scale;
-            var cell = (ScrollLayout.StableContentWidth() - gap * (columns - 1)) / columns;
-            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(gap, gap)))
+            var avail = ScrollLayout.StableContentWidth();
+            var cell = (avail - gap * (columns - 1)) / columns;
+            var origin = ImGui.GetCursorScreenPos();
+            var scrollY = ImGui.GetScrollY();
+            var viewHeight = ImGui.GetWindowSize().Y;
+            var margin = cell + 60f * scale;
+            for (var index = 0; index < pickerPaths.Length; index++)
             {
-                for (var index = 0; index < pickerPaths.Length; index++)
+                var column = index % columns;
+                var rowIndex = index / columns;
+                var rowTop = rowIndex * (cell + gap);
+                if (rowTop + cell < scrollY - margin || rowTop > scrollY + viewHeight + margin)
                 {
-                    ImGui.Dummy(new Vector2(cell, cell));
-                    var min = ImGui.GetItemRectMin();
-                    var max = ImGui.GetItemRectMax();
-                    DrawPickerThumbnail(pickerPaths[index], min, max, scale);
-                    if (UiInteract.Click(min, max, UiInteract.Hover(min, max)))
-                    {
-                        SendChatImage(threadId, pickerPaths[index]);
-                    }
+                    continue;
+                }
 
-                    if (index % columns != columns - 1)
-                    {
-                        ImGui.SameLine();
-                    }
+                var min = new Vector2(origin.X + column * (cell + gap), origin.Y + rowTop);
+                var max = new Vector2(min.X + cell, min.Y + cell);
+                var hovered = UiInteract.Hover(min, max);
+                DrawPickerThumbnail(pickerPaths[index], min, max, scale, hovered);
+                if (UiInteract.Click(min, max, hovered))
+                {
+                    SendChatImage(threadId, pickerPaths[index]);
                 }
             }
+
+            var rows = (pickerPaths.Length + columns - 1) / columns;
+            var totalHeight = rows * (cell + gap);
+            ImGui.SetCursorScreenPos(origin);
+            ImGui.Dummy(new Vector2(avail, totalHeight));
         }
     }
 
@@ -890,7 +899,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         PopScreen();
     }
 
-    private void DrawPickerThumbnail(string path, Vector2 min, Vector2 max, float scale)
+    private void DrawPickerThumbnail(string path, Vector2 min, Vector2 max, float scale, bool hovered)
     {
         var drawList = ImGui.GetWindowDrawList();
         var rounding = 10f * scale;
@@ -922,7 +931,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         }
 
         drawList.AddImageRounded(texture.Handle, min, max, uv0, uv1, 0xFFFFFFFFu, rounding, ImDrawFlags.RoundCornersAll);
-        if (ImGui.IsItemHovered())
+        if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }

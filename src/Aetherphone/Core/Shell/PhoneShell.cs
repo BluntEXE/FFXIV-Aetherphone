@@ -236,6 +236,9 @@ internal sealed class PhoneShell : IDisposable
         var theme = themes.Chrome;
         var chassis = DeviceChrome.Chassis(device, theme);
         var screen = chassis.Screen;
+        var sideButtonRect = DeviceChrome.SideButtonRect(device, chassis, out var sideButtonSide);
+        var muteButtonRect = DeviceChrome.MuteButtonRect(device, chassis, out var muteButtonSide);
+        var lockButtonRect = DeviceChrome.LockButtonRect(device, chassis, out var lockButtonSide);
         DeviceChrome.DrawBody(chassis, theme, TransparentBand(screen));
         loading.Advance(delta);
         navigation.Advance(delta);
@@ -252,7 +255,7 @@ internal sealed class PhoneShell : IDisposable
         calls.Advance(delta);
         if (!loading.IsActive)
         {
-            switch (sideButton.Update(DeviceChrome.SideButtonRect(device, chassis), theme, delta))
+            switch (sideButton.Update(sideButtonRect, sideButtonSide, theme, delta))
             {
                 case SideButtonAction.Minimize:
                     minimize.BeginCollapse();
@@ -267,14 +270,14 @@ internal sealed class PhoneShell : IDisposable
                 minimize.BeginCollapse();
             }
 
-            if (SideToggle.Update(DeviceChrome.MuteButtonRect(device, chassis), theme, configuration.DoNotDisturb,
+            if (SideToggle.Update(muteButtonRect, muteButtonSide, theme, configuration.DoNotDisturb,
                     Loc.T(configuration.DoNotDisturb ? L.Plugin.DndDisableHint : L.Plugin.DndEnableHint)))
             {
                 configuration.DoNotDisturb = !configuration.DoNotDisturb;
                 configuration.Save();
             }
 
-            if (SideToggle.Update(DeviceChrome.LockButtonRect(device, chassis), theme, configuration.LockPosition,
+            if (SideToggle.Update(lockButtonRect, lockButtonSide, theme, configuration.LockPosition,
                     Loc.T(configuration.LockPosition ? L.Plugin.UnlockPositionHint : L.Plugin.LockPositionHint)))
             {
                 configuration.LockPosition = !configuration.LockPosition;
@@ -297,8 +300,8 @@ internal sealed class PhoneShell : IDisposable
         var state = overlays.Assess(screen);
         director.Advance(delta, state.Busy, navigation.AtHome, navigation.Current?.Id);
         UiAnchors.BeginFrame(director.WantsAnchors);
-        UiAnchors.Report("chrome.lock", DeviceChrome.LockButtonRect(device, chassis));
-        UiAnchors.Report("chrome.minimize", DeviceChrome.SideButtonRect(device, chassis));
+        UiAnchors.Report("chrome.lock", lockButtonRect);
+        UiAnchors.Report("chrome.minimize", sideButtonRect);
         UiAnchors.Report("chrome.controlcenter",
             new Rect(screen.Min, new Vector2(screen.Max.X, screen.Min.Y + 44f * UiScale.Current)));
         using (InputShield.Engage(state.ShieldBase || director.CapturesPointer))

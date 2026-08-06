@@ -47,7 +47,7 @@ internal sealed class CameraApp : IPhoneApp
 
     private static Rect ViewfinderRect(Rect screen, float scale)
     {
-        if (screen.Width > screen.Height)
+        if (screen.IsLandscape())
         {
             return new Rect(new Vector2(screen.Min.X + SideBarWidth * scale, screen.Min.Y),
                 new Vector2(screen.Max.X - SideTrayWidth * scale, screen.Max.Y));
@@ -101,7 +101,7 @@ internal sealed class CameraApp : IPhoneApp
         var rounding = theme.ScreenRounding * scale;
         AdvanceTimers(ImGui.GetIO().DeltaTime);
         var screen = ScreenFrom(context.Content, theme, scale);
-        var landscape = screen.Width > screen.Height;
+        var landscape = screen.IsLandscape();
         var viewfinder = ViewfinderRect(screen, scale);
         var captureRect = CaptureRect(viewfinder);
 

@@ -319,30 +319,40 @@ internal sealed class FeedbackApp : IPhoneApp
             }
 
             var gap = 6f * scale;
-            var cell = (ScrollLayout.StableContentWidth() - gap * (PickerColumns - 1)) / PickerColumns;
-            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(gap, gap)))
+            var avail = ScrollLayout.StableContentWidth();
+            var cell = (avail - gap * (PickerColumns - 1)) / PickerColumns;
+            var origin = ImGui.GetCursorScreenPos();
+            var scrollY = ImGui.GetScrollY();
+            var viewHeight = ImGui.GetWindowSize().Y;
+            var margin = cell + 60f * scale;
+            for (var index = 0; index < pickerPaths.Length; index++)
             {
-                for (var index = 0; index < pickerPaths.Length; index++)
+                var column = index % PickerColumns;
+                var rowIndex = index / PickerColumns;
+                var rowTop = rowIndex * (cell + gap);
+                if (rowTop + cell < scrollY - margin || rowTop > scrollY + viewHeight + margin)
                 {
-                    ImGui.Dummy(new Vector2(cell, cell));
-                    var min = ImGui.GetItemRectMin();
-                    var max = ImGui.GetItemRectMax();
-                    DrawLocalThumbnail(pickerPaths[index], min, max, scale);
-                    if (UiInteract.Click(min, max, UiInteract.Hover(min, max)))
-                    {
-                        AddAttachment(pickerPaths[index]);
-                    }
+                    continue;
+                }
 
-                    if (index % PickerColumns != PickerColumns - 1)
-                    {
-                        ImGui.SameLine();
-                    }
+                var min = new Vector2(origin.X + column * (cell + gap), origin.Y + rowTop);
+                var max = new Vector2(min.X + cell, min.Y + cell);
+                var hovered = UiInteract.Hover(min, max);
+                DrawLocalThumbnail(pickerPaths[index], min, max, scale, hovered);
+                if (UiInteract.Click(min, max, hovered))
+                {
+                    AddAttachment(pickerPaths[index]);
                 }
             }
+
+            var rows = (pickerPaths.Length + PickerColumns - 1) / PickerColumns;
+            var totalHeight = rows * (cell + gap);
+            ImGui.SetCursorScreenPos(origin);
+            ImGui.Dummy(new Vector2(avail, totalHeight));
         }
     }
 
-    private void DrawLocalThumbnail(string path, Vector2 min, Vector2 max, float scale)
+    private void DrawLocalThumbnail(string path, Vector2 min, Vector2 max, float scale, bool hovered)
     {
         var drawList = ImGui.GetWindowDrawList();
         var rounding = 10f * scale;
@@ -356,7 +366,7 @@ internal sealed class FeedbackApp : IPhoneApp
         var (uv0, uv1) = ImageFit.CoverSquare(texture.Size);
         drawList.AddImageRounded(texture.Handle, min, max, uv0, uv1, 0xFFFFFFFFu, rounding,
             ImDrawFlags.RoundCornersAll);
-        if (ImGui.IsItemHovered())
+        if (hovered)
         {
             drawList.AddRectFilled(min, max, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.1f)), rounding);
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
