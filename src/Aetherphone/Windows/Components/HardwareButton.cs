@@ -20,7 +20,7 @@ internal static class HardwareButton
         float press, float active)
     {
         var scale = UiScale.Current;
-        Boss(drawList, bounds, theme, scale);
+        Boss(drawList, bounds, theme, side, scale);
 
         var travel = press * PressTravel * scale;
         var shift = side switch
@@ -45,10 +45,10 @@ internal static class HardwareButton
         Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(Palette.Darken(metal, 0.60f)), 1f * scale);
     }
 
-    private static void Boss(ImDrawListPtr drawList, Rect bounds, PhoneTheme theme, float scale)
+    private static void Boss(ImDrawListPtr drawList, Rect bounds, PhoneTheme theme, RailSide side, float scale)
     {
         var pad = 2.4f * scale;
-        var horizontal = bounds.IsLandscape();
+        var horizontal = side is RailSide.Top or RailSide.Bottom;
         var min = horizontal
             ? new Vector2(bounds.Min.X - pad, bounds.Min.Y)
             : new Vector2(bounds.Min.X, bounds.Min.Y - pad);
