@@ -991,7 +991,7 @@ internal static class L
         public static readonly LocString FilterEligibility = new("housing.filterEligibility", "Who can buy");
         public static readonly LocString FilterDivision = new("housing.filterDivision", "Division");
         public static readonly LocString FilterData = new("housing.filterData", "Data");
-        public static readonly LocString FilterOtherPhases = new("housing.filterOtherPhases", "Other phases");
+        public static readonly LocString FilterOtherPhases = new("housing.filterOtherPhases", "Other");
         public static readonly LocString FilterFreshOnly = new("housing.filterFreshOnly", "Fresh scans only");
         public static readonly LocString FilterWatchedOnly = new("housing.filterWatchedOnly", "Watched plots only");
         public static readonly LocString FilterMaxEntries = new("housing.filterMaxEntries", "Max reported entries");
@@ -1289,6 +1289,118 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release0998 =
+        {
+            new("changelog.r0998.0",
+                "Added Housing, a new app that browses every housing ward on a map, tracks the plots you are watching, and reminds you before a lottery entry period closes, contributed by Chaosvanguard"),
+            new("changelog.r0998.1",
+                "Added Community Radio to Music, with more details coming soon"),
+            new("changelog.r0998.2",
+                "Added new phone cases, contributed by Silkie, Zivyl, Remi, and Rania"),
+            new("changelog.r0998.3",
+                "Badges have been completely reworked: they are now granted or earned under certain conditions, with the details on the Discord server"),
+            new("changelog.r0998.4",
+                "A fullscreen photo can be popped out into an ordinary window with a title bar, resized freely, and named after the app it came from"),
+            new("changelog.r0998.5",
+                "A photo can be filed into an album from the viewer, without leaving for the album first"),
+            new("changelog.r0998.6",
+                "The market now shows what lands in your retainer after tax, and names the city with the lowest rate"),
+            new("changelog.r0998.7",
+                "When another world, data center, or region sells an item cheaper, the Prices card names it and its price"),
+            new("changelog.r0998.8",
+                "An item that only sells HQ now opens on the HQ tab instead of an empty NQ one"),
+            new("changelog.r0998.9",
+                "Hovering a market row reveals the full item name, so families such as Ballroom Etiquette are no longer indistinguishable"),
+            new("changelog.r0998.10",
+                "Calls gained a Speaker picker, so a call plays through the output device you choose instead of always following the system default"),
+            new("changelog.r0998.11",
+                "Quiet While Busy holds banners, sounds, and shakes during combat, duties, cutscenes, and zoning; the notification still arrives and still counts as unread"),
+            new("changelog.r0998.12",
+                "Notification toasts can be turned off globally or per app, contributed by Radvo"),
+            new("changelog.r0998.13",
+                "An alarm whose minute passed while the plugin was unloaded now still fires, within a ten minute catch-up window"),
+            new("changelog.r0998.14",
+                "Every chat app now keeps a draft per conversation, so what you wrote for one person no longer follows you into the next"),
+            new("changelog.r0998.15",
+                "Velvet can pass on a profile, which drops them for the session without blocking them"),
+            new("changelog.r0998.16",
+                "Leaving the Velvet profile editor with unsaved changes now asks before discarding them"),
+            new("changelog.r0998.17",
+                "A Velvet profile you have already reported no longer offers the flag again"),
+            new("changelog.r0998.18",
+                "Dragging an icon past the last Home Screen page now opens a new page"),
+            new("changelog.r0998.19",
+                "Escape now backs out of the topmost thing on screen: a confirmation, the report sheet, the share sheet, then Control Center"),
+            new("changelog.r0998.20",
+                "Control Center can be pulled open by dragging the status band down, not only by tapping it"),
+            new("changelog.r0998.21",
+                "The community rules unlock their accept button once you have read to the end, instead of after a fixed countdown"),
+            new("changelog.r0998.22",
+                "Dock icons now raise the same name pill as the rest of the Home Screen"),
+            new("changelog.r0998.23",
+                "Removing an app from the Home Screen now asks first"),
+            new("changelog.r0998.24",
+                "Dalamud's settings button beside the plugin now opens the phone on the Settings app"),
+            new("changelog.r0998.25",
+                "A shortcut can use any plugin's icon, picked from the appearance sheet"),
+            new("changelog.r0998.26",
+                "Copying a chat bubble, a Linkpearl line, or a travel command now shows a confirmation, so a copy is no longer silent"),
+            new("changelog.r0998.27",
+                "An album's rename and delete are now reachable from a menu button on the card, not only by right-click"),
+            new("changelog.r0998.28",
+                "Empty screens now offer the next step: an empty photo library offers Camera, and Velvet offers Clear filters when your own filters are hiding everyone"),
+            new("changelog.r0998.29",
+                "A list that failed to load now says so and offers Retry, instead of reading as an empty list"),
+            new("changelog.r0998.30",
+                "Camera remembers the grid and the flash, and Photos reopens on the tab you left"),
+            new("changelog.r0998.31",
+                "The emoji picker takes the caret when it opens, so you can type to search instead of hunting the grid"),
+            new("changelog.r0998.32",
+                "Games that run on a clock now show a Paused veil when the phone loses focus, instead of looking frozen"),
+            new("changelog.r0998.33",
+                "The battery icon warns as a whole below twenty percent and breathes below ten, rather than tinting the fill alone"),
+            new("changelog.r0998.34",
+                "An empty inbox now offers New message instead of only describing itself"),
+            new("changelog.r0998.35",
+                "About gained a Copy Support Info row that puts versions, OS, language, and sound state on the clipboard, carrying no account or character identifiers"),
+            new("changelog.r0998.36",
+                "Fixed encryption and imported WAV and MP3 playback on Linux and Wine, contributed by Ehno"),
+            new("changelog.r0998.37",
+                "Fixed a message the game rejects disappearing in silence: the text stays in the box and the phone says the send failed"),
+            new("changelog.r0998.38",
+                "Fixed the housing translations: every language now uses the wording its own game client uses, and district names are translated"),
+            new("changelog.r0998.39",
+                "Fixed the calendar starting its week on Sunday in the five languages whose week starts on Monday"),
+            new("changelog.r0998.40",
+                "Fixed mini-games running on while the phone was not focused, and Tetris and Sudoku taking the keyboard while you were typing in the game"),
+            new("changelog.r0998.41",
+                "Fixed Settings showing badges you no longer hold"),
+            new("changelog.r0998.42",
+                "Fixed screens collapsing onto the avatar while a profile photo had not loaded yet, most visibly in the Velvet profile editor"),
+            new("changelog.r0998.43",
+                "Fixed the photo viewer's buttons stacking up over the photo"),
+            new("changelog.r0998.44",
+                "Fixed the Yellow Pages ad form cutting off its failure message instead of wrapping it, contributed by Raya"),
+            new("changelog.r0998.45",
+                "Moved the Velvet photo gallery below the profile details, contributed by Farroness"),
+            new("changelog.r0998.46",
+                "Fixed the emote idle scroll firing while an event window was open, contributed by Chaosvanguard"),
+            new("changelog.r0998.47",
+                "Fixed Escape doing nothing when the phone had been opened with a slash command"),
+            new("changelog.r0998.48",
+                "Fixed the app badge counting the conversation you are currently reading"),
+            new("changelog.r0998.49",
+                "Fixed blocking someone in Velvet leaving them in the Discover deck"),
+            new("changelog.r0998.50",
+                "Fixed Block on a Velvet profile acting without asking first"),
+            new("changelog.r0998.51",
+                "Fixed a blocking moderation notice vanishing for good once dismissed: it now leaves a notification behind"),
+            new("changelog.r0998.52",
+                "Fixed two notification settings showing in English in every translated language"),
+            new("changelog.r0998.53",
+                "Notifications no longer appear at the title screen, where there is no session to act on them"),
+        };
+
         public static readonly LocString[] Release0997 =
         {
             new("changelog.r0997.0",
@@ -3408,10 +3520,39 @@ internal static class L
         public static readonly LocString AccentPink = new("catalog.accent.pink", "Pink");
         public static readonly LocString AccentAmber = new("catalog.accent.amber", "Amber");
         public static readonly LocString CaseTitanium = new("catalog.case.titanium", "Titanium");
+        public static readonly LocString CaseBlack = new("catalog.case.black", "Black");
+        public static readonly LocString CaseBlue = new("catalog.case.blue", "Blue");
+        public static readonly LocString CaseGreen = new("catalog.case.green", "Green");
+        public static readonly LocString CaseGrey = new("catalog.case.grey", "Grey");
+        public static readonly LocString CaseLavender = new("catalog.case.lavender", "Lavender");
+        public static readonly LocString CasePink = new("catalog.case.pink", "Pink");
+        public static readonly LocString CasePurple = new("catalog.case.purple", "Purple");
+        public static readonly LocString CaseTeal = new("catalog.case.teal", "Teal");
+        public static readonly LocString CaseWhite = new("catalog.case.white", "White");
+        public static readonly LocString CaseYellow = new("catalog.case.yellow", "Yellow");
+        public static readonly LocString CaseBlackCat = new("catalog.case.blackcatgradient", "Black Cat");
+        public static readonly LocString CaseBruteBomber = new("catalog.case.brutebombergradient", "Brute Bomber");
+        public static readonly LocString CaseDancingGreen = new("catalog.case.dancinggreengradient", "Dancing Green");
+        public static readonly LocString CaseGridania = new("catalog.case.gridaniagradient", "Gridania");
+        public static readonly LocString CaseHoneyBLovely = new("catalog.case.honeyblovelygradient", "Honey B. Lovely");
+        public static readonly LocString CaseHowlingBlade = new("catalog.case.howlingbladegradient", "Howling Blade");
+        public static readonly LocString CaseLimsa = new("catalog.case.limsagradient", "Limsa Lominsa");
+        public static readonly LocString CaseLindwurm = new("catalog.case.lindwurmgradient", "Lindwurm");
+        public static readonly LocString CaseMoogle = new("catalog.case.mooglegradient", "Moogle");
+        public static readonly LocString CaseRedHotDeepBlue = new("catalog.case.redhotdeepbluegradient", "Red Hot Deep Blue");
+        public static readonly LocString CaseSolutionNine = new("catalog.case.solution9gradient", "Solution Nine");
+        public static readonly LocString CaseSphene = new("catalog.case.sphenegradient", "Sphene");
+        public static readonly LocString CaseSugarRiot = new("catalog.case.sugarriotgradient", "Sugar Riot");
+        public static readonly LocString CaseTheTyrant = new("catalog.case.thetyrantgradient", "The Tyrant");
+        public static readonly LocString CaseTuliyollal = new("catalog.case.tuliyollalgradient", "Tuliyollal");
+        public static readonly LocString CaseUldah = new("catalog.case.uldahgradient", "Ul'dah");
+        public static readonly LocString CaseVampFatale = new("catalog.case.vampfatalegradient", "Vamp Fatale");
+        public static readonly LocString CaseWickedThunder = new("catalog.case.wickedthundergradient", "Wicked Thunder");
         public static readonly LocString CaseSilkie = new("catalog.case.silkie", "Silkie");
         public static readonly LocString CaseFatCat = new("catalog.case.fatcat", "Fat Cat");
         public static readonly LocString CaseCosmicEx = new("catalog.case.cosmicex", "Cosmic EX");
         public static readonly LocString CaseCaduceus = new("catalog.case.caduceus", "Caduceus");
+        public static readonly LocString CaseMagicalGirl = new("catalog.case.magicalgirl", "Magical Girl");
         public static readonly LocString RingtoneSilent = new("catalog.ringtone.silent", "Silent");
         public static readonly LocString RadioLofi = new("catalog.radio.lofi", "Lofi");
         public static readonly LocString RadioChillout = new("catalog.radio.chillout", "Chillout");

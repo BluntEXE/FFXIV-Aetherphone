@@ -112,7 +112,8 @@ internal sealed class DailiesApp : IPhoneApp
 
     private static bool IsValueTracking(DailyTracking tracking) =>
         tracking is DailyTracking.BeastTribeAllowances or DailyTracking.CustomDeliveries
-            or DailyTracking.WondrousTails or DailyTracking.Levequests or DailyTracking.HuntBills;
+            or DailyTracking.WondrousTails or DailyTracking.Levequests or DailyTracking.HuntBills
+            or DailyTracking.DomanEnclave;
 
     private bool IsOutstanding(in DailyItem item, in DailyAutoStatus status, DateTime utcNow)
     {

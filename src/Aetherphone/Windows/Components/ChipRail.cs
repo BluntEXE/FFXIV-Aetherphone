@@ -83,8 +83,9 @@ internal sealed class ChipRail
             : highlighted ? ui.HoverTint : ui.FieldSurface;
         Squircle.Fill(drawList, min, max, radius, ImGui.GetColorU32(fill));
         var ink = active ? new Vector4(0.11f, 0.08f, 0.02f, 1f) : ui.BodyInk;
-        Typography.DrawCentered(drawList, new Vector2((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f), label, ink,
-            TextStyles.SubheadlineEmphasized);
+        var labelSize = Typography.Measure(label, TextStyles.SubheadlineEmphasized);
+        var labelOrigin = new Vector2((min.X + max.X - labelSize.X) * 0.5f, (min.Y + max.Y - labelSize.Y) * 0.5f);
+        Typography.Draw(drawList, labelOrigin, label, ink, TextStyles.SubheadlineEmphasized);
         if (highlighted)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
