@@ -136,8 +136,9 @@ internal sealed class ImagePickCrop
 
                 var min = new Vector2(origin.X + column * (cell + gap), origin.Y + rowTop);
                 var max = new Vector2(min.X + cell, min.Y + cell);
-                DrawThumbnail(pickerPaths[index], min, max, theme, scale);
-                if (UiInteract.Click(min, max, UiInteract.Hover(min, max)))
+                var hovered = UiInteract.Hover(min, max);
+                DrawThumbnail(pickerPaths[index], min, max, theme, scale, hovered);
+                if (UiInteract.Click(min, max, hovered))
                 {
                     BeginCrop(pickerPaths[index]);
                 }
@@ -152,7 +153,7 @@ internal sealed class ImagePickCrop
         return cancelled ? ImagePickCropEvent.Cancelled : ImagePickCropEvent.None;
     }
 
-    private void DrawThumbnail(string path, Vector2 min, Vector2 max, PhoneTheme theme, float scale)
+    private void DrawThumbnail(string path, Vector2 min, Vector2 max, PhoneTheme theme, float scale, bool hovered)
     {
         var drawList = ImGui.GetWindowDrawList();
         var rounding = 10f * scale;
@@ -166,7 +167,7 @@ internal sealed class ImagePickCrop
         var (uv0, uv1) = ImageFit.CoverSquare(texture.Size);
         drawList.AddImageRounded(texture.Handle, min, max, uv0, uv1, 0xFFFFFFFFu, rounding,
             ImDrawFlags.RoundCornersAll);
-        if (ImGui.IsItemHovered())
+        if (hovered)
         {
             drawList.AddRectFilled(min, max, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.1f)), rounding);
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

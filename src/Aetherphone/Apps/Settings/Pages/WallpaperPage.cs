@@ -354,7 +354,6 @@ internal sealed class WallpaperPage : ISettingsPage
         var photosKey = ImGui.GetID("##wallpaperPhotos");
         ImGui.SetCursorScreenPos(grid.Min);
         var gap = 6f * scale;
-        using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(gap, gap)))
         using (var child = ImRaii.Child("##wallpaperPhotos", grid.Size, false,
                    DragScrollHost.ScrollFlags(ImGuiWindowFlags.NoBackground)))
         {
@@ -383,8 +382,9 @@ internal sealed class WallpaperPage : ISettingsPage
 
                 var min = new Vector2(origin.X + column * (cell + gap), origin.Y + top);
                 var max = new Vector2(min.X + cell, min.Y + cell);
-                DrawPhotoThumb(photoPaths[index], min, max, theme);
-                if (UiInteract.Click(min, max, UiInteract.Hover(min, max)))
+                var hovered = UiInteract.Hover(min, max);
+                DrawPhotoThumb(photoPaths[index], min, max, theme, hovered);
+                if (UiInteract.Click(min, max, hovered))
                 {
                     overlay = Overlay.None;
                     navigator.Open(new WallpaperCropPage(photoPaths[index], navigator, assign, wallpapers,
@@ -400,7 +400,7 @@ internal sealed class WallpaperPage : ISettingsPage
         }
     }
 
-    private void DrawPhotoThumb(string path, Vector2 min, Vector2 max, PhoneTheme theme)
+    private void DrawPhotoThumb(string path, Vector2 min, Vector2 max, PhoneTheme theme, bool hovered)
     {
         var dl = ImGui.GetWindowDrawList();
         var rounding = 10f * UiScale.Current;
@@ -413,7 +413,7 @@ internal sealed class WallpaperPage : ISettingsPage
 
         var (uv0, uv1) = CenterCrop(texture.Size);
         dl.AddImageRounded(texture.Handle, min, max, uv0, uv1, 0xFFFFFFFFu, rounding, ImDrawFlags.RoundCornersAll);
-        if (ImGui.IsItemHovered())
+        if (hovered)
         {
             dl.AddRectFilled(min, max, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.1f)), rounding);
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
