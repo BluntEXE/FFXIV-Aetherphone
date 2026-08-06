@@ -7,6 +7,11 @@ namespace Aetherphone.Windows.Components;
 
 internal static class DeviceChrome
 {
+    private const float SideButtonStartFraction = 0.250f;
+    private const float SideButtonLengthFraction = 0.108f;
+    private const float MuteButtonStartFraction = 0.205f;
+    private const float LockButtonStartFraction = 0.315f;
+    private const float ShortButtonLengthFraction = 0.082f;
     private const float ChamferFraction = 0.4f;
 
     private const float MaskGrow = 0.5f;
@@ -23,13 +28,13 @@ internal static class DeviceChrome
         var device = chassis.Body;
         if (device.IsLandscape())
         {
-            var left = device.Min.X + device.Width * 0.250f;
-            var width = device.Width * 0.108f;
+            var left = device.Min.X + device.Width * SideButtonStartFraction;
+            var width = device.Width * SideButtonLengthFraction;
             return new Rect(new Vector2(left, window.Min.Y), new Vector2(left + width, device.Min.Y + 2f * scale));
         }
 
-        var top = device.Min.Y + device.Height * 0.250f;
-        var height = device.Height * 0.108f;
+        var top = device.Min.Y + device.Height * SideButtonStartFraction;
+        var height = device.Height * SideButtonLengthFraction;
         return new Rect(new Vector2(device.Max.X - 2f * scale, top), new Vector2(window.Max.X, top + height));
     }
 
@@ -39,13 +44,13 @@ internal static class DeviceChrome
         var device = chassis.Body;
         if (device.IsLandscape())
         {
-            var left = device.Min.X + device.Width * 0.205f;
-            var width = device.Width * 0.082f;
+            var left = device.Min.X + device.Width * MuteButtonStartFraction;
+            var width = device.Width * ShortButtonLengthFraction;
             return new Rect(new Vector2(left, device.Max.Y - 2f * scale), new Vector2(left + width, window.Max.Y));
         }
 
-        var top = device.Min.Y + device.Height * 0.205f;
-        var height = device.Height * 0.082f;
+        var top = device.Min.Y + device.Height * MuteButtonStartFraction;
+        var height = device.Height * ShortButtonLengthFraction;
         return new Rect(new Vector2(window.Min.X, top), new Vector2(device.Min.X + 2f * scale, top + height));
     }
 
@@ -55,13 +60,13 @@ internal static class DeviceChrome
         var device = chassis.Body;
         if (device.IsLandscape())
         {
-            var left = device.Min.X + device.Width * 0.315f;
-            var width = device.Width * 0.082f;
+            var left = device.Min.X + device.Width * LockButtonStartFraction;
+            var width = device.Width * ShortButtonLengthFraction;
             return new Rect(new Vector2(left, device.Max.Y - 2f * scale), new Vector2(left + width, window.Max.Y));
         }
 
-        var top = device.Min.Y + device.Height * 0.315f;
-        var height = device.Height * 0.082f;
+        var top = device.Min.Y + device.Height * LockButtonStartFraction;
+        var height = device.Height * ShortButtonLengthFraction;
         return new Rect(new Vector2(window.Min.X, top), new Vector2(device.Min.X + 2f * scale, top + height));
     }
 
