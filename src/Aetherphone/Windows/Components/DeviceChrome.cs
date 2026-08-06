@@ -12,10 +12,7 @@ internal static class DeviceChrome
     private const float MaskGrow = 0.5f;
 
     public static Rect BodyRect(Rect window, PhoneTheme theme)
-    {
-        var rail = theme.RailWidth * UiScale.Current;
-        return new Rect(new Vector2(window.Min.X + rail, window.Min.Y), new Vector2(window.Max.X - rail, window.Max.Y));
-    }
+        => ChassisGeometry.BodyRect(window, theme, UiScale.Current);
 
     public static ChassisGeometry Chassis(Rect window, PhoneTheme theme) =>
         ChassisGeometry.Device(window, theme, UiScale.Current);
@@ -24,6 +21,13 @@ internal static class DeviceChrome
     {
         var scale = UiScale.Current;
         var device = chassis.Body;
+        if (device.Width > device.Height)
+        {
+            var left = device.Min.X + device.Width * 0.250f;
+            var width = device.Width * 0.108f;
+            return new Rect(new Vector2(left, window.Min.Y), new Vector2(left + width, device.Min.Y + 2f * scale));
+        }
+
         var top = device.Min.Y + device.Height * 0.250f;
         var height = device.Height * 0.108f;
         return new Rect(new Vector2(device.Max.X - 2f * scale, top), new Vector2(window.Max.X, top + height));
@@ -33,6 +37,13 @@ internal static class DeviceChrome
     {
         var scale = UiScale.Current;
         var device = chassis.Body;
+        if (device.Width > device.Height)
+        {
+            var left = device.Min.X + device.Width * 0.205f;
+            var width = device.Width * 0.082f;
+            return new Rect(new Vector2(left, device.Max.Y - 2f * scale), new Vector2(left + width, window.Max.Y));
+        }
+
         var top = device.Min.Y + device.Height * 0.205f;
         var height = device.Height * 0.082f;
         return new Rect(new Vector2(window.Min.X, top), new Vector2(device.Min.X + 2f * scale, top + height));
@@ -42,6 +53,13 @@ internal static class DeviceChrome
     {
         var scale = UiScale.Current;
         var device = chassis.Body;
+        if (device.Width > device.Height)
+        {
+            var left = device.Min.X + device.Width * 0.315f;
+            var width = device.Width * 0.082f;
+            return new Rect(new Vector2(left, device.Max.Y - 2f * scale), new Vector2(left + width, window.Max.Y));
+        }
+
         var top = device.Min.Y + device.Height * 0.315f;
         var height = device.Height * 0.082f;
         return new Rect(new Vector2(window.Min.X, top), new Vector2(device.Min.X + 2f * scale, top + height));
