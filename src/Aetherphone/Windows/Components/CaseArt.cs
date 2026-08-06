@@ -35,8 +35,8 @@ internal static class CaseArt
 
         var topRight = new Vector2(art.Max.X, art.Min.Y);
         var bottomLeft = new Vector2(art.Min.X, art.Max.Y);
-        drawList.AddImageQuad(texture, art.Min, topRight, art.Max, bottomLeft, new Vector2(0f, 1f), Vector2.Zero,
-            new Vector2(1f, 0f), Vector2.One, tint);
+        drawList.AddImageQuad(texture, art.Min, topRight, art.Max, bottomLeft, new Vector2(1f, 0f), Vector2.One,
+            new Vector2(0f, 1f), Vector2.Zero, tint);
     }
 
     public static void QuadExcluding(ImDrawListPtr drawList, ImTextureID texture, Rect art, Rect exclude,
