@@ -14,7 +14,7 @@ internal static class CaseArt
 
     public static Rect RectFor(Rect body)
     {
-        var margin = body.Width * MarginFraction;
+        var margin = MathF.Min(body.Width, body.Height) * MarginFraction;
         return new Rect(body.Min - new Vector2(margin, margin), body.Max + new Vector2(margin, margin));
     }
 
