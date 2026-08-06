@@ -31,11 +31,22 @@ internal readonly struct ChassisGeometry
 
     public static ChassisGeometry Device(Rect window, PhoneTheme theme, float scale)
     {
-        var rail = theme.RailWidth * scale;
-        var body = new Rect(new Vector2(window.Min.X + rail, window.Min.Y),
-            new Vector2(window.Max.X - rail, window.Max.Y));
+        var body = BodyRect(window, theme, scale);
         return new ChassisGeometry(body, theme.DeviceRounding * scale, theme.MetalWidth * scale,
             theme.GlassWidth * scale);
+    }
+
+    public static Rect BodyRect(Rect window, PhoneTheme theme, float scale)
+    {
+        var rail = theme.RailWidth * scale;
+        if (window.IsLandscape())
+        {
+            return new Rect(new Vector2(window.Min.X, window.Min.Y + rail),
+                new Vector2(window.Max.X, window.Max.Y - rail));
+        }
+
+        return new Rect(new Vector2(window.Min.X + rail, window.Min.Y),
+            new Vector2(window.Max.X - rail, window.Max.Y));
     }
 
     public static ChassisGeometry Puck(Rect body) =>

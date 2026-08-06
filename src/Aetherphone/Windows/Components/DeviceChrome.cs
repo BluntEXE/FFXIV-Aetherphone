@@ -7,43 +7,72 @@ namespace Aetherphone.Windows.Components;
 
 internal static class DeviceChrome
 {
+    private const float SideButtonStartFraction = 0.250f;
+    private const float SideButtonLengthFraction = 0.108f;
+    private const float MuteButtonStartFraction = 0.205f;
+    private const float LockButtonStartFraction = 0.315f;
+    private const float ShortButtonLengthFraction = 0.082f;
     private const float ChamferFraction = 0.4f;
 
     private const float MaskGrow = 0.5f;
 
     public static Rect BodyRect(Rect window, PhoneTheme theme)
-    {
-        var rail = theme.RailWidth * UiScale.Current;
-        return new Rect(new Vector2(window.Min.X + rail, window.Min.Y), new Vector2(window.Max.X - rail, window.Max.Y));
-    }
+        => ChassisGeometry.BodyRect(window, theme, UiScale.Current);
 
     public static ChassisGeometry Chassis(Rect window, PhoneTheme theme) =>
         ChassisGeometry.Device(window, theme, UiScale.Current);
 
-    public static Rect SideButtonRect(Rect window, in ChassisGeometry chassis)
+    public static Rect SideButtonRect(Rect window, in ChassisGeometry chassis, out RailSide side)
     {
         var scale = UiScale.Current;
         var device = chassis.Body;
-        var top = device.Min.Y + device.Height * 0.250f;
-        var height = device.Height * 0.108f;
+        if (device.IsLandscape())
+        {
+            side = RailSide.Top;
+            var left = device.Min.X + device.Width * SideButtonStartFraction;
+            var width = device.Width * SideButtonLengthFraction;
+            return new Rect(new Vector2(left, window.Min.Y), new Vector2(left + width, device.Min.Y + 2f * scale));
+        }
+
+        side = RailSide.Right;
+        var top = device.Min.Y + device.Height * SideButtonStartFraction;
+        var height = device.Height * SideButtonLengthFraction;
         return new Rect(new Vector2(device.Max.X - 2f * scale, top), new Vector2(window.Max.X, top + height));
     }
 
-    public static Rect MuteButtonRect(Rect window, in ChassisGeometry chassis)
+    public static Rect MuteButtonRect(Rect window, in ChassisGeometry chassis, out RailSide side)
     {
         var scale = UiScale.Current;
         var device = chassis.Body;
-        var top = device.Min.Y + device.Height * 0.205f;
-        var height = device.Height * 0.082f;
+        if (device.IsLandscape())
+        {
+            side = RailSide.Bottom;
+            var left = device.Min.X + device.Width * MuteButtonStartFraction;
+            var width = device.Width * ShortButtonLengthFraction;
+            return new Rect(new Vector2(left, device.Max.Y - 2f * scale), new Vector2(left + width, window.Max.Y));
+        }
+
+        side = RailSide.Left;
+        var top = device.Min.Y + device.Height * MuteButtonStartFraction;
+        var height = device.Height * ShortButtonLengthFraction;
         return new Rect(new Vector2(window.Min.X, top), new Vector2(device.Min.X + 2f * scale, top + height));
     }
 
-    public static Rect LockButtonRect(Rect window, in ChassisGeometry chassis)
+    public static Rect LockButtonRect(Rect window, in ChassisGeometry chassis, out RailSide side)
     {
         var scale = UiScale.Current;
         var device = chassis.Body;
-        var top = device.Min.Y + device.Height * 0.315f;
-        var height = device.Height * 0.082f;
+        if (device.IsLandscape())
+        {
+            side = RailSide.Bottom;
+            var left = device.Min.X + device.Width * LockButtonStartFraction;
+            var width = device.Width * ShortButtonLengthFraction;
+            return new Rect(new Vector2(left, device.Max.Y - 2f * scale), new Vector2(left + width, window.Max.Y));
+        }
+
+        side = RailSide.Left;
+        var top = device.Min.Y + device.Height * LockButtonStartFraction;
+        var height = device.Height * ShortButtonLengthFraction;
         return new Rect(new Vector2(window.Min.X, top), new Vector2(device.Min.X + 2f * scale, top + height));
     }
 
@@ -64,7 +93,7 @@ internal static class DeviceChrome
         if (theme.WantsCaseArt && PhoneCaseTextures.Skin(theme.CaseTextureId) is { } bandTexture)
         {
             CaseArt.QuadExcluding(dl, bandTexture, CaseArt.RectFor(chassis.Body), band,
-                CaseArt.IsLandscape(chassis.Body));
+                chassis.Body.IsLandscape());
             paintMetal = false;
         }
 
@@ -112,7 +141,7 @@ internal static class DeviceChrome
                 ImGui.GetColorU32(theme.FrameMetal));
         }
 
-        CaseArt.Quad(dl, texture, CaseArt.RectFor(chassis.Body), CaseArt.IsLandscape(chassis.Body),
+        CaseArt.Quad(dl, texture, CaseArt.RectFor(chassis.Body), chassis.Body.IsLandscape(),
             CaseArt.Tint(artAlpha));
         Squircle.Fill(dl, chassis.Glass.Min, chassis.Glass.Max, chassis.GlassRadius, ImGui.GetColorU32(theme.Glass));
         Squircle.Fill(dl, chassis.Screen.Min, chassis.Screen.Max, chassis.ScreenRadius,
