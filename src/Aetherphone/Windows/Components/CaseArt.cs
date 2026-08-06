@@ -6,6 +6,7 @@ namespace Aetherphone.Windows.Components;
 
 internal static class CaseArt
 {
+    private const float DisplayInset = 1.5f;
     private const uint Opaque = 0xFFFFFFFFu;
 
     public const float MarginFraction = 0.25f;
@@ -25,15 +26,16 @@ internal static class CaseArt
 
     public static void QuadClipped(ImDrawListPtr drawList, ImTextureID texture, Rect art, bool landscape, uint tint)
     {
+        var drawArt = art.Inset(DisplayInset * UiScale.Current);
         if (!landscape)
         {
-            drawList.AddImage(texture, art.Min, art.Max, Vector2.Zero, Vector2.One, tint);
+            drawList.AddImage(texture, drawArt.Min, drawArt.Max, Vector2.Zero, Vector2.One, tint);
             return;
         }
 
-        var topRight = new Vector2(art.Max.X, art.Min.Y);
-        var bottomLeft = new Vector2(art.Min.X, art.Max.Y);
-        drawList.AddImageQuad(texture, art.Min, topRight, art.Max, bottomLeft, new Vector2(1f, 0f), Vector2.One,
+        var topRight = new Vector2(drawArt.Max.X, drawArt.Min.Y);
+        var bottomLeft = new Vector2(drawArt.Min.X, drawArt.Max.Y);
+        drawList.AddImageQuad(texture, drawArt.Min, topRight, drawArt.Max, bottomLeft, new Vector2(1f, 0f), Vector2.One,
             new Vector2(0f, 1f), Vector2.Zero, tint);
     }
 
