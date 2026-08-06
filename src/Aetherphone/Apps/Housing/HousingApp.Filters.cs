@@ -28,7 +28,7 @@ internal sealed partial class HousingApp
     private readonly bool[] reminderActive = new bool[HousingDefaults.ReminderChoices.Length];
 
     private static float FilterSectionHeight(float scale) =>
-        Typography.LineHeight(TextStyles.Caption1) + (ChipRail.RowHeight + 12f) * scale;
+        Typography.LineHeight(TextStyles.Caption1) + (ChipRail.RowHeight + Metrics.Space.Sm * 2f) * scale;
 
     private static float FilterDrawerHeightFor(float scale)
     {
@@ -237,10 +237,10 @@ internal sealed partial class HousingApp
         string label, float scale, ReadOnlySpan<string> labels, ReadOnlySpan<bool> active, out int tapped)
     {
         HousingChrome.SectionLabel(drawList, new Vector2(left, y), right - left, label, ui);
-        var top = y + Typography.LineHeight(TextStyles.Caption1) + 4f * scale;
+        var top = y + Typography.LineHeight(TextStyles.Caption1) + Metrics.Space.Sm * scale;
         var row = new Rect(new Vector2(left, top), new Vector2(right, top + ChipRail.RowHeight * scale));
         tapped = rail.Draw(row, ui, labels, active, true);
-        return row.Max.Y + 8f * scale;
+        return row.Max.Y + Metrics.Space.Sm * scale;
     }
 
     private void ResetFilterRails()
