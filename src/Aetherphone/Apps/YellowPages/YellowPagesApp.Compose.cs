@@ -9,7 +9,6 @@ using Aetherphone.Core.YellowPages;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.YellowPages;
 
@@ -349,26 +348,35 @@ internal sealed partial class YellowPagesApp
             }
 
             var gap = 6f * scale;
-            var cell = (ScrollLayout.StableContentWidth() - gap * (PickerColumns - 1)) / PickerColumns;
-            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(gap, gap)))
+            var avail = ScrollLayout.StableContentWidth();
+            var cell = (avail - gap * (PickerColumns - 1)) / PickerColumns;
+            var origin = ImGui.GetCursorScreenPos();
+            var scrollY = ImGui.GetScrollY();
+            var viewHeight = ImGui.GetWindowSize().Y;
+            var margin = cell + 60f * scale;
+            for (var index = 0; index < pickerPaths.Length; index++)
             {
-                for (var index = 0; index < pickerPaths.Length; index++)
+                var column = index % PickerColumns;
+                var rowIndex = index / PickerColumns;
+                var rowTop = rowIndex * (cell + gap);
+                if (rowTop + cell < scrollY - margin || rowTop > scrollY + viewHeight + margin)
                 {
-                    ImGui.Dummy(new Vector2(cell, cell));
-                    var min = ImGui.GetItemRectMin();
-                    var max = ImGui.GetItemRectMax();
-                    DrawPickerThumbnail(pickerPaths[index], min, max, scale);
-                    if (UiInteract.Click(min, max, UiInteract.Hover(min, max)))
-                    {
-                        AddComposePhoto(pickerPaths[index]);
-                    }
+                    continue;
+                }
 
-                    if (index % PickerColumns != PickerColumns - 1)
-                    {
-                        ImGui.SameLine();
-                    }
+                var min = new Vector2(origin.X + column * (cell + gap), origin.Y + rowTop);
+                var max = new Vector2(min.X + cell, min.Y + cell);
+                DrawPickerThumbnail(pickerPaths[index], min, max, scale);
+                if (UiInteract.Click(min, max, UiInteract.Hover(min, max)))
+                {
+                    AddComposePhoto(pickerPaths[index]);
                 }
             }
+
+            var rows = (pickerPaths.Length + PickerColumns - 1) / PickerColumns;
+            var totalHeight = rows * (cell + gap);
+            ImGui.SetCursorScreenPos(origin);
+            ImGui.Dummy(new Vector2(avail, totalHeight));
         }
     }
 

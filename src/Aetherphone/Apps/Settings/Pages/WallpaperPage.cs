@@ -365,29 +365,38 @@ internal sealed class WallpaperPage : ISettingsPage
 
             DragScrollHost.Begin(photosKey);
 
-            var cell = (ScrollLayout.StableContentWidth() - gap * (PhotoColumns - 1)) / PhotoColumns;
+            var avail = ScrollLayout.StableContentWidth();
+            var cell = (avail - gap * (PhotoColumns - 1)) / PhotoColumns;
+            var origin = ImGui.GetCursorScreenPos();
+            var scrollY = ImGui.GetScrollY();
+            var viewHeight = ImGui.GetWindowSize().Y;
+            var margin = cell + 60f * scale;
             for (var index = 0; index < photoPaths.Length; index++)
             {
-                using (ImRaii.PushId(index))
+                var column = index % PhotoColumns;
+                var rowIndex = index / PhotoColumns;
+                var top = rowIndex * (cell + gap);
+                if (top + cell < scrollY - margin || top > scrollY + viewHeight + margin)
                 {
-                    ImGui.Dummy(new Vector2(cell, cell));
-                    var min = ImGui.GetItemRectMin();
-                    var max = ImGui.GetItemRectMax();
-                    DrawPhotoThumb(photoPaths[index], min, max, theme);
-                    if (UiInteract.Click(min, max, UiInteract.Hover(min, max)))
-                    {
-                        overlay = Overlay.None;
-                        navigator.Open(new WallpaperCropPage(photoPaths[index], navigator, assign, wallpapers,
-                            wallpaperImages));
-                        return;
-                    }
+                    continue;
                 }
 
-                if (index % PhotoColumns != PhotoColumns - 1)
+                var min = new Vector2(origin.X + column * (cell + gap), origin.Y + top);
+                var max = new Vector2(min.X + cell, min.Y + cell);
+                DrawPhotoThumb(photoPaths[index], min, max, theme);
+                if (UiInteract.Click(min, max, UiInteract.Hover(min, max)))
                 {
-                    ImGui.SameLine();
+                    overlay = Overlay.None;
+                    navigator.Open(new WallpaperCropPage(photoPaths[index], navigator, assign, wallpapers,
+                        wallpaperImages));
+                    return;
                 }
             }
+
+            var rows = (photoPaths.Length + PhotoColumns - 1) / PhotoColumns;
+            var totalHeight = rows * (cell + gap);
+            ImGui.SetCursorScreenPos(origin);
+            ImGui.Dummy(new Vector2(avail, totalHeight));
         }
     }
 
