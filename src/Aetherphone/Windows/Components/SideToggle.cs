@@ -13,7 +13,8 @@ internal static class SideToggle
         var hitMax = new Vector2(bounds.Max.X + 4f * scale, bounds.Max.Y + 6f * scale);
         var hovered = UiInteract.Hover(hitMin, hitMax);
         var press = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left) ? 1f : 0f;
-        HardwareButton.Draw(ImGui.GetWindowDrawList(), bounds, theme, RailSide.Left, hovered, press, active ? 1f : 0f);
+        var side = bounds.Width > bounds.Height ? RailSide.Bottom : RailSide.Left;
+        HardwareButton.Draw(ImGui.GetWindowDrawList(), bounds, theme, side, hovered, press, active ? 1f : 0f);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
