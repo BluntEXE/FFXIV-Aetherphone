@@ -94,6 +94,7 @@ internal sealed partial class AethergramApp
                 caption = string.Empty;
                 store.RefreshFeed(SocialFeedScope.ForYou);
                 store.RefreshFeed(SocialFeedScope.Following);
+                feedScrollTopPending = true;
             }
 
             router.Pop();
