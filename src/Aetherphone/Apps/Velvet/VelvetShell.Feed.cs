@@ -316,10 +316,7 @@ internal sealed partial class VelvetShell
                 contain: true));
     }
 
-    // contain scopes the "show the whole baked photo, letterboxed if its own aspect differs from
-    // the frame" treatment to the post carousel - the profile grid (VelvetShell.Profile.cs) wants
-    // its usual forced square cover-crop regardless of a post's own aspect, same as Instagram's
-    // own profile grid, so it leaves this false.
+    // The profile grid leaves contain false: it wants its forced square cover crop, like Instagram's.
     private void DrawMedia(ImDrawListPtr drawList, Vector2 min, Vector2 max, string url, float rounding,
         string? scanStatus = null, bool contain = false)
     {

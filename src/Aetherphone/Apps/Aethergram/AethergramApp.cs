@@ -1117,12 +1117,8 @@ internal sealed partial class AethergramApp : IPhoneApp
         }
         else
         {
-            // Contain-fit, not cover: the photo was already baked to its own chosen aspect at
-            // compose time (see AethergramStore.CreateGram), which can differ from this post's
-            // shared carousel container when photos in the same post used different aspects -
-            // covering here would crop it a second time. When the aspects do match (the common
-            // case, including every pre-existing post), the drawn image fills rect exactly and
-            // the backdrop is fully covered, so this is a no-op visually.
+            // Contain, not cover: the photo was baked to its own aspect at compose time, which can
+            // differ from this post's carousel frame, and covering would crop it a second time.
             ImageFit.DrawLetterboxed(drawList, texture, rect, Vector2.Zero, Vector2.One, rounding);
         }
 

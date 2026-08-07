@@ -79,14 +79,10 @@ internal sealed class VelvetPostComposer
 
     private const float AspectPickerReserve = 42f;
 
-    // The frame the currently-active crop step draws into - see
-    // AethergramApp.Compose.cs's ComposeCropAspect for the matching reasoning.
     private float CropAspect => storyMode
         ? (float)StoryStore.StoryWidth / StoryStore.StoryHeight
         : PostAspects.Ratio(session.CurrentAspect);
 
-    // The shared container frame for the caption/review screen - see
-    // AethergramApp.Compose.cs's ComposeContainerAspect for the matching reasoning.
     private float ContainerAspect => storyMode
         ? (float)StoryStore.StoryWidth / StoryStore.StoryHeight
         : PostAspects.Ratio(session.ContainerAspect);
@@ -95,12 +91,10 @@ internal sealed class VelvetPostComposer
         ? ContainerAspect
         : PostAspects.Ratio(session.AspectAt(session.ClampedPreviewIndex));
 
-    // Reveal-fit (see PhotoComposeSession.DrawCropCanvas's allowReveal) only applies to Portrait -
-    // Square and Landscape stay a plain cover crop, matching how they behaved before this existed.
-    private bool CropAllowsReveal => !storyMode && session.CurrentAspect == PostAspect.Portrait;
+    private bool CropAllowsReveal => !storyMode && PostAspects.RevealsWholeImage(session.CurrentAspect);
 
     private bool PreviewAllowsReveal =>
-        !storyMode && session.AspectAt(session.ClampedPreviewIndex) == PostAspect.Portrait;
+        !storyMode && PostAspects.RevealsWholeImage(session.AspectAt(session.ClampedPreviewIndex));
 
     private string Title => storyMode ? Loc.T(L.Story.NewStory) : Loc.T(L.Velvet.NewPost);
 
@@ -387,8 +381,6 @@ internal sealed class VelvetPostComposer
             return;
         }
 
-        // A photo whose own aspect differs from the shared container (see ContainerAspect) shows
-        // letterboxed instead of being restretched to fill the frame.
         ImageFit.DrawLetterboxed(drawList, texture, preview, uv0, uv1, rounding);
         if (UiInteract.HoverClick(preview.Min, preview.Max))
         {

@@ -1188,8 +1188,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         });
     }
 
-    // aspects is one choice per photo - see AethergramStore.CreateGram's doc comment for the
-    // full reasoning, identical here.
+    // aspects holds one choice per photo, framed exactly as AethergramStore.CreateGram does.
     public void CreatePost(string[] sourcePaths, WallpaperCrop[] crops, PostAspect[] aspects, string caption,
         string[] tags, int audience, Action<bool> onComplete)
     {
@@ -1206,14 +1205,8 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
             for (var index = 0; index < sourcePaths.Length; index++)
             {
                 var (bakedWidth, bakedHeight) = PostAspects.Size(aspects[index], PostSize);
-                // Reveal-fit only applies to Portrait - Square and Landscape stay a plain cover
-                // crop, matching how they baked before this existed.
-                var minZoom = aspects[index] == PostAspect.Portrait
-                    ? WallpaperCrop.MinZoomToReveal(ImageProcessor.ReadSize(sourcePaths[index]),
-                        (float)bakedWidth / bakedHeight)
-                    : WallpaperCrop.MinZoom;
                 var baked = ImageProcessor.BakeCroppedJpeg(sourcePaths[index], crops[index], bakedWidth, bakedHeight,
-                    minZoom);
+                    PostAspects.RevealsWholeImage(aspects[index]));
                 var upload = await media.UploadUrlAsync("image/jpeg", "velvet", token).ConfigureAwait(false);
                 if (upload is null)
                 {
