@@ -49,6 +49,13 @@ internal static class ThemeCatalog
         PhoneCase.Art("CosmicEX", new Vector4(0.141f, 0.141f, 0.172f, 1f)),
         PhoneCase.Art("Caduceus", new Vector4(0.414f, 0.398f, 0.209f, 1f)),
         PhoneCase.Art("MagicalGirl", new Vector4(0.911f, 0.593f, 0.734f, 1f)),
+        PhoneCase.Art("Atomos", new Vector4(0.830f, 0.574f, 0.691f, 1f)),
+        PhoneCase.Art("BabyBat", new Vector4(0.201f, 0.174f, 0.196f, 1f)),
+        PhoneCase.Art("DwarfRabbit", new Vector4(0.860f, 0.686f, 0.382f, 1f)),
+        PhoneCase.Art("Enkidu", new Vector4(0.561f, 0.672f, 0.301f, 1f)),
+        PhoneCase.Art("Horror", new Vector4(0.407f, 0.202f, 0.210f, 1f)),
+        PhoneCase.Art("MoogleCase", new Vector4(0.964f, 0.964f, 0.964f, 1f)),
+        PhoneCase.Art("Runic", new Vector4(0.414f, 0.296f, 0.491f, 1f)),
     };
 
     public static IReadOnlyList<PhoneCase> Cases { get; } = BuiltInCases;

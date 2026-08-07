@@ -60,6 +60,13 @@ internal static class CatalogLabels
             "CosmicEX" => Loc.T(L.Catalogs.CaseCosmicEx),
             "Caduceus" => Loc.T(L.Catalogs.CaseCaduceus),
             "MagicalGirl" => Loc.T(L.Catalogs.CaseMagicalGirl),
+            "Atomos" => Loc.T(L.Catalogs.CaseAtomos),
+            "BabyBat" => Loc.T(L.Catalogs.CaseBabyBat),
+            "DwarfRabbit" => Loc.T(L.Catalogs.CaseDwarfRabbit),
+            "Enkidu" => Loc.T(L.Catalogs.CaseEnkidu),
+            "Horror" => Loc.T(L.Catalogs.CaseHorror),
+            "MoogleCase" => Loc.T(L.Catalogs.CaseKupo),
+            "Runic" => Loc.T(L.Catalogs.CaseRunic),
             _ => identifier,
         };
 
