@@ -683,6 +683,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         if (scope != activeScope)
         {
             activeScope = scope;
+            feedScrollTopPending = true;
             profile.EnsureLoaded(activeScope);
         }
     }
