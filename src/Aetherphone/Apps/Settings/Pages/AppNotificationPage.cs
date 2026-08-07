@@ -4,7 +4,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 using Dalamud.Interface;
 
@@ -31,21 +30,34 @@ internal sealed class AppNotificationPage : ISettingsPage
     public void Draw(in PhoneContext context, Rect body)
     {
         var theme = context.Theme;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         using (AppSurface.Begin(body))
         {
             SettingsSection.Header(Loc.T(L.Common.Alerts), theme);
-            var card = GroupCard.Begin(theme, 1);
+            var appSetting = configuration.NotificationSettingFor(channel.AppId);
             var wasEnabled = configuration.IsAppNotificationEnabled(channel.AppId);
+            var card = GroupCard.Begin(theme, wasEnabled ? 2 : 1);
             var enabled = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.AllowNotifications), wasEnabled, theme);
+
+            if (wasEnabled)
+            {
+                var showNotificationBanner = SettingsRow.Bool(card.NextRow(),
+                    Loc.T(L.Settings.ShowNotificationBanner), appSetting.ShowNotificationBanner, theme);
+                if (showNotificationBanner != appSetting.ShowNotificationBanner)
+                {
+                    appSetting.ShowNotificationBanner = showNotificationBanner;
+                    configuration.Save();
+                }
+            }
+
             card.End();
             if (enabled != wasEnabled)
             {
-                configuration.NotificationSettingFor(channel.AppId).Enabled = enabled;
+                appSetting.Enabled = enabled;
                 configuration.Save();
             }
 
-            if (!enabled)
+            if (!wasEnabled)
             {
                 return;
             }

@@ -3,6 +3,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Linkpearl;
 using Aetherphone.Core.Moderation;
 using Aetherphone.Core.Muster;
+using Aetherphone.Core.Radio;
 using Aetherphone.Core.YellowPages;
 
 namespace Aetherphone.Core.Notifications;
@@ -18,6 +19,7 @@ internal sealed class NotificationRouter
     private const string YellowPagesAppId = "yellowpages";
     private const string AnnouncementsAppId = "announcements";
     private const string SettingsAppId = "settings";
+    private const string MusicAppId = "music";
     private const int TypeLike = 0;
     private const int TypeComment = 1;
     private const int TypeFollow = 2;
@@ -33,6 +35,7 @@ internal sealed class NotificationRouter
     private const int TypeFollowAccept = 15;
     private const int TypeAdInquiry = 19;
     private const int TypeMissedCall = 20;
+    private const int TypeRadioLive = 21;
     private const string CallGroupPrefix = "call:";
     private readonly INavigator navigation;
     private readonly NotificationService notifications;
@@ -46,13 +49,15 @@ internal sealed class NotificationRouter
     private readonly YellowPagesLauncher yellowPagesLauncher;
     private readonly AnnouncementsLauncher announcementsLauncher;
     private readonly SafetyLauncher safetyLauncher;
+    private readonly RadioLauncher radioLauncher;
 
     public NotificationRouter(INavigator navigation, NotificationService notifications,
         SocialNotificationService socialNotifications, LinkpearlLauncher linkpearlLauncher,
         VelvetLauncher velvetLauncher, DmLauncher dmLauncher, GramDmLauncher gramDmLauncher, SocialLauncher socialLauncher,
         MusterLauncher musterLauncher, YellowPagesLauncher yellowPagesLauncher,
-        AnnouncementsLauncher announcementsLauncher, SafetyLauncher safetyLauncher)
+        AnnouncementsLauncher announcementsLauncher, SafetyLauncher safetyLauncher, RadioLauncher radioLauncher)
     {
+        this.radioLauncher = radioLauncher;
         this.navigation = navigation;
         this.notifications = notifications;
         this.socialNotifications = socialNotifications;
@@ -65,6 +70,18 @@ internal sealed class NotificationRouter
         this.yellowPagesLauncher = yellowPagesLauncher;
         this.announcementsLauncher = announcementsLauncher;
         this.safetyLauncher = safetyLauncher;
+    }
+
+    public void AcknowledgeAll() => socialNotifications.AcknowledgeAll();
+
+    public void Acknowledge(PhoneNotification notification)
+    {
+        if (notification.SocialType < 0)
+        {
+            return;
+        }
+
+        socialNotifications.AcknowledgeUpTo(notification.AppId, notification.CreatedAtUnix);
     }
 
     public void Open(PhoneNotification notification)
@@ -129,6 +146,11 @@ internal sealed class NotificationRouter
         else if (notification.AppId == AnnouncementsAppId && !string.IsNullOrEmpty(notification.GroupKey))
         {
             announcementsLauncher.RequestDetail(notification.GroupKey);
+        }
+        else if (notification.AppId == MusicAppId && notification.SocialType == TypeRadioLive
+                 && !string.IsNullOrEmpty(notification.PostId))
+        {
+            radioLauncher.RequestStation(notification.PostId!);
         }
         else if (notification.AppId == SettingsAppId)
         {

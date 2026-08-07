@@ -4,7 +4,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -64,8 +63,6 @@ internal sealed class NotificationBanner : IDisposable
         notifications.Presented += OnPresented;
     }
 
-    public event Action? Shown;
-
     public bool IsVisible => stage != Stage.Idle;
 
     public bool CapturesPointer(Rect screen)
@@ -80,7 +77,7 @@ internal sealed class NotificationBanner : IDisposable
             return true;
         }
 
-        var bounds = CurrentBounds(screen, ImGuiHelpers.GlobalScale, out _);
+        var bounds = CurrentBounds(screen, UiScale.Current, out _);
         return UiInteract.Hover(bounds.Min, bounds.Max);
     }
 
@@ -153,7 +150,7 @@ internal sealed class NotificationBanner : IDisposable
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var bounds = CurrentBounds(screen, scale, out var opacity);
         var hovered = stage != Stage.Exit && UiInteract.Hover(bounds.Min, bounds.Max);
         if (hovered || dragging)
@@ -313,7 +310,6 @@ internal sealed class NotificationBanner : IDisposable
         {
             active = notification;
             holdElapsed = 0f;
-            Shown?.Invoke();
             return;
         }
 
@@ -324,7 +320,6 @@ internal sealed class NotificationBanner : IDisposable
         }
 
         pending.Enqueue(notification);
-        Shown?.Invoke();
         if (stage == Stage.Idle)
         {
             BeginNext();

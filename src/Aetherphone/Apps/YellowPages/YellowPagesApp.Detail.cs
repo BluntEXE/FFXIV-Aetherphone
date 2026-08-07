@@ -15,7 +15,6 @@ using Aetherphone.Core.YellowPages;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.YellowPages;
 
@@ -64,7 +63,7 @@ internal sealed partial class YellowPagesApp
         var ad = ResolveAd(adId);
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, ad is null ? DisplayName : Loc.T(AdCategories.Label(ad.Category)), back);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var body = new Rect(new Vector2(area.Min.X, top), area.Max);
         if (ad is null)
@@ -265,7 +264,7 @@ internal sealed partial class YellowPagesApp
         if (UiInteract.Click(expandCenter - expandHalf, expandCenter + expandHalf, overExpand))
         {
             var viewerUrl = url;
-            photoViewer.Open(() => images.Get(viewerUrl));
+            photoViewer.Open(this, () => images.Get(viewerUrl));
             return;
         }
 
@@ -303,7 +302,7 @@ internal sealed partial class YellowPagesApp
         if (UiInteract.Click(rect.Min, touchMax, hovered))
         {
             var viewerUrl = url;
-            photoViewer.Open(() => images.Get(viewerUrl));
+            photoViewer.Open(this, () => images.Get(viewerUrl));
         }
     }
 
@@ -763,7 +762,7 @@ internal sealed partial class YellowPagesApp
         var textLeft = avatarCenter.X + avatarRadius + 13f * scale;
         var textWidth = origin.X + width - pad - textLeft;
         UserName.DrawAuto(drawList, "yellowpages.owner." + ad.Id, SocialIdentity.Name(ad.OwnerName, ad.OwnerHandle),
-            ad.OwnerBadges, textLeft, origin.Y + 13f * scale, textWidth, TextStyles.Headline,
+            ad.OwnerBadges, ad.OwnerBadgeIds, textLeft, origin.Y + 13f * scale, textWidth, TextStyles.Headline,
             AppPalettes.YellowPages.TitleInk, theme);
         var handle = ad.OwnerHandle.Length > 0 ? $"@{ad.OwnerHandle}" : string.Empty;
         var renewed = Loc.T(L.YellowPages.RenewedAgo,

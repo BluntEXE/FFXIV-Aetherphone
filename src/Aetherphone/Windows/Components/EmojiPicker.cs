@@ -3,7 +3,6 @@ using Aetherphone.Core.Emoji;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -29,6 +28,7 @@ internal sealed class EmojiPicker
     private int lastCategory = -1;
     private int tone;
     private bool resetScroll;
+    private int lastDrawnFrame = -1;
 
     public string? Draw(Rect area, in AppSkin ui)
     {
@@ -38,7 +38,7 @@ internal sealed class EmojiPicker
         }
 
         UiInteract.HoverOverlay(area);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = ui.Theme;
         string? picked = null;
         ImGui.SetCursorScreenPos(area.Min);
@@ -67,7 +67,9 @@ internal sealed class EmojiPicker
             var searchTop = tabsTop + rowHeight + 6f * scale;
             var searchRect = new Rect(new Vector2(innerLeft, searchTop),
                 new Vector2(innerRight, searchTop + rowHeight));
-            SearchField.Draw(searchRect, "##emojiSearch", Loc.T(L.Common.Search), ref search, theme);
+            var appearing = ImGui.GetFrameCount() - lastDrawnFrame > 1;
+            lastDrawnFrame = ImGui.GetFrameCount();
+            SearchField.Draw(searchRect, "##emojiSearch", Loc.T(L.Common.Search), ref search, theme, 100, appearing);
 
             RebuildViewIfNeeded();
 
@@ -80,7 +82,7 @@ internal sealed class EmojiPicker
 
     private void DrawHeader(ImDrawListPtr drawList, float left, float right, float top, float height, in AppSkin ui)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var centerY = top + height * 0.5f;
         var toneRadius = height * 0.5f;
         var toneCenter = new Vector2(right - toneRadius, centerY);
@@ -184,7 +186,7 @@ internal sealed class EmojiPicker
 
     private string? DrawGrid(Rect body, in AppSkin ui)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         string? picked = null;
         var gridKey = ImGui.GetID("##emojiGrid");
         ImGui.SetCursorScreenPos(body.Min);

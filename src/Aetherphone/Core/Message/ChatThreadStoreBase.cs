@@ -291,14 +291,20 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         var total = 0;
         for (var index = 0; index < snapshot.Length; index++)
         {
-            if (!IsThreadMuted(snapshot[index]))
+            if (IsThreadMuted(snapshot[index]) || IsBeingViewed(ThreadKeyOf(snapshot[index])))
             {
-                total += ThreadUnreadCountOf(snapshot[index]);
+                continue;
             }
+
+            total += ThreadUnreadCountOf(snapshot[index]);
         }
 
         return total;
     }
+
+    private bool IsBeingViewed(string threadKey) =>
+        string.Equals(viewingThreadKey, threadKey, StringComparison.Ordinal)
+        && DateTime.UtcNow - lastViewingUtc < ViewingGrace;
 
     public void NoteThreadViewed(string threadKey)
     {
@@ -504,7 +510,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
             }
 
             inboxMarks[key] = new InboxMark(lastMessageAt, unread);
-            if (viewingThreadKey == key && DateTime.UtcNow - lastViewingUtc < ViewingGrace)
+            if (IsBeingViewed(key))
             {
                 continue;
             }

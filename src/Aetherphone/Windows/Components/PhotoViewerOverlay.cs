@@ -1,25 +1,28 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures.TextureWraps;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
 internal sealed class PhotoViewerOverlay
 {
     private const float RevealSmoothTime = 0.15f;
+    private const float BottomInset = 16f;
     private readonly PhotoZoomView zoomView = new();
     private Aetherphone.Core.Animation.Spring reveal;
     private Func<IDalamudTextureWrap?>? source;
+    private IPhoneApp? owner;
     private bool open;
 
     public bool Active => open || reveal.Value > 0.01f;
 
-    public void Open(Func<IDalamudTextureWrap?> textureSource)
+    public void Open(IPhoneApp app, Func<IDalamudTextureWrap?> textureSource)
     {
         source = textureSource;
+        owner = app;
         zoomView.Reset();
         open = true;
     }
@@ -36,26 +39,34 @@ internal sealed class PhotoViewerOverlay
             if (!open)
             {
                 source = null;
+                owner = null;
             }
 
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddRectFilled(area.Min, area.Max, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.96f * eased)));
         var grow = 0.94f + 0.06f * Aetherphone.Core.Animation.Easing.EaseOutCubic(eased);
         var contentTop = area.Min.Y + theme.TopZoneHeight * scale;
         var contentLeft = area.Min.X + theme.SidePadding * scale;
         var headerBottom = contentTop + AppHeader.Height * scale;
+        var controlsBottom = area.Max.Y - BottomInset * scale;
         var stageTarget = new Rect(new Vector2(area.Min.X, headerBottom),
-            new Vector2(area.Max.X, area.Max.Y - 16f * scale));
+            new Vector2(area.Max.X, controlsBottom - PhotoZoomView.ControlBandUnits * scale));
         var stageHalf = stageTarget.Size * 0.5f * grow;
         var stage = new Rect(stageTarget.Center - stageHalf, stageTarget.Center + stageHalf);
+        var controls = new Rect(new Vector2(stageTarget.Min.X, stageTarget.Max.Y),
+            new Vector2(stageTarget.Max.X, controlsBottom));
         var texture = source?.Invoke();
         if (texture is not null)
         {
-            zoomView.Draw(stage, texture, theme, Metrics.Radius.Sm * scale, open && eased > 0.9f);
+            if (zoomView.Draw(stage, texture, theme, Metrics.Radius.Sm * scale, open && eased > 0.9f, controls) &&
+                source is not null && owner is not null)
+            {
+                Plugin.PhotoWindow.Open(source, owner);
+            }
         }
         else
         {

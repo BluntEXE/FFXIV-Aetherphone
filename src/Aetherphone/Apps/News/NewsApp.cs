@@ -10,7 +10,6 @@ using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.News;
@@ -80,7 +79,7 @@ internal sealed class NewsApp : IPhoneApp
         theme = context.Theme;
         ui.Theme = theme;
         var area = context.Content;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var screen = SceneChrome.ScreenFrom(area, theme, scale);
         ui.Backdrop(screen);
         AppHeader.Draw(context, DisplayName);
@@ -458,7 +457,7 @@ internal sealed class NewsApp : IPhoneApp
     }
 
     private static void DrawSpinner(Vector2 center, float radius, Vector4 color) =>
-        ProgressRing.Sweep(center, radius, 2.4f * ImGuiHelpers.GlobalScale, color, 900.0, 1.8f, 0.95f);
+        ProgressRing.Sweep(center, radius, 2.4f * UiScale.Current, color, 900.0, 1.8f, 0.95f);
 
     private static void DrawChevronRight(Vector2 tip, float size, float thickness, Vector4 color)
     {

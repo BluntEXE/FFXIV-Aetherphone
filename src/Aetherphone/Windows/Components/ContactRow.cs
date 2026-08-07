@@ -3,7 +3,6 @@ using Aetherphone.Core.Contacts;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -11,7 +10,7 @@ internal static class ContactRow
 {
     public static bool Draw(Rect row, FriendEntry friend, PhoneTheme theme, LodestoneService lodestone)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dl = ImGui.GetWindowDrawList();
         var hovered = UiInteract.Hover(row.Min, row.Max);
         var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);

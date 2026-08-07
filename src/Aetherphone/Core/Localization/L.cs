@@ -11,13 +11,22 @@ internal static class L
         public static readonly LocString Refresh = new("common.refresh", "Refresh");
         public static readonly LocString Emoji = new("common.emoji", "Emoji");
         public static readonly LocString Cancel = new("common.cancel", "Cancel");
+        public static readonly LocString Retry = new("common.retry", "Retry");
+        public static readonly LocString Copied = new("common.copied", "Copied");
+        public static readonly LocString LoadFailed = new("common.loadFailed", "Could not load");
+        public static readonly LocString FileNotDownloaded =
+            new("common.fileNotDownloaded", "That file is stored online and is not on this PC yet. Open it once in File Explorer to download it, then pick it again.");
+        public static readonly LocString LoadFailedHint =
+            new("common.loadFailedHint", "Check your connection and try again.");
         public static readonly LocString Close = new("common.close", "Close");
         public static readonly LocString Alerts = new("common.alerts", "Alerts");
         public static readonly LocString Live = new("common.live", "LIVE");
         public static readonly LocString Hq = new("common.hq", "HQ");
         public static readonly LocString Nq = new("common.nq", "NQ");
         public static readonly LocString OpenInBrowser = new("common.openInBrowser", "Click to open in browser");
+        public static readonly LocString OpenInWindow = new("common.openInWindow", "Open in a window");
         public static readonly LocString Next = new("common.next", "Next");
+        public static readonly LocString Previous = new("common.previous", "Previous");
         public static readonly LocString PhotoCounter = new("common.photoCounter", "{0}/{1}");
         public static readonly LocString PhotoStep = new("common.photoStep", "Photo {0} of {1}");
         public static readonly LocString PhotoLimit = new("common.photoLimit", "You can add up to {0} photos");
@@ -202,6 +211,10 @@ internal static class L
         public static readonly LocString NoticeBadgeBodyOne = new("moderation.notice.badgeBodyOne", "The Aetherphone team granted you the {0} badge. It now shows next to your name, and you can manage it in Settings under Account.");
         public static readonly LocString NoticeBadgeBodyMany = new("moderation.notice.badgeBodyMany", "The Aetherphone team granted you new badges: {0}. They now show next to your name, and you can manage them in Settings under Account.");
         public static readonly LocString NoticeBadgeBodyFallback = new("moderation.notice.badgeBodyFallback", "The Aetherphone team granted you a new badge. You can see it in Settings under Account.");
+        public static readonly LocString NoticeBadgeRevokedTitle = new("moderation.notice.badgeRevokedTitle", "Badge removed");
+        public static readonly LocString NoticeBadgeRevokedBodyOne = new("moderation.notice.badgeRevokedBodyOne", "The {0} badge was removed from your account and no longer shows next to your name. If you think this was a mistake, reach out to us on our Discord server.");
+        public static readonly LocString NoticeBadgeRevokedBodyMany = new("moderation.notice.badgeRevokedBodyMany", "These badges were removed from your account: {0}. They no longer show next to your name. If you think this was a mistake, reach out to us on our Discord server.");
+        public static readonly LocString NoticeBadgeRevokedBodyFallback = new("moderation.notice.badgeRevokedBodyFallback", "A badge was removed from your account. If you think this was a mistake, reach out to us on our Discord server.");
     }
 
     internal static class Apps
@@ -209,6 +222,7 @@ internal static class L
         public static readonly LocString Contacts = new("app.contacts", "Contacts");
         public static readonly LocString Character = new("app.character", "Character");
         public static readonly LocString Health = new("app.health", "Health");
+        public static readonly LocString Housing = new("app.housing", "Housing");
         public static readonly LocString Chirper = new("app.chirper", "Chirper");
         public static readonly LocString Aethergram = new("app.aethergram", "Aethergram");
         public static readonly LocString Velvet = new("app.velvet", "Velvet");
@@ -263,8 +277,14 @@ internal static class L
         public static readonly LocString RunDone = new("shortcuts.runDone", "Ran {0}");
         public static readonly LocString RunRejected = new("shortcuts.runRejected", "The game refused that command");
         public static readonly LocString RunPluginMissing = new("shortcuts.runPluginMissing", "That plugin is not loaded");
+        public static readonly LocString RunStep = new("shortcuts.runStep", "Step {0} of {1}");
+        public static readonly LocString RunHolding = new("shortcuts.runHolding", "Waiting for the game");
+        public static readonly LocString RunNotLoggedIn = new("shortcuts.runNotLoggedIn", "Log in to run this");
+        public static readonly LocString RunGameBusy = new("shortcuts.runGameBusy", "The game stayed busy, so it stopped");
         public static readonly LocString SearchPlugins = new("shortcuts.searchPlugins", "Search plugins and commands");
         public static readonly LocString NoPluginsFound = new("shortcuts.noPluginsFound", "No plugins match that search.");
+        public static readonly LocString SearchShortcuts = new("shortcuts.searchShortcuts", "Search your shortcuts");
+        public static readonly LocString NoMatches = new("shortcuts.noMatches", "No shortcuts match that search.");
         public static readonly LocString PluginDisabled = new("shortcuts.pluginDisabled", "Disabled");
         public static readonly LocString PluginCommandCount = new("shortcuts.pluginCommandCount", "{0} commands");
         public static readonly LocString PluginBy = new("shortcuts.pluginBy", "by {0}");
@@ -276,6 +296,7 @@ internal static class L
         public static readonly LocString NoCommands = new("shortcuts.noCommands", "This plugin registers no commands.");
         public static readonly LocString NewFromCommand = new("shortcuts.newFromCommand", "New shortcut from this");
         public static readonly LocString ChoosePlugin = new("shortcuts.choosePlugin", "Choose Plugin");
+        public static readonly LocString ChooseIcon = new("shortcuts.chooseIcon", "Choose Icon");
         public static readonly LocString NameHint = new("shortcuts.nameHint", "Shortcut name");
         public static readonly LocString Appearance = new("shortcuts.appearance", "Appearance");
         public static readonly LocString Steps = new("shortcuts.steps", "Steps");
@@ -284,6 +305,8 @@ internal static class L
         public static readonly LocString AddWait = new("shortcuts.addWait", "Wait");
         public static readonly LocString AddOpen = new("shortcuts.addOpen", "Open");
         public static readonly LocString AddLink = new("shortcuts.addLink", "Link");
+        public static readonly LocString PasteMacro = new("shortcuts.pasteMacro", "Paste Macro");
+        public static readonly LocString PasteEmpty = new("shortcuts.pasteEmpty", "There is no macro text on the clipboard.");
         public static readonly LocString UrlHint = new("shortcuts.urlHint", "https://example.com");
         public static readonly LocString KindOpenUrl = new("shortcuts.kindOpenUrl", "OPEN LINK");
         public static readonly LocString RunLinkRejected = new("shortcuts.runLinkRejected", "That link could not be opened");
@@ -300,6 +323,16 @@ internal static class L
         public static readonly LocString TestRun = new("shortcuts.testRun", "Run Now");
         public static readonly LocString Save = new("shortcuts.save", "Save");
         public static readonly LocString Edit = new("shortcuts.edit", "Edit");
+        public static readonly LocString Duplicate = new("shortcuts.duplicate", "Duplicate");
+        public static readonly LocString Share = new("shortcuts.share", "Share");
+        public static readonly LocString Copied = new("shortcuts.copied", "Copied");
+        public static readonly LocString ImportShortcut = new("shortcuts.importShortcut", "Import Shortcut");
+        public static readonly LocString ImportAdd = new("shortcuts.importAdd", "Add to My Shortcuts");
+        public static readonly LocString ImportWillRun = new("shortcuts.importWillRun", "This shortcut will run");
+        public static readonly LocString ImportBadCode = new("shortcuts.importBadCode", "That is not an Aetherphone shortcut code.");
+        public static readonly LocString ImportMalformed = new("shortcuts.importMalformed", "That shortcut code is damaged or too large.");
+        public static readonly LocString ImportUnsafeLink = new("shortcuts.importUnsafeLink", "That code holds a link that is not http or https.");
+        public static readonly LocString CopyName = new("shortcuts.copyName", "{0} copy");
         public static readonly LocString DeleteShortcut = new("shortcuts.deleteShortcut", "Delete Shortcut");
         public static readonly LocString DeleteConfirm = new("shortcuts.deleteConfirm", "Delete this shortcut?");
         public static readonly LocString Delete = new("shortcuts.delete", "Delete");
@@ -307,7 +340,8 @@ internal static class L
         public static readonly LocString Color = new("shortcuts.color", "Color");
         public static readonly LocString CustomColor = new("shortcuts.customColor", "Custom color");
         public static readonly LocString Symbol = new("shortcuts.symbol", "Symbol");
-        public static readonly LocString UsePluginIcon = new("shortcuts.usePluginIcon", "Use the plugin icon");
+        public static readonly LocString PluginIcon = new("shortcuts.pluginIcon", "Plugin icon");
+        public static readonly LocString PluginIconNone = new("shortcuts.pluginIconNone", "None");
         public static readonly LocString LimitReached = new("shortcuts.limitReached", "You can keep up to {0} shortcuts.");
         public static readonly LocString StepLimitReached = new("shortcuts.stepLimitReached", "A shortcut can hold up to {0} steps.");
         public static readonly LocString Ok = new("shortcuts.ok", "OK");
@@ -422,6 +456,9 @@ internal static class L
         public static readonly LocString HealthSub = new("storeCopy.healthSub", "Your adventurer's activity");
         public static readonly LocString HealthBody = new("storeCopy.healthBody",
             "Estimated steps, distance, swimming, hydration and personal goals for your character. A fictional activity tracker for roleplay and statistics.");
+        public static readonly LocString HousingSub = new("storeCopy.housingSub", "Plots on a map");
+        public static readonly LocString HousingBody = new("storeCopy.housingBody",
+            "Browse reported openings ward by ward, watch a plot and get reminded before the lottery closes.");
         public static readonly LocString WalletSub = new("storeCopy.walletSub", "Gil and currencies");
         public static readonly LocString WalletBody = new("storeCopy.walletBody",
             "Every currency you carry, with caps and totals you can actually read.");
@@ -557,6 +594,9 @@ internal static class L
         public static readonly LocString StarredTitle = new("message.starredTitle", "Starred messages");
         public static readonly LocString NoStarred = new("message.noStarred", "No starred messages yet");
         public static readonly LocString ReactionsTitle = new("message.reactionsTitle", "Reactions");
+        public static readonly LocString ReactionAdd = new("message.reactionAdd", "React with this");
+        public static readonly LocString HostingMuster = new("message.hostingMuster", "Hosting a meetup, open it");
+        public static readonly LocString ReactionRemove = new("message.reactionRemove", "Remove your reaction");
         public static readonly LocString TapToRemove = new("message.tapToRemove", "Click to remove");
         public static readonly LocString DraftPrefix = new("message.draftPrefix", "Draft:");
         public static readonly LocString PresenceOnline = new("message.presenceOnline", "online");
@@ -809,6 +849,261 @@ internal static class L
         public static readonly LocString NeedsLifestream = new("maps.needsLifestream", "Lifestream is not installed");
     }
 
+    internal static class Housing
+    {
+        // Chrome and navigation
+        public static readonly LocString Map = new("housing.map", "Map");
+        public static readonly LocString List = new("housing.list", "List");
+        public static readonly LocString Watchlist = new("housing.watchlist", "Watchlist");
+        public static readonly LocString Settings = new("housing.settings", "Housing Settings");
+        public static readonly LocString Details = new("housing.details", "Plot Details");
+        public static readonly LocString ChooseWorld = new("housing.chooseWorld", "Choose World");
+        public static readonly LocString ChooseWard = new("housing.chooseWard", "Choose Another Ward");
+        public static readonly LocString ViewAsList = new("housing.viewAsList", "View as List");
+        public static readonly LocString BackToMap = new("housing.backToMap", "Back to Map");
+        public static readonly LocString WorldLabel = new("housing.worldLabel", "World");
+        public static readonly LocString DistrictLabel = new("housing.districtLabel", "District");
+        public static readonly LocString DistrictMist = new("housing.districtMist", "Mist");
+        public static readonly LocString DistrictMistShort = new("housing.districtMistShort", "Mist");
+        public static readonly LocString DistrictLavenderBeds =
+            new("housing.districtLavenderBeds", "The Lavender Beds");
+        public static readonly LocString DistrictLavenderBedsShort =
+            new("housing.districtLavenderBedsShort", "Lavender");
+        public static readonly LocString DistrictGoblet = new("housing.districtGoblet", "The Goblet");
+        public static readonly LocString DistrictGobletShort = new("housing.districtGobletShort", "Goblet");
+        public static readonly LocString DistrictShirogane = new("housing.districtShirogane", "Shirogane");
+        public static readonly LocString DistrictShiroganeShort =
+            new("housing.districtShiroganeShort", "Shirogane");
+        public static readonly LocString DistrictEmpyreum = new("housing.districtEmpyreum", "Empyreum");
+        public static readonly LocString DistrictEmpyreumShort = new("housing.districtEmpyreumShort", "Empyreum");
+        public static readonly LocString WardLabel = new("housing.wardLabel", "Ward");
+        public static readonly LocString WardNumber = new("housing.wardNumber", "Ward {0}");
+        public static readonly LocString PlotNumber = new("housing.plotNumber", "Plot {0}");
+        public static readonly LocString PlotTitle = new("housing.plotTitle", "Plot {0} ({1})");
+        public static readonly LocString PlaceLine = new("housing.placeLine", "{0}, Ward {1}");
+        public static readonly LocString SelectWorldTitle = new("housing.selectWorldTitle", "Select a world");
+        public static readonly LocString SearchWorlds = new("housing.searchWorlds", "Search worlds");
+        public static readonly LocString NoWorldMatches = new("housing.noWorldMatches", "No worlds match that");
+        public static readonly LocString HomeWorld = new("housing.homeWorld", "Home world");
+
+        // Plot facts
+        public static readonly LocString SizeSmall = new("housing.sizeSmall", "Small");
+        public static readonly LocString SizeMedium = new("housing.sizeMedium", "Medium");
+        public static readonly LocString SizeLarge = new("housing.sizeLarge", "Large");
+        public static readonly LocString SizeUnknown = new("housing.sizeUnknown", "Unknown size");
+        public static readonly LocString PhaseEntry = new("housing.phaseEntry", "Entry period");
+        public static readonly LocString PhaseResults = new("housing.phaseResults", "Results period");
+        public static readonly LocString PhaseUnavailable = new("housing.phaseUnavailable", "Unavailable period");
+        public static readonly LocString PhaseUnknown = new("housing.phaseUnknown", "Phase unknown");
+        public static readonly LocString PhaseExpired = new("housing.phaseExpired", "Expired, refreshing");
+        public static readonly LocString EligibilityPrivate = new("housing.eligibilityPrivate", "Private buyers");
+        public static readonly LocString EligibilityFreeCompany =
+            new("housing.eligibilityFreeCompany", "Free Companies");
+        public static readonly LocString EligibilityBoth = new("housing.eligibilityBoth", "Private & Free Company");
+        public static readonly LocString ModeLottery = new("housing.modeLottery", "Lottery");
+        public static readonly LocString ModeFcfs = new("housing.modeFcfs", "First come, first served");
+        public static readonly LocString MainDivision = new("housing.mainDivision", "Main division");
+        public static readonly LocString Subdivision = new("housing.subdivision", "Subdivision");
+        public static readonly LocString NotReported = new("housing.notReported", "Not reported");
+        public static readonly LocString TimeUnknown = new("housing.timeUnknown", "Unknown");
+        public static readonly LocString PriceGil = new("housing.priceGil", "{0} gil");
+        public static readonly LocString EntriesLabel = new("housing.entriesLabel", "Reported entries");
+        public static readonly LocString PriceLabel = new("housing.priceLabel", "Price");
+        public static readonly LocString EligibilityLabel = new("housing.eligibilityLabel", "Eligibility");
+        public static readonly LocString PurchaseLabel = new("housing.purchaseLabel", "Purchase");
+        public static readonly LocString DivisionLabel = new("housing.divisionLabel", "Division");
+        public static readonly LocString OddsApproximate =
+            new("housing.oddsApproximate", "Approximate odds: 1 in {0}");
+        public static readonly LocString EntriesCaveat = new("housing.entriesCaveat",
+            "Entry counts reflect the most recently reported scan and may have changed.");
+        public static readonly LocString RegionLabel = new("housing.regionLabel", "Region");
+        public static readonly LocString DataCenterLabel = new("housing.dataCenterLabel", "Data centre");
+        public static readonly LocString FirstReported = new("housing.firstReported", "First reported");
+        public static readonly LocString PhaseEndsLabel = new("housing.phaseEndsLabel", "Phase ends");
+        public static readonly LocString ScannedLabel = new("housing.scannedLabel", "Last scanned");
+        public static readonly LocString ProviderLabel = new("housing.providerLabel", "Data provider");
+        public static readonly LocString ExactTime = new("housing.exactTime", "Exact time");
+        public static readonly LocString StatusLabel = new("housing.statusLabel", "Status");
+
+        // Countdowns and freshness
+        public static readonly LocString CountdownDays = new("housing.countdownDays", "{0}d {1:00}h {2:00}m");
+        public static readonly LocString CountdownHours = new("housing.countdownHours", "{0:00}h {1:00}m");
+        public static readonly LocString CountdownMinutes = new("housing.countdownMinutes", "{0}m {1:00}s");
+        public static readonly LocString CountdownUnderMinute =
+            new("housing.countdownUnderMinute", "Under 1 minute");
+        public static readonly LocString CountdownEnded = new("housing.countdownEnded", "Ended");
+        public static readonly LocString Remaining = new("housing.remaining", "{0} remaining");
+        public static readonly LocString ScannedJustNow = new("housing.scannedJustNow", "Scanned just now");
+        public static readonly LocString ScannedMinutes = new("housing.scannedMinutes", "Scanned {0} minutes ago");
+        public static readonly LocString ScannedHours = new("housing.scannedHours", "Scanned {0} hours ago");
+        public static readonly LocString ScannedDays = new("housing.scannedDays", "Scanned {0} days ago");
+        public static readonly LocString ScannedUnknown = new("housing.scannedUnknown", "Scan time unknown");
+        public static readonly LocString AgeNow = new("housing.ageNow", "now");
+        public static readonly LocString AgeMinutes = new("housing.ageMinutes", "{0}m");
+        public static readonly LocString AgeHours = new("housing.ageHours", "{0}h");
+        public static readonly LocString AgeDays = new("housing.ageDays", "{0}d");
+        public static readonly LocString FreshnessLive = new("housing.freshnessLive", "Live");
+        public static readonly LocString FreshnessRecent = new("housing.freshnessRecent", "Recent");
+        public static readonly LocString FreshnessStale = new("housing.freshnessStale", "Stale");
+        public static readonly LocString FreshnessCached = new("housing.freshnessCached", "Cached");
+        public static readonly LocString FreshnessUnknown = new("housing.freshnessUnknown", "Unknown");
+        public static readonly LocString UpdatedAgo = new("housing.updatedAgo", "Updated {0}");
+        public static readonly LocString Updating = new("housing.updating", "Updating…");
+        public static readonly LocString CachedBanner = new("housing.cachedBanner",
+            "Live updates are unavailable. Showing housing data saved {0}.");
+        public static readonly LocString AgeJustNow = new("housing.ageJustNow", "just now");
+        public static readonly LocString AgeMinutesAgo = new("housing.ageMinutesAgo", "{0} minutes ago");
+        public static readonly LocString AgeHoursAgo = new("housing.ageHoursAgo", "{0} hours ago");
+        public static readonly LocString AgeDaysAgo = new("housing.ageDaysAgo", "{0} days ago");
+
+        // Actions
+        public static readonly LocString Watch = new("housing.watch", "Watch");
+        public static readonly LocString Watching = new("housing.watching", "Watching");
+        public static readonly LocString Unwatch = new("housing.unwatch", "Unwatch");
+        public static readonly LocString RemindMe = new("housing.remindMe", "Remind Me");
+        public static readonly LocString ReminderSet = new("housing.reminderSet", "Reminder Set");
+        public static readonly LocString ChangeReminder = new("housing.changeReminder", "Change");
+        public static readonly LocString CancelReminder = new("housing.cancelReminder", "Cancel reminder");
+        public static readonly LocString DetailsAction = new("housing.detailsAction", "Details");
+        public static readonly LocString ReminderPrompt =
+            new("housing.reminderPrompt", "Notify me before this phase ends:");
+        public static readonly LocPlural LeadMinutes = new("housing.leadMinutes", "{0} minute", "{0} minutes");
+        public static readonly LocPlural LeadHours = new("housing.leadHours", "{0} hour", "{0} hours");
+        public static readonly LocString ReminderConfirmed = new("housing.reminderConfirmed",
+            "Reminder set for {0} before the {1} ends. {2}, plot {3}.");
+        public static readonly LocString ReminderUnavailable = new("housing.reminderUnavailable",
+            "No phase deadline was reported for this plot, so a reminder cannot be scheduled yet.");
+        public static readonly LocString Filters = new("housing.filters", "Filters");
+        public static readonly LocString FiltersCount = new("housing.filtersCount", "Filters ({0})");
+        public static readonly LocString ClearFilters = new("housing.clearFilters", "Clear Filters");
+        public static readonly LocString Refresh = new("housing.refresh", "Refresh");
+        public static readonly LocString Retry = new("housing.retry", "Retry");
+        public static readonly LocString ZoomIn = new("housing.zoomIn", "Zoom in");
+        public static readonly LocString ZoomOut = new("housing.zoomOut", "Zoom out");
+        public static readonly LocString ResetMap = new("housing.resetMap", "Reset map");
+        public static readonly LocString Recenter = new("housing.recenter", "Centre on selected plot");
+        public static readonly LocString Legend = new("housing.legend", "Legend");
+        public static readonly LocString MatchingPlots = new("housing.matchingPlots", "{0} matching");
+
+        // Filters
+        public static readonly LocString FilterSizes = new("housing.filterSizes", "Plot size");
+        public static readonly LocString FilterPhase = new("housing.filterPhase", "Lottery phase");
+        public static readonly LocString FilterEligibility = new("housing.filterEligibility", "Who can buy");
+        public static readonly LocString FilterDivision = new("housing.filterDivision", "Division");
+        public static readonly LocString FilterData = new("housing.filterData", "Data");
+        public static readonly LocString FilterOtherPhases = new("housing.filterOtherPhases", "Other");
+        public static readonly LocString FilterFreshOnly = new("housing.filterFreshOnly", "Fresh scans only");
+        public static readonly LocString FilterWatchedOnly = new("housing.filterWatchedOnly", "Watched plots only");
+        public static readonly LocString FilterMaxEntries = new("housing.filterMaxEntries", "Max reported entries");
+        public static readonly LocString FilterAnyEntries = new("housing.filterAnyEntries", "Any");
+        public static readonly LocString ShowAvailableOnly = new("housing.showAvailableOnly", "Available only");
+        public static readonly LocString ShowAllPlots = new("housing.showAllPlots", "All plots");
+
+        // Sorting
+        public static readonly LocString SortEntries = new("housing.sortEntries", "Fewest entries");
+        public static readonly LocString SortScanned = new("housing.sortScanned", "Recently scanned");
+        public static readonly LocString SortSize = new("housing.sortSize", "Plot size");
+        public static readonly LocString SortPrice = new("housing.sortPrice", "Price");
+        public static readonly LocString SortWard = new("housing.sortWard", "Ward and plot");
+        public static readonly LocString SortLabel = new("housing.sortLabel", "Sort");
+
+        // Empty, loading and error states
+        public static readonly LocString LoadingFirst =
+            new("housing.loadingFirst", "Checking residential listings…");
+        public static readonly LocString LoadingRefresh = new("housing.loadingRefresh", "Updating housing plots…");
+        public static readonly LocString NoFilterMatches =
+            new("housing.noFilterMatches", "No plots match the current filters.");
+        public static readonly LocString NoOpenings =
+            new("housing.noOpenings", "No available plots were reported in Ward {0}.");
+        public static readonly LocString NoScans =
+            new("housing.noScans", "No recent housing scans are available for this ward.");
+        public static readonly LocString NoScansHint = new("housing.noScansHint",
+            "A missing report does not mean every plot is sold: it means nobody has walked this ward recently.");
+        public static readonly LocString Offline = new("housing.offline", "Housing data could not be reached.");
+        public static readonly LocString OfflineHint = new("housing.offlineHint",
+            "Check your connection, or preview the demo data to explore the app offline.");
+        public static readonly LocString NoWorldTitle = new("housing.noWorldTitle", "Pick a world to start");
+        public static readonly LocString NoWorldHint = new("housing.noWorldHint",
+            "Housing could not read your home world yet. Choose one and it becomes your preferred world.");
+        public static readonly LocString WatchlistEmpty = new("housing.watchlistEmpty", "No watched plots yet");
+        public static readonly LocString WatchlistEmptyHint = new("housing.watchlistEmptyHint",
+            "Tap a plot on the map and choose Watch to keep an eye on it here.");
+        public static readonly LocString NoLongerReported =
+            new("housing.noLongerReported", "No longer reported, last seen {0}");
+        public static readonly LocString LastKnown = new("housing.lastKnown", "Last known state");
+        public static readonly LocString ClearWatchlist = new("housing.clearWatchlist", "Clear watchlist");
+        public static readonly LocString ClearWatchlistConfirm = new("housing.clearWatchlistConfirm",
+            "Remove all {0} watched plots? Their reminders are cancelled too.");
+        public static readonly LocString MapHint = new("housing.mapHint",
+            "Available plots appear as markers. Select a marker to view its lottery details.");
+        public static readonly LocString GotIt = new("housing.gotIt", "Got it");
+
+        // Legend
+        public static readonly LocString LegendSmall = new("housing.legendSmall", "Circle: small");
+        public static readonly LocString LegendMedium = new("housing.legendMedium", "Diamond: medium");
+        public static readonly LocString LegendLarge = new("housing.legendLarge", "Hexagon: large");
+        public static readonly LocString LegendWatched = new("housing.legendWatched", "Notch: watched");
+        public static readonly LocString LegendStale = new("housing.legendStale", "Dashed ring: stale scan");
+        public static readonly LocString LegendSelected = new("housing.legendSelected", "Outer ring: selected");
+
+        // Settings
+        public static readonly LocString SettingsData = new("housing.settingsData", "Data");
+        public static readonly LocString SettingsWorld = new("housing.settingsWorld", "World");
+        public static readonly LocString SettingsNotifications = new("housing.settingsNotifications", "Reminders");
+        public static readonly LocString SettingsMap = new("housing.settingsMap", "Map");
+        public static readonly LocString SettingsDiagnostics = new("housing.settingsDiagnostics", "Diagnostics");
+        public static readonly LocString AutoRefresh = new("housing.autoRefresh", "Refresh automatically");
+        public static readonly LocString RefreshInterval = new("housing.refreshInterval", "Refresh every");
+        public static readonly LocString RefreshMinutes = new("housing.refreshMinutes", "{0} min");
+        public static readonly LocString FollowCurrentWorld =
+            new("housing.followCurrentWorld", "Follow the world I am visiting");
+        public static readonly LocString FollowCurrentWorldHint = new("housing.followCurrentWorldHint",
+            "Off by default: your preferred world stays put when you world-visit.");
+        public static readonly LocString PreferredWorld = new("housing.preferredWorld", "Preferred world");
+        public static readonly LocString NotifyEntry = new("housing.notifyEntry", "Entry period reminders");
+        public static readonly LocString NotifyResults = new("housing.notifyResults", "Results period reminders");
+        public static readonly LocString ReminderLead = new("housing.reminderLead", "Default lead time");
+        public static readonly LocString FreshnessThreshold = new("housing.freshnessThreshold", "Treat scans as live for");
+        public static readonly LocString ClearCache = new("housing.clearCache", "Clear saved housing data");
+        public static readonly LocString MinutesSuffix = new("housing.minutesSuffix", "min");
+        public static readonly LocString ReminderLeadHint = new("housing.reminderLeadHint",
+            "Used when you create a reminder. You can still pick a different lead time per plot.");
+        public static readonly LocString GameMapHint = new("housing.gameMapHint",
+            "The district map and plot positions are read from your own game installation.");
+        public static readonly LocString GameMapUnavailable =
+            new("housing.gameMapUnavailable", "District map unavailable");
+        public static readonly LocString GameMapUnavailableHint = new("housing.gameMapUnavailableHint",
+            "Aetherphone could not read this district's map from your game files, so it has no plot positions to draw. The list shows the same plots without a map.");
+        public static readonly LocString GameMapUnavailableDetail = new("housing.gameMapUnavailableDetail",
+            "District map unavailable ({0}). Copy the map diagnostics below to see why.");
+        public static readonly LocString CopyMapDiagnostics =
+            new("housing.copyMapDiagnostics", "Copy map diagnostics");
+        public static readonly LocString CopiedMapDiagnostics = new("housing.copiedMapDiagnostics",
+            "Map diagnostics copied to the clipboard.");
+        public static readonly LocString MapSourceLabel = new("housing.mapSourceLabel", "Map source");
+        public static readonly LocString ProviderStatus = new("housing.providerStatus", "Provider");
+        public static readonly LocString LastRefresh = new("housing.lastRefresh", "Last successful refresh");
+        public static readonly LocString OpenPlotsReported = new("housing.openPlotsReported", "Reported openings");
+        public static readonly LocString ApiEndpointLabel = new("housing.apiEndpointLabel", "Endpoint");
+        public static readonly LocString ProxyCacheAge = new("housing.proxyCacheAge", "Service cache age");
+        public static readonly LocString ServiceUnavailable = new("housing.serviceUnavailable",
+            "The Aetherphone housing service could not be reached.");
+        public static readonly LocString DataSourceNotice = new("housing.dataSourceNotice",
+            "Housing reads Aetherphone's housing service, which polls and caches the public PaissaDB API once for all users rather than each client polling it. The PaissaHouse plugin is not required.");
+        public static readonly LocString RefreshIntervalHint = new("housing.refreshIntervalHint",
+            "Housing polls no faster than every {0} minutes, and only while this app is open. Ward data only changes when a player walks the ward, so checking more often shows you nothing new. Refresh manually any time.");
+
+        // Notifications
+        public static readonly LocString NotifyEntryTitle = new("housing.notifyEntryTitle", "Housing Reminder");
+        public static readonly LocString NotifyEntryBody =
+            new("housing.notifyEntryBody", "Plot {0} in {1} has {2} left in the entry period.");
+        public static readonly LocString NotifyEntryDetail =
+            new("housing.notifyEntryDetail", "Reported entries: {0} · {1}");
+        public static readonly LocString NotifyResultsTitle = new("housing.notifyResultsTitle", "Housing Results");
+        public static readonly LocString NotifyResultsBody = new("housing.notifyResultsBody",
+            "The results period ends in {0}. Check the estate placard before the claim or refund window closes.");
+    }
+
     internal static class Phone
     {
         public static readonly LocString AddToCall = new("phone.addToCall", "Add to Call");
@@ -830,6 +1125,7 @@ internal static class L
         public static readonly LocString Calls = new("phone.calls", "Calls");
         public static readonly LocString EnablePhoneCalls = new("phone.enablePhoneCalls", "Enable Phone Calls");
         public static readonly LocString Microphone = new("phone.microphone", "Microphone");
+        public static readonly LocString Speaker = new("phone.speaker", "Speaker");
         public static readonly LocString SystemDefault = new("phone.systemDefault", "System default");
         public static readonly LocString DeviceFallback = new("phone.deviceFallback", "Microphone {0}");
         public static readonly LocString AudioHint = new("phone.audioHint", "Audio plays on your system default output device. Use headphones to avoid echo. A device change applies to your next call.");
@@ -912,6 +1208,7 @@ internal static class L
         public static readonly LocString ThemeDark = new("settings.themeDark", "Dark");
         public static readonly LocString ThemeAuto = new("settings.themeAuto", "Auto");
         public static readonly LocString Accent = new("settings.accent", "Accent");
+        public static readonly LocString AccentCustom = new("settings.accentCustom", "Custom");
         public static readonly LocString PhoneCase = new("settings.phoneCase", "Case");
         public static readonly LocString Wallpaper = new("settings.wallpaper", "Wallpaper");
         public static readonly LocString TextSize = new("settings.textSize", "Text Size");
@@ -922,6 +1219,10 @@ internal static class L
         public static readonly LocString DoNotDisturb = new("settings.doNotDisturb", "Do Not Disturb");
         public static readonly LocString Vibration = new("settings.vibration", "Vibration");
         public static readonly LocString VibrationHint = new("settings.vibrationHint", "The phone shakes briefly when a notification arrives.");
+        public static readonly LocString QuietWhileBusy = new("settings.quietWhileBusy", "Quiet While Busy");
+        public static readonly LocString QuietWhileBusyHint = new("settings.quietWhileBusyHint", "Hold banners, sound and vibration during combat, duties, cutscenes and loading. Notifications still arrive.");
+        public static readonly LocString ShowNotificationBanner = new("settings.showNotificationBanner", "Show Notification Banner");
+        public static readonly LocString ShowNotificationBannerHint = new("settings.showNotificationBannerHint", "Display banner notifications at the top of the screen.");
         public static readonly LocString NotificationApps = new("settings.notificationApps", "Apps");
         public static readonly LocString AllowNotifications = new("settings.allowNotifications", "Allow Notifications");
         public static readonly LocString NotificationsOff = new("settings.notificationsOff", "Off");
@@ -951,6 +1252,8 @@ internal static class L
         public static readonly LocString Plugin = new("settings.plugin", "Plugin");
         public static readonly LocString Version = new("settings.version", "Version");
         public static readonly LocString Command = new("settings.command", "Command");
+        public static readonly LocString CopySupportInfo = new("settings.copySupportInfo", "Copy Support Info");
+        public static readonly LocString SupportInfoCopied = new("settings.supportInfoCopied", "Copied to clipboard");
         public static readonly LocString CreditsLinks = new("settings.creditsLinks", "Credits & links");
         public static readonly LocString SupportAetherphone = new("settings.supportAetherphone", "Support Aetherphone");
         public static readonly LocString SupportHint = new("settings.supportHint", "Aetherphone is free and made in my spare time. If you enjoy it, a pledge on Patreon helps me keep building and improving it. Thank you for being here.");
@@ -986,6 +1289,176 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release0999 =
+        {
+            new("changelog.r0999.0",
+                "Added seven phone cases: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo, and Runic"),
+            new("changelog.r0999.1",
+                "Every phone case was recompressed, so the plugin downloads at less than half its old size even with the seven new cases"),
+            new("changelog.r0999.2",
+                "A message now appears in an open conversation the moment it arrives, instead of waiting for the next refresh"),
+            new("changelog.r0999.3",
+                "Opening a conversation, or coming back to one you left open, now pulls the newest messages straight away"),
+            new("changelog.r0999.4",
+                "Chat now says when it cannot reach the server and offers a retry, instead of quietly showing an old transcript"),
+            new("changelog.r0999.5",
+                "Landscape now runs the hardware buttons along the top and bottom edges and keeps the screen the size it has in portrait, contributed by Raya"),
+            new("changelog.r0999.6",
+                "Photo pickers now draw only the thumbnails you can see, so opening one with a large library no longer stalls, contributed by BluntEXE"),
+            new("changelog.r0999.7",
+                "A shortcut icon borrowed from another plugin now fills the tile all the way to its rounded edge"),
+            new("changelog.r0999.14",
+                "Home folders now hold shortcuts as well as apps, so a plugin launcher can be dragged in and grouped like any other icon, contributed by K.I.R.O"),
+            new("changelog.r0999.8",
+                "Housing filter chips no longer wrap their labels, and the filter drawer rows sit on the standard spacing, contributed by Chaosvanguard"),
+            new("changelog.r0999.9",
+                "Fixed one refused request pausing all the others: an upload stopped by the request limit no longer holds back sends and refreshes"),
+            new("changelog.r0999.10",
+                "Fixed the Doman Enclave daily reporting your whole allowance as outstanding, ignoring what you had already donated, contributed by Farroness"),
+            new("changelog.r0999.11",
+                "Fixed the venue website link falling back to a page that does not exist on FFXIV Venues, contributed by Raya"),
+            new("changelog.r0999.12",
+                "Fixed the case artwork rotating the wrong way in landscape and leaving a hairline gap along the edge of the phone, contributed by Raya"),
+            new("changelog.r0999.13",
+                "Fixed the German wording for the physical ranged role, two game names, and a Dailies tour card, contributed by Silkie"),
+        };
+
+        public static readonly LocString[] Release0998 =
+        {
+            new("changelog.r0998.0",
+                "Added Housing, a new app that browses every housing ward on a map, tracks the plots you are watching, and reminds you before a lottery entry period closes, contributed by Chaosvanguard"),
+            new("changelog.r0998.1",
+                "Added Community Radio to Music, with more details coming soon"),
+            new("changelog.r0998.2",
+                "Added new phone cases, contributed by Silkie, Zivyl, Remi, and Rania"),
+            new("changelog.r0998.3",
+                "Badges have been completely reworked: they are now granted or earned under certain conditions, with the details on the Discord server"),
+            new("changelog.r0998.4",
+                "A fullscreen photo can be popped out into an ordinary window with a title bar, resized freely, and named after the app it came from"),
+            new("changelog.r0998.5",
+                "A photo can be filed into an album from the viewer, without leaving for the album first"),
+            new("changelog.r0998.6",
+                "The market now shows what lands in your retainer after tax, and names the city with the lowest rate"),
+            new("changelog.r0998.7",
+                "When another world, data center, or region sells an item cheaper, the Prices card names it and its price"),
+            new("changelog.r0998.8",
+                "An item that only sells HQ now opens on the HQ tab instead of an empty NQ one"),
+            new("changelog.r0998.9",
+                "Hovering a market row reveals the full item name, so families such as Ballroom Etiquette are no longer indistinguishable"),
+            new("changelog.r0998.10",
+                "Calls gained a Speaker picker, so a call plays through the output device you choose instead of always following the system default"),
+            new("changelog.r0998.11",
+                "Quiet While Busy holds banners, sounds, and shakes during combat, duties, cutscenes, and zoning; the notification still arrives and still counts as unread"),
+            new("changelog.r0998.12",
+                "Notification toasts can be turned off globally or per app, contributed by Radvo"),
+            new("changelog.r0998.13",
+                "An alarm whose minute passed while the plugin was unloaded now still fires, within a ten minute catch-up window"),
+            new("changelog.r0998.14",
+                "Every chat app now keeps a draft per conversation, so what you wrote for one person no longer follows you into the next"),
+            new("changelog.r0998.15",
+                "Velvet can pass on a profile, which drops them for the session without blocking them"),
+            new("changelog.r0998.16",
+                "Leaving the Velvet profile editor with unsaved changes now asks before discarding them"),
+            new("changelog.r0998.17",
+                "A Velvet profile you have already reported no longer offers the flag again"),
+            new("changelog.r0998.18",
+                "Dragging an icon past the last Home Screen page now opens a new page"),
+            new("changelog.r0998.19",
+                "Escape now backs out of the topmost thing on screen: a confirmation, the report sheet, the share sheet, then Control Center"),
+            new("changelog.r0998.20",
+                "Control Center can be pulled open by dragging the status band down, not only by tapping it"),
+            new("changelog.r0998.21",
+                "The community rules unlock their accept button once you have read to the end, instead of after a fixed countdown"),
+            new("changelog.r0998.22",
+                "Dock icons now raise the same name pill as the rest of the Home Screen"),
+            new("changelog.r0998.23",
+                "Removing an app from the Home Screen now asks first"),
+            new("changelog.r0998.24",
+                "Dalamud's settings button beside the plugin now opens the phone on the Settings app"),
+            new("changelog.r0998.25",
+                "A shortcut can use any plugin's icon, picked from the appearance sheet"),
+            new("changelog.r0998.26",
+                "Copying a chat bubble, a Linkpearl line, or a travel command now shows a confirmation, so a copy is no longer silent"),
+            new("changelog.r0998.27",
+                "An album's rename and delete are now reachable from a menu button on the card, not only by right-click"),
+            new("changelog.r0998.28",
+                "Empty screens now offer the next step: an empty photo library offers Camera, and Velvet offers Clear filters when your own filters are hiding everyone"),
+            new("changelog.r0998.29",
+                "A list that failed to load now says so and offers Retry, instead of reading as an empty list"),
+            new("changelog.r0998.30",
+                "Camera remembers the grid and the flash, and Photos reopens on the tab you left"),
+            new("changelog.r0998.31",
+                "The emoji picker takes the caret when it opens, so you can type to search instead of hunting the grid"),
+            new("changelog.r0998.32",
+                "Games that run on a clock now show a Paused veil when the phone loses focus, instead of looking frozen"),
+            new("changelog.r0998.33",
+                "The battery icon warns as a whole below twenty percent and breathes below ten, rather than tinting the fill alone"),
+            new("changelog.r0998.34",
+                "An empty inbox now offers New message instead of only describing itself"),
+            new("changelog.r0998.35",
+                "About gained a Copy Support Info row that puts versions, OS, language, and sound state on the clipboard, carrying no account or character identifiers"),
+            new("changelog.r0998.36",
+                "Fixed encryption and imported WAV and MP3 playback on Linux and Wine, contributed by Ehno"),
+            new("changelog.r0998.37",
+                "Fixed a message the game rejects disappearing in silence: the text stays in the box and the phone says the send failed"),
+            new("changelog.r0998.38",
+                "Fixed the housing translations: every language now uses the wording its own game client uses, and district names are translated"),
+            new("changelog.r0998.39",
+                "Fixed the calendar starting its week on Sunday in the five languages whose week starts on Monday"),
+            new("changelog.r0998.40",
+                "Fixed mini-games running on while the phone was not focused, and Tetris and Sudoku taking the keyboard while you were typing in the game"),
+            new("changelog.r0998.41",
+                "Fixed Settings showing badges you no longer hold"),
+            new("changelog.r0998.42",
+                "Fixed screens collapsing onto the avatar while a profile photo had not loaded yet, most visibly in the Velvet profile editor"),
+            new("changelog.r0998.43",
+                "Fixed the photo viewer's buttons stacking up over the photo"),
+            new("changelog.r0998.44",
+                "Fixed the Yellow Pages ad form cutting off its failure message instead of wrapping it, contributed by Raya"),
+            new("changelog.r0998.45",
+                "Moved the Velvet photo gallery below the profile details, contributed by Farroness"),
+            new("changelog.r0998.46",
+                "Fixed the emote idle scroll firing while an event window was open, contributed by Chaosvanguard"),
+            new("changelog.r0998.47",
+                "Fixed Escape doing nothing when the phone had been opened with a slash command"),
+            new("changelog.r0998.48",
+                "Fixed the app badge counting the conversation you are currently reading"),
+            new("changelog.r0998.49",
+                "Fixed blocking someone in Velvet leaving them in the Discover deck"),
+            new("changelog.r0998.50",
+                "Fixed Block on a Velvet profile acting without asking first"),
+            new("changelog.r0998.51",
+                "Fixed a blocking moderation notice vanishing for good once dismissed: it now leaves a notification behind"),
+            new("changelog.r0998.52",
+                "Fixed two notification settings showing in English in every translated language"),
+            new("changelog.r0998.53",
+                "Notifications no longer appear at the title screen, where there is no session to act on them"),
+        };
+
+        public static readonly LocString[] Release0997 =
+        {
+            new("changelog.r0997.0",
+                "Added Shortcuts, a new app that turns a run of commands into a single tap and pins it to the home screen"),
+            new("changelog.r0997.1",
+                "You can now resize the phone by dragging the bottom right corner of its frame"),
+            new("changelog.r0997.2",
+                "Phone Size in Settings is a slider now, so you can pick any size instead of six fixed ones"),
+            new("changelog.r0997.3",
+                "The whole screen scales with the phone, so text and icons grow with it instead of staying small"),
+            new("changelog.r0997.4",
+                "Text Size is a slider too now, and it goes down to 70 percent for people who want smaller text"),
+            new("changelog.r0997.5",
+                "Accent is a full color picker now, so you can use any color you like instead of the five presets"),
+            new("changelog.r0997.6",
+                "Ringtone volume and notification volume are sliders now, so you can pick any level instead of four fixed steps"),
+            new("changelog.r0997.7",
+                "The minimized phone now stays the same size whatever size the phone itself is"),
+            new("changelog.r0997.8",
+                "Fixed notifications coming back after you cleared them, and badges staying lit after everything had been read"),
+            new("changelog.r0997.9",
+                "Fixed taps in the Control Center doing nothing while a menu or picker was open in the app behind it"),
+        };
+
         public static readonly LocString[] Release0996 =
         {
             new("changelog.r0996.0", "You can now link your Patreon account from the account section in Settings"),
@@ -1942,6 +2415,56 @@ internal static class L
         public static readonly LocString Buffering = new("music.buffering", "Buffering…");
         public static readonly LocString Paused = new("music.paused", "Paused");
         public static readonly LocString ConnectionLost = new("music.connectionLost", "Connection lost");
+        public static readonly LocString Reconnecting = new("music.reconnecting", "Reconnecting…");
+        public static readonly LocString CommunityRadio = new("music.communityRadio", "Community Radio");
+        public static readonly LocString CommunityEmpty = new("music.communityEmpty", "No community stations yet");
+        public static readonly LocString CommunityEmptySub = new("music.communityEmptySub",
+            "When someone opens a station, it shows up here");
+        public static readonly LocString ListeningCount = new("music.listeningCount", "{0} listening");
+        public static readonly LocString WatchOnTwitch = new("music.watchOnTwitch", "Watch on Twitch");
+        public static readonly LocString OffAir = new("music.offAir", "Off air");
+        public static readonly LocString HostedBy = new("music.hostedBy", "Hosted by {0}");
+        public static readonly LocString ListenLive = new("music.listenLive", "Listen live");
+        public static readonly LocString StopListening = new("music.stopListening", "Stop");
+        public static readonly LocString ReportStation = new("music.reportStation", "Report station");
+        public static readonly LocString ReportStationTitle = new("music.reportStationTitle",
+            "Report this station");
+        public static readonly LocString FollowStation = new("music.followStation", "Follow");
+        public static readonly LocString FollowingStation = new("music.followingStation", "Following");
+        public static readonly LocPlural StationFollowers =
+            new("music.stationFollowers", "{0} follower", "{0} followers");
+        public static readonly LocString NotifLiveBody = new("music.notifLiveBody", "is live on {0}");
+        public static readonly LocString NotifLiveGeneric = new("music.notifLiveGeneric", "is live now");
+        public static readonly LocString MyStation = new("music.myStation", "My station");
+        public static readonly LocString StationArtwork = new("music.stationArtwork", "Artwork");
+        public static readonly LocString OnAir = new("music.onAir", "On air");
+        public static readonly LocString StationNameLabel = new("music.stationNameLabel", "Station name");
+        public static readonly LocString StationDescriptionLabel = new("music.stationDescriptionLabel", "Description");
+        public static readonly LocString StationLinksLabel = new("music.stationLinksLabel", "Links");
+        public static readonly LocString StationTagsLabel =
+            new("music.stationTagsLabel", "Tags (up to 5, separated by commas)");
+        public static readonly LocString StationTagsHint = new("music.stationTagsHint", "lofi, jazz, chill");
+        public static readonly LocString AllTags = new("music.allTags", "All");
+        public static readonly LocString NextBroadcast = new("music.nextBroadcast", "Next broadcast {0}");
+        public static readonly LocString ScheduleLabel = new("music.scheduleLabel", "Next broadcast");
+        public static readonly LocString ScheduleNone = new("music.scheduleNone", "No broadcast scheduled");
+        public static readonly LocString ScheduleRepeat = new("music.scheduleRepeat", "Repeat weekly");
+        public static readonly LocString ScheduleClear = new("music.scheduleClear", "Clear");
+        public static readonly LocString CommunityMatches = new("music.communityMatches", "Community stations");
+        public static readonly LocString StationSave = new("music.stationSave", "Save changes");
+        public static readonly LocString StationSaved = new("music.stationSaved", "Saved");
+        public static readonly LocString StationSaveFailed = new("music.stationSaveFailed", "Could not save");
+        public static readonly LocString StationBroadcast = new("music.stationBroadcast", "Broadcast settings");
+        public static readonly LocString StationServer = new("music.stationServer", "Server");
+        public static readonly LocString StationPort = new("music.stationPort", "Port");
+        public static readonly LocString StationMount = new("music.stationMount", "Mount");
+        public static readonly LocString StationUser = new("music.stationUser", "User");
+        public static readonly LocString StationPassword = new("music.stationPassword", "Password");
+        public static readonly LocString StationFormat = new("music.stationFormat", "Format");
+        public static readonly LocString StationCopied = new("music.stationCopied", "Copied");
+        public static readonly LocString StationHelp = new("music.stationHelp",
+            "Paste these into butt, or Rocket Broadcaster if you want to stream your desktop audio. "
+            + "MP3 only: other formats connect fine and reach listeners as silence.");
         public static readonly LocString CouldntPlay = new("music.couldntPlay", "Couldn't play this track");
         public static readonly LocString NowPlayingState = new("music.nowPlayingState", "Now playing");
         public static readonly LocString PlaybackFailed = new("music.playbackFailed", "Playback failed");
@@ -1995,6 +2518,7 @@ internal static class L
         public static readonly LocString ResumeNotifications = new("messages.resumeNotifications", "Resume notifications");
         public static readonly LocString CopyMessage = new("messages.copyMessage", "Copy message");
         public static readonly LocString CopyName = new("messages.copyName", "Copy name");
+        public static readonly LocString SendFailed = new("messages.sendFailed", "Couldn't send that message. Check for unsupported characters.");
     }
 
     internal static class Character
@@ -2245,6 +2769,11 @@ internal static class L
         public static readonly LocString Share = new("velvet.share", "Share");
         public static readonly LocString CaptionHint = new("velvet.captionHint", "Write a caption…");
         public static readonly LocString Block = new("velvet.block", "Block");
+        public static readonly LocString NotInterested = new("velvet.notInterested", "Not interested");
+        public static readonly LocString DiscardEdits =
+            new("velvet.discardEdits", "You have changes you have not saved yet. Leave without saving them?");
+        public static readonly LocString DiscardEditsConfirm = new("velvet.discardEditsConfirm", "Discard changes");
+        public static readonly LocString KeepEditing = new("velvet.keepEditing", "Keep editing");
         public static readonly LocString Blocked = new("velvet.blocked", "Blocked");
         public static readonly LocString Unblock = new("velvet.unblock", "Unblock");
         public static readonly LocString Like = new("velvet.like", "Like");
@@ -2635,6 +3164,8 @@ internal static class L
         public static readonly LocString Widgets = new("home.widgets", "Widgets");
         public static readonly LocString AddWidget = new("home.addWidget", "Add Widget");
         public static readonly LocString Remove = new("home.remove", "Remove");
+        public static readonly LocString RemoveConfirm =
+            new("home.removeConfirm", "Remove {0} from the Home Screen? You can add it back from the App Library.");
         public static readonly LocString SizeSmall = new("home.sizeSmall", "Small");
         public static readonly LocString SizeMedium = new("home.sizeMedium", "Medium");
         public static readonly LocString SizeLarge = new("home.sizeLarge", "Large");
@@ -2671,6 +3202,9 @@ internal static class L
         public static readonly LocString CreateAlbumButton = new("photos.createAlbumButton", "Create Album");
         public static readonly LocString AlbumName = new("photos.albumName", "Album name");
         public static readonly LocString AddPhotos = new("photos.addPhotos", "Add Photos");
+        public static readonly LocString AddToAlbum = new("photos.addToAlbum", "Add to Album");
+        public static readonly LocString AlreadyInAllAlbums =
+            new("photos.alreadyInAllAlbums", "This photo is already in every album");
         public static readonly LocString RemoveFromAlbum = new("photos.removeFromAlbum", "Remove from Album");
         public static readonly LocString DeleteAlbum = new("photos.deleteAlbum", "Delete Album");
         public static readonly LocString DeleteAlbumConfirm = new("photos.deleteAlbumConfirm", "Delete {0}?");
@@ -2821,6 +3355,8 @@ internal static class L
         public static readonly LocString Updated = new("market.updated", "Updated");
         public static readonly LocString VendorNpc = new("market.vendorNpc", "Vendor (NPC)");
         public static readonly LocString Cheaper = new("market.cheaper", "cheaper");
+        public static readonly LocString CheaperOn = new("market.cheaperOn", "Cheaper on {0}");
+        public static readonly LocString AfterTax = new("market.afterTax", "You keep after {0}% tax ({1})");
         public static readonly LocString PriceAlert = new("market.priceAlert", "Price alert");
         public static readonly LocString AddAnotherAlert = new("market.addAnotherAlert", "Add another alert");
         public static readonly LocString SetPriceAlert = new("market.setPriceAlert", "Set a price alert");
@@ -2872,6 +3408,8 @@ internal static class L
         public static readonly LocString WaterSort = new("games.waterSort", "Water Sort");
         public static readonly LocString Saved = new("games.saved", "Saved");
         public static readonly LocString Next = new("games.next", "Next");
+        public static readonly LocString Paused = new("games.paused", "Paused");
+        public static readonly LocString PausedHint = new("games.pausedHint", "Click the phone to carry on");
         public static readonly LocString Lines = new("games.lines", "Lines");
         public static readonly LocString Level = new("games.level", "Level");
         public static readonly LocString Moves = new("games.moves", "Moves");
@@ -2944,6 +3482,7 @@ internal static class L
         public static readonly LocString DaysAgo = new("time.daysAgo", "{0}d ago");
         public static readonly LocString Today = new("time.today", "Today");
         public static readonly LocString Yesterday = new("time.yesterday", "Yesterday");
+        public static readonly LocString Tomorrow = new("time.tomorrow", "Tomorrow");
         public static readonly LocString InMinutes = new("time.inMinutes", "in {0}m");
         public static readonly LocString InHours = new("time.inHours", "in {0}h");
         public static readonly LocString InHoursMinutes = new("time.inHoursMinutes", "in {0}h {1}m");
@@ -2951,13 +3490,16 @@ internal static class L
 
     internal static class Plugin
     {
-        public static readonly LocString CommandHelp =new("plugin.commandHelp", "Toggle the Aetherphone. /phone market [item] opens the market board, /phone reset recenters the phone, /phone test sends a sample notification.");
+        public static readonly LocString CommandHelp =new("plugin.commandHelp", "Toggle the Aetherphone. /phone run [shortcut] runs a shortcut, /phone market [item] opens the market board, /phone reset recenters the phone, /phone test sends a sample notification.");
         public static readonly LocString CommandHelpAlias = new("plugin.commandHelpAlias", "Alias for /phone.");
+        public static readonly LocString RunUsage = new("plugin.runUsage", "Type /phone run followed by a shortcut name.");
+        public static readonly LocString ShortcutNotFound = new("plugin.shortcutNotFound", "No shortcut named {0}.");
         public static readonly LocString SearchTheMarket = new("plugin.searchTheMarket", "Search the Market");
         public static readonly LocString SideButtonHint = new("plugin.sideButtonHint", "Tap to minimize · Hold to turn off");
         public static readonly LocString MaximizeHint = new("plugin.maximizeHint", "Maximize");
         public static readonly LocString LockPositionHint = new("plugin.lockPositionHint", "Lock position");
         public static readonly LocString UnlockPositionHint = new("plugin.unlockPositionHint", "Unlock position");
+        public static readonly LocString ResizeHint = new("plugin.resizeHint", "Drag to resize");
         public static readonly LocString DndEnableHint = new("plugin.dndEnableHint", "Turn on Do Not Disturb");
         public static readonly LocString DndDisableHint = new("plugin.dndDisableHint", "Turn off Do Not Disturb");
         public static readonly LocString UpdateChip = new("plugin.updateChip", "Update to {0}");
@@ -3012,7 +3554,46 @@ internal static class L
         public static readonly LocString AccentPink = new("catalog.accent.pink", "Pink");
         public static readonly LocString AccentAmber = new("catalog.accent.amber", "Amber");
         public static readonly LocString CaseTitanium = new("catalog.case.titanium", "Titanium");
+        public static readonly LocString CaseBlack = new("catalog.case.black", "Black");
+        public static readonly LocString CaseBlue = new("catalog.case.blue", "Blue");
+        public static readonly LocString CaseGreen = new("catalog.case.green", "Green");
+        public static readonly LocString CaseGrey = new("catalog.case.grey", "Grey");
+        public static readonly LocString CaseLavender = new("catalog.case.lavender", "Lavender");
+        public static readonly LocString CasePink = new("catalog.case.pink", "Pink");
+        public static readonly LocString CasePurple = new("catalog.case.purple", "Purple");
+        public static readonly LocString CaseTeal = new("catalog.case.teal", "Teal");
+        public static readonly LocString CaseWhite = new("catalog.case.white", "White");
+        public static readonly LocString CaseYellow = new("catalog.case.yellow", "Yellow");
+        public static readonly LocString CaseBlackCat = new("catalog.case.blackcatgradient", "Black Cat");
+        public static readonly LocString CaseBruteBomber = new("catalog.case.brutebombergradient", "Brute Bomber");
+        public static readonly LocString CaseDancingGreen = new("catalog.case.dancinggreengradient", "Dancing Green");
+        public static readonly LocString CaseGridania = new("catalog.case.gridaniagradient", "Gridania");
+        public static readonly LocString CaseHoneyBLovely = new("catalog.case.honeyblovelygradient", "Honey B. Lovely");
+        public static readonly LocString CaseHowlingBlade = new("catalog.case.howlingbladegradient", "Howling Blade");
+        public static readonly LocString CaseLimsa = new("catalog.case.limsagradient", "Limsa Lominsa");
+        public static readonly LocString CaseLindwurm = new("catalog.case.lindwurmgradient", "Lindwurm");
+        public static readonly LocString CaseMoogle = new("catalog.case.mooglegradient", "Moogle");
+        public static readonly LocString CaseRedHotDeepBlue = new("catalog.case.redhotdeepbluegradient", "Red Hot Deep Blue");
+        public static readonly LocString CaseSolutionNine = new("catalog.case.solution9gradient", "Solution Nine");
+        public static readonly LocString CaseSphene = new("catalog.case.sphenegradient", "Sphene");
+        public static readonly LocString CaseSugarRiot = new("catalog.case.sugarriotgradient", "Sugar Riot");
+        public static readonly LocString CaseTheTyrant = new("catalog.case.thetyrantgradient", "The Tyrant");
+        public static readonly LocString CaseTuliyollal = new("catalog.case.tuliyollalgradient", "Tuliyollal");
+        public static readonly LocString CaseUldah = new("catalog.case.uldahgradient", "Ul'dah");
+        public static readonly LocString CaseVampFatale = new("catalog.case.vampfatalegradient", "Vamp Fatale");
+        public static readonly LocString CaseWickedThunder = new("catalog.case.wickedthundergradient", "Wicked Thunder");
         public static readonly LocString CaseSilkie = new("catalog.case.silkie", "Silkie");
+        public static readonly LocString CaseFatCat = new("catalog.case.fatcat", "Fat Cat");
+        public static readonly LocString CaseCosmicEx = new("catalog.case.cosmicex", "Cosmic EX");
+        public static readonly LocString CaseCaduceus = new("catalog.case.caduceus", "Caduceus");
+        public static readonly LocString CaseMagicalGirl = new("catalog.case.magicalgirl", "Magical Girl");
+        public static readonly LocString CaseAtomos = new("catalog.case.atomos", "Atomos");
+        public static readonly LocString CaseBabyBat = new("catalog.case.babybat", "Baby Bat");
+        public static readonly LocString CaseDwarfRabbit = new("catalog.case.dwarfrabbit", "Dwarf Rabbit");
+        public static readonly LocString CaseEnkidu = new("catalog.case.enkidu", "Enkidu");
+        public static readonly LocString CaseHorror = new("catalog.case.horror", "Horror");
+        public static readonly LocString CaseKupo = new("catalog.case.mooglecase", "Kupo");
+        public static readonly LocString CaseRunic = new("catalog.case.runic", "Runic");
         public static readonly LocString RingtoneSilent = new("catalog.ringtone.silent", "Silent");
         public static readonly LocString RadioLofi = new("catalog.radio.lofi", "Lofi");
         public static readonly LocString RadioChillout = new("catalog.radio.chillout", "Chillout");
@@ -3564,6 +4145,7 @@ internal static class L
         public static readonly LocString Acknowledge = new("conduct.acknowledge", "I have read and understood these rules. I accept that breaking them may get my account suspended or banned.");
         public static readonly LocString AgreeAction = new("conduct.agreeAction", "I understand and agree");
         public static readonly LocString WaitAction = new("conduct.waitAction", "Please read the rules… {0}");
+        public static readonly LocString ReadToEndAction = new("conduct.readToEndAction", "Scroll to the end to continue");
 
         public static readonly LocString ChirperTitle = new("conduct.chirper.title", "Chirper Community Rules");
         public static readonly LocString ChirperIntro = new("conduct.chirper.intro", "Before you start posting, please read the rules of the community.");

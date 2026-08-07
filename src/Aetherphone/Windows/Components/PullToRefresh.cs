@@ -1,7 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -18,7 +17,7 @@ internal sealed class PullToRefresh
 
     public void Draw(Rect area, float pull, bool dragging, bool loading, Vector4 ink, Action onRefresh)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var deltaSeconds = ImGui.GetIO().DeltaTime;
 
         if (refreshing)

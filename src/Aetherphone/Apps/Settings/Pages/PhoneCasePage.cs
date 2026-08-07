@@ -5,7 +5,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Settings.Pages;
@@ -34,7 +33,7 @@ internal sealed class PhoneCasePage : ISettingsPage
     public void Draw(in PhoneContext context, Rect body)
     {
         var theme = context.Theme;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var gap = 12f * scale;
         var cases = ThemeCatalog.Cases;
         using (AppSurface.Begin(body))

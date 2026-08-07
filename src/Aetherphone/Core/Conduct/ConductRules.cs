@@ -18,7 +18,6 @@ internal sealed class ConductGate
 {
     public required string AppId { get; init; }
     public required int Version { get; init; }
-    public required float CountdownSeconds { get; init; }
     public required FontAwesomeIcon Icon { get; init; }
     public required LocString Title { get; init; }
     public required LocString Intro { get; init; }
@@ -31,7 +30,6 @@ internal static class ConductRules
     {
         AppId = "chirper",
         Version = 2,
-        CountdownSeconds = 45f,
         Icon = FontAwesomeIcon.Comments,
         Title = L.Conduct.ChirperTitle,
         Intro = L.Conduct.ChirperIntro,
@@ -60,7 +58,6 @@ internal static class ConductRules
     {
         AppId = "aethergram",
         Version = 2,
-        CountdownSeconds = 50f,
         Icon = FontAwesomeIcon.Camera,
         Title = L.Conduct.AethergramTitle,
         Intro = L.Conduct.AethergramIntro,
@@ -93,7 +90,6 @@ internal static class ConductRules
     {
         AppId = "velvet",
         Version = 2,
-        CountdownSeconds = 60f,
         Icon = FontAwesomeIcon.Heart,
         Title = L.Conduct.VelvetTitle,
         Intro = L.Conduct.VelvetIntro,
@@ -126,7 +122,6 @@ internal static class ConductRules
     {
         AppId = "muster",
         Version = 2,
-        CountdownSeconds = 40f,
         Icon = FontAwesomeIcon.Bullhorn,
         Title = L.Conduct.MusterTitle,
         Intro = L.Conduct.MusterIntro,
@@ -157,7 +152,6 @@ internal static class ConductRules
     {
         AppId = "yellowpages",
         Version = 2,
-        CountdownSeconds = 45f,
         Icon = FontAwesomeIcon.AddressBook,
         Title = L.Conduct.YellowPagesTitle,
         Intro = L.Conduct.YellowPagesIntro,

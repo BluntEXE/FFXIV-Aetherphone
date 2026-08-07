@@ -10,7 +10,6 @@ using Aetherphone.Core.Venues;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Apps.Venues;
@@ -85,7 +84,7 @@ internal sealed partial class VenuesApp : IPhoneApp
         navigation = context.Navigation;
         ui.Theme = theme;
         venues.EnsureFresh(false);
-        var screen = SceneChrome.ScreenFrom(context.Content, theme, ImGuiHelpers.GlobalScale);
+        var screen = SceneChrome.ScreenFrom(context.Content, theme, UiScale.Current);
         ui.Backdrop(screen);
         router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
     }
@@ -119,7 +118,7 @@ internal sealed partial class VenuesApp : IPhoneApp
 
     private void DrawRoot(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         DrawRootHeader(area, scale);
         var pad = Metrics.Space.Lg * scale;
         var top = area.Min.Y + AppHeader.Height * scale;
@@ -180,7 +179,7 @@ internal sealed partial class VenuesApp : IPhoneApp
 
     private void DrawFilterChips(Rect bar)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var gap = Metrics.Space.Sm * scale;
         var dataCenter = CurrentDataCenter();
         var dcLabel = dataCenter.Length > 0 ? dataCenter : Loc.T(L.Venues.AllDataCenters);
@@ -288,7 +287,7 @@ internal sealed partial class VenuesApp : IPhoneApp
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var nowUtc = DateTime.UtcNow;
         if (filtered.Count <= MaxCards)
         {
@@ -340,7 +339,7 @@ internal sealed partial class VenuesApp : IPhoneApp
 
     private void DrawSummary(string dataCenter)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dcLabel = dataCenter.Length > 0 ? dataCenter : Loc.T(L.Venues.AllDataCenters);
         var summary =
             $"{dcLabel}  ·  {TimeFilterLabel(configuration.VenueTimeFilter)}  ·  {Loc.T(L.Venues.EventsCount, filtered.Count)}";
@@ -355,7 +354,7 @@ internal sealed partial class VenuesApp : IPhoneApp
 
     private void DrawEmptyState(Rect body)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var centerX = body.Center.X;
         if (venues.State == VenueState.Loading && venues.Events.Count == 0)
         {
@@ -393,7 +392,7 @@ internal sealed partial class VenuesApp : IPhoneApp
 
     private void DrawTagPicker(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, theme, navigation);
         var showClear = selectedTags.Count > 0;
         var clearLabel = Loc.T(L.Venues.ClearTags);

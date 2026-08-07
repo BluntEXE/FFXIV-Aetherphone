@@ -33,7 +33,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Apps.Games;
@@ -62,6 +61,7 @@ internal sealed class GamesApp : IPhoneApp
     private const float HeroHeight = 168f;
     private const float SectionHeaderHeight = 30f;
     private const float GameRowHeight = 64f;
+    private const float PausedFadeSeconds = 0.12f;
     private const int FeaturedStep = 5;
     private readonly GameStatsStore stats;
     private readonly IMiniGame[] games;
@@ -71,6 +71,7 @@ internal sealed class GamesApp : IPhoneApp
     private readonly Action back;
     private Section[] sections = Array.Empty<Section>();
     private Spring heroScale = new(1f);
+    private Spring pausedVeil = new(0f);
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
     private IMiniGame? currentGame;
@@ -224,20 +225,43 @@ internal sealed class GamesApp : IPhoneApp
     {
         var game = currentGame!;
         AppHeader.Draw(context, game.Title, back);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + HeaderHeight * scale), content.Max);
         using (AppSurface.Begin(body))
         {
-            var deltaSeconds = MathF.Min(ImGui.GetIO().DeltaTime, 0.1f);
-            game.Draw(new GameContext(body, context.Theme, stats, deltaSeconds));
+            var attentive = GameFocus.Active;
+            var frameSeconds = MathF.Min(ImGui.GetIO().DeltaTime, 0.1f);
+            game.Draw(new GameContext(body, context.Theme, stats, attentive ? frameSeconds : 0f));
+            pausedVeil.Step(!attentive && game.RunsOnAClock ? 1f : 0f, PausedFadeSeconds, frameSeconds);
+            DrawPausedVeil(body, context.Theme);
         }
+    }
+
+    private void DrawPausedVeil(Rect body, PhoneTheme theme)
+    {
+        var alpha = Math.Clamp(pausedVeil.Value, 0f, 1f);
+        if (alpha <= 0.01f)
+        {
+            return;
+        }
+
+        var scale = UiScale.Current;
+        var drawList = ImGui.GetWindowDrawList();
+        drawList.AddRectFilled(body.Min, body.Max,
+            ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.72f * alpha)));
+        var center = body.Center;
+        Typography.DrawCentered(drawList, new Vector2(center.X, center.Y - 12f * scale), Loc.T(L.Games.Paused),
+            new Vector4(1f, 1f, 1f, alpha), TextStyles.Title2);
+        Typography.DrawWrappedCentered(drawList, new Vector2(center.X, center.Y + 14f * scale),
+            Loc.T(L.Games.PausedHint), new Vector4(1f, 1f, 1f, 0.7f * alpha), TextStyles.Subheadline,
+            MathF.Min(body.Width - 48f * scale, 260f * scale));
     }
 
     private void DrawLauncher(in PhoneContext context)
     {
         AppHeader.Draw(context, DisplayName);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + HeaderHeight * scale), content.Max);
         using (AppSurface.Begin(body))

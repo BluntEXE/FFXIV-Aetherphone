@@ -34,6 +34,5 @@ internal readonly struct ChassisMetrics
     public static ChassisMetrics ForBody(PhoneCaseKind kind, float bodyWidth) =>
         For(kind, bodyWidth / (1f - 2f * RailFraction));
 
-    public static ChassisMetrics Default =>
-        For(PhoneCaseKind.Color, PhoneSizeCatalog.SizeFor(PhoneSizeCatalog.DefaultScale).X);
+    public static ChassisMetrics Default => For(PhoneCaseKind.Color, PhoneSizeCatalog.DesignWidth);
 }

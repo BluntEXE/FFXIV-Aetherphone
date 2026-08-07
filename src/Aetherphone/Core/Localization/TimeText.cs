@@ -174,6 +174,43 @@ internal static class TimeText
         return day.ToString("d", Loc.Culture);
     }
 
+    public static string FutureDayLabel(long unixSeconds)
+    {
+        if (unixSeconds <= 0)
+        {
+            return string.Empty;
+        }
+
+        var day = DateTimeOffset.FromUnixTimeSeconds(unixSeconds).ToLocalTime().Date;
+        var today = DateTime.Now.Date;
+        if (day == today)
+        {
+            return Loc.T(L.Time.Today);
+        }
+
+        if (day == today.AddDays(1))
+        {
+            return Loc.T(L.Time.Tomorrow);
+        }
+
+        if (day > today && day < today.AddDays(7))
+        {
+            return Loc.Culture.TextInfo.ToTitleCase(day.ToString("dddd", Loc.Culture));
+        }
+
+        return day.ToString("d", Loc.Culture);
+    }
+
+    public static string FutureMoment(long unixSeconds)
+    {
+        if (unixSeconds <= 0)
+        {
+            return string.Empty;
+        }
+
+        return FutureDayLabel(unixSeconds) + " " + Clock(unixSeconds);
+    }
+
     public static bool SameLocalDay(long firstUnix, long secondUnix) =>
         DateTimeOffset.FromUnixTimeSeconds(firstUnix).ToLocalTime().Date ==
         DateTimeOffset.FromUnixTimeSeconds(secondUnix).ToLocalTime().Date;

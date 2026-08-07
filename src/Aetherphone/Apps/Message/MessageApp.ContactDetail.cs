@@ -8,7 +8,6 @@ using Aetherphone.Core.Telephony;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Message;
@@ -29,7 +28,7 @@ internal sealed partial class MessageApp
 
     private void DrawContactDetail(Rect area, string userId)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, string.Empty, back);
         var contact = contacts.Find(userId);
@@ -263,7 +262,7 @@ internal sealed partial class MessageApp
 
     private void DrawInfoRow(float left, float right, float top, float rowHeight, string label, string value)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var centerY = top + rowHeight * 0.5f;
         var labelSize = Typography.Measure(label, TextStyles.Footnote);
         Typography.Draw(new Vector2(left, centerY - 8f * scale), label, ui.MutedInk, TextStyles.Footnote);

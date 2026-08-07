@@ -6,7 +6,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -32,6 +31,8 @@ internal sealed class ConductGateOverlay
     private const float ChipSize = 26f;
     private const float SectionGap = 12f;
     private const float ItemGap = 7f;
+    private const float EndOfRulesFraction = 0.99f;
+    private const float MinimumReadSeconds = 4f;
 
     private static readonly Vector4 EncouragedColor = new(0.34f, 0.74f, 0.48f, 1f);
 
@@ -41,6 +42,8 @@ internal sealed class ConductGateOverlay
     private bool wasActive;
     private bool scrollTopPending;
     private float elapsed;
+    private bool reachedEnd;
+    private float readProgress;
 
     public ConductGateOverlay(ConductGateService service)
     {
@@ -56,6 +59,8 @@ internal sealed class ConductGateOverlay
         {
             shown = active;
             elapsed = 0f;
+            reachedEnd = false;
+            readProgress = 0f;
             scrollTopPending = true;
         }
 
@@ -93,7 +98,7 @@ internal sealed class ConductGateOverlay
 
     private void DrawPanel(Rect screen, PhoneTheme theme, ConductGate gate, float opacity, bool interactive)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var accent = AppAccents.For(gate.AppId);
         var drawList = ImGui.GetWindowDrawList();
         var reviewing = service.ActiveIsReview;
@@ -141,7 +146,7 @@ internal sealed class ConductGateOverlay
 
     private void DrawCloseButton(Vector2 center, PhoneTheme theme, float opacity, bool interactive)
     {
-        var pressed = AppSkin.IconButton(center, CloseRadius * ImGuiHelpers.GlobalScale,
+        var pressed = AppSkin.IconButton(center, CloseRadius * UiScale.Current,
             FontAwesomeIcon.Times.ToIconString(), Palette.WithAlpha(theme.TextStrong, opacity),
             Palette.WithAlpha(theme.TextStrong, 0.10f * opacity), 0.5f, theme);
         if (pressed && interactive && opacity > 0.5f)
@@ -153,7 +158,7 @@ internal sealed class ConductGateOverlay
     private static float DrawHeader(Rect panel, PhoneTheme theme, ConductGate gate, Vector4 accent, float opacity,
         float centerX, float innerWidth, float pad)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
 
         var tileSize = 48f * scale;
@@ -182,7 +187,7 @@ internal sealed class ConductGateOverlay
 
     private void DrawRules(Rect listRect, PhoneTheme theme, ConductGate gate, Vector4 accent, float opacity)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (listRect.Height <= 0f)
         {
             return;
@@ -207,6 +212,25 @@ internal sealed class ConductGateOverlay
             }
 
             ImGui.Dummy(new Vector2(width, 4f * scale));
+            TrackReading();
+        }
+    }
+
+    private void TrackReading()
+    {
+        var maxScroll = ImGui.GetScrollMaxY();
+        if (maxScroll <= 0.001f)
+        {
+            readProgress = 1f;
+            reachedEnd = true;
+            return;
+        }
+
+        var fraction = Math.Clamp(ImGui.GetScrollY() / maxScroll, 0f, 1f);
+        readProgress = MathF.Max(readProgress, fraction);
+        if (fraction >= EndOfRulesFraction)
+        {
+            reachedEnd = true;
         }
     }
 
@@ -223,7 +247,7 @@ internal sealed class ConductGateOverlay
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var toneColor = section.Tone switch
         {
             ConductTone.Encouraged => EncouragedColor,
@@ -364,7 +388,7 @@ internal sealed class ConductGateOverlay
 
     private static void DrawNote(string text, float width, PhoneTheme theme, float opacity)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var inset = 4f * scale;
         var height = Typography.DrawWrappedLeft(new Vector2(origin.X + inset, origin.Y), text,
@@ -376,7 +400,7 @@ internal sealed class ConductGateOverlay
     private void DrawFooter(PhoneTheme theme, ConductGate gate, Vector4 accent, float opacity, bool interactive,
         float centerX, float innerLeft, float innerWidth, float footerTop, string ack, float ackHeight)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
 
         Typography.DrawWrappedCentered(new Vector2(centerX, footerTop), ack,
@@ -387,17 +411,20 @@ internal sealed class ConductGateOverlay
         var barMax = new Vector2(innerLeft + innerWidth, barY + BarHeight * scale);
         Squircle.Fill(drawList, barMin, barMax, BarHeight * scale * 0.5f,
             ImGui.GetColorU32(Palette.WithAlpha(theme.TextStrong, 0.10f * opacity)));
-        var progress = gate.CountdownSeconds <= 0.001f ? 1f : Math.Clamp(elapsed / gate.CountdownSeconds, 0f, 1f);
+        var progress = reachedEnd ? 1f : readProgress;
         if (progress > 0.001f)
         {
             Squircle.Fill(drawList, barMin, new Vector2(innerLeft + innerWidth * progress, barMax.Y),
                 BarHeight * scale * 0.5f, ImGui.GetColorU32(Palette.WithAlpha(accent, opacity)));
         }
 
-        var remaining = MathF.Max(0f, gate.CountdownSeconds - elapsed);
-        var ready = remaining <= 0.001f;
-        var seconds = (int)MathF.Ceiling(remaining);
-        var label = ready ? Loc.T(L.Conduct.AgreeAction) : Loc.T(L.Conduct.WaitAction, seconds);
+        var floorRemaining = MathF.Max(0f, MinimumReadSeconds - elapsed);
+        var ready = reachedEnd && floorRemaining <= 0.001f;
+        var label = ready
+            ? Loc.T(L.Conduct.AgreeAction)
+            : reachedEnd
+                ? Loc.T(L.Conduct.WaitAction, (int)MathF.Ceiling(floorRemaining))
+                : Loc.T(L.Conduct.ReadToEndAction);
         var buttonY = barMax.Y + BarGap * scale;
         var buttonRect = new Rect(new Vector2(innerLeft, buttonY),
             new Vector2(innerLeft + innerWidth, buttonY + ButtonHeight * scale));

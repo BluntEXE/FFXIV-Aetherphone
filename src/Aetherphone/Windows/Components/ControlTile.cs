@@ -2,7 +2,6 @@ using Aetherphone.Core;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -17,7 +16,7 @@ internal static class ControlTile
     public static bool Toggle(ImDrawListPtr dl, Rect rect, FontAwesomeIcon icon, string label, bool active,
         Vector4 accent, PhoneTheme theme, float opacity, bool interactive, bool showLabel = true)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var radius = MathF.Min(rect.Width, rect.Height) * 0.30f;
         var released = Release(rect, interactive, out var hovered);
         var press = Pressed(rect, interactive) ? 0.96f : 1f;
@@ -60,7 +59,7 @@ internal static class ControlTile
     public static float VerticalSlider(ImDrawListPtr dl, Rect rect, float value, FontAwesomeIcon icon, string label,
         PhoneTheme theme, float opacity, bool interactive, out bool released)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var radius = MathF.Min(rect.Width, rect.Height * 0.5f) * 0.44f;
         var result = Math.Clamp(value, 0f, 1f);
         released = false;
@@ -96,7 +95,7 @@ internal static class ControlTile
     public static bool Swatch(ImDrawListPtr dl, Vector2 center, float radius, Vector4 color, bool selected,
         float opacity, bool interactive)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var rect = new Rect(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
         var released = Release(rect, interactive, out var hovered);
         var grow = hovered ? 1.08f : 1f;
@@ -138,7 +137,7 @@ internal static class ControlTile
             return false;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var moved = (ImGui.GetMousePos() - armedOrigin).Length() > PressSlop * scale;
         var fire = armed && !moved;
         armed = false;

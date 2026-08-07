@@ -8,7 +8,6 @@ using Dalamud.Bindings.ImGui;
 using Dalamud.Game.Gui.NamePlate;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Textures.TextureWraps;
-using Dalamud.Interface.Utility;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
@@ -48,7 +47,7 @@ internal sealed class CameraApp : IPhoneApp
 
     private static Rect ViewfinderRect(Rect screen, float scale)
     {
-        if (screen.Width > screen.Height)
+        if (screen.IsLandscape())
         {
             return new Rect(new Vector2(screen.Min.X + SideBarWidth * scale, screen.Min.Y),
                 new Vector2(screen.Max.X - SideTrayWidth * scale, screen.Max.Y));
@@ -62,8 +61,8 @@ internal sealed class CameraApp : IPhoneApp
     private readonly PhotoLibrary library;
     private readonly Configuration configuration;
     private int modeIndex = 1;
-    private bool gridEnabled;
-    private bool flashEnabled = true;
+
+
     private float shutterPress;
     private float flashAge = FlashDuration + 1f;
     private float reticleAge = ReticleDuration + 1f;
@@ -97,22 +96,22 @@ internal sealed class CameraApp : IPhoneApp
 
     public void Draw(in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         var rounding = theme.ScreenRounding * scale;
         AdvanceTimers(ImGui.GetIO().DeltaTime);
         var screen = ScreenFrom(context.Content, theme, scale);
-        var landscape = screen.Width > screen.Height;
+        var landscape = screen.IsLandscape();
         var viewfinder = ViewfinderRect(screen, scale);
         var captureRect = CaptureRect(viewfinder);
 
         var barAction = landscape
-            ? CameraChrome.SideBar(screen, SideBarWidth, flashEnabled, configuration.CameraLandscape, scale, rounding)
-            : CameraChrome.TopBar(screen, TopBarHeight, flashEnabled, configuration.CameraLandscape, scale, rounding);
+            ? CameraChrome.SideBar(screen, SideBarWidth, configuration.CameraFlash, configuration.CameraLandscape, scale, rounding)
+            : CameraChrome.TopBar(screen, TopBarHeight, configuration.CameraFlash, configuration.CameraLandscape, scale, rounding);
         var consumed = barAction != CameraBarAction.None;
         ApplyBarAction(barAction);
 
-        CameraChrome.Viewfinder(viewfinder, captureRect, gridEnabled, reticleAge, ReticleDuration, reticlePos, scale);
+        CameraChrome.Viewfinder(viewfinder, captureRect, configuration.CameraGrid, reticleAge, ReticleDuration, reticlePos, scale);
         consumed |= landscape
             ? DrawSideTray(screen, captureRect, context.Navigation, scale, rounding)
             : DrawTray(screen, captureRect, context.Navigation, scale, rounding);
@@ -124,7 +123,8 @@ internal sealed class CameraApp : IPhoneApp
     {
         if (action == CameraBarAction.ToggleFlash)
         {
-            flashEnabled = !flashEnabled;
+            configuration.CameraFlash = !configuration.CameraFlash;
+            configuration.Save();
             return;
         }
 
@@ -186,9 +186,10 @@ internal sealed class CameraApp : IPhoneApp
             consumed = true;
         }
 
-        if (CameraChrome.GridToggle(new Vector2(screen.Max.X - 44f * scale, shutterCenter.Y), gridEnabled, scale))
+        if (CameraChrome.GridToggle(new Vector2(screen.Max.X - 44f * scale, shutterCenter.Y), configuration.CameraGrid, scale))
         {
-            gridEnabled = !gridEnabled;
+            configuration.CameraGrid = !configuration.CameraGrid;
+            configuration.Save();
             consumed = true;
         }
 
@@ -221,9 +222,10 @@ internal sealed class CameraApp : IPhoneApp
             consumed = true;
         }
 
-        if (CameraChrome.GridToggle(new Vector2(screen.Max.X - 52f * scale, wellCenterY), gridEnabled, scale))
+        if (CameraChrome.GridToggle(new Vector2(screen.Max.X - 52f * scale, wellCenterY), configuration.CameraGrid, scale))
         {
-            gridEnabled = !gridEnabled;
+            configuration.CameraGrid = !configuration.CameraGrid;
+            configuration.Save();
             consumed = true;
         }
 
@@ -311,7 +313,7 @@ internal sealed class CameraApp : IPhoneApp
         }
 
         shutterPress = 1f;
-        if (flashEnabled)
+        if (configuration.CameraFlash)
         {
             flashAge = 0f;
         }

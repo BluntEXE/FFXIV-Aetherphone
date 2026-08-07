@@ -4,7 +4,6 @@ using Aetherphone.Core.Shell.Home;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Core.Shell;
@@ -85,7 +84,7 @@ internal sealed class ShellTransitionRenderer
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var iconRadius = MathF.Min(MathF.Min(rest.Width, rest.Height) * 0.26f, 24f * scale);
         var rounding = iconRadius + (screenRadius - iconRadius) * raw;
         var shellDrawList = ImGui.GetWindowDrawList();
@@ -110,7 +109,7 @@ internal sealed class ShellTransitionRenderer
             if (reveal > 0.001f)
             {
                 var offset = card.Center - screen.Center;
-                var rise = (1f - reveal) * 8f * ImGuiHelpers.GlobalScale;
+                var rise = (1f - reveal) * 8f * UiScale.Current;
                 var target = new Rect(screen.Min + offset + new Vector2(0f, rise),
                     screen.Max + offset + new Vector2(0f, rise));
                 using (ImRaii.PushId(over.Id))
@@ -157,7 +156,7 @@ internal sealed class ShellTransitionRenderer
 
     private static Rect CenterOrigin(Rect content)
     {
-        var half = 30f * ImGuiHelpers.GlobalScale;
+        var half = 30f * UiScale.Current;
         return new Rect(content.Center - new Vector2(half, half), content.Center + new Vector2(half, half));
     }
 }

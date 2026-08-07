@@ -5,7 +5,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Settings.Pages;
@@ -37,11 +36,11 @@ internal sealed class NotificationsPage : ISettingsPage
     public void Draw(in PhoneContext context, Rect body)
     {
         var theme = context.Theme;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         using (AppSurface.Begin(body))
         {
             SettingsSection.Header(Loc.T(L.Common.Alerts), theme);
-            var alerts = GroupCard.Begin(theme, 3);
+            var alerts = GroupCard.Begin(theme, 5);
             var doNotDisturb = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Settings.DoNotDisturb),
                 configuration.DoNotDisturb, theme);
             if (doNotDisturb != configuration.DoNotDisturb)
@@ -50,8 +49,26 @@ internal sealed class NotificationsPage : ISettingsPage
                 configuration.Save();
             }
 
+            var quietWhileBusy = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Settings.QuietWhileBusy),
+                configuration.QuietWhileBusy, theme, null, Loc.T(L.Settings.QuietWhileBusyHint),
+                dimmed: doNotDisturb);
+            if (quietWhileBusy != configuration.QuietWhileBusy)
+            {
+                configuration.QuietWhileBusy = quietWhileBusy;
+                configuration.Save();
+            }
+
+            var showNotificationBanner = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Settings.ShowNotificationBanner),
+                configuration.ShowNotificationBanner, theme, null, Loc.T(L.Settings.ShowNotificationBannerHint),
+                dimmed: doNotDisturb);
+            if (showNotificationBanner != configuration.ShowNotificationBanner)
+            {
+                configuration.ShowNotificationBanner = showNotificationBanner;
+                configuration.Save();
+            }
+
             var vibration = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Settings.Vibration),
-                configuration.Vibration, theme);
+                configuration.Vibration, theme, null, Loc.T(L.Settings.VibrationHint), dimmed: doNotDisturb);
             if (vibration != configuration.Vibration)
             {
                 configuration.Vibration = vibration;
@@ -59,15 +76,12 @@ internal sealed class NotificationsPage : ISettingsPage
             }
 
             if (SettingsRow.Disclosure(alerts.NextRow(), Loc.T(L.Settings.NotificationSound),
-                    sound.Label(SoundKind.Notification, configuration.NotificationSound), theme))
+                    sound.Label(SoundKind.Notification, configuration.NotificationSound), theme, dimmed: doNotDisturb))
             {
                 navigator.Open(soundPage);
             }
 
             alerts.End();
-
-            ImGui.Dummy(new Vector2(0f, 8f * scale));
-            SettingsSection.Hint(Loc.T(L.Settings.VibrationHint), theme);
 
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
             SettingsSection.Header(Loc.T(L.Settings.NotificationApps), theme);

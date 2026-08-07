@@ -5,7 +5,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Sharing;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -39,6 +38,8 @@ internal sealed class ShareSheet
     }
 
     public bool CapturesPointer => service.Pending is not null || !reveal.IsResting(0f, 0.001f, 0.005f);
+
+    public void Dismiss() => service.Dismiss();
 
     public void Draw(Rect screen, PhoneTheme theme)
     {
@@ -87,7 +88,7 @@ internal sealed class ShareSheet
 
     private Rect DrawPanel(Rect screen, PhoneTheme theme, float opacity, float slide, bool interactive)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var targets = service.Targets;
         var pad = Metrics.Space.Xl * scale;

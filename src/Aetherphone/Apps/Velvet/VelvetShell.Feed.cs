@@ -8,7 +8,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -19,7 +18,7 @@ internal sealed partial class VelvetShell
 
     private void DrawFeed(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (!store.FeedLoaded && !store.LoadingFeed)
         {
             store.RefreshFeed();
@@ -131,7 +130,7 @@ internal sealed partial class VelvetShell
 
     private void DrawPostCard(VelvetPostDto entry, float width)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var pad = PostCardMetrics.Pad * scale;
@@ -184,7 +183,7 @@ internal sealed partial class VelvetShell
         var nameSize = Typography.Measure(authorName, TextStyles.Headline);
         var nameHovering = UiInteract.Hover(new Vector2(nameLeft, nameTop),
             new Vector2(nameLeft + headerTextMaxWidth, nameTop + nameSize.Y));
-        UserName.Draw("velvet.feed.author." + entry.Id, authorName, entry.OwnerBadges, nameLeft, nameTop,
+        UserName.Draw("velvet.feed.author." + entry.Id, authorName, entry.OwnerBadges, entry.OwnerBadgeIds, nameLeft, nameTop,
             headerTextMaxWidth, TextStyles.Headline, VelvetTheme.TitleInk, nameHovering, false);
         var ownerSub = SocialIdentity.FeedMeta(entry.OwnerHandle, TimeText.Short(entry.CreatedAtUnix));
         var ownerSubY = nameTop + PostCardMetrics.SublineTop * scale;

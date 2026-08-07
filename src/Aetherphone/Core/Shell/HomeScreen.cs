@@ -1,11 +1,11 @@
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Shell.Home;
 using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Core.Shell;
 
@@ -23,15 +23,15 @@ internal sealed class HomeScreen
     private readonly Configuration configuration;
 
     public HomeScreen(IReadOnlyList<IPhoneApp> apps, WidgetRegistry widgets, ShortcutStore shortcuts,
-        ShortcutRunner runner, Configuration configuration)
+        ShortcutRunner runner, Configuration configuration, ConfirmService confirm)
     {
         this.configuration = configuration;
         layout = new HomeLayoutService(apps, widgets, shortcuts, configuration);
-        folder = new FolderOverlay(layout);
+        folder = new FolderOverlay(layout, shortcuts, runner);
         sizeMenu = new WidgetSizeMenu(layout);
         gallery = new WidgetGallery(layout, widgets);
         interaction = new HomeInteractionController(layout, widgets, pager, folder, sizeMenu, gallery, poses, runner);
-        renderer = new HomeGridRenderer(layout, pager, poses, interaction, shortcuts);
+        renderer = new HomeGridRenderer(layout, pager, poses, interaction, shortcuts, confirm);
         chrome = new HomeChrome(pager, interaction);
     }
 
@@ -45,7 +45,7 @@ internal sealed class HomeScreen
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
         interaction.Advance(delta);
         var editReserve = interaction.Editing && motion.Interactive ? HomeMetrics.EditToolbarBandUnits : 0f;
-        var metrics = HomeMetrics.Compute(content, HomeLayoutService.Columns, layout.Rows, ImGuiHelpers.GlobalScale,
+        var metrics = HomeMetrics.Compute(content, HomeLayoutService.Columns, layout.Rows, UiScale.Current,
             motion, editReserve);
         pager.Step(delta, interaction.DisplayPageCount());
         var chromeAlpha = Math.Clamp(1f - motion.Progress * 1.6f, 0f, 1f);
@@ -92,7 +92,7 @@ internal sealed class HomeScreen
 
     public Rect? RevealRect(string appId, Rect content)
     {
-        var metrics = HomeMetrics.Compute(content, HomeLayoutService.Columns, layout.Rows, ImGuiHelpers.GlobalScale,
+        var metrics = HomeMetrics.Compute(content, HomeLayoutService.Columns, layout.Rows, UiScale.Current,
             HomeMotion.Rest);
         var dock = layout.Dock;
         for (var index = 0; index < dock.Count; index++)
@@ -131,9 +131,9 @@ internal sealed class HomeScreen
             return tile.Widget!.AppId == appId;
         }
 
-        for (var index = 0; index < tile.Apps.Count; index++)
+        for (var index = 0; index < tile.Members.Count; index++)
         {
-            if (tile.Apps[index].Id == appId)
+            if (tile.Members[index].App?.Id == appId)
             {
                 return true;
             }

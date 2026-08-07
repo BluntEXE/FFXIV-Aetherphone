@@ -5,7 +5,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Games.Nonogram;
 
@@ -74,7 +73,7 @@ internal sealed class NonogramApp : IMiniGame
     public void Draw(in GameContext context)
     {
         var deltaSeconds = context.DeltaSeconds;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         var body = context.Body;
         if (loadedBestTime < 0)
@@ -259,8 +258,8 @@ internal sealed class NonogramApp : IMiniGame
         var gridTop = layout.GridOrigin;
         var gridCenterX = gridTop.X + board.Size * layout.CellSize * 0.5f;
         var gridCenter = new Vector2(gridCenterX, gridTop.Y + board.Size * layout.CellSize * 0.5f);
-        particles.Confetti(new Vector2(gridCenterX, gridTop.Y), 72, palette, 260f * ImGuiHelpers.GlobalScale, 4f, 1.3f);
-        particles.Sparkle(gridCenter, 16, new Vector4(1f, 0.95f, 0.7f, 1f), 200f * ImGuiHelpers.GlobalScale, 2.6f, 0.9f);
+        particles.Confetti(new Vector2(gridCenterX, gridTop.Y), 72, palette, 260f * UiScale.Current, 4f, 1.3f);
+        particles.Sparkle(gridCenter, 16, new Vector4(1f, 0.95f, 0.7f, 1f), 200f * UiScale.Current, 2.6f, 0.9f);
         fx.Shockwave(gridCenter, board.Size * layout.CellSize * 0.6f, GamePalette.Lighten(Accent, 0.3f), 0.6f, 3f);
     }
 

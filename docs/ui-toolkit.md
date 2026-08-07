@@ -71,10 +71,10 @@ Watch for the cursor landmine: `Typography.Draw` and `Typography.DrawCentered` h
 - `Metrics.Size`: `Header` 42, `Row` 46, `FieldHeight` 34, `FieldMultiline` 88, `ToggleWidth` 46, `ToggleHeight` 28, `IconTile` 28, `HeroRing` 56, `HomeIndicatorInset` 34
 - `Metrics.Stroke`: `Hairline` 1, `Thin` 1.4, `Ring` 2
 
-The values are unscaled design units. Multiply by `ImGuiHelpers.GlobalScale` (the Dalamud UI scale factor) at the call site:
+The values are unscaled design units, authored against a 360 wide phone. Multiply by `UiScale.Current` (Dalamud's UI scale times the phone zoom) at the call site:
 
 ```csharp
-var scale = ImGuiHelpers.GlobalScale;
+var scale = UiScale.Current;
 ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
 ```
 
@@ -269,8 +269,9 @@ Animated components (the `Toggle` knob, `ConfirmOverlay` reveal) use `Spring` (s
 | Draw a person's picture | `AvatarView` |
 | Take multiline text input | `SoftWrapField.Multiline` |
 | Add a search box | `SearchField` |
+| Let someone pick a color | `ColorField.Draw` (shade square plus hue rail) |
 | Add depth behind a card | `Elevation.Card` + `Squircle.Fill` |
-| Space or round anything | `Metrics` tokens times `ImGuiHelpers.GlobalScale` |
+| Space or round anything | `Metrics` tokens times `UiScale.Current` |
 
 ## Gotchas
 
@@ -279,7 +280,7 @@ Animated components (the `Toggle` knob, `ConfirmOverlay` reveal) use `Spring` (s
 - A popup without the `openedFrame` guard closes on the same click that opened it, because the opening click lands outside the popup rect. Compare `ImGui.GetFrameCount()` to the frame the popup opened before honoring outside-click dismissal, as `DropdownMenu.Draw` and `ConfirmOverlay.Draw` do.
 - `UiInteract.Click` claims: the last `Click` call of the press frame wins. A parent row hit-tested after its child button steals the child's tap unless you gate the parent with `hovered && !overChildRect` (see AccountPage.cs above).
 - Using `ImGui.GetContentRegionAvail().X` to size content in a native-scrollbar region causes the scrollbar show/hide feedback loop (layout shakes every frame). Use `ScrollLayout.StableContentWidth()`.
-- `Metrics` values are unscaled design units. Forgetting `ImGuiHelpers.GlobalScale` makes layouts wrong at any UI scale other than 100 percent.
+- `Metrics` values are unscaled design units. Forgetting `UiScale.Current` makes layouts wrong at any UI scale other than 100 percent and at any phone size other than 360 wide.
 - `FeedVirtualizer.Skip`/`Record` cache row heights per id and revision. If a row can change height (comments appear, text expands), change its revision or the feed will draw with stale heights.
 - Text drawn without `Typography` skips `Plugin.Fonts.NoticeText`, so characters outside the base glyph ranges (CJK in particular) may render as placeholder boxes until something else notices them.
 - `DropdownMenu` rows and other blocked-frame overlays must hit-test with `UiInteract.HoverWindowOnly`, because `Gate()` makes plain `Hover` return false while they are open.

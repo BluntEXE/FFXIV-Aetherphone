@@ -24,7 +24,6 @@ using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -33,6 +32,7 @@ internal sealed partial class VelvetShell : IPhoneApp
     private const float HeartbeatSeconds = 45f;
 
     private readonly VelvetStore store;
+    private readonly HashSet<string> reportedTargets = new(StringComparer.Ordinal);
     private readonly StoryPresenter stories;
     private readonly VelvetLauncher launcher;
     private readonly SocialLauncher socialLauncher;
@@ -240,7 +240,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         store.EnsureMe();
         TickHeartbeat();
         GateMenus();
-        var screen = SceneChrome.ScreenFrom(context.Content, theme, ImGuiHelpers.GlobalScale);
+        var screen = SceneChrome.ScreenFrom(context.Content, theme, UiScale.Current);
         ui.Backdrop(screen);
         ConsumeSharedPhoto();
         stories.Advance();
@@ -375,7 +375,7 @@ internal sealed partial class VelvetShell : IPhoneApp
 
     private void DrawRoot(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var headerHeight = VHeader.Height * scale;
         var tabHeight = VTabBar.Height * scale;
         var headerRect = new Rect(area.Min, new Vector2(area.Max.X, area.Min.Y + headerHeight));

@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Animation;
 using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Windows.Components;
@@ -17,9 +18,19 @@ internal static class UiInteract
     private static bool hasPendingTap;
     private static bool windowHovered = true;
     private static int windowHoveredFrame = -1;
+    private static bool windowFocused = true;
+    private static int windowFocusedFrame = -1;
     private static int gestureSurfaceFrame = -1;
 
-    public static void BlockThisFrame() => blockedFrame = ImGui.GetFrameCount();
+    public static void BlockThisFrame()
+    {
+        if (InputShield.Active)
+        {
+            return;
+        }
+
+        blockedFrame = ImGui.GetFrameCount();
+    }
 
     public static bool InputBlocked => blockedFrame == ImGui.GetFrameCount();
 
@@ -31,6 +42,14 @@ internal static class UiInteract
 
     private static bool WindowHovered => windowHoveredFrame != ImGui.GetFrameCount() || windowHovered;
 
+    public static void SetWindowFocused(bool focused)
+    {
+        windowFocused = focused;
+        windowFocusedFrame = ImGui.GetFrameCount();
+    }
+
+    public static bool WindowFocused => windowFocusedFrame != ImGui.GetFrameCount() || windowFocused;
+
     public static void CancelPendingTap() => hasPendingTap = false;
 
     public static void ReportGestureSurface() => gestureSurfaceFrame = ImGui.GetFrameCount();
@@ -39,6 +58,11 @@ internal static class UiInteract
 
     public static bool HoverOverlay(Rect rect)
     {
+        if (InputShield.Active)
+        {
+            return false;
+        }
+
         overlayRect = rect;
         overlayFrame = ImGui.GetFrameCount();
         return !InputBlocked && WindowHovered && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);

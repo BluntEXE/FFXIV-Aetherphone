@@ -20,7 +20,11 @@ Notes:
   and `SoundLibrary.BundledNotificationToken`, so rename the files and the
   constants together. Whenever a saved choice no longer resolves, the first
   file in alphabetical order of its kind takes over.
-- Playback uses Windows Media Foundation, so `.mp3` and `.wav` are safe choices.
+- Playback is dispatched by file extension: `.mp3` and `.wav` play through
+  managed decoders (Wine-safe), everything else falls back to Windows Media
+  Foundation. A misnamed file (for example MP3 bytes named `.wav`) plays
+  through the wrong decoder and can fail, where content sniffing used to
+  cover that case.
 - A file's display name is its file name with `_`/`-` turned into spaces
   (`soft_bell.mp3` shows as "soft bell").
 - Ringtones loop until the call is answered or missed, so keep them seamless.

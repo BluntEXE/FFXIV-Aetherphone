@@ -10,7 +10,6 @@ using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Velvet;
@@ -166,7 +165,7 @@ internal sealed class VelvetPostComposer
 
     private void DrawPick(Rect area, AppSkin ui, in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var showNext = !storyMode;
         var nextLabel = Loc.T(L.Common.Next);
         var nextReserve = showNext
@@ -212,7 +211,7 @@ internal sealed class VelvetPostComposer
 
     private void DrawCrop(Rect area, AppSkin ui, in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var title = session.SelectedCount > 1
             ? Loc.T(L.Common.PhotoStep, session.CropIndex + 1, session.SelectedCount)
             : Loc.T(L.Velvet.MoveAndScale);
@@ -256,7 +255,7 @@ internal sealed class VelvetPostComposer
 
     private void DrawCaption(Rect area, AppSkin ui, in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var busy = Posting;
         var actionLabel = busy ? Loc.T(L.Velvet.Saving) : Loc.T(L.Velvet.Share);
         var actionReserve = Typography.Measure(actionLabel, 0.9f, FontWeight.SemiBold).X + 34f * scale + 20f * scale;

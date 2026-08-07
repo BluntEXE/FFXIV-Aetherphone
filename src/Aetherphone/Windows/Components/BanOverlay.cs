@@ -7,7 +7,6 @@ using Aetherphone.Core.Moderation;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -78,7 +77,7 @@ internal sealed class BanOverlay
 
     private void DrawContent(Rect screen, PhoneTheme theme, float reveal, bool interactive)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dl = ImGui.GetWindowDrawList();
         var alpha = Math.Clamp(reveal * 1.4f, 0f, 1f);
         dl.AddRectFilled(screen.Min, screen.Max,
@@ -152,7 +151,7 @@ internal sealed class BanOverlay
 
     private void DrawDismiss(Rect screen, PhoneTheme theme, float alpha, bool interactive)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var centerX = screen.Center.X;
         var width = MathF.Min(screen.Size.X - 56f * scale, 240f * scale);
         var rect = new Rect(

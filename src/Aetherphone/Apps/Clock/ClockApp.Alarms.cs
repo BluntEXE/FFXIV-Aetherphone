@@ -6,7 +6,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Clock;
@@ -53,7 +52,7 @@ internal sealed partial class ClockApp
 
     private void DrawAlarmRow(Rect row, AlarmEntry alarm)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var timeInk = alarm.Enabled ? ui.TitleInk : ui.MutedInk;
         var time = $"{alarm.Hour:D2}:{alarm.Minute:D2}";
         var timeSize = Typography.Measure(time, TextStyles.Title1);

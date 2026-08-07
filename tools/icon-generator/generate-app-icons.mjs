@@ -15,6 +15,7 @@ const map = {
   contacts: "address-book",
   character: "user-circle",
   health: "heartbeat",
+  housing: "building-estate",
   camera: "camera",
   photos: "photo",
   skywatcher: "cloud",

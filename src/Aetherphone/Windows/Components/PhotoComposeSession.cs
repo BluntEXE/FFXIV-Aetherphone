@@ -8,7 +8,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Core.Wallpapers;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures.TextureWraps;
-using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
 
@@ -247,31 +246,42 @@ internal sealed class PhotoComposeSession
     public void DrawPickGrid(Rect gridRect, float scale, in PhotoComposeStyle style, bool showBadges)
     {
         var gap = 6f * scale;
-        var cell = (ScrollLayout.StableContentWidth() - gap * (GridColumns - 1)) / GridColumns;
-        using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(gap, gap)))
+        var avail = ScrollLayout.StableContentWidth();
+        var cell = (avail - gap * (GridColumns - 1)) / GridColumns;
+        var origin = ImGui.GetCursorScreenPos();
+        var scrollY = ImGui.GetScrollY();
+        var viewHeight = ImGui.GetWindowSize().Y;
+        var margin = cell + 60f * scale;
+        for (var index = 0; index < pickerPaths.Length; index++)
         {
-            for (var index = 0; index < pickerPaths.Length; index++)
+            var column = index % GridColumns;
+            var rowIndex = index / GridColumns;
+            var top = rowIndex * (cell + gap);
+            if (top + cell < scrollY - margin || top > scrollY + viewHeight + margin)
             {
-                ImGui.Dummy(new Vector2(cell, cell));
-                var min = ImGui.GetItemRectMin();
-                var max = ImGui.GetItemRectMax();
-                DrawLocalThumbnail(pickerPaths[index], min, max, scale, style.PlaceholderFill);
-                if (showBadges)
-                {
-                    DrawPickBadge(pickerPaths[index], min, max, scale, style.Accent);
-                }
+                continue;
+            }
 
-                if (UiInteract.Click(min, max, UiInteract.Hover(min, max)))
-                {
-                    TakePicked(pickerPaths[index]);
-                }
+            var min = new Vector2(origin.X + column * (cell + gap), origin.Y + top);
+            var max = new Vector2(min.X + cell, min.Y + cell);
+            var path = pickerPaths[index];
+            var hovered = UiInteract.Hover(min, max);
+            DrawLocalThumbnail(path, min, max, scale, style.PlaceholderFill, hovered);
+            if (showBadges)
+            {
+                DrawPickBadge(path, min, max, scale, style.Accent);
+            }
 
-                if (index % GridColumns != GridColumns - 1)
-                {
-                    ImGui.SameLine();
-                }
+            if (UiInteract.Click(min, max, hovered))
+            {
+                TakePicked(path);
             }
         }
+
+        var rows = (pickerPaths.Length + GridColumns - 1) / GridColumns;
+        var totalHeight = rows * (cell + gap);
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(avail, totalHeight));
     }
 
     private void DrawPickBadge(string path, Vector2 min, Vector2 max, float scale, Vector4 accent)
@@ -297,7 +307,8 @@ internal sealed class PhotoComposeSession
             TextStyles.FootnoteEmphasized);
     }
 
-    public void DrawLocalThumbnail(string path, Vector2 min, Vector2 max, float scale, Vector4 placeholderFill)
+    public void DrawLocalThumbnail(string path, Vector2 min, Vector2 max, float scale, Vector4 placeholderFill,
+        bool hovered)
     {
         var drawList = ImGui.GetWindowDrawList();
         var rounding = 10f * scale;
@@ -311,7 +322,7 @@ internal sealed class PhotoComposeSession
         var (uv0, uv1) = ImageFit.CoverSquare(texture.Size);
         drawList.AddImageRounded(texture.Handle, min, max, uv0, uv1, 0xFFFFFFFFu, rounding,
             ImDrawFlags.RoundCornersAll);
-        if (ImGui.IsItemHovered())
+        if (hovered)
         {
             drawList.AddRectFilled(min, max, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.1f)), rounding);
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -452,7 +463,7 @@ internal sealed class PhotoComposeSession
         {
             var min = new Vector2(startX + index * (side + gap), strip.Min.Y);
             var max = min + new Vector2(side, side);
-            DrawLocalThumbnail(selected[index], min, max, scale, style.PlaceholderFill);
+            DrawLocalThumbnail(selected[index], min, max, scale, style.PlaceholderFill, UiInteract.Hover(min, max));
             if (index == PreviewIndex)
             {
                 drawList.AddRect(min, max, ImGui.GetColorU32(style.Accent), 8f * scale, ImDrawFlags.RoundCornersAll,

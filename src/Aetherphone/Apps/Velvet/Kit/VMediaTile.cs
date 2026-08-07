@@ -1,7 +1,6 @@
 using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet.Kit;
 
@@ -21,7 +20,7 @@ internal static class VMediaTile
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         Squircle.Fill(drawList, min, max, radius, VelvetTheme.Alpha(VelvetTheme.PlumWell, alpha).Packed());
         Squircle.Stroke(drawList, min, max, radius, VelvetTheme.Alpha(VelvetTheme.Rose, 0.5f * alpha).Packed(),
             Metrics.Stroke.Hairline * scale);

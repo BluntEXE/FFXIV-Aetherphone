@@ -8,6 +8,7 @@ using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Photos;
 using Aetherphone.Core.Platform;
 using Aetherphone.Core.Shell;
+using Aetherphone.Core.Theme;
 using Aetherphone.Core.Updates;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows;
@@ -50,6 +51,7 @@ public sealed class Plugin : IDalamudPlugin
     internal static WallpaperLibrary Wallpapers { get; private set; } = null!;
     internal static DeviceStatus Device { get; private set; } = null!;
     internal static UpdateCheckService Updates { get; private set; } = null!;
+    internal static PhotoWindow PhotoWindow { get; private set; } = null!;
     private readonly WindowSystem windowSystem = new(AepConstants.Name);
     private readonly PhoneServices services;
     private readonly PhoneShell shell;
@@ -80,13 +82,18 @@ public sealed class Plugin : IDalamudPlugin
             Cfg.MigrateMessage();
             Cfg.MigrateMessagesMerge();
             Cfg.MigrateSetupCompleted();
+            Cfg.MigratePhoneWidth();
             Cfg.MigrateControlPanelRepack();
             Cfg.MigrateCharacterSessions();
+            Cfg.MigrateHousingRefreshFloor();
             InitializeLocalization();
             Device = new DeviceStatus(ClientState, ObjectTable, DataManager);
             services = PhoneServices.Build(Cfg, ChatGui, DataManager, ObjectTable, ClientState, Framework, DutyState,
                 TextureProvider, PluginInterface.ConfigDirectory, UnlockState, Condition);
-            Fonts = new FontService(PluginInterface, Cfg, services.Loading, Cfg.TextZoom);
+            FilePicker.ProblemReporter = message =>
+                services.Confirm.Alert(null, message, Loc.T(L.Common.Close));
+            Fonts = new FontService(PluginInterface, Cfg, services.Loading, Cfg.TextZoom,
+                PhoneSizeCatalog.ZoomFor(Cfg.PhoneWidth));
             EmojiCatalog.Load();
             Wallpapers = services.Wallpapers;
             var bundle = AppRegistry.BuildDefault(services);
@@ -95,8 +102,10 @@ public sealed class Plugin : IDalamudPlugin
             phoneWindow = new PhoneWindow(shell, Cfg);
             Updates = new UpdateCheckService(services.Http, PluginInterface);
             updateChipWindow = new UpdateChipWindow(phoneWindow, Updates, services.Themes);
+            PhotoWindow = new PhotoWindow(services.Themes);
             windowSystem.AddWindow(phoneWindow);
             windowSystem.AddWindow(updateChipWindow);
+            windowSystem.AddWindow(PhotoWindow);
             services.Visibility.Bind(() => phoneWindow is { IsOpen: true, IsMinimized: false });
             phoneEmote = new PhoneEmoteController(Cfg, Framework, ObjectTable, Condition, DataManager,
                 () => services.Visibility.IsVisible);
@@ -123,6 +132,7 @@ public sealed class Plugin : IDalamudPlugin
             PluginInterface.UiBuilder.Draw += windowSystem.Draw;
             PluginInterface.UiBuilder.Draw += FilePicker.Draw;
             PluginInterface.UiBuilder.OpenMainUi += phoneWindow.ToggleShell;
+            PluginInterface.UiBuilder.OpenConfigUi += phoneWindow.OpenSettings;
             PluginInterface.UiBuilder.DisableGposeUiHide = Cfg.ShowInGpose;
             ClientState.Login += OnLogin;
 
@@ -153,6 +163,7 @@ public sealed class Plugin : IDalamudPlugin
         if (phoneWindow is not null)
         {
             PluginInterface.UiBuilder.OpenMainUi -= phoneWindow.ToggleShell;
+            PluginInterface.UiBuilder.OpenConfigUi -= phoneWindow.OpenSettings;
         }
 
         ClientState.Login -= OnLogin;
@@ -240,6 +251,7 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.Draw -= windowSystem.Draw;
         PluginInterface.UiBuilder.Draw -= FilePicker.Draw;
         PluginInterface.UiBuilder.OpenMainUi -= phoneWindow.ToggleShell;
+        PluginInterface.UiBuilder.OpenConfigUi -= phoneWindow.OpenSettings;
         ClientState.Login -= OnLogin;
         Framework.Update -= OnAutoOpenTick;
         services.Notifications.Changed -= UpdateDtrBadge;
@@ -342,7 +354,32 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 
+        if (argument.Equals("run", StringComparison.OrdinalIgnoreCase) ||
+            argument.StartsWith("run ", StringComparison.OrdinalIgnoreCase))
+        {
+            RunShortcut(argument.Length > 4 ? argument.Substring(4).Trim() : string.Empty);
+            return;
+        }
+
         phoneWindow.ToggleShell();
+    }
+
+    private void RunShortcut(string name)
+    {
+        if (name.Length == 0)
+        {
+            ChatGui.Print(Loc.T(L.Plugin.RunUsage));
+            return;
+        }
+
+        var shortcut = services.Shortcuts.FindByName(name);
+        if (shortcut is null)
+        {
+            ChatGui.Print(Loc.T(L.Plugin.ShortcutNotFound, name));
+            return;
+        }
+
+        services.ShortcutRunner.Run(shortcut);
     }
 
     private void OnIncomingCall()

@@ -6,7 +6,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -56,6 +55,7 @@ internal sealed class NotificationCenter
     private long animId;
     private string animKey = string.Empty;
     private bool animGroup;
+    private PhoneNotification? animNotification;
     private Spring animOffset;
     private float animTarget;
 
@@ -76,6 +76,7 @@ internal sealed class NotificationCenter
         scrollGesture = false;
         axisLocked = false;
         animActive = false;
+        animNotification = null;
         states.Clear();
         groups.Clear();
         groupLookup.Clear();
@@ -84,13 +85,13 @@ internal sealed class NotificationCenter
 
     public void Draw(in PhoneContext context, Rect body)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         DrawCore(ImGui.GetWindowDrawList(), body, context.Theme, scale, 16f * scale, 1f, true);
     }
 
     public void DrawOverlay(ImDrawListPtr dl, Rect area, PhoneTheme theme, float opacity, bool interactive)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         DrawCore(dl, area, theme, scale, 0f, opacity, interactive);
     }
 
@@ -232,6 +233,12 @@ internal sealed class NotificationCenter
 
     private void PerformRemoval()
     {
+        if (animNotification is { } dismissed)
+        {
+            router.Acknowledge(dismissed);
+            animNotification = null;
+        }
+
         if (animGroup)
         {
             notifications.RemoveGroup(animKey);
@@ -267,6 +274,7 @@ internal sealed class NotificationCenter
         ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
+            router.AcknowledgeAll();
             notifications.Clear();
             Reset();
         }
@@ -498,6 +506,12 @@ internal sealed class NotificationCenter
                     }
 
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                    if (ImGui.IsMouseClicked(ImGuiMouseButton.Right))
+                    {
+                        SlideOut(candidate, UiScale.Current);
+                        break;
+                    }
+
                     if (drag.Begin(candidate.Rect))
                     {
                         BeginDrag(candidate);
@@ -522,6 +536,20 @@ internal sealed class NotificationCenter
                 ResolveGesture(totalDelta, scale);
             }
         }
+    }
+
+    private void SlideOut(in Candidate candidate, float scale)
+    {
+        animGroup = candidate.IsGroup;
+        animKey = candidate.Key;
+        animId = candidate.Id;
+        animNotification = candidate.Notification;
+        animRemoving = true;
+        animTarget = -(candidate.Width + 40f * scale);
+        animOffset.SnapTo(0f);
+        animActive = true;
+        swipeOffset = 0f;
+        dragNotification = null;
     }
 
     private void BeginDrag(in Candidate candidate)
@@ -561,6 +589,7 @@ internal sealed class NotificationCenter
         animGroup = dragGroup;
         animKey = dragKey;
         animId = dragId;
+        animNotification = commit ? dragNotification : null;
         animRemoving = commit;
         animTarget = commit ? -(dragWidth + 40f * scale) : 0f;
         animOffset.SnapTo(swipeOffset);

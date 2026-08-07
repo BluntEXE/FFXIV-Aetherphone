@@ -2,11 +2,11 @@ using Aetherphone.Apps.Velvet.Kit;
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -60,7 +60,7 @@ internal sealed partial class VelvetShell
 
     private void DrawEditProfile(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (avatarEditing)
         {
             var context = new PhoneContext(area, theme, navigation);
@@ -81,7 +81,19 @@ internal sealed partial class VelvetShell
 
         if (VHeader.Push(area, Loc.T(L.Velvet.EditProfile), theme))
         {
-            router.Pop();
+            if (!HasUnsavedEdits())
+            {
+                router.Pop();
+                return;
+            }
+
+            confirm.Ask(new ConfirmRequest
+            {
+                Message = Loc.T(L.Velvet.DiscardEdits),
+                ConfirmLabel = Loc.T(L.Velvet.DiscardEditsConfirm),
+                CancelLabel = Loc.T(L.Velvet.KeepEditing),
+                Confirm = () => router.Pop(),
+            });
             return;
         }
 
@@ -162,7 +174,7 @@ internal sealed partial class VelvetShell
 
     private void DrawEditAvatar()
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var block = Reserve(160f);
         var drawList = ImGui.GetWindowDrawList();
         var radius = 46f * scale;
@@ -198,7 +210,7 @@ internal sealed partial class VelvetShell
 
     private void DrawIntentEditor()
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var models = new VChipModel[VelvetIntent.All.Length];
         for (var index = 0; index < models.Length; index++)
@@ -218,7 +230,7 @@ internal sealed partial class VelvetShell
 
     private void DrawGenderPicker(ref int gender)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var options = VelvetGender.All;
         var models = new VChipModel[options.Length];
@@ -239,7 +251,7 @@ internal sealed partial class VelvetShell
 
     private void DrawSexualityPicker(ref int sexuality)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var options = VelvetSexuality.All;
         var models = new VChipModel[options.Length];
@@ -260,7 +272,7 @@ internal sealed partial class VelvetShell
 
     private void DrawRelationshipEditor()
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var options = VelvetRelationship.All;
         var models = new VChipModel[options.Length];
@@ -277,6 +289,46 @@ internal sealed partial class VelvetShell
         {
             editRelationship = options[clicked];
         }
+    }
+
+    private bool HasUnsavedEdits()
+    {
+        if (store.Me is not { } me)
+        {
+            return false;
+        }
+
+        return !string.Equals(editDisplayName, me.DisplayName, StringComparison.Ordinal)
+               || !string.Equals(editHandle, me.Handle, StringComparison.Ordinal)
+               || !string.Equals(editIntro, me.Intro, StringComparison.Ordinal)
+               || !string.Equals(editPronouns, me.Pronouns, StringComparison.Ordinal)
+               || editGender != VelvetGender.Sanitize(me.Gender)
+               || editSexuality != VelvetSexuality.Sanitize(me.Sexuality)
+               || editIntent != VelvetIntent.Sanitize(me.LookingFor)
+               || editRelationship != me.RelationshipStatus
+               || Differs(editRole, VelvetTags.Parse(me.Dynamic))
+               || Differs(editKinks, me.Kinks)
+               || Differs(editTags, me.Tags)
+               || Differs(editLimits, me.Limits);
+    }
+
+    private static bool Differs(List<string> edited, IReadOnlyList<string>? saved)
+    {
+        var count = saved?.Count ?? 0;
+        if (edited.Count != count)
+        {
+            return true;
+        }
+
+        for (var index = 0; index < edited.Count; index++)
+        {
+            if (!string.Equals(edited[index], saved![index], StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void SaveProfile()

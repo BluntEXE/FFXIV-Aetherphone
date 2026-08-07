@@ -9,7 +9,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Message;
 
@@ -23,7 +22,7 @@ internal sealed partial class MessageApp
 
     private float DrawReturnToCallBanner(Rect rect)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var min = new Vector2(rect.Min.X + 14f * scale, rect.Min.Y + 3f * scale);
         var max = new Vector2(rect.Max.X - 14f * scale, rect.Max.Y - 5f * scale);
@@ -60,7 +59,7 @@ internal sealed partial class MessageApp
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         AppHeader.Draw(new PhoneContext(area, theme, navigation), string.Empty, back);
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         DrawCallScreen(new PhoneContext(body, theme, navigation), view);
@@ -82,7 +81,7 @@ internal sealed partial class MessageApp
 
     private void DrawCallsTab(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (!session.IsSignedIn)
         {
             EmptyState.Draw(area, ui, FontAwesomeIcon.Phone, Loc.T(L.Phone.SignInTitle), Loc.T(L.Phone.SignInPrompt));
@@ -222,7 +221,7 @@ internal sealed partial class MessageApp
 
     private void DrawNewCall(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         AppHeader.Draw(new PhoneContext(area, theme, navigation), Loc.T(L.Phone.NewCall), back);
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         DrawContactPicker(body, addMode: false);
@@ -230,7 +229,7 @@ internal sealed partial class MessageApp
 
     private void DrawAddToCall(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         AppHeader.Draw(new PhoneContext(area, theme, navigation), Loc.T(L.Phone.AddToCall), back);
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         DrawContactPicker(body, addMode: true);
@@ -238,7 +237,7 @@ internal sealed partial class MessageApp
 
     private void DrawContactPicker(Rect body, bool addMode)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var searchRect = new Rect(body.Min, new Vector2(body.Max.X, body.Min.Y + CallSearchHeight * scale));
         SearchField.DrawSubmit(searchRect, "##msgCallSearch", Loc.T(L.Phone.FilterHint), ref searchDraft,
             AppPalettes.Message);
@@ -367,7 +366,7 @@ internal sealed partial class MessageApp
 
     private void DrawCallScreen(in PhoneContext context, CallView view)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var screenTheme = context.Theme;
         var content = context.Content;
         var drawList = ImGui.GetWindowDrawList();
@@ -506,7 +505,7 @@ internal sealed partial class MessageApp
         string label, Vector4 labelColor, float iconScale, bool enabled)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var min = center - new Vector2(radius, radius);
         var max = center + new Vector2(radius, radius);
         var hovered = enabled && UiInteract.Hover(min, max);

@@ -69,11 +69,32 @@ internal sealed record UserDto(
     int PendingFollowRequests = 0,
     string Region = "",
     int Badges = 0,
-    int GrantedBadges = 0) : IIdentified;
+    int GrantedBadges = 0,
+    string[]? ProfileBadges = null) : IIdentified;
 
 internal sealed record UpdateProfileRequest(string? DisplayName, string? Handle, string? Bio, string? AvatarUrl = null);
 
 internal sealed record UpdateBadgeLoadoutRequest(int Equipped);
+
+internal sealed record BadgeTranslationDto(string Lang, string Name);
+
+internal sealed record BadgeDescriptorDto(
+    string Id,
+    string Name,
+    string Icon,
+    string AssetIcon = "",
+    string AssetUrl = "",
+    string[]? Colors = null,
+    string Effect = "none",
+    string[]? Platforms = null,
+    BadgeTranslationDto[]? Translations = null,
+    bool? Hidden = null);
+
+internal sealed record BadgeCatalogDto(BadgeDescriptorDto[] Badges);
+
+internal sealed record AwardedBadgesDto(BadgeDescriptorDto[] Badges);
+
+internal sealed record UpdateBadgeVisibilityRequest(bool Hidden);
 
 internal sealed record PatreonLinkStartResponse(bool Ok, string? Reason, string? Url, int ExpiresInSeconds);
 
@@ -154,7 +175,8 @@ internal sealed record PostDto(
     int RepostCount = 0,
     bool MyReposted = false,
     bool Saved = false,
-    int AuthorBadges = 0) : IIdentified;
+    int AuthorBadges = 0,
+    string[]? AuthorBadgeIds = null) : IIdentified;
 
 internal sealed record FeedPage(PostDto[] Items, string? NextCursor);
 
@@ -190,7 +212,8 @@ internal sealed record StoryDto(
     bool Seen,
     int ViewCount,
     string ScanStatus = "clean",
-    int AuthorBadges = 0) : IIdentified;
+    int AuthorBadges = 0,
+    string[]? AuthorBadgeIds = null) : IIdentified;
 
 internal sealed record StoryRingDto(
     string AuthorId,
@@ -212,7 +235,8 @@ internal sealed record StoryViewerDto(
     string Handle,
     string? AvatarUrl,
     long ViewedAtUnix,
-    int Badges = 0);
+    int Badges = 0,
+    string[]? BadgeIds = null);
 
 internal sealed record StoryViewersPage(StoryViewerDto[] Items, int Total, string? NextCursor = null);
 
@@ -230,7 +254,8 @@ internal sealed record CommentDto(
     bool Liked,
     MentionDto[]? Mentions = null,
     string ScanStatus = "clean",
-    int AuthorBadges = 0) : IIdentified;
+    int AuthorBadges = 0,
+    string[]? AuthorBadgeIds = null) : IIdentified;
 
 internal sealed record CreateCommentRequest(string Text);
 
@@ -273,7 +298,8 @@ internal sealed record VelvetProfileDto(
     int WhoCanMessage = 0,
     int Sexuality = 0,
     string[]? Kinks = null,
-    string Region = "");
+    string Region = "",
+    string[]? BadgeIds = null);
 
 internal sealed record UpdateVelvetProfileRequest(
     string? Intro,
@@ -313,7 +339,8 @@ internal sealed record VelvetPostDto(
     string[]? MediaUrls = null,
     MentionDto[]? Mentions = null,
     int Audience = 0,
-    int OwnerBadges = 0) : IIdentified;
+    int OwnerBadges = 0,
+    string[]? OwnerBadgeIds = null) : IIdentified;
 
 internal sealed record VelvetFeedPage(VelvetPostDto[] Items, string? NextCursor);
 
@@ -343,7 +370,8 @@ internal sealed record VelvetCommentDto(
     bool Liked,
     MentionDto[]? Mentions = null,
     string ScanStatus = "clean",
-    int AuthorBadges = 0) : IIdentified;
+    int AuthorBadges = 0,
+    string[]? AuthorBadgeIds = null) : IIdentified;
 
 internal sealed record VelvetCommentPage(VelvetCommentDto[] Items, string? NextCursor);
 
@@ -435,7 +463,8 @@ internal sealed record NotificationDto(
     long CreatedAtUnix,
     string? CommentId = null,
     int ActorBadges = 0,
-    bool Read = false) : IIdentified;
+    bool Read = false,
+    string[]? ActorBadgeIds = null) : IIdentified;
 
 internal sealed record NotificationPage(
     NotificationDto[] Items,
@@ -564,7 +593,8 @@ internal sealed record ConversationMemberDto(
     int Role,
     bool IsActive,
     long? LastReadAtUnix = null,
-    int Badges = 0);
+    int Badges = 0,
+    string[]? BadgeIds = null);
 
 internal sealed record ChatMessageDto(
     string Id,
@@ -592,7 +622,8 @@ internal sealed record ChatMessageDto(
     int DurationSecs = 0,
     ReactionSummaryDto[]? Reactions = null,
     long? EditedAtUnix = null,
-    int SenderBadges = 0) : IIdentified;
+    int SenderBadges = 0,
+    string[]? SenderBadgeIds = null) : IIdentified;
 
 internal sealed record ReactionSummaryDto(string Token, int Count, bool Mine);
 

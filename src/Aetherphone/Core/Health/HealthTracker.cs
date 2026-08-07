@@ -757,18 +757,7 @@ internal sealed class HealthTracker : IDisposable
         return start < end ? current >= start && current < end : current >= start || current < end;
     }
 
-    private bool RemindersSuppressed()
-    {
-        if (!profile.ReminderPauseInDuties)
-        {
-            return false;
-        }
-
-        var c = Plugin.Condition;
-        return c[ConditionFlag.InCombat] || c[ConditionFlag.BoundByDuty] || c[ConditionFlag.BoundByDuty56] ||
-               c[ConditionFlag.WatchingCutscene] || c[ConditionFlag.OccupiedInCutSceneEvent] ||
-               c[ConditionFlag.BetweenAreas];
-    }
+    private bool RemindersSuppressed() => profile.ReminderPauseInDuties && PlayerBusy.Now;
 
     public (double Current, double Target) GoalProgress(HealthGoal goal)
     {

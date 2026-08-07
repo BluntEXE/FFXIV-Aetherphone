@@ -20,8 +20,9 @@ internal sealed partial class ShortcutsApp
     private Guid draftId = Guid.Empty;
     private bool draftPinned;
     private string hexBuffer = string.Empty;
-    private string iconPluginOption = string.Empty;
     private int pendingStepRemoval = -1;
+
+    private void Warn(string message) => confirm.Alert(null, message, Loc.T(L.Shortcuts.Ok));
 
     private bool WarnIfFull()
     {
@@ -30,13 +31,7 @@ internal sealed partial class ShortcutsApp
             return false;
         }
 
-        confirm.Ask(new ConfirmRequest
-        {
-            Message = Loc.T(L.Shortcuts.LimitReached, ShortcutStore.MaxShortcuts),
-            ConfirmLabel = Loc.T(L.Shortcuts.Ok),
-            CancelLabel = string.Empty,
-            Confirm = () => { },
-        });
+        Warn(Loc.T(L.Shortcuts.LimitReached, ShortcutStore.MaxShortcuts));
         return true;
     }
 
@@ -251,7 +246,8 @@ internal sealed partial class ShortcutsApp
         if (step.Kind == ShortcutStepKind.Wait)
         {
             StepperField.Draw(ui, rect, Loc.T(L.Shortcuts.WaitSeconds, Seconds(step.Seconds)), scale,
-                () => step.Seconds = MathF.Max(0.1f, MathF.Round((step.Seconds - 0.5f) * 10f) / 10f),
+                () => step.Seconds = MathF.Max(ShortcutRunner.MinWaitSeconds,
+                    MathF.Round((step.Seconds - 0.5f) * 10f) / 10f),
                 () => step.Seconds = MathF.Min(ShortcutRunner.MaxWaitSeconds,
                     MathF.Round((step.Seconds + 0.5f) * 10f) / 10f));
             return;
@@ -316,8 +312,7 @@ internal sealed partial class ShortcutsApp
         var openRect = new Rect(openMin, new Vector2(openMin.X + buttonWidth, secondRowY + height));
         if (ui.PillButton(openRect, Loc.T(L.Shortcuts.AddOpen), false))
         {
-            pluginQuery = string.Empty;
-            router.Push(ShortcutsScreen.PluginPicker);
+            OpenPluginPicker(false);
         }
 
         var linkMin = new Vector2(origin.X + buttonWidth + gap, secondRowY);
@@ -327,10 +322,33 @@ internal sealed partial class ShortcutsApp
             draft.Steps.Add(new ShortcutStep { Kind = ShortcutStepKind.OpenUrl });
         }
 
+        var pasteMin = new Vector2(origin.X, secondRowY + height + gap);
+        var pasteRect = new Rect(pasteMin, new Vector2(origin.X + width, pasteMin.Y + height));
+        if (ui.PillButton(pasteRect, Loc.T(L.Shortcuts.PasteMacro), false))
+        {
+            PasteMacro();
+        }
+
         ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, height * 2f + gap + Metrics.Space.Lg * scale));
+        ImGui.Dummy(new Vector2(width, height * 3f + gap * 2f + Metrics.Space.Lg * scale));
         ui.HelpText(Loc.T(L.Shortcuts.StepsHint));
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
+    }
+
+    private void PasteMacro()
+    {
+        var added = ShortcutMacro.Append(ImGui.GetClipboardText(), draft!.Steps, ShortcutStore.MaxSteps,
+            out var truncated);
+        if (truncated)
+        {
+            Warn(Loc.T(L.Shortcuts.StepLimitReached, ShortcutStore.MaxSteps));
+            return;
+        }
+
+        if (added == 0)
+        {
+            Warn(Loc.T(L.Shortcuts.PasteEmpty));
+        }
     }
 
     private void DrawEditorOptions(float scale)
@@ -365,6 +383,26 @@ internal sealed partial class ShortcutsApp
         {
             return;
         }
+
+        var pairOrigin = ImGui.GetCursorScreenPos();
+        var gap = Metrics.Space.Sm * scale;
+        var halfWidth = (width - gap) * 0.5f;
+        var duplicateRect = new Rect(pairOrigin, new Vector2(pairOrigin.X + halfWidth, pairOrigin.Y + height));
+        if (ui.PillButton(duplicateRect, Loc.T(L.Shortcuts.Duplicate), false))
+        {
+            DuplicateDraft();
+            return;
+        }
+
+        var shareMin = new Vector2(pairOrigin.X + halfWidth + gap, pairOrigin.Y);
+        var shareRect = new Rect(shareMin, new Vector2(shareMin.X + halfWidth, pairOrigin.Y + height));
+        if (ui.PillButton(shareRect, Loc.T(copiedClock > 0f ? L.Shortcuts.Copied : L.Shortcuts.Share), false))
+        {
+            CopyDraftCode();
+        }
+
+        ImGui.SetCursorScreenPos(pairOrigin);
+        ImGui.Dummy(new Vector2(width, height + Metrics.Space.Sm * scale));
 
         var deleteOrigin = ImGui.GetCursorScreenPos();
         var deleteRect = new Rect(deleteOrigin, new Vector2(deleteOrigin.X + width, deleteOrigin.Y + height));
@@ -402,6 +440,30 @@ internal sealed partial class ShortcutsApp
         draft = null;
         draftId = Guid.Empty;
         router.Pop();
+    }
+
+    private void DuplicateDraft()
+    {
+        if (draft is null || WarnIfFull())
+        {
+            return;
+        }
+
+        var copy = draft.Copy();
+        copy.Name = CopyName(draft.Name);
+        PruneEmptySteps(copy);
+        store.Add(copy);
+        draft = copy.Copy();
+        draftId = copy.Id;
+        draftPinned = false;
+    }
+
+    private static string CopyName(string name)
+    {
+        var candidate = Loc.T(L.Shortcuts.CopyName, ShortcutRunText.Name(name).Trim());
+        return candidate.Length <= ShortcutStore.NameMaxLength
+            ? candidate
+            : candidate.Substring(0, ShortcutStore.NameMaxLength);
     }
 
     private static void PruneEmptySteps(ShortcutEntry entry)
@@ -460,27 +522,7 @@ internal sealed partial class ShortcutsApp
     private void OpenAppearance()
     {
         hexBuffer = draft!.Tint;
-        iconPluginOption = ResolveIconPluginOption(draft);
         router.Push(ShortcutsScreen.Appearance);
-    }
-
-    private static string ResolveIconPluginOption(ShortcutEntry entry)
-    {
-        if (entry.IconPlugin.Length > 0)
-        {
-            return entry.IconPlugin;
-        }
-
-        for (var index = 0; index < entry.Steps.Count; index++)
-        {
-            var step = entry.Steps[index];
-            if (step.Kind == ShortcutStepKind.OpenPlugin && step.Text.Length > 0)
-            {
-                return step.Text;
-            }
-        }
-
-        return string.Empty;
     }
 
     private void DrawAppearance(Rect content, float scale)
@@ -566,32 +608,8 @@ internal sealed partial class ShortcutsApp
     private void DrawGlyphSection(ShortcutEntry entry, float scale)
     {
         ui.SectionLabel(Loc.T(L.Shortcuts.Symbol), TextStyles.FootnoteEmphasized, 6f);
-        if (iconPluginOption.Length > 0)
-        {
-            var card = GroupCard.Begin(theme, 1, Metrics.Size.Row);
-            var row = card.NextRow();
-            var toggleWidth = Metrics.Size.ToggleWidth * scale;
-            var toggleHeight = Metrics.Size.ToggleHeight * scale;
-            var toggleMin = new Vector2(row.Max.X - toggleWidth, row.Center.Y - toggleHeight * 0.5f);
-            var label = Loc.T(L.Shortcuts.UsePluginIcon);
-            var labelSize = Typography.Measure(label, TextStyles.Body);
-            Typography.Draw(new Vector2(row.Min.X, row.Center.Y - labelSize.Y * 0.5f), label, ui.TitleInk,
-                TextStyles.Body);
-            var usesPluginIcon = entry.IconPlugin.Length > 0;
-            var wanted = Toggle.Draw("shortcuts.usePluginIcon",
-                new Rect(toggleMin, toggleMin + new Vector2(toggleWidth, toggleHeight)), usesPluginIcon, theme);
-            card.End();
-            if (wanted != usesPluginIcon)
-            {
-                entry.IconPlugin = wanted ? iconPluginOption : string.Empty;
-            }
-
-            ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
-            if (entry.IconPlugin.Length > 0)
-            {
-                return;
-            }
-        }
+        var usesPluginIcon = entry.IconPlugin.Length > 0;
+        DrawIconPluginRow(entry, usesPluginIcon, scale);
 
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
@@ -608,7 +626,7 @@ internal sealed partial class ShortcutsApp
             var min = center - new Vector2(tile * 0.5f);
             var max = center + new Vector2(tile * 0.5f);
             var glyph = index == 0 ? 0 : (int)ShortcutPalette.Glyphs[index - 1];
-            var active = entry.Glyph == glyph;
+            var active = !usesPluginIcon && entry.Glyph == glyph;
             Squircle.Fill(drawList, min, max, tile * 0.28f,
                 ImGui.GetColorU32(active ? Palette.WithAlpha(ui.Accent, 0.32f) : ui.FieldSurface));
             if (active)
@@ -635,5 +653,22 @@ internal sealed partial class ShortcutsApp
 
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, rows * cell));
+    }
+
+    private void DrawIconPluginRow(ShortcutEntry entry, bool usesPluginIcon, float scale)
+    {
+        var card = GroupCard.Begin(theme, 1, Metrics.Size.Row);
+        var value = usesPluginIcon
+            ? catalog.DisplayName(entry.IconPlugin)
+            : Loc.T(L.Shortcuts.PluginIconNone);
+        var picked = SettingsRow.Disclosure(card.NextRow(), Loc.T(L.Shortcuts.PluginIcon), value, theme,
+            "shortcuts.iconPlugin");
+        card.End();
+        if (picked)
+        {
+            OpenPluginPicker(true);
+        }
+
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
     }
 }

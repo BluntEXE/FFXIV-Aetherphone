@@ -3,7 +3,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Sharing;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Photos;
 
@@ -14,7 +13,7 @@ internal sealed partial class PhotosApp
 
     private void DrawViewer(Rect screen)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (viewerPaths.Length == 0)
         {
             router.Pop(false);
@@ -30,7 +29,10 @@ internal sealed partial class PhotosApp
         var texture = GetFull(path) ?? thumbnails.Get(path);
         if (texture is not null)
         {
-            zoomView.Draw(screen, texture, frameTheme, 0f, controls: safe);
+            if (zoomView.Draw(screen, texture, frameTheme, 0f, controls: safe))
+            {
+                Plugin.PhotoWindow.Open(() => GetFull(path) ?? thumbnails.Get(path), this);
+            }
         }
         else
         {
@@ -67,6 +69,13 @@ internal sealed partial class PhotosApp
             PhotosChrome.Share(new Vector2(safe.Max.X - 58f * scale, rowCenterY), White, scale))
         {
             share.Offer(new ShareItem(ShareKind.Photo, path, Id));
+            return;
+        }
+
+        if (customAlbums.Count > 0 &&
+            PhotosChrome.AddToAlbum(new Vector2(safe.Max.X - 96f * scale, rowCenterY), White, scale))
+        {
+            router.Push(PhotoView.AddToAlbum());
             return;
         }
 

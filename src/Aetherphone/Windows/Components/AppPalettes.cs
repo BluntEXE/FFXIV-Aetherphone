@@ -194,6 +194,28 @@ internal static class AppPalettes
         HoverTint = DefaultHover,
     };
 
+    public static readonly AppPalette Housing = new()
+    {
+        Accent = AppAccents.For("housing"),
+        TitleInk = new(0.97f, 0.97f, 0.94f, 1f),
+        BodyInk = new(0.90f, 0.92f, 0.87f, 0.96f),
+        MutedInk = new(0.70f, 0.75f, 0.70f, 0.88f),
+        HeaderInk = new(0.72f, 0.88f, 0.76f, 0.95f),
+        HeadingInk = new(0.95f, 0.97f, 0.93f, 1f),
+        BackdropTop = new(0.07f, 0.13f, 0.11f, 1f),
+        BackdropBottom = new(0.03f, 0.05f, 0.05f, 1f),
+        BloomTop = new(0.28f, 0.62f, 0.44f, 0.20f),
+        BloomBottom = new(0.16f, 0.30f, 0.24f, 0f),
+        CardFill = GlassFill,
+        CardStroke = GlassStroke,
+        FieldSurface = GlassField,
+        HoverTint = DefaultHover,
+    };
+    public static readonly Vector4 HousingParchment = new(0.86f, 0.80f, 0.66f, 1f);
+    public static readonly Vector4 HousingBrass = new(0.84f, 0.68f, 0.34f, 1f);
+    public static readonly Vector4 HousingResults = new(0.94f, 0.68f, 0.26f, 1f);
+    public static readonly Vector4 HousingClosed = new(0.55f, 0.58f, 0.60f, 1f);
+
     public static readonly AppPalette Muster = new()
     {
         Accent = AppAccents.For("muster"),

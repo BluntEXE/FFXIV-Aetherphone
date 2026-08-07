@@ -24,6 +24,7 @@ internal sealed class AethernetApi
         Announcements = new AnnouncementsClient(net);
         Musters = new MusterClient(net);
         Ads = new YellowPagesClient(net);
+        Radio = new RadioClient(net);
     }
 
     public AuthClient Auth { get; }
@@ -42,4 +43,5 @@ internal sealed class AethernetApi
     public AnnouncementsClient Announcements { get; }
     public MusterClient Musters { get; }
     public YellowPagesClient Ads { get; }
+    public RadioClient Radio { get; }
 }

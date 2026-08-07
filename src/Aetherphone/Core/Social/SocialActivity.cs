@@ -26,11 +26,13 @@ internal static class SocialActivity
     public const int TypeAdOpened = 18;
     public const int TypeAdInquiry = 19;
     public const int TypeMissedCall = 20;
+    public const int TypeRadioLive = 21;
     public const string ChirperApp = "chirper";
     public const string AethergramApp = "aethergram";
     public const string VelvetApp = "velvet";
     public const string YellowPagesApp = "yellowpages";
     public const string MessageApp = "message";
+    public const string MusicApp = "music";
 
     public static bool IsModerationNotice(int type) =>
         type is TypePostRemoved or TypeWarning or TypeReportUpdate;
@@ -115,6 +117,10 @@ internal static class SocialActivity
                     : Loc.T(L.YellowPages.NotifInquiryBody, item.Preview);
             case TypeMissedCall:
                 return Loc.T(L.Phone.MissedCallBody);
+            case TypeRadioLive:
+                return string.IsNullOrEmpty(item.Preview)
+                    ? Loc.T(L.Music.NotifLiveGeneric)
+                    : Loc.T(L.Music.NotifLiveBody, item.Preview);
             default:
                 return string.Empty;
         }

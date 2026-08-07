@@ -148,7 +148,7 @@ internal sealed class HomeLayoutService
 
     public void MoveTile(HomeTile tile, int targetPage, GridCell cell)
     {
-        if (targetPage < 0 || targetPage >= pages.Count)
+        if (targetPage < 0 || targetPage > pages.Count)
         {
             return;
         }
@@ -156,6 +156,11 @@ internal sealed class HomeLayoutService
         if (!Detach(tile))
         {
             return;
+        }
+
+        if (targetPage == pages.Count)
+        {
+            pages.Add(new List<HomeTile>());
         }
 
         tile.Cell = cell;
@@ -166,14 +171,18 @@ internal sealed class HomeLayoutService
     public bool TryResolveDrop(int page, HomeTile tile, GridCell desired, out GridCell cell)
     {
         cell = HomeGridSolver.Unassigned;
-        if (page < 0 || page >= pages.Count)
+        if (page < 0 || page > pages.Count)
         {
             return false;
         }
 
         Span<bool> occupied = stackalloc bool[HomeGridSolver.MaxCells];
         occupied.Clear();
-        Occupy(occupied, pages[page], tile);
+        if (page < pages.Count)
+        {
+            Occupy(occupied, pages[page], tile);
+        }
+
         return HomeGridSolver.TryFindFree(occupied, Columns, rows, tile.ColumnSpan, tile.RowSpan, desired, out cell);
     }
 
@@ -214,8 +223,8 @@ internal sealed class HomeLayoutService
 
     public void MakeFolder(HomeTile target, HomeTile dragged)
     {
-        if (ReferenceEquals(target, dragged) || target.IsWidget || dragged.IsWidget || target.IsShortcut ||
-            dragged.IsShortcut || target.IsFolder && dragged.IsFolder)
+        if (ReferenceEquals(target, dragged) || target.IsWidget || dragged.IsWidget
+            || target.IsFolder && dragged.IsFolder)
         {
             return;
         }
@@ -228,29 +237,29 @@ internal sealed class HomeLayoutService
 
         if (target.IsFolder)
         {
-            AddApps(target, dragged);
+            AddMember(target, dragged);
         }
         else
         {
             (targetPage, targetIndex) = Locate(target);
-            var folder = HomeTile.ForFolder(NextFolderKey(), string.Empty, new[] { target.App! });
+            var folder = HomeTile.ForFolder(NextFolderKey(), string.Empty, new[] { HomeTile.AsLeaf(target) });
             folder.Cell = target.Cell;
-            AddApps(folder, dragged);
+            AddMember(folder, dragged);
             pages[targetPage][targetIndex] = folder;
         }
 
         Commit();
     }
 
-    public void RemoveFromFolder(HomeTile folder, IPhoneApp app, int targetPage)
+    public void RemoveFromFolder(HomeTile folder, HomeTile member, int targetPage)
     {
-        if (!folder.IsFolder || !folder.Apps.Remove(app))
+        if (!folder.IsFolder || !folder.Members.Remove(member))
         {
             return;
         }
 
         targetPage = Math.Clamp(targetPage, 0, Math.Max(0, pages.Count - 1));
-        pages[targetPage].Add(HomeTile.ForApp(app));
+        pages[targetPage].Add(HomeTile.AsLeaf(member));
         Commit();
     }
 
@@ -347,11 +356,11 @@ internal sealed class HomeLayoutService
                     return;
                 }
 
-                for (var appIndex = tile.Apps.Count - 1; appIndex >= 0; appIndex--)
+                for (var memberIndex = tile.Members.Count - 1; memberIndex >= 0; memberIndex--)
                 {
-                    if (string.Equals(tile.Apps[appIndex].Id, appId, StringComparison.Ordinal))
+                    if (string.Equals(tile.Members[memberIndex].App?.Id, appId, StringComparison.Ordinal))
                     {
-                        tile.Apps.RemoveAt(appIndex);
+                        tile.Members.RemoveAt(memberIndex);
                         return;
                     }
                 }
@@ -366,9 +375,23 @@ internal sealed class HomeLayoutService
             var tiles = pages[page];
             for (var index = 0; index < tiles.Count; index++)
             {
-                if (tiles[index].Shortcut?.Id == id)
+                var tile = tiles[index];
+                if (tile.Shortcut?.Id == id)
                 {
                     return true;
+                }
+
+                if (!tile.IsFolder)
+                {
+                    continue;
+                }
+
+                for (var memberIndex = 0; memberIndex < tile.Members.Count; memberIndex++)
+                {
+                    if (tile.Members[memberIndex].Shortcut?.Id == id)
+                    {
+                        return true;
+                    }
                 }
             }
         }
@@ -396,10 +419,26 @@ internal sealed class HomeLayoutService
             var tiles = pages[page];
             for (var index = tiles.Count - 1; index >= 0; index--)
             {
-                if (tiles[index].Shortcut?.Id == id)
+                var tile = tiles[index];
+                if (tile.Shortcut?.Id == id)
                 {
                     tiles.RemoveAt(index);
                     removed = true;
+                    continue;
+                }
+
+                if (!tile.IsFolder)
+                {
+                    continue;
+                }
+
+                for (var memberIndex = tile.Members.Count - 1; memberIndex >= 0; memberIndex--)
+                {
+                    if (tile.Members[memberIndex].Shortcut?.Id == id)
+                    {
+                        tile.Members.RemoveAt(memberIndex);
+                        removed = true;
+                    }
                 }
             }
         }
@@ -469,10 +508,10 @@ internal sealed class HomeLayoutService
         }
 
         pages[page].RemoveAt(index);
-        for (var appIndex = 0; appIndex < folder.Apps.Count; appIndex++)
+        for (var memberIndex = 0; memberIndex < folder.Members.Count; memberIndex++)
         {
-            var tile = HomeTile.ForApp(folder.Apps[appIndex]);
-            if (appIndex == 0)
+            var tile = HomeTile.AsLeaf(folder.Members[memberIndex]);
+            if (memberIndex == 0)
             {
                 tile.Cell = folder.Cell;
             }
@@ -507,19 +546,19 @@ internal sealed class HomeLayoutService
         return true;
     }
 
-    private static void AddApps(HomeTile folder, HomeTile source)
+    private static void AddMember(HomeTile folder, HomeTile source)
     {
         if (source.IsFolder)
         {
-            for (var index = 0; index < source.Apps.Count; index++)
+            for (var index = 0; index < source.Members.Count; index++)
             {
-                folder.Apps.Add(source.Apps[index]);
+                folder.Members.Add(source.Members[index]);
             }
 
             return;
         }
 
-        folder.Apps.Add(source.App!);
+        folder.Members.Add(HomeTile.AsLeaf(source));
     }
 
     private void Load()
@@ -712,14 +751,14 @@ internal sealed class HomeLayoutService
     {
         if (string.Equals(item.Kind, "folder", StringComparison.Ordinal))
         {
-            var contents = ResolveApps(item.AppIds, placed);
+            var contents = ResolveFolderMembers(item, placed);
             if (contents.Count == 0)
             {
                 return null;
             }
 
             return contents.Count == 1
-                ? HomeTile.ForApp(contents[0])
+                ? HomeTile.AsLeaf(contents[0])
                 : HomeTile.ForFolder(NextFolderKey(), item.FolderName, contents, item.FolderTint);
         }
 
@@ -778,6 +817,52 @@ internal sealed class HomeLayoutService
                 page.Add(HomeTile.ForApp(app));
             }
         }
+    }
+
+    private List<HomeTile> ResolveFolderMembers(HomeItem item, HashSet<string> placed)
+    {
+        if (item.Members.Count > 0)
+        {
+            var contents = new List<HomeTile>(item.Members.Count);
+            for (var index = 0; index < item.Members.Count; index++)
+            {
+                if (ResolveFolderMember(item.Members[index], placed) is { } member)
+                {
+                    contents.Add(member);
+                }
+            }
+
+            return contents;
+        }
+
+        var apps = ResolveApps(item.AppIds, placed);
+        var legacy = new List<HomeTile>(apps.Count);
+        for (var index = 0; index < apps.Count; index++)
+        {
+            legacy.Add(HomeTile.ForApp(apps[index]));
+        }
+
+        return legacy;
+    }
+
+    private HomeTile? ResolveFolderMember(HomeItem item, HashSet<string> placed)
+    {
+        if (string.Equals(item.Kind, "shortcut", StringComparison.Ordinal))
+        {
+            if (!Guid.TryParse(item.ShortcutId, out var shortcutId) || shortcuts.Find(shortcutId) is not { } shortcut)
+            {
+                return null;
+            }
+
+            return HomeTile.ForShortcut(shortcut);
+        }
+
+        if (byId.TryGetValue(item.AppId, out var app) && app.IsAvailable && placed.Add(app.Id))
+        {
+            return HomeTile.ForApp(app);
+        }
+
+        return null;
     }
 
     private List<IPhoneApp> ResolveApps(List<string> ids, HashSet<string> placed)
@@ -875,14 +960,14 @@ internal sealed class HomeLayoutService
             for (var index = pages[page].Count - 1; index >= 0; index--)
             {
                 var tile = pages[page][index];
-                if (!tile.IsFolder || tile.Apps.Count > 1)
+                if (!tile.IsFolder || tile.Members.Count > 1)
                 {
                     continue;
                 }
 
-                if (tile.Apps.Count == 1)
+                if (tile.Members.Count == 1)
                 {
-                    var folded = HomeTile.ForApp(tile.Apps[0]);
+                    var folded = HomeTile.AsLeaf(tile.Members[0]);
                     folded.Cell = tile.Cell;
                     pages[page][index] = folded;
                 }
@@ -954,6 +1039,15 @@ internal sealed class HomeLayoutService
                 {
                     target.Add(item.AppIds[appIndex]);
                 }
+
+                for (var memberIndex = 0; memberIndex < item.Members.Count; memberIndex++)
+                {
+                    var member = item.Members[memberIndex];
+                    if (!string.IsNullOrEmpty(member.AppId))
+                    {
+                        target.Add(member.AppId);
+                    }
+                }
             }
         }
 
@@ -1011,9 +1105,23 @@ internal sealed class HomeLayoutService
         if (tile.IsFolder)
         {
             var item = new HomeItem { Kind = "folder", FolderName = tile.FolderName, FolderTint = tile.FolderTint };
-            for (var appIndex = 0; appIndex < tile.Apps.Count; appIndex++)
+            for (var memberIndex = 0; memberIndex < tile.Members.Count; memberIndex++)
             {
-                item.AppIds.Add(tile.Apps[appIndex].Id);
+                var member = tile.Members[memberIndex];
+                if (member.IsShortcut)
+                {
+                    item.Members.Add(new HomeItem
+                    {
+                        Kind = "shortcut", ShortcutId = member.Shortcut!.Id.ToString("N"),
+                    });
+                    continue;
+                }
+
+                var appId = member.App!.Id;
+                item.Members.Add(new HomeItem { Kind = "app", AppId = appId });
+
+                // Mirrored into AppIds so rolling back to a build that only reads AppIds keeps the app grouping.
+                item.AppIds.Add(appId);
             }
 
             return item;
