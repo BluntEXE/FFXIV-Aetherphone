@@ -42,10 +42,33 @@ internal sealed class DirectMessagesStore : ChatThreadStoreBase<ChatMessageDto, 
 
     public override bool RealtimePushActive => signals.RealtimeActive;
 
-    private void OnChatPinged()
+    private void OnChatPinged(ChatSignal signal)
     {
         InboxCadence.RequestImmediate();
-        RefreshThreadIfVisible();
+        if (signal.Message is { } pushed && ConversationId == pushed.ConversationId)
+        {
+            ApplyPushedMessage(pushed);
+            return;
+        }
+
+        RequestThreadRefresh(signal.ConversationId);
+    }
+
+    private void ApplyPushedMessage(ChatMessageDto message)
+    {
+        MergePushedMessage(message.ConversationId, message);
+        if (message.EncVersion == EnvelopeCodec.VersionEnvelope && DecryptionState(message.Id).IsPlaceholder)
+        {
+            RequestThreadRefresh(message.ConversationId);
+        }
+
+        if (!IsBeingViewed(message.ConversationId))
+        {
+            return;
+        }
+
+        work.Run("mark read", async token =>
+            await client.MarkReadAsync(message.ConversationId, token).ConfigureAwait(false));
     }
 
     public ConversationDto[] Conversations => ThreadListItems;

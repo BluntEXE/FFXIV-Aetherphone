@@ -43,6 +43,11 @@ internal sealed class ChatClient
         return net.GetAsync(path, AethernetJsonContext.Default.ChatMessagePage, token);
     }
 
+    public Task<bool> MarkReadAsync(string conversationId, CancellationToken token)
+    {
+        return net.SendAsync(HttpMethod.Post, $"/chats/{Uri.EscapeDataString(conversationId)}/read", token);
+    }
+
     public Task<ChatMessageDto?> SendMessageAsync(string conversationId, string body, int kind, CancellationToken token, string? mediaKey = null, int mediaWidth = 0, int mediaHeight = 0, int encVersion = 0, string? commitmentTag = null, string? replyToId = null, string? forwardOfId = null, bool forwarded = false, int durationSecs = 0)
     {
         return net.PostAsync($"/chats/{Uri.EscapeDataString(conversationId)}/messages", new SendChatMessageRequest(body, kind, mediaKey, mediaWidth, mediaHeight, encVersion, commitmentTag, replyToId, forwardOfId, forwarded, durationSecs), AethernetJsonContext.Default.SendChatMessageRequest, AethernetJsonContext.Default.ChatMessageDto, token);

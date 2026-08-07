@@ -121,11 +121,6 @@ internal sealed class HttpService : IDisposable
     public async Task<bool> PutBytesAsync(Uri uri, byte[] content, string contentType, CancellationToken token,
         string? bearer = null)
     {
-        if (IsPaused(uri))
-        {
-            return false;
-        }
-
         using var request = new HttpRequestMessage(HttpMethod.Put, uri) { Content = new ByteArrayContent(content), };
         request.Content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
         ApplyHeaders(request, bearer, null);
@@ -135,7 +130,6 @@ internal sealed class HttpService : IDisposable
             using var response = await client.SendAsync(request, scope.Token).ConfigureAwait(false);
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
             {
-                PauseHost(uri, response);
                 return false;
             }
 
@@ -157,7 +151,7 @@ internal sealed class HttpService : IDisposable
         string? appScope = null)
     {
         using var request = new HttpRequestMessage(method, url);
-        if (IsPaused(request.RequestUri))
+        if (IsPollingPaused(request))
         {
             onStatus?.Invoke(RateLimitedStatus);
             return false;
@@ -173,7 +167,7 @@ internal sealed class HttpService : IDisposable
             onStatus?.Invoke((int)response.StatusCode);
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
             {
-                PauseHost(request.RequestUri, response);
+                PauseIfPolling(request, response);
                 return false;
             }
 
@@ -194,7 +188,7 @@ internal sealed class HttpService : IDisposable
         Action<int>? onStatus = null, string? appScope = null)
     {
         using var request = new HttpRequestMessage(method, url);
-        if (IsPaused(request.RequestUri))
+        if (IsPollingPaused(request))
         {
             onStatus?.Invoke(RateLimitedStatus);
             return false;
@@ -208,7 +202,7 @@ internal sealed class HttpService : IDisposable
             onStatus?.Invoke((int)response.StatusCode);
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
             {
-                PauseHost(request.RequestUri, response);
+                PauseIfPolling(request, response);
                 return false;
             }
 
@@ -228,7 +222,7 @@ internal sealed class HttpService : IDisposable
     private async Task<T?> SendForJsonAsync<T>(HttpRequestMessage request, JsonTypeInfo<T> typeInfo, string? bearer,
         Action<int>? onStatus, string? appScope, CancellationToken token)
     {
-        if (IsPaused(request.RequestUri))
+        if (IsPollingPaused(request))
         {
             onStatus?.Invoke(RateLimitedStatus);
             return default;
@@ -253,7 +247,7 @@ internal sealed class HttpService : IDisposable
             onStatus?.Invoke((int)response.StatusCode);
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
             {
-                PauseHost(request.RequestUri, response);
+                PauseIfPolling(request, response);
                 return default;
             }
 
@@ -331,6 +325,21 @@ internal sealed class HttpService : IDisposable
 
         pausedHostsUntilTicks.TryRemove(uri.Host, out _);
         return false;
+    }
+
+    private bool IsPollingPaused(HttpRequestMessage request)
+    {
+        return request.Method == HttpMethod.Get && IsPaused(request.RequestUri);
+    }
+
+    private void PauseIfPolling(HttpRequestMessage request, HttpResponseMessage response)
+    {
+        if (request.Method != HttpMethod.Get)
+        {
+            return;
+        }
+
+        PauseHost(request.RequestUri, response);
     }
 
     private void PauseHost(Uri? uri, HttpResponseMessage response)

@@ -232,6 +232,7 @@
   "common.fileKindAudio": "音频",
   "common.fileKindAll": "所有文件",
   "common.rateLimited": "请求过多，{0} 秒后重试",
+  "common.chatOutOfDate": "可能不是最新的。{0} 秒后重试",
   "message.threadEmpty": "打个招呼吧",
   "social.likedChirp": "赞了你的叽叽",
   "social.likedPhoto": "赞了你的照片",

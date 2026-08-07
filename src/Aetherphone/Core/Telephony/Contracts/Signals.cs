@@ -1,3 +1,5 @@
+using Aetherphone.Core.Aethernet.Contracts;
+
 namespace Aetherphone.Core.Telephony.Contracts;
 
 internal static class SignalType
@@ -60,4 +62,5 @@ internal sealed record CallControl
     public string? ContentKind { get; init; }
     public string? ContentId { get; init; }
     public string? ParentId { get; init; }
+    public ChatMessageDto? Message { get; init; }
 }

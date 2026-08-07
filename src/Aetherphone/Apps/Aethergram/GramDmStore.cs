@@ -48,7 +48,7 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
     private void OnGramPinged()
     {
         InboxCadence.RequestImmediate();
-        RefreshThreadIfVisible();
+        RequestThreadRefresh();
     }
 
     public GramThreadDto[] Threads => ThreadListItems;

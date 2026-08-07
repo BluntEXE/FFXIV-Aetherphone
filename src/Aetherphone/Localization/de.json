@@ -232,6 +232,7 @@
   "common.fileKindAudio": "Audio",
   "common.fileKindAll": "Alle Dateien",
   "common.rateLimited": "Zu viele Anfragen. Neuer Versuch in {0}s",
+  "common.chatOutOfDate": "Möglicherweise nicht aktuell. Neuer Versuch in {0}s",
   "message.threadEmpty": "Sag Hallo",
   "social.likedChirp": "gefällt dein Chirp",
   "social.likedPhoto": "gefällt dein Foto",

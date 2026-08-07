@@ -50,6 +50,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     private volatile string? failedSendThreadId;
     private volatile string? failedSendText;
     private static readonly TimeSpan VoiceFailureRetryFor = TimeSpan.FromMinutes(2);
+    private static readonly TimeSpan SyncBannerFloor = TimeSpan.FromSeconds(2);
     private readonly ConcurrentDictionary<string, byte[]> voiceBytes = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, byte> voiceFetching = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, DateTime> voiceFailed = new(StringComparer.Ordinal);
@@ -68,9 +69,11 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     private TMessage[] transcriptSource = Array.Empty<TMessage>();
     private TranscriptMessage[] transcriptCache = Array.Empty<TranscriptMessage>();
     private const float PushActivePollMultiplier = 3f;
+    private const int ResumeFrameGap = 3;
 
     private float sinceThreadPoll;
     private float sinceTypingPoll;
+    private int lastThreadDrawFrame;
     private float sinceTypingSend;
     private string lastTypingDraft = string.Empty;
     private string? imageViewId;
@@ -229,6 +232,9 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     public void Draw(Rect area, string threadId)
     {
+        var frame = ImGui.GetFrameCount();
+        var resumed = frame - lastThreadDrawFrame > ResumeFrameGap;
+        lastThreadDrawFrame = frame;
         if (store.CurrentThreadId != threadId)
         {
             if (store.CurrentThreadId is { } previousThreadId)
@@ -237,7 +243,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             }
 
             store.OpenThread(threadId);
-            sinceThreadPoll = threadPollSeconds * PushActivePollMultiplier;
+            sinceThreadPoll = 0f;
             sinceTypingPoll = threadPollSeconds;
             lastTypingDraft = string.Empty;
             composer.ClearTargets();
@@ -245,6 +251,11 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             composer.CancelVoice();
             voicePlayer.Stop();
             OnThreadOpened(threadId);
+        }
+        else if (resumed)
+        {
+            store.RequestThreadRefresh(threadId);
+            sinceThreadPoll = 0f;
         }
 
         if (pendingPrefill is { } prefill)
@@ -277,6 +288,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         var listRect = new Rect(new Vector2(area.Min.X, top),
             new Vector2(area.Max.X, area.Max.Y - composerHeight - accessoryHeight));
         DrawVaultBanner(ref listRect, threadId);
+        DrawSyncBanner(ref listRect);
         DrawAboveTranscript(ref listRect, threadId);
         var model = new ChatTranscriptModel
         {
@@ -290,7 +302,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             EmptyText = EmptyText,
             LoadingText = Loc.T(L.Common.Loading),
             OtherTyping = store.OtherTyping,
-            Loading = store.LoadingThread,
+            Loading = store.LoadingThread || store.ThreadOpenPending,
             IsGroup = IsGroupThread,
             Media = this,
             Interactions = this,
@@ -318,6 +330,19 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             OnSendVoice = sendVoice,
         });
         DrawMessageMenu(area);
+    }
+
+    private void DrawSyncBanner(ref Rect listRect)
+    {
+        var retryIn = store.SyncRetryIn;
+        if (retryIn <= SyncBannerFloor)
+        {
+            return;
+        }
+
+        var seconds = Math.Max(1, (int)Math.Ceiling(retryIn.TotalSeconds));
+        ChatHeaderControls.DrawBanner(ui, ref listRect, Loc.T(L.Common.ChatOutOfDate, seconds), ui.MutedInk,
+            store.RetrySyncNow);
     }
 
     private void DrawVaultBanner(ref Rect listRect, string threadId)
