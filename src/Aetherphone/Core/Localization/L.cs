@@ -1290,6 +1290,38 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release0999 =
+        {
+            new("changelog.r0999.0",
+                "Added seven phone cases: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo, and Runic"),
+            new("changelog.r0999.1",
+                "Every phone case was recompressed, so the plugin downloads at less than half its old size even with the seven new cases"),
+            new("changelog.r0999.2",
+                "A message now appears in an open conversation the moment it arrives, instead of waiting for the next refresh"),
+            new("changelog.r0999.3",
+                "Opening a conversation, or coming back to one you left open, now pulls the newest messages straight away"),
+            new("changelog.r0999.4",
+                "Chat now says when it cannot reach the server and offers a retry, instead of quietly showing an old transcript"),
+            new("changelog.r0999.5",
+                "Landscape now runs the hardware buttons along the top and bottom edges and keeps the screen the size it has in portrait, contributed by Raya"),
+            new("changelog.r0999.6",
+                "Photo pickers now draw only the thumbnails you can see, so opening one with a large library no longer stalls, contributed by BluntEXE"),
+            new("changelog.r0999.7",
+                "A shortcut icon borrowed from another plugin now fills the tile all the way to its rounded edge"),
+            new("changelog.r0999.8",
+                "Housing filter chips no longer wrap their labels, and the filter drawer rows sit on the standard spacing, contributed by Chaosvanguard"),
+            new("changelog.r0999.9",
+                "Fixed one refused request pausing all the others: an upload stopped by the request limit no longer holds back sends and refreshes"),
+            new("changelog.r0999.10",
+                "Fixed the Doman Enclave daily reporting your whole allowance as outstanding, ignoring what you had already donated, contributed by Farroness"),
+            new("changelog.r0999.11",
+                "Fixed the venue website link falling back to a page that does not exist on FFXIV Venues, contributed by Raya"),
+            new("changelog.r0999.12",
+                "Fixed the case artwork rotating the wrong way in landscape and leaving a hairline gap along the edge of the phone, contributed by Raya"),
+            new("changelog.r0999.13",
+                "Fixed the German wording for the physical ranged role, two game names, and a Dailies tour card, contributed by Silkie"),
+        };
+
         public static readonly LocString[] Release0998 =
         {
             new("changelog.r0998.0",
