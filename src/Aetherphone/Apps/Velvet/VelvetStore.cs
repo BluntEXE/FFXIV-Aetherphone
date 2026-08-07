@@ -1188,7 +1188,8 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         });
     }
 
-    public void CreatePost(string[] sourcePaths, WallpaperCrop[] crops, PostAspect aspect, string caption,
+    // aspects holds one choice per photo, framed exactly as AethergramStore.CreateGram does.
+    public void CreatePost(string[] sourcePaths, WallpaperCrop[] crops, PostAspect[] aspects, string caption,
         string[] tags, int audience, Action<bool> onComplete)
     {
         if (posting || sourcePaths.Length == 0)
@@ -1200,10 +1201,12 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         work.Run("create post", async token =>
         {
             var mediaKeys = new string[sourcePaths.Length];
-            var (bakedWidth, bakedHeight) = PostAspects.Size(aspect, PostSize);
+            var (containerWidth, containerHeight) = PostAspects.Size(aspects[0], PostSize);
             for (var index = 0; index < sourcePaths.Length; index++)
             {
-                var baked = ImageProcessor.BakeCroppedJpeg(sourcePaths[index], crops[index], bakedWidth, bakedHeight);
+                var (bakedWidth, bakedHeight) = PostAspects.Size(aspects[index], PostSize);
+                var baked = ImageProcessor.BakeCroppedJpeg(sourcePaths[index], crops[index], bakedWidth, bakedHeight,
+                    PostAspects.RevealsWholeImage(aspects[index]));
                 var upload = await media.UploadUrlAsync("image/jpeg", "velvet", token).ConfigureAwait(false);
                 if (upload is null)
                 {
@@ -1220,8 +1223,8 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
                 mediaKeys[index] = upload.Key;
             }
 
-            var request =
-                new CreateVelvetPostRequest(mediaKeys[0], bakedWidth, bakedHeight, caption, tags, mediaKeys, audience);
+            var request = new CreateVelvetPostRequest(mediaKeys[0], containerWidth, containerHeight, caption, tags,
+                mediaKeys, audience);
             var created = await client.CreatePostAsync(request, token).ConfigureAwait(false);
             if (created is null)
             {

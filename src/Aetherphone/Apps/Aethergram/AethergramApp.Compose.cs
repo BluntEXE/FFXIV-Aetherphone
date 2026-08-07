@@ -18,13 +18,29 @@ internal sealed partial class AethergramApp
 {
     private const float AspectPickerReserve = 42f;
 
-    private float ComposeAspect => composeStoryMode
+    private float ComposeCropAspect => composeStoryMode
         ? (float)StoryStore.StoryWidth / StoryStore.StoryHeight
         : composeAvatarMode
             ? PostAspects.SquareRatio
-            : PostAspects.Ratio(composeAspect);
+            : PostAspects.Ratio(composeSession.CurrentAspect);
+
+    private float ComposeContainerAspect => composeStoryMode
+        ? (float)StoryStore.StoryWidth / StoryStore.StoryHeight
+        : composeAvatarMode
+            ? PostAspects.SquareRatio
+            : PostAspects.Ratio(composeSession.ContainerAspect);
+
+    private float ComposePreviewAspect => composeStoryMode || composeAvatarMode
+        ? ComposeContainerAspect
+        : PostAspects.Ratio(composeSession.AspectAt(composeSession.ClampedPreviewIndex));
 
     private bool ComposeAllowsAspectChoice => !composeStoryMode && !composeAvatarMode;
+
+    private bool ComposeCropAllowsReveal =>
+        ComposeAllowsAspectChoice && PostAspects.RevealsWholeImage(composeSession.CurrentAspect);
+
+    private bool ComposePreviewAllowsReveal => ComposeAllowsAspectChoice
+        && PostAspects.RevealsWholeImage(composeSession.AspectAt(composeSession.ClampedPreviewIndex));
 
     private string ComposeTitle => composeAvatarMode ? Loc.T(L.Aethergram.NewAvatar)
         : composeStoryMode ? Loc.T(L.Story.NewStory)
@@ -194,8 +210,8 @@ internal sealed partial class AethergramApp
         }
 
         var reserve = ComposeAllowsAspectChoice ? AspectPickerReserve : 0f;
-        composeSession.DrawCropCanvas(area, UiScale.Current, ComposeAspect, ComposeStyle,
-            Loc.T(L.Aethergram.GestureHint), reserve);
+        composeSession.DrawCropCanvas(area, UiScale.Current, ComposeCropAspect, ComposeStyle,
+            Loc.T(L.Aethergram.GestureHint), reserve, ComposeCropAllowsReveal);
         if (ComposeAllowsAspectChoice)
         {
             DrawAspectPicker(area, scale);
@@ -213,14 +229,15 @@ internal sealed partial class AethergramApp
             aspectLabels[index] = Loc.T(AspectLabels.For(PostAspects.All[index]));
         }
 
+        var current = composeSession.CurrentAspect;
         var picked = SegmentStrip.Draw("aethergram.compose.aspect", row, aspectLabels,
-            Array.IndexOf(PostAspects.All, composeAspect), AppPalettes.Aethergram);
-        if (picked < 0 || picked >= PostAspects.All.Length || PostAspects.All[picked] == composeAspect)
+            Array.IndexOf(PostAspects.All, current), AppPalettes.Aethergram);
+        if (picked < 0 || picked >= PostAspects.All.Length || PostAspects.All[picked] == current)
         {
             return;
         }
 
-        composeAspect = PostAspects.All[picked];
+        composeSession.SetAspect(composeSession.CropIndex, PostAspects.All[picked]);
     }
 
     private void CropBack()
@@ -273,7 +290,7 @@ internal sealed partial class AethergramApp
         var reserved = stripGap + stripHeight + tagBarGap + tagBarHeight;
         var previewRegion = new Rect(new Vector2(left, top + 14f * scale),
             new Vector2(right, cardRect.Min.Y - 18f * scale - reserved));
-        var preview = ImageFit.CenteredRect(previewRegion, ComposeAspect);
+        var preview = ImageFit.CenteredRect(previewRegion, ComposeContainerAspect);
         DrawCaptionPreview(preview, scale);
         var stackY = preview.Max.Y;
         if (stripHeight > 0f)
@@ -432,15 +449,15 @@ internal sealed partial class AethergramApp
             new Vector2(preview.Max.X + 2f * scale, preview.Max.Y + 8f * scale), rounding + 2f * scale,
             ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.32f)));
         var index = composeSession.ClampedPreviewIndex;
-        if (!composeSession.TryGetPreviewUv(ComposeAspect, out var texture, out var uv0, out var uv1))
+        if (!composeSession.TryGetPreviewUv(ComposePreviewAspect, ComposePreviewAllowsReveal, out var texture,
+            out var uv0, out var uv1))
         {
             Squircle.Fill(drawList, preview.Min, preview.Max, rounding, ImGui.GetColorU32(theme.SurfaceMuted));
             Typography.DrawCentered(preview.Center, Loc.T(L.Common.Loading), AppPalettes.Aethergram.MutedInk);
             return;
         }
 
-        drawList.AddImageRounded(texture.Handle, preview.Min, preview.Max, uv0, uv1, 0xFFFFFFFFu, rounding,
-            ImDrawFlags.RoundCornersAll);
+        ImageFit.DrawLetterboxed(drawList, texture, preview, uv0, uv1, rounding);
         Material.EdgeSquircle(drawList, preview.Min, preview.Max, rounding, scale);
         if (composeTagMode && !composeStoryMode)
         {
@@ -584,8 +601,8 @@ internal sealed partial class AethergramApp
         }
 
         composeStatus = string.Empty;
-        store.CreateGram(composeSession.SelectedArray(), composeSession.CropsArray(), composeAspect, caption,
-            ComposeTagInputs(), ok => composeOutcome = ok ? 1 : 2);
+        store.CreateGram(composeSession.SelectedArray(), composeSession.CropsArray(), composeSession.AspectsArray(),
+            caption, ComposeTagInputs(), ok => composeOutcome = ok ? 1 : 2);
     }
 
     private void CommitStory()
