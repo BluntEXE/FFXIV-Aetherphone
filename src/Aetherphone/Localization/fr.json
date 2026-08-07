@@ -735,6 +735,7 @@
   "changelog.r0999.11": "Correction du lien de repli d'un lieu, qui menait à une page inexistante sur FFXIV Venues, contribué par Raya",
   "changelog.r0999.12": "Correction de l'illustration de coque qui tournait dans le mauvais sens en paysage et laissait un fin interstice au bord du téléphone, contribué par Raya",
   "changelog.r0999.13": "Correction des libellés allemands du rôle distance physique, de deux noms de jeux et d'une carte du guide de Dailies, contribué par Silkie",
+  "changelog.r0999.14": "Les dossiers de l'écran d'accueil accueillent désormais les raccourcis en plus des applications, si bien qu'un lanceur de plugin peut y être glissé et regroupé comme n'importe quelle autre icône, contribué par K.I.R.O",
   "changelog.r0998.0": "Ajout de Housing, une nouvelle app qui parcourt chaque secteur résidentiel sur une carte, suit les parcelles que vous surveillez et vous prévient avant la fin d'une période de candidature au tirage, contribué par Chaosvanguard",
   "changelog.r0998.1": "Ajout de la Radio communautaire dans Musique, plus de détails bientôt",
   "changelog.r0998.2": "Ajout de nouvelles coques, contribué par Silkie, Zivyl, Remi et Rania",

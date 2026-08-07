@@ -735,6 +735,7 @@
   "changelog.r0999.11": "Fixed the venue website link falling back to a page that does not exist on FFXIV Venues, contributed by Raya",
   "changelog.r0999.12": "Fixed the case artwork rotating the wrong way in landscape and leaving a hairline gap along the edge of the phone, contributed by Raya",
   "changelog.r0999.13": "Fixed the German wording for the physical ranged role, two game names, and a Dailies tour card, contributed by Silkie",
+  "changelog.r0999.14": "Home folders now hold shortcuts as well as apps, so a plugin launcher can be dragged in and grouped like any other icon, contributed by K.I.R.O",
   "changelog.r0998.0": "Added Housing, a new app that browses every housing ward on a map, tracks the plots you are watching, and reminds you before a lottery entry period closes, contributed by Chaosvanguard",
   "changelog.r0998.1": "Added Community Radio to Music, with more details coming soon",
   "changelog.r0998.2": "Added new phone cases, contributed by Silkie, Zivyl, Remi, and Rania",

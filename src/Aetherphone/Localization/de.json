@@ -735,6 +735,7 @@
   "changelog.r0999.11": "Behoben, dass der Ersatzlink eines Veranstaltungsortes auf eine Seite führte, die es auf FFXIV Venues nicht gibt, beigetragen von Raya",
   "changelog.r0999.12": "Behoben, dass die Hüllengrafik im Querformat falsch herum gedreht wurde und am Rand des Telefons einen feinen Spalt ließ, beigetragen von Raya",
   "changelog.r0999.13": "Mehrere deutsche Beschriftungen korrigiert: die Rolle der physischen Fernkämpfer, zwei Spielnamen und eine Karte der Dailies-Tour, beigetragen von Silkie",
+  "changelog.r0999.14": "Ordner auf dem Startbildschirm nehmen jetzt auch Verknüpfungen auf, sodass sich ein Plugin-Starter wie jedes andere Symbol hineinziehen und gruppieren lässt, beigetragen von K.I.R.O",
   "changelog.r0998.0": "Housing hinzugefügt, eine neue App, die jedes Wohnviertel auf einer Karte zeigt, die Grundstücke verfolgt, die du beobachtest, und dich erinnert, bevor eine Auslosungsfrist endet, beigetragen von Chaosvanguard",
   "changelog.r0998.1": "Community-Radio in Musik hinzugefügt, weitere Details folgen in Kürze",
   "changelog.r0998.2": "Neue Telefonhüllen hinzugefügt, beigetragen von Silkie, Zivyl, Remi und Rania",
