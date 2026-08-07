@@ -1,6 +1,10 @@
+using Aetherphone.Core.Aethernet.Contracts;
+
 namespace Aetherphone.Core;
 
 internal readonly record struct ContentRemovalSignal(string? App, string? Kind, string ContentId, string? ParentId);
+
+internal readonly record struct ChatSignal(string? ConversationId, ChatMessageDto? Message);
 
 internal static class ContentRemovalKinds
 {
@@ -13,7 +17,7 @@ internal sealed class RealtimeSignalBus
 {
     private volatile bool realtimeActive;
 
-    public event Action? ChatPinged;
+    public event Action<ChatSignal>? ChatPinged;
     public event Action? VelvetPinged;
     public event Action? GramPinged;
     public event Action? SocialPinged;
@@ -35,9 +39,9 @@ internal sealed class RealtimeSignalBus
         ConnectedChanged?.Invoke(active);
     }
 
-    public void PublishChat()
+    public void PublishChat(ChatSignal signal)
     {
-        ChatPinged?.Invoke();
+        ChatPinged?.Invoke(signal);
     }
 
     public void PublishVelvet()

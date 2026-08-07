@@ -68,9 +68,11 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     private TMessage[] transcriptSource = Array.Empty<TMessage>();
     private TranscriptMessage[] transcriptCache = Array.Empty<TranscriptMessage>();
     private const float PushActivePollMultiplier = 3f;
+    private const int ResumeFrameGap = 3;
 
     private float sinceThreadPoll;
     private float sinceTypingPoll;
+    private int lastThreadDrawFrame;
     private float sinceTypingSend;
     private string lastTypingDraft = string.Empty;
     private string? imageViewId;
@@ -229,6 +231,9 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     public void Draw(Rect area, string threadId)
     {
+        var frame = ImGui.GetFrameCount();
+        var resumed = frame - lastThreadDrawFrame > ResumeFrameGap;
+        lastThreadDrawFrame = frame;
         if (store.CurrentThreadId != threadId)
         {
             if (store.CurrentThreadId is { } previousThreadId)
@@ -237,7 +242,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             }
 
             store.OpenThread(threadId);
-            sinceThreadPoll = threadPollSeconds * PushActivePollMultiplier;
+            sinceThreadPoll = 0f;
             sinceTypingPoll = threadPollSeconds;
             lastTypingDraft = string.Empty;
             composer.ClearTargets();
@@ -245,6 +250,11 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             composer.CancelVoice();
             voicePlayer.Stop();
             OnThreadOpened(threadId);
+        }
+        else if (resumed)
+        {
+            store.RequestThreadRefresh(threadId);
+            sinceThreadPoll = 0f;
         }
 
         if (pendingPrefill is { } prefill)
