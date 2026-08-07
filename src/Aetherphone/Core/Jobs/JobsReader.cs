@@ -70,30 +70,31 @@ internal static unsafe class JobsReader
         return sections.ToArray();
     }
 
-    // Custom categories are user-curated, so their display order follows GearsetIds' own list
-    // order (whatever JobsApp's drag-to-reorder last left it in) instead of UiPriority - unlike
-    // the built-in role sections below, which still fall back to SortedEntries. A gearset id with
-    // no live entry this cycle (deleted, or the bucket simply hasn't caught up yet) is skipped
-    // rather than left as a gap.
+    // Custom categories are user-curated, so they follow GearsetIds' own order (whatever the Jobs
+    // drag-to-reorder last left it in) instead of the UiPriority sort the role sections keep. A
+    // gearset id with no live entry this cycle is skipped rather than left as a gap.
     private static JobEntry[] CustomOrderedEntries(List<(JobEntry Entry, byte UiPriority)> bucket,
         List<int> gearsetIds)
     {
-        var byGearsetId = new Dictionary<int, JobEntry>(bucket.Count);
-        for (var index = 0; index < bucket.Count; index++)
+        var ordered = new JobEntry[bucket.Count];
+        var count = 0;
+        for (var idIndex = 0; idIndex < gearsetIds.Count && count < ordered.Length; idIndex++)
         {
-            byGearsetId[bucket[index].Entry.GearsetId] = bucket[index].Entry;
-        }
-
-        var ordered = new List<JobEntry>(bucket.Count);
-        for (var index = 0; index < gearsetIds.Count; index++)
-        {
-            if (byGearsetId.TryGetValue(gearsetIds[index], out var entry))
+            var gearsetId = gearsetIds[idIndex];
+            for (var entryIndex = 0; entryIndex < bucket.Count; entryIndex++)
             {
-                ordered.Add(entry);
+                if (bucket[entryIndex].Entry.GearsetId != gearsetId)
+                {
+                    continue;
+                }
+
+                ordered[count] = bucket[entryIndex].Entry;
+                count++;
+                break;
             }
         }
 
-        return ordered.ToArray();
+        return count == ordered.Length ? ordered : ordered[..count];
     }
 
     private static JobEntry[] SortedEntries(List<(JobEntry Entry, byte UiPriority)> bucket)

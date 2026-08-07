@@ -17,11 +17,6 @@ internal sealed partial class JobsApp
     private const float EditorFieldHeight = 30f;
     private const int CategoryNameMaxLength = 24;
     private const float CategoryDragHandleRadius = 9f;
-
-    // Matches AetherStreamQueue's own reorder drag threshold - the phone-appears-to-move bug
-    // turned out to be DragScrollHost racing the handle for the same press (fixed via
-    // surface.CancelDrag() in JobsApp.cs), not a timing race with the window lock, so there's no
-    // need for a long-press dead zone here after all.
     private const float DragThreshold = 7f;
 
     private static readonly List<JobsCategory> NoCategories = new();
@@ -33,25 +28,21 @@ internal sealed partial class JobsApp
     private string categoryEditorName = string.Empty;
     private bool focusCategoryField;
 
-    // Rebuilt every frame from the on-screen custom section headers (see JobsApp.cs's main draw
-    // loop) - used both to place each header's drag handle and, once a drag is active, to find
-    // the nearest header to the cursor as the drop target. Header heights are fixed but section
-    // card heights vary with gearset count, so target detection compares against real header
-    // positions rather than assuming a uniform row height (contrast AetherStreamQueue.Reorder's
-    // drag, where every row is the same height).
-    private readonly List<(int CategoryIndex, Rect Rect)> categoryHeaderRects = new();
+    // Header rect places the drop highlight, span rect claims the vertical band that counts as
+    // "over this category". Spans, not header centers, because section heights swing with gearset
+    // count and the midpoint between two headers is nowhere near the boundary between their slots.
+    private readonly List<(int CategoryIndex, Rect Header, Rect Span)> categoryDropSlots = new();
     private int categoryDragIndex = -1;
+    private int categoryDropIndex = -1;
     private Vector2 categoryDragPressPos;
     private bool categoryDragActive;
 
-    // Reordering the jobs/gearsets *within* one custom category - separate from the header drag
-    // above, which reorders the categories themselves. Rows inside a section are uniform height
-    // (RowHeight), so this can use AetherStreamQueue's simpler displaced-row drag math instead of
-    // the nearest-header search the variable-height category headers need.
     private int jobDragCategoryIndex = -1;
     private int jobDragIndex = -1;
+    private int jobDragFromGearsetId = -1;
+    private int jobDragToGearsetId = -1;
     private Vector2 jobDragStart;
-    private float jobDragY;
+    private float jobDragOffset;
     private bool jobDragActive;
 
     private List<JobsCategory> CurrentCategories()
@@ -117,27 +108,26 @@ internal sealed partial class JobsApp
         OpenCategoryEditor(picked, -1);
     }
 
-    // Grip handle on a custom section's header - press-and-hold past the threshold starts a
-    // drag, mirroring AetherStreamQueue's own reorder gesture. Also registers this header's rect
-    // for this frame's drop-target search, so callers must invoke this for every custom section
-    // before UpdateCategoryDrag runs.
-    //
-    // A real InvisibleButton, not just UiInteract.Hover's raw mouse-position check: Dear ImGui
-    // starts its own native window-drag whenever a press lands on the window background with no
-    // item active, regardless of LockPosition (that only adds NoMove). Without an actual active
-    // item here, pressing the handle on an unlocked phone would drag the whole phone instead of
-    // starting a reorder.
+    // A real InvisibleButton rather than a bare UiInteract.Hover check: Dear ImGui starts its own
+    // native window-drag whenever a press lands on the window background with no item active,
+    // regardless of LockPosition (that only adds NoMove), so without an item under the press the
+    // handle would drag the whole phone. UiInteract still owns the gating, since raw ImGui item
+    // state ignores InputBlocked and the overlay reservation.
     private void DrawCategoryDragHandle(Rect headerRect, int categoryIndex, float scale)
     {
-        categoryHeaderRects.Add((categoryIndex, headerRect));
-
         var drawList = ImGui.GetWindowDrawList();
         var radius = CategoryDragHandleRadius * scale;
         var center = new Vector2(headerRect.Max.X - radius - 2f * scale, headerRect.Center.Y);
-        ImGui.SetCursorScreenPos(center - new Vector2(radius));
-        ImGui.InvisibleButton($"##categoryDragHandle{categoryIndex}", new Vector2(radius * 2f));
-        var hovered = ImGui.IsItemHovered();
-        var activated = ImGui.IsItemActivated();
+        var half = new Vector2(radius);
+        var cursor = ImGui.GetCursorScreenPos();
+        ImGui.SetCursorScreenPos(center - half);
+        ImGui.InvisibleButton($"##categoryDragHandle{categoryIndex}", half * 2f);
+        var hovered = ImGui.IsItemHovered() && UiInteract.Hover(center - half, center + half);
+        var activated = hovered && ImGui.IsItemActivated();
+        ImGui.SetCursorScreenPos(cursor);
+
+        categoryDropSlots.Add((categoryIndex, headerRect, headerRect));
+
         var dragging = categoryDragIndex == categoryIndex;
         var tint = dragging || hovered
             ? ui.Accent
@@ -157,10 +147,21 @@ internal sealed partial class JobsApp
         }
     }
 
-    // Drives the drag state machine once per frame, after every custom header has registered
-    // itself this frame via DrawCategoryDragHandle. Deliberately runs outside the section loop
-    // (rather than inline per-row) since the drop-target search needs every header's rect, not
-    // just the ones drawn so far this frame.
+    private void SealCategoryDropSlot(float bottom)
+    {
+        var last = categoryDropSlots.Count - 1;
+        if (last < 0)
+        {
+            return;
+        }
+
+        var slot = categoryDropSlots[last];
+        categoryDropSlots[last] = (slot.CategoryIndex, slot.Header,
+            new Rect(slot.Span.Min, new Vector2(slot.Span.Max.X, bottom)));
+    }
+
+    // Runs inside the app surface so the drop highlight inherits its clip rect, and after every
+    // custom section has registered its slot, since the target search needs all of them.
     private void UpdateCategoryDrag(float scale)
     {
         if (categoryDragIndex < 0)
@@ -168,24 +169,8 @@ internal sealed partial class JobsApp
             return;
         }
 
-        if (!ImGui.IsMouseDown(ImGuiMouseButton.Left))
-        {
-            if (categoryDragActive)
-            {
-                var targetIndex = ClosestCategoryHeader(ImGui.GetMousePos().Y);
-                if (targetIndex >= 0)
-                {
-                    ReorderCategory(categoryDragIndex, targetIndex);
-                }
-            }
-
-            categoryDragIndex = -1;
-            categoryDragActive = false;
-            return;
-        }
-
-        if (!categoryDragActive && Vector2.Distance(ImGui.GetMousePos(), categoryDragPressPos) >
-            DragThreshold * scale)
+        if (!categoryDragActive && ImGui.IsMouseDown(ImGuiMouseButton.Left) &&
+            Vector2.Distance(ImGui.GetMousePos(), categoryDragPressPos) > DragThreshold * scale)
         {
             categoryDragActive = true;
         }
@@ -195,52 +180,81 @@ internal sealed partial class JobsApp
             return;
         }
 
-        var hoverIndex = ClosestCategoryHeader(ImGui.GetMousePos().Y);
-        if (hoverIndex >= 0)
-        {
-            DrawCategoryDropHighlight(hoverIndex, scale);
-        }
+        categoryDropIndex = CategoryDropTarget(ImGui.GetMousePos().Y);
+        DrawCategoryDropHighlight(categoryDropIndex, scale);
     }
 
-    private int ClosestCategoryHeader(float mouseY)
+    // Unconditional for the same reason as FinishJobDrag: the surface stops drawing on logout or
+    // app close, and nothing there would ever release the gesture.
+    private void FinishCategoryDrag()
     {
-        var best = -1;
-        var bestDistance = float.MaxValue;
-        for (var index = 0; index < categoryHeaderRects.Count; index++)
+        if (categoryDragIndex < 0 || ImGui.IsMouseDown(ImGuiMouseButton.Left))
         {
-            var distance = MathF.Abs(categoryHeaderRects[index].Rect.Center.Y - mouseY);
-            if (distance < bestDistance)
+            return;
+        }
+
+        if (categoryDragActive)
+        {
+            ReorderCategory(categoryDragIndex, categoryDropIndex);
+        }
+
+        ResetCategoryDrag();
+    }
+
+    private void ResetCategoryDrag()
+    {
+        categoryDragIndex = -1;
+        categoryDropIndex = -1;
+        categoryDragActive = false;
+    }
+
+    // -1 when the pointer is outside every custom section, which cancels the drop rather than
+    // snapping to whichever header happens to be nearest.
+    private int CategoryDropTarget(float mouseY)
+    {
+        for (var index = 0; index < categoryDropSlots.Count; index++)
+        {
+            var span = categoryDropSlots[index].Span;
+            if (mouseY >= span.Min.Y && mouseY < span.Max.Y)
             {
-                bestDistance = distance;
-                best = categoryHeaderRects[index].CategoryIndex;
+                return categoryDropSlots[index].CategoryIndex;
             }
         }
 
-        return best;
+        return -1;
     }
 
     private void DrawCategoryDropHighlight(int categoryIndex, float scale)
     {
-        for (var index = 0; index < categoryHeaderRects.Count; index++)
+        if (categoryIndex < 0)
         {
-            if (categoryHeaderRects[index].CategoryIndex != categoryIndex)
+            return;
+        }
+
+        for (var index = 0; index < categoryDropSlots.Count; index++)
+        {
+            if (categoryDropSlots[index].CategoryIndex != categoryIndex)
             {
                 continue;
             }
 
-            var rect = categoryHeaderRects[index].Rect;
-            var drawList = ImGui.GetForegroundDrawList();
-            drawList.AddRectFilled(rect.Min, rect.Max, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.16f)),
-                6f * scale);
+            var rect = categoryDropSlots[index].Header;
+            ImGui.GetWindowDrawList().AddRectFilled(rect.Min, rect.Max,
+                ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.16f)), 6f * scale);
             return;
         }
     }
 
-    // A true move (remove then re-insert), not a plain adjacent swap - a single drag gesture can
-    // cross several other categories at once, unlike the old up/down-arrow version this replaced.
+    // A true move (remove then re-insert), not an adjacent swap: one gesture can cross several
+    // categories at once.
     private void ReorderCategory(int fromIndex, int toIndex)
     {
-        var categories = CurrentCategories();
+        if (characterWatch.CurrentContentId == 0)
+        {
+            return;
+        }
+
+        var categories = CategoriesForWrite();
         if (fromIndex < 0 || fromIndex >= categories.Count || toIndex < 0 || toIndex >= categories.Count ||
             fromIndex == toIndex)
         {
@@ -254,21 +268,19 @@ internal sealed partial class JobsApp
         Rebuild();
     }
 
-    // Grip handle on a job row inside a custom category's card - same long-press-and-hold-still
-    // start as DrawCategoryDragHandle, but only one row (identified by categoryIndex+rowIndex) can
-    // claim the drag.
-    //
-    // A real InvisibleButton for the same reason as DrawCategoryDragHandle - without an active
-    // ImGui item under the press, Dear ImGui's own window-drag takes over instead, dragging the
-    // whole phone rather than starting a reorder. Returns whether the handle is hovered, so
-    // DrawJobRow can exclude that area from the row's own hover/equip-click handling.
+    // Returns whether the handle is hovered, so DrawJobRow can keep that area out of the row's own
+    // hover and equip-click handling. InvisibleButton and UiInteract gating as in
+    // DrawCategoryDragHandle.
     private bool DrawJobDragHandle(ImDrawListPtr drawList, Vector2 center, float radius, int categoryIndex,
-        int rowIndex, float scale)
+        int rowIndex)
     {
-        ImGui.SetCursorScreenPos(center - new Vector2(radius));
-        ImGui.InvisibleButton($"##jobDragHandle{categoryIndex}_{rowIndex}", new Vector2(radius * 2f));
-        var hovered = ImGui.IsItemHovered();
-        var activated = ImGui.IsItemActivated();
+        var half = new Vector2(radius);
+        var cursor = ImGui.GetCursorScreenPos();
+        ImGui.SetCursorScreenPos(center - half);
+        ImGui.InvisibleButton($"##jobDragHandle{categoryIndex}_{rowIndex}", half * 2f);
+        var hovered = ImGui.IsItemHovered() && UiInteract.Hover(center - half, center + half);
+        var activated = hovered && ImGui.IsItemActivated();
+        ImGui.SetCursorScreenPos(cursor);
 
         var dragging = jobDragCategoryIndex == categoryIndex && jobDragIndex == rowIndex;
         var tint = dragging || hovered ? ui.Accent : Palette.WithAlpha(ui.MutedInk, ui.MutedInk.W * 0.6f);
@@ -283,59 +295,85 @@ internal sealed partial class JobsApp
         {
             jobDragCategoryIndex = categoryIndex;
             jobDragIndex = rowIndex;
+            jobDragFromGearsetId = -1;
+            jobDragToGearsetId = -1;
             jobDragStart = ImGui.GetMousePos();
-            jobDragY = 0f;
+            jobDragOffset = 0f;
             jobDragActive = false;
         }
 
         return hovered;
     }
 
-    // Called once per custom section's card, before its rows are drawn - a no-op unless this is
-    // the specific category currently being dragged in.
+    // Tracks the live gesture while the dragged row's own card is on screen, resolving it down to
+    // the pair of gearset ids that FinishJobDrag will commit. Travel is clamped to the card so the
+    // lifted row cannot paint over a neighbouring section, and so the preview matches the drop.
     private void UpdateJobDrag(int categoryIndex, JobEntry[] entries, float rowHeight, float scale)
     {
-        if (jobDragCategoryIndex != categoryIndex || jobDragIndex < 0)
+        if (jobDragCategoryIndex != categoryIndex || jobDragIndex < 0 || jobDragIndex >= entries.Length)
         {
             return;
         }
 
-        if (!ImGui.IsMouseDown(ImGuiMouseButton.Left))
-        {
-            if (jobDragActive && jobDragIndex < entries.Length)
-            {
-                var targetIndex = Math.Clamp(jobDragIndex + (int)MathF.Round(jobDragY / rowHeight), 0,
-                    entries.Length - 1);
-                if (targetIndex != jobDragIndex)
-                {
-                    ReorderGearsetInCategory(categoryIndex, entries[jobDragIndex].GearsetId,
-                        entries[targetIndex].GearsetId);
-                }
-            }
-
-            jobDragCategoryIndex = -1;
-            jobDragIndex = -1;
-            jobDragActive = false;
-            return;
-        }
-
-        if (!jobDragActive && Vector2.Distance(ImGui.GetMousePos(), jobDragStart) > DragThreshold * scale)
+        if (!jobDragActive && ImGui.IsMouseDown(ImGuiMouseButton.Left) &&
+            Vector2.Distance(ImGui.GetMousePos(), jobDragStart) > DragThreshold * scale)
         {
             jobDragActive = true;
         }
 
-        if (jobDragActive)
+        if (!jobDragActive)
         {
-            jobDragY = ImGui.GetMousePos().Y - jobDragStart.Y;
+            return;
         }
+
+        var travel = ImGui.GetMousePos().Y - jobDragStart.Y;
+        jobDragOffset = Math.Clamp(travel, -jobDragIndex * rowHeight,
+            (entries.Length - 1 - jobDragIndex) * rowHeight);
+
+        var targetIndex = Math.Clamp(jobDragIndex + (int)MathF.Round(jobDragOffset / rowHeight), 0,
+            entries.Length - 1);
+        jobDragFromGearsetId = entries[jobDragIndex].GearsetId;
+        jobDragToGearsetId = entries[targetIndex].GearsetId;
     }
 
-    // Moves fromGearsetId to sit where toGearsetId currently is, within one category's own
-    // GearsetIds list - matched by id rather than raw index so a stale id (a gearset removed from
-    // the game but not yet cleaned out of GearsetIds) can't desync the drag from the display.
+    // Runs unconditionally every frame, not from the section card: if the dragged category stops
+    // drawing mid-gesture (logout, the app closing, the category being deleted) nothing else would
+    // ever clear jobDragIndex, and the handles would refuse every later drag.
+    private void FinishJobDrag()
+    {
+        if (jobDragIndex < 0 || ImGui.IsMouseDown(ImGuiMouseButton.Left))
+        {
+            return;
+        }
+
+        if (jobDragActive)
+        {
+            ReorderGearsetInCategory(jobDragCategoryIndex, jobDragFromGearsetId, jobDragToGearsetId);
+        }
+
+        ResetJobDrag();
+    }
+
+    private void ResetJobDrag()
+    {
+        jobDragCategoryIndex = -1;
+        jobDragIndex = -1;
+        jobDragFromGearsetId = -1;
+        jobDragToGearsetId = -1;
+        jobDragOffset = 0f;
+        jobDragActive = false;
+    }
+
+    // Matched by gearset id rather than row index so a rebuild landing mid-drag cannot desync the
+    // gesture from the list it was started against.
     private void ReorderGearsetInCategory(int categoryIndex, int fromGearsetId, int toGearsetId)
     {
-        var categories = CurrentCategories();
+        if (characterWatch.CurrentContentId == 0 || fromGearsetId < 0 || toGearsetId < 0)
+        {
+            return;
+        }
+
+        var categories = CategoriesForWrite();
         if (categoryIndex < 0 || categoryIndex >= categories.Count)
         {
             return;

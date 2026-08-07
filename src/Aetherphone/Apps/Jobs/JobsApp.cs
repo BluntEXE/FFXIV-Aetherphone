@@ -69,6 +69,9 @@ internal sealed partial class JobsApp : IPhoneApp
         pendingEquip = null;
         sincePendingEquip = 0f;
         menuGearsetId = -1;
+        ResetCategoryDrag();
+        ResetJobDrag();
+        categoryDropSlots.Clear();
         menu.Close();
         CloseColorPicker();
         CloseCategoryEditor();
@@ -171,13 +174,13 @@ internal sealed partial class JobsApp : IPhoneApp
 
             using (var surface = AppSurface.Begin(body))
             {
+                categoryDropSlots.Clear();
                 if (sections.Length == 0)
                 {
                     DrawHint();
                 }
                 else
                 {
-                    categoryHeaderRects.Clear();
                     for (var index = 0; index < sections.Length; index++)
                     {
                         var section = sections[index];
@@ -194,18 +197,21 @@ internal sealed partial class JobsApp : IPhoneApp
 
                         DrawSectionCard(section, scale);
                         ImGui.Dummy(new Vector2(0f, SectionGap * scale));
+                        if (section.IsCustom)
+                        {
+                            SealCategoryDropSlot(ImGui.GetCursorScreenPos().Y);
+                        }
                     }
 
                     ImGui.Dummy(new Vector2(0f, 8f * scale));
                 }
 
-                // Fixes the phone appearing to move during a category/row drag: it was never the
-                // window's own position, it was DragScrollHost's kinetic scroll racing the drag
-                // handle for the exact same press. DragScrollHost.Begin runs before any row/handle
-                // this frame, so on the press's first frame it sees "no widget active yet" and
-                // happily starts its own scroll gesture on the same touch. Handing it back once a
-                // Jobs drag has been picked up (same pattern as SkywatcherApp's scrubber) stops
-                // that race outright.
+                UpdateCategoryDrag(scale);
+
+                // DragScrollHost.Begin runs before any handle this frame, so on the press's first
+                // frame it sees no active widget and starts a kinetic scroll on the same touch,
+                // which reads as the phone sliding under the drag. Same hand-back SkywatcherApp's
+                // scrubber uses.
                 if (categoryDragIndex >= 0 || jobDragIndex >= 0)
                 {
                     surface.CancelDrag();
@@ -213,7 +219,8 @@ internal sealed partial class JobsApp : IPhoneApp
             }
         }
 
-        UpdateCategoryDrag(scale);
+        FinishCategoryDrag();
+        FinishJobDrag();
 
         DrawColorMenu(content, theme);
         DrawCategoriesMenu(content, theme);
@@ -353,34 +360,49 @@ internal sealed partial class JobsApp : IPhoneApp
             UpdateJobDrag(section.CategoryIndex, section.Entries, rowHeight, scale);
         }
 
+        var draggedIndex = section.IsCustom && jobDragActive && jobDragCategoryIndex == section.CategoryIndex
+            ? jobDragIndex
+            : -1;
         var separator = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.06f));
         for (var index = 0; index < section.Entries.Length; index++)
         {
-            var rowTop = min.Y + index * rowHeight;
-            var dragOffset = section.IsCustom && jobDragActive && jobDragCategoryIndex == section.CategoryIndex &&
-                jobDragIndex == index
-                ? jobDragY
-                : 0f;
-            var rowRect = new Rect(new Vector2(min.X, rowTop + dragOffset), new Vector2(max.X, rowTop + rowHeight + dragOffset));
-            var contentRect = new Rect(new Vector2(min.X + padding, rowTop + dragOffset),
-                new Vector2(max.X - padding, rowTop + rowHeight + dragOffset));
-            if (!rowAnchorTaken)
+            if (index != draggedIndex)
             {
-                rowAnchorTaken = true;
-                UiAnchors.Report("jobs.row", rowRect);
+                DrawSectionRow(drawList, section, index, min, max, padding, rowHeight, 0f, scale);
             }
 
-            DrawJobRow(drawList, rowRect, contentRect, section.Entries[index], scale, section.IsCustom,
-                section.CategoryIndex, index);
             if (index > 0)
             {
+                var rowTop = min.Y + index * rowHeight;
                 drawList.AddLine(new Vector2(min.X + padding, rowTop), new Vector2(max.X - padding, rowTop), separator,
                     Metrics.Stroke.Hairline);
             }
         }
 
+        if (draggedIndex >= 0 && draggedIndex < section.Entries.Length)
+        {
+            DrawSectionRow(drawList, section, draggedIndex, min, max, padding, rowHeight, jobDragOffset, scale);
+        }
+
         ImGui.SetCursorScreenPos(min);
         ImGui.Dummy(new Vector2(width, rowCount * rowHeight));
+    }
+
+    private void DrawSectionRow(ImDrawListPtr drawList, JobSection section, int index, Vector2 min, Vector2 max,
+        float padding, float rowHeight, float dragOffset, float scale)
+    {
+        var rowTop = min.Y + index * rowHeight + dragOffset;
+        var rowRect = new Rect(new Vector2(min.X, rowTop), new Vector2(max.X, rowTop + rowHeight));
+        var contentRect = new Rect(new Vector2(min.X + padding, rowTop),
+            new Vector2(max.X - padding, rowTop + rowHeight));
+        if (!rowAnchorTaken)
+        {
+            rowAnchorTaken = true;
+            UiAnchors.Report("jobs.row", rowRect);
+        }
+
+        DrawJobRow(drawList, rowRect, contentRect, section.Entries[index], scale, section.IsCustom,
+            section.CategoryIndex, index);
     }
 
     private void DrawJobRow(ImDrawListPtr drawList, Rect rowRect, Rect contentRect, JobEntry job, float scale,
@@ -397,7 +419,7 @@ internal sealed partial class JobsApp : IPhoneApp
         var overHandle = false;
         if (draggable)
         {
-            overHandle = DrawJobDragHandle(drawList, handleCenter, handleRadius, categoryIndex, rowIndex, scale);
+            overHandle = DrawJobDragHandle(drawList, handleCenter, handleRadius, categoryIndex, rowIndex);
         }
 
         var equippable = job.Kind == JobEntryKind.Gearset && !job.IsActive;
