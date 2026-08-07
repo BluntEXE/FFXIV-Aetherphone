@@ -8,6 +8,7 @@ using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Textures.TextureWraps;
 
 namespace Aetherphone.Core.Shell.Home;
 
@@ -18,6 +19,7 @@ internal sealed class HomeGridRenderer
     private readonly TilePoseCache poses;
     private readonly HomeInteractionController interaction;
     private readonly ShortcutStore shortcuts;
+    private readonly Func<ShortcutEntry, IDalamudTextureWrap?> shortcutIcon;
     private readonly ConfirmService confirm;
     private bool widgetAnchorReported;
 
@@ -29,6 +31,7 @@ internal sealed class HomeGridRenderer
         this.poses = poses;
         this.interaction = interaction;
         this.shortcuts = shortcuts;
+        shortcutIcon = shortcuts.Icon;
         this.confirm = confirm;
     }
 
@@ -149,7 +152,7 @@ internal sealed class HomeGridRenderer
         {
             HomeTileView.DrawFolder(center, rect.Width, tile, theme,
                 interaction.TapScale(tile) * interaction.Magnify(center, metrics.CellWidth),
-                labelAlpha, showLabels, Loc.T(L.Home.NewFolder), metrics.CellWidth, zoom, shortcuts.Icon);
+                labelAlpha, showLabels, Loc.T(L.Home.NewFolder), metrics.CellWidth, shortcutIcon, zoom);
             if (interaction.RemoveBadgesLive(motion) &&
                 HomeTileView.RemoveBadge(new Vector2(rect.Min.X + 2f * scale, rect.Min.Y + 2f * scale), scale, theme))
             {
@@ -309,7 +312,7 @@ internal sealed class HomeGridRenderer
         if (tile.IsFolder)
         {
             HomeTileView.DrawFolder(position, metrics.IconSize, tile, theme, scale, 0f, true, Loc.T(L.Home.NewFolder),
-                metrics.CellWidth, 1f, shortcuts.Icon);
+                metrics.CellWidth, shortcutIcon);
             return;
         }
 

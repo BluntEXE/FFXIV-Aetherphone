@@ -1117,7 +1117,11 @@ internal sealed class HomeLayoutService
                     continue;
                 }
 
-                item.Members.Add(new HomeItem { Kind = "app", AppId = member.App!.Id });
+                var appId = member.App!.Id;
+                item.Members.Add(new HomeItem { Kind = "app", AppId = appId });
+
+                // Mirrored into AppIds so rolling back to a build that only reads AppIds keeps the app grouping.
+                item.AppIds.Add(appId);
             }
 
             return item;

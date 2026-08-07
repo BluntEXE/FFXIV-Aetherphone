@@ -47,8 +47,8 @@ internal static class HomeTileView
     }
 
     public static void DrawFolder(Vector2 center, float size, HomeTile folder, PhoneTheme theme, float drawScale,
-        float labelAlpha, bool showLabels, string fallbackName, float labelWidth, float zoom = 1f,
-        Func<ShortcutEntry, IDalamudTextureWrap?>? shortcutIcon = null)
+        float labelAlpha, bool showLabels, string fallbackName, float labelWidth,
+        Func<ShortcutEntry, IDalamudTextureWrap?> shortcutIcon, float zoom = 1f)
     {
         var scale = UiScale.Current * zoom;
         var dl = ImGui.GetWindowDrawList();
@@ -74,8 +74,7 @@ internal static class HomeTileView
             var member = folder.Members[index];
             if (member.IsShortcut)
             {
-                ShortcutArt.DrawSurface(dl, cellCenter, mini, member.Shortcut!,
-                    shortcutIcon?.Invoke(member.Shortcut!), scale);
+                ShortcutArt.DrawSurface(dl, cellCenter, mini, member.Shortcut!, shortcutIcon(member.Shortcut!), scale);
                 continue;
             }
 
