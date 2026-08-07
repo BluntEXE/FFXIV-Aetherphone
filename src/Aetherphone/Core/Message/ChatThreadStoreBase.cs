@@ -232,6 +232,24 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     {
     }
 
+    public bool ThreadOpenPending => pendingOpenThreadId is not null;
+
+    public TimeSpan SyncRetryIn
+    {
+        get
+        {
+            var remaining = pollBackoffUntilUtc - DateTime.UtcNow;
+            return remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero;
+        }
+    }
+
+    public void RetrySyncNow()
+    {
+        pollFailureStreak = 0;
+        pollBackoffUntilUtc = DateTime.MinValue;
+        threadRefreshPending = true;
+    }
+
     public bool IsSignedIn => session.IsSignedIn;
     public string MyUserId => session.CurrentUser?.Id ?? string.Empty;
     public TMessage[] Messages => messages;

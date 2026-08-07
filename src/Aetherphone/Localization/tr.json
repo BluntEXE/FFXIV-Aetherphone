@@ -232,6 +232,7 @@
   "common.fileKindAudio": "Ses",
   "common.fileKindAll": "Tüm dosyalar",
   "common.rateLimited": "Çok fazla istek. {0} sn sonra yeniden denenecek",
+  "common.chatOutOfDate": "Güncel olmayabilir. {0} sn sonra yeniden denenecek",
   "message.threadEmpty": "Merhaba de",
   "social.likedChirp": "chirp'ini beğendi",
   "social.likedPhoto": "fotoğrafını beğendi",

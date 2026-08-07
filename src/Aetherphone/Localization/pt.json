@@ -232,6 +232,7 @@
   "common.fileKindAudio": "Áudio",
   "common.fileKindAll": "Todos os arquivos",
   "common.rateLimited": "Solicitações demais. Nova tentativa em {0}s",
+  "common.chatOutOfDate": "Pode estar desatualizado. Nova tentativa em {0}s",
   "message.threadEmpty": "Diga olá",
   "social.likedChirp": "curtiu seu chirp",
   "social.likedPhoto": "curtiu sua foto",
