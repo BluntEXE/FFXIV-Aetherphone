@@ -245,6 +245,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             composer.CancelVoice();
             voicePlayer.Stop();
             OnThreadOpened(threadId);
+            transcript.RequestSnapToBottom();
         }
 
         if (pendingPrefill is { } prefill)
