@@ -96,7 +96,7 @@ internal sealed class SocialActivityFeed
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[Activity] {app} fetch failed: {exception.Message}");
+                AepLog.Warning(exception, $"[Activity] {app} fetch failed");
             }
             finally
             {

@@ -101,7 +101,7 @@ internal static class ShortcutCode
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"A shortcut code could not be read: {exception.Message}");
+            AepLog.Warning(exception, "A shortcut code could not be read");
             return null;
         }
     }

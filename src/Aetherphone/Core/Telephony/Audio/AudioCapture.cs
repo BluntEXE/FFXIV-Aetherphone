@@ -55,7 +55,7 @@ internal sealed class AudioCapture : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Voice capture failed to start: {exception.Message}");
+            AepLog.Warning(exception, "Voice capture failed to start");
         }
     }
 
@@ -83,7 +83,7 @@ internal sealed class AudioCapture : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Voice capture failed to stop: {exception.Message}");
+            AepLog.Warning(exception, "Voice capture failed to stop");
         }
 
         toStop.Dispose();

@@ -198,7 +198,7 @@ internal sealed class WallpaperLibrary : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Wallpaper] failed to delete {record.FileName}: {exception.Message}");
+            AepLog.Warning(exception, $"[Wallpaper] failed to delete {record.FileName}");
         }
 
         if (ready.TryRemove(path, out var wrap))
@@ -332,7 +332,7 @@ internal sealed class WallpaperLibrary : IDisposable
         catch (Exception exception)
         {
             failed.TryAdd(path, 0);
-            AepLog.Warning($"[Wallpaper] failed to load {path}: {exception.Message}");
+            AepLog.Warning(exception, $"[Wallpaper] failed to load {path}");
         }
         finally
         {
@@ -348,7 +348,7 @@ internal sealed class WallpaperLibrary : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Wallpaper] brightness analysis failed for {path}: {exception.Message}");
+            AepLog.Warning(exception, $"[Wallpaper] brightness analysis failed for {path}");
         }
     }
 

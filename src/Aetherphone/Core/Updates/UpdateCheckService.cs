@@ -59,7 +59,7 @@ internal sealed class UpdateCheckService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Update check failed for {url}: {exception.Message}");
+            AepLog.Warning(exception, $"Update check failed for {url}");
         }
         finally
         {

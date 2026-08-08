@@ -161,7 +161,7 @@ internal sealed class PhotosWidget : IHomeWidget
         catch (Exception exception)
         {
             failed.TryAdd(path, 0);
-            AepLog.Warning($"[PhotosWidget] failed to load {path}: {exception.Message}");
+            AepLog.Warning(exception, $"[PhotosWidget] failed to load {path}");
         }
         finally
         {

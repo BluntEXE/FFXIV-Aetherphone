@@ -354,7 +354,7 @@ internal sealed class RadioPlayer : IDisposable
         catch (Exception exception)
         {
             TrySetState(workerSession, RadioPlaybackState.Failed);
-            AepLog.Warning($"Radio playback failed: {exception.Message}");
+            AepLog.Warning(exception, "Radio playback failed");
         }
         finally
         {

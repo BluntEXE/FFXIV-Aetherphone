@@ -102,7 +102,7 @@ internal sealed class MediaCache : IDisposable
         catch (Exception exception)
         {
             failed[key] = DateTime.UtcNow;
-            AepLog.Warning($"MediaCache load failed for {key}: {exception.Message}");
+            AepLog.Warning(exception, $"MediaCache load failed for {key}");
         }
         finally
         {

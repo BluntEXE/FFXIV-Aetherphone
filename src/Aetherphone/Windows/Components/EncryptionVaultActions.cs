@@ -97,7 +97,7 @@ internal sealed class EncryptionVaultActions : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Recovery code setup failed: {exception.Message}");
+                AepLog.Warning(exception, "Recovery code setup failed");
                 status = Loc.T(L.Encryption.Failed);
             }
             finally
@@ -133,7 +133,7 @@ internal sealed class EncryptionVaultActions : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Recovery failed: {exception.Message}");
+                AepLog.Warning(exception, "Recovery failed");
                 status = Loc.T(L.Encryption.Failed);
             }
             finally
@@ -154,7 +154,7 @@ internal sealed class EncryptionVaultActions : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Previous key restore failed: {exception.Message}");
+            AepLog.Warning(exception, "Previous key restore failed");
         }
     }
 
@@ -171,7 +171,7 @@ internal sealed class EncryptionVaultActions : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Archived escrow lookup failed: {exception.Message}");
+                AepLog.Warning(exception, "Archived escrow lookup failed");
             }
         });
     }
@@ -201,7 +201,7 @@ internal sealed class EncryptionVaultActions : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Previous key restore failed: {exception.Message}");
+                AepLog.Warning(exception, "Previous key restore failed");
                 status = Loc.T(L.Encryption.Failed);
             }
             finally
@@ -227,7 +227,7 @@ internal sealed class EncryptionVaultActions : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Encryption reset failed: {exception.Message}");
+                AepLog.Warning(exception, "Encryption reset failed");
                 status = Loc.T(L.Encryption.Failed);
             }
             finally

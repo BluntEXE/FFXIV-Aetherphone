@@ -72,7 +72,7 @@ internal sealed class SignInFlow : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Aethernet challenge failed: {exception.Message}");
+                AepLog.Warning(exception, "Aethernet challenge failed");
                 status = Loc.T(L.Account.CannotReach);
             }
             finally
@@ -122,7 +122,7 @@ internal sealed class SignInFlow : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Aethernet verify failed: {exception.Message}");
+                AepLog.Warning(exception, "Aethernet verify failed");
                 status = string.Empty;
                 failureReason = VerifyFailure.Network;
             }
@@ -167,7 +167,7 @@ internal sealed class SignInFlow : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"XIVAuth sign-in failed: {exception.Message}");
+                AepLog.Warning(exception, "XIVAuth sign-in failed");
                 status = string.Empty;
                 failureReason = VerifyFailure.Network;
                 ResetXivFlow();

@@ -143,7 +143,7 @@ internal sealed partial class AethergramApp
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Aethergram message privacy load failed: {exception.Message}");
+                AepLog.Warning(exception, "Aethergram message privacy load failed");
             }
             finally
             {
@@ -173,7 +173,7 @@ internal sealed partial class AethergramApp
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Aethergram message privacy update failed: {exception.Message}");
+                AepLog.Warning(exception, "Aethergram message privacy update failed");
             }
         });
     }

@@ -160,7 +160,7 @@ internal sealed class MarketItemIndex
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Market item index build failed: {exception.Message}");
+            AepLog.Warning(exception, "Market item index build failed");
             building = false;
         }
     }
@@ -185,7 +185,7 @@ internal sealed class MarketItemIndex
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Market vendor set build failed: {exception.Message}");
+            AepLog.Warning(exception, "Market vendor set build failed");
         }
 
         return vendorItems;

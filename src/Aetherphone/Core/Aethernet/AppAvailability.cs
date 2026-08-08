@@ -97,7 +97,7 @@ internal sealed class AppAvailability : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"App availability fetch failed: {exception.Message}");
+                AepLog.Warning(exception, "App availability fetch failed");
                 Volatile.Write(ref nextFetchTick, Environment.TickCount64 + RetryIntervalMilliseconds);
             }
             finally

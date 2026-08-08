@@ -56,7 +56,7 @@ internal sealed class WallpaperImageCache : IDisposable
         catch (Exception exception)
         {
             failed.TryAdd(path, 0);
-            AepLog.Warning($"[Wallpaper] failed to load {path}: {exception.Message}");
+            AepLog.Warning(exception, $"[Wallpaper] failed to load {path}");
         }
         finally
         {

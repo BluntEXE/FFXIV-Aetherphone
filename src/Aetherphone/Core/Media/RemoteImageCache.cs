@@ -150,7 +150,7 @@ internal sealed class RemoteImageCache : IDisposable
         catch (Exception exception)
         {
             failed[key] = DateTime.UtcNow;
-            AepLog.Warning($"[Media] failed to load image {key}: {exception.Message}");
+            AepLog.Warning(exception, $"[Media] failed to load image {key}");
         }
         finally
         {

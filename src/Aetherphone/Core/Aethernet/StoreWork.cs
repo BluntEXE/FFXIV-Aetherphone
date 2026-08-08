@@ -26,7 +26,7 @@ internal sealed class StoreWork : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[{logTag}] {operation} failed: {exception.Message}");
+                AepLog.Warning(exception, $"[{logTag}] {operation} failed");
             }
             finally
             {
@@ -54,7 +54,7 @@ internal sealed class StoreWork : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[{logTag}] {operation} failed: {exception.Message}");
+                AepLog.Warning(exception, $"[{logTag}] {operation} failed");
             }
             finally
             {

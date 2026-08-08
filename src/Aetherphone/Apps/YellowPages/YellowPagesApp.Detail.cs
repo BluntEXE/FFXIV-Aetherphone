@@ -1007,7 +1007,7 @@ internal sealed partial class YellowPagesApp
     {
         Copy("modlink", ad.LinkUrl);
         Windows.UrlActions.OpenInBrowser(ad.LinkUrl,
-            exception => AepLog.Warning($"[YellowPages] mod link failed: {exception.Message}"));
+            exception => AepLog.Warning(exception, "[YellowPages] mod link failed"));
     }
 
     private void OpenInquiry(AdDto ad) => OpenInquiryFor(ad);

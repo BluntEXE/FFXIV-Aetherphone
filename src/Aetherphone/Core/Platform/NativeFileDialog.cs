@@ -62,7 +62,7 @@ internal static class NativeFileDialog
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"{logTag} file dialog failed: {exception.Message}");
+                AepLog.Warning(exception, $"{logTag} file dialog failed");
                 completion.SetResult(null);
             }
         }) { IsBackground = true, };
@@ -124,7 +124,7 @@ internal static class NativeFileDialog
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[FilePicker] Wine probe failed: {exception.Message}");
+            AepLog.Warning(exception, "[FilePicker] Wine probe failed");
             return false;
         }
     }
@@ -147,7 +147,7 @@ internal static class NativeFileDialog
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[FilePicker] Overlay probe failed: {exception.Message}");
+            AepLog.Warning(exception, "[FilePicker] Overlay probe failed");
             return true;
         }
     }

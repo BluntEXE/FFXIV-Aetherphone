@@ -115,7 +115,7 @@ internal sealed class CommunityRadioService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Radio] station update failed: {exception.Message}");
+            AepLog.Warning(exception, "[Radio] station update failed");
             return false;
         }
     }
@@ -149,7 +149,7 @@ internal sealed class CommunityRadioService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Radio] follow failed: {exception.Message}");
+            AepLog.Warning(exception, "[Radio] follow failed");
             Replace(stationId, previous);
         }
     }
@@ -210,7 +210,7 @@ internal sealed class CommunityRadioService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Radio] tracklist fetch failed: {exception.Message}");
+            AepLog.Warning(exception, "[Radio] tracklist fetch failed");
         }
         finally
         {
@@ -274,7 +274,7 @@ internal sealed class CommunityRadioService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Radio] community fetch failed: {exception.Message}");
+            AepLog.Warning(exception, "[Radio] community fetch failed");
             Volatile.Write(ref retryAfterTick, Environment.TickCount64 + RetryIntervalMilliseconds);
         }
         finally
@@ -296,7 +296,7 @@ internal sealed class CommunityRadioService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Radio] station lookup failed: {exception.Message}");
+            AepLog.Warning(exception, "[Radio] station lookup failed");
         }
         finally
         {

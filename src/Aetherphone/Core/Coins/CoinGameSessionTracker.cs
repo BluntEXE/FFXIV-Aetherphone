@@ -160,7 +160,7 @@ internal sealed class CoinGameSessionTracker : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[CoinGames] session end on unload failed: {exception.Message}");
+            AepLog.Warning(exception, "[CoinGames] session end on unload failed");
         }
     }
 }

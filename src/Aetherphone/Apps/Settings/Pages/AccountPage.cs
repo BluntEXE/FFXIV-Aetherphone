@@ -379,7 +379,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Community badges load failed: {exception.Message}");
+                AepLog.Warning(exception, "Community badges load failed");
                 communityBadgesRequested = false;
             }
         });
@@ -412,7 +412,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Badge visibility update failed: {exception.Message}");
+                AepLog.Warning(exception, "Badge visibility update failed");
                 badges[index] = badge;
             }
         });
@@ -830,7 +830,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Token revoke failed: {exception.Message}");
+                AepLog.Warning(exception, "Token revoke failed");
             }
         });
     }
@@ -856,7 +856,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
                     }
                     catch (Exception exception)
                     {
-                        AepLog.Warning($"Account deletion failed: {exception.Message}");
+                        AepLog.Warning(exception, "Account deletion failed");
                     }
 
                     if (erased)
@@ -1157,7 +1157,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Aethernet profile load failed: {exception.Message}");
+                AepLog.Warning(exception, "Aethernet profile load failed");
             }
         });
     }

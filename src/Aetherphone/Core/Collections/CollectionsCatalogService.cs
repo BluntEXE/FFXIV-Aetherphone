@@ -230,7 +230,7 @@ internal sealed class CollectionsCatalogService : IDisposable
         catch (Exception exception)
         {
             entry.State = CollectionState.Failed;
-            AepLog.Warning($"Collections catalog fetch failed for {category}: {exception.Message}");
+            AepLog.Warning(exception, $"Collections catalog fetch failed for {category}");
         }
     }
 
@@ -287,7 +287,7 @@ internal sealed class CollectionsCatalogService : IDisposable
         catch (Exception exception)
         {
             built = LocalUnlocks.Empty;
-            AepLog.Warning($"Collections local unlocks failed for {category}: {exception.Message}");
+            AepLog.Warning(exception, $"Collections local unlocks failed for {category}");
         }
 
         localUnlocks[category] = built;
@@ -500,7 +500,7 @@ internal sealed class CollectionsCatalogService : IDisposable
         {
             entry.FetchedUtc = DateTime.UtcNow;
             entry.State = OwnedState.Failed;
-            AepLog.Warning($"Collections owned fetch failed for {category}: {exception.Message}");
+            AepLog.Warning(exception, $"Collections owned fetch failed for {category}");
         }
     }
 
@@ -530,7 +530,7 @@ internal sealed class CollectionsCatalogService : IDisposable
             entry.FetchedUtc = DateTime.UtcNow;
             Apply(entry, CollectionCategory.Achievements, null);
             entry.State = SummaryState.Ready;
-            AepLog.Warning($"Collections summary fetch failed: {exception.Message}");
+            AepLog.Warning(exception, "Collections summary fetch failed");
         }
     }
 

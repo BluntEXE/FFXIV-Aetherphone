@@ -203,7 +203,7 @@ internal sealed class LookupService : IDisposable
         catch (Exception exception)
         {
             target.State = LookupState.Failed;
-            AepLog.Warning($"Lookup character search failed: {exception.Message}");
+            AepLog.Warning(exception, "Lookup character search failed");
         }
     }
 
@@ -273,7 +273,7 @@ internal sealed class LookupService : IDisposable
         catch (Exception exception)
         {
             target.State = LookupState.Failed;
-            AepLog.Warning($"Lookup free company search failed: {exception.Message}");
+            AepLog.Warning(exception, "Lookup free company search failed");
         }
     }
 
@@ -344,7 +344,7 @@ internal sealed class LookupService : IDisposable
         catch (Exception exception)
         {
             target.State = LookupState.Failed;
-            AepLog.Warning($"Lookup character detail failed: {exception.Message}");
+            AepLog.Warning(exception, "Lookup character detail failed");
         }
     }
 
@@ -358,7 +358,7 @@ internal sealed class LookupService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Lookup class job info failed: {exception.Message}");
+            AepLog.Warning(exception, "Lookup class job info failed");
             return Array.Empty<ClassJobLevel>();
         }
     }
@@ -521,7 +521,7 @@ internal sealed class LookupService : IDisposable
         catch (Exception exception)
         {
             target.State = LookupState.Failed;
-            AepLog.Warning($"Lookup free company detail failed: {exception.Message}");
+            AepLog.Warning(exception, "Lookup free company detail failed");
         }
         finally
         {
@@ -560,7 +560,7 @@ internal sealed class LookupService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Lookup roster page failed: {exception.Message}");
+            AepLog.Warning(exception, "Lookup roster page failed");
         }
         finally
         {

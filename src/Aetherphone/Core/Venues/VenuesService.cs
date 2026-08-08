@@ -93,7 +93,7 @@ internal sealed class VenuesService : IDisposable
                 state = VenueState.Failed;
             }
 
-            AepLog.Warning($"Venues refresh failed: {exception.Message}");
+            AepLog.Warning(exception, "Venues refresh failed");
         }
         finally
         {

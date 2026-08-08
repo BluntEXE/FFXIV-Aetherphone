@@ -119,7 +119,7 @@ internal static class LifestreamBridge
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Lifestream] IsBusy failed: {exception.Message}");
+            AepLog.Warning(exception, "[Lifestream] IsBusy failed");
             return false;
         }
     }
@@ -133,7 +133,7 @@ internal static class LifestreamBridge
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Lifestream] Teleport failed: {exception.Message}");
+            AepLog.Warning(exception, "[Lifestream] Teleport failed");
             return false;
         }
     }
@@ -147,7 +147,7 @@ internal static class LifestreamBridge
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Lifestream] ChangeWorldById failed: {exception.Message}");
+            AepLog.Warning(exception, "[Lifestream] ChangeWorldById failed");
             return false;
         }
     }
@@ -164,7 +164,7 @@ internal static class LifestreamBridge
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Lifestream] world reachability check failed: {exception.Message}");
+            AepLog.Warning(exception, "[Lifestream] world reachability check failed");
             return true;
         }
     }

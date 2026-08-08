@@ -73,7 +73,7 @@ internal sealed class AccountStateService : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[AccountState] poll failed: {exception.Message}");
+                AepLog.Warning(exception, "[AccountState] poll failed");
             }
             finally
             {

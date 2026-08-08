@@ -87,7 +87,7 @@ internal sealed class PatreonLinkFlow : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Patreon status fetch failed: {exception.Message}");
+                AepLog.Warning(exception, "Patreon status fetch failed");
                 Volatile.Write(ref nextStatusFetchTick, Environment.TickCount64 + StatusRetryIntervalMilliseconds);
             }
             finally
@@ -129,7 +129,7 @@ internal sealed class PatreonLinkFlow : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Patreon link failed: {exception.Message}");
+                AepLog.Warning(exception, "Patreon link failed");
                 failureReason = FailureNetwork;
             }
             finally
@@ -192,7 +192,7 @@ internal sealed class PatreonLinkFlow : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Patreon unlink failed: {exception.Message}");
+                AepLog.Warning(exception, "Patreon unlink failed");
                 failureReason = FailureNetwork;
             }
             finally

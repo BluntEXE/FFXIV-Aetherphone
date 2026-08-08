@@ -35,7 +35,7 @@ internal static class StationArtworkUpload
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Radio] artwork upload failed: {exception.Message}");
+            AepLog.Warning(exception, "[Radio] artwork upload failed");
             return false;
         }
     }

@@ -59,7 +59,7 @@ internal sealed class VoiceNoteRecorder : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Voice note recording failed to start: {exception.Message}");
+            AepLog.Warning(exception, "Voice note recording failed to start");
             recording = false;
             return false;
         }
@@ -117,7 +117,7 @@ internal sealed class VoiceNoteRecorder : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Voice note recording failed to stop: {exception.Message}");
+            AepLog.Warning(exception, "Voice note recording failed to stop");
         }
 
         toStop.Dispose();

@@ -184,7 +184,7 @@ internal sealed partial class MusterApp : IPhoneApp
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[Muster] report failed: {exception.Message}");
+                AepLog.Warning(exception, "[Muster] report failed");
             }
 
             done(ok);

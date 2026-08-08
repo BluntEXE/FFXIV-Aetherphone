@@ -138,7 +138,7 @@ internal sealed class MarketboardService : IDisposable
         catch (Exception exception)
         {
             taxRates[worldName] = new TaxEntry(0, string.Empty, DateTime.UtcNow);
-            AepLog.Warning($"Market tax fetch failed for {worldName}: {exception.Message}");
+            AepLog.Warning(exception, $"Market tax fetch failed for {worldName}");
         }
         finally
         {
@@ -265,7 +265,7 @@ internal sealed class MarketboardService : IDisposable
         {
             entry.FetchedUtc = DateTime.UtcNow;
             entry.State = MarketState.Failed;
-            AepLog.Warning($"Market fetch failed for {key}: {exception.Message}");
+            AepLog.Warning(exception, $"Market fetch failed for {key}");
         }
     }
 
@@ -312,7 +312,7 @@ internal sealed class MarketboardService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Market aggregated fetch failed: {exception.Message}");
+            AepLog.Warning(exception, "Market aggregated fetch failed");
         }
         finally
         {

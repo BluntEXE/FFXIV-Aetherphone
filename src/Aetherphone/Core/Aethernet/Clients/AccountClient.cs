@@ -41,7 +41,7 @@ internal sealed class AccountClient
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Aethernet account load failed: {exception.Message}");
+                AepLog.Warning(exception, "Aethernet account load failed");
             }
         });
     }

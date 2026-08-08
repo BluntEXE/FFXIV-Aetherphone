@@ -26,7 +26,7 @@ internal static class AvatarUploader
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Aethernet avatar update failed: {exception.Message}");
+                AepLog.Warning(exception, "Aethernet avatar update failed");
             }
             finally
             {

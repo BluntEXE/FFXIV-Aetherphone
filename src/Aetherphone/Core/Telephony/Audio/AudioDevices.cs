@@ -82,7 +82,7 @@ internal static class AudioDevices
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Audio output enumeration unavailable: {exception.Message}");
+            AepLog.Warning(exception, "Audio output enumeration unavailable");
             return 0;
         }
     }
@@ -97,7 +97,7 @@ internal static class AudioDevices
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Audio output name unavailable for {index}: {exception.Message}");
+            AepLog.Warning(exception, $"Audio output name unavailable for {index}");
             return string.Empty;
         }
     }

@@ -35,7 +35,7 @@ internal static class RegionSync
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Region update failed: {exception.Message}");
+                AepLog.Warning(exception, "Region update failed");
             }
         });
     }

@@ -217,7 +217,7 @@ internal sealed class NamePage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Aethernet name update failed: {exception.Message}");
+                AepLog.Warning(exception, "Aethernet name update failed");
                 busy = false;
                 outcome = 3;
             }

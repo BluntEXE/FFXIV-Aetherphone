@@ -112,7 +112,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Encryption key refresh failed: {exception.Message}");
+                AepLog.Warning(exception, "Encryption key refresh failed");
             }
         });
     }

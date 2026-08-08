@@ -173,7 +173,7 @@ internal sealed class HousingCache
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Housing cache clear failed: {exception.Message}");
+                AepLog.Warning(exception, "Housing cache clear failed");
             }
         }
     }
@@ -203,7 +203,7 @@ internal sealed class HousingCache
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Housing cache read failed for {name}: {exception.Message}");
+            AepLog.Warning(exception, $"Housing cache read failed for {name}");
             return null;
         }
     }
@@ -226,7 +226,7 @@ internal sealed class HousingCache
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Housing cache write failed for {name}: {exception.Message}");
+            AepLog.Warning(exception, $"Housing cache write failed for {name}");
         }
     }
 

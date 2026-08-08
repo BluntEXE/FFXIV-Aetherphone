@@ -57,7 +57,7 @@ internal sealed class ShellScreenPainter
         }
         catch (Exception exception)
         {
-            AepLog.Error($"[shell] app-draw {app.Id} threw: {exception.Message}");
+            AepLog.Error(exception, $"[shell] app-draw {app.Id} threw");
             DrawAppFailure(contentRect, content);
         }
     }

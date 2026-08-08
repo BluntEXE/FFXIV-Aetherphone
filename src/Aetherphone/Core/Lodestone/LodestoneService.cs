@@ -51,7 +51,7 @@ internal sealed class LodestoneService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Lodestone id index purge failed: {exception.Message}");
+            AepLog.Warning(exception, "Lodestone id index purge failed");
         }
 
         configuration.LodestoneIdIndexVersion = IdIndexVersion;
@@ -241,7 +241,7 @@ internal sealed class LodestoneService : IDisposable
         catch (Exception exception)
         {
             lastInitFailureUtc = DateTime.UtcNow;
-            AepLog.Warning($"Lodestone client init failed: {exception.Message}");
+            AepLog.Warning(exception, "Lodestone client init failed");
         }
         finally
         {
@@ -287,7 +287,7 @@ internal sealed class LodestoneService : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Lodestone id index load failed: {exception.Message}");
+                AepLog.Warning(exception, "Lodestone id index load failed");
             }
         }
     }
@@ -300,7 +300,7 @@ internal sealed class LodestoneService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Lodestone id index append failed: {exception.Message}");
+            AepLog.Warning(exception, "Lodestone id index append failed");
         }
     }
 

@@ -373,7 +373,7 @@ internal sealed partial class SetupOverlay : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Setup profile update failed: {exception.Message}");
+                AepLog.Warning(exception, "Setup profile update failed");
                 profileOutcome = 2;
             }
             finally

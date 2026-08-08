@@ -765,7 +765,7 @@ internal sealed partial class MusicApp
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[Radio] station report failed: {exception.Message}");
+                AepLog.Warning(exception, "[Radio] station report failed");
             }
 
             done(ok);

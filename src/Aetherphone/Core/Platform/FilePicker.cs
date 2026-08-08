@@ -65,7 +65,7 @@ internal static class FilePicker
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Could not read attributes for {path}: {exception.Message}");
+            AepLog.Warning(exception, $"Could not read attributes for {path}");
             return false;
         }
     }

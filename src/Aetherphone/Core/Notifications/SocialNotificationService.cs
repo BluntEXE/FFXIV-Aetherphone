@@ -305,7 +305,7 @@ internal sealed class SocialNotificationService : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[Notifications] read ack failed: {exception.Message}");
+                AepLog.Warning(exception, "[Notifications] read ack failed");
             }
             finally
             {
@@ -379,7 +379,7 @@ internal sealed class SocialNotificationService : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[Notifications] poll failed: {exception.Message}");
+                AepLog.Warning(exception, "[Notifications] poll failed");
             }
             finally
             {

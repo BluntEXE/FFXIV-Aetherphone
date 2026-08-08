@@ -681,7 +681,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Voice note download failed: {exception.Message}");
+                AepLog.Warning(exception, "Voice note download failed");
                 MarkVoiceFailed(messageId);
             }
             finally
@@ -827,7 +827,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[{LogTag}] save image failed: {exception.Message}");
+                AepLog.Warning(exception, $"[{LogTag}] save image failed");
             }
             finally
             {
