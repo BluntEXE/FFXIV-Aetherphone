@@ -8,7 +8,7 @@ internal sealed class AppAvailability : IDisposable
     private const long RetryIntervalMilliseconds = 60 * 1000;
 
     private static readonly string[] AlwaysAvailable = { "appstore", "settings", "announcements" };
-    private static readonly string[] HiddenUntilLaunched = { "muster" };
+    private static readonly string[] HiddenUntilLaunched = { "muster", "coin" };
 
     private static AppAvailability? current;
 

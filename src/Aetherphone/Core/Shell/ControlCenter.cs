@@ -64,7 +64,8 @@ internal sealed class ControlCenter
     private ControlMetrics metrics;
 
     public ControlCenter(Configuration configuration, ThemeProvider themes, PlaybackHub playback, CallHub calls,
-        INavigator navigation, NotificationService notifications, NotificationRouter router)
+        INavigator navigation, NotificationService notifications, NotificationRouter router,
+        Coins.CoinStore coins, Aethernet.AethernetSession session)
     {
         this.themes = themes;
         this.playback = playback;
@@ -72,7 +73,7 @@ internal sealed class ControlCenter
         this.notifications = notifications;
         this.router = router;
         notificationCenter = new NotificationCenter(notifications, router, Dismiss);
-        registry = new ControlRegistry(configuration, themes, playback, calls, navigation, Dismiss);
+        registry = new ControlRegistry(configuration, themes, playback, calls, navigation, Dismiss, coins, session);
         layout = new ControlLayoutService(registry, configuration);
         gallery = new ControlGallery(layout);
     }

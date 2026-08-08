@@ -64,6 +64,8 @@ internal sealed class GamesApp : IPhoneApp
     private const float PausedFadeSeconds = 0.12f;
     private const int FeaturedStep = 5;
     private readonly GameStatsStore stats;
+    private readonly Core.Coins.CoinStore coins;
+    private readonly Core.Coins.CoinGameSessionTracker coinSessions;
     private readonly IMiniGame[] games;
     private readonly int[] tileOrder;
     private readonly ViewRouter<GameRoute> router;
@@ -82,9 +84,12 @@ internal sealed class GamesApp : IPhoneApp
     public string Glyph => ">";
     public int BadgeCount => 0;
 
-    public GamesApp(GameStatsStore stats, GameData gameData, ITextureProvider textures)
+    public GamesApp(GameStatsStore stats, GameData gameData, ITextureProvider textures,
+        Core.Coins.CoinStore coins, Core.Coins.CoinGameSessionTracker coinSessions)
     {
         this.stats = stats;
+        this.coins = coins;
+        this.coinSessions = coinSessions;
         games = new IMiniGame[]
         {
             new SweeperApp(), new PairsApp(), new GemSwapApp(), new TetrisApp(), new Twenty48App(),
@@ -100,11 +105,26 @@ internal sealed class GamesApp : IPhoneApp
         back = () => router.Pop();
     }
 
+    // The server owns the featured rotation; the local formula is only the offline fallback,
+    // so the highlighted tile and the game that actually pays can never disagree.
     private void RebuildLayout()
     {
         BuildDisplayOrder();
         BuildSections();
         featuredIndex = GameStatsStore.TodayIndex * FeaturedStep % games.Length;
+        var serverFeatured = coins.Wallet?.FeaturedGameId;
+        if (!string.IsNullOrEmpty(serverFeatured))
+        {
+            for (var index = 0; index < games.Length; index++)
+            {
+                if (string.Equals(games[index].Id, serverFeatured, StringComparison.Ordinal))
+                {
+                    featuredIndex = index;
+                    break;
+                }
+            }
+        }
+
         stats.DailyGameId = games[featuredIndex].Id;
     }
 
@@ -613,6 +633,7 @@ internal sealed class GamesApp : IPhoneApp
     {
         currentGame = game;
         game.Open();
+        coinSessions.GameOpened(game.Id);
         router.Push(GameRoute.Playing);
     }
 
@@ -625,5 +646,6 @@ internal sealed class GamesApp : IPhoneApp
 
         currentGame.Close();
         currentGame = null;
+        coinSessions.GameClosed();
     }
 }

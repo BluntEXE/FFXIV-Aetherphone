@@ -39,6 +39,7 @@ internal sealed class PhoneShell : IDisposable
     private readonly NotificationService notifications;
     private readonly NotificationBanner banner;
     private readonly ShortcutRunPill shortcutPill;
+    private readonly CoinEarnPill coinPill;
     private readonly MinimizedPhone minimizedView;
     private readonly MinimizeTransition minimize = new();
     private readonly SideButton sideButton = new();
@@ -86,8 +87,9 @@ internal sealed class PhoneShell : IDisposable
         var island = new DynamicIsland(services.Playback, calls);
         var rateLimitPill = new RateLimitPill(services.Http, services.AethernetSession);
         shortcutPill = new ShortcutRunPill(services.ShortcutRunner);
+        coinPill = new CoinEarnPill(services.Coins, configuration);
         var controlCenter = new ControlCenter(configuration, themes, services.Playback, calls, navigation,
-            notifications, router);
+            notifications, router, services.Coins, services.AethernetSession);
         minimizedView = new MinimizedPhone(notifications, configuration);
         home = new HomeScreen(apps, bundle.Widgets, services.Shortcuts, services.ShortcutRunner, configuration,
             services.Confirm);
@@ -109,8 +111,8 @@ internal sealed class PhoneShell : IDisposable
         transition = new ShellTransitionRenderer(themes, navigation, home, painter);
         morph = new MinimizeMorphView(themes, minimize, minimizedView, notifications, painter);
         overlays = new ShellOverlayCoordinator(configuration, loading, navigation, controlCenter, banner, island,
-            rateLimitPill, shortcutPill, incomingOverlay, banOverlay, confirmOverlay, reportOverlay, shareSheet,
-            conductOverlay, director, setup);
+            rateLimitPill, shortcutPill, coinPill, incomingOverlay, banOverlay, confirmOverlay, reportOverlay,
+            shareSheet, conductOverlay, director, setup);
     }
 
     public void OnOpened()
@@ -430,6 +432,7 @@ internal sealed class PhoneShell : IDisposable
         notifications.Vibration -= OnVibration;
         banner.Dispose();
         shortcutPill.Dispose();
+        coinPill.Dispose();
         minimizedView.Dispose();
         setup.Dispose();
         for (var index = 0; index < apps.Count; index++)

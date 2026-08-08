@@ -70,7 +70,10 @@ internal sealed record UserDto(
     string Region = "",
     int Badges = 0,
     int GrantedBadges = 0,
-    string[]? ProfileBadges = null) : IIdentified;
+    string[]? ProfileBadges = null,
+    long Coins = 0,
+    long CoinsEarnedToday = 0,
+    long CoinsDailyCap = 0) : IIdentified;
 
 internal sealed record UpdateProfileRequest(string? DisplayName, string? Handle, string? Bio, string? AvatarUrl = null);
 

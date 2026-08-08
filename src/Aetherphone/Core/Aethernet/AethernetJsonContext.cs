@@ -168,6 +168,18 @@ namespace Aetherphone.Core.Aethernet;
 [JsonSerializable(typeof(MyCommunityStationDto))]
 [JsonSerializable(typeof(RadioFollowResultDto))]
 [JsonSerializable(typeof(RadioTrackPage))]
+[JsonSerializable(typeof(CoinWalletDto))]
+[JsonSerializable(typeof(CoinRuleStatusDto))]
+[JsonSerializable(typeof(CoinLedgerEntryDto))]
+[JsonSerializable(typeof(CoinLedgerPage))]
+[JsonSerializable(typeof(CoinSkuDto))]
+[JsonSerializable(typeof(CoinTranslationDto))]
+[JsonSerializable(typeof(CoinCatalogDto))]
+[JsonSerializable(typeof(CoinAwardDto))]
+[JsonSerializable(typeof(CoinGameSessionRequest))]
+[JsonSerializable(typeof(CoinGameSessionDto))]
+[JsonSerializable(typeof(CoinPurchaseRequest))]
+[JsonSerializable(typeof(CoinPurchaseResult))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
 internal sealed partial class AethernetJsonContext : JsonSerializerContext
 {

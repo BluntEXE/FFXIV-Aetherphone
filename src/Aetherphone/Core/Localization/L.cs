@@ -233,6 +233,7 @@ internal static class L
         public static readonly LocString Venues = new("app.venues", "Venues");
         public static readonly LocString Market = new("app.market", "Market");
         public static readonly LocString Wallet = new("app.wallet", "Wallet");
+        public static readonly LocString Coin = new("app.coin", "Aether Coin");
         public static readonly LocString Music = new("app.music", "Music");
         public static readonly LocString Clock = new("app.clock", "Clock");
         public static readonly LocString Timers = new("app.timers", "Timers");
@@ -463,6 +464,9 @@ internal static class L
         public static readonly LocString WalletSub = new("storeCopy.walletSub", "Gil and currencies");
         public static readonly LocString WalletBody = new("storeCopy.walletBody",
             "Every currency you carry, with caps and totals you can actually read.");
+        public static readonly LocString CoinSub = new("storeCopy.coinSub", "Earn by living here");
+        public static readonly LocString CoinBody = new("storeCopy.coinBody",
+            "Check in, play, and talk to earn Aether Coin, then spend it on phone cases and name flair. Never traded, never pay to win.");
         public static readonly LocString MarketSub = new("storeCopy.marketSub", "Prices, live");
         public static readonly LocString MarketBody = new("storeCopy.marketBody",
             "Universalis prices for any item, with alerts when something drops.");
@@ -1290,6 +1294,22 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release09100 =
+        {
+            new("changelog.r09100.0",
+                "Added Aether Coin: check in daily, play the arcade, hold real calls and conversations, and post things that stay up, and it all pays a little cosmetic currency"),
+            new("changelog.r09100.1",
+                "The Aether Coin app shows your balance, the daily cap with its reset time, your check-in streak, and every earning rule with today's progress"),
+            new("changelog.r09100.2",
+                "The coin shop sells phone cases and a name effect; custom wallpapers, accent colors, and imported sounds stay free"),
+            new("changelog.r09100.3",
+                "Aether Coin stays on your character, can never be traded, and never buys reach"),
+            new("changelog.r09100.4",
+                "The Games app now highlights the same featured game the server pays a bonus for"),
+            new("changelog.r09100.5",
+                "One daily notification rolls up what you earned instead of pinging on every grant"),
+        };
+
         public static readonly LocString[] Release0999 =
         {
             new("changelog.r0999.0",
@@ -3547,6 +3567,86 @@ internal static class L
         public static readonly LocString EmptyHint = new("announcements.emptyHint", "News from the Aetherphone team lands here.");
         public static readonly LocString UnavailableTitle = new("announcements.unavailableTitle", "Announcement unavailable");
         public static readonly LocString UnavailableHint = new("announcements.unavailableHint", "This announcement was taken down.");
+    }
+
+    internal static class Coin
+    {
+        public static readonly LocString TabWallet = new("coin.tabWallet", "Wallet");
+        public static readonly LocString TabShop = new("coin.tabShop", "Shop");
+        public static readonly LocString TabHistory = new("coin.tabHistory", "History");
+        public static readonly LocString SignInTitle = new("coin.signInTitle", "Sign in required");
+        public static readonly LocString SignInHint = new("coin.signInHint", "Sign in to Aethernet in Settings to use Aether Coin");
+        public static readonly LocString Balance = new("coin.balance", "Aether Coin");
+        public static readonly LocString EarnedToday = new("coin.earnedToday", "Earned today");
+        public static readonly LocString EarnedLifetime = new("coin.earnedLifetime", "Earned all time");
+        public static readonly LocString SpentLifetime = new("coin.spentLifetime", "Spent all time");
+        public static readonly LocString CapProgress = new("coin.capProgress", "{0} of {1} today");
+        public static readonly LocString CapResets = new("coin.capResets", "Resets {0}");
+        public static readonly LocString CapReached = new("coin.capReached", "Daily cap reached");
+        public static readonly LocString PausedTitle = new("coin.pausedTitle", "Earning is paused");
+        public static readonly LocString PausedHint = new("coin.pausedHint", "The team switched earning off for now. Your balance and the shop still work.");
+        public static readonly LocString StreakLabel = new("coin.streakLabel", "Check-in streak");
+        public static readonly LocString StreakDays = new("coin.streakDays", "{0} day streak");
+        public static readonly LocString StreakGraceUsed = new("coin.streakGraceUsed", "Grace day used this week");
+        public static readonly LocString StreakNext = new("coin.streakNext", "Come back tomorrow to keep it going");
+        public static readonly LocString CheckIn = new("coin.checkIn", "Check in");
+        public static readonly LocString CheckedIn = new("coin.checkedIn", "Checked in");
+        public static readonly LocString CheckInReward = new("coin.checkInReward", "+{0} Aether Coin");
+        public static readonly LocString CheckInUnavailable = new("coin.checkInUnavailable", "Check-in is not available right now");
+        public static readonly LocString RuleCheckin = new("coin.ruleCheckin", "Daily check-in");
+        public static readonly LocString RuleStreak = new("coin.ruleStreak", "Streak bonus");
+        public static readonly LocString RuleWelcome = new("coin.ruleWelcome", "Welcome bonus");
+        public static readonly LocString RuleCall = new("coin.ruleCall", "A real call");
+        public static readonly LocString RuleChat = new("coin.ruleChat", "Conversations");
+        public static readonly LocString RuleGameSession = new("coin.ruleGameSession", "Playing a game");
+        public static readonly LocString RuleGameDeep = new("coin.ruleGameDeep", "A long session");
+        public static readonly LocString RuleGameFeatured = new("coin.ruleGameFeatured", "The featured game");
+        public static readonly LocString RuleChirp = new("coin.ruleChirp", "A chirp that lasted");
+        public static readonly LocString RuleGram = new("coin.ruleGram", "A gram that lasted");
+        public static readonly LocString RuleStory = new("coin.ruleStory", "A story that ran its day");
+        public static readonly LocString RuleComment = new("coin.ruleComment", "A comment that lasted");
+        public static readonly LocString RulePurchase = new("coin.rulePurchase", "Shop purchase");
+        public static readonly LocString RuleStaffGrant = new("coin.ruleStaffGrant", "From the team");
+        public static readonly LocString RuleClawback = new("coin.ruleClawback", "Removed by the team");
+        public static readonly LocString RuleCarry = new("coin.ruleCarry", "Carried forward");
+        public static readonly LocString RuleGeneric = new("coin.ruleGeneric", "Aether Coin");
+        public static readonly LocString EarnHeader = new("coin.earnHeader", "How to earn");
+        public static readonly LocString EarnHintGames = new("coin.earnHintGames", "Playing the arcade covers most of a day's cap");
+        public static readonly LocString EarnHintSocial = new("coin.earnHintSocial", "Calls, chats, and posts that stay up cover the rest");
+        public static readonly LocString FeaturedToday = new("coin.featuredToday", "Featured today");
+        public static readonly LocString PlayToEarn = new("coin.playToEarn", "Play to earn");
+        public static readonly LocString SessionTooShort = new("coin.sessionTooShort", "Played too short to pay");
+        public static readonly LocString SessionExpired = new("coin.sessionExpired", "The session expired");
+        public static readonly LocString DeepPlay = new("coin.deepPlay", "Deep play bonus");
+        public static readonly LocString GameCooldown = new("coin.gameCooldown", "Give it a minute before the next game");
+        public static readonly LocString HistoryHeader = new("coin.historyHeader", "History");
+        public static readonly LocString HistoryEmptyTitle = new("coin.historyEmptyTitle", "Nothing earned yet");
+        public static readonly LocString HistoryEmptyHint = new("coin.historyEmptyHint", "Check in, play, and talk; it all lands here.");
+        public static readonly LocString HistoryFailed = new("coin.historyFailed", "The ledger did not load");
+        public static readonly LocString Retry = new("coin.retry", "Retry");
+        public static readonly LocString FilterAll = new("coin.filterAll", "All");
+        public static readonly LocString FilterEarned = new("coin.filterEarned", "Earned");
+        public static readonly LocString FilterSpent = new("coin.filterSpent", "Spent");
+        public static readonly LocString ShopHeader = new("coin.shopHeader", "Shop");
+        public static readonly LocString Owned = new("coin.owned", "Owned");
+        public static readonly LocString Buy = new("coin.buy", "Buy");
+        public static readonly LocString BuyConfirmTitle = new("coin.buyConfirmTitle", "Buy {0}?");
+        public static readonly LocString BuyConfirmBody = new("coin.buyConfirmBody", "{0} Aether Coin will leave your wallet.");
+        public static readonly LocString Insufficient = new("coin.insufficient", "Not enough Aether Coin yet");
+        public static readonly LocString Purchased = new("coin.purchased", "It is yours");
+        public static readonly LocString PriceChanged = new("coin.priceChanged", "The price changed; take another look");
+        public static readonly LocString Unavailable = new("coin.unavailable", "Not for sale right now");
+        public static readonly LocString ShopEmpty = new("coin.shopEmpty", "The shelves are being stocked");
+        public static readonly LocString FreeNote = new("coin.freeNote", "Custom wallpapers, accents, and imported sounds are free and stay free.");
+        public static readonly LocString LeavingSoon = new("coin.leavingSoon", "Leaving {0}");
+        public static readonly LocString FrozenTitle = new("coin.frozenTitle", "Your wallet is frozen");
+        public static readonly LocString FrozenHint = new("coin.frozenHint", "Earning and spending are on hold. Check the Safety page for the reason.");
+        public static readonly LocString RollupTitle = new("coin.rollupTitle", "+{0} Aether Coin");
+        public static readonly LocString RollupBody = new("coin.rollupBody", "Today: {0}");
+        public static readonly LocString RollupMore = new("coin.rollupMore", "and {0} more");
+        public static readonly LocString SettingsRow = new("coin.settingsRow", "Aether Coin");
+        public static readonly LocString AboutWhat = new("coin.aboutWhat", "A little thank-you for using the phone: check in, play, talk, and spend it on looks.");
+        public static readonly LocString AboutBound = new("coin.aboutBound", "Aether Coin stays on this character and can never be traded.");
     }
 
     internal static class Catalogs

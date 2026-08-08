@@ -28,6 +28,7 @@ internal static class AppAccents
         ["market"] = new(0.92f, 0.62f, 0.18f, 1f),
         ["music"] = new(0.13f, 0.75f, 0.36f, 1f),
         ["wallet"] = new(0.26f, 0.78f, 0.52f, 1f),
+        ["coin"] = new(0.98f, 0.76f, 0.24f, 1f),
         ["inventory"] = new(0.42f, 0.58f, 0.86f, 1f),
         ["jobs"] = new(0.30f, 0.55f, 0.98f, 1f),
         ["clock"] = new(1.00f, 0.58f, 0.00f, 1f),
