@@ -722,7 +722,7 @@
   "settings.commandMarket": "Öffnet das Marktbrett, optional mit Gegenstandssuche",
   "settings.commandReset": "Holt das Telefon zurück in die Bildschirmmitte",
   "settings.commandTest": "Sendet eine Beispielbenachrichtigung",
-  "changelog.r0999.0": "Sieben Telefonhüllen hinzugefügt: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo und Runic",
+  "changelog.r0999.0": "Sieben Telefonhüllen hinzugefügt: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo und Runic, beigetragen von Remi und Silkie",
   "changelog.r0999.1": "Alle Telefonhüllen wurden neu komprimiert, sodass das Plugin trotz der sieben neuen Hüllen weniger als halb so groß heruntergeladen wird",
   "changelog.r0999.2": "Eine Nachricht erscheint jetzt sofort in einem offenen Gespräch, statt auf die nächste Aktualisierung zu warten",
   "changelog.r0999.3": "Ein Gespräch zu öffnen oder zu einem offen gelassenen zurückzukehren holt jetzt sofort die neuesten Nachrichten",
