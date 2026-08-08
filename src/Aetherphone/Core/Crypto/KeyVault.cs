@@ -129,6 +129,7 @@ internal sealed class KeyVault : IDisposable
 
             if (bundle is null)
             {
+                AepLog.Debug("[Encryption] vault refresh skipped: the keys endpoint was unreachable; it will be retried.");
                 return;
             }
 
@@ -193,6 +194,7 @@ internal sealed class KeyVault : IDisposable
             var (fetched, _) = await client.MyKeysAsync(token).ConfigureAwait(false);
             if (fetched is null)
             {
+                AepLog.Warning("[Encryption] creating a recovery code failed: the keys endpoint was unreachable.");
                 return RecoveryCodeCreation.Failure;
             }
 
@@ -208,6 +210,7 @@ internal sealed class KeyVault : IDisposable
             var pkcs8 = CryptoBox.TryExportPrivateKey(key);
             if (pkcs8 is null)
             {
+                AepLog.Warning("[Encryption] creating a recovery code failed: the private key could not be exported.");
                 return RecoveryCodeCreation.Failure;
             }
 
@@ -216,6 +219,7 @@ internal sealed class KeyVault : IDisposable
             CryptographicOperations.ZeroMemory(pkcs8);
             if (escrow is null)
             {
+                AepLog.Warning("[Encryption] creating a recovery code failed: wrapping the private key failed.");
                 return RecoveryCodeCreation.Failure;
             }
 
@@ -231,6 +235,7 @@ internal sealed class KeyVault : IDisposable
 
             if (stored is null)
             {
+                AepLog.Warning("[Encryption] creating a recovery code failed: the server did not accept the escrow.");
                 return RecoveryCodeCreation.Failure;
             }
 
@@ -255,18 +260,21 @@ internal sealed class KeyVault : IDisposable
             var (bundle, _) = await client.MyKeysAsync(token).ConfigureAwait(false);
             if (bundle is null)
             {
+                AepLog.Warning("[Encryption] recovery failed: the keys endpoint was unreachable.");
                 return false;
             }
 
             serverBundle = bundle;
             if (bundle.PrivateKey is null)
             {
+                AepLog.Warning("[Encryption] recovery failed: no recovery escrow exists for this account.");
                 return false;
             }
 
             var pkcs8 = RecoveryKey.Unwrap(bundle.PrivateKey, code);
             if (pkcs8 is null)
             {
+                AepLog.Info("[Encryption] recovery failed: the entered code did not open the escrow.");
                 return false;
             }
 
@@ -274,12 +282,14 @@ internal sealed class KeyVault : IDisposable
             if (imported is null)
             {
                 CryptographicOperations.ZeroMemory(pkcs8);
+                AepLog.Warning("[Encryption] recovery failed: the escrow opened but its private key could not be imported.");
                 return false;
             }
 
             if (!string.Equals(CryptoBox.ExportPublicKey(imported), bundle.PublicKey, StringComparison.Ordinal))
             {
                 CryptographicOperations.ZeroMemory(pkcs8);
+                AepLog.Warning("[Encryption] recovery failed: the escrowed key does not match the account's current public key (stale escrow).");
                 return false;
             }
 
@@ -335,7 +345,13 @@ internal sealed class KeyVault : IDisposable
         }
 
         var escrows = await client.MyKeyEscrowsAsync(token).ConfigureAwait(false);
-        return escrows is not null && escrows.Items.Length > 0;
+        if (escrows is null)
+        {
+            AepLog.Debug("[Encryption] archived escrow lookup failed: the escrows endpoint was unreachable.");
+            return false;
+        }
+
+        return escrows.Items.Length > 0;
     }
 
     public async Task<int> RestorePreviousKeysAsync(string code, CancellationToken token)
@@ -356,7 +372,13 @@ internal sealed class KeyVault : IDisposable
             }
 
             var escrows = await client.MyKeyEscrowsAsync(token).ConfigureAwait(false);
-            if (escrows is null || escrows.Items.Length == 0)
+            if (escrows is null)
+            {
+                AepLog.Warning("[Encryption] restoring older keys failed: the escrows endpoint was unreachable.");
+                return 0;
+            }
+
+            if (escrows.Items.Length == 0)
             {
                 return 0;
             }
@@ -383,8 +405,11 @@ internal sealed class KeyVault : IDisposable
 
             if (restored.Count == 0)
             {
+                AepLog.Info($"[Encryption] the entered code did not open any of the {escrows.Items.Length} archived keys.");
                 return 0;
             }
+
+            AepLog.Info($"[Encryption] restored {restored.Count} of {escrows.Items.Length} archived keys.");
 
             var merged = new EcPrivateKey[recoveredPreviousKeys.Length + restored.Count];
             recoveredPreviousKeys.CopyTo(merged, 0);
@@ -444,12 +469,17 @@ internal sealed class KeyVault : IDisposable
         CryptographicOperations.ZeroMemory(pkcs8);
         if (imported is null)
         {
+            AepLog.Warning($"[Encryption] archived key version {item.KeyVersion} opened but could not be imported.");
             return null;
         }
 
-        return string.Equals(CryptoBox.TryExportPublicKey(imported), item.PublicKey, StringComparison.Ordinal)
-            ? imported
-            : null;
+        if (!string.Equals(CryptoBox.TryExportPublicKey(imported), item.PublicKey, StringComparison.Ordinal))
+        {
+            AepLog.Warning($"[Encryption] archived key version {item.KeyVersion} opened but does not match its recorded public key.");
+            return null;
+        }
+
+        return imported;
     }
 
     public void Dispose()
@@ -487,6 +517,7 @@ internal sealed class KeyVault : IDisposable
 
         if (stored is null)
         {
+            AepLog.Warning("[Encryption] creating a key failed: the server did not accept the upload; it will be retried.");
             return false;
         }
 
@@ -498,6 +529,10 @@ internal sealed class KeyVault : IDisposable
         {
             StoreLocalCache(pkcs8);
             CryptographicOperations.ZeroMemory(pkcs8);
+        }
+        else
+        {
+            AepLog.Warning("[Encryption] the new key could not be exported for local storage; it will only last this session.");
         }
 
         SetState(KeyVaultState.Unlocked);
@@ -547,6 +582,7 @@ internal sealed class KeyVault : IDisposable
         var publicKey = CryptoBox.TryExportPublicKey(existingKey);
         if (publicKey is null)
         {
+            AepLog.Warning("[Encryption] re-uploading the existing key failed: its public key could not be exported.");
             return;
         }
 
@@ -560,6 +596,7 @@ internal sealed class KeyVault : IDisposable
 
         if (stored is null)
         {
+            AepLog.Warning("[Encryption] re-uploading the existing key failed: the server did not accept it; it will be retried.");
             return;
         }
 
@@ -603,6 +640,7 @@ internal sealed class KeyVault : IDisposable
         var currentPublicKey = CryptoBox.TryExportPublicKey(key);
         if (currentPublicKey is null)
         {
+            AepLog.Warning("[Encryption] verifying the stored key failed: the current public key could not be exported.");
             return;
         }
 
@@ -616,6 +654,7 @@ internal sealed class KeyVault : IDisposable
         var pkcs8 = CryptoBox.TryExportPrivateKey(key);
         if (pkcs8 is null)
         {
+            AepLog.Warning("[Encryption] rewriting the stored key failed: the private key could not be exported.");
             return;
         }
 

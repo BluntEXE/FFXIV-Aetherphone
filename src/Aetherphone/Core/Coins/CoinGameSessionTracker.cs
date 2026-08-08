@@ -19,6 +19,9 @@ internal sealed class CoinGameSessionTracker : IDisposable
     private volatile string? lastAwardGameId;
     private int transitioning;
     private int resolvingPending;
+    private long openStartTicks;
+    private volatile int openMinSeconds = 180;
+    private volatile int openDeepSeconds = 900;
 
     public CoinGameSessionTracker(Configuration configuration, AethernetSession session, CoinsClient coins)
     {
@@ -30,6 +33,24 @@ internal sealed class CoinGameSessionTracker : IDisposable
     }
 
     public string? OpenGameId => openGameId;
+
+    public int OpenMinSeconds => openMinSeconds;
+
+    public int OpenDeepSeconds => openDeepSeconds;
+
+    public int OpenSessionSeconds
+    {
+        get
+        {
+            if (openSessionId is null)
+            {
+                return -1;
+            }
+
+            var start = Volatile.Read(ref openStartTicks);
+            return start == 0 ? -1 : (int)((Environment.TickCount64 - start) / 1000);
+        }
+    }
 
     public CoinAwardDto? TakeAward(out string? gameId)
     {
@@ -57,6 +78,19 @@ internal sealed class CoinGameSessionTracker : IDisposable
             var issued = await coins.StartGameSessionAsync(gameId, token).ConfigureAwait(false);
             if (issued is not null && issued.SessionId.Length > 0)
             {
+                var startTicks = Environment.TickCount64;
+                if (issued.StartedAtUnix > 0)
+                {
+                    var alreadyElapsed = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - issued.StartedAtUnix;
+                    if (alreadyElapsed > 0)
+                    {
+                        startTicks -= alreadyElapsed * 1000;
+                    }
+                }
+
+                openMinSeconds = issued.MinSeconds > 0 ? issued.MinSeconds : openMinSeconds;
+                openDeepSeconds = issued.DeepSeconds > 0 ? issued.DeepSeconds : openDeepSeconds;
+                Volatile.Write(ref openStartTicks, startTicks);
                 openSessionId = issued.SessionId;
                 RememberPending(issued.SessionId);
             }
@@ -68,6 +102,7 @@ internal sealed class CoinGameSessionTracker : IDisposable
         var gameId = openGameId;
         openSessionId = null;
         openGameId = null;
+        Volatile.Write(ref openStartTicks, 0);
         if (!session.IsSignedIn || configuration.PendingCoinGameSession.Length == 0)
         {
             return;

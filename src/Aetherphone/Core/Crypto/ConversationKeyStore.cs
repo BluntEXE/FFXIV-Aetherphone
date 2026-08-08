@@ -783,31 +783,43 @@ internal sealed class ConversationKeyStore
         const string chatPrefix = "chat:";
         const string velvetPrefix = "velvet:";
         const string gramPrefix = "gram:";
+        bool accepted;
         if (scopeId.StartsWith(chatPrefix, StringComparison.Ordinal))
         {
-            await client.AddConversationWrapsAsync(scopeId[chatPrefix.Length..], request, CancellationToken.None)
+            accepted = await client.AddConversationWrapsAsync(scopeId[chatPrefix.Length..], request, CancellationToken.None)
                 .ConfigureAwait(false);
-            return;
         }
-
-        if (scopeId.StartsWith(velvetPrefix, StringComparison.Ordinal))
+        else if (scopeId.StartsWith(velvetPrefix, StringComparison.Ordinal))
         {
             var otherId = OtherIdFromPairKey(scopeId[velvetPrefix.Length..], myUserId);
-            if (otherId is not null)
+            if (otherId is null)
             {
-                await client.AddVelvetWrapsAsync(otherId, request, CancellationToken.None).ConfigureAwait(false);
+                AepLog.Warning($"[Crypto] self repair skipped for {scopeId}; the pair key does not contain this user.");
+                return;
             }
 
+            accepted = await client.AddVelvetWrapsAsync(otherId, request, CancellationToken.None).ConfigureAwait(false);
+        }
+        else if (scopeId.StartsWith(gramPrefix, StringComparison.Ordinal))
+        {
+            var otherId = OtherIdFromPairKey(scopeId[gramPrefix.Length..], myUserId);
+            if (otherId is null)
+            {
+                AepLog.Warning($"[Crypto] self repair skipped for {scopeId}; the pair key does not contain this user.");
+                return;
+            }
+
+            accepted = await client.AddGramWrapsAsync(otherId, request, CancellationToken.None).ConfigureAwait(false);
+        }
+        else
+        {
+            AepLog.Debug($"[Crypto] self repair skipped for {scopeId}; the surface has no repair route.");
             return;
         }
 
-        if (scopeId.StartsWith(gramPrefix, StringComparison.Ordinal))
+        if (!accepted)
         {
-            var otherId = OtherIdFromPairKey(scopeId[gramPrefix.Length..], myUserId);
-            if (otherId is not null)
-            {
-                await client.AddGramWrapsAsync(otherId, request, CancellationToken.None).ConfigureAwait(false);
-            }
+            AepLog.Warning($"[Crypto] self repair for {scopeId} generation {request.Generation} was not accepted by the server; it will be retried next session.");
         }
     }
 

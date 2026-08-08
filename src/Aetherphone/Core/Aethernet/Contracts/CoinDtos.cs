@@ -65,7 +65,8 @@ internal sealed record CoinGameSessionDto(
     int MinSeconds,
     int DeepSeconds,
     long ExpiresAtUnix,
-    string Reason = "");
+    string Reason = "",
+    long StartedAtUnix = 0);
 
 internal sealed record CoinPurchaseRequest(string SkuId, long ExpectedPrice);
 
