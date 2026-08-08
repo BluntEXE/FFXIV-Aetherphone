@@ -45,6 +45,7 @@ internal sealed class HttpService : IDisposable
     {
         if (IsPaused(uri))
         {
+            AepLog.Debug($"HTTP GET {uri} skipped; {uri.Host} is rate limit paused");
             return null;
         }
 
@@ -62,6 +63,7 @@ internal sealed class HttpService : IDisposable
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    AepLog.Warning($"HTTP GET {uri} returned {(int)response.StatusCode}");
                     return null;
                 }
 
@@ -75,7 +77,7 @@ internal sealed class HttpService : IDisposable
             {
                 if (attempt == MaxAttempts)
                 {
-                    AepLog.Warning($"HTTP GET failed for {uri}: {exception.Message}");
+                    AepLog.Warning(exception, $"HTTP GET failed for {uri}");
                     return null;
                 }
 
@@ -130,10 +132,11 @@ internal sealed class HttpService : IDisposable
             using var response = await client.SendAsync(request, scope.Token).ConfigureAwait(false);
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
             {
+                AepLog.Warning($"HTTP PUT {uri} was rate limited");
                 return false;
             }
 
-            return response.IsSuccessStatusCode;
+            return SucceededOrLogged(request, response);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -141,7 +144,7 @@ internal sealed class HttpService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"HTTP PUT failed for {uri}: {exception.Message}");
+            AepLog.Warning(exception, $"HTTP PUT failed for {uri}");
             return false;
         }
     }
@@ -153,6 +156,7 @@ internal sealed class HttpService : IDisposable
         using var request = new HttpRequestMessage(method, url);
         if (IsPollingPaused(request))
         {
+            AepLog.Debug($"HTTP {method} {url} skipped; host is rate limit paused");
             onStatus?.Invoke(RateLimitedStatus);
             return false;
         }
@@ -171,7 +175,7 @@ internal sealed class HttpService : IDisposable
                 return false;
             }
 
-            return response.IsSuccessStatusCode;
+            return SucceededOrLogged(request, response);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -179,7 +183,7 @@ internal sealed class HttpService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"HTTP {method} failed for {url}: {exception.Message}");
+            AepLog.Warning(exception, $"HTTP {method} failed for {url}");
             return false;
         }
     }
@@ -190,6 +194,7 @@ internal sealed class HttpService : IDisposable
         using var request = new HttpRequestMessage(method, url);
         if (IsPollingPaused(request))
         {
+            AepLog.Debug($"HTTP {method} {url} skipped; host is rate limit paused");
             onStatus?.Invoke(RateLimitedStatus);
             return false;
         }
@@ -206,7 +211,7 @@ internal sealed class HttpService : IDisposable
                 return false;
             }
 
-            return response.IsSuccessStatusCode;
+            return SucceededOrLogged(request, response);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -214,7 +219,7 @@ internal sealed class HttpService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"HTTP {method} failed for {url}: {exception.Message}");
+            AepLog.Warning(exception, $"HTTP {method} failed for {url}");
             return false;
         }
     }
@@ -224,6 +229,7 @@ internal sealed class HttpService : IDisposable
     {
         if (IsPollingPaused(request))
         {
+            AepLog.Debug($"HTTP {request.Method} {request.RequestUri} skipped; host is rate limit paused");
             onStatus?.Invoke(RateLimitedStatus);
             return default;
         }
@@ -282,7 +288,7 @@ internal sealed class HttpService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"HTTP {request.Method} failed for {request.RequestUri}: {exception.Message}");
+            AepLog.Warning(exception, $"HTTP {request.Method} failed for {request.RequestUri}");
             return default;
         }
     }
@@ -336,10 +342,22 @@ internal sealed class HttpService : IDisposable
     {
         if (request.Method != HttpMethod.Get)
         {
+            AepLog.Warning($"HTTP {request.Method} {request.RequestUri} was rate limited");
             return;
         }
 
         PauseHost(request.RequestUri, response);
+    }
+
+    private static bool SucceededOrLogged(HttpRequestMessage request, HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return true;
+        }
+
+        AepLog.Warning($"HTTP {request.Method} {request.RequestUri} returned {(int)response.StatusCode}");
+        return false;
     }
 
     private void PauseHost(Uri? uri, HttpResponseMessage response)
