@@ -18,7 +18,6 @@ internal static class OnboardingHero
         new(-0.86f, -0.58f), new(0.92f, -0.30f), new(0.58f, 0.82f),
     };
 
-    private static readonly Vector4 GlyphInk = new(1f, 1f, 1f, 1f);
     private const float StaggerSpan = 0.34f;
     private const double DriftPeriodMs = 30000.0;
     private const double RipplePeriodMs = 2800.0;

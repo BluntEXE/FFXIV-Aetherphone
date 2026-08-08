@@ -24,7 +24,6 @@ internal sealed class ShareSheet
     private const float CancelHeight = 40f;
     private const int MaxColumns = 4;
 
-    private static readonly Vector4 GlyphInk = new(1f, 1f, 1f, 1f);
 
     private readonly ShareService service;
     private Spring reveal;

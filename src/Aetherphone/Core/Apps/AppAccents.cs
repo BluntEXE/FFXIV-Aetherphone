@@ -80,5 +80,5 @@ internal static class AppAccents
     public static Vector4 For(string id) =>
         Accents.TryGetValue(id, out var accent) ? accent : AccentRing.Fallback;
 
-    public static Vector4 InkFor(string id) => Palette.ReadableInk(For(id));
+    public static Vector4 InkFor(string id) => AccentRing.Ink;
 }

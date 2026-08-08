@@ -7,6 +7,10 @@ namespace Aetherphone.Core.Theme;
 // without breaking white ink, so regenerate rather than hand-edit; see docs/design-accents.md.
 internal static class AccentRing
 {
+    public const float TileLuminance = 0.285f;
+
+    public static readonly Vector4 Ink = new(1f, 1f, 1f, 1f);
+
     public static readonly Vector4 Rose = new(0.978f, 0.333f, 0.536f, 1f);
     public static readonly Vector4 Red = new(0.977f, 0.362f, 0.324f, 1f);
     public static readonly Vector4 Orange = new(0.883f, 0.453f, 0.114f, 1f);

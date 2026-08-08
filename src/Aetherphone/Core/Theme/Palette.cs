@@ -2,11 +2,6 @@ namespace Aetherphone.Core.Theme;
 
 internal static class Palette
 {
-    private const float MinInkContrast = 3.0f;
-    private const float InkDarkening = 0.78f;
-
-    private static readonly Vector4 WhiteInk = new(1f, 1f, 1f, 1f);
-
     public static Vector4 WithAlpha(Vector4 color, float alpha) => color with { W = alpha };
     public static Vector4 Mix(Vector4 from, Vector4 to, float amount) => Vector4.Lerp(from, to, amount);
     public static float Luminance(Vector4 color) => color.X * 0.299f + color.Y * 0.587f + color.Z * 0.114f;
@@ -21,8 +16,9 @@ internal static class Palette
         return one > other ? (one + 0.05f) / (other + 0.05f) : (other + 0.05f) / (one + 0.05f);
     }
 
-    // Scaling in gamma space keeps the hue and lets every app backdrop land at the same darkness no matter
-    // how luminous its accent is, which a fixed Darken factor cannot do (yellow would sit far brighter than blue).
+    // Scales in linear light, so the result lands on the target luminance exactly and keeps its chromaticity.
+    // A fixed Darken factor cannot do this (yellow would sit far brighter than blue), and scaling the encoded
+    // channels only approximates it: pure green came out at 2.98:1 against white instead of the intended 3.13.
     public static Vector4 ShadeToLuminance(Vector4 color, float target)
     {
         var luminance = RelativeLuminance(color);
@@ -31,22 +27,19 @@ internal static class Palette
             return color;
         }
 
-        var factor = MathF.Pow(target / luminance, 1f / 2.4f);
-        return new Vector4(color.X * factor, color.Y * factor, color.Z * factor, color.W);
-    }
-
-    public static Vector4 ReadableInk(Vector4 surface)
-    {
-        if (ContrastRatio(surface, WhiteInk) >= MinInkContrast)
-        {
-            return WhiteInk;
-        }
-
-        return Darken(surface, InkDarkening) with { W = 1f };
+        var factor = target / luminance;
+        return new Vector4(
+            EncodeChannel(LinearChannel(color.X) * factor),
+            EncodeChannel(LinearChannel(color.Y) * factor),
+            EncodeChannel(LinearChannel(color.Z) * factor),
+            color.W);
     }
 
     private static float LinearChannel(float channel) =>
         channel <= 0.04045f ? channel / 12.92f : MathF.Pow((channel + 0.055f) / 1.055f, 2.4f);
+
+    private static float EncodeChannel(float channel) =>
+        channel <= 0.0031308f ? channel * 12.92f : 1.055f * MathF.Pow(channel, 1f / 2.4f) - 0.055f;
 
     public static Vector4 Lighten(Vector4 color, float amount) =>
         Vector4.Lerp(color, new Vector4(1f, 1f, 1f, color.W), amount);

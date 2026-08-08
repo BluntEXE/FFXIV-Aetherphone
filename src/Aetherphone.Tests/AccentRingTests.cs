@@ -2,6 +2,7 @@ using System.Numerics;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
 using Xunit;
 
 namespace Aetherphone.Tests;
@@ -55,6 +56,35 @@ public sealed class AccentRingTests
     public void NoAccentEverFlipsToDarkInk(string id)
     {
         Assert.Equal(White, AppAccents.InkFor(id));
+    }
+
+    [Theory]
+    [MemberData(nameof(AppIds))]
+    public void EveryTileSurfaceCarriesWhiteAtThreeToOne(string id)
+    {
+        var contrast = Palette.ContrastRatio(IconTile.Surface(AppAccents.For(id)), White);
+        Assert.True(contrast >= MinInkContrast,
+            $"{id} renders white at {contrast:F2}:1, below the {MinInkContrast:F1}:1 floor");
+    }
+
+    // Settings pages, shortcuts, and custom accents author tints outside the ring. IconTile.Surface has to
+    // pull any of them down far enough for the white glyph, or those tiles fall back to a dark glyph.
+    [Fact]
+    public void AnyTintNormalisesToCarryWhite()
+    {
+        for (var red = 0; red <= 4; red++)
+        {
+            for (var green = 0; green <= 4; green++)
+            {
+                for (var blue = 0; blue <= 4; blue++)
+                {
+                    var tint = new Vector4(red / 4f, green / 4f, blue / 4f, 1f);
+                    var contrast = Palette.ContrastRatio(IconTile.Surface(tint), White);
+                    Assert.True(contrast >= MinInkContrast,
+                        $"tint ({tint.X:F2}, {tint.Y:F2}, {tint.Z:F2}) renders white at {contrast:F2}:1");
+                }
+            }
+        }
     }
 
     [Fact]

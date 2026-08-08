@@ -21,7 +21,7 @@ internal static class ShortcutArt
         var surface = IconTile.Surface(ShortcutTint.Resolve(shortcut.Tint));
         Elevation.IconRest(drawList, min, max, radius, scale);
         IconTile.FillShaded(drawList, min, max, radius, surface);
-        DrawContent(drawList, center, size, shortcut, icon, IconTile.Ink(surface));
+        DrawContent(drawList, center, size, shortcut, icon, AccentRing.Ink);
         Material.EdgeSquircle(drawList, min, max, radius, scale);
     }
 

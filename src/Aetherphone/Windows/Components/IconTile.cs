@@ -12,12 +12,14 @@ internal static class IconTile
         var half = size * 0.5f;
         Squircle.Fill(drawList, center - new Vector2(half, half), center + new Vector2(half, half),
             size * Metrics.Radius.TileFactor, ImGui.GetColorU32(tint));
-        ProgressRing.CenterIcon(center, icon, Palette.ReadableInk(tint), size * 0.50f);
+        ProgressRing.CenterIcon(center, icon, AccentRing.Ink, size * 0.50f);
     }
 
-    public static Vector4 Surface(Vector4 accent) => accent with { W = 1f };
-
-    public static Vector4 Ink(Vector4 surface) => Palette.ReadableInk(surface);
+    // Tints authored outside the ring (settings pages, shortcuts, custom accents) can be far too bright to
+    // carry the white glyph. Pulling them to the ring luminance is what keeps every tile on one contract;
+    // ring accents already sit at that value and pass through untouched.
+    public static Vector4 Surface(Vector4 accent) =>
+        Palette.ShadeToLuminance(accent with { W = 1f }, AccentRing.TileLuminance);
 
     public static void FillShaded(ImDrawListPtr drawList, Vector2 min, Vector2 max, float radius, Vector4 surface,
         float alpha = 1f)

@@ -12,6 +12,11 @@ Two variations were tried and rejected in review: flipping the glyph to dark on 
 broken, since neighbouring tiles disagree on ink) and inverting whole tiles to a white body with a colored
 glyph (reads as missing artwork at this density). Do not reintroduce either without new evidence.
 
+`IconTile.Surface` enforces the rule for tints that never went through the ring: settings page tints,
+shortcut tints, and user chosen accents are shaded to `AccentRing.TileLuminance` before drawing, so white
+always reads on them. Ring accents already sit at that luminance and pass through untouched. Draw a tile
+through `IconTile.Surface` and paint the glyph `AccentRing.Ink`; never pass a raw tint straight to a fill.
+
 ## The ring
 
 `src/Aetherphone/Core/Theme/AccentRing.cs` holds thirteen chromatic accents plus a neutral `Slate`.
