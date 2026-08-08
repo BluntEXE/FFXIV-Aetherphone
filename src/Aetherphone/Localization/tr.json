@@ -2315,6 +2315,8 @@
   "jobs.deleteCategory": "Sil",
   "jobs.deleteCategoryConfirm": "\"{0}\" silinsin mi? Setler rol bölümlerine geri döner.",
   "jobs.emptyCategory": "Burada henüz set yok. Bir setin ··· menüsünden ekleyebilirsin.",
+  "jobs.moveUp": "Yukarı taşı",
+  "jobs.moveDown": "Aşağı taşı",
   "inventory.logInToView": "Eşyalarını görmek için giriş yap",
   "inventory.search": "Eşyalarını ara",
   "inventory.searchHint": "Sahip olduğun her şeyin içinde bir eşyanın nerede olduğunu bulmak için ara.",

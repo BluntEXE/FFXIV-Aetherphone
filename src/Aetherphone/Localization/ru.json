@@ -2315,6 +2315,8 @@
   "jobs.deleteCategory": "Удалить",
   "jobs.deleteCategoryConfirm": "Удалить «{0}»? Наборы вернутся в свои разделы ролей.",
   "jobs.emptyCategory": "Здесь пока нет наборов. Добавьте набор через его меню ···.",
+  "jobs.moveUp": "Переместить вверх",
+  "jobs.moveDown": "Переместить вниз",
   "inventory.logInToView": "Войдите, чтобы увидеть предметы",
   "inventory.search": "Поиск предметов",
   "inventory.searchHint": "Ищите, где находится любой предмет среди всего, что у вас есть.",

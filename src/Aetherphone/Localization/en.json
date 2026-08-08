@@ -2315,6 +2315,8 @@
   "jobs.deleteCategory": "Delete",
   "jobs.deleteCategoryConfirm": "Delete \"{0}\"? Its gearsets go back to their role sections.",
   "jobs.emptyCategory": "No gearsets here yet. Use a gearset's ··· menu to add one.",
+  "jobs.moveUp": "Move up",
+  "jobs.moveDown": "Move down",
   "inventory.logInToView": "Log in to view your items",
   "inventory.search": "Search your items",
   "inventory.searchHint": "Search to find where any item is across everything you own.",
