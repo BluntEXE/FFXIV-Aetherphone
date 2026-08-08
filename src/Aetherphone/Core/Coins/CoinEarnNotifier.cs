@@ -6,8 +6,6 @@ using Aetherphone.Core.Notifications;
 
 namespace Aetherphone.Core.Coins;
 
-// Routine earns are silent; the one client-raised coin notification is the daily rollup,
-// coalesced onto a single stack key so the centre never turns into a coin log.
 internal sealed class CoinEarnNotifier : IDisposable
 {
     public const string GroupKey = "coin:daily";

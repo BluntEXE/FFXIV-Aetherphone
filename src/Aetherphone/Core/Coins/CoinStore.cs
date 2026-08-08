@@ -160,9 +160,6 @@ internal sealed class CoinStore : IDisposable
         });
     }
 
-    // The /me poll carries the balance shell-wide; when it moves up without a local action,
-    // settlement paid something the player never saw happen. Fetch what changed and let the
-    // notification layer coalesce it into the daily rollup.
     private void OnSessionChanged()
     {
         var accountId = session.CurrentUser?.Id;

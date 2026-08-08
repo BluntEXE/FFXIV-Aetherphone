@@ -66,6 +66,7 @@ internal sealed class GamesApp : IPhoneApp
     private readonly GameStatsStore stats;
     private readonly Core.Coins.CoinStore coins;
     private readonly Core.Coins.CoinGameSessionTracker coinSessions;
+    private readonly Windows.Components.CoinFloat coinFloats = new();
     private readonly IMiniGame[] games;
     private readonly int[] tileOrder;
     private readonly ViewRouter<GameRoute> router;
@@ -105,8 +106,6 @@ internal sealed class GamesApp : IPhoneApp
         back = () => router.Pop();
     }
 
-    // The server owns the featured rotation; the local formula is only the offline fallback,
-    // so the highlighted tile and the game that actually pays can never disagree.
     private void RebuildLayout()
     {
         BuildDisplayOrder();
@@ -227,6 +226,23 @@ internal sealed class GamesApp : IPhoneApp
         {
             CloseCurrentGame();
         }
+
+        var award = coinSessions.TakeAward(out _);
+        if (award is not null)
+        {
+            var anchor = new Vector2(context.Content.Center.X, context.Content.Min.Y + 96f * UiScale.Current);
+            if (award.Granted && award.Amount > 0)
+            {
+                coinFloats.Spawn(Loc.T(L.Coin.CheckInReward, award.Amount.ToString("N0", Loc.Culture)), anchor);
+            }
+            else if (award.Reason == "too_short")
+            {
+                coinFloats.Spawn(Loc.T(L.Coin.SessionTooShort), anchor, true);
+            }
+        }
+
+        coinFloats.Draw(ImGui.GetWindowDrawList(), Core.Apps.AppAccents.For("coin"), theme.TextMuted,
+            ImGui.GetIO().DeltaTime);
     }
 
     private void DrawView(GameRoute route, Rect area, int depth)

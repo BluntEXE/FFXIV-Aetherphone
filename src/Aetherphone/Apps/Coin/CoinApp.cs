@@ -33,6 +33,7 @@ internal sealed partial class CoinApp : IPhoneApp
     private readonly string[] filterOptions = new string[3];
     private readonly PullToRefresh walletRefresh = new();
     private readonly PullToRefresh historyRefresh = new();
+    private readonly CoinFloat floats = new();
 
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
@@ -115,6 +116,8 @@ internal sealed partial class CoinApp : IPhoneApp
                 DrawWallet(body);
                 break;
         }
+
+        floats.Draw(ImGui.GetWindowDrawList(), ui.Palette.Accent, ui.MutedInk, ImGui.GetIO().DeltaTime);
     }
 
     public void Dispose()

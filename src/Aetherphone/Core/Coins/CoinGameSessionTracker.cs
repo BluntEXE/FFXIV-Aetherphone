@@ -4,9 +4,6 @@ using Aetherphone.Core.Aethernet.Contracts;
 
 namespace Aetherphone.Core.Coins;
 
-// The server times the session; this tracker only brackets a mini-game between its open and
-// close. A crash or a dropped request simply lets the session expire server-side and pay
-// nothing, so there is no recovery path and no local clock to trust.
 internal sealed class CoinGameSessionTracker : IDisposable
 {
     private readonly AethernetSession session;

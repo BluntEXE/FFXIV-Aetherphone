@@ -10,9 +10,6 @@ using Dalamud.Interface;
 
 namespace Aetherphone.Core.Shell;
 
-// Sits in the banner-shortcut-coin-rate-limit exclusivity chain under the island. At most
-// one appearance per eight seconds; deltas that arrive while a pill is on screen or inside
-// the window merge into the next one, so a settlement burst reads as a single number.
 internal sealed class CoinEarnPill : IDisposable
 {
     private const float PresenceSmoothTime = 0.16f;

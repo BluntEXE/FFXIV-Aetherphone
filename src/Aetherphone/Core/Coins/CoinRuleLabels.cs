@@ -25,8 +25,29 @@ internal static class CoinRuleLabels
         ["carry.forward"] = L.Coin.RuleCarry,
     }.ToFrozenDictionary(StringComparer.Ordinal);
 
+    private static readonly FrozenDictionary<string, LocString> Hints = new Dictionary<string, LocString>
+    {
+        ["coin.checkin"] = L.Coin.RuleCheckinHint,
+        ["coin.streak"] = L.Coin.RuleStreakHint,
+        ["coin.welcome"] = L.Coin.RuleWelcomeHint,
+        ["call.connected"] = L.Coin.RuleCallHint,
+        ["chat.conversation"] = L.Coin.RuleChatHint,
+        ["game.session"] = L.Coin.RuleGameSessionHint,
+        ["game.deep"] = L.Coin.RuleGameDeepHint,
+        ["game.featured"] = L.Coin.RuleGameFeaturedHint,
+        ["chirp.survived"] = L.Coin.RuleChirpHint,
+        ["gram.survived"] = L.Coin.RuleGramHint,
+        ["story.survived"] = L.Coin.RuleStoryHint,
+        ["comment.survived"] = L.Coin.RuleCommentHint,
+    }.ToFrozenDictionary(StringComparer.Ordinal);
+
     public static LocString For(string ruleId)
     {
         return Labels.TryGetValue(ruleId, out var label) ? label : L.Coin.RuleGeneric;
+    }
+
+    public static bool TryHint(string ruleId, out LocString hint)
+    {
+        return Hints.TryGetValue(ruleId, out hint);
     }
 }

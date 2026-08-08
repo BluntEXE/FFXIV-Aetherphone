@@ -48,7 +48,6 @@ internal sealed class CoinPage : ISettingsPage
             }
 
             SettingsSection.Hint(Loc.T(L.Coin.AboutWhat), theme);
-            SettingsSection.Hint(Loc.T(L.Coin.AboutBound), theme);
             ImGui.Dummy(new Vector2(0f, 8f * scale));
 
             var entries = store.Entries;
