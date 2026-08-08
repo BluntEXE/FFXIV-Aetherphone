@@ -75,8 +75,9 @@ internal static class EnvelopeCodec
         {
             sealedBytes = Convert.FromBase64String(envelope[payloadStart..]);
         }
-        catch (FormatException)
+        catch (FormatException exception)
         {
+            AepLog.Debug(exception, $"[Crypto] envelope decode failed; the generation {generation} payload is not valid base64");
             return new EnvelopeDecodeResult(EnvelopeDecodeStatus.Malformed, string.Empty, null, false);
         }
 
@@ -88,6 +89,8 @@ internal static class EnvelopeCodec
 
         if (inner.Length < 1 + FrankingKeyBytes || inner[0] != ContentTypeText)
         {
+            AepLog.Debug(
+                $"[Crypto] envelope decode failed; opened {inner.Length} bytes with content type {(inner.Length > 0 ? inner[0] : -1)}");
             return new EnvelopeDecodeResult(EnvelopeDecodeStatus.Malformed, string.Empty, null, false);
         }
 
@@ -121,8 +124,9 @@ internal static class EnvelopeCodec
             decoded = Convert.FromBase64String(tag);
             return decoded.Length == 32;
         }
-        catch (FormatException)
+        catch (FormatException exception)
         {
+            AepLog.Debug(exception, "[Crypto] the commitment tag is not valid base64; treating the message as unverified");
             decoded = Array.Empty<byte>();
             return false;
         }

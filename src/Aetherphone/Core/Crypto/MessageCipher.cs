@@ -160,6 +160,13 @@ internal sealed class MessageCipher
         }
 
         RecordGeneration(messageId, generation);
+        if (resolved.State is DmBodyState.NoKey or DmBodyState.Malformed
+            && (!decryptedBodies.TryGetValue(messageId, out var previous) || previous.State != resolved.State))
+        {
+            AepLog.Warning(
+                $"[Crypto] message {messageId} in {scope} generation {generation} resolved as {resolved.State}; enable debug logging for the cause");
+        }
+
         decryptedBodies[messageId] = resolved;
         return resolved;
     }

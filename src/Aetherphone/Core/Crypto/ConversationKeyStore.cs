@@ -754,20 +754,27 @@ internal sealed class ConversationKeyStore
             var myKeyVersion = vault.KeyVersion;
             if (myUserId is null || myPublicKey is null || myKeyVersion <= 0)
             {
+                AepLog.Debug(
+                    $"[Crypto] self repair skipped for {scopeId} generation {generation}; the vault is not ready (key version {myKeyVersion})");
                 return;
             }
 
             var wrapped = CryptoBox.WrapCek(cek, myPublicKey);
             if (wrapped is null)
             {
+                AepLog.Warning($"[Crypto] self repair failed for {scopeId} generation {generation}; wrapping the key failed");
                 return;
             }
 
             var request = new AddWrapsRequest(generation, new[] { new NewWrapDto(myUserId, myKeyVersion, wrapped) });
             await PostSelfRepairAsync(scopeId, myUserId, request).ConfigureAwait(false);
         }
-        catch (Exception)
+        catch (OperationCanceledException)
         {
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning(exception, $"[Crypto] self repair threw for {scopeId} generation {generation}");
         }
     }
 
@@ -839,8 +846,7 @@ internal sealed class ConversationKeyStore
         }
         catch (Exception exception)
         {
-            AepLog.Warning(
-                $"[Encryption] refreshing conversation keys after restoring older keys failed: {exception.Message}");
+            AepLog.Warning(exception, "[Encryption] refreshing conversation keys after restoring older keys failed");
         }
     }
 

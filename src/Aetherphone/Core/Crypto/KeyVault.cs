@@ -673,8 +673,9 @@ internal static class LocalKeyProtector
             {
                 return Convert.FromBase64String(stored[RawPrefix.Length..]);
             }
-            catch (FormatException)
+            catch (FormatException exception)
             {
+                AepLog.Error(exception, "[Crypto] the unprotected vault blob is not valid base64");
                 return null;
             }
         }
@@ -685,8 +686,10 @@ internal static class LocalKeyProtector
             var entropy = Encoding.UTF8.GetBytes(userId);
             return System.Security.Cryptography.ProtectedData.Unprotect(protectedBytes, entropy, DataProtectionScope.CurrentUser);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            AepLog.Error(exception,
+                "[Crypto] DPAPI could not unprotect the vault; the key was stored by a different Windows user or prefix");
             return null;
         }
     }
