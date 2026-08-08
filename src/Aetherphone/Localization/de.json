@@ -2315,6 +2315,8 @@
   "jobs.deleteCategory": "Löschen",
   "jobs.deleteCategoryConfirm": "\"{0}\" löschen? Die Gearsets kehren in ihre Rollenbereiche zurück.",
   "jobs.emptyCategory": "Noch keine Gearsets hier. Füge eines über das ···-Menü eines Gearsets hinzu.",
+  "jobs.moveUp": "Nach oben",
+  "jobs.moveDown": "Nach unten",
   "inventory.logInToView": "Melde dich an, um deine Gegenstände zu sehen",
   "inventory.search": "Gegenstände durchsuchen",
   "inventory.searchHint": "Suche, um zu finden, wo ein Gegenstand in deinem gesamten Besitz liegt.",

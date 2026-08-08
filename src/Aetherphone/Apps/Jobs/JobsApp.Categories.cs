@@ -16,8 +16,9 @@ internal sealed partial class JobsApp
     private const float EditorTitleHeight = 18f;
     private const float EditorFieldHeight = 30f;
     private const int CategoryNameMaxLength = 24;
-    private const float CategoryDragHandleRadius = 9f;
-    private const float DragThreshold = 7f;
+    private const float CategoryReorderRadius = 9f;
+    private const float RowReorderRadius = 10f;
+    private const float RowReorderOffset = 11f;
 
     private static readonly List<JobsCategory> NoCategories = new();
 
@@ -28,22 +29,11 @@ internal sealed partial class JobsApp
     private string categoryEditorName = string.Empty;
     private bool focusCategoryField;
 
-    // Header rect places the drop highlight, span rect claims the vertical band that counts as
-    // "over this category". Spans, not header centers, because section heights swing with gearset
-    // count and the midpoint between two headers is nowhere near the boundary between their slots.
-    private readonly List<(int CategoryIndex, Rect Header, Rect Span)> categoryDropSlots = new();
-    private int categoryDragIndex = -1;
-    private int categoryDropIndex = -1;
-    private Vector2 categoryDragPressPos;
-    private bool categoryDragActive;
-
-    private int jobDragCategoryIndex = -1;
-    private int jobDragIndex = -1;
-    private int jobDragFromGearsetId = -1;
-    private int jobDragToGearsetId = -1;
-    private Vector2 jobDragStart;
-    private float jobDragOffset;
-    private bool jobDragActive;
+    private int categoryMoveIndex = -1;
+    private int categoryMoveDelta;
+    private int gearsetMoveCategoryIndex = -1;
+    private int gearsetMoveId = -1;
+    private int gearsetMoveNeighbourId = -1;
 
     private List<JobsCategory> CurrentCategories()
     {
@@ -108,271 +98,124 @@ internal sealed partial class JobsApp
         OpenCategoryEditor(picked, -1);
     }
 
-    // A real InvisibleButton rather than a bare UiInteract.Hover check: Dear ImGui starts its own
-    // native window-drag whenever a press lands on the window background with no item active,
-    // regardless of LockPosition (that only adds NoMove), so without an item under the press the
-    // handle would drag the whole phone. UiInteract still owns the gating, since raw ImGui item
-    // state ignores InputBlocked and the overlay reservation.
-    private void DrawCategoryDragHandle(Rect headerRect, int categoryIndex, float scale)
+    private void DrawCategoryReorder(Rect headerRect, int categoryIndex, int categoryCount, float scale)
     {
-        var drawList = ImGui.GetWindowDrawList();
-        var radius = CategoryDragHandleRadius * scale;
-        var center = new Vector2(headerRect.Max.X - radius - 2f * scale, headerRect.Center.Y);
-        var half = new Vector2(radius);
-        var cursor = ImGui.GetCursorScreenPos();
-        ImGui.SetCursorScreenPos(center - half);
-        ImGui.InvisibleButton($"##categoryDragHandle{categoryIndex}", half * 2f);
-        var hovered = ImGui.IsItemHovered() && UiInteract.Hover(center - half, center + half);
-        var activated = hovered && ImGui.IsItemActivated();
-        ImGui.SetCursorScreenPos(cursor);
-
-        categoryDropSlots.Add((categoryIndex, headerRect, headerRect));
-
-        var dragging = categoryDragIndex == categoryIndex;
-        var tint = dragging || hovered
-            ? ui.Accent
-            : Palette.WithAlpha(ui.MutedInk, ui.MutedInk.W * 0.6f);
-        AppSkin.Icon(drawList, center, FontAwesomeIcon.GripLinesVertical.ToIconString(), tint, 0.6f);
-
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        if (categoryDragIndex < 0 && activated)
-        {
-            categoryDragIndex = categoryIndex;
-            categoryDragPressPos = ImGui.GetMousePos();
-            categoryDragActive = false;
-        }
-    }
-
-    private void SealCategoryDropSlot(float bottom)
-    {
-        var last = categoryDropSlots.Count - 1;
-        if (last < 0)
+        if (categoryCount < 2)
         {
             return;
         }
 
-        var slot = categoryDropSlots[last];
-        categoryDropSlots[last] = (slot.CategoryIndex, slot.Header,
-            new Rect(slot.Span.Min, new Vector2(slot.Span.Max.X, bottom)));
+        var radius = CategoryReorderRadius * scale;
+        var down = new Vector2(headerRect.Max.X - radius, headerRect.Center.Y);
+        var up = new Vector2(down.X - radius * 2f - 2f * scale, headerRect.Center.Y);
+        if (DrawReorderButton(up, radius, FontAwesomeIcon.ChevronUp.ToIconString(), 0.5f, categoryIndex > 0,
+                Loc.T(L.Jobs.MoveUp)))
+        {
+            categoryMoveIndex = categoryIndex;
+            categoryMoveDelta = -1;
+        }
+
+        if (DrawReorderButton(down, radius, FontAwesomeIcon.ChevronDown.ToIconString(), 0.5f,
+                categoryIndex < categoryCount - 1, Loc.T(L.Jobs.MoveDown)))
+        {
+            categoryMoveIndex = categoryIndex;
+            categoryMoveDelta = 1;
+        }
     }
 
-    // Runs inside the app surface so the drop highlight inherits its clip rect, and after every
-    // custom section has registered its slot, since the target search needs all of them.
-    private void UpdateCategoryDrag(float scale)
+    private void DrawJobReorder(Vector2 center, float radius, JobSection section, int rowIndex, float scale)
     {
-        if (categoryDragIndex < 0)
+        var offset = RowReorderOffset * scale;
+        var up = new Vector2(center.X, center.Y - offset);
+        var down = new Vector2(center.X, center.Y + offset);
+        if (DrawReorderButton(up, radius, FontAwesomeIcon.ChevronUp.ToIconString(), 0.45f, rowIndex > 0, string.Empty))
+        {
+            QueueGearsetMove(section, rowIndex, rowIndex - 1);
+        }
+
+        if (DrawReorderButton(down, radius, FontAwesomeIcon.ChevronDown.ToIconString(), 0.45f,
+                rowIndex < section.Entries.Length - 1, string.Empty))
+        {
+            QueueGearsetMove(section, rowIndex, rowIndex + 1);
+        }
+    }
+
+    private void QueueGearsetMove(JobSection section, int rowIndex, int neighbourRowIndex)
+    {
+        gearsetMoveCategoryIndex = section.CategoryIndex;
+        gearsetMoveId = section.Entries[rowIndex].GearsetId;
+        gearsetMoveNeighbourId = section.Entries[neighbourRowIndex].GearsetId;
+    }
+
+    private bool DrawReorderButton(Vector2 center, float radius, string glyph, float glyphScale, bool enabled,
+        string tooltip)
+    {
+        if (!enabled)
+        {
+            AppSkin.Icon(ImGui.GetWindowDrawList(), center, glyph,
+                Palette.WithAlpha(ui.MutedInk, ui.MutedInk.W * 0.25f), glyphScale);
+            return false;
+        }
+
+        return ui.IconButton(center, radius, glyph, ui.MutedInk, default, glyphScale, tooltip);
+    }
+
+    // Queued rather than applied at the click: both moves call Rebuild, which swaps the sections
+    // array the draw loop is still walking.
+    private void ApplyPendingReorder()
+    {
+        if (categoryMoveIndex >= 0)
+        {
+            MoveCategory(categoryMoveIndex, categoryMoveDelta);
+            categoryMoveIndex = -1;
+            categoryMoveDelta = 0;
+        }
+
+        if (gearsetMoveId < 0)
         {
             return;
         }
 
-        if (!categoryDragActive && ImGui.IsMouseDown(ImGuiMouseButton.Left) &&
-            Vector2.Distance(ImGui.GetMousePos(), categoryDragPressPos) > DragThreshold * scale)
-        {
-            categoryDragActive = true;
-        }
-
-        if (!categoryDragActive)
-        {
-            return;
-        }
-
-        categoryDropIndex = CategoryDropTarget(ImGui.GetMousePos().Y);
-        DrawCategoryDropHighlight(categoryDropIndex, scale);
+        MoveGearsetInCategory(gearsetMoveCategoryIndex, gearsetMoveId, gearsetMoveNeighbourId);
+        ResetPendingGearsetMove();
     }
 
-    // Unconditional for the same reason as FinishJobDrag: the surface stops drawing on logout or
-    // app close, and nothing there would ever release the gesture.
-    private void FinishCategoryDrag()
+    private void ResetPendingReorder()
     {
-        if (categoryDragIndex < 0 || ImGui.IsMouseDown(ImGuiMouseButton.Left))
-        {
-            return;
-        }
-
-        if (categoryDragActive)
-        {
-            ReorderCategory(categoryDragIndex, categoryDropIndex);
-        }
-
-        ResetCategoryDrag();
+        categoryMoveIndex = -1;
+        categoryMoveDelta = 0;
+        ResetPendingGearsetMove();
     }
 
-    private void ResetCategoryDrag()
+    private void ResetPendingGearsetMove()
     {
-        categoryDragIndex = -1;
-        categoryDropIndex = -1;
-        categoryDragActive = false;
+        gearsetMoveCategoryIndex = -1;
+        gearsetMoveId = -1;
+        gearsetMoveNeighbourId = -1;
     }
 
-    // -1 when the pointer is outside every custom section, which cancels the drop rather than
-    // snapping to whichever header happens to be nearest.
-    private int CategoryDropTarget(float mouseY)
+    private void MoveCategory(int categoryIndex, int delta)
     {
-        for (var index = 0; index < categoryDropSlots.Count; index++)
-        {
-            var span = categoryDropSlots[index].Span;
-            if (mouseY >= span.Min.Y && mouseY < span.Max.Y)
-            {
-                return categoryDropSlots[index].CategoryIndex;
-            }
-        }
-
-        return -1;
-    }
-
-    private void DrawCategoryDropHighlight(int categoryIndex, float scale)
-    {
-        if (categoryIndex < 0)
-        {
-            return;
-        }
-
-        for (var index = 0; index < categoryDropSlots.Count; index++)
-        {
-            if (categoryDropSlots[index].CategoryIndex != categoryIndex)
-            {
-                continue;
-            }
-
-            var rect = categoryDropSlots[index].Header;
-            ImGui.GetWindowDrawList().AddRectFilled(rect.Min, rect.Max,
-                ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.16f)), 6f * scale);
-            return;
-        }
-    }
-
-    // A true move (remove then re-insert), not an adjacent swap: one gesture can cross several
-    // categories at once.
-    private void ReorderCategory(int fromIndex, int toIndex)
-    {
-        if (characterWatch.CurrentContentId == 0)
-        {
-            return;
-        }
-
         var categories = CategoriesForWrite();
-        if (fromIndex < 0 || fromIndex >= categories.Count || toIndex < 0 || toIndex >= categories.Count ||
-            fromIndex == toIndex)
+        var targetIndex = categoryIndex + delta;
+        if (categoryIndex < 0 || categoryIndex >= categories.Count || targetIndex < 0 ||
+            targetIndex >= categories.Count)
         {
             return;
         }
 
-        var item = categories[fromIndex];
-        categories.RemoveAt(fromIndex);
-        categories.Insert(toIndex, item);
+        var moved = categories[categoryIndex];
+        categories[categoryIndex] = categories[targetIndex];
+        categories[targetIndex] = moved;
         configuration.Save();
         Rebuild();
     }
 
-    // Returns whether the handle is hovered, so DrawJobRow can keep that area out of the row's own
-    // hover and equip-click handling. InvisibleButton and UiInteract gating as in
-    // DrawCategoryDragHandle.
-    private bool DrawJobDragHandle(ImDrawListPtr drawList, Vector2 center, float radius, int categoryIndex,
-        int rowIndex)
+    // Swaps the two ids' own slots instead of stepping one index in GearsetIds: a category can hold
+    // an id whose gearset no longer exists, and those are skipped when the rows are built, so list
+    // neighbours and row neighbours are not the same thing.
+    private void MoveGearsetInCategory(int categoryIndex, int gearsetId, int neighbourGearsetId)
     {
-        var half = new Vector2(radius);
-        var cursor = ImGui.GetCursorScreenPos();
-        ImGui.SetCursorScreenPos(center - half);
-        ImGui.InvisibleButton($"##jobDragHandle{categoryIndex}_{rowIndex}", half * 2f);
-        var hovered = ImGui.IsItemHovered() && UiInteract.Hover(center - half, center + half);
-        var activated = hovered && ImGui.IsItemActivated();
-        ImGui.SetCursorScreenPos(cursor);
-
-        var dragging = jobDragCategoryIndex == categoryIndex && jobDragIndex == rowIndex;
-        var tint = dragging || hovered ? ui.Accent : Palette.WithAlpha(ui.MutedInk, ui.MutedInk.W * 0.6f);
-        AppSkin.Icon(drawList, center, FontAwesomeIcon.GripLines.ToIconString(), tint, 0.55f);
-
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        if (jobDragIndex < 0 && activated)
-        {
-            jobDragCategoryIndex = categoryIndex;
-            jobDragIndex = rowIndex;
-            jobDragFromGearsetId = -1;
-            jobDragToGearsetId = -1;
-            jobDragStart = ImGui.GetMousePos();
-            jobDragOffset = 0f;
-            jobDragActive = false;
-        }
-
-        return hovered;
-    }
-
-    // Tracks the live gesture while the dragged row's own card is on screen, resolving it down to
-    // the pair of gearset ids that FinishJobDrag will commit. Travel is clamped to the card so the
-    // lifted row cannot paint over a neighbouring section, and so the preview matches the drop.
-    private void UpdateJobDrag(int categoryIndex, JobEntry[] entries, float rowHeight, float scale)
-    {
-        if (jobDragCategoryIndex != categoryIndex || jobDragIndex < 0 || jobDragIndex >= entries.Length)
-        {
-            return;
-        }
-
-        if (!jobDragActive && ImGui.IsMouseDown(ImGuiMouseButton.Left) &&
-            Vector2.Distance(ImGui.GetMousePos(), jobDragStart) > DragThreshold * scale)
-        {
-            jobDragActive = true;
-        }
-
-        if (!jobDragActive)
-        {
-            return;
-        }
-
-        var travel = ImGui.GetMousePos().Y - jobDragStart.Y;
-        jobDragOffset = Math.Clamp(travel, -jobDragIndex * rowHeight,
-            (entries.Length - 1 - jobDragIndex) * rowHeight);
-
-        var targetIndex = Math.Clamp(jobDragIndex + (int)MathF.Round(jobDragOffset / rowHeight), 0,
-            entries.Length - 1);
-        jobDragFromGearsetId = entries[jobDragIndex].GearsetId;
-        jobDragToGearsetId = entries[targetIndex].GearsetId;
-    }
-
-    // Runs unconditionally every frame, not from the section card: if the dragged category stops
-    // drawing mid-gesture (logout, the app closing, the category being deleted) nothing else would
-    // ever clear jobDragIndex, and the handles would refuse every later drag.
-    private void FinishJobDrag()
-    {
-        if (jobDragIndex < 0 || ImGui.IsMouseDown(ImGuiMouseButton.Left))
-        {
-            return;
-        }
-
-        if (jobDragActive)
-        {
-            ReorderGearsetInCategory(jobDragCategoryIndex, jobDragFromGearsetId, jobDragToGearsetId);
-        }
-
-        ResetJobDrag();
-    }
-
-    private void ResetJobDrag()
-    {
-        jobDragCategoryIndex = -1;
-        jobDragIndex = -1;
-        jobDragFromGearsetId = -1;
-        jobDragToGearsetId = -1;
-        jobDragOffset = 0f;
-        jobDragActive = false;
-    }
-
-    // Matched by gearset id rather than row index so a rebuild landing mid-drag cannot desync the
-    // gesture from the list it was started against.
-    private void ReorderGearsetInCategory(int categoryIndex, int fromGearsetId, int toGearsetId)
-    {
-        if (characterWatch.CurrentContentId == 0 || fromGearsetId < 0 || toGearsetId < 0)
-        {
-            return;
-        }
-
         var categories = CategoriesForWrite();
         if (categoryIndex < 0 || categoryIndex >= categories.Count)
         {
@@ -380,15 +223,15 @@ internal sealed partial class JobsApp
         }
 
         var gearsetIds = categories[categoryIndex].GearsetIds;
-        var fromIndex = gearsetIds.IndexOf(fromGearsetId);
-        var toIndex = gearsetIds.IndexOf(toGearsetId);
+        var fromIndex = gearsetIds.IndexOf(gearsetId);
+        var toIndex = gearsetIds.IndexOf(neighbourGearsetId);
         if (fromIndex < 0 || toIndex < 0 || fromIndex == toIndex)
         {
             return;
         }
 
-        gearsetIds.RemoveAt(fromIndex);
-        gearsetIds.Insert(toIndex, fromGearsetId);
+        gearsetIds[fromIndex] = neighbourGearsetId;
+        gearsetIds[toIndex] = gearsetId;
         configuration.Save();
         Rebuild();
     }

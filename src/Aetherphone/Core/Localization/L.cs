@@ -3310,6 +3310,8 @@ internal static class L
         public static readonly LocString DeleteCategory = new("jobs.deleteCategory", "Delete");
         public static readonly LocString DeleteCategoryConfirm = new("jobs.deleteCategoryConfirm", "Delete \"{0}\"? Its gearsets go back to their role sections.");
         public static readonly LocString EmptyCategory = new("jobs.emptyCategory", "No gearsets here yet. Use a gearset's ··· menu to add one.");
+        public static readonly LocString MoveUp = new("jobs.moveUp", "Move up");
+        public static readonly LocString MoveDown = new("jobs.moveDown", "Move down");
     }
 
     internal static class Inventory
