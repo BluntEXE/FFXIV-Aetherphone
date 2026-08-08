@@ -24,56 +24,53 @@ internal static class DeviceChrome
 
     public static Rect SideButtonRect(Rect window, in ChassisGeometry chassis, out RailSide side)
     {
-        var scale = UiScale.Current;
         var device = chassis.Body;
         if (device.IsLandscape())
         {
             side = RailSide.Top;
             var left = device.Min.X + device.Width * SideButtonStartFraction;
             var width = device.Width * SideButtonLengthFraction;
-            return new Rect(new Vector2(left, window.Min.Y), new Vector2(left + width, device.Min.Y + 2f * scale));
+            return new Rect(new Vector2(left, window.Min.Y), new Vector2(left + width, device.Min.Y));
         }
 
         side = RailSide.Right;
         var top = device.Min.Y + device.Height * SideButtonStartFraction;
         var height = device.Height * SideButtonLengthFraction;
-        return new Rect(new Vector2(device.Max.X - 2f * scale, top), new Vector2(window.Max.X, top + height));
+        return new Rect(new Vector2(device.Max.X, top), new Vector2(window.Max.X, top + height));
     }
 
     public static Rect MuteButtonRect(Rect window, in ChassisGeometry chassis, out RailSide side)
     {
-        var scale = UiScale.Current;
         var device = chassis.Body;
         if (device.IsLandscape())
         {
             side = RailSide.Bottom;
             var left = device.Min.X + device.Width * MuteButtonStartFraction;
             var width = device.Width * ShortButtonLengthFraction;
-            return new Rect(new Vector2(left, device.Max.Y - 2f * scale), new Vector2(left + width, window.Max.Y));
+            return new Rect(new Vector2(left, device.Max.Y), new Vector2(left + width, window.Max.Y));
         }
 
         side = RailSide.Left;
         var top = device.Min.Y + device.Height * MuteButtonStartFraction;
         var height = device.Height * ShortButtonLengthFraction;
-        return new Rect(new Vector2(window.Min.X, top), new Vector2(device.Min.X + 2f * scale, top + height));
+        return new Rect(new Vector2(window.Min.X, top), new Vector2(device.Min.X, top + height));
     }
 
     public static Rect LockButtonRect(Rect window, in ChassisGeometry chassis, out RailSide side)
     {
-        var scale = UiScale.Current;
         var device = chassis.Body;
         if (device.IsLandscape())
         {
             side = RailSide.Bottom;
             var left = device.Min.X + device.Width * LockButtonStartFraction;
             var width = device.Width * ShortButtonLengthFraction;
-            return new Rect(new Vector2(left, device.Max.Y - 2f * scale), new Vector2(left + width, window.Max.Y));
+            return new Rect(new Vector2(left, device.Max.Y), new Vector2(left + width, window.Max.Y));
         }
 
         side = RailSide.Left;
         var top = device.Min.Y + device.Height * LockButtonStartFraction;
         var height = device.Height * ShortButtonLengthFraction;
-        return new Rect(new Vector2(window.Min.X, top), new Vector2(device.Min.X + 2f * scale, top + height));
+        return new Rect(new Vector2(window.Min.X, top), new Vector2(device.Min.X, top + height));
     }
 
     public static Rect DrawBody(in ChassisGeometry chassis, PhoneTheme theme, Rect? transparentBand = null)
