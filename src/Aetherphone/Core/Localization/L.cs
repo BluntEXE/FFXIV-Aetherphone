@@ -3610,11 +3610,15 @@ internal static class L
         public static readonly LocString RuleClawback = new("coin.ruleClawback", "Removed by the team");
         public static readonly LocString RuleCarry = new("coin.ruleCarry", "Carried forward");
         public static readonly LocString RuleGeneric = new("coin.ruleGeneric", "Aether Coin");
+        public static readonly LocString RulePost = new("coin.rulePost", "A post that lasted");
+        public static readonly LocString RuleCommentsDaily = new("coin.ruleCommentsDaily", "Comments that lasted");
         public static readonly LocString RuleCheckinHint = new("coin.ruleCheckinHint", "Open the app and tap the button, once a day");
         public static readonly LocString RuleStreakHint = new("coin.ruleStreakHint", "Grows 4 a day up to 20; one missed day a week is forgiven");
         public static readonly LocString RuleWelcomeHint = new("coin.ruleWelcomeHint", "A one-time gift on your first check-in");
-        public static readonly LocString RuleCallHint = new("coin.ruleCallHint", "One answered call of two minutes or more where both of you talk");
-        public static readonly LocString RuleChatHint = new("coin.ruleChatHint", "Send a message to someone in a private chat, up to three people a day");
+        public static readonly LocString RuleCallHint = new("coin.ruleCallHint", "Answered calls of two minutes or more where both of you talk, up to two people a day");
+        public static readonly LocString RuleChatHint = new("coin.ruleChatHint", "Send a message to someone in a private chat, up to four people a day");
+        public static readonly LocString RulePostHint = new("coin.rulePostHint", "One chirp or gram that stays up for an hour and passes review, once a day");
+        public static readonly LocString RuleCommentsDailyHint = new("coin.ruleCommentsDailyHint", "Comments on other people's posts that stay up for an hour, up to three authors a day");
         public static readonly LocString RuleGameSessionHint = new("coin.ruleGameSessionHint", "Play any arcade game for three minutes, up to five games a day");
         public static readonly LocString RuleGameDeepHint = new("coin.ruleGameDeepHint", "Stay in one game for fifteen minutes, up to twice a day");
         public static readonly LocString RuleGameFeaturedHint = new("coin.ruleGameFeaturedHint", "Finish a session of today's highlighted game");

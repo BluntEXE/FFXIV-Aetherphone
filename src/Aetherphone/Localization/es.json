@@ -4030,13 +4030,17 @@
   "coin.ruleCheckinHint": "Abre la app y toca el botón, una vez al día",
   "coin.ruleStreakHint": "Crece 4 al día hasta 20; se perdona un día perdido por semana",
   "coin.ruleWelcomeHint": "Un regalo único en tu primer registro",
-  "coin.ruleCallHint": "Una llamada contestada de dos minutos o más en la que ambos hablan",
-  "coin.ruleChatHint": "Envía un mensaje en un chat privado, hasta tres personas al día",
+  "coin.ruleCallHint": "Llamadas contestadas de dos minutos o más en las que ambos hablan, hasta dos personas al día",
+  "coin.ruleChatHint": "Envía un mensaje en un chat privado, hasta cuatro personas al día",
   "coin.ruleGameSessionHint": "Juega cualquier juego del arcade durante tres minutos, hasta cinco juegos al día",
   "coin.ruleGameDeepHint": "Quédate quince minutos en un juego, hasta dos veces al día",
   "coin.ruleGameFeaturedHint": "Termina una sesión del juego destacado de hoy",
   "coin.ruleChirpHint": "Un chirp que permanece una hora y pasa la revisión, una vez por semana",
   "coin.ruleGramHint": "Un gram que permanece una hora y pasa la revisión, una vez por semana",
   "coin.ruleStoryHint": "Una historia que completa su día sin ser retirada, una vez por semana",
-  "coin.ruleCommentHint": "Un comentario en la publicación de otra persona que permanece una hora, una vez por semana"
+  "coin.ruleCommentHint": "Un comentario en la publicación de otra persona que permanece una hora, una vez por semana",
+    "coin.rulePost": "Una publicación que perduró",
+    "coin.ruleCommentsDaily": "Comentarios que perduraron",
+    "coin.rulePostHint": "Un chirp o un gram que permanece una hora y pasa la revisión, una vez al día",
+    "coin.ruleCommentsDailyHint": "Comentarios en publicaciones de otras personas que permanecen una hora, hasta tres autores al día"
 }

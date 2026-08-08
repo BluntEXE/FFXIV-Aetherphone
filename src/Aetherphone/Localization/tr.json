@@ -4030,13 +4030,17 @@
   "coin.ruleCheckinHint": "Uygulamayı aç ve düğmeye dokun, günde bir kez",
   "coin.ruleStreakHint": "Günde 4 artarak 20'ye çıkar; haftada bir kaçırılan gün affedilir",
   "coin.ruleWelcomeHint": "İlk girişinde bir kerelik hediye",
-  "coin.ruleCallHint": "İkinizin de konuştuğu, iki dakika veya daha uzun bir arama",
-  "coin.ruleChatHint": "Özel sohbette birine mesaj gönder, günde en fazla üç kişi",
+  "coin.ruleCallHint": "İkinizin de konuştuğu, iki dakika veya daha uzun aramalar, günde en fazla iki kişi",
+  "coin.ruleChatHint": "Özel sohbette birine mesaj gönder, günde en fazla dört kişi",
   "coin.ruleGameSessionHint": "Herhangi bir oyunu üç dakika oyna, günde en fazla beş oyun",
   "coin.ruleGameDeepHint": "Bir oyunda on beş dakika kal, günde en fazla iki kez",
   "coin.ruleGameFeaturedHint": "Bugünün öne çıkan oyununda bir oturumu bitir",
   "coin.ruleChirpHint": "Bir saat kalan ve incelemeyi geçen bir chirp, haftada bir",
   "coin.ruleGramHint": "Bir saat kalan ve incelemeyi geçen bir gram, haftada bir",
   "coin.ruleStoryHint": "Kaldırılmadan gününü tamamlayan bir hikâye, haftada bir",
-  "coin.ruleCommentHint": "Başkasının gönderisinde bir saat kalan bir yorum, haftada bir"
+  "coin.ruleCommentHint": "Başkasının gönderisinde bir saat kalan bir yorum, haftada bir",
+    "coin.rulePost": "Kalan bir gönderi",
+    "coin.ruleCommentsDaily": "Kalan yorumlar",
+    "coin.rulePostHint": "Bir saat kalan ve incelemeyi geçen bir chirp veya gram, günde bir",
+    "coin.ruleCommentsDailyHint": "Başkalarının gönderilerinde bir saat kalan yorumlar, günde en fazla üç yazar"
 }

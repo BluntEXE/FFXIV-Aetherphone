@@ -4030,13 +4030,17 @@
   "coin.ruleCheckinHint": "Open the app and tap the button, once a day",
   "coin.ruleStreakHint": "Grows 4 a day up to 20; one missed day a week is forgiven",
   "coin.ruleWelcomeHint": "A one-time gift on your first check-in",
-  "coin.ruleCallHint": "One answered call of two minutes or more where both of you talk",
-  "coin.ruleChatHint": "Send a message to someone in a private chat, up to three people a day",
+  "coin.ruleCallHint": "Answered calls of two minutes or more where both of you talk, up to two people a day",
+  "coin.ruleChatHint": "Send a message to someone in a private chat, up to four people a day",
   "coin.ruleGameSessionHint": "Play any arcade game for three minutes, up to five games a day",
   "coin.ruleGameDeepHint": "Stay in one game for fifteen minutes, up to twice a day",
   "coin.ruleGameFeaturedHint": "Finish a session of today's highlighted game",
   "coin.ruleChirpHint": "A chirp that stays up for an hour and passes review, once a week",
   "coin.ruleGramHint": "A gram that stays up for an hour and passes review, once a week",
   "coin.ruleStoryHint": "A story that runs its full day without being taken down, once a week",
-  "coin.ruleCommentHint": "A comment on someone else's post that stays up for an hour, once a week"
+  "coin.ruleCommentHint": "A comment on someone else's post that stays up for an hour, once a week",
+    "coin.rulePost": "A post that lasted",
+    "coin.ruleCommentsDaily": "Comments that lasted",
+    "coin.rulePostHint": "One chirp or gram that stays up for an hour and passes review, once a day",
+    "coin.ruleCommentsDailyHint": "Comments on other people's posts that stay up for an hour, up to three authors a day"
 }

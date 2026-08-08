@@ -4030,13 +4030,17 @@
   "coin.ruleCheckinHint": "每天打开应用点一下按钮",
   "coin.ruleStreakHint": "每天加4最多20；每周可原谅一次漏签",
   "coin.ruleWelcomeHint": "首次签到的一次性礼物",
-  "coin.ruleCallHint": "一次接通两分钟以上且双方都说话的通话",
-  "coin.ruleChatHint": "在私聊中给人发消息，每天最多三人",
+  "coin.ruleCallHint": "接通两分钟以上且双方都说话的通话，每天最多两人",
+  "coin.ruleChatHint": "在私聊中给人发消息，每天最多四人",
   "coin.ruleGameSessionHint": "任意街机游戏玩满三分钟，每天最多五款",
   "coin.ruleGameDeepHint": "在同一款游戏中玩满十五分钟，每天最多两次",
   "coin.ruleGameFeaturedHint": "完成一局今日推荐游戏",
   "coin.ruleChirpHint": "留存一小时并通过审核的啁啾，每周一次",
   "coin.ruleGramHint": "留存一小时并通过审核的相片，每周一次",
   "coin.ruleStoryHint": "完整播完一天未被下架的动态，每周一次",
-  "coin.ruleCommentHint": "在他人帖子下留存一小时的评论，每周一次"
+  "coin.ruleCommentHint": "在他人帖子下留存一小时的评论，每周一次",
+    "coin.rulePost": "留存的帖子",
+    "coin.ruleCommentsDaily": "留存的评论",
+    "coin.rulePostHint": "留存一小时并通过审核的一条啁啾或相片，每天一次",
+    "coin.ruleCommentsDailyHint": "在他人帖子下留存一小时的评论，每天最多三位作者"
 }

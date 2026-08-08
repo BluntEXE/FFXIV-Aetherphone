@@ -4030,13 +4030,17 @@
   "coin.ruleCheckinHint": "1日1回、アプリを開いてボタンをタップ",
   "coin.ruleStreakHint": "1日4ずつ最大20まで増加。週1回まで休んでもセーフ",
   "coin.ruleWelcomeHint": "初回チェックイン時の一度きりのギフト",
-  "coin.ruleCallHint": "2分以上つながって、双方が話した通話1回",
-  "coin.ruleChatHint": "1対1チャットでメッセージを送信。1日3人まで",
+  "coin.ruleCallHint": "2分以上つながって、双方が話した通話。1日2人まで",
+  "coin.ruleChatHint": "1対1チャットでメッセージを送信。1日4人まで",
   "coin.ruleGameSessionHint": "アーケードのゲームを3分プレイ。1日5タイトルまで",
   "coin.ruleGameDeepHint": "1つのゲームを15分続けてプレイ。1日2回まで",
   "coin.ruleGameFeaturedHint": "本日のおすすめゲームのセッションを終える",
   "coin.ruleChirpHint": "1時間残って審査を通ったチャープ。週1回",
   "coin.ruleGramHint": "1時間残って審査を通ったグラム。週1回",
   "coin.ruleStoryHint": "削除されずに丸一日走り切ったストーリー。週1回",
-  "coin.ruleCommentHint": "他の人の投稿に付けて1時間残ったコメント。週1回"
+  "coin.ruleCommentHint": "他の人の投稿に付けて1時間残ったコメント。週1回",
+    "coin.rulePost": "残った投稿",
+    "coin.ruleCommentsDaily": "残ったコメント",
+    "coin.rulePostHint": "1時間残って審査を通ったチャープまたはグラム。1日1回",
+    "coin.ruleCommentsDailyHint": "他の人の投稿に付けて1時間残ったコメント。1日3人まで"
 }

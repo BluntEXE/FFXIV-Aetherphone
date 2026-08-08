@@ -4030,13 +4030,17 @@
   "coin.ruleCheckinHint": "Öffne die App und tippe auf den Knopf, einmal am Tag",
   "coin.ruleStreakHint": "Wächst um 4 pro Tag bis 20; ein verpasster Tag pro Woche wird verziehen",
   "coin.ruleWelcomeHint": "Ein einmaliges Geschenk beim ersten Check-in",
-  "coin.ruleCallHint": "Ein angenommener Anruf von mindestens zwei Minuten, bei dem beide reden",
-  "coin.ruleChatHint": "Schreibe jemandem im Privatchat, bis zu drei Personen am Tag",
+  "coin.ruleCallHint": "Angenommene Anrufe von mindestens zwei Minuten, bei denen beide reden, bis zu zwei Personen am Tag",
+  "coin.ruleChatHint": "Schreibe jemandem im Privatchat, bis zu vier Personen am Tag",
   "coin.ruleGameSessionHint": "Spiele ein beliebiges Arcade-Spiel drei Minuten lang, bis zu fünf Spiele am Tag",
   "coin.ruleGameDeepHint": "Bleib fünfzehn Minuten in einem Spiel, bis zu zweimal am Tag",
   "coin.ruleGameFeaturedHint": "Beende eine Runde des heute hervorgehobenen Spiels",
   "coin.ruleChirpHint": "Ein Chirp, der eine Stunde stehen bleibt und die Prüfung besteht, einmal pro Woche",
   "coin.ruleGramHint": "Ein Gram, das eine Stunde stehen bleibt und die Prüfung besteht, einmal pro Woche",
   "coin.ruleStoryHint": "Eine Story, die ihren ganzen Tag läuft, ohne entfernt zu werden, einmal pro Woche",
-  "coin.ruleCommentHint": "Ein Kommentar unter einem fremden Beitrag, der eine Stunde stehen bleibt, einmal pro Woche"
+  "coin.ruleCommentHint": "Ein Kommentar unter einem fremden Beitrag, der eine Stunde stehen bleibt, einmal pro Woche",
+    "coin.rulePost": "Ein Beitrag, der blieb",
+    "coin.ruleCommentsDaily": "Kommentare, die blieben",
+    "coin.rulePostHint": "Ein Chirp oder Gram, der eine Stunde stehen bleibt und die Prüfung besteht, einmal am Tag",
+    "coin.ruleCommentsDailyHint": "Kommentare unter fremden Beiträgen, die eine Stunde stehen bleiben, bis zu drei Autoren am Tag"
 }

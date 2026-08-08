@@ -4030,13 +4030,17 @@
   "coin.ruleCheckinHint": "Ouvrez l'appli et touchez le bouton, une fois par jour",
   "coin.ruleStreakHint": "Augmente de 4 par jour jusqu'à 20 ; un jour manqué par semaine est pardonné",
   "coin.ruleWelcomeHint": "Un cadeau unique lors de votre premier pointage",
-  "coin.ruleCallHint": "Un appel décroché de deux minutes ou plus où vous parlez tous les deux",
-  "coin.ruleChatHint": "Envoyez un message en discussion privée, jusqu'à trois personnes par jour",
+  "coin.ruleCallHint": "Des appels décrochés de deux minutes ou plus où vous parlez tous les deux, jusqu'à deux personnes par jour",
+  "coin.ruleChatHint": "Envoyez un message en discussion privée, jusqu'à quatre personnes par jour",
   "coin.ruleGameSessionHint": "Jouez à un jeu d'arcade pendant trois minutes, jusqu'à cinq jeux par jour",
   "coin.ruleGameDeepHint": "Restez quinze minutes dans un jeu, jusqu'à deux fois par jour",
   "coin.ruleGameFeaturedHint": "Terminez une session du jeu mis en avant aujourd'hui",
   "coin.ruleChirpHint": "Un chirp qui reste en ligne une heure et passe la vérification, une fois par semaine",
   "coin.ruleGramHint": "Un gram qui reste en ligne une heure et passe la vérification, une fois par semaine",
   "coin.ruleStoryHint": "Une story qui va au bout de sa journée sans être retirée, une fois par semaine",
-  "coin.ruleCommentHint": "Un commentaire sous la publication de quelqu'un d'autre qui reste une heure, une fois par semaine"
+  "coin.ruleCommentHint": "Un commentaire sous la publication de quelqu'un d'autre qui reste une heure, une fois par semaine",
+    "coin.rulePost": "Une publication qui est restée",
+    "coin.ruleCommentsDaily": "Des commentaires qui sont restés",
+    "coin.rulePostHint": "Un chirp ou un gram qui reste en ligne une heure et passe la vérification, une fois par jour",
+    "coin.ruleCommentsDailyHint": "Des commentaires sous les publications des autres qui restent une heure, jusqu'à trois auteurs par jour"
 }
