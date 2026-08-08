@@ -111,7 +111,7 @@ internal sealed class CalendarEvents : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Calendar cache write failed: {exception.Message}");
+            AepLog.Warning(exception, "Calendar cache write failed");
         }
     }
 
@@ -131,8 +131,9 @@ internal sealed class CalendarEvents : IDisposable
             age = DateTime.UtcNow - File.GetLastWriteTimeUtc(cachePath);
             return json.Length > 0;
         }
-        catch
+        catch (Exception exception)
         {
+            AepLog.Warning(exception, "Calendar cache read failed; refetching");
             return false;
         }
     }
@@ -145,7 +146,7 @@ internal sealed class CalendarEvents : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Calendar events parse failed: {exception.Message}");
+            AepLog.Warning(exception, "Calendar events parse failed");
         }
     }
 

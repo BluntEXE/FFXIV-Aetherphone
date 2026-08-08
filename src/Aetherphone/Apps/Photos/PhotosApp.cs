@@ -592,8 +592,9 @@ internal sealed partial class PhotosApp : IPhoneApp
         {
             return File.GetLastWriteTime(path);
         }
-        catch
+        catch (Exception exception)
         {
+            AepLog.Warning(exception, $"[Photos] could not read the timestamp of {Path.GetFileName(path)}");
             return DateTime.Now;
         }
     }
@@ -678,7 +679,7 @@ internal sealed partial class PhotosApp : IPhoneApp
         catch (Exception exception)
         {
             failed.TryAdd(path, 0);
-            AepLog.Warning($"[Photos] thumbnail failed for {Path.GetFileName(path)}: {exception.Message}");
+            AepLog.Warning(exception, $"[Photos] thumbnail failed for {Path.GetFileName(path)}");
         }
         finally
         {
@@ -705,7 +706,7 @@ internal sealed partial class PhotosApp : IPhoneApp
         catch (Exception exception)
         {
             failed.TryAdd(path, 0);
-            AepLog.Warning($"[Photos] failed to load {Path.GetFileName(path)}: {exception.Message}");
+            AepLog.Warning(exception, $"[Photos] failed to load {Path.GetFileName(path)}");
         }
         finally
         {

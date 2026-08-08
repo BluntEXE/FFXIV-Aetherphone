@@ -1,3 +1,4 @@
+using Aetherphone.Core;
 using Dalamud.Bindings.ImGui;
 using System.Diagnostics;
 
@@ -9,7 +10,9 @@ internal static class UrlActions
     {
         if (!IsWebUrl(url))
         {
-            onError?.Invoke(new NotSupportedException("Only http and https links can be opened."));
+            var rejected = new NotSupportedException("Only http and https links can be opened.");
+            AepLog.Warning(rejected, $"Refused to open a non-web link: {url}");
+            onError?.Invoke(rejected);
             return;
         }
 
@@ -17,10 +20,11 @@ internal static class UrlActions
         {
             Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
+            AepLog.Warning(exception, $"Opening {url} in a browser failed; copied it to the clipboard instead");
             ImGui.SetClipboardText(url);
-            onError?.Invoke(ex);
+            onError?.Invoke(exception);
         }
     }
 

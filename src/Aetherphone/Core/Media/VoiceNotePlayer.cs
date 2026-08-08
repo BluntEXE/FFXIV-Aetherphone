@@ -43,7 +43,7 @@ internal sealed class VoiceNotePlayer : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Voice note playback failed: {exception.Message}");
+                AepLog.Warning(exception, "Voice note playback failed");
                 Stop();
             }
 
@@ -61,7 +61,7 @@ internal sealed class VoiceNotePlayer : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Voice note playback failed: {exception.Message}");
+            AepLog.Warning(exception, "Voice note playback failed");
             Stop();
         }
     }
@@ -72,8 +72,9 @@ internal sealed class VoiceNotePlayer : IDisposable
         {
             output?.Stop();
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            AepLog.Debug(exception, "Stopping voice note playback failed");
         }
 
         output?.Dispose();

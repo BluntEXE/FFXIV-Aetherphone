@@ -1,3 +1,5 @@
+using Aetherphone.Core;
+
 namespace Aetherphone.Apps.Clock;
 
 internal readonly record struct WorldCity(string City, string TimeZoneId);
@@ -35,8 +37,9 @@ internal static class WorldClockCatalog
             zone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
             return true;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            AepLog.Warning(exception, $"[Clock] time zone '{timeZoneId}' is unavailable; falling back to UTC");
             zone = TimeZoneInfo.Utc;
             return false;
         }

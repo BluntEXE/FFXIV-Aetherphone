@@ -161,7 +161,7 @@ internal sealed class PluginCatalog
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Reading the shipped icon of {internalName} failed: {exception.Message}");
+            AepLog.Warning(exception, $"Reading the shipped icon of {internalName} failed");
             return null;
         }
     }
@@ -212,7 +212,7 @@ internal sealed class PluginCatalog
             }
             catch (Exception ex)
             {
-                AepLog.Warning($"Opening {internalName} failed: {ex.Message}");
+                AepLog.Warning(ex, $"Opening {internalName} failed");
             }
 
             return false;
@@ -238,7 +238,7 @@ internal sealed class PluginCatalog
             }
             catch (Exception ex)
             {
-                AepLog.Warning($"Opening the settings of {internalName} failed: {ex.Message}");
+                AepLog.Warning(ex, $"Opening the settings of {internalName} failed");
                 return false;
             }
         }
@@ -317,8 +317,9 @@ internal sealed class PluginCatalog
             punchline = manifest.Punchline ?? string.Empty;
             iconUrl = NormalizeIconUrl(manifest.IconUrl);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            AepLog.Debug(exception, $"[Shortcuts] reading the manifest of {plugin.InternalName} failed");
             author = string.Empty;
         }
 
@@ -396,8 +397,9 @@ internal sealed class PluginCatalog
             var declaring = handler.Target?.GetType() ?? handler.Method.DeclaringType;
             return declaring?.Assembly.GetName().Name ?? string.Empty;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            AepLog.Debug(exception, "[Shortcuts] resolving a command owner assembly failed");
             return string.Empty;
         }
     }

@@ -101,7 +101,7 @@ internal sealed class HousingGameMaps
         }
         catch (Exception exception)
         {
-            AepLog.Debug($"Housing map texture '{map.TexturePath}' failed to load: {exception.Message}");
+            AepLog.Debug(exception, $"Housing map texture '{map.TexturePath}' failed to load");
             return null;
         }
     }
@@ -122,6 +122,7 @@ internal sealed class HousingGameMaps
             }
             catch (Exception exception)
             {
+                AepLog.Warning(exception, $"[Housing] building the game map for district {districtId} failed");
                 entry = new Entry(null, HousingGameMapFailure.Error, exception.Message);
             }
 
@@ -346,7 +347,7 @@ internal sealed class HousingGameMaps
         }
         catch (Exception exception)
         {
-            AepLog.Debug($"Housing could not test '{path}': {exception.Message}");
+            AepLog.Debug(exception, $"Housing could not test '{path}'");
             return false;
         }
     }

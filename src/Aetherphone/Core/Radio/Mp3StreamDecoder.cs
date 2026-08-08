@@ -30,8 +30,9 @@ internal sealed class Mp3StreamDecoder : IStreamDecoder
             {
                 frame = Mp3Frame.LoadFromStream(source);
             }
-            catch (EndOfStreamException)
+            catch (EndOfStreamException exception)
             {
+                AepLog.Debug(exception, "[Radio] the stream ended part way through an mp3 frame");
                 return 0;
             }
 
