@@ -53,7 +53,7 @@ internal static unsafe class JobsReader
         for (var categoryIndex = 0; categoryIndex < customBuckets.Length; categoryIndex++)
         {
             sections.Add(new JobSection(categoryIndex, categories[categoryIndex].Name,
-                SortedEntries(customBuckets[categoryIndex])));
+                CustomOrderedEntries(customBuckets[categoryIndex], categories[categoryIndex].GearsetIds)));
         }
 
         for (var bucketIndex = 0; bucketIndex < buckets.Length; bucketIndex++)
@@ -68,6 +68,33 @@ internal static unsafe class JobsReader
         }
 
         return sections.ToArray();
+    }
+
+    // Custom categories are user-curated, so they follow GearsetIds' own order (whatever the Jobs
+    // drag-to-reorder last left it in) instead of the UiPriority sort the role sections keep. A
+    // gearset id with no live entry this cycle is skipped rather than left as a gap.
+    private static JobEntry[] CustomOrderedEntries(List<(JobEntry Entry, byte UiPriority)> bucket,
+        List<int> gearsetIds)
+    {
+        var ordered = new JobEntry[bucket.Count];
+        var count = 0;
+        for (var idIndex = 0; idIndex < gearsetIds.Count && count < ordered.Length; idIndex++)
+        {
+            var gearsetId = gearsetIds[idIndex];
+            for (var entryIndex = 0; entryIndex < bucket.Count; entryIndex++)
+            {
+                if (bucket[entryIndex].Entry.GearsetId != gearsetId)
+                {
+                    continue;
+                }
+
+                ordered[count] = bucket[entryIndex].Entry;
+                count++;
+                break;
+            }
+        }
+
+        return count == ordered.Length ? ordered : ordered[..count];
     }
 
     private static JobEntry[] SortedEntries(List<(JobEntry Entry, byte UiPriority)> bucket)
