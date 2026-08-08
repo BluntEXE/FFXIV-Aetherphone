@@ -77,6 +77,14 @@ internal sealed class PhoneServices : IDisposable
     public required RemoteImageCache RemoteImages { get; init; }
 
     public required Social.BadgeCatalogStore BadgeCatalog { get; init; }
+
+    public required Coins.CoinStore Coins { get; init; }
+
+    public required Coins.CoinCatalogStore CoinCatalog { get; init; }
+
+    public required Coins.CoinGameSessionTracker CoinSessions { get; init; }
+
+    public required Coins.CoinEarnNotifier CoinEarnNotifier { get; init; }
     public required PluginCatalog PluginCatalog { get; init; }
     public required ShortcutStore Shortcuts { get; init; }
     public required ShortcutRunner ShortcutRunner { get; init; }
@@ -188,6 +196,11 @@ internal sealed class PhoneServices : IDisposable
         var badgeCatalog = new Social.BadgeCatalogStore(aethernetSession, aethernet.Account);
         Windows.Components.UserName.Configure(badgeCatalog, remoteImages);
         Moderation.ModerationNoticeText.Configure(badgeCatalog);
+        var coinApi = new AethernetApi(http, aethernetSession, "coin");
+        var coins = new Coins.CoinStore(aethernetSession, coinApi.Coins);
+        var coinCatalog = new Coins.CoinCatalogStore(aethernetSession, coinApi.Coins);
+        var coinSessions = new Coins.CoinGameSessionTracker(aethernetSession, coinApi.Coins);
+        var coinEarnNotifier = new Coins.CoinEarnNotifier(coins, notifications);
         var peerKeys = new PeerKeyDirectory(configuration, aethernet.Keys);
         var conversationKeys = new ConversationKeyStore(aethernet.Keys, keyVault);
         var marketIndex = new MarketItemIndex(dataManager);
@@ -281,6 +294,10 @@ internal sealed class PhoneServices : IDisposable
             Media = media,
             RemoteImages = remoteImages,
             BadgeCatalog = badgeCatalog,
+            Coins = coins,
+            CoinCatalog = coinCatalog,
+            CoinSessions = coinSessions,
+            CoinEarnNotifier = coinEarnNotifier,
             PluginCatalog = pluginCatalog,
             Shortcuts = new ShortcutStore(configuration, pluginCatalog),
             ShortcutRunner = new ShortcutRunner(clientState, condition),
@@ -372,6 +389,10 @@ internal sealed class PhoneServices : IDisposable
         RemoteImages.Dispose();
         Windows.Components.UserName.Reset();
         Moderation.ModerationNoticeText.Reset();
+        CoinEarnNotifier.Dispose();
+        CoinSessions.Dispose();
+        CoinCatalog.Dispose();
+        Coins.Dispose();
         BadgeCatalog.Dispose();
         Availability.Dispose();
         Http.Dispose();

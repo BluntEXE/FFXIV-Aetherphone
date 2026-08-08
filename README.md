@@ -48,7 +48,7 @@ Privacy and safety come first: text messages, attachments, and voice notes are e
 ## Highlights
 
 - **Social**: Chirper microblog, Aethergram photo feed, ChocoChat private messaging with voice notes and group calls, and Velvet, an optional 18+ companion app.
-- **Utilities**: a market board tracker, a housing browser that maps open plots and tracks lottery phases, venue and event directory, in-game music, weather, a wallet, timers and resets, a photo library and camera, Shortcuts that run command macros and open your other plugins in one tap, and a pocket arcade of mini-games, among 30+ apps.
+- **Utilities**: a market board tracker, a housing browser that maps open plots and tracks lottery phases, venue and event directory, in-game music, weather, a wallet, timers and resets, a photo library and camera, Shortcuts that run command macros and open your other plugins in one tap, a pocket arcade of mini-games, and Aether Coin, a non-tradable cosmetic currency you earn just by using the phone, among 30+ apps.
 - **Make it yours**: any accent color you like from a full picker, wallpapers, Lodestone character portraits, custom ringtones, an accessibility text-size zoom, and a phone you can drag to any size you like.
 
 Full feature tour, screenshots, and details live on the website:

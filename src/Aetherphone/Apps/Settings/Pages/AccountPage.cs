@@ -53,6 +53,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
     private readonly NamePage namePage;
     private readonly ISettingsPage profilePage;
     private readonly ISettingsPage encryptionPage;
+    private readonly ISettingsPage coinPage;
     private readonly PhotoLibrary photoLibrary;
     private readonly ConfirmService confirm;
     private readonly WallpaperImageCache wallpaperImages;
@@ -71,7 +72,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
     public AccountPage(Configuration configuration, AethernetSession session, AuthClient auth, AccountClient account,
         AccountStateService accountState, MediaClient media, GameData gameData, RemoteImageCache images,
         LodestoneService lodestone, ISettingsNavigator navigator, NamePage namePage, ISettingsPage profilePage,
-        ISettingsPage encryptionPage, PhotoLibrary photoLibrary, ConfirmService confirm,
+        ISettingsPage encryptionPage, ISettingsPage coinPage, PhotoLibrary photoLibrary, ConfirmService confirm,
         WallpaperImageCache wallpaperImages)
     {
         this.configuration = configuration;
@@ -87,6 +88,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         this.namePage = namePage;
         this.profilePage = profilePage;
         this.encryptionPage = encryptionPage;
+        this.coinPage = coinPage;
         this.photoLibrary = photoLibrary;
         this.confirm = confirm;
         this.wallpaperImages = wallpaperImages;
@@ -192,7 +194,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         DrawCommunityBadgesSection(theme, scale);
         DrawPatreonSection(theme, scale);
         ImGui.Dummy(new Vector2(0f, 14f * scale));
-        var links = GroupCard.Begin(theme, 3);
+        var links = GroupCard.Begin(theme, 4);
         if (SettingsRow.Link(links.NextRow(), namePage.Icon, namePage.Tint, namePage.Title, namePage.Summary, theme))
         {
             namePage.ResetEdit();
@@ -203,6 +205,12 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
                 profilePage.Summary, theme))
         {
             navigator.Open(profilePage);
+        }
+
+        if (SettingsRow.Link(links.NextRow(), coinPage.Icon, coinPage.Tint, coinPage.Title,
+                coinPage.Summary, theme))
+        {
+            navigator.Open(coinPage);
         }
 
         if (SettingsRow.Link(links.NextRow(), encryptionPage.Icon, encryptionPage.Tint, encryptionPage.Title,
