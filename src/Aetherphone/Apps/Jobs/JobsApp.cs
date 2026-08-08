@@ -69,9 +69,7 @@ internal sealed partial class JobsApp : IPhoneApp
         pendingEquip = null;
         sincePendingEquip = 0f;
         menuGearsetId = -1;
-        ResetCategoryDrag();
-        ResetJobDrag();
-        categoryDropSlots.Clear();
+        ResetPendingReorder();
         menu.Close();
         CloseColorPicker();
         CloseCategoryEditor();
@@ -172,15 +170,15 @@ internal sealed partial class JobsApp : IPhoneApp
                 Rebuild();
             }
 
-            using (var surface = AppSurface.Begin(body))
+            using (AppSurface.Begin(body))
             {
-                categoryDropSlots.Clear();
                 if (sections.Length == 0)
                 {
                     DrawHint();
                 }
                 else
                 {
+                    var categoryCount = CurrentCategories().Count;
                     for (var index = 0; index < sections.Length; index++)
                     {
                         var section = sections[index];
@@ -192,35 +190,19 @@ internal sealed partial class JobsApp : IPhoneApp
                         {
                             var headerRect = new Rect(headerTop,
                                 new Vector2(headerTop.X + headerWidth, ImGui.GetCursorScreenPos().Y));
-                            DrawCategoryDragHandle(headerRect, section.CategoryIndex, scale);
+                            DrawCategoryReorder(headerRect, section.CategoryIndex, categoryCount, scale);
                         }
 
                         DrawSectionCard(section, scale);
                         ImGui.Dummy(new Vector2(0f, SectionGap * scale));
-                        if (section.IsCustom)
-                        {
-                            SealCategoryDropSlot(ImGui.GetCursorScreenPos().Y);
-                        }
                     }
 
                     ImGui.Dummy(new Vector2(0f, 8f * scale));
                 }
-
-                UpdateCategoryDrag(scale);
-
-                // DragScrollHost.Begin runs before any handle this frame, so on the press's first
-                // frame it sees no active widget and starts a kinetic scroll on the same touch,
-                // which reads as the phone sliding under the drag. Same hand-back SkywatcherApp's
-                // scrubber uses.
-                if (categoryDragIndex >= 0 || jobDragIndex >= 0)
-                {
-                    surface.CancelDrag();
-                }
             }
         }
 
-        FinishCategoryDrag();
-        FinishJobDrag();
+        ApplyPendingReorder();
 
         DrawColorMenu(content, theme);
         DrawCategoriesMenu(content, theme);
@@ -355,22 +337,10 @@ internal sealed partial class JobsApp : IPhoneApp
                 Loc.T(L.Jobs.EmptyCategory), ui.MutedInk, TextStyles.Footnote, width - padding * 2f);
         }
 
-        if (section.IsCustom)
-        {
-            UpdateJobDrag(section.CategoryIndex, section.Entries, rowHeight, scale);
-        }
-
-        var draggedIndex = section.IsCustom && jobDragActive && jobDragCategoryIndex == section.CategoryIndex
-            ? jobDragIndex
-            : -1;
         var separator = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.06f));
         for (var index = 0; index < section.Entries.Length; index++)
         {
-            if (index != draggedIndex)
-            {
-                DrawSectionRow(drawList, section, index, min, max, padding, rowHeight, 0f, scale);
-            }
-
+            DrawSectionRow(drawList, section, index, min, max, padding, rowHeight, scale);
             if (index > 0)
             {
                 var rowTop = min.Y + index * rowHeight;
@@ -379,19 +349,14 @@ internal sealed partial class JobsApp : IPhoneApp
             }
         }
 
-        if (draggedIndex >= 0 && draggedIndex < section.Entries.Length)
-        {
-            DrawSectionRow(drawList, section, draggedIndex, min, max, padding, rowHeight, jobDragOffset, scale);
-        }
-
         ImGui.SetCursorScreenPos(min);
         ImGui.Dummy(new Vector2(width, rowCount * rowHeight));
     }
 
     private void DrawSectionRow(ImDrawListPtr drawList, JobSection section, int index, Vector2 min, Vector2 max,
-        float padding, float rowHeight, float dragOffset, float scale)
+        float padding, float rowHeight, float scale)
     {
-        var rowTop = min.Y + index * rowHeight + dragOffset;
+        var rowTop = min.Y + index * rowHeight;
         var rowRect = new Rect(new Vector2(min.X, rowTop), new Vector2(max.X, rowTop + rowHeight));
         var contentRect = new Rect(new Vector2(min.X + padding, rowTop),
             new Vector2(max.X - padding, rowTop + rowHeight));
@@ -401,33 +366,36 @@ internal sealed partial class JobsApp : IPhoneApp
             UiAnchors.Report("jobs.row", rowRect);
         }
 
-        DrawJobRow(drawList, rowRect, contentRect, section.Entries[index], scale, section.IsCustom,
-            section.CategoryIndex, index);
+        DrawJobRow(drawList, rowRect, contentRect, section, index, scale);
     }
 
-    private void DrawJobRow(ImDrawListPtr drawList, Rect rowRect, Rect contentRect, JobEntry job, float scale,
-        bool draggable, int categoryIndex, int rowIndex)
+    private void DrawJobRow(ImDrawListPtr drawList, Rect rowRect, Rect contentRect, JobSection section, int rowIndex,
+        float scale)
     {
+        var job = section.Entries[rowIndex];
         var hasMenu = job.Kind == JobEntryKind.Gearset;
         var menuRadius = 13f * scale;
         var menuCenter = new Vector2(contentRect.Max.X - menuRadius, contentRect.Center.Y);
         var menuHalf = new Vector2(menuRadius, menuRadius);
         var overMenu = hasMenu && UiInteract.Hover(menuCenter - menuHalf, menuCenter + menuHalf);
 
-        var handleRadius = 12f * scale;
-        var handleCenter = new Vector2(menuCenter.X - menuRadius - 20f * scale, contentRect.Center.Y);
-        var overHandle = false;
-        if (draggable)
-        {
-            overHandle = DrawJobDragHandle(drawList, handleCenter, handleRadius, categoryIndex, rowIndex);
-        }
+        var reorderable = section.IsCustom && section.Entries.Length > 1;
+        var reorderRadius = RowReorderRadius * scale;
+        var reorderCenter = new Vector2(menuCenter.X - menuRadius - 20f * scale, contentRect.Center.Y);
+        var reorderHalf = new Vector2(reorderRadius, reorderRadius + RowReorderOffset * scale);
+        var overReorder = reorderable && UiInteract.Hover(reorderCenter - reorderHalf, reorderCenter + reorderHalf);
 
         var equippable = job.Kind == JobEntryKind.Gearset && !job.IsActive;
-        var hovered = equippable && !overMenu && !overHandle && UiInteract.Hover(rowRect.Min, rowRect.Max);
+        var hovered = equippable && !overMenu && !overReorder && UiInteract.Hover(rowRect.Min, rowRect.Max);
         if (hovered)
         {
             var alpha = ImGui.IsMouseDown(ImGuiMouseButton.Left) ? 0.14f : 0.07f;
             drawList.AddRectFilled(rowRect.Min, rowRect.Max, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, alpha)));
+        }
+
+        if (reorderable)
+        {
+            DrawJobReorder(reorderCenter, reorderRadius, section, rowIndex, scale);
         }
 
         var iconSize = 42f * scale;
@@ -447,9 +415,9 @@ internal sealed partial class JobsApp : IPhoneApp
             : string.Empty;
         var textLeft = iconMax.X + 14f * scale;
         var noteRight = hasMenu ? menuCenter.X - menuRadius - 8f * scale : contentRect.Max.X;
-        if (draggable)
+        if (reorderable)
         {
-            noteRight -= handleRadius * 2f + 8f * scale;
+            noteRight -= reorderRadius * 2f + 8f * scale;
         }
         var textRight = noteRight -
                         (note.Length == 0 ? 0f : Typography.Measure(note, TextStyles.Caption2).X + 28f * scale);

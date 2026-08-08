@@ -2314,6 +2314,8 @@
   "jobs.deleteCategory": "削除",
   "jobs.deleteCategoryConfirm": "「{0}」を削除しますか？ギアセットは元のロール欄に戻ります。",
   "jobs.emptyCategory": "まだギアセットがありません。ギアセットの···メニューから追加できます。",
+  "jobs.moveUp": "上へ移動",
+  "jobs.moveDown": "下へ移動",
   "inventory.logInToView": "ログインしてアイテムを見る",
   "inventory.search": "アイテムを検索",
   "inventory.searchHint": "所有しているすべてのアイテムの場所を検索します。",

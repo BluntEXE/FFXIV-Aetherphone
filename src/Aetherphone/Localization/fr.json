@@ -2314,6 +2314,8 @@
   "jobs.deleteCategory": "Supprimer",
   "jobs.deleteCategoryConfirm": "Supprimer « {0} » ? Ses ensembles retourneront dans leurs sections de rôle.",
   "jobs.emptyCategory": "Aucun ensemble ici pour le moment. Utilisez le menu ··· d'un ensemble pour l'ajouter.",
+  "jobs.moveUp": "Monter",
+  "jobs.moveDown": "Descendre",
   "inventory.logInToView": "Connectez-vous pour voir vos objets",
   "inventory.search": "Rechercher vos objets",
   "inventory.searchHint": "Recherchez pour trouver où se trouve un objet parmi tout ce que vous possédez.",

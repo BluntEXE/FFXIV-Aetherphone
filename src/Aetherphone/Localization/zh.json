@@ -2314,6 +2314,8 @@
   "jobs.deleteCategory": "删除",
   "jobs.deleteCategoryConfirm": "删除“{0}”？套装将回到原来的职能分组。",
   "jobs.emptyCategory": "这里还没有套装。可以通过套装的···菜单添加。",
+  "jobs.moveUp": "上移",
+  "jobs.moveDown": "下移",
   "inventory.logInToView": "登录后查看你的物品",
   "inventory.search": "搜索物品",
   "inventory.searchHint": "搜索以查找你拥有的任何物品在什么地方。",
