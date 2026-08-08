@@ -13,7 +13,7 @@ internal sealed class HomeLayoutService
     private const string DefaultWidgetId = "skywatcher.forecast";
     private static readonly string[] DefaultDockApps = { "message", "messages", "settings" };
 
-    private static readonly string[] DefaultFirstPageApps =
+    internal static readonly string[] DefaultFirstPageApps =
     {
         "chirper", "aethergram", "velvet", "polls",
         "announcements", "camera", "photos", "feedback", "music",
@@ -21,7 +21,7 @@ internal sealed class HomeLayoutService
         "appstore",
     };
 
-    private static readonly string[] DefaultSecondPageApps =
+    internal static readonly string[] DefaultSecondPageApps =
     {
         "skywatcher", "collections", "inventory", "fishing",
         "clock", "notes", "calculator", "timers", "shortcuts",

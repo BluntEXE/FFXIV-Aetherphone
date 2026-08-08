@@ -75,8 +75,8 @@ internal static class SettingsRow
         var tileMax = tileMin + new Vector2(tileSize, tileSize);
         var surface = hovered ? Palette.Lighten(tint, 0.08f) : tint;
         IconTile.FillShaded(dl, tileMin, tileMax, tileSize * Metrics.Radius.TileFactor, surface);
-        ProgressRing.CenterIcon(dl, new Vector2(tileMin.X + tileSize * 0.5f, row.Center.Y), icon, GlyphInk,
-            tileSize * 0.5f);
+        ProgressRing.CenterIcon(dl, new Vector2(tileMin.X + tileSize * 0.5f, row.Center.Y), icon,
+            IconTile.Ink(surface), tileSize * 0.5f);
         if (badge)
         {
             AppBadge.DrawDot(new Vector2(tileMax.X, tileMin.Y), theme, scale);
@@ -117,10 +117,11 @@ internal static class SettingsRow
         var tileFill = hovered ? Palette.Mix(tint, theme.TextStrong, 0.14f) : tint;
         Squircle.Fill(dl, tileMin, tileMax, tileSize * Metrics.Radius.TileFactor, ImGui.GetColorU32(tileFill));
         var iconCenter = (tileMin + tileMax) * 0.5f;
-        var hole = Palette.Mix(tint, new Vector4(0f, 0f, 0f, 1f), 0.25f);
-        if (!AppIconArt.TryDraw(dl, appId, iconCenter, tileSize * 0.98f, theme.TextStrong, hole))
+        var ink = IconTile.Ink(tileFill);
+        var hole = Palette.Mix(tileFill, ink, 0.28f);
+        if (!AppIconArt.TryDraw(dl, appId, iconCenter, tileSize * 0.98f, ink, hole))
         {
-            dl.AddCircleFilled(iconCenter, 4f * scale, ImGui.GetColorU32(theme.TextStrong), 16);
+            dl.AddCircleFilled(iconCenter, 4f * scale, ImGui.GetColorU32(ink), 16);
         }
 
         var labelStartX = tileMax.X + Metrics.Space.Md * scale;

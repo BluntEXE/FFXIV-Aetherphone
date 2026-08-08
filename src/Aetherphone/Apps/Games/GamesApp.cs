@@ -482,7 +482,7 @@ internal sealed class GamesApp : IPhoneApp
             ImGui.GetColorU32(GamePalette.Darken(accent, 0.18f)));
         Squircle.Stroke(drawList, iconMin, iconMax, iconRounding,
             ImGui.GetColorU32(GamePalette.Lighten(accent, 0.4f) with { W = 0.35f }), Metrics.Stroke.Hairline * scale);
-        var ink = new Vector4(0.99f, 0.99f, 1f, 1f);
+        var ink = Palette.ReadableInk(accent);
         if (!AppIconArt.TryDraw(game.Id, iconCenter, iconSize * 0.62f, ink, accent))
         {
             Typography.DrawCentered(iconCenter, game.Title, ink, TextStyles.Caption2);
@@ -560,7 +560,7 @@ internal sealed class GamesApp : IPhoneApp
         drawList.AddCircleFilled(iconCenter + new Vector2(0f, iconSize * 0.10f), iconSize * 0.52f,
             ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.22f)));
         ProgressRing.Glow(iconCenter, iconSize * 0.5f, GamePalette.Lighten(accent, 0.45f), hovered ? 0.9f : 0.55f);
-        var ink = new Vector4(0.99f, 0.99f, 1f, 1f);
+        var ink = Palette.ReadableInk(accent);
         if (!AppIconArt.TryDraw(game.Id, iconCenter, iconSize, ink, GamePalette.Darken(accent, 0.16f)))
         {
             Typography.DrawCentered(iconCenter, game.Title, ink, TextStyles.Title1);

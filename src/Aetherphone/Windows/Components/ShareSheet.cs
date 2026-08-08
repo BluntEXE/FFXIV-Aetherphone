@@ -174,12 +174,13 @@ internal sealed class ShareSheet
         Elevation.IconRest(drawList, tileMin, tileMax, radius, scale);
         IconTile.FillShaded(drawList, tileMin, tileMax, radius, Palette.WithAlpha(surface, opacity));
         Material.EdgeSquircle(drawList, tileMin, tileMax, radius, scale);
-        if (!AppIconArt.TryDraw(drawList, app.Id, tileCenter, tileSize, Palette.WithAlpha(GlyphInk, opacity),
-                Palette.Darken(surface, 0.25f)))
+        var ink = AppAccents.InkFor(app.Id);
+        if (!AppIconArt.TryDraw(drawList, app.Id, tileCenter, tileSize, Palette.WithAlpha(ink, opacity),
+                Palette.Mix(surface, ink, 0.28f)))
         {
             var glyphHeight = Typography.Measure(app.Glyph).Y;
             var glyphScale = glyphHeight > 0f ? tileSize * 0.5f / glyphHeight : 1f;
-            Typography.DrawCentered(drawList, tileCenter, app.Glyph, Palette.WithAlpha(GlyphInk, opacity), glyphScale,
+            Typography.DrawCentered(drawList, tileCenter, app.Glyph, Palette.WithAlpha(ink, opacity), glyphScale,
                 FontWeight.Regular);
         }
 

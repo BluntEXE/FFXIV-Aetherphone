@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Apps;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Notifications;
@@ -268,7 +269,7 @@ internal sealed class NotificationBanner : IDisposable
         var iconMin = new Vector2(iconCenter.X - iconExtent, iconCenter.Y - iconExtent);
         var iconMax = new Vector2(iconCenter.X + iconExtent, iconCenter.Y + iconExtent);
         Squircle.Fill(dl, iconMin, iconMax, iconExtent * 0.52f, Color(notification.Accent, opacity));
-        var ink = Palette.WithAlpha(theme.TextStrong, opacity);
+        var ink = Palette.WithAlpha(Palette.ReadableInk(notification.Accent), opacity);
         if (!AppIconArt.TryDraw(dl, notification.AppId, iconCenter, IconSize * scale, ink,
                 Palette.WithAlpha(notification.Accent, opacity)))
         {

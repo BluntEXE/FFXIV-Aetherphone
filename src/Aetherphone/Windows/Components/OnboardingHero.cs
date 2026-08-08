@@ -104,8 +104,9 @@ internal static class OnboardingHero
         Elevation.IconRest(drawList, min, max, radius, scale, alpha);
         IconTile.FillShaded(drawList, min, max, radius, surface, alpha);
         Material.EdgeSquircle(drawList, min, max, radius, scale, alpha);
-        AppIconArt.TryDraw(drawList, id, center, size, GlyphInk with { W = alpha },
-            Palette.Darken(surface, 0.25f) with { W = alpha });
+        var ink = AppAccents.InkFor(id);
+        AppIconArt.TryDraw(drawList, id, center, size, ink with { W = alpha },
+            Palette.Mix(surface, ink, 0.28f) with { W = alpha });
     }
 
     private static void Heart(ImDrawListPtr drawList, Vector2 center, float size, Vector4 accent, float alpha)

@@ -60,6 +60,7 @@ The one exception is [the art asset specification](ART-ASSET-SPEC.md), which is 
 | [Creating your own app](creating-an-app.md) | Step-by-step tutorial: folder, class, registration, icon, accent color, localized name, plus a recipe for adding a Settings page |
 | [App framework](app-framework.md) | The `IPhoneApp` contract in full: lifecycle, navigation, theming, badges, sharing, home placement, polling, home widgets, Control Center tiles |
 | [UI toolkit](ui-toolkit.md) | The widget library in src/Aetherphone/Windows/Components: typography, spacing tokens, input, popups, scrolling, common widgets |
+| [Accent colors](design-accents.md) | The generated accent ring: the white-glyph contrast rule, hue spacing, per-app assignment, brand exceptions, and derived palettes |
 | [Mini-games framework](games-framework.md) | The Games app: the `IMiniGame` contract, juice helpers (shake, hit-stop, particles), scoring, and the daily challenge |
 
 ### Platform services

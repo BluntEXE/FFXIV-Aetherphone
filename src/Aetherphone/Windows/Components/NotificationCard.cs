@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Theme;
@@ -37,8 +38,9 @@ internal static class NotificationCard
         drawList.AddLine(new Vector2(tileMin.X + tileRounding, tileMin.Y + 1f * scale),
             new Vector2(tileMax.X - tileRounding, tileMin.Y + 1f * scale), gloss, 1f * scale);
         var iconCenter = (tileMin + tileMax) * 0.5f;
-        var ink = Palette.WithAlpha(Ink, opacity);
-        var hole = Palette.WithAlpha(Palette.Mix(tint, new Vector4(0f, 0f, 0f, 1f), 0.25f), opacity);
+        var tileInk = Palette.ReadableInk(tint);
+        var ink = Palette.WithAlpha(tileInk, opacity);
+        var hole = Palette.WithAlpha(Palette.Mix(tint, tileInk, 0.28f), opacity);
         if (!AppIconArt.TryDraw(drawList, notification.AppId, iconCenter, tileSize * 0.5f, ink, hole))
         {
             drawList.AddCircleFilled(iconCenter, 4f * scale, ImGui.GetColorU32(ink), 16);
