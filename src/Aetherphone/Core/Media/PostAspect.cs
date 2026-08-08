@@ -22,6 +22,8 @@ internal static class PostAspects
         _ => SquareRatio,
     };
 
+    public static bool RevealsWholeImage(PostAspect aspect) => aspect == PostAspect.Portrait;
+
     public static (int Width, int Height) Size(PostAspect aspect, int baseSize)
     {
         var ratio = Ratio(aspect);

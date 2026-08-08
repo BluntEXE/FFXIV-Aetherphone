@@ -262,6 +262,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         {
             activeScope = (SocialFeedScope)selected;
             actions.Reset();
+            feedScrollTopPending = true;
             profile.EnsureLoaded(activeScope);
         }
 

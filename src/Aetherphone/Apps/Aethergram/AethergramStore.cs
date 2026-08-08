@@ -31,7 +31,10 @@ internal sealed class AethergramStore : SocialFeedStore
     protected override Task<FeedPage?> FetchTaggedPostsAsync(string userId, string? cursor, CancellationToken token) =>
         grams.UserTaggedAsync(userId, cursor, token);
 
-    public void CreateGram(string[] sourcePaths, WallpaperCrop[] crops, PostAspect aspect, string caption,
+    // aspects holds one choice per photo. The post's MediaWidth/MediaHeight is the first photo's
+    // aspect box, which frames the whole carousel; each photo is baked to fit inside its own box
+    // and is contain-fit into that frame at draw time.
+    public void CreateGram(string[] sourcePaths, WallpaperCrop[] crops, PostAspect[] aspects, string caption,
         PhotoTagInput[]? photoTags, Action<bool> onComplete)
     {
         if (posting || sourcePaths.Length == 0)
@@ -43,10 +46,12 @@ internal sealed class AethergramStore : SocialFeedStore
         work.Run("create gram", async token =>
         {
             var keys = new string[sourcePaths.Length];
-            var (bakedWidth, bakedHeight) = PostAspects.Size(aspect, GramSize);
+            var (containerWidth, containerHeight) = PostAspects.Size(aspects[0], GramSize);
             for (var index = 0; index < sourcePaths.Length; index++)
             {
-                var baked = ImageProcessor.BakeCroppedJpeg(sourcePaths[index], crops[index], bakedWidth, bakedHeight);
+                var (bakedWidth, bakedHeight) = PostAspects.Size(aspects[index], GramSize);
+                var baked = ImageProcessor.BakeCroppedJpeg(sourcePaths[index], crops[index], bakedWidth, bakedHeight,
+                    PostAspects.RevealsWholeImage(aspects[index]));
                 var upload = await media.UploadUrlAsync("image/jpeg", "gram", token).ConfigureAwait(false);
                 if (upload is null)
                 {
@@ -63,8 +68,8 @@ internal sealed class AethergramStore : SocialFeedStore
                 keys[index] = upload.Key;
             }
 
-            var created = await grams.CreateAsync(caption.Trim(), keys, bakedWidth, bakedHeight, photoTags, token)
-                .ConfigureAwait(false);
+            var created = await grams.CreateAsync(caption.Trim(), keys, containerWidth, containerHeight, photoTags,
+                token).ConfigureAwait(false);
             if (created is null)
             {
                 return false;

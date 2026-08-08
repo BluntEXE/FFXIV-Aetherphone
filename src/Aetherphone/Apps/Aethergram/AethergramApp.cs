@@ -113,7 +113,6 @@ internal sealed partial class AethergramApp : IPhoneApp
     private readonly PhotoComposeSession composeSession;
     private bool composeAvatarMode;
     private bool composeStoryMode;
-    private PostAspect composeAspect = PostAspect.Square;
     private readonly string[] aspectLabels = new string[PostAspects.All.Length];
     private string? pendingSharedPhoto;
     private static readonly LocString[] ProfileTabs = { L.PhotoTag.PostsTab, L.PhotoTag.TaggedTab };
@@ -384,20 +383,23 @@ internal sealed partial class AethergramApp : IPhoneApp
 
         var navRect = new Rect(new Vector2(area.Min.X, area.Max.Y - BottomNavHeight * scale), area.Max);
         var tabArea = new Rect(contentArea.Min, new Vector2(area.Max.X, navRect.Min.Y));
-        switch (activeTab)
+        using (ImRaii.PushId((int)activeTab))
         {
-            case AethergramTab.Search:
-                DrawSearchTab(tabArea);
-                break;
-            case AethergramTab.Activity:
-                DrawActivityTab(tabArea);
-                break;
-            case AethergramTab.Profile:
-                DrawProfileTab(tabArea);
-                break;
-            default:
-                DrawFeedTab(tabArea);
-                break;
+            switch (activeTab)
+            {
+                case AethergramTab.Search:
+                    DrawSearchTab(tabArea);
+                    break;
+                case AethergramTab.Activity:
+                    DrawActivityTab(tabArea);
+                    break;
+                case AethergramTab.Profile:
+                    DrawProfileTab(tabArea);
+                    break;
+                default:
+                    DrawFeedTab(tabArea);
+                    break;
+            }
         }
 
         DrawBottomNav(navRect);
@@ -680,6 +682,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         if (scope != activeScope)
         {
             activeScope = scope;
+            feedScrollTopPending = true;
             profile.EnsureLoaded(activeScope);
         }
     }
@@ -1114,9 +1117,9 @@ internal sealed partial class AethergramApp : IPhoneApp
         }
         else
         {
-            var (uv0, uv1) = ImageFit.Cover(texture.Size.X, texture.Size.Y, rect.Width, rect.Height);
-            drawList.AddImageRounded(texture.Handle, rect.Min, rect.Max, uv0, uv1, 0xFFFFFFFFu, rounding,
-                ImDrawFlags.RoundCornersAll);
+            // Contain, not cover: the photo was baked to its own aspect at compose time, which can
+            // differ from this post's carousel frame, and covering would crop it a second time.
+            ImageFit.DrawLetterboxed(drawList, texture, rect, Vector2.Zero, Vector2.One, rounding);
         }
 
         ModerationOverlay.Draw(drawList, rect.Min, rect.Max, rounding, scanStatus);
