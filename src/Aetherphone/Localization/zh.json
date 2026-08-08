@@ -4042,5 +4042,6 @@
     "coin.rulePost": "留存的帖子",
     "coin.ruleCommentsDaily": "留存的评论",
     "coin.rulePostHint": "留存一小时的一条啁啾或相片，每天一次",
-    "coin.ruleCommentsDailyHint": "在他人帖子下留存一小时的评论，每天最多三位作者"
+    "coin.ruleCommentsDailyHint": "在他人帖子下留存一小时的评论，每天最多三位作者",
+    "phone.micNotReaching": "通话中听不到你的麦克风，请在设置中检查输入设备"
 }

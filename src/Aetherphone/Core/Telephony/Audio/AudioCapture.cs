@@ -7,7 +7,7 @@ namespace Aetherphone.Core.Telephony.Audio;
 internal sealed class AudioCapture : IDisposable
 {
     private const int Bitrate = 28000;
-    private const float GateOpenRms = 0.018f;
+    public const float GateOpenRms = 0.018f;
     private const float GateCloseRms = 0.010f;
     private const int HangoverFrames = 12;
     private readonly object gate = new();

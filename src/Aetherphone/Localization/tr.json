@@ -4042,5 +4042,6 @@
     "coin.rulePost": "Kalan bir gönderi",
     "coin.ruleCommentsDaily": "Kalan yorumlar",
     "coin.rulePostHint": "Bir saat kalan bir chirp veya gram, günde bir",
-    "coin.ruleCommentsDailyHint": "Başkalarının gönderilerinde bir saat kalan yorumlar, günde en fazla üç yazar"
+    "coin.ruleCommentsDailyHint": "Başkalarının gönderilerinde bir saat kalan yorumlar, günde en fazla üç yazar",
+    "phone.micNotReaching": "Mikrofonun aramaya ulaşmıyor, Ayarlar'dan giriş cihazını kontrol et"
 }

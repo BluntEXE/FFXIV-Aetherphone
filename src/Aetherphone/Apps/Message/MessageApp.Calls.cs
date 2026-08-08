@@ -422,10 +422,25 @@ internal sealed partial class MessageApp
             TextStyles.Callout);
         if (view.State == CallState.Active)
         {
-            Typography.DrawCentered(new Vector2(centerX, nameCenterY + 58f * scale), Loc.T(L.Phone.UseHeadphones),
-                Palette.WithAlpha(screenTheme.TextStrong, 0.45f), TextStyles.Footnote);
+            var micSilent = !view.Muted
+                && view.Seconds >= MicSilentWarningSeconds
+                && view.PeakMicLevel < Core.Telephony.Audio.AudioCapture.GateOpenRms;
+            if (micSilent)
+            {
+                var warning = Typography.FitText(Loc.T(L.Phone.MicNotReaching),
+                    ImGui.GetWindowSize().X - 32f * scale, TextStyles.Footnote);
+                Typography.DrawCentered(new Vector2(centerX, nameCenterY + 58f * scale), warning,
+                    Palette.WithAlpha(screenTheme.Danger, 0.92f), TextStyles.Footnote);
+            }
+            else
+            {
+                Typography.DrawCentered(new Vector2(centerX, nameCenterY + 58f * scale), Loc.T(L.Phone.UseHeadphones),
+                    Palette.WithAlpha(screenTheme.TextStrong, 0.45f), TextStyles.Footnote);
+            }
         }
     }
+
+    private const int MicSilentWarningSeconds = 30;
 
     private static void DrawAvatarBloom(ImDrawListPtr drawList, Vector2 center, float radius, PhoneTheme screenTheme,
         float scale)

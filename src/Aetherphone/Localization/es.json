@@ -4042,5 +4042,6 @@
     "coin.rulePost": "Una publicación que perduró",
     "coin.ruleCommentsDaily": "Comentarios que perduraron",
     "coin.rulePostHint": "Un chirp o un gram que permanece una hora, una vez al día",
-    "coin.ruleCommentsDailyHint": "Comentarios en publicaciones de otras personas que permanecen una hora, hasta tres autores al día"
+    "coin.ruleCommentsDailyHint": "Comentarios en publicaciones de otras personas que permanecen una hora, hasta tres autores al día",
+    "phone.micNotReaching": "Tu micrófono no llega a la llamada, revisa el dispositivo de entrada en Ajustes"
 }

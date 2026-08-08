@@ -14,6 +14,7 @@ internal sealed class CallAudioController
     private bool muted;
     private float volume = 0.85f;
     private long startTicks;
+    private float peakMicLevel;
 
     public CallAudioController(Configuration configuration, PlaybackHub playback, RealtimeConnection connection)
     {
@@ -25,6 +26,20 @@ internal sealed class CallAudioController
     public bool MutedLocked => muted;
     public float VolumeLocked => volume;
     public float MicLevelLocked => session?.MicLevel ?? 0f;
+
+    public float PeakMicLevelLocked
+    {
+        get
+        {
+            var level = session?.MicLevel ?? 0f;
+            if (level > peakMicLevel)
+            {
+                peakMicLevel = level;
+            }
+
+            return peakMicLevel;
+        }
+    }
     public bool HasSessionLocked => session is not null;
     public long StartTicksLocked => startTicks;
     public CallSession? SessionLocked => session;
@@ -55,6 +70,7 @@ internal sealed class CallAudioController
         session = created;
         remoteSlots.Clear();
         startTicks = Environment.TickCount64;
+        peakMicLevel = 0f;
         playback.Stop();
         return true;
     }
@@ -141,6 +157,7 @@ internal sealed class CallAudioController
         remoteSlots.Clear();
         muted = false;
         startTicks = 0;
+        peakMicLevel = 0f;
         return taken;
     }
 }

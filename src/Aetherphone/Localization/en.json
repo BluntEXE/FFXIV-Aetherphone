@@ -4042,5 +4042,6 @@
     "coin.rulePost": "A post that lasted",
     "coin.ruleCommentsDaily": "Comments that lasted",
     "coin.rulePostHint": "One chirp or gram that stays up for an hour, once a day",
-    "coin.ruleCommentsDailyHint": "Comments on other people's posts that stay up for an hour, up to three authors a day"
+    "coin.ruleCommentsDailyHint": "Comments on other people's posts that stay up for an hour, up to three authors a day",
+    "phone.micNotReaching": "Your mic is not reaching the call, check the input device in Settings"
 }

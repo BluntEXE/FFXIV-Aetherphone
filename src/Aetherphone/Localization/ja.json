@@ -4042,5 +4042,6 @@
     "coin.rulePost": "残った投稿",
     "coin.ruleCommentsDaily": "残ったコメント",
     "coin.rulePostHint": "1時間残ったチャープまたはグラム。1日1回",
-    "coin.ruleCommentsDailyHint": "他の人の投稿に付けて1時間残ったコメント。1日3人まで"
+    "coin.ruleCommentsDailyHint": "他の人の投稿に付けて1時間残ったコメント。1日3人まで",
+    "phone.micNotReaching": "マイクの音声が通話に届いていません。設定で入力デバイスをご確認ください"
 }

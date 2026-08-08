@@ -1116,6 +1116,7 @@ internal static class L
         public static readonly LocString NoOneFound = new("phone.noOneFound", "No one found");
         public static readonly LocString Connecting = new("phone.connecting", "Connecting to call service…");
         public static readonly LocString UseHeadphones = new("phone.useHeadphones", "Use headphones to avoid echo");
+        public static readonly LocString MicNotReaching = new("phone.micNotReaching", "Your mic is not reaching the call, check the input device in Settings");
         public static readonly LocString EnableTitle = new("phone.enableTitle", "Phone Calls");
         public static readonly LocString EnableBody = new("phone.enableBody", "Voice calls with other Aetherphone users");
         public static readonly LocString Enable = new("phone.enable", "Enable");
