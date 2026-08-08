@@ -66,6 +66,18 @@ internal sealed class CoinStore : IDisposable
         ReloadLedger();
     }
 
+    public void AbsorbLocalAward(long balance)
+    {
+        if (balance <= 0)
+        {
+            return;
+        }
+
+        Interlocked.Exchange(ref lastSeenBalance, balance);
+        Interlocked.Exchange(ref walletLoadedAtTick, 0);
+        RefreshWallet(0);
+    }
+
     public CoinAwardDto? TakeCheckInResult()
     {
         return Interlocked.Exchange(ref checkInResult, null);

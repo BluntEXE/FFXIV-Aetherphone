@@ -234,6 +234,7 @@ internal sealed class GamesApp : IPhoneApp
             if (award.Granted && award.Amount > 0)
             {
                 coinFloats.Spawn(Loc.T(L.Coin.CheckInReward, award.Amount.ToString("N0", Loc.Culture)), anchor);
+                coins.AbsorbLocalAward(award.Balance);
             }
             else if (award.Reason == "too_short")
             {

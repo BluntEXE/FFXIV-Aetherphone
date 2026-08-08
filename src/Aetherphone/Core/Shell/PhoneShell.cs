@@ -40,6 +40,7 @@ internal sealed class PhoneShell : IDisposable
     private readonly NotificationBanner banner;
     private readonly ShortcutRunPill shortcutPill;
     private readonly CoinEarnPill coinPill;
+    private readonly CoinEarnFloats coinFloats;
     private readonly MinimizedPhone minimizedView;
     private readonly MinimizeTransition minimize = new();
     private readonly SideButton sideButton = new();
@@ -88,6 +89,7 @@ internal sealed class PhoneShell : IDisposable
         var rateLimitPill = new RateLimitPill(services.Http, services.AethernetSession);
         shortcutPill = new ShortcutRunPill(services.ShortcutRunner);
         coinPill = new CoinEarnPill(services.Coins, configuration);
+        coinFloats = new CoinEarnFloats(services.Coins);
         var controlCenter = new ControlCenter(configuration, themes, services.Playback, calls, navigation,
             notifications, router, services.Coins, services.AethernetSession);
         minimizedView = new MinimizedPhone(notifications, configuration);
@@ -111,8 +113,8 @@ internal sealed class PhoneShell : IDisposable
         transition = new ShellTransitionRenderer(themes, navigation, home, painter);
         morph = new MinimizeMorphView(themes, minimize, minimizedView, notifications, painter);
         overlays = new ShellOverlayCoordinator(configuration, loading, navigation, controlCenter, banner, island,
-            rateLimitPill, shortcutPill, coinPill, incomingOverlay, banOverlay, confirmOverlay, reportOverlay,
-            shareSheet, conductOverlay, director, setup);
+            rateLimitPill, shortcutPill, coinPill, coinFloats, incomingOverlay, banOverlay, confirmOverlay,
+            reportOverlay, shareSheet, conductOverlay, director, setup);
     }
 
     public void OnOpened()
@@ -433,6 +435,7 @@ internal sealed class PhoneShell : IDisposable
         banner.Dispose();
         shortcutPill.Dispose();
         coinPill.Dispose();
+        coinFloats.Dispose();
         minimizedView.Dispose();
         setup.Dispose();
         for (var index = 0; index < apps.Count; index++)
