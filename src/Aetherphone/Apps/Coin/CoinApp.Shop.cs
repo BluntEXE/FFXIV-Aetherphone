@@ -30,7 +30,7 @@ internal sealed partial class CoinApp
             else
             {
                 EmptyState.Draw(body, ui, FontAwesomeIcon.Store, Loc.T(L.Coin.ShopEmpty),
-                    Loc.T(L.Coin.FreeNote));
+                    Loc.T(L.Coin.ShopEmptyHint));
             }
 
             return;

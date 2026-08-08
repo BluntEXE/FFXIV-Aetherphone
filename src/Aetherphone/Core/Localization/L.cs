@@ -206,6 +206,8 @@ internal static class L
         public static readonly LocString NoticePhotoCount = new("moderation.notice.photoCount", "{0} photo(s)");
         public static readonly LocString NoticeModeratorNote = new("moderation.notice.moderatorNote", "From the moderator: {0}");
         public static readonly LocString NoticeWarningConsequence = new("moderation.notice.warningConsequence", "Please follow the community guidelines. Repeated breaks of the same rule can lead to a temporary suspension.");
+        public static readonly LocString NoticeCoinTitle = new("moderation.notice.coinTitle", "Your Aether Coin balance changed");
+        public static readonly LocString NoticeCoinBody = new("moderation.notice.coinBody", "A staff member adjusted your Aether Coin balance.");
         public static readonly LocString NoticeThanksTitle = new("moderation.notice.thanksTitle", "Thanks for looking out for everyone");
         public static readonly LocString NoticeThanksBody = new("moderation.notice.thanksBody", "Our moderators reviewed your report and it has been handled. Reports like yours are what keep Aethernet safe, and we read every single one. Thank you for taking the time.");
         public static readonly LocString NoticeBadgeTitle = new("moderation.notice.badgeTitle", "New badge");
@@ -3661,6 +3663,9 @@ internal static class L
         public static readonly LocString PriceChanged = new("coin.priceChanged", "The price changed; take another look");
         public static readonly LocString Unavailable = new("coin.unavailable", "Not for sale right now");
         public static readonly LocString ShopEmpty = new("coin.shopEmpty", "The shelves are being stocked");
+        public static readonly LocString HelpTitle = new("coin.helpTitle", "About Aether Coin");
+        public static readonly LocString HelpBody = new("coin.helpBody", "Coins can take up to 30 minutes to arrive, so give it a little time if an earn does not show up right away. The shop opens in a future update, and everything you earn until then will be waiting.");
+        public static readonly LocString ShopEmptyHint = new("coin.shopEmptyHint", "The shop is still in the works. It opens very soon.");
         public static readonly LocString FreeNote = new("coin.freeNote", "Custom wallpapers, accents, and imported sounds are free and stay free.");
         public static readonly LocString LeavingSoon = new("coin.leavingSoon", "Leaving {0}");
         public static readonly LocString FrozenTitle = new("coin.frozenTitle", "Your wallet is frozen");
@@ -4055,6 +4060,41 @@ internal static class L
         public static readonly LocString HealthGoalsBody = new("onboarding.healthGoalsBody", "Switch a goal on and it appears on the overview with a progress bar and your streak.");
         public static readonly LocString HealthPrivacyTitle = new("onboarding.healthPrivacyTitle", "Stays on your machine");
         public static readonly LocString HealthPrivacyBody = new("onboarding.healthPrivacyBody", "None of this is uploaded anywhere. It's tracked per character and saved with your phone.");
+        public static readonly LocString CoinBody = new("onboarding.coinBody", "Aether Coin is the phone's own currency. You earn it simply by using the phone, and it stacks up quietly while you go about your day.");
+        public static readonly LocString CoinBalanceTitle = new("onboarding.coinBalanceTitle", "What you're holding");
+        public static readonly LocString CoinBalanceBody = new("onboarding.coinBalanceBody", "Your balance up top, with what you earned today and your all-time totals underneath.");
+        public static readonly LocString CoinCheckInTitle = new("onboarding.coinCheckInTitle", "One tap a day");
+        public static readonly LocString CoinCheckInBody = new("onboarding.coinCheckInBody", "Check in once a day for coin. The streak bonus grows the longer you keep it going, and one missed day a week is forgiven.");
+        public static readonly LocString CoinEarnTitle = new("onboarding.coinEarnTitle", "Every way to earn");
+        public static readonly LocString CoinEarnBody = new("onboarding.coinEarnBody", "Calls, conversations, games and posts all pay out. Each row shows what you've earned against its cap for the period.");
+        public static readonly LocString CoinShopTitle = new("onboarding.coinShopTitle", "Where it gets spent");
+        public static readonly LocString CoinShopBody = new("onboarding.coinShopBody", "The shop is where your coin goes. It's still filling out, so check back as new things land.");
+        public static readonly LocString CoinFairTitle = new("onboarding.coinFairTitle", "Never real money");
+        public static readonly LocString CoinFairBody = new("onboarding.coinFairBody", "Coin can't be bought with real money, and it never buys an advantage. You can also earn it at community events and across the phone's other apps.");
+        public static readonly LocString ShortcutsBody = new("onboarding.shortcutsBody", "Chain the commands you type every day into a single tap: emote routines, travel, opening your other plugins.");
+        public static readonly LocString ShortcutsNewTitle = new("onboarding.shortcutsNewTitle", "Build one");
+        public static readonly LocString ShortcutsNewBody = new("onboarding.shortcutsNewBody", "Stack steps in order: game commands, waits between them, a plugin to open or a link to launch.");
+        public static readonly LocString ShortcutsLibraryTitle = new("onboarding.shortcutsLibraryTitle", "Tap to run");
+        public static readonly LocString ShortcutsLibraryBody = new("onboarding.shortcutsLibraryBody", "A tap on the row runs the whole chain and reports each step as it goes. The sliders on the right open it for editing.");
+        public static readonly LocString ShortcutsImportTitle = new("onboarding.shortcutsImportTitle", "Pass them around");
+        public static readonly LocString ShortcutsImportBody = new("onboarding.shortcutsImportBody", "Shortcuts copy out as plain text, so you can send one to a friend and import theirs straight back in.");
+        public static readonly LocString ShortcutsPluginsTitle = new("onboarding.shortcutsPluginsTitle", "Every plugin you have");
+        public static readonly LocString ShortcutsPluginsBody = new("onboarding.shortcutsPluginsBody", "The Plugins tab lists what's installed and every command it registers, ready to drop into a shortcut.");
+        public static readonly LocString ShortcutsHomeTitle = new("onboarding.shortcutsHomeTitle", "Keep it one tap away");
+        public static readonly LocString ShortcutsHomeBody = new("onboarding.shortcutsHomeBody", "Any shortcut can sit on the home screen as its own tile, with an icon and color you choose.");
+        public static readonly LocString HousingBody = new("onboarding.housingBody", "Open plots across every world, with lottery timers, so you know where to be and when.");
+        public static readonly LocString HousingContextTitle = new("onboarding.housingContextTitle", "Pick where to look");
+        public static readonly LocString HousingContextBody = new("onboarding.housingContextBody", "World, district and ward. Change any of the three and the map follows.");
+        public static readonly LocString HousingMapTitle = new("onboarding.housingMapTitle", "The ward at a glance");
+        public static readonly LocString HousingMapBody = new("onboarding.housingMapBody", "Every marker is a plot, sized small to large. Drag to pan, scroll to zoom, and tap one for its price and lottery details.");
+        public static readonly LocString HousingPhaseTitle = new("onboarding.housingPhaseTitle", "Where the lottery stands");
+        public static readonly LocString HousingPhaseBody = new("onboarding.housingPhaseBody", "Entry or results, and how long is left on the one closing soonest. It counts down live.");
+        public static readonly LocString HousingFiltersTitle = new("onboarding.housingFiltersTitle", "Only the plots you want");
+        public static readonly LocString HousingFiltersBody = new("onboarding.housingFiltersBody", "Filter by size, phase, private or Free Company, even how many entries are already in. A crowded ward becomes the few worth chasing.");
+        public static readonly LocString HousingWatchTitle = new("onboarding.housingWatchTitle", "Never miss an entry");
+        public static readonly LocString HousingWatchBody = new("onboarding.housingWatchBody", "Watch a plot and the phone reminds you before its phase ends, with however much warning you ask for.");
+        public static readonly LocString HousingDataTitle = new("onboarding.housingDataTitle", "How fresh this is");
+        public static readonly LocString HousingDataBody = new("onboarding.housingDataBody", "Listings come from community scans, so the chip in the footer tells you how recent they are. Refresh beside it pulls again.");
     }
 
     internal static class Setup

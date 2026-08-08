@@ -4,6 +4,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Coins;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -75,6 +76,7 @@ internal sealed partial class CoinApp : IPhoneApp
 
         if (!session.IsSignedIn)
         {
+            TourHolds.Hold(Id);
             ui.Body(context.Content);
             AppHeader.Draw(context, DisplayName, navigation.Back);
             var top = context.Content.Min.Y + AppHeader.Height * scale;
@@ -84,6 +86,7 @@ internal sealed partial class CoinApp : IPhoneApp
             return;
         }
 
+        TourHolds.Release(Id);
         store.EnsureFresh();
         router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
     }
@@ -91,13 +94,26 @@ internal sealed partial class CoinApp : IPhoneApp
     private void DrawView(CoinRoute route, Rect area, int depth)
     {
         ui.Body(area);
+        if (GuideIntents.Consume("coin.tab.shop"))
+        {
+            activeTab = TabShop;
+        }
+
         var scale = UiScale.Current;
         AppHeader.Draw(new PhoneContext(area, theme, navigation), DisplayName, navigation.Back);
+        var helpCenter = new Vector2(area.Max.X - 26f * scale, area.Min.Y + AppHeader.Height * scale * 0.5f);
+        if (ui.IconButton(helpCenter, 16f * scale, FontAwesomeIcon.QuestionCircle.ToIconString(), ui.MutedInk,
+                AppSkin.Transparent, 1.1f, Loc.T(L.Coin.HelpTitle), HoverLabelSide.Below))
+        {
+            confirm.Alert(Loc.T(L.Coin.HelpTitle), Loc.T(L.Coin.HelpBody), Loc.T(L.Onboarding.GotIt));
+        }
+
         var top = area.Min.Y + AppHeader.Height * scale;
         var inset = 16f * scale;
         var segRow = new Rect(
             new Vector2(area.Min.X + inset, top + 4f * scale),
             new Vector2(area.Max.X - inset, top + 34f * scale));
+        UiAnchors.Report("coin.tabs", segRow);
         tabOptions[TabWallet] = Loc.T(L.Coin.TabWallet);
         tabOptions[TabShop] = Loc.T(L.Coin.TabShop);
         tabOptions[TabHistory] = Loc.T(L.Coin.TabHistory);

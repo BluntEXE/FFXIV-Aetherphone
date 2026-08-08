@@ -58,7 +58,26 @@ internal sealed class GamesApp : IPhoneApp
         }
     }
 
+    private readonly struct CoinSessionChip
+    {
+        public readonly string Label;
+        public readonly float Fraction;
+        public readonly bool Qualified;
+        public readonly bool Visible;
+
+        public CoinSessionChip(string label, float fraction, bool qualified)
+        {
+            Label = label;
+            Fraction = fraction;
+            Qualified = qualified;
+            Visible = true;
+        }
+    }
+
     private const float HeaderHeight = 42f;
+    private const float CoinChipRingRadius = 7f;
+    private const float CoinChipGap = 5f;
+    private const float CoinChipReserve = 72f;
     private const float HeroHeight = 168f;
     private const float SectionHeaderHeight = 30f;
     private const float GameRowHeight = 64f;
@@ -262,9 +281,19 @@ internal sealed class GamesApp : IPhoneApp
     private void DrawActiveGame(in PhoneContext context)
     {
         var game = currentGame!;
-        AppHeader.Draw(context, game.Title, back);
         var scale = UiScale.Current;
         var content = context.Content;
+        var chip = BuildCoinSessionChip();
+        if (chip.Visible)
+        {
+            AppHeader.Draw(context, "games.header.title", game.Title, CoinChipReserve * scale, back);
+            DrawCoinSessionChip(chip, content, context.Theme, scale);
+        }
+        else
+        {
+            AppHeader.Draw(context, game.Title, back);
+        }
+
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + HeaderHeight * scale), content.Max);
         using (AppSurface.Begin(body))
         {
@@ -273,65 +302,64 @@ internal sealed class GamesApp : IPhoneApp
             game.Draw(new GameContext(body, context.Theme, stats, attentive ? frameSeconds : 0f));
             pausedVeil.Step(!attentive && game.RunsOnAClock ? 1f : 0f, PausedFadeSeconds, frameSeconds);
             DrawPausedVeil(body, context.Theme);
-            DrawCoinSessionChip(body, scale);
         }
     }
 
-    private void DrawCoinSessionChip(Rect body, float scale)
+    private CoinSessionChip BuildCoinSessionChip()
     {
         var seconds = coinSessions.OpenSessionSeconds;
         if (seconds < 0)
         {
-            return;
+            return default;
         }
 
         var wallet = coins.Wallet;
         if (wallet is not null && RuleExhausted(wallet, "game.session") && RuleExhausted(wallet, "game.deep"))
         {
-            return;
+            return default;
         }
 
         var minSeconds = coinSessions.OpenMinSeconds;
+        if (seconds < minSeconds)
+        {
+            return new CoinSessionChip(TimeText.Duration(minSeconds - seconds), seconds / (float)minSeconds, false);
+        }
+
         var deepSeconds = coinSessions.OpenDeepSeconds;
-        var qualified = seconds >= minSeconds;
-        var deepDone = seconds >= deepSeconds;
+        if (seconds < deepSeconds)
+        {
+            return new CoinSessionChip(TimeText.Duration(deepSeconds - seconds),
+                (seconds - minSeconds) / (float)(deepSeconds - minSeconds), true);
+        }
+
+        return new CoinSessionChip(string.Empty, 1f, true);
+    }
+
+    private static void DrawCoinSessionChip(in CoinSessionChip chip, Rect content, PhoneTheme theme, float scale)
+    {
         var accent = AppAccents.For("coin");
-
-        var label = string.Empty;
-        var fraction = 1f;
-        if (!qualified)
+        var ringRadius = CoinChipRingRadius * scale;
+        var thickness = Metrics.Stroke.Ring * scale;
+        var rowCenterY = content.Min.Y + HeaderHeight * scale * 0.5f;
+        var right = content.Max.X - Metrics.Space.Md * scale;
+        var textSize = chip.Label.Length > 0 ? Typography.Measure(chip.Label, TextStyles.Caption1) : Vector2.Zero;
+        var labelSpan = chip.Label.Length > 0 ? textSize.X + CoinChipGap * scale : 0f;
+        var ringCenter = new Vector2(right - labelSpan - ringRadius, rowCenterY);
+        ProgressRing.Track(ringCenter, ringRadius, thickness, Palette.WithAlpha(accent, 0.28f));
+        ProgressRing.Fill(ringCenter, ringRadius, thickness, chip.Fraction, accent);
+        if (chip.Qualified)
         {
-            label = TimeText.Duration(minSeconds - seconds);
-            fraction = seconds / (float)minSeconds;
-        }
-        else if (!deepDone)
-        {
-            label = TimeText.Duration(deepSeconds - seconds);
-            fraction = (seconds - minSeconds) / (float)(deepSeconds - minSeconds);
-        }
-
-        var drawList = ImGui.GetWindowDrawList();
-        var textSize = label.Length > 0 ? Typography.Measure(label, TextStyles.Caption1) : Vector2.Zero;
-        var ringRadius = 7f * scale;
-        var chipHeight = 22f * scale;
-        var chipWidth = ringRadius * 2f + 18f * scale + (label.Length > 0 ? textSize.X + 7f * scale : 0f);
-        var min = new Vector2(body.Max.X - chipWidth - 10f * scale, body.Min.Y + 10f * scale);
-        var max = new Vector2(min.X + chipWidth, min.Y + chipHeight);
-        Material.Frosted(drawList, min, max, chipHeight * 0.5f, scale);
-
-        var ringCenter = new Vector2(min.X + 9f * scale + ringRadius, (min.Y + max.Y) * 0.5f);
-        ProgressRing.Track(ringCenter, ringRadius, 2f * scale, Palette.WithAlpha(accent, 0.28f));
-        ProgressRing.Fill(ringCenter, ringRadius, 2f * scale, Math.Clamp(fraction, 0f, 1f), accent);
-        if (qualified)
-        {
-            ProgressRing.CenterIcon(drawList, ringCenter, FontAwesomeIcon.Check, accent, ringRadius * 1.05f);
+            ProgressRing.CenterIcon(ImGui.GetWindowDrawList(), ringCenter, FontAwesomeIcon.Check, accent,
+                ringRadius * 1.05f);
         }
 
-        if (label.Length > 0)
+        if (chip.Label.Length == 0)
         {
-            Typography.DrawCentered(new Vector2(ringCenter.X + ringRadius + 5f * scale + textSize.X * 0.5f,
-                (min.Y + max.Y) * 0.5f), label, new Vector4(0.97f, 0.97f, 0.99f, 1f), TextStyles.Caption1);
+            return;
         }
+
+        Typography.DrawCentered(new Vector2(right - textSize.X * 0.5f, rowCenterY), chip.Label, theme.TextStrong,
+            TextStyles.Caption1);
     }
 
     private static bool RuleExhausted(CoinWalletDto wallet, string ruleId)

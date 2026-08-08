@@ -30,7 +30,7 @@ internal sealed class HomeLayoutService
         "health",
     };
 
-    private static readonly string[] MandatoryApps = { "appstore", "settings", "announcements", "coin" };
+    private static readonly string[] MandatoryApps = { "appstore", "settings", "announcements" };
 
     private readonly IReadOnlyList<IPhoneApp> apps;
     private readonly WidgetRegistry widgets;

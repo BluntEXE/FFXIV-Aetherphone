@@ -2,8 +2,11 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Coins;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Onboarding;
+using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Coin;
 
@@ -26,6 +29,7 @@ internal sealed partial class CoinApp
 
         if (wallet is null)
         {
+            TourHolds.Hold(Id);
             LoadingPulse.Draw(body.Center, 16f * scale, ui.Palette.Accent, ui.MutedInk, LoadingPulse.SafeLabel());
             return;
         }
@@ -36,7 +40,11 @@ internal sealed partial class CoinApp
             NoticeCard(Loc.T(L.Coin.FrozenTitle), Loc.T(L.Coin.FrozenHint));
         }
 
+        var heroOrigin = ImGui.GetCursorScreenPos();
+        var heroWidth = ScrollLayout.StableContentWidth();
         CoinHero.Draw(wallet, ui.Palette);
+        UiAnchors.Report("coin.balance", new Rect(heroOrigin,
+            new Vector2(heroOrigin.X + heroWidth, ImGui.GetCursorScreenPos().Y)));
         ImGui.Dummy(new Vector2(0f, 8f * scale));
 
         if (wallet.Paused)
@@ -61,6 +69,7 @@ internal sealed partial class CoinApp
         var origin = ImGui.GetCursorScreenPos();
         var buttonRect = new Rect(origin, new Vector2(origin.X + width, origin.Y + 44f * scale));
         checkInAnchor = new Vector2(buttonRect.Center.X, buttonRect.Min.Y - 6f * scale);
+        UiAnchors.Report("coin.checkin", buttonRect);
         var available = wallet.CheckInAvailable && !wallet.Paused && wallet.FrozenUntilUnix is null
             && !store.CheckingIn;
         var label = wallet.CheckInAvailable ? Loc.T(L.Coin.CheckIn) : Loc.T(L.Coin.CheckedIn);
@@ -92,11 +101,18 @@ internal sealed partial class CoinApp
             return;
         }
 
+        var sectionOrigin = ImGui.GetCursorScreenPos();
+        var sectionWidth = ScrollLayout.StableContentWidth();
         ui.SectionHeading(Loc.T(L.Coin.EarnHeader), 4f);
         var scale = UiScale.Current;
         for (var index = 0; index < wallet.Rules.Length; index++)
         {
             DrawRuleCard(wallet.Rules[index], scale);
+            if (index == 0)
+            {
+                UiAnchors.Report("coin.earn", new Rect(sectionOrigin,
+                    new Vector2(sectionOrigin.X + sectionWidth, ImGui.GetCursorScreenPos().Y)));
+            }
         }
     }
 
@@ -117,28 +133,64 @@ internal sealed partial class CoinApp
         var hintBlock = hasHint
             ? Typography.MeasureWrappedBlock(hint, TextStyles.Footnote, hintWidth)
             : Vector2.Zero;
-        var height = titleSize.Y + (hasHint ? hintBlock.Y + 6f * scale : 0f) + 22f * scale;
+        var hasBar = rule.PeriodCap > 0;
+        var height = titleSize.Y + (hasHint ? hintBlock.Y + 6f * scale : 0f) + 22f * scale
+            + (hasBar ? 9f * scale : 0f);
         var min = origin;
         var max = new Vector2(origin.X + width, origin.Y + height);
         var rounding = 14f * scale;
+        var complete = rule.PeriodCap > 0 && rule.EarnedThisPeriod >= rule.PeriodCap;
+        var accent = ui.Palette.Accent;
         Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(ui.Palette.CardFill));
+        if (complete)
+        {
+            Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(Palette.WithAlpha(accent, 0.08f)));
+            Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(Palette.WithAlpha(accent, 0.45f)),
+                1f * scale);
+        }
+
         Material.EdgeSquircle(drawList, min, max, rounding, scale);
 
-        var complete = rule.PeriodCap > 0 && rule.EarnedThisPeriod >= rule.PeriodCap;
         var progressSize = Typography.Measure(progress, TextStyles.SubheadlineEmphasized);
-        var titleMaxWidth = width - inset * 2f - progressSize.X - 10f * scale;
+        var checkSize = complete ? 11f * scale : 0f;
+        var checkPad = complete ? 6f * scale : 0f;
+        var titleMaxWidth = width - inset * 2f - progressSize.X - checkSize - checkPad - 10f * scale;
         var fittedTitle = Typography.FitText(title, MathF.Max(40f * scale, titleMaxWidth),
             TextStyles.SubheadlineEmphasized);
         Typography.Draw(drawList, new Vector2(min.X + inset, min.Y + 11f * scale), fittedTitle,
             ui.Palette.TitleInk, TextStyles.SubheadlineEmphasized);
+        var progressLeft = max.X - inset - progressSize.X;
         Typography.Draw(drawList,
-            new Vector2(max.X - inset - progressSize.X, min.Y + 11f * scale), progress,
-            complete ? ui.Palette.Accent : ui.MutedInk, TextStyles.SubheadlineEmphasized);
+            new Vector2(progressLeft, min.Y + 11f * scale), progress,
+            complete ? accent : ui.MutedInk, TextStyles.SubheadlineEmphasized);
+        if (complete)
+        {
+            ProgressRing.CenterIcon(drawList,
+                new Vector2(progressLeft - checkPad - checkSize * 0.5f,
+                    min.Y + 11f * scale + progressSize.Y * 0.5f),
+                FontAwesomeIcon.CheckCircle, accent, checkSize);
+        }
 
         if (hasHint)
         {
             Typography.DrawWrappedLeft(new Vector2(min.X + inset, min.Y + titleSize.Y + 15f * scale), hint,
                 ui.MutedInk, TextStyles.Footnote, hintWidth);
+        }
+
+        if (hasBar)
+        {
+            var barHeight = 3f * scale;
+            var barMin = new Vector2(min.X + inset, max.Y - 10f * scale);
+            var barMax = new Vector2(max.X - inset, barMin.Y + barHeight);
+            drawList.AddRectFilled(barMin, barMax,
+                ImGui.GetColorU32(Palette.WithAlpha(ui.MutedInk, 0.18f)), barHeight * 0.5f);
+            var fraction = Math.Clamp(rule.EarnedThisPeriod / (float)rule.PeriodCap, 0f, 1f);
+            if (fraction > 0f)
+            {
+                var fillMax = new Vector2(barMin.X + (barMax.X - barMin.X) * fraction, barMax.Y);
+                drawList.AddRectFilled(barMin, fillMax,
+                    ImGui.GetColorU32(complete ? accent : Palette.WithAlpha(accent, 0.85f)), barHeight * 0.5f);
+            }
         }
 
         ImGui.SetCursorScreenPos(origin);
