@@ -4035,12 +4035,12 @@
   "coin.ruleGameSessionHint": "Jogue qualquer jogo do fliperama por três minutos, até cinco jogos por dia",
   "coin.ruleGameDeepHint": "Fique quinze minutos em um jogo, até duas vezes por dia",
   "coin.ruleGameFeaturedHint": "Termine uma sessão do jogo em destaque de hoje",
-  "coin.ruleChirpHint": "Um chirp que fica no ar por uma hora e passa na revisão, uma vez por semana",
-  "coin.ruleGramHint": "Um gram que fica no ar por uma hora e passa na revisão, uma vez por semana",
+  "coin.ruleChirpHint": "Um chirp que fica no ar por uma hora, uma vez por semana",
+  "coin.ruleGramHint": "Um gram que fica no ar por uma hora, uma vez por semana",
   "coin.ruleStoryHint": "Um story que completa o dia inteiro sem ser removido, uma vez por semana",
   "coin.ruleCommentHint": "Um comentário no post de outra pessoa que fica por uma hora, uma vez por semana",
     "coin.rulePost": "Um post que ficou",
     "coin.ruleCommentsDaily": "Comentários que ficaram",
-    "coin.rulePostHint": "Um chirp ou gram que fica no ar por uma hora e passa na revisão, uma vez por dia",
+    "coin.rulePostHint": "Um chirp ou gram que fica no ar por uma hora, uma vez por dia",
     "coin.ruleCommentsDailyHint": "Comentários nos posts de outras pessoas que ficam por uma hora, até três autores por dia"
 }

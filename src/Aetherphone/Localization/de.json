@@ -4035,12 +4035,12 @@
   "coin.ruleGameSessionHint": "Spiele ein beliebiges Arcade-Spiel drei Minuten lang, bis zu fünf Spiele am Tag",
   "coin.ruleGameDeepHint": "Bleib fünfzehn Minuten in einem Spiel, bis zu zweimal am Tag",
   "coin.ruleGameFeaturedHint": "Beende eine Runde des heute hervorgehobenen Spiels",
-  "coin.ruleChirpHint": "Ein Chirp, der eine Stunde stehen bleibt und die Prüfung besteht, einmal pro Woche",
-  "coin.ruleGramHint": "Ein Gram, das eine Stunde stehen bleibt und die Prüfung besteht, einmal pro Woche",
+  "coin.ruleChirpHint": "Ein Chirp, der eine Stunde stehen bleibt, einmal pro Woche",
+  "coin.ruleGramHint": "Ein Gram, das eine Stunde stehen bleibt, einmal pro Woche",
   "coin.ruleStoryHint": "Eine Story, die ihren ganzen Tag läuft, ohne entfernt zu werden, einmal pro Woche",
   "coin.ruleCommentHint": "Ein Kommentar unter einem fremden Beitrag, der eine Stunde stehen bleibt, einmal pro Woche",
     "coin.rulePost": "Ein Beitrag, der blieb",
     "coin.ruleCommentsDaily": "Kommentare, die blieben",
-    "coin.rulePostHint": "Ein Chirp oder Gram, der eine Stunde stehen bleibt und die Prüfung besteht, einmal am Tag",
+    "coin.rulePostHint": "Ein Chirp oder Gram, der eine Stunde stehen bleibt, einmal am Tag",
     "coin.ruleCommentsDailyHint": "Kommentare unter fremden Beiträgen, die eine Stunde stehen bleiben, bis zu drei Autoren am Tag"
 }

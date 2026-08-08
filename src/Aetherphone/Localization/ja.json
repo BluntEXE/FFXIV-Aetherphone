@@ -4035,12 +4035,12 @@
   "coin.ruleGameSessionHint": "アーケードのゲームを3分プレイ。1日5タイトルまで",
   "coin.ruleGameDeepHint": "1つのゲームを15分続けてプレイ。1日2回まで",
   "coin.ruleGameFeaturedHint": "本日のおすすめゲームのセッションを終える",
-  "coin.ruleChirpHint": "1時間残って審査を通ったチャープ。週1回",
-  "coin.ruleGramHint": "1時間残って審査を通ったグラム。週1回",
+  "coin.ruleChirpHint": "1時間残ったチャープ。週1回",
+  "coin.ruleGramHint": "1時間残ったグラム。週1回",
   "coin.ruleStoryHint": "削除されずに丸一日走り切ったストーリー。週1回",
   "coin.ruleCommentHint": "他の人の投稿に付けて1時間残ったコメント。週1回",
     "coin.rulePost": "残った投稿",
     "coin.ruleCommentsDaily": "残ったコメント",
-    "coin.rulePostHint": "1時間残って審査を通ったチャープまたはグラム。1日1回",
+    "coin.rulePostHint": "1時間残ったチャープまたはグラム。1日1回",
     "coin.ruleCommentsDailyHint": "他の人の投稿に付けて1時間残ったコメント。1日3人まで"
 }

@@ -3617,13 +3617,13 @@ internal static class L
         public static readonly LocString RuleWelcomeHint = new("coin.ruleWelcomeHint", "A one-time gift on your first check-in");
         public static readonly LocString RuleCallHint = new("coin.ruleCallHint", "Answered calls of two minutes or more where both of you talk, up to two people a day");
         public static readonly LocString RuleChatHint = new("coin.ruleChatHint", "Send a message to someone in a private chat, up to four people a day");
-        public static readonly LocString RulePostHint = new("coin.rulePostHint", "One chirp or gram that stays up for an hour and passes review, once a day");
+        public static readonly LocString RulePostHint = new("coin.rulePostHint", "One chirp or gram that stays up for an hour, once a day");
         public static readonly LocString RuleCommentsDailyHint = new("coin.ruleCommentsDailyHint", "Comments on other people's posts that stay up for an hour, up to three authors a day");
         public static readonly LocString RuleGameSessionHint = new("coin.ruleGameSessionHint", "Play any arcade game for three minutes, up to five games a day");
         public static readonly LocString RuleGameDeepHint = new("coin.ruleGameDeepHint", "Stay in one game for fifteen minutes, up to twice a day");
         public static readonly LocString RuleGameFeaturedHint = new("coin.ruleGameFeaturedHint", "Finish a session of today's highlighted game");
-        public static readonly LocString RuleChirpHint = new("coin.ruleChirpHint", "A chirp that stays up for an hour and passes review, once a week");
-        public static readonly LocString RuleGramHint = new("coin.ruleGramHint", "A gram that stays up for an hour and passes review, once a week");
+        public static readonly LocString RuleChirpHint = new("coin.ruleChirpHint", "A chirp that stays up for an hour, once a week");
+        public static readonly LocString RuleGramHint = new("coin.ruleGramHint", "A gram that stays up for an hour, once a week");
         public static readonly LocString RuleStoryHint = new("coin.ruleStoryHint", "A story that runs its full day without being taken down, once a week");
         public static readonly LocString RuleCommentHint = new("coin.ruleCommentHint", "A comment on someone else's post that stays up for an hour, once a week");
         public static readonly LocString EarnHeader = new("coin.earnHeader", "How to earn");
