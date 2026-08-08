@@ -1293,7 +1293,7 @@ internal static class L
         public static readonly LocString[] Release0999 =
         {
             new("changelog.r0999.0",
-                "Added seven phone cases: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo, and Runic"),
+                "Added seven phone cases: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo, and Runic, contributed by Remi and Silkie"),
             new("changelog.r0999.1",
                 "Every phone case was recompressed, so the plugin downloads at less than half its old size even with the seven new cases"),
             new("changelog.r0999.2",

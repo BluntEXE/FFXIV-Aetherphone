@@ -722,7 +722,7 @@
   "settings.commandMarket": "Abrir el tablón de mercado, opcionalmente buscando un objeto",
   "settings.commandReset": "Mover el teléfono de vuelta al centro de la pantalla",
   "settings.commandTest": "Enviar una notificación de prueba",
-  "changelog.r0999.0": "Se añadieron siete fundas: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo y Runic",
+  "changelog.r0999.0": "Se añadieron siete fundas: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo y Runic, contribuido por Remi y Silkie",
   "changelog.r0999.1": "Se recomprimieron todas las fundas, así que el plugin se descarga con menos de la mitad de su tamaño anterior pese a las siete fundas nuevas",
   "changelog.r0999.2": "Un mensaje aparece ahora en una conversación abierta en cuanto llega, en vez de esperar a la siguiente actualización",
   "changelog.r0999.3": "Abrir una conversación, o volver a una que dejaste abierta, ahora trae los mensajes más recientes de inmediato",

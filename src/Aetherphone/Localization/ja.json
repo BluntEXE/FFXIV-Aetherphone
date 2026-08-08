@@ -722,7 +722,7 @@
   "settings.commandMarket": "マーケットボードを開く。任意でアイテムを検索可能",
   "settings.commandReset": "電話を画面の中央に戻す",
   "settings.commandTest": "サンプル通知を送信",
-  "changelog.r0999.0": "スマホケースを7種類追加しました。Atomos、Baby Bat、Dwarf Rabbit、Enkidu、Horror、Kupo、Runicです",
+  "changelog.r0999.0": "スマホケースを7種類追加しました。Atomos、Baby Bat、Dwarf Rabbit、Enkidu、Horror、Kupo、Runicです。RemiさんとSilkieさんの貢献です",
   "changelog.r0999.1": "すべてのスマホケースを圧縮し直したので、7種類増えてもプラグインのダウンロードサイズは以前の半分未満になりました",
   "changelog.r0999.2": "開いている会話では、メッセージが次の更新を待たずに届いた瞬間に表示されるようになりました",
   "changelog.r0999.3": "会話を開いたとき、または開いたままにしていた会話に戻ったときに、最新のメッセージをすぐ取得するようになりました",

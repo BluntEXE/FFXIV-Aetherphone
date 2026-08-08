@@ -722,7 +722,7 @@
   "settings.commandMarket": "Abrir o mercado, opcionalmente buscando um item",
   "settings.commandReset": "Mover o telefone de volta ao centro da tela",
   "settings.commandTest": "Enviar uma notificação de teste",
-  "changelog.r0999.0": "Adicionadas sete capas: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo e Runic",
+  "changelog.r0999.0": "Adicionadas sete capas: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo e Runic, contribuído por Remi e Silkie",
   "changelog.r0999.1": "Todas as capas foram recomprimidas, então o plugin baixa com menos da metade do tamanho anterior mesmo com as sete capas novas",
   "changelog.r0999.2": "Uma mensagem agora aparece na conversa aberta assim que chega, em vez de esperar pela próxima atualização",
   "changelog.r0999.3": "Abrir uma conversa, ou voltar a uma que você deixou aberta, agora traz as mensagens mais recentes na hora",

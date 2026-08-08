@@ -722,7 +722,7 @@
   "settings.commandMarket": "打开市场布告板，支持搜索物品",
   "settings.commandReset": "将手机移回屏幕中央",
   "settings.commandTest": "发送测试通知",
-  "changelog.r0999.0": "新增七款手机壳：Atomos、Baby Bat、Dwarf Rabbit、Enkidu、Horror、Kupo 和 Runic",
+  "changelog.r0999.0": "新增七款手机壳：Atomos、Baby Bat、Dwarf Rabbit、Enkidu、Horror、Kupo 和 Runic，由 Remi 和 Silkie 贡献",
   "changelog.r0999.1": "所有手机壳都重新压缩过，即便多了七款新壳，插件的下载体积仍不到原来的一半",
   "changelog.r0999.2": "消息现在一到达就出现在打开着的会话里，不必等下一次刷新",
   "changelog.r0999.3": "打开会话，或回到一个一直开着的会话，现在会立即拉取最新消息",
