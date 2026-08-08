@@ -199,7 +199,7 @@ internal sealed class PhoneServices : IDisposable
         var coinApi = new AethernetApi(http, aethernetSession, "coin");
         var coins = new Coins.CoinStore(aethernetSession, coinApi.Coins);
         var coinCatalog = new Coins.CoinCatalogStore(aethernetSession, coinApi.Coins);
-        var coinSessions = new Coins.CoinGameSessionTracker(aethernetSession, coinApi.Coins);
+        var coinSessions = new Coins.CoinGameSessionTracker(configuration, aethernetSession, coinApi.Coins);
         var coinEarnNotifier = new Coins.CoinEarnNotifier(coins, notifications);
         var peerKeys = new PeerKeyDirectory(configuration, aethernet.Keys);
         var conversationKeys = new ConversationKeyStore(aethernet.Keys, keyVault);

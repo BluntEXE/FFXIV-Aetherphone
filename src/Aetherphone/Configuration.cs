@@ -118,6 +118,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public List<GameStatRecord> GameStats { get; set; } = new();
     public int DailyChallengeStreak { get; set; }
     public int DailyChallengeLastDay { get; set; }
+    public string PendingCoinGameSession { get; set; } = string.Empty;
     public HomeLayout? Home { get; set; }
     public Dictionary<string, bool> AppFlags { get; set; } = new();
     public int HomeGridRows { get; set; } = 6;

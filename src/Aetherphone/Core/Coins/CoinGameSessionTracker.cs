@@ -6,6 +6,9 @@ namespace Aetherphone.Core.Coins;
 
 internal sealed class CoinGameSessionTracker : IDisposable
 {
+    private const int UnloadEndTimeoutMilliseconds = 2000;
+
+    private readonly Configuration configuration;
     private readonly AethernetSession session;
     private readonly CoinsClient coins;
     private readonly StoreWork work = new("CoinGames");
@@ -15,11 +18,15 @@ internal sealed class CoinGameSessionTracker : IDisposable
     private CoinAwardDto? lastAward;
     private volatile string? lastAwardGameId;
     private int transitioning;
+    private int resolvingPending;
 
-    public CoinGameSessionTracker(AethernetSession session, CoinsClient coins)
+    public CoinGameSessionTracker(Configuration configuration, AethernetSession session, CoinsClient coins)
     {
+        this.configuration = configuration;
         this.session = session;
         this.coins = coins;
+        session.Changed += OnSessionChanged;
+        OnSessionChanged();
     }
 
     public string? OpenGameId => openGameId;
@@ -46,41 +53,114 @@ internal sealed class CoinGameSessionTracker : IDisposable
         openGameId = gameId;
         work.Run("session start", async token =>
         {
+            await EndPendingAsync(token).ConfigureAwait(false);
             var issued = await coins.StartGameSessionAsync(gameId, token).ConfigureAwait(false);
             if (issued is not null && issued.SessionId.Length > 0)
             {
                 openSessionId = issued.SessionId;
+                RememberPending(issued.SessionId);
             }
         }, () => Interlocked.Exchange(ref transitioning, 0));
     }
 
     public void GameClosed()
     {
-        var sessionId = openSessionId;
         var gameId = openGameId;
         openSessionId = null;
         openGameId = null;
-        if (sessionId is null || !session.IsSignedIn)
+        if (!session.IsSignedIn || configuration.PendingCoinGameSession.Length == 0)
         {
             return;
         }
 
-        work.Run("session end", async token =>
+        lastAwardGameId = gameId;
+        work.Run("session end", EndPendingAsync);
+    }
+
+    private void OnSessionChanged()
+    {
+        if (!session.IsSignedIn || configuration.PendingCoinGameSession.Length == 0 || openSessionId is not null)
         {
-            var award = await coins.EndGameSessionAsync(sessionId, token).ConfigureAwait(false);
+            return;
+        }
+
+        work.Run("session recover", EndPendingAsync);
+    }
+
+    private async Task EndPendingAsync(CancellationToken token)
+    {
+        if (Interlocked.Exchange(ref resolvingPending, 1) != 0)
+        {
+            return;
+        }
+
+        try
+        {
+            var pending = configuration.PendingCoinGameSession;
+            if (pending.Length == 0)
+            {
+                return;
+            }
+
+            var award = await coins.EndGameSessionAsync(pending, token).ConfigureAwait(false);
             if (award is null)
             {
                 return;
             }
 
-            lastAwardGameId = gameId;
-            Interlocked.Exchange(ref lastAward, award);
-        });
+            ClearPending(pending);
+            if (award.Granted)
+            {
+                Interlocked.Exchange(ref lastAward, award);
+            }
+        }
+        finally
+        {
+            Interlocked.Exchange(ref resolvingPending, 0);
+        }
+    }
+
+    private void RememberPending(string sessionId)
+    {
+        configuration.PendingCoinGameSession = sessionId;
+        configuration.Save();
+    }
+
+    private void ClearPending(string sessionId)
+    {
+        if (!string.Equals(configuration.PendingCoinGameSession, sessionId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        configuration.PendingCoinGameSession = string.Empty;
+        configuration.Save();
     }
 
     public void Dispose()
     {
-        GameClosed();
+        session.Changed -= OnSessionChanged;
         work.Dispose();
+        openSessionId = null;
+        openGameId = null;
+        var pending = configuration.PendingCoinGameSession;
+        if (pending.Length == 0 || !session.IsSignedIn)
+        {
+            return;
+        }
+
+        try
+        {
+            using var timeout = new CancellationTokenSource(UnloadEndTimeoutMilliseconds);
+            var award = coins.EndGameSessionAsync(pending, timeout.Token).GetAwaiter().GetResult();
+            if (award is not null)
+            {
+                ClearPending(pending);
+            }
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning($"[CoinGames] session end on unload failed: {exception.Message}");
+        }
     }
 }
