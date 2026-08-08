@@ -26,8 +26,8 @@ internal sealed class DynamicIsland
     private const float PresenceSmoothTime = 0.14f;
     private const float SplitSmoothTime = 0.12f;
     private const float ExpandSmoothTime = 0.16f;
-    private const float CompactPadX = 22f;
-    private const float CompactPadY = 5f;
+    private const float CompactPadX = 8f;
+    private const float CompactPadY = 3f;
     private const float BubbleGap = 7f;
     private const float CallExpandedHeight = 104f;
     private const float CallExpandedHalfWidth = 138f;
