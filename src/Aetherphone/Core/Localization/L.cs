@@ -1308,6 +1308,8 @@ internal static class L
                 "Photo pickers now draw only the thumbnails you can see, so opening one with a large library no longer stalls, contributed by BluntEXE"),
             new("changelog.r0999.7",
                 "A shortcut icon borrowed from another plugin now fills the tile all the way to its rounded edge"),
+            new("changelog.r0999.14",
+                "Home folders now hold shortcuts as well as apps, so a plugin launcher can be dragged in and grouped like any other icon, contributed by K.I.R.O"),
             new("changelog.r0999.8",
                 "Housing filter chips no longer wrap their labels, and the filter drawer rows sit on the standard spacing, contributed by Chaosvanguard"),
             new("changelog.r0999.9",

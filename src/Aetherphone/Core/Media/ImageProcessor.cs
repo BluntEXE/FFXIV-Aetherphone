@@ -58,23 +58,49 @@ internal static class ImageProcessor
         return BakeCroppedJpeg(sourcePath, crop, target, target);
     }
 
-    public static BakedImage BakeCroppedJpeg(string sourcePath, WallpaperCrop crop, int targetWidth, int targetHeight)
+    // revealWholeImage lets the crop fall below WallpaperCrop.MinZoom so the whole source stays
+    // visible instead of being cover-cropped. The revealed region no longer matches
+    // targetWidth/targetHeight, so the result is the region contained inside that box: the bake
+    // keeps real pixels only and the display side frames it (see ImageFit.DrawLetterboxed), rather
+    // than burning bars into the JPEG where a cover-cropping profile grid would later cut through
+    // them.
+    public static BakedImage BakeCroppedJpeg(string sourcePath, WallpaperCrop crop, int targetWidth, int targetHeight,
+        bool revealWholeImage = false)
     {
         using var sourceStream = File.OpenRead(sourcePath);
         EnsureDecodable(sourceStream, MaxLocalDecodePixels);
         using var image = Image.Load(SingleFrame, sourceStream);
         var size = new Vector2(image.Width, image.Height);
         var aspect = (float)targetWidth / targetHeight;
-        var clamped = crop.Clamped(size, aspect);
-        var (uv0, uv1) = clamped.ComputeUv(size, aspect);
+        var minZoom = revealWholeImage
+            ? WallpaperCrop.MinZoomToReveal(size, aspect)
+            : WallpaperCrop.MinZoom;
+        var clamped = crop.Clamped(size, aspect, minZoom);
+        var (uv0, uv1) = clamped.ComputeUv(size, aspect, minZoom);
         var x = Math.Clamp((int)MathF.Round(uv0.X * image.Width), 0, Math.Max(0, image.Width - 1));
         var y = Math.Clamp((int)MathF.Round(uv0.Y * image.Height), 0, Math.Max(0, image.Height - 1));
         var width = Math.Clamp((int)MathF.Round((uv1.X - uv0.X) * image.Width), 1, image.Width - x);
         var height = Math.Clamp((int)MathF.Round((uv1.Y - uv0.Y) * image.Height), 1, image.Height - y);
-        image.Mutate(context => context.Crop(new Rectangle(x, y, width, height)).Resize(targetWidth, targetHeight));
+        var (containedWidth, containedHeight) = ContainSize(width, height, targetWidth, targetHeight);
+        image.Mutate(context => context
+            .Crop(new Rectangle(x, y, width, height))
+            .Resize(containedWidth, containedHeight));
         using var stream = new MemoryStream();
         image.SaveAsJpeg(stream, new JpegEncoder { Quality = JpegQuality });
-        return new BakedImage(stream.ToArray(), targetWidth, targetHeight);
+        return new BakedImage(stream.ToArray(), containedWidth, containedHeight);
+    }
+
+    public static (int Width, int Height) ContainSize(int width, int height, int targetWidth, int targetHeight)
+    {
+        if (width <= 0 || height <= 0)
+        {
+            return (targetWidth, targetHeight);
+        }
+
+        var scale = MathF.Min((float)targetWidth / width, (float)targetHeight / height);
+        var containedWidth = Math.Clamp((int)MathF.Round(width * scale), 1, targetWidth);
+        var containedHeight = Math.Clamp((int)MathF.Round(height * scale), 1, targetHeight);
+        return (containedWidth, containedHeight);
     }
 
     public static BakedImage BakeJpeg(string sourcePath, int maxDimension)

@@ -436,14 +436,14 @@ internal sealed class HomeInteractionController
 
         var tiles = layout.Page(dragPage);
         var cells = layout.Placements(dragPage);
-        if (!dragTile!.IsWidget && !dragTile.IsShortcut)
+        if (!dragTile!.IsWidget)
         {
             var radius = metrics.IconSize * 0.42f;
             for (var index = 0; index < tiles.Count && index < cells.Count; index++)
             {
                 var candidate = tiles[index];
-                if (ReferenceEquals(candidate, dragTile) || candidate.IsWidget || candidate.IsShortcut ||
-                    candidate.IsFolder && dragTile.IsFolder)
+                if (ReferenceEquals(candidate, dragTile) || candidate.IsWidget
+                    || candidate.IsFolder && dragTile.IsFolder)
                 {
                     continue;
                 }

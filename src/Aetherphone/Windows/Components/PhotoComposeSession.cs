@@ -30,11 +30,16 @@ internal sealed class PhotoComposeSession
 {
     public const int GridColumns = 3;
     private const float CropSmoothTime = 0.10f;
+    private const float RatioEpsilon = 0.0001f;
 
     private readonly PhotoLibrary library;
     private readonly WallpaperImageCache wallpaperImages;
     private readonly List<string> selected = new();
     private readonly List<WallpaperCrop> crops = new();
+    private readonly List<PostAspect> aspects = new();
+    // The ratio each photo was last framed at, so a change of aspect re-frames it exactly once
+    // instead of fighting the user's own zoom and pan every frame.
+    private readonly List<float?> framedForRatio = new();
     private string[] pickerPaths = Array.Empty<string>();
     private string? pendingPickedPath;
     private Spring zoomSpring = new(1f);
@@ -68,9 +73,27 @@ internal sealed class PhotoComposeSession
     public WallpaperCrop CurrentTargetCrop => new(targetZoom, targetCenterX, targetCenterY);
     public int ClampedPreviewIndex => Math.Clamp(PreviewIndex, 0, Math.Max(0, selected.Count - 1));
 
+    public PostAspect CurrentAspect => AspectAt(CropIndex);
+
+    // The first photo sets the carousel frame for the whole post; any other photo whose aspect
+    // differs is contain-fit inside it rather than reframing the carousel as you swipe.
+    public PostAspect ContainerAspect => AspectAt(0);
+
     public string[] SelectedArray() => selected.ToArray();
 
     public WallpaperCrop[] CropsArray() => crops.ToArray();
+
+    public PostAspect[] AspectsArray() => aspects.ToArray();
+
+    public PostAspect AspectAt(int index) => index >= 0 && index < aspects.Count ? aspects[index] : PostAspect.Square;
+
+    public void SetAspect(int index, PostAspect aspect)
+    {
+        if (index >= 0 && index < aspects.Count)
+        {
+            aspects[index] = aspect;
+        }
+    }
 
     public void Open(bool singleSelect)
     {
@@ -78,6 +101,8 @@ internal sealed class PhotoComposeSession
         Stage = PhotoComposeStage.Pick;
         selected.Clear();
         crops.Clear();
+        aspects.Clear();
+        framedForRatio.Clear();
         CropIndex = 0;
         PreviewIndex = 0;
         Notice = string.Empty;
@@ -137,9 +162,13 @@ internal sealed class PhotoComposeSession
     public void BeginCropSequence()
     {
         crops.Clear();
+        aspects.Clear();
+        framedForRatio.Clear();
         for (var index = 0; index < selected.Count; index++)
         {
             crops.Add(DefaultCrop);
+            aspects.Add(PostAspect.Square);
+            framedForRatio.Add(null);
         }
 
         PreviewIndex = 0;
@@ -293,8 +322,10 @@ internal sealed class PhotoComposeSession
         }
     }
 
+    // Avatar and story crops pass allowReveal false: a letterboxed avatar, or a story that does not
+    // fill the screen, would read as broken rather than as framing.
     public void DrawCropCanvas(Rect area, float scale, float aspect, in PhotoComposeStyle style, string gestureHint,
-        float footerReserve = 0f)
+        float footerReserve, bool allowReveal)
     {
         var deltaSeconds = MathF.Min(ImGui.GetIO().DeltaTime, 0.1f);
         var drawList = ImGui.GetWindowDrawList();
@@ -312,30 +343,61 @@ internal sealed class PhotoComposeSession
         }
 
         var size = texture.Size;
+        var minZoom = allowReveal ? WallpaperCrop.MinZoomToReveal(size, aspect) : WallpaperCrop.MinZoom;
+        ApplyAspectFraming(size, aspect, allowReveal);
         var zoom = zoomSpring.Step(targetZoom, CropSmoothTime, deltaSeconds);
         var centerX = centerXSpring.Step(targetCenterX, CropSmoothTime, deltaSeconds);
         var centerY = centerYSpring.Step(targetCenterY, CropSmoothTime, deltaSeconds);
-        var crop = new WallpaperCrop(zoom, centerX, centerY).Clamped(size, aspect);
-        var (uv0, uv1) = crop.ComputeUv(size, aspect);
-        drawList.AddImageRounded(texture.Handle, preview.Min, preview.Max, uv0, uv1, 0xFFFFFFFFu, rounding,
-            ImDrawFlags.RoundCornersAll);
+        var crop = new WallpaperCrop(zoom, centerX, centerY).Clamped(size, aspect, minZoom);
+        var (uv0, uv1) = crop.ComputeUv(size, aspect, minZoom);
+        ImageFit.DrawLetterboxed(drawList, texture, preview, uv0, uv1, rounding);
         if (style.EdgeFrame)
         {
             Material.EdgeSquircle(drawList, preview.Min, preview.Max, rounding, scale);
         }
 
-        HandleCropGestures(preview, size, uv1 - uv0, aspect);
+        HandleCropGestures(preview, size, uv1 - uv0, aspect, minZoom);
         Typography.DrawCentered(new Vector2(area.Center.X, area.Max.Y - 70f * scale), gestureHint, style.MutedInk,
             0.78f);
         var trackWidth = area.Width * 0.62f;
         var track = new Rect(new Vector2(area.Center.X - trackWidth * 0.5f, area.Max.Y - 48f * scale),
             new Vector2(area.Center.X + trackWidth * 0.5f, area.Max.Y - 44f * scale));
-        var zoomNormalized = (targetZoom - WallpaperCrop.MinZoom) / (WallpaperCrop.MaxZoom - WallpaperCrop.MinZoom);
+        var zoomRange = WallpaperCrop.MaxZoom - minZoom;
+        var zoomNormalized = zoomRange > 0f ? (targetZoom - minZoom) / zoomRange : 0f;
         var updatedZoom = Scrubber.Draw(track, zoomNormalized, style.ScrubberActive, style.ScrubberTrack, 1f);
-        targetZoom = WallpaperCrop.MinZoom + updatedZoom * (WallpaperCrop.MaxZoom - WallpaperCrop.MinZoom);
+        targetZoom = minZoom + updatedZoom * zoomRange;
     }
 
-    private void HandleCropGestures(Rect preview, Vector2 size, Vector2 visible, float aspect)
+    // The ratio is recorded on every aspect change, not just revealing ones, so that switching
+    // Portrait to Square and back still re-reveals rather than keeping the cover crop Square left
+    // behind.
+    private void ApplyAspectFraming(Vector2 imageSize, float aspect, bool allowReveal)
+    {
+        if (CropIndex < 0 || CropIndex >= framedForRatio.Count)
+        {
+            return;
+        }
+
+        if (framedForRatio[CropIndex] is { } prior && MathF.Abs(prior - aspect) < RatioEpsilon)
+        {
+            return;
+        }
+
+        framedForRatio[CropIndex] = aspect;
+        if (!allowReveal)
+        {
+            return;
+        }
+
+        targetZoom = WallpaperCrop.MinZoomToReveal(imageSize, aspect);
+        targetCenterX = 0.5f;
+        targetCenterY = 0.5f;
+        zoomSpring.SnapTo(targetZoom);
+        centerXSpring.SnapTo(targetCenterX);
+        centerYSpring.SnapTo(targetCenterY);
+    }
+
+    private void HandleCropGestures(Rect preview, Vector2 size, Vector2 visible, float aspect, float minZoom)
     {
         var hovering = UiInteract.Hover(preview.Min, preview.Max);
         if (hovering)
@@ -344,8 +406,7 @@ internal sealed class PhotoComposeSession
             var wheel = ImGui.GetIO().MouseWheel;
             if (wheel != 0f)
             {
-                targetZoom = Math.Clamp(targetZoom * (1f + wheel * 0.12f), WallpaperCrop.MinZoom,
-                    WallpaperCrop.MaxZoom);
+                targetZoom = Math.Clamp(targetZoom * (1f + wheel * 0.12f), minZoom, WallpaperCrop.MaxZoom);
             }
         }
 
@@ -374,7 +435,7 @@ internal sealed class PhotoComposeSession
             }
         }
 
-        var clamped = new WallpaperCrop(targetZoom, targetCenterX, targetCenterY).Clamped(size, aspect);
+        var clamped = new WallpaperCrop(targetZoom, targetCenterX, targetCenterY).Clamped(size, aspect, minZoom);
         targetZoom = clamped.Zoom;
         targetCenterX = clamped.CenterX;
         targetCenterY = clamped.CenterY;
@@ -410,7 +471,10 @@ internal sealed class PhotoComposeSession
         }
     }
 
-    public bool TryGetPreviewUv(float aspect, out IDalamudTextureWrap texture, out Vector2 uv0, out Vector2 uv1)
+    // aspect is the previewed photo's own aspect, not the shared container the caller frames it in,
+    // so the caller must contain-fit the returned uv window rather than stretch it.
+    public bool TryGetPreviewUv(float aspect, bool allowReveal, out IDalamudTextureWrap texture, out Vector2 uv0,
+        out Vector2 uv1)
     {
         var index = ClampedPreviewIndex;
         var loaded = wallpaperImages.Get(index < selected.Count ? selected[index] : string.Empty);
@@ -423,8 +487,9 @@ internal sealed class PhotoComposeSession
         }
 
         texture = loaded;
-        var crop = crops[index].Clamped(loaded.Size, aspect);
-        (uv0, uv1) = crop.ComputeUv(loaded.Size, aspect);
+        var minZoom = allowReveal ? WallpaperCrop.MinZoomToReveal(loaded.Size, aspect) : WallpaperCrop.MinZoom;
+        var crop = crops[index].Clamped(loaded.Size, aspect, minZoom);
+        (uv0, uv1) = crop.ComputeUv(loaded.Size, aspect, minZoom);
         return true;
     }
 }

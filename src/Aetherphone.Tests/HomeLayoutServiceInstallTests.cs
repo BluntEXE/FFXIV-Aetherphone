@@ -290,9 +290,9 @@ public sealed class HomeLayoutServiceInstallTests
                     return page;
                 }
 
-                for (var appIndex = 0; appIndex < tile.Apps.Count; appIndex++)
+                for (var memberIndex = 0; memberIndex < tile.Members.Count; memberIndex++)
                 {
-                    if (tile.Apps[appIndex].Id == appId)
+                    if (tile.Members[memberIndex].App?.Id == appId)
                     {
                         return page;
                     }
