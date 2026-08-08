@@ -1,3 +1,4 @@
+using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Calendar;
 using Aetherphone.Core.Message;
@@ -580,12 +581,22 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     {
         if (Plugin.Framework.IsInFrameworkUpdateThread)
         {
-            Plugin.PluginInterface.SavePluginConfig(this);
+            SaveNow();
             return;
         }
 
-        _ = Plugin.Framework.RunOnFrameworkThread(() => Plugin.PluginInterface.SavePluginConfig(this));
+        _ = Plugin.Framework.RunOnFrameworkThread(SaveNow);
     }
 
-    public void SaveNow() => Plugin.PluginInterface.SavePluginConfig(this);
+    public void SaveNow()
+    {
+        try
+        {
+            Plugin.PluginInterface.SavePluginConfig(this);
+        }
+        catch (Exception exception)
+        {
+            AepLog.Error(exception, "Configuration save failed; settings changed this session may be lost");
+        }
+    }
 }
