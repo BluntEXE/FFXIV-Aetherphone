@@ -21,6 +21,8 @@ internal sealed class ConversationKeyStore
     private readonly ConcurrentDictionary<string, int> currentGenerations = new(StringComparer.Ordinal);
     private readonly UnwrapFailureCache failedUnwraps = new();
     private readonly ConcurrentDictionary<(string ScopeId, int Generation), byte> scheduledSelfRepairs = new();
+    private readonly ConcurrentDictionary<string, DateTime> previewHydrateRequests = new(StringComparer.Ordinal);
+    private static readonly TimeSpan PreviewHydrateCooldown = TimeSpan.FromSeconds(30);
 
     public ConversationKeyStore(KeysClient client, KeyVault vault)
     {
@@ -733,6 +735,60 @@ internal sealed class ConversationKeyStore
         var generations = keysByScope.GetOrAdd(scopeId, _ => new ConcurrentDictionary<int, byte[]>());
         generations[generation] = cek;
         currentGenerations[scopeId] = generation;
+    }
+
+    public void RequestPreviewHydrate(string scopeId)
+    {
+        if (vault.State != KeyVaultState.Unlocked)
+        {
+            return;
+        }
+
+        var separatorIndex = scopeId.IndexOf(':');
+        if (separatorIndex <= 0)
+        {
+            return;
+        }
+
+        var surface = scopeId[..separatorIndex];
+        var now = DateTime.UtcNow;
+        if (previewHydrateRequests.TryGetValue(surface, out var lastRequestedAt)
+            && now - lastRequestedAt < PreviewHydrateCooldown)
+        {
+            return;
+        }
+
+        previewHydrateRequests[surface] = now;
+        _ = Task.Run(() => HydrateForPreviewAsync(surface));
+    }
+
+    private async Task HydrateForPreviewAsync(string surface)
+    {
+        try
+        {
+            switch (surface)
+            {
+                case "chat":
+                    await HydrateAsync(CancellationToken.None).ConfigureAwait(false);
+                    break;
+                case "velvet":
+                    await HydrateVelvetAsync(CancellationToken.None).ConfigureAwait(false);
+                    break;
+                case "gram":
+                    await HydrateGramAsync(CancellationToken.None).ConfigureAwait(false);
+                    break;
+                case "ads":
+                    await HydrateAdsAsync(CancellationToken.None).ConfigureAwait(false);
+                    break;
+                default:
+                    AepLog.Debug($"[Crypto] preview hydrate skipped for unknown surface {surface}.");
+                    break;
+            }
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning(exception, $"[Crypto] preview hydrate for {surface} failed");
+        }
     }
 
     private void ScheduleSelfRepair(string scopeId, int generation, byte[] cek)

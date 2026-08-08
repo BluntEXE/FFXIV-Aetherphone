@@ -418,6 +418,13 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
             AppPalettes.Aethergram.Accent, thread.OtherUserId);
     }
 
+    protected override bool IsInboxPreviewReady(GramThreadDto thread)
+    {
+        return thread.LastMessageKind == PostShareKind
+            || thread.LastMessageEncVersion != EnvelopeCodec.VersionEnvelope
+            || cipher.IsPreviewResolved(thread.OtherUserId, thread.LastMessageAtUnix);
+    }
+
     protected override GramMessageDto[] DecorateMessages(string threadId, GramMessageDto[] items)
     {
         var scope = ScopeFor(threadId);

@@ -207,18 +207,33 @@ internal sealed class MessageCipher
         }
 
         var text = Loc.T(L.Encryption.EncryptedPlaceholder);
-        if (EnvelopeCodec.TryParseGeneration(preview, out var generation)
-            && keys.TryGetCek(scope, generation, out var cek))
+        if (!EnvelopeCodec.TryParseGeneration(preview, out var generation))
         {
-            var decoded = EnvelopeCodec.Decode(preview, cek, scope, senderId, null);
-            if (decoded.Status == EnvelopeDecodeStatus.Success)
-            {
-                text = decoded.Body;
-            }
-
-            previewCache[cacheKey] = (atUnix, text);
+            return text;
         }
 
+        if (!keys.TryGetCek(scope, generation, out var cek))
+        {
+            keys.RequestPreviewHydrate(scope);
+            return text;
+        }
+
+        var decoded = EnvelopeCodec.Decode(preview, cek, scope, senderId, null);
+        if (decoded.Status == EnvelopeDecodeStatus.Success)
+        {
+            text = decoded.Body;
+        }
+        else
+        {
+            AepLog.Warning($"[Crypto] preview for {scope} at {atUnix} failed to decode as {decoded.Status}.");
+        }
+
+        previewCache[cacheKey] = (atUnix, text);
         return text;
+    }
+
+    public bool IsPreviewResolved(string cacheKey, long atUnix)
+    {
+        return previewCache.TryGetValue(cacheKey, out var cached) && cached.AtUnix == atUnix;
     }
 }

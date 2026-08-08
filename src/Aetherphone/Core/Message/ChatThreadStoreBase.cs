@@ -506,6 +506,14 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     private readonly record struct InboxMark(long LastMessageAt, int Unread);
 
+    private static readonly TimeSpan InboxNotifyDeferralLimit = TimeSpan.FromSeconds(30);
+    private readonly Dictionary<string, DateTime> inboxNotifyDeferrals = new(StringComparer.Ordinal);
+
+    protected virtual bool IsInboxPreviewReady(TThread item)
+    {
+        return true;
+    }
+
     private void RaiseInboxNotifications(TThread[] items)
     {
         var primed = inboxPrimed;
@@ -527,9 +535,25 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
                 || (lastMessageAt == previous.LastMessageAt && unread > previous.Unread);
             if (!isNew || unread <= 0)
             {
+                inboxNotifyDeferrals.Remove(key);
                 continue;
             }
 
+            if (!IsInboxPreviewReady(item))
+            {
+                if (!inboxNotifyDeferrals.TryGetValue(key, out var deferredSince))
+                {
+                    deferredSince = DateTime.UtcNow;
+                    inboxNotifyDeferrals[key] = deferredSince;
+                }
+
+                if (DateTime.UtcNow - deferredSince < InboxNotifyDeferralLimit)
+                {
+                    continue;
+                }
+            }
+
+            inboxNotifyDeferrals.Remove(key);
             inboxMarks[key] = new InboxMark(lastMessageAt, unread);
             if (IsBeingViewed(key))
             {

@@ -459,6 +459,12 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         return decorated ?? items;
     }
 
+    protected override bool IsInboxPreviewReady(VelvetThreadDto thread)
+    {
+        return thread.LastMessageEncVersion != EnvelopeCodec.VersionEnvelope
+            || cipher.IsPreviewResolved(thread.OtherUserId, thread.LastMessageAtUnix);
+    }
+
     public byte[]? DecryptMedia(VelvetMessageDto message, byte[] sealedBytes, string threadPartnerId)
     {
         if (message.EncVersion != EnvelopeCodec.VersionEnvelope

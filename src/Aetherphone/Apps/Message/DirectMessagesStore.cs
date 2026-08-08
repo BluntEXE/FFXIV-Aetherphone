@@ -229,6 +229,12 @@ internal sealed class DirectMessagesStore : ChatThreadStoreBase<ChatMessageDto, 
             AppPalettes.Message.Accent, thread.Id);
     }
 
+    protected override bool IsInboxPreviewReady(ConversationDto thread)
+    {
+        return thread.LastMessageEncVersion != EnvelopeCodec.VersionEnvelope
+            || cipher.IsPreviewResolved(thread.Id, thread.LastMessageAtUnix);
+    }
+
     public static string DisplayTitle(ConversationDto item)
     {
         if (item.IsGroup)
