@@ -1,4 +1,4 @@
-namespace Aetherphone.Apps.Games.Framework;
+namespace Aetherphone.Core.Animation;
 
 internal struct RollingValue
 {
