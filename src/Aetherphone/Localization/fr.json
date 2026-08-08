@@ -721,7 +721,7 @@
   "settings.commandMarket": "Ouvre l'hôtel des ventes, avec recherche d'objet en option",
   "settings.commandReset": "Ramène le téléphone au centre de l'écran",
   "settings.commandTest": "Envoie une notification d'exemple",
-  "changelog.r0999.0": "Ajout de sept coques : Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo et Runic",
+  "changelog.r0999.0": "Ajout de sept coques : Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo et Runic, contribué par Remi et Silkie",
   "changelog.r0999.1": "Toutes les coques ont été recompressées, si bien que le plugin se télécharge à moins de la moitié de son ancienne taille malgré les sept nouvelles coques",
   "changelog.r0999.2": "Un message apparaît désormais dans une conversation ouverte dès son arrivée, au lieu d'attendre la prochaine actualisation",
   "changelog.r0999.3": "Ouvrir une conversation, ou revenir à une conversation laissée ouverte, récupère désormais les messages les plus récents immédiatement",

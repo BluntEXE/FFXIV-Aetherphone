@@ -721,7 +721,7 @@
   "settings.commandMarket": "Open the market board, optionally searching an item",
   "settings.commandReset": "Move the phone back to the center of the screen",
   "settings.commandTest": "Send a sample notification",
-  "changelog.r0999.0": "Added seven phone cases: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo, and Runic",
+  "changelog.r0999.0": "Added seven phone cases: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo, and Runic, contributed by Remi and Silkie",
   "changelog.r0999.1": "Every phone case was recompressed, so the plugin downloads at less than half its old size even with the seven new cases",
   "changelog.r0999.2": "A message now appears in an open conversation the moment it arrives, instead of waiting for the next refresh",
   "changelog.r0999.3": "Opening a conversation, or coming back to one you left open, now pulls the newest messages straight away",

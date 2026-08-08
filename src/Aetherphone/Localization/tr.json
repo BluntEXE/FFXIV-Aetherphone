@@ -721,7 +721,7 @@
   "settings.commandMarket": "Pazar tahtasını açar, isteğe bağlı eşya araması yapar",
   "settings.commandReset": "Telefonu ekranın ortasına geri getirir",
   "settings.commandTest": "Örnek bir bildirim gönderir",
-  "changelog.r0999.0": "Yedi telefon kılıfı eklendi: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo ve Runic",
+  "changelog.r0999.0": "Yedi telefon kılıfı eklendi: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo ve Runic, Remi ve Silkie katkısıyla",
   "changelog.r0999.1": "Bütün kılıflar yeniden sıkıştırıldı, böylece yedi yeni kılıfa rağmen eklenti eski boyutunun yarısından azıyla iniyor",
   "changelog.r0999.2": "Bir mesaj artık açık sohbette bir sonraki yenilemeyi beklemeden, geldiği anda görünüyor",
   "changelog.r0999.3": "Bir sohbeti açmak ya da açık bıraktığın sohbete dönmek artık en yeni mesajları hemen getiriyor",
