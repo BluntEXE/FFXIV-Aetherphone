@@ -2340,9 +2340,11 @@ internal static class L
         public static readonly LocString UnsupportedSummary = new("encryption.unsupportedSummary", "This PC cannot set up encryption, so messages here are not encrypted.");
         public static readonly LocString ActiveHint = new("encryption.activeHint", "Encryption is active on this device. It works automatically. There is nothing to set up.");
         public static readonly LocString NewDeviceHint = new("encryption.newDeviceHint", "On a new computer a fresh key is created automatically. Older messages become readable again once your chat partners come online.");
-        public static readonly LocString LocalStoreUnavailable = new("encryption.localStoreUnavailable", "This PC can't store the encryption key securely, so a fresh key will be created each session. Older messages become readable again once your chat partners come online.");
+        public static readonly LocString LocalStoreUnavailable = new("encryption.localStoreUnavailable", "This PC can't use the system's secure key store, so your encryption key is saved with basic protection instead. Your chats keep working normally on this device.");
         public static readonly LocString LockedBody = new("encryption.lockedBody", "This device doesn't have the encryption key for this account, so messages here can't be read yet. This usually happens after switching to a different computer. Your messages are safe: open Aetherphone on the computer that already has your key, or create a new key here. If you create a new key, older messages become readable again once your chat partners come online.");
         public static readonly LocString NewKeyButton = new("encryption.newKeyButton", "Create a new key on this device…");
+        public static readonly LocString LockedNoRecoveryBody = new("encryption.lockedNoRecoveryBody", "This device doesn't hold an encryption key for this account, and no recovery code was set up, so the old key can't be restored here. You can create a new key to keep chatting, but messages encrypted with the old key will remain unreadable.");
+        public static readonly LocString ForgotNoRecoveryBody = new("encryption.forgotNoRecoveryBody", "A new key will be created. Messages encrypted with the old key will remain unreadable.");
         public static readonly LocString LockedRecoverBody = new("encryption.lockedRecoverBody", "This device doesn't have your encryption key yet. Enter the recovery code you saved to restore your chats here, with your full history.");
         public static readonly LocString LockedBanner = new("encryption.lockedBanner", "Chats are locked on this device. Tap to unlock.");
         public static readonly LocString RecoveryNudgeBanner = new("encryption.recoveryNudgeBanner", "Protect your chat history: set up a recovery code");
@@ -2358,6 +2360,13 @@ internal static class L
         public static readonly LocString RecoveryCodeLabel = new("encryption.recoveryCodeLabel", "Recovery code");
         public static readonly LocString RecoveryUnlockButton = new("encryption.recoveryUnlockButton", "Unlock my chats");
         public static readonly LocString RecoveryWrongCode = new("encryption.recoveryWrongCode", "That code didn't work. Check it and try again.");
+        public static readonly LocString RecoveryKeyChanged = new("encryption.recoveryKeyChanged", "Your encryption key changed on another device, so this device can't create a recovery code right now. Wait a moment for this device to update, then try again.");
+        public static readonly LocString RestoreOlderTitle = new("encryption.restoreOlderTitle", "Older chats");
+        public static readonly LocString RestoreOlderBody = new("encryption.restoreOlderBody", "Messages from before your encryption key changed can be unlocked with the recovery code you had at the time.");
+        public static readonly LocString RestoreOlderButton = new("encryption.restoreOlderButton", "Restore older chats…");
+        public static readonly LocString RestoreOlderConfirm = new("encryption.restoreOlderConfirm", "Unlock older chats");
+        public static readonly LocString RestoreOlderDone = new("encryption.restoreOlderDone", "Keys restored: {0}. Older messages are now readable on this device.");
+        public static readonly LocString RestoreOlderNoMatch = new("encryption.restoreOlderNoMatch", "That code didn't match any older keys.");
         public static readonly LocString ForgotBody = new("encryption.forgotBody", "A new key will be created. Messages encrypted with the old key become readable again once your chat partners come online.");
         public static readonly LocString ForgotConfirm = new("encryption.forgotConfirm", "Reset key");
         public static readonly LocString ResetButton = new("encryption.resetButton", "Reset encryption key…");

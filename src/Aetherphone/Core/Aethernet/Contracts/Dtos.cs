@@ -677,7 +677,7 @@ internal sealed record ChatMediaUrlDto(string Url, long ExpiresAtUnix);
 
 internal sealed record WrappedPrivateKeyDto(string Salt, int Iterations, string Nonce, string Ciphertext);
 
-internal sealed record PutMyKeysRequest(string PublicKey, WrappedPrivateKeyDto? PrivateKey = null);
+internal sealed record PutMyKeysRequest(string PublicKey, WrappedPrivateKeyDto? PrivateKey = null, int? ExpectedKeyVersion = null);
 
 internal sealed record MyKeysDto(
     string PublicKey,
@@ -718,3 +718,7 @@ internal sealed record ConversationKeysDto(
 internal sealed record ConversationWrapsDto(string ConversationId, int CurrentGeneration, KeyWrapDto[] Wraps);
 
 internal sealed record MyConversationKeysDto(ConversationWrapsDto[] Items);
+
+internal sealed record ArchivedKeyEscrowDto(int KeyVersion, string PublicKey, WrappedPrivateKeyDto Escrow, long CreatedAtUnix);
+
+internal sealed record ArchivedEscrowsDto(ArchivedKeyEscrowDto[] Items);

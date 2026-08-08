@@ -162,6 +162,8 @@ namespace Aetherphone.Core.Aethernet;
 [JsonSerializable(typeof(ConversationKeysDto))]
 [JsonSerializable(typeof(ConversationWrapsDto))]
 [JsonSerializable(typeof(MyConversationKeysDto))]
+[JsonSerializable(typeof(ArchivedKeyEscrowDto))]
+[JsonSerializable(typeof(ArchivedEscrowsDto))]
 [JsonSerializable(typeof(CommunityStationDto))]
 [JsonSerializable(typeof(CommunityStationPage))]
 [JsonSerializable(typeof(UpdateCommunityStationRequest))]

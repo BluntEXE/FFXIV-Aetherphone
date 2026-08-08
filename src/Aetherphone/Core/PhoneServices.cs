@@ -97,6 +97,7 @@ internal sealed class PhoneServices : IDisposable
     public required KeyVault KeyVault { get; init; }
     public required PeerKeyDirectory PeerKeys { get; init; }
     public required ConversationKeyStore ConversationKeys { get; init; }
+    public required EncryptionSetupLauncher EncryptionSetup { get; init; }
     public required MarketItemIndex MarketIndex { get; init; }
     public required MarketboardService Market { get; init; }
     public required MarketLauncher MarketLauncher { get; init; }
@@ -310,6 +311,7 @@ internal sealed class PhoneServices : IDisposable
             KeyVault = keyVault,
             PeerKeys = peerKeys,
             ConversationKeys = conversationKeys,
+            EncryptionSetup = new EncryptionSetupLauncher(),
             MarketIndex = marketIndex,
             Market = market,
             MarketLauncher = marketLauncher,

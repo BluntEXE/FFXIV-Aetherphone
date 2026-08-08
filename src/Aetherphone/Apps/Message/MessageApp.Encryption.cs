@@ -107,7 +107,7 @@ internal sealed partial class MessageApp
         {
             return store.Vault.RecoveryConfigured
                 ? Loc.T(L.Encryption.LockedRecoverBody)
-                : Loc.T(L.Encryption.LockedBody);
+                : Loc.T(L.Encryption.LockedNoRecoveryBody);
         }
 
         var waiting = store.CurrentKeyStatus.MembersWithoutKeys;

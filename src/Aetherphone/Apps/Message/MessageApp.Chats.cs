@@ -1,6 +1,7 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Muster;
 using Aetherphone.Core.Theme;
@@ -42,6 +43,7 @@ internal sealed partial class MessageApp
         DrawChatFilterChips(new Rect(new Vector2(area.Min.X, area.Min.Y + searchHeight),
             new Vector2(area.Max.X, area.Min.Y + searchHeight + chipsHeight)), scale);
         var listRect = new Rect(new Vector2(area.Min.X, area.Min.Y + searchHeight + chipsHeight), area.Max);
+        DrawRecoveryNudge(ref listRect);
         var pinned = new List<ConversationDto>();
         var regular = new List<ConversationDto>();
         CollectChats(pinned, regular, archived: false);
@@ -96,6 +98,24 @@ internal sealed partial class MessageApp
             filter = string.Empty;
             router.Push(MessageRoute.NewChat);
         }
+    }
+
+    private void DrawRecoveryNudge(ref Rect listRect)
+    {
+        if (recoveryNudgeDismissed || configuration.EncryptionRecoveryNudgeDismissed
+            || store.VaultState != KeyVaultState.Unlocked || store.Vault.RecoveryConfigured)
+        {
+            return;
+        }
+
+        ChatHeaderControls.DrawPromptBanner(ui, ref listRect, Loc.T(L.Encryption.RecoveryNudgeBanner), ui.MutedInk,
+            () =>
+            {
+                recoveryNudgeDismissed = true;
+                encryptionSetup.Request();
+                navigation.Open("settings");
+            },
+            () => recoveryNudgeDismissed = true);
     }
 
     private void DrawChatFilterChips(Rect area, float scale)

@@ -1,6 +1,7 @@
 using Aetherphone.Apps.Settings.Pages;
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Moderation;
 using Aetherphone.Core.Notifications;
@@ -33,6 +34,7 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
     private readonly AccountPage accountPage;
     private readonly SafetyPage safetyPage;
     private readonly SafetyLauncher safetyLauncher;
+    private readonly EncryptionSetupLauncher encryptionSetupLauncher;
     private readonly NamePage namePage;
     private readonly ProfilePage profilePage;
     private readonly EncryptionPage encryptionPage;
@@ -101,6 +103,7 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
             });
         safetyPage = new SafetyPage(aethernetSession, services.ModerationArchive, this);
         safetyLauncher = services.SafetyLauncher;
+        encryptionSetupLauncher = services.EncryptionSetup;
         var commands = new CommandsPage();
         privacyPage = new PrivacyPage(configuration, aethernetSession, aethernet.Account, aethernet.Safety,
             confirm);
@@ -195,6 +198,12 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
         {
             router.Reset();
             router.Push(safetyPage);
+        }
+
+        if (encryptionSetupLauncher.TryConsume())
+        {
+            router.Reset();
+            router.Push(encryptionPage);
         }
 
         frameTheme = context.Theme;

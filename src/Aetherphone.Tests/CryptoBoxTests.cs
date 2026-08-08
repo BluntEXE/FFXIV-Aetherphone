@@ -65,6 +65,23 @@ public sealed class CryptoBoxTests
         Assert.NotEqual(first, second);
     }
     [Fact]
+    public void CekWrappedToOldKeyUnwrapsOnlyWithThatKey()
+    {
+        var oldIdentity = CryptoBox.TryGenerateIdentity();
+        var newIdentity = CryptoBox.TryGenerateIdentity();
+        Assert.NotNull(oldIdentity);
+        Assert.NotNull(newIdentity);
+        var cek = CryptoBox.GenerateCek();
+        var expected = (byte[])cek.Clone();
+
+        var wrapped = CryptoBox.WrapCek(cek, CryptoBox.ExportPublicKey(oldIdentity));
+        Assert.NotNull(wrapped);
+
+        Assert.Null(CryptoBox.UnwrapCek(wrapped, newIdentity));
+        Assert.Equal(expected, CryptoBox.UnwrapCek(wrapped, oldIdentity));
+    }
+
+    [Fact]
     public void ManagedP256KeysInteroperateWithPlatformEcdh()
     {
         var identity = CryptoBox.TryGenerateIdentity();
