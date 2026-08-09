@@ -50,3 +50,80 @@ internal sealed record CasinoLimitsDto(
     long? SelfLossLimit = null,
     long? PendingRaiseLimit = null,
     long? PendingRaiseAtUnix = null);
+
+internal sealed record CasinoSlotsSpinRequest(string SittingId, string ClientRoundId, long Stake);
+
+internal sealed record CasinoSlotsLineWinDto(int Line = 0, int Symbol = 0, int Count = 0, long Pay = 0);
+
+internal sealed record CasinoSlotsSpinResultDto(
+    int[]? Grid = null,
+    CasinoSlotsLineWinDto[]? LineWins = null,
+    int ScatterCount = 0,
+    long ScatterPay = 0,
+    long Win = 0,
+    int SpinsAdded = 0);
+
+internal sealed record CasinoSlotsSpinDto(
+    bool Granted = false,
+    string Reason = "",
+    string RoundId = "",
+    long Stake = 0,
+    CasinoSlotsSpinResultDto? BaseSpin = null,
+    CasinoSlotsSpinResultDto[]? FreeSpins = null,
+    long TotalWin = 0,
+    bool CapApplied = false,
+    string NextSeedHash = "",
+    long Stack = 0);
+
+internal sealed record CasinoScratchBuyRequest(string SittingId, string ClientRoundId, int Tier);
+
+internal sealed record CasinoScratchCardDto(
+    bool Granted = false,
+    string Reason = "",
+    string RoundId = "",
+    int Tier = 0,
+    int[]? Cells = null,
+    long Prize = 0,
+    string NextSeedHash = "",
+    long Stack = 0);
+
+internal sealed record CasinoBarkeepStartRequest(string SittingId, string ClientRoundId);
+
+internal sealed record CasinoBarkeepPatronDto(int ArrivalSecond = 0, int[]? StepKinds = null);
+
+internal sealed record CasinoBarkeepStartDto(
+    bool Granted = false,
+    string Reason = "",
+    string RoundId = "",
+    CasinoBarkeepPatronDto[]? Patrons = null,
+    int MaxScore = 0,
+    long StartedAtUnix = 0,
+    long ExpiresAtUnix = 0,
+    string NextSeedHash = "",
+    long Stack = 0);
+
+internal sealed record CasinoBarkeepOrderRequest(int[] StepGrades);
+
+internal sealed record CasinoBarkeepFinishRequest(string RoundId, CasinoBarkeepOrderRequest[] Orders);
+
+internal sealed record CasinoBarkeepFinishDto(
+    bool Granted = false,
+    string Reason = "",
+    string RoundId = "",
+    int Score = 0,
+    long Payout = 0,
+    long NetWinToday = 0,
+    long Stack = 0);
+
+internal sealed record CasinoRoundVerifyDto(
+    bool Granted = false,
+    string Reason = "",
+    string RoundId = "",
+    string GameKind = "",
+    int State = 0,
+    long Stake = 0,
+    long Payout = 0,
+    string SeedCommitHash = "",
+    string SeedRevealed = "",
+    string NextSeedHash = "",
+    string DrawLog = "");

@@ -188,6 +188,18 @@ internal sealed class CasinoStore : IDisposable
         }, () => savingLimits = false);
     }
 
+    public void AbsorbStack(long stack)
+    {
+        var current = state;
+        var sitting = current?.Sitting;
+        if (current is null || sitting is null || sitting.Stack == stack)
+        {
+            return;
+        }
+
+        state = current with { Sitting = sitting with { Stack = stack } };
+    }
+
     internal static CasinoStateDto MergeLimits(CasinoStateDto current, CasinoLimitsDto limits)
     {
         return current with

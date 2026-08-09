@@ -1,6 +1,7 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Calendar;
+using Aetherphone.Core.Casino;
 using Aetherphone.Core.Message;
 using Aetherphone.Core.Clock;
 using Aetherphone.Core.Notes;
@@ -121,6 +122,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public int DailyChallengeLastDay { get; set; }
     public string PendingCoinGameSession { get; set; } = string.Empty;
     public Dictionary<ulong, string> PendingCasinoSittings { get; set; } = new();
+    public Dictionary<ulong, PendingCasinoRound> PendingCasinoRounds { get; set; } = new();
     public HomeLayout? Home { get; set; }
     public Dictionary<string, bool> AppFlags { get; set; } = new();
     public int HomeGridRows { get; set; } = 6;

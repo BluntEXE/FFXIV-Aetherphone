@@ -3764,6 +3764,28 @@ internal static class L
         public static readonly LocString LimitReachedBodySoon = new("casino.limitReachedBodySoon", "Your limit kicked in so the fun stays fun. Tables reopen for you with the next day.");
         public static readonly LocString RoomLeft = new("casino.roomLeft", "Room left tonight: {0}");
         public static readonly LocString NetHeading = new("casino.netHeading", "Tonight");
+        public static readonly LocString SlotsChips = new("casino.slots.chips", "Chips");
+        public static readonly LocString SlotsStake = new("casino.slots.stake", "Stake");
+        public static readonly LocString SlotsSpin = new("casino.slots.spin", "Spin");
+        public static readonly LocString SlotsSpinFor = new("casino.slots.spinFor", "Spin for {0}");
+        public static readonly LocString SlotsSkip = new("casino.slots.skip", "Skip");
+        public static readonly LocString SlotsPays = new("casino.slots.pays", "Pays");
+        public static readonly LocString SlotsBigWin = new("casino.slots.bigWin", "Big win");
+        public static readonly LocString SlotsFreeSpinsBanner = new("casino.slots.freeSpinsBanner", "{0} free spins");
+        public static readonly LocString SlotsBonusSub = new("casino.slots.bonusSub", "Wins pay double");
+        public static readonly LocString SlotsFreeSpinCounter = new("casino.slots.freeSpinCounter", "Free spin {0} of {1}");
+        public static readonly LocString SlotsExtraSpins = new("casino.slots.extraSpins", "+{0} spins");
+        public static readonly LocString SlotsCapNote = new("casino.slots.capNote", "Paid at the table ceiling of {0}x the stake");
+        public static readonly LocString SlotsPaysMatches = new("casino.slots.paysMatches", "Matches from the left, shown at your current stake");
+        public static readonly LocString SlotsWildName = new("casino.slots.wildName", "Wild");
+        public static readonly LocString SlotsWildNote = new("casino.slots.wildNote", "Stands in for any pay symbol on reels 2 to 4.");
+        public static readonly LocString SlotsScatterName = new("casino.slots.scatterName", "Saucer scatter");
+        public static readonly LocString SlotsScatterNote = new("casino.slots.scatterNote", "3, 4, or 5 saucers anywhere pay {0}, {1}, or {2} and start {3}, {4}, or {5} free spins.");
+        public static readonly LocString SlotsBonusNote = new("casino.slots.bonusNote", "Free spin wins pay double. More saucers add {0} spins, up to {1} in one round.");
+        public static readonly LocString SlotsCapRule = new("casino.slots.capRule", "One round never pays more than {0}x the stake.");
+        public static readonly LocString SlotsNoChipsTitle = new("casino.slots.noChipsTitle", "No chips at this cabinet");
+        public static readonly LocString SlotsNoChipsHint = new("casino.slots.noChipsHint", "Visit the cashier to buy in, then take a seat.");
+        public static readonly LocString SlotsLowStack = new("casino.slots.lowStack", "Not enough chips for that stake. Top up at the cashier.");
     }
 
     internal static class Catalogs

@@ -2,6 +2,8 @@ namespace Aetherphone.Core.Casino;
 
 internal static class CasinoWire
 {
+    public const string SlotsKind = "casino.slots";
+
     private const string KindPrefix = "casino.";
 
     public static string Kind(string gameId)

@@ -1,0 +1,725 @@
+using Aetherphone.Apps.Games.Framework;
+using Aetherphone.Core;
+using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Animation;
+using Aetherphone.Core.Casino;
+using Aetherphone.Core.Localization;
+using Aetherphone.Core.Theme;
+using Aetherphone.Windows.Components;
+using Dalamud.Bindings.ImGui;
+
+namespace Aetherphone.Apps.Casino.Cabinets;
+
+internal sealed class SlotsCabinet
+{
+    private const float PadX = 16f;
+    private const float InfoRowHeight = 48f;
+    private const float BannerHeight = 62f;
+    private const float StakeChipHeight = 36f;
+    private const float SpinPillHeight = 50f;
+    private const float SpinRowsPerSecond = 15f;
+    private const float AnticipationRowsPerSecond = 5.5f;
+    private const float LineTraceCycleSeconds = 0.7f;
+    private const long SmallCelebrationMultiple = 4;
+
+    private static readonly Vector4 Gold = new(1f, 0.84f, 0.42f, 1f);
+    private static readonly Vector4 FeltTop = new(0.049f, 0.094f, 0.075f, 1f);
+    private static readonly Vector4 FeltBottom = new(0.024f, 0.051f, 0.040f, 1f);
+    private static readonly int[] DecorativeCycle = { 4, 0, 5, 1, 6, 2, 7, 3 };
+
+    private static readonly Vector4[] ConfettiPalette =
+    {
+        new(1.00f, 0.84f, 0.42f, 1f),
+        new(1.00f, 0.95f, 0.75f, 1f),
+        new(0.55f, 0.92f, 0.88f, 1f),
+        new(0.80f, 0.58f, 0.98f, 1f),
+    };
+
+    private readonly CasinoStore store;
+    private readonly CasinoPlayStore play;
+    private readonly Action openCashier;
+    private readonly SlotsRoundPlayback playback = new();
+    private readonly ParticleSystem particles = new(256);
+    private readonly SlotsPayTableSheet payTable = new();
+    private readonly int[] restingGrid = new int[SlotsRules.CellCount];
+
+    private RollingValue winRoll;
+    private int stakeIndex;
+    private string inlineReason = string.Empty;
+    private float lineTraceSeconds;
+    private int celebratedSpinIndex = -1;
+    private Rect reelWindow;
+
+    public SlotsCabinet(CasinoStore store, CasinoPlayStore play, Action openCashier)
+    {
+        this.store = store;
+        this.play = play;
+        this.openCashier = openCashier;
+        for (var cellIndex = 0; cellIndex < SlotsRules.CellCount; cellIndex++)
+        {
+            restingGrid[cellIndex] = DecorativeCycle[cellIndex % DecorativeCycle.Length];
+        }
+    }
+
+    public long CurrentStake => SlotsRules.StakeTiers[stakeIndex];
+
+    public bool PayTableOpen => payTable.IsOpen;
+
+    public void OpenPayTable()
+    {
+        payTable.Open();
+    }
+
+    public void ClosePayTable()
+    {
+        payTable.Close();
+    }
+
+    public void Gate()
+    {
+        payTable.Gate();
+    }
+
+    public void DrawOverlay(Rect screen, AppSkin ui)
+    {
+        payTable.Draw(screen, ui, CurrentStake);
+    }
+
+    public void Enter()
+    {
+        inlineReason = string.Empty;
+        play.RecoverPendingRound();
+    }
+
+    public void Reset()
+    {
+        playback.Reset();
+        particles.Clear();
+        payTable.Close();
+        inlineReason = string.Empty;
+        celebratedSpinIndex = -1;
+        winRoll.Snap(0);
+    }
+
+    public void Draw(Rect body, AppSkin ui)
+    {
+        var scale = UiScale.Current;
+        var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
+        ConsumeResults();
+        playback.Update(delta);
+        particles.Update(delta);
+        lineTraceSeconds += delta;
+        CelebrateSettledSpin();
+
+        var state = store.State;
+        if (state is null)
+        {
+            LoadingPulse.Draw(body.Center, 16f * scale, ui.Palette.Accent, ui.MutedInk, LoadingPulse.SafeLabel());
+            return;
+        }
+
+        var drawList = ImGui.GetWindowDrawList();
+        var pad = PadX * scale;
+        var left = body.Min.X + pad;
+        var width = body.Width - pad * 2f;
+        var y = body.Min.Y + Metrics.Space.Sm * scale;
+
+        y = DrawInfoRow(drawList, ui, state, left, y, width, scale, delta);
+        y += Metrics.Space.Sm * scale;
+
+        var cellWidth = (width - 12f * scale) / SlotsRules.ReelCount;
+        var cellHeight = MathF.Min(cellWidth * 1.02f, 82f * scale);
+        var frameHeight = cellHeight * SlotsRules.RowCount + 12f * scale;
+        var frame = new Rect(new Vector2(left, y), new Vector2(left + width, y + frameHeight));
+        reelWindow = frame;
+        DrawReels(drawList, ui, frame, scale);
+        y = frame.Max.Y + Metrics.Space.Sm * scale;
+
+        y = DrawBanner(drawList, ui, left, y, width, scale, delta);
+        y += Metrics.Space.Sm * scale;
+
+        var sitting = state.Sitting;
+        var slotsSeated = sitting is not null
+            && string.Equals(sitting.GameKind, CasinoWire.SlotsKind, StringComparison.Ordinal);
+        if (!slotsSeated)
+        {
+            DrawSeatMissing(drawList, ui, left, y, width, scale);
+        }
+        else
+        {
+            y = DrawStakeRow(drawList, ui, left, y, width, scale);
+            y += Metrics.Space.Md * scale;
+            DrawSpinControls(drawList, ui, state, sitting!, left, y, width, scale);
+        }
+
+        particles.Draw(drawList, scale);
+    }
+
+    private void ConsumeResults()
+    {
+        var result = play.TakeSpinResult();
+        if (result is not null)
+        {
+            if (result.Granted && playback.Begin(result))
+            {
+                inlineReason = string.Empty;
+                winRoll.Snap(0);
+                celebratedSpinIndex = -1;
+            }
+            else
+            {
+                inlineReason = result.Reason.Length > 0 ? result.Reason : CasinoReasons.Unreachable;
+            }
+        }
+
+        if (play.TakeRoundFailure())
+        {
+            inlineReason = CasinoReasons.Unreachable;
+        }
+    }
+
+    private void CelebrateSettledSpin()
+    {
+        if (playback.Phase != SlotsPlaybackPhase.Presenting || celebratedSpinIndex == playback.SpinIndex)
+        {
+            return;
+        }
+
+        celebratedSpinIndex = playback.SpinIndex;
+        lineTraceSeconds = 0f;
+        var spin = playback.CurrentSpin;
+        Array.Copy(spin.Grid, restingGrid, SlotsRules.CellCount);
+        if (spin.Win <= 0)
+        {
+            return;
+        }
+
+        var scale = UiScale.Current;
+        var origin = new Vector2(reelWindow.Center.X, reelWindow.Min.Y + reelWindow.Height * 0.3f);
+        if (spin.Win >= playback.Stake * SlotsRoundPlayback.BigWinMultiple)
+        {
+            particles.Confetti(origin, 90, ConfettiPalette, 330f * scale, 5f, 1.6f);
+            particles.Sparkle(origin, 24, Gold, 190f * scale, 4f, 1.0f);
+        }
+        else if (spin.Win >= playback.Stake * SmallCelebrationMultiple)
+        {
+            particles.Confetti(origin, 36, ConfettiPalette, 250f * scale, 4f, 1.2f);
+        }
+        else
+        {
+            particles.Sparkle(origin, 10, Gold, 130f * scale, 3f, 0.8f);
+        }
+    }
+
+    private float DrawInfoRow(ImDrawListPtr drawList, AppSkin ui, CasinoStateDto state, float left, float y,
+        float width, float scale, float delta)
+    {
+        var height = InfoRowHeight * scale;
+        var pillWidth = width * 0.46f;
+        var min = new Vector2(left, y);
+        var max = new Vector2(left + pillWidth, y + height);
+        Squircle.Fill(drawList, min, max, height * 0.5f, ImGui.GetColorU32(ui.FieldSurface));
+        Squircle.Stroke(drawList, min, max, height * 0.5f,
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.25f)), Metrics.Stroke.Hairline);
+
+        var label = Loc.T(L.Casino.SlotsChips);
+        Typography.Draw(drawList, new Vector2(min.X + 16f * scale, y + 7f * scale), label, ui.MutedInk,
+            TextStyles.Caption1);
+        var stackText = DisplayStack(state).ToString("N0", Loc.Culture);
+        Typography.Draw(drawList, new Vector2(min.X + 16f * scale, y + 21f * scale), stackText, ui.TitleInk,
+            TextStyles.SubheadlineEmphasized);
+
+        if (playback.InBonus && playback.Phase != SlotsPlaybackPhase.Finished)
+        {
+            var counter = Loc.T(L.Casino.SlotsFreeSpinCounter, GameNumber.Label(playback.SpinIndex),
+                GameNumber.Label(playback.FreeSpinCount));
+            var counterSize = Typography.Measure(counter, TextStyles.FootnoteEmphasized);
+            Typography.Draw(drawList, new Vector2(left + width - counterSize.X, y + 9f * scale), counter, Gold,
+                TextStyles.FootnoteEmphasized);
+            if (playback.Phase == SlotsPlaybackPhase.Presenting && playback.CurrentSpin.SpinsAdded > 0)
+            {
+                var extra = Loc.T(L.Casino.SlotsExtraSpins, GameNumber.Label(playback.CurrentSpin.SpinsAdded));
+                var extraSize = Typography.Measure(extra, TextStyles.Caption1);
+                Typography.Draw(drawList, new Vector2(left + width - extraSize.X, y + 27f * scale), extra, Gold,
+                    TextStyles.Caption1);
+            }
+        }
+
+        return y + height;
+    }
+
+    private long DisplayStack(CasinoStateDto state)
+    {
+        var stack = state.Sitting?.Stack ?? 0;
+        var replaying = playback.Phase == SlotsPlaybackPhase.Spinning
+            || playback.Phase == SlotsPlaybackPhase.Presenting
+            || playback.Phase == SlotsPlaybackPhase.BonusIntro;
+        if (!replaying)
+        {
+            return stack;
+        }
+
+        return Math.Max(0, stack - (playback.TotalWin - playback.CommittedWin));
+    }
+
+    private void DrawReels(ImDrawListPtr drawList, AppSkin ui, Rect frame, float scale)
+    {
+        var rounding = Metrics.Radius.Card * scale;
+        Squircle.FillVerticalGradient(drawList, frame.Min, frame.Max, rounding, ImGui.GetColorU32(FeltTop),
+            ImGui.GetColorU32(FeltBottom));
+        Squircle.Stroke(drawList, frame.Min, frame.Max, rounding,
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.28f)), Metrics.Stroke.Thin * scale);
+
+        var inset = 6f * scale;
+        var inner = new Rect(frame.Min + new Vector2(inset, inset), frame.Max - new Vector2(inset, inset));
+        var cellWidth = inner.Width / SlotsRules.ReelCount;
+        var cellHeight = inner.Height / SlotsRules.RowCount;
+        var choreography = playback.Choreography;
+        var spinningPhase = playback.Phase == SlotsPlaybackPhase.Spinning;
+        var grid = spinningPhase || playback.Phase == SlotsPlaybackPhase.Presenting ? playback.CurrentSpin.Grid
+            : restingGrid;
+
+        Span<bool> winningCells = stackalloc bool[SlotsRules.CellCount];
+        var presenting = PresentingWins();
+        if (presenting)
+        {
+            MarkWinningCells(playback.CurrentSpin, winningCells);
+        }
+
+        for (var reel = 0; reel < SlotsRules.ReelCount; reel++)
+        {
+            var reelMin = new Vector2(inner.Min.X + reel * cellWidth, inner.Min.Y);
+            var reelMax = new Vector2(reelMin.X + cellWidth, inner.Max.Y);
+            if (reel > 0)
+            {
+                drawList.AddLine(new Vector2(reelMin.X, inner.Min.Y + 4f * scale),
+                    new Vector2(reelMin.X, inner.Max.Y - 4f * scale),
+                    ImGui.GetColorU32(Palette.WithAlpha(ui.TitleInk, 0.07f)), 1f * scale);
+            }
+
+            drawList.PushClipRect(reelMin, reelMax, true);
+            if (!spinningPhase || choreography.ReelStopped(reel))
+            {
+                DrawRestedReel(drawList, grid, reel, reelMin, cellWidth, cellHeight, presenting, winningCells);
+            }
+            else
+            {
+                var landing = choreography.LandingProgress(reel);
+                if (landing <= 0f)
+                {
+                    DrawSpinningReel(drawList, choreography, reel, reelMin, cellWidth, cellHeight);
+                }
+                else
+                {
+                    DrawLandingReel(drawList, playback.CurrentSpin.Grid, reel, reelMin, cellWidth, cellHeight,
+                        landing);
+                }
+            }
+
+            drawList.PopClipRect();
+        }
+
+        if (choreography.Anticipating && spinningPhase)
+        {
+            var lastMin = new Vector2(inner.Min.X + (SlotsRules.ReelCount - 1) * cellWidth, inner.Min.Y);
+            var pulse = 0.24f + 0.14f * MathF.Sin(choreography.ElapsedSeconds * 6f);
+            Squircle.Stroke(drawList, lastMin, inner.Max, 8f * scale,
+                ImGui.GetColorU32(Gold with { W = pulse }), 2f * scale);
+        }
+
+        if (presenting)
+        {
+            DrawLineTraces(drawList, playback.CurrentSpin, inner.Min, cellWidth, cellHeight, scale);
+        }
+    }
+
+    private bool PresentingWins()
+    {
+        return playback.HasSpins
+            && (playback.Phase == SlotsPlaybackPhase.Presenting
+                || playback.Phase == SlotsPlaybackPhase.BonusIntro
+                || playback.Phase == SlotsPlaybackPhase.Finished);
+    }
+
+    private static void MarkWinningCells(in SlotsSpinView spin, Span<bool> winningCells)
+    {
+        for (var winIndex = 0; winIndex < spin.LineWins.Length; winIndex++)
+        {
+            var win = spin.LineWins[winIndex];
+            if (win.Line < 0 || win.Line >= SlotsRules.PaylineCount)
+            {
+                continue;
+            }
+
+            var rows = SlotsRules.Paylines[win.Line];
+            var count = Math.Min(win.Count, SlotsRules.ReelCount);
+            for (var reel = 0; reel < count; reel++)
+            {
+                winningCells[reel * SlotsRules.RowCount + rows[reel]] = true;
+            }
+        }
+
+        if (spin.ScatterCount >= 3)
+        {
+            for (var cellIndex = 0; cellIndex < SlotsRules.CellCount; cellIndex++)
+            {
+                if (spin.Grid[cellIndex] == SlotsRules.ScatterSymbol)
+                {
+                    winningCells[cellIndex] = true;
+                }
+            }
+        }
+    }
+
+    private void DrawRestedReel(ImDrawListPtr drawList, int[] grid, int reel, Vector2 reelMin, float cellWidth,
+        float cellHeight, bool presenting, ReadOnlySpan<bool> winningCells)
+    {
+        var hasWins = presenting && playback.HasSpins
+            && (playback.CurrentSpin.LineWins.Length > 0 || playback.CurrentSpin.ScatterCount >= 3);
+        var extent = MathF.Min(cellWidth, cellHeight) * 0.32f;
+        for (var row = 0; row < SlotsRules.RowCount; row++)
+        {
+            var cellIndex = reel * SlotsRules.RowCount + row;
+            var center = new Vector2(reelMin.X + cellWidth * 0.5f, reelMin.Y + (row + 0.5f) * cellHeight);
+            var winning = hasWins && winningCells[cellIndex];
+            if (winning)
+            {
+                var glow = 0.10f + 0.06f * MathF.Sin(lineTraceSeconds * 5f);
+                drawList.AddCircleFilled(center, MathF.Min(cellWidth, cellHeight) * 0.46f,
+                    ImGui.GetColorU32(Gold with { W = glow }), 24);
+            }
+
+            var alpha = hasWins && !winning ? 0.4f : 1f;
+            SlotsSymbolArt.Draw(drawList, grid[cellIndex], center, extent, alpha);
+        }
+    }
+
+    private static void DrawSpinningReel(ImDrawListPtr drawList, SlotsChoreography choreography, int reel,
+        Vector2 reelMin, float cellWidth, float cellHeight)
+    {
+        var rows = ScrollRows(choreography, reel);
+        var wholeRows = (int)rows;
+        var fraction = rows - wholeRows;
+        var extent = MathF.Min(cellWidth, cellHeight) * 0.32f;
+        for (var slot = -1; slot <= SlotsRules.RowCount; slot++)
+        {
+            var symbol = DecorativeCycle[Mod(wholeRows + slot + reel * 3, DecorativeCycle.Length)];
+            var centerY = reelMin.Y + (slot + fraction - 0.5f + 1f) * cellHeight;
+            var center = new Vector2(reelMin.X + cellWidth * 0.5f, centerY);
+            SlotsSymbolArt.Draw(drawList, symbol, center with { Y = center.Y - cellHeight * 0.22f }, extent, 0.14f);
+            SlotsSymbolArt.Draw(drawList, symbol, center, extent, 0.55f);
+        }
+    }
+
+    private static void DrawLandingReel(ImDrawListPtr drawList, int[] grid, int reel, Vector2 reelMin,
+        float cellWidth, float cellHeight, float landing)
+    {
+        var eased = Easing.EaseOutCubic(landing);
+        var offset = (eased - 1f) * SlotsRules.RowCount * cellHeight;
+        var extent = MathF.Min(cellWidth, cellHeight) * 0.32f;
+        for (var row = 0; row < SlotsRules.RowCount; row++)
+        {
+            var center = new Vector2(reelMin.X + cellWidth * 0.5f,
+                reelMin.Y + (row + 0.5f) * cellHeight + offset);
+            SlotsSymbolArt.Draw(drawList, grid[reel * SlotsRules.RowCount + row], center, extent);
+        }
+
+        for (var trailingRow = 0; trailingRow < SlotsRules.RowCount; trailingRow++)
+        {
+            var symbol = DecorativeCycle[Mod(trailingRow + reel * 3, DecorativeCycle.Length)];
+            var center = new Vector2(reelMin.X + cellWidth * 0.5f,
+                reelMin.Y + (SlotsRules.RowCount + trailingRow + 0.5f) * cellHeight + offset);
+            SlotsSymbolArt.Draw(drawList, symbol, center, extent, 0.55f);
+        }
+    }
+
+    private static float ScrollRows(SlotsChoreography choreography, int reel)
+    {
+        if (!choreography.HoldsLastReel || reel != SlotsRules.ReelCount - 1)
+        {
+            return choreography.ElapsedSeconds * SpinRowsPerSecond;
+        }
+
+        var slowFrom = choreography.StopSeconds(SlotsRules.ReelCount - 2);
+        if (choreography.ElapsedSeconds <= slowFrom)
+        {
+            return choreography.ElapsedSeconds * SpinRowsPerSecond;
+        }
+
+        return slowFrom * SpinRowsPerSecond
+            + (choreography.ElapsedSeconds - slowFrom) * AnticipationRowsPerSecond;
+    }
+
+    private static int Mod(int value, int length)
+    {
+        var remainder = value % length;
+        return remainder < 0 ? remainder + length : remainder;
+    }
+
+    private void DrawLineTraces(ImDrawListPtr drawList, in SlotsSpinView spin, Vector2 innerMin, float cellWidth,
+        float cellHeight, float scale)
+    {
+        if (spin.LineWins.Length == 0)
+        {
+            return;
+        }
+
+        var activeIndex = (int)(lineTraceSeconds / LineTraceCycleSeconds) % spin.LineWins.Length;
+        var win = spin.LineWins[activeIndex];
+        if (win.Line < 0 || win.Line >= SlotsRules.PaylineCount)
+        {
+            return;
+        }
+
+        var rows = SlotsRules.Paylines[win.Line];
+        var count = Math.Min(win.Count, SlotsRules.ReelCount);
+        if (count < 2)
+        {
+            return;
+        }
+
+        Span<Vector2> points = stackalloc Vector2[SlotsRules.ReelCount];
+        for (var reel = 0; reel < count; reel++)
+        {
+            points[reel] = new Vector2(innerMin.X + (reel + 0.5f) * cellWidth,
+                innerMin.Y + (rows[reel] + 0.5f) * cellHeight);
+        }
+
+        var glow = ImGui.GetColorU32(Gold with { W = 0.22f });
+        var core = ImGui.GetColorU32(Gold);
+        for (var segment = 0; segment < count - 1; segment++)
+        {
+            drawList.AddLine(points[segment], points[segment + 1], glow, 7f * scale);
+            drawList.AddLine(points[segment], points[segment + 1], core, 2.4f * scale);
+        }
+
+        for (var reel = 0; reel < count; reel++)
+        {
+            drawList.AddCircleFilled(points[reel], 3.2f * scale, core, 12);
+        }
+    }
+
+    private float DrawBanner(ImDrawListPtr drawList, AppSkin ui, float left, float y, float width, float scale,
+        float delta)
+    {
+        var height = BannerHeight * scale;
+        var center = new Vector2(left + width * 0.5f, y + height * 0.5f);
+        if (playback.Phase == SlotsPlaybackPhase.BonusIntro)
+        {
+            var banner = Loc.T(L.Casino.SlotsFreeSpinsBanner, GameNumber.Label(playback.BonusAwarded));
+            Typography.DrawCentered(drawList, center with { Y = center.Y - 10f * scale }, banner, Gold,
+                TextStyles.Title2);
+            Typography.DrawCentered(drawList, center with { Y = center.Y + 16f * scale },
+                Loc.T(L.Casino.SlotsBonusSub), ui.MutedInk, TextStyles.Footnote);
+            DrawSkip(drawList, ui, left, y, width, scale);
+            return y + height;
+        }
+
+        winRoll.Update((int)playback.CommittedWin, delta);
+        if (playback.Phase != SlotsPlaybackPhase.Idle && winRoll.Display > 0)
+        {
+            var bigWin = playback.CommittedWin >= playback.Stake * SlotsRoundPlayback.BigWinMultiple;
+            if (bigWin)
+            {
+                Typography.DrawCentered(drawList, center with { Y = center.Y - 20f * scale },
+                    Loc.T(L.Casino.SlotsBigWin), Gold, TextStyles.FootnoteEmphasized);
+            }
+
+            var amount = "+" + ((long)winRoll.Display).ToString("N0", Loc.Culture);
+            Typography.DrawCentered(drawList, center with { Y = center.Y + (bigWin ? 4f : -4f) * scale }, amount,
+                Gold, TextStyles.Title1.Scale * winRoll.PopScale, TextStyles.Title1.Weight);
+            if (playback.CapApplied && playback.Phase == SlotsPlaybackPhase.Finished)
+            {
+                Typography.DrawCentered(drawList, center with { Y = center.Y + 24f * scale },
+                    Loc.T(L.Casino.SlotsCapNote, SlotsRules.PayoutCapMultiple.ToString(Loc.Culture)), ui.MutedInk,
+                    TextStyles.Caption1);
+            }
+        }
+
+        DrawSkip(drawList, ui, left, y, width, scale);
+        return y + height;
+    }
+
+    private void DrawSkip(ImDrawListPtr drawList, AppSkin ui, float left, float y, float width, float scale)
+    {
+        if (!playback.SkipAvailable)
+        {
+            return;
+        }
+
+        var label = Loc.T(L.Casino.SlotsSkip);
+        var labelSize = Typography.Measure(label, TextStyles.FootnoteEmphasized);
+        var chipHeight = 28f * scale;
+        var chipMax = new Vector2(left + width, y + chipHeight);
+        var chipMin = new Vector2(chipMax.X - labelSize.X - 24f * scale, y);
+        var hovered = UiInteract.Hover(chipMin, chipMax);
+        Squircle.Fill(drawList, chipMin, chipMax, chipHeight * 0.5f, ImGui.GetColorU32(ui.FieldSurface));
+        Squircle.Stroke(drawList, chipMin, chipMax, chipHeight * 0.5f,
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.3f)), 1f * scale);
+        if (hovered)
+        {
+            Squircle.Fill(drawList, chipMin, chipMax, chipHeight * 0.5f, ImGui.GetColorU32(ui.HoverTint));
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        Typography.DrawCentered(drawList, (chipMin + chipMax) * 0.5f, label, ui.BodyInk,
+            TextStyles.FootnoteEmphasized);
+        if (UiInteract.Click(chipMin, chipMax, hovered))
+        {
+            playback.Skip();
+            winRoll.Snap((int)playback.TotalWin);
+            Array.Copy(playback.CurrentSpin.Grid, restingGrid, SlotsRules.CellCount);
+            celebratedSpinIndex = playback.SpinIndex;
+        }
+    }
+
+    private float DrawStakeRow(ImDrawListPtr drawList, AppSkin ui, float left, float y, float width, float scale)
+    {
+        var label = Loc.T(L.Casino.SlotsStake);
+        Typography.Draw(drawList, new Vector2(left, y), label, ui.MutedInk, TextStyles.FootnoteEmphasized);
+        y += 20f * scale;
+        var gap = 8f * scale;
+        var chipWidth = (width - gap * 2f) / SlotsRules.StakeTiers.Length;
+        var chipHeight = StakeChipHeight * scale;
+        var changeable = !play.RoundInFlight && !PlaybackBusy;
+        for (var tierIndex = 0; tierIndex < SlotsRules.StakeTiers.Length; tierIndex++)
+        {
+            var chipMin = new Vector2(left + tierIndex * (chipWidth + gap), y);
+            var chipMax = new Vector2(chipMin.X + chipWidth, y + chipHeight);
+            var active = tierIndex == stakeIndex;
+            var hovered = changeable && UiInteract.Hover(chipMin, chipMax);
+            var fill = active ? Palette.WithAlpha(ui.Accent, 0.9f) : ui.FieldSurface;
+            Squircle.Fill(drawList, chipMin, chipMax, chipHeight * 0.5f, ImGui.GetColorU32(fill));
+            if (hovered)
+            {
+                Squircle.Fill(drawList, chipMin, chipMax, chipHeight * 0.5f, ImGui.GetColorU32(ui.HoverTint));
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            }
+
+            var ink = active ? ui.Palette.HeaderInk : ui.BodyInk;
+            Typography.DrawCentered(drawList, (chipMin + chipMax) * 0.5f,
+                GameNumber.Label((int)SlotsRules.StakeTiers[tierIndex]), ink, TextStyles.SubheadlineEmphasized);
+            if (UiInteract.Click(chipMin, chipMax, hovered))
+            {
+                stakeIndex = tierIndex;
+            }
+        }
+
+        return y + chipHeight;
+    }
+
+    private bool PlaybackBusy => playback.Phase == SlotsPlaybackPhase.Spinning
+        || playback.Phase == SlotsPlaybackPhase.Presenting
+        || playback.Phase == SlotsPlaybackPhase.BonusIntro;
+
+    private void DrawSpinControls(ImDrawListPtr drawList, AppSkin ui, CasinoStateDto state,
+        CasinoSittingDto sitting, float left, float y, float width, float scale)
+    {
+        if (inlineReason.Length > 0)
+        {
+            y = DrawReasonCard(drawList, ui, Loc.T(CasinoReasons.MessageFor(inlineReason)), left, y, width, scale);
+            y += Metrics.Space.Sm * scale;
+        }
+
+        var stake = CurrentStake;
+        var lowStack = sitting.Stack < stake;
+        var blocked = state.StakesPaused || state.Draining;
+        var canSpin = !play.RoundInFlight && !PlaybackBusy && !blocked && !lowStack;
+        var label = canSpin
+            ? Loc.T(L.Casino.SlotsSpinFor, stake.ToString("N0", Loc.Culture))
+            : Loc.T(L.Casino.SlotsSpin);
+        var pillRect = new Rect(new Vector2(left, y), new Vector2(left + width, y + SpinPillHeight * scale));
+        if (DrawSpinPill(drawList, ui, pillRect, label, canSpin, scale))
+        {
+            inlineReason = string.Empty;
+            play.SpinSlots(stake);
+        }
+
+        y = pillRect.Max.Y + Metrics.Space.Sm * scale;
+        if (blocked)
+        {
+            var notice = state.StakesPaused ? Loc.T(L.Casino.PausedTitle) : Loc.T(L.Casino.DrainingTitle);
+            Typography.DrawCentered(drawList, new Vector2(left + width * 0.5f, y + 8f * scale), notice,
+                ui.MutedInk, TextStyles.Footnote);
+            return;
+        }
+
+        if (!lowStack || play.RoundInFlight || PlaybackBusy)
+        {
+            return;
+        }
+
+        var hint = Loc.T(L.Casino.SlotsLowStack);
+        var hintBlock = Typography.MeasureWrappedBlock(hint, TextStyles.Footnote, width);
+        Typography.DrawWrappedLeft(new Vector2(left, y), hint, ui.MutedInk, TextStyles.Footnote, width);
+        y += hintBlock.Y + Metrics.Space.Sm * scale;
+        var cashierLabel = Loc.T(L.Casino.Cashier);
+        var cashierRect = new Rect(new Vector2(left + width * 0.25f, y),
+            new Vector2(left + width * 0.75f, y + 38f * scale));
+        if (ui.GhostButton(cashierRect, cashierLabel))
+        {
+            openCashier();
+        }
+    }
+
+    private bool DrawSpinPill(ImDrawListPtr drawList, AppSkin ui, Rect rect, string label, bool enabled,
+        float scale)
+    {
+        var rounding = rect.Height * 0.5f;
+        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
+        var fill = Palette.WithAlpha(ui.Accent, enabled ? 1f : 0.4f);
+        Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(fill));
+        if (hovered)
+        {
+            Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(ui.HoverTint));
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        var ink = ui.Palette.HeaderInk;
+        var fitted = Typography.FitText(label, rect.Width - rect.Height, TextStyles.Headline);
+        Typography.DrawCentered(drawList, rect.Center, fitted,
+            enabled ? ink : Palette.WithAlpha(ink, 0.6f), TextStyles.Headline);
+        return enabled && UiInteract.Click(rect.Min, rect.Max, hovered);
+    }
+
+    private static float DrawReasonCard(ImDrawListPtr drawList, AppSkin ui, string message, float left, float y,
+        float width, float scale)
+    {
+        var pad = 12f * scale;
+        var block = Typography.MeasureWrappedBlock(message, TextStyles.Footnote, width - pad * 2f);
+        var height = block.Y + pad * 2f;
+        var min = new Vector2(left, y);
+        var max = new Vector2(left + width, y + height);
+        Squircle.Fill(drawList, min, max, 16f * scale, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.10f)));
+        Squircle.Stroke(drawList, min, max, 16f * scale,
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.35f)), 1f * scale);
+        Typography.DrawWrappedLeft(new Vector2(min.X + pad, min.Y + pad), message, ui.TitleInk,
+            TextStyles.Footnote, width - pad * 2f);
+        return max.Y;
+    }
+
+    private void DrawSeatMissing(ImDrawListPtr drawList, AppSkin ui, float left, float y, float width, float scale)
+    {
+        var title = Loc.T(L.Casino.SlotsNoChipsTitle);
+        var hint = Loc.T(L.Casino.SlotsNoChipsHint);
+        var pad = 14f * scale;
+        var titleSize = Typography.Measure(title, TextStyles.SubheadlineEmphasized);
+        var hintBlock = Typography.MeasureWrappedBlock(hint, TextStyles.Footnote, width - pad * 2f);
+        var cardHeight = titleSize.Y + hintBlock.Y + pad * 2f + 6f * scale;
+        var min = new Vector2(left, y);
+        var max = new Vector2(left + width, y + cardHeight);
+        ui.Card(drawList, min, max, Metrics.Radius.Card * scale);
+        Typography.Draw(drawList, new Vector2(min.X + pad, min.Y + pad), title, ui.TitleInk,
+            TextStyles.SubheadlineEmphasized);
+        Typography.DrawWrappedLeft(new Vector2(min.X + pad, min.Y + pad + titleSize.Y + 6f * scale), hint,
+            ui.MutedInk, TextStyles.Footnote, width - pad * 2f);
+
+        var pillY = max.Y + Metrics.Space.Md * scale;
+        var pillRect = new Rect(new Vector2(left + width * 0.2f, pillY),
+            new Vector2(left + width * 0.8f, pillY + 44f * scale));
+        if (AppSkin.PillButton(pillRect, Loc.T(L.Casino.Cashier), true, true, ui.Theme))
+        {
+            openCashier();
+        }
+    }
+}

@@ -74,6 +74,12 @@ internal sealed class CashierDrawer
         coins.EnsureFresh();
     }
 
+    public void Open(int gameIndex)
+    {
+        selectedGame = gameIndex;
+        Open();
+    }
+
     public void Close()
     {
         open = false;

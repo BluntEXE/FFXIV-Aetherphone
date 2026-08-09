@@ -135,7 +135,7 @@ internal sealed partial class CasinoApp
 
         if (UiInteract.Click(tile.Min, tile.Max, hovered))
         {
-            router.Push(new CasinoRoute(CasinoScreen.Cabinet, definition.GameId));
+            OpenGame(definition.GameId);
         }
     }
 

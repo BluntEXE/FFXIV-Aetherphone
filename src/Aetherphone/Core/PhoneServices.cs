@@ -87,6 +87,7 @@ internal sealed class PhoneServices : IDisposable
     public required Coins.CoinEarnNotifier CoinEarnNotifier { get; init; }
 
     public required Casino.CasinoStore Casino { get; init; }
+    public required Casino.CasinoPlayStore CasinoPlay { get; init; }
     public required PluginCatalog PluginCatalog { get; init; }
     public required ShortcutStore Shortcuts { get; init; }
     public required ShortcutRunner ShortcutRunner { get; init; }
@@ -206,6 +207,7 @@ internal sealed class PhoneServices : IDisposable
         var coinEarnNotifier = new Coins.CoinEarnNotifier(coins, notifications);
         var casinoApi = new AethernetApi(http, aethernetSession, "casino");
         var casino = new Casino.CasinoStore(configuration, aethernetSession, casinoApi.Casino, coins);
+        var casinoPlay = new Casino.CasinoPlayStore(configuration, aethernetSession, casinoApi.Casino, casino);
         var peerKeys = new PeerKeyDirectory(configuration, aethernet.Keys);
         var conversationKeys = new ConversationKeyStore(aethernet.Keys, keyVault);
         var marketIndex = new MarketItemIndex(dataManager);
@@ -304,6 +306,7 @@ internal sealed class PhoneServices : IDisposable
             CoinSessions = coinSessions,
             CoinEarnNotifier = coinEarnNotifier,
             Casino = casino,
+            CasinoPlay = casinoPlay,
             PluginCatalog = pluginCatalog,
             Shortcuts = new ShortcutStore(configuration, pluginCatalog),
             ShortcutRunner = new ShortcutRunner(clientState, condition),
@@ -396,6 +399,7 @@ internal sealed class PhoneServices : IDisposable
         RemoteImages.Dispose();
         Windows.Components.UserName.Reset();
         Moderation.ModerationNoticeText.Reset();
+        CasinoPlay.Dispose();
         Casino.Dispose();
         CoinEarnNotifier.Dispose();
         CoinSessions.Dispose();
