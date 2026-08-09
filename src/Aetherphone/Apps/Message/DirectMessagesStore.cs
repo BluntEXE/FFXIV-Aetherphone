@@ -145,6 +145,9 @@ internal sealed class DirectMessagesStore : ChatThreadStoreBase<ChatMessageDto, 
     protected override Task<bool> DeleteMessageRequestAsync(string messageId, CancellationToken token) =>
         client.DeleteMessageAsync(messageId, token);
 
+    protected override Task<bool> DeleteThreadRequestAsync(string threadId, CancellationToken token) =>
+        client.DeleteConversationAsync(threadId, token);
+
     protected override Task SetReactionRequestAsync(string messageId, string reactionToken, CancellationToken token) =>
         client.SetReactionAsync(messageId, reactionToken, token);
 

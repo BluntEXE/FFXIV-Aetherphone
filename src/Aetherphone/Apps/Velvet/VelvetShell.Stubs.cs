@@ -9,6 +9,8 @@ internal sealed partial class VelvetShell
     private readonly DropdownMenu postMenu = new();
     private readonly DropdownMenu threadMenu = new();
     private readonly DropdownMenu.Item[] postItems = new DropdownMenu.Item[3];
+    private readonly DropdownMenu.Item[] threadItems = new DropdownMenu.Item[1];
     private VelvetMessagesTab messagesTab = VelvetMessagesTab.Chats;
     private VelvetPostDto? menuPost;
+    private string? menuThreadId;
 }

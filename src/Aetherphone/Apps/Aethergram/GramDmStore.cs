@@ -116,35 +116,6 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
             await client.AcceptThreadAsync(otherId, token).ConfigureAwait(false), RefreshThreads);
     }
 
-    public void DeleteThread(string otherId, Action? onDone = null)
-    {
-        var snapshot = ThreadListItems;
-        for (var index = 0; index < snapshot.Length; index++)
-        {
-            if (snapshot[index].OtherUserId != otherId)
-            {
-                continue;
-            }
-
-            var updated = new GramThreadDto[snapshot.Length - 1];
-            Array.Copy(snapshot, 0, updated, 0, index);
-            Array.Copy(snapshot, index + 1, updated, index, snapshot.Length - index - 1);
-            ThreadListItems = updated;
-            break;
-        }
-
-        CloseThreadIfCurrent(otherId);
-        work.Run("thread delete", async token =>
-            await client.DeleteThreadAsync(otherId, token).ConfigureAwait(false), succeeded =>
-        {
-            RefreshThreads();
-            if (succeeded)
-            {
-                onDone?.Invoke();
-            }
-        });
-    }
-
     private void AcceptThreadIfPending(string otherId)
     {
         if (IsThreadPending(otherId))
@@ -333,6 +304,9 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
 
     protected override Task<bool> DeleteMessageRequestAsync(string messageId, CancellationToken token) =>
         client.DeleteMessageAsync(messageId, token);
+
+    protected override Task<bool> DeleteThreadRequestAsync(string threadId, CancellationToken token) =>
+        client.DeleteThreadAsync(threadId, token);
 
     protected override Task SetReactionRequestAsync(string messageId, string reactionToken, CancellationToken token) =>
         client.SetReactionAsync(messageId, reactionToken, token);

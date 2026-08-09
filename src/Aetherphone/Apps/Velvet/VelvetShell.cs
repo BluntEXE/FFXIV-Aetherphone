@@ -488,6 +488,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         }
 
         DrawPostMenu(area, true);
+        DrawThreadMenu(area);
     }
 
     private void DrawRichBody(ImDrawListPtr drawList, RichTextLayout layout, Vector2 origin)

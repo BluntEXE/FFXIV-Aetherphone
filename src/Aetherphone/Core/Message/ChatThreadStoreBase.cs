@@ -162,6 +162,8 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     protected abstract Task<bool> DeleteMessageRequestAsync(string messageId, CancellationToken token);
 
+    protected abstract Task<bool> DeleteThreadRequestAsync(string threadId, CancellationToken token);
+
     protected abstract Task SetReactionRequestAsync(string messageId, string reactionToken, CancellationToken token);
 
     protected abstract Task<ReactionListDto?> FetchReactionsAsync(string messageId, CancellationToken token);
@@ -303,6 +305,35 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
             currentThreadId = null;
             messages = Array.Empty<TMessage>();
         }
+    }
+
+    public void DeleteThread(string threadId, Action? onDone = null)
+    {
+        var snapshot = threadList;
+        for (var index = 0; index < snapshot.Length; index++)
+        {
+            if (ThreadKeyOf(snapshot[index]) != threadId)
+            {
+                continue;
+            }
+
+            var updated = new TThread[snapshot.Length - 1];
+            Array.Copy(snapshot, 0, updated, 0, index);
+            Array.Copy(snapshot, index + 1, updated, index, snapshot.Length - index - 1);
+            threadList = updated;
+            break;
+        }
+
+        CloseThreadIfCurrent(threadId);
+        work.Run("thread delete", async token =>
+            await DeleteThreadRequestAsync(threadId, token).ConfigureAwait(false), succeeded =>
+        {
+            RefreshThreadListCore();
+            if (succeeded)
+            {
+                onDone?.Invoke();
+            }
+        });
     }
 
     protected int ComputeUnread()

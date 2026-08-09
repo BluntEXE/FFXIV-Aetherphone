@@ -11,6 +11,7 @@ internal static class L
         public static readonly LocString Refresh = new("common.refresh", "Refresh");
         public static readonly LocString Emoji = new("common.emoji", "Emoji");
         public static readonly LocString Cancel = new("common.cancel", "Cancel");
+        public static readonly LocString Delete = new("common.delete", "Delete");
         public static readonly LocString Retry = new("common.retry", "Retry");
         public static readonly LocString Copied = new("common.copied", "Copied");
         public static readonly LocString LoadFailed = new("common.loadFailed", "Could not load");
@@ -585,6 +586,9 @@ internal static class L
         public static readonly LocString ForwardedLabel = new("message.forwardedLabel", "Forwarded");
         public static readonly LocString DeleteAction = new("message.deleteAction", "Delete for everyone");
         public static readonly LocString DeleteConfirm = new("message.deleteConfirm", "Delete this message for everyone in this chat?");
+        public static readonly LocString DeleteConversation = new("message.deleteConversation", "Delete conversation");
+        public static readonly LocString DeleteConversationMessage = new("message.deleteConversationMessage",
+            "This deletes the conversation for you. This can't be undone.");
         public static readonly LocString DeletedBody = new("message.deletedBody", "This message was deleted");
         public static readonly LocString MuteAction = new("message.muteAction", "Mute");
         public static readonly LocString UnmuteAction = new("message.unmuteAction", "Unmute");
@@ -2898,6 +2902,9 @@ internal static class L
         public static readonly LocString Accept = new("velvet.accept", "Accept");
         public static readonly LocString WantsToConnect = new("velvet.wantsToConnect", "wants to connect");
         public static readonly LocString SentRequests = new("velvet.sentRequests", "Sent");
+        public static readonly LocString DeleteConversation = new("velvet.deleteConversation", "Delete conversation");
+        public static readonly LocString DeleteConversationMessage = new("velvet.deleteConversationMessage",
+            "This deletes the conversation for you. This can't be undone.");
         public static readonly LocString Disconnect = new("velvet.disconnect", "Disconnect");
         public static readonly LocString DisconnectConfirmMessage = new("velvet.disconnectConfirmMessage", "Remove this connection?");
         public static readonly LocString PeopleToMeet = new("velvet.peopleToMeet", "People to meet");
