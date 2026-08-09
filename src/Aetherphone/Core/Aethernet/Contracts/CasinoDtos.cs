@@ -315,6 +315,11 @@ internal sealed record CasinoBlackjackSeatDto(
 // communal game. ActionsMask states what the table will accept from the active hand right now, and
 // it is the only thing the action bar is allowed to consult: a client that decided legality for
 // itself would offer a double the server refuses and read as broken the moment the shoe disagreed.
+// The trailing block is the care surface, and every field on it is a server fact the screen is
+// forbidden from inferring: Spectators is the count at the rail, BoundElsewhere says this account is
+// playing the seat from another device, SeatHeldUntilUnixMs is the absolute instant the hold lapses
+// (never a duration, for the same reason a phase deadline is not), JoinsNextHand marks a seat that
+// arrived mid hand, and Draining is the table winding down while the open hand finishes.
 internal sealed record CasinoBlackjackRoomStateDto(
     long RoundIndex = 0,
     string HandId = "",
@@ -333,7 +338,15 @@ internal sealed record CasinoBlackjackRoomStateDto(
     int WindowSeconds = 0,
     long MinBet = 0,
     long MaxBet = 0,
-    int MySeat = -1);
+    int MySeat = -1,
+    string TableName = "",
+    int Spectators = 0,
+    bool BoundElsewhere = false,
+    long SeatHeldUntilUnixMs = 0,
+    bool JoinsNextHand = false,
+    bool Draining = false,
+    bool InviteOnly = false,
+    bool Owner = false);
 
 // The seat scoped half, delivered on casino.private to one recipient. It exists so a table can deal
 // a closed card without the public blob ever carrying it: the projection lays these faces over the
@@ -380,6 +393,122 @@ internal sealed record CasinoBlackjackActionDto(
     long RoundIndex = 0,
     int Action = 0,
     long Stack = 0);
+
+// One live table as the browser sees it before anybody steps into it. Seats and spectators travel as
+// counts rather than a roster because the directory is a public read and a lurker list is an
+// identity leak; the room itself is where names appear, and only for the seats. An invite only table
+// is never listed, so a row that carries InviteOnly is one this account already belongs to.
+internal sealed record CasinoTableRowDto(
+    string RoomId = "",
+    string GameKind = "",
+    string Name = "",
+    int StakeTier = 0,
+    long MinBet = 0,
+    long MaxBet = 0,
+    long MinBuyIn = 0,
+    long MaxBuyIn = 0,
+    int SeatCount = 0,
+    int SeatsTaken = 0,
+    int Spectators = 0,
+    bool InviteOnly = false,
+    bool Owner = false,
+    bool Seated = false,
+    bool Draining = false,
+    int Phase = 0,
+    long PhaseEndsAtUnixMs = 0);
+
+internal sealed record CasinoTableListDto(
+    CasinoTableRowDto[]? Tables = null,
+    long ServerNowUnixMs = 0);
+
+// Quick seat is the whole floor-tile-to-a-bet path in one post: the server picks the table, so the
+// client never races five phones onto the same open seat, and it answers with the buy-in bounds the
+// cashier is about to be prefilled from. It reserves nothing; sitting is still a separate intent.
+internal sealed record CasinoQuickSeatRequest(string GameKind, int StakeTier);
+
+internal sealed record CasinoQuickSeatDto(
+    bool Granted = false,
+    string Reason = "",
+    string RoomId = "",
+    string Name = "",
+    long MinBuyIn = 0,
+    long MaxBuyIn = 0,
+    long SuggestedBuyIn = 0,
+    long MinBet = 0,
+    long MaxBet = 0,
+    int SeatIndex = -1);
+
+// Creating a private table is idempotent on ClientTableId so a lost response replays the same table
+// instead of hosting a second one, which is also what the server's one-live-table-per-owner guard
+// answers with when a second create really does arrive.
+internal sealed record CasinoCreateTableRequest(string ClientTableId, string GameKind, int StakeTier);
+
+internal sealed record CasinoTableDto(
+    bool Granted = false,
+    string Reason = "",
+    string RoomId = "",
+    string Name = "",
+    string InviteToken = "",
+    bool InviteOnly = false,
+    bool Owner = false,
+    long MinBuyIn = 0,
+    long MaxBuyIn = 0);
+
+// The door is the host's half of a private table and it is read separately from the room, because
+// the knocks are the host's business and nobody else's: the public snapshot must never carry the
+// name of somebody who asked to come in and was not let in.
+internal sealed record CasinoKnockerDto(
+    string UserId = "",
+    string DisplayName = "",
+    string Handle = "",
+    long KnockedAtUnix = 0);
+
+internal sealed record CasinoTableDoorDto(
+    string RoomId = "",
+    bool Owner = false,
+    string InviteToken = "",
+    CasinoKnockerDto[]? Knocks = null,
+    CasinoKnockerDto[]? Seated = null);
+
+internal sealed record CasinoDoorRequest(string UserId, bool Approve);
+
+internal sealed record CasinoDoorResultDto(
+    bool Granted = false,
+    string Reason = "",
+    string RoomId = "",
+    bool Pending = false);
+
+// Sitting is an intent, never a fact: the answer says whether the seat was taken, whether the hand
+// in play means the seat waits for the next one, and whether this account is already holding the
+// seat from another device. ClientSeatId makes the retry of a lost response free.
+internal sealed record CasinoSitRequest(int SeatIndex, string ClientSeatId, long BuyIn);
+
+internal sealed record CasinoSeatDto(
+    bool Granted = false,
+    string Reason = "",
+    string RoomId = "",
+    int SeatIndex = -1,
+    bool JoinsNextHand = false,
+    bool BoundElsewhere = false,
+    long SeatHeldUntilUnixMs = 0,
+    long Stack = 0);
+
+// Standing has to work when the casino app flag is off, which is why it is its own route rather than
+// a flavour of cash-out: a killed floor must never strand chips on a table. AtHandEnd is the server
+// saying the intent is queued behind the hand the player is still in.
+internal sealed record CasinoStandRequest(string ClientStandId);
+
+internal sealed record CasinoStandDto(
+    bool Granted = false,
+    string Reason = "",
+    string RoomId = "",
+    bool AtHandEnd = false,
+    long Balance = 0);
+
+// A takeover is always a gesture. The client never posts this on its own: the seat sits in the
+// "playing on another device" state until somebody presses the button, because the seat sees hole
+// cards and spends money and a silent swap would move both without asking.
+internal sealed record CasinoClaimRequest(string ClientClaimId);
 
 internal sealed record CasinoBingoCardsRequest(
     string RoomId,

@@ -35,7 +35,9 @@ internal sealed partial class CasinoApp : IPhoneApp
     private readonly Core.Casino.CasinoPlayStore casinoPlay;
     private readonly Core.Casino.CasinoHistoryStore history;
     private readonly Core.Casino.CasinoRoomsStore casinoRooms;
+    private readonly Core.Casino.CasinoTablesStore casinoTables;
     private readonly Core.Casino.CasinoSpinStore casinoSpin;
+    private readonly Core.Casino.CasinoLauncher launcher;
     private readonly ConfirmService confirm;
     private readonly CashierDrawer cashier;
     private readonly Cabinets.SlotsCabinet slots;
@@ -45,20 +47,26 @@ internal sealed partial class CasinoApp : IPhoneApp
     private readonly Cabinets.BingoCabinet bingo;
     private readonly Cabinets.DailySpinCabinet dailySpin;
     private readonly Tables.BlackjackTable blackjack;
+    private readonly Tables.TableBrowser browser;
+    private readonly Tables.TableDoor tableDoor;
     private readonly AppSkin ui = new(AppPalettes.Casino);
     private readonly ViewRouter<CasinoRoute> router;
     private readonly RouterDraw<CasinoRoute> drawView;
     private readonly Action popRoute;
     private readonly Action openLimits;
+    private readonly Action<string> openTable;
+    private readonly Action<string> openDoorFromRow;
 
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
     private Rect screenArea;
+    private string pendingTableId = string.Empty;
 
     public CasinoApp(AethernetSession session, CoinStore coins, Core.Casino.CasinoStore casino,
         Core.Casino.CasinoPlayStore casinoPlay, Core.Casino.CasinoHistoryStore history,
-        Core.Casino.CasinoRoomsStore casinoRooms, Core.Casino.CasinoSpinStore casinoSpin,
-        Core.Games.GameStatsStore gameStats, ConfirmService confirm)
+        Core.Casino.CasinoRoomsStore casinoRooms, Core.Casino.CasinoTablesStore casinoTables,
+        Core.Casino.CasinoSpinStore casinoSpin, Core.Casino.CasinoTurnNotifier casinoTurns,
+        Core.Casino.CasinoLauncher launcher, Core.Games.GameStatsStore gameStats, ConfirmService confirm)
     {
         this.session = session;
         this.coins = coins;
@@ -66,7 +74,9 @@ internal sealed partial class CasinoApp : IPhoneApp
         this.casinoPlay = casinoPlay;
         this.history = history;
         this.casinoRooms = casinoRooms;
+        this.casinoTables = casinoTables;
         this.casinoSpin = casinoSpin;
+        this.launcher = launcher;
         this.confirm = confirm;
         cashier = new CashierDrawer(casino, coins, confirm);
         slots = new Cabinets.SlotsCabinet(casino, casinoPlay, OpenCashier);
@@ -75,7 +85,11 @@ internal sealed partial class CasinoApp : IPhoneApp
         wheel = new Cabinets.WheelCabinet(casino, casinoRooms, OpenCashier, PopRoute);
         bingo = new Cabinets.BingoCabinet(casino, casinoRooms, OpenCashier, PopRoute);
         dailySpin = new Cabinets.DailySpinCabinet(casinoSpin);
-        blackjack = new Tables.BlackjackTable(casino, casinoRooms, OpenCashier, PopRoute);
+        blackjack = new Tables.BlackjackTable(casino, casinoRooms, casinoTables, casinoTurns, OpenCashier, PopRoute);
+        openTable = OpenTable;
+        openDoorFromRow = OpenDoor;
+        browser = new Tables.TableBrowser(casinoTables, openTable, openDoorFromRow);
+        tableDoor = new Tables.TableDoor(casinoTables, confirm, openTable);
         router = new ViewRouter<CasinoRoute>(CasinoRoute.Floor);
         drawView = DrawView;
         popRoute = PopRoute;
@@ -93,13 +107,18 @@ internal sealed partial class CasinoApp : IPhoneApp
         bingo.Reset();
         dailySpin.Reset();
         blackjack.Reset();
+        browser.Reset();
+        tableDoor.Reset();
+        pendingTableId = string.Empty;
         ResetLimitsEditor();
         historyLoadFailed = false;
         history.Invalidate();
         coins.RefreshNow();
         casino.RefreshNow();
         casinoRooms.RefreshNow();
+        casinoTables.RefreshNow();
         casinoPlay.RecoverPendingRound();
+        ConsumeLaunch();
     }
 
     public void OnClosed()
@@ -113,7 +132,31 @@ internal sealed partial class CasinoApp : IPhoneApp
         bingo.Reset();
         dailySpin.Reset();
         blackjack.Reset();
+        browser.Reset();
+        tableDoor.Reset();
+        pendingTableId = string.Empty;
         ResetLimitsEditor();
+    }
+
+    // Opening an app that is already open re-fires this, which is exactly what a turn alert tapped
+    // while the casino is on screen depends on: the deep link is consumed here or not at all.
+    private void ConsumeLaunch()
+    {
+        if (!launcher.TryConsume(out var launch))
+        {
+            return;
+        }
+
+        if (launch.Kind == Core.Casino.CasinoLaunchKind.Table && launch.TableId.Length > 0)
+        {
+            OpenTable(launch.TableId);
+            return;
+        }
+
+        if (launch.Kind == Core.Casino.CasinoLaunchKind.Tables)
+        {
+            OpenTables();
+        }
     }
 
     public void Draw(in PhoneContext context)
@@ -142,6 +185,8 @@ internal sealed partial class CasinoApp : IPhoneApp
         coins.EnsureFresh();
         casino.EnsureFresh();
         casinoRooms.EnsureFresh();
+        casinoTables.EnsureFresh();
+        ConsumeTableAnswers();
         screenArea = context.Content;
         barkeep.Tick();
         cashier.Gate();
@@ -180,6 +225,14 @@ internal sealed partial class CasinoApp : IPhoneApp
             case CasinoScreen.Cabinet when string.Equals(route.GameId, CasinoGames.Bingo, StringComparison.Ordinal):
                 AppHeader.Draw(context, Loc.T(L.Casino.GameBingo), popRoute);
                 bingo.Draw(body, ui);
+                break;
+            case CasinoScreen.Tables:
+                AppHeader.Draw(context, Loc.T(L.Casino.TablesTitle), popRoute);
+                browser.Draw(body, ui);
+                break;
+            case CasinoScreen.TableDoor:
+                AppHeader.Draw(context, Loc.T(L.Casino.DoorTitle), popRoute);
+                tableDoor.Draw(body, ui);
                 break;
             case CasinoScreen.Table:
                 AppHeader.Draw(context, Loc.T(L.Casino.GameBlackjack), popRoute);
@@ -278,6 +331,101 @@ internal sealed partial class CasinoApp : IPhoneApp
         router.Pop();
     }
 
+    private void OpenTables()
+    {
+        if (router.Current.Screen == CasinoScreen.Tables)
+        {
+            return;
+        }
+
+        browser.Enter();
+        router.Push(new CasinoRoute(CasinoScreen.Tables, CasinoGames.Blackjack));
+    }
+
+    private void OpenTable(string tableId)
+    {
+        if (tableId.Length == 0)
+        {
+            return;
+        }
+
+        var current = router.Current;
+        if (current.Screen == CasinoScreen.Table
+            && string.Equals(current.TableId, tableId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        blackjack.Enter(tableId);
+        router.Push(new CasinoRoute(CasinoScreen.Table, CasinoGames.Blackjack, string.Empty, tableId));
+    }
+
+    private void OpenDoor(string tableId)
+    {
+        OpenDoor(tableId, string.Empty);
+    }
+
+    private void OpenDoor(string tableId, string inviteToken)
+    {
+        if (tableId.Length == 0)
+        {
+            return;
+        }
+
+        tableDoor.Enter(tableId, inviteToken);
+        if (router.Current.Screen == CasinoScreen.TableDoor)
+        {
+            return;
+        }
+
+        router.Push(new CasinoRoute(CasinoScreen.TableDoor, CasinoGames.Blackjack, string.Empty, tableId));
+    }
+
+    // The quick seat answer is the pivot of the whole three tap path: it names the table, the buy-in
+    // fills the cashier, and the table is entered the moment the chips actually exist. Entering
+    // before the buy-in lands would seat a player at a felt with nothing to bet.
+    private void ConsumeTableAnswers()
+    {
+        var quick = casinoTables.TakeQuickSeat();
+        if (quick is not null)
+        {
+            pendingTableId = quick.RoomId;
+            if (!SeatedAt(Core.Casino.CasinoWire.BlackjackKind))
+            {
+                cashier.Open(GameIndexOf(CasinoGames.Blackjack), quick.SuggestedBuyIn);
+            }
+        }
+
+        var hosted = casinoTables.TakeHostedTable();
+        if (hosted is not null)
+        {
+            OpenDoor(hosted.RoomId, hosted.InviteToken);
+        }
+
+        var resolved = casinoTables.TakeResolvedTable();
+        if (resolved is not null)
+        {
+            if (resolved.Owner)
+            {
+                OpenDoor(resolved.RoomId, resolved.InviteToken);
+            }
+            else
+            {
+                OpenTable(resolved.RoomId);
+            }
+        }
+
+        if (pendingTableId.Length == 0 || !SeatedAt(Core.Casino.CasinoWire.BlackjackKind))
+        {
+            return;
+        }
+
+        var target = pendingTableId;
+        pendingTableId = string.Empty;
+        cashier.Close();
+        OpenTable(target);
+    }
+
     private void OpenDailySpin()
     {
         if (router.Current.Screen == CasinoScreen.DailySpin)
@@ -293,14 +441,9 @@ internal sealed partial class CasinoApp : IPhoneApp
     {
         if (string.Equals(gameId, CasinoGames.Blackjack, StringComparison.Ordinal))
         {
-            if (!SeatedAt(Core.Casino.CasinoWire.BlackjackKind))
-            {
-                cashier.Open(GameIndexOf(gameId));
-                return;
-            }
-
-            blackjack.Enter();
-            router.Push(new CasinoRoute(CasinoScreen.Table, gameId));
+            // The tile never picks a table itself. Asking the server which felt has room is what
+            // keeps five phones from racing onto the same open seat off one stale directory page.
+            casinoTables.QuickSeat(Core.Casino.CasinoStakeTiers.Any);
             return;
         }
 

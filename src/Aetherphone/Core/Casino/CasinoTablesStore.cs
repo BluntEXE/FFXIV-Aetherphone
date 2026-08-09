@@ -1,0 +1,628 @@
+using Aetherphone.Core.Aethernet;
+using Aetherphone.Core.Aethernet.Clients;
+using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Telephony.Contracts;
+
+namespace Aetherphone.Core.Casino;
+
+// What a seat intent tells the screen and nothing more. The stack, the seat index and the wait all
+// arrive on the next snapshot, so an outcome only has to carry the two facts the snapshot cannot:
+// whether the server said yes, and what it called the refusal if it did not.
+internal sealed record CasinoSeatOutcome(bool Granted, string Reason, bool JoinsNextHand, bool AtHandEnd);
+
+// The directory and the doors, kept apart from the room the player is standing in. A table browser
+// is a list of places the player is not, so it polls on the ordinary 60/120 cadence and tolerates
+// being a minute stale in silence, while the room in play keeps its own tight loop in
+// CasinoRoomsStore. Every failed attempt still backs off the shared thirty seconds.
+//
+// Every intent here is an idempotent post keyed on a client id the store mints once and reuses
+// until the answer arrives, which is the whole reason a lost response is free: the same seat id is
+// the same sit, never a second buy-in, and the same claim id is the same takeover.
+internal sealed class CasinoTablesStore : IDisposable
+{
+    private static readonly TimeSpan ForegroundPollInterval = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan BackgroundPollInterval = TimeSpan.FromSeconds(120);
+    private const long RetryAfterAttemptMilliseconds = 30_000;
+    private const int NotFoundStatus = 404;
+
+    private readonly AethernetSession session;
+    private readonly CasinoClient casino;
+    private readonly CasinoStore chips;
+    private readonly RealtimeSignalBus signals;
+    private readonly PollCadence cadence;
+    private readonly StoreWork work = new("CasinoTables");
+    private readonly object intentGate = new();
+    private readonly Action<int> tableStatusSink;
+
+    private volatile CasinoTableRowDto[] tables = Array.Empty<CasinoTableRowDto>();
+    private volatile CasinoTableDoorDto? door;
+    private volatile CasinoQuickSeatDto? quickSeat;
+    private volatile CasinoTableDto? hostedTable;
+    private volatile CasinoTableDto? resolvedTable;
+    private volatile bool loading;
+    private volatile bool loaded;
+    private volatile bool intentInFlight;
+    private CasinoSeatOutcome? seatOutcome;
+    private CasinoStakeOutcome? noticeOutcome;
+    private string seatIntentId = string.Empty;
+    private string standIntentId = string.Empty;
+    private string claimIntentId = string.Empty;
+    private string createIntentId = string.Empty;
+    private string doorRoomId = string.Empty;
+    private int tablesFailed;
+    private int intentFailed;
+    private int tableMissing;
+    private int fetchingTables;
+    private int fetchingDoor;
+    private long tablesAttemptedAtTick;
+    private long doorAttemptedAtTick;
+    private string? lastAccountId;
+
+    public CasinoTablesStore(AethernetSession session, CasinoClient casino, CasinoStore chips,
+        PhoneVisibility visibility, RealtimeSignalBus signals)
+    {
+        this.session = session;
+        this.casino = casino;
+        this.chips = chips;
+        this.signals = signals;
+        cadence = new PollCadence(visibility, ForegroundPollInterval, BackgroundPollInterval);
+        tableStatusSink = OnTableStatus;
+        session.Changed += OnSessionChanged;
+        signals.CasinoReceived += OnCasinoSignal;
+    }
+
+    public CasinoTableRowDto[] Tables => tables;
+
+    public CasinoTableDoorDto? Door => door;
+
+    public bool Loading => loading;
+
+    public bool Loaded => loaded;
+
+    public bool IntentInFlight => intentInFlight;
+
+    public bool TakeTablesFailure()
+    {
+        return Interlocked.Exchange(ref tablesFailed, 0) != 0;
+    }
+
+    public bool TakeIntentFailure()
+    {
+        return Interlocked.Exchange(ref intentFailed, 0) != 0;
+    }
+
+    public CasinoSeatOutcome? TakeSeatOutcome()
+    {
+        return Interlocked.Exchange(ref seatOutcome, null);
+    }
+
+    // One slot for everything the browser and the door need to say, kept apart from the seat
+    // outcome so a message meant for a list screen can never swallow the answer the table screen is
+    // waiting on to leave its in-flight stage.
+    public CasinoStakeOutcome? TakeNoticeOutcome()
+    {
+        return Interlocked.Exchange(ref noticeOutcome, null);
+    }
+
+    public CasinoQuickSeatDto? TakeQuickSeat()
+    {
+        return Interlocked.Exchange(ref quickSeat, null);
+    }
+
+    public CasinoTableDto? TakeHostedTable()
+    {
+        return Interlocked.Exchange(ref hostedTable, null);
+    }
+
+    public CasinoTableDto? TakeResolvedTable()
+    {
+        return Interlocked.Exchange(ref resolvedTable, null);
+    }
+
+    public void EnsureFresh()
+    {
+        if (!session.IsSignedIn || !cadence.Due(DateTime.UtcNow))
+        {
+            return;
+        }
+
+        RefreshTables();
+    }
+
+    public void RefreshNow()
+    {
+        Interlocked.Exchange(ref tablesAttemptedAtTick, 0);
+        cadence.Reset();
+        RefreshTables();
+    }
+
+    // Quick seat asks the server which table to walk to. Picking one on the client out of a
+    // directory that refreshes once a minute is how five phones land on the same open seat and four
+    // of them get told it is taken.
+    public void QuickSeat(int stakeTier)
+    {
+        if (!Begin())
+        {
+            return;
+        }
+
+        work.Run("quick seat", async token =>
+        {
+            var answer = await casino.QuickSeatAsync(CasinoWire.BlackjackKind, stakeTier, token)
+                .ConfigureAwait(false);
+            if (answer is null)
+            {
+                Interlocked.Exchange(ref intentFailed, 1);
+                return;
+            }
+
+            if (!answer.Granted)
+            {
+                Interlocked.Exchange(ref noticeOutcome, new CasinoStakeOutcome(false, Named(answer.Reason)));
+                return;
+            }
+
+            Interlocked.Exchange(ref quickSeat, answer);
+        }, EndIntent);
+    }
+
+    public void CreatePrivateTable(int stakeTier)
+    {
+        if (!Begin())
+        {
+            return;
+        }
+
+        string clientTableId;
+        lock (intentGate)
+        {
+            if (createIntentId.Length == 0)
+            {
+                createIntentId = Guid.NewGuid().ToString("N");
+            }
+
+            clientTableId = createIntentId;
+        }
+
+        work.Run("create table", async token =>
+        {
+            var answer = await casino.CreateTableAsync(clientTableId, CasinoWire.BlackjackKind, stakeTier, token)
+                .ConfigureAwait(false);
+            if (answer is null)
+            {
+                Interlocked.Exchange(ref intentFailed, 1);
+                return;
+            }
+
+            ForgetCreateIntent(clientTableId);
+            if (!answer.Granted)
+            {
+                Interlocked.Exchange(ref noticeOutcome, new CasinoStakeOutcome(false, Named(answer.Reason)));
+                return;
+            }
+
+            Interlocked.Exchange(ref hostedTable, answer);
+            RefreshNow();
+        }, EndIntent);
+    }
+
+    // A pasted token is resolved before it is knocked on, so the player sees the table they are
+    // asking to join rather than a spinner that turns into a refusal. A table the server will not
+    // name at all comes back as the same plain "no such table" a deleted one does.
+    public void ResolveToken(string tableId)
+    {
+        if (tableId.Length == 0 || !Begin())
+        {
+            return;
+        }
+
+        Interlocked.Exchange(ref tableMissing, 0);
+        work.Run("resolve table", async token =>
+        {
+            var answer = await casino.TableAsync(tableId, tableStatusSink, token).ConfigureAwait(false);
+            if (answer is null)
+            {
+                if (Interlocked.Exchange(ref tableMissing, 0) != 0)
+                {
+                    Interlocked.Exchange(ref noticeOutcome,
+                        new CasinoStakeOutcome(false, CasinoReasons.TableClosed));
+                    return;
+                }
+
+                Interlocked.Exchange(ref intentFailed, 1);
+                return;
+            }
+
+            if (!answer.Granted)
+            {
+                Interlocked.Exchange(ref noticeOutcome, new CasinoStakeOutcome(false, Named(answer.Reason)));
+                return;
+            }
+
+            Interlocked.Exchange(ref resolvedTable, answer);
+        }, EndIntent);
+    }
+
+    public void Knock(string roomId)
+    {
+        if (roomId.Length == 0 || !Begin())
+        {
+            return;
+        }
+
+        work.Run("knock", async token =>
+        {
+            var answer = await casino.KnockAsync(roomId, token).ConfigureAwait(false);
+            if (answer is null)
+            {
+                Interlocked.Exchange(ref intentFailed, 1);
+                return;
+            }
+
+            Interlocked.Exchange(ref noticeOutcome, new CasinoStakeOutcome(answer.Granted,
+                answer.Granted && answer.Pending ? CasinoReasons.KnockPending : Named(answer.Reason)));
+        }, EndIntent);
+    }
+
+    public void AnswerKnock(string roomId, string userId, bool approve)
+    {
+        if (roomId.Length == 0 || userId.Length == 0 || !Begin())
+        {
+            return;
+        }
+
+        work.Run("answer knock", async token =>
+        {
+            var answer = await casino.AnswerKnockAsync(roomId, userId, approve, token).ConfigureAwait(false);
+            if (answer is null)
+            {
+                Interlocked.Exchange(ref intentFailed, 1);
+                return;
+            }
+
+            Interlocked.Exchange(ref noticeOutcome, new CasinoStakeOutcome(answer.Granted, Named(answer.Reason)));
+            RefreshDoorNow(roomId);
+        }, EndIntent);
+    }
+
+    public void Kick(string roomId, string userId)
+    {
+        if (roomId.Length == 0 || userId.Length == 0 || !Begin())
+        {
+            return;
+        }
+
+        work.Run("kick", async token =>
+        {
+            var answer = await casino.KickAsync(roomId, userId, token).ConfigureAwait(false);
+            if (answer is null)
+            {
+                Interlocked.Exchange(ref intentFailed, 1);
+                return;
+            }
+
+            Interlocked.Exchange(ref noticeOutcome, new CasinoStakeOutcome(answer.Granted, Named(answer.Reason)));
+            RefreshDoorNow(roomId);
+        }, EndIntent);
+    }
+
+    public void Sit(string roomId, int seatIndex, long buyIn)
+    {
+        if (roomId.Length == 0 || !Begin())
+        {
+            return;
+        }
+
+        string clientSeatId;
+        lock (intentGate)
+        {
+            if (seatIntentId.Length == 0)
+            {
+                seatIntentId = Guid.NewGuid().ToString("N");
+            }
+
+            clientSeatId = seatIntentId;
+        }
+
+        work.Run("sit", async token =>
+        {
+            var answer = await casino.SitAsync(roomId, seatIndex, clientSeatId, buyIn, token).ConfigureAwait(false);
+            if (answer is null)
+            {
+                Interlocked.Exchange(ref intentFailed, 1);
+                return;
+            }
+
+            ForgetSeatIntent(clientSeatId);
+            Interlocked.Exchange(ref seatOutcome,
+                new CasinoSeatOutcome(answer.Granted, Named(answer.Reason), answer.JoinsNextHand, false));
+            chips.RefreshNow();
+        }, EndIntent);
+    }
+
+    // Standing has to survive a killed floor, so it is never gated on anything the client believes
+    // about the casino being open: a table that stops accepting bets still has to hand the chips
+    // back, and this is the path that does it.
+    public void Stand(string roomId)
+    {
+        if (roomId.Length == 0 || !Begin())
+        {
+            return;
+        }
+
+        string clientStandId;
+        lock (intentGate)
+        {
+            if (standIntentId.Length == 0)
+            {
+                standIntentId = Guid.NewGuid().ToString("N");
+            }
+
+            clientStandId = standIntentId;
+        }
+
+        work.Run("stand", async token =>
+        {
+            var answer = await casino.StandAsync(roomId, clientStandId, token).ConfigureAwait(false);
+            if (answer is null)
+            {
+                Interlocked.Exchange(ref intentFailed, 1);
+                return;
+            }
+
+            ForgetStandIntent(clientStandId);
+            Interlocked.Exchange(ref seatOutcome,
+                new CasinoSeatOutcome(answer.Granted, Named(answer.Reason), false, answer.AtHandEnd));
+            chips.RefreshNow();
+        }, EndIntent);
+    }
+
+    public void Claim(string roomId)
+    {
+        if (roomId.Length == 0 || !Begin())
+        {
+            return;
+        }
+
+        string clientClaimId;
+        lock (intentGate)
+        {
+            if (claimIntentId.Length == 0)
+            {
+                claimIntentId = Guid.NewGuid().ToString("N");
+            }
+
+            clientClaimId = claimIntentId;
+        }
+
+        work.Run("claim seat", async token =>
+        {
+            var answer = await casino.ClaimSeatAsync(roomId, clientClaimId, token).ConfigureAwait(false);
+            if (answer is null)
+            {
+                Interlocked.Exchange(ref intentFailed, 1);
+                return;
+            }
+
+            ForgetClaimIntent(clientClaimId);
+            Interlocked.Exchange(ref seatOutcome,
+                new CasinoSeatOutcome(answer.Granted, Named(answer.Reason), answer.JoinsNextHand, false));
+        }, EndIntent);
+    }
+
+    public void RefreshDoorNow(string roomId)
+    {
+        if (roomId.Length == 0)
+        {
+            return;
+        }
+
+        doorRoomId = roomId;
+        Interlocked.Exchange(ref doorAttemptedAtTick, 0);
+        RefreshDoor(roomId);
+    }
+
+    public void ForgetDoor()
+    {
+        doorRoomId = string.Empty;
+        door = null;
+        Interlocked.Exchange(ref doorAttemptedAtTick, 0);
+    }
+
+    public CasinoTableDoorDto? DoorFor(string roomId)
+    {
+        var held = door;
+        return held is not null && string.Equals(held.RoomId, roomId, StringComparison.Ordinal) ? held : null;
+    }
+
+    internal static bool CoolingDown(long attemptedAtTick, long nowTick)
+    {
+        return attemptedAtTick != 0 && nowTick - attemptedAtTick < RetryAfterAttemptMilliseconds;
+    }
+
+    internal static string Named(string reason)
+    {
+        return reason.Length > 0 ? reason : CasinoReasons.Unreachable;
+    }
+
+    private bool Begin()
+    {
+        if (intentInFlight || !session.IsSignedIn)
+        {
+            return false;
+        }
+
+        intentInFlight = true;
+        return true;
+    }
+
+    private void EndIntent()
+    {
+        intentInFlight = false;
+    }
+
+    private void OnTableStatus(int statusCode)
+    {
+        if (statusCode == NotFoundStatus)
+        {
+            Interlocked.Exchange(ref tableMissing, 1);
+        }
+    }
+
+    private void OnCasinoSignal(CasinoSignal signal)
+    {
+        if (!string.Equals(signal.Type, SignalType.CasinoPing, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        cadence.RequestImmediate();
+        var open = doorRoomId;
+        if (open.Length > 0)
+        {
+            RefreshDoorNow(open);
+        }
+    }
+
+    private void OnSessionChanged()
+    {
+        var accountId = session.CurrentUser?.Id;
+        if (string.Equals(accountId, lastAccountId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        lastAccountId = accountId;
+        tables = Array.Empty<CasinoTableRowDto>();
+        loaded = false;
+        door = null;
+        doorRoomId = string.Empty;
+        Interlocked.Exchange(ref quickSeat, null);
+        Interlocked.Exchange(ref hostedTable, null);
+        Interlocked.Exchange(ref resolvedTable, null);
+        Interlocked.Exchange(ref seatOutcome, null);
+        Interlocked.Exchange(ref noticeOutcome, null);
+        Interlocked.Exchange(ref tablesFailed, 0);
+        Interlocked.Exchange(ref intentFailed, 0);
+        Interlocked.Exchange(ref tablesAttemptedAtTick, 0);
+        Interlocked.Exchange(ref doorAttemptedAtTick, 0);
+        lock (intentGate)
+        {
+            seatIntentId = string.Empty;
+            standIntentId = string.Empty;
+            claimIntentId = string.Empty;
+            createIntentId = string.Empty;
+        }
+
+        cadence.Reset();
+    }
+
+    private void RefreshTables()
+    {
+        if (!session.IsSignedIn
+            || CoolingDown(Interlocked.Read(ref tablesAttemptedAtTick), Environment.TickCount64)
+            || Interlocked.Exchange(ref fetchingTables, 1) != 0)
+        {
+            return;
+        }
+
+        loading = true;
+        Interlocked.Exchange(ref tablesAttemptedAtTick, Environment.TickCount64);
+        work.Run("tables directory", async token =>
+        {
+            var directory = await casino.TablesAsync(CasinoWire.BlackjackKind, token).ConfigureAwait(false);
+            if (directory is null)
+            {
+                Interlocked.Exchange(ref tablesFailed, 1);
+                return;
+            }
+
+            Interlocked.Exchange(ref tablesAttemptedAtTick, 0);
+            tables = directory.Tables ?? Array.Empty<CasinoTableRowDto>();
+            loaded = true;
+        }, () =>
+        {
+            loading = false;
+            Interlocked.Exchange(ref fetchingTables, 0);
+        });
+    }
+
+    private void RefreshDoor(string roomId)
+    {
+        if (!session.IsSignedIn
+            || CoolingDown(Interlocked.Read(ref doorAttemptedAtTick), Environment.TickCount64)
+            || Interlocked.Exchange(ref fetchingDoor, 1) != 0)
+        {
+            return;
+        }
+
+        Interlocked.Exchange(ref doorAttemptedAtTick, Environment.TickCount64);
+        work.Run("table door", async token =>
+        {
+            var fresh = await casino.TableDoorAsync(roomId, token).ConfigureAwait(false);
+            if (fresh is null)
+            {
+                return;
+            }
+
+            Interlocked.Exchange(ref doorAttemptedAtTick, 0);
+            if (!string.Equals(doorRoomId, roomId, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            door = fresh;
+        }, () => Interlocked.Exchange(ref fetchingDoor, 0));
+    }
+
+    private void ForgetSeatIntent(string intentId)
+    {
+        lock (intentGate)
+        {
+            if (string.Equals(seatIntentId, intentId, StringComparison.Ordinal))
+            {
+                seatIntentId = string.Empty;
+            }
+        }
+    }
+
+    private void ForgetStandIntent(string intentId)
+    {
+        lock (intentGate)
+        {
+            if (string.Equals(standIntentId, intentId, StringComparison.Ordinal))
+            {
+                standIntentId = string.Empty;
+            }
+        }
+    }
+
+    private void ForgetClaimIntent(string intentId)
+    {
+        lock (intentGate)
+        {
+            if (string.Equals(claimIntentId, intentId, StringComparison.Ordinal))
+            {
+                claimIntentId = string.Empty;
+            }
+        }
+    }
+
+    private void ForgetCreateIntent(string intentId)
+    {
+        lock (intentGate)
+        {
+            if (string.Equals(createIntentId, intentId, StringComparison.Ordinal))
+            {
+                createIntentId = string.Empty;
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        session.Changed -= OnSessionChanged;
+        signals.CasinoReceived -= OnCasinoSignal;
+        work.Dispose();
+    }
+}

@@ -90,7 +90,10 @@ internal sealed class PhoneServices : IDisposable
     public required Casino.CasinoPlayStore CasinoPlay { get; init; }
     public required Casino.CasinoHistoryStore CasinoHistory { get; init; }
     public required Casino.CasinoRoomsStore CasinoRooms { get; init; }
+    public required Casino.CasinoTablesStore CasinoTables { get; init; }
     public required Casino.CasinoSpinStore CasinoSpin { get; init; }
+    public required Casino.CasinoTurnNotifier CasinoTurns { get; init; }
+    public required Casino.CasinoLauncher CasinoLauncher { get; init; }
     public required PluginCatalog PluginCatalog { get; init; }
     public required ShortcutStore Shortcuts { get; init; }
     public required ShortcutRunner ShortcutRunner { get; init; }
@@ -266,6 +269,10 @@ internal sealed class PhoneServices : IDisposable
         var safetyLauncher = new SafetyLauncher();
         var casinoRooms = new Casino.CasinoRoomsStore(aethernetSession, casinoApi.Casino, casino, visibility,
             realtimeSignals);
+        var casinoTables = new Casino.CasinoTablesStore(aethernetSession, casinoApi.Casino, casino, visibility,
+            realtimeSignals);
+        var casinoTurns = new Casino.CasinoTurnNotifier(aethernetSession, casinoRooms, notifications,
+            Apps.AppAccents.For("casino"));
         var musters = new MusterStore(aethernetSession, aethernet.Musters, notifications, configuration,
             visibility, realtimeSignals, installer.Gate(MusterStore.AppId));
         var yellowPages = new YellowPagesStore(aethernetSession, aethernet.Ads, aethernet.Media, configuration,
@@ -316,7 +323,10 @@ internal sealed class PhoneServices : IDisposable
             CasinoPlay = casinoPlay,
             CasinoHistory = casinoHistory,
             CasinoRooms = casinoRooms,
+            CasinoTables = casinoTables,
             CasinoSpin = casinoSpin,
+            CasinoTurns = casinoTurns,
+            CasinoLauncher = new Casino.CasinoLauncher(),
             PluginCatalog = pluginCatalog,
             Shortcuts = new ShortcutStore(configuration, pluginCatalog),
             ShortcutRunner = new ShortcutRunner(clientState, condition),
@@ -409,6 +419,8 @@ internal sealed class PhoneServices : IDisposable
         RemoteImages.Dispose();
         Windows.Components.UserName.Reset();
         Moderation.ModerationNoticeText.Reset();
+        CasinoTurns.Dispose();
+        CasinoTables.Dispose();
         CasinoRooms.Dispose();
         CasinoSpin.Dispose();
         CasinoHistory.Dispose();

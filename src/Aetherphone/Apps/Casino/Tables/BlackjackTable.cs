@@ -48,8 +48,12 @@ internal sealed class BlackjackTable
 
     private readonly CasinoStore chips;
     private readonly CasinoRoomsStore rooms;
+    private readonly CasinoTablesStore tables;
+    private readonly CasinoTurnNotifier turns;
+    private readonly BlackjackSeatFlow seatFlow;
     private readonly Action openCashier;
     private readonly Action leaveRoom;
+    private readonly Action knock;
     private readonly BlackjackProjection projection = new();
     private readonly BlackjackDealPlayback playback = new();
     private readonly DealerBubble dealer = new();
@@ -59,6 +63,7 @@ internal sealed class BlackjackTable
     private readonly Vector2[] seatCenters = new Vector2[BlackjackRules.SeatCount];
 
     private RollingValue winRoll;
+    private string roomId = CasinoRoomIds.BlackjackTable;
     private string inlineReason = string.Empty;
     private string celebratedHandId = string.Empty;
     private string spokenHandId = string.Empty;
@@ -67,22 +72,30 @@ internal sealed class BlackjackTable
     private int spokenSeat = int.MinValue;
     private bool entered;
 
-    public BlackjackTable(CasinoStore chips, CasinoRoomsStore rooms, Action openCashier, Action leaveRoom)
+    public BlackjackTable(CasinoStore chips, CasinoRoomsStore rooms, CasinoTablesStore tables,
+        CasinoTurnNotifier turns, Action openCashier, Action leaveRoom)
     {
         this.chips = chips;
         this.rooms = rooms;
+        this.tables = tables;
+        this.turns = turns;
         this.openCashier = openCashier;
         this.leaveRoom = leaveRoom;
+        knock = Knock;
+        seatFlow = new BlackjackSeatFlow(tables);
     }
 
-    public void Enter()
+    public void Enter(string tableId)
     {
         entered = true;
+        roomId = tableId.Length > 0 ? tableId : CasinoRoomIds.BlackjackTable;
         inlineReason = string.Empty;
         projection.Reset();
         playback.Reset();
+        seatFlow.Reset();
+        turns.Forget();
         composer.Reset(BlackjackRules.MinBet);
-        rooms.Enter(CasinoRoomIds.BlackjackTable);
+        rooms.Enter(roomId);
     }
 
     public void Reset()
@@ -90,6 +103,7 @@ internal sealed class BlackjackTable
         if (entered)
         {
             rooms.Leave();
+            seatFlow.Left();
         }
 
         entered = false;
@@ -97,6 +111,8 @@ internal sealed class BlackjackTable
         playback.Reset();
         dealer.Clear();
         particles.Clear();
+        seatFlow.Reset();
+        turns.Forget();
         inlineReason = string.Empty;
         celebratedHandId = string.Empty;
         spokenHandId = string.Empty;
@@ -110,6 +126,7 @@ internal sealed class BlackjackTable
     {
         var scale = UiScale.Current;
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
+        turns.StampAttention();
         ConsumeStakeResults();
 
         var room = rooms.Room;
@@ -121,10 +138,7 @@ internal sealed class BlackjackTable
 
         if (closedReason.Length > 0)
         {
-            DrawNotice(drawList, ui, Loc.T(L.Casino.BlackjackClosedTitle),
-                Loc.T(CasinoReasons.TryMessage(closedReason, out var known) ? known : L.Casino.BlackjackClosedHint),
-                Loc.T(L.Casino.WheelBackToFloor), leaveRoom, left, body.Min.Y + Metrics.Space.Lg * scale, width,
-                scale);
+            DrawClosedNotice(drawList, ui, closedReason, left, body.Min.Y + Metrics.Space.Lg * scale, width, scale);
             return;
         }
 
@@ -134,6 +148,13 @@ internal sealed class BlackjackTable
         projection.Apply(held);
         projection.ApplyPersonal(room.Private);
         var board = projection.Board;
+        seatFlow.Observe(board, snapshot?.Phase ?? CasinoRoomPhases.Open);
+        if (seatFlow.Reason.Length > 0)
+        {
+            inlineReason = seatFlow.Reason;
+            seatFlow.ClearReason();
+        }
+
         if (state is null || snapshot is null || board is null)
         {
             LoadingPulse.Draw(body.Center, 16f * scale, ui.Palette.Accent, ui.MutedInk, LoadingPulse.SafeLabel());
@@ -149,7 +170,7 @@ internal sealed class BlackjackTable
         var turnRemaining = room.RemainingMilliseconds(board.DeadlineUnixMs, localNow);
 
         var y = body.Min.Y + Metrics.Space.Xs * scale;
-        y = DrawStatusRow(drawList, ui, snapshot, room.Attached, left, y, width, scale);
+        y = DrawStatusRow(drawList, ui, snapshot, board, room.Attached, left, y, width, scale);
 
         var footerHeight = FooterHeightFor(snapshot.Phase, scale);
         var feltMin = new Vector2(left, y + Metrics.Space.Xs * scale);
@@ -165,7 +186,7 @@ internal sealed class BlackjackTable
         var tapped = DrawSeats(drawList, ui, board, felt, turnRemaining, scale);
         if (BlackjackRules.IsSeat(tapped) && seatViews[tapped].Phase == SeatPhase.Empty)
         {
-            openCashier();
+            TapEmptySeat(tapped, state, snapshot.Phase);
         }
 
         SpeakForPhase(snapshot.Phase, board);
@@ -175,6 +196,14 @@ internal sealed class BlackjackTable
         var footerTop = felt.Max.Y + Metrics.Space.Md * scale;
         DrawFooter(drawList, ui, state, board, snapshot, phaseRemaining, delta, left, footerTop, width, scale);
         particles.Draw(drawList, scale);
+
+        // The veil goes on last so it dims the frame the player was already reading rather than
+        // replacing it: the hand stays visible underneath while the line is down.
+        if (!room.Attached && CasinoSeatMachine.Holds(seatFlow.Stage))
+        {
+            ReconnectVeil.Draw(drawList, body, ui,
+                room.RemainingMilliseconds(board.SeatHeldUntilUnixMs, localNow), scale);
+        }
     }
 
     private void ConsumeStakeResults()
@@ -193,6 +222,35 @@ internal sealed class BlackjackTable
         }
     }
 
+    // A door refusal is not a dead end, it is a question nobody has been asked yet, so the notice
+    // for one carries the knock instead of only the way back to the floor.
+    private void DrawClosedNotice(ImDrawListPtr drawList, AppSkin ui, string closedReason, float left, float y,
+        float width, float scale)
+    {
+        var hint = Loc.T(CasinoReasons.TryMessage(closedReason, out var known) ? known : L.Casino.BlackjackClosedHint);
+        if (AsksToJoin(closedReason))
+        {
+            DrawNotice(drawList, ui, Loc.T(L.Casino.BlackjackDoorTitle), hint, Loc.T(L.Casino.BlackjackAskToJoin),
+                knock, left, y, width, scale);
+            return;
+        }
+
+        DrawNotice(drawList, ui, Loc.T(L.Casino.BlackjackClosedTitle), hint, Loc.T(L.Casino.WheelBackToFloor),
+            leaveRoom, left, y, width, scale);
+    }
+
+    internal static bool AsksToJoin(string reason)
+    {
+        return string.Equals(reason, CasinoReasons.InviteOnly, StringComparison.Ordinal)
+            || string.Equals(reason, CasinoReasons.NotMember, StringComparison.Ordinal)
+            || string.Equals(reason, CasinoReasons.Denied, StringComparison.Ordinal);
+    }
+
+    private void Knock()
+    {
+        tables.Knock(roomId);
+    }
+
     // The stage never resizes under a hand: the footer reserves the tallest thing the current phase
     // can put there, so a bet window opening or an action bar arriving cannot shove the felt.
     private static float FooterHeightFor(int phase, float scale)
@@ -202,12 +260,21 @@ internal sealed class BlackjackTable
             : BannerHeight * scale + ActionBarHeight * scale;
     }
 
-    private float DrawStatusRow(ImDrawListPtr drawList, AppSkin ui, CasinoRoomSnapshotDto snapshot, bool attached,
-        float left, float y, float width, float scale)
+    private float DrawStatusRow(ImDrawListPtr drawList, AppSkin ui, CasinoRoomSnapshotDto snapshot,
+        CasinoBlackjackRoomStateDto board, bool attached, float left, float y, float width, float scale)
     {
         var height = StatusRowHeight * scale;
-        var seated = Loc.T(L.Casino.BlackjackAtTheTable, GameNumber.Label(snapshot.Occupancy));
+        var seated = board.Spectators > 0
+            ? Loc.T(L.Casino.BlackjackAtTheTableWatching, GameNumber.Label(snapshot.Occupancy),
+                GameNumber.Label(board.Spectators))
+            : Loc.T(L.Casino.BlackjackAtTheTable, GameNumber.Label(snapshot.Occupancy));
         Typography.Draw(drawList, new Vector2(left, y + 4f * scale), seated, ui.MutedInk, TextStyles.Caption1);
+        if (attached && AwayAtMySeat(board))
+        {
+            AwayBadge.Draw(drawList, new Vector2(left + width, y), ui, Loc.T(L.Casino.AwayBadge), scale);
+            return y + height;
+        }
+
         if (attached)
         {
             // The house rules are printed on the felt of a real table, so they live here rather than
@@ -237,6 +304,27 @@ internal sealed class BlackjackTable
         Typography.Draw(drawList, new Vector2(dotCenter.X + 6f * scale, chipMin.Y + 3f * scale), label, ui.MutedInk,
             TextStyles.Caption2);
         return y + height;
+    }
+
+    private void TapEmptySeat(int seatIndex, CasinoStateDto state, int phase)
+    {
+        var sitting = state.Sitting;
+        var bought = sitting is not null
+            && string.Equals(sitting.GameKind, CasinoWire.BlackjackKind, StringComparison.Ordinal);
+        if (!bought)
+        {
+            openCashier();
+            return;
+        }
+
+        inlineReason = string.Empty;
+        seatFlow.Sit(roomId, seatIndex, sitting!.Stack, phase);
+    }
+
+    private bool AwayAtMySeat(CasinoBlackjackRoomStateDto board)
+    {
+        var seat = projection.SeatAt(board.MySeat);
+        return seat is not null && seat.State == BlackjackSeatStates.Away;
     }
 
     private void DrawDealer(ImDrawListPtr drawList, AppSkin ui, CasinoBlackjackRoomStateDto board, in Rect felt,
@@ -514,31 +602,60 @@ internal sealed class BlackjackTable
         CasinoBlackjackRoomStateDto board, CasinoRoomSnapshotDto snapshot, long phaseRemaining, float delta,
         float left, float y, float width, float scale)
     {
-        y = DrawBanner(drawList, ui, board, snapshot, phaseRemaining, delta, left, y, width, scale);
+        y = DrawBanner(drawList, ui, state, board, snapshot, phaseRemaining, delta, left, y, width, scale);
         var sitting = state.Sitting;
-        var seated = sitting is not null
+        var bought = sitting is not null
             && string.Equals(sitting.GameKind, CasinoWire.BlackjackKind, StringComparison.Ordinal);
-        if (!seated || board.MySeat < 0)
+
+        // The seat bound to another device owns the footer outright: no composer, no action bar, one
+        // button that says exactly what it will do. Anything else here would let a second screen
+        // spend chips the first screen is holding.
+        if (CasinoSeatMachine.ShowsTakeOver(seatFlow.Stage))
         {
-            DrawTakeSeat(ui, left, y, width, scale);
+            if (DrawSingleAction(ui, Loc.T(L.Casino.TakeOverAction), !seatFlow.Busy, left, y, width, scale))
+            {
+                inlineReason = string.Empty;
+                seatFlow.TakeOver(roomId);
+            }
+
             return;
         }
 
-        if (snapshot.Phase == CasinoRoomPhases.Open)
+        var seated = bought && BlackjackRules.IsSeat(board.MySeat);
+        if (!seated)
+        {
+            DrawSitAction(ui, bought, snapshot.Phase, left, y, width, scale);
+            return;
+        }
+
+        var stakeBlocked = board.Draining || state.Draining || state.StakesPaused;
+        var betting = CasinoJoinGate.CanPlaceBet(snapshot.Phase, true, seatFlow.Waiting, board.Draining,
+            state.StakesPaused || state.Draining);
+        if (betting)
         {
             DrawComposer(ui, state, sitting!, board, left, y, width, scale, delta);
             return;
         }
 
-        if (board.ActiveSeat == board.MySeat)
+        if (CasinoJoinGate.CanAct(true, seatFlow.Waiting, board.ActiveSeat == board.MySeat))
         {
             DrawActionBar(ui, board, sitting!, left, y, width, scale);
+            return;
+        }
+
+        var standLabel = seatFlow.StandQueued
+            ? Loc.T(L.Casino.StandQueued)
+            : stakeBlocked ? Loc.T(L.Casino.CashOut) : Loc.T(L.Casino.StandAction);
+        if (DrawSingleAction(ui, standLabel, !seatFlow.Busy && !seatFlow.StandQueued, left, y, width, scale))
+        {
+            inlineReason = string.Empty;
+            seatFlow.Stand(roomId);
         }
     }
 
-    private float DrawBanner(ImDrawListPtr drawList, AppSkin ui, CasinoBlackjackRoomStateDto board,
-        CasinoRoomSnapshotDto snapshot, long phaseRemaining, float delta, float left, float y, float width,
-        float scale)
+    private float DrawBanner(ImDrawListPtr drawList, AppSkin ui, CasinoStateDto state,
+        CasinoBlackjackRoomStateDto board, CasinoRoomSnapshotDto snapshot, long phaseRemaining, float delta,
+        float left, float y, float width, float scale)
     {
         var center = new Vector2(left + width * 0.5f, y + BannerHeight * scale * 0.4f);
         if (snapshot.Phase == CasinoRoomPhases.Result && settledDelta > 0)
@@ -554,10 +671,39 @@ internal sealed class BlackjackTable
         // pressed again and a reason printed anywhere else would be read after the retry.
         var message = inlineReason.Length > 0
             ? Loc.T(CasinoReasons.MessageFor(inlineReason))
-            : BannerTextFor(board, snapshot, phaseRemaining);
+            : SeatTextFor(state, board) ?? BannerTextFor(board, snapshot, phaseRemaining);
         Typography.DrawCentered(drawList, center, Typography.FitText(message, width, TextStyles.Caption1),
             ui.MutedInk, TextStyles.Caption1);
         return y + BannerHeight * scale;
+    }
+
+    // The seat has a few things to say that outrank the phase: where the seat is being played from,
+    // that it is waiting for the boundary, and that the table is winding down. Each of them changes
+    // what the buttons underneath will do, so leaving the phase text on top would explain the wrong
+    // screen.
+    private string? SeatTextFor(CasinoStateDto state, CasinoBlackjackRoomStateDto board)
+    {
+        if (CasinoSeatMachine.ShowsTakeOver(seatFlow.Stage))
+        {
+            return Loc.T(L.Casino.PlayingElsewhere);
+        }
+
+        if (seatFlow.StandQueued)
+        {
+            return Loc.T(L.Casino.StandAtHandEnd);
+        }
+
+        if (seatFlow.Waiting)
+        {
+            return Loc.T(L.Casino.DealtNextHand);
+        }
+
+        if (board.Draining || state.Draining)
+        {
+            return Loc.T(L.Casino.TableDrainingLine);
+        }
+
+        return state.StakesPaused ? Loc.T(L.Casino.PausedTitle) : null;
     }
 
     private static string BannerTextFor(CasinoBlackjackRoomStateDto board, CasinoRoomSnapshotDto snapshot,
@@ -661,14 +807,48 @@ internal sealed class BlackjackTable
         };
     }
 
-    private void DrawTakeSeat(AppSkin ui, float left, float y, float width, float scale)
+    // Without chips there is nothing to sit on, so the cashier comes first and the seat second: a
+    // sit that failed for want of a buy-in would read as the table refusing the player.
+    private void DrawSitAction(AppSkin ui, bool bought, int phase, float left, float y, float width, float scale)
+    {
+        if (!bought)
+        {
+            if (DrawSingleAction(ui, Loc.T(L.Casino.BlackjackTakeSeat), true, left, y, width, scale))
+            {
+                openCashier();
+            }
+
+            return;
+        }
+
+        var seatIndex = FirstOpenSeat();
+        var label = seatIndex < 0 ? Loc.T(L.Casino.TableFullBadge) : Loc.T(L.Casino.SitDownAction);
+        if (DrawSingleAction(ui, label, seatIndex >= 0 && !seatFlow.Busy, left, y, width, scale))
+        {
+            inlineReason = string.Empty;
+            seatFlow.Sit(roomId, seatIndex, chips.State?.Sitting?.Stack ?? 0, phase);
+        }
+    }
+
+    private int FirstOpenSeat()
+    {
+        for (var seatIndex = 0; seatIndex < BlackjackRules.SeatCount; seatIndex++)
+        {
+            if (projection.SeatAt(seatIndex) is null)
+            {
+                return seatIndex;
+            }
+        }
+
+        return -1;
+    }
+
+    private static bool DrawSingleAction(AppSkin ui, string label, bool enabled, float left, float y, float width,
+        float scale)
     {
         var rect = new Rect(new Vector2(left + width * 0.2f, y),
             new Vector2(left + width * 0.8f, y + ActionBarHeight * scale));
-        if (AppSkin.PillButton(rect, Loc.T(L.Casino.BlackjackTakeSeat), true, true, ui.Theme))
-        {
-            openCashier();
-        }
+        return AppSkin.PillButton(rect, label, true, enabled, ui.Theme) && enabled;
     }
 
     private static void DrawNotice(ImDrawListPtr drawList, AppSkin ui, string title, string hint, string action,

@@ -38,6 +38,29 @@ internal static class CasinoReasons
     public const string DailyCap = "daily_cap";
     public const string RuleCap = "rule_cap";
     public const string CardsFull = "cards_full";
+    public const string Full = "full";
+    public const string InviteOnly = "private";
+    public const string Denied = "denied";
+    public const string KnockPending = "knock_pending";
+    public const string BannedFromTable = "banned_from_table";
+    public const string Blocked = "blocked";
+    public const string AlreadyHosting = "already_hosting";
+    public const string AlreadySeated = "already_seated";
+    public const string SeatTaken = "seat_taken";
+    public const string NotSeated = "not_seated";
+    public const string NotMember = "not_member";
+    public const string NotYourTurn = "not_your_turn";
+    public const string StaleAction = "stale_action";
+    public const string StaleHand = "stale_hand";
+    public const string HandOver = "hand_over";
+    public const string InvalidAction = "invalid_action";
+    public const string InvalidAmount = "invalid_amount";
+    public const string InsufficientChips = "insufficient_chips";
+    public const string TooLate = "too_late";
+    public const string AtHandEnd = "at_hand_end";
+    public const string Kicked = "kicked";
+    public const string BoundElsewhere = "bound_elsewhere";
+    public const string NoTables = "no_tables";
 
     public static readonly string[] All =
     {
@@ -68,6 +91,29 @@ internal static class CasinoReasons
         DailyCap,
         RuleCap,
         CardsFull,
+        Full,
+        InviteOnly,
+        Denied,
+        KnockPending,
+        BannedFromTable,
+        Blocked,
+        AlreadyHosting,
+        AlreadySeated,
+        SeatTaken,
+        NotSeated,
+        NotMember,
+        NotYourTurn,
+        StaleAction,
+        StaleHand,
+        HandOver,
+        InvalidAction,
+        InvalidAmount,
+        InsufficientChips,
+        TooLate,
+        AtHandEnd,
+        Kicked,
+        BoundElsewhere,
+        NoTables,
     };
 
     private static readonly FrozenDictionary<string, LocString> Messages = new Dictionary<string, LocString>
@@ -99,6 +145,29 @@ internal static class CasinoReasons
         [DailyCap] = L.Casino.ReasonDailyCap,
         [RuleCap] = L.Casino.ReasonRuleCap,
         [CardsFull] = L.Casino.ReasonCardsFull,
+        [Full] = L.Casino.ReasonFull,
+        [InviteOnly] = L.Casino.ReasonInviteOnly,
+        [Denied] = L.Casino.ReasonDenied,
+        [KnockPending] = L.Casino.ReasonKnockPending,
+        [BannedFromTable] = L.Casino.ReasonBannedFromTable,
+        [Blocked] = L.Casino.ReasonBlocked,
+        [AlreadyHosting] = L.Casino.ReasonAlreadyHosting,
+        [AlreadySeated] = L.Casino.ReasonAlreadySeated,
+        [SeatTaken] = L.Casino.ReasonSeatTaken,
+        [NotSeated] = L.Casino.ReasonNotSeated,
+        [NotMember] = L.Casino.ReasonNotMember,
+        [NotYourTurn] = L.Casino.ReasonNotYourTurn,
+        [StaleAction] = L.Casino.ReasonStaleAction,
+        [StaleHand] = L.Casino.ReasonStaleHand,
+        [HandOver] = L.Casino.ReasonHandOver,
+        [InvalidAction] = L.Casino.ReasonInvalidAction,
+        [InvalidAmount] = L.Casino.ReasonInvalidAmount,
+        [InsufficientChips] = L.Casino.ReasonInsufficientChips,
+        [TooLate] = L.Casino.ReasonTooLate,
+        [AtHandEnd] = L.Casino.ReasonAtHandEnd,
+        [Kicked] = L.Casino.ReasonKicked,
+        [BoundElsewhere] = L.Casino.ReasonBoundElsewhere,
+        [NoTables] = L.Casino.ReasonNoTables,
     }.ToFrozenDictionary(StringComparer.Ordinal);
 
     public static bool TryMessage(string reason, out LocString message)

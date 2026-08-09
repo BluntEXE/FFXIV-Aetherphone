@@ -78,6 +78,12 @@ internal sealed partial class CasinoApp
         ui.SectionHeading(Loc.T(L.Casino.GamesHeading), 4f);
         DrawGameGrid(scale);
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
+        if (DrawNavRow(FontAwesomeIcon.ThList, L.Casino.TablesRow, L.Casino.TablesRowHint, scale))
+        {
+            OpenTables();
+        }
+
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
         ui.SectionHeading(Loc.T(L.Casino.RecordsHeading), 4f);
         if (DrawNavRow(FontAwesomeIcon.Receipt, L.Casino.HistoryRow, L.Casino.HistoryRowHint, scale))
         {
@@ -246,10 +252,7 @@ internal sealed partial class CasinoApp
             var occupancy = casinoRooms.OccupancyOf(definition.RoomId);
             if (occupancy > 0)
             {
-                var crowd = string.Equals(definition.GameId, CasinoGames.Bingo, StringComparison.Ordinal)
-                    ? Loc.T(L.Casino.BingoInTheHall, Apps.Games.Framework.GameNumber.Label(occupancy))
-                    : Loc.T(L.Casino.WheelAtTheRail, Apps.Games.Framework.GameNumber.Label(occupancy));
-                DrawCornerChip(drawList, tile, crowd, ui.Accent, scale);
+                DrawCornerChip(drawList, tile, CrowdLine(definition.GameId, occupancy), ui.Accent, scale);
             }
 
             DrawRoomClock(drawList, tile, definition.RoomId, scale);
@@ -259,6 +262,19 @@ internal sealed partial class CasinoApp
         {
             OpenGame(definition.GameId);
         }
+    }
+
+    private static string CrowdLine(string gameId, int occupancy)
+    {
+        var count = Apps.Games.Framework.GameNumber.Label(occupancy);
+        if (string.Equals(gameId, CasinoGames.Bingo, StringComparison.Ordinal))
+        {
+            return Loc.T(L.Casino.BingoInTheHall, count);
+        }
+
+        return string.Equals(gameId, CasinoGames.Blackjack, StringComparison.Ordinal)
+            ? Loc.T(L.Casino.BlackjackAtTheTable, count)
+            : Loc.T(L.Casino.WheelAtTheRail, count);
     }
 
     // The tile counts down off the room's own deadline against the server clock the directory

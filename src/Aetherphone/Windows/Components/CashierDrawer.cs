@@ -80,6 +80,19 @@ internal sealed class CashierDrawer
         Open();
     }
 
+    // Quick seat has already asked the server what this table wants, so the field arrives filled
+    // rather than empty: a suggestion is the difference between three taps and three taps plus a
+    // number the player has to invent.
+    public void Open(int gameIndex, long suggestedAmount)
+    {
+        selectedGame = gameIndex;
+        Open();
+        if (suggestedAmount > 0)
+        {
+            amountBuffer = suggestedAmount.ToString(Loc.Culture);
+        }
+    }
+
     public void Close()
     {
         open = false;

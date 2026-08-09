@@ -1,0 +1,54 @@
+using Aetherphone.Core;
+using Aetherphone.Core.Animation;
+using Aetherphone.Core.Localization;
+using Aetherphone.Core.Theme;
+using Dalamud.Bindings.ImGui;
+
+namespace Aetherphone.Windows.Components;
+
+// The veil never hides the table, it dims it: the last true frame stays visible underneath so a
+// player can see the hand they are still in while being told the line is down. The countdown is the
+// only number on it and it is read off the server's own hold deadline, so a phone that slept through
+// half the grace comes back with the truth rather than with the seconds it failed to count.
+internal static class ReconnectVeil
+{
+    private const float Dim = 0.55f;
+    private const float PanelWidthFraction = 0.78f;
+
+    public static void Draw(ImDrawListPtr drawList, in Rect area, AppSkin ui, long heldRemainingMilliseconds,
+        float scale)
+    {
+        drawList.AddRectFilled(area.Min, area.Max, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, Dim)));
+
+        var title = Loc.T(L.Casino.ReconnectTitle);
+        var body = heldRemainingMilliseconds > 0
+            ? Loc.T(L.Casino.SeatHeldFor, TimeText.Duration(SecondsOf(heldRemainingMilliseconds)))
+            : Loc.T(L.Casino.ReconnectHint);
+
+        var width = area.Width * PanelWidthFraction;
+        var pad = 16f * scale;
+        var titleSize = Typography.Measure(title, TextStyles.SubheadlineEmphasized);
+        var bodyBlock = Typography.MeasureWrappedBlock(body, TextStyles.Footnote, width - pad * 2f);
+        var height = titleSize.Y + bodyBlock.Y + pad * 2f + 8f * scale;
+        var center = area.Center;
+        var min = new Vector2(center.X - width * 0.5f, center.Y - height * 0.5f);
+        var max = new Vector2(center.X + width * 0.5f, center.Y + height * 0.5f);
+        var rounding = Metrics.Radius.Card * scale;
+        Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(ui.Palette.CardFill));
+        Squircle.Stroke(drawList, min, max, rounding,
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.35f)), 1f * scale);
+
+        var dotCenter = new Vector2(min.X + pad, min.Y + pad + titleSize.Y * 0.5f);
+        drawList.AddCircleFilled(dotCenter, 3.2f * scale,
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.35f + 0.45f * Pulse.Wave(Pulse.Breath))), 12);
+        Typography.Draw(drawList, new Vector2(dotCenter.X + 10f * scale, min.Y + pad), title, ui.TitleInk,
+            TextStyles.SubheadlineEmphasized);
+        Typography.DrawWrappedLeft(new Vector2(min.X + pad, min.Y + pad + titleSize.Y + 8f * scale), body,
+            ui.MutedInk, TextStyles.Footnote, width - pad * 2f);
+    }
+
+    internal static int SecondsOf(long remainingMilliseconds)
+    {
+        return (int)((remainingMilliseconds + 999) / 1000);
+    }
+}
