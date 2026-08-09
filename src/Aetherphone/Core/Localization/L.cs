@@ -1310,11 +1310,9 @@ internal static class L
         public static readonly LocString[] Release09910 =
         {
             new("changelog.r09910.0",
-                "Added Aether Coin: check in daily, play the arcade, hold real calls and conversations, and post things that stay up, and it all pays a little cosmetic currency"),
+                "Added Aether Coin, the currency of the Aethernet: check in daily, play the arcade, hold real calls and conversations, and post things that stay up, and it all earns coins"),
             new("changelog.r09910.1",
                 "The Aether Coin app shows your balance, the daily cap with its reset time, your check-in streak, and every earning rule with today's progress"),
-            new("changelog.r09910.3",
-                "Aether Coin stays on your character and never buys reach"),
             new("changelog.r09910.4",
                 "The Games app now highlights the same featured game the server pays a bonus for"),
             new("changelog.r09910.5",
@@ -1343,8 +1341,6 @@ internal static class L
                 "A community station now opens a full page with its artwork, the track playing right now, and a notify button while the station is off air"),
             new("changelog.r09910.31",
                 "The phone case picker is now a store: cases sit in Colors, Gradients, and Custom Artwork rails, and each one opens a page with a full size preview and its artist credit"),
-            new("changelog.r09910.32",
-                "Eight name effects join the shop, Ember, Frost, Aurora, Prism, Glitch, Starfall, Eclipse, and Heartbeat, and the shop card plays the effect on your own name before you buy"),
             new("changelog.r09910.33",
                 "The Discord invite now sits on the settings root under Support Aetherphone, instead of two taps down in About"),
             new("changelog.r09910.11",
