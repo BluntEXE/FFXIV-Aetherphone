@@ -322,7 +322,13 @@ internal sealed class CasinoTablesStore : IDisposable
 
         work.Run("sit", async token =>
         {
-            var answer = await casino.SitAsync(roomId, seatIndex, clientSeatId, buyIn, token).ConfigureAwait(false);
+            // Chips already at a card table belong to the sitting that holds them. Minting a fresh
+            // id here asks the house to open a second one, which it refuses, and the refusal reads
+            // as though the player has to cash out before they can sit anywhere at all.
+            var held = chips.State?.TableSitting?.Id ?? string.Empty;
+            var sittingId = held.Length > 0 ? held : clientSeatId;
+            var answer = await casino.SitAsync(roomId, seatIndex, sittingId, clientSeatId, buyIn, token)
+                .ConfigureAwait(false);
             if (answer is null)
             {
                 Interlocked.Exchange(ref intentFailed, 1);

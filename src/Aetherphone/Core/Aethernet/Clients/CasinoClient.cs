@@ -265,11 +265,11 @@ internal sealed class CasinoClient
             AethernetJsonContext.Default.CasinoDoorResultDto, token);
     }
 
-    public Task<CasinoSeatDto?> SitAsync(string roomId, int seatIndex, string clientSeatId, long buyIn,
-        CancellationToken token)
+    public Task<CasinoSeatDto?> SitAsync(string roomId, int seatIndex, string clientSittingId,
+        string clientActionId, long buyIn, CancellationToken token)
     {
         return net.PostAsync(BlackjackSitPath,
-            new CasinoSitRequest(roomId, seatIndex, clientSeatId, clientSeatId, buyIn),
+            new CasinoSitRequest(roomId, seatIndex, clientSittingId, clientActionId, buyIn),
             AethernetJsonContext.Default.CasinoSitRequest,
             AethernetJsonContext.Default.CasinoSeatDto, token);
     }
