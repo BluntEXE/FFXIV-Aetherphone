@@ -346,6 +346,15 @@ internal sealed partial class CasinoApp : IPhoneApp
             return;
         }
 
+        // The door holds a cached knocker list and keeps re-reading it on every ping, and that list
+        // exists so names never travel further than the host's own screen. Leaving the screen has to
+        // drop it, not only closing the app.
+        if (route.Screen == CasinoScreen.TableDoor)
+        {
+            tableDoor.Reset();
+            return;
+        }
+
         if (route.Screen != CasinoScreen.Cabinet)
         {
             return;

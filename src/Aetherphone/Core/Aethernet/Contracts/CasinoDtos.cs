@@ -357,6 +357,19 @@ internal sealed record CasinoBlackjackPrivateDto(
     int SeatIndex = -1,
     int[][]? Hands = null);
 
+// The same seat scoped half read over HTTP, because the socket is the only other carrier and a room
+// has to stay playable without one: a player whose socket died would otherwise be shown card backs
+// for their own hand while the action bar the server enabled asks them to hit or stand on it. It
+// carries the (Epoch, Seq) pair the frame it stands in for would have carried, so the poll and the
+// socket land in one order rather than overpainting each other.
+internal sealed record CasinoBlackjackHandReadDto(
+    string RoomId = "",
+    int Epoch = 0,
+    long Seq = 0,
+    long RoundIndex = 0,
+    int SeatIndex = -1,
+    int[][]? Hands = null);
+
 internal sealed record CasinoBlackjackBetRequest(
     string RoomId,
     long RoundIndex,

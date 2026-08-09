@@ -52,6 +52,11 @@ internal sealed class CasinoClient
         return string.Concat("/casino/bingo/", Uri.EscapeDataString(roomId), "/cards");
     }
 
+    internal static string BlackjackMyHandPath(string roomId)
+    {
+        return string.Concat("/casino/blackjack/", Uri.EscapeDataString(roomId), "/hand");
+    }
+
     internal static string VerifyRoundPath(string roundId)
     {
         return string.Concat("/casino/rounds/", roundId, "/verify");
@@ -288,6 +293,14 @@ internal sealed class CasinoClient
     public Task<CasinoBingoCardsDto?> MyBingoCardsAsync(string roomId, CancellationToken token)
     {
         return net.GetAsync(BingoMyCardsPath(roomId), AethernetJsonContext.Default.CasinoBingoCardsDto, token);
+    }
+
+    // The hand read is the socket's understudy and nothing else: it answers with the faces already
+    // dealt to this account's seat, so a table stays playable when casino.private cannot arrive.
+    public Task<CasinoBlackjackHandReadDto?> MyBlackjackHandAsync(string roomId, CancellationToken token)
+    {
+        return net.GetAsync(BlackjackMyHandPath(roomId), AethernetJsonContext.Default.CasinoBlackjackHandReadDto,
+            token);
     }
 
     // The free spin has no read route at all: this post either takes today's spin or replays the

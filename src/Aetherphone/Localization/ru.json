@@ -4443,7 +4443,7 @@
   "casino.bet.half": "Половина",
   "casino.bet.max": "Макс.",
   "casino.blackjack.atTheTable": "За столом: {0}",
-  "casino.blackjack.betConfirm": "Ставка {0}",
+  "casino.blackjack.betConfirm": "Ставка {0}, блэкджек платит {1}",
   "casino.blackjack.betsCloseIn": "Приём ставок закроется через {0}",
   "casino.blackjack.waitingForBets": "Делайте ставки",
   "casino.blackjack.dealing": "Раздача",

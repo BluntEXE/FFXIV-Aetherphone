@@ -392,6 +392,7 @@ internal sealed class CasinoRoomsStore : IDisposable
             if (!result.Granted)
             {
                 chips.RefreshNow();
+                InvalidatePersonal();
                 return;
             }
 
@@ -399,6 +400,8 @@ internal sealed class CasinoRoomsStore : IDisposable
             {
                 chips.AbsorbStack(sittingId, result.Stack);
             }
+
+            InvalidatePersonal();
         }, () => stakeInFlight = false);
     }
 
@@ -457,6 +460,7 @@ internal sealed class CasinoRoomsStore : IDisposable
             if (!result.Granted)
             {
                 chips.RefreshNow();
+                InvalidatePersonal();
                 return;
             }
 
@@ -464,6 +468,10 @@ internal sealed class CasinoRoomsStore : IDisposable
             {
                 chips.AbsorbStack(sittingId, result.Stack);
             }
+
+            // A card the table just dealt me is the private half moving inside one phase, which no
+            // watermark keyed on the round and the phase can notice on its own.
+            InvalidatePersonal();
         }, () => stakeInFlight = false);
     }
 
@@ -864,6 +872,9 @@ internal sealed class CasinoRoomsStore : IDisposable
         var roundIndex = snapshot.RoundIndex;
         var phase = snapshot.Phase;
         var generation = Volatile.Read(ref personalGeneration);
+        // The socket is the primary carrier of a blackjack hand, so the read is only spent when
+        // there is no socket to carry it: a table with a healthy attachment already has the faces.
+        var handNeedsReading = !room.Attached;
         Interlocked.Exchange(ref personalAttemptedAtTick, Environment.TickCount64);
         work.Run("room personal", async token =>
         {
@@ -881,21 +892,35 @@ internal sealed class CasinoRoomsStore : IDisposable
                 return;
             }
 
-            if (!string.Equals(gameKind, CasinoWire.BingoKind, StringComparison.Ordinal))
+            if (string.Equals(gameKind, CasinoWire.BingoKind, StringComparison.Ordinal))
             {
+                var cards = await casino.MyBingoCardsAsync(target, token).ConfigureAwait(false);
+                if (cards is null)
+                {
+                    return;
+                }
+
                 Interlocked.Exchange(ref personalAttemptedAtTick, 0);
+                AbsorbBingoCards(target, cards);
                 MarkPersonalLoaded(target, generation, roundIndex, phase);
                 return;
             }
 
-            var cards = await casino.MyBingoCardsAsync(target, token).ConfigureAwait(false);
-            if (cards is null)
+            if (handNeedsReading && string.Equals(gameKind, CasinoWire.BlackjackKind, StringComparison.Ordinal))
             {
+                var hand = await casino.MyBlackjackHandAsync(target, token).ConfigureAwait(false);
+                if (hand is null)
+                {
+                    return;
+                }
+
+                Interlocked.Exchange(ref personalAttemptedAtTick, 0);
+                AbsorbBlackjackHand(target, hand);
+                MarkPersonalLoaded(target, generation, roundIndex, phase);
                 return;
             }
 
             Interlocked.Exchange(ref personalAttemptedAtTick, 0);
-            AbsorbBingoCards(target, cards);
             MarkPersonalLoaded(target, generation, roundIndex, phase);
         }, () => Interlocked.Exchange(ref fetchingPersonal, 0));
     }
@@ -937,6 +962,12 @@ internal sealed class CasinoRoomsStore : IDisposable
         }
 
         bingoCards = fresh;
+    }
+
+    private void AbsorbBlackjackHand(string requestedRoomId, CasinoBlackjackHandReadDto fresh)
+    {
+        room.AbsorbHttpPrivate(requestedRoomId, fresh.Epoch, fresh.Seq,
+            new CasinoBlackjackPrivateDto(fresh.RoundIndex, fresh.SeatIndex, fresh.Hands));
     }
 
     public void Dispose()

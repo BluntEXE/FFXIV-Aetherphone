@@ -4443,7 +4443,7 @@
   "casino.bet.half": "一半",
   "casino.bet.max": "最大",
   "casino.blackjack.atTheTable": "牌桌上有 {0} 人",
-  "casino.blackjack.betConfirm": "下注 {0}",
+  "casino.blackjack.betConfirm": "下注 {0}，二十一点赔 {1}",
   "casino.blackjack.betsCloseIn": "下注将在 {0} 后截止",
   "casino.blackjack.waitingForBets": "请下注",
   "casino.blackjack.dealing": "发牌中",

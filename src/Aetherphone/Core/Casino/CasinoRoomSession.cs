@@ -57,6 +57,11 @@ internal sealed class CasinoRoomSession
     private const long SkewReanchorMilliseconds = 5_000;
     private const int SkewSmoothingWeight = 4;
 
+    // Four missed reads on the three second room poll. A socket that never attached is not a room
+    // that cannot be reached: the poll is the carrier the whole store is built around, so only a
+    // room that has gone quiet on both of them is out of touch.
+    private const long UnreachableAfterMilliseconds = 12_000;
+
     private readonly RealtimeSignalBus signals;
     private readonly object gate = new();
 
@@ -68,6 +73,7 @@ internal sealed class CasinoRoomSession
     private volatile bool awaitingSnapshot;
     private long skewMilliseconds;
     private long resyncAskedAtUnixMs;
+    private long touchedAtTick;
     private bool skewAnchored;
 
     public CasinoRoomSession(RealtimeSignalBus signals)
@@ -88,6 +94,24 @@ internal sealed class CasinoRoomSession
     public string ClosedReason => closedReason;
 
     public long SkewMilliseconds => Volatile.Read(ref skewMilliseconds);
+
+    // The one question the veil is allowed to ask. A phone playing the room over plain HTTP is not
+    // disconnected from anything, so dimming a table for want of a socket would dim a table that is
+    // dealing: only a room that has answered neither carrier for a while is actually out of reach.
+    public bool Unreachable(long nowTick)
+    {
+        return Unreachable(attached, Volatile.Read(ref touchedAtTick), nowTick);
+    }
+
+    internal static bool Unreachable(bool socketAttached, long touchedAtTick, long nowTick)
+    {
+        if (socketAttached || touchedAtTick == 0)
+        {
+            return false;
+        }
+
+        return nowTick - touchedAtTick >= UnreachableAfterMilliseconds;
+    }
 
     public long ServerNowUnixMs(long localNowUnixMs)
     {
@@ -137,6 +161,7 @@ internal sealed class CasinoRoomSession
             attached = false;
             awaitingSnapshot = true;
             resyncAskedAtUnixMs = 0;
+            Touch();
             Send(SignalType.CasinoAttach, nextRoomId);
         }
     }
@@ -176,6 +201,7 @@ internal sealed class CasinoRoomSession
             {
                 attached = false;
                 awaitingSnapshot = true;
+                Touch();
                 return;
             }
 
@@ -198,6 +224,7 @@ internal sealed class CasinoRoomSession
             return;
         }
 
+        Touch();
         switch (signal.Type)
         {
             case SignalType.CasinoAttached:
@@ -231,8 +258,27 @@ internal sealed class CasinoRoomSession
             return;
         }
 
+        Touch();
         AbsorbServerTime(fresh.ServerNowUnixMs, localNowUnixMs);
         Absorb(requestedRoomId, fresh.Epoch, fresh.Seq, fresh);
+    }
+
+    // The seat scoped half over the poll, versioned by the same pair the socket frames carry so the
+    // two carriers land in one order. A room has to stay playable without a socket, and a hand the
+    // client cannot draw is a hand the player is being asked to hit on blind.
+    public void AbsorbHttpPrivate(string requestedRoomId, int epoch, long seq, CasinoBlackjackPrivateDto hand)
+    {
+        lock (gate)
+        {
+            if (!string.Equals(roomId, requestedRoomId, StringComparison.Ordinal)
+                || !AcceptsPrivate(privateState, epoch, seq))
+            {
+                return;
+            }
+
+            privateState = new CasinoRoomPrivate(requestedRoomId, epoch, seq,
+                new CasinoPrivateDto(CasinoWire.BlackjackHandEvent, string.Empty), hand);
+        }
     }
 
     // A room the server no longer serves is the one refusal the poll can name on its own: a 404 is
@@ -521,6 +567,12 @@ internal sealed class CasinoRoomSession
         attached = false;
         awaitingSnapshot = false;
         resyncAskedAtUnixMs = 0;
+        Volatile.Write(ref touchedAtTick, 0);
+    }
+
+    private void Touch()
+    {
+        Volatile.Write(ref touchedAtTick, Environment.TickCount64);
     }
 
     private void Send(string type, string targetRoomId)

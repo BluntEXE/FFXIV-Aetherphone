@@ -148,7 +148,8 @@ internal sealed class BlackjackTable
         projection.Apply(held);
         projection.ApplyPersonal(room.Private);
         var board = projection.Board;
-        seatFlow.Observe(board, snapshot?.Phase ?? CasinoRoomPhases.Open);
+        var nowTick = Environment.TickCount64;
+        seatFlow.Observe(board, snapshot?.Phase ?? CasinoRoomPhases.Open, nowTick);
         if (seatFlow.Reason.Length > 0)
         {
             inlineReason = seatFlow.Reason;
@@ -165,12 +166,23 @@ internal sealed class BlackjackTable
         particles.Update(delta);
         dealer.Update(delta);
 
+        // Money never moves over the socket, so a table being played on the poll alone is a table
+        // that works: only a room answering neither carrier is out of touch. The veil claims the
+        // frame before anything under it is drawn, because a panel that only dims is a panel every
+        // pill beneath it still answers, and the felt behind a dead line must not take a bet.
+        var unreachable = room.Unreachable(nowTick);
+        var veiled = unreachable && CasinoSeatMachine.Holds(seatFlow.Stage);
+        if (veiled)
+        {
+            UiInteract.BlockThisFrame();
+        }
+
         var localNow = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var phaseRemaining = room.RemainingMilliseconds(snapshot.PhaseEndsAtUnixMs, localNow);
         var turnRemaining = room.RemainingMilliseconds(board.DeadlineUnixMs, localNow);
 
         var y = body.Min.Y + Metrics.Space.Xs * scale;
-        y = DrawStatusRow(drawList, ui, snapshot, board, room.Attached, left, y, width, scale);
+        y = DrawStatusRow(drawList, ui, snapshot, board, !unreachable, left, y, width, scale);
 
         var footerHeight = FooterHeightFor(snapshot.Phase, scale);
         var feltMin = new Vector2(left, y + Metrics.Space.Xs * scale);
@@ -194,12 +206,13 @@ internal sealed class BlackjackTable
         CelebrateSettledHand(board, scale);
 
         var footerTop = felt.Max.Y + Metrics.Space.Md * scale;
-        DrawFooter(drawList, ui, state, board, snapshot, phaseRemaining, delta, left, footerTop, width, scale);
+        DrawFooter(drawList, ui, state, board, snapshot, phaseRemaining, delta, left, footerTop, width, scale,
+            veiled);
         particles.Draw(drawList, scale);
 
         // The veil goes on last so it dims the frame the player was already reading rather than
         // replacing it: the hand stays visible underneath while the line is down.
-        if (!room.Attached && CasinoSeatMachine.Holds(seatFlow.Stage))
+        if (veiled)
         {
             ReconnectVeil.Draw(drawList, body, ui,
                 room.RemainingMilliseconds(board.SeatHeldUntilUnixMs, localNow), scale);
@@ -261,7 +274,7 @@ internal sealed class BlackjackTable
     }
 
     private float DrawStatusRow(ImDrawListPtr drawList, AppSkin ui, CasinoRoomSnapshotDto snapshot,
-        CasinoBlackjackRoomStateDto board, bool attached, float left, float y, float width, float scale)
+        CasinoBlackjackRoomStateDto board, bool reachable, float left, float y, float width, float scale)
     {
         var height = StatusRowHeight * scale;
         var seated = board.Spectators > 0
@@ -269,13 +282,13 @@ internal sealed class BlackjackTable
                 GameNumber.Label(board.Spectators))
             : Loc.T(L.Casino.BlackjackAtTheTable, GameNumber.Label(snapshot.Occupancy));
         Typography.Draw(drawList, new Vector2(left, y + 4f * scale), seated, ui.MutedInk, TextStyles.Caption1);
-        if (attached && AwayAtMySeat(board))
+        if (reachable && AwayAtMySeat(board))
         {
             AwayBadge.Draw(drawList, new Vector2(left + width, y), ui, Loc.T(L.Casino.AwayBadge), scale);
             return y + height;
         }
 
-        if (attached)
+        if (reachable)
         {
             // The house rules are printed on the felt of a real table, so they live here rather than
             // behind a sheet: the two numbers that decide every hand should never need looking up.
@@ -600,7 +613,7 @@ internal sealed class BlackjackTable
 
     private void DrawFooter(ImDrawListPtr drawList, AppSkin ui, CasinoStateDto state,
         CasinoBlackjackRoomStateDto board, CasinoRoomSnapshotDto snapshot, long phaseRemaining, float delta,
-        float left, float y, float width, float scale)
+        float left, float y, float width, float scale, bool veiled)
     {
         y = DrawBanner(drawList, ui, state, board, snapshot, phaseRemaining, delta, left, y, width, scale);
         var sitting = state.Sitting;
@@ -621,25 +634,31 @@ internal sealed class BlackjackTable
             return;
         }
 
-        var seated = bought && BlackjackRules.IsSeat(board.MySeat);
-        if (!seated)
+        // Two different truths, and the footer needs both. The grant says the seat is mine from the
+        // instant the server answers; the board says what the hand is doing, and it can be a poll
+        // behind. So a granted seat never offers to sit down again, and a board that has not caught
+        // up opens neither the composer nor the action bar: the only honest offer in that gap is to
+        // give the seat back.
+        var onBoard = BlackjackRules.IsSeat(board.MySeat);
+        if (!bought || (!onBoard && !CasinoSeatMachine.Holds(seatFlow.Stage)))
         {
             DrawSitAction(ui, bought, snapshot.Phase, left, y, width, scale);
             return;
         }
 
         var stakeBlocked = board.Draining || state.Draining || state.StakesPaused;
-        var betting = CasinoJoinGate.CanPlaceBet(snapshot.Phase, true, seatFlow.Waiting, board.Draining,
+        var seatStack = SeatStackOf(board, sitting!);
+        var betting = onBoard && CasinoJoinGate.CanPlaceBet(snapshot.Phase, true, seatFlow.Waiting, board.Draining,
             state.StakesPaused || state.Draining);
         if (betting)
         {
-            DrawComposer(ui, state, sitting!, board, left, y, width, scale, delta);
+            DrawComposer(ui, state, seatStack, board, left, y, width, scale, delta, veiled);
             return;
         }
 
-        if (CasinoJoinGate.CanAct(true, seatFlow.Waiting, board.ActiveSeat == board.MySeat))
+        if (onBoard && CasinoJoinGate.CanAct(true, seatFlow.Waiting, board.ActiveSeat == board.MySeat))
         {
-            DrawActionBar(ui, board, sitting!, left, y, width, scale);
+            DrawActionBar(ui, board, seatStack, left, y, width, scale);
             return;
         }
 
@@ -651,6 +670,15 @@ internal sealed class BlackjackTable
             inlineReason = string.Empty;
             seatFlow.Stand(roomId);
         }
+    }
+
+    // The seat's own stack is a fact on every snapshot; the cashier's copy is refreshed once a
+    // minute and on a stake answer, and a settlement moves chips with nothing posted at all. Reading
+    // the cashier here caps the Max button at what the seat held before the last hand paid out.
+    private long SeatStackOf(CasinoBlackjackRoomStateDto board, CasinoSittingDto sitting)
+    {
+        var seat = projection.SeatAt(board.MySeat);
+        return seat is not null ? seat.Stack : sitting.Stack;
     }
 
     private float DrawBanner(ImDrawListPtr drawList, AppSkin ui, CasinoStateDto state,
@@ -730,17 +758,21 @@ internal sealed class BlackjackTable
             : Loc.T(L.Casino.BlackjackDealerPlays);
     }
 
-    private void DrawComposer(AppSkin ui, CasinoStateDto state, CasinoSittingDto sitting,
-        CasinoBlackjackRoomStateDto board, float left, float y, float width, float scale, float delta)
+    // The confirm carries the payout as well as the stake, computed with the floor formula the
+    // house settles by, so the rounding on an odd bet is never a surprise sprung after the money is
+    // committed.
+    private void DrawComposer(AppSkin ui, CasinoStateDto state, long seatStack,
+        CasinoBlackjackRoomStateDto board, float left, float y, float width, float scale, float delta, bool veiled)
     {
         var minimum = board.MinBet > 0 ? board.MinBet : BlackjackRules.MinBet;
         var maximum = board.MaxBet > 0 ? board.MaxBet : BlackjackRules.MaxBet;
         composer.Prefill(minimum);
-        var blocked = state.StakesPaused || state.Draining || rooms.StakeInFlight;
+        var blocked = veiled || state.StakesPaused || state.Draining || rooms.StakeInFlight;
         var bounds = new Rect(new Vector2(left, y),
             new Vector2(left + width, y + BetComposer.HeightFor(scale)));
-        var label = Loc.T(L.Casino.BlackjackBetConfirm, composer.Amount.ToString("N0", Loc.Culture));
-        if (composer.Draw(ui, bounds, minimum, maximum, sitting.Stack, BlackjackRules.BetStep, !blocked, label,
+        var label = Loc.T(L.Casino.BlackjackBetConfirm, composer.Amount.ToString("N0", Loc.Culture),
+            BlackjackRules.BlackjackPayout(composer.Amount).ToString("N0", Loc.Culture));
+        if (composer.Draw(ui, bounds, minimum, maximum, seatStack, BlackjackRules.BetStep, !blocked, label,
                 delta))
         {
             inlineReason = string.Empty;
@@ -748,14 +780,14 @@ internal sealed class BlackjackTable
         }
     }
 
-    private void DrawActionBar(AppSkin ui, CasinoBlackjackRoomStateDto board, CasinoSittingDto sitting, float left,
+    private void DrawActionBar(AppSkin ui, CasinoBlackjackRoomStateDto board, long seatStack, float left,
         float y, float width, float scale)
     {
         var gap = Metrics.Space.Xs * scale;
         var buttonWidth = (width - gap * (ActionCount - 1)) / ActionCount;
         var height = ActionBarHeight * scale;
         var cost = ActiveBetOf(board);
-        var affordable = sitting.Stack >= cost;
+        var affordable = seatStack >= cost;
         for (var index = 0; index < ActionCount; index++)
         {
             var bit = ActionBits[index];

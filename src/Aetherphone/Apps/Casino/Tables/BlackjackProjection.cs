@@ -125,7 +125,10 @@ internal sealed class BlackjackProjection
     }
 
     // A face-down card stays face down for every seat but mine, and mine only turns over when the
-    // private frame that carries it belongs to the round on the felt right now.
+    // private frame that carries it belongs to the round on the felt right now and to the same run
+    // of the table. A round index repeats across a restart, so the epoch is what tells last table's
+    // hole cards apart from this one's: without it the faces of a round seven that ended when the
+    // room restarted would be painted onto the placeholders of the round seven that replaced it.
     public int CardAt(int seatIndex, int splitIndex, int cardIndex, int publicCard)
     {
         if (PlayingCards.IsCard(publicCard))
@@ -135,7 +138,7 @@ internal sealed class BlackjackProjection
 
         var personal = Personal;
         var board = Board;
-        if (personal is null || board is null || personal.SeatIndex != seatIndex
+        if (personal is null || board is null || personalEpoch != epoch || personal.SeatIndex != seatIndex
             || personal.RoundIndex != board.RoundIndex)
         {
             return PlayingCards.FaceDown;

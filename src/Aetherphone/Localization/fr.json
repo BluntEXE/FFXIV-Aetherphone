@@ -4443,7 +4443,7 @@
   "casino.bet.half": "Moitié",
   "casino.bet.max": "Max.",
   "casino.blackjack.atTheTable": "{0} à la table",
-  "casino.blackjack.betConfirm": "Miser {0}",
+  "casino.blackjack.betConfirm": "Miser {0}, le blackjack paie {1}",
   "casino.blackjack.betsCloseIn": "Les mises ferment dans {0}",
   "casino.blackjack.waitingForBets": "Faites vos jeux",
   "casino.blackjack.dealing": "Distribution",

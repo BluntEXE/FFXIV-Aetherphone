@@ -4443,7 +4443,7 @@
   "casino.bet.half": "Yarısı",
   "casino.bet.max": "En çok",
   "casino.blackjack.atTheTable": "Masada {0}",
-  "casino.blackjack.betConfirm": "{0} yatır",
+  "casino.blackjack.betConfirm": "{0} yatır, blackjack {1} öder",
   "casino.blackjack.betsCloseIn": "Bahisler {0} içinde kapanıyor",
   "casino.blackjack.waitingForBets": "Bahislerinizi yapın",
   "casino.blackjack.dealing": "Dağıtılıyor",

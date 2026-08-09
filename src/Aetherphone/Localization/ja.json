@@ -4443,7 +4443,7 @@
   "casino.bet.half": "半分",
   "casino.bet.max": "最大",
   "casino.blackjack.atTheTable": "テーブルに{0}人",
-  "casino.blackjack.betConfirm": "{0}を賭ける",
+  "casino.blackjack.betConfirm": "{0}を賭ける（ブラックジャックは{1}）",
   "casino.blackjack.betsCloseIn": "ベット締切まで{0}",
   "casino.blackjack.waitingForBets": "ベットしてください",
   "casino.blackjack.dealing": "配札中",

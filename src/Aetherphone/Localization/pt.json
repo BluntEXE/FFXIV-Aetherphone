@@ -4443,7 +4443,7 @@
   "casino.bet.half": "Metade",
   "casino.bet.max": "Máx.",
   "casino.blackjack.atTheTable": "{0} na mesa",
-  "casino.blackjack.betConfirm": "Apostar {0}",
+  "casino.blackjack.betConfirm": "Apostar {0}, blackjack paga {1}",
   "casino.blackjack.betsCloseIn": "As apostas fecham em {0}",
   "casino.blackjack.waitingForBets": "Façam suas apostas",
   "casino.blackjack.dealing": "Distribuindo",

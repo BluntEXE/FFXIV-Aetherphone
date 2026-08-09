@@ -119,6 +119,28 @@ public sealed class BlackjackProjectionTests
         Assert.Equal(40, projection.CardAt(0, 0, 0, PlayingCards.FaceDown));
     }
 
+    // A round index repeats across a restart, so seat and round alone cannot tell last table's hole
+    // cards from this one's. The table restarts, the first board of the new epoch opens the same
+    // round number again with closed cards, and the private frame still held is from the run that
+    // ended: without the epoch in the gate it paints the old faces onto the new placeholders.
+    [Fact]
+    public void APrivateFrameFromTheTableThatRestartedOpensNothing()
+    {
+        var projection = new BlackjackProjection();
+        projection.Apply(State(1, 5, Board(7, new[] { PlayingCards.FaceDown, PlayingCards.FaceDown })));
+        Assert.True(projection.ApplyPersonal(Personal(1, 6, 7, 0, new[] { 40, 41 })));
+        Assert.Equal(40, projection.CardAt(0, 0, 0, PlayingCards.FaceDown));
+
+        Assert.True(projection.Apply(State(2, 1, Board(7, new[] { PlayingCards.FaceDown, PlayingCards.FaceDown }))));
+        Assert.False(projection.ApplyPersonal(Personal(1, 4, 7, 0, new[] { 40, 41 })));
+
+        Assert.Equal(PlayingCards.FaceDown, projection.CardAt(0, 0, 0, PlayingCards.FaceDown));
+        Assert.Equal(PlayingCards.FaceDown, projection.CardAt(0, 0, 1, PlayingCards.FaceDown));
+
+        Assert.True(projection.ApplyPersonal(Personal(2, 2, 7, 0, new[] { 12, 13 })));
+        Assert.Equal(12, projection.CardAt(0, 0, 0, PlayingCards.FaceDown));
+    }
+
     [Fact]
     public void APrivateFrameThatIsNotBlackjackIsNotAPrivateFrame()
     {

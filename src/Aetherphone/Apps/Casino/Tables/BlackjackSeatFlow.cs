@@ -12,12 +12,18 @@ namespace Aetherphone.Apps.Casino.Tables;
 // The join latch lives here rather than on the wire because a client that sat down knows it sat
 // down mid hand before any snapshot can say so, and a seat that shows a live bet composer for one
 // frame before the server corrects it has already lied about being dealt in.
+//
+// The settle latch is the same idea pointed the other way: an answered intent outranks every board
+// taken before it, so a grant holds the stage until a snapshot confirms it rather than being undone
+// two lines later by the poll that has not caught up yet.
 internal sealed class BlackjackSeatFlow
 {
     private readonly CasinoTablesStore tables;
 
     private CasinoSeatStage stage = CasinoSeatStage.Watching;
+    private CasinoSeatSettle settle = CasinoSeatSettle.None;
     private string reason = string.Empty;
+    private long settleArmedAtTick;
     private bool waitArmed;
     private bool standQueued;
 
@@ -39,6 +45,8 @@ internal sealed class BlackjackSeatFlow
     public void Reset()
     {
         stage = CasinoSeatStage.Watching;
+        settle = CasinoSeatSettle.None;
+        settleArmedAtTick = 0;
         reason = string.Empty;
         waitArmed = false;
         standQueued = false;
@@ -49,16 +57,22 @@ internal sealed class BlackjackSeatFlow
         reason = string.Empty;
     }
 
-    public void Observe(CasinoBlackjackRoomStateDto? board, int phase)
+    public void Observe(CasinoBlackjackRoomStateDto? board, int phase, long nowTick)
     {
-        ConsumeOutcomes();
+        ConsumeOutcomes(nowTick);
         if (board is null)
         {
             return;
         }
 
         var hasSeat = BlackjackRules.IsSeat(board.MySeat);
-        stage = CasinoSeatMachine.Next(stage, CasinoSeatMachine.SignalFor(hasSeat, board.BoundElsewhere));
+        var signal = CasinoSeatMachine.SignalFor(hasSeat, board.BoundElsewhere);
+        if (!Settled(signal, nowTick))
+        {
+            return;
+        }
+
+        stage = CasinoSeatMachine.Next(stage, signal);
         if (!hasSeat)
         {
             waitArmed = false;
@@ -74,9 +88,12 @@ internal sealed class BlackjackSeatFlow
         waitArmed = CasinoJoinGate.Waiting(true, waitArmed, board.JoinsNextHand);
     }
 
+    // A seat already held is never asked for again. The board can be a poll behind the grant that
+    // bound it, and a second sit posted against that older board comes back refused at a felt the
+    // player is already sitting at.
     public void Sit(string roomId, int seatIndex, long buyIn, int phase)
     {
-        if (Busy || roomId.Length == 0)
+        if (Busy || CasinoSeatMachine.Holds(stage) || roomId.Length == 0)
         {
             return;
         }
@@ -116,15 +133,38 @@ internal sealed class BlackjackSeatFlow
     public void Left()
     {
         stage = CasinoSeatMachine.Next(stage, CasinoSeatSignal.Left);
+        settle = CasinoSeatSettle.None;
+        settleArmedAtTick = 0;
         waitArmed = false;
         standQueued = false;
     }
 
-    private void ConsumeOutcomes()
+    // The latch opens on the first board that agrees with the grant and on nothing else, and it
+    // expires so a table that never confirms hands the screen back rather than freezing it.
+    private bool Settled(CasinoSeatSignal signal, long nowTick)
+    {
+        if (settle == CasinoSeatSettle.None)
+        {
+            return true;
+        }
+
+        if (!CasinoSeatMachine.AcceptsBoard(settle, signal, settleArmedAtTick, nowTick))
+        {
+            return false;
+        }
+
+        settle = CasinoSeatSettle.None;
+        settleArmedAtTick = 0;
+        return true;
+    }
+
+    private void ConsumeOutcomes(long nowTick)
     {
         if (tables.TakeIntentFailure())
         {
             reason = CasinoReasons.Unreachable;
+            settle = CasinoSeatSettle.None;
+            settleArmedAtTick = 0;
             stage = RefusalOf(stage);
         }
 
@@ -137,6 +177,8 @@ internal sealed class BlackjackSeatFlow
         if (!outcome.Granted)
         {
             reason = outcome.Reason;
+            settle = CasinoSeatSettle.None;
+            settleArmedAtTick = 0;
             stage = RefusalOf(stage);
             return;
         }
@@ -148,6 +190,8 @@ internal sealed class BlackjackSeatFlow
             waitArmed = true;
         }
 
+        settle = CasinoSeatMachine.SettleFor(stage, outcome.AtHandEnd);
+        settleArmedAtTick = nowTick;
         stage = CasinoSeatMachine.Next(stage, GrantOf(stage, outcome.AtHandEnd));
     }
 

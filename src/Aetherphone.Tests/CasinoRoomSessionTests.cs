@@ -413,6 +413,78 @@ public sealed class CasinoRoomSessionTests
         Assert.Equal(string.Empty, session.RoomId);
     }
 
+    // The socket is not the only carrier a hand can arrive on. A player whose socket died would
+    // otherwise be shown card backs for their own cards while the action bar the server enabled
+    // asks them to hit or stand on them, so the poll carries the same shape under the same rules.
+    [Fact]
+    public void ThePollCarriesTheHandTheSocketCouldNotDeliver()
+    {
+        var session = Session(out _);
+        session.Enter(Room);
+        session.AbsorbHttpState(Room, Polled(epoch: 2, seq: 30, occupancy: 12), Now);
+
+        session.AbsorbHttpPrivate(Room, 2, 31, new CasinoBlackjackPrivateDto(7, 0, new[] { new[] { 40, 41 } }));
+
+        var personal = session.Private;
+        Assert.NotNull(personal);
+        Assert.Equal(2, personal.Epoch);
+        Assert.Equal(31, personal.Seq);
+        Assert.NotNull(personal.Blackjack);
+        Assert.Equal(0, personal.Blackjack.SeatIndex);
+        Assert.Equal(new[] { 40, 41 }, personal.Blackjack.Hands![0]);
+    }
+
+    [Fact]
+    public void APolledHandIsVersionedLikeEveryOtherFrame()
+    {
+        var session = Session(out _);
+        session.Enter(Room);
+        session.AbsorbHttpPrivate(Room, 2, 31, new CasinoBlackjackPrivateDto(7, 0, new[] { new[] { 40, 41 } }));
+
+        session.AbsorbHttpPrivate(Room, 2, 30, new CasinoBlackjackPrivateDto(6, 0, new[] { new[] { 2, 3 } }));
+        Assert.Equal(31, session.Private!.Seq);
+
+        session.AbsorbHttpPrivate(Room, 1, 900, new CasinoBlackjackPrivateDto(6, 0, new[] { new[] { 2, 3 } }));
+        Assert.Equal(31, session.Private!.Seq);
+
+        session.AbsorbHttpPrivate("bingo-hall", 3, 1, new CasinoBlackjackPrivateDto(8, 0, new[] { new[] { 4, 5 } }));
+        Assert.Equal(31, session.Private!.Seq);
+
+        session.AbsorbHttpPrivate(Room, 3, 1, new CasinoBlackjackPrivateDto(8, 0, new[] { new[] { 4, 5 } }));
+        Assert.Equal(3, session.Private!.Epoch);
+        Assert.Equal(8, session.Private!.Blackjack!.RoundIndex);
+    }
+
+    // "No socket" is not "no table". The veil answers this question and nothing else, so a room
+    // being played over plain HTTP has to read as reachable for as long as the reads keep landing.
+    [Fact]
+    public void ARoomOnThePollAloneIsNotAnUnreachableRoom()
+    {
+        Assert.False(CasinoRoomSession.Unreachable(true, 0, 10_000_000));
+        Assert.False(CasinoRoomSession.Unreachable(false, 0, 10_000_000));
+        Assert.False(CasinoRoomSession.Unreachable(false, 1_000, 1_000));
+        Assert.False(CasinoRoomSession.Unreachable(false, 1_000, 12_999));
+        Assert.True(CasinoRoomSession.Unreachable(false, 1_000, 13_000));
+    }
+
+    [Fact]
+    public void EveryLandedReadPutsTheRoomBackInTouch()
+    {
+        var session = Session(out _);
+        session.Enter(Room);
+        Assert.False(session.Unreachable(Environment.TickCount64));
+
+        session.AbsorbHttpState(Room, Polled(epoch: 2, seq: 30, occupancy: 12), Now);
+        Assert.False(session.Unreachable(Environment.TickCount64));
+
+        session.Receive(Attached(epoch: 3, seq: 1), Now);
+        Assert.True(session.Attached);
+        Assert.False(session.Unreachable(Environment.TickCount64 + 600_000));
+
+        session.Leave();
+        Assert.False(session.Unreachable(Environment.TickCount64 + 600_000));
+    }
+
     [Fact]
     public void TheFirstServerStampAnchorsTheSkewAndTheRestCrawl()
     {

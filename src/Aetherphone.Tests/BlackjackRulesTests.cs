@@ -1,5 +1,7 @@
+using System.Globalization;
 using Aetherphone.Apps.Casino.Tables;
 using Aetherphone.Core.Casino;
+using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Xunit;
 
@@ -89,6 +91,18 @@ public sealed class BlackjackRulesTests
         Assert.Equal(748, BlackjackRules.BlackjackPayout(499));
         Assert.Equal(750, BlackjackRules.BlackjackPayout(500));
         Assert.Equal(0, BlackjackRules.BlackjackPayout(0));
+    }
+
+    // The rounding is only ever a surprise if it is sprung after the money is committed, so the
+    // confirm label carries the payout beside the stake and takes both numbers to say so.
+    [Fact]
+    public void TheConfirmLabelHasRoomForThePayoutBesideTheStake()
+    {
+        var label = L.Casino.BlackjackBetConfirm;
+        Assert.Contains("{0}", label.Source, StringComparison.Ordinal);
+        Assert.Contains("{1}", label.Source, StringComparison.Ordinal);
+        Assert.Equal("Bet 11, blackjack pays 16",
+            string.Format(CultureInfo.InvariantCulture, label.Source, 11, BlackjackRules.BlackjackPayout(11)));
     }
 
     [Fact]

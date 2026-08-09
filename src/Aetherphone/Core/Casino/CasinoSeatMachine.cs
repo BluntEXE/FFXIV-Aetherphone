@@ -10,6 +10,15 @@ internal enum CasinoSeatStage
     Standing,
 }
 
+// What the screen is still waiting for the board to confirm after the server has already answered an
+// intent. Bound is a sit or a takeover the server granted, Released is a stand it granted outright.
+internal enum CasinoSeatSettle
+{
+    None,
+    Bound,
+    Released,
+}
+
 internal enum CasinoSeatSignal
 {
     SitRequested,
@@ -41,6 +50,14 @@ internal enum CasinoSeatSignal
 // and Left win from every stage, because the server closing the seat is not a request.
 internal static class CasinoSeatMachine
 {
+    // A grant the server has already answered has to survive the boards that were taken before it.
+    // The poll carrying my new seat can be a whole interval behind the answer that created it, and
+    // letting that older board speak would undo the grant on the very frame it landed: the footer
+    // would offer the seat back to somebody already sitting in it and the second tap comes back
+    // refused. The latch is a grace rather than a lock, so a server that never confirms cannot
+    // strand the screen.
+    public const long SettleGraceMilliseconds = 6_000;
+
     public static CasinoSeatStage Next(CasinoSeatStage held, CasinoSeatSignal signal)
     {
         if (signal == CasinoSeatSignal.Left)
@@ -98,6 +115,38 @@ internal static class CasinoSeatMachine
         }
 
         return boundElsewhere ? CasinoSeatSignal.SeatBoundElsewhere : CasinoSeatSignal.SeatBoundHere;
+    }
+
+    // Which fact the board still owes the screen, read off the stage the intent was posted from. A
+    // stand the table queued to the end of the hand owes nothing: the seat is still mine until it
+    // settles, which is exactly what the stale board already says.
+    public static CasinoSeatSettle SettleFor(CasinoSeatStage requested, bool atHandEnd)
+    {
+        return requested switch
+        {
+            CasinoSeatStage.Sitting => CasinoSeatSettle.Bound,
+            CasinoSeatStage.Claiming => CasinoSeatSettle.Bound,
+            CasinoSeatStage.Standing => atHandEnd ? CasinoSeatSettle.None : CasinoSeatSettle.Released,
+            _ => CasinoSeatSettle.None,
+        };
+    }
+
+    // Whether the board is allowed to speak at all this frame. A latch opens on the first reading
+    // that agrees with the grant, and on nothing else until the grace runs out.
+    public static bool AcceptsBoard(CasinoSeatSettle awaited, CasinoSeatSignal signal, long armedAtTick,
+        long nowTick)
+    {
+        return Settles(awaited, signal) || nowTick - armedAtTick >= SettleGraceMilliseconds;
+    }
+
+    private static bool Settles(CasinoSeatSettle awaited, CasinoSeatSignal signal)
+    {
+        return awaited switch
+        {
+            CasinoSeatSettle.Bound => signal == CasinoSeatSignal.SeatBoundHere,
+            CasinoSeatSettle.Released => signal == CasinoSeatSignal.SeatLost,
+            _ => true,
+        };
     }
 
     private static CasinoSeatStage FromWatching(CasinoSeatSignal signal)

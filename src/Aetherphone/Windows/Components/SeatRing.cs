@@ -193,7 +193,7 @@ internal static class SeatRing
                 ImGui.GetColorU32(Palette.WithAlpha(style.Accent, 0.75f)), 32, RingThickness * scale);
         }
 
-        var initial = InitialOf(seat.DisplayName);
+        var initial = Initials.Of(seat.DisplayName);
         var ink = dimmed ? style.MutedInk : style.TitleInk;
         Typography.DrawCentered(drawList, new Vector2(center.X, center.Y - radius * 0.16f), initial, ink,
             TextStyles.Headline);
@@ -243,15 +243,5 @@ internal static class SeatRing
 
         var corner = new Vector2(radius, radius);
         return UiInteract.Hover(center - corner, center + corner);
-    }
-
-    private static string InitialOf(string displayName)
-    {
-        if (displayName.Length == 0)
-        {
-            return "?";
-        }
-
-        return displayName[..1].ToUpperInvariant();
     }
 }

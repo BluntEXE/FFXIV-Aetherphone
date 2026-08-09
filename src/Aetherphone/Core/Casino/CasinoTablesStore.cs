@@ -49,6 +49,9 @@ internal sealed class CasinoTablesStore : IDisposable
     private string claimIntentId = string.Empty;
     private string createIntentId = string.Empty;
     private string doorRoomId = string.Empty;
+    private int seatIntentSeatIndex = -1;
+    private long seatIntentBuyIn = -1;
+    private int createIntentTier = int.MinValue;
     private int tablesFailed;
     private int intentFailed;
     private int tableMissing;
@@ -176,11 +179,17 @@ internal sealed class CasinoTablesStore : IDisposable
         string clientTableId;
         lock (intentGate)
         {
+            if (!ReusesCreate(createIntentTier, stakeTier))
+            {
+                createIntentId = string.Empty;
+            }
+
             if (createIntentId.Length == 0)
             {
                 createIntentId = Guid.NewGuid().ToString("N");
             }
 
+            createIntentTier = stakeTier;
             clientTableId = createIntentId;
         }
 
@@ -316,11 +325,18 @@ internal sealed class CasinoTablesStore : IDisposable
         string clientSeatId;
         lock (intentGate)
         {
+            if (!ReusesSeat(seatIntentSeatIndex, seatIntentBuyIn, seatIndex, buyIn))
+            {
+                seatIntentId = string.Empty;
+            }
+
             if (seatIntentId.Length == 0)
             {
                 seatIntentId = Guid.NewGuid().ToString("N");
             }
 
+            seatIntentSeatIndex = seatIndex;
+            seatIntentBuyIn = buyIn;
             clientSeatId = seatIntentId;
         }
 
@@ -407,6 +423,7 @@ internal sealed class CasinoTablesStore : IDisposable
             ForgetClaimIntent(clientClaimId);
             Interlocked.Exchange(ref seatOutcome,
                 new CasinoSeatOutcome(answer.Granted, Named(answer.Reason), answer.JoinsNextHand, false));
+            chips.RefreshNow();
         }, EndIntent);
     }
 
@@ -443,6 +460,20 @@ internal sealed class CasinoTablesStore : IDisposable
     internal static string Named(string reason)
     {
         return reason.Length > 0 ? reason : CasinoReasons.Unreachable;
+    }
+
+    // A seat id is only free to reuse for the same seat and the same buy-in. The server dedups on
+    // it and replays the answer it already stored, so carrying a burned id to a different seat
+    // would report a grant for a seat and a buy-in nobody asked for: the same reason a bet id
+    // carries its amount and a purchase id carries its count.
+    internal static bool ReusesSeat(int heldSeatIndex, long heldBuyIn, int seatIndex, long buyIn)
+    {
+        return heldSeatIndex == seatIndex && heldBuyIn == buyIn;
+    }
+
+    internal static bool ReusesCreate(int heldStakeTier, int stakeTier)
+    {
+        return heldStakeTier == stakeTier;
     }
 
     private bool Begin()
@@ -509,9 +540,12 @@ internal sealed class CasinoTablesStore : IDisposable
         lock (intentGate)
         {
             seatIntentId = string.Empty;
+            seatIntentSeatIndex = -1;
+            seatIntentBuyIn = -1;
             standIntentId = string.Empty;
             claimIntentId = string.Empty;
             createIntentId = string.Empty;
+            createIntentTier = int.MinValue;
         }
 
         cadence.Reset();
@@ -582,6 +616,8 @@ internal sealed class CasinoTablesStore : IDisposable
             if (string.Equals(seatIntentId, intentId, StringComparison.Ordinal))
             {
                 seatIntentId = string.Empty;
+                seatIntentSeatIndex = -1;
+                seatIntentBuyIn = -1;
             }
         }
     }
@@ -615,6 +651,7 @@ internal sealed class CasinoTablesStore : IDisposable
             if (string.Equals(createIntentId, intentId, StringComparison.Ordinal))
             {
                 createIntentId = string.Empty;
+                createIntentTier = int.MinValue;
             }
         }
     }

@@ -247,4 +247,52 @@ public sealed class CasinoTableWireContractTests
         Assert.Equal(2, ReconnectVeil.SecondsOf(1_001));
         Assert.Equal(0, ReconnectVeil.SecondsOf(0));
     }
+
+    // The hand read is the socket's understudy, so it carries the version pair a casino.private
+    // frame carries: without it the two carriers would overpaint each other in whichever order the
+    // network happened to deliver them.
+    [Fact]
+    public void TheHandReadCarriesTheSameVersionPairTheSocketFrameDoes()
+    {
+        const string json = """
+        {
+          "roomId": "blackjack-table",
+          "epoch": 3,
+          "seq": 41,
+          "roundIndex": 7,
+          "seatIndex": 2,
+          "hands": [[40, 41], [12]]
+        }
+        """;
+        var hand = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoBlackjackHandReadDto);
+        Assert.NotNull(hand);
+        Assert.Equal("blackjack-table", hand!.RoomId);
+        Assert.Equal(3, hand.Epoch);
+        Assert.Equal(41, hand.Seq);
+        Assert.Equal(7, hand.RoundIndex);
+        Assert.Equal(2, hand.SeatIndex);
+        Assert.Equal(new[] { 40, 41 }, hand.Hands![0]);
+        Assert.Equal(new[] { 12 }, hand.Hands![1]);
+
+        Assert.Equal("/casino/blackjack/blackjack-table/hand",
+            Aetherphone.Core.Aethernet.Clients.CasinoClient.BlackjackMyHandPath(CasinoRoomIds.BlackjackTable));
+        Assert.Equal("/casino/blackjack/a%20b/hand",
+            Aetherphone.Core.Aethernet.Clients.CasinoClient.BlackjackMyHandPath("a b"));
+    }
+
+    // The server dedups a seat intent on the client id it was sent with and replays the answer it
+    // already stored, so an id is only free to carry the same seat and the same buy-in: the same
+    // rule a bet id obeys for its amount and a purchase id for its count.
+    [Fact]
+    public void ABurnedSeatIdIsNeverCarriedToADifferentSeatOrBuyIn()
+    {
+        Assert.True(CasinoTablesStore.ReusesSeat(2, 500, 2, 500));
+        Assert.False(CasinoTablesStore.ReusesSeat(2, 500, 4, 500));
+        Assert.False(CasinoTablesStore.ReusesSeat(2, 500, 2, 200));
+        Assert.False(CasinoTablesStore.ReusesSeat(-1, -1, 0, 0));
+
+        Assert.True(CasinoTablesStore.ReusesCreate(1, 1));
+        Assert.False(CasinoTablesStore.ReusesCreate(1, 2));
+        Assert.False(CasinoTablesStore.ReusesCreate(int.MinValue, 0));
+    }
 }

@@ -92,9 +92,14 @@ internal sealed class TableBrowser
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
     }
 
+    // Quick seat, hosting and a pasted token all fail on this screen, so this screen drains that
+    // flag: leaving it set would print the browser's own timeout over the felt of the next table
+    // the player opens, which is a working table being told it cannot be reached.
     private void ConsumeOutcomes()
     {
-        if (tables.TakeTablesFailure())
+        var directoryFailed = tables.TakeTablesFailure();
+        var intentFailed = tables.TakeIntentFailure();
+        if (directoryFailed || intentFailed)
         {
             inlineReason = CasinoReasons.Unreachable;
         }

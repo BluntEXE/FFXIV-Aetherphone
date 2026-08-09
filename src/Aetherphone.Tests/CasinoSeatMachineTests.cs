@@ -134,6 +134,72 @@ public sealed class CasinoSeatMachineTests
         Assert.False(CasinoSeatMachine.Busy(CasinoSeatStage.Seated));
     }
 
+    // The blocker this latch exists for: the poll that carries my new seat is taken before the sit
+    // is answered, so the very next board honestly reports no seat. Letting it speak would undo the
+    // grant on the frame it landed, the footer would offer the seat back, and the second tap comes
+    // back "already seated" over a seat that is mine.
+    [Fact]
+    public void AGrantedSitIsNotUndoneByTheBoardThatPredatesIt()
+    {
+        var awaited = CasinoSeatMachine.SettleFor(CasinoSeatStage.Sitting, atHandEnd: false);
+        Assert.Equal(CasinoSeatSettle.Bound, awaited);
+
+        Assert.False(CasinoSeatMachine.AcceptsBoard(awaited, CasinoSeatSignal.SeatLost, 1_000, 1_000));
+        Assert.False(CasinoSeatMachine.AcceptsBoard(awaited, CasinoSeatSignal.SeatBoundElsewhere, 1_000, 3_500));
+        Assert.True(CasinoSeatMachine.AcceptsBoard(awaited, CasinoSeatSignal.SeatBoundHere, 1_000, 1_050));
+    }
+
+    [Fact]
+    public void AGrantedStandIsNotUndoneEither()
+    {
+        var awaited = CasinoSeatMachine.SettleFor(CasinoSeatStage.Standing, atHandEnd: false);
+        Assert.Equal(CasinoSeatSettle.Released, awaited);
+
+        Assert.False(CasinoSeatMachine.AcceptsBoard(awaited, CasinoSeatSignal.SeatBoundHere, 0, 500));
+        Assert.True(CasinoSeatMachine.AcceptsBoard(awaited, CasinoSeatSignal.SeatLost, 0, 500));
+    }
+
+    // A stand the table queued to the end of the hand keeps the seat, so the board saying the seat
+    // is still mine is not a contradiction and nothing is waited on.
+    [Fact]
+    public void AQueuedStandWaitsForNothing()
+    {
+        var awaited = CasinoSeatMachine.SettleFor(CasinoSeatStage.Standing, atHandEnd: true);
+        Assert.Equal(CasinoSeatSettle.None, awaited);
+        Assert.True(CasinoSeatMachine.AcceptsBoard(awaited, CasinoSeatSignal.SeatBoundHere, 0, 0));
+        Assert.True(CasinoSeatMachine.AcceptsBoard(awaited, CasinoSeatSignal.SeatLost, 0, 0));
+    }
+
+    [Fact]
+    public void ATakeoverGrantedWaitsForTheSameFactASitDoes()
+    {
+        Assert.Equal(CasinoSeatSettle.Bound, CasinoSeatMachine.SettleFor(CasinoSeatStage.Claiming, false));
+        Assert.Equal(CasinoSeatSettle.None, CasinoSeatMachine.SettleFor(CasinoSeatStage.Watching, false));
+        Assert.Equal(CasinoSeatSettle.None, CasinoSeatMachine.SettleFor(CasinoSeatStage.Seated, false));
+        Assert.Equal(CasinoSeatSettle.None, CasinoSeatMachine.SettleFor(CasinoSeatStage.Elsewhere, false));
+    }
+
+    // The latch is a grace, never a lock: a table that took the seat away between the grant and the
+    // next board has to be able to say so once the window closes.
+    [Fact]
+    public void ABoardThatKeepsDisagreeingWinsOnceTheGraceRunsOut()
+    {
+        const long armed = 4_000;
+        Assert.False(CasinoSeatMachine.AcceptsBoard(CasinoSeatSettle.Bound, CasinoSeatSignal.SeatLost, armed,
+            armed + CasinoSeatMachine.SettleGraceMilliseconds - 1));
+        Assert.True(CasinoSeatMachine.AcceptsBoard(CasinoSeatSettle.Bound, CasinoSeatSignal.SeatLost, armed,
+            armed + CasinoSeatMachine.SettleGraceMilliseconds));
+    }
+
+    [Fact]
+    public void NothingIsWaitedOnWhenNothingWasGranted()
+    {
+        foreach (var signal in AllSignalsExcept())
+        {
+            Assert.True(CasinoSeatMachine.AcceptsBoard(CasinoSeatSettle.None, signal, 0, 0));
+        }
+    }
+
     private static CasinoSeatStage[] AllStages()
     {
         return new[]
