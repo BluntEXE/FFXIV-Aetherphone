@@ -142,3 +142,66 @@ internal sealed record CasinoRoundHistoryDto(
 internal sealed record CasinoRoundHistoryPage(
     CasinoRoundHistoryDto[]? Items = null,
     string? NextCursor = null);
+
+internal sealed record CasinoRoomCardDto(
+    string RoomId = "",
+    string GameKind = "",
+    int Phase = 0,
+    long PhaseEndsAtUnixMs = 0,
+    int PlayerCount = 0,
+    long MinStake = 0,
+    long MaxStake = 0,
+    bool Draining = false);
+
+internal sealed record CasinoRoomDirectoryDto(
+    CasinoRoomCardDto[]? Rooms = null,
+    long ServerNowUnixMs = 0);
+
+internal sealed record CasinoRoomSnapshotDto(
+    string RoomId = "",
+    string GameKind = "",
+    int Phase = 0,
+    string RoundId = "",
+    long PhaseEndsAtUnixMs = 0,
+    bool Draining = false,
+    int PlayerCount = 0,
+    int EntryCount = 0,
+    long StakeTotal = 0,
+    long MinStake = 0,
+    long MaxStake = 0,
+    int[]? Numbers = null);
+
+// A room event states only what moved, so every field is nullable and an absent one means the
+// held snapshot already has the truth. Widening a value type to zero here would silently wipe
+// the pot or the deadline every time the server broadcast a player count.
+internal sealed record CasinoRoomEventDto(
+    int? Phase = null,
+    string? RoundId = null,
+    long? PhaseEndsAtUnixMs = null,
+    int? PlayerCount = null,
+    int? EntryCount = null,
+    long? StakeTotal = null,
+    int[]? Numbers = null,
+    string? Reason = null);
+
+internal sealed record CasinoRoomEntryDto(
+    string EntryId = "",
+    int Kind = 0,
+    long Stake = 0,
+    int Target = 0,
+    long Payout = 0,
+    int State = 0);
+
+internal sealed record CasinoRoomPrivateDto(
+    string RoundId = "",
+    long Staked = 0,
+    CasinoRoomEntryDto[]? Entries = null);
+
+internal sealed record CasinoRoomStateDto(
+    bool Granted = false,
+    string Reason = "",
+    int Epoch = 0,
+    long Seq = 0,
+    long ServerNowUnixMs = 0,
+    CasinoRoomSnapshotDto? Snapshot = null,
+    CasinoRoomPrivateDto? Private = null);

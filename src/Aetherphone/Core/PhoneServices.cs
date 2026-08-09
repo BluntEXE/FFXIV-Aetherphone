@@ -89,6 +89,7 @@ internal sealed class PhoneServices : IDisposable
     public required Casino.CasinoStore Casino { get; init; }
     public required Casino.CasinoPlayStore CasinoPlay { get; init; }
     public required Casino.CasinoHistoryStore CasinoHistory { get; init; }
+    public required Casino.CasinoRoomsStore CasinoRooms { get; init; }
     public required PluginCatalog PluginCatalog { get; init; }
     public required ShortcutStore Shortcuts { get; init; }
     public required ShortcutRunner ShortcutRunner { get; init; }
@@ -261,6 +262,8 @@ internal sealed class PhoneServices : IDisposable
             accountState, framework);
         var moderationArchive = new ModerationNoticeArchive(aethernetSession, aethernet.Account);
         var safetyLauncher = new SafetyLauncher();
+        var casinoRooms = new Casino.CasinoRoomsStore(aethernetSession, casinoApi.Casino, visibility,
+            realtimeSignals);
         var musters = new MusterStore(aethernetSession, aethernet.Musters, notifications, configuration,
             visibility, realtimeSignals, installer.Gate(MusterStore.AppId));
         var yellowPages = new YellowPagesStore(aethernetSession, aethernet.Ads, aethernet.Media, configuration,
@@ -310,6 +313,7 @@ internal sealed class PhoneServices : IDisposable
             Casino = casino,
             CasinoPlay = casinoPlay,
             CasinoHistory = casinoHistory,
+            CasinoRooms = casinoRooms,
             PluginCatalog = pluginCatalog,
             Shortcuts = new ShortcutStore(configuration, pluginCatalog),
             ShortcutRunner = new ShortcutRunner(clientState, condition),
@@ -402,6 +406,7 @@ internal sealed class PhoneServices : IDisposable
         RemoteImages.Dispose();
         Windows.Components.UserName.Reset();
         Moderation.ModerationNoticeText.Reset();
+        CasinoRooms.Dispose();
         CasinoHistory.Dispose();
         CasinoPlay.Dispose();
         Casino.Dispose();

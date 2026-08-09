@@ -1,10 +1,13 @@
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Telephony.Contracts;
 
 namespace Aetherphone.Core;
 
 internal readonly record struct ContentRemovalSignal(string? App, string? Kind, string ContentId, string? ParentId);
 
 internal readonly record struct ChatSignal(string? ConversationId, ChatMessageDto? Message);
+
+internal readonly record struct CasinoSignal(string Type, string? Reason, CasinoPayload? Payload);
 
 internal static class ContentRemovalKinds
 {
@@ -16,6 +19,7 @@ internal static class ContentRemovalKinds
 internal sealed class RealtimeSignalBus
 {
     private volatile bool realtimeActive;
+    private volatile Action<CallControl>? outbound;
 
     public event Action<ChatSignal>? ChatPinged;
     public event Action? VelvetPinged;
@@ -24,6 +28,7 @@ internal sealed class RealtimeSignalBus
     public event Action? MusterPinged;
     public event Action? AnnouncementsPinged;
     public event Action<ContentRemovalSignal>? ContentRemoved;
+    public event Action<CasinoSignal>? CasinoReceived;
     public event Action<bool>? ConnectedChanged;
 
     public bool RealtimeActive => realtimeActive;
@@ -72,5 +77,34 @@ internal sealed class RealtimeSignalBus
     public void PublishContentRemoved(ContentRemovalSignal removal)
     {
         ContentRemoved?.Invoke(removal);
+    }
+
+    // Every other app is woken with a bare ping because HTTP holds the truth. A casino room
+    // cannot be: its events carry a per-room sequence that only means anything applied in
+    // arrival order, and a refetch per event would both lose that proof and cost a request per
+    // ball. The casino signal therefore carries the payload it arrived with.
+    public void PublishCasino(CasinoSignal signal)
+    {
+        CasinoReceived?.Invoke(signal);
+    }
+
+    // The room session has to answer the socket (attach, detach, resync) and there is exactly
+    // one socket on the phone. Binding the sender here keeps that seam on the bus every store
+    // already holds, so no app ever reaches for a second connection to speak back.
+    public void BindSender(Action<CallControl>? sender)
+    {
+        outbound = sender;
+    }
+
+    public bool TrySend(CallControl control)
+    {
+        var sender = outbound;
+        if (sender is null || !realtimeActive)
+        {
+            return false;
+        }
+
+        sender(control);
+        return true;
     }
 }

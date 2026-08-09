@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Aetherphone.Core.Aethernet.Contracts;
 
 namespace Aetherphone.Core.Telephony.Contracts;
@@ -29,6 +30,16 @@ internal static class SignalType
     public const string SocialPing = "social.ping";
     public const string MusterPing = "muster.ping";
     public const string AnnouncePing = "announce.ping";
+    public const string CasinoPrefix = "casino.";
+    public const string CasinoAttach = "casino.attach";
+    public const string CasinoDetach = "casino.detach";
+    public const string CasinoResync = "casino.resync";
+    public const string CasinoAttached = "casino.attached";
+    public const string CasinoDeclined = "casino.declined";
+    public const string CasinoSnapshot = "casino.snapshot";
+    public const string CasinoEvent = "casino.event";
+    public const string CasinoEnded = "casino.ended";
+    public const string CasinoPing = "casino.ping";
     public const string Error = "error";
 }
 
@@ -63,4 +74,30 @@ internal sealed record CallControl
     public string? ContentId { get; init; }
     public string? ParentId { get; init; }
     public ChatMessageDto? Message { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public CasinoPayload? Casino { get; init; }
+}
+
+// The casino gets exactly one envelope field and nests everything else, so a room event never
+// widens the schema every call, chat, and stream message pays for. The field drops out of the
+// JSON when it is null, which keeps a call control byte identical to the one shipping today.
+internal sealed record CasinoPayload
+{
+    public string RoomId { get; init; } = string.Empty;
+    public int Epoch { get; init; }
+    public long Seq { get; init; }
+    public long ServerNowUnixMs { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? EventKind { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public CasinoRoomSnapshotDto? Snapshot { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public CasinoRoomEventDto? Event { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public CasinoRoomPrivateDto? Private { get; init; }
 }

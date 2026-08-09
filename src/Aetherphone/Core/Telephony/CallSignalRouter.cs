@@ -14,6 +14,7 @@ internal sealed class CallSignalRouter : IDisposable
         connection = new RealtimeConnection(session);
         connection.ControlReceived += OnControl;
         connection.ConnectedChanged += OnConnected;
+        signals.BindSender(Send);
     }
 
     public event Action<Guid, CallControl>? IncomingReceived;
@@ -44,6 +45,12 @@ internal sealed class CallSignalRouter : IDisposable
 
     private void OnControl(CallControl message)
     {
+        if (message.Type.StartsWith(SignalType.CasinoPrefix, StringComparison.Ordinal))
+        {
+            signals.PublishCasino(new CasinoSignal(message.Type, message.Reason, message.Casino));
+            return;
+        }
+
         switch (message.Type)
         {
             case SignalType.ChatPing:
@@ -101,6 +108,7 @@ internal sealed class CallSignalRouter : IDisposable
 
     public void Dispose()
     {
+        signals.BindSender(null);
         connection.ControlReceived -= OnControl;
         connection.ConnectedChanged -= OnConnected;
         connection.Dispose();

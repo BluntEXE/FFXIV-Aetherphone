@@ -205,6 +205,13 @@ namespace Aetherphone.Core.Aethernet;
 [JsonSerializable(typeof(CasinoRoundVerifyDto))]
 [JsonSerializable(typeof(CasinoRoundHistoryDto))]
 [JsonSerializable(typeof(CasinoRoundHistoryPage))]
+[JsonSerializable(typeof(CasinoRoomCardDto))]
+[JsonSerializable(typeof(CasinoRoomDirectoryDto))]
+[JsonSerializable(typeof(CasinoRoomSnapshotDto))]
+[JsonSerializable(typeof(CasinoRoomEventDto))]
+[JsonSerializable(typeof(CasinoRoomEntryDto))]
+[JsonSerializable(typeof(CasinoRoomPrivateDto))]
+[JsonSerializable(typeof(CasinoRoomStateDto))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
 internal sealed partial class AethernetJsonContext : JsonSerializerContext
 {

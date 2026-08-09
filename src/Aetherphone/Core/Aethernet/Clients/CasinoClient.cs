@@ -15,6 +15,12 @@ internal sealed class CasinoClient
     internal const string FinishBarkeepPath = "/casino/barkeep/finish";
 
     internal const string RoundsPath = "/casino/rounds";
+    internal const string RoomsPath = "/casino/rooms";
+
+    internal static string RoomPath(string roomId)
+    {
+        return string.Concat(RoomsPath, "/", Uri.EscapeDataString(roomId));
+    }
 
     internal static string VerifyRoundPath(string roundId)
     {
@@ -113,5 +119,15 @@ internal sealed class CasinoClient
     public Task<CasinoRoundHistoryPage?> RoundsPageAsync(string? cursor, CancellationToken token)
     {
         return net.GetAsync(RoundsPagePath(cursor), AethernetJsonContext.Default.CasinoRoundHistoryPage, token);
+    }
+
+    public Task<CasinoRoomDirectoryDto?> RoomsAsync(CancellationToken token)
+    {
+        return net.GetAsync(RoomsPath, AethernetJsonContext.Default.CasinoRoomDirectoryDto, token);
+    }
+
+    public Task<CasinoRoomStateDto?> RoomStateAsync(string roomId, CancellationToken token)
+    {
+        return net.GetAsync(RoomPath(roomId), AethernetJsonContext.Default.CasinoRoomStateDto, token);
     }
 }
