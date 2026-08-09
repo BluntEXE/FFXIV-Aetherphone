@@ -13,13 +13,14 @@ namespace Aetherphone.Apps.Casino.Cabinets;
 internal sealed class BingoCabinet
 {
     private const float StatusRowHeight = 22f;
-    private const float CallerHeight = 148f;
-    private const float BallRailHeight = 32f;
+    private const float CallerHeight = 162f;
+    private const float BallRailHeight = 48f;
     private const float ProgressHeight = 62f;
     private const float LadderRowHeight = 38f;
     private const float SegmentHeight = 40f;
     private const float PillHeight = 46f;
     private const float CardGap = 10f;
+    private const float CardPlatePadding = 5f;
     private const float CardLabelHeight = 22f;
     private const int RailCalls = 8;
 
@@ -453,16 +454,26 @@ internal sealed class BingoCabinet
         var step = radius * 2f + gap;
         var railWidth = shown * step - gap;
         var startX = (min.X + max.X) * 0.5f - railWidth * 0.5f + radius;
-        var railY = max.Y - BallRailHeight * scale * 0.5f;
+        // The label sits on its own line above the rail. Sharing a line with eight chips only works
+        // until the rail is full, and a full rail is the normal state of a room worth watching.
         var label = Loc.T(L.Casino.BingoRecentCalls);
-        Typography.Draw(drawList, new Vector2(min.X + 12f * scale, railY - radius - 2f * scale), label,
-            ui.MutedInk, TextStyles.Caption2);
+        Typography.Draw(drawList, new Vector2(min.X + 14f * scale, max.Y - BallRailHeight * scale), label,
+            ui.MutedInk, TextStyles.Footnote);
+        var railY = max.Y - radius - 8f * scale;
         for (var index = 0; index < shown; index++)
         {
             var ball = balls[balls.Length - shown + index];
+            var newest = index == shown - 1;
             var alpha = 0.40f + 0.60f * ((index + 1f) / shown);
-            BingoCardArt.DrawBallChip(drawList, new Vector2(startX + index * step, railY), radius, ball, alpha,
-                ui.Palette.HeaderInk);
+            var center = new Vector2(startX + index * step, railY);
+            if (newest)
+            {
+                var breath = 0.45f + 0.55f * Pulse.Wave(Pulse.Breath);
+                drawList.AddCircle(center, radius + 4f * scale,
+                    ImGui.GetColorU32(Palette.WithAlpha(Gold, 0.30f + 0.35f * breath)), 28, 1.8f * scale);
+            }
+
+            BingoCardArt.DrawBallChip(drawList, center, radius, ball, alpha, ui.Palette.HeaderInk);
         }
     }
 
@@ -767,38 +778,33 @@ internal sealed class BingoCabinet
         var labelHeight = CardLabelHeight * scale;
         var hero = HeroIndex(mine, holding);
 
-        var heroWidth = holding == 1 ? width * 0.74f : width * 0.78f;
-        var heroHeight = BingoCardArt.HeightFor(heroWidth);
-        var heroMin = new Vector2(origin.X + (width - heroWidth) * 0.5f, origin.Y + labelHeight);
-        var heroCard = new Rect(heroMin, new Vector2(heroMin.X + heroWidth, heroMin.Y + heroHeight));
-        DrawCard(drawList, ui, heroCard, mine, hero, labelHeight, true, scale);
-
-        var used = heroHeight + labelHeight;
-        if (holding > 1)
+        // Every card is the same size. Making the closest one bigger read as two different kinds of
+        // card rather than as emphasis, and a five by five grid at full width gives cells so large
+        // that twenty four numbers scatter instead of forming a card. The one to watch is marked,
+        // not resized.
+        // The plate is drawn outside the card rect, so the padding has to come out of the width or
+        // the right hand card runs off the surface and its last column wraps mid number.
+        var plate = CardPlatePadding * scale;
+        var columns = holding > 1 ? 2 : 1;
+        var usable = width - plate * 2f;
+        var cardWidth = columns == 2 ? (usable - gap - plate * 2f) * 0.5f : usable * 0.56f;
+        var cardHeight = BingoCardArt.HeightFor(cardWidth);
+        var rowStep = cardHeight + labelHeight + gap;
+        var rows = (holding + columns - 1) / columns;
+        for (var cardIndex = 0; cardIndex < holding; cardIndex++)
         {
-            var others = holding - 1;
-            var smallWidth = (width - gap * (others - 1)) / others;
-            var smallHeight = BingoCardArt.HeightFor(smallWidth);
-            var rowY = origin.Y + used + gap + labelHeight;
-            var slot = 0;
-            for (var cardIndex = 0; cardIndex < holding; cardIndex++)
-            {
-                if (cardIndex == hero)
-                {
-                    continue;
-                }
-
-                var cardMin = new Vector2(origin.X + slot * (smallWidth + gap), rowY);
-                var card = new Rect(cardMin, new Vector2(cardMin.X + smallWidth, cardMin.Y + smallHeight));
-                DrawCard(drawList, ui, card, mine, cardIndex, labelHeight, false, scale);
-                slot++;
-            }
-
-            used += gap + labelHeight + smallHeight;
+            var column = cardIndex % columns;
+            var row = cardIndex / columns;
+            var left = columns == 1
+                ? origin.X + (width - cardWidth) * 0.5f
+                : origin.X + plate + column * (cardWidth + gap + plate * 2f);
+            var cardMin = new Vector2(left, origin.Y + row * rowStep + labelHeight);
+            var card = new Rect(cardMin, new Vector2(cardMin.X + cardWidth, cardMin.Y + cardHeight));
+            DrawCard(drawList, ui, card, mine, cardIndex, labelHeight, cardIndex == hero && holding > 1, scale);
         }
 
         ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, used + Metrics.Space.Sm * scale));
+        ImGui.Dummy(new Vector2(width, rows * rowStep - gap + Metrics.Space.Sm * scale));
 
         var footnote = Loc.T(L.Casino.BingoMarksAuto);
         var footBlock = Typography.MeasureWrappedBlock(footnote, TextStyles.Caption2, width);
@@ -816,15 +822,16 @@ internal sealed class BingoCabinet
         float labelHeight, bool hero, float scale)
     {
         var rounding = Metrics.Radius.Sm * scale;
-        var padding = new Vector2((hero ? 6f : 3f) * scale, (hero ? 6f : 3f) * scale);
+        var padding = new Vector2(CardPlatePadding * scale, CardPlatePadding * scale);
         var plateMin = card.Min - padding;
         var plateMax = card.Max + padding;
+        Elevation.Card(drawList, plateMin, plateMax, rounding, scale, hero ? 1f : 0.6f);
+        Squircle.Fill(drawList, plateMin, plateMax, rounding, ImGui.GetColorU32(ui.FieldSurface));
         if (hero)
         {
-            Elevation.Card(drawList, plateMin, plateMax, rounding, scale);
+            Squircle.Stroke(drawList, plateMin, plateMax, rounding,
+                ImGui.GetColorU32(Palette.WithAlpha(Gold, 0.55f)), 1.6f * scale);
         }
-
-        Squircle.Fill(drawList, plateMin, plateMax, rounding, ImGui.GetColorU32(ui.FieldSurface));
 
         var autoMask = playback.AutoMaskOf(cardIndex);
         var stampedMask = playback.StampedMaskOf(cardIndex);

@@ -12,7 +12,6 @@ namespace Aetherphone.Apps.Casino.Tables;
 
 internal sealed class TableBrowser
 {
-    private const float QuickCardHeight = 96f;
     private const float PillHeight = 44f;
     private const float RowGap = 10f;
     private const float FieldHeight = 40f;
@@ -105,19 +104,25 @@ internal sealed class TableBrowser
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
         var drawList = ImGui.GetWindowDrawList();
-        var height = QuickCardHeight * scale;
+        // Measured, not assumed: a fixed height that predates the button leaves it drawn on top of
+        // the line explaining what it does.
+        var pad = 14f * scale;
+        var titleSize = Typography.Measure(Loc.T(L.Casino.QuickSeatTitle), TextStyles.SubheadlineEmphasized);
+        var hintText = Typography.FitText(Loc.T(L.Casino.QuickSeatHint), width - pad * 2f, TextStyles.Footnote);
+        var hintSize = Typography.Measure(hintText, TextStyles.Footnote);
+        var height = 12f * scale + titleSize.Y + 6f * scale + hintSize.Y + 12f * scale
+            + PillHeight * scale + 12f * scale;
         var card = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
         var rounding = Metrics.Radius.Card * scale;
         ui.Card(drawList, card.Min, card.Max, rounding);
         Squircle.Stroke(drawList, card.Min, card.Max, rounding,
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.35f)), 1f * scale);
 
-        var pad = 14f * scale;
         Typography.Draw(drawList, new Vector2(card.Min.X + pad, card.Min.Y + 12f * scale),
             Loc.T(L.Casino.QuickSeatTitle), ui.TitleInk, TextStyles.SubheadlineEmphasized);
-        var hint = Typography.FitText(Loc.T(L.Casino.QuickSeatHint), width - pad * 2f, TextStyles.Footnote);
-        Typography.Draw(drawList, new Vector2(card.Min.X + pad, card.Min.Y + 32f * scale), hint, ui.MutedInk,
-            TextStyles.Footnote);
+        Typography.Draw(drawList,
+            new Vector2(card.Min.X + pad, card.Min.Y + 12f * scale + titleSize.Y + 6f * scale), hintText,
+            ui.MutedInk, TextStyles.Footnote);
 
         var pillRect = new Rect(new Vector2(card.Min.X + pad, card.Max.Y - PillHeight * scale - 12f * scale),
             new Vector2(card.Max.X - pad, card.Max.Y - 12f * scale));

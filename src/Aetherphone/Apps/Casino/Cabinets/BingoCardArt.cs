@@ -78,7 +78,8 @@ internal static class BingoCardArt
         }
 
         var ink = marked ? ui.Palette.HeaderInk : ui.BodyInk;
-        Typography.DrawCentered(drawList, center, GameNumber.Label(number), ink, TextStyles.Caption2);
+        Typography.DrawCentered(drawList, center, GameNumber.Label(number), ink, ScaleForRadius(cell * 0.40f),
+            marked ? FontWeight.SemiBold : FontWeight.Medium);
     }
 
     public static void DrawBallChip(ImDrawListPtr drawList, Vector2 center, float radius, int ball, float alpha,
@@ -86,8 +87,17 @@ internal static class BingoCardArt
     {
         var column = BingoRules.ColumnOfBall(ball);
         var tint = column >= 0 ? ColumnTints[column] : ink;
-        drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(tint, 0.85f * alpha)), 24);
+        drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(tint, 0.85f * alpha)), 32);
         Typography.DrawCentered(drawList, center, GameNumber.Label(ball), Palette.WithAlpha(ink, alpha),
-            TextStyles.Caption1);
+            ScaleForRadius(radius), FontWeight.Bold);
+    }
+
+    // A number drawn at a fixed size inside a circle that grows is the tell of a chip nobody sized:
+    // the ink has to follow the geometry it sits in, so both the felt and the caller read the same
+    // whatever the layout hands them.
+    private static float ScaleForRadius(float radius)
+    {
+        var scale = radius / (13f * MathF.Max(0.5f, UiScale.Current));
+        return Math.Clamp(scale, 0.66f, 3.00f);
     }
 }
