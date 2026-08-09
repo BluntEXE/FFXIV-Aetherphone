@@ -1306,13 +1306,39 @@ internal static class L
             new("changelog.r09100.1",
                 "The Aether Coin app shows your balance, the daily cap with its reset time, your check-in streak, and every earning rule with today's progress"),
             new("changelog.r09100.2",
-                "The coin shop sells phone cases and a name effect; custom wallpapers, accent colors, and imported sounds stay free"),
+                "The coin shop is not open yet, so coins you earn now wait for it"),
             new("changelog.r09100.3",
                 "Aether Coin stays on your character and never buys reach"),
             new("changelog.r09100.4",
                 "The Games app now highlights the same featured game the server pays a bonus for"),
             new("changelog.r09100.5",
                 "One daily notification rolls up what you earned instead of pinging on every grant"),
+            new("changelog.r09100.6",
+                "The coin balance now shows in Control Center and on a home screen widget, so you can check it without opening the app"),
+            new("changelog.r09100.8",
+                "Games now carry a small session chip that fills toward the three minute mark, so you can see when a session will pay and when the day's game earnings are used up"),
+            new("changelog.r09100.10",
+                "Aether Coin, Shortcuts, and Housing now have their own welcome tours"),
+            new("changelog.r09100.11",
+                "App tile colors are now generated from one color ring, so the home screen no longer mixes vivid tiles with dull ones"),
+            new("changelog.r09100.13",
+                "The side, mute, and lock buttons now sit seated in the chassis edge instead of floating beside it"),
+            new("changelog.r09100.14",
+                "A call now warns you when your microphone never reaches the other side, and points at the input device setting"),
+            new("changelog.r09100.15",
+                "A device without your encryption key now locks and asks for your recovery code, instead of quietly creating a new key"),
+            new("changelog.r09100.16",
+                "Your recovery code now brings back history encrypted under a previous key, right after unlocking or through Restore older chats in Settings"),
+            new("changelog.r09100.17",
+                "Chats now nudge you once to set up a recovery code if you have not saved one"),
+            new("changelog.r09100.18",
+                "A PC that cannot use the system key store now keeps your encryption key instead of creating a new one every session"),
+            new("changelog.r09100.19",
+                "Conversation previews and message notifications no longer show the encrypted placeholder: previews heal within seconds, and notifications wait for the text to decrypt"),
+            new("changelog.r09100.21",
+                "Reordering gearsets and categories in Jobs now uses up and down buttons, replacing drag handles that rarely picked a row up"),
+            new("changelog.r09100.22",
+                "Failures that used to pass silently, in playback, imports, saving settings, network requests, and encryption, are now written to the log so problem reports can be traced"),
         };
 
         public static readonly LocString[] Release0999 =
@@ -2634,6 +2660,10 @@ internal static class L
         public static readonly LocString EditProfile = new("chirper.editProfile", "Edit Profile");
         public static readonly LocString ChangePhoto = new("chirper.changePhoto", "Change Photo");
         public static readonly LocString ImportFromPc = new("chirper.importFromPc", "Import from PC");
+        public static readonly LocString AddPhotos = new("chirper.addPhotos", "Add photos");
+        public static readonly LocString GifTooLarge = new("chirper.gifTooLarge", "GIF is too large (max 4 MB)");
+        public static readonly LocString GifRidesAlone = new("chirper.gifRidesAlone", "A GIF has to be posted on its own, without other photos.");
+        public static readonly LocString MaxPhotos = new("chirper.maxPhotos", "A chirp can carry up to {0} photos.");
         public static readonly LocString MoveAndScale = new("chirper.moveAndScale", "Move and Scale");
         public static readonly LocString GestureHint = new("chirper.gestureHint", "Drag to move · scroll to zoom");
         public static readonly LocString Use = new("chirper.use", "Use");
@@ -2660,10 +2690,6 @@ internal static class L
         public static readonly LocString ReactHundred = new("chirper.reactHundred", "100");
         public static readonly LocString ReactQuestion = new("chirper.reactQuestion", "Question");
         public static readonly LocPlural Posts = new("chirper.posts", "{0} post", "{0} posts");
-        public static readonly LocString AddPhotos = new("chirper.addPhotos", "Add photos");
-        public static readonly LocString GifTooLarge = new("chirper.gifTooLarge", "GIF is too large (max 4 MB)");
-        public static readonly LocString GifRidesAlone = new("chirper.gifRidesAlone", "A GIF has to be posted on its own, without other photos.");
-        public static readonly LocString MaxPhotos = new("chirper.maxPhotos", "A chirp can carry up to {0} photos.");
         public static readonly LocPlural Likes = new("chirper.likes", "{0} like", "{0} likes");
         public static readonly LocString DeleteConfirmMessage = new("chirper.deleteConfirmMessage", "Delete this post? This can't be undone.");
         public static readonly LocString DeleteCommentConfirmMessage = new("chirper.deleteCommentConfirmMessage", "Delete this comment? This can't be undone.");
@@ -3677,7 +3703,6 @@ internal static class L
         public static readonly LocString HelpTitle = new("coin.helpTitle", "About Aether Coin");
         public static readonly LocString HelpBody = new("coin.helpBody", "Coins can take up to 30 minutes to arrive, so give it a little time if an earn does not show up right away. The shop opens in a future update, and everything you earn until then will be waiting.");
         public static readonly LocString ShopEmptyHint = new("coin.shopEmptyHint", "The shop is still in the works. It opens very soon.");
-        public static readonly LocString FreeNote = new("coin.freeNote", "Custom wallpapers, accents, and imported sounds are free and stay free.");
         public static readonly LocString LeavingSoon = new("coin.leavingSoon", "Leaving {0}");
         public static readonly LocString FrozenTitle = new("coin.frozenTitle", "Your wallet is frozen");
         public static readonly LocString FrozenHint = new("coin.frozenHint", "Earning and spending are on hold. Check the Safety page for the reason.");

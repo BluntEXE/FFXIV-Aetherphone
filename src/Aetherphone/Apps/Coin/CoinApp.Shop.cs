@@ -54,8 +54,6 @@ internal sealed partial class CoinApp
             ImGui.Dummy(new Vector2(width, cardHeight + gap));
         }
 
-        ImGui.Dummy(new Vector2(0f, 4f * scale));
-        SettingsSection.Hint(Loc.T(L.Coin.FreeNote), theme);
         ImGui.Dummy(new Vector2(0f, 16f * scale));
     }
 
