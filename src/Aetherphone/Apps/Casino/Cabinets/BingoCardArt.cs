@@ -12,6 +12,8 @@ internal static class BingoCardArt
 {
     public const int Columns = BingoRules.Columns;
 
+    private const string FreeMark = "FREE";
+
     public static readonly Vector4[] ColumnTints =
     {
         new(0.310f, 0.588f, 0.855f, 1f),
@@ -48,8 +50,12 @@ internal static class BingoCardArt
 
         if (cellIndex == BingoRules.FreeCell)
         {
-            drawList.AddCircleFilled(center, cell * 0.34f,
-                ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.35f)), 24);
+            // The middle square is given, so it reads as a mark that was already made rather than
+            // as a hole where a number should be.
+            drawList.AddCircleFilled(center, cell * 0.40f,
+                ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.55f)), 32);
+            Typography.DrawCentered(drawList, center, FreeMark, ui.Palette.HeaderInk,
+                ScaleForRadius(cell * 0.40f) * 0.72f, FontWeight.Bold);
             return;
         }
 

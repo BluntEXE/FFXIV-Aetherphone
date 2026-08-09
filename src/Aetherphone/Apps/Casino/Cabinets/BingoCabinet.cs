@@ -16,7 +16,7 @@ internal sealed class BingoCabinet
     private const float CallerHeight = 162f;
     private const float BallRailHeight = 48f;
     private const float ProgressHeight = 62f;
-    private const float LadderRowHeight = 38f;
+    private const float LadderRowHeight = 34f;
     private const float SegmentHeight = 40f;
     private const float PillHeight = 46f;
     private const float CardGap = 10f;
@@ -311,15 +311,32 @@ internal sealed class BingoCabinet
         }
         else if (playback.LatestBall > 0)
         {
-            var entry = MathF.Min(1f, playback.SinceBall / BingoRoundPlayback.BallEntrySeconds);
-            var radius = 38f * scale * (0.62f + 0.38f * Easing.EaseOutBack(entry));
-            var ballCenter = new Vector2(centerX, min.Y + 46f * scale);
-            drawList.AddCircleFilled(ballCenter, radius * 1.42f,
-                ImGui.GetColorU32(new Vector4(ui.Palette.Accent.X, ui.Palette.Accent.Y, ui.Palette.Accent.Z,
-                    0.16f * (1f - entry * 0.4f))), 40);
-            BingoCardArt.DrawBallChip(drawList, ballCenter, radius, playback.LatestBall, 1f,
-                ui.Palette.HeaderInk);
-            Typography.DrawCentered(drawList, new Vector2(centerX, min.Y + 96f * scale),
+            var ballCenter = new Vector2(centerX, min.Y + 52f * scale);
+            if (playback.Rolling)
+            {
+                // The tumble: the chip is already there and already the right size, and only the
+                // face is undecided. Growing it here as well would read as two events.
+                var roll = playback.RollProgress;
+                var wobble = (1f - roll) * 3.5f * scale;
+                var jitter = new Vector2(MathF.Sin(playback.SinceBall * 41f) * wobble,
+                    MathF.Cos(playback.SinceBall * 37f) * wobble);
+                drawList.AddCircleFilled(ballCenter, 44f * scale,
+                    ImGui.GetColorU32(Palette.WithAlpha(ui.Palette.Accent, 0.10f + 0.14f * (1f - roll))), 40);
+                BingoCardArt.DrawBallChip(drawList, ballCenter + jitter, 38f * scale,
+                    playback.RollingFace(playback.BallCount), 0.55f + 0.35f * roll, ui.Palette.HeaderInk);
+            }
+            else
+            {
+                var settle = MathF.Min(1f,
+                    (playback.SinceBall - BingoRoundPlayback.BallRollSeconds)
+                    / BingoRoundPlayback.BallEntrySeconds);
+                var radius = 38f * scale * (0.90f + 0.10f * Easing.EaseOutBack(MathF.Max(0.01f, settle)));
+                drawList.AddCircleFilled(ballCenter, radius * 1.42f,
+                    ImGui.GetColorU32(Palette.WithAlpha(ui.Palette.Accent, 0.18f * (1f - settle * 0.5f))), 40);
+                BingoCardArt.DrawBallChip(drawList, ballCenter, radius, playback.LatestBall, 1f,
+                    ui.Palette.HeaderInk);
+            }
+            Typography.DrawCentered(drawList, new Vector2(centerX, min.Y + 104f * scale),
                 Loc.T(L.Casino.BingoCalledCount, GameNumber.Label(playback.BallCount),
                     GameNumber.Label(BingoRules.Balls)), ui.MutedInk, TextStyles.Subheadline);
         }
@@ -392,22 +409,17 @@ internal sealed class BingoCabinet
         Typography.Draw(drawList, new Vector2(min.X + pad, centerY + 6f * scale), onCard, ui.MutedInk,
             TextStyles.Subheadline);
 
+        // The headline already says the number, so the right hand side carries how many numbers are
+        // still live on that card rather than repeating it.
         if (hot)
         {
-            var pulse = 0.5f + 0.5f * MathF.Sin(playback.SinceBall * 4.4f);
-            var radius = 13f * scale;
+            var pulse = 0.5f + 0.5f * Pulse.Wave(Pulse.Fast);
+            var radius = 16f * scale;
             var center = new Vector2(max.X - pad - radius, centerY);
             drawList.AddCircleFilled(center, radius * (0.94f + 0.10f * pulse),
-                ImGui.GetColorU32(new Vector4(Gold.X, Gold.Y, Gold.Z, 0.20f + 0.16f * pulse)), 28);
+                ImGui.GetColorU32(Palette.WithAlpha(Gold, 0.22f + 0.18f * pulse)), 28);
             Typography.DrawCentered(drawList, center, GameNumber.Label(best.Gap), Gold,
-                TextStyles.SubheadlineEmphasized);
-        }
-        else
-        {
-            var gapLabel = GameNumber.Label(best.Gap);
-            var gapSize = Typography.Measure(gapLabel, TextStyles.Title2);
-            Typography.Draw(drawList, new Vector2(max.X - pad - gapSize.X, centerY - gapSize.Y * 0.5f),
-                gapLabel, ui.TitleInk, TextStyles.Title2);
+                TextStyles.Title3);
         }
 
         ImGui.Dummy(new Vector2(width, height + Metrics.Space.Sm * scale));
