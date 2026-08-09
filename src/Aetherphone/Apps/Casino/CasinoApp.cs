@@ -524,7 +524,7 @@ internal sealed partial class CasinoApp : IPhoneApp
 
     private bool SeatedAt(string wireKind)
     {
-        var sitting = casino.State?.Sitting;
+        var sitting = Core.Casino.CasinoWire.SittingFor(casino.State, wireKind);
         return sitting is not null && string.Equals(sitting.GameKind, wireKind, StringComparison.Ordinal);
     }
 

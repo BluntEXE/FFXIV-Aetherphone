@@ -24,4 +24,17 @@ internal static class CasinoWire
     {
         return string.Concat(KindPrefix, gameId);
     }
+
+    public static Aethernet.Contracts.CasinoSittingDto? SittingFor(
+        Aethernet.Contracts.CasinoStateDto? state, string wireKind)
+    {
+        if (state is null)
+        {
+            return null;
+        }
+
+        return string.Equals(wireKind, BlackjackKind, StringComparison.Ordinal)
+            ? state.TableSitting
+            : state.Sitting;
+    }
 }

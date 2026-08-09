@@ -302,7 +302,7 @@ internal sealed class BlackjackTable
 
     private void TapEmptySeat(int seatIndex, CasinoStateDto state, int phase)
     {
-        var sitting = state.Sitting;
+        var sitting = CasinoWire.SittingFor(state, CasinoWire.BlackjackKind);
         var bought = sitting is not null
             && string.Equals(sitting.GameKind, CasinoWire.BlackjackKind, StringComparison.Ordinal);
         if (!bought)
@@ -586,7 +586,7 @@ internal sealed class BlackjackTable
         float left, float y, float width, float scale, bool veiled)
     {
         y = DrawBanner(drawList, ui, state, board, snapshot, phaseRemaining, delta, left, y, width, scale);
-        var sitting = state.Sitting;
+        var sitting = CasinoWire.SittingFor(state, CasinoWire.BlackjackKind);
         var bought = sitting is not null
             && string.Equals(sitting.GameKind, CasinoWire.BlackjackKind, StringComparison.Ordinal);
 
@@ -806,7 +806,8 @@ internal sealed class BlackjackTable
         if (DrawSingleAction(ui, label, seatIndex >= 0 && !seatFlow.Busy, left, y, width, scale))
         {
             inlineReason = string.Empty;
-            seatFlow.Sit(roomId, seatIndex, chips.State?.Sitting?.Stack ?? 0, phase);
+            seatFlow.Sit(roomId, seatIndex,
+                CasinoWire.SittingFor(chips.State, CasinoWire.BlackjackKind)?.Stack ?? 0, phase);
         }
     }
 

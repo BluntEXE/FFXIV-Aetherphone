@@ -24,7 +24,8 @@ internal sealed record CasinoStateDto(
     long NetLossToday = 0,
     long AtRisk = 0,
     long BuyInToday = 0,
-    long Balance = 0);
+    long Balance = 0,
+    CasinoSittingDto? TableSitting = null);
 
 internal sealed record CasinoOpenSittingRequest(
     string ClientSittingId,
