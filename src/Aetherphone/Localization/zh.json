@@ -4161,5 +4161,5 @@
     "moderation.notice.coinTitle": "你的Aether Coin余额有变动",
     "moderation.notice.coinBody": "工作人员调整了你的Aether Coin余额。",
     "coin.helpTitle": "关于Aether Coin",
-    "coin.helpBody": "金币最多可能需要30分钟才能到账，如果收益没有立即显示，请稍等片刻。商店将在未来的更新中开放，在那之前你赚到的一切都会保留。"
+    "coin.helpBody": "金币最多可能需要30分钟才能到账，如果收益没有立即显示，请稍等片刻。"
 }

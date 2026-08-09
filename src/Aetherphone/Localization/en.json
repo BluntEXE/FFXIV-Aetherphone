@@ -4161,5 +4161,5 @@
     "moderation.notice.coinTitle": "Your Aether Coin balance changed",
     "moderation.notice.coinBody": "A staff member adjusted your Aether Coin balance.",
     "coin.helpTitle": "About Aether Coin",
-    "coin.helpBody": "Coins can take up to 30 minutes to arrive, so give it a little time if an earn does not show up right away. The shop opens in a future update, and everything you earn until then will be waiting."
+    "coin.helpBody": "Coins can take up to 30 minutes to arrive, so give it a little time if an earn does not show up right away."
 }

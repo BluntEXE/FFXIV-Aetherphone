@@ -3766,7 +3766,7 @@ internal static class L
         public static readonly LocString Unavailable = new("coin.unavailable", "Not for sale right now");
         public static readonly LocString ShopEmpty = new("coin.shopEmpty", "The shelves are being stocked");
         public static readonly LocString HelpTitle = new("coin.helpTitle", "About Aether Coin");
-        public static readonly LocString HelpBody = new("coin.helpBody", "Coins can take up to 30 minutes to arrive, so give it a little time if an earn does not show up right away. The shop opens in a future update, and everything you earn until then will be waiting.");
+        public static readonly LocString HelpBody = new("coin.helpBody", "Coins can take up to 30 minutes to arrive, so give it a little time if an earn does not show up right away.");
         public static readonly LocString ShopEmptyHint = new("coin.shopEmptyHint", "The shop is still in the works. It opens very soon.");
         public static readonly LocString LeavingSoon = new("coin.leavingSoon", "Leaving {0}");
         public static readonly LocString FrozenTitle = new("coin.frozenTitle", "Your wallet is frozen");

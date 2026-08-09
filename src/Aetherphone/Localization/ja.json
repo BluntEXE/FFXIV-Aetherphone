@@ -4161,5 +4161,5 @@
     "moderation.notice.coinTitle": "Aether Coinの残高が変わりました",
     "moderation.notice.coinBody": "スタッフがあなたのAether Coin残高を調整しました。",
     "coin.helpTitle": "Aether Coinについて",
-    "coin.helpBody": "コインの反映には最大30分かかることがあります。すぐに表示されなくても少しお待ちください。ショップは今後のアップデートで開店します。それまでに稼いだ分はすべて残ります。"
+    "coin.helpBody": "コインの反映には最大30分かかることがあります。すぐに表示されなくても少しお待ちください。"
 }
