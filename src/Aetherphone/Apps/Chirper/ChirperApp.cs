@@ -20,6 +20,7 @@ using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
+using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Chirper;
@@ -1011,13 +1012,23 @@ internal sealed partial class ChirperApp : IPhoneApp
         if (result.Tapped && result.Index < photos.Length)
         {
             var url = photos[result.Index];
-            photoViewer.Open(this, () => images.Get(url));
+            photoViewer.Open(this, () => MediaTexture(url));
         }
+    }
+
+    private IDalamudTextureWrap? MediaTexture(string? url)
+    {
+        if (url is not null && url.EndsWith(".gif", StringComparison.OrdinalIgnoreCase))
+        {
+            return images.GetAnimated(url)?.FrameAt(ImGui.GetTime());
+        }
+
+        return images.Get(url);
     }
 
     private void DrawPostImage(ImDrawListPtr drawList, Rect rect, string? url, float rounding, string? scanStatus)
     {
-        var texture = images.Get(url);
+        var texture = MediaTexture(url);
         if (texture is null)
         {
             Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(AppPalettes.Chirper.FieldSurface));

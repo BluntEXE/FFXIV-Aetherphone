@@ -12,9 +12,16 @@ internal sealed class ChirperStore : SocialFeedStore
 {
     public const int MaxImages = 4;
 
+    public const long MaxGifBytes = 4L * 1024 * 1024;
+
     private const int MaxImageDimension = 1600;
 
     private const string UploadScope = "chirp";
+
+    public static bool IsGifPath(string path)
+    {
+        return path.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
+    }
 
     private volatile bool avatarBusy;
 
@@ -75,14 +82,37 @@ internal sealed class ChirperStore : SocialFeedStore
         var firstHeight = 0;
         for (var index = 0; index < keys.Length; index++)
         {
-            var baked = ImageProcessor.BakeJpeg(imagePaths[index], MaxImageDimension);
-            var upload = await media.UploadUrlAsync("image/jpeg", UploadScope, token).ConfigureAwait(false);
+            byte[] bytes;
+            string contentType;
+            int width;
+            int height;
+            if (IsGifPath(imagePaths[index]))
+            {
+                bytes = await File.ReadAllBytesAsync(imagePaths[index], token).ConfigureAwait(false);
+                if (bytes.Length == 0 || bytes.Length > MaxGifBytes)
+                {
+                    return null;
+                }
+
+                (width, height) = ImageProcessor.IdentifyDimensions(bytes);
+                contentType = "image/gif";
+            }
+            else
+            {
+                var baked = ImageProcessor.BakeJpeg(imagePaths[index], MaxImageDimension);
+                bytes = baked.Bytes;
+                width = baked.Width;
+                height = baked.Height;
+                contentType = "image/jpeg";
+            }
+
+            var upload = await media.UploadUrlAsync(contentType, UploadScope, token).ConfigureAwait(false);
             if (upload is null)
             {
                 return null;
             }
 
-            var sent = await media.UploadImageAsync(upload.UploadUrl, baked.Bytes, "image/jpeg", token)
+            var sent = await media.UploadImageAsync(upload.UploadUrl, bytes, contentType, token)
                 .ConfigureAwait(false);
             if (!sent)
             {
@@ -92,8 +122,8 @@ internal sealed class ChirperStore : SocialFeedStore
             keys[index] = upload.Key;
             if (index == 0)
             {
-                firstWidth = baked.Width;
-                firstHeight = baked.Height;
+                firstWidth = width;
+                firstHeight = height;
             }
         }
 

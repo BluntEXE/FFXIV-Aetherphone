@@ -91,9 +91,9 @@ internal sealed class MediaCache : IDisposable
                 return;
             }
 
-            if (disposed && ready.TryRemove(key, out var lateWrap))
+            if (disposed)
             {
-                lateWrap.Dispose();
+                ready.RemoveAndDispose(key);
             }
         }
         catch (OperationCanceledException)

@@ -1706,6 +1706,7 @@
   "chirper.changePhoto": "Сменить фото",
   "chirper.importFromPc": "Импортировать с ПК",
   "chirper.addPhotos": "Добавить фото",
+  "chirper.gifTooLarge": "GIF слишком большой (макс. 4 МБ)",
   "chirper.moveAndScale": "Перемещение и масштаб",
   "chirper.gestureHint": "Перетащите · прокрутите для масштаба",
   "chirper.use": "Использовать",

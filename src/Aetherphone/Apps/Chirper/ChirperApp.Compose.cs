@@ -168,7 +168,7 @@ internal sealed partial class ChirperApp
             composeEmoji.DrawToggle(ui, emojiCenter, emojiRadius, Accent, AppPalettes.Chirper.MutedInk,
                 Loc.T(L.Common.Emoji));
             var photoCenter = new Vector2(emojiCenter.X + emojiRadius * 2f + 10f * scale, footerY);
-            var canAttach = composeAttachments.Count < ChirperStore.MaxImages;
+            var canAttach = composeAttachments.Count < ChirperStore.MaxImages && !ComposeHasGif();
             var photoInk = canAttach
                 ? AppPalettes.Chirper.MutedInk
                 : Palette.WithAlpha(AppPalettes.Chirper.MutedInk, 0.4f);
@@ -357,12 +357,33 @@ internal sealed partial class ChirperApp
         composePicking = true;
     }
 
+    private bool ComposeHasGif()
+    {
+        return composeAttachments.Count > 0 && ChirperStore.IsGifPath(composeAttachments[0]);
+    }
+
     private void AddComposeAttachment(string path)
     {
         composePicking = false;
-        if (string.IsNullOrEmpty(path) || composeAttachments.Count >= ChirperStore.MaxImages)
+        if (string.IsNullOrEmpty(path) || composeAttachments.Count >= ChirperStore.MaxImages || ComposeHasGif())
         {
             return;
+        }
+
+        var addingGif = ChirperStore.IsGifPath(path);
+        if (addingGif && composeAttachments.Count > 0)
+        {
+            return;
+        }
+
+        if (addingGif)
+        {
+            var info = new FileInfo(path);
+            if (!info.Exists || info.Length == 0 || info.Length > ChirperStore.MaxGifBytes)
+            {
+                composeStatus = Loc.T(L.Chirper.GifTooLarge);
+                return;
+            }
         }
 
         for (var index = 0; index < composeAttachments.Count; index++)

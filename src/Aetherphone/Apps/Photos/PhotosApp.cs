@@ -714,10 +714,10 @@ internal sealed partial class PhotosApp : IPhoneApp
         }
     }
 
-    private static void DisposeLater(IDalamudTextureWrap wrap)
+    private static void DisposeLater(IDisposable disposable)
     {
         _ = Task.Delay(TimeSpan.FromSeconds(1))
-            .ContinueWith(_ => Plugin.Framework.RunOnFrameworkThread(wrap.Dispose), TaskScheduler.Default);
+            .ContinueWith(_ => Plugin.Framework.RunOnFrameworkThread(disposable.Dispose), TaskScheduler.Default);
     }
 
     public void Dispose()

@@ -1706,6 +1706,7 @@
   "chirper.changePhoto": "Alterar foto",
   "chirper.importFromPc": "Importar do PC",
   "chirper.addPhotos": "Adicionar fotos",
+  "chirper.gifTooLarge": "O GIF é grande demais (máx. 4 MB)",
   "chirper.moveAndScale": "Mover e ajustar",
   "chirper.gestureHint": "Arraste para mover · role para dar zoom",
   "chirper.use": "Usar",

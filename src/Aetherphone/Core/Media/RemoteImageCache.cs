@@ -56,6 +56,43 @@ internal sealed class RemoteImageCache : IDisposable
         return null;
     }
 
+    public AnimatedImage? GetAnimated(string? url)
+    {
+        if (string.IsNullOrEmpty(url) || !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var resolved = LegacyMediaHosts.Normalize(url);
+        if (ready.GetAnimated(resolved) is { } animation)
+        {
+            return animation;
+        }
+
+        if (ready.Get(resolved) is not null)
+        {
+            return null;
+        }
+
+        if (failed.TryGetValue(resolved, out var failedAtUtc))
+        {
+            if (DateTime.UtcNow - failedAtUtc < FailureRetryFor)
+            {
+                return null;
+            }
+
+            failed.TryRemove(resolved, out _);
+        }
+
+        if (!loading.TryAdd(resolved, 0))
+        {
+            return null;
+        }
+
+        _ = LoadAsync(resolved, token => FetchThroughDiskAsync(resolved, token));
+        return null;
+    }
+
     private async Task<byte[]?> FetchThroughDiskAsync(string url, CancellationToken token)
     {
         var cached = disk.Get(url, DiskMaxAge);
@@ -131,17 +168,30 @@ internal sealed class RemoteImageCache : IDisposable
                 return;
             }
 
-            var wrap = await ImageProcessor.DecodeToTextureAsync(Plugin.TextureProvider, bytes,
-                $"Aetherphone.Img.{key}", ImageProcessor.MaxDecodePixels, token).ConfigureAwait(false);
-            if (!ready.TryAdd(key, wrap))
+            if (ImageProcessor.IsGif(bytes))
             {
-                wrap.Dispose();
-                return;
+                var animation = await ImageProcessor.DecodeAnimationAsync(Plugin.TextureProvider, bytes,
+                    $"Aetherphone.Gif.{key}", token).ConfigureAwait(false);
+                if (!ready.TryAddAnimated(key, animation))
+                {
+                    animation.Dispose();
+                    return;
+                }
+            }
+            else
+            {
+                var wrap = await ImageProcessor.DecodeToTextureAsync(Plugin.TextureProvider, bytes,
+                    $"Aetherphone.Img.{key}", ImageProcessor.MaxDecodePixels, token).ConfigureAwait(false);
+                if (!ready.TryAdd(key, wrap))
+                {
+                    wrap.Dispose();
+                    return;
+                }
             }
 
-            if (disposed && ready.TryRemove(key, out var lateWrap))
+            if (disposed)
             {
-                lateWrap.Dispose();
+                ready.RemoveAndDispose(key);
             }
         }
         catch (OperationCanceledException)

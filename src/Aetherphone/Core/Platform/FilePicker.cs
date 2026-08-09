@@ -5,7 +5,7 @@ namespace Aetherphone.Core.Platform;
 
 internal static class FilePicker
 {
-    private const string ImageExtensions = "{.png,.jpg,.jpeg,.bmp},.*";
+    private const string ImageExtensions = "{.png,.jpg,.jpeg,.bmp,.gif},.*";
     private const string AudioExtensions = "{.mp3,.wav},.*";
     private static readonly FileDialogManager Manager = new();
 
