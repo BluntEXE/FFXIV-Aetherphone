@@ -11,6 +11,8 @@ internal static class SlotsRules
 
     public const int CellCount = 15;
 
+    public const int StopsPerReel = 40;
+
     public const int SymbolCount = 8;
 
     public const int WildSymbol = 8;

@@ -3836,6 +3836,46 @@ internal static class L
         public static readonly LocString BarkeepNeedSeat = new("casino.barkeep.needSeat", "Buy in at the cashier to work a paid shift.");
         public static readonly LocString BarkeepLowStack = new("casino.barkeep.lowStack", "Not enough chips for the entry. Top up at the cashier.");
         public static readonly LocString BarkeepDone = new("casino.barkeep.done", "Done");
+        public static readonly LocString RecordsHeading = new("casino.recordsHeading", "On the record");
+        public static readonly LocString HistoryRow = new("casino.historyRow", "Round history");
+        public static readonly LocString HistoryRowHint = new("casino.historyRowHint", "Every stake and payout, on the record");
+        public static readonly LocString FairnessRow = new("casino.fairnessRow", "Fair play");
+        public static readonly LocString FairnessRowHint = new("casino.fairnessRowHint", "Check any settled round yourself");
+        public static readonly LocString ResumeAction = new("casino.resume", "Resume");
+        public static readonly LocString SessionPill = new("casino.sessionPill", "At the tables for {0}");
+        public static readonly LocString HistoryEmptyTitle = new("casino.history.emptyTitle", "No rounds yet");
+        public static readonly LocString HistoryEmptyHint = new("casino.history.emptyHint", "Play a round and it lands here, newest first.");
+        public static readonly LocString HistoryStakeLine = new("casino.history.stakeLine", "Stake {0}");
+        public static readonly LocString StateOpen = new("casino.round.stateOpen", "In play");
+        public static readonly LocString StateSettled = new("casino.round.stateSettled", "Settled");
+        public static readonly LocString StateVoided = new("casino.round.stateVoided", "Voided");
+        public static readonly LocString RoundDetailTitle = new("casino.round.title", "Round");
+        public static readonly LocString RoundGame = new("casino.round.game", "Game");
+        public static readonly LocString RoundState = new("casino.round.state", "Status");
+        public static readonly LocString RoundStake = new("casino.round.stake", "Stake");
+        public static readonly LocString RoundPayout = new("casino.round.payout", "Payout");
+        public static readonly LocString RoundPlayed = new("casino.round.played", "Played");
+        public static readonly LocString RoundSettledAt = new("casino.round.settledAt", "Settled");
+        public static readonly LocString RoundIdLabel = new("casino.round.id", "Round id");
+        public static readonly LocString RoundCommit = new("casino.round.commit", "Seed fingerprint");
+        public static readonly LocString VerifyAction = new("casino.round.verify", "Check this round");
+        public static readonly LocString CopyDetails = new("casino.round.copyDetails", "Copy details");
+        public static readonly LocString VerdictMatchTitle = new("casino.verdict.matchTitle", "This round checks out");
+        public static readonly LocString VerdictMatchHint = new("casino.verdict.matchHint", "The revealed seed matches the fingerprint published before your stake, and every draw replays from it on this device.");
+        public static readonly LocString VerdictMismatchTitle = new("casino.verdict.mismatchTitle", "This round does not add up");
+        public static readonly LocString VerdictMismatchHint = new("casino.verdict.mismatchHint", "The revealed seed does not reproduce this round. Copy the details and send them to us through Feedback.");
+        public static readonly LocString VerdictUnrevealedTitle = new("casino.verdict.unrevealedTitle", "Still sealed");
+        public static readonly LocString VerdictUnrevealedHint = new("casino.verdict.unrevealedHint", "This round has not settled yet, so its seed stays sealed. Check back once it wraps.");
+        public static readonly LocString FairnessIntro = new("casino.fairness.intro", "Every game here is dealt from a sealed seed, and you can check any settled round yourself, right on this phone. Here is how it works.");
+        public static readonly LocString FairnessLockTitle = new("casino.fairness.lockTitle", "Locked before you play");
+        public static readonly LocString FairnessLockBody = new("casino.fairness.lockBody", "Before a stake is accepted, the Saucer publishes a fingerprint of the round's secret seed. The outcome is fixed in that seed; nothing after your tap can bend it.");
+        public static readonly LocString FairnessRevealTitle = new("casino.fairness.revealTitle", "Revealed when it settles");
+        public static readonly LocString FairnessRevealBody = new("casino.fairness.revealBody", "When the round settles, the seed itself is revealed. Hash it and it must match the fingerprint published up front, bit for bit.");
+        public static readonly LocString FairnessReplayTitle = new("casino.fairness.replayTitle", "Checked on your device");
+        public static readonly LocString FairnessReplayBody = new("casino.fairness.replayBody", "Your phone replays every draw of the round from the revealed seed and compares the result with what you were dealt. The check runs here, not at the house.");
+        public static readonly LocString FairnessChainNote = new("casino.fairness.chainNote", "Every round also carries the sealed fingerprint of the round after it, so the chain never breaks.");
+        public static readonly LocString FairnessRecentHeading = new("casino.fairness.recentHeading", "Check a round");
+        public static readonly LocString FairnessNoRounds = new("casino.fairness.noRounds", "Nothing to check yet. Settled rounds land here.");
     }
 
     internal static class Catalogs

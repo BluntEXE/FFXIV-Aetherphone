@@ -127,3 +127,18 @@ internal sealed record CasinoRoundVerifyDto(
     string SeedRevealed = "",
     string NextSeedHash = "",
     string DrawLog = "");
+
+internal sealed record CasinoRoundHistoryDto(
+    string RoundId = "",
+    string GameKind = "",
+    long Stake = 0,
+    long Payout = 0,
+    int State = 0,
+    long CreatedAtUnix = 0,
+    long? SettledAtUnix = null,
+    string SeedCommitHash = "",
+    bool Revealed = false);
+
+internal sealed record CasinoRoundHistoryPage(
+    CasinoRoundHistoryDto[]? Items = null,
+    string? NextCursor = null);

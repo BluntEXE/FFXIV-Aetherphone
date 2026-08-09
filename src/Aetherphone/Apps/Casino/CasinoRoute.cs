@@ -7,9 +7,10 @@ internal enum CasinoScreen
     History,
     Fairness,
     Limits,
+    RoundDetail,
 }
 
-internal readonly record struct CasinoRoute(CasinoScreen Screen, string GameId = "")
+internal readonly record struct CasinoRoute(CasinoScreen Screen, string GameId = "", string RoundId = "")
 {
     public static readonly CasinoRoute Floor = new(CasinoScreen.Floor);
 }

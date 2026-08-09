@@ -30,6 +30,7 @@ internal sealed partial class CasinoApp : IPhoneApp
     private readonly CoinStore coins;
     private readonly Core.Casino.CasinoStore casino;
     private readonly Core.Casino.CasinoPlayStore casinoPlay;
+    private readonly Core.Casino.CasinoHistoryStore history;
     private readonly ConfirmService confirm;
     private readonly CashierDrawer cashier;
     private readonly Cabinets.SlotsCabinet slots;
@@ -46,12 +47,14 @@ internal sealed partial class CasinoApp : IPhoneApp
     private Rect screenArea;
 
     public CasinoApp(AethernetSession session, CoinStore coins, Core.Casino.CasinoStore casino,
-        Core.Casino.CasinoPlayStore casinoPlay, Core.Games.GameStatsStore gameStats, ConfirmService confirm)
+        Core.Casino.CasinoPlayStore casinoPlay, Core.Casino.CasinoHistoryStore history,
+        Core.Games.GameStatsStore gameStats, ConfirmService confirm)
     {
         this.session = session;
         this.coins = coins;
         this.casino = casino;
         this.casinoPlay = casinoPlay;
+        this.history = history;
         this.confirm = confirm;
         cashier = new CashierDrawer(casino, coins, confirm);
         slots = new Cabinets.SlotsCabinet(casino, casinoPlay, OpenCashier);
@@ -71,6 +74,8 @@ internal sealed partial class CasinoApp : IPhoneApp
         scratch.Reset();
         barkeep.Reset();
         ResetLimitsEditor();
+        historyLoadFailed = false;
+        history.Invalidate();
         coins.RefreshNow();
         casino.RefreshNow();
         casinoPlay.RecoverPendingRound();
@@ -151,9 +156,16 @@ internal sealed partial class CasinoApp : IPhoneApp
                 DrawLimits(body);
                 break;
             case CasinoScreen.History:
+                AppHeader.Draw(context, Loc.T(L.Casino.HistoryRow), popRoute);
+                DrawHistory(body);
+                break;
             case CasinoScreen.Fairness:
-                AppHeader.Draw(context, DisplayName, popRoute);
-                DrawPlaceholder(body, FontAwesomeIcon.Hammer);
+                AppHeader.Draw(context, Loc.T(L.Casino.FairnessRow), popRoute);
+                DrawFairness(body);
+                break;
+            case CasinoScreen.RoundDetail:
+                AppHeader.Draw(context, Loc.T(L.Casino.RoundDetailTitle), popRoute);
+                DrawRoundDetail(body, route.RoundId);
                 break;
             default:
                 DrawFloorHeader(context, area);

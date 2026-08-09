@@ -68,6 +68,24 @@ internal sealed class CasinoStore : IDisposable
         }
     }
 
+    // The wire does not carry the sitting's activation time, so the elapsed-session indicator
+    // anchors to the wall clock at which this client first learned of the sitting; a sitting
+    // opened here is stamped at buy-in, one recovered from the server at first observation.
+    public long SittingSeenAtUnix
+    {
+        get
+        {
+            var contentId = session.ActiveContentId;
+            if (contentId == 0)
+            {
+                return 0;
+            }
+
+            var snapshot = configuration.CasinoSittingSeenAtUnix;
+            return snapshot.TryGetValue(contentId, out var seenAtUnix) ? seenAtUnix : 0;
+        }
+    }
+
     public void EnsureFresh()
     {
         RefreshState(StateRefreshMilliseconds);
@@ -331,6 +349,10 @@ internal sealed class CasinoStore : IDisposable
             var next = new Dictionary<ulong, string>(snapshot);
             next[contentId] = sittingId;
             configuration.PendingCasinoSittings = next;
+
+            var seenAt = new Dictionary<ulong, long>(configuration.CasinoSittingSeenAtUnix);
+            seenAt[contentId] = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            configuration.CasinoSittingSeenAtUnix = seenAt;
         }
 
         configuration.Save();
@@ -355,6 +377,13 @@ internal sealed class CasinoStore : IDisposable
             var next = new Dictionary<ulong, string>(snapshot);
             next.Remove(contentId);
             configuration.PendingCasinoSittings = next;
+
+            if (configuration.CasinoSittingSeenAtUnix.ContainsKey(contentId))
+            {
+                var seenAt = new Dictionary<ulong, long>(configuration.CasinoSittingSeenAtUnix);
+                seenAt.Remove(contentId);
+                configuration.CasinoSittingSeenAtUnix = seenAt;
+            }
         }
 
         configuration.Save();

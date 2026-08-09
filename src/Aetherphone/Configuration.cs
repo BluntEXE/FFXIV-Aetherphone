@@ -122,6 +122,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public int DailyChallengeLastDay { get; set; }
     public string PendingCoinGameSession { get; set; } = string.Empty;
     public Dictionary<ulong, string> PendingCasinoSittings { get; set; } = new();
+    public Dictionary<ulong, long> CasinoSittingSeenAtUnix { get; set; } = new();
     public Dictionary<ulong, PendingCasinoRound> PendingCasinoRounds { get; set; } = new();
     public HomeLayout? Home { get; set; }
     public Dictionary<string, bool> AppFlags { get; set; } = new();
