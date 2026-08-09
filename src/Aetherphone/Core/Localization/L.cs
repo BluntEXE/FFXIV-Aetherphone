@@ -863,7 +863,6 @@ internal static class L
 
     internal static class Housing
     {
-        // Chrome and navigation
         public static readonly LocString Map = new("housing.map", "Map");
         public static readonly LocString List = new("housing.list", "List");
         public static readonly LocString Watchlist = new("housing.watchlist", "Watchlist");
@@ -898,7 +897,6 @@ internal static class L
         public static readonly LocString NoWorldMatches = new("housing.noWorldMatches", "No worlds match that");
         public static readonly LocString HomeWorld = new("housing.homeWorld", "Home world");
 
-        // Plot facts
         public static readonly LocString SizeSmall = new("housing.sizeSmall", "Small");
         public static readonly LocString SizeMedium = new("housing.sizeMedium", "Medium");
         public static readonly LocString SizeLarge = new("housing.sizeLarge", "Large");
@@ -937,7 +935,6 @@ internal static class L
         public static readonly LocString ExactTime = new("housing.exactTime", "Exact time");
         public static readonly LocString StatusLabel = new("housing.statusLabel", "Status");
 
-        // Countdowns and freshness
         public static readonly LocString CountdownDays = new("housing.countdownDays", "{0}d {1:00}h {2:00}m");
         public static readonly LocString CountdownHours = new("housing.countdownHours", "{0:00}h {1:00}m");
         public static readonly LocString CountdownMinutes = new("housing.countdownMinutes", "{0}m {1:00}s");
@@ -968,7 +965,6 @@ internal static class L
         public static readonly LocString AgeHoursAgo = new("housing.ageHoursAgo", "{0} hours ago");
         public static readonly LocString AgeDaysAgo = new("housing.ageDaysAgo", "{0} days ago");
 
-        // Actions
         public static readonly LocString Watch = new("housing.watch", "Watch");
         public static readonly LocString Watching = new("housing.watching", "Watching");
         public static readonly LocString Unwatch = new("housing.unwatch", "Unwatch");
@@ -997,7 +993,6 @@ internal static class L
         public static readonly LocString Legend = new("housing.legend", "Legend");
         public static readonly LocString MatchingPlots = new("housing.matchingPlots", "{0} matching");
 
-        // Filters
         public static readonly LocString FilterSizes = new("housing.filterSizes", "Plot size");
         public static readonly LocString FilterPhase = new("housing.filterPhase", "Lottery phase");
         public static readonly LocString FilterEligibility = new("housing.filterEligibility", "Who can buy");
@@ -1011,7 +1006,6 @@ internal static class L
         public static readonly LocString ShowAvailableOnly = new("housing.showAvailableOnly", "Available only");
         public static readonly LocString ShowAllPlots = new("housing.showAllPlots", "All plots");
 
-        // Sorting
         public static readonly LocString SortEntries = new("housing.sortEntries", "Fewest entries");
         public static readonly LocString SortScanned = new("housing.sortScanned", "Recently scanned");
         public static readonly LocString SortSize = new("housing.sortSize", "Plot size");
@@ -1019,7 +1013,6 @@ internal static class L
         public static readonly LocString SortWard = new("housing.sortWard", "Ward and plot");
         public static readonly LocString SortLabel = new("housing.sortLabel", "Sort");
 
-        // Empty, loading and error states
         public static readonly LocString LoadingFirst =
             new("housing.loadingFirst", "Checking residential listings…");
         public static readonly LocString LoadingRefresh = new("housing.loadingRefresh", "Updating housing plots…");
@@ -1050,7 +1043,6 @@ internal static class L
             "Available plots appear as markers. Select a marker to view its lottery details.");
         public static readonly LocString GotIt = new("housing.gotIt", "Got it");
 
-        // Legend
         public static readonly LocString LegendSmall = new("housing.legendSmall", "Circle: small");
         public static readonly LocString LegendMedium = new("housing.legendMedium", "Diamond: medium");
         public static readonly LocString LegendLarge = new("housing.legendLarge", "Hexagon: large");
@@ -1058,7 +1050,6 @@ internal static class L
         public static readonly LocString LegendStale = new("housing.legendStale", "Dashed ring: stale scan");
         public static readonly LocString LegendSelected = new("housing.legendSelected", "Outer ring: selected");
 
-        // Settings
         public static readonly LocString SettingsData = new("housing.settingsData", "Data");
         public static readonly LocString SettingsWorld = new("housing.settingsWorld", "World");
         public static readonly LocString SettingsNotifications = new("housing.settingsNotifications", "Reminders");
@@ -1105,7 +1096,6 @@ internal static class L
         public static readonly LocString RefreshIntervalHint = new("housing.refreshIntervalHint",
             "Housing polls no faster than every {0} minutes, and only while this app is open. Ward data only changes when a player walks the ward, so checking more often shows you nothing new. Refresh manually any time.");
 
-        // Notifications
         public static readonly LocString NotifyEntryTitle = new("housing.notifyEntryTitle", "Housing Reminder");
         public static readonly LocString NotifyEntryBody =
             new("housing.notifyEntryBody", "Plot {0} in {1} has {2} left in the entry period.");

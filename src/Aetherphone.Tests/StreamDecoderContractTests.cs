@@ -28,7 +28,6 @@ public sealed class StreamDecoderContractTests
         Assert.Equal(0, decoder.Read(new byte[4096]));
     }
 
-    /// Stands in for the ACM decoder priming: a few frames yield nothing, then audio arrives.
     private sealed class PrimingDecoder : IStreamDecoder
     {
         private readonly int silentReads;

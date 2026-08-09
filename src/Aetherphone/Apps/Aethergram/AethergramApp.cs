@@ -1118,8 +1118,6 @@ internal sealed partial class AethergramApp : IPhoneApp
         }
         else
         {
-            // Contain, not cover: the photo was baked to its own aspect at compose time, which can
-            // differ from this post's carousel frame, and covering would crop it a second time.
             ImageFit.DrawLetterboxed(drawList, texture, rect, Vector2.Zero, Vector2.One, rounding);
         }
 

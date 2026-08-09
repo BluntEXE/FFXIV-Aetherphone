@@ -2,9 +2,6 @@ using NAudio.Wave;
 
 namespace Aetherphone.Core.Radio;
 
-/// Frame at a time through the Windows ACM decoder, which is what has always played internet radio
-/// here. Moved behind the decoder seam unchanged: same frame loop, same decompressor, same
-/// end-of-stream behaviour.
 internal sealed class Mp3StreamDecoder : IStreamDecoder
 {
     public const int MaxDecodedBytes = 16384 * 4;

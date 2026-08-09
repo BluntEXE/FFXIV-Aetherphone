@@ -52,7 +52,6 @@ public sealed class IcyMetadataStreamTests
     [Fact]
     public void ReadsSmallerThanTheIntervalStillLandOnTheBoundary()
     {
-        // The decoder asks for whatever it wants, not for whole metadata intervals.
         var audio = Audio(250);
         var wire = Wire(interval: 100, audio, ("StreamTitle='Boundary';", 100), (null, 200));
 
@@ -98,7 +97,6 @@ public sealed class IcyMetadataStreamTests
         return audio;
     }
 
-    /// Builds what the server actually sends: audio with metadata blocks spliced in at each interval.
     private static byte[] Wire(int interval, byte[] audio, params (string? Block, int At)[] blocks)
     {
         var wire = new MemoryStream();

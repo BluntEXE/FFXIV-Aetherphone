@@ -565,8 +565,6 @@ internal sealed partial class MusicApp
         }
     }
 
-    /// A raw handle names nobody. The directory already carries the owner's display name, avatar and
-    /// badges, so the page shows the person rather than their id.
     private void DrawHost(ImDrawListPtr drawList, CommunityStationDto station, float left, float top, float width,
         float scale)
     {
