@@ -17,8 +17,9 @@ internal sealed class WheelCabinet
     private const float PadX = 16f;
     private const float StatusRowHeight = 22f;
     private const float MaxRingRadius = 108f;
-    private const float BannerHeight = 46f;
-    private const float SpotCardHeight = 84f;
+    private const float BannerHeight = 54f;
+    private const int BetWindowSeconds = 60;
+    private const float SpotCardHeight = 92f;
     private const float SpotGap = 6f;
     private const float FieldHeight = 40f;
     private const float PillHeight = 46f;
@@ -356,7 +357,7 @@ internal sealed class WheelCabinet
             {
                 var amount = "+" + ((long)winRoll.Display).ToString("N0", Loc.Culture);
                 Typography.DrawCentered(drawList, center, Loc.T(L.Casino.WheelYouWon, amount), Gold,
-                    TextStyles.Title3.Scale * winRoll.PopScale, TextStyles.Title3.Weight);
+                    TextStyles.Title2.Scale * winRoll.PopScale, TextStyles.Title2.Weight);
             }
             else
             {
@@ -372,16 +373,23 @@ internal sealed class WheelCabinet
         if (snapshot.Phase == CasinoRoomPhases.Open)
         {
             var seconds = (int)((remainingMs + 999) / 1000);
-            Typography.DrawCentered(drawList, center,
-                Loc.T(L.Casino.WheelBetsCloseIn, TimeText.Duration(seconds)), ui.TitleInk,
-                TextStyles.SubheadlineEmphasized);
+            var urgent = TurnTimerRing.IsUrgent(remainingMs, BetWindowSeconds);
+            var ringRadius = 17f * scale;
+            var ringCenter = new Vector2(left + width * 0.5f - 74f * scale, center.Y);
+            TurnTimerRing.Draw(drawList, ringCenter, ringRadius, remainingMs, BetWindowSeconds,
+                urgent ? Gold : ui.Palette.Accent, scale);
+            Typography.DrawCentered(drawList, ringCenter, GameNumber.Label(seconds),
+                urgent ? Gold : ui.TitleInk, TextStyles.FootnoteEmphasized);
+            Typography.Draw(drawList, new Vector2(ringCenter.X + ringRadius + 12f * scale,
+                    center.Y - 10f * scale), Loc.T(L.Casino.WheelBetsCloseIn, TimeText.Duration(seconds)),
+                urgent ? Gold : ui.TitleInk, TextStyles.Title3);
             return y + BannerHeight * scale;
         }
 
         var message = playback.Stage == WheelStage.Locking
             ? Loc.T(L.Casino.WheelBetsClosed)
             : Loc.T(L.Casino.WheelSpinning);
-        Typography.DrawCentered(drawList, center, message, Gold, TextStyles.SubheadlineEmphasized);
+        Typography.DrawCentered(drawList, center, message, Gold, TextStyles.Title3);
         return y + BannerHeight * scale;
     }
 
@@ -411,6 +419,7 @@ internal sealed class WheelCabinet
         var hovered = selectable && UiInteract.Hover(min, max);
         var winning = playback.Stage == WheelStage.Settling && WheelRules.Wins(playback.Segment, spot);
 
+        Elevation.Card(drawList, min, max, rounding, scale, selected || winning ? 1f : 0.65f);
         Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(ui.FieldSurface));
         var capMax = new Vector2(max.X, min.Y + 4f * scale);
         Squircle.Fill(drawList, min, capMax, rounding * 0.5f, ImGui.GetColorU32(color));
@@ -433,14 +442,14 @@ internal sealed class WheelCabinet
 
         var centerX = (min.X + max.X) * 0.5f;
         var multiplier = Loc.T(L.Casino.WheelMultiplier, GameNumber.Label(WheelRules.Multipliers[spot]));
-        Typography.DrawCentered(drawList, new Vector2(centerX, min.Y + 18f * scale), multiplier, color,
-            TextStyles.SubheadlineEmphasized);
+        Typography.DrawCentered(drawList, new Vector2(centerX, min.Y + 20f * scale), multiplier, color,
+            TextStyles.Title3);
 
         var row = BoardFor(board, spot);
-        Typography.DrawCentered(drawList, new Vector2(centerX, min.Y + 38f * scale),
-            row.Amount.ToString("N0", Loc.Culture), ui.BodyInk, TextStyles.Caption1);
-        Typography.DrawCentered(drawList, new Vector2(centerX, min.Y + 53f * scale),
-            Loc.T(L.Casino.WheelBettors, GameNumber.Label(row.Bettors)), ui.MutedInk, TextStyles.Caption2);
+        Typography.DrawCentered(drawList, new Vector2(centerX, min.Y + 42f * scale),
+            row.Amount.ToString("N0", Loc.Culture), ui.BodyInk, TextStyles.Subheadline);
+        Typography.DrawCentered(drawList, new Vector2(centerX, min.Y + 58f * scale),
+            Loc.T(L.Casino.WheelBettors, GameNumber.Label(row.Bettors)), ui.MutedInk, TextStyles.Footnote);
 
         var mine = spotStakes[spot];
         if (mine > 0)
