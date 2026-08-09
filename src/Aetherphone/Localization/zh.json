@@ -4091,6 +4091,8 @@
   "coin.shopHeader": "商店",
   "coin.owned": "已拥有",
   "coin.buy": "购买",
+  "coin.price.one": "{0:N0} 硬币",
+  "coin.price.other": "{0:N0} 硬币",
   "coin.buyConfirmTitle": "购买{0}？",
   "coin.buyConfirmBody": "将从钱包中扣除{0} Aether Coin。",
   "coin.insufficient": "Aether Coin还不够",

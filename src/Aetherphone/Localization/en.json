@@ -4091,6 +4091,8 @@
   "coin.shopHeader": "Shop",
   "coin.owned": "Owned",
   "coin.buy": "Buy",
+  "coin.price.one": "{0:N0} Coin",
+  "coin.price.other": "{0:N0} Coins",
   "coin.buyConfirmTitle": "Buy {0}?",
   "coin.buyConfirmBody": "{0} Aether Coin will leave your wallet.",
   "coin.insufficient": "Not enough Aether Coin yet",

@@ -4091,6 +4091,8 @@
   "coin.shopHeader": "ショップ",
   "coin.owned": "所持済み",
   "coin.buy": "購入",
+  "coin.price.one": "{0:N0} コイン",
+  "coin.price.other": "{0:N0} コイン",
   "coin.buyConfirmTitle": "{0}を購入しますか？",
   "coin.buyConfirmBody": "ウォレットから{0} Aether Coinが引かれます。",
   "coin.insufficient": "Aether Coinが足りません",

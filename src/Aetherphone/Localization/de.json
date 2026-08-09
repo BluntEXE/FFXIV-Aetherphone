@@ -4091,6 +4091,8 @@
   "coin.shopHeader": "Shop",
   "coin.owned": "Im Besitz",
   "coin.buy": "Kaufen",
+  "coin.price.one": "{0:N0} Münze",
+  "coin.price.other": "{0:N0} Münzen",
   "coin.buyConfirmTitle": "{0} kaufen?",
   "coin.buyConfirmBody": "{0} Aether Coin verlassen deine Geldbörse.",
   "coin.insufficient": "Noch nicht genug Aether Coin",

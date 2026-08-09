@@ -4091,6 +4091,8 @@
   "coin.shopHeader": "Магазин",
   "coin.owned": "Куплено",
   "coin.buy": "Купить",
+  "coin.price.one": "{0:N0} монета",
+  "coin.price.other": "{0:N0} монет",
   "coin.buyConfirmTitle": "Купить {0}?",
   "coin.buyConfirmBody": "Из кошелька спишется {0} Aether Coin.",
   "coin.insufficient": "Пока недостаточно Aether Coin",

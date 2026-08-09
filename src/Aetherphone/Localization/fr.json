@@ -4091,6 +4091,8 @@
   "coin.shopHeader": "Boutique",
   "coin.owned": "Possédé",
   "coin.buy": "Acheter",
+  "coin.price.one": "{0:N0} pièce",
+  "coin.price.other": "{0:N0} pièces",
   "coin.buyConfirmTitle": "Acheter {0} ?",
   "coin.buyConfirmBody": "{0} Aether Coin quitteront votre portefeuille.",
   "coin.insufficient": "Pas encore assez d'Aether Coin",

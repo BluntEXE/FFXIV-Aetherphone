@@ -45,7 +45,7 @@ internal static class NameEffects
             return default;
         }
 
-        var crest = RoleInk.Highlight(badge.Colors[0], light);
+        var crest = RoleInk.Highlight(badge.Colors[badge.Colors.Length > 1 ? 1 : 0], light);
         var phase = Phase(badge.Effect);
         if (Decorrelated(badge.Effect))
         {

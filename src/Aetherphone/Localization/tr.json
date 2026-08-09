@@ -4091,6 +4091,8 @@
   "coin.shopHeader": "Mağaza",
   "coin.owned": "Sahipsin",
   "coin.buy": "Satın al",
+  "coin.price.one": "{0:N0} Coin",
+  "coin.price.other": "{0:N0} Coin",
   "coin.buyConfirmTitle": "{0} satın alınsın mı?",
   "coin.buyConfirmBody": "Cüzdanından {0} Aether Coin çıkacak.",
   "coin.insufficient": "Henüz yeterli Aether Coin yok",

@@ -3731,6 +3731,7 @@ internal static class L
         public static readonly LocString ShopHeader = new("coin.shopHeader", "Shop");
         public static readonly LocString Owned = new("coin.owned", "Owned");
         public static readonly LocString Buy = new("coin.buy", "Buy");
+        public static readonly LocPlural Price = new("coin.price", "{0:N0} Coin", "{0:N0} Coins");
         public static readonly LocString BuyConfirmTitle = new("coin.buyConfirmTitle", "Buy {0}?");
         public static readonly LocString BuyConfirmBody = new("coin.buyConfirmBody", "{0} Aether Coin will leave your wallet.");
         public static readonly LocString Insufficient = new("coin.insufficient", "Not enough Aether Coin yet");
