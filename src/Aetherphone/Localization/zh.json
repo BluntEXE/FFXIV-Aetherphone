@@ -228,6 +228,7 @@
   "common.saveToGallery": "保存到图库",
   "common.savedToGallery": "已保存到图库",
   "common.noPhotos": "图库中还没有照片",
+  "common.back": "返回",
   "common.fileKindImages": "图片",
   "common.fileKindAudio": "音频",
   "common.fileKindAll": "所有文件",
