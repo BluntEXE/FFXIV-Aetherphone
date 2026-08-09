@@ -16,7 +16,7 @@ internal sealed class BingoCabinet
     private const float CallerHeight = 148f;
     private const float BallRailHeight = 32f;
     private const float ProgressHeight = 62f;
-    private const float LadderRowHeight = 30f;
+    private const float LadderRowHeight = 38f;
     private const float SegmentHeight = 40f;
     private const float PillHeight = 46f;
     private const float CardGap = 10f;
@@ -511,26 +511,36 @@ internal sealed class BingoCabinet
     {
         var awarded = StageAwarded(board, stage);
         var name = Loc.T(StageNames[stage]);
-        var ink = awarded is null ? ui.BodyInk : Gold;
-        Typography.Draw(drawList, new Vector2(left, y + 5f * scale), name, ink, TextStyles.Subheadline);
+        var ink = awarded is null ? ui.TitleInk : Gold;
+        var rowCenter = y + LadderRowHeight * scale * 0.42f;
 
         var prize = awarded?.Prize ?? ladder[stage];
         var prizeText = prize.ToString("N0", Loc.Culture);
-        var prizeSize = Typography.Measure(prizeText, TextStyles.SubheadlineEmphasized);
-        Typography.Draw(drawList, new Vector2(left + width - prizeSize.X, y + 5f * scale), prizeText, ink,
-            TextStyles.SubheadlineEmphasized);
+        var prizeSize = Typography.Measure(prizeText, TextStyles.Title3);
+        Typography.Draw(drawList, new Vector2(left + width - prizeSize.X, rowCenter - prizeSize.Y * 0.5f),
+            prizeText, ink, TextStyles.Title3);
+
+        var nameSize = Typography.Measure(name, TextStyles.Subheadline);
+        Typography.Draw(drawList, new Vector2(left, rowCenter - nameSize.Y * 0.5f), name, ink,
+            TextStyles.Subheadline);
 
         if (awarded is null)
         {
             return;
         }
 
-        var wonOn = Loc.T(L.Casino.BingoStageWonOn, name, GameNumber.Label(awarded.Ball));
-        var fitted = Typography.FitText(wonOn, width - prizeSize.X - 12f * scale, TextStyles.Caption2);
-        var wonSize = Typography.Measure(fitted, TextStyles.Caption2);
-        Typography.Draw(drawList,
-            new Vector2(left + width - prizeSize.X - wonSize.X - 10f * scale, y + 8f * scale), fitted,
-            ui.MutedInk, TextStyles.Caption2);
+        var chip = Loc.T(L.Casino.BingoLadderGone, GameNumber.Label(awarded.Ball));
+        var chipSize = Typography.Measure(chip, TextStyles.Caption1);
+        var chipPad = 7f * scale;
+        var chipMin = new Vector2(left + nameSize.X + 10f * scale, rowCenter - chipSize.Y * 0.5f - 2f * scale);
+        var chipMax = new Vector2(chipMin.X + chipSize.X + chipPad * 2f, chipMin.Y + chipSize.Y + 4f * scale);
+        if (chipMax.X < left + width - prizeSize.X - 8f * scale)
+        {
+            Squircle.Fill(drawList, chipMin, chipMax, (chipMax.Y - chipMin.Y) * 0.5f,
+                ImGui.GetColorU32(new Vector4(Gold.X, Gold.Y, Gold.Z, 0.16f)));
+            Typography.Draw(drawList, new Vector2(chipMin.X + chipPad, chipMin.Y + 2f * scale), chip, Gold,
+                TextStyles.Caption1);
+        }
     }
 
     internal static CasinoBingoStageDto? StageAwarded(CasinoBingoRoomStateDto? board, int stage)
@@ -754,24 +764,41 @@ internal sealed class BingoCabinet
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var gap = CardGap * scale;
-        var columns = holding > 1 ? 2 : 1;
-        var cardWidth = columns == 2 ? (width - gap) * 0.5f : width * 0.64f;
-        var cardHeight = BingoCardArt.HeightFor(cardWidth);
         var labelHeight = CardLabelHeight * scale;
-        var rowCount = (holding + columns - 1) / columns;
-        var rowStep = cardHeight + labelHeight + gap;
-        for (var cardIndex = 0; cardIndex < holding; cardIndex++)
+        var hero = HeroIndex(mine, holding);
+
+        var heroWidth = holding == 1 ? width * 0.74f : width * 0.78f;
+        var heroHeight = BingoCardArt.HeightFor(heroWidth);
+        var heroMin = new Vector2(origin.X + (width - heroWidth) * 0.5f, origin.Y + labelHeight);
+        var heroCard = new Rect(heroMin, new Vector2(heroMin.X + heroWidth, heroMin.Y + heroHeight));
+        DrawCard(drawList, ui, heroCard, mine, hero, labelHeight, true, scale);
+
+        var used = heroHeight + labelHeight;
+        if (holding > 1)
         {
-            var column = cardIndex % columns;
-            var row = cardIndex / columns;
-            var cardMin = new Vector2(origin.X + column * (cardWidth + gap),
-                origin.Y + row * rowStep + labelHeight);
-            var card = new Rect(cardMin, new Vector2(cardMin.X + cardWidth, cardMin.Y + cardHeight));
-            DrawCard(drawList, ui, card, mine, cardIndex, labelHeight, scale);
+            var others = holding - 1;
+            var smallWidth = (width - gap * (others - 1)) / others;
+            var smallHeight = BingoCardArt.HeightFor(smallWidth);
+            var rowY = origin.Y + used + gap + labelHeight;
+            var slot = 0;
+            for (var cardIndex = 0; cardIndex < holding; cardIndex++)
+            {
+                if (cardIndex == hero)
+                {
+                    continue;
+                }
+
+                var cardMin = new Vector2(origin.X + slot * (smallWidth + gap), rowY);
+                var card = new Rect(cardMin, new Vector2(cardMin.X + smallWidth, cardMin.Y + smallHeight));
+                DrawCard(drawList, ui, card, mine, cardIndex, labelHeight, false, scale);
+                slot++;
+            }
+
+            used += gap + labelHeight + smallHeight;
         }
 
         ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowCount * rowStep - gap + Metrics.Space.Sm * scale));
+        ImGui.Dummy(new Vector2(width, used + Metrics.Space.Sm * scale));
 
         var footnote = Loc.T(L.Casino.BingoMarksAuto);
         var footBlock = Typography.MeasureWrappedBlock(footnote, TextStyles.Caption2, width);
@@ -779,27 +806,46 @@ internal sealed class BingoCabinet
         ImGui.Dummy(new Vector2(width, footBlock.Y));
     }
 
+    private int HeroIndex(CasinoBingoCardsDto? mine, int holding)
+    {
+        var best = BestProgress(mine);
+        return best.CardIndex >= 0 && best.CardIndex < holding ? best.CardIndex : 0;
+    }
+
     private void DrawCard(ImDrawListPtr drawList, AppSkin ui, Rect card, CasinoBingoCardsDto? mine, int cardIndex,
-        float labelHeight, float scale)
+        float labelHeight, bool hero, float scale)
     {
         var rounding = Metrics.Radius.Sm * scale;
-        var padding = new Vector2(3f * scale, 3f * scale);
+        var padding = new Vector2((hero ? 6f : 3f) * scale, (hero ? 6f : 3f) * scale);
         var plateMin = card.Min - padding;
         var plateMax = card.Max + padding;
+        if (hero)
+        {
+            Elevation.Card(drawList, plateMin, plateMax, rounding, scale);
+        }
+
         Squircle.Fill(drawList, plateMin, plateMax, rounding, ImGui.GetColorU32(ui.FieldSurface));
 
         var autoMask = playback.AutoMaskOf(cardIndex);
         var stampedMask = playback.StampedMaskOf(cardIndex);
         var label = Loc.T(L.Casino.BingoCardLabel, GameNumber.Label(cardIndex + 1));
-        Typography.Draw(drawList, new Vector2(card.Min.X, card.Min.Y - labelHeight), label, ui.MutedInk,
-            TextStyles.Caption2);
+        var labelStyle = hero ? TextStyles.SubheadlineEmphasized : TextStyles.Footnote;
+        Typography.Draw(drawList, new Vector2(card.Min.X, card.Min.Y - labelHeight), label,
+            hero ? ui.TitleInk : ui.MutedInk, labelStyle);
 
-        if (BingoRules.ClosestLineGap(autoMask) == 1 || BingoRules.CellsRemaining(autoMask) == 1)
+        var gap = BingoRules.NextGoalGap(autoMask, out _);
+        if (gap <= 2 && gap > 0)
         {
-            var chip = Loc.T(L.Casino.BingoOneAway);
-            var chipSize = Typography.Measure(chip, TextStyles.Caption2);
-            Typography.Draw(drawList, new Vector2(card.Max.X - chipSize.X, card.Min.Y - labelHeight), chip, Gold,
-                TextStyles.Caption2);
+            var chip = gap == 1 ? Loc.T(L.Casino.BingoOneAway) : GameNumber.Label(gap);
+            var chipStyle = hero ? TextStyles.FootnoteEmphasized : TextStyles.Caption1;
+            var chipSize = Typography.Measure(chip, chipStyle);
+            var chipPad = 7f * scale;
+            var chipMax = new Vector2(card.Max.X, card.Min.Y - labelHeight * 0.12f);
+            var chipMin = new Vector2(chipMax.X - chipSize.X - chipPad * 2f, chipMax.Y - chipSize.Y - 3f * scale);
+            Squircle.Fill(drawList, chipMin, chipMax, (chipMax.Y - chipMin.Y) * 0.5f,
+                ImGui.GetColorU32(new Vector4(Gold.X, Gold.Y, Gold.Z, gap == 1 ? 0.26f : 0.14f)));
+            Typography.Draw(drawList, new Vector2(chipMin.X + chipPad, chipMin.Y + 1.5f * scale), chip, Gold,
+                chipStyle);
         }
 
         if (Settled(mine) && mine!.Payout > 0)

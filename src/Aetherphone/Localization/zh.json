@@ -4428,6 +4428,7 @@
   "casino.bingo.stageTwoLines": "两线",
   "casino.bingo.stageFullHouse": "满卡",
   "casino.bingo.cardsInPlay": "{0} 张卡在玩",
+  "casino.bingo.ladderGone": "{0} 号已中",
   "casino.bingo.ladderGrows": "奖金随大厅一起长，到 {0} 张卡就不再往上涨。",
   "casino.bingo.ladderCapped": "大厅已超过 {0} 张卡，奖金到顶了，之后就停在那里。",
   "casino.bingo.stageWonOn": "{0} 在第 {1} 球开出",

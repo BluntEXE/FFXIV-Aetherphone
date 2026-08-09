@@ -4428,6 +4428,7 @@
   "casino.bingo.stageTwoLines": "ダブルライン",
   "casino.bingo.stageFullHouse": "フルハウス",
   "casino.bingo.cardsInPlay": "{0} 枚がプレイ中",
+  "casino.bingo.ladderGone": "{0}で決着",
   "casino.bingo.ladderGrows": "賞金はホールとともに増え、{0} 枚で頭打ちになります。",
   "casino.bingo.ladderCapped": "ホールは {0} 枚を超えたので、賞金は上限に達したままです。",
   "casino.bingo.stageWonOn": "{0} はボール {1} で決まりました",

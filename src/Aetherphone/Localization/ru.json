@@ -4428,6 +4428,7 @@
   "casino.bingo.stageTwoLines": "Две линии",
   "casino.bingo.stageFullHouse": "Полная карточка",
   "casino.bingo.cardsInPlay": "Карточек в игре: {0}",
+  "casino.bingo.ladderGone": "ушёл на {0}",
   "casino.bingo.ladderGrows": "Призы растут вместе с залом и перестают расти на {0} карточках.",
   "casino.bingo.ladderCapped": "В зале больше {0} карточек, поэтому призы упёрлись в потолок и там и остаются.",
   "casino.bingo.stageWonOn": "{0}: шар {1}",

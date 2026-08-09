@@ -4428,6 +4428,7 @@
   "casino.bingo.stageTwoLines": "İki çizgi",
   "casino.bingo.stageFullHouse": "Tam kart",
   "casino.bingo.cardsInPlay": "Oyunda {0} kart",
+  "casino.bingo.ladderGone": "{0} topunda gitti",
   "casino.bingo.ladderGrows": "Ödüller salonla birlikte büyür ve {0} kartta büyümeyi bırakır.",
   "casino.bingo.ladderCapped": "Salon {0} kartı geçti, bu yüzden ödüller tavanında ve orada kalıyor.",
   "casino.bingo.stageWonOn": "{0}: {1} numaralı topta",

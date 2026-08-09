@@ -4428,6 +4428,7 @@
   "casino.bingo.stageTwoLines": "Deux lignes",
   "casino.bingo.stageFullHouse": "Carton plein",
   "casino.bingo.cardsInPlay": "{0} cartes en jeu",
+  "casino.bingo.ladderGone": "tombé sur le {0}",
   "casino.bingo.ladderGrows": "Les lots grandissent avec la salle et cessent de grandir à {0} cartes.",
   "casino.bingo.ladderCapped": "La salle dépasse {0} cartes, les lots sont donc à leur plafond et y restent.",
   "casino.bingo.stageWonOn": "{0} est tombée sur la boule {1}",

@@ -4428,6 +4428,7 @@
   "casino.bingo.stageTwoLines": "Duas linhas",
   "casino.bingo.stageFullHouse": "Cartela cheia",
   "casino.bingo.cardsInPlay": "{0} cartelas em jogo",
+  "casino.bingo.ladderGone": "saiu na {0}",
   "casino.bingo.ladderGrows": "Os prêmios crescem com o salão e param de crescer em {0} cartelas.",
   "casino.bingo.ladderCapped": "O salão passou de {0} cartelas, então os prêmios estão no teto e ficam por lá.",
   "casino.bingo.stageWonOn": "{0} saiu na bola {1}",

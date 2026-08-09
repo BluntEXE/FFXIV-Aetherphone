@@ -4428,6 +4428,7 @@
   "casino.bingo.stageTwoLines": "Zwei Reihen",
   "casino.bingo.stageFullHouse": "Volle Karte",
   "casino.bingo.cardsInPlay": "{0} Karten im Spiel",
+  "casino.bingo.ladderGone": "weg auf {0}",
   "casino.bingo.ladderGrows": "Die Preise wachsen mit dem Saal und hören bei {0} Karten auf zu wachsen.",
   "casino.bingo.ladderCapped": "Der Saal ist über {0} Karten hinaus, die Preise stehen also an ihrer Decke und bleiben dort.",
   "casino.bingo.stageWonOn": "{0} fiel auf Kugel {1}",

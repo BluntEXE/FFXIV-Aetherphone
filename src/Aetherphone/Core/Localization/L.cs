@@ -4036,6 +4036,7 @@ internal static class L
         public static readonly LocString BingoStageTwoLines = new("casino.bingo.stageTwoLines", "Two lines");
         public static readonly LocString BingoStageFullHouse = new("casino.bingo.stageFullHouse", "Full house");
         public static readonly LocString BingoCardsInPlay = new("casino.bingo.cardsInPlay", "{0} cards in play");
+        public static readonly LocString BingoLadderGone = new("casino.bingo.ladderGone", "gone on {0}");
         public static readonly LocString BingoLadderGrows = new("casino.bingo.ladderGrows", "Prizes grow with the hall and stop growing at {0} cards.");
         public static readonly LocString BingoLadderCapped = new("casino.bingo.ladderCapped", "The hall is past {0} cards, so the prizes are at their ceiling and stay there.");
         public static readonly LocString BingoStageWonOn = new("casino.bingo.stageWonOn", "{0} went on ball {1}");

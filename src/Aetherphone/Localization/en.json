@@ -4428,6 +4428,7 @@
   "casino.bingo.stageTwoLines": "Two lines",
   "casino.bingo.stageFullHouse": "Full house",
   "casino.bingo.cardsInPlay": "{0} cards in play",
+  "casino.bingo.ladderGone": "gone on {0}",
   "casino.bingo.ladderGrows": "Prizes grow with the hall and stop growing at {0} cards.",
   "casino.bingo.ladderCapped": "The hall is past {0} cards, so the prizes are at their ceiling and stay there.",
   "casino.bingo.stageWonOn": "{0} went on ball {1}",
