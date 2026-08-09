@@ -11,6 +11,15 @@ internal enum CasinoTableFilter
     Mine,
 }
 
+internal static class CasinoTableKinds
+{
+    public const int Solo = 0;
+
+    public const int House = 1;
+
+    public const int Private = 2;
+}
+
 internal static class CasinoStakeTiers
 {
     public const int Any = 0;
@@ -52,13 +61,24 @@ internal static class CasinoTableFilters
             CasinoTableFilter.OpenSeats => HasOpenSeat(row),
             CasinoTableFilter.LowStakes => row.MinBet > 0 && row.MinBet <= LowStakeCeiling,
             CasinoTableFilter.HighStakes => row.MinBet >= HighStakeFloor,
-            CasinoTableFilter.Mine => row.Owner || row.Seated,
+            CasinoTableFilter.Mine => row.Kind == CasinoTableKinds.Private,
             _ => true,
         };
     }
 
     public static bool HasOpenSeat(CasinoTableRowDto row)
     {
-        return row.SeatCount > 0 && row.SeatsTaken < row.SeatCount;
+        return row.MaxSeats > 0 && row.SeatedCount < row.MaxSeats;
+    }
+
+    public static bool IsPrivate(CasinoTableRowDto row)
+    {
+        return row.Kind == CasinoTableKinds.Private;
+    }
+
+    public static int SpectatorsOf(CasinoTableRowDto row)
+    {
+        var watching = row.Occupancy - row.SeatedCount;
+        return watching > 0 ? watching : 0;
     }
 }

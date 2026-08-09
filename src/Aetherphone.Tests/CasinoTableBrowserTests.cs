@@ -127,15 +127,16 @@ public sealed class CasinoTableBrowserTests
         bool inviteOnly = false, bool owner = false, bool seated = false)
     {
         return new CasinoTableRowDto(
-            RoomId: "blackjack-table",
+            TableId: "blackjack-table",
             GameKind: CasinoWire.BlackjackKind,
-            Name: "Emerald room",
+            Kind: inviteOnly || owner || seated ? CasinoTableKinds.Private : CasinoTableKinds.House,
+            OwnerName: owner ? "Emerald" : string.Empty,
             MinBet: minBet,
             MaxBet: 500,
-            SeatCount: seatCount,
-            SeatsTaken: seatsTaken,
-            InviteOnly: inviteOnly,
-            Owner: owner,
-            Seated: seated);
+            MinBuyIn: 100,
+            MaxBuyIn: 2000,
+            MaxSeats: seatCount,
+            SeatedCount: seatsTaken,
+            Admitted: true);
     }
 }

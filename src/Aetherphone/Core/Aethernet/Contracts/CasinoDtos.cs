@@ -360,23 +360,22 @@ internal sealed record CasinoBlackjackActionDto(
     long Stack = 0);
 
 internal sealed record CasinoTableRowDto(
-    string RoomId = "",
+    string TableId = "",
     string GameKind = "",
-    string Name = "",
+    int Kind = 0,
     int StakeTier = 0,
+    string OwnerUserId = "",
+    string OwnerName = "",
     long MinBet = 0,
     long MaxBet = 0,
     long MinBuyIn = 0,
     long MaxBuyIn = 0,
-    int SeatCount = 0,
-    int SeatsTaken = 0,
-    int Spectators = 0,
-    bool InviteOnly = false,
-    bool Owner = false,
-    bool Seated = false,
-    bool Draining = false,
-    int Phase = 0,
-    long PhaseEndsAtUnixMs = 0);
+    int MaxSeats = 0,
+    int SeatedCount = 0,
+    int Occupancy = 0,
+    bool Admitted = false,
+    string Reason = "",
+    string InviteToken = "");
 
 internal sealed record CasinoTableListDto(
     CasinoTableRowDto[]? Tables = null,
@@ -430,7 +429,8 @@ internal sealed record CasinoDoorResultDto(
     string RoomId = "",
     bool Pending = false);
 
-internal sealed record CasinoSitRequest(int SeatIndex, string ClientSeatId, long BuyIn);
+internal sealed record CasinoSitRequest(string RoomId, int SeatIndex, string ClientSittingId,
+    string ClientActionId, long BuyIn);
 
 internal sealed record CasinoSeatDto(
     bool Granted = false,
@@ -442,7 +442,7 @@ internal sealed record CasinoSeatDto(
     long SeatHeldUntilUnixMs = 0,
     long Stack = 0);
 
-internal sealed record CasinoStandRequest(string ClientStandId);
+internal sealed record CasinoStandRequest(string RoomId);
 
 internal sealed record CasinoStandDto(
     bool Granted = false,

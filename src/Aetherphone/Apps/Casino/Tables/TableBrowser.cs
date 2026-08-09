@@ -186,13 +186,13 @@ internal sealed class TableBrowser
             if (TableRow.Draw(drawList, rect, ui, ViewOf(row), scale))
             {
                 inlineReason = string.Empty;
-                if (row.Owner)
+                if (CasinoTableFilters.IsPrivate(row))
                 {
-                    openDoor(row.RoomId);
+                    openDoor(row.TableId);
                 }
                 else
                 {
-                    openTable(row.RoomId);
+                    openTable(row.TableId);
                 }
             }
 
@@ -306,15 +306,18 @@ internal sealed class TableBrowser
     private static TableRowView ViewOf(CasinoTableRowDto row)
     {
         var full = !CasinoTableFilters.HasOpenSeat(row);
-        var name = row.Name.Length > 0 ? row.Name : Loc.T(L.Casino.TableUnnamed);
+        var isPrivate = CasinoTableFilters.IsPrivate(row);
+        var name = isPrivate && row.OwnerName.Length > 0
+            ? Loc.T(L.Casino.TableHostedBy, row.OwnerName)
+            : Loc.T(L.Casino.TableUnnamed);
         var stakes = Loc.T(L.Casino.TableStakes, row.MinBet.ToString("N0", Loc.Culture),
             row.MaxBet.ToString("N0", Loc.Culture));
-        var seats = Loc.T(L.Casino.TableSeats, row.SeatsTaken.ToString(Loc.Culture),
-            row.SeatCount.ToString(Loc.Culture));
-        var spectators = row.Spectators > 0
-            ? Loc.T(L.Casino.TableSpectators, row.Spectators.ToString(Loc.Culture))
+        var seats = Loc.T(L.Casino.TableSeats, row.SeatedCount.ToString(Loc.Culture),
+            row.MaxSeats.ToString(Loc.Culture));
+        var watching = CasinoTableFilters.SpectatorsOf(row);
+        var spectators = watching > 0
+            ? Loc.T(L.Casino.TableSpectators, watching.ToString(Loc.Culture))
             : string.Empty;
-        return new TableRowView(name, stakes, seats, spectators, full, row.InviteOnly, row.Owner || row.Seated,
-            row.Draining);
+        return new TableRowView(name, stakes, seats, spectators, full, isPrivate, isPrivate, !row.Admitted);
     }
 }

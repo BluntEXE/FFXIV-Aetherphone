@@ -11,29 +11,28 @@ namespace Aetherphone.Tests;
 public sealed class CasinoTableWireContractTests
 {
     [Fact]
-    public void TheDirectoryCarriesSeatsSpectatorsAndStakes()
+    public void TheDirectoryReadsTheShapeTheServerActuallySends()
     {
         const string json = """
         {
           "tables": [
             {
-              "roomId": "blackjack-table",
+              "tableId": "blackjack-pit",
               "gameKind": "casino.blackjack",
-              "name": "Emerald room",
-              "stakeTier": 1,
-              "minBet": 10,
-              "maxBet": 500,
+              "kind": 1,
+              "stakeTier": 0,
+              "ownerUserId": "",
+              "ownerName": "",
+              "minBet": 5,
+              "maxBet": 25,
               "minBuyIn": 100,
               "maxBuyIn": 2000,
-              "seatCount": 5,
-              "seatsTaken": 3,
-              "spectators": 7,
-              "inviteOnly": false,
-              "owner": false,
-              "seated": true,
-              "draining": false,
-              "phase": 0,
-              "phaseEndsAtUnixMs": 1750000000000
+              "maxSeats": 5,
+              "seatedCount": 3,
+              "occupancy": 7,
+              "admitted": true,
+              "reason": "",
+              "inviteToken": "[aep.casino.v1:blackjack-pit]"
             }
           ],
           "serverNowUnixMs": 1749999999000
@@ -42,15 +41,34 @@ public sealed class CasinoTableWireContractTests
 
         var directory = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoTableListDto);
         Assert.NotNull(directory);
-        Assert.Single(directory!.Tables!);
-        var row = directory.Tables![0];
-        Assert.Equal("blackjack-table", row.RoomId);
+        var row = Assert.Single(directory!.Tables!);
+        Assert.Equal("blackjack-pit", row.TableId);
         Assert.Equal(CasinoWire.BlackjackKind, row.GameKind);
-        Assert.Equal(3, row.SeatsTaken);
-        Assert.Equal(5, row.SeatCount);
-        Assert.Equal(7, row.Spectators);
-        Assert.True(row.Seated);
+        Assert.Equal(5, row.MaxSeats);
+        Assert.Equal(3, row.SeatedCount);
+        Assert.Equal(100, row.MinBuyIn);
+        Assert.Equal(2000, row.MaxBuyIn);
+        Assert.True(row.Admitted);
         Assert.Equal(1749999999000, directory.ServerNowUnixMs);
+
+        Assert.True(CasinoTableFilters.HasOpenSeat(row));
+        Assert.Equal(4, CasinoTableFilters.SpectatorsOf(row));
+        Assert.False(CasinoTableFilters.IsPrivate(row));
+    }
+
+    // A table the server describes as having five seats and three sitters must never read as full,
+    // which is what every unmatched field name produced: absent names deserialize to zero and zero
+    // of zero satisfies taken >= capacity.
+    [Fact]
+    public void AFullTableIsOnlyOneWhoseSeatsAreActuallyTaken()
+    {
+        var open = new CasinoTableRowDto(TableId: "t", MaxSeats: 5, SeatedCount: 3);
+        var full = new CasinoTableRowDto(TableId: "t", MaxSeats: 5, SeatedCount: 5);
+        var unseeded = new CasinoTableRowDto(TableId: "t");
+
+        Assert.True(CasinoTableFilters.HasOpenSeat(open));
+        Assert.False(CasinoTableFilters.HasOpenSeat(full));
+        Assert.False(CasinoTableFilters.HasOpenSeat(unseeded));
     }
 
     [Fact]
