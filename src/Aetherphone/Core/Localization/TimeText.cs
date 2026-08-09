@@ -79,6 +79,9 @@ internal static class TimeText
 
     public static string Ago(DateTimeOffset moment) => Ago(moment.UtcDateTime);
 
+    public static string Ago(long unixSeconds) =>
+        unixSeconds <= 0 ? "-" : Ago(DateTimeOffset.FromUnixTimeSeconds(unixSeconds));
+
     public static string Short(long unixSeconds)
     {
         if (unixSeconds <= 0)

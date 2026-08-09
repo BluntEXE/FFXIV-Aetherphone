@@ -2459,6 +2459,21 @@ internal static class L
     {
         public static readonly LocString RadioStations = new("music.radioStations", "Radio stations");
         public static readonly LocString RecentlyPlayed = new("music.recentlyPlayed", "Recently played");
+        public static readonly LocString TabHome = new("music.tabHome", "Home");
+        public static readonly LocString TabLive = new("music.tabLive", "Live");
+        public static readonly LocString TabRadio = new("music.tabRadio", "Radio");
+        public static readonly LocString TabLibrary = new("music.tabLibrary", "Library");
+        public static readonly LocString BrowseCategories = new("music.browseCategories", "Browse");
+        public static readonly LocString LiveBadge = new("music.liveBadge", "LIVE");
+        public static readonly LocString LastLive = new("music.lastLive", "Last live {0}");
+        public static readonly LocString OnAirSection = new("music.onAirSection", "On air");
+        public static readonly LocString UpNextSection = new("music.upNextSection", "Up next");
+        public static readonly LocString FollowingSection = new("music.followingSection", "Following");
+        public static readonly LocString AllStationsSection = new("music.allStationsSection", "All stations");
+        public static readonly LocString OnAirNow = new("music.onAirNow", "On air now");
+        public static readonly LocString LastPlayed = new("music.lastPlayed", "Last played");
+        public static readonly LocString ShowAll = new("music.showAll", "Show all");
+        public static readonly LocString NotifyWhenLive = new("music.notifyWhenLive", "Notify me");
         public static readonly LocString TuningIn = new("music.tuningIn", "Tuning in…");
         public static readonly LocString NoStations = new("music.noStations", "No stations found");
         public static readonly LocString NoResults = new("music.noResults", "No results");
@@ -2487,6 +2502,18 @@ internal static class L
         public static readonly LocString CommunityEmpty = new("music.communityEmpty", "No community stations yet");
         public static readonly LocString CommunityEmptySub = new("music.communityEmptySub",
             "When someone opens a station, it shows up here");
+        public static readonly LocString CommunityOffline = new("music.communityOffline",
+            "Could not load stations");
+        public static readonly LocString StationGone = new("music.stationGone", "Station unavailable");
+        public static readonly LocString StationGoneSub = new("music.stationGoneSub",
+            "It may have been closed or hidden by its host");
+        public static readonly LocString StationSignedOut = new("music.stationSignedOut", "Sign in to listen");
+        public static readonly LocString StationSignedOutSub = new("music.stationSignedOutSub",
+            "Sign in to Aethernet in Settings to browse community stations");
+        public static readonly LocString StationOffline = new("music.stationOffline",
+            "Could not load this station");
+        public static readonly LocString StationOfflineSub = new("music.stationOfflineSub",
+            "Check your connection and try again");
         public static readonly LocString ListeningCount = new("music.listeningCount", "{0} listening");
         public static readonly LocString WatchOnTwitch = new("music.watchOnTwitch", "Watch on Twitch");
         public static readonly LocString OffAir = new("music.offAir", "Off air");
