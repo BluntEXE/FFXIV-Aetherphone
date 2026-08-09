@@ -130,18 +130,28 @@ internal sealed class BingoCabinet
         using var surface = AppSurface.Begin(body);
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
         var width = ScrollLayout.StableContentWidth();
+        var calledOff = CalledOff(board, mine);
         DrawStatusRow(ui, snapshot, room.Attached, width, scale);
         DrawCaller(ui, snapshot, board, remaining, width, scale);
         DrawLadder(ui, board, width, scale);
         if (snapshot.Phase == CasinoRoomPhases.Result)
         {
-            DrawRoomSummary(ui, mine, remaining, width, scale, delta);
+            DrawRoomSummary(ui, mine, calledOff, remaining, width, scale, delta);
         }
 
         var sitting = state.Sitting;
         var seated = sitting is not null
             && string.Equals(sitting.GameKind, CasinoWire.BingoKind, StringComparison.Ordinal);
-        if (!seated)
+        if (calledOff)
+        {
+            // The wrap card already carries the news in the result window, and one screen saying
+            // it twice reads as two different refunds.
+            if (snapshot.Phase != CasinoRoomPhases.Result)
+            {
+                DrawNote(ui, Loc.T(L.Casino.BingoCalledOff), width, scale);
+            }
+        }
+        else if (!seated)
         {
             DrawSeatMissing(ui, width, scale);
         }
@@ -150,7 +160,7 @@ internal sealed class BingoCabinet
             DrawComposer(ui, state, sitting!, mine, width, scale);
         }
 
-        DrawCards(ui, mine, width, scale);
+        DrawCards(ui, mine, calledOff, width, scale);
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
         particles.Draw(ImGui.GetWindowDrawList(), scale);
     }
@@ -187,6 +197,49 @@ internal sealed class BingoCabinet
         return mine is not null && mine.RoundState == CasinoRoundStates.Settled;
     }
 
+    // A game the house called off is not a game still being counted. The hall says so from either
+    // end of the fact: the room blob carries the cancel the moment an operator pauses a selling
+    // window, and the personal read carries the voided round once the refund has run. Without both,
+    // a refunded room sits under "the hall is printing your cards" until the round index turns over.
+    internal static bool CalledOff(CasinoBingoRoomStateDto? board, CasinoBingoCardsDto? mine)
+    {
+        return (board is not null && board.Cancelled)
+            || (mine is not null && mine.RoundState == CasinoRoundStates.Voided);
+    }
+
+    // The house's own ladder is quoted whenever the room sends one. The mirrored rates exist so a
+    // room that has not published a table yet still has numbers to paint, not so the phone can
+    // argue with the server about what a full house pays.
+    internal static long PrizeAt(CasinoBingoRoomStateDto? board, int stage)
+    {
+        if (!BingoRules.IsStage(stage))
+        {
+            return 0;
+        }
+
+        var published = board?.Prizes;
+        if (published is not null && published.Length >= BingoRules.StageCount)
+        {
+            return published[stage];
+        }
+
+        return BingoRules.PrizeFor(stage, CardsInPlay(board));
+    }
+
+    internal static void LadderFor(CasinoBingoRoomStateDto? board, Span<long> ladder)
+    {
+        for (var stage = 0; stage < BingoRules.StageCount && stage < ladder.Length; stage++)
+        {
+            ladder[stage] = PrizeAt(board, stage);
+        }
+    }
+
+    internal static int PrizeCardCapOf(CasinoBingoRoomStateDto? board)
+    {
+        var cap = board?.PrizeCardCap ?? 0;
+        return cap > 0 ? cap : BingoRules.PrizeCardCap;
+    }
+
     // A room celebrates once, when the calling is over and a card of this player's came home. A
     // room that paid nothing says so in words and stays quiet, because a loss that gets its own
     // fanfare is the house teaching the wrong lesson.
@@ -208,7 +261,7 @@ internal sealed class BingoCabinet
             return;
         }
 
-        if (settledPayout >= BingoRules.PrizeFor(BingoRules.StageFullHouse, CardsInPlay(board)))
+        if (settledPayout >= PrizeAt(board, BingoRules.StageFullHouse))
         {
             particles.Confetti(celebrationAnchor, 90, ConfettiPalette, 330f * scale, 5f, 1.6f);
             particles.Sparkle(celebrationAnchor, 24, Gold, 190f * scale, 4f, 1.0f);
@@ -323,10 +376,11 @@ internal sealed class BingoCabinet
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var cardsInPlay = CardsInPlay(board);
-        BingoRules.PrizeLadder(cardsInPlay, ladder);
-        var capNote = BingoRules.PrizesFrozen(cardsInPlay)
-            ? Loc.T(L.Casino.BingoLadderCapped, GameNumber.Label(BingoRules.PrizeCardCap))
-            : Loc.T(L.Casino.BingoLadderGrows, GameNumber.Label(BingoRules.PrizeCardCap));
+        LadderFor(board, ladder);
+        var prizeCardCap = PrizeCardCapOf(board);
+        var capNote = cardsInPlay >= prizeCardCap
+            ? Loc.T(L.Casino.BingoLadderCapped, GameNumber.Label(prizeCardCap))
+            : Loc.T(L.Casino.BingoLadderGrows, GameNumber.Label(prizeCardCap));
         var inset = 14f * scale;
         var innerWidth = width - inset * 2f;
         var heading = Loc.T(L.Casino.BingoLadderHeading);
@@ -403,8 +457,8 @@ internal sealed class BingoCabinet
         return null;
     }
 
-    private void DrawRoomSummary(AppSkin ui, CasinoBingoCardsDto? mine, long remainingMs, float width,
-        float scale, float delta)
+    private void DrawRoomSummary(AppSkin ui, CasinoBingoCardsDto? mine, bool calledOff, long remainingMs,
+        float width, float scale, float delta)
     {
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
@@ -428,8 +482,17 @@ internal sealed class BingoCabinet
 
         // The hall says "no card came home" only once the ledger has actually settled the round.
         // Until then it says the calling is over and nothing more, because a zero printed while the
-        // settlement is still in flight is a loss the player never had.
+        // settlement is still in flight is a loss the player never had. A round the house called
+        // off never settles at all, so it says that instead of waiting on a payout nobody owes.
         var outcomeY = min.Y + inset + titleSize.Y + 8f * scale;
+        if (calledOff)
+        {
+            Typography.Draw(drawList, new Vector2(min.X + inset, outcomeY), Loc.T(L.Casino.BingoCalledOff),
+                ui.MutedInk, TextStyles.Subheadline);
+            ImGui.Dummy(new Vector2(width, height + Metrics.Space.Sm * scale));
+            return;
+        }
+
         if (!Settled(mine))
         {
             Typography.Draw(drawList, new Vector2(min.X + inset, outcomeY), Loc.T(L.Casino.BingoCardsPending),
@@ -499,7 +562,8 @@ internal sealed class BingoCabinet
 
         var stake = BingoRules.StakeFor(requestedCards);
         var thin = sitting.Stack < stake;
-        var canBuy = !state.StakesPaused && !state.Draining && !thin && !rooms.StakeInFlight;
+        var blocked = state.StakesPaused || state.Draining;
+        var canBuy = !blocked && !thin && !rooms.StakeInFlight;
         var label = Loc.T(L.Casino.BingoBuyFor, CardCountLabel(requestedCards),
             stake.ToString("N0", Loc.Culture));
         var pillY = segmentY + SegmentHeight * scale + Metrics.Space.Sm * scale;
@@ -511,8 +575,13 @@ internal sealed class BingoCabinet
             rooms.BuyBingoCards(requestedCards);
         }
 
+        // A pill that cannot be pressed has to say why, and a paused hall outranks every other
+        // reason: a buy nothing will accept beside a note about one buy a room reads as a broken
+        // button rather than a house that stopped taking money.
         var noteY = pillRect.Max.Y + 6f * scale;
-        var note = thin ? Loc.T(L.Casino.SlotsLowStack) : Loc.T(L.Casino.BingoOneBuyPerRoom);
+        var note = blocked
+            ? Loc.T(state.StakesPaused ? L.Casino.PausedTitle : L.Casino.DrainingTitle)
+            : thin ? Loc.T(L.Casino.SlotsLowStack) : Loc.T(L.Casino.BingoOneBuyPerRoom);
         var noteBlock = Typography.MeasureWrappedBlock(note, TextStyles.Caption2, width);
         Typography.DrawWrappedLeft(new Vector2(origin.X, noteY), note, ui.MutedInk, TextStyles.Caption2, width);
         var finalNote = Loc.T(L.Casino.BingoCardsFinal);
@@ -586,12 +655,16 @@ internal sealed class BingoCabinet
         return cards == 1 ? Loc.T(L.Casino.BingoOneCard) : Loc.T(L.Casino.BingoCardCount, GameNumber.Label(cards));
     }
 
-    private void DrawCards(AppSkin ui, CasinoBingoCardsDto? mine, float width, float scale)
+    private void DrawCards(AppSkin ui, CasinoBingoCardsDto? mine, bool calledOff, float width, float scale)
     {
         var holding = HeldCards(mine);
         if (holding == 0)
         {
-            DrawNote(ui, Loc.T(L.Casino.BingoNoCardsHint), width, scale);
+            if (!calledOff)
+            {
+                DrawNote(ui, Loc.T(L.Casino.BingoNoCardsHint), width, scale);
+            }
+
             return;
         }
 

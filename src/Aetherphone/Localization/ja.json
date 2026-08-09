@@ -4401,6 +4401,7 @@
   "casino.bingo.buyFor": "{0} を {1} で購入",
   "casino.bingo.oneBuyPerRoom": "1ルームにつき購入は1回です。タップする前にまとめて選びましょう。",
   "casino.bingo.cardsPending": "ホールがカードを印刷しています。",
+  "casino.bingo.calledOff": "ハウスがこのゲームを中止し、カード代はすべて返金されました。",
   "casino.bingo.cardPrice": "1枚 {0}、1ルーム最大 {1}",
   "casino.bingo.holdingFull": "このルームのカードを {0} 枚すべて持っています",
   "casino.bingo.cardCount": "{0} 枚",

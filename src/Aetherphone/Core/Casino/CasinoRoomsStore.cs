@@ -61,12 +61,16 @@ internal sealed class CasinoRoomsStore : IDisposable
     private long unansweredBetRoundIndex = -1;
     private string unansweredPurchaseId = string.Empty;
     private long unansweredPurchaseRoundIndex = -1;
+    private int unansweredPurchaseCardCount = -1;
     private string unansweredActionId = string.Empty;
     private string unansweredActionHandId = string.Empty;
     private int unansweredActionValue;
     private long unansweredActionSeq = -1;
     private long personalRoundIndex = -1;
     private int personalPhase = -1;
+    private long personalAskedRoundIndex = -1;
+    private int personalAskedPhase = -1;
+    private int personalGeneration;
     private int roomsFailed;
     private int stakeFailed;
     private int fetchingRooms;
@@ -257,7 +261,7 @@ internal sealed class CasinoRoomsStore : IDisposable
             if (!result.Granted)
             {
                 chips.RefreshNow();
-                RefreshPersonal();
+                InvalidatePersonal();
                 return;
             }
 
@@ -266,7 +270,7 @@ internal sealed class CasinoRoomsStore : IDisposable
                 chips.AbsorbStack(sittingId, result.Stack);
             }
 
-            RefreshPersonal();
+            InvalidatePersonal();
         }, () => stakeInFlight = false);
     }
 
@@ -292,7 +296,7 @@ internal sealed class CasinoRoomsStore : IDisposable
         string purchaseId;
         lock (stakeGate)
         {
-            purchaseId = ReusablePurchaseId(roundIndex);
+            purchaseId = ReusablePurchaseId(roundIndex, cardCount);
             if (purchaseId.Length == 0)
             {
                 purchaseId = Guid.NewGuid().ToString("N");
@@ -300,6 +304,7 @@ internal sealed class CasinoRoomsStore : IDisposable
 
             unansweredPurchaseId = purchaseId;
             unansweredPurchaseRoundIndex = roundIndex;
+            unansweredPurchaseCardCount = cardCount;
         }
 
         stakeInFlight = true;
@@ -319,7 +324,7 @@ internal sealed class CasinoRoomsStore : IDisposable
             if (!result.Granted)
             {
                 chips.RefreshNow();
-                RefreshPersonal();
+                InvalidatePersonal();
                 return;
             }
 
@@ -329,6 +334,7 @@ internal sealed class CasinoRoomsStore : IDisposable
             }
 
             AbsorbBingoCards(roomId, result);
+            InvalidatePersonal();
         }, () => stakeInFlight = false);
     }
 
@@ -515,11 +521,24 @@ internal sealed class CasinoRoomsStore : IDisposable
         return unansweredBetId;
     }
 
-    private string ReusablePurchaseId(long roundIndex)
+    // A purchase id is only free to reuse for the same order. The server replays the stored
+    // purchase behind an id it has already answered, so sending the id of a one card order with a
+    // four card body would charge one card and hand back one card while the composer asked for
+    // four: the count belongs in the match for the same reason the amount belongs in a bet's.
+    internal static bool ReusesPurchase(long heldRoundIndex, int heldCardCount, long roundIndex, int cardCount)
     {
-        return unansweredPurchaseId.Length > 0 && unansweredPurchaseRoundIndex == roundIndex
-            ? unansweredPurchaseId
-            : string.Empty;
+        return heldRoundIndex == roundIndex && heldCardCount == cardCount;
+    }
+
+    private string ReusablePurchaseId(long roundIndex, int cardCount)
+    {
+        if (unansweredPurchaseId.Length == 0
+            || !ReusesPurchase(unansweredPurchaseRoundIndex, unansweredPurchaseCardCount, roundIndex, cardCount))
+        {
+            return string.Empty;
+        }
+
+        return unansweredPurchaseId;
     }
 
     private void ForgetUnansweredBet(string betId)
@@ -549,6 +568,7 @@ internal sealed class CasinoRoomsStore : IDisposable
 
             unansweredPurchaseId = string.Empty;
             unansweredPurchaseRoundIndex = -1;
+            unansweredPurchaseCardCount = -1;
         }
     }
 
@@ -632,6 +652,11 @@ internal sealed class CasinoRoomsStore : IDisposable
         RefreshRoomState();
     }
 
+    // Two watermarks, because a read that was asked for is not a read that landed. The asked mark
+    // spends the immediate attempt one phase is owed; the loaded mark only moves when a read
+    // actually came back, so a blip or a rate limit is retried on the shared backoff instead of
+    // writing the whole phase off. A hall that swallowed one read would otherwise call its numbers
+    // for minutes with the player's cards missing from the screen.
     private void SyncPersonal()
     {
         var snapshot = room.State?.Snapshot;
@@ -640,15 +665,38 @@ internal sealed class CasinoRoomsStore : IDisposable
             return;
         }
 
-        if (!PersonalIsStale(personalRoundIndex, personalPhase, snapshot.RoundIndex, snapshot.Phase))
+        var roundIndex = snapshot.RoundIndex;
+        var phase = snapshot.Phase;
+        if (!PersonalIsStale(Interlocked.Read(ref personalRoundIndex), Volatile.Read(ref personalPhase),
+                roundIndex, phase))
         {
             return;
         }
 
-        personalRoundIndex = snapshot.RoundIndex;
-        personalPhase = snapshot.Phase;
-        Interlocked.Exchange(ref personalAttemptedAtTick, 0);
+        if (PersonalIsStale(Interlocked.Read(ref personalAskedRoundIndex), Volatile.Read(ref personalAskedPhase),
+                roundIndex, phase))
+        {
+            Interlocked.Exchange(ref personalAskedRoundIndex, roundIndex);
+            Volatile.Write(ref personalAskedPhase, phase);
+            Interlocked.Exchange(ref personalAttemptedAtTick, 0);
+        }
+
         RefreshPersonal();
+    }
+
+    // A stake the server answered is the other moment a player's own money moves, and it lands
+    // between two phases rather than on one. Both watermarks are dropped so the next tick reads
+    // again, the backoff is spent so it reads at once, and the generation turns over so a read
+    // already in flight (which was taken before the stake landed) can no longer mark the phase
+    // loaded on the strength of a board that predates the bet.
+    private void InvalidatePersonal()
+    {
+        Interlocked.Increment(ref personalGeneration);
+        Interlocked.Exchange(ref personalRoundIndex, -1);
+        Volatile.Write(ref personalPhase, -1);
+        Interlocked.Exchange(ref personalAskedRoundIndex, -1);
+        Volatile.Write(ref personalAskedPhase, -1);
+        Interlocked.Exchange(ref personalAttemptedAtTick, 0);
     }
 
     private void OnCasinoSignal(CasinoSignal signal)
@@ -687,8 +735,6 @@ internal sealed class CasinoRoomsStore : IDisposable
         rooms = Array.Empty<CasinoRoomListItemDto>();
         loadedRooms = false;
         ClearPersonal();
-        Interlocked.Exchange(ref stakeResult, null);
-        Interlocked.Exchange(ref stakeFailed, 0);
         Interlocked.Exchange(ref roomsFailed, 0);
         Interlocked.Exchange(ref roomsAttemptedAtTick, 0);
         Interlocked.Exchange(ref roomAttemptedAtTick, 0);
@@ -696,15 +742,24 @@ internal sealed class CasinoRoomsStore : IDisposable
         roomCadence.Reset();
     }
 
+    // A refusal belongs to the room it was raised in. The composer that reads it is whichever
+    // cabinet draws next, so a purchase turned away in the hall would otherwise print "that is all
+    // four cards for this room" over a betting wheel: leaving a room drops the answer with the
+    // money it described.
     private void ClearPersonal()
     {
+        Interlocked.Increment(ref personalGeneration);
         wheelBets = null;
         bingoCards = null;
-        personalRoundIndex = -1;
-        personalPhase = -1;
+        Interlocked.Exchange(ref personalRoundIndex, -1);
+        Volatile.Write(ref personalPhase, -1);
+        personalAskedRoundIndex = -1;
+        personalAskedPhase = -1;
         chipRoundId = string.Empty;
         chipRoundIndex = -1;
         Interlocked.Exchange(ref personalAttemptedAtTick, 0);
+        Interlocked.Exchange(ref stakeResult, null);
+        Interlocked.Exchange(ref stakeFailed, 0);
         lock (stakeGate)
         {
             unansweredBetId = string.Empty;
@@ -713,6 +768,7 @@ internal sealed class CasinoRoomsStore : IDisposable
             unansweredBetRoundIndex = -1;
             unansweredPurchaseId = string.Empty;
             unansweredPurchaseRoundIndex = -1;
+            unansweredPurchaseCardCount = -1;
             unansweredActionId = string.Empty;
             unansweredActionHandId = string.Empty;
             unansweredActionValue = 0;
@@ -805,6 +861,9 @@ internal sealed class CasinoRoomsStore : IDisposable
         }
 
         var gameKind = snapshot.GameKind;
+        var roundIndex = snapshot.RoundIndex;
+        var phase = snapshot.Phase;
+        var generation = Volatile.Read(ref personalGeneration);
         Interlocked.Exchange(ref personalAttemptedAtTick, Environment.TickCount64);
         work.Run("room personal", async token =>
         {
@@ -818,12 +877,14 @@ internal sealed class CasinoRoomsStore : IDisposable
 
                 Interlocked.Exchange(ref personalAttemptedAtTick, 0);
                 AbsorbWheelBets(target, bets);
+                MarkPersonalLoaded(target, generation, roundIndex, phase);
                 return;
             }
 
             if (!string.Equals(gameKind, CasinoWire.BingoKind, StringComparison.Ordinal))
             {
                 Interlocked.Exchange(ref personalAttemptedAtTick, 0);
+                MarkPersonalLoaded(target, generation, roundIndex, phase);
                 return;
             }
 
@@ -835,7 +896,25 @@ internal sealed class CasinoRoomsStore : IDisposable
 
             Interlocked.Exchange(ref personalAttemptedAtTick, 0);
             AbsorbBingoCards(target, cards);
+            MarkPersonalLoaded(target, generation, roundIndex, phase);
         }, () => Interlocked.Exchange(ref fetchingPersonal, 0));
+    }
+
+    // The mark belongs to the room and the generation the read was taken in, for the same reason
+    // the read itself is dropped when the player has moved on. The room id alone does not answer a
+    // player who left the hall and walked straight back into it: the generation does, and marking
+    // the wrong one loaded would hold the fresh room's first read back behind a watermark that
+    // never described it.
+    private void MarkPersonalLoaded(string requestedRoomId, int askedGeneration, long roundIndex, int phase)
+    {
+        if (askedGeneration != Volatile.Read(ref personalGeneration)
+            || !string.Equals(room.RoomId, requestedRoomId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        Interlocked.Exchange(ref personalRoundIndex, roundIndex);
+        Volatile.Write(ref personalPhase, phase);
     }
 
     // A personal read that came back for a room the player has already left is dropped rather than

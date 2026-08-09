@@ -320,15 +320,47 @@ internal sealed partial class CasinoApp : IPhoneApp
         EmptyState.Draw(body, ui, icon, Loc.T(L.Casino.CabinetSoonTitle), Loc.T(L.Casino.CabinetSoonHint));
     }
 
+    // Only the screen actually being left is torn down. A live room is seated by the cabinet route,
+    // not by the top of the stack, so resetting all three every pop would detach the room under a
+    // cabinet the player is still standing in: the cashier can push Limits over the wheel, and the
+    // way back from Limits is this same pop.
     private void PopRoute()
     {
         slots.ClosePayTable();
         scratch.CloseOdds();
-        wheel.Reset();
-        bingo.Reset();
-        dailySpin.Reset();
-        blackjack.Reset();
+        ResetCabinetOf(router.Current);
         router.Pop();
+    }
+
+    private void ResetCabinetOf(CasinoRoute route)
+    {
+        if (route.Screen == CasinoScreen.DailySpin)
+        {
+            dailySpin.Reset();
+            return;
+        }
+
+        if (route.Screen == CasinoScreen.Table)
+        {
+            blackjack.Reset();
+            return;
+        }
+
+        if (route.Screen != CasinoScreen.Cabinet)
+        {
+            return;
+        }
+
+        if (string.Equals(route.GameId, CasinoGames.Wheel, StringComparison.Ordinal))
+        {
+            wheel.Reset();
+            return;
+        }
+
+        if (string.Equals(route.GameId, CasinoGames.Bingo, StringComparison.Ordinal))
+        {
+            bingo.Reset();
+        }
     }
 
     private void OpenTables()

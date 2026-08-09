@@ -4019,6 +4019,7 @@ internal static class L
         public static readonly LocString BingoBuyFor = new("casino.bingo.buyFor", "Buy {0} for {1}");
         public static readonly LocString BingoOneBuyPerRoom = new("casino.bingo.oneBuyPerRoom", "One buy a room, so pick the whole set before you tap.");
         public static readonly LocString BingoCardsPending = new("casino.bingo.cardsPending", "The hall is printing your cards.");
+        public static readonly LocString BingoCalledOff = new("casino.bingo.calledOff", "The house called this game off and handed every card back.");
         public static readonly LocString BingoCardPrice = new("casino.bingo.cardPrice", "{0} a card, up to {1} a room");
         public static readonly LocString BingoHoldingFull = new("casino.bingo.holdingFull", "You are holding {0} for this room. One buy a room, so that is your set.");
         public static readonly LocString BingoCardCount = new("casino.bingo.cardCount", "{0} cards");

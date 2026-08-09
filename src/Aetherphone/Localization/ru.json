@@ -4401,6 +4401,7 @@
   "casino.bingo.buyFor": "Купить {0} за {1}",
   "casino.bingo.oneBuyPerRoom": "Одна покупка на зал, поэтому выберите все карточки до нажатия.",
   "casino.bingo.cardsPending": "Зал печатает ваши карточки.",
+  "casino.bingo.calledOff": "Заведение отменило эту игру и вернуло деньги за все карточки.",
   "casino.bingo.cardPrice": "{0} за карточку, до {1} за комнату",
   "casino.bingo.holdingFull": "У вас все {0} карточки этой комнаты",
   "casino.bingo.cardCount": "Карточек: {0}",

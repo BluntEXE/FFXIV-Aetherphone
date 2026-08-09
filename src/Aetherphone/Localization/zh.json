@@ -4401,6 +4401,7 @@
   "casino.bingo.buyFor": "用 {1} 买 {0}",
   "casino.bingo.oneBuyPerRoom": "每个房间只能购买一次，点击前请一次选好所有卡片。",
   "casino.bingo.cardsPending": "大厅正在打印你的卡片。",
+  "casino.bingo.calledOff": "赌场取消了这一局，所有卡片的费用都已退还。",
   "casino.bingo.cardPrice": "每张 {0}，每场最多 {1}",
   "casino.bingo.holdingFull": "这一场的 {0} 张卡你都拿了",
   "casino.bingo.cardCount": "{0} 张卡",

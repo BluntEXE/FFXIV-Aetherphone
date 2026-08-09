@@ -4401,6 +4401,7 @@
   "casino.bingo.buyFor": "{0} für {1} kaufen",
   "casino.bingo.oneBuyPerRoom": "Ein Kauf pro Raum, also wähl den ganzen Satz, bevor du tippst.",
   "casino.bingo.cardsPending": "Der Saal druckt gerade deine Karten.",
+  "casino.bingo.calledOff": "Das Haus hat dieses Spiel abgesagt und jede Karte zurückgegeben.",
   "casino.bingo.cardPrice": "{0} pro Karte, bis zu {1} pro Raum",
   "casino.bingo.holdingFull": "Du hältst alle {0} Karten für diesen Raum",
   "casino.bingo.cardCount": "{0} Karten",

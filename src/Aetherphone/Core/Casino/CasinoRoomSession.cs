@@ -113,6 +113,9 @@ internal sealed class CasinoRoomSession
         AbsorbServerTime(serverNowUnixMs, localNowUnixMs);
     }
 
+    // Attach and detach are ordered by the same gate the room state moves under. The socket answers
+    // whichever it hears last, so a detach that overtook the attach it was meant to cancel would
+    // leave the server fanning a room the phone dropped every frame of into nothing.
     public void Enter(string nextRoomId)
     {
         if (nextRoomId.Length == 0)
@@ -134,23 +137,20 @@ internal sealed class CasinoRoomSession
             attached = false;
             awaitingSnapshot = true;
             resyncAskedAtUnixMs = 0;
+            Send(SignalType.CasinoAttach, nextRoomId);
         }
-
-        Send(SignalType.CasinoAttach, nextRoomId);
     }
 
     public void Leave()
     {
-        string leaving;
         lock (gate)
         {
-            leaving = roomId;
+            var leaving = roomId;
             ClearRoom();
-        }
-
-        if (leaving.Length > 0)
-        {
-            Send(SignalType.CasinoDetach, leaving);
+            if (leaving.Length > 0)
+            {
+                Send(SignalType.CasinoDetach, leaving);
+            }
         }
     }
 
@@ -164,21 +164,24 @@ internal sealed class CasinoRoomSession
 
     public void OnRealtimeConnected(bool connected)
     {
-        var current = roomId;
-        if (current.Length == 0)
+        lock (gate)
         {
-            return;
-        }
+            var current = roomId;
+            if (current.Length == 0)
+            {
+                return;
+            }
 
-        if (!connected)
-        {
-            attached = false;
+            if (!connected)
+            {
+                attached = false;
+                awaitingSnapshot = true;
+                return;
+            }
+
             awaitingSnapshot = true;
-            return;
+            Send(SignalType.CasinoAttach, current);
         }
-
-        awaitingSnapshot = true;
-        Send(SignalType.CasinoAttach, current);
     }
 
     public void Receive(CasinoSignal signal, long localNowUnixMs)

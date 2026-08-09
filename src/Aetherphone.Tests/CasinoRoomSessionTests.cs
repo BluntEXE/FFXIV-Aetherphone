@@ -341,6 +341,27 @@ public sealed class CasinoRoomSessionTests
         Assert.Equal(Room, sent[1].Casino!.RoomId);
     }
 
+    // The reconnect reads and writes the held room under the same gate every absorb does. A socket
+    // that came back in the same breath as the player walking out would otherwise re-subscribe the
+    // room they just dropped, and every frame the server fanned after that would land nowhere.
+    [Fact]
+    public void AReconnectAfterLeavingDoesNotReattachTheRoomThePlayerDropped()
+    {
+        var session = Session(out var sent);
+        session.Enter(Room);
+        session.Receive(Attached(epoch: 1, seq: 5), Now);
+        session.Leave();
+
+        session.OnRealtimeConnected(false);
+        session.OnRealtimeConnected(true);
+
+        Assert.Equal(2, sent.Count);
+        Assert.Equal(SignalType.CasinoAttach, sent[0].Type);
+        Assert.Equal(SignalType.CasinoDetach, sent[1].Type);
+        Assert.Equal(string.Empty, session.RoomId);
+        Assert.False(session.AwaitingSnapshot);
+    }
+
     // One shape serves the socket and the poll, so a player whose socket died plays the same room
     // from the same numbers under the same version rules.
     [Fact]

@@ -597,6 +597,18 @@ internal sealed class WheelCabinet
         }
 
         y += MathF.Max(FieldHeight, PillHeight) * scale + Metrics.Space.Xs * scale;
+
+        // The same rule the round cap and the thin stack answer to, for the two refusals that come
+        // from the house rather than the player: a rail whose banner still counts the window down
+        // owes an explanation for a pill that will not move.
+        if (state.StakesPaused || state.Draining)
+        {
+            Typography.DrawWrappedLeft(new Vector2(left, y),
+                Loc.T(state.StakesPaused ? L.Casino.PausedTitle : L.Casino.DrainingTitle), ui.MutedInk,
+                TextStyles.Caption2, width);
+            return;
+        }
+
         if (staked == 0)
         {
             Typography.DrawWrappedLeft(new Vector2(left, y),

@@ -4401,6 +4401,7 @@
   "casino.bingo.buyFor": "{0} kartı {1} karşılığında al",
   "casino.bingo.oneBuyPerRoom": "Her odada tek alım, bu yüzden dokunmadan önce tüm kartları seç.",
   "casino.bingo.cardsPending": "Salon kartlarını basıyor.",
+  "casino.bingo.calledOff": "Kasa bu oyunu iptal etti ve bütün kartların parasını geri verdi.",
   "casino.bingo.cardPrice": "Kartı {0}, oda başına en fazla {1}",
   "casino.bingo.holdingFull": "Bu odanın {0} kartının hepsi sende",
   "casino.bingo.cardCount": "{0} kart",

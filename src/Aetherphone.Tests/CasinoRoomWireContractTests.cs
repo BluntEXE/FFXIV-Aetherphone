@@ -291,4 +291,30 @@ public sealed class CasinoRoomWireContractTests
         Assert.True(CasinoRoomsStore.PersonalIsStale(7, CasinoRoomPhases.Open, 7, CasinoRoomPhases.Locked));
         Assert.True(CasinoRoomsStore.PersonalIsStale(-1, -1, 0, CasinoRoomPhases.Open));
     }
+
+    // The staleness question is asked of the read that landed, never of the read that was asked
+    // for, so a personal read the network swallowed is still owed a retry inside the same phase.
+    // A bingo hall calls for minutes on one phase, and writing the phase off on a single lost read
+    // would leave the player watching their own numbers go by with no cards on screen.
+    [Fact]
+    public void APersonalReadThatNeverLandedLeavesThePhaseStale()
+    {
+        const long loadedRound = -1;
+        const int loadedPhase = -1;
+
+        Assert.True(CasinoRoomsStore.PersonalIsStale(loadedRound, loadedPhase, 7, CasinoRoomPhases.Locked));
+        Assert.False(CasinoRoomsStore.PersonalIsStale(7, CasinoRoomPhases.Locked, 7, CasinoRoomPhases.Locked));
+    }
+
+    // One purchase id is one order. The server replays the stored purchase behind an id it has
+    // already answered, so a four card order sent under the id of a one card order is charged and
+    // dealt as one card while the composer asked for four.
+    [Fact]
+    public void APurchaseIdIsOnlyReusedForTheSameRoundAndTheSameCount()
+    {
+        Assert.True(CasinoRoomsStore.ReusesPurchase(7, 1, 7, 1));
+        Assert.False(CasinoRoomsStore.ReusesPurchase(7, 1, 7, 4));
+        Assert.False(CasinoRoomsStore.ReusesPurchase(7, 4, 8, 4));
+        Assert.False(CasinoRoomsStore.ReusesPurchase(-1, -1, 7, 1));
+    }
 }

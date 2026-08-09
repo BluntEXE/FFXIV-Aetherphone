@@ -212,4 +212,62 @@ public sealed class CasinoBingoWireContractTests
         Assert.Equal(4, BingoRules.MaxCards);
         Assert.Equal(20, BingoRules.CardPrice);
     }
+
+    // The hall quotes the house, not its own arithmetic. A rate the operators tune server side
+    // reaches the ladder on the next snapshot rather than on the next plugin release, and the
+    // mirrored rates only answer a room that has published no table at all.
+    [Fact]
+    public void TheLadderIsQuotedFromTheRoomWhenTheRoomPublishesOne()
+    {
+        var board = new CasinoBingoRoomStateDto(RoundIndex: 7, Cards: 40,
+            Prizes: new long[] { 136, 176, 384 }, PrizeCardCap: 500);
+        Span<long> ladder = stackalloc long[BingoRules.StageCount];
+
+        BingoCabinet.LadderFor(board, ladder);
+
+        Assert.Equal(136, ladder[BingoRules.StageLine]);
+        Assert.Equal(176, ladder[BingoRules.StageTwoLines]);
+        Assert.Equal(384, ladder[BingoRules.StageFullHouse]);
+        Assert.Equal(384, BingoCabinet.PrizeAt(board, BingoRules.StageFullHouse));
+        Assert.Equal(500, BingoCabinet.PrizeCardCapOf(board));
+    }
+
+    [Fact]
+    public void TheMirroredRatesOnlyAnswerARoomThatPublishedNoTable()
+    {
+        var board = new CasinoBingoRoomStateDto(RoundIndex: 7, Cards: 40);
+        Span<long> ladder = stackalloc long[BingoRules.StageCount];
+
+        BingoCabinet.LadderFor(board, ladder);
+
+        for (var stage = 0; stage < BingoRules.StageCount; stage++)
+        {
+            Assert.Equal(BingoRules.PrizeFor(stage, 40), ladder[stage]);
+        }
+
+        Assert.Equal(BingoRules.PrizeCardCap, BingoCabinet.PrizeCardCapOf(board));
+        Assert.Equal(BingoRules.PrizeCardCap, BingoCabinet.PrizeCardCapOf(null));
+        Assert.Equal(0, BingoCabinet.PrizeAt(board, BingoRules.StageCount));
+    }
+
+    // A cancelled room and a voided round are the same fact told from the two halves of the wire,
+    // and either one has to reach the screen: a refunded game that still says the hall is printing
+    // cards is a receipt for money that came back.
+    [Fact]
+    public void ACancelledRoomAndAVoidedRoundBothReadAsCalledOff()
+    {
+        var running = new CasinoBingoRoomStateDto(RoundIndex: 7, Cards: 40);
+        var cancelled = new CasinoBingoRoomStateDto(RoundIndex: 7, Cards: 0, Cancelled: true);
+        var settled = new CasinoBingoCardsDto(Granted: true, RoomId: CasinoRoomIds.BingoHall, RoundIndex: 7,
+            RoundState: CasinoRoundStates.Settled);
+        var voided = new CasinoBingoCardsDto(Granted: true, RoomId: CasinoRoomIds.BingoHall, RoundIndex: 7,
+            RoundState: CasinoRoundStates.Voided);
+
+        Assert.False(BingoCabinet.CalledOff(running, settled));
+        Assert.False(BingoCabinet.CalledOff(null, null));
+        Assert.True(BingoCabinet.CalledOff(cancelled, null));
+        Assert.True(BingoCabinet.CalledOff(cancelled, settled));
+        Assert.True(BingoCabinet.CalledOff(running, voided));
+        Assert.False(BingoCabinet.Settled(voided));
+    }
 }
