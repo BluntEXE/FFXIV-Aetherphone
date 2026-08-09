@@ -700,8 +700,8 @@ internal sealed class SlotsCabinet
 
     private void DrawSeatMissing(ImDrawListPtr drawList, AppSkin ui, float left, float y, float width, float scale)
     {
-        var title = Loc.T(L.Casino.SlotsNoChipsTitle);
-        var hint = Loc.T(L.Casino.SlotsNoChipsHint);
+        var title = Loc.T(L.Casino.CabinetNoChipsTitle);
+        var hint = Loc.T(L.Casino.CabinetNoChipsHint);
         var pad = 14f * scale;
         var titleSize = Typography.Measure(title, TextStyles.SubheadlineEmphasized);
         var hintBlock = Typography.MeasureWrappedBlock(hint, TextStyles.Footnote, width - pad * 2f);

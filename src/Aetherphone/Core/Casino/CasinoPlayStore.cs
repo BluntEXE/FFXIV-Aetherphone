@@ -8,7 +8,9 @@ namespace Aetherphone.Core.Casino;
 // money-motion path (buy-in, top-up, cash-out) while this store owns game rounds. The client
 // mints every round id, persists the intent per character before the POST leaves, and clears
 // it only once a response lands, so a crash mid-round recovers by re-issuing the idempotent
-// POST and reconciling from the byte-identical replay.
+// POST and reconciling from the byte-identical replay. Barkeep is the one open-ended round:
+// its intent survives the granted start and clears only when the finish settles, so a crash
+// mid-shift can still recover the script and settle against the server clock.
 internal sealed class CasinoPlayStore : IDisposable
 {
     private readonly Configuration configuration;
@@ -20,6 +22,9 @@ internal sealed class CasinoPlayStore : IDisposable
 
     private volatile bool roundInFlight;
     private CasinoSlotsSpinDto? spinResult;
+    private CasinoScratchCardDto? scratchResult;
+    private CasinoBarkeepStartDto? barkeepStartResult;
+    private CasinoBarkeepFinishDto? barkeepFinishResult;
     private int roundFailed;
 
     public CasinoPlayStore(Configuration configuration, AethernetSession session, CasinoClient casino,
@@ -53,6 +58,21 @@ internal sealed class CasinoPlayStore : IDisposable
         return Interlocked.Exchange(ref spinResult, null);
     }
 
+    public CasinoScratchCardDto? TakeScratchResult()
+    {
+        return Interlocked.Exchange(ref scratchResult, null);
+    }
+
+    public CasinoBarkeepStartDto? TakeBarkeepStart()
+    {
+        return Interlocked.Exchange(ref barkeepStartResult, null);
+    }
+
+    public CasinoBarkeepFinishDto? TakeBarkeepFinish()
+    {
+        return Interlocked.Exchange(ref barkeepFinishResult, null);
+    }
+
     public bool TakeRoundFailure()
     {
         return Interlocked.Exchange(ref roundFailed, 0) != 0;
@@ -78,6 +98,57 @@ internal sealed class CasinoPlayStore : IDisposable
         IssueSpin(sittingId, roundId, stake);
     }
 
+    public void BuyScratch(int tier)
+    {
+        var sittingId = store.State?.Sitting?.Id ?? string.Empty;
+        if (roundInFlight || !session.IsSignedIn || sittingId.Length == 0 || !ScratchRules.IsValidTier(tier))
+        {
+            return;
+        }
+
+        roundInFlight = true;
+        var roundId = Guid.NewGuid().ToString("N");
+        RememberPendingRound(new PendingCasinoRound
+        {
+            GameKind = CasinoWire.ScratchKind,
+            SittingId = sittingId,
+            RoundId = roundId,
+            Stake = ScratchRules.Prices[tier],
+        });
+        IssueScratch(sittingId, roundId, tier);
+    }
+
+    public void StartBarkeep()
+    {
+        var sittingId = store.State?.Sitting?.Id ?? string.Empty;
+        if (roundInFlight || !session.IsSignedIn || sittingId.Length == 0)
+        {
+            return;
+        }
+
+        roundInFlight = true;
+        var roundId = Guid.NewGuid().ToString("N");
+        RememberPendingRound(new PendingCasinoRound
+        {
+            GameKind = CasinoWire.BartenderKind,
+            SittingId = sittingId,
+            RoundId = roundId,
+            Stake = BarkeepRules.EntryChips,
+        });
+        IssueBarkeepStart(sittingId, roundId);
+    }
+
+    public void FinishBarkeep(string roundId, CasinoBarkeepOrderRequest[] orders)
+    {
+        if (roundInFlight || !session.IsSignedIn || roundId.Length == 0)
+        {
+            return;
+        }
+
+        roundInFlight = true;
+        IssueBarkeepFinish(roundId, orders);
+    }
+
     public void RecoverPendingRound()
     {
         if (roundInFlight || !session.IsSignedIn)
@@ -86,13 +157,37 @@ internal sealed class CasinoPlayStore : IDisposable
         }
 
         var pending = PendingRound;
-        if (pending is null || !string.Equals(pending.GameKind, CasinoWire.SlotsKind, StringComparison.Ordinal))
+        if (pending is null)
         {
             return;
         }
 
-        roundInFlight = true;
-        IssueSpin(pending.SittingId, pending.RoundId, pending.Stake);
+        if (string.Equals(pending.GameKind, CasinoWire.SlotsKind, StringComparison.Ordinal))
+        {
+            roundInFlight = true;
+            IssueSpin(pending.SittingId, pending.RoundId, pending.Stake);
+            return;
+        }
+
+        if (string.Equals(pending.GameKind, CasinoWire.ScratchKind, StringComparison.Ordinal))
+        {
+            var tier = ScratchRules.TierForPrice(pending.Stake);
+            if (tier < 0)
+            {
+                ClearPendingRound(pending.RoundId);
+                return;
+            }
+
+            roundInFlight = true;
+            IssueScratch(pending.SittingId, pending.RoundId, tier);
+            return;
+        }
+
+        if (string.Equals(pending.GameKind, CasinoWire.BartenderKind, StringComparison.Ordinal))
+        {
+            roundInFlight = true;
+            IssueBarkeepStart(pending.SittingId, pending.RoundId);
+        }
     }
 
     private void IssueSpin(string sittingId, string roundId, long stake)
@@ -108,6 +203,90 @@ internal sealed class CasinoPlayStore : IDisposable
 
             ClearPendingRound(roundId);
             Interlocked.Exchange(ref spinResult, result);
+            if (result.Granted)
+            {
+                store.AbsorbStack(result.Stack);
+            }
+            else
+            {
+                store.RefreshNow();
+            }
+        }, () => roundInFlight = false);
+    }
+
+    private void IssueScratch(string sittingId, string roundId, int tier)
+    {
+        work.Run("scratch buy", async token =>
+        {
+            var result = await casino.BuyScratchAsync(sittingId, roundId, tier, token).ConfigureAwait(false);
+            if (result is null)
+            {
+                Interlocked.Exchange(ref roundFailed, 1);
+                return;
+            }
+
+            ClearPendingRound(roundId);
+            Interlocked.Exchange(ref scratchResult, result);
+            if (result.Granted)
+            {
+                store.AbsorbStack(StackWithPrizeStillHidden(result));
+            }
+            else
+            {
+                store.RefreshNow();
+            }
+        }, () => roundInFlight = false);
+    }
+
+    // The card is settled at purchase, but the cabinet only celebrates once the foil comes off:
+    // the stack the player sees holds the prize back until the reveal commits it.
+    internal static long StackWithPrizeStillHidden(CasinoScratchCardDto card)
+    {
+        return card.Stack - card.Prize;
+    }
+
+    private void IssueBarkeepStart(string sittingId, string roundId)
+    {
+        work.Run("barkeep start", async token =>
+        {
+            var result = await casino.StartBarkeepAsync(sittingId, roundId, token).ConfigureAwait(false);
+            if (result is null)
+            {
+                Interlocked.Exchange(ref roundFailed, 1);
+                return;
+            }
+
+            if (result.Granted)
+            {
+                store.AbsorbStack(result.Stack);
+            }
+            else
+            {
+                ClearPendingRound(roundId);
+                store.RefreshNow();
+            }
+
+            Interlocked.Exchange(ref barkeepStartResult, result);
+        }, () => roundInFlight = false);
+    }
+
+    private void IssueBarkeepFinish(string roundId, CasinoBarkeepOrderRequest[] orders)
+    {
+        work.Run("barkeep finish", async token =>
+        {
+            var result = await casino.FinishBarkeepAsync(roundId, orders, token).ConfigureAwait(false);
+            if (result is null)
+            {
+                Interlocked.Exchange(ref roundFailed, 1);
+                return;
+            }
+
+            if (!string.Equals(result.Reason, CasinoReasons.Cooldown, StringComparison.Ordinal))
+            {
+                ClearPendingRound(roundId);
+            }
+
+            Interlocked.Exchange(ref barkeepFinishResult, result);
             if (result.Granted)
             {
                 store.AbsorbStack(result.Stack);

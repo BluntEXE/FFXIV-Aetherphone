@@ -33,6 +33,8 @@ internal sealed partial class CasinoApp : IPhoneApp
     private readonly ConfirmService confirm;
     private readonly CashierDrawer cashier;
     private readonly Cabinets.SlotsCabinet slots;
+    private readonly Cabinets.ScratchCabinet scratch;
+    private readonly Cabinets.BarkeepCabinet barkeep;
     private readonly AppSkin ui = new(AppPalettes.Casino);
     private readonly ViewRouter<CasinoRoute> router;
     private readonly RouterDraw<CasinoRoute> drawView;
@@ -44,7 +46,7 @@ internal sealed partial class CasinoApp : IPhoneApp
     private Rect screenArea;
 
     public CasinoApp(AethernetSession session, CoinStore coins, Core.Casino.CasinoStore casino,
-        Core.Casino.CasinoPlayStore casinoPlay, ConfirmService confirm)
+        Core.Casino.CasinoPlayStore casinoPlay, Core.Games.GameStatsStore gameStats, ConfirmService confirm)
     {
         this.session = session;
         this.coins = coins;
@@ -53,6 +55,8 @@ internal sealed partial class CasinoApp : IPhoneApp
         this.confirm = confirm;
         cashier = new CashierDrawer(casino, coins, confirm);
         slots = new Cabinets.SlotsCabinet(casino, casinoPlay, OpenCashier);
+        scratch = new Cabinets.ScratchCabinet(casino, casinoPlay, OpenCashier);
+        barkeep = new Cabinets.BarkeepCabinet(casino, casinoPlay, gameStats, OpenCashier);
         router = new ViewRouter<CasinoRoute>(CasinoRoute.Floor);
         drawView = DrawView;
         popRoute = PopRoute;
@@ -64,6 +68,8 @@ internal sealed partial class CasinoApp : IPhoneApp
         router.Reset();
         cashier.Close();
         slots.Reset();
+        scratch.Reset();
+        barkeep.Reset();
         ResetLimitsEditor();
         coins.RefreshNow();
         casino.RefreshNow();
@@ -75,6 +81,8 @@ internal sealed partial class CasinoApp : IPhoneApp
         router.Reset();
         cashier.Close();
         slots.Reset();
+        scratch.Reset();
+        barkeep.Reset();
         ResetLimitsEditor();
     }
 
@@ -104,10 +112,13 @@ internal sealed partial class CasinoApp : IPhoneApp
         coins.EnsureFresh();
         casino.EnsureFresh();
         screenArea = context.Content;
+        barkeep.Tick();
         cashier.Gate();
         slots.Gate();
+        scratch.Gate();
         router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
         slots.DrawOverlay(screenArea, ui);
+        scratch.DrawOverlay(screenArea, ui);
         cashier.Draw(screenArea, ui, PlayableGames, openLimits);
     }
 
@@ -122,6 +133,14 @@ internal sealed partial class CasinoApp : IPhoneApp
             case CasinoScreen.Cabinet when string.Equals(route.GameId, CasinoGames.Slots, StringComparison.Ordinal):
                 DrawSlotsHeader(context, area);
                 slots.Draw(body, ui);
+                break;
+            case CasinoScreen.Cabinet when string.Equals(route.GameId, CasinoGames.Scratch, StringComparison.Ordinal):
+                DrawScratchHeader(context, area);
+                scratch.Draw(body, ui);
+                break;
+            case CasinoScreen.Cabinet when string.Equals(route.GameId, CasinoGames.Barkeep, StringComparison.Ordinal):
+                AppHeader.Draw(context, Loc.T(L.Casino.GameBarkeep), popRoute);
+                barkeep.Draw(body, ui);
                 break;
             case CasinoScreen.Cabinet:
                 AppHeader.Draw(context, Loc.T(GameName(route.GameId)), popRoute);
@@ -165,6 +184,17 @@ internal sealed partial class CasinoApp : IPhoneApp
         }
     }
 
+    private void DrawScratchHeader(in PhoneContext context, Rect area)
+    {
+        var oddsLabel = Loc.T(L.Casino.ScratchOdds);
+        var reserve = AppSkin.HeaderActionWidth(oddsLabel) + 18f * UiScale.Current;
+        AppHeader.Draw(context, "casino.scratchHeader", Loc.T(L.Casino.GameScratch), reserve, popRoute);
+        if (ui.HeaderAction(area, oddsLabel, !scratch.OddsOpen))
+        {
+            scratch.OpenOdds();
+        }
+    }
+
     private void OpenCashier()
     {
         cashier.Open();
@@ -186,6 +216,7 @@ internal sealed partial class CasinoApp : IPhoneApp
     private void PopRoute()
     {
         slots.ClosePayTable();
+        scratch.CloseOdds();
         router.Pop();
     }
 
@@ -193,10 +224,7 @@ internal sealed partial class CasinoApp : IPhoneApp
     {
         if (string.Equals(gameId, CasinoGames.Slots, StringComparison.Ordinal))
         {
-            var sitting = casino.State?.Sitting;
-            var seated = sitting is not null
-                && string.Equals(sitting.GameKind, Core.Casino.CasinoWire.SlotsKind, StringComparison.Ordinal);
-            if (!seated)
+            if (!SeatedAt(Core.Casino.CasinoWire.SlotsKind))
             {
                 cashier.Open(GameIndexOf(gameId));
                 return;
@@ -204,8 +232,28 @@ internal sealed partial class CasinoApp : IPhoneApp
 
             slots.Enter();
         }
+        else if (string.Equals(gameId, CasinoGames.Scratch, StringComparison.Ordinal))
+        {
+            if (!SeatedAt(Core.Casino.CasinoWire.ScratchKind))
+            {
+                cashier.Open(GameIndexOf(gameId));
+                return;
+            }
+
+            scratch.Enter();
+        }
+        else if (string.Equals(gameId, CasinoGames.Barkeep, StringComparison.Ordinal))
+        {
+            barkeep.Enter();
+        }
 
         router.Push(new CasinoRoute(CasinoScreen.Cabinet, gameId));
+    }
+
+    private bool SeatedAt(string wireKind)
+    {
+        var sitting = casino.State?.Sitting;
+        return sitting is not null && string.Equals(sitting.GameKind, wireKind, StringComparison.Ordinal);
     }
 
     private static int GameIndexOf(string gameId)
