@@ -45,6 +45,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool ShowNotificationBanner { get; set; } = true;
     public bool ImportScreenshots { get; set; } = true;
     public bool? UseNativeFileDialog { get; set; }
+    public bool ChirperShowMediaPosts { get; set; } = true;
     public Dictionary<string, AppNotificationSetting> NotificationSettings { get; set; } = new();
     public bool NotifyDailyReset { get; set; }
     public bool NotifyWeeklyReset { get; set; }

@@ -68,6 +68,20 @@ internal sealed class BehaviorPage : ISettingsPage
             SettingsSection.Hint(Loc.T(L.Settings.NativeFileDialogHint), theme);
 
             ImGui.Dummy(new Vector2(0f, 12f * scale));
+            var chirperMediaCard = GroupCard.Begin(theme, 1);
+            var showMediaChirps = SettingsRow.Bool(chirperMediaCard.NextRow(),
+                Loc.T(L.Settings.ChirperMediaPosts), configuration.ChirperShowMediaPosts, theme);
+            chirperMediaCard.End();
+            if (showMediaChirps != configuration.ChirperShowMediaPosts)
+            {
+                configuration.ChirperShowMediaPosts = showMediaChirps;
+                configuration.Save();
+            }
+
+            ImGui.Dummy(new Vector2(0f, 8f * scale));
+            SettingsSection.Hint(Loc.T(L.Settings.ChirperMediaPostsHint), theme);
+
+            ImGui.Dummy(new Vector2(0f, 12f * scale));
             var startupCard = GroupCard.Begin(theme, 2);
             var openStartup = SettingsRow.Bool(startupCard.NextRow(), Loc.T(L.Settings.OpenOnStartup),
                 configuration.OpenOnStartup, theme);

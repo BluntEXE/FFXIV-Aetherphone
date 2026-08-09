@@ -39,7 +39,6 @@ internal static class L
         public static readonly LocString SaveToGallery = new("common.saveToGallery", "Save to gallery");
         public static readonly LocString SavedToGallery = new("common.savedToGallery", "Saved to gallery");
         public static readonly LocString NoPhotos = new("common.noPhotos", "No photos in your gallery yet");
-        public static readonly LocString Back = new("common.back", "Back");
         public static readonly LocString FileKindImages = new("common.fileKindImages", "Images");
         public static readonly LocString FileKindAudio = new("common.fileKindAudio", "Audio");
         public static readonly LocString FileKindAll = new("common.fileKindAll", "All files");
@@ -1246,6 +1245,8 @@ internal static class L
         public static readonly LocString ImportScreenshotsHint = new("settings.importScreenshotsHint", "Copy screenshots you take into the Photos gallery, including ones from ReShade and GShade. Only shots taken while the phone is running are copied, and the originals stay where they are.");
         public static readonly LocString NativeFileDialog = new("settings.nativeFileDialog", "Use the Windows file browser");
         public static readonly LocString NativeFileDialogHint = new("settings.nativeFileDialogHint", "Pick photos and sounds with the Windows file browser. Turn it off if importing a file crashes your game.");
+        public static readonly LocString ChirperMediaPosts = new("settings.chirperMediaPosts", "Show photo and GIF chirps");
+        public static readonly LocString ChirperMediaPostsHint = new("settings.chirperMediaPostsHint", "Chirps that carry photos or GIFs show up in your feeds. Turn this off to keep your Chirper feeds text only.");
         public static readonly LocString OpenOnStartup = new("settings.openOnStartup", "Open at startup");
         public static readonly LocString OpenMinimized = new("settings.openMinimized", "Open minimized");
         public static readonly LocString StartupHint = new("settings.startupHint", "Open the phone automatically when you log in. Open minimized shows it as a small dock that you tap to expand.");

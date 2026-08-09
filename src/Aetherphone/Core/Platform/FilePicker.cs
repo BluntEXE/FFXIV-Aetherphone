@@ -70,7 +70,7 @@ internal static class FilePicker
         }
     }
 
-    public static bool UsesNativeDialog => Plugin.Cfg?.UseNativeFileDialog ?? NativeFileDialog.IsSupported;
+    private static bool UsesNativeDialog => Plugin.Cfg?.UseNativeFileDialog ?? NativeFileDialog.IsSupported;
 
     private static void Open(string title, string filters, string startPath, Action<string> onPicked)
     {

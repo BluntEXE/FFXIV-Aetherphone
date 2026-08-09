@@ -95,10 +95,8 @@ internal sealed partial class ChirperApp : IPhoneApp
     private readonly WallpaperImageCache wallpaperImages;
     private readonly PhotoCarousel carousel = new();
     private readonly PhotoViewerOverlay photoViewer = new();
-    private readonly PcImageBrowser pcBrowser = new();
     private readonly List<string> composeAttachments = new();
     private bool composePicking;
-    private bool composeBrowsingPc;
     private string[] composePickerPaths = Array.Empty<string>();
     private string? pendingComposePickedPath;
     private string? pendingSharedPhoto;
@@ -200,7 +198,6 @@ internal sealed partial class ChirperApp : IPhoneApp
         commentDraft = string.Empty;
         composeAttachments.Clear();
         composePicking = false;
-        composeBrowsingPc = false;
         store.ClearDiscover();
     }
 
@@ -302,7 +299,6 @@ internal sealed partial class ChirperApp : IPhoneApp
             quoteTargetId = null;
             composeAttachments.Clear();
             composePicking = false;
-            composeBrowsingPc = false;
             composeFocus = true;
             router.Push(ChirperRoute.Compose);
         }
@@ -374,6 +370,11 @@ internal sealed partial class ChirperApp : IPhoneApp
                 for (var index = 0; index < snapshot.Length; index++)
                 {
                     var post = snapshot[index];
+                    if (HiddenByMediaPreference(post))
+                    {
+                        continue;
+                    }
+
                     if (!renderedUnderlyingIds.Add(post.RepostOfId ?? post.Id))
                     {
                         continue;
@@ -938,7 +939,7 @@ internal sealed partial class ChirperApp : IPhoneApp
 
     private const float QuoteThumbSize = 44f;
 
-    private static float QuotedCardHeight(PostDto? quoted, float width)
+    private float QuotedCardHeight(PostDto? quoted, float width)
     {
         var scale = UiScale.Current;
         var innerPad = 10f * scale;
@@ -948,7 +949,8 @@ internal sealed partial class ChirperApp : IPhoneApp
             return innerPad + nameHeight + innerPad;
         }
 
-        var hasMedia = PostMedia.Photos(quoted.MediaUrls, quoted.MediaUrl).Length > 0;
+        var hasMedia = configuration.ChirperShowMediaPosts
+            && PostMedia.Photos(quoted.MediaUrls, quoted.MediaUrl).Length > 0;
         var innerWidth = width - innerPad * 2f - (hasMedia ? QuoteThumbSize * scale + 8f * scale : 0f);
         var textHeight = quoted.Text.Length > 0
             ? MathF.Min(Typography.MeasureWrapped(quoted.Text, innerWidth, 0.9f), nameHeight * 4f)
@@ -978,7 +980,9 @@ internal sealed partial class ChirperApp : IPhoneApp
             return;
         }
 
-        var quotedPhotos = PostMedia.Photos(quoted.MediaUrls, quoted.MediaUrl);
+        var quotedPhotos = configuration.ChirperShowMediaPosts
+            ? PostMedia.Photos(quoted.MediaUrls, quoted.MediaUrl)
+            : Array.Empty<string>();
         var thumbReserve = quotedPhotos.Length > 0 ? QuoteThumbSize * scale + 8f * scale : 0f;
         var innerWidth = width - innerPad * 2f - thumbReserve;
         var rawName = SocialIdentity.Name(quoted.AuthorDisplayName, quoted.AuthorHandle);
@@ -1038,6 +1042,17 @@ internal sealed partial class ChirperApp : IPhoneApp
         {
             OpenThread(quoted);
         }
+    }
+
+    private bool HiddenByMediaPreference(PostDto post)
+    {
+        if (configuration.ChirperShowMediaPosts)
+        {
+            return false;
+        }
+
+        var target = post.RepostOfId is not null && post.ReferencedPost is not null ? post.ReferencedPost : post;
+        return PostMedia.Photos(target.MediaUrls, target.MediaUrl).Length > 0;
     }
 
     private void DrawPostMedia(PostDto post, string[] photos, Rect rect)
@@ -1110,7 +1125,6 @@ internal sealed partial class ChirperApp : IPhoneApp
         composeStatus = string.Empty;
         composeAttachments.Clear();
         composePicking = false;
-        composeBrowsingPc = false;
         composeFocus = true;
         router.Push(ChirperRoute.Compose);
     }
@@ -1545,7 +1559,6 @@ internal sealed partial class ChirperApp : IPhoneApp
         composeStatus = string.Empty;
         composeAttachments.Clear();
         composePicking = false;
-        composeBrowsingPc = false;
         AddComposeAttachment(path);
         composeFocus = true;
         router.Push(ChirperRoute.Compose);
@@ -1553,7 +1566,6 @@ internal sealed partial class ChirperApp : IPhoneApp
 
     public void Dispose()
     {
-        pcBrowser.Dispose();
         store.Dispose();
     }
 }

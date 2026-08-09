@@ -144,32 +144,6 @@ internal static class ImageProcessor
         return (pixels, image.Width, image.Height);
     }
 
-    public static async Task<IDalamudTextureWrap> DecodeThumbnailToTextureAsync(ITextureProvider textures,
-        string path, int maxDimension, CancellationToken token)
-    {
-        var (pixels, width, height) = await Task.Run(() =>
-        {
-            using var stream = File.OpenRead(path);
-            EnsureDecodable(stream, MaxLocalDecodePixels);
-            using var image = Image.Load<Rgba32>(SingleFrame, stream);
-            if (image.Width > maxDimension || image.Height > maxDimension)
-            {
-                var factor = MathF.Min((float)maxDimension / image.Width, (float)maxDimension / image.Height);
-                var targetWidth = Math.Max(1, (int)MathF.Round(image.Width * factor));
-                var targetHeight = Math.Max(1, (int)MathF.Round(image.Height * factor));
-                image.Mutate(context => context.Resize(targetWidth, targetHeight));
-            }
-
-            var length = checked(image.Width * image.Height * 4);
-            var buffer = new byte[length];
-            image.CopyPixelDataTo(buffer);
-            return (buffer, image.Width, image.Height);
-        }, token).ConfigureAwait(false);
-
-        return await textures.CreateFromRawAsync(RawImageSpecification.Rgba32(width, height), pixels,
-            $"Aetherphone.Thumb.{path}", token).ConfigureAwait(false);
-    }
-
     public static bool IsGif(ReadOnlySpan<byte> bytes)
     {
         return bytes.Length >= 6 && bytes[0] == 0x47 && bytes[1] == 0x49 && bytes[2] == 0x46

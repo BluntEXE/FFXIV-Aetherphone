@@ -25,7 +25,6 @@ internal sealed partial class ChirperApp
             quoteTargetId = null;
             composeAttachments.Clear();
             composePicking = false;
-            composeBrowsingPc = false;
             store.RefreshFeed(SocialFeedScope.ForYou);
             store.RefreshFeed(SocialFeedScope.Following);
             feedScrollTopPending = true;
@@ -42,14 +41,7 @@ internal sealed partial class ChirperApp
         var pickedPath = Interlocked.Exchange(ref pendingComposePickedPath, null);
         if (pickedPath is not null)
         {
-            composeBrowsingPc = false;
             AddComposeAttachment(pickedPath);
-        }
-
-        if (composeBrowsingPc)
-        {
-            DrawComposePcBrowser(area);
-            return;
         }
 
         if (composePicking)
@@ -288,16 +280,8 @@ internal sealed partial class ChirperApp
             new Vector2(area.Max.X - 16f * scale, top + 8f * scale + importHeight));
         if (ui.PillButton(importRect, Loc.T(L.Chirper.ImportFromPc), true))
         {
-            if (FilePicker.UsesNativeDialog)
-            {
-                FilePicker.PickImage(Loc.T(L.Chirper.AddPhotos),
-                    path => Interlocked.Exchange(ref pendingComposePickedPath, path));
-            }
-            else
-            {
-                pcBrowser.Open();
-                composeBrowsingPc = true;
-            }
+            FilePicker.PickImage(Loc.T(L.Chirper.AddPhotos),
+                path => Interlocked.Exchange(ref pendingComposePickedPath, path));
         }
 
         var gridTop = importRect.Max.Y + 12f * scale;
@@ -364,21 +348,6 @@ internal sealed partial class ChirperApp
         {
             drawList.AddRectFilled(min, max, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.1f)), rounding);
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-    }
-
-    private void DrawComposePcBrowser(Rect area)
-    {
-        var context = new PhoneContext(area, theme, navigation);
-        AppHeader.Draw(context, Loc.T(L.Chirper.ImportFromPc), () => composeBrowsingPc = false);
-        var scale = UiScale.Current;
-        var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
-        var picked = pcBrowser.Draw(body, ui, theme, AppPalettes.Chirper.BodyInk, AppPalettes.Chirper.MutedInk,
-            AppPalettes.Chirper.FieldSurface);
-        if (picked is not null)
-        {
-            composeBrowsingPc = false;
-            AddComposeAttachment(picked);
         }
     }
 
