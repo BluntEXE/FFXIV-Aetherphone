@@ -107,6 +107,14 @@ internal sealed record BadgeStyle(
             "glint" => NameEffectKind.Glint,
             "sweep" => NameEffectKind.Sweep,
             "wave" => NameEffectKind.Wave,
+            "ember" => NameEffectKind.Ember,
+            "frost" => NameEffectKind.Frost,
+            "aurora" => NameEffectKind.Aurora,
+            "prism" => NameEffectKind.Prism,
+            "glitch" => NameEffectKind.Glitch,
+            "starfall" => NameEffectKind.Starfall,
+            "eclipse" => NameEffectKind.Eclipse,
+            "heartbeat" => NameEffectKind.Heartbeat,
             _ => NameEffectKind.None,
         };
     }

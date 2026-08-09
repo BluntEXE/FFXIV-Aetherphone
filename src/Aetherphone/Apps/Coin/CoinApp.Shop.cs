@@ -2,6 +2,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Coins;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -10,8 +11,9 @@ namespace Aetherphone.Apps.Coin;
 
 internal sealed partial class CoinApp
 {
-    private const float SkuCardHeight = 118f;
+    private const float SkuCardHeight = 142f;
     private const float SkuCardGap = 10f;
+    private const string FlairKind = "flair";
 
     private void DrawShop(Rect body)
     {
@@ -66,20 +68,32 @@ internal sealed partial class CoinApp
         ui.Card(drawList, min, max, rounding, false);
 
         var inset = 12f * scale;
-        var name = Typography.FitText(sku.Name, cardWidth - inset * 2f, TextStyles.Headline);
-        Typography.Draw(drawList, new Vector2(min.X + inset, min.Y + inset), name, ui.Palette.TitleInk,
-            TextStyles.Headline);
+        var textLeft = min.X + inset;
+        var textWidth = cardWidth - inset * 2f;
+        var cursorY = min.Y + inset;
+        if (DrawFlairPreview(drawList, sku, textLeft, cursorY, textWidth, scale))
+        {
+            cursorY += 26f * scale;
+            var label = Typography.FitText(sku.Name, textWidth, TextStyles.Caption1);
+            Typography.Draw(drawList, new Vector2(textLeft, cursorY), label, ui.MutedInk, TextStyles.Caption1);
+            cursorY += 18f * scale;
+        }
+        else
+        {
+            var name = Typography.FitText(sku.Name, textWidth, TextStyles.Headline);
+            Typography.Draw(drawList, new Vector2(textLeft, cursorY), name, ui.Palette.TitleInk, TextStyles.Headline);
+            cursorY += 24f * scale;
+        }
 
         var priceText = sku.Price.ToString("N0", Loc.Culture);
-        Typography.Draw(drawList, new Vector2(min.X + inset, min.Y + 36f * scale), priceText,
-            ui.Palette.Accent, TextStyles.Title3);
+        Typography.Draw(drawList, new Vector2(textLeft, cursorY), priceText, ui.Palette.Accent, TextStyles.Title3);
+        cursorY += 24f * scale;
 
         if (sku.AvailableUntilUnix is { } leavingUnix)
         {
             var leaving = Loc.T(L.Coin.LeavingSoon, TimeText.FutureDayLabel(leavingUnix));
-            var fitted = Typography.FitText(leaving, cardWidth - inset * 2f, TextStyles.Caption1);
-            Typography.Draw(drawList, new Vector2(min.X + inset, min.Y + 60f * scale), fitted,
-                ui.MutedInk, TextStyles.Caption1);
+            var fitted = Typography.FitText(leaving, textWidth, TextStyles.Caption1);
+            Typography.Draw(drawList, new Vector2(textLeft, cursorY), fitted, ui.MutedInk, TextStyles.Caption1);
         }
 
         var buttonRect = new Rect(
@@ -96,6 +110,44 @@ internal sealed partial class CoinApp
         {
             AskPurchase(sku);
         }
+    }
+
+    private bool DrawFlairPreview(ImDrawListPtr drawList, CoinSkuStyle sku, float left, float top, float width,
+        float scale)
+    {
+        if (!string.Equals(sku.Kind, FlairKind, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var badge = badgeCatalog.Find(sku.Payload);
+        if (badge is null)
+        {
+            return false;
+        }
+
+        var light = RoleInk.IsLight(theme);
+        var glyphSize = 15f * scale;
+        var center = new Vector2(left + glyphSize * 0.5f, top + glyphSize * 0.5f);
+        BadgeStrip.DrawOne(drawList, center, badge, images, light, glyphSize);
+
+        var nameLeft = left + glyphSize + 6f * scale;
+        var fitted = Typography.FitText(PreviewName(), width - (glyphSize + 6f * scale), TextStyles.Headline);
+        var ink = RoleInk.For(badge.Colors[0], light);
+        Typography.Draw(drawList, new Vector2(nameLeft, top), fitted, ink, TextStyles.Headline,
+            NameEffects.For(badge, light));
+        return true;
+    }
+
+    private string PreviewName()
+    {
+        var user = session.CurrentUser;
+        if (user is null)
+        {
+            return Loc.T(L.Coin.TabShop);
+        }
+
+        return user.DisplayName.Length > 0 ? user.DisplayName : user.Name;
     }
 
     private void AskPurchase(CoinSkuStyle sku)
