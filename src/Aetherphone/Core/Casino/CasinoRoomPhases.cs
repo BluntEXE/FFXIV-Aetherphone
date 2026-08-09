@@ -15,4 +15,6 @@ internal static class CasinoRoomPhases
 internal static class CasinoRoomIds
 {
     public const string WheelFloor = "wheel-floor";
+
+    public const string BingoHall = "bingo-hall";
 }

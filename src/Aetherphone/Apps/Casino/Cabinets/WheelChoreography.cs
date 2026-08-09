@@ -28,6 +28,25 @@ internal static class WheelChoreography
     // the deceleration is played at exactly that speed and the two meet without a visible kink.
     private const float HandoffSlope = 5f;
 
+    // A rim is a rim: the daily spin has sixteen segments instead of fifty and the same landing has
+    // to be staged for it, so the span aware overloads carry the shape and the wheel's own methods
+    // are the fifty segment case of them.
+    public static float SpanFor(int segmentCount)
+    {
+        return Tau / segmentCount;
+    }
+
+    public static float RestAngleOf(int segment, int segmentCount)
+    {
+        return Normalize(-segment * SpanFor(segmentCount));
+    }
+
+    public static float SweepFor(float fromAngle, int segment, int segmentCount, int turns)
+    {
+        var advance = Normalize(RestAngleOf(segment, segmentCount) - fromAngle);
+        return turns * Tau + advance;
+    }
+
     public static float RestAngleOf(int segment)
     {
         return Normalize(-segment * SegmentSpan);

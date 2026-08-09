@@ -152,11 +152,11 @@ public sealed class CasinoWheelWireContractTests
         var held = new[] { new CasinoRoomSpotDto(0, 2, 40) };
         var fresh = new[] { new CasinoRoomSpotDto(0, 3, 65) };
 
-        Assert.Same(fresh, CasinoRoomSession.ReplacedSpots(held, fresh, false));
-        Assert.Same(fresh, CasinoRoomSession.ReplacedSpots(held, fresh, true));
-        Assert.Same(held, CasinoRoomSession.ReplacedSpots(held, null, false));
-        Assert.Null(CasinoRoomSession.ReplacedSpots(held, null, true));
-        Assert.Null(CasinoRoomSession.ReplacedSpots(null, null, false));
+        Assert.Same(fresh, CasinoRoomSession.Replaced(held, fresh, false));
+        Assert.Same(fresh, CasinoRoomSession.Replaced(held, fresh, true));
+        Assert.Same(held, CasinoRoomSession.Replaced(held, null, false));
+        Assert.Null(CasinoRoomSession.Replaced(held, null, true));
+        Assert.Null(CasinoRoomSession.Replaced<CasinoRoomSpotDto>(null, null, false));
     }
 
     [Fact]

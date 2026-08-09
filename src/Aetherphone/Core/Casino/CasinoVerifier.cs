@@ -23,11 +23,27 @@ internal static class CasinoVerifier
 {
     private const string ScratchPrizePurpose = "prize";
     private const string BarkeepPatronsPurpose = "patrons";
+    private const string WheelSegmentPurpose = "segment";
+    private const string DailySpinPurpose = "spin";
+    private const string BingoCardPurpose = "card";
+    private const string BingoBallPurpose = "ball";
     private const uint BarkeepJitterBound = 3;
     private const uint BarkeepStepCountBound = 3;
 
     private static readonly uint ScratchWinnerBagSize = (ScratchRules.SymbolCount - 1) * 2;
     private static readonly uint ScratchLoserBagSize = ScratchRules.SymbolCount * 2;
+
+    // A card is dealt column by column out of a fifteen deep pool that shrinks with every pick,
+    // and the middle column takes four picks instead of five because the centre is free. The
+    // twenty-four bounds that produces are the same for every card, so the pattern simply repeats.
+    private static readonly uint[] BingoCardBounds =
+    {
+        15, 14, 13, 12, 11,
+        15, 14, 13, 12, 11,
+        15, 14, 13, 12,
+        15, 14, 13, 12, 11,
+        15, 14, 13, 12, 11,
+    };
 
     public static CasinoRoundVerdict Verify(CasinoRoundVerifyDto round)
     {
@@ -72,6 +88,7 @@ internal static class CasinoVerifier
         }
 
         var stream = new DrawStream(seed, roundId);
+        var shuffles = default(ShuffleRun);
         var cursor = 0;
         while (cursor < drawLog.Length)
         {
@@ -91,7 +108,7 @@ internal static class CasinoVerifier
                 return false;
             }
 
-            if (!TryBoundFor(purpose, out var bound) || loggedValue >= bound)
+            if (!TryBoundFor(purpose, shuffles.Next(purpose), out var bound) || loggedValue >= bound)
             {
                 return false;
             }
@@ -107,13 +124,30 @@ internal static class CasinoVerifier
         return true;
     }
 
-    // The purpose vocabulary is the union of the three game engines: slots stops s{spin}r{reel},
-    // scratch prize roll plus winner/loser shuffles w{pick}/g{cell}/l{pick}, and the barkeep
-    // script draws patrons/a{patron}/n{patron}/k{patron}.{step}. Every bound comes from the
-    // mirrored rules tables, so a new purpose on the wire fails closed as a mismatch.
+    // The purpose vocabulary is the union of every game engine: slots stops s{spin}r{reel}, scratch
+    // prize roll plus winner/loser shuffles w{pick}/g{cell}/l{pick}, the barkeep script draws
+    // patrons/a{patron}/n{patron}/k{patron}.{step}, the wheel segment, the daily spin segment, and
+    // the two bingo shuffles. Every bound comes from the mirrored rules tables, so a new purpose on
+    // the wire fails closed as a mismatch.
+    //
+    // The bingo shuffles are the only purposes whose bound is not written on the label: a Fisher
+    // Yates pass narrows its range with every pick, and the engine logs each one under the same
+    // name. The bound therefore comes from how many draws of that purpose the log has already
+    // spent, which is exactly the number the server had spent when it made this one. A log that
+    // runs past the end of a shuffle has no honest bound left and fails closed.
     internal static bool TryBoundFor(ReadOnlySpan<char> purpose, out uint bound)
     {
+        return TryBoundFor(purpose, 0, out bound);
+    }
+
+    internal static bool TryBoundFor(ReadOnlySpan<char> purpose, int occurrence, out uint bound)
+    {
         bound = 0;
+        if (occurrence < 0)
+        {
+            return false;
+        }
+
         if (purpose.SequenceEqual(ScratchPrizePurpose))
         {
             bound = ScratchRules.TableScale;
@@ -123,6 +157,35 @@ internal static class CasinoVerifier
         if (purpose.SequenceEqual(BarkeepPatronsPurpose))
         {
             bound = (uint)BarkeepRules.PatronBuckets.Length;
+            return true;
+        }
+
+        if (purpose.SequenceEqual(WheelSegmentPurpose))
+        {
+            bound = WheelRules.SegmentCount;
+            return true;
+        }
+
+        if (purpose.SequenceEqual(DailySpinPurpose))
+        {
+            bound = DailySpinRules.SegmentCount;
+            return true;
+        }
+
+        if (purpose.SequenceEqual(BingoCardPurpose))
+        {
+            bound = BingoCardBounds[occurrence % BingoCardBounds.Length];
+            return true;
+        }
+
+        if (purpose.SequenceEqual(BingoBallPurpose))
+        {
+            if (occurrence >= BingoRules.Balls - 1)
+            {
+                return false;
+            }
+
+            bound = (uint)(BingoRules.Balls - occurrence);
             return true;
         }
 
@@ -223,6 +286,32 @@ internal static class CasinoVerifier
     private static bool TryParseIndex(ReadOnlySpan<char> text, out int value)
     {
         return int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out value);
+    }
+
+    private struct ShuffleRun
+    {
+        private int cards;
+
+        private int balls;
+
+        public int Next(ReadOnlySpan<char> purpose)
+        {
+            if (purpose.SequenceEqual(BingoCardPurpose))
+            {
+                var taken = cards;
+                cards++;
+                return taken;
+            }
+
+            if (purpose.SequenceEqual(BingoBallPurpose))
+            {
+                var taken = balls;
+                balls++;
+                return taken;
+            }
+
+            return 0;
+        }
     }
 
     internal sealed class DrawStream

@@ -26,6 +26,9 @@ internal static class CasinoGlyphs
             case CasinoGames.Wheel:
                 DrawWheel(drawList, center, extent, ink, hole);
                 break;
+            case CasinoGames.DailySpin:
+                DrawDailySpin(drawList, center, extent, ink, hole);
+                break;
             default:
                 DrawChip(drawList, center, extent, ink, hole);
                 break;
@@ -116,6 +119,21 @@ internal static class CasinoGlyphs
 
         drawList.AddCircle(center, extent * 0.5f, hole, 32, extent * 0.08f);
         drawList.AddCircleFilled(center, extent * 0.18f, hole, 16);
+    }
+
+    private static void DrawDailySpin(ImDrawListPtr drawList, Vector2 center, float extent, uint ink, uint hole)
+    {
+        drawList.AddCircleFilled(center, extent * 0.85f, ink, 40);
+        var spokeThickness = extent * 0.09f;
+        for (var spoke = 0; spoke < 4; spoke++)
+        {
+            var angle = spoke * (MathF.PI / 4f);
+            var direction = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * extent * 0.85f;
+            drawList.AddLine(center - direction, center + direction, hole, spokeThickness);
+        }
+
+        drawList.AddCircleFilled(center, extent * 0.3f, hole, 20);
+        drawList.AddCircleFilled(center, extent * 0.16f, ink, 16);
     }
 
     private static void DrawChip(ImDrawListPtr drawList, Vector2 center, float extent, uint ink, uint hole)

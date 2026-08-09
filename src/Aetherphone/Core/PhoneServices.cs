@@ -90,6 +90,7 @@ internal sealed class PhoneServices : IDisposable
     public required Casino.CasinoPlayStore CasinoPlay { get; init; }
     public required Casino.CasinoHistoryStore CasinoHistory { get; init; }
     public required Casino.CasinoRoomsStore CasinoRooms { get; init; }
+    public required Casino.CasinoSpinStore CasinoSpin { get; init; }
     public required PluginCatalog PluginCatalog { get; init; }
     public required ShortcutStore Shortcuts { get; init; }
     public required ShortcutRunner ShortcutRunner { get; init; }
@@ -211,6 +212,7 @@ internal sealed class PhoneServices : IDisposable
         var casino = new Casino.CasinoStore(configuration, aethernetSession, casinoApi.Casino, coins);
         var casinoPlay = new Casino.CasinoPlayStore(configuration, aethernetSession, casinoApi.Casino, casino);
         var casinoHistory = new Casino.CasinoHistoryStore(aethernetSession, casinoApi.Casino);
+        var casinoSpin = new Casino.CasinoSpinStore(aethernetSession, casinoApi.Casino, coins);
         var peerKeys = new PeerKeyDirectory(configuration, aethernet.Keys);
         var conversationKeys = new ConversationKeyStore(aethernet.Keys, keyVault);
         var marketIndex = new MarketItemIndex(dataManager);
@@ -314,6 +316,7 @@ internal sealed class PhoneServices : IDisposable
             CasinoPlay = casinoPlay,
             CasinoHistory = casinoHistory,
             CasinoRooms = casinoRooms,
+            CasinoSpin = casinoSpin,
             PluginCatalog = pluginCatalog,
             Shortcuts = new ShortcutStore(configuration, pluginCatalog),
             ShortcutRunner = new ShortcutRunner(clientState, condition),
@@ -407,6 +410,7 @@ internal sealed class PhoneServices : IDisposable
         Windows.Components.UserName.Reset();
         Moderation.ModerationNoticeText.Reset();
         CasinoRooms.Dispose();
+        CasinoSpin.Dispose();
         CasinoHistory.Dispose();
         CasinoPlay.Dispose();
         Casino.Dispose();

@@ -10,6 +10,10 @@ internal static class CasinoWire
 
     public const string WheelKind = "casino.wheel";
 
+    public const string BingoKind = "casino.bingo";
+
+    public const string DailySpinKind = "casino.dailyspin";
+
     private const string KindPrefix = "casino.";
 
     public static string Kind(string gameId)

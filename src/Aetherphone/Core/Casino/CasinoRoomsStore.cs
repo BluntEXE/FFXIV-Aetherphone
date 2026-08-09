@@ -107,6 +107,37 @@ internal sealed class CasinoRoomsStore : IDisposable
         return 0;
     }
 
+    // A tile wants the same two facts about a room nobody is standing in: which phase it is in and
+    // when that phase ends. The live room answers for the room in play because its snapshot is
+    // seconds fresher than a directory page that refreshes once a minute.
+    public bool TryRoomClock(string roomId, out int phase, out long phaseEndsAtUnixMs)
+    {
+        var current = room.State?.Snapshot;
+        if (current is not null && string.Equals(current.RoomId, roomId, StringComparison.Ordinal))
+        {
+            phase = current.Phase;
+            phaseEndsAtUnixMs = current.PhaseEndsAtUnixMs;
+            return true;
+        }
+
+        var directory = rooms;
+        for (var index = 0; index < directory.Length; index++)
+        {
+            if (!string.Equals(directory[index].RoomId, roomId, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            phase = directory[index].Phase;
+            phaseEndsAtUnixMs = directory[index].PhaseEndsAtUnixMs;
+            return true;
+        }
+
+        phase = CasinoRoomPhases.Open;
+        phaseEndsAtUnixMs = 0;
+        return false;
+    }
+
     // A communal stake has no replay-before-staking rule to lean on: the round it belongs to
     // closes on the server clock whether or not this client ever heard back, so a lost response
     // is healed by the next snapshot rather than by re-POSTing blind. The one thing that must
@@ -121,7 +152,7 @@ internal sealed class CasinoRoomsStore : IDisposable
             return;
         }
 
-        if (!WheelRules.IsSpot(target) || !WheelRules.IsStakeInRange(amount))
+        if (!AcceptsStake(snapshot.GameKind, target, amount))
         {
             return;
         }
@@ -254,6 +285,25 @@ internal sealed class CasinoRoomsStore : IDisposable
         return attemptedAtTick != 0 && nowTick - attemptedAtTick < RetryAfterAttemptMilliseconds;
     }
 
+    // What a target and an amount mean is the game's business, not the room's: a wheel target is a
+    // bet spot with its own range, a bingo target is how many cards to print at a fixed price. A
+    // room whose game this client does not know refuses to send money at all rather than posting a
+    // number the server would have to interpret.
+    internal static bool AcceptsStake(string gameKind, int target, long amount)
+    {
+        if (string.Equals(gameKind, CasinoWire.WheelKind, StringComparison.Ordinal))
+        {
+            return WheelRules.IsSpot(target) && WheelRules.IsStakeInRange(amount);
+        }
+
+        if (string.Equals(gameKind, CasinoWire.BingoKind, StringComparison.Ordinal))
+        {
+            return BingoRules.IsValidCardCount(target) && amount == BingoRules.StakeFor(target);
+        }
+
+        return false;
+    }
+
     private static long NowUnixMilliseconds()
     {
         return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -347,6 +397,7 @@ internal sealed class CasinoRoomsStore : IDisposable
             }
 
             Interlocked.Exchange(ref roomsAttemptedAtTick, 0);
+            room.AbsorbClock(directory.ServerNowUnixMs, NowUnixMilliseconds());
             rooms = directory.Rooms ?? Array.Empty<CasinoRoomCardDto>();
             loadedRooms = true;
         }, () =>

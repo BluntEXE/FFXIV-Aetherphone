@@ -78,6 +78,14 @@ internal sealed class CasinoRoomSession
         return remaining > 0 ? remaining : 0;
     }
 
+    // The room directory carries the same server clock a room does, and the floor tiles count the
+    // next room down from it, so a phone that has never stepped into a room still paints honest
+    // deadlines on the tiles.
+    public void AbsorbClock(long serverNowUnixMs, long localNowUnixMs)
+    {
+        AbsorbServerTime(serverNowUnixMs, localNowUnixMs);
+    }
+
     public void Enter(string nextRoomId)
     {
         if (nextRoomId.Length == 0)
@@ -258,7 +266,8 @@ internal sealed class CasinoRoomSession
             EntryCount = change.EntryCount ?? snapshot.EntryCount,
             StakeTotal = change.StakeTotal ?? snapshot.StakeTotal,
             Numbers = MergedNumbers(snapshot.Numbers, change.Numbers, roundChanged),
-            Spots = ReplacedSpots(snapshot.Spots, change.Spots, roundChanged),
+            Spots = Replaced(snapshot.Spots, change.Spots, roundChanged),
+            Stages = Replaced(snapshot.Stages, change.Stages, roundChanged),
         };
 
         // Entries belong to the round that took the money. Carrying them past a round boundary
@@ -293,11 +302,11 @@ internal sealed class CasinoRoomSession
         return merged;
     }
 
-    // A spot row is a total the server keeps, not a draw the room accumulates, so a present board
-    // replaces the held one and an absent board leaves it alone. The round boundary still clears
-    // it: last round's pot painted under this round's countdown reads as money already down.
-    internal static CasinoRoomSpotDto[]? ReplacedSpots(CasinoRoomSpotDto[]? held, CasinoRoomSpotDto[]? fresh,
-        bool roundChanged)
+    // A spot row and a won stage are both totals the server keeps, not draws the room accumulates,
+    // so a present board replaces the held one and an absent board leaves it alone. The round
+    // boundary still clears them: last round's pot painted under this round's countdown reads as
+    // money already down, and last room's full house reads as one this room just awarded.
+    internal static TRow[]? Replaced<TRow>(TRow[]? held, TRow[]? fresh, bool roundChanged)
     {
         if (fresh is not null)
         {

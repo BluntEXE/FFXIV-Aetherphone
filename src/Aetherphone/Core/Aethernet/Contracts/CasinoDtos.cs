@@ -165,6 +165,15 @@ internal sealed record CasinoRoomSpotDto(
     int Bettors = 0,
     long Amount = 0);
 
+// A stage the room has already awarded, in the order it was won. Ball names the call that closed
+// it and Winners how many cards shared it, so the hall can show a full house that landed on ball
+// forty-one and say how many people are splitting nothing (every winner is paid in full).
+internal sealed record CasinoRoomStageDto(
+    int Stage = 0,
+    int Ball = 0,
+    long Prize = 0,
+    int Winners = 0);
+
 internal sealed record CasinoRoomSnapshotDto(
     string RoomId = "",
     string GameKind = "",
@@ -178,7 +187,8 @@ internal sealed record CasinoRoomSnapshotDto(
     long MinStake = 0,
     long MaxStake = 0,
     int[]? Numbers = null,
-    CasinoRoomSpotDto[]? Spots = null);
+    CasinoRoomSpotDto[]? Spots = null,
+    CasinoRoomStageDto[]? Stages = null);
 
 // A room event states only what moved, so every field is nullable and an absent one means the
 // held snapshot already has the truth. Widening a value type to zero here would silently wipe
@@ -196,15 +206,20 @@ internal sealed record CasinoRoomEventDto(
     long? StakeTotal = null,
     int[]? Numbers = null,
     CasinoRoomSpotDto[]? Spots = null,
+    CasinoRoomStageDto[]? Stages = null,
     string? Reason = null);
 
+// One entry is one thing the player bought into this round: a wheel bet on a spot, or a single
+// bingo card with its own printed numbers. Numbers is null for games whose entries carry nothing
+// but a target, which keeps one carrier serving every communal room rather than a shape per game.
 internal sealed record CasinoRoomEntryDto(
     string EntryId = "",
     int Kind = 0,
     long Stake = 0,
     int Target = 0,
     long Payout = 0,
-    int State = 0);
+    int State = 0,
+    int[]? Numbers = null);
 
 internal sealed record CasinoRoomPrivateDto(
     string RoundId = "",
@@ -240,3 +255,29 @@ internal sealed record CasinoRoomStakeDto(
     long Staked = 0,
     long Stack = 0,
     CasinoRoomSpotDto[]? Spots = null);
+
+// The daily spin is the one game with no sitting and no chips: it mints coins straight into the
+// wallet, so its answers carry Balance where every other game carries Stack. Available and Reason
+// are read together, never inferred from each other, because "not today" and "your wallet is
+// frozen" are different sentences and the player deserves the right one.
+internal sealed record CasinoDailySpinStateDto(
+    bool Available = false,
+    string Reason = "",
+    long NextClaimAtUnix = 0,
+    int Segment = -1,
+    long Amount = 0,
+    string RoundId = "",
+    long Balance = 0);
+
+internal sealed record CasinoDailySpinRequest(string ClientRoundId);
+
+internal sealed record CasinoDailySpinDto(
+    bool Granted = false,
+    string Reason = "",
+    string RoundId = "",
+    int Segment = -1,
+    long Amount = 0,
+    long Balance = 0,
+    long NextClaimAtUnix = 0,
+    string SeedCommitHash = "",
+    string NextSeedHash = "");

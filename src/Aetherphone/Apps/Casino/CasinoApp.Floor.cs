@@ -12,6 +12,7 @@ internal sealed partial class CasinoApp
     private const float TileHeight = 108f;
     private const float TileGap = 12f;
     private const float NavRowHeight = 60f;
+    private const float DailySpinCardHeight = 64f;
     private const float ResumePillHeight = 36f;
     private const long SessionPillAfterSeconds = 45 * 60;
 
@@ -37,7 +38,7 @@ internal sealed partial class CasinoApp
         new(CasinoGames.Slots, L.Casino.GameSlots, true),
         new(CasinoGames.Scratch, L.Casino.GameScratch, true),
         new(CasinoGames.Barkeep, L.Casino.GameBarkeep, true),
-        new(CasinoGames.Bingo, L.Casino.GameBingo, false),
+        new(CasinoGames.Bingo, L.Casino.GameBingo, true, Core.Casino.CasinoRoomIds.BingoHall),
         new(CasinoGames.Wheel, L.Casino.GameWheel, true, Core.Casino.CasinoRoomIds.WheelFloor),
     };
 
@@ -73,6 +74,7 @@ internal sealed partial class CasinoApp
             DrawFloorNotice(title, hint, scale);
         }
 
+        DrawDailySpinCard(scale);
         ui.SectionHeading(Loc.T(L.Casino.GamesHeading), 4f);
         DrawGameGrid(scale);
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
@@ -98,6 +100,94 @@ internal sealed partial class CasinoApp
         }
 
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
+    }
+
+    // The one row on the floor that is free, so it says so with a badge rather than a price. A spin
+    // already taken keeps its place in the list and shows when the next one lands: hiding the row
+    // for the rest of the day would teach the player to stop looking for it.
+    private void DrawDailySpinCard(float scale)
+    {
+        var claim = Core.Casino.DailySpinStatus.Of(casinoSpin.Loaded, casinoSpin.State);
+        if (claim == Core.Casino.DailySpinClaim.Unknown)
+        {
+            return;
+        }
+
+        var width = ScrollLayout.StableContentWidth();
+        var origin = ImGui.GetCursorScreenPos();
+        var drawList = ImGui.GetWindowDrawList();
+        var height = DailySpinCardHeight * scale;
+        var card = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
+        var rounding = Metrics.Radius.Card * scale;
+        var hovered = UiInteract.Hover(card.Min, card.Max);
+        ui.Card(drawList, card.Min, card.Max, rounding);
+        if (hovered)
+        {
+            Squircle.Fill(drawList, card.Min, card.Max, rounding, ImGui.GetColorU32(ui.HoverTint));
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        var available = claim == Core.Casino.DailySpinClaim.Available;
+        if (available)
+        {
+            Squircle.Stroke(drawList, card.Min, card.Max, rounding,
+                ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.45f)), 1f * scale);
+        }
+
+        var glyphCenter = new Vector2(card.Min.X + 34f * scale, card.Center.Y);
+        drawList.AddCircleFilled(glyphCenter, 20f * scale,
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, available ? 0.20f : 0.12f)), 32);
+        CasinoGlyphs.Draw(drawList, CasinoGames.DailySpin, glyphCenter, 11f * scale,
+            ImGui.GetColorU32(available ? ui.Accent : ui.MutedInk), ImGui.GetColorU32(ui.Palette.CardFill));
+
+        var textLeft = card.Min.X + 62f * scale;
+        var badgeWidth = available ? DrawReadyBadge(drawList, card, scale) : 0f;
+        var textWidth = card.Max.X - 14f * scale - badgeWidth - textLeft;
+        var title = Typography.FitText(Loc.T(L.Casino.SpinCardTitle), textWidth, TextStyles.SubheadlineEmphasized);
+        Typography.Draw(drawList, new Vector2(textLeft, card.Min.Y + 14f * scale), title, ui.TitleInk,
+            TextStyles.SubheadlineEmphasized);
+        var hint = Typography.FitText(DailySpinHint(claim), textWidth, TextStyles.Footnote);
+        Typography.Draw(drawList, new Vector2(textLeft, card.Min.Y + 34f * scale), hint, ui.MutedInk,
+            TextStyles.Footnote);
+
+        if (UiInteract.Click(card.Min, card.Max, hovered))
+        {
+            OpenDailySpin();
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, height + Metrics.Space.Md * scale));
+    }
+
+    private float DrawReadyBadge(ImDrawListPtr drawList, Rect card, float scale)
+    {
+        var label = Loc.T(L.Casino.SpinReadyBadge);
+        var labelSize = Typography.Measure(label, TextStyles.Caption1);
+        var chipHeight = labelSize.Y + 6f * scale;
+        var chipMax = new Vector2(card.Max.X - 14f * scale, card.Center.Y + chipHeight * 0.5f);
+        var chipMin = new Vector2(chipMax.X - labelSize.X - 16f * scale, card.Center.Y - chipHeight * 0.5f);
+        Squircle.Fill(drawList, chipMin, chipMax, chipHeight * 0.5f, ImGui.GetColorU32(ui.Accent));
+        Typography.DrawCentered(drawList, (chipMin + chipMax) * 0.5f, label, ui.Palette.HeaderInk,
+            TextStyles.Caption1);
+        return chipMax.X - chipMin.X + 10f * scale;
+    }
+
+    private string DailySpinHint(Core.Casino.DailySpinClaim claim)
+    {
+        if (claim == Core.Casino.DailySpinClaim.Available)
+        {
+            return Loc.T(L.Casino.SpinCardHint);
+        }
+
+        var state = casinoSpin.State;
+        if (claim == Core.Casino.DailySpinClaim.Denied && state is not null)
+        {
+            return Loc.T(Core.Casino.CasinoReasons.MessageFor(state.Reason));
+        }
+
+        return state is not null && state.NextClaimAtUnix > 0
+            ? Loc.T(L.Casino.SpinNextAt, TimeText.FutureMoment(state.NextClaimAtUnix))
+            : Loc.T(L.Casino.SpinNextSoon);
     }
 
     private void DrawGameGrid(float scale)
@@ -161,16 +251,45 @@ internal sealed partial class CasinoApp
             var occupancy = casinoRooms.OccupancyOf(definition.RoomId);
             if (occupancy > 0)
             {
-                DrawCornerChip(drawList, tile,
-                    Loc.T(L.Casino.WheelAtTheRail, Apps.Games.Framework.GameNumber.Label(occupancy)), ui.Accent,
-                    scale);
+                var crowd = string.Equals(definition.GameId, CasinoGames.Bingo, StringComparison.Ordinal)
+                    ? Loc.T(L.Casino.BingoInTheHall, Apps.Games.Framework.GameNumber.Label(occupancy))
+                    : Loc.T(L.Casino.WheelAtTheRail, Apps.Games.Framework.GameNumber.Label(occupancy));
+                DrawCornerChip(drawList, tile, crowd, ui.Accent, scale);
             }
+
+            DrawRoomClock(drawList, tile, definition.RoomId, scale);
         }
 
         if (UiInteract.Click(tile.Min, tile.Max, hovered))
         {
             OpenGame(definition.GameId);
         }
+    }
+
+    // The tile counts down off the room's own deadline against the server clock the directory
+    // carried, never off frame time, so a tile that has been sitting on a background phone for a
+    // minute is either right or blank rather than confidently wrong.
+    private void DrawRoomClock(ImDrawListPtr drawList, Rect tile, string roomId, float scale)
+    {
+        if (!casinoRooms.TryRoomClock(roomId, out var phase, out var endsAtUnixMs) || endsAtUnixMs <= 0)
+        {
+            return;
+        }
+
+        var remaining = casinoRooms.Room.RemainingMilliseconds(endsAtUnixMs,
+            DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+        if (remaining <= 0)
+        {
+            return;
+        }
+
+        var seconds = (int)((remaining + 999) / 1000);
+        var label = phase == Core.Casino.CasinoRoomPhases.Open
+            ? Loc.T(L.Casino.RoomClosesIn, TimeText.Duration(seconds))
+            : Loc.T(L.Casino.RoomNextIn, TimeText.Duration(seconds));
+        var fitted = Typography.FitText(label, tile.Width - 16f * scale, TextStyles.Caption2);
+        Typography.DrawCentered(drawList, new Vector2(tile.Center.X, tile.Max.Y - 14f * scale), fitted,
+            ui.MutedInk, TextStyles.Caption2);
     }
 
     private void DrawCornerChip(ImDrawListPtr drawList, Rect tile, string label, Vector4 ink, float scale)

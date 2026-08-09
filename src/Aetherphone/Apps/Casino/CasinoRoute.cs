@@ -8,6 +8,7 @@ internal enum CasinoScreen
     Fairness,
     Limits,
     RoundDetail,
+    DailySpin,
 }
 
 internal readonly record struct CasinoRoute(CasinoScreen Screen, string GameId = "", string RoundId = "")

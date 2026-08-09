@@ -16,6 +16,7 @@ internal sealed class CasinoClient
 
     internal const string RoundsPath = "/casino/rounds";
     internal const string RoomsPath = "/casino/rooms";
+    internal const string DailySpinPath = "/casino/spin";
 
     internal static string RoomPath(string roomId)
     {
@@ -143,5 +144,17 @@ internal sealed class CasinoClient
             new CasinoRoomStakeRequest(roomId, roundId, clientEntryId, target, amount),
             AethernetJsonContext.Default.CasinoRoomStakeRequest,
             AethernetJsonContext.Default.CasinoRoomStakeDto, token);
+    }
+
+    public Task<CasinoDailySpinStateDto?> DailySpinStateAsync(CancellationToken token)
+    {
+        return net.GetAsync(DailySpinPath, AethernetJsonContext.Default.CasinoDailySpinStateDto, token);
+    }
+
+    public Task<CasinoDailySpinDto?> ClaimDailySpinAsync(string clientRoundId, CancellationToken token)
+    {
+        return net.PostAsync(DailySpinPath, new CasinoDailySpinRequest(clientRoundId),
+            AethernetJsonContext.Default.CasinoDailySpinRequest,
+            AethernetJsonContext.Default.CasinoDailySpinDto, token);
     }
 }

@@ -27,6 +27,10 @@ internal static class CasinoReasons
     public const string Ended = "ended";
     public const string Restarting = "restarting";
     public const string Unreachable = "unreachable";
+    public const string Claimed = "claimed";
+    public const string Paused = "paused";
+    public const string DailyCap = "daily_cap";
+    public const string CardsFull = "cards_full";
 
     public static readonly string[] All =
     {
@@ -52,6 +56,10 @@ internal static class CasinoReasons
         Ended,
         Restarting,
         Unreachable,
+        Claimed,
+        Paused,
+        DailyCap,
+        CardsFull,
     };
 
     private static readonly FrozenDictionary<string, LocString> Messages = new Dictionary<string, LocString>
@@ -78,6 +86,10 @@ internal static class CasinoReasons
         [Ended] = L.Casino.ReasonEnded,
         [Restarting] = L.Casino.ReasonRestarting,
         [Unreachable] = L.Casino.ReasonUnreachable,
+        [Claimed] = L.Casino.ReasonClaimed,
+        [Paused] = L.Casino.ReasonPaused,
+        [DailyCap] = L.Casino.ReasonDailyCap,
+        [CardsFull] = L.Casino.ReasonCardsFull,
     }.ToFrozenDictionary(StringComparer.Ordinal);
 
     public static bool TryMessage(string reason, out LocString message)
