@@ -92,6 +92,7 @@ internal sealed partial class SkywatcherApp : IPhoneApp
         {
             if (child)
             {
+                AppSurface.ResetScrollOnNewVisit();
                 var surface = DragScrollHost.Begin(skyKey);
                 DrawTab(screen, palette, kind, isDay, hasData, scale);
                 if (scrubbing)

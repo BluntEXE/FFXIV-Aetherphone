@@ -346,6 +346,7 @@ internal sealed partial class PhotosApp
                 return;
             }
 
+            AppSurface.ResetScrollOnNewVisit();
             var surface = DragScrollHost.Begin(gridKey);
             if (resetScroll)
             {
@@ -488,6 +489,7 @@ internal sealed partial class PhotosApp
                 return;
             }
 
+            AppSurface.ResetScrollOnNewVisit();
             var surface = DragScrollHost.Begin(albumsKey);
             if (resetScroll)
             {
@@ -805,6 +807,7 @@ internal sealed partial class PhotosApp
                 return;
             }
 
+            AppSurface.ResetScrollOnNewVisit();
             var surface = DragScrollHost.Begin(gridKey);
             if (resetScroll)
             {
@@ -902,6 +905,7 @@ internal sealed partial class PhotosApp
                 return;
             }
 
+            AppSurface.ResetScrollOnNewVisit();
             var surface = DragScrollHost.Begin(gridKey);
             if (resetScroll)
             {
