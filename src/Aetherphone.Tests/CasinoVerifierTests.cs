@@ -26,7 +26,7 @@ public sealed class CasinoVerifierTests
     private const string WheelRoundId = "cafe0000000000000000000000000004";
     private const string WheelLog = "segment:16";
     private const string SpinRoundId = "cafe0000000000000000000000000005";
-    private const string SpinLog = "spin:6";
+    private const string SpinLog = "segment:6";
     private const string BingoRoundId = "cafe0000000000000000000000000006";
     private const string BingoLog =
         "card:2;card:8;card:5;card:1;card:6;card:7;card:0;card:12;card:6;card:6;card:4;card:7;card:2;card:9;"
@@ -42,35 +42,35 @@ public sealed class CasinoVerifierTests
     public void SlotsVectorReproducesTheCommitAndEveryDraw()
     {
         Assert.Equal(CasinoRoundVerdict.Match,
-            CasinoVerifier.Verify(Seed, SeedCommit, SlotsRoundId, SlotsLog));
+            CasinoVerifier.Verify(CasinoWire.SlotsKind, Seed, SeedCommit, SlotsRoundId, SlotsLog));
     }
 
     [Fact]
     public void ScratchWinnerVectorReplays()
     {
         Assert.Equal(CasinoRoundVerdict.Match,
-            CasinoVerifier.Verify(Seed, SeedCommit, ScratchRoundId, ScratchLog));
+            CasinoVerifier.Verify(CasinoWire.ScratchKind, Seed, SeedCommit, ScratchRoundId, ScratchLog));
     }
 
     [Fact]
     public void BarkeepScriptVectorReplays()
     {
         Assert.Equal(CasinoRoundVerdict.Match,
-            CasinoVerifier.Verify(Seed, SeedCommit, BarkeepRoundId, BarkeepLog));
+            CasinoVerifier.Verify(CasinoWire.BartenderKind, Seed, SeedCommit, BarkeepRoundId, BarkeepLog));
     }
 
     [Fact]
     public void WheelSegmentVectorReplays()
     {
         Assert.Equal(CasinoRoundVerdict.Match,
-            CasinoVerifier.Verify(Seed, SeedCommit, WheelRoundId, WheelLog));
+            CasinoVerifier.Verify(CasinoWire.WheelKind, Seed, SeedCommit, WheelRoundId, WheelLog));
     }
 
     [Fact]
     public void DailySpinVectorReplays()
     {
         Assert.Equal(CasinoRoundVerdict.Match,
-            CasinoVerifier.Verify(Seed, SeedCommit, SpinRoundId, SpinLog));
+            CasinoVerifier.Verify(CasinoWire.DailySpinKind, Seed, SeedCommit, SpinRoundId, SpinLog));
     }
 
     // The two bingo shuffles narrow as they go and the engine logs both under one name apiece, so
@@ -80,14 +80,14 @@ public sealed class CasinoVerifierTests
     public void BingoCardAndBallVectorReplays()
     {
         Assert.Equal(CasinoRoundVerdict.Match,
-            CasinoVerifier.Verify(Seed, SeedCommit, BingoRoundId, BingoLog));
+            CasinoVerifier.Verify(CasinoWire.BingoKind, Seed, SeedCommit, BingoRoundId, BingoLog));
     }
 
     [Fact]
     public void ASecondCardRestartsTheColumnPoolPattern()
     {
         Assert.Equal(CasinoRoundVerdict.Match,
-            CasinoVerifier.Verify(Seed, SeedCommit, BingoRoundId, BingoTwoCardLog));
+            CasinoVerifier.Verify(CasinoWire.BingoKind, Seed, SeedCommit, BingoRoundId, BingoTwoCardLog));
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public sealed class CasinoVerifierTests
     {
         const string tampered = "card:2;card:8;card:5;card:1;card:11";
         Assert.Equal(CasinoRoundVerdict.Mismatch,
-            CasinoVerifier.Verify(Seed, SeedCommit, BingoRoundId, tampered));
+            CasinoVerifier.Verify(CasinoWire.BingoKind, Seed, SeedCommit, BingoRoundId, tampered));
     }
 
     [Fact]
@@ -110,7 +110,7 @@ public sealed class CasinoVerifierTests
     {
         var tampered = string.Concat(Seed.AsSpan(0, Seed.Length - 1), "0");
         Assert.Equal(CasinoRoundVerdict.Mismatch,
-            CasinoVerifier.Verify(tampered, SeedCommit, SlotsRoundId, SlotsLog));
+            CasinoVerifier.Verify(CasinoWire.SlotsKind, tampered, SeedCommit, SlotsRoundId, SlotsLog));
     }
 
     [Fact]
@@ -119,14 +119,14 @@ public sealed class CasinoVerifierTests
         var tampered = string.Concat("ff", Seed.AsSpan(2));
         var tamperedCommit = Convert.ToHexStringLower(SHA256.HashData(Convert.FromHexString(tampered)));
         Assert.Equal(CasinoRoundVerdict.Mismatch,
-            CasinoVerifier.Verify(tampered, tamperedCommit, SlotsRoundId, SlotsLog));
+            CasinoVerifier.Verify(CasinoWire.SlotsKind, tampered, tamperedCommit, SlotsRoundId, SlotsLog));
     }
 
     [Fact]
     public void TheStreamIsBoundToTheRoundId()
     {
         Assert.Equal(CasinoRoundVerdict.Mismatch,
-            CasinoVerifier.Verify(Seed, SeedCommit, ScratchRoundId, SlotsLog));
+            CasinoVerifier.Verify(CasinoWire.SlotsKind, Seed, SeedCommit, ScratchRoundId, SlotsLog));
     }
 
     [Fact]
@@ -134,28 +134,28 @@ public sealed class CasinoVerifierTests
     {
         const string tamperedLog = "s0r0:20;s0r1:22;s0r2:29;s0r3:33;s0r4:23";
         Assert.Equal(CasinoRoundVerdict.Mismatch,
-            CasinoVerifier.Verify(Seed, SeedCommit, SlotsRoundId, tamperedLog));
+            CasinoVerifier.Verify(CasinoWire.SlotsKind, Seed, SeedCommit, SlotsRoundId, tamperedLog));
     }
 
     [Fact]
     public void AnUnknownPurposeFailsClosed()
     {
         Assert.Equal(CasinoRoundVerdict.Mismatch,
-            CasinoVerifier.Verify(Seed, SeedCommit, SlotsRoundId, "mystery:1"));
+            CasinoVerifier.Verify(CasinoWire.SlotsKind, Seed, SeedCommit, SlotsRoundId, "mystery:1"));
     }
 
     [Fact]
     public void AValueAtOrAboveItsBoundFails()
     {
         Assert.Equal(CasinoRoundVerdict.Mismatch,
-            CasinoVerifier.Verify(Seed, SeedCommit, SlotsRoundId, "s0r0:40"));
+            CasinoVerifier.Verify(CasinoWire.SlotsKind, Seed, SeedCommit, SlotsRoundId, "s0r0:40"));
     }
 
     [Fact]
     public void AMalformedSeedIsAMismatchNotACrash()
     {
         Assert.Equal(CasinoRoundVerdict.Mismatch,
-            CasinoVerifier.Verify("not-hex", SeedCommit, SlotsRoundId, SlotsLog));
+            CasinoVerifier.Verify(CasinoWire.SlotsKind, "not-hex", SeedCommit, SlotsRoundId, SlotsLog));
     }
 
     // Commit evidence alone says a seed was published, never that this round came out of it. A
@@ -165,9 +165,9 @@ public sealed class CasinoVerifierTests
     public void AnEmptyDrawLogFailsClosedInsteadOfPassingOnTheCommitAlone()
     {
         Assert.Equal(CasinoRoundVerdict.Mismatch,
-            CasinoVerifier.Verify(Seed, SeedCommit, SlotsRoundId, string.Empty));
+            CasinoVerifier.Verify(CasinoWire.SlotsKind, Seed, SeedCommit, SlotsRoundId, string.Empty));
         Assert.Equal(CasinoRoundVerdict.Mismatch,
-            CasinoVerifier.Verify(Seed, "00" + SeedCommit[2..], SlotsRoundId, string.Empty));
+            CasinoVerifier.Verify(CasinoWire.SlotsKind, Seed, "00" + SeedCommit[2..], SlotsRoundId, string.Empty));
     }
 
     [Fact]
@@ -230,59 +230,85 @@ public sealed class CasinoVerifierTests
     [Fact]
     public void PurposeBoundsMirrorTheEngines()
     {
-        Assert.True(CasinoVerifier.TryBoundFor("s0r0", out var slotsBound));
+        Assert.True(CasinoVerifier.TryBoundFor("s0r0", 0u, out var slotsBound));
         Assert.Equal(40u, slotsBound);
-        Assert.True(CasinoVerifier.TryBoundFor("prize", out var prizeBound));
+        Assert.True(CasinoVerifier.TryBoundFor("prize", 0u, out var prizeBound));
         Assert.Equal(1_000_000u, prizeBound);
-        Assert.True(CasinoVerifier.TryBoundFor("w0", out var winnerBound));
+        Assert.True(CasinoVerifier.TryBoundFor("w0", 0u, out var winnerBound));
         Assert.Equal(12u, winnerBound);
-        Assert.True(CasinoVerifier.TryBoundFor("w5", out var lastWinnerBound));
+        Assert.True(CasinoVerifier.TryBoundFor("w5", 0u, out var lastWinnerBound));
         Assert.Equal(7u, lastWinnerBound);
-        Assert.True(CasinoVerifier.TryBoundFor("g8", out var shuffleBound));
+        Assert.True(CasinoVerifier.TryBoundFor("g8", 0u, out var shuffleBound));
         Assert.Equal(9u, shuffleBound);
-        Assert.True(CasinoVerifier.TryBoundFor("l0", out var loserBound));
+        Assert.True(CasinoVerifier.TryBoundFor("l0", 0u, out var loserBound));
         Assert.Equal(14u, loserBound);
-        Assert.True(CasinoVerifier.TryBoundFor("patrons", out var patronsBound));
+        Assert.True(CasinoVerifier.TryBoundFor("patrons", 0u, out var patronsBound));
         Assert.Equal(16u, patronsBound);
-        Assert.True(CasinoVerifier.TryBoundFor("a3", out var jitterBound));
+        Assert.True(CasinoVerifier.TryBoundFor("a3", 0u, out var jitterBound));
         Assert.Equal(3u, jitterBound);
-        Assert.True(CasinoVerifier.TryBoundFor("n11", out var stepCountBound));
+        Assert.True(CasinoVerifier.TryBoundFor("n11", 0u, out var stepCountBound));
         Assert.Equal(3u, stepCountBound);
-        Assert.True(CasinoVerifier.TryBoundFor("k13.3", out var stepKindBound));
+        Assert.True(CasinoVerifier.TryBoundFor("k13.3", 0u, out var stepKindBound));
         Assert.Equal(4u, stepKindBound);
-        Assert.False(CasinoVerifier.TryBoundFor("w6", out _));
-        Assert.False(CasinoVerifier.TryBoundFor("g0", out _));
-        Assert.False(CasinoVerifier.TryBoundFor("g9", out _));
-        Assert.False(CasinoVerifier.TryBoundFor("l9", out _));
-        Assert.False(CasinoVerifier.TryBoundFor("a14", out _));
-        Assert.False(CasinoVerifier.TryBoundFor("k14.0", out _));
-        Assert.False(CasinoVerifier.TryBoundFor("k0.4", out _));
-        Assert.False(CasinoVerifier.TryBoundFor("s41r0", out _));
-        Assert.False(CasinoVerifier.TryBoundFor("s0r5", out _));
-        Assert.False(CasinoVerifier.TryBoundFor("", out _));
+        Assert.False(CasinoVerifier.TryBoundFor("w6", 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("g0", 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("g9", 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("l9", 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("a14", 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("k14.0", 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("k0.4", 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("s41r0", 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("s0r5", 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("", 0u, out _));
     }
 
+    // Both wheels log their draw under the one name "segment" and they are different wheels, so
+    // the bound arrives from the round's game kind rather than the label. Reading a sixteen
+    // segment draw against a fifty segment bound consumes the stream differently, which would
+    // accuse the house of cheating on every honest daily spin.
     [Fact]
     public void TheCommunalPurposeBoundsMirrorTheirRules()
     {
-        Assert.True(CasinoVerifier.TryBoundFor("segment", out var segmentBound));
+        Assert.True(CasinoVerifier.TrySegmentBound(CasinoWire.WheelKind, out var wheelSegments));
+        Assert.Equal(50u, wheelSegments);
+        Assert.True(CasinoVerifier.TrySegmentBound(CasinoWire.DailySpinKind, out var spinSegments));
+        Assert.Equal(16u, spinSegments);
+
+        Assert.True(CasinoVerifier.TryBoundFor("segment", wheelSegments, out var segmentBound));
         Assert.Equal(50u, segmentBound);
-        Assert.True(CasinoVerifier.TryBoundFor("spin", out var spinBound));
+        Assert.True(CasinoVerifier.TryBoundFor("segment", spinSegments, out var spinBound));
         Assert.Equal(16u, spinBound);
 
-        Assert.True(CasinoVerifier.TryBoundFor("card", 0, out var firstPick));
+        Assert.True(CasinoVerifier.TryBoundFor("card", 0, 0u, out var firstPick));
         Assert.Equal(15u, firstPick);
-        Assert.True(CasinoVerifier.TryBoundFor("card", 4, out var lastPick));
+        Assert.True(CasinoVerifier.TryBoundFor("card", 4, 0u, out var lastPick));
         Assert.Equal(11u, lastPick);
-        Assert.True(CasinoVerifier.TryBoundFor("card", 13, out var middleColumnLastPick));
+        Assert.True(CasinoVerifier.TryBoundFor("card", 13, 0u, out var middleColumnLastPick));
         Assert.Equal(12u, middleColumnLastPick);
-        Assert.True(CasinoVerifier.TryBoundFor("card", 24, out var secondCardFirstPick));
+        Assert.True(CasinoVerifier.TryBoundFor("card", 24, 0u, out var secondCardFirstPick));
         Assert.Equal(15u, secondCardFirstPick);
 
-        Assert.True(CasinoVerifier.TryBoundFor("ball", 0, out var firstBall));
+        Assert.True(CasinoVerifier.TryBoundFor("ball", 0, 0u, out var firstBall));
         Assert.Equal(75u, firstBall);
-        Assert.True(CasinoVerifier.TryBoundFor("ball", 73, out var lastBall));
+        Assert.True(CasinoVerifier.TryBoundFor("ball", 73, 0u, out var lastBall));
         Assert.Equal(2u, lastBall);
+    }
+
+    // Guessing one of the two rims would hand a round the strongest verdict on a coin flip, so a
+    // game kind this client does not know leaves the segment bound at zero and every draw under
+    // it fails closed.
+    [Fact]
+    public void AWheelThisClientDoesNotKnowFailsClosedRatherThanGuessing()
+    {
+        Assert.False(CasinoVerifier.TrySegmentBound(CasinoWire.BingoKind, out var bingoSegments));
+        Assert.Equal(0u, bingoSegments);
+        Assert.False(CasinoVerifier.TrySegmentBound("casino.mystery", out _));
+        Assert.False(CasinoVerifier.TryBoundFor("segment", 0u, out _));
+
+        Assert.Equal(CasinoRoundVerdict.Mismatch,
+            CasinoVerifier.Verify("casino.mystery", Seed, SeedCommit, WheelRoundId, WheelLog));
+        Assert.Equal(CasinoRoundVerdict.Mismatch,
+            CasinoVerifier.Verify(CasinoWire.DailySpinKind, Seed, SeedCommit, WheelRoundId, WheelLog));
     }
 
     // A shuffle that ran past its own end has no honest bound left, and a purpose the client has
@@ -290,19 +316,19 @@ public sealed class CasinoVerifierTests
     [Fact]
     public void AShuffleRunPastItsEndFailsClosedLikeAnUnknownPurpose()
     {
-        Assert.False(CasinoVerifier.TryBoundFor("ball", 74, out _));
-        Assert.False(CasinoVerifier.TryBoundFor("ball", 900, out _));
-        Assert.False(CasinoVerifier.TryBoundFor("card", -1, out _));
-        Assert.False(CasinoVerifier.TryBoundFor("balls", out _));
-        Assert.False(CasinoVerifier.TryBoundFor("cards", out _));
-        Assert.False(CasinoVerifier.TryBoundFor("segments", out _));
-        Assert.False(CasinoVerifier.TryBoundFor("spins", out _));
+        Assert.False(CasinoVerifier.TryBoundFor("ball", 74, 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("ball", 900, 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("card", -1, 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("balls", 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("cards", 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("segments", 50u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("spins", 16u, out _));
         Assert.Equal(CasinoRoundVerdict.Mismatch,
-            CasinoVerifier.Verify(Seed, SeedCommit, BingoRoundId, "wedge:3"));
+            CasinoVerifier.Verify(CasinoWire.BingoKind, Seed, SeedCommit, BingoRoundId, "wedge:3"));
         Assert.Equal(CasinoRoundVerdict.Mismatch,
-            CasinoVerifier.Verify(Seed, SeedCommit, SpinRoundId, "spin:16"));
+            CasinoVerifier.Verify(CasinoWire.DailySpinKind, Seed, SeedCommit, SpinRoundId, "segment:16"));
         Assert.Equal(CasinoRoundVerdict.Mismatch,
-            CasinoVerifier.Verify(Seed, SeedCommit, WheelRoundId, "segment:50"));
+            CasinoVerifier.Verify(CasinoWire.WheelKind, Seed, SeedCommit, WheelRoundId, "segment:50"));
     }
 
     private static string ReferenceLog(string seedHex, string roundId)

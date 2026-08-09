@@ -10,9 +10,7 @@ namespace Aetherphone.Core.Telephony.Contracts;
 [JsonSerializable(typeof(CasinoPayload))]
 [JsonSerializable(typeof(Aethernet.Contracts.CasinoRoomSnapshotDto))]
 [JsonSerializable(typeof(Aethernet.Contracts.CasinoRoomEventDto))]
-[JsonSerializable(typeof(Aethernet.Contracts.CasinoRoomPrivateDto))]
-[JsonSerializable(typeof(Aethernet.Contracts.CasinoRoomEntryDto))]
-[JsonSerializable(typeof(Aethernet.Contracts.CasinoRoomSpotDto))]
+[JsonSerializable(typeof(Aethernet.Contracts.CasinoPrivateDto))]
 internal sealed partial class TelephonyJsonContext : JsonSerializerContext
 {
 }

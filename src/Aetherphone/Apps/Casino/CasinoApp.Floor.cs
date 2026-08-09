@@ -107,12 +107,7 @@ internal sealed partial class CasinoApp
     // for the rest of the day would teach the player to stop looking for it.
     private void DrawDailySpinCard(float scale)
     {
-        var claim = Core.Casino.DailySpinStatus.Of(casinoSpin.Loaded, casinoSpin.State);
-        if (claim == Core.Casino.DailySpinClaim.Unknown)
-        {
-            return;
-        }
-
+        var claim = Core.Casino.DailySpinStatus.Of(casinoSpin.Answer);
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
         var drawList = ImGui.GetWindowDrawList();
@@ -174,19 +169,19 @@ internal sealed partial class CasinoApp
 
     private string DailySpinHint(Core.Casino.DailySpinClaim claim)
     {
+        var answer = casinoSpin.Answer;
         if (claim == Core.Casino.DailySpinClaim.Available)
         {
             return Loc.T(L.Casino.SpinCardHint);
         }
 
-        var state = casinoSpin.State;
-        if (claim == Core.Casino.DailySpinClaim.Denied && state is not null)
+        if (claim == Core.Casino.DailySpinClaim.Denied && answer is not null)
         {
-            return Loc.T(Core.Casino.CasinoReasons.MessageFor(state.Reason));
+            return Loc.T(Core.Casino.CasinoReasons.MessageFor(answer.Reason));
         }
 
-        return state is not null && state.NextClaimAtUnix > 0
-            ? Loc.T(L.Casino.SpinNextAt, TimeText.FutureMoment(state.NextClaimAtUnix))
+        return answer is not null && answer.NextSpinAtUnix > 0
+            ? Loc.T(L.Casino.SpinNextAt, TimeText.FutureMoment(answer.NextSpinAtUnix))
             : Loc.T(L.Casino.SpinNextSoon);
     }
 

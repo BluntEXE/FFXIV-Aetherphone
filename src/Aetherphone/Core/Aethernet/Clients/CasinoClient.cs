@@ -16,16 +16,23 @@ internal sealed class CasinoClient
 
     internal const string RoundsPath = "/casino/rounds";
     internal const string RoomsPath = "/casino/rooms";
-    internal const string DailySpinPath = "/casino/spin";
+    internal const string DailySpinPath = "/casino/dailyspin";
+    internal const string WheelBetPath = "/casino/wheel/bet";
+    internal const string BingoCardsPath = "/casino/bingo/cards";
 
     internal static string RoomPath(string roomId)
     {
         return string.Concat(RoomsPath, "/", Uri.EscapeDataString(roomId));
     }
 
-    internal static string RoomStakePath(string roomId)
+    internal static string WheelBetsPath(string roomId)
     {
-        return string.Concat(RoomPath(roomId), "/stake");
+        return string.Concat("/casino/wheel/", Uri.EscapeDataString(roomId), "/bets");
+    }
+
+    internal static string BingoMyCardsPath(string roomId)
+    {
+        return string.Concat("/casino/bingo/", Uri.EscapeDataString(roomId), "/cards");
     }
 
     internal static string VerifyRoundPath(string roundId)
@@ -127,34 +134,54 @@ internal sealed class CasinoClient
         return net.GetAsync(RoundsPagePath(cursor), AethernetJsonContext.Default.CasinoRoundHistoryPage, token);
     }
 
-    public Task<CasinoRoomDirectoryDto?> RoomsAsync(CancellationToken token)
+    public Task<CasinoRoomListDto?> RoomsAsync(CancellationToken token)
     {
-        return net.GetAsync(RoomsPath, AethernetJsonContext.Default.CasinoRoomDirectoryDto, token);
+        return net.GetAsync(RoomsPath, AethernetJsonContext.Default.CasinoRoomListDto, token);
     }
 
-    public Task<CasinoRoomStateDto?> RoomStateAsync(string roomId, CancellationToken token)
+    // The room read answers with the bare snapshot or a 404, so the status is the only way to tell
+    // a room that is gone from a read that never arrived. A caller that cannot see the difference
+    // would either kill a live room on one dropped packet or sit forever on one that closed.
+    public Task<CasinoRoomSnapshotDto?> RoomStateAsync(string roomId, Action<int> onStatus,
+        CancellationToken token)
     {
-        return net.GetAsync(RoomPath(roomId), AethernetJsonContext.Default.CasinoRoomStateDto, token);
+        return net.GetAsync(RoomPath(roomId), AethernetJsonContext.Default.CasinoRoomSnapshotDto, token,
+            onStatus);
     }
 
-    public Task<CasinoRoomStakeDto?> StakeRoomAsync(string roomId, string roundId, string clientEntryId,
-        int target, long amount, CancellationToken token)
+    public Task<CasinoWheelBetDto?> PlaceWheelBetAsync(string roomId, long roundIndex, string clientRoundId,
+        string clientBetId, int spot, long amount, CancellationToken token)
     {
-        return net.PostAsync(RoomStakePath(roomId),
-            new CasinoRoomStakeRequest(roomId, roundId, clientEntryId, target, amount),
-            AethernetJsonContext.Default.CasinoRoomStakeRequest,
-            AethernetJsonContext.Default.CasinoRoomStakeDto, token);
+        return net.PostAsync(WheelBetPath,
+            new CasinoWheelBetRequest(roomId, roundIndex, clientRoundId, clientBetId, spot, amount),
+            AethernetJsonContext.Default.CasinoWheelBetRequest,
+            AethernetJsonContext.Default.CasinoWheelBetDto, token);
     }
 
-    public Task<CasinoDailySpinStateDto?> DailySpinStateAsync(CancellationToken token)
+    public Task<CasinoWheelBetsDto?> MyWheelBetsAsync(string roomId, CancellationToken token)
     {
-        return net.GetAsync(DailySpinPath, AethernetJsonContext.Default.CasinoDailySpinStateDto, token);
+        return net.GetAsync(WheelBetsPath(roomId), AethernetJsonContext.Default.CasinoWheelBetsDto, token);
     }
 
-    public Task<CasinoDailySpinDto?> ClaimDailySpinAsync(string clientRoundId, CancellationToken token)
+    public Task<CasinoBingoCardsDto?> BuyBingoCardsAsync(string roomId, long roundIndex, string clientRoundId,
+        int cardCount, CancellationToken token)
     {
-        return net.PostAsync(DailySpinPath, new CasinoDailySpinRequest(clientRoundId),
-            AethernetJsonContext.Default.CasinoDailySpinRequest,
+        return net.PostAsync(BingoCardsPath,
+            new CasinoBingoCardsRequest(roomId, roundIndex, clientRoundId, cardCount),
+            AethernetJsonContext.Default.CasinoBingoCardsRequest,
+            AethernetJsonContext.Default.CasinoBingoCardsDto, token);
+    }
+
+    public Task<CasinoBingoCardsDto?> MyBingoCardsAsync(string roomId, CancellationToken token)
+    {
+        return net.GetAsync(BingoMyCardsPath(roomId), AethernetJsonContext.Default.CasinoBingoCardsDto, token);
+    }
+
+    // The free spin has no read route at all: this post either takes today's spin or replays the
+    // one already taken, and both answers carry the segment, so asking is the same act as claiming.
+    public Task<CasinoDailySpinDto?> ClaimDailySpinAsync(CancellationToken token)
+    {
+        return net.RequestAsync(HttpMethod.Post, DailySpinPath,
             AethernetJsonContext.Default.CasinoDailySpinDto, token);
     }
 }

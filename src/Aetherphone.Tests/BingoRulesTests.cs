@@ -1,3 +1,4 @@
+using Aetherphone.Apps.Casino.Cabinets;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Casino;
 using Xunit;
@@ -21,6 +22,36 @@ public sealed class BingoRulesTests
         }
 
         return card;
+    }
+
+    private static CasinoRoomSnapshotDto Snapshot(long roundIndex, int phase = CasinoRoomPhases.Locked)
+    {
+        return new CasinoRoomSnapshotDto(
+            RoomId: CasinoRoomIds.BingoHall,
+            GameKind: CasinoWire.BingoKind,
+            Phase: phase,
+            RoundIndex: roundIndex);
+    }
+
+    private static CasinoBingoRoomStateDto Board(long roundIndex, int[]? balls, int cards = 1)
+    {
+        return new CasinoBingoRoomStateDto(
+            RoundIndex: roundIndex,
+            Cards: cards,
+            Balls: balls,
+            BallIndex: balls?.Length ?? 0);
+    }
+
+    private static CasinoBingoCardsDto Mine(long roundIndex, params int[][] cards)
+    {
+        return new CasinoBingoCardsDto(
+            Granted: true,
+            RoomId: CasinoRoomIds.BingoHall,
+            RoundIndex: roundIndex,
+            RoundId: "entry-1",
+            Cards: cards,
+            Stake: BingoRules.StakeFor(cards.Length),
+            RoundState: CasinoRoundStates.Open);
     }
 
     [Fact]
@@ -72,27 +103,17 @@ public sealed class BingoRulesTests
             third[slot] += BingoRules.Columns;
         }
 
-        var playback = new Aetherphone.Apps.Casino.Cabinets.BingoRoundPlayback();
-        var entries = new[]
-        {
-            new CasinoRoomEntryDto("e1", 0, BingoRules.CardPrice, 0, 0, 0, first),
-            new CasinoRoomEntryDto("e2", 0, BingoRules.CardPrice, 0, 0, 0, second),
-            new CasinoRoomEntryDto("e3", 0, BingoRules.CardPrice, 0, 0, 0, third),
-        };
-        var snapshot = new CasinoRoomSnapshotDto(
-            RoomId: CasinoRoomIds.BingoHall,
-            GameKind: CasinoWire.BingoKind,
-            Phase: CasinoRoomPhases.Locked,
-            RoundId: "room7",
-            Numbers: new[] { 1 });
+        var playback = new BingoRoundPlayback();
+        var mine = Mine(7, first, second, third);
 
-        playback.Update(snapshot, entries, 0.016f);
+        playback.Update(Snapshot(7), Board(7, new[] { 1 }, 3), mine, 0.016f);
 
         Assert.True(BingoRules.IsMarked(playback.AutoMaskOf(0), BingoRules.CellForSlot(0)));
         Assert.False(BingoRules.IsMarked(playback.AutoMaskOf(0), BingoRules.CellForSlot(4)));
         Assert.True(BingoRules.IsMarked(playback.AutoMaskOf(1), BingoRules.CellForSlot(4)));
         Assert.False(BingoRules.IsMarked(playback.AutoMaskOf(1), BingoRules.CellForSlot(0)));
         Assert.Equal(BingoRules.FreeMask, playback.AutoMaskOf(2));
+        Assert.Equal(3, playback.CardCount);
     }
 
     [Fact]
@@ -218,6 +239,38 @@ public sealed class BingoRulesTests
         Assert.Equal(BingoRules.MaxSingleWin, ladder[2]);
     }
 
+    // The ladder the cabinet paints is quoted from the cards the room says are in play, so a room
+    // that has published no board yet quotes nothing rather than the one card case.
+    [Fact]
+    public void TheCabinetQuotesTheLadderFromTheCardsTheRoomPublished()
+    {
+        Assert.Equal(0, BingoCabinet.CardsInPlay(null));
+        Assert.Equal(40, BingoCabinet.CardsInPlay(Board(7, null, 40)));
+
+        Span<long> quoted = stackalloc long[BingoRules.StageCount];
+        BingoRules.PrizeLadder(BingoCabinet.CardsInPlay(null), quoted);
+        Assert.Equal(0, quoted[0]);
+        Assert.Equal(0, quoted[1]);
+        Assert.Equal(0, quoted[2]);
+    }
+
+    [Fact]
+    public void AnAwardedStageIsReadFromTheRoomRatherThanRederived()
+    {
+        var board = Board(7, new[] { 1, 2 }, 40) with
+        {
+            Stages = new[] { new CasinoBingoStageDto(BingoRules.StageLine, 41, 112, 2, 224) },
+        };
+
+        var line = BingoCabinet.StageAwarded(board, BingoRules.StageLine);
+        Assert.NotNull(line);
+        Assert.Equal(41, line.Ball);
+        Assert.Equal(112, line.Prize);
+        Assert.Equal(2, line.Winners);
+        Assert.Null(BingoCabinet.StageAwarded(board, BingoRules.StageFullHouse));
+        Assert.Null(BingoCabinet.StageAwarded(null, BingoRules.StageLine));
+    }
+
     [Fact]
     public void CardCountsAndStakesAreBoundedByTheRoomRule()
     {
@@ -228,16 +281,29 @@ public sealed class BingoRulesTests
         Assert.Equal(80, BingoRules.StakeFor(BingoRules.MaxCards));
     }
 
+    // One purchase is one room, so the composer only ever reads how many cards the server printed
+    // and never adds a local tally to them. A read that came back refused holds no cards at all.
     [Fact]
-    public void TheRoomOnlyAcceptsAStakeItsOwnGameCanExplain()
+    public void TheHeldSetIsWhateverTheServerPrintedAndNeverMore()
     {
-        Assert.True(CasinoRoomsStore.AcceptsStake(CasinoWire.BingoKind, 2, 40));
-        Assert.False(CasinoRoomsStore.AcceptsStake(CasinoWire.BingoKind, 2, 39));
-        Assert.False(CasinoRoomsStore.AcceptsStake(CasinoWire.BingoKind, 5, 100));
-        Assert.False(CasinoRoomsStore.AcceptsStake(CasinoWire.BingoKind, 0, 0));
-        Assert.True(CasinoRoomsStore.AcceptsStake(CasinoWire.WheelKind, 3, 25));
-        Assert.False(CasinoRoomsStore.AcceptsStake(CasinoWire.WheelKind, 3, 20_000));
-        Assert.False(CasinoRoomsStore.AcceptsStake("casino.mystery", 1, 20));
+        Assert.Equal(0, BingoCabinet.HeldCards(null));
+        Assert.Equal(2, BingoCabinet.HeldCards(Mine(7, SequentialCard(), SequentialCard())));
+        Assert.Equal(BingoRules.MaxCards, BingoCabinet.HeldCards(Mine(7,
+            SequentialCard(), SequentialCard(), SequentialCard(), SequentialCard(), SequentialCard())));
+    }
+
+    // The payout only speaks once the ledger has settled the round. A phase that flipped to the
+    // result window is the calling ending, not the money landing, and the two are seconds apart.
+    [Fact]
+    public void OnlyASettledRoundIsAllowedToSpeakAPayout()
+    {
+        Assert.False(BingoCabinet.Settled(null));
+        Assert.False(BingoCabinet.Settled(Mine(7, SequentialCard())));
+        Assert.True(BingoCabinet.Settled(Mine(7, SequentialCard()) with
+        {
+            RoundState = CasinoRoundStates.Settled,
+            Payout = 112,
+        }));
     }
 
     // Settlement is the room's call sheet and nothing else. Whatever the player stamped by hand,
@@ -250,17 +316,8 @@ public sealed class BingoRulesTests
         var balls = new[] { 1, 2, 3, 4, 5, 16 };
         var truth = BingoRules.AutoMask(card, balls);
 
-        var playback = new Aetherphone.Apps.Casino.Cabinets.BingoRoundPlayback();
-        var snapshot = new CasinoRoomSnapshotDto(
-            RoomId: CasinoRoomIds.BingoHall,
-            GameKind: CasinoWire.BingoKind,
-            Phase: CasinoRoomPhases.Locked,
-            RoundId: "room7",
-            EntryCount: 3,
-            Numbers: balls);
-        var entries = new[] { new CasinoRoomEntryDto("e1", 0, BingoRules.CardPrice, 0, 0, 0, card) };
-
-        playback.Update(snapshot, entries, 0.016f);
+        var playback = new BingoRoundPlayback();
+        playback.Update(Snapshot(7), Board(7, balls), Mine(7, card), 0.016f);
         Assert.Equal(truth, playback.AutoMaskOf(0));
 
         var stampedBefore = playback.StampedMaskOf(0);
@@ -277,19 +334,12 @@ public sealed class BingoRulesTests
     public void AHandStampOnlyPullsForwardAMarkTheRoomAlreadyCalled()
     {
         var card = SequentialCard();
-        var playback = new Aetherphone.Apps.Casino.Cabinets.BingoRoundPlayback();
-        var entries = new[] { new CasinoRoomEntryDto("e1", 0, BingoRules.CardPrice, 0, 0, 0, card) };
-        var opening = new CasinoRoomSnapshotDto(
-            RoomId: CasinoRoomIds.BingoHall,
-            GameKind: CasinoWire.BingoKind,
-            Phase: CasinoRoomPhases.Locked,
-            RoundId: "room7",
-            Numbers: new[] { 1 });
-        playback.Update(opening, entries, 0.016f);
+        var playback = new BingoRoundPlayback();
+        var mine = Mine(7, card);
+        playback.Update(Snapshot(7), Board(7, new[] { 1 }), mine, 0.016f);
         Assert.Equal(playback.AutoMaskOf(0), playback.StampedMaskOf(0));
 
-        var next = opening with { Numbers = new[] { 1, 2 } };
-        playback.Update(next, entries, 0.016f);
+        playback.Update(Snapshot(7), Board(7, new[] { 1, 2 }), mine, 0.016f);
         var freshCell = BingoRules.CellForSlot(1);
         Assert.True(BingoRules.IsMarked(playback.AutoMaskOf(0), freshCell));
         Assert.False(BingoRules.IsMarked(playback.StampedMaskOf(0), freshCell));
@@ -303,42 +353,32 @@ public sealed class BingoRulesTests
     public void AnUnwatchedMarkStampsItselfOnceTheBeatHasPassed()
     {
         var card = SequentialCard();
-        var playback = new Aetherphone.Apps.Casino.Cabinets.BingoRoundPlayback();
-        var entries = new[] { new CasinoRoomEntryDto("e1", 0, BingoRules.CardPrice, 0, 0, 0, card) };
-        var opening = new CasinoRoomSnapshotDto(
-            RoomId: CasinoRoomIds.BingoHall,
-            GameKind: CasinoWire.BingoKind,
-            Phase: CasinoRoomPhases.Locked,
-            RoundId: "room7",
-            Numbers: new[] { 1 });
-        playback.Update(opening, entries, 0.016f);
-        playback.Update(opening with { Numbers = new[] { 1, 2 } }, entries, 0.016f);
-        playback.Update(opening with { Numbers = new[] { 1, 2 } }, entries,
-            Aetherphone.Apps.Casino.Cabinets.BingoRoundPlayback.StampDelaySeconds);
+        var playback = new BingoRoundPlayback();
+        var mine = Mine(7, card);
+        playback.Update(Snapshot(7), Board(7, new[] { 1 }), mine, 0.016f);
+        playback.Update(Snapshot(7), Board(7, new[] { 1, 2 }), mine, 0.016f);
+        playback.Update(Snapshot(7), Board(7, new[] { 1, 2 }), mine, BingoRoundPlayback.StampDelaySeconds);
 
         Assert.Equal(playback.AutoMaskOf(0), playback.StampedMaskOf(0));
         Assert.Equal(2, playback.LatestBall);
         Assert.Equal(2, playback.BallCount);
+        Assert.True(playback.IsCalled(1));
+        Assert.True(playback.IsCalled(2));
+        Assert.False(playback.IsCalled(3));
     }
 
     [Fact]
     public void ANewRoomForgetsTheLastOnesMarks()
     {
         var card = SequentialCard();
-        var playback = new Aetherphone.Apps.Casino.Cabinets.BingoRoundPlayback();
-        var entries = new[] { new CasinoRoomEntryDto("e1", 0, BingoRules.CardPrice, 0, 0, 0, card) };
-        var first = new CasinoRoomSnapshotDto(
-            RoomId: CasinoRoomIds.BingoHall,
-            GameKind: CasinoWire.BingoKind,
-            Phase: CasinoRoomPhases.Locked,
-            RoundId: "room7",
-            Numbers: new[] { 1, 2, 3 });
-        playback.Update(first, entries, 0.016f);
+        var playback = new BingoRoundPlayback();
+        playback.Update(Snapshot(7), Board(7, new[] { 1, 2, 3 }), Mine(7, card), 0.016f);
         Assert.NotEqual(BingoRules.FreeMask, playback.AutoMaskOf(0));
 
-        playback.Update(first with { RoundId = "room8", Numbers = null }, null, 0.016f);
+        playback.Update(Snapshot(8), Board(8, null, 0), null, 0.016f);
         Assert.Equal(BingoRules.FreeMask, playback.AutoMaskOf(0));
         Assert.Equal(0, playback.BallCount);
         Assert.Equal(0, playback.CardCount);
+        Assert.Equal("bingo-hall#8", playback.RoundId);
     }
 }

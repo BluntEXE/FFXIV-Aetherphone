@@ -99,5 +99,5 @@ internal sealed record CasinoPayload
     public CasinoRoomEventDto? Event { get; init; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public CasinoRoomPrivateDto? Private { get; init; }
+    public CasinoPrivateDto? Private { get; init; }
 }

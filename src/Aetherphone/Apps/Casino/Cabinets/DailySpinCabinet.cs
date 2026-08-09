@@ -57,7 +57,6 @@ internal sealed class DailySpinCabinet
     public void Enter()
     {
         inlineReason = string.Empty;
-        spin.RefreshNow();
     }
 
     public void Reset()
@@ -80,7 +79,6 @@ internal sealed class DailySpinCabinet
     {
         var scale = UiScale.Current;
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
-        spin.EnsureFresh();
         ConsumeClaimResult();
         Advance(delta, scale);
         particles.Update(delta);
@@ -89,13 +87,8 @@ internal sealed class DailySpinCabinet
         var pad = Metrics.Space.Md * scale;
         var left = body.Min.X + pad;
         var width = body.Width - pad * 2f;
-        var state = spin.State;
-        var claim = DailySpinStatus.Of(spin.Loaded, state);
-        if (claim == DailySpinClaim.Unknown)
-        {
-            LoadingPulse.Draw(body.Center, 16f * scale, ui.Palette.Accent, ui.MutedInk, LoadingPulse.SafeLabel());
-            return;
-        }
+        var answer = spin.Answer;
+        var claim = DailySpinStatus.Of(answer);
 
         var y = body.Min.Y + Metrics.Space.Sm * scale;
         var intro = Loc.T(L.Casino.SpinIntro);
@@ -105,7 +98,7 @@ internal sealed class DailySpinCabinet
 
         y = DrawRing(drawList, left, y, width, scale);
         y = DrawBanner(drawList, ui, claim, left, y, width, scale, delta);
-        DrawAction(drawList, ui, state, claim, left, y, width, scale);
+        DrawAction(drawList, ui, answer, claim, left, y, width, scale);
         particles.Draw(drawList, scale);
     }
 
@@ -122,9 +115,22 @@ internal sealed class DailySpinCabinet
             return;
         }
 
+        // A replay is not a failure to show: it carries the segment the day already landed on and
+        // what it already paid, so the rim is stated at rest on it instead of being staged again.
         if (!result.Granted)
         {
-            inlineReason = result.Reason.Length > 0 ? result.Reason : CasinoReasons.Claimed;
+            inlineReason = result.Reason.Length > 0 ? result.Reason : CasinoReasons.AlreadyClaimed;
+            spunRoundId = result.RoundId;
+            landedSegment = result.Segment;
+            landedAmount = result.Amount;
+            celebrated = true;
+            spinning = false;
+            if (DailySpinRules.IsSegment(result.Segment))
+            {
+                angle = WheelChoreography.RestAngleOf(result.Segment, DailySpinRules.SegmentCount);
+                coinRoll.Snap((int)Math.Min(landedAmount, int.MaxValue));
+            }
+
             return;
         }
 
@@ -156,36 +162,20 @@ internal sealed class DailySpinCabinet
     // long before this frame.
     private void Advance(float deltaSeconds, float scale)
     {
-        if (spinning)
-        {
-            spinElapsedSeconds += deltaSeconds;
-            if (spinElapsedSeconds >= WheelChoreography.SpinSeconds)
-            {
-                spinElapsedSeconds = WheelChoreography.SpinSeconds;
-                spinning = false;
-                Celebrate(scale);
-            }
-
-            angle = WheelChoreography.AngleAt(spinFromAngle, sweep, spinElapsedSeconds);
-            return;
-        }
-
-        var state = spin.State;
-        if (state is null || !DailySpinRules.IsSegment(state.Segment))
+        if (!spinning)
         {
             return;
         }
 
-        if (string.Equals(spunRoundId, state.RoundId, StringComparison.Ordinal) && spunRoundId.Length > 0)
+        spinElapsedSeconds += deltaSeconds;
+        if (spinElapsedSeconds >= WheelChoreography.SpinSeconds)
         {
-            return;
+            spinElapsedSeconds = WheelChoreography.SpinSeconds;
+            spinning = false;
+            Celebrate(scale);
         }
 
-        landedSegment = state.Segment;
-        landedAmount = state.Amount;
-        celebrated = true;
-        angle = WheelChoreography.RestAngleOf(state.Segment, DailySpinRules.SegmentCount);
-        coinRoll.Snap((int)Math.Min(landedAmount, int.MaxValue));
+        angle = WheelChoreography.AngleAt(spinFromAngle, sweep, spinElapsedSeconds);
     }
 
     private void Celebrate(float scale)
@@ -231,7 +221,7 @@ internal sealed class DailySpinCabinet
             return y + 40f * scale;
         }
 
-        if (claim == DailySpinClaim.Available)
+        if (claim != DailySpinClaim.Claimed)
         {
             Typography.DrawCentered(drawList, center,
                 Loc.T(L.Casino.SpinTopNote, GameNumber.Label((int)DailySpinRules.TopAward)), ui.MutedInk,
@@ -254,7 +244,7 @@ internal sealed class DailySpinCabinet
     }
 
     private void DrawAction(ImDrawListPtr drawList, AppSkin ui,
-        Core.Aethernet.Contracts.CasinoDailySpinStateDto? state, DailySpinClaim claim, float left, float y,
+        Core.Aethernet.Contracts.CasinoDailySpinDto? answer, DailySpinClaim claim, float left, float y,
         float width, float scale)
     {
         if (inlineReason.Length > 0)
@@ -262,15 +252,15 @@ internal sealed class DailySpinCabinet
             y = DrawReasonCard(drawList, ui, Loc.T(CasinoReasons.MessageFor(inlineReason)), left, y, width, scale)
                 + Metrics.Space.Sm * scale;
         }
-        else if (claim == DailySpinClaim.Denied && state is not null)
+
+        if (spinning)
         {
-            y = DrawReasonCard(drawList, ui, Loc.T(CasinoReasons.MessageFor(state.Reason)), left, y, width, scale)
-                + Metrics.Space.Sm * scale;
+            return;
         }
 
-        if (claim == DailySpinClaim.Available && !spinning)
+        if (claim != DailySpinClaim.Claimed)
         {
-            var enabled = DailySpinStatus.CanClaim(spin.Loaded, state, spin.Claiming);
+            var enabled = DailySpinStatus.CanClaim(answer, spin.Claiming);
             var pillRect = new Rect(new Vector2(left + width * 0.18f, y),
                 new Vector2(left + width * 0.82f, y + PillHeight * scale));
             if (AppSkin.PillButton(pillRect, Loc.T(L.Casino.SpinAction), true, enabled, ui.Theme))
@@ -282,13 +272,8 @@ internal sealed class DailySpinCabinet
             return;
         }
 
-        if (spinning)
-        {
-            return;
-        }
-
-        var reset = state is not null && state.NextClaimAtUnix > 0
-            ? Loc.T(L.Casino.SpinNextAt, TimeText.FutureMoment(state.NextClaimAtUnix))
+        var reset = answer is not null && answer.NextSpinAtUnix > 0
+            ? Loc.T(L.Casino.SpinNextAt, TimeText.FutureMoment(answer.NextSpinAtUnix))
             : Loc.T(L.Casino.SpinNextSoon);
         Typography.DrawCentered(drawList, new Vector2(left + width * 0.5f, y + 10f * scale), reset, ui.MutedInk,
             TextStyles.Footnote);

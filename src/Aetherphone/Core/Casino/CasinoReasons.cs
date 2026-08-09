@@ -3,6 +3,12 @@ using Aetherphone.Core.Localization;
 
 namespace Aetherphone.Core.Casino;
 
+// The table has to cover every string the server can put on the wire, plus the handful the client
+// raises for itself (unreachable is nobody's refusal but this phone's). A reason the server sends
+// that is missing here renders as the generic apology however well the rest of the screen is
+// worded, which is why the daily spin's vocabulary lives here too: its refusals come out of the
+// coin ledger rather than the casino, so already_claimed and rule_cap arrive from a set none of
+// the tables ever use.
 internal static class CasinoReasons
 {
     public const string StakesPaused = "stakes_paused";
@@ -27,9 +33,10 @@ internal static class CasinoReasons
     public const string Ended = "ended";
     public const string Restarting = "restarting";
     public const string Unreachable = "unreachable";
-    public const string Claimed = "claimed";
+    public const string AlreadyClaimed = "already_claimed";
     public const string Paused = "paused";
     public const string DailyCap = "daily_cap";
+    public const string RuleCap = "rule_cap";
     public const string CardsFull = "cards_full";
 
     public static readonly string[] All =
@@ -56,9 +63,10 @@ internal static class CasinoReasons
         Ended,
         Restarting,
         Unreachable,
-        Claimed,
+        AlreadyClaimed,
         Paused,
         DailyCap,
+        RuleCap,
         CardsFull,
     };
 
@@ -86,9 +94,10 @@ internal static class CasinoReasons
         [Ended] = L.Casino.ReasonEnded,
         [Restarting] = L.Casino.ReasonRestarting,
         [Unreachable] = L.Casino.ReasonUnreachable,
-        [Claimed] = L.Casino.ReasonClaimed,
+        [AlreadyClaimed] = L.Casino.ReasonClaimed,
         [Paused] = L.Casino.ReasonPaused,
         [DailyCap] = L.Casino.ReasonDailyCap,
+        [RuleCap] = L.Casino.ReasonRuleCap,
         [CardsFull] = L.Casino.ReasonCardsFull,
     }.ToFrozenDictionary(StringComparer.Ordinal);
 

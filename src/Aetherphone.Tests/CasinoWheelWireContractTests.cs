@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Aetherphone.Apps.Casino.Cabinets;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
@@ -9,60 +10,55 @@ namespace Aetherphone.Tests;
 
 public sealed class CasinoWheelWireContractTests
 {
+    // Money never touches the socket. The bet is a plain post and the personal read hangs off the
+    // room, because the socket carries nothing private.
     [Fact]
-    public void TheStakeRouteHangsOffTheRoomTheBetBelongsTo()
+    public void TheMoneyPathsAreOrdinaryHttpRoutes()
     {
-        Assert.Equal("/casino/rooms/wheel-floor/stake", CasinoClient.RoomStakePath(CasinoRoomIds.WheelFloor));
-        Assert.Equal("/casino/rooms/a%2Fb/stake", CasinoClient.RoomStakePath("a/b"));
-        Assert.Equal("wheel-floor", CasinoRoomIds.WheelFloor);
+        Assert.Equal("/casino/wheel/bet", CasinoClient.WheelBetPath);
+        Assert.Equal("/casino/wheel/wheel-floor/bets", CasinoClient.WheelBetsPath(CasinoRoomIds.WheelFloor));
+        Assert.Equal("/casino/wheel/a%2Fb/bets", CasinoClient.WheelBetsPath("a/b"));
         Assert.Equal("casino.wheel", CasinoWire.WheelKind);
     }
 
+    // RoundIndex rides the request so a bet composed against a round that closed while it was in
+    // flight is refused rather than landed on the next one, and ClientBetId makes the retry of a
+    // lost response free: the same id is the same bet, never a second one.
     [Fact]
-    public void ThePhaseConstantsMirrorTheBackendCycle()
+    public void TheBetRequestSerializesTheBackendShape()
     {
-        Assert.Equal(0, CasinoRoomPhases.Open);
-        Assert.Equal(1, CasinoRoomPhases.Locked);
-        Assert.Equal(2, CasinoRoomPhases.Result);
-    }
-
-    [Fact]
-    public void TheStakeRequestSerializesTheBackendShape()
-    {
-        var request = new CasinoRoomStakeRequest("wheel-floor", "r7", "entry1", 3, 25);
-        var json = JsonSerializer.Serialize(request, AethernetJsonContext.Default.CasinoRoomStakeRequest);
+        var request = new CasinoWheelBetRequest("wheel-floor", 7, "round1", "bet1", 3, 25);
+        var json = JsonSerializer.Serialize(request, AethernetJsonContext.Default.CasinoWheelBetRequest);
         Assert.Equal(
-            "{\"roomId\":\"wheel-floor\",\"roundId\":\"r7\",\"clientEntryId\":\"entry1\",\"target\":3,\"amount\":25}",
+            "{\"roomId\":\"wheel-floor\",\"roundIndex\":7,\"clientRoundId\":\"round1\","
+            + "\"clientBetId\":\"bet1\",\"spot\":3,\"amount\":25}",
             json);
     }
 
     [Fact]
-    public void AGrantedStakeCarriesTheStackAndTheFreshBoard()
+    public void AGrantedBetCarriesTheStackAndTheRoundItLandedIn()
     {
-        const string json = "{\"granted\":true,\"reason\":\"\",\"roundId\":\"r7\",\"target\":3,\"amount\":25,"
-            + "\"staked\":45,\"stack\":205,"
-            + "\"spots\":[{\"spot\":0,\"bettors\":4,\"amount\":180},{\"spot\":3,\"bettors\":2,\"amount\":75}]}";
-        var stake = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoRoomStakeDto);
+        const string json = "{\"granted\":true,\"reason\":\"\",\"roomId\":\"wheel-floor\",\"roundIndex\":7,"
+            + "\"roundId\":\"r7\",\"spot\":3,\"amount\":25,\"myStake\":45,\"stack\":205}";
+        var bet = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoWheelBetDto);
 
-        Assert.NotNull(stake);
-        Assert.True(stake.Granted);
-        Assert.Equal("r7", stake.RoundId);
-        Assert.Equal(3, stake.Target);
-        Assert.Equal(25, stake.Amount);
-        Assert.Equal(45, stake.Staked);
-        Assert.Equal(205, stake.Stack);
-        Assert.NotNull(stake.Spots);
-        Assert.Equal(2, stake.Spots.Length);
-        Assert.Equal(180, stake.Spots[0].Amount);
-        Assert.Equal(2, stake.Spots[1].Bettors);
+        Assert.NotNull(bet);
+        Assert.True(bet.Granted);
+        Assert.Equal("wheel-floor", bet.RoomId);
+        Assert.Equal(7, bet.RoundIndex);
+        Assert.Equal("r7", bet.RoundId);
+        Assert.Equal(3, bet.Spot);
+        Assert.Equal(25, bet.Amount);
+        Assert.Equal(45, bet.MyStake);
+        Assert.Equal(205, bet.Stack);
     }
 
     // Wallet balance never rides a game response: the cabinet reads chips at the table, and the
-    // wallet is refreshed through its own store when a stake is refused.
+    // wallet is refreshed through its own store when a bet is refused.
     [Fact]
-    public void AStakeResponseCarriesChipsAndNeverAWalletBalance()
+    public void ABetResponseCarriesChipsAndNeverAWalletBalance()
     {
-        var properties = typeof(CasinoRoomStakeDto).GetProperties();
+        var properties = typeof(CasinoWheelBetDto).GetProperties();
         var hasStack = false;
         for (var index = 0; index < properties.Length; index++)
         {
@@ -77,15 +73,16 @@ public sealed class CasinoWheelWireContractTests
     }
 
     [Fact]
-    public void ARefusedStakeStillNamesAReasonTheCabinetCanSpeak()
+    public void ARefusedBetStillNamesAReasonTheCabinetCanSpeak()
     {
-        const string json = "{\"granted\":false,\"reason\":\"closed\",\"roundId\":\"r7\",\"stack\":205}";
-        var stake = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoRoomStakeDto);
+        const string json = "{\"granted\":false,\"reason\":\"closed\",\"roomId\":\"wheel-floor\","
+            + "\"roundIndex\":7,\"roundId\":\"\",\"spot\":3,\"amount\":0,\"myStake\":0,\"stack\":205}";
+        var bet = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoWheelBetDto);
 
-        Assert.NotNull(stake);
-        Assert.False(stake.Granted);
-        Assert.Equal(CasinoReasons.Closed, stake.Reason);
-        Assert.True(CasinoReasons.TryMessage(stake.Reason, out _));
+        Assert.NotNull(bet);
+        Assert.False(bet.Granted);
+        Assert.Equal(CasinoReasons.Closed, bet.Reason);
+        Assert.True(CasinoReasons.TryMessage(bet.Reason, out _));
     }
 
     [Fact]
@@ -124,110 +121,113 @@ public sealed class CasinoWheelWireContractTests
         Assert.Equal("restarting", CasinoReasons.Restarting);
     }
 
+    // Occupancy is half the game at a communal wheel, so the spot totals ride the public game
+    // state rather than a private payload: everyone at the rail reads the same board.
     [Fact]
-    public void ARoomSnapshotCarriesTheSpotBoardAndTheDrawnSegment()
+    public void TheWheelBlobCarriesTheSpotBoardAndTheDrawnSegment()
     {
-        const string json = "{\"roomId\":\"wheel-floor\",\"gameKind\":\"casino.wheel\",\"phase\":2,"
-            + "\"roundId\":\"r7\",\"phaseEndsAtUnixMs\":1770000000000,\"playerCount\":9,\"entryCount\":14,"
-            + "\"stakeTotal\":640,\"numbers\":[31],"
-            + "\"spots\":[{\"spot\":0,\"bettors\":5,\"amount\":220},{\"spot\":4,\"bettors\":1,\"amount\":20}]}";
-        var snapshot = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoRoomSnapshotDto);
+        const string json = "{\"roundIndex\":7,\"commit\":\"aa\",\"nextCommit\":\"bb\",\"seed\":\"cc\","
+            + "\"segment\":31,\"spot\":1,\"spots\":[{\"spot\":0,\"multiplier\":1,\"segments\":24,"
+            + "\"returnBasisPoints\":9600,\"amount\":220,\"bettors\":5},{\"spot\":4,\"multiplier\":20,"
+            + "\"segments\":2,\"returnBasisPoints\":8400,\"amount\":20,\"bettors\":1}],\"staked\":640,"
+            + "\"paid\":300,\"recent\":[4,17,31],\"minBet\":5,\"maxBetPerSpot\":50,\"maxBetPerRound\":200,"
+            + "\"maxWin\":1000}";
+        var board = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoWheelRoomStateDto);
 
-        Assert.NotNull(snapshot);
-        Assert.Equal(CasinoRoomPhases.Result, snapshot.Phase);
-        Assert.Equal(9, snapshot.PlayerCount);
-        Assert.NotNull(snapshot.Numbers);
-        Assert.Equal(31, snapshot.Numbers[0]);
-        Assert.NotNull(snapshot.Spots);
-        Assert.Equal(2, snapshot.Spots.Length);
-        Assert.Equal(220, snapshot.Spots[0].Amount);
-        Assert.Equal(4, snapshot.Spots[1].Spot);
+        Assert.NotNull(board);
+        Assert.Equal(7, board.RoundIndex);
+        Assert.Equal(31, board.Segment);
+        Assert.Equal(1, board.Spot);
+        Assert.NotNull(board.Spots);
+        Assert.Equal(2, board.Spots.Length);
+        Assert.Equal(220, board.Spots[0].Amount);
+        Assert.Equal(4, board.Spots[1].Spot);
+        Assert.Equal(20, board.Spots[1].Multiplier);
+        Assert.Equal(640, board.Staked);
+        Assert.Equal(new[] { 4, 17, 31 }, board.Recent);
+        Assert.Equal(WheelRules.MinStakePerSpot, board.MinBet);
+        Assert.Equal(WheelRules.MaxStakePerSpot, board.MaxBetPerSpot);
+        Assert.Equal(WheelRules.MaxStakePerRound, board.MaxBetPerRound);
     }
 
-    // A spot total is a running figure, so a board that arrived replaces the held one outright.
-    // Merging it the way draws merge would double every pot the moment a second bet landed.
+    // The rim stays still until the room publishes a segment, and it only publishes one once the
+    // window has closed and the draw has been made.
     [Fact]
-    public void AFreshSpotBoardReplacesTheHeldOneAndAnAbsentOneLeavesIt()
+    public void TheRimHoldsUntilTheRoomPublishesADrawnSegment()
     {
-        var held = new[] { new CasinoRoomSpotDto(0, 2, 40) };
-        var fresh = new[] { new CasinoRoomSpotDto(0, 3, 65) };
+        var open = new CasinoWheelRoomStateDto(RoundIndex: 7);
+        Assert.Equal(-1, open.Segment);
+        Assert.Equal(-1, WheelRoundPlayback.DrawnSegment(open));
 
-        Assert.Same(fresh, CasinoRoomSession.Replaced(held, fresh, false));
-        Assert.Same(fresh, CasinoRoomSession.Replaced(held, fresh, true));
-        Assert.Same(held, CasinoRoomSession.Replaced(held, null, false));
-        Assert.Null(CasinoRoomSession.Replaced(held, null, true));
-        Assert.Null(CasinoRoomSession.Replaced<CasinoRoomSpotDto>(null, null, false));
+        var drawn = open with { Segment = 31 };
+        Assert.Equal(31, WheelRoundPlayback.DrawnSegment(drawn));
+    }
+
+    // The personal half is read over HTTP because the socket carries nothing private, and only
+    // accepted bets come back, so a refused or refunded bet can never be painted as live money.
+    [Fact]
+    public void ThePersonalReadCarriesOnlyAcceptedBets()
+    {
+        const string json = "{\"roomId\":\"wheel-floor\",\"roundIndex\":7,\"phase\":0,\"roundId\":\"r7\","
+            + "\"bets\":[{\"spot\":0,\"amount\":25},{\"spot\":3,\"amount\":20}],\"myStake\":45,\"stack\":205}";
+        var mine = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoWheelBetsDto);
+
+        Assert.NotNull(mine);
+        Assert.Equal("wheel-floor", mine.RoomId);
+        Assert.Equal(7, mine.RoundIndex);
+        Assert.Equal(CasinoRoomPhases.Open, mine.Phase);
+        Assert.NotNull(mine.Bets);
+        Assert.Equal(2, mine.Bets.Length);
+        Assert.Equal(25, mine.Bets[0].Amount);
+        Assert.Equal(3, mine.Bets[1].Spot);
+        Assert.Equal(45, mine.MyStake);
     }
 
     [Fact]
-    public void AnEventThatOnlyMovesTheBoardLeavesTheRestOfTheRoomAlone()
+    public void TheRimMirrorsTheRatifiedTableSegmentForSegment()
     {
-        var snapshot = new CasinoRoomSnapshotDto(
-            RoomId: CasinoRoomIds.WheelFloor,
-            GameKind: CasinoWire.WheelKind,
-            Phase: CasinoRoomPhases.Open,
-            RoundId: "r7",
-            PhaseEndsAtUnixMs: 1770000000000,
-            PlayerCount: 9,
-            StakeTotal: 200,
-            Spots: new[] { new CasinoRoomSpotDto(0, 2, 40) });
-        var held = new CasinoRoomState(CasinoRoomIds.WheelFloor, 1, 5, snapshot, null);
+        Assert.Equal(50, WheelRules.SegmentCount);
+        Assert.Equal(WheelRules.SegmentCount, WheelRules.Segments.Length);
+        Assert.Equal(5, WheelRules.SpotCount);
 
-        var applied = CasinoRoomSession.Applied(held, 1, 6, new CasinoRoomEventDto(
-            StakeTotal: 265,
-            Spots: new[] { new CasinoRoomSpotDto(0, 3, 65) }));
+        Span<int> counted = stackalloc int[WheelRules.SpotCount];
+        for (var segment = 0; segment < WheelRules.SegmentCount; segment++)
+        {
+            counted[WheelRules.SpotAt(segment)]++;
+        }
 
-        Assert.Equal(6, applied.Seq);
-        Assert.Equal("r7", applied.Snapshot.RoundId);
-        Assert.Equal(CasinoRoomPhases.Open, applied.Snapshot.Phase);
-        Assert.Equal(1770000000000, applied.Snapshot.PhaseEndsAtUnixMs);
-        Assert.Equal(9, applied.Snapshot.PlayerCount);
-        Assert.Equal(265, applied.Snapshot.StakeTotal);
-        Assert.NotNull(applied.Snapshot.Spots);
-        Assert.Equal(65, applied.Snapshot.Spots[0].Amount);
-        Assert.Equal(3, applied.Snapshot.Spots[0].Bettors);
+        for (var spot = 0; spot < WheelRules.SpotCount; spot++)
+        {
+            Assert.Equal(WheelRules.SegmentsOn(spot), counted[spot]);
+        }
     }
 
+    // The room cap is the one the player cannot see coming, so a bet that would cross it is
+    // clamped before the post leaves rather than bounced with money already committed elsewhere.
     [Fact]
-    public void ARoundChangeClearsLastRoundsBoardAndEntries()
+    public void TheRoundCapIsClampedBeforeTheBetLeaves()
     {
-        var snapshot = new CasinoRoomSnapshotDto(
-            RoomId: CasinoRoomIds.WheelFloor,
-            GameKind: CasinoWire.WheelKind,
-            Phase: CasinoRoomPhases.Result,
-            RoundId: "r7",
-            Numbers: new[] { 31 },
-            Spots: new[] { new CasinoRoomSpotDto(0, 3, 65) });
-        var personal = new CasinoRoomPrivateDto("r7", 25, new[] { new CasinoRoomEntryDto("e1", 0, 25, 3) });
-        var held = new CasinoRoomState(CasinoRoomIds.WheelFloor, 1, 5, snapshot, personal);
+        Assert.Equal(WheelRules.MaxStakePerSpot, WheelRules.Headroom(0));
+        Assert.Equal(20, WheelRules.Headroom(WheelRules.MaxStakePerRound - 20));
+        Assert.Equal(0, WheelRules.Headroom(WheelRules.MaxStakePerRound));
 
-        var applied = CasinoRoomSession.Applied(held, 1, 6,
-            new CasinoRoomEventDto(Phase: CasinoRoomPhases.Open, RoundId: "r8"));
-
-        Assert.Equal("r8", applied.Snapshot.RoundId);
-        Assert.Null(applied.Snapshot.Spots);
-        Assert.Null(applied.Snapshot.Numbers);
-        Assert.Null(applied.Private);
+        Assert.Equal(25, WheelRules.Clamp(25, 0, 500));
+        Assert.Equal(WheelRules.MaxStakePerSpot, WheelRules.Clamp(500, 0, 500));
+        Assert.Equal(20, WheelRules.Clamp(50, WheelRules.MaxStakePerRound - 20, 500));
+        Assert.Equal(0, WheelRules.Clamp(50, WheelRules.MaxStakePerRound, 500));
+        Assert.Equal(0, WheelRules.Clamp(1, 0, 500));
+        Assert.Equal(0, WheelRules.Clamp(25, 0, 4));
     }
 
-    // The drawn wedge rides Numbers, the same field a bingo ball would, so one round carrier
-    // serves both games and the wheel simply draws once.
+    // A winning spot returns the stake alongside the winnings, so every quoted return is the
+    // multiplier plus one: a 1x spot doubles the stake, it does not hand back what it took.
     [Fact]
-    public void TheDrawnWedgeSurvivesAnEventThatOnlyReportsPlayerCount()
+    public void AWinningSpotReturnsTheStakeBesideTheWinnings()
     {
-        var snapshot = new CasinoRoomSnapshotDto(
-            RoomId: CasinoRoomIds.WheelFloor,
-            GameKind: CasinoWire.WheelKind,
-            Phase: CasinoRoomPhases.Locked,
-            RoundId: "r7",
-            Numbers: new[] { 44 });
-        var held = new CasinoRoomState(CasinoRoomIds.WheelFloor, 1, 5, snapshot, null);
-
-        var applied = CasinoRoomSession.Applied(held, 1, 6, new CasinoRoomEventDto(PlayerCount: 11));
-
-        Assert.NotNull(applied.Snapshot.Numbers);
-        Assert.Single(applied.Snapshot.Numbers);
-        Assert.Equal(44, applied.Snapshot.Numbers[0]);
-        Assert.Equal(11, applied.Snapshot.PlayerCount);
+        Assert.True(WheelRules.Wins(0, WheelRules.SpotAt(0)));
+        Assert.Equal(50, WheelRules.Returned(0, WheelRules.SpotAt(0), 25));
+        Assert.Equal(0, WheelRules.Returned(0, WheelRules.SpotAt(0) + 1, 25));
+        Assert.False(WheelRules.IsSegment(WheelRules.SegmentCount));
+        Assert.Equal(-1, WheelRules.SpotAt(WheelRules.SegmentCount));
     }
 }

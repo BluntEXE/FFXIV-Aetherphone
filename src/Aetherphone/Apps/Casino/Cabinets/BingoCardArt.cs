@@ -59,8 +59,16 @@ internal static class BingoCardArt
             return;
         }
 
+        // A cell whose number has not arrived draws as an empty cell rather than as a zero. Zero is
+        // not a ball this hall can ever call, so printing it would be the card claiming a number it
+        // does not hold, and twenty four of them would read as a dealt card that cannot win.
         var slot = BingoRules.SlotForCell(cellIndex);
-        var number = numbers is not null && slot >= 0 && slot < numbers.Length ? numbers[slot] : 0;
+        if (numbers is null || slot < 0 || slot >= numbers.Length || !BingoRules.IsBall(numbers[slot]))
+        {
+            return;
+        }
+
+        var number = numbers[slot];
         var marked = (stampedMask & (1 << cellIndex)) != 0;
         var pending = !marked && (autoMask & (1 << cellIndex)) != 0;
 

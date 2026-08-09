@@ -82,7 +82,36 @@ internal sealed class BingoRoundPlayback
         return BingoRules.IsBall(ball) && called[ball];
     }
 
-    public void Update(CasinoRoomSnapshotDto? snapshot, CasinoRoomEntryDto[]? entries, float deltaSeconds)
+    // A room is identified by the room and its index, never by a round id: the hall turns over on
+    // its own clock whether or not this player bought in, and a player who bought nothing has no
+    // round id to compare against at all.
+    internal static string RoundKeyOf(CasinoRoomSnapshotDto snapshot)
+    {
+        return string.Concat(snapshot.RoomId, "#",
+            snapshot.RoundIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
+    }
+
+    // The room publishes the calls it has made, in the order it made them, so the length is the
+    // count. Nothing here derives a call from the clock: a phone that slept through six balls
+    // catches up on the next snapshot rather than inventing the ones it missed.
+    internal static int[] CalledBalls(CasinoBingoRoomStateDto? board)
+    {
+        return board?.Balls ?? Array.Empty<int>();
+    }
+
+    internal static int[]? CardAt(CasinoBingoCardsDto? mine, int cardIndex)
+    {
+        var cards = mine?.Cards;
+        if (cards is null || cardIndex < 0 || cardIndex >= cards.Length)
+        {
+            return null;
+        }
+
+        return cards[cardIndex];
+    }
+
+    public void Update(CasinoRoomSnapshotDto? snapshot, CasinoBingoRoomStateDto? board,
+        CasinoBingoCardsDto? mine, float deltaSeconds)
     {
         sinceBall += deltaSeconds;
         AdvancePops(deltaSeconds);
@@ -91,14 +120,15 @@ internal sealed class BingoRoundPlayback
             return;
         }
 
-        if (!string.Equals(snapshot.RoundId, roundId, StringComparison.Ordinal))
+        var nextRoundId = RoundKeyOf(snapshot);
+        if (!string.Equals(nextRoundId, roundId, StringComparison.Ordinal))
         {
-            OpenRound(snapshot.RoundId);
+            OpenRound(nextRoundId);
         }
 
-        var balls = snapshot.Numbers;
-        var drawn = balls?.Length ?? 0;
-        var held = entries?.Length ?? 0;
+        var balls = CalledBalls(board);
+        var drawn = balls.Length;
+        var held = mine?.Cards?.Length ?? 0;
         if (held > BingoRules.MaxCards)
         {
             held = BingoRules.MaxCards;
@@ -106,7 +136,7 @@ internal sealed class BingoRoundPlayback
 
         if (drawn != ballCount || held != cardCount)
         {
-            AbsorbBoard(balls, entries, drawn, held);
+            AbsorbBoard(balls, mine, drawn, held);
         }
 
         if (!primed)
@@ -163,9 +193,9 @@ internal sealed class BingoRoundPlayback
         Array.Fill(stampedMasks, BingoRules.FreeMask);
     }
 
-    private void AbsorbBoard(int[]? balls, CasinoRoomEntryDto[]? entries, int drawn, int held)
+    private void AbsorbBoard(int[] balls, CasinoBingoCardsDto? mine, int drawn, int held)
     {
-        if (drawn > ballCount && balls is not null && drawn > 0)
+        if (drawn > ballCount && drawn > 0)
         {
             latestBall = balls[drawn - 1];
             sinceBall = 0f;
@@ -181,7 +211,7 @@ internal sealed class BingoRoundPlayback
         BingoRules.MarkCalled(balls, called);
         for (var cardIndex = 0; cardIndex < autoMasks.Length; cardIndex++)
         {
-            var card = cardIndex < held && entries is not null ? entries[cardIndex].Numbers : null;
+            var card = cardIndex < held ? CardAt(mine, cardIndex) : null;
             autoMasks[cardIndex] = BingoRules.AutoMask(card, called);
             stampedMasks[cardIndex] &= autoMasks[cardIndex];
         }

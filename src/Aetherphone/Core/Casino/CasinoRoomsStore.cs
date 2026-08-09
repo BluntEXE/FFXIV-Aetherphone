@@ -6,11 +6,22 @@ using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Core.Casino;
 
-// Money never moves over the socket, so a room has to stay playable without one: entering asks
-// the socket to attach and reads the HTTP snapshot in the same breath, and the room keeps
-// polling on its own clock for as long as the attach is unconfirmed. The socket only ever saves
-// the polls, which is why the directory keeps the ordinary 60/120 cadence while the room in
-// play gets a tight one, and why every failed attempt still backs off for the shared 30 seconds.
+// What the composer needs from a money post and nothing else: the two games answer with different
+// shapes, and everything else either lands in the chip stack or arrives on the next personal read.
+internal sealed record CasinoStakeOutcome(bool Granted, string Reason);
+
+// Money never moves over the socket, so a room has to stay playable without one: entering asks the
+// socket to attach and reads the HTTP snapshot in the same breath, and the room keeps polling on
+// its own clock for as long as it is not attached or is waiting on a snapshot it asked for. The
+// socket only ever saves polls, which is why the directory keeps the ordinary 60/120 cadence while
+// the room in play gets a tight one, and why every failed attempt still backs off the shared 30
+// seconds.
+//
+// The public room and the player's own money are two different reads and they are kept that way.
+// The snapshot is what everyone at the rail sees; the personal half (accepted bets, printed cards,
+// what the hall settled) lives only behind the per-game read, is refetched whenever the round or
+// the phase moves, and is never inferred from a local tally. That separation is what stops a bet
+// the server refused from being painted as live money.
 internal sealed class CasinoRoomsStore : IDisposable
 {
     private static readonly TimeSpan ForegroundPollInterval = TimeSpan.FromSeconds(60);
@@ -18,6 +29,7 @@ internal sealed class CasinoRoomsStore : IDisposable
     private static readonly TimeSpan ForegroundRoomPollInterval = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan BackgroundRoomPollInterval = TimeSpan.FromSeconds(10);
     private const long RetryAfterAttemptMilliseconds = 30_000;
+    private const int NotFoundStatus = 404;
 
     private readonly AethernetSession session;
     private readonly CasinoClient casino;
@@ -28,22 +40,34 @@ internal sealed class CasinoRoomsStore : IDisposable
     private readonly CasinoRoomSession room;
     private readonly StoreWork work = new("CasinoRooms");
     private readonly object stakeGate = new();
+    private readonly Action<int> roomStatusSink;
 
-    private volatile CasinoRoomCardDto[] rooms = Array.Empty<CasinoRoomCardDto>();
+    private volatile CasinoRoomListItemDto[] rooms = Array.Empty<CasinoRoomListItemDto>();
+    private volatile CasinoWheelBetsDto? wheelBets;
+    private volatile CasinoBingoCardsDto? bingoCards;
     private volatile bool loadingRooms;
     private volatile bool loadedRooms;
     private volatile bool stakeInFlight;
-    private CasinoRoomStakeDto? stakeResult;
-    private string unansweredStakeId = string.Empty;
-    private string unansweredStakeRoundId = string.Empty;
-    private int unansweredStakeTarget = -1;
-    private long unansweredStakeAmount;
+    private CasinoStakeOutcome? stakeResult;
+    private string chipRoundId = string.Empty;
+    private long chipRoundIndex = -1;
+    private string unansweredBetId = string.Empty;
+    private int unansweredBetSpot = -1;
+    private long unansweredBetAmount;
+    private long unansweredBetRoundIndex = -1;
+    private string unansweredPurchaseId = string.Empty;
+    private long unansweredPurchaseRoundIndex = -1;
+    private long personalRoundIndex = -1;
+    private int personalPhase = -1;
     private int roomsFailed;
     private int stakeFailed;
     private int fetchingRooms;
     private int fetchingRoomState;
+    private int fetchingPersonal;
+    private int roomGoneStatus;
     private long roomsAttemptedAtTick;
     private long roomAttemptedAtTick;
+    private long personalAttemptedAtTick;
     private string? lastAccountId;
 
     public CasinoRoomsStore(AethernetSession session, CasinoClient casino, CasinoStore chips,
@@ -56,6 +80,7 @@ internal sealed class CasinoRoomsStore : IDisposable
         directoryCadence = new PollCadence(visibility, ForegroundPollInterval, BackgroundPollInterval);
         roomCadence = new PollCadence(visibility, ForegroundRoomPollInterval, BackgroundRoomPollInterval);
         room = new CasinoRoomSession(signals);
+        roomStatusSink = OnRoomStatus;
         session.Changed += OnSessionChanged;
         signals.CasinoReceived += OnCasinoSignal;
         signals.ConnectedChanged += OnRealtimeConnected;
@@ -64,7 +89,7 @@ internal sealed class CasinoRoomsStore : IDisposable
 
     public CasinoRoomSession Room => room;
 
-    public CasinoRoomCardDto[] Rooms => rooms;
+    public CasinoRoomListItemDto[] Rooms => rooms;
 
     public bool LoadingRooms => loadingRooms;
 
@@ -72,12 +97,16 @@ internal sealed class CasinoRoomsStore : IDisposable
 
     public bool StakeInFlight => stakeInFlight;
 
+    public CasinoWheelBetsDto? WheelBets => wheelBets;
+
+    public CasinoBingoCardsDto? BingoCards => bingoCards;
+
     public bool TakeRoomsFailure()
     {
         return Interlocked.Exchange(ref roomsFailed, 0) != 0;
     }
 
-    public CasinoRoomStakeDto? TakeStakeResult()
+    public CasinoStakeOutcome? TakeStakeResult()
     {
         return Interlocked.Exchange(ref stakeResult, null);
     }
@@ -87,12 +116,39 @@ internal sealed class CasinoRoomsStore : IDisposable
         return Interlocked.Exchange(ref stakeFailed, 0) != 0;
     }
 
+    // A personal read only speaks for the room and the round it was taken in. Handing back the
+    // wrong round's cards would show last room's full house under this room's ladder, so the match
+    // is checked here rather than trusted at every call site.
+    public CasinoWheelBetsDto? WheelBetsFor(string roomId, long roundIndex)
+    {
+        var held = wheelBets;
+        if (held is null || held.RoundIndex != roundIndex
+            || !string.Equals(held.RoomId, roomId, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        return held;
+    }
+
+    public CasinoBingoCardsDto? BingoCardsFor(string roomId, long roundIndex)
+    {
+        var held = bingoCards;
+        if (held is null || !held.Granted || held.RoundIndex != roundIndex
+            || !string.Equals(held.RoomId, roomId, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        return held;
+    }
+
     public int OccupancyOf(string roomId)
     {
         var current = room.State?.Snapshot;
         if (current is not null && string.Equals(current.RoomId, roomId, StringComparison.Ordinal))
         {
-            return current.PlayerCount;
+            return current.Occupancy;
         }
 
         var directory = rooms;
@@ -100,7 +156,7 @@ internal sealed class CasinoRoomsStore : IDisposable
         {
             if (string.Equals(directory[index].RoomId, roomId, StringComparison.Ordinal))
             {
-                return directory[index].PlayerCount;
+                return directory[index].Occupancy;
             }
         }
 
@@ -138,12 +194,11 @@ internal sealed class CasinoRoomsStore : IDisposable
         return false;
     }
 
-    // A communal stake has no replay-before-staking rule to lean on: the round it belongs to
-    // closes on the server clock whether or not this client ever heard back, so a lost response
-    // is healed by the next snapshot rather than by re-POSTing blind. The one thing that must
-    // not happen is charging twice for one tap, so an attempt whose response never arrived keeps
-    // its entry id and the next identical tap reuses it. Any answer at all retires the id.
-    public void PlaceStake(int target, long amount)
+    // Every bet of one spin shares a chip round id and each tap carries its own bet id, which is
+    // what makes the retry of a lost response free: the same bet id is the same bet, never a second
+    // one. The chip round id is minted once per room round, because the server ties every leg of a
+    // spin to it and refuses a bet that arrives under a different one.
+    public void PlaceWheelBet(int spot, long amount)
     {
         var roomId = room.RoomId;
         var snapshot = room.State?.Snapshot;
@@ -152,38 +207,36 @@ internal sealed class CasinoRoomsStore : IDisposable
             return;
         }
 
-        if (!AcceptsStake(snapshot.GameKind, target, amount))
+        if (!string.Equals(snapshot.GameKind, CasinoWire.WheelKind, StringComparison.Ordinal)
+            || !WheelRules.IsSpot(spot) || !WheelRules.IsStakeInRange(amount))
         {
             return;
         }
 
-        var roundId = snapshot.RoundId;
-        if (roundId.Length == 0)
-        {
-            return;
-        }
-
+        var roundIndex = snapshot.RoundIndex;
         var sittingId = chips.State?.Sitting?.Id ?? string.Empty;
-        string entryId;
+        string betId;
+        string clientRoundId;
         lock (stakeGate)
         {
-            entryId = ReusableStakeId(roundId, target, amount);
-            if (entryId.Length == 0)
+            clientRoundId = ChipRoundFor(roundIndex);
+            betId = ReusableBetId(roundIndex, spot, amount);
+            if (betId.Length == 0)
             {
-                entryId = Guid.NewGuid().ToString("N");
+                betId = Guid.NewGuid().ToString("N");
             }
 
-            unansweredStakeId = entryId;
-            unansweredStakeRoundId = roundId;
-            unansweredStakeTarget = target;
-            unansweredStakeAmount = amount;
+            unansweredBetId = betId;
+            unansweredBetSpot = spot;
+            unansweredBetAmount = amount;
+            unansweredBetRoundIndex = roundIndex;
         }
 
         stakeInFlight = true;
-        work.Run("room stake", async token =>
+        work.Run("wheel bet", async token =>
         {
             var result = await casino
-                .StakeRoomAsync(roomId, roundId, entryId, target, amount, token)
+                .PlaceWheelBetAsync(roomId, roundIndex, clientRoundId, betId, spot, amount, token)
                 .ConfigureAwait(false);
             if (result is null)
             {
@@ -191,11 +244,12 @@ internal sealed class CasinoRoomsStore : IDisposable
                 return;
             }
 
-            ForgetUnansweredStake(entryId);
-            Interlocked.Exchange(ref stakeResult, result);
+            ForgetUnansweredBet(betId);
+            Interlocked.Exchange(ref stakeResult, new CasinoStakeOutcome(result.Granted, result.Reason));
             if (!result.Granted)
             {
                 chips.RefreshNow();
+                RefreshPersonal();
                 return;
             }
 
@@ -204,42 +258,131 @@ internal sealed class CasinoRoomsStore : IDisposable
                 chips.AbsorbStack(sittingId, result.Stack);
             }
 
-            // The board a bet just moved has to come back authoritatively rather than be patched
-            // in: a locally folded total carries no sequence, so the next room event would either
-            // overwrite it or stack on top of it. One read per accepted bet buys that certainty,
-            // and it is the only way a player with a quiet socket watches their own chips land.
-            Interlocked.Exchange(ref roomAttemptedAtTick, 0);
-            roomCadence.Reset();
-            RefreshRoomState();
+            RefreshPersonal();
         }, () => stakeInFlight = false);
     }
 
-    private string ReusableStakeId(string roundId, int target, long amount)
+    // One purchase is one game: the server keys the entry on the room, the round and the identity,
+    // so a second post is refused rather than added to. The client sends the whole order once.
+    public void BuyBingoCards(int cardCount)
     {
-        if (unansweredStakeId.Length == 0
-            || unansweredStakeTarget != target
-            || unansweredStakeAmount != amount
-            || !string.Equals(unansweredStakeRoundId, roundId, StringComparison.Ordinal))
+        var roomId = room.RoomId;
+        var snapshot = room.State?.Snapshot;
+        if (stakeInFlight || !session.IsSignedIn || roomId.Length == 0 || snapshot is null)
+        {
+            return;
+        }
+
+        if (!string.Equals(snapshot.GameKind, CasinoWire.BingoKind, StringComparison.Ordinal)
+            || !BingoRules.IsValidCardCount(cardCount))
+        {
+            return;
+        }
+
+        var roundIndex = snapshot.RoundIndex;
+        var sittingId = chips.State?.Sitting?.Id ?? string.Empty;
+        string purchaseId;
+        lock (stakeGate)
+        {
+            purchaseId = ReusablePurchaseId(roundIndex);
+            if (purchaseId.Length == 0)
+            {
+                purchaseId = Guid.NewGuid().ToString("N");
+            }
+
+            unansweredPurchaseId = purchaseId;
+            unansweredPurchaseRoundIndex = roundIndex;
+        }
+
+        stakeInFlight = true;
+        work.Run("bingo cards", async token =>
+        {
+            var result = await casino
+                .BuyBingoCardsAsync(roomId, roundIndex, purchaseId, cardCount, token)
+                .ConfigureAwait(false);
+            if (result is null)
+            {
+                Interlocked.Exchange(ref stakeFailed, 1);
+                return;
+            }
+
+            ForgetUnansweredPurchase(purchaseId);
+            Interlocked.Exchange(ref stakeResult, new CasinoStakeOutcome(result.Granted, result.Reason));
+            if (!result.Granted)
+            {
+                chips.RefreshNow();
+                RefreshPersonal();
+                return;
+            }
+
+            if (sittingId.Length > 0)
+            {
+                chips.AbsorbStack(sittingId, result.Stack);
+            }
+
+            AbsorbBingoCards(roomId, result);
+        }, () => stakeInFlight = false);
+    }
+
+    private string ChipRoundFor(long roundIndex)
+    {
+        if (chipRoundIndex == roundIndex && chipRoundId.Length > 0)
+        {
+            return chipRoundId;
+        }
+
+        chipRoundIndex = roundIndex;
+        chipRoundId = Guid.NewGuid().ToString("N");
+        return chipRoundId;
+    }
+
+    private string ReusableBetId(long roundIndex, int spot, long amount)
+    {
+        if (unansweredBetId.Length == 0
+            || unansweredBetSpot != spot
+            || unansweredBetAmount != amount
+            || unansweredBetRoundIndex != roundIndex)
         {
             return string.Empty;
         }
 
-        return unansweredStakeId;
+        return unansweredBetId;
     }
 
-    private void ForgetUnansweredStake(string entryId)
+    private string ReusablePurchaseId(long roundIndex)
+    {
+        return unansweredPurchaseId.Length > 0 && unansweredPurchaseRoundIndex == roundIndex
+            ? unansweredPurchaseId
+            : string.Empty;
+    }
+
+    private void ForgetUnansweredBet(string betId)
     {
         lock (stakeGate)
         {
-            if (!string.Equals(unansweredStakeId, entryId, StringComparison.Ordinal))
+            if (!string.Equals(unansweredBetId, betId, StringComparison.Ordinal))
             {
                 return;
             }
 
-            unansweredStakeId = string.Empty;
-            unansweredStakeRoundId = string.Empty;
-            unansweredStakeTarget = -1;
-            unansweredStakeAmount = 0;
+            unansweredBetId = string.Empty;
+            unansweredBetSpot = -1;
+            unansweredBetAmount = 0;
+            unansweredBetRoundIndex = -1;
+        }
+    }
+
+    private void ForgetUnansweredPurchase(string purchaseId)
+    {
+        lock (stakeGate)
+        {
+            if (!string.Equals(unansweredPurchaseId, purchaseId, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            unansweredPurchaseId = string.Empty;
+            unansweredPurchaseRoundIndex = -1;
         }
     }
 
@@ -267,6 +410,7 @@ internal sealed class CasinoRoomsStore : IDisposable
             return;
         }
 
+        ClearPersonal();
         room.Enter(roomId);
         roomCadence.Reset();
         Interlocked.Exchange(ref roomAttemptedAtTick, 0);
@@ -276,6 +420,7 @@ internal sealed class CasinoRoomsStore : IDisposable
     public void Leave()
     {
         room.Leave();
+        ClearPersonal();
         roomCadence.Reset();
         Interlocked.Exchange(ref roomAttemptedAtTick, 0);
     }
@@ -285,23 +430,12 @@ internal sealed class CasinoRoomsStore : IDisposable
         return attemptedAtTick != 0 && nowTick - attemptedAtTick < RetryAfterAttemptMilliseconds;
     }
 
-    // What a target and an amount mean is the game's business, not the room's: a wheel target is a
-    // bet spot with its own range, a bingo target is how many cards to print at a fixed price. A
-    // room whose game this client does not know refuses to send money at all rather than posting a
-    // number the server would have to interpret.
-    internal static bool AcceptsStake(string gameKind, int target, long amount)
+    // The public snapshot moves on the socket while the private half never does, so the two are
+    // resynchronised here: a round that turned over or a phase that moved is the whole set of
+    // moments at which a player's own money can have changed hands, and each one costs one read.
+    internal static bool PersonalIsStale(long heldRoundIndex, int heldPhase, long roundIndex, int phase)
     {
-        if (string.Equals(gameKind, CasinoWire.WheelKind, StringComparison.Ordinal))
-        {
-            return WheelRules.IsSpot(target) && WheelRules.IsStakeInRange(amount);
-        }
-
-        if (string.Equals(gameKind, CasinoWire.BingoKind, StringComparison.Ordinal))
-        {
-            return BingoRules.IsValidCardCount(target) && amount == BingoRules.StakeFor(target);
-        }
-
-        return false;
+        return heldRoundIndex != roundIndex || heldPhase != phase;
     }
 
     private static long NowUnixMilliseconds()
@@ -316,8 +450,9 @@ internal sealed class CasinoRoomsStore : IDisposable
             return;
         }
 
+        SyncPersonal();
         var nowUtc = DateTime.UtcNow;
-        if (signals.RealtimeActive && room.Attached)
+        if (signals.RealtimeActive && room.Attached && !room.AwaitingSnapshot)
         {
             roomCadence.Mark(nowUtc);
             return;
@@ -329,6 +464,25 @@ internal sealed class CasinoRoomsStore : IDisposable
         }
 
         RefreshRoomState();
+    }
+
+    private void SyncPersonal()
+    {
+        var snapshot = room.State?.Snapshot;
+        if (snapshot is null)
+        {
+            return;
+        }
+
+        if (!PersonalIsStale(personalRoundIndex, personalPhase, snapshot.RoundIndex, snapshot.Phase))
+        {
+            return;
+        }
+
+        personalRoundIndex = snapshot.RoundIndex;
+        personalPhase = snapshot.Phase;
+        Interlocked.Exchange(ref personalAttemptedAtTick, 0);
+        RefreshPersonal();
     }
 
     private void OnCasinoSignal(CasinoSignal signal)
@@ -364,9 +518,9 @@ internal sealed class CasinoRoomsStore : IDisposable
 
         lastAccountId = accountId;
         room.Reset();
-        rooms = Array.Empty<CasinoRoomCardDto>();
+        rooms = Array.Empty<CasinoRoomListItemDto>();
         loadedRooms = false;
-        ForgetUnansweredStake(unansweredStakeId);
+        ClearPersonal();
         Interlocked.Exchange(ref stakeResult, null);
         Interlocked.Exchange(ref stakeFailed, 0);
         Interlocked.Exchange(ref roomsFailed, 0);
@@ -374,6 +528,26 @@ internal sealed class CasinoRoomsStore : IDisposable
         Interlocked.Exchange(ref roomAttemptedAtTick, 0);
         directoryCadence.Reset();
         roomCadence.Reset();
+    }
+
+    private void ClearPersonal()
+    {
+        wheelBets = null;
+        bingoCards = null;
+        personalRoundIndex = -1;
+        personalPhase = -1;
+        chipRoundId = string.Empty;
+        chipRoundIndex = -1;
+        Interlocked.Exchange(ref personalAttemptedAtTick, 0);
+        lock (stakeGate)
+        {
+            unansweredBetId = string.Empty;
+            unansweredBetSpot = -1;
+            unansweredBetAmount = 0;
+            unansweredBetRoundIndex = -1;
+            unansweredPurchaseId = string.Empty;
+            unansweredPurchaseRoundIndex = -1;
+        }
     }
 
     private void RefreshRooms()
@@ -398,13 +572,21 @@ internal sealed class CasinoRoomsStore : IDisposable
 
             Interlocked.Exchange(ref roomsAttemptedAtTick, 0);
             room.AbsorbClock(directory.ServerNowUnixMs, NowUnixMilliseconds());
-            rooms = directory.Rooms ?? Array.Empty<CasinoRoomCardDto>();
+            rooms = directory.Rooms ?? Array.Empty<CasinoRoomListItemDto>();
             loadedRooms = true;
         }, () =>
         {
             loadingRooms = false;
             Interlocked.Exchange(ref fetchingRooms, 0);
         });
+    }
+
+    private void OnRoomStatus(int statusCode)
+    {
+        if (statusCode == NotFoundStatus)
+        {
+            Interlocked.Exchange(ref roomGoneStatus, 1);
+        }
     }
 
     private void RefreshRoomState()
@@ -418,17 +600,94 @@ internal sealed class CasinoRoomsStore : IDisposable
         }
 
         Interlocked.Exchange(ref roomAttemptedAtTick, Environment.TickCount64);
+        Interlocked.Exchange(ref roomGoneStatus, 0);
         work.Run("room state", async token =>
         {
-            var fresh = await casino.RoomStateAsync(target, token).ConfigureAwait(false);
+            var fresh = await casino.RoomStateAsync(target, roomStatusSink, token).ConfigureAwait(false);
             if (fresh is null)
             {
+                // A 404 is the same fact casino.ended carries and the only refusal this read can
+                // name on its own. Every other empty answer leaves the held room alone, because one
+                // dropped read must never look like a closed table.
+                if (Interlocked.Exchange(ref roomGoneStatus, 0) != 0)
+                {
+                    Interlocked.Exchange(ref roomAttemptedAtTick, 0);
+                    room.CloseFromHttp(target, CasinoReasons.Ended);
+                }
+
                 return;
             }
 
             Interlocked.Exchange(ref roomAttemptedAtTick, 0);
             room.AbsorbHttpState(target, fresh, NowUnixMilliseconds());
         }, () => Interlocked.Exchange(ref fetchingRoomState, 0));
+    }
+
+    private void RefreshPersonal()
+    {
+        var target = room.RoomId;
+        var snapshot = room.State?.Snapshot;
+        if (target.Length == 0 || snapshot is null || !session.IsSignedIn
+            || CoolingDown(Interlocked.Read(ref personalAttemptedAtTick), Environment.TickCount64)
+            || Interlocked.Exchange(ref fetchingPersonal, 1) != 0)
+        {
+            return;
+        }
+
+        var gameKind = snapshot.GameKind;
+        Interlocked.Exchange(ref personalAttemptedAtTick, Environment.TickCount64);
+        work.Run("room personal", async token =>
+        {
+            if (string.Equals(gameKind, CasinoWire.WheelKind, StringComparison.Ordinal))
+            {
+                var bets = await casino.MyWheelBetsAsync(target, token).ConfigureAwait(false);
+                if (bets is null)
+                {
+                    return;
+                }
+
+                Interlocked.Exchange(ref personalAttemptedAtTick, 0);
+                AbsorbWheelBets(target, bets);
+                return;
+            }
+
+            if (!string.Equals(gameKind, CasinoWire.BingoKind, StringComparison.Ordinal))
+            {
+                Interlocked.Exchange(ref personalAttemptedAtTick, 0);
+                return;
+            }
+
+            var cards = await casino.MyBingoCardsAsync(target, token).ConfigureAwait(false);
+            if (cards is null)
+            {
+                return;
+            }
+
+            Interlocked.Exchange(ref personalAttemptedAtTick, 0);
+            AbsorbBingoCards(target, cards);
+        }, () => Interlocked.Exchange(ref fetchingPersonal, 0));
+    }
+
+    // A personal read that came back for a room the player has already left is dropped rather than
+    // parked, for the same reason a snapshot is: the next room would render another room's money.
+    private void AbsorbWheelBets(string requestedRoomId, CasinoWheelBetsDto fresh)
+    {
+        if (!string.Equals(room.RoomId, requestedRoomId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        wheelBets = fresh;
+    }
+
+    private void AbsorbBingoCards(string requestedRoomId, CasinoBingoCardsDto fresh)
+    {
+        if (!string.Equals(room.RoomId, requestedRoomId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        bingoCards = fresh;
     }
 
     public void Dispose()

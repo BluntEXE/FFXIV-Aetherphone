@@ -16,181 +16,200 @@ public sealed class CasinoBingoWireContractTests
         Assert.Equal("bingo-hall", CasinoRoomIds.BingoHall);
         Assert.Equal("casino.bingo", CasinoWire.BingoKind);
         Assert.Equal("/casino/rooms/bingo-hall", CasinoClient.RoomPath(CasinoRoomIds.BingoHall));
-        Assert.Equal("/casino/rooms/bingo-hall/stake", CasinoClient.RoomStakePath(CasinoRoomIds.BingoHall));
+        Assert.Equal("/casino/bingo/cards", CasinoClient.BingoCardsPath);
+        Assert.Equal("/casino/bingo/bingo-hall/cards", CasinoClient.BingoMyCardsPath(CasinoRoomIds.BingoHall));
+        Assert.Equal("/casino/bingo/a%2Fb/cards", CasinoClient.BingoMyCardsPath("a/b"));
     }
 
-    // Buying cards is the same money path a wheel bet takes: the round id refuses a purchase that
-    // arrived after the selling window closed, and the client entry id makes the retry of a lost
-    // response free instead of printing a second set of cards.
+    // One purchase is one game: the server keys the entry on the room, the round and the identity,
+    // so the whole order ships once and a second post is refused rather than added to.
     [Fact]
-    public void BuyingCardsSerializesAsAnOrdinaryRoomStake()
+    public void TheCardPurchaseSerializesTheBackendShape()
     {
-        var request = new CasinoRoomStakeRequest("bingo-hall", "room7", "entry1", 3, 60);
-        var json = JsonSerializer.Serialize(request, AethernetJsonContext.Default.CasinoRoomStakeRequest);
+        var request = new CasinoBingoCardsRequest("bingo-hall", 7, "round1", 3);
+        var json = JsonSerializer.Serialize(request, AethernetJsonContext.Default.CasinoBingoCardsRequest);
         Assert.Equal(
-            "{\"roomId\":\"bingo-hall\",\"roundId\":\"room7\",\"clientEntryId\":\"entry1\",\"target\":3,"
-            + "\"amount\":60}",
+            "{\"roomId\":\"bingo-hall\",\"roundIndex\":7,\"clientRoundId\":\"round1\",\"cardCount\":3}",
             json);
         Assert.Equal(60, BingoRules.StakeFor(3));
     }
 
+    // The buy and the read answer with one shape, so the printed cards and what the hall settled
+    // arrive together and the summary never has two sources to disagree between.
     [Fact]
-    public void APrivatePayloadCarriesOneEntryPerCardWithItsPrintedNumbers()
+    public void OneShapeAnswersBothTheBuyAndTheRead()
     {
-        const string json = "{\"roundId\":\"room7\",\"staked\":40,\"entries\":["
-            + "{\"entryId\":\"e1\",\"kind\":0,\"stake\":20,\"target\":0,\"payout\":0,\"state\":0,"
-            + "\"numbers\":[1,2,3,4,5,16,17,18,19,20,31,32,33,34,46,47,48,49,50,61,62,63,64,65]},"
-            + "{\"entryId\":\"e2\",\"kind\":0,\"stake\":20,\"target\":1,\"payout\":80,\"state\":1,"
-            + "\"numbers\":[6,7,8,9,10,21,22,23,24,25,36,37,38,39,51,52,53,54,55,66,67,68,69,70]}]}";
-        var personal = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoRoomPrivateDto);
+        const string json = "{\"granted\":true,\"reason\":\"\",\"roomId\":\"bingo-hall\",\"roundIndex\":7,"
+            + "\"roundId\":\"entry-1\",\"cards\":[[1,2,3,4,5,16,17,18,19,20,31,32,33,34,46,47,48,49,50,61,62,"
+            + "63,64,65],[6,7,8,9,10,21,22,23,24,25,36,37,38,39,51,52,53,54,55,66,67,68,69,70]],\"stake\":40,"
+            + "\"payout\":112,\"roundState\":1,\"seedCommitHash\":\"aa\",\"nextSeedHash\":\"bb\",\"stack\":205}";
+        var mine = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoBingoCardsDto);
 
-        Assert.NotNull(personal);
-        Assert.NotNull(personal.Entries);
-        Assert.Equal(2, personal.Entries.Length);
-        Assert.NotNull(personal.Entries[0].Numbers);
-        Assert.Equal(BingoRules.CardNumbers, personal.Entries[0].Numbers!.Length);
-        Assert.Equal(1, personal.Entries[0].Numbers![0]);
-        Assert.Equal(80, personal.Entries[1].Payout);
-        Assert.Equal(100, BingoCabinet.PayoutOf(personal.Entries) + 20);
+        Assert.NotNull(mine);
+        Assert.True(mine.Granted);
+        Assert.Equal("bingo-hall", mine.RoomId);
+        Assert.Equal(7, mine.RoundIndex);
+        Assert.Equal("entry-1", mine.RoundId);
+        Assert.NotNull(mine.Cards);
+        Assert.Equal(2, mine.Cards.Length);
+        Assert.Equal(BingoRules.CardNumbers, mine.Cards[0].Length);
+        Assert.Equal(1, mine.Cards[0][0]);
+        Assert.Equal(BingoRules.StakeFor(2), mine.Stake);
+        Assert.Equal(112, mine.Payout);
+        Assert.Equal(CasinoRoundStates.Settled, mine.RoundState);
+        Assert.Equal(205, mine.Stack);
+        Assert.Equal(2, BingoCabinet.HeldCards(mine));
+        Assert.True(BingoCabinet.Settled(mine));
     }
 
-    // A wheel entry carries no printed numbers, which is the whole reason the field is nullable:
-    // one carrier serves both communal games without a shape per game.
+    // Wallet balance never rides a game response: cards are bought with chips at the table.
     [Fact]
-    public void AWheelEntryStillParsesWithoutPrintedNumbers()
+    public void ACardPurchaseCarriesChipsAndNeverAWalletBalance()
     {
-        const string json = "{\"entryId\":\"e1\",\"kind\":0,\"stake\":25,\"target\":3,\"payout\":0,\"state\":0}";
-        var entry = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoRoomEntryDto);
-
-        Assert.NotNull(entry);
-        Assert.Null(entry.Numbers);
-        Assert.Equal(3, entry.Target);
-    }
-
-    [Fact]
-    public void ASnapshotCarriesTheCalledBallsTheCardsInPlayAndTheAwardedStages()
-    {
-        const string json = "{\"roomId\":\"bingo-hall\",\"gameKind\":\"casino.bingo\",\"phase\":1,"
-            + "\"roundId\":\"room7\",\"phaseEndsAtUnixMs\":1770000000000,\"playerCount\":18,\"entryCount\":44,"
-            + "\"stakeTotal\":880,\"numbers\":[12,45,3,71],"
-            + "\"stages\":[{\"stage\":0,\"ball\":31,\"prize\":124,\"winners\":2}]}";
-        var snapshot = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoRoomSnapshotDto);
-
-        Assert.NotNull(snapshot);
-        Assert.Equal(CasinoRoomPhases.Locked, snapshot.Phase);
-        Assert.Equal(18, snapshot.PlayerCount);
-        Assert.Equal(44, snapshot.EntryCount);
-        Assert.NotNull(snapshot.Numbers);
-        Assert.Equal(4, snapshot.Numbers.Length);
-        Assert.NotNull(snapshot.Stages);
-        var line = BingoCabinet.StageAwarded(snapshot, BingoRules.StageLine);
-        Assert.NotNull(line);
-        Assert.Equal(31, line.Ball);
-        Assert.Equal(124, line.Prize);
-        Assert.Equal(2, line.Winners);
-        Assert.Null(BingoCabinet.StageAwarded(snapshot, BingoRules.StageFullHouse));
-    }
-
-    // Balls accumulate across events the way the wheel's single wedge does, but stages are running
-    // totals the server keeps, so a present list replaces the held one outright.
-    [Fact]
-    public void BallsAccumulateWhileAwardedStagesReplace()
-    {
-        var snapshot = new CasinoRoomSnapshotDto(
-            RoomId: CasinoRoomIds.BingoHall,
-            GameKind: CasinoWire.BingoKind,
-            Phase: CasinoRoomPhases.Locked,
-            RoundId: "room7",
-            EntryCount: 20,
-            Numbers: new[] { 12, 45 },
-            Stages: new[] { new CasinoRoomStageDto(BingoRules.StageLine, 31, 56, 1) });
-        var held = new CasinoRoomState(CasinoRoomIds.BingoHall, 1, 5, snapshot, null);
-
-        var applied = CasinoRoomSession.Applied(held, 1, 6, new CasinoRoomEventDto(
-            Numbers: new[] { 3 },
-            Stages: new[]
-            {
-                new CasinoRoomStageDto(BingoRules.StageLine, 31, 56, 1),
-                new CasinoRoomStageDto(BingoRules.StageTwoLines, 44, 74, 1),
-            }));
-
-        Assert.NotNull(applied.Snapshot.Numbers);
-        Assert.Equal(3, applied.Snapshot.Numbers.Length);
-        Assert.Equal(3, applied.Snapshot.Numbers[2]);
-        Assert.NotNull(applied.Snapshot.Stages);
-        Assert.Equal(2, applied.Snapshot.Stages.Length);
-
-        var quiet = CasinoRoomSession.Applied(applied, 1, 7, new CasinoRoomEventDto(PlayerCount: 19));
-        Assert.NotNull(quiet.Snapshot.Stages);
-        Assert.Equal(2, quiet.Snapshot.Stages.Length);
-        Assert.Equal(19, quiet.Snapshot.PlayerCount);
-    }
-
-    [Fact]
-    public void ANewRoomClearsLastRoomsBallsStagesAndCards()
-    {
-        var snapshot = new CasinoRoomSnapshotDto(
-            RoomId: CasinoRoomIds.BingoHall,
-            GameKind: CasinoWire.BingoKind,
-            Phase: CasinoRoomPhases.Result,
-            RoundId: "room7",
-            Numbers: new[] { 12, 45, 3 },
-            Stages: new[] { new CasinoRoomStageDto(BingoRules.StageFullHouse, 52, 160, 1) });
-        var personal = new CasinoRoomPrivateDto("room7", 20,
-            new[] { new CasinoRoomEntryDto("e1", 0, 20, 0, 160, 1, new int[BingoRules.CardNumbers]) });
-        var held = new CasinoRoomState(CasinoRoomIds.BingoHall, 1, 5, snapshot, personal);
-
-        var applied = CasinoRoomSession.Applied(held, 1, 6,
-            new CasinoRoomEventDto(Phase: CasinoRoomPhases.Open, RoundId: "room8"));
-
-        Assert.Equal("room8", applied.Snapshot.RoundId);
-        Assert.Null(applied.Snapshot.Numbers);
-        Assert.Null(applied.Snapshot.Stages);
-        Assert.Null(applied.Private);
-    }
-
-    // Cards belong to the round that printed them, so a private payload left over from the last
-    // room is never read against this one.
-    [Fact]
-    public void CardsAreOnlyReadWhenTheyBelongToTheRoundInPlay()
-    {
-        var personal = new CasinoRoomPrivateDto("room7", 20,
-            new[] { new CasinoRoomEntryDto("e1", 0, 20, 0, 0, 0, new int[BingoRules.CardNumbers]) });
-        var snapshot = new CasinoRoomSnapshotDto(
-            RoomId: CasinoRoomIds.BingoHall,
-            GameKind: CasinoWire.BingoKind,
-            RoundId: "room7");
-        var held = new CasinoRoomState(CasinoRoomIds.BingoHall, 1, 5, snapshot, personal);
-
-        Assert.NotNull(BingoCabinet.EntriesFor(held, "room7"));
-        Assert.Null(BingoCabinet.EntriesFor(held, "room8"));
-        Assert.Null(BingoCabinet.EntriesFor(held, string.Empty));
-        Assert.Null(BingoCabinet.EntriesFor(null, "room7"));
-    }
-
-    [Fact]
-    public void MoreCardsThanTheRoomAllowsAreNeverDrawn()
-    {
-        var entries = new CasinoRoomEntryDto[BingoRules.MaxCards + 2];
-        for (var index = 0; index < entries.Length; index++)
+        var properties = typeof(CasinoBingoCardsDto).GetProperties();
+        var hasStack = false;
+        for (var index = 0; index < properties.Length; index++)
         {
-            entries[index] = new CasinoRoomEntryDto("e" + index, 0, 20, index);
+            Assert.NotEqual("Balance", properties[index].Name);
+            if (string.Equals(properties[index].Name, "Stack", StringComparison.Ordinal))
+            {
+                hasStack = true;
+            }
         }
 
-        Assert.Equal(BingoRules.MaxCards, BingoCabinet.HeldCards(entries));
-        Assert.Equal(0, BingoCabinet.HeldCards(null));
+        Assert.True(hasStack);
     }
 
     [Fact]
-    public void ARefusedPurchaseStillNamesAReasonTheHallCanSpeak()
+    public void ARefusedPurchaseNamesAReasonTheHallCanSpeak()
     {
-        const string json = "{\"granted\":false,\"reason\":\"cards_full\",\"roundId\":\"room7\",\"stack\":180}";
-        var stake = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoRoomStakeDto);
+        const string json = "{\"granted\":false,\"reason\":\"cards_full\",\"roomId\":\"bingo-hall\","
+            + "\"roundIndex\":7,\"roundId\":\"\",\"cards\":[],\"stake\":0,\"payout\":0,\"roundState\":0,"
+            + "\"seedCommitHash\":\"\",\"nextSeedHash\":\"\",\"stack\":205}";
+        var mine = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoBingoCardsDto);
 
-        Assert.NotNull(stake);
-        Assert.False(stake.Granted);
-        Assert.Equal(CasinoReasons.CardsFull, stake.Reason);
-        Assert.True(CasinoReasons.TryMessage(stake.Reason, out var message));
+        Assert.NotNull(mine);
+        Assert.False(mine.Granted);
+        Assert.Equal(CasinoReasons.CardsFull, mine.Reason);
+        Assert.True(CasinoReasons.TryMessage(mine.Reason, out var message));
         Assert.NotEqual(Aetherphone.Core.Localization.L.Casino.ReasonGeneric.Key, message.Key);
+        Assert.Equal(0, BingoCabinet.HeldCards(mine));
+        Assert.False(BingoCabinet.Settled(mine));
+    }
+
+    [Fact]
+    public void EveryHallReasonTheBackendCanSendHasItsOwnWords()
+    {
+        var reasons = new[]
+        {
+            CasinoReasons.CardsFull,
+            CasinoReasons.Closed,
+            CasinoReasons.Locked,
+            CasinoReasons.NotRunning,
+            CasinoReasons.Expired,
+            CasinoReasons.Pacing,
+            CasinoReasons.Insufficient,
+            CasinoReasons.StakesPaused,
+            CasinoReasons.LossLimit,
+            CasinoReasons.Draining,
+            CasinoReasons.Frozen,
+        };
+
+        for (var index = 0; index < reasons.Length; index++)
+        {
+            Assert.True(CasinoReasons.TryMessage(reasons[index], out var message), reasons[index]);
+            Assert.NotEqual(Aetherphone.Core.Localization.L.Casino.ReasonGeneric.Key, message.Key);
+        }
+
+        Assert.Equal("cards_full", CasinoReasons.CardsFull);
+    }
+
+    // The prize ladder and the card cap ride the public room state, because the hall has to say
+    // out loud where the prizes stop growing rather than letting a full room imply a bigger pot.
+    [Fact]
+    public void TheHallBlobCarriesTheLadderTheCapAndTheCalls()
+    {
+        const string json = "{\"roundIndex\":7,\"commit\":\"aa\",\"nextCommit\":\"bb\",\"seed\":\"cc\","
+            + "\"cards\":40,\"players\":11,\"prizes\":[112,148,320],\"prizeCardCap\":125,\"ballIndex\":3,"
+            + "\"balls\":[42,7,55],\"nextBallAtUnixMs\":1754784003000,\"stages\":[{\"stage\":0,\"ball\":41,"
+            + "\"prize\":112,\"winners\":2,\"paid\":224}],\"ended\":false,\"cancelled\":false,"
+            + "\"cardPrice\":20,\"maxCards\":4,\"maxWin\":1000}";
+        var board = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoBingoRoomStateDto);
+
+        Assert.NotNull(board);
+        Assert.Equal(7, board.RoundIndex);
+        Assert.Equal(40, board.Cards);
+        Assert.Equal(11, board.Players);
+        Assert.NotNull(board.Prizes);
+        Assert.Equal(BingoRules.StageCount, board.Prizes.Length);
+        Assert.Equal(BingoRules.PrizeCardCap, board.PrizeCardCap);
+        Assert.Equal(BingoRules.CardPrice, board.CardPrice);
+        Assert.Equal(BingoRules.MaxCards, board.MaxCards);
+        Assert.Equal(BingoRules.MaxSingleWin, board.MaxWin);
+        Assert.Equal(new[] { 42, 7, 55 }, board.Balls);
+        Assert.Equal(1754784003000, board.NextBallAtUnixMs);
+        Assert.False(board.Ended);
+
+        Assert.Equal(40, BingoCabinet.CardsInPlay(board));
+        var awarded = BingoCabinet.StageAwarded(board, BingoRules.StageLine);
+        Assert.NotNull(awarded);
+        Assert.Equal(41, awarded.Ball);
+        Assert.Equal(2, awarded.Winners);
+        Assert.Equal(224, awarded.Paid);
+    }
+
+    // The ladder the room published and the ladder the cabinet computes are the same numbers, or
+    // the hall is quoting a prize the bank will not pay.
+    [Fact]
+    public void ThePublishedLadderAgreesWithTheMirroredRates()
+    {
+        const string json = "{\"roundIndex\":7,\"cards\":40,\"prizes\":[112,148,320],\"prizeCardCap\":125}";
+        var board = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoBingoRoomStateDto);
+
+        Assert.NotNull(board);
+        Assert.NotNull(board.Prizes);
+        Span<long> mirrored = stackalloc long[BingoRules.StageCount];
+        BingoRules.PrizeLadder(board.Cards, mirrored);
+        for (var stage = 0; stage < BingoRules.StageCount; stage++)
+        {
+            Assert.Equal(board.Prizes[stage], mirrored[stage]);
+        }
+    }
+
+    // The balls the room called arrive as a list in the order they were called, so a phone that
+    // slept through six of them catches up on the next snapshot instead of inventing the ones it
+    // missed on its own clock.
+    [Fact]
+    public void TheCallsAreAListRatherThanACountTheClientTicksUp()
+    {
+        var board = new CasinoBingoRoomStateDto(RoundIndex: 7, Balls: new[] { 42, 7, 55 }, BallIndex: 3);
+        Assert.Equal(new[] { 42, 7, 55 }, BingoRoundPlayback.CalledBalls(board));
+        Assert.Empty(BingoRoundPlayback.CalledBalls(null));
+        Assert.Empty(BingoRoundPlayback.CalledBalls(new CasinoBingoRoomStateDto(RoundIndex: 7)));
+    }
+
+    [Fact]
+    public void TheCardsReadFromThePersonalHalfRatherThanTheRoom()
+    {
+        var mine = new CasinoBingoCardsDto(
+            Granted: true,
+            RoomId: CasinoRoomIds.BingoHall,
+            RoundIndex: 7,
+            Cards: new[] { new[] { 1, 2 }, new[] { 3, 4 } });
+
+        Assert.Equal(new[] { 1, 2 }, BingoRoundPlayback.CardAt(mine, 0));
+        Assert.Equal(new[] { 3, 4 }, BingoRoundPlayback.CardAt(mine, 1));
+        Assert.Null(BingoRoundPlayback.CardAt(mine, 2));
+        Assert.Null(BingoRoundPlayback.CardAt(mine, -1));
+        Assert.Null(BingoRoundPlayback.CardAt(null, 0));
+    }
+
+    [Fact]
+    public void TheBallIntervalMirrorsTheRoomClock()
+    {
+        Assert.Equal(3, BingoRules.BallIntervalSeconds);
+        Assert.Equal(75, BingoRules.Balls);
+        Assert.Equal(4, BingoRules.MaxCards);
+        Assert.Equal(20, BingoRules.CardPrice);
     }
 }

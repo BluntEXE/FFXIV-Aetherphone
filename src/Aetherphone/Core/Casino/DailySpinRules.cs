@@ -4,27 +4,26 @@ namespace Aetherphone.Core.Casino;
 // mints rather than moves: a cash-out returns money the player already owned, so it stays quiet,
 // while this hands out coins that did not exist a moment ago, so it celebrates.
 //
-// Sixteen segments, no stake, once per coin day. Every other award sits on a five, which is what
-// keeps the rim readable at phone size and stops the wheel from looking like one fat wedge, and
-// the eight paying segments climb 12, 20, 12, 24, 12, 20, 12, 40 with the best two a half turn
-// apart. The table sums to 192 for an expected twelve coins a day, comfortably under the wallet's
-// own daily cap, so the spin can never be the thing that closes a player's earning day on its own.
+// The ladder is a mirror of DailySpinEngine.Awards on the server and has to stay one, because the
+// rim art paints AwardOf on every wedge while the pointer rests on the segment the server drew:
+// a table that differs by one number puts a wedge under the pointer that contradicts the banner
+// beneath it. Sixteen equally likely segments, no stake, once per coin day, summing to 280 for an
+// expected 17.5 coins, deliberately under the 20 coin daily check-in so a second character is
+// never worth more for the spin alone.
 internal static class DailySpinRules
 {
     public const int SegmentCount = 16;
 
-    public const long TotalAward = 192;
+    public const long TotalAward = 280;
 
-    public const long ExpectedAward = TotalAward / SegmentCount;
-
-    public const long TopAward = 40;
+    public const long TopAward = 60;
 
     public static readonly long[] Awards =
     {
-        5, 12, 5, 20,
-        5, 12, 5, 24,
-        5, 12, 5, 20,
-        5, 12, 5, 40,
+        5, 15, 10, 30,
+        5, 20, 10, 45,
+        5, 15, 10, 60,
+        5, 20, 10, 15,
     };
 
     public static bool IsSegment(int segment)

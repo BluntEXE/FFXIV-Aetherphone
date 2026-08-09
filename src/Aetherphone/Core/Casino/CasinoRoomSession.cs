@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Telephony.Contracts;
 
@@ -8,7 +10,8 @@ internal sealed record CasinoRoomState(
     int Epoch,
     long Seq,
     CasinoRoomSnapshotDto Snapshot,
-    CasinoRoomPrivateDto? Private);
+    CasinoWheelRoomStateDto? Wheel,
+    CasinoBingoRoomStateDto? Bingo);
 
 internal enum CasinoRoomApply
 {
@@ -21,8 +24,17 @@ internal enum CasinoRoomApply
 // gated on (Epoch, Seq): a frame from a restarted server, a duplicate, or one that arrives after
 // a lost frame can never be folded into the held state. A gap parks the room on the stale
 // snapshot and asks for a fresh one rather than guessing, and the ask is rate limited so a
-// flapping socket turns one lost frame into one request, not a storm. Nothing here touches Draw:
-// the pump is the store's, and Draw only ever reads the volatile state swapped in from here.
+// flapping socket turns one lost frame into one request, not a storm.
+//
+// The per-game half of a room rides the snapshot as a JSON string, and it is parsed here rather
+// than in Draw: the pump is the store's, Draw only ever reads the volatile state swapped in from
+// here, and an immediate mode frame can afford neither the parse nor the garbage.
+//
+// Every absorb re-reads the room id inside the gate. The receive thread checks the id before it
+// blocks on the lock, so without that second read a frame for the room the player just left can
+// be parked under the room they just entered, and the two rooms keep independent sequences behind
+// one shared epoch: the wrong snapshot would then out-rank every genuine one until the new room's
+// sequence overtook it.
 internal sealed class CasinoRoomSession
 {
     private const long ResyncCooldownMilliseconds = 2_000;
@@ -145,7 +157,7 @@ internal sealed class CasinoRoomSession
         if (!connected)
         {
             attached = false;
-            awaitingSnapshot = false;
+            awaitingSnapshot = true;
             return;
         }
 
@@ -182,34 +194,32 @@ internal sealed class CasinoRoomSession
                 return;
             case SignalType.CasinoDeclined:
             case SignalType.CasinoEnded:
-                Close(signal.Reason ?? string.Empty);
+                Close(payload.RoomId, signal.Reason ?? string.Empty);
                 return;
         }
     }
 
     // The polling path carries the identical snapshot under the identical version rules, so a
     // player whose socket died keeps a current room from plain HTTP reads alone.
-    public void AbsorbHttpState(string requestedRoomId, CasinoRoomStateDto fresh, long localNowUnixMs)
+    public void AbsorbHttpState(string requestedRoomId, CasinoRoomSnapshotDto fresh, long localNowUnixMs)
     {
-        if (!string.Equals(roomId, requestedRoomId, StringComparison.Ordinal))
-        {
-            return;
-        }
-
-        if (!fresh.Granted)
-        {
-            Close(fresh.Reason);
-            return;
-        }
-
-        var snapshot = fresh.Snapshot;
-        if (snapshot is null || !string.Equals(snapshot.RoomId, requestedRoomId, StringComparison.Ordinal))
+        if (!string.Equals(roomId, requestedRoomId, StringComparison.Ordinal)
+            || !string.Equals(fresh.RoomId, requestedRoomId, StringComparison.Ordinal))
         {
             return;
         }
 
         AbsorbServerTime(fresh.ServerNowUnixMs, localNowUnixMs);
-        Absorb(requestedRoomId, fresh.Epoch, fresh.Seq, snapshot, fresh.Private);
+        Absorb(requestedRoomId, fresh.Epoch, fresh.Seq, fresh);
+    }
+
+    // A room the server no longer serves is the one refusal the poll can name on its own: a 404 is
+    // the same fact casino.ended carries, and a player with a dead socket has no other way to hear
+    // it. Every other failure leaves the held room alone, because one dropped read must never look
+    // like a closed table.
+    public void CloseFromHttp(string requestedRoomId, string reason)
+    {
+        Close(requestedRoomId, reason);
     }
 
     internal static bool AcceptsSnapshot(CasinoRoomState? held, int epoch, long seq)
@@ -252,68 +262,45 @@ internal sealed class CasinoRoomSession
         return seq == held.Seq + 1 ? CasinoRoomApply.Apply : CasinoRoomApply.Resync;
     }
 
+    // An event states the whole room, so applying one is a replacement rather than a merge: the
+    // phase, the deadline, the round and the game blob all arrive together and nothing on this
+    // side accumulates. That is what makes a resync after a gap cheap enough to be the only
+    // healing path the client needs.
     internal static CasinoRoomState Applied(CasinoRoomState held, int epoch, long seq, CasinoRoomEventDto change)
     {
-        var snapshot = held.Snapshot;
-        var roundId = change.RoundId ?? snapshot.RoundId;
-        var roundChanged = !string.Equals(roundId, snapshot.RoundId, StringComparison.Ordinal);
-        var next = snapshot with
+        var next = held.Snapshot with
         {
-            Phase = change.Phase ?? snapshot.Phase,
-            RoundId = roundId,
-            PhaseEndsAtUnixMs = change.PhaseEndsAtUnixMs ?? snapshot.PhaseEndsAtUnixMs,
-            PlayerCount = change.PlayerCount ?? snapshot.PlayerCount,
-            EntryCount = change.EntryCount ?? snapshot.EntryCount,
-            StakeTotal = change.StakeTotal ?? snapshot.StakeTotal,
-            Numbers = MergedNumbers(snapshot.Numbers, change.Numbers, roundChanged),
-            Spots = Replaced(snapshot.Spots, change.Spots, roundChanged),
-            Stages = Replaced(snapshot.Stages, change.Stages, roundChanged),
-        };
-
-        // Entries belong to the round that took the money. Carrying them past a round boundary
-        // would render last round's stake as live money on this round's board.
-        return held with
-        {
+            State = change.State,
+            Phase = change.Phase,
+            PhaseEndsAtUnixMs = change.PhaseEndsAtUnixMs,
+            RoundIndex = change.RoundIndex,
+            GameState = change.GameState,
+            Occupancy = change.Occupancy,
             Epoch = epoch,
             Seq = seq,
-            Snapshot = next,
-            Private = roundChanged ? null : held.Private,
         };
+
+        return Build(held.RoomId, epoch, seq, next);
     }
 
-    // An event carries the draw it just made, never the whole board, so numbers accumulate for
-    // as long as the round id holds and start over the moment it moves: a client that attached
-    // mid round and one that watched from the first ball converge on the same board.
-    internal static int[]? MergedNumbers(int[]? held, int[]? drawn, bool roundChanged)
+    // The blob belongs to the game, so a room whose kind this client does not know parks on the
+    // envelope and paints nothing rather than guessing at a shape. A blob that fails to parse is
+    // the same case: the room keeps its clock and its occupancy and the cabinet says it is waiting.
+    internal static CasinoRoomState Build(string roomId, int epoch, long seq, CasinoRoomSnapshotDto snapshot)
     {
-        if (drawn is null || drawn.Length == 0)
+        if (string.Equals(snapshot.GameKind, CasinoWire.WheelKind, StringComparison.Ordinal))
         {
-            return roundChanged ? null : held;
+            return new CasinoRoomState(roomId, epoch, seq, snapshot,
+                Parse(snapshot.GameState, AethernetJsonContext.Default.CasinoWheelRoomStateDto), null);
         }
 
-        if (roundChanged || held is null || held.Length == 0)
+        if (string.Equals(snapshot.GameKind, CasinoWire.BingoKind, StringComparison.Ordinal))
         {
-            return drawn;
+            return new CasinoRoomState(roomId, epoch, seq, snapshot, null,
+                Parse(snapshot.GameState, AethernetJsonContext.Default.CasinoBingoRoomStateDto));
         }
 
-        var merged = new int[held.Length + drawn.Length];
-        held.CopyTo(merged, 0);
-        drawn.CopyTo(merged, held.Length);
-        return merged;
-    }
-
-    // A spot row and a won stage are both totals the server keeps, not draws the room accumulates,
-    // so a present board replaces the held one and an absent board leaves it alone. The round
-    // boundary still clears them: last round's pot painted under this round's countdown reads as
-    // money already down, and last room's full house reads as one this room just awarded.
-    internal static TRow[]? Replaced<TRow>(TRow[]? held, TRow[]? fresh, bool roundChanged)
-    {
-        if (fresh is not null)
-        {
-            return fresh;
-        }
-
-        return roundChanged ? null : held;
+        return new CasinoRoomState(roomId, epoch, seq, snapshot, null, null);
     }
 
     internal static long SmoothedSkew(long held, long sample)
@@ -327,6 +314,25 @@ internal sealed class CasinoRoomSession
         return held + drift / SkewSmoothingWeight;
     }
 
+    private static TState? Parse<TState>(string gameState,
+        System.Text.Json.Serialization.Metadata.JsonTypeInfo<TState> typeInfo)
+        where TState : class
+    {
+        if (gameState.Length == 0)
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize(gameState, typeInfo);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
     private void AbsorbSnapshot(CasinoPayload payload, long localNowUnixMs)
     {
         var snapshot = payload.Snapshot;
@@ -336,20 +342,20 @@ internal sealed class CasinoRoomSession
         }
 
         AbsorbServerTime(payload.ServerNowUnixMs, localNowUnixMs);
-        Absorb(payload.RoomId, payload.Epoch, payload.Seq, snapshot, payload.Private);
+        Absorb(payload.RoomId, payload.Epoch, payload.Seq, snapshot);
     }
 
-    private void Absorb(string absorbedRoomId, int epoch, long seq, CasinoRoomSnapshotDto snapshot,
-        CasinoRoomPrivateDto? personal)
+    private void Absorb(string absorbedRoomId, int epoch, long seq, CasinoRoomSnapshotDto snapshot)
     {
         lock (gate)
         {
-            if (!AcceptsSnapshot(state, epoch, seq))
+            if (!string.Equals(roomId, absorbedRoomId, StringComparison.Ordinal)
+                || !AcceptsSnapshot(state, epoch, seq))
             {
                 return;
             }
 
-            state = new CasinoRoomState(absorbedRoomId, epoch, seq, snapshot, personal);
+            state = Build(absorbedRoomId, epoch, seq, snapshot);
             awaitingSnapshot = false;
             resyncAskedAtUnixMs = 0;
         }
@@ -367,6 +373,11 @@ internal sealed class CasinoRoomSession
         var asksForResync = false;
         lock (gate)
         {
+            if (!string.Equals(roomId, payload.RoomId, StringComparison.Ordinal))
+            {
+                return;
+            }
+
             var held = state;
             var decision = Decide(held, payload.Epoch, payload.Seq);
             if (decision == CasinoRoomApply.Apply && held is not null)
@@ -412,10 +423,15 @@ internal sealed class CasinoRoomSession
         }
     }
 
-    private void Close(string reason)
+    private void Close(string closingRoomId, string reason)
     {
         lock (gate)
         {
+            if (!string.Equals(roomId, closingRoomId, StringComparison.Ordinal))
+            {
+                return;
+            }
+
             ClearRoom();
             closedReason = reason;
         }

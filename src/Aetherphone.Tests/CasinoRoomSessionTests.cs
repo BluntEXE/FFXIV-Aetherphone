@@ -8,8 +8,9 @@ namespace Aetherphone.Tests;
 
 public sealed class CasinoRoomSessionTests
 {
-    private const string Room = "wheel-1";
+    private const string Room = "wheel-floor";
     private const long Now = 1_754_784_000_000;
+    private const string WheelBlob = "{\"roundIndex\":7,\"segment\":-1,\"staked\":120}";
 
     [Fact]
     public void EnteringARoomAsksTheOneSocketToAttach()
@@ -70,6 +71,53 @@ public sealed class CasinoRoomSessionTests
         Assert.False(session.AwaitingSnapshot);
     }
 
+    // The per-game half rides the snapshot as a JSON string and is parsed here rather than in
+    // Draw, so an immediate mode frame pays for neither the parse nor the garbage.
+    [Fact]
+    public void TheGameBlobIsParsedOnceIntoTheKindTheRoomNamed()
+    {
+        var session = Session(out _);
+        session.Enter(Room);
+
+        session.Receive(Attached(epoch: 1, seq: 5), Now);
+
+        var state = session.State;
+        Assert.NotNull(state);
+        Assert.NotNull(state.Wheel);
+        Assert.Null(state.Bingo);
+        Assert.Equal(7, state.Wheel.RoundIndex);
+        Assert.Equal(-1, state.Wheel.Segment);
+        Assert.Equal(120, state.Wheel.Staked);
+    }
+
+    // A room whose kind this client does not know parks on the envelope and paints nothing rather
+    // than guessing at a shape, and a blob that fails to parse is the same case.
+    [Fact]
+    public void AnUnknownKindOrAnUnreadableBlobKeepsTheEnvelopeAndNothingElse()
+    {
+        var mystery = CasinoRoomSession.Build(Room, 1, 5, new CasinoRoomSnapshotDto(
+            RoomId: Room,
+            GameKind: "casino.mystery",
+            GameState: WheelBlob,
+            Occupancy: 4));
+        Assert.Null(mystery.Wheel);
+        Assert.Null(mystery.Bingo);
+        Assert.Equal(4, mystery.Snapshot.Occupancy);
+
+        var broken = CasinoRoomSession.Build(Room, 1, 5, new CasinoRoomSnapshotDto(
+            RoomId: Room,
+            GameKind: CasinoWire.WheelKind,
+            GameState: "{not json",
+            Occupancy: 4));
+        Assert.Null(broken.Wheel);
+        Assert.Equal(4, broken.Snapshot.Occupancy);
+
+        var empty = CasinoRoomSession.Build(Room, 1, 5, new CasinoRoomSnapshotDto(
+            RoomId: Room,
+            GameKind: CasinoWire.BingoKind));
+        Assert.Null(empty.Bingo);
+    }
+
     [Fact]
     public void FramesForAnotherRoomNeverTouchTheRoomInPlay()
     {
@@ -79,13 +127,13 @@ public sealed class CasinoRoomSessionTests
 
         session.Receive(new CasinoSignal(SignalType.CasinoEvent, null, new CasinoPayload
         {
-            RoomId = "bingo-9",
+            RoomId = "bingo-hall",
             Epoch = 1,
             Seq = 6,
-            Event = new CasinoRoomEventDto(PlayerCount: 99),
+            Event = new CasinoRoomEventDto(Occupancy: 99),
         }), Now);
 
-        Assert.Equal(4, session.State!.Snapshot.PlayerCount);
+        Assert.Equal(4, session.State!.Snapshot.Occupancy);
     }
 
     [Fact]
@@ -95,30 +143,42 @@ public sealed class CasinoRoomSessionTests
         session.Enter(Room);
         session.Receive(Attached(epoch: 1, seq: 5), Now);
 
-        session.Receive(Event(epoch: 1, seq: 6, new CasinoRoomEventDto(PlayerCount: 7, StakeTotal: 250)), Now);
+        session.Receive(Event(epoch: 1, seq: 6, new CasinoRoomEventDto(
+            State: 1,
+            Phase: CasinoRoomPhases.Locked,
+            PhaseEndsAtUnixMs: Now + 8_000,
+            RoundIndex: 8,
+            GameState: "{\"roundIndex\":8,\"segment\":31}",
+            Occupancy: 7)), Now);
 
         var state = session.State;
         Assert.Equal(6, state!.Seq);
-        Assert.Equal(7, state.Snapshot.PlayerCount);
-        Assert.Equal(250, state.Snapshot.StakeTotal);
+        Assert.Equal(7, state.Snapshot.Occupancy);
+        Assert.Equal(8, state.Snapshot.RoundIndex);
+        Assert.Equal(CasinoRoomPhases.Locked, state.Snapshot.Phase);
+        Assert.Equal(Now + 8_000, state.Snapshot.PhaseEndsAtUnixMs);
+        Assert.Equal(31, state.Wheel!.Segment);
         Assert.Single(sent);
     }
 
+    // An event states the whole room rather than a delta, so applying one is a replacement: the
+    // identity of the room survives and everything the round owns arrives together.
     [Fact]
-    public void AnEventLeavesEveryFieldItDoesNotCarryAlone()
+    public void AnEventReplacesTheRoomWithoutLosingItsIdentity()
     {
         var session = Session(out _);
         session.Enter(Room);
         session.Receive(Attached(epoch: 1, seq: 5), Now);
 
-        session.Receive(Event(epoch: 1, seq: 6, new CasinoRoomEventDto(PlayerCount: 9)), Now);
+        session.Receive(Event(epoch: 1, seq: 6, new CasinoRoomEventDto(Occupancy: 9)), Now);
 
-        var snapshot = session.State!.Snapshot;
-        Assert.Equal(9, snapshot.PlayerCount);
-        Assert.Equal(120, snapshot.StakeTotal);
-        Assert.Equal("round-1", snapshot.RoundId);
-        Assert.Equal(2, snapshot.Phase);
-        Assert.Equal(Now + 20_000, snapshot.PhaseEndsAtUnixMs);
+        var state = session.State;
+        Assert.Equal(Room, state!.RoomId);
+        Assert.Equal(Room, state.Snapshot.RoomId);
+        Assert.Equal(CasinoWire.WheelKind, state.Snapshot.GameKind);
+        Assert.Equal(9, state.Snapshot.Occupancy);
+        Assert.Equal(0, state.Snapshot.RoundIndex);
+        Assert.Null(state.Wheel);
     }
 
     [Fact]
@@ -128,10 +188,10 @@ public sealed class CasinoRoomSessionTests
         session.Enter(Room);
         session.Receive(Attached(epoch: 1, seq: 5), Now);
 
-        session.Receive(Event(epoch: 1, seq: 5, new CasinoRoomEventDto(PlayerCount: 77)), Now);
-        session.Receive(Event(epoch: 1, seq: 2, new CasinoRoomEventDto(PlayerCount: 88)), Now);
+        session.Receive(Event(epoch: 1, seq: 5, new CasinoRoomEventDto(Occupancy: 77)), Now);
+        session.Receive(Event(epoch: 1, seq: 2, new CasinoRoomEventDto(Occupancy: 88)), Now);
 
-        Assert.Equal(4, session.State!.Snapshot.PlayerCount);
+        Assert.Equal(4, session.State!.Snapshot.Occupancy);
         Assert.Equal(5, session.State!.Seq);
         Assert.Single(sent);
     }
@@ -143,9 +203,9 @@ public sealed class CasinoRoomSessionTests
         session.Enter(Room);
         session.Receive(Attached(epoch: 4, seq: 5), Now);
 
-        session.Receive(Event(epoch: 3, seq: 6, new CasinoRoomEventDto(PlayerCount: 77)), Now);
+        session.Receive(Event(epoch: 3, seq: 6, new CasinoRoomEventDto(Occupancy: 77)), Now);
 
-        Assert.Equal(4, session.State!.Snapshot.PlayerCount);
+        Assert.Equal(4, session.State!.Snapshot.Occupancy);
         Assert.Equal(4, session.State!.Epoch);
         Assert.Single(sent);
         Assert.False(session.AwaitingSnapshot);
@@ -158,9 +218,9 @@ public sealed class CasinoRoomSessionTests
         session.Enter(Room);
         session.Receive(Attached(epoch: 1, seq: 5), Now);
 
-        session.Receive(Event(epoch: 2, seq: 1006, new CasinoRoomEventDto(PlayerCount: 77)), Now);
+        session.Receive(Event(epoch: 2, seq: 1006, new CasinoRoomEventDto(Occupancy: 77)), Now);
 
-        Assert.Equal(4, session.State!.Snapshot.PlayerCount);
+        Assert.Equal(4, session.State!.Snapshot.Occupancy);
         Assert.Equal(1, session.State!.Epoch);
         Assert.True(session.AwaitingSnapshot);
         Assert.Equal(2, sent.Count);
@@ -174,14 +234,14 @@ public sealed class CasinoRoomSessionTests
         session.Enter(Room);
         session.Receive(Attached(epoch: 1, seq: 5), Now);
 
-        session.Receive(Event(epoch: 1, seq: 9, new CasinoRoomEventDto(PlayerCount: 6)), Now);
-        session.Receive(Event(epoch: 1, seq: 10, new CasinoRoomEventDto(PlayerCount: 7)), Now + 500);
-        session.Receive(Event(epoch: 1, seq: 11, new CasinoRoomEventDto(PlayerCount: 8)), Now + 1_999);
+        session.Receive(Event(epoch: 1, seq: 9, new CasinoRoomEventDto(Occupancy: 6)), Now);
+        session.Receive(Event(epoch: 1, seq: 10, new CasinoRoomEventDto(Occupancy: 7)), Now + 500);
+        session.Receive(Event(epoch: 1, seq: 11, new CasinoRoomEventDto(Occupancy: 8)), Now + 1_999);
 
         Assert.Equal(2, sent.Count);
         Assert.Equal(SignalType.CasinoResync, sent[1].Type);
         Assert.Equal(Room, sent[1].Casino!.RoomId);
-        Assert.Equal(4, session.State!.Snapshot.PlayerCount);
+        Assert.Equal(4, session.State!.Snapshot.Occupancy);
         Assert.True(session.AwaitingSnapshot);
     }
 
@@ -192,8 +252,8 @@ public sealed class CasinoRoomSessionTests
         session.Enter(Room);
         session.Receive(Attached(epoch: 1, seq: 5), Now);
 
-        session.Receive(Event(epoch: 1, seq: 9, new CasinoRoomEventDto(PlayerCount: 6)), Now);
-        session.Receive(Event(epoch: 1, seq: 10, new CasinoRoomEventDto(PlayerCount: 7)), Now + 2_000);
+        session.Receive(Event(epoch: 1, seq: 9, new CasinoRoomEventDto(Occupancy: 6)), Now);
+        session.Receive(Event(epoch: 1, seq: 10, new CasinoRoomEventDto(Occupancy: 7)), Now + 2_000);
 
         Assert.Equal(3, sent.Count);
         Assert.Equal(SignalType.CasinoResync, sent[1].Type);
@@ -206,16 +266,16 @@ public sealed class CasinoRoomSessionTests
         var session = Session(out _);
         session.Enter(Room);
         session.Receive(Attached(epoch: 1, seq: 5), Now);
-        session.Receive(Event(epoch: 1, seq: 9, new CasinoRoomEventDto(PlayerCount: 6)), Now);
-        session.Receive(Event(epoch: 1, seq: 10, new CasinoRoomEventDto(PlayerCount: 7)), Now);
+        session.Receive(Event(epoch: 1, seq: 9, new CasinoRoomEventDto(Occupancy: 6)), Now);
+        session.Receive(Event(epoch: 1, seq: 10, new CasinoRoomEventDto(Occupancy: 7)), Now);
 
-        session.Receive(Snapshot(epoch: 1, seq: 12, playerCount: 31), Now);
-        session.Receive(Event(epoch: 1, seq: 11, new CasinoRoomEventDto(PlayerCount: 99)), Now);
-        session.Receive(Event(epoch: 1, seq: 13, new CasinoRoomEventDto(PlayerCount: 32)), Now);
+        session.Receive(Snapshot(epoch: 1, seq: 12, occupancy: 31), Now);
+        session.Receive(Event(epoch: 1, seq: 11, new CasinoRoomEventDto(Occupancy: 99)), Now);
+        session.Receive(Event(epoch: 1, seq: 13, new CasinoRoomEventDto(Occupancy: 32)), Now);
 
         var state = session.State;
         Assert.Equal(13, state!.Seq);
-        Assert.Equal(32, state.Snapshot.PlayerCount);
+        Assert.Equal(32, state.Snapshot.Occupancy);
         Assert.False(session.AwaitingSnapshot);
     }
 
@@ -243,31 +303,6 @@ public sealed class CasinoRoomSessionTests
         Assert.Equal(CasinoRoomApply.Ignore, CasinoRoomSession.Decide(held, 2, 9));
         Assert.Equal(CasinoRoomApply.Apply, CasinoRoomSession.Decide(held, 2, 11));
         Assert.Equal(CasinoRoomApply.Resync, CasinoRoomSession.Decide(held, 2, 12));
-    }
-
-    [Fact]
-    public void DrawsAccumulateInsideARoundAndStartOverWhenTheRoundMoves()
-    {
-        Assert.Equal(new[] { 4, 9 }, CasinoRoomSession.MergedNumbers(new[] { 4 }, new[] { 9 }, roundChanged: false));
-        Assert.Equal(new[] { 9 }, CasinoRoomSession.MergedNumbers(new[] { 4 }, new[] { 9 }, roundChanged: true));
-        Assert.Equal(new[] { 4 }, CasinoRoomSession.MergedNumbers(new[] { 4 }, null, roundChanged: false));
-        Assert.Null(CasinoRoomSession.MergedNumbers(new[] { 4 }, null, roundChanged: true));
-    }
-
-    [Fact]
-    public void ANewRoundDropsTheEntriesTheOldRoundPaidFor()
-    {
-        var session = Session(out _);
-        session.Enter(Room);
-        session.Receive(Attached(epoch: 1, seq: 5), Now);
-        Assert.NotNull(session.State!.Private);
-
-        session.Receive(Event(epoch: 1, seq: 6, new CasinoRoomEventDto(RoundId: "round-2", Numbers: new[] { 17 })), Now);
-
-        var state = session.State;
-        Assert.Null(state!.Private);
-        Assert.Equal("round-2", state.Snapshot.RoundId);
-        Assert.Equal(new[] { 17 }, state.Snapshot.Numbers);
     }
 
     [Fact]
@@ -306,42 +341,54 @@ public sealed class CasinoRoomSessionTests
         Assert.Equal(Room, sent[1].Casino!.RoomId);
     }
 
+    // One shape serves the socket and the poll, so a player whose socket died plays the same room
+    // from the same numbers under the same version rules.
     [Fact]
     public void ThePollingPathFillsTheRoomUnderTheSameVersionRules()
     {
         var session = Session(out _);
         session.Enter(Room);
 
-        session.AbsorbHttpState(Room, new CasinoRoomStateDto(
-            Granted: true,
-            Epoch: 2,
-            Seq: 30,
-            ServerNowUnixMs: Now,
-            Snapshot: new CasinoRoomSnapshotDto(RoomId: Room, PlayerCount: 12)), Now);
+        session.AbsorbHttpState(Room, Polled(epoch: 2, seq: 30, occupancy: 12), Now);
 
         Assert.Equal(30, session.State!.Seq);
-        Assert.Equal(12, session.State!.Snapshot.PlayerCount);
+        Assert.Equal(12, session.State!.Snapshot.Occupancy);
         Assert.False(session.AwaitingSnapshot);
 
-        session.AbsorbHttpState(Room, new CasinoRoomStateDto(
-            Granted: true,
-            Epoch: 1,
-            Seq: 900,
-            ServerNowUnixMs: Now,
-            Snapshot: new CasinoRoomSnapshotDto(RoomId: Room, PlayerCount: 99)), Now);
+        session.AbsorbHttpState(Room, Polled(epoch: 1, seq: 900, occupancy: 99), Now);
 
-        Assert.Equal(12, session.State!.Snapshot.PlayerCount);
+        Assert.Equal(12, session.State!.Snapshot.Occupancy);
     }
 
+    // A polled snapshot for a room the player already left is dropped rather than parked, because
+    // the two rooms keep independent sequences behind one shared epoch.
     [Fact]
-    public void APolledDenialClosesTheRoomToo()
+    public void APolledSnapshotForAnotherRoomIsDropped()
     {
         var session = Session(out _);
         session.Enter(Room);
 
-        session.AbsorbHttpState(Room, new CasinoRoomStateDto(Granted: false, Reason: "room_closed"), Now);
+        session.AbsorbHttpState("bingo-hall", Polled(epoch: 2, seq: 30, occupancy: 12), Now);
+        Assert.Null(session.State);
 
-        Assert.Equal("room_closed", session.ClosedReason);
+        session.AbsorbHttpState(Room, Polled(epoch: 2, seq: 30, occupancy: 12) with { RoomId = "bingo-hall" }, Now);
+        Assert.Null(session.State);
+    }
+
+    // A 404 is the same fact casino.ended carries and the only refusal the poll can name on its
+    // own, so it is the one empty answer allowed to close a room.
+    [Fact]
+    public void APolledFourOhFourClosesTheRoomToo()
+    {
+        var session = Session(out _);
+        session.Enter(Room);
+
+        session.CloseFromHttp("bingo-hall", CasinoReasons.Ended);
+        Assert.Equal(Room, session.RoomId);
+
+        session.CloseFromHttp(Room, CasinoReasons.Ended);
+
+        Assert.Equal(CasinoReasons.Ended, session.ClosedReason);
         Assert.Equal(string.Empty, session.RoomId);
     }
 
@@ -354,8 +401,21 @@ public sealed class CasinoRoomSessionTests
         session.Receive(Attached(epoch: 1, seq: 5, serverNowUnixMs: Now + 400), Now);
         Assert.Equal(400, session.SkewMilliseconds);
 
-        session.Receive(Event(epoch: 1, seq: 6, new CasinoRoomEventDto(PlayerCount: 5), Now + 800), Now);
+        session.Receive(Event(epoch: 1, seq: 6, new CasinoRoomEventDto(Occupancy: 5), Now + 800), Now);
         Assert.Equal(500, session.SkewMilliseconds);
+    }
+
+    // The floor tiles count the next room down from the directory's own server clock, so a phone
+    // that has never stepped into a room still paints honest deadlines.
+    [Fact]
+    public void TheDirectoryClockAnchorsTheSkewWithoutEnteringARoom()
+    {
+        var session = Session(out _);
+
+        session.AbsorbClock(Now + 250, Now);
+
+        Assert.Equal(250, session.SkewMilliseconds);
+        Assert.Equal(Now + 250, session.ServerNowUnixMs(Now));
     }
 
     [Fact]
@@ -408,7 +468,30 @@ public sealed class CasinoRoomSessionTests
 
     private static CasinoRoomState Held(int epoch, long seq)
     {
-        return new CasinoRoomState(Room, epoch, seq, new CasinoRoomSnapshotDto(RoomId: Room), null);
+        return new CasinoRoomState(Room, epoch, seq, new CasinoRoomSnapshotDto(RoomId: Room), null, null);
+    }
+
+    private static CasinoRoomSnapshotDto Board(int occupancy)
+    {
+        return new CasinoRoomSnapshotDto(
+            RoomId: Room,
+            GameKind: CasinoWire.WheelKind,
+            Phase: CasinoRoomPhases.Result,
+            RoundIndex: 7,
+            PhaseEndsAtUnixMs: Now + 20_000,
+            GameState: WheelBlob,
+            Occupancy: occupancy);
+    }
+
+    private static CasinoRoomSnapshotDto Polled(int epoch, long seq, int occupancy)
+    {
+        return Board(occupancy) with
+        {
+            Attached = false,
+            Epoch = epoch,
+            Seq = seq,
+            ServerNowUnixMs = Now,
+        };
     }
 
     private static CasinoSignal Attached(int epoch, long seq, long serverNowUnixMs = 0)
@@ -419,28 +502,18 @@ public sealed class CasinoRoomSessionTests
             Epoch = epoch,
             Seq = seq,
             ServerNowUnixMs = serverNowUnixMs,
-            Snapshot = new CasinoRoomSnapshotDto(
-                RoomId: Room,
-                GameKind: "casino.wheel",
-                Phase: 2,
-                RoundId: "round-1",
-                PhaseEndsAtUnixMs: Now + 20_000,
-                PlayerCount: 4,
-                EntryCount: 3,
-                StakeTotal: 120),
-            Private = new CasinoRoomPrivateDto("round-1", 20,
-                new[] { new CasinoRoomEntryDto("entry-1", 1, 20, 7) }),
+            Snapshot = Board(4) with { Attached = true, Epoch = epoch, Seq = seq },
         });
     }
 
-    private static CasinoSignal Snapshot(int epoch, long seq, int playerCount)
+    private static CasinoSignal Snapshot(int epoch, long seq, int occupancy)
     {
         return new CasinoSignal(SignalType.CasinoSnapshot, null, new CasinoPayload
         {
             RoomId = Room,
             Epoch = epoch,
             Seq = seq,
-            Snapshot = new CasinoRoomSnapshotDto(RoomId: Room, RoundId: "round-1", PlayerCount: playerCount),
+            Snapshot = Board(occupancy) with { Epoch = epoch, Seq = seq },
         });
     }
 

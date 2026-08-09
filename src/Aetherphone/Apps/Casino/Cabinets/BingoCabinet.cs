@@ -104,8 +104,9 @@ internal sealed class BingoCabinet
         var room = rooms.Room;
         var held = room.State;
         var snapshot = held?.Snapshot;
-        var entries = EntriesFor(held, snapshot?.RoundId ?? string.Empty);
-        playback.Update(snapshot, entries, delta);
+        var board = held?.Bingo;
+        var mine = snapshot is null ? null : rooms.BingoCardsFor(snapshot.RoomId, snapshot.RoundIndex);
+        playback.Update(snapshot, board, mine, delta);
         particles.Update(delta);
 
         var closedReason = room.ClosedReason;
@@ -124,17 +125,17 @@ internal sealed class BingoCabinet
 
         var remaining = room.RemainingMilliseconds(snapshot.PhaseEndsAtUnixMs,
             DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
-        CelebrateSettledRoom(snapshot, entries, scale);
+        CelebrateSettledRoom(snapshot, board, mine, scale);
 
         using var surface = AppSurface.Begin(body);
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
         var width = ScrollLayout.StableContentWidth();
         DrawStatusRow(ui, snapshot, room.Attached, width, scale);
-        DrawCaller(ui, snapshot, remaining, width, scale);
-        DrawLadder(ui, snapshot, width, scale);
+        DrawCaller(ui, snapshot, board, remaining, width, scale);
+        DrawLadder(ui, board, width, scale);
         if (snapshot.Phase == CasinoRoomPhases.Result)
         {
-            DrawRoomSummary(ui, remaining, width, scale, delta);
+            DrawRoomSummary(ui, mine, remaining, width, scale, delta);
         }
 
         var sitting = state.Sitting;
@@ -146,10 +147,10 @@ internal sealed class BingoCabinet
         }
         else if (snapshot.Phase == CasinoRoomPhases.Open)
         {
-            DrawComposer(ui, state, sitting!, entries, width, scale);
+            DrawComposer(ui, state, sitting!, mine, width, scale);
         }
 
-        DrawCards(ui, entries, width, scale);
+        DrawCards(ui, mine, width, scale);
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
         particles.Draw(ImGui.GetWindowDrawList(), scale);
     }
@@ -170,60 +171,44 @@ internal sealed class BingoCabinet
         }
     }
 
-    internal static CasinoRoomEntryDto[]? EntriesFor(CasinoRoomState? held, string roundId)
+    internal static int HeldCards(CasinoBingoCardsDto? mine)
     {
-        var personal = held?.Private;
-        if (personal is null || roundId.Length == 0
-            || !string.Equals(personal.RoundId, roundId, StringComparison.Ordinal))
-        {
-            return null;
-        }
-
-        return personal.Entries;
-    }
-
-    internal static long PayoutOf(CasinoRoomEntryDto[]? entries)
-    {
-        if (entries is null)
-        {
-            return 0;
-        }
-
-        var total = 0L;
-        for (var index = 0; index < entries.Length; index++)
-        {
-            total += entries[index].Payout;
-        }
-
-        return total;
-    }
-
-    internal static int HeldCards(CasinoRoomEntryDto[]? entries)
-    {
-        var held = entries?.Length ?? 0;
+        var held = mine?.Cards?.Length ?? 0;
         return held > BingoRules.MaxCards ? BingoRules.MaxCards : held;
+    }
+
+    // Only a round the server calls settled has a payout worth speaking. The phase flipping to
+    // Result is the hall saying the calling is over, not the ledger saying what it paid: the two
+    // are seconds apart and the personal read is what closes the gap, so nothing is latched until
+    // that read carries a settled round. Latching on the phase alone freezes a zero the next read
+    // can no longer correct, and the card underneath would be stroked gold beside it.
+    internal static bool Settled(CasinoBingoCardsDto? mine)
+    {
+        return mine is not null && mine.RoundState == CasinoRoundStates.Settled;
     }
 
     // A room celebrates once, when the calling is over and a card of this player's came home. A
     // room that paid nothing says so in words and stays quiet, because a loss that gets its own
     // fanfare is the house teaching the wrong lesson.
-    private void CelebrateSettledRoom(CasinoRoomSnapshotDto snapshot, CasinoRoomEntryDto[]? entries, float scale)
+    private void CelebrateSettledRoom(CasinoRoomSnapshotDto snapshot, CasinoBingoRoomStateDto? board,
+        CasinoBingoCardsDto? mine, float scale)
     {
-        if (snapshot.Phase != CasinoRoomPhases.Result
-            || string.Equals(celebratedRoundId, snapshot.RoundId, StringComparison.Ordinal))
+        var roundKey = BingoRoundPlayback.RoundKeyOf(snapshot);
+        settledPayout = Settled(mine) ? mine!.Payout : 0;
+        if (snapshot.Phase != CasinoRoomPhases.Result || !Settled(mine)
+            || string.Equals(celebratedRoundId, roundKey, StringComparison.Ordinal))
         {
             return;
         }
 
-        celebratedRoundId = snapshot.RoundId;
-        settledPayout = PayoutOf(entries);
+        celebratedRoundId = roundKey;
         winRoll.Snap(0);
         if (settledPayout <= 0)
         {
             return;
         }
 
-        if (settledPayout >= BingoRules.PrizeFor(BingoRules.StageFullHouse, snapshot.EntryCount))
+        if (settledPayout >= BingoRules.PrizeFor(BingoRules.StageFullHouse, CardsInPlay(board)))
         {
             particles.Confetti(celebrationAnchor, 90, ConfettiPalette, 330f * scale, 5f, 1.6f);
             particles.Sparkle(celebrationAnchor, 24, Gold, 190f * scale, 4f, 1.0f);
@@ -233,12 +218,17 @@ internal sealed class BingoCabinet
         particles.Confetti(celebrationAnchor, 40, ConfettiPalette, 250f * scale, 4f, 1.2f);
     }
 
+    internal static int CardsInPlay(CasinoBingoRoomStateDto? board)
+    {
+        return board?.Cards ?? 0;
+    }
+
     private void DrawStatusRow(AppSkin ui, CasinoRoomSnapshotDto snapshot, bool attached, float width, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var height = StatusRowHeight * scale;
-        var hall = Loc.T(L.Casino.BingoInTheHall, GameNumber.Label(snapshot.PlayerCount));
+        var hall = Loc.T(L.Casino.BingoInTheHall, GameNumber.Label(snapshot.Occupancy));
         Typography.Draw(drawList, new Vector2(origin.X, origin.Y + 4f * scale), hall, ui.MutedInk,
             TextStyles.Caption1);
 
@@ -260,7 +250,8 @@ internal sealed class BingoCabinet
         ImGui.Dummy(new Vector2(width, height));
     }
 
-    private void DrawCaller(AppSkin ui, CasinoRoomSnapshotDto snapshot, long remainingMs, float width, float scale)
+    private void DrawCaller(AppSkin ui, CasinoRoomSnapshotDto snapshot, CasinoBingoRoomStateDto? board,
+        long remainingMs, float width, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
@@ -295,15 +286,15 @@ internal sealed class BingoCabinet
                 Loc.T(L.Casino.BingoWaitingRoom), ui.MutedInk, TextStyles.Subheadline);
         }
 
-        DrawBallRail(drawList, ui, snapshot, min, max, scale);
+        DrawBallRail(drawList, ui, board, min, max, scale);
         ImGui.Dummy(new Vector2(width, height + Metrics.Space.Sm * scale));
     }
 
-    private void DrawBallRail(ImDrawListPtr drawList, AppSkin ui, CasinoRoomSnapshotDto snapshot, Vector2 min,
+    private void DrawBallRail(ImDrawListPtr drawList, AppSkin ui, CasinoBingoRoomStateDto? board, Vector2 min,
         Vector2 max, float scale)
     {
-        var balls = snapshot.Numbers;
-        if (balls is null || balls.Length == 0)
+        var balls = BingoRoundPlayback.CalledBalls(board);
+        if (balls.Length == 0)
         {
             return;
         }
@@ -327,11 +318,11 @@ internal sealed class BingoCabinet
         }
     }
 
-    private void DrawLadder(AppSkin ui, CasinoRoomSnapshotDto snapshot, float width, float scale)
+    private void DrawLadder(AppSkin ui, CasinoBingoRoomStateDto? board, float width, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
-        var cardsInPlay = snapshot.EntryCount;
+        var cardsInPlay = CardsInPlay(board);
         BingoRules.PrizeLadder(cardsInPlay, ladder);
         var capNote = BingoRules.PrizesFrozen(cardsInPlay)
             ? Loc.T(L.Casino.BingoLadderCapped, GameNumber.Label(BingoRules.PrizeCardCap))
@@ -357,7 +348,7 @@ internal sealed class BingoCabinet
         var rowY = min.Y + inset + headingSize.Y + 6f * scale;
         for (var stage = 0; stage < BingoRules.StageCount; stage++)
         {
-            DrawLadderRow(drawList, ui, snapshot, stage, min.X + inset, rowY, innerWidth, scale);
+            DrawLadderRow(drawList, ui, board, stage, min.X + inset, rowY, innerWidth, scale);
             rowY += LadderRowHeight * scale;
         }
 
@@ -366,10 +357,10 @@ internal sealed class BingoCabinet
         ImGui.Dummy(new Vector2(width, height + Metrics.Space.Sm * scale));
     }
 
-    private void DrawLadderRow(ImDrawListPtr drawList, AppSkin ui, CasinoRoomSnapshotDto snapshot, int stage,
+    private void DrawLadderRow(ImDrawListPtr drawList, AppSkin ui, CasinoBingoRoomStateDto? board, int stage,
         float left, float y, float width, float scale)
     {
-        var awarded = StageAwarded(snapshot, stage);
+        var awarded = StageAwarded(board, stage);
         var name = Loc.T(StageNames[stage]);
         var ink = awarded is null ? ui.BodyInk : Gold;
         Typography.Draw(drawList, new Vector2(left, y + 5f * scale), name, ink, TextStyles.Subheadline);
@@ -393,9 +384,9 @@ internal sealed class BingoCabinet
             ui.MutedInk, TextStyles.Caption2);
     }
 
-    internal static CasinoRoomStageDto? StageAwarded(CasinoRoomSnapshotDto snapshot, int stage)
+    internal static CasinoBingoStageDto? StageAwarded(CasinoBingoRoomStateDto? board, int stage)
     {
-        var stages = snapshot.Stages;
+        var stages = board?.Stages;
         if (stages is null)
         {
             return null;
@@ -412,7 +403,8 @@ internal sealed class BingoCabinet
         return null;
     }
 
-    private void DrawRoomSummary(AppSkin ui, long remainingMs, float width, float scale, float delta)
+    private void DrawRoomSummary(AppSkin ui, CasinoBingoCardsDto? mine, long remainingMs, float width,
+        float scale, float delta)
     {
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
@@ -434,7 +426,18 @@ internal sealed class BingoCabinet
         Typography.Draw(drawList, new Vector2(max.X - inset - nextSize.X, min.Y + inset + 2f * scale), next,
             ui.MutedInk, TextStyles.Caption1);
 
+        // The hall says "no card came home" only once the ledger has actually settled the round.
+        // Until then it says the calling is over and nothing more, because a zero printed while the
+        // settlement is still in flight is a loss the player never had.
         var outcomeY = min.Y + inset + titleSize.Y + 8f * scale;
+        if (!Settled(mine))
+        {
+            Typography.Draw(drawList, new Vector2(min.X + inset, outcomeY), Loc.T(L.Casino.BingoCardsPending),
+                ui.MutedInk, TextStyles.Subheadline);
+            ImGui.Dummy(new Vector2(width, height + Metrics.Space.Sm * scale));
+            return;
+        }
+
         if (settledPayout > 0)
         {
             winRoll.Update((int)Math.Min(settledPayout, int.MaxValue), delta);
@@ -451,25 +454,29 @@ internal sealed class BingoCabinet
         ImGui.Dummy(new Vector2(width, height + Metrics.Space.Sm * scale));
     }
 
+    // One purchase is one room. The server keys the entry on the room, the round and the identity,
+    // so the second post is refused rather than added to: a composer that stayed up offering "add
+    // two more" would be selling a flow the protocol does not have. A refusal always draws, because
+    // the reason a purchase was turned away (a frozen wallet, a loss limit, paused stakes) matters
+    // most at exactly the moment the composer has nothing left to offer.
     private void DrawComposer(AppSkin ui, CasinoStateDto state, CasinoSittingDto sitting,
-        CasinoRoomEntryDto[]? entries, float width, float scale)
+        CasinoBingoCardsDto? mine, float width, float scale)
     {
-        var holding = HeldCards(entries);
-        if (holding >= BingoRules.MaxCards)
-        {
-            DrawNote(ui, Loc.T(L.Casino.BingoHoldingFull, GameNumber.Label(BingoRules.MaxCards)), width, scale);
-            return;
-        }
-
         if (inlineReason.Length > 0)
         {
             DrawNote(ui, Loc.T(CasinoReasons.MessageFor(inlineReason)), width, scale);
         }
 
-        var headroom = BingoRules.MaxCards - holding;
-        if (requestedCards > headroom)
+        var holding = HeldCards(mine);
+        if (holding > 0)
         {
-            requestedCards = headroom;
+            DrawNote(ui, Loc.T(L.Casino.BingoHoldingFull, CardCountLabel(holding)), width, scale);
+            return;
+        }
+
+        if (requestedCards > BingoRules.MaxCards)
+        {
+            requestedCards = BingoRules.MaxCards;
         }
 
         if (requestedCards < 1)
@@ -488,30 +495,34 @@ internal sealed class BingoCabinet
             TextStyles.Caption1);
 
         var segmentY = origin.Y + 20f * scale;
-        DrawCountSegments(drawList, ui, origin.X, segmentY, width, headroom, scale);
+        DrawCountSegments(drawList, ui, origin.X, segmentY, width, BingoRules.MaxCards, scale);
 
         var stake = BingoRules.StakeFor(requestedCards);
         var thin = sitting.Stack < stake;
         var canBuy = !state.StakesPaused && !state.Draining && !thin && !rooms.StakeInFlight;
-        var label = holding > 0
-            ? Loc.T(L.Casino.BingoBuyMoreFor, CardCountLabel(requestedCards), stake.ToString("N0", Loc.Culture))
-            : Loc.T(L.Casino.BingoBuyFor, CardCountLabel(requestedCards), stake.ToString("N0", Loc.Culture));
+        var label = Loc.T(L.Casino.BingoBuyFor, CardCountLabel(requestedCards),
+            stake.ToString("N0", Loc.Culture));
         var pillY = segmentY + SegmentHeight * scale + Metrics.Space.Sm * scale;
         var pillRect = new Rect(new Vector2(origin.X, pillY),
             new Vector2(origin.X + width, pillY + PillHeight * scale));
         if (DrawBuyPill(drawList, ui, pillRect, label, canBuy, scale))
         {
             inlineReason = string.Empty;
-            rooms.PlaceStake(requestedCards, stake);
+            rooms.BuyBingoCards(requestedCards);
         }
 
         var noteY = pillRect.Max.Y + 6f * scale;
-        var note = thin ? Loc.T(L.Casino.SlotsLowStack) : Loc.T(L.Casino.BingoCardsFinal);
+        var note = thin ? Loc.T(L.Casino.SlotsLowStack) : Loc.T(L.Casino.BingoOneBuyPerRoom);
         var noteBlock = Typography.MeasureWrappedBlock(note, TextStyles.Caption2, width);
         Typography.DrawWrappedLeft(new Vector2(origin.X, noteY), note, ui.MutedInk, TextStyles.Caption2, width);
+        var finalNote = Loc.T(L.Casino.BingoCardsFinal);
+        var finalY = noteY + noteBlock.Y + 2f * scale;
+        var finalBlock = Typography.MeasureWrappedBlock(finalNote, TextStyles.Caption2, width);
+        Typography.DrawWrappedLeft(new Vector2(origin.X, finalY), finalNote, ui.MutedInk, TextStyles.Caption2,
+            width);
 
         ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, noteY + noteBlock.Y - origin.Y + Metrics.Space.Md * scale));
+        ImGui.Dummy(new Vector2(width, finalY + finalBlock.Y - origin.Y + Metrics.Space.Md * scale));
         if (thin)
         {
             DrawCashierPill(ui, width, scale);
@@ -575,9 +586,9 @@ internal sealed class BingoCabinet
         return cards == 1 ? Loc.T(L.Casino.BingoOneCard) : Loc.T(L.Casino.BingoCardCount, GameNumber.Label(cards));
     }
 
-    private void DrawCards(AppSkin ui, CasinoRoomEntryDto[]? entries, float width, float scale)
+    private void DrawCards(AppSkin ui, CasinoBingoCardsDto? mine, float width, float scale)
     {
-        var holding = HeldCards(entries);
+        var holding = HeldCards(mine);
         if (holding == 0)
         {
             DrawNote(ui, Loc.T(L.Casino.BingoNoCardsHint), width, scale);
@@ -600,7 +611,7 @@ internal sealed class BingoCabinet
             var cardMin = new Vector2(origin.X + column * (cardWidth + gap),
                 origin.Y + row * rowStep + labelHeight);
             var card = new Rect(cardMin, new Vector2(cardMin.X + cardWidth, cardMin.Y + cardHeight));
-            DrawCard(drawList, ui, card, entries![cardIndex], cardIndex, labelHeight, scale);
+            DrawCard(drawList, ui, card, mine, cardIndex, labelHeight, scale);
         }
 
         ImGui.SetCursorScreenPos(origin);
@@ -612,7 +623,7 @@ internal sealed class BingoCabinet
         ImGui.Dummy(new Vector2(width, footBlock.Y));
     }
 
-    private void DrawCard(ImDrawListPtr drawList, AppSkin ui, Rect card, CasinoRoomEntryDto entry, int cardIndex,
+    private void DrawCard(ImDrawListPtr drawList, AppSkin ui, Rect card, CasinoBingoCardsDto? mine, int cardIndex,
         float labelHeight, float scale)
     {
         var rounding = Metrics.Radius.Sm * scale;
@@ -635,12 +646,16 @@ internal sealed class BingoCabinet
                 TextStyles.Caption2);
         }
 
-        if (entry.Payout > 0)
+        // The gold stroke is the settled payout speaking, so it waits for the same fact the summary
+        // waits for. Stroking on a payout the ledger has not written yet is how one screen ends up
+        // saying won and lost at the same time.
+        if (Settled(mine) && mine!.Payout > 0)
         {
             Squircle.Stroke(drawList, plateMin, plateMax, rounding, ImGui.GetColorU32(Gold), 1.6f * scale);
         }
 
-        BingoCardArt.Draw(drawList, ui, card, entry.Numbers, autoMask, stampedMask, playback, cardIndex, scale);
+        var numbers = BingoRoundPlayback.CardAt(mine, cardIndex);
+        BingoCardArt.Draw(drawList, ui, card, numbers, autoMask, stampedMask, playback, cardIndex, scale);
         HandleCardTaps(card, cardIndex, autoMask, stampedMask);
     }
 

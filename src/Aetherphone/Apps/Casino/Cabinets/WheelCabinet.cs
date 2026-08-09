@@ -97,10 +97,11 @@ internal sealed class WheelCabinet
         var room = rooms.Room;
         var held = room.State;
         var snapshot = held?.Snapshot;
+        var board = held?.Wheel;
         var remaining = snapshot is null
             ? 0
             : room.RemainingMilliseconds(snapshot.PhaseEndsAtUnixMs, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
-        playback.Update(snapshot, remaining, delta);
+        playback.Update(snapshot, board, remaining, delta);
         particles.Update(delta);
 
         var drawList = ImGui.GetWindowDrawList();
@@ -122,7 +123,7 @@ internal sealed class WheelCabinet
             return;
         }
 
-        CollectStakes(held, snapshot.RoundId);
+        CollectStakes(snapshot);
         CelebrateSettledRound(snapshot, scale);
 
         var y = body.Min.Y + Metrics.Space.Xs * scale;
@@ -133,7 +134,7 @@ internal sealed class WheelCabinet
         var sitting = state.Sitting;
         var seated = sitting is not null
             && string.Equals(sitting.GameKind, CasinoWire.WheelKind, StringComparison.Ordinal);
-        y = DrawSpotRow(drawList, ui, snapshot, seated, left, y, width, scale);
+        y = DrawSpotRow(drawList, ui, board, snapshot, seated, left, y, width, scale);
         if (!seated)
         {
             DrawSeatMissing(drawList, ui, left, y + Metrics.Space.Sm * scale, width, scale);
@@ -161,29 +162,45 @@ internal sealed class WheelCabinet
         }
     }
 
-    private void CollectStakes(CasinoRoomState? held, string roundId)
+    // Only bets the server has accepted for this room and this round reach the board. A bet that
+    // was refused, dropped by the pacing guard or swept back by the stale-round refund never
+    // appears in this read, so nothing here can paint money that did not actually move.
+    private void CollectStakes(CasinoRoomSnapshotDto snapshot)
     {
         Array.Clear(spotStakes);
-        var personal = held?.Private;
-        if (personal is null || !string.Equals(personal.RoundId, roundId, StringComparison.Ordinal))
+        var mine = rooms.WheelBetsFor(snapshot.RoomId, snapshot.RoundIndex);
+        var bets = mine?.Bets;
+        if (bets is null)
         {
             return;
         }
 
-        var entries = personal.Entries;
-        if (entries is null)
+        for (var index = 0; index < bets.Length; index++)
         {
-            return;
-        }
-
-        for (var index = 0; index < entries.Length; index++)
-        {
-            var target = entries[index].Target;
-            if (WheelRules.IsSpot(target))
+            var spot = bets[index].Spot;
+            if (WheelRules.IsSpot(spot))
             {
-                spotStakes[target] += entries[index].Stake;
+                spotStakes[spot] += bets[index].Amount;
             }
         }
+    }
+
+    private bool HasBetOn(int spot)
+    {
+        return WheelRules.IsSpot(spot) && spotStakes[spot] > 0;
+    }
+
+    private int FirstOpenSpot()
+    {
+        for (var spot = 0; spot < WheelRules.SpotCount; spot++)
+        {
+            if (spotStakes[spot] == 0)
+            {
+                return spot;
+            }
+        }
+
+        return -1;
     }
 
     private long StakedThisRound()
@@ -210,15 +227,21 @@ internal sealed class WheelCabinet
 
     // A win is loud once and only once per round: gold, a count up and confetti sized by what the
     // spot paid. A loss says nothing at all beyond the banner, which is the whole point of it.
+    //
+    // The number is derived rather than read back, and that is safe for exactly one reason: the
+    // stakes it multiplies are the server's own list of accepted bets, and the multiplier is the
+    // same (multiplier + 1) the house settles with. Sum a local tally instead and the banner would
+    // celebrate chips that never left the stack.
     private void CelebrateSettledRound(CasinoRoomSnapshotDto snapshot, float scale)
     {
+        var roundKey = WheelRoundPlayback.RoundKeyOf(snapshot);
         if (playback.Stage != WheelStage.Settling
-            || string.Equals(celebratedRoundId, snapshot.RoundId, StringComparison.Ordinal))
+            || string.Equals(celebratedRoundId, roundKey, StringComparison.Ordinal))
         {
             return;
         }
 
-        celebratedRoundId = snapshot.RoundId;
+        celebratedRoundId = roundKey;
         settledReturn = ReturnOn(playback.Segment);
         winRoll.Snap(0);
         if (settledReturn <= 0)
@@ -248,7 +271,7 @@ internal sealed class WheelCabinet
         float left, float y, float width, float scale)
     {
         var height = StatusRowHeight * scale;
-        var rail = Loc.T(L.Casino.WheelAtTheRail, GameNumber.Label(snapshot.PlayerCount));
+        var rail = Loc.T(L.Casino.WheelAtTheRail, GameNumber.Label(snapshot.Occupancy));
         Typography.Draw(drawList, new Vector2(left, y + 4f * scale), rail, ui.MutedInk, TextStyles.Caption1);
 
         if (attached)
@@ -376,8 +399,8 @@ internal sealed class WheelCabinet
         return y + BannerHeight * scale;
     }
 
-    private float DrawSpotRow(ImDrawListPtr drawList, AppSkin ui, CasinoRoomSnapshotDto snapshot, bool seated,
-        float left, float y, float width, float scale)
+    private float DrawSpotRow(ImDrawListPtr drawList, AppSkin ui, CasinoWheelRoomStateDto? board,
+        CasinoRoomSnapshotDto snapshot, bool seated, float left, float y, float width, float scale)
     {
         var gap = SpotGap * scale;
         var cardWidth = (width - gap * (WheelRules.SpotCount - 1)) / WheelRules.SpotCount;
@@ -387,13 +410,13 @@ internal sealed class WheelCabinet
         {
             var min = new Vector2(left + spot * (cardWidth + gap), y);
             var max = new Vector2(min.X + cardWidth, y + cardHeight);
-            DrawSpotCard(drawList, ui, snapshot, spot, min, max, seated && betting, scale);
+            DrawSpotCard(drawList, ui, board, spot, min, max, seated && betting && !HasBetOn(spot), scale);
         }
 
         return y + cardHeight;
     }
 
-    private void DrawSpotCard(ImDrawListPtr drawList, AppSkin ui, CasinoRoomSnapshotDto snapshot, int spot,
+    private void DrawSpotCard(ImDrawListPtr drawList, AppSkin ui, CasinoWheelRoomStateDto? board, int spot,
         Vector2 min, Vector2 max, bool selectable, float scale)
     {
         var rounding = Metrics.Radius.Sm * scale;
@@ -427,11 +450,11 @@ internal sealed class WheelCabinet
         Typography.DrawCentered(drawList, new Vector2(centerX, min.Y + 18f * scale), multiplier, color,
             TextStyles.SubheadlineEmphasized);
 
-        var board = BoardFor(snapshot, spot);
+        var row = BoardFor(board, spot);
         Typography.DrawCentered(drawList, new Vector2(centerX, min.Y + 38f * scale),
-            board.Amount.ToString("N0", Loc.Culture), ui.BodyInk, TextStyles.Caption1);
+            row.Amount.ToString("N0", Loc.Culture), ui.BodyInk, TextStyles.Caption1);
         Typography.DrawCentered(drawList, new Vector2(centerX, min.Y + 53f * scale),
-            Loc.T(L.Casino.WheelBettors, GameNumber.Label(board.Bettors)), ui.MutedInk, TextStyles.Caption2);
+            Loc.T(L.Casino.WheelBettors, GameNumber.Label(row.Bettors)), ui.MutedInk, TextStyles.Caption2);
 
         var mine = spotStakes[spot];
         if (mine > 0)
@@ -447,12 +470,12 @@ internal sealed class WheelCabinet
         }
     }
 
-    private static CasinoRoomSpotDto BoardFor(CasinoRoomSnapshotDto snapshot, int spot)
+    private static CasinoWheelSpotDto BoardFor(CasinoWheelRoomStateDto? board, int spot)
     {
-        var spots = snapshot.Spots;
+        var spots = board?.Spots;
         if (spots is null)
         {
-            return new CasinoRoomSpotDto(spot);
+            return new CasinoWheelSpotDto(spot);
         }
 
         for (var index = 0; index < spots.Length; index++)
@@ -463,7 +486,7 @@ internal sealed class WheelCabinet
             }
         }
 
-        return new CasinoRoomSpotDto(spot);
+        return new CasinoWheelSpotDto(spot);
     }
 
     private void DrawComposer(ImDrawListPtr drawList, AppSkin ui, CasinoStateDto state, CasinoSittingDto sitting,
@@ -480,6 +503,25 @@ internal sealed class WheelCabinet
         {
             y = DrawReasonCard(drawList, ui, Loc.T(CasinoReasons.MessageFor(inlineReason)), left, y, width, scale);
             y += Metrics.Space.Sm * scale;
+        }
+
+        // The server keys one bet to one spot for one round, so a spot already backed is not a
+        // smaller bet, it is no bet at all. The composer moves off it rather than offering a tap
+        // that can only ever come back refused.
+        if (HasBetOn(selectedSpot))
+        {
+            var open = FirstOpenSpot();
+            if (open >= 0)
+            {
+                selectedSpot = open;
+            }
+        }
+
+        if (FirstOpenSpot() < 0)
+        {
+            Typography.DrawWrappedLeft(new Vector2(left, y), Loc.T(L.Casino.WheelEverySpotBacked), ui.MutedInk,
+                TextStyles.Footnote, width);
+            return;
         }
 
         var ceiling = WheelRules.Headroom(staked);
@@ -541,7 +583,7 @@ internal sealed class WheelCabinet
         var amount = ParseAmount();
         var clamped = WheelRules.Clamp(amount, staked, sitting.Stack);
         var blocked = state.StakesPaused || state.Draining || snapshot.Phase != CasinoRoomPhases.Open;
-        var canPlace = !blocked && !rooms.StakeInFlight && clamped > 0;
+        var canPlace = !blocked && !rooms.StakeInFlight && clamped > 0 && !HasBetOn(selectedSpot);
         var multiplier = Loc.T(L.Casino.WheelMultiplier, GameNumber.Label(WheelRules.Multipliers[selectedSpot]));
         var label = canPlace
             ? Loc.T(L.Casino.WheelPlaceOn, clamped.ToString("N0", Loc.Culture), multiplier)
@@ -551,20 +593,23 @@ internal sealed class WheelCabinet
         if (DrawPlacePill(drawList, ui, pillRect, label, canPlace, scale))
         {
             inlineReason = string.Empty;
-            rooms.PlaceStake(selectedSpot, clamped);
+            rooms.PlaceWheelBet(selectedSpot, clamped);
         }
 
         y += MathF.Max(FieldHeight, PillHeight) * scale + Metrics.Space.Xs * scale;
-        if (staked > 0)
+        if (staked == 0)
         {
-            Typography.Draw(drawList, new Vector2(left, y), Loc.T(L.Casino.WheelFinalShort), ui.MutedInk,
-                TextStyles.Caption2);
+            Typography.DrawWrappedLeft(new Vector2(left, y),
+                Loc.T(L.Casino.WheelSpinCap, WheelRules.MaxStakePerRound.ToString("N0", Loc.Culture)),
+                ui.MutedInk, TextStyles.Caption2, width);
             return;
         }
 
-        Typography.Draw(drawList, new Vector2(left, y),
-            Loc.T(L.Casino.WheelSpinCap, WheelRules.MaxStakePerRound.ToString("N0", Loc.Culture)), ui.MutedInk,
-            TextStyles.Caption2);
+        var final = Loc.T(L.Casino.WheelFinalShort);
+        Typography.Draw(drawList, new Vector2(left, y), final, ui.MutedInk, TextStyles.Caption2);
+        y += Typography.Measure(final, TextStyles.Caption2).Y + 2f * scale;
+        Typography.DrawWrappedLeft(new Vector2(left, y), Loc.T(L.Casino.WheelOneBetPerSpot), ui.MutedInk,
+            TextStyles.Caption2, width);
     }
 
     private long ParseAmount()

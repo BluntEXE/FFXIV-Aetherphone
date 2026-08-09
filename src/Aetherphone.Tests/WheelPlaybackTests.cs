@@ -7,23 +7,27 @@ namespace Aetherphone.Tests;
 
 public sealed class WheelPlaybackTests
 {
-    private static CasinoRoomSnapshotDto Snapshot(int phase, string roundId, int[]? numbers = null)
+    private static CasinoRoomSnapshotDto Snapshot(int phase, long roundIndex)
     {
         return new CasinoRoomSnapshotDto(
             RoomId: CasinoRoomIds.WheelFloor,
             GameKind: CasinoWire.WheelKind,
             Phase: phase,
-            RoundId: roundId,
-            Numbers: numbers);
+            RoundIndex: roundIndex);
+    }
+
+    private static CasinoWheelRoomStateDto Board(long roundIndex, int segment = -1)
+    {
+        return new CasinoWheelRoomStateDto(RoundIndex: roundIndex, Segment: segment);
     }
 
     [Fact]
     public void AnOpenRoomRestsOnTheRimAndCallsItBetting()
     {
         var playback = new WheelRoundPlayback();
-        playback.Update(Snapshot(CasinoRoomPhases.Open, "r1"), 42_000, 0.016f);
+        playback.Update(Snapshot(CasinoRoomPhases.Open, 1), Board(1), 42_000, 0.016f);
         Assert.Equal(WheelStage.Betting, playback.Stage);
-        Assert.Equal("r1", playback.RoundId);
+        Assert.Equal("wheel-floor#1", playback.RoundId);
         Assert.Equal(0f, playback.Angle);
         Assert.Equal(-1, playback.Segment);
     }
@@ -32,8 +36,8 @@ public sealed class WheelPlaybackTests
     public void TheLockWithoutAResultYetTurnsTheRimAndCallsItLocking()
     {
         var playback = new WheelRoundPlayback();
-        playback.Update(Snapshot(CasinoRoomPhases.Open, "r1"), 42_000, 0.016f);
-        playback.Update(Snapshot(CasinoRoomPhases.Locked, "r1"), 8_000, 0.5f);
+        playback.Update(Snapshot(CasinoRoomPhases.Open, 1), Board(1), 42_000, 0.016f);
+        playback.Update(Snapshot(CasinoRoomPhases.Locked, 1), Board(1), 8_000, 0.5f);
         Assert.Equal(WheelStage.Locking, playback.Stage);
         Assert.True(playback.Angle > 0f);
         Assert.Equal(-1, playback.Segment);
@@ -43,8 +47,8 @@ public sealed class WheelPlaybackTests
     public void AResultDuringALongLockStartsTheSpinBeforeTheCurveIsDue()
     {
         var playback = new WheelRoundPlayback();
-        playback.Update(Snapshot(CasinoRoomPhases.Open, "r1"), 42_000, 0.016f);
-        playback.Update(Snapshot(CasinoRoomPhases.Locked, "r1", new[] { 17 }), 8_000, 0.016f);
+        playback.Update(Snapshot(CasinoRoomPhases.Open, 1), Board(1), 42_000, 0.016f);
+        playback.Update(Snapshot(CasinoRoomPhases.Locked, 1), Board(1, 17), 8_000, 0.016f);
         Assert.Equal(WheelStage.Spinning, playback.Stage);
         Assert.Equal(17, playback.Segment);
         Assert.Equal(0f, playback.SpinProgress);
@@ -56,7 +60,7 @@ public sealed class WheelPlaybackTests
     public void JoiningMidSpinSkipsToWhereTheRoomAlreadyIs()
     {
         var playback = new WheelRoundPlayback();
-        playback.Update(Snapshot(CasinoRoomPhases.Locked, "r1", new[] { 23 }), 3_000, 0f);
+        playback.Update(Snapshot(CasinoRoomPhases.Locked, 1), Board(1, 23), 3_000, 0f);
 
         Assert.Equal(WheelStage.Spinning, playback.Stage);
         Assert.Equal(23, playback.Segment);
@@ -71,18 +75,18 @@ public sealed class WheelPlaybackTests
     public void AWatcherAndAMidSpinJoinerStopOnTheSameWedge()
     {
         var watcher = new WheelRoundPlayback();
-        watcher.Update(Snapshot(CasinoRoomPhases.Open, "r1"), 20_000, 0.016f);
-        watcher.Update(Snapshot(CasinoRoomPhases.Locked, "r1", new[] { 41 }), 8_000, 0.016f);
+        watcher.Update(Snapshot(CasinoRoomPhases.Open, 1), Board(1), 20_000, 0.016f);
+        watcher.Update(Snapshot(CasinoRoomPhases.Locked, 1), Board(1, 41), 8_000, 0.016f);
         for (var step = 0; step < 600; step++)
         {
-            watcher.Update(Snapshot(CasinoRoomPhases.Locked, "r1", new[] { 41 }), 8_000, 0.02f);
+            watcher.Update(Snapshot(CasinoRoomPhases.Locked, 1), Board(1, 41), 8_000, 0.02f);
         }
 
         var joiner = new WheelRoundPlayback();
-        joiner.Update(Snapshot(CasinoRoomPhases.Locked, "r1", new[] { 41 }), 2_000, 0f);
+        joiner.Update(Snapshot(CasinoRoomPhases.Locked, 1), Board(1, 41), 2_000, 0f);
         for (var step = 0; step < 600; step++)
         {
-            joiner.Update(Snapshot(CasinoRoomPhases.Locked, "r1", new[] { 41 }), 2_000, 0.02f);
+            joiner.Update(Snapshot(CasinoRoomPhases.Locked, 1), Board(1, 41), 2_000, 0.02f);
         }
 
         Assert.Equal(WheelStage.Settling, watcher.Stage);
@@ -95,7 +99,7 @@ public sealed class WheelPlaybackTests
     public void JoiningDuringTheResultWindowShowsTheWheelAlreadyStopped()
     {
         var playback = new WheelRoundPlayback();
-        playback.Update(Snapshot(CasinoRoomPhases.Result, "r1", new[] { 8 }), 6_000, 0f);
+        playback.Update(Snapshot(CasinoRoomPhases.Result, 1), Board(1, 8), 6_000, 0f);
 
         Assert.Equal(WheelStage.Settling, playback.Stage);
         Assert.Equal(8, playback.Segment);
@@ -107,13 +111,13 @@ public sealed class WheelPlaybackTests
     public void ANewRoundReturnsToBettingAndLeavesTheRimWhereItStopped()
     {
         var playback = new WheelRoundPlayback();
-        playback.Update(Snapshot(CasinoRoomPhases.Result, "r1", new[] { 31 }), 6_000, 0f);
+        playback.Update(Snapshot(CasinoRoomPhases.Result, 1), Board(1, 31), 6_000, 0f);
         var settledAngle = playback.Angle;
 
-        playback.Update(Snapshot(CasinoRoomPhases.Open, "r2"), 60_000, 0.016f);
+        playback.Update(Snapshot(CasinoRoomPhases.Open, 2), Board(2), 60_000, 0.016f);
 
         Assert.Equal(WheelStage.Betting, playback.Stage);
-        Assert.Equal("r2", playback.RoundId);
+        Assert.Equal("wheel-floor#2", playback.RoundId);
         Assert.Equal(-1, playback.Segment);
         Assert.Equal(31, playback.LastSegment);
         Assert.Equal(WheelChoreography.Normalize(settledAngle), playback.Angle, 4);
@@ -124,12 +128,12 @@ public sealed class WheelPlaybackTests
     public void TheNextRoundSpinsToItsOwnWedgeFromWhereTheLastOneRested()
     {
         var playback = new WheelRoundPlayback();
-        playback.Update(Snapshot(CasinoRoomPhases.Result, "r1", new[] { 5 }), 6_000, 0f);
-        playback.Update(Snapshot(CasinoRoomPhases.Open, "r2"), 60_000, 0.016f);
-        playback.Update(Snapshot(CasinoRoomPhases.Locked, "r2", new[] { 44 }), 8_000, 0.016f);
+        playback.Update(Snapshot(CasinoRoomPhases.Result, 1), Board(1, 5), 6_000, 0f);
+        playback.Update(Snapshot(CasinoRoomPhases.Open, 2), Board(2), 60_000, 0.016f);
+        playback.Update(Snapshot(CasinoRoomPhases.Locked, 2), Board(2, 44), 8_000, 0.016f);
         for (var step = 0; step < 700; step++)
         {
-            playback.Update(Snapshot(CasinoRoomPhases.Locked, "r2", new[] { 44 }), 8_000, 0.02f);
+            playback.Update(Snapshot(CasinoRoomPhases.Locked, 2), Board(2, 44), 8_000, 0.02f);
         }
 
         Assert.Equal(WheelStage.Settling, playback.Stage);
@@ -140,10 +144,10 @@ public sealed class WheelPlaybackTests
     public void ADroppedSnapshotHoldsTheFrameInsteadOfRewindingTheWheel()
     {
         var playback = new WheelRoundPlayback();
-        playback.Update(Snapshot(CasinoRoomPhases.Locked, "r1", new[] { 12 }), 3_000, 0f);
+        playback.Update(Snapshot(CasinoRoomPhases.Locked, 1), Board(1, 12), 3_000, 0f);
         var held = playback.Angle;
 
-        playback.Update(null, 0, 0.2f);
+        playback.Update(null, null, 0, 0.2f);
 
         Assert.Equal(held, playback.Angle);
         Assert.Equal(WheelStage.Spinning, playback.Stage);
@@ -153,14 +157,25 @@ public sealed class WheelPlaybackTests
     public void AnUnreadableDrawIsIgnoredRatherThanSpunTo()
     {
         var playback = new WheelRoundPlayback();
-        playback.Update(Snapshot(CasinoRoomPhases.Locked, "r1", new[] { WheelRules.SegmentCount }), 3_000, 0.016f);
+        playback.Update(Snapshot(CasinoRoomPhases.Locked, 1), Board(1, WheelRules.SegmentCount), 3_000, 0.016f);
         Assert.Equal(WheelStage.Locking, playback.Stage);
         Assert.Equal(-1, playback.Segment);
 
-        Assert.Equal(-1, WheelRoundPlayback.DrawnSegment(Snapshot(CasinoRoomPhases.Locked, "r1")));
-        Assert.Equal(-1,
-            WheelRoundPlayback.DrawnSegment(Snapshot(CasinoRoomPhases.Locked, "r1", Array.Empty<int>())));
-        Assert.Equal(-1, WheelRoundPlayback.DrawnSegment(Snapshot(CasinoRoomPhases.Locked, "r1", new[] { -1 })));
+        Assert.Equal(-1, WheelRoundPlayback.DrawnSegment(null));
+        Assert.Equal(-1, WheelRoundPlayback.DrawnSegment(Board(1)));
+        Assert.Equal(-1, WheelRoundPlayback.DrawnSegment(Board(1, -2)));
+        Assert.Equal(-1, WheelRoundPlayback.DrawnSegment(Board(1, WheelRules.SegmentCount)));
+        Assert.Equal(0, WheelRoundPlayback.DrawnSegment(Board(1, 0)));
+    }
+
+    // A round is keyed by the room and its index, never by a round id: the rim turns whether or
+    // not this player put a chip down, and a watcher has no round id to compare against at all.
+    [Fact]
+    public void TheRoundKeyIsTheRoomAndItsIndex()
+    {
+        Assert.Equal("wheel-floor#7", WheelRoundPlayback.RoundKeyOf(Snapshot(CasinoRoomPhases.Open, 7)));
+        Assert.NotEqual(WheelRoundPlayback.RoundKeyOf(Snapshot(CasinoRoomPhases.Open, 7)),
+            WheelRoundPlayback.RoundKeyOf(Snapshot(CasinoRoomPhases.Open, 8)));
     }
 
     [Fact]
@@ -179,7 +194,7 @@ public sealed class WheelPlaybackTests
     public void ResetReturnsTheCabinetToAColdWheel()
     {
         var playback = new WheelRoundPlayback();
-        playback.Update(Snapshot(CasinoRoomPhases.Result, "r1", new[] { 19 }), 6_000, 0f);
+        playback.Update(Snapshot(CasinoRoomPhases.Result, 1), Board(1, 19), 6_000, 0f);
         playback.Reset();
 
         Assert.Equal(WheelStage.Waiting, playback.Stage);

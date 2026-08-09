@@ -19,12 +19,17 @@ internal enum CasinoRoundVerdict
 // to the round id, read as big-endian 32-bit words with exact rejection sampling. Each draw
 // purpose names its own bound, so the replay consumes the stream exactly as the server did and
 // a single flipped seed bit shifts every draw.
+//
+// One purpose name is not enough to fix a bound on its own. Both wheels log their draw as
+// "segment" and they are different wheels: the wager rim has fifty segments and the free spin has
+// sixteen. The game kind therefore rides into the replay alongside the log, because reading a
+// sixteen segment draw against a fifty segment bound consumes the stream differently and would
+// accuse the house of cheating on every honest daily spin.
 internal static class CasinoVerifier
 {
     private const string ScratchPrizePurpose = "prize";
     private const string BarkeepPatronsPurpose = "patrons";
-    private const string WheelSegmentPurpose = "segment";
-    private const string DailySpinPurpose = "spin";
+    private const string SegmentPurpose = "segment";
     private const string BingoCardPurpose = "card";
     private const string BingoBallPurpose = "ball";
     private const uint BarkeepJitterBound = 3;
@@ -52,10 +57,11 @@ internal static class CasinoVerifier
             return CasinoRoundVerdict.Unrevealed;
         }
 
-        return Verify(round.SeedRevealed, round.SeedCommitHash, round.RoundId, round.DrawLog);
+        return Verify(round.GameKind, round.SeedRevealed, round.SeedCommitHash, round.RoundId, round.DrawLog);
     }
 
-    public static CasinoRoundVerdict Verify(string seedHex, string seedCommitHash, string roundId, string drawLog)
+    public static CasinoRoundVerdict Verify(string gameKind, string seedHex, string seedCommitHash, string roundId,
+        string drawLog)
     {
         byte[] seed;
         try
@@ -73,20 +79,44 @@ internal static class CasinoVerifier
             return CasinoRoundVerdict.Mismatch;
         }
 
-        return ReplaysDrawLog(seed, roundId, drawLog) ? CasinoRoundVerdict.Match : CasinoRoundVerdict.Mismatch;
+        return ReplaysDrawLog(gameKind, seed, roundId, drawLog)
+            ? CasinoRoundVerdict.Match
+            : CasinoRoundVerdict.Mismatch;
+    }
+
+    // Sixteen for the free spin, fifty for the wager rim, and nothing at all for a game kind this
+    // client does not know: guessing one of the two would give a round the strongest verdict on a
+    // coin flip, which is the one thing a verifier must never do.
+    internal static bool TrySegmentBound(string gameKind, out uint bound)
+    {
+        if (string.Equals(gameKind, CasinoWire.DailySpinKind, StringComparison.Ordinal))
+        {
+            bound = DailySpinRules.SegmentCount;
+            return true;
+        }
+
+        if (string.Equals(gameKind, CasinoWire.WheelKind, StringComparison.Ordinal))
+        {
+            bound = WheelRules.SegmentCount;
+            return true;
+        }
+
+        bound = 0;
+        return false;
     }
 
     // A revealed round that logs no draws is not evidence of fair play, it is the absence of it:
     // the commit alone proves a seed was published, never that this round fell out of it. The
     // verifier is the one component whose job is to distrust the server, so missing evidence
     // fails closed rather than earning the strongest verdict for free.
-    internal static bool ReplaysDrawLog(byte[] seed, string roundId, string drawLog)
+    internal static bool ReplaysDrawLog(string gameKind, byte[] seed, string roundId, string drawLog)
     {
         if (drawLog.Length == 0)
         {
             return false;
         }
 
+        TrySegmentBound(gameKind, out var segmentBound);
         var stream = new DrawStream(seed, roundId);
         var shuffles = default(ShuffleRun);
         var cursor = 0;
@@ -108,7 +138,8 @@ internal static class CasinoVerifier
                 return false;
             }
 
-            if (!TryBoundFor(purpose, shuffles.Next(purpose), out var bound) || loggedValue >= bound)
+            if (!TryBoundFor(purpose, shuffles.Next(purpose), segmentBound, out var bound)
+                || loggedValue >= bound)
             {
                 return false;
             }
@@ -126,21 +157,22 @@ internal static class CasinoVerifier
 
     // The purpose vocabulary is the union of every game engine: slots stops s{spin}r{reel}, scratch
     // prize roll plus winner/loser shuffles w{pick}/g{cell}/l{pick}, the barkeep script draws
-    // patrons/a{patron}/n{patron}/k{patron}.{step}, the wheel segment, the daily spin segment, and
-    // the two bingo shuffles. Every bound comes from the mirrored rules tables, so a new purpose on
-    // the wire fails closed as a mismatch.
+    // patrons/a{patron}/n{patron}/k{patron}.{step}, the segment both wheels draw, and the two bingo
+    // shuffles. Every bound comes from the mirrored rules tables, so a new purpose on the wire fails
+    // closed as a mismatch.
     //
-    // The bingo shuffles are the only purposes whose bound is not written on the label: a Fisher
-    // Yates pass narrows its range with every pick, and the engine logs each one under the same
-    // name. The bound therefore comes from how many draws of that purpose the log has already
-    // spent, which is exactly the number the server had spent when it made this one. A log that
-    // runs past the end of a shuffle has no honest bound left and fails closed.
-    internal static bool TryBoundFor(ReadOnlySpan<char> purpose, out uint bound)
+    // Two purposes do not carry their bound on the label. The bingo shuffles narrow with every pick
+    // and the engine logs each one under the same name, so the bound comes from how many draws of
+    // that purpose the log has already spent, which is exactly the number the server had spent when
+    // it made this one; a log that runs past the end of a shuffle has no honest bound left. The
+    // segment is the other: two different wheels share the name, so its bound arrives from the
+    // round's game kind and a zero there means no wheel this client knows, which fails closed.
+    internal static bool TryBoundFor(ReadOnlySpan<char> purpose, uint segmentBound, out uint bound)
     {
-        return TryBoundFor(purpose, 0, out bound);
+        return TryBoundFor(purpose, 0, segmentBound, out bound);
     }
 
-    internal static bool TryBoundFor(ReadOnlySpan<char> purpose, int occurrence, out uint bound)
+    internal static bool TryBoundFor(ReadOnlySpan<char> purpose, int occurrence, uint segmentBound, out uint bound)
     {
         bound = 0;
         if (occurrence < 0)
@@ -160,16 +192,10 @@ internal static class CasinoVerifier
             return true;
         }
 
-        if (purpose.SequenceEqual(WheelSegmentPurpose))
+        if (purpose.SequenceEqual(SegmentPurpose))
         {
-            bound = WheelRules.SegmentCount;
-            return true;
-        }
-
-        if (purpose.SequenceEqual(DailySpinPurpose))
-        {
-            bound = DailySpinRules.SegmentCount;
-            return true;
+            bound = segmentBound;
+            return segmentBound > 0;
         }
 
         if (purpose.SequenceEqual(BingoCardPurpose))

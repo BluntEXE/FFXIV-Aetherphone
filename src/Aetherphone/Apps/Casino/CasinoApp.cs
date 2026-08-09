@@ -95,7 +95,6 @@ internal sealed partial class CasinoApp : IPhoneApp
         coins.RefreshNow();
         casino.RefreshNow();
         casinoRooms.RefreshNow();
-        casinoSpin.RefreshNow();
         casinoPlay.RecoverPendingRound();
     }
 
@@ -138,7 +137,6 @@ internal sealed partial class CasinoApp : IPhoneApp
         coins.EnsureFresh();
         casino.EnsureFresh();
         casinoRooms.EnsureFresh();
-        casinoSpin.EnsureFresh();
         screenArea = context.Content;
         barkeep.Tick();
         cashier.Gate();

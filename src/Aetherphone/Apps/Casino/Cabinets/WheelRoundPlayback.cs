@@ -72,7 +72,8 @@ internal sealed class WheelRoundPlayback
         spinBegun = false;
     }
 
-    public void Update(CasinoRoomSnapshotDto? snapshot, long remainingMilliseconds, float deltaSeconds)
+    public void Update(CasinoRoomSnapshotDto? snapshot, CasinoWheelRoomStateDto? board,
+        long remainingMilliseconds, float deltaSeconds)
     {
         stageSeconds += deltaSeconds;
         if (snapshot is null)
@@ -80,12 +81,13 @@ internal sealed class WheelRoundPlayback
             return;
         }
 
-        if (!string.Equals(snapshot.RoundId, roundId, StringComparison.Ordinal))
+        var nextRoundId = RoundKeyOf(snapshot);
+        if (!string.Equals(nextRoundId, roundId, StringComparison.Ordinal))
         {
-            OpenRound(snapshot.RoundId);
+            OpenRound(nextRoundId);
         }
 
-        var drawn = DrawnSegment(snapshot);
+        var drawn = DrawnSegment(board);
         if (drawn >= 0 && !spinBegun)
         {
             BeginSpin(drawn, snapshot.Phase, remainingMilliseconds);
@@ -109,16 +111,25 @@ internal sealed class WheelRoundPlayback
         EnterStage(WheelStage.Locking);
     }
 
-    internal static int DrawnSegment(CasinoRoomSnapshotDto snapshot)
+    // A round is identified by the room and its index rather than by a round id, because the wheel
+    // has no id of its own until a bet mints one: the room turns whether or not this player played.
+    internal static string RoundKeyOf(CasinoRoomSnapshotDto snapshot)
     {
-        var numbers = snapshot.Numbers;
-        if (numbers is null || numbers.Length == 0)
+        return string.Concat(snapshot.RoomId, "#",
+            snapshot.RoundIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
+    }
+
+    // The rim stays still until the room publishes a segment, and it only publishes one once the
+    // window has closed and the draw has been made. Anything outside the rim reads as no draw at
+    // all rather than as segment zero, which would land the wheel on a 1x nobody spun.
+    internal static int DrawnSegment(CasinoWheelRoomStateDto? board)
+    {
+        if (board is null)
         {
             return -1;
         }
 
-        var drawn = numbers[0];
-        return WheelRules.IsSegment(drawn) ? drawn : -1;
+        return WheelRules.IsSegment(board.Segment) ? board.Segment : -1;
     }
 
     // A window longer than the spin hands back a negative elapsed on purpose: the choreography
