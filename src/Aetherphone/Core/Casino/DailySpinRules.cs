@@ -1,6 +1,6 @@
 namespace Aetherphone.Core.Casino;
 
-// The one wheel on the floor that pays coins instead of chips, and the only Saucer surface that
+// The one wheel on the floor that pays coins instead of chips, and the only Gamba surface that
 // mints rather than moves: a cash-out returns money the player already owned, so it stays quiet,
 // while this hands out coins that did not exist a moment ago, so it celebrates.
 //

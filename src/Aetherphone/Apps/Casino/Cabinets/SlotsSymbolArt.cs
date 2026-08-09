@@ -55,7 +55,7 @@ internal static class SlotsSymbolArt
                 DrawWild(drawList, center, extent, ink, shade, glint);
                 break;
             default:
-                DrawSaucer(drawList, center, extent, ink, glint);
+                DrawDisc(drawList, center, extent, ink, glint);
                 break;
         }
     }
@@ -202,7 +202,7 @@ internal static class SlotsSymbolArt
         DrawSparkle(drawList, center, extent * 0.62f, glint);
     }
 
-    private static void DrawSaucer(ImDrawListPtr drawList, Vector2 center, float extent, uint ink, uint glint)
+    private static void DrawDisc(ImDrawListPtr drawList, Vector2 center, float extent, uint ink, uint glint)
     {
         drawList.PathClear();
         drawList.PathArcTo(new Vector2(center.X, center.Y + extent * 0.05f), extent * 0.45f, MathF.PI,

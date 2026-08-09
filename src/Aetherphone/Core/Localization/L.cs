@@ -236,7 +236,7 @@ internal static class L
         public static readonly LocString Market = new("app.market", "Market");
         public static readonly LocString Wallet = new("app.wallet", "Wallet");
         public static readonly LocString Coin = new("app.coin", "Aether Coin");
-        public static readonly LocString Casino = new("app.casino", "Saucer");
+        public static readonly LocString Casino = new("app.casino", "Gamba");
         public static readonly LocString Music = new("app.music", "Music");
         public static readonly LocString Clock = new("app.clock", "Clock");
         public static readonly LocString Timers = new("app.timers", "Timers");
@@ -3751,7 +3751,7 @@ internal static class L
         public static readonly LocString ReasonTableClosed = new("casino.reasonTableClosed", "That table is not open right now. Another game will happily deal you in.");
         public static readonly LocString ReasonRoundOpen = new("casino.reasonRoundOpen", "There is still a round in play. Wrap it up, then cash out.");
         public static readonly LocString ReasonCapReached = new("casino.reasonCapReached", "Tonight's win cap stepped in, so the payout stops at the cap.");
-        public static readonly LocString ReasonUnreachable = new("casino.reasonUnreachable", "The Saucer could not be reached. Check your connection and try again.");
+        public static readonly LocString ReasonUnreachable = new("casino.reasonUnreachable", "Gamba could not be reached. Check your connection and try again.");
         public static readonly LocString HouseLimitTitle = new("casino.houseLimitTitle", "House limit");
         public static readonly LocString HouseLimitLine = new("casino.houseLimitLine", "Everyone's night stops at {0} down. House rule, no exceptions.");
         public static readonly LocString SelfLimitHeading = new("casino.selfLimitHeading", "Your own limit");
@@ -3780,9 +3780,9 @@ internal static class L
         public static readonly LocString SlotsPaysMatches = new("casino.slots.paysMatches", "Matches from the left, shown at your current stake");
         public static readonly LocString SlotsWildName = new("casino.slots.wildName", "Wild");
         public static readonly LocString SlotsWildNote = new("casino.slots.wildNote", "Stands in for any pay symbol on reels 2 to 4.");
-        public static readonly LocString SlotsScatterName = new("casino.slots.scatterName", "Saucer scatter");
-        public static readonly LocString SlotsScatterNote = new("casino.slots.scatterNote", "3, 4, or 5 saucers anywhere pay {0}, {1}, or {2} and start {3}, {4}, or {5} free spins.");
-        public static readonly LocString SlotsBonusNote = new("casino.slots.bonusNote", "Free spin wins pay double. More saucers add {0} spins, up to {1} in one round.");
+        public static readonly LocString SlotsScatterName = new("casino.slots.scatterName", "Disc scatter");
+        public static readonly LocString SlotsScatterNote = new("casino.slots.scatterNote", "3, 4, or 5 discs anywhere pay {0}, {1}, or {2} and start {3}, {4}, or {5} free spins.");
+        public static readonly LocString SlotsBonusNote = new("casino.slots.bonusNote", "Free spin wins pay double. More discs add {0} spins, up to {1} in one round.");
         public static readonly LocString SlotsCapRule = new("casino.slots.capRule", "One round never pays more than {0}x the stake.");
         public static readonly LocString CabinetNoChipsTitle = new("casino.cabinet.noChipsTitle", "No chips at this cabinet");
         public static readonly LocString CabinetNoChipsHint = new("casino.cabinet.noChipsHint", "Visit the cashier to buy in, then take a seat.");
@@ -3869,7 +3869,7 @@ internal static class L
         public static readonly LocString VerdictUnrevealedHint = new("casino.verdict.unrevealedHint", "This round has not settled yet, so its seed stays sealed. Check back once it wraps.");
         public static readonly LocString FairnessIntro = new("casino.fairness.intro", "Every game here is dealt from a sealed seed, and you can check any settled round yourself, right on this phone. Here is how it works.");
         public static readonly LocString FairnessLockTitle = new("casino.fairness.lockTitle", "Locked before you play");
-        public static readonly LocString FairnessLockBody = new("casino.fairness.lockBody", "Before a stake is accepted, the Saucer publishes a fingerprint of the round's secret seed. The outcome is fixed in that seed; nothing after your tap can bend it.");
+        public static readonly LocString FairnessLockBody = new("casino.fairness.lockBody", "Before a stake is accepted, Gamba publishes a fingerprint of the round's secret seed. The outcome is fixed in that seed; nothing after your tap can bend it.");
         public static readonly LocString FairnessRevealTitle = new("casino.fairness.revealTitle", "Revealed when it settles");
         public static readonly LocString FairnessRevealBody = new("casino.fairness.revealBody", "When the round settles, the seed itself is revealed. Hash it and it must match the fingerprint published up front, bit for bit.");
         public static readonly LocString FairnessReplayTitle = new("casino.fairness.replayTitle", "Checked on your device");
@@ -4943,10 +4943,10 @@ internal static class L
         public static readonly LocString YellowPagesDiscretionTitle = new("conduct.yellowpages.discretion.title", "Moderator Discretion");
         public static readonly LocString YellowPagesDiscretionBody = new("conduct.yellowpages.discretion.body", "Ads that are misleading, off-topic, or otherwise inappropriate for a public board may be removed at moderator discretion.");
 
-        public static readonly LocString CasinoTitle = new("conduct.casino.title", "Saucer House Rules");
+        public static readonly LocString CasinoTitle = new("conduct.casino.title", "Gamba House Rules");
         public static readonly LocString CasinoIntro = new("conduct.casino.intro", "Before you sit down at a table, please read the house rules.");
         public static readonly LocString CasinoPlayMoneyTitle = new("conduct.casino.playMoney.title", "Play Money Only");
-        public static readonly LocString CasinoPlayMoneyBody = new("conduct.casino.playMoney.body", "Aether Coin is a cosmetic currency with no real-world value. The Saucer is entertainment, the odds favor the house, and nothing here can be turned into anything real.");
+        public static readonly LocString CasinoPlayMoneyBody = new("conduct.casino.playMoney.body", "Aether Coin is a cosmetic currency with no real-world value. Gamba is entertainment, the odds favor the house, and nothing here can be turned into anything real.");
         public static readonly LocString CasinoRmtTitle = new("conduct.casino.rmt.title", "No Real-Money Trading");
         public static readonly LocString CasinoRmtLead = new("conduct.casino.rmt.lead", "Trading play money for anything real is enforced with clawbacks and bans. Do not:");
         public static readonly LocString[] CasinoRmtItems =
