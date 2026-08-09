@@ -59,6 +59,7 @@ internal sealed partial class CasinoApp : IPhoneApp
     {
         router.Reset();
         cashier.Close();
+        ResetLimitsEditor();
         coins.RefreshNow();
         casino.RefreshNow();
     }
@@ -67,6 +68,7 @@ internal sealed partial class CasinoApp : IPhoneApp
     {
         router.Reset();
         cashier.Close();
+        ResetLimitsEditor();
     }
 
     public void Draw(in PhoneContext context)

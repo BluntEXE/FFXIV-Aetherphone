@@ -4,6 +4,14 @@ namespace Aetherphone.Core.Aethernet.Clients;
 
 internal sealed class CasinoClient
 {
+    internal const string StatePath = "/casino";
+    internal const string OpenSittingPath = "/casino/sittings";
+    internal const string TopUpPath = "/casino/sittings/topup";
+    internal const string CloseSittingPath = "/casino/sittings/close";
+    internal const string LimitsPath = "/casino/limits";
+
+    internal const int SoloTableKind = 0;
+
     private readonly AethernetTransport net;
 
     public CasinoClient(AethernetTransport net)
@@ -13,34 +21,37 @@ internal sealed class CasinoClient
 
     public Task<CasinoStateDto?> GetStateAsync(CancellationToken token)
     {
-        return net.GetAsync("/casino/me", AethernetJsonContext.Default.CasinoStateDto, token);
+        return net.GetAsync(StatePath, AethernetJsonContext.Default.CasinoStateDto, token);
     }
 
-    public Task<CasinoSittingDto?> OpenSittingAsync(string clientSittingId, string gameKind, long amount,
+    public Task<CasinoSittingResultDto?> OpenSittingAsync(string clientSittingId, string clientActionId,
+        string gameKind, long amount, CancellationToken token)
+    {
+        return net.PostAsync(OpenSittingPath,
+            new CasinoOpenSittingRequest(clientSittingId, clientActionId, gameKind, SoloTableKind, amount),
+            AethernetJsonContext.Default.CasinoOpenSittingRequest,
+            AethernetJsonContext.Default.CasinoSittingResultDto, token);
+    }
+
+    public Task<CasinoSittingResultDto?> TopUpAsync(string sittingId, string clientActionId, long amount,
         CancellationToken token)
     {
-        return net.PostAsync("/casino/sittings", new CasinoOpenSittingRequest(clientSittingId, gameKind, amount),
-            AethernetJsonContext.Default.CasinoOpenSittingRequest, AethernetJsonContext.Default.CasinoSittingDto,
-            token);
+        return net.PostAsync(TopUpPath, new CasinoTopUpRequest(sittingId, clientActionId, amount),
+            AethernetJsonContext.Default.CasinoTopUpRequest,
+            AethernetJsonContext.Default.CasinoSittingResultDto, token);
     }
 
-    public Task<CasinoSittingDto?> TopUpAsync(string sittingId, string actionId, long amount, CancellationToken token)
+    public Task<CasinoSittingResultDto?> CloseSittingAsync(string sittingId, CancellationToken token)
     {
-        return net.PostAsync($"/casino/sittings/{Uri.EscapeDataString(sittingId)}/topup",
-            new CasinoTopUpRequest(actionId, amount), AethernetJsonContext.Default.CasinoTopUpRequest,
-            AethernetJsonContext.Default.CasinoSittingDto, token);
+        return net.PostAsync(CloseSittingPath, new CasinoCloseSittingRequest(sittingId),
+            AethernetJsonContext.Default.CasinoCloseSittingRequest,
+            AethernetJsonContext.Default.CasinoSittingResultDto, token);
     }
 
-    public Task<CasinoSittingDto?> CloseSittingAsync(string sittingId, string actionId, CancellationToken token)
+    public Task<CasinoLimitsDto?> SetLimitsAsync(long? selfLossLimit, CancellationToken token)
     {
-        return net.PostAsync($"/casino/sittings/{Uri.EscapeDataString(sittingId)}/cashout",
-            new CasinoCloseSittingRequest(actionId), AethernetJsonContext.Default.CasinoCloseSittingRequest,
-            AethernetJsonContext.Default.CasinoSittingDto, token);
-    }
-
-    public Task<CasinoStateDto?> SetLimitsAsync(long selfLossLimit, CancellationToken token)
-    {
-        return net.PostAsync("/casino/limits", new CasinoLimitsRequest(selfLossLimit),
-            AethernetJsonContext.Default.CasinoLimitsRequest, AethernetJsonContext.Default.CasinoStateDto, token);
+        return net.PostAsync(LimitsPath, new CasinoLimitRequest(selfLossLimit),
+            AethernetJsonContext.Default.CasinoLimitRequest,
+            AethernetJsonContext.Default.CasinoLimitsDto, token);
     }
 }

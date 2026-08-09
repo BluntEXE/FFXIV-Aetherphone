@@ -32,16 +32,31 @@ public sealed class CasinoEconomyBridgeTests
     }
 
     [Fact]
-    public void CasinoRuleIdsSkipTheEarnCelebration()
+    public void CasinoMoneyMoveRuleIdsSkipTheEarnCelebration()
     {
         Assert.True(CasinoLedgerRules.SkipsEarnCelebration(CasinoLedgerRules.BuyIn));
         Assert.True(CasinoLedgerRules.SkipsEarnCelebration(CasinoLedgerRules.CashOut));
         Assert.True(CasinoLedgerRules.SkipsEarnCelebration(CasinoLedgerRules.Refund));
-        Assert.True(CasinoLedgerRules.SkipsEarnCelebration(CasinoLedgerRules.Daily));
         Assert.True(CasinoLedgerRules.SkipsEarnCelebration("casino.future"));
         Assert.False(CasinoLedgerRules.SkipsEarnCelebration("coin.checkin"));
         Assert.False(CasinoLedgerRules.SkipsEarnCelebration("call.connected"));
         Assert.False(CasinoLedgerRules.SkipsEarnCelebration("casino"));
+    }
+
+    [Fact]
+    public void TheDailySpinCelebratesLikeAnyOtherEarn()
+    {
+        Assert.False(CasinoLedgerRules.SkipsEarnCelebration(CasinoLedgerRules.Daily));
+
+        var items = new[]
+        {
+            Entry("1", CasinoLedgerRules.Daily, 10),
+            Entry("2", CasinoLedgerRules.CashOut, 200),
+        };
+        var slice = CoinStore.CollectEarnDelta(items, 210, out var celebratedDelta);
+        var celebrated = Assert.Single(slice);
+        Assert.Equal(CasinoLedgerRules.Daily, celebrated.RuleId);
+        Assert.Equal(10, celebratedDelta);
     }
 
     [Fact]

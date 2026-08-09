@@ -8,5 +8,5 @@ internal static class CasinoGames
     public const string Scratch = "scratch";
     public const string Bingo = "bingo";
     public const string Wheel = "wheel";
-    public const string Barkeep = "barkeep";
+    public const string Barkeep = "bartender";
 }

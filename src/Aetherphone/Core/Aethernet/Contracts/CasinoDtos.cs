@@ -1,37 +1,52 @@
 namespace Aetherphone.Core.Aethernet.Contracts;
 
-internal sealed record CasinoStateDto(
-    string SittingId = "",
+internal sealed record CasinoSittingDto(
+    string Id = "",
     string TableId = "",
     string GameKind = "",
+    int State = 0,
     long Stack = 0,
     long ChipsIn = 0,
-    long NetToday = 0,
-    long LossLimit = 0,
-    long LossHeadroom = 0,
-    long SelfLimit = 0,
-    long PendingRaiseLimit = 0,
-    long PendingRaiseDay = 0,
+    long ChipsOut = 0);
+
+internal sealed record CasinoStateDto(
     bool StakesPaused = false,
     bool Draining = false,
+    CasinoSittingDto? Sitting = null,
     long MinBuyIn = 0,
     long MaxBuyIn = 0,
-    string Reason = "");
+    long DailyBuyInCap = 0,
+    long LossLimit = 0,
+    long LossHeadroom = 0,
+    long? SelfLossLimit = null,
+    long? PendingRaiseLimit = null,
+    long? PendingRaiseAtUnix = null,
+    long NetLossToday = 0,
+    long AtRisk = 0,
+    long BuyInToday = 0,
+    long Balance = 0);
 
-internal sealed record CasinoSittingDto(
-    string SittingId = "",
-    string TableId = "",
-    string GameKind = "",
-    long Stack = 0,
-    long ChipsIn = 0,
-    long ChipsOut = 0,
-    long Balance = 0,
-    string Reason = "");
+internal sealed record CasinoOpenSittingRequest(
+    string ClientSittingId,
+    string ClientActionId,
+    string GameKind,
+    int TableKind,
+    long Amount);
 
-internal sealed record CasinoOpenSittingRequest(string ClientSittingId, string GameKind, long Amount);
+internal sealed record CasinoTopUpRequest(string SittingId, string ClientActionId, long Amount);
 
-internal sealed record CasinoTopUpRequest(string ActionId, long Amount);
+internal sealed record CasinoCloseSittingRequest(string SittingId);
 
-internal sealed record CasinoCloseSittingRequest(string ActionId);
+internal sealed record CasinoSittingResultDto(
+    bool Granted = false,
+    string Reason = "",
+    CasinoSittingDto? Sitting = null,
+    long Balance = 0);
 
-internal sealed record CasinoLimitsRequest(long SelfLossLimit);
+internal sealed record CasinoLimitRequest(long? SelfLossLimit);
+
+internal sealed record CasinoLimitsDto(
+    long LossLimit = 0,
+    long? SelfLossLimit = null,
+    long? PendingRaiseLimit = null,
+    long? PendingRaiseAtUnix = null);

@@ -28,8 +28,9 @@ internal sealed class CashierDrawer
     private const float ChipHeight = 30f;
     private const float FieldHeight = 40f;
     private const float PillHeight = 44f;
-    private const long FallbackMinBuyIn = 10;
+    private const long FallbackMinBuyIn = 100;
     private const long FallbackMaxBuyIn = 2000;
+    private const long MinTopUp = 1;
 
     private readonly CasinoStore store;
     private readonly CoinStore coins;
@@ -132,6 +133,11 @@ internal sealed class CashierDrawer
         {
             HandleOutcome(closed.Reason, openLimits, false);
         }
+
+        if (store.TakeMoneyMoveFailure())
+        {
+            HandleOutcome(CasinoReasons.Unreachable, openLimits, false);
+        }
     }
 
     private void HandleOutcome(string reason, Action openLimits, bool clearAmount)
@@ -169,7 +175,7 @@ internal sealed class CashierDrawer
         var scale = UiScale.Current;
         var state = store.State;
         var wallet = coins.Wallet;
-        var sittingOpen = state is not null && state.SittingId.Length > 0;
+        var sittingOpen = state?.Sitting is not null;
         var frozen = wallet?.FrozenUntilUnix is not null;
         var paused = state?.StakesPaused == true;
         var draining = state?.Draining == true;
@@ -268,7 +274,7 @@ internal sealed class CashierDrawer
         if (sittingOpen)
         {
             y += SectionGap * scale;
-            DrawCashOut(drawList, ui, state!, left, y, innerWidth, scale, interactive);
+            DrawCashOut(drawList, ui, state!.Sitting!, left, y, innerWidth, scale, interactive);
         }
 
         return new Rect(panelMin, panelMax);
@@ -293,13 +299,13 @@ internal sealed class CashierDrawer
 
         if (sittingOpen)
         {
-            var stackText = (state?.Stack ?? 0).ToString("N0", Loc.Culture);
-            DrawSummaryRow(drawList, ui, GameLabel(state?.GameKind ?? string.Empty, games), stackText, left, rowY,
-                innerWidth, scale, ui.Accent);
+            var stackText = (state?.Sitting?.Stack ?? 0).ToString("N0", Loc.Culture);
+            DrawSummaryRow(drawList, ui, GameLabel(state?.Sitting?.GameKind ?? string.Empty, games), stackText,
+                left, rowY, innerWidth, scale, ui.Accent);
             rowY += SummaryRowHeight * scale;
         }
 
-        var net = state?.NetToday ?? 0;
+        var net = state?.NetLossToday ?? 0;
         var tonight = net switch
         {
             > 0 => Loc.T(L.Casino.TonightDown, net.ToString("N0", Loc.Culture)),
@@ -405,13 +411,14 @@ internal sealed class CashierDrawer
     {
         var minBuyIn = state is { MinBuyIn: > 0 } ? state.MinBuyIn : FallbackMinBuyIn;
         var maxBuyIn = state is { MaxBuyIn: > 0 } ? state.MaxBuyIn : FallbackMaxBuyIn;
-        var room = sittingOpen ? Math.Max(0, maxBuyIn - (state?.ChipsIn ?? 0)) : maxBuyIn;
+        var minAmount = sittingOpen ? MinTopUp : minBuyIn;
+        var room = sittingOpen ? Math.Max(0, maxBuyIn - (state?.Sitting?.ChipsIn ?? 0)) : maxBuyIn;
         var balance = wallet?.Balance ?? 0;
         var effectiveMax = Math.Min(room, balance);
 
         var heading = sittingOpen ? Loc.T(L.Casino.TopUp) : Loc.T(L.Casino.BuyIn);
         Typography.Draw(drawList, new Vector2(left, y), heading, ui.MutedInk, TextStyles.FootnoteEmphasized);
-        var bounds = Loc.T(L.Casino.BuyInBounds, minBuyIn.ToString("N0", Loc.Culture),
+        var bounds = Loc.T(L.Casino.BuyInBounds, minAmount.ToString("N0", Loc.Culture),
             effectiveMax.ToString("N0", Loc.Culture));
         var boundsSize = Typography.Measure(bounds, TextStyles.Footnote);
         Typography.Draw(drawList, new Vector2(left + innerWidth - boundsSize.X, y), bounds, ui.MutedInk,
@@ -435,8 +442,8 @@ internal sealed class CashierDrawer
         var presetWidth = (innerWidth - fieldWidth - 3f * 8f * scale) / 3f;
         var presetLeft = fieldMax.X + 8f * scale;
         Span<long> presetValues = stackalloc long[3];
-        presetValues[0] = minBuyIn;
-        presetValues[1] = Math.Max(minBuyIn, effectiveMax / 2);
+        presetValues[0] = minAmount;
+        presetValues[1] = Math.Max(minAmount, effectiveMax / 2);
         presetValues[2] = effectiveMax;
         var presetLabels = PresetLabels;
         for (var index = 0; index < 3; index++)
@@ -444,7 +451,7 @@ internal sealed class CashierDrawer
             var chipMin = new Vector2(presetLeft, y + (FieldHeight - ChipHeight) * 0.5f * scale);
             var chipMax = new Vector2(presetLeft + presetWidth, chipMin.Y + ChipHeight * scale);
             if (RawChip(drawList, new Rect(chipMin, chipMax), Loc.T(presetLabels[index]), false, ui, scale,
-                    interactive && effectiveMax >= minBuyIn))
+                    interactive && effectiveMax >= minAmount))
             {
                 amountBuffer = presetValues[index].ToString(Loc.Culture);
             }
@@ -455,7 +462,7 @@ internal sealed class CashierDrawer
         y += FieldHeight * scale + SectionGap * scale;
 
         var amount = ParseAmount();
-        var amountValid = amount >= minBuyIn && amount <= effectiveMax && effectiveMax >= minBuyIn;
+        var amountValid = amount >= minAmount && amount <= effectiveMax && effectiveMax >= minAmount;
         var busy = store.MovingMoney;
         var label = amount > 0 && amountValid
             ? Loc.T(sittingOpen ? L.Casino.TopUpFor : L.Casino.BuyInFor, amount.ToString("N0", Loc.Culture))
@@ -505,10 +512,10 @@ internal sealed class CashierDrawer
         });
     }
 
-    private void DrawCashOut(ImDrawListPtr drawList, AppSkin ui, CasinoStateDto state,
+    private void DrawCashOut(ImDrawListPtr drawList, AppSkin ui, CasinoSittingDto sitting,
         float left, float y, float innerWidth, float scale, bool interactive)
     {
-        var stackText = state.Stack.ToString("N0", Loc.Culture);
+        var stackText = sitting.Stack.ToString("N0", Loc.Culture);
         var rect = new Rect(new Vector2(left, y), new Vector2(left + innerWidth, y + PillHeight * scale));
         var canCashOut = interactive && !store.MovingMoney;
         if (RawPill(drawList, rect, Loc.T(L.Casino.CashOutFor, stackText), false, canCashOut, ui, scale))

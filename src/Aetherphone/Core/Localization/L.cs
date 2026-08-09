@@ -3746,6 +3746,11 @@ internal static class L
         public static readonly LocString ReasonInsufficient = new("casino.reasonInsufficient", "Not enough coins in the wallet for that.");
         public static readonly LocString ReasonFrozen = new("casino.reasonFrozen", "Your wallet is frozen right now, so the chips have to wait.");
         public static readonly LocString ReasonGeneric = new("casino.reasonGeneric", "That did not go through. Give it another try.");
+        public static readonly LocString ReasonExpired = new("casino.reasonExpired", "That table already settled and sent the chips home to your wallet.");
+        public static readonly LocString ReasonTableClosed = new("casino.reasonTableClosed", "That table is not open right now. Another game will happily deal you in.");
+        public static readonly LocString ReasonRoundOpen = new("casino.reasonRoundOpen", "There is still a round in play. Wrap it up, then cash out.");
+        public static readonly LocString ReasonCapReached = new("casino.reasonCapReached", "Tonight's win cap stepped in, so the payout stops at the cap.");
+        public static readonly LocString ReasonUnreachable = new("casino.reasonUnreachable", "The Saucer could not be reached. Check your connection and try again.");
         public static readonly LocString HouseLimitTitle = new("casino.houseLimitTitle", "House limit");
         public static readonly LocString HouseLimitLine = new("casino.houseLimitLine", "Everyone's night stops at {0} down. House rule, no exceptions.");
         public static readonly LocString SelfLimitHeading = new("casino.selfLimitHeading", "Your own limit");

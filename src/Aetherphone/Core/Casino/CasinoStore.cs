@@ -15,15 +15,18 @@ internal sealed class CasinoStore : IDisposable
     private readonly CasinoClient casino;
     private readonly CoinStore coins;
     private readonly StoreWork work = new("Casino");
+    private readonly object pendingSittingsSwapLock = new();
 
     private volatile CasinoStateDto? state;
     private volatile bool openingSitting;
     private volatile bool toppingUp;
     private volatile bool closingSitting;
     private volatile bool savingLimits;
-    private CasinoSittingDto? sittingResult;
-    private CasinoSittingDto? closeResult;
-    private CasinoStateDto? limitsResult;
+    private CasinoSittingResultDto? sittingResult;
+    private CasinoSittingResultDto? closeResult;
+    private CasinoLimitsDto? limitsResult;
+    private int moneyMoveFailed;
+    private int limitsSaveFailed;
     private long stateLoadedAtTick;
     private long stateAttemptedAtTick;
     private int fetchingState;
@@ -60,9 +63,8 @@ internal sealed class CasinoStore : IDisposable
                 return string.Empty;
             }
 
-            return configuration.PendingCasinoSittings.TryGetValue(contentId, out var sittingId)
-                ? sittingId
-                : string.Empty;
+            var snapshot = configuration.PendingCasinoSittings;
+            return snapshot.TryGetValue(contentId, out var sittingId) ? sittingId : string.Empty;
         }
     }
 
@@ -78,19 +80,29 @@ internal sealed class CasinoStore : IDisposable
         RefreshState(0);
     }
 
-    public CasinoSittingDto? TakeSittingResult()
+    public CasinoSittingResultDto? TakeSittingResult()
     {
         return Interlocked.Exchange(ref sittingResult, null);
     }
 
-    public CasinoSittingDto? TakeCloseResult()
+    public CasinoSittingResultDto? TakeCloseResult()
     {
         return Interlocked.Exchange(ref closeResult, null);
     }
 
-    public CasinoStateDto? TakeLimitsResult()
+    public CasinoLimitsDto? TakeLimitsResult()
     {
         return Interlocked.Exchange(ref limitsResult, null);
+    }
+
+    public bool TakeMoneyMoveFailure()
+    {
+        return Interlocked.Exchange(ref moneyMoveFailed, 0) != 0;
+    }
+
+    public bool TakeLimitsFailure()
+    {
+        return Interlocked.Exchange(ref limitsSaveFailed, 0) != 0;
     }
 
     public void OpenSitting(string gameKind, long amount)
@@ -102,37 +114,36 @@ internal sealed class CasinoStore : IDisposable
 
         openingSitting = true;
         var clientSittingId = Guid.NewGuid().ToString("N");
+        var clientActionId = Guid.NewGuid().ToString("N");
         RememberPendingSitting(clientSittingId);
         work.Run("open sitting", async token =>
         {
-            var result = await casino.OpenSittingAsync(clientSittingId, gameKind, amount, token)
+            var result = await casino.OpenSittingAsync(clientSittingId, clientActionId, gameKind, amount, token)
                 .ConfigureAwait(false);
-            Interlocked.Exchange(ref sittingResult, result);
-            AbsorbSitting(result);
+            AbsorbMoneyMove(result, ref sittingResult);
         }, () => openingSitting = false);
     }
 
     public void TopUp(long amount)
     {
-        var sittingId = state?.SittingId ?? string.Empty;
+        var sittingId = state?.Sitting?.Id ?? string.Empty;
         if (MovingMoney || !session.IsSignedIn || amount <= 0 || sittingId.Length == 0)
         {
             return;
         }
 
         toppingUp = true;
-        var actionId = Guid.NewGuid().ToString("N");
+        var clientActionId = Guid.NewGuid().ToString("N");
         work.Run("top up", async token =>
         {
-            var result = await casino.TopUpAsync(sittingId, actionId, amount, token).ConfigureAwait(false);
-            Interlocked.Exchange(ref sittingResult, result);
-            AbsorbSitting(result);
+            var result = await casino.TopUpAsync(sittingId, clientActionId, amount, token).ConfigureAwait(false);
+            AbsorbMoneyMove(result, ref sittingResult);
         }, () => toppingUp = false);
     }
 
     public void CloseSitting()
     {
-        var sittingId = state?.SittingId ?? string.Empty;
+        var sittingId = state?.Sitting?.Id ?? string.Empty;
         if (sittingId.Length == 0)
         {
             sittingId = PendingSittingId;
@@ -144,16 +155,14 @@ internal sealed class CasinoStore : IDisposable
         }
 
         closingSitting = true;
-        var actionId = Guid.NewGuid().ToString("N");
         work.Run("close sitting", async token =>
         {
-            var result = await casino.CloseSittingAsync(sittingId, actionId, token).ConfigureAwait(false);
-            Interlocked.Exchange(ref closeResult, result);
-            AbsorbSitting(result);
+            var result = await casino.CloseSittingAsync(sittingId, token).ConfigureAwait(false);
+            AbsorbMoneyMove(result, ref closeResult);
         }, () => closingSitting = false);
     }
 
-    public void SetLimits(long selfLossLimit)
+    public void SetLimits(long? selfLossLimit)
     {
         if (savingLimits || !session.IsSignedIn)
         {
@@ -164,25 +173,42 @@ internal sealed class CasinoStore : IDisposable
         work.Run("set limits", async token =>
         {
             var result = await casino.SetLimitsAsync(selfLossLimit, token).ConfigureAwait(false);
-            Interlocked.Exchange(ref limitsResult, result);
-            if (result is null || result.Reason.Length > 0)
+            if (result is null)
             {
+                Interlocked.Exchange(ref limitsSaveFailed, 1);
                 return;
             }
 
-            state = result;
-            Interlocked.Exchange(ref stateLoadedAtTick, Environment.TickCount64);
-            ReconcilePendingSitting(result);
+            Interlocked.Exchange(ref limitsResult, result);
+            var current = state;
+            if (current is not null)
+            {
+                state = MergeLimits(current, result);
+            }
         }, () => savingLimits = false);
     }
 
-    private void AbsorbSitting(CasinoSittingDto? result)
+    internal static CasinoStateDto MergeLimits(CasinoStateDto current, CasinoLimitsDto limits)
+    {
+        return current with
+        {
+            LossLimit = limits.LossLimit,
+            LossHeadroom = Math.Max(0, limits.LossLimit - current.NetLossToday - current.AtRisk),
+            SelfLossLimit = limits.SelfLossLimit,
+            PendingRaiseLimit = limits.PendingRaiseLimit,
+            PendingRaiseAtUnix = limits.PendingRaiseAtUnix,
+        };
+    }
+
+    private void AbsorbMoneyMove(CasinoSittingResultDto? result, ref CasinoSittingResultDto? slot)
     {
         if (result is null)
         {
+            Interlocked.Exchange(ref moneyMoveFailed, 1);
             return;
         }
 
+        Interlocked.Exchange(ref slot, result);
         coins.AbsorbLocalAward(result.Balance);
         RefreshNow();
     }
@@ -197,6 +223,8 @@ internal sealed class CasinoStore : IDisposable
             Interlocked.Exchange(ref sittingResult, null);
             Interlocked.Exchange(ref closeResult, null);
             Interlocked.Exchange(ref limitsResult, null);
+            Interlocked.Exchange(ref moneyMoveFailed, 0);
+            Interlocked.Exchange(ref limitsSaveFailed, 0);
             Interlocked.Exchange(ref stateLoadedAtTick, 0);
             Interlocked.Exchange(ref stateAttemptedAtTick, 0);
             if (session.IsSignedIn)
@@ -260,9 +288,10 @@ internal sealed class CasinoStore : IDisposable
             return;
         }
 
-        if (fresh.SittingId.Length > 0)
+        var sittingId = fresh.Sitting?.Id ?? string.Empty;
+        if (sittingId.Length > 0)
         {
-            RememberPendingSitting(fresh.SittingId);
+            RememberPendingSitting(sittingId);
         }
         else
         {
@@ -278,22 +307,42 @@ internal sealed class CasinoStore : IDisposable
             return;
         }
 
-        if (configuration.PendingCasinoSittings.TryGetValue(contentId, out var known) &&
-            string.Equals(known, sittingId, StringComparison.Ordinal))
+        lock (pendingSittingsSwapLock)
         {
-            return;
+            var snapshot = configuration.PendingCasinoSittings;
+            if (snapshot.TryGetValue(contentId, out var known) &&
+                string.Equals(known, sittingId, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            var next = new Dictionary<ulong, string>(snapshot);
+            next[contentId] = sittingId;
+            configuration.PendingCasinoSittings = next;
         }
 
-        configuration.PendingCasinoSittings[contentId] = sittingId;
         configuration.Save();
     }
 
     private void ClearPendingSitting()
     {
         var contentId = session.ActiveContentId;
-        if (contentId == 0 || !configuration.PendingCasinoSittings.Remove(contentId))
+        if (contentId == 0)
         {
             return;
+        }
+
+        lock (pendingSittingsSwapLock)
+        {
+            var snapshot = configuration.PendingCasinoSittings;
+            if (!snapshot.ContainsKey(contentId))
+            {
+                return;
+            }
+
+            var next = new Dictionary<ulong, string>(snapshot);
+            next.Remove(contentId);
+            configuration.PendingCasinoSittings = next;
         }
 
         configuration.Save();

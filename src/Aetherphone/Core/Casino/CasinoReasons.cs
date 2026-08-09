@@ -14,6 +14,11 @@ internal static class CasinoReasons
     public const string SittingOpen = "sitting_open";
     public const string Insufficient = "insufficient";
     public const string Frozen = "frozen";
+    public const string Expired = "expired";
+    public const string TableClosed = "table_closed";
+    public const string RoundOpen = "round_open";
+    public const string CapReached = "cap_reached";
+    public const string Unreachable = "unreachable";
 
     public static readonly string[] All =
     {
@@ -26,6 +31,11 @@ internal static class CasinoReasons
         SittingOpen,
         Insufficient,
         Frozen,
+        Expired,
+        TableClosed,
+        RoundOpen,
+        CapReached,
+        Unreachable,
     };
 
     private static readonly FrozenDictionary<string, LocString> Messages = new Dictionary<string, LocString>
@@ -39,6 +49,11 @@ internal static class CasinoReasons
         [SittingOpen] = L.Casino.ReasonSittingOpen,
         [Insufficient] = L.Casino.ReasonInsufficient,
         [Frozen] = L.Casino.ReasonFrozen,
+        [Expired] = L.Casino.ReasonExpired,
+        [TableClosed] = L.Casino.ReasonTableClosed,
+        [RoundOpen] = L.Casino.ReasonRoundOpen,
+        [CapReached] = L.Casino.ReasonCapReached,
+        [Unreachable] = L.Casino.ReasonUnreachable,
     }.ToFrozenDictionary(StringComparer.Ordinal);
 
     public static bool TryMessage(string reason, out LocString message)

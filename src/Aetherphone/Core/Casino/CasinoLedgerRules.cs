@@ -11,6 +11,11 @@ internal static class CasinoLedgerRules
 
     public static bool SkipsEarnCelebration(string ruleId)
     {
+        if (string.Equals(ruleId, Daily, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
         return ruleId.StartsWith(RulePrefix, StringComparison.Ordinal);
     }
 }

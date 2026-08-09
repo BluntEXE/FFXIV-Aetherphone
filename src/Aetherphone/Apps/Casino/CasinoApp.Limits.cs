@@ -18,7 +18,18 @@ internal sealed partial class CasinoApp
 
     private string limitsBuffer = string.Empty;
     private bool limitsSeeded;
+    private string limitsSeededAccount = string.Empty;
     private long limitsSavedAtTick;
+
+    private void ResetLimitsEditor()
+    {
+        limitsBuffer = string.Empty;
+        limitsSeeded = false;
+        limitsSeededAccount = string.Empty;
+        limitsSavedAtTick = 0;
+        casino.TakeLimitsResult();
+        casino.TakeLimitsFailure();
+    }
 
     private void DrawLimits(Rect body)
     {
@@ -53,32 +64,38 @@ internal sealed partial class CasinoApp
 
     private void ConsumeLimitsResult()
     {
+        if (casino.TakeLimitsFailure())
+        {
+            confirm.Alert(null, Loc.T(CasinoReasons.MessageFor(CasinoReasons.Unreachable)), Loc.T(L.Common.Close));
+        }
+
         var result = casino.TakeLimitsResult();
         if (result is null)
         {
             return;
         }
 
-        if (result.Reason.Length == 0)
-        {
-            limitsSeeded = false;
-            limitsSavedAtTick = Environment.TickCount64;
-            return;
-        }
-
-        confirm.Alert(null, Loc.T(CasinoReasons.MessageFor(result.Reason)), Loc.T(L.Common.Close));
+        limitsSeeded = false;
+        limitsSavedAtTick = Environment.TickCount64;
     }
 
     private void SeedLimitsBuffer(CasinoStateDto state)
     {
-        if (limitsSeeded)
+        var account = session.CurrentUser?.Id ?? string.Empty;
+        if (limitsSeeded && string.Equals(account, limitsSeededAccount, StringComparison.Ordinal))
         {
             return;
         }
 
-        var current = state.SelfLimit > 0 ? state.SelfLimit : CasinoLimits.HouseDailyLossLimit;
+        if (!string.Equals(account, limitsSeededAccount, StringComparison.Ordinal))
+        {
+            limitsSavedAtTick = 0;
+        }
+
+        var current = state.SelfLossLimit ?? CasinoLimits.HouseDailyLossLimit;
         limitsBuffer = current.ToString(Loc.Culture);
         limitsSeeded = true;
+        limitsSeededAccount = account;
     }
 
     private void DrawLimitReachedCard(float scale)
@@ -124,10 +141,10 @@ internal sealed partial class CasinoApp
         var origin = ImGui.GetCursorScreenPos();
         var inset = 14f * scale;
         var heading = Loc.T(L.Casino.NetHeading);
-        var tonight = state.NetToday switch
+        var tonight = state.NetLossToday switch
         {
-            > 0 => Loc.T(L.Casino.TonightDown, state.NetToday.ToString("N0", Loc.Culture)),
-            < 0 => Loc.T(L.Casino.TonightUp, (-state.NetToday).ToString("N0", Loc.Culture)),
+            > 0 => Loc.T(L.Casino.TonightDown, state.NetLossToday.ToString("N0", Loc.Culture)),
+            < 0 => Loc.T(L.Casino.TonightUp, (-state.NetLossToday).ToString("N0", Loc.Culture)),
             _ => Loc.T(L.Casino.TonightEven),
         };
         var room = Loc.T(L.Casino.RoomLeft, Math.Max(0, state.LossHeadroom).ToString("N0", Loc.Culture));
@@ -189,9 +206,12 @@ internal sealed partial class CasinoApp
         Typography.Draw(drawList, currentOrigin, currentLine, ui.TitleInk, TextStyles.Subheadline);
         ImGui.Dummy(new Vector2(width, currentSize.Y + 6f * scale));
 
-        if (state.PendingRaiseLimit > 0)
+        var pendingRaise = state.PendingRaiseAtUnix is not null
+            ? state.PendingRaiseLimit ?? CasinoLimits.HouseDailyLossLimit
+            : 0;
+        if (pendingRaise > 0)
         {
-            var pending = Loc.T(L.Casino.PendingRaise, state.PendingRaiseLimit.ToString("N0", Loc.Culture));
+            var pending = Loc.T(L.Casino.PendingRaise, pendingRaise.ToString("N0", Loc.Culture));
             var pendingOrigin = ImGui.GetCursorScreenPos();
             var pendingSize = Typography.Measure(pending, TextStyles.Footnote);
             Typography.Draw(drawList, pendingOrigin, pending, ui.Accent, TextStyles.Footnote);
@@ -217,16 +237,16 @@ internal sealed partial class CasinoApp
             out var value)
             ? value
             : 0;
-        var currentSelf = state.SelfLimit > 0 ? state.SelfLimit : CasinoLimits.HouseDailyLossLimit;
+        var currentSelf = state.SelfLossLimit ?? CasinoLimits.HouseDailyLossLimit;
         var valid = typed >= CasinoLimits.SelfLimitFloor && typed <= CasinoLimits.HouseDailyLossLimit;
-        var changed = typed != currentSelf && typed != state.PendingRaiseLimit;
+        var changed = typed != currentSelf && typed != pendingRaise;
         var saveRect = new Rect(
             new Vector2(fieldMax.X + 10f * scale, fieldOrigin.Y + (LimitFieldHeight - LimitPillHeight) * 0.5f * scale),
             new Vector2(fieldOrigin.X + width, fieldOrigin.Y + (LimitFieldHeight + LimitPillHeight) * 0.5f * scale));
         var canSave = valid && changed && !casino.SavingLimits;
         if (AppSkin.PillButton(saveRect, Loc.T(L.Casino.SelfLimitSave), true, canSave, theme))
         {
-            casino.SetLimits(typed);
+            casino.SetLimits(typed == CasinoLimits.HouseDailyLossLimit ? null : typed);
         }
 
         ImGui.SetCursorScreenPos(fieldOrigin);

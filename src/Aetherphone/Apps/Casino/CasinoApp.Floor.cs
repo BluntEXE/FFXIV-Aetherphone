@@ -57,9 +57,9 @@ internal sealed partial class CasinoApp
         }
 
         var state = casino.State;
-        if (state is not null && state.SittingId.Length > 0)
+        if (state?.Sitting is not null)
         {
-            DrawChipsInPlayRow(state, scale);
+            DrawChipsInPlayRow(state.Sitting, scale);
         }
 
         if (state is not null && (state.StakesPaused || state.Draining))
@@ -153,7 +153,7 @@ internal sealed partial class CasinoApp
         Typography.DrawCentered(drawList, (chipMin + chipMax) * 0.5f, label, ui.MutedInk, TextStyles.Caption1);
     }
 
-    private void DrawChipsInPlayRow(Core.Aethernet.Contracts.CasinoStateDto state, float scale)
+    private void DrawChipsInPlayRow(Core.Aethernet.Contracts.CasinoSittingDto sitting, float scale)
     {
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
@@ -171,8 +171,8 @@ internal sealed partial class CasinoApp
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        var label = Loc.T(L.Casino.ChipsAt, state.Stack.ToString("N0", Loc.Culture),
-            Loc.T(GameName(ClientGameId(state.GameKind))));
+        var label = Loc.T(L.Casino.ChipsAt, sitting.Stack.ToString("N0", Loc.Culture),
+            Loc.T(GameName(ClientGameId(sitting.GameKind))));
         var chevronCenter = new Vector2(row.Max.X - 18f * scale, row.Center.Y);
         var fitted = Typography.FitText(label, chevronCenter.X - 14f * scale - row.Min.X - 14f * scale,
             TextStyles.SubheadlineEmphasized);
