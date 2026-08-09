@@ -278,8 +278,18 @@ internal sealed partial class ChirperApp : IPhoneApp
         TourHolds.Release(Id);
         var segmentHeight = 38f * scale;
         var tabsRect = new Rect(new Vector2(area.Min.X + 16f * scale, top + 2f * scale),
-            new Vector2(area.Max.X - 16f * scale, top + 2f * scale + segmentHeight));
+            new Vector2(area.Max.X - 16f * scale - segmentHeight - 8f * scale, top + 2f * scale + segmentHeight));
         UiAnchors.Report("chirper.tabs", tabsRect);
+        var mediaOn = configuration.ChirperShowMediaPosts;
+        var mediaCenter = new Vector2(area.Max.X - 16f * scale - segmentHeight * 0.5f, tabsRect.Center.Y);
+        if (ui.IconButton(mediaCenter, segmentHeight * 0.5f, FontAwesomeIcon.Image.ToIconString(),
+                mediaOn ? Accent : AppPalettes.Chirper.MutedInk, AppPalettes.Chirper.FieldSurface, 1.1f,
+                Loc.T(L.Settings.ChirperMediaPosts), HoverLabelSide.Below))
+        {
+            configuration.ChirperShowMediaPosts = !mediaOn;
+            configuration.Save();
+        }
+
         var selected = SegmentSlider.Draw(tabsRect, Loc.T(L.Chirper.ForYou), Loc.T(L.Chirper.Following),
             (int)activeScope, ref tabSegmentAnim, Accent, AppPalettes.Chirper.MutedInk);
         if (selected != (int)activeScope)
