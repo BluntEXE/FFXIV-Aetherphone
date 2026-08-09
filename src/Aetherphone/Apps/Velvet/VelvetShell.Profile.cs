@@ -154,6 +154,9 @@ internal sealed partial class VelvetShell
                 WrapText(user.Intro, VelvetTheme.BodyInk, TextStyles.Body);
             }
 
+            Gap(20f);
+            DrawGallery(user, isMe, connected);
+
             var genderLabels = VelvetGender.Labels(user.Gender);
             if (genderLabels.Length > 0)
             {
@@ -204,9 +207,6 @@ internal sealed partial class VelvetShell
                 Gap(4f);
                 DrawDisplayTokens(user.Limits, VChipStyle.Outline, VelvetTheme.Gold);
             }
-
-            Gap(24f);
-            DrawGallery(user, isMe, connected);
 
             if (!isMe)
             {
