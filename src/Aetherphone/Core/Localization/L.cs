@@ -1218,6 +1218,12 @@ internal static class L
         public static readonly LocString Accent = new("settings.accent", "Accent");
         public static readonly LocString AccentCustom = new("settings.accentCustom", "Custom");
         public static readonly LocString PhoneCase = new("settings.phoneCase", "Case");
+        public static readonly LocString CaseCategoryColors = new("settings.caseCategoryColors", "Colors");
+        public static readonly LocString CaseCategoryGradients = new("settings.caseCategoryGradients", "Gradients");
+        public static readonly LocString CaseCategoryCustom = new("settings.caseCategoryCustom", "Custom Artwork");
+        public static readonly LocString CaseDesignBy = new("settings.caseDesignBy", "Design by {0}");
+        public static readonly LocString CaseApply = new("settings.caseApply", "Apply");
+        public static readonly LocString CaseApplied = new("settings.caseApplied", "Applied");
         public static readonly LocString Wallpaper = new("settings.wallpaper", "Wallpaper");
         public static readonly LocString TextSize = new("settings.textSize", "Text Size");
         public static readonly LocString PhoneSize = new("settings.phoneSize", "Phone Size");
