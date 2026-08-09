@@ -112,9 +112,8 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
         changelogPage = new ChangelogPage(configuration);
         var groups = new[]
         {
-            new SettingsGroup(new ISettingsPage[] { appearance, language, immersion, behavior, tutorials },
-                L.Settings.GeneralFooter),
-            new SettingsGroup(new ISettingsPage[] { callsPage, notifications, ringtonePage }, L.Settings.AlertsFooter),
+            new SettingsGroup(new ISettingsPage[] { appearance, language, immersion, behavior, tutorials }),
+            new SettingsGroup(new ISettingsPage[] { callsPage, notifications, ringtonePage }),
             new SettingsGroup(new ISettingsPage[] { commands, privacyPage, tagsMentionsPage, safetyPage, changelogPage, about }),
         };
         router = new ViewRouter<ISettingsPage>(

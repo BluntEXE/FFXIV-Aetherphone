@@ -105,7 +105,7 @@ internal static class ProgressRing
     }
 
     public static void CenterIconRamp(ImDrawListPtr dl, Vector2 c, FontAwesomeIcon icon, Vector4[] colors, bool light,
-        float targetHeight)
+        float targetHeight, float phase = 0f)
     {
         if (colors.Length <= 1)
         {
@@ -133,7 +133,7 @@ internal static class ProgressRing
             {
                 var clipLeft = left + lineSize.X * sliceIndex / rampSlices;
                 var clipRight = left + lineSize.X * (sliceIndex + 1) / rampSlices;
-                var sample = SampleRamp(colors, (sliceIndex + 0.5f) / rampSlices);
+                var sample = SampleRamp(colors, (sliceIndex + 0.5f) / rampSlices, phase);
                 var tint = RoleInk.For(sample, light);
                 dl.PushClipRect(new Vector2(clipLeft, top), new Vector2(clipRight, bottom), true);
                 dl.AddText(font, drawSize, pen, ImGui.GetColorU32(tint), glyph);
@@ -142,9 +142,11 @@ internal static class ProgressRing
         }
     }
 
-    private static Vector4 SampleRamp(Vector4[] colors, float position)
+    private static Vector4 SampleRamp(Vector4[] colors, float position, float phase)
     {
-        var scaled = position * (colors.Length - 1);
+        var shifted = position + phase;
+        shifted -= MathF.Floor(shifted);
+        var scaled = shifted * (colors.Length - 1);
         var lower = Math.Clamp((int)scaled, 0, colors.Length - 2);
         return Vector4.Lerp(colors[lower], colors[lower + 1], scaled - lower);
     }

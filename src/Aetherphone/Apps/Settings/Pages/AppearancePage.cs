@@ -82,7 +82,7 @@ internal sealed class AppearancePage : ISettingsPage
             if (SettingsRow.Disclosure(card.NextRow(), Loc.T(L.Settings.PhoneCase),
                     CatalogLabels.PhoneCase(configuration.PhoneCaseName), theme))
             {
-                navigator.Open(new PhoneCasePage(configuration, themes));
+                navigator.Open(new PhoneCasePage(configuration, themes, navigator));
             }
 
             if (SettingsRow.Disclosure(card.NextRow(), Loc.T(L.Settings.Wallpaper), string.Empty, theme))

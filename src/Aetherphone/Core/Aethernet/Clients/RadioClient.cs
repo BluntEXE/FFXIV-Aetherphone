@@ -16,10 +16,11 @@ internal sealed class RadioClient
         return net.GetAsync("/radio/stations", AethernetJsonContext.Default.CommunityStationPage, token);
     }
 
-    public Task<CommunityStationDto?> StationAsync(string stationId, CancellationToken token)
+    public Task<CommunityStationDto?> StationAsync(string stationId, CancellationToken token,
+        Action<int>? statusSink = null)
     {
         return net.GetAsync($"/radio/stations/{Uri.EscapeDataString(stationId)}",
-            AethernetJsonContext.Default.CommunityStationDto, token);
+            AethernetJsonContext.Default.CommunityStationDto, token, statusSink);
     }
 
     public Task<MyCommunityStationDto?> MineAsync(CancellationToken token)

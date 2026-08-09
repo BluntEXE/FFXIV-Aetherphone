@@ -31,6 +31,9 @@ internal sealed class RootSettingsPage : ISettingsPage
     public string Summary => string.Empty;
     public FontAwesomeIcon Icon => FontAwesomeIcon.Cog;
     public Vector4 Tint => new(0.56f, 0.57f, 0.63f, 1f);
+    private static readonly Vector4 DiscordTint = new(0.345f, 0.396f, 0.949f, 1f);
+    private const float BlockGap = 20f;
+    private const float CardGap = 14f;
     private readonly ISettingsNavigator navigator;
     private readonly IReadOnlyList<SettingsGroup> groups;
     private readonly AethernetSession session;
@@ -63,15 +66,20 @@ internal sealed class RootSettingsPage : ISettingsPage
                 navigator.Open(accountPage);
             }
 
-            ImGui.Dummy(new Vector2(0f, 20f * scale));
+            ImGui.Dummy(new Vector2(0f, (BlockGap - SupportButton.GlowPadding) * scale));
             if (SupportButton.Draw(Loc.T(L.Settings.SupportAetherphone), theme, Loc.T(L.Settings.SupportHint)))
             {
                 UrlActions.OpenInBrowser(AepConstants.PatreonUrl);
             }
 
+            if (LinkButton.Draw(FontAwesomeIcon.Users, Loc.T(L.Settings.JoinDiscord), DiscordTint))
+            {
+                UrlActions.OpenInBrowser(AepConstants.DiscordUrl);
+            }
+
             for (var groupIndex = 0; groupIndex < groups.Count; groupIndex++)
             {
-                ImGui.Dummy(new Vector2(0f, (groupIndex == 0 ? 20f : 14f) * scale));
+                ImGui.Dummy(new Vector2(0f, (groupIndex == 0 ? BlockGap : CardGap) * scale));
                 var group = groups[groupIndex];
                 var pages = group.Pages;
                 var card = GroupCard.Begin(theme, pages.Count);

@@ -9,8 +9,9 @@ namespace Aetherphone.Windows.Components;
 
 internal static class SupportButton
 {
+    public const float GlowPadding = 14f;
+
     private const float ButtonHeight = 56f;
-    private const float GlowPadding = 14f;
     private const double HueBlendMs = 5200.0;
     private const double HeartbeatMs = 1500.0;
     private const double SheenMs = 3200.0;

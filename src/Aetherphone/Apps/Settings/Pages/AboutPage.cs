@@ -23,7 +23,6 @@ internal sealed class AboutPage : ISettingsPage
     public FontAwesomeIcon Icon => FontAwesomeIcon.InfoCircle;
     public Vector4 Tint => new(0.40f, 0.62f, 0.92f, 1f);
     private static readonly TimeSpan CopiedFlashWindow = TimeSpan.FromSeconds(3);
-    private static readonly Vector4 DiscordTint = new(0.345f, 0.396f, 0.949f, 1f);
     private static readonly Vector4 WebsiteTint = new(0.13f, 0.63f, 0.60f, 1f);
 
     public void Draw(in PhoneContext context, Rect body)
@@ -46,13 +45,7 @@ internal sealed class AboutPage : ISettingsPage
 
             card.End();
             SettingsSection.Header(Loc.T(L.Settings.CreditsLinks), theme);
-            var links = GroupCard.Begin(theme, 2);
-            if (SettingsRow.Link(links.NextRow(), FontAwesomeIcon.Users, DiscordTint, Loc.T(L.Settings.JoinDiscord),
-                    string.Empty, theme))
-            {
-                UrlActions.OpenInBrowser(AepConstants.DiscordUrl);
-            }
-
+            var links = GroupCard.Begin(theme, 1);
             if (SettingsRow.Link(links.NextRow(), FontAwesomeIcon.Globe, WebsiteTint, Loc.T(L.Settings.VisitWebsite),
                     string.Empty, theme))
             {

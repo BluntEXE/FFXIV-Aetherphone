@@ -27,6 +27,8 @@ internal sealed partial class CoinApp : IPhoneApp
     private readonly CoinStore store;
     private readonly CoinCatalogStore catalog;
     private readonly ConfirmService confirm;
+    private readonly Core.Social.BadgeCatalogStore badgeCatalog;
+    private readonly Core.Media.RemoteImageCache images;
     private readonly AppSkin ui = new(AppPalettes.Coin);
     private readonly ViewRouter<CoinRoute> router;
     private readonly RouterDraw<CoinRoute> drawView;
@@ -41,12 +43,15 @@ internal sealed partial class CoinApp : IPhoneApp
     private int activeTab;
     private int historyFilter;
 
-    public CoinApp(AethernetSession session, CoinStore store, CoinCatalogStore catalog, ConfirmService confirm)
+    public CoinApp(AethernetSession session, CoinStore store, CoinCatalogStore catalog, ConfirmService confirm,
+        Core.Social.BadgeCatalogStore badgeCatalog, Core.Media.RemoteImageCache images)
     {
         this.session = session;
         this.store = store;
         this.catalog = catalog;
         this.confirm = confirm;
+        this.badgeCatalog = badgeCatalog;
+        this.images = images;
         router = new ViewRouter<CoinRoute>(CoinRoute.Root);
         drawView = DrawView;
     }

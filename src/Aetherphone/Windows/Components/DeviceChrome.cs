@@ -125,6 +125,13 @@ internal static class DeviceChrome
     public static void DrawShell(ImDrawListPtr dl, in ChassisGeometry chassis, float scale, PhoneTheme theme,
         float artAlpha)
     {
+        CaseSwap.Step(ImGui.GetFrameCount(), MathF.Min(ImGui.GetIO().DeltaTime, 0.05f));
+        if (CaseSwap.Active)
+        {
+            DrawSwappingShell(dl, chassis, scale, theme, artAlpha);
+            return;
+        }
+
         var skin = artAlpha > 0.001f && theme.WantsCaseArt ? PhoneCaseTextures.Skin(theme.CaseTextureId) : null;
         if (skin is not { } texture)
         {
@@ -146,6 +153,41 @@ internal static class DeviceChrome
         var step = ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.55f));
         Squircle.Stroke(dl, chassis.Glass.Min, chassis.Glass.Max, chassis.GlassRadius, step, 1f * scale);
         ScreenRecess(dl, chassis, scale);
+    }
+
+    private static void DrawSwappingShell(ImDrawListPtr dl, in ChassisGeometry chassis, float scale, PhoneTheme theme,
+        float artAlpha)
+    {
+        var progress = Math.Clamp(CaseSwap.Progress, 0f, 1f);
+        var outgoing = CaseSwap.Outgoing;
+        var outgoingFinish = new CaseFinish(outgoing.Tint);
+        var frame = Vector4.Lerp(outgoingFinish.Frame, theme.Case.Frame, progress) with { W = 1f };
+        Squircle.Fill(dl, chassis.Body.Min, chassis.Body.Max, chassis.BodyRadius, ImGui.GetColorU32(frame));
+        DrawCaseArt(dl, chassis, outgoing.Kind, outgoing.TextureId, 1f - progress);
+        DrawCaseArt(dl, chassis, theme.CaseKind, theme.CaseTextureId, Math.Clamp(progress * artAlpha, 0f, 1f));
+        var glass = Vector4.Lerp(outgoingFinish.Glass, theme.Glass, progress) with { W = 1f };
+        Squircle.Fill(dl, chassis.Glass.Min, chassis.Glass.Max, chassis.GlassRadius, ImGui.GetColorU32(glass));
+        Squircle.Fill(dl, chassis.Screen.Min, chassis.Screen.Max, chassis.ScreenRadius,
+            ImGui.GetColorU32(theme.ScreenBase));
+        var step = ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.55f));
+        Squircle.Stroke(dl, chassis.Glass.Min, chassis.Glass.Max, chassis.GlassRadius, step, 1f * scale);
+        ScreenRecess(dl, chassis, scale);
+    }
+
+    private static void DrawCaseArt(ImDrawListPtr dl, in ChassisGeometry chassis, PhoneCaseKind kind,
+        string textureId, float alpha)
+    {
+        if (alpha <= 0.001f || kind != PhoneCaseKind.Art || textureId.Length == 0)
+        {
+            return;
+        }
+
+        if (PhoneCaseTextures.Skin(textureId) is not { } texture)
+        {
+            return;
+        }
+
+        CaseArt.Quad(dl, texture, CaseArt.RectFor(chassis.Body), chassis.Body.IsLandscape(), CaseArt.Tint(alpha));
     }
 
     private static void DrawViewportBody(ImDrawListPtr dl, in ChassisGeometry chassis, Rect band, uint frame,

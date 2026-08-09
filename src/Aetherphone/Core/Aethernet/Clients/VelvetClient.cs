@@ -137,6 +137,11 @@ internal sealed class VelvetClient
         return net.SendAsync(HttpMethod.Delete, $"/velvet/connect/{Uri.EscapeDataString(userId)}", token);
     }
 
+    public Task<bool> DeleteThreadAsync(string otherId, CancellationToken token)
+    {
+        return net.SendAsync(HttpMethod.Delete, $"/velvet/threads/{Uri.EscapeDataString(otherId)}", token);
+    }
+
     public Task<VelvetConnectionPage?> RequestsAsync(CancellationToken token)
     {
         return net.GetAsync("/velvet/requests", AethernetJsonContext.Default.VelvetConnectionPage, token);

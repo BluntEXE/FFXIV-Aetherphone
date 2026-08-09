@@ -15,6 +15,8 @@ using Aetherphone.Core.Songs;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
+using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Apps.Music;
@@ -24,15 +26,25 @@ internal sealed partial class MusicApp : IPhoneApp
     private enum View : byte
     {
         Home,
+        Live,
+        Radio,
+        Library,
         Stations,
         Search,
         CountryFilter,
         LanguageFilter,
         PlaylistDetail,
-        Community,
         Station,
         MyStation,
         StationArtwork,
+    }
+
+    private enum MusicTab : byte
+    {
+        Home,
+        Live,
+        Radio,
+        Library,
     }
 
     private const float TopBarHeight = 46f;
@@ -64,7 +76,8 @@ internal sealed partial class MusicApp : IPhoneApp
     public Vector4 Accent => AppAccents.For(Id);
     public string DisplayName => Loc.T(L.Apps.Music);
     public string Glyph => "M";
-    public int BadgeCount => 0;
+    public int BadgeCount => community.LiveCount;
+    public bool BadgeAsDot => true;
     private readonly RadioService radio;
     private readonly SongSearchService songSearch;
     private readonly PlaybackHub playback;
@@ -81,8 +94,11 @@ internal sealed partial class MusicApp : IPhoneApp
     private readonly ConfirmService confirm;
     private readonly Configuration configuration;
     private readonly ArtworkCache artwork;
-    private readonly ViewRouter<View> router;
+    private readonly ViewRouter<View>[] routers;
     private readonly RouterDraw<View> drawView;
+    private readonly BottomTabBar bottomNav = new();
+    private readonly NavTab[] navTabs = new NavTab[4];
+    private MusicTab tab = MusicTab.Home;
     private readonly AppSkin ui = new(AppPalettes.Music);
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
@@ -131,7 +147,7 @@ internal sealed partial class MusicApp : IPhoneApp
 
     public MusicApp(RadioService radio, SongSearchService songSearch, PlaybackHub playback, SongHistory history,
         PlaylistStore playlists, MediaCache media, HttpService http, ITextureProvider textures,
-        AethernetApi aethernet, ReportService report, PhotoLibrary photoLibrary,
+        AethernetApi aethernet, AethernetSession session, ReportService report, PhotoLibrary photoLibrary,
         WallpaperImageCache wallpaperImages, ConfirmService confirm, Configuration configuration,
         RadioLauncher launcher)
     {
@@ -140,7 +156,7 @@ internal sealed partial class MusicApp : IPhoneApp
         this.report = report;
         this.photoLibrary = photoLibrary;
         this.wallpaperImages = wallpaperImages;
-        community = new CommunityRadioService(aethernet);
+        community = new CommunityRadioService(aethernet, session);
         this.radio = radio;
         this.songSearch = songSearch;
         this.playback = playback;
@@ -151,14 +167,43 @@ internal sealed partial class MusicApp : IPhoneApp
         this.confirm = confirm;
         this.configuration = configuration;
         artwork = new ArtworkCache(textures);
-        router = new ViewRouter<View>(View.Home);
+        routers =
+        [
+            new ViewRouter<View>(View.Home),
+            new ViewRouter<View>(View.Live),
+            new ViewRouter<View>(View.Radio),
+            new ViewRouter<View>(View.Library),
+        ];
         drawView = DrawView;
         artBreath = new Spring(1f);
     }
 
+    private ViewRouter<View> Router => routers[(int)tab];
+
+    private void ResetTabs()
+    {
+        for (var index = 0; index < routers.Length; index++)
+        {
+            routers[index].Reset();
+        }
+
+        tab = MusicTab.Home;
+    }
+
+    private void SelectTab(MusicTab wanted)
+    {
+        if (tab == wanted)
+        {
+            Router.Reset();
+            return;
+        }
+
+        tab = wanted;
+    }
+
     public void OnOpened()
     {
-        router.Reset();
+        ResetTabs();
         nowPlayingOpen = false;
         sheetPresence.SnapTo(0f);
         DismissOverlay(true);
@@ -172,8 +217,10 @@ internal sealed partial class MusicApp : IPhoneApp
         if (launcher.TryConsumeStation(out var stationId))
         {
             viewedStationId = stationId;
+            community.OpenStation(stationId, null);
             community.EnsureFresh(true);
-            router.Push(View.Station, false);
+            tab = MusicTab.Live;
+            Router.Push(View.Station, false);
             return;
         }
 
@@ -182,7 +229,7 @@ internal sealed partial class MusicApp : IPhoneApp
 
     public void OnClosed()
     {
-        router.Reset();
+        ResetTabs();
         nowPlayingOpen = false;
         sheetPresence.SnapTo(0f);
         DismissOverlay(true);
@@ -214,18 +261,44 @@ internal sealed partial class MusicApp : IPhoneApp
 
         var screen = SceneChrome.ScreenFrom(content, theme, scale);
         ui.Backdrop(screen);
-        using (InputShield.Engage(sheetValue > 0.15f || overlayValue > 0.15f))
+        var stage = StageFrom(content, scale);
+        var chromeBlocked = sheetValue > 0.15f || overlayValue > 0.15f;
+        using (InputShield.Engage(chromeBlocked))
+        using (ImRaii.PushId((int)tab))
         {
-            router.Draw(content, AppSkin.Transparent, delta, drawView);
+            Router.Draw(stage, AppSkin.Transparent, delta, drawView);
         }
 
         using (InputShield.Engage(overlayValue > 0.15f))
         {
-            DrawMiniPlayer(content, scale);
+            DrawMiniPlayer(stage, scale);
             DrawNowPlayingSheet(content, scale, sheetValue, delta);
         }
 
+        using (InputShield.Engage(chromeBlocked))
+        {
+            DrawTabBar(new Rect(new Vector2(content.Min.X, stage.Max.Y), content.Max), scale);
+        }
+
         DrawPlaylistOverlay(content, scale, overlayValue, delta);
+    }
+
+    private static Rect StageFrom(Rect content, float scale)
+    {
+        return new Rect(content.Min, new Vector2(content.Max.X, content.Max.Y - BottomTabBar.LabelledHeight * scale));
+    }
+
+    private void DrawTabBar(Rect bar, float scale)
+    {
+        navTabs[0] = new NavTab(FontAwesomeIcon.Home, Loc.T(L.Music.TabHome));
+        navTabs[1] = new NavTab(FontAwesomeIcon.BroadcastTower, Loc.T(L.Music.TabLive), community.LiveCount);
+        navTabs[2] = new NavTab(FontAwesomeIcon.Podcast, Loc.T(L.Music.TabRadio), AnchorKey: "music.categories");
+        navTabs[3] = new NavTab(FontAwesomeIcon.LayerGroup, Loc.T(L.Music.TabLibrary));
+        var tapped = bottomNav.Draw(bar, ui, theme, navTabs, (int)tab, true);
+        if (tapped >= 0)
+        {
+            SelectTab((MusicTab)tapped);
+        }
     }
 
     private void DrawView(View view, Rect area, int depth)
@@ -249,8 +322,14 @@ internal sealed partial class MusicApp : IPhoneApp
             case View.PlaylistDetail:
                 DrawPlaylistDetail(context);
                 break;
-            case View.Community:
-                DrawCommunity(context);
+            case View.Live:
+                DrawLive(context);
+                break;
+            case View.Radio:
+                DrawRadioTab(context);
+                break;
+            case View.Library:
+                DrawLibrary(context);
                 break;
             case View.Station:
                 DrawStationPage(context);
@@ -341,7 +420,7 @@ internal sealed partial class MusicApp : IPhoneApp
     private void OpenSearch()
     {
         focusSearch = true;
-        router.Push(View.Search);
+        Router.Push(View.Search);
     }
 
     private void OpenCategory(int index)
@@ -349,7 +428,7 @@ internal sealed partial class MusicApp : IPhoneApp
         categoryIndex = index;
         radioQuery = string.Empty;
         radioSearchDraft = string.Empty;
-        router.Push(View.Stations);
+        Router.Push(View.Stations);
         BeginFetch(RadioService.Categories[index].Tags);
     }
 
@@ -363,7 +442,7 @@ internal sealed partial class MusicApp : IPhoneApp
         loading = false;
         ResetPaging();
         focusRadioSearch = true;
-        router.Push(View.Stations);
+        Router.Push(View.Stations);
         if (!CurrentRadioFilter().IsDefault)
         {
             BeginRadioSearch(string.Empty);
@@ -519,7 +598,7 @@ internal sealed partial class MusicApp : IPhoneApp
     {
         facetSearchDraft = string.Empty;
         EnsureRadioFacets();
-        router.Push(view);
+        Router.Push(view);
     }
 
     private void ApplyPage(RadioPage page, int offset)
@@ -684,13 +763,13 @@ internal sealed partial class MusicApp : IPhoneApp
         featuredLoading = false;
     }
 
-    private void GoToHome()
+    private void GoBack()
     {
         fetch?.Cancel();
         search?.Cancel();
         loading = false;
         searching = false;
-        router.Pop();
+        Router.Pop();
     }
 
     private bool IsCurrentStation(RadioStation station)

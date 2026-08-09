@@ -15,6 +15,14 @@ internal enum NameEffectKind
     Glint,
     Sweep,
     Wave,
+    Ember,
+    Frost,
+    Aurora,
+    Prism,
+    Glitch,
+    Starfall,
+    Eclipse,
+    Heartbeat,
 }
 
 internal readonly record struct TextEffect(NameEffectKind Kind, Vector4 Crest, float Phase, WaveRamp Ramp = default);

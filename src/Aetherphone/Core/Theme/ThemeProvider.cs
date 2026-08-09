@@ -8,6 +8,7 @@ internal sealed class ThemeProvider
     private readonly WallpaperLibrary wallpapers;
     private PhoneTheme light = PhoneTheme.Default;
     private PhoneTheme dark = PhoneTheme.Default;
+    private PhoneCase? appliedCase;
 
     public ThemeProvider(Configuration configuration, WallpaperLibrary wallpapers)
     {
@@ -26,6 +27,12 @@ internal sealed class ThemeProvider
     {
         var accent = ThemeCatalog.ResolveAccent(configuration.AccentName);
         var phoneCase = ThemeCatalog.ResolveCase(configuration.PhoneCaseName);
+        if (appliedCase is { } previous && previous.Id != phoneCase.Id)
+        {
+            CaseSwap.Begin(previous);
+        }
+
+        appliedCase = phoneCase;
         var chassis = ChassisMetrics.For(phoneCase.Kind, PhoneSizeCatalog.DesignWidth);
         light = PhoneTheme.Light(accent, phoneCase, chassis, configuration.LightWallpaperId,
             configuration.DarkWallpaperId);

@@ -11,6 +11,7 @@ internal static class L
         public static readonly LocString Refresh = new("common.refresh", "Refresh");
         public static readonly LocString Emoji = new("common.emoji", "Emoji");
         public static readonly LocString Cancel = new("common.cancel", "Cancel");
+        public static readonly LocString Delete = new("common.delete", "Delete");
         public static readonly LocString Retry = new("common.retry", "Retry");
         public static readonly LocString Copied = new("common.copied", "Copied");
         public static readonly LocString LoadFailed = new("common.loadFailed", "Could not load");
@@ -149,7 +150,7 @@ internal static class L
     internal static class Safety
     {
         public static readonly LocString Title = new("safety.title", "Moderation and safety");
-        public static readonly LocString Summary = new("safety.summary", "Warnings and removals");
+        public static readonly LocString Summary = new("safety.summary", "Warnings");
         public static readonly LocString UnreadSummary = new("safety.unreadSummary", "{0} unread");
         public static readonly LocString Empty = new("safety.empty", "Nothing here. No moderator has acted on your account.");
         public static readonly LocString SignInPrompt = new("safety.signInPrompt", "Sign in to see moderation notices for your account.");
@@ -586,6 +587,9 @@ internal static class L
         public static readonly LocString ForwardedLabel = new("message.forwardedLabel", "Forwarded");
         public static readonly LocString DeleteAction = new("message.deleteAction", "Delete for everyone");
         public static readonly LocString DeleteConfirm = new("message.deleteConfirm", "Delete this message for everyone in this chat?");
+        public static readonly LocString DeleteConversation = new("message.deleteConversation", "Delete conversation");
+        public static readonly LocString DeleteConversationMessage = new("message.deleteConversationMessage",
+            "This deletes the conversation for you. This can't be undone.");
         public static readonly LocString DeletedBody = new("message.deletedBody", "This message was deleted");
         public static readonly LocString MuteAction = new("message.muteAction", "Mute");
         public static readonly LocString UnmuteAction = new("message.unmuteAction", "Unmute");
@@ -1209,8 +1213,6 @@ internal static class L
     internal static class Settings
     {
         public static readonly LocString Title = new("settings.title", "Settings");
-        public static readonly LocString GeneralFooter = new("settings.generalFooter", "Personalize how your phone looks, reads and behaves.");
-        public static readonly LocString AlertsFooter = new("settings.alertsFooter", "Choose how calls and notifications reach you.");
         public static readonly LocString Appearance = new("settings.appearance", "Appearance");
         public static readonly LocString Theme = new("settings.theme", "Theme");
         public static readonly LocString ThemeLight = new("settings.themeLight", "Light");
@@ -1219,6 +1221,12 @@ internal static class L
         public static readonly LocString Accent = new("settings.accent", "Accent");
         public static readonly LocString AccentCustom = new("settings.accentCustom", "Custom");
         public static readonly LocString PhoneCase = new("settings.phoneCase", "Case");
+        public static readonly LocString CaseCategoryColors = new("settings.caseCategoryColors", "Colors");
+        public static readonly LocString CaseCategoryGradients = new("settings.caseCategoryGradients", "Gradients");
+        public static readonly LocString CaseCategoryCustom = new("settings.caseCategoryCustom", "Custom Artwork");
+        public static readonly LocString CaseDesignBy = new("settings.caseDesignBy", "Design by {0}");
+        public static readonly LocString CaseApply = new("settings.caseApply", "Apply");
+        public static readonly LocString CaseApplied = new("settings.caseApplied", "Applied");
         public static readonly LocString Wallpaper = new("settings.wallpaper", "Wallpaper");
         public static readonly LocString TextSize = new("settings.textSize", "Text Size");
         public static readonly LocString PhoneSize = new("settings.phoneSize", "Phone Size");
@@ -1246,6 +1254,8 @@ internal static class L
         public static readonly LocString ImportScreenshotsHint = new("settings.importScreenshotsHint", "Copy screenshots you take into the Photos gallery, including ones from ReShade and GShade. Only shots taken while the phone is running are copied, and the originals stay where they are.");
         public static readonly LocString NativeFileDialog = new("settings.nativeFileDialog", "Use the Windows file browser");
         public static readonly LocString NativeFileDialogHint = new("settings.nativeFileDialogHint", "Pick photos and sounds with the Windows file browser. Turn it off if importing a file crashes your game.");
+        public static readonly LocString ChirperMediaPosts = new("settings.chirperMediaPosts", "Show photo and GIF chirps");
+        public static readonly LocString ChirperMediaPostsHint = new("settings.chirperMediaPostsHint", "Chirps that carry photos or GIFs show up in your feeds. Turn this off to keep your Chirper feeds text only.");
         public static readonly LocString OpenOnStartup = new("settings.openOnStartup", "Open at startup");
         public static readonly LocString OpenMinimized = new("settings.openMinimized", "Open minimized");
         public static readonly LocString StartupHint = new("settings.startupHint", "Open the phone automatically when you log in. Open minimized shows it as a small dock that you tap to expand.");
@@ -1298,20 +1308,72 @@ internal static class L
 
     internal static class Changelog
     {
-        public static readonly LocString[] Release09100 =
+        public static readonly LocString[] Release09910 =
         {
-            new("changelog.r09100.0",
-                "Added Aether Coin: check in daily, play the arcade, hold real calls and conversations, and post things that stay up, and it all pays a little cosmetic currency"),
-            new("changelog.r09100.1",
+            new("changelog.r09910.0",
+                "Added Aether Coin, the currency of the Aethernet: check in daily, play the arcade, hold real calls and conversations, and post things that stay up, and it all earns coins"),
+            new("changelog.r09910.1",
                 "The Aether Coin app shows your balance, the daily cap with its reset time, your check-in streak, and every earning rule with today's progress"),
-            new("changelog.r09100.2",
-                "The coin shop sells phone cases and a name effect; custom wallpapers, accent colors, and imported sounds stay free"),
-            new("changelog.r09100.3",
-                "Aether Coin stays on your character and never buys reach"),
-            new("changelog.r09100.4",
+            new("changelog.r09910.4",
                 "The Games app now highlights the same featured game the server pays a bonus for"),
-            new("changelog.r09100.5",
+            new("changelog.r09910.5",
                 "One daily notification rolls up what you earned instead of pinging on every grant"),
+            new("changelog.r09910.6",
+                "The coin balance now shows in Control Center and on a home screen widget, so you can check it without opening the app"),
+            new("changelog.r09910.8",
+                "Games now carry a small session chip that fills toward the three minute mark, so you can see when a session will pay and when the day's game earnings are used up"),
+            new("changelog.r09910.10",
+                "Aether Coin, Shortcuts, and Housing now have their own welcome tours"),
+            new("changelog.r09910.23",
+                "Chirps can now carry up to four photos, picked from the phone or imported from your PC, and tapping one opens it full screen"),
+            new("changelog.r09910.24",
+                "A chirp can also carry one animated GIF, which plays right in the feed"),
+            new("changelog.r09910.25",
+                "Chirps with photos and GIFs can be turned off: a button beside For You and Following hides them, and the same switch sits in Behavior settings"),
+            new("changelog.r09910.26",
+                "Sharing a photo from Photos now offers Chirper, which opens the composer with that photo already attached"),
+            new("changelog.r09910.27",
+                "The author of a post can now remove any comment left on it, in Aethergram, Chirper, and Velvet"),
+            new("changelog.r09910.28",
+                "Velvet and Message can now delete a conversation, which only Aethergram could before: right click the row in the inbox, and it clears the thread for you alone while the other person keeps theirs"),
+            new("changelog.r09910.29",
+                "Music is now split into four tabs, Home, Live, Radio, and Library, so live community stations are no longer buried under a scroll"),
+            new("changelog.r09910.30",
+                "A community station now opens a full page with its artwork, the track playing right now, and a notify button while the station is off air"),
+            new("changelog.r09910.31",
+                "The phone case picker is now a store: cases sit in Colors, Gradients, and Custom Artwork rails, and each one opens a page with a full size preview and its artist credit"),
+            new("changelog.r09910.33",
+                "The Discord invite now sits on the settings root under Support Aetherphone, instead of two taps down in About"),
+            new("changelog.r09910.11",
+                "App tile colors are now generated from one color ring, so the home screen no longer mixes vivid tiles with dull ones"),
+            new("changelog.r09910.13",
+                "The side, mute, and lock buttons now sit seated in the chassis edge instead of floating beside it"),
+            new("changelog.r09910.34",
+                "Velvet profile photos now sit directly beneath the about section"),
+            new("changelog.r09910.14",
+                "A call now warns you when your microphone never reaches the other side, and points at the input device setting"),
+            new("changelog.r09910.15",
+                "A device without your encryption key now locks and asks for your recovery code, instead of quietly creating a new key"),
+            new("changelog.r09910.16",
+                "Your recovery code now brings back history encrypted under a previous key, right after unlocking or through Restore older chats in Settings"),
+            new("changelog.r09910.17",
+                "Chats now nudge you once to set up a recovery code if you have not saved one"),
+            new("changelog.r09910.18",
+                "A PC that cannot use the system key store now keeps your encryption key instead of creating a new one every session"),
+            new("changelog.r09910.19",
+                "Conversation previews and message notifications no longer show the encrypted placeholder: previews heal within seconds, and notifications wait for the text to decrypt"),
+            new("changelog.r09910.21",
+                "Reordering gearsets and categories in Jobs now uses up and down buttons, replacing drag handles that rarely picked a row up"),
+            new("changelog.r09910.22",
+                "Failures that used to pass silently, in playback, imports, saving settings, network requests, and encryption, are now written to the log so problem reports can be traced"),
+            new("changelog.r09910.35",
+                "Fixed apps opening wherever you last scrolled: every app now starts at the top, and a chat opens on its newest message"),
+            new("changelog.r09910.36",
+                "Fixed pressing close in a story counting as a tap that skipped ahead, and tapping the avatar or the name now opens that person's profile"),
+            new("changelog.r09910.37",
+                "Fixed the dynamic island clipping the signal bars, contributed by Farroness"),
+            new("changelog.r09910.38",
+                "Fixed Moderation and safety truncating in Settings, and cut two group footers that repeated the rows above them"),
         };
 
         public static readonly LocString[] Release0999 =
@@ -2426,6 +2488,21 @@ internal static class L
     {
         public static readonly LocString RadioStations = new("music.radioStations", "Radio stations");
         public static readonly LocString RecentlyPlayed = new("music.recentlyPlayed", "Recently played");
+        public static readonly LocString TabHome = new("music.tabHome", "Home");
+        public static readonly LocString TabLive = new("music.tabLive", "Live");
+        public static readonly LocString TabRadio = new("music.tabRadio", "Radio");
+        public static readonly LocString TabLibrary = new("music.tabLibrary", "Library");
+        public static readonly LocString BrowseCategories = new("music.browseCategories", "Browse");
+        public static readonly LocString LiveBadge = new("music.liveBadge", "LIVE");
+        public static readonly LocString LastLive = new("music.lastLive", "Last live {0}");
+        public static readonly LocString OnAirSection = new("music.onAirSection", "On air");
+        public static readonly LocString UpNextSection = new("music.upNextSection", "Up next");
+        public static readonly LocString FollowingSection = new("music.followingSection", "Following");
+        public static readonly LocString AllStationsSection = new("music.allStationsSection", "All stations");
+        public static readonly LocString OnAirNow = new("music.onAirNow", "On air now");
+        public static readonly LocString LastPlayed = new("music.lastPlayed", "Last played");
+        public static readonly LocString ShowAll = new("music.showAll", "Show all");
+        public static readonly LocString NotifyWhenLive = new("music.notifyWhenLive", "Notify me");
         public static readonly LocString TuningIn = new("music.tuningIn", "Tuning in…");
         public static readonly LocString NoStations = new("music.noStations", "No stations found");
         public static readonly LocString NoResults = new("music.noResults", "No results");
@@ -2454,6 +2531,18 @@ internal static class L
         public static readonly LocString CommunityEmpty = new("music.communityEmpty", "No community stations yet");
         public static readonly LocString CommunityEmptySub = new("music.communityEmptySub",
             "When someone opens a station, it shows up here");
+        public static readonly LocString CommunityOffline = new("music.communityOffline",
+            "Could not load stations");
+        public static readonly LocString StationGone = new("music.stationGone", "Station unavailable");
+        public static readonly LocString StationGoneSub = new("music.stationGoneSub",
+            "It may have been closed or hidden by its host");
+        public static readonly LocString StationSignedOut = new("music.stationSignedOut", "Sign in to listen");
+        public static readonly LocString StationSignedOutSub = new("music.stationSignedOutSub",
+            "Sign in to Aethernet in Settings to browse community stations");
+        public static readonly LocString StationOffline = new("music.stationOffline",
+            "Could not load this station");
+        public static readonly LocString StationOfflineSub = new("music.stationOfflineSub",
+            "Check your connection and try again");
         public static readonly LocString ListeningCount = new("music.listeningCount", "{0} listening");
         public static readonly LocString WatchOnTwitch = new("music.watchOnTwitch", "Watch on Twitch");
         public static readonly LocString OffAir = new("music.offAir", "Off air");
@@ -2633,6 +2722,10 @@ internal static class L
         public static readonly LocString EditProfile = new("chirper.editProfile", "Edit Profile");
         public static readonly LocString ChangePhoto = new("chirper.changePhoto", "Change Photo");
         public static readonly LocString ImportFromPc = new("chirper.importFromPc", "Import from PC");
+        public static readonly LocString AddPhotos = new("chirper.addPhotos", "Add photos");
+        public static readonly LocString GifTooLarge = new("chirper.gifTooLarge", "GIF is too large (max 4 MB)");
+        public static readonly LocString GifRidesAlone = new("chirper.gifRidesAlone", "A GIF has to be posted on its own, without other photos.");
+        public static readonly LocString MaxPhotos = new("chirper.maxPhotos", "A chirp can carry up to {0} photos.");
         public static readonly LocString MoveAndScale = new("chirper.moveAndScale", "Move and Scale");
         public static readonly LocString GestureHint = new("chirper.gestureHint", "Drag to move · scroll to zoom");
         public static readonly LocString Use = new("chirper.use", "Use");
@@ -2659,8 +2752,6 @@ internal static class L
         public static readonly LocString ReactHundred = new("chirper.reactHundred", "100");
         public static readonly LocString ReactQuestion = new("chirper.reactQuestion", "Question");
         public static readonly LocPlural Posts = new("chirper.posts", "{0} post", "{0} posts");
-        public static readonly LocString AddPhotos = new("chirper.addPhotos", "Add photos");
-        public static readonly LocString GifTooLarge = new("chirper.gifTooLarge", "GIF is too large (max 4 MB)");
         public static readonly LocPlural Likes = new("chirper.likes", "{0} like", "{0} likes");
         public static readonly LocString DeleteConfirmMessage = new("chirper.deleteConfirmMessage", "Delete this post? This can't be undone.");
         public static readonly LocString DeleteCommentConfirmMessage = new("chirper.deleteCommentConfirmMessage", "Delete this comment? This can't be undone.");
@@ -2836,6 +2927,9 @@ internal static class L
         public static readonly LocString Accept = new("velvet.accept", "Accept");
         public static readonly LocString WantsToConnect = new("velvet.wantsToConnect", "wants to connect");
         public static readonly LocString SentRequests = new("velvet.sentRequests", "Sent");
+        public static readonly LocString DeleteConversation = new("velvet.deleteConversation", "Delete conversation");
+        public static readonly LocString DeleteConversationMessage = new("velvet.deleteConversationMessage",
+            "This deletes the conversation for you. This can't be undone.");
         public static readonly LocString Disconnect = new("velvet.disconnect", "Disconnect");
         public static readonly LocString DisconnectConfirmMessage = new("velvet.disconnectConfirmMessage", "Remove this connection?");
         public static readonly LocString PeopleToMeet = new("velvet.peopleToMeet", "People to meet");
@@ -3668,6 +3762,7 @@ internal static class L
         public static readonly LocString ShopHeader = new("coin.shopHeader", "Shop");
         public static readonly LocString Owned = new("coin.owned", "Owned");
         public static readonly LocString Buy = new("coin.buy", "Buy");
+        public static readonly LocPlural Price = new("coin.price", "{0:N0} Coin", "{0:N0} Coins");
         public static readonly LocString BuyConfirmTitle = new("coin.buyConfirmTitle", "Buy {0}?");
         public static readonly LocString BuyConfirmBody = new("coin.buyConfirmBody", "{0} Aether Coin will leave your wallet.");
         public static readonly LocString Insufficient = new("coin.insufficient", "Not enough Aether Coin yet");
@@ -3676,9 +3771,8 @@ internal static class L
         public static readonly LocString Unavailable = new("coin.unavailable", "Not for sale right now");
         public static readonly LocString ShopEmpty = new("coin.shopEmpty", "The shelves are being stocked");
         public static readonly LocString HelpTitle = new("coin.helpTitle", "About Aether Coin");
-        public static readonly LocString HelpBody = new("coin.helpBody", "Coins can take up to 30 minutes to arrive, so give it a little time if an earn does not show up right away. The shop opens in a future update, and everything you earn until then will be waiting.");
+        public static readonly LocString HelpBody = new("coin.helpBody", "Coins can take up to 30 minutes to arrive, so give it a little time if an earn does not show up right away.");
         public static readonly LocString ShopEmptyHint = new("coin.shopEmptyHint", "The shop is still in the works. It opens very soon.");
-        public static readonly LocString FreeNote = new("coin.freeNote", "Custom wallpapers, accents, and imported sounds are free and stay free.");
         public static readonly LocString LeavingSoon = new("coin.leavingSoon", "Leaving {0}");
         public static readonly LocString FrozenTitle = new("coin.frozenTitle", "Your wallet is frozen");
         public static readonly LocString FrozenHint = new("coin.frozenHint", "Earning and spending are on hold. Check the Safety page for the reason.");

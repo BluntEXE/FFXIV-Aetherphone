@@ -26,7 +26,7 @@ internal sealed partial class MusicApp
         var scale = UiScale.Current;
         var content = context.Content;
         community.EnsureFresh(false);
-        DrawTopBar(context, Loc.T(L.Common.Search), GoToHome);
+        DrawTopBar(context, Loc.T(L.Common.Search), GoBack);
         var barRect = SearchBarRect(content, scale);
         if (focusSearch)
         {
@@ -163,7 +163,7 @@ internal sealed partial class MusicApp
     private void DrawSongRow(float scale, Song song, int index)
     {
         var rowHeight = SongRowHeight * scale;
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
         var min = origin;
         var max = new Vector2(origin.X + width, origin.Y + rowHeight);

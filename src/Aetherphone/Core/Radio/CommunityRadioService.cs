@@ -3,13 +3,24 @@ using Aetherphone.Core.Aethernet.Contracts;
 
 namespace Aetherphone.Core.Radio;
 
+internal enum CommunityStationLoad : byte
+{
+    Idle,
+    Loading,
+    Ready,
+    NotFound,
+    SignedOut,
+    Unavailable,
+}
+
 internal sealed class CommunityRadioService : IDisposable
 {
-    private const long ActiveIntervalMilliseconds = 30 * 1000;
+    private const long ActiveIntervalMilliseconds = 15 * 1000;
     private const long IdleIntervalMilliseconds = 5 * 60 * 1000;
     private const long RetryIntervalMilliseconds = 60 * 1000;
 
     private readonly AethernetApi api;
+    private readonly AethernetSession session;
     private readonly CancellationTokenSource cancellation = new();
     private volatile CommunityStationDto[] stations = Array.Empty<CommunityStationDto>();
     private volatile MyCommunityStationDto? mine;
@@ -19,14 +30,19 @@ internal sealed class CommunityRadioService : IDisposable
     private volatile RadioTrackDto[] tracks = Array.Empty<RadioTrackDto>();
     private volatile bool tracksLoading;
     private volatile string tracksStationId = string.Empty;
+    private volatile int liveCount;
+    private volatile CommunityStationDto? viewed;
+    private volatile string viewedId = string.Empty;
+    private volatile CommunityStationLoad viewedState;
     private long lastFetchTick = long.MinValue / 2;
     private long retryAfterTick;
     private int fetching;
     private int fetchingMine;
 
-    public CommunityRadioService(AethernetApi api)
+    public CommunityRadioService(AethernetApi api, AethernetSession session)
     {
         this.api = api;
+        this.session = session;
     }
 
     public CommunityStationDto[] Stations => stations;
@@ -34,23 +50,22 @@ internal sealed class CommunityRadioService : IDisposable
     public bool Loading => loading;
     public bool Loaded => loaded;
     public bool OwnsStation => mine is not null;
+    public bool IsSignedIn => session.IsSignedIn;
 
-    public int LiveCount
+    public int LiveCount => liveCount;
+
+    private static int CountLive(CommunityStationDto[] snapshot)
     {
-        get
+        var count = 0;
+        for (var index = 0; index < snapshot.Length; index++)
         {
-            var snapshot = stations;
-            var count = 0;
-            for (var index = 0; index < snapshot.Length; index++)
+            if (snapshot[index].IsLive)
             {
-                if (snapshot[index].IsLive)
-                {
-                    count++;
-                }
+                count++;
             }
-
-            return count;
         }
+
+        return count;
     }
 
     // The interval belongs to the caller, not to whoever fetched last. Storing a single "next fetch"
@@ -70,10 +85,10 @@ internal sealed class CommunityRadioService : IDisposable
             return;
         }
 
-        Refresh(active);
+        Refresh();
     }
 
-    public void Refresh(bool active = true)
+    public void Refresh()
     {
         if (Interlocked.Exchange(ref fetching, 1) == 1)
         {
@@ -139,7 +154,7 @@ internal sealed class CommunityRadioService : IDisposable
                 return;
             }
 
-            if (TryFind(stationId, out var current))
+            if (TryResolve(stationId, out var current))
             {
                 Replace(stationId, current with { IsFollowing = result.Following, Followers = result.Followers });
             }
@@ -156,6 +171,12 @@ internal sealed class CommunityRadioService : IDisposable
 
     private void Replace(string stationId, CommunityStationDto updated)
     {
+        var cached = viewed;
+        if (cached is not null && string.Equals(cached.Id, stationId, StringComparison.Ordinal))
+        {
+            viewed = updated;
+        }
+
         var snapshot = stations;
         for (var index = 0; index < snapshot.Length; index++)
         {
@@ -186,13 +207,6 @@ internal sealed class CommunityRadioService : IDisposable
         tracks = Array.Empty<RadioTrackDto>();
         tracksLoading = true;
         _ = FetchTracksAsync(stationId, cancellation.Token);
-    }
-
-    public void ForgetTracks()
-    {
-        tracksStationId = string.Empty;
-        tracks = Array.Empty<RadioTrackDto>();
-        tracksLoading = false;
     }
 
     private async Task FetchTracksAsync(string stationId, CancellationToken token)
@@ -237,6 +251,106 @@ internal sealed class CommunityRadioService : IDisposable
         return false;
     }
 
+    public CommunityStationLoad StationState => viewedState;
+
+    public bool TryResolve(string stationId, out CommunityStationDto station)
+    {
+        if (TryFind(stationId, out station))
+        {
+            return true;
+        }
+
+        var cached = viewed;
+        if (cached is not null && string.Equals(cached.Id, stationId, StringComparison.Ordinal))
+        {
+            station = cached;
+            return true;
+        }
+
+        station = null!;
+        return false;
+    }
+
+    public void OpenStation(string stationId, CommunityStationDto? known)
+    {
+        viewedId = stationId;
+        if (known is not null)
+        {
+            viewed = known;
+            viewedState = CommunityStationLoad.Ready;
+            return;
+        }
+
+        if (TryFind(stationId, out var found))
+        {
+            viewed = found;
+            viewedState = CommunityStationLoad.Ready;
+            return;
+        }
+
+        viewed = null;
+        viewedState = CommunityStationLoad.Loading;
+        _ = FetchStationAsync(stationId, cancellation.Token);
+    }
+
+    public void RetryStation()
+    {
+        var stationId = viewedId;
+        if (stationId.Length == 0)
+        {
+            return;
+        }
+
+        viewedState = CommunityStationLoad.Loading;
+        _ = FetchStationAsync(stationId, cancellation.Token);
+        RetryDirectory();
+    }
+
+    public void RetryDirectory()
+    {
+        Volatile.Write(ref retryAfterTick, 0);
+        Volatile.Write(ref lastFetchTick, long.MinValue / 2);
+        Refresh();
+    }
+
+    private async Task FetchStationAsync(string stationId, CancellationToken token)
+    {
+        var status = 0;
+        try
+        {
+            var station = await api.Radio.StationAsync(stationId, token, code => status = code)
+                .ConfigureAwait(false);
+            if (!string.Equals(viewedId, stationId, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            if (station is not null)
+            {
+                viewed = station;
+                viewedState = CommunityStationLoad.Ready;
+                return;
+            }
+
+            viewedState = status == 404
+                ? CommunityStationLoad.NotFound
+                : session.IsSignedIn
+                    ? CommunityStationLoad.Unavailable
+                    : CommunityStationLoad.SignedOut;
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning(exception, "[Radio] station fetch failed");
+            if (string.Equals(viewedId, stationId, StringComparison.Ordinal))
+            {
+                viewedState = CommunityStationLoad.Unavailable;
+            }
+        }
+    }
+
     public static RadioStation ToStation(CommunityStationDto station)
     {
         return new RadioStation(station.Name, station.StreamUrl, "MP3", 0, string.Empty, string.Empty, station.Id,
@@ -262,6 +376,7 @@ internal sealed class CommunityRadioService : IDisposable
             if (page?.Items is { } items)
             {
                 stations = items;
+                liveCount = CountLive(items);
                 loaded = true;
                 Volatile.Write(ref lastFetchTick, Environment.TickCount64);
                 return;

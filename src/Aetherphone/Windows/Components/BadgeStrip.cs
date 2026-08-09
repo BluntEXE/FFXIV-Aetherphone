@@ -79,7 +79,8 @@ internal static class BadgeStrip
             }
         }
 
-        ProgressRing.CenterIconRamp(drawList, center, badge.Glyph, badge.Colors, light, size);
+        ProgressRing.CenterIconRamp(drawList, center, badge.Glyph, badge.Colors, light, size,
+            NameEffects.GlyphPhase(badge));
     }
 
     private static int Shown(string[]? badgeIds, int maxBadges)

@@ -70,6 +70,14 @@ internal static class CatalogLabels
             _ => identifier,
         };
 
+    public static string CaseCategory(PhoneCaseCategory category) =>
+        category switch
+        {
+            PhoneCaseCategory.Colors => Loc.T(L.Settings.CaseCategoryColors),
+            PhoneCaseCategory.Gradients => Loc.T(L.Settings.CaseCategoryGradients),
+            _ => Loc.T(L.Settings.CaseCategoryCustom),
+        };
+
     public static string RadioCategory(string identifier) =>
         identifier switch
         {

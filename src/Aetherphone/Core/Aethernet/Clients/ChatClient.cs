@@ -73,6 +73,11 @@ internal sealed class ChatClient
         return net.SendAsync(HttpMethod.Delete, $"/chats/messages/{Uri.EscapeDataString(messageId)}", token);
     }
 
+    public Task<bool> DeleteConversationAsync(string conversationId, CancellationToken token)
+    {
+        return net.SendAsync(HttpMethod.Delete, $"/chats/{Uri.EscapeDataString(conversationId)}", token);
+    }
+
     public Task<bool> MuteConversationAsync(string conversationId, bool muted, CancellationToken token)
     {
         return net.SendJsonForStatusAsync(HttpMethod.Post, $"/chats/{Uri.EscapeDataString(conversationId)}/mute", new MuteConversationRequest(muted), AethernetJsonContext.Default.MuteConversationRequest, token);
