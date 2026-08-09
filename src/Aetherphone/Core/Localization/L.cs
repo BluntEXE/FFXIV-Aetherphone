@@ -3723,9 +3723,9 @@ internal static class L
         public static readonly LocString RuleStaffGrant = new("coin.ruleStaffGrant", "From the team");
         public static readonly LocString RuleClawback = new("coin.ruleClawback", "Removed by the team");
         public static readonly LocString RuleCarry = new("coin.ruleCarry", "Carried forward");
-        public static readonly LocString RuleCasinoBuyIn = new("coin.ruleCasinoBuyIn", "Casino buy-in");
-        public static readonly LocString RuleCasinoCashOut = new("coin.ruleCasinoCashOut", "Casino cash-out");
-        public static readonly LocString RuleCasinoRefund = new("coin.ruleCasinoRefund", "Casino refund");
+        public static readonly LocString RuleCasinoBuyIn = new("coin.ruleCasinoBuyIn", "Gamba buy-in");
+        public static readonly LocString RuleCasinoCashOut = new("coin.ruleCasinoCashOut", "Gamba cash-out");
+        public static readonly LocString RuleCasinoRefund = new("coin.ruleCasinoRefund", "Gamba refund");
         public static readonly LocString RuleCasinoDaily = new("coin.ruleCasinoDaily", "Daily spin");
         public static readonly LocString RuleGeneric = new("coin.ruleGeneric", "Aether Coin");
         public static readonly LocString RulePost = new("coin.rulePost", "A post that lasted");
