@@ -17,4 +17,6 @@ internal static class CasinoRoomIds
     public const string WheelFloor = "wheel-floor";
 
     public const string BingoHall = "bingo-hall";
+
+    public const string BlackjackTable = "blackjack-table";
 }

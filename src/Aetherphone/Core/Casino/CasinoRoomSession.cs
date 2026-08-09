@@ -11,7 +11,19 @@ internal sealed record CasinoRoomState(
     long Seq,
     CasinoRoomSnapshotDto Snapshot,
     CasinoWheelRoomStateDto? Wheel,
-    CasinoBingoRoomStateDto? Bingo);
+    CasinoBingoRoomStateDto? Bingo,
+    CasinoBlackjackRoomStateDto? Blackjack);
+
+// The seat scoped half of a room, held beside the public one and versioned by the same pair. A
+// private frame is the only thing on this socket that is not true for everybody at the rail, so it
+// is stored apart rather than merged in: a snapshot that arrives without one must never be able to
+// erase a face the server already dealt to this seat, and a stale one must never paint it back.
+internal sealed record CasinoRoomPrivate(
+    string RoomId,
+    int Epoch,
+    long Seq,
+    CasinoPrivateDto Payload,
+    CasinoBlackjackPrivateDto? Blackjack);
 
 internal enum CasinoRoomApply
 {
@@ -49,6 +61,7 @@ internal sealed class CasinoRoomSession
     private readonly object gate = new();
 
     private volatile CasinoRoomState? state;
+    private volatile CasinoRoomPrivate? privateState;
     private volatile string roomId = string.Empty;
     private volatile string closedReason = string.Empty;
     private volatile bool attached;
@@ -63,6 +76,8 @@ internal sealed class CasinoRoomSession
     }
 
     public CasinoRoomState? State => state;
+
+    public CasinoRoomPrivate? Private => privateState;
 
     public string RoomId => roomId;
 
@@ -114,6 +129,7 @@ internal sealed class CasinoRoomSession
 
             roomId = nextRoomId;
             state = null;
+            privateState = null;
             closedReason = string.Empty;
             attached = false;
             awaitingSnapshot = true;
@@ -192,6 +208,9 @@ internal sealed class CasinoRoomSession
             case SignalType.CasinoEvent:
                 AbsorbEvent(payload, localNowUnixMs);
                 return;
+            case SignalType.CasinoPrivate:
+                AbsorbPrivate(payload, localNowUnixMs);
+                return;
             case SignalType.CasinoDeclined:
             case SignalType.CasinoEnded:
                 Close(payload.RoomId, signal.Reason ?? string.Empty);
@@ -223,6 +242,21 @@ internal sealed class CasinoRoomSession
     }
 
     internal static bool AcceptsSnapshot(CasinoRoomState? held, int epoch, long seq)
+    {
+        if (held is null)
+        {
+            return true;
+        }
+
+        if (epoch != held.Epoch)
+        {
+            return epoch > held.Epoch;
+        }
+
+        return seq >= held.Seq;
+    }
+
+    internal static bool AcceptsPrivate(CasinoRoomPrivate? held, int epoch, long seq)
     {
         if (held is null)
         {
@@ -291,16 +325,22 @@ internal sealed class CasinoRoomSession
         if (string.Equals(snapshot.GameKind, CasinoWire.WheelKind, StringComparison.Ordinal))
         {
             return new CasinoRoomState(roomId, epoch, seq, snapshot,
-                Parse(snapshot.GameState, AethernetJsonContext.Default.CasinoWheelRoomStateDto), null);
+                Parse(snapshot.GameState, AethernetJsonContext.Default.CasinoWheelRoomStateDto), null, null);
         }
 
         if (string.Equals(snapshot.GameKind, CasinoWire.BingoKind, StringComparison.Ordinal))
         {
             return new CasinoRoomState(roomId, epoch, seq, snapshot, null,
-                Parse(snapshot.GameState, AethernetJsonContext.Default.CasinoBingoRoomStateDto));
+                Parse(snapshot.GameState, AethernetJsonContext.Default.CasinoBingoRoomStateDto), null);
         }
 
-        return new CasinoRoomState(roomId, epoch, seq, snapshot, null, null);
+        if (string.Equals(snapshot.GameKind, CasinoWire.BlackjackKind, StringComparison.Ordinal))
+        {
+            return new CasinoRoomState(roomId, epoch, seq, snapshot, null, null,
+                Parse(snapshot.GameState, AethernetJsonContext.Default.CasinoBlackjackRoomStateDto));
+        }
+
+        return new CasinoRoomState(roomId, epoch, seq, snapshot, null, null, null);
     }
 
     internal static long SmoothedSkew(long held, long sample)
@@ -397,6 +437,38 @@ internal sealed class CasinoRoomSession
         }
     }
 
+    private void AbsorbPrivate(CasinoPayload payload, long localNowUnixMs)
+    {
+        var personal = payload.Private;
+        if (personal is null)
+        {
+            return;
+        }
+
+        AbsorbServerTime(payload.ServerNowUnixMs, localNowUnixMs);
+        lock (gate)
+        {
+            if (!string.Equals(roomId, payload.RoomId, StringComparison.Ordinal)
+                || !AcceptsPrivate(privateState, payload.Epoch, payload.Seq))
+            {
+                return;
+            }
+
+            privateState = new CasinoRoomPrivate(payload.RoomId, payload.Epoch, payload.Seq, personal,
+                BuildPrivate(personal));
+        }
+    }
+
+    internal static CasinoBlackjackPrivateDto? BuildPrivate(CasinoPrivateDto personal)
+    {
+        if (!string.Equals(personal.EventKind, CasinoWire.BlackjackHandEvent, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        return Parse(personal.Payload, AethernetJsonContext.Default.CasinoBlackjackPrivateDto);
+    }
+
     private bool AsksForResync(long localNowUnixMs)
     {
         if (resyncAskedAtUnixMs != 0 && localNowUnixMs - resyncAskedAtUnixMs < ResyncCooldownMilliseconds)
@@ -441,6 +513,7 @@ internal sealed class CasinoRoomSession
     {
         roomId = string.Empty;
         state = null;
+        privateState = null;
         closedReason = string.Empty;
         attached = false;
         awaitingSnapshot = false;

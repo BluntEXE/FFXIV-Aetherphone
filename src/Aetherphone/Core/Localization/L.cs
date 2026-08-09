@@ -4055,6 +4055,28 @@ internal static class L
         public static readonly LocString SpinNextSoon = new("casino.spin.nextSoon", "Your next spin opens with the coin day");
         public static readonly LocString SpinTopNote = new("casino.spin.topNote", "Sixteen segments, and the best of them pays {0} coins.");
         public static readonly LocString SpinClaimedTitle = new("casino.spin.claimedTitle", "Today's spin is spent");
+        public static readonly LocString SeatOpen = new("casino.seat.open", "Open");
+        public static readonly LocString BetMin = new("casino.bet.min", "Min");
+        public static readonly LocString BetHalf = new("casino.bet.half", "Half");
+        public static readonly LocString BetMax = new("casino.bet.max", "Max");
+        public static readonly LocString BlackjackAtTheTable = new("casino.blackjack.atTheTable", "{0} at the table");
+        public static readonly LocString BlackjackBetConfirm = new("casino.blackjack.betConfirm", "Bet {0}");
+        public static readonly LocString BlackjackBetsCloseIn = new("casino.blackjack.betsCloseIn", "Bets close in {0}");
+        public static readonly LocString BlackjackWaitingForBets = new("casino.blackjack.waitingForBets", "Place your bets");
+        public static readonly LocString BlackjackDealing = new("casino.blackjack.dealing", "Dealing");
+        public static readonly LocString BlackjackYourTurn = new("casino.blackjack.yourTurn", "Your turn");
+        public static readonly LocString BlackjackDealerPlays = new("casino.blackjack.dealerPlays", "The table is playing");
+        public static readonly LocString BlackjackDealerHas = new("casino.blackjack.dealerHas", "Dealer has {0}");
+        public static readonly LocString BlackjackActionHit = new("casino.blackjack.actionHit", "Hit");
+        public static readonly LocString BlackjackActionStand = new("casino.blackjack.actionStand", "Stand");
+        public static readonly LocString BlackjackActionDouble = new("casino.blackjack.actionDouble", "Double {0}");
+        public static readonly LocString BlackjackActionSplit = new("casino.blackjack.actionSplit", "Split {0}");
+        public static readonly LocString BlackjackYouWon = new("casino.blackjack.youWon", "You won {0}");
+        public static readonly LocString BlackjackHandOver = new("casino.blackjack.handOver", "Hand over");
+        public static readonly LocString BlackjackTakeSeat = new("casino.blackjack.takeSeat", "Take a seat");
+        public static readonly LocString BlackjackRules = new("casino.blackjack.rules", "Blackjack pays 3 to 2. The dealer stands on 17.");
+        public static readonly LocString BlackjackClosedTitle = new("casino.blackjack.closedTitle", "This table has closed");
+        public static readonly LocString BlackjackClosedHint = new("casino.blackjack.closedHint", "The table is not running right now. The rest of the floor is still open.");
     }
 
     internal static class Catalogs

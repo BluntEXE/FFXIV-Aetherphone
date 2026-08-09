@@ -19,6 +19,8 @@ internal sealed class CasinoClient
     internal const string DailySpinPath = "/casino/dailyspin";
     internal const string WheelBetPath = "/casino/wheel/bet";
     internal const string BingoCardsPath = "/casino/bingo/cards";
+    internal const string BlackjackBetPath = "/casino/blackjack/bet";
+    internal const string BlackjackActionPath = "/casino/blackjack/action";
 
     internal static string RoomPath(string roomId)
     {
@@ -170,6 +172,25 @@ internal sealed class CasinoClient
             new CasinoBingoCardsRequest(roomId, roundIndex, clientRoundId, cardCount),
             AethernetJsonContext.Default.CasinoBingoCardsRequest,
             AethernetJsonContext.Default.CasinoBingoCardsDto, token);
+    }
+
+    public Task<CasinoBlackjackBetDto?> PlaceBlackjackBetAsync(string roomId, long roundIndex, string clientRoundId,
+        string clientBetId, long amount, CancellationToken token)
+    {
+        return net.PostAsync(BlackjackBetPath,
+            new CasinoBlackjackBetRequest(roomId, roundIndex, clientRoundId, clientBetId, amount),
+            AethernetJsonContext.Default.CasinoBlackjackBetRequest,
+            AethernetJsonContext.Default.CasinoBlackjackBetDto, token);
+    }
+
+    public Task<CasinoBlackjackActionDto?> SendBlackjackActionAsync(string roomId, string handId, long roundIndex,
+        int splitIndex, int action, long actionSeq, string clientActionId, CancellationToken token)
+    {
+        return net.PostAsync(BlackjackActionPath,
+            new CasinoBlackjackActionRequest(roomId, handId, roundIndex, splitIndex, action, actionSeq,
+                clientActionId),
+            AethernetJsonContext.Default.CasinoBlackjackActionRequest,
+            AethernetJsonContext.Default.CasinoBlackjackActionDto, token);
     }
 
     public Task<CasinoBingoCardsDto?> MyBingoCardsAsync(string roomId, CancellationToken token)

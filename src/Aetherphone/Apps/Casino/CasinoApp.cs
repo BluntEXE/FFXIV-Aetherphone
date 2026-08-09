@@ -21,6 +21,7 @@ internal sealed partial class CasinoApp : IPhoneApp
 
     private static readonly CashierDrawer.GameOption[] PlayableGames =
     {
+        new(CasinoGames.Blackjack, L.Casino.GameBlackjack),
         new(CasinoGames.Slots, L.Casino.GameSlots),
         new(CasinoGames.Scratch, L.Casino.GameScratch),
         new(CasinoGames.Barkeep, L.Casino.GameBarkeep),
@@ -43,6 +44,7 @@ internal sealed partial class CasinoApp : IPhoneApp
     private readonly Cabinets.WheelCabinet wheel;
     private readonly Cabinets.BingoCabinet bingo;
     private readonly Cabinets.DailySpinCabinet dailySpin;
+    private readonly Tables.BlackjackTable blackjack;
     private readonly AppSkin ui = new(AppPalettes.Casino);
     private readonly ViewRouter<CasinoRoute> router;
     private readonly RouterDraw<CasinoRoute> drawView;
@@ -73,6 +75,7 @@ internal sealed partial class CasinoApp : IPhoneApp
         wheel = new Cabinets.WheelCabinet(casino, casinoRooms, OpenCashier, PopRoute);
         bingo = new Cabinets.BingoCabinet(casino, casinoRooms, OpenCashier, PopRoute);
         dailySpin = new Cabinets.DailySpinCabinet(casinoSpin);
+        blackjack = new Tables.BlackjackTable(casino, casinoRooms, OpenCashier, PopRoute);
         router = new ViewRouter<CasinoRoute>(CasinoRoute.Floor);
         drawView = DrawView;
         popRoute = PopRoute;
@@ -89,6 +92,7 @@ internal sealed partial class CasinoApp : IPhoneApp
         wheel.Reset();
         bingo.Reset();
         dailySpin.Reset();
+        blackjack.Reset();
         ResetLimitsEditor();
         historyLoadFailed = false;
         history.Invalidate();
@@ -108,6 +112,7 @@ internal sealed partial class CasinoApp : IPhoneApp
         wheel.Reset();
         bingo.Reset();
         dailySpin.Reset();
+        blackjack.Reset();
         ResetLimitsEditor();
     }
 
@@ -175,6 +180,10 @@ internal sealed partial class CasinoApp : IPhoneApp
             case CasinoScreen.Cabinet when string.Equals(route.GameId, CasinoGames.Bingo, StringComparison.Ordinal):
                 AppHeader.Draw(context, Loc.T(L.Casino.GameBingo), popRoute);
                 bingo.Draw(body, ui);
+                break;
+            case CasinoScreen.Table:
+                AppHeader.Draw(context, Loc.T(L.Casino.GameBlackjack), popRoute);
+                blackjack.Draw(body, ui);
                 break;
             case CasinoScreen.DailySpin:
                 AppHeader.Draw(context, Loc.T(L.Casino.GameDailySpin), popRoute);
@@ -265,6 +274,7 @@ internal sealed partial class CasinoApp : IPhoneApp
         wheel.Reset();
         bingo.Reset();
         dailySpin.Reset();
+        blackjack.Reset();
         router.Pop();
     }
 
@@ -281,6 +291,19 @@ internal sealed partial class CasinoApp : IPhoneApp
 
     internal void OpenGame(string gameId)
     {
+        if (string.Equals(gameId, CasinoGames.Blackjack, StringComparison.Ordinal))
+        {
+            if (!SeatedAt(Core.Casino.CasinoWire.BlackjackKind))
+            {
+                cashier.Open(GameIndexOf(gameId));
+                return;
+            }
+
+            blackjack.Enter();
+            router.Push(new CasinoRoute(CasinoScreen.Table, gameId));
+            return;
+        }
+
         if (string.Equals(gameId, CasinoGames.Slots, StringComparison.Ordinal))
         {
             if (!SeatedAt(Core.Casino.CasinoWire.SlotsKind))

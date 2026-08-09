@@ -285,6 +285,102 @@ internal sealed record CasinoWheelBetsDto(
     long MyStake = 0,
     long Stack = 0);
 
+// One seat as everybody at the rail sees it. Cards are the shared playing card integers 0..51 and
+// -1 is a card whose existence is public but whose face is not, which is the dealer's hole card
+// before the reveal and any seat the table is keeping closed. A concealed card is never sent as a
+// value the client could uncover: the server leaves the placeholder in and the face simply does not
+// travel.
+internal sealed record CasinoBlackjackHandDto(
+    int SplitIndex = 0,
+    int[]? Cards = null,
+    int Total = 0,
+    bool Soft = false,
+    long Bet = 0,
+    int Outcome = 0,
+    long Delta = 0);
+
+internal sealed record CasinoBlackjackSeatDto(
+    int SeatIndex = 0,
+    string DisplayName = "",
+    string Handle = "",
+    long Stack = 0,
+    long Bet = 0,
+    int State = 0,
+    bool Mine = false,
+    bool Connected = true,
+    bool Split = false,
+    CasinoBlackjackHandDto[]? Hands = null);
+
+// The per-game half of a blackjack room, riding the snapshot's GameState blob like every other
+// communal game. ActionsMask states what the table will accept from the active hand right now, and
+// it is the only thing the action bar is allowed to consult: a client that decided legality for
+// itself would offer a double the server refuses and read as broken the moment the shoe disagreed.
+internal sealed record CasinoBlackjackRoomStateDto(
+    long RoundIndex = 0,
+    string HandId = "",
+    string Commit = "",
+    string NextCommit = "",
+    string Seed = "",
+    CasinoBlackjackSeatDto[]? Seats = null,
+    int[]? DealerCards = null,
+    int DealerTotal = 0,
+    bool DealerSoft = false,
+    int ActiveSeat = -1,
+    int ActiveSplit = -1,
+    int ActionsMask = 0,
+    long ActionCount = 0,
+    long DeadlineUnixMs = 0,
+    int WindowSeconds = 0,
+    long MinBet = 0,
+    long MaxBet = 0,
+    int MySeat = -1);
+
+// The seat scoped half, delivered on casino.private to one recipient. It exists so a table can deal
+// a closed card without the public blob ever carrying it: the projection lays these faces over the
+// placeholders for my seat only, and every other seat keeps its backs because there is nothing to
+// lay over them.
+internal sealed record CasinoBlackjackPrivateDto(
+    long RoundIndex = 0,
+    int SeatIndex = -1,
+    int[][]? Hands = null);
+
+internal sealed record CasinoBlackjackBetRequest(
+    string RoomId,
+    long RoundIndex,
+    string ClientRoundId,
+    string ClientBetId,
+    long Amount);
+
+internal sealed record CasinoBlackjackBetDto(
+    bool Granted = false,
+    string Reason = "",
+    string RoomId = "",
+    long RoundIndex = 0,
+    string RoundId = "",
+    long Amount = 0,
+    long Stack = 0);
+
+// An action is guarded by the hand it was composed against and the action count the client had seen,
+// so a post that raced the table loses rather than landing on the next decision. A refusal answers
+// with the reason and the client resyncs instead of guessing.
+internal sealed record CasinoBlackjackActionRequest(
+    string RoomId,
+    string HandId,
+    long RoundIndex,
+    int SplitIndex,
+    int Action,
+    long ActionSeq,
+    string ClientActionId);
+
+internal sealed record CasinoBlackjackActionDto(
+    bool Granted = false,
+    string Reason = "",
+    string RoomId = "",
+    string HandId = "",
+    long RoundIndex = 0,
+    int Action = 0,
+    long Stack = 0);
+
 internal sealed record CasinoBingoCardsRequest(
     string RoomId,
     long RoundIndex,

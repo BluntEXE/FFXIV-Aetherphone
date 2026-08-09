@@ -4,6 +4,7 @@ internal enum CasinoScreen
 {
     Floor,
     Cabinet,
+    Table,
     History,
     Fairness,
     Limits,

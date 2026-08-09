@@ -12,6 +12,12 @@ internal static class CasinoWire
 
     public const string BingoKind = "casino.bingo";
 
+    public const string BlackjackKind = "casino.blackjack";
+
+    // The one private frame the table sends: my seat's own cards, named so the room session can
+    // parse it off the pump thread instead of leaving a JSON string for a draw path to open.
+    public const string BlackjackHandEvent = "casino.blackjack.hand";
+
     public const string DailySpinKind = "casino.dailyspin";
 
     private const string KindPrefix = "casino.";

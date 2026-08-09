@@ -34,7 +34,7 @@ internal sealed partial class CasinoApp
 
     private static readonly FloorTileDefinition[] FloorTiles =
     {
-        new(CasinoGames.Blackjack, L.Casino.GameBlackjack, false),
+        new(CasinoGames.Blackjack, L.Casino.GameBlackjack, true, Core.Casino.CasinoRoomIds.BlackjackTable),
         new(CasinoGames.Slots, L.Casino.GameSlots, true),
         new(CasinoGames.Scratch, L.Casino.GameScratch, true),
         new(CasinoGames.Barkeep, L.Casino.GameBarkeep, true),

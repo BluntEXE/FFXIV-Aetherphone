@@ -31,6 +31,10 @@ internal sealed class CasinoRoomsStore : IDisposable
     private const long RetryAfterAttemptMilliseconds = 30_000;
     private const int NotFoundStatus = 404;
 
+    // A hand bet has no spot to sit on, so it burns a sentinel and shares the wheel's bet identity
+    // bookkeeping rather than growing a second copy of it.
+    private const int HandBetSpot = -2;
+
     private readonly AethernetSession session;
     private readonly CasinoClient casino;
     private readonly CasinoStore chips;
@@ -57,6 +61,10 @@ internal sealed class CasinoRoomsStore : IDisposable
     private long unansweredBetRoundIndex = -1;
     private string unansweredPurchaseId = string.Empty;
     private long unansweredPurchaseRoundIndex = -1;
+    private string unansweredActionId = string.Empty;
+    private string unansweredActionHandId = string.Empty;
+    private int unansweredActionValue;
+    private long unansweredActionSeq = -1;
     private long personalRoundIndex = -1;
     private int personalPhase = -1;
     private int roomsFailed;
@@ -324,6 +332,164 @@ internal sealed class CasinoRoomsStore : IDisposable
         }, () => stakeInFlight = false);
     }
 
+    // A blackjack bet is one bet for one seat in one round, so it reuses the wheel's idempotency
+    // exactly with the spot slot burned to a sentinel: the same bet id is the same bet however many
+    // times a lost response is retried, and a bet composed against a round that closed in flight is
+    // refused by the server rather than landing on the next one.
+    public void PlaceBlackjackBet(long amount)
+    {
+        var roomId = room.RoomId;
+        var snapshot = room.State?.Snapshot;
+        if (stakeInFlight || !session.IsSignedIn || roomId.Length == 0 || snapshot is null || amount <= 0)
+        {
+            return;
+        }
+
+        if (!string.Equals(snapshot.GameKind, CasinoWire.BlackjackKind, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var roundIndex = snapshot.RoundIndex;
+        var sittingId = chips.State?.Sitting?.Id ?? string.Empty;
+        string betId;
+        string clientRoundId;
+        lock (stakeGate)
+        {
+            clientRoundId = ChipRoundFor(roundIndex);
+            betId = ReusableBetId(roundIndex, HandBetSpot, amount);
+            if (betId.Length == 0)
+            {
+                betId = Guid.NewGuid().ToString("N");
+            }
+
+            unansweredBetId = betId;
+            unansweredBetSpot = HandBetSpot;
+            unansweredBetAmount = amount;
+            unansweredBetRoundIndex = roundIndex;
+        }
+
+        stakeInFlight = true;
+        work.Run("blackjack bet", async token =>
+        {
+            var result = await casino
+                .PlaceBlackjackBetAsync(roomId, roundIndex, clientRoundId, betId, amount, token)
+                .ConfigureAwait(false);
+            if (result is null)
+            {
+                Interlocked.Exchange(ref stakeFailed, 1);
+                return;
+            }
+
+            ForgetUnansweredBet(betId);
+            Interlocked.Exchange(ref stakeResult, new CasinoStakeOutcome(result.Granted, result.Reason));
+            if (!result.Granted)
+            {
+                chips.RefreshNow();
+                return;
+            }
+
+            if (sittingId.Length > 0)
+            {
+                chips.AbsorbStack(sittingId, result.Stack);
+            }
+        }, () => stakeInFlight = false);
+    }
+
+    // The action count the client last saw rides along so a post that raced the table loses the
+    // guard rather than applying to whatever decision came next. A refusal is therefore safe to
+    // retry: if the first one landed the retry is stale, and if it did not the retry is the action.
+    public void SendBlackjackAction(int action)
+    {
+        var roomId = room.RoomId;
+        var held = room.State;
+        var board = held?.Blackjack;
+        if (stakeInFlight || !session.IsSignedIn || roomId.Length == 0 || board is null || action == 0)
+        {
+            return;
+        }
+
+        if (!BlackjackRules.Allows(board.ActionsMask, action) || board.HandId.Length == 0)
+        {
+            return;
+        }
+
+        var handId = board.HandId;
+        var roundIndex = board.RoundIndex;
+        var splitIndex = board.ActiveSplit;
+        var actionSeq = board.ActionCount;
+        var sittingId = chips.State?.Sitting?.Id ?? string.Empty;
+        string actionId;
+        lock (stakeGate)
+        {
+            actionId = ReusableActionId(handId, action, actionSeq);
+            if (actionId.Length == 0)
+            {
+                actionId = Guid.NewGuid().ToString("N");
+            }
+
+            unansweredActionId = actionId;
+            unansweredActionHandId = handId;
+            unansweredActionValue = action;
+            unansweredActionSeq = actionSeq;
+        }
+
+        stakeInFlight = true;
+        work.Run("blackjack action", async token =>
+        {
+            var result = await casino
+                .SendBlackjackActionAsync(roomId, handId, roundIndex, splitIndex, action, actionSeq, actionId, token)
+                .ConfigureAwait(false);
+            if (result is null)
+            {
+                Interlocked.Exchange(ref stakeFailed, 1);
+                return;
+            }
+
+            ForgetUnansweredAction(actionId);
+            Interlocked.Exchange(ref stakeResult, new CasinoStakeOutcome(result.Granted, result.Reason));
+            if (!result.Granted)
+            {
+                chips.RefreshNow();
+                return;
+            }
+
+            if (sittingId.Length > 0)
+            {
+                chips.AbsorbStack(sittingId, result.Stack);
+            }
+        }, () => stakeInFlight = false);
+    }
+
+    private string ReusableActionId(string handId, int action, long actionSeq)
+    {
+        if (unansweredActionId.Length == 0
+            || unansweredActionValue != action
+            || unansweredActionSeq != actionSeq
+            || !string.Equals(unansweredActionHandId, handId, StringComparison.Ordinal))
+        {
+            return string.Empty;
+        }
+
+        return unansweredActionId;
+    }
+
+    private void ForgetUnansweredAction(string actionId)
+    {
+        lock (stakeGate)
+        {
+            if (!string.Equals(unansweredActionId, actionId, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            unansweredActionId = string.Empty;
+            unansweredActionHandId = string.Empty;
+            unansweredActionValue = 0;
+            unansweredActionSeq = -1;
+        }
+    }
+
     private string ChipRoundFor(long roundIndex)
     {
         if (chipRoundIndex == roundIndex && chipRoundId.Length > 0)
@@ -547,6 +713,10 @@ internal sealed class CasinoRoomsStore : IDisposable
             unansweredBetRoundIndex = -1;
             unansweredPurchaseId = string.Empty;
             unansweredPurchaseRoundIndex = -1;
+            unansweredActionId = string.Empty;
+            unansweredActionHandId = string.Empty;
+            unansweredActionValue = 0;
+            unansweredActionSeq = -1;
         }
     }
 

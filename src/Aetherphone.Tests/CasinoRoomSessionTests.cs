@@ -468,7 +468,7 @@ public sealed class CasinoRoomSessionTests
 
     private static CasinoRoomState Held(int epoch, long seq)
     {
-        return new CasinoRoomState(Room, epoch, seq, new CasinoRoomSnapshotDto(RoomId: Room), null, null);
+        return new CasinoRoomState(Room, epoch, seq, new CasinoRoomSnapshotDto(RoomId: Room), null, null, null);
     }
 
     private static CasinoRoomSnapshotDto Board(int occupancy)
