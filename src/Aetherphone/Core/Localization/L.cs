@@ -150,7 +150,7 @@ internal static class L
     internal static class Safety
     {
         public static readonly LocString Title = new("safety.title", "Moderation and safety");
-        public static readonly LocString Summary = new("safety.summary", "Warnings and removals");
+        public static readonly LocString Summary = new("safety.summary", "Warnings");
         public static readonly LocString UnreadSummary = new("safety.unreadSummary", "{0} unread");
         public static readonly LocString Empty = new("safety.empty", "Nothing here. No moderator has acted on your account.");
         public static readonly LocString SignInPrompt = new("safety.signInPrompt", "Sign in to see moderation notices for your account.");
@@ -1212,8 +1212,6 @@ internal static class L
     internal static class Settings
     {
         public static readonly LocString Title = new("settings.title", "Settings");
-        public static readonly LocString GeneralFooter = new("settings.generalFooter", "Personalize how your phone looks, reads and behaves.");
-        public static readonly LocString AlertsFooter = new("settings.alertsFooter", "Choose how calls and notifications reach you.");
         public static readonly LocString Appearance = new("settings.appearance", "Appearance");
         public static readonly LocString Theme = new("settings.theme", "Theme");
         public static readonly LocString ThemeLight = new("settings.themeLight", "Light");
