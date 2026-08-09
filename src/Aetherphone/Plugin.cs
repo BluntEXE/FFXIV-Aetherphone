@@ -390,14 +390,21 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnMenuOpened(IMenuOpenedArgs args)
     {
-        var itemId = ResolveContextItem(args);
-        if (itemId == 0 || !services.MarketIndex.TryGet(itemId, out _))
+        if(!Cfg.MarketContextMenu)
         {
             return;
         }
-
-        args.AddMenuItem(
-            new MenuItem { Name = Loc.T(L.Plugin.SearchTheMarket), OnClicked = _ => OpenMarketAt(itemId), });
+            else
+        {
+            var itemId = ResolveContextItem(args);
+            if (itemId == 0 || !services.MarketIndex.TryGet(itemId, out _))
+            {
+                return;
+            }
+            
+            args.AddMenuItem(
+                new MenuItem { Name = Loc.T(L.Plugin.SearchTheMarket), OnClicked = _ => OpenMarketAt(itemId), });
+        }
     }
 
     private static uint ResolveContextItem(IMenuOpenedArgs args)

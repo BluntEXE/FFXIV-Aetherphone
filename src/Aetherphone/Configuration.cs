@@ -215,6 +215,8 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool TimerNotified { get; set; }
     public string LastSeenChangelogVersion { get; set; } = string.Empty;
     public bool ChangelogSeenInitialized { get; set; }
+    
+    public bool MarketContextMenu { get; set; } = true;
 
     public bool HasUnseenChangelog => LastSeenChangelogVersion != ChangelogData.LatestVersion;
 

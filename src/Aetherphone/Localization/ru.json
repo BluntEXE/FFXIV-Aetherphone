@@ -675,6 +675,8 @@
   "settings.soundDefault": "По умолчанию",
   "settings.immersion": "Погружение",
   "settings.behavior": "Поведение",
+  "settings.marketContextMenu": "Поиск на рынке в контекстном меню",
+  "settings.marketContextMenuHint": "Показывает пункт «Искать на рынке» в контекстном меню при нажатии правой кнопкой мыши на предмет.",
   "settings.scrollWhileIdle": "Листать телефон на месте",
   "settings.scrollWhileIdleHint": "Ваш персонаж листает телефон (эмоция Tomescroll), стоя на месте вне боя. Не работает, если эмоция не разблокирована.",
   "settings.showInGpose": "Показывать в групповой позе",

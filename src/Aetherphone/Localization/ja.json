@@ -675,6 +675,8 @@
   "settings.soundDefault": "デフォルト",
   "settings.immersion": "没入感",
   "settings.behavior": "動作",
+  "settings.marketContextMenu": "コンテキストメニューでマーケット検索を有効にする",
+  "settings.marketContextMenuHint": "ゲーム内でアイテムを右クリックしたときに表示されるコンテキストメニューに「マーケットで検索」オプションを表示します。",
   "settings.scrollWhileIdle": "待機中にスクロール",
   "settings.scrollWhileIdleHint": "立ち止まっていて非戦闘状態の時、キャラクターが電話をスクロールする（トームストーン）エモートを実行します。エモートを解放していない場合は機能しません。",
   "settings.showInGpose": "グループポーズ中に表示",

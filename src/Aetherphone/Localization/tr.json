@@ -675,6 +675,8 @@
   "settings.soundDefault": "Varsayılan",
   "settings.immersion": "Atmosfer",
   "settings.behavior": "Davranış",
+  "settings.marketContextMenu": "Sağ tık menüsünde pazar aramasını etkinleştir",
+  "settings.marketContextMenuHint": "Oyun içinde bir eşyaya sağ tıkladığında \"Pazarda Ara\" seçeneğini gösterir.",
   "settings.scrollWhileIdle": "Boştayken kaydır",
   "settings.scrollWhileIdleHint": "Karakterin hareketsiz ve savaş dışındayken telefonunda gezinir (Tomescroll emotu). Bu emotu açmadıysan hiçbir şey yapmaz.",
   "settings.showInGpose": "Grup pozunda göster",

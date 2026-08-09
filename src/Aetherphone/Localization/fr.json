@@ -675,6 +675,8 @@
   "settings.soundDefault": "Par défaut",
   "settings.immersion": "Immersion",
   "settings.behavior": "Comportement",
+  "settings.marketContextMenu": "Activer la recherche du marché dans le menu contextuel",
+  "settings.marketContextMenuHint": "Affiche l'option « Chercher sur le marché » dans le menu contextuel en jeu lorsque vous faites un clic droit sur un objet.",
   "settings.scrollWhileIdle": "Faire défiler à l'arrêt",
   "settings.scrollWhileIdleHint": "Votre personnage fait défiler son téléphone (émote Tomescroll) lorsqu'il reste immobile et hors combat. Sans effet si vous n'avez pas débloqué l'émote.",
   "settings.showInGpose": "Afficher dans le Photodrame",
