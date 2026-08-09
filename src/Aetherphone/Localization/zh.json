@@ -1709,6 +1709,8 @@
   "chirper.importFromPc": "从电脑导入",
   "chirper.addPhotos": "添加照片",
   "chirper.gifTooLarge": "GIF太大（最大4MB）",
+  "chirper.gifRidesAlone": "GIF只能单独发布，不能与其他照片一起。",
+  "chirper.maxPhotos": "一条啾文最多可附{0}张照片。",
   "chirper.moveAndScale": "移动并缩放",
   "chirper.gestureHint": "拖动以移动 · 滚动以缩放",
   "chirper.use": "使用",

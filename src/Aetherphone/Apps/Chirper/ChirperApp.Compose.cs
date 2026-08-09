@@ -70,22 +70,15 @@ internal sealed partial class ChirperApp
             var drawList = ImGui.GetWindowDrawList();
             var origin = ImGui.GetCursorScreenPos();
             var width = ImGui.GetContentRegionAvail().X;
-            var footerHeight = 40f * scale;
+            var footerHeight = 44f * scale;
             var emojiHeight = composeEmoji.PanelHeight(scale);
             var panelTop = area.Max.Y - footerHeight - emojiHeight;
             var cardMin = origin;
-            var cardMax = new Vector2(origin.X + width, emojiHeight > 0f ? panelTop - 8f * scale : panelTop);
-            ui.Card(drawList, cardMin, cardMax, 18f * scale);
+            var cardLimit = emojiHeight > 0f ? panelTop - 8f * scale : panelTop;
             var pad = 14f * scale;
             var radius = 20f * scale;
             var me = store.Me;
             var displayName = me is null ? string.Empty : SocialIdentity.Name(me.DisplayName, me.Handle);
-            if (me is not null)
-            {
-                DrawAvatar(drawList, new Vector2(cardMin.X + pad + radius, cardMin.Y + pad + radius), radius, me.Name,
-                    me.World, me.AvatarUrl, 0.95f, 48);
-            }
-
             var inputLeft = pad + radius * 2f + 12f * scale;
             var inputX = cardMin.X + inputLeft;
             var nameMaxWidth = MathF.Max(1f, width - inputLeft - pad);
@@ -95,21 +88,43 @@ internal sealed partial class ChirperApp
             var nameSize = displayName.Length > 0
                 ? Typography.Measure(displayName, 1.05f, FontWeight.SemiBold)
                 : Vector2.Zero;
+            var inputTop = cardMin.Y + pad + nameSize.Y + 6f * scale;
+            var inputWidth = width - inputLeft - pad;
+            var framePadding = ImGui.GetStyle().FramePadding.X;
+            var composeWrapWidth = inputWidth - framePadding * 2f - 4f * scale;
+            var quotePreviewHeight = quoteTarget is not null
+                ? QuotedCardHeight(quoteTarget, inputWidth) + 8f * scale
+                : 0f;
+            var stripGap = 6f * scale;
+            var stripTile = composeAttachments.Count > 0
+                ? MathF.Min(120f * scale,
+                    (inputWidth - stripGap * (composeAttachments.Count - 1)) / MathF.Max(2f, composeAttachments.Count))
+                : 0f;
+            var stripHeight = composeAttachments.Count > 0 ? stripTile + 8f * scale : 0f;
+            var measuredText = draft.Length == 0
+                ? Typography.Measure("Ag", 1.15f).Y
+                : Typography.MeasureWrapped(draft, composeWrapWidth, 1.15f);
+            var statusHeight = composeStatus.Length > 0
+                ? Typography.MeasureWrapped(composeStatus, inputWidth, 0.85f) + 6f * scale
+                : 0f;
+            var availableInput = cardLimit - inputTop - pad - quotePreviewHeight - stripHeight - statusHeight;
+            var desiredInput = MathF.Max(measuredText + 34f * scale, 96f * scale);
+            var inputHeight = MathF.Max(40f * scale, MathF.Min(desiredInput, availableInput));
+            var cardBottom = MathF.Min(cardLimit,
+                inputTop + inputHeight + stripHeight + quotePreviewHeight + statusHeight + pad);
+            ui.Card(drawList, cardMin, new Vector2(origin.X + width, cardBottom), 18f * scale);
+            if (me is not null)
+            {
+                DrawAvatar(drawList, new Vector2(cardMin.X + pad + radius, cardMin.Y + pad + radius), radius, me.Name,
+                    me.World, me.AvatarUrl, 0.95f, 48);
+            }
+
             if (displayName.Length > 0)
             {
                 Typography.Draw(new Vector2(inputX, cardMin.Y + pad), displayName, theme.TextStrong, 1.05f,
                     FontWeight.SemiBold);
             }
 
-            var inputTop = cardMin.Y + pad + nameSize.Y + 6f * scale;
-            var inputWidth = width - inputLeft - pad;
-            var quotePreviewHeight = quoteTarget is not null
-                ? QuotedCardHeight(quoteTarget, inputWidth) + 8f * scale
-                : 0f;
-            var stripGap = 6f * scale;
-            var stripTile = (inputWidth - stripGap * (ChirperStore.MaxImages - 1)) / ChirperStore.MaxImages;
-            var stripHeight = composeAttachments.Count > 0 ? stripTile + 8f * scale : 0f;
-            var inputHeight = cardMax.Y - inputTop - pad - quotePreviewHeight - stripHeight;
             ImGui.SetCursorScreenPos(new Vector2(inputX, inputTop));
             ImGui.SetNextItemWidth(inputWidth);
             if (composeFocus)
@@ -118,8 +133,6 @@ internal sealed partial class ChirperApp
                 composeFocus = false;
             }
 
-            var framePadding = ImGui.GetStyle().FramePadding.X;
-            var composeWrapWidth = inputWidth - framePadding * 2f - 4f * scale;
             using (ImRaii.PushColor(ImGuiCol.FrameBg, new Vector4(0f, 0f, 0f, 0f)))
             using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Chirper.TitleInk))
             using (Plugin.Fonts.Push(1.15f))
@@ -155,6 +168,18 @@ internal sealed partial class ChirperApp
                     false, "compose.quote");
             }
 
+            if (composeStatus.Length > 0)
+            {
+                var statusTop = inputTop + inputHeight + stripHeight + quotePreviewHeight + 4f * scale;
+                ImGui.SetCursorScreenPos(new Vector2(inputX, statusTop));
+                using (Typography.WrapAt(inputX + inputWidth))
+                using (Plugin.Fonts.Push(0.85f))
+                using (ImRaii.PushColor(ImGuiCol.Text, theme.Danger))
+                {
+                    Typography.Wrapped(composeStatus);
+                }
+            }
+
             if (composeEmoji.Open)
             {
                 var panel = new Rect(new Vector2(area.Min.X, panelTop),
@@ -163,38 +188,38 @@ internal sealed partial class ChirperApp
             }
 
             var footerY = area.Max.Y - footerHeight * 0.5f;
-            var emojiRadius = 15f * scale;
-            var emojiCenter = new Vector2(origin.X + 4f * scale + emojiRadius, footerY);
+            var emojiRadius = 17f * scale;
+            var emojiCenter = new Vector2(origin.X + 6f * scale + emojiRadius, footerY);
             composeEmoji.DrawToggle(ui, emojiCenter, emojiRadius, Accent, AppPalettes.Chirper.MutedInk,
                 Loc.T(L.Common.Emoji));
-            var photoCenter = new Vector2(emojiCenter.X + emojiRadius * 2f + 10f * scale, footerY);
+            var photoCenter = new Vector2(emojiCenter.X + emojiRadius * 2f + 14f * scale, footerY);
             var canAttach = composeAttachments.Count < ChirperStore.MaxImages && !ComposeHasGif();
             var photoInk = canAttach
                 ? AppPalettes.Chirper.MutedInk
                 : Palette.WithAlpha(AppPalettes.Chirper.MutedInk, 0.4f);
             if (ui.IconButton(photoCenter, emojiRadius, FontAwesomeIcon.Image.ToIconString(), photoInk,
-                    new Vector4(0f, 0f, 0f, 0f), 1.05f, Loc.T(L.Chirper.AddPhotos)) && canAttach)
+                    new Vector4(0f, 0f, 0f, 0f), 1.2f, Loc.T(L.Chirper.AddPhotos)))
             {
-                OpenComposePicker();
+                if (canAttach)
+                {
+                    OpenComposePicker();
+                }
+                else
+                {
+                    composeStatus = ComposeHasGif()
+                        ? Loc.T(L.Chirper.GifRidesAlone)
+                        : Loc.T(L.Chirper.MaxPhotos, ChirperStore.MaxImages);
+                }
             }
 
             var remaining = MaxPostLength - draft.Length;
             var counterColor = remaining < 40
                 ? (remaining < 0 ? theme.Danger : new Vector4(0.95f, 0.65f, 0.20f, 1f))
                 : AppPalettes.Chirper.MutedInk;
-            var counter = remaining.ToString(Loc.Culture);
-            var counterSize = Typography.Measure(counter, 0.9f, FontWeight.Medium);
-            Typography.Draw(new Vector2(area.Max.X - 4f * scale - counterSize.X, footerY - counterSize.Y * 0.5f),
-                counter, counterColor, 0.9f, FontWeight.Medium);
-            if (composeStatus.Length > 0)
-            {
-                var statusLeft = photoCenter.X + emojiRadius + 10f * scale;
-                var statusMaxWidth = MathF.Max(1f, area.Max.X - 8f * scale - counterSize.X - statusLeft);
-                var clippedStatus = Typography.FitText(composeStatus, statusMaxWidth, 0.85f, FontWeight.Regular);
-                Typography.Draw(
-                    new Vector2(statusLeft, footerY - Typography.Measure(clippedStatus, 0.85f).Y * 0.5f),
-                    clippedStatus, theme.Danger, 0.85f);
-            }
+            var counter = string.Format(Loc.Culture, "{0} / {1}", draft.Length, MaxPostLength);
+            var counterSize = Typography.Measure(counter, 1f, FontWeight.Medium);
+            Typography.Draw(new Vector2(area.Max.X - 6f * scale - counterSize.X, footerY - counterSize.Y * 0.5f),
+                counter, counterColor, 1f, FontWeight.Medium);
         }
     }
 
@@ -365,14 +390,21 @@ internal sealed partial class ChirperApp
     private void AddComposeAttachment(string path)
     {
         composePicking = false;
-        if (string.IsNullOrEmpty(path) || composeAttachments.Count >= ChirperStore.MaxImages || ComposeHasGif())
+        if (string.IsNullOrEmpty(path))
         {
             return;
         }
 
         var addingGif = ChirperStore.IsGifPath(path);
-        if (addingGif && composeAttachments.Count > 0)
+        if (ComposeHasGif() || (addingGif && composeAttachments.Count > 0))
         {
+            composeStatus = Loc.T(L.Chirper.GifRidesAlone);
+            return;
+        }
+
+        if (composeAttachments.Count >= ChirperStore.MaxImages)
+        {
+            composeStatus = Loc.T(L.Chirper.MaxPhotos, ChirperStore.MaxImages);
             return;
         }
 
@@ -394,6 +426,7 @@ internal sealed partial class ChirperApp
             }
         }
 
+        composeStatus = string.Empty;
         composeAttachments.Add(path);
     }
 }

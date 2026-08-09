@@ -1709,6 +1709,8 @@
   "chirper.importFromPc": "PCからインポート",
   "chirper.addPhotos": "写真を追加",
   "chirper.gifTooLarge": "GIFが大きすぎます（最大4MB）",
+  "chirper.gifRidesAlone": "GIFは他の写真と一緒にできず、単独で投稿します。",
+  "chirper.maxPhotos": "チャープには最大{0}枚の写真を付けられます。",
   "chirper.moveAndScale": "移動と拡大・縮小",
   "chirper.gestureHint": "ドラッグで移動・スクロールでズーム",
   "chirper.use": "使用",

@@ -1709,6 +1709,8 @@
   "chirper.importFromPc": "Vom PC importieren",
   "chirper.addPhotos": "Fotos hinzufügen",
   "chirper.gifTooLarge": "GIF ist zu groß (max. 4 MB)",
+  "chirper.gifRidesAlone": "Ein GIF muss allein gepostet werden, ohne weitere Fotos.",
+  "chirper.maxPhotos": "Ein Chirp kann bis zu {0} Fotos enthalten.",
   "chirper.moveAndScale": "Verschieben und Zoomen",
   "chirper.gestureHint": "Ziehen zum Bewegen · Scrollen zum Zoomen",
   "chirper.use": "Verwenden",

@@ -2662,6 +2662,8 @@ internal static class L
         public static readonly LocPlural Posts = new("chirper.posts", "{0} post", "{0} posts");
         public static readonly LocString AddPhotos = new("chirper.addPhotos", "Add photos");
         public static readonly LocString GifTooLarge = new("chirper.gifTooLarge", "GIF is too large (max 4 MB)");
+        public static readonly LocString GifRidesAlone = new("chirper.gifRidesAlone", "A GIF has to be posted on its own, without other photos.");
+        public static readonly LocString MaxPhotos = new("chirper.maxPhotos", "A chirp can carry up to {0} photos.");
         public static readonly LocPlural Likes = new("chirper.likes", "{0} like", "{0} likes");
         public static readonly LocString DeleteConfirmMessage = new("chirper.deleteConfirmMessage", "Delete this post? This can't be undone.");
         public static readonly LocString DeleteCommentConfirmMessage = new("chirper.deleteCommentConfirmMessage", "Delete this comment? This can't be undone.");
