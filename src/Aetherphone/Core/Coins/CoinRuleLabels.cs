@@ -25,6 +25,10 @@ internal static class CoinRuleLabels
         ["staff.adjust"] = L.Coin.RuleStaffGrant,
         ["staff.clawback"] = L.Coin.RuleClawback,
         ["carry.forward"] = L.Coin.RuleCarry,
+        [Casino.CasinoLedgerRules.BuyIn] = L.Coin.RuleCasinoBuyIn,
+        [Casino.CasinoLedgerRules.CashOut] = L.Coin.RuleCasinoCashOut,
+        [Casino.CasinoLedgerRules.Refund] = L.Coin.RuleCasinoRefund,
+        [Casino.CasinoLedgerRules.Daily] = L.Coin.RuleCasinoDaily,
     }.ToFrozenDictionary(StringComparer.Ordinal);
 
     private static readonly FrozenDictionary<string, LocString> Hints = new Dictionary<string, LocString>

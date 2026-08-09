@@ -44,8 +44,29 @@ internal sealed partial class CasinoApp
         var wallet = coins.Wallet;
         if (wallet is not null)
         {
+            var heroOrigin = ImGui.GetCursorScreenPos();
+            var heroWidth = ScrollLayout.StableContentWidth();
             CoinHero.Draw(wallet, ui.Palette);
+            var heroMax = new Vector2(heroOrigin.X + heroWidth, ImGui.GetCursorScreenPos().Y);
+            if (UiInteract.Click(heroOrigin, heroMax, UiInteract.Hover(heroOrigin, heroMax)))
+            {
+                cashier.Open();
+            }
+
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+        }
+
+        var state = casino.State;
+        if (state is not null && state.SittingId.Length > 0)
+        {
+            DrawChipsInPlayRow(state, scale);
+        }
+
+        if (state is not null && (state.StakesPaused || state.Draining))
+        {
+            var title = state.StakesPaused ? Loc.T(L.Casino.PausedTitle) : Loc.T(L.Casino.DrainingTitle);
+            var hint = state.StakesPaused ? Loc.T(L.Casino.PausedHint) : Loc.T(L.Casino.DrainingHint);
+            DrawFloorNotice(title, hint, scale);
         }
 
         ui.SectionHeading(Loc.T(L.Casino.GamesHeading), 4f);
@@ -130,6 +151,70 @@ internal sealed partial class CasinoApp
         Squircle.Stroke(drawList, chipMin, chipMax, chipHeight * 0.5f,
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.30f)), 1f * scale);
         Typography.DrawCentered(drawList, (chipMin + chipMax) * 0.5f, label, ui.MutedInk, TextStyles.Caption1);
+    }
+
+    private void DrawChipsInPlayRow(Core.Aethernet.Contracts.CasinoStateDto state, float scale)
+    {
+        var width = ScrollLayout.StableContentWidth();
+        var origin = ImGui.GetCursorScreenPos();
+        var drawList = ImGui.GetWindowDrawList();
+        var height = 48f * scale;
+        var row = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
+        var rounding = Metrics.Radius.Card * scale;
+        var hovered = UiInteract.Hover(row.Min, row.Max);
+        ui.Card(drawList, row.Min, row.Max, rounding);
+        Squircle.Stroke(drawList, row.Min, row.Max, rounding,
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.35f)), 1f * scale);
+        if (hovered)
+        {
+            Squircle.Fill(drawList, row.Min, row.Max, rounding, ImGui.GetColorU32(ui.HoverTint));
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        var label = Loc.T(L.Casino.ChipsAt, state.Stack.ToString("N0", Loc.Culture),
+            Loc.T(GameName(ClientGameId(state.GameKind))));
+        var chevronCenter = new Vector2(row.Max.X - 18f * scale, row.Center.Y);
+        var fitted = Typography.FitText(label, chevronCenter.X - 14f * scale - row.Min.X - 14f * scale,
+            TextStyles.SubheadlineEmphasized);
+        Typography.Draw(drawList, new Vector2(row.Min.X + 14f * scale, row.Center.Y - 9f * scale), fitted,
+            ui.Accent, TextStyles.SubheadlineEmphasized);
+        AppSkin.Icon(drawList, chevronCenter, FontAwesomeIcon.ChevronRight.ToIconString(), ui.MutedInk, 0.8f);
+
+        if (UiInteract.Click(row.Min, row.Max, hovered))
+        {
+            cashier.Open();
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, height + 8f * scale));
+    }
+
+    private void DrawFloorNotice(string title, string hint, float scale)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var width = ScrollLayout.StableContentWidth();
+        var origin = ImGui.GetCursorScreenPos();
+        var inset = 14f * scale;
+        var titleSize = Typography.Measure(title, TextStyles.FootnoteEmphasized);
+        var hintBlock = Typography.MeasureWrappedBlock(hint, TextStyles.Footnote, width - inset * 2f);
+        var height = titleSize.Y + hintBlock.Y + 26f * scale;
+        var min = origin;
+        var max = new Vector2(origin.X + width, origin.Y + height);
+        var rounding = 16f * scale;
+        Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(ui.Palette.CardFill));
+        Material.EdgeSquircle(drawList, min, max, rounding, scale);
+        Typography.Draw(drawList, new Vector2(min.X + inset, min.Y + 10f * scale), title,
+            ui.Accent, TextStyles.FootnoteEmphasized);
+        Typography.DrawWrappedLeft(new Vector2(min.X + inset, min.Y + titleSize.Y + 16f * scale), hint,
+            ui.MutedInk, TextStyles.Footnote, width - inset * 2f);
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, height + 8f * scale));
+    }
+
+    private static string ClientGameId(string wireKind)
+    {
+        const string prefix = "casino.";
+        return wireKind.StartsWith(prefix, StringComparison.Ordinal) ? wireKind[prefix.Length..] : wireKind;
     }
 
     private void DrawLimitsRow(float scale)

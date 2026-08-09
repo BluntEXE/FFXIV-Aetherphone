@@ -26,6 +26,7 @@ internal sealed class AethernetApi
         Ads = new YellowPagesClient(net);
         Radio = new RadioClient(net);
         Coins = new CoinsClient(net);
+        Casino = new CasinoClient(net);
     }
 
     public AuthClient Auth { get; }
@@ -46,4 +47,5 @@ internal sealed class AethernetApi
     public YellowPagesClient Ads { get; }
     public RadioClient Radio { get; }
     public CoinsClient Coins { get; }
+    public CasinoClient Casino { get; }
 }

@@ -2,6 +2,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Coins;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
@@ -18,34 +19,54 @@ internal sealed partial class CasinoApp : IPhoneApp
     public string Glyph => "Sa";
     public int BadgeCount => 0;
 
+    private static readonly CashierDrawer.GameOption[] PlayableGames =
+    {
+        new(CasinoGames.Slots, L.Casino.GameSlots),
+        new(CasinoGames.Scratch, L.Casino.GameScratch),
+        new(CasinoGames.Barkeep, L.Casino.GameBarkeep),
+    };
+
     private readonly AethernetSession session;
     private readonly CoinStore coins;
+    private readonly Core.Casino.CasinoStore casino;
+    private readonly ConfirmService confirm;
+    private readonly CashierDrawer cashier;
     private readonly AppSkin ui = new(AppPalettes.Casino);
     private readonly ViewRouter<CasinoRoute> router;
     private readonly RouterDraw<CasinoRoute> drawView;
     private readonly Action popRoute;
+    private readonly Action openLimits;
 
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
+    private Rect screenArea;
 
-    public CasinoApp(AethernetSession session, CoinStore coins)
+    public CasinoApp(AethernetSession session, CoinStore coins, Core.Casino.CasinoStore casino,
+        ConfirmService confirm)
     {
         this.session = session;
         this.coins = coins;
+        this.casino = casino;
+        this.confirm = confirm;
+        cashier = new CashierDrawer(casino, coins, confirm);
         router = new ViewRouter<CasinoRoute>(CasinoRoute.Floor);
         drawView = DrawView;
         popRoute = PopRoute;
+        openLimits = OpenLimits;
     }
 
     public void OnOpened()
     {
         router.Reset();
+        cashier.Close();
         coins.RefreshNow();
+        casino.RefreshNow();
     }
 
     public void OnClosed()
     {
         router.Reset();
+        cashier.Close();
     }
 
     public void Draw(in PhoneContext context)
@@ -72,7 +93,11 @@ internal sealed partial class CasinoApp : IPhoneApp
 
         TourHolds.Release(Id);
         coins.EnsureFresh();
+        casino.EnsureFresh();
+        screenArea = context.Content;
+        cashier.Gate();
         router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
+        cashier.Draw(screenArea, ui, PlayableGames, openLimits);
     }
 
     private void DrawView(CasinoRoute route, Rect area, int depth)
@@ -89,7 +114,7 @@ internal sealed partial class CasinoApp : IPhoneApp
                 break;
             case CasinoScreen.Limits:
                 AppHeader.Draw(context, Loc.T(L.Casino.LimitsRow), popRoute);
-                DrawPlaceholder(body, FontAwesomeIcon.HandHoldingHeart);
+                DrawLimits(body);
                 break;
             case CasinoScreen.History:
             case CasinoScreen.Fairness:
@@ -97,9 +122,28 @@ internal sealed partial class CasinoApp : IPhoneApp
                 DrawPlaceholder(body, FontAwesomeIcon.Hammer);
                 break;
             default:
-                AppHeader.Draw(context, DisplayName, navigation.Back);
+                DrawFloorHeader(context, area);
                 DrawFloor(body);
                 break;
+        }
+    }
+
+    private void DrawFloorHeader(in PhoneContext context, Rect area)
+    {
+        var cashierLabel = Loc.T(L.Casino.Cashier);
+        var reserve = AppSkin.HeaderActionWidth(cashierLabel) + 18f * UiScale.Current;
+        AppHeader.Draw(context, "casino.header", DisplayName, reserve, navigation.Back);
+        if (ui.HeaderAction(area, cashierLabel, !cashier.IsOpen))
+        {
+            cashier.Open();
+        }
+    }
+
+    private void OpenLimits()
+    {
+        if (router.Current.Screen != CasinoScreen.Limits)
+        {
+            router.Push(new CasinoRoute(CasinoScreen.Limits));
         }
     }
 

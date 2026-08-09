@@ -1,6 +1,7 @@
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Casino;
 
 namespace Aetherphone.Core.Coins;
 
@@ -207,14 +208,19 @@ internal sealed class CoinStore : IDisposable
                 return;
             }
 
-            var fresh = CollectEarnDelta(page.Items, delta);
-            Earned?.Invoke(delta, fresh);
+            var fresh = CollectEarnDelta(page.Items, delta, out var celebratedDelta);
+            if (celebratedDelta > 0)
+            {
+                Earned?.Invoke(celebratedDelta, fresh);
+            }
+
             Interlocked.Exchange(ref walletLoadedAtTick, 0);
             RefreshWallet(0);
         });
     }
 
-    private static CoinLedgerEntryDto[] CollectEarnDelta(CoinLedgerEntryDto[] items, long delta)
+    internal static CoinLedgerEntryDto[] CollectEarnDelta(CoinLedgerEntryDto[] items, long delta,
+        out long celebratedDelta)
     {
         var count = 0;
         long running = 0;
@@ -228,13 +234,45 @@ internal sealed class CoinStore : IDisposable
             count++;
         }
 
-        var slice = new CoinLedgerEntryDto[count];
+        celebratedDelta = 0;
+        var celebrated = 0;
         for (var index = 0; index < count; index++)
         {
-            slice[index] = items[index];
+            if (CelebratesEarn(items[index]))
+            {
+                celebrated++;
+            }
+        }
+
+        var slice = new CoinLedgerEntryDto[celebrated];
+        var write = 0;
+        for (var index = 0; index < count; index++)
+        {
+            if (!CelebratesEarn(items[index]))
+            {
+                continue;
+            }
+
+            if (items[index].Amount > 0)
+            {
+                celebratedDelta += items[index].Amount;
+            }
+
+            slice[write] = items[index];
+            write++;
+        }
+
+        if (celebratedDelta > delta)
+        {
+            celebratedDelta = delta;
         }
 
         return slice;
+    }
+
+    private static bool CelebratesEarn(CoinLedgerEntryDto entry)
+    {
+        return !CasinoLedgerRules.SkipsEarnCelebration(entry.RuleId);
     }
 
     private void RefreshWallet(long refreshAfterMilliseconds)
