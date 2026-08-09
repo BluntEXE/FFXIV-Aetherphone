@@ -4020,6 +4020,15 @@ internal static class L
         public static readonly LocString BingoRecentCalls = new("casino.bingo.recentCalls", "Recent calls");
         public static readonly LocString BingoFirstBall = new("casino.bingo.firstBall", "First ball in {0}");
         public static readonly LocString BingoOneAway = new("casino.bingo.oneAway", "One away");
+        public static readonly LocString BingoAwayLine = new("casino.bingo.awayLine", "{0} away from a line");
+        public static readonly LocString BingoAwayTwoLines = new("casino.bingo.awayTwoLines", "{0} away from two lines");
+        public static readonly LocString BingoAwayFullHouse = new("casino.bingo.awayFullHouse", "{0} away from a full house");
+        public static readonly LocString BingoAwayReadyLine = new("casino.bingo.awayReadyLine", "One number from a line");
+        public static readonly LocString BingoAwayReadyTwoLines = new("casino.bingo.awayReadyTwoLines", "One number from two lines");
+        public static readonly LocString BingoAwayReadyFullHouse = new("casino.bingo.awayReadyFullHouse", "One number from the full house");
+        public static readonly LocString BingoProgressOn = new("casino.bingo.progressOn", "on {0}");
+        public static readonly LocString BingoProgressWaiting = new("casino.bingo.progressWaiting", "Waiting on the first ball");
+        public static readonly LocString BingoProgressAllDone = new("casino.bingo.progressAllDone", "Every prize on this card is home");
         public static readonly LocString BingoMarksAuto = new("casino.bingo.marksAuto", "Marks are automatic. Tapping a called number is only for the satisfaction of it.");
         public static readonly LocString BingoCardsFinal = new("casino.bingo.cardsFinal", "Cards are final once the calling starts.");
         public static readonly LocString BingoLadderHeading = new("casino.bingo.ladderHeading", "Prizes this room");
