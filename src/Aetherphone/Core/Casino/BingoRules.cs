@@ -199,6 +199,40 @@ internal static class BingoRules
         return lines;
     }
 
+    public static int NextGoalGap(int mask, out int goalStage)
+    {
+        var remaining = CellsRemaining(mask);
+        var lines = LinesOn(mask);
+        if (lines >= 2)
+        {
+            goalStage = StageFullHouse;
+            return remaining;
+        }
+
+        goalStage = lines >= 1 ? StageTwoLines : StageLine;
+        return SecondClosestLineGap(mask, lines);
+    }
+
+    public static int SecondClosestLineGap(int mask, int completedLines)
+    {
+        var closest = Columns;
+        for (var index = 0; index < LineMasks.Length; index++)
+        {
+            var missing = CountBits(LineMasks[index] & ~mask);
+            if (missing == 0)
+            {
+                continue;
+            }
+
+            if (missing < closest)
+            {
+                closest = missing;
+            }
+        }
+
+        return completedLines >= 1 ? closest : ClosestLineGap(mask);
+    }
+
     public static int CellsRemaining(int mask)
     {
         return CountBits(FullMask & ~mask);

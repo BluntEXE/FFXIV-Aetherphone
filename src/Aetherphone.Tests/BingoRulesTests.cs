@@ -358,4 +358,39 @@ public sealed class BingoRulesTests
         Assert.Equal(0, playback.CardCount);
         Assert.Equal("bingo-hall#8", playback.RoundId);
     }
+
+    [Fact]
+    public void AFreshCardIsFourAwayFromItsFirstLine()
+    {
+        var gap = BingoRules.NextGoalGap(BingoRules.FreeMask, out var stage);
+        Assert.Equal(BingoRules.StageLine, stage);
+        Assert.Equal(4, gap);
+    }
+
+    [Fact]
+    public void OneLineDoneCountsTowardTheSecondAndNeverBackAtTheFinishedOne()
+    {
+        var mask = BingoRules.FreeMask | BingoRules.LineMasks[0];
+        var gap = BingoRules.NextGoalGap(mask, out var stage);
+        Assert.Equal(BingoRules.StageTwoLines, stage);
+        Assert.True(gap >= 1);
+        Assert.Equal(1, BingoRules.LinesOn(mask));
+    }
+
+    [Fact]
+    public void TwoLinesDoneCountsTheCellsLeftForTheFullHouse()
+    {
+        var mask = BingoRules.FreeMask | BingoRules.LineMasks[0] | BingoRules.LineMasks[1];
+        var gap = BingoRules.NextGoalGap(mask, out var stage);
+        Assert.Equal(BingoRules.StageFullHouse, stage);
+        Assert.Equal(BingoRules.CellsRemaining(mask), gap);
+    }
+
+    [Fact]
+    public void AFullCardHasNothingLeftToGo()
+    {
+        var gap = BingoRules.NextGoalGap(BingoRules.FullMask, out var stage);
+        Assert.Equal(BingoRules.StageFullHouse, stage);
+        Assert.Equal(0, gap);
+    }
 }
