@@ -20,7 +20,6 @@ internal static class NameEffects
     private const double StarfallPeriod = 2600.0;
     private const double EclipsePeriod = 3800.0;
     private const double HeartbeatPeriod = 2200.0;
-    private const double GlyphPeriod = 5200.0;
 
     public static TextEffect For(RoleKind role, bool light)
     {
@@ -67,7 +66,7 @@ internal static class NameEffects
             return 0f;
         }
 
-        return Fraction(Pulse.Phase(GlyphPeriod) + Seed(badge.Id));
+        return Seed(badge.Id);
     }
 
     private static bool UsesRamp(NameEffectKind kind)
