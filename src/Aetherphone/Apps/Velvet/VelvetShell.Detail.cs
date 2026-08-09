@@ -205,7 +205,8 @@ internal sealed partial class VelvetShell
                 DrawDisplayTokens(post.Tags, VChipStyle.Tint, VelvetTheme.Rose);
             }
 
-            DrawComments(post.CommentCount, width, scale);
+            var viewerOwnsPost = store.Me is { } viewer && viewer.UserId == post.OwnerId;
+            DrawComments(post.CommentCount, width, scale, viewerOwnsPost);
             Gap(20f);
         }
 
@@ -213,7 +214,7 @@ internal sealed partial class VelvetShell
         DrawPostMenu(area, false);
     }
 
-    private void DrawComments(int totalCount, float width, float scale)
+    private void DrawComments(int totalCount, float width, float scale, bool viewerOwnsPost)
     {
         Gap(10f);
         var linePos = ImGui.GetCursorScreenPos();
@@ -243,7 +244,7 @@ internal sealed partial class VelvetShell
 
         for (var index = 0; index < comments.Length; index++)
         {
-            DrawCommentRow(comments[index], scale);
+            DrawCommentRow(comments[index], scale, viewerOwnsPost);
         }
 
         if (store.CommentsLoadingMore)
@@ -256,7 +257,7 @@ internal sealed partial class VelvetShell
         }
     }
 
-    private void DrawCommentRow(VelvetCommentDto comment, float scale)
+    private void DrawCommentRow(VelvetCommentDto comment, float scale, bool viewerOwnsPost)
     {
         var origin = ImGui.GetCursorScreenPos();
         var width = ScrollLayout.StableContentWidth();
@@ -319,13 +320,20 @@ internal sealed partial class VelvetShell
         }
 
         var mine = store.Me is { } me && me.UserId == comment.AuthorId;
-        if (mine)
+        if (mine || viewerOwnsPost)
         {
             var trashCenter = new Vector2(origin.X + width - 8f * scale, origin.Y + 8f * scale);
             if (ui.IconButton(trashCenter, 10f * scale, FontAwesomeIcon.Times.ToIconString(), VelvetTheme.MutedInk,
                     AppSkin.Transparent, 0.7f))
             {
-                AskDeleteComment(commentsPostId, comment.Id);
+                if (mine)
+                {
+                    AskDeleteComment(commentsPostId, comment.Id);
+                }
+                else
+                {
+                    AskRemoveComment(commentsPostId, comment.Id);
+                }
             }
         }
 
@@ -451,6 +459,19 @@ internal sealed partial class VelvetShell
         confirm.Ask(new ConfirmRequest
         {
             Message = Loc.T(L.Velvet.DeleteCommentConfirmMessage),
+            ConfirmLabel = Loc.T(L.Velvet.DeleteConfirm),
+            CancelLabel = Loc.T(L.Velvet.DeleteCancel),
+            BusyLabel = Loc.T(L.Velvet.Saving),
+            FailedMessage = Loc.T(L.Velvet.DeleteCommentFailed),
+            ConfirmAsync = done => store.DeleteComment(postId, commentId, done),
+        });
+    }
+
+    private void AskRemoveComment(string postId, string commentId)
+    {
+        confirm.Ask(new ConfirmRequest
+        {
+            Message = Loc.T(L.Velvet.RemoveCommentConfirmMessage),
             ConfirmLabel = Loc.T(L.Velvet.DeleteConfirm),
             CancelLabel = Loc.T(L.Velvet.DeleteCancel),
             BusyLabel = Loc.T(L.Velvet.Saving),

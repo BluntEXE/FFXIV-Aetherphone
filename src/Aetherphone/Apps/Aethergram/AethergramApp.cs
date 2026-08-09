@@ -200,6 +200,7 @@ internal sealed partial class AethergramApp : IPhoneApp
             DeleteFailed = L.Aethergram.DeleteFailed,
             DeleteCommentConfirmMessage = L.Aethergram.DeleteCommentConfirmMessage,
             DeleteCommentFailed = L.Aethergram.DeleteCommentFailed,
+            RemoveCommentConfirmMessage = L.Aethergram.RemoveCommentConfirmMessage,
             MessageLabel = L.Aethergram.MessageButton,
             SettingsLabel = L.Aethergram.Settings,
             SavedLabel = L.Aethergram.SavedTitle,

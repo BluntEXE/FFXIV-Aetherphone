@@ -144,6 +144,7 @@ internal sealed partial class ChirperApp : IPhoneApp
             DeleteFailed = L.Chirper.DeleteFailed,
             DeleteCommentConfirmMessage = L.Chirper.DeleteCommentConfirmMessage,
             DeleteCommentFailed = L.Chirper.DeleteCommentFailed,
+            RemoveCommentConfirmMessage = L.Chirper.RemoveCommentConfirmMessage,
         }, images, lodestone, avatarLightbox, configuration, gameData, confirm, report,
             () => router.Push(ChirperRoute.EditProfile), OpenAvatarComposer, OpenProfile, OpenUserList, back,
             null);
@@ -1169,13 +1170,22 @@ internal sealed partial class ChirperApp : IPhoneApp
         }
 
         var textBottom = ImGui.GetCursorScreenPos().Y;
-        if (store.Me is { } me && me.Id == comment.AuthorId && store.DetailPost is { } post)
+        if (store.Me is { } me && store.DetailPost is { } post
+            && (me.Id == comment.AuthorId || me.Id == post.AuthorId))
         {
+            var mine = me.Id == comment.AuthorId;
             var trashCenter = new Vector2(origin.X + width - 10f * scale, origin.Y + 9f * scale);
             if (ui.IconButton(trashCenter, 12f * scale, FontAwesomeIcon.Times.ToIconString(), AppPalettes.Chirper.MutedInk,
-                    new Vector4(0f, 0f, 0f, 0f), 0.85f, Loc.T(L.Chirper.DeleteComment)))
+                    new Vector4(0f, 0f, 0f, 0f), 0.85f, Loc.T(mine ? L.Chirper.DeleteComment : L.Chirper.RemoveComment)))
             {
-                profile.AskDeleteComment(post.Id, comment.Id);
+                if (mine)
+                {
+                    profile.AskDeleteComment(post.Id, comment.Id);
+                }
+                else
+                {
+                    profile.AskRemoveComment(post.Id, comment.Id);
+                }
             }
         }
 

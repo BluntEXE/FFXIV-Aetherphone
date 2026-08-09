@@ -2666,6 +2666,8 @@ internal static class L
         public static readonly LocString DeleteFailed = new("chirper.deleteFailed", "Couldn't delete the post");
         public static readonly LocString DeleteCommentFailed = new("chirper.deleteCommentFailed", "Couldn't delete the comment");
         public static readonly LocString DeleteComment = new("chirper.deleteComment", "Delete comment");
+        public static readonly LocString RemoveCommentConfirmMessage = new("chirper.removeCommentConfirmMessage", "Remove this comment from your post? This can't be undone.");
+        public static readonly LocString RemoveComment = new("chirper.removeComment", "Remove comment");
         public static readonly LocString PostTitle = new("chirper.postTitle", "Post");
         public static readonly LocString NoComments = new("chirper.noComments", "No replies yet. Start the conversation");
         public static readonly LocString EarlierComments = new("chirper.earlierComments", "View earlier replies");
@@ -2731,6 +2733,8 @@ internal static class L
         public static readonly LocString DeleteFailed = new("aethergram.deleteFailed", "Couldn't delete the post");
         public static readonly LocString DeleteCommentFailed = new("aethergram.deleteCommentFailed", "Couldn't delete the comment");
         public static readonly LocString DeleteComment = new("aethergram.deleteComment", "Delete comment");
+        public static readonly LocString RemoveCommentConfirmMessage = new("aethergram.removeCommentConfirmMessage", "Remove this comment from your post? This can't be undone.");
+        public static readonly LocString RemoveComment = new("aethergram.removeComment", "Remove comment");
         public static readonly LocString Like = new("aethergram.like", "Like");
         public static readonly LocString Comment = new("aethergram.comment", "Comment");
         public static readonly LocString More = new("aethergram.more", "More");
@@ -2819,6 +2823,7 @@ internal static class L
         public static readonly LocString DeleteFailed = new("velvet.deleteFailed", "Couldn't delete the post");
         public static readonly LocString DeleteCommentConfirmMessage = new("velvet.deleteCommentConfirmMessage", "Delete this comment? This can't be undone.");
         public static readonly LocString DeleteCommentFailed = new("velvet.deleteCommentFailed", "Couldn't delete the comment");
+        public static readonly LocString RemoveCommentConfirmMessage = new("velvet.removeCommentConfirmMessage", "Remove this comment from your post? This can't be undone.");
         public static readonly LocString TabMe = new("velvet.tabMe", "Me");
         public static readonly LocString Settings = new("velvet.settings", "Settings");
         public static readonly LocString OnboardIntent = new("velvet.onboardIntent", "What brings you here?");
