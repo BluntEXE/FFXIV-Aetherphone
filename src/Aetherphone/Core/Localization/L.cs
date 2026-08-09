@@ -2658,6 +2658,7 @@ internal static class L
         public static readonly LocString ReactHundred = new("chirper.reactHundred", "100");
         public static readonly LocString ReactQuestion = new("chirper.reactQuestion", "Question");
         public static readonly LocPlural Posts = new("chirper.posts", "{0} post", "{0} posts");
+        public static readonly LocString AddPhotos = new("chirper.addPhotos", "Add photos");
         public static readonly LocPlural Likes = new("chirper.likes", "{0} like", "{0} likes");
         public static readonly LocString DeleteConfirmMessage = new("chirper.deleteConfirmMessage", "Delete this post? This can't be undone.");
         public static readonly LocString DeleteCommentConfirmMessage = new("chirper.deleteCommentConfirmMessage", "Delete this comment? This can't be undone.");

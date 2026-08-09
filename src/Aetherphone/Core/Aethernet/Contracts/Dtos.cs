@@ -121,7 +121,12 @@ internal sealed record UpdateAccountPrivacyRequest(bool? IsPrivate);
 
 internal sealed record FollowResultDto(bool Following, bool Requested);
 
-internal sealed record CreatePostRequest(string Text, string? QuotedPostId = null);
+internal sealed record CreatePostRequest(
+    string Text,
+    string? QuotedPostId = null,
+    string[]? MediaKeys = null,
+    int MediaWidth = 0,
+    int MediaHeight = 0);
 
 internal sealed record ReactRequest(int Kind);
 

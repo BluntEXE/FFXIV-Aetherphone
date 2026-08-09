@@ -1705,6 +1705,7 @@
   "chirper.editProfile": "プロフィールを編集",
   "chirper.changePhoto": "写真を変更",
   "chirper.importFromPc": "PCからインポート",
+  "chirper.addPhotos": "写真を追加",
   "chirper.moveAndScale": "移動と拡大・縮小",
   "chirper.gestureHint": "ドラッグで移動・スクロールでズーム",
   "chirper.use": "使用",
