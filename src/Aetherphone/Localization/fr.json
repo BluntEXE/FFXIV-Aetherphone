@@ -4286,7 +4286,7 @@
   "casino.fairness.revealTitle": "Révélée au règlement",
   "casino.fairness.revealBody": "Quand la manche est réglée, la graine elle-même est révélée. Son hachage doit correspondre à l'empreinte publiée d'avance, bit pour bit.",
   "casino.fairness.replayTitle": "Vérifié sur ton appareil",
-  "casino.fairness.replayBody": "Ton téléphone rejoue chaque tirage de la manche depuis la graine révélée et compare le résultat avec ce qui t'a été distribué. La vérification tourne ici, pas chez la maison.",
+  "casino.fairness.replayBody": "Ton téléphone redérive depuis la graine révélée chaque tirage consigné par la manche, et chacun doit tomber sur le même nombre. La vérification tourne ici, pas chez la maison.",
   "casino.fairness.chainNote": "Chaque manche porte aussi l'empreinte scellée de la manche suivante, la chaîne ne se brise donc jamais.",
   "casino.fairness.recentHeading": "Vérifier une manche",
   "casino.fairness.noRounds": "Rien à vérifier pour l'instant. Les manches réglées atterrissent ici.",

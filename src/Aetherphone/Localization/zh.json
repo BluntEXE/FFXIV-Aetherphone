@@ -4286,7 +4286,7 @@
   "casino.fairness.revealTitle": "结算时公开",
   "casino.fairness.revealBody": "回合结算后，种子本身会被公开。对它做哈希，必须与事先公示的指纹逐比特一致。",
   "casino.fairness.replayTitle": "在你的设备上验证",
-  "casino.fairness.replayBody": "你的手机会用公开的种子重放回合中的每一次抽取，并与你实际拿到的结果比对。验证在这里进行，而不是在庄家那边。",
+  "casino.fairness.replayBody": "你的手机会用公开的种子重新推导回合记录下来的每一次抽取，每一个都必须得出相同的数字。验证在这里进行，而不是在庄家那边。",
   "casino.fairness.chainNote": "每个回合还带着下一回合的封存指纹，因此链条永不断裂。",
   "casino.fairness.recentHeading": "验证一个回合",
   "casino.fairness.noRounds": "暂时没有可验证的回合。已结算的回合会出现在这里。",

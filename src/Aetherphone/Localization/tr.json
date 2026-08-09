@@ -4286,7 +4286,7 @@
   "casino.fairness.revealTitle": "Sonuçlanınca açıklanır",
   "casino.fairness.revealBody": "Tur sonuçlandığında tohumun kendisi açıklanır. Hash'i, baştan yayımlanan parmak iziyle bit bit eşleşmek zorundadır.",
   "casino.fairness.replayTitle": "Kendi cihazında doğrulanır",
-  "casino.fairness.replayBody": "Telefonun, açıklanan tohumdan turun her çekilişini yeniden oynatır ve sonucu sana dağıtılanla karşılaştırır. Doğrulama burada çalışır, kasada değil.",
+  "casino.fairness.replayBody": "Telefonun, açıklanan tohumdan turun kaydettiği her çekilişi yeniden türetir ve her biri aynı sayıyı vermek zorundadır. Doğrulama burada çalışır, kasada değil.",
   "casino.fairness.chainNote": "Her tur ayrıca bir sonraki turun mühürlü parmak izini taşır, böylece zincir asla kopmaz.",
   "casino.fairness.recentHeading": "Bir turu doğrula",
   "casino.fairness.noRounds": "Henüz doğrulanacak bir şey yok. Sonuçlanan turlar buraya düşer.",

@@ -3872,7 +3872,7 @@ internal static class L
         public static readonly LocString FairnessRevealTitle = new("casino.fairness.revealTitle", "Revealed when it settles");
         public static readonly LocString FairnessRevealBody = new("casino.fairness.revealBody", "When the round settles, the seed itself is revealed. Hash it and it must match the fingerprint published up front, bit for bit.");
         public static readonly LocString FairnessReplayTitle = new("casino.fairness.replayTitle", "Checked on your device");
-        public static readonly LocString FairnessReplayBody = new("casino.fairness.replayBody", "Your phone replays every draw of the round from the revealed seed and compares the result with what you were dealt. The check runs here, not at the house.");
+        public static readonly LocString FairnessReplayBody = new("casino.fairness.replayBody", "Your phone re-derives every draw the round logged from the revealed seed, and each one has to come out the same. The check runs here, not at the house.");
         public static readonly LocString FairnessChainNote = new("casino.fairness.chainNote", "Every round also carries the sealed fingerprint of the round after it, so the chain never breaks.");
         public static readonly LocString FairnessRecentHeading = new("casino.fairness.recentHeading", "Check a round");
         public static readonly LocString FairnessNoRounds = new("casino.fairness.noRounds", "Nothing to check yet. Settled rounds land here.");

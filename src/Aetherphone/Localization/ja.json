@@ -4286,7 +4286,7 @@
   "casino.fairness.revealTitle": "清算とともに公開",
   "casino.fairness.revealBody": "ラウンドが清算されると、シードそのものが公開されます。ハッシュ化すれば、事前に公開された指紋とビット単位で一致するはずです。",
   "casino.fairness.replayTitle": "あなたの端末で検証",
-  "casino.fairness.replayBody": "この電話が公開されたシードからラウンドの抽選をすべて再現し、配られた結果と突き合わせます。検証はここで走ります。ハウス側ではありません。",
+  "casino.fairness.replayBody": "この電話が、公開されたシードからラウンドに記録された抽選をすべて導き直し、どれも同じ数値になる必要があります。検証はここで走ります。ハウス側ではありません。",
   "casino.fairness.chainNote": "各ラウンドは次のラウンドの封印された指紋も携えているので、連鎖は決して途切れません。",
   "casino.fairness.recentHeading": "ラウンドを検証",
   "casino.fairness.noRounds": "まだ検証するものがありません。清算済みのラウンドがここに並びます。",

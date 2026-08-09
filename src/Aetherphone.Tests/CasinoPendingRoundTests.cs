@@ -1,3 +1,4 @@
+using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Casino;
 using Xunit;
 
@@ -79,6 +80,59 @@ public sealed class CasinoPendingRoundTests
 
         Assert.Null(CasinoPlayStore.ClearRound(snapshot, Character, "round2"));
         Assert.Null(CasinoPlayStore.ClearRound(snapshot, OtherCharacter, "round1"));
+    }
+
+    // A remembered round is the client's only handle on chips the server has already taken. The
+    // next tap at the same table has to replay it instead of minting a second round id, or the
+    // first round is stranded open until the server expires it and takes the stake with it.
+    [Fact]
+    public void AnotherTapAtTheSameTableReplaysTheStrandedRoundInsteadOfStakingAgain()
+    {
+        Assert.True(CasinoPlayStore.ReplaysBeforeStaking(Pending("round1"), "sit1"));
+    }
+
+    [Fact]
+    public void ARoundLeftBehindByAClosedSittingNeverBlocksTheTableInPlay()
+    {
+        Assert.False(CasinoPlayStore.ReplaysBeforeStaking(Pending("round1"), "sit2"));
+        Assert.False(CasinoPlayStore.ReplaysBeforeStaking(null, "sit1"));
+        Assert.False(CasinoPlayStore.ReplaysBeforeStaking(Pending("round1"), string.Empty));
+    }
+
+    [Fact]
+    public void AReplayedRoundNeverWritesAClosedSittingsStackOntoTheOneInPlay()
+    {
+        var inPlay = State("sit2", stack: 300);
+
+        Assert.Null(CasinoStore.StackAbsorbedInto(inPlay, "sit1", 0));
+        Assert.Equal(300, inPlay.Sitting!.Stack);
+    }
+
+    [Fact]
+    public void TheSittingInPlayStillAbsorbsItsOwnRounds()
+    {
+        var inPlay = State("sit2", stack: 300);
+
+        var next = CasinoStore.StackAbsorbedInto(inPlay, "sit2", 295);
+
+        Assert.NotNull(next);
+        Assert.Equal(295, next.Sitting!.Stack);
+        Assert.Equal(300, inPlay.Sitting!.Stack);
+    }
+
+    [Fact]
+    public void AnUnchangedOrUnseatedStackIsNotWorthANewState()
+    {
+        Assert.Null(CasinoStore.StackAbsorbedInto(State("sit2", stack: 300), "sit2", 300));
+        Assert.Null(CasinoStore.StackAbsorbedInto(State("sit2", stack: 300), string.Empty, 295));
+        Assert.Null(CasinoStore.StackAbsorbedInto(new CasinoStateDto(), "sit2", 295));
+        Assert.Null(CasinoStore.StackAbsorbedInto(null, "sit2", 295));
+    }
+
+    private static CasinoStateDto State(string sittingId, long stack)
+    {
+        return new CasinoStateDto(
+            Sitting: new CasinoSittingDto(Id: sittingId, GameKind: CasinoWire.SlotsKind, Stack: stack));
     }
 
     private static PendingCasinoRound Pending(string roundId)

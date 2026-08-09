@@ -60,34 +60,32 @@ public sealed class ScratchPlaybackTests
     }
 
     [Fact]
-    public void TheStackCommitsExactlyOnceWhenEveryCellIsRevealed()
+    public void TheHeldBackPrizeLastsExactlyUntilEveryCellIsRevealed()
     {
         var playback = new ScratchCardPlayback();
         Assert.True(playback.Begin(Card(WinnerCells, prize: 50, stack: 140)));
         for (var cellIndex = 0; cellIndex < ScratchRules.CellCount - 1; cellIndex++)
         {
             playback.Rub(cellIndex, 1f);
-            Assert.False(playback.TakeStackCommit(out _));
+            Assert.Equal(50, playback.PrizeStillUnderFoil);
         }
 
         playback.Rub(ScratchRules.CellCount - 1, 1f);
         Assert.True(playback.RevealComplete);
-        Assert.True(playback.TakeStackCommit(out var stack));
-        Assert.Equal(140, stack);
-        Assert.False(playback.TakeStackCommit(out _));
+        Assert.Equal(0, playback.PrizeStillUnderFoil);
     }
 
     [Fact]
-    public void ALosingCardStaysQuietAndStillCommitsTheStack()
+    public void ALosingCardStaysQuietAndHoldsNothingBack()
     {
         var playback = new ScratchCardPlayback();
         Assert.True(playback.Begin(Card(LoserCells, prize: 0, stack: 90)));
+        Assert.Equal(0, playback.PrizeStillUnderFoil);
         playback.RevealAll();
         Assert.True(playback.RevealComplete);
         Assert.False(playback.TakeWinCelebration(out _));
         Assert.Equal(0, playback.PrizeOnceRevealed);
-        Assert.True(playback.TakeStackCommit(out var stack));
-        Assert.Equal(90, stack);
+        Assert.Equal(0, playback.PrizeStillUnderFoil);
     }
 
     [Fact]
@@ -112,8 +110,7 @@ public sealed class ScratchPlaybackTests
         Assert.True(playback.RevealComplete);
         Assert.True(playback.TakeWinCelebration(out var prize));
         Assert.Equal(50, prize);
-        Assert.True(playback.TakeStackCommit(out var stack));
-        Assert.Equal(140, stack);
+        Assert.Equal(0, playback.PrizeStillUnderFoil);
     }
 
     [Fact]
@@ -139,16 +136,34 @@ public sealed class ScratchPlaybackTests
         playback.Clear();
         Assert.Equal(ScratchPhase.Idle, playback.Phase);
         Assert.False(playback.TakeWinCelebration(out _));
-        Assert.False(playback.TakeStackCommit(out _));
+        Assert.Equal(0, playback.PrizeStillUnderFoil);
     }
 
+    // The prize is credited at purchase, so the store carries the settled stack from the moment
+    // the card lands. Holding the prize back has to be a property of the card on screen, not of
+    // the stored stack: a doctored stack is overwritten by the next state refresh, which would
+    // jump the chips pill by exactly the prize while every cell is still under foil.
     [Fact]
-    public void TheHeldStackKeepsThePrizeInvisibleUntilTheRevealCommitsIt()
+    public void ThePrizeIsHeldBackByTheCardOnScreenAndNeverByTheStoredStack()
     {
-        var card = Card(WinnerCells, prize: 50, stack: 140);
-        Assert.Equal(90, CasinoPlayStore.StackWithPrizeStillHidden(card));
-        var loser = Card(LoserCells, prize: 0, stack: 90);
-        Assert.Equal(90, CasinoPlayStore.StackWithPrizeStillHidden(loser));
+        var playback = new ScratchCardPlayback();
+        Assert.True(playback.Begin(Card(WinnerCells, prize: 50, stack: 140)));
+        Assert.Equal(50, playback.PrizeStillUnderFoil);
+
+        var refreshed = State(sittingId: "sit1", stack: 140);
+        var absorbed = CasinoStore.StackAbsorbedInto(refreshed, "sit1", 140);
+        Assert.Null(absorbed);
+        Assert.Equal(140, refreshed.Sitting!.Stack);
+        Assert.Equal(90, refreshed.Sitting.Stack - playback.PrizeStillUnderFoil);
+
+        playback.RevealAll();
+        Assert.Equal(140, refreshed.Sitting.Stack - playback.PrizeStillUnderFoil);
+    }
+
+    private static CasinoStateDto State(string sittingId, long stack)
+    {
+        return new CasinoStateDto(
+            Sitting: new CasinoSittingDto(Id: sittingId, GameKind: CasinoWire.ScratchKind, Stack: stack));
     }
 
     private static CasinoScratchCardDto Card(int[] cells, long prize, long stack = 100)

@@ -89,12 +89,6 @@ internal sealed class ScratchCabinet
 
     public void Reset()
     {
-        playback.RevealAll();
-        if (playback.TakeStackCommit(out var stack))
-        {
-            store.AbsorbStack(stack);
-        }
-
         playback.Clear();
         particles.Clear();
         oddsSheet.Close();
@@ -167,7 +161,6 @@ internal sealed class ScratchCabinet
             }
             else if (card.Granted)
             {
-                store.AbsorbStack(card.Stack);
                 inlineReason = MalformedReason;
             }
             else
@@ -186,11 +179,6 @@ internal sealed class ScratchCabinet
             celebrationPrize = prize;
             prizeRoll.Snap(0);
             Celebrate(prize, scale);
-        }
-
-        if (playback.TakeStackCommit(out var stack))
-        {
-            store.AbsorbStack(stack);
         }
     }
 
@@ -225,10 +213,16 @@ internal sealed class ScratchCabinet
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.25f)), Metrics.Stroke.Hairline);
         Typography.Draw(drawList, new Vector2(min.X + 16f * scale, y + 7f * scale), Loc.T(L.Casino.SlotsChips),
             ui.MutedInk, TextStyles.Caption1);
-        var stackText = (state.Sitting?.Stack ?? 0).ToString("N0", Loc.Culture);
+        var stackText = DisplayStack(state).ToString("N0", Loc.Culture);
         Typography.Draw(drawList, new Vector2(min.X + 16f * scale, y + 21f * scale), stackText, ui.TitleInk,
             TextStyles.SubheadlineEmphasized);
         return y + height;
+    }
+
+    private long DisplayStack(CasinoStateDto state)
+    {
+        var stack = state.Sitting?.Stack ?? 0;
+        return Math.Max(0, stack - playback.PrizeStillUnderFoil);
     }
 
     private void DrawCard(ImDrawListPtr drawList, AppSkin ui, Rect card, float cellExtent, float scale, float delta)
@@ -243,6 +237,15 @@ internal sealed class ScratchCabinet
         var cellGap = 4f * scale;
         var cellSize = (inner.Width - cellGap * (ScratchRules.GridSide - 1)) / ScratchRules.GridSide;
         var scratching = playback.Phase == ScratchPhase.Scratching;
+
+        // The rub is a raw drag over drawlist art, so the card has to claim the pointer: without
+        // this the press lands on bare window space and drags the phone across the screen instead
+        // of the foil off the cell.
+        if (scratching && UiInteract.HoverWindowOnly(card.Min, card.Max))
+        {
+            UiInteract.ReportGestureSurface();
+        }
+
         var rubbing = scratching && ImGui.IsMouseDown(ImGuiMouseButton.Left);
         var mouseDrag = ImGui.GetIO().MouseDelta.Length();
 

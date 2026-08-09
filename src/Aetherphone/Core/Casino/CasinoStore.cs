@@ -206,16 +206,30 @@ internal sealed class CasinoStore : IDisposable
         }, () => savingLimits = false);
     }
 
-    public void AbsorbStack(long stack)
+    public void AbsorbStack(string sittingId, long stack)
     {
-        var current = state;
-        var sitting = current?.Sitting;
-        if (current is null || sitting is null || sitting.Stack == stack)
+        var next = StackAbsorbedInto(state, sittingId, stack);
+        if (next is null)
         {
             return;
         }
 
-        state = current with { Sitting = sitting with { Stack = stack } };
+        state = next;
+    }
+
+    // A round response only ever speaks for the sitting it was staked in. A replayed round can
+    // land long after that sitting was cashed out, and its stack (zero, once the table closed)
+    // must never be written onto the sitting now in play.
+    internal static CasinoStateDto? StackAbsorbedInto(CasinoStateDto? current, string sittingId, long stack)
+    {
+        var sitting = current?.Sitting;
+        if (current is null || sitting is null || sittingId.Length == 0
+            || !string.Equals(sitting.Id, sittingId, StringComparison.Ordinal) || sitting.Stack == stack)
+        {
+            return null;
+        }
+
+        return current with { Sitting = sitting with { Stack = stack } };
     }
 
     internal static CasinoStateDto MergeLimits(CasinoStateDto current, CasinoLimitsDto limits)

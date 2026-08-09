@@ -8,6 +8,8 @@ internal sealed record VerifiedCasinoRound(CasinoRoundVerifyDto Round, CasinoRou
 
 internal sealed class CasinoHistoryStore : IDisposable
 {
+    private const long RetryAfterAttemptMilliseconds = 30_000;
+
     private readonly AethernetSession session;
     private readonly CasinoClient casino;
     private readonly StoreWork work = new("CasinoHistory");
@@ -21,6 +23,7 @@ internal sealed class CasinoHistoryStore : IDisposable
     private volatile Dictionary<string, VerifiedCasinoRound> verified = new(StringComparer.Ordinal);
     private int loadFailed;
     private int verifyFailed;
+    private long attemptedAtTick;
     private string? lastAccountId;
 
     public CasinoHistoryStore(AethernetSession session, CasinoClient casino)
@@ -41,6 +44,7 @@ internal sealed class CasinoHistoryStore : IDisposable
 
     public void Invalidate()
     {
+        Interlocked.Exchange(ref attemptedAtTick, 0);
         loaded = false;
     }
 
@@ -73,13 +77,14 @@ internal sealed class CasinoHistoryStore : IDisposable
             rounds = Array.Empty<CasinoRoundHistoryDto>();
             nextCursor = null;
             loaded = false;
+            Interlocked.Exchange(ref attemptedAtTick, 0);
             lock (verifiedSwapLock)
             {
                 verified = new Dictionary<string, VerifiedCasinoRound>(StringComparer.Ordinal);
             }
         }
 
-        if (!loaded && !loading)
+        if (!loaded && !loading && !CoolingDown(Interlocked.Read(ref attemptedAtTick), Environment.TickCount64))
         {
             Fetch(null);
         }
@@ -87,12 +92,22 @@ internal sealed class CasinoHistoryStore : IDisposable
 
     public void LoadMore()
     {
-        if (loading || nextCursor is null)
+        if (loading || nextCursor is null
+            || CoolingDown(Interlocked.Read(ref attemptedAtTick), Environment.TickCount64))
         {
             return;
         }
 
         Fetch(nextCursor);
+    }
+
+    // Both fetch paths are driven from the draw loop, so a page that never lands would otherwise
+    // re-fire every frame: the failed attempt has to hold the store off for the same window the
+    // other polling stores use, or one open history screen empties the rate-limit bucket and
+    // pauses GET polling for every app on the host.
+    internal static bool CoolingDown(long attemptedAtTick, long nowTick)
+    {
+        return attemptedAtTick != 0 && nowTick - attemptedAtTick < RetryAfterAttemptMilliseconds;
     }
 
     public void RequestVerify(string roundId)
@@ -197,6 +212,7 @@ internal sealed class CasinoHistoryStore : IDisposable
     private void Fetch(string? cursor)
     {
         loading = true;
+        Interlocked.Exchange(ref attemptedAtTick, Environment.TickCount64);
         work.Run("history fetch", async token =>
         {
             var page = await casino.RoundsPageAsync(cursor, token).ConfigureAwait(false);
@@ -206,6 +222,7 @@ internal sealed class CasinoHistoryStore : IDisposable
                 return;
             }
 
+            Interlocked.Exchange(ref attemptedAtTick, 0);
             var items = page.Items ?? Array.Empty<CasinoRoundHistoryDto>();
             rounds = cursor is null ? items : MergePage(rounds, items);
             nextCursor = page.NextCursor;

@@ -60,11 +60,15 @@ internal static class CasinoVerifier
         return ReplaysDrawLog(seed, roundId, drawLog) ? CasinoRoundVerdict.Match : CasinoRoundVerdict.Mismatch;
     }
 
+    // A revealed round that logs no draws is not evidence of fair play, it is the absence of it:
+    // the commit alone proves a seed was published, never that this round fell out of it. The
+    // verifier is the one component whose job is to distrust the server, so missing evidence
+    // fails closed rather than earning the strongest verdict for free.
     internal static bool ReplaysDrawLog(byte[] seed, string roundId, string drawLog)
     {
         if (drawLog.Length == 0)
         {
-            return true;
+            return false;
         }
 
         var stream = new DrawStream(seed, roundId);

@@ -86,6 +86,11 @@ internal sealed class CasinoPlayStore : IDisposable
             return;
         }
 
+        if (ReplayedPendingRound(sittingId))
+        {
+            return;
+        }
+
         roundInFlight = true;
         var roundId = Guid.NewGuid().ToString("N");
         RememberPendingRound(new PendingCasinoRound
@@ -102,6 +107,11 @@ internal sealed class CasinoPlayStore : IDisposable
     {
         var sittingId = store.State?.Sitting?.Id ?? string.Empty;
         if (roundInFlight || !session.IsSignedIn || sittingId.Length == 0 || !ScratchRules.IsValidTier(tier))
+        {
+            return;
+        }
+
+        if (ReplayedPendingRound(sittingId))
         {
             return;
         }
@@ -126,6 +136,11 @@ internal sealed class CasinoPlayStore : IDisposable
             return;
         }
 
+        if (ReplayedPendingRound(sittingId))
+        {
+            return;
+        }
+
         roundInFlight = true;
         var roundId = Guid.NewGuid().ToString("N");
         RememberPendingRound(new PendingCasinoRound
@@ -145,8 +160,33 @@ internal sealed class CasinoPlayStore : IDisposable
             return;
         }
 
+        var pending = PendingRound;
+        var sittingId = pending is not null
+            && string.Equals(pending.RoundId, roundId, StringComparison.Ordinal)
+                ? pending.SittingId
+                : string.Empty;
         roundInFlight = true;
-        IssueBarkeepFinish(roundId, orders);
+        IssueBarkeepFinish(sittingId, roundId, orders);
+    }
+
+    // A lost response leaves the round id as the only handle on chips already staked, so the
+    // next tap at the same table replays that round instead of minting a second one: a fresh id
+    // would strand the first round open until the server expires it, and the stake with it.
+    internal static bool ReplaysBeforeStaking(PendingCasinoRound? pending, string sittingId)
+    {
+        return pending is not null && sittingId.Length > 0
+            && string.Equals(pending.SittingId, sittingId, StringComparison.Ordinal);
+    }
+
+    private bool ReplayedPendingRound(string sittingId)
+    {
+        if (!ReplaysBeforeStaking(PendingRound, sittingId))
+        {
+            return false;
+        }
+
+        RecoverPendingRound();
+        return true;
     }
 
     public void RecoverPendingRound()
@@ -205,7 +245,7 @@ internal sealed class CasinoPlayStore : IDisposable
             Interlocked.Exchange(ref spinResult, result);
             if (result.Granted)
             {
-                store.AbsorbStack(result.Stack);
+                store.AbsorbStack(sittingId, result.Stack);
             }
             else
             {
@@ -229,20 +269,13 @@ internal sealed class CasinoPlayStore : IDisposable
             Interlocked.Exchange(ref scratchResult, result);
             if (result.Granted)
             {
-                store.AbsorbStack(StackWithPrizeStillHidden(result));
+                store.AbsorbStack(sittingId, result.Stack);
             }
             else
             {
                 store.RefreshNow();
             }
         }, () => roundInFlight = false);
-    }
-
-    // The card is settled at purchase, but the cabinet only celebrates once the foil comes off:
-    // the stack the player sees holds the prize back until the reveal commits it.
-    internal static long StackWithPrizeStillHidden(CasinoScratchCardDto card)
-    {
-        return card.Stack - card.Prize;
     }
 
     private void IssueBarkeepStart(string sittingId, string roundId)
@@ -258,7 +291,7 @@ internal sealed class CasinoPlayStore : IDisposable
 
             if (result.Granted)
             {
-                store.AbsorbStack(result.Stack);
+                store.AbsorbStack(sittingId, result.Stack);
             }
             else
             {
@@ -270,7 +303,7 @@ internal sealed class CasinoPlayStore : IDisposable
         }, () => roundInFlight = false);
     }
 
-    private void IssueBarkeepFinish(string roundId, CasinoBarkeepOrderRequest[] orders)
+    private void IssueBarkeepFinish(string sittingId, string roundId, CasinoBarkeepOrderRequest[] orders)
     {
         work.Run("barkeep finish", async token =>
         {
@@ -287,17 +320,18 @@ internal sealed class CasinoPlayStore : IDisposable
             }
 
             Interlocked.Exchange(ref barkeepFinishResult, result);
-            if (result.Granted)
+            if (result.Granted && sittingId.Length > 0)
             {
-                store.AbsorbStack(result.Stack);
+                store.AbsorbStack(sittingId, result.Stack);
+                return;
             }
-            else
-            {
-                store.RefreshNow();
-            }
+
+            store.RefreshNow();
         }, () => roundInFlight = false);
     }
 
+    // Replacing a remembered round is only ever reached for one left behind by a sitting that is
+    // already closed: a round of the sitting in play replays before a new one is ever minted.
     internal static Dictionary<ulong, PendingCasinoRound>? RememberRound(
         Dictionary<ulong, PendingCasinoRound> snapshot, ulong contentId, PendingCasinoRound round)
     {

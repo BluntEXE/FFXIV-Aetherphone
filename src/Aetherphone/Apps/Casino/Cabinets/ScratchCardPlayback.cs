@@ -12,9 +12,10 @@ internal enum ScratchPhase
 
 // The card's outcome is settled the moment the purchase response lands, but nothing outside
 // this class may see it early: the prize amount stays sealed until the third matching symbol
-// is on the table, the winning-cell highlight stays sealed with it, and the settled stack is
-// handed out exactly once when every cell is revealed. The theater can never leak what the
-// foil still hides.
+// is on the table, and the winning-cell highlight stays sealed with it. The store always holds
+// the true settled stack, so the amount the prize adds is held back from the displayed stack
+// here, for as long as the foil is still on the card; nothing the theater shows can leak what
+// the foil still hides, and no state refresh can spoil it either.
 internal sealed class ScratchCardPlayback
 {
     private readonly int[] cells = new int[ScratchRules.CellCount];
@@ -24,11 +25,9 @@ internal sealed class ScratchCardPlayback
     private ScratchPhase phase;
     private int tier;
     private long sealedPrize;
-    private long sealedStack;
     private int sealedWinningSymbol;
     private int revealedMatches;
     private bool winCelebrationPending;
-    private bool stackCommitPending;
 
     public ScratchPhase Phase => phase;
 
@@ -37,6 +36,8 @@ internal sealed class ScratchCardPlayback
     public bool RevealComplete => phase == ScratchPhase.Settled;
 
     public long PrizeOnceRevealed => MatchOnTheTable ? sealedPrize : 0;
+
+    public long PrizeStillUnderFoil => phase == ScratchPhase.Scratching ? sealedPrize : 0;
 
     public int WinningSymbolOnceMatched => MatchOnTheTable ? sealedWinningSymbol : -1;
 
@@ -67,11 +68,9 @@ internal sealed class ScratchCardPlayback
         phase = ScratchPhase.Scratching;
         tier = ScratchRules.IsValidTier(card.Tier) ? card.Tier : 0;
         sealedPrize = card.Prize;
-        sealedStack = card.Stack;
         sealedWinningSymbol = winningSymbol;
         revealedMatches = 0;
         winCelebrationPending = false;
-        stackCommitPending = false;
         return true;
     }
 
@@ -144,28 +143,13 @@ internal sealed class ScratchCardPlayback
         return true;
     }
 
-    public bool TakeStackCommit(out long stack)
-    {
-        if (!stackCommitPending)
-        {
-            stack = 0;
-            return false;
-        }
-
-        stackCommitPending = false;
-        stack = sealedStack;
-        return true;
-    }
-
     public void Clear()
     {
         phase = ScratchPhase.Idle;
         sealedPrize = 0;
-        sealedStack = 0;
         sealedWinningSymbol = -1;
         revealedMatches = 0;
         winCelebrationPending = false;
-        stackCommitPending = false;
         for (var cellIndex = 0; cellIndex < ScratchRules.CellCount; cellIndex++)
         {
             foil[cellIndex] = 1f;
@@ -194,6 +178,5 @@ internal sealed class ScratchCardPlayback
         }
 
         phase = ScratchPhase.Settled;
-        stackCommitPending = true;
     }
 }

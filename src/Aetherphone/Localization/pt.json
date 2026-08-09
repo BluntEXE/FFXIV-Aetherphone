@@ -4286,7 +4286,7 @@
   "casino.fairness.revealTitle": "Revelada na liquidação",
   "casino.fairness.revealBody": "Quando a rodada é liquidada, a própria semente é revelada. O hash dela precisa bater com a impressão digital publicada antes, bit a bit.",
   "casino.fairness.replayTitle": "Conferido no seu aparelho",
-  "casino.fairness.replayBody": "Seu telefone refaz cada sorteio da rodada a partir da semente revelada e compara o resultado com o que foi distribuído a você. A conferência roda aqui, não na casa.",
+  "casino.fairness.replayBody": "Seu telefone deriva de novo, a partir da semente revelada, cada sorteio que a rodada registrou, e cada um tem que dar o mesmo número. A conferência roda aqui, não na casa.",
   "casino.fairness.chainNote": "Cada rodada também carrega a impressão digital lacrada da rodada seguinte, então a corrente nunca se quebra.",
   "casino.fairness.recentHeading": "Conferir uma rodada",
   "casino.fairness.noRounds": "Nada para conferir ainda. Rodadas liquidadas aparecem aqui.",

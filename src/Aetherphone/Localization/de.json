@@ -4286,7 +4286,7 @@
   "casino.fairness.revealTitle": "Offengelegt bei der Abrechnung",
   "casino.fairness.revealBody": "Sobald die Runde abgerechnet ist, wird der Seed selbst offengelegt. Sein Hash muss Bit für Bit zum vorab veröffentlichten Fingerabdruck passen.",
   "casino.fairness.replayTitle": "Geprüft auf deinem Gerät",
-  "casino.fairness.replayBody": "Dein Telefon zieht jede Ziehung der Runde aus dem offengelegten Seed nach und vergleicht das Ergebnis mit dem, was dir ausgeteilt wurde. Die Prüfung läuft hier, nicht beim Haus.",
+  "casino.fairness.replayBody": "Dein Telefon leitet jede protokollierte Ziehung der Runde erneut aus dem offengelegten Seed ab, und jede muss dieselbe Zahl ergeben. Die Prüfung läuft hier, nicht beim Haus.",
   "casino.fairness.chainNote": "Jede Runde trägt außerdem den versiegelten Fingerabdruck der nächsten Runde, die Kette reißt also nie.",
   "casino.fairness.recentHeading": "Eine Runde prüfen",
   "casino.fairness.noRounds": "Noch nichts zu prüfen. Abgerechnete Runden landen hier.",

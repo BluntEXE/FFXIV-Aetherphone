@@ -105,13 +105,30 @@ public sealed class CasinoVerifierTests
             CasinoVerifier.Verify("not-hex", SeedCommit, SlotsRoundId, SlotsLog));
     }
 
+    // Commit evidence alone says a seed was published, never that this round came out of it. A
+    // server that reveals a seed and logs no draws must not collect the strongest verdict, so
+    // the missing evidence fails closed rather than open.
     [Fact]
-    public void AnEmptyDrawLogStillChecksTheCommit()
+    public void AnEmptyDrawLogFailsClosedInsteadOfPassingOnTheCommitAlone()
     {
-        Assert.Equal(CasinoRoundVerdict.Match,
+        Assert.Equal(CasinoRoundVerdict.Mismatch,
             CasinoVerifier.Verify(Seed, SeedCommit, SlotsRoundId, string.Empty));
         Assert.Equal(CasinoRoundVerdict.Mismatch,
             CasinoVerifier.Verify(Seed, "00" + SeedCommit[2..], SlotsRoundId, string.Empty));
+    }
+
+    [Fact]
+    public void ASettledDtoWithoutADrawLogIsAMismatchNotAMatch()
+    {
+        var evidenceless = new CasinoRoundVerifyDto(
+            Granted: true,
+            RoundId: SlotsRoundId,
+            GameKind: "casino.slots",
+            State: CasinoRoundStates.Settled,
+            SeedCommitHash: SeedCommit,
+            SeedRevealed: Seed,
+            DrawLog: "");
+        Assert.Equal(CasinoRoundVerdict.Mismatch, CasinoVerifier.Verify(evidenceless));
     }
 
     [Fact]

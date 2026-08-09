@@ -156,6 +156,26 @@ public sealed class CasinoHistoryTests
             + "verdict=match", blob);
     }
 
+    // Both history fetches are driven from the draw loop, so a page that never lands would fire
+    // again every frame. The backoff has to be the same window the other polling stores use, or
+    // one open history screen drains the rate-limit bucket and pauses GET polling host-wide.
+    [Fact]
+    public void AFailedPageHoldsTheStoreOffInsteadOfRefiringEveryFrame()
+    {
+        const long attemptedAtTick = 1_000_000;
+
+        Assert.True(CasinoHistoryStore.CoolingDown(attemptedAtTick, attemptedAtTick));
+        Assert.True(CasinoHistoryStore.CoolingDown(attemptedAtTick, attemptedAtTick + 16));
+        Assert.True(CasinoHistoryStore.CoolingDown(attemptedAtTick, attemptedAtTick + 29_999));
+        Assert.False(CasinoHistoryStore.CoolingDown(attemptedAtTick, attemptedAtTick + 30_000));
+    }
+
+    [Fact]
+    public void AStoreThatHasNeverAttemptedAFetchIsNotCoolingDown()
+    {
+        Assert.False(CasinoHistoryStore.CoolingDown(0, 1_000_000));
+    }
+
     private static CasinoRoundHistoryDto Round(string roundId, long createdAtUnix)
     {
         return new CasinoRoundHistoryDto(

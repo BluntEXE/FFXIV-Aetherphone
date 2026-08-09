@@ -4286,7 +4286,7 @@
   "casino.fairness.revealTitle": "Revelada al liquidarse",
   "casino.fairness.revealBody": "Cuando la ronda se liquida, se revela la propia semilla. Su hash debe coincidir con la huella publicada de antemano, bit a bit.",
   "casino.fairness.replayTitle": "Comprobado en tu dispositivo",
-  "casino.fairness.replayBody": "Tu teléfono reproduce cada sorteo de la ronda desde la semilla revelada y compara el resultado con lo que te repartieron. La comprobación corre aquí, no en la casa.",
+  "casino.fairness.replayBody": "Tu teléfono vuelve a derivar desde la semilla revelada cada sorteo que la ronda registró, y cada uno tiene que dar el mismo número. La comprobación corre aquí, no en la casa.",
   "casino.fairness.chainNote": "Cada ronda lleva además la huella sellada de la ronda siguiente, así que la cadena nunca se rompe.",
   "casino.fairness.recentHeading": "Comprobar una ronda",
   "casino.fairness.noRounds": "Nada que comprobar todavía. Las rondas liquidadas aparecen aquí.",
