@@ -105,7 +105,18 @@ internal static class SocialActivityList
             }
         }
 
-        if (UiInteract.HoverClick(origin, rowMax))
+        var avatarMin = avatarCenter - new Vector2(radius, radius);
+        var avatarMax = avatarCenter + new Vector2(radius, radius);
+        var overAvatar = UiInteract.Hover(avatarMin, avatarMax);
+        if (overAvatar)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            if (UiInteract.Click(avatarMin, avatarMax, true))
+            {
+                openActor(item);
+            }
+        }
+        else if (UiInteract.HoverClick(origin, rowMax))
         {
             if (SocialActivity.OpensPost(item))
             {
