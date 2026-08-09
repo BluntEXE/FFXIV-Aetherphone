@@ -4,10 +4,6 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Windows.Components;
 
-// A frosted pill that says the table is looking after the seat while the player is not. It is
-// deliberately not a warning: the auto-stand it names is protection, and dressing it in alarm
-// colours would teach a player to fear stepping away from a table they are allowed to step away
-// from.
 internal static class AwayBadge
 {
     public const float Height = 24f;

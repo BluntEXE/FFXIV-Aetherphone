@@ -5,14 +5,6 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Windows.Components;
 
-// One painter for every playing card the phone draws, and one encoding behind it: a card is the
-// integer 0..51 that solitaire has always used, rank is card modulo thirteen and suit is card over
-// thirteen. That integer is also what the casino sends on the wire, so a hand arrives from the
-// server in the same alphabet the renderer already speaks and nothing has to translate between a
-// dealt card and a drawn one.
-//
-// A face is drawn from a rect rather than a center and a size, which is what lets a flip squash the
-// rect through zero width without the painter knowing anything about the animation running it.
 internal static class PlayingCards
 {
     public const int RankCount = 13;

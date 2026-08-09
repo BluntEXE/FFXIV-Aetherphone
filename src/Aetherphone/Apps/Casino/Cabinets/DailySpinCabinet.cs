@@ -9,14 +9,6 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Apps.Casino.Cabinets;
 
-// The only wheel in the building that mints. A cash-out hands back money the player already owned
-// and stays quiet about it; this one creates coins that did not exist a second ago, so it gets the
-// confetti, the count up and the loud number.
-//
-// The rim never replays. A spin claimed on this device turns, decelerates and lands on the segment
-// the server named; a spin claimed earlier today (or on another device) is already history, so the
-// wheel is simply painted at rest on that segment with no fanfare at all. A wheel that re-enacted
-// yesterday's win every time the screen opened would be a slot machine pretending to be a gift.
 internal sealed class DailySpinCabinet
 {
     private const float MaxRingRadius = 104f;
@@ -115,8 +107,6 @@ internal sealed class DailySpinCabinet
             return;
         }
 
-        // A replay is not a failure to show: it carries the segment the day already landed on and
-        // what it already paid, so the rim is stated at rest on it instead of being staged again.
         if (!result.Granted)
         {
             inlineReason = result.Reason.Length > 0 ? result.Reason : CasinoReasons.AlreadyClaimed;
@@ -157,9 +147,6 @@ internal sealed class DailySpinCabinet
         coinRoll.Snap(0);
     }
 
-    // A spin claimed before this screen opened is not staged, it is stated: the rim snaps to the
-    // segment the server recorded and nothing celebrates, because the coins landed in the wallet
-    // long before this frame.
     private void Advance(float deltaSeconds, float scale)
     {
         if (!spinning)

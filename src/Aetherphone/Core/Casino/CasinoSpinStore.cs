@@ -5,18 +5,6 @@ using Aetherphone.Core.Coins;
 
 namespace Aetherphone.Core.Casino;
 
-// The daily spin is the only casino surface with no sitting, no chips and no room, so it keeps its
-// own tiny store rather than renting space in one built for tables.
-//
-// There is no read route and there must not be one that this store invents: the single post either
-// takes today's spin or replays the one already taken, so a speculative poll on app open would
-// spend the player's turn for them. The store therefore never asks anything until the player taps,
-// and until it holds an answer the wheel is offered rather than hidden. Being wrong that way costs
-// one tap that comes back "already taken"; being wrong the other way hides a free spin all day.
-//
-// The answer is the whole state. A granted spin carries the segment, what reached the wallet and
-// when the next one opens; a replay carries the same facts with Granted false, which is why the
-// reason is read rather than inferred from the flag.
 internal sealed class CasinoSpinStore : IDisposable
 {
     private readonly AethernetSession session;

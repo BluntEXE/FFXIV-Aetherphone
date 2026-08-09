@@ -34,11 +34,6 @@ internal readonly record struct SeatRingStyle(
     Vector4 Surface,
     Vector4 Money);
 
-// Players sit on an arc across the lower half of the felt with the dealer anchored above them, and
-// the ring is rotated so the player looking at it is always at bottom centre. That rotation is the
-// whole point of the component: a seat index is a server fact and a slot is a place on the glass,
-// and mixing the two is how a table ends up telling one player they are sitting where another one
-// is. Layout and hit testing are pure so both can be pinned without a frame.
 internal static class SeatRing
 {
     public const float ArcStartDegrees = 160f;
@@ -109,9 +104,6 @@ internal static class SeatRing
             center.Y + MathF.Sin(radians) * arena.Height * RadiusYFraction);
     }
 
-    // Chips sit between the player and the felt and cards sit further in still, which is the order a
-    // real table lays them and, more usefully here, the order that keeps them from overlapping when
-    // five seats share one arc.
     public static Vector2 Pushed(Vector2 seatCenter, Vector2 towards, float radius, float factor)
     {
         var offset = towards - seatCenter;

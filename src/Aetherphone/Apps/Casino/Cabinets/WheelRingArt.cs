@@ -7,11 +7,6 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Apps.Casino.Cabinets;
 
-// Fifty wedges on a phone rim leave about ten pixels of arc apiece, which is not a number, so the
-// wheel is read by colour first: one hue per bet spot, and the spot cards under it carry the same
-// swatches as the legend. A multiplier is only ever painted onto a wedge when the measured glyph
-// actually fits inside that wedge's chord, so the labels appear as the phone is zoomed and never
-// crowd into each other at the size where they would not fit.
 internal static class WheelRingArt
 {
     public static readonly Vector4[] SpotColors =

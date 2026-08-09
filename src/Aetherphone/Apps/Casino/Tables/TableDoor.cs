@@ -9,13 +9,6 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Apps.Casino.Tables;
 
-// The host's side of a private table. Knocks are read here and nowhere else: the room snapshot every
-// player at the table receives must never carry the name of somebody who asked to come in, because a
-// refused knock would then be public.
-//
-// Removing a player is the one destructive act on this screen and it goes through the confirm
-// service, because it ends somebody's hand and sends their chips home whether they were ready or
-// not. Letting somebody in does not, because a mistaken approval is undone by a removal.
 internal sealed class TableDoor
 {
     private const float PillHeight = 40f;

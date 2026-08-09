@@ -5,10 +5,6 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Windows.Components;
 
-// The playing surface every table and cabinet sits on: the games arena with a lamp pool poured over
-// its middle and a stitch line run round the inside. The pool is painted with stacked translucent
-// discs rather than a texture, because a textured fill inside a path is the one thing this draw
-// list cannot do without dragging the whole frame's texture binding along with it.
 internal static class FeltPanel
 {
     public const float RoundingUnits = 26f;

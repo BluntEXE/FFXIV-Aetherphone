@@ -7,10 +7,6 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Apps.Casino.Cabinets;
 
-// Sixteen wedges leave enough arc for a number, so unlike the fifty segment wager wheel this rim
-// is read by its coin values rather than by colour alone. The two tiers are still tinted apart so
-// the eye can find the good wedges while it is turning, and the label is only painted when the
-// measured glyph actually fits the chord it has to sit in.
 internal static class SpinRingArt
 {
     private static readonly Vector4 SmallFill = new(0.129f, 0.298f, 0.271f, 1f);

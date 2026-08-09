@@ -1,9 +1,5 @@
 namespace Aetherphone.Core.Casino;
 
-// A verbatim mirror of the backend BarkeepEngine timing window, grade domain, patron buckets,
-// and tip ladder: the cabinet grades and settles against these numbers, so they must stay
-// byte-identical to Aethernet.Api/Services/Casino/Games/BarkeepEngine.cs plus the entry and
-// daily cap in CasinoEconomy.cs (pinned by BarkeepRulesTests).
 internal static class BarkeepRules
 {
     public const int ShiftSeconds = 60;

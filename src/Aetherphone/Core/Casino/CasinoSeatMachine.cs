@@ -10,8 +10,6 @@ internal enum CasinoSeatStage
     Standing,
 }
 
-// What the screen is still waiting for the board to confirm after the server has already answered an
-// intent. Bound is a sit or a takeover the server granted, Released is a stand it granted outright.
 internal enum CasinoSeatSettle
 {
     None,
@@ -37,25 +35,8 @@ internal enum CasinoSeatSignal
     Left,
 }
 
-// A seat belongs to an account, not to a phone, so two phones signed into one account can both be
-// looking at the same table. Exactly one of them holds the binding: the seat that sees hole cards
-// and spends chips. The other one is told so in plain words and offered the takeover, and the one
-// transition this machine refuses to make on its own is Elsewhere into Claiming: a claim always
-// costs a gesture, because it moves money and private cards away from a screen somebody may be
-// sitting in front of.
-//
-// Every intent has its own in-flight stage rather than a shared boolean, so a refusal lands the
-// player back exactly where they started (a refused stand is still Seated, a refused claim is still
-// Elsewhere) and a snapshot that arrives mid-flight can still overrule the whole thing: SeatLost
-// and Left win from every stage, because the server closing the seat is not a request.
 internal static class CasinoSeatMachine
 {
-    // A grant the server has already answered has to survive the boards that were taken before it.
-    // The poll carrying my new seat can be a whole interval behind the answer that created it, and
-    // letting that older board speak would undo the grant on the very frame it landed: the footer
-    // would offer the seat back to somebody already sitting in it and the second tap comes back
-    // refused. The latch is a grace rather than a lock, so a server that never confirms cannot
-    // strand the screen.
     public const long SettleGraceMilliseconds = 6_000;
 
     public static CasinoSeatStage Next(CasinoSeatStage held, CasinoSeatSignal signal)
@@ -65,9 +46,6 @@ internal static class CasinoSeatMachine
             return CasinoSeatStage.Watching;
         }
 
-        // A post already on the wire outranks a snapshot that has not caught up with it yet:
-        // between pressing sit and the answer arriving, every frame honestly reports no seat, and
-        // letting that cancel the intent would flip the screen back a dozen times a second.
         if (signal == CasinoSeatSignal.SeatLost)
         {
             return held is CasinoSeatStage.Sitting or CasinoSeatStage.Claiming ? held : CasinoSeatStage.Watching;
@@ -104,9 +82,6 @@ internal static class CasinoSeatMachine
         return stage is CasinoSeatStage.Elsewhere or CasinoSeatStage.Claiming;
     }
 
-    // The snapshot speaks once a frame and it only ever says one of three things about my seat, so
-    // the reading of it lives here rather than at the call site where a missing case would quietly
-    // strand the screen in whatever it was showing before.
     public static CasinoSeatSignal SignalFor(bool hasSeat, bool boundElsewhere)
     {
         if (!hasSeat)
@@ -117,9 +92,6 @@ internal static class CasinoSeatMachine
         return boundElsewhere ? CasinoSeatSignal.SeatBoundElsewhere : CasinoSeatSignal.SeatBoundHere;
     }
 
-    // Which fact the board still owes the screen, read off the stage the intent was posted from. A
-    // stand the table queued to the end of the hand owes nothing: the seat is still mine until it
-    // settles, which is exactly what the stale board already says.
     public static CasinoSeatSettle SettleFor(CasinoSeatStage requested, bool atHandEnd)
     {
         return requested switch
@@ -131,8 +103,6 @@ internal static class CasinoSeatMachine
         };
     }
 
-    // Whether the board is allowed to speak at all this frame. A latch opens on the first reading
-    // that agrees with the grant, and on nothing else until the grace runs out.
     public static bool AcceptsBoard(CasinoSeatSettle awaited, CasinoSeatSignal signal, long armedAtTick,
         long nowTick)
     {
@@ -208,9 +178,6 @@ internal static class CasinoSeatMachine
         return signal switch
         {
             CasinoSeatSignal.StandGranted => CasinoSeatStage.Watching,
-            // A stand posted mid hand is accepted and queued, so the seat is still mine until the
-            // hand it is waiting on settles. Treating that acceptance as a departure would take the
-            // cards off the felt with money still on them.
             CasinoSeatSignal.StandQueued => CasinoSeatStage.Seated,
             CasinoSeatSignal.StandRefused => CasinoSeatStage.Seated,
             CasinoSeatSignal.SeatBoundElsewhere => CasinoSeatStage.Elsewhere,

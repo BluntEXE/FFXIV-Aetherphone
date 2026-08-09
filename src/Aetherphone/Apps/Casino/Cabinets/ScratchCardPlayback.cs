@@ -10,12 +10,6 @@ internal enum ScratchPhase
     Settled,
 }
 
-// The card's outcome is settled the moment the purchase response lands, but nothing outside
-// this class may see it early: the prize amount stays sealed until the third matching symbol
-// is on the table, and the winning-cell highlight stays sealed with it. The store always holds
-// the true settled stack, so the amount the prize adds is held back from the displayed stack
-// here, for as long as the foil is still on the card; nothing the theater shows can leak what
-// the foil still hides, and no state refresh can spoil it either.
 internal sealed class ScratchCardPlayback
 {
     private readonly int[] cells = new int[ScratchRules.CellCount];

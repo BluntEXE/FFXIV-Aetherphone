@@ -14,10 +14,6 @@ internal readonly struct BarkeepPatronScript
     }
 }
 
-// The shift is played locally but settled by the server clock: grades stay inside the fixed
-// domain, submitted orders are a strict prefix of the scripted patrons, and the finish gates
-// keep a safety margin inside the server's 60..300 second window so a slightly skewed clock
-// can never trip the cooldown refusal or the forfeit.
 internal sealed class BarkeepShift
 {
     public const int FinishEarliestSeconds = 61;

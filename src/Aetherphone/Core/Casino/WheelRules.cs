@@ -1,14 +1,5 @@
 namespace Aetherphone.Core.Casino;
 
-// A verbatim mirror of the ratified Wager Wheel table, and the client half of a contract the
-// backend wheel engine has to match segment for segment: the cabinet paints the rim from
-// Segments and quotes every spot's odds from SegmentCounts, so a layout that drifted from the
-// server would draw a wheel that lands somewhere other than where the house says it landed.
-//
-// The rim is the flatten of A A A A B B C where A is 1,3,1,5,1,3,1,10 and B is 1,3,1,5,1,20 and
-// C is 1,3,5,1,3,5. No two neighbours share a spot, which is the whole point of the shape: the
-// ones alternate between almost every other segment so a wheel read at phone size never looks
-// like one fat wedge, and the two 20x segments sit a third of the rim apart.
 internal static class WheelRules
 {
     public const int SegmentCount = 50;
@@ -66,9 +57,6 @@ internal static class WheelRules
         return IsSpot(spot) && SpotAt(segment) == spot;
     }
 
-    // A winning spot returns the stake alongside the winnings, which is why every quoted return
-    // is (multiplier + 1) and not the multiplier: a 1x spot doubles the stake, it does not
-    // hand back exactly what it took.
     public static long Returned(int segment, int spot, long stake)
     {
         return Wins(segment, spot) ? stake * (MultiplierOf(spot) + 1) : 0;
@@ -79,9 +67,6 @@ internal static class WheelRules
         return amount >= MinStakePerSpot && amount <= MaxStakePerSpot;
     }
 
-    // The room cap is the one the player cannot see coming: the per-spot bound is printed on the
-    // composer, but a fifth bet that would cross 200 for the round has to be clamped before the
-    // POST leaves rather than bounced by the server with money already committed elsewhere.
     public static long Headroom(long stakedThisRound)
     {
         var left = MaxStakePerRound - stakedThisRound;

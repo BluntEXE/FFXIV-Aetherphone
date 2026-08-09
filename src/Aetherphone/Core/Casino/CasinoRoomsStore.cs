@@ -6,22 +6,8 @@ using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Core.Casino;
 
-// What the composer needs from a money post and nothing else: the two games answer with different
-// shapes, and everything else either lands in the chip stack or arrives on the next personal read.
 internal sealed record CasinoStakeOutcome(bool Granted, string Reason);
 
-// Money never moves over the socket, so a room has to stay playable without one: entering asks the
-// socket to attach and reads the HTTP snapshot in the same breath, and the room keeps polling on
-// its own clock for as long as it is not attached or is waiting on a snapshot it asked for. The
-// socket only ever saves polls, which is why the directory keeps the ordinary 60/120 cadence while
-// the room in play gets a tight one, and why every failed attempt still backs off the shared 30
-// seconds.
-//
-// The public room and the player's own money are two different reads and they are kept that way.
-// The snapshot is what everyone at the rail sees; the personal half (accepted bets, printed cards,
-// what the hall settled) lives only behind the per-game read, is refetched whenever the round or
-// the phase moves, and is never inferred from a local tally. That separation is what stops a bet
-// the server refused from being painted as live money.
 internal sealed class CasinoRoomsStore : IDisposable
 {
     private static readonly TimeSpan ForegroundPollInterval = TimeSpan.FromSeconds(60);
@@ -31,8 +17,6 @@ internal sealed class CasinoRoomsStore : IDisposable
     private const long RetryAfterAttemptMilliseconds = 30_000;
     private const int NotFoundStatus = 404;
 
-    // A hand bet has no spot to sit on, so it burns a sentinel and shares the wheel's bet identity
-    // bookkeeping rather than growing a second copy of it.
     private const int HandBetSpot = -2;
 
     private readonly AethernetSession session;
@@ -128,9 +112,6 @@ internal sealed class CasinoRoomsStore : IDisposable
         return Interlocked.Exchange(ref stakeFailed, 0) != 0;
     }
 
-    // A personal read only speaks for the room and the round it was taken in. Handing back the
-    // wrong round's cards would show last room's full house under this room's ladder, so the match
-    // is checked here rather than trusted at every call site.
     public CasinoWheelBetsDto? WheelBetsFor(string roomId, long roundIndex)
     {
         var held = wheelBets;
@@ -175,9 +156,6 @@ internal sealed class CasinoRoomsStore : IDisposable
         return 0;
     }
 
-    // A tile wants the same two facts about a room nobody is standing in: which phase it is in and
-    // when that phase ends. The live room answers for the room in play because its snapshot is
-    // seconds fresher than a directory page that refreshes once a minute.
     public bool TryRoomClock(string roomId, out int phase, out long phaseEndsAtUnixMs)
     {
         var current = room.State?.Snapshot;
@@ -206,10 +184,6 @@ internal sealed class CasinoRoomsStore : IDisposable
         return false;
     }
 
-    // Every bet of one spin shares a chip round id and each tap carries its own bet id, which is
-    // what makes the retry of a lost response free: the same bet id is the same bet, never a second
-    // one. The chip round id is minted once per room round, because the server ties every leg of a
-    // spin to it and refuses a bet that arrives under a different one.
     public void PlaceWheelBet(int spot, long amount)
     {
         var roomId = room.RoomId;
@@ -274,8 +248,6 @@ internal sealed class CasinoRoomsStore : IDisposable
         }, () => stakeInFlight = false);
     }
 
-    // One purchase is one game: the server keys the entry on the room, the round and the identity,
-    // so a second post is refused rather than added to. The client sends the whole order once.
     public void BuyBingoCards(int cardCount)
     {
         var roomId = room.RoomId;
@@ -338,10 +310,6 @@ internal sealed class CasinoRoomsStore : IDisposable
         }, () => stakeInFlight = false);
     }
 
-    // A blackjack bet is one bet for one seat in one round, so it reuses the wheel's idempotency
-    // exactly with the spot slot burned to a sentinel: the same bet id is the same bet however many
-    // times a lost response is retried, and a bet composed against a round that closed in flight is
-    // refused by the server rather than landing on the next one.
     public void PlaceBlackjackBet(long amount)
     {
         var roomId = room.RoomId;
@@ -405,9 +373,6 @@ internal sealed class CasinoRoomsStore : IDisposable
         }, () => stakeInFlight = false);
     }
 
-    // The action count the client last saw rides along so a post that raced the table loses the
-    // guard rather than applying to whatever decision came next. A refusal is therefore safe to
-    // retry: if the first one landed the retry is stale, and if it did not the retry is the action.
     public void SendBlackjackAction(int action)
     {
         var roomId = room.RoomId;
@@ -469,8 +434,6 @@ internal sealed class CasinoRoomsStore : IDisposable
                 chips.AbsorbStack(sittingId, result.Stack);
             }
 
-            // A card the table just dealt me is the private half moving inside one phase, which no
-            // watermark keyed on the round and the phase can notice on its own.
             InvalidatePersonal();
         }, () => stakeInFlight = false);
     }
@@ -529,10 +492,6 @@ internal sealed class CasinoRoomsStore : IDisposable
         return unansweredBetId;
     }
 
-    // A purchase id is only free to reuse for the same order. The server replays the stored
-    // purchase behind an id it has already answered, so sending the id of a one card order with a
-    // four card body would charge one card and hand back one card while the composer asked for
-    // four: the count belongs in the match for the same reason the amount belongs in a bet's.
     internal static bool ReusesPurchase(long heldRoundIndex, int heldCardCount, long roundIndex, int cardCount)
     {
         return heldRoundIndex == roundIndex && heldCardCount == cardCount;
@@ -624,9 +583,6 @@ internal sealed class CasinoRoomsStore : IDisposable
         return attemptedAtTick != 0 && nowTick - attemptedAtTick < RetryAfterAttemptMilliseconds;
     }
 
-    // The public snapshot moves on the socket while the private half never does, so the two are
-    // resynchronised here: a round that turned over or a phase that moved is the whole set of
-    // moments at which a player's own money can have changed hands, and each one costs one read.
     internal static bool PersonalIsStale(long heldRoundIndex, int heldPhase, long roundIndex, int phase)
     {
         return heldRoundIndex != roundIndex || heldPhase != phase;
@@ -660,11 +616,6 @@ internal sealed class CasinoRoomsStore : IDisposable
         RefreshRoomState();
     }
 
-    // Two watermarks, because a read that was asked for is not a read that landed. The asked mark
-    // spends the immediate attempt one phase is owed; the loaded mark only moves when a read
-    // actually came back, so a blip or a rate limit is retried on the shared backoff instead of
-    // writing the whole phase off. A hall that swallowed one read would otherwise call its numbers
-    // for minutes with the player's cards missing from the screen.
     private void SyncPersonal()
     {
         var snapshot = room.State?.Snapshot;
@@ -692,11 +643,6 @@ internal sealed class CasinoRoomsStore : IDisposable
         RefreshPersonal();
     }
 
-    // A stake the server answered is the other moment a player's own money moves, and it lands
-    // between two phases rather than on one. Both watermarks are dropped so the next tick reads
-    // again, the backoff is spent so it reads at once, and the generation turns over so a read
-    // already in flight (which was taken before the stake landed) can no longer mark the phase
-    // loaded on the strength of a board that predates the bet.
     private void InvalidatePersonal()
     {
         Interlocked.Increment(ref personalGeneration);
@@ -750,10 +696,6 @@ internal sealed class CasinoRoomsStore : IDisposable
         roomCadence.Reset();
     }
 
-    // A refusal belongs to the room it was raised in. The composer that reads it is whichever
-    // cabinet draws next, so a purchase turned away in the hall would otherwise print "that is all
-    // four cards for this room" over a betting wheel: leaving a room drops the answer with the
-    // money it described.
     private void ClearPersonal()
     {
         Interlocked.Increment(ref personalGeneration);
@@ -840,9 +782,6 @@ internal sealed class CasinoRoomsStore : IDisposable
             var fresh = await casino.RoomStateAsync(target, roomStatusSink, token).ConfigureAwait(false);
             if (fresh is null)
             {
-                // A 404 is the same fact casino.ended carries and the only refusal this read can
-                // name on its own. Every other empty answer leaves the held room alone, because one
-                // dropped read must never look like a closed table.
                 if (Interlocked.Exchange(ref roomGoneStatus, 0) != 0)
                 {
                     Interlocked.Exchange(ref roomAttemptedAtTick, 0);
@@ -872,8 +811,6 @@ internal sealed class CasinoRoomsStore : IDisposable
         var roundIndex = snapshot.RoundIndex;
         var phase = snapshot.Phase;
         var generation = Volatile.Read(ref personalGeneration);
-        // The socket is the primary carrier of a blackjack hand, so the read is only spent when
-        // there is no socket to carry it: a table with a healthy attachment already has the faces.
         var handNeedsReading = !room.Attached;
         Interlocked.Exchange(ref personalAttemptedAtTick, Environment.TickCount64);
         work.Run("room personal", async token =>
@@ -925,11 +862,6 @@ internal sealed class CasinoRoomsStore : IDisposable
         }, () => Interlocked.Exchange(ref fetchingPersonal, 0));
     }
 
-    // The mark belongs to the room and the generation the read was taken in, for the same reason
-    // the read itself is dropped when the player has moved on. The room id alone does not answer a
-    // player who left the hall and walked straight back into it: the generation does, and marking
-    // the wrong one loaded would hold the fresh room's first read back behind a watermark that
-    // never described it.
     private void MarkPersonalLoaded(string requestedRoomId, int askedGeneration, long roundIndex, int phase)
     {
         if (askedGeneration != Volatile.Read(ref personalGeneration)
@@ -942,8 +874,6 @@ internal sealed class CasinoRoomsStore : IDisposable
         Volatile.Write(ref personalPhase, phase);
     }
 
-    // A personal read that came back for a room the player has already left is dropped rather than
-    // parked, for the same reason a snapshot is: the next room would render another room's money.
     private void AbsorbWheelBets(string requestedRoomId, CasinoWheelBetsDto fresh)
     {
         if (!string.Equals(room.RoomId, requestedRoomId, StringComparison.Ordinal))

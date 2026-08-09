@@ -8,9 +8,6 @@ using Xunit;
 
 namespace Aetherphone.Tests;
 
-// The shapes the backend has to implement, written the way the client will read them. Every one of
-// these is round tripped through the real source generated context, because a DTO that is not
-// registered there deserializes to nothing at runtime and the screen simply stays empty.
 public sealed class CasinoTableWireContractTests
 {
     [Fact]
@@ -190,8 +187,6 @@ public sealed class CasinoTableWireContractTests
         Assert.Equal("Emerald room", board.TableName);
     }
 
-    // A blob without the new block still has to load, because a table on an older server is a table
-    // with no care surfaces rather than a table that fails to render.
     [Fact]
     public void ABlobWithoutTheCareBlockStillLoads()
     {
@@ -248,9 +243,6 @@ public sealed class CasinoTableWireContractTests
         Assert.Equal(0, ReconnectVeil.SecondsOf(0));
     }
 
-    // The hand read is the socket's understudy, so it carries the version pair a casino.private
-    // frame carries: without it the two carriers would overpaint each other in whichever order the
-    // network happened to deliver them.
     [Fact]
     public void TheHandReadCarriesTheSameVersionPairTheSocketFrameDoes()
     {
@@ -280,9 +272,6 @@ public sealed class CasinoTableWireContractTests
             Aetherphone.Core.Aethernet.Clients.CasinoClient.BlackjackMyHandPath("a b"));
     }
 
-    // The server dedups a seat intent on the client id it was sent with and replays the answer it
-    // already stored, so an id is only free to carry the same seat and the same buy-in: the same
-    // rule a bet id obeys for its amount and a purchase id for its count.
     [Fact]
     public void ABurnedSeatIdIsNeverCarriedToADifferentSeatOrBuyIn()
     {

@@ -1,18 +1,5 @@
 namespace Aetherphone.Core.Casino;
 
-// The client half of the bingo contract, mirrored from the backend engine so the hall can paint a
-// card, daub it, and quote the ladder without asking the server what any of it means.
-//
-// Two rules in here carry the money and both are disclosed on screen. The stage rates are tenths
-// of a chip per card in play (2.8, 3.7 and 8.0 for a line, two lines and a full house), and
-// PrizeCardCap is where that scaling stops: eight times 125 is exactly the single win ceiling, so
-// the top prize reaches the house maximum precisely at the cap and never crosses it. Past the cap
-// the stakes keep growing while the prizes stand still, which changes what a card is worth, so the
-// cabinet says the cap out loud rather than letting a full hall imply a bigger pot than it pays.
-//
-// Daubing here is presentation only. A mark is derived from the balls the room has called and the
-// numbers printed on the card, never from what a finger touched, so the settlement the server
-// sends and the board the player reads cannot disagree.
 internal static class BingoRules
 {
     public const int Balls = 75;
@@ -92,7 +79,6 @@ internal static class BingoRules
         return slot >= 0 && slot < CardNumbers ? CardCells[slot] : -1;
     }
 
-    // The free centre owns no slot, so it answers -1 rather than borrowing its neighbour's number.
     public static int SlotForCell(int cell)
     {
         if (!IsCell(cell) || cell == FreeCell)
@@ -166,9 +152,6 @@ internal static class BingoRules
         }
     }
 
-    // The settlement mask: the free centre plus every printed number the room has called. Nothing
-    // the player did on the glass reaches this, which is the whole reason hand daubing is safe to
-    // offer at all.
     public static int AutoMask(int[]? card, ReadOnlySpan<bool> called)
     {
         var mask = FreeMask;
@@ -221,9 +204,6 @@ internal static class BingoRules
         return CountBits(FullMask & ~mask);
     }
 
-    // How close the nearest unfinished line is, so the board can whisper "one away" without ever
-    // claiming a line the room has not actually completed. A card that already holds every line
-    // answers zero.
     public static int ClosestLineGap(int mask)
     {
         var closest = Columns;

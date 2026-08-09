@@ -4,10 +4,6 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Windows.Components;
 
-// A countdown that survives an unfocused phone. The caller hands over the milliseconds still left
-// against the server clock, never a frame delta, because a phone that loses focus stops stepping
-// deltas entirely and a ring driven by them would freeze mid sweep and then lie about the deadline
-// on the way back.
 internal static class TurnTimerRing
 {
     public const float WarnFraction = 0.33f;

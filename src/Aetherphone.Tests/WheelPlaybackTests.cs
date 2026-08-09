@@ -54,8 +54,6 @@ public sealed class WheelPlaybackTests
         Assert.Equal(0f, playback.SpinProgress);
     }
 
-    // The no-replay proof. A phone that opens the app with three seconds left in the lock has to
-    // pick the wheel up three seconds from rest, not start the spin over from the first turn.
     [Fact]
     public void JoiningMidSpinSkipsToWhereTheRoomAlreadyIs()
     {
@@ -168,8 +166,6 @@ public sealed class WheelPlaybackTests
         Assert.Equal(0, WheelRoundPlayback.DrawnSegment(Board(1, 0)));
     }
 
-    // A round is keyed by the room and its index, never by a round id: the rim turns whether or
-    // not this player put a chip down, and a watcher has no round id to compare against at all.
     [Fact]
     public void TheRoundKeyIsTheRoomAndItsIndex()
     {

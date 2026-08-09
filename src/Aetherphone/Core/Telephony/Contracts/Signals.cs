@@ -80,9 +80,6 @@ internal sealed record CallControl
     public CasinoPayload? Casino { get; init; }
 }
 
-// The casino gets exactly one envelope field and nests everything else, so a room event never
-// widens the schema every call, chat, and stream message pays for. The field drops out of the
-// JSON when it is null, which keeps a call control byte identical to the one shipping today.
 internal sealed record CasinoPayload
 {
     public string RoomId { get; init; } = string.Empty;

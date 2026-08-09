@@ -7,9 +7,6 @@ namespace Aetherphone.Tests;
 
 public sealed class BingoRulesTests
 {
-    // Column major: five numbers from each column's own fifteen, four in the middle because the
-    // centre is free. Cells run 0 to 24 down the columns, so slot n maps to cell n below the free
-    // centre and cell n + 1 above it.
     private static int[] SequentialCard()
     {
         var card = new int[BingoRules.CardNumbers];
@@ -89,8 +86,6 @@ public sealed class BingoRulesTests
         Assert.Equal(BingoRules.Cells - 1, BingoRules.CellsRemaining(mask));
     }
 
-    // The core daub invariant: one call marks the matching cell on every held card that prints the
-    // number, wherever it happens to sit on each of them, and never touches a card that does not.
     [Fact]
     public void ACalledBallMarksEveryMatchingCellAcrossEveryHeldCard()
     {
@@ -143,8 +138,6 @@ public sealed class BingoRulesTests
         Assert.Equal(1, BingoRules.ClosestLineGap(mask));
     }
 
-    // The row through the free centre needs four calls, not five: the middle column contributes
-    // nothing to it, which is exactly the shape the engine's line masks encode.
     [Fact]
     public void TheRowThroughTheFreeCentreNeedsOnlyFourCalls()
     {
@@ -175,7 +168,6 @@ public sealed class BingoRulesTests
             BingoRules.StageReached(BingoRules.AutoMask(card, new[] { 1, 2, 3, 4, 5, 16, 17, 18, 19, 20 })));
     }
 
-    // The published ladder: tenths of a chip per card in play, rounded up, per stage.
     [Fact]
     public void ThePrizeLadderIsTheEnginesRateTimesTheCardsInPlay()
     {
@@ -196,9 +188,6 @@ public sealed class BingoRulesTests
         Assert.Equal(0, BingoRules.PrizeFor(-1, 50));
     }
 
-    // The disclosed ceiling: eight times a hundred and twenty five is exactly the single win
-    // maximum, so the full house prize touches the house ceiling at the cap and stops there while
-    // the stakes keep climbing.
     [Fact]
     public void PrizesStopGrowingAtTheDisclosedCardCap()
     {
@@ -239,8 +228,6 @@ public sealed class BingoRulesTests
         Assert.Equal(BingoRules.MaxSingleWin, ladder[2]);
     }
 
-    // The ladder the cabinet paints is quoted from the cards the room says are in play, so a room
-    // that has published no board yet quotes nothing rather than the one card case.
     [Fact]
     public void TheCabinetQuotesTheLadderFromTheCardsTheRoomPublished()
     {
@@ -281,8 +268,6 @@ public sealed class BingoRulesTests
         Assert.Equal(80, BingoRules.StakeFor(BingoRules.MaxCards));
     }
 
-    // One purchase is one room, so the composer only ever reads how many cards the server printed
-    // and never adds a local tally to them. A read that came back refused holds no cards at all.
     [Fact]
     public void TheHeldSetIsWhateverTheServerPrintedAndNeverMore()
     {
@@ -292,8 +277,6 @@ public sealed class BingoRulesTests
             SequentialCard(), SequentialCard(), SequentialCard(), SequentialCard(), SequentialCard())));
     }
 
-    // The payout only speaks once the ledger has settled the round. A phase that flipped to the
-    // result window is the calling ending, not the money landing, and the two are seconds apart.
     [Fact]
     public void OnlyASettledRoundIsAllowedToSpeakAPayout()
     {
@@ -306,9 +289,6 @@ public sealed class BingoRulesTests
         }));
     }
 
-    // Settlement is the room's call sheet and nothing else. Whatever the player stamped by hand,
-    // the mask that decides a line is derived from the balls and the printed numbers alone, so two
-    // players holding the same card at the same moment always read the same board.
     [Fact]
     public void SettlementNeverDependsOnWhatWasDaubedByHand()
     {
@@ -327,9 +307,6 @@ public sealed class BingoRulesTests
         Assert.Equal(1, BingoRules.LinesOn(playback.AutoMaskOf(0)));
     }
 
-    // A card seen for the first time is stamped whole, so a player who joins mid room never
-    // watches twenty balls replay. From then on a mark either waits its beat or is pulled forward
-    // by a tap, and the auto mask is untouched either way.
     [Fact]
     public void AHandStampOnlyPullsForwardAMarkTheRoomAlreadyCalled()
     {

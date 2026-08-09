@@ -12,15 +12,6 @@ internal enum WheelStage
     Settling,
 }
 
-// The room owns the clock and this reads it. Nothing here counts a phase down on frame time: the
-// stage is whatever the last snapshot said, and where the spin has got to is derived from the
-// deadline that snapshot carried, so a phone that just woke up, one that cold-opened mid spin,
-// and one that watched from the lock all show the same wheel at the same moment.
-//
-// That derivation is the whole reason a joiner never replays. The spin is staged to land a beat
-// before the locked window closes, so its progress is the distance from that landing instant, not
-// the time since this client happened to learn the result. Arriving with three seconds left picks
-// the wheel up three seconds from rest; arriving after the window shows it already stopped.
 internal sealed class WheelRoundPlayback
 {
     public const float SettleHoldSeconds = 1.2f;
@@ -111,17 +102,12 @@ internal sealed class WheelRoundPlayback
         EnterStage(WheelStage.Locking);
     }
 
-    // A round is identified by the room and its index rather than by a round id, because the wheel
-    // has no id of its own until a bet mints one: the room turns whether or not this player played.
     internal static string RoundKeyOf(CasinoRoomSnapshotDto snapshot)
     {
         return string.Concat(snapshot.RoomId, "#",
             snapshot.RoundIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
     }
 
-    // The rim stays still until the room publishes a segment, and it only publishes one once the
-    // window has closed and the draw has been made. Anything outside the rim reads as no draw at
-    // all rather than as segment zero, which would land the wheel on a 1x nobody spun.
     internal static int DrawnSegment(CasinoWheelRoomStateDto? board)
     {
         if (board is null)
@@ -132,9 +118,6 @@ internal sealed class WheelRoundPlayback
         return WheelRules.IsSegment(board.Segment) ? board.Segment : -1;
     }
 
-    // A window longer than the spin hands back a negative elapsed on purpose: the choreography
-    // reads that as the free run before the deceleration, so the rim is already turning the
-    // instant bets close instead of sitting still until the curve is due to start.
     internal static float InitialSpinElapsed(int phase, long remainingMilliseconds)
     {
         if (phase != CasinoRoomPhases.Locked)

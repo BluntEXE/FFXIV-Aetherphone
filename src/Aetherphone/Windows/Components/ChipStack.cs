@@ -5,10 +5,6 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Windows.Components;
 
-// Chips carry their colour the way a real table does, but the colour is never the only signal: the
-// numeral is drawn under every stack, always, so a player who cannot separate emerald from slate
-// reads the same amount everybody else does. The breakdown is greedy over the denominations and is
-// deliberately pure, which is what lets the geometry be tested without a frame.
 internal static class ChipStack
 {
     public const int DenominationCount = 6;
@@ -47,9 +43,6 @@ internal static class ChipStack
         return DiscColors[DenominationCount - 1];
     }
 
-    // Counts per denomination, highest first. A stack taller than the rail can show is compressed
-    // rather than truncated: the numeral below it is the amount, so the discs only have to read as
-    // "a lot" and never as an exact count.
     public static int Breakdown(long amount, Span<int> counts)
     {
         counts.Clear();

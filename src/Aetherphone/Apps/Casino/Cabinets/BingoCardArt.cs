@@ -8,12 +8,6 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Apps.Casino.Cabinets;
 
-// A bingo card at phone size has twenty five cells inside about a hundred and seventy points, so
-// nothing here can afford a label it does not need. The five columns are tinted instead of
-// lettered: a called ball wears its column's tint on the rail and the matching cell answers in the
-// same colour, which says which column a number belongs to without a glyph and without a word to
-// translate. The mark itself is a filled disc that pops in on EaseOutBack, which is games only
-// easing and stays inside the cabinet where it belongs.
 internal static class BingoCardArt
 {
     public const int Columns = BingoRules.Columns;
@@ -59,9 +53,6 @@ internal static class BingoCardArt
             return;
         }
 
-        // A cell whose number has not arrived draws as an empty cell rather than as a zero. Zero is
-        // not a ball this hall can ever call, so printing it would be the card claiming a number it
-        // does not hold, and twenty four of them would read as a dealt card that cannot win.
         var slot = BingoRules.SlotForCell(cellIndex);
         if (numbers is null || slot < 0 || slot >= numbers.Length || !BingoRules.IsBall(numbers[slot]))
         {

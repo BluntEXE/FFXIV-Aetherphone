@@ -101,10 +101,6 @@ internal sealed class CasinoHistoryStore : IDisposable
         Fetch(nextCursor);
     }
 
-    // Both fetch paths are driven from the draw loop, so a page that never lands would otherwise
-    // re-fire every frame: the failed attempt has to hold the store off for the same window the
-    // other polling stores use, or one open history screen empties the rate-limit bucket and
-    // pauses GET polling for every app on the host.
     internal static bool CoolingDown(long attemptedAtTick, long nowTick)
     {
         return attemptedAtTick != 0 && nowTick - attemptedAtTick < RetryAfterAttemptMilliseconds;

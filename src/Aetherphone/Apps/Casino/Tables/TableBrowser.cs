@@ -10,14 +10,6 @@ using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Casino.Tables;
 
-// The room a player stands in before they pick one. Everything on it is a count rather than a
-// roster, because a directory that named who was at which table would be a presence tracker with a
-// card game attached.
-//
-// Quick seat is the primary action and the list is the second thought: a player who knows what they
-// want presses one pill and the server picks, and a player who wants to look reads the rows. The
-// filters are one pannable rail and never a wall, and the same rail tells quick seat which band of
-// stakes was meant, so narrowing the list is also narrowing the shortcut.
 internal sealed class TableBrowser
 {
     private const float QuickCardHeight = 96f;
@@ -92,9 +84,6 @@ internal sealed class TableBrowser
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
     }
 
-    // Quick seat, hosting and a pasted token all fail on this screen, so this screen drains that
-    // flag: leaving it set would print the browser's own timeout over the felt of the next table
-    // the player opens, which is a working table being told it cannot be reached.
     private void ConsumeOutcomes()
     {
         var directoryFailed = tables.TakeTablesFailure();

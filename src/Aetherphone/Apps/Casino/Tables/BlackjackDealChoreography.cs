@@ -2,14 +2,6 @@ using Aetherphone.Core;
 
 namespace Aetherphone.Apps.Casino.Tables;
 
-// The deal is choreography over a result the server already decided: cards leave the shoe one every
-// ninety milliseconds, take a third of a second to reach their seat, and turn over at sixty percent
-// of that travel so the flip lands mid flight rather than on arrival. Nothing here decides what a
-// card is, only when it appears to arrive.
-//
-// A player who comes back to the phone after the hand moved on gets the board, not the show: the
-// playback snaps to the end whenever it joins a round already past its deal, which is the same
-// promise the rest of the table makes about refocusing on truth instead of replaying theatre.
 internal static class BlackjackDealChoreography
 {
     public const float StaggerSeconds = 0.09f;
@@ -42,8 +34,6 @@ internal static class BlackjackDealChoreography
         return travel >= FlipFraction;
     }
 
-    // The card squashes to nothing at the flip point and opens again on the far side, so the swap
-    // from back to face happens at zero width and is never seen as a pop.
     public static float FlipScaleX(float travel)
     {
         if (travel <= 0f)

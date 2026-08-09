@@ -3,12 +3,6 @@ using Aetherphone.Core.Localization;
 
 namespace Aetherphone.Core.Casino;
 
-// The table has to cover every string the server can put on the wire, plus the handful the client
-// raises for itself (unreachable is nobody's refusal but this phone's). A reason the server sends
-// that is missing here renders as the generic apology however well the rest of the screen is
-// worded, which is why the daily spin's vocabulary lives here too: its refusals come out of the
-// coin ledger rather than the casino, so already_claimed and rule_cap arrive from a set none of
-// the tables ever use.
 internal static class CasinoReasons
 {
     public const string StakesPaused = "stakes_paused";

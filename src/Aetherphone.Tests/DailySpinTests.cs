@@ -23,9 +23,6 @@ public sealed class DailySpinTests
         }
     }
 
-    // The ladder is a verbatim mirror of DailySpinEngine.Awards, because the rim art paints
-    // AwardOf on every wedge while the pointer rests on the segment the server drew: a table that
-    // differs by one number puts a wedge under the pointer that contradicts the banner below it.
     [Fact]
     public void TheLadderIsTheEnginesTableInTheEnginesOrder()
     {
@@ -55,8 +52,6 @@ public sealed class DailySpinTests
         Assert.Equal(35, total * 2 / DailySpinRules.SegmentCount);
     }
 
-    // No two neighbouring wedges carry the same number, which is what lets a player watching the
-    // pointer tell that it moved at all. The rim wraps, so the last wedge answers to the first.
     [Fact]
     public void NoTwoNeighbouringWedgesCarryTheSameNumber()
     {
@@ -95,9 +90,6 @@ public sealed class DailySpinTests
         Assert.Equal(0, DailySpinRules.AwardOf(DailySpinRules.SegmentCount));
     }
 
-    // There is no read route, so a phone that has not asked cannot tell an unspent turn from a
-    // spent one. It offers the wheel: being wrong that way costs one tap that answers itself,
-    // while being wrong the other way hides a free spin all day.
     [Fact]
     public void ACardThatHasNeverAskedOffersTheWheelRatherThanHidingIt()
     {
@@ -125,8 +117,6 @@ public sealed class DailySpinTests
         Assert.Equal(60, DailySpinStatus.AwardOf(granted));
     }
 
-    // A replay is not a refusal the player can clear: it carries the segment the day already
-    // landed on and what it already paid, so the card states it at rest instead of staging it.
     [Fact]
     public void AReplayReadsAsClaimedAndKeepsTheAmountTheLedgerPaid()
     {
@@ -145,9 +135,6 @@ public sealed class DailySpinTests
         Assert.Equal(30, DailySpinStatus.AwardOf(replay));
     }
 
-    // A refusal the player might be able to clear leaves the button pressable, which is safe
-    // because the round id is derived from the identity and the day: a retry re-reads the same
-    // wheel rather than spinning a new one.
     [Fact]
     public void EveryDenialTheServerCanSendHasWarmWordsAndLeavesTheTurnOpen()
     {
@@ -176,8 +163,6 @@ public sealed class DailySpinTests
         Assert.Equal("rule_cap", CasinoReasons.RuleCap);
     }
 
-    // A refusal with nothing to say is not a dead button either: the only benign reading of an
-    // unexplained no is that today's turn is spent, so that is what the card says.
     [Fact]
     public void AnUnexplainedRefusalFallsBackToClaimedRatherThanADeadPill()
     {
@@ -186,8 +171,6 @@ public sealed class DailySpinTests
         Assert.False(DailySpinStatus.CanClaim(nameless, false));
     }
 
-    // A wedge clipped by the account's daily cap is still a granted spin: the rim reports where it
-    // stopped while the banner reports what reached the wallet, and the two are different numbers.
     [Fact]
     public void ACappedSpinShowsTheWedgeItStoppedOnAndPaysWhatTheLedgerAllowed()
     {
@@ -215,8 +198,6 @@ public sealed class DailySpinTests
         Assert.Equal("casino.daily", CasinoLedgerRules.Daily);
     }
 
-    // Coins minted by the spin are a real earn, so unlike buy-ins and cash-outs they are never
-    // swallowed by the casino ledger's quiet rule.
     [Fact]
     public void TheSpinsCoinsAreCelebratedWhileTheRestOfTheCasinoLedgerStaysQuiet()
     {
@@ -225,8 +206,6 @@ public sealed class DailySpinTests
         Assert.True(CasinoLedgerRules.SkipsEarnCelebration(CasinoLedgerRules.CashOut));
     }
 
-    // The one game whose answer carries a wallet balance instead of a chip stack, because it is
-    // the one game that mints rather than moves.
     [Fact]
     public void TheSpinAnswersWithAWalletBalanceAndNeverAChipStack()
     {
@@ -280,8 +259,6 @@ public sealed class DailySpinTests
         Assert.Equal(DailySpinClaim.Denied, DailySpinStatus.Of(claim));
     }
 
-    // The rim is staged with the same choreography as the wager wheel, just sixteen wedges wide:
-    // the sweep always lands the named segment under the pointer, whatever angle it started from.
     [Fact]
     public void TheSweepLandsTheServersSegmentUnderThePointer()
     {

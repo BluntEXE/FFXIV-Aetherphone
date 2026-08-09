@@ -35,8 +35,6 @@ public sealed class WheelRulesTests
         Assert.Equal(WheelRules.SegmentCount, total);
     }
 
-    // The whole point of the published layout: no wedge ever touches another of its own colour,
-    // including across the seam, so the rim never reads as one fat block at phone size.
     [Fact]
     public void NoTwoNeighbouringSegmentsShareASpot()
     {
@@ -47,8 +45,6 @@ public sealed class WheelRulesTests
         }
     }
 
-    // The return quoted on the info sheet is exact integer arithmetic, not a rounded percentage:
-    // segments times (multiplier + 1) over fifty is 96 / 96 / 96 / 88 / 84.
     [Theory]
     [InlineData(0, 48)]
     [InlineData(1, 48)]

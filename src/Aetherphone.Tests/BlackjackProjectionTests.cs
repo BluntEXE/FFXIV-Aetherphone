@@ -119,10 +119,6 @@ public sealed class BlackjackProjectionTests
         Assert.Equal(40, projection.CardAt(0, 0, 0, PlayingCards.FaceDown));
     }
 
-    // A round index repeats across a restart, so seat and round alone cannot tell last table's hole
-    // cards from this one's. The table restarts, the first board of the new epoch opens the same
-    // round number again with closed cards, and the private frame still held is from the run that
-    // ended: without the epoch in the gate it paints the old faces onto the new placeholders.
     [Fact]
     public void APrivateFrameFromTheTableThatRestartedOpensNothing()
     {

@@ -13,18 +13,6 @@ internal enum CasinoRoundVerdict
     Mismatch,
 }
 
-// A client-side replay of the server fairness recipe in CasinoRng.cs: SHA256 of the revealed
-// seed must equal the commit published before the stake was accepted, and every accepted draw
-// in the log must fall out of an HMAC-SHA256 counter-mode stream keyed by that seed and bound
-// to the round id, read as big-endian 32-bit words with exact rejection sampling. Each draw
-// purpose names its own bound, so the replay consumes the stream exactly as the server did and
-// a single flipped seed bit shifts every draw.
-//
-// One purpose name is not enough to fix a bound on its own. Both wheels log their draw as
-// "segment" and they are different wheels: the wager rim has fifty segments and the free spin has
-// sixteen. The game kind therefore rides into the replay alongside the log, because reading a
-// sixteen segment draw against a fifty segment bound consumes the stream differently and would
-// accuse the house of cheating on every honest daily spin.
 internal static class CasinoVerifier
 {
     private const string ScratchPrizePurpose = "prize";
@@ -38,9 +26,6 @@ internal static class CasinoVerifier
     private static readonly uint ScratchWinnerBagSize = (ScratchRules.SymbolCount - 1) * 2;
     private static readonly uint ScratchLoserBagSize = ScratchRules.SymbolCount * 2;
 
-    // A card is dealt column by column out of a fifteen deep pool that shrinks with every pick,
-    // and the middle column takes four picks instead of five because the centre is free. The
-    // twenty-four bounds that produces are the same for every card, so the pattern simply repeats.
     private static readonly uint[] BingoCardBounds =
     {
         15, 14, 13, 12, 11,
@@ -84,9 +69,6 @@ internal static class CasinoVerifier
             : CasinoRoundVerdict.Mismatch;
     }
 
-    // Sixteen for the free spin, fifty for the wager rim, and nothing at all for a game kind this
-    // client does not know: guessing one of the two would give a round the strongest verdict on a
-    // coin flip, which is the one thing a verifier must never do.
     internal static bool TrySegmentBound(string gameKind, out uint bound)
     {
         if (string.Equals(gameKind, CasinoWire.DailySpinKind, StringComparison.Ordinal))
@@ -105,10 +87,6 @@ internal static class CasinoVerifier
         return false;
     }
 
-    // A revealed round that logs no draws is not evidence of fair play, it is the absence of it:
-    // the commit alone proves a seed was published, never that this round fell out of it. The
-    // verifier is the one component whose job is to distrust the server, so missing evidence
-    // fails closed rather than earning the strongest verdict for free.
     internal static bool ReplaysDrawLog(string gameKind, byte[] seed, string roundId, string drawLog)
     {
         if (drawLog.Length == 0)
@@ -155,18 +133,6 @@ internal static class CasinoVerifier
         return true;
     }
 
-    // The purpose vocabulary is the union of every game engine: slots stops s{spin}r{reel}, scratch
-    // prize roll plus winner/loser shuffles w{pick}/g{cell}/l{pick}, the barkeep script draws
-    // patrons/a{patron}/n{patron}/k{patron}.{step}, the segment both wheels draw, and the two bingo
-    // shuffles. Every bound comes from the mirrored rules tables, so a new purpose on the wire fails
-    // closed as a mismatch.
-    //
-    // Two purposes do not carry their bound on the label. The bingo shuffles narrow with every pick
-    // and the engine logs each one under the same name, so the bound comes from how many draws of
-    // that purpose the log has already spent, which is exactly the number the server had spent when
-    // it made this one; a log that runs past the end of a shuffle has no honest bound left. The
-    // segment is the other: two different wheels share the name, so its bound arrives from the
-    // round's game kind and a zero there means no wheel this client knows, which fails closed.
     internal static bool TryBoundFor(ReadOnlySpan<char> purpose, uint segmentBound, out uint bound)
     {
         return TryBoundFor(purpose, 0, segmentBound, out bound);

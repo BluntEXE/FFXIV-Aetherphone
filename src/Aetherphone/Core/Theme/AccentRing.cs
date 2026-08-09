@@ -1,10 +1,5 @@
 namespace Aetherphone.Core.Theme;
 
-// Fills are sampled from an OKLCH ring: 13 hues at least 22 degrees apart, every one solved to relative
-// luminance 0.285 so the whole set carries a white glyph at 3.13:1 and hue stays the only variable between
-// tiles. Chroma is 94 percent of the sRGB gamut edge at that luminance, which is why cyan and teal read
-// softer than red or orange: the gamut simply holds less color there. Nothing here may be brightened
-// without breaking white ink, so regenerate rather than hand-edit; see docs/design-accents.md.
 internal static class AccentRing
 {
     public const float TileLuminance = 0.285f;

@@ -2,11 +2,6 @@ using Aetherphone.Core.Casino;
 
 namespace Aetherphone.Apps.Casino.Cabinets;
 
-// Choreography of a known result: the server grid is final before the first reel moves, and
-// these timings only stage how it is revealed. Stops run left to right from 0.9 s in 0.25 s
-// steps, so the first, middle, and last reels land at the ratified 0.9 / 1.4 / 1.9 marks,
-// and the only permitted drama is the 0.6 s hold on the last reel when the settled outcome
-// is a bonus or a big win. Never a fabricated near miss.
 internal sealed class SlotsChoreography
 {
     public const float FirstStopSeconds = 0.9f;

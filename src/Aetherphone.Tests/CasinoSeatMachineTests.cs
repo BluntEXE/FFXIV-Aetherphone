@@ -3,9 +3,6 @@ using Xunit;
 
 namespace Aetherphone.Tests;
 
-// The one thing this machine exists to guarantee: a seat bound to another device never becomes this
-// device's seat without somebody pressing the button. Everything else here is the supporting cast
-// that keeps that guarantee honest under a snapshot arriving many times a second.
 public sealed class CasinoSeatMachineTests
 {
     [Fact]
@@ -22,8 +19,6 @@ public sealed class CasinoSeatMachineTests
             CasinoSeatMachine.Next(stage, CasinoSeatSignal.TakeOverRequested));
     }
 
-    // A claim grant that nobody asked for cannot arrive, and if one ever did it must not move the
-    // screen: the takeover is the gesture, not the message.
     [Fact]
     public void AClaimGrantWithoutAClaimChangesNothing()
     {
@@ -134,10 +129,6 @@ public sealed class CasinoSeatMachineTests
         Assert.False(CasinoSeatMachine.Busy(CasinoSeatStage.Seated));
     }
 
-    // The blocker this latch exists for: the poll that carries my new seat is taken before the sit
-    // is answered, so the very next board honestly reports no seat. Letting it speak would undo the
-    // grant on the frame it landed, the footer would offer the seat back, and the second tap comes
-    // back "already seated" over a seat that is mine.
     [Fact]
     public void AGrantedSitIsNotUndoneByTheBoardThatPredatesIt()
     {
@@ -159,8 +150,6 @@ public sealed class CasinoSeatMachineTests
         Assert.True(CasinoSeatMachine.AcceptsBoard(awaited, CasinoSeatSignal.SeatLost, 0, 500));
     }
 
-    // A stand the table queued to the end of the hand keeps the seat, so the board saying the seat
-    // is still mine is not a contradiction and nothing is waited on.
     [Fact]
     public void AQueuedStandWaitsForNothing()
     {
@@ -179,8 +168,6 @@ public sealed class CasinoSeatMachineTests
         Assert.Equal(CasinoSeatSettle.None, CasinoSeatMachine.SettleFor(CasinoSeatStage.Elsewhere, false));
     }
 
-    // The latch is a grace, never a lock: a table that took the seat away between the grant and the
-    // next board has to be able to say so once the window closes.
     [Fact]
     public void ABoardThatKeepsDisagreeingWinsOnceTheGraceRunsOut()
     {

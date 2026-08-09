@@ -15,9 +15,6 @@ internal static class IconTile
         ProgressRing.CenterIcon(center, icon, AccentRing.Ink, size * 0.50f);
     }
 
-    // Tints authored outside the ring (settings pages, shortcuts, custom accents) can be far too bright to
-    // carry the white glyph. Pulling them to the ring luminance is what keeps every tile on one contract;
-    // ring accents already sit at that value and pass through untouched.
     public static Vector4 Surface(Vector4 accent) =>
         Palette.ShadeToLuminance(accent with { W = 1f }, AccentRing.TileLuminance);
 

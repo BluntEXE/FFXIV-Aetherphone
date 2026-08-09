@@ -118,9 +118,6 @@ public sealed class CasinoHistoryTests
         Assert.Same(current, merged);
     }
 
-    // The history list groups by local calendar day through TimeText.SameLocalDay; the coin day
-    // boundary lives server-side on the wallet and is not carried per round, so the grouping
-    // seam under test is the local midnight.
     [Fact]
     public void DayGroupingSplitsAtLocalMidnight()
     {
@@ -156,9 +153,6 @@ public sealed class CasinoHistoryTests
             + "verdict=match", blob);
     }
 
-    // Both history fetches are driven from the draw loop, so a page that never lands would fire
-    // again every frame. The backoff has to be the same window the other polling stores use, or
-    // one open history screen drains the rate-limit bucket and pauses GET polling host-wide.
     [Fact]
     public void AFailedPageHoldsTheStoreOffInsteadOfRefiringEveryFrame()
     {

@@ -10,13 +10,6 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Apps.Casino.Tables;
 
-// The felt from the player's side of it. Every number on this screen is the server's: seats, stacks,
-// bets, totals, whose turn it is and which of the four verbs that turn allows. Nothing here plays
-// blackjack, it only paints a hand that has already been dealt somewhere else, which is what lets a
-// phone that missed three frames catch up by being told rather than by working it out.
-//
-// The one law the whole screen obeys: a win is gold, counts up and throws confetti at the seat that
-// won it, a loss is quiet, and the house never celebrates.
 internal sealed class BlackjackTable
 {
     private const float PadX = 16f;
@@ -166,10 +159,6 @@ internal sealed class BlackjackTable
         particles.Update(delta);
         dealer.Update(delta);
 
-        // Money never moves over the socket, so a table being played on the poll alone is a table
-        // that works: only a room answering neither carrier is out of touch. The veil claims the
-        // frame before anything under it is drawn, because a panel that only dims is a panel every
-        // pill beneath it still answers, and the felt behind a dead line must not take a bet.
         var unreachable = room.Unreachable(nowTick);
         var veiled = unreachable && CasinoSeatMachine.Holds(seatFlow.Stage);
         if (veiled)
@@ -210,8 +199,6 @@ internal sealed class BlackjackTable
             veiled);
         particles.Draw(drawList, scale);
 
-        // The veil goes on last so it dims the frame the player was already reading rather than
-        // replacing it: the hand stays visible underneath while the line is down.
         if (veiled)
         {
             ReconnectVeil.Draw(drawList, body, ui,
@@ -235,8 +222,6 @@ internal sealed class BlackjackTable
         }
     }
 
-    // A door refusal is not a dead end, it is a question nobody has been asked yet, so the notice
-    // for one carries the knock instead of only the way back to the floor.
     private void DrawClosedNotice(ImDrawListPtr drawList, AppSkin ui, string closedReason, float left, float y,
         float width, float scale)
     {
@@ -264,8 +249,6 @@ internal sealed class BlackjackTable
         tables.Knock(roomId);
     }
 
-    // The stage never resizes under a hand: the footer reserves the tallest thing the current phase
-    // can put there, so a bet window opening or an action bar arriving cannot shove the felt.
     private static float FooterHeightFor(int phase, float scale)
     {
         return phase == CasinoRoomPhases.Open
@@ -290,8 +273,6 @@ internal sealed class BlackjackTable
 
         if (reachable)
         {
-            // The house rules are printed on the felt of a real table, so they live here rather than
-            // behind a sheet: the two numbers that decide every hand should never need looking up.
             var seatedWidth = Typography.Measure(seated, TextStyles.Caption1).X;
             var room = width - seatedWidth - Metrics.Space.Md * scale;
             if (room > 0f)
@@ -421,9 +402,6 @@ internal sealed class BlackjackTable
         }
     }
 
-    // Cards are laid in from the seat toward the felt, one fan per split hand, and the ordinal a card
-    // carries in the stagger is its place in the whole deal rather than its place in its own hand:
-    // that is what keeps the pass order reading as a pass rather than five seats dealing at once.
     private void DrawHands(ImDrawListPtr drawList, AppSkin ui, CasinoBlackjackRoomStateDto board, in Rect felt,
         float scale)
     {
@@ -505,8 +483,6 @@ internal sealed class BlackjackTable
         return ordinal + count;
     }
 
-    // The dealer speaks when something actually changed, never on a timer: a bubble that reappears
-    // every few seconds because its own hold expired is a tic, not a table.
     private void SpeakForPhase(int phase, CasinoBlackjackRoomStateDto board)
     {
         if (phase == spokenPhase && board.ActiveSeat == spokenSeat
@@ -536,9 +512,6 @@ internal sealed class BlackjackTable
         }
     }
 
-    // The count up and the confetti fire once per hand and only for money that actually came back to
-    // my seat, read from the settled deltas the server wrote. A hand that lost says nothing here at
-    // all: silence is what a loss sounds like.
     private void CelebrateSettledHand(CasinoBlackjackRoomStateDto board, float scale)
     {
         if (string.Equals(celebratedHandId, board.HandId, StringComparison.Ordinal))
@@ -546,9 +519,6 @@ internal sealed class BlackjackTable
             return;
         }
 
-        // A new hand owes nobody the last one's number, and a hand I sat out never settles onto my
-        // seat at all, so the figure is cleared the moment the table moves on rather than when the
-        // next win happens to overwrite it.
         settledDelta = 0;
         if (board.HandId.Length == 0 || !BlackjackRules.IsSeat(board.MySeat))
         {
@@ -620,9 +590,6 @@ internal sealed class BlackjackTable
         var bought = sitting is not null
             && string.Equals(sitting.GameKind, CasinoWire.BlackjackKind, StringComparison.Ordinal);
 
-        // The seat bound to another device owns the footer outright: no composer, no action bar, one
-        // button that says exactly what it will do. Anything else here would let a second screen
-        // spend chips the first screen is holding.
         if (CasinoSeatMachine.ShowsTakeOver(seatFlow.Stage))
         {
             if (DrawSingleAction(ui, Loc.T(L.Casino.TakeOverAction), !seatFlow.Busy, left, y, width, scale))
@@ -634,11 +601,6 @@ internal sealed class BlackjackTable
             return;
         }
 
-        // Two different truths, and the footer needs both. The grant says the seat is mine from the
-        // instant the server answers; the board says what the hand is doing, and it can be a poll
-        // behind. So a granted seat never offers to sit down again, and a board that has not caught
-        // up opens neither the composer nor the action bar: the only honest offer in that gap is to
-        // give the seat back.
         var onBoard = BlackjackRules.IsSeat(board.MySeat);
         if (!bought || (!onBoard && !CasinoSeatMachine.Holds(seatFlow.Stage)))
         {
@@ -672,9 +634,6 @@ internal sealed class BlackjackTable
         }
     }
 
-    // The seat's own stack is a fact on every snapshot; the cashier's copy is refreshed once a
-    // minute and on a stake answer, and a settlement moves chips with nothing posted at all. Reading
-    // the cashier here caps the Max button at what the seat held before the last hand paid out.
     private long SeatStackOf(CasinoBlackjackRoomStateDto board, CasinoSittingDto sitting)
     {
         var seat = projection.SeatAt(board.MySeat);
@@ -695,8 +654,6 @@ internal sealed class BlackjackTable
             return y + BannerHeight * scale;
         }
 
-        // A refusal owns the banner while it stands, because the composer below it is about to be
-        // pressed again and a reason printed anywhere else would be read after the retry.
         var message = inlineReason.Length > 0
             ? Loc.T(CasinoReasons.MessageFor(inlineReason))
             : SeatTextFor(state, board) ?? BannerTextFor(board, snapshot, phaseRemaining);
@@ -705,10 +662,6 @@ internal sealed class BlackjackTable
         return y + BannerHeight * scale;
     }
 
-    // The seat has a few things to say that outrank the phase: where the seat is being played from,
-    // that it is waiting for the boundary, and that the table is winding down. Each of them changes
-    // what the buttons underneath will do, so leaving the phase text on top would explain the wrong
-    // screen.
     private string? SeatTextFor(CasinoStateDto state, CasinoBlackjackRoomStateDto board)
     {
         if (CasinoSeatMachine.ShowsTakeOver(seatFlow.Stage))
@@ -758,9 +711,6 @@ internal sealed class BlackjackTable
             : Loc.T(L.Casino.BlackjackDealerPlays);
     }
 
-    // The confirm carries the payout as well as the stake, computed with the floor formula the
-    // house settles by, so the rounding on an odd bet is never a surprise sprung after the money is
-    // committed.
     private void DrawComposer(AppSkin ui, CasinoStateDto state, long seatStack,
         CasinoBlackjackRoomStateDto board, float left, float y, float width, float scale, float delta, bool veiled)
     {
@@ -839,8 +789,6 @@ internal sealed class BlackjackTable
         };
     }
 
-    // Without chips there is nothing to sit on, so the cashier comes first and the seat second: a
-    // sit that failed for want of a buy-in would read as the table refusing the player.
     private void DrawSitAction(AppSkin ui, bool bought, int phase, float left, float y, float width, float scale)
     {
         if (!bought)

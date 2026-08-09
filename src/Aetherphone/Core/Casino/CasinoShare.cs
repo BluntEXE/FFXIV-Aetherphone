@@ -1,10 +1,5 @@
 namespace Aetherphone.Core.Casino;
 
-// An invite token is a reference, never a capability. Pasting one names a table and nothing more:
-// the server still runs the whole admission gate on the read and again on the knock, so a token
-// scraped out of a chat log buys its finder exactly one knock at a door that may not open. That is
-// what lets the token be plain text with no expiry machinery behind it, and why revoking an invite
-// is a row on the allowlist rather than a key rotation.
 internal static class CasinoShare
 {
     public const int MaxIdLength = 64;
@@ -22,8 +17,6 @@ internal static class CasinoShare
         return TryParse(body, out _);
     }
 
-    // A bare table id pasted without its wrapper is accepted too, because a player who copies the
-    // middle of the token out of a chat line has still told us exactly which table they mean.
     public static bool TryParse(string? body, out string tableId)
     {
         tableId = string.Empty;

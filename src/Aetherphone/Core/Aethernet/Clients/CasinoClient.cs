@@ -161,9 +161,6 @@ internal sealed class CasinoClient
         return net.GetAsync(RoomsPath, AethernetJsonContext.Default.CasinoRoomListDto, token);
     }
 
-    // The room read answers with the bare snapshot or a 404, so the status is the only way to tell
-    // a room that is gone from a read that never arrived. A caller that cannot see the difference
-    // would either kill a live room on one dropped packet or sit forever on one that closed.
     public Task<CasinoRoomSnapshotDto?> RoomStateAsync(string roomId, Action<int> onStatus,
         CancellationToken token)
     {
@@ -233,9 +230,6 @@ internal sealed class CasinoClient
             AethernetJsonContext.Default.CasinoTableDto, token);
     }
 
-    // A table read by id answers for a private table the directory will never list, which is what
-    // makes a pasted invite token a reference rather than a capability: the token names the table
-    // and the server decides, on this read and again on the knock, whether the reader may come in.
     public Task<CasinoTableDto?> TableAsync(string roomId, Action<int> onStatus, CancellationToken token)
     {
         return net.GetAsync(string.Concat(TablesPath, "/", Uri.EscapeDataString(roomId)),
@@ -295,16 +289,12 @@ internal sealed class CasinoClient
         return net.GetAsync(BingoMyCardsPath(roomId), AethernetJsonContext.Default.CasinoBingoCardsDto, token);
     }
 
-    // The hand read is the socket's understudy and nothing else: it answers with the faces already
-    // dealt to this account's seat, so a table stays playable when casino.private cannot arrive.
     public Task<CasinoBlackjackHandReadDto?> MyBlackjackHandAsync(string roomId, CancellationToken token)
     {
         return net.GetAsync(BlackjackMyHandPath(roomId), AethernetJsonContext.Default.CasinoBlackjackHandReadDto,
             token);
     }
 
-    // The free spin has no read route at all: this post either takes today's spin or replays the
-    // one already taken, and both answers carry the segment, so asking is the same act as claiming.
     public Task<CasinoDailySpinDto?> ClaimDailySpinAsync(CancellationToken token)
     {
         return net.RequestAsync(HttpMethod.Post, DailySpinPath,

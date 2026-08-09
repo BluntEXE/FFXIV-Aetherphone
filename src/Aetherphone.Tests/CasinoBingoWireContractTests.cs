@@ -21,8 +21,6 @@ public sealed class CasinoBingoWireContractTests
         Assert.Equal("/casino/bingo/a%2Fb/cards", CasinoClient.BingoMyCardsPath("a/b"));
     }
 
-    // One purchase is one game: the server keys the entry on the room, the round and the identity,
-    // so the whole order ships once and a second post is refused rather than added to.
     [Fact]
     public void TheCardPurchaseSerializesTheBackendShape()
     {
@@ -34,8 +32,6 @@ public sealed class CasinoBingoWireContractTests
         Assert.Equal(60, BingoRules.StakeFor(3));
     }
 
-    // The buy and the read answer with one shape, so the printed cards and what the hall settled
-    // arrive together and the summary never has two sources to disagree between.
     [Fact]
     public void OneShapeAnswersBothTheBuyAndTheRead()
     {
@@ -62,7 +58,6 @@ public sealed class CasinoBingoWireContractTests
         Assert.True(BingoCabinet.Settled(mine));
     }
 
-    // Wallet balance never rides a game response: cards are bought with chips at the table.
     [Fact]
     public void ACardPurchaseCarriesChipsAndNeverAWalletBalance()
     {
@@ -124,8 +119,6 @@ public sealed class CasinoBingoWireContractTests
         Assert.Equal("cards_full", CasinoReasons.CardsFull);
     }
 
-    // The prize ladder and the card cap ride the public room state, because the hall has to say
-    // out loud where the prizes stop growing rather than letting a full room imply a bigger pot.
     [Fact]
     public void TheHallBlobCarriesTheLadderTheCapAndTheCalls()
     {
@@ -158,8 +151,6 @@ public sealed class CasinoBingoWireContractTests
         Assert.Equal(224, awarded.Paid);
     }
 
-    // The ladder the room published and the ladder the cabinet computes are the same numbers, or
-    // the hall is quoting a prize the bank will not pay.
     [Fact]
     public void ThePublishedLadderAgreesWithTheMirroredRates()
     {
@@ -176,9 +167,6 @@ public sealed class CasinoBingoWireContractTests
         }
     }
 
-    // The balls the room called arrive as a list in the order they were called, so a phone that
-    // slept through six of them catches up on the next snapshot instead of inventing the ones it
-    // missed on its own clock.
     [Fact]
     public void TheCallsAreAListRatherThanACountTheClientTicksUp()
     {
@@ -213,9 +201,6 @@ public sealed class CasinoBingoWireContractTests
         Assert.Equal(20, BingoRules.CardPrice);
     }
 
-    // The hall quotes the house, not its own arithmetic. A rate the operators tune server side
-    // reaches the ladder on the next snapshot rather than on the next plugin release, and the
-    // mirrored rates only answer a room that has published no table at all.
     [Fact]
     public void TheLadderIsQuotedFromTheRoomWhenTheRoomPublishesOne()
     {
@@ -250,9 +235,6 @@ public sealed class CasinoBingoWireContractTests
         Assert.Equal(0, BingoCabinet.PrizeAt(board, BingoRules.StageCount));
     }
 
-    // A cancelled room and a voided round are the same fact told from the two halves of the wire,
-    // and either one has to reach the screen: a refunded game that still says the hall is printing
-    // cards is a receipt for money that came back.
     [Fact]
     public void ACancelledRoomAndAVoidedRoundBothReadAsCalledOff()
     {

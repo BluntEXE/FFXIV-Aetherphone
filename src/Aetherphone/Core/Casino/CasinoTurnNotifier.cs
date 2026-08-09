@@ -5,22 +5,10 @@ using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Core.Casino;
 
-// A turn alert is for the player who is not looking at the table. Firing one at somebody already
-// watching their own cards land is the notification equivalent of tapping them on the shoulder to
-// tell them where they are, so the table stamps its own attention every frame it draws and this
-// only speaks once that stamp has gone stale.
-//
-// One alert per hand per seat: the key is the hand id and the split being asked for, which is also
-// what makes a resync harmless. A snapshot re-delivered after a reconnect names the same hand, so
-// it cannot ring twice for one decision.
 internal sealed class CasinoTurnNotifier : IDisposable
 {
     public const string AppId = "casino";
 
-    // The group prefix is the whole channel: it stacks every alert from one table together in the
-    // shell, dedupes the sound, and is what the router reads back to know which felt to open. A
-    // separate settings key would be a switch nobody could find, because the settings list is built
-    // from installed app ids and a channel id is not one.
     public const string GroupPrefix = "casino:";
 
     private const long AttentionWindowMilliseconds = 1_200;
@@ -43,7 +31,6 @@ internal sealed class CasinoTurnNotifier : IDisposable
         Plugin.Framework.Update += OnFrameworkUpdate;
     }
 
-    // Called from the table's own draw path, which only runs while the table is the thing on screen.
     public void StampAttention()
     {
         Interlocked.Exchange(ref attentionStampedAtTick, Environment.TickCount64);

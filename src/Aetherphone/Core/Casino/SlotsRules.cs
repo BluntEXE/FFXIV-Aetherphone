@@ -1,8 +1,5 @@
 namespace Aetherphone.Core.Casino;
 
-// A verbatim mirror of the backend SlotsEngine layout and paytable: the cabinet renders line
-// wins and the paytable sheet from these tables, so they must stay byte-identical to
-// Aethernet.Api/Services/Casino/Games/SlotsEngine.cs (pinned by CasinoSlotsContractTests).
 internal static class SlotsRules
 {
     public const int ReelCount = 5;

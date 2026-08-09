@@ -138,8 +138,6 @@ internal sealed partial class CasinoApp : IPhoneApp
         ResetLimitsEditor();
     }
 
-    // Opening an app that is already open re-fires this, which is exactly what a turn alert tapped
-    // while the casino is on screen depends on: the deep link is consumed here or not at all.
     private void ConsumeLaunch()
     {
         if (!launcher.TryConsume(out var launch))
@@ -320,10 +318,6 @@ internal sealed partial class CasinoApp : IPhoneApp
         EmptyState.Draw(body, ui, icon, Loc.T(L.Casino.CabinetSoonTitle), Loc.T(L.Casino.CabinetSoonHint));
     }
 
-    // Only the screen actually being left is torn down. A live room is seated by the cabinet route,
-    // not by the top of the stack, so resetting all three every pop would detach the room under a
-    // cabinet the player is still standing in: the cashier can push Limits over the wheel, and the
-    // way back from Limits is this same pop.
     private void PopRoute()
     {
         slots.ClosePayTable();
@@ -346,9 +340,6 @@ internal sealed partial class CasinoApp : IPhoneApp
             return;
         }
 
-        // The door holds a cached knocker list and keeps re-reading it on every ping, and that list
-        // exists so names never travel further than the host's own screen. Leaving the screen has to
-        // drop it, not only closing the app.
         if (route.Screen == CasinoScreen.TableDoor)
         {
             tableDoor.Reset();
@@ -422,9 +413,6 @@ internal sealed partial class CasinoApp : IPhoneApp
         router.Push(new CasinoRoute(CasinoScreen.TableDoor, CasinoGames.Blackjack, string.Empty, tableId));
     }
 
-    // The quick seat answer is the pivot of the whole three tap path: it names the table, the buy-in
-    // fills the cashier, and the table is entered the moment the chips actually exist. Entering
-    // before the buy-in lands would seat a player at a felt with nothing to bet.
     private void ConsumeTableAnswers()
     {
         var quick = casinoTables.TakeQuickSeat();
@@ -482,8 +470,6 @@ internal sealed partial class CasinoApp : IPhoneApp
     {
         if (string.Equals(gameId, CasinoGames.Blackjack, StringComparison.Ordinal))
         {
-            // The tile never picks a table itself. Asking the server which felt has room is what
-            // keeps five phones from racing onto the same open seat off one stale directory page.
             casinoTables.QuickSeat(Core.Casino.CasinoStakeTiers.Any);
             return;
         }

@@ -108,9 +108,6 @@ internal sealed partial class CasinoApp
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
     }
 
-    // The one row on the floor that is free, so it says so with a badge rather than a price. A spin
-    // already taken keeps its place in the list and shows when the next one lands: hiding the row
-    // for the rest of the day would teach the player to stop looking for it.
     private void DrawDailySpinCard(float scale)
     {
         var claim = Core.Casino.DailySpinStatus.Of(casinoSpin.Answer);
@@ -277,9 +274,6 @@ internal sealed partial class CasinoApp
             : Loc.T(L.Casino.WheelAtTheRail, count);
     }
 
-    // The tile counts down off the room's own deadline against the server clock the directory
-    // carried, never off frame time, so a tile that has been sitting on a background phone for a
-    // minute is either right or blank rather than confidently wrong.
     private void DrawRoomClock(ImDrawListPtr drawList, Rect tile, string roomId, float scale)
     {
         if (!casinoRooms.TryRoomClock(roomId, out var phase, out var endsAtUnixMs) || endsAtUnixMs <= 0)

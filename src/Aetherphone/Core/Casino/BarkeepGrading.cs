@@ -1,7 +1,5 @@
 namespace Aetherphone.Core.Casino;
 
-// Every interaction funnels through one quantizer so a grade can only ever be a value the
-// backend accepts: the wire rejects anything outside {0, 40, 70, 100}.
 internal static class BarkeepGrading
 {
     public const int PerfectGrade = 100;

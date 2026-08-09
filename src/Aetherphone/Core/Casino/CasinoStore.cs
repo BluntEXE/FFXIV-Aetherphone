@@ -68,9 +68,6 @@ internal sealed class CasinoStore : IDisposable
         }
     }
 
-    // The wire does not carry the sitting's activation time, so the elapsed-session indicator
-    // anchors to the wall clock at which this client first learned of the sitting; a sitting
-    // opened here is stamped at buy-in, one recovered from the server at first observation.
     public long SittingSeenAtUnix
     {
         get
@@ -217,9 +214,6 @@ internal sealed class CasinoStore : IDisposable
         state = next;
     }
 
-    // A round response only ever speaks for the sitting it was staked in. A replayed round can
-    // land long after that sitting was cashed out, and its stack (zero, once the table closed)
-    // must never be written onto the sitting now in play.
     internal static CasinoStateDto? StackAbsorbedInto(CasinoStateDto? current, string sittingId, long stack)
     {
         var sitting = current?.Sitting;

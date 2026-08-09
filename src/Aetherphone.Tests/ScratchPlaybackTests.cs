@@ -139,10 +139,6 @@ public sealed class ScratchPlaybackTests
         Assert.Equal(0, playback.PrizeStillUnderFoil);
     }
 
-    // The prize is credited at purchase, so the store carries the settled stack from the moment
-    // the card lands. Holding the prize back has to be a property of the card on screen, not of
-    // the stored stack: a doctored stack is overwritten by the next state refresh, which would
-    // jump the chips pill by exactly the prize while every cell is still under foil.
     [Fact]
     public void ThePrizeIsHeldBackByTheCardOnScreenAndNeverByTheStoredStack()
     {

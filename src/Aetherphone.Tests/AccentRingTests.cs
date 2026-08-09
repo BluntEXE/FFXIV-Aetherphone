@@ -67,8 +67,6 @@ public sealed class AccentRingTests
             $"{id} renders white at {contrast:F2}:1, below the {MinInkContrast:F1}:1 floor");
     }
 
-    // Settings pages, shortcuts, and custom accents author tints outside the ring. IconTile.Surface has to
-    // pull any of them down far enough for the white glyph, or those tiles fall back to a dark glyph.
     [Fact]
     public void AnyTintNormalisesToCarryWhite()
     {

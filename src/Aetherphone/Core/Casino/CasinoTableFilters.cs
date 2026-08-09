@@ -11,9 +11,6 @@ internal enum CasinoTableFilter
     Mine,
 }
 
-// Quick seat asks for a band rather than a table, and the band is read off whatever the rail is
-// already showing: a player who has narrowed the list to low stakes and then presses quick seat
-// plainly means a low stakes table, so asking them again would be a question they have answered.
 internal static class CasinoStakeTiers
 {
     public const int Any = 0;
@@ -33,9 +30,6 @@ internal static class CasinoStakeTiers
     }
 }
 
-// One rail, five filters, and every one of them a fact the row already carries. Anything that needed
-// a second read to answer would leave the rail lying whenever the directory was a minute old, which
-// is why there is no "friends here" chip: the directory ships counts, not rosters.
 internal static class CasinoTableFilters
 {
     public const long LowStakeCeiling = 25;

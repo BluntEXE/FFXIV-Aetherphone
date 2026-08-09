@@ -1101,8 +1101,6 @@ internal sealed partial class ChirperApp : IPhoneApp
         }
         else
         {
-            // Contain, not cover: the photo keeps the aspect it was baked with at compose time,
-            // and the card frame is clamped separately, so covering would crop it a second time.
             ImageFit.DrawLetterboxed(drawList, texture, rect, Vector2.Zero, Vector2.One, rounding);
         }
 

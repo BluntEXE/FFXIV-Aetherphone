@@ -10,13 +10,6 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Apps.Casino.Cabinets;
 
-// The hall runs on the room's clock and the client only ever paints it: cards are bought over the
-// money path while the selling window is open, balls arrive on the snapshot, and the stages are
-// awarded by the house. Two honesty rules shape the screen. The prize ladder is quoted from the
-// cards actually in play and says out loud where it stops growing, because a full hall that
-// implies a bigger pot than it pays is a lie told with arithmetic. And the marks a player watches
-// land are never what settles the round: the board reads the balls the room called, so a finger
-// that never touches the glass wins exactly as often as one that daubs every cell.
 internal sealed class BingoCabinet
 {
     private const float StatusRowHeight = 22f;
@@ -144,8 +137,6 @@ internal sealed class BingoCabinet
             && string.Equals(sitting.GameKind, CasinoWire.BingoKind, StringComparison.Ordinal);
         if (calledOff)
         {
-            // The wrap card already carries the news in the result window, and one screen saying
-            // it twice reads as two different refunds.
             if (snapshot.Phase != CasinoRoomPhases.Result)
             {
                 DrawNote(ui, Loc.T(L.Casino.BingoCalledOff), width, scale);
@@ -187,29 +178,17 @@ internal sealed class BingoCabinet
         return held > BingoRules.MaxCards ? BingoRules.MaxCards : held;
     }
 
-    // Only a round the server calls settled has a payout worth speaking. The phase flipping to
-    // Result is the hall saying the calling is over, not the ledger saying what it paid: the two
-    // are seconds apart and the personal read is what closes the gap, so nothing is latched until
-    // that read carries a settled round. Latching on the phase alone freezes a zero the next read
-    // can no longer correct, and the card underneath would be stroked gold beside it.
     internal static bool Settled(CasinoBingoCardsDto? mine)
     {
         return mine is not null && mine.RoundState == CasinoRoundStates.Settled;
     }
 
-    // A game the house called off is not a game still being counted. The hall says so from either
-    // end of the fact: the room blob carries the cancel the moment an operator pauses a selling
-    // window, and the personal read carries the voided round once the refund has run. Without both,
-    // a refunded room sits under "the hall is printing your cards" until the round index turns over.
     internal static bool CalledOff(CasinoBingoRoomStateDto? board, CasinoBingoCardsDto? mine)
     {
         return (board is not null && board.Cancelled)
             || (mine is not null && mine.RoundState == CasinoRoundStates.Voided);
     }
 
-    // The house's own ladder is quoted whenever the room sends one. The mirrored rates exist so a
-    // room that has not published a table yet still has numbers to paint, not so the phone can
-    // argue with the server about what a full house pays.
     internal static long PrizeAt(CasinoBingoRoomStateDto? board, int stage)
     {
         if (!BingoRules.IsStage(stage))
@@ -240,9 +219,6 @@ internal sealed class BingoCabinet
         return cap > 0 ? cap : BingoRules.PrizeCardCap;
     }
 
-    // A room celebrates once, when the calling is over and a card of this player's came home. A
-    // room that paid nothing says so in words and stays quiet, because a loss that gets its own
-    // fanfare is the house teaching the wrong lesson.
     private void CelebrateSettledRoom(CasinoRoomSnapshotDto snapshot, CasinoBingoRoomStateDto? board,
         CasinoBingoCardsDto? mine, float scale)
     {
@@ -480,10 +456,6 @@ internal sealed class BingoCabinet
         Typography.Draw(drawList, new Vector2(max.X - inset - nextSize.X, min.Y + inset + 2f * scale), next,
             ui.MutedInk, TextStyles.Caption1);
 
-        // The hall says "no card came home" only once the ledger has actually settled the round.
-        // Until then it says the calling is over and nothing more, because a zero printed while the
-        // settlement is still in flight is a loss the player never had. A round the house called
-        // off never settles at all, so it says that instead of waiting on a payout nobody owes.
         var outcomeY = min.Y + inset + titleSize.Y + 8f * scale;
         if (calledOff)
         {
@@ -517,11 +489,6 @@ internal sealed class BingoCabinet
         ImGui.Dummy(new Vector2(width, height + Metrics.Space.Sm * scale));
     }
 
-    // One purchase is one room. The server keys the entry on the room, the round and the identity,
-    // so the second post is refused rather than added to: a composer that stayed up offering "add
-    // two more" would be selling a flow the protocol does not have. A refusal always draws, because
-    // the reason a purchase was turned away (a frozen wallet, a loss limit, paused stakes) matters
-    // most at exactly the moment the composer has nothing left to offer.
     private void DrawComposer(AppSkin ui, CasinoStateDto state, CasinoSittingDto sitting,
         CasinoBingoCardsDto? mine, float width, float scale)
     {
@@ -575,9 +542,6 @@ internal sealed class BingoCabinet
             rooms.BuyBingoCards(requestedCards);
         }
 
-        // A pill that cannot be pressed has to say why, and a paused hall outranks every other
-        // reason: a buy nothing will accept beside a note about one buy a room reads as a broken
-        // button rather than a house that stopped taking money.
         var noteY = pillRect.Max.Y + 6f * scale;
         var note = blocked
             ? Loc.T(state.StakesPaused ? L.Casino.PausedTitle : L.Casino.DrainingTitle)
@@ -719,9 +683,6 @@ internal sealed class BingoCabinet
                 TextStyles.Caption2);
         }
 
-        // The gold stroke is the settled payout speaking, so it waits for the same fact the summary
-        // waits for. Stroking on a payout the ledger has not written yet is how one screen ends up
-        // saying won and lost at the same time.
         if (Settled(mine) && mine!.Payout > 0)
         {
             Squircle.Stroke(drawList, plateMin, plateMax, rounding, ImGui.GetColorU32(Gold), 1.6f * scale);
@@ -732,8 +693,6 @@ internal sealed class BingoCabinet
         HandleCardTaps(card, cardIndex, autoMask, stampedMask);
     }
 
-    // Hand daubing is flair and nothing more, so the hit test only ever answers cells the room has
-    // already called, and the mark it sets is one the auto mask was going to set anyway.
     private void HandleCardTaps(Rect card, int cardIndex, int autoMask, int stampedMask)
     {
         var pending = autoMask & ~stampedMask;

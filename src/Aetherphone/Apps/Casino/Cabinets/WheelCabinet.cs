@@ -12,10 +12,6 @@ using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Casino.Cabinets;
 
-// A communal table the client never owns: the round, the deadline and the landing all arrive from
-// the room, and everything here either paints them or takes a bet to the money path over HTTP.
-// The one rule the whole screen bends around is that a bet cannot be taken back, so the warning
-// is told before the first stake of a round rather than after, where it would only be a receipt.
 internal sealed class WheelCabinet
 {
     private const float PadX = 16f;
@@ -162,9 +158,6 @@ internal sealed class WheelCabinet
         }
     }
 
-    // Only bets the server has accepted for this room and this round reach the board. A bet that
-    // was refused, dropped by the pacing guard or swept back by the stale-round refund never
-    // appears in this read, so nothing here can paint money that did not actually move.
     private void CollectStakes(CasinoRoomSnapshotDto snapshot)
     {
         Array.Clear(spotStakes);
@@ -225,13 +218,6 @@ internal sealed class WheelCabinet
         return total;
     }
 
-    // A win is loud once and only once per round: gold, a count up and confetti sized by what the
-    // spot paid. A loss says nothing at all beyond the banner, which is the whole point of it.
-    //
-    // The number is derived rather than read back, and that is safe for exactly one reason: the
-    // stakes it multiplies are the server's own list of accepted bets, and the multiplier is the
-    // same (multiplier + 1) the house settles with. Sum a local tally instead and the banner would
-    // celebrate chips that never left the stack.
     private void CelebrateSettledRound(CasinoRoomSnapshotDto snapshot, float scale)
     {
         var roundKey = WheelRoundPlayback.RoundKeyOf(snapshot);
@@ -505,9 +491,6 @@ internal sealed class WheelCabinet
             y += Metrics.Space.Sm * scale;
         }
 
-        // The server keys one bet to one spot for one round, so a spot already backed is not a
-        // smaller bet, it is no bet at all. The composer moves off it rather than offering a tap
-        // that can only ever come back refused.
         if (HasBetOn(selectedSpot))
         {
             var open = FirstOpenSpot();
@@ -530,8 +513,6 @@ internal sealed class WheelCabinet
             ceiling = sitting.Stack;
         }
 
-        // A pill that cannot be pressed has to say why. The round cap and a thin stack are the two
-        // ways the composer runs out of room, and both of them read as a broken button otherwise.
         if (ceiling < WheelRules.MinStakePerSpot)
         {
             var note = staked >= WheelRules.MaxStakePerRound
@@ -598,9 +579,6 @@ internal sealed class WheelCabinet
 
         y += MathF.Max(FieldHeight, PillHeight) * scale + Metrics.Space.Xs * scale;
 
-        // The same rule the round cap and the thin stack answer to, for the two refusals that come
-        // from the house rather than the player: a rail whose banner still counts the window down
-        // owes an explanation for a pill that will not move.
         if (state.StakesPaused || state.Draining)
         {
             Typography.DrawWrappedLeft(new Vector2(left, y),

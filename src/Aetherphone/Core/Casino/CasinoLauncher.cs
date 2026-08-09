@@ -9,9 +9,6 @@ internal enum CasinoLaunchKind
 
 internal readonly record struct CasinoLaunch(CasinoLaunchKind Kind, string TableId = "");
 
-// Opening an app that is already open re-fires OnOpened, so the request has to survive until the
-// app consumes it rather than being acted on at the moment it is made: a turn alert tapped while
-// the casino is on screen has to reach the table just as surely as one tapped from the lock screen.
 internal sealed class CasinoLauncher
 {
     private CasinoLaunch? pending;

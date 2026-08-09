@@ -14,10 +14,6 @@ internal sealed record CasinoRoomState(
     CasinoBingoRoomStateDto? Bingo,
     CasinoBlackjackRoomStateDto? Blackjack);
 
-// The seat scoped half of a room, held beside the public one and versioned by the same pair. A
-// private frame is the only thing on this socket that is not true for everybody at the rail, so it
-// is stored apart rather than merged in: a snapshot that arrives without one must never be able to
-// erase a face the server already dealt to this seat, and a stale one must never paint it back.
 internal sealed record CasinoRoomPrivate(
     string RoomId,
     int Epoch,
@@ -32,34 +28,13 @@ internal enum CasinoRoomApply
     Resync,
 }
 
-// The socket only ever accelerates a room whose truth is the server snapshot, so every frame is
-// gated on (Epoch, Seq): a frame from a restarted server, a duplicate, or one that arrives after
-// a lost frame can never be folded into the held state. A gap parks the room on the stale
-// snapshot and asks for a fresh one rather than guessing, and the ask is rate limited so a
-// flapping socket turns one lost frame into one request, not a storm.
-//
-// The per-game half of a room rides the snapshot as a JSON string, and it is parsed here rather
-// than in Draw: the pump is the store's, Draw only ever reads the volatile state swapped in from
-// here, and an immediate mode frame can afford neither the parse nor the garbage.
-//
-// Every absorb re-reads the room id inside the gate. The receive thread checks the id before it
-// blocks on the lock, so without that second read a frame for the room the player just left can
-// be parked under the room they just entered, and the two rooms keep independent sequences behind
-// one shared epoch: the wrong snapshot would then out-rank every genuine one until the new room's
-// sequence overtook it.
 internal sealed class CasinoRoomSession
 {
     private const long ResyncCooldownMilliseconds = 2_000;
 
-    // The skew estimate crawls toward the server clock so one frame queued behind a slow send
-    // cannot hand a countdown phantom seconds, but a machine that slept (or a clock the user
-    // just corrected) has to snap: an estimate minutes wrong renders every deadline expired.
     private const long SkewReanchorMilliseconds = 5_000;
     private const int SkewSmoothingWeight = 4;
 
-    // Four missed reads on the three second room poll. A socket that never attached is not a room
-    // that cannot be reached: the poll is the carrier the whole store is built around, so only a
-    // room that has gone quiet on both of them is out of touch.
     private const long UnreachableAfterMilliseconds = 12_000;
 
     private readonly RealtimeSignalBus signals;
@@ -95,9 +70,6 @@ internal sealed class CasinoRoomSession
 
     public long SkewMilliseconds => Volatile.Read(ref skewMilliseconds);
 
-    // The one question the veil is allowed to ask. A phone playing the room over plain HTTP is not
-    // disconnected from anything, so dimming a table for want of a socket would dim a table that is
-    // dealing: only a room that has answered neither carrier for a while is actually out of reach.
     public bool Unreachable(long nowTick)
     {
         return Unreachable(attached, Volatile.Read(ref touchedAtTick), nowTick);
@@ -129,17 +101,11 @@ internal sealed class CasinoRoomSession
         return remaining > 0 ? remaining : 0;
     }
 
-    // The room directory carries the same server clock a room does, and the floor tiles count the
-    // next room down from it, so a phone that has never stepped into a room still paints honest
-    // deadlines on the tiles.
     public void AbsorbClock(long serverNowUnixMs, long localNowUnixMs)
     {
         AbsorbServerTime(serverNowUnixMs, localNowUnixMs);
     }
 
-    // Attach and detach are ordered by the same gate the room state moves under. The socket answers
-    // whichever it hears last, so a detach that overtook the attach it was meant to cancel would
-    // leave the server fanning a room the phone dropped every frame of into nothing.
     public void Enter(string nextRoomId)
     {
         if (nextRoomId.Length == 0)
@@ -248,8 +214,6 @@ internal sealed class CasinoRoomSession
         }
     }
 
-    // The polling path carries the identical snapshot under the identical version rules, so a
-    // player whose socket died keeps a current room from plain HTTP reads alone.
     public void AbsorbHttpState(string requestedRoomId, CasinoRoomSnapshotDto fresh, long localNowUnixMs)
     {
         if (!string.Equals(roomId, requestedRoomId, StringComparison.Ordinal)
@@ -263,9 +227,6 @@ internal sealed class CasinoRoomSession
         Absorb(requestedRoomId, fresh.Epoch, fresh.Seq, fresh);
     }
 
-    // The seat scoped half over the poll, versioned by the same pair the socket frames carry so the
-    // two carriers land in one order. A room has to stay playable without a socket, and a hand the
-    // client cannot draw is a hand the player is being asked to hit on blind.
     public void AbsorbHttpPrivate(string requestedRoomId, int epoch, long seq, CasinoBlackjackPrivateDto hand)
     {
         lock (gate)
@@ -281,10 +242,6 @@ internal sealed class CasinoRoomSession
         }
     }
 
-    // A room the server no longer serves is the one refusal the poll can name on its own: a 404 is
-    // the same fact casino.ended carries, and a player with a dead socket has no other way to hear
-    // it. Every other failure leaves the held room alone, because one dropped read must never look
-    // like a closed table.
     public void CloseFromHttp(string requestedRoomId, string reason)
     {
         Close(requestedRoomId, reason);
@@ -345,10 +302,6 @@ internal sealed class CasinoRoomSession
         return seq == held.Seq + 1 ? CasinoRoomApply.Apply : CasinoRoomApply.Resync;
     }
 
-    // An event states the whole room, so applying one is a replacement rather than a merge: the
-    // phase, the deadline, the round and the game blob all arrive together and nothing on this
-    // side accumulates. That is what makes a resync after a gap cheap enough to be the only
-    // healing path the client needs.
     internal static CasinoRoomState Applied(CasinoRoomState held, int epoch, long seq, CasinoRoomEventDto change)
     {
         var next = held.Snapshot with
@@ -366,9 +319,6 @@ internal sealed class CasinoRoomSession
         return Build(held.RoomId, epoch, seq, next);
     }
 
-    // The blob belongs to the game, so a room whose kind this client does not know parks on the
-    // envelope and paints nothing rather than guessing at a shape. A blob that fails to parse is
-    // the same case: the room keeps its clock and its occupancy and the cabinet says it is waiting.
     internal static CasinoRoomState Build(string roomId, int epoch, long seq, CasinoRoomSnapshotDto snapshot)
     {
         if (string.Equals(snapshot.GameKind, CasinoWire.WheelKind, StringComparison.Ordinal))

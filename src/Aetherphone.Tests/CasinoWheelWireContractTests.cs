@@ -10,8 +10,6 @@ namespace Aetherphone.Tests;
 
 public sealed class CasinoWheelWireContractTests
 {
-    // Money never touches the socket. The bet is a plain post and the personal read hangs off the
-    // room, because the socket carries nothing private.
     [Fact]
     public void TheMoneyPathsAreOrdinaryHttpRoutes()
     {
@@ -21,9 +19,6 @@ public sealed class CasinoWheelWireContractTests
         Assert.Equal("casino.wheel", CasinoWire.WheelKind);
     }
 
-    // RoundIndex rides the request so a bet composed against a round that closed while it was in
-    // flight is refused rather than landed on the next one, and ClientBetId makes the retry of a
-    // lost response free: the same id is the same bet, never a second one.
     [Fact]
     public void TheBetRequestSerializesTheBackendShape()
     {
@@ -53,8 +48,6 @@ public sealed class CasinoWheelWireContractTests
         Assert.Equal(205, bet.Stack);
     }
 
-    // Wallet balance never rides a game response: the cabinet reads chips at the table, and the
-    // wallet is refreshed through its own store when a bet is refused.
     [Fact]
     public void ABetResponseCarriesChipsAndNeverAWalletBalance()
     {
@@ -121,8 +114,6 @@ public sealed class CasinoWheelWireContractTests
         Assert.Equal("restarting", CasinoReasons.Restarting);
     }
 
-    // Occupancy is half the game at a communal wheel, so the spot totals ride the public game
-    // state rather than a private payload: everyone at the rail reads the same board.
     [Fact]
     public void TheWheelBlobCarriesTheSpotBoardAndTheDrawnSegment()
     {
@@ -150,8 +141,6 @@ public sealed class CasinoWheelWireContractTests
         Assert.Equal(WheelRules.MaxStakePerRound, board.MaxBetPerRound);
     }
 
-    // The rim stays still until the room publishes a segment, and it only publishes one once the
-    // window has closed and the draw has been made.
     [Fact]
     public void TheRimHoldsUntilTheRoomPublishesADrawnSegment()
     {
@@ -163,8 +152,6 @@ public sealed class CasinoWheelWireContractTests
         Assert.Equal(31, WheelRoundPlayback.DrawnSegment(drawn));
     }
 
-    // The personal half is read over HTTP because the socket carries nothing private, and only
-    // accepted bets come back, so a refused or refunded bet can never be painted as live money.
     [Fact]
     public void ThePersonalReadCarriesOnlyAcceptedBets()
     {
@@ -202,8 +189,6 @@ public sealed class CasinoWheelWireContractTests
         }
     }
 
-    // The room cap is the one the player cannot see coming, so a bet that would cross it is
-    // clamped before the post leaves rather than bounced with money already committed elsewhere.
     [Fact]
     public void TheRoundCapIsClampedBeforeTheBetLeaves()
     {
@@ -219,8 +204,6 @@ public sealed class CasinoWheelWireContractTests
         Assert.Equal(0, WheelRules.Clamp(25, 0, 4));
     }
 
-    // A winning spot returns the stake alongside the winnings, so every quoted return is the
-    // multiplier plus one: a 1x spot doubles the stake, it does not hand back what it took.
     [Fact]
     public void AWinningSpotReturnsTheStakeBesideTheWinnings()
     {

@@ -6,9 +6,6 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Apps.Casino.Cabinets;
 
-// One interaction of the mixology loop. The stage animates on frame time because it is pure
-// theater; only the shift clock is wall anchored. Whatever happens in here, the only thing
-// that ever leaves is a BarkeepGrading grade, so the wire domain holds by construction.
 internal sealed class BarkeepVerbStage
 {
     public const float PourFillPerSecond = 0.45f;

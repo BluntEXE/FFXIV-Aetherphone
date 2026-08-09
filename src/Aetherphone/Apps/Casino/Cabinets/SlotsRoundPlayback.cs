@@ -30,10 +30,6 @@ internal readonly struct SlotsSpinView
     }
 }
 
-// Replays one settled server round: the base spin at the ratified cadence, then every free
-// spin the response already resolved, at a faster but readable pace. The committed tally only
-// ever counts wins the player has been shown, and skipping jumps straight to the server's
-// capped total, so the number on screen always ends exactly where the wire said it would.
 internal sealed class SlotsRoundPlayback
 {
     public const float LossPresentSeconds = 0.45f;

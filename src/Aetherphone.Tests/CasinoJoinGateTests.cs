@@ -3,10 +3,6 @@ using Xunit;
 
 namespace Aetherphone.Tests;
 
-// Sitting down mid hand must never look like being dealt in. These pin both halves of that: the
-// wait is armed by the phase the seat was taken in and cleared only by the table coming back round,
-// and a waiting seat gets neither a bet nor an action however loudly the rest of the screen says it
-// is seated.
 public sealed class CasinoJoinGateTests
 {
     [Fact]
@@ -61,7 +57,6 @@ public sealed class CasinoJoinGateTests
         Assert.False(CasinoJoinGate.CanPlaceBet(CasinoRoomPhases.Result, true, false, false, false));
     }
 
-    // The whole point of drain and pause: money in stops, the hand already dealt carries on.
     [Fact]
     public void DrainingAndPausingRefuseNewBetsWithoutTouchingTheOpenHand()
     {

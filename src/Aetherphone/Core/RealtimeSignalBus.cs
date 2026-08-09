@@ -79,18 +79,11 @@ internal sealed class RealtimeSignalBus
         ContentRemoved?.Invoke(removal);
     }
 
-    // Every other app is woken with a bare ping because HTTP holds the truth. A casino room
-    // cannot be: its events carry a per-room sequence that only means anything applied in
-    // arrival order, and a refetch per event would both lose that proof and cost a request per
-    // ball. The casino signal therefore carries the payload it arrived with.
     public void PublishCasino(CasinoSignal signal)
     {
         CasinoReceived?.Invoke(signal);
     }
 
-    // The room session has to answer the socket (attach, detach, resync) and there is exactly
-    // one socket on the phone. Binding the sender here keeps that seam on the bus every store
-    // already holds, so no app ever reaches for a second connection to speak back.
     public void BindSender(Action<CallControl>? sender)
     {
         outbound = sender;

@@ -4,15 +4,6 @@ using Aetherphone.Windows.Components;
 
 namespace Aetherphone.Apps.Casino.Tables;
 
-// The rendered hand is a projection of what the server last said, never a hand this client is
-// playing along with. Everything arrives already versioned by (epoch, seq) and the gate here is the
-// second half of that contract: a frame from before the one on screen, or from a table that
-// restarted behind us, is dropped rather than merged, because a board assembled out of order would
-// show cards in an order the shoe never dealt them.
-//
-// The public board and the seat scoped faces are held apart and only ever meet in CardAt: a private
-// frame belonging to another round can then be ignored on the spot instead of quietly overpainting
-// this round's placeholders.
 internal sealed class BlackjackProjection
 {
     private int epoch = -1;
@@ -124,11 +115,6 @@ internal sealed class BlackjackProjection
         return count;
     }
 
-    // A face-down card stays face down for every seat but mine, and mine only turns over when the
-    // private frame that carries it belongs to the round on the felt right now and to the same run
-    // of the table. A round index repeats across a restart, so the epoch is what tells last table's
-    // hole cards apart from this one's: without it the faces of a round seven that ended when the
-    // room restarted would be painted onto the placeholders of the round seven that replaced it.
     public int CardAt(int seatIndex, int splitIndex, int cardIndex, int publicCard)
     {
         if (PlayingCards.IsCard(publicCard))

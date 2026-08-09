@@ -6,10 +6,6 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Windows.Components;
 
-// The veil never hides the table, it dims it: the last true frame stays visible underneath so a
-// player can see the hand they are still in while being told the line is down. The countdown is the
-// only number on it and it is read off the server's own hold deadline, so a phone that slept through
-// half the grace comes back with the truth rather than with the seconds it failed to count.
 internal static class ReconnectVeil
 {
     private const float Dim = 0.55f;

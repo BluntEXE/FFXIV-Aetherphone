@@ -4,13 +4,6 @@ using Aetherphone.Core.Aethernet.Contracts;
 
 namespace Aetherphone.Core.Casino;
 
-// The round lifecycle lives apart from CasinoStore on purpose: CasinoStore is the hardened
-// money-motion path (buy-in, top-up, cash-out) while this store owns game rounds. The client
-// mints every round id, persists the intent per character before the POST leaves, and clears
-// it only once a response lands, so a crash mid-round recovers by re-issuing the idempotent
-// POST and reconciling from the byte-identical replay. Barkeep is the one open-ended round:
-// its intent survives the granted start and clears only when the finish settles, so a crash
-// mid-shift can still recover the script and settle against the server clock.
 internal sealed class CasinoPlayStore : IDisposable
 {
     private readonly Configuration configuration;
@@ -169,9 +162,6 @@ internal sealed class CasinoPlayStore : IDisposable
         IssueBarkeepFinish(sittingId, roundId, orders);
     }
 
-    // A lost response leaves the round id as the only handle on chips already staked, so the
-    // next tap at the same table replays that round instead of minting a second one: a fresh id
-    // would strand the first round open until the server expires it, and the stake with it.
     internal static bool ReplaysBeforeStaking(PendingCasinoRound? pending, string sittingId)
     {
         return pending is not null && sittingId.Length > 0
@@ -330,8 +320,6 @@ internal sealed class CasinoPlayStore : IDisposable
         }, () => roundInFlight = false);
     }
 
-    // Replacing a remembered round is only ever reached for one left behind by a sitting that is
-    // already closed: a round of the sitting in play replays before a new one is ever minted.
     internal static Dictionary<ulong, PendingCasinoRound>? RememberRound(
         Dictionary<ulong, PendingCasinoRound> snapshot, ulong contentId, PendingCasinoRound round)
     {

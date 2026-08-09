@@ -238,9 +238,6 @@ internal sealed class ScratchCabinet
         var cellSize = (inner.Width - cellGap * (ScratchRules.GridSide - 1)) / ScratchRules.GridSide;
         var scratching = playback.Phase == ScratchPhase.Scratching;
 
-        // The rub is a raw drag over drawlist art, so the card has to claim the pointer: without
-        // this the press lands on bare window space and drags the phone across the screen instead
-        // of the foil off the cell.
         if (scratching && UiInteract.HoverWindowOnly(card.Min, card.Max))
         {
             UiInteract.ReportGestureSurface();

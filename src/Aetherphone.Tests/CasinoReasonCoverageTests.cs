@@ -6,10 +6,6 @@ using Xunit;
 
 namespace Aetherphone.Tests;
 
-// The reason table is the client's whole vocabulary for refusal, and a gap in it is invisible until
-// a player is looking at "that did not go through" while the server is saying something specific and
-// helpful. These pin the mapping as total in both directions: every constant has a message, no two
-// constants share one, and no message is a placeholder.
 public sealed class CasinoReasonCoverageTests
 {
     [Fact]
@@ -66,8 +62,6 @@ public sealed class CasinoReasonCoverageTests
         Assert.False(CasinoReasons.TryMessage("a_reason_from_the_future", out _));
     }
 
-    // An empty refusal is the shape a dropped response has, and painting it as a silent success is
-    // exactly the bug the store's naming exists to stop.
     [Fact]
     public void AnEmptyReasonBecomesTheUnreachableOne()
     {

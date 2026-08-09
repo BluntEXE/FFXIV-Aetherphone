@@ -143,12 +143,6 @@ internal sealed record CasinoRoundHistoryPage(
     CasinoRoundHistoryDto[]? Items = null,
     string? NextCursor = null);
 
-// One shape serves the socket and the poll: GET /casino/rooms/{id} answers with exactly the
-// snapshot casino.attached and casino.snapshot carry, so a player whose socket is dead plays the
-// same room from the same numbers. Deadlines ship as absolute server milliseconds beside
-// ServerNowUnixMs, never as durations, because a message delayed in a send queue must not hand the
-// receiver phantom seconds. GameState is the per-game blob as a JSON string: the registry owns the
-// room and the games own their contents, so a new game kind ships without widening this envelope.
 internal sealed record CasinoRoomSnapshotDto(
     string RoomId = "",
     string GameKind = "",
@@ -164,9 +158,6 @@ internal sealed record CasinoRoomSnapshotDto(
     long Seq = 0,
     long ServerNowUnixMs = 0);
 
-// A room event states the whole room, not a delta: every field is the live value and GameState is
-// the same blob a snapshot carries. Nothing here accumulates on the client, which is what lets a
-// phone that missed a frame land on the same board as one that watched every one of them.
 internal sealed record CasinoRoomEventDto(
     int State = 0,
     int Phase = 0,
@@ -191,10 +182,6 @@ internal sealed record CasinoRoomListDto(
     CasinoRoomListItemDto[]? Rooms = null,
     long ServerNowUnixMs = 0);
 
-// One row per bet spot, carrying the whole room's money on it. Occupancy is half the game at a
-// communal wheel, so the totals ride the public game state instead of a private payload: everyone
-// at the rail reads the same board. Segment and Spot stay -1 until the window has closed and the
-// draw has been made, which is what stops a rim from landing before the money stopped moving.
 internal sealed record CasinoWheelSpotDto(
     int Spot = 0,
     int Multiplier = 0,
@@ -219,9 +206,6 @@ internal sealed record CasinoWheelRoomStateDto(
     long MaxBetPerRound = 0,
     long MaxWin = 0);
 
-// A stage the hall has already awarded, in the order it was won. Ball names the call that closed
-// it and Winners how many cards shared it, so the hall can show a full house that landed on ball
-// forty one and say how many people are splitting nothing (every winner is paid in full).
 internal sealed record CasinoBingoStageDto(
     int Stage = 0,
     int Ball = 0,
@@ -248,11 +232,6 @@ internal sealed record CasinoBingoRoomStateDto(
     int MaxCards = 0,
     long MaxWin = 0);
 
-// The bet is the money path and it never touches the socket. RoundIndex is sent so a bet composed
-// against a round that closed while the request was in flight is refused by the server rather than
-// landing on the next one, and ClientBetId makes the retry of a lost response free: the same id is
-// the same bet, never a second one. ClientRoundId is the chip round every bet of one spin shares,
-// which is why it is minted once per room round rather than once per tap.
 internal sealed record CasinoWheelBetRequest(
     string RoomId,
     long RoundIndex,
@@ -274,8 +253,6 @@ internal sealed record CasinoWheelBetDto(
 
 internal sealed record CasinoWheelMyBetDto(int Spot = 0, long Amount = 0);
 
-// The personal half of a wheel round, read over HTTP because the socket carries nothing private.
-// Only accepted bets come back, so a refused or refunded bet can never be painted as live money.
 internal sealed record CasinoWheelBetsDto(
     string RoomId = "",
     long RoundIndex = 0,
@@ -285,11 +262,6 @@ internal sealed record CasinoWheelBetsDto(
     long MyStake = 0,
     long Stack = 0);
 
-// One seat as everybody at the rail sees it. Cards are the shared playing card integers 0..51 and
-// -1 is a card whose existence is public but whose face is not, which is the dealer's hole card
-// before the reveal and any seat the table is keeping closed. A concealed card is never sent as a
-// value the client could uncover: the server leaves the placeholder in and the face simply does not
-// travel.
 internal sealed record CasinoBlackjackHandDto(
     int SplitIndex = 0,
     int[]? Cards = null,
@@ -311,15 +283,6 @@ internal sealed record CasinoBlackjackSeatDto(
     bool Split = false,
     CasinoBlackjackHandDto[]? Hands = null);
 
-// The per-game half of a blackjack room, riding the snapshot's GameState blob like every other
-// communal game. ActionsMask states what the table will accept from the active hand right now, and
-// it is the only thing the action bar is allowed to consult: a client that decided legality for
-// itself would offer a double the server refuses and read as broken the moment the shoe disagreed.
-// The trailing block is the care surface, and every field on it is a server fact the screen is
-// forbidden from inferring: Spectators is the count at the rail, BoundElsewhere says this account is
-// playing the seat from another device, SeatHeldUntilUnixMs is the absolute instant the hold lapses
-// (never a duration, for the same reason a phase deadline is not), JoinsNextHand marks a seat that
-// arrived mid hand, and Draining is the table winding down while the open hand finishes.
 internal sealed record CasinoBlackjackRoomStateDto(
     long RoundIndex = 0,
     string HandId = "",
@@ -348,20 +311,11 @@ internal sealed record CasinoBlackjackRoomStateDto(
     bool InviteOnly = false,
     bool Owner = false);
 
-// The seat scoped half, delivered on casino.private to one recipient. It exists so a table can deal
-// a closed card without the public blob ever carrying it: the projection lays these faces over the
-// placeholders for my seat only, and every other seat keeps its backs because there is nothing to
-// lay over them.
 internal sealed record CasinoBlackjackPrivateDto(
     long RoundIndex = 0,
     int SeatIndex = -1,
     int[][]? Hands = null);
 
-// The same seat scoped half read over HTTP, because the socket is the only other carrier and a room
-// has to stay playable without one: a player whose socket died would otherwise be shown card backs
-// for their own hand while the action bar the server enabled asks them to hit or stand on it. It
-// carries the (Epoch, Seq) pair the frame it stands in for would have carried, so the poll and the
-// socket land in one order rather than overpainting each other.
 internal sealed record CasinoBlackjackHandReadDto(
     string RoomId = "",
     int Epoch = 0,
@@ -386,9 +340,6 @@ internal sealed record CasinoBlackjackBetDto(
     long Amount = 0,
     long Stack = 0);
 
-// An action is guarded by the hand it was composed against and the action count the client had seen,
-// so a post that raced the table loses rather than landing on the next decision. A refusal answers
-// with the reason and the client resyncs instead of guessing.
 internal sealed record CasinoBlackjackActionRequest(
     string RoomId,
     string HandId,
@@ -407,10 +358,6 @@ internal sealed record CasinoBlackjackActionDto(
     int Action = 0,
     long Stack = 0);
 
-// One live table as the browser sees it before anybody steps into it. Seats and spectators travel as
-// counts rather than a roster because the directory is a public read and a lurker list is an
-// identity leak; the room itself is where names appear, and only for the seats. An invite only table
-// is never listed, so a row that carries InviteOnly is one this account already belongs to.
 internal sealed record CasinoTableRowDto(
     string RoomId = "",
     string GameKind = "",
@@ -434,9 +381,6 @@ internal sealed record CasinoTableListDto(
     CasinoTableRowDto[]? Tables = null,
     long ServerNowUnixMs = 0);
 
-// Quick seat is the whole floor-tile-to-a-bet path in one post: the server picks the table, so the
-// client never races five phones onto the same open seat, and it answers with the buy-in bounds the
-// cashier is about to be prefilled from. It reserves nothing; sitting is still a separate intent.
 internal sealed record CasinoQuickSeatRequest(string GameKind, int StakeTier);
 
 internal sealed record CasinoQuickSeatDto(
@@ -451,9 +395,6 @@ internal sealed record CasinoQuickSeatDto(
     long MaxBet = 0,
     int SeatIndex = -1);
 
-// Creating a private table is idempotent on ClientTableId so a lost response replays the same table
-// instead of hosting a second one, which is also what the server's one-live-table-per-owner guard
-// answers with when a second create really does arrive.
 internal sealed record CasinoCreateTableRequest(string ClientTableId, string GameKind, int StakeTier);
 
 internal sealed record CasinoTableDto(
@@ -467,9 +408,6 @@ internal sealed record CasinoTableDto(
     long MinBuyIn = 0,
     long MaxBuyIn = 0);
 
-// The door is the host's half of a private table and it is read separately from the room, because
-// the knocks are the host's business and nobody else's: the public snapshot must never carry the
-// name of somebody who asked to come in and was not let in.
 internal sealed record CasinoKnockerDto(
     string UserId = "",
     string DisplayName = "",
@@ -491,9 +429,6 @@ internal sealed record CasinoDoorResultDto(
     string RoomId = "",
     bool Pending = false);
 
-// Sitting is an intent, never a fact: the answer says whether the seat was taken, whether the hand
-// in play means the seat waits for the next one, and whether this account is already holding the
-// seat from another device. ClientSeatId makes the retry of a lost response free.
 internal sealed record CasinoSitRequest(int SeatIndex, string ClientSeatId, long BuyIn);
 
 internal sealed record CasinoSeatDto(
@@ -506,9 +441,6 @@ internal sealed record CasinoSeatDto(
     long SeatHeldUntilUnixMs = 0,
     long Stack = 0);
 
-// Standing has to work when the casino app flag is off, which is why it is its own route rather than
-// a flavour of cash-out: a killed floor must never strand chips on a table. AtHandEnd is the server
-// saying the intent is queued behind the hand the player is still in.
 internal sealed record CasinoStandRequest(string ClientStandId);
 
 internal sealed record CasinoStandDto(
@@ -518,9 +450,6 @@ internal sealed record CasinoStandDto(
     bool AtHandEnd = false,
     long Balance = 0);
 
-// A takeover is always a gesture. The client never posts this on its own: the seat sits in the
-// "playing on another device" state until somebody presses the button, because the seat sees hole
-// cards and spends money and a silent swap would move both without asking.
 internal sealed record CasinoClaimRequest(string ClientClaimId);
 
 internal sealed record CasinoBingoCardsRequest(
@@ -529,9 +458,6 @@ internal sealed record CasinoBingoCardsRequest(
     string ClientRoundId,
     int CardCount);
 
-// One purchase is one game, so this answers both the buy and the read: Cards holds every printed
-// card the player owns this round and Payout is what the hall settled onto them, which is the only
-// figure the summary is ever allowed to speak.
 internal sealed record CasinoBingoCardsDto(
     bool Granted = false,
     string Reason = "",
@@ -546,12 +472,6 @@ internal sealed record CasinoBingoCardsDto(
     string NextSeedHash = "",
     long Stack = 0);
 
-// The daily spin is the one game with no sitting and no chips: it mints coins straight into the
-// wallet, so its answer carries Balance where every other game carries Stack. There is no read
-// route, only this one idempotent post: the day's spin either happens here or is replayed here,
-// and a replay comes back refused with the segment it already landed on and what it already paid.
-// SegmentAward is what the wedge is worth and Amount is what reached the wallet, so a spin clipped
-// by the account's daily cap can still show the number it stopped on.
 internal sealed record CasinoDailySpinDto(
     bool Granted = false,
     string Reason = "",

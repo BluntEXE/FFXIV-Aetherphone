@@ -6,9 +6,6 @@ using Xunit;
 
 namespace Aetherphone.Tests;
 
-// The browser is a filter over a directory and a token parser, and both are places where a quiet
-// mistake reads as a missing table rather than as a bug. These pin the filter as a pure function of
-// the row and the token as a reference that accepts only what a table id can be.
 public sealed class CasinoTableBrowserTests
 {
     [Fact]
@@ -40,8 +37,6 @@ public sealed class CasinoTableBrowserTests
             Row(minBet: CasinoTableFilters.HighStakeFloor - 1)));
     }
 
-    // A table with no minimum at all is a table the directory could not describe, and it must not
-    // land in the low band by arithmetic accident.
     [Fact]
     public void ATableWithoutAMinimumIsNotALowStakesTable()
     {
@@ -117,8 +112,6 @@ public sealed class CasinoTableBrowserTests
         Assert.Equal("/casino/tables/a%20b/door", CasinoClient.TablePath("a b", "door"));
     }
 
-    // A refusal at the door is a question, not a wall, so the table screen has to offer the knock
-    // for exactly the reasons that a knock can answer and for no others.
     [Fact]
     public void OnlyADoorRefusalOffersTheKnock()
     {

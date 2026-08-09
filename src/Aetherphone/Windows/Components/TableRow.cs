@@ -15,10 +15,6 @@ internal readonly record struct TableRowView(
     bool Mine,
     bool Draining);
 
-// One table in the browser, and the whole point of it is that a player can tell at a glance whether
-// there is room for them: seats read as taken of total rather than as a bare number, a full table
-// says so in words instead of by arithmetic, and the spectator count sits apart from the seats so
-// nobody reads a crowded rail as a crowded table.
 internal static class TableRow
 {
     public const float Height = 74f;

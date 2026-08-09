@@ -82,9 +82,6 @@ public sealed class CasinoPendingRoundTests
         Assert.Null(CasinoPlayStore.ClearRound(snapshot, OtherCharacter, "round1"));
     }
 
-    // A remembered round is the client's only handle on chips the server has already taken. The
-    // next tap at the same table has to replay it instead of minting a second round id, or the
-    // first round is stranded open until the server expires it and takes the stake with it.
     [Fact]
     public void AnotherTapAtTheSameTableReplaysTheStrandedRoundInsteadOfStakingAgain()
     {

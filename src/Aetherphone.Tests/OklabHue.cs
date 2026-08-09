@@ -2,8 +2,6 @@ using System.Numerics;
 
 namespace Aetherphone.Tests;
 
-// The accent ring is spaced in OKLCH, where equal hue steps look equal. HSV hue cannot check that:
-// it compresses orange through yellow so hard that neighbours 22 degrees apart in OKLCH read as 11.
 internal static class OklabHue
 {
     public static float Degrees(Vector4 color)

@@ -5,19 +5,8 @@ using Aetherphone.Core.Telephony.Contracts;
 
 namespace Aetherphone.Core.Casino;
 
-// What a seat intent tells the screen and nothing more. The stack, the seat index and the wait all
-// arrive on the next snapshot, so an outcome only has to carry the two facts the snapshot cannot:
-// whether the server said yes, and what it called the refusal if it did not.
 internal sealed record CasinoSeatOutcome(bool Granted, string Reason, bool JoinsNextHand, bool AtHandEnd);
 
-// The directory and the doors, kept apart from the room the player is standing in. A table browser
-// is a list of places the player is not, so it polls on the ordinary 60/120 cadence and tolerates
-// being a minute stale in silence, while the room in play keeps its own tight loop in
-// CasinoRoomsStore. Every failed attempt still backs off the shared thirty seconds.
-//
-// Every intent here is an idempotent post keyed on a client id the store mints once and reuses
-// until the answer arrives, which is the whole reason a lost response is free: the same seat id is
-// the same sit, never a second buy-in, and the same claim id is the same takeover.
 internal sealed class CasinoTablesStore : IDisposable
 {
     private static readonly TimeSpan ForegroundPollInterval = TimeSpan.FromSeconds(60);
@@ -99,9 +88,6 @@ internal sealed class CasinoTablesStore : IDisposable
         return Interlocked.Exchange(ref seatOutcome, null);
     }
 
-    // One slot for everything the browser and the door need to say, kept apart from the seat
-    // outcome so a message meant for a list screen can never swallow the answer the table screen is
-    // waiting on to leave its in-flight stage.
     public CasinoStakeOutcome? TakeNoticeOutcome()
     {
         return Interlocked.Exchange(ref noticeOutcome, null);
@@ -139,9 +125,6 @@ internal sealed class CasinoTablesStore : IDisposable
         RefreshTables();
     }
 
-    // Quick seat asks the server which table to walk to. Picking one on the client out of a
-    // directory that refreshes once a minute is how five phones land on the same open seat and four
-    // of them get told it is taken.
     public void QuickSeat(int stakeTier)
     {
         if (!Begin())
@@ -215,9 +198,6 @@ internal sealed class CasinoTablesStore : IDisposable
         }, EndIntent);
     }
 
-    // A pasted token is resolved before it is knocked on, so the player sees the table they are
-    // asking to join rather than a spinner that turns into a refusal. A table the server will not
-    // name at all comes back as the same plain "no such table" a deleted one does.
     public void ResolveToken(string tableId)
     {
         if (tableId.Length == 0 || !Begin())
@@ -356,9 +336,6 @@ internal sealed class CasinoTablesStore : IDisposable
         }, EndIntent);
     }
 
-    // Standing has to survive a killed floor, so it is never gated on anything the client believes
-    // about the casino being open: a table that stops accepting bets still has to hand the chips
-    // back, and this is the path that does it.
     public void Stand(string roomId)
     {
         if (roomId.Length == 0 || !Begin())
@@ -462,10 +439,6 @@ internal sealed class CasinoTablesStore : IDisposable
         return reason.Length > 0 ? reason : CasinoReasons.Unreachable;
     }
 
-    // A seat id is only free to reuse for the same seat and the same buy-in. The server dedups on
-    // it and replays the answer it already stored, so carrying a burned id to a different seat
-    // would report a grant for a seat and a buy-in nobody asked for: the same reason a bet id
-    // carries its amount and a purchase id carries its count.
     internal static bool ReusesSeat(int heldSeatIndex, long heldBuyIn, int seatIndex, long buyIn)
     {
         return heldSeatIndex == seatIndex && heldBuyIn == buyIn;

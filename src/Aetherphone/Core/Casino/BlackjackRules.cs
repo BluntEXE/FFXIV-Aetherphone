@@ -36,11 +36,6 @@ internal static class BlackjackOutcomes
     public const int DealerBlackjack = 6;
 }
 
-// The table's arithmetic, mirrored on the client for one purpose only: naming what is already on
-// the felt. The server totals every hand and states which actions are legal, and nothing here is
-// ever allowed to decide either. A total is recomputed locally so a face card that has landed but
-// not yet been counted into a snapshot still reads honestly during the deal, and the payout formula
-// exists so the composer can show what a blackjack would pay before the money is committed.
 internal static class BlackjackRules
 {
     public const int SeatCount = 5;
@@ -91,8 +86,6 @@ internal static class BlackjackRules
         return rank >= 9 ? 10 : rank + 1;
     }
 
-    // Aces count one each and the hand is promoted once if a single eleven still fits, which is the
-    // only way a soft total can ever arise: two elevens are already twenty two.
     public static int Total(ReadOnlySpan<int> cards, out bool soft)
     {
         var sum = 0;

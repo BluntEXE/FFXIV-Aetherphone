@@ -71,8 +71,6 @@ public sealed class CasinoRoomSessionTests
         Assert.False(session.AwaitingSnapshot);
     }
 
-    // The per-game half rides the snapshot as a JSON string and is parsed here rather than in
-    // Draw, so an immediate mode frame pays for neither the parse nor the garbage.
     [Fact]
     public void TheGameBlobIsParsedOnceIntoTheKindTheRoomNamed()
     {
@@ -90,8 +88,6 @@ public sealed class CasinoRoomSessionTests
         Assert.Equal(120, state.Wheel.Staked);
     }
 
-    // A room whose kind this client does not know parks on the envelope and paints nothing rather
-    // than guessing at a shape, and a blob that fails to parse is the same case.
     [Fact]
     public void AnUnknownKindOrAnUnreadableBlobKeepsTheEnvelopeAndNothingElse()
     {
@@ -161,8 +157,6 @@ public sealed class CasinoRoomSessionTests
         Assert.Single(sent);
     }
 
-    // An event states the whole room rather than a delta, so applying one is a replacement: the
-    // identity of the room survives and everything the round owns arrives together.
     [Fact]
     public void AnEventReplacesTheRoomWithoutLosingItsIdentity()
     {
@@ -341,9 +335,6 @@ public sealed class CasinoRoomSessionTests
         Assert.Equal(Room, sent[1].Casino!.RoomId);
     }
 
-    // The reconnect reads and writes the held room under the same gate every absorb does. A socket
-    // that came back in the same breath as the player walking out would otherwise re-subscribe the
-    // room they just dropped, and every frame the server fanned after that would land nowhere.
     [Fact]
     public void AReconnectAfterLeavingDoesNotReattachTheRoomThePlayerDropped()
     {
@@ -362,8 +353,6 @@ public sealed class CasinoRoomSessionTests
         Assert.False(session.AwaitingSnapshot);
     }
 
-    // One shape serves the socket and the poll, so a player whose socket died plays the same room
-    // from the same numbers under the same version rules.
     [Fact]
     public void ThePollingPathFillsTheRoomUnderTheSameVersionRules()
     {
@@ -381,8 +370,6 @@ public sealed class CasinoRoomSessionTests
         Assert.Equal(12, session.State!.Snapshot.Occupancy);
     }
 
-    // A polled snapshot for a room the player already left is dropped rather than parked, because
-    // the two rooms keep independent sequences behind one shared epoch.
     [Fact]
     public void APolledSnapshotForAnotherRoomIsDropped()
     {
@@ -396,8 +383,6 @@ public sealed class CasinoRoomSessionTests
         Assert.Null(session.State);
     }
 
-    // A 404 is the same fact casino.ended carries and the only refusal the poll can name on its
-    // own, so it is the one empty answer allowed to close a room.
     [Fact]
     public void APolledFourOhFourClosesTheRoomToo()
     {
@@ -413,9 +398,6 @@ public sealed class CasinoRoomSessionTests
         Assert.Equal(string.Empty, session.RoomId);
     }
 
-    // The socket is not the only carrier a hand can arrive on. A player whose socket died would
-    // otherwise be shown card backs for their own cards while the action bar the server enabled
-    // asks them to hit or stand on them, so the poll carries the same shape under the same rules.
     [Fact]
     public void ThePollCarriesTheHandTheSocketCouldNotDeliver()
     {
@@ -455,8 +437,6 @@ public sealed class CasinoRoomSessionTests
         Assert.Equal(8, session.Private!.Blackjack!.RoundIndex);
     }
 
-    // "No socket" is not "no table". The veil answers this question and nothing else, so a room
-    // being played over plain HTTP has to read as reachable for as long as the reads keep landing.
     [Fact]
     public void ARoomOnThePollAloneIsNotAnUnreachableRoom()
     {
@@ -498,8 +478,6 @@ public sealed class CasinoRoomSessionTests
         Assert.Equal(500, session.SkewMilliseconds);
     }
 
-    // The floor tiles count the next room down from the directory's own server clock, so a phone
-    // that has never stepped into a room still paints honest deadlines.
     [Fact]
     public void TheDirectoryClockAnchorsTheSkewWithoutEnteringARoom()
     {

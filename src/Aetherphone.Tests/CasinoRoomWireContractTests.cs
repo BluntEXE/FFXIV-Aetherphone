@@ -34,8 +34,6 @@ public sealed class CasinoRoomWireContractTests
         Assert.Equal("casino.ping", SignalType.CasinoPing);
     }
 
-    // The router branches on the prefix alone, so a kind that fell outside it would land in the
-    // call switch and log itself as an unhandled signal instead of reaching the room.
     [Fact]
     public void EveryCasinoKindIsCaughtByThePrefixTheRouterBranchesOn()
     {
@@ -125,9 +123,6 @@ public sealed class CasinoRoomWireContractTests
         Assert.Contains("\"casino\":{\"roomId\":\"wheel-floor\",\"epoch\":0,\"seq\":0,\"serverNowUnixMs\":0}", json);
     }
 
-    // The envelope is shared with calls, chat, streams, and every ping, so the casino field has
-    // to disappear entirely when it is not the casino talking: a call control that grew a key
-    // would make every existing message pay for a feature it never uses.
     [Fact]
     public void ACallControlNeverPaysForTheCasinoField()
     {
@@ -136,8 +131,6 @@ public sealed class CasinoRoomWireContractTests
         Assert.DoesNotContain("casino", json);
     }
 
-    // The per-game half rides the envelope as a JSON string, so the registry owns the room and the
-    // games own their contents: a new game kind ships without widening this shape.
     [Fact]
     public void TheBackendAttachedFrameDeserializesIntoTheNestedPayload()
     {
@@ -175,9 +168,6 @@ public sealed class CasinoRoomWireContractTests
         Assert.Null(state.Bingo);
     }
 
-    // An event states the whole room rather than a delta, so every field is the live value and
-    // nothing on the client accumulates: that is what makes a resync after a gap the only healing
-    // path this client needs.
     [Fact]
     public void TheBackendEventFrameStatesTheWholeRoom()
     {
@@ -248,9 +238,6 @@ public sealed class CasinoRoomWireContractTests
         Assert.Equal(1754784000000, directory.ServerNowUnixMs);
     }
 
-    // One shape serves the socket and the poll: GET /casino/rooms/{id} answers with exactly the
-    // snapshot casino.attached carries, so a player whose socket is dead plays the same room from
-    // the same numbers.
     [Fact]
     public void ThePolledRoomStateIsTheSameSnapshotTheSocketDelivers()
     {
@@ -269,8 +256,6 @@ public sealed class CasinoRoomWireContractTests
         Assert.False(snapshot.Attached);
     }
 
-    // The 30 second attempt backoff is shared by every read this store makes, so a flapping socket
-    // turns one lost frame into one request rather than a storm.
     [Fact]
     public void EveryFailedReadBacksOffTheSharedThirtySeconds()
     {
@@ -280,9 +265,6 @@ public sealed class CasinoRoomWireContractTests
         Assert.False(CasinoRoomsStore.CoolingDown(100_000, 130_000));
     }
 
-    // The public room moves on the socket while the private half never does, so a round that
-    // turned over or a phase that moved is the whole set of moments a player's own money can have
-    // changed hands, and each one costs exactly one read.
     [Fact]
     public void ThePersonalHalfIsRefetchedWheneverTheRoundOrThePhaseMoves()
     {
@@ -292,10 +274,6 @@ public sealed class CasinoRoomWireContractTests
         Assert.True(CasinoRoomsStore.PersonalIsStale(-1, -1, 0, CasinoRoomPhases.Open));
     }
 
-    // The staleness question is asked of the read that landed, never of the read that was asked
-    // for, so a personal read the network swallowed is still owed a retry inside the same phase.
-    // A bingo hall calls for minutes on one phase, and writing the phase off on a single lost read
-    // would leave the player watching their own numbers go by with no cards on screen.
     [Fact]
     public void APersonalReadThatNeverLandedLeavesThePhaseStale()
     {
@@ -306,9 +284,6 @@ public sealed class CasinoRoomWireContractTests
         Assert.False(CasinoRoomsStore.PersonalIsStale(7, CasinoRoomPhases.Locked, 7, CasinoRoomPhases.Locked));
     }
 
-    // One purchase id is one order. The server replays the stored purchase behind an id it has
-    // already answered, so a four card order sent under the id of a one card order is charged and
-    // dealt as one card while the composer asked for four.
     [Fact]
     public void APurchaseIdIsOnlyReusedForTheSameRoundAndTheSameCount()
     {

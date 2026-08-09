@@ -16,9 +16,6 @@ internal static class Palette
         return one > other ? (one + 0.05f) / (other + 0.05f) : (other + 0.05f) / (one + 0.05f);
     }
 
-    // Scales in linear light, so the result lands on the target luminance exactly and keeps its chromaticity.
-    // A fixed Darken factor cannot do this (yellow would sit far brighter than blue), and scaling the encoded
-    // channels only approximates it: pure green came out at 2.98:1 against white instead of the intended 3.13.
     public static Vector4 ShadeToLuminance(Vector4 color, float target)
     {
         var luminance = RelativeLuminance(color);

@@ -17,8 +17,6 @@ public sealed class WheelChoreographyTests
         -WheelChoreography.Tau * 2f - 0.7f,
     };
 
-    // The one invariant the whole cabinet rests on: whatever the rim was doing beforehand, the
-    // sweep chosen for a result brings that exact wedge under the pointer and no other.
     [Fact]
     public void EverySegmentLandsUnderThePointerFromEveryStartingAngle()
     {
@@ -78,8 +76,6 @@ public sealed class WheelChoreographyTests
         Assert.Equal(from + sweep, WheelChoreography.AngleAt(from, sweep, WheelChoreography.SpinSeconds + 9f));
     }
 
-    // Bounce free is not a matter of taste here: an overshoot would carry the pointer onto the
-    // next wedge and back, which is a near miss the house never dealt.
     [Fact]
     public void TheDecelerationOnlyEverMovesForwardAndNeverOvershoots()
     {
@@ -99,8 +95,6 @@ public sealed class WheelChoreographyTests
         Assert.Equal(target, previous, 3);
     }
 
-    // A window longer than the spin must not park the rim: elapsed below zero is the free run,
-    // and it has to meet the curve without a jump.
     [Fact]
     public void TheFreeRunBeforeTheCurveMeetsItWithoutAJump()
     {

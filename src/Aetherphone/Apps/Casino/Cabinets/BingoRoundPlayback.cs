@@ -11,15 +11,6 @@ internal enum BingoStage
     Wrapped,
 }
 
-// Two masks per card and the difference between them is the whole design. The auto mask is what
-// the room has called against what the card prints, and it is the only mask anything reads for a
-// line, a full house or a one away whisper. The stamped mask is what the player has watched land:
-// it catches up to the auto mask on its own after a beat, or immediately when a finger beats it
-// there. A tap can therefore never add a mark the room did not call, and never withhold one it
-// did, which is what makes hand daubing safe to offer beside a settlement the server owns.
-//
-// Nothing here counts a ball down on frame time. Balls are whatever the last snapshot listed, and
-// the only clock this keeps is how long the newest one has been on screen, which is presentation.
 internal sealed class BingoRoundPlayback
 {
     public const float StampDelaySeconds = 0.85f;
@@ -82,18 +73,12 @@ internal sealed class BingoRoundPlayback
         return BingoRules.IsBall(ball) && called[ball];
     }
 
-    // A room is identified by the room and its index, never by a round id: the hall turns over on
-    // its own clock whether or not this player bought in, and a player who bought nothing has no
-    // round id to compare against at all.
     internal static string RoundKeyOf(CasinoRoomSnapshotDto snapshot)
     {
         return string.Concat(snapshot.RoomId, "#",
             snapshot.RoundIndex.ToString(System.Globalization.CultureInfo.InvariantCulture));
     }
 
-    // The room publishes the calls it has made, in the order it made them, so the length is the
-    // count. Nothing here derives a call from the clock: a phone that slept through six balls
-    // catches up on the next snapshot rather than inventing the ones it missed.
     internal static int[] CalledBalls(CasinoBingoRoomStateDto? board)
     {
         return board?.Balls ?? Array.Empty<int>();
@@ -152,8 +137,6 @@ internal sealed class BingoRoundPlayback
         }
     }
 
-    // A tap only ever pulls a mark forward. The cell has to be one the room called, which is why
-    // this asks the auto mask rather than trusting the caller to have checked.
     public bool Stamp(int cardIndex, int cell)
     {
         if (cardIndex < 0 || cardIndex >= cardCount || !BingoRules.IsCell(cell))
@@ -178,8 +161,6 @@ internal sealed class BingoRoundPlayback
         ClearRound();
     }
 
-    // An empty slot reads as a card with nothing but its free centre, which is what the rules
-    // answer for a card that does not exist. Zero would claim the centre had not been given away.
     private void ClearRound()
     {
         cardCount = 0;

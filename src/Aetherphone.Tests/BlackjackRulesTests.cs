@@ -93,8 +93,6 @@ public sealed class BlackjackRulesTests
         Assert.Equal(0, BlackjackRules.BlackjackPayout(0));
     }
 
-    // The rounding is only ever a surprise if it is sprung after the money is committed, so the
-    // confirm label carries the payout beside the stake and takes both numbers to say so.
     [Fact]
     public void TheConfirmLabelHasRoomForThePayoutBesideTheStake()
     {

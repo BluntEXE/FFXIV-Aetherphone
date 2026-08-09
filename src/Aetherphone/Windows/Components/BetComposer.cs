@@ -7,11 +7,6 @@ using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
 
-// A bet is typed, never picked off a rail: any amount the table allows is reachable, and Min, Half
-// and Max are buttons that fill the field rather than chips that replace it. Every path lands in
-// Clamp, which is pure and takes the stack as a hard ceiling, so a composer can never offer to
-// stake money that is not on the table. The confirm carries the number it will spend in its own
-// label, which is why there is no second dialogue behind it.
 internal sealed class BetComposer
 {
     public const float FieldHeight = 40f;

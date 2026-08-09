@@ -5,10 +5,6 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Windows.Components;
 
-// The dealer says one thing at a time and says it plainly. The bubble springs in critically damped
-// (no bounce: this is chrome, not a game piece), holds, then fades, and a second line replaces the
-// first rather than stacking under it, because a table that talks over itself reads as noise at
-// exactly the moment the player is trying to read the board.
 internal sealed class DealerBubble
 {
     private const float HoldSeconds = 2.5f;

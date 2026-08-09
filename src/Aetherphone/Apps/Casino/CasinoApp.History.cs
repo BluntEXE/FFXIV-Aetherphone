@@ -132,8 +132,6 @@ internal sealed partial class CasinoApp
         }
     }
 
-    // Wins land loud in the accent and losses stay quiet in muted ink; the house never
-    // celebrates taking a stake.
     private string OutcomeText(CasinoRoundHistoryDto round, out Vector4 ink, out TextStyle style)
     {
         if (round.State == CasinoRoundStates.Open)
@@ -477,8 +475,6 @@ internal sealed partial class CasinoApp
         ImGui.Dummy(new Vector2(width, height + 10f * scale));
     }
 
-    // The evidence blob keeps the raw wire vocabulary on purpose: a mismatch report has to be
-    // legible to the operators regardless of the phone's language.
     internal static string BuildRoundDetailsBlob(VerifiedCasinoRound verifiedRound)
     {
         var round = verifiedRound.Round;

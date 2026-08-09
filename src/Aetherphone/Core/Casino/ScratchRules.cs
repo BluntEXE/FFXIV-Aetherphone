@@ -2,9 +2,6 @@ namespace Aetherphone.Core.Casino;
 
 internal readonly record struct ScratchPrizeRow(long Chips, int CountPerMillion);
 
-// A verbatim mirror of the backend ScratchEngine tiers and prize tables: the cabinet sells and
-// reveals cards from these numbers, so they must stay byte-identical to
-// Aethernet.Api/Services/Casino/Games/ScratchEngine.cs (pinned by ScratchRulesTests).
 internal static class ScratchRules
 {
     public const int TierCount = 3;
