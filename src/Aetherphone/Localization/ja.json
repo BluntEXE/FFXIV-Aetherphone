@@ -4391,6 +4391,7 @@
   "casino.reasonDailyCap": "今日もらえるコインはすべて受け取りました。ホイールは明日また戻ってきます。",
   "casino.reasonRuleCap": "ホイールは今のところ出せる分をすべて配りました。ほかのコイン獲得はいつもどおり続きます。",
   "casino.reasonCardsFull": "このルームのカードは4枚すべてそろっています。次のルームはまもなく開きます。",
+  "casino.reasonSoldOut": "この回に受けられる賭けはここまでです。次の回はまもなく始まります。",
   "casino.room.closesIn": "締切まで {0}",
   "casino.room.nextIn": "次まで {0}",
   "casino.bingo.inTheHall": "ホールに {0} 人",

@@ -4391,6 +4391,7 @@
   "casino.reasonDailyCap": "You have earned every coin today has to give. The wheel comes back around tomorrow.",
   "casino.reasonRuleCap": "The wheel has paid out all it can for now. Your other coin earnings carry on as normal.",
   "casino.reasonCardsFull": "That is all four cards for this room. The next one opens shortly.",
+  "casino.reasonSoldOut": "That is all the house is taking on this round. The next one opens shortly.",
   "casino.room.closesIn": "Closes in {0}",
   "casino.room.nextIn": "Next in {0}",
   "casino.bingo.inTheHall": "{0} in the hall",

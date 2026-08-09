@@ -4391,6 +4391,7 @@
   "casino.reasonDailyCap": "Ya has ganado todas las monedas que daba el día. La rueda vuelve mañana.",
   "casino.reasonRuleCap": "La rueda ya ha repartido todo lo que puede por ahora. Tus otras ganancias de monedas siguen como siempre.",
   "casino.reasonCardsFull": "Esas son las cuatro cartas de esta sala. La siguiente abre enseguida.",
+  "casino.reasonSoldOut": "Es todo lo que la casa acepta en esta ronda. La siguiente abre enseguida.",
   "casino.room.closesIn": "Cierra en {0}",
   "casino.room.nextIn": "Siguiente en {0}",
   "casino.bingo.inTheHall": "{0} en la sala",

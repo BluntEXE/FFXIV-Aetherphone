@@ -4391,6 +4391,7 @@
   "casino.reasonDailyCap": "Du hast heute schon jede Münze geholt, die zu holen war. Das Rad kommt morgen wieder.",
   "casino.reasonRuleCap": "Das Rad hat vorerst alles ausgezahlt, was es kann. Deine übrigen Münzeinnahmen laufen ganz normal weiter.",
   "casino.reasonCardsFull": "Das sind alle vier Karten für diesen Raum. Der nächste öffnet gleich.",
+  "casino.reasonSoldOut": "Mehr nimmt das Haus in dieser Runde nicht an. Die nächste öffnet gleich.",
   "casino.room.closesIn": "Schließt in {0}",
   "casino.room.nextIn": "Nächster in {0}",
   "casino.bingo.inTheHall": "{0} im Saal",

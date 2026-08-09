@@ -4391,6 +4391,7 @@
   "casino.reasonDailyCap": "你已经拿到今天能给的所有硬币了。转盘明天再来。",
   "casino.reasonRuleCap": "转盘目前能派的都派完了。你其他的硬币收入照常进行。",
   "casino.reasonCardsFull": "这一场的四张卡都在你手上了。下一场马上开始。",
+  "casino.reasonSoldOut": "这一轮庄家只收到这里。下一轮马上开始。",
   "casino.room.closesIn": "{0} 后关闭",
   "casino.room.nextIn": "{0} 后开始",
   "casino.bingo.inTheHall": "大厅里有 {0} 人",

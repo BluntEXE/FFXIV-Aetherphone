@@ -4391,6 +4391,7 @@
   "casino.reasonDailyCap": "Tu as gagné toutes les pièces que la journée avait à offrir. La roue revient demain.",
   "casino.reasonRuleCap": "La roue a versé tout ce qu'elle pouvait pour l'instant. Tes autres gains de pièces continuent normalement.",
   "casino.reasonCardsFull": "Ce sont les quatre cartes de cette salle. La prochaine ouvre bientôt.",
+  "casino.reasonSoldOut": "C'est tout ce que la maison prend sur ce tour. Le prochain ouvre bientôt.",
   "casino.room.closesIn": "Ferme dans {0}",
   "casino.room.nextIn": "Prochaine dans {0}",
   "casino.bingo.inTheHall": "{0} dans la salle",

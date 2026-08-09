@@ -32,6 +32,7 @@ internal static class CasinoReasons
     public const string DailyCap = "daily_cap";
     public const string RuleCap = "rule_cap";
     public const string CardsFull = "cards_full";
+    public const string SoldOut = "sold_out";
     public const string Full = "full";
     public const string InviteOnly = "private";
     public const string Denied = "denied";
@@ -85,6 +86,7 @@ internal static class CasinoReasons
         DailyCap,
         RuleCap,
         CardsFull,
+        SoldOut,
         Full,
         InviteOnly,
         Denied,
@@ -139,6 +141,7 @@ internal static class CasinoReasons
         [DailyCap] = L.Casino.ReasonDailyCap,
         [RuleCap] = L.Casino.ReasonRuleCap,
         [CardsFull] = L.Casino.ReasonCardsFull,
+        [SoldOut] = L.Casino.ReasonSoldOut,
         [Full] = L.Casino.ReasonFull,
         [InviteOnly] = L.Casino.ReasonInviteOnly,
         [Denied] = L.Casino.ReasonDenied,

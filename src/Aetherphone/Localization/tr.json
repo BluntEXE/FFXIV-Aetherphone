@@ -4391,6 +4391,7 @@
   "casino.reasonDailyCap": "Bugünün verebileceği tüm coinleri kazandın. Çark yarın geri geliyor.",
   "casino.reasonRuleCap": "Çark şimdilik verebileceği her şeyi verdi. Diğer coin kazançların normal şekilde devam ediyor.",
   "casino.reasonCardsFull": "Bu oda için dört kartın da elinde. Bir sonraki oda birazdan açılıyor.",
+  "casino.reasonSoldOut": "Bu turda kasanın aldığı kadarı bu. Bir sonraki tur birazdan açılıyor.",
   "casino.room.closesIn": "{0} içinde kapanıyor",
   "casino.room.nextIn": "{0} içinde sıradaki",
   "casino.bingo.inTheHall": "Salonda {0} kişi",

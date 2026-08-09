@@ -3999,6 +3999,7 @@ internal static class L
         public static readonly LocString ReasonDailyCap = new("casino.reasonDailyCap", "You have earned every coin today has to give. The wheel comes back around tomorrow.");
         public static readonly LocString ReasonRuleCap = new("casino.reasonRuleCap", "The wheel has paid out all it can for now. Your other coin earnings carry on as normal.");
         public static readonly LocString ReasonCardsFull = new("casino.reasonCardsFull", "That is all four cards for this room. The next one opens shortly.");
+        public static readonly LocString ReasonSoldOut = new("casino.reasonSoldOut", "That is all the house is taking on this round. The next one opens shortly.");
         public static readonly LocString RoomClosesIn = new("casino.room.closesIn", "Closes in {0}");
         public static readonly LocString RoomNextIn = new("casino.room.nextIn", "Next in {0}");
         public static readonly LocString BingoInTheHall = new("casino.bingo.inTheHall", "{0} in the hall");
