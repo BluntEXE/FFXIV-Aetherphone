@@ -14,6 +14,7 @@ using Aetherphone.Apps.Housing;
 using Aetherphone.Apps.Inventory;
 using Aetherphone.Apps.Jobs;
 using Aetherphone.Apps.Calculator;
+using Aetherphone.Apps.Casino;
 using Aetherphone.Apps.Maps;
 using Aetherphone.Apps.Market;
 using Aetherphone.Apps.Linkpearl;
@@ -93,6 +94,7 @@ internal static class AppRegistry
         apps.Add(new CalendarApp(services.Configuration, calendarEvents, services.Confirm));
         apps.Add(new Aetherphone.Apps.Coin.CoinApp(services.AethernetSession, services.Coins, services.CoinCatalog,
             services.Confirm));
+        apps.Add(new CasinoApp(services.AethernetSession, services.Coins));
         apps.Add(new AppStoreApp(services.Installer, apps));
         apps.Add(new HousingApp(services.Housing, services.Configuration, services.Confirm));
 

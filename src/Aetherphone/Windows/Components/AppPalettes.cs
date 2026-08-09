@@ -78,6 +78,24 @@ internal static class AppPalettes
     public static readonly AppPalette Timers = For("timers");
     public static readonly AppPalette Fishing = For("fishing");
 
+    public static readonly AppPalette Casino = new()
+    {
+        Accent = AccentRing.Emerald,
+        TitleInk = new(0.949f, 0.937f, 0.902f, 1f),
+        BodyInk = new(0.847f, 0.871f, 0.851f, 0.96f),
+        MutedInk = new(0.561f, 0.627f, 0.588f, 0.85f),
+        HeaderInk = Palette.WithAlpha(Palette.Lighten(AccentRing.Emerald, 0.60f), 0.95f),
+        HeadingInk = new(0.949f, 0.937f, 0.902f, 1f),
+        BackdropTop = new(0.043f, 0.082f, 0.071f, 1f),
+        BackdropBottom = new(0.020f, 0.031f, 0.027f, 1f),
+        BloomTop = Palette.WithAlpha(AccentRing.Emerald, 0.16f),
+        BloomBottom = Palette.WithAlpha(Palette.Darken(AccentRing.Emerald, 0.37f), 0.06f),
+        CardFill = new(0.063f, 0.102f, 0.086f, 0.92f),
+        CardStroke = GlassStroke,
+        FieldSurface = new(0.051f, 0.090f, 0.075f, 1f),
+        HoverTint = new(1f, 1f, 1f, 0.05f),
+    };
+
     public static readonly AppPalette News = Neutral(AppAccents.For("news"));
     public static readonly AppPalette Music = Neutral(AppAccents.For("music"));
     public static readonly AppPalette Calculator = Neutral(AppAccents.For("calculator"));

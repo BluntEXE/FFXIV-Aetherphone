@@ -19,6 +19,9 @@ internal static class AppIconArt
         var holeColor = ImGui.GetColorU32(hole);
         switch (id)
         {
+            case "casino":
+                DrawCasinoChip(dl, center, extent, inkColor, holeColor);
+                return true;
             case "minesweeper":
                 DrawMine(dl, center, extent, inkColor, holeColor);
                 return true;
@@ -91,6 +94,53 @@ internal static class AppIconArt
             default:
                 return false;
         }
+    }
+
+    private static void DrawCasinoChip(ImDrawListPtr drawList, Vector2 center, float extent, uint ink, uint hole)
+    {
+        var rimRadius = extent * 0.95f;
+        drawList.AddCircleFilled(center, rimRadius, ink, 48);
+        var radialHalf = extent * 0.24f;
+        var tangentialHalf = extent * 0.16f;
+        for (var notch = 0; notch < 4; notch++)
+        {
+            var angle = MathF.PI * 0.25f + notch * (MathF.PI * 0.5f);
+            var direction = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+            var perpendicular = new Vector2(-direction.Y, direction.X);
+            var notchCenter = center + direction * rimRadius;
+            Span<Vector2> quad = stackalloc Vector2[4]
+            {
+                notchCenter - direction * radialHalf - perpendicular * tangentialHalf,
+                notchCenter - direction * radialHalf + perpendicular * tangentialHalf,
+                notchCenter + direction * radialHalf + perpendicular * tangentialHalf,
+                notchCenter + direction * radialHalf - perpendicular * tangentialHalf,
+            };
+            FillConvex(drawList, hole, quad);
+        }
+
+        drawList.AddCircle(center, extent * 0.60f, hole, 40, extent * 0.10f);
+        DrawInsetSpade(drawList, center, extent * 0.34f, hole);
+    }
+
+    private static void DrawInsetSpade(ImDrawListPtr drawList, Vector2 center, float radius, uint packed)
+    {
+        var lobe = radius * 0.5f;
+        drawList.AddCircleFilled(new Vector2(center.X - lobe, center.Y + radius * 0.2f), lobe, packed, 20);
+        drawList.AddCircleFilled(new Vector2(center.X + lobe, center.Y + radius * 0.2f), lobe, packed, 20);
+        Span<Vector2> triangle = stackalloc Vector2[3]
+        {
+            new(center.X - radius * 0.98f, center.Y + radius * 0.08f),
+            new(center.X + radius * 0.98f, center.Y + radius * 0.08f), new(center.X, center.Y - radius),
+        };
+        FillConvex(drawList, packed, triangle);
+        Span<Vector2> stem = stackalloc Vector2[4]
+        {
+            new(center.X - radius * 0.12f, center.Y + radius * 0.18f),
+            new(center.X + radius * 0.12f, center.Y + radius * 0.18f),
+            new(center.X + radius * 0.26f, center.Y + radius * 0.98f),
+            new(center.X - radius * 0.26f, center.Y + radius * 0.98f),
+        };
+        FillConvex(drawList, packed, stem);
     }
 
     private static void DrawMine(ImDrawListPtr dl, Vector2 center, float extent, uint ink, uint hole)

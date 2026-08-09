@@ -25,6 +25,7 @@ internal static class AppAccents
         ["music"] = AccentRing.Green,
         ["wallet"] = AccentRing.Green,
         ["coin"] = AccentRing.Gold,
+        ["casino"] = AccentRing.Emerald,
         ["inventory"] = AccentRing.Orange,
         ["jobs"] = AccentRing.Indigo,
         ["clock"] = AccentRing.Red,

@@ -236,6 +236,7 @@ internal static class L
         public static readonly LocString Market = new("app.market", "Market");
         public static readonly LocString Wallet = new("app.wallet", "Wallet");
         public static readonly LocString Coin = new("app.coin", "Aether Coin");
+        public static readonly LocString Casino = new("app.casino", "Saucer");
         public static readonly LocString Music = new("app.music", "Music");
         public static readonly LocString Clock = new("app.clock", "Clock");
         public static readonly LocString Timers = new("app.timers", "Timers");
@@ -3684,6 +3685,26 @@ internal static class L
         public static readonly LocString AboutWhat = new("coin.aboutWhat", "A little thank-you for using the phone: check in, play, talk, and spend it on looks.");
     }
 
+    internal static class Casino
+    {
+        public static readonly LocString SignInTitle = new("casino.signInTitle", "Sign in required");
+        public static readonly LocString SignInHint = new("casino.signInHint", "Sign in to Aethernet in Settings to step onto the floor");
+        public static readonly LocString GamesHeading = new("casino.gamesHeading", "The floor");
+        public static readonly LocString CareHeading = new("casino.careHeading", "Take care");
+        public static readonly LocString GameBlackjack = new("casino.game.blackjack", "Blackjack");
+        public static readonly LocString GameHoldem = new("casino.game.holdem", "Hold'em");
+        public static readonly LocString GameSlots = new("casino.game.slots", "Slots");
+        public static readonly LocString GameScratch = new("casino.game.scratch", "Scratch");
+        public static readonly LocString GameBingo = new("casino.game.bingo", "Bingo");
+        public static readonly LocString GameWheel = new("casino.game.wheel", "Wheel");
+        public static readonly LocString GameBarkeep = new("casino.game.barkeep", "Barkeep");
+        public static readonly LocString Soon = new("casino.soon", "Soon");
+        public static readonly LocString LimitsRow = new("casino.limitsRow", "Daily loss limit");
+        public static readonly LocString LimitsRowHint = new("casino.limitsRowHint", "A cap on every night, so the fun stays fun");
+        public static readonly LocString CabinetSoonTitle = new("casino.cabinetSoonTitle", "The cabinet is on its way");
+        public static readonly LocString CabinetSoonHint = new("casino.cabinetSoonHint", "This game is still being wired up. It arrives in a coming update.");
+    }
+
     internal static class Catalogs
     {
         public static readonly LocString AccentViolet = new("catalog.accent.violet", "Violet");
@@ -4663,6 +4684,37 @@ internal static class L
         };
         public static readonly LocString YellowPagesDiscretionTitle = new("conduct.yellowpages.discretion.title", "Moderator Discretion");
         public static readonly LocString YellowPagesDiscretionBody = new("conduct.yellowpages.discretion.body", "Ads that are misleading, off-topic, or otherwise inappropriate for a public board may be removed at moderator discretion.");
+
+        public static readonly LocString CasinoTitle = new("conduct.casino.title", "Saucer House Rules");
+        public static readonly LocString CasinoIntro = new("conduct.casino.intro", "Before you sit down at a table, please read the house rules.");
+        public static readonly LocString CasinoPlayMoneyTitle = new("conduct.casino.playMoney.title", "Play Money Only");
+        public static readonly LocString CasinoPlayMoneyBody = new("conduct.casino.playMoney.body", "Aether Coin is a cosmetic currency with no real-world value. The Saucer is entertainment, the odds favor the house, and nothing here can be turned into anything real.");
+        public static readonly LocString CasinoRmtTitle = new("conduct.casino.rmt.title", "No Real-Money Trading");
+        public static readonly LocString CasinoRmtLead = new("conduct.casino.rmt.lead", "Trading play money for anything real is enforced with clawbacks and bans. Do not:");
+        public static readonly LocString[] CasinoRmtItems =
+        {
+            new("conduct.casino.rmt.1", "Buy or sell coins, chips, or seats for anything of value, gil included"),
+            new("conduct.casino.rmt.2", "Lose on purpose to move coins to another player"),
+            new("conduct.casino.rmt.3", "Advertise or broker any trade of coins or chips"),
+        };
+        public static readonly LocString CasinoOneSeatTitle = new("conduct.casino.oneSeat.title", "One Player, One Seat");
+        public static readonly LocString CasinoOneSeatLead = new("conduct.casino.oneSeat.lead", "Every seat is one person playing their own hand. Do not:");
+        public static readonly LocString[] CasinoOneSeatItems =
+        {
+            new("conduct.casino.oneSeat.1", "Share a seat or play someone else's hand"),
+            new("conduct.casino.oneSeat.2", "Sit more than one of your characters at the same table"),
+            new("conduct.casino.oneSeat.3", "Collude or soft-play with friends or alts; suspicious tables are logged and reviewed"),
+        };
+        public static readonly LocString CasinoMannersTitle = new("conduct.casino.manners.title", "Table Manners");
+        public static readonly LocString CasinoMannersLead = new("conduct.casino.manners.lead", "A good table is a friendly one:");
+        public static readonly LocString[] CasinoMannersItems =
+        {
+            new("conduct.casino.manners.1", "Be patient with new players"),
+            new("conduct.casino.manners.2", "Nobody owes you a fast turn"),
+            new("conduct.casino.manners.3", "Never needle someone over a loss"),
+        };
+        public static readonly LocString CasinoSelfCareTitle = new("conduct.casino.selfCare.title", "Look After Yourself");
+        public static readonly LocString CasinoSelfCareBody = new("conduct.casino.selfCare.body", "Limits and the session timer exist for you. Take breaks, set your own pace, and remember the felt will be here tomorrow.");
     }
 
     internal static class Health
