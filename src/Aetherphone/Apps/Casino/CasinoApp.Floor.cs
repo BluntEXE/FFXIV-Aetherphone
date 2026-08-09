@@ -20,12 +20,14 @@ internal sealed partial class CasinoApp
         public readonly string GameId;
         public readonly LocString Name;
         public readonly bool Playable;
+        public readonly string RoomId;
 
-        public FloorTileDefinition(string gameId, LocString name, bool playable)
+        public FloorTileDefinition(string gameId, LocString name, bool playable, string roomId = "")
         {
             GameId = gameId;
             Name = name;
             Playable = playable;
+            RoomId = roomId;
         }
     }
 
@@ -36,7 +38,7 @@ internal sealed partial class CasinoApp
         new(CasinoGames.Scratch, L.Casino.GameScratch, true),
         new(CasinoGames.Barkeep, L.Casino.GameBarkeep, true),
         new(CasinoGames.Bingo, L.Casino.GameBingo, false),
-        new(CasinoGames.Wheel, L.Casino.GameWheel, false),
+        new(CasinoGames.Wheel, L.Casino.GameWheel, true, Core.Casino.CasinoRoomIds.WheelFloor),
     };
 
     private void DrawFloor(Rect body)
@@ -150,8 +152,19 @@ internal sealed partial class CasinoApp
 
         if (!definition.Playable)
         {
-            DrawSoonChip(drawList, tile, scale);
+            DrawCornerChip(drawList, tile, Loc.T(L.Casino.Soon), ui.MutedInk, scale);
             return;
+        }
+
+        if (definition.RoomId.Length > 0)
+        {
+            var occupancy = casinoRooms.OccupancyOf(definition.RoomId);
+            if (occupancy > 0)
+            {
+                DrawCornerChip(drawList, tile,
+                    Loc.T(L.Casino.WheelAtTheRail, Apps.Games.Framework.GameNumber.Label(occupancy)), ui.Accent,
+                    scale);
+            }
         }
 
         if (UiInteract.Click(tile.Min, tile.Max, hovered))
@@ -160,9 +173,8 @@ internal sealed partial class CasinoApp
         }
     }
 
-    private void DrawSoonChip(ImDrawListPtr drawList, Rect tile, float scale)
+    private void DrawCornerChip(ImDrawListPtr drawList, Rect tile, string label, Vector4 ink, float scale)
     {
-        var label = Loc.T(L.Casino.Soon);
         var labelSize = Typography.Measure(label, TextStyles.Caption1);
         var horizontalPad = 7f * scale;
         var chipHeight = labelSize.Y + 5f * scale;
@@ -171,7 +183,7 @@ internal sealed partial class CasinoApp
         Squircle.Fill(drawList, chipMin, chipMax, chipHeight * 0.5f, ImGui.GetColorU32(ui.FieldSurface));
         Squircle.Stroke(drawList, chipMin, chipMax, chipHeight * 0.5f,
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.30f)), 1f * scale);
-        Typography.DrawCentered(drawList, (chipMin + chipMax) * 0.5f, label, ui.MutedInk, TextStyles.Caption1);
+        Typography.DrawCentered(drawList, (chipMin + chipMax) * 0.5f, label, ink, TextStyles.Caption1);
     }
 
     private void DrawSittingResumeCard(Core.Aethernet.Contracts.CasinoSittingDto sitting, float scale)

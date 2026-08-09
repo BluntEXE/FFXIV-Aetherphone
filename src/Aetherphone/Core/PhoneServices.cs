@@ -262,7 +262,7 @@ internal sealed class PhoneServices : IDisposable
             accountState, framework);
         var moderationArchive = new ModerationNoticeArchive(aethernetSession, aethernet.Account);
         var safetyLauncher = new SafetyLauncher();
-        var casinoRooms = new Casino.CasinoRoomsStore(aethernetSession, casinoApi.Casino, visibility,
+        var casinoRooms = new Casino.CasinoRoomsStore(aethernetSession, casinoApi.Casino, casino, visibility,
             realtimeSignals);
         var musters = new MusterStore(aethernetSession, aethernet.Musters, notifications, configuration,
             visibility, realtimeSignals, installer.Gate(MusterStore.AppId));

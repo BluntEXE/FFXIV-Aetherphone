@@ -258,6 +258,7 @@ internal sealed class CasinoRoomSession
             EntryCount = change.EntryCount ?? snapshot.EntryCount,
             StakeTotal = change.StakeTotal ?? snapshot.StakeTotal,
             Numbers = MergedNumbers(snapshot.Numbers, change.Numbers, roundChanged),
+            Spots = ReplacedSpots(snapshot.Spots, change.Spots, roundChanged),
         };
 
         // Entries belong to the round that took the money. Carrying them past a round boundary
@@ -290,6 +291,20 @@ internal sealed class CasinoRoomSession
         held.CopyTo(merged, 0);
         drawn.CopyTo(merged, held.Length);
         return merged;
+    }
+
+    // A spot row is a total the server keeps, not a draw the room accumulates, so a present board
+    // replaces the held one and an absent board leaves it alone. The round boundary still clears
+    // it: last round's pot painted under this round's countdown reads as money already down.
+    internal static CasinoRoomSpotDto[]? ReplacedSpots(CasinoRoomSpotDto[]? held, CasinoRoomSpotDto[]? fresh,
+        bool roundChanged)
+    {
+        if (fresh is not null)
+        {
+            return fresh;
+        }
+
+        return roundChanged ? null : held;
     }
 
     internal static long SmoothedSkew(long held, long sample)

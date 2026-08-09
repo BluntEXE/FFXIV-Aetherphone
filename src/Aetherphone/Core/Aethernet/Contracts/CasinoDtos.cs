@@ -157,6 +157,14 @@ internal sealed record CasinoRoomDirectoryDto(
     CasinoRoomCardDto[]? Rooms = null,
     long ServerNowUnixMs = 0);
 
+// One row per bet spot, carrying the whole room's money on it. Occupancy is half the game at a
+// communal wheel, so the totals ride the public snapshot instead of hanging off a private
+// payload: everyone at the rail reads the same board.
+internal sealed record CasinoRoomSpotDto(
+    int Spot = 0,
+    int Bettors = 0,
+    long Amount = 0);
+
 internal sealed record CasinoRoomSnapshotDto(
     string RoomId = "",
     string GameKind = "",
@@ -169,11 +177,16 @@ internal sealed record CasinoRoomSnapshotDto(
     long StakeTotal = 0,
     long MinStake = 0,
     long MaxStake = 0,
-    int[]? Numbers = null);
+    int[]? Numbers = null,
+    CasinoRoomSpotDto[]? Spots = null);
 
 // A room event states only what moved, so every field is nullable and an absent one means the
 // held snapshot already has the truth. Widening a value type to zero here would silently wipe
 // the pot or the deadline every time the server broadcast a player count.
+//
+// Spots are the one field that does not accumulate the way Numbers does: a spot row is a running
+// total rather than a draw, so a present Spots array replaces the held board outright. Five rows
+// resend for less than a delta costs to reconcile, and a total that merged would double itself.
 internal sealed record CasinoRoomEventDto(
     int? Phase = null,
     string? RoundId = null,
@@ -182,6 +195,7 @@ internal sealed record CasinoRoomEventDto(
     int? EntryCount = null,
     long? StakeTotal = null,
     int[]? Numbers = null,
+    CasinoRoomSpotDto[]? Spots = null,
     string? Reason = null);
 
 internal sealed record CasinoRoomEntryDto(
@@ -205,3 +219,24 @@ internal sealed record CasinoRoomStateDto(
     long ServerNowUnixMs = 0,
     CasinoRoomSnapshotDto? Snapshot = null,
     CasinoRoomPrivateDto? Private = null);
+
+// The stake is the money path and it never touches the socket. RoundId is sent so a bet composed
+// against a round that closed while the request was in flight is refused by the server rather
+// than landing on the next one, and ClientEntryId makes the retry of a lost response free: the
+// same id is the same bet, never a second one.
+internal sealed record CasinoRoomStakeRequest(
+    string RoomId,
+    string RoundId,
+    string ClientEntryId,
+    int Target,
+    long Amount);
+
+internal sealed record CasinoRoomStakeDto(
+    bool Granted = false,
+    string Reason = "",
+    string RoundId = "",
+    int Target = 0,
+    long Amount = 0,
+    long Staked = 0,
+    long Stack = 0,
+    CasinoRoomSpotDto[]? Spots = null);

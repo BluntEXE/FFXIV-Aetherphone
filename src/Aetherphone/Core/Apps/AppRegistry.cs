@@ -95,7 +95,7 @@ internal static class AppRegistry
         apps.Add(new Aetherphone.Apps.Coin.CoinApp(services.AethernetSession, services.Coins, services.CoinCatalog,
             services.Confirm));
         apps.Add(new CasinoApp(services.AethernetSession, services.Coins, services.Casino, services.CasinoPlay,
-            services.CasinoHistory, services.GameStats, services.Confirm));
+            services.CasinoHistory, services.CasinoRooms, services.GameStats, services.Confirm));
         apps.Add(new AppStoreApp(services.Installer, apps));
         apps.Add(new HousingApp(services.Housing, services.Configuration, services.Confirm));
 

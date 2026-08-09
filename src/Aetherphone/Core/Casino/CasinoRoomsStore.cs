@@ -21,27 +21,37 @@ internal sealed class CasinoRoomsStore : IDisposable
 
     private readonly AethernetSession session;
     private readonly CasinoClient casino;
+    private readonly CasinoStore chips;
     private readonly RealtimeSignalBus signals;
     private readonly PollCadence directoryCadence;
     private readonly PollCadence roomCadence;
     private readonly CasinoRoomSession room;
     private readonly StoreWork work = new("CasinoRooms");
+    private readonly object stakeGate = new();
 
     private volatile CasinoRoomCardDto[] rooms = Array.Empty<CasinoRoomCardDto>();
     private volatile bool loadingRooms;
     private volatile bool loadedRooms;
+    private volatile bool stakeInFlight;
+    private CasinoRoomStakeDto? stakeResult;
+    private string unansweredStakeId = string.Empty;
+    private string unansweredStakeRoundId = string.Empty;
+    private int unansweredStakeTarget = -1;
+    private long unansweredStakeAmount;
     private int roomsFailed;
+    private int stakeFailed;
     private int fetchingRooms;
     private int fetchingRoomState;
     private long roomsAttemptedAtTick;
     private long roomAttemptedAtTick;
     private string? lastAccountId;
 
-    public CasinoRoomsStore(AethernetSession session, CasinoClient casino, PhoneVisibility visibility,
-        RealtimeSignalBus signals)
+    public CasinoRoomsStore(AethernetSession session, CasinoClient casino, CasinoStore chips,
+        PhoneVisibility visibility, RealtimeSignalBus signals)
     {
         this.session = session;
         this.casino = casino;
+        this.chips = chips;
         this.signals = signals;
         directoryCadence = new PollCadence(visibility, ForegroundPollInterval, BackgroundPollInterval);
         roomCadence = new PollCadence(visibility, ForegroundRoomPollInterval, BackgroundRoomPollInterval);
@@ -60,9 +70,146 @@ internal sealed class CasinoRoomsStore : IDisposable
 
     public bool LoadedRooms => loadedRooms;
 
+    public bool StakeInFlight => stakeInFlight;
+
     public bool TakeRoomsFailure()
     {
         return Interlocked.Exchange(ref roomsFailed, 0) != 0;
+    }
+
+    public CasinoRoomStakeDto? TakeStakeResult()
+    {
+        return Interlocked.Exchange(ref stakeResult, null);
+    }
+
+    public bool TakeStakeFailure()
+    {
+        return Interlocked.Exchange(ref stakeFailed, 0) != 0;
+    }
+
+    public int OccupancyOf(string roomId)
+    {
+        var current = room.State?.Snapshot;
+        if (current is not null && string.Equals(current.RoomId, roomId, StringComparison.Ordinal))
+        {
+            return current.PlayerCount;
+        }
+
+        var directory = rooms;
+        for (var index = 0; index < directory.Length; index++)
+        {
+            if (string.Equals(directory[index].RoomId, roomId, StringComparison.Ordinal))
+            {
+                return directory[index].PlayerCount;
+            }
+        }
+
+        return 0;
+    }
+
+    // A communal stake has no replay-before-staking rule to lean on: the round it belongs to
+    // closes on the server clock whether or not this client ever heard back, so a lost response
+    // is healed by the next snapshot rather than by re-POSTing blind. The one thing that must
+    // not happen is charging twice for one tap, so an attempt whose response never arrived keeps
+    // its entry id and the next identical tap reuses it. Any answer at all retires the id.
+    public void PlaceStake(int target, long amount)
+    {
+        var roomId = room.RoomId;
+        var snapshot = room.State?.Snapshot;
+        if (stakeInFlight || !session.IsSignedIn || roomId.Length == 0 || snapshot is null)
+        {
+            return;
+        }
+
+        if (!WheelRules.IsSpot(target) || !WheelRules.IsStakeInRange(amount))
+        {
+            return;
+        }
+
+        var roundId = snapshot.RoundId;
+        if (roundId.Length == 0)
+        {
+            return;
+        }
+
+        var sittingId = chips.State?.Sitting?.Id ?? string.Empty;
+        string entryId;
+        lock (stakeGate)
+        {
+            entryId = ReusableStakeId(roundId, target, amount);
+            if (entryId.Length == 0)
+            {
+                entryId = Guid.NewGuid().ToString("N");
+            }
+
+            unansweredStakeId = entryId;
+            unansweredStakeRoundId = roundId;
+            unansweredStakeTarget = target;
+            unansweredStakeAmount = amount;
+        }
+
+        stakeInFlight = true;
+        work.Run("room stake", async token =>
+        {
+            var result = await casino
+                .StakeRoomAsync(roomId, roundId, entryId, target, amount, token)
+                .ConfigureAwait(false);
+            if (result is null)
+            {
+                Interlocked.Exchange(ref stakeFailed, 1);
+                return;
+            }
+
+            ForgetUnansweredStake(entryId);
+            Interlocked.Exchange(ref stakeResult, result);
+            if (!result.Granted)
+            {
+                chips.RefreshNow();
+                return;
+            }
+
+            if (sittingId.Length > 0)
+            {
+                chips.AbsorbStack(sittingId, result.Stack);
+            }
+
+            // The board a bet just moved has to come back authoritatively rather than be patched
+            // in: a locally folded total carries no sequence, so the next room event would either
+            // overwrite it or stack on top of it. One read per accepted bet buys that certainty,
+            // and it is the only way a player with a quiet socket watches their own chips land.
+            Interlocked.Exchange(ref roomAttemptedAtTick, 0);
+            roomCadence.Reset();
+            RefreshRoomState();
+        }, () => stakeInFlight = false);
+    }
+
+    private string ReusableStakeId(string roundId, int target, long amount)
+    {
+        if (unansweredStakeId.Length == 0
+            || unansweredStakeTarget != target
+            || unansweredStakeAmount != amount
+            || !string.Equals(unansweredStakeRoundId, roundId, StringComparison.Ordinal))
+        {
+            return string.Empty;
+        }
+
+        return unansweredStakeId;
+    }
+
+    private void ForgetUnansweredStake(string entryId)
+    {
+        lock (stakeGate)
+        {
+            if (!string.Equals(unansweredStakeId, entryId, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            unansweredStakeId = string.Empty;
+            unansweredStakeRoundId = string.Empty;
+            unansweredStakeTarget = -1;
+            unansweredStakeAmount = 0;
+        }
     }
 
     public void EnsureFresh()
@@ -169,6 +316,9 @@ internal sealed class CasinoRoomsStore : IDisposable
         room.Reset();
         rooms = Array.Empty<CasinoRoomCardDto>();
         loadedRooms = false;
+        ForgetUnansweredStake(unansweredStakeId);
+        Interlocked.Exchange(ref stakeResult, null);
+        Interlocked.Exchange(ref stakeFailed, 0);
         Interlocked.Exchange(ref roomsFailed, 0);
         Interlocked.Exchange(ref roomsAttemptedAtTick, 0);
         Interlocked.Exchange(ref roomAttemptedAtTick, 0);

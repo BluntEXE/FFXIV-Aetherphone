@@ -22,6 +22,11 @@ internal sealed class CasinoClient
         return string.Concat(RoomsPath, "/", Uri.EscapeDataString(roomId));
     }
 
+    internal static string RoomStakePath(string roomId)
+    {
+        return string.Concat(RoomPath(roomId), "/stake");
+    }
+
     internal static string VerifyRoundPath(string roundId)
     {
         return string.Concat("/casino/rounds/", roundId, "/verify");
@@ -129,5 +134,14 @@ internal sealed class CasinoClient
     public Task<CasinoRoomStateDto?> RoomStateAsync(string roomId, CancellationToken token)
     {
         return net.GetAsync(RoomPath(roomId), AethernetJsonContext.Default.CasinoRoomStateDto, token);
+    }
+
+    public Task<CasinoRoomStakeDto?> StakeRoomAsync(string roomId, string roundId, string clientEntryId,
+        int target, long amount, CancellationToken token)
+    {
+        return net.PostAsync(RoomStakePath(roomId),
+            new CasinoRoomStakeRequest(roomId, roundId, clientEntryId, target, amount),
+            AethernetJsonContext.Default.CasinoRoomStakeRequest,
+            AethernetJsonContext.Default.CasinoRoomStakeDto, token);
     }
 }

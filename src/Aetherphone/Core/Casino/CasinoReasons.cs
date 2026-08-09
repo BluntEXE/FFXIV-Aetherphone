@@ -18,6 +18,14 @@ internal static class CasinoReasons
     public const string TableClosed = "table_closed";
     public const string RoundOpen = "round_open";
     public const string CapReached = "cap_reached";
+    public const string Closed = "closed";
+    public const string Locked = "locked";
+    public const string NotRunning = "not_running";
+    public const string StakeInvalid = "stake_invalid";
+    public const string Pacing = "pacing";
+    public const string Unavailable = "unavailable";
+    public const string Ended = "ended";
+    public const string Restarting = "restarting";
     public const string Unreachable = "unreachable";
 
     public static readonly string[] All =
@@ -35,6 +43,14 @@ internal static class CasinoReasons
         TableClosed,
         RoundOpen,
         CapReached,
+        Closed,
+        Locked,
+        NotRunning,
+        StakeInvalid,
+        Pacing,
+        Unavailable,
+        Ended,
+        Restarting,
         Unreachable,
     };
 
@@ -53,6 +69,14 @@ internal static class CasinoReasons
         [TableClosed] = L.Casino.ReasonTableClosed,
         [RoundOpen] = L.Casino.ReasonRoundOpen,
         [CapReached] = L.Casino.ReasonCapReached,
+        [Closed] = L.Casino.ReasonClosed,
+        [Locked] = L.Casino.ReasonLocked,
+        [NotRunning] = L.Casino.ReasonNotRunning,
+        [StakeInvalid] = L.Casino.ReasonStakeInvalid,
+        [Pacing] = L.Casino.ReasonPacing,
+        [Unavailable] = L.Casino.ReasonUnavailable,
+        [Ended] = L.Casino.ReasonEnded,
+        [Restarting] = L.Casino.ReasonRestarting,
         [Unreachable] = L.Casino.ReasonUnreachable,
     }.ToFrozenDictionary(StringComparer.Ordinal);
 

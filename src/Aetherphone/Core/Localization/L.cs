@@ -3876,6 +3876,37 @@ internal static class L
         public static readonly LocString FairnessChainNote = new("casino.fairness.chainNote", "Every round also carries the sealed fingerprint of the round after it, so the chain never breaks.");
         public static readonly LocString FairnessRecentHeading = new("casino.fairness.recentHeading", "Check a round");
         public static readonly LocString FairnessNoRounds = new("casino.fairness.noRounds", "Nothing to check yet. Settled rounds land here.");
+        public static readonly LocString ReasonClosed = new("casino.reasonClosed", "Bets are closed for this spin. The next one opens in a moment.");
+        public static readonly LocString ReasonLocked = new("casino.reasonLocked", "The wheel is already turning. Your next bet rides the following spin.");
+        public static readonly LocString ReasonNotRunning = new("casino.reasonNotRunning", "This table is not running right now. Give it a moment.");
+        public static readonly LocString ReasonStakeInvalid = new("casino.reasonStakeInvalid", "That amount does not fit this spot. Try one inside the range.");
+        public static readonly LocString ReasonPacing = new("casino.reasonPacing", "That is a lot of bets for one spin. Take a breath and try again.");
+        public static readonly LocString ReasonUnavailable = new("casino.reasonUnavailable", "That table is not open right now. The rest of the floor is.");
+        public static readonly LocString ReasonEnded = new("casino.reasonEnded", "That table has closed for the night.");
+        public static readonly LocString ReasonRestarting = new("casino.reasonRestarting", "The floor is restarting. Step back in shortly.");
+        public static readonly LocString WheelMultiplier = new("casino.wheel.multiplier", "{0}x");
+        public static readonly LocString WheelBetsCloseIn = new("casino.wheel.betsCloseIn", "Bets close in {0}");
+        public static readonly LocString WheelBetsClosed = new("casino.wheel.betsClosed", "No more bets");
+        public static readonly LocString WheelSpinning = new("casino.wheel.spinning", "The wheel is turning");
+        public static readonly LocString WheelLanded = new("casino.wheel.landed", "Landed on {0}");
+        public static readonly LocString WheelYouWon = new("casino.wheel.youWon", "You won {0}");
+        public static readonly LocString WheelBettors = new("casino.wheel.bettors", "{0} in");
+        public static readonly LocString WheelYours = new("casino.wheel.yours", "You {0}");
+        public static readonly LocString WheelAtTheRail = new("casino.wheel.atTheRail", "{0} at the rail");
+        public static readonly LocString WheelBetHeading = new("casino.wheel.betHeading", "Your bet");
+        public static readonly LocString WheelBetBounds = new("casino.wheel.betBounds", "{0} to {1}");
+        public static readonly LocString WheelPlaceOn = new("casino.wheel.placeOn", "Place {0} on {1}");
+        public static readonly LocString WheelPlace = new("casino.wheel.place", "Place a bet");
+        public static readonly LocString WheelOnThisSpin = new("casino.wheel.onThisSpin", "{0} down this spin");
+        public static readonly LocString WheelSpinCap = new("casino.wheel.spinCap", "Up to {0} a spin");
+        public static readonly LocString WheelSpinFull = new("casino.wheel.spinFull", "That is the whole {0} for this spin. The next one opens in a moment.");
+        public static readonly LocString WheelFinalTitle = new("casino.wheel.finalTitle", "Bets are final");
+        public static readonly LocString WheelFinalBody = new("casino.wheel.finalBody", "Once a bet is down it stays down. There is no taking one back, so pick your spot before you tap.");
+        public static readonly LocString WheelFinalShort = new("casino.wheel.finalShort", "Bets are final.");
+        public static readonly LocString WheelReconnecting = new("casino.wheel.reconnecting", "Reconnecting");
+        public static readonly LocString WheelClosedTitle = new("casino.wheel.closedTitle", "This wheel has stopped");
+        public static readonly LocString WheelClosedHint = new("casino.wheel.closedHint", "The table is not running right now. The rest of the floor is still open.");
+        public static readonly LocString WheelBackToFloor = new("casino.wheel.backToFloor", "Back to the floor");
     }
 
     internal static class Catalogs
