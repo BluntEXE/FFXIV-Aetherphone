@@ -187,7 +187,7 @@ internal sealed class BlackjackTable
         var tapped = DrawSeats(drawList, ui, board, felt, turnRemaining, scale);
         if (BlackjackRules.IsSeat(tapped) && seatViews[tapped].Phase == SeatPhase.Empty)
         {
-            TapEmptySeat(tapped, state, snapshot.Phase);
+            TapEmptySeat(tapped, state, board, snapshot.Phase);
         }
 
         SpeakForPhase(snapshot.Phase, board);
@@ -300,19 +300,32 @@ internal sealed class BlackjackTable
         return y + height;
     }
 
-    private void TapEmptySeat(int seatIndex, CasinoStateDto state, int phase)
+    private void TapEmptySeat(int seatIndex, CasinoStateDto state, CasinoBlackjackRoomStateDto board,
+        int phase)
     {
-        var sitting = CasinoWire.SittingFor(state, CasinoWire.BlackjackKind);
-        var bought = sitting is not null
-            && string.Equals(sitting.GameKind, CasinoWire.BlackjackKind, StringComparison.Ordinal);
-        if (!bought)
+        var rack = CasinoWire.SittingFor(state, CasinoWire.BlackjackKind);
+        if (rack is not null)
+        {
+            inlineReason = string.Empty;
+            seatFlow.Sit(roomId, seatIndex, rack.Stack, phase);
+            return;
+        }
+
+        var buyIn = RackFor(state, board);
+        if (buyIn <= 0)
         {
             openCashier();
             return;
         }
 
         inlineReason = string.Empty;
-        seatFlow.Sit(roomId, seatIndex, sitting!.Stack, phase);
+        seatFlow.Sit(roomId, seatIndex, buyIn, phase);
+    }
+
+    private static long RackFor(CasinoStateDto state, CasinoBlackjackRoomStateDto board)
+    {
+        return BlackjackRules.RackFor(board.MaxBet, state.MinBuyIn, state.MaxBuyIn,
+            state.Sitting?.Stack ?? 0);
     }
 
     private bool AwayAtMySeat(CasinoBlackjackRoomStateDto board)
@@ -587,8 +600,7 @@ internal sealed class BlackjackTable
     {
         y = DrawBanner(drawList, ui, state, board, snapshot, phaseRemaining, delta, left, y, width, scale);
         var sitting = CasinoWire.SittingFor(state, CasinoWire.BlackjackKind);
-        var bought = sitting is not null
-            && string.Equals(sitting.GameKind, CasinoWire.BlackjackKind, StringComparison.Ordinal);
+        var bought = sitting is not null;
 
         if (CasinoSeatMachine.ShowsTakeOver(seatFlow.Stage))
         {
@@ -604,7 +616,7 @@ internal sealed class BlackjackTable
         var onBoard = BlackjackRules.IsSeat(board.MySeat);
         if (!bought || (!onBoard && !CasinoSeatMachine.Holds(seatFlow.Stage)))
         {
-            DrawSitAction(ui, bought, snapshot.Phase, left, y, width, scale);
+            DrawSitAction(ui, state, board, bought, snapshot.Phase, left, y, width, scale);
             return;
         }
 
@@ -789,9 +801,13 @@ internal sealed class BlackjackTable
         };
     }
 
-    private void DrawSitAction(AppSkin ui, bool bought, int phase, float left, float y, float width, float scale)
+    private void DrawSitAction(AppSkin ui, CasinoStateDto state, CasinoBlackjackRoomStateDto board, bool bought,
+        int phase, float left, float y, float width, float scale)
     {
-        if (!bought)
+        var buyIn = bought
+            ? CasinoWire.SittingFor(state, CasinoWire.BlackjackKind)?.Stack ?? 0
+            : RackFor(state, board);
+        if (!bought && buyIn <= 0)
         {
             if (DrawSingleAction(ui, Loc.T(L.Casino.BlackjackTakeSeat), true, left, y, width, scale))
             {
@@ -806,8 +822,7 @@ internal sealed class BlackjackTable
         if (DrawSingleAction(ui, label, seatIndex >= 0 && !seatFlow.Busy, left, y, width, scale))
         {
             inlineReason = string.Empty;
-            seatFlow.Sit(roomId, seatIndex,
-                CasinoWire.SittingFor(chips.State, CasinoWire.BlackjackKind)?.Stack ?? 0, phase);
+            seatFlow.Sit(roomId, seatIndex, buyIn, phase);
         }
     }
 

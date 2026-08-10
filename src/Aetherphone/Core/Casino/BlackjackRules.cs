@@ -60,6 +60,19 @@ internal static class BlackjackRules
 
     public const int ActionSplit = 8;
 
+    private const long RackHands = 20;
+
+    public static long RackFor(long tableMaxBet, long minBuyIn, long maxBuyIn, long bankroll)
+    {
+        if (bankroll < minBuyIn)
+        {
+            return 0;
+        }
+
+        var suggested = Math.Clamp(tableMaxBet * RackHands, minBuyIn, maxBuyIn);
+        return Math.Min(suggested, bankroll);
+    }
+
     public static bool Allows(int actionsMask, int action)
     {
         return action != 0 && (actionsMask & action) == action;

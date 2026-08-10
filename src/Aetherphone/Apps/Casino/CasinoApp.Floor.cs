@@ -316,8 +316,7 @@ internal sealed partial class CasinoApp
         var origin = ImGui.GetCursorScreenPos();
         var drawList = ImGui.GetWindowDrawList();
         var inset = 14f * scale;
-        var label = Loc.T(L.Casino.ChipsAt, sitting.Stack.ToString("N0", Loc.Culture),
-            Loc.T(GameName(ClientGameId(sitting.GameKind))));
+        var label = Loc.T(L.Casino.ChipsOnHand, sitting.Stack.ToString("N0", Loc.Culture));
         var labelSize = Typography.Measure(label, TextStyles.SubheadlineEmphasized);
         var sessionLine = SessionElapsedLine();
         var sessionSize = sessionLine.Length > 0
@@ -344,14 +343,14 @@ internal sealed partial class CasinoApp
         var pillTop = min.Y + 12f * scale + labelSize.Y + 10f * scale;
         var pillGap = 10f * scale;
         var pillWidth = (width - inset * 2f - pillGap) * 0.5f;
-        var resumeRect = new Rect(new Vector2(min.X + inset, pillTop),
+        var topUpRect = new Rect(new Vector2(min.X + inset, pillTop),
             new Vector2(min.X + inset + pillWidth, pillTop + pillHeight));
-        if (AppSkin.PillButton(resumeRect, Loc.T(L.Casino.ResumeAction), true, !casino.MovingMoney, theme))
+        if (AppSkin.PillButton(topUpRect, Loc.T(L.Casino.TopUp), true, !casino.MovingMoney, theme))
         {
-            OpenGame(ClientGameId(sitting.GameKind));
+            cashier.Open();
         }
 
-        var cashOutRect = new Rect(new Vector2(resumeRect.Max.X + pillGap, pillTop),
+        var cashOutRect = new Rect(new Vector2(topUpRect.Max.X + pillGap, pillTop),
             new Vector2(min.X + inset + pillWidth * 2f + pillGap, pillTop + pillHeight));
         if (AppSkin.PillButton(cashOutRect, Loc.T(L.Casino.CashOut), false, !casino.MovingMoney, theme))
         {

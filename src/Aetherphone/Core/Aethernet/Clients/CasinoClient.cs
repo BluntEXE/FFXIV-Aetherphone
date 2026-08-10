@@ -87,10 +87,10 @@ internal sealed class CasinoClient
     }
 
     public Task<CasinoSittingResultDto?> OpenSittingAsync(string clientSittingId, string clientActionId,
-        string gameKind, long amount, CancellationToken token)
+        long amount, CancellationToken token)
     {
         return net.PostAsync(OpenSittingPath,
-            new CasinoOpenSittingRequest(clientSittingId, clientActionId, gameKind, SoloTableKind, amount),
+            new CasinoOpenSittingRequest(clientSittingId, clientActionId, SoloTableKind, amount),
             AethernetJsonContext.Default.CasinoOpenSittingRequest,
             AethernetJsonContext.Default.CasinoSittingResultDto, token);
     }

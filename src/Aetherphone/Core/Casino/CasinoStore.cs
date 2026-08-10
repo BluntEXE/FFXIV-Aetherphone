@@ -120,9 +120,9 @@ internal sealed class CasinoStore : IDisposable
         return Interlocked.Exchange(ref limitsSaveFailed, 0) != 0;
     }
 
-    public void OpenSitting(string gameKind, long amount)
+    public void OpenSitting(long amount)
     {
-        if (MovingMoney || !session.IsSignedIn || amount <= 0 || gameKind.Length == 0)
+        if (MovingMoney || !session.IsSignedIn || amount <= 0)
         {
             return;
         }
@@ -133,11 +133,13 @@ internal sealed class CasinoStore : IDisposable
         RememberPendingSitting(clientSittingId);
         work.Run("open sitting", async token =>
         {
-            var result = await casino.OpenSittingAsync(clientSittingId, clientActionId, gameKind, amount, token)
+            var result = await casino.OpenSittingAsync(clientSittingId, clientActionId, amount, token)
                 .ConfigureAwait(false);
             AbsorbMoneyMove(result, ref sittingResult);
         }, () => openingSitting = false);
     }
+
+    public bool HasChips => (state?.Sitting?.Stack ?? 0) > 0;
 
     public void TopUp(long amount)
     {

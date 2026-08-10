@@ -30,7 +30,6 @@ internal sealed record CasinoStateDto(
 internal sealed record CasinoOpenSittingRequest(
     string ClientSittingId,
     string ClientActionId,
-    string GameKind,
     int TableKind,
     long Amount);
 

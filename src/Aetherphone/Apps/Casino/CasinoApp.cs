@@ -19,16 +19,6 @@ internal sealed partial class CasinoApp : IPhoneApp
     public string Glyph => "Sa";
     public int BadgeCount => 0;
 
-    private static readonly CashierDrawer.GameOption[] PlayableGames =
-    {
-        new(CasinoGames.Blackjack, L.Casino.GameBlackjack),
-        new(CasinoGames.Slots, L.Casino.GameSlots),
-        new(CasinoGames.Scratch, L.Casino.GameScratch),
-        new(CasinoGames.Barkeep, L.Casino.GameBarkeep),
-        new(CasinoGames.Wheel, L.Casino.GameWheel),
-        new(CasinoGames.Bingo, L.Casino.GameBingo),
-    };
-
     private readonly AethernetSession session;
     private readonly CoinStore coins;
     private readonly Core.Casino.CasinoStore casino;
@@ -61,6 +51,7 @@ internal sealed partial class CasinoApp : IPhoneApp
     private INavigator navigation = null!;
     private Rect screenArea;
     private string pendingTableId = string.Empty;
+    private bool greetedWithCashier;
 
     public CasinoApp(AethernetSession session, CoinStore coins, Core.Casino.CasinoStore casino,
         Core.Casino.CasinoPlayStore casinoPlay, Core.Casino.CasinoHistoryStore history,
@@ -118,6 +109,7 @@ internal sealed partial class CasinoApp : IPhoneApp
         casinoRooms.RefreshNow();
         casinoTables.RefreshNow();
         casinoPlay.RecoverPendingRound();
+        greetedWithCashier = false;
         ConsumeLaunch();
     }
 
@@ -185,6 +177,7 @@ internal sealed partial class CasinoApp : IPhoneApp
         casinoRooms.EnsureFresh();
         casinoTables.EnsureFresh();
         ConsumeTableAnswers();
+        GreetWithCashier();
         screenArea = context.Content;
         barkeep.Tick();
         cashier.Gate();
@@ -193,7 +186,7 @@ internal sealed partial class CasinoApp : IPhoneApp
         router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
         slots.DrawOverlay(screenArea, ui);
         scratch.DrawOverlay(screenArea, ui);
-        cashier.Draw(screenArea, ui, PlayableGames, openLimits);
+        cashier.Draw(screenArea, ui, openLimits);
     }
 
     private void DrawView(CasinoRoute route, Rect area, int depth)
@@ -298,6 +291,22 @@ internal sealed partial class CasinoApp : IPhoneApp
         {
             scratch.OpenOdds();
         }
+    }
+
+    private void GreetWithCashier()
+    {
+        if (greetedWithCashier || casino.State is null)
+        {
+            return;
+        }
+
+        greetedWithCashier = true;
+        if (casino.HasChips || cashier.IsOpen || router.Current.Screen != CasinoScreen.Floor)
+        {
+            return;
+        }
+
+        cashier.Open();
     }
 
     private void OpenCashier()
@@ -419,9 +428,10 @@ internal sealed partial class CasinoApp : IPhoneApp
         if (quick is not null)
         {
             pendingTableId = quick.RoomId;
-            if (!SeatedAt(Core.Casino.CasinoWire.BlackjackKind))
+
+            if (!SeatedAt(Core.Casino.CasinoWire.BlackjackKind) && !casino.HasChips)
             {
-                cashier.Open(GameIndexOf(CasinoGames.Blackjack), quick.SuggestedBuyIn);
+                cashier.Open(quick.SuggestedBuyIn);
             }
         }
 
@@ -444,7 +454,8 @@ internal sealed partial class CasinoApp : IPhoneApp
             }
         }
 
-        if (pendingTableId.Length == 0 || !SeatedAt(Core.Casino.CasinoWire.BlackjackKind))
+        if (pendingTableId.Length == 0
+            || (!casino.HasChips && !SeatedAt(Core.Casino.CasinoWire.BlackjackKind)))
         {
             return;
         }
@@ -474,24 +485,18 @@ internal sealed partial class CasinoApp : IPhoneApp
             return;
         }
 
+        if (!casino.HasChips)
+        {
+            cashier.Open();
+            return;
+        }
+
         if (string.Equals(gameId, CasinoGames.Slots, StringComparison.Ordinal))
         {
-            if (!SeatedAt(Core.Casino.CasinoWire.SlotsKind))
-            {
-                cashier.Open(GameIndexOf(gameId));
-                return;
-            }
-
             slots.Enter();
         }
         else if (string.Equals(gameId, CasinoGames.Scratch, StringComparison.Ordinal))
         {
-            if (!SeatedAt(Core.Casino.CasinoWire.ScratchKind))
-            {
-                cashier.Open(GameIndexOf(gameId));
-                return;
-            }
-
             scratch.Enter();
         }
         else if (string.Equals(gameId, CasinoGames.Barkeep, StringComparison.Ordinal))
@@ -500,22 +505,10 @@ internal sealed partial class CasinoApp : IPhoneApp
         }
         else if (string.Equals(gameId, CasinoGames.Wheel, StringComparison.Ordinal))
         {
-            if (!SeatedAt(Core.Casino.CasinoWire.WheelKind))
-            {
-                cashier.Open(GameIndexOf(gameId));
-                return;
-            }
-
             wheel.Enter();
         }
         else if (string.Equals(gameId, CasinoGames.Bingo, StringComparison.Ordinal))
         {
-            if (!SeatedAt(Core.Casino.CasinoWire.BingoKind))
-            {
-                cashier.Open(GameIndexOf(gameId));
-                return;
-            }
-
             bingo.Enter();
         }
 
@@ -524,21 +517,7 @@ internal sealed partial class CasinoApp : IPhoneApp
 
     private bool SeatedAt(string wireKind)
     {
-        var sitting = Core.Casino.CasinoWire.SittingFor(casino.State, wireKind);
-        return sitting is not null && string.Equals(sitting.GameKind, wireKind, StringComparison.Ordinal);
-    }
-
-    private static int GameIndexOf(string gameId)
-    {
-        for (var index = 0; index < PlayableGames.Length; index++)
-        {
-            if (string.Equals(PlayableGames[index].GameId, gameId, StringComparison.Ordinal))
-            {
-                return index;
-            }
-        }
-
-        return 0;
+        return Core.Casino.CasinoWire.SittingFor(casino.State, wireKind) is not null;
     }
 
     private static LocString GameName(string gameId) => gameId switch

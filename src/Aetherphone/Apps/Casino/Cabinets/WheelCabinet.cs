@@ -129,8 +129,7 @@ internal sealed class WheelCabinet
         y = DrawBanner(drawList, ui, snapshot, remaining, left, y, width, scale, delta);
 
         var sitting = state.Sitting;
-        var seated = sitting is not null
-            && string.Equals(sitting.GameKind, CasinoWire.WheelKind, StringComparison.Ordinal);
+        var seated = sitting is not null;
         y = DrawSpotRow(drawList, ui, board, snapshot, seated, left, y, width, scale);
         if (!seated)
         {

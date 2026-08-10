@@ -139,8 +139,7 @@ internal sealed class SlotsCabinet
         y += Metrics.Space.Sm * scale;
 
         var sitting = state.Sitting;
-        var slotsSeated = sitting is not null
-            && string.Equals(sitting.GameKind, CasinoWire.SlotsKind, StringComparison.Ordinal);
+        var slotsSeated = sitting is not null;
         if (!slotsSeated)
         {
             DrawSeatMissing(drawList, ui, left, y, width, scale);

@@ -140,8 +140,7 @@ internal sealed class BingoCabinet
         }
 
         var sitting = state.Sitting;
-        var seated = sitting is not null
-            && string.Equals(sitting.GameKind, CasinoWire.BingoKind, StringComparison.Ordinal);
+        var seated = sitting is not null;
         if (calledOff)
         {
             if (snapshot.Phase != CasinoRoomPhases.Result)

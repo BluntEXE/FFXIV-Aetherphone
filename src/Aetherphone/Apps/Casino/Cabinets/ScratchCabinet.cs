@@ -132,8 +132,7 @@ internal sealed class ScratchCabinet
         y += Metrics.Space.Sm * scale;
 
         var sitting = state.Sitting;
-        var scratchSeated = sitting is not null
-            && string.Equals(sitting.GameKind, CasinoWire.ScratchKind, StringComparison.Ordinal);
+        var scratchSeated = sitting is not null;
         if (!scratchSeated)
         {
             DrawSeatMissing(drawList, ui, left, y, width, scale);

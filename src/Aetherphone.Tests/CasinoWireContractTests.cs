@@ -35,10 +35,10 @@ public sealed class CasinoWireContractTests
     [Fact]
     public void OpenSittingRequestSerializesTheBackendShape()
     {
-        var request = new CasinoOpenSittingRequest("sit1", "act1", "casino.slots", 0, 100);
+        var request = new CasinoOpenSittingRequest("sit1", "act1", 0, 100);
         var json = JsonSerializer.Serialize(request, AethernetJsonContext.Default.CasinoOpenSittingRequest);
         Assert.Equal(
-            "{\"clientSittingId\":\"sit1\",\"clientActionId\":\"act1\",\"gameKind\":\"casino.slots\",\"tableKind\":0,\"amount\":100}",
+            "{\"clientSittingId\":\"sit1\",\"clientActionId\":\"act1\",\"tableKind\":0,\"amount\":100}",
             json);
     }
 

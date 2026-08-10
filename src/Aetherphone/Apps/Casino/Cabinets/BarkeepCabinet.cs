@@ -607,8 +607,7 @@ internal sealed class BarkeepCabinet
 
         var pad = 14f * scale;
         var sitting = state.Sitting;
-        var seated = sitting is not null
-            && string.Equals(sitting.GameKind, CasinoWire.BartenderKind, StringComparison.Ordinal);
+        var seated = sitting is not null;
         var blocked = state.StakesPaused || state.Draining;
         var entryText = BarkeepRules.EntryChips.ToString("N0", Loc.Culture);
 
