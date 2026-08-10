@@ -125,7 +125,7 @@ internal sealed partial class CasinoApp
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        var available = claim == Core.Casino.DailySpinClaim.Available;
+        var available = Core.Casino.DailySpinStatus.OffersWheel(claim);
         if (available)
         {
             Squircle.Stroke(drawList, card.Min, card.Max, rounding,
@@ -170,10 +170,12 @@ internal sealed partial class CasinoApp
         return chipMax.X - chipMin.X + 10f * scale;
     }
 
+    // Unknown reads the card's own line rather than a reset time: before the status lands we know
+    // what the wheel is, not whether today's turn is still there, and saying either would be a guess.
     private string DailySpinHint(Core.Casino.DailySpinClaim claim)
     {
         var answer = casinoSpin.Answer;
-        if (claim == Core.Casino.DailySpinClaim.Available)
+        if (claim == Core.Casino.DailySpinClaim.Available || claim == Core.Casino.DailySpinClaim.Unknown)
         {
             return Loc.T(L.Casino.SpinCardHint);
         }

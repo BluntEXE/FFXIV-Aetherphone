@@ -299,6 +299,11 @@ internal sealed class CasinoClient
             token);
     }
 
+    public Task<CasinoDailySpinDto?> DailySpinStatusAsync(CancellationToken token)
+    {
+        return net.GetAsync(DailySpinPath, AethernetJsonContext.Default.CasinoDailySpinDto, token);
+    }
+
     public Task<CasinoDailySpinDto?> ClaimDailySpinAsync(CancellationToken token)
     {
         return net.RequestAsync(HttpMethod.Post, DailySpinPath,

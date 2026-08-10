@@ -482,4 +482,5 @@ internal sealed record CasinoDailySpinDto(
     long Balance = 0,
     long NextSpinAtUnix = 0,
     string SeedCommitHash = "",
-    string NextSeedHash = "");
+    string NextSeedHash = "",
+    bool Claimed = false);

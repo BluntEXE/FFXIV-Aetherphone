@@ -7,6 +7,9 @@ namespace Aetherphone.Core.Casino;
 
 internal sealed class CasinoSpinStore : IDisposable
 {
+    private const long StatusRefreshMilliseconds = 120_000;
+    private const long RetryAfterAttemptMilliseconds = 30_000;
+
     private readonly AethernetSession session;
     private readonly CasinoClient casino;
     private readonly CoinStore coins;
@@ -16,6 +19,10 @@ internal sealed class CasinoSpinStore : IDisposable
     private volatile bool claiming;
     private CasinoDailySpinDto? claimResult;
     private int claimFailed;
+    private long statusLoadedAtTick;
+    private long statusAttemptedAtTick;
+    private int loadingStatus;
+    private int claimGeneration;
     private string? lastAccountId;
 
     public CasinoSpinStore(AethernetSession session, CasinoClient casino, CoinStore coins)
@@ -30,6 +37,20 @@ internal sealed class CasinoSpinStore : IDisposable
 
     public bool Claiming => claiming;
 
+    public bool Busy => claiming || Interlocked.CompareExchange(ref loadingStatus, 0, 0) != 0;
+
+    public void EnsureFresh()
+    {
+        RefreshStatus(StatusRefreshMilliseconds);
+    }
+
+    public void RefreshNow()
+    {
+        Interlocked.Exchange(ref statusLoadedAtTick, 0);
+        Interlocked.Exchange(ref statusAttemptedAtTick, 0);
+        RefreshStatus(0);
+    }
+
     public CasinoDailySpinDto? TakeClaimResult()
     {
         return Interlocked.Exchange(ref claimResult, null);
@@ -42,11 +63,12 @@ internal sealed class CasinoSpinStore : IDisposable
 
     public void Claim()
     {
-        if (claiming || !session.IsSignedIn || !DailySpinStatus.CanClaim(answer, false))
+        if (Busy || !session.IsSignedIn || !DailySpinStatus.CanClaim(answer, false))
         {
             return;
         }
 
+        Interlocked.Increment(ref claimGeneration);
         claiming = true;
         work.Run("daily spin", async token =>
         {
@@ -58,12 +80,58 @@ internal sealed class CasinoSpinStore : IDisposable
             }
 
             answer = result;
+            Interlocked.Exchange(ref statusLoadedAtTick, Environment.TickCount64);
             Interlocked.Exchange(ref claimResult, result);
             if (result.Granted && result.Balance > 0)
             {
                 coins.AbsorbLocalAward(result.Balance);
             }
         }, () => claiming = false);
+    }
+
+    // The claim answer is fresher than anything the read can return, so a claim owns the field: a
+    // read that started before the claim would otherwise land after it and reopen a spent day. The
+    // generation stamp is what catches the claim that begins and ends inside a single read.
+    private void RefreshStatus(long refreshAfterMilliseconds)
+    {
+        if (!session.IsSignedIn || claiming)
+        {
+            return;
+        }
+
+        var now = Environment.TickCount64;
+        var lastAttempt = Interlocked.Read(ref statusAttemptedAtTick);
+        if (lastAttempt != 0 && now - lastAttempt < RetryAfterAttemptMilliseconds)
+        {
+            return;
+        }
+
+        var lastLoad = Interlocked.Read(ref statusLoadedAtTick);
+        if (lastLoad != 0 && now - lastLoad < refreshAfterMilliseconds)
+        {
+            return;
+        }
+
+        if (Interlocked.Exchange(ref loadingStatus, 1) != 0)
+        {
+            return;
+        }
+
+        Interlocked.Exchange(ref statusAttemptedAtTick, now);
+        var generation = Interlocked.CompareExchange(ref claimGeneration, 0, 0);
+        work.Run("daily spin status", async token =>
+        {
+            var status = await casino.DailySpinStatusAsync(token).ConfigureAwait(false);
+            if (status is null
+                || claiming
+                || Interlocked.CompareExchange(ref claimGeneration, 0, 0) != generation)
+            {
+                return;
+            }
+
+            answer = status;
+            Interlocked.Exchange(ref statusLoadedAtTick, Environment.TickCount64);
+        }, () => Interlocked.Exchange(ref loadingStatus, 0));
     }
 
     private void OnSessionChanged()
@@ -78,6 +146,8 @@ internal sealed class CasinoSpinStore : IDisposable
         answer = null;
         Interlocked.Exchange(ref claimResult, null);
         Interlocked.Exchange(ref claimFailed, 0);
+        Interlocked.Exchange(ref statusLoadedAtTick, 0);
+        Interlocked.Exchange(ref statusAttemptedAtTick, 0);
     }
 
     public void Dispose()

@@ -72,6 +72,7 @@ internal sealed class DailySpinCabinet
         var scale = UiScale.Current;
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
         ConsumeClaimResult();
+        AdoptKnownSpin();
         Advance(delta, scale);
         particles.Update(delta);
 
@@ -130,6 +131,34 @@ internal sealed class DailySpinCabinet
         landedAmount = result.Amount;
         celebrated = false;
         BeginSpin(result.Segment);
+    }
+
+    // A day already spent arrives from the status read rather than from a claim, and it arrives
+    // after the screen is drawing. Settling the wheel on the wedge it stopped on is what makes a
+    // reload show this morning's result instead of an untouched rim under a spent banner.
+    private void AdoptKnownSpin()
+    {
+        var answer = spin.Answer;
+        if (spinning
+            || answer is null
+            || answer.RoundId.Length == 0
+            || string.Equals(answer.RoundId, spunRoundId, StringComparison.Ordinal)
+            || DailySpinStatus.Of(answer) != DailySpinClaim.Claimed)
+        {
+            return;
+        }
+
+        spunRoundId = answer.RoundId;
+        landedSegment = answer.Segment;
+        landedAmount = answer.Amount;
+        celebrated = true;
+        if (!DailySpinRules.IsSegment(answer.Segment))
+        {
+            return;
+        }
+
+        angle = WheelChoreography.RestAngleOf(answer.Segment, DailySpinRules.SegmentCount);
+        coinRoll.Snap((int)Math.Min(landedAmount, int.MaxValue));
     }
 
     private void BeginSpin(int segment)
@@ -247,7 +276,7 @@ internal sealed class DailySpinCabinet
 
         if (claim != DailySpinClaim.Claimed)
         {
-            var enabled = DailySpinStatus.CanClaim(answer, spin.Claiming);
+            var enabled = DailySpinStatus.CanClaim(answer, spin.Busy);
             var pillRect = new Rect(new Vector2(left + width * 0.18f, y),
                 new Vector2(left + width * 0.82f, y + PillHeight * scale));
             if (AppSkin.PillButton(pillRect, Loc.T(L.Casino.SpinAction), true, enabled, ui.Theme))
