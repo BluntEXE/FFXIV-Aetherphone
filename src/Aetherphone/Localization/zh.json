@@ -676,7 +676,7 @@
   "settings.immersion": "沉浸感",
   "settings.behavior": "行为",
   "settings.marketContextMenu": "在右键菜单中启用市场搜索",
-  "settings.marketContextMenuHint": "在游戏中右键点击物品时，在右键菜单中显示"在市场搜索"选项。",
+  "settings.marketContextMenuHint": "在游戏中右键点击物品时，在右键菜单中显示“在市场搜索”选项。",
   "settings.scrollWhileIdle": "待机时滑动手机",
   "settings.scrollWhileIdleHint": "你的角色在站立且非战斗状态下会滑动手机（使用神典石情感动作）。如果未解锁该动作则无效。",
   "settings.showInGpose": "集体动作时显示",
