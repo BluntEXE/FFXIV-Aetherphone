@@ -17,8 +17,11 @@ internal static class CoinHero
     private const float HeroLuminance = 0.20f;
     private const float HeroTopLift = 0.16f;
     private const float HeroBottomDrop = 0.24f;
-    private const float WatermarkFraction = 0.94f;
+    private const float WatermarkFraction = 1.15f;
+    private const float WatermarkInsetFraction = 0.24f;
+    private const float WatermarkCenterFraction = 0.58f;
     private const float WatermarkAlpha = 0.12f;
+    private const string CoinIconId = "coin";
     private const float BalanceMaxScale = 2.45f;
     private const float BalanceMinScale = 1.25f;
 
@@ -57,9 +60,14 @@ internal static class CoinHero
             ImGui.GetColorU32(Palette.Darken(surface, HeroBottomDrop)));
 
         var watermark = height * WatermarkFraction;
+        var watermarkCenter = new Vector2(max.X - height * WatermarkInsetFraction,
+            min.Y + height * WatermarkCenterFraction);
+        var watermarkTint = Palette.WithAlpha(Ink, WatermarkAlpha);
         drawList.PushClipRect(min, max, true);
-        ProgressRing.CenterIcon(drawList, new Vector2(max.X - watermark * 0.26f, min.Y + height * 0.58f),
-            FontAwesomeIcon.Coins, Palette.WithAlpha(Ink, WatermarkAlpha), watermark);
+        if (!AppIconTextures.TryDrawArtwork(drawList, CoinIconId, watermarkCenter, watermark, watermarkTint))
+        {
+            ProgressRing.CenterIcon(drawList, watermarkCenter, FontAwesomeIcon.Coins, watermarkTint, watermark);
+        }
 
         var inset = HeroInset * scale;
         var textLeft = min.X + inset;

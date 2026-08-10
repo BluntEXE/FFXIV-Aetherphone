@@ -58,7 +58,7 @@ internal static class CoinEarnRow
 
         var titleTop = min.Y + 12f * scale;
         var appId = rule.App.Length == 0 ? "coin" : rule.App;
-        var tileCenter = new Vector2(min.X + inset + tileSize * 0.5f, titleTop + titleSize.Y * 0.5f);
+        var tileCenter = new Vector2(min.X + inset + tileSize * 0.5f, (min.Y + max.Y) * 0.5f);
         IconTile.DrawApp(drawList, appId, tileCenter, tileSize, IconTile.Surface(AppAccents.For(appId)));
 
         var progress = rule.EarnedThisPeriod.ToString("N0", Loc.Culture) + " / "
