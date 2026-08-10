@@ -1236,6 +1236,8 @@ internal static class L
         public static readonly LocString SoundDefault = new("settings.soundDefault", "Default");
         public static readonly LocString Immersion = new("settings.immersion", "Immersion");
         public static readonly LocString Behavior = new("settings.behavior", "Behavior");
+        public static readonly LocString MarketContextMenu = new("settings.marketContextMenu", "Enable Market Search in Context Menu");
+        public static readonly LocString MarketContextMenuHint = new("settings.marketContextMenuHint", "Shows \"Search the Market\" option in the in-game context menu when right-clicking on an item.");
         public static readonly LocString ScrollWhileIdle = new("settings.scrollWhileIdle", "Scroll while idle");
         public static readonly LocString ScrollWhileIdleHint = new("settings.scrollWhileIdleHint", "Your character scrolls through their phone (Tomescroll emote) while standing still and out of combat. Does nothing if you haven't unlocked the emote.");
         public static readonly LocString ShowInGpose = new("settings.showInGpose", "Show in Group Pose");

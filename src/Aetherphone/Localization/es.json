@@ -675,6 +675,8 @@
   "settings.soundDefault": "Predeterminado",
   "settings.immersion": "Inmersión",
   "settings.behavior": "Comportamiento",
+  "settings.marketContextMenu": "Activar búsqueda de mercado en el menú contextual",
+  "settings.marketContextMenuHint": "Muestra la opción \"Buscar en el mercado\" en el menú contextual del juego al hacer clic derecho en un objeto.",
   "settings.scrollWhileIdle": "Desplazar estando inactivo",
   "settings.scrollWhileIdleHint": "Tu personaje revisa su teléfono (emote Tomescroll) mientras está quieto y fuera de combate. No hace nada si no has desbloqueado el emote.",
   "settings.showInGpose": "Mostrar en Pose de grupo",

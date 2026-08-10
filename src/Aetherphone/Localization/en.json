@@ -675,6 +675,8 @@
   "settings.soundDefault": "Default",
   "settings.immersion": "Immersion",
   "settings.behavior": "Behavior",
+  "settings.marketContextMenu": "Enable Market Search in Context Menu",
+  "settings.marketContextMenuHint": "Shows \"Search the Market\" option in the in-game context menu when right-clicking on an item.",
   "settings.scrollWhileIdle": "Scroll while idle",
   "settings.scrollWhileIdleHint": "Your character scrolls through their phone (Tomescroll emote) while standing still and out of combat. Does nothing if you haven't unlocked the emote.",
   "settings.showInGpose": "Show in Group Pose",

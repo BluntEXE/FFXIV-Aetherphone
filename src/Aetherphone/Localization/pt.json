@@ -675,6 +675,8 @@
   "settings.soundDefault": "Padrão",
   "settings.immersion": "Imersão",
   "settings.behavior": "Comportamento",
+  "settings.marketContextMenu": "Ativar busca no mercado no menu de contexto",
+  "settings.marketContextMenuHint": "Mostra a opção \"Buscar no Mercado\" no menu de contexto do jogo ao clicar com o botão direito em um item.",
   "settings.scrollWhileIdle": "Rolar quando parado",
   "settings.scrollWhileIdleHint": "Seu personagem rola o telefone (emote Tomescroll) enquanto fica parado e fora de combate. Não faz nada se você não desbloqueou o emote.",
   "settings.showInGpose": "Mostrar no Group Pose",

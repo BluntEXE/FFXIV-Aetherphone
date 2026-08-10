@@ -81,6 +81,18 @@ internal sealed class BehaviorPage : ISettingsPage
             ImGui.Dummy(new Vector2(0f, 8f * scale));
             SettingsSection.Hint(Loc.T(L.Settings.ChirperMediaPostsHint), theme);
 
+            ImGui.Dummy(new Vector2(0f, 8f * scale));
+            var menuContextCard = GroupCard.Begin(theme,1);
+            var menuContextToggle = SettingsRow.Bool(menuContextCard.NextRow(), Loc.T(L.Settings.MarketContextMenu), configuration.MarketContextMenu, theme);
+            menuContextCard.End();
+            if (menuContextToggle != configuration.MarketContextMenu)
+            {
+                configuration.MarketContextMenu = menuContextToggle;
+                configuration.Save();
+            }
+            ImGui.Dummy(new Vector2(0f, 8f * scale));
+            SettingsSection.Hint(Loc.T(L.Settings.MarketContextMenuHint), theme);
+
             ImGui.Dummy(new Vector2(0f, 12f * scale));
             var startupCard = GroupCard.Begin(theme, 2);
             var openStartup = SettingsRow.Bool(startupCard.NextRow(), Loc.T(L.Settings.OpenOnStartup),
