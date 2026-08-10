@@ -9,6 +9,9 @@ internal sealed class SlotsChoreography
     public const float AnticipationHoldSeconds = 0.6f;
     public const float LandingSeconds = 0.3f;
 
+    public const float TurboFirstStopSeconds = 0.28f;
+    public const float TurboStopStaggerSeconds = 0.07f;
+
     private float firstStopSeconds = FirstStopSeconds;
     private float stopStaggerSeconds = StopStaggerSeconds;
     private bool holdLastReel;
@@ -29,6 +32,13 @@ internal sealed class SlotsChoreography
     public void Begin(bool anticipation)
     {
         Begin(anticipation, FirstStopSeconds, StopStaggerSeconds);
+    }
+
+    public void Begin(bool anticipation, bool turbo)
+    {
+        Begin(anticipation,
+            turbo ? TurboFirstStopSeconds : FirstStopSeconds,
+            turbo ? TurboStopStaggerSeconds : StopStaggerSeconds);
     }
 
     public void Begin(bool anticipation, float firstStop, float stagger)

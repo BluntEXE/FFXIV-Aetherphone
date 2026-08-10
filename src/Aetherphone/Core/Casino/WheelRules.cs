@@ -6,13 +6,13 @@ internal static class WheelRules
 
     public const int SpotCount = 5;
 
-    public const long MinStakePerSpot = 5;
+    public const long MinStakePerSpot = 100;
 
-    public const long MaxStakePerSpot = 50;
+    public const long MaxStakePerSpot = 5000;
 
-    public const long MaxStakePerRound = 200;
+    public const long MaxStakePerRound = 20000;
 
-    public static readonly int[] Multipliers = { 1, 3, 5, 10, 20 };
+    public static readonly int[] Multipliers = { 1, 3, 5, 11, 22 };
 
     public static readonly int[] SegmentCounts = { 24, 12, 8, 4, 2 };
 

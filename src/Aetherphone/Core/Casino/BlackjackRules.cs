@@ -46,9 +46,9 @@ internal static class BlackjackRules
 
     public const int TargetTotal = 21;
 
-    public const long MinBet = 10;
+    public const long MinBet = 250;
 
-    public const long MaxBet = 500;
+    public const long MaxBet = 10000;
 
     public const long BetStep = 10;
 

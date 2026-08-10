@@ -33,6 +33,7 @@ internal readonly struct SlotsSpinView
 internal sealed class SlotsRoundPlayback
 {
     public const float LossPresentSeconds = 0.45f;
+    public const float TurboLossPresentSeconds = 0.12f;
     public const float WinPresentSeconds = 1.5f;
     public const float BonusIntroSeconds = 1.3f;
     public const float FreeSpinFirstStopSeconds = 0.4f;
@@ -51,6 +52,13 @@ internal sealed class SlotsRoundPlayback
     private long totalWin;
     private bool capApplied;
     private long committedWin;
+    private bool turbo;
+
+    public bool Turbo
+    {
+        get => turbo;
+        set => turbo = value;
+    }
 
     public SlotsPlaybackPhase Phase => phase;
 
@@ -124,7 +132,7 @@ internal sealed class SlotsRoundPlayback
         }
 
         phase = SlotsPlaybackPhase.Spinning;
-        choreography.Begin(AnticipationFor(spins[0]));
+        choreography.Begin(AnticipationFor(spins[0]), turbo);
         return true;
     }
 
@@ -145,7 +153,9 @@ internal sealed class SlotsRoundPlayback
                 return;
             case SlotsPlaybackPhase.Presenting:
                 phaseSeconds += deltaSeconds;
-                var hold = spins[spinIndex].Win > 0 ? WinPresentSeconds : LossPresentSeconds;
+                var hold = spins[spinIndex].Win > 0
+                    ? WinPresentSeconds
+                    : (turbo ? TurboLossPresentSeconds : LossPresentSeconds);
                 if (phaseSeconds < hold)
                 {
                     return;
@@ -207,7 +217,7 @@ internal sealed class SlotsRoundPlayback
         phaseSeconds = 0f;
         if (index == 0)
         {
-            choreography.Begin(AnticipationFor(spins[index]));
+            choreography.Begin(AnticipationFor(spins[index]), turbo);
             return;
         }
 

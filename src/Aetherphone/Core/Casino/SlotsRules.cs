@@ -24,7 +24,7 @@ internal static class SlotsRules
 
     public const int RetriggerSpins = 5;
 
-    public static readonly long[] StakeTiers = { 1, 2, 5 };
+    public static readonly long[] StakeTiers = { 50, 100, 250, 500, 1000, 2500 };
 
     public static readonly int[][] Paylines =
     {
@@ -42,8 +42,8 @@ internal static class SlotsRules
 
     public static readonly long[,] LinePays =
     {
-        { 2, 8, 40 },
-        { 2, 5, 25 },
+        { 2, 10, 60 },
+        { 2, 5, 30 },
         { 1, 4, 15 },
         { 1, 3, 10 },
         { 1, 2, 5 },

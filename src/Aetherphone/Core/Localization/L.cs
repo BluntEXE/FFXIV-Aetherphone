@@ -1334,6 +1334,8 @@ internal static class L
                 "A community station now opens a full page with its artwork, the track playing right now, and a notify button while the station is off air"),
             new("changelog.r09910.31",
                 "The phone case picker is now a store: cases sit in Colors, Gradients, and Custom Artwork rails, and each one opens a page with a full size preview and its artist credit"),
+            new("changelog.r09910.40",
+                "Added two phone cases: Garlean and Gurren Lagann, contributed by Zivyl and daitomata"),
             new("changelog.r09910.33",
                 "The Discord invite now sits on the settings root under Support Aetherphone, instead of two taps down in About"),
             new("changelog.r09910.11",
@@ -3695,6 +3697,10 @@ internal static class L
         public static readonly LocString StreakDays = new("coin.streakDays", "{0} day streak");
         public static readonly LocString StreakGraceUsed = new("coin.streakGraceUsed", "Grace day used this week");
         public static readonly LocString StreakNext = new("coin.streakNext", "Come back tomorrow to keep it going");
+        public static readonly LocString StreakClaim = new("coin.streakClaim", "Check in to keep it going");
+        public static readonly LocString DailyGoals = new("coin.dailyGoals", "Daily goals");
+        public static readonly LocString WeeklyGoals = new("coin.weeklyGoals", "Weekly goals");
+        public static readonly LocString GoalsDone = new("coin.goalsDone", "{0} of {1} done");
         public static readonly LocString CheckIn = new("coin.checkIn", "Check in");
         public static readonly LocString CheckedIn = new("coin.checkedIn", "Checked in");
         public static readonly LocString CheckInReward = new("coin.checkInReward", "+{0} Aether Coin");
@@ -3804,11 +3810,17 @@ internal static class L
         public static readonly LocString TopUpFor = new("casino.topUpFor", "Top up for {0}");
         public static readonly LocString CashOut = new("casino.cashOut", "Cash out");
         public static readonly LocString CashOutFor = new("casino.cashOutFor", "Cash out {0}");
-        public static readonly LocString CashOutHint = new("casino.cashOutHint", "Chips settle back into your wallet as coins.");
+        public static readonly LocString CashOutHint = new("casino.cashOutHint", "Chips settle back into your wallet as coins, rounded up in your favour. Leave them here and they wait for you.");
         public static readonly LocString AmountMin = new("casino.amountMin", "Min");
         public static readonly LocString AmountHalf = new("casino.amountHalf", "Half");
         public static readonly LocString AmountMax = new("casino.amountMax", "Max");
         public static readonly LocString BuyInBounds = new("casino.buyInBounds", "Between {0} and {1}");
+        public static readonly LocString ChipRate = new("casino.chipRate", "100 chips = 1 coin");
+        public static readonly LocString SlotsTurbo = new("casino.slotsTurbo", "Turbo");
+        public static readonly LocString LotCost = new("casino.lotCost", "{0} coins");
+        public static readonly LocString NotEnoughCoins = new("casino.notEnoughCoins", "Not enough coins");
+        public static readonly LocString PurseRow = new("casino.purseRow", "Chips on the floor");
+        public static readonly LocString PurseHint = new("casino.purseHint", "Your chips wait here between visits.");
         public static readonly LocString TonightEven = new("casino.tonightEven", "Tonight: even");
         public static readonly LocString TonightUp = new("casino.tonightUp", "Tonight: {0} up");
         public static readonly LocString TonightDown = new("casino.tonightDown", "Tonight: {0} down");
@@ -3817,7 +3829,7 @@ internal static class L
         public static readonly LocString TopUpConfirmTitle = new("casino.topUpConfirmTitle", "Top up for {0}?");
         public static readonly LocString TopUpConfirmBody = new("casino.topUpConfirmBody", "{0} more coins join the chips you are carrying.");
         public static readonly LocString CashOutConfirmTitle = new("casino.cashOutConfirmTitle", "Cash out {0}?");
-        public static readonly LocString CashOutConfirmBody = new("casino.cashOutConfirmBody", "Your chips leave the floor and land in your wallet.");
+        public static readonly LocString CashOutConfirmBody = new("casino.cashOutConfirmBody", "Your chips leave the floor and land in your wallet as coins. You do not have to cash out to stop playing.");
         public static readonly LocString PausedTitle = new("casino.pausedTitle", "The floor is closed right now");
         public static readonly LocString PausedHint = new("casino.pausedHint", "Hands in progress finish, and chips can still be cashed out.");
         public static readonly LocString DrainingTitle = new("casino.drainingTitle", "Tables are closing");
@@ -4214,6 +4226,8 @@ internal static class L
         public static readonly LocString CaseHorror = new("catalog.case.horror", "Horror");
         public static readonly LocString CaseKupo = new("catalog.case.mooglecase", "Kupo");
         public static readonly LocString CaseRunic = new("catalog.case.runic", "Runic");
+        public static readonly LocString CaseGarlean = new("catalog.case.garlean", "Garlean");
+        public static readonly LocString CaseGurrenLagann = new("catalog.case.gurrenlagann", "Gurren Lagann");
         public static readonly LocString RingtoneSilent = new("catalog.ringtone.silent", "Silent");
         public static readonly LocString RadioLofi = new("catalog.radio.lofi", "Lofi");
         public static readonly LocString RadioChillout = new("catalog.radio.chillout", "Chillout");

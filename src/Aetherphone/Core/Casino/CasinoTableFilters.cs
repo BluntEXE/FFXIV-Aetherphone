@@ -41,9 +41,9 @@ internal static class CasinoStakeTiers
 
 internal static class CasinoTableFilters
 {
-    public const long LowStakeCeiling = 25;
+    public const long LowStakeCeiling = 1000;
 
-    public const long HighStakeFloor = 100;
+    public const long HighStakeFloor = 2500;
 
     public static readonly CasinoTableFilter[] All =
     {
