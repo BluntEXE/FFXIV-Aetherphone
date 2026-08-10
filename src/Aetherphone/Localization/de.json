@@ -675,6 +675,8 @@
   "settings.soundDefault": "Standard",
   "settings.immersion": "Immersion",
   "settings.behavior": "Verhalten",
+  "settings.marketContextMenu": "Marktsuche im Kontextmenü aktivieren",
+  "settings.marketContextMenuHint": "Zeigt die Option \"Auf dem Markt suchen\" im Kontextmenü an, wenn du im Spiel mit Rechtsklick auf einen Gegenstand klickst.",
   "settings.scrollWhileIdle": "Im Leerlauf scrollen",
   "settings.scrollWhileIdleHint": "Dein Charakter scrollt durch sein Handy (Tomescroll-Emote), während er still steht und sich nicht im Kampf befindet. Ohne Wirkung, falls die Emote nicht freigeschaltet ist.",
   "settings.showInGpose": "In Gruppenpose anzeigen",
