@@ -56,6 +56,8 @@ internal static class ThemeCatalog
         PhoneCase.Art("Horror", PhoneCaseCategory.ArtistSeries, new Vector4(0.407f, 0.202f, 0.210f, 1f), "Remi"),
         PhoneCase.Art("MoogleCase", PhoneCaseCategory.ArtistSeries, new Vector4(0.964f, 0.964f, 0.964f, 1f), "Silkie"),
         PhoneCase.Art("Runic", PhoneCaseCategory.ArtistSeries, new Vector4(0.414f, 0.296f, 0.491f, 1f), "Silkie"),
+        PhoneCase.Art("Garlean", PhoneCaseCategory.ArtistSeries, new Vector4(0.283f, 0.274f, 0.276f, 1f), "Zivyl"),
+        PhoneCase.Art("GurrenLagann", PhoneCaseCategory.ArtistSeries, new Vector4(0.239f, 0.523f, 0.509f, 1f), "daitomata"),
     };
 
     public static IReadOnlyList<PhoneCase> Cases { get; } = BuiltInCases;
