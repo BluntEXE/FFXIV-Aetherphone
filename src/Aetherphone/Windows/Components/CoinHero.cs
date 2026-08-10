@@ -1,6 +1,7 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Animation;
+using Aetherphone.Core.Coins;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
@@ -10,15 +11,29 @@ namespace Aetherphone.Windows.Components;
 
 internal static class CoinHero
 {
-    private const float HeroHeight = 152f;
-    private const float HeroRounding = 24f;
-    private const float MedallionRadius = 15f;
-    private const float CapBarHeight = 58f;
-    private const float CapBarRounding = 18f;
-    private const float CapFillSmoothSeconds = 0.3f;
+    private const float HeroHeight = 148f;
+    private const float HeroRounding = 26f;
+    private const float HeroInset = 20f;
+    private const float HeroLuminance = 0.20f;
+    private const float HeroTopLift = 0.16f;
+    private const float HeroBottomDrop = 0.24f;
+    private const float WatermarkFraction = 0.94f;
+    private const float WatermarkAlpha = 0.12f;
+    private const float BalanceMaxScale = 2.45f;
+    private const float BalanceMinScale = 1.25f;
 
+    private const float TodayHeight = 134f;
+    private const float TodayRounding = 20f;
+    private const float RingRadius = 40f;
+    private const float RingThickness = 9f;
+    private const float CapFillSmoothSeconds = 0.35f;
+    private const float TitleRowHeight = 24f;
+    private const float GoalRowHeight = 21f;
+    private const float ResetRowHeight = 19f;
+    private const float LegendDotRadius = 3.5f;
+
+    private static readonly Vector4 Ink = new(1f, 1f, 1f, 1f);
     private static readonly Vector4 CappedTint = new(0.98f, 0.80f, 0.36f, 1f);
-    private static readonly Vector4 MedallionInk = new(0.26f, 0.18f, 0.05f, 1f);
 
     private static RollingValue balanceRoll;
     private static Spring capFill = new(0f);
@@ -34,42 +49,34 @@ internal static class CoinHero
         var min = origin;
         var max = new Vector2(origin.X + width, origin.Y + height);
         var rounding = HeroRounding * scale;
-        var surface = Palette.Lighten(palette.BackdropTop, 0.12f) with { W = 1f };
+        var surface = Palette.ShadeToLuminance(palette.Accent with { W = 1f }, HeroLuminance);
+
         Elevation.Card(drawList, min, max, rounding, scale, 0.9f);
-        Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(surface));
-        Material.TopGlow(drawList, min, max, rounding, palette.Accent, 0.92f, 0.26f);
-        Material.EdgeSquircle(drawList, min, max, rounding, scale);
+        Squircle.FillVerticalGradient(drawList, min, max, rounding,
+            ImGui.GetColorU32(Palette.Lighten(surface, HeroTopLift)),
+            ImGui.GetColorU32(Palette.Darken(surface, HeroBottomDrop)));
 
-        var centerX = min.X + width * 0.5f;
+        var watermark = height * WatermarkFraction;
         drawList.PushClipRect(min, max, true);
-        Sparkle(drawList, min, width, height, 0.14f, 0.26f, 2.1f, 0.20f, palette.Accent, scale);
-        Sparkle(drawList, min, width, height, 0.86f, 0.20f, 1.6f, 0.16f, palette.Accent, scale);
-        Sparkle(drawList, min, width, height, 0.22f, 0.74f, 1.5f, 0.13f, palette.Accent, scale);
-        Sparkle(drawList, min, width, height, 0.80f, 0.66f, 2.4f, 0.18f, palette.Accent, scale);
-        Sparkle(drawList, min, width, height, 0.68f, 0.36f, 1.3f, 0.11f, palette.Accent, scale);
+        ProgressRing.CenterIcon(drawList, new Vector2(max.X - watermark * 0.26f, min.Y + height * 0.58f),
+            FontAwesomeIcon.Coins, Palette.WithAlpha(Ink, WatermarkAlpha), watermark);
 
-        var medallionCenter = new Vector2(centerX, min.Y + 30f * scale);
-        var medallionRadius = MedallionRadius * scale;
-        ProgressRing.Glow(medallionCenter, medallionRadius * 2.2f, palette.Accent, 0.4f);
-        drawList.AddCircleFilled(medallionCenter, medallionRadius, ImGui.GetColorU32(palette.Accent), 48);
-        drawList.AddCircle(medallionCenter, medallionRadius - 3f * scale,
-            ImGui.GetColorU32(Palette.WithAlpha(MedallionInk, 0.35f)), 48, 1.2f * scale);
-        ProgressRing.CenterIcon(drawList, medallionCenter, FontAwesomeIcon.Coins, MedallionInk,
-            medallionRadius * 1.05f);
-
-        Typography.DrawCentered(drawList, new Vector2(centerX, min.Y + 57f * scale), Loc.T(L.Coin.Balance),
-            palette.HeaderInk, TextStyles.Title3);
-
+        var inset = HeroInset * scale;
+        var textLeft = min.X + inset;
+        var available = width - inset * 2f - height * 0.34f;
         balanceRoll.Update((int)wallet.Balance, delta);
         var amountText = balanceRoll.Display.ToString("N0", Loc.Culture);
-        var available = width - 44f * scale;
-        var amountScale = Typography.FitScale(amountText, available, 2.35f, 1.2f, FontWeight.Bold)
-            * balanceRoll.PopScale;
-        var amountSize = Typography.Measure(amountText, amountScale, FontWeight.Bold);
-        var rowCenterY = min.Y + height * 0.60f;
-        ProgressRing.Glow(new Vector2(centerX, rowCenterY), amountSize.Y * 1.35f, palette.Accent, 0.22f);
-        Typography.Draw(drawList, new Vector2(centerX - amountSize.X * 0.5f, rowCenterY - amountSize.Y * 0.5f),
-            amountText, palette.TitleInk, amountScale, FontWeight.Bold);
+        var restScale = Typography.FitScale(amountText, available, BalanceMaxScale, BalanceMinScale, FontWeight.Bold);
+        var restHeight = Typography.Measure(amountText, restScale, FontWeight.Bold).Y;
+        var poppedScale = restScale * balanceRoll.PopScale;
+        var poppedSize = Typography.Measure(amountText, poppedScale, FontWeight.Bold);
+        var amountBottom = min.Y + 28f * scale + restHeight;
+        Typography.Draw(drawList, new Vector2(textLeft, amountBottom - poppedSize.Y), amountText, Ink, poppedScale,
+            FontWeight.Bold);
+
+        Typography.Draw(drawList, new Vector2(textLeft, amountBottom + 2f * scale),
+            Typography.FitText(Loc.T(L.Coin.Balance), width - inset * 2f, TextStyles.Headline),
+            Palette.WithAlpha(Ink, 0.82f), TextStyles.Headline);
 
         var statsText = Loc.T(L.Coin.EarnedLifetime) + " " + wallet.LifetimeEarned.ToString("N0", Loc.Culture);
         if (wallet.LifetimeSpent > 0)
@@ -78,91 +85,131 @@ internal static class CoinHero
                 + wallet.LifetimeSpent.ToString("N0", Loc.Culture);
         }
 
-        Typography.DrawCentered(drawList, new Vector2(centerX, max.Y - 18f * scale), statsText,
-            palette.MutedInk, TextStyles.Footnote);
+        Typography.Draw(drawList, new Vector2(textLeft, max.Y - 26f * scale),
+            Typography.FitText(statsText, width - inset * 2f, TextStyles.Footnote),
+            Palette.WithAlpha(Ink, 0.70f), TextStyles.Footnote);
         drawList.PopClipRect();
+        Material.EdgeSquircle(drawList, min, max, rounding, scale);
 
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height + 4f * scale));
     }
 
-    public static void DrawCapBar(CoinWalletDto wallet, in AppPalette palette)
+    public static void DrawToday(CoinWalletDto wallet, in AppPalette palette)
     {
         var scale = UiScale.Current;
         var delta = ImGui.GetIO().DeltaTime;
         var drawList = ImGui.GetWindowDrawList();
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
-        var height = CapBarHeight * scale;
+        var height = TodayHeight * scale;
         var min = origin;
         var max = new Vector2(origin.X + width, origin.Y + height);
-        var rounding = CapBarRounding * scale;
+        var rounding = TodayRounding * scale;
         var capped = wallet.DailyCap > 0 && wallet.EarnedToday >= wallet.DailyCap;
         var accent = capped ? CappedTint : palette.Accent;
+
         Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(palette.CardFill));
         if (capped)
         {
             Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(Palette.WithAlpha(accent, 0.07f)));
-            Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(Palette.WithAlpha(accent, 0.4f)),
+            Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(Palette.WithAlpha(accent, 0.40f)),
                 1f * scale);
         }
 
         Material.EdgeSquircle(drawList, min, max, rounding, scale);
 
-        var inset = 14f * scale;
-        var textY = min.Y + 12f * scale;
-        var progressText = capped
-            ? Loc.T(L.Coin.CapReached)
-            : Loc.T(L.Coin.CapProgress,
-                wallet.EarnedToday.ToString("N0", Loc.Culture),
-                wallet.DailyCap.ToString("N0", Loc.Culture));
-        var progressLeft = min.X + inset;
+        var inset = 16f * scale;
+        var radius = RingRadius * scale;
+        var ringCenter = new Vector2(min.X + inset + radius, min.Y + height * 0.5f);
+        var thickness = RingThickness * scale;
+        ProgressRing.Glow(ringCenter, radius, accent, 0.26f);
+        ProgressRing.Track(ringCenter, radius, thickness, Palette.WithAlpha(palette.TitleInk, 0.10f));
+        var target = wallet.DailyCap > 0
+            ? Math.Clamp((float)((double)wallet.EarnedToday / wallet.DailyCap), 0f, 1f)
+            : 0f;
+        var shown = Math.Clamp(capFill.Step(target, CapFillSmoothSeconds, delta), 0f, 1f);
+        ProgressRing.Fill(ringCenter, radius, thickness, shown, accent);
+
+        var earnedText = wallet.EarnedToday.ToString("N0", Loc.Culture);
+        var capText = "/ " + wallet.DailyCap.ToString("N0", Loc.Culture);
+        var earnedSize = Typography.Measure(earnedText, TextStyles.Title2);
+        var capSize = Typography.Measure(capText, TextStyles.Caption1);
+        var blockTop = ringCenter.Y - (earnedSize.Y + capSize.Y + 2f * scale) * 0.5f;
+        Typography.Draw(drawList, new Vector2(ringCenter.X - earnedSize.X * 0.5f, blockTop), earnedText,
+            capped ? accent : palette.TitleInk, TextStyles.Title2);
+        Typography.Draw(drawList, new Vector2(ringCenter.X - capSize.X * 0.5f, blockTop + earnedSize.Y + 2f * scale),
+            capText, palette.MutedInk, TextStyles.Caption1);
+
+        var columnLeft = ringCenter.X + radius + 16f * scale;
+        var columnRight = max.X - inset;
+        CoinGoals.Count(wallet.Rules, false, out var dailyDone, out var dailyTotal);
+        CoinGoals.Count(wallet.Rules, true, out var weeklyDone, out var weeklyTotal);
+        var rows = (dailyTotal > 0 ? 1 : 0) + (weeklyTotal > 0 ? 1 : 0);
+        var blockHeight = (TitleRowHeight + ResetRowHeight + rows * GoalRowHeight) * scale;
+        var cursorY = min.Y + (height - blockHeight) * 0.5f;
+
+        var title = capped ? Loc.T(L.Coin.CapReached) : Loc.T(L.Coin.EarnedToday);
+        var titleInk = capped ? accent : palette.TitleInk;
+        var titleLeft = columnLeft;
         if (capped)
         {
             var checkSize = 11f * scale;
-            var progressSize = Typography.Measure(progressText, TextStyles.FootnoteEmphasized);
             ProgressRing.CenterIcon(drawList,
-                new Vector2(progressLeft + checkSize * 0.5f, textY + progressSize.Y * 0.5f),
+                new Vector2(titleLeft + checkSize * 0.5f, cursorY + TitleRowHeight * scale * 0.42f),
                 FontAwesomeIcon.CheckCircle, accent, checkSize);
-            progressLeft += checkSize + 6f * scale;
+            titleLeft += checkSize + 6f * scale;
         }
 
-        Typography.Draw(drawList, new Vector2(progressLeft, textY), progressText,
-            capped ? accent : palette.TitleInk, TextStyles.FootnoteEmphasized);
+        Typography.Draw(drawList, new Vector2(titleLeft, cursorY),
+            Typography.FitText(title, columnRight - titleLeft, TextStyles.SubheadlineEmphasized), titleInk,
+            TextStyles.SubheadlineEmphasized);
+        cursorY += TitleRowHeight * scale;
 
-        var resetText = Loc.T(L.Coin.CapResets, TimeText.FutureMoment(wallet.ResetsAtUnix));
-        var resetSize = Typography.Measure(resetText, TextStyles.Footnote);
-        Typography.Draw(drawList, new Vector2(max.X - inset - resetSize.X, textY + 1f * scale), resetText,
-            palette.MutedInk, TextStyles.Footnote);
-
-        var barTop = max.Y - 18f * scale;
-        var barMin = new Vector2(min.X + inset, barTop);
-        var barMax = new Vector2(max.X - inset, barTop + 6f * scale);
-        var barRounding = (barMax.Y - barMin.Y) * 0.5f;
-        Squircle.Fill(drawList, barMin, barMax, barRounding,
-            ImGui.GetColorU32(Palette.WithAlpha(palette.TitleInk, 0.10f)));
-        if (wallet.DailyCap > 0)
+        if (dailyTotal > 0)
         {
-            var target = Math.Clamp((float)((double)wallet.EarnedToday / wallet.DailyCap), 0f, 1f);
-            var shown = Math.Clamp(capFill.Step(target, CapFillSmoothSeconds, delta), 0f, 1f);
-            if (shown > 0.001f)
-            {
-                var fillEnd = barMin.X + (barMax.X - barMin.X) * shown;
-                Squircle.Fill(drawList, barMin, new Vector2(fillEnd, barMax.Y), barRounding,
-                    ImGui.GetColorU32(accent));
-                ProgressRing.Glow(new Vector2(fillEnd, (barMin.Y + barMax.Y) * 0.5f), 7f * scale, accent,
-                    0.4f);
-            }
+            GoalRow(drawList, columnLeft, columnRight, cursorY + GoalRowHeight * scale * 0.5f, accent, palette,
+                Loc.T(L.Coin.DailyGoals), dailyDone, dailyTotal, scale);
+            cursorY += GoalRowHeight * scale;
         }
+
+        if (weeklyTotal > 0)
+        {
+            GoalRow(drawList, columnLeft, columnRight, cursorY + GoalRowHeight * scale * 0.5f,
+                Palette.Lighten(accent, 0.45f), palette, Loc.T(L.Coin.WeeklyGoals), weeklyDone, weeklyTotal, scale);
+            cursorY += GoalRowHeight * scale;
+        }
+
+        var resetCenterY = cursorY + ResetRowHeight * scale * 0.5f;
+        var glyphSize = 10f * scale;
+        ProgressRing.CenterIcon(drawList, new Vector2(columnLeft + glyphSize * 0.5f, resetCenterY),
+            FontAwesomeIcon.HourglassHalf, palette.MutedInk, glyphSize);
+        var resetText = Loc.T(L.Coin.CapResets, TimeText.Until(wallet.ResetsAtUnix));
+        var resetLeft = columnLeft + glyphSize + 7f * scale;
+        var resetSize = Typography.Measure(resetText, TextStyles.Footnote);
+        Typography.Draw(drawList, new Vector2(resetLeft, resetCenterY - resetSize.Y * 0.5f),
+            Typography.FitText(resetText, columnRight - resetLeft, TextStyles.Footnote), palette.MutedInk,
+            TextStyles.Footnote);
 
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height + 4f * scale));
     }
 
-    private static void Sparkle(ImDrawListPtr drawList, Vector2 min, float width, float height,
-        float fractionX, float fractionY, float radius, float alpha, Vector4 accent, float scale)
+    private static void GoalRow(ImDrawListPtr drawList, float left, float right, float centerY, Vector4 dot,
+        in AppPalette palette, string label, int done, int total, float scale)
     {
-        drawList.AddCircleFilled(new Vector2(min.X + width * fractionX, min.Y + height * fractionY),
-            radius * scale, ImGui.GetColorU32(Palette.WithAlpha(accent, alpha)), 12);
+        var dotRadius = LegendDotRadius * scale;
+        drawList.AddCircleFilled(new Vector2(left + dotRadius, centerY), dotRadius, ImGui.GetColorU32(dot), 16);
+
+        var value = Loc.T(L.Coin.GoalsDone, done, total);
+        var valueSize = Typography.Measure(value, TextStyles.FootnoteEmphasized);
+        var labelLeft = left + dotRadius * 2f + 8f * scale;
+        var labelWidth = MathF.Max(24f * scale, right - valueSize.X - 8f * scale - labelLeft);
+        var fitted = Typography.FitText(label, labelWidth, TextStyles.Footnote);
+        var labelSize = Typography.Measure(fitted, TextStyles.Footnote);
+        Typography.Draw(drawList, new Vector2(labelLeft, centerY - labelSize.Y * 0.5f), fitted, palette.MutedInk,
+            TextStyles.Footnote);
+        Typography.Draw(drawList, new Vector2(right - valueSize.X, centerY - valueSize.Y * 0.5f), value,
+            done >= total ? dot : palette.TitleInk, TextStyles.FootnoteEmphasized);
     }
 }

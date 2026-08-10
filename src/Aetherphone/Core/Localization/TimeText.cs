@@ -214,6 +214,35 @@ internal static class TimeText
         return FutureDayLabel(unixSeconds) + " " + Clock(unixSeconds);
     }
 
+    public static string Until(long unixSeconds)
+    {
+        if (unixSeconds <= 0)
+        {
+            return string.Empty;
+        }
+
+        var span = DateTimeOffset.FromUnixTimeSeconds(unixSeconds) - DateTimeOffset.UtcNow;
+        if (span <= TimeSpan.Zero)
+        {
+            return Loc.T(L.Time.Now);
+        }
+
+        if (span.TotalHours < 1)
+        {
+            return Loc.T(L.Time.InMinutes, Math.Max(1, (int)span.TotalMinutes));
+        }
+
+        if (span.TotalDays < 1)
+        {
+            var hours = (int)span.TotalHours;
+            return span.Minutes > 0
+                ? Loc.T(L.Time.InHoursMinutes, hours, span.Minutes)
+                : Loc.T(L.Time.InHours, hours);
+        }
+
+        return Loc.T(L.Timers.InDays, (int)span.TotalDays);
+    }
+
     public static bool SameLocalDay(long firstUnix, long secondUnix) =>
         DateTimeOffset.FromUnixTimeSeconds(firstUnix).ToLocalTime().Date ==
         DateTimeOffset.FromUnixTimeSeconds(secondUnix).ToLocalTime().Date;

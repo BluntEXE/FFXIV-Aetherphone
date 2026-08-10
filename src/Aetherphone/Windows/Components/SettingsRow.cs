@@ -115,14 +115,7 @@ internal static class SettingsRow
         var tileMax = tileMin + new Vector2(tileSize, tileSize);
         var normalized = IconTile.Surface(tint);
         var tileFill = hovered ? Palette.Mix(normalized, theme.TextStrong, 0.14f) : normalized;
-        Squircle.Fill(dl, tileMin, tileMax, tileSize * Metrics.Radius.TileFactor, ImGui.GetColorU32(tileFill));
-        var iconCenter = (tileMin + tileMax) * 0.5f;
-        var ink = AccentRing.Ink;
-        var hole = Palette.Mix(tileFill, ink, 0.28f);
-        if (!AppIconArt.TryDraw(dl, appId, iconCenter, tileSize * 0.98f, ink, hole))
-        {
-            dl.AddCircleFilled(iconCenter, 4f * scale, ImGui.GetColorU32(ink), 16);
-        }
+        IconTile.DrawApp(dl, appId, (tileMin + tileMax) * 0.5f, tileSize, tileFill);
 
         var labelStartX = tileMax.X + Metrics.Space.Md * scale;
         var chevronWidth = Metrics.Space.Xs * scale;
