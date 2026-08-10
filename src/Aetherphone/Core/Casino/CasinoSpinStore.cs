@@ -89,9 +89,6 @@ internal sealed class CasinoSpinStore : IDisposable
         }, () => claiming = false);
     }
 
-    // The claim answer is fresher than anything the read can return, so a claim owns the field: a
-    // read that started before the claim would otherwise land after it and reopen a spent day. The
-    // generation stamp is what catches the claim that begins and ends inside a single read.
     private void RefreshStatus(long refreshAfterMilliseconds)
     {
         if (!session.IsSignedIn || claiming)

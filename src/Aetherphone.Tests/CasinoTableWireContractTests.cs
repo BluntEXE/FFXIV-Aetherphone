@@ -56,9 +56,6 @@ public sealed class CasinoTableWireContractTests
         Assert.False(CasinoTableFilters.IsPrivate(row));
     }
 
-    // A table the server describes as having five seats and three sitters must never read as full,
-    // which is what every unmatched field name produced: absent names deserialize to zero and zero
-    // of zero satisfies taken >= capacity.
     [Fact]
     public void AFullTableIsOnlyOneWhoseSeatsAreActuallyTaken()
     {

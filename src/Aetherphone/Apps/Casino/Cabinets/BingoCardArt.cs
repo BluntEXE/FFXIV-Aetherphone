@@ -50,8 +50,6 @@ internal static class BingoCardArt
 
         if (cellIndex == BingoRules.FreeCell)
         {
-            // The middle square is given, so it reads as a mark that was already made rather than
-            // as a hole where a number should be.
             drawList.AddCircleFilled(center, cell * 0.40f,
                 ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.55f)), 32);
             Typography.DrawCentered(drawList, center, FreeMark, ui.Palette.HeaderInk,
@@ -98,9 +96,6 @@ internal static class BingoCardArt
             ScaleForRadius(radius), FontWeight.Bold);
     }
 
-    // A number drawn at a fixed size inside a circle that grows is the tell of a chip nobody sized:
-    // the ink has to follow the geometry it sits in, so both the felt and the caller read the same
-    // whatever the layout hands them.
     private static float ScaleForRadius(float radius)
     {
         var scale = radius / (13f * MathF.Max(0.5f, UiScale.Current));

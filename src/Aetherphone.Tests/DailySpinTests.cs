@@ -90,9 +90,6 @@ public sealed class DailySpinTests
         Assert.Equal(0, DailySpinRules.AwardOf(DailySpinRules.SegmentCount));
     }
 
-    // A card that has not heard back yet knows nothing, and nothing is not a free spin. It may not
-    // wear the ready badge, because promising a turn the server has already spent is the whole bug
-    // this state exists to stop, and it may not show a reset time either.
     [Fact]
     public void ACardThatHasNotHeardBackYetPromisesNothingEitherWay()
     {
@@ -102,9 +99,6 @@ public sealed class DailySpinTests
         Assert.False(DailySpinStatus.CanClaim(null, true));
     }
 
-    // The pill stays live while the answer is unknown so a status read that never lands cannot
-    // strand the player behind a button that will not press. The store holds it disabled for the
-    // length of the read by reporting itself busy, and the server refuses a second claim anyway.
     [Fact]
     public void AnUnansweredCardStillLetsThePlayerAskTheServer()
     {
@@ -129,9 +123,6 @@ public sealed class DailySpinTests
         Assert.False(DailySpinStatus.ShowsReset(DailySpinClaim.Available));
     }
 
-    // The reload bug in one assertion: the day the status read reports as spent carries no refusal
-    // reason of its own, so only the Claimed flag can close the card. Reading this as an open day
-    // is what put a free spin on the floor every time the plugin was reloaded.
     [Fact]
     public void ASpentDayFromTheStatusReadClosesTheCardOnItsFlagAlone()
     {
@@ -221,8 +212,6 @@ public sealed class DailySpinTests
         Assert.Equal("rule_cap", CasinoReasons.RuleCap);
     }
 
-    // A granted spin is claimed whether or not the server also says so, and a replay is claimed on
-    // its reason alone. Both survive a server that has not learned the flag yet.
     [Fact]
     public void TheClaimedDayIsReadableWithoutTheFlag()
     {
@@ -265,8 +254,6 @@ public sealed class DailySpinTests
         Assert.Equal("casino.daily", CasinoLedgerRules.Daily);
     }
 
-    // Reading the day and claiming it share one path and differ only in verb, so a client cannot
-    // learn the state without the read and cannot mint by accident while asking.
     [Fact]
     public void TheDayIsReadWithTheVerbThatMintsNothing()
     {

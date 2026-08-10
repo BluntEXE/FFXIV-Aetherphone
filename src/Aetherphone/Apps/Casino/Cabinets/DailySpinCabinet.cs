@@ -133,9 +133,6 @@ internal sealed class DailySpinCabinet
         BeginSpin(result.Segment);
     }
 
-    // A day already spent arrives from the status read rather than from a claim, and it arrives
-    // after the screen is drawing. Settling the wheel on the wedge it stopped on is what makes a
-    // reload show this morning's result instead of an untouched rim under a spent banner.
     private void AdoptKnownSpin()
     {
         var answer = spin.Answer;
