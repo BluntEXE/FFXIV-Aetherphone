@@ -15,7 +15,6 @@ internal sealed class SlotsCabinet
     private const float PadX = 16f;
     private const float InfoRowHeight = 48f;
     private const float BannerHeight = 62f;
-    private const float StakeChipHeight = 36f;
     private const float SpinPillHeight = 50f;
     private const float TurboWidth = 76f;
     private const float SpinRowsPerSecond = 15f;
@@ -42,10 +41,10 @@ internal sealed class SlotsCabinet
     private readonly SlotsRoundPlayback playback = new();
     private readonly ParticleSystem particles = new(256);
     private readonly SlotsPayTableSheet payTable = new();
+    private readonly BetComposer composer = new("##slotsStake");
     private readonly int[] restingGrid = new int[SlotsRules.CellCount];
 
     private RollingValue winRoll;
-    private int stakeIndex;
     private string inlineReason = string.Empty;
     private float lineTraceSeconds;
     private int celebratedSpinIndex = -1;
@@ -61,9 +60,11 @@ internal sealed class SlotsCabinet
         {
             restingGrid[cellIndex] = DecorativeCycle[cellIndex % DecorativeCycle.Length];
         }
+
+        composer.Reset(SlotsRules.DefaultStake);
     }
 
-    public long CurrentStake => SlotsRules.StakeTiers[stakeIndex];
+    public long CurrentStake => composer.Amount;
 
     public bool PayTableOpen => payTable.IsOpen;
 
@@ -148,7 +149,7 @@ internal sealed class SlotsCabinet
         }
         else
         {
-            y = DrawStakeRow(drawList, ui, left, y, width, scale);
+            y = DrawStakeRow(drawList, ui, sitting!, left, y, width, scale, delta);
             y += Metrics.Space.Md * scale;
             DrawSpinControls(drawList, ui, state, sitting!, left, y, width, scale);
         }
@@ -574,39 +575,17 @@ internal sealed class SlotsCabinet
         }
     }
 
-    private float DrawStakeRow(ImDrawListPtr drawList, AppSkin ui, float left, float y, float width, float scale)
+    private float DrawStakeRow(ImDrawListPtr drawList, AppSkin ui, CasinoSittingDto sitting, float left, float y,
+        float width, float scale, float delta)
     {
         var label = Loc.T(L.Casino.SlotsStake);
         Typography.Draw(drawList, new Vector2(left, y), label, ui.MutedInk, TextStyles.FootnoteEmphasized);
         y += 20f * scale;
-        var gap = 8f * scale;
-        var chipWidth = (width - gap * 2f) / SlotsRules.StakeTiers.Length;
-        var chipHeight = StakeChipHeight * scale;
         var changeable = !play.RoundInFlight && !PlaybackBusy;
-        for (var tierIndex = 0; tierIndex < SlotsRules.StakeTiers.Length; tierIndex++)
-        {
-            var chipMin = new Vector2(left + tierIndex * (chipWidth + gap), y);
-            var chipMax = new Vector2(chipMin.X + chipWidth, y + chipHeight);
-            var active = tierIndex == stakeIndex;
-            var hovered = changeable && UiInteract.Hover(chipMin, chipMax);
-            var fill = active ? Palette.WithAlpha(ui.Accent, 0.9f) : ui.FieldSurface;
-            Squircle.Fill(drawList, chipMin, chipMax, chipHeight * 0.5f, ImGui.GetColorU32(fill));
-            if (hovered)
-            {
-                Squircle.Fill(drawList, chipMin, chipMax, chipHeight * 0.5f, ImGui.GetColorU32(ui.HoverTint));
-                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-            }
-
-            var ink = active ? ui.Palette.HeaderInk : ui.BodyInk;
-            Typography.DrawCentered(drawList, (chipMin + chipMax) * 0.5f,
-                GameNumber.Label((int)SlotsRules.StakeTiers[tierIndex]), ink, TextStyles.SubheadlineEmphasized);
-            if (UiInteract.Click(chipMin, chipMax, hovered))
-            {
-                stakeIndex = tierIndex;
-            }
-        }
-
-        return y + chipHeight;
+        var bounds = new Rect(new Vector2(left, y),
+            new Vector2(left + width, y + BetComposer.AmountHeightFor(scale)));
+        return composer.DrawAmount(ui, bounds, SlotsRules.MinStake, SlotsRules.MaxStake, sitting.Stack,
+            SlotsRules.StakeStep, changeable, delta);
     }
 
     private bool PlaybackBusy => playback.Phase == SlotsPlaybackPhase.Spinning
@@ -623,7 +602,7 @@ internal sealed class SlotsCabinet
         }
 
         var stake = CurrentStake;
-        var lowStack = sitting.Stack < stake;
+        var lowStack = stake < SlotsRules.MinStake || sitting.Stack < stake;
         var blocked = state.StakesPaused || state.Draining;
         var canSpin = !play.RoundInFlight && !PlaybackBusy && !blocked && !lowStack;
         var label = canSpin

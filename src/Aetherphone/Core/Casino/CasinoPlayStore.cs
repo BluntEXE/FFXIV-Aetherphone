@@ -74,7 +74,7 @@ internal sealed class CasinoPlayStore : IDisposable
     public void SpinSlots(long stake)
     {
         var sittingId = store.State?.Sitting?.Id ?? string.Empty;
-        if (roundInFlight || !session.IsSignedIn || sittingId.Length == 0 || !SlotsRules.IsStakeTier(stake))
+        if (roundInFlight || !session.IsSignedIn || sittingId.Length == 0 || !SlotsRules.IsStakeInRange(stake))
         {
             return;
         }

@@ -19,10 +19,12 @@ public sealed class SlotsPaylineGeometryTests
         new[] { 2, 1, 1, 1, 0 },
     };
 
+    private const long BackendSingleWinCeiling = 500000;
+
     private static readonly long[,] BackendLinePays =
     {
-        { 2, 8, 40 },
-        { 2, 5, 25 },
+        { 2, 10, 60 },
+        { 2, 5, 30 },
         { 1, 4, 15 },
         { 1, 3, 10 },
         { 1, 2, 5 },
@@ -71,7 +73,6 @@ public sealed class SlotsPaylineGeometryTests
 
         Assert.Equal(new long[] { 0, 0, 0, 1, 5, 25 }, SlotsRules.ScatterPays);
         Assert.Equal(new[] { 0, 0, 0, 8, 12, 20 }, SlotsRules.FreeSpinAwards);
-        Assert.Equal(new long[] { 1, 2, 5 }, SlotsRules.StakeTiers);
     }
 
     [Fact]
@@ -89,14 +90,23 @@ public sealed class SlotsPaylineGeometryTests
     }
 
     [Fact]
-    public void StakeTierValidationOnlyAcceptsTheWireTiers()
+    public void TheStakeBandTopsOutWhereTheCapMeetsTheSingleWinCeiling()
     {
-        Assert.True(SlotsRules.IsStakeTier(1));
-        Assert.True(SlotsRules.IsStakeTier(2));
-        Assert.True(SlotsRules.IsStakeTier(5));
-        Assert.False(SlotsRules.IsStakeTier(0));
-        Assert.False(SlotsRules.IsStakeTier(3));
-        Assert.False(SlotsRules.IsStakeTier(10));
-        Assert.False(SlotsRules.IsStakeTier(-1));
+        Assert.Equal(50, SlotsRules.MinStake);
+        Assert.Equal(BackendSingleWinCeiling, SlotsRules.MaxStake * SlotsRules.PayoutCapMultiple);
+        Assert.True(SlotsRules.IsStakeInRange(SlotsRules.DefaultStake));
+        Assert.Equal(0, SlotsRules.DefaultStake % SlotsRules.StakeStep);
+    }
+
+    [Fact]
+    public void AnyWholeAmountInsideTheBandIsAStake()
+    {
+        Assert.True(SlotsRules.IsStakeInRange(SlotsRules.MinStake));
+        Assert.True(SlotsRules.IsStakeInRange(137));
+        Assert.True(SlotsRules.IsStakeInRange(SlotsRules.MaxStake));
+        Assert.False(SlotsRules.IsStakeInRange(SlotsRules.MinStake - 1));
+        Assert.False(SlotsRules.IsStakeInRange(SlotsRules.MaxStake + 1));
+        Assert.False(SlotsRules.IsStakeInRange(0));
+        Assert.False(SlotsRules.IsStakeInRange(-1));
     }
 }
