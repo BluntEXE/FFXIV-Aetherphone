@@ -12,7 +12,9 @@ updates:
     open-pull-requests-limit: 5
 
   - package-ecosystem: nuget
-    directory: /src/Aetherphone
+    directories:
+      - /src/Aetherphone
+      - /src/Aetherphone.Tests
     schedule:
       interval: weekly
     commit-message:

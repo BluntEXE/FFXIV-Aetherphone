@@ -12,9 +12,10 @@ permissions:
 jobs:
 
   # Cheap gates that don't need the SDK or Dalamud; run them first so a
-  # version-sync mistake fails fast without burning the full build.
+  # version-sync mistake or a style break fails fast without burning the
+  # full build.
   guards:
-    name: Guards (version sync)
+    name: Guards
     runs-on: ubuntu-latest
 
     steps:
@@ -43,6 +44,42 @@ jobs:
           if [ -n "$offenders" ]; then
             echo "$offenders"
             echo "::error::Draw code must scale through UiScale.Current, not ImGuiHelpers.GlobalScale directly. Only src/Aetherphone/UiScale.cs may read the Dalamud scale."
+            exit 1
+          fi
+
+      # The dash is built from its UTF-8 bytes so this step does not trip itself,
+      # and announce-commits.yml is exempt because it carries the character to
+      # substitute it out of Discord payloads.
+      - name: Verify no em dashes
+        shell: bash
+        run: |
+          dash=$(printf '\xe2\x80\x94')
+          offenders=$(git ls-files -z | xargs -0 grep -I -H -n -F -- "$dash" \
+            | grep -v '^.github/workflows/announce-commits.yml:' || true)
+          if [ -n "$offenders" ]; then
+            echo "$offenders"
+            echo "::error::No em dashes anywhere: not in code, UI strings, locale JSONs, or docs. Use commas, colons, or parentheses."
+            exit 1
+          fi
+
+      - name: Verify no async void
+        shell: bash
+        run: |
+          offenders=$(grep -rn 'async void' src --include=*.cs || true)
+          if [ -n "$offenders" ]; then
+            echo "$offenders"
+            echo "::error::Zero async void. Return async Task, and fire-and-forget from draw code with an explicit discard: _ = Task.Run(...)."
+            exit 1
+          fi
+
+      - name: Verify clock format seam
+        shell: bash
+        run: |
+          offenders=$(grep -rnE '"(HH|hh|H|h):mm' src --include=*.cs \
+            | grep -v 'src/Aetherphone/Core/Localization/TimeText.cs' || true)
+          if [ -n "$offenders" ]; then
+            echo "$offenders"
+            echo "::error::All clock text goes through TimeText.Clock. Only src/Aetherphone/Core/Localization/TimeText.cs may hand-format a time pattern."
             exit 1
           fi
 
@@ -79,12 +116,29 @@ jobs:
         run: dotnet build Aetherphone.sln --configuration Release --no-restore
 
       - name: Run tests
-        run: dotnet test Aetherphone.sln --configuration Release --no-build --logger "console;verbosity=normal"
+        run: >
+          dotnet test Aetherphone.sln --configuration Release --no-build
+          --logger "console;verbosity=normal"
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory TestResults
 
+      # The console log on a Windows runner is long and the assertion is buried
+      # in it, so the trx goes up whenever the suite is red.
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: TestResults/test-results.trx
+          if-no-files-found: warn
+          retention-days: 14
+
+      # Every pull request gets a loadable build: reviewing this plugin means
+      # opening the phone in game, so the reviewer needs the zip, not a log.
       - name: Upload plugin artifact
-        if: github.ref == 'refs/heads/master'
         uses: actions/upload-artifact@v7
         with:
           name: Aetherphone-plugin
           path: src/Aetherphone/bin/Release/Aetherphone/latest.zip
-          if-no-files-found: warn
+          if-no-files-found: error
+          retention-days: 14
