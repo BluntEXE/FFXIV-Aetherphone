@@ -171,12 +171,12 @@ public sealed class BingoRulesTests
     [Fact]
     public void ThePrizeLadderIsTheEnginesRateTimesTheCardsInPlay()
     {
-        Assert.Equal(2900, BingoRules.PrizeFor(BingoRules.StageLine, 10));
-        Assert.Equal(3850, BingoRules.PrizeFor(BingoRules.StageTwoLines, 10));
-        Assert.Equal(8300, BingoRules.PrizeFor(BingoRules.StageFullHouse, 10));
-        Assert.Equal(290, BingoRules.PrizeFor(BingoRules.StageLine, 1));
-        Assert.Equal(385, BingoRules.PrizeFor(BingoRules.StageTwoLines, 1));
-        Assert.Equal(830, BingoRules.PrizeFor(BingoRules.StageFullHouse, 1));
+        Assert.Equal(2847, BingoRules.PrizeFor(BingoRules.StageLine, 10));
+        Assert.Equal(3780, BingoRules.PrizeFor(BingoRules.StageTwoLines, 10));
+        Assert.Equal(8149, BingoRules.PrizeFor(BingoRules.StageFullHouse, 10));
+        Assert.Equal(285, BingoRules.PrizeFor(BingoRules.StageLine, 1));
+        Assert.Equal(378, BingoRules.PrizeFor(BingoRules.StageTwoLines, 1));
+        Assert.Equal(815, BingoRules.PrizeFor(BingoRules.StageFullHouse, 1));
     }
 
     [Fact]
@@ -192,13 +192,13 @@ public sealed class BingoRulesTests
     public void PrizesStopGrowingAtTheDisclosedCardCap()
     {
         var atCap = BingoRules.PrizeFor(BingoRules.StageFullHouse, BingoRules.PrizeCardCap);
-        Assert.Equal(103_750, atCap);
+        Assert.Equal(101_863, atCap);
         Assert.Equal(atCap, BingoRules.PrizeFor(BingoRules.StageFullHouse, BingoRules.PrizeCardCap + 1));
         Assert.Equal(atCap, BingoRules.PrizeFor(BingoRules.StageFullHouse, 100_000));
         Assert.True(atCap < BingoRules.MaxSingleWin);
 
         var lineAtCap = BingoRules.PrizeFor(BingoRules.StageLine, BingoRules.PrizeCardCap);
-        Assert.Equal(36_250, lineAtCap);
+        Assert.Equal(35_588, lineAtCap);
         Assert.Equal(lineAtCap, BingoRules.PrizeFor(BingoRules.StageLine, BingoRules.PrizeCardCap * 4));
         Assert.True(lineAtCap < BingoRules.MaxSingleWin);
     }

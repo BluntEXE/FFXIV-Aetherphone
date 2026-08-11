@@ -123,9 +123,9 @@ public sealed class CasinoBingoWireContractTests
     public void TheHallBlobCarriesTheLadderTheCapAndTheCalls()
     {
         const string json = "{\"roundIndex\":7,\"commit\":\"aa\",\"nextCommit\":\"bb\",\"seed\":\"cc\","
-            + "\"cards\":40,\"players\":11,\"prizes\":[11600,15400,33200],\"prizeCardCap\":125,\"ballIndex\":3,"
+            + "\"cards\":40,\"players\":11,\"prizes\":[11388,15120,32596],\"prizeCardCap\":125,\"ballIndex\":3,"
             + "\"balls\":[42,7,55],\"nextBallAtUnixMs\":1754784003000,\"stages\":[{\"stage\":0,\"ball\":41,"
-            + "\"prize\":11600,\"winners\":2,\"paid\":23200}],\"ended\":false,\"cancelled\":false,"
+            + "\"prize\":11388,\"winners\":2,\"paid\":22776}],\"ended\":false,\"cancelled\":false,"
             + "\"cardPrice\":2000,\"maxCards\":4,\"maxWin\":500000}";
         var board = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoBingoRoomStateDto);
 
@@ -148,13 +148,13 @@ public sealed class CasinoBingoWireContractTests
         Assert.NotNull(awarded);
         Assert.Equal(41, awarded.Ball);
         Assert.Equal(2, awarded.Winners);
-        Assert.Equal(23200, awarded.Paid);
+        Assert.Equal(22776, awarded.Paid);
     }
 
     [Fact]
     public void ThePublishedLadderAgreesWithTheMirroredRates()
     {
-        const string json = "{\"roundIndex\":7,\"cards\":40,\"prizes\":[11600,15400,33200],\"prizeCardCap\":125}";
+        const string json = "{\"roundIndex\":7,\"cards\":40,\"prizes\":[11388,15120,32596],\"prizeCardCap\":125}";
         var board = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoBingoRoomStateDto);
 
         Assert.NotNull(board);

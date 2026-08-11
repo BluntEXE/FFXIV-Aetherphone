@@ -36,7 +36,7 @@ internal static class BingoRules
 
     public const int FullMask = (1 << Cells) - 1;
 
-    public static readonly int[] StageRateTenths = { 2900, 3850, 8300 };
+    public static readonly int[] StageRateTenths = { 2847, 3780, 8149 };
 
     public static readonly int[] CardCells =
     {
