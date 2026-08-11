@@ -6,6 +6,7 @@ using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Wallet;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Apps.Wallet;
@@ -16,7 +17,6 @@ internal sealed class WalletApp : IPhoneApp
     private const float CardRounding = 18f;
     private const float RowPadding = 16f;
     private const float SectionGap = 12f;
-
     private const float BadgeRefreshMillis = 1500f;
 
     public string Id => "wallet";
@@ -27,6 +27,11 @@ internal sealed class WalletApp : IPhoneApp
     {
         get
         {
+            if (!configuration.NotifyWalletCapped)
+            {
+                return 0;
+            }
+
             var now = Environment.TickCount64;
             if (now >= nextBadgeTick)
             {
@@ -40,6 +45,7 @@ internal sealed class WalletApp : IPhoneApp
 
     private readonly GameData gameData;
     private readonly ITextureProvider textures;
+    private readonly Configuration configuration;
     private readonly AppSkin ui = new(AppPalettes.Wallet);
     private WalletEntry? gil;
     private WalletSection[] sections = Array.Empty<WalletSection>();
@@ -47,10 +53,11 @@ internal sealed class WalletApp : IPhoneApp
     private int cappedBadge;
     private long nextBadgeTick;
 
-    public WalletApp(GameData gameData, ITextureProvider textures)
+    public WalletApp(GameData gameData, ITextureProvider textures, Configuration configuration)
     {
         this.gameData = gameData;
         this.textures = textures;
+        this.configuration = configuration;
     }
 
     public void OnOpened() => Rebuild();
@@ -84,6 +91,11 @@ internal sealed class WalletApp : IPhoneApp
         ui.Theme = theme;
         ui.Backdrop(SceneChrome.ScreenFrom(content, theme, scale));
         DrawHeader(content, scale);
+        if (DrawNotificationToggle(content, scale))
+        {
+            configuration.NotifyWalletCapped = !configuration.NotifyWalletCapped;
+            configuration.Save();
+        }
 
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + AppHeader.Height * scale), content.Max);
         if (gil is null)
@@ -138,6 +150,29 @@ internal sealed class WalletApp : IPhoneApp
         var rowCenterY = content.Min.Y + AppHeader.Height * scale * 0.5f;
         Typography.DrawCentered(new Vector2(content.Center.X, rowCenterY), DisplayName, AppPalettes.Wallet.TitleInk,
             1.15f, FontWeight.SemiBold);
+    }
+
+    private bool DrawNotificationToggle(Rect content, float scale)
+    {
+        var center = new Vector2(content.Max.X - 22f * scale, content.Min.Y + AppHeader.Height * scale * 0.5f);
+        var radius = 16f * scale;
+        var min = center - new Vector2(radius, radius);
+        var max = center + new Vector2(radius, radius);
+        var paused = !configuration.NotifyWalletCapped;
+        var hovered = UiInteract.Hover(min, max);
+        var color = paused ? AppPalettes.Wallet.Accent : hovered ? AppPalettes.Wallet.TitleInk : AppPalettes.Wallet.MutedInk;
+        ProgressRing.CenterIcon(ImGui.GetWindowDrawList(), center,
+            paused ? FontAwesomeIcon.BellSlash : FontAwesomeIcon.Bell, color, 15f * scale);
+        var toggleRect = new Rect(min, max);
+        UiAnchors.Report("wallet.notifications.toggle", toggleRect);
+        HoverTooltip.Show(toggleRect,
+            Loc.T(paused ? L.Messages.ResumeNotifications : L.Messages.PauseNotifications));
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
     }
 
     private Rect DrawSectionCard(WalletSection section, float scale)
