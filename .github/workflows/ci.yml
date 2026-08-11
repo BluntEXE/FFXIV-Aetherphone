@@ -21,11 +21,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '10.0.x'
-
       - name: Verify version sync (Directory.Build.props ↔ repo.json)
         shell: bash
         run: |
@@ -83,18 +78,7 @@ jobs:
       - name: Build (Release)
         run: dotnet build Aetherphone.sln --configuration Release --no-restore
 
-      - name: Find test projects
-        id: find_tests
-        shell: bash
-        run: |
-          if find . -name "*.Tests.csproj" -o -name "*.Test.csproj" 2>/dev/null | grep -q .; then
-            echo "found=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "found=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Run tests
-        if: steps.find_tests.outputs.found == 'true'
         run: dotnet test Aetherphone.sln --configuration Release --no-build --logger "console;verbosity=normal"
 
       - name: Upload plugin artifact
