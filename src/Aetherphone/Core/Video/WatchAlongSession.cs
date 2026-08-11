@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
@@ -26,6 +27,11 @@ internal sealed record PendingJoinRequest(string UserId, string Name, string Wor
 // above applies to stream.queueSuggestion's From too.
 internal sealed record QueueSuggestion(string SuggestionId, string UserId, string Name, string World,
     string DisplayName, string Url);
+
+// An alert raised from the receive thread, waiting for the main thread to show it (see
+// WatchAlongSession.pendingAlerts). Carries the LocStrings, not resolved text, so a language
+// change between receiving and showing still lands in the right language.
+internal readonly record struct PendingAlert(LocString Title, LocString Body);
 
 internal enum WatchAlongMode : byte
 {
@@ -90,6 +96,15 @@ internal sealed class WatchAlongSession : IDisposable
     // thread. A plain volatile bool is enough here (no payload to hand off, and a worst-case
     // one-frame-late Stop is harmless) rather than the CallControl handoff the other two need.
     private volatile bool pendingViewerStop;
+
+    // Same background-thread problem again, on the alert path: OnDeclined/OnQueueSuggestionResult/
+    // OnKicked all raise a ConfirmService alert straight from the receive loop, and ConfirmService
+    // is main-thread-only (a check-then-set on Active, then a plain Queue<T>). Alerts are stashed
+    // here as their LocStrings and raised from OnFrameworkUpdate instead, which also keeps Loc.T
+    // resolving at display time rather than at receive time. A queue rather than a single slot:
+    // two verdicts can land in the same frame (a denied suggestion followed by a kick), and
+    // silently dropping either one leaves the user with no explanation for what just happened.
+    private readonly ConcurrentQueue<PendingAlert> pendingAlerts = new();
 
     // Per the protocol spec: "the host's FIRST stream.state creates the room ('go live') ... wait
     // for that echo before treating yourself as hosting." Set right before the first PublishState
@@ -354,6 +369,13 @@ internal sealed class WatchAlongSession : IDisposable
             video.Stop();
         }
 
+        // Ahead of every early return below: an alert explains something that already happened
+        // (a denial, a kick), so it must still be shown in the states those returns cover.
+        while (pendingAlerts.TryDequeue(out var alert))
+        {
+            confirm.Alert(Loc.T(alert.Title), Loc.T(alert.Body), Loc.T(L.Phone.OutcomeDismiss));
+        }
+
         if (Mode == WatchAlongMode.Viewing)
         {
             // The user's own queue only ever gets an entry through explicit local action (URL
@@ -540,15 +562,13 @@ internal sealed class WatchAlongSession : IDisposable
             // request and said no), so it earns its own message instead of the deliberately
             // generic one below. Deny is not sticky server-side - a denied user may ask again,
             // throttled only by the 2s join cooldown.
-            confirm.Alert(Loc.T(L.AetherStream.JoinDeniedTitle), Loc.T(L.AetherStream.JoinDeniedBody),
-                Loc.T(L.Phone.OutcomeDismiss));
+            QueueAlert(L.AetherStream.JoinDeniedTitle, L.AetherStream.JoinDeniedBody);
             return;
         }
 
         // Deliberately generic - a decline must never reveal whether it was a block, a full room,
         // or the host simply isn't live, per the server's own policy note.
-        confirm.Alert(Loc.T(L.AetherStream.StreamUnavailableTitle), Loc.T(L.AetherStream.StreamUnavailableBody),
-            Loc.T(L.Phone.OutcomeDismiss));
+        QueueAlert(L.AetherStream.StreamUnavailableTitle, L.AetherStream.StreamUnavailableBody);
     }
 
     private void OnRoster(CallControl message)
@@ -668,13 +688,11 @@ internal sealed class WatchAlongSession : IDisposable
     {
         if (message.Reason == "accepted")
         {
-            confirm.Alert(Loc.T(L.AetherStream.QueueSuggestionAcceptedTitle),
-                Loc.T(L.AetherStream.QueueSuggestionAcceptedBody), Loc.T(L.Phone.OutcomeDismiss));
+            QueueAlert(L.AetherStream.QueueSuggestionAcceptedTitle, L.AetherStream.QueueSuggestionAcceptedBody);
             return;
         }
 
-        confirm.Alert(Loc.T(L.AetherStream.QueueSuggestionDeniedTitle),
-            Loc.T(L.AetherStream.QueueSuggestionDeniedBody), Loc.T(L.Phone.OutcomeDismiss));
+        QueueAlert(L.AetherStream.QueueSuggestionDeniedTitle, L.AetherStream.QueueSuggestionDeniedBody);
     }
 
     private void RemovePendingRequest(string userId)
@@ -844,9 +862,11 @@ internal sealed class WatchAlongSession : IDisposable
         Interlocked.Exchange(ref pendingJoinSync, null);
         Interlocked.Exchange(ref pendingStateSync, null);
 
-        confirm.Alert(Loc.T(L.AetherStream.KickedTitle), Loc.T(L.AetherStream.KickedBody),
-            Loc.T(L.Phone.OutcomeDismiss));
+        QueueAlert(L.AetherStream.KickedTitle, L.AetherStream.KickedBody);
     }
+
+    // Called from the receive thread only - see pendingAlerts.
+    private void QueueAlert(LocString title, LocString body) => pendingAlerts.Enqueue(new PendingAlert(title, body));
 
     private static WatchAlongParticipant[] ToParticipants(ParticipantInfo[]? participants)
     {
