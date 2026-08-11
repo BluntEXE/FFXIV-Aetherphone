@@ -3426,6 +3426,8 @@ internal static class L
         public static readonly LocString SectionPvp = new("wallet.sectionPvp", "PvP");
         public static readonly LocString SectionCrafting = new("wallet.sectionCrafting", "Crafting & Gathering");
         public static readonly LocString SectionOther = new("wallet.sectionOther", "Other");
+        public static readonly LocString ShowBadge = new("wallet.showBadge", "Show badge");
+        public static readonly LocString HideBadge = new("wallet.hideBadge", "Hide badge");
     }
 
     internal static class Jobs

@@ -2338,6 +2338,8 @@
   "wallet.sectionPvp": "PvP",
   "wallet.sectionCrafting": "クラフター＆ギャザラー",
   "wallet.sectionOther": "その他",
+  "wallet.showBadge": "バッジを表示",
+  "wallet.hideBadge": "バッジを非表示",
   "jobs.logInToView": "ログインしてジョブを見る",
   "jobs.noGearsets": "ゲーム内でジョブのギアセットを登録すると、ここに表示されます。",
   "jobs.noGearset": "ギアセットなし",

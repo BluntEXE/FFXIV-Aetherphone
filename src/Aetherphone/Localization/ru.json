@@ -2338,6 +2338,8 @@
   "wallet.sectionPvp": "PvP",
   "wallet.sectionCrafting": "Ремесло и сбор",
   "wallet.sectionOther": "Прочее",
+  "wallet.showBadge": "Показать значок",
+  "wallet.hideBadge": "Скрыть значок",
   "jobs.logInToView": "Войдите, чтобы увидеть классы",
   "jobs.noGearsets": "Создайте в игре набор экипировки для класса, и он появится здесь.",
   "jobs.noGearset": "Нет набора",
