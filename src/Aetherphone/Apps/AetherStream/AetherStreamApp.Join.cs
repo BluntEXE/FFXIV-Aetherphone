@@ -112,14 +112,15 @@ internal sealed partial class AetherStreamApp
 
         var avatarRadius = 18f * scale;
         var avatarCenter = new Vector2(rect.Min.X + 8f * scale + avatarRadius, rect.Center.Y);
-        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, row.Name, row.World, null, remoteImages,
-            lodestone, 0.8f, 28);
+        // DisplayName for the monogram and no name/world caption: NearbyStreamInfo carries the
+        // same DisplayName-only shape as ParticipantInfo, so a Name/World line here would render
+        // as a bare separator and the portrait lookup would never resolve (see NearbyStream).
+        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, row.DisplayName, string.Empty, null,
+            remoteImages, lodestone, 0.8f, 28);
 
         var textLeft = avatarCenter.X + avatarRadius + 12f * scale;
-        Typography.Draw(new Vector2(textLeft, rect.Center.Y - 16f * scale), row.DisplayName, theme.TextStrong,
+        Typography.Draw(new Vector2(textLeft, rect.Center.Y - 8f * scale), row.DisplayName, theme.TextStrong,
             TextStyles.Body);
-        Typography.Draw(new Vector2(textLeft, rect.Center.Y + 2f * scale), $"{row.Name}  ·  {row.World}",
-            theme.TextMuted, TextStyles.Caption1);
 
         if (hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
