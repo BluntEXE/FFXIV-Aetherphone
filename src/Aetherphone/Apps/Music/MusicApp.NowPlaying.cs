@@ -19,6 +19,20 @@ internal sealed partial class MusicApp
     private static readonly Vector4 PlayInk = new(0.05f, 0.06f, 0.05f, 1f);
     private static readonly Vector4 White = new(1f, 1f, 1f, 1f);
 
+    private void DrawStationCover(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding)
+    {
+        var station = playback.Radio.CurrentStationInfo;
+        if (station.ArtworkUrl.Length > 0 && Thumb(station.ArtworkUrl).Texture is { } cover)
+        {
+            drawList.AddImageRounded(cover.Handle, min, max, Vector2.Zero, Vector2.One, 0xFFFFFFFFu, rounding,
+                ImDrawFlags.RoundCornersAll);
+            return;
+        }
+
+        drawList.AddImageRounded(artwork.HandleForName(playback.Title), min, max, Vector2.Zero, Vector2.One,
+            0xFFFFFFFFu, rounding, ImDrawFlags.RoundCornersAll);
+    }
+
     private void DrawMiniPlayer(Rect content, float scale)
     {
         var presence = Math.Clamp(miniPresence.Value, 0f, 1f);
@@ -54,8 +68,7 @@ internal sealed partial class MusicApp
             }
             else
             {
-                drawList.AddImageRounded(artwork.HandleForName(playback.Title), artMin, artMax, Vector2.Zero,
-                    Vector2.One, 0xFFFFFFFFu, 6f * scale, ImDrawFlags.RoundCornersAll);
+                DrawStationCover(drawList, artMin, artMax, 6f * scale);
             }
 
             var toggleCenter = new Vector2(max.X - 28f * scale, centerY);
@@ -255,8 +268,7 @@ internal sealed partial class MusicApp
         }
         else
         {
-            drawList.AddImageRounded(artwork.HandleForName(playback.Title), artMin, artMax, Vector2.Zero, Vector2.One,
-                0xFFFFFFFFu, artRounding, ImDrawFlags.RoundCornersAll);
+            DrawStationCover(drawList, artMin, artMax, artRounding);
             Equalizer.Draw(drawList, new Vector2(artMax.X - 22f * scale, artMax.Y - 18f * scale), scale, 16f * scale,
                 clock, White, 1f, playback.IsPlaying);
         }

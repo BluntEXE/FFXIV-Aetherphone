@@ -1,3 +1,4 @@
+using Aetherphone.Core.Animation;
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
@@ -5,7 +6,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Games.Simon;
 
@@ -47,6 +47,8 @@ internal sealed class SimonApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Simon);
+    public bool RunsOnAClock => true;
+
     public string Genre => Loc.T(L.Games.GenreMemory);
     public void Open()
     {
@@ -88,7 +90,7 @@ internal sealed class SimonApp : IMiniGame
     public void Draw(in GameContext context)
     {
         var deltaSeconds = context.DeltaSeconds;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         var body = context.Body;
         if (!statsLoaded)

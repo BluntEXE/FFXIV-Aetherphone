@@ -83,7 +83,7 @@ internal sealed class ModerationNoticeArchive
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[Notices] history fetch failed: {exception.Message}");
+                AepLog.Warning(exception, "[Notices] history fetch failed");
             }
             finally
             {

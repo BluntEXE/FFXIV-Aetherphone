@@ -3,7 +3,6 @@ using Aetherphone.Core;
 using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -20,7 +19,7 @@ internal sealed partial class VelvetShell
 
     private void DrawGate(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var screen = SceneChrome.ScreenFrom(area, theme, scale);
         ui.Backdrop(screen);
         var drawList = ImGui.GetWindowDrawList();
@@ -71,7 +70,7 @@ internal sealed partial class VelvetShell
 
     private void DrawCategoryPicker(VelvetTagCategory[] categories, List<string> target)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         for (var index = 0; index < categories.Length; index++)
         {
             DrawTagCategory(categories[index], target);
@@ -100,7 +99,7 @@ internal sealed partial class VelvetShell
 
     private static void DrawTagCategoryHeader(string title, Vector4 hue)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var headerOrigin = ImGui.GetCursorScreenPos();
         Typography.Draw(headerOrigin,
@@ -113,7 +112,7 @@ internal sealed partial class VelvetShell
     private void DrawTagFlow(string[] options, List<string> selected, Vector4 hue, bool showUnlisted = false,
         string[]? universe = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var origin = ImGui.GetCursorScreenPos();
         var height = 40f * scale;

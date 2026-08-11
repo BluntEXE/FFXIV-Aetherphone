@@ -5,7 +5,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Games.Sweeper;
 
@@ -62,7 +61,7 @@ internal sealed class SweeperApp : IMiniGame
     public void Draw(in GameContext context)
     {
         var deltaSeconds = context.DeltaSeconds;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         var body = context.Body;
         if (loadedBestTime < 0)
@@ -195,7 +194,7 @@ internal sealed class SweeperApp : IMiniGame
             if (!wasFlagged && board.IsFlagged(hoveredIndex))
             {
                 flagAnim[hoveredIndex] = 1f;
-                particles.Sparkle(cellCenter, 4, new Vector4(1f, 0.85f, 0.5f, 1f), 90f * ImGuiHelpers.GlobalScale, 1.8f,
+                particles.Sparkle(cellCenter, 4, new Vector4(1f, 0.85f, 0.5f, 1f), 90f * UiScale.Current, 1.8f,
                     0.5f);
             }
         }
@@ -218,7 +217,7 @@ internal sealed class SweeperApp : IMiniGame
             fx.Flash(new Vector4(0.95f, 0.3f, 0.3f, 1f), 0.45f);
             if (board.ClickedBomb >= 0)
             {
-                var scale = ImGuiHelpers.GlobalScale;
+                var scale = UiScale.Current;
                 var center = grid.CellCenter(board.ClickedBomb % board.Columns, board.ClickedBomb / board.Columns);
                 particles.Burst(center, 40, new Vector4(0.98f, 0.45f, 0.32f, 1f), 360f * scale, 4.5f, 0.85f, 420f);
                 particles.Streaks(center, 16, new Vector4(1f, 0.7f, 0.4f, 1f), 480f * scale, 2.8f, 0.55f);
@@ -235,8 +234,8 @@ internal sealed class SweeperApp : IMiniGame
                 Accent, Core.Theme.Accent.Mint, Core.Theme.Accent.Amber, Core.Theme.Accent.Pink,
             };
             particles.Confetti(new Vector2(grid.Center.X, grid.Bounds.Min.Y), 70, palette,
-                260f * ImGuiHelpers.GlobalScale, 4f, 1.3f);
-            particles.Sparkle(grid.Center, 16, new Vector4(1f, 0.95f, 0.7f, 1f), 200f * ImGuiHelpers.GlobalScale, 2.6f,
+                260f * UiScale.Current, 4f, 1.3f);
+            particles.Sparkle(grid.Center, 16, new Vector4(1f, 0.95f, 0.7f, 1f), 200f * UiScale.Current, 2.6f,
                 0.9f);
             fx.Shockwave(grid.Center, grid.Width * 0.55f, GamePalette.Lighten(Accent, 0.3f), 0.6f, 3f);
         }

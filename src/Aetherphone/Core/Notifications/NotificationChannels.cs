@@ -21,11 +21,15 @@ internal static class NotificationChannels
         new("muster", L.Apps.Muster, AppAccents.For("muster")),
         new("yellowpages", L.Apps.YellowPages, AppAccents.For("yellowpages")),
         new("announcements", L.Apps.Announcements, AppAccents.For("announcements")),
+        new("music", L.Apps.Music, AppAccents.For("music")),
         new("timers", L.Apps.Timers, AppAccents.For("timers")),
         new("character", L.Apps.Character, AppAccents.For("character")),
         new("health", L.Apps.Health, AppAccents.For("health")),
+        new("housing", L.Apps.Housing, AppAccents.For("housing")),
         new("calendar", L.Apps.Calendar, AppAccents.For("calendar")),
         new("clock", L.Apps.Clock, AppAccents.For("clock")),
         new("notes", L.Apps.Notes, AppAccents.For("notes")),
+        new("coin", L.Apps.Coin, AppAccents.For("coin")),
+        new("casino", L.Apps.Casino, AppAccents.For("casino")),
     };
 }

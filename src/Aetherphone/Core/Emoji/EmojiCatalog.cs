@@ -74,7 +74,7 @@ internal static class EmojiCatalog
         }
         catch (Exception exception)
         {
-            AepLog.Error($"Failed to load emoji catalog: {exception.Message}");
+            AepLog.Error(exception, "Failed to load emoji catalog");
         }
     }
 

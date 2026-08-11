@@ -8,6 +8,7 @@ internal readonly struct CallView
     public readonly bool Muted;
     public readonly float Volume;
     public readonly float MicLevel;
+    public readonly float PeakMicLevel;
     public readonly int Seconds;
     public readonly ParticipantInfo[] Participants;
     public readonly ParticipantInfo? IncomingFrom;
@@ -16,7 +17,7 @@ internal readonly struct CallView
     public readonly string PeerLabel;
     public readonly int OthersCount;
 
-    public CallView(CallState state, bool muted, float volume, float micLevel, int seconds,
+    public CallView(CallState state, bool muted, float volume, float micLevel, float peakMicLevel, int seconds,
         ParticipantInfo[] participants, ParticipantInfo? incomingFrom, bool connected, string localUserId,
         string peerLabel, int othersCount)
     {
@@ -24,6 +25,7 @@ internal readonly struct CallView
         Muted = muted;
         Volume = volume;
         MicLevel = micLevel;
+        PeakMicLevel = peakMicLevel;
         Seconds = seconds;
         Participants = participants;
         IncomingFrom = incomingFrom;

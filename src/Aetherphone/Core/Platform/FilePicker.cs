@@ -5,7 +5,7 @@ namespace Aetherphone.Core.Platform;
 
 internal static class FilePicker
 {
-    private const string ImageExtensions = "{.png,.jpg,.jpeg,.bmp},.*";
+    private const string ImageExtensions = "{.png,.jpg,.jpeg,.bmp,.gif},.*";
     private const string AudioExtensions = "{.mp3,.wav},.*";
     private static readonly FileDialogManager Manager = new();
 
@@ -14,28 +14,60 @@ internal static class FilePicker
         Manager.Draw();
     }
 
+    public static Action<string>? ProblemReporter;
+
     public static void PickImage(string title, Action<string> onPicked)
     {
+        var guarded = OnlyLocalFiles(onPicked);
         if (UsesNativeDialog)
         {
-            NativeFileDialog.PickImage(title, onPicked);
+            NativeFileDialog.PickImage(title, guarded);
             return;
         }
 
         Open(title, Loc.T(L.Common.FileKindImages) + ImageExtensions,
-            ExistingFolder(Environment.SpecialFolder.MyPictures), onPicked);
+            ExistingFolder(Environment.SpecialFolder.MyPictures), guarded);
     }
 
     public static void PickAudio(string title, Action<string> onPicked)
     {
+        var guarded = OnlyLocalFiles(onPicked);
         if (UsesNativeDialog)
         {
-            NativeFileDialog.PickAudio(title, onPicked);
+            NativeFileDialog.PickAudio(title, guarded);
             return;
         }
 
         Open(title, Loc.T(L.Common.FileKindAudio) + AudioExtensions,
-            ExistingFolder(Environment.SpecialFolder.MyMusic), onPicked);
+            ExistingFolder(Environment.SpecialFolder.MyMusic), guarded);
+    }
+
+    private static Action<string> OnlyLocalFiles(Action<string> onPicked) => path =>
+    {
+        if (NotYetDownloaded(path))
+        {
+            ProblemReporter?.Invoke(Loc.T(L.Common.FileNotDownloaded));
+            return;
+        }
+
+        onPicked(path);
+    };
+
+    private static bool NotYetDownloaded(string path)
+    {
+        try
+        {
+            const uint offline = 0x00001000;
+            const uint recallOnOpen = 0x00040000;
+            const uint recallOnDataAccess = 0x00400000;
+            var attributes = (uint)File.GetAttributes(path);
+            return (attributes & (offline | recallOnOpen | recallOnDataAccess)) != 0;
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning(exception, $"Could not read attributes for {path}");
+            return false;
+        }
     }
 
     private static bool UsesNativeDialog => Plugin.Cfg?.UseNativeFileDialog ?? NativeFileDialog.IsSupported;

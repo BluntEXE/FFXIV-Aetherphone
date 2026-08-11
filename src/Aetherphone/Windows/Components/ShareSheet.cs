@@ -5,7 +5,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Sharing;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -25,7 +24,6 @@ internal sealed class ShareSheet
     private const float CancelHeight = 40f;
     private const int MaxColumns = 4;
 
-    private static readonly Vector4 GlyphInk = new(1f, 1f, 1f, 1f);
 
     private readonly ShareService service;
     private Spring reveal;
@@ -39,6 +37,8 @@ internal sealed class ShareSheet
     }
 
     public bool CapturesPointer => service.Pending is not null || !reveal.IsResting(0f, 0.001f, 0.005f);
+
+    public void Dismiss() => service.Dismiss();
 
     public void Draw(Rect screen, PhoneTheme theme)
     {
@@ -87,7 +87,7 @@ internal sealed class ShareSheet
 
     private Rect DrawPanel(Rect screen, PhoneTheme theme, float opacity, float slide, bool interactive)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var targets = service.Targets;
         var pad = Metrics.Space.Xl * scale;
@@ -173,12 +173,13 @@ internal sealed class ShareSheet
         Elevation.IconRest(drawList, tileMin, tileMax, radius, scale);
         IconTile.FillShaded(drawList, tileMin, tileMax, radius, Palette.WithAlpha(surface, opacity));
         Material.EdgeSquircle(drawList, tileMin, tileMax, radius, scale);
-        if (!AppIconArt.TryDraw(drawList, app.Id, tileCenter, tileSize, Palette.WithAlpha(GlyphInk, opacity),
-                Palette.Darken(surface, 0.25f)))
+        var ink = AppAccents.InkFor(app.Id);
+        if (!AppIconArt.TryDraw(drawList, app.Id, tileCenter, tileSize, Palette.WithAlpha(ink, opacity),
+                Palette.Mix(surface, ink, 0.28f)))
         {
             var glyphHeight = Typography.Measure(app.Glyph).Y;
             var glyphScale = glyphHeight > 0f ? tileSize * 0.5f / glyphHeight : 1f;
-            Typography.DrawCentered(drawList, tileCenter, app.Glyph, Palette.WithAlpha(GlyphInk, opacity), glyphScale,
+            Typography.DrawCentered(drawList, tileCenter, app.Glyph, Palette.WithAlpha(ink, opacity), glyphScale,
                 FontWeight.Regular);
         }
 

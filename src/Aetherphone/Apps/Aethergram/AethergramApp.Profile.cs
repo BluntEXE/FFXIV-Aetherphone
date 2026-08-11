@@ -6,7 +6,6 @@ using Aetherphone.Core.Onboarding;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Aethergram;
@@ -19,7 +18,7 @@ internal sealed partial class AethergramApp
     private void DrawProfileGrid(PostDto[] posts, LocString emptyMessage, bool hasMore, bool loadingMore,
         Action loadMore)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (posts.Length == 0)
         {
             Typography.DrawCentered(
@@ -66,7 +65,7 @@ internal sealed partial class AethergramApp
 
     private void DrawGridThumbnail(PostDto post, Vector2 min, Vector2 max)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var rounding = 8f * scale;
         var photos = PostMedia.Photos(post.MediaUrls, post.MediaUrl);
@@ -94,7 +93,7 @@ internal sealed partial class AethergramApp
 
     private void DrawSearchTab(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var searchHeight = 52f * scale;
         profile.DrawSearchBar(new Rect(area.Min, new Vector2(area.Max.X, area.Min.Y + searchHeight)));
         profile.DrawSearchResults(new Rect(new Vector2(area.Min.X, area.Min.Y + searchHeight), area.Max), theme,
@@ -103,7 +102,7 @@ internal sealed partial class AethergramApp
 
     private void DrawHomeTopBar(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
         var logoLeft = area.Min.X + 16f * scale;
         var chevronReserve = store.IsSignedIn ? 32f * scale : 0f;

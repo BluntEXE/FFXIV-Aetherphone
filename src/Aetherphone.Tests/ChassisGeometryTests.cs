@@ -9,15 +9,22 @@ public sealed class ChassisGeometryTests
 {
     private const float Tolerance = 1e-4f;
 
+    private static readonly float[] Widths =
+    {
+        PhoneSizeCatalog.MinimumWidth, 280f, 320f, 337f, 360f, 400f, 450f, 500f, 673f, PhoneSizeCatalog.MaximumWidth,
+    };
+
+    private static readonly float[] GlobalScales = { 1f, 1.111f, 1.25f, 1.4f };
+
     public static TheoryData<float, float, float> Devices()
     {
         var data = new TheoryData<float, float, float>();
-        for (var index = 0; index < PhoneSizeCatalog.Sizes.Count; index++)
+        for (var widthIndex = 0; widthIndex < Widths.Length; widthIndex++)
         {
-            var size = PhoneSizeCatalog.Sizes[index];
-            foreach (var scale in new[] { 1f, 1.111f, 1.25f, 1.4f })
+            var size = PhoneSizeCatalog.SizeFor(Widths[widthIndex]);
+            for (var scaleIndex = 0; scaleIndex < GlobalScales.Length; scaleIndex++)
             {
-                data.Add(size.X, size.Y, scale);
+                data.Add(size.X, size.Y, GlobalScales[scaleIndex]);
             }
         }
 

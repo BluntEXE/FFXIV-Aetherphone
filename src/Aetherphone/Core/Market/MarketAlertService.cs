@@ -138,7 +138,7 @@ internal sealed class MarketAlertService : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Market alert poll failed: {exception.Message}");
+                AepLog.Warning(exception, "Market alert poll failed");
             }
 
             try

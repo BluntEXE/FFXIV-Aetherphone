@@ -28,6 +28,8 @@ internal sealed class ConfirmOverlay
 
     public bool CapturesPointer => service.Active is not null || !reveal.IsResting(0f, 0.001f, 0.005f);
 
+    public void CancelActive() => service.CancelActive();
+
     public void Draw(Rect screen, PhoneTheme theme)
     {
         var active = service.Active;

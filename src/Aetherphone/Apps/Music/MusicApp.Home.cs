@@ -8,7 +8,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Music;
 
@@ -22,32 +21,77 @@ internal sealed partial class MusicApp
 
     private void DrawHome(in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         EnsureFeatured();
         DrawTopBar(context, Greeting(), null);
         var barRect = SearchBarRect(content, scale);
         UiAnchors.Report("music.search", barRect);
-        DrawSearchPill(barRect, scale);
+        if (DrawSearchPill(barRect, scale, Loc.T(L.Music.SearchSongs)))
+        {
+            OpenSearch();
+        }
+
         var body = new Rect(new Vector2(content.Min.X, barRect.Max.Y),
             new Vector2(content.Max.X, BodyBottom(content, scale)));
         var gridWidth = body.Width - 32f * scale;
         using (AppSurface.Begin(body))
         {
             ImGui.Dummy(new Vector2(0f, 4f * scale));
+            DrawCommunitySection(scale);
             DrawRecentChips(scale, gridWidth);
             DrawShelfHeading(Loc.T(L.Music.MadeForYou), scale);
             DrawFeaturedShelf(scale, gridWidth);
             DrawShelfHeading(Loc.T(L.Music.YourPlaylists), scale);
             DrawPlaylistShelf(scale, gridWidth);
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
+        }
+    }
+
+    private void DrawRadioTab(in PhoneContext context)
+    {
+        var scale = UiScale.Current;
+        var content = context.Content;
+        DrawTopBar(context, Loc.T(L.Music.RadioStations), null);
+        var barRect = SearchBarRect(content, scale);
+        if (DrawSearchPill(barRect, scale, Loc.T(L.Music.SearchStations)))
+        {
+            OpenRadioSearch();
+        }
+
+        var body = new Rect(new Vector2(content.Min.X, barRect.Max.Y),
+            new Vector2(content.Max.X, BodyBottom(content, scale)));
+        var gridWidth = body.Width - 32f * scale;
+        using (AppSurface.Begin(body))
+        {
+            ImGui.Dummy(new Vector2(0f, 4f * scale));
             DrawFavoriteRadioStationsSection(Loc.T(L.Music.FavoriteStations), scale);
-            DrawRadioHeading(scale);
+            DrawShelfHeading(Loc.T(L.Music.BrowseCategories), scale);
             DrawCategoryGrid(scale, gridWidth);
             ImGui.Dummy(new Vector2(0f, 10f * scale));
         }
     }
 
-    private void DrawSearchPill(Rect bar, float scale)
+    private void DrawLibrary(in PhoneContext context)
+    {
+        var scale = UiScale.Current;
+        var content = context.Content;
+        DrawTopBar(context, Loc.T(L.Music.TabLibrary), null);
+        var body = ScrollBody(content, scale);
+        var gridWidth = body.Width - 32f * scale;
+        using (AppSurface.Begin(body))
+        {
+            ImGui.Dummy(new Vector2(0f, 4f * scale));
+            DrawShelfHeading(Loc.T(L.Music.RecentlyPlayed), scale);
+            DrawRecentChips(scale, gridWidth);
+            DrawShelfHeading(Loc.T(L.Music.YourPlaylists), scale);
+            DrawPlaylistShelf(scale, gridWidth);
+            DrawFavoriteRadioStationsSection(Loc.T(L.Music.FavoriteStations), scale);
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
+        }
+    }
+
+    private bool DrawSearchPill(Rect bar, float scale, string hint)
     {
         var drawList = ImGui.GetWindowDrawList();
         var pillMin = new Vector2(bar.Min.X + 16f * scale, bar.Min.Y + 8f * scale);
@@ -59,58 +103,26 @@ internal sealed partial class MusicApp
         var centerY = (pillMin.Y + pillMax.Y) * 0.5f;
         AppSkin.Icon(new Vector2(pillMin.X + 18f * scale, centerY), FontAwesomeIcon.Search.ToIconString(),
             ui.MutedInk, 0.85f);
-        var hint = Typography.FitText(Loc.T(L.Music.SearchSongs), pillMax.X - pillMin.X - 48f * scale,
-            TextStyles.Callout);
-        var hintSize = Typography.Measure(hint, TextStyles.Callout);
-        Typography.Draw(new Vector2(pillMin.X + 34f * scale, centerY - hintSize.Y * 0.5f), hint, ui.MutedInk,
+        var fitted = Typography.FitText(hint, pillMax.X - pillMin.X - 48f * scale, TextStyles.Callout);
+        var hintSize = Typography.Measure(fitted, TextStyles.Callout);
+        Typography.Draw(new Vector2(pillMin.X + 34f * scale, centerY - hintSize.Y * 0.5f), fitted, ui.MutedInk,
             TextStyles.Callout);
         if (!hovered)
         {
-            return;
+            return false;
         }
 
         ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
-        {
-            OpenSearch();
-        }
+        return ImGui.IsMouseClicked(ImGuiMouseButton.Left);
     }
 
     private void DrawShelfHeading(string title, float scale)
     {
         ImGui.Dummy(new Vector2(0f, 14f * scale));
         var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var fitted = Typography.FitText(title, width, TextStyles.Title3);
         Typography.Draw(origin, fitted, ui.Palette.HeadingInk, TextStyles.Title3);
-        ImGui.Dummy(new Vector2(0f, 8f * scale));
-    }
-
-    private void DrawRadioHeading(float scale)
-    {
-        ImGui.Dummy(new Vector2(0f, 14f * scale));
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var iconBox = 30f * scale;
-        var title = Typography.FitText(Loc.T(L.Music.RadioStations), width - iconBox - 8f * scale, TextStyles.Title3);
-        var titleSize = Typography.Measure(title, TextStyles.Title3);
-        Typography.Draw(origin, title, ui.Palette.HeadingInk, TextStyles.Title3);
-        var iconCenter = new Vector2(origin.X + width - iconBox * 0.5f, origin.Y + titleSize.Y * 0.5f);
-        var iconMin = iconCenter - new Vector2(iconBox * 0.5f, iconBox * 0.5f);
-        var iconMax = iconCenter + new Vector2(iconBox * 0.5f, iconBox * 0.5f);
-        var hovered = UiInteract.Hover(iconMin, iconMax);
-        if (hovered)
-        {
-            Squircle.Fill(ImGui.GetWindowDrawList(), iconMin, iconMax, iconBox * 0.5f, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        AppSkin.Icon(iconCenter, FontAwesomeIcon.Search.ToIconString(), ui.MutedInk, 0.9f);
-        if (UiInteract.Click(iconMin, iconMax, hovered))
-        {
-            OpenRadioSearch();
-        }
-
         ImGui.Dummy(new Vector2(0f, 8f * scale));
     }
 
@@ -142,36 +154,23 @@ internal sealed partial class MusicApp
                 ? Palette.WithAlpha(ui.Accent, 0.16f)
                 : Palette.WithAlpha(ui.TitleInk, hovered ? 0.13f : 0.07f);
             Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(fill));
-            var showAuthor = configuration.PhoneScale >= PhoneSizeCatalog.DefaultScale;
             var artMax = new Vector2(min.X + chipHeight, max.Y);
             DrawCover(drawList, min, artMax, song.ThumbnailUrl, song.Title, rounding);
             var textLeft = artMax.X + 10f * scale;
             var trailing = current ? 26f * scale : 10f * scale;
             var textWidth = max.X - trailing - textLeft;
-            if (showAuthor)
-            {
-                var chipTitleY = min.Y + 9f * scale;
-                var chipTitleSize = Typography.Measure(song.Title, TextStyles.FootnoteEmphasized);
-                var chipTitleHovering = UiInteract.Hover(new Vector2(textLeft, chipTitleY),
-                    new Vector2(textLeft + textWidth, chipTitleY + chipTitleSize.Y));
-                Marquee.DrawLeft("music.recentChip.title." + song.VideoId, song.Title, textLeft, chipTitleY,
-                    textWidth, TextStyles.FootnoteEmphasized, current ? ui.Accent : ui.TitleInk, chipTitleHovering);
-                var chipAuthorY = min.Y + 28f * scale;
-                var chipAuthorSize = Typography.Measure(song.Author, TextStyles.Caption1);
-                var chipAuthorHovering = UiInteract.Hover(new Vector2(textLeft, chipAuthorY),
-                    new Vector2(textLeft + textWidth, chipAuthorY + chipAuthorSize.Y));
-                Marquee.DrawLeft("music.recentChip.author." + song.VideoId, song.Author, textLeft, chipAuthorY,
-                    textWidth, TextStyles.Caption1, ui.MutedInk, chipAuthorHovering);
-            }
-            else
-            {
-                var chipTitleY = min.Y + (chipHeight - Typography.Measure(song.Title, TextStyles.Caption1).Y) * 0.5f;
-                var chipTitleSize = Typography.Measure(song.Title, TextStyles.Caption1);
-                var chipTitleHovering = UiInteract.Hover(new Vector2(textLeft, chipTitleY),
-                    new Vector2(textLeft + textWidth, chipTitleY + chipTitleSize.Y));
-                Marquee.DrawLeft("music.recentChip.title." + song.VideoId, song.Title, textLeft, chipTitleY,
-                    textWidth, TextStyles.Caption1, current ? ui.Accent : ui.TitleInk, chipTitleHovering);
-            }
+            var chipTitleY = min.Y + 9f * scale;
+            var chipTitleSize = Typography.Measure(song.Title, TextStyles.FootnoteEmphasized);
+            var chipTitleHovering = UiInteract.Hover(new Vector2(textLeft, chipTitleY),
+                new Vector2(textLeft + textWidth, chipTitleY + chipTitleSize.Y));
+            Marquee.DrawLeft("music.recentChip.title." + song.VideoId, song.Title, textLeft, chipTitleY,
+                textWidth, TextStyles.FootnoteEmphasized, current ? ui.Accent : ui.TitleInk, chipTitleHovering);
+            var chipAuthorY = min.Y + 28f * scale;
+            var chipAuthorSize = Typography.Measure(song.Author, TextStyles.Caption1);
+            var chipAuthorHovering = UiInteract.Hover(new Vector2(textLeft, chipAuthorY),
+                new Vector2(textLeft + textWidth, chipAuthorY + chipAuthorSize.Y));
+            Marquee.DrawLeft("music.recentChip.author." + song.VideoId, song.Author, textLeft, chipAuthorY,
+                textWidth, TextStyles.Caption1, ui.MutedInk, chipAuthorHovering);
 
             if (current)
             {
@@ -354,9 +353,9 @@ internal sealed partial class MusicApp
 
     private void DrawStations(in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
-        DrawTopBar(context, StationsTitle(), GoToHome);
+        DrawTopBar(context, StationsTitle(), GoBack);
         var barRect = SearchBarRect(content, scale);
         if (focusRadioSearch)
         {
@@ -427,7 +426,7 @@ internal sealed partial class MusicApp
     private void DrawStationRow(float scale, RadioStation station, int index, Action<int> onPlay)
     {
         var rowHeight = StationRowHeight * scale;
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
         var min = origin;
         var max = new Vector2(origin.X + width, origin.Y + rowHeight);

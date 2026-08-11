@@ -203,7 +203,7 @@ internal sealed class RecipeApp : IPhoneApp
     public void Draw(in PhoneContext context)
     {
         ui.Theme = context.Theme;
-        var screen = SceneChrome.ScreenFrom(context.Content, context.Theme, ImGuiHelpers.GlobalScale);
+        var screen = SceneChrome.ScreenFrom(context.Content, context.Theme, UiScale.Current);
         ui.Backdrop(screen);
         router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
     }
@@ -271,7 +271,7 @@ Dismissing the sheet (`ShareService.Dismiss`) clears `Pending` but intentionally
 `HomeLayoutService` (src/Aetherphone/Core/Home/HomeLayoutService.cs) owns what appears on the home screen:
 
 - The grid is 4 columns (`Columns`) by 5 to 8 rows (`MinRows`/`MaxRows`, default 6), plus a dock of up to 4 apps (`DockCapacity`).
-- Pages hold `HomeTile` items: an app, a folder of apps, or a widget. Layout is persisted as `HomeLayout` (src/Aetherphone/Core/Home/HomeLayout.cs) with per-item `Column`/`Row`, the `Installed` app list, the `Known` list (apps the user has ever seen), and the `Dock`.
+- Pages hold `HomeTile` items: an app, a shortcut, a folder of apps and/or shortcuts, or a widget. Layout is persisted as `HomeLayout` (src/Aetherphone/Core/Home/HomeLayout.cs) with per-item `Column`/`Row`, the `Installed` app list, the `Known` list (apps the user has ever seen), and the `Dock`.
 - Placement is free-form and sticky: each tile keeps its saved `GridCell`, and the solver (`HomeGridSolver`) only assigns cells to tiles that have none or that conflict. Removing a tile leaves a hole; the grid never auto-compacts.
 - `Installed` decides which apps exist on the phone. First run seeds it with every available app; installing via the App Store app (`AppStoreApp`, id `"appstore"`) appends a tile to the last page. `MandatoryApps` (`"appstore"`, `"settings"`, `"announcements"`) cannot be uninstalled.
 - `AppInstaller` (src/Aetherphone/Core/Home/AppInstaller.cs) is the facade other systems use: `IsInstalled` (which also folds in availability), `Install`, `Uninstall`, and `Gate(appId)` returning an `AppGate` that background services (alarm timers, reminders) check before emitting notifications for an app that may be uninstalled.

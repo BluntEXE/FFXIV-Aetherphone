@@ -14,7 +14,6 @@ using Aetherphone.Core.Wallpapers;
 using Aetherphone.Core.YellowPages;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Core.Shell;
@@ -37,10 +36,15 @@ internal sealed class PhoneShell : IDisposable
     private readonly IReadOnlyList<IPhoneApp> apps;
     private readonly WidgetRegistry widgets;
     private readonly NavigationStack navigation;
+    private readonly NotificationService notifications;
     private readonly NotificationBanner banner;
+    private readonly ShortcutRunPill shortcutPill;
+    private readonly CoinEarnPill coinPill;
+    private readonly CoinEarnFloats coinFloats;
     private readonly MinimizedPhone minimizedView;
     private readonly MinimizeTransition minimize = new();
     private readonly SideButton sideButton = new();
+    private readonly ResizeGrip resizeGrip = new();
     private readonly CallHub calls;
     private readonly OnboardingDirector director;
     private readonly SetupOverlay setup;
@@ -66,7 +70,7 @@ internal sealed class PhoneShell : IDisposable
         apps = bundle.Apps;
         widgets = bundle.Widgets;
         calls = services.Calls;
-        var notifications = services.Notifications;
+        notifications = services.Notifications;
         suspensions = new SuspensionGate(services.AethernetSession);
         navigation = new NavigationStack(apps, services.Installer, suspensions);
         notifications.AppAvailability = navigation.IsAvailable;
@@ -76,17 +80,22 @@ internal sealed class PhoneShell : IDisposable
         var router = new NotificationRouter(navigation, notifications, services.SocialNotifications,
             services.LinkpearlLauncher, services.VelvetLauncher, services.DmLauncher, services.GramDmLauncher,
             services.SocialLauncher, services.MusterLauncher, services.YellowPagesLauncher,
-            services.AnnouncementsLauncher, services.SafetyLauncher);
+            services.AnnouncementsLauncher, services.SafetyLauncher, services.RadioLauncher,
+            services.CasinoLauncher);
         MusterChatBridge.Bind(services.Musters, services.MusterLauncher, navigation);
         AdChatBridge.Bind(services.YellowPages, services.YellowPagesLauncher, navigation);
         banner = new NotificationBanner(notifications, VisibleAppId, PhoneVisible, router);
-        banner.Shown += OnBannerShown;
+        notifications.Vibration += OnVibration;
         var island = new DynamicIsland(services.Playback, calls);
         var rateLimitPill = new RateLimitPill(services.Http, services.AethernetSession);
+        shortcutPill = new ShortcutRunPill(services.ShortcutRunner);
+        coinPill = new CoinEarnPill(services.Coins, configuration);
+        coinFloats = new CoinEarnFloats(services.Coins);
         var controlCenter = new ControlCenter(configuration, themes, services.Playback, calls, navigation,
-            notifications, router);
+            notifications, router, services.Coins, services.AethernetSession);
         minimizedView = new MinimizedPhone(notifications, configuration);
-        home = new HomeScreen(apps, bundle.Widgets, services.Shortcuts, services.ShortcutRunner, configuration);
+        home = new HomeScreen(apps, bundle.Widgets, services.Shortcuts, services.ShortcutRunner, configuration,
+            services.Confirm);
         services.Installer.Bind(home.Layout);
         services.Shortcuts.Bind(home.Layout);
         navigation.ReturningHome += home.PrepareReveal;
@@ -105,8 +114,8 @@ internal sealed class PhoneShell : IDisposable
         transition = new ShellTransitionRenderer(themes, navigation, home, painter);
         morph = new MinimizeMorphView(themes, minimize, minimizedView, notifications, painter);
         overlays = new ShellOverlayCoordinator(configuration, loading, navigation, controlCenter, banner, island,
-            rateLimitPill, incomingOverlay, banOverlay, confirmOverlay, reportOverlay, shareSheet, conductOverlay,
-            director, setup);
+            rateLimitPill, shortcutPill, coinPill, coinFloats, incomingOverlay, banOverlay, confirmOverlay,
+            reportOverlay, shareSheet, conductOverlay, director, setup);
     }
 
     public void OnOpened()
@@ -144,6 +153,21 @@ internal sealed class PhoneShell : IDisposable
 
     public bool MinimizedResting => minimize.MinimizedResting;
 
+    private static bool BezelDoubleClicked(Rect device, in ChassisGeometry chassis)
+    {
+        if (!ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left) || ImGui.IsAnyItemHovered())
+        {
+            return false;
+        }
+
+        var mouse = ImGui.GetMousePos();
+        var onDevice = mouse.X >= device.Min.X && mouse.X <= device.Max.X &&
+                       mouse.Y >= device.Min.Y && mouse.Y <= device.Max.Y;
+        var onScreen = mouse.X >= chassis.Screen.Min.X && mouse.X <= chassis.Screen.Max.X &&
+                       mouse.Y >= chassis.Screen.Min.Y && mouse.Y <= chassis.Screen.Max.Y;
+        return onDevice && !onScreen;
+    }
+
     public bool HomeEditing => home.Editing && navigation.Current is null;
 
     public bool LandscapeActive => configuration.CameraLandscape && minimize.Phase == MinimizePhase.None &&
@@ -157,12 +181,24 @@ internal sealed class PhoneShell : IDisposable
 
     public void ForceMinimized() => minimize.SnapMinimized();
 
-    private void OnBannerShown()
+    private void OnVibration(PhoneNotification notification)
     {
-        if (minimize.Phase == MinimizePhase.None && configuration.Vibration)
+        if (minimize.Phase != MinimizePhase.None)
         {
-            shake.Trigger();
+            return;
         }
+
+        if (!PhoneVisible())
+        {
+            return;
+        }
+
+        if (VisibleAppId() == notification.AppId)
+        {
+            return;
+        }
+
+        shake.Trigger();
     }
 
     private bool PhoneVisible() => DateTime.UtcNow - lastVisibleDrawUtc < ScreenVisibleGrace;
@@ -194,6 +230,7 @@ internal sealed class PhoneShell : IDisposable
             }
 
             HoverTooltip.Flush();
+            CopyToast.Flush();
             return;
         }
 
@@ -204,6 +241,9 @@ internal sealed class PhoneShell : IDisposable
         var theme = themes.Chrome;
         var chassis = DeviceChrome.Chassis(device, theme);
         var screen = chassis.Screen;
+        var sideButtonRect = DeviceChrome.SideButtonRect(device, chassis, out var sideButtonSide);
+        var muteButtonRect = DeviceChrome.MuteButtonRect(device, chassis, out var muteButtonSide);
+        var lockButtonRect = DeviceChrome.LockButtonRect(device, chassis, out var lockButtonSide);
         DeviceChrome.DrawBody(chassis, theme, TransparentBand(screen));
         loading.Advance(delta);
         navigation.Advance(delta);
@@ -220,7 +260,7 @@ internal sealed class PhoneShell : IDisposable
         calls.Advance(delta);
         if (!loading.IsActive)
         {
-            switch (sideButton.Update(DeviceChrome.SideButtonRect(device, chassis), theme, delta))
+            switch (sideButton.Update(sideButtonRect, sideButtonSide, theme, delta))
             {
                 case SideButtonAction.Minimize:
                     minimize.BeginCollapse();
@@ -230,17 +270,33 @@ internal sealed class PhoneShell : IDisposable
                     break;
             }
 
-            if (SideToggle.Update(DeviceChrome.MuteButtonRect(device, chassis), theme, configuration.DoNotDisturb,
+            if (BezelDoubleClicked(device, chassis))
+            {
+                minimize.BeginCollapse();
+            }
+
+            if (SideToggle.Update(muteButtonRect, muteButtonSide, theme, configuration.DoNotDisturb,
                     Loc.T(configuration.DoNotDisturb ? L.Plugin.DndDisableHint : L.Plugin.DndEnableHint)))
             {
                 configuration.DoNotDisturb = !configuration.DoNotDisturb;
                 configuration.Save();
             }
 
-            if (SideToggle.Update(DeviceChrome.LockButtonRect(device, chassis), theme, configuration.LockPosition,
+            if (SideToggle.Update(lockButtonRect, lockButtonSide, theme, configuration.LockPosition,
                     Loc.T(configuration.LockPosition ? L.Plugin.UnlockPositionHint : L.Plugin.LockPositionHint)))
             {
                 configuration.LockPosition = !configuration.LockPosition;
+                configuration.Save();
+            }
+
+            var resized = resizeGrip.Update(chassis, PhoneBounds.ClampWidth(configuration.PhoneWidth), delta);
+            if (resized.Adjusting && MathF.Abs(resized.Width - configuration.PhoneWidth) > 0.01f)
+            {
+                configuration.PhoneWidth = resized.Width;
+            }
+
+            if (resized.Committed)
+            {
                 configuration.Save();
             }
         }
@@ -249,14 +305,14 @@ internal sealed class PhoneShell : IDisposable
         var state = overlays.Assess(screen);
         director.Advance(delta, state.Busy, navigation.AtHome, navigation.Current?.Id);
         UiAnchors.BeginFrame(director.WantsAnchors);
-        UiAnchors.Report("chrome.lock", DeviceChrome.LockButtonRect(device, chassis));
-        UiAnchors.Report("chrome.minimize", DeviceChrome.SideButtonRect(device, chassis));
+        UiAnchors.Report("chrome.lock", lockButtonRect);
+        UiAnchors.Report("chrome.minimize", sideButtonRect);
         UiAnchors.Report("chrome.controlcenter",
-            new Rect(screen.Min, new Vector2(screen.Max.X, screen.Min.Y + 44f * ImGuiHelpers.GlobalScale)));
+            new Rect(screen.Min, new Vector2(screen.Max.X, screen.Min.Y + 44f * UiScale.Current)));
         using (InputShield.Engage(state.ShieldBase || director.CapturesPointer))
         {
             DrawContent(chassis, theme);
-            DeviceChrome.MaskScreenCorners(ImGui.GetWindowDrawList(), chassis, theme, ImGuiHelpers.GlobalScale);
+            DeviceChrome.MaskScreenCorners(ImGui.GetWindowDrawList(), chassis, theme, UiScale.Current);
             DrawChrome(screen, theme);
         }
 
@@ -265,7 +321,7 @@ internal sealed class PhoneShell : IDisposable
 
     private Rect? TransparentBand(Rect screen)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (navigation.IsTransitioning)
         {
             return navigation.MotionOver.TransparentViewport(screen, scale) ??
@@ -317,7 +373,7 @@ internal sealed class PhoneShell : IDisposable
 
     private void DrawHomeIndicator(Rect screen, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = 112f * scale;
         var height = 5f * scale;
         var center = new Vector2(screen.Center.X, screen.Max.Y - 14f * scale);
@@ -376,8 +432,11 @@ internal sealed class PhoneShell : IDisposable
     {
         MusterChatBridge.Clear();
         AdChatBridge.Clear();
-        banner.Shown -= OnBannerShown;
+        notifications.Vibration -= OnVibration;
         banner.Dispose();
+        shortcutPill.Dispose();
+        coinPill.Dispose();
+        coinFloats.Dispose();
         minimizedView.Dispose();
         setup.Dispose();
         for (var index = 0; index < apps.Count; index++)

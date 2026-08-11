@@ -367,6 +367,40 @@ internal static class TourRegistry
                 GuideStep.Note(L.Onboarding.HealthGoalsTitle, L.Onboarding.HealthGoalsBody),
                 GuideStep.Note(L.Onboarding.HealthPrivacyTitle, L.Onboarding.HealthPrivacyBody),
             });
+        Add(tours, "coin", 1,
+            new[]
+            {
+                GuideStep.Note(L.Apps.Coin, L.Onboarding.CoinBody),
+                GuideStep.Point(L.Onboarding.CoinBalanceTitle, L.Onboarding.CoinBalanceBody, "coin.balance"),
+                GuideStep.Point(L.Onboarding.CoinCheckInTitle, L.Onboarding.CoinCheckInBody, "coin.checkin"),
+                GuideStep.Point(L.Onboarding.CoinEarnTitle, L.Onboarding.CoinEarnBody, "coin.earn"),
+                GuideStep.Tap(L.Onboarding.CoinShopTitle, L.Onboarding.CoinShopBody, "coin.tabs", "coin.tab.shop"),
+                GuideStep.Note(L.Onboarding.CoinFairTitle, L.Onboarding.CoinFairBody),
+            });
+        Add(tours, "shortcuts", 1,
+            new[]
+            {
+                GuideStep.Note(L.Apps.Shortcuts, L.Onboarding.ShortcutsBody),
+                GuideStep.Point(L.Onboarding.ShortcutsNewTitle, L.Onboarding.ShortcutsNewBody, "shortcuts.new"),
+                GuideStep.Point(L.Onboarding.ShortcutsLibraryTitle, L.Onboarding.ShortcutsLibraryBody,
+                    "shortcuts.library"),
+                GuideStep.Point(L.Onboarding.ShortcutsImportTitle, L.Onboarding.ShortcutsImportBody,
+                    "shortcuts.import"),
+                GuideStep.Tap(L.Onboarding.ShortcutsPluginsTitle, L.Onboarding.ShortcutsPluginsBody, "shortcuts.tabs",
+                    "shortcuts.tab.plugins"),
+                GuideStep.Note(L.Onboarding.ShortcutsHomeTitle, L.Onboarding.ShortcutsHomeBody),
+            });
+        Add(tours, "housing", 1,
+            new[]
+            {
+                GuideStep.Note(L.Apps.Housing, L.Onboarding.HousingBody),
+                GuideStep.Point(L.Onboarding.HousingContextTitle, L.Onboarding.HousingContextBody, "housing.context"),
+                GuideStep.Point(L.Onboarding.HousingMapTitle, L.Onboarding.HousingMapBody, "housing.map"),
+                GuideStep.Point(L.Onboarding.HousingPhaseTitle, L.Onboarding.HousingPhaseBody, "housing.phase"),
+                GuideStep.Point(L.Onboarding.HousingFiltersTitle, L.Onboarding.HousingFiltersBody, "housing.filters"),
+                GuideStep.Point(L.Onboarding.HousingWatchTitle, L.Onboarding.HousingWatchBody, "housing.watchlist"),
+                GuideStep.Note(L.Onboarding.HousingDataTitle, L.Onboarding.HousingDataBody),
+            });
         return tours;
     }
 

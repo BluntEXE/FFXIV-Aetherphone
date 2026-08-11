@@ -53,7 +53,7 @@ The constructor runs, in order:
 4. `PhoneServices.Build(...)` constructs every shared service (next section).
 5. `Fonts = new FontService(...)` builds the Inter font atlas at every weight and size bucket.
 6. `AppRegistry.BuildDefault(services)` constructs every app into an `AppBundle` (apps, home widgets, photo library).
-7. `new PhoneShell(services, bundle)` and `new PhoneWindow(shell, Cfg)` build the UI, and both windows (`PhoneWindow`, `UpdateChipWindow`) are added to a Dalamud `WindowSystem`, the helper that tracks window open state and calls each window's draw methods.
+7. `new PhoneShell(services, bundle)` and `new PhoneWindow(shell, Cfg)` build the UI, and the three windows (`PhoneWindow`, `UpdateChipWindow`, `PhotoWindow`) are added to a Dalamud `WindowSystem`, the helper that tracks window open state and calls each window's draw methods.
 8. Background services start: `PhoneEmoteController`, `TimerNotifier`, `CalendarReminderService`, `ClockAlarmService`, `ReminderService`, `ScreenshotImportService`, character session watchers, and `CallHub`.
 9. Chat commands `/phone` and `/aetherphone` (see `AepConstants`), a server info bar entry (`IDtrBar`), and a context menu hook are registered.
 10. `PluginInterface.UiBuilder.Draw += windowSystem.Draw` wires the whole UI into Dalamud's ImGui frame.
@@ -112,23 +112,26 @@ Crossing threads: `Configuration.Save()` checks `Plugin.Framework.IsInFrameworkU
 
 A Dalamud window is a class deriving from `Dalamud.Interface.Windowing.Window`. You set `Size`, `Position`, and `Flags`, override `PreDraw`/`Draw`/`PostDraw`, and the `WindowSystem` calls them each frame while `IsOpen` is true. `PhoneWindow` uses flags that remove everything a normal window has (`NoTitleBar`, `NoResize`, `NoBackground`, `NoScrollbar`), leaving a transparent canvas that `DeviceChrome` paints a phone onto.
 
-Scaling rule, verified in `PhoneWindow.PreDraw`: **`Window.Size` is specified in unscaled units and Dalamud multiplies it by `ImGuiHelpers.GlobalScale`; `Window.Position` is raw screen pixels and is not scaled.** That is why centering the window multiplies the size manually:
+Scaling rule, verified in `PhoneWindow.PreDraw`: **`Window.Size` is specified in unscaled units and Dalamud multiplies it by `UiScale.Global` (the raw Dalamud scale, *not* `UiScale.Current`); `Window.Position` is raw screen pixels and is not scaled.** This is the one place the phone zoom must be left out, because the size assigned to `Window.Size` already carries it. Getting this wrong double counts the zoom. That is why centering the window multiplies the size manually:
 
 ```csharp
 var viewport = ImGui.GetMainViewport();
-var scaledSize = size * ImGuiHelpers.GlobalScale;
+var scaledSize = size * UiScale.Global;
 Position = viewport.Pos + (viewport.Size - scaledSize) * 0.5f;
 ```
 
 Other things `PhoneWindow` handles:
 
-- The window size comes from `PhoneSizeCatalog.SizeFor(configuration.PhoneScale)`: six fixed portrait sizes (XS through XXL), re-applied every frame with `SizeCondition = ImGuiCond.Always`.
-- Minimized mode swaps the size to `MinimizeTransition.MinimizedSize` (a small puck) and lerps the position between the saved maximized and minimized spots while the morph runs.
+- The window size comes from `PhoneSizeCatalog.SizeFor(width)`, where `width` is `Configuration.PhoneWidth` run through `PhoneBounds.ClampWidth`. Width is continuous (240 to 900, clamped further to fit the game window), height is always `width * PhoneSizeCatalog.AspectRatio`, and the size is re-applied every frame with `SizeCondition = ImGuiCond.Always`. The clamp is applied for display only and never written back to config, so shrinking the game window does not destroy a saved size.
+- `PreDraw` publishes the zoom for the frame: `UiScale.SetPhone(zoom)` for layout and `Plugin.Fonts.SetPhoneZoom(zoom)` for text, where `zoom = width / 360`. It also pushes `FramePadding`, `ItemSpacing`, `ItemInnerSpacing`, `ScrollbarSize` and `GrabMinSize` scaled by the zoom so native ImGui widgets track the phone.
+- Minimized mode swaps the size to `MinimizeTransition.MinimizedSize * zoom` (a small puck) and lerps the position between the saved maximized and minimized spots while the morph runs.
 - Landscape (camera app only) animates a blend between the portrait size and its transpose in `OrientedSize()`; the content is transposed, never rotated.
 - Separate maximized and minimized positions persist in `Configuration.MaximizedPosition` / `MinimizedPosition` via `PersistPositions()`.
-- `Draw()` pushes the base font, reserves the full content region with `ImGui.Dummy`, wraps the region in a `Rect`, and hands it to `shell.Draw(device)`. Apart from `UpdateChipWindow` below, nothing else in the codebase talks to the `Window` API.
+- `Draw()` pushes the base font, reserves the full content region with `ImGui.Dummy`, wraps the region in a `Rect`, and hands it to `shell.Draw(device)`. Apart from the two windows below, nothing else in the codebase talks to the `Window` API.
 
-`UpdateChipWindow` (src/Aetherphone/Windows/UpdateChipWindow.cs) is the only other window: a small chip shown when a plugin update is available.
+`UpdateChipWindow` (src/Aetherphone/Windows/UpdateChipWindow.cs) is a small chip shown under the phone when a plugin update is available.
+
+`PhotoWindow` (src/Aetherphone/Windows/PhotoWindow.cs) is the photo pop-out: an ordinary resizable Dalamud window that shows one image fitted to its content region. `PhotoZoomView` draws the button that opens it (leftmost in the control row), every fullscreen photo viewer returns that click to its caller, and the caller hands `Plugin.PhotoWindow.Open` a `Func<IDalamudTextureWrap?>` plus the `IPhoneApp` it came from. The texture source means the window re-resolves from the cache every frame instead of holding a wrap that eviction could free; the app supplies the window title, read as `DisplayName` every frame so it follows a language switch. It sizes itself to the image aspect the first frame the texture resolves, then leaves the size alone.
 
 ## The shell layer (Core/Shell)
 
@@ -149,6 +152,7 @@ The shell's cast, all in `src/Aetherphone/Core/Shell/`:
 | `ShellOverlayCoordinator` | Decides overlay visibility, z-order, and pointer capture |
 | `MinimizeTransition` / `MinimizeMorphView` | Phone-to-puck collapse state and rendering |
 | `RateLimitPill` | Small pill shown when the backend rate limiter pushes back |
+| `ShortcutRunPill` | Progress and stop button for the running shortcut, plus its outcome |
 
 ### Loading screen
 
@@ -156,10 +160,12 @@ When the window opens full size, `PhoneShell.OnOpened` calls `loading.BeginSessi
 
 ### Overlays and z-order
 
-The overlay model is plain ImGui: **later draw calls appear on top**, so the call order in `ShellOverlayCoordinator.DrawOverlays` is the z-order. From bottom to top: notification banner, dynamic island, rate limit pill, incoming call overlay, control center, share sheet, report overlay, confirm overlay, onboarding director, conduct gate, ban overlay. Two special cases sit outside that list:
+The overlay model is plain ImGui: **later draw calls appear on top**, so the call order in `ShellOverlayCoordinator.DrawOverlays` is the z-order. From bottom to top: notification banner, dynamic island, shortcut run pill, rate limit pill, incoming call overlay, control center, share sheet, report overlay, confirm overlay, onboarding director, conduct gate, ban overlay. Two special cases sit outside that list:
 
 - While `LoadingScreen.IsActive`, `DrawOverlays` draws the boot screen and returns early, so nothing else can appear above it.
 - `DeviceChrome.SealScreen` always runs last. It draws the screen corner mask and the brightness veil on `ImGui.GetForegroundDrawList()`, which renders above every ImGui window, so no content can ever poke outside the rounded screen.
+
+The banner and the two pills all sit in the same strip under the island, so they take turns rather than stack: the notification banner wins, then `ShortcutRunPill`, then `RateLimitPill`. `ShortcutRunPill` is the only one of the three that takes input (its stop button), so it joins the banner in the pointer-capture term that `Assess` folds into `IslandCaptures`.
 
 `Assess` runs before content each frame and returns a `ShellOverlayState` (`Busy`, `ShieldBase`, and friends). `PhoneShell` wraps content drawing in `InputShield.Engage(...)` (src/Aetherphone/Core/Animation/InputShield.cs) so that when any overlay owns the pointer, the layers underneath stop reacting to hover and clicks even though they still draw.
 
@@ -200,10 +206,16 @@ All layout is done in absolute screen coordinates using `Rect` (src/Aetherphone/
 
 `ChassisGeometry.Device(window, theme, scale)` turns the window rect into three nested, pixel-snapped rects with matching corner radii: `Body` (the metal frame), `Glass` (the bezel), and `Screen` (where content lives). `DeviceChrome` (src/Aetherphone/Windows/Components/DeviceChrome.cs) renders them as squircles, plus the side button hit rects (`SideButtonRect`, `MuteButtonRect`, `LockButtonRect`), the wallpaper, and `SealScreen`.
 
-Two scale factors are in play and they multiply:
+Two scale factors are in play and they multiply, which is what `UiScale.Current` returns:
 
-- **`Configuration.PhoneScale`** picks one of the six fixed design sizes in `PhoneSizeCatalog` (design units, portrait).
-- **`ImGuiHelpers.GlobalScale`** is Dalamud's global UI scale. Every hardcoded design unit in draw code is multiplied by it at draw time (`44f * ImGuiHelpers.GlobalScale` and similar throughout the shell).
+- **`UiScale.Global`** is Dalamud's global UI scale, straight from `ImGuiHelpers.GlobalScale`.
+- **`UiScale.Phone`** is the phone zoom, `Configuration.PhoneWidth / 360`. The whole UI is authored against a 360 wide phone and rendered larger or smaller as one unit, so a 720 wide phone is the same layout at 2x, not a bigger phone showing more rows.
+
+Every hardcoded design unit in draw code is multiplied by `UiScale.Current` at draw time (`44f * UiScale.Current` and similar throughout the shell). **`UiScale.cs` is the only file allowed to read `ImGuiHelpers.GlobalScale`,** and a CI guard enforces it. Text follows the same zoom through `FontService`, which folds it into `ImFont.Scale` alongside the text zoom setting, so sizes stay exact with no atlas rebuild.
+
+Because the zoom already scales everything at draw time, **`ChassisMetrics` is built from the fixed design width (360), never the live width.** It sizes bezels as a fraction of the width it is handed, and that result is then multiplied by `UiScale.Current`, so passing the live width would double count the zoom and grow bezels quadratically.
+
+`PhoneScalingTests` (src/Aetherphone.Tests/PhoneScalingTests.cs) asserts chassis geometry, screen aspect, and home grid metrics stay proportional to phone width across a spread of widths and global scales. If a change breaks proportionality, those fail.
 
 Apps do not see any of this: they receive a ready-made content `Rect` already inset by the theme's top zone (status bar) and bottom zone (home indicator) via `ShellScreenPainter.ContentRect`.
 
@@ -283,7 +295,7 @@ One line per subfolder of `src/Aetherphone/Core/`. Root-level files not listed h
 ## Gotchas
 
 - **The plugin constructor can run off the game's main thread.** Never read `IObjectTable.LocalPlayer` (or other live game state) in it. `Plugin` follows this rule: auto-open subscribes `OnAutoOpenTick` to `Framework.Update` and only reads `ObjectTable.LocalPlayer` there, and `DeviceStatus` defers its player lookup to `SyncTarget()`, called from `StatusBar.Draw`.
-- **`Window.Size` scales by `ImGuiHelpers.GlobalScale`, `Window.Position` does not.** Mixing them up puts the window in the wrong place at any UI scale other than 100%. See the centering math in `PhoneWindow.PreDraw`.
+- **`Window.Size` scales by `UiScale.Global`, `Window.Position` does not.** Use `Global` here, not `Current`: the size handed to `Window.Size` already carries the phone zoom, so `Current` would apply it twice. Mixing these up puts the window in the wrong place at any UI scale other than 100% or any phone size other than 360. See the centering math in `PhoneWindow.PreDraw`.
 - **An app that throws in `Draw` does not crash the plugin, but it logs every frame.** `ShellScreenPainter.PaintApp` catches per frame and paints a failure message, so a broken app looks "stuck" while flooding the log. Check the Dalamud log for `[shell] app-draw` lines.
 - **Nothing outdraws `DeviceChrome.SealScreen`.** It renders the corner mask and brightness veil on ImGui's foreground draw list, which sits above all windows. If your overlay must be visible, it has to be drawn inside `ShellOverlayCoordinator.DrawOverlays` before `SealScreen`, and content must stay inside the screen rect.
 - **`Configuration.Save()` is asynchronous from non-framework threads.** It fire-and-forgets onto the framework thread. In teardown paths where the plugin may be gone before that runs, use `SaveNow()` as `PhoneWindow.PersistPositions` does.

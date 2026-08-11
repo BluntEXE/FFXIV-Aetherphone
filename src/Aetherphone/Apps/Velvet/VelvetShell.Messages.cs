@@ -1,10 +1,11 @@
 using Aetherphone.Apps.Velvet.Kit;
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
+using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -15,7 +16,7 @@ internal sealed partial class VelvetShell
 
     private void DrawMessages(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var pad = Metrics.Space.Lg * scale;
         var segRect = new Rect(new Vector2(area.Min.X + pad, area.Min.Y + 8f * scale),
             new Vector2(area.Max.X - pad, area.Min.Y + 8f * scale + 32f * scale));
@@ -47,7 +48,7 @@ internal sealed partial class VelvetShell
 
     private void DrawChatsList(Rect listRect)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (!store.ThreadsLoaded && !store.LoadingThreads)
         {
             store.RefreshThreads();
@@ -89,9 +90,14 @@ internal sealed partial class VelvetShell
                 Time = TimeText.Short(thread.LastMessageAtUnix),
                 Badge = thread.UnreadCount,
             };
-            if (VRow.Draw(in model, ui, theme, images, lodestone) == VRowHit.Body)
+            var hit = VRow.Draw(in model, ui, theme, images, lodestone);
+            if (hit == VRowHit.Body)
             {
                 OpenThread(thread.OtherUserId);
+            }
+            else if (hit == VRowHit.Overflow)
+            {
+                OpenThreadMenu(thread.OtherUserId);
             }
         }
 
@@ -109,7 +115,7 @@ internal sealed partial class VelvetShell
 
     private void DrawRequestsList(Rect listRect)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (!store.RequestsLoaded && !store.LoadingRequests)
         {
             store.RefreshRequests();
@@ -208,6 +214,52 @@ internal sealed partial class VelvetShell
         }
     }
 
+    private void OpenThreadMenu(string otherId)
+    {
+        menuThreadId = otherId;
+        var position = ImGui.GetMousePos();
+        threadMenu.Toggle(otherId, new Rect(position, position + new Vector2(1f, 1f)));
+    }
+
+    private void DrawThreadMenu(Rect area)
+    {
+        if (menuThreadId is not { } otherId || !threadMenu.IsOpenFor(otherId))
+        {
+            return;
+        }
+
+        threadItems[0] = new DropdownMenu.Item(Loc.T(L.Velvet.DeleteConversation),
+            FontAwesomeIcon.Trash.ToIconString(), true);
+        if (threadMenu.Draw(area, theme, threadItems) == 0)
+        {
+            AskDeleteConversation(otherId);
+        }
+    }
+
+    private void AskDeleteConversation(string otherId)
+    {
+        confirm.Ask(new ConfirmRequest
+        {
+            Title = Loc.T(L.Velvet.DeleteConversation),
+            Message = Loc.T(L.Velvet.DeleteConversationMessage),
+            ConfirmLabel = Loc.T(L.Velvet.DeleteConfirm),
+            CancelLabel = Loc.T(L.Velvet.DeleteCancel),
+            Danger = true,
+            Confirm = () => DeleteConversation(otherId),
+        });
+    }
+
+    private void DeleteConversation(string otherId)
+    {
+        var current = router.Current;
+        var threadOpen = current.Screen == VelvetScreenId.Thread && current.Arg == otherId;
+        store.DeleteThread(otherId);
+        if (threadOpen)
+        {
+            router.Pop();
+        }
+    }
+
     private void OpenRequest(string userId)
     {
         if (string.IsNullOrEmpty(userId))
@@ -279,7 +331,7 @@ internal sealed partial class VelvetShell
         }
 
         var introText = ResolveRequestIntro(req);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + VHeader.Height * scale), area.Max);
         using (AppSurface.Begin(body))
         {
@@ -359,7 +411,7 @@ internal sealed partial class VelvetShell
 
     private void DrawIntro(Rect area, string userId)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (VHeader.Push(area, Loc.T(L.Velvet.IntroTitle), theme))
         {
             router.Pop();

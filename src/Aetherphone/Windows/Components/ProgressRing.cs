@@ -2,7 +2,6 @@ using Aetherphone.Core.Animation;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -81,7 +80,7 @@ internal static class ProgressRing
         var bs = Typography.Measure(big, bigStyle);
         var hasSmall = !string.IsNullOrEmpty(small);
         var ss = hasSmall ? Typography.Measure(small!, TextStyles.Footnote) : Vector2.Zero;
-        var gap = hasSmall ? 2f * ImGuiHelpers.GlobalScale : 0f;
+        var gap = hasSmall ? 2f * UiScale.Current : 0f;
         var top = c.Y - (bs.Y + gap + ss.Y) * 0.5f;
         Typography.Draw(new Vector2(c.X - bs.X * 0.5f, top), big, bigCol, bigStyle);
         if (hasSmall)
@@ -103,6 +102,53 @@ internal static class ProgressRing
             dl.AddText(font, drawSize, GlyphPen(font, glyph[0], c, drawSize, measured * scale), ImGui.GetColorU32(col),
                 glyph);
         }
+    }
+
+    public static void CenterIconRamp(ImDrawListPtr dl, Vector2 c, FontAwesomeIcon icon, Vector4[] colors, bool light,
+        float targetHeight, float phase = 0f)
+    {
+        if (colors.Length <= 1)
+        {
+            var single = colors.Length == 1 ? RoleInk.For(colors[0], light) : new Vector4(1f, 1f, 1f, 1f);
+            CenterIcon(dl, c, icon, single, targetHeight);
+            return;
+        }
+
+        var glyph = icon.ToIconString();
+        using (ImRaii.PushFont(UiBuilder.IconFont))
+        {
+            var font = ImGui.GetFont();
+            var baseSize = ImGui.GetFontSize();
+            var measured = ImGui.CalcTextSize(glyph);
+            var scale = measured.Y > 0f ? targetHeight / measured.Y : 1f;
+            var drawSize = baseSize * scale;
+            var lineSize = measured * scale;
+            var pen = GlyphPen(font, glyph[0], c, drawSize, lineSize);
+            var left = c.X - lineSize.X * 0.5f;
+            var top = c.Y - targetHeight;
+            var bottom = c.Y + targetHeight;
+
+            const int rampSlices = 8;
+            for (var sliceIndex = 0; sliceIndex < rampSlices; sliceIndex++)
+            {
+                var clipLeft = left + lineSize.X * sliceIndex / rampSlices;
+                var clipRight = left + lineSize.X * (sliceIndex + 1) / rampSlices;
+                var sample = SampleRamp(colors, (sliceIndex + 0.5f) / rampSlices, phase);
+                var tint = RoleInk.For(sample, light);
+                dl.PushClipRect(new Vector2(clipLeft, top), new Vector2(clipRight, bottom), true);
+                dl.AddText(font, drawSize, pen, ImGui.GetColorU32(tint), glyph);
+                dl.PopClipRect();
+            }
+        }
+    }
+
+    private static Vector4 SampleRamp(Vector4[] colors, float position, float phase)
+    {
+        var shifted = position + phase;
+        shifted -= MathF.Floor(shifted);
+        var scaled = shifted * (colors.Length - 1);
+        var lower = Math.Clamp((int)scaled, 0, colors.Length - 2);
+        return Vector4.Lerp(colors[lower], colors[lower + 1], scaled - lower);
     }
 
     private static unsafe Vector2 GlyphPen(ImFontPtr font, char codepoint, Vector2 center, float drawSize,
@@ -142,7 +188,7 @@ internal static class ProgressRing
         var max = c + new Vector2(radius, radius);
         var hovered = enabled && UiInteract.Hover(min, max);
         var accent = Accent.Violet;
-        var thickness = 4.5f * ImGuiHelpers.GlobalScale;
+        var thickness = 4.5f * UiScale.Current;
         if (enabled)
             Glow(c, radius, accent, 0.85f + (hovered ? 1.0f : 0f) + 0.55f * Pulse.Wave(Pulse.Breath));
         dl.AddCircleFilled(c, radius - thickness * 0.5f,

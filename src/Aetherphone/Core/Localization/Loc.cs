@@ -69,8 +69,9 @@ internal static class Loc
         {
             return CultureInfo.GetCultureInfo(name);
         }
-        catch (CultureNotFoundException)
+        catch (CultureNotFoundException exception)
         {
+            AepLog.Warning(exception, $"Culture '{name}' is unavailable; falling back to the invariant culture");
             return CultureInfo.InvariantCulture;
         }
     }

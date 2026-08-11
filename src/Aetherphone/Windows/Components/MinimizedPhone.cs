@@ -5,7 +5,6 @@ using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -32,14 +31,14 @@ internal sealed class MinimizedPhone : IDisposable
     {
         this.notifications = notifications;
         this.configuration = configuration;
-        notifications.Presented += OnPresented;
+        notifications.Vibration += OnVibration;
     }
 
     public bool IsShowing { get; set; }
 
     public MinimizedAction Draw(Rect device, PhoneTheme theme, float delta)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Global;
         var frame = device.Translate(new Vector2(shake.Advance(delta), 0f));
         var dl = ImGui.GetForegroundDrawList();
         var geometry = ChassisGeometry.Puck(frame.Inset(scale));
@@ -64,7 +63,7 @@ internal sealed class MinimizedPhone : IDisposable
 
     public static void DrawShell(ImDrawListPtr dl, in ChassisGeometry geometry, PhoneTheme theme)
     {
-        DeviceChrome.DrawShell(dl, geometry, ImGuiHelpers.GlobalScale, theme, 1f);
+        DeviceChrome.DrawShell(dl, geometry, UiScale.Global, theme, 1f);
     }
 
     public static void DrawFace(ImDrawListPtr dl, in ChassisGeometry geometry, PhoneTheme theme, float scale,
@@ -110,13 +109,13 @@ internal sealed class MinimizedPhone : IDisposable
         Typography.Draw(dl, center - labelSize * 0.5f, label, new Vector4(1f, 1f, 1f, alpha), 0.66f, FontWeight.Bold);
     }
 
-    private void OnPresented(PhoneNotification _)
+    private void OnVibration(PhoneNotification _)
     {
-        if (IsShowing && configuration.Vibration)
+        if (IsShowing)
         {
             shake.Trigger();
         }
     }
 
-    public void Dispose() => notifications.Presented -= OnPresented;
+    public void Dispose() => notifications.Vibration -= OnVibration;
 }

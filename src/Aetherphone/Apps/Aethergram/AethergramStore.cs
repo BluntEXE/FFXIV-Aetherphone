@@ -31,12 +31,9 @@ internal sealed class AethergramStore : SocialFeedStore
     protected override Task<FeedPage?> FetchTaggedPostsAsync(string userId, string? cursor, CancellationToken token) =>
         grams.UserTaggedAsync(userId, cursor, token);
 
-    // aspects is one choice per photo (Instagram lets a multi-photo post mix Square/Portrait/
-    // Landscape). Each photo is baked at its own chosen size; the post's shared MediaWidth/
-    // MediaHeight (what the feed/detail carousel frames every photo in that post at) comes from
-    // the first photo, matching PhotoComposeSession.ContainerAspect. A later photo whose own
-    // baked size differs from the container just gets contain-fit there too - see
-    // AethergramApp.Detail.cs.
+    // aspects holds one choice per photo. The post's MediaWidth/MediaHeight is the first photo's
+    // aspect box, which frames the whole carousel; each photo is baked to fit inside its own box
+    // and is contain-fit into that frame at draw time.
     public void CreateGram(string[] sourcePaths, WallpaperCrop[] crops, PostAspect[] aspects, string caption,
         PhotoTagInput[]? photoTags, Action<bool> onComplete)
     {
@@ -53,14 +50,8 @@ internal sealed class AethergramStore : SocialFeedStore
             for (var index = 0; index < sourcePaths.Length; index++)
             {
                 var (bakedWidth, bakedHeight) = PostAspects.Size(aspects[index], GramSize);
-                // Reveal-fit only applies to Portrait - Square and Landscape stay a plain cover
-                // crop, matching how they baked before this existed.
-                var minZoom = aspects[index] == PostAspect.Portrait
-                    ? WallpaperCrop.MinZoomToReveal(ImageProcessor.ReadSize(sourcePaths[index]),
-                        (float)bakedWidth / bakedHeight)
-                    : WallpaperCrop.MinZoom;
                 var baked = ImageProcessor.BakeCroppedJpeg(sourcePaths[index], crops[index], bakedWidth, bakedHeight,
-                    minZoom);
+                    PostAspects.RevealsWholeImage(aspects[index]));
                 var upload = await media.UploadUrlAsync("image/jpeg", "gram", token).ConfigureAwait(false);
                 if (upload is null)
                 {

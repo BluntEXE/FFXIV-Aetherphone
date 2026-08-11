@@ -9,7 +9,6 @@ using Aetherphone.Core.YellowPages;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.YellowPages;
 
@@ -22,7 +21,7 @@ internal sealed partial class YellowPagesApp
 
     private void DrawMine(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         DrawTabTitle(area, Loc.T(L.YellowPages.YourAds), 0f, scale);
         var top = area.Min.Y + AppHeader.Height * scale;
         var body = new Rect(new Vector2(area.Min.X, top), area.Max);
@@ -303,7 +302,7 @@ internal sealed partial class YellowPagesApp
 
     private void DrawSaved(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         DrawTabTitle(area, Loc.T(L.YellowPages.SavedTitle), 0f, scale);
         var top = area.Min.Y + AppHeader.Height * scale;
         var body = new Rect(new Vector2(area.Min.X, top), area.Max);

@@ -10,7 +10,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Interface;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Settings.Pages;
 
@@ -37,7 +36,7 @@ internal sealed class ProfilePage : ISettingsPage, IDisposable
 
     public void Draw(in PhoneContext context, Rect body)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         using (AppSurface.Begin(body))
         {
@@ -131,7 +130,7 @@ internal sealed class ProfilePage : ISettingsPage, IDisposable
 
     private void DrawOffsetStepper(Rect row, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var buttonSize = 26f * scale;
         var plusMin = new Vector2(row.Max.X - buttonSize, row.Center.Y - buttonSize * 0.5f);
@@ -214,7 +213,7 @@ internal sealed class ProfilePage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Time zone update failed: {exception.Message}");
+                AepLog.Warning(exception, "Time zone update failed");
             }
         });
     }

@@ -110,13 +110,16 @@ internal static class RecoveryKey
             nonce = Convert.FromBase64String(escrow.Nonce);
             cipher = Convert.FromBase64String(escrow.Ciphertext);
         }
-        catch (FormatException)
+        catch (FormatException exception)
         {
+            AepLog.Error(exception, "[Crypto] recovery failed; the stored escrow blob is not valid base64");
             return null;
         }
 
         if (nonce.Length != NonceBytes || cipher.Length < TagBytes)
         {
+            AepLog.Error(
+                $"[Crypto] recovery failed; escrow nonce is {nonce.Length} bytes and ciphertext is {cipher.Length} bytes");
             return null;
         }
 
@@ -128,8 +131,9 @@ internal static class RecoveryKey
             aes.Decrypt(nonce, cipher.AsSpan(0, plaintext.Length), cipher.AsSpan(plaintext.Length, TagBytes), plaintext);
             return plaintext;
         }
-        catch (CryptographicException)
+        catch (CryptographicException exception)
         {
+            AepLog.Warning(exception, "[Crypto] recovery failed; the recovery key did not decrypt the escrow blob");
             CryptographicOperations.ZeroMemory(plaintext);
             return null;
         }
@@ -139,12 +143,15 @@ internal static class RecoveryKey
         }
     }
 
-    private static byte[] DeriveKey(string canonicalCode, byte[] salt, int iterations)
+    internal static byte[] DeriveKey(string canonicalCode, byte[] salt, int iterations)
     {
         var password = Encoding.UTF8.GetBytes(canonicalCode);
         try
         {
-            return Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, HashAlgorithmName.SHA256, WrapKeyBytes);
+#pragma warning disable SYSLIB0060
+            using var deriveBytes = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA256);
+#pragma warning restore SYSLIB0060
+            return deriveBytes.GetBytes(WrapKeyBytes);
         }
         finally
         {

@@ -214,7 +214,7 @@ internal sealed class TapApp : IMiniGame
 
     public void Draw(in GameContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var body = context.Body;
         var simDelta = fx.ScaleDelta(context.DeltaSeconds);
         particles.Update(context.DeltaSeconds);

@@ -1,7 +1,33 @@
 using System.Security.Cryptography;
 using System.Text;
+using Org.BouncyCastle.Asn1.Sec;
+using Org.BouncyCastle.Crypto.Agreement;
+using Org.BouncyCastle.Crypto.Generators;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Pkcs;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.X509;
 
 namespace Aetherphone.Core.Crypto;
+
+internal sealed class EcPrivateKey
+{
+    internal EcPrivateKey(ECPrivateKeyParameters privateKey, ECPublicKeyParameters publicKey)
+    {
+        PrivateKey = privateKey;
+        PublicKey = publicKey;
+    }
+
+    internal ECPrivateKeyParameters PrivateKey { get; }
+    internal ECPublicKeyParameters PublicKey { get; }
+}
+
+internal sealed class EcPublicKey
+{
+    internal EcPublicKey(ECPublicKeyParameters publicKey) => PublicKey = publicKey;
+
+    internal ECPublicKeyParameters PublicKey { get; }
+}
 
 internal static class CryptoBox
 {
@@ -10,103 +36,130 @@ internal static class CryptoBox
     private const int TagBytes = 16;
     private const string WrapPrefix = "EC1.";
     private static readonly byte[] WrapInfo = Encoding.UTF8.GetBytes("aethernet-cek-v1");
+    private static readonly SecureRandom SecureRandomSource = new();
 
-    public static ECDiffieHellman? TryGenerateIdentity()
+    private static readonly ECNamedDomainParameters P256 = CreateP256Domain();
+
+    public static EcPrivateKey? TryGenerateIdentity()
     {
         try
         {
-            return ECDiffieHellman.Create(ECCurve.NamedCurves.nistP256);
+            var generator = new ECKeyPairGenerator();
+            generator.Init(new ECKeyGenerationParameters(P256, SecureRandomSource));
+            var pair = generator.GenerateKeyPair();
+            return new EcPrivateKey((ECPrivateKeyParameters)pair.Private,
+                (ECPublicKeyParameters)pair.Public);
         }
-        catch (CryptographicException)
+        catch (Exception exception)
         {
-        }
-        catch (PlatformNotSupportedException)
-        {
-        }
-
-        return TryGenerateNamedCurveIdentity();
-    }
-
-    private static ECDiffieHellman? TryGenerateNamedCurveIdentity()
-    {
-        if (!OperatingSystem.IsWindows())
-        {
+            AepLog.Error(exception, "[Crypto] generating a P-256 identity failed; encryption cannot be set up");
             return null;
         }
+    }
 
+    public static string ExportPublicKey(EcPrivateKey key)
+    {
+        return Convert.ToBase64String(
+            SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(key.PublicKey).GetDerEncoded());
+    }
+
+    public static string? TryExportPublicKey(EcPrivateKey key)
+    {
         try
         {
-            var parameters = new CngKeyCreationParameters
+            return ExportPublicKey(key);
+        }
+        catch (Exception exception)
+        {
+            AepLog.Error(exception, "[Crypto] exporting the public key failed");
+            return null;
+        }
+    }
+
+    public static EcPublicKey? ImportPublicKey(string publicKeyBase64)
+    {
+        try
+        {
+            var parsed = PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKeyBase64));
+            if (parsed is ECPublicKeyParameters publicKey && IsP256(publicKey.Parameters))
             {
-                ExportPolicy = CngExportPolicies.AllowPlaintextExport,
-            };
-            return new ECDiffieHellmanCng(CngKey.Create(CngAlgorithm.ECDiffieHellmanP256, null, parameters));
-        }
-        catch (CryptographicException)
-        {
+                return new EcPublicKey(publicKey);
+            }
+
+            AepLog.Warning("[Crypto] a peer public key was rejected; it is not a P-256 key");
             return null;
         }
-        catch (PlatformNotSupportedException)
+        catch (Exception exception)
         {
+            AepLog.Warning(exception, "[Crypto] importing a peer public key failed");
             return null;
         }
     }
 
-    public static string ExportPublicKey(ECDiffieHellman key)
-    {
-        return Convert.ToBase64String(key.ExportSubjectPublicKeyInfo());
-    }
-
-    public static string? TryExportPublicKey(ECDiffieHellman key)
+    public static byte[]? TryExportPrivateKey(EcPrivateKey key)
     {
         try
         {
-            return Convert.ToBase64String(key.ExportSubjectPublicKeyInfo());
+            return PrivateKeyInfoFactory.CreatePrivateKeyInfo(key.PrivateKey).GetDerEncoded();
         }
-        catch (CryptographicException)
+        catch (Exception exception)
         {
+            AepLog.Error(exception, "[Crypto] exporting the private key failed; the vault cannot be written");
             return null;
         }
     }
 
-    public static ECDiffieHellman? ImportPublicKey(string publicKeyBase64)
+    public static EcPrivateKey? ImportPrivateKey(byte[] pkcs8)
     {
         try
         {
-            var key = ECDiffieHellman.Create();
-            key.ImportSubjectPublicKeyInfo(Convert.FromBase64String(publicKeyBase64), out _);
-            return key;
+            var parsed = PrivateKeyFactory.CreateKey(pkcs8);
+            if (parsed is not ECPrivateKeyParameters privateKey || !IsP256(privateKey.Parameters))
+            {
+                AepLog.Error("[Crypto] the stored private key is not a P-256 key; the vault cannot be unlocked");
+                return null;
+            }
+
+            var publicPoint = privateKey.Parameters.G.Multiply(privateKey.D).Normalize();
+            var publicKey = new ECPublicKeyParameters("ECDH", publicPoint, privateKey.Parameters);
+            return new EcPrivateKey(privateKey, publicKey);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            AepLog.Error(exception, "[Crypto] importing the stored private key failed; the vault cannot be unlocked");
             return null;
         }
     }
 
-    public static byte[]? TryExportPrivateKey(ECDiffieHellman key)
+    private static ECNamedDomainParameters CreateP256Domain()
     {
-        try
-        {
-            return key.ExportPkcs8PrivateKey();
-        }
-        catch (CryptographicException)
-        {
-            return null;
-        }
+        var parameters = SecNamedCurves.GetByOid(SecObjectIdentifiers.SecP256r1);
+        return new ECNamedDomainParameters(SecObjectIdentifiers.SecP256r1, parameters.Curve, parameters.G,
+            parameters.N, parameters.H, parameters.GetSeed());
     }
 
-    public static ECDiffieHellman? ImportPrivateKey(byte[] pkcs8)
+    private static bool IsP256(ECDomainParameters? parameters)
     {
-        try
+        return parameters is not null
+               && parameters.Curve.FieldSize == P256.Curve.FieldSize
+               && parameters.N.Equals(P256.N)
+               && parameters.H.Equals(P256.H)
+               && parameters.G.Normalize().Equals(P256.G.Normalize());
+    }
+
+    private static byte[] DeriveRawSecret(EcPrivateKey privateKey, EcPublicKey publicKey)
+    {
+        var agreement = new ECDHBasicAgreement();
+        agreement.Init(privateKey.PrivateKey);
+        var raw = agreement.CalculateAgreement(publicKey.PublicKey).ToByteArrayUnsigned();
+        var secret = new byte[agreement.GetFieldSize()];
+        if (raw.Length > secret.Length)
         {
-            var key = ECDiffieHellman.Create();
-            key.ImportPkcs8PrivateKey(pkcs8, out _);
-            return key;
+            throw new CryptographicException("ECDH agreement exceeded the P-256 field size.");
         }
-        catch (Exception)
-        {
-            return null;
-        }
+
+        raw.CopyTo(secret, secret.Length - raw.Length);
+        return secret;
     }
 
     public static byte[] GenerateCek()
@@ -116,19 +169,22 @@ internal static class CryptoBox
 
     public static string? WrapCek(byte[] cek, string recipientPublicKeyBase64)
     {
-        using var recipient = ImportPublicKey(recipientPublicKeyBase64);
-        if (recipient is null)
+        var recipient = ImportPublicKey(recipientPublicKeyBase64);
+        var ephemeral = TryGenerateIdentity();
+        if (recipient is null || ephemeral is null)
         {
+            AepLog.Error(
+                $"[Crypto] cannot wrap a key (recipient key usable: {recipient is not null}, ephemeral key usable: {ephemeral is not null})");
             return null;
         }
 
-        using var ephemeral = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP256);
-        var shared = ephemeral.DeriveRawSecretAgreement(recipient.PublicKey);
+        var shared = DeriveRawSecret(ephemeral, recipient);
         var nonce = RandomNumberGenerator.GetBytes(NonceBytes);
         var wrapKey = HKDF.DeriveKey(HashAlgorithmName.SHA256, shared, CekBytes, nonce, WrapInfo);
         CryptographicOperations.ZeroMemory(shared);
 
-        var ephemeralPublic = ephemeral.ExportSubjectPublicKeyInfo();
+        var ephemeralPublic = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(ephemeral.PublicKey)
+            .GetDerEncoded();
         var payload = new byte[1 + ephemeralPublic.Length + NonceBytes + cek.Length + TagBytes];
         payload[0] = (byte)ephemeralPublic.Length;
         ephemeralPublic.CopyTo(payload.AsSpan(1));
@@ -136,17 +192,19 @@ internal static class CryptoBox
         var cipherOffset = 1 + ephemeralPublic.Length + NonceBytes;
         using (var aes = new AesGcm(wrapKey, TagBytes))
         {
-            aes.Encrypt(nonce, cek, payload.AsSpan(cipherOffset, cek.Length), payload.AsSpan(cipherOffset + cek.Length, TagBytes));
+            aes.Encrypt(nonce, cek, payload.AsSpan(cipherOffset, cek.Length),
+                payload.AsSpan(cipherOffset + cek.Length, TagBytes));
         }
 
         CryptographicOperations.ZeroMemory(wrapKey);
         return WrapPrefix + Convert.ToBase64String(payload);
     }
 
-    public static byte[]? UnwrapCek(string wrappedKey, ECDiffieHellman privateKey)
+    public static byte[]? UnwrapCek(string wrappedKey, EcPrivateKey privateKey)
     {
         if (!wrappedKey.StartsWith(WrapPrefix, StringComparison.Ordinal))
         {
+            AepLog.Debug($"[Crypto] unwrap skipped; the wrapped key does not start with {WrapPrefix}");
             return null;
         }
 
@@ -155,13 +213,15 @@ internal static class CryptoBox
         {
             payload = Convert.FromBase64String(wrappedKey[WrapPrefix.Length..]);
         }
-        catch (FormatException)
+        catch (FormatException exception)
         {
+            AepLog.Debug(exception, "[Crypto] unwrap failed; the wrapped key is not valid base64");
             return null;
         }
 
         if (payload.Length < 2)
         {
+            AepLog.Debug($"[Crypto] unwrap failed; the payload is {payload.Length} bytes");
             return null;
         }
 
@@ -170,14 +230,22 @@ internal static class CryptoBox
         var cekLength = payload.Length - cipherOffset - TagBytes;
         if (ephemeralLength == 0 || cekLength != CekBytes)
         {
+            AepLog.Debug(
+                $"[Crypto] unwrap failed; ephemeral key length {ephemeralLength}, cek length {cekLength} (expected {CekBytes})");
             return null;
         }
 
         try
         {
-            using var ephemeral = ECDiffieHellman.Create();
-            ephemeral.ImportSubjectPublicKeyInfo(payload.AsSpan(1, ephemeralLength), out _);
-            var shared = privateKey.DeriveRawSecretAgreement(ephemeral.PublicKey);
+            var parsed = PublicKeyFactory.CreateKey(payload.AsSpan(1, ephemeralLength).ToArray());
+            if (parsed is not ECPublicKeyParameters publicKey || !IsP256(publicKey.Parameters))
+            {
+                AepLog.Debug("[Crypto] unwrap failed; the embedded ephemeral key is not a P-256 key");
+                return null;
+            }
+
+            var ephemeral = new EcPublicKey(publicKey);
+            var shared = DeriveRawSecret(privateKey, ephemeral);
             var nonce = payload.AsSpan(1 + ephemeralLength, NonceBytes).ToArray();
             var wrapKey = HKDF.DeriveKey(HashAlgorithmName.SHA256, shared, CekBytes, nonce, WrapInfo);
             CryptographicOperations.ZeroMemory(shared);
@@ -186,7 +254,8 @@ internal static class CryptoBox
             try
             {
                 using var aes = new AesGcm(wrapKey, TagBytes);
-                aes.Decrypt(nonce, payload.AsSpan(cipherOffset, CekBytes), payload.AsSpan(cipherOffset + CekBytes, TagBytes), cek);
+                aes.Decrypt(nonce, payload.AsSpan(cipherOffset, CekBytes),
+                    payload.AsSpan(cipherOffset + CekBytes, TagBytes), cek);
                 return cek;
             }
             finally
@@ -194,8 +263,11 @@ internal static class CryptoBox
                 CryptographicOperations.ZeroMemory(wrapKey);
             }
         }
-        catch (CryptographicException)
+        catch (Exception exception) when (exception is ArgumentException or IOException or SecurityUtilityException
+                                          or InvalidOperationException or InvalidCastException or FormatException
+                                          or CryptographicException)
         {
+            AepLog.Debug(exception, "[Crypto] unwrap failed; the wrap was not made for this key");
             return null;
         }
     }
@@ -215,6 +287,7 @@ internal static class CryptoBox
     {
         if (sealedBytes.Length < NonceBytes + TagBytes)
         {
+            AepLog.Debug($"[Crypto] open failed; {sealedBytes.Length} bytes is shorter than a nonce plus a tag");
             return null;
         }
 
@@ -226,8 +299,9 @@ internal static class CryptoBox
                 sealedBytes.AsSpan(NonceBytes + plaintext.Length, TagBytes), plaintext, aad);
             return plaintext;
         }
-        catch (CryptographicException)
+        catch (CryptographicException exception)
         {
+            AepLog.Debug(exception, "[Crypto] open failed; the tag did not verify against this key");
             return null;
         }
     }

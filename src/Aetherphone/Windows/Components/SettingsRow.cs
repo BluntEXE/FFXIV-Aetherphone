@@ -2,36 +2,47 @@ using Aetherphone.Core;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
 internal static class SettingsRow
 {
-    private static readonly Vector4 GlyphInk = new(1f, 1f, 1f, 1f);
-
-    public static bool Bool(Rect row, string label, bool value, PhoneTheme theme, string? id = null)
+    public static bool Bool(Rect row, string label, bool value, PhoneTheme theme, string? id = null,
+        string? hint = null, bool dimmed = false)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = Metrics.Size.ToggleWidth * scale;
         var height = Metrics.Size.ToggleHeight * scale;
-        var min = new Vector2(row.Max.X - width, row.Center.Y - height * 0.5f);
-        var labelMaxWidth = MathF.Max(1f, min.X - 10f * scale - row.Min.X);
+        var toggleMin = new Vector2(row.Max.X - width, row.Center.Y - height * 0.5f);
+
+        var iconHeight = Metrics.Size.HintIconHeight * scale;
+        var iconGap = Metrics.Size.HintIconGap * scale;
+        var reservedSpace = hint != null ? iconHeight + iconGap : 0f;
+        var labelMaxWidth = MathF.Max(1f, toggleMin.X - 10f * scale - row.Min.X - reservedSpace);
+
         var labelSize = Typography.Measure(label, TextStyles.BodyEmphasized);
         var rowId = id ?? label;
-        Marquee.DrawLeftAuto(rowId, label, row.Min.X, row.Center.Y - labelSize.Y * 0.5f, labelMaxWidth,
-            TextStyles.BodyEmphasized, theme.TextStrong);
-        return Toggle.Draw(rowId, new Rect(min, min + new Vector2(width, height)), value, theme);
+        var labelWidth = Marquee.DrawLeftAuto(rowId, label, row.Min.X, row.Center.Y - labelSize.Y * 0.5f, labelMaxWidth,
+            TextStyles.BodyEmphasized, dimmed ? theme.TextMuted : theme.TextStrong);
+
+        if (hint != null)
+        {
+            var hintIconCenter = new Vector2(row.Min.X + labelWidth + iconGap, row.Center.Y);
+            HintIcon.Draw(hintIconCenter, hint, theme, scale);
+        }
+
+        return Toggle.Draw(rowId, new Rect(toggleMin, toggleMin + new Vector2(width, height)), value, theme);
     }
 
     public static void Info(Rect row, string label, string value, PhoneTheme theme, string? id = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var gap = 12f * scale;
         var available = row.Width - gap;
         var valueFullSize = Typography.Measure(value, TextStyles.Body);
-        var labelCap = MathF.Max(1f, available - valueFullSize.X);
         var labelSize = Typography.Measure(label, TextStyles.BodyEmphasized);
+        var labelFloor = MathF.Min(labelSize.X, available * 0.55f);
+        var labelCap = Math.Clamp(available - valueFullSize.X, labelFloor, available);
         var labelY = row.Center.Y - labelSize.Y * 0.5f;
         var labelHovered = UiInteract.Hover(new Vector2(row.Min.X, row.Min.Y),
             new Vector2(row.Min.X + labelCap, row.Max.Y));
@@ -49,7 +60,7 @@ internal static class SettingsRow
     public static bool Link(Rect row, FontAwesomeIcon icon, Vector4 tint, string label, string value, PhoneTheme theme,
         bool badge = false, string? id = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var hovered = UiInteract.Hover(row.Min, row.Max);
         var dl = ImGui.GetWindowDrawList();
         if (hovered)
@@ -60,10 +71,11 @@ internal static class SettingsRow
         var tileSize = Metrics.Size.IconTile * scale;
         var tileMin = new Vector2(row.Min.X, row.Center.Y - tileSize * 0.5f);
         var tileMax = tileMin + new Vector2(tileSize, tileSize);
-        var surface = hovered ? Palette.Lighten(tint, 0.08f) : tint;
+        var normalized = IconTile.Surface(tint);
+        var surface = hovered ? Palette.Lighten(normalized, 0.08f) : normalized;
         IconTile.FillShaded(dl, tileMin, tileMax, tileSize * Metrics.Radius.TileFactor, surface);
-        ProgressRing.CenterIcon(dl, new Vector2(tileMin.X + tileSize * 0.5f, row.Center.Y), icon, GlyphInk,
-            tileSize * 0.5f);
+        ProgressRing.CenterIcon(dl, new Vector2(tileMin.X + tileSize * 0.5f, row.Center.Y), icon,
+            AccentRing.Ink, tileSize * 0.5f);
         if (badge)
         {
             AppBadge.DrawDot(new Vector2(tileMax.X, tileMin.Y), theme, scale);
@@ -90,7 +102,7 @@ internal static class SettingsRow
     public static bool AppLink(Rect row, string appId, Vector4 tint, string label, string value, PhoneTheme theme,
         string? id = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var hovered = UiInteract.Hover(row.Min, row.Max);
         var dl = ImGui.GetWindowDrawList();
         if (hovered)
@@ -101,14 +113,9 @@ internal static class SettingsRow
         var tileSize = 30f * scale;
         var tileMin = new Vector2(row.Min.X, row.Center.Y - tileSize * 0.5f);
         var tileMax = tileMin + new Vector2(tileSize, tileSize);
-        var tileFill = hovered ? Palette.Mix(tint, theme.TextStrong, 0.14f) : tint;
-        Squircle.Fill(dl, tileMin, tileMax, tileSize * Metrics.Radius.TileFactor, ImGui.GetColorU32(tileFill));
-        var iconCenter = (tileMin + tileMax) * 0.5f;
-        var hole = Palette.Mix(tint, new Vector4(0f, 0f, 0f, 1f), 0.25f);
-        if (!AppIconArt.TryDraw(dl, appId, iconCenter, tileSize * 0.98f, theme.TextStrong, hole))
-        {
-            dl.AddCircleFilled(iconCenter, 4f * scale, ImGui.GetColorU32(theme.TextStrong), 16);
-        }
+        var normalized = IconTile.Surface(tint);
+        var tileFill = hovered ? Palette.Mix(normalized, theme.TextStrong, 0.14f) : normalized;
+        IconTile.DrawApp(dl, appId, (tileMin + tileMax) * 0.5f, tileSize, tileFill);
 
         var labelStartX = tileMax.X + Metrics.Space.Md * scale;
         var chevronWidth = Metrics.Space.Xs * scale;
@@ -128,9 +135,10 @@ internal static class SettingsRow
         return UiInteract.Click(row.Min, row.Max, hovered);
     }
 
-    public static bool Disclosure(Rect row, string label, string value, PhoneTheme theme, string? id = null)
+    public static bool Disclosure(Rect row, string label, string value, PhoneTheme theme, string? id = null,
+        bool dimmed = false)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var hovered = UiInteract.Hover(row.Min, row.Max);
         if (hovered)
         {
@@ -143,7 +151,7 @@ internal static class SettingsRow
         var midGap = 8f * scale;
         var available = chevronTip.X - chevronWidth - chevronGap - row.Min.X;
         DrawTwoColumnText(row, label, value, theme, row.Min.X, chevronTip.X - chevronWidth - chevronGap, available,
-            midGap, id);
+            midGap, id, dimmed);
         DrawChevronRight(chevronTip, chevronWidth, 2.2f * scale, theme.TextMuted);
 
         if (hovered)
@@ -155,7 +163,7 @@ internal static class SettingsRow
     }
 
     private static void DrawTwoColumnText(Rect row, string label, string value, PhoneTheme theme, float labelStartX,
-        float valueBoxRight, float available, float midGap, string? id = null)
+        float valueBoxRight, float available, float midGap, string? id = null, bool dimmed = false)
     {
         var rowId = id ?? label;
         float labelCap;
@@ -174,7 +182,7 @@ internal static class SettingsRow
         var labelHovered = UiInteract.Hover(new Vector2(labelStartX, row.Min.Y),
             new Vector2(labelStartX + labelCap, row.Max.Y));
         var labelWidth = Marquee.DrawLeft(rowId, label, labelStartX, labelY, labelCap, TextStyles.BodyEmphasized,
-            theme.TextStrong, labelHovered);
+            dimmed ? theme.TextMuted : theme.TextStrong, labelHovered);
 
         if (string.IsNullOrEmpty(value))
         {
@@ -192,7 +200,7 @@ internal static class SettingsRow
 
     public static bool Selectable(Rect row, string label, bool selected, PhoneTheme theme, string? id = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var hovered = UiInteract.Hover(row.Min, row.Max);
         if (hovered)
         {
@@ -243,7 +251,7 @@ internal static class SettingsRow
 
     private static void DrawRowHighlight(Rect row, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var pressed = ImGui.IsMouseDown(ImGuiMouseButton.Left);
         var min = new Vector2(row.Min.X - 10f * scale, row.Min.Y + 3f * scale);
         var max = new Vector2(row.Max.X + 10f * scale, row.Max.Y - 3f * scale);

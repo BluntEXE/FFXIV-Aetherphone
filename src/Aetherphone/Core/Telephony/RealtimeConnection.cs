@@ -62,7 +62,7 @@ internal sealed class RealtimeConnection : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Realtime abort failed: {exception.Message}");
+            AepLog.Warning(exception, "Realtime abort failed");
         }
 
         toAbort?.Dispose();
@@ -103,7 +103,7 @@ internal sealed class RealtimeConnection : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Realtime connection error: {exception.Message}");
+                AepLog.Warning(exception, "Realtime connection error");
             }
             finally
             {
@@ -185,7 +185,7 @@ internal sealed class RealtimeConnection : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Realtime control parse failed: {exception.Message}");
+            AepLog.Warning(exception, "Realtime control parse failed");
         }
     }
 
@@ -231,7 +231,7 @@ internal sealed class RealtimeConnection : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Realtime send failed: {exception.Message}");
+            AepLog.Warning(exception, "Realtime send failed");
         }
         finally
         {

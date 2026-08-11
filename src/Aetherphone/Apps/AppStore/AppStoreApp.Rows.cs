@@ -6,7 +6,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.AppStore;
 
@@ -14,7 +13,7 @@ internal sealed partial class AppStoreApp
 {
     private void DrawIcon(ImDrawListPtr drawList, Vector2 center, float size, IPhoneApp app)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var half = size * 0.5f;
         var min = new Vector2(center.X - half, center.Y - half);
         var max = new Vector2(center.X + half, center.Y + half);
@@ -23,9 +22,10 @@ internal sealed partial class AppStoreApp
         Elevation.IconRest(drawList, min, max, radius, scale);
         IconTile.FillShaded(drawList, min, max, radius, surface);
         Material.EdgeSquircle(drawList, min, max, radius, scale);
-        if (!AppIconArt.TryDraw(drawList, app.Id, center, size * 0.62f, GlyphInk, Palette.Darken(surface, 0.25f)))
+        var ink = AppAccents.InkFor(app.Id);
+        if (!AppIconArt.TryDraw(drawList, app.Id, center, size * 0.62f, ink, Palette.Mix(surface, ink, 0.28f)))
         {
-            Typography.DrawCentered(drawList, center, app.Glyph, GlyphInk, TextStyles.Headline);
+            Typography.DrawCentered(drawList, center, app.Glyph, ink, TextStyles.Headline);
         }
     }
 

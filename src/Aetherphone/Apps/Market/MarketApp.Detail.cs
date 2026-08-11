@@ -7,7 +7,6 @@ using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Textures;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Market;
@@ -16,7 +15,7 @@ internal sealed partial class MarketApp
 {
     private void DrawDetail(Rect area, MarketView view)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, frameTheme, frameNavigation);
         AppHeader.Draw(context, string.Empty, backToList);
         DrawHeaderTitle(area, view.Name);
@@ -54,7 +53,7 @@ internal sealed partial class MarketApp
         using (AppSurface.Begin(body))
         {
             var hasHq = snapshot.HasHq;
-            var effectiveHq = hasHq && showHq;
+            var effectiveHq = ResolveQuality(snapshot, hasHq);
             DrawHero(view, snapshot, effectiveHq, hasHq);
             DrawPrices(snapshot, effectiveHq);
             DrawAlertEditor(view, snapshot, effectiveHq, scope);
@@ -66,7 +65,7 @@ internal sealed partial class MarketApp
 
     private void DrawHero(MarketView view, MarketSnapshot snapshot, bool hq, bool hasHq)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var origin = ImGui.GetCursorScreenPos();
         var drawList = ImGui.GetWindowDrawList();
@@ -109,8 +108,16 @@ internal sealed partial class MarketApp
 
         Material.EdgeSquircle(drawList, iconMin, iconMax, tileRounding, scale);
         var titleMaxWidth = MathF.Max(1f, origin.X + width - 16f * scale - textX);
-        Marquee.DrawLeftAuto("market.detail.hero." + view.ItemId, view.Name, textX, textTop, titleMaxWidth,
-            TextStyles.Title3, frameTheme.TextStrong);
+        var titleId = "market.detail.hero." + view.ItemId;
+        var titleSize = Typography.Measure(view.Name, TextStyles.Title3);
+        Marquee.DrawLeft(titleId, view.Name, textX, textTop, titleMaxWidth, TextStyles.Title3,
+            frameTheme.TextStrong, false);
+        if (titleSize.X > titleMaxWidth)
+        {
+            HoverTooltip.Show(titleId,
+                new Rect(new Vector2(textX, textTop), new Vector2(textX + titleMaxWidth, textTop + titleSize.Y)),
+                view.Name);
+        }
         var priceMaxWidth = MathF.Max(1f, origin.X + width - 16f * scale - textX);
         Marquee.DrawLeftAuto("market.detail.price." + view.ItemId, priceText, textX, priceY,
             priceMaxWidth, new TextStyle(1.4f, FontWeight.SemiBold), AppPalettes.Market.Accent);
@@ -125,12 +132,12 @@ internal sealed partial class MarketApp
             var nqRect = new Rect(new Vector2(textX, pillY), new Vector2(textX + nqWidth, pillY + pillHeight));
             var hqRect = new Rect(new Vector2(textX + nqWidth + pillGap, pillY),
                 new Vector2(textX + nqWidth + pillGap + hqWidth, pillY + pillHeight));
-            if (ui.PillButton(nqRect, Loc.T(L.Common.Nq), !showHq))
+            if (ui.PillButton(nqRect, Loc.T(L.Common.Nq), !hq))
             {
                 SetQuality(false);
             }
 
-            if (ui.PillButton(hqRect, Loc.T(L.Common.Hq), showHq))
+            if (ui.PillButton(hqRect, Loc.T(L.Common.Hq), hq))
             {
                 SetQuality(true);
             }
@@ -143,7 +150,11 @@ internal sealed partial class MarketApp
     private void DrawPrices(MarketSnapshot snapshot, bool hq)
     {
         var hasVendor = index.TryGet(snapshot.ItemId, out var itemRef) && itemRef.VendorPrice > 0;
-        var rowCount = hasVendor ? 6 : 5;
+        var hasCheaper = market.TryFindCheaperScope(snapshot.ItemId, CurrentScope, snapshot.Min(hq),
+            out var cheaperPrice, out var cheaperWorldId);
+        var hasTax = market.TryGetLowestTax(gameData.WorldName(gameData.LocalCurrentWorldId), out var taxRate,
+                         out var taxCity) && snapshot.Min(hq) > 0;
+        var rowCount = 5 + (hasVendor ? 1 : 0) + (hasCheaper ? 1 : 0) + (hasTax ? 1 : 0);
         ui.SectionHeading(Loc.T(L.Market.Prices), 14f);
         var card = GroupCard.Begin(frameTheme, rowCount);
         SettingsRow.Info(card.NextRow(), Loc.T(L.Market.Average), PriceOrDash(snapshot.Average(hq)), frameTheme);
@@ -163,6 +174,19 @@ internal sealed partial class MarketApp
             }
 
             SettingsRow.Info(card.NextRow(), Loc.T(L.Market.VendorNpc), value, frameTheme);
+        }
+
+        if (hasCheaper)
+        {
+            SettingsRow.Info(card.NextRow(), Loc.T(L.Market.CheaperOn, gameData.WorldName(cheaperWorldId)),
+                MarketFormat.Gil(cheaperPrice), frameTheme);
+        }
+
+        if (hasTax)
+        {
+            var net = snapshot.Min(hq) - snapshot.Min(hq) * taxRate / 100L;
+            SettingsRow.Info(card.NextRow(), Loc.T(L.Market.AfterTax, taxRate, taxCity),
+                MarketFormat.Gil(net), frameTheme);
         }
 
         card.End();
@@ -192,7 +216,7 @@ internal sealed partial class MarketApp
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ImGui.Dummy(new Vector2(0f, 8f * scale));
         DrawThresholdField();
         ImGui.Dummy(new Vector2(0f, 8f * scale));
@@ -228,7 +252,7 @@ internal sealed partial class MarketApp
 
     private void DrawThresholdField()
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
@@ -260,7 +284,7 @@ internal sealed partial class MarketApp
 
     private bool DrawPrimaryButton(string label)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
@@ -297,7 +321,7 @@ internal sealed partial class MarketApp
         }
 
         ui.SectionHeading(Loc.T(L.Market.Trend), 14f);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var width = ImGui.GetContentRegionAvail().X;
         var origin = ImGui.GetCursorScreenPos();
         var height = 60f * scale;
@@ -385,14 +409,14 @@ internal sealed partial class MarketApp
 
     private void DrawHeaderTitle(Rect area, string name)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         AppHeader.DrawTitleWithReserve(area, "market.detail.header." + name, name, 64f * scale, frameTheme.TextStrong,
             scale);
     }
 
     private void DrawHeaderButtons(Rect area, MarketView view, out bool forceRefresh)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var midY = area.Min.Y + AppHeader.Height * scale * 0.5f;
         var starCenter = new Vector2(area.Max.X - 18f * scale, midY);
         var refreshCenter = new Vector2(area.Max.X - 46f * scale, midY);
@@ -407,7 +431,7 @@ internal sealed partial class MarketApp
 
     private bool IconButton(Vector2 center, FontAwesomeIcon icon, Vector4 color)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var box = 14f * scale;
         var hovered = UiInteract.Hover(center - new Vector2(box, box), center + new Vector2(box, box));
         var glyph = icon.ToIconString();
@@ -445,8 +469,20 @@ internal sealed partial class MarketApp
     private void SetQuality(bool hq)
     {
         showHq = hq;
+        autoHq = false;
         configuration.MarketHqOnly = hq;
         configuration.Save();
+    }
+
+    private bool ResolveQuality(MarketSnapshot snapshot, bool hasHq)
+    {
+        if (autoHqItemId != snapshot.ItemId)
+        {
+            autoHqItemId = snapshot.ItemId;
+            autoHq = hasHq && !showHq && snapshot.Min(false) <= 0 && snapshot.Min(true) > 0;
+        }
+
+        return hasHq && (showHq || autoHq);
     }
 
     private static int CountListings(MarketListing[] listings, bool hq)

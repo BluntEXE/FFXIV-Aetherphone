@@ -2,13 +2,13 @@ using Aetherphone.Core;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
 internal sealed class ChipRail
 {
-    private const float Height = 34f;
+    public const float RowHeight = 34f;
+
     private const float Gap = 8f;
     private const float SidePad = 2f;
     private const float DragSlop = 5f;
@@ -19,15 +19,18 @@ internal sealed class ChipRail
     private float dragTravel;
     private float lastMouseX;
 
-    public int Draw(AppSkin ui, ReadOnlySpan<string> labels, ReadOnlySpan<bool> active, string? anchorKey = null)
+    public int Draw(AppSkin ui, ReadOnlySpan<string> labels, ReadOnlySpan<bool> active, string? anchorKey = null) =>
+        Draw(ReserveRow(UiScale.Current), ui, labels, active, false, anchorKey);
+
+    public int Draw(Rect row, AppSkin ui, ReadOnlySpan<string> labels, ReadOnlySpan<bool> active, bool overlay = false,
+        string? anchorKey = null)
     {
         if (labels.Length == 0)
         {
             return -1;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
-        var row = ReserveRow(scale);
+        var scale = UiScale.Current;
         if (anchorKey is not null)
         {
             UiAnchors.Report(anchorKey, row);
@@ -41,7 +44,7 @@ internal sealed class ChipRail
         }
 
         maxOffset = MathF.Max(0f, content - row.Width);
-        HandleDrag(row);
+        HandleDrag(row, overlay);
         var drawList = ImGui.GetWindowDrawList();
         drawList.PushClipRect(row.Min, row.Max, true);
         var cursorX = row.Min.X + SidePad * scale - offset;
@@ -51,7 +54,7 @@ internal sealed class ChipRail
             var width = ChipWidth(labels[index], scale);
             if (cursorX + width >= row.Min.X && cursorX <= row.Max.X
                 && DrawChip(drawList, ui, labels[index], active[index],
-                    new Vector2(cursorX, row.Center.Y), width, scale))
+                    new Vector2(cursorX, row.Center.Y), width, scale, overlay))
             {
                 tapped = index;
             }
@@ -67,21 +70,22 @@ internal sealed class ChipRail
         Typography.Measure(label, TextStyles.SubheadlineEmphasized).X + 26f * scale;
 
     private bool DrawChip(ImDrawListPtr drawList, AppSkin ui, string label, bool active, Vector2 leftCenter,
-        float width, float scale)
+        float width, float scale, bool overlay)
     {
-        var height = Height * scale;
+        var height = RowHeight * scale;
         var min = new Vector2(leftCenter.X, leftCenter.Y - height * 0.5f);
         var max = new Vector2(leftCenter.X + width, leftCenter.Y + height * 0.5f);
         var radius = height * 0.5f;
-        var hovered = UiInteract.Hover(min, max);
+        var hovered = Hovered(min, max, overlay);
         var highlighted = hovered && !dragging;
         var fill = active
             ? Palette.WithAlpha(ui.Accent, highlighted ? 1f : 0.92f)
             : highlighted ? ui.HoverTint : ui.FieldSurface;
         Squircle.Fill(drawList, min, max, radius, ImGui.GetColorU32(fill));
         var ink = active ? new Vector4(0.11f, 0.08f, 0.02f, 1f) : ui.BodyInk;
-        Typography.DrawCentered(drawList, new Vector2((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f), label, ink,
-            TextStyles.SubheadlineEmphasized);
+        var labelSize = Typography.Measure(label, TextStyles.SubheadlineEmphasized);
+        var labelOrigin = new Vector2((min.X + max.X - labelSize.X) * 0.5f, (min.Y + max.Y - labelSize.Y) * 0.5f);
+        Typography.Draw(drawList, labelOrigin, label, ink, TextStyles.SubheadlineEmphasized);
         if (highlighted)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -94,15 +98,18 @@ internal sealed class ChipRail
     {
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
-        var height = Height * scale;
+        var height = RowHeight * scale;
         ImGui.Dummy(new Vector2(width, height));
         return new Rect(new Vector2(ImGui.GetWindowPos().X, origin.Y),
             new Vector2(origin.X + width, origin.Y + height));
     }
 
-    private void HandleDrag(Rect row)
+    private static bool Hovered(Vector2 min, Vector2 max, bool overlay) =>
+        overlay ? UiInteract.HoverWindowOnly(min, max) : UiInteract.Hover(min, max);
+
+    private void HandleDrag(Rect row, bool overlay)
     {
-        if (UiInteract.Hover(row.Min, row.Max) && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        if (Hovered(row.Min, row.Max, overlay) && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
             dragging = true;
             dragTravel = 0f;
@@ -115,7 +122,7 @@ internal sealed class ChipRail
             var travel = mouseX - lastMouseX;
             lastMouseX = mouseX;
             dragTravel += MathF.Abs(travel);
-            if (dragTravel > DragSlop * ImGuiHelpers.GlobalScale)
+            if (dragTravel > DragSlop * UiScale.Current)
             {
                 offset -= travel;
             }

@@ -1,7 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -11,17 +10,31 @@ internal static class AppHeader
 
     public static void Draw(in PhoneContext context, string title, Action? onBack = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
-        var theme = context.Theme;
         var rowCenterY = content.Min.Y + Height * scale * 0.5f;
-        Typography.DrawCentered(new Vector2(content.Center.X, rowCenterY), title, theme.TextStrong, 1.15f,
+        Typography.DrawCentered(new Vector2(content.Center.X, rowCenterY), title, context.Theme.TextStrong, 1.15f,
             FontWeight.SemiBold);
+        DrawBack(context, onBack, scale, rowCenterY);
+    }
+
+    public static void Draw(in PhoneContext context, string id, string title, float rightReserve,
+        Action? onBack = null)
+    {
+        var scale = UiScale.Current;
+        var content = context.Content;
+        DrawTitleWithReserve(content, id, title, rightReserve, context.Theme.TextStrong, scale);
+        DrawBack(context, onBack, scale, content.Min.Y + Height * scale * 0.5f);
+    }
+
+    private static void DrawBack(in PhoneContext context, Action? onBack, float scale, float rowCenterY)
+    {
+        var content = context.Content;
         var hitMin = new Vector2(content.Min.X, content.Min.Y);
         var hitMax = new Vector2(content.Min.X + 44f * scale, content.Min.Y + Height * scale);
         var hovered = UiInteract.Hover(hitMin, hitMax);
         var center = new Vector2(content.Min.X + 13f * scale, rowCenterY);
-        var clicked = BackButton.Draw("appheader.back", center, 15f * scale, theme.Accent, hovered, scale);
+        var clicked = BackButton.Draw("appheader.back", center, 15f * scale, context.Theme.Accent, hovered, scale);
         if (!clicked)
         {
             return;

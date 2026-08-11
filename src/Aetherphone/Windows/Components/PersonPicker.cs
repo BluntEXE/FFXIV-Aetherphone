@@ -7,7 +7,6 @@ using Aetherphone.Core.Media;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -67,7 +66,7 @@ internal sealed class PersonPicker
             return null;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var reveal = Easing.EaseOutQuint(Math.Clamp((float)((ImGui.GetTime() - openedAt) / RevealSeconds), 0f, 1f));
         var alpha = Easing.SmoothStep(Math.Clamp(reveal / 0.7f, 0f, 1f));
 

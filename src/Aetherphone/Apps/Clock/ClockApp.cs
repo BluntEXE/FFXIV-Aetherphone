@@ -7,7 +7,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Clock;
 
@@ -67,7 +66,7 @@ internal sealed partial class ClockApp : IPhoneApp
         theme = context.Theme;
         navigation = context.Navigation;
         ui.Theme = context.Theme;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var screen = SceneChrome.ScreenFrom(context.Content, context.Theme, scale);
         ui.Backdrop(screen);
         router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
@@ -75,7 +74,7 @@ internal sealed partial class ClockApp : IPhoneApp
 
     private void DrawView(ClockScreen screen, Rect area, int depth)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ui.Body(area);
         switch (screen)
         {

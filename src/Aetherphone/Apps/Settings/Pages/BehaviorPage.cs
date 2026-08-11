@@ -4,7 +4,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Platform;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Settings.Pages;
@@ -24,7 +23,7 @@ internal sealed class BehaviorPage : ISettingsPage
 
     public void Draw(in PhoneContext context, Rect body)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         using (AppSurface.Begin(body))
         {
@@ -67,6 +66,32 @@ internal sealed class BehaviorPage : ISettingsPage
 
             ImGui.Dummy(new Vector2(0f, 8f * scale));
             SettingsSection.Hint(Loc.T(L.Settings.NativeFileDialogHint), theme);
+
+            ImGui.Dummy(new Vector2(0f, 12f * scale));
+            var chirperMediaCard = GroupCard.Begin(theme, 1);
+            var showMediaChirps = SettingsRow.Bool(chirperMediaCard.NextRow(),
+                Loc.T(L.Settings.ChirperMediaPosts), configuration.ChirperShowMediaPosts, theme);
+            chirperMediaCard.End();
+            if (showMediaChirps != configuration.ChirperShowMediaPosts)
+            {
+                configuration.ChirperShowMediaPosts = showMediaChirps;
+                configuration.Save();
+            }
+
+            ImGui.Dummy(new Vector2(0f, 8f * scale));
+            SettingsSection.Hint(Loc.T(L.Settings.ChirperMediaPostsHint), theme);
+
+            ImGui.Dummy(new Vector2(0f, 8f * scale));
+            var menuContextCard = GroupCard.Begin(theme,1);
+            var menuContextToggle = SettingsRow.Bool(menuContextCard.NextRow(), Loc.T(L.Settings.MarketContextMenu), configuration.MarketContextMenu, theme);
+            menuContextCard.End();
+            if (menuContextToggle != configuration.MarketContextMenu)
+            {
+                configuration.MarketContextMenu = menuContextToggle;
+                configuration.Save();
+            }
+            ImGui.Dummy(new Vector2(0f, 8f * scale));
+            SettingsSection.Hint(Loc.T(L.Settings.MarketContextMenuHint), theme);
 
             ImGui.Dummy(new Vector2(0f, 12f * scale));
             var startupCard = GroupCard.Begin(theme, 2);

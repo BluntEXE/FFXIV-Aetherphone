@@ -3,7 +3,6 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Settings.Pages;
@@ -23,7 +22,7 @@ internal sealed class ImmersionPage : ISettingsPage
 
     public void Draw(in PhoneContext context, Rect body)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         using (AppSurface.Begin(body))
         {

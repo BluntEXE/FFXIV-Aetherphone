@@ -4,7 +4,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -47,7 +46,7 @@ internal sealed class CoachmarkOverlay
     public CoachmarkAction Draw(Rect screen, PhoneTheme theme, in GuideStep step, Rect? anchor, float presence,
         float textProgress, int index, int count, bool interactive)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
         var dl = ImGui.GetForegroundDrawList();
         var rounding = theme.ScreenRounding * scale;

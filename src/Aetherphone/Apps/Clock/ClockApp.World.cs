@@ -5,7 +5,6 @@ using Aetherphone.Core.Game;
 using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Clock;
 
@@ -94,7 +93,7 @@ internal sealed partial class ClockApp
     private void DrawWorldRow(Rect row, string name, string sublabel, string digital, float hours, float minutes,
         float seconds)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dialRadius = (row.Height - 22f * scale) * 0.5f;
         var dialCenter = new Vector2(row.Min.X + dialRadius, row.Center.Y);
         AnalogClock.Draw(dialCenter, dialRadius, hours, minutes, seconds, theme);
@@ -146,7 +145,7 @@ internal sealed partial class ClockApp
 
     private void DrawCityOption(Rect row, WorldCity city)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var added = configuration.WorldClocks.Exists(entry => entry.TimeZoneId == city.TimeZoneId &&
                                                               entry.City == city.City);
         var hovering = UiInteract.Hover(row.Min, row.Max);

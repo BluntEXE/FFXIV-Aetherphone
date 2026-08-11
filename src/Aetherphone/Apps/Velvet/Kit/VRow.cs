@@ -5,7 +5,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet.Kit;
 
@@ -43,6 +42,7 @@ internal struct VRowModel
     public bool PillEnabled;
     public int Badge;
     public int RoleBadges;
+    public string[]? RoleBadgeIds;
     public string? UserId;
     public string Time;
     public bool Chevron;
@@ -54,7 +54,7 @@ internal static class VRow
     public static VRowHit Draw(in VRowModel model, AppSkin ui, PhoneTheme theme, RemoteImageCache images,
         LodestoneService lodestone)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
@@ -168,7 +168,7 @@ internal static class VRow
         if (subtitleText.Length == 0)
         {
             var titleSize = Typography.Measure(titleText, TextStyles.Headline);
-            UserName.Draw(drawList, titleKey, titleText, model.RoleBadges, textLeft,
+            UserName.Draw(drawList, titleKey, titleText, model.RoleBadges, model.RoleBadgeIds, textLeft,
                 centerY - titleSize.Y * 0.5f, innerWidth, TextStyles.Headline, VelvetTheme.TitleInk, hovered, false);
         }
         else
@@ -177,7 +177,7 @@ internal static class VRow
             var titleSize = Typography.Measure(titleText, TextStyles.Headline);
             var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleY),
                 new Vector2(textLeft + innerWidth, titleY + titleSize.Y));
-            UserName.Draw(drawList, titleKey, titleText, model.RoleBadges, textLeft, titleY,
+            UserName.Draw(drawList, titleKey, titleText, model.RoleBadges, model.RoleBadgeIds, textLeft, titleY,
                 innerWidth, TextStyles.Headline, VelvetTheme.TitleInk, titleHovering, false);
             var subtitleY = centerY + 3f * scale;
             var subtitleSize = Typography.Measure(subtitleText, TextStyles.Subheadline);
@@ -187,7 +187,11 @@ internal static class VRow
                 innerWidth, TextStyles.Subheadline, VelvetTheme.MutedInk, subtitleHovering);
         }
 
-        if (hit == VRowHit.None && !overControl && UiInteract.Click(min, max, hovered))
+        if (hit == VRowHit.None && !overControl && hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
+        {
+            hit = VRowHit.Overflow;
+        }
+        else if (hit == VRowHit.None && !overControl && UiInteract.Click(min, max, hovered))
         {
             hit = VRowHit.Body;
         }

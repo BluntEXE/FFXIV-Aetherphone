@@ -4,7 +4,6 @@ using Aetherphone.Core.Linkpearl;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -24,7 +23,7 @@ internal static class LinkshellRow
     public static LinkshellRowAction Draw(LinkshellChannel channel, string label, LinkshellThread? thread, bool muted,
         PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var min = origin;

@@ -3,7 +3,6 @@ using Aetherphone.Core.Animation;
 using Aetherphone.Core.Shell;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 
 namespace Aetherphone.Windows;
@@ -15,6 +14,7 @@ internal sealed class PhoneWindow : Window
                                                ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoBackground;
 
     private const int RecenterFrameCount = 3;
+    private const int ScaledStyleVarCount = 6;
     private const float RotateSeconds = 0.26f;
     private readonly PhoneShell shell;
     private readonly Configuration configuration;
@@ -31,7 +31,7 @@ internal sealed class PhoneWindow : Window
     {
         this.shell = shell;
         this.configuration = configuration;
-        Size = PhoneSizeCatalog.SizeFor(configuration.PhoneScale);
+        Size = PhoneSizeCatalog.SizeFor(configuration.PhoneWidth);
         SizeCondition = ImGuiCond.Always;
         RespectCloseHotkey = false;
         maximizedPosition = configuration.MaximizedPosition;
@@ -91,6 +91,13 @@ internal sealed class PhoneWindow : Window
         IsOpen = true;
     }
 
+    public void OpenSettings()
+    {
+        Maximize();
+        IsOpen = true;
+        shell.OpenApp("settings");
+    }
+
     private void RequestPosition(Vector2? target)
     {
         if (target is not { } position)
@@ -115,9 +122,13 @@ internal sealed class PhoneWindow : Window
 
     public override void PreDraw()
     {
+        var width = Components.PhoneBounds.ClampWidth(configuration.PhoneWidth);
+        var zoom = PhoneSizeCatalog.ZoomFor(width);
+        UiScale.SetPhone(zoom);
+        Plugin.Fonts.SetPhoneZoom(zoom);
         var phase = shell.MinimizePhase;
         var minimized = phase == MinimizePhase.Minimized;
-        var size = minimized ? MinimizeTransition.MinimizedSize : OrientedSize();
+        var size = minimized ? MinimizeTransition.MinimizedSize : OrientedSize(width);
         Size = size;
         SizeCondition = ImGuiCond.Always;
         var locked = !minimized && configuration.LockPosition;
@@ -130,7 +141,7 @@ internal sealed class PhoneWindow : Window
         if (recenterFrames > 0)
         {
             var viewport = ImGui.GetMainViewport();
-            var scaledSize = size * ImGuiHelpers.GlobalScale;
+            var scaledSize = size * UiScale.Global;
             Position = viewport.Pos + (viewport.Size - scaledSize) * 0.5f;
             PositionCondition = ImGuiCond.Always;
             recenterFrames--;
@@ -159,14 +170,25 @@ internal sealed class PhoneWindow : Window
             pendingFrames = 0;
         }
 
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+        PushScaledStyle(zoom);
     }
 
-    public override void PostDraw() => ImGui.PopStyleVar();
+    public override void PostDraw() => ImGui.PopStyleVar(ScaledStyleVarCount);
 
-    private Vector2 OrientedSize()
+    private static void PushScaledStyle(float zoom)
     {
-        var portrait = PhoneSizeCatalog.SizeFor(configuration.PhoneScale);
+        var style = ImGui.GetStyle();
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, style.FramePadding * zoom);
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, style.ItemSpacing * zoom);
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemInnerSpacing, style.ItemInnerSpacing * zoom);
+        ImGui.PushStyleVar(ImGuiStyleVar.ScrollbarSize, style.ScrollbarSize * zoom);
+        ImGui.PushStyleVar(ImGuiStyleVar.GrabMinSize, style.GrabMinSize * zoom);
+    }
+
+    private Vector2 OrientedSize(float width)
+    {
+        var portrait = PhoneSizeCatalog.SizeFor(width);
         var target = shell.LandscapeActive ? 1f : 0f;
         if (landscapeBlend != target)
         {
@@ -189,7 +211,7 @@ internal sealed class PhoneWindow : Window
 
     private Vector2 CenterPinnedPosition(Vector2 size)
     {
-        var scaledSize = size * ImGuiHelpers.GlobalScale;
+        var scaledSize = size * UiScale.Global;
         var center = LastPosition + LastSize * 0.5f;
         var viewport = ImGui.GetMainViewport();
         var position = center - scaledSize * 0.5f;
@@ -205,6 +227,7 @@ internal sealed class PhoneWindow : Window
         LastSize = ImGui.GetWindowSize();
         Components.UiInteract.SetWindowHovered(ImGui.IsWindowHovered(
             ImGuiHoveredFlags.ChildWindows | ImGuiHoveredFlags.AllowWhenBlockedByActiveItem));
+        Components.UiInteract.SetWindowFocused(ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows));
         Plugin.Updates.Poll();
         using (Plugin.Fonts.Push(1f))
         {

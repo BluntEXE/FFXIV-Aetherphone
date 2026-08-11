@@ -8,7 +8,7 @@ internal sealed class AppAvailability : IDisposable
     private const long RetryIntervalMilliseconds = 60 * 1000;
 
     private static readonly string[] AlwaysAvailable = { "appstore", "settings", "announcements" };
-    private static readonly string[] HiddenUntilLaunched = { "muster" };
+    private static readonly string[] HiddenUntilLaunched = { "muster", "coin", "casino" };
 
     private static AppAvailability? current;
 
@@ -97,7 +97,7 @@ internal sealed class AppAvailability : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"App availability fetch failed: {exception.Message}");
+                AepLog.Warning(exception, "App availability fetch failed");
                 Volatile.Write(ref nextFetchTick, Environment.TickCount64 + RetryIntervalMilliseconds);
             }
             finally

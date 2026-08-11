@@ -36,7 +36,9 @@ internal sealed class PlaybackHub
     public bool IsPaused => SongActive ? songs.IsPaused : radio.State == RadioPlaybackState.Paused;
 
     public string Title => SongActive ? songs.CurrentTitle : radio.CurrentStation;
-    public string Subtitle => SongActive ? SongSubtitle() : RadioStateLabel(radio.State);
+    public string Subtitle => SongActive ? SongSubtitle() : RadioSubtitle();
+
+    public string RadioNowPlaying => radio.NowPlaying;
     public bool HasQueue => SongActive ? songs.HasQueue : radio.HasQueue;
 
     public float Volume
@@ -145,11 +147,20 @@ internal sealed class PlaybackHub
         };
     }
 
+    private string RadioSubtitle()
+    {
+        var track = radio.NowPlaying;
+        return radio.State == RadioPlaybackState.Playing && track.Length > 0
+            ? track
+            : RadioStateLabel(radio.State);
+    }
+
     private static string RadioStateLabel(RadioPlaybackState state)
     {
         return state switch
         {
             RadioPlaybackState.Buffering => Loc.T(L.Music.Buffering),
+            RadioPlaybackState.Reconnecting => Loc.T(L.Music.Reconnecting),
             RadioPlaybackState.Playing => Loc.T(L.Music.NowPlayingState),
             RadioPlaybackState.Paused => Loc.T(L.Music.Paused),
             RadioPlaybackState.Failed => Loc.T(L.Music.ConnectionLost),

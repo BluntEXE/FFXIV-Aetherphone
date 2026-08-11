@@ -59,7 +59,7 @@ internal static class ConfigMigrations
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Config type migration skipped: {exception.Message}");
+            AepLog.Warning(exception, "Config type migration skipped");
         }
     }
 }

@@ -41,11 +41,11 @@ body:
       label: Plugin version
       description: Shown in `/xlplugins` next to "Aetherphone".
       options:
+        - 0.9.9.9
+        - 0.9.9.8
+        - 0.9.9.7
         - 0.9.9.6
         - 0.9.9.5
-        - 0.9.9.4
-        - 0.9.9.3
-        - 0.9.9.2
         - Older / not sure
     validations:
       required: true

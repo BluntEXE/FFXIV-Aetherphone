@@ -4,7 +4,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Radio;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Music;
 
@@ -87,7 +86,7 @@ internal sealed partial class MusicApp
 
     private void DrawFacetPicker(in PhoneContext context, bool isCountry)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
         DrawTopBar(context, Loc.T(isCountry ? L.Music.FilterCountry : L.Music.FilterLanguage), CloseFacetPicker);
         var barRect = SearchBarRect(content, scale);
@@ -137,7 +136,7 @@ internal sealed partial class MusicApp
 
     private void CloseFacetPicker()
     {
-        router.Pop();
+        Router.Pop();
     }
 
     private void ApplyFacet(bool isCountry, RadioFacet facet)
@@ -153,14 +152,14 @@ internal sealed partial class MusicApp
             radioLanguageName = facet.Display ?? string.Empty;
         }
 
-        router.Pop();
+        Router.Pop();
         RefetchRadio();
     }
 
     private bool DrawFacetRow(float scale, string label, string count, bool selected)
     {
         var rowHeight = FacetRowHeight * scale;
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         if (!ImGui.IsRectVisible(new Vector2(width, rowHeight)))
         {
             ImGui.Dummy(new Vector2(width, rowHeight));

@@ -7,7 +7,6 @@ using Aetherphone.Core.Venues;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Venues;
 
@@ -28,7 +27,7 @@ internal static class VenueCard
     public static VenueCardAction Draw(Rect card, VenueEvent venue, bool favorite, MediaCache media, HttpService http,
         ArtworkCache art, AppSkin ui, DateTime nowUtc)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var rounding = Metrics.Radius.Lg * scale;
         var palette = ui.Palette;
@@ -164,7 +163,7 @@ internal static class VenueCard
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var gap = 5f * scale;
         var cursor = left;
         for (var index = 0; index < venue.Tags.Count; index++)

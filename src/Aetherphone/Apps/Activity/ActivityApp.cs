@@ -8,7 +8,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Activity;
 
@@ -57,7 +56,7 @@ internal sealed partial class ActivityApp : IPhoneApp
 
     public void Draw(in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         var content = context.Content;
         ui.Theme = theme;
@@ -179,7 +178,7 @@ internal sealed partial class ActivityApp : IPhoneApp
 
     private static void DrawLegendItem(Vector2 top, float columnWidth, Vector4 tint, string label, string value)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var dot = 6f * scale;
         var labelMaxWidth = MathF.Max(1f, columnWidth - dot - 10f * scale);
         var label2 = Typography.FitText(label, labelMaxWidth, TextStyles.Callout);

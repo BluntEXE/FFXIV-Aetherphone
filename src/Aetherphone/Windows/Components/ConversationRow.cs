@@ -3,7 +3,6 @@ using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Linkpearl;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -13,7 +12,7 @@ internal static class ConversationRow
 
     public static bool Draw(Conversation conversation, PhoneTheme theme, LodestoneService lodestone)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var min = origin;

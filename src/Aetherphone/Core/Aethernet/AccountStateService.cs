@@ -73,7 +73,7 @@ internal sealed class AccountStateService : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[AccountState] poll failed: {exception.Message}");
+                AepLog.Warning(exception, "[AccountState] poll failed");
             }
             finally
             {
@@ -90,7 +90,31 @@ internal sealed class AccountStateService : IDisposable
             return false;
         }
 
-        return current.Badges != fresh.Badges || current.GrantedBadges != fresh.GrantedBadges;
+        return current.Badges != fresh.Badges
+            || current.GrantedBadges != fresh.GrantedBadges
+            || current.Coins != fresh.Coins
+            || current.CoinsEarnedToday != fresh.CoinsEarnedToday
+            || !SameBadgeIds(current.ProfileBadges, fresh.ProfileBadges);
+    }
+
+    private static bool SameBadgeIds(string[]? current, string[]? fresh)
+    {
+        var currentLength = current?.Length ?? 0;
+        var freshLength = fresh?.Length ?? 0;
+        if (currentLength != freshLength)
+        {
+            return false;
+        }
+
+        for (var index = 0; index < currentLength; index++)
+        {
+            if (!string.Equals(current![index], fresh![index], StringComparison.Ordinal))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public void Dispose()

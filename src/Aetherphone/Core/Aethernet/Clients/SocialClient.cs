@@ -22,9 +22,9 @@ internal sealed class SocialClient
         return net.GetAsync(path, AethernetJsonContext.Default.FeedPage, token);
     }
 
-    public Task<PostDto?> CreatePostAsync(string text, CancellationToken token)
+    public Task<PostDto?> CreatePostAsync(string text, string[]? mediaKeys, int mediaWidth, int mediaHeight, CancellationToken token)
     {
-        return net.PostAsync("/posts", new CreatePostRequest(text), AethernetJsonContext.Default.CreatePostRequest, AethernetJsonContext.Default.PostDto, token);
+        return net.PostAsync("/posts", new CreatePostRequest(text, null, mediaKeys, mediaWidth, mediaHeight), AethernetJsonContext.Default.CreatePostRequest, AethernetJsonContext.Default.PostDto, token);
     }
 
     public Task<FeedPage?> UserPostsAsync(string userId, string? cursor, CancellationToken token)
@@ -154,9 +154,9 @@ internal sealed class SocialClient
         return net.RequestAsync(HttpMethod.Delete, $"/posts/{postId}/repost", AethernetJsonContext.Default.PostDto, token);
     }
 
-    public Task<PostDto?> QuotePostAsync(string text, string quotedPostId, CancellationToken token)
+    public Task<PostDto?> QuotePostAsync(string text, string quotedPostId, string[]? mediaKeys, int mediaWidth, int mediaHeight, CancellationToken token)
     {
-        return net.PostAsync("/posts", new CreatePostRequest(text, quotedPostId), AethernetJsonContext.Default.CreatePostRequest, AethernetJsonContext.Default.PostDto, token);
+        return net.PostAsync("/posts", new CreatePostRequest(text, quotedPostId, mediaKeys, mediaWidth, mediaHeight), AethernetJsonContext.Default.CreatePostRequest, AethernetJsonContext.Default.PostDto, token);
     }
 
     public Task<CommentPage?> CommentsAsync(string postId, string? cursor, CancellationToken token)

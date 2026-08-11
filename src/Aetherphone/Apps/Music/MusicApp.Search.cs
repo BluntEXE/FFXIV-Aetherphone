@@ -1,11 +1,12 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Songs;
+using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Music;
 
@@ -14,15 +15,18 @@ internal sealed partial class MusicApp
     private const float SongRowHeight = 60f;
     private const float ScopeRowHeight = 42f;
 
+    private readonly List<CommunityStationDto> communityMatches = new();
+
     private static readonly Vector4 SearchFieldSurface = new(0.96f, 0.96f, 0.96f, 1f);
     private static readonly Vector4 SearchFieldHint = new(0.38f, 0.39f, 0.40f, 1f);
     private static readonly Vector4 SearchFieldInk = new(0.07f, 0.07f, 0.08f, 1f);
 
     private void DrawSearch(in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var content = context.Content;
-        DrawTopBar(context, Loc.T(L.Common.Search), GoToHome);
+        community.EnsureFresh(false);
+        DrawTopBar(context, Loc.T(L.Common.Search), GoBack);
         var barRect = SearchBarRect(content, scale);
         if (focusSearch)
         {
@@ -47,7 +51,8 @@ internal sealed partial class MusicApp
             return;
         }
 
-        if (results.Length == 0)
+        MatchCommunityStations(lastSearchQuery.Trim());
+        if (results.Length == 0 && communityMatches.Count == 0)
         {
             DrawSearchPlaceholder(body, scale);
             return;
@@ -56,6 +61,7 @@ internal sealed partial class MusicApp
         using (AppSurface.Begin(body))
         {
             ImGui.Dummy(new Vector2(0f, 4f * scale));
+            DrawCommunityMatches(scale);
             for (var index = 0; index < results.Length; index++)
             {
                 DrawSongRow(scale, results[index], index);
@@ -63,6 +69,62 @@ internal sealed partial class MusicApp
 
             ImGui.Dummy(new Vector2(0f, 8f * scale));
         }
+    }
+
+    private void MatchCommunityStations(string query)
+    {
+        communityMatches.Clear();
+        if (query.Length == 0)
+        {
+            return;
+        }
+
+        var stations = community.Stations;
+        for (var index = 0; index < stations.Length; index++)
+        {
+            if (MatchesQuery(stations[index], query))
+            {
+                communityMatches.Add(stations[index]);
+            }
+        }
+    }
+
+    private static bool MatchesQuery(CommunityStationDto station, string query)
+    {
+        if (station.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
+            || station.Description.Contains(query, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        for (var index = 0; index < station.Tags.Length; index++)
+        {
+            if (station.Tags[index].Contains(query, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void DrawCommunityMatches(float scale)
+    {
+        if (communityMatches.Count == 0)
+        {
+            return;
+        }
+
+        Typography.Draw(ImGui.GetWindowDrawList(),
+            new Vector2(ImGui.GetCursorScreenPos().X + 6f * scale, ImGui.GetCursorScreenPos().Y),
+            Loc.T(L.Music.CommunityMatches), ui.MutedInk, TextStyles.Caption1);
+        ImGui.Dummy(new Vector2(0f, 22f * scale));
+        for (var index = 0; index < communityMatches.Count; index++)
+        {
+            DrawCommunityRow(scale, communityMatches[index]);
+        }
+
+        ImGui.Dummy(new Vector2(0f, 10f * scale));
     }
 
     private void DrawScopeChips(Rect content, Rect barRect, float scale)
@@ -101,7 +163,7 @@ internal sealed partial class MusicApp
     private void DrawSongRow(float scale, Song song, int index)
     {
         var rowHeight = SongRowHeight * scale;
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
         var min = origin;
         var max = new Vector2(origin.X + width, origin.Y + rowHeight);

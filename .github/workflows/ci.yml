@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [master, dev]
   pull_request:
-    branches: [master]
+    branches: [master, dev]
 
 permissions:
   contents: read
@@ -37,6 +37,17 @@ jobs:
           echo "repo.json TestingAssemblyVersion    = $testing_ver"
           if [ "$build_ver" != "$assembly_ver" ] || [ "$build_ver" != "$testing_ver" ]; then
             echo "::error::Version mismatch: Directory.Build.props ($build_ver), repo.json AssemblyVersion ($assembly_ver), TestingAssemblyVersion ($testing_ver) must all match."
+            exit 1
+          fi
+
+      - name: Verify UI scale seam
+        shell: bash
+        run: |
+          offenders=$(grep -rn 'ImGuiHelpers\.GlobalScale' src --include=*.cs \
+            | grep -v 'src/Aetherphone/UiScale.cs' || true)
+          if [ -n "$offenders" ]; then
+            echo "$offenders"
+            echo "::error::Draw code must scale through UiScale.Current, not ImGuiHelpers.GlobalScale directly. Only src/Aetherphone/UiScale.cs may read the Dalamud scale."
             exit 1
           fi
 

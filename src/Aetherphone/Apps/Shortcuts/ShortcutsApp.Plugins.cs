@@ -14,8 +14,13 @@ internal sealed partial class ShortcutsApp
     private const float PluginRowHeight = 60f;
     private const float CommandRowHeight = 54f;
 
+    private readonly Action<PluginEntry> openPluginDetail;
+    private readonly Action<PluginEntry> pickStepPlugin;
+    private readonly Action<PluginEntry> pickIconPlugin;
+
     private string pluginQuery = string.Empty;
     private string detailPlugin = string.Empty;
+    private bool pickingIcon;
 
     private void DrawPluginsTab(Rect content, float bodyTop, float scale)
     {
@@ -28,15 +33,22 @@ internal sealed partial class ShortcutsApp
         var body = new Rect(new Vector2(content.Min.X, searchRow.Max.Y + Metrics.Space.Sm * scale), content.Max);
         using (AppSurface.Begin(body))
         {
-            DrawPluginList(body, scale, OpenPluginDetail);
+            DrawPluginList(body, scale, openPluginDetail);
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
         }
+    }
+
+    private void OpenPluginPicker(bool forIcon)
+    {
+        pluginQuery = string.Empty;
+        pickingIcon = forIcon;
+        router.Push(ShortcutsScreen.PluginPicker);
     }
 
     private void DrawPluginPicker(Rect content, float scale)
     {
         var context = new PhoneContext(content, theme, navigation);
-        AppHeader.Draw(context, Loc.T(L.Shortcuts.ChoosePlugin), back);
+        AppHeader.Draw(context, Loc.T(pickingIcon ? L.Shortcuts.ChooseIcon : L.Shortcuts.ChoosePlugin), back);
 
         var margin = Metrics.Space.Lg * scale;
         var searchTop = content.Min.Y + AppHeader.Height * scale + Metrics.Space.Xs * scale;
@@ -48,7 +60,7 @@ internal sealed partial class ShortcutsApp
         var body = new Rect(new Vector2(content.Min.X, searchRow.Max.Y + Metrics.Space.Sm * scale), content.Max);
         using (AppSurface.Begin(body))
         {
-            DrawPluginList(body, scale, AddOpenPluginStep);
+            DrawPluginList(body, scale, pickingIcon ? pickIconPlugin : pickStepPlugin);
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
         }
     }
@@ -161,8 +173,8 @@ internal sealed partial class ShortcutsApp
         var icon = catalog.Icon(entry.InternalName);
         if (icon is not null)
         {
-            drawList.AddImageRounded(icon.Handle, min, max, Vector2.Zero, Vector2.One,
-                entry.Loaded ? 0xFFFFFFFFu : 0x80FFFFFFu, radius, ImDrawFlags.RoundCornersAll);
+            Squircle.FillImage(drawList, min, max, radius, icon.Handle,
+                entry.Loaded ? 0xFFFFFFFFu : 0x80FFFFFFu);
             return;
         }
 
@@ -370,6 +382,16 @@ internal sealed partial class ShortcutsApp
         }
 
         draft.Steps.Add(new ShortcutStep { Kind = ShortcutStepKind.OpenPlugin, Text = entry.InternalName });
+        router.Pop();
+    }
+
+    private void UsePluginIcon(PluginEntry entry)
+    {
+        if (draft is not null)
+        {
+            draft.IconPlugin = entry.InternalName;
+        }
+
         router.Pop();
     }
 }

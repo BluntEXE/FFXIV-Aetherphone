@@ -7,7 +7,7 @@ namespace Aetherphone.Core.Telephony.Audio;
 internal sealed class AudioCapture : IDisposable
 {
     private const int Bitrate = 28000;
-    private const float GateOpenRms = 0.018f;
+    public const float GateOpenRms = 0.018f;
     private const float GateCloseRms = 0.010f;
     private const int HangoverFrames = 12;
     private readonly object gate = new();
@@ -55,7 +55,7 @@ internal sealed class AudioCapture : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Voice capture failed to start: {exception.Message}");
+            AepLog.Warning(exception, "Voice capture failed to start");
         }
     }
 
@@ -83,7 +83,7 @@ internal sealed class AudioCapture : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Voice capture failed to stop: {exception.Message}");
+            AepLog.Warning(exception, "Voice capture failed to stop");
         }
 
         toStop.Dispose();

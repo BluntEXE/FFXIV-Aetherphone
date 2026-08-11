@@ -113,7 +113,8 @@ internal sealed class CallHub : IDisposable
             var localId = LocalUserId;
             var others = CountOthers(localId);
             var seconds = state == CallState.Active ? audio.ElapsedSecondsLocked : 0;
-            return new CallView(state, audio.MutedLocked, audio.VolumeLocked, audio.MicLevelLocked, seconds, roster,
+            return new CallView(state, audio.MutedLocked, audio.VolumeLocked, audio.MicLevelLocked,
+                audio.PeakMicLevelLocked, seconds, roster,
                 incomingFrom, router.Connected && connectionLostTicks == 0, localId, BuildPeerLabel(localId), others);
         }
     }

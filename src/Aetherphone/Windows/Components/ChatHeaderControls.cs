@@ -4,7 +4,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -19,7 +18,7 @@ internal static class ChatHeaderControls
     public static void DrawLock(AppSkin ui, Rect area, float rowCenterY, bool encrypted, KeyVaultState vault,
         Action onOpen)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var tooltip = encrypted
             ? Loc.T(L.Encryption.EncryptedIndicator)
             : vault == KeyVaultState.Provisioning
@@ -38,7 +37,7 @@ internal static class ChatHeaderControls
 
     public static void DrawSearchToggle(AppSkin ui, Rect area, float rowCenterY, bool open, Action onToggle)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var center = new Vector2(area.Max.X - SearchOffset * scale, rowCenterY);
         if (ui.IconButton(center, IconRadius * scale, FontAwesomeIcon.Search.ToIconString(),
                 open ? ui.Accent : ui.MutedInk, AppSkin.Transparent, 0.95f, Loc.T(L.Common.Search),
@@ -50,7 +49,7 @@ internal static class ChatHeaderControls
 
     public static void DrawBanner(AppSkin ui, ref Rect listRect, string text, Vector4 mutedInk, Action onDismiss)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var height = BannerHeight * scale;
         var min = listRect.Min;
@@ -69,7 +68,7 @@ internal static class ChatHeaderControls
     public static void DrawPromptBanner(AppSkin ui, ref Rect listRect, string text, Vector4 mutedInk, Action onOpen,
         Action onDismiss)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var height = BannerHeight * scale;
         var min = listRect.Min;

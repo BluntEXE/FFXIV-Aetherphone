@@ -174,7 +174,7 @@ internal sealed class CharacterSessionManager : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Legacy account claim failed: {exception.Message}");
+                AepLog.Warning(exception, "Legacy account claim failed");
             }
 
             var resolved = user;

@@ -4,7 +4,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.AppStore;
 
@@ -14,7 +13,7 @@ internal sealed partial class AppStoreApp
 
     private void DrawTodayTab(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var today = DateTime.Now;
         DrawLargeTitle(area, Loc.T(L.Store.Today),
             Loc.Culture.TextInfo.ToUpper(today.ToString("dddd d MMMM", Loc.Culture)));

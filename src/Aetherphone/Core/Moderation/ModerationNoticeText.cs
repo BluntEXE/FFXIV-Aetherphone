@@ -15,14 +15,30 @@ internal static class ModerationNoticeKinds
     public const int SignedOut = 5;
     public const int ReportOutcome = 6;
     public const int BadgeGranted = 7;
+    public const int BadgeRevoked = 8;
+    public const int EconomyAction = 9;
 }
 
 internal static class ModerationNoticeText
 {
+    private static BadgeCatalogStore? badgeCatalog;
+
+    public static void Configure(BadgeCatalogStore catalog)
+    {
+        badgeCatalog = catalog;
+    }
+
+    public static void Reset()
+    {
+        badgeCatalog = null;
+    }
+
     public static bool IsBlocking(ModerationNoticeDto notice)
     {
         return notice.Kind != ModerationNoticeKinds.ReportOutcome
-            && notice.Kind != ModerationNoticeKinds.BadgeGranted;
+            && notice.Kind != ModerationNoticeKinds.BadgeGranted
+            && notice.Kind != ModerationNoticeKinds.BadgeRevoked
+            && notice.Kind != ModerationNoticeKinds.EconomyAction;
     }
 
     public static string Title(ModerationNoticeDto notice)
@@ -36,6 +52,8 @@ internal static class ModerationNoticeText
             ModerationNoticeKinds.Suspended => Loc.T(L.Moderation.NoticeSuspendedTitle),
             ModerationNoticeKinds.SignedOut => Loc.T(L.Moderation.NoticeSignedOutTitle),
             ModerationNoticeKinds.BadgeGranted => Loc.T(L.Moderation.NoticeBadgeTitle),
+            ModerationNoticeKinds.BadgeRevoked => Loc.T(L.Moderation.NoticeBadgeRevokedTitle),
+            ModerationNoticeKinds.EconomyAction => Loc.T(L.Moderation.NoticeCoinTitle),
             _ => Loc.T(L.Moderation.NoticeThanksTitle),
         };
     }
@@ -47,7 +65,7 @@ internal static class ModerationNoticeText
             return Loc.T(L.Moderation.NoticeThanksBody);
         }
 
-        if (notice.Kind == ModerationNoticeKinds.BadgeGranted)
+        if (notice.Kind == ModerationNoticeKinds.BadgeGranted || notice.Kind == ModerationNoticeKinds.BadgeRevoked)
         {
             return BadgeBody(notice);
         }
@@ -55,6 +73,11 @@ internal static class ModerationNoticeText
         if (notice.Kind == ModerationNoticeKinds.SignedOut)
         {
             return Loc.T(L.Moderation.NoticeSignedOutBody);
+        }
+
+        if (notice.Kind == ModerationNoticeKinds.EconomyAction)
+        {
+            return notice.Detail.Length > 0 ? notice.Detail : Loc.T(L.Moderation.NoticeCoinBody);
         }
 
         var body = new StringBuilder();
@@ -90,18 +113,20 @@ internal static class ModerationNoticeText
 
     private static string BadgeBody(ModerationNoticeDto notice)
     {
+        var revoked = notice.Kind == ModerationNoticeKinds.BadgeRevoked;
         var names = BadgeNames(notice.Detail);
         if (names.Count == 0)
         {
-            return Loc.T(L.Moderation.NoticeBadgeBodyFallback);
+            return Loc.T(revoked ? L.Moderation.NoticeBadgeRevokedBodyFallback : L.Moderation.NoticeBadgeBodyFallback);
         }
 
         if (names.Count == 1)
         {
-            return Loc.T(L.Moderation.NoticeBadgeBodyOne, names[0]);
+            return Loc.T(revoked ? L.Moderation.NoticeBadgeRevokedBodyOne : L.Moderation.NoticeBadgeBodyOne, names[0]);
         }
 
-        return Loc.T(L.Moderation.NoticeBadgeBodyMany, string.Join(", ", names));
+        return Loc.T(revoked ? L.Moderation.NoticeBadgeRevokedBodyMany : L.Moderation.NoticeBadgeBodyMany,
+            string.Join(", ", names));
     }
 
     private static List<string> BadgeNames(string detail)
@@ -113,6 +138,10 @@ internal static class ModerationNoticeText
             if (BadgeNameFor(keys[index]) is { } name)
             {
                 names.Add(Loc.T(name));
+            }
+            else if (badgeCatalog?.Find(keys[index]) is { } style)
+            {
+                names.Add(style.Name);
             }
         }
 

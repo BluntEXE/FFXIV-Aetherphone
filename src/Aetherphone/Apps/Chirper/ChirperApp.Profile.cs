@@ -6,7 +6,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Chirper;
 
@@ -25,7 +24,7 @@ internal sealed partial class ChirperApp
             : SocialIdentity.Name(user.DisplayName, user.Handle);
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, title, back);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var body = new Rect(new Vector2(area.Min.X, top), area.Max);
         if (store.ProfileFailed)
@@ -57,6 +56,11 @@ internal sealed partial class ChirperApp
                 for (var index = 0; index < posts.Length; index++)
                 {
                     var post = posts[index];
+                    if (HiddenByMediaPreference(post))
+                    {
+                        continue;
+                    }
+
                     if (!renderedUnderlyingIds.Add(post.RepostOfId ?? post.Id))
                     {
                         continue;
@@ -112,7 +116,7 @@ internal sealed partial class ChirperApp
     {
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, Loc.T(L.Chirper.FindPeople), back);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var searchHeight = 52f * scale;
         profile.DrawSearchBar(new Rect(new Vector2(area.Min.X, top), new Vector2(area.Max.X, top + searchHeight)));
@@ -121,7 +125,7 @@ internal sealed partial class ChirperApp
 
     private void DrawHomeTopBar(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
         var titleStyle = new TextStyle(1.3f, FontWeight.Bold);
         var leftReserve = area.Min.X + 84f * scale;

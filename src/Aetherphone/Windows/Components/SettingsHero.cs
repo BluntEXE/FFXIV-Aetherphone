@@ -7,7 +7,6 @@ using Aetherphone.Core.Media;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -20,7 +19,7 @@ internal static class SettingsHero
     public static bool Draw(PhoneTheme theme, AethernetSession session, RemoteImageCache images,
         LodestoneService lodestone)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;

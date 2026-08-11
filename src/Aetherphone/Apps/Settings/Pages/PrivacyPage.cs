@@ -9,7 +9,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Settings.Pages;
@@ -48,7 +47,7 @@ internal sealed class PrivacyPage : ISettingsPage, IDisposable
 
     public void Draw(in PhoneContext context, Rect body)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         using (AppSurface.Begin(body))
         {
@@ -119,7 +118,7 @@ internal sealed class PrivacyPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Blocked list load failed: {exception.Message}");
+                AepLog.Warning(exception, "Blocked list load failed");
             }
             finally
             {
@@ -155,7 +154,7 @@ internal sealed class PrivacyPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Unblock failed: {exception.Message}");
+                AepLog.Warning(exception, "Unblock failed");
             }
         });
     }
@@ -232,7 +231,7 @@ internal sealed class PrivacyPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Chat privacy load failed: {exception.Message}");
+                AepLog.Warning(exception, "Chat privacy load failed");
             }
             finally
             {
@@ -258,7 +257,7 @@ internal sealed class PrivacyPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Chat privacy update failed: {exception.Message}");
+                AepLog.Warning(exception, "Chat privacy update failed");
             }
         });
     }

@@ -37,6 +37,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     private volatile AvatarUploadOutcome avatarFailure = AvatarUploadOutcome.Unreachable;
     private volatile bool introBusy;
     private volatile VelvetProfileDto[] discoverResults = Array.Empty<VelvetProfileDto>();
+    private volatile string[] hiddenFromDiscover = Array.Empty<string>();
     private volatile bool loadingDiscover;
     private volatile bool discoverLoaded;
     private volatile string? discoverCursor;
@@ -142,7 +143,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     private void OnVelvetPinged()
     {
         InboxCadence.RequestImmediate();
-        RefreshThreadIfVisible();
+        RequestThreadRefresh();
     }
 
     public MentionSuggestions NewMentionSuggestions() => new(account, work);
@@ -233,6 +234,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         accessBlocked = false;
         meGate.Reset();
         discoverResults = Array.Empty<VelvetProfileDto>();
+        hiddenFromDiscover = Array.Empty<string>();
         discoverCursor = null;
         discoverLoaded = false;
         discoverFilter = VelvetDiscoverFilter.Empty;
@@ -314,6 +316,9 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
 
     protected override Task<bool> DeleteMessageRequestAsync(string messageId, CancellationToken token) =>
         client.DeleteMessageAsync(messageId, token);
+
+    protected override Task<bool> DeleteThreadRequestAsync(string threadId, CancellationToken token) =>
+        client.DeleteThreadAsync(threadId, token);
 
     protected override Task SetReactionRequestAsync(string messageId, string reactionToken, CancellationToken token) =>
         client.SetReactionAsync(messageId, reactionToken, token);
@@ -455,6 +460,12 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         }
 
         return decorated ?? items;
+    }
+
+    protected override bool IsInboxPreviewReady(VelvetThreadDto thread)
+    {
+        return thread.LastMessageEncVersion != EnvelopeCodec.VersionEnvelope
+            || cipher.IsPreviewResolved(thread.OtherUserId, thread.LastMessageAtUnix);
     }
 
     public byte[]? DecryptMedia(VelvetMessageDto message, byte[] sealedBytes, string threadPartnerId)
@@ -614,7 +625,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
             var page = await client.DiscoverAsync(filter, tags, region, null, token).ConfigureAwait(false);
             if (page is not null && epoch == discoverEpoch)
             {
-                discoverResults = page.Users;
+                discoverResults = WithoutHidden(page.Users);
                 discoverCursor = page.NextCursor;
             }
         }, () =>
@@ -645,10 +656,39 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
                 .ConfigureAwait(false);
             if (page is not null && epoch == discoverEpoch)
             {
-                discoverResults = AppendUniqueDiscover(discoverResults, page.Users);
+                discoverResults = AppendUniqueDiscover(discoverResults, WithoutHidden(page.Users));
                 discoverCursor = page.NextCursor;
             }
         }, () => loadingMoreDiscover = false);
+    }
+
+    private VelvetProfileDto[] WithoutHidden(VelvetProfileDto[] incoming)
+    {
+        var hidden = hiddenFromDiscover;
+        if (hidden.Length == 0)
+        {
+            return incoming;
+        }
+
+        var kept = new VelvetProfileDto[incoming.Length];
+        var count = 0;
+        for (var index = 0; index < incoming.Length; index++)
+        {
+            if (Array.IndexOf(hidden, incoming[index].UserId) < 0)
+            {
+                kept[count] = incoming[index];
+                count++;
+            }
+        }
+
+        if (count == incoming.Length)
+        {
+            return incoming;
+        }
+
+        var trimmed = new VelvetProfileDto[count];
+        Array.Copy(kept, trimmed, count);
+        return trimmed;
     }
 
     private static VelvetProfileDto[] AppendUniqueDiscover(VelvetProfileDto[] existing, VelvetProfileDto[] incoming)
@@ -1092,7 +1132,40 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     {
         blockedLoaded = false;
         ForgetConnection(userId, VelvetConnectionState.Blocked);
+        HideFromDiscover(userId);
         work.Run("block", async token => await safety.BlockAsync(userId, token).ConfigureAwait(false), onComplete);
+    }
+
+    public void HideFromDiscover(string userId)
+    {
+        var hidden = hiddenFromDiscover;
+        if (Array.IndexOf(hidden, userId) < 0)
+        {
+            var grown = new string[hidden.Length + 1];
+            Array.Copy(hidden, grown, hidden.Length);
+            grown[hidden.Length] = userId;
+            hiddenFromDiscover = grown;
+        }
+
+        discoverResults = RemoveDiscover(discoverResults, userId);
+    }
+
+    private static VelvetProfileDto[] RemoveDiscover(VelvetProfileDto[] source, string userId)
+    {
+        for (var index = 0; index < source.Length; index++)
+        {
+            if (source[index].UserId != userId)
+            {
+                continue;
+            }
+
+            var trimmed = new VelvetProfileDto[source.Length - 1];
+            Array.Copy(source, trimmed, index);
+            Array.Copy(source, index + 1, trimmed, index, source.Length - index - 1);
+            return trimmed;
+        }
+
+        return source;
     }
 
     public void Unblock(string userId)
@@ -1124,8 +1197,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         });
     }
 
-    // aspects is one choice per photo - see AethergramStore.CreateGram's doc comment for the
-    // full reasoning, identical here.
+    // aspects holds one choice per photo, framed exactly as AethergramStore.CreateGram does.
     public void CreatePost(string[] sourcePaths, WallpaperCrop[] crops, PostAspect[] aspects, string caption,
         string[] tags, int audience, Action<bool> onComplete)
     {
@@ -1142,14 +1214,8 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
             for (var index = 0; index < sourcePaths.Length; index++)
             {
                 var (bakedWidth, bakedHeight) = PostAspects.Size(aspects[index], PostSize);
-                // Reveal-fit only applies to Portrait - Square and Landscape stay a plain cover
-                // crop, matching how they baked before this existed.
-                var minZoom = aspects[index] == PostAspect.Portrait
-                    ? WallpaperCrop.MinZoomToReveal(ImageProcessor.ReadSize(sourcePaths[index]),
-                        (float)bakedWidth / bakedHeight)
-                    : WallpaperCrop.MinZoom;
                 var baked = ImageProcessor.BakeCroppedJpeg(sourcePaths[index], crops[index], bakedWidth, bakedHeight,
-                    minZoom);
+                    PostAspects.RevealsWholeImage(aspects[index]));
                 var upload = await media.UploadUrlAsync("image/jpeg", "velvet", token).ConfigureAwait(false);
                 if (upload is null)
                 {

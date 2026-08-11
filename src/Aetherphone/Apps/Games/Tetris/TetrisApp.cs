@@ -1,3 +1,4 @@
+using Aetherphone.Core.Animation;
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
@@ -5,7 +6,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Games.Tetris;
 
@@ -35,6 +35,8 @@ internal sealed class TetrisApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Tetris);
+    public bool RunsOnAClock => true;
+
     public string Genre => Loc.T(L.Games.GenrePuzzle);
     public void Open()
     {
@@ -67,7 +69,7 @@ internal sealed class TetrisApp : IMiniGame
     public void Draw(in GameContext context)
     {
         var deltaSeconds = context.DeltaSeconds;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         var body = context.Body;
         if (!statsLoaded)
@@ -271,7 +273,7 @@ internal sealed class TetrisApp : IMiniGame
 
     private void HandleKeyboard()
     {
-        if (!ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows))
+        if (!GameFocus.Active)
         {
             return;
         }

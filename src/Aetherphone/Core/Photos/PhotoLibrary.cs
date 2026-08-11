@@ -2,7 +2,7 @@ namespace Aetherphone.Core.Photos;
 
 internal sealed class PhotoLibrary
 {
-    private static readonly string[] Extensions = { ".png", ".jpg", ".jpeg" };
+    private static readonly string[] Extensions = { ".png", ".jpg", ".jpeg", ".gif" };
     private readonly string directory;
 
     public PhotoLibrary(DirectoryInfo configDirectory)

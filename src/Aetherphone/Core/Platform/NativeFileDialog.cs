@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Aetherphone.Core.Localization;
+using KernelDevice = FFXIVClientStructs.FFXIV.Client.Graphics.Kernel.Device;
 
 namespace Aetherphone.Core.Platform;
 
@@ -11,7 +12,7 @@ internal static class NativeFileDialog
     private const int OfnPathMustExist = 0x00000800;
     private const int OfnNoChangeDir = 0x00000008;
     private const int OfnExplorer = 0x00080000;
-    private const string ImageExtensions = "*.png;*.jpg;*.jpeg;*.bmp";
+    private const string ImageExtensions = "*.png;*.jpg;*.jpeg;*.bmp;*.gif";
     private const string AudioExtensions = "*.mp3;*.wav";
     private const string VideoExtensions = "*.mp4;*.mkv;*.webm;*.mov;*.avi;*.flv;*.m4v";
 
@@ -57,16 +58,17 @@ internal static class NativeFileDialog
 
     private static Task<string?> OpenAsync(string title, string filter, string logTag)
     {
+        var owner = GameWindow();
         var completion = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
         var thread = new Thread(() =>
         {
             try
             {
-                completion.SetResult(ShowDialog(title, filter));
+                completion.SetResult(ShowDialog(title, filter, owner));
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"{logTag} file dialog failed: {exception.Message}");
+                AepLog.Warning(exception, $"{logTag} file dialog failed");
                 completion.SetResult(null);
             }
         }) { IsBackground = true, };
@@ -75,7 +77,13 @@ internal static class NativeFileDialog
         return completion.Task;
     }
 
-    private static string? ShowDialog(string title, string filter)
+    private static unsafe IntPtr GameWindow()
+    {
+        var device = KernelDevice.Instance();
+        return device == null ? IntPtr.Zero : (IntPtr)device->hWnd;
+    }
+
+    private static string? ShowDialog(string title, string filter, IntPtr owner)
     {
         var fileBuffer = Marshal.AllocHGlobal(MaxPath * sizeof(char));
         var filterBuffer = Marshal.StringToHGlobalUni(filter);
@@ -89,7 +97,8 @@ internal static class NativeFileDialog
             var dialog = new OpenFileName
             {
                 lStructSize = Marshal.SizeOf<OpenFileName>(),
-                hwndOwner = IntPtr.Zero,
+                // An unowned picker can open behind the game window and read as a freeze.
+                hwndOwner = owner,
                 lpstrFilter = filterBuffer,
                 nFilterIndex = 1,
                 lpstrFile = fileBuffer,
@@ -121,7 +130,7 @@ internal static class NativeFileDialog
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[FilePicker] Wine probe failed: {exception.Message}");
+            AepLog.Warning(exception, "[FilePicker] Wine probe failed");
             return false;
         }
     }
@@ -144,7 +153,7 @@ internal static class NativeFileDialog
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[FilePicker] Overlay probe failed: {exception.Message}");
+            AepLog.Warning(exception, "[FilePicker] Overlay probe failed");
             return true;
         }
     }

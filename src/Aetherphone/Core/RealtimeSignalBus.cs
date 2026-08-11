@@ -1,6 +1,13 @@
+using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Telephony.Contracts;
+
 namespace Aetherphone.Core;
 
 internal readonly record struct ContentRemovalSignal(string? App, string? Kind, string ContentId, string? ParentId);
+
+internal readonly record struct ChatSignal(string? ConversationId, ChatMessageDto? Message);
+
+internal readonly record struct CasinoSignal(string Type, string? Reason, CasinoPayload? Payload);
 
 internal static class ContentRemovalKinds
 {
@@ -12,14 +19,16 @@ internal static class ContentRemovalKinds
 internal sealed class RealtimeSignalBus
 {
     private volatile bool realtimeActive;
+    private volatile Action<CallControl>? outbound;
 
-    public event Action? ChatPinged;
+    public event Action<ChatSignal>? ChatPinged;
     public event Action? VelvetPinged;
     public event Action? GramPinged;
     public event Action? SocialPinged;
     public event Action? MusterPinged;
     public event Action? AnnouncementsPinged;
     public event Action<ContentRemovalSignal>? ContentRemoved;
+    public event Action<CasinoSignal>? CasinoReceived;
     public event Action<bool>? ConnectedChanged;
 
     public bool RealtimeActive => realtimeActive;
@@ -35,9 +44,9 @@ internal sealed class RealtimeSignalBus
         ConnectedChanged?.Invoke(active);
     }
 
-    public void PublishChat()
+    public void PublishChat(ChatSignal signal)
     {
-        ChatPinged?.Invoke();
+        ChatPinged?.Invoke(signal);
     }
 
     public void PublishVelvet()
@@ -68,5 +77,27 @@ internal sealed class RealtimeSignalBus
     public void PublishContentRemoved(ContentRemovalSignal removal)
     {
         ContentRemoved?.Invoke(removal);
+    }
+
+    public void PublishCasino(CasinoSignal signal)
+    {
+        CasinoReceived?.Invoke(signal);
+    }
+
+    public void BindSender(Action<CallControl>? sender)
+    {
+        outbound = sender;
+    }
+
+    public bool TrySend(CallControl control)
+    {
+        var sender = outbound;
+        if (sender is null || !realtimeActive)
+        {
+            return false;
+        }
+
+        sender(control);
+        return true;
     }
 }

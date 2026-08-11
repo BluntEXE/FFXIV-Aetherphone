@@ -2,7 +2,6 @@ using Aetherphone.Core.Animation;
 using Aetherphone.Core;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Skywatcher;
 
@@ -240,7 +239,7 @@ internal static class WeatherSky
         var height = screen.Height;
         var bandTop = screen.Min.Y + rounding;
         var bandBottom = screen.Max.Y - rounding;
-        var step = MathF.Max(2f, 3f * ImGuiHelpers.GlobalScale);
+        var step = MathF.Max(2f, 3f * UiScale.Current);
         for (var y = bandTop; y < bandBottom; y += step)
         {
             var fraction = (y - screen.Min.Y) / height;
@@ -257,7 +256,7 @@ internal static class WeatherSky
 
     private static void DrawStars(ImDrawListPtr drawList, Rect screen, Vector4 glow)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         for (var index = 0; index < StarX.Length; index++)
         {
             var position = new Vector2(screen.Min.X + StarX[index] * screen.Width,

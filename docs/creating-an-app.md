@@ -35,7 +35,7 @@ Open src/Aetherphone/Apps/Calculator/CalculatorApp.cs. It is a small, self-conta
 
 - **Identity properties.** `Id => "calculator"`, `DisplayName => Loc.T(L.Apps.Calculator)`, `Glyph => "="`, `Accent => AppAccents.For("calculator")`, `BadgeCount => 0`. The id is a stable lowercase key used everywhere: accent lookup, icon file name, availability flags, navigation.
 - **An `AppSkin` field.** `private readonly AppSkin ui = new(AppPalettes.Calculator);` bundles the app's palette (inks, backdrop gradient, card fills) with reusable widgets.
-- **`Draw(in PhoneContext context)`.** Runs every frame while the app is open. It reads `ImGuiHelpers.GlobalScale` (the UI scale factor; multiply every pixel constant by it), refreshes `ui.Theme` from the context, paints the backdrop, draws the header, then lays out content with plain rectangle math.
+- **`Draw(in PhoneContext context)`.** Runs every frame while the app is open. It reads `UiScale.Current` (Dalamud's UI scale times the phone zoom; multiply every pixel constant by it), refreshes `ui.Theme` from the context, paints the backdrop, draws the header, then lays out content with plain rectangle math.
 - **Hit testing.** Buttons are drawn shapes plus `UiInteract.Hover(min, max)` and `ImGui.IsMouseClicked(...)` checks. No retained state.
 - **Empty lifecycle members.** `OnOpened`, `OnClosed`, and `Dispose` can be empty when there is nothing to set up or tear down.
 
@@ -112,7 +112,7 @@ internal sealed class CounterApp : IPhoneApp
 
     public void Draw(in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ui.Theme = context.Theme;
         var content = context.Content;
         var screen = SceneChrome.ScreenFrom(content, context.Theme, scale);
@@ -156,7 +156,7 @@ The idioms, all copied from CalculatorApp and NotesApp:
 - `AppHeader.Draw(context, DisplayName)` renders the centered title and a back button that calls `context.Navigation.Back()` for you.
 - `Typography` draws all text; never call `ImGui.Text` for styled copy. Styles come from the `TextStyles` ladder (see [the UI toolkit](ui-toolkit.md)). The sample fetches `ImGui.GetWindowDrawList()` and passes it to `Typography.DrawCentered` because the overloads without an `ImDrawListPtr` move the ImGui cursor, which has no place in a hand-laid-out `Draw`; CalculatorApp passes the draw list the same way.
 - `AppSkin.PillButton` draws the shape, handles hover, and returns `true` on click, all in one call.
-- Every layout constant is multiplied by `ImGuiHelpers.GlobalScale`. `Metrics` tokens (`Metrics.Space`, `Metrics.Radius`, `Metrics.Size`) are unscaled values; scale them at the call site.
+- Every layout constant is multiplied by `UiScale.Current`. `Metrics` tokens (`Metrics.Space`, `Metrics.Radius`, `Metrics.Size`) are unscaled values; scale them at the call site.
 
 The example borrows `AppPalettes.Calculator` to stay short. A real app adds its own entry in src/Aetherphone/Windows/Components/AppPalettes.cs, either a static `AppPalette` (dark bespoke backdrop, like `AppPalettes.Calculator`) or a `PhoneTheme`-derived factory method plus `WantsSystemTheme => true` (like `AppPalettes.Notes(theme)`, refreshed each frame in `Draw` the way NotesApp does).
 
@@ -274,7 +274,7 @@ internal sealed class ExamplePage : ISettingsPage
 
     public void Draw(in PhoneContext context, Rect body)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         using (AppSurface.Begin(body))
         {

@@ -3,7 +3,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Clock;
 
@@ -150,7 +149,7 @@ internal sealed partial class ClockApp
         var shown = enabled ? color : Palette.WithAlpha(color, 0.4f);
         drawList.AddCircleFilled(center, radius,
             ImGui.GetColorU32(Palette.WithAlpha(shown, hovered ? 0.34f : 0.22f)), 40);
-        drawList.AddCircle(center, radius, ImGui.GetColorU32(shown), 40, 2f * ImGuiHelpers.GlobalScale);
+        drawList.AddCircle(center, radius, ImGui.GetColorU32(shown), 40, 2f * UiScale.Current);
         Typography.DrawCentered(drawList, center, label, shown, TextStyles.Subheadline.Scale, FontWeight.Medium);
         if (hovered)
         {

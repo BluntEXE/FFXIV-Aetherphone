@@ -29,7 +29,7 @@ internal sealed class ActivityStore
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"ActivityStore load failed for {contentId:X16}: {exception.Message}");
+            AepLog.Warning(exception, $"ActivityStore load failed for {contentId:X16}");
             return new ActivityLedger();
         }
     }
@@ -50,7 +50,7 @@ internal sealed class ActivityStore
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"ActivityStore write failed for {contentId:X16}: {exception.Message}");
+            AepLog.Warning(exception, $"ActivityStore write failed for {contentId:X16}");
         }
     }
 

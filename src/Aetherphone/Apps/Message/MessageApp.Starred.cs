@@ -5,7 +5,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Message;
 
@@ -13,7 +12,7 @@ internal sealed partial class MessageApp
 {
     private void DrawStarred(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, Loc.T(L.Message.StarredTitle), back);
         var top = area.Min.Y + AppHeader.Height * scale;

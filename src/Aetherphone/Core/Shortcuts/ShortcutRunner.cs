@@ -1,5 +1,6 @@
 using Aetherphone.Core.Linkpearl;
 using Aetherphone.Windows;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Core.Shortcuts;
@@ -11,29 +12,71 @@ internal enum ShortcutRunOutcome : byte
     CommandRejected,
     PluginUnavailable,
     LinkRejected,
+    NotLoggedIn,
+    GameBusy,
+}
+
+internal readonly struct ShortcutRunView
+{
+    public readonly Guid Id;
+    public readonly string Name;
+    public readonly Vector4 Accent;
+    public readonly int Step;
+    public readonly int StepCount;
+    public readonly bool Holding;
+
+    public ShortcutRunView(Guid id, string name, Vector4 accent, int step, int stepCount, bool holding)
+    {
+        Id = id;
+        Name = name;
+        Accent = accent;
+        Step = step;
+        StepCount = stepCount;
+        Holding = holding;
+    }
+
+    public bool IsRunning => Id != Guid.Empty;
+
+    public float Progress => StepCount > 0 ? Math.Clamp((float)Step / StepCount, 0f, 1f) : 0f;
 }
 
 internal sealed class ShortcutRunner : IDisposable
 {
     public const float MaxWaitSeconds = 60f;
+    public const float MinWaitSeconds = 0.1f;
     private const float StepGapSeconds = 0.05f;
 
+    private static readonly ConditionFlag[] ChatSwallowedConditions =
+    {
+        ConditionFlag.BetweenAreas, ConditionFlag.BetweenAreas51, ConditionFlag.OccupiedInCutSceneEvent,
+        ConditionFlag.WatchingCutscene, ConditionFlag.WatchingCutscene78,
+    };
+
+    private readonly IClientState clientState;
+    private readonly ICondition condition;
     private readonly List<ShortcutStep> queue = new();
+    private ShortcutHold hold;
     private Guid runningId;
     private string runningName = string.Empty;
+    private Vector4 runningAccent;
     private int cursor;
     private float wait;
     private bool subscribed;
 
-    public event Action<Guid, string, ShortcutRunOutcome>? Finished;
+    public ShortcutRunner(IClientState clientState, ICondition condition)
+    {
+        this.clientState = clientState;
+        this.condition = condition;
+    }
 
-    public Guid RunningId => runningId;
+    public event Action<ShortcutRunView, ShortcutRunOutcome>? Finished;
 
     public bool IsRunning => runningId != Guid.Empty;
 
-    public int RunningStep => cursor;
+    public static bool NeedsGame(ShortcutStepKind kind) => kind == ShortcutStepKind.Command;
 
-    public int RunningStepCount => queue.Count;
+    public ShortcutRunView Snapshot() => new(runningId, runningName, runningAccent,
+        Math.Clamp(cursor, 1, Math.Max(queue.Count, 1)), queue.Count, hold.IsWaiting);
 
     public void Run(ShortcutEntry entry)
     {
@@ -59,8 +102,10 @@ internal sealed class ShortcutRunner : IDisposable
 
         runningId = entry.Id;
         runningName = entry.Name;
+        runningAccent = ShortcutTint.Resolve(entry.Tint);
         cursor = 0;
         wait = 0f;
+        hold.Clear();
         Subscribe();
     }
 
@@ -129,6 +174,11 @@ internal sealed class ShortcutRunner : IDisposable
         }
 
         var step = queue[cursor];
+        if (NeedsGame(step.Kind) && !TryClearGate(delta))
+        {
+            return;
+        }
+
         cursor++;
         if (!Execute(step, out var failure))
         {
@@ -140,6 +190,39 @@ internal sealed class ShortcutRunner : IDisposable
         {
             Stop(ShortcutRunOutcome.Completed);
         }
+    }
+
+    private bool TryClearGate(float delta)
+    {
+        if (!clientState.IsLoggedIn)
+        {
+            Stop(ShortcutRunOutcome.NotLoggedIn);
+            return false;
+        }
+
+        switch (hold.Advance(ChatInputSwallowed(), delta))
+        {
+            case ShortcutHoldOutcome.Waiting:
+                return false;
+            case ShortcutHoldOutcome.Expired:
+                Stop(ShortcutRunOutcome.GameBusy);
+                return false;
+            default:
+                return true;
+        }
+    }
+
+    private bool ChatInputSwallowed()
+    {
+        for (var index = 0; index < ChatSwallowedConditions.Length; index++)
+        {
+            if (condition[ChatSwallowedConditions[index]])
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private bool Execute(ShortcutStep step, out ShortcutRunOutcome failure)
@@ -173,7 +256,7 @@ internal sealed class ShortcutRunner : IDisposable
         UrlActions.OpenInBrowser(url.Trim(), exception =>
         {
             opened = false;
-            AepLog.Warning($"Shortcut \"{runningName}\" could not open {url}: {exception.Message}");
+            AepLog.Warning(exception, $"Shortcut \"{runningName}\" could not open {url}");
         });
 
         if (!opened)
@@ -209,18 +292,21 @@ internal sealed class ShortcutRunner : IDisposable
 
     private void Stop(ShortcutRunOutcome outcome)
     {
-        var finishedId = runningId;
-        var finishedName = runningName;
+        if (runningId == Guid.Empty)
+        {
+            return;
+        }
+
+        var finished = Snapshot();
         runningId = Guid.Empty;
         runningName = string.Empty;
+        runningAccent = default;
         queue.Clear();
         cursor = 0;
         wait = 0f;
+        hold.Clear();
         Unsubscribe();
-        if (finishedId != Guid.Empty)
-        {
-            Finished?.Invoke(finishedId, finishedName, outcome);
-        }
+        Finished?.Invoke(finished, outcome);
     }
 
     public void Dispose()

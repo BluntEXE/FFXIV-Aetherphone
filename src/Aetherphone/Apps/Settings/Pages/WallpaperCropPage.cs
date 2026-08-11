@@ -6,7 +6,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 using Dalamud.Interface;
 
@@ -45,7 +44,7 @@ internal sealed class WallpaperCropPage : ISettingsPage
 
     public void Draw(in PhoneContext context, Rect body)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         var deltaSeconds = MathF.Min(ImGui.GetIO().DeltaTime, 0.1f);
         var aspect = CropAspect();

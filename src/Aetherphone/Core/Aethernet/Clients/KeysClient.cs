@@ -11,9 +11,11 @@ internal sealed class KeysClient
         this.net = net;
     }
 
-    public Task<MyKeysDto?> PutMyKeysAsync(PutMyKeysRequest request, CancellationToken token)
+    public async Task<(MyKeysDto? Keys, int Status)> PutMyKeysAsync(PutMyKeysRequest request, CancellationToken token)
     {
-        return net.SendJsonAsync(HttpMethod.Put, "/keys/me", request, AethernetJsonContext.Default.PutMyKeysRequest, AethernetJsonContext.Default.MyKeysDto, token);
+        var status = 0;
+        var keys = await net.SendJsonAsync(HttpMethod.Put, "/keys/me", request, AethernetJsonContext.Default.PutMyKeysRequest, AethernetJsonContext.Default.MyKeysDto, token, statusCode => status = statusCode).ConfigureAwait(false);
+        return (keys, status);
     }
 
     public async Task<(MyKeysDto? Keys, int Status)> MyKeysAsync(CancellationToken token)
@@ -21,6 +23,11 @@ internal sealed class KeysClient
         var status = 0;
         var keys = await net.GetAsync("/keys/me", AethernetJsonContext.Default.MyKeysDto, token, statusCode => status = statusCode).ConfigureAwait(false);
         return (keys, status);
+    }
+
+    public Task<ArchivedEscrowsDto?> MyKeyEscrowsAsync(CancellationToken token)
+    {
+        return net.GetAsync("/keys/me/escrows", AethernetJsonContext.Default.ArchivedEscrowsDto, token);
     }
 
     public Task<PublicKeysDto?> PublicKeysAsync(string[] userIds, CancellationToken token)

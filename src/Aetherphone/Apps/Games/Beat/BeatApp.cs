@@ -6,7 +6,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Games.Beat;
 
@@ -33,6 +32,8 @@ internal sealed class BeatApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Beat);
+    public bool RunsOnAClock => true;
+
     public string Genre => Loc.T(L.Games.GenreArcade);
 
     public void Open()
@@ -71,7 +72,7 @@ internal sealed class BeatApp : IMiniGame
 
     public void Draw(in GameContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         var body = context.Body;
         var deltaSeconds = fx.ScaleDelta(context.DeltaSeconds);

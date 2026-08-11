@@ -24,7 +24,6 @@ using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -33,6 +32,7 @@ internal sealed partial class VelvetShell : IPhoneApp
     private const float HeartbeatSeconds = 45f;
 
     private readonly VelvetStore store;
+    private readonly HashSet<string> reportedTargets = new(StringComparer.Ordinal);
     private readonly StoryPresenter stories;
     private readonly VelvetLauncher launcher;
     private readonly SocialLauncher socialLauncher;
@@ -85,7 +85,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         commentMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         stories = new StoryPresenter(session, net.Grams, net.Media, images, lodestone, VelvetArt.StoryRing, VelvetTheme.Palette,
             new StoryConfirmLabels(L.Velvet.DeleteConfirm, L.Velvet.DeleteCancel, L.Velvet.Saving), confirm,
-            realtimeSignals, "Velvet stories", StartStoryCompose);
+            realtimeSignals, "Velvet stories", StartStoryCompose, openProfile: OpenProfile);
         this.launcher = launcher;
         this.socialLauncher = socialLauncher;
         this.lodestone = lodestone;
@@ -240,7 +240,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         store.EnsureMe();
         TickHeartbeat();
         GateMenus();
-        var screen = SceneChrome.ScreenFrom(context.Content, theme, ImGuiHelpers.GlobalScale);
+        var screen = SceneChrome.ScreenFrom(context.Content, theme, UiScale.Current);
         ui.Backdrop(screen);
         ConsumeSharedPhoto();
         stories.Advance();
@@ -375,7 +375,7 @@ internal sealed partial class VelvetShell : IPhoneApp
 
     private void DrawRoot(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var headerHeight = VHeader.Height * scale;
         var tabHeight = VTabBar.Height * scale;
         var headerRect = new Rect(area.Min, new Vector2(area.Max.X, area.Min.Y + headerHeight));
@@ -488,6 +488,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         }
 
         DrawPostMenu(area, true);
+        DrawThreadMenu(area);
     }
 
     private void DrawRichBody(ImDrawListPtr drawList, RichTextLayout layout, Vector2 origin)

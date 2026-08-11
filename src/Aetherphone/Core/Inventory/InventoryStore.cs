@@ -116,7 +116,7 @@ internal sealed class InventoryStore
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"InventoryStore load failed for {characterId}: {exception.Message}");
+            AepLog.Warning(exception, $"InventoryStore load failed for {characterId}");
             return null;
         }
     }
@@ -130,7 +130,7 @@ internal sealed class InventoryStore
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"InventoryStore write failed for {characterId}: {exception.Message}");
+            AepLog.Warning(exception, $"InventoryStore write failed for {characterId}");
         }
     }
 

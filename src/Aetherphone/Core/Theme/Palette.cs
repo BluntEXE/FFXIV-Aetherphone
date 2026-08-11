@@ -6,6 +6,38 @@ internal static class Palette
     public static Vector4 Mix(Vector4 from, Vector4 to, float amount) => Vector4.Lerp(from, to, amount);
     public static float Luminance(Vector4 color) => color.X * 0.299f + color.Y * 0.587f + color.Z * 0.114f;
 
+    public static float RelativeLuminance(Vector4 color) =>
+        0.2126f * LinearChannel(color.X) + 0.7152f * LinearChannel(color.Y) + 0.0722f * LinearChannel(color.Z);
+
+    public static float ContrastRatio(Vector4 first, Vector4 second)
+    {
+        var one = RelativeLuminance(first);
+        var other = RelativeLuminance(second);
+        return one > other ? (one + 0.05f) / (other + 0.05f) : (other + 0.05f) / (one + 0.05f);
+    }
+
+    public static Vector4 ShadeToLuminance(Vector4 color, float target)
+    {
+        var luminance = RelativeLuminance(color);
+        if (luminance <= target || luminance <= 0f)
+        {
+            return color;
+        }
+
+        var factor = target / luminance;
+        return new Vector4(
+            EncodeChannel(LinearChannel(color.X) * factor),
+            EncodeChannel(LinearChannel(color.Y) * factor),
+            EncodeChannel(LinearChannel(color.Z) * factor),
+            color.W);
+    }
+
+    private static float LinearChannel(float channel) =>
+        channel <= 0.04045f ? channel / 12.92f : MathF.Pow((channel + 0.055f) / 1.055f, 2.4f);
+
+    private static float EncodeChannel(float channel) =>
+        channel <= 0.0031308f ? channel * 12.92f : 1.055f * MathF.Pow(channel, 1f / 2.4f) - 0.055f;
+
     public static Vector4 Lighten(Vector4 color, float amount) =>
         Vector4.Lerp(color, new Vector4(1f, 1f, 1f, color.W), amount);
 

@@ -7,7 +7,6 @@ using Aetherphone.Core.Telephony;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Message;
@@ -73,7 +72,7 @@ internal sealed partial class MessageApp
 
     private void DrawContactsTab(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (!session.IsSignedIn)
         {
             Typography.DrawCentered(area.Center, Loc.T(L.Message.SignInPrompt), ui.MutedInk);
@@ -268,7 +267,7 @@ internal sealed partial class MessageApp
 
     private void DrawAddContact(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, Loc.T(L.Friends.AddFriend), back);
         var sideInset = 16f * scale;
@@ -328,7 +327,7 @@ internal sealed partial class MessageApp
 
     private void DrawSafety(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, Loc.T(L.Friends.NewNumberTitle), back);
         var sideInset = 16f * scale;

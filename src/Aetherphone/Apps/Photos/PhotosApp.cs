@@ -11,7 +11,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures.TextureWraps;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Photos;
 
@@ -71,6 +70,7 @@ internal sealed partial class PhotosApp : IPhoneApp
     private int viewerIndex;
     private int segment;
     private bool resetScroll;
+    private bool focusAlbumName;
     private PhoneTheme frameTheme = PhoneTheme.Default;
     private INavigator frameNavigation = null!;
 
@@ -89,7 +89,7 @@ internal sealed partial class PhotosApp : IPhoneApp
     public void OnOpened()
     {
         router.Reset();
-        segment = 0;
+        segment = Math.Clamp(configuration.PhotosSegment, 0, 1);
         viewerPaths = Array.Empty<string>();
         viewerIndex = 0;
         resetScroll = true;
@@ -114,7 +114,7 @@ internal sealed partial class PhotosApp : IPhoneApp
 
         albumMenu.Gate();
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var screen = SceneChrome.ScreenFrom(context.Content, context.Theme, scale);
         ui.Backdrop(screen);
         router.Draw(screen, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
@@ -148,6 +148,12 @@ internal sealed partial class PhotosApp : IPhoneApp
             return;
         }
 
+        if (view.Route == PhotoRoute.AddToAlbum)
+        {
+            DrawAddToAlbumPage(content);
+            return;
+        }
+
         if (view.Route == PhotoRoute.Album)
         {
             DrawAlbum(content, view.AlbumKey);
@@ -159,7 +165,7 @@ internal sealed partial class PhotosApp : IPhoneApp
 
     private Rect ContentWithin(Rect screen)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var min = new Vector2(screen.Min.X + frameTheme.SidePadding * scale,
             screen.Min.Y + frameTheme.TopZoneHeight * scale);
         var max = new Vector2(screen.Max.X - frameTheme.SidePadding * scale,
@@ -169,7 +175,7 @@ internal sealed partial class PhotosApp : IPhoneApp
 
     private void DrawNavBar(Rect area, string title, Action? onBack, float rightReserve = 0f)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
         if (rightReserve > 0f)
         {
@@ -586,8 +592,9 @@ internal sealed partial class PhotosApp : IPhoneApp
         {
             return File.GetLastWriteTime(path);
         }
-        catch
+        catch (Exception exception)
         {
+            AepLog.Warning(exception, $"[Photos] could not read the timestamp of {Path.GetFileName(path)}");
             return DateTime.Now;
         }
     }
@@ -672,7 +679,7 @@ internal sealed partial class PhotosApp : IPhoneApp
         catch (Exception exception)
         {
             failed.TryAdd(path, 0);
-            AepLog.Warning($"[Photos] thumbnail failed for {Path.GetFileName(path)}: {exception.Message}");
+            AepLog.Warning(exception, $"[Photos] thumbnail failed for {Path.GetFileName(path)}");
         }
         finally
         {
@@ -699,7 +706,7 @@ internal sealed partial class PhotosApp : IPhoneApp
         catch (Exception exception)
         {
             failed.TryAdd(path, 0);
-            AepLog.Warning($"[Photos] failed to load {Path.GetFileName(path)}: {exception.Message}");
+            AepLog.Warning(exception, $"[Photos] failed to load {Path.GetFileName(path)}");
         }
         finally
         {
@@ -707,10 +714,10 @@ internal sealed partial class PhotosApp : IPhoneApp
         }
     }
 
-    private static void DisposeLater(IDalamudTextureWrap wrap)
+    private static void DisposeLater(IDisposable disposable)
     {
         _ = Task.Delay(TimeSpan.FromSeconds(1))
-            .ContinueWith(_ => Plugin.Framework.RunOnFrameworkThread(wrap.Dispose), TaskScheduler.Default);
+            .ContinueWith(_ => Plugin.Framework.RunOnFrameworkThread(disposable.Dispose), TaskScheduler.Default);
     }
 
     public void Dispose()

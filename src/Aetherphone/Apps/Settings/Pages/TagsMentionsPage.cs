@@ -7,7 +7,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Settings.Pages;
 
@@ -39,7 +38,7 @@ internal sealed class TagsMentionsPage : ISettingsPage, IDisposable
 
     public void Draw(in PhoneContext context, Rect body)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         using (AppSurface.Begin(body))
         {
@@ -137,7 +136,7 @@ internal sealed class TagsMentionsPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Tag privacy load failed: {exception.Message}");
+                AepLog.Warning(exception, "Tag privacy load failed");
             }
             finally
             {
@@ -162,7 +161,7 @@ internal sealed class TagsMentionsPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Mention privacy update failed: {exception.Message}");
+                AepLog.Warning(exception, "Mention privacy update failed");
             }
         });
     }
@@ -185,7 +184,7 @@ internal sealed class TagsMentionsPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Tag privacy update failed: {exception.Message}");
+                AepLog.Warning(exception, "Tag privacy update failed");
             }
         });
     }

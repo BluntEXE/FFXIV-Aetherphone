@@ -18,7 +18,6 @@ internal static class OnboardingHero
         new(-0.86f, -0.58f), new(0.92f, -0.30f), new(0.58f, 0.82f),
     };
 
-    private static readonly Vector4 GlyphInk = new(1f, 1f, 1f, 1f);
     private const float StaggerSpan = 0.34f;
     private const double DriftPeriodMs = 30000.0;
     private const double RipplePeriodMs = 2800.0;
@@ -104,8 +103,9 @@ internal static class OnboardingHero
         Elevation.IconRest(drawList, min, max, radius, scale, alpha);
         IconTile.FillShaded(drawList, min, max, radius, surface, alpha);
         Material.EdgeSquircle(drawList, min, max, radius, scale, alpha);
-        AppIconArt.TryDraw(drawList, id, center, size, GlyphInk with { W = alpha },
-            Palette.Darken(surface, 0.25f) with { W = alpha });
+        var ink = AppAccents.InkFor(id);
+        AppIconArt.TryDraw(drawList, id, center, size, ink with { W = alpha },
+            Palette.Mix(surface, ink, 0.28f) with { W = alpha });
     }
 
     private static void Heart(ImDrawListPtr drawList, Vector2 center, float size, Vector4 accent, float alpha)

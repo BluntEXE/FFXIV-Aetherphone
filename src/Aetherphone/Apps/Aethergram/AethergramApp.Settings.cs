@@ -5,7 +5,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Aethergram;
 
@@ -21,7 +20,7 @@ internal sealed partial class AethergramApp
     {
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, Loc.T(L.Aethergram.Settings), back);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         EnsureMessagePolicyLoaded();
         var listRect = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         using (AppSurface.Begin(listRect))
@@ -144,7 +143,7 @@ internal sealed partial class AethergramApp
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Aethergram message privacy load failed: {exception.Message}");
+                AepLog.Warning(exception, "Aethergram message privacy load failed");
             }
             finally
             {
@@ -174,7 +173,7 @@ internal sealed partial class AethergramApp
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Aethergram message privacy update failed: {exception.Message}");
+                AepLog.Warning(exception, "Aethergram message privacy update failed");
             }
         });
     }

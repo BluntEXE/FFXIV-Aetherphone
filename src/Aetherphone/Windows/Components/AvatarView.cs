@@ -51,7 +51,7 @@ internal static class AvatarView
         var fade = handle.Texture is not null && handle.Key.Length > 0 ? Advance(handle.Key) : 0f;
         if (fade < 1f)
         {
-            Typography.DrawCentered(center, monogram, White with { W = (1f - fade) * alpha }, monogramScale);
+            Typography.DrawCentered(drawList, center, monogram, White with { W = (1f - fade) * alpha }, monogramScale);
         }
 
         if (handle.Texture is { } texture && fade > 0f)

@@ -7,7 +7,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.AppStore;
 
@@ -44,7 +43,6 @@ internal sealed partial class AppStoreApp : IPhoneApp
     private const float SearchHeight = 50f;
     private const float InstallSeconds = 0.9f;
     private const int CategoryArtCount = 3;
-    private static readonly Vector4 GlyphInk = new(1f, 1f, 1f, 0.96f);
     private static readonly Vector4 TabBarFill = new(0.02f, 0.03f, 0.06f, 0.72f);
 
     private readonly AppInstaller installer;
@@ -111,7 +109,7 @@ internal sealed partial class AppStoreApp : IPhoneApp
 
         var delta = ImGui.GetIO().DeltaTime;
         AdvanceInstalls(delta);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var screen = SceneChrome.ScreenFrom(context.Content, context.Theme, scale);
         ui.Backdrop(screen);
         var content = context.Content;
@@ -206,7 +204,7 @@ internal sealed partial class AppStoreApp : IPhoneApp
 
     private void DrawLargeTitle(Rect area, string title, string? eyebrow)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var left = area.Min.X + Metrics.Space.Lg * scale;
         var top = area.Min.Y + 18f * scale;
         if (eyebrow is not null)

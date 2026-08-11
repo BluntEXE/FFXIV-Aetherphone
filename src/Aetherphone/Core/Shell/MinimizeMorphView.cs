@@ -4,7 +4,6 @@ using Aetherphone.Core.Shell.Home;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Core.Shell;
 
@@ -40,10 +39,11 @@ internal sealed class MinimizeMorphView
     private void DrawMorph(Rect device)
     {
         minimizedView.IsShowing = false;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = themes.Chrome;
+        var puckScale = UiScale.Global;
         var startBody = DeviceChrome.BodyRect(device, theme);
-        var endBody = MinimizedRect(device, scale).Inset(scale);
+        var endBody = MinimizedRect(device, puckScale).Inset(puckScale);
         var eased = minimize.EasedProgress;
         var body = new Rect(Vector2.Lerp(startBody.Min, endBody.Min, eased),
             Vector2.Lerp(startBody.Max, endBody.Max, eased));
@@ -56,7 +56,7 @@ internal sealed class MinimizeMorphView
 
         var raw = Math.Clamp((eased - 0.5f) / 0.4f, 0f, 1f);
         var glyphAlpha = raw * raw * (3f - 2f * raw);
-        MinimizedPhone.DrawFace(ImGui.GetForegroundDrawList(), geometry, theme, scale, glyphAlpha,
+        MinimizedPhone.DrawFace(ImGui.GetForegroundDrawList(), geometry, theme, puckScale, glyphAlpha,
             notifications.UnreadCount);
     }
 
@@ -79,7 +79,7 @@ internal sealed class MinimizeMorphView
             painter.PaintCurrent(target, fullRadius, theme, shrink);
             Squircle.Fill(ImGui.GetWindowDrawList(), screen.Min, screen.Max, rounding, veil);
         });
-        DeviceChrome.MaskScreenCorners(ImGui.GetWindowDrawList(), geometry, theme, ImGuiHelpers.GlobalScale);
+        DeviceChrome.MaskScreenCorners(ImGui.GetWindowDrawList(), geometry, theme, UiScale.Current);
     }
 
     private static HomeMotion ShrinkMotion(Rect fullScreen, Rect target)
@@ -97,7 +97,7 @@ internal sealed class MinimizeMorphView
     private bool DrawFace(Rect device, float delta)
     {
         minimizedView.IsShowing = true;
-        var mini = MinimizedRect(device, ImGuiHelpers.GlobalScale);
+        var mini = MinimizedRect(device, UiScale.Global);
         switch (minimizedView.Draw(mini, themes.Chrome, delta))
         {
             case MinimizedAction.Expand:

@@ -4,7 +4,6 @@ using Aetherphone.Core.Market;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Market;
 
@@ -13,7 +12,7 @@ internal sealed partial class MarketApp
     private void DrawRoot(Rect area)
     {
         UpdateHovered();
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         DrawRootTopBar(area, scale);
         var top = area.Min.Y + AppHeader.Height * scale;
         var scopeBar = new Rect(new Vector2(area.Min.X, top), new Vector2(area.Max.X, top + ScopeBarHeight * scale));
@@ -76,7 +75,7 @@ internal sealed partial class MarketApp
         }
 
         market.PrefetchAggregated(prefetchBuffer, scope);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ImGui.Dummy(new Vector2(0f, 4f * scale));
         var card = GroupCard.Begin(frameTheme, results.Count, MarketRowViews.ItemRowHeight);
         for (var resultIndex = 0; resultIndex < results.Count; resultIndex++)
@@ -235,13 +234,13 @@ internal sealed partial class MarketApp
 
     private void CenteredHint(Rect body, string message)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         Typography.DrawCentered(new Vector2(body.Center.X, body.Min.Y + 70f * scale), message, AppPalettes.Market.MutedInk);
     }
 
     private void CenteredLoading(Rect body, string message)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         LoadingPulse.Draw(new Vector2(body.Center.X, body.Min.Y + 60f * scale), 13f * scale, AppPalettes.Market.Accent,
             AppPalettes.Market.MutedInk, message);
     }

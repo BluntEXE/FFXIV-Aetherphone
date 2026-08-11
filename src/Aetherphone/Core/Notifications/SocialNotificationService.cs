@@ -13,6 +13,7 @@ internal sealed class SocialNotificationService : IDisposable
 {
     private static readonly TimeSpan ForegroundPollInterval = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan BackgroundPollInterval = TimeSpan.FromSeconds(120);
+    private static readonly TimeSpan AckRetryInterval = TimeSpan.FromSeconds(15);
 
     private static readonly string[] ServedApps =
     {
@@ -31,12 +32,15 @@ internal sealed class SocialNotificationService : IDisposable
     private readonly IFramework framework;
     private readonly RealtimeSignalBus signals;
     private readonly PollCadence cadence;
+    private readonly NotificationAckQueue acks;
     private readonly CancellationTokenSource cancellation = new();
     private readonly HashSet<string> seenIds = new();
     private volatile NotificationDto[] latest = Array.Empty<NotificationDto>();
     private volatile Dictionary<string, int>? serverUnread;
     private volatile bool polling;
     private volatile bool primed;
+    private volatile bool flushingAcks;
+    private DateTime nextAckFlushUtc = DateTime.MinValue;
     private string? lastAccountId;
 
     public SocialNotificationService(AethernetSession session, AccountClient client, NotificationService notifications,
@@ -50,6 +54,7 @@ internal sealed class SocialNotificationService : IDisposable
         this.configuration = configuration;
         this.framework = framework;
         this.signals = signals;
+        acks = new NotificationAckQueue(configuration.PendingNotificationAcks, configuration.Save);
         cadence = new PollCadence(visibility, ForegroundPollInterval, BackgroundPollInterval);
         signals.SocialPinged += cadence.RequestImmediate;
         signals.ConnectedChanged += OnRealtimeConnected;
@@ -101,17 +106,28 @@ internal sealed class SocialNotificationService : IDisposable
     public int UnseenCount(string app)
     {
         var counts = serverUnread;
-        if (counts is not null)
+        if (counts is null)
         {
-            return counts.GetValueOrDefault(app, 0);
+            return UnreadAfter(app, SeenUnix(app));
         }
 
+        var pending = PendingAckWatermark(app);
+        if (pending > 0)
+        {
+            return UnreadAfter(app, pending);
+        }
+
+        return counts.GetValueOrDefault(app, 0);
+    }
+
+    private int UnreadAfter(string app, long watermark)
+    {
         var items = latest;
-        var seenUnix = SeenUnix(app);
         var count = 0;
         for (var index = 0; index < items.Length; index++)
         {
-            if (items[index].App == app && items[index].CreatedAtUnix > seenUnix)
+            var item = items[index];
+            if (item.App == app && !item.Read && item.CreatedAtUnix > watermark)
             {
                 count++;
             }
@@ -133,23 +149,66 @@ internal sealed class SocialNotificationService : IDisposable
         }
 
         notifications.RemoveSocial(app);
-        var counts = serverUnread;
-        if (counts is not null && counts.GetValueOrDefault(app, 0) > 0)
+        var hadServerUnread = ClearServerUnread(app);
+        var advances = newest > SeenUnix(app);
+        if (advances)
         {
-            var updated = new Dictionary<string, int>(counts);
-            updated[app] = 0;
-            serverUnread = updated;
+            configuration.SocialActivitySeenUnix[SeenKey(app)] = newest;
+            configuration.Save();
         }
 
-        if (newest <= SeenUnix(app))
+        if (!advances && !hadServerUnread)
         {
             return;
         }
 
-        configuration.SocialActivitySeenUnix[SeenKey(app)] = newest;
-        configuration.Save();
-        AcknowledgeRead(newest, app);
+        EnqueueAck(app, advances ? newest : NowUnix());
     }
+
+    public void AcknowledgeAll()
+    {
+        var counts = serverUnread;
+        var outstanding = false;
+        if (counts is not null)
+        {
+            foreach (var count in counts.Values)
+            {
+                if (count > 0)
+                {
+                    outstanding = true;
+                    break;
+                }
+            }
+        }
+
+        if (!outstanding && notifications.UnreadCount == 0)
+        {
+            return;
+        }
+
+        if (counts is not null && counts.Count > 0)
+        {
+            serverUnread = new Dictionary<string, int>();
+        }
+
+        EnqueueAck(null, NowUnix());
+    }
+
+    private bool ClearServerUnread(string app)
+    {
+        var counts = serverUnread;
+        if (counts is null || counts.GetValueOrDefault(app, 0) <= 0)
+        {
+            return false;
+        }
+
+        var updated = new Dictionary<string, int>(counts);
+        updated[app] = 0;
+        serverUnread = updated;
+        return true;
+    }
+
+    private static long NowUnix() => DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
     public void AcknowledgeUpTo(string app, long upToUnix)
     {
@@ -167,22 +226,12 @@ internal sealed class SocialNotificationService : IDisposable
         var counts = serverUnread;
         if (counts is not null)
         {
-            var items = latest;
-            var remaining = 0;
-            for (var index = 0; index < items.Length; index++)
-            {
-                if (items[index].App == app && !items[index].Read && items[index].CreatedAtUnix > upToUnix)
-                {
-                    remaining++;
-                }
-            }
-
             var updated = new Dictionary<string, int>(counts);
-            updated[app] = remaining;
+            updated[app] = UnreadAfter(app, upToUnix);
             serverUnread = updated;
         }
 
-        AcknowledgeRead(upToUnix, app);
+        EnqueueAck(app, upToUnix);
     }
 
     private string SeenKey(string app)
@@ -201,24 +250,71 @@ internal sealed class SocialNotificationService : IDisposable
         return configuration.SocialActivitySeenUnix.GetValueOrDefault(app, 0L);
     }
 
-    private void AcknowledgeRead(long upToUnix, string? app)
+    private string? CurrentAccountId => session.CurrentUser?.Id ?? lastAccountId;
+
+    private long PendingAckWatermark(string app)
     {
+        var accountId = CurrentAccountId;
+        return string.IsNullOrEmpty(accountId) ? 0 : acks.WatermarkFor(accountId, app);
+    }
+
+    private void EnqueueAck(string? app, long upToUnix)
+    {
+        var accountId = CurrentAccountId;
+        if (string.IsNullOrEmpty(accountId) || !acks.Enqueue(accountId, app, upToUnix))
+        {
+            return;
+        }
+
+        nextAckFlushUtc = DateTime.MinValue;
+    }
+
+    private void FlushPendingAcks(DateTime nowUtc)
+    {
+        if (flushingAcks || nowUtc < nextAckFlushUtc)
+        {
+            return;
+        }
+
+        var accountId = CurrentAccountId;
+        if (string.IsNullOrEmpty(accountId) || !acks.TryPeek(accountId, out var key, out var app, out var watermark))
+        {
+            return;
+        }
+
+        var scope = app ?? NotificationAckQueue.GlobalScope;
+        flushingAcks = true;
+        nextAckFlushUtc = nowUtc + AckRetryInterval;
         var token = cancellation.Token;
         _ = Task.Run(async () =>
         {
             try
             {
-                await client.MarkNotificationsReadAsync(upToUnix, app, token).ConfigureAwait(false);
+                var result = await client.MarkNotificationsReadAsync(watermark, app, token).ConfigureAwait(false);
+                if (result is null)
+                {
+                    AepLog.Warning($"[Notifications] read ack for {scope} did not land; retrying");
+                    return;
+                }
+
+                await framework.RunOnFrameworkThread(() => ConfirmAck(key, watermark)).ConfigureAwait(false);
+                cadence.RequestImmediate();
             }
             catch (OperationCanceledException)
             {
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[Notifications] read ack failed: {exception.Message}");
+                AepLog.Warning(exception, "[Notifications] read ack failed");
+            }
+            finally
+            {
+                flushingAcks = false;
             }
         });
     }
+
+    private void ConfirmAck(string key, long watermark) => acks.ConfirmSent(key, watermark);
 
     public void RefreshNow()
     {
@@ -248,7 +344,9 @@ internal sealed class SocialNotificationService : IDisposable
             return;
         }
 
-        if (polling || !cadence.Due(DateTime.UtcNow))
+        var nowUtc = DateTime.UtcNow;
+        FlushPendingAcks(nowUtc);
+        if (polling || !cadence.Due(nowUtc))
         {
             return;
         }
@@ -281,7 +379,7 @@ internal sealed class SocialNotificationService : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[Notifications] poll failed: {exception.Message}");
+                AepLog.Warning(exception, "[Notifications] poll failed");
             }
             finally
             {
@@ -406,6 +504,7 @@ internal sealed class SocialNotificationService : IDisposable
             SocialActivity.VelvetApp => AppAccents.For(SocialActivity.VelvetApp),
             SocialActivity.YellowPagesApp => AppAccents.For(SocialActivity.YellowPagesApp),
             SocialActivity.MessageApp => AppAccents.For(SocialActivity.MessageApp),
+            SocialActivity.MusicApp => AppAccents.For(SocialActivity.MusicApp),
             _ => AppAccents.For(SocialActivity.ChirperApp),
         };
     }

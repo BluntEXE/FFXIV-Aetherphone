@@ -4,7 +4,6 @@ using Aetherphone.Core.Shell.Home;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Core.Shell;
@@ -54,11 +53,14 @@ internal sealed class ShellScreenPainter
         var contentRect = ContentRect(screen, theme);
         try
         {
-            app.Draw(new PhoneContext(contentRect, content, navigation));
+            using (AppVisits.Enter(app.Id))
+            {
+                app.Draw(new PhoneContext(contentRect, content, navigation));
+            }
         }
         catch (Exception exception)
         {
-            AepLog.Error($"[shell] app-draw {app.Id} threw: {exception.Message}");
+            AepLog.Error(exception, $"[shell] app-draw {app.Id} threw");
             DrawAppFailure(contentRect, content);
         }
     }
@@ -74,7 +76,7 @@ internal sealed class ShellScreenPainter
 
     public static Rect ContentRect(Rect screen, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var min = new Vector2(screen.Min.X + theme.SidePadding * scale, screen.Min.Y + theme.TopZoneHeight * scale);
         var max = new Vector2(screen.Max.X - theme.SidePadding * scale, screen.Max.Y - theme.BottomZoneHeight * scale);
         return new Rect(min, max);

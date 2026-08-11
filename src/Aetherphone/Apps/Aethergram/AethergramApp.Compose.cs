@@ -10,7 +10,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Aethergram;
@@ -19,39 +18,29 @@ internal sealed partial class AethergramApp
 {
     private const float AspectPickerReserve = 42f;
 
-    // The frame the currently-active crop step draws into - for posts, this is whichever photo
-    // is currently being individually framed (see PhotoComposeSession.CurrentAspect), so it
-    // changes as CropAdvance/CropBack step through a multi-photo selection.
     private float ComposeCropAspect => composeStoryMode
         ? (float)StoryStore.StoryWidth / StoryStore.StoryHeight
         : composeAvatarMode
             ? PostAspects.SquareRatio
             : PostAspects.Ratio(composeSession.CurrentAspect);
 
-    // The shared container frame for the caption/review screen - the first photo's choice, same
-    // reasoning as PhotoComposeSession.ContainerAspect's doc comment (matches Instagram: the
-    // first photo sets the carousel's frame, other photos with a different aspect contain-fit
-    // inside it rather than resizing the frame itself as you swipe).
     private float ComposeContainerAspect => composeStoryMode
         ? (float)StoryStore.StoryWidth / StoryStore.StoryHeight
         : composeAvatarMode
             ? PostAspects.SquareRatio
             : PostAspects.Ratio(composeSession.ContainerAspect);
 
-    // The aspect to fetch this specific preview photo's own crop at - for posts, each photo kept
-    // its own choice during the crop step, so this can differ from ComposeContainerAspect.
     private float ComposePreviewAspect => composeStoryMode || composeAvatarMode
         ? ComposeContainerAspect
         : PostAspects.Ratio(composeSession.AspectAt(composeSession.ClampedPreviewIndex));
 
     private bool ComposeAllowsAspectChoice => !composeStoryMode && !composeAvatarMode;
 
-    // Reveal-fit (see PhotoComposeSession.DrawCropCanvas's allowReveal) only applies to Portrait -
-    // Square and Landscape stay a plain cover crop, matching how they behaved before this existed.
-    private bool ComposeCropAllowsReveal => ComposeAllowsAspectChoice && composeSession.CurrentAspect == PostAspect.Portrait;
+    private bool ComposeCropAllowsReveal =>
+        ComposeAllowsAspectChoice && PostAspects.RevealsWholeImage(composeSession.CurrentAspect);
 
-    private bool ComposePreviewAllowsReveal => !composeStoryMode && !composeAvatarMode
-        && composeSession.AspectAt(composeSession.ClampedPreviewIndex) == PostAspect.Portrait;
+    private bool ComposePreviewAllowsReveal => ComposeAllowsAspectChoice
+        && PostAspects.RevealsWholeImage(composeSession.AspectAt(composeSession.ClampedPreviewIndex));
 
     private string ComposeTitle => composeAvatarMode ? Loc.T(L.Aethergram.NewAvatar)
         : composeStoryMode ? Loc.T(L.Story.NewStory)
@@ -121,6 +110,7 @@ internal sealed partial class AethergramApp
                 caption = string.Empty;
                 store.RefreshFeed(SocialFeedScope.ForYou);
                 store.RefreshFeed(SocialFeedScope.Following);
+                feedScrollTopPending = true;
             }
 
             router.Pop();
@@ -152,7 +142,7 @@ internal sealed partial class AethergramApp
 
     private void DrawComposePick(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, theme, navigation);
         var showNext = !composeAvatarMode && !composeStoryMode;
         var nextLabel = Loc.T(L.Common.Next);
@@ -200,7 +190,7 @@ internal sealed partial class AethergramApp
 
     private void DrawComposeCrop(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var multi = !composeAvatarMode && composeSession.SelectedCount > 1;
         var title = multi
             ? Loc.T(L.Common.PhotoStep, composeSession.CropIndex + 1, composeSession.SelectedCount)
@@ -220,7 +210,7 @@ internal sealed partial class AethergramApp
         }
 
         var reserve = ComposeAllowsAspectChoice ? AspectPickerReserve : 0f;
-        composeSession.DrawCropCanvas(area, ImGuiHelpers.GlobalScale, ComposeCropAspect, ComposeStyle,
+        composeSession.DrawCropCanvas(area, UiScale.Current, ComposeCropAspect, ComposeStyle,
             Loc.T(L.Aethergram.GestureHint), reserve, ComposeCropAllowsReveal);
         if (ComposeAllowsAspectChoice)
         {
@@ -280,7 +270,7 @@ internal sealed partial class AethergramApp
         personPicker.Gate();
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, ComposeTitle, () => composeSession.LoadCropStage(composeSession.SelectedCount - 1));
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var margin = 16f * scale;
         var top = area.Min.Y + AppHeader.Height * scale;
         var shareHeight = 46f * scale;
@@ -467,13 +457,11 @@ internal sealed partial class AethergramApp
             return;
         }
 
-        // A photo whose own aspect differs from the shared container (see ComposeContainerAspect)
-        // shows letterboxed instead of being restretched to fill the frame.
-        var imageRect = ImageFit.DrawLetterboxed(drawList, texture, preview, uv0, uv1, rounding);
+        ImageFit.DrawLetterboxed(drawList, texture, preview, uv0, uv1, rounding);
         Material.EdgeSquircle(drawList, preview.Min, preview.Max, rounding, scale);
         if (composeTagMode && !composeStoryMode)
         {
-            DrawComposeTags(drawList, imageRect, index, scale);
+            DrawComposeTags(drawList, preview, index, scale);
         }
 
         if (!UiInteract.HoverClick(preview.Min, preview.Max))
@@ -493,7 +481,7 @@ internal sealed partial class AethergramApp
             return;
         }
 
-        composeTagPoint = PhotoTagGeometry.ToNormalized(imageRect, ImGui.GetMousePos());
+        composeTagPoint = PhotoTagGeometry.ToNormalized(preview, ImGui.GetMousePos());
         composeTagPhotoIndex = index;
         personPicker.Open();
     }
@@ -578,7 +566,7 @@ internal sealed partial class AethergramApp
 
     private bool DrawShareBar(Rect rect, string label, bool enabled)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
         var radius = rect.Height * 0.5f;

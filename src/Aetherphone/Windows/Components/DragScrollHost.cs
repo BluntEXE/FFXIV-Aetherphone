@@ -1,6 +1,5 @@
 using Aetherphone.Core.Animation;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -90,7 +89,7 @@ internal static class DragScrollHost
         region.LastFrame = frame;
 
         var scroller = region.Scroller;
-        scroller.Scale = ImGuiHelpers.GlobalScale;
+        scroller.Scale = UiScale.Current;
         scroller.SetBounds(ImGui.GetScrollMaxY());
         if (gapped)
         {

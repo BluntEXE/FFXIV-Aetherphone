@@ -103,19 +103,17 @@ internal static unsafe class DailiesReader
     private static DailyAutoStatus ReadDomanEnclave()
     {
         var manager = DomanEnclaveManager.Instance();
-        if (manager is null || !manager->IsLoaded)
-        {
-            return DailyAutoStatus.Unavailable;
-        }
-
         var state = manager->State;
-        if (state.CurrentMilestone == 0)
+        var donated = (int)state.Donated;
+        var allowance = (int)state.Allowance;
+        var remaining = allowance - donated;
+
+        if (allowance == 0)
         {
             return DailyAutoStatus.Unavailable;
         }
 
-        var remaining = state.Allowance;
-        return new DailyAutoStatus(true, remaining == 0, remaining, remaining);
+        return new DailyAutoStatus(true, remaining == 0, remaining, allowance);
     }
 
     private static DailyAutoStatus ReadLevequests(int goal)

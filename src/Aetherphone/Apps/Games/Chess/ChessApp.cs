@@ -7,7 +7,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Games.Chess;
 
@@ -125,7 +124,7 @@ internal sealed class ChessApp : IMiniGame
     public void Draw(in GameContext context)
     {
         var deltaSeconds = context.DeltaSeconds;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = context.Theme;
         var body = context.Body;
         if (!statsLoaded)
@@ -338,7 +337,7 @@ internal sealed class ChessApp : IMiniGame
         selected = -1;
         targets = 0;
         captureTargets = 0;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var center = layout.CellSize > 0f ? layout.SquareCenter(move.To) : Vector2.Zero;
         if (layout.CellSize > 0f)
         {
@@ -603,7 +602,7 @@ internal sealed class ChessApp : IMiniGame
 
     private static bool IconButton(Vector2 center, float radius, FontAwesomeIcon icon, PhoneTheme theme, bool enabled)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var min = center - new Vector2(radius, radius);
         var max = center + new Vector2(radius, radius);

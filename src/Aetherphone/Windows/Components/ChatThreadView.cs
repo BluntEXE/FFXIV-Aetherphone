@@ -19,8 +19,6 @@ using Aetherphone.Core.Wallpapers;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Textures.TextureWraps;
-using Dalamud.Interface.Utility;
-using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
 
@@ -48,7 +46,11 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     protected readonly VoiceNotePlayer voicePlayer = new();
     protected readonly EncryptionInfoPane encryptionPane;
     private readonly PhotoZoomView imageZoom = new();
+    private readonly Dictionary<string, string> sessionDrafts = new(StringComparer.Ordinal);
+    private volatile string? failedSendThreadId;
+    private volatile string? failedSendText;
     private static readonly TimeSpan VoiceFailureRetryFor = TimeSpan.FromMinutes(2);
+    private static readonly TimeSpan SyncBannerFloor = TimeSpan.FromSeconds(2);
     private readonly ConcurrentDictionary<string, byte[]> voiceBytes = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, byte> voiceFetching = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, DateTime> voiceFailed = new(StringComparer.Ordinal);
@@ -67,9 +69,11 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     private TMessage[] transcriptSource = Array.Empty<TMessage>();
     private TranscriptMessage[] transcriptCache = Array.Empty<TranscriptMessage>();
     private const float PushActivePollMultiplier = 3f;
+    private const int ResumeFrameGap = 3;
 
     private float sinceThreadPoll;
     private float sinceTypingPoll;
+    private int lastThreadDrawFrame;
     private float sinceTypingSend;
     private string lastTypingDraft = string.Empty;
     private string? imageViewId;
@@ -111,6 +115,8 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     protected abstract PhoneTheme Theme { get; }
 
+    protected abstract IPhoneApp Owner { get; }
+
     protected abstract INavigator Navigation { get; }
 
     protected abstract Action BackAction { get; }
@@ -151,15 +157,25 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     protected virtual void OnThreadSwitchingFrom(string previousThreadId)
     {
+        if (composer.IsEditing)
+        {
+            return;
+        }
+
+        var draft = composer.Draft.Trim();
+        if (draft.Length == 0)
+        {
+            sessionDrafts.Remove(previousThreadId);
+            return;
+        }
+
+        sessionDrafts[previousThreadId] = composer.Draft;
     }
 
-    protected virtual void OnThreadOpened(string threadId)
-    {
-    }
+    protected virtual void OnThreadOpened(string threadId) =>
+        composer.Draft = sessionDrafts.GetValueOrDefault(threadId, string.Empty);
 
-    protected virtual void OnDraftConsumed(string threadId)
-    {
-    }
+    protected virtual void OnDraftConsumed(string threadId) => sessionDrafts.Remove(threadId);
 
     protected abstract TranscriptMessage[] MapTranscript(TMessage[] source);
 
@@ -203,6 +219,11 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     public virtual void OnAppClosed()
     {
+        if (store.CurrentThreadId is { } openThreadId)
+        {
+            OnThreadSwitchingFrom(openThreadId);
+        }
+
         composer.CancelVoice();
         voicePlayer.Stop();
         searchController.Close();
@@ -211,6 +232,9 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     public void Draw(Rect area, string threadId)
     {
+        var frame = ImGui.GetFrameCount();
+        var resumed = frame - lastThreadDrawFrame > ResumeFrameGap;
+        lastThreadDrawFrame = frame;
         if (store.CurrentThreadId != threadId)
         {
             if (store.CurrentThreadId is { } previousThreadId)
@@ -219,7 +243,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             }
 
             store.OpenThread(threadId);
-            sinceThreadPoll = threadPollSeconds * PushActivePollMultiplier;
+            sinceThreadPoll = 0f;
             sinceTypingPoll = threadPollSeconds;
             lastTypingDraft = string.Empty;
             composer.ClearTargets();
@@ -227,6 +251,12 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             composer.CancelVoice();
             voicePlayer.Stop();
             OnThreadOpened(threadId);
+            transcript.RequestSnapToBottom();
+        }
+        else if (resumed)
+        {
+            store.RequestThreadRefresh(threadId);
+            sinceThreadPoll = 0f;
         }
 
         if (pendingPrefill is { } prefill)
@@ -238,10 +268,12 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             }
         }
 
+        RestoreFailedSend(threadId);
+
         store.NoteThreadViewed(threadId);
         TickThread(threadId);
         DrawHeader(area, threadId);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var composerHeight = 56f * scale;
         var accessoryHeight = composer.AccessoryHeight;
@@ -257,6 +289,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         var listRect = new Rect(new Vector2(area.Min.X, top),
             new Vector2(area.Max.X, area.Max.Y - composerHeight - accessoryHeight));
         DrawVaultBanner(ref listRect, threadId);
+        DrawSyncBanner(ref listRect);
         DrawAboveTranscript(ref listRect, threadId);
         var model = new ChatTranscriptModel
         {
@@ -270,7 +303,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             EmptyText = EmptyText,
             LoadingText = Loc.T(L.Common.Loading),
             OtherTyping = store.OtherTyping,
-            Loading = store.LoadingThread,
+            Loading = store.LoadingThread || store.ThreadOpenPending,
             IsGroup = IsGroupThread,
             Media = this,
             Interactions = this,
@@ -298,6 +331,19 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             OnSendVoice = sendVoice,
         });
         DrawMessageMenu(area);
+    }
+
+    private void DrawSyncBanner(ref Rect listRect)
+    {
+        var retryIn = store.SyncRetryIn;
+        if (retryIn <= SyncBannerFloor)
+        {
+            return;
+        }
+
+        var seconds = Math.Max(1, (int)Math.Ceiling(retryIn.TotalSeconds));
+        ChatHeaderControls.DrawBanner(ui, ref listRect, Loc.T(L.Common.ChatOutOfDate, seconds), ui.MutedInk,
+            store.RetrySyncNow);
     }
 
     private void DrawVaultBanner(ref Rect listRect, string threadId)
@@ -329,7 +375,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     {
         var context = new PhoneContext(area, Theme, Navigation);
         AppHeader.Draw(context, Loc.T(L.Encryption.InfoTitle), BackAction);
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         using (AppSurface.Begin(body))
         {
@@ -528,7 +574,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     private void ComposerSendText(string threadId, string text, string? replyToId)
     {
-        store.SendMessage(threadId, text, _ => { }, replyToId);
+        store.SendMessage(threadId, text, succeeded => NoteSendOutcome(succeeded, threadId, text), replyToId);
         transcript.RequestSnapToBottom();
         lastTypingDraft = string.Empty;
         OnDraftConsumed(threadId);
@@ -539,6 +585,33 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         store.EditMessage(threadId, editId, text, _ => { });
         lastTypingDraft = string.Empty;
         OnDraftConsumed(threadId);
+    }
+
+    private void NoteSendOutcome(bool succeeded, string threadId, string text)
+    {
+        if (succeeded)
+        {
+            return;
+        }
+
+        failedSendThreadId = threadId;
+        failedSendText = text;
+    }
+
+    private void RestoreFailedSend(string threadId)
+    {
+        var text = failedSendText;
+        if (text is null || failedSendThreadId != threadId)
+        {
+            return;
+        }
+
+        failedSendText = null;
+        failedSendThreadId = null;
+        if (composer.Draft.Length == 0)
+        {
+            composer.Draft = text;
+        }
     }
 
     private void ComposerSendVoice(string threadId, byte[] wavBytes, int durationSecs)
@@ -608,7 +681,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Voice note download failed: {exception.Message}");
+                AepLog.Warning(exception, "Voice note download failed");
                 MarkVoiceFailed(messageId);
             }
             finally
@@ -680,13 +753,15 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             imageZoom.Reset();
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddRectFilled(area.Min, area.Max, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.94f)));
         var headerHeight = AppHeader.Height * scale;
         var footerHeight = 60f * scale;
+        var controlsBottom = area.Max.Y - footerHeight;
         var fitMin = new Vector2(area.Min.X + 8f * scale, area.Min.Y + headerHeight);
-        var fitMax = new Vector2(area.Max.X - 8f * scale, area.Max.Y - footerHeight);
+        var fitMax = new Vector2(area.Max.X - 8f * scale,
+            controlsBottom - PhotoZoomView.ControlBandUnits * scale);
         var texture = ResolveThreadImage(messageId);
         if (texture is null)
         {
@@ -695,7 +770,11 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         }
         else
         {
-            imageZoom.Draw(new Rect(fitMin, fitMax), texture, Theme, 10f * scale);
+            var controls = new Rect(new Vector2(fitMin.X, fitMax.Y), new Vector2(fitMax.X, controlsBottom));
+            if (imageZoom.Draw(new Rect(fitMin, fitMax), texture, Theme, 10f * scale, true, controls))
+            {
+                Plugin.PhotoWindow.Open(() => ResolveThreadImage(messageId), Owner);
+            }
         }
 
         var context = new PhoneContext(area, Theme, Navigation);
@@ -748,7 +827,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[{LogTag}] save image failed: {exception.Message}");
+                AepLog.Warning(exception, $"[{LogTag}] save image failed");
             }
             finally
             {
@@ -783,7 +862,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var importHeight = 46f * scale;
         var importRect = new Rect(new Vector2(area.Min.X + 16f * scale, top + 8f * scale),
@@ -805,26 +884,36 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
             const int columns = 3;
             var gap = 6f * scale;
-            var cell = (ScrollLayout.StableContentWidth() - gap * (columns - 1)) / columns;
-            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(gap, gap)))
+            var avail = ScrollLayout.StableContentWidth();
+            var cell = (avail - gap * (columns - 1)) / columns;
+            var origin = ImGui.GetCursorScreenPos();
+            var scrollY = ImGui.GetScrollY();
+            var viewHeight = ImGui.GetWindowSize().Y;
+            var margin = cell + 60f * scale;
+            for (var index = 0; index < pickerPaths.Length; index++)
             {
-                for (var index = 0; index < pickerPaths.Length; index++)
+                var column = index % columns;
+                var rowIndex = index / columns;
+                var rowTop = rowIndex * (cell + gap);
+                if (rowTop + cell < scrollY - margin || rowTop > scrollY + viewHeight + margin)
                 {
-                    ImGui.Dummy(new Vector2(cell, cell));
-                    var min = ImGui.GetItemRectMin();
-                    var max = ImGui.GetItemRectMax();
-                    DrawPickerThumbnail(pickerPaths[index], min, max, scale);
-                    if (UiInteract.Click(min, max, UiInteract.Hover(min, max)))
-                    {
-                        SendChatImage(threadId, pickerPaths[index]);
-                    }
+                    continue;
+                }
 
-                    if (index % columns != columns - 1)
-                    {
-                        ImGui.SameLine();
-                    }
+                var min = new Vector2(origin.X + column * (cell + gap), origin.Y + rowTop);
+                var max = new Vector2(min.X + cell, min.Y + cell);
+                var hovered = UiInteract.Hover(min, max);
+                DrawPickerThumbnail(pickerPaths[index], min, max, scale, hovered);
+                if (UiInteract.Click(min, max, hovered))
+                {
+                    SendChatImage(threadId, pickerPaths[index]);
                 }
             }
+
+            var rows = (pickerPaths.Length + columns - 1) / columns;
+            var totalHeight = rows * (cell + gap);
+            ImGui.SetCursorScreenPos(origin);
+            ImGui.Dummy(new Vector2(avail, totalHeight));
         }
     }
 
@@ -836,7 +925,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         PopScreen();
     }
 
-    private void DrawPickerThumbnail(string path, Vector2 min, Vector2 max, float scale)
+    private void DrawPickerThumbnail(string path, Vector2 min, Vector2 max, float scale, bool hovered)
     {
         var drawList = ImGui.GetWindowDrawList();
         var rounding = 10f * scale;
@@ -868,7 +957,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         }
 
         drawList.AddImageRounded(texture.Handle, min, max, uv0, uv1, 0xFFFFFFFFu, rounding, ImDrawFlags.RoundCornersAll);
-        if (ImGui.IsItemHovered())
+        if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
@@ -876,7 +965,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     public void DrawReactions(Rect area, string messageId)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var context = new PhoneContext(area, Theme, Navigation);
         AppHeader.Draw(context, Loc.T(L.Message.ReactionsTitle), BackAction);
         if (reactorsFor != messageId)

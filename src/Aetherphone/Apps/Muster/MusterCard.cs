@@ -9,7 +9,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Muster;
 
@@ -37,7 +36,7 @@ internal static class MusterCard
     public static bool Draw(Rect card, MusterDto muster, RemoteImageCache images, LodestoneService lodestone,
         PhoneTheme theme, AppSkin ui, long nowUnix, int currentDataCenterId)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var rounding = Metrics.Radius.Card * scale * 1.15f;
         var palette = ui.Palette;

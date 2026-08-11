@@ -37,7 +37,7 @@ internal sealed class ScreenshotImportService : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[Screenshots] could not watch '{directory}': {exception.Message}");
+                AepLog.Warning(exception, $"[Screenshots] could not watch '{directory}'");
             }
         }
     }
@@ -92,7 +92,7 @@ internal sealed class ScreenshotImportService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Screenshots] import failed for '{Path.GetFileName(path)}': {exception.Message}");
+            AepLog.Warning(exception, $"[Screenshots] import failed for '{Path.GetFileName(path)}'");
         }
     }
 
@@ -103,12 +103,14 @@ internal sealed class ScreenshotImportService : IDisposable
             using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None);
             return stream.Length > 0;
         }
-        catch (IOException)
+        catch (IOException exception)
         {
+            AepLog.Debug(exception, $"[Screenshots] '{Path.GetFileName(path)}' is not readable yet");
             return false;
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException exception)
         {
+            AepLog.Debug(exception, $"[Screenshots] '{Path.GetFileName(path)}' cannot be read");
             return false;
         }
     }
@@ -129,7 +131,7 @@ internal sealed class ScreenshotImportService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Screenshots] could not probe overlay folders: {exception.Message}");
+            AepLog.Warning(exception, "[Screenshots] could not probe overlay folders");
         }
 
         return directories;
@@ -161,7 +163,7 @@ internal sealed class ScreenshotImportService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Screenshots] could not read the game screenshot folder: {exception.Message}");
+            AepLog.Warning(exception, "[Screenshots] could not read the game screenshot folder");
         }
 
         return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games",
@@ -217,7 +219,7 @@ internal sealed class ScreenshotImportService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Screenshots] could not read '{Path.GetFileName(iniPath)}': {exception.Message}");
+            AepLog.Warning(exception, $"[Screenshots] could not read '{Path.GetFileName(iniPath)}'");
             return null;
         }
     }

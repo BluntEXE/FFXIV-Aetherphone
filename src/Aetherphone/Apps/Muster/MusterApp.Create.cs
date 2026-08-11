@@ -6,7 +6,6 @@ using Aetherphone.Core.Maps;
 using Aetherphone.Core.Muster;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Muster;
 
@@ -52,7 +51,7 @@ internal sealed partial class MusterApp
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var body = new Rect(new Vector2(area.Min.X, top), area.Max);
         using (AppSurface.Begin(body))
@@ -234,16 +233,17 @@ internal sealed partial class MusterApp
         var cursorY = origin.Y;
         if (createOutcome is { } outcome)
         {
-            Typography.Draw(new Vector2(origin.X, cursorY), OutcomeText(outcome), theme.Danger,
-                TextStyles.FootnoteEmphasized);
-            cursorY += 22f * scale;
+            var outcomeHeight = Typography.DrawWrappedLeft(new Vector2(origin.X, cursorY), OutcomeText(outcome),
+                theme.Danger, TextStyles.FootnoteEmphasized, width);
+            cursorY += outcomeHeight + Metrics.Space.Xs * scale;
         }
         else if (!valid)
         {
             var hint = descriptionLength == 0 ? Loc.T(L.Muster.NeedDescription)
                 : !hasWhere ? Loc.T(L.Muster.NeedWhere) : Loc.T(L.Muster.NeedDataCenter);
-            Typography.Draw(new Vector2(origin.X, cursorY), hint, AppPalettes.Muster.MutedInk, TextStyles.Footnote);
-            cursorY += 22f * scale;
+            var hintHeight = Typography.DrawWrappedLeft(new Vector2(origin.X, cursorY), hint,
+                AppPalettes.Muster.MutedInk, TextStyles.Footnote, width);
+            cursorY += hintHeight + Metrics.Space.Xs * scale;
         }
 
         var rect = new Rect(new Vector2(origin.X, cursorY), new Vector2(origin.X + width,

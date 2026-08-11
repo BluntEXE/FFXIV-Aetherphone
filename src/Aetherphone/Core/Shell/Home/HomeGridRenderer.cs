@@ -1,4 +1,6 @@
 using Aetherphone.Core.Animation;
+using Aetherphone.Core.Apps;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Onboarding;
@@ -6,6 +8,7 @@ using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Textures.TextureWraps;
 
 namespace Aetherphone.Core.Shell.Home;
 
@@ -16,16 +19,20 @@ internal sealed class HomeGridRenderer
     private readonly TilePoseCache poses;
     private readonly HomeInteractionController interaction;
     private readonly ShortcutStore shortcuts;
+    private readonly Func<ShortcutEntry, IDalamudTextureWrap?> shortcutIcon;
+    private readonly ConfirmService confirm;
     private bool widgetAnchorReported;
 
     public HomeGridRenderer(HomeLayoutService layout, Pager pager, TilePoseCache poses,
-        HomeInteractionController interaction, ShortcutStore shortcuts)
+        HomeInteractionController interaction, ShortcutStore shortcuts, ConfirmService confirm)
     {
         this.layout = layout;
         this.pager = pager;
         this.poses = poses;
         this.interaction = interaction;
         this.shortcuts = shortcuts;
+        shortcutIcon = shortcuts.Icon;
+        this.confirm = confirm;
     }
 
     public void DrawPages(in HomeMetrics metrics, PhoneTheme theme, float delta, float labelAlpha, bool showLabels,
@@ -36,7 +43,7 @@ internal sealed class HomeGridRenderer
         drawList.PushClipRect(metrics.Content.Min, new Vector2(metrics.Content.Max.X, metrics.DockBar.Min.Y), true);
         var scroll = pager.Value;
         var first = Math.Max(0, (int)MathF.Floor(scroll) - 1);
-        var last = Math.Min(layout.PageCount - 1, (int)MathF.Ceiling(scroll) + 1);
+        var last = Math.Min(interaction.DisplayPageCount() - 1, (int)MathF.Ceiling(scroll) + 1);
         for (var page = first; page <= last; page++)
         {
             DrawPage(metrics, theme, page, delta, labelAlpha, showLabels, motion);
@@ -48,10 +55,15 @@ internal sealed class HomeGridRenderer
     private void DrawPage(in HomeMetrics metrics, PhoneTheme theme, int page, float delta, float labelAlpha,
         bool showLabels, in HomeMotion motion)
     {
+        DrawDropTarget(metrics, theme, page, labelAlpha);
+        if (page >= layout.PageCount)
+        {
+            return;
+        }
+
         var tiles = layout.Page(page);
         var cells = layout.Placements(page);
         var pageOffset = new Vector2(metrics.PageOffsetX(page, pager.Value), 0f);
-        DrawDropTarget(metrics, theme, page, labelAlpha);
         for (var index = 0; index < tiles.Count && index < cells.Count; index++)
         {
             var tile = tiles[index];
@@ -140,7 +152,7 @@ internal sealed class HomeGridRenderer
         {
             HomeTileView.DrawFolder(center, rect.Width, tile, theme,
                 interaction.TapScale(tile) * interaction.Magnify(center, metrics.CellWidth),
-                labelAlpha, showLabels, Loc.T(L.Home.NewFolder), metrics.CellWidth, zoom);
+                labelAlpha, showLabels, Loc.T(L.Home.NewFolder), metrics.CellWidth, shortcutIcon, zoom);
             if (interaction.RemoveBadgesLive(motion) &&
                 HomeTileView.RemoveBadge(new Vector2(rect.Min.X + 2f * scale, rect.Min.Y + 2f * scale), scale, theme))
             {
@@ -158,11 +170,23 @@ internal sealed class HomeGridRenderer
         if (interaction.RemoveBadgesLive(motion) && HomeLayoutService.CanUninstall(tile.App!.Id) &&
             HomeTileView.RemoveBadge(new Vector2(rect.Min.X + 2f * scale, rect.Min.Y + 2f * scale), scale, theme))
         {
-            layout.Uninstall(tile.App!.Id);
+            AskUninstall(tile.App!);
             interaction.ConsumeEditGesture();
         }
 
         ReportIconAnchor(tile, center, rect.Width, motion);
+    }
+
+    private void AskUninstall(IPhoneApp app)
+    {
+        var appId = app.Id;
+        confirm.Ask(new ConfirmRequest
+        {
+            Message = Loc.T(L.Home.RemoveConfirm, app.DisplayName),
+            ConfirmLabel = Loc.T(L.Home.Remove),
+            CancelLabel = Loc.T(L.Common.Cancel),
+            Confirm = () => layout.Uninstall(appId),
+        });
     }
 
     private static Rect ScaleRect(Rect rect, float factor)
@@ -222,6 +246,12 @@ internal sealed class HomeGridRenderer
             HomeTileView.DrawApp(rect.Center + jiggle, rect.Width, tile.App!, theme,
                 interaction.TapScale(tile) * interaction.Magnify(rect.Center, metrics.CellWidth), 0f, true, 0f,
                 motion.Zoom);
+            if (!interaction.Editing && dragTile is null)
+            {
+                HoverTooltip.Show(string.Concat("dock:", tile.Key), rect, tile.App!.DisplayName,
+                    HoverLabelSide.Above);
+            }
+
             ReportIconAnchor(tile, rect.Center, rect.Width, motion);
         }
     }
@@ -282,7 +312,7 @@ internal sealed class HomeGridRenderer
         if (tile.IsFolder)
         {
             HomeTileView.DrawFolder(position, metrics.IconSize, tile, theme, scale, 0f, true, Loc.T(L.Home.NewFolder),
-                metrics.CellWidth);
+                metrics.CellWidth, shortcutIcon);
             return;
         }
 

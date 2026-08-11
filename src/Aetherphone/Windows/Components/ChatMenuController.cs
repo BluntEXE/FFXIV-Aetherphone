@@ -3,7 +3,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -187,7 +186,7 @@ internal sealed class ChatMenuController
             return new Rect(anchor, anchor + new Vector2(1f, 1f));
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var slot = 34f * scale;
         var padding = 7f * scale;
         var width = ReactionArt.Tokens.Length * slot + padding * 2f;
@@ -206,7 +205,7 @@ internal sealed class ChatMenuController
 
     private void DrawReactionStrip(Rect strip, string targetId, in ChatMenuModel model)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var theme = model.Ui.Theme;
         var drawList = ImGui.GetForegroundDrawList();
         var slot = 34f * scale;

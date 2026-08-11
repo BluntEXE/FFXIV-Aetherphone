@@ -6,23 +6,25 @@ namespace Aetherphone.Windows.Components;
 
 internal static class ImageFit
 {
-    public static readonly Vector4 LetterboxFill = new(0f, 0f, 0f, 1f);
+    private const uint LetterboxFill = 0xFF000000u;
+    private const float FrameMatchEpsilon = 0.5f;
 
-    // Draws a photo contain-fit inside frame (using the uv0/uv1 window's own aspect, not frame's),
-    // backed by a solid black fill so a mismatched aspect never shows raw frame background through
-    // the gap. Returns the actual drawn image rect (frame is what's requested; this is what
-    // actually holds the sharp image) since callers that overlay content on the photo itself (tag
-    // pins, a hit-test) need it, not the wider frame.
-    public static Rect DrawLetterboxed(ImDrawListPtr drawList, IDalamudTextureWrap texture, Rect frame, Vector2 uv0,
+    // Draws a photo contain-fit inside frame, using the uv window's own aspect rather than the
+    // frame's, so a photo whose aspect differs from the frame is bordered instead of stretched.
+    public static void DrawLetterboxed(ImDrawListPtr drawList, IDalamudTextureWrap texture, Rect frame, Vector2 uv0,
         Vector2 uv1, float rounding)
     {
-        var size = texture.Size;
-        drawList.AddRectFilled(frame.Min, frame.Max, ImGui.GetColorU32(LetterboxFill), rounding,
-            ImDrawFlags.RoundCornersAll);
-        var imageRect = CenteredRect(frame, VisibleAspect(uv0, uv1, size));
-        drawList.AddImageRounded(texture.Handle, imageRect.Min, imageRect.Max, uv0, uv1, 0xFFFFFFFFu, rounding,
-            ImDrawFlags.RoundCornersAll);
-        return imageRect;
+        var imageRect = CenteredRect(frame, VisibleAspect(uv0, uv1, texture.Size));
+        if (MathF.Abs(imageRect.Width - frame.Width) <= FrameMatchEpsilon
+            && MathF.Abs(imageRect.Height - frame.Height) <= FrameMatchEpsilon)
+        {
+            drawList.AddImageRounded(texture.Handle, frame.Min, frame.Max, uv0, uv1, 0xFFFFFFFFu, rounding,
+                ImDrawFlags.RoundCornersAll);
+            return;
+        }
+
+        drawList.AddRectFilled(frame.Min, frame.Max, LetterboxFill, rounding, ImDrawFlags.RoundCornersAll);
+        drawList.AddImage(texture.Handle, imageRect.Min, imageRect.Max, uv0, uv1, 0xFFFFFFFFu);
     }
 
     public static Rect CenteredRect(Rect region, float aspect)
@@ -60,9 +62,6 @@ internal static class ImageFit
     public static (Vector2 Uv0, Vector2 Uv1) CoverSquare(Vector2 imageSize) =>
         Cover(imageSize.X, imageSize.Y, 1f, 1f);
 
-    // The aspect ratio of a uv sub-window (Cover's output, or WallpaperCrop.ComputeUv's) once
-    // mapped back onto real image pixels - used to contain-fit that window into a frame with
-    // CenteredRect instead of stretching it to fill the frame outright.
     public static float VisibleAspect(Vector2 uv0, Vector2 uv1, Vector2 imageSize)
     {
         if (imageSize.X <= 0f || imageSize.Y <= 0f)

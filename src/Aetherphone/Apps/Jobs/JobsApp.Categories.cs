@@ -16,6 +16,9 @@ internal sealed partial class JobsApp
     private const float EditorTitleHeight = 18f;
     private const float EditorFieldHeight = 30f;
     private const int CategoryNameMaxLength = 24;
+    private const float CategoryReorderRadius = 9f;
+    private const float RowReorderRadius = 10f;
+    private const float RowReorderOffset = 11f;
 
     private static readonly List<JobsCategory> NoCategories = new();
 
@@ -25,6 +28,12 @@ internal sealed partial class JobsApp
     private int categoryEditorOpenedFrame;
     private string categoryEditorName = string.Empty;
     private bool focusCategoryField;
+
+    private int categoryMoveIndex = -1;
+    private int categoryMoveDelta;
+    private int gearsetMoveCategoryIndex = -1;
+    private int gearsetMoveId = -1;
+    private int gearsetMoveNeighbourId = -1;
 
     private List<JobsCategory> CurrentCategories()
     {
@@ -87,6 +96,144 @@ internal sealed partial class JobsApp
         }
 
         OpenCategoryEditor(picked, -1);
+    }
+
+    private void DrawCategoryReorder(Rect headerRect, int categoryIndex, int categoryCount, float scale)
+    {
+        if (categoryCount < 2)
+        {
+            return;
+        }
+
+        var radius = CategoryReorderRadius * scale;
+        var down = new Vector2(headerRect.Max.X - radius, headerRect.Center.Y);
+        var up = new Vector2(down.X - radius * 2f - 2f * scale, headerRect.Center.Y);
+        if (DrawReorderButton(up, radius, FontAwesomeIcon.ChevronUp.ToIconString(), 0.5f, categoryIndex > 0,
+                Loc.T(L.Jobs.MoveUp)))
+        {
+            categoryMoveIndex = categoryIndex;
+            categoryMoveDelta = -1;
+        }
+
+        if (DrawReorderButton(down, radius, FontAwesomeIcon.ChevronDown.ToIconString(), 0.5f,
+                categoryIndex < categoryCount - 1, Loc.T(L.Jobs.MoveDown)))
+        {
+            categoryMoveIndex = categoryIndex;
+            categoryMoveDelta = 1;
+        }
+    }
+
+    private void DrawJobReorder(Vector2 center, float radius, JobSection section, int rowIndex, float scale)
+    {
+        var offset = RowReorderOffset * scale;
+        var up = new Vector2(center.X, center.Y - offset);
+        var down = new Vector2(center.X, center.Y + offset);
+        if (DrawReorderButton(up, radius, FontAwesomeIcon.ChevronUp.ToIconString(), 0.45f, rowIndex > 0, string.Empty))
+        {
+            QueueGearsetMove(section, rowIndex, rowIndex - 1);
+        }
+
+        if (DrawReorderButton(down, radius, FontAwesomeIcon.ChevronDown.ToIconString(), 0.45f,
+                rowIndex < section.Entries.Length - 1, string.Empty))
+        {
+            QueueGearsetMove(section, rowIndex, rowIndex + 1);
+        }
+    }
+
+    private void QueueGearsetMove(JobSection section, int rowIndex, int neighbourRowIndex)
+    {
+        gearsetMoveCategoryIndex = section.CategoryIndex;
+        gearsetMoveId = section.Entries[rowIndex].GearsetId;
+        gearsetMoveNeighbourId = section.Entries[neighbourRowIndex].GearsetId;
+    }
+
+    private bool DrawReorderButton(Vector2 center, float radius, string glyph, float glyphScale, bool enabled,
+        string tooltip)
+    {
+        if (!enabled)
+        {
+            AppSkin.Icon(ImGui.GetWindowDrawList(), center, glyph,
+                Palette.WithAlpha(ui.MutedInk, ui.MutedInk.W * 0.25f), glyphScale);
+            return false;
+        }
+
+        return ui.IconButton(center, radius, glyph, ui.MutedInk, default, glyphScale, tooltip);
+    }
+
+    // Queued rather than applied at the click: both moves call Rebuild, which swaps the sections
+    // array the draw loop is still walking.
+    private void ApplyPendingReorder()
+    {
+        if (categoryMoveIndex >= 0)
+        {
+            MoveCategory(categoryMoveIndex, categoryMoveDelta);
+            categoryMoveIndex = -1;
+            categoryMoveDelta = 0;
+        }
+
+        if (gearsetMoveId < 0)
+        {
+            return;
+        }
+
+        MoveGearsetInCategory(gearsetMoveCategoryIndex, gearsetMoveId, gearsetMoveNeighbourId);
+        ResetPendingGearsetMove();
+    }
+
+    private void ResetPendingReorder()
+    {
+        categoryMoveIndex = -1;
+        categoryMoveDelta = 0;
+        ResetPendingGearsetMove();
+    }
+
+    private void ResetPendingGearsetMove()
+    {
+        gearsetMoveCategoryIndex = -1;
+        gearsetMoveId = -1;
+        gearsetMoveNeighbourId = -1;
+    }
+
+    private void MoveCategory(int categoryIndex, int delta)
+    {
+        var categories = CategoriesForWrite();
+        var targetIndex = categoryIndex + delta;
+        if (categoryIndex < 0 || categoryIndex >= categories.Count || targetIndex < 0 ||
+            targetIndex >= categories.Count)
+        {
+            return;
+        }
+
+        var moved = categories[categoryIndex];
+        categories[categoryIndex] = categories[targetIndex];
+        categories[targetIndex] = moved;
+        configuration.Save();
+        Rebuild();
+    }
+
+    // Swaps the two ids' own slots instead of stepping one index in GearsetIds: a category can hold
+    // an id whose gearset no longer exists, and those are skipped when the rows are built, so list
+    // neighbours and row neighbours are not the same thing.
+    private void MoveGearsetInCategory(int categoryIndex, int gearsetId, int neighbourGearsetId)
+    {
+        var categories = CategoriesForWrite();
+        if (categoryIndex < 0 || categoryIndex >= categories.Count)
+        {
+            return;
+        }
+
+        var gearsetIds = categories[categoryIndex].GearsetIds;
+        var fromIndex = gearsetIds.IndexOf(gearsetId);
+        var toIndex = gearsetIds.IndexOf(neighbourGearsetId);
+        if (fromIndex < 0 || toIndex < 0 || fromIndex == toIndex)
+        {
+            return;
+        }
+
+        gearsetIds[fromIndex] = neighbourGearsetId;
+        gearsetIds[toIndex] = gearsetId;
+        configuration.Save();
+        Rebuild();
     }
 
     private void DrawRowMenu(Rect content, PhoneTheme theme)

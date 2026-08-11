@@ -11,7 +11,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Linkpearl;
 
@@ -110,6 +109,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         chatMenu.Close();
         router.Reset();
         draft = string.Empty;
+        sendFailedAtMilliseconds = 0;
         trackedThread = null;
         ResetContactsState();
         ResetFindState();
@@ -186,7 +186,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
             notificationGate.Toggle();
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var navHeight = 60f * scale;
         var navRect = new Rect(new Vector2(area.Min.X, area.Max.Y - navHeight), area.Max);
         var content = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale),
@@ -216,7 +216,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
 
     private void DrawBottomNav(Rect nav)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddLine(nav.Min, new Vector2(nav.Max.X, nav.Min.Y),
             ImGui.GetColorU32(Palette.WithAlpha(frameTheme.TextMuted, 0.25f)), 1f);
@@ -235,7 +235,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
 
     private void DrawNavItem(Rect rect, FontAwesomeIcon icon, string label, MessagesTab tab, int badge)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var active = activeTab == tab;
         var color = active ? frameTheme.Accent : frameTheme.TextMuted;
         var iconCenter = new Vector2(rect.Center.X, rect.Min.Y + 20f * scale);

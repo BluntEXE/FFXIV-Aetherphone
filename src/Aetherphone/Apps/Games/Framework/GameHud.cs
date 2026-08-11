@@ -1,9 +1,9 @@
+using Aetherphone.Core.Animation;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Games.Framework;
 
@@ -28,7 +28,7 @@ internal static class GameHud
 
     public static float PillWidth(string label, string value, float sizeScale = 1f)
     {
-        var scale = ImGuiHelpers.GlobalScale * sizeScale;
+        var scale = UiScale.Current * sizeScale;
         var valueSize = Typography.Measure(value, TextStyles.Title3.Scale * sizeScale, TextStyles.Title3.Weight);
         var labelSize = Typography.Measure(label, TextStyles.Caption2.Scale * sizeScale, TextStyles.Caption2.Weight);
         return MathF.Max(valueSize.X, labelSize.X) + 26f * scale;
@@ -37,7 +37,7 @@ internal static class GameHud
     private static void DrawPill(Vector2 center, string label, string value, Vector4 accent, PhoneTheme theme,
         bool highlight, float valuePop, float sizeScale)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var pillWidth = PillWidth(label, value, sizeScale);
         var pillHeight = PillHeight * scale * sizeScale;
@@ -66,7 +66,7 @@ internal static class GameHud
 
     public static bool RestartButton(Vector2 center, float radius, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var min = center - new Vector2(radius, radius);
         var max = center + new Vector2(radius, radius);
@@ -85,7 +85,7 @@ internal static class GameHud
 
     public static bool Button(Vector2 center, Vector2 size, string label, Vector4 accent, PhoneTheme theme)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var hoverHalf = size * 0.5f;
         var hovered = UiInteract.Hover(center - hoverHalf, center + hoverHalf);

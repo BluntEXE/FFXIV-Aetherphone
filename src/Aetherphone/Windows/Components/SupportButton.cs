@@ -3,22 +3,22 @@ using Aetherphone.Core.Animation;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
 
 internal static class SupportButton
 {
+    public const float GlowPadding = 14f;
+
     private const float ButtonHeight = 56f;
-    private const float GlowPadding = 14f;
     private const double HueBlendMs = 5200.0;
     private const double HeartbeatMs = 1500.0;
     private const double SheenMs = 3200.0;
 
     public static bool Draw(string label, PhoneTheme theme, string? hint = null)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var glowPad = GlowPadding * scale;
         var slotOrigin = ImGui.GetCursorScreenPos();

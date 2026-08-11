@@ -9,7 +9,6 @@ using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -49,6 +48,7 @@ internal sealed class StoryViewerOverlay
 
     private readonly RemoteImageCache images;
     private readonly LodestoneService lodestone;
+    private readonly Action<string>? openProfile;
     private Spring reveal;
     private StoryDto[] stories = Array.Empty<StoryDto>();
     private string authorLabel = string.Empty;
@@ -61,7 +61,8 @@ internal sealed class StoryViewerOverlay
     private double pressStartedAt;
     private Vector2 pressOrigin;
     private float dragOffset;
-    private bool pressInReplyZone;
+    private bool pressInChrome;
+    private Rect seenPillBounds;
     private Action<StoryDto>? onSeen;
     private Action<StoryDto>? onDelete;
     private Action? onExhausted;
@@ -78,10 +79,11 @@ internal sealed class StoryViewerOverlay
     private Spring seenHover;
     private bool sheetOpen;
 
-    public StoryViewerOverlay(RemoteImageCache images, LodestoneService lodestone)
+    public StoryViewerOverlay(RemoteImageCache images, LodestoneService lodestone, Action<string>? openProfile = null)
     {
         this.images = images;
         this.lodestone = lodestone;
+        this.openProfile = openProfile;
     }
 
     public bool Active => open || reveal.Value > 0.01f;
@@ -114,6 +116,8 @@ internal sealed class StoryViewerOverlay
         index = startAtEnd && items.Length > 0 ? items.Length - 1 : FirstUnseen(items);
         elapsed = 0f;
         dragOffset = 0f;
+        seenPillBounds = default;
+        pressInChrome = false;
         holding = false;
         open = true;
         ReportSeen();
@@ -197,7 +201,7 @@ internal sealed class StoryViewerOverlay
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var dim = 0.97f * eased * (1f - Math.Clamp(dragOffset / (DismissDragDistance * 2f), 0f, 0.45f));
         drawList.AddRectFilled(area.Min, area.Max, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, dim)));
@@ -216,7 +220,7 @@ internal sealed class StoryViewerOverlay
             new Vector2(area.Max.X, area.Max.Y - 16f * scale));
         if (open && !suspended && !sheetOpen)
         {
-            HandleInput(area, delta, images.Get(story.MediaUrl) is not null, ReplyZone(baseStage, scale));
+            HandleInput(baseStage, delta, images.Get(story.MediaUrl) is not null, ReplyZone(baseStage, scale));
         }
 
         var shift = new Vector2(0f, dragOffset * scale);
@@ -408,6 +412,7 @@ internal sealed class StoryViewerOverlay
         var iconWidth = 11f * scale;
         var iconGap = 7f * scale;
         var max = new Vector2(origin.X + padding * 2f + iconWidth + iconGap + size.X, origin.Y + height);
+        seenPillBounds = new Rect(origin, max);
         var radius = height * 0.5f;
         var centerY = origin.Y + height * 0.5f;
         var hovered = !sheetOpen && UiInteract.Hover(origin, max);
@@ -520,7 +525,7 @@ internal sealed class StoryViewerOverlay
         var nameMaxWidth = MathF.Max(1f, origin.X + width - stampSize.X - 16f * scale - left);
         var rowHovering = UiInteract.Hover(origin, new Vector2(origin.X + width, origin.Y + height));
         var nameSize = Typography.Measure(name, TextStyles.Subheadline);
-        UserName.Draw("storyviewer.name." + viewer.Handle, name, viewer.Badges, left,
+        UserName.Draw("storyviewer.name." + viewer.Handle, name, viewer.Badges, viewer.BadgeIds, left,
             center.Y - nameSize.Y * 0.5f, nameMaxWidth, TextStyles.Subheadline, theme.TextStrong, rowHovering, theme);
         Typography.Draw(new Vector2(origin.X + width - stampSize.X - 6f * scale, center.Y - stampSize.Y * 0.5f), stamp,
             theme.TextMuted, TextStyles.Caption1);
@@ -535,16 +540,16 @@ internal sealed class StoryViewerOverlay
         {
             pressStartedAt = ImGui.GetTime();
             pressOrigin = ImGui.GetIO().MousePos;
-            pressInReplyZone = replyPrompt is not null
-                && UiInteract.Hover(replyZone.Min, replyZone.Max);
+            pressInChrome = (replyPrompt is not null && UiInteract.Hover(replyZone.Min, replyZone.Max))
+                || (ShowSeenPill && UiInteract.Hover(seenPillBounds.Min, seenPillBounds.Max));
         }
 
         var down = ImGui.IsMouseDown(ImGuiMouseButton.Left);
         var heldFor = ImGui.GetTime() - pressStartedAt;
-        if (down && hovering && !pressInReplyZone)
+        if (down && hovering && !pressInChrome)
         {
             var travel = ImGui.GetIO().MousePos.Y - pressOrigin.Y;
-            dragOffset = MathF.Max(0f, travel / ImGuiHelpers.GlobalScale);
+            dragOffset = MathF.Max(0f, travel / UiScale.Current);
             holding = heldFor >= HoldPauseSeconds && dragOffset < 8f;
         }
         else
@@ -554,10 +559,10 @@ internal sealed class StoryViewerOverlay
 
         if (ImGui.IsMouseReleased(ImGuiMouseButton.Left))
         {
-            var wasDrag = !pressInReplyZone && dragOffset >= DismissDragDistance;
-            var wasTap = !pressInReplyZone && heldFor < HoldPauseSeconds && dragOffset < 8f;
+            var wasDrag = !pressInChrome && dragOffset >= DismissDragDistance;
+            var wasTap = !pressInChrome && heldFor < HoldPauseSeconds && dragOffset < 8f;
             dragOffset = 0f;
-            pressInReplyZone = false;
+            pressInChrome = false;
             if (wasDrag)
             {
                 Close();
@@ -714,13 +719,20 @@ internal sealed class StoryViewerOverlay
         var stamp = TimeText.Short(story.CreatedAtUnix);
         var stampWidth = Typography.Measure(stamp, TextStyles.Footnote).X;
         var nameMaxWidth = MathF.Max(1f, row.Max.X - closeReserve - stampWidth - 8f * scale - left);
-        var headerHovering = UiInteract.Hover(row.Min, row.Max);
         var nameSize = Typography.Measure(authorLabel, TextStyles.SubheadlineEmphasized);
-        var nameWidth = UserName.Draw("storyviewer.header.author." + authorLabel, authorLabel, story.AuthorBadges,
+        var authorMin = new Vector2(row.Min.X, row.Min.Y);
+        var authorMax = new Vector2(left + MathF.Min(nameSize.X, nameMaxWidth), row.Max.Y);
+        var headerHovering = UiInteract.Hover(authorMin, authorMax);
+        var nameWidth = UserName.Draw("storyviewer.header.author." + authorLabel, authorLabel, story.AuthorBadges, story.AuthorBadgeIds,
             left, row.Center.Y - nameSize.Y * 0.5f, nameMaxWidth, TextStyles.SubheadlineEmphasized,
             new Vector4(1f, 1f, 1f, 0.98f), headerHovering, false);
         Typography.Draw(new Vector2(left + nameWidth + 8f * scale, row.Center.Y - nameSize.Y * 0.5f + 1f * scale),
             stamp, new Vector4(1f, 1f, 1f, 0.6f), TextStyles.Footnote);
+        if (openProfile is not null && UiInteract.HoverClick(authorMin, authorMax))
+        {
+            openProfile(story.AuthorId);
+            return;
+        }
 
         var hit = new Vector2(14f * scale, 14f * scale);
         var closeCenter = new Vector2(row.Max.X - 10f * scale, row.Center.Y);

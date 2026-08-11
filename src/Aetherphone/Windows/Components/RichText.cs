@@ -4,7 +4,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Windows.Components;
 
@@ -146,7 +145,7 @@ internal static class RichText
         var font = ImGui.GetFont();
         var pop = ink.Pop;
         var fontSize = layout.FontSize * pop;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var runs = layout.Runs;
         var hoveredKind = RichTextRunKind.Plain;
         var hoveredIndex = -1;

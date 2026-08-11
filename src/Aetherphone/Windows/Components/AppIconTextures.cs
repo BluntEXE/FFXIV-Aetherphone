@@ -13,6 +13,12 @@ internal static class AppIconTextures
 
     public static bool TryDraw(ImDrawListPtr drawList, string id, Vector2 center, float size, Vector4 tint)
     {
+        return TryDrawArtwork(drawList, id, center, size * GlyphFraction, tint);
+    }
+
+    public static bool TryDrawArtwork(ImDrawListPtr drawList, string id, Vector2 center, float artworkSize,
+        Vector4 tint)
+    {
         var path = ResolvePath(id);
         if (path is null)
         {
@@ -25,7 +31,7 @@ internal static class AppIconTextures
             return false;
         }
 
-        var half = size * GlyphFraction * 0.5f;
+        var half = artworkSize * 0.5f;
         var min = new Vector2(center.X - half, center.Y - half);
         var max = new Vector2(center.X + half, center.Y + half);
         drawList.AddImage(texture.Handle, min, max, Vector2.Zero, Vector2.One, ImGui.GetColorU32(tint));

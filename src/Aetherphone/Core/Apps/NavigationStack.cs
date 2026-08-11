@@ -181,6 +181,7 @@ internal sealed class NavigationStack : INavigator
 
     private void BeginPresent(IPhoneApp over, IPhoneApp? under)
     {
+        AppVisits.NoteOpened(over.Id);
         motion = ShellMotion.Present;
         motionOver = over;
         motionUnder = under;

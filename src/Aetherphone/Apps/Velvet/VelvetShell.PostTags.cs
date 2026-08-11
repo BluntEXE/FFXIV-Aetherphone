@@ -4,7 +4,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -14,7 +13,7 @@ internal sealed partial class VelvetShell
 
     private void DrawPostTags(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         if (VHeader.Push(area, Loc.T(L.Velvet.PostTagsTitle), theme))
         {
             router.Pop();

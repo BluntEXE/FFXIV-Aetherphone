@@ -5,7 +5,6 @@ using Aetherphone.Core.Media;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures.TextureWraps;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -80,7 +79,7 @@ internal sealed class AvatarLightbox
             return;
         }
 
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         ImGui.SetCursorScreenPos(area.Min);
         using (ImRaii.Child("##avatarLightbox", area.Size, false, OverlayFlags))
         {

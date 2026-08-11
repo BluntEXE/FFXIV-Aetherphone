@@ -10,7 +10,6 @@ using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Velvet;
@@ -80,14 +79,10 @@ internal sealed class VelvetPostComposer
 
     private const float AspectPickerReserve = 42f;
 
-    // The frame the currently-active crop step draws into - see
-    // AethergramApp.Compose.cs's ComposeCropAspect for the matching reasoning.
     private float CropAspect => storyMode
         ? (float)StoryStore.StoryWidth / StoryStore.StoryHeight
         : PostAspects.Ratio(session.CurrentAspect);
 
-    // The shared container frame for the caption/review screen - see
-    // AethergramApp.Compose.cs's ComposeContainerAspect for the matching reasoning.
     private float ContainerAspect => storyMode
         ? (float)StoryStore.StoryWidth / StoryStore.StoryHeight
         : PostAspects.Ratio(session.ContainerAspect);
@@ -96,12 +91,10 @@ internal sealed class VelvetPostComposer
         ? ContainerAspect
         : PostAspects.Ratio(session.AspectAt(session.ClampedPreviewIndex));
 
-    // Reveal-fit (see PhotoComposeSession.DrawCropCanvas's allowReveal) only applies to Portrait -
-    // Square and Landscape stay a plain cover crop, matching how they behaved before this existed.
-    private bool CropAllowsReveal => !storyMode && session.CurrentAspect == PostAspect.Portrait;
+    private bool CropAllowsReveal => !storyMode && PostAspects.RevealsWholeImage(session.CurrentAspect);
 
     private bool PreviewAllowsReveal =>
-        !storyMode && session.AspectAt(session.ClampedPreviewIndex) == PostAspect.Portrait;
+        !storyMode && PostAspects.RevealsWholeImage(session.AspectAt(session.ClampedPreviewIndex));
 
     private string Title => storyMode ? Loc.T(L.Story.NewStory) : Loc.T(L.Velvet.NewPost);
 
@@ -166,7 +159,7 @@ internal sealed class VelvetPostComposer
 
     private void DrawPick(Rect area, AppSkin ui, in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var showNext = !storyMode;
         var nextLabel = Loc.T(L.Common.Next);
         var nextReserve = showNext
@@ -212,7 +205,7 @@ internal sealed class VelvetPostComposer
 
     private void DrawCrop(Rect area, AppSkin ui, in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var title = session.SelectedCount > 1
             ? Loc.T(L.Common.PhotoStep, session.CropIndex + 1, session.SelectedCount)
             : Loc.T(L.Velvet.MoveAndScale);
@@ -256,7 +249,7 @@ internal sealed class VelvetPostComposer
 
     private void DrawCaption(Rect area, AppSkin ui, in PhoneContext context)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var busy = Posting;
         var actionLabel = busy ? Loc.T(L.Velvet.Saving) : Loc.T(L.Velvet.Share);
         var actionReserve = Typography.Measure(actionLabel, 0.9f, FontWeight.SemiBold).X + 34f * scale + 20f * scale;
@@ -388,8 +381,6 @@ internal sealed class VelvetPostComposer
             return;
         }
 
-        // A photo whose own aspect differs from the shared container (see ContainerAspect) shows
-        // letterboxed instead of being restretched to fill the frame.
         ImageFit.DrawLetterboxed(drawList, texture, preview, uv0, uv1, rounding);
         if (UiInteract.HoverClick(preview.Min, preview.Max))
         {
