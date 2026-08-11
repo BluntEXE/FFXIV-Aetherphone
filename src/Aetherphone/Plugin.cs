@@ -248,7 +248,6 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnVideoFrameworkUpdate(IFramework framework)
     {
-        screenController.OnFrameworkUpdate();
         videoQueue.OnFrameworkUpdate();
         watchAlong.OnFrameworkUpdate((float)framework.UpdateDelta.TotalSeconds);
     }

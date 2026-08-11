@@ -21,8 +21,6 @@ internal sealed class ScreenController : IDisposable
         Plugin.NamePlateGui.OnNamePlateUpdate += OnNamePlateUpdate;
     }
 
-    public void OnFrameworkUpdate() => Engine.OnFrameworkUpdate();
-
     // Ported from AlphaChannel's Core.OnNamePlateUpdate/HideNearbyNameplates (Voudi, GPL-3.0),
     // distance-gated against the screen's own world position now rather than a companion's or the
     // local player's - the screen renders wherever the user placed it, so that's where nameplate

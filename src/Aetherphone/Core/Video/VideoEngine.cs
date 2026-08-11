@@ -66,7 +66,6 @@ internal sealed class VideoEngine : IDisposable
     private static bool IsYTURL(string url) => YtRegex.IsMatch(url);
 
     private bool _isActive; // whether the screen should currently be drawing for the local player
-    private bool _lastIdle = true;
     private int _pendingVolume = 60;
 
     // Read fresh at Play() time by MpvRenderer.Initialize so a settings change takes effect on
@@ -269,12 +268,6 @@ internal sealed class VideoEngine : IDisposable
             && (url?.Scheme == Uri.UriSchemeHttp || url?.Scheme == Uri.UriSchemeHttps)
             && url.Host.Contains('.') && !url.Host.EndsWith('.')
             && Uri.CheckHostName(url.Host) == UriHostNameType.Dns;
-    }
-
-    internal void OnFrameworkUpdate()
-    {
-        var localPlayer = Plugin.ObjectTable.LocalPlayer;
-        _lastIdle = localPlayer is null || !_isActive || GetIdle();
     }
 
     //Places the screen 2 units in front of (and slightly above) the local player, facing the way
