@@ -143,12 +143,15 @@ internal static class RecoveryKey
         }
     }
 
-    private static byte[] DeriveKey(string canonicalCode, byte[] salt, int iterations)
+    internal static byte[] DeriveKey(string canonicalCode, byte[] salt, int iterations)
     {
         var password = Encoding.UTF8.GetBytes(canonicalCode);
         try
         {
-            return Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, HashAlgorithmName.SHA256, WrapKeyBytes);
+#pragma warning disable SYSLIB0060
+            using var deriveBytes = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA256);
+#pragma warning restore SYSLIB0060
+            return deriveBytes.GetBytes(WrapKeyBytes);
         }
         finally
         {
