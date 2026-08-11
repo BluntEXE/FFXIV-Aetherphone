@@ -2046,6 +2046,8 @@
   "velvet.whoNoOne": "Ninguém",
   "velvet.whoHelp": "Escolha quem pode enviar uma apresentação de uma linha para você. Amigos significa amigos de amigos.",
   "velvet.blockedNone": "Ninguém bloqueado.",
+  "velvet.notInterestedNone": "Ninguém marcado como não interessado.",
+  "velvet.notInterestedRemove": "Remover",
   "velvet.chatsTab": "Conversas",
   "velvet.requestsCount": "Solicitações ({0})",
   "velvet.messagesEmptyHint": "Envie uma apresentação pelo Descobrir.",

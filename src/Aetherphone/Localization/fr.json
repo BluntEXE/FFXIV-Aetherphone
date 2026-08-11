@@ -2046,6 +2046,8 @@
   "velvet.whoNoOne": "Personne",
   "velvet.whoHelp": "Choisis qui peut t'envoyer une intro d'une ligne. Amis signifie les amis de tes amis.",
   "velvet.blockedNone": "Personne de bloqué.",
+  "velvet.notInterestedNone": "Personne n'est marquée comme non intéressée.",
+  "velvet.notInterestedRemove": "Supprimer",
   "velvet.chatsTab": "Discussions",
   "velvet.requestsCount": "Demandes ({0})",
   "velvet.messagesEmptyHint": "Envoie une intro depuis Découvrir.",

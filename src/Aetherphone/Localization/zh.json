@@ -2046,6 +2046,8 @@
   "velvet.whoNoOne": "无人",
   "velvet.whoHelp": "选择谁可以给你发送一行介绍。“好友”指好友的好友。",
   "velvet.blockedNone": "没有拉黑任何人。",
+  "velvet.notInterestedNone": "没有人被标记为不感兴趣。",
+  "velvet.notInterestedRemove": "移除",
   "velvet.chatsTab": "聊天",
   "velvet.requestsCount": "请求（{0}）",
   "velvet.messagesEmptyHint": "在“发现”中发送介绍吧。",

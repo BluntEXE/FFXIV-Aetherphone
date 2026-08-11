@@ -3059,6 +3059,8 @@ internal static class L
         public static readonly LocString WhoHelp =
             new("velvet.whoHelp", "Choose who can send you a one line intro. Friends means friends of friends.");
         public static readonly LocString BlockedNone = new("velvet.blockedNone", "No one blocked.");
+        public static readonly LocString NotInterestedNone = new("velvet.notInterestedNone", "No one marked as not interested.");
+        public static readonly LocString NotInterestedRemove = new("velvet.notInterestedRemove", "Remove");
         public static readonly LocString ChatsTab = new("velvet.chatsTab", "Chats");
         public static readonly LocString RequestsCount = new("velvet.requestsCount", "Requests ({0})");
         public static readonly LocString MessagesEmptyHint =
@@ -3645,7 +3647,7 @@ internal static class L
 
     internal static class Plugin
     {
-        public static readonly LocString CommandHelp =new("plugin.commandHelp", "Toggle the Aetherphone. /phone run [shortcut] runs a shortcut, /phone market [item] opens the market board, /phone reset recenters the phone, /phone test sends a sample notification.");
+        public static readonly LocString CommandHelp = new("plugin.commandHelp", "Toggle the Aetherphone. /phone run [shortcut] runs a shortcut, /phone market [item] opens the market board, /phone reset recenters the phone, /phone test sends a sample notification.");
         public static readonly LocString CommandHelpAlias = new("plugin.commandHelpAlias", "Alias for /phone.");
         public static readonly LocString RunUsage = new("plugin.runUsage", "Type /phone run followed by a shortcut name.");
         public static readonly LocString ShortcutNotFound = new("plugin.shortcutNotFound", "No shortcut named {0}.");

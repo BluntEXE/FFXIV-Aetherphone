@@ -2046,6 +2046,8 @@
   "velvet.whoNoOne": "Hiç kimse",
   "velvet.whoHelp": "Sana tek satırlık tanışma mesajını kimlerin gönderebileceğini seç. Arkadaşlar, arkadaşlarının arkadaşları demek.",
   "velvet.blockedNone": "Engellenen kimse yok.",
+  "velvet.notInterestedNone": "Hiç kimse 'ilgisiz' olarak işaretlenmedi.",
+  "velvet.notInterestedRemove": "Kaldır",
   "velvet.chatsTab": "Sohbetler",
   "velvet.requestsCount": "İstekler ({0})",
   "velvet.messagesEmptyHint": "Keşfet'ten bir tanışma mesajı gönder.",

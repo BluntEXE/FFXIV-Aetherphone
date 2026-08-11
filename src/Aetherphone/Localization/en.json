@@ -2046,6 +2046,8 @@
   "velvet.whoNoOne": "No one",
   "velvet.whoHelp": "Choose who can send you a one line intro. Friends means friends of friends.",
   "velvet.blockedNone": "No one blocked.",
+  "velvet.notInterestedNone": "No one marked as not interested.",
+  "velvet.notInterestedRemove": "Remove",
   "velvet.chatsTab": "Chats",
   "velvet.requestsCount": "Requests ({0})",
   "velvet.messagesEmptyHint": "Send an intro from Discover.",

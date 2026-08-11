@@ -2046,6 +2046,8 @@
   "velvet.whoNoOne": "誰も不可",
   "velvet.whoHelp": "一行の自己紹介を送れる人を選びます。「フレンド」は友達の友達までを指します。",
   "velvet.blockedNone": "ブロックしたユーザーはいません。",
+  "velvet.notInterestedNone": "誰も「興味なし」にマークされていません。",
+  "velvet.notInterestedRemove": "削除",
   "velvet.chatsTab": "チャット",
   "velvet.requestsCount": "リクエスト ({0})",
   "velvet.messagesEmptyHint": "「見つける」から自己紹介を送りましょう。",

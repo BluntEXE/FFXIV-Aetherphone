@@ -2046,6 +2046,8 @@
   "velvet.whoNoOne": "Никто",
   "velvet.whoHelp": "Выберите, кто может отправить вам приветствие в одну строку. «Друзья» означает друзей ваших друзей.",
   "velvet.blockedNone": "Вы никого не заблокировали.",
+  "velvet.notInterestedNone": "Никто не помечен как «не заинтересован».",
+  "velvet.notInterestedRemove": "Удалить",
   "velvet.chatsTab": "Чаты",
   "velvet.requestsCount": "Запросы ({0})",
   "velvet.messagesEmptyHint": "Отправьте приветствие из Обзора.",

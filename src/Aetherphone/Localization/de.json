@@ -2046,6 +2046,8 @@
   "velvet.whoNoOne": "Niemand",
   "velvet.whoHelp": "Wähle, wer dir eine einzeilige Vorstellung schicken darf. Freunde heißt Freunde von Freunden.",
   "velvet.blockedNone": "Niemand blockiert.",
+  "velvet.notInterestedNone": "Niemand als nicht interessiert markiert.",
+  "velvet.notInterestedRemove": "Entfernen",
   "velvet.chatsTab": "Chats",
   "velvet.requestsCount": "Anfragen ({0})",
   "velvet.messagesEmptyHint": "Schick eine Vorstellung aus Entdecken.",
