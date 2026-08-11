@@ -1,0 +1,12 @@
+# The repo stores text as LF. Without this, a contributor whose Git sets
+# core.autocrlf=true commits CRLF and the diff swallows a whole file.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.bmp binary
+*.ttf binary
+*.mp3 binary
+*.wav binary
+*.zip binary

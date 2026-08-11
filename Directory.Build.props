@@ -18,6 +18,9 @@
   <PropertyGroup Label="Determinism" Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <Deterministic>true</Deterministic>
+    <!-- CI only: a warning nobody fails on is a warning nobody reads. Local
+         builds stay warn-only so a work in progress still compiles. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Label="Restore">
