@@ -86,7 +86,7 @@ internal static class PlayingCards
         var labelScale = MathF.Max(0.5f, MathF.Min(0.9f, rect.Width / (40f * scale)));
         var label = RankLabel(Rank(card));
         var corner = new Vector2(rect.Min.X + rect.Width * 0.18f, rect.Min.Y + rect.Height * 0.16f);
-        Typography.DrawCentered(drawList, corner, label, color, labelScale, FontWeight.Bold);
+        DrawRankLabel(drawList, corner, label, color, labelScale);
         DrawSuit(drawList, new Vector2(corner.X, corner.Y + rect.Height * 0.2f), rect.Width * 0.1f, suit, color);
         DrawSuit(drawList, new Vector2(rect.Center.X, rect.Center.Y + rect.Height * 0.08f), rect.Width * 0.24f, suit,
             color);
@@ -135,6 +135,19 @@ internal static class PlayingCards
             default:
                 DrawClub(drawList, center, radius, packed);
                 break;
+        }
+    }
+
+    // Typography.DrawCentered wraps against the window content region, which splits "10" down the middle on cards
+    // sitting near the window edge.
+    private static void DrawRankLabel(ImDrawListPtr drawList, Vector2 center, string label, Vector4 color, float scale)
+    {
+        using (Plugin.Fonts.Push(scale, FontWeight.Bold))
+        {
+            Plugin.Fonts.NoticeText(label);
+            var size = ImGui.CalcTextSize(label);
+            drawList.AddText(ImGui.GetFont(), ImGui.GetFontSize(), center - size * 0.5f, ImGui.GetColorU32(color),
+                label);
         }
     }
 
