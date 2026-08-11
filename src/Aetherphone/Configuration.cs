@@ -52,7 +52,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool NotifyWeeklyReset { get; set; }
     public bool NotifyGrandCompanyReset { get; set; }
     public bool NotifyRetainerVentures { get; set; }
-    public bool NotifyWalletCapped { get; set; } = true;
+    public bool ShowWalletBadge { get; set; } = true;
     public bool ShowDailiesBadge { get; set; } = true;
     public List<DailyCheckRecord> DailyChecks { get; set; } = new();
     public float ActivityGoalLevels { get; set; } = 1f;

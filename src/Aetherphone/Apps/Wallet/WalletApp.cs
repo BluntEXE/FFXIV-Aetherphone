@@ -27,7 +27,7 @@ internal sealed class WalletApp : IPhoneApp
     {
         get
         {
-            if (!configuration.NotifyWalletCapped)
+            if (!configuration.ShowWalletBadge)
             {
                 return 0;
             }
@@ -93,7 +93,7 @@ internal sealed class WalletApp : IPhoneApp
         DrawHeader(content, scale);
         if (DrawNotificationToggle(content, scale))
         {
-            configuration.NotifyWalletCapped = !configuration.NotifyWalletCapped;
+            configuration.ShowWalletBadge = !configuration.ShowWalletBadge;
             configuration.Save();
         }
 
@@ -154,25 +154,9 @@ internal sealed class WalletApp : IPhoneApp
 
     private bool DrawNotificationToggle(Rect content, float scale)
     {
-        var center = new Vector2(content.Max.X - 22f * scale, content.Min.Y + AppHeader.Height * scale * 0.5f);
-        var radius = 16f * scale;
-        var min = center - new Vector2(radius, radius);
-        var max = center + new Vector2(radius, radius);
-        var paused = !configuration.NotifyWalletCapped;
-        var hovered = UiInteract.Hover(min, max);
-        var color = paused ? AppPalettes.Wallet.Accent : hovered ? AppPalettes.Wallet.TitleInk : AppPalettes.Wallet.MutedInk;
-        ProgressRing.CenterIcon(ImGui.GetWindowDrawList(), center,
-            paused ? FontAwesomeIcon.BellSlash : FontAwesomeIcon.Bell, color, 15f * scale);
-        var toggleRect = new Rect(min, max);
-        UiAnchors.Report("wallet.notifications.toggle", toggleRect);
-        HoverTooltip.Show(toggleRect,
-            Loc.T(paused ? L.Messages.ResumeNotifications : L.Messages.PauseNotifications));
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+        return NotificationToggleButton.Draw(content, scale, "wallet.notifications.toggle",
+            !configuration.ShowWalletBadge, AppPalettes.Wallet.Accent, AppPalettes.Wallet.TitleInk,
+            AppPalettes.Wallet.MutedInk, Loc.T(L.Wallet.ShowBadge), Loc.T(L.Wallet.HideBadge));
     }
 
     private Rect DrawSectionCard(WalletSection section, float scale)

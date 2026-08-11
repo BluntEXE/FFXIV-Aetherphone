@@ -157,26 +157,9 @@ internal sealed partial class LinkpearlApp
     private bool DrawNotificationPauseButton(in PhoneContext context)
     {
         var scale = UiScale.Current;
-        var content = context.Content;
-        var center = new Vector2(content.Max.X - 22f * scale, content.Min.Y + AppHeader.Height * scale * 0.5f);
-        var radius = 16f * scale;
-        var min = center - new Vector2(radius, radius);
-        var max = center + new Vector2(radius, radius);
-        var paused = notificationGate.Paused;
-        var hovered = UiInteract.Hover(min, max);
-        var color = paused ? context.Theme.Accent : hovered ? context.Theme.TextStrong : context.Theme.TextMuted;
-        ProgressRing.CenterIcon(ImGui.GetWindowDrawList(), center,
-            paused ? FontAwesomeIcon.BellSlash : FontAwesomeIcon.Bell, color, 15f * scale);
-        var toggleRect = new Rect(min, max);
-        UiAnchors.Report("messages.notifications.toggle", toggleRect);
-        HoverTooltip.Show(toggleRect,
-            Loc.T(paused ? L.Messages.ResumeNotifications : L.Messages.PauseNotifications));
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+        return NotificationToggleButton.Draw(context.Content, scale, "messages.notifications.toggle",
+            notificationGate.Paused, context.Theme.Accent, context.Theme.TextStrong, context.Theme.TextMuted,
+            Loc.T(L.Messages.ResumeNotifications), Loc.T(L.Messages.PauseNotifications));
     }
 
     private void DrawDirectThread(Rect area, Conversation conversation)
