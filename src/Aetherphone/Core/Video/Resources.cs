@@ -39,10 +39,6 @@ internal sealed class Resources : IDisposable
 
 	private void Initialize()
 	{
-		if(!Directory.Exists(Path.Combine(_configDir, "roms")))
-		{
-			Directory.CreateDirectory(Path.Combine(_configDir, "roms"));
-		}
 		_=GetNtpUtcAsync().ContinueWith(task =>
 		{
 			//Set NTP time
