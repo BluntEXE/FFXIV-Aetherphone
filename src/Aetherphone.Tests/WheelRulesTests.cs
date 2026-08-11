@@ -10,7 +10,7 @@ public sealed class WheelRulesTests
     {
         Assert.Equal(50, WheelRules.SegmentCount);
         Assert.Equal(WheelRules.SegmentCount, WheelRules.Segments.Length);
-        Assert.Equal(new[] { 1, 3, 5, 10, 20 }, WheelRules.Multipliers);
+        Assert.Equal(new[] { 1, 3, 5, 11, 22 }, WheelRules.Multipliers);
         Assert.Equal(new[] { 24, 12, 8, 4, 2 }, WheelRules.SegmentCounts);
     }
 
@@ -49,8 +49,8 @@ public sealed class WheelRulesTests
     [InlineData(0, 48)]
     [InlineData(1, 48)]
     [InlineData(2, 48)]
-    [InlineData(3, 44)]
-    [InlineData(4, 42)]
+    [InlineData(3, 48)]
+    [InlineData(4, 46)]
     public void EachSpotReturnsItsPublishedShareOfFifty(int spot, int expectedPerFifty)
     {
         var returned = WheelRules.SegmentsOn(spot) * (WheelRules.MultiplierOf(spot) + 1);
@@ -58,7 +58,7 @@ public sealed class WheelRulesTests
     }
 
     [Fact]
-    public void TheBlendedReturnAcrossAllFiveSpotsIsNinetyTwoPercent()
+    public void TheBlendedReturnAcrossAllFiveSpotsIsNinetyFivePercent()
     {
         var totalReturn = 0;
         for (var spot = 0; spot < WheelRules.SpotCount; spot++)
@@ -66,7 +66,7 @@ public sealed class WheelRulesTests
             totalReturn += WheelRules.SegmentsOn(spot) * (WheelRules.MultiplierOf(spot) + 1);
         }
 
-        Assert.Equal(230, totalReturn);
+        Assert.Equal(238, totalReturn);
         Assert.Equal(250, WheelRules.SegmentCount * WheelRules.SpotCount);
     }
 
@@ -100,22 +100,22 @@ public sealed class WheelRulesTests
     public void HeadroomNarrowsAsTheRoundCapFillsAndClosesAtIt()
     {
         Assert.Equal(WheelRules.MaxStakePerSpot, WheelRules.Headroom(0));
-        Assert.Equal(WheelRules.MaxStakePerSpot, WheelRules.Headroom(WheelRules.MaxStakePerRound - 60));
-        Assert.Equal(20, WheelRules.Headroom(WheelRules.MaxStakePerRound - 20));
+        Assert.Equal(WheelRules.MaxStakePerSpot, WheelRules.Headroom(WheelRules.MaxStakePerRound - 6000));
+        Assert.Equal(2000, WheelRules.Headroom(WheelRules.MaxStakePerRound - 2000));
         Assert.Equal(0, WheelRules.Headroom(WheelRules.MaxStakePerRound));
-        Assert.Equal(0, WheelRules.Headroom(WheelRules.MaxStakePerRound + 40));
+        Assert.Equal(0, WheelRules.Headroom(WheelRules.MaxStakePerRound + 4000));
     }
 
     [Fact]
     public void ClampCutsABetToWhatTheRoundCapAndTheStackAllow()
     {
-        Assert.Equal(30, WheelRules.Clamp(30, 0, 1000));
-        Assert.Equal(WheelRules.MaxStakePerSpot, WheelRules.Clamp(500, 0, 1000));
-        Assert.Equal(20, WheelRules.Clamp(50, WheelRules.MaxStakePerRound - 20, 1000));
-        Assert.Equal(12, WheelRules.Clamp(50, 0, 12));
-        Assert.Equal(0, WheelRules.Clamp(50, WheelRules.MaxStakePerRound, 1000));
-        Assert.Equal(0, WheelRules.Clamp(50, 0, WheelRules.MinStakePerSpot - 1));
-        Assert.Equal(0, WheelRules.Clamp(WheelRules.MinStakePerSpot - 1, 0, 1000));
+        Assert.Equal(3000, WheelRules.Clamp(3000, 0, 100_000));
+        Assert.Equal(WheelRules.MaxStakePerSpot, WheelRules.Clamp(50_000, 0, 100_000));
+        Assert.Equal(2000, WheelRules.Clamp(5000, WheelRules.MaxStakePerRound - 2000, 100_000));
+        Assert.Equal(1200, WheelRules.Clamp(5000, 0, 1200));
+        Assert.Equal(0, WheelRules.Clamp(5000, WheelRules.MaxStakePerRound, 100_000));
+        Assert.Equal(0, WheelRules.Clamp(5000, 0, WheelRules.MinStakePerSpot - 1));
+        Assert.Equal(0, WheelRules.Clamp(WheelRules.MinStakePerSpot - 1, 0, 100_000));
     }
 
     [Fact]

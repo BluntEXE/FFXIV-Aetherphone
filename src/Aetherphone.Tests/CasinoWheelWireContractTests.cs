@@ -119,10 +119,10 @@ public sealed class CasinoWheelWireContractTests
     {
         const string json = "{\"roundIndex\":7,\"commit\":\"aa\",\"nextCommit\":\"bb\",\"seed\":\"cc\","
             + "\"segment\":31,\"spot\":1,\"spots\":[{\"spot\":0,\"multiplier\":1,\"segments\":24,"
-            + "\"returnBasisPoints\":9600,\"amount\":220,\"bettors\":5},{\"spot\":4,\"multiplier\":20,"
-            + "\"segments\":2,\"returnBasisPoints\":8400,\"amount\":20,\"bettors\":1}],\"staked\":640,"
-            + "\"paid\":300,\"recent\":[4,17,31],\"minBet\":5,\"maxBetPerSpot\":50,\"maxBetPerRound\":200,"
-            + "\"maxWin\":1000}";
+            + "\"returnBasisPoints\":9600,\"amount\":22000,\"bettors\":5},{\"spot\":4,\"multiplier\":22,"
+            + "\"segments\":2,\"returnBasisPoints\":9200,\"amount\":2000,\"bettors\":1}],\"staked\":64000,"
+            + "\"paid\":30000,\"recent\":[4,17,31],\"minBet\":100,\"maxBetPerSpot\":5000,"
+            + "\"maxBetPerRound\":20000,\"maxWin\":500000}";
         var board = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoWheelRoomStateDto);
 
         Assert.NotNull(board);
@@ -131,10 +131,10 @@ public sealed class CasinoWheelWireContractTests
         Assert.Equal(1, board.Spot);
         Assert.NotNull(board.Spots);
         Assert.Equal(2, board.Spots.Length);
-        Assert.Equal(220, board.Spots[0].Amount);
+        Assert.Equal(22000, board.Spots[0].Amount);
         Assert.Equal(4, board.Spots[1].Spot);
-        Assert.Equal(20, board.Spots[1].Multiplier);
-        Assert.Equal(640, board.Staked);
+        Assert.Equal(22, board.Spots[1].Multiplier);
+        Assert.Equal(64000, board.Staked);
         Assert.Equal(new[] { 4, 17, 31 }, board.Recent);
         Assert.Equal(WheelRules.MinStakePerSpot, board.MinBet);
         Assert.Equal(WheelRules.MaxStakePerSpot, board.MaxBetPerSpot);
@@ -193,15 +193,15 @@ public sealed class CasinoWheelWireContractTests
     public void TheRoundCapIsClampedBeforeTheBetLeaves()
     {
         Assert.Equal(WheelRules.MaxStakePerSpot, WheelRules.Headroom(0));
-        Assert.Equal(20, WheelRules.Headroom(WheelRules.MaxStakePerRound - 20));
+        Assert.Equal(2000, WheelRules.Headroom(WheelRules.MaxStakePerRound - 2000));
         Assert.Equal(0, WheelRules.Headroom(WheelRules.MaxStakePerRound));
 
-        Assert.Equal(25, WheelRules.Clamp(25, 0, 500));
-        Assert.Equal(WheelRules.MaxStakePerSpot, WheelRules.Clamp(500, 0, 500));
-        Assert.Equal(20, WheelRules.Clamp(50, WheelRules.MaxStakePerRound - 20, 500));
-        Assert.Equal(0, WheelRules.Clamp(50, WheelRules.MaxStakePerRound, 500));
-        Assert.Equal(0, WheelRules.Clamp(1, 0, 500));
-        Assert.Equal(0, WheelRules.Clamp(25, 0, 4));
+        Assert.Equal(2500, WheelRules.Clamp(2500, 0, 50_000));
+        Assert.Equal(WheelRules.MaxStakePerSpot, WheelRules.Clamp(50_000, 0, 50_000));
+        Assert.Equal(2000, WheelRules.Clamp(5000, WheelRules.MaxStakePerRound - 2000, 50_000));
+        Assert.Equal(0, WheelRules.Clamp(5000, WheelRules.MaxStakePerRound, 50_000));
+        Assert.Equal(0, WheelRules.Clamp(1, 0, 50_000));
+        Assert.Equal(0, WheelRules.Clamp(2500, 0, 4));
     }
 
     [Fact]

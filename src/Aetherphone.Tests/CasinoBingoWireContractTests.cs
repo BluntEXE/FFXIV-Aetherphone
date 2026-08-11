@@ -29,7 +29,7 @@ public sealed class CasinoBingoWireContractTests
         Assert.Equal(
             "{\"roomId\":\"bingo-hall\",\"roundIndex\":7,\"clientRoundId\":\"round1\",\"cardCount\":3}",
             json);
-        Assert.Equal(60, BingoRules.StakeFor(3));
+        Assert.Equal(6000, BingoRules.StakeFor(3));
     }
 
     [Fact]
@@ -37,8 +37,8 @@ public sealed class CasinoBingoWireContractTests
     {
         const string json = "{\"granted\":true,\"reason\":\"\",\"roomId\":\"bingo-hall\",\"roundIndex\":7,"
             + "\"roundId\":\"entry-1\",\"cards\":[[1,2,3,4,5,16,17,18,19,20,31,32,33,34,46,47,48,49,50,61,62,"
-            + "63,64,65],[6,7,8,9,10,21,22,23,24,25,36,37,38,39,51,52,53,54,55,66,67,68,69,70]],\"stake\":40,"
-            + "\"payout\":112,\"roundState\":1,\"seedCommitHash\":\"aa\",\"nextSeedHash\":\"bb\",\"stack\":205}";
+            + "63,64,65],[6,7,8,9,10,21,22,23,24,25,36,37,38,39,51,52,53,54,55,66,67,68,69,70]],\"stake\":4000,"
+            + "\"payout\":11200,\"roundState\":1,\"seedCommitHash\":\"aa\",\"nextSeedHash\":\"bb\",\"stack\":20500}";
         var mine = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoBingoCardsDto);
 
         Assert.NotNull(mine);
@@ -51,9 +51,9 @@ public sealed class CasinoBingoWireContractTests
         Assert.Equal(BingoRules.CardNumbers, mine.Cards[0].Length);
         Assert.Equal(1, mine.Cards[0][0]);
         Assert.Equal(BingoRules.StakeFor(2), mine.Stake);
-        Assert.Equal(112, mine.Payout);
+        Assert.Equal(11200, mine.Payout);
         Assert.Equal(CasinoRoundStates.Settled, mine.RoundState);
-        Assert.Equal(205, mine.Stack);
+        Assert.Equal(20500, mine.Stack);
         Assert.Equal(2, BingoCabinet.HeldCards(mine));
         Assert.True(BingoCabinet.Settled(mine));
     }
@@ -123,10 +123,10 @@ public sealed class CasinoBingoWireContractTests
     public void TheHallBlobCarriesTheLadderTheCapAndTheCalls()
     {
         const string json = "{\"roundIndex\":7,\"commit\":\"aa\",\"nextCommit\":\"bb\",\"seed\":\"cc\","
-            + "\"cards\":40,\"players\":11,\"prizes\":[112,148,320],\"prizeCardCap\":125,\"ballIndex\":3,"
+            + "\"cards\":40,\"players\":11,\"prizes\":[11600,15400,33200],\"prizeCardCap\":125,\"ballIndex\":3,"
             + "\"balls\":[42,7,55],\"nextBallAtUnixMs\":1754784003000,\"stages\":[{\"stage\":0,\"ball\":41,"
-            + "\"prize\":112,\"winners\":2,\"paid\":224}],\"ended\":false,\"cancelled\":false,"
-            + "\"cardPrice\":20,\"maxCards\":4,\"maxWin\":1000}";
+            + "\"prize\":11600,\"winners\":2,\"paid\":23200}],\"ended\":false,\"cancelled\":false,"
+            + "\"cardPrice\":2000,\"maxCards\":4,\"maxWin\":500000}";
         var board = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoBingoRoomStateDto);
 
         Assert.NotNull(board);
@@ -148,13 +148,13 @@ public sealed class CasinoBingoWireContractTests
         Assert.NotNull(awarded);
         Assert.Equal(41, awarded.Ball);
         Assert.Equal(2, awarded.Winners);
-        Assert.Equal(224, awarded.Paid);
+        Assert.Equal(23200, awarded.Paid);
     }
 
     [Fact]
     public void ThePublishedLadderAgreesWithTheMirroredRates()
     {
-        const string json = "{\"roundIndex\":7,\"cards\":40,\"prizes\":[112,148,320],\"prizeCardCap\":125}";
+        const string json = "{\"roundIndex\":7,\"cards\":40,\"prizes\":[11600,15400,33200],\"prizeCardCap\":125}";
         var board = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoBingoRoomStateDto);
 
         Assert.NotNull(board);
@@ -195,10 +195,10 @@ public sealed class CasinoBingoWireContractTests
     [Fact]
     public void TheBallIntervalMirrorsTheRoomClock()
     {
-        Assert.Equal(3, BingoRules.BallIntervalSeconds);
+        Assert.Equal(2, BingoRules.BallIntervalSeconds);
         Assert.Equal(75, BingoRules.Balls);
         Assert.Equal(4, BingoRules.MaxCards);
-        Assert.Equal(20, BingoRules.CardPrice);
+        Assert.Equal(2000, BingoRules.CardPrice);
     }
 
     [Fact]

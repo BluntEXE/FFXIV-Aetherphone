@@ -8,14 +8,14 @@ public sealed class ScratchRulesTests
     [Fact]
     public void ConstantsMatchTheBackendEngine()
     {
-        Assert.Equal(3, ScratchRules.TierCount);
+        Assert.Equal(4, ScratchRules.TierCount);
         Assert.Equal(9, ScratchRules.CellCount);
         Assert.Equal(3, ScratchRules.GridSide);
-        Assert.Equal(5, ScratchRules.PrizeSymbolCount);
+        Assert.Equal(4, ScratchRules.PrizeSymbolCount);
         Assert.Equal(7, ScratchRules.SymbolCount);
         Assert.Equal(1_000_000, ScratchRules.TableScale);
         Assert.Equal(3, ScratchRules.MatchesToWin);
-        Assert.Equal(new long[] { 10, 25, 50 }, ScratchRules.Prices);
+        Assert.Equal(new long[] { 500, 1_000, 2_500, 5_000 }, ScratchRules.Prices);
     }
 
     [Fact]
@@ -23,9 +23,10 @@ public sealed class ScratchRulesTests
     {
         var expected = new (long Chips, int CountPerMillion)[][]
         {
-            new[] { (10L, 200_000), (20L, 100_000), (50L, 40_000), (100L, 12_000), (200L, 8_000) },
-            new[] { (25L, 210_000), (50L, 110_000), (125L, 40_000), (250L, 15_000), (500L, 6_000) },
-            new[] { (50L, 220_000), (100L, 115_000), (250L, 44_000), (500L, 17_000), (1_000L, 4_000) },
+            new[] { (1_000L, 285_000), (2_500L, 50_000), (5_000L, 7_500), (10_000L, 1_400) },
+            new[] { (2_000L, 285_000), (5_000L, 50_000), (10_000L, 7_500), (20_000L, 1_400) },
+            new[] { (5_000L, 285_000), (12_500L, 51_000), (25_000L, 7_600), (50_000L, 1_450) },
+            new[] { (10_000L, 286_000), (25_000L, 52_000), (50_000L, 7_800), (100_000L, 1_500) },
         };
         for (var tier = 0; tier < ScratchRules.TierCount; tier++)
         {
@@ -42,22 +43,24 @@ public sealed class ScratchRulesTests
     [Fact]
     public void WinCountsSumTheTierTables()
     {
-        Assert.Equal(360_000, ScratchRules.WinCountPerMillion(0));
-        Assert.Equal(381_000, ScratchRules.WinCountPerMillion(1));
-        Assert.Equal(400_000, ScratchRules.WinCountPerMillion(2));
+        Assert.Equal(343_900, ScratchRules.WinCountPerMillion(0));
+        Assert.Equal(343_900, ScratchRules.WinCountPerMillion(1));
+        Assert.Equal(345_050, ScratchRules.WinCountPerMillion(2));
+        Assert.Equal(347_300, ScratchRules.WinCountPerMillion(3));
     }
 
     [Fact]
     public void TierForPriceRoundTripsAndRejectsUnknownPrices()
     {
-        Assert.Equal(0, ScratchRules.TierForPrice(10));
-        Assert.Equal(1, ScratchRules.TierForPrice(25));
-        Assert.Equal(2, ScratchRules.TierForPrice(50));
-        Assert.Equal(-1, ScratchRules.TierForPrice(20));
+        Assert.Equal(0, ScratchRules.TierForPrice(500));
+        Assert.Equal(1, ScratchRules.TierForPrice(1_000));
+        Assert.Equal(2, ScratchRules.TierForPrice(2_500));
+        Assert.Equal(3, ScratchRules.TierForPrice(5_000));
+        Assert.Equal(-1, ScratchRules.TierForPrice(750));
         Assert.True(ScratchRules.IsValidTier(0));
-        Assert.True(ScratchRules.IsValidTier(2));
+        Assert.True(ScratchRules.IsValidTier(3));
         Assert.False(ScratchRules.IsValidTier(-1));
-        Assert.False(ScratchRules.IsValidTier(3));
+        Assert.False(ScratchRules.IsValidTier(4));
     }
 
     [Fact]
