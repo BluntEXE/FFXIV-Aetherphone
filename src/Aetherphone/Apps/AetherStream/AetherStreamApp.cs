@@ -95,7 +95,7 @@ internal sealed partial class AetherStreamApp : IPhoneApp
     {
         theme = context.Theme;
         ui.Theme = context.Theme;
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var screenRect = SceneChrome.ScreenFrom(context.Content, context.Theme, scale);
         ui.Backdrop(screenRect);
         var localContext = context;
