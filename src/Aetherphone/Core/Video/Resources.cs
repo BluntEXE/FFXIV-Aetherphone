@@ -21,8 +21,6 @@ internal sealed class Resources : IDisposable
 
 	internal long CurrentTimeNTPNormalizedMilliseconds => _ntpTimeOffset > 0 ? _ntpTimeOffset + (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _sysTimeOffset) : DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-	internal string RomsDirectory => Path.Combine(_configDir, "roms");
-
 
 	internal Resources()
 	{
@@ -118,26 +116,6 @@ internal sealed class Resources : IDisposable
 		{
 			return null;
 		}
-	}
-
-	internal string? GetLocationSNES9X()
-	{
-		string directoryName = "snes9x";
-		string? dir = Directory.GetDirectories(_configDir, $"{directoryName}*").FirstOrDefault();
-		if (dir != null)
-		{
-			string file = Path.Combine(_configDir, directoryName, "snes9x_libretro.dll");
-			if(File.Exists(file))
-			{
-				return file;
-			}
-		}
-		else
-		{
-			Directory.CreateDirectory(Path.Combine(_configDir, "snes9x"));
-		}
-		
-		return null;
 	}
 
 	internal async Task CheckMPVAsync()
@@ -287,41 +265,6 @@ internal sealed class Resources : IDisposable
 		catch (Exception e)
 		{
 			AepLog.Error($"Error updating {nameStartsWith}: {e.Message} {e.StackTrace}");
-			return false;
-		}
-	}
-
-	internal async Task<bool> DownloadSNES9XAsync()
-	{
-		try
-		{
-			string directoryName = "snes9x";
-			string temp = Path.GetTempFileName() + ".zip";
-			var response = await _httpClient.GetAsync("https://buildbot.libretro.com/nightly/windows/x86_64/latest/snes9x_libretro.dll.zip", HttpCompletionOption.ResponseHeadersRead);
-			await using (var fs = File.OpenWrite(temp))
-			{
-				await response.Content.CopyToAsync(fs);
-			}
-
-			string localFolder = Path.Combine(_configDir, directoryName);
-			Directory.CreateDirectory(localFolder);
-			using (var archive = ArchiveFactory.OpenArchive(temp))
-			{
-				foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
-				{
-					entry.WriteToDirectory(localFolder, new ExtractionOptions
-					{
-						ExtractFullPath = true,
-						Overwrite = true
-					});
-				}
-			}
-
-			File.Delete(temp);
-			return true;
-		}
-		catch
-		{
 			return false;
 		}
 	}

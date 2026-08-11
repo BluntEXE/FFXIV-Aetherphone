@@ -138,10 +138,6 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     // doesn't lose what was lined up. What was actively Current isn't included here - see
     // AetherStreamQueue's constructor doc comment.
     public List<VideoQueueRecord> VideoQueue { get; set; } = new();
-    // SNES9x (AlphaChannel port) emulator input mapping and recent-ROM list - ported from
-    // AlphaChannel's own Configuration, which used to be its own separate IPluginConfiguration.
-    public Dictionary<Snes9xInput, string> SnesKeyMappings { get; set; } = new();
-    public List<string> SnesRecentRomPaths { get; set; } = new();
     public bool GameSoundsCleared { get; set; }
     #if DEBUG
     public const string DefaultAethernetBaseUrl = "https://aethernet-dev-production.up.railway.app";

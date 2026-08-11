@@ -45,9 +45,7 @@ internal sealed class VideoEngine : IDisposable
     internal Vector3 ScreenSpawnAnchor { get; private set; }
 
     private MpvRenderer? _mpvRenderer;
-    private Snes9xRenderer? _snesRenderer;
     private readonly Texture2D _screenTexture;
-    private readonly Texture2D _snesScreenTexture;
     private static readonly Texture2DDescription ScreenTextureDescription = new()
     {
         Width = ScreenWidth,
@@ -61,30 +59,14 @@ internal sealed class VideoEngine : IDisposable
         Usage = ResourceUsage.Default,
         OptionFlags = ResourceOptionFlags.None,
     };
-    private static readonly Texture2DDescription SnesTextureDescription = new()
-    {
-        Width = ScreenWidth,
-        Height = ScreenHeight,
-        MipLevels = 1,
-        ArraySize = 1,
-        Format = Format.B5G6R5_UNorm,
-        BindFlags = BindFlags.ShaderResource | BindFlags.RenderTarget,
-        CpuAccessFlags = CpuAccessFlags.None,
-        SampleDescription = new SampleDescription(1, 0),
-        Usage = ResourceUsage.Default,
-        OptionFlags = ResourceOptionFlags.None,
-    };
     private CancellationTokenSource _renderCancellation = new();
 
     private DateTime _lastLoadYT = DateTime.MinValue;
     private static readonly Regex YtRegex = new(@"^\w+://[^/]*youtube\.\w+/|^\w+://youtu\.be/", RegexOptions.Compiled);
     private static bool IsYTURL(string url) => YtRegex.IsMatch(url);
 
-    private bool _isPlayingSnes;
-    private bool _snesControlsEnabled;
     private bool _isActive; // whether the screen should currently be drawing for the local player
     private bool _lastIdle = true;
-    private readonly List<string> _recentSnesPaths = [];
     private int _pendingVolume = 60;
 
     // Read fresh at Play() time by MpvRenderer.Initialize so a settings change takes effect on
@@ -94,8 +76,6 @@ internal sealed class VideoEngine : IDisposable
     internal bool AllowInsecureDirectUrls { get; set; }
 
     internal Resources Resources { get; }
-    internal InputManager Input { get; }
-    internal WndProcKeyUpReader WindowKeyUpReader { get; }
 
     internal VideoEngine()
     {
@@ -104,15 +84,9 @@ internal sealed class VideoEngine : IDisposable
         MpvRenderer.Setup(Resources);
         DxHandler.Initialise(Plugin.PluginInterface);
 
-        WindowKeyUpReader = new WndProcKeyUpReader(Plugin.PluginInterface.UiBuilder.WindowHandlePtr,
-            Plugin.InteropProvider);
-        Input = new InputManager(WindowKeyUpReader);
-
         _screenTexture = new Texture2D(DxHandler.Device, ScreenTextureDescription);
-        _snesScreenTexture = new Texture2D(DxHandler.Device, SnesTextureDescription);
         _screenPainter = new ScreenPainter();
 
-        _recentSnesPaths.AddRange(Plugin.Cfg.SnesRecentRomPaths);
         _screenPresets.AddRange(Plugin.Cfg.ScreenPresets);
     }
 
@@ -127,16 +101,8 @@ internal sealed class VideoEngine : IDisposable
     internal void StopVideo()
     {
         _isActive = false;
-        if (_isPlayingSnes)
-        {
-            _snesRenderer?.Unload();
-            _isPlayingSnes = false;
-        }
-        else
-        {
-            _mpvRenderer?.Stop();
-            _mpvRenderer = null;
-        }
+        _mpvRenderer?.Stop();
+        _mpvRenderer = null;
 
         _screenPainter.SetTarget(null);
     }
@@ -254,11 +220,7 @@ internal sealed class VideoEngine : IDisposable
     internal void SetVolume(int vol)
     {
         _pendingVolume = Math.Clamp(vol, 0, 100);
-        if (_isPlayingSnes)
-        {
-            _snesRenderer?.SetVolume(vol);
-        }
-        else if (!_renderCancellation.Token.IsCancellationRequested)
+        if (!_renderCancellation.Token.IsCancellationRequested)
         {
             _mpvRenderer?.SetVolume(vol);
         }
@@ -309,67 +271,10 @@ internal sealed class VideoEngine : IDisposable
             && Uri.CheckHostName(url.Host) == UriHostNameType.Dns;
     }
 
-    internal bool PlaySnes(string path)
-    {
-        try
-        {
-            _snesRenderer ??= new Snes9xRenderer(Resources.GetLocationSNES9X(), Resources.RomsDirectory);
-
-            AddSnesPath(path);
-            _snesControlsEnabled = true;
-            AssignScreenForSession(_snesScreenTexture);
-            _isPlayingSnes = _snesRenderer.Load(_snesScreenTexture, path);
-            _isActive = true;
-            AepLog.Debug("Starting ROM");
-        }
-        catch (Exception e)
-        {
-            AepLog.Error($"[SNES9X] Generic error: {e.Message} {e.StackTrace}");
-        }
-
-        return _isPlayingSnes;
-    }
-
-    internal void RemoveSnesPath(string path)
-    {
-        _recentSnesPaths.Remove(path);
-    }
-
-    private void AddSnesPath(string path)
-    {
-        _recentSnesPaths.Remove(path);
-        _recentSnesPaths.Insert(0, path);
-        if (_recentSnesPaths.Count > 6)
-        {
-            _recentSnesPaths.RemoveAt(_recentSnesPaths.Count - 1);
-        }
-
-        Plugin.Cfg.SnesRecentRomPaths = _recentSnesPaths;
-        Plugin.Cfg.Save();
-    }
-
-    internal List<string> GetRecentSnesPaths() => [.. _recentSnesPaths];
-
-    internal bool IsPlayingSnes() => _isPlayingSnes;
-
-    internal bool IsSnesControlsEnabled() => _snesControlsEnabled;
-
-    internal void EnableSnesControls(bool enabled) => _snesControlsEnabled = enabled;
-
     internal void OnFrameworkUpdate()
     {
         var localPlayer = Plugin.ObjectTable.LocalPlayer;
-        if (localPlayer is not null && _isActive && !IsPlayingSnes())
-        {
-            bool idle = GetIdle();
-            _lastIdle = idle;
-        }
-        else
-        {
-            _lastIdle = true;
-        }
-
-        Input.OnFrameworkUpdate(_isPlayingSnes, _snesControlsEnabled, _snesRenderer);
+        _lastIdle = localPlayer is null || !_isActive || GetIdle();
     }
 
     //Places the screen 2 units in front of (and slightly above) the local player, facing the way
@@ -471,10 +376,7 @@ internal sealed class VideoEngine : IDisposable
     public void Dispose()
     {
         _mpvRenderer?.Dispose();
-        _snesRenderer?.Dispose();
         _screenPainter.Dispose();
-
-        WindowKeyUpReader.Dispose();
         Resources.Dispose();
     }
 }

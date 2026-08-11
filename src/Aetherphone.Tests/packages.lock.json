@@ -195,15 +195,6 @@
           "SharpDX": "4.2.0"
         }
       },
-      "SharpDX.XAudio2": {
-        "type": "Transitive",
-        "resolved": "4.2.0",
-        "contentHash": "Q3fFjN8iumvCjIXioHYqfGKUNGFN8FjdmAtRfyZ+7KHnWjeA22WOKeeVxdm429le+gOTgN+9P51wfAJjwAPdHQ==",
-        "dependencies": {
-          "NETStandard.Library": "1.6.1",
-          "SharpDX": "4.2.0"
-        }
-      },
       "SharpGen.Runtime": {
         "type": "Transitive",
         "resolved": "2.4.2-beta",
@@ -333,7 +324,6 @@
           "SharpCompress": "[0.48.1, )",
           "SharpDX.D3DCompiler": "[4.2.0, )",
           "SharpDX.Direct3D11": "[4.2.0, )",
-          "SharpDX.XAudio2": "[4.2.0, )",
           "SixLabors.ImageSharp": "[3.1.12, )",
           "System.Security.Cryptography.ProtectedData": "[10.0.0, )",
           "Vortice.D3DCompiler": "[3.8.3, )",
