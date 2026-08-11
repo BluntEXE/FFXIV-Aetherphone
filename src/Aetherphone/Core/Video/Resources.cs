@@ -16,74 +16,20 @@ internal sealed class Resources : IDisposable
 
 	internal string[] MpvCheckResult { get; private set; } = [string.Empty, string.Empty];
 	internal string[] YtdlpCheckResult { get; private set; } = [string.Empty, string.Empty];
-	private long _ntpTimeOffset;
-	private long _sysTimeOffset;
 
-	internal long CurrentTimeNTPNormalizedMilliseconds => _ntpTimeOffset > 0 ? _ntpTimeOffset + (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _sysTimeOffset) : DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
+	private int _provisionStarted;
 
 	internal Resources()
 	{
 		_httpClient = new HttpClient();
 		_httpClient.DefaultRequestHeaders.Add("User-Agent", "AetherphoneAetherStreamUpdater/1.0");
 		_configDir = Plugin.PluginInterface.ConfigDirectory.FullName;
-
-		Initialize();
 	}
 
 	public void Dispose()
 	{
 		_httpClient.Dispose();
 		GC.SuppressFinalize(this);
-	}
-
-	private void Initialize()
-	{
-		_=GetNtpUtcAsync().ContinueWith(task =>
-		{
-			//Set NTP time
-			if (task.IsCompletedSuccessfully)
-			{
-				_ntpTimeOffset = task.GetResultSafely();
-				AepLog.Debug("Received NTP Time Offset: " + (_ntpTimeOffset - DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()) + " ms.");
-			}
-			_sysTimeOffset = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-		}).ContinueWith(_ =>
-		{
-			//Check for MPV Updates, then auto-download in the background if one was found - a
-			//tester never has to visit Settings at all for mpv to become ready. The Settings
-			//page's own button (see AetherStreamApp.Settings.cs) stays as a manual fallback for
-			//when this attempt hits a network hiccup at plugin load.
-			CheckMPVAsync().ContinueWith(task =>
-			{
-				if (!task.IsCompletedSuccessfully)
-				{
-					AepLog.Error("Failed to check for MPV updates: " + task.Exception?.ToString());
-					return;
-				}
-
-				if (MpvCheckResult[0].Length > 0)
-				{
-					_ = DownloadMPVAsync();
-				}
-			});
-		}).ContinueWith(_=>
-		{
-			//Check for YTDLP Updates - same auto-download reasoning as the MPV check above.
-			CheckYTDLPAsync().ContinueWith(task =>
-			{
-				if (!task.IsCompletedSuccessfully)
-				{
-					AepLog.Error("Failed to check for YTDLP updates: " + task.Exception?.ToString());
-					return;
-				}
-
-				if (YtdlpCheckResult[0].Length > 0)
-				{
-					_ = DownloadYTDLPAsync();
-				}
-			});
-		});
 	}
 
 	internal string? GetLocationMPV()
@@ -111,6 +57,48 @@ internal sealed class Resources : IDisposable
 		else
 		{
 			return null;
+		}
+	}
+
+	// mpv and yt-dlp expand to roughly 108 MB in the plugin config directory, so neither is
+	// fetched at plugin load: this runs the first time someone actually reaches for AetherStream,
+	// which is opening the app or a watch-along join starting playback. Anyone who never opens
+	// the app downloads nothing at all.
+	//
+	// Only a binary that is missing outright is fetched, since there is no playback without it.
+	// A build that already works is left alone and not even checked: mpv-winbuild publishes
+	// nightly, so following it automatically meant re-downloading 26 MB most days, and a version
+	// pin is no answer either because that repo keeps only about a month of releases before
+	// pruning them, so a pinned tag would eventually 404 and strand new installs. Replacing a
+	// working build is a deliberate tap in Settings instead. One-shot per session.
+	internal void EnsureProvisioned()
+	{
+		if (Interlocked.Exchange(ref _provisionStarted, 1) != 0)
+		{
+			return;
+		}
+
+		_ = ProvisionAsync();
+	}
+
+	private async Task ProvisionAsync()
+	{
+		if (GetLocationMPV() is null)
+		{
+			await CheckMPVAsync().ConfigureAwait(false);
+			if (MpvCheckResult[0].Length > 0)
+			{
+				await DownloadMPVAsync().ConfigureAwait(false);
+			}
+		}
+
+		if (GetLocationYTDLP() is null)
+		{
+			await CheckYTDLPAsync().ConfigureAwait(false);
+			if (YtdlpCheckResult[0].Length > 0)
+			{
+				await DownloadYTDLPAsync().ConfigureAwait(false);
+			}
 		}
 	}
 
@@ -262,34 +250,6 @@ internal sealed class Resources : IDisposable
 		{
 			AepLog.Error($"Error updating {nameStartsWith}: {e.Message} {e.StackTrace}");
 			return false;
-		}
-	}
-
-	private async Task<long> GetNtpUtcAsync(string server = "pool.ntp.org")
-	{
-		try
-		{
-			byte[] ntpData = new byte[48];
-			ntpData[0] = 0x1B;
-
-			var addresses = await Dns.GetHostAddressesAsync(server);
-			var ep = new IPEndPoint(addresses[0], 123);
-
-			using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-			socket.ReceiveTimeout = 3000;
-			await socket.ConnectAsync(ep);
-			await socket.SendAsync(ntpData);
-			await socket.ReceiveAsync(ntpData);
-
-			ulong intPart = ((ulong)ntpData[40] << 24) | ((ulong)ntpData[41] << 16) | ((ulong)ntpData[42] << 8) | ntpData[43];
-			ulong fracPart = ((ulong)ntpData[44] << 24) | ((ulong)ntpData[45] << 16) | ((ulong)ntpData[46] << 8) | ntpData[47];
-			ulong ms = intPart * 1000 + fracPart * 1000 / 0x100000000L;
-			var dto = new DateTimeOffset(1900, 1, 1, 0, 0, 0, TimeSpan.Zero).AddMilliseconds((long)ms);
-        	return dto.ToUnixTimeMilliseconds();
-		}
-		catch
-		{
-			return 0;
 		}
 	}
 

@@ -57,13 +57,11 @@ internal sealed partial class AetherStreamApp
 
             statusCard.End();
 
-            if (NeedsMpvDownload(resources) || NeedsYtdlpDownload(resources))
             {
                 ImGui.Dummy(new Vector2(0f, 8f * scale));
                 var buttonHeight = 34f * scale;
                 var buttonTop = ImGui.GetCursorScreenPos().Y;
 
-                if (NeedsMpvDownload(resources))
                 {
                     var mpvRect = new Rect(new Vector2(content.Min.X, buttonTop),
                         new Vector2(content.Max.X, buttonTop + buttonHeight));
@@ -75,9 +73,9 @@ internal sealed partial class AetherStreamApp
                         mpvDownloading = true;
                         dependencyWork.Run("download mpv", async token =>
                         {
-                            // MpvCheckResult can still be empty here: the initial check fired at
-                            // Resources construction may not have finished yet, or may have
-                            // failed outright (no network yet at plugin load, GitHub rate limit).
+                            // MpvCheckResult can still be empty here: the check fired when the
+                            // app opened may not have finished yet, or may have failed outright
+                            // (no network at that moment, GitHub rate limit).
                             // Re-running it before downloading means a tap always either starts a
                             // real download or retries the check, never hands DownloadMPVAsync an
                             // empty URL (that used to throw straight into HttpClient).
@@ -96,7 +94,6 @@ internal sealed partial class AetherStreamApp
                     buttonTop += buttonHeight + 8f * scale;
                 }
 
-                if (NeedsYtdlpDownload(resources))
                 {
                     var ytdlpRect = new Rect(new Vector2(content.Min.X, buttonTop),
                         new Vector2(content.Max.X, buttonTop + buttonHeight));
@@ -259,9 +256,10 @@ internal sealed partial class AetherStreamApp
     }
 
     // Unlike the old bundled Native/libmpv-2.dll this replaces, AlphaChannel's engine downloads
-    // mpv-winbuild and yt-dlp itself into Dalamud's plugin config directory the first time it
-    // checks (see Resources.Initialize/CheckMPVAsync/CheckYTDLPAsync) - it only checks though,
-    // the actual download needs an explicit call, which is what these rows/buttons are for.
+    // mpv-winbuild and yt-dlp itself into Dalamud's plugin config directory, on first use of the
+    // app rather than at plugin load (see Resources.EnsureProvisioned). That provisioning only
+    // fetches what is missing outright; replacing a build that already works is an explicit
+    // choice, which is what these rows and buttons are for.
     private static string MpvStatusText(Resources resources)
     {
         if (resources.GetLocationMPV() is null)
@@ -285,12 +283,6 @@ internal sealed partial class AetherStreamApp
             ? Loc.T(L.AetherStream.SettingsDependencyUpdateAvailable)
             : Loc.T(L.AetherStream.SettingsDependencyOk);
     }
-
-    private static bool NeedsMpvDownload(Resources resources) =>
-        resources.GetLocationMPV() is null || resources.MpvCheckResult[0].Length > 0;
-
-    private static bool NeedsYtdlpDownload(Resources resources) =>
-        resources.GetLocationYTDLP() is null || resources.YtdlpCheckResult[0].Length > 0;
 
     private string ScreenStateText() => screen.Engine.IsActive
         ? Loc.T(L.AetherStream.CastingStateReady)

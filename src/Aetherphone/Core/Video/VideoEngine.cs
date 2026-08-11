@@ -113,6 +113,10 @@ internal sealed class VideoEngine : IDisposable
             return;
         }
 
+        // Covers the path that never opens the app: a watch-along join starts playback straight
+        // off the wire. No-op once anything has already asked for it this session.
+        Resources.EnsureProvisioned();
+
         LastError = null;
         AssignScreenForSession(_screenTexture);
 
