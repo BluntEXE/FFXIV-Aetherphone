@@ -28,8 +28,12 @@ The application icons under `src/Aetherphone/Icons/` are derived from
 
 ## mpv
 
-`Native/libmpv-2.dll` is a redistributed binary build of libmpv, used for
-video decoding and playback by the AetherStream app.
+libmpv provides video decoding and playback for the AetherStream app. No mpv
+binary is redistributed with this plugin: `Core/Video/Resources.cs` downloads
+an LGPL build (`mpv-dev-lgpl-x86_64-*`, from the
+[zhongfly/mpv-winbuild](https://github.com/zhongfly/mpv-winbuild) releases)
+into the plugin's own Dalamud config directory on first use, and keeps it
+updated from there.
 
 - Homepage: https://mpv.io
 - Source: https://github.com/mpv-player/mpv
@@ -38,9 +42,11 @@ video decoding and playback by the AetherStream app.
 
 ## yt-dlp
 
-`Native/yt-dlp.exe` is a redistributed binary build of yt-dlp, used by mpv's
-own `ytdl_hook` to resolve video URLs from sites other than YouTube (YouTube
-itself is resolved separately via YoutubeExplode, already a dependency).
+yt-dlp is used by mpv's own `ytdl_hook` to resolve video URLs from sites other
+than YouTube (YouTube itself is resolved separately via YoutubeExplode, already
+a dependency). As with mpv above, no yt-dlp binary is redistributed: it is
+downloaded from the project's own GitHub releases into the plugin's Dalamud
+config directory on first use.
 
 - Homepage: https://github.com/yt-dlp/yt-dlp
 - License: The Unlicense (public domain)
@@ -48,8 +54,8 @@ itself is resolved separately via YoutubeExplode, already a dependency).
 ## AlphaChannel (Voudi)
 
 AetherStream's video/screen engine under `src/Aetherphone/Core/Video/`
-(mpv-backed playback, the world-anchored ScreenPainter D3D11 quad renderer,
-and the SNES9x-based emulator renderer) is ported from
+(mpv-backed playback and the world-anchored ScreenPainter D3D11 quad
+renderer) is ported from
 [AlphaChannel](https://github.com/Voudi/AlphaChannel) by Voudi, used with the
 author's permission.
 

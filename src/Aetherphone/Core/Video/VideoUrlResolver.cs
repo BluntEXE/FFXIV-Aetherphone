@@ -13,8 +13,10 @@ internal sealed record ResolvedStream(string VideoUrl, string? AudioUrl, string 
 // (see docs/video-pipeline.md §5 in the AlphaChannel repo) - AlphaChannel's C# code never
 // touches yt-dlp's output directly. Aetherphone already depends on YoutubeExplode (managed,
 // no external process) for the Music app's own YouTube resolution (Core/Songs/SongSearchService,
-// SongPlayer). Reusing it here removes an entire runtime-downloaded-binary dependency and its
-// failure modes (network required on first use, download hangs, binary goes missing).
+// SongPlayer). Reusing it here keeps YouTube metadata off the yt-dlp path entirely: the binary
+// is still downloaded at runtime for mpv's ytdl_hook (see Resources.cs), but a title, duration
+// or thumbnail no longer waits on it, so its failure modes (network required on first use,
+// download hangs, binary goes missing) stay confined to playback of non-YouTube sources.
 //
 // YouTube only serves muxed (single-file, audio+video together) streams up to 720p - anything
 // higher only exists as separate video-only and audio-only streams. This resolves adaptive
