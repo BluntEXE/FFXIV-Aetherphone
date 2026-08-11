@@ -53,45 +53,63 @@ internal sealed partial class CoinApp
         }
         else
         {
-            CoinHero.DrawCapBar(wallet, ui.Palette);
+            CoinHero.DrawToday(wallet, ui.Palette);
         }
 
+        DrawCasinoPurse(scale);
         ImGui.Dummy(new Vector2(0f, 12f * scale));
-        DrawCheckIn(wallet, scale);
+        DrawCheckIn(wallet, frozen, scale);
         ImGui.Dummy(new Vector2(0f, 12f * scale));
         DrawHowToEarn(wallet);
         ImGui.Dummy(new Vector2(0f, 16f * scale));
     }
 
-    private void DrawCheckIn(CoinWalletDto wallet, float scale)
+    private void DrawCasinoPurse(float scale)
     {
+        var stack = casino.State?.Sitting?.Stack ?? 0;
+        if (stack <= 0)
+        {
+            return;
+        }
+
+        ImGui.Dummy(new Vector2(0f, 12f * scale));
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
-        var buttonRect = new Rect(origin, new Vector2(origin.X + width, origin.Y + 44f * scale));
+        var height = 52f * scale;
+        var drawList = ImGui.GetWindowDrawList();
+        var min = origin;
+        var max = new Vector2(origin.X + width, origin.Y + height);
+        ui.Card(drawList, min, max, Metrics.Radius.Card * scale);
+
+        var pad = 14f * scale;
+        Typography.Draw(drawList, new Vector2(min.X + pad, min.Y + 10f * scale),
+            Loc.T(L.Casino.PurseRow), ui.BodyInk, TextStyles.Subheadline);
+        Typography.Draw(drawList, new Vector2(min.X + pad, min.Y + 28f * scale),
+            Loc.T(L.Casino.PurseHint), ui.MutedInk, TextStyles.Caption1);
+
+        var chipText = stack.ToString("N0", Loc.Culture);
+        var chipSize = Typography.Measure(chipText, TextStyles.SubheadlineEmphasized);
+        Typography.Draw(drawList, new Vector2(max.X - pad - chipSize.X, min.Y + 10f * scale), chipText,
+            ui.Accent, TextStyles.SubheadlineEmphasized);
+        var worth = Loc.T(L.Casino.LotCost,
+            (stack / Core.Casino.CasinoChipLots.ChipPerCoin).ToString("N0", Loc.Culture));
+        var worthSize = Typography.Measure(worth, TextStyles.Caption1);
+        Typography.Draw(drawList, new Vector2(max.X - pad - worthSize.X, min.Y + 28f * scale), worth,
+            ui.MutedInk, TextStyles.Caption1);
+
+        ImGui.Dummy(new Vector2(0f, height));
+    }
+
+    private void DrawCheckIn(CoinWalletDto wallet, bool frozen, float scale)
+    {
+        var available = wallet.CheckInAvailable && !wallet.Paused && !frozen && !store.CheckingIn;
+        var pressed = CoinStreakCard.Draw(wallet, ui.Palette, theme, available, out var buttonRect);
         checkInAnchor = new Vector2(buttonRect.Center.X, buttonRect.Min.Y - 6f * scale);
         UiAnchors.Report("coin.checkin", buttonRect);
-        var available = wallet.CheckInAvailable && !wallet.Paused && wallet.FrozenUntilUnix is null
-            && !store.CheckingIn;
-        var label = wallet.CheckInAvailable ? Loc.T(L.Coin.CheckIn) : Loc.T(L.Coin.CheckedIn);
-        if (AppSkin.PillButton(buttonRect, label, wallet.CheckInAvailable, available, theme))
+        if (pressed)
         {
             store.CheckIn();
         }
-
-        ImGui.Dummy(new Vector2(width, 48f * scale));
-
-        var streakText = Loc.T(L.Coin.StreakDays, wallet.StreakDays.ToString("N0", Loc.Culture));
-        if (!wallet.CheckInAvailable)
-        {
-            streakText += " · " + Loc.T(L.Coin.StreakNext);
-        }
-
-        var drawList = ImGui.GetWindowDrawList();
-        var textSize = Typography.Measure(streakText, TextStyles.Footnote);
-        Typography.Draw(drawList,
-            new Vector2(origin.X + (width - textSize.X) * 0.5f, ImGui.GetCursorScreenPos().Y),
-            streakText, ui.MutedInk, TextStyles.Footnote);
-        ImGui.Dummy(new Vector2(width, textSize.Y + 4f * scale));
     }
 
     private void DrawHowToEarn(CoinWalletDto wallet)
@@ -104,97 +122,33 @@ internal sealed partial class CoinApp
         var sectionOrigin = ImGui.GetCursorScreenPos();
         var sectionWidth = ScrollLayout.StableContentWidth();
         ui.SectionHeading(Loc.T(L.Coin.EarnHeader), 4f);
-        var scale = UiScale.Current;
-        for (var index = 0; index < wallet.Rules.Length; index++)
-        {
-            DrawRuleCard(wallet.Rules[index], scale);
-            if (index == 0)
-            {
-                UiAnchors.Report("coin.earn", new Rect(sectionOrigin,
-                    new Vector2(sectionOrigin.X + sectionWidth, ImGui.GetCursorScreenPos().Y)));
-            }
-        }
+        var reported = DrawRules(wallet, false, sectionOrigin, sectionWidth, false);
+        DrawRules(wallet, true, sectionOrigin, sectionWidth, reported);
     }
 
-    private void DrawRuleCard(in CoinRuleStatusDto rule, float scale)
+    private bool DrawRules(CoinWalletDto wallet, bool complete, Vector2 sectionOrigin, float sectionWidth,
+        bool reported)
     {
-        var drawList = ImGui.GetWindowDrawList();
-        var width = ScrollLayout.StableContentWidth();
-        var origin = ImGui.GetCursorScreenPos();
-        var inset = 14f * scale;
-        var title = Loc.T(CoinRuleLabels.For(rule.RuleId));
-        var progress = rule.EarnedThisPeriod.ToString("N0", Loc.Culture) + " / "
-            + rule.PeriodCap.ToString("N0", Loc.Culture);
-        var hasHint = CoinRuleLabels.TryHint(rule.RuleId, out var hintEntry);
-        var hint = hasHint ? Loc.T(hintEntry) : string.Empty;
-
-        var titleSize = Typography.Measure(title, TextStyles.SubheadlineEmphasized);
-        var hintWidth = width - inset * 2f;
-        var hintBlock = hasHint
-            ? Typography.MeasureWrappedBlock(hint, TextStyles.Footnote, hintWidth)
-            : Vector2.Zero;
-        var hasBar = rule.PeriodCap > 0;
-        var height = titleSize.Y + (hasHint ? hintBlock.Y + 6f * scale : 0f) + 22f * scale
-            + (hasBar ? 9f * scale : 0f);
-        var min = origin;
-        var max = new Vector2(origin.X + width, origin.Y + height);
-        var rounding = 14f * scale;
-        var complete = rule.PeriodCap > 0 && rule.EarnedThisPeriod >= rule.PeriodCap;
-        var accent = ui.Palette.Accent;
-        Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(ui.Palette.CardFill));
-        if (complete)
+        for (var index = 0; index < wallet.Rules.Length; index++)
         {
-            Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(Palette.WithAlpha(accent, 0.08f)));
-            Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(Palette.WithAlpha(accent, 0.45f)),
-                1f * scale);
-        }
-
-        Material.EdgeSquircle(drawList, min, max, rounding, scale);
-
-        var progressSize = Typography.Measure(progress, TextStyles.SubheadlineEmphasized);
-        var checkSize = complete ? 11f * scale : 0f;
-        var checkPad = complete ? 6f * scale : 0f;
-        var titleMaxWidth = width - inset * 2f - progressSize.X - checkSize - checkPad - 10f * scale;
-        var fittedTitle = Typography.FitText(title, MathF.Max(40f * scale, titleMaxWidth),
-            TextStyles.SubheadlineEmphasized);
-        Typography.Draw(drawList, new Vector2(min.X + inset, min.Y + 11f * scale), fittedTitle,
-            ui.Palette.TitleInk, TextStyles.SubheadlineEmphasized);
-        var progressLeft = max.X - inset - progressSize.X;
-        Typography.Draw(drawList,
-            new Vector2(progressLeft, min.Y + 11f * scale), progress,
-            complete ? accent : ui.MutedInk, TextStyles.SubheadlineEmphasized);
-        if (complete)
-        {
-            ProgressRing.CenterIcon(drawList,
-                new Vector2(progressLeft - checkPad - checkSize * 0.5f,
-                    min.Y + 11f * scale + progressSize.Y * 0.5f),
-                FontAwesomeIcon.CheckCircle, accent, checkSize);
-        }
-
-        if (hasHint)
-        {
-            Typography.DrawWrappedLeft(new Vector2(min.X + inset, min.Y + titleSize.Y + 15f * scale), hint,
-                ui.MutedInk, TextStyles.Footnote, hintWidth);
-        }
-
-        if (hasBar)
-        {
-            var barHeight = 3f * scale;
-            var barMin = new Vector2(min.X + inset, max.Y - 10f * scale);
-            var barMax = new Vector2(max.X - inset, barMin.Y + barHeight);
-            drawList.AddRectFilled(barMin, barMax,
-                ImGui.GetColorU32(Palette.WithAlpha(ui.MutedInk, 0.18f)), barHeight * 0.5f);
-            var fraction = Math.Clamp(rule.EarnedThisPeriod / (float)rule.PeriodCap, 0f, 1f);
-            if (fraction > 0f)
+            var rule = wallet.Rules[index];
+            if (CoinGoals.IsComplete(rule) != complete)
             {
-                var fillMax = new Vector2(barMin.X + (barMax.X - barMin.X) * fraction, barMax.Y);
-                drawList.AddRectFilled(barMin, fillMax,
-                    ImGui.GetColorU32(complete ? accent : Palette.WithAlpha(accent, 0.85f)), barHeight * 0.5f);
+                continue;
             }
+
+            CoinEarnRow.Draw(rule, ui.Palette);
+            if (reported)
+            {
+                continue;
+            }
+
+            UiAnchors.Report("coin.earn", new Rect(sectionOrigin,
+                new Vector2(sectionOrigin.X + sectionWidth, ImGui.GetCursorScreenPos().Y)));
+            reported = true;
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, height + 8f * scale));
+        return reported;
     }
 
     private void NoticeCard(string title, string hint)

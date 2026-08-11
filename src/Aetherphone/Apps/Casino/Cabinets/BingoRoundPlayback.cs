@@ -19,8 +19,6 @@ internal sealed class BingoRoundPlayback
 
     public const float BallEntrySeconds = 0.55f;
 
-    // A number that simply appears has nothing to wait for. The caller spends this long tumbling
-    // before it commits, which is the whole difference between a readout and a draw.
     public const float BallRollSeconds = 0.62f;
 
     private readonly bool[] called = new bool[BingoRules.Balls + 1];
@@ -56,8 +54,6 @@ internal sealed class BingoRoundPlayback
         ? 1f
         : Math.Clamp(sinceBall / BallRollSeconds, 0f, 1f);
 
-    // A tumbling face, not the answer: derived from the elapsed time so it never needs its own
-    // clock and always lands on the real ball when the roll is done.
     public int RollingFace(int ballCount)
     {
         var step = (int)(sinceBall * 26f);

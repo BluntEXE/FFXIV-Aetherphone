@@ -26,9 +26,9 @@ internal static class BarkeepRules
 
     public const long MaxPayout = 30;
 
-    public const long EntryChips = 20;
+    public const long EntryChips = 2000;
 
-    public const long DailyNetWinCap = 100;
+    public const long DailyNetWinCap = 10000;
 
     public static readonly int[] GradeDomain = { 0, 40, 70, 100 };
 

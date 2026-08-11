@@ -65,6 +65,11 @@ internal sealed class BetComposer
         return (FieldHeight + QuickHeight + ConfirmHeight + RowGap * 2f) * scale;
     }
 
+    public static float AmountHeightFor(float scale)
+    {
+        return (FieldHeight + QuickHeight + RowGap) * scale;
+    }
+
     public void Reset(long value)
     {
         amount = value;
@@ -84,6 +89,17 @@ internal sealed class BetComposer
 
     public bool Draw(AppSkin skin, in Rect bounds, long minimumBet, long maximumBet, long stack, long step,
         bool enabled, string confirmLabel, float deltaSeconds)
+    {
+        var scale = UiScale.Current;
+        var quickBottom = DrawAmount(skin, bounds, minimumBet, maximumBet, stack, step, enabled, deltaSeconds);
+        var confirmRect = new Rect(new Vector2(bounds.Min.X, quickBottom + RowGap * scale),
+            new Vector2(bounds.Max.X, quickBottom + (RowGap + ConfirmHeight) * scale));
+        var confirmEnabled = enabled && amount >= minimumBet && amount <= Ceiling(maximumBet, stack);
+        return AppSkin.PillButton(confirmRect, confirmLabel, true, confirmEnabled, skin.Theme);
+    }
+
+    public float DrawAmount(AppSkin skin, in Rect bounds, long minimumBet, long maximumBet, long stack, long step,
+        bool enabled, float deltaSeconds)
     {
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
@@ -141,11 +157,7 @@ internal sealed class BetComposer
             clampFlash = FlashSeconds;
         }
 
-        y += quickHeight + RowGap * scale;
-        var confirmRect = new Rect(new Vector2(bounds.Min.X, y),
-            new Vector2(bounds.Max.X, y + ConfirmHeight * scale));
-        var confirmEnabled = enabled && amount >= minimumBet && amount <= ceiling;
-        return AppSkin.PillButton(confirmRect, confirmLabel, true, confirmEnabled, skin.Theme);
+        return y + quickHeight;
     }
 
     private void DrawField(ImDrawListPtr drawList, AppSkin skin, Vector2 min, Vector2 max, float scale, bool enabled)

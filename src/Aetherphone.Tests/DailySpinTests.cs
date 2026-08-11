@@ -91,12 +91,61 @@ public sealed class DailySpinTests
     }
 
     [Fact]
-    public void ACardThatHasNeverAskedOffersTheWheelRatherThanHidingIt()
+    public void ACardThatHasNotHeardBackYetPromisesNothingEitherWay()
     {
-        Assert.Equal(DailySpinClaim.Available, DailySpinStatus.Of(null));
+        Assert.Equal(DailySpinClaim.Unknown, DailySpinStatus.Of(null));
+        Assert.False(DailySpinStatus.OffersWheel(DailySpinClaim.Unknown));
+        Assert.False(DailySpinStatus.ShowsReset(DailySpinClaim.Unknown));
+        Assert.False(DailySpinStatus.CanClaim(null, true));
+    }
+
+    [Fact]
+    public void AnUnansweredCardStillLetsThePlayerAskTheServer()
+    {
         Assert.True(DailySpinStatus.CanClaim(null, false));
         Assert.False(DailySpinStatus.CanClaim(null, true));
+    }
+
+    [Fact]
+    public void AnOpenDayFromTheStatusReadOffersTheWheel()
+    {
+        var open = new CasinoDailySpinDto(
+            Granted: false,
+            RoundId: "spin-9",
+            Segment: -1,
+            Balance: 1_240,
+            NextSpinAtUnix: 1_770_000_000,
+            Claimed: false);
+
+        Assert.Equal(DailySpinClaim.Available, DailySpinStatus.Of(open));
+        Assert.True(DailySpinStatus.OffersWheel(DailySpinClaim.Available));
+        Assert.True(DailySpinStatus.CanClaim(open, false));
         Assert.False(DailySpinStatus.ShowsReset(DailySpinClaim.Available));
+    }
+
+    [Fact]
+    public void ASpentDayFromTheStatusReadClosesTheCardOnItsFlagAlone()
+    {
+        var spent = new CasinoDailySpinDto(
+            Granted: false,
+            Reason: CasinoReasons.AlreadyClaimed,
+            RoundId: "spin-9",
+            Segment: 3,
+            SegmentAward: 30,
+            Amount: 30,
+            Balance: 1_270,
+            NextSpinAtUnix: 1_770_000_000,
+            Claimed: true);
+
+        Assert.Equal(DailySpinClaim.Claimed, DailySpinStatus.Of(spent));
+        Assert.False(DailySpinStatus.OffersWheel(DailySpinClaim.Claimed));
+        Assert.False(DailySpinStatus.CanClaim(spent, false));
+        Assert.True(DailySpinStatus.ShowsReset(DailySpinClaim.Claimed));
+        Assert.Equal(30, DailySpinStatus.AwardOf(spent));
+
+        var flagOnly = spent with { Reason = string.Empty };
+        Assert.Equal(DailySpinClaim.Claimed, DailySpinStatus.Of(flagOnly));
+        Assert.False(DailySpinStatus.CanClaim(flagOnly, false));
     }
 
     [Fact]
@@ -164,11 +213,18 @@ public sealed class DailySpinTests
     }
 
     [Fact]
-    public void AnUnexplainedRefusalFallsBackToClaimedRatherThanADeadPill()
+    public void TheClaimedDayIsReadableWithoutTheFlag()
     {
-        var nameless = new CasinoDailySpinDto(Granted: false, Segment: -1);
-        Assert.Equal(DailySpinClaim.Claimed, DailySpinStatus.Of(nameless));
-        Assert.False(DailySpinStatus.CanClaim(nameless, false));
+        var granted = new CasinoDailySpinDto(Granted: true, Segment: 11, Amount: 60, Claimed: false);
+        Assert.Equal(DailySpinClaim.Claimed, DailySpinStatus.Of(granted));
+
+        var replay = new CasinoDailySpinDto(
+            Granted: false,
+            Reason: CasinoReasons.AlreadyClaimed,
+            Segment: 11,
+            Amount: 60,
+            Claimed: false);
+        Assert.Equal(DailySpinClaim.Claimed, DailySpinStatus.Of(replay));
     }
 
     [Fact]
@@ -196,6 +252,45 @@ public sealed class DailySpinTests
         Assert.Equal("/casino/dailyspin", CasinoClient.DailySpinPath);
         Assert.Equal("casino.dailyspin", CasinoWire.DailySpinKind);
         Assert.Equal("casino.daily", CasinoLedgerRules.Daily);
+    }
+
+    [Fact]
+    public void TheDayIsReadWithTheVerbThatMintsNothing()
+    {
+        var status = typeof(CasinoClient).GetMethod(nameof(CasinoClient.DailySpinStatusAsync));
+        var claim = typeof(CasinoClient).GetMethod(nameof(CasinoClient.ClaimDailySpinAsync));
+
+        Assert.NotNull(status);
+        Assert.NotNull(claim);
+    }
+
+    [Fact]
+    public void AnOpenDayDeserializesTheBackendStatusShape()
+    {
+        const string json = "{\"granted\":false,\"reason\":\"\",\"roundId\":\"spin-9\",\"segment\":-1,"
+            + "\"segmentAward\":0,\"amount\":0,\"balance\":1240,\"nextSpinAtUnix\":1770000000,"
+            + "\"seedCommitHash\":\"\",\"nextSeedHash\":\"\",\"claimed\":false}";
+        var status = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoDailySpinDto);
+
+        Assert.NotNull(status);
+        Assert.False(status.Claimed);
+        Assert.Equal(DailySpinClaim.Available, DailySpinStatus.Of(status));
+    }
+
+    [Fact]
+    public void ASpentDayDeserializesTheBackendStatusShape()
+    {
+        const string json = "{\"granted\":false,\"reason\":\"already_claimed\",\"roundId\":\"spin-9\","
+            + "\"segment\":3,\"segmentAward\":30,\"amount\":30,\"balance\":1270,"
+            + "\"nextSpinAtUnix\":1770000000,\"seedCommitHash\":\"aa\",\"nextSeedHash\":\"bb\","
+            + "\"claimed\":true}";
+        var status = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoDailySpinDto);
+
+        Assert.NotNull(status);
+        Assert.True(status.Claimed);
+        Assert.Equal(DailySpinClaim.Claimed, DailySpinStatus.Of(status));
+        Assert.Equal(30, DailySpinStatus.AwardOf(status));
+        Assert.Equal(1_770_000_000, status.NextSpinAtUnix);
     }
 
     [Fact]

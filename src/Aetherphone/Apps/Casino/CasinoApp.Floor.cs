@@ -125,7 +125,7 @@ internal sealed partial class CasinoApp
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        var available = claim == Core.Casino.DailySpinClaim.Available;
+        var available = Core.Casino.DailySpinStatus.OffersWheel(claim);
         if (available)
         {
             Squircle.Stroke(drawList, card.Min, card.Max, rounding,
@@ -173,7 +173,7 @@ internal sealed partial class CasinoApp
     private string DailySpinHint(Core.Casino.DailySpinClaim claim)
     {
         var answer = casinoSpin.Answer;
-        if (claim == Core.Casino.DailySpinClaim.Available)
+        if (claim == Core.Casino.DailySpinClaim.Available || claim == Core.Casino.DailySpinClaim.Unknown)
         {
             return Loc.T(L.Casino.SpinCardHint);
         }

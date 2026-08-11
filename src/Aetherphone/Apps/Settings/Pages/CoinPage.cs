@@ -43,7 +43,7 @@ internal sealed class CoinPage : ISettingsPage
             ImGui.Dummy(new Vector2(0f, 8f * scale));
             if (!wallet.Paused)
             {
-                CoinHero.DrawCapBar(wallet, AppPalettes.Coin);
+                CoinHero.DrawToday(wallet, AppPalettes.Coin);
                 ImGui.Dummy(new Vector2(0f, 8f * scale));
             }
 

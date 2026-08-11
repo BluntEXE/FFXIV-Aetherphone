@@ -15,6 +15,20 @@ internal static class IconTile
         ProgressRing.CenterIcon(center, icon, AccentRing.Ink, size * 0.50f);
     }
 
+    public static void DrawApp(ImDrawListPtr drawList, string appId, Vector2 center, float size, Vector4 surface)
+    {
+        var half = size * 0.5f;
+        Squircle.Fill(drawList, center - new Vector2(half, half), center + new Vector2(half, half),
+            size * Metrics.Radius.TileFactor, ImGui.GetColorU32(surface));
+        var ink = AccentRing.Ink;
+        if (AppIconArt.TryDraw(drawList, appId, center, size * 0.98f, ink, Palette.Mix(surface, ink, 0.28f)))
+        {
+            return;
+        }
+
+        drawList.AddCircleFilled(center, size * 0.13f, ImGui.GetColorU32(ink), 16);
+    }
+
     public static Vector4 Surface(Vector4 accent) =>
         Palette.ShadeToLuminance(accent with { W = 1f }, AccentRing.TileLuminance);
 

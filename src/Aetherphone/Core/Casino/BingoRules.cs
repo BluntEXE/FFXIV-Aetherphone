@@ -14,7 +14,7 @@ internal static class BingoRules
 
     public const int NumbersPerColumn = 15;
 
-    public const long CardPrice = 20;
+    public const long CardPrice = 2000;
 
     public const int MaxCards = 4;
 

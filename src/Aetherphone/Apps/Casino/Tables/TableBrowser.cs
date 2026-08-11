@@ -104,8 +104,6 @@ internal sealed class TableBrowser
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
         var drawList = ImGui.GetWindowDrawList();
-        // Measured, not assumed: a fixed height that predates the button leaves it drawn on top of
-        // the line explaining what it does.
         var pad = 14f * scale;
         var titleSize = Typography.Measure(Loc.T(L.Casino.QuickSeatTitle), TextStyles.SubheadlineEmphasized);
         var hintText = Typography.FitText(Loc.T(L.Casino.QuickSeatHint), width - pad * 2f, TextStyles.Footnote);

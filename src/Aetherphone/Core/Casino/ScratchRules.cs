@@ -4,13 +4,13 @@ internal readonly record struct ScratchPrizeRow(long Chips, int CountPerMillion)
 
 internal static class ScratchRules
 {
-    public const int TierCount = 3;
+    public const int TierCount = 4;
 
     public const int CellCount = 9;
 
     public const int GridSide = 3;
 
-    public const int PrizeSymbolCount = 5;
+    public const int PrizeSymbolCount = 4;
 
     public const int SymbolCount = 7;
 
@@ -18,33 +18,37 @@ internal static class ScratchRules
 
     public const int MatchesToWin = 3;
 
-    public static readonly long[] Prices = { 10, 25, 50 };
+    public static readonly long[] Prices = { 500, 1_000, 2_500, 5_000 };
 
     public static readonly ScratchPrizeRow[][] PrizeTables =
     {
         new ScratchPrizeRow[]
         {
-            new(10, 200_000),
-            new(20, 100_000),
-            new(50, 40_000),
-            new(100, 12_000),
-            new(200, 8_000),
+            new(1_000, 285_000),
+            new(2_500, 50_000),
+            new(5_000, 7_500),
+            new(10_000, 1_400),
         },
         new ScratchPrizeRow[]
         {
-            new(25, 210_000),
-            new(50, 110_000),
-            new(125, 40_000),
-            new(250, 15_000),
-            new(500, 6_000),
+            new(2_000, 285_000),
+            new(5_000, 50_000),
+            new(10_000, 7_500),
+            new(20_000, 1_400),
         },
         new ScratchPrizeRow[]
         {
-            new(50, 220_000),
-            new(100, 115_000),
-            new(250, 44_000),
-            new(500, 17_000),
-            new(1_000, 4_000),
+            new(5_000, 285_000),
+            new(12_500, 51_000),
+            new(25_000, 7_600),
+            new(50_000, 1_450),
+        },
+        new ScratchPrizeRow[]
+        {
+            new(10_000, 286_000),
+            new(25_000, 52_000),
+            new(50_000, 7_800),
+            new(100_000, 1_500),
         },
     };
 

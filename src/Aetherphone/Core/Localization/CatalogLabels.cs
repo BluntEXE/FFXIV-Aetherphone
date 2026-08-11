@@ -67,6 +67,8 @@ internal static class CatalogLabels
             "Horror" => Loc.T(L.Catalogs.CaseHorror),
             "MoogleCase" => Loc.T(L.Catalogs.CaseKupo),
             "Runic" => Loc.T(L.Catalogs.CaseRunic),
+            "Garlean" => Loc.T(L.Catalogs.CaseGarlean),
+            "GurrenLagann" => Loc.T(L.Catalogs.CaseGurrenLagann),
             _ => identifier,
         };
 

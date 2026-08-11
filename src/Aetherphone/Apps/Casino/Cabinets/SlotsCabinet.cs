@@ -15,8 +15,8 @@ internal sealed class SlotsCabinet
     private const float PadX = 16f;
     private const float InfoRowHeight = 48f;
     private const float BannerHeight = 62f;
-    private const float StakeChipHeight = 36f;
     private const float SpinPillHeight = 50f;
+    private const float TurboWidth = 76f;
     private const float SpinRowsPerSecond = 15f;
     private const float AnticipationRowsPerSecond = 5.5f;
     private const float LineTraceCycleSeconds = 0.7f;
@@ -41,13 +41,14 @@ internal sealed class SlotsCabinet
     private readonly SlotsRoundPlayback playback = new();
     private readonly ParticleSystem particles = new(256);
     private readonly SlotsPayTableSheet payTable = new();
+    private readonly BetComposer composer = new("##slotsStake");
     private readonly int[] restingGrid = new int[SlotsRules.CellCount];
 
     private RollingValue winRoll;
-    private int stakeIndex;
     private string inlineReason = string.Empty;
     private float lineTraceSeconds;
     private int celebratedSpinIndex = -1;
+    private bool turbo;
     private Rect reelWindow;
 
     public SlotsCabinet(CasinoStore store, CasinoPlayStore play, Action openCashier)
@@ -59,9 +60,11 @@ internal sealed class SlotsCabinet
         {
             restingGrid[cellIndex] = DecorativeCycle[cellIndex % DecorativeCycle.Length];
         }
+
+        composer.Reset(SlotsRules.DefaultStake);
     }
 
-    public long CurrentStake => SlotsRules.StakeTiers[stakeIndex];
+    public long CurrentStake => composer.Amount;
 
     public bool PayTableOpen => payTable.IsOpen;
 
@@ -146,7 +149,7 @@ internal sealed class SlotsCabinet
         }
         else
         {
-            y = DrawStakeRow(drawList, ui, left, y, width, scale);
+            y = DrawStakeRow(drawList, ui, sitting!, left, y, width, scale, delta);
             y += Metrics.Space.Md * scale;
             DrawSpinControls(drawList, ui, state, sitting!, left, y, width, scale);
         }
@@ -514,7 +517,7 @@ internal sealed class SlotsCabinet
             return y + height;
         }
 
-        winRoll.Update((int)playback.CommittedWin, delta);
+        winRoll.Update((int)playback.CommittedWin, delta, CountUpSpeedFor(playback.CommittedWin));
         if (playback.Phase != SlotsPlaybackPhase.Idle && winRoll.Display > 0)
         {
             var bigWin = playback.CommittedWin >= playback.Stake * SlotsRoundPlayback.BigWinMultiple;
@@ -572,39 +575,17 @@ internal sealed class SlotsCabinet
         }
     }
 
-    private float DrawStakeRow(ImDrawListPtr drawList, AppSkin ui, float left, float y, float width, float scale)
+    private float DrawStakeRow(ImDrawListPtr drawList, AppSkin ui, CasinoSittingDto sitting, float left, float y,
+        float width, float scale, float delta)
     {
         var label = Loc.T(L.Casino.SlotsStake);
         Typography.Draw(drawList, new Vector2(left, y), label, ui.MutedInk, TextStyles.FootnoteEmphasized);
         y += 20f * scale;
-        var gap = 8f * scale;
-        var chipWidth = (width - gap * 2f) / SlotsRules.StakeTiers.Length;
-        var chipHeight = StakeChipHeight * scale;
         var changeable = !play.RoundInFlight && !PlaybackBusy;
-        for (var tierIndex = 0; tierIndex < SlotsRules.StakeTiers.Length; tierIndex++)
-        {
-            var chipMin = new Vector2(left + tierIndex * (chipWidth + gap), y);
-            var chipMax = new Vector2(chipMin.X + chipWidth, y + chipHeight);
-            var active = tierIndex == stakeIndex;
-            var hovered = changeable && UiInteract.Hover(chipMin, chipMax);
-            var fill = active ? Palette.WithAlpha(ui.Accent, 0.9f) : ui.FieldSurface;
-            Squircle.Fill(drawList, chipMin, chipMax, chipHeight * 0.5f, ImGui.GetColorU32(fill));
-            if (hovered)
-            {
-                Squircle.Fill(drawList, chipMin, chipMax, chipHeight * 0.5f, ImGui.GetColorU32(ui.HoverTint));
-                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-            }
-
-            var ink = active ? ui.Palette.HeaderInk : ui.BodyInk;
-            Typography.DrawCentered(drawList, (chipMin + chipMax) * 0.5f,
-                GameNumber.Label((int)SlotsRules.StakeTiers[tierIndex]), ink, TextStyles.SubheadlineEmphasized);
-            if (UiInteract.Click(chipMin, chipMax, hovered))
-            {
-                stakeIndex = tierIndex;
-            }
-        }
-
-        return y + chipHeight;
+        var bounds = new Rect(new Vector2(left, y),
+            new Vector2(left + width, y + BetComposer.AmountHeightFor(scale)));
+        return composer.DrawAmount(ui, bounds, SlotsRules.MinStake, SlotsRules.MaxStake, sitting.Stack,
+            SlotsRules.StakeStep, changeable, delta);
     }
 
     private bool PlaybackBusy => playback.Phase == SlotsPlaybackPhase.Spinning
@@ -621,14 +602,31 @@ internal sealed class SlotsCabinet
         }
 
         var stake = CurrentStake;
-        var lowStack = sitting.Stack < stake;
+        var lowStack = stake < SlotsRules.MinStake || sitting.Stack < stake;
         var blocked = state.StakesPaused || state.Draining;
         var canSpin = !play.RoundInFlight && !PlaybackBusy && !blocked && !lowStack;
         var label = canSpin
             ? Loc.T(L.Casino.SlotsSpinFor, stake.ToString("N0", Loc.Culture))
             : Loc.T(L.Casino.SlotsSpin);
-        var pillRect = new Rect(new Vector2(left, y), new Vector2(left + width, y + SpinPillHeight * scale));
+        var turboWidth = TurboWidth * scale;
+        var pillRect = new Rect(new Vector2(left, y),
+            new Vector2(left + width - turboWidth - Metrics.Space.Sm * scale, y + SpinPillHeight * scale));
         if (DrawSpinPill(drawList, ui, pillRect, label, canSpin, scale))
+        {
+            inlineReason = string.Empty;
+            play.SpinSlots(stake);
+        }
+
+        var turboRect = new Rect(new Vector2(pillRect.Max.X + Metrics.Space.Sm * scale, y),
+            new Vector2(left + width, y + SpinPillHeight * scale));
+        if (DrawTurboToggle(drawList, ui, turboRect, scale))
+        {
+            turbo = !turbo;
+            playback.Turbo = turbo;
+        }
+
+        if (turbo && canSpin && UiInteract.Hover(pillRect.Min, pillRect.Max)
+            && ImGui.IsMouseDown(ImGuiMouseButton.Left))
         {
             inlineReason = string.Empty;
             play.SpinSlots(stake);
@@ -659,6 +657,47 @@ internal sealed class SlotsCabinet
         {
             openCashier();
         }
+    }
+
+    private float CountUpSpeedFor(long win)
+    {
+        var stake = playback.Stake;
+        if (stake <= 0 || win <= 0)
+        {
+            return 14f;
+        }
+
+        var multiple = win / stake;
+        if (multiple < 2)
+        {
+            return 14f;
+        }
+
+        if (multiple < 10)
+        {
+            return 9f;
+        }
+
+        return multiple < 50 ? 5f : 3f;
+    }
+
+    private bool DrawTurboToggle(ImDrawListPtr drawList, AppSkin ui, Rect rect, float scale)
+    {
+        var rounding = rect.Height * 0.5f;
+        var hovered = UiInteract.Hover(rect.Min, rect.Max);
+        var fill = turbo ? Palette.WithAlpha(ui.Accent, 0.22f) : ui.FieldSurface;
+        Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(fill));
+        Squircle.Stroke(drawList, rect.Min, rect.Max, rounding,
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, turbo ? 0.7f : 0.25f)), 1f * scale);
+        if (hovered)
+        {
+            Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(ui.HoverTint));
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        Typography.DrawCentered(drawList, rect.Center, Loc.T(L.Casino.SlotsTurbo),
+            turbo ? ui.Accent : ui.MutedInk, TextStyles.FootnoteEmphasized);
+        return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
     }
 
     private bool DrawSpinPill(ImDrawListPtr drawList, AppSkin ui, Rect rect, string label, bool enabled,

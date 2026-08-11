@@ -108,6 +108,7 @@ internal sealed partial class CasinoApp : IPhoneApp
         casino.RefreshNow();
         casinoRooms.RefreshNow();
         casinoTables.RefreshNow();
+        casinoSpin.RefreshNow();
         casinoPlay.RecoverPendingRound();
         greetedWithCashier = false;
         ConsumeLaunch();
@@ -176,6 +177,7 @@ internal sealed partial class CasinoApp : IPhoneApp
         casino.EnsureFresh();
         casinoRooms.EnsureFresh();
         casinoTables.EnsureFresh();
+        casinoSpin.EnsureFresh();
         ConsumeTableAnswers();
         GreetWithCashier();
         screenArea = context.Content;

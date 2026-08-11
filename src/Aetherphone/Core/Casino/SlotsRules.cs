@@ -24,7 +24,13 @@ internal static class SlotsRules
 
     public const int RetriggerSpins = 5;
 
-    public static readonly long[] StakeTiers = { 1, 2, 5 };
+    public const long MinStake = 50;
+
+    public const long MaxStake = 2500;
+
+    public const long StakeStep = 50;
+
+    public const long DefaultStake = 250;
 
     public static readonly int[][] Paylines =
     {
@@ -42,8 +48,8 @@ internal static class SlotsRules
 
     public static readonly long[,] LinePays =
     {
-        { 2, 8, 40 },
-        { 2, 5, 25 },
+        { 2, 10, 60 },
+        { 2, 5, 30 },
         { 1, 4, 15 },
         { 1, 3, 10 },
         { 1, 2, 5 },
@@ -56,16 +62,8 @@ internal static class SlotsRules
 
     public static readonly int[] FreeSpinAwards = { 0, 0, 0, 8, 12, 20 };
 
-    public static bool IsStakeTier(long stake)
+    public static bool IsStakeInRange(long stake)
     {
-        for (var tierIndex = 0; tierIndex < StakeTiers.Length; tierIndex++)
-        {
-            if (StakeTiers[tierIndex] == stake)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return stake >= MinStake && stake <= MaxStake;
     }
 }

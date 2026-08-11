@@ -25,6 +25,11 @@ internal struct RollingValue
 
     public bool Update(int value, float deltaSeconds)
     {
+        return Update(value, deltaSeconds, FollowSpeed);
+    }
+
+    public bool Update(int value, float deltaSeconds, float followSpeed)
+    {
         if (!initialized)
         {
             Snap(value);
@@ -45,7 +50,7 @@ internal struct RollingValue
         }
         else
         {
-            shown += difference * MathF.Min(1f, deltaSeconds * FollowSpeed);
+            shown += difference * MathF.Min(1f, deltaSeconds * followSpeed);
         }
 
         pop = MathF.Max(0f, pop - deltaSeconds * PopSettleSpeed * (pop + 0.12f));

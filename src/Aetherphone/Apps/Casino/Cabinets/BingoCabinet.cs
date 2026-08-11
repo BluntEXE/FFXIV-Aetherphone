@@ -313,8 +313,6 @@ internal sealed class BingoCabinet
             var ballCenter = new Vector2(centerX, min.Y + 52f * scale);
             if (playback.Rolling)
             {
-                // The tumble: the chip is already there and already the right size, and only the
-                // face is undecided. Growing it here as well would read as two events.
                 var roll = playback.RollProgress;
                 var wobble = (1f - roll) * 3.5f * scale;
                 var jitter = new Vector2(MathF.Sin(playback.SinceBall * 41f) * wobble,
@@ -408,8 +406,6 @@ internal sealed class BingoCabinet
         Typography.Draw(drawList, new Vector2(min.X + pad, centerY + 6f * scale), onCard, ui.MutedInk,
             TextStyles.Subheadline);
 
-        // The headline already says the number, so the right hand side carries how many numbers are
-        // still live on that card rather than repeating it.
         if (hot)
         {
             var pulse = 0.5f + 0.5f * Pulse.Wave(Pulse.Fast);
@@ -465,8 +461,6 @@ internal sealed class BingoCabinet
         var step = radius * 2f + gap;
         var railWidth = shown * step - gap;
         var startX = (min.X + max.X) * 0.5f - railWidth * 0.5f + radius;
-        // The label sits on its own line above the rail. Sharing a line with eight chips only works
-        // until the rail is full, and a full rail is the normal state of a room worth watching.
         var label = Loc.T(L.Casino.BingoRecentCalls);
         Typography.Draw(drawList, new Vector2(min.X + 14f * scale, max.Y - BallRailHeight * scale), label,
             ui.MutedInk, TextStyles.Footnote);
@@ -789,12 +783,6 @@ internal sealed class BingoCabinet
         var labelHeight = CardLabelHeight * scale;
         var hero = HeroIndex(mine, holding);
 
-        // Every card is the same size. Making the closest one bigger read as two different kinds of
-        // card rather than as emphasis, and a five by five grid at full width gives cells so large
-        // that twenty four numbers scatter instead of forming a card. The one to watch is marked,
-        // not resized.
-        // The plate is drawn outside the card rect, so the padding has to come out of the width or
-        // the right hand card runs off the surface and its last column wraps mid number.
         var plate = CardPlatePadding * scale;
         var columns = holding > 1 ? 2 : 1;
         var usable = width - plate * 2f;

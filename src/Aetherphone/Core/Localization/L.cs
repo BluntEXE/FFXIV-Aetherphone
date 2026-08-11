@@ -1300,71 +1300,95 @@ internal static class L
 
     internal static class Changelog
     {
-        public static readonly LocString[] Release09910 =
+        public static readonly LocString[] Release1000 =
         {
-            new("changelog.r09910.0",
+            new("changelog.r1000.0",
+                "Added Gamba, a play-money casino: coins become chips at the cashier, and those chips play at anything on the floor, with no real money involved and nothing here carrying cash value"),
+            new("changelog.r1000.1",
+                "Blackjack is dealt at shared tables: browse who is playing, take a seat or open your own, hit, stand, double and split, and your chips ride to the felt and come home when you leave"),
+            new("changelog.r1000.2",
+                "The bingo hall runs live rooms where the marking happens for you, the prize ladder grows with the hall, and every card says how many numbers it is away from a line, two lines, or the full house"),
+            new("changelog.r1000.3",
+                "A communal wheel takes everyone's bets on the same spin, with a clock counting down to no more bets and every spot showing what is riding on it"),
+            new("changelog.r1000.4",
+                "Slots, scratch cards and a bar shift fill out the cabinets, each carrying its own pay table or odds sheet in plain numbers"),
+            new("changelog.r1000.5",
+                "A free daily spin pays coins straight into your wallet, with no chips and nothing staked"),
+            new("changelog.r1000.6",
+                "Every round is provably fair: a fingerprint of the round's seed is published before your stake is taken, the seed itself is revealed once the round settles, and your phone re-derives the result to check it"),
+            new("changelog.r1000.7",
+                "Round history keeps every stake and payout on the record, and Gamba carries limits: a house cap on how far a night can go down, plus your own limit, which takes effect the moment you lower it and waits for the next day when you raise it"),
+            new("changelog.r1000.8",
                 "Added Aether Coin, the currency of the Aethernet: check in daily, play the arcade, hold real calls and conversations, and post things that stay up, and it all earns coins"),
-            new("changelog.r09910.1",
-                "The Aether Coin app shows your balance, the daily cap with its reset time, your check-in streak, and every earning rule with today's progress"),
-            new("changelog.r09910.4",
+            new("changelog.r1000.9",
+                "The Aether Coin wallet opens on today: a ring for the daily cap with the time left before it resets, your daily and weekly goals, a check-in streak on a seven day track, and every earning rule as a row with today's progress"),
+            new("changelog.r1000.10",
+                "The coin shop sells name flair: eight new animated name effects bring the set to fifteen, and every card previews the effect on your own name before you buy"),
+            new("changelog.r1000.11",
                 "The Games app now highlights the same featured game the server pays a bonus for"),
-            new("changelog.r09910.5",
+            new("changelog.r1000.12",
                 "One daily notification rolls up what you earned instead of pinging on every grant"),
-            new("changelog.r09910.6",
+            new("changelog.r1000.13",
                 "The coin balance now shows in Control Center and on a home screen widget, so you can check it without opening the app"),
-            new("changelog.r09910.8",
+            new("changelog.r1000.14",
                 "Games now carry a small session chip that fills toward the three minute mark, so you can see when a session will pay and when the day's game earnings are used up"),
-            new("changelog.r09910.10",
+            new("changelog.r1000.15",
                 "Aether Coin, Shortcuts, and Housing now have their own welcome tours"),
-            new("changelog.r09910.23",
+            new("changelog.r1000.16",
                 "Chirps can now carry up to four photos, picked from the phone or imported from your PC, and tapping one opens it full screen"),
-            new("changelog.r09910.24",
+            new("changelog.r1000.17",
                 "A chirp can also carry one animated GIF, which plays right in the feed"),
-            new("changelog.r09910.25",
+            new("changelog.r1000.18",
                 "Chirps with photos and GIFs can be turned off: a button beside For You and Following hides them, and the same switch sits in Behavior settings"),
-            new("changelog.r09910.26",
+            new("changelog.r1000.19",
                 "Sharing a photo from Photos now offers Chirper, which opens the composer with that photo already attached"),
-            new("changelog.r09910.27",
+            new("changelog.r1000.20",
                 "The author of a post can now remove any comment left on it, in Aethergram, Chirper, and Velvet"),
-            new("changelog.r09910.28",
+            new("changelog.r1000.21",
                 "Velvet and Message can now delete a conversation, which only Aethergram could before: right click the row in the inbox, and it clears the thread for you alone while the other person keeps theirs"),
-            new("changelog.r09910.29",
+            new("changelog.r1000.22",
+                "Tapping a profile photo in a notifications list now opens that person's profile, contributed by Farroness"),
+            new("changelog.r1000.23",
                 "Music is now split into four tabs, Home, Live, Radio, and Library, so live community stations are no longer buried under a scroll"),
-            new("changelog.r09910.30",
+            new("changelog.r1000.24",
                 "A community station now opens a full page with its artwork, the track playing right now, and a notify button while the station is off air"),
-            new("changelog.r09910.31",
+            new("changelog.r1000.25",
                 "The phone case picker is now a store: cases sit in Colors, Gradients, and Custom Artwork rails, and each one opens a page with a full size preview and its artist credit"),
-            new("changelog.r09910.33",
+            new("changelog.r1000.26",
+                "Added two phone cases: Garlean and Gurren Lagann, contributed by Zivyl and daitomata"),
+            new("changelog.r1000.27",
+                "The Search the Market entry in the game's right click menu can now be switched off in Behavior settings, contributed by Farroness"),
+            new("changelog.r1000.28",
                 "The Discord invite now sits on the settings root under Support Aetherphone, instead of two taps down in About"),
-            new("changelog.r09910.11",
+            new("changelog.r1000.29",
                 "App tile colors are now generated from one color ring, so the home screen no longer mixes vivid tiles with dull ones"),
-            new("changelog.r09910.13",
+            new("changelog.r1000.30",
                 "The side, mute, and lock buttons now sit seated in the chassis edge instead of floating beside it"),
-            new("changelog.r09910.34",
+            new("changelog.r1000.31",
                 "Velvet profile photos now sit directly beneath the about section"),
-            new("changelog.r09910.14",
+            new("changelog.r1000.32",
                 "A call now warns you when your microphone never reaches the other side, and points at the input device setting"),
-            new("changelog.r09910.15",
+            new("changelog.r1000.33",
                 "A device without your encryption key now locks and asks for your recovery code, instead of quietly creating a new key"),
-            new("changelog.r09910.16",
+            new("changelog.r1000.34",
                 "Your recovery code now brings back history encrypted under a previous key, right after unlocking or through Restore older chats in Settings"),
-            new("changelog.r09910.17",
+            new("changelog.r1000.35",
                 "Chats now nudge you once to set up a recovery code if you have not saved one"),
-            new("changelog.r09910.18",
+            new("changelog.r1000.36",
                 "A PC that cannot use the system key store now keeps your encryption key instead of creating a new one every session"),
-            new("changelog.r09910.19",
+            new("changelog.r1000.37",
                 "Conversation previews and message notifications no longer show the encrypted placeholder: previews heal within seconds, and notifications wait for the text to decrypt"),
-            new("changelog.r09910.21",
+            new("changelog.r1000.38",
                 "Reordering gearsets and categories in Jobs now uses up and down buttons, replacing drag handles that rarely picked a row up"),
-            new("changelog.r09910.22",
+            new("changelog.r1000.39",
                 "Failures that used to pass silently, in playback, imports, saving settings, network requests, and encryption, are now written to the log so problem reports can be traced"),
-            new("changelog.r09910.35",
+            new("changelog.r1000.40",
                 "Fixed apps opening wherever you last scrolled: every app now starts at the top, and a chat opens on its newest message"),
-            new("changelog.r09910.36",
+            new("changelog.r1000.41",
                 "Fixed pressing close in a story counting as a tap that skipped ahead, and tapping the avatar or the name now opens that person's profile"),
-            new("changelog.r09910.37",
+            new("changelog.r1000.42",
                 "Fixed the dynamic island clipping the signal bars, contributed by Farroness"),
-            new("changelog.r09910.38",
+            new("changelog.r1000.43",
                 "Fixed Moderation and safety truncating in Settings, and cut two group footers that repeated the rows above them"),
         };
 
@@ -3695,6 +3719,10 @@ internal static class L
         public static readonly LocString StreakDays = new("coin.streakDays", "{0} day streak");
         public static readonly LocString StreakGraceUsed = new("coin.streakGraceUsed", "Grace day used this week");
         public static readonly LocString StreakNext = new("coin.streakNext", "Come back tomorrow to keep it going");
+        public static readonly LocString StreakClaim = new("coin.streakClaim", "Check in to keep it going");
+        public static readonly LocString DailyGoals = new("coin.dailyGoals", "Daily goals");
+        public static readonly LocString WeeklyGoals = new("coin.weeklyGoals", "Weekly goals");
+        public static readonly LocString GoalsDone = new("coin.goalsDone", "{0} of {1} done");
         public static readonly LocString CheckIn = new("coin.checkIn", "Check in");
         public static readonly LocString CheckedIn = new("coin.checkedIn", "Checked in");
         public static readonly LocString CheckInReward = new("coin.checkInReward", "+{0} Aether Coin");
@@ -3804,11 +3832,17 @@ internal static class L
         public static readonly LocString TopUpFor = new("casino.topUpFor", "Top up for {0}");
         public static readonly LocString CashOut = new("casino.cashOut", "Cash out");
         public static readonly LocString CashOutFor = new("casino.cashOutFor", "Cash out {0}");
-        public static readonly LocString CashOutHint = new("casino.cashOutHint", "Chips settle back into your wallet as coins.");
+        public static readonly LocString CashOutHint = new("casino.cashOutHint", "Chips settle back into your wallet as coins, rounded up in your favour. Leave them here and they wait for you.");
         public static readonly LocString AmountMin = new("casino.amountMin", "Min");
         public static readonly LocString AmountHalf = new("casino.amountHalf", "Half");
         public static readonly LocString AmountMax = new("casino.amountMax", "Max");
         public static readonly LocString BuyInBounds = new("casino.buyInBounds", "Between {0} and {1}");
+        public static readonly LocString ChipRate = new("casino.chipRate", "100 chips = 1 coin");
+        public static readonly LocString SlotsTurbo = new("casino.slotsTurbo", "Turbo");
+        public static readonly LocString LotCost = new("casino.lotCost", "{0} coins");
+        public static readonly LocString NotEnoughCoins = new("casino.notEnoughCoins", "Not enough coins");
+        public static readonly LocString PurseRow = new("casino.purseRow", "Chips on the floor");
+        public static readonly LocString PurseHint = new("casino.purseHint", "Your chips wait here between visits.");
         public static readonly LocString TonightEven = new("casino.tonightEven", "Tonight: even");
         public static readonly LocString TonightUp = new("casino.tonightUp", "Tonight: {0} up");
         public static readonly LocString TonightDown = new("casino.tonightDown", "Tonight: {0} down");
@@ -3817,7 +3851,7 @@ internal static class L
         public static readonly LocString TopUpConfirmTitle = new("casino.topUpConfirmTitle", "Top up for {0}?");
         public static readonly LocString TopUpConfirmBody = new("casino.topUpConfirmBody", "{0} more coins join the chips you are carrying.");
         public static readonly LocString CashOutConfirmTitle = new("casino.cashOutConfirmTitle", "Cash out {0}?");
-        public static readonly LocString CashOutConfirmBody = new("casino.cashOutConfirmBody", "Your chips leave the floor and land in your wallet.");
+        public static readonly LocString CashOutConfirmBody = new("casino.cashOutConfirmBody", "Your chips leave the floor and land in your wallet as coins. You do not have to cash out to stop playing.");
         public static readonly LocString PausedTitle = new("casino.pausedTitle", "The floor is closed right now");
         public static readonly LocString PausedHint = new("casino.pausedHint", "Hands in progress finish, and chips can still be cashed out.");
         public static readonly LocString DrainingTitle = new("casino.drainingTitle", "Tables are closing");
@@ -4214,6 +4248,8 @@ internal static class L
         public static readonly LocString CaseHorror = new("catalog.case.horror", "Horror");
         public static readonly LocString CaseKupo = new("catalog.case.mooglecase", "Kupo");
         public static readonly LocString CaseRunic = new("catalog.case.runic", "Runic");
+        public static readonly LocString CaseGarlean = new("catalog.case.garlean", "Garlean");
+        public static readonly LocString CaseGurrenLagann = new("catalog.case.gurrenlagann", "Gurren Lagann");
         public static readonly LocString RingtoneSilent = new("catalog.ringtone.silent", "Silent");
         public static readonly LocString RadioLofi = new("catalog.radio.lofi", "Lofi");
         public static readonly LocString RadioChillout = new("catalog.radio.chillout", "Chillout");
