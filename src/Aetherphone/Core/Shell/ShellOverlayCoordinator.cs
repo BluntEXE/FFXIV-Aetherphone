@@ -34,6 +34,8 @@ internal sealed class ShellOverlayCoordinator
     private readonly DynamicIsland island;
     private readonly RateLimitPill rateLimitPill;
     private readonly ShortcutRunPill shortcutPill;
+    private readonly CoinEarnPill coinPill;
+    private readonly CoinEarnFloats coinFloats;
     private readonly IncomingCallOverlay incomingOverlay;
     private readonly BanOverlay banOverlay;
     private readonly ConfirmOverlay confirmOverlay;
@@ -45,10 +47,13 @@ internal sealed class ShellOverlayCoordinator
 
     public ShellOverlayCoordinator(Configuration configuration, LoadingScreen loading, NavigationStack navigation,
         ControlCenter controlCenter, NotificationBanner banner, DynamicIsland island, RateLimitPill rateLimitPill,
-        ShortcutRunPill shortcutPill, IncomingCallOverlay incomingOverlay, BanOverlay banOverlay,
+        ShortcutRunPill shortcutPill, CoinEarnPill coinPill, CoinEarnFloats coinFloats,
+        IncomingCallOverlay incomingOverlay, BanOverlay banOverlay,
         ConfirmOverlay confirmOverlay, ReportOverlay reportOverlay, ShareSheet shareSheet,
         ConductGateOverlay conductOverlay, OnboardingDirector director, SetupOverlay setup)
     {
+        this.coinPill = coinPill;
+        this.coinFloats = coinFloats;
         this.configuration = configuration;
         this.loading = loading;
         this.navigation = navigation;
@@ -166,7 +171,8 @@ internal sealed class ShellOverlayCoordinator
                 banner.Draw(screen, theme);
                 island.Draw(screen, theme, navigation, navigation.Current?.Id);
                 shortcutPill.Draw(screen, theme, delta, banner.IsVisible);
-                if (!banner.IsVisible && !shortcutPill.IsVisible)
+                coinPill.Draw(screen, theme, delta, banner.IsVisible || shortcutPill.IsVisible);
+                if (!banner.IsVisible && !shortcutPill.IsVisible && !coinPill.IsVisible)
                 {
                     rateLimitPill.Draw(screen, theme, delta);
                 }
@@ -198,6 +204,7 @@ internal sealed class ShellOverlayCoordinator
         director.Draw(screen, theme);
         conductOverlay.Draw(screen, theme);
         banOverlay.Draw(screen, theme);
+        coinFloats.Draw(screen, theme, delta);
         DeviceChrome.SealScreen(chassis, theme, configuration.ScreenBrightness);
     }
 }

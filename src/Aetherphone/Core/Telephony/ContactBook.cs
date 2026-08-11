@@ -95,7 +95,7 @@ internal sealed class ContactBook : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Contact refresh failed: {exception.Message}");
+                AepLog.Warning(exception, "Contact refresh failed");
             }
             finally
             {
@@ -117,7 +117,7 @@ internal sealed class ContactBook : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Contact add failed: {exception.Message}");
+                AepLog.Warning(exception, "Contact add failed");
             }
 
             if (added is not null)
@@ -149,7 +149,7 @@ internal sealed class ContactBook : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Contact rename failed: {exception.Message}");
+                AepLog.Warning(exception, "Contact rename failed");
             }
 
             if (updated is not null)
@@ -173,7 +173,7 @@ internal sealed class ContactBook : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Contact remove failed: {exception.Message}");
+                AepLog.Warning(exception, "Contact remove failed");
             }
 
             if (ok)
@@ -197,7 +197,7 @@ internal sealed class ContactBook : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Number change request failed: {exception.Message}");
+                AepLog.Warning(exception, "Number change request failed");
             }
 
             if (result?.Request is not null)

@@ -286,6 +286,8 @@ internal sealed partial class AethergramApp
         var avatarRadius = 20f * scale;
         var avatarCenterX = origin.X + avatarRadius + 5f * scale;
         var mine = store.Me is { } me && me.Id == comment.AuthorId;
+        var ownsPost = store.Me is { } viewer && store.DetailPost is { } detailPost && viewer.Id == detailPost.AuthorId;
+        var canDelete = mine || ownsPost;
 
         var bubbleLeft = avatarCenterX + avatarRadius + 11f * scale;
         var bubbleRight = origin.X + width;
@@ -329,7 +331,7 @@ internal sealed partial class AethergramApp
         var meta = TimeText.Short(comment.CreatedAtUnix);
         var metaSize = Typography.Measure(meta, 0.8f);
         var metaLeft = textLeft + nameWidth + 8f * scale;
-        var metaRightBound = mine ? textRight - 14f * scale : textRight;
+        var metaRightBound = canDelete ? textRight - 14f * scale : textRight;
         if (metaLeft + metaSize.X <= metaRightBound)
         {
             Typography.Draw(new Vector2(metaLeft, nameTop + (nameHeight - metaSize.Y) * 0.5f), meta,
@@ -362,18 +364,26 @@ internal sealed partial class AethergramApp
             OpenProfile(comment.AuthorId);
         }
 
-        if (mine)
+        if (canDelete)
         {
             var trashCenter = new Vector2(bubbleRight - 13f * scale, bubbleTop + 13f * scale);
             if (ui.IconButton(trashCenter, 11f * scale, FontAwesomeIcon.Times.ToIconString(), AppPalettes.Aethergram.MutedInk,
-                    AppSkin.Transparent, 0.85f, Loc.T(L.Aethergram.DeleteComment)) && store.DetailPost is { } post)
+                    AppSkin.Transparent, 0.85f,
+                    Loc.T(mine ? L.Aethergram.DeleteComment : L.Aethergram.RemoveComment)) && store.DetailPost is { } post)
             {
-                profile.AskDeleteComment(post.Id, comment.Id);
+                if (mine)
+                {
+                    profile.AskDeleteComment(post.Id, comment.Id);
+                }
+                else
+                {
+                    profile.AskRemoveComment(post.Id, comment.Id);
+                }
             }
         }
 
         var heartCenter = new Vector2(bubbleRight - 16f * scale, (bubbleTop + bubbleBottom) * 0.5f);
-        if (mine)
+        if (canDelete)
         {
             heartCenter.Y = MathF.Max(heartCenter.Y, bubbleTop + 36f * scale);
         }

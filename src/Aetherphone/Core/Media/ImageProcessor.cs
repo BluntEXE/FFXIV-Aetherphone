@@ -31,6 +31,10 @@ internal static class ImageProcessor
 
     public const long MaxDecodePixels = 4096L * 4096L;
     public const long MaxLocalDecodePixels = 8192L * 8192L;
+    public const int MaxAnimationDimension = 480;
+    public const long MaxAnimationPixels = 9_000_000L;
+    private const long MaxAnimationSourcePixels = 40_000_000L;
+    private const int MaxAnimationSourceFrames = 300;
     internal static readonly DecoderOptions SingleFrame = new() { MaxFrames = 1 };
 
     private static void EnsureDecodable(Stream stream, long maxPixels)
@@ -138,6 +142,85 @@ internal static class ImageProcessor
         var pixels = new byte[length];
         image.CopyPixelDataTo(pixels);
         return (pixels, image.Width, image.Height);
+    }
+
+    public static bool IsGif(ReadOnlySpan<byte> bytes)
+    {
+        return bytes.Length >= 6 && bytes[0] == 0x47 && bytes[1] == 0x49 && bytes[2] == 0x46
+            && bytes[3] == 0x38 && (bytes[4] == 0x37 || bytes[4] == 0x39) && bytes[5] == 0x61;
+    }
+
+    public static (int Width, int Height) IdentifyDimensions(byte[] bytes)
+    {
+        using var stream = new MemoryStream(bytes);
+        var info = Image.Identify(stream);
+        return (info.Width, info.Height);
+    }
+
+    public static async Task<AnimatedImage> DecodeAnimationAsync(ITextureProvider textures, byte[] bytes, string tag,
+        CancellationToken token)
+    {
+        var (frames, width, height, delays) = await Task.Run(() => DecodeAnimationFrames(bytes), token)
+            .ConfigureAwait(false);
+        var wraps = new IDalamudTextureWrap[frames.Length];
+        try
+        {
+            for (var index = 0; index < frames.Length; index++)
+            {
+                wraps[index] = await textures.CreateFromRawAsync(RawImageSpecification.Rgba32(width, height),
+                    frames[index], $"{tag}#{index}", token).ConfigureAwait(false);
+            }
+        }
+        catch
+        {
+            for (var index = 0; index < wraps.Length; index++)
+            {
+                wraps[index]?.Dispose();
+            }
+
+            throw;
+        }
+
+        return new AnimatedImage(wraps, delays);
+    }
+
+    private static (byte[][] Frames, int Width, int Height, float[] Delays) DecodeAnimationFrames(byte[] bytes)
+    {
+        using var stream = new MemoryStream(bytes);
+        EnsureDecodable(stream, MaxDecodePixels);
+        var info = Image.Identify(stream);
+        stream.Position = 0;
+        var pixelsPerFrame = Math.Max(1L, (long)info.Width * info.Height);
+        var maxSourceFrames = (int)Math.Clamp(MaxAnimationSourcePixels / pixelsPerFrame, 1L,
+            MaxAnimationSourceFrames);
+        var options = new DecoderOptions { MaxFrames = (uint)maxSourceFrames };
+        using var image = Image.Load<Rgba32>(options, stream);
+        var rawDelays = new float[image.Frames.Count];
+        for (var index = 0; index < rawDelays.Length; index++)
+        {
+            rawDelays[index] = image.Frames[index].Metadata.GetGifMetadata().FrameDelay / 100f;
+        }
+
+        if (image.Width > MaxAnimationDimension || image.Height > MaxAnimationDimension)
+        {
+            var factor = MathF.Min((float)MaxAnimationDimension / image.Width,
+                (float)MaxAnimationDimension / image.Height);
+            var width = Math.Max(1, (int)MathF.Round(image.Width * factor));
+            var height = Math.Max(1, (int)MathF.Round(image.Height * factor));
+            image.Mutate(context => context.Resize(width, height));
+        }
+
+        var (keptIndices, delays) = GifFramePlan.Plan(rawDelays, image.Width, image.Height, MaxAnimationPixels);
+        var frameLength = checked(image.Width * image.Height * 4);
+        var frames = new byte[keptIndices.Length][];
+        for (var index = 0; index < keptIndices.Length; index++)
+        {
+            var pixels = new byte[frameLength];
+            image.Frames[keptIndices[index]].CopyPixelDataTo(pixels);
+            frames[index] = pixels;
+        }
+
+        return (frames, image.Width, image.Height, delays);
     }
 
     public static async Task<IDalamudTextureWrap> DecodeToTextureAsync(ITextureProvider textures, byte[] bytes,

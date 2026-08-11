@@ -8,6 +8,7 @@ internal sealed class AethernetTransport
     private readonly HttpService http;
     private readonly string? appScope;
     private readonly Action<int> authStatusSink;
+    private bool loggedSignedOutSkip;
 
     public AethernetTransport(HttpService http, AethernetSession session, string appScope = "")
     {
@@ -22,7 +23,7 @@ internal sealed class AethernetTransport
     public Task<T?> GetAsync<T>(string path, JsonTypeInfo<T> responseInfo, CancellationToken token,
         Action<int>? onStatus = null)
     {
-        if (!Session.IsSignedIn)
+        if (SignedOut(path))
         {
             return Task.FromResult<T?>(default);
         }
@@ -34,7 +35,7 @@ internal sealed class AethernetTransport
         JsonTypeInfo<TRequest> requestInfo, JsonTypeInfo<TResponse> responseInfo, CancellationToken token,
         Action<int>? onStatus = null)
     {
-        if (!Session.IsSignedIn)
+        if (SignedOut(path))
         {
             return Task.FromResult<TResponse?>(default);
         }
@@ -47,7 +48,7 @@ internal sealed class AethernetTransport
         JsonTypeInfo<TRequest> requestInfo, JsonTypeInfo<TResponse> responseInfo, CancellationToken token,
         Action<int>? onStatus = null)
     {
-        if (!Session.IsSignedIn)
+        if (SignedOut(path))
         {
             return Task.FromResult<TResponse?>(default);
         }
@@ -59,7 +60,7 @@ internal sealed class AethernetTransport
     public Task<TResponse?> RequestAsync<TResponse>(HttpMethod method, string path,
         JsonTypeInfo<TResponse> responseInfo, CancellationToken token, Action<int>? onStatus = null)
     {
-        if (!Session.IsSignedIn)
+        if (SignedOut(path))
         {
             return Task.FromResult<TResponse?>(default);
         }
@@ -69,7 +70,7 @@ internal sealed class AethernetTransport
 
     public Task<bool> SendAsync(HttpMethod method, string path, CancellationToken token, Action<int>? onStatus = null)
     {
-        if (!Session.IsSignedIn)
+        if (SignedOut(path))
         {
             return Task.FromResult(false);
         }
@@ -85,7 +86,7 @@ internal sealed class AethernetTransport
     public Task<bool> SendJsonForStatusAsync<TRequest>(HttpMethod method, string path, TRequest body,
         JsonTypeInfo<TRequest> requestInfo, CancellationToken token, Action<int>? onStatus = null)
     {
-        if (!Session.IsSignedIn)
+        if (SignedOut(path))
         {
             return Task.FromResult(false);
         }
@@ -127,6 +128,23 @@ internal sealed class AethernetTransport
         var sameHost = string.Equals(uri.Host, baseUri.Host, StringComparison.OrdinalIgnoreCase)
             && uri.Port == baseUri.Port;
         return sameHost ? Session.Token : null;
+    }
+
+    private bool SignedOut(string path)
+    {
+        if (Session.IsSignedIn)
+        {
+            loggedSignedOutSkip = false;
+            return false;
+        }
+
+        if (!loggedSignedOutSkip)
+        {
+            loggedSignedOutSkip = true;
+            AepLog.Debug($"Aethernet request skipped while signed out: {path} (further skips suppressed)");
+        }
+
+        return true;
     }
 
     private Action<int> Sink(Action<int>? onStatus)

@@ -150,7 +150,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         stories = new StoryPresenter(session, net.Grams, net.Media, images, lodestone, AethergramArt.StoryRing,
             AppPalettes.Aethergram, new StoryConfirmLabels(L.Aethergram.DeleteConfirm, L.Aethergram.DeleteCancel,
                 L.Aethergram.Saving), confirm, realtimeSignals, "Aethergram stories", StartStoryCompose,
-            new StoryReplyHooks(L.Aethergram.ReplyToStory, dmStore.SendStoryReply, OpenThread));
+            new StoryReplyHooks(L.Aethergram.ReplyToStory, dmStore.SendStoryReply, OpenThread), OpenProfile);
         this.launcher = launcher;
         this.dmLauncher = dmLauncher;
         this.gameData = gameData;
@@ -200,6 +200,7 @@ internal sealed partial class AethergramApp : IPhoneApp
             DeleteFailed = L.Aethergram.DeleteFailed,
             DeleteCommentConfirmMessage = L.Aethergram.DeleteCommentConfirmMessage,
             DeleteCommentFailed = L.Aethergram.DeleteCommentFailed,
+            RemoveCommentConfirmMessage = L.Aethergram.RemoveCommentConfirmMessage,
             MessageLabel = L.Aethergram.MessageButton,
             SettingsLabel = L.Aethergram.Settings,
             SavedLabel = L.Aethergram.SavedTitle,
@@ -1117,8 +1118,6 @@ internal sealed partial class AethergramApp : IPhoneApp
         }
         else
         {
-            // Contain, not cover: the photo was baked to its own aspect at compose time, which can
-            // differ from this post's carousel frame, and covering would crop it a second time.
             ImageFit.DrawLetterboxed(drawList, texture, rect, Vector2.Zero, Vector2.One, rounding);
         }
 

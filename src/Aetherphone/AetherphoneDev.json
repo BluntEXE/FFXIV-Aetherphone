@@ -1,0 +1,21 @@
+{
+    "Author": "XeldarAlz",
+    "Name": "Aetherphone Development",
+    "InternalName": "AetherphoneDev",
+    "Punchline": "A smartphone, built for you.",
+    "Description": "An in-game smartphone that puts everything you do into a single window: one device, endless things to do.",
+    "ApplicableVersion": "any",
+    "RepoUrl": "https://github.com/XeldarAlz/FFXIV-Aetherphone",
+    "IconUrl": "https://raw.githubusercontent.com/XeldarAlz/FFXIV-Aetherphone/master/src/Aetherphone/Images/Icon.png",
+    "Tags": [
+        "phone",
+        "aether",
+	    "aetherphone",
+        "messages",
+        "social",
+        "ui",
+        "quality of life",
+        "device",
+	    "call"
+    ]
+}

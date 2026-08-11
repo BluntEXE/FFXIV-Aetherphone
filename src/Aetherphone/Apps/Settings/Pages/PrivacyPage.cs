@@ -118,7 +118,7 @@ internal sealed class PrivacyPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Blocked list load failed: {exception.Message}");
+                AepLog.Warning(exception, "Blocked list load failed");
             }
             finally
             {
@@ -154,7 +154,7 @@ internal sealed class PrivacyPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Unblock failed: {exception.Message}");
+                AepLog.Warning(exception, "Unblock failed");
             }
         });
     }
@@ -231,7 +231,7 @@ internal sealed class PrivacyPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Chat privacy load failed: {exception.Message}");
+                AepLog.Warning(exception, "Chat privacy load failed");
             }
             finally
             {
@@ -257,7 +257,7 @@ internal sealed class PrivacyPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Chat privacy update failed: {exception.Message}");
+                AepLog.Warning(exception, "Chat privacy update failed");
             }
         });
     }

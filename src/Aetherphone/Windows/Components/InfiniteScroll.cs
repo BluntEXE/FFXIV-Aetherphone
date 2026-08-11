@@ -10,6 +10,11 @@ internal static class InfiniteScroll
 
     public static bool ReachedBottom()
     {
+        if (AppSurface.ActiveFreshVisit)
+        {
+            return false;
+        }
+
         var scale = UiScale.Current;
         var max = ImGui.GetScrollMaxY();
         return max > 0f && ImGui.GetScrollY() >= max - BottomTriggerDistance * scale;

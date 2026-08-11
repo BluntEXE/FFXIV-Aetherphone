@@ -69,6 +69,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     private volatile bool otherTyping;
 
     private volatile bool inboxPolling;
+    private volatile bool threadRefreshPending;
     private bool inboxPrimed;
     private volatile string? viewingThreadKey;
     private DateTime lastViewingUtc = DateTime.MinValue;
@@ -121,6 +122,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         hasMoreOlder = false;
         otherTyping = false;
         inboxPrimed = false;
+        threadRefreshPending = false;
         currentKeyStatus = ChatKeyStatus.None;
         dmMediaUrls.Clear();
         dmMediaFailed.Clear();
@@ -159,6 +161,8 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         int encVersion = 0, string? commitmentTag = null);
 
     protected abstract Task<bool> DeleteMessageRequestAsync(string messageId, CancellationToken token);
+
+    protected abstract Task<bool> DeleteThreadRequestAsync(string threadId, CancellationToken token);
 
     protected abstract Task SetReactionRequestAsync(string messageId, string reactionToken, CancellationToken token);
 
@@ -230,6 +234,24 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     {
     }
 
+    public bool ThreadOpenPending => pendingOpenThreadId is not null;
+
+    public TimeSpan SyncRetryIn
+    {
+        get
+        {
+            var remaining = pollBackoffUntilUtc - DateTime.UtcNow;
+            return remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero;
+        }
+    }
+
+    public void RetrySyncNow()
+    {
+        pollFailureStreak = 0;
+        pollBackoffUntilUtc = DateTime.MinValue;
+        threadRefreshPending = true;
+    }
+
     public bool IsSignedIn => session.IsSignedIn;
     public string MyUserId => session.CurrentUser?.Id ?? string.Empty;
     public TMessage[] Messages => messages;
@@ -285,6 +307,35 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         }
     }
 
+    public void DeleteThread(string threadId, Action? onDone = null)
+    {
+        var snapshot = threadList;
+        for (var index = 0; index < snapshot.Length; index++)
+        {
+            if (ThreadKeyOf(snapshot[index]) != threadId)
+            {
+                continue;
+            }
+
+            var updated = new TThread[snapshot.Length - 1];
+            Array.Copy(snapshot, 0, updated, 0, index);
+            Array.Copy(snapshot, index + 1, updated, index, snapshot.Length - index - 1);
+            threadList = updated;
+            break;
+        }
+
+        CloseThreadIfCurrent(threadId);
+        work.Run("thread delete", async token =>
+            await DeleteThreadRequestAsync(threadId, token).ConfigureAwait(false), succeeded =>
+        {
+            RefreshThreadListCore();
+            if (succeeded)
+            {
+                onDone?.Invoke();
+            }
+        });
+    }
+
     protected int ComputeUnread()
     {
         var snapshot = threadList;
@@ -302,7 +353,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         return total;
     }
 
-    private bool IsBeingViewed(string threadKey) =>
+    protected bool IsBeingViewed(string threadKey) =>
         string.Equals(viewingThreadKey, threadKey, StringComparison.Ordinal)
         && DateTime.UtcNow - lastViewingUtc < ViewingGrace;
 
@@ -335,6 +386,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         var now = DateTime.UtcNow;
         EnsureCurrentThreadKeysFresh(now);
         ResumePendingThreadOpen(now);
+        ConsumePendingThreadRefresh(now);
 
         if (inboxPolling || !inboxCadence.Due(now))
         {
@@ -485,6 +537,14 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     private readonly record struct InboxMark(long LastMessageAt, int Unread);
 
+    private static readonly TimeSpan InboxNotifyDeferralLimit = TimeSpan.FromSeconds(30);
+    private readonly Dictionary<string, DateTime> inboxNotifyDeferrals = new(StringComparer.Ordinal);
+
+    protected virtual bool IsInboxPreviewReady(TThread item)
+    {
+        return true;
+    }
+
     private void RaiseInboxNotifications(TThread[] items)
     {
         var primed = inboxPrimed;
@@ -506,9 +566,25 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
                 || (lastMessageAt == previous.LastMessageAt && unread > previous.Unread);
             if (!isNew || unread <= 0)
             {
+                inboxNotifyDeferrals.Remove(key);
                 continue;
             }
 
+            if (!IsInboxPreviewReady(item))
+            {
+                if (!inboxNotifyDeferrals.TryGetValue(key, out var deferredSince))
+                {
+                    deferredSince = DateTime.UtcNow;
+                    inboxNotifyDeferrals[key] = deferredSince;
+                }
+
+                if (DateTime.UtcNow - deferredSince < InboxNotifyDeferralLimit)
+                {
+                    continue;
+                }
+            }
+
+            inboxNotifyDeferrals.Remove(key);
             inboxMarks[key] = new InboxMark(lastMessageAt, unread);
             if (IsBeingViewed(key))
             {
@@ -558,6 +634,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
         currentThreadId = id;
         OnThreadOpening(id);
+        threadRefreshPending = false;
         messages = Array.Empty<TMessage>();
         olderCursor = null;
         hasMoreOlder = false;
@@ -589,8 +666,10 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         loadingThread = true;
         work.Run("thread open", async token =>
         {
-            await PrefetchThreadAsync(id, token).ConfigureAwait(false);
-            var status = await EnsureThreadKeysAsync(id, token).ConfigureAwait(false);
+            var detail = PrefetchThreadAsync(id, token);
+            var threadKeys = EnsureThreadKeysAsync(id, token);
+            await Task.WhenAll(detail, threadKeys).ConfigureAwait(false);
+            var status = await threadKeys.ConfigureAwait(false);
             if (currentThreadId == id)
             {
                 currentKeyStatus = status;
@@ -629,20 +708,53 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         BeginThreadOpen(pending);
     }
 
-    public void RefreshThreadIfVisible()
+    public void RequestThreadRefresh(string? threadId = null)
     {
+        if (threadId is not null && currentThreadId is { } open && threadId != open)
+        {
+            return;
+        }
+
+        threadRefreshPending = true;
+        ConsumePendingThreadRefresh(DateTime.UtcNow);
+    }
+
+    private void ConsumePendingThreadRefresh(DateTime now)
+    {
+        if (!threadRefreshPending)
+        {
+            return;
+        }
+
         var current = currentThreadId;
-        if (current is null || !string.Equals(viewingThreadKey, current, StringComparison.Ordinal))
+        if (current is null || !IsBeingViewed(current) || loadingThread || refreshingThread
+            || now < pollBackoffUntilUtc)
         {
             return;
         }
 
-        if (DateTime.UtcNow - lastViewingUtc > ViewingGrace)
-        {
-            return;
-        }
-
+        threadRefreshPending = false;
         RefreshThread();
+    }
+
+    protected void MergePushedMessage(string threadId, TMessage message)
+    {
+        if (currentThreadId != threadId)
+        {
+            return;
+        }
+
+        if (loadingThread)
+        {
+            threadRefreshPending = true;
+            return;
+        }
+
+        var decorated = DecorateMessages(threadId, new[] { message });
+        lock (messagesLock)
+        {
+            messages = IdentifiedMerge.MergeById(messages, decorated, messageOrder);
+        }
     }
 
     public void RefreshThread()

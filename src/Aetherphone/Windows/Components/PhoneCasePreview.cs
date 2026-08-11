@@ -6,16 +6,30 @@ namespace Aetherphone.Windows.Components;
 
 internal static class PhoneCasePreview
 {
+    public const float DeviceAspect = 0.443f;
+
+    private const float CanvasWidthFactor = 1f + 2f * CaseArt.MarginFraction;
+    private const float CanvasHeightFactor = 1f / DeviceAspect + 2f * CaseArt.MarginFraction;
+
+    public const float CanvasAspect = CanvasWidthFactor / CanvasHeightFactor;
+
     private const float IslandWidthFraction = 0.34f;
     private const float IslandHeightFraction = 0.030f;
     private const float IslandTopFraction = 0.028f;
 
-    public static void Draw(ImDrawListPtr drawList, Rect body, PhoneCase option, PhoneTheme theme, float scale)
+    public static Rect BodyRect(Rect canvas)
+    {
+        var bodyWidth = MathF.Min(canvas.Width / CanvasWidthFactor, canvas.Height / CanvasHeightFactor);
+        var bodySize = new Vector2(bodyWidth, bodyWidth / DeviceAspect);
+        return new Rect(canvas.Center - bodySize * 0.5f, canvas.Center + bodySize * 0.5f);
+    }
+
+    public static void Draw(ImDrawListPtr drawList, Rect body, PhoneCase option, PhoneTheme theme, float scale,
+        bool fullResolution = false)
     {
         var finish = new CaseFinish(option.Tint);
-        var inner = Shrink(body, 1f + 2f * CaseArt.MarginFraction);
-        var chassis = ChassisGeometry.Preview(inner, option.Kind);
-        if (option.Kind == PhoneCaseKind.Art && PhoneCaseTextures.Thumb(option.TextureId) is { } thumb)
+        var chassis = ChassisGeometry.Preview(BodyRect(body), option.Kind);
+        if (option.Kind == PhoneCaseKind.Art && ResolveArt(option.TextureId, fullResolution) is { } thumb)
         {
             Squircle.Fill(drawList, chassis.Body.Min, chassis.Body.Max, chassis.BodyRadius,
                 ImGui.GetColorU32(finish.Frame));
@@ -33,12 +47,10 @@ internal static class PhoneCasePreview
         DrawIsland(drawList, chassis.Screen, finish);
     }
 
-    private static Rect Shrink(Rect rect, float factor)
-    {
-        var size = rect.Size / factor;
-        var center = rect.Center;
-        return new Rect(center - size * 0.5f, center + size * 0.5f);
-    }
+    private static ImTextureID? ResolveArt(string textureId, bool fullResolution) =>
+        fullResolution
+            ? PhoneCaseTextures.Skin(textureId) ?? PhoneCaseTextures.Thumb(textureId)
+            : PhoneCaseTextures.Thumb(textureId);
 
     private static void DrawIsland(ImDrawListPtr drawList, Rect screen, in CaseFinish finish)
     {

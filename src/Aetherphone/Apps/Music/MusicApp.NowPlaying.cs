@@ -19,8 +19,6 @@ internal sealed partial class MusicApp
     private static readonly Vector4 PlayInk = new(0.05f, 0.06f, 0.05f, 1f);
     private static readonly Vector4 White = new(1f, 1f, 1f, 1f);
 
-    /// A community station has a cover its owner uploaded; everything else falls back to the
-    /// gradient generated from the station name, which is all a directory station ever has.
     private void DrawStationCover(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding)
     {
         var station = playback.Radio.CurrentStationInfo;

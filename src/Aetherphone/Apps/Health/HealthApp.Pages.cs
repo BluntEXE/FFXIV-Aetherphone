@@ -918,8 +918,9 @@ internal sealed partial class HealthApp
                 };
             }
         }
-        catch
+        catch (Exception exception)
         {
+            AepLog.Warning(exception, "[Health] reading the character build factor failed; using the default");
         }
 
         return 1.0;
@@ -963,8 +964,9 @@ internal sealed partial class HealthApp
                 clan = gameData.ClanName(customize[4], female);
             }
         }
-        catch
+        catch (Exception exception)
         {
+            AepLog.Warning(exception, "[Health] reading the character race and clan failed");
         }
     }
 

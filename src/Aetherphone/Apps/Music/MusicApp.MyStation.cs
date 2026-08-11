@@ -47,7 +47,7 @@ internal sealed partial class MusicApp
     private void OpenMyStation()
     {
         LoadStationDrafts();
-        router.Push(View.MyStation);
+        Router.Push(View.MyStation);
     }
 
     private void OpenStationArtwork()
@@ -55,21 +55,21 @@ internal sealed partial class MusicApp
         artworkPicker ??= new ImagePickCrop(photoLibrary, wallpaperImages);
         artworkPicker.Open();
         artworkOutcome = 0;
-        router.Push(View.StationArtwork);
+        Router.Push(View.StationArtwork);
     }
 
     private void DrawStationArtwork(in PhoneContext context)
     {
         if (artworkPicker is null || community.Mine is null)
         {
-            router.Pop();
+            Router.Pop();
             return;
         }
 
         if (artworkOutcome == 1)
         {
             artworkOutcome = 0;
-            router.Pop();
+            Router.Pop();
             return;
         }
 
@@ -85,7 +85,7 @@ internal sealed partial class MusicApp
         var result = artworkPicker.Draw(context.Content, context, labels, ui.Accent, artworkSaving);
         if (result == ImagePickCropEvent.Cancelled)
         {
-            router.Pop();
+            Router.Pop();
             return;
         }
 
@@ -215,7 +215,7 @@ internal sealed partial class MusicApp
     {
         var scale = UiScale.Current;
         var content = context.Content;
-        DrawTopBar(context, Loc.T(L.Music.MyStation), PopToCommunity);
+        DrawTopBar(context, Loc.T(L.Music.MyStation), PopStationPage);
         if (community.Mine is not { } mine)
         {
             return;
@@ -255,7 +255,7 @@ internal sealed partial class MusicApp
     private void DrawStationStatusLine(float scale, CommunityStationDto station)
     {
         var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var drawList = ImGui.GetWindowDrawList();
         var status = station.IsLive
             ? $"{Loc.T(L.Music.OnAir)} · {string.Format(Loc.T(L.Music.ListeningCount), station.Listeners)}"
@@ -270,7 +270,7 @@ internal sealed partial class MusicApp
     private void DrawArtworkRow(float scale, CommunityStationDto station)
     {
         var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var drawList = ImGui.GetWindowDrawList();
         var coverSize = 64f * scale;
         var coverMin = new Vector2(origin.X + 16f * scale, origin.Y);
@@ -292,7 +292,7 @@ internal sealed partial class MusicApp
     private void DrawFieldLabel(float scale, string label)
     {
         var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         Typography.Draw(ImGui.GetWindowDrawList(), new Vector2(origin.X + 16f * scale, origin.Y + 8f * scale), label,
             ui.MutedInk, TextStyles.Caption1);
         ImGui.SetCursorScreenPos(origin);
@@ -302,7 +302,7 @@ internal sealed partial class MusicApp
     private void DrawStationField(float scale, string id, ref string draft, int maxLength, string hint = "")
     {
         var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var fieldMin = new Vector2(origin.X + 16f * scale, origin.Y);
         var fieldRect = new Rect(fieldMin, new Vector2(origin.X + width - 16f * scale,
             origin.Y + FieldHeight * scale));
@@ -327,7 +327,7 @@ internal sealed partial class MusicApp
         }
 
         var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var fieldWidth = width - 32f * scale;
         var timeRect = new Rect(new Vector2(origin.X + 16f * scale, origin.Y),
             new Vector2(origin.X + 16f * scale + fieldWidth, origin.Y + FieldHeight * scale));
@@ -361,7 +361,7 @@ internal sealed partial class MusicApp
     private void DrawScheduleRepeatRow(float scale)
     {
         var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         Typography.Draw(ImGui.GetWindowDrawList(), new Vector2(origin.X + 16f * scale, origin.Y + 6f * scale),
             Loc.T(L.Music.ScheduleRepeat), ui.BodyInk, TextStyles.Callout);
         var toggleWidth = 46f * scale;
@@ -375,7 +375,7 @@ internal sealed partial class MusicApp
     private void DrawScheduleSummary(float scale, string text, Vector4 color)
     {
         var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         Typography.Draw(ImGui.GetWindowDrawList(), new Vector2(origin.X + 16f * scale, origin.Y), text, color,
             TextStyles.Caption1);
         ImGui.SetCursorScreenPos(origin);
@@ -385,7 +385,7 @@ internal sealed partial class MusicApp
     private void DrawLinkField(float scale, int kind)
     {
         var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var labelWidth = 74f * scale;
         Typography.Draw(ImGui.GetWindowDrawList(),
             new Vector2(origin.X + 16f * scale, origin.Y + 13f * scale), LinkLabels[kind], ui.BodyInk,
@@ -403,7 +403,7 @@ internal sealed partial class MusicApp
     private void DrawStationDescription(float scale)
     {
         var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var fieldWidth = width - 32f * scale;
         ImGui.SetCursorScreenPos(new Vector2(origin.X + 16f * scale, origin.Y));
         SoftWrapField.Multiline("##stationDescription", ref stationDescriptionDraft, StationDescriptionMaxLength,
@@ -415,7 +415,7 @@ internal sealed partial class MusicApp
     private void DrawStationSaveRow(float scale, CommunityStationDto station)
     {
         var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var buttonWidth = MathF.Min(width - 32f * scale, 220f * scale);
         var buttonMin = new Vector2(origin.X + (width - buttonWidth) * 0.5f, origin.Y + 6f * scale);
         var buttonRect = new Rect(buttonMin, buttonMin + new Vector2(buttonWidth, 40f * scale));
@@ -472,7 +472,7 @@ internal sealed partial class MusicApp
             $"{credentials.Format} · {credentials.Bitrate}kbps · {credentials.SampleRate}Hz");
 
         var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var wrapWidth = width - 32f * scale;
         var height = Typography.DrawWrappedLeft(new Vector2(origin.X + 16f * scale, origin.Y + 8f * scale),
             Loc.T(L.Music.StationHelp), ui.MutedInk, TextStyles.Caption1, wrapWidth);
@@ -483,7 +483,7 @@ internal sealed partial class MusicApp
     private void DrawCredentialRow(float scale, int row, string label, string value)
     {
         var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var rowHeight = CredentialRowHeight * scale;
         var drawList = ImGui.GetWindowDrawList();
         var labelLeft = origin.X + 16f * scale;

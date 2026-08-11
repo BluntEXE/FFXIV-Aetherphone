@@ -5,9 +5,10 @@ namespace Aetherphone.Core.Media;
 
 internal sealed class TextureLedger
 {
-    private sealed class Entry
+    private sealed class Entry : IDisposable
     {
-        public readonly IDalamudTextureWrap Wrap;
+        public readonly IDalamudTextureWrap? Wrap;
+        public readonly AnimatedImage? Animation;
         public readonly long Bytes;
         public long LastAccessTicks;
 
@@ -16,6 +17,19 @@ internal sealed class TextureLedger
             Wrap = wrap;
             Bytes = (long)wrap.Width * wrap.Height * 4;
             LastAccessTicks = Environment.TickCount64;
+        }
+
+        public Entry(AnimatedImage animation)
+        {
+            Animation = animation;
+            Bytes = animation.Bytes;
+            LastAccessTicks = Environment.TickCount64;
+        }
+
+        public void Dispose()
+        {
+            Wrap?.Dispose();
+            Animation?.Dispose();
         }
     }
 
@@ -37,17 +51,42 @@ internal sealed class TextureLedger
         }
 
         Volatile.Write(ref entry.LastAccessTicks, Environment.TickCount64);
-        return entry.Wrap;
+        return entry.Wrap ?? entry.Animation!.Frames[0];
+    }
+
+    public AnimatedImage? GetAnimated(string key)
+    {
+        if (!entries.TryGetValue(key, out var entry) || entry.Animation is null)
+        {
+            return null;
+        }
+
+        Volatile.Write(ref entry.LastAccessTicks, Environment.TickCount64);
+        return entry.Animation;
     }
 
     public Vector2 SizeOf(string key)
     {
-        return entries.TryGetValue(key, out var entry) ? entry.Wrap.Size : Vector2.Zero;
+        if (!entries.TryGetValue(key, out var entry))
+        {
+            return Vector2.Zero;
+        }
+
+        return entry.Wrap?.Size ?? entry.Animation!.Frames[0].Size;
     }
 
     public bool TryAdd(string key, IDalamudTextureWrap wrap)
     {
-        var entry = new Entry(wrap);
+        return TryAddEntry(key, new Entry(wrap));
+    }
+
+    public bool TryAddAnimated(string key, AnimatedImage animation)
+    {
+        return TryAddEntry(key, new Entry(animation));
+    }
+
+    private bool TryAddEntry(string key, Entry entry)
+    {
         if (!entries.TryAdd(key, entry))
         {
             return false;
@@ -58,17 +97,26 @@ internal sealed class TextureLedger
         return true;
     }
 
-    public bool TryRemove(string key, out IDalamudTextureWrap wrap)
+    public bool TryRemove(string key, out IDisposable disposable)
     {
         if (entries.TryRemove(key, out var entry))
         {
             Interlocked.Add(ref totalBytes, -entry.Bytes);
-            wrap = entry.Wrap;
+            disposable = entry;
             return true;
         }
 
-        wrap = null!;
+        disposable = null!;
         return false;
+    }
+
+    public void RemoveAndDispose(string key)
+    {
+        if (entries.TryRemove(key, out var entry))
+        {
+            Interlocked.Add(ref totalBytes, -entry.Bytes);
+            entry.Dispose();
+        }
     }
 
     public void DisposeAll()
@@ -78,7 +126,7 @@ internal sealed class TextureLedger
             if (entries.TryRemove(key, out var entry))
             {
                 Interlocked.Add(ref totalBytes, -entry.Bytes);
-                entry.Wrap.Dispose();
+                entry.Dispose();
             }
         }
     }
@@ -114,7 +162,7 @@ internal sealed class TextureLedger
             if (entries.TryRemove(candidates[index].Key, out var removed))
             {
                 Interlocked.Add(ref totalBytes, -removed.Bytes);
-                _ = Plugin.Framework.RunOnFrameworkThread(removed.Wrap.Dispose);
+                _ = Plugin.Framework.RunOnFrameworkThread(removed.Dispose);
             }
         }
     }

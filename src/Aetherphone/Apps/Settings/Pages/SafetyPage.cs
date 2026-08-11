@@ -101,6 +101,7 @@ internal sealed class SafetyPage : ISettingsPage
             ModerationNoticeKinds.ProfileTextCleared => FontAwesomeIcon.Eraser,
             ModerationNoticeKinds.Suspended => FontAwesomeIcon.Ban,
             ModerationNoticeKinds.SignedOut => FontAwesomeIcon.SignOutAlt,
+            ModerationNoticeKinds.EconomyAction => FontAwesomeIcon.Coins,
             _ => FontAwesomeIcon.Heart,
         };
     }

@@ -13,6 +13,7 @@ internal sealed class EncryptionVaultActions : IDisposable
     private volatile string status = string.Empty;
     private volatile bool busy;
     private volatile string generatedCode = string.Empty;
+    private volatile bool hasArchivedEscrows;
 
     public string CodeEntry = string.Empty;
 
@@ -28,6 +29,8 @@ internal sealed class EncryptionVaultActions : IDisposable
 
     public string GeneratedCode => generatedCode;
 
+    public bool HasArchivedEscrows => hasArchivedEscrows;
+
     public string Status
     {
         get => status;
@@ -42,9 +45,19 @@ internal sealed class EncryptionVaultActions : IDisposable
 
     public void AskReset()
     {
+        AskReset(Loc.T(L.Encryption.ForgotBody));
+    }
+
+    public void AskResetWithoutRecovery()
+    {
+        AskReset(Loc.T(L.Encryption.ForgotNoRecoveryBody));
+    }
+
+    private void AskReset(string message)
+    {
         confirm.Ask(new ConfirmRequest
         {
-            Message = Loc.T(L.Encryption.ForgotBody),
+            Message = message,
             ConfirmLabel = Loc.T(L.Encryption.ForgotConfirm),
             CancelLabel = Loc.T(L.Common.Cancel),
             Danger = true,
@@ -64,11 +77,15 @@ internal sealed class EncryptionVaultActions : IDisposable
         {
             try
             {
-                var code = await vault.CreateRecoveryCodeAsync(cancellation.Token).ConfigureAwait(false);
-                if (code is not null)
+                var creation = await vault.CreateRecoveryCodeAsync(cancellation.Token).ConfigureAwait(false);
+                if (creation.Status == RecoveryCodeCreationStatus.Created && creation.Code is not null)
                 {
-                    generatedCode = code;
+                    generatedCode = creation.Code;
                     status = string.Empty;
+                }
+                else if (creation.Status == RecoveryCodeCreationStatus.KeyChangedElsewhere)
+                {
+                    status = Loc.T(L.Encryption.RecoveryKeyChanged);
                 }
                 else
                 {
@@ -80,7 +97,7 @@ internal sealed class EncryptionVaultActions : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Recovery code setup failed: {exception.Message}");
+                AepLog.Warning(exception, "Recovery code setup failed");
                 status = Loc.T(L.Encryption.Failed);
             }
             finally
@@ -104,6 +121,7 @@ internal sealed class EncryptionVaultActions : IDisposable
                 {
                     CodeEntry = string.Empty;
                     status = string.Empty;
+                    await RestorePreviousKeysSilentlyAsync(code).ConfigureAwait(false);
                 }
                 else
                 {
@@ -115,7 +133,75 @@ internal sealed class EncryptionVaultActions : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Recovery failed: {exception.Message}");
+                AepLog.Warning(exception, "Recovery failed");
+                status = Loc.T(L.Encryption.Failed);
+            }
+            finally
+            {
+                busy = false;
+            }
+        });
+    }
+
+    private async Task RestorePreviousKeysSilentlyAsync(string code)
+    {
+        try
+        {
+            await vault.RestorePreviousKeysAsync(code, cancellation.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning(exception, "Previous key restore failed");
+        }
+    }
+
+    public void RefreshArchivedEscrows()
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                hasArchivedEscrows = await vault.HasArchivedEscrowsAsync(cancellation.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                AepLog.Warning(exception, "Archived escrow lookup failed");
+            }
+        });
+    }
+
+    public void BeginRestorePreviousKeys()
+    {
+        var code = CodeEntry;
+        busy = true;
+        status = Loc.T(L.Encryption.Working);
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var restored = await vault.RestorePreviousKeysAsync(code, cancellation.Token).ConfigureAwait(false);
+                if (restored > 0)
+                {
+                    CodeEntry = string.Empty;
+                    status = Loc.T(L.Encryption.RestoreOlderDone, restored);
+                }
+                else
+                {
+                    status = Loc.T(L.Encryption.RestoreOlderNoMatch);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                AepLog.Warning(exception, "Previous key restore failed");
                 status = Loc.T(L.Encryption.Failed);
             }
             finally
@@ -141,7 +227,7 @@ internal sealed class EncryptionVaultActions : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Encryption reset failed: {exception.Message}");
+                AepLog.Warning(exception, "Encryption reset failed");
                 status = Loc.T(L.Encryption.Failed);
             }
             finally

@@ -43,6 +43,8 @@ internal sealed class DeviceStatus : IDisposable
     private volatile int signalBars = 4;
     private volatile int latencyMilliseconds;
     private volatile int packetLossPercent;
+    private bool loggedBatteryProbeFailure;
+    private bool loggedPingFailure;
 
     public DeviceStatus(IClientState clientState, IObjectTable objectTable, IDataManager data)
     {
@@ -87,14 +89,19 @@ internal sealed class DeviceStatus : IDisposable
             {
                 SampleBattery();
                 SampleNetwork(ping);
+            }
+            catch (Exception exception)
+            {
+                AepLog.Warning(exception, "[Device] status sampling failed");
+            }
+
+            try
+            {
                 await Task.Delay(SampleIntervalMilliseconds, token).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
                 break;
-            }
-            catch
-            {
             }
         }
     }
@@ -110,11 +117,18 @@ internal sealed class DeviceStatus : IDisposable
                 batteryPresent = !absent;
                 batteryPercent = absent ? 100 : Math.Clamp((int)status.BatteryLifePercent, 0, 100);
                 charging = !absent && ((status.BatteryFlag & 0x08) != 0 || status.AcLineStatus == 1);
+                loggedBatteryProbeFailure = false;
                 return;
             }
         }
-        catch
+        catch (Exception exception)
         {
+            if (!loggedBatteryProbeFailure)
+            {
+                loggedBatteryProbeFailure = true;
+                AepLog.Warning(exception,
+                    "[Device] battery probe failed; reporting no battery (further failures suppressed)");
+            }
         }
 
         batteryPresent = false;
@@ -134,10 +148,18 @@ internal sealed class DeviceStatus : IDisposable
             {
                 succeeded = true;
                 roundtrip = reply.RoundtripTime;
+                loggedPingFailure = false;
             }
         }
-        catch
+        catch (Exception exception)
         {
+            if (!loggedPingFailure)
+            {
+                loggedPingFailure = true;
+                AepLog.Warning(exception,
+                    $"[Device] ping to {endpoint} failed; signal bars will read empty (further failures suppressed)");
+            }
+
             succeeded = false;
         }
 

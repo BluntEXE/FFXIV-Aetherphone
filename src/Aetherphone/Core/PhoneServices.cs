@@ -77,6 +77,23 @@ internal sealed class PhoneServices : IDisposable
     public required RemoteImageCache RemoteImages { get; init; }
 
     public required Social.BadgeCatalogStore BadgeCatalog { get; init; }
+
+    public required Coins.CoinStore Coins { get; init; }
+
+    public required Coins.CoinCatalogStore CoinCatalog { get; init; }
+
+    public required Coins.CoinGameSessionTracker CoinSessions { get; init; }
+
+    public required Coins.CoinEarnNotifier CoinEarnNotifier { get; init; }
+
+    public required Casino.CasinoStore Casino { get; init; }
+    public required Casino.CasinoPlayStore CasinoPlay { get; init; }
+    public required Casino.CasinoHistoryStore CasinoHistory { get; init; }
+    public required Casino.CasinoRoomsStore CasinoRooms { get; init; }
+    public required Casino.CasinoTablesStore CasinoTables { get; init; }
+    public required Casino.CasinoSpinStore CasinoSpin { get; init; }
+    public required Casino.CasinoTurnNotifier CasinoTurns { get; init; }
+    public required Casino.CasinoLauncher CasinoLauncher { get; init; }
     public required PluginCatalog PluginCatalog { get; init; }
     public required ShortcutStore Shortcuts { get; init; }
     public required ShortcutRunner ShortcutRunner { get; init; }
@@ -89,6 +106,7 @@ internal sealed class PhoneServices : IDisposable
     public required KeyVault KeyVault { get; init; }
     public required PeerKeyDirectory PeerKeys { get; init; }
     public required ConversationKeyStore ConversationKeys { get; init; }
+    public required EncryptionSetupLauncher EncryptionSetup { get; init; }
     public required MarketItemIndex MarketIndex { get; init; }
     public required MarketboardService Market { get; init; }
     public required MarketLauncher MarketLauncher { get; init; }
@@ -188,6 +206,16 @@ internal sealed class PhoneServices : IDisposable
         var badgeCatalog = new Social.BadgeCatalogStore(aethernetSession, aethernet.Account);
         Windows.Components.UserName.Configure(badgeCatalog, remoteImages);
         Moderation.ModerationNoticeText.Configure(badgeCatalog);
+        var coinApi = new AethernetApi(http, aethernetSession, "coin");
+        var coins = new Coins.CoinStore(aethernetSession, coinApi.Coins);
+        var coinCatalog = new Coins.CoinCatalogStore(aethernetSession, coinApi.Coins);
+        var coinSessions = new Coins.CoinGameSessionTracker(configuration, aethernetSession, coinApi.Coins);
+        var coinEarnNotifier = new Coins.CoinEarnNotifier(coins, notifications);
+        var casinoApi = new AethernetApi(http, aethernetSession, "casino");
+        var casino = new Casino.CasinoStore(configuration, aethernetSession, casinoApi.Casino, coins);
+        var casinoPlay = new Casino.CasinoPlayStore(configuration, aethernetSession, casinoApi.Casino, casino);
+        var casinoHistory = new Casino.CasinoHistoryStore(aethernetSession, casinoApi.Casino);
+        var casinoSpin = new Casino.CasinoSpinStore(aethernetSession, casinoApi.Casino, coins);
         var peerKeys = new PeerKeyDirectory(configuration, aethernet.Keys);
         var conversationKeys = new ConversationKeyStore(aethernet.Keys, keyVault);
         var marketIndex = new MarketItemIndex(dataManager);
@@ -239,6 +267,12 @@ internal sealed class PhoneServices : IDisposable
             accountState, framework);
         var moderationArchive = new ModerationNoticeArchive(aethernetSession, aethernet.Account);
         var safetyLauncher = new SafetyLauncher();
+        var casinoRooms = new Casino.CasinoRoomsStore(aethernetSession, casinoApi.Casino, casino, visibility,
+            realtimeSignals);
+        var casinoTables = new Casino.CasinoTablesStore(aethernetSession, casinoApi.Casino, casino, visibility,
+            realtimeSignals);
+        var casinoTurns = new Casino.CasinoTurnNotifier(aethernetSession, casinoRooms, notifications,
+            Apps.AppAccents.For("casino"));
         var musters = new MusterStore(aethernetSession, aethernet.Musters, notifications, configuration,
             visibility, realtimeSignals, installer.Gate(MusterStore.AppId));
         var yellowPages = new YellowPagesStore(aethernetSession, aethernet.Ads, aethernet.Media, configuration,
@@ -281,6 +315,18 @@ internal sealed class PhoneServices : IDisposable
             Media = media,
             RemoteImages = remoteImages,
             BadgeCatalog = badgeCatalog,
+            Coins = coins,
+            CoinCatalog = coinCatalog,
+            CoinSessions = coinSessions,
+            CoinEarnNotifier = coinEarnNotifier,
+            Casino = casino,
+            CasinoPlay = casinoPlay,
+            CasinoHistory = casinoHistory,
+            CasinoRooms = casinoRooms,
+            CasinoTables = casinoTables,
+            CasinoSpin = casinoSpin,
+            CasinoTurns = casinoTurns,
+            CasinoLauncher = new Casino.CasinoLauncher(),
             PluginCatalog = pluginCatalog,
             Shortcuts = new ShortcutStore(configuration, pluginCatalog),
             ShortcutRunner = new ShortcutRunner(clientState, condition),
@@ -293,6 +339,7 @@ internal sealed class PhoneServices : IDisposable
             KeyVault = keyVault,
             PeerKeys = peerKeys,
             ConversationKeys = conversationKeys,
+            EncryptionSetup = new EncryptionSetupLauncher(),
             MarketIndex = marketIndex,
             Market = market,
             MarketLauncher = marketLauncher,
@@ -372,6 +419,17 @@ internal sealed class PhoneServices : IDisposable
         RemoteImages.Dispose();
         Windows.Components.UserName.Reset();
         Moderation.ModerationNoticeText.Reset();
+        CasinoTurns.Dispose();
+        CasinoTables.Dispose();
+        CasinoRooms.Dispose();
+        CasinoSpin.Dispose();
+        CasinoHistory.Dispose();
+        CasinoPlay.Dispose();
+        Casino.Dispose();
+        CoinEarnNotifier.Dispose();
+        CoinSessions.Dispose();
+        CoinCatalog.Dispose();
+        Coins.Dispose();
         BadgeCatalog.Dispose();
         Availability.Dispose();
         Http.Dispose();

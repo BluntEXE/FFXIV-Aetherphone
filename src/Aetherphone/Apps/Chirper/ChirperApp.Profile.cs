@@ -56,6 +56,11 @@ internal sealed partial class ChirperApp
                 for (var index = 0; index < posts.Length; index++)
                 {
                     var post = posts[index];
+                    if (HiddenByMediaPreference(post))
+                    {
+                        continue;
+                    }
+
                     if (!renderedUnderlyingIds.Add(post.RepostOfId ?? post.Id))
                     {
                         continue;

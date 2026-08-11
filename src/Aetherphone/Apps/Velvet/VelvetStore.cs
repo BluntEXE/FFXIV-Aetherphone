@@ -143,7 +143,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     private void OnVelvetPinged()
     {
         InboxCadence.RequestImmediate();
-        RefreshThreadIfVisible();
+        RequestThreadRefresh();
     }
 
     public MentionSuggestions NewMentionSuggestions() => new(account, work);
@@ -317,6 +317,9 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     protected override Task<bool> DeleteMessageRequestAsync(string messageId, CancellationToken token) =>
         client.DeleteMessageAsync(messageId, token);
 
+    protected override Task<bool> DeleteThreadRequestAsync(string threadId, CancellationToken token) =>
+        client.DeleteThreadAsync(threadId, token);
+
     protected override Task SetReactionRequestAsync(string messageId, string reactionToken, CancellationToken token) =>
         client.SetReactionAsync(messageId, reactionToken, token);
 
@@ -457,6 +460,12 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         }
 
         return decorated ?? items;
+    }
+
+    protected override bool IsInboxPreviewReady(VelvetThreadDto thread)
+    {
+        return thread.LastMessageEncVersion != EnvelopeCodec.VersionEnvelope
+            || cipher.IsPreviewResolved(thread.OtherUserId, thread.LastMessageAtUnix);
     }
 
     public byte[]? DecryptMedia(VelvetMessageDto message, byte[] sealedBytes, string threadPartnerId)

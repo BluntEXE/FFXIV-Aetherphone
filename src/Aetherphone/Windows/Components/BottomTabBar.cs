@@ -13,7 +13,14 @@ internal readonly record struct NavTab(FontAwesomeIcon Icon, string Label, int B
 internal sealed class BottomTabBar
 {
     public const float Height = 52f;
+    public const float LabelledHeight = 72f;
 
+    private const float LabelIconOffset = 26f;
+    private const float LabelBaseline = 25f;
+    private const float LabelIconScale = 1.18f;
+    private const float LabelActiveIconScale = 1.3f;
+    private const float LabelPillWidth = 54f;
+    private const float LabelPillHeight = 40f;
     private const float HitRadius = 17f;
     private const float RaisedRadius = 19f;
     private const float PillWidth = 40f;
@@ -26,7 +33,8 @@ internal sealed class BottomTabBar
 
     private Spring[] hover = Array.Empty<Spring>();
 
-    public int Draw(Rect bar, AppSkin ui, PhoneTheme theme, ReadOnlySpan<NavTab> tabs, int active)
+    public int Draw(Rect bar, AppSkin ui, PhoneTheme theme, ReadOnlySpan<NavTab> tabs, int active,
+        bool showLabels = false)
     {
         if (tabs.Length == 0)
         {
@@ -55,7 +63,9 @@ internal sealed class BottomTabBar
 
             var picked = tabs[index].Raised
                 ? DrawRaised(drawList, ui, tabs[index], center, index, scale)
-                : DrawTab(ui, theme, tabs[index], center, index, index == active, scale);
+                : showLabels
+                    ? DrawLabelledTab(drawList, ui, theme, tabs[index], bar, slot, index, index == active, scale)
+                    : DrawTab(ui, theme, tabs[index], center, index, index == active, scale);
             if (picked)
             {
                 tapped = index;
@@ -63,6 +73,47 @@ internal sealed class BottomTabBar
         }
 
         return tapped;
+    }
+
+    private bool DrawLabelledTab(ImDrawListPtr drawList, AppSkin ui, PhoneTheme theme, in NavTab tab, Rect bar,
+        float slot, int index, bool active, float scale)
+    {
+        var cellMin = new Vector2(bar.Min.X + slot * index, bar.Min.Y);
+        var cellMax = new Vector2(cellMin.X + slot, bar.Max.Y);
+        var hovered = UiInteract.Hover(cellMin, cellMax);
+        var delta = MathF.Min(ImGui.GetIO().DeltaTime, MaxFrameSeconds);
+        hover[index].Step(hovered ? 1f : 0f, HoverSmoothTime, delta);
+        var iconCenter = new Vector2((cellMin.X + cellMax.X) * 0.5f, cellMin.Y + LabelIconOffset * scale);
+        DrawLabelPill(drawList, ui, iconCenter, Math.Clamp(hover[index].Value, 0f, 1f), scale);
+
+        var ink = active ? ui.Accent : hovered ? ui.TitleInk : ui.MutedInk;
+        AppSkin.Icon(drawList, iconCenter, tab.Icon.ToIconString(), ink,
+            active ? LabelActiveIconScale : LabelIconScale);
+        var style = active ? TextStyles.FootnoteEmphasized : TextStyles.Footnote;
+        var label = Typography.FitText(tab.Label, slot - 6f * scale, style);
+        Typography.DrawCentered(drawList, new Vector2(iconCenter.X, iconCenter.Y + LabelBaseline * scale), label, ink,
+            style);
+        ActivityBadge.Draw(iconCenter + new Vector2(13f * scale, -10f * scale), tab.Badge, theme, scale);
+        HoverTooltip.Show(new Rect(cellMin, cellMax), tab.Label, HoverLabelSide.Above);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return UiInteract.Click(cellMin, cellMax, hovered);
+    }
+
+    private static void DrawLabelPill(ImDrawListPtr drawList, AppSkin ui, Vector2 center, float amount, float scale)
+    {
+        if (amount <= 0.001f)
+        {
+            return;
+        }
+
+        var grow = 0.86f + 0.14f * amount;
+        var half = new Vector2(LabelPillWidth * 0.5f * scale * grow, LabelPillHeight * 0.5f * scale * grow);
+        var tint = Palette.WithAlpha(ui.HoverTint, PillAlpha * amount);
+        Squircle.Fill(drawList, center - half, center + half, half.Y * 0.6f, ImGui.GetColorU32(tint));
     }
 
     private bool DrawTab(AppSkin ui, PhoneTheme theme, in NavTab tab, Vector2 center, int slot, bool active,

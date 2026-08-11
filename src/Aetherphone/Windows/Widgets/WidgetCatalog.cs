@@ -19,6 +19,7 @@ internal static class WidgetCatalog
             new PhotosWidget(photos),
             new ResetsWidget(),
             new ActivityRingsWidget(services.Activity, services.Configuration),
+            new CoinWidget(services.Coins, services.AethernetSession),
         };
 
         return new WidgetRegistry(widgets, apps);

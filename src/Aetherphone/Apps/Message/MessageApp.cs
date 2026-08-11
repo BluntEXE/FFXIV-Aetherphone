@@ -3,6 +3,7 @@ using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
+using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
@@ -58,6 +59,7 @@ internal sealed partial class MessageApp : IPhoneApp
     private readonly MusterStore musters;
     private readonly MusterLauncher musterLauncher;
     private readonly SocialNotificationService socialNotifications;
+    private readonly EncryptionSetupLauncher encryptionSetup;
     private readonly AppSkin ui = new(AppPalettes.Message);
     private readonly AvatarLightbox avatarLightbox = new();
     private readonly ViewRouter<MessageRoute> router;
@@ -70,15 +72,17 @@ internal sealed partial class MessageApp : IPhoneApp
     private CallView currentCall;
     private CallState lastCallState;
     private string filter = string.Empty;
+    private bool recoveryNudgeDismissed;
 
     public MessageApp(DirectMessagesStore store, ContactBook contacts, CallHub calls, AethernetSession session,
         RemoteImageCache images, LodestoneService lodestone, DmLauncher launcher, PhotoLibrary library,
         HttpService http, Configuration configuration, ConfirmService confirm, ReportService report,
         WallpaperImageCache wallpaperImages, MusterStore musters, MusterLauncher musterLauncher,
-        SocialNotificationService socialNotifications)
+        SocialNotificationService socialNotifications, EncryptionSetupLauncher encryptionSetup)
     {
         this.socialNotifications = socialNotifications;
         this.musterLauncher = musterLauncher;
+        this.encryptionSetup = encryptionSetup;
         this.store = store;
         this.contacts = contacts;
         this.calls = calls;

@@ -269,7 +269,7 @@ internal sealed class ChatTranscript
         var typingTarget = model.OtherTyping ? 1f : 0f;
         typingReveal += (typingTarget - typingReveal) * MathF.Min(1f, delta * 12f);
 
-        using (AppSurface.Begin(listRect))
+        using (var surface = AppSurface.Begin(listRect))
         {
             if (model.Messages.Length == 0 && typingReveal < 0.01f)
             {
@@ -278,7 +278,7 @@ internal sealed class ChatTranscript
                 return;
             }
 
-            SyncFollow(model.ThreadId);
+            SyncFollow(model.ThreadId, surface.FreshVisit);
             MaybeLoadOlder(model);
             ImGui.Dummy(new Vector2(0f, 8f * scale));
             var messages = model.Messages;
@@ -435,7 +435,7 @@ internal sealed class ChatTranscript
         }
     }
 
-    private void SyncFollow(string threadId)
+    private void SyncFollow(string threadId, bool freshVisit)
     {
         var scale = UiScale.Current;
         if (followThreadId == threadId)
@@ -445,6 +445,12 @@ internal sealed class ChatTranscript
         else
         {
             followThreadId = threadId;
+            followBottom = true;
+            olderAnchorFromBottom = -1f;
+        }
+
+        if (freshVisit && scrollTargetId is null)
+        {
             followBottom = true;
             olderAnchorFromBottom = -1f;
         }

@@ -1,5 +1,6 @@
 using Aetherphone.Core.Announcements;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Casino;
 using Aetherphone.Core.Linkpearl;
 using Aetherphone.Core.Moderation;
 using Aetherphone.Core.Muster;
@@ -20,6 +21,8 @@ internal sealed class NotificationRouter
     private const string AnnouncementsAppId = "announcements";
     private const string SettingsAppId = "settings";
     private const string MusicAppId = "music";
+    private const string CasinoAppId = "casino";
+    private const string CasinoGroupPrefix = "casino:";
     private const int TypeLike = 0;
     private const int TypeComment = 1;
     private const int TypeFollow = 2;
@@ -50,14 +53,17 @@ internal sealed class NotificationRouter
     private readonly AnnouncementsLauncher announcementsLauncher;
     private readonly SafetyLauncher safetyLauncher;
     private readonly RadioLauncher radioLauncher;
+    private readonly CasinoLauncher casinoLauncher;
 
     public NotificationRouter(INavigator navigation, NotificationService notifications,
         SocialNotificationService socialNotifications, LinkpearlLauncher linkpearlLauncher,
         VelvetLauncher velvetLauncher, DmLauncher dmLauncher, GramDmLauncher gramDmLauncher, SocialLauncher socialLauncher,
         MusterLauncher musterLauncher, YellowPagesLauncher yellowPagesLauncher,
-        AnnouncementsLauncher announcementsLauncher, SafetyLauncher safetyLauncher, RadioLauncher radioLauncher)
+        AnnouncementsLauncher announcementsLauncher, SafetyLauncher safetyLauncher, RadioLauncher radioLauncher,
+        CasinoLauncher casinoLauncher)
     {
         this.radioLauncher = radioLauncher;
+        this.casinoLauncher = casinoLauncher;
         this.navigation = navigation;
         this.notifications = notifications;
         this.socialNotifications = socialNotifications;
@@ -151,6 +157,11 @@ internal sealed class NotificationRouter
                  && !string.IsNullOrEmpty(notification.PostId))
         {
             radioLauncher.RequestStation(notification.PostId!);
+        }
+        else if (notification.AppId == CasinoAppId && notification.GroupKey is { } tableKey
+                 && tableKey.StartsWith(CasinoGroupPrefix, StringComparison.Ordinal))
+        {
+            casinoLauncher.RequestTable(tableKey[CasinoGroupPrefix.Length..]);
         }
         else if (notification.AppId == SettingsAppId)
         {

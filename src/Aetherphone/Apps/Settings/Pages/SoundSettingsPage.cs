@@ -106,7 +106,7 @@ internal sealed class SoundSettingsPage : ISettingsPage
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Sound] import failed: {exception.Message}");
+            AepLog.Warning(exception, "[Sound] import failed");
         }
     }
 }

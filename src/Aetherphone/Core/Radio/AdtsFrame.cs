@@ -98,7 +98,6 @@ internal static class AdtsReader
                 break;
             }
 
-            // Not a frame start: drop the first byte and try again from the next one.
             Array.Copy(buffer, 1, buffer, 0, HeaderLength - 1);
             header = HeaderLength - 1;
         }

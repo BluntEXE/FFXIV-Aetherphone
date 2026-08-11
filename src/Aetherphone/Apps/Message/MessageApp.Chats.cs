@@ -1,6 +1,8 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Confirm;
+using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Muster;
 using Aetherphone.Core.Theme;
@@ -17,7 +19,7 @@ internal sealed partial class MessageApp
     private const byte ChatFilterGroups = 2;
 
     private readonly DropdownMenu chatMenu = new();
-    private readonly DropdownMenu.Item[] chatMenuItems = new DropdownMenu.Item[3];
+    private readonly DropdownMenu.Item[] chatMenuItems = new DropdownMenu.Item[4];
     private string? menuConversationId;
     private byte chatFilter = ChatFilterAll;
 
@@ -42,6 +44,7 @@ internal sealed partial class MessageApp
         DrawChatFilterChips(new Rect(new Vector2(area.Min.X, area.Min.Y + searchHeight),
             new Vector2(area.Max.X, area.Min.Y + searchHeight + chipsHeight)), scale);
         var listRect = new Rect(new Vector2(area.Min.X, area.Min.Y + searchHeight + chipsHeight), area.Max);
+        DrawRecoveryNudge(ref listRect);
         var pinned = new List<ConversationDto>();
         var regular = new List<ConversationDto>();
         CollectChats(pinned, regular, archived: false);
@@ -96,6 +99,24 @@ internal sealed partial class MessageApp
             filter = string.Empty;
             router.Push(MessageRoute.NewChat);
         }
+    }
+
+    private void DrawRecoveryNudge(ref Rect listRect)
+    {
+        if (recoveryNudgeDismissed || configuration.EncryptionRecoveryNudgeDismissed
+            || store.VaultState != KeyVaultState.Unlocked || store.Vault.RecoveryConfigured)
+        {
+            return;
+        }
+
+        ChatHeaderControls.DrawPromptBanner(ui, ref listRect, Loc.T(L.Encryption.RecoveryNudgeBanner), ui.MutedInk,
+            () =>
+            {
+                recoveryNudgeDismissed = true;
+                encryptionSetup.Request();
+                navigation.Open("settings");
+            },
+            () => recoveryNudgeDismissed = true);
     }
 
     private void DrawChatFilterChips(Rect area, float scale)
@@ -325,6 +346,8 @@ internal sealed partial class MessageApp
             FontAwesomeIcon.BoxOpen.ToIconString());
         chatMenuItems[2] = new DropdownMenu.Item(Loc.T(isMuted ? L.Message.UnmuteAction : L.Message.MuteAction),
             (isMuted ? FontAwesomeIcon.Bell : FontAwesomeIcon.BellSlash).ToIconString());
+        chatMenuItems[3] = new DropdownMenu.Item(Loc.T(L.Message.DeleteConversation),
+            FontAwesomeIcon.Trash.ToIconString(), true);
         var clicked = chatMenu.Draw(area, theme, chatMenuItems);
         if (clicked == 0)
         {
@@ -337,6 +360,37 @@ internal sealed partial class MessageApp
         else if (clicked == 2)
         {
             store.SetMuted(id, !isMuted, _ => { });
+        }
+        else if (clicked == 3)
+        {
+            AskDeleteConversation(id);
+        }
+    }
+
+    private void AskDeleteConversation(string conversationId)
+    {
+        confirm.Ask(new ConfirmRequest
+        {
+            Title = Loc.T(L.Message.DeleteConversation),
+            Message = Loc.T(L.Message.DeleteConversationMessage),
+            ConfirmLabel = Loc.T(L.Common.Delete),
+            CancelLabel = Loc.T(L.Common.Cancel),
+            Danger = true,
+            Confirm = () => DeleteConversation(conversationId),
+        });
+    }
+
+    private void DeleteConversation(string conversationId)
+    {
+        var current = router.Current;
+        var threadOpen = current.Screen == MessageScreen.Thread && current.Id == conversationId;
+        configuration.MessagePinnedChats.Remove(conversationId);
+        configuration.MessageArchivedChats.Remove(conversationId);
+        configuration.Save();
+        store.DeleteThread(conversationId);
+        if (threadOpen)
+        {
+            router.Pop();
         }
     }
 

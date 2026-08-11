@@ -14,7 +14,7 @@ internal sealed class ControlRegistry : IControlRegistry
     private readonly Dictionary<string, IControlModule> byId = new();
 
     public ControlRegistry(Configuration configuration, ThemeProvider themes, PlaybackHub playback, CallHub calls,
-        INavigator navigation, Action dismiss)
+        INavigator navigation, Action dismiss, Coins.CoinStore coins, Aethernet.AethernetSession session)
     {
         Add(new ToggleModule("dnd", FontAwesomeIcon.Moon, L.Settings.DoNotDisturb,
             () => configuration.DoNotDisturb, () =>
@@ -52,6 +52,7 @@ internal sealed class ControlRegistry : IControlRegistry
             navigation.Open("settings");
             dismiss();
         }));
+        Add(new CoinModule(coins, session, navigation, dismiss));
         Add(new AccentModule(themes, configuration));
     }
 

@@ -9,8 +9,6 @@ namespace Aetherphone.Windows.Components;
 
 internal static class HomeTileView
 {
-    private static readonly Vector4 GlyphInk = new(1f, 1f, 1f, 1f);
-
     public static void DrawApp(Vector2 center, float size, IPhoneApp app, PhoneTheme theme, float drawScale,
         float labelAlpha, bool showLabels, float labelWidth, float zoom = 1f)
     {
@@ -21,14 +19,15 @@ internal static class HomeTileView
         var drawMax = new Vector2(center.X + drawHalf, center.Y + drawHalf);
         var radius = size * 0.26f * drawScale;
         var surface = IconTile.Surface(app.Accent);
+        var ink = AppAccents.InkFor(app.Id);
         Elevation.IconRest(dl, drawMin, drawMax, radius, scale);
         IconTile.FillShaded(dl, drawMin, drawMax, radius, surface);
         Material.EdgeSquircle(dl, drawMin, drawMax, radius, scale);
-        if (!AppIconArt.TryDraw(app.Id, center, size * drawScale, GlyphInk, Palette.Darken(surface, 0.25f)))
+        if (!AppIconArt.TryDraw(app.Id, center, size * drawScale, ink, Palette.Mix(surface, ink, 0.28f)))
         {
             var glyphHeight = Typography.Measure(app.Glyph).Y;
             var glyphScale = glyphHeight > 0f ? size * drawScale * 0.5f / glyphHeight : 1f;
-            Typography.DrawCentered(center, app.Glyph, GlyphInk, glyphScale);
+            Typography.DrawCentered(center, app.Glyph, ink, glyphScale);
         }
 
         DrawLabel(center, size, app.DisplayName, theme, scale, labelAlpha, showLabels, labelWidth, zoom);
@@ -80,8 +79,9 @@ internal static class HomeTileView
 
             var appItem = member.App!;
             var surface = IconTile.Surface(appItem.Accent);
+            var memberInk = AppAccents.InkFor(appItem.Id);
             Squircle.Fill(dl, miniMin, miniMax, mini * 0.3f, ImGui.GetColorU32(surface));
-            AppIconArt.TryDraw(appItem.Id, cellCenter, mini, GlyphInk, Palette.Darken(surface, 0.25f));
+            AppIconArt.TryDraw(appItem.Id, cellCenter, mini, memberInk, Palette.Mix(surface, memberInk, 0.28f));
         }
 
         var name = string.IsNullOrEmpty(folder.FolderName) ? fallbackName : folder.FolderName;

@@ -67,7 +67,7 @@ internal sealed class ModerationNoticeService : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[Notices] ack failed for {notice.Id}: {exception.Message}");
+                AepLog.Warning(exception, $"[Notices] ack failed for {notice.Id}");
             }
             finally
             {
@@ -156,7 +156,7 @@ internal sealed class ModerationNoticeService : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[Notices] poll failed: {exception.Message}");
+                AepLog.Warning(exception, "[Notices] poll failed");
             }
             finally
             {

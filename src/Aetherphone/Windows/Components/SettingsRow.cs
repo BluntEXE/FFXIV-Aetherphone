@@ -7,8 +7,6 @@ namespace Aetherphone.Windows.Components;
 
 internal static class SettingsRow
 {
-    private static readonly Vector4 GlyphInk = new(1f, 1f, 1f, 1f);
-
     public static bool Bool(Rect row, string label, bool value, PhoneTheme theme, string? id = null,
         string? hint = null, bool dimmed = false)
     {
@@ -73,10 +71,11 @@ internal static class SettingsRow
         var tileSize = Metrics.Size.IconTile * scale;
         var tileMin = new Vector2(row.Min.X, row.Center.Y - tileSize * 0.5f);
         var tileMax = tileMin + new Vector2(tileSize, tileSize);
-        var surface = hovered ? Palette.Lighten(tint, 0.08f) : tint;
+        var normalized = IconTile.Surface(tint);
+        var surface = hovered ? Palette.Lighten(normalized, 0.08f) : normalized;
         IconTile.FillShaded(dl, tileMin, tileMax, tileSize * Metrics.Radius.TileFactor, surface);
-        ProgressRing.CenterIcon(dl, new Vector2(tileMin.X + tileSize * 0.5f, row.Center.Y), icon, GlyphInk,
-            tileSize * 0.5f);
+        ProgressRing.CenterIcon(dl, new Vector2(tileMin.X + tileSize * 0.5f, row.Center.Y), icon,
+            AccentRing.Ink, tileSize * 0.5f);
         if (badge)
         {
             AppBadge.DrawDot(new Vector2(tileMax.X, tileMin.Y), theme, scale);
@@ -114,14 +113,9 @@ internal static class SettingsRow
         var tileSize = 30f * scale;
         var tileMin = new Vector2(row.Min.X, row.Center.Y - tileSize * 0.5f);
         var tileMax = tileMin + new Vector2(tileSize, tileSize);
-        var tileFill = hovered ? Palette.Mix(tint, theme.TextStrong, 0.14f) : tint;
-        Squircle.Fill(dl, tileMin, tileMax, tileSize * Metrics.Radius.TileFactor, ImGui.GetColorU32(tileFill));
-        var iconCenter = (tileMin + tileMax) * 0.5f;
-        var hole = Palette.Mix(tint, new Vector4(0f, 0f, 0f, 1f), 0.25f);
-        if (!AppIconArt.TryDraw(dl, appId, iconCenter, tileSize * 0.98f, theme.TextStrong, hole))
-        {
-            dl.AddCircleFilled(iconCenter, 4f * scale, ImGui.GetColorU32(theme.TextStrong), 16);
-        }
+        var normalized = IconTile.Surface(tint);
+        var tileFill = hovered ? Palette.Mix(normalized, theme.TextStrong, 0.14f) : normalized;
+        IconTile.DrawApp(dl, appId, (tileMin + tileMax) * 0.5f, tileSize, tileFill);
 
         var labelStartX = tileMax.X + Metrics.Space.Md * scale;
         var chevronWidth = Metrics.Space.Xs * scale;

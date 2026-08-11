@@ -70,7 +70,10 @@ internal sealed record UserDto(
     string Region = "",
     int Badges = 0,
     int GrantedBadges = 0,
-    string[]? ProfileBadges = null) : IIdentified;
+    string[]? ProfileBadges = null,
+    long Coins = 0,
+    long CoinsEarnedToday = 0,
+    long CoinsDailyCap = 0) : IIdentified;
 
 internal sealed record UpdateProfileRequest(string? DisplayName, string? Handle, string? Bio, string? AvatarUrl = null);
 
@@ -118,7 +121,12 @@ internal sealed record UpdateAccountPrivacyRequest(bool? IsPrivate);
 
 internal sealed record FollowResultDto(bool Following, bool Requested);
 
-internal sealed record CreatePostRequest(string Text, string? QuotedPostId = null);
+internal sealed record CreatePostRequest(
+    string Text,
+    string? QuotedPostId = null,
+    string[]? MediaKeys = null,
+    int MediaWidth = 0,
+    int MediaHeight = 0);
 
 internal sealed record ReactRequest(int Kind);
 
@@ -674,7 +682,7 @@ internal sealed record ChatMediaUrlDto(string Url, long ExpiresAtUnix);
 
 internal sealed record WrappedPrivateKeyDto(string Salt, int Iterations, string Nonce, string Ciphertext);
 
-internal sealed record PutMyKeysRequest(string PublicKey, WrappedPrivateKeyDto? PrivateKey = null);
+internal sealed record PutMyKeysRequest(string PublicKey, WrappedPrivateKeyDto? PrivateKey = null, int? ExpectedKeyVersion = null);
 
 internal sealed record MyKeysDto(
     string PublicKey,
@@ -715,3 +723,7 @@ internal sealed record ConversationKeysDto(
 internal sealed record ConversationWrapsDto(string ConversationId, int CurrentGeneration, KeyWrapDto[] Wraps);
 
 internal sealed record MyConversationKeysDto(ConversationWrapsDto[] Items);
+
+internal sealed record ArchivedKeyEscrowDto(int KeyVersion, string PublicKey, WrappedPrivateKeyDto Escrow, long CreatedAtUnix);
+
+internal sealed record ArchivedEscrowsDto(ArchivedKeyEscrowDto[] Items);

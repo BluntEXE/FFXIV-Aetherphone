@@ -213,7 +213,7 @@ internal sealed class ProfilePage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Time zone update failed: {exception.Message}");
+                AepLog.Warning(exception, "Time zone update failed");
             }
         });
     }

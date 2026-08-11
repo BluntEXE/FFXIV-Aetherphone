@@ -136,7 +136,7 @@ internal sealed class TagsMentionsPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Tag privacy load failed: {exception.Message}");
+                AepLog.Warning(exception, "Tag privacy load failed");
             }
             finally
             {
@@ -161,7 +161,7 @@ internal sealed class TagsMentionsPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Mention privacy update failed: {exception.Message}");
+                AepLog.Warning(exception, "Mention privacy update failed");
             }
         });
     }
@@ -184,7 +184,7 @@ internal sealed class TagsMentionsPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Tag privacy update failed: {exception.Message}");
+                AepLog.Warning(exception, "Tag privacy update failed");
             }
         });
     }

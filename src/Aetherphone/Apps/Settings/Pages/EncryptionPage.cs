@@ -33,6 +33,8 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
     private readonly EncryptionVaultActions actions;
     private readonly CancellationTokenSource cancellation = new();
     private volatile bool refreshRequested;
+    private int lastDrawnFrame;
+    private bool restoreEntryOpen;
 
     public EncryptionPage(AethernetSession session, KeyVault vault, ConfirmService confirm)
     {
@@ -43,6 +45,14 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
 
     public void Draw(in PhoneContext context, Rect body)
     {
+        var frame = ImGui.GetFrameCount();
+        if (frame - lastDrawnFrame > 1)
+        {
+            restoreEntryOpen = false;
+            actions.RefreshArchivedEscrows();
+        }
+
+        lastDrawnFrame = frame;
         var theme = context.Theme;
         using (AppSurface.Begin(body))
         {
@@ -102,7 +112,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Encryption key refresh failed: {exception.Message}");
+                AepLog.Warning(exception, "Encryption key refresh failed");
             }
         });
     }
@@ -149,13 +159,13 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         ImGui.Dummy(new Vector2(0f, 8f * scale));
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
         {
-            Typography.Wrapped(Loc.T(L.Encryption.LockedBody));
+            Typography.Wrapped(Loc.T(L.Encryption.LockedNoRecoveryBody));
         }
 
         ImGui.Dummy(new Vector2(0f, 12f * scale));
         if (Button(Loc.T(L.Encryption.NewKeyButton), theme) && !actions.Busy)
         {
-            actions.AskReset();
+            actions.AskResetWithoutRecovery();
         }
     }
 
@@ -296,18 +306,60 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         if (vault.LocalCacheUnavailable)
         {
             ImGui.Dummy(new Vector2(0f, 8f * scale));
-            using (ImRaii.PushColor(ImGuiCol.Text, theme.Danger))
+            using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
             {
                 Typography.Wrapped(Loc.T(L.Encryption.LocalStoreUnavailable));
             }
         }
 
         DrawRecoverySection(theme);
+        DrawRestoreOlderSection(theme);
 
         ImGui.Dummy(new Vector2(0f, 14f * scale));
         if (Button(Loc.T(L.Encryption.ResetButton), theme) && !actions.Busy)
         {
             actions.AskReset();
+        }
+    }
+
+    private void DrawRestoreOlderSection(PhoneTheme theme)
+    {
+        if (!actions.HasArchivedEscrows)
+        {
+            return;
+        }
+
+        var scale = UiScale.Current;
+        ImGui.Dummy(new Vector2(0f, 14f * scale));
+        using (ImRaii.PushColor(ImGuiCol.Text, theme.TextStrong))
+        {
+            Typography.Plain(Loc.T(L.Encryption.RestoreOlderTitle));
+        }
+
+        ImGui.Dummy(new Vector2(0f, 4f * scale));
+        using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
+        {
+            Typography.Wrapped(Loc.T(L.Encryption.RestoreOlderBody));
+        }
+
+        ImGui.Dummy(new Vector2(0f, 8f * scale));
+        if (!restoreEntryOpen)
+        {
+            if (Button(Loc.T(L.Encryption.RestoreOlderButton), theme) && !actions.Busy)
+            {
+                actions.CodeEntry = string.Empty;
+                restoreEntryOpen = true;
+            }
+
+            return;
+        }
+
+        DrawCodeInput(theme);
+        ImGui.Dummy(new Vector2(0f, 10f * scale));
+        if (Button(Loc.T(L.Encryption.RestoreOlderConfirm), theme)
+            && !actions.Busy && RecoveryKey.Canonicalize(actions.CodeEntry).Length > 0)
+        {
+            actions.BeginRestorePreviousKeys();
         }
     }
 

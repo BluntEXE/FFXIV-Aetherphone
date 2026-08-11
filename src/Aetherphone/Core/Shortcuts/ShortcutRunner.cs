@@ -256,7 +256,7 @@ internal sealed class ShortcutRunner : IDisposable
         UrlActions.OpenInBrowser(url.Trim(), exception =>
         {
             opened = false;
-            AepLog.Warning($"Shortcut \"{runningName}\" could not open {url}: {exception.Message}");
+            AepLog.Warning(exception, $"Shortcut \"{runningName}\" could not open {url}");
         });
 
         if (!opened)

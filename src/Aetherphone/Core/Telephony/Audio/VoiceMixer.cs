@@ -65,7 +65,7 @@ internal sealed class VoiceMixer : ISampleProvider, IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Voice output failed to start: {exception.Message}");
+            AepLog.Warning(exception, "Voice output failed to start");
         }
     }
 
@@ -82,7 +82,7 @@ internal sealed class VoiceMixer : ISampleProvider, IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Voice output failed to stop: {exception.Message}");
+                AepLog.Warning(exception, "Voice output failed to stop");
             }
 
             device.Dispose();

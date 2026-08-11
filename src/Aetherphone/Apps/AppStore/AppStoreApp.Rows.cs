@@ -22,9 +22,10 @@ internal sealed partial class AppStoreApp
         Elevation.IconRest(drawList, min, max, radius, scale);
         IconTile.FillShaded(drawList, min, max, radius, surface);
         Material.EdgeSquircle(drawList, min, max, radius, scale);
-        if (!AppIconArt.TryDraw(drawList, app.Id, center, size * 0.62f, GlyphInk, Palette.Darken(surface, 0.25f)))
+        var ink = AppAccents.InkFor(app.Id);
+        if (!AppIconArt.TryDraw(drawList, app.Id, center, size * 0.62f, ink, Palette.Mix(surface, ink, 0.28f)))
         {
-            Typography.DrawCentered(drawList, center, app.Glyph, GlyphInk, TextStyles.Headline);
+            Typography.DrawCentered(drawList, center, app.Glyph, ink, TextStyles.Headline);
         }
     }
 

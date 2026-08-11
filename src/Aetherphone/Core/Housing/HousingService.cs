@@ -512,7 +512,7 @@ internal sealed class HousingService : IDisposable
         {
             LastError = exception.Message;
             State = HousingLoadState.Failed;
-            AepLog.Warning($"Housing refresh threw: {exception.Message}");
+            AepLog.Warning(exception, "Housing refresh threw");
             Bump();
         }
         finally
@@ -639,7 +639,7 @@ internal sealed class HousingService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Housing world list failed: {exception.Message}");
+            AepLog.Warning(exception, "Housing world list failed");
         }
         finally
         {

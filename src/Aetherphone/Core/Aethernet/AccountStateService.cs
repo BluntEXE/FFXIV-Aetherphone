@@ -73,7 +73,7 @@ internal sealed class AccountStateService : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[AccountState] poll failed: {exception.Message}");
+                AepLog.Warning(exception, "[AccountState] poll failed");
             }
             finally
             {
@@ -92,6 +92,8 @@ internal sealed class AccountStateService : IDisposable
 
         return current.Badges != fresh.Badges
             || current.GrantedBadges != fresh.GrantedBadges
+            || current.Coins != fresh.Coins
+            || current.CoinsEarnedToday != fresh.CoinsEarnedToday
             || !SameBadgeIds(current.ProfileBadges, fresh.ProfileBadges);
     }
 

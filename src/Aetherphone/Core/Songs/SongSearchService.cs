@@ -63,7 +63,7 @@ internal sealed class SongSearchService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Song search failed for '{query}': {exception.Message}");
+            AepLog.Warning(exception, $"Song search failed for '{query}'");
             return Array.Empty<Song>();
         }
     }

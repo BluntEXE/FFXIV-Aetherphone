@@ -98,7 +98,7 @@ internal sealed class MessageArchive
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"MessageArchive legacy migration failed: {exception.Message}");
+            AepLog.Warning(exception, "MessageArchive legacy migration failed");
         }
     }
 
@@ -123,7 +123,7 @@ internal sealed class MessageArchive
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"MessageArchive list failed: {exception.Message}");
+            AepLog.Warning(exception, "MessageArchive list failed");
             return result;
         }
 
@@ -190,7 +190,7 @@ internal sealed class MessageArchive
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"MessageArchive write failed for {sendTarget}: {exception.Message}");
+            AepLog.Warning(exception, $"MessageArchive write failed for {sendTarget}");
         }
     }
 
@@ -219,7 +219,7 @@ internal sealed class MessageArchive
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"MessageArchive delete failed for {sendTarget}: {exception.Message}");
+            AepLog.Warning(exception, $"MessageArchive delete failed for {sendTarget}");
         }
     }
 
@@ -234,7 +234,7 @@ internal sealed class MessageArchive
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"MessageArchive load failed for {file.Name}: {exception.Message}");
+            AepLog.Warning(exception, $"MessageArchive load failed for {file.Name}");
             return null;
         }
     }

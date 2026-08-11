@@ -42,8 +42,9 @@ internal sealed class SoundEffectPlayer : IDisposable
             {
                 snapshot[index].Stop();
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                AepLog.Debug(exception, "[Sound] stopping a one shot failed");
             }
         }
     }
@@ -66,7 +67,7 @@ internal sealed class SoundEffectPlayer : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Sound] ringtone loop failed: {exception.Message}");
+            AepLog.Warning(exception, "[Sound] ringtone loop failed");
             return;
         }
 
@@ -107,8 +108,9 @@ internal sealed class SoundEffectPlayer : IDisposable
         {
             output.Stop();
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            AepLog.Warning(exception, "[Sound] stopping the ringtone loop failed");
         }
 
         output.Dispose();
@@ -143,7 +145,7 @@ internal sealed class SoundEffectPlayer : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Sound] playback failed: {exception.Message}");
+            AepLog.Warning(exception, "[Sound] playback failed");
         }
         finally
         {
@@ -180,8 +182,9 @@ internal sealed class SoundEffectPlayer : IDisposable
         {
             return new Mp3FileReaderBase(path, waveFormat => new Mp3FrameDecompressor(waveFormat));
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            AepLog.Debug(exception, $"[Sound] NAudio mp3 reader rejected {path}; falling back to MediaFoundation");
             return new MediaFoundationReader(path);
         }
     }
@@ -193,8 +196,9 @@ internal sealed class SoundEffectPlayer : IDisposable
         {
             reader = new WaveFileReader(path);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            AepLog.Debug(exception, $"[Sound] NAudio wave reader rejected {path}; falling back to MediaFoundation");
             return new MediaFoundationReader(path);
         }
 

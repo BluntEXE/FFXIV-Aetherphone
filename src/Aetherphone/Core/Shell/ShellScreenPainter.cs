@@ -53,11 +53,14 @@ internal sealed class ShellScreenPainter
         var contentRect = ContentRect(screen, theme);
         try
         {
-            app.Draw(new PhoneContext(contentRect, content, navigation));
+            using (AppVisits.Enter(app.Id))
+            {
+                app.Draw(new PhoneContext(contentRect, content, navigation));
+            }
         }
         catch (Exception exception)
         {
-            AepLog.Error($"[shell] app-draw {app.Id} threw: {exception.Message}");
+            AepLog.Error(exception, $"[shell] app-draw {app.Id} threw");
             DrawAppFailure(contentRect, content);
         }
     }

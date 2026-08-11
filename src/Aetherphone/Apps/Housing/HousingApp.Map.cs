@@ -37,6 +37,7 @@ internal sealed partial class HousingApp
         UiAnchors.Report("housing.map", viewport);
         if (!housing.HasWorldSelected)
         {
+            TourHolds.Hold(Id);
             DrawNoWorldState(viewport, scale);
             DrawFooter(footer, scale);
             return;
@@ -44,6 +45,7 @@ internal sealed partial class HousingApp
 
         if (housing.GameMap is null)
         {
+            TourHolds.Hold(Id);
             DrawEmptyCard(viewport, FontAwesomeIcon.MapSigns, Loc.T(L.Housing.GameMapUnavailable),
                 Loc.T(L.Housing.GameMapUnavailableHint), Loc.T(L.Housing.ViewAsList),
                 () => Push(HousingRoute.List), scale);
@@ -51,6 +53,7 @@ internal sealed partial class HousingApp
             return;
         }
 
+        TourHolds.Release(Id);
         DrawMapViewport(viewport, scale);
         DrawFooter(footer, scale);
         DrawSheet(area, viewport, scale);
@@ -91,6 +94,8 @@ internal sealed partial class HousingApp
             Push(HousingRoute.List);
         }
 
+        var watchExtent = new Vector2(buttonRadius, buttonRadius);
+        UiAnchors.Report("housing.watchlist", new Rect(watchCenter - watchExtent, watchCenter + watchExtent));
         if (HousingChrome.MapButton(watchCenter, buttonRadius, FontAwesomeIcon.Bookmark, ui,
                 Loc.T(L.Housing.Watchlist), false, false))
         {
@@ -137,6 +142,7 @@ internal sealed partial class HousingApp
         var districtRect = new Rect(new Vector2(x, top), new Vector2(x + districtWidth, top + height));
         x = districtRect.Max.X + gap;
         var wardRect = new Rect(new Vector2(x, top), new Vector2(x + wardWidth, top + height));
+        UiAnchors.Report("housing.context", new Rect(worldRect.Min, wardRect.Max));
         var worldName = housing.WorldName;
         if (HousingChrome.Selector(worldRect, Loc.T(L.Housing.WorldLabel),
                 worldName.Length > 0 ? worldName : Loc.T(L.Housing.ChooseWorld), ui, false))
@@ -160,6 +166,7 @@ internal sealed partial class HousingApp
 
     private void DrawPhaseBar(Rect bar, float scale)
     {
+        UiAnchors.Report("housing.phase", bar);
         var drawList = ImGui.GetWindowDrawList();
         var pad = 14f * scale;
         var plots = VisiblePlots();
@@ -939,6 +946,7 @@ internal sealed partial class HousingApp
             new Vector2(refreshCenter.X - refreshRadius - 8f * scale - filterWidth,
                 footer.Center.Y - filterHeight * 0.5f),
             new Vector2(refreshCenter.X - refreshRadius - 8f * scale, footer.Center.Y + filterHeight * 0.5f));
+        UiAnchors.Report("housing.filters", filterRect);
         var statusText = FooterStatusText();
         var freshness = FooterFreshness();
         var chipLabel = HousingFormat.FreshnessLabel(freshness);

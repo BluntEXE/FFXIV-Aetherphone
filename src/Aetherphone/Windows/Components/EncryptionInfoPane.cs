@@ -107,7 +107,7 @@ internal sealed class EncryptionInfoPane : IDisposable
         {
             KeyVaultState.Locked => vault.RecoveryConfigured
                 ? Loc.T(L.Encryption.LockedRecoverBody)
-                : Loc.T(L.Encryption.LockedBody),
+                : Loc.T(L.Encryption.LockedNoRecoveryBody),
             KeyVaultState.Provisioning => Loc.T(L.Encryption.SettingUp),
             KeyVaultState.Unsupported => Loc.T(L.Encryption.UnsupportedSummary),
             _ => encrypted ? Loc.T(L.Encryption.Intro) : Loc.T(L.Encryption.SettingUp),
@@ -130,7 +130,8 @@ internal sealed class EncryptionInfoPane : IDisposable
     private void DrawLockedSection(AppSkin ui, PhoneTheme theme)
     {
         var scale = UiScale.Current;
-        if (actions.Vault.RecoveryConfigured)
+        var recoveryConfigured = actions.Vault.RecoveryConfigured;
+        if (recoveryConfigured)
         {
             DrawSectionLabel(ui, Loc.T(L.Encryption.RecoveryCodeLabel));
             DrawCodeInput(ui, theme);
@@ -144,7 +145,14 @@ internal sealed class EncryptionInfoPane : IDisposable
 
         if (DrawButton(ui, Loc.T(L.Encryption.NewKeyButton), false) && !actions.Busy)
         {
-            actions.AskReset();
+            if (recoveryConfigured)
+            {
+                actions.AskReset();
+            }
+            else
+            {
+                actions.AskResetWithoutRecovery();
+            }
         }
     }
 

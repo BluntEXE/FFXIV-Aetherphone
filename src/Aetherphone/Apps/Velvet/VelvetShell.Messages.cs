@@ -1,9 +1,11 @@
 using Aetherphone.Apps.Velvet.Kit;
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -88,9 +90,14 @@ internal sealed partial class VelvetShell
                 Time = TimeText.Short(thread.LastMessageAtUnix),
                 Badge = thread.UnreadCount,
             };
-            if (VRow.Draw(in model, ui, theme, images, lodestone) == VRowHit.Body)
+            var hit = VRow.Draw(in model, ui, theme, images, lodestone);
+            if (hit == VRowHit.Body)
             {
                 OpenThread(thread.OtherUserId);
+            }
+            else if (hit == VRowHit.Overflow)
+            {
+                OpenThreadMenu(thread.OtherUserId);
             }
         }
 
@@ -204,6 +211,52 @@ internal sealed partial class VelvetShell
             case VRowHit.Body:
                 OpenRequest(request.UserId);
                 break;
+        }
+    }
+
+    private void OpenThreadMenu(string otherId)
+    {
+        menuThreadId = otherId;
+        var position = ImGui.GetMousePos();
+        threadMenu.Toggle(otherId, new Rect(position, position + new Vector2(1f, 1f)));
+    }
+
+    private void DrawThreadMenu(Rect area)
+    {
+        if (menuThreadId is not { } otherId || !threadMenu.IsOpenFor(otherId))
+        {
+            return;
+        }
+
+        threadItems[0] = new DropdownMenu.Item(Loc.T(L.Velvet.DeleteConversation),
+            FontAwesomeIcon.Trash.ToIconString(), true);
+        if (threadMenu.Draw(area, theme, threadItems) == 0)
+        {
+            AskDeleteConversation(otherId);
+        }
+    }
+
+    private void AskDeleteConversation(string otherId)
+    {
+        confirm.Ask(new ConfirmRequest
+        {
+            Title = Loc.T(L.Velvet.DeleteConversation),
+            Message = Loc.T(L.Velvet.DeleteConversationMessage),
+            ConfirmLabel = Loc.T(L.Velvet.DeleteConfirm),
+            CancelLabel = Loc.T(L.Velvet.DeleteCancel),
+            Danger = true,
+            Confirm = () => DeleteConversation(otherId),
+        });
+    }
+
+    private void DeleteConversation(string otherId)
+    {
+        var current = router.Current;
+        var threadOpen = current.Screen == VelvetScreenId.Thread && current.Arg == otherId;
+        store.DeleteThread(otherId);
+        if (threadOpen)
+        {
+            router.Pop();
         }
     }
 

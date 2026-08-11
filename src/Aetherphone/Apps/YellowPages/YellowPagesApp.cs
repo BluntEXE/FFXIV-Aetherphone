@@ -383,7 +383,7 @@ internal sealed partial class YellowPagesApp : IPhoneApp
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"[YellowPages] report failed: {exception.Message}");
+                AepLog.Warning(exception, "[YellowPages] report failed");
             }
 
             done(ok);

@@ -33,7 +33,7 @@ internal sealed class DiskCache
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"DiskCache read failed for {key}: {exception.Message}");
+            AepLog.Warning(exception, $"DiskCache read failed for {key}");
             return null;
         }
     }
@@ -50,7 +50,7 @@ internal sealed class DiskCache
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"DiskCache write failed for {key}: {exception.Message}");
+            AepLog.Warning(exception, $"DiskCache write failed for {key}");
         }
     }
 
@@ -78,7 +78,7 @@ internal sealed class DiskCache
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"DiskCache eviction skipped {files[index].Name}: {exception.Message}");
+                AepLog.Warning(exception, $"DiskCache eviction skipped {files[index].Name}");
             }
         }
     }

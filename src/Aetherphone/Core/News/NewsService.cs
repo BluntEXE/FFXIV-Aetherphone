@@ -77,7 +77,7 @@ internal sealed class NewsService : IDisposable
         {
             entry.FetchedUtc = DateTime.UtcNow;
             entry.State = NewsState.Failed;
-            AepLog.Warning($"News fetch failed for {category}/{locale}: {exception.Message}");
+            AepLog.Warning(exception, $"News fetch failed for {category}/{locale}");
         }
     }
 

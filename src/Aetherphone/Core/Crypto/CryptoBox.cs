@@ -50,8 +50,9 @@ internal static class CryptoBox
             return new EcPrivateKey((ECPrivateKeyParameters)pair.Private,
                 (ECPublicKeyParameters)pair.Public);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            AepLog.Error(exception, "[Crypto] generating a P-256 identity failed; encryption cannot be set up");
             return null;
         }
     }
@@ -68,8 +69,9 @@ internal static class CryptoBox
         {
             return ExportPublicKey(key);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            AepLog.Error(exception, "[Crypto] exporting the public key failed");
             return null;
         }
     }
@@ -79,12 +81,17 @@ internal static class CryptoBox
         try
         {
             var parsed = PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKeyBase64));
-            return parsed is ECPublicKeyParameters publicKey && IsP256(publicKey.Parameters)
-                ? new EcPublicKey(publicKey)
-                : null;
+            if (parsed is ECPublicKeyParameters publicKey && IsP256(publicKey.Parameters))
+            {
+                return new EcPublicKey(publicKey);
+            }
+
+            AepLog.Warning("[Crypto] a peer public key was rejected; it is not a P-256 key");
+            return null;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            AepLog.Warning(exception, "[Crypto] importing a peer public key failed");
             return null;
         }
     }
@@ -95,8 +102,9 @@ internal static class CryptoBox
         {
             return PrivateKeyInfoFactory.CreatePrivateKeyInfo(key.PrivateKey).GetDerEncoded();
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            AepLog.Error(exception, "[Crypto] exporting the private key failed; the vault cannot be written");
             return null;
         }
     }
@@ -108,6 +116,7 @@ internal static class CryptoBox
             var parsed = PrivateKeyFactory.CreateKey(pkcs8);
             if (parsed is not ECPrivateKeyParameters privateKey || !IsP256(privateKey.Parameters))
             {
+                AepLog.Error("[Crypto] the stored private key is not a P-256 key; the vault cannot be unlocked");
                 return null;
             }
 
@@ -115,8 +124,9 @@ internal static class CryptoBox
             var publicKey = new ECPublicKeyParameters("ECDH", publicPoint, privateKey.Parameters);
             return new EcPrivateKey(privateKey, publicKey);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            AepLog.Error(exception, "[Crypto] importing the stored private key failed; the vault cannot be unlocked");
             return null;
         }
     }
@@ -163,6 +173,8 @@ internal static class CryptoBox
         var ephemeral = TryGenerateIdentity();
         if (recipient is null || ephemeral is null)
         {
+            AepLog.Error(
+                $"[Crypto] cannot wrap a key (recipient key usable: {recipient is not null}, ephemeral key usable: {ephemeral is not null})");
             return null;
         }
 
@@ -192,6 +204,7 @@ internal static class CryptoBox
     {
         if (!wrappedKey.StartsWith(WrapPrefix, StringComparison.Ordinal))
         {
+            AepLog.Debug($"[Crypto] unwrap skipped; the wrapped key does not start with {WrapPrefix}");
             return null;
         }
 
@@ -200,13 +213,15 @@ internal static class CryptoBox
         {
             payload = Convert.FromBase64String(wrappedKey[WrapPrefix.Length..]);
         }
-        catch (FormatException)
+        catch (FormatException exception)
         {
+            AepLog.Debug(exception, "[Crypto] unwrap failed; the wrapped key is not valid base64");
             return null;
         }
 
         if (payload.Length < 2)
         {
+            AepLog.Debug($"[Crypto] unwrap failed; the payload is {payload.Length} bytes");
             return null;
         }
 
@@ -215,6 +230,8 @@ internal static class CryptoBox
         var cekLength = payload.Length - cipherOffset - TagBytes;
         if (ephemeralLength == 0 || cekLength != CekBytes)
         {
+            AepLog.Debug(
+                $"[Crypto] unwrap failed; ephemeral key length {ephemeralLength}, cek length {cekLength} (expected {CekBytes})");
             return null;
         }
 
@@ -223,6 +240,7 @@ internal static class CryptoBox
             var parsed = PublicKeyFactory.CreateKey(payload.AsSpan(1, ephemeralLength).ToArray());
             if (parsed is not ECPublicKeyParameters publicKey || !IsP256(publicKey.Parameters))
             {
+                AepLog.Debug("[Crypto] unwrap failed; the embedded ephemeral key is not a P-256 key");
                 return null;
             }
 
@@ -249,6 +267,7 @@ internal static class CryptoBox
                                           or InvalidOperationException or InvalidCastException or FormatException
                                           or CryptographicException)
         {
+            AepLog.Debug(exception, "[Crypto] unwrap failed; the wrap was not made for this key");
             return null;
         }
     }
@@ -268,6 +287,7 @@ internal static class CryptoBox
     {
         if (sealedBytes.Length < NonceBytes + TagBytes)
         {
+            AepLog.Debug($"[Crypto] open failed; {sealedBytes.Length} bytes is shorter than a nonce plus a tag");
             return null;
         }
 
@@ -279,8 +299,9 @@ internal static class CryptoBox
                 sealedBytes.AsSpan(NonceBytes + plaintext.Length, TagBytes), plaintext, aad);
             return plaintext;
         }
-        catch (CryptographicException)
+        catch (CryptographicException exception)
         {
+            AepLog.Debug(exception, "[Crypto] open failed; the tag did not verify against this key");
             return null;
         }
     }

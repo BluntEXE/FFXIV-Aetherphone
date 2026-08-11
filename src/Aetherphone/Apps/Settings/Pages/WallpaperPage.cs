@@ -362,6 +362,7 @@ internal sealed class WallpaperPage : ISettingsPage
                 return;
             }
 
+            AppSurface.ResetScrollOnNewVisit();
             DragScrollHost.Begin(photosKey);
 
             var avail = ScrollLayout.StableContentWidth();

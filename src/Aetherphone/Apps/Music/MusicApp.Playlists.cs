@@ -76,7 +76,7 @@ internal sealed partial class MusicApp
     private void OpenPlaylist(string id)
     {
         selectedPlaylistId = id;
-        router.Push(View.PlaylistDetail);
+        Router.Push(View.PlaylistDetail);
     }
 
     private void BeginCreateFromPicker()
@@ -175,7 +175,7 @@ internal sealed partial class MusicApp
             Confirm = () =>
             {
                 playlists.Delete(id);
-                router.Pop();
+                Router.Pop();
             },
         });
     }
@@ -397,7 +397,7 @@ internal sealed partial class MusicApp
     private void DrawPickRow(PlaylistRecord playlist, float scale, bool interactive)
     {
         var rowHeight = PickRowHeight * scale;
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
         var min = origin;
         var max = new Vector2(origin.X + width, origin.Y + rowHeight);
@@ -510,7 +510,7 @@ internal sealed partial class MusicApp
         var content = context.Content;
         if (playlists.Find(selectedPlaylistId) is not { } record)
         {
-            router.Pop();
+            Router.Pop();
             return;
         }
 
@@ -567,7 +567,7 @@ internal sealed partial class MusicApp
         if (BackButton.Draw("music.playlist.back", new Vector2(content.Min.X + 18f * scale, rowCenterY), 15f * scale,
                 ui.TitleInk, backHovered, scale))
         {
-            router.Pop();
+            Router.Pop();
         }
 
         var titleLeft = content.Min.X + 38f * scale;
@@ -606,7 +606,7 @@ internal sealed partial class MusicApp
     private void DrawPlaylistSongRow(float scale, Song song, int index, Song[] songs, PlaylistRecord record)
     {
         var rowHeight = DetailRowHeight * scale;
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
         var min = origin;
         var max = new Vector2(origin.X + width, origin.Y + rowHeight);

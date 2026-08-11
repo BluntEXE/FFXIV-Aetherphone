@@ -11,8 +11,6 @@ internal static class ShortcutArt
 {
     private const float RadiusFactor = 0.26f;
 
-    private static readonly Vector4 GlyphInk = new(1f, 1f, 1f, 1f);
-
     public static void DrawSurface(ImDrawListPtr drawList, Vector2 center, float size, ShortcutEntry shortcut,
         IDalamudTextureWrap? icon, float scale)
     {
@@ -23,12 +21,12 @@ internal static class ShortcutArt
         var surface = IconTile.Surface(ShortcutTint.Resolve(shortcut.Tint));
         Elevation.IconRest(drawList, min, max, radius, scale);
         IconTile.FillShaded(drawList, min, max, radius, surface);
-        DrawContent(drawList, center, size, shortcut, icon);
+        DrawContent(drawList, center, size, shortcut, icon, AccentRing.Ink);
         Material.EdgeSquircle(drawList, min, max, radius, scale);
     }
 
-    public static void DrawContent(ImDrawListPtr drawList, Vector2 center, float size, ShortcutEntry shortcut,
-        IDalamudTextureWrap? icon)
+    private static void DrawContent(ImDrawListPtr drawList, Vector2 center, float size, ShortcutEntry shortcut,
+        IDalamudTextureWrap? icon, Vector4 glyphInk)
     {
         if (icon is not null)
         {
@@ -40,14 +38,14 @@ internal static class ShortcutArt
 
         if (shortcut.Glyph != 0)
         {
-            ProgressRing.CenterIcon(drawList, center, (FontAwesomeIcon)shortcut.Glyph, GlyphInk, size * 0.42f);
+            ProgressRing.CenterIcon(drawList, center, (FontAwesomeIcon)shortcut.Glyph, glyphInk, size * 0.42f);
             return;
         }
 
         var monogram = ShortcutStore.Monogram(shortcut.Name);
         var measured = Typography.Measure(monogram, TextStyles.Title1);
         var glyphScale = measured.Y > 0f ? size * 0.44f / measured.Y : 1f;
-        Typography.DrawCentered(drawList, center, monogram, GlyphInk, TextStyles.Title1.Scale * glyphScale,
+        Typography.DrawCentered(drawList, center, monogram, glyphInk, TextStyles.Title1.Scale * glyphScale,
             FontWeight.SemiBold);
     }
 }

@@ -67,7 +67,17 @@ internal static class CatalogLabels
             "Horror" => Loc.T(L.Catalogs.CaseHorror),
             "MoogleCase" => Loc.T(L.Catalogs.CaseKupo),
             "Runic" => Loc.T(L.Catalogs.CaseRunic),
+            "Garlean" => Loc.T(L.Catalogs.CaseGarlean),
+            "GurrenLagann" => Loc.T(L.Catalogs.CaseGurrenLagann),
             _ => identifier,
+        };
+
+    public static string CaseCategory(PhoneCaseCategory category) =>
+        category switch
+        {
+            PhoneCaseCategory.Colors => Loc.T(L.Settings.CaseCategoryColors),
+            PhoneCaseCategory.Gradients => Loc.T(L.Settings.CaseCategoryGradients),
+            _ => Loc.T(L.Settings.CaseCategoryCustom),
         };
 
     public static string RadioCategory(string identifier) =>

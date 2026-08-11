@@ -182,7 +182,7 @@ internal sealed class RadioService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Radio country list failed: {exception.Message}");
+            AepLog.Warning(exception, "Radio country list failed");
             return Array.Empty<RadioFacet>();
         }
     }
@@ -213,7 +213,7 @@ internal sealed class RadioService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Radio language list failed: {exception.Message}");
+            AepLog.Warning(exception, "Radio language list failed");
             return Array.Empty<RadioFacet>();
         }
     }
@@ -235,8 +235,9 @@ internal sealed class RadioService : IDisposable
             var uri = new Uri($"{ApiRoot}/json/url/{Uri.EscapeDataString(stationUuid)}");
             await http.GetBytesAsync(uri, cancellation.Token).ConfigureAwait(false);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            AepLog.Debug(exception, $"[Radio] click report failed for station {stationUuid}");
         }
     }
 
@@ -320,7 +321,7 @@ internal sealed class RadioService : IDisposable
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"Radio fetch failed for {label}: {exception.Message}");
+            AepLog.Warning(exception, $"Radio fetch failed for {label}");
             return Array.Empty<RadioStation>();
         }
     }

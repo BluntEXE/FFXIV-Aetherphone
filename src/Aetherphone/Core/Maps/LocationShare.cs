@@ -154,7 +154,7 @@ internal static class LocationShare
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[LocationShare] open map failed: {exception.Message}");
+            AepLog.Warning(exception, "[LocationShare] open map failed");
         }
     }
 
@@ -274,7 +274,7 @@ internal static class LocationShare
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[LocationShare] housing read failed: {exception.Message}");
+            AepLog.Warning(exception, "[LocationShare] housing read failed");
             return (0, 0, 0);
         }
     }

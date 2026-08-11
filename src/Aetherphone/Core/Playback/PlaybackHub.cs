@@ -38,7 +38,6 @@ internal sealed class PlaybackHub
     public string Title => SongActive ? songs.CurrentTitle : radio.CurrentStation;
     public string Subtitle => SongActive ? SongSubtitle() : RadioSubtitle();
 
-    /// What the station says is playing, empty when it sends no metadata.
     public string RadioNowPlaying => radio.NowPlaying;
     public bool HasQueue => SongActive ? songs.HasQueue : radio.HasQueue;
 
@@ -150,7 +149,6 @@ internal sealed class PlaybackHub
 
     private string RadioSubtitle()
     {
-        // A track name says more than "Now playing", but only once one has actually arrived.
         var track = radio.NowPlaying;
         return radio.State == RadioPlaybackState.Playing && track.Length > 0
             ? track

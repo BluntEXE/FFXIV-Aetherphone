@@ -34,6 +34,7 @@ internal sealed class StoryPresenter : IDisposable
     private readonly Func<bool> previousGroup;
     private readonly StoryReplyHooks? replyHooks;
     private readonly StoryReplyPrompt? replyPrompt;
+    private readonly Action<string>? openProfile;
     private StoryRingDto? pendingRing;
     private bool pendingOpenAtEnd;
     private bool pendingFromViewer;
@@ -42,11 +43,12 @@ internal sealed class StoryPresenter : IDisposable
     public StoryPresenter(AethernetSession session, GramClient client, MediaClient media, RemoteImageCache images,
         LodestoneService lodestone, StoryRingPainter painter, AppPalette palette, StoryConfirmLabels labels,
         ConfirmService confirm, RealtimeSignalBus signals, string logTag, Action onCompose,
-        StoryReplyHooks? reply = null)
+        StoryReplyHooks? reply = null, Action<string>? openProfile = null)
     {
         stories = new StoryStore(session, client, media, signals, logTag);
         tray = new StoryTrayRow(images, lodestone);
-        viewer = new StoryViewerOverlay(images, lodestone);
+        this.openProfile = openProfile;
+        viewer = new StoryViewerOverlay(images, lodestone, openProfile is null ? null : OpenAuthorProfile);
         this.painter = painter;
         this.palette = palette;
         this.labels = labels;
@@ -176,6 +178,12 @@ internal sealed class StoryPresenter : IDisposable
         }
 
         return false;
+    }
+
+    private void OpenAuthorProfile(string authorId)
+    {
+        Close();
+        openProfile?.Invoke(authorId);
     }
 
     private void SendReply(StoryDto story, string text)

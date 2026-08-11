@@ -85,7 +85,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         commentMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         stories = new StoryPresenter(session, net.Grams, net.Media, images, lodestone, VelvetArt.StoryRing, VelvetTheme.Palette,
             new StoryConfirmLabels(L.Velvet.DeleteConfirm, L.Velvet.DeleteCancel, L.Velvet.Saving), confirm,
-            realtimeSignals, "Velvet stories", StartStoryCompose);
+            realtimeSignals, "Velvet stories", StartStoryCompose, openProfile: OpenProfile);
         this.launcher = launcher;
         this.socialLauncher = socialLauncher;
         this.lodestone = lodestone;
@@ -488,6 +488,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         }
 
         DrawPostMenu(area, true);
+        DrawThreadMenu(area);
     }
 
     private void DrawRichBody(ImDrawListPtr drawList, RichTextLayout layout, Vector2 origin)

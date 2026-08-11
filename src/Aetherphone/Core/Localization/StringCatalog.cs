@@ -32,7 +32,7 @@ internal sealed class StringCatalog
         }
         catch (Exception exception)
         {
-            AepLog.Error($"Failed to load language catalog '{path}': {exception.Message}");
+            AepLog.Error(exception, $"Failed to load language catalog '{path}'");
             return Empty;
         }
 

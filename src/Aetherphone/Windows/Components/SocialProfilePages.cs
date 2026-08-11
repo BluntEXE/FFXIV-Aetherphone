@@ -44,6 +44,7 @@ internal sealed class SocialProfileStyle
     public required LocString DeleteFailed { get; init; }
     public required LocString DeleteCommentConfirmMessage { get; init; }
     public required LocString DeleteCommentFailed { get; init; }
+    public required LocString RemoveCommentConfirmMessage { get; init; }
     public LocString? MessageLabel { get; init; }
     public LocString? SettingsLabel { get; init; }
     public LocString? SavedLabel { get; init; }
@@ -821,6 +822,19 @@ internal sealed class SocialProfilePages
         confirm.Ask(new ConfirmRequest
         {
             Message = Loc.T(style.DeleteCommentConfirmMessage),
+            ConfirmLabel = Loc.T(style.DeleteConfirm),
+            CancelLabel = Loc.T(style.DeleteCancel),
+            BusyLabel = Loc.T(style.Saving),
+            FailedMessage = Loc.T(style.DeleteCommentFailed),
+            ConfirmAsync = done => store.DeleteComment(postId, commentId, done),
+        });
+    }
+
+    public void AskRemoveComment(string postId, string commentId)
+    {
+        confirm.Ask(new ConfirmRequest
+        {
+            Message = Loc.T(style.RemoveCommentConfirmMessage),
             ConfirmLabel = Loc.T(style.DeleteConfirm),
             CancelLabel = Loc.T(style.DeleteCancel),
             BusyLabel = Loc.T(style.Saving),

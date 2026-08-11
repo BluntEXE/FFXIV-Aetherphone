@@ -278,7 +278,7 @@ internal sealed class HealthTracker : IDisposable
             if (!loggedError)
             {
                 loggedError = true;
-                AepLog.Warning($"Health tracking error: {exception.Message}");
+                AepLog.Warning(exception, "Health tracking error");
             }
         }
     }
@@ -699,7 +699,7 @@ internal sealed class HealthTracker : IDisposable
                 if (!loggedError)
                 {
                     loggedError = true;
-                    AepLog.Warning($"Health height read failed: {exception.Message}");
+                    AepLog.Warning(exception, "Health height read failed");
                 }
             }
         }

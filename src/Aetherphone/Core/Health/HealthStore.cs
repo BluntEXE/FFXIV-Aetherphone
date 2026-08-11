@@ -30,7 +30,7 @@ internal sealed class HealthStore
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"HealthStore load failed for {contentId:X16}: {exception.Message}");
+            AepLog.Warning(exception, $"HealthStore load failed for {contentId:X16}");
             return new HealthProfile();
         }
     }
@@ -51,7 +51,7 @@ internal sealed class HealthStore
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"HealthStore write failed for {contentId:X16}: {exception.Message}");
+            AepLog.Warning(exception, $"HealthStore write failed for {contentId:X16}");
         }
     }
 

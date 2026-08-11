@@ -1,5 +1,7 @@
+using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Calendar;
+using Aetherphone.Core.Casino;
 using Aetherphone.Core.Message;
 using Aetherphone.Core.Clock;
 using Aetherphone.Core.Notes;
@@ -44,6 +46,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool ShowNotificationBanner { get; set; } = true;
     public bool ImportScreenshots { get; set; } = true;
     public bool? UseNativeFileDialog { get; set; }
+    public bool ChirperShowMediaPosts { get; set; } = true;
     public Dictionary<string, AppNotificationSetting> NotificationSettings { get; set; } = new();
     public bool NotifyDailyReset { get; set; }
     public bool NotifyWeeklyReset { get; set; }
@@ -84,7 +87,11 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public float MusicVolume { get; set; } = 0.6f;
     public int MusicRepeat { get; set; }
     public bool GameSoundsCleared { get; set; }
+    #if DEBUG
+    public const string DefaultAethernetBaseUrl = "https://aethernet-dev-production.up.railway.app";
+    #else
     public const string DefaultAethernetBaseUrl = "https://api.aetherphone.net";
+    #endif
     private const string LegacyAethernetHost = "ffxiv-aethernet-production.up.railway.app";
     public string AethernetBaseUrl { get; set; } = DefaultAethernetBaseUrl;
     public string AethernetToken { get; set; } = string.Empty;
@@ -114,6 +121,10 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public List<GameStatRecord> GameStats { get; set; } = new();
     public int DailyChallengeStreak { get; set; }
     public int DailyChallengeLastDay { get; set; }
+    public string PendingCoinGameSession { get; set; } = string.Empty;
+    public Dictionary<ulong, string> PendingCasinoSittings { get; set; } = new();
+    public Dictionary<ulong, long> CasinoSittingSeenAtUnix { get; set; } = new();
+    public Dictionary<ulong, PendingCasinoRound> PendingCasinoRounds { get; set; } = new();
     public HomeLayout? Home { get; set; }
     public Dictionary<string, bool> AppFlags { get; set; } = new();
     public int HomeGridRows { get; set; } = 6;
@@ -204,6 +215,8 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool TimerNotified { get; set; }
     public string LastSeenChangelogVersion { get; set; } = string.Empty;
     public bool ChangelogSeenInitialized { get; set; }
+    
+    public bool MarketContextMenu { get; set; } = true;
 
     public bool HasUnseenChangelog => LastSeenChangelogVersion != ChangelogData.LatestVersion;
 
@@ -575,12 +588,22 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     {
         if (Plugin.Framework.IsInFrameworkUpdateThread)
         {
-            Plugin.PluginInterface.SavePluginConfig(this);
+            SaveNow();
             return;
         }
 
-        _ = Plugin.Framework.RunOnFrameworkThread(() => Plugin.PluginInterface.SavePluginConfig(this));
+        _ = Plugin.Framework.RunOnFrameworkThread(SaveNow);
     }
 
-    public void SaveNow() => Plugin.PluginInterface.SavePluginConfig(this);
+    public void SaveNow()
+    {
+        try
+        {
+            Plugin.PluginInterface.SavePluginConfig(this);
+        }
+        catch (Exception exception)
+        {
+            AepLog.Error(exception, "Configuration save failed; settings changed this session may be lost");
+        }
+    }
 }

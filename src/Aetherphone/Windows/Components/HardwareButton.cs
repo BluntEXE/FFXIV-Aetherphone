@@ -15,12 +15,18 @@ internal enum RailSide
 internal static class HardwareButton
 {
     private const float PressTravel = 1.5f;
+    private const float SeatSpread = 2.4f;
+    private const float MinBury = 3f;
+    private const float MaxBury = 6f;
+    private const float ClipBleed = 3f;
 
     public static void Draw(ImDrawListPtr drawList, Rect bounds, PhoneTheme theme, RailSide side, bool hovered,
         float press, float active)
     {
         var scale = UiScale.Current;
-        Boss(drawList, bounds, theme, side, scale);
+        var bury = Math.Clamp(theme.MetalWidth, MinBury, MaxBury) * scale;
+        var rounding = Protrusion(bounds, side) * 0.5f;
+        Seat(drawList, bounds, theme, side, rounding, bury, scale);
 
         var travel = press * PressTravel * scale;
         var shift = side switch
@@ -32,32 +38,89 @@ internal static class HardwareButton
         };
         var min = bounds.Min + shift;
         var max = bounds.Max + shift;
-        var rounding = MathF.Min(max.X - min.X, max.Y - min.Y) * 0.5f;
+        var cap = Bury(min, max, side, bury);
 
         var metal = theme.RailMetal;
         var crown = Palette.Lighten(metal, 0.30f - press * 0.20f);
         var flank = Palette.Darken(metal, 0.28f + press * 0.12f);
 
-        Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(metal));
-        Face(drawList, min, max, rounding, side, crown, flank);
+        FillCap(drawList, cap, rounding, side, ImGui.GetColorU32(metal));
+        Face(drawList, cap.Min, cap.Max, rounding, side, crown, flank);
         CrownSpecular(drawList, min, max, rounding, side, hovered, press, scale);
         RecessSeam(drawList, min, max, rounding, side, press, active, theme, scale);
-        Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(Palette.Darken(metal, 0.60f)), 1f * scale);
+        StrokeProud(drawList, cap, ProudClip(bounds, side, scale), rounding,
+            ImGui.GetColorU32(Palette.Darken(metal, 0.60f)), 1f * scale);
     }
 
-    private static void Boss(ImDrawListPtr drawList, Rect bounds, PhoneTheme theme, RailSide side, float scale)
+    private static void Seat(ImDrawListPtr drawList, Rect bounds, PhoneTheme theme, RailSide side, float rounding,
+        float bury, float scale)
     {
-        var pad = 2.4f * scale;
+        var spread = SeatSpread * scale;
         var horizontal = side is RailSide.Top or RailSide.Bottom;
         var min = horizontal
-            ? new Vector2(bounds.Min.X - pad, bounds.Min.Y)
-            : new Vector2(bounds.Min.X, bounds.Min.Y - pad);
+            ? new Vector2(bounds.Min.X - spread, bounds.Min.Y)
+            : new Vector2(bounds.Min.X, bounds.Min.Y - spread);
         var max = horizontal
-            ? new Vector2(bounds.Max.X + pad, bounds.Max.Y)
-            : new Vector2(bounds.Max.X, bounds.Max.Y + pad);
-        var rounding = MathF.Min(max.X - min.X, max.Y - min.Y) * 0.5f;
-        Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(Palette.Lighten(theme.Glass, 0.06f)));
-        Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.55f)), 1f * scale);
+            ? new Vector2(bounds.Max.X + spread, bounds.Max.Y)
+            : new Vector2(bounds.Max.X, bounds.Max.Y + spread);
+        var seat = Bury(min, max, side, bury);
+        FillCap(drawList, seat, rounding + spread, side, ImGui.GetColorU32(Palette.Lighten(theme.Glass, 0.06f)));
+        StrokeProud(drawList, seat, ProudClip(new Rect(min, max), side, scale), rounding + spread,
+            ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.55f)), 1f * scale);
+    }
+
+    private static float Protrusion(Rect bounds, RailSide side) =>
+        side is RailSide.Top or RailSide.Bottom ? bounds.Height : bounds.Width;
+
+    private static Rect Bury(Vector2 min, Vector2 max, RailSide side, float depth) => side switch
+    {
+        RailSide.Right => new Rect(new Vector2(min.X - depth, min.Y), max),
+        RailSide.Top => new Rect(min, new Vector2(max.X, max.Y + depth)),
+        RailSide.Bottom => new Rect(new Vector2(min.X, min.Y - depth), max),
+        _ => new Rect(min, new Vector2(max.X + depth, max.Y)),
+    };
+
+    private static Rect ProudClip(Rect bounds, RailSide side, float scale)
+    {
+        var bleed = ClipBleed * scale;
+        return side switch
+        {
+            RailSide.Right => new Rect(new Vector2(bounds.Min.X, bounds.Min.Y - bleed),
+                new Vector2(bounds.Max.X + bleed, bounds.Max.Y + bleed)),
+            RailSide.Top => new Rect(new Vector2(bounds.Min.X - bleed, bounds.Min.Y - bleed),
+                new Vector2(bounds.Max.X + bleed, bounds.Max.Y)),
+            RailSide.Bottom => new Rect(new Vector2(bounds.Min.X - bleed, bounds.Min.Y),
+                new Vector2(bounds.Max.X + bleed, bounds.Max.Y + bleed)),
+            _ => new Rect(new Vector2(bounds.Min.X - bleed, bounds.Min.Y - bleed),
+                new Vector2(bounds.Max.X, bounds.Max.Y + bleed)),
+        };
+    }
+
+    private static void FillCap(ImDrawListPtr drawList, Rect rect, float rounding, RailSide side, uint color)
+    {
+        switch (side)
+        {
+            case RailSide.Right:
+                Squircle.FillSideCap(drawList, rect.Min, rect.Max, rounding, color, false);
+                return;
+            case RailSide.Top:
+                Squircle.FillCap(drawList, rect.Min, rect.Max, rounding, color, true);
+                return;
+            case RailSide.Bottom:
+                Squircle.FillCap(drawList, rect.Min, rect.Max, rounding, color, false);
+                return;
+            default:
+                Squircle.FillSideCap(drawList, rect.Min, rect.Max, rounding, color, true);
+                return;
+        }
+    }
+
+    private static void StrokeProud(ImDrawListPtr drawList, Rect rect, Rect clip, float rounding, uint color,
+        float thickness)
+    {
+        drawList.PushClipRect(clip.Min, clip.Max, true);
+        Squircle.Stroke(drawList, rect.Min, rect.Max, rounding, color, thickness);
+        drawList.PopClipRect();
     }
 
     private static void Face(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding, RailSide side,

@@ -136,7 +136,7 @@ internal sealed partial class MusicApp
 
     private void CloseFacetPicker()
     {
-        router.Pop();
+        Router.Pop();
     }
 
     private void ApplyFacet(bool isCountry, RadioFacet facet)
@@ -152,14 +152,14 @@ internal sealed partial class MusicApp
             radioLanguageName = facet.Display ?? string.Empty;
         }
 
-        router.Pop();
+        Router.Pop();
         RefetchRadio();
     }
 
     private bool DrawFacetRow(float scale, string label, string count, bool selected)
     {
         var rowHeight = FacetRowHeight * scale;
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         if (!ImGui.IsRectVisible(new Vector2(width, rowHeight)))
         {
             ImGui.Dummy(new Vector2(width, rowHeight));

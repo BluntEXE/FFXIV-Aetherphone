@@ -43,7 +43,6 @@ internal sealed partial class AppStoreApp : IPhoneApp
     private const float SearchHeight = 50f;
     private const float InstallSeconds = 0.9f;
     private const int CategoryArtCount = 3;
-    private static readonly Vector4 GlyphInk = new(1f, 1f, 1f, 0.96f);
     private static readonly Vector4 TabBarFill = new(0.02f, 0.03f, 0.06f, 0.72f);
 
     private readonly AppInstaller installer;

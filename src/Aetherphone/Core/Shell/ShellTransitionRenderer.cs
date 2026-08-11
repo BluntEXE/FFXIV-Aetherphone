@@ -144,9 +144,9 @@ internal sealed class ShellTransitionRenderer
         var size = rest.Width * (1f + 0.4f * raw);
         var center = card.Center;
         var surface = IconTile.Surface(over.Accent);
-        var ink = new Vector4(1f, 1f, 1f, alpha);
+        var ink = AppAccents.InkFor(over.Id) with { W = alpha };
         if (!AppIconArt.TryDraw(drawList, over.Id, center, size, ink,
-                Palette.WithAlpha(Palette.Darken(surface, 0.25f), alpha)))
+                Palette.WithAlpha(Palette.Mix(surface, ink, 0.28f), alpha)))
         {
             var glyphHeight = Typography.Measure(over.Glyph).Y;
             var glyphScale = glyphHeight > 0f ? size * 0.5f / glyphHeight : 1f;

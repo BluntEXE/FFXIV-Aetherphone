@@ -19,13 +19,17 @@ internal sealed class ConversationKeyStore
     private readonly KeyVault vault;
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<int, byte[]>> keysByScope = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, int> currentGenerations = new(StringComparer.Ordinal);
-    private readonly ConcurrentDictionary<(string ScopeId, int Generation), byte> failedUnwraps = new();
+    private readonly UnwrapFailureCache failedUnwraps = new();
+    private readonly ConcurrentDictionary<(string ScopeId, int Generation), byte> scheduledSelfRepairs = new();
+    private readonly ConcurrentDictionary<string, DateTime> previewHydrateRequests = new(StringComparer.Ordinal);
+    private static readonly TimeSpan PreviewHydrateCooldown = TimeSpan.FromSeconds(30);
 
     public ConversationKeyStore(KeysClient client, KeyVault vault)
     {
         this.client = client;
         this.vault = vault;
         vault.Changed += OnVaultChanged;
+        vault.PreviousKeysRestored += OnPreviousKeysRestored;
     }
 
     public static string ChatScope(string conversationId)
@@ -77,6 +81,7 @@ internal sealed class ConversationKeyStore
         keysByScope.Clear();
         currentGenerations.Clear();
         failedUnwraps.Clear();
+        scheduledSelfRepairs.Clear();
     }
 
     public async Task HydrateAsync(CancellationToken token)
@@ -154,6 +159,18 @@ internal sealed class ConversationKeyStore
                 continue;
             }
 
+            if (keys.NeedsNewGeneration && keys.MemberKeys.Length > 0)
+            {
+                var nextGeneration = keys.CurrentGeneration + 1;
+                if (await CreateVelvetGenerationAsync(otherId, scope, nextGeneration, keys.MemberKeys, token).ConfigureAwait(false))
+                {
+                    keys = keys with { CurrentGeneration = nextGeneration };
+                    break;
+                }
+
+                continue;
+            }
+
             await FixVelvetWrapsAsync(otherId, scope, keys, token).ConfigureAwait(false);
             break;
         }
@@ -208,25 +225,7 @@ internal sealed class ConversationKeyStore
 
         foreach (var (generation, cek) in generations)
         {
-            var recipients = new List<UserPublicKeyDto>();
-            for (var index = 0; index < keys.StaleWrapUserIds.Length; index++)
-            {
-                if (memberKeys.TryGetValue(keys.StaleWrapUserIds[index], out var key))
-                {
-                    recipients.Add(key);
-                }
-            }
-
-            if (generation == keys.CurrentGeneration)
-            {
-                for (var index = 0; index < keys.MissingWrapUserIds.Length; index++)
-                {
-                    if (memberKeys.TryGetValue(keys.MissingWrapUserIds[index], out var key))
-                    {
-                        recipients.Add(key);
-                    }
-                }
-            }
+            var recipients = CollectHealRecipients(keys, memberKeys, generation);
 
             if (recipients.Count == 0)
             {
@@ -371,25 +370,7 @@ internal sealed class ConversationKeyStore
 
         foreach (var (generation, cek) in generations)
         {
-            var recipients = new List<UserPublicKeyDto>();
-            for (var index = 0; index < keys.StaleWrapUserIds.Length; index++)
-            {
-                if (memberKeys.TryGetValue(keys.StaleWrapUserIds[index], out var key))
-                {
-                    recipients.Add(key);
-                }
-            }
-
-            if (generation == keys.CurrentGeneration)
-            {
-                for (var index = 0; index < keys.MissingWrapUserIds.Length; index++)
-                {
-                    if (memberKeys.TryGetValue(keys.MissingWrapUserIds[index], out var key))
-                    {
-                        recipients.Add(key);
-                    }
-                }
-            }
+            var recipients = CollectHealRecipients(keys, memberKeys, generation);
 
             if (recipients.Count == 0)
             {
@@ -435,6 +416,18 @@ internal sealed class ConversationKeyStore
                 if (await CreateGramGenerationAsync(otherId, scope, 1, keys.MemberKeys, token).ConfigureAwait(false))
                 {
                     keys = keys with { CurrentGeneration = 1 };
+                    break;
+                }
+
+                continue;
+            }
+
+            if (keys.NeedsNewGeneration && keys.MemberKeys.Length > 0)
+            {
+                var nextGeneration = keys.CurrentGeneration + 1;
+                if (await CreateGramGenerationAsync(otherId, scope, nextGeneration, keys.MemberKeys, token).ConfigureAwait(false))
+                {
+                    keys = keys with { CurrentGeneration = nextGeneration };
                     break;
                 }
 
@@ -495,25 +488,7 @@ internal sealed class ConversationKeyStore
 
         foreach (var (generation, cek) in generations)
         {
-            var recipients = new List<UserPublicKeyDto>();
-            for (var index = 0; index < keys.StaleWrapUserIds.Length; index++)
-            {
-                if (memberKeys.TryGetValue(keys.StaleWrapUserIds[index], out var key))
-                {
-                    recipients.Add(key);
-                }
-            }
-
-            if (generation == keys.CurrentGeneration)
-            {
-                for (var index = 0; index < keys.MissingWrapUserIds.Length; index++)
-                {
-                    if (memberKeys.TryGetValue(keys.MissingWrapUserIds[index], out var key))
-                    {
-                        recipients.Add(key);
-                    }
-                }
-            }
+            var recipients = CollectHealRecipients(keys, memberKeys, generation);
 
             if (recipients.Count == 0)
             {
@@ -649,25 +624,7 @@ internal sealed class ConversationKeyStore
 
         foreach (var (generation, cek) in generations)
         {
-            var recipients = new List<UserPublicKeyDto>();
-            for (var index = 0; index < keys.StaleWrapUserIds.Length; index++)
-            {
-                if (memberKeys.TryGetValue(keys.StaleWrapUserIds[index], out var key))
-                {
-                    recipients.Add(key);
-                }
-            }
-
-            if (generation == keys.CurrentGeneration)
-            {
-                for (var index = 0; index < keys.MissingWrapUserIds.Length; index++)
-                {
-                    if (memberKeys.TryGetValue(keys.MissingWrapUserIds[index], out var key))
-                    {
-                        recipients.Add(key);
-                    }
-                }
-            }
+            var recipients = CollectHealRecipients(keys, memberKeys, generation);
 
             if (recipients.Count == 0)
             {
@@ -682,6 +639,37 @@ internal sealed class ConversationKeyStore
 
             await client.AddConversationWrapsAsync(conversationId, new AddWrapsRequest(generation, wraps), token).ConfigureAwait(false);
         }
+    }
+
+    private static List<UserPublicKeyDto> CollectHealRecipients(
+        ConversationKeysDto keys,
+        Dictionary<string, UserPublicKeyDto> memberKeys,
+        int generation)
+    {
+        var recipients = new List<UserPublicKeyDto>();
+        var addedUserIds = new HashSet<string>(StringComparer.Ordinal);
+        for (var index = 0; index < keys.StaleWrapUserIds.Length; index++)
+        {
+            if (memberKeys.TryGetValue(keys.StaleWrapUserIds[index], out var key) && addedUserIds.Add(key.UserId))
+            {
+                recipients.Add(key);
+            }
+        }
+
+        if (generation != keys.CurrentGeneration)
+        {
+            return recipients;
+        }
+
+        for (var index = 0; index < keys.MissingWrapUserIds.Length; index++)
+        {
+            if (memberKeys.TryGetValue(keys.MissingWrapUserIds[index], out var key) && addedUserIds.Add(key.UserId))
+            {
+                recipients.Add(key);
+            }
+        }
+
+        return recipients;
     }
 
     private static NewWrapDto[]? BuildWraps(byte[] cek, IReadOnlyList<UserPublicKeyDto> recipients)
@@ -718,21 +706,26 @@ internal sealed class ConversationKeyStore
                 continue;
             }
 
-            var failureKey = (scopeId, wrap.Generation);
-            if (failedUnwraps.ContainsKey(failureKey))
+            if (failedUnwraps.ShouldSkip(scopeId, wrap.Generation, wrap.WrappedKey))
             {
                 continue;
             }
 
-            var cek = vault.UnwrapCek(wrap.WrappedKey);
+            var cek = vault.UnwrapCek(wrap.WrappedKey, out var privateKeyWasLoaded);
             if (cek is not null)
             {
                 generations[wrap.Generation] = cek;
+                failedUnwraps.RecordSuccess(scopeId, wrap.Generation);
+                if (wrap.RecipientKeyVersion < vault.KeyVersion)
+                {
+                    ScheduleSelfRepair(scopeId, wrap.Generation, cek);
+                }
             }
             else
             {
-                failedUnwraps[failureKey] = 0;
-                AepLog.Warning($"[Encryption] failed to unwrap key for {scopeId} generation {wrap.Generation}.");
+                failedUnwraps.RecordFailure(scopeId, wrap.Generation, wrap.WrappedKey, privateKeyWasLoaded);
+                AepLog.Warning(
+                    $"[Encryption] failed to unwrap key for {scopeId} generation {wrap.Generation} (private key loaded: {privateKeyWasLoaded}).");
             }
         }
     }
@@ -742,6 +735,187 @@ internal sealed class ConversationKeyStore
         var generations = keysByScope.GetOrAdd(scopeId, _ => new ConcurrentDictionary<int, byte[]>());
         generations[generation] = cek;
         currentGenerations[scopeId] = generation;
+    }
+
+    public void RequestPreviewHydrate(string scopeId)
+    {
+        if (vault.State != KeyVaultState.Unlocked)
+        {
+            return;
+        }
+
+        var separatorIndex = scopeId.IndexOf(':');
+        if (separatorIndex <= 0)
+        {
+            return;
+        }
+
+        var surface = scopeId[..separatorIndex];
+        var now = DateTime.UtcNow;
+        if (previewHydrateRequests.TryGetValue(surface, out var lastRequestedAt)
+            && now - lastRequestedAt < PreviewHydrateCooldown)
+        {
+            return;
+        }
+
+        previewHydrateRequests[surface] = now;
+        _ = Task.Run(() => HydrateForPreviewAsync(surface));
+    }
+
+    private async Task HydrateForPreviewAsync(string surface)
+    {
+        try
+        {
+            switch (surface)
+            {
+                case "chat":
+                    await HydrateAsync(CancellationToken.None).ConfigureAwait(false);
+                    break;
+                case "velvet":
+                    await HydrateVelvetAsync(CancellationToken.None).ConfigureAwait(false);
+                    break;
+                case "gram":
+                    await HydrateGramAsync(CancellationToken.None).ConfigureAwait(false);
+                    break;
+                case "ads":
+                    await HydrateAdsAsync(CancellationToken.None).ConfigureAwait(false);
+                    break;
+                default:
+                    AepLog.Debug($"[Crypto] preview hydrate skipped for unknown surface {surface}.");
+                    break;
+            }
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning(exception, $"[Crypto] preview hydrate for {surface} failed");
+        }
+    }
+
+    private void ScheduleSelfRepair(string scopeId, int generation, byte[] cek)
+    {
+        if (!scheduledSelfRepairs.TryAdd((scopeId, generation), 0))
+        {
+            return;
+        }
+
+        _ = Task.Run(() => SelfRepairWrapAsync(scopeId, generation, cek));
+    }
+
+    private async Task SelfRepairWrapAsync(string scopeId, int generation, byte[] cek)
+    {
+        try
+        {
+            var myUserId = vault.MyUserId;
+            var myPublicKey = vault.PublicKey;
+            var myKeyVersion = vault.KeyVersion;
+            if (myUserId is null || myPublicKey is null || myKeyVersion <= 0)
+            {
+                AepLog.Debug(
+                    $"[Crypto] self repair skipped for {scopeId} generation {generation}; the vault is not ready (key version {myKeyVersion})");
+                return;
+            }
+
+            var wrapped = CryptoBox.WrapCek(cek, myPublicKey);
+            if (wrapped is null)
+            {
+                AepLog.Warning($"[Crypto] self repair failed for {scopeId} generation {generation}; wrapping the key failed");
+                return;
+            }
+
+            var request = new AddWrapsRequest(generation, new[] { new NewWrapDto(myUserId, myKeyVersion, wrapped) });
+            await PostSelfRepairAsync(scopeId, myUserId, request).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning(exception, $"[Crypto] self repair threw for {scopeId} generation {generation}");
+        }
+    }
+
+    private async Task PostSelfRepairAsync(string scopeId, string myUserId, AddWrapsRequest request)
+    {
+        const string chatPrefix = "chat:";
+        const string velvetPrefix = "velvet:";
+        const string gramPrefix = "gram:";
+        bool accepted;
+        if (scopeId.StartsWith(chatPrefix, StringComparison.Ordinal))
+        {
+            accepted = await client.AddConversationWrapsAsync(scopeId[chatPrefix.Length..], request, CancellationToken.None)
+                .ConfigureAwait(false);
+        }
+        else if (scopeId.StartsWith(velvetPrefix, StringComparison.Ordinal))
+        {
+            var otherId = OtherIdFromPairKey(scopeId[velvetPrefix.Length..], myUserId);
+            if (otherId is null)
+            {
+                AepLog.Warning($"[Crypto] self repair skipped for {scopeId}; the pair key does not contain this user.");
+                return;
+            }
+
+            accepted = await client.AddVelvetWrapsAsync(otherId, request, CancellationToken.None).ConfigureAwait(false);
+        }
+        else if (scopeId.StartsWith(gramPrefix, StringComparison.Ordinal))
+        {
+            var otherId = OtherIdFromPairKey(scopeId[gramPrefix.Length..], myUserId);
+            if (otherId is null)
+            {
+                AepLog.Warning($"[Crypto] self repair skipped for {scopeId}; the pair key does not contain this user.");
+                return;
+            }
+
+            accepted = await client.AddGramWrapsAsync(otherId, request, CancellationToken.None).ConfigureAwait(false);
+        }
+        else
+        {
+            AepLog.Debug($"[Crypto] self repair skipped for {scopeId}; the surface has no repair route.");
+            return;
+        }
+
+        if (!accepted)
+        {
+            AepLog.Warning($"[Crypto] self repair for {scopeId} generation {request.Generation} was not accepted by the server; it will be retried next session.");
+        }
+    }
+
+    private static string? OtherIdFromPairKey(string pairKey, string myUserId)
+    {
+        var separatorIndex = pairKey.IndexOf(':');
+        if (separatorIndex < 0)
+        {
+            return null;
+        }
+
+        var first = pairKey[..separatorIndex];
+        var second = pairKey[(separatorIndex + 1)..];
+        if (string.Equals(first, myUserId, StringComparison.Ordinal))
+        {
+            return second;
+        }
+
+        return string.Equals(second, myUserId, StringComparison.Ordinal) ? first : null;
+    }
+
+    private void OnPreviousKeysRestored()
+    {
+        failedUnwraps.Clear();
+        _ = RetryUnreadableWrapsAsync();
+    }
+
+    private async Task RetryUnreadableWrapsAsync()
+    {
+        try
+        {
+            await HydrateAsync(CancellationToken.None).ConfigureAwait(false);
+            await HydrateVelvetAsync(CancellationToken.None).ConfigureAwait(false);
+            await HydrateGramAsync(CancellationToken.None).ConfigureAwait(false);
+            await HydrateAdsAsync(CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning(exception, "[Encryption] refreshing conversation keys after restoring older keys failed");
+        }
     }
 
     private void OnVaultChanged()

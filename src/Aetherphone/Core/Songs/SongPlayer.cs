@@ -238,12 +238,12 @@ internal sealed class SongPlayer : IDisposable
                 if (attempt + 1 >= StreamedAttempts)
                 {
                     TrySetState(workerSession, SongPlaybackState.Failed);
-                    AepLog.Warning($"Song playback failed: {exception.Message}");
+                    AepLog.Warning(exception, "Song playback failed");
                     return;
                 }
 
                 TrySetState(workerSession, SongPlaybackState.Buffering);
-                AepLog.Warning($"Song stream interrupted, retrying: {exception.Message}");
+                AepLog.Warning(exception, "Song stream interrupted, retrying");
             }
         }
     }
@@ -389,7 +389,7 @@ internal sealed class SongPlayer : IDisposable
             }
             catch (Exception exception)
             {
-                AepLog.Warning($"Song cache fill failed: {exception.Message}");
+                AepLog.Warning(exception, "Song cache fill failed");
             }
         }, CancellationToken.None);
     }

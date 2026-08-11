@@ -60,6 +60,7 @@ The one exception is [the art asset specification](ART-ASSET-SPEC.md), which is 
 | [Creating your own app](creating-an-app.md) | Step-by-step tutorial: folder, class, registration, icon, accent color, localized name, plus a recipe for adding a Settings page |
 | [App framework](app-framework.md) | The `IPhoneApp` contract in full: lifecycle, navigation, theming, badges, sharing, home placement, polling, home widgets, Control Center tiles |
 | [UI toolkit](ui-toolkit.md) | The widget library in src/Aetherphone/Windows/Components: typography, spacing tokens, input, popups, scrolling, common widgets |
+| [Accent colors](design-accents.md) | The generated accent ring: the white-glyph contrast rule, hue spacing, per-app assignment, brand exceptions, and derived palettes |
 | [Mini-games framework](games-framework.md) | The Games app: the `IMiniGame` contract, juice helpers (shake, hit-stop, particles), scoring, and the daily challenge |
 
 ### Platform services
@@ -112,7 +113,7 @@ Read [CONTRIBUTING.md](../CONTRIBUTING.md) at the repo root for the pull request
 
 ## Gotchas
 
-- Dev plugin loading points at a fixed dll path. If you registered `src/Aetherphone/bin/Release/Aetherphone.dll` in Dalamud and then build with `-c Debug`, the output goes to `bin/Debug/` and the game silently keeps loading your previous Release build.
+- Dev plugin loading points at a fixed dll path. Release builds `bin/Release/Aetherphone.dll`, Debug builds the side-by-side `bin/Debug/AetherphoneDev.dll` (`/phonedev`, its own config, development Aethernet instance). Build the configuration you did not register and the game silently keeps loading your previous plugin.
 - Bundled asset folders (Fonts, Emoji, Icons, Images, Sounds, Wallpapers, Cases, Localization) are copied to the build output by `<Content>` items in src/Aetherphone/Aetherphone.csproj. Editing an asset file does nothing in game until you rebuild.
 - These docs cover the client only. The Aethernet backend lives in a separate repository, so server behavior can change without any commit here; where a doc and the code disagree, the code wins.
 

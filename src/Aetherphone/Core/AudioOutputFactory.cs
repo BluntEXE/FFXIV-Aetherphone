@@ -14,8 +14,8 @@ internal static class AudioOutputFactory
         }
         catch (Exception exception)
         {
-            AepLog.Warning(
-                $"[Audio] WASAPI output unavailable ({exception.Message}); falling back to waveOut " +
+            AepLog.Warning(exception,
+                "[Audio] WASAPI output unavailable; falling back to waveOut " +
                 $"(devices visible to waveOut: {waveOutGetNumDevs()}).");
             return new WaveOutEvent { DesiredLatency = desiredLatencyMs };
         }

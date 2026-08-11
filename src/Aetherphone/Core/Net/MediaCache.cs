@@ -91,9 +91,9 @@ internal sealed class MediaCache : IDisposable
                 return;
             }
 
-            if (disposed && ready.TryRemove(key, out var lateWrap))
+            if (disposed)
             {
-                lateWrap.Dispose();
+                ready.RemoveAndDispose(key);
             }
         }
         catch (OperationCanceledException)
@@ -102,7 +102,7 @@ internal sealed class MediaCache : IDisposable
         catch (Exception exception)
         {
             failed[key] = DateTime.UtcNow;
-            AepLog.Warning($"MediaCache load failed for {key}: {exception.Message}");
+            AepLog.Warning(exception, $"MediaCache load failed for {key}");
         }
         finally
         {

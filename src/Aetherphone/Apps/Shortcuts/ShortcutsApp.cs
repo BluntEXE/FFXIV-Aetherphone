@@ -2,6 +2,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
@@ -122,12 +123,18 @@ internal sealed partial class ShortcutsApp : IPhoneApp
 
     private void DrawHome(Rect content, float scale)
     {
+        if (GuideIntents.Consume("shortcuts.tab.plugins"))
+        {
+            activeTab = 1;
+        }
+
         DrawTopBar(content, scale);
 
         var margin = Metrics.Space.Lg * scale;
         var segTop = content.Min.Y + AppHeader.Height * scale + Metrics.Space.Sm * scale;
         var segRow = new Rect(new Vector2(content.Min.X + margin, segTop),
             new Vector2(content.Max.X - margin, segTop + 30f * scale));
+        UiAnchors.Report("shortcuts.tabs", segRow);
         tabOptions[0] = Loc.T(L.Shortcuts.TabShortcuts);
         tabOptions[1] = Loc.T(L.Shortcuts.TabPlugins);
         activeTab = SegmentStrip.Draw("shortcuts.tabs", segRow, tabOptions, activeTab, theme);
@@ -149,6 +156,7 @@ internal sealed partial class ShortcutsApp : IPhoneApp
             body = new Rect(new Vector2(content.Min.X, searchRow.Max.Y + Metrics.Space.Sm * scale), content.Max);
         }
 
+        UiAnchors.Report("shortcuts.library", body);
         using (AppSurface.Begin(body))
         {
             DrawLibrary(body, scale);
@@ -168,6 +176,8 @@ internal sealed partial class ShortcutsApp : IPhoneApp
 
         var radius = 15f * scale;
         var buttonCenter = new Vector2(content.Max.X - Metrics.Space.Lg * scale - radius, centerY);
+        var buttonExtent = new Vector2(radius, radius);
+        UiAnchors.Report("shortcuts.new", new Rect(buttonCenter - buttonExtent, buttonCenter + buttonExtent));
         if (ui.IconButton(buttonCenter, radius, FontAwesomeIcon.Plus.ToIconString(), ui.TitleInk,
                 Palette.WithAlpha(ui.TitleInk, 0.12f), 0.6f, Loc.T(L.Shortcuts.NewShortcut)))
         {
@@ -175,6 +185,7 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         }
 
         var importCenter = new Vector2(buttonCenter.X - radius * 2.6f, centerY);
+        UiAnchors.Report("shortcuts.import", new Rect(importCenter - buttonExtent, importCenter + buttonExtent));
         if (ui.IconButton(importCenter, radius, FontAwesomeIcon.FileImport.ToIconString(), ui.TitleInk,
                 Palette.WithAlpha(ui.TitleInk, 0.12f), 0.6f, Loc.T(L.Shortcuts.ImportShortcut)))
         {
