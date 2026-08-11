@@ -1,9 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using Aetherphone.Core.Aethernet.Contracts;
-using Org.BouncyCastle.Crypto.Digests;
-using Org.BouncyCastle.Crypto.Generators;
-using Org.BouncyCastle.Crypto.Parameters;
 
 namespace Aetherphone.Core.Crypto;
 
@@ -142,15 +139,15 @@ internal static class RecoveryKey
         }
     }
 
-    private static byte[] DeriveKey(string canonicalCode, byte[] salt, int iterations)
+    internal static byte[] DeriveKey(string canonicalCode, byte[] salt, int iterations)
     {
         var password = Encoding.UTF8.GetBytes(canonicalCode);
         try
         {
-            var generator = new Pkcs5S2ParametersGenerator(new Sha256Digest());
-            generator.Init(password, salt, iterations);
-            var derived = (KeyParameter)generator.GenerateDerivedParameters("AES", WrapKeyBytes * 8);
-            return derived.GetKey();
+#pragma warning disable SYSLIB0060
+            using var deriveBytes = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA256);
+#pragma warning restore SYSLIB0060
+            return deriveBytes.GetBytes(WrapKeyBytes);
         }
         finally
         {

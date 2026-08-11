@@ -1,3 +1,4 @@
+using System.Text;
 using Aetherphone.Core.Crypto;
 using Xunit;
 
@@ -73,6 +74,16 @@ public sealed class RecoveryKeyTests
     public void CanonicalizeMapsAmbiguousCharacters()
     {
         Assert.Equal("0111VV", RecoveryKey.Canonicalize("oIlL-uV"));
+    }
+
+    [Theory]
+    [InlineData("passwd", "salt", 1, "55ac046e56e3089fec1691c22544b605f94185216dde0465e68b9d57c20dacbc")]
+    [InlineData("Password", "NaCl", 80000, "4ddcd8f60b98be21830cee5ef22701f9641a4418d04c0414aeff08876b34ab56")]
+    public void DeriveKeyMatchesRfc7914Pbkdf2HmacSha256Vector(string password, string salt, int iterations, string expectedHex)
+    {
+        var derived = RecoveryKey.DeriveKey(password, Encoding.UTF8.GetBytes(salt), iterations);
+
+        Assert.Equal(Convert.FromHexString(expectedHex), derived);
     }
 
     [Fact]
