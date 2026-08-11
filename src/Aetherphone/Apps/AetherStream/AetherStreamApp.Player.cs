@@ -32,17 +32,6 @@ internal sealed partial class AetherStreamApp
         // would otherwise just get clipped off the bottom with no way to reach it.
         using (AppSurface.Begin(body))
         {
-            // Temporary diagnostic for the Player-tab scroll bug (wheel + kinetic drag both
-            // reported dead while Lock Position is on) - remove once confirmed fixed. Fires only
-            // on actual wheel/click activity so it doesn't spam the log every frame.
-            var scrollIo = ImGui.GetIO();
-            if (scrollIo.MouseWheel != 0f || (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && ImGui.IsWindowHovered()))
-            {
-                AepLog.Info($"[PlayerScroll] wheel={scrollIo.MouseWheel:F2} scrollY={ImGui.GetScrollY():F1} " +
-                    $"scrollMaxY={ImGui.GetScrollMaxY():F1} lockPosition={configuration.LockPosition} " +
-                    $"dragEnabled={DragScrollHost.Enabled} windowHovered={ImGui.IsWindowHovered()}");
-            }
-
             // Screen stays active (and this row keeps showing) between videos now - see
             // AetherStreamQueue.Advance's doc comment on why natural queue-end no longer
             // deactivates the screen. "Nothing current" covers exactly that "waiting for the next

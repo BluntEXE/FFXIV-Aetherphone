@@ -472,13 +472,6 @@ internal sealed class WatchAlongSession : IDisposable
             awaitingHostAck = true;
         }
 
-        // Temporary diagnostic for the screen-transform sync path - remove once confirmed working
-        // end to end. IsActive being false here (screenPosition null) is the single most likely
-        // reason a viewer's screen stays parked at its own spawn fallback instead of following.
-        AepLog.Info(screenPosition is { } sp
-            ? $"[WatchAlong] host publish screen active=true pos={sp} yaw={screenYaw:F2} scale={screenScale:F2}"
-            : "[WatchAlong] host publish screen active=false (screen.Engine.IsActive is false - no coords sent)");
-
         stream.PublishState(url, position, paused, Plugin.ClientState.TerritoryType, approvalRequired,
             screenPosition, screenPosition is not null ? screenYaw : null,
             screenPosition is not null ? screenScale : null);
@@ -574,13 +567,6 @@ internal sealed class WatchAlongSession : IDisposable
     private void OnRoster(CallControl message)
     {
         Roster = ToParticipants(message.Participants);
-
-        // Temporary diagnostic for the "host doesn't see who joined" report - covers both halves
-        // at once: whether the server ever sent anyone besides us in the roster, and whether the
-        // Watching() display gate (VideoShareWatchPresence) would hide it locally even if so.
-        var names = Roster.Count == 0 ? "(none)" : string.Join(", ", Roster.Select(p => $"{p.DisplayName}{(p.IsHost ? " [host]" : string.Empty)}"));
-        AepLog.Info($"[WatchAlong] roster update: {Roster.Count} participant(s): {names} " +
-            $"(VideoShareWatchPresence={configuration.VideoShareWatchPresence}, signedIn={session.IsSignedIn})");
 
         // Defensive tidy-up: if someone we still thought was pending shows up in the authoritative
         // roster (approved through some path other than our own ApproveRequest call), drop them
@@ -791,17 +777,8 @@ internal sealed class WatchAlongSession : IDisposable
     {
         if (message is { ScreenX: { } x, ScreenY: { } y, ScreenZ: { } z })
         {
-            // Temporary diagnostic - see the matching host publish log. Pairs the two log lines up
-            // so we can tell whether coords are being sent-but-not-applied vs. never sent at all.
-            AepLog.Info($"[WatchAlong] viewer apply screen pos=({x:F2},{y:F2},{z:F2}) " +
-                $"yaw={message.ScreenYaw:F2} scale={message.ScreenScale:F2} ownScreenActive={screen.Engine.IsActive}");
             screen.Engine.ApplyRemoteScreenTransform(new Vector3(x, y, z), message.ScreenYaw ?? 0f,
                 message.ScreenScale ?? 1f);
-        }
-        else
-        {
-            AepLog.Info("[WatchAlong] viewer received stream update with no screen transform - " +
-                "host's own screen not active at publish time.");
         }
     }
 
