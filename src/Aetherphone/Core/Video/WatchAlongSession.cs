@@ -66,6 +66,10 @@ internal sealed class WatchAlongSession : IDisposable
     private float lastPublishedScreenScale;
     private bool lastPublishedApprovalRequired;
     private string? viewingUrl;
+    // The last wire URL IsPlayableRemoteUrl turned down, so a host who keeps republishing the
+    // same unplayable one (a local file of theirs, republished on every 8s heartbeat) costs one
+    // log line rather than one per heartbeat.
+    private string? rejectedRemoteUrl;
     // Last stream.state actually applied while Viewing - lets ResyncNow() force a re-apply
     // (re-seek, re-pause, re-place the screen) without waiting on the next heartbeat. Reference
     // assignment/read of an immutable record is safe to share between OnState's background thread
@@ -242,6 +246,8 @@ internal sealed class WatchAlongSession : IDisposable
     // Host only - approving adds it straight to the host's own local queue (there is no
     // server-tracked shared queue - once it's in the host's queue, the existing stream.state
     // sync already carries whatever the host plays to every viewer, no extra plumbing needed).
+    // Whatever is still pending here already passed OnQueueSuggested's remote-URL check, so the
+    // approval itself has no filtering left to do.
     public void ApproveQueueSuggestion(string suggestionId)
     {
         var suggestion = FindQueueSuggestion(suggestionId);
@@ -480,11 +486,37 @@ internal sealed class WatchAlongSession : IDisposable
         }
     }
 
+    // Every URL that reaches this client over stream.* is someone else's string: a host's
+    // stream.joined/stream.state, or a viewer's stream.queueSuggestion. mpv's loadfile would take
+    // a UNC path (Windows attempts SMB auth against it and leaks the viewer's NetNTLMv2 hash) or
+    // a file:// path just as readily as an http one, so nothing from the wire is played or queued
+    // without passing this first. The local paths (a URL the user typed, a file they picked) stay
+    // unrestricted on purpose - see VideoEngine.ValidateURL.
+    private static bool IsPlayableRemoteUrl(string url) => VideoEngine.ValidateURL(url, out _);
+
+    private void WarnOnceForRejectedUrl(string url)
+    {
+        if (rejectedRemoteUrl == url)
+        {
+            return;
+        }
+
+        rejectedRemoteUrl = url;
+        AepLog.Warning($"[WatchAlong] ignoring a stream url that is not a remote http(s) address: {url}");
+    }
+
     // Runs on the main thread via OnFrameworkUpdate. Only ever called with a message that already
     // passed OnJoined's Url-present check.
     private void ApplyJoinSync(CallControl message)
     {
         var url = message.Url!;
+        if (!IsPlayableRemoteUrl(url))
+        {
+            WarnOnceForRejectedUrl(url);
+            return;
+        }
+
+        rejectedRemoteUrl = null;
         viewingUrl = url;
         ViewingEntry = queue.CreateDisplayEntry(url);
         video.Play(url); // Spawns the screen in front of the local player first (a new session) -
@@ -607,6 +639,15 @@ internal sealed class WatchAlongSession : IDisposable
             return;
         }
 
+        // Filtered on arrival rather than at ApproveQueueSuggestion, so a UNC or file:// path
+        // never reaches the host's queue and never gets rendered as a suggestion row either -
+        // the row's title is this raw string (see IsPlayableRemoteUrl).
+        if (!IsPlayableRemoteUrl(url))
+        {
+            AepLog.Warning($"[WatchAlong] dropping a queue suggestion that is not a remote http(s) address: {url}");
+            return;
+        }
+
         var updated = new List<QueueSuggestion>(PendingQueueSuggestions.Count + 1);
         foreach (var existing in PendingQueueSuggestions)
         {
@@ -690,6 +731,18 @@ internal sealed class WatchAlongSession : IDisposable
     {
         if (message.Url is { Length: > 0 } url && url != viewingUrl)
         {
+            // A host playing a local file publishes that path, which no viewer could resolve
+            // anyway - skipping it leaves the screen on whatever it was showing rather than
+            // handing an arbitrary path to mpv (see IsPlayableRemoteUrl). The rest of the message
+            // is dropped with it: position and paused describe the video we just refused, so
+            // applying them would drag whatever is still on screen to the wrong place.
+            if (!IsPlayableRemoteUrl(url))
+            {
+                WarnOnceForRejectedUrl(url);
+                return;
+            }
+
+            rejectedRemoteUrl = null;
             viewingUrl = url;
             ViewingEntry = queue.CreateDisplayEntry(url);
             video.Play(url);

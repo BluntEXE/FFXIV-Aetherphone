@@ -288,7 +288,13 @@ internal sealed class VideoEngine : IDisposable
 
     internal string? GetCurrentUrl() => _mpvRenderer?.GetCurrentUrl();
 
-    internal bool ValidateURL(string inputUrl, out Uri? url)
+    // The only gate between a URL that arrived over the wire and mpv's loadfile, which happily
+    // takes UNC shares (an SMB auth attempt, leaking NetNTLMv2) and file:// paths as well as
+    // http(s). Static because callers hold a VideoPlayer or nothing at all, not the engine, and
+    // this decides a policy question that needs no engine state. Deliberately not applied inside
+    // PlayVideo: playing a local file the user picked themselves is legitimate, so the
+    // restriction belongs on the remote paths only (see WatchAlongSession.IsPlayableRemoteUrl).
+    internal static bool ValidateURL(string inputUrl, out Uri? url)
     {
         string formattedUrl = inputUrl;
 
