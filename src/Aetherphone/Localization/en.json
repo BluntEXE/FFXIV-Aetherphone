@@ -2338,6 +2338,8 @@
   "wallet.sectionPvp": "PvP",
   "wallet.sectionCrafting": "Crafting & Gathering",
   "wallet.sectionOther": "Other",
+  "wallet.showBadge": "Show badge",
+  "wallet.hideBadge": "Hide badge",
   "jobs.logInToView": "Log in to view your jobs",
   "jobs.noGearsets": "Create a gearset for a job in-game to see it here.",
   "jobs.noGearset": "No gearset",
