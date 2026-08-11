@@ -24,7 +24,7 @@ internal static class BarkeepRules
 
     public const int PerfectGrade = 100;
 
-    public const long MaxPayout = 30;
+    public const long MaxPayout = 3000;
 
     public const long EntryChips = 2000;
 
@@ -36,7 +36,7 @@ internal static class BarkeepRules
 
     public static readonly int[] LadderScoreFloors = { 450, 750, 1000, 1200 };
 
-    public static readonly long[] LadderPays = { 8, 12, 18, MaxPayout };
+    public static readonly long[] LadderPays = { 900, 1500, 2300, MaxPayout };
 
     public static bool IsValidGrade(int grade)
     {

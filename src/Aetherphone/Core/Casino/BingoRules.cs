@@ -28,15 +28,15 @@ internal static class BingoRules
 
     public const int StageCount = 3;
 
-    public const int BallIntervalSeconds = 3;
+    public const int BallIntervalSeconds = 2;
 
-    public const long MaxSingleWin = 1000;
+    public const long MaxSingleWin = 500_000;
 
     public const int FreeMask = 1 << FreeCell;
 
     public const int FullMask = (1 << Cells) - 1;
 
-    public static readonly int[] StageRateTenths = { 28, 37, 80 };
+    public static readonly int[] StageRateTenths = { 2900, 3850, 8300 };
 
     public static readonly int[] CardCells =
     {
