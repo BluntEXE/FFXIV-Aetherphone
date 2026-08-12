@@ -314,7 +314,7 @@
   "moderation.removedHate": "你的帖子已被移除，因为其中似乎包含仇恨内容。",
   "moderation.removedSelfHarm": "你的帖子已被移除，因为其中似乎涉及自我伤害。",
   "moderation.removedPolicy": "你的帖子因违反社区准则而被移除。",
-  "moderation.removedFooter": "如果你认为这是误判，请通过反馈应用告诉我们。",
+  "moderation.removedFooter": "如果你认为这是误判，可以通过我们的 Discord 服务器联系我们。",
   "moderation.removedDismiss": "好的",
   "moderation.removedCommentTitle": "评论已移除",
   "moderation.removedCommentAdult": "你的评论已被移除，因为其中似乎包含此处不允许的成人内容。",

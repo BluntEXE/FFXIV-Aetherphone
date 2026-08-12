@@ -314,7 +314,7 @@
   "moderation.removedHate": "Tu publicación se eliminó porque parece contener contenido de odio.",
   "moderation.removedSelfHarm": "Tu publicación se eliminó porque parece hacer referencia a autolesiones.",
   "moderation.removedPolicy": "Tu publicación se eliminó por incumplir las normas de la comunidad.",
-  "moderation.removedFooter": "Si crees que es un error, avísanos a través de la app Feedback.",
+  "moderation.removedFooter": "Si crees que es un error, escríbenos en nuestro servidor de Discord.",
   "moderation.removedDismiss": "Entendido",
   "moderation.removedCommentTitle": "Comentario eliminado",
   "moderation.removedCommentAdult": "Tu comentario se eliminó porque parece contener contenido para adultos, que no está permitido aquí.",

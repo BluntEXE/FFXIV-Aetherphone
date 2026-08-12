@@ -314,7 +314,7 @@
   "moderation.removedHate": "Gönderin, nefret içerikli olduğu görüldüğü için kaldırıldı.",
   "moderation.removedSelfHarm": "Gönderin, kendine zarar vermeye gönderme yaptığı görüldüğü için kaldırıldı.",
   "moderation.removedPolicy": "Gönderin, topluluk kurallarını ihlal ettiği için kaldırıldı.",
-  "moderation.removedFooter": "Bunun bir hata olduğunu düşünüyorsan, Geri Bildirim uygulaması üzerinden bize bildir.",
+  "moderation.removedFooter": "Bunun bir hata olduğunu düşünüyorsan Discord sunucumuz üzerinden bize ulaşabilirsin.",
   "moderation.removedDismiss": "Tamam",
   "moderation.removedCommentTitle": "Yorum kaldırıldı",
   "moderation.removedCommentAdult": "Yorumun, burada izin verilmeyen yetişkin içerik barındırdığı görüldüğü için kaldırıldı.",

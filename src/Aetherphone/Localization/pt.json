@@ -314,7 +314,7 @@
   "moderation.removedHate": "Sua publicação foi removida porque parece conter conteúdo de ódio.",
   "moderation.removedSelfHarm": "Sua publicação foi removida porque parece fazer referência a automutilação.",
   "moderation.removedPolicy": "Sua publicação foi removida por violar as diretrizes da comunidade.",
-  "moderation.removedFooter": "Se você acha que isto é um engano, avise-nos pelo app Feedback.",
+  "moderation.removedFooter": "Se você acha que isto é um engano, fale conosco no nosso servidor do Discord.",
   "moderation.removedDismiss": "OK",
   "moderation.removedCommentTitle": "Comentário removido",
   "moderation.removedCommentAdult": "Seu comentário foi removido porque parece conter conteúdo adulto, que não é permitido aqui.",

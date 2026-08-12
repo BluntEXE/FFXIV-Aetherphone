@@ -314,7 +314,7 @@
   "moderation.removedHate": "Your post was removed because it appears to contain hateful content.",
   "moderation.removedSelfHarm": "Your post was removed because it appears to reference self-harm.",
   "moderation.removedPolicy": "Your post was removed for violating the community guidelines.",
-  "moderation.removedFooter": "If you believe this is a mistake, let us know through the Feedback app.",
+  "moderation.removedFooter": "If you believe this is a mistake, reach out to us on our Discord server.",
   "moderation.removedDismiss": "OK",
   "moderation.removedCommentTitle": "Comment removed",
   "moderation.removedCommentAdult": "Your comment was removed because it appears to contain adult content, which is not allowed here.",

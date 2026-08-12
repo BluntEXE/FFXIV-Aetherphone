@@ -170,7 +170,7 @@ internal static class L
         public static readonly LocString RemovedHate = new("moderation.removedHate", "Your post was removed because it appears to contain hateful content.");
         public static readonly LocString RemovedSelfHarm = new("moderation.removedSelfHarm", "Your post was removed because it appears to reference self-harm.");
         public static readonly LocString RemovedPolicy = new("moderation.removedPolicy", "Your post was removed for violating the community guidelines.");
-        public static readonly LocString RemovedFooter = new("moderation.removedFooter", "If you believe this is a mistake, let us know through the Feedback app.");
+        public static readonly LocString RemovedFooter = new("moderation.removedFooter", "If you believe this is a mistake, reach out to us on our Discord server.");
         public static readonly LocString RemovedDismiss = new("moderation.removedDismiss", "OK");
         public static readonly LocString RemovedCommentTitle = new("moderation.removedCommentTitle", "Comment removed");
         public static readonly LocString RemovedCommentAdult = new("moderation.removedCommentAdult", "Your comment was removed because it appears to contain adult content, which is not allowed here.");

@@ -314,7 +314,7 @@
   "moderation.removedHate": "この投稿にはヘイトや差別的な内容が含まれている可能性があるため、削除しました。",
   "moderation.removedSelfHarm": "この投稿には自傷に関する内容が含まれている可能性があるため、削除しました。",
   "moderation.removedPolicy": "この投稿はコミュニティガイドラインに違反しているため、削除しました。",
-  "moderation.removedFooter": "誤りだと思われる場合は、フィードバックアプリからお知らせください。",
+  "moderation.removedFooter": "誤りだと思われる場合は、Discordサーバーからご連絡ください。",
   "moderation.removedDismiss": "OK",
   "moderation.removedCommentTitle": "コメントを削除しました",
   "moderation.removedCommentAdult": "このコメントにはアダルトコンテンツが含まれている可能性があるため、削除しました。ここではアダルトコンテンツは許可されていません。",

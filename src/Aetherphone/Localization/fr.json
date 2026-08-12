@@ -314,7 +314,7 @@
   "moderation.removedHate": "Votre publication a été supprimée car elle semble contenir du contenu haineux.",
   "moderation.removedSelfHarm": "Votre publication a été supprimée car elle semble faire référence à l'automutilation.",
   "moderation.removedPolicy": "Votre publication a été supprimée pour non-respect des règles de la communauté.",
-  "moderation.removedFooter": "Si vous pensez qu'il s'agit d'une erreur, faites-le nous savoir via l'application Feedback.",
+  "moderation.removedFooter": "Si vous pensez qu'il s'agit d'une erreur, contactez-nous sur notre serveur Discord.",
   "moderation.removedDismiss": "OK",
   "moderation.removedCommentTitle": "Commentaire supprimé",
   "moderation.removedCommentAdult": "Votre commentaire a été supprimé car il semble contenir du contenu réservé aux adultes, qui n'est pas autorisé ici.",
