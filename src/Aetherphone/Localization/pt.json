@@ -4672,6 +4672,8 @@
   "casino.wheel.recentHeading": "ÚLTIMOS GIROS",
   "casino.bingo.ladderShared": "{0} dividiram no {1}",
   "casino.bingo.holdingCards": "{0} com cartelas",
+  "casino.fact.notOffered": "Não oferecido",
+  "casino.fact.notOfferedValue": "Seguro e desistência",
   "conduct.casino.title": "Regras da casa de Gamba",
   "conduct.casino.intro": "Antes de sentar a uma mesa, leia as regras da casa.",
   "conduct.casino.playMoney.title": "Só dinheiro de brincadeira",

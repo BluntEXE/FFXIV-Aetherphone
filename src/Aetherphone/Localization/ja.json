@@ -4672,6 +4672,8 @@
   "casino.wheel.recentHeading": "直近のスピン",
   "casino.bingo.ladderShared": "{1} で {0} 人が分け合いました",
   "casino.bingo.holdingCards": "カード保有 {0} 人",
+  "casino.fact.notOffered": "取り扱いなし",
+  "casino.fact.notOfferedValue": "インシュランスとサレンダー",
   "conduct.casino.title": "Gambaのハウスルール",
   "conduct.casino.intro": "テーブルに着く前に、ハウスルールをお読みください。",
   "conduct.casino.playMoney.title": "遊びのお金だけ",

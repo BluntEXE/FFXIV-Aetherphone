@@ -4672,6 +4672,8 @@
   "casino.wheel.recentHeading": "LAST SPINS",
   "casino.bingo.ladderShared": "{0} shared it on {1}",
   "casino.bingo.holdingCards": "{0} with cards",
+  "casino.fact.notOffered": "Not offered",
+  "casino.fact.notOfferedValue": "Insurance and surrender",
   "conduct.casino.title": "Gamba House Rules",
   "conduct.casino.intro": "Before you sit down at a table, please read the house rules.",
   "conduct.casino.playMoney.title": "Play Money Only",

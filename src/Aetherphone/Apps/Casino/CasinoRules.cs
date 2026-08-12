@@ -205,6 +205,10 @@ internal static class CasinoRules
                 label = L.Casino.FactHouseRules;
                 value = Loc.T(L.Casino.FactHouseRulesValue);
                 return true;
+            case 3:
+                label = L.Casino.FactNotOffered;
+                value = Loc.T(L.Casino.FactNotOfferedValue);
+                return true;
             default:
                 return false;
         }

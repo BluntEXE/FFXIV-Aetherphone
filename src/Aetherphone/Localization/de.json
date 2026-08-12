@@ -4672,6 +4672,8 @@
   "casino.wheel.recentHeading": "LETZTE DREHS",
   "casino.bingo.ladderShared": "{0} teilten sich ihn bei {1}",
   "casino.bingo.holdingCards": "{0} mit Karten",
+  "casino.fact.notOffered": "Nicht im Angebot",
+  "casino.fact.notOfferedValue": "Versicherung und Aufgeben",
   "conduct.casino.title": "Gamba-Hausregeln",
   "conduct.casino.intro": "Bevor du an einem Tisch Platz nimmst, lies bitte die Hausregeln.",
   "conduct.casino.playMoney.title": "Nur Spielgeld",

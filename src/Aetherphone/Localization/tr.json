@@ -4672,6 +4672,8 @@
   "casino.wheel.recentHeading": "SON ÇEVİRMELER",
   "casino.bingo.ladderShared": "{1} topunda {0} kişi paylaştı",
   "casino.bingo.holdingCards": "{0} kişi kartlı",
+  "casino.fact.notOffered": "Sunulmuyor",
+  "casino.fact.notOfferedValue": "Insurance ve surrender",
   "conduct.casino.title": "Gamba Ev Kuralları",
   "conduct.casino.intro": "Bir masaya oturmadan önce lütfen ev kurallarını oku.",
   "conduct.casino.playMoney.title": "Yalnızca oyun parası",

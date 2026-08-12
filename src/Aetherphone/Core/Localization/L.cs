@@ -4290,6 +4290,8 @@ internal static class L
         public static readonly LocString WheelRecentHeading = new("casino.wheel.recentHeading", "LAST SPINS");
         public static readonly LocString BingoLadderShared = new("casino.bingo.ladderShared", "{0} shared it on {1}");
         public static readonly LocString BingoHoldingCards = new("casino.bingo.holdingCards", "{0} with cards");
+        public static readonly LocString FactNotOffered = new("casino.fact.notOffered", "Not offered");
+        public static readonly LocString FactNotOfferedValue = new("casino.fact.notOfferedValue", "Insurance and surrender");
     }
 
     internal static class Catalogs

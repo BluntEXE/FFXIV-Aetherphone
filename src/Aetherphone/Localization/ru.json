@@ -4672,6 +4672,8 @@
   "casino.wheel.recentHeading": "ПОСЛЕДНИЕ СПИНЫ",
   "casino.bingo.ladderShared": "{0} разделили его на {1}",
   "casino.bingo.holdingCards": "{0} с карточками",
+  "casino.fact.notOffered": "Не предлагается",
+  "casino.fact.notOfferedValue": "Страховка и сдача",
   "conduct.casino.title": "Правила заведения Gamba",
   "conduct.casino.intro": "Прежде чем сесть за стол, прочитайте правила заведения.",
   "conduct.casino.playMoney.title": "Только игровые деньги",

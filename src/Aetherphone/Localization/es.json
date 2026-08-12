@@ -4672,6 +4672,8 @@
   "casino.wheel.recentHeading": "ÚLTIMAS TIRADAS",
   "casino.bingo.ladderShared": "{0} lo compartieron en {1}",
   "casino.bingo.holdingCards": "{0} con cartones",
+  "casino.fact.notOffered": "No se ofrece",
+  "casino.fact.notOfferedValue": "Seguro y rendición",
   "conduct.casino.title": "Reglas de la casa de Gamba",
   "conduct.casino.intro": "Antes de sentarte a una mesa, lee las reglas de la casa.",
   "conduct.casino.playMoney.title": "Solo dinero de juego",

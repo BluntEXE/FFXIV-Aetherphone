@@ -4672,6 +4672,8 @@
   "casino.wheel.recentHeading": "最近几轮",
   "casino.bingo.ladderShared": "第 {1} 号球时 {0} 人平分",
   "casino.bingo.holdingCards": "{0} 人持卡",
+  "casino.fact.notOffered": "不提供",
+  "casino.fact.notOfferedValue": "保险与投降",
   "conduct.casino.title": "Gamba 场馆规则",
   "conduct.casino.intro": "入座之前，请先阅读场馆规则。",
   "conduct.casino.playMoney.title": "仅限游戏币",
