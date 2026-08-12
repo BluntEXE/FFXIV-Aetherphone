@@ -45,51 +45,50 @@ internal sealed partial class CasinoApp
     private void DrawFloor(Rect body)
     {
         var scale = UiScale.Current;
-        using var surface = AppSurface.Begin(body);
-        var wallet = coins.Wallet;
-        if (wallet is not null)
+        var barHeight = BottomTabBar.LabelledHeight * scale;
+        var stage = new Rect(body.Min, new Vector2(body.Max.X, MathF.Max(body.Min.Y, body.Max.Y - barHeight)));
+        switch (tab)
         {
-            var heroOrigin = ImGui.GetCursorScreenPos();
-            var heroWidth = ScrollLayout.StableContentWidth();
-            CoinHero.Draw(wallet, ui.Palette);
-            var heroMax = new Vector2(heroOrigin.X + heroWidth, ImGui.GetCursorScreenPos().Y);
-            if (UiInteract.Click(heroOrigin, heroMax, UiInteract.Hover(heroOrigin, heroMax)))
-            {
-                cashier.Open();
-            }
-
-            ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+            case CasinoTab.Games:
+                DrawGamesTab(stage);
+                break;
+            case CasinoTab.Live:
+                DrawLiveTab(stage);
+                break;
+            case CasinoTab.Cashier:
+                DrawCashierTab(stage);
+                break;
+            default:
+                DrawLobbyTab(stage);
+                break;
         }
 
-        var state = casino.State;
-        var jackpot = casino.Jackpot;
-        if (jackpot > 0 && jackpotRail.Draw(ui, jackpot))
-        {
-            OpenGame(CasinoGames.Slots);
-        }
+        DrawFloorTabBar(new Rect(new Vector2(body.Min.X, stage.Max.Y), body.Max));
+    }
 
-        if (state?.Sitting is not null)
+    private void DrawFloorTabBar(Rect bar)
+    {
+        navTabs[0] = new NavTab(FontAwesomeIcon.DiceD20, Loc.T(L.Casino.TabLobby));
+        navTabs[1] = new NavTab(FontAwesomeIcon.Th, Loc.T(L.Casino.TabGames));
+        navTabs[2] = new NavTab(FontAwesomeIcon.BroadcastTower, Loc.T(L.Casino.TabLive), LiveHeadcount());
+        navTabs[3] = new NavTab(FontAwesomeIcon.CashRegister, Loc.T(L.Casino.TabCashier));
+        var tapped = bottomNav.Draw(bar, ui, theme, navTabs, (int)tab, true);
+        if (tapped >= 0)
         {
-            DrawSittingResumeCard(state.Sitting, scale);
+            tab = (CasinoTab)tapped;
         }
+    }
 
-        if (state is not null && (state.StakesPaused || state.Draining))
-        {
-            var title = state.StakesPaused ? Loc.T(L.Casino.PausedTitle) : Loc.T(L.Casino.DrainingTitle);
-            var hint = state.StakesPaused ? Loc.T(L.Casino.PausedHint) : Loc.T(L.Casino.DrainingHint);
-            DrawFloorNotice(title, hint, scale);
-        }
+    private int LiveHeadcount()
+    {
+        var total = casinoTables.SeatedAt(Core.Casino.CasinoWire.BlackjackKind);
+        total += casinoRooms.OccupancyOf(Core.Casino.CasinoRoomIds.WheelFloor);
+        total += casinoRooms.OccupancyOf(Core.Casino.CasinoRoomIds.BingoHall);
+        return total;
+    }
 
-        DrawDailySpinCard(scale);
-        ui.SectionHeading(Loc.T(L.Casino.GamesHeading), 4f);
-        DrawGameGrid(scale);
-        ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
-        if (DrawNavRow(FontAwesomeIcon.ThList, L.Casino.TablesRow, L.Casino.TablesRowHint, scale))
-        {
-            OpenTables();
-        }
-
-        ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
+    private void DrawRecordsRows(float scale)
+    {
         ui.SectionHeading(Loc.T(L.Casino.RecordsHeading), 4f);
         if (DrawNavRow(FontAwesomeIcon.Receipt, L.Casino.HistoryRow, L.Casino.HistoryRowHint, scale))
         {
@@ -110,8 +109,19 @@ internal sealed partial class CasinoApp
         {
             router.Push(new CasinoRoute(CasinoScreen.Limits));
         }
+    }
 
-        ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
+    private void DrawStakeNotice(float scale)
+    {
+        var state = casino.State;
+        if (state is null || (!state.StakesPaused && !state.Draining))
+        {
+            return;
+        }
+
+        var title = state.StakesPaused ? Loc.T(L.Casino.PausedTitle) : Loc.T(L.Casino.DrainingTitle);
+        var hint = state.StakesPaused ? Loc.T(L.Casino.PausedHint) : Loc.T(L.Casino.DrainingHint);
+        DrawFloorNotice(title, hint, scale);
     }
 
     private void DrawDailySpinCard(float scale)
