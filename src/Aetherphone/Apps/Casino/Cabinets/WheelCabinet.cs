@@ -177,22 +177,9 @@ internal sealed class WheelCabinet
         }
     }
 
-    private bool HasBetOn(int spot)
+    private long StakedOn(int spot)
     {
-        return WheelRules.IsSpot(spot) && spotStakes[spot] > 0;
-    }
-
-    private int FirstOpenSpot()
-    {
-        for (var spot = 0; spot < WheelRules.SpotCount; spot++)
-        {
-            if (spotStakes[spot] == 0)
-            {
-                return spot;
-            }
-        }
-
-        return -1;
+        return WheelRules.IsSpot(spot) ? spotStakes[spot] : 0;
     }
 
     private long StakedThisRound()
@@ -403,7 +390,7 @@ internal sealed class WheelCabinet
         {
             var min = new Vector2(left + spot * (cardWidth + gap), y);
             var max = new Vector2(min.X + cardWidth, y + cardHeight);
-            DrawSpotCard(drawList, ui, board, spot, min, max, seated && betting && !HasBetOn(spot), scale);
+            DrawSpotCard(drawList, ui, board, spot, min, max, seated && betting, scale);
         }
 
         return y + cardHeight;
@@ -499,23 +486,8 @@ internal sealed class WheelCabinet
             y += Metrics.Space.Sm * scale;
         }
 
-        if (HasBetOn(selectedSpot))
-        {
-            var open = FirstOpenSpot();
-            if (open >= 0)
-            {
-                selectedSpot = open;
-            }
-        }
-
-        if (FirstOpenSpot() < 0)
-        {
-            Typography.DrawWrappedLeft(new Vector2(left, y), Loc.T(L.Casino.WheelEverySpotBacked), ui.MutedInk,
-                TextStyles.Footnote, width);
-            return;
-        }
-
-        var ceiling = WheelRules.Headroom(staked);
+        var onSelected = StakedOn(selectedSpot);
+        var ceiling = WheelRules.HeadroomOn(staked, onSelected);
         if (sitting.Stack < ceiling)
         {
             ceiling = sitting.Stack;
@@ -525,10 +497,12 @@ internal sealed class WheelCabinet
         {
             var note = staked >= WheelRules.MaxStakePerRound
                 ? Loc.T(L.Casino.WheelSpinFull, WheelRules.MaxStakePerRound.ToString("N0", Loc.Culture))
-                : Loc.T(L.Casino.SlotsLowStack);
+                : (onSelected >= WheelRules.MaxStakePerSpot
+                    ? Loc.T(L.Casino.WheelSpotFull, WheelRules.MaxStakePerSpot.ToString("N0", Loc.Culture))
+                    : Loc.T(L.Casino.SlotsLowStack));
             var block = Typography.MeasureWrappedBlock(note, TextStyles.Footnote, width);
             Typography.DrawWrappedLeft(new Vector2(left, y), note, ui.MutedInk, TextStyles.Footnote, width);
-            if (staked >= WheelRules.MaxStakePerRound)
+            if (staked >= WheelRules.MaxStakePerRound || onSelected >= WheelRules.MaxStakePerSpot)
             {
                 return;
             }
@@ -544,9 +518,11 @@ internal sealed class WheelCabinet
             return;
         }
 
-        var heading = staked > 0
-            ? Loc.T(L.Casino.WheelOnThisSpin, staked.ToString("N0", Loc.Culture))
-            : Loc.T(L.Casino.WheelBetHeading);
+        var heading = onSelected > 0
+            ? Loc.T(L.Casino.WheelAddToSpot, onSelected.ToString("N0", Loc.Culture))
+            : (staked > 0
+                ? Loc.T(L.Casino.WheelOnThisSpin, staked.ToString("N0", Loc.Culture))
+                : Loc.T(L.Casino.WheelBetHeading));
         Typography.Draw(drawList, new Vector2(left, y), heading, ui.MutedInk, TextStyles.FootnoteEmphasized);
         var bounds = Loc.T(L.Casino.WheelBetBounds, WheelRules.MinStakePerSpot.ToString("N0", Loc.Culture),
             ceiling.ToString("N0", Loc.Culture));
@@ -570,9 +546,9 @@ internal sealed class WheelCabinet
         }
 
         var amount = ParseAmount();
-        var clamped = WheelRules.Clamp(amount, staked, sitting.Stack);
+        var clamped = WheelRules.ClampOn(amount, staked, onSelected, sitting.Stack);
         var blocked = state.StakesPaused || state.Draining || snapshot.Phase != CasinoRoomPhases.Open;
-        var canPlace = !blocked && !rooms.StakeInFlight && clamped > 0 && !HasBetOn(selectedSpot);
+        var canPlace = !blocked && !rooms.StakeInFlight && clamped > 0;
         var multiplier = Loc.T(L.Casino.WheelMultiplier, GameNumber.Label(WheelRules.Multipliers[selectedSpot]));
         var label = canPlace
             ? Loc.T(L.Casino.WheelPlaceOn, clamped.ToString("N0", Loc.Culture), multiplier)
@@ -606,7 +582,7 @@ internal sealed class WheelCabinet
         var final = Loc.T(L.Casino.WheelFinalShort);
         Typography.Draw(drawList, new Vector2(left, y), final, ui.MutedInk, TextStyles.Caption2);
         y += Typography.Measure(final, TextStyles.Caption2).Y + 2f * scale;
-        Typography.DrawWrappedLeft(new Vector2(left, y), Loc.T(L.Casino.WheelOneBetPerSpot), ui.MutedInk,
+        Typography.DrawWrappedLeft(new Vector2(left, y), Loc.T(L.Casino.WheelSpreadHint), ui.MutedInk,
             TextStyles.Caption2, width);
     }
 

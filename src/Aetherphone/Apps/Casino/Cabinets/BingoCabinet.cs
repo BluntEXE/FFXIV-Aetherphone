@@ -643,15 +643,16 @@ internal sealed class BingoCabinet
         }
 
         var holding = HeldCards(mine);
-        if (holding > 0)
+        var room = BingoRules.MaxCards - holding;
+        if (room <= 0)
         {
             DrawNote(ui, Loc.T(L.Casino.BingoHoldingFull, CardCountLabel(holding)), width, scale);
             return;
         }
 
-        if (requestedCards > BingoRules.MaxCards)
+        if (requestedCards > room)
         {
-            requestedCards = BingoRules.MaxCards;
+            requestedCards = room;
         }
 
         if (requestedCards < 1)
@@ -661,8 +662,10 @@ internal sealed class BingoCabinet
 
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
-        Typography.Draw(drawList, origin, Loc.T(L.Casino.BingoBuyHeading), ui.MutedInk,
-            TextStyles.FootnoteEmphasized);
+        var heading = holding > 0
+            ? Loc.T(L.Casino.BingoBuyMoreHeading, CardCountLabel(holding))
+            : Loc.T(L.Casino.BingoBuyHeading);
+        Typography.Draw(drawList, origin, heading, ui.MutedInk, TextStyles.FootnoteEmphasized);
         var price = Loc.T(L.Casino.BingoCardPrice, BingoRules.CardPrice.ToString("N0", Loc.Culture),
             GameNumber.Label(BingoRules.MaxCards));
         var priceSize = Typography.Measure(price, TextStyles.Caption1);
@@ -670,7 +673,7 @@ internal sealed class BingoCabinet
             TextStyles.Caption1);
 
         var segmentY = origin.Y + 20f * scale;
-        DrawCountSegments(drawList, ui, origin.X, segmentY, width, BingoRules.MaxCards, scale);
+        DrawCountSegments(drawList, ui, origin.X, segmentY, width, room, scale);
 
         var stake = BingoRules.StakeFor(requestedCards);
         var thin = sitting.Stack < stake;
@@ -690,7 +693,7 @@ internal sealed class BingoCabinet
         var noteY = pillRect.Max.Y + 6f * scale;
         var note = blocked
             ? Loc.T(state.StakesPaused ? L.Casino.PausedTitle : L.Casino.DrainingTitle)
-            : thin ? Loc.T(L.Casino.SlotsLowStack) : Loc.T(L.Casino.BingoOneBuyPerRoom);
+            : thin ? Loc.T(L.Casino.SlotsLowStack) : Loc.T(L.Casino.BingoBuyAgainNote);
         var noteBlock = Typography.MeasureWrappedBlock(note, TextStyles.Caption2, width);
         Typography.DrawWrappedLeft(new Vector2(origin.X, noteY), note, ui.MutedInk, TextStyles.Caption2, width);
         var finalNote = Loc.T(L.Casino.BingoCardsFinal);

@@ -4028,8 +4028,7 @@ internal static class L
         public static readonly LocString WheelFinalTitle = new("casino.wheel.finalTitle", "Bets are final");
         public static readonly LocString WheelFinalBody = new("casino.wheel.finalBody", "Once a bet is down it stays down. There is no taking one back, so pick your spot before you tap.");
         public static readonly LocString WheelFinalShort = new("casino.wheel.finalShort", "Bets are final.");
-        public static readonly LocString WheelOneBetPerSpot = new("casino.wheel.oneBetPerSpot", "One bet a spot. Spread them out to cover more of the rim.");
-        public static readonly LocString WheelEverySpotBacked = new("casino.wheel.everySpotBacked", "You are on every spot this spin. The next one opens in a moment.");
+        public static readonly LocString WheelSpreadHint = new("casino.wheel.spreadHint", "Add to a spot you like, or spread across the rim to cover more of it.");
         public static readonly LocString WheelReconnecting = new("casino.wheel.reconnecting", "Reconnecting");
         public static readonly LocString WheelClosedTitle = new("casino.wheel.closedTitle", "This wheel has stopped");
         public static readonly LocString WheelClosedHint = new("casino.wheel.closedHint", "The table is not running right now. The rest of the floor is still open.");
@@ -4048,7 +4047,6 @@ internal static class L
         public static readonly LocString BingoCardsClose = new("casino.bingo.cardsClose", "Cards close in {0}");
         public static readonly LocString BingoBuyHeading = new("casino.bingo.buyHeading", "How many cards?");
         public static readonly LocString BingoBuyFor = new("casino.bingo.buyFor", "Buy {0} for {1}");
-        public static readonly LocString BingoOneBuyPerRoom = new("casino.bingo.oneBuyPerRoom", "One buy a room, so pick the whole set before you tap.");
         public static readonly LocString BingoCardsPending = new("casino.bingo.cardsPending", "The hall is printing your cards.");
         public static readonly LocString BingoCalledOff = new("casino.bingo.calledOff", "The house called this game off and handed every card back.");
         public static readonly LocString BingoCardPrice = new("casino.bingo.cardPrice", "{0} a card, up to {1} a room");
@@ -4282,6 +4280,10 @@ internal static class L
         public static readonly LocString FactEntry = new("casino.fact.entry", "Entry");
         public static readonly LocString FactSkill = new("casino.fact.skill", "Decided by");
         public static readonly LocString FactSkillValue = new("casino.fact.skillValue", "How well you serve");
+        public static readonly LocString WheelAddToSpot = new("casino.wheel.addToSpot", "You have {0} on this spot");
+        public static readonly LocString WheelSpotFull = new("casino.wheel.spotFull", "That is the whole {0} this spot takes from one backer. Try another spot on the rim.");
+        public static readonly LocString BingoBuyMoreHeading = new("casino.bingo.buyMoreHeading", "You hold {0}. How many more?");
+        public static readonly LocString BingoBuyAgainNote = new("casino.bingo.buyAgainNote", "You can come back for more cards while the window is open.");
     }
 
     internal static class Catalogs
