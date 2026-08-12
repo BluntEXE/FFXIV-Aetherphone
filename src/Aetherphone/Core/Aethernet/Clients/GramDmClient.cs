@@ -1,4 +1,5 @@
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Aethernet.Clients;
 
@@ -11,7 +12,8 @@ internal sealed class GramDmClient
         this.net = net;
     }
 
-    public Task<GramThreadPage?> ThreadsAsync(string? cursor, CancellationToken token)
+    public Task<GramThreadPage?> ThreadsAsync(string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         var path = "/gram/threads";
         if (cursor is not null)
@@ -19,7 +21,7 @@ internal sealed class GramDmClient
             path += $"?cursor={Uri.EscapeDataString(cursor)}";
         }
 
-        return net.GetAsync(path, AethernetJsonContext.Default.GramThreadPage, token);
+        return net.GetAsync(path, AethernetJsonContext.Default.GramThreadPage, token, null, onFailure);
     }
 
     public Task<GramMessagePage?> MessagesAsync(string threadId, string? cursor, CancellationToken token)

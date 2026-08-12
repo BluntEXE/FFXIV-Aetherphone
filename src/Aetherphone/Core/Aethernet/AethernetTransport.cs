@@ -21,27 +21,29 @@ internal sealed class AethernetTransport
     public AethernetSession Session { get; }
 
     public Task<T?> GetAsync<T>(string path, JsonTypeInfo<T> responseInfo, CancellationToken token,
-        Action<int>? onStatus = null)
+        Action<int>? onStatus = null, Action<AepFailure>? onFailure = null)
     {
         if (SignedOut(path))
         {
+            onFailure?.Invoke(AepFailure.Transport(AepFailureKind.SignedOut));
             return Task.FromResult<T?>(default);
         }
 
-        return http.GetJsonAsync(Url(path), responseInfo, Session.Token, token, Sink(onStatus), appScope);
+        return http.GetJsonAsync(Url(path), responseInfo, Session.Token, token, Sink(onStatus), appScope, onFailure);
     }
 
     public Task<TResponse?> PostAsync<TRequest, TResponse>(string path, TRequest body,
         JsonTypeInfo<TRequest> requestInfo, JsonTypeInfo<TResponse> responseInfo, CancellationToken token,
-        Action<int>? onStatus = null)
+        Action<int>? onStatus = null, Action<AepFailure>? onFailure = null)
     {
         if (SignedOut(path))
         {
+            onFailure?.Invoke(AepFailure.Transport(AepFailureKind.SignedOut));
             return Task.FromResult<TResponse?>(default);
         }
 
         return http.PostJsonAsync(Url(path), body, requestInfo, responseInfo, Session.Token, token, Sink(onStatus),
-            appScope);
+            appScope, onFailure);
     }
 
     public Task<TResponse?> SendJsonAsync<TRequest, TResponse>(HttpMethod method, string path, TRequest body,

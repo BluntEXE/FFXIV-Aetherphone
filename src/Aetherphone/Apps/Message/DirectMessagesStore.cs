@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Net;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
@@ -115,9 +116,10 @@ internal sealed class DirectMessagesStore : ChatThreadStoreBase<ChatMessageDto, 
     protected override Task<ChatKeyStatus> EnsureThreadKeysAsync(string threadId, CancellationToken token) =>
         keys.EnsureChatKeysAsync(threadId, token);
 
-    protected override async Task<ThreadListPage?> FetchThreadListAsync(string? cursor, CancellationToken token)
+    protected override async Task<ThreadListPage?> FetchThreadListAsync(string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        var page = await client.ConversationsAsync(cursor, token).ConfigureAwait(false);
+        var page = await client.ConversationsAsync(cursor, token, onFailure).ConfigureAwait(false);
         return page is null ? null : new ThreadListPage(page.Items, page.NextCursor);
     }
 

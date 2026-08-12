@@ -35,7 +35,7 @@ internal sealed partial class ChirperApp
         if (composeOutcome == 2)
         {
             composeOutcome = 0;
-            composeStatus = Loc.T(L.Account.CannotReach);
+            composeStatus = composeFailure.Failed ? composeFailure.Text() : Loc.T(L.Account.CannotReach);
         }
 
         var pickedPath = Interlocked.Exchange(ref pendingComposePickedPath, null);
@@ -231,6 +231,7 @@ internal sealed partial class ChirperApp
         }
 
         composeStatus = string.Empty;
+        composeFailure.Clear();
         var attachments = composeAttachments.ToArray();
         if (quoteTargetId is not null)
         {
@@ -238,7 +239,7 @@ internal sealed partial class ChirperApp
         }
         else
         {
-            store.Compose(draft, attachments, ok => composeOutcome = ok ? 1 : 2);
+            store.Compose(draft, attachments, ok => composeOutcome = ok ? 1 : 2, composeFailure.Set);
         }
     }
 

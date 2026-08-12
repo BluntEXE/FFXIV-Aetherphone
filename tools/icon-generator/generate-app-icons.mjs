@@ -49,6 +49,7 @@ const map = {
   kupoai: "message-chatbot",
   appstore: "apps",
   shortcuts: "bolt",
+  aetherstream: "device-tv",
 };
 
 function recolor(svg) {

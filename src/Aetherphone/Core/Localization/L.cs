@@ -5704,4 +5704,32 @@ internal static class L
         public static readonly LocString DurationHm = new("health.durationHm", "{0}h {1}m");
         public static readonly LocString DurationM = new("health.durationM", "{0}m");
     }
+
+    internal static class Failure
+    {
+        public static readonly LocString Offline = new("failure.offline", "Couldn't reach Aethernet. Check your connection, then try again.");
+        public static readonly LocString Timeout = new("failure.timeout", "The server took too long to answer. Try again in a moment.");
+        public static readonly LocString RateLimitPaused = new("failure.rateLimitPaused", "Too many requests just now. Give it a few seconds, then try again.");
+        public static readonly LocString SignedOut = new("failure.signedOut", "You're signed out. Sign in from Settings, then try again.");
+        public static readonly LocString BadResponse = new("failure.badResponse", "The server sent something we couldn't read. This is a bug: please report it.");
+        public static readonly LocString Unknown = new("failure.unknown", "That didn't work, and the reason wasn't clear. Reference: {0}");
+        public static readonly LocString Unauthorized = new("failure.unauthorized", "Your session expired. Sign in again, then try again.");
+        public static readonly LocString Forbidden = new("failure.forbidden", "You're not allowed to do that.");
+        public static readonly LocString NotFound = new("failure.notFound", "That isn't there any more.");
+        public static readonly LocString RateLimited = new("failure.rateLimited", "You're going a bit fast. Wait a moment, then try again.");
+        public static readonly LocString ServerError = new("failure.serverError", "Aethernet hit a problem on its side. Reference: {0}");
+        public static readonly LocString Suspended = new("failure.suspended", "Your account is suspended, so this action is blocked.");
+        public static readonly LocString PostEmpty = new("failure.postEmpty", "Write something or attach an image before posting.");
+        public static readonly LocString PostTooLong = new("failure.postTooLong", "That's too long. Keep it to {0} characters.");
+        public static readonly LocString PostTooManyImages = new("failure.postTooManyImages", "You can attach at most {0} images.");
+        public static readonly LocString PostQuoteMissing = new("failure.postQuoteMissing", "The chirp you quoted is no longer available.");
+        public static readonly LocString PostQuoteNotChirp = new("failure.postQuoteNotChirp", "Only chirps can be quoted.");
+        public static readonly LocString PostQuoteBlocked = new("failure.postQuoteBlocked", "You can't quote that chirp.");
+        public static readonly LocString PostCooldown = new("failure.postCooldown", "You're posting quickly. Try again in {0} seconds.");
+        public static readonly LocString MediaInvalidImage = new("failure.mediaInvalidImage", "One of your images didn't upload. Remove it and attach it again.");
+        public static readonly LocString MediaInvalidAudio = new("failure.mediaInvalidAudio", "That voice clip didn't upload. Record it again.");
+        public static readonly LocString MediaInvalidReference = new("failure.mediaInvalidReference", "An attachment went missing before posting. Attach it again.");
+        public static readonly LocString PullToRetry = new("failure.pullToRetry", "Pull down to try again.");
+        public static readonly LocString CouldNotLoad = new("failure.couldNotLoad", "Couldn't load this");
+    }
 }

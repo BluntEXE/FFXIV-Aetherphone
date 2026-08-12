@@ -4,6 +4,7 @@ using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Net;
 using Aetherphone.Core.Notifications;
 using Dalamud.Plugin.Services;
 
@@ -28,6 +29,7 @@ internal sealed class AnnouncementsStore : IDisposable
     private volatile bool loading;
     private volatile bool loadedOnce;
     private volatile bool pingRefreshRequested;
+    private volatile AepFailureBox? failureBox;
     private DateTime lastBackgroundRefreshUtc = DateTime.MinValue;
     private readonly RealtimeSignalBus signals;
 
@@ -59,6 +61,10 @@ internal sealed class AnnouncementsStore : IDisposable
     public bool HasMore => announcementsCursor is not null;
 
     public bool LoadedOnce => loadedOnce;
+
+    public bool Failed => failureBox is not null;
+
+    public AepFailure Failure => failureBox?.Failure ?? AepFailure.None;
 
     public int UnreadCount
     {
@@ -97,11 +103,18 @@ internal sealed class AnnouncementsStore : IDisposable
         loading = true;
         work.Run("announcements refresh", async token =>
         {
-            var page = await client.ListAsync(null, token).ConfigureAwait(false);
+            var reported = AepFailure.None;
+            var page = await client.ListAsync(null, token, failure => reported = failure).ConfigureAwait(false);
             if (page is null)
             {
+                failureBox = new AepFailureBox(reported.Failed
+                    ? reported
+                    : AepFailure.Transport(AepFailureKind.Offline));
+                AepLog.Warning($"Announcements failed to load: {failureBox.Failure.Describe()}");
                 return;
             }
+
+            failureBox = null;
 
             if (pagedDeeper)
             {

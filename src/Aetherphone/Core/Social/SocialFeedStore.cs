@@ -144,6 +144,10 @@ internal abstract class SocialFeedStore : IDisposable
 
     public bool IsLoading(SocialFeedScope scope) => Lane(scope).Loading;
 
+    public bool FeedFailed(SocialFeedScope scope) => Lane(scope).Failed;
+
+    public AepFailure FeedFailure(SocialFeedScope scope) => Lane(scope).Failure;
+
     public bool HasMoreFeed(SocialFeedScope scope) => Lane(scope).HasMore;
 
     public bool LoadingMore(SocialFeedScope scope) => Lane(scope).LoadingMore;
@@ -199,7 +203,8 @@ internal abstract class SocialFeedStore : IDisposable
         : user.FollowRequested ? FollowState.Requested
         : FollowState.None;
 
-    protected abstract Task<FeedPage?> FetchFeedAsync(string feedKey, string? cursor, CancellationToken token);
+    protected abstract Task<FeedPage?> FetchFeedAsync(string feedKey, string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null);
 
     protected abstract Task<FeedPage?> FetchProfilePostsAsync(string userId, string? cursor, CancellationToken token);
 
@@ -305,11 +310,17 @@ internal abstract class SocialFeedStore : IDisposable
         lane.Loading = true;
         work.Run("feed refresh", async token =>
         {
-            var page = await FetchFeedAsync(FeedKey(scope), null, token).ConfigureAwait(false);
+            var reported = AepFailure.None;
+            var page = await FetchFeedAsync(FeedKey(scope), null, token, failure => reported = failure)
+                .ConfigureAwait(false);
             if (page is not null)
             {
                 lane.ApplyRefresh(page.Items, page.NextCursor);
+                return;
             }
+
+            lane.RecordFailure(reported.Failed ? reported : AepFailure.Transport(AepFailureKind.Offline));
+            AepLog.Warning($"Feed '{FeedKey(scope)}' failed to refresh: {lane.Failure.Describe()}");
         }, () => lane.Loading = false);
     }
 
@@ -330,11 +341,17 @@ internal abstract class SocialFeedStore : IDisposable
         lane.LoadingMore = true;
         work.Run("feed more", async token =>
         {
-            var page = await FetchFeedAsync(FeedKey(scope), cursor, token).ConfigureAwait(false);
+            var reported = AepFailure.None;
+            var page = await FetchFeedAsync(FeedKey(scope), cursor, token, failure => reported = failure)
+                .ConfigureAwait(false);
             if (page is not null)
             {
                 lane.ApplyMore(page.Items, page.NextCursor);
+                return;
             }
+
+            lane.RecordFailure(reported.Failed ? reported : AepFailure.Transport(AepFailureKind.Offline));
+            AepLog.Warning($"Feed '{FeedKey(scope)}' failed to load more: {lane.Failure.Describe()}");
         }, () => lane.LoadingMore = false);
     }
 

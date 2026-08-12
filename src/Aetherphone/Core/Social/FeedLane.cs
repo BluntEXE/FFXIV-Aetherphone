@@ -1,6 +1,7 @@
 using System.Globalization;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Social;
 
@@ -13,6 +14,7 @@ internal sealed class FeedLane<TPost> : ITrimmable where TPost : class, IIdentif
     private volatile string? cursor;
     private volatile bool loading;
     private volatile bool loadingMore;
+    private volatile AepFailureBox? failureBox;
 
     public FeedLane(Comparison<TPost> order, Func<TPost, long>? createdAtUnix = null)
     {
@@ -41,8 +43,25 @@ internal sealed class FeedLane<TPost> : ITrimmable where TPost : class, IIdentif
         set => loadingMore = value;
     }
 
+    public bool Failed => failureBox is not null;
+
+    public AepFailure Failure => failureBox?.Failure ?? AepFailure.None;
+
+    public bool NeverLoaded => items.Length == 0;
+
+    public void RecordFailure(AepFailure failure)
+    {
+        failureBox = new AepFailureBox(failure);
+    }
+
+    public void ClearFailure()
+    {
+        failureBox = null;
+    }
+
     public void ApplyRefresh(TPost[] incoming, string? nextCursor)
     {
+        failureBox = null;
         lock (gate)
         {
             var wasEmpty = items.Length == 0;
@@ -56,6 +75,7 @@ internal sealed class FeedLane<TPost> : ITrimmable where TPost : class, IIdentif
 
     public void ApplyMore(TPost[] incoming, string? nextCursor)
     {
+        failureBox = null;
         lock (gate)
         {
             items = IdentifiedMerge.MergeById(items, incoming, order);

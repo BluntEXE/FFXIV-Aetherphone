@@ -2,7 +2,9 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Localization;
 using Aetherphone.Core.Media;
+using Aetherphone.Core.Net;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Wallpapers;
 
@@ -33,13 +35,15 @@ internal sealed class ChirperStore : SocialFeedStore
 
     public bool AvatarBusy => avatarBusy;
 
-    protected override Task<FeedPage?> FetchFeedAsync(string feedKey, string? cursor, CancellationToken token) =>
-        client.FeedAsync(feedKey, cursor, token);
+    protected override Task<FeedPage?> FetchFeedAsync(string feedKey, string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null) =>
+        client.FeedAsync(feedKey, cursor, token, onFailure);
 
     protected override Task<FeedPage?> FetchProfilePostsAsync(string userId, string? cursor, CancellationToken token) =>
         client.UserPostsAsync(userId, cursor, token);
 
-    public void Compose(string text, IReadOnlyList<string> imagePaths, Action<bool> onComplete)
+    public void Compose(string text, IReadOnlyList<string> imagePaths, Action<bool> onComplete,
+        Action<AepFailure>? onFailure = null)
     {
         var trimmed = text.Trim();
         if ((trimmed.Length == 0 && imagePaths.Count == 0) || posting)
@@ -50,14 +54,15 @@ internal sealed class ChirperStore : SocialFeedStore
         posting = true;
         work.Run("compose", async token =>
         {
-            var uploaded = await UploadImagesAsync(imagePaths, token).ConfigureAwait(false);
+            var uploaded = await UploadImagesAsync(imagePaths, token, onFailure).ConfigureAwait(false);
             if (uploaded is null)
             {
                 return false;
             }
 
             var (keys, width, height) = uploaded.Value;
-            var created = await client.CreatePostAsync(trimmed, keys.Length > 0 ? keys : null, width, height, token)
+            var created = await client.CreatePostAsync(trimmed, keys.Length > 0 ? keys : null, width, height, token,
+                    onFailure)
                 .ConfigureAwait(false);
             if (created is null)
             {
@@ -70,7 +75,7 @@ internal sealed class ChirperStore : SocialFeedStore
     }
 
     private async Task<(string[] Keys, int Width, int Height)?> UploadImagesAsync(
-        IReadOnlyList<string> imagePaths, CancellationToken token)
+        IReadOnlyList<string> imagePaths, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         if (imagePaths.Count == 0)
         {
@@ -91,6 +96,9 @@ internal sealed class ChirperStore : SocialFeedStore
                 bytes = await File.ReadAllBytesAsync(imagePaths[index], token).ConfigureAwait(false);
                 if (bytes.Length == 0 || bytes.Length > MaxGifBytes)
                 {
+                    AepLog.Warning($"Chirper upload rejected a GIF of {bytes.Length} bytes; the cap is {MaxGifBytes}");
+                    onFailure?.Invoke(new AepFailure(AepFailureKind.Server, 0, FailureCodes.MediaInvalidImage, null,
+                        null, null));
                     return null;
                 }
 
@@ -106,7 +114,7 @@ internal sealed class ChirperStore : SocialFeedStore
                 contentType = "image/jpeg";
             }
 
-            var upload = await media.UploadUrlAsync(contentType, UploadScope, token).ConfigureAwait(false);
+            var upload = await media.UploadUrlAsync(contentType, UploadScope, token, onFailure).ConfigureAwait(false);
             if (upload is null)
             {
                 return null;
@@ -116,6 +124,8 @@ internal sealed class ChirperStore : SocialFeedStore
                 .ConfigureAwait(false);
             if (!sent)
             {
+                AepLog.Warning($"Chirper upload could not store image {index + 1} of {keys.Length}");
+                onFailure?.Invoke(AepFailure.Transport(AepFailureKind.Offline));
                 return null;
             }
 

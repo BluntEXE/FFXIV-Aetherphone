@@ -126,6 +126,7 @@ internal sealed partial class AethergramApp : IPhoneApp
     private readonly PersonPicker personPicker;
     private string caption = string.Empty;
     private bool captionFocus;
+    private readonly FailureSlot feedFailure = new();
     private string composeStatus = string.Empty;
     private volatile int composeOutcome;
     private string commentDraft = string.Empty;
@@ -769,12 +770,24 @@ internal sealed partial class AethergramApp : IPhoneApp
             stories.DrawTray(theme);
             if (snapshot.Length == 0)
             {
+                var failed = !store.IsLoading(scope) && store.FeedFailed(scope);
+                if (failed)
+                {
+                    feedFailure.Set(store.FeedFailure(scope));
+                }
+
                 var message = store.IsLoading(scope) ? Loc.T(L.Common.Loading) :
+                    failed ? feedFailure.Text() :
                     scope == SocialFeedScope.Following ? Loc.T(L.Aethergram.FollowingEmpty) :
                     Loc.T(L.Aethergram.ExploreEmpty);
-                Typography.DrawCentered(
-                    new Vector2(listRect.Center.X, ImGui.GetCursorScreenPos().Y + 60f * UiScale.Current),
-                    message, AppPalettes.Aethergram.MutedInk);
+                var messageY = ImGui.GetCursorScreenPos().Y + 60f * UiScale.Current;
+                Typography.DrawCentered(new Vector2(listRect.Center.X, messageY), message,
+                    AppPalettes.Aethergram.MutedInk);
+                if (failed)
+                {
+                    Typography.DrawCentered(new Vector2(listRect.Center.X, messageY + 28f * UiScale.Current),
+                        Loc.T(L.Failure.PullToRetry), AppPalettes.Aethergram.MutedInk, TextStyles.Footnote);
+                }
             }
             else
             {

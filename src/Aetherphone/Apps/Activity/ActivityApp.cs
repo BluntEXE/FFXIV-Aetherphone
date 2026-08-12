@@ -64,7 +64,7 @@ internal sealed partial class ActivityApp : IPhoneApp
         ui.Backdrop(screen);
         DrawHeader(content, scale);
 
-        if (DrawNotificationToggle(content, scale))
+        if (DrawBadgeToggle(content, scale))
         {
             configuration.ShowActivityBadge = !configuration.ShowActivityBadge;
             configuration.Save();
@@ -98,11 +98,12 @@ internal sealed partial class ActivityApp : IPhoneApp
         }
     }
 
-    private bool DrawNotificationToggle(Rect content, float scale)
+    private bool DrawBadgeToggle(Rect content, float scale)
     {
         return NotificationToggleButton.Draw(content, scale, "character.badge.toggle",
-            !configuration.ShowActivityBadge, AppPalettes.Activity.Accent, AppPalettes.Activity.TitleInk,
-            AppPalettes.Activity.MutedInk, Loc.T(L.Character.ShowBadge), Loc.T(L.Character.HideBadge));
+            AlertSuppression.Badge, !configuration.ShowActivityBadge, AppPalettes.Activity.Accent,
+            AppPalettes.Activity.TitleInk, AppPalettes.Activity.MutedInk, Loc.T(L.Character.ShowBadge),
+            Loc.T(L.Character.HideBadge));
     }
 
     private void DrawScreenTabs(float scale)

@@ -5,6 +5,7 @@ using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Media;
+using Aetherphone.Core.Net;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Report;
 using Dalamud.Plugin.Services;
@@ -52,6 +53,7 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
     private volatile bool loadingMoreThreads;
     private volatile bool loadingThreadList;
     private volatile bool threadListLoaded;
+    private volatile AepFailureBox? threadListFailureBox;
     private volatile string? currentThreadId;
     private volatile TMessage[] messages = Array.Empty<TMessage>();
     private volatile string? olderCursor;
@@ -148,7 +150,8 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     protected abstract Task<ChatKeyStatus> EnsureThreadKeysAsync(string threadId, CancellationToken token);
 
-    protected abstract Task<ThreadListPage?> FetchThreadListAsync(string? cursor, CancellationToken token);
+    protected abstract Task<ThreadListPage?> FetchThreadListAsync(string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null);
 
     protected abstract Task<MessagePage?> FetchMessagesPageAsync(string threadId, string? cursor,
         CancellationToken token);
@@ -279,6 +282,8 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
 
     protected bool LoadingThreadList => loadingThreadList;
     protected bool ThreadListLoaded => threadListLoaded;
+    public bool ThreadListFailed => threadListFailureBox is not null;
+    public AepFailure ThreadListFailure => threadListFailureBox?.Failure ?? AepFailure.None;
     public bool LoadingMoreThreads => loadingMoreThreads;
     public bool HasMoreThreads => threadListCursor is not null;
 
@@ -607,11 +612,19 @@ internal abstract class ChatThreadStoreBase<TMessage, TThread> : IDisposable
         loadingThreadList = true;
         work.Run("threads", async token =>
         {
-            var page = await FetchThreadListAsync(null, token).ConfigureAwait(false);
-            if (page is not null)
+            var reported = AepFailure.None;
+            var page = await FetchThreadListAsync(null, token, failure => reported = failure).ConfigureAwait(false);
+            if (page is null)
             {
-                AcceptThreadListHead(DecorateThreadList(page.Value.Items), page.Value.NextCursor);
+                threadListFailureBox = new AepFailureBox(reported.Failed
+                    ? reported
+                    : AepFailure.Transport(AepFailureKind.Offline));
+                AepLog.Warning($"Conversation list failed to load: {threadListFailureBox.Failure.Describe()}");
+                return;
             }
+
+            threadListFailureBox = null;
+            AcceptThreadListHead(DecorateThreadList(page.Value.Items), page.Value.NextCursor);
         }, () =>
         {
             loadingThreadList = false;

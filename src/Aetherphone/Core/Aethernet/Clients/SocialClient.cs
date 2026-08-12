@@ -1,4 +1,5 @@
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Aethernet.Clients;
 
@@ -11,7 +12,8 @@ internal sealed class SocialClient
         this.net = net;
     }
 
-    public Task<FeedPage?> FeedAsync(string scope, string? cursor, CancellationToken token)
+    public Task<FeedPage?> FeedAsync(string scope, string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         var path = $"/feed?scope={scope}";
         if (cursor is not null)
@@ -19,12 +21,13 @@ internal sealed class SocialClient
             path += $"&cursor={Uri.EscapeDataString(cursor)}";
         }
 
-        return net.GetAsync(path, AethernetJsonContext.Default.FeedPage, token);
+        return net.GetAsync(path, AethernetJsonContext.Default.FeedPage, token, null, onFailure);
     }
 
-    public Task<PostDto?> CreatePostAsync(string text, string[]? mediaKeys, int mediaWidth, int mediaHeight, CancellationToken token)
+    public Task<PostDto?> CreatePostAsync(string text, string[]? mediaKeys, int mediaWidth, int mediaHeight, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync("/posts", new CreatePostRequest(text, null, mediaKeys, mediaWidth, mediaHeight), AethernetJsonContext.Default.CreatePostRequest, AethernetJsonContext.Default.PostDto, token);
+        return net.PostAsync("/posts", new CreatePostRequest(text, null, mediaKeys, mediaWidth, mediaHeight), AethernetJsonContext.Default.CreatePostRequest, AethernetJsonContext.Default.PostDto, token, null, onFailure);
     }
 
     public Task<FeedPage?> UserPostsAsync(string userId, string? cursor, CancellationToken token)

@@ -1,4 +1,5 @@
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Aethernet.Clients;
 
@@ -32,7 +33,7 @@ internal sealed class VelvetClient
     }
 
     public Task<VelvetDiscoverPage?> DiscoverAsync(VelvetDiscoverFilter filter, string tags, string region,
-        string? cursor, CancellationToken token)
+        string? cursor, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         var path = new System.Text.StringBuilder("/velvet/discover");
         AppendFilter(path, filter, region);
@@ -42,7 +43,7 @@ internal sealed class VelvetClient
         }
 
         AppendCursor(path, cursor);
-        return net.GetAsync(path.ToString(), AethernetJsonContext.Default.VelvetDiscoverPage, token);
+        return net.GetAsync(path.ToString(), AethernetJsonContext.Default.VelvetDiscoverPage, token, null, onFailure);
     }
 
     private static void AppendFilter(System.Text.StringBuilder path, VelvetDiscoverFilter filter, string region)
@@ -250,7 +251,8 @@ internal sealed class VelvetClient
         return net.RequestAsync(HttpMethod.Delete, $"/velvet/posts/{Uri.EscapeDataString(postId)}/comments/{Uri.EscapeDataString(commentId)}/like", AethernetJsonContext.Default.VelvetCommentDto, token);
     }
 
-    public Task<VelvetThreadPage?> ThreadsAsync(string? cursor, CancellationToken token)
+    public Task<VelvetThreadPage?> ThreadsAsync(string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         var path = "/velvet/threads";
         if (cursor is not null)
@@ -258,7 +260,7 @@ internal sealed class VelvetClient
             path += $"?cursor={Uri.EscapeDataString(cursor)}";
         }
 
-        return net.GetAsync(path, AethernetJsonContext.Default.VelvetThreadPage, token);
+        return net.GetAsync(path, AethernetJsonContext.Default.VelvetThreadPage, token, null, onFailure);
     }
 
     public Task<VelvetMessagePage?> MessagesAsync(string threadId, string? cursor, CancellationToken token)

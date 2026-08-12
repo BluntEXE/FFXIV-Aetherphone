@@ -1,4 +1,5 @@
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Aethernet.Clients;
 
@@ -16,7 +17,8 @@ internal sealed class GramClient
         return net.PostAsync("/grams", new CreateGramRequest(caption, mediaKeys[0], width, height, mediaKeys, photoTags), AethernetJsonContext.Default.CreateGramRequest, AethernetJsonContext.Default.PostDto, token);
     }
 
-    public Task<FeedPage?> FeedAsync(string scope, string? cursor, CancellationToken token)
+    public Task<FeedPage?> FeedAsync(string scope, string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         var path = $"/feed?scope={scope}&kind=1";
         if (cursor is not null)
@@ -24,7 +26,7 @@ internal sealed class GramClient
             path += $"&cursor={Uri.EscapeDataString(cursor)}";
         }
 
-        return net.GetAsync(path, AethernetJsonContext.Default.FeedPage, token);
+        return net.GetAsync(path, AethernetJsonContext.Default.FeedPage, token, null, onFailure);
     }
 
     public Task<FeedPage?> UserGramsAsync(string userId, string? cursor, CancellationToken token)

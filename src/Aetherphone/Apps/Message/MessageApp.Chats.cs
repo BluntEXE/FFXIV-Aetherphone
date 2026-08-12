@@ -54,6 +54,15 @@ internal sealed partial class MessageApp
             {
                 EmptyState.Draw(listRect, ui, FontAwesomeIcon.Search, Loc.T(L.Phone.NoOneFound), string.Empty);
             }
+            else if (store.ThreadListFailed)
+            {
+                threadListFailure.Set(store.ThreadListFailure);
+                if (EmptyState.Draw(listRect, ui, FontAwesomeIcon.ExclamationTriangle,
+                        Loc.T(L.Failure.CouldNotLoad), threadListFailure.Text(), Loc.T(L.Common.Retry)))
+                {
+                    store.RefreshConversations();
+                }
+            }
             else if (EmptyState.Draw(listRect, ui, FontAwesomeIcon.Comments, Loc.T(L.DirectMessages.Empty),
                          Loc.T(L.DirectMessages.EmptyHint), Loc.T(L.DirectMessages.NewMessage)))
             {

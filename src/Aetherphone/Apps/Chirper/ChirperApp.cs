@@ -84,6 +84,8 @@ internal sealed partial class ChirperApp : IPhoneApp
     private string draft = string.Empty;
     private bool composeFocus;
     private bool feedScrollTopPending;
+    private readonly FailureSlot composeFailure = new();
+    private readonly FailureSlot feedFailure = new();
     private string composeStatus = string.Empty;
     private volatile int composeOutcome;
     private readonly ChirperActionReveal actions = new();
@@ -366,11 +368,24 @@ internal sealed partial class ChirperApp : IPhoneApp
 
             if (snapshot.Length == 0)
             {
+                var failed = !store.IsLoading(scope) && store.FeedFailed(scope);
+                if (failed)
+                {
+                    feedFailure.Set(store.FeedFailure(scope));
+                }
+
                 var message = store.IsLoading(scope) ? Loc.T(L.Common.Loading) :
+                    failed ? feedFailure.Text() :
                     scope == SocialFeedScope.Following ? Loc.T(L.Chirper.FollowingEmpty) :
                     Loc.T(L.Chirper.ExploreEmpty);
                 Typography.DrawCentered(new Vector2(listRect.Center.X, listRect.Min.Y + 90f * UiScale.Current),
                     message, AppPalettes.Chirper.MutedInk);
+                if (failed)
+                {
+                    Typography.DrawCentered(
+                        new Vector2(listRect.Center.X, listRect.Min.Y + 118f * UiScale.Current),
+                        Loc.T(L.Failure.PullToRetry), AppPalettes.Chirper.MutedInk, TextStyles.Footnote);
+                }
             }
             else
             {

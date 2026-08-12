@@ -1,4 +1,5 @@
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Aethernet.Clients;
 
@@ -11,7 +12,8 @@ internal sealed class ChatClient
         this.net = net;
     }
 
-    public Task<ConversationPage?> ConversationsAsync(string? cursor, CancellationToken token)
+    public Task<ConversationPage?> ConversationsAsync(string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         var path = "/chats/";
         if (cursor is not null)
@@ -19,7 +21,7 @@ internal sealed class ChatClient
             path += $"?cursor={Uri.EscapeDataString(cursor)}";
         }
 
-        return net.GetAsync(path, AethernetJsonContext.Default.ConversationPage, token);
+        return net.GetAsync(path, AethernetJsonContext.Default.ConversationPage, token, null, onFailure);
     }
 
     public Task<ConversationDetailDto?> ConversationAsync(string conversationId, CancellationToken token)

@@ -158,8 +158,8 @@ internal sealed partial class LinkpearlApp
     {
         var scale = UiScale.Current;
         return NotificationToggleButton.Draw(context.Content, scale, "messages.notifications.toggle",
-            notificationGate.Paused, context.Theme.Accent, context.Theme.TextStrong, context.Theme.TextMuted,
-            Loc.T(L.Messages.ResumeNotifications), Loc.T(L.Messages.PauseNotifications));
+            AlertSuppression.Notifications, notificationGate.Paused, context.Theme.Accent, context.Theme.TextStrong,
+            context.Theme.TextMuted, Loc.T(L.Messages.ResumeNotifications), Loc.T(L.Messages.PauseNotifications));
     }
 
     private void DrawDirectThread(Rect area, Conversation conversation)
