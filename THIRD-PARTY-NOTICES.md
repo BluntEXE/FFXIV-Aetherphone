@@ -57,7 +57,12 @@ AetherStream's video/screen engine under `src/Aetherphone/Core/Video/`
 (mpv-backed playback and the world-anchored ScreenPainter D3D11 quad
 renderer) is ported from
 [AlphaChannel](https://github.com/Voudi/AlphaChannel) by Voudi, used with the
-author's permission.
+author's permission. Two smaller pieces ported from the same source live
+outside that directory: the screen placement controls and presets in
+`src/Aetherphone/Apps/AetherStream/AetherStreamApp.Casting.cs` (from
+AlphaChannel's `ControlWindow.DrawScreenPositionSettings`) and the saved
+screen preset shape in `src/Aetherphone/Configuration.cs` (from its
+`Configuration`, with yaw added). Both are modified from the originals.
 
 - Source: https://github.com/Voudi/AlphaChannel
 - License: GNU General Public License v3.0 or later; full text reproduced in

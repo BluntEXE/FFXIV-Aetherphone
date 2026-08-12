@@ -8,28 +8,8 @@ internal sealed record VideoMetadata(string Title, string Source, TimeSpan? Dura
 
 internal sealed record ResolvedStream(string VideoUrl, string? AudioUrl, string QualityLabel);
 
-// Stage 4, deliberately NOT a port of AlphaChannel's yt-dlp path. AlphaChannel downloads a
-// yt-dlp binary at runtime and hands mpv's own ytdl_hook script a URL to resolve internally
-// (see docs/video-pipeline.md §5 in the AlphaChannel repo) - AlphaChannel's C# code never
-// touches yt-dlp's output directly. Aetherphone already depends on YoutubeExplode (managed,
-// no external process) for the Music app's own YouTube resolution (Core/Songs/SongSearchService,
-// SongPlayer). Reusing it here keeps YouTube metadata off the yt-dlp path entirely: the binary
-// is still downloaded at runtime for mpv's ytdl_hook (see Resources.cs), but a title, duration
-// or thumbnail no longer waits on it, so its failure modes (network required on first use,
-// download hangs, binary goes missing) stay confined to playback of non-YouTube sources.
-// YouTube only serves muxed (single-file, audio+video together) streams up to 720p - anything
-// higher only exists as separate video-only and audio-only streams. This resolves adaptive
-// streams first (best video-only <= the requested cap, paired with the best audio-only track)
-// and only falls back to a muxed stream if no adaptive pair is available, so quality above 720p
-// is actually reachable rather than the dropdown just listing numbers that silently clamp.
 internal sealed class VideoUrlResolver
 {
-    // YouTube's own practical ceiling for muxed streams. Below this, always prefer muxed even if
-    // a particular video's own muxed ceiling happens to be lower than what adaptive could offer
-    // at the same cap - the adaptive (external audio-file) path is new and its track-selection
-    // behavior under Wine isn't fully verified yet, so it's scoped to only the quality tier that
-    // has no muxed option at all, rather than opportunistically replacing muxed playback that
-    // was already known to work.
     private const int MuxedCeiling = 720;
 
     private readonly YoutubeClient youtube = new();

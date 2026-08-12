@@ -12,18 +12,11 @@ internal sealed record WatchAlongParticipant(string UserId, string Name, string 
 
 internal sealed record NearbyStream(string HostId, string Name, string World, string DisplayName);
 
-// A viewer awaiting the host's approve/deny decision (see SignalType.StreamJoinRequest's doc
-// comment). Name/World always arrive empty here - the server has never carried real name/world in
-// the From it sends on stream.joinRequest, only DisplayName (same as call.incoming) - keep them on
-// the record for shape-parity with WatchAlongParticipant, but render DisplayName only.
 internal sealed record PendingJoinRequest(string UserId, string Name, string World, string DisplayName);
 
 internal sealed record QueueSuggestion(string SuggestionId, string UserId, string Name, string World,
     string DisplayName, string Url);
 
-// An alert raised from the receive thread, waiting for the main thread to show it (see
-// WatchAlongSession.pendingAlerts). Carries the LocStrings, not resolved text, so a language
-// change between receiving and showing still lands in the right language.
 internal readonly record struct PendingAlert(LocString Title, LocString Body);
 
 internal enum WatchAlongMode : byte
@@ -35,7 +28,7 @@ internal enum WatchAlongMode : byte
 
 internal sealed class WatchAlongSession : IDisposable
 {
-    private const int CheckEveryTicks = 30; // ~2x/sec at 60fps, matches AetherStreamQueue's own throttle
+    private const int CheckEveryTicks = 30;
     private const float HeartbeatSeconds = 8f;
     private const double PositionDriftToleranceSeconds = 3.0;
 
@@ -62,40 +55,14 @@ internal sealed class WatchAlongSession : IDisposable
     private bool lastPublishedApprovalRequired;
     private string? viewingUrl;
     private string? rejectedRemoteUrl;
-    // Last stream.state actually applied while Viewing - lets ResyncNow() force a re-apply
-    // (re-seek, re-pause, re-place the screen) without waiting on the next heartbeat. Reference
-    // assignment/read of an immutable record is safe to share between OnState's background thread
-    // and the main-thread button tap without extra locking; a one-message-stale read is harmless
-    // here, unlike pendingJoinSync/pendingStateSync which need exact single-consume handoff.
     private CallControl? lastStateMessage;
 
-    // stream.joined/stream.state arrive on RealtimeConnection's background receive loop
-    // (Task.Run in RealtimeConnection.cs), never the game's main/Framework thread - but
-    // video.Play/Seek/Pause and the screen's D3D-backed painter both require the main thread
-    // (Dalamud's ObjectTable access and D3D11 resource creation both assert this and throw
-    // "not on main thread" otherwise). OnJoined/OnState only stash the message here; the actual
-    // engine calls happen in OnFrameworkUpdate, which does run on the main thread.
     private CallControl? pendingJoinSync;
     private CallControl? pendingStateSync;
-    // Same reasoning as pendingJoinSync/pendingStateSync above - OnEnded also touches video.Stop()
-    // (which tears down the D3D-backed screen painter) directly from the background receive
-    // thread. A plain volatile bool is enough here (no payload to hand off, and a worst-case
-    // one-frame-late Stop is harmless) rather than the CallControl handoff the other two need.
     private volatile bool pendingViewerStop;
 
-    // Same background-thread problem again, on the alert path: OnDeclined/OnQueueSuggestionResult/
-    // OnKicked all raise a ConfirmService alert straight from the receive loop, and ConfirmService
-    // is main-thread-only (a check-then-set on Active, then a plain Queue<T>). Alerts are stashed
-    // here as their LocStrings and raised from OnFrameworkUpdate instead, which also keeps Loc.T
-    // resolving at display time rather than at receive time. A queue rather than a single slot:
-    // two verdicts can land in the same frame (a denied suggestion followed by a kick), and
-    // silently dropping either one leaves the user with no explanation for what just happened.
     private readonly ConcurrentQueue<PendingAlert> pendingAlerts = new();
 
-    // Per the protocol spec: "the host's FIRST stream.state creates the room ('go live') ... wait
-    // for that echo before treating yourself as hosting." Set right before the first PublishState
-    // call of a session, cleared the moment that echo comes back through OnState. Mode only
-    // becomes Hosting once the server has actually confirmed it, never optimistically.
     private bool awaitingHostAck;
 
     private bool partyOpen;
@@ -130,9 +97,6 @@ internal sealed class WatchAlongSession : IDisposable
     public IReadOnlyList<WatchAlongParticipant> Roster { get; private set; } = Array.Empty<WatchAlongParticipant>();
     public IReadOnlyList<NearbyStream> Nearby { get; private set; } = Array.Empty<NearbyStream>();
 
-    // What a viewer is actually watching, for display only (Player tab's Now Playing card) - kept
-    // separate from queue.Current on purpose, see AetherStreamQueue.CreateDisplayEntry's doc
-    // comment on why writing this into the queue itself would be unsafe.
     public VideoQueueEntry? ViewingEntry { get; private set; }
 
     public bool IsAwaitingApproval { get; private set; }
@@ -151,9 +115,6 @@ internal sealed class WatchAlongSession : IDisposable
         return Roster;
     }
 
-    // Zone-scoped discovery - unlike Join, this needs no hostId and no mutual-contact relationship;
-    // the server answers with whoever is currently hosting (see OnFrameworkUpdate's PublishState
-    // call below) in the caller's own current territory. Response lands in Nearby via OnNearby.
     public void RequestNearbyStreams() => stream.RequestNearby(Plugin.ClientState.TerritoryType);
 
     public void Join(string hostId)
@@ -207,8 +168,6 @@ internal sealed class WatchAlongSession : IDisposable
         Roster = Array.Empty<WatchAlongParticipant>();
         PendingRequests = Array.Empty<PendingJoinRequest>();
         PendingQueueSuggestions = Array.Empty<QueueSuggestion>();
-        // Drop anything queued for the next OnFrameworkUpdate - applying a sync for a session that
-        // just ended would resurrect video.Play/screen state right after Stop() just cleared it.
         Interlocked.Exchange(ref pendingJoinSync, null);
         Interlocked.Exchange(ref pendingStateSync, null);
     }
@@ -224,11 +183,6 @@ internal sealed class WatchAlongSession : IDisposable
         stream.SuggestQueueItem(url, Guid.NewGuid().ToString());
     }
 
-    // Host only - approving adds it straight to the host's own local queue (there is no
-    // server-tracked shared queue - once it's in the host's queue, the existing stream.state
-    // sync already carries whatever the host plays to every viewer, no extra plumbing needed).
-    // Whatever is still pending here already passed OnQueueSuggested's remote-URL check, so the
-    // approval itself has no filtering left to do.
     public void ApproveQueueSuggestion(string suggestionId)
     {
         var suggestion = FindQueueSuggestion(suggestionId);
@@ -312,8 +266,6 @@ internal sealed class WatchAlongSession : IDisposable
 
     public void OnFrameworkUpdate(float deltaSeconds)
     {
-        // Must run before the Mode == Viewing branch below, which returns early - otherwise a
-        // pending sync queued the same frame Mode flips to Viewing would never get applied.
         if (Interlocked.Exchange(ref pendingJoinSync, null) is { } joinMessage)
         {
             ApplyJoinSync(joinMessage);
@@ -330,8 +282,6 @@ internal sealed class WatchAlongSession : IDisposable
             video.Stop();
         }
 
-        // Ahead of every early return below: an alert explains something that already happened
-        // (a denial, a kick), so it must still be shown in the states those returns cover.
         while (pendingAlerts.TryDequeue(out var alert))
         {
             confirm.Alert(Loc.T(alert.Title), Loc.T(alert.Body), Loc.T(L.Phone.OutcomeDismiss));
@@ -339,9 +289,6 @@ internal sealed class WatchAlongSession : IDisposable
 
         if (Mode == WatchAlongMode.Viewing)
         {
-            // The user's own queue only ever gets an entry through explicit local action (URL
-            // entry, local file, queue advance) - that always wins over a joined stream's
-            // mirrored playback, so treat it as the user choosing to leave.
             if (queue.Current is not null)
             {
                 Leave();
@@ -362,16 +309,6 @@ internal sealed class WatchAlongSession : IDisposable
 
         if (!partyOpen && queue.Current is null)
         {
-            // awaitingHostAck also needs a Leave() here, not just Mode == Hosting - the server
-            // creates the room off our very first stream.state, before the echo (and thus our
-            // local Mode flip) ever arrives, so a room can already exist server-side even while
-            // we're still technically "None" from our own point of view.
-            //
-            // Deliberately does NOT check VideoShareWatchPresence here (unlike Watching() above) -
-            // that toggle's own label/hint ("Off keeps your name out of the watching list on this
-            // screen") only promises to hide presence from the local display, not to stop hosting.
-            // Gating publish on it too meant flipping a privacy toggle mid-stream silently ended
-            // the room out from under any connected viewers with no warning.
             if (Mode == WatchAlongMode.Hosting || awaitingHostAck)
             {
                 Leave();
@@ -390,12 +327,8 @@ internal sealed class WatchAlongSession : IDisposable
         tickCounter = 0;
 
         var (position, _, paused) = video.GetProgress();
-        // Empty, not null - a party can be open with nothing queued yet (see partyOpen), and the
-        // envelope's own url field is a plain string, not nullable.
         var url = queue.Current?.Url ?? string.Empty;
 
-        // Only meaningful to publish while the host's own screen is actually up - an idle engine's
-        // ScreenPosition is just whatever it was last left at, not a real placement.
         Vector3? screenPosition = screen.Engine.IsActive ? screen.Engine.ScreenPosition : null;
         var screenYaw = screen.Engine.ScreenYaw;
         var screenScale = screen.Engine.ScreenScale;
@@ -457,12 +390,6 @@ internal sealed class WatchAlongSession : IDisposable
         }
     }
 
-    // Every URL that reaches this client over stream.* is someone else's string: a host's
-    // stream.joined/stream.state, or a viewer's stream.queueSuggestion. mpv's loadfile would take
-    // a UNC path (Windows attempts SMB auth against it and leaks the viewer's NetNTLMv2 hash) or
-    // a file:// path just as readily as an http one, so nothing from the wire is played or queued
-    // without passing this first. The local paths (a URL the user typed, a file they picked) stay
-    // unrestricted on purpose - see VideoEngine.ValidateURL.
     private static bool IsPlayableRemoteUrl(string url) => VideoEngine.ValidateURL(url, out _);
 
     private void WarnOnceForRejectedUrl(string url)
@@ -488,8 +415,8 @@ internal sealed class WatchAlongSession : IDisposable
         rejectedRemoteUrl = null;
         viewingUrl = url;
         ViewingEntry = queue.CreateDisplayEntry(url);
-        video.Play(url); // Spawns the screen in front of the local player first (a new session) -
-        ApplyRemoteScreenTransform(message); // then immediately re-place it at the host's spot, if sent.
+        video.Play(url);
+        ApplyRemoteScreenTransform(message);
         if (message.PositionSeconds is { } position)
         {
             video.Seek((float)position);
@@ -509,8 +436,6 @@ internal sealed class WatchAlongSession : IDisposable
             return;
         }
 
-        // Deliberately generic - a decline must never reveal whether it was a block, a full room,
-        // or the host simply isn't live, per the server's own policy note.
         QueueAlert(L.AetherStream.StreamUnavailableTitle, L.AetherStream.StreamUnavailableBody);
     }
 
@@ -527,12 +452,6 @@ internal sealed class WatchAlongSession : IDisposable
         }
     }
 
-    // Host only: the server telling us a pending requester (or queue suggester) dropped or
-    // withdrew before we decided on them - stream.roster (handled above) already reflects the
-    // room's actual membership, but says nothing about PendingRequests/PendingQueueSuggestions,
-    // which would otherwise leave a stale approve/deny row that no-ops. The server forgets a
-    // suggestion the same way on the suggester's departure (see SignalType.StreamQueueSuggest's
-    // doc comment), so clearing it here just mirrors what the server already did.
     private void OnLeft(CallControl message)
     {
         if (Mode != WatchAlongMode.Hosting || message.UserId is not { } userId)
@@ -582,9 +501,6 @@ internal sealed class WatchAlongSession : IDisposable
             return;
         }
 
-        // Filtered on arrival rather than at ApproveQueueSuggestion, so a UNC or file:// path
-        // never reaches the host's queue and never gets rendered as a suggestion row either -
-        // the row's title is this raw string (see IsPlayableRemoteUrl).
         if (!IsPlayableRemoteUrl(url))
         {
             AepLog.Warning($"[WatchAlong] dropping a queue suggestion that is not a remote http(s) address: {url}");
@@ -653,7 +569,7 @@ internal sealed class WatchAlongSession : IDisposable
             return;
         }
 
-        lastStateMessage = message; // Cached for ResyncNow(), independent of the pending handoff.
+        lastStateMessage = message;
         Interlocked.Exchange(ref pendingStateSync, message);
     }
 
@@ -661,11 +577,6 @@ internal sealed class WatchAlongSession : IDisposable
     {
         if (message.Url is { Length: > 0 } url && url != viewingUrl)
         {
-            // A host playing a local file publishes that path, which no viewer could resolve
-            // anyway - skipping it leaves the screen on whatever it was showing rather than
-            // handing an arbitrary path to mpv (see IsPlayableRemoteUrl). The rest of the message
-            // is dropped with it: position and paused describe the video we just refused, so
-            // applying them would drag whatever is still on screen to the wrong place.
             if (!IsPlayableRemoteUrl(url))
             {
                 WarnOnceForRejectedUrl(url);
@@ -762,7 +673,6 @@ internal sealed class WatchAlongSession : IDisposable
         QueueAlert(L.AetherStream.KickedTitle, L.AetherStream.KickedBody);
     }
 
-    // Called from the receive thread only - see pendingAlerts.
     private void QueueAlert(LocString title, LocString body) => pendingAlerts.Enqueue(new PendingAlert(title, body));
 
     private static WatchAlongParticipant[] ToParticipants(ParticipantInfo[]? participants)

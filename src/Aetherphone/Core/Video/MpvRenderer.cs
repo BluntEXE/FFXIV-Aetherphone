@@ -70,9 +70,6 @@ namespace Aetherphone.Core.Video
 
 			_mpvCtx = mpv_create();
 			_ = mpv_set_option_string(_mpvCtx, "vo", "libmpv");
-			// Not measured on this project's Wine/RADV setup - mpv has no GPU render path here
-			// either way, only decode could benefit. Off is the safe default; read fresh here so a
-			// settings change takes effect on the next video, not the current one.
 			_ = mpv_set_option_string(_mpvCtx, "hwdec", hardwareDecoding ? "auto-safe" : "no");
 			_ = mpv_set_option_string(_mpvCtx, "profile", "sw-fast");
 			_ = mpv_set_option_string(_mpvCtx, "ytdl", "yes");
@@ -84,9 +81,6 @@ namespace Aetherphone.Core.Video
 			_ = mpv_set_option_string(_mpvCtx, "ytdl-raw-options", "force-ipv4=,hls-use-mpegts=");
 			_ = mpv_set_option_string(_mpvCtx, "idle", "yes");
 			_ = mpv_set_option_string(_mpvCtx, "keep-open", "yes");
-			// Wine's own certificate store is essentially empty by default - only disabling
-			// verification worked around it on this project's Wine setup. Never applies on real
-			// Windows, and only when the user has explicitly opted in.
 			if (WineEnvironment.IsWine && allowInsecureDirectUrls)
 			{
 				_ = mpv_set_option_string(_mpvCtx, "tls-verify", "no");
@@ -550,14 +544,14 @@ namespace Aetherphone.Core.Video
 
                     switch (eventId)
                     {
-                        case 0: // MPV_EVENT_NONE (Timeout)
+                        case 0:
                             continue;
 
-                        case 1: // MPV_EVENT_SHUTDOWN
+                        case 1:
                             AepLog.Verbose("[MPV] SHUTDOWN");
                             return;
 
-                        case 2: // MPV_EVENT_LOG_MESSAGE
+                        case 2:
                             {
                                 IntPtr dataPtr2 = Marshal.ReadIntPtr(ev + 16);
                                 if (dataPtr2 != IntPtr.Zero && dataPtr2.ToInt64() > 65536)
@@ -580,7 +574,7 @@ namespace Aetherphone.Core.Video
                         case 5:  AepLog.Verbose("[MPV] COMMAND_REPLY");      break;
                         case 6:  AepLog.Verbose("[MPV] START_FILE");         break;
                         
-                        case 7: // MPV_EVENT_END_FILE
+                        case 7:
 								break;
                         
                         case 8:  AepLog.Verbose("[MPV] FILE_LOADED");      break;

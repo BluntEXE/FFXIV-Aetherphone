@@ -75,18 +75,12 @@ internal sealed partial class AetherStreamApp
                 bottom = watchingTop + watchingHeight;
             }
 
-            // Reserves the child window's real content height so it knows how far there is to
-            // scroll - everything above was drawn straight onto the draw list (absolute
-            // positions, not ImGui's layout cursor), which on its own leaves the child thinking
-            // its content is empty.
             ImGui.SetCursorScreenPos(content.Min);
             ImGui.Dummy(new Vector2(content.Width, bottom - content.Min.Y + Metrics.Space.Lg * scale));
         }
 
     }
 
-    // Join a friend's stream (mutual-contact + block checks happen entirely server-side - a
-    // decline never says why, see WatchAlongSession.OnDeclined) or leave the one you're in.
     private void DrawJoinRow(Rect rect, float scale)
     {
         if (watchAlong.IsViewing)
@@ -139,16 +133,13 @@ internal sealed partial class AetherStreamApp
 
         if (SmallButton(joinRect, Loc.T(L.AetherStream.JoinStream), true, scale))
         {
-            nearbyRefreshTimer = NearbyRefreshIntervalSeconds; // Refresh immediately, not on next tick.
+            nearbyRefreshTimer = NearbyRefreshIntervalSeconds;
             router.Push(AetherStreamScreen.Join);
         }
     }
 
     private const float CastingRowHeight = 40f;
 
-    // Matches DrawUrlEntry's own fixed layout math (field 38 + gap 10 + toggle row 30 + gap 10 +
-    // submit button 38) - needed here so the watching list below it knows where it actually ends,
-    // since DrawUrlEntry positions everything itself rather than through ImGui's layout cursor.
     private const float UrlEntryHeight = 126f;
 
     private void DrawCastingStatus(Rect rect, float scale, bool waiting)
@@ -166,10 +157,6 @@ internal sealed partial class AetherStreamApp
         Typography.Draw(new Vector2(textLeft, rect.Center.Y - textSize.Y * 0.5f),
             label, ui.TitleInk, TextStyles.Subheadline);
 
-        // Hidden entirely while viewing someone else's stream - this row now shows for a viewer
-        // too (isCasting no longer requires queue.Current, see DrawPlayerTab), but queue.Clear()
-        // would desync their local screen from the host's without actually leaving the session.
-        // Leave (see DrawJoinRow) is the correct exit for a viewer.
         if (watchAlong.IsViewing)
         {
             return;
@@ -186,10 +173,6 @@ internal sealed partial class AetherStreamApp
 
     private void DrawNowPlaying(Rect rect, float scale)
     {
-        // A viewer's own queue.Current never gets touched by the sync path (see
-        // WatchAlongSession.ViewingEntry's doc comment) - use the display-only mirror instead so
-        // the card actually reflects what's playing instead of reading "Nothing playing" the
-        // whole time.
         var current = watchAlong.IsViewing ? watchAlong.ViewingEntry : queue.Current;
         var title = current?.Title ?? Loc.T(L.AetherStream.NothingPlaying);
         Typography.Draw(rect.Min, title, ui.TitleInk, TextStyles.Headline);
@@ -306,19 +289,12 @@ internal sealed partial class AetherStreamApp
 
     private void DrawProgress(Rect rect, float scale)
     {
-        // While watching someone else's stream, playback is entirely host-controlled - the next
-        // stream.state would just override a local scrub/pause within moments anyway, so block the
-        // interaction here instead of letting it silently snap back and look broken. Volume is
-        // deliberately exempt (see DrawVolume) - that's a personal preference, not playback state.
         var interactive = !watchAlong.IsViewing;
         var (position, duration, _) = video.GetProgress();
         var normalized = duration > 0f ? Math.Clamp(position / duration, 0f, 1f) : 0f;
         var track = new Rect(new Vector2(rect.Min.X + 46f * scale, rect.Center.Y - 2f * scale),
             new Vector2(rect.Max.X - 46f * scale, rect.Center.Y + 2f * scale));
 
-        // Stage 0 established seeking is cheap on this pipeline - mpv's own "seek <pos>
-        // absolute" command, not a reload (docs/video-pipeline.md §3 in the AlphaChannel repo) -
-        // so this scrubs live rather than only previewing a target and committing on release.
         var updated = Scrubber.Draw(track, normalized, ui.Accent, Palette.WithAlpha(ui.MutedInk, 0.3f),
             interactive ? 1f : 0.4f);
         if (interactive && Scrubber.IsHovered(track) && ImGui.IsMouseDown(ImGuiMouseButton.Left) && duration > 0f)
@@ -336,10 +312,6 @@ internal sealed partial class AetherStreamApp
 
     private void DrawTransport(Rect rect, float scale)
     {
-        // See DrawProgress's note - transport is host-controlled while watching someone else's
-        // stream. queue.Advance() specifically also needs blocking here: tapping it while Viewing
-        // could populate queue.Current from a stale local queue, which OnFrameworkUpdate's own
-        // "local queue action wins" rule would then read as the user choosing to leave the stream.
         var interactive = !watchAlong.IsViewing;
         var transportAlpha = interactive ? 1f : 0.4f;
         var centerY = rect.Center.Y;
@@ -446,12 +418,6 @@ internal sealed partial class AetherStreamApp
             }
         }
 
-        // While watching someone else's stream, this field proposes a suggestion to the host
-        // instead of touching the local queue directly - queue.Add/PlayNow would populate
-        // queue.Current, which OnFrameworkUpdate's "local action wins" rule already treats as the
-        // user choosing to leave the stream. The Play Now/Add to Queue choice is meaningless here
-        // (there's no local queue position to pick), so it's hidden entirely rather than shown
-        // disabled.
         var suggesting = watchAlong.IsViewing;
         var submitTop = fieldRect.Max.Y + 10f * scale;
         if (!suggesting)

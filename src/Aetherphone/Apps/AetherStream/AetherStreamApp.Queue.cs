@@ -11,9 +11,6 @@ namespace Aetherphone.Apps.AetherStream;
 
 internal sealed partial class AetherStreamApp
 {
-    // Deliberately not a reuse of HomeInteractionController - that solves a 2D grid/folder/dock
-    // problem far beyond a flat list reorder. Borrows its core shape (threshold-triggered drag
-    // start, tracked position, commit on release) at a scale that fits one column of rows.
     private const float QueueDragThreshold = 7f;
     private const float QueueRowHeight = 56f;
 

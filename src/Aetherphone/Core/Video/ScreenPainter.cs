@@ -13,20 +13,8 @@ using NumericsMatrix4x4 = System.Numerics.Matrix4x4;
 
 namespace Aetherphone.Core.Video;
 
-// Ported from AlphaChannel's ScreenPainter (Voudi, GPL-3.0, tag v1.1.20260725.1088) - the revamp that
-// replaced the VFX/companion mounting (chara/monster/.../aetherstreamscreen_{session}.avfx cast on an
-// actor) with a screen drawn directly in world space, independent of any game object. Paints our video
-// texture directly into the 3D world at the TV's location as a screen-aligned quad, drawn with its own
-// unlit shader so world lighting doesn't affect it - independent of the VFX/material system entirely.
-// Every frame (from DxHandler's Present hook) it reads the swapchain's own current back buffer plus the
-// engine's real scene depth buffer directly from FFXIVClientStructs and draws straight into them - no
-// ID3D11DeviceContext hook of any kind. (Hooking OMSetRenderTargets to find the scene depth buffer crashed
-// the game reproducibly - turned out unnecessary anyway: RenderTargetManager already exposes it as a plain
-// field. The swapchain's own DepthStencil, by contrast, only ever holds a stale clear value by Present
-// time - confirmed via readback - which is why depth testing against it never worked.)
 internal sealed unsafe class ScreenPainter : IDisposable
 {
-	//Base quad size before Scale is applied - rough starting guess, tune live in-game.
 	private const float BaseWidth = 1.0f;
 	private const float BaseHeight = 0.6f;
 
@@ -44,28 +32,13 @@ internal sealed unsafe class ScreenPainter : IDisposable
 	private Texture2D? _texture;
 	private ShaderResourceView? _srv;
 
-	//Wrapping the swapchain's own persistent back buffer/depth buffer views via SharpDX AddRefs/Releases them.
-	//Doing that fresh every single frame (60+ times/sec) tears down the engine's own refcount on objects it
-	//still needs - only re-wrap when the underlying pointer actually changes (e.g. on resize), and otherwise
-	//reuse the cached wrapper for the draw.
 	private nint _cachedRtvPtr;
 	private nint _cachedDsvPtr;
 	private RenderTargetView? _cachedRtv;
 	private DepthStencilView? _cachedDsv;
 
-	//Native game UI (inventory, chat, hotbars, ...) is already fully composited into the back buffer by the
-	//time our Present hook runs - only Dalamud's own ImGui overlay draws later than us. The scene depth
-	//buffer has no concept of 2D UI at all, so depth testing alone can't stop us from painting over it; the
-	//pixel shader discards fragments that fall inside any currently-visible native UI window's screen rect
-	//instead, using bounds read straight from FFXIVClientStructs (AtkUnitBase/AtkResNode) - no hook needed.
 	private const int MaxUiRects = 64;
 
-	//Aetherphone addition on top of the upstream port - a slight cylindrical bow (curved-monitor look)
-	//across the screen's width. There's no per-vertex buffer at all here (the flat 4-corner quad was
-	//generated purely from SV_VertexID) - subdividing into a horizontal strip of quads and displacing
-	//each column along local Z by a parabola (max at the edges, zero at center) is still just procedural
-	//math in the vertex shader, no CPU-side geometry needed. Curvature is a fixed constant, not
-	//user-adjustable - "slightly curved" was the ask, not a control to expose.
 	private const int CurveSegments = 24;
 	private const float Curvature = 0.12f;
 	private const int VertexCount = (CurveSegments + 1) * 2;
@@ -77,7 +50,7 @@ internal sealed unsafe class ScreenPainter : IDisposable
 		public int UiRectCount;
 		public float Curvature;
 		private fixed float _pad[2];
-		public fixed float UiRects[MaxUiRects * 4]; //Each rect: screenX, screenY, width, height (pixels).
+		public fixed float UiRects[MaxUiRects * 4];
 	}
 
 	internal ScreenPainter()
@@ -155,8 +128,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 			CullMode = SharpDX.Direct3D11.CullMode.None
 		});
 
-		//Reversed-Z (near=1, far=0) - the common convention for modern D3D11 engines, matched with a
-		//reversed-Z projection matrix below so our own computed depth is on the same scale as the real buffer.
 		_depthState = new DepthStencilState(DxHandler.Device, new DepthStencilStateDescription
 		{
 			IsDepthEnabled = true,
@@ -174,7 +145,7 @@ internal sealed unsafe class ScreenPainter : IDisposable
 	{
 		if (ReferenceEquals(texture, _texture))
 		{
-			return; //Nothing changed.
+			return;
 		}
 
 		_srv?.Dispose();
@@ -212,9 +183,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 			return;
 		}
 
-		//SharpDX's raw-pointer ComObject constructor does NOT AddRef, but its Dispose() unconditionally
-		//Release()s - wrapping a borrowed pointer and disposing it later would silently over-release the
-		//engine's own view. AddRef right after construction so our eventual Dispose() is actually balanced.
 		if (rtvPtr != _cachedRtvPtr || _cachedRtv == null)
 		{
 			_cachedRtv?.Dispose();
@@ -248,15 +216,10 @@ internal sealed unsafe class ScreenPainter : IDisposable
 		{
 			var p = new ScreenParams { WorldViewProj = worldViewProj.Value, Curvature = Curvature };
 			p.UiRectCount = CollectUiRects(ref p);
-			//p is a stack local, its address is already stable, no `fixed` needed to take it.
 			ScreenParams* pp = &p;
 			ctx.UpdateSubresource(new SharpDX.DataBox((nint)pp), _cbuf);
 
 			ctx.OutputMerger.SetRenderTargets(dsv, rtv);
-			//Explicit full-target viewport - we never set this before, so whatever viewport the game's last
-			//draw call before Present left bound (could be a sub-region: UI element, shadow pass, anything)
-			//stayed active, meaning our correctly-computed NDC(0,0) landed at that viewport's center instead
-			//of the actual screen center. That's the "math is right but it's drawn in the wrong place" gap.
 			ctx.Rasterizer.SetViewport(0, 0, targetWidth, targetHeight, 0, 1);
 			ctx.InputAssembler.InputLayout = null;
 			ctx.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleStrip;
@@ -299,9 +262,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 			return 0;
 		}
 
-		//Some loaded addons are invisible-but-"IsVisible" full-screen backdrops/overlays (loading-screen
-		//fades, click-blockers, etc.), not actual windows - a single one of those among AllLoadedUnitsList
-		//would otherwise mask out the entire draw. Real windows never span nearly the whole screen.
 		float maxWidth = stage->ScreenSize.Width * 0.9f;
 		float maxHeight = stage->ScreenSize.Height * 0.9f;
 
@@ -315,9 +275,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 				continue;
 			}
 
-			//GetBounds is the same engine-computed bounding box FFXIV itself uses for mouse-collision testing
-			//against this node - the actual current rendered extent, in real screen pixels, accounting for
-			//scale/resolution/borders already. No guessing at Width/Height/ScreenX/Y or a fudge-factor padding.
 			FFXIVClientStructs.FFXIV.Common.Math.Bounds bounds;
 			unit->RootNode->GetBounds(&bounds);
 
@@ -341,10 +298,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 		return count;
 	}
 
-	//Pure memory reads - no hooking, no calling into the game. Colour comes from the swapchain's own back
-	//buffer (that's what's actually presented), but depth comes from RenderTargetManager's own DepthStencil
-	//field - the real opaque-scene depth buffer, as opposed to the swapchain's own DepthStencil (which only
-	//ever holds a stale clear value by this point in the frame).
 	private static bool TryGetSceneTargets(out nint rtvPtr, out nint dsvPtr, out uint width, out uint height)
 	{
 		rtvPtr = 0;
@@ -370,9 +323,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 		{
 			return false;
 		}
-		//Binding an RTV and DSV together in one draw call requires matching dimensions - if the internal
-		//render resolution differs from the swapchain's (e.g. a "rendering resolution" scale setting below
-		//100%), skip this frame rather than pairing mismatched targets.
 		if (rtm->Resolution_Width != device->SwapChain->Width || rtm->Resolution_Height != device->SwapChain->Height)
 		{
 			return false;
@@ -387,9 +337,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 
 	private NumericsMatrix4x4? ComputeWorldViewProj()
 	{
-		//The "active game camera" (Client.Game.Control.CameraManager) is a different object from the plain
-		//scene-graph camera (Client.Graphics.Scene.CameraManager) - go through the game-level camera and
-		//down into its embedded scene camera instead of grabbing the scene one directly.
 		GameControl.CameraManager* gameCameraManager = GameControl.CameraManager.Instance();
 		if (gameCameraManager == null)
 		{
@@ -416,9 +363,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 		NumericsMatrix4x4 proj = CreatePerspectiveFieldOfViewReversedZ(renderCamera->FoV, renderCamera->AspectRatio, renderCamera->NearPlane, renderCamera->FarPlane);
 
 		NumericsMatrix4x4 world =
-			// Z scales with Scale too, not left at a flat 1 - otherwise the curvature depth (which is
-			// expressed in the same pre-scale local units as X/Y) would look progressively flatter as
-			// the screen is resized up, instead of bowing proportionally to its own size.
 			NumericsMatrix4x4.CreateScale(BaseWidth * Scale, BaseHeight * Scale, Scale) *
 			NumericsMatrix4x4.CreateFromAxisAngle(Vector3.UnitY, WorldYaw) *
 			NumericsMatrix4x4.CreateTranslation(WorldPosition);
@@ -426,9 +370,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 		return world * view * proj;
 	}
 
-	//Same X/Y as System.Numerics' right-handed CreatePerspectiveFieldOfView (M34=-1 layout), but with the Z
-	//terms re-derived so near->1 and far->0 in NDC instead of near->0/far->1, matching FFXIV's reversed-Z
-	//depth buffer.
 	private static NumericsMatrix4x4 CreatePerspectiveFieldOfViewReversedZ(float fov, float aspect, float near, float far)
 	{
 		float yScale = 1f / MathF.Tan(fov / 2f);
@@ -441,8 +382,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 			0, 0, near * far / (far - near), 0);
 	}
 
-	//FFXIVClientStructs' Vector3 has the same explicit field layout as System.Numerics', so a raw
-	//reinterpret is safe.
 	private static Vector3 ToNumerics(FFXIVClientStructs.FFXIV.Common.Math.Vector3 v)
 		=> Unsafe.As<FFXIVClientStructs.FFXIV.Common.Math.Vector3, Vector3>(ref v);
 

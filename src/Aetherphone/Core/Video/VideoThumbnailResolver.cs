@@ -16,9 +16,6 @@ internal static class VideoThumbnailResolver
             : cache.Get(fallbackThumbnailUrl);
     }
 
-    // maxresdefault.jpg only exists for videos uploaded at 720p or higher; hqdefault.jpg is
-    // generated for every upload, so a miss on the first falls back to the second rather than
-    // leaving the row without a thumbnail at all.
     private static async Task<byte[]?> FetchAsync(HttpService http, string videoId, CancellationToken token)
     {
         var maxres = await http.GetBytesAsync(new Uri($"https://i.ytimg.com/vi/{videoId}/maxresdefault.jpg"), token)

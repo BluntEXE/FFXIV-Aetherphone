@@ -84,10 +84,6 @@ internal sealed partial class AetherStreamApp : IPhoneApp
 
     public void OnOpened()
     {
-        // Opening the app is the earliest honest signal that this player wants AetherStream, so
-        // it is where mpv and yt-dlp get fetched (see Resources.EnsureProvisioned). Idempotent,
-        // and it starts early enough that the download is usually done before anyone has pasted
-        // a URL and hit play.
         screen.Engine.Resources.EnsureProvisioned();
     }
 

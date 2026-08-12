@@ -14,10 +14,6 @@ internal sealed partial class AetherStreamApp
 {
     private string screenPresetName = "";
 
-    // The screen is a world-anchored quad drawn by ScreenPainter (ported from AlphaChannel's
-    // v1.1.20260725.1088 revamp, replacing the earlier VFX/companion/Penumbra mounting - see
-    // port/alphachannel-engine Stage 4 and the ScreenPainter port that followed it), so State just
-    // reflects whether the engine is currently drawing anything at all.
     private void DrawCastingTab(Rect body, float scale)
     {
         var margin = Metrics.Space.Lg * scale;
@@ -69,9 +65,6 @@ internal sealed partial class AetherStreamApp
 
         bodyTop = windowRect.Max.Y + 12f * scale;
 
-        // Same "Leave, not Stop" reasoning as DrawCastingStatus in the Player tab - queue.Clear()
-        // would desync a viewer's local screen from the host's without actually leaving the
-        // session.
         if (!watchAlong.IsViewing)
         {
             var stopRect = new Rect(new Vector2(content.Min.X, bodyTop), new Vector2(content.Max.X, bodyTop + 38f * scale));
@@ -110,9 +103,6 @@ internal sealed partial class AetherStreamApp
         var approveRect = new Rect(new Vector2(denyRect.Min.X - 76f * scale, rect.Min.Y + 5f * scale),
             new Vector2(denyRect.Min.X - 6f * scale, rect.Max.Y - 5f * scale));
 
-        // DisplayName only - the server never carries real name/world on stream.joinRequest (see
-        // PendingJoinRequest's doc comment), so a Name/World caption line here would always
-        // render empty. Single line, vertically centered instead of stacked with a second row.
         var textLeft = rect.Min.X + 10f * scale;
         var textWidth = approveRect.Min.X - 8f * scale - textLeft;
         Typography.Draw(new Vector2(textLeft, rect.Center.Y - 8f * scale), Ellipsize(request.DisplayName, textWidth),
@@ -136,13 +126,6 @@ internal sealed partial class AetherStreamApp
         return bodyTop + 32f * scale;
     }
 
-    // X/Y/Z/Scale fields + named presets, ported from AlphaChannel's ControlWindow.
-    // DrawScreenPositionSettings (Voudi, GPL-3.0, tag v1.1.20260725.1088) - raw ImGui widgets
-    // rather than a dedicated component since this is a one-off field, same precedent as
-    // MarketApp.Detail.cs's alert-threshold InputInt. DragFloat/SliderFloat/SliderAngle instead of
-    // upstream's plain InputFloat text boxes - click-and-drag to adjust live is far more fluid than
-    // typing a number and pressing enter, and a bounded slider for Scale/Rotate makes the [0.1x, 8x]
-    // range and the full turn discoverable instead of a blank text box.
     private float DrawScreenPositionEditor(Rect content, float bodyTop, float scale)
     {
         var pos = screen.Engine.ScreenPosition;

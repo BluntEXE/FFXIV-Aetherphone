@@ -1,11 +1,5 @@
 namespace Aetherphone.Core.Video;
 
-// Title/Source/Duration/ThumbnailUrl start out as just the raw URL and get filled in
-// asynchronously - see AetherStreamQueue's enrichment step. Mutable (not a record) precisely so
-// that fill-in can update the same instance already sitting in the queue/UI rather than needing
-// every caller to track down and replace it after a reorder. Reference equality (the class
-// default) is also the correct behavior for List.Remove here, unlike a record's value equality,
-// which could match the wrong entry if two queued items happen to share every field.
 internal sealed class VideoQueueEntry
 {
     public Guid Id { get; } = Guid.NewGuid();
@@ -25,15 +19,9 @@ internal sealed class VideoQueueEntry
     }
 }
 
-// Aetherphone's own queue - VideoPlayer has no knowledge this exists. One item plays at a time;
-// the next is pushed when VideoPlayer.IsIdle() reports the current one has naturally ended.
-// Stage 0 established that end-of-playback is only observable by polling mpv's idle-active
-// property (docs/video-pipeline.md in the AlphaChannel repo, §"when is state published" for the
-// equivalent finding on the reference implementation) - there's no event to subscribe to, so
-// this polls, but on a tick-throttled interval, never every frame.
 internal sealed class AetherStreamQueue
 {
-    private const int PollEveryTicks = 30; // roughly twice a second at 60fps, not per-frame
+    private const int PollEveryTicks = 30;
 
     private readonly VideoPlayer video;
     private readonly VideoUrlResolver metadataResolver = new();
@@ -57,11 +45,6 @@ internal sealed class AetherStreamQueue
     public IReadOnlyList<VideoQueueEntry> Entries => entries;
     public VideoQueueEntry? Current { get; private set; }
 
-    // Builds a display-only entry for a URL, enriched the same way a real queue entry would be,
-    // without touching entries or Current - used by WatchAlongSession to show what a viewer is
-    // watching. Current specifically must stay untouched here: OnFrameworkUpdate's Viewing branch
-    // treats any non-null Current as "the user queued something locally, leave the stream", so
-    // populating it from the sync path itself would immediately self-trigger a Leave().
     public VideoQueueEntry CreateDisplayEntry(string url)
     {
         var entry = new VideoQueueEntry(url, url, string.Empty, null, null);
@@ -81,7 +64,7 @@ internal sealed class AetherStreamQueue
         entries.Remove(entry);
         entries.Insert(0, entry);
         EnrichIfYouTube(entry);
-        Advance(); // Persists on our behalf - see Advance's own Persist call.
+        Advance();
     }
 
     public void PlayNext(VideoQueueEntry entry)
@@ -145,11 +128,6 @@ internal sealed class AetherStreamQueue
     {
         if (entries.Count == 0)
         {
-            // Deliberately does NOT call video.Stop() - that deactivates the in-world screen
-            // entirely (VideoEngine._isActive = false), which reads as the screen just
-            // vanishing mid watch-party. Leaving it alone keeps the screen up, frozen on the
-            // last frame (mpv's own keep-open=yes), as a "waiting for the next video" state.
-            // Clear() is the explicit-close path for when the user actually wants it gone.
             Current = null;
             Persist();
             return;
@@ -186,7 +164,7 @@ internal sealed class AetherStreamQueue
         entry.Source = metadata.Source;
         entry.Duration = metadata.Duration;
         entry.ThumbnailUrl = metadata.ThumbnailUrl;
-        Persist(); // Keep the saved copy in sync so a reload doesn't fall back to a bare URL title.
+        Persist();
     }
 
     public void OnFrameworkUpdate()

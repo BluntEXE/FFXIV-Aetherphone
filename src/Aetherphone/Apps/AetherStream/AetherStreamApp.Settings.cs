@@ -11,12 +11,6 @@ namespace Aetherphone.Apps.AetherStream;
 
 internal sealed partial class AetherStreamApp
 {
-    // Capped at 1080p, not YouTube's actual ceiling - the screen's own texture is a fixed
-    // 1920x1080 (VideoEngine.ScreenWidth/Height), so anything higher would just be downscaled
-    // into the same buffer by mpv for no visible gain, at the cost of extra bandwidth and decode
-    // work. Enforced via mpv's own ytdl-format option (see MpvRenderer.Initialize), not a
-    // separate resolver - AlphaChannel's engine resolves YouTube itself through mpv's bundled
-    // ytdl_hook/yt-dlp.
     private static readonly int[] QualityOptions = { 144, 240, 360, 480, 720, 1080 };
     private readonly DropdownMenu qualityMenu = new();
     private Rect qualityRowRect;
@@ -67,12 +61,6 @@ internal sealed partial class AetherStreamApp
                         mpvDownloading = true;
                         dependencyWork.Run("download mpv", async token =>
                         {
-                            // MpvCheckResult can still be empty here: the check fired when the
-                            // app opened may not have finished yet, or may have failed outright
-                            // (no network at that moment, GitHub rate limit).
-                            // Re-running it before downloading means a tap always either starts a
-                            // real download or retries the check, never hands DownloadMPVAsync an
-                            // empty URL (that used to throw straight into HttpClient).
                             if (resources.MpvCheckResult[0].Length == 0)
                             {
                                 await resources.CheckMPVAsync().ConfigureAwait(false);
@@ -134,8 +122,6 @@ internal sealed partial class AetherStreamApp
             var sharePresence = SettingsRow.Bool(watchingCard.NextRow(),
                 Loc.T(L.AetherStream.SettingsShareWatchPresence), configuration.VideoShareWatchPresence,
                 accentedTheme);
-            // See WatchAlongSession.PendingRequests. Layers on top of the mutual-contact + block
-            // gate, it does not replace it - a non-contact still can't reach the host either way.
             var approvalRequired = SettingsRow.Bool(watchingCard.NextRow(),
                 Loc.T(L.AetherStream.SettingsApprovalRequired), configuration.VideoStreamApprovalRequired,
                 accentedTheme);
@@ -211,10 +197,6 @@ internal sealed partial class AetherStreamApp
         }
     }
 
-    // PhoneTheme is a sealed class with required init-only properties, not a record, so there is
-    // no `with` support - this is the only way to hand existing PhoneTheme-typed components
-    // (SettingsRow, Toggle, GroupCard, AppHeader, ...) this app's own accent instead of the
-    // system theme's, without touching those shared components' own colour logic.
     private static PhoneTheme AccentedTheme(PhoneTheme baseTheme)
     {
         var accent = AppAccents.For("aetherstream");

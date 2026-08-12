@@ -9,11 +9,6 @@ internal enum VideoPlaybackState : byte
     Failed,
 }
 
-// Adapter over VideoEngine (the ported AlphaChannel engine, Voudi, GPL-3.0), keeping the public
-// contract the rest of AetherStream (the queue, WatchAlongSession, the debug/screen windows)
-// already depends on. The old hand-rolled libmpv p/invoke wrapper this replaced is gone; playback
-// itself now lives on VideoEngine, shared with ScreenController so both the phone's UI and the
-// in-world screen VFX are driven by the same single mpv instance.
 internal sealed class VideoPlayer : IDisposable
 {
     private readonly VideoEngine engine;
@@ -75,10 +70,6 @@ internal sealed class VideoPlayer : IDisposable
 
     public (float Position, float Duration, bool Paused) GetProgress()
     {
-        // engine.LastError is only ever set from PlayVideo's detached background task, well after
-        // Play() itself already optimistically set State = Playing and returned - this is the
-        // first point afterward where that failure becomes visible, since GetProgress is polled
-        // every frame by the Player tab and on every WatchAlongSession.OnState update.
         if (State != VideoPlaybackState.Idle && engine.LastError is { } error && LastError != error)
         {
             State = VideoPlaybackState.Failed;

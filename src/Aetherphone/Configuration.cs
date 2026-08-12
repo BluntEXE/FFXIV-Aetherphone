@@ -27,10 +27,6 @@ using Dalamud.Configuration;
 
 namespace Aetherphone;
 
-// Ported from AlphaChannel's Configuration (Voudi, GPL-3.0, tag v1.1.20260725.1088) - a saved world
-// position/scale for the AetherStream screen (VideoEngine.ScreenPosition/ScreenYaw/ScreenScale), so the
-// user can jump back to a spot without re-placing it by hand every time. Yaw is an Aetherphone addition
-// on top of the upstream preset shape (which only carried X/Y/Z/Scale) - rotation is user-adjustable here.
 [Serializable]
 internal sealed class ScreenPositionPreset
 {
@@ -42,10 +38,6 @@ internal sealed class ScreenPositionPreset
     public float Scale { get; set; } = 1.0f;
 }
 
-// A saved AetherStreamQueue.VideoQueueEntry (Url/Title/Source/Duration/ThumbnailUrl) - kept as its
-// own DTO rather than serializing VideoQueueEntry directly so Configuration doesn't couple to
-// AetherStreamQueue's internals (it also carries a Guid Id and mutable fields that don't belong
-// in a saved record).
 [Serializable]
 internal sealed class VideoQueueRecord
 {
@@ -123,10 +115,6 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool VideoHideNameplates { get; set; } = true;
     public bool VideoShareWatchPresence { get; set; } = true;
     public bool VideoHardwareDecoding { get; set; }
-    // Off by default and unsafe by design - only affects direct (non-YouTube) HTTPS URLs under
-    // Wine, where mpv's bundled curl fails TLS verification (likely a Schannel/Wine cert-store
-    // gap, not fixable via a CA bundle file - see Stage 7 investigation notes). Never touches
-    // real Windows.
     public bool VideoAllowInsecureDirectUrls { get; set; }
     public bool VideoStreamApprovalRequired { get; set; }
     public List<ScreenPositionPreset> ScreenPresets { get; set; } = new();

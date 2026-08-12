@@ -20,19 +20,9 @@ internal sealed partial class AetherStreamApp
     private float joinDebounce;
     private UserDto[] joinResults = Array.Empty<UserDto>();
     private bool joinSearching;
-    // Distinguishes "the request came back with zero matches" from "the request itself failed"
-    // (bad status, timeout, exception) - AccountClient.SearchAsync returns null either way, which
-    // used to render identically to a genuine empty search. See HttpService.SendForJsonAsync's
-    // new non-2xx log line for the server-side half of this same gap.
     private bool joinSearchFailed;
-    private float nearbyRefreshTimer = NearbyRefreshIntervalSeconds; // due immediately on first draw
+    private float nearbyRefreshTimer = NearbyRefreshIntervalSeconds;
 
-    // Two ways onto someone's screen: search-by-person (mutual-contact/block checks happen
-    // entirely server-side, via AccountClient.SearchAsync - the general /users/search endpoint,
-    // not the mention-suggest one used for @-mentions elsewhere, since that DTO has no World
-    // field and results here need to show it, mirroring SocialFeedStore.Search's own use of the
-    // same endpoint), or "Nearby" - zone-scoped discovery (stream.nearby) with no contact
-    // relationship required at all, refreshed on a timer while this screen is open.
     private void DrawJoinScreen(PhoneContext context, Rect area, float scale)
     {
         var accentedTheme = AccentedTheme(context.Theme);
@@ -110,9 +100,6 @@ internal sealed partial class AetherStreamApp
 
         var avatarRadius = 18f * scale;
         var avatarCenter = new Vector2(rect.Min.X + 8f * scale + avatarRadius, rect.Center.Y);
-        // DisplayName for the monogram and no name/world caption: NearbyStreamInfo carries the
-        // same DisplayName-only shape as ParticipantInfo, so a Name/World line here would render
-        // as a bare separator and the portrait lookup would never resolve (see NearbyStream).
         AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, row.DisplayName, string.Empty, null,
             remoteImages, lodestone, 0.8f, 28);
 

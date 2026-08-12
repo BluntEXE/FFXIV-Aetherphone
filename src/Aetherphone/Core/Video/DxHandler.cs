@@ -24,9 +24,6 @@ internal static class DxHandler
 		HookPresent();
 	}
 
-	//Queues 'work' to run once, synchronously, from inside the game's own Present call - the only point at
-	//which touching Device.ImmediateContext from outside the game's own render thread is safe.
-	//A newer call for the same key overwrites an older, not-yet-run one, since only the latest frame matters.
 	internal static void RunOnRenderThread(string key, Action work)
 	{
 		_pendingRenderWork[key] = work;
@@ -41,7 +38,7 @@ internal static class DxHandler
 	{
 		nint swapChainPtr = (nint)GfxKernel.Device.Instance()->SwapChain->DXGISwapChain;
 		nint* vtable = *(nint**)swapChainPtr;
-		nint presentAddress = vtable[8]; //IDXGISwapChain::Present
+		nint presentAddress = vtable[8];
 
 		_presentHook = Plugin.InteropProvider.HookFromAddress<PresentDelegate>(presentAddress, PresentDetour);
 		_presentHook.Enable();
@@ -84,6 +81,6 @@ internal static class DxHandler
 		_pendingRenderWork.Clear();
 		OnPresent = null;
 
-		Device = null; //Do not dispose this device, as it's owned by the game process.
+		Device = null;
 	}
 }

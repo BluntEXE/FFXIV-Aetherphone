@@ -60,17 +60,6 @@ internal sealed class Resources : IDisposable
 		}
 	}
 
-	// mpv and yt-dlp expand to roughly 108 MB in the plugin config directory, so neither is
-	// fetched at plugin load: this runs the first time someone actually reaches for AetherStream,
-	// which is opening the app or a watch-along join starting playback. Anyone who never opens
-	// the app downloads nothing at all.
-	//
-	// Only a binary that is missing outright is fetched, since there is no playback without it.
-	// A build that already works is left alone and not even checked: mpv-winbuild publishes
-	// nightly, so following it automatically meant re-downloading 26 MB most days, and a version
-	// pin is no answer either because that repo keeps only about a month of releases before
-	// pruning them, so a pinned tag would eventually 404 and strand new installs. Replacing a
-	// working build is a deliberate tap in Settings instead. One-shot per session.
 	internal void EnsureProvisioned()
 	{
 		if (Interlocked.Exchange(ref _provisionStarted, 1) != 0)
@@ -116,12 +105,6 @@ internal sealed class Resources : IDisposable
 		string url = "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest";
 		YtdlpCheckResult = await CheckForUpdateAsync(_configDir, filenameStart, filenameEnd, url);
 	}
-	// downloadURL is empty either because CheckForUpdateAsync already found the local folder up
-	// to date, or because the check itself failed (rate limit, no network yet at plugin load) and
-	// fell back to its empty-result default - either way there is nothing to fetch, and calling
-	// HttpClient.GetAsync with an empty URI throws. Callers (AetherStreamApp.Settings) already
-	// re-run the check first when this is empty, but this guard stays as the actual line that
-	// can never hand HttpClient an invalid request.
 	internal async Task<bool> DownloadMPVAsync()
 	{
 		string filenameStart = "mpv-dev-lgpl-x86_64-";
@@ -166,7 +149,7 @@ internal sealed class Resources : IDisposable
 
 			if (Directory.Exists(localFolder))
 			{
-				return [string.Empty, folderName]; //Already up to date
+				return [string.Empty, folderName];
 			}
 
 			string downloadURL = asset["browser_download_url"]!.Value<string>()!;
@@ -215,7 +198,7 @@ internal sealed class Resources : IDisposable
 					Directory.Delete(dir, recursive: true);
 				}
 
-				if (Directory.Exists(Path.Combine(configDir, folderName))) //Super weird but lets just do this to be safe
+				if (Directory.Exists(Path.Combine(configDir, folderName)))
 				{
 					foreach (string file in Directory.GetFiles(localFolder, "*", SearchOption.AllDirectories))
 					{

@@ -4,32 +4,17 @@ using SharpDX.DXGI;
 
 namespace Aetherphone.Core.Video;
 
-// Ported from AlphaChannel's Core (Voudi, GPL-3.0), with the companion/minion tracking removed -
-// see port/alphachannel-engine Stage 4. Screen mounting itself is ported again from AlphaChannel's
-// later revamp (tag v1.1.20260725.1088, "Revamp screen to not use VFX" / "Removed need for
-// carbuncle, added screen positions in settings"): the VFX/Penumbra/actor-attach approach
-// (chara/monster/m7002/.../aetherstreamscreen_{session}.avfx cast on the local player) is gone
-// entirely, replaced by ScreenPainter drawing a textured quad directly at an absolute world
-// position/yaw/scale - independent of any game object, so it no longer rides along on the player's
-// own body.
 internal sealed class VideoEngine : IDisposable
 {
     internal const int ScreenWidth = 1920;
     internal const int ScreenHeight = 1080;
 
-    //Default placement for a freshly (re)spawned screen: 2 units in front of the local player, facing
-    //back towards them. Matches AlphaChannel's SpawnScreenInFrontOfLocalPlayer 1:1.
     private const float DefaultScreenSpawnDistance = 2.0f;
     private const float DefaultScreenHeightOffset = 1.0f;
 
-    //Aetherphone addition on top of the upstream port - upstream's Scale field had no bounds at all.
     internal const float MinScreenScale = 0.1f;
     internal const float MaxScreenScale = 8.0f;
 
-    //Aetherphone addition - how far the Casting tab's X/Y/Z sliders reach out from ScreenSpawnAnchor in
-    //either direction. Position itself is unbounded (it's a world coordinate), but a slider needs a
-    //visible min/max to be a slider at all, so it's capped relative to wherever the screen was last
-    //placed on purpose (spawn/recenter/preset apply) rather than relative to some arbitrary world origin.
     internal const float ScreenPositionSliderRange = 10f;
 
     private readonly ScreenPainter _screenPainter;
@@ -39,9 +24,6 @@ internal sealed class VideoEngine : IDisposable
     internal float ScreenYaw { get; private set; }
     internal float ScreenScale { get; private set; } = 1.0f;
 
-    //Center the Casting tab's position sliders around - updated only on a deliberate re-placement
-    //(spawn/recenter/preset apply), never while just dragging the sliders themselves, so the window
-    //doesn't shrink out from under the slider mid-drag.
     internal Vector3 ScreenSpawnAnchor { get; private set; }
 
     private MpvRenderer? _mpvRenderer;
@@ -65,11 +47,9 @@ internal sealed class VideoEngine : IDisposable
     private static readonly Regex YtRegex = new(@"^\w+://[^/]*youtube\.\w+/|^\w+://youtu\.be/", RegexOptions.Compiled);
     private static bool IsYTURL(string url) => YtRegex.IsMatch(url);
 
-    private bool _isActive; // whether the screen should currently be drawing for the local player
+    private bool _isActive;
     private int _pendingVolume = 60;
 
-    // Read fresh at Play() time by MpvRenderer.Initialize so a settings change takes effect on
-    // the next video, not the current one - matching how the old VideoPlayer read these.
     internal bool HardwareDecoding { get; set; }
     internal int MaxQualityHeight { get; set; } = 720;
     internal bool AllowInsecureDirectUrls { get; set; }
@@ -91,10 +71,6 @@ internal sealed class VideoEngine : IDisposable
 
     internal bool IsActive => _isActive;
 
-    // Set only from PlayVideo's background task on a genuine init/decode failure (e.g. mpv/yt-dlp
-    // never downloaded, so mpv_create() throws DllNotFoundException) - VideoPlayer polls this from
-    // GetProgress() to flip its own State/LastError, since PlayVideo itself returns long before
-    // the failure is known and its caller's try/catch never sees it.
     internal string? LastError { get; private set; }
 
     internal void StopVideo()
@@ -113,8 +89,6 @@ internal sealed class VideoEngine : IDisposable
             return;
         }
 
-        // Covers the path that never opens the app: a watch-along join starts playback straight
-        // off the wire. No-op once anything has already asked for it this session.
         Resources.EnsureProvisioned();
 
         LastError = null;
@@ -127,7 +101,7 @@ internal sealed class VideoEngine : IDisposable
                 TimeSpan elapsed = DateTime.Now - _lastLoadYT;
                 if (elapsed.TotalSeconds < 7)
                 {
-                    int sleepTime = Math.Min(Math.Max((int)(7000 - elapsed.TotalMilliseconds), 0), 7000); //Add some sleep time to avoid hitting rate limits
+                    int sleepTime = Math.Min(Math.Max((int)(7000 - elapsed.TotalMilliseconds), 0), 7000);
                     Thread.Sleep(sleepTime);
                 }
 
@@ -140,12 +114,6 @@ internal sealed class VideoEngine : IDisposable
                 {
                     _mpvRenderer.Play(url, playbackPosition, isPlaying);
                     _isActive = true;
-                    // AssignScreenForSession's SpawnScreenInFrontOfLocalPlayer already computed
-                    // ScreenPosition/Yaw/Scale synchronously above, but SetScreenTransform only
-                    // pushes into the painter while _isActive is true - which it wasn't yet at
-                    // that point on a genuinely new session. Push it now that it actually is, or
-                    // the screen stays parked at the painter's stale/default transform until the
-                    // next unrelated SetScreenTransform call happens to fire.
                     _screenPainter.SetTransform(ScreenPosition, ScreenYaw, ScreenScale);
                     return;
                 }
@@ -253,12 +221,6 @@ internal sealed class VideoEngine : IDisposable
 
     internal string? GetCurrentUrl() => _mpvRenderer?.GetCurrentUrl();
 
-    // The only gate between a URL that arrived over the wire and mpv's loadfile, which happily
-    // takes UNC shares (an SMB auth attempt, leaking NetNTLMv2) and file:// paths as well as
-    // http(s). Static because callers hold a VideoPlayer or nothing at all, not the engine, and
-    // this decides a policy question that needs no engine state. Deliberately not applied inside
-    // PlayVideo: playing a local file the user picked themselves is legitimate, so the
-    // restriction belongs on the remote paths only (see WatchAlongSession.IsPlayableRemoteUrl).
     internal static bool ValidateURL(string inputUrl, out Uri? url)
     {
         string formattedUrl = inputUrl;
@@ -287,14 +249,11 @@ internal sealed class VideoEngine : IDisposable
 
         var position = localPlayer.Position + forward * DefaultScreenSpawnDistance + new Vector3(0, DefaultScreenHeightOffset, 0);
         ScreenSpawnAnchor = position;
-        SetScreenTransform(position, yaw + MathF.PI, 1.0f); //Face back towards the player, not away from them.
+        SetScreenTransform(position, yaw + MathF.PI, 1.0f);
     }
 
     internal void RecenterScreen() => SpawnScreenInFrontOfLocalPlayer();
 
-    //Live, unsaved position/yaw/scale edit from the Casting tab - only meaningful while the screen is
-    //active. Scale is clamped to [MinScreenScale, MaxScreenScale] here rather than at each call site,
-    //so drag/slider widgets in the UI can't push it out of range through fast mouse movement.
     internal void SetScreenTransform(Vector3 position, float yaw, float scale)
     {
         ScreenPosition = position;
@@ -337,17 +296,13 @@ internal sealed class VideoEngine : IDisposable
     internal void ApplyScreenPreset(ScreenPositionPreset preset)
     {
         var position = new Vector3(preset.X, preset.Y, preset.Z);
-        ScreenSpawnAnchor = position; //Re-center the position sliders on the spot just jumped to.
+        ScreenSpawnAnchor = position;
         SetScreenTransform(position, preset.Yaw, preset.Scale);
     }
 
-    // Applied when watching someone else's AetherStream over WatchAlongSession and their host
-    // client publishes a screen transform (see StreamSignalRouter.PublishState/CallControl's
-    // ScreenX/Y/Z/Yaw/Scale). There is no shared/networked 3D object - this just makes the local
-    // ScreenPainter draw at the same coordinates the host is using, same as any other placement.
     internal void ApplyRemoteScreenTransform(Vector3 position, float yaw, float scale)
     {
-        ScreenSpawnAnchor = position; //Re-center the position sliders on the host's spot too.
+        ScreenSpawnAnchor = position;
         SetScreenTransform(position, yaw, scale);
     }
 

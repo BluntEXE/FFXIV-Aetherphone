@@ -208,8 +208,6 @@ public sealed class Plugin : IDalamudPlugin
         screenController?.Dispose();
         watchAlong?.Dispose();
         video?.Dispose();
-        // Must come after video.Dispose() - ScreenPainter (owned by VideoEngine) still unsubscribes
-        // from DxHandler.OnPresent during its own teardown, so the hook needs to still be alive then.
         DxHandler.Dispose();
         phoneEmote?.Dispose();
         timerNotifier?.Dispose();
@@ -305,8 +303,6 @@ public sealed class Plugin : IDalamudPlugin
         screenController.Dispose();
         watchAlong.Dispose();
         video.Dispose();
-        // Must come after video.Dispose() - ScreenPainter (owned by VideoEngine) still unsubscribes
-        // from DxHandler.OnPresent during its own teardown, so the hook needs to still be alive then.
         DxHandler.Dispose();
         phoneEmote.Dispose();
         timerNotifier.Dispose();
