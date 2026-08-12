@@ -4202,6 +4202,12 @@ internal static class L
         public static readonly LocString ReasonKicked = new("casino.reasonKicked", "The host closed the table to you. Your chips are back in your wallet.");
         public static readonly LocString ReasonBoundElsewhere = new("casino.reasonBoundElsewhere", "This seat is being played on another device. Take it over to play here.");
         public static readonly LocString ReasonNoTables = new("casino.reasonNoTables", "No table has room right now. Try again in a moment.");
+        public static readonly LocString JackpotEyebrow = new("casino.jackpot.eyebrow", "JACKPOT");
+        public static readonly LocString JackpotUnit = new("casino.jackpot.unit", "coin");
+        public static readonly LocString JackpotHint = new("casino.jackpot.hint", "Five scatters on one spin takes the whole pot");
+        public static readonly LocString JackpotWon = new("casino.jackpot.won", "JACKPOT");
+        public static readonly LocString JackpotWonAmount = new("casino.jackpot.wonAmount", "{0} coin, the whole pot");
+        public static readonly LocString JackpotMeter = new("casino.jackpot.meter", "Every spin on the floor feeds it");
     }
 
     internal static class Catalogs

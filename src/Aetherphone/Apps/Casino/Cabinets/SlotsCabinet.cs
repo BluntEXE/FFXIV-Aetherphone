@@ -45,6 +45,7 @@ internal sealed class SlotsCabinet
     private readonly int[] restingGrid = new int[SlotsRules.CellCount];
 
     private RollingValue winRoll;
+    private RollingValue jackpotRoll;
     private string inlineReason = string.Empty;
     private float lineTraceSeconds;
     private int celebratedSpinIndex = -1;
@@ -198,6 +199,13 @@ internal sealed class SlotsCabinet
 
         var scale = UiScale.Current;
         var origin = new Vector2(reelWindow.Center.X, reelWindow.Min.Y + reelWindow.Height * 0.3f);
+        if (playback.JackpotLanded && playback.SpinIndex == 0)
+        {
+            particles.Confetti(origin, 160, ConfettiPalette, 420f * scale, 6f, 2.4f);
+            particles.Sparkle(origin, 48, Gold, 260f * scale, 5f, 1.6f);
+            return;
+        }
+
         if (spin.Win >= playback.Stake * SlotsRoundPlayback.BigWinMultiple)
         {
             particles.Confetti(origin, 90, ConfettiPalette, 330f * scale, 5f, 1.6f);
@@ -245,9 +253,39 @@ internal sealed class SlotsCabinet
                 Typography.Draw(drawList, new Vector2(left + width - extraSize.X, y + 27f * scale), extra, Gold,
                     TextStyles.Caption1);
             }
+
+            return y + height;
         }
 
+        DrawJackpotPill(drawList, ui, state.Jackpot, left + width, y, width * 0.50f, height, scale, delta);
         return y + height;
+    }
+
+    private void DrawJackpotPill(ImDrawListPtr drawList, AppSkin ui, long jackpot, float right, float y,
+        float pillWidth, float height, float scale, float delta)
+    {
+        if (jackpot <= 0)
+        {
+            return;
+        }
+
+        var max = new Vector2(right, y + height);
+        var min = new Vector2(right - pillWidth, y);
+        var rounding = height * 0.5f;
+        Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(Palette.WithAlpha(Gold, 0.12f)));
+        Squircle.Stroke(drawList, min, max, rounding,
+            ImGui.GetColorU32(Palette.WithAlpha(Gold, 0.32f + 0.22f * Pulse.Wave(Pulse.Breath))),
+            Metrics.Stroke.Hairline);
+
+        var label = Loc.T(L.Casino.JackpotEyebrow);
+        Typography.Draw(drawList, new Vector2(min.X + 16f * scale, y + 7f * scale), label,
+            Palette.WithAlpha(Gold, 0.85f), TextStyles.Caption1);
+
+        jackpotRoll.Update((int)CasinoChipLots.CoinsFor(jackpot), delta);
+        var amount = jackpotRoll.Display.ToString("N0", Loc.Culture);
+        var fitted = Typography.FitText(amount, pillWidth - 32f * scale, TextStyles.SubheadlineEmphasized);
+        Typography.Draw(drawList, new Vector2(min.X + 16f * scale, y + 21f * scale), fitted, Gold,
+            TextStyles.SubheadlineEmphasized);
     }
 
     private long DisplayStack(CasinoStateDto state)
@@ -517,6 +555,18 @@ internal sealed class SlotsCabinet
             return y + height;
         }
 
+        if (playback.JackpotLanded && ShowingJackpotBanner)
+        {
+            var pulse = 0.78f + 0.22f * Pulse.Wave(Pulse.Fast);
+            Typography.DrawCentered(drawList, center with { Y = center.Y - 16f * scale },
+                Loc.T(L.Casino.JackpotWon), Palette.WithAlpha(Gold, pulse), TextStyles.Title1);
+            var coins = CasinoChipLots.CoinsFor(playback.Jackpot).ToString("N0", Loc.Culture);
+            Typography.DrawCentered(drawList, center with { Y = center.Y + 16f * scale },
+                Loc.T(L.Casino.JackpotWonAmount, coins), Gold, TextStyles.SubheadlineEmphasized);
+            DrawSkip(drawList, ui, left, y, width, scale);
+            return y + height;
+        }
+
         winRoll.Update((int)playback.CommittedWin, delta, CountUpSpeedFor(playback.CommittedWin));
         if (playback.Phase != SlotsPlaybackPhase.Idle && winRoll.Display > 0)
         {
@@ -587,6 +637,9 @@ internal sealed class SlotsCabinet
         return composer.DrawAmount(ui, bounds, SlotsRules.MinStake, SlotsRules.MaxStake, sitting.Stack,
             SlotsRules.StakeStep, changeable, delta);
     }
+
+    private bool ShowingJackpotBanner => playback.Phase == SlotsPlaybackPhase.Finished
+        || (playback.SpinIndex == 0 && playback.Phase == SlotsPlaybackPhase.Presenting);
 
     private bool PlaybackBusy => playback.Phase == SlotsPlaybackPhase.Spinning
         || playback.Phase == SlotsPlaybackPhase.Presenting

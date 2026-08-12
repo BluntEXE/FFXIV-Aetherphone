@@ -8,6 +8,10 @@ internal static class CasinoChipLots
 
     public const long MaxSingleWin = MaxSingleWinCoins * ChipPerCoin;
 
+    public const long JackpotSeedCoins = 5_000;
+
+    public const long JackpotCapCoins = 20_000;
+
     public static readonly long[] Chips =
     {
         2_000,

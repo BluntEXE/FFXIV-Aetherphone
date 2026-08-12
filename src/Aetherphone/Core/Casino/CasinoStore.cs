@@ -141,6 +141,8 @@ internal sealed class CasinoStore : IDisposable
 
     public bool HasChips => (state?.Sitting?.Stack ?? 0) > 0;
 
+    public long Jackpot => state?.Jackpot ?? 0;
+
     public void TopUp(long amount)
     {
         var sittingId = state?.Sitting?.Id ?? string.Empty;

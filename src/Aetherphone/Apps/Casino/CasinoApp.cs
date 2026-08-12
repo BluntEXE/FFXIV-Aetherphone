@@ -39,6 +39,7 @@ internal sealed partial class CasinoApp : IPhoneApp
     private readonly Tables.BlackjackTable blackjack;
     private readonly Tables.TableBrowser browser;
     private readonly Tables.TableDoor tableDoor;
+    private readonly JackpotRail jackpotRail = new();
     private readonly AppSkin ui = new(AppPalettes.Casino);
     private readonly ViewRouter<CasinoRoute> router;
     private readonly RouterDraw<CasinoRoute> drawView;
@@ -102,6 +103,7 @@ internal sealed partial class CasinoApp : IPhoneApp
         tableDoor.Reset();
         pendingTableId = string.Empty;
         ResetLimitsEditor();
+        jackpotRail.Snap(Core.Casino.CasinoChipLots.CoinsFor(casino.Jackpot));
         historyLoadFailed = false;
         history.Invalidate();
         coins.RefreshNow();

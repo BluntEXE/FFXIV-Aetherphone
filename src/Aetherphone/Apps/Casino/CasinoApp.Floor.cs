@@ -62,6 +62,12 @@ internal sealed partial class CasinoApp
         }
 
         var state = casino.State;
+        var jackpot = casino.Jackpot;
+        if (jackpot > 0 && jackpotRail.Draw(ui, jackpot))
+        {
+            OpenGame(CasinoGames.Slots);
+        }
+
         if (state?.Sitting is not null)
         {
             DrawSittingResumeCard(state.Sitting, scale);
