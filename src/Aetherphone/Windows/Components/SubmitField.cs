@@ -11,7 +11,7 @@ internal static class SubmitField
     private const float PillHalfHeight = 17f;
 
     public static bool Draw(Rect bar, string imguiId, string hint, ref string text, PhoneTheme theme,
-        int maxLength = 64)
+        int maxLength = 64, FontAwesomeIcon icon = FontAwesomeIcon.Search)
     {
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
@@ -22,7 +22,7 @@ internal static class SubmitField
         var glyphCenter = new Vector2(pillMin.X + 16f * scale, bar.Center.Y);
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
-            var glyph = FontAwesomeIcon.Search.ToIconString();
+            var glyph = icon.ToIconString();
             var size = ImGui.CalcTextSize(glyph);
             ImGui.SetCursorScreenPos(new Vector2(glyphCenter.X - size.X * 0.5f, glyphCenter.Y - size.Y * 0.5f));
             using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))

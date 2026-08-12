@@ -6,15 +6,21 @@ using Aetherphone.Core.Video;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
-using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.AetherStream;
 
 internal sealed partial class AetherStreamApp
 {
+    private static readonly Vector4 WhiteInk = new(1f, 1f, 1f, 1f);
+    private static readonly Vector4 HeroPillBacking = new(0f, 0f, 0f, 0.45f);
+
+    private const float HeroAspect = 9f / 16f;
+    private const float PartyButtonHeight = 40f;
+    private const float PartyRowHeight = 44f;
+
     private string urlInput = string.Empty;
     private bool queueOnAdd;
+    private float composerModeAnimation;
     private string? pendingLocalFile;
 
     private void DrawPlayerTab(Rect body, float scale)
@@ -24,325 +30,214 @@ internal sealed partial class AetherStreamApp
             SubmitLocalFile(localPath);
         }
 
-        var margin = Metrics.Space.Lg * scale;
-        var content = new Rect(new Vector2(body.Min.X + margin, body.Min.Y), new Vector2(body.Max.X - margin, body.Max.Y));
-
         using (AppSurface.Begin(body))
         {
-            var isCasting = screen.Engine.IsActive;
-            var hasCurrent = watchAlong.IsViewing ? watchAlong.ViewingEntry is not null : queue.Current is not null;
-            var watchers = watchAlong.Watching();
-
-            var bodyTop = content.Min.Y;
-            if (isCasting)
-            {
-                var castingRect = new Rect(new Vector2(content.Min.X, bodyTop),
-                    new Vector2(content.Max.X, bodyTop + CastingRowHeight * scale));
-                DrawCastingStatus(castingRect, scale, !hasCurrent);
-                bodyTop = castingRect.Max.Y + 10f * scale;
-            }
-
-            var nowPlayingHeight = 200f * scale;
-            DrawNowPlaying(
-                new Rect(new Vector2(content.Min.X, bodyTop), new Vector2(content.Max.X, bodyTop + nowPlayingHeight)),
-                scale);
-
-            var progressTop = bodyTop + nowPlayingHeight + 12f * scale;
-            var progressRect = new Rect(new Vector2(content.Min.X, progressTop), new Vector2(content.Max.X, progressTop + 24f * scale));
-            DrawProgress(progressRect, scale);
-
-            var transportTop = progressRect.Max.Y + 8f * scale;
-            DrawTransport(new Rect(new Vector2(content.Min.X, transportTop), new Vector2(content.Max.X, transportTop + 48f * scale)), scale);
-
-            var volumeTop = transportTop + 56f * scale;
-            DrawVolume(new Rect(new Vector2(content.Min.X, volumeTop), new Vector2(content.Max.X, volumeTop + 24f * scale)), scale);
-
-            var urlTop = volumeTop + 36f * scale;
-            var urlEntryHeight = UrlEntryHeight * scale;
-            DrawUrlEntry(new Rect(new Vector2(content.Min.X, urlTop), new Vector2(content.Max.X, urlTop + urlEntryHeight)), scale);
-
-            var joinTop = urlTop + urlEntryHeight + 12f * scale;
-            var joinRect = new Rect(new Vector2(content.Min.X, joinTop), new Vector2(content.Max.X, joinTop + 34f * scale));
-            DrawJoinRow(joinRect, scale);
-            var bottom = joinRect.Max.Y;
-
-            if (watchers.Count > 0)
-            {
-                var watchingTop = bottom + 14f * scale;
-                var watchingHeight = WatchingTotalHeight(watchers, scale);
-                DrawWatching(new Rect(new Vector2(content.Min.X, watchingTop), new Vector2(content.Max.X, watchingTop + watchingHeight)),
-                    watchers, scale);
-                bottom = watchingTop + watchingHeight;
-            }
-
-            ImGui.SetCursorScreenPos(content.Min);
-            ImGui.Dummy(new Vector2(content.Width, bottom - content.Min.Y + Metrics.Space.Lg * scale));
-        }
-
-    }
-
-    private void DrawJoinRow(Rect rect, float scale)
-    {
-        if (watchAlong.IsViewing)
-        {
-            var viewingHalf = rect.Width * 0.5f - 5f * scale;
-            var resyncRect = new Rect(rect.Min, new Vector2(rect.Min.X + viewingHalf, rect.Max.Y));
-            var leaveRect = new Rect(new Vector2(rect.Max.X - viewingHalf, rect.Min.Y), rect.Max);
-
-            if (SmallButton(resyncRect, Loc.T(L.AetherStream.Resync), true, scale))
-            {
-                watchAlong.ResyncNow();
-            }
-
-            if (SmallButton(leaveRect, Loc.T(L.AetherStream.LeaveStream), true, scale, danger: true))
-            {
-                watchAlong.Leave();
-            }
-
-            return;
-        }
-
-        if (watchAlong.IsAwaitingApproval)
-        {
-            if (SmallButton(rect, Loc.T(L.AetherStream.JoinWaitingApproval), true, scale, danger: true))
-            {
-                watchAlong.Leave();
-            }
-
-            return;
-        }
-
-        if (watchAlong.IsHosting)
-        {
-            if (SmallButton(rect, Loc.T(L.AetherStream.EndParty), true, scale, danger: true))
-            {
-                watchAlong.Leave();
-            }
-
-            return;
-        }
-
-        var half = rect.Width * 0.5f - 5f * scale;
-        var startRect = new Rect(rect.Min, new Vector2(rect.Min.X + half, rect.Max.Y));
-        var joinRect = new Rect(new Vector2(rect.Max.X - half, rect.Min.Y), rect.Max);
-
-        if (SmallButton(startRect, Loc.T(L.AetherStream.StartParty), true, scale))
-        {
-            watchAlong.OpenParty();
-        }
-
-        if (SmallButton(joinRect, Loc.T(L.AetherStream.JoinStream), true, scale))
-        {
-            nearbyRefreshTimer = NearbyRefreshIntervalSeconds;
-            router.Push(AetherStreamScreen.Join);
+            var width = ScrollLayout.StableContentWidth();
+            DrawHero(width, scale);
+            DrawPlaybackError(width, scale);
+            DrawNowPlayingTitle(width, scale);
+            DrawProgressBlock(width, scale);
+            DrawTransportBlock(width, scale);
+            DrawVolumeBlock(width, scale);
+            DrawComposer(width, scale);
+            DrawWatchPartySection(width, scale);
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
         }
     }
 
-    private const float CastingRowHeight = 40f;
+    private VideoQueueEntry? CurrentEntry => watchAlong.IsViewing ? watchAlong.ViewingEntry : queue.Current;
 
-    private const float UrlEntryHeight = 126f;
-
-    private void DrawCastingStatus(Rect rect, float scale, bool waiting)
+    private void DrawHero(float width, float scale)
     {
+        var origin = ImGui.GetCursorScreenPos();
+        var height = width * HeroAspect;
+        var min = origin;
+        var max = origin + new Vector2(width, height);
+        var rounding = Metrics.Radius.Card * scale;
         var drawList = ImGui.GetWindowDrawList();
-        Squircle.Fill(drawList, rect.Min, rect.Max, 10f * scale, ImGui.GetColorU32(ui.FieldSurface));
+        var current = CurrentEntry;
 
-        var dotColor = waiting ? new Vector4(1f, 0.8f, 0.3f, 1f) : new Vector4(0.4f, 1f, 0.5f, 1f);
-        var dotCenter = new Vector2(rect.Min.X + 18f * scale, rect.Center.Y);
-        drawList.AddCircleFilled(dotCenter, 4f * scale, ImGui.GetColorU32(dotColor), 16);
-
-        var label = waiting ? Loc.T(L.AetherStream.PlayerCastingWaiting) : Loc.T(L.AetherStream.PlayerCastingStatus);
-        var textLeft = dotCenter.X + 12f * scale;
-        var textSize = Typography.Measure(label, TextStyles.Subheadline);
-        Typography.Draw(new Vector2(textLeft, rect.Center.Y - textSize.Y * 0.5f),
-            label, ui.TitleInk, TextStyles.Subheadline);
-
-        if (watchAlong.IsViewing)
-        {
-            return;
-        }
-
-        var stopRect = new Rect(new Vector2(rect.Max.X - 84f * scale, rect.Min.Y + 6f * scale),
-            new Vector2(rect.Max.X - 12f * scale, rect.Max.Y - 6f * scale));
-        var canStop = queue.Current is not null || video.State != VideoPlaybackState.Idle;
-        if (SmallButton(stopRect, Loc.T(L.AetherStream.Stop), canStop, scale, danger: true) && canStop)
-        {
-            queue.Clear();
-        }
-    }
-
-    private void DrawNowPlaying(Rect rect, float scale)
-    {
-        var current = watchAlong.IsViewing ? watchAlong.ViewingEntry : queue.Current;
-        var title = current?.Title ?? Loc.T(L.AetherStream.NothingPlaying);
-        Typography.Draw(rect.Min, title, ui.TitleInk, TextStyles.Headline);
-
-        var sourceTop = rect.Min.Y + 26f * scale;
-        if (current is not null)
-        {
-            Typography.Draw(new Vector2(rect.Min.X, sourceTop), current.Source, ui.MutedInk, TextStyles.Subheadline);
-        }
-
-        var artTop = rect.Min.Y + 48f * scale;
-        if (video.LastError is not null)
-        {
-            Typography.DrawWrappedLeft(new Vector2(rect.Min.X, sourceTop + 22f * scale), video.LastError,
-                Palette.WithAlpha(theme.Danger, 0.9f), TextStyles.Footnote, rect.Width);
-            artTop += 34f * scale;
-        }
-
-        var artMin = new Vector2(rect.Min.X, artTop);
-        var artMax = new Vector2(rect.Max.X, rect.Max.Y);
-        var drawList = ImGui.GetWindowDrawList();
-        Squircle.Fill(drawList, artMin, artMax, 10f * scale, ImGui.GetColorU32(ui.FieldSurface));
+        Elevation.Card(drawList, min, max, rounding, scale);
+        Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(ui.FieldSurface));
 
         var thumbnail = VideoThumbnailResolver.Get(remoteImages, http, current?.Url, current?.ThumbnailUrl);
         if (thumbnail is not null)
         {
-            drawList.AddImageRounded(thumbnail.Handle, artMin, artMax, Vector2.Zero, Vector2.One, 0xFFFFFFFFu,
-                10f * scale, ImDrawFlags.RoundCornersAll);
+            drawList.AddImageRounded(thumbnail.Handle, min, max, Vector2.Zero, Vector2.One, 0xFFFFFFFFu, rounding,
+                ImDrawFlags.RoundCornersAll);
+        }
+        else if (current is not null)
+        {
+            AppSkin.Icon((min + max) * 0.5f, FontAwesomeIcon.Tv.ToIconString(), ui.MutedInk, 1.8f);
         }
         else
         {
-            AppSkin.Icon((artMin + artMax) * 0.5f, FontAwesomeIcon.Tv.ToIconString(), ui.MutedInk, 1.8f);
+            EmptyState.Draw(new Rect(min, max), ui, FontAwesomeIcon.Tv, Loc.T(L.AetherStream.NothingPlaying),
+                Loc.T(L.AetherStream.NothingPlayingHint));
         }
+
+        Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(ui.Palette.CardStroke), 1f);
+
+        if (screen.Engine.IsActive)
+        {
+            var pillLabel = current is not null
+                ? Loc.T(L.Common.Live)
+                : Loc.T(L.AetherStream.PlayerCastingWaiting);
+            var pillOrigin = min + new Vector2(Metrics.Space.Md * scale, Metrics.Space.Md * scale);
+            var pillSize = new Vector2(LivePill.Width(pillLabel, scale), LivePill.Height(scale));
+            Squircle.Fill(drawList, pillOrigin, pillOrigin + pillSize, pillSize.Y * 0.34f,
+                ImGui.GetColorU32(HeroPillBacking));
+            LivePill.Draw(drawList, pillOrigin, pillLabel, current is not null ? theme.Danger : ui.MutedInk,
+                (float)ImGui.GetTime(), scale);
+
+            var canStop = !watchAlong.IsViewing &&
+                (queue.Current is not null || video.State != VideoPlaybackState.Idle);
+            if (canStop)
+            {
+                var stopRadius = 13f * scale;
+                var stopCenter = new Vector2(max.X - Metrics.Space.Md * scale - stopRadius,
+                    min.Y + Metrics.Space.Md * scale + stopRadius);
+                if (HoverButton.Circle(drawList, "aetherstream.hero.stop", stopCenter, stopRadius,
+                        FontAwesomeIcon.Stop, HeroPillBacking, WhiteInk, ImGui.GetIO().DeltaTime, 1f, true,
+                        Loc.T(L.AetherStream.Stop)))
+                {
+                    queue.Clear();
+                }
+            }
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, height));
     }
 
-    private const float WatchingHeaderHeight = 26f;
-    private const float WatchingRowHeight = 52f;
-
-    private void DrawWatching(Rect rect, IReadOnlyList<WatchAlongParticipant> watchers, float scale)
+    private void DrawPlaybackError(float width, float scale)
     {
-        var rowHeight = WatchingRowHeight * scale;
-        var headerHeight = WatchingHeaderHeight * scale;
-        var y = rect.Min.Y;
-
-        Typography.Draw(new Vector2(rect.Min.X, y), Loc.T(L.AetherStream.WatchingHostLabel), ui.MutedInk,
-            TextStyles.Caption1);
-        y += headerHeight;
-        DrawWatchingRow(new Rect(new Vector2(rect.Min.X, y), new Vector2(rect.Max.X, y + rowHeight)), watchers[0],
-            false, scale);
-        y += rowHeight;
-
-        if (watchers.Count <= 1)
+        if (video.LastError is not { } error)
         {
             return;
         }
 
-        y += 10f * scale;
-        Typography.Draw(new Vector2(rect.Min.X, y), Loc.T(L.AetherStream.WatchingSectionLabel), ui.MutedInk,
-            TextStyles.Caption1);
-        y += headerHeight;
-        var canKick = watchAlong.IsHosting;
-        for (var index = 1; index < watchers.Count; index++)
-        {
-            DrawWatchingRow(new Rect(new Vector2(rect.Min.X, y), new Vector2(rect.Max.X, y + rowHeight)),
-                watchers[index], canKick, scale);
-            y += rowHeight;
-        }
-    }
-
-    private void DrawWatchingRow(Rect row, WatchAlongParticipant participant, bool canKick, float scale)
-    {
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+        var origin = ImGui.GetCursorScreenPos();
+        var pad = Metrics.Space.Md * scale;
+        var textWidth = width - pad * 2f;
+        var textHeight = Typography.MeasureWrappedBlock(error, TextStyles.Footnote, textWidth).Y;
+        var cardHeight = textHeight + pad * 2f;
         var drawList = ImGui.GetWindowDrawList();
-        var avatarRadius = 18f * scale;
-        var centerY = row.Center.Y;
-        var avatarCenter = new Vector2(row.Min.X + avatarRadius, centerY);
-        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, participant.Name, participant.World,
-            participant.AvatarUrl, remoteImages, lodestone, 0.7f, 20);
-
-        var textLeft = avatarCenter.X + avatarRadius + 12f * scale;
-        var textRight = row.Max.X;
-        if (canKick)
-        {
-            var kickRect = new Rect(new Vector2(row.Max.X - 64f * scale, row.Min.Y + 8f * scale),
-                new Vector2(row.Max.X - 4f * scale, row.Max.Y - 8f * scale));
-            if (SmallButton(kickRect, Loc.T(L.AetherStream.WatchingKick), true, scale, danger: true))
-            {
-                watchAlong.KickParticipant(participant.UserId);
-            }
-
-            textRight = kickRect.Min.X - 8f * scale;
-        }
-
-        var name = Ellipsize(participant.DisplayName, textRight - textLeft);
-        var nameSize = Typography.Measure(name, TextStyles.Body);
-        Typography.Draw(new Vector2(textLeft, centerY - nameSize.Y * 0.5f), name, ui.TitleInk, TextStyles.Body);
+        var max = origin + new Vector2(width, cardHeight);
+        Squircle.Fill(drawList, origin, max, Metrics.Radius.Md * scale,
+            ImGui.GetColorU32(Palette.WithAlpha(theme.Danger, 0.10f)));
+        Squircle.Stroke(drawList, origin, max, Metrics.Radius.Md * scale,
+            ImGui.GetColorU32(Palette.WithAlpha(theme.Danger, 0.35f)), 1f);
+        Typography.DrawWrappedLeft(origin + new Vector2(pad, pad), error, theme.Danger, TextStyles.Footnote,
+            textWidth);
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, cardHeight));
     }
 
-    private static float WatchingTotalHeight(IReadOnlyList<WatchAlongParticipant> watchers, float scale)
+    private void DrawNowPlayingTitle(float width, float scale)
     {
-        if (watchers.Count == 0)
+        var current = CurrentEntry;
+        if (current is null)
         {
-            return 0f;
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
+            return;
         }
 
-        var height = WatchingHeaderHeight * scale + WatchingRowHeight * scale;
-        var othersCount = watchers.Count - 1;
-        if (othersCount > 0)
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
+        var origin = ImGui.GetCursorScreenPos();
+        var titleHeight = Typography.LineHeight(TextStyles.Title3);
+        Marquee.DrawLeftAuto("aetherstream.nowPlaying.title", current.Title, origin.X, origin.Y, width,
+            TextStyles.Title3, ui.TitleInk);
+        var sourceY = origin.Y + titleHeight + 2f * scale;
+        var sourceHeight = 0f;
+        if (current.Source.Length > 0)
         {
-            height += 10f * scale + WatchingHeaderHeight * scale + othersCount * WatchingRowHeight * scale;
+            sourceHeight = Typography.LineHeight(TextStyles.Caption1) + 2f * scale;
+            Marquee.DrawLeftAuto("aetherstream.nowPlaying.source", current.Source, origin.X, sourceY, width,
+                TextStyles.Caption1, ui.MutedInk);
         }
 
-        return height;
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, titleHeight + sourceHeight + Metrics.Space.Sm * scale));
     }
 
-    private void DrawProgress(Rect rect, float scale)
+    private void DrawProgressBlock(float width, float scale)
     {
+        var origin = ImGui.GetCursorScreenPos();
         var interactive = !watchAlong.IsViewing;
         var (position, duration, _) = video.GetProgress();
         var normalized = duration > 0f ? Math.Clamp(position / duration, 0f, 1f) : 0f;
-        var track = new Rect(new Vector2(rect.Min.X + 46f * scale, rect.Center.Y - 2f * scale),
-            new Vector2(rect.Max.X - 46f * scale, rect.Center.Y + 2f * scale));
+        var sliderRow = new Rect(origin, origin + new Vector2(width, 24f * scale));
+        var shown = position;
 
-        var updated = Scrubber.Draw(track, normalized, ui.Accent, Palette.WithAlpha(ui.MutedInk, 0.3f),
-            interactive ? 1f : 0.4f);
-        if (interactive && Scrubber.IsHovered(track) && ImGui.IsMouseDown(ImGuiMouseButton.Left) && duration > 0f)
+        if (interactive && duration > 0f)
         {
-            video.Seek(updated * duration);
+            var result = Slider.Draw("aetherstream.progress", sliderRow, normalized, accentedTheme, 0f, 0f);
+            if (result.Released)
+            {
+                video.Seek(result.Value * duration);
+            }
+
+            if (result.Dragging || result.Released)
+            {
+                shown = result.Value * duration;
+            }
+        }
+        else
+        {
+            var track = new Rect(new Vector2(origin.X, sliderRow.Center.Y - 2f * scale),
+                new Vector2(origin.X + width, sliderRow.Center.Y + 2f * scale));
+            Scrubber.Draw(track, normalized, ui.Accent, Palette.WithAlpha(ui.MutedInk, 0.3f),
+                interactive ? 1f : 0.4f);
         }
 
-        Typography.Draw(new Vector2(rect.Min.X, rect.Center.Y - 7f * scale), TimeText.MinutesSeconds((int)position),
-            ui.MutedInk, TextStyles.Caption1);
-        var totalText = TimeText.MinutesSeconds((int)duration);
-        var totalSize = Typography.Measure(totalText, TextStyles.Caption1);
-        Typography.Draw(new Vector2(rect.Max.X - totalSize.X, rect.Center.Y - 7f * scale), totalText, ui.MutedInk,
+        var labelY = sliderRow.Max.Y + 2f * scale;
+        Typography.Draw(new Vector2(origin.X, labelY), TimeText.MinutesSeconds((int)shown), ui.MutedInk,
             TextStyles.Caption1);
+        var remainingText = $"-{TimeText.MinutesSeconds((int)MathF.Max(0f, duration - shown))}";
+        var remainingSize = Typography.Measure(remainingText, TextStyles.Caption1);
+        Typography.Draw(new Vector2(origin.X + width - remainingSize.X, labelY), remainingText, ui.MutedInk,
+            TextStyles.Caption1);
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, 24f * scale + Typography.LineHeight(TextStyles.Caption1) + 4f * scale));
     }
 
-    private void DrawTransport(Rect rect, float scale)
+    private void DrawTransportBlock(float width, float scale)
     {
+        var origin = ImGui.GetCursorScreenPos();
+        var rowHeight = 60f * scale;
+        var centerY = origin.Y + rowHeight * 0.5f;
+        var centerX = origin.X + width * 0.5f;
         var interactive = !watchAlong.IsViewing;
         var transportAlpha = interactive ? 1f : 0.4f;
-        var centerY = rect.Center.Y;
-        var centerX = rect.Center.X;
-        var (_, _, paused) = video.GetProgress();
+        var (position, _, paused) = video.GetProgress();
 
         if (interactive && ui.IconButton(new Vector2(centerX - 132f * scale, centerY), 16f * scale,
                 FontAwesomeIcon.UndoAlt.ToIconString(), ui.TitleInk, AppSkin.Transparent, 0.6f))
         {
-            var (position, _, _) = video.GetProgress();
             video.Seek(Math.Max(0f, position - 10f));
         }
 
-        if (TransportButton.Draw(new Vector2(centerX - 66f * scale, centerY), 18f * scale, TransportAction.Previous,
+        if (TransportButton.Draw(new Vector2(centerX - 72f * scale, centerY), 18f * scale, TransportAction.Previous,
                 ui.TitleInk, Palette.WithAlpha(ui.TitleInk, 0.85f), transportAlpha, interactive) && interactive)
         {
             queue.Advance();
         }
 
         var playAction = paused ? TransportAction.Play : TransportAction.Pause;
-        var centerRadius = 22f * scale;
+        var centerRadius = 24f * scale;
         var centerPoint = new Vector2(centerX, centerY);
         ImGui.GetWindowDrawList().AddCircleFilled(centerPoint, centerRadius,
-            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, transportAlpha)), 32);
-        if (TransportButton.Draw(centerPoint, centerRadius, playAction, ui.Accent, new Vector4(1f, 1f, 1f, 1f),
-                transportAlpha, interactive) && interactive)
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, transportAlpha)), 40);
+        if (TransportButton.Draw(centerPoint, centerRadius, playAction, ui.Accent, WhiteInk, transportAlpha,
+                interactive) && interactive)
         {
             video.Pause(!paused);
         }
 
-        if (TransportButton.Draw(new Vector2(centerX + 66f * scale, centerY), 18f * scale, TransportAction.Next,
+        if (TransportButton.Draw(new Vector2(centerX + 72f * scale, centerY), 18f * scale, TransportAction.Next,
                 ui.TitleInk, Palette.WithAlpha(ui.TitleInk, 0.85f), transportAlpha, interactive) && interactive)
         {
             queue.Advance();
@@ -351,65 +246,69 @@ internal sealed partial class AetherStreamApp
         if (interactive && ui.IconButton(new Vector2(centerX + 132f * scale, centerY), 16f * scale,
                 FontAwesomeIcon.RedoAlt.ToIconString(), ui.TitleInk, AppSkin.Transparent, 0.6f))
         {
-            var (position, _, _) = video.GetProgress();
             video.Seek(position + 10f);
         }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, rowHeight));
     }
 
-    private void DrawVolume(Rect rect, float scale)
+    private void DrawVolumeBlock(float width, float scale)
     {
-        var iconCenter = new Vector2(rect.Min.X + 10f * scale, rect.Center.Y);
-        var glyph = configuration.VideoVolume <= 0.001f
-            ? FontAwesomeIcon.VolumeMute
-            : configuration.VideoVolume < 0.5f
-                ? FontAwesomeIcon.VolumeDown
-                : FontAwesomeIcon.VolumeUp;
-        AppSkin.Icon(iconCenter, glyph.ToIconString(), ui.MutedInk, 0.55f);
-
-        var track = new Rect(new Vector2(rect.Min.X + 28f * scale, rect.Center.Y - 2f * scale),
-            new Vector2(rect.Max.X - 34f * scale, rect.Center.Y + 2f * scale));
-        var updated = Scrubber.Draw(track, configuration.VideoVolume, ui.Accent, Palette.WithAlpha(ui.MutedInk, 0.3f),
-            1f);
-        if (Math.Abs(updated - configuration.VideoVolume) > 0.001f)
+        var origin = ImGui.GetCursorScreenPos();
+        var row = new Rect(origin, origin + new Vector2(width, 26f * scale));
+        var result = VolumeSlider.Draw("aetherstream.volume", row, configuration.VideoVolume, accentedTheme);
+        if (result.Dragging && Math.Abs(result.Value - configuration.VideoVolume) > 0.001f)
         {
-            configuration.VideoVolume = updated;
+            configuration.VideoVolume = result.Value;
+            video.SetVolume((int)(result.Value * 100f));
+        }
+
+        if (result.Released)
+        {
+            configuration.VideoVolume = result.Value;
+            video.SetVolume((int)(result.Value * 100f));
             configuration.Save();
-            video.SetVolume((int)(updated * 100));
         }
 
-        var valueText = $"{configuration.VideoVolume * 100f:F0}%";
-        var valueSize = Typography.Measure(valueText, TextStyles.Caption1);
-        Typography.Draw(new Vector2(rect.Max.X - valueSize.X, rect.Center.Y - valueSize.Y * 0.5f), valueText,
-            ui.MutedInk, TextStyles.Caption1);
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, 26f * scale));
     }
 
-    private void DrawUrlEntry(Rect rect, float scale)
+    private void DrawComposer(float width, float scale)
     {
-        var fieldHeight = 38f * scale;
-        var fieldRect = new Rect(rect.Min, new Vector2(rect.Max.X - 88f * scale, rect.Min.Y + fieldHeight));
-        var drawList = ImGui.GetWindowDrawList();
-        Squircle.Fill(drawList, fieldRect.Min, fieldRect.Max, 10f * scale, ImGui.GetColorU32(ui.FieldSurface));
-        ImGui.SetCursorScreenPos(new Vector2(fieldRect.Min.X + 12f * scale,
-            fieldRect.Center.Y - ImGui.GetFrameHeight() * 0.5f));
-        ImGui.SetNextItemWidth(fieldRect.Width - 24f * scale);
-        using (ImRaii.PushColor(ImGuiCol.FrameBg, AppSkin.Transparent))
-        using (ImRaii.PushColor(ImGuiCol.Text, ui.TitleInk))
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
+        var origin = ImGui.GetCursorScreenPos();
+        var suggesting = watchAlong.IsViewing;
+        var sendRadius = 17f * scale;
+        var fieldRowHeight = 44f * scale;
+        var fieldRect = new Rect(origin,
+            origin + new Vector2(width - sendRadius * 2f - Metrics.Space.Md * scale, fieldRowHeight));
+        var hint = suggesting ? Loc.T(L.AetherStream.SuggestHint) : Loc.T(L.AetherStream.UrlHint);
+        var submitted = SubmitField.Draw(fieldRect, "##aetherstreamUrl", hint, ref urlInput, accentedTheme, 2000,
+            FontAwesomeIcon.Link);
+
+        var canSubmit = urlInput.Trim().Length > 0;
+        var sendCenter = new Vector2(origin.X + width - sendRadius, origin.Y + fieldRowHeight * 0.5f);
+        var sendIcon = suggesting ? FontAwesomeIcon.PaperPlane : FontAwesomeIcon.ArrowUp;
+        var sendBackground = canSubmit ? ui.Accent : Palette.WithAlpha(ui.Accent, 0.35f);
+        var sendInk = canSubmit ? WhiteInk : Palette.WithAlpha(WhiteInk, 0.6f);
+        if (ui.IconButton(sendCenter, sendRadius, sendIcon.ToIconString(), sendInk, sendBackground, 0.6f) &&
+            canSubmit)
         {
-            ImGui.InputTextWithHint("##aetherstreamUrl", Loc.T(L.AetherStream.UrlHint), ref urlInput, 2000,
-                ImGuiInputTextFlags.None);
+            submitted = true;
         }
 
-        var browseCenter = new Vector2(fieldRect.Max.X + 22f * scale, fieldRect.Center.Y);
-        if (ui.IconButton(browseCenter, 16f * scale, FontAwesomeIcon.FolderOpen.ToIconString(), ui.TitleInk,
-                ui.FieldSurface, 0.6f, Loc.T(L.AetherStream.BrowseLocalFile)))
-        {
-            FilePicker.PickVideo(Loc.T(L.AetherStream.BrowseLocalFile),
-                path => Interlocked.Exchange(ref pendingLocalFile, path));
-        }
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, fieldRowHeight));
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
 
-        var pasteCenter = new Vector2(fieldRect.Max.X + 22f * scale + 44f * scale, fieldRect.Center.Y);
-        if (ui.IconButton(pasteCenter, 16f * scale, FontAwesomeIcon.Paste.ToIconString(), ui.TitleInk,
-                ui.FieldSurface, 0.6f))
+        var rowOrigin = ImGui.GetCursorScreenPos();
+        var rowHeight = 34f * scale;
+        var circleRadius = rowHeight * 0.5f;
+        var pasteCenter = new Vector2(rowOrigin.X + circleRadius, rowOrigin.Y + circleRadius);
+        if (ui.IconButton(pasteCenter, circleRadius, FontAwesomeIcon.Paste.ToIconString(), ui.TitleInk,
+                ui.FieldSurface, 0.5f))
         {
             var clipboard = ImGui.GetClipboardText();
             if (!string.IsNullOrWhiteSpace(clipboard))
@@ -418,66 +317,244 @@ internal sealed partial class AetherStreamApp
             }
         }
 
-        var suggesting = watchAlong.IsViewing;
-        var submitTop = fieldRect.Max.Y + 10f * scale;
         if (!suggesting)
         {
-            var toggleRow = new Rect(new Vector2(rect.Min.X, submitTop), new Vector2(rect.Max.X, submitTop + 30f * scale));
-            var half = toggleRow.Width * 0.5f - 5f * scale;
-            var playNowRect = new Rect(toggleRow.Min, new Vector2(toggleRow.Min.X + half, toggleRow.Max.Y));
-            var queueRect = new Rect(new Vector2(toggleRow.Max.X - half, toggleRow.Min.Y), toggleRow.Max);
-            DrawModeButton(playNowRect, Loc.T(L.AetherStream.PlayNow), !queueOnAdd, scale);
-            DrawModeButton(queueRect, Loc.T(L.AetherStream.AddToQueue), queueOnAdd, scale);
-            submitTop = toggleRow.Max.Y + 10f * scale;
+            var folderCenter = new Vector2(pasteCenter.X + circleRadius * 2f + Metrics.Space.Sm * scale,
+                rowOrigin.Y + circleRadius);
+            if (ui.IconButton(folderCenter, circleRadius, FontAwesomeIcon.FolderOpen.ToIconString(), ui.TitleInk,
+                    ui.FieldSurface, 0.5f, Loc.T(L.AetherStream.BrowseLocalFile)))
+            {
+                FilePicker.PickVideo(Loc.T(L.AetherStream.BrowseLocalFile),
+                    path => Interlocked.Exchange(ref pendingLocalFile, path));
+            }
+
+            var leftEdge = folderCenter.X + circleRadius + Metrics.Space.Md * scale;
+            var segmentWidth = MathF.Min(210f * scale, rowOrigin.X + width - leftEdge);
+            var segmentRect = new Rect(new Vector2(rowOrigin.X + width - segmentWidth, rowOrigin.Y),
+                new Vector2(rowOrigin.X + width, rowOrigin.Y + rowHeight));
+            var mode = SegmentSlider.Draw(segmentRect, Loc.T(L.AetherStream.PlayNow),
+                Loc.T(L.AetherStream.AddToQueue), queueOnAdd ? 1 : 0, ref composerModeAnimation, ui.Accent,
+                ui.MutedInk);
+            queueOnAdd = mode == 1;
         }
 
-        var enabled = urlInput.Trim().Length > 0;
-        var submitRect = new Rect(new Vector2(rect.Min.X, submitTop), new Vector2(rect.Max.X, submitTop + 38f * scale));
-        var submitLabel = suggesting ? Loc.T(L.AetherStream.SuggestToHost)
-            : queueOnAdd ? Loc.T(L.AetherStream.AddToQueue) : Loc.T(L.AetherStream.PlayNow);
-        if (DrawSubmitButton(submitRect, submitLabel, enabled) && enabled)
+        ImGui.SetCursorScreenPos(rowOrigin);
+        ImGui.Dummy(new Vector2(width, rowHeight));
+
+        if (!submitted || !canSubmit)
         {
-            if (suggesting)
-            {
-                watchAlong.SuggestQueueItem(urlInput.Trim());
-                urlInput = string.Empty;
-            }
-            else
-            {
-                SubmitUrl();
-            }
+            return;
         }
+
+        if (suggesting)
+        {
+            watchAlong.SuggestQueueItem(urlInput.Trim());
+            urlInput = string.Empty;
+            return;
+        }
+
+        SubmitUrl();
     }
 
-    private void DrawModeButton(Rect rect, string label, bool selected, float scale)
+    private void DrawWatchPartySection(float width, float scale)
     {
-        var drawList = ImGui.GetWindowDrawList();
-        var fill = selected ? Palette.WithAlpha(ui.Accent, 0.18f) : ui.FieldSurface;
-        Squircle.Fill(drawList, rect.Min, rect.Max, 8f * scale, ImGui.GetColorU32(fill));
-        var ink = selected ? ui.Accent : ui.MutedInk;
-        Typography.DrawCentered(rect.Center, label, ink, TextStyles.Footnote.Scale, FontWeight.SemiBold);
-        if (UiInteract.HoverClick(rect.Min, rect.Max))
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
+        ui.SectionLabel(Loc.T(L.AetherStream.WatchPartyHeader));
+
+        if (watchAlong.IsAwaitingApproval)
         {
-            queueOnAdd = label == Loc.T(L.AetherStream.AddToQueue);
+            DrawPartyAwaiting(width, scale);
+            return;
         }
+
+        if (watchAlong.IsViewing)
+        {
+            DrawPartyViewing(width, scale);
+            return;
+        }
+
+        if (watchAlong.IsHosting)
+        {
+            DrawPartyHosting(width, scale);
+            return;
+        }
+
+        DrawPartyIdle(width, scale);
     }
 
-    private bool DrawSubmitButton(Rect rect, string label, bool enabled)
+    private void DrawPartyIdle(float width, float scale)
     {
-        var drawList = ImGui.GetWindowDrawList();
-        var hovered = enabled && ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
-        var fill = !enabled ? Palette.WithAlpha(ui.Accent, 0.35f) :
-            hovered ? Palette.Mix(ui.Accent, new Vector4(0f, 0f, 0f, 1f), 0.12f) : ui.Accent;
-        Squircle.Fill(drawList, rect.Min, rect.Max, rect.Height * 0.5f, ImGui.GetColorU32(fill));
-        Typography.DrawCentered(drawList, rect.Center, label, new Vector4(1f, 1f, 1f, 1f), TextStyles.Headline.Scale,
-            TextStyles.Headline.Weight);
-        if (!hovered)
+        var origin = ImGui.GetCursorScreenPos();
+        var buttonHeight = PartyButtonHeight * scale;
+        var gap = Metrics.Space.Sm * scale;
+        var half = (width - gap) * 0.5f;
+        var startRect = new Rect(origin, origin + new Vector2(half, buttonHeight));
+        var joinRect = new Rect(new Vector2(origin.X + width - half, origin.Y),
+            new Vector2(origin.X + width, origin.Y + buttonHeight));
+        if (ui.PillButton(startRect, Loc.T(L.AetherStream.StartParty), true, "aetherstream.party.start"))
         {
-            return false;
+            watchAlong.OpenParty();
         }
 
-        ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        return ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+        if (ui.GhostButton(joinRect, Loc.T(L.AetherStream.JoinStream)))
+        {
+            nearbyRefreshTimer = NearbyRefreshIntervalSeconds;
+            router.Push(AetherStreamScreen.Join);
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, buttonHeight));
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+        ui.HelpText(Loc.T(L.AetherStream.WatchPartyHint));
+    }
+
+    private void DrawPartyAwaiting(float width, float scale)
+    {
+        var origin = ImGui.GetCursorScreenPos();
+        var captionHeight = 30f * scale;
+        LoadingPulse.Caption(new Vector2(origin.X + width * 0.5f, origin.Y + captionHeight * 0.5f), ui.MutedInk,
+            ui.Accent, Loc.T(L.AetherStream.JoinWaitingApproval), 1f, TextStyles.Subheadline.Scale);
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, captionHeight));
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+
+        var buttonOrigin = ImGui.GetCursorScreenPos();
+        var cancelRect = new Rect(buttonOrigin, buttonOrigin + new Vector2(width, PartyButtonHeight * scale));
+        if (ui.DangerGhostButton(cancelRect, Loc.T(L.AetherStream.CancelRequest)))
+        {
+            watchAlong.Leave();
+        }
+
+        ImGui.SetCursorScreenPos(buttonOrigin);
+        ImGui.Dummy(new Vector2(width, PartyButtonHeight * scale));
+    }
+
+    private void DrawPartyViewing(float width, float scale)
+    {
+        var host = FindHost();
+        if (host is not null)
+        {
+            var origin = ImGui.GetCursorScreenPos();
+            var line = string.Format(Loc.T(L.AetherStream.ViewingStream), host.DisplayName);
+            var lineHeight = Typography.DrawWrappedLeft(origin, line, ui.MutedInk, TextStyles.Subheadline, width);
+            ImGui.SetCursorScreenPos(origin);
+            ImGui.Dummy(new Vector2(width, lineHeight + Metrics.Space.Sm * scale));
+        }
+
+        DrawPartyRoster(width, scale, canKick: false);
+
+        var buttonOrigin = ImGui.GetCursorScreenPos();
+        var buttonHeight = PartyButtonHeight * scale;
+        var gap = Metrics.Space.Sm * scale;
+        var half = (width - gap) * 0.5f;
+        var resyncRect = new Rect(buttonOrigin, buttonOrigin + new Vector2(half, buttonHeight));
+        var leaveRect = new Rect(new Vector2(buttonOrigin.X + width - half, buttonOrigin.Y),
+            new Vector2(buttonOrigin.X + width, buttonOrigin.Y + buttonHeight));
+        if (ui.GhostButton(resyncRect, Loc.T(L.AetherStream.Resync)))
+        {
+            watchAlong.ResyncNow();
+        }
+
+        if (ui.DangerGhostButton(leaveRect, Loc.T(L.AetherStream.LeaveStream)))
+        {
+            watchAlong.Leave();
+        }
+
+        ImGui.SetCursorScreenPos(buttonOrigin);
+        ImGui.Dummy(new Vector2(width, buttonHeight));
+    }
+
+    private void DrawPartyHosting(float width, float scale)
+    {
+        DrawPartyRoster(width, scale, canKick: true);
+
+        var buttonOrigin = ImGui.GetCursorScreenPos();
+        var endRect = new Rect(buttonOrigin, buttonOrigin + new Vector2(width, PartyButtonHeight * scale));
+        if (ui.DangerGhostButton(endRect, Loc.T(L.AetherStream.EndParty)))
+        {
+            watchAlong.Leave();
+        }
+
+        ImGui.SetCursorScreenPos(buttonOrigin);
+        ImGui.Dummy(new Vector2(width, PartyButtonHeight * scale));
+    }
+
+    private WatchAlongParticipant? FindHost()
+    {
+        var roster = watchAlong.Roster;
+        for (var index = 0; index < roster.Count; index++)
+        {
+            if (roster[index].IsHost)
+            {
+                return roster[index];
+            }
+        }
+
+        return null;
+    }
+
+    private void DrawPartyRoster(float width, float scale, bool canKick)
+    {
+        var watchers = watchAlong.Watching();
+        if (watchers.Count == 0)
+        {
+            return;
+        }
+
+        DrawRosterLabel(Loc.T(L.AetherStream.WatchingHostLabel), width, scale);
+        DrawWatcherRow(width, scale, watchers[0], kickable: false);
+
+        if (watchers.Count > 1)
+        {
+            DrawRosterLabel(Loc.T(L.AetherStream.WatchingSectionLabel), width, scale);
+            for (var index = 1; index < watchers.Count; index++)
+            {
+                DrawWatcherRow(width, scale, watchers[index], canKick);
+            }
+        }
+
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+    }
+
+    private void DrawRosterLabel(string label, float width, float scale)
+    {
+        var origin = ImGui.GetCursorScreenPos();
+        Typography.Draw(ImGui.GetWindowDrawList(), origin, label, ui.MutedInk, TextStyles.Caption1);
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, Typography.LineHeight(TextStyles.Caption1) + Metrics.Space.Xs * scale));
+    }
+
+    private void DrawWatcherRow(float width, float scale, WatchAlongParticipant participant, bool kickable)
+    {
+        var origin = ImGui.GetCursorScreenPos();
+        var row = new Rect(origin, origin + new Vector2(width, PartyRowHeight * scale));
+        var drawList = ImGui.GetWindowDrawList();
+        var avatarRadius = 16f * scale;
+        var avatarCenter = new Vector2(row.Min.X + avatarRadius, row.Center.Y);
+        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, participant.Name, participant.World,
+            participant.AvatarUrl, remoteImages, lodestone, 0.7f, 20);
+
+        var textLeft = avatarCenter.X + avatarRadius + Metrics.Space.Md * scale;
+        var textRight = row.Max.X;
+        if (kickable)
+        {
+            var kickCenter = new Vector2(row.Max.X - 14f * scale, row.Center.Y);
+            if (ui.IconButton(kickCenter, 12f * scale, FontAwesomeIcon.Times.ToIconString(), ui.MutedInk,
+                    AppSkin.Transparent, 0.55f, Loc.T(L.AetherStream.WatchingKick)))
+            {
+                watchAlong.KickParticipant(participant.UserId);
+            }
+
+            textRight = kickCenter.X - 20f * scale;
+        }
+
+        var nameHeight = Typography.LineHeight(TextStyles.Body);
+        Marquee.DrawLeft(drawList, "aetherstream.watcher." + participant.UserId, participant.DisplayName, textLeft,
+            row.Center.Y - nameHeight * 0.5f, textRight - textLeft, TextStyles.Body, ui.TitleInk,
+            UiInteract.Hover(row.Min, row.Max));
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, PartyRowHeight * scale));
     }
 
     private void SubmitUrl()

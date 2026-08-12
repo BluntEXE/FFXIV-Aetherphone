@@ -3154,6 +3154,8 @@ internal static class L
         public static readonly LocString SettingsTitle = new("aetherstream.settingsTitle", "AetherStream Settings");
 
         public static readonly LocString NothingPlaying = new("aetherstream.nothingPlaying", "Nothing playing");
+        public static readonly LocString NothingPlayingHint = new("aetherstream.nothingPlayingHint",
+            "Paste a link below or pick a local file to start watching.");
         public static readonly LocString UrlHint = new("aetherstream.urlHint", "Paste a video URL or YouTube link");
         public static readonly LocString BrowseLocalFile = new("aetherstream.browseLocalFile", "Play a local file");
         public static readonly LocString LocalFileSource = new("aetherstream.localFileSource", "Local file");
@@ -3169,8 +3171,10 @@ internal static class L
         public static readonly LocString Stop = new("aetherstream.stop", "Stop");
         public static readonly LocString Resync = new("aetherstream.resync", "Resync");
         public static readonly LocString Remove = new("aetherstream.remove", "Remove");
-        public static readonly LocString QueueEmpty = new("aetherstream.queueEmpty",
-            "Queue's empty. Add a video from the Player tab.");
+        public static readonly LocString QueueUpNext = new("aetherstream.queueUpNext", "Up Next");
+        public static readonly LocString QueueEmptyTitle = new("aetherstream.queueEmptyTitle", "Nothing queued");
+        public static readonly LocString QueueEmptyHint = new("aetherstream.queueEmptyHint",
+            "Add a video link above and it will play after the current one.");
 
         public static readonly LocString PlayerCastingStatus = new("aetherstream.playerCastingStatus",
             "Casting to the in-game screen");
@@ -3182,7 +3186,6 @@ internal static class L
             "Not ready");
         public static readonly LocString CastingStateReady = new("aetherstream.castingStateReady", "Ready");
         public static readonly LocString OpenScreenWindow = new("aetherstream.openScreenWindow", "Open in a window");
-        public static readonly LocString CloseScreenWindow = new("aetherstream.closeScreenWindow", "Close window");
         public static readonly LocString CastingScreenPositionHeader = new(
             "aetherstream.castingScreenPositionHeader", "Screen Position");
         public static readonly LocString CastingScreenPositionHint = new(
@@ -3221,6 +3224,8 @@ internal static class L
             "Update mpv");
         public static readonly LocString SettingsUpdateYtdlp = new("aetherstream.settingsUpdateYtdlp",
             "Update yt-dlp");
+        public static readonly LocString SettingsDownloading = new("aetherstream.settingsDownloading",
+            "Downloading...");
         public static readonly LocString SettingsScreen = new("aetherstream.settingsScreen", "Screen");
         public static readonly LocString SettingsHideNameplates = new("aetherstream.settingsHideNameplates",
             "Hide nameplates");
@@ -3256,6 +3261,11 @@ internal static class L
             "Couldn't reach the server. Check your connection and try again.");
         public static readonly LocString JoinNearbyHeader = new("aetherstream.joinNearbyHeader",
             "Streaming nearby");
+        public static readonly LocString JoinEmptyTitle = new("aetherstream.joinEmptyTitle", "No streams nearby");
+        public static readonly LocString JoinEmptyHint = new("aetherstream.joinEmptyHint",
+            "When someone nearby goes live, their stream shows up here. You can also search by name.");
+        public static readonly LocString JoinSearchFailedTitle = new("aetherstream.joinSearchFailedTitle",
+            "Search unavailable");
         public static readonly LocString StreamUnavailableTitle = new("aetherstream.streamUnavailableTitle",
             "Stream unavailable");
         public static readonly LocString StreamUnavailableBody = new("aetherstream.streamUnavailableBody",
@@ -3268,12 +3278,15 @@ internal static class L
             "The host declined your request to join.");
         public static readonly LocString JoinWaitingApproval = new("aetherstream.joinWaitingApproval",
             "Waiting for approval...");
+        public static readonly LocString CancelRequest = new("aetherstream.cancelRequest", "Cancel request");
         public static readonly LocString CastingPendingRequestsHeader = new(
             "aetherstream.castingPendingRequestsHeader", "Waiting to join");
         public static readonly LocString CastingApprove = new("aetherstream.castingApprove", "Approve");
         public static readonly LocString CastingDeny = new("aetherstream.castingDeny", "Deny");
 
         public static readonly LocString SuggestToHost = new("aetherstream.suggestToHost", "Suggest to Host");
+        public static readonly LocString SuggestHint = new("aetherstream.suggestHint",
+            "Suggest a video to the host");
         public static readonly LocString QueueSuggestionsHeader = new("aetherstream.queueSuggestionsHeader",
             "Suggestions from viewers");
         public static readonly LocString QueueSuggestionAdd = new("aetherstream.queueSuggestionAdd", "Add");
@@ -3295,6 +3308,9 @@ internal static class L
 
         public static readonly LocString StartParty = new("aetherstream.startParty", "Start a Party");
         public static readonly LocString EndParty = new("aetherstream.endParty", "End Party");
+        public static readonly LocString WatchPartyHeader = new("aetherstream.watchPartyHeader", "Watch Party");
+        public static readonly LocString WatchPartyHint = new("aetherstream.watchPartyHint",
+            "Host a watch party for your zone, or join a friend's stream.");
     }
 
     internal static class Clock

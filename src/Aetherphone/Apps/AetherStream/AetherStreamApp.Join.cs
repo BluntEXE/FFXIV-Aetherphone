@@ -2,17 +2,17 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
-using Aetherphone.Core.Theme;
 using Aetherphone.Core.Video;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 
 namespace Aetherphone.Apps.AetherStream;
 
 internal sealed partial class AetherStreamApp
 {
     private const float JoinDebounceSeconds = 0.20f;
-    private const float JoinRowHeight = 52f;
+    private const float JoinRowHeight = 56f;
     private const float NearbyRefreshIntervalSeconds = 5f;
 
     private string joinQuery = string.Empty;
@@ -25,8 +25,8 @@ internal sealed partial class AetherStreamApp
 
     private void DrawJoinScreen(PhoneContext context, Rect area, float scale)
     {
-        var accentedTheme = AccentedTheme(context.Theme);
-        var accentedContext = new PhoneContext(context.Content, accentedTheme, context.Navigation);
+        ui.Body(area);
+        var accentedContext = new PhoneContext(area, accentedTheme, context.Navigation);
         AppHeader.Draw(accentedContext, Loc.T(L.AetherStream.JoinStream), () => router.Pop());
 
         TickNearbyRefresh();
@@ -40,74 +40,125 @@ internal sealed partial class AetherStreamApp
             accentedTheme);
         TickJoinSearch();
 
-        var listTop = fieldRect.Max.Y + 10f * scale;
-        var nearby = watchAlong.Nearby;
-        if (joinQuery.Trim().Length == 0 && nearby.Count > 0)
-        {
-            Typography.Draw(new Vector2(content.Min.X, listTop), Loc.T(L.AetherStream.JoinNearbyHeader),
-                accentedTheme.TextMuted, TextStyles.Caption1);
-            listTop += 20f * scale;
-        }
-
-        var listRect = new Rect(new Vector2(content.Min.X, listTop), content.Max);
+        var listRect = new Rect(new Vector2(content.Min.X, fieldRect.Max.Y + Metrics.Space.Md * scale),
+            content.Max);
         using (AppSurface.Begin(listRect))
         {
-            var rowHeight = JoinRowHeight * scale;
-            var cursorY = listRect.Min.Y;
-
+            var width = ScrollLayout.StableContentWidth();
             if (joinQuery.Trim().Length == 0)
             {
-                for (var index = 0; index < nearby.Count; index++)
-                {
-                    var rowRect = new Rect(new Vector2(listRect.Min.X, cursorY),
-                        new Vector2(listRect.Max.X, cursorY + rowHeight));
-                    DrawNearbyResultRow(rowRect, nearby[index], accentedTheme, scale);
-                    cursorY = rowRect.Max.Y;
-                }
+                DrawNearbyList(width, scale, listRect);
             }
-
-            if (joinResults.Length == 0 && (joinQuery.Trim().Length > 0 || nearby.Count == 0))
+            else
             {
-                var message = joinSearching ? Loc.T(L.Social.MentionSearching)
-                    : joinSearchFailed ? Loc.T(L.AetherStream.JoinSearchFailed)
-                    : Loc.T(L.PhotoTag.NoPeople);
-                Typography.DrawCentered(new Vector2(listRect.Center.X, cursorY + 40f * scale), message,
-                    accentedTheme.TextMuted, TextStyles.Subheadline.Scale);
+                DrawSearchResults(width, scale, listRect);
             }
 
-            for (var index = 0; index < joinResults.Length; index++)
-            {
-                var row = joinResults[index];
-                var rowRect = new Rect(new Vector2(listRect.Min.X, cursorY), new Vector2(listRect.Max.X, cursorY + rowHeight));
-                DrawJoinResultRow(rowRect, row, accentedTheme, scale);
-                cursorY = rowRect.Max.Y;
-            }
-
-            ImGui.SetCursorScreenPos(listRect.Min);
-            ImGui.Dummy(new Vector2(listRect.Width, cursorY - listRect.Min.Y + Metrics.Space.Lg * scale));
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
         }
     }
 
-    private void DrawNearbyResultRow(Rect rect, NearbyStream row, PhoneTheme theme, float scale)
+    private void DrawNearbyList(float width, float scale, Rect listRect)
     {
+        var nearby = watchAlong.Nearby;
+        if (nearby.Count == 0)
+        {
+            DrawJoinEmptyState(width, scale, listRect, FontAwesomeIcon.Tv,
+                Loc.T(L.AetherStream.JoinEmptyTitle), Loc.T(L.AetherStream.JoinEmptyHint));
+            return;
+        }
+
+        var labelOrigin = ImGui.GetCursorScreenPos();
+        Typography.Draw(ImGui.GetWindowDrawList(), labelOrigin,
+            Loc.Culture.TextInfo.ToUpper(Loc.T(L.AetherStream.JoinNearbyHeader)), ui.Palette.HeaderInk,
+            TextStyles.FootnoteEmphasized);
+        ImGui.SetCursorScreenPos(labelOrigin);
+        ImGui.Dummy(new Vector2(width,
+            Typography.LineHeight(TextStyles.FootnoteEmphasized) + Metrics.Space.Xs * scale));
+
+        for (var index = 0; index < nearby.Count; index++)
+        {
+            DrawNearbyResultRow(width, scale, nearby[index]);
+        }
+    }
+
+    private void DrawSearchResults(float width, float scale, Rect listRect)
+    {
+        if (joinResults.Length == 0)
+        {
+            if (joinSearching)
+            {
+                var origin = ImGui.GetCursorScreenPos();
+                var height = MathF.Max(160f * scale, listRect.Max.Y - origin.Y - Metrics.Space.Lg * scale);
+                LoadingPulse.Draw(new Vector2(origin.X + width * 0.5f, origin.Y + height * 0.5f), 16f * scale,
+                    ui.Accent, ui.MutedInk, LoadingPulse.SafeLabel());
+                ImGui.SetCursorScreenPos(origin);
+                ImGui.Dummy(new Vector2(width, height));
+                return;
+            }
+
+            if (joinSearchFailed)
+            {
+                DrawJoinEmptyState(width, scale, listRect, FontAwesomeIcon.ExclamationTriangle,
+                    Loc.T(L.AetherStream.JoinSearchFailedTitle), Loc.T(L.AetherStream.JoinSearchFailed));
+                return;
+            }
+
+            DrawJoinEmptyState(width, scale, listRect, FontAwesomeIcon.Search, Loc.T(L.PhotoTag.NoPeople),
+                string.Empty);
+            return;
+        }
+
+        for (var index = 0; index < joinResults.Length; index++)
+        {
+            DrawJoinResultRow(width, scale, joinResults[index]);
+        }
+    }
+
+    private void DrawJoinEmptyState(float width, float scale, Rect listRect, FontAwesomeIcon icon, string title,
+        string hint)
+    {
+        var origin = ImGui.GetCursorScreenPos();
+        var height = MathF.Max(220f * scale, listRect.Max.Y - origin.Y - Metrics.Space.Lg * scale);
+        EmptyState.Draw(new Rect(origin, origin + new Vector2(width, height)), ui, icon, title, hint);
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, height));
+    }
+
+    private void DrawNearbyResultRow(float width, float scale, NearbyStream row)
+    {
+        var origin = ImGui.GetCursorScreenPos();
+        var rect = new Rect(origin, origin + new Vector2(width, JoinRowHeight * scale));
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = UiInteract.Hover(rect.Min, rect.Max);
         if (hovered)
         {
-            Squircle.Fill(drawList, rect.Min, rect.Max, 10f * scale, ImGui.GetColorU32(Palette.WithAlpha(theme.TextStrong, 0.06f)));
+            Squircle.Fill(drawList, rect.Min, rect.Max, Metrics.Radius.Md * scale, ImGui.GetColorU32(ui.HoverTint));
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
         var avatarRadius = 18f * scale;
-        var avatarCenter = new Vector2(rect.Min.X + 8f * scale + avatarRadius, rect.Center.Y);
-        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, row.DisplayName, string.Empty, null,
-            remoteImages, lodestone, 0.8f, 28);
+        var avatarCenter = new Vector2(rect.Min.X + Metrics.Space.Sm * scale + avatarRadius, rect.Center.Y);
+        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, row.Name, row.World, null, remoteImages,
+            lodestone, 0.8f, 28);
 
-        var textLeft = avatarCenter.X + avatarRadius + 12f * scale;
-        Typography.Draw(new Vector2(textLeft, rect.Center.Y - 8f * scale), row.DisplayName, theme.TextStrong,
-            TextStyles.Body);
+        var liveLabel = Loc.T(L.Common.Live);
+        var pillWidth = LivePill.Width(liveLabel, scale);
+        var pillOrigin = new Vector2(rect.Max.X - Metrics.Space.Sm * scale - pillWidth,
+            rect.Center.Y - LivePill.Height(scale) * 0.5f);
+        LivePill.Draw(drawList, pillOrigin, liveLabel, theme.Danger, (float)ImGui.GetTime(), scale);
 
-        if (hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        var textLeft = avatarCenter.X + avatarRadius + Metrics.Space.Md * scale;
+        var textWidth = pillOrigin.X - Metrics.Space.Md * scale - textLeft;
+        Marquee.DrawLeft(drawList, "aetherstream.nearby.name." + row.HostId, row.DisplayName, textLeft,
+            rect.Center.Y - 16f * scale, textWidth, TextStyles.BodyEmphasized, ui.TitleInk, hovered);
+        Marquee.DrawLeft(drawList, "aetherstream.nearby.world." + row.HostId, $"{row.Name}  ·  {row.World}",
+            textLeft, rect.Center.Y + 2f * scale, textWidth, TextStyles.Caption1, ui.MutedInk, hovered);
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, JoinRowHeight * scale));
+
+        if (UiInteract.Click(rect.Min, rect.Max, hovered))
         {
             watchAlong.Join(row.HostId);
             router.Pop();
@@ -126,28 +177,34 @@ internal sealed partial class AetherStreamApp
         watchAlong.RequestNearbyStreams();
     }
 
-    private void DrawJoinResultRow(Rect rect, UserDto row, PhoneTheme theme, float scale)
+    private void DrawJoinResultRow(float width, float scale, UserDto row)
     {
+        var origin = ImGui.GetCursorScreenPos();
+        var rect = new Rect(origin, origin + new Vector2(width, JoinRowHeight * scale));
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = ImGui.IsMouseHoveringRect(rect.Min, rect.Max);
+        var hovered = UiInteract.Hover(rect.Min, rect.Max);
         if (hovered)
         {
-            Squircle.Fill(drawList, rect.Min, rect.Max, 10f * scale, ImGui.GetColorU32(Palette.WithAlpha(theme.TextStrong, 0.06f)));
+            Squircle.Fill(drawList, rect.Min, rect.Max, Metrics.Radius.Md * scale, ImGui.GetColorU32(ui.HoverTint));
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
         var avatarRadius = 18f * scale;
-        var avatarCenter = new Vector2(rect.Min.X + 8f * scale + avatarRadius, rect.Center.Y);
+        var avatarCenter = new Vector2(rect.Min.X + Metrics.Space.Sm * scale + avatarRadius, rect.Center.Y);
         AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, row.Name, row.World, row.AvatarUrl,
             remoteImages, lodestone, 0.8f, 28);
 
-        var textLeft = avatarCenter.X + avatarRadius + 12f * scale;
-        Typography.Draw(new Vector2(textLeft, rect.Center.Y - 16f * scale), row.DisplayName, theme.TextStrong,
-            TextStyles.Body);
-        Typography.Draw(new Vector2(textLeft, rect.Center.Y + 2f * scale), $"{row.Name}  ·  {row.World}",
-            theme.TextMuted, TextStyles.Caption1);
+        var textLeft = avatarCenter.X + avatarRadius + Metrics.Space.Md * scale;
+        var textWidth = rect.Max.X - Metrics.Space.Sm * scale - textLeft;
+        Marquee.DrawLeft(drawList, "aetherstream.result.name." + row.Id, row.DisplayName, textLeft,
+            rect.Center.Y - 16f * scale, textWidth, TextStyles.BodyEmphasized, ui.TitleInk, hovered);
+        Marquee.DrawLeft(drawList, "aetherstream.result.world." + row.Id, $"{row.Name}  ·  {row.World}", textLeft,
+            rect.Center.Y + 2f * scale, textWidth, TextStyles.Caption1, ui.MutedInk, hovered);
 
-        if (hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, JoinRowHeight * scale));
+
+        if (UiInteract.Click(rect.Min, rect.Max, hovered))
         {
             watchAlong.Join(row.Id);
             router.Pop();

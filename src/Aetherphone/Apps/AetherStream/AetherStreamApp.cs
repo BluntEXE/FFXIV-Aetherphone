@@ -59,6 +59,7 @@ internal sealed partial class AetherStreamApp : IPhoneApp
     private readonly string[] tabOptions = new string[3];
     private AetherStreamTab activeTab;
     private PhoneTheme theme = PhoneTheme.Default;
+    private PhoneTheme accentedTheme = PhoneTheme.Default;
 
     public AetherStreamApp(VideoPlayer video, ScreenController screen, AetherStreamQueue queue,
         Configuration configuration, ConfirmService confirm, RemoteImageCache remoteImages, HttpService http,
@@ -96,6 +97,7 @@ internal sealed partial class AetherStreamApp : IPhoneApp
     {
         theme = context.Theme;
         ui.Theme = context.Theme;
+        accentedTheme = AccentedTheme(context.Theme);
         var scale = UiScale.Current;
         var screenRect = SceneChrome.ScreenFrom(context.Content, context.Theme, scale);
         ui.Backdrop(screenRect);
@@ -119,6 +121,7 @@ internal sealed partial class AetherStreamApp : IPhoneApp
 
     private void DrawMain(PhoneContext context, Rect area, float scale)
     {
+        ui.Body(area);
         DrawMainHeader(context, area, scale);
 
         var tabTop = area.Min.Y + AppHeader.Height * scale + Metrics.Space.Sm * scale;
@@ -128,7 +131,7 @@ internal sealed partial class AetherStreamApp : IPhoneApp
         tabOptions[0] = Loc.T(L.AetherStream.TabPlayer);
         tabOptions[1] = Loc.T(L.AetherStream.TabQueue);
         tabOptions[2] = Loc.T(L.AetherStream.TabCasting);
-        var selected = SegmentStrip.Draw("aetherstream.tabs", tabRow, tabOptions, (int)activeTab, theme);
+        var selected = SegmentStrip.Draw("aetherstream.tabs", tabRow, tabOptions, (int)activeTab, accentedTheme);
         activeTab = (AetherStreamTab)selected;
 
         var body = new Rect(new Vector2(area.Min.X, tabRow.Max.Y + 10f * scale), area.Max);
@@ -148,7 +151,8 @@ internal sealed partial class AetherStreamApp : IPhoneApp
 
     private void DrawMainHeader(PhoneContext context, Rect area, float scale)
     {
-        AppHeader.Draw(context, DisplayName);
+        var areaContext = new PhoneContext(area, context.Theme, context.Navigation);
+        AppHeader.Draw(areaContext, DisplayName);
         var radius = 13f * scale;
         var center = new Vector2(area.Max.X - Metrics.Space.Lg * scale - radius,
             area.Min.Y + AppHeader.Height * scale * 0.5f);

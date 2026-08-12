@@ -17,8 +17,8 @@ internal sealed partial class AetherStreamApp
 
     private void DrawSettings(PhoneContext context, Rect area, float scale)
     {
-        var accentedTheme = AccentedTheme(context.Theme);
-        var accentedContext = new PhoneContext(context.Content, accentedTheme, context.Navigation);
+        ui.Body(area);
+        var accentedContext = new PhoneContext(area, accentedTheme, context.Navigation);
 
         AppHeader.Draw(accentedContext, Loc.T(L.AetherStream.SettingsTitle), () => router.Pop());
 
@@ -31,11 +31,55 @@ internal sealed partial class AetherStreamApp
         using (AppSurface.Begin(content))
         {
             SettingsSection.Header(Loc.T(L.AetherStream.SettingsSectionStatus), accentedTheme);
-            var statusCard = GroupCard.Begin(accentedTheme, 3);
+            var statusCard = GroupCard.Begin(accentedTheme, 5);
             SettingsRow.Info(statusCard.NextRow(), Loc.T(L.AetherStream.SettingsDependencyStatus),
                 MpvStatusText(resources), accentedTheme);
+            var mpvLabel = mpvDownloading ? Loc.T(L.AetherStream.SettingsDownloading)
+                : resources.GetLocationMPV() is null ? Loc.T(L.AetherStream.SettingsDownloadMpv)
+                : Loc.T(L.AetherStream.SettingsUpdateMpv);
+            if (SettingsRow.Action(statusCard.NextRow(), mpvLabel,
+                    mpvDownloading ? accentedTheme.TextMuted : accentedTheme.Accent, accentedTheme) &&
+                !mpvDownloading)
+            {
+                mpvDownloading = true;
+                dependencyWork.Run("download mpv", async token =>
+                {
+                    if (resources.MpvCheckResult[0].Length == 0)
+                    {
+                        await resources.CheckMPVAsync().ConfigureAwait(false);
+                    }
+
+                    if (resources.MpvCheckResult[0].Length > 0)
+                    {
+                        await resources.DownloadMPVAsync().ConfigureAwait(false);
+                    }
+                }, () => mpvDownloading = false);
+            }
+
             SettingsRow.Info(statusCard.NextRow(), Loc.T(L.AetherStream.SettingsDependencyYtdlp),
                 YtdlpStatusText(resources), accentedTheme);
+            var ytdlpLabel = ytdlpDownloading ? Loc.T(L.AetherStream.SettingsDownloading)
+                : resources.GetLocationYTDLP() is null ? Loc.T(L.AetherStream.SettingsDownloadYtdlp)
+                : Loc.T(L.AetherStream.SettingsUpdateYtdlp);
+            if (SettingsRow.Action(statusCard.NextRow(), ytdlpLabel,
+                    ytdlpDownloading ? accentedTheme.TextMuted : accentedTheme.Accent, accentedTheme) &&
+                !ytdlpDownloading)
+            {
+                ytdlpDownloading = true;
+                dependencyWork.Run("download yt-dlp", async token =>
+                {
+                    if (resources.YtdlpCheckResult[0].Length == 0)
+                    {
+                        await resources.CheckYTDLPAsync().ConfigureAwait(false);
+                    }
+
+                    if (resources.YtdlpCheckResult[0].Length > 0)
+                    {
+                        await resources.DownloadYTDLPAsync().ConfigureAwait(false);
+                    }
+                }, () => ytdlpDownloading = false);
+            }
+
             if (SettingsRow.Disclosure(statusCard.NextRow(), Loc.T(L.AetherStream.SettingsScreen), ScreenStateText(),
                     accentedTheme))
             {
@@ -44,64 +88,6 @@ internal sealed partial class AetherStreamApp
             }
 
             statusCard.End();
-
-            {
-                ImGui.Dummy(new Vector2(0f, 8f * scale));
-                var buttonHeight = 34f * scale;
-                var buttonTop = ImGui.GetCursorScreenPos().Y;
-
-                {
-                    var mpvRect = new Rect(new Vector2(content.Min.X, buttonTop),
-                        new Vector2(content.Max.X, buttonTop + buttonHeight));
-                    var mpvLabel = resources.GetLocationMPV() is null
-                        ? Loc.T(L.AetherStream.SettingsDownloadMpv)
-                        : Loc.T(L.AetherStream.SettingsUpdateMpv);
-                    if (SmallButton(mpvRect, mpvLabel, !mpvDownloading, scale))
-                    {
-                        mpvDownloading = true;
-                        dependencyWork.Run("download mpv", async token =>
-                        {
-                            if (resources.MpvCheckResult[0].Length == 0)
-                            {
-                                await resources.CheckMPVAsync().ConfigureAwait(false);
-                            }
-
-                            if (resources.MpvCheckResult[0].Length > 0)
-                            {
-                                await resources.DownloadMPVAsync().ConfigureAwait(false);
-                            }
-                        }, () => mpvDownloading = false);
-                    }
-
-                    buttonTop += buttonHeight + 8f * scale;
-                }
-
-                {
-                    var ytdlpRect = new Rect(new Vector2(content.Min.X, buttonTop),
-                        new Vector2(content.Max.X, buttonTop + buttonHeight));
-                    var ytdlpLabel = resources.GetLocationYTDLP() is null
-                        ? Loc.T(L.AetherStream.SettingsDownloadYtdlp)
-                        : Loc.T(L.AetherStream.SettingsUpdateYtdlp);
-                    if (SmallButton(ytdlpRect, ytdlpLabel, !ytdlpDownloading, scale))
-                    {
-                        ytdlpDownloading = true;
-                        dependencyWork.Run("download yt-dlp", async token =>
-                        {
-                            if (resources.YtdlpCheckResult[0].Length == 0)
-                            {
-                                await resources.CheckYTDLPAsync().ConfigureAwait(false);
-                            }
-
-                            if (resources.YtdlpCheckResult[0].Length > 0)
-                            {
-                                await resources.DownloadYTDLPAsync().ConfigureAwait(false);
-                            }
-                        }, () => ytdlpDownloading = false);
-                    }
-                }
-
-                ImGui.SetCursorScreenPos(new Vector2(content.Min.X, buttonTop + buttonHeight));
-            }
 
             ImGui.Dummy(new Vector2(0f, 12f * scale));
             SettingsSection.Header(Loc.T(L.AetherStream.SettingsSectionPlayback), accentedTheme);
