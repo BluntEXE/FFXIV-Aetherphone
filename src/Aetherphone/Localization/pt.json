@@ -4674,6 +4674,8 @@
   "casino.bingo.holdingCards": "{0} com cartelas",
   "casino.fact.notOffered": "Não oferecido",
   "casino.fact.notOfferedValue": "Seguro e desistência",
+  "casino.blackjack.seatNatural": "Blackjack",
+  "casino.blackjack.seatPush": "Empate",
   "conduct.casino.title": "Regras da casa de Gamba",
   "conduct.casino.intro": "Antes de sentar a uma mesa, leia as regras da casa.",
   "conduct.casino.playMoney.title": "Só dinheiro de brincadeira",

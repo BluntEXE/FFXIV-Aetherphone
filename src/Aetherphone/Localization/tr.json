@@ -4674,6 +4674,8 @@
   "casino.bingo.holdingCards": "{0} kişi kartlı",
   "casino.fact.notOffered": "Sunulmuyor",
   "casino.fact.notOfferedValue": "Insurance ve surrender",
+  "casino.blackjack.seatNatural": "Blackjack",
+  "casino.blackjack.seatPush": "Berabere",
   "conduct.casino.title": "Gamba Ev Kuralları",
   "conduct.casino.intro": "Bir masaya oturmadan önce lütfen ev kurallarını oku.",
   "conduct.casino.playMoney.title": "Yalnızca oyun parası",
