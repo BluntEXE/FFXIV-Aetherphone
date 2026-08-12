@@ -1711,6 +1711,8 @@
   "character.ringClosedBody": "Você atingiu a meta de hoje.",
   "character.allRingsTitle": "Todos os anéis fechados",
   "character.allRingsBody": "Você atingiu as três metas hoje. Dia perfeito!",
+  "character.showBadge": "Mostrar o contador de expedições dos retainers",
+  "character.hideBadge": "Ocultar o contador de expedições dos retainers",
   "camera.modeSquare": "QUADRADO",
   "camera.modePhoto": "FOTO",
   "contacts.empty": "Abra sua lista de amigos no jogo uma vez",

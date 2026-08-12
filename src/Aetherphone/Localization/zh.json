@@ -1711,6 +1711,8 @@
   "character.ringClosedBody": "你已达成今日目标。",
   "character.allRingsTitle": "全部圆环闭合",
   "character.allRingsBody": "今天你达成了全部三个目标。完美的一天！",
+  "character.showBadge": "显示雇员探险角标",
+  "character.hideBadge": "隐藏雇员探险角标",
   "camera.modeSquare": "正方形",
   "camera.modePhoto": "照片",
   "contacts.empty": "请在游戏中打开一次好友列表",

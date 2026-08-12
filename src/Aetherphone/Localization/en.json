@@ -1711,6 +1711,8 @@
   "character.ringClosedBody": "You reached today's goal.",
   "character.allRingsTitle": "All rings closed",
   "character.allRingsBody": "You hit all three goals today. Perfect day!",
+  "character.showBadge": "Show retainer ventures badge",
+  "character.hideBadge": "Hide retainer ventures badge",
   "camera.modeSquare": "SQUARE",
   "camera.modePhoto": "PHOTO",
   "contacts.empty": "Open your in-game friend list once",

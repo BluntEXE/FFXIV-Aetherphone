@@ -1711,6 +1711,8 @@
   "character.ringClosedBody": "Bugünkü hedefine ulaştın.",
   "character.allRingsTitle": "Tüm halkalar tamamlandı",
   "character.allRingsBody": "Bugün üç hedefin üçüne de ulaştın. Mükemmel bir gün!",
+  "character.showBadge": "Hizmetkâr seferleri rozetini göster",
+  "character.hideBadge": "Hizmetkâr seferleri rozetini gizle",
   "camera.modeSquare": "KARE",
   "camera.modePhoto": "FOTO",
   "contacts.empty": "Oyun içi arkadaş listeni bir kez aç",

@@ -1711,6 +1711,8 @@
   "character.ringClosedBody": "今日の目標を達成しました。",
   "character.allRingsTitle": "全リング完成",
   "character.allRingsBody": "今日は3つの目標をすべて達成しました。パーフェクトな1日です！",
+  "character.showBadge": "リテイナーのベンチャーバッジを表示",
+  "character.hideBadge": "リテイナーのベンチャーバッジを非表示",
   "camera.modeSquare": "スクエア",
   "camera.modePhoto": "写真",
   "contacts.empty": "ゲーム内のフレンドリストを一度開いてください",

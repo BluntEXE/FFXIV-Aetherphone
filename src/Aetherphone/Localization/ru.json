@@ -1711,6 +1711,8 @@
   "character.ringClosedBody": "Вы достигли цели на сегодня.",
   "character.allRingsTitle": "Все кольца закрыты",
   "character.allRingsBody": "Сегодня вы выполнили все три цели. Идеальный день!",
+  "character.showBadge": "Показать значок заданий ретейнеров",
+  "character.hideBadge": "Скрыть значок заданий ретейнеров",
   "camera.modeSquare": "КВАДРАТ",
   "camera.modePhoto": "ФОТО",
   "contacts.empty": "Откройте список друзей в игре один раз",

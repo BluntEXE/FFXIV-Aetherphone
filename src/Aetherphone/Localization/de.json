@@ -1711,6 +1711,8 @@
   "character.ringClosedBody": "Du hast dein heutiges Ziel erreicht.",
   "character.allRingsTitle": "Alle Ringe geschlossen",
   "character.allRingsBody": "Du hast heute alle drei Ziele erreicht. Ein perfekter Tag!",
+  "character.showBadge": "Kennzeichen für Gehilfen-Aufträge anzeigen",
+  "character.hideBadge": "Kennzeichen für Gehilfen-Aufträge ausblenden",
   "camera.modeSquare": "QUADRAT",
   "camera.modePhoto": "FOTO",
   "contacts.empty": "Öffne einmal deine Freundesliste im Spiel",

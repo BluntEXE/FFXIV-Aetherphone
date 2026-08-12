@@ -54,6 +54,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool NotifyRetainerVentures { get; set; }
     public bool ShowWalletBadge { get; set; } = true;
     public bool ShowDailiesBadge { get; set; } = true;
+    public bool ShowActivityBadge { get; set; } = true;
     public List<DailyCheckRecord> DailyChecks { get; set; } = new();
     public float ActivityGoalLevels { get; set; } = 1f;
     public int ActivityGoalDuties { get; set; } = 3;

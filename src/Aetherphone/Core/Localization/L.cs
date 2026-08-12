@@ -2698,6 +2698,8 @@ internal static class L
         public static readonly LocString RingClosedBody = new("character.ringClosedBody", "You reached today's goal.");
         public static readonly LocString AllRingsTitle = new("character.allRingsTitle", "All rings closed");
         public static readonly LocString AllRingsBody = new("character.allRingsBody", "You hit all three goals today. Perfect day!");
+        public static readonly LocString ShowBadge = new("character.showBadge", "Show retainer ventures badge");
+        public static readonly LocString HideBadge = new("character.hideBadge", "Hide retainer ventures badge");
     }
 
     internal static class Camera

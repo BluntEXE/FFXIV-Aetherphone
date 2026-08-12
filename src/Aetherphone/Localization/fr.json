@@ -1711,6 +1711,8 @@
   "character.ringClosedBody": "Vous avez atteint votre objectif du jour.",
   "character.allRingsTitle": "Tous les anneaux fermés",
   "character.allRingsBody": "Vous avez atteint les trois objectifs aujourd'hui. Une journée parfaite !",
+  "character.showBadge": "Afficher la pastille des expéditions de servants",
+  "character.hideBadge": "Masquer la pastille des expéditions de servants",
   "camera.modeSquare": "CARRÉ",
   "camera.modePhoto": "PHOTO",
   "contacts.empty": "Ouvrez une fois votre liste d'amis en jeu",
