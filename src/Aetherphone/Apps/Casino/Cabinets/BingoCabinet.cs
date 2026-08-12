@@ -126,7 +126,7 @@ internal sealed class BingoCabinet
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
         var width = ScrollLayout.StableContentWidth();
         var calledOff = CalledOff(board, mine);
-        DrawStatusRow(ui, snapshot, room.Attached, width, scale);
+        DrawStatusRow(ui, snapshot, board, room.Attached, width, scale);
         DrawCaller(ui, snapshot, board, remaining, width, scale);
         if (snapshot.Phase != CasinoRoomPhases.Open)
         {
@@ -258,12 +258,19 @@ internal sealed class BingoCabinet
         return board?.Cards ?? 0;
     }
 
-    private void DrawStatusRow(AppSkin ui, CasinoRoomSnapshotDto snapshot, bool attached, float width, float scale)
+    private void DrawStatusRow(AppSkin ui, CasinoRoomSnapshotDto snapshot, CasinoBingoRoomStateDto? board,
+        bool attached, float width, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var height = StatusRowHeight * scale;
         var hall = Loc.T(L.Casino.BingoInTheHall, GameNumber.Label(snapshot.Occupancy));
+        var holders = board?.Players ?? 0;
+        if (holders > 0)
+        {
+            hall = string.Concat(hall, "  ", Loc.T(L.Casino.BingoHoldingCards, GameNumber.Label(holders)));
+        }
+
         Typography.Draw(drawList, new Vector2(origin.X, origin.Y + 4f * scale), hall, ui.MutedInk,
             TextStyles.Caption1);
 
@@ -545,7 +552,10 @@ internal sealed class BingoCabinet
             return;
         }
 
-        var chip = Loc.T(L.Casino.BingoLadderGone, GameNumber.Label(awarded.Ball));
+        var chip = awarded.Winners > 1
+            ? Loc.T(L.Casino.BingoLadderShared, GameNumber.Label(awarded.Winners),
+                GameNumber.Label(awarded.Ball))
+            : Loc.T(L.Casino.BingoLadderGone, GameNumber.Label(awarded.Ball));
         var chipSize = Typography.Measure(chip, TextStyles.Caption1);
         var chipPad = 7f * scale;
         var chipMin = new Vector2(left + nameSize.X + 10f * scale, rowCenter - chipSize.Y * 0.5f - 2f * scale);

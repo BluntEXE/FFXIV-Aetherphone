@@ -23,6 +23,9 @@ internal sealed class WheelCabinet
     private const float FieldHeight = 40f;
     private const float PillHeight = 46f;
     private const float LockFlashSeconds = 0.45f;
+    private const float RecentChipHeight = 20f;
+    private const float RecentChipGap = 5f;
+    private const int RecentShown = 8;
     private const int AmountBufferLength = 4;
 
     private static readonly Vector4 Gold = new(1f, 0.84f, 0.42f, 1f);
@@ -126,6 +129,8 @@ internal sealed class WheelCabinet
         y = DrawStatusRow(drawList, ui, snapshot, room.Attached, left, y, width, scale);
         y = DrawWheel(drawList, ui, snapshot, remaining, left, y, width, scale);
         y = DrawBanner(drawList, ui, snapshot, remaining, left, y, width, scale, delta);
+        y = DrawRecentRail(drawList, ui, board, left, y, width, scale);
+        y += Metrics.Space.Xs * scale;
 
         var sitting = state.Sitting;
         var seated = sitting is not null;
@@ -394,6 +399,59 @@ internal sealed class WheelCabinet
         }
 
         return y + cardHeight;
+    }
+
+    private float DrawRecentRail(ImDrawListPtr drawList, AppSkin ui, CasinoWheelRoomStateDto? board, float left,
+        float y, float width, float scale)
+    {
+        var recent = board?.Recent;
+        if (recent is null || recent.Length == 0)
+        {
+            return y;
+        }
+
+        var label = Loc.T(L.Casino.WheelRecentHeading);
+        var labelSize = Typography.Measure(label, TextStyles.Caption2);
+        Typography.Draw(drawList, new Vector2(left, y), label, ui.MutedInk, TextStyles.Caption2);
+
+        var chipHeight = RecentChipHeight * scale;
+        var chipY = y + labelSize.Y + 4f * scale;
+        var chipX = left;
+        var limit = recent.Length < RecentShown ? recent.Length : RecentShown;
+        for (var index = 0; index < limit; index++)
+        {
+            var spot = recent[index];
+            if (!WheelRules.IsSpot(spot))
+            {
+                continue;
+            }
+
+            var text = Loc.T(L.Casino.WheelMultiplier, GameNumber.Label(WheelRules.Multipliers[spot]));
+            var textSize = Typography.Measure(text, TextStyles.Caption1);
+            var chipWidth = textSize.X + 14f * scale;
+            if (chipX + chipWidth > left + width)
+            {
+                break;
+            }
+
+            var min = new Vector2(chipX, chipY);
+            var max = new Vector2(chipX + chipWidth, chipY + chipHeight);
+            var color = WheelRingArt.SpotColors[spot];
+            var newest = index == 0;
+            Squircle.Fill(drawList, min, max, chipHeight * 0.5f,
+                ImGui.GetColorU32(Palette.WithAlpha(color, newest ? 0.30f : 0.14f)));
+            if (newest)
+            {
+                Squircle.Stroke(drawList, min, max, chipHeight * 0.5f,
+                    ImGui.GetColorU32(Palette.WithAlpha(color, 0.85f)), 1f * scale);
+            }
+
+            Typography.DrawCentered(drawList, (min + max) * 0.5f, text,
+                Palette.WithAlpha(color, newest ? 1f : 0.75f), TextStyles.Caption1);
+            chipX = max.X + RecentChipGap * scale;
+        }
+
+        return chipY + chipHeight;
     }
 
     private void DrawSpotCard(ImDrawListPtr drawList, AppSkin ui, CasinoWheelRoomStateDto? board, int spot,
