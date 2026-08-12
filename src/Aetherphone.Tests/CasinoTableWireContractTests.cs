@@ -218,7 +218,7 @@ public sealed class CasinoTableWireContractTests
     {
         var notification = new PhoneNotification(CasinoTurnNotifier.AppId, "Your turn", "The table is waiting",
             System.DateTime.Now, default,
-            string.Concat(CasinoTurnNotifier.GroupPrefix, CasinoRoomIds.BlackjackTable));
+            string.Concat(CasinoTurnNotifier.GroupPrefix, CasinoRoomIds.BlackjackPit));
         Assert.Equal("casino:blackjack-table", notification.GroupKey);
         Assert.Equal("casino:blackjack-table", notification.StackKey);
         Assert.Equal("casino", notification.SettingsKey);
@@ -227,7 +227,7 @@ public sealed class CasinoTableWireContractTests
         launcher.RequestTable(notification.GroupKey![CasinoTurnNotifier.GroupPrefix.Length..]);
         Assert.True(launcher.TryConsume(out var launch));
         Assert.Equal(CasinoLaunchKind.Table, launch.Kind);
-        Assert.Equal(CasinoRoomIds.BlackjackTable, launch.TableId);
+        Assert.Equal(CasinoRoomIds.BlackjackPit, launch.TableId);
         Assert.False(launcher.TryConsume(out _));
     }
 
@@ -282,7 +282,7 @@ public sealed class CasinoTableWireContractTests
         Assert.Equal(new[] { 12 }, hand.Hands![1]);
 
         Assert.Equal("/casino/blackjack/blackjack-table/hand",
-            Aetherphone.Core.Aethernet.Clients.CasinoClient.BlackjackMyHandPath(CasinoRoomIds.BlackjackTable));
+            Aetherphone.Core.Aethernet.Clients.CasinoClient.BlackjackMyHandPath(CasinoRoomIds.BlackjackPit));
         Assert.Equal("/casino/blackjack/a%20b/hand",
             Aetherphone.Core.Aethernet.Clients.CasinoClient.BlackjackMyHandPath("a b"));
     }

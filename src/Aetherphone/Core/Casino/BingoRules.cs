@@ -30,7 +30,7 @@ internal static class BingoRules
 
     public const int BallIntervalSeconds = 2;
 
-    public const long MaxSingleWin = 500_000;
+    public const long MaxSingleWin = CasinoChipLots.MaxSingleWin;
 
     public const int FreeMask = 1 << FreeCell;
 

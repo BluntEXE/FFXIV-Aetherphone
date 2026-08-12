@@ -34,7 +34,7 @@ internal sealed partial class CasinoApp
 
     private static readonly FloorTileDefinition[] FloorTiles =
     {
-        new(CasinoGames.Blackjack, L.Casino.GameBlackjack, true, Core.Casino.CasinoRoomIds.BlackjackTable),
+        new(CasinoGames.Blackjack, L.Casino.GameBlackjack, true),
         new(CasinoGames.Slots, L.Casino.GameSlots, true),
         new(CasinoGames.Scratch, L.Casino.GameScratch, true),
         new(CasinoGames.Barkeep, L.Casino.GameBarkeep, true),
@@ -244,14 +244,14 @@ internal sealed partial class CasinoApp
             return;
         }
 
+        var crowd = CrowdAt(definition);
+        if (crowd > 0)
+        {
+            DrawCornerChip(drawList, tile, CrowdLine(definition.GameId, crowd), ui.Accent, scale);
+        }
+
         if (definition.RoomId.Length > 0)
         {
-            var occupancy = casinoRooms.OccupancyOf(definition.RoomId);
-            if (occupancy > 0)
-            {
-                DrawCornerChip(drawList, tile, CrowdLine(definition.GameId, occupancy), ui.Accent, scale);
-            }
-
             DrawRoomClock(drawList, tile, definition.RoomId, scale);
         }
 
@@ -259,6 +259,16 @@ internal sealed partial class CasinoApp
         {
             OpenGame(definition.GameId);
         }
+    }
+
+    private int CrowdAt(in FloorTileDefinition definition)
+    {
+        if (string.Equals(definition.GameId, CasinoGames.Blackjack, StringComparison.Ordinal))
+        {
+            return casinoTables.SeatedAt(Core.Casino.CasinoWire.BlackjackKind);
+        }
+
+        return definition.RoomId.Length > 0 ? casinoRooms.OccupancyOf(definition.RoomId) : 0;
     }
 
     private static string CrowdLine(string gameId, int occupancy)

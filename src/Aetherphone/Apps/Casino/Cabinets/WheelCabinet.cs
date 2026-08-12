@@ -18,7 +18,6 @@ internal sealed class WheelCabinet
     private const float StatusRowHeight = 22f;
     private const float MaxRingRadius = 108f;
     private const float BannerHeight = 54f;
-    private const int BetWindowSeconds = 60;
     private const float SpotCardHeight = 92f;
     private const float SpotGap = 6f;
     private const float FieldHeight = 40f;
@@ -372,10 +371,11 @@ internal sealed class WheelCabinet
         if (snapshot.Phase == CasinoRoomPhases.Open)
         {
             var seconds = (int)((remainingMs + 999) / 1000);
-            var urgent = TurnTimerRing.IsUrgent(remainingMs, BetWindowSeconds);
+            var window = CasinoRoomCadence.WheelWindow(snapshot.Phase);
+            var urgent = TurnTimerRing.IsUrgent(remainingMs, window);
             var ringRadius = 17f * scale;
             var ringCenter = new Vector2(left + width * 0.5f - 74f * scale, center.Y);
-            TurnTimerRing.Draw(drawList, ringCenter, ringRadius, remainingMs, BetWindowSeconds,
+            TurnTimerRing.Draw(drawList, ringCenter, ringRadius, remainingMs, window,
                 urgent ? Gold : ui.Palette.Accent, scale);
             Typography.DrawCentered(drawList, ringCenter, GameNumber.Label(seconds),
                 urgent ? Gold : ui.TitleInk, TextStyles.FootnoteEmphasized);

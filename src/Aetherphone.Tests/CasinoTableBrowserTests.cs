@@ -106,9 +106,9 @@ public sealed class CasinoTableBrowserTests
         Assert.Equal("/casino/tables?game=casino.blackjack",
             CasinoClient.TablesPagePath(CasinoWire.BlackjackKind));
         Assert.Equal("/casino/tables/blackjack-table/sit",
-            CasinoClient.TablePath(CasinoRoomIds.BlackjackTable, "sit"));
+            CasinoClient.TablePath(CasinoRoomIds.BlackjackPit, "sit"));
         Assert.Equal("/casino/tables/blackjack-table/claim",
-            CasinoClient.TablePath(CasinoRoomIds.BlackjackTable, "claim"));
+            CasinoClient.TablePath(CasinoRoomIds.BlackjackPit, "claim"));
         Assert.Equal("/casino/tables/a%20b/door", CasinoClient.TablePath("a b", "door"));
     }
 

@@ -25,7 +25,8 @@ internal sealed record CasinoStateDto(
     long AtRisk = 0,
     long BuyInToday = 0,
     long Balance = 0,
-    CasinoSittingDto? TableSitting = null);
+    CasinoSittingDto? TableSitting = null,
+    long Jackpot = 0);
 
 internal sealed record CasinoOpenSittingRequest(
     string ClientSittingId,
@@ -73,7 +74,8 @@ internal sealed record CasinoSlotsSpinDto(
     long TotalWin = 0,
     bool CapApplied = false,
     string NextSeedHash = "",
-    long Stack = 0);
+    long Stack = 0,
+    long Jackpot = 0);
 
 internal sealed record CasinoScratchBuyRequest(string SittingId, string ClientRoundId, int Tier);
 

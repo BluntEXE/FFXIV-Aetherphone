@@ -56,7 +56,7 @@ internal sealed class BlackjackTable
     private readonly Vector2[] seatCenters = new Vector2[BlackjackRules.SeatCount];
 
     private RollingValue winRoll;
-    private string roomId = CasinoRoomIds.BlackjackTable;
+    private string roomId = CasinoRoomIds.BlackjackPit;
     private string inlineReason = string.Empty;
     private string celebratedHandId = string.Empty;
     private string spokenHandId = string.Empty;
@@ -81,7 +81,7 @@ internal sealed class BlackjackTable
     public void Enter(string tableId)
     {
         entered = true;
-        roomId = tableId.Length > 0 ? tableId : CasinoRoomIds.BlackjackTable;
+        roomId = tableId.Length > 0 ? tableId : CasinoRoomIds.BlackjackPit;
         inlineReason = string.Empty;
         projection.Reset();
         playback.Reset();
