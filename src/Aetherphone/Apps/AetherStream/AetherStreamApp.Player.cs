@@ -472,7 +472,7 @@ internal sealed partial class AetherStreamApp
         if (ui.IconButton(browseCenter, 16f * scale, FontAwesomeIcon.FolderOpen.ToIconString(), ui.TitleInk,
                 ui.FieldSurface, 0.6f, Loc.T(L.AetherStream.BrowseLocalFile)))
         {
-            NativeFileDialog.PickVideo(Loc.T(L.AetherStream.BrowseLocalFile),
+            FilePicker.PickVideo(Loc.T(L.AetherStream.BrowseLocalFile),
                 path => Interlocked.Exchange(ref pendingLocalFile, path));
         }
 

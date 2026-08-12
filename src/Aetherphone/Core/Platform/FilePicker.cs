@@ -7,6 +7,7 @@ internal static class FilePicker
 {
     private const string ImageExtensions = "{.png,.jpg,.jpeg,.bmp,.gif},.*";
     private const string AudioExtensions = "{.mp3,.wav},.*";
+    private const string VideoExtensions = "{.mp4,.mkv,.webm,.mov,.avi,.flv,.m4v},.*";
     private static readonly FileDialogManager Manager = new();
 
     public static void Draw()
@@ -40,6 +41,19 @@ internal static class FilePicker
 
         Open(title, Loc.T(L.Common.FileKindAudio) + AudioExtensions,
             ExistingFolder(Environment.SpecialFolder.MyMusic), guarded);
+    }
+
+    public static void PickVideo(string title, Action<string> onPicked)
+    {
+        var guarded = OnlyLocalFiles(onPicked);
+        if (UsesNativeDialog)
+        {
+            NativeFileDialog.PickVideo(title, guarded);
+            return;
+        }
+
+        Open(title, Loc.T(L.Common.FileKindVideo) + VideoExtensions,
+            ExistingFolder(Environment.SpecialFolder.MyVideos), guarded);
     }
 
     private static Action<string> OnlyLocalFiles(Action<string> onPicked) => path =>
