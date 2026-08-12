@@ -3809,6 +3809,8 @@
   "aetherstream.settingsScreen": "Screen",
   "aetherstream.settingsHideNameplates": "Hide nameplates",
   "aetherstream.settingsMaxQuality": "Max quality",
+  "aetherstream.settingsDiscoverable": "List me in this zone",
+  "aetherstream.settingsDiscoverableHint": "Players in the same zone can find your stream under Nearby. Off keeps it to people you invite, though the screen itself stays visible.",
   "aetherstream.settingsShareWatchPresence": "Show me as watching",
   "aetherstream.settingsShareWatchPresenceHint": "Off keeps your name out of the watching list on this screen.",
   "aetherstream.settingsApprovalRequired": "Require approval to join",

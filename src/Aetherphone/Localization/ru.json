@@ -3809,6 +3809,8 @@
   "aetherstream.settingsScreen": "Экран",
   "aetherstream.settingsHideNameplates": "Скрыть таблички с именами",
   "aetherstream.settingsMaxQuality": "Максимальное качество",
+  "aetherstream.settingsDiscoverable": "Показывать в этой зоне",
+  "aetherstream.settingsDiscoverableHint": "Игроки в той же зоне смогут найти вашу трансляцию в разделе Nearby. Если выключено, она доступна только приглашённым, но сам экран остаётся видимым.",
   "aetherstream.settingsShareWatchPresence": "Показывать, что я смотрю",
   "aetherstream.settingsShareWatchPresenceHint": "Если выключено, ваше имя не отображается в списке зрителей на этом экране.",
   "aetherstream.settingsApprovalRequired": "Требовать подтверждение для входа",

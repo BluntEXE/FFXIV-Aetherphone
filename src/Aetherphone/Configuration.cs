@@ -118,6 +118,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool VideoHardwareDecoding { get; set; }
     public bool VideoAllowInsecureDirectUrls { get; set; }
     public bool VideoStreamApprovalRequired { get; set; }
+    public bool VideoStreamDiscoverable { get; set; } = true;
     public List<ScreenPositionPreset> ScreenPresets { get; set; } = new();
     public List<VideoQueueRecord> VideoQueue { get; set; } = new();
     public bool GameSoundsCleared { get; set; }

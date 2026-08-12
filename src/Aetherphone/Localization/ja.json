@@ -3809,6 +3809,8 @@
   "aetherstream.settingsScreen": "スクリーン",
   "aetherstream.settingsHideNameplates": "ネームプレートを非表示",
   "aetherstream.settingsMaxQuality": "最大画質",
+  "aetherstream.settingsDiscoverable": "このゾーンに表示する",
+  "aetherstream.settingsDiscoverableHint": "同じゾーンのプレイヤーがNearbyであなたの配信を見つけられます。オフにすると招待した人だけになりますが、スクリーン自体は見えたままです。",
   "aetherstream.settingsShareWatchPresence": "視聴中として表示する",
   "aetherstream.settingsShareWatchPresenceHint": "オフにすると、この画面の視聴者リストに自分の名前が表示されません。",
   "aetherstream.settingsApprovalRequired": "参加には承認が必要",

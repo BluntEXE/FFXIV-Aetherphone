@@ -3809,6 +3809,8 @@
   "aetherstream.settingsScreen": "Ekran",
   "aetherstream.settingsHideNameplates": "İsim etiketlerini gizle",
   "aetherstream.settingsMaxQuality": "Maksimum kalite",
+  "aetherstream.settingsDiscoverable": "Bu bolgede goster",
+  "aetherstream.settingsDiscoverableHint": "Ayni bolgedeki oyuncular yayinini Nearby altinda bulabilir. Kapaliyken yalnizca davet ettiklerine acik kalir, ancak ekranin kendisi gorunur olmayi surdurur.",
   "aetherstream.settingsShareWatchPresence": "Beni izliyor olarak göster",
   "aetherstream.settingsShareWatchPresenceHint": "Kapalıyken adın bu ekrandaki izleyici listesinde görünmez.",
   "aetherstream.settingsApprovalRequired": "Katılmak için onay gerektir",

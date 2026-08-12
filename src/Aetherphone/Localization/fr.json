@@ -3809,6 +3809,8 @@
   "aetherstream.settingsScreen": "Écran",
   "aetherstream.settingsHideNameplates": "Masquer les plaques nominatives",
   "aetherstream.settingsMaxQuality": "Qualité maximale",
+  "aetherstream.settingsDiscoverable": "Apparaitre dans cette zone",
+  "aetherstream.settingsDiscoverableHint": "Les joueurs de la meme zone peuvent trouver votre diffusion dans Nearby. Desactive, elle reste reservee aux personnes invitees, mais l'ecran lui-meme reste visible.",
   "aetherstream.settingsShareWatchPresence": "M'afficher comme spectateur",
   "aetherstream.settingsShareWatchPresenceHint": "Désactivé, votre nom n'apparaît pas dans la liste des spectateurs de cet écran.",
   "aetherstream.settingsApprovalRequired": "Approbation requise pour rejoindre",

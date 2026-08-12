@@ -3809,6 +3809,8 @@
   "aetherstream.settingsScreen": "Bildschirm",
   "aetherstream.settingsHideNameplates": "Namensschilder ausblenden",
   "aetherstream.settingsMaxQuality": "Maximale Qualität",
+  "aetherstream.settingsDiscoverable": "In dieser Zone anzeigen",
+  "aetherstream.settingsDiscoverableHint": "Spieler in derselben Zone finden deinen Stream unter Nearby. Aus beschraenkt ihn auf Eingeladene, der Bildschirm selbst bleibt aber sichtbar.",
   "aetherstream.settingsShareWatchPresence": "Mich als zuschauend anzeigen",
   "aetherstream.settingsShareWatchPresenceHint": "Deaktiviert hält deinen Namen von der Zuschauerliste auf diesem Bildschirm fern.",
   "aetherstream.settingsApprovalRequired": "Beitritt erfordert Genehmigung",

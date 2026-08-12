@@ -3809,6 +3809,8 @@
   "aetherstream.settingsScreen": "屏幕",
   "aetherstream.settingsHideNameplates": "隐藏姓名牌",
   "aetherstream.settingsMaxQuality": "最高画质",
+  "aetherstream.settingsDiscoverable": "在此区域中显示",
+  "aetherstream.settingsDiscoverableHint": "同一区域的玩家可以在 Nearby 中找到你的直播。关闭后仅限你邀请的人，但屏幕本身依然可见。",
   "aetherstream.settingsShareWatchPresence": "显示我正在观看",
   "aetherstream.settingsShareWatchPresenceHint": "关闭后,你的名字不会出现在此屏幕的观看列表中。",
   "aetherstream.settingsApprovalRequired": "加入需要批准",

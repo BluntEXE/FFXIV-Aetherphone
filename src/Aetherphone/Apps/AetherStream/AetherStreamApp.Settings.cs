@@ -118,9 +118,12 @@ internal sealed partial class AetherStreamApp
 
             ImGui.Dummy(new Vector2(0f, 12f * scale));
             SettingsSection.Header(Loc.T(L.AetherStream.SettingsSectionWatching), accentedTheme);
-            var watchingCard = GroupCard.Begin(accentedTheme, 2);
+            var watchingCard = GroupCard.Begin(accentedTheme, 3);
             var sharePresence = SettingsRow.Bool(watchingCard.NextRow(),
                 Loc.T(L.AetherStream.SettingsShareWatchPresence), configuration.VideoShareWatchPresence,
+                accentedTheme);
+            var discoverable = SettingsRow.Bool(watchingCard.NextRow(),
+                Loc.T(L.AetherStream.SettingsDiscoverable), configuration.VideoStreamDiscoverable,
                 accentedTheme);
             var approvalRequired = SettingsRow.Bool(watchingCard.NextRow(),
                 Loc.T(L.AetherStream.SettingsApprovalRequired), configuration.VideoStreamApprovalRequired,
@@ -129,7 +132,15 @@ internal sealed partial class AetherStreamApp
             ImGui.Dummy(new Vector2(0f, 8f * scale));
             SettingsSection.Hint(Loc.T(L.AetherStream.SettingsShareWatchPresenceHint), accentedTheme);
             ImGui.Dummy(new Vector2(0f, 4f * scale));
+            SettingsSection.Hint(Loc.T(L.AetherStream.SettingsDiscoverableHint), accentedTheme);
+            ImGui.Dummy(new Vector2(0f, 4f * scale));
             SettingsSection.Hint(Loc.T(L.AetherStream.SettingsApprovalRequiredHint), accentedTheme);
+            if (discoverable != configuration.VideoStreamDiscoverable)
+            {
+                configuration.VideoStreamDiscoverable = discoverable;
+                configuration.Save();
+            }
+
             if (sharePresence != configuration.VideoShareWatchPresence)
             {
                 configuration.VideoShareWatchPresence = sharePresence;

@@ -3809,6 +3809,8 @@
   "aetherstream.settingsScreen": "Tela",
   "aetherstream.settingsHideNameplates": "Ocultar placas de nome",
   "aetherstream.settingsMaxQuality": "Qualidade máxima",
+  "aetherstream.settingsDiscoverable": "Aparecer nesta zona",
+  "aetherstream.settingsDiscoverableHint": "Jogadores na mesma zona podem encontrar sua transmissao em Nearby. Desligado, fica so para quem voce convidar, mas a tela em si continua visivel.",
   "aetherstream.settingsShareWatchPresence": "Mostrar que estou assistindo",
   "aetherstream.settingsShareWatchPresenceHint": "Desativado mantém seu nome fora da lista de quem está assistindo nesta tela.",
   "aetherstream.settingsApprovalRequired": "Exigir aprovação para entrar",

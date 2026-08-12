@@ -3235,6 +3235,11 @@ internal static class L
         public static readonly LocString SettingsApprovalRequiredHint = new(
             "aetherstream.settingsApprovalRequiredHint",
             "New viewers must be approved by you before they can watch. Applies the next time you go live.");
+        public static readonly LocString SettingsDiscoverable = new("aetherstream.settingsDiscoverable",
+            "List me in this zone");
+        public static readonly LocString SettingsDiscoverableHint = new(
+            "aetherstream.settingsDiscoverableHint",
+            "Players in the same zone can find your stream under Nearby. Off keeps it to people you invite, though the screen itself stays visible.");
         public static readonly LocString SettingsHardwareDecoding = new("aetherstream.settingsHardwareDecoding",
             "Hardware decoding");
         public static readonly LocString SettingsHardwareDecodingHint = new(

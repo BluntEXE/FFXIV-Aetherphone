@@ -363,7 +363,8 @@ internal sealed class WatchAlongSession : IDisposable
         }
 
         stream.PublishState(url, position, paused, Plugin.ClientState.TerritoryType, approvalRequired,
-            screenPosition, screenPosition is not null ? screenYaw : null,
+            configuration.VideoStreamDiscoverable, screenPosition,
+            screenPosition is not null ? screenYaw : null,
             screenPosition is not null ? screenScale : null);
     }
 
