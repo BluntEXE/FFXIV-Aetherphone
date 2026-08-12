@@ -35,10 +35,10 @@ internal sealed class Resources : IDisposable
 	internal string? GetLocationMPV()
 	{
 		string filenameStart = "mpv-dev-lgpl-x86_64-";
-		string? dir = Directory.GetDirectories(_configDir, $"{filenameStart}*").FirstOrDefault();
-		if (dir != null)
+		string[] dirs = Directory.GetDirectories(_configDir, $"{filenameStart}*");
+		if (dirs.Length > 0)
 		{
-			return dir + "/libmpv-2.dll";
+			return dirs[0] + "/libmpv-2.dll";
 		}
 		else
 		{
@@ -49,10 +49,10 @@ internal sealed class Resources : IDisposable
 	internal string? GetLocationYTDLP()
 	{
 		string filenameStart = "yt-dlp";
-		string? dir = Directory.GetDirectories(_configDir, $"{filenameStart}*").FirstOrDefault();
-		if (dir != null)
+		string[] dirs = Directory.GetDirectories(_configDir, $"{filenameStart}*");
+		if (dirs.Length > 0)
 		{
-			return dir + "/yt-dlp.exe";
+			return dirs[0] + "/yt-dlp.exe";
 		}
 		else
 		{
