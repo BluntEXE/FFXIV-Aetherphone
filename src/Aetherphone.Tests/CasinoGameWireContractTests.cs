@@ -66,6 +66,34 @@ public sealed class CasinoGameWireContractTests
     }
 
     [Fact]
+    public void AFiveScatterSpinCarriesTheJackpotItPaid()
+    {
+        const string json = "{\"granted\":true,\"reason\":\"\",\"roundId\":\"r1\",\"stake\":500,"
+            + "\"baseSpin\":{\"grid\":[9,0,5,2,9,3,7,9,4,1,9,2,6,0,9],\"lineWins\":[],"
+            + "\"scatterCount\":5,\"scatterPay\":25000,\"win\":25000,\"spinsAdded\":12},"
+            + "\"freeSpins\":[],\"totalWin\":25000,\"capApplied\":false,"
+            + "\"nextSeedHash\":\"next\",\"stack\":868000,\"jackpot\":843000}";
+        var spin = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoSlotsSpinDto);
+        Assert.NotNull(spin);
+        Assert.Equal(843000L, spin.Jackpot);
+        Assert.NotNull(spin.BaseSpin);
+        Assert.Equal(5, spin.BaseSpin.ScatterCount);
+    }
+
+    [Fact]
+    public void AnOrdinarySpinReportsNoJackpot()
+    {
+        const string json = "{\"granted\":true,\"reason\":\"\",\"roundId\":\"r1\",\"stake\":500,"
+            + "\"baseSpin\":{\"grid\":[4,0,5,2,6,3,7,1,4,9,5,2,6,0,7],\"lineWins\":[],"
+            + "\"scatterCount\":0,\"scatterPay\":0,\"win\":0,\"spinsAdded\":0},"
+            + "\"freeSpins\":[],\"totalWin\":0,\"capApplied\":false,"
+            + "\"nextSeedHash\":\"next\",\"stack\":137500}";
+        var spin = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoSlotsSpinDto);
+        Assert.NotNull(spin);
+        Assert.Equal(0L, spin.Jackpot);
+    }
+
+    [Fact]
     public void RefusedSpinPayloadDeserializesWithTheReason()
     {
         const string json = "{\"granted\":false,\"reason\":\"cooldown\",\"roundId\":\"r1\",\"stake\":5,"

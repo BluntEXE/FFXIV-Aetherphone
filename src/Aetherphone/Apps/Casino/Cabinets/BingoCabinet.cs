@@ -126,7 +126,7 @@ internal sealed class BingoCabinet
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
         var width = ScrollLayout.StableContentWidth();
         var calledOff = CalledOff(board, mine);
-        DrawStatusRow(ui, snapshot, room.Attached, width, scale);
+        DrawStatusRow(ui, snapshot, board, room.Attached, width, scale);
         DrawCaller(ui, snapshot, board, remaining, width, scale);
         if (snapshot.Phase != CasinoRoomPhases.Open)
         {
@@ -258,12 +258,19 @@ internal sealed class BingoCabinet
         return board?.Cards ?? 0;
     }
 
-    private void DrawStatusRow(AppSkin ui, CasinoRoomSnapshotDto snapshot, bool attached, float width, float scale)
+    private void DrawStatusRow(AppSkin ui, CasinoRoomSnapshotDto snapshot, CasinoBingoRoomStateDto? board,
+        bool attached, float width, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var height = StatusRowHeight * scale;
         var hall = Loc.T(L.Casino.BingoInTheHall, GameNumber.Label(snapshot.Occupancy));
+        var holders = board?.Players ?? 0;
+        if (holders > 0)
+        {
+            hall = string.Concat(hall, "  ", Loc.T(L.Casino.BingoHoldingCards, GameNumber.Label(holders)));
+        }
+
         Typography.Draw(drawList, new Vector2(origin.X, origin.Y + 4f * scale), hall, ui.MutedInk,
             TextStyles.Caption1);
 
@@ -545,7 +552,10 @@ internal sealed class BingoCabinet
             return;
         }
 
-        var chip = Loc.T(L.Casino.BingoLadderGone, GameNumber.Label(awarded.Ball));
+        var chip = awarded.Winners > 1
+            ? Loc.T(L.Casino.BingoLadderShared, GameNumber.Label(awarded.Winners),
+                GameNumber.Label(awarded.Ball))
+            : Loc.T(L.Casino.BingoLadderGone, GameNumber.Label(awarded.Ball));
         var chipSize = Typography.Measure(chip, TextStyles.Caption1);
         var chipPad = 7f * scale;
         var chipMin = new Vector2(left + nameSize.X + 10f * scale, rowCenter - chipSize.Y * 0.5f - 2f * scale);
@@ -643,15 +653,16 @@ internal sealed class BingoCabinet
         }
 
         var holding = HeldCards(mine);
-        if (holding > 0)
+        var room = BingoRules.MaxCards - holding;
+        if (room <= 0)
         {
             DrawNote(ui, Loc.T(L.Casino.BingoHoldingFull, CardCountLabel(holding)), width, scale);
             return;
         }
 
-        if (requestedCards > BingoRules.MaxCards)
+        if (requestedCards > room)
         {
-            requestedCards = BingoRules.MaxCards;
+            requestedCards = room;
         }
 
         if (requestedCards < 1)
@@ -661,8 +672,10 @@ internal sealed class BingoCabinet
 
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
-        Typography.Draw(drawList, origin, Loc.T(L.Casino.BingoBuyHeading), ui.MutedInk,
-            TextStyles.FootnoteEmphasized);
+        var heading = holding > 0
+            ? Loc.T(L.Casino.BingoBuyMoreHeading, CardCountLabel(holding))
+            : Loc.T(L.Casino.BingoBuyHeading);
+        Typography.Draw(drawList, origin, heading, ui.MutedInk, TextStyles.FootnoteEmphasized);
         var price = Loc.T(L.Casino.BingoCardPrice, BingoRules.CardPrice.ToString("N0", Loc.Culture),
             GameNumber.Label(BingoRules.MaxCards));
         var priceSize = Typography.Measure(price, TextStyles.Caption1);
@@ -670,7 +683,7 @@ internal sealed class BingoCabinet
             TextStyles.Caption1);
 
         var segmentY = origin.Y + 20f * scale;
-        DrawCountSegments(drawList, ui, origin.X, segmentY, width, BingoRules.MaxCards, scale);
+        DrawCountSegments(drawList, ui, origin.X, segmentY, width, room, scale);
 
         var stake = BingoRules.StakeFor(requestedCards);
         var thin = sitting.Stack < stake;
@@ -690,7 +703,7 @@ internal sealed class BingoCabinet
         var noteY = pillRect.Max.Y + 6f * scale;
         var note = blocked
             ? Loc.T(state.StakesPaused ? L.Casino.PausedTitle : L.Casino.DrainingTitle)
-            : thin ? Loc.T(L.Casino.SlotsLowStack) : Loc.T(L.Casino.BingoOneBuyPerRoom);
+            : thin ? Loc.T(L.Casino.SlotsLowStack) : Loc.T(L.Casino.BingoBuyAgainNote);
         var noteBlock = Typography.MeasureWrappedBlock(note, TextStyles.Caption2, width);
         Typography.DrawWrappedLeft(new Vector2(origin.X, noteY), note, ui.MutedInk, TextStyles.Caption2, width);
         var finalNote = Loc.T(L.Casino.BingoCardsFinal);

@@ -39,6 +39,10 @@ internal sealed partial class CasinoApp : IPhoneApp
     private readonly Tables.BlackjackTable blackjack;
     private readonly Tables.TableBrowser browser;
     private readonly Tables.TableDoor tableDoor;
+    private readonly JackpotRail jackpotRail = new();
+    private readonly GameRulesSheet rulesSheet = new();
+    private readonly BottomTabBar bottomNav = new();
+    private readonly NavTab[] navTabs = new NavTab[4];
     private readonly AppSkin ui = new(AppPalettes.Casino);
     private readonly ViewRouter<CasinoRoute> router;
     private readonly RouterDraw<CasinoRoute> drawView;
@@ -50,8 +54,8 @@ internal sealed partial class CasinoApp : IPhoneApp
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
     private Rect screenArea;
+    private CasinoTab tab;
     private string pendingTableId = string.Empty;
-    private bool greetedWithCashier;
 
     public CasinoApp(AethernetSession session, CoinStore coins, Core.Casino.CasinoStore casino,
         Core.Casino.CasinoPlayStore casinoPlay, Core.Casino.CasinoHistoryStore history,
@@ -101,7 +105,10 @@ internal sealed partial class CasinoApp : IPhoneApp
         browser.Reset();
         tableDoor.Reset();
         pendingTableId = string.Empty;
+        tab = CasinoTab.Lobby;
+        rulesSheet.Close();
         ResetLimitsEditor();
+        jackpotRail.Snap(Core.Casino.CasinoChipLots.CoinsFor(casino.Jackpot));
         historyLoadFailed = false;
         history.Invalidate();
         coins.RefreshNow();
@@ -110,7 +117,6 @@ internal sealed partial class CasinoApp : IPhoneApp
         casinoTables.RefreshNow();
         casinoSpin.RefreshNow();
         casinoPlay.RecoverPendingRound();
-        greetedWithCashier = false;
         ConsumeLaunch();
     }
 
@@ -128,6 +134,7 @@ internal sealed partial class CasinoApp : IPhoneApp
         browser.Reset();
         tableDoor.Reset();
         pendingTableId = string.Empty;
+        rulesSheet.Close();
         ResetLimitsEditor();
     }
 
@@ -179,16 +186,21 @@ internal sealed partial class CasinoApp : IPhoneApp
         casinoTables.EnsureFresh();
         casinoSpin.EnsureFresh();
         ConsumeTableAnswers();
-        GreetWithCashier();
         screenArea = context.Content;
         barkeep.Tick();
         cashier.Gate();
         slots.Gate();
         scratch.Gate();
+        rulesSheet.Gate();
         router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
         slots.DrawOverlay(screenArea, ui);
         scratch.DrawOverlay(screenArea, ui);
+        rulesSheet.Draw(screenArea, ui);
         cashier.Draw(screenArea, ui, openLimits);
+        if (rulesSheet.TakePlayRequest())
+        {
+            OpenGame(rulesSheet.GameId);
+        }
     }
 
     private void DrawView(CasinoRoute route, Rect area, int depth)
@@ -264,14 +276,27 @@ internal sealed partial class CasinoApp : IPhoneApp
 
     private void DrawFloorHeader(in PhoneContext context, Rect area)
     {
+        if (tab == CasinoTab.Cashier)
+        {
+            AppHeader.Draw(context, Loc.T(L.Casino.Cashier), navigation.Back);
+            return;
+        }
+
         var cashierLabel = Loc.T(L.Casino.Cashier);
         var reserve = AppSkin.HeaderActionWidth(cashierLabel) + 18f * UiScale.Current;
-        AppHeader.Draw(context, "casino.header", DisplayName, reserve, navigation.Back);
+        AppHeader.Draw(context, "casino.header", TabTitle(), reserve, navigation.Back);
         if (ui.HeaderAction(area, cashierLabel, !cashier.IsOpen))
         {
             cashier.Open();
         }
     }
+
+    private string TabTitle() => tab switch
+    {
+        CasinoTab.Games => Loc.T(L.Casino.GamesHeading),
+        CasinoTab.Live => Loc.T(L.Casino.TabLive),
+        _ => DisplayName,
+    };
 
     private void DrawSlotsHeader(in PhoneContext context, Rect area)
     {
@@ -293,22 +318,6 @@ internal sealed partial class CasinoApp : IPhoneApp
         {
             scratch.OpenOdds();
         }
-    }
-
-    private void GreetWithCashier()
-    {
-        if (greetedWithCashier || casino.State is null)
-        {
-            return;
-        }
-
-        greetedWithCashier = true;
-        if (casino.HasChips || cashier.IsOpen || router.Current.Screen != CasinoScreen.Floor)
-        {
-            return;
-        }
-
-        cashier.Open();
     }
 
     private void OpenCashier()

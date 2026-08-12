@@ -80,8 +80,10 @@ internal sealed partial class VelvetShell : IPhoneApp
         PhoneVisibility visibility, RealtimeSignalBus realtimeSignals, WallpaperImageCache wallpaperImages,
         ConfirmService confirm, ReportService report, ConductGateService conduct, AppInstaller installer)
     {
+        var velvetArchiveDir = new DirectoryInfo(Path.Combine(Plugin.PluginInterface.ConfigDirectory.FullName, "Velvet"));
+        var notInterestedArchive = new VelvetNotInterestedArchive(velvetArchiveDir);
         store = new VelvetStore(session, net.Velvet, net.Account, net.Safety, net.Media, notifications, configuration,
-            keyVault, conversationKeys, visibility, realtimeSignals, installer);
+            keyVault, conversationKeys, visibility, realtimeSignals, installer, notInterestedArchive);
         commentMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         stories = new StoryPresenter(session, net.Grams, net.Media, images, lodestone, VelvetArt.StoryRing, VelvetTheme.Palette,
             new StoryConfirmLabels(L.Velvet.DeleteConfirm, L.Velvet.DeleteCancel, L.Velvet.Saving), confirm,
@@ -342,6 +344,9 @@ internal sealed partial class VelvetShell : IPhoneApp
                 break;
             case VelvetScreenId.Blocked:
                 DrawBlocked(area);
+                break;
+            case VelvetScreenId.NotInterested:
+                DrawNotInterested(area);
                 break;
             case VelvetScreenId.ChatImage:
                 threadView.DrawImagePicker(area, view.Arg ?? string.Empty);

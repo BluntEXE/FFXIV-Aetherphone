@@ -26,6 +26,7 @@ internal enum VelvetScreenId
     Activity,
     Likers,
     Blocked,
+    NotInterested,
     ChatImage,
     ImageView,
     Intro,
@@ -44,6 +45,7 @@ internal readonly record struct VelvetView(VelvetScreenId Screen, string? Arg = 
     public static readonly VelvetView Settings = new(VelvetScreenId.Settings);
     public static readonly VelvetView Activity = new(VelvetScreenId.Activity);
     public static readonly VelvetView Blocked = new(VelvetScreenId.Blocked);
+    public static readonly VelvetView NotInterested = new(VelvetScreenId.NotInterested);
     public static readonly VelvetView Filters = new(VelvetScreenId.Filters);
     public static readonly VelvetView PostTags = new(VelvetScreenId.PostTags);
     public static readonly VelvetView Encryption = new(VelvetScreenId.Encryption);

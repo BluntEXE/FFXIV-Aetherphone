@@ -20,13 +20,31 @@ internal static class CasinoTableKinds
     public const int Private = 2;
 }
 
+internal static class CasinoHouseTiers
+{
+    public const int Pit = 0;
+
+    public const int Parlour = 1;
+
+    public const int Salon = 2;
+
+    public const int Count = 3;
+
+    public static readonly int[] All = { Pit, Parlour, Salon };
+}
+
 internal static class CasinoStakeTiers
 {
     public const int Any = 0;
 
     public const int Low = 1;
 
-    public const int High = 2;
+    public const int High = 3;
+
+    public static int ForHouseTier(int houseTier)
+    {
+        return houseTier + 1;
+    }
 
     public static int From(CasinoTableFilter filter)
     {

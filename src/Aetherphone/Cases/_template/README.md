@@ -5,13 +5,13 @@ glass band, the screen, the wallpaper, the interface and the hardware buttons on
 
 You paint two areas:
 
-- **The metal band** — a 38 px ring around the phone body. Everything further in is covered, so this is
+- **The metal band**: a 38 px ring around the phone body. Everything further in is covered, so this is
   the only part *on* the phone that shows.
-- **The overflow margin** — 250 px of free space all round the body, outside the phone entirely. Charms,
+- **The overflow margin**: 250 px of free space all round the body, outside the phone entirely. Charms,
   straps, ears, figures, anything that breaks the rectangle. It draws outside the plugin window and
   passes clicks through, so it costs nothing.
 
-There is no painting behind the screen — the screen is opaque and drawn above you. But the phone is not
+There is no painting behind the screen, which is opaque and drawn above you. But the phone is not
 the edge of the canvas.
 
 ```
@@ -39,7 +39,7 @@ body and are drawn by the plugin, so leave no gutter for them.
 
 1000 px of body is a little over 1:1 at the largest possible on-screen size. Higher gains nothing: the
 plugin generates no mipmaps, so extra pixels are only ever sampled down. Body aspect varies 0.21% across
-the six phone sizes, so the art stretches to fill — never letterbox, never anchor.
+the six phone sizes, so the art stretches to fill: never letterbox, never anchor.
 
 ## Guides, in canvas pixels
 
@@ -63,7 +63,7 @@ in the SVG; a rounded-rectangle tool will not match and the mismatch shows as a 
 - Alpha 0 inside the red cutout, and anywhere in the margin you leave unpainted.
 - The 10 px ring between the blue glass edge and the red cutout is opaque but always covered. Keep it
   flat, no detail, matching the adjacent metal.
-- **Bleed the RGB at least 8 px past every alpha edge** — the silhouette, the cutout, and around anything
+- **Bleed the RGB at least 8 px past every alpha edge**: the silhouette, the cutout, and around anything
   in the margin. Exporters that zero RGB under alpha 0 produce black halos once the image is filtered.
   Check by sampling any transparent pixel within 8 px of an opaque one: its RGB must match its neighbour.
 
@@ -81,7 +81,7 @@ buttons.
 **Do not paint them.** The plugin draws all three procedurally, on top of your artwork, every frame. A
 painted button would sit under a real one and read as a double.
 
-They are not flat shapes — each is a recessed housing, a rounded body with a lit crown and a shaded
+They are not flat shapes. Each is a recessed housing, a rounded body with a lit crown and a shaded
 flank, a specular highlight that brightens on hover, a 1.5 px press travel, and an accent seam that
 lights up when the toggle is on. None of that can come from a static image, which is why it stays
 procedural.
@@ -100,7 +100,7 @@ Exact footprints, in canvas pixels. Each is 24.5 px wide: 20.3 px in the margin 
 | Lock | 229.7 - 254.2 | 960.3 - 1145.2 | left | bottom |
 
 The housing extends a further ~5 px above and below each span. Everything inside these rectangles is
-covered, so leave them plain — but you *can* paint around them, and a raised bump or a moulded button
+covered, so leave them plain, but you *can* paint around them, and a raised bump or a moulded button
 cover in the margin beside a button is a good use of the space.
 
 **In camera mode the whole image rotates 90 degrees clockwise.** Overflow art rotates with it, so a charm
@@ -111,7 +111,7 @@ overflow near the corners.
 
 **Fine repeating texture does not fit the band.** It is 38 px; a carbon weave needs a cell finer than
 that to read as material, which is both under the aliasing floor and ruinous for file size. Broad,
-low-frequency treatments work. **The margin has no such limit** — nothing is drawn over it.
+low-frequency treatments work. **The margin has no such limit**: nothing is drawn over it.
 
 ## Export
 
@@ -125,7 +125,7 @@ low-frequency treatments work. **The margin has no such limit** — nothing is d
 The biggest lever on file size is authoring within a limited palette so `pngquant --quality 85-95` can
 index the result; that can take a case from 800 KB to under 300 KB. It is an authoring decision, not
 something fixable at export. Quantise repeated detail to discrete steps rather than smooth ramps, and
-keep unpainted areas flat — they exist only to satisfy the bleed.
+keep unpainted areas flat, since they exist only to satisfy the bleed.
 
 The loader does not care about resolution, only aspect. A flat or graphic case may ship at 1125 x 2066
 or 750 x 1378 if that lands it comfortably under budget.
@@ -138,7 +138,7 @@ or 750 x 1378 if that lands it comfortably under budget.
    before the texture loads, so pick the case's dominant metal tone rather than an accent.
 3. Add `catalog.case.<caseid>` to `L.cs` and all nine files in `src/Aetherphone/Localization/`.
 
-The id is permanent — it is both the saved setting and the translation key, so changing it after release
+The id is permanent: it is both the saved setting and the translation key, so changing it after release
 resets everyone who selected that case.
 
 ## Reference cases

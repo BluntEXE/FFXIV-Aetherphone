@@ -1,5 +1,13 @@
 namespace Aetherphone.Apps.Casino;
 
+internal enum CasinoTab
+{
+    Lobby,
+    Games,
+    Live,
+    Cashier,
+}
+
 internal enum CasinoScreen
 {
     Floor,

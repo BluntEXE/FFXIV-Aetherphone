@@ -40,6 +40,8 @@ internal static class BlackjackRules
 {
     public const int SeatCount = 5;
 
+    public const int Decks = 6;
+
     public const int MaxHandsPerSeat = 4;
 
     public const int DealerStandsOn = 17;

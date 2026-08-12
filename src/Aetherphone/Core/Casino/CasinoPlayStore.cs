@@ -233,7 +233,7 @@ internal sealed class CasinoPlayStore : IDisposable
 
             ClearPendingRound(roundId);
             Interlocked.Exchange(ref spinResult, result);
-            if (result.Granted)
+            if (result.Granted && result.Jackpot == 0)
             {
                 store.AbsorbStack(sittingId, result.Stack);
             }

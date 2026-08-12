@@ -52,6 +52,7 @@ internal sealed class SlotsRoundPlayback
     private long totalWin;
     private bool capApplied;
     private long committedWin;
+    private long jackpot;
     private bool turbo;
 
     public bool Turbo
@@ -82,6 +83,10 @@ internal sealed class SlotsRoundPlayback
 
     public long CommittedWin => committedWin;
 
+    public long Jackpot => jackpot;
+
+    public bool JackpotLanded => jackpot > 0;
+
     public float PhaseSeconds => phaseSeconds;
 
     public bool HasSpins => spins.Count > 0;
@@ -101,6 +106,7 @@ internal sealed class SlotsRoundPlayback
         totalWin = 0;
         capApplied = false;
         committedWin = 0;
+        jackpot = 0;
     }
 
     public bool Begin(CasinoSlotsSpinDto round)
@@ -115,6 +121,7 @@ internal sealed class SlotsRoundPlayback
         stake = round.Stake;
         totalWin = round.TotalWin;
         capApplied = round.CapApplied;
+        jackpot = round.Jackpot;
         spins.Add(ViewOf(round.BaseSpin!));
         var freeSpins = round.FreeSpins;
         if (freeSpins is not null)

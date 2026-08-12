@@ -71,10 +71,10 @@ public sealed class CasinoTableBrowserTests
     [Fact]
     public void AnInviteTokenRoundTrips()
     {
-        var token = CasinoShare.Compose("blackjack-table");
-        Assert.Equal("[aep.casino.v1:blackjack-table]", token);
+        var token = CasinoShare.Compose("blackjack-pit");
+        Assert.Equal("[aep.casino.v1:blackjack-pit]", token);
         Assert.True(CasinoShare.TryParse(token, out var tableId));
-        Assert.Equal("blackjack-table", tableId);
+        Assert.Equal("blackjack-pit", tableId);
         Assert.True(CasinoShare.IsToken("  " + token + "  "));
     }
 
@@ -105,10 +105,10 @@ public sealed class CasinoTableBrowserTests
         Assert.Equal("/casino/tables", CasinoClient.TablesPagePath(string.Empty));
         Assert.Equal("/casino/tables?game=casino.blackjack",
             CasinoClient.TablesPagePath(CasinoWire.BlackjackKind));
-        Assert.Equal("/casino/tables/blackjack-table/sit",
-            CasinoClient.TablePath(CasinoRoomIds.BlackjackTable, "sit"));
-        Assert.Equal("/casino/tables/blackjack-table/claim",
-            CasinoClient.TablePath(CasinoRoomIds.BlackjackTable, "claim"));
+        Assert.Equal("/casino/tables/blackjack-pit/sit",
+            CasinoClient.TablePath(CasinoRoomIds.BlackjackPit, "sit"));
+        Assert.Equal("/casino/tables/blackjack-pit/claim",
+            CasinoClient.TablePath(CasinoRoomIds.BlackjackPit, "claim"));
         Assert.Equal("/casino/tables/a%20b/door", CasinoClient.TablePath("a b", "door"));
     }
 
@@ -127,7 +127,7 @@ public sealed class CasinoTableBrowserTests
         bool inviteOnly = false, bool owner = false, bool seated = false)
     {
         return new CasinoTableRowDto(
-            TableId: "blackjack-table",
+            TableId: "blackjack-pit",
             GameKind: CasinoWire.BlackjackKind,
             Kind: inviteOnly || owner || seated ? CasinoTableKinds.Private : CasinoTableKinds.House,
             OwnerName: owner ? "Emerald" : string.Empty,

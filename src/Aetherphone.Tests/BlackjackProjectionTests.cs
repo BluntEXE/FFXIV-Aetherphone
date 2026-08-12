@@ -8,7 +8,7 @@ namespace Aetherphone.Tests;
 
 public sealed class BlackjackProjectionTests
 {
-    private const string Room = CasinoRoomIds.BlackjackTable;
+    private const string Room = CasinoRoomIds.BlackjackPit;
 
     [Fact]
     public void TheFirstBoardIsAlwaysTaken()

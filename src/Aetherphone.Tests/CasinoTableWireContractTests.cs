@@ -74,7 +74,7 @@ public sealed class CasinoTableWireContractTests
         const string json = """
         {
           "granted": true,
-          "roomId": "blackjack-table",
+          "roomId": "blackjack-pit",
           "name": "Emerald room",
           "minBuyIn": 100,
           "maxBuyIn": 2000,
@@ -88,7 +88,7 @@ public sealed class CasinoTableWireContractTests
         var answer = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoQuickSeatDto);
         Assert.NotNull(answer);
         Assert.True(answer!.Granted);
-        Assert.Equal("blackjack-table", answer.RoomId);
+        Assert.Equal("blackjack-pit", answer.RoomId);
         Assert.Equal(500, answer.SuggestedBuyIn);
         Assert.Equal(2, answer.SeatIndex);
     }
@@ -109,7 +109,7 @@ public sealed class CasinoTableWireContractTests
         const string json = """
         {
           "granted": true,
-          "roomId": "blackjack-table",
+          "roomId": "blackjack-pit",
           "seatIndex": 2,
           "joinsNextHand": true,
           "boundElsewhere": false,
@@ -129,7 +129,7 @@ public sealed class CasinoTableWireContractTests
     [Fact]
     public void StandingMidHandComesBackQueuedRatherThanRefused()
     {
-        const string json = """{"granted":true,"roomId":"blackjack-table","atHandEnd":true,"balance":1480}""";
+        const string json = """{"granted":true,"roomId":"blackjack-pit","atHandEnd":true,"balance":1480}""";
         var answer = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoStandDto);
         Assert.NotNull(answer);
         Assert.True(answer!.Granted);
@@ -218,16 +218,16 @@ public sealed class CasinoTableWireContractTests
     {
         var notification = new PhoneNotification(CasinoTurnNotifier.AppId, "Your turn", "The table is waiting",
             System.DateTime.Now, default,
-            string.Concat(CasinoTurnNotifier.GroupPrefix, CasinoRoomIds.BlackjackTable));
-        Assert.Equal("casino:blackjack-table", notification.GroupKey);
-        Assert.Equal("casino:blackjack-table", notification.StackKey);
+            string.Concat(CasinoTurnNotifier.GroupPrefix, CasinoRoomIds.BlackjackPit));
+        Assert.Equal("casino:blackjack-pit", notification.GroupKey);
+        Assert.Equal("casino:blackjack-pit", notification.StackKey);
         Assert.Equal("casino", notification.SettingsKey);
 
         var launcher = new CasinoLauncher();
         launcher.RequestTable(notification.GroupKey![CasinoTurnNotifier.GroupPrefix.Length..]);
         Assert.True(launcher.TryConsume(out var launch));
         Assert.Equal(CasinoLaunchKind.Table, launch.Kind);
-        Assert.Equal(CasinoRoomIds.BlackjackTable, launch.TableId);
+        Assert.Equal(CasinoRoomIds.BlackjackPit, launch.TableId);
         Assert.False(launcher.TryConsume(out _));
     }
 
@@ -263,7 +263,7 @@ public sealed class CasinoTableWireContractTests
     {
         const string json = """
         {
-          "roomId": "blackjack-table",
+          "roomId": "blackjack-pit",
           "epoch": 3,
           "seq": 41,
           "roundIndex": 7,
@@ -273,7 +273,7 @@ public sealed class CasinoTableWireContractTests
         """;
         var hand = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoBlackjackHandReadDto);
         Assert.NotNull(hand);
-        Assert.Equal("blackjack-table", hand!.RoomId);
+        Assert.Equal("blackjack-pit", hand!.RoomId);
         Assert.Equal(3, hand.Epoch);
         Assert.Equal(41, hand.Seq);
         Assert.Equal(7, hand.RoundIndex);
@@ -281,8 +281,8 @@ public sealed class CasinoTableWireContractTests
         Assert.Equal(new[] { 40, 41 }, hand.Hands![0]);
         Assert.Equal(new[] { 12 }, hand.Hands![1]);
 
-        Assert.Equal("/casino/blackjack/blackjack-table/hand",
-            Aetherphone.Core.Aethernet.Clients.CasinoClient.BlackjackMyHandPath(CasinoRoomIds.BlackjackTable));
+        Assert.Equal("/casino/blackjack/blackjack-pit/hand",
+            Aetherphone.Core.Aethernet.Clients.CasinoClient.BlackjackMyHandPath(CasinoRoomIds.BlackjackPit));
         Assert.Equal("/casino/blackjack/a%20b/hand",
             Aetherphone.Core.Aethernet.Clients.CasinoClient.BlackjackMyHandPath("a b"));
     }

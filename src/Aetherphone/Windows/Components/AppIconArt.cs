@@ -102,19 +102,17 @@ internal static class AppIconArt
         drawList.AddCircleFilled(center, rimRadius, ink, 48);
         var radialHalf = extent * 0.24f;
         var tangentialHalf = extent * 0.16f;
+        Span<Vector2> quad = stackalloc Vector2[4];
         for (var notch = 0; notch < 4; notch++)
         {
             var angle = MathF.PI * 0.25f + notch * (MathF.PI * 0.5f);
             var direction = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
             var perpendicular = new Vector2(-direction.Y, direction.X);
             var notchCenter = center + direction * rimRadius;
-            Span<Vector2> quad = stackalloc Vector2[4]
-            {
-                notchCenter - direction * radialHalf - perpendicular * tangentialHalf,
-                notchCenter - direction * radialHalf + perpendicular * tangentialHalf,
-                notchCenter + direction * radialHalf + perpendicular * tangentialHalf,
-                notchCenter + direction * radialHalf - perpendicular * tangentialHalf,
-            };
+            quad[0] = notchCenter - direction * radialHalf - perpendicular * tangentialHalf;
+            quad[1] = notchCenter - direction * radialHalf + perpendicular * tangentialHalf;
+            quad[2] = notchCenter + direction * radialHalf + perpendicular * tangentialHalf;
+            quad[3] = notchCenter + direction * radialHalf - perpendicular * tangentialHalf;
             FillConvex(drawList, hole, quad);
         }
 

@@ -56,7 +56,7 @@ internal sealed class BlackjackTable
     private readonly Vector2[] seatCenters = new Vector2[BlackjackRules.SeatCount];
 
     private RollingValue winRoll;
-    private string roomId = CasinoRoomIds.BlackjackTable;
+    private string roomId = CasinoRoomIds.BlackjackPit;
     private string inlineReason = string.Empty;
     private string celebratedHandId = string.Empty;
     private string spokenHandId = string.Empty;
@@ -81,7 +81,7 @@ internal sealed class BlackjackTable
     public void Enter(string tableId)
     {
         entered = true;
-        roomId = tableId.Length > 0 ? tableId : CasinoRoomIds.BlackjackTable;
+        roomId = tableId.Length > 0 ? tableId : CasinoRoomIds.BlackjackPit;
         inlineReason = string.Empty;
         projection.Reset();
         playback.Reset();
@@ -484,16 +484,59 @@ internal sealed class BlackjackTable
             }
         }
 
+        var totalY = anchor.Y + PlayingCards.HeightFor(cardWidth) * 0.5f + 9f * scale;
         if (hand.Total > 0)
         {
             var active = board.ActiveSeat == seat.SeatIndex && board.ActiveSplit == hand.SplitIndex;
             var ink = hand.Outcome == BlackjackOutcomes.Bust ? ui.MutedInk : active ? ui.Accent : ui.BodyInk;
-            Typography.DrawCentered(drawList,
-                new Vector2(anchor.X, anchor.Y + PlayingCards.HeightFor(cardWidth) * 0.5f + 9f * scale),
-                GameNumber.Label(hand.Total), ink, TextStyles.Caption2);
+            Typography.DrawCentered(drawList, new Vector2(anchor.X, totalY), GameNumber.Label(hand.Total), ink,
+                TextStyles.Caption2);
         }
 
+        DrawHandOutcome(drawList, ui, hand, new Vector2(anchor.X, totalY + 13f * scale), scale);
         return ordinal + count;
+    }
+
+    private void DrawHandOutcome(ImDrawListPtr drawList, AppSkin ui, CasinoBlackjackHandDto hand, Vector2 center,
+        float scale)
+    {
+        if (hand.Outcome == BlackjackOutcomes.Pending)
+        {
+            return;
+        }
+
+        var text = OutcomeLabel(hand);
+        if (text.Length == 0)
+        {
+            return;
+        }
+
+        var won = hand.Delta > 0;
+        var ink = won ? Gold : ui.MutedInk;
+        var size = Typography.Measure(text, TextStyles.Caption2);
+        var pad = 6f * scale;
+        var min = new Vector2(center.X - size.X * 0.5f - pad, center.Y - size.Y * 0.5f - 2f * scale);
+        var max = new Vector2(center.X + size.X * 0.5f + pad, center.Y + size.Y * 0.5f + 2f * scale);
+        Squircle.Fill(drawList, min, max, (max.Y - min.Y) * 0.5f,
+            ImGui.GetColorU32(Palette.WithAlpha(won ? Gold : ui.TitleInk, won ? 0.18f : 0.10f)));
+        Typography.DrawCentered(drawList, center, text, ink, TextStyles.Caption2);
+    }
+
+    private static string OutcomeLabel(CasinoBlackjackHandDto hand)
+    {
+        if (hand.Outcome == BlackjackOutcomes.Blackjack)
+        {
+            return Loc.T(L.Casino.BlackjackSeatNatural);
+        }
+
+        if (hand.Outcome == BlackjackOutcomes.Push)
+        {
+            return Loc.T(L.Casino.BlackjackSeatPush);
+        }
+
+        return hand.Delta > 0
+            ? string.Concat("+", hand.Delta.ToString("N0", Loc.Culture))
+            : string.Empty;
     }
 
     private void SpeakForPhase(int phase, CasinoBlackjackRoomStateDto board)

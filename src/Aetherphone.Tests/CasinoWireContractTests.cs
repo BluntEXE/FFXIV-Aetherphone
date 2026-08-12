@@ -103,6 +103,52 @@ public sealed class CasinoWireContractTests
     }
 
     [Fact]
+    public void BackendStatePayloadCarriesTheProgressiveJackpot()
+    {
+        const string json = "{\"stakesPaused\":false,\"draining\":false,\"sitting\":null,"
+            + "\"minBuyIn\":2000,\"maxBuyIn\":200000,\"dailyBuyInCap\":500000,"
+            + "\"lossLimit\":50000,\"lossHeadroom\":50000,\"selfLossLimit\":null,"
+            + "\"pendingRaiseLimit\":null,\"pendingRaiseAtUnix\":null,"
+            + "\"netLossToday\":0,\"atRisk\":0,\"buyInToday\":0,\"balance\":1300,"
+            + "\"tableSitting\":null,\"jackpot\":843000}";
+        var state = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoStateDto);
+        Assert.NotNull(state);
+        Assert.Equal(843000L, state.Jackpot);
+    }
+
+    [Fact]
+    public void AStatePayloadWithoutAJackpotStillLoads()
+    {
+        const string json = "{\"stakesPaused\":false,\"draining\":false,\"sitting\":null,"
+            + "\"minBuyIn\":2000,\"maxBuyIn\":200000,\"balance\":1300}";
+        var state = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoStateDto);
+        Assert.NotNull(state);
+        Assert.Equal(0L, state.Jackpot);
+    }
+
+    [Fact]
+    public void HouseRoomIdsMatchTheRoomsTheBackendSeeds()
+    {
+        Assert.Equal("wheel-floor", CasinoRoomIds.WheelFloor);
+        Assert.Equal("bingo-hall", CasinoRoomIds.BingoHall);
+        Assert.Equal("blackjack-pit", CasinoRoomIds.BlackjackPit);
+        Assert.Equal("blackjack-parlour", CasinoRoomIds.BlackjackParlour);
+        Assert.Equal("blackjack-salon", CasinoRoomIds.BlackjackSalon);
+        Assert.Equal(3, CasinoRoomIds.BlackjackHouse.Length);
+    }
+
+    [Fact]
+    public void TheRoomCadenceMatchesTheScheduleTheServerRuns()
+    {
+        Assert.Equal(25, CasinoRoomCadence.WheelWindow(CasinoRoomPhases.Open));
+        Assert.Equal(5, CasinoRoomCadence.WheelWindow(CasinoRoomPhases.Locked));
+        Assert.Equal(10, CasinoRoomCadence.WheelWindow(CasinoRoomPhases.Result));
+        Assert.Equal(60, CasinoRoomCadence.BingoWindow(CasinoRoomPhases.Open));
+        Assert.Equal(155, CasinoRoomCadence.BingoWindow(CasinoRoomPhases.Locked));
+        Assert.Equal(15, CasinoRoomCadence.BingoWindow(CasinoRoomPhases.Result));
+    }
+
+    [Fact]
     public void BackendStatePayloadDeserializesWithoutASitting()
     {
         const string json = "{\"stakesPaused\":false,\"draining\":false,\"sitting\":null,"

@@ -65,6 +65,22 @@ internal sealed class CasinoTablesStore : IDisposable
 
     public CasinoTableRowDto[] Tables => tables;
 
+    public int SeatedAt(string gameKind)
+    {
+        var directory = tables;
+        var seated = 0;
+        for (var index = 0; index < directory.Length; index++)
+        {
+            var row = directory[index];
+            if (string.Equals(row.GameKind, gameKind, StringComparison.Ordinal))
+            {
+                seated += row.SeatedCount;
+            }
+        }
+
+        return seated;
+    }
+
     public CasinoTableDoorDto? Door => door;
 
     public bool Loading => loading;
