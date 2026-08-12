@@ -16,11 +16,17 @@ internal sealed class SlotsCabinet
     private const float InfoRowHeight = 48f;
     private const float BannerHeight = 62f;
     private const float SpinPillHeight = 50f;
-    private const float TurboWidth = 76f;
+    private const float TurboWidth = 62f;
+    private const float AutoWidth = 62f;
+    private const float AutoChipHeight = 34f;
+    private const float AutoChipGap = 6f;
+
     private const float SpinRowsPerSecond = 15f;
     private const float AnticipationRowsPerSecond = 5.5f;
     private const float LineTraceCycleSeconds = 0.7f;
     private const long SmallCelebrationMultiple = 4;
+
+    private static readonly int[] AutoRounds = { 10, 25, 50, 100 };
 
     private static readonly Vector4 Gold = new(1f, 0.84f, 0.42f, 1f);
     private static readonly Vector4 FeltTop = new(0.049f, 0.094f, 0.075f, 1f);
@@ -49,6 +55,9 @@ internal sealed class SlotsCabinet
     private string inlineReason = string.Empty;
     private float lineTraceSeconds;
     private int celebratedSpinIndex = -1;
+    private int autoRemaining;
+    private int autoSettledSpin = -1;
+    private bool autoPickerOpen;
     private bool turbo;
     private Rect reelWindow;
 
@@ -102,6 +111,9 @@ internal sealed class SlotsCabinet
         payTable.Close();
         inlineReason = string.Empty;
         celebratedSpinIndex = -1;
+        autoRemaining = 0;
+        autoSettledSpin = -1;
+        autoPickerOpen = false;
         winRoll.Snap(0);
     }
 
@@ -146,10 +158,12 @@ internal sealed class SlotsCabinet
         var slotsSeated = sitting is not null;
         if (!slotsSeated)
         {
+            StopAuto();
             DrawSeatMissing(drawList, ui, left, y, width, scale);
         }
         else
         {
+            AdvanceAuto(state, sitting!);
             y = DrawStakeRow(drawList, ui, sitting!, left, y, width, scale, delta);
             y += Metrics.Space.Md * scale;
             DrawSpinControls(drawList, ui, state, sitting!, left, y, width, scale);
@@ -638,6 +652,66 @@ internal sealed class SlotsCabinet
             SlotsRules.StakeStep, changeable, delta);
     }
 
+    public bool AutoRunning => autoRemaining > 0;
+
+    private void StopAuto()
+    {
+        autoRemaining = 0;
+        autoPickerOpen = false;
+    }
+
+    private void AdvanceAuto(CasinoStateDto state, CasinoSittingDto sitting)
+    {
+        if (autoRemaining <= 0)
+        {
+            return;
+        }
+
+        if (inlineReason.Length > 0 || state.StakesPaused || state.Draining)
+        {
+            StopAuto();
+            return;
+        }
+
+        if (play.RoundInFlight || PlaybackBusy)
+        {
+            return;
+        }
+
+        if (playback.Phase == SlotsPlaybackPhase.Finished && autoSettledSpin != playback.SpinIndex)
+        {
+            autoSettledSpin = playback.SpinIndex;
+            if (StopsAutoAfterRound())
+            {
+                StopAuto();
+                return;
+            }
+        }
+
+        var stake = CurrentStake;
+        if (stake < SlotsRules.MinStake || sitting.Stack < stake
+            || (state.LossHeadroom > 0 && state.LossHeadroom < stake))
+        {
+            StopAuto();
+            return;
+        }
+
+        autoRemaining--;
+        autoSettledSpin = -1;
+        play.SpinSlots(stake);
+    }
+
+    private bool StopsAutoAfterRound()
+    {
+        if (playback.JackpotLanded || playback.BonusAwarded > 0)
+        {
+            return true;
+        }
+
+        var stake = playback.Stake;
+        return stake > 0 && playback.TotalWin >= stake * SlotsRoundPlayback.BigWinMultiple;
+    }
+
     private bool ShowingJackpotBanner => playback.Phase == SlotsPlaybackPhase.Finished
         || (playback.SpinIndex == 0 && playback.Phase == SlotsPlaybackPhase.Presenting);
 
@@ -658,19 +732,44 @@ internal sealed class SlotsCabinet
         var lowStack = stake < SlotsRules.MinStake || sitting.Stack < stake;
         var blocked = state.StakesPaused || state.Draining;
         var canSpin = !play.RoundInFlight && !PlaybackBusy && !blocked && !lowStack;
-        var label = canSpin
-            ? Loc.T(L.Casino.SlotsSpinFor, stake.ToString("N0", Loc.Culture))
-            : Loc.T(L.Casino.SlotsSpin);
-        var turboWidth = TurboWidth * scale;
+        var running = AutoRunning;
+        var label = running
+            ? Loc.T(L.Casino.SlotsAutoStop, GameNumber.Label(autoRemaining))
+            : canSpin
+                ? Loc.T(L.Casino.SlotsSpinFor, stake.ToString("N0", Loc.Culture))
+                : Loc.T(L.Casino.SlotsSpin);
+        var sideWidth = (TurboWidth + AutoWidth + Metrics.Space.Xs) * scale;
         var pillRect = new Rect(new Vector2(left, y),
-            new Vector2(left + width - turboWidth - Metrics.Space.Sm * scale, y + SpinPillHeight * scale));
-        if (DrawSpinPill(drawList, ui, pillRect, label, canSpin, scale))
+            new Vector2(left + width - sideWidth - Metrics.Space.Sm * scale, y + SpinPillHeight * scale));
+        if (DrawSpinPill(drawList, ui, pillRect, label, running || canSpin, scale))
         {
-            inlineReason = string.Empty;
-            play.SpinSlots(stake);
+            if (running)
+            {
+                StopAuto();
+            }
+            else
+            {
+                inlineReason = string.Empty;
+                play.SpinSlots(stake);
+            }
         }
 
-        var turboRect = new Rect(new Vector2(pillRect.Max.X + Metrics.Space.Sm * scale, y),
+        var autoRect = new Rect(new Vector2(pillRect.Max.X + Metrics.Space.Sm * scale, y),
+            new Vector2(pillRect.Max.X + Metrics.Space.Sm * scale + AutoWidth * scale,
+                y + SpinPillHeight * scale));
+        if (DrawAutoToggle(drawList, ui, autoRect, scale))
+        {
+            if (running)
+            {
+                StopAuto();
+            }
+            else
+            {
+                autoPickerOpen = !autoPickerOpen;
+            }
+        }
+
+        var turboRect = new Rect(new Vector2(autoRect.Max.X + Metrics.Space.Xs * scale, y),
             new Vector2(left + width, y + SpinPillHeight * scale));
         if (DrawTurboToggle(drawList, ui, turboRect, scale))
         {
@@ -678,7 +777,7 @@ internal sealed class SlotsCabinet
             playback.Turbo = turbo;
         }
 
-        if (turbo && canSpin && UiInteract.Hover(pillRect.Min, pillRect.Max)
+        if (turbo && !running && canSpin && UiInteract.Hover(pillRect.Min, pillRect.Max)
             && ImGui.IsMouseDown(ImGuiMouseButton.Left))
         {
             inlineReason = string.Empty;
@@ -686,6 +785,11 @@ internal sealed class SlotsCabinet
         }
 
         y = pillRect.Max.Y + Metrics.Space.Sm * scale;
+        if (autoPickerOpen && !running)
+        {
+            y = DrawAutoPicker(drawList, ui, left, y, width, sitting, stake, scale);
+        }
+
         if (blocked)
         {
             var notice = state.StakesPaused ? Loc.T(L.Casino.PausedTitle) : Loc.T(L.Casino.DrainingTitle);
@@ -732,6 +836,68 @@ internal sealed class SlotsCabinet
         }
 
         return multiple < 50 ? 5f : 3f;
+    }
+
+    private float DrawAutoPicker(ImDrawListPtr drawList, AppSkin ui, float left, float y, float width,
+        CasinoSittingDto sitting, long stake, float scale)
+    {
+        var gap = AutoChipGap * scale;
+        var chipWidth = (width - gap * (AutoRounds.Length - 1)) / AutoRounds.Length;
+        var height = AutoChipHeight * scale;
+        for (var index = 0; index < AutoRounds.Length; index++)
+        {
+            var rounds = AutoRounds[index];
+            var min = new Vector2(left + index * (chipWidth + gap), y);
+            var max = new Vector2(min.X + chipWidth, y + height);
+            var affordable = stake > 0 && sitting.Stack >= stake;
+            var rounding = height * 0.5f;
+            var hovered = affordable && UiInteract.Hover(min, max);
+            Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(ui.FieldSurface));
+            Squircle.Stroke(drawList, min, max, rounding,
+                ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, affordable ? 0.30f : 0.14f)), 1f * scale);
+            if (hovered)
+            {
+                Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(ui.HoverTint));
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            }
+
+            Typography.DrawCentered(drawList, (min + max) * 0.5f, GameNumber.Label(rounds),
+                affordable ? ui.TitleInk : Palette.WithAlpha(ui.MutedInk, 0.6f),
+                TextStyles.SubheadlineEmphasized);
+            if (UiInteract.Click(min, max, hovered))
+            {
+                inlineReason = string.Empty;
+                autoRemaining = rounds;
+                autoSettledSpin = -1;
+                autoPickerOpen = false;
+            }
+        }
+
+        y += height + Metrics.Space.Xs * scale;
+        var note = Loc.T(L.Casino.SlotsAutoStopsOn);
+        var block = Typography.MeasureWrappedBlock(note, TextStyles.Caption2, width);
+        Typography.DrawWrappedLeft(new Vector2(left, y), note, ui.MutedInk, TextStyles.Caption2, width);
+        return y + block.Y + Metrics.Space.Sm * scale;
+    }
+
+    private bool DrawAutoToggle(ImDrawListPtr drawList, AppSkin ui, Rect rect, float scale)
+    {
+        var rounding = rect.Height * 0.5f;
+        var hovered = UiInteract.Hover(rect.Min, rect.Max);
+        var lit = AutoRunning || autoPickerOpen;
+        var fill = lit ? Palette.WithAlpha(ui.Accent, 0.22f) : ui.FieldSurface;
+        Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(fill));
+        Squircle.Stroke(drawList, rect.Min, rect.Max, rounding,
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, lit ? 0.7f : 0.25f)), 1f * scale);
+        if (hovered)
+        {
+            Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(ui.HoverTint));
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        Typography.DrawCentered(drawList, rect.Center, Loc.T(L.Casino.SlotsAuto),
+            lit ? ui.Accent : ui.MutedInk, TextStyles.FootnoteEmphasized);
+        return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
     }
 
     private bool DrawTurboToggle(ImDrawListPtr drawList, AppSkin ui, Rect rect, float scale)

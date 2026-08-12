@@ -4284,6 +4284,9 @@ internal static class L
         public static readonly LocString WheelSpotFull = new("casino.wheel.spotFull", "That is the whole {0} this spot takes from one backer. Try another spot on the rim.");
         public static readonly LocString BingoBuyMoreHeading = new("casino.bingo.buyMoreHeading", "You hold {0}. How many more?");
         public static readonly LocString BingoBuyAgainNote = new("casino.bingo.buyAgainNote", "You can come back for more cards while the window is open.");
+        public static readonly LocString SlotsAuto = new("casino.slots.auto", "Auto");
+        public static readonly LocString SlotsAutoStop = new("casino.slots.autoStop", "Stop ({0} left)");
+        public static readonly LocString SlotsAutoStopsOn = new("casino.slots.autoStopsOn", "Auto stops on a bonus, a big win, the jackpot, or when your chips run low.");
     }
 
     internal static class Catalogs
