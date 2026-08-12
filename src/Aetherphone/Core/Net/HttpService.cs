@@ -224,6 +224,21 @@ internal sealed class HttpService : IDisposable
         }
     }
 
+    private const int MaxErrorBodyChars = 500;
+
+    private static async Task<string> ReadErrorBodyAsync(HttpResponseMessage response, CancellationToken token)
+    {
+        try
+        {
+            var body = await response.Content.ReadAsStringAsync(token).ConfigureAwait(false);
+            return body.Length > MaxErrorBodyChars ? body[..MaxErrorBodyChars] + "..." : body;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
     private async Task<T?> SendForJsonAsync<T>(HttpRequestMessage request, JsonTypeInfo<T> typeInfo, string? bearer,
         Action<int>? onStatus, string? appScope, CancellationToken token)
     {
@@ -264,7 +279,9 @@ internal sealed class HttpService : IDisposable
 
             if (!response.IsSuccessStatusCode)
             {
-                AepLog.Warning($"HTTP {request.Method} {request.RequestUri} returned {(int)response.StatusCode}");
+                var errorBody = await ReadErrorBodyAsync(response, scope.Token).ConfigureAwait(false);
+                AepLog.Warning($"HTTP {request.Method} {request.RequestUri} returned {(int)response.StatusCode} " +
+                    $"{response.StatusCode}{(errorBody.Length > 0 ? $": {errorBody}" : string.Empty)}");
                 return default;
             }
 

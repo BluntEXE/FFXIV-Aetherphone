@@ -2,6 +2,8 @@ namespace Aetherphone.Core;
 
 internal static class AepLog
 {
+    public static void Verbose(string message) => Plugin.Log?.Verbose(message);
+
     public static void Debug(string message) => Plugin.Log?.Debug(message);
 
     public static void Debug(Exception exception, string message) => Plugin.Log?.Debug(exception, message);

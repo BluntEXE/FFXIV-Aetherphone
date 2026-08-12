@@ -23,6 +23,7 @@ internal static class AppAccents
         ["news"] = AccentRing.Slate,
         ["market"] = AccentRing.Gold,
         ["music"] = AccentRing.Green,
+        ["aetherstream"] = AccentRing.Violet,
         ["wallet"] = AccentRing.Green,
         ["coin"] = AccentRing.Gold,
         ["casino"] = AccentRing.Emerald,

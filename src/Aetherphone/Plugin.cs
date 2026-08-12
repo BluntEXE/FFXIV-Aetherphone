@@ -10,9 +10,12 @@ using Aetherphone.Core.Platform;
 using Aetherphone.Core.Shell;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Updates;
+using Aetherphone.Core.Video;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows;
 using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.GamePad;
+using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.Command;
 using Dalamud.Game.Config;
 using Dalamud.Game.Gui.ContextMenu;
@@ -44,6 +47,9 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
     [PluginService] internal static IGameConfig GameConfig { get; private set; } = null!;
     [PluginService] internal static IUnlockState UnlockState { get; private set; } = null!;
+    [PluginService] internal static IGameInteropProvider InteropProvider { get; private set; } = null!;
+    [PluginService] internal static IKeyState KeyState { get; private set; } = null!;
+    [PluginService] internal static IGamepadState GamepadState { get; private set; } = null!;
     [PluginService] internal static IAetheryteList AetheryteList { get; private set; } = null!;
     internal static Plugin Instance { get; private set; } = null!;
     internal static Configuration Cfg { get; private set; } = null!;
@@ -56,6 +62,12 @@ public sealed class Plugin : IDalamudPlugin
     private readonly PhoneServices services;
     private readonly PhoneShell shell;
     private readonly PhoneWindow phoneWindow;
+    private readonly VideoPlayer video;
+    private readonly ScreenController screenController;
+    private readonly AetherStreamQueue videoQueue;
+    private readonly WatchAlongSession watchAlong;
+    private readonly VideoDebugWindow videoDebugWindow;
+    private readonly AetherStreamScreenWindow screenWindow;
     private readonly UpdateChipWindow updateChipWindow;
     private readonly PhoneEmoteController phoneEmote;
     private readonly TimerNotifier timerNotifier;
@@ -96,7 +108,16 @@ public sealed class Plugin : IDalamudPlugin
                 PhoneSizeCatalog.ZoomFor(Cfg.PhoneWidth));
             EmojiCatalog.Load();
             Wallpapers = services.Wallpapers;
-            var bundle = AppRegistry.BuildDefault(services);
+            screenController = new ScreenController(() => Cfg.VideoHideNameplates);
+            video = new VideoPlayer(screenController.Engine);
+            videoQueue = new AetherStreamQueue(video);
+            watchAlong = new WatchAlongSession(services.AethernetSession, Cfg, services.Confirm, video,
+                videoQueue, services.StreamSignals, screenController);
+            Framework.Update += OnVideoFrameworkUpdate;
+            videoDebugWindow = new VideoDebugWindow(video, screenController);
+            screenWindow = new AetherStreamScreenWindow(video);
+            var bundle = AppRegistry.BuildDefault(services, video, screenController, videoQueue, watchAlong,
+                screenWindow);
             shell = new PhoneShell(services, bundle);
             screenshotImport = new ScreenshotImportService(bundle.Photos, Cfg);
             phoneWindow = new PhoneWindow(shell, Cfg);
@@ -106,6 +127,8 @@ public sealed class Plugin : IDalamudPlugin
             windowSystem.AddWindow(phoneWindow);
             windowSystem.AddWindow(updateChipWindow);
             windowSystem.AddWindow(PhotoWindow);
+            windowSystem.AddWindow(videoDebugWindow);
+            windowSystem.AddWindow(screenWindow);
             services.Visibility.Bind(() => phoneWindow is { IsOpen: true, IsMinimized: false });
             phoneEmote = new PhoneEmoteController(Cfg, Framework, ObjectTable, Condition, DataManager,
                 () => services.Visibility.IsVisible);
@@ -168,6 +191,7 @@ public sealed class Plugin : IDalamudPlugin
 
         ClientState.Login -= OnLogin;
         Framework.Update -= OnAutoOpenTick;
+        Framework.Update -= OnVideoFrameworkUpdate;
         ContextMenu.OnMenuOpened -= OnMenuOpened;
         CommandManager.RemoveHandler(AepConstants.PrimaryCommand);
         CommandManager.RemoveHandler(AepConstants.AliasCommand);
@@ -179,6 +203,12 @@ public sealed class Plugin : IDalamudPlugin
 
         dtrEntry?.Remove();
         windowSystem.RemoveAllWindows();
+        videoDebugWindow?.Dispose();
+        screenWindow?.Dispose();
+        screenController?.Dispose();
+        watchAlong?.Dispose();
+        video?.Dispose();
+        DxHandler.Dispose();
         phoneEmote?.Dispose();
         timerNotifier?.Dispose();
         calendarReminders?.Dispose();
@@ -186,6 +216,7 @@ public sealed class Plugin : IDalamudPlugin
         reminders?.Dispose();
         Updates?.Dispose();
         shell?.Dispose();
+        screenshotImport?.Dispose();
         services?.Dispose();
         Device?.Dispose();
         Fonts?.Dispose();
@@ -211,6 +242,12 @@ public sealed class Plugin : IDalamudPlugin
         autoOpenPending = true;
         Framework.Update -= OnAutoOpenTick;
         Framework.Update += OnAutoOpenTick;
+    }
+
+    private void OnVideoFrameworkUpdate(IFramework framework)
+    {
+        videoQueue.OnFrameworkUpdate();
+        watchAlong.OnFrameworkUpdate((float)framework.UpdateDelta.TotalSeconds);
     }
 
     private void OnAutoOpenTick(IFramework framework)
@@ -254,12 +291,19 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.OpenConfigUi -= phoneWindow.OpenSettings;
         ClientState.Login -= OnLogin;
         Framework.Update -= OnAutoOpenTick;
+        Framework.Update -= OnVideoFrameworkUpdate;
         services.Notifications.Changed -= UpdateDtrBadge;
         services.Calls.IncomingCallPresented -= OnIncomingCall;
         ContextMenu.OnMenuOpened -= OnMenuOpened;
         dtrEntry.Remove();
         phoneWindow.PersistPositions();
         windowSystem.RemoveAllWindows();
+        videoDebugWindow.Dispose();
+        screenWindow.Dispose();
+        screenController.Dispose();
+        watchAlong.Dispose();
+        video.Dispose();
+        DxHandler.Dispose();
         phoneEmote.Dispose();
         timerNotifier.Dispose();
         calendarReminders.Dispose();
@@ -344,6 +388,12 @@ public sealed class Plugin : IDalamudPlugin
         if (argument.Equals("reset", StringComparison.OrdinalIgnoreCase))
         {
             phoneWindow.Recenter();
+            return;
+        }
+
+        if (argument.Equals("videodebug", StringComparison.OrdinalIgnoreCase))
+        {
+            videoDebugWindow.IsOpen = true;
             return;
         }
 

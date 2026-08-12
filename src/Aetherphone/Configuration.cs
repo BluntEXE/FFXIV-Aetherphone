@@ -21,10 +21,32 @@ using Aetherphone.Core.Songs;
 using Aetherphone.Core.Telephony;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Venues;
+using Aetherphone.Core.Video;
 using Aetherphone.Core.Wallpapers;
 using Dalamud.Configuration;
 
 namespace Aetherphone;
+
+[Serializable]
+internal sealed class ScreenPositionPreset
+{
+    public string Name { get; set; } = "";
+    public float X { get; set; }
+    public float Y { get; set; }
+    public float Z { get; set; }
+    public float Yaw { get; set; }
+    public float Scale { get; set; } = 1.0f;
+}
+
+[Serializable]
+internal sealed class VideoQueueRecord
+{
+    public string Url { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string Source { get; set; } = "";
+    public double? DurationSeconds { get; set; }
+    public string? ThumbnailUrl { get; set; }
+}
 
 [Serializable]
 internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, IControlConfiguration
@@ -88,6 +110,16 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public float NotificationVolume { get; set; } = 0.8f;
     public float MusicVolume { get; set; } = 0.6f;
     public int MusicRepeat { get; set; }
+    public bool SoundSettingsMigrated { get; set; }
+    public float VideoVolume { get; set; } = 0.6f;
+    public int VideoMaxQualityHeight { get; set; } = 720;
+    public bool VideoHideNameplates { get; set; } = true;
+    public bool VideoShareWatchPresence { get; set; } = true;
+    public bool VideoHardwareDecoding { get; set; }
+    public bool VideoAllowInsecureDirectUrls { get; set; }
+    public bool VideoStreamApprovalRequired { get; set; }
+    public List<ScreenPositionPreset> ScreenPresets { get; set; } = new();
+    public List<VideoQueueRecord> VideoQueue { get; set; } = new();
     public bool GameSoundsCleared { get; set; }
     #if DEBUG
     public const string DefaultAethernetBaseUrl = "https://aethernet-dev-production.up.railway.app";
