@@ -23,12 +23,6 @@ internal sealed partial class AetherStreamApp
 
     private void DrawSettings(PhoneContext context, Rect area, float scale)
     {
-        // Every other tab in this app draws through `ui` (AppSkin, accented pink via
-        // AppAccents.For("aetherstream")). SettingsRow/Toggle/GroupCard/AppHeader all take a
-        // plain PhoneTheme instead, so without this the whole Settings screen silently fell back
-        // to the system theme's accent/toggle-green - a different colour from every other screen
-        // in this same app. PhoneTheme is a sealed class, not a record, so it can't use `with`;
-        // this copies it field-by-field with just Accent/ToggleOn swapped.
         var accentedTheme = AccentedTheme(context.Theme);
         var accentedContext = new PhoneContext(context.Content, accentedTheme, context.Navigation);
 
@@ -105,8 +99,6 @@ internal sealed partial class AetherStreamApp
                         ytdlpDownloading = true;
                         dependencyWork.Run("download yt-dlp", async token =>
                         {
-                            // Same "retry the check first if it's empty" reasoning as the mpv
-                            // button above.
                             if (resources.YtdlpCheckResult[0].Length == 0)
                             {
                                 await resources.CheckYTDLPAsync().ConfigureAwait(false);
@@ -255,11 +247,6 @@ internal sealed partial class AetherStreamApp
         };
     }
 
-    // Unlike the old bundled Native/libmpv-2.dll this replaces, AlphaChannel's engine downloads
-    // mpv-winbuild and yt-dlp itself into Dalamud's plugin config directory, on first use of the
-    // app rather than at plugin load (see Resources.EnsureProvisioned). That provisioning only
-    // fetches what is missing outright; replacing a build that already works is an explicit
-    // choice, which is what these rows and buttons are for.
     private static string MpvStatusText(Resources resources)
     {
         if (resources.GetLocationMPV() is null)

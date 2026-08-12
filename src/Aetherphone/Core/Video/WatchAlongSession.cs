@@ -7,13 +7,9 @@ using Aetherphone.Core.Telephony.Contracts;
 
 namespace Aetherphone.Core.Video;
 
-// Shape mirrors Telephony's ParticipantInfo - kept distinct so the video layer never needs to
-// know about Telephony's contracts directly. IsHost is decided from the server's own slot 0
-// convention (see StreamSignalRouter), not fabricated locally.
 internal sealed record WatchAlongParticipant(string UserId, string Name, string World, string DisplayName,
     string? AvatarUrl, bool IsHost);
 
-// Shape mirrors Telephony's NearbyStreamInfo, same reasoning as WatchAlongParticipant above.
 internal sealed record NearbyStream(string HostId, string Name, string World, string DisplayName);
 
 // A viewer awaiting the host's approve/deny decision (see SignalType.StreamJoinRequest's doc
@@ -22,9 +18,6 @@ internal sealed record NearbyStream(string HostId, string Name, string World, st
 // the record for shape-parity with WatchAlongParticipant, but render DisplayName only.
 internal sealed record PendingJoinRequest(string UserId, string Name, string World, string DisplayName);
 
-// A viewer's proposed queue URL awaiting the host's approve/deny decision (see
-// SignalType.StreamQueueSuggest's doc comment). Same empty-Name/World caveat as PendingJoinRequest
-// above applies to stream.queueSuggestion's From too.
 internal sealed record QueueSuggestion(string SuggestionId, string UserId, string Name, string World,
     string DisplayName, string Url);
 
@@ -40,10 +33,6 @@ internal enum WatchAlongMode : byte
     Viewing,
 }
 
-// Real cross-player watch-along, built on StreamSignalRouter's stream.* signals (server-side as
-// of the dev-branch deploy - see the spec that shipped this file). A connection is host XOR
-// viewer, never both, mirroring the server's own "joining ends your own stream" policy - Mode
-// tracks that locally so the UI and the framework tick agree on which role is active.
 internal sealed class WatchAlongSession : IDisposable
 {
     private const int CheckEveryTicks = 30; // ~2x/sec at 60fps, matches AetherStreamQueue's own throttle
@@ -72,9 +61,6 @@ internal sealed class WatchAlongSession : IDisposable
     private float lastPublishedScreenScale;
     private bool lastPublishedApprovalRequired;
     private string? viewingUrl;
-    // The last wire URL IsPlayableRemoteUrl turned down, so a host who keeps republishing the
-    // same unplayable one (a local file of theirs, republished on every 8s heartbeat) costs one
-    // log line rather than one per heartbeat.
     private string? rejectedRemoteUrl;
     // Last stream.state actually applied while Viewing - lets ResyncNow() force a re-apply
     // (re-seek, re-pause, re-place the screen) without waiting on the next heartbeat. Reference
@@ -112,10 +98,6 @@ internal sealed class WatchAlongSession : IDisposable
     // becomes Hosting once the server has actually confirmed it, never optimistically.
     private bool awaitingHostAck;
 
-    // Whether the host has explicitly opened a party independent of having anything queued -
-    // "function like a party": friends should be able to join and hang out in the room before
-    // anyone's picked a video, not only once queue.Current is non-null. Cleared by Leave() and by
-    // StopHostingLocal() (switching to viewing someone else's stream also ends this one).
     private bool partyOpen;
 
     public WatchAlongSession(AethernetSession session, Configuration configuration, ConfirmService confirm,
@@ -153,18 +135,12 @@ internal sealed class WatchAlongSession : IDisposable
     // comment on why writing this into the queue itself would be unsafe.
     public VideoQueueEntry? ViewingEntry { get; private set; }
 
-    // Host-approval extension state (see PendingJoinRequest's doc comment).
     public bool IsAwaitingApproval { get; private set; }
     public IReadOnlyList<PendingJoinRequest> PendingRequests { get; private set; } = Array.Empty<PendingJoinRequest>();
 
-    // Shared-queue extension state (see QueueSuggestion's doc comment).
     public IReadOnlyList<QueueSuggestion> PendingQueueSuggestions { get; private set; } =
         Array.Empty<QueueSuggestion>();
 
-    // Only meaningful while sharing is on and signed in - showing a roster from a room the local
-    // player has no visibility into, or while there's no identity to attribute it to, would just
-    // be misleading chrome. Mirrors the same VideoShareWatchPresence gate documented on the
-    // Settings toggle that introduced it.
     public IReadOnlyList<WatchAlongParticipant> Watching()
     {
         if (!configuration.VideoShareWatchPresence || !session.IsSignedIn)
@@ -184,17 +160,12 @@ internal sealed class WatchAlongSession : IDisposable
     {
         if (Mode == WatchAlongMode.Hosting)
         {
-            // The server would end our own room anyway once the join lands - reflect that
-            // locally right away instead of waiting for the stream.ended round-trip.
             StopHostingLocal();
         }
 
         stream.Join(hostId);
     }
 
-    // Host only - opens a room independent of having anything queued yet, so friends can join and
-    // wait together before a video is picked ("function like a party"). If currently watching
-    // someone else, that gets left first, same as Join() does for the reverse direction.
     public void OpenParty()
     {
         if (Mode == WatchAlongMode.Viewing)
@@ -205,9 +176,6 @@ internal sealed class WatchAlongSession : IDisposable
         partyOpen = true;
     }
 
-    // Viewer only - forces a re-apply of the last known stream.state (re-seek, re-pause, re-place
-    // the screen) instead of waiting on the next heartbeat. A manual safety valve for whenever
-    // drift/lag makes things look off; harmless no-op if nothing's been received yet.
     public void ResyncNow()
     {
         if (Mode == WatchAlongMode.Viewing && lastStateMessage is { } message)
@@ -245,14 +213,12 @@ internal sealed class WatchAlongSession : IDisposable
         Interlocked.Exchange(ref pendingStateSync, null);
     }
 
-    // Host only - decide a pending join request.
     public void ApproveRequest(string userId)
     {
         stream.Approve(userId);
         RemovePendingRequest(userId);
     }
 
-    // Viewer only - propose a URL for the host's queue.
     public void SuggestQueueItem(string url)
     {
         stream.SuggestQueueItem(url, Guid.NewGuid().ToString());
@@ -282,9 +248,6 @@ internal sealed class WatchAlongSession : IDisposable
         RemoveQueueSuggestion(suggestionId);
     }
 
-    // Host only - force-remove a participant. No local roster change here - the authoritative
-    // stream.roster broadcast that follows already updates Roster the same way any other
-    // departure does.
     public void KickParticipant(string userId)
     {
         stream.Kick(userId);
@@ -322,8 +285,6 @@ internal sealed class WatchAlongSession : IDisposable
         PendingQueueSuggestions = updated;
     }
 
-    // A single viewer can have more than one suggestion outstanding (unlike join requests, which
-    // are one-per-user) - see OnLeft, which is the only caller.
     private void RemoveQueueSuggestionsByUser(string userId)
     {
         if (PendingQueueSuggestions.Count == 0)
@@ -391,8 +352,6 @@ internal sealed class WatchAlongSession : IDisposable
 
         if (IsAwaitingApproval)
         {
-            // Same "local action wins" rule as the Viewing branch above, while we're parked
-            // waiting on a host decision that (today) will never arrive.
             if (queue.Current is not null)
             {
                 Leave();
@@ -465,8 +424,6 @@ internal sealed class WatchAlongSession : IDisposable
         lastPublishedScreenScale = screenScale;
         lastPublishedApprovalRequired = approvalRequired;
 
-        // Only the very first publish of a session needs to wait for the ack - once we're already
-        // confirmed Hosting, later updates are just that, updates, not another "go live" moment.
         if (Mode != WatchAlongMode.Hosting)
         {
             awaitingHostAck = true;
@@ -496,7 +453,6 @@ internal sealed class WatchAlongSession : IDisposable
 
         if (message.Url is { Length: > 0 })
         {
-            // Actual playback deferred to OnFrameworkUpdate - see pendingJoinSync's doc comment.
             Interlocked.Exchange(ref pendingJoinSync, message);
         }
     }
@@ -520,8 +476,6 @@ internal sealed class WatchAlongSession : IDisposable
         AepLog.Warning($"[WatchAlong] ignoring a stream url that is not a remote http(s) address: {url}");
     }
 
-    // Runs on the main thread via OnFrameworkUpdate. Only ever called with a message that already
-    // passed OnJoined's Url-present check.
     private void ApplyJoinSync(CallControl message)
     {
         var url = message.Url!;
@@ -551,10 +505,6 @@ internal sealed class WatchAlongSession : IDisposable
 
         if (message.Reason == "denied")
         {
-            // Unlike "full"/"unavailable" this reason is unambiguous (the host looked at the
-            // request and said no), so it earns its own message instead of the deliberately
-            // generic one below. Deny is not sticky server-side - a denied user may ask again,
-            // throttled only by the 2s join cooldown.
             QueueAlert(L.AetherStream.JoinDeniedTitle, L.AetherStream.JoinDeniedBody);
             return;
         }
@@ -568,10 +518,6 @@ internal sealed class WatchAlongSession : IDisposable
     {
         Roster = ToParticipants(message.Participants);
 
-        // Defensive tidy-up: if someone we still thought was pending shows up in the authoritative
-        // roster (approved through some path other than our own ApproveRequest call), drop them
-        // from PendingRequests too rather than leaving a stale approve/deny row for someone
-        // already in.
         if (PendingRequests.Count > 0)
         {
             foreach (var participant in Roster)
@@ -598,9 +544,6 @@ internal sealed class WatchAlongSession : IDisposable
         RemoveQueueSuggestionsByUser(userId);
     }
 
-    // Host only: the server telling us someone wants to join while ApprovalRequired is on. A
-    // stray one arriving after we've already stopped (a race with our own stream.leave) is
-    // ignored rather than resurrecting a request list for a stream that no longer exists.
     private void OnJoinRequested(CallControl message)
     {
         if (Mode != WatchAlongMode.Hosting || message.From is not { } from)
@@ -621,10 +564,6 @@ internal sealed class WatchAlongSession : IDisposable
         PendingRequests = updated;
     }
 
-    // Viewer only: the server acknowledging our stream.join is waiting on the host's decision,
-    // instead of the immediate stream.joined/stream.declined verdict Open mode gives when
-    // approval isn't required. Resolved by whichever of those two eventually follows (or
-    // stream.ended if the host stops streaming first).
     private void OnJoinPending(CallControl message)
     {
         if (Mode != WatchAlongMode.None)
@@ -635,8 +574,6 @@ internal sealed class WatchAlongSession : IDisposable
         IsAwaitingApproval = true;
     }
 
-    // Host only: a viewer proposed a URL for the queue. Same "only while actually hosting"
-    // reasoning as OnJoinRequested.
     private void OnQueueSuggested(CallControl message)
     {
         if (Mode != WatchAlongMode.Hosting || message.From is not { } from
@@ -667,9 +604,6 @@ internal sealed class WatchAlongSession : IDisposable
         PendingQueueSuggestions = updated;
     }
 
-    // Viewer only: the host's verdict on a suggestion this client made. Reason reuses the same
-    // "accepted"/"denied" convention as stream.declined's Reason field rather than adding a
-    // dedicated bool.
     private void OnQueueSuggestionResult(CallControl message)
     {
         if (message.Reason == "accepted")
@@ -704,9 +638,6 @@ internal sealed class WatchAlongSession : IDisposable
     {
         if (awaitingHostAck)
         {
-            // The live-ack for our own first publish - this is what actually makes us "hosting"
-            // per the protocol spec ("wait for that echo before treating yourself as hosting"),
-            // not the optimistic PublishState call itself.
             awaitingHostAck = false;
             Mode = WatchAlongMode.Hosting;
             return;
@@ -714,7 +645,6 @@ internal sealed class WatchAlongSession : IDisposable
 
         if (Mode == WatchAlongMode.Hosting)
         {
-            // A later echo of our own update - nothing else to do; publishing already reflects this.
             return;
         }
 
@@ -723,14 +653,10 @@ internal sealed class WatchAlongSession : IDisposable
             return;
         }
 
-        // Actual apply deferred to OnFrameworkUpdate - see pendingStateSync's doc comment.
         lastStateMessage = message; // Cached for ResyncNow(), independent of the pending handoff.
         Interlocked.Exchange(ref pendingStateSync, message);
     }
 
-    // Runs on the main thread via OnFrameworkUpdate. Only ever called once OnState has already
-    // confirmed Mode == Viewing (or, via ResyncNow(), a re-apply of the last message under the
-    // same guarantee).
     private void ApplyStateSync(CallControl message)
     {
         if (message.Url is { Length: > 0 } url && url != viewingUrl)
@@ -766,13 +692,9 @@ internal sealed class WatchAlongSession : IDisposable
             video.Pause(paused);
         }
 
-        // Live re-placement while already watching - lets a host who nudges their screen mid-stream
-        // (Casting tab sliders, a Recenter tap, a preset) carry viewers along with them.
         ApplyRemoteScreenTransform(message);
     }
 
-    // Shared by OnJoined/OnState - a no-op if the host didn't send a screen transform (their own
-    // screen isn't active), matching CallControl's ScreenX/Y/Z/Yaw/Scale doc comment.
     private void ApplyRemoteScreenTransform(CallControl message)
     {
         if (message is { ScreenX: { } x, ScreenY: { } y, ScreenZ: { } z })
@@ -821,8 +743,6 @@ internal sealed class WatchAlongSession : IDisposable
         Interlocked.Exchange(ref pendingStateSync, null);
     }
 
-    // Viewer only: the host removed us specifically - distinct from OnEnded ("room is gone for
-    // everyone"), so it gets its own message instead of the generic stream-unavailable one.
     private void OnKicked(CallControl message)
     {
         if (Mode == WatchAlongMode.Viewing)

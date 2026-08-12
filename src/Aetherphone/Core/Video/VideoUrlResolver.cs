@@ -17,7 +17,6 @@ internal sealed record ResolvedStream(string VideoUrl, string? AudioUrl, string 
 // is still downloaded at runtime for mpv's ytdl_hook (see Resources.cs), but a title, duration
 // or thumbnail no longer waits on it, so its failure modes (network required on first use,
 // download hangs, binary goes missing) stay confined to playback of non-YouTube sources.
-//
 // YouTube only serves muxed (single-file, audio+video together) streams up to 720p - anything
 // higher only exists as separate video-only and audio-only streams. This resolves adaptive
 // streams first (best video-only <= the requested cap, paired with the best audio-only track)
@@ -54,8 +53,6 @@ internal sealed class VideoUrlResolver
             var muxed = manifest.GetMuxedStreams().Where(stream => stream.VideoQuality.MaxHeight <= maxHeight)
                 .OrderByDescending(stream => stream.VideoQuality.MaxHeight).FirstOrDefault();
 
-            // Only reach for adaptive when the requested quality is above what muxed can ever
-            // offer - not just above what this particular video's muxed ceiling happens to be.
             if (maxHeight > MuxedCeiling && video is not null && audio is not null)
             {
                 var label = video.VideoQuality.Label;

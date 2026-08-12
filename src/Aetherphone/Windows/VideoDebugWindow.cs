@@ -6,11 +6,6 @@ using Dalamud.Interface.Windowing;
 
 namespace Aetherphone.Windows;
 
-// Stage 3/6 spike window: decode a local video file and draw it locally - off the phone shell
-// entirely. No URL handling, no phone UI yet - see docs/port-plan.md. The screen is self-drawn
-// and world-anchored on the local player (port/alphachannel-engine Stage 4) - playing a video here
-// plays it on the in-world screen automatically, there's no separate "send to TV" step or
-// companion to summon first.
 internal sealed class VideoDebugWindow : Window, IDisposable
 {
     private readonly VideoPlayer video;

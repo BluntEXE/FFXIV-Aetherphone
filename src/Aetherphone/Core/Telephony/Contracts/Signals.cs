@@ -43,8 +43,6 @@ internal static class SignalType
     public const string CasinoPing = "casino.ping";
     public const string Error = "error";
 
-    // AetherStream watch-along - rides the same wss /rt socket and CallControl envelope as the
-    // call.* signals above (see StreamSignalRouter), not a second connection.
     public const string StreamState = "stream.state";
     public const string StreamJoin = "stream.join";
     public const string StreamLeave = "stream.leave";
@@ -55,8 +53,7 @@ internal static class SignalType
     public const string StreamEnded = "stream.ended";
 
     // Host-approval extension (approve/deny each join instead of the automatic contact-check
-    // accept/decline that runs when ApprovalRequired is unset/false) - live on the dev backend as
-    // of commit 95f3acd. Approval layers on top of the mutual-contact + block gate, it does not
+    // accept/decline that runs when ApprovalRequired is unset/false). Approval layers on top of the mutual-contact + block gate, it does not
     // replace it; a non-contact still can't reach the host. Deny is not sticky - a denied user may
     // ask again, throttled only by the 2s join cooldown. See WatchAlongSession.PendingRequests/
     // IsAwaitingApproval and CallControl.ApprovalRequired below.
@@ -65,7 +62,7 @@ internal static class SignalType
     public const string StreamDeny = "stream.deny";
     public const string StreamJoinPending = "stream.joinPending";
 
-    // Shared-queue extension, live on the dev backend as of commit 95f3acd. A viewer proposes a
+    // Shared-queue extension. A viewer proposes a
     // URL; the server relays it to the host only (stream.queueSuggestion); the host approves (adds
     // it to their own local queue - see WatchAlongSession.ApproveQueueSuggestion, there is no
     // server-tracked shared queue, playback sync of whatever the host eventually plays already
@@ -80,7 +77,7 @@ internal static class SignalType
     public const string StreamQueueDeny = "stream.queueDeny";
     public const string StreamQueueSuggestionResult = "stream.queueSuggestionResult";
 
-    // Host-kick extension, live on the dev backend as of commit 95f3acd. Host targets a specific
+    // Host-kick extension. Host targets a specific
     // participant by UserId; the server force-removes them from the room (a stream.roster
     // broadcast to everyone else covers reflecting that removal) and tells the removed viewer
     // specifically via stream.kicked, distinct from stream.ended ("room is gone for everyone")
@@ -112,9 +109,6 @@ internal sealed record ParticipantInfo(
     string State,
     bool Muted);
 
-// One entry in a stream.nearby.roster response - a currently-hosting user in the same territory
-// as the requester. Deliberately just enough to show and join with, not a full ParticipantInfo
-// (there's no call slot/mute state for someone you haven't joined yet).
 internal sealed record NearbyStreamInfo(string HostId, string Name, string World, string DisplayName);
 
 internal sealed record CallControl
@@ -135,9 +129,6 @@ internal sealed record CallControl
     public double? PositionSeconds { get; init; }
     public bool? Paused { get; init; }
 
-    // Part of the host-approval extension (see StreamJoinRequest et al. above) - sent by the host
-    // alongside every stream.state so the server knows whether to auto-decide joins (false/omitted)
-    // or hold them for stream.approve/stream.deny (true).
     public bool? ApprovalRequired { get; init; }
 
     // Part of the shared-queue extension (see StreamQueueSuggest et al. above) - client-generated
@@ -164,8 +155,6 @@ internal sealed record CallControl
     public uint? TerritoryId { get; init; }
     public NearbyStreamInfo[]? NearbyStreams { get; init; }
 
-    // content.removed fields - moderation broadcast when a post/comment/etc is taken down while
-    // someone is viewing it.
     public string? App { get; init; }
     public string? ContentKind { get; init; }
     public string? ContentId { get; init; }

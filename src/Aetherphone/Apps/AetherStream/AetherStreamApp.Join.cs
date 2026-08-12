@@ -65,8 +65,6 @@ internal sealed partial class AetherStreamApp
             var rowHeight = JoinRowHeight * scale;
             var cursorY = listRect.Min.Y;
 
-            // Nearby streams only show while the search box is empty - once the user starts
-            // typing a name, that's an explicit "I know who I want" search, not zone browsing.
             if (joinQuery.Trim().Length == 0)
             {
                 for (var index = 0; index < nearby.Count; index++)
@@ -199,9 +197,6 @@ internal sealed partial class AetherStreamApp
         joinWork.Run("join search", async token =>
         {
             var result = await joinAccount.SearchAsync(trimmed, token).ConfigureAwait(false);
-            // A null result means the request itself failed (see AccountClient.SearchAsync /
-            // HttpService.SendForJsonAsync) - clear any stale prior results instead of leaving
-            // them on screen, and flag it separately from a genuine zero-match search.
             joinResults = result?.Users ?? Array.Empty<UserDto>();
             joinSearchFailed = result is null;
         }, () => joinSearching = false);

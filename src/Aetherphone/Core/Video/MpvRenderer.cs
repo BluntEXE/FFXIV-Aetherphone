@@ -320,9 +320,6 @@ namespace Aetherphone.Core.Video
 				}
 			}
 		}
-		// A managed copy of the latest decoded frame - for CPU-side consumers (the debug window
-		// and the plain screen-window fallback) alongside the GPU texture upload RenderFrame
-		// already does. Not on the hot path: only copied when actually asked for.
 		public byte[]? TryGetFrame(out int width, out int height)
 		{
 			width = _width;
@@ -541,7 +538,6 @@ namespace Aetherphone.Core.Video
 
 		private void EventLoop()
 		{
-			
             AepLog.Verbose("[MPV] event loop started");
             try
             {
@@ -552,10 +548,8 @@ namespace Aetherphone.Core.Video
 
                     int eventId = Marshal.ReadInt32(ev);
 
-                    
                     switch (eventId)
                     {
-                        
                         case 0: // MPV_EVENT_NONE (Timeout)
                             continue;
 

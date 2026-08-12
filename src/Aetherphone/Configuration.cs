@@ -121,22 +121,15 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public float VideoVolume { get; set; } = 0.6f;
     public int VideoMaxQualityHeight { get; set; } = 720;
     public bool VideoHideNameplates { get; set; } = true;
-    // On by default, matching ShowLodestonePortraits - visible unless the user opts out.
     public bool VideoShareWatchPresence { get; set; } = true;
-    // Off by default - not measured, mpv has no GPU render path under this project's Wine/RADV
-    // setup, only decode may benefit. See docs/video-pipeline.md in the AlphaChannel repo.
     public bool VideoHardwareDecoding { get; set; }
     // Off by default and unsafe by design - only affects direct (non-YouTube) HTTPS URLs under
     // Wine, where mpv's bundled curl fails TLS verification (likely a Schannel/Wine cert-store
     // gap, not fixable via a CA bundle file - see Stage 7 investigation notes). Never touches
     // real Windows.
     public bool VideoAllowInsecureDirectUrls { get; set; }
-    // Off by default (Open mode) - see WatchAlongSession.PendingRequests / stream.joinRequest.
     public bool VideoStreamApprovalRequired { get; set; }
     public List<ScreenPositionPreset> ScreenPresets { get; set; } = new();
-    // The upcoming queue (AetherStreamQueue.Entries), so a relog or plugin reload mid watch-party
-    // doesn't lose what was lined up. What was actively Current isn't included here - see
-    // AetherStreamQueue's constructor doc comment.
     public List<VideoQueueRecord> VideoQueue { get; set; } = new();
     public bool GameSoundsCleared { get; set; }
     #if DEBUG

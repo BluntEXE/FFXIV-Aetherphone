@@ -12,8 +12,6 @@ internal static class DxHandler
 
 	private static readonly ConcurrentDictionary<string, Action> _pendingRenderWork = new();
 
-	//Fires every Present call, unlike RunOnRenderThread's one-shot queue - for subscribers that need to
-	//redraw every frame (e.g. a world-space overlay) rather than react to a single freshly-produced frame.
 	internal static event Action? OnPresent;
 
 	private unsafe delegate int PresentDelegate(void* swapChain, uint syncInterval, uint flags);

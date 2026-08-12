@@ -32,7 +32,6 @@ internal sealed partial class AetherStreamApp
 
         var listTop = content.Min.Y + controlsHeight + 8f * scale;
 
-        // See WatchAlongSession.PendingQueueSuggestions.
         if (watchAlong.IsHosting && watchAlong.PendingQueueSuggestions.Count > 0)
         {
             listTop = DrawQueueSuggestions(content, listTop, scale);
@@ -254,8 +253,6 @@ internal sealed partial class AetherStreamApp
         Typography.Draw(new Vector2(textLeft, row.Min.Y + 30f * scale), Ellipsize(secondLine, textRight - textLeft),
             ui.MutedInk, TextStyles.Footnote);
 
-        // Drag handle - press-and-hold past the threshold starts a reorder; a plain click on the
-        // rest of the row plays it now.
         var handleCenter = new Vector2(row.Max.X - 52f * scale, row.Center.Y);
         AppSkin.Icon(handleCenter, FontAwesomeIcon.GripLines.ToIconString(), ui.MutedInk, 0.6f);
         var handleHit = ImGui.IsMouseHoveringRect(handleCenter - new Vector2(14f * scale), handleCenter + new Vector2(14f * scale));

@@ -275,9 +275,6 @@ internal sealed class Resources : IDisposable
 			switch (name)
 			{
 				case "libmpv-2":
-					// Queried fresh rather than cached at startup - mpv-winbuild may still be
-					// downloading (see CheckMPVAsync/DownloadMPVAsync) the first time this
-					// resolves.
 					return TryLoad(_resources?.GetLocationMPV(), "MPV");
 				default:
 					return IntPtr.Zero;

@@ -14,11 +14,6 @@ internal sealed partial class AetherStreamApp
 {
     private string screenPresetName = "";
 
-    // Only one target exists right now (Stage 7 scope - see spec's "Render target" section), so
-    // this shows that single screen plainly rather than a "1 of N" list implying more should be
-    // here. Watch-party features (viewer lists, handing control to another player) are out of
-    // scope until the networking question is settled - this tab has nothing referencing them.
-    //
     // The screen is a world-anchored quad drawn by ScreenPainter (ported from AlphaChannel's
     // v1.1.20260725.1088 revamp, replacing the earlier VFX/companion/Penumbra mounting - see
     // port/alphachannel-engine Stage 4 and the ScreenPainter port that followed it), so State just
@@ -49,8 +44,6 @@ internal sealed partial class AetherStreamApp
 
         var bodyTop = card.Max.Y + 16f * scale;
 
-        // See WatchAlongSession.PendingRequests. Sits above screen placement since a pending
-        // join is more time-sensitive.
         if (watchAlong.IsHosting && watchAlong.PendingRequests.Count > 0)
         {
             bodyTop = DrawPendingRequests(content, bodyTop, scale);
@@ -67,8 +60,6 @@ internal sealed partial class AetherStreamApp
 
         bodyTop += 12f * scale;
 
-        // A second, independent render option - a plain resizable, movable window showing the
-        // same decoded frames, for whenever the in-world quad isn't what's wanted.
         var windowRect = new Rect(new Vector2(content.Min.X, bodyTop), new Vector2(content.Max.X, bodyTop + 38f * scale));
         var windowLabel = screenWindow.IsOpen ? Loc.T(L.AetherStream.CloseScreenWindow) : Loc.T(L.AetherStream.OpenScreenWindow);
         if (SmallButton(windowRect, windowLabel, true, scale))

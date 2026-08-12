@@ -30,9 +30,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 	private const float BaseWidth = 1.0f;
 	private const float BaseHeight = 0.6f;
 
-	//Absolute world transform for the screen quad. Unlike the old companion-relative offset, this is a
-	//fixed world position/yaw set once per "spawn" (see VideoEngine.SpawnScreenInFrontOfLocalPlayer) and
-	//updated live from the Settings UI - it does not track any game object's movement afterwards.
 	internal Vector3 WorldPosition;
 	internal float WorldYaw;
 	internal float Scale = 1.0f;
@@ -98,9 +95,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 			};
 			struct VOut { float4 pos : SV_POSITION; float2 uv : TEXCOORD0; };
 
-			// Procedural horizontal strip: column = id/2 (0..CURVE_SEGMENTS), row = id%2 (0 = bottom,
-			// 1 = top). Same flat quad as before when curvature is 0 - this just adds columns between
-			// the two original edges instead of replacing them.
 			VOut VS(uint id : SV_VertexID)
 			{
 				uint col = id / 2;
@@ -176,7 +170,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 		DxHandler.OnPresent += DrawIfReady;
 	}
 
-	//Called from VideoEngine whenever the active video texture changes. Pass null to stop painting.
 	internal void SetTarget(Texture2D? texture)
 	{
 		if (ReferenceEquals(texture, _texture))
@@ -199,8 +192,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 		}
 	}
 
-	//Cheap per-tick update of where/how big to draw the quad - called continuously so live Settings edits
-	//are reflected immediately, without touching the SRV.
 	internal void SetTransform(Vector3 worldPosition, float worldYaw, float scale)
 	{
 		WorldPosition = worldPosition;
@@ -208,8 +199,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 		Scale = scale;
 	}
 
-	//Runs every frame from DxHandler's Present hook. Reads the swapchain's own current back buffer and
-	//depth buffer straight out of FFXIVClientStructs (no context hook needed) and draws into them.
 	private void DrawIfReady()
 	{
 		if (!TryGetSceneTargets(out nint rtvPtr, out nint dsvPtr, out uint targetWidth, out uint targetHeight) || _srv == null)
@@ -302,9 +291,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 		}
 	}
 
-	//Pure memory reads - walks every currently-loaded native UI window (AtkUnitBase) and, for the visible
-	//ones, records its on-screen rect from its root node. No hook, no game calls - same risk profile as
-	//TryGetSceneTargets below.
 	private static int CollectUiRects(ref ScreenParams p)
 	{
 		GfxGui.AtkStage* stage = GfxGui.AtkStage.Instance();
@@ -423,8 +409,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 			return null;
 		}
 
-		//Built from plain position/angle data rather than the game's own raw view/projection matrices -
-		//confirmed correct for position/rotation.
 		Vector3 camPos = ToNumerics(camera->Position);
 		Vector3 camLookAt = ToNumerics(camera->LookAtVector);
 

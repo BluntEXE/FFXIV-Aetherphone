@@ -32,17 +32,12 @@ internal sealed class StreamSignalRouter : IDisposable
     public event Action<CallControl>? StateReceived;
     public event Action<CallControl>? NearbyReceived;
 
-    // Host-approval extension (see SignalType.StreamJoinRequest's doc comment).
     public event Action<CallControl>? JoinRequested;
     public event Action<CallControl>? JoinPending;
 
-    // Shared-queue extension (see SignalType.StreamQueueSuggest's doc comment) - QueueSuggested
-    // reaches the host, QueueSuggestionResult reaches the original suggester.
     public event Action<CallControl>? QueueSuggested;
     public event Action<CallControl>? QueueSuggestionResult;
 
-    // Host-kick extension (see SignalType.StreamKick's doc comment) - only ever raised on the
-    // client that was actually kicked.
     public event Action<CallControl>? Kicked;
 
     public bool Connected => calls.Connected;
@@ -68,7 +63,6 @@ internal sealed class StreamSignalRouter : IDisposable
         });
     }
 
-    // Host only - decide a pending stream.joinRequest (see WatchAlongSession.PendingRequests).
     public void Approve(string userId)
     {
         calls.Send(new CallControl { Type = SignalType.StreamApprove, UserId = userId });
@@ -87,7 +81,6 @@ internal sealed class StreamSignalRouter : IDisposable
         calls.Send(new CallControl { Type = SignalType.StreamQueueSuggest, Url = url, SuggestionId = suggestionId });
     }
 
-    // Host only - decide a pending stream.queueSuggestion.
     public void ApproveQueueSuggestion(string suggestionId)
     {
         calls.Send(new CallControl { Type = SignalType.StreamQueueApprove, SuggestionId = suggestionId });
@@ -98,7 +91,6 @@ internal sealed class StreamSignalRouter : IDisposable
         calls.Send(new CallControl { Type = SignalType.StreamQueueDeny, SuggestionId = suggestionId });
     }
 
-    // Host only - force-remove a specific participant.
     public void Kick(string userId)
     {
         calls.Send(new CallControl { Type = SignalType.StreamKick, UserId = userId });
@@ -119,8 +111,6 @@ internal sealed class StreamSignalRouter : IDisposable
         calls.Send(new CallControl { Type = SignalType.StreamNearby, TerritoryId = territoryId });
     }
 
-    // No hostId needed - the server already knows which room this connection is in. From the host
-    // this ends the stream for everyone.
     public void Leave()
     {
         calls.Send(new CallControl { Type = SignalType.StreamLeave });

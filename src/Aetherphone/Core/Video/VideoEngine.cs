@@ -274,9 +274,6 @@ internal sealed class VideoEngine : IDisposable
             && Uri.CheckHostName(url.Host) == UriHostNameType.Dns;
     }
 
-    //Places the screen 2 units in front of (and slightly above) the local player, facing the way
-    //they're facing. Called when a genuinely new session starts (see AssignScreenForSession), and
-    //re-callable any time via RecenterScreen() as a one-tap "lost track of it" reset.
     private void SpawnScreenInFrontOfLocalPlayer()
     {
         var localPlayer = Plugin.ObjectTable.LocalPlayer;
@@ -293,8 +290,6 @@ internal sealed class VideoEngine : IDisposable
         SetScreenTransform(position, yaw + MathF.PI, 1.0f); //Face back towards the player, not away from them.
     }
 
-    //One-tap reset for when the screen has drifted out of view/reach - re-spawns it in front of the
-    //player exactly like a fresh session would, without touching playback.
     internal void RecenterScreen() => SpawnScreenInFrontOfLocalPlayer();
 
     //Live, unsaved position/yaw/scale edit from the Casting tab - only meaningful while the screen is
@@ -356,9 +351,6 @@ internal sealed class VideoEngine : IDisposable
         SetScreenTransform(position, yaw, scale);
     }
 
-    //Hands the painter its texture and, if this is a genuinely new session (the screen was idle),
-    //spawns it 2 units in front of the local player. Continuing/switching content on an
-    //already-active screen must not reset a position the user placed by hand.
     private void AssignScreenForSession(Texture2D screenTexture)
     {
         bool isNewSession = !_isActive;

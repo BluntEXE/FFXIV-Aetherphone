@@ -6,12 +6,6 @@ using Dalamud.Interface.Windowing;
 
 namespace Aetherphone.Windows;
 
-// A resizable, movable window that shows AetherStream's video directly - an alternative render
-// target to the in-game TV model, for players without a Penumbra-modded companion (or who just
-// don't want video projected onto a minion). Reuses VideoDebugWindow's own frame-to-texture
-// technique (TryGetFrame -> CreateFromRaw -> ImGui.Image) as a real user-facing feature instead
-// of a debug spike. No playback controls of its own - that's what the phone's Player tab is for;
-// this only ever displays whatever VideoPlayer is already doing.
 internal sealed class AetherStreamScreenWindow : Window, IDisposable
 {
     private readonly VideoPlayer video;

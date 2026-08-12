@@ -27,16 +27,8 @@ internal sealed partial class AetherStreamApp
         var margin = Metrics.Space.Lg * scale;
         var content = new Rect(new Vector2(body.Min.X + margin, body.Min.Y), new Vector2(body.Max.X - margin, body.Max.Y));
 
-        // Whole tab scrolls now - nothing here reserved space for overflow before, so a long
-        // watching list (once real remote participants exist, not just the local-only stub today)
-        // would otherwise just get clipped off the bottom with no way to reach it.
         using (AppSurface.Begin(body))
         {
-            // Screen stays active (and this row keeps showing) between videos now - see
-            // AetherStreamQueue.Advance's doc comment on why natural queue-end no longer
-            // deactivates the screen. "Nothing current" covers exactly that "waiting for the next
-            // video" gap - checks ViewingEntry too, since a viewer's queue.Current is never set
-            // (see DrawNowPlaying's own note) and would otherwise always read as waiting.
             var isCasting = screen.Engine.IsActive;
             var hasCurrent = watchAlong.IsViewing ? watchAlong.ViewingEntry is not null : queue.Current is not null;
             var watchers = watchAlong.Watching();
@@ -95,13 +87,10 @@ internal sealed partial class AetherStreamApp
 
     // Join a friend's stream (mutual-contact + block checks happen entirely server-side - a
     // decline never says why, see WatchAlongSession.OnDeclined) or leave the one you're in.
-    // Positioned directly above the Host/Watching list below it, not buried in a menu.
     private void DrawJoinRow(Rect rect, float scale)
     {
         if (watchAlong.IsViewing)
         {
-            // Resync alongside Leave - a manual safety valve for when drift/lag makes playback or
-            // screen placement look off, instead of waiting on the next heartbeat.
             var viewingHalf = rect.Width * 0.5f - 5f * scale;
             var resyncRect = new Rect(rect.Min, new Vector2(rect.Min.X + viewingHalf, rect.Max.Y));
             var leaveRect = new Rect(new Vector2(rect.Max.X - viewingHalf, rect.Min.Y), rect.Max);
@@ -121,9 +110,6 @@ internal sealed partial class AetherStreamApp
 
         if (watchAlong.IsAwaitingApproval)
         {
-            // True while waiting on the host's approve/deny decision (see
-            // WatchAlongSession.OnJoinPending). Tapping this just cancels the request, same
-            // Leave() the button above uses.
             if (SmallButton(rect, Loc.T(L.AetherStream.JoinWaitingApproval), true, scale, danger: true))
             {
                 watchAlong.Leave();
@@ -134,9 +120,6 @@ internal sealed partial class AetherStreamApp
 
         if (watchAlong.IsHosting)
         {
-            // "Function like a party" - a room open via OpenParty() doesn't need a queued video to
-            // stay alive, so ending it needs its own explicit action rather than just waiting for
-            // the queue to empty (see WatchAlongSession's partyOpen).
             if (SmallButton(rect, Loc.T(L.AetherStream.EndParty), true, scale, danger: true))
             {
                 watchAlong.Leave();
@@ -145,8 +128,6 @@ internal sealed partial class AetherStreamApp
             return;
         }
 
-        // Neither hosting nor viewing - two separate entry points side by side: start your own
-        // room (works with nothing queued yet) or join someone else's.
         var half = rect.Width * 0.5f - 5f * scale;
         var startRect = new Rect(rect.Min, new Vector2(rect.Min.X + half, rect.Max.Y));
         var joinRect = new Rect(new Vector2(rect.Max.X - half, rect.Min.Y), rect.Max);
@@ -170,10 +151,6 @@ internal sealed partial class AetherStreamApp
     // since DrawUrlEntry positions everything itself rather than through ImGui's layout cursor.
     private const float UrlEntryHeight = 126f;
 
-    // Status left, stop right - deliberately just "casting or not", no product name and no viewer
-    // count (that's the Watching section below, a separate opt-in feature with its own toggle).
-    // Reuses SmallButton/the stop action already built for the Casting tab rather than a second
-    // copy - this is the same "turn the screen off" action from a second entry point.
     private void DrawCastingStatus(Rect rect, float scale, bool waiting)
     {
         var drawList = ImGui.GetWindowDrawList();
@@ -207,8 +184,6 @@ internal sealed partial class AetherStreamApp
         }
     }
 
-    // Title/source stacked above a full-width thumbnail, not beside a small square one - matches
-    // the layout you asked for over the concept art's own side-by-side arrangement.
     private void DrawNowPlaying(Rect rect, float scale)
     {
         // A viewer's own queue.Current never gets touched by the sync path (see
@@ -250,15 +225,9 @@ internal sealed partial class AetherStreamApp
         }
     }
 
-    // Unscaled row metrics, used both here and by DrawPlayerTab to size the reserved space before
-    // any scaling is applied. Sized and positioned to match the concept art's watch-party list -
-    // full-size avatar rows directly under the transport row, not the earlier compact strip.
     private const float WatchingHeaderHeight = 26f;
     private const float WatchingRowHeight = 52f;
 
-    // Host gets its own labeled row up top; everyone else is a separate "Watching" group below it -
-    // only ever one real entry right now (see WatchAlongRoster), so the second group stays hidden
-    // until a real roster exists. The roster is already host-first; watchers[0] is always the host.
     private void DrawWatching(Rect rect, IReadOnlyList<WatchAlongParticipant> watchers, float scale)
     {
         var rowHeight = WatchingRowHeight * scale;
@@ -268,8 +237,6 @@ internal sealed partial class AetherStreamApp
         Typography.Draw(new Vector2(rect.Min.X, y), Loc.T(L.AetherStream.WatchingHostLabel), ui.MutedInk,
             TextStyles.Caption1);
         y += headerHeight;
-        // The host's own row (watchers[0]) never gets a kick control regardless of IsHosting -
-        // that's you, not something to remove.
         DrawWatchingRow(new Rect(new Vector2(rect.Min.X, y), new Vector2(rect.Max.X, y + rowHeight)), watchers[0],
             false, scale);
         y += rowHeight;
@@ -283,8 +250,6 @@ internal sealed partial class AetherStreamApp
         Typography.Draw(new Vector2(rect.Min.X, y), Loc.T(L.AetherStream.WatchingSectionLabel), ui.MutedInk,
             TextStyles.Caption1);
         y += headerHeight;
-        // See WatchAlongSession.KickParticipant. Gated on IsHosting so a viewer never sees a
-        // control for an action they have no authority to take.
         var canKick = watchAlong.IsHosting;
         for (var index = 1; index < watchers.Count; index++)
         {
@@ -322,9 +287,6 @@ internal sealed partial class AetherStreamApp
         Typography.Draw(new Vector2(textLeft, centerY - nameSize.Y * 0.5f), name, ui.TitleInk, TextStyles.Body);
     }
 
-    // Mirrors DrawWatching's own layout math (host label + host row, then - only when there's
-    // anyone besides the host - a gap, a second label, and one row per remaining participant) so
-    // DrawPlayerTab can size the reserved rect without duplicating the two-group logic.
     private static float WatchingTotalHeight(IReadOnlyList<WatchAlongParticipant> watchers, float scale)
     {
         if (watchers.Count == 0)
@@ -397,9 +359,6 @@ internal sealed partial class AetherStreamApp
             queue.Advance();
         }
 
-        // Solid accent fill behind the centre button, not just TransportButton's own hover glow -
-        // matches the concept art's filled play/pause circle. Same fill technique DrawSubmitButton
-        // already uses below, just as a circle instead of a squircle.
         var playAction = paused ? TransportAction.Play : TransportAction.Pause;
         var centerRadius = 22f * scale;
         var centerPoint = new Vector2(centerX, centerY);

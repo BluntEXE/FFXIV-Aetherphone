@@ -46,16 +46,8 @@ internal sealed class VideoPlayer : IDisposable
 
     public void SetVolume(int volumePercent) => engine.SetVolume(volumePercent);
 
-    // True once mpv has nothing left to play (natural end, with keep-open=yes so it doesn't
-    // reset position) or before anything has ever been loaded. Callers polling this for
-    // auto-advance should throttle - see AetherStreamQueue, which does not poll every frame.
     public bool IsIdle() => engine.GetIdle();
 
-    // AlphaChannel's engine resolves both YouTube and generic page URLs itself, via mpv's bundled
-    // ytdl_hook + yt-dlp (see MpvRenderer's "ytdl"/"ytdl-format" options) - unlike the old
-    // VideoPlayer this replaces, there's no separate YoutubeExplode pre-resolution step needed
-    // here; that resolver (VideoUrlResolver) is kept only for AetherStreamQueue's metadata
-    // enrichment (title/duration/thumbnail), not for the playback URL itself.
     public void Play(string url)
     {
         try

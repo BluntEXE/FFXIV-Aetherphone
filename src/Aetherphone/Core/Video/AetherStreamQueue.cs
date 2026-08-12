@@ -42,9 +42,6 @@ internal sealed class AetherStreamQueue
     private bool wasIdle = true;
     private bool autoAdvanceArmed;
 
-    // Restores the upcoming list (not whatever was actively Current - that doesn't survive a
-    // reload anyway, since the mpv session behind it is gone) from Configuration, so a relog or
-    // plugin reload mid watch-party doesn't wipe out what was queued up.
     public AetherStreamQueue(VideoPlayer video)
     {
         this.video = video;
@@ -144,8 +141,6 @@ internal sealed class AetherStreamQueue
         Plugin.Cfg.Save();
     }
 
-    // Plays the next queued entry now, whether or not something was already playing - used both
-    // for the user's own "skip" action and for auto-advance on natural end.
     public void Advance()
     {
         if (entries.Count == 0)
