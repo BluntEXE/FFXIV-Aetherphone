@@ -28,7 +28,7 @@ internal sealed class GeneralPage : ISettingsPage
         using (AppSurface.Begin(body))
         {
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
-            var card = GroupCard.Begin(theme, 4);
+            var card = GroupCard.Begin(theme, 5);
             var importScreenshots = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.ImportScreenshots),
                 configuration.ImportScreenshots, theme, null, Loc.T(L.Settings.ImportScreenshotsHint));
             var usesNativeFileDialog = configuration.UseNativeFileDialog ?? NativeFileDialog.IsSupported;
@@ -36,6 +36,8 @@ internal sealed class GeneralPage : ISettingsPage
                 usesNativeFileDialog, theme, null, Loc.T(L.Settings.NativeFileDialogHint));
             var showMediaChirps = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.ChirperMediaPosts),
                 configuration.ChirperShowMediaPosts, theme, null, Loc.T(L.Settings.ChirperMediaPostsHint));
+            var showSensitive = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.ShowSensitive),
+                configuration.ShowSensitiveContent, theme, null, Loc.T(L.Settings.ShowSensitiveHint));
             var marketContextMenu = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.MarketContextMenu),
                 configuration.MarketContextMenu, theme, null, Loc.T(L.Settings.MarketContextMenuHint));
             card.End();
@@ -54,6 +56,12 @@ internal sealed class GeneralPage : ISettingsPage
             if (showMediaChirps != configuration.ChirperShowMediaPosts)
             {
                 configuration.ChirperShowMediaPosts = showMediaChirps;
+                configuration.Save();
+            }
+
+            if (showSensitive != configuration.ShowSensitiveContent)
+            {
+                configuration.ShowSensitiveContent = showSensitive;
                 configuration.Save();
             }
 

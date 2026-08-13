@@ -126,6 +126,14 @@ internal sealed class SocialClient
         return net.SendAsync(HttpMethod.Delete, $"/posts/{Uri.EscapeDataString(postId)}/save", token, null, onFailure);
     }
 
+    public Task<PostDto?> SetSensitiveAsync(string postId, bool sensitive, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
+    {
+        return net.SendJsonAsync(HttpMethod.Put, $"/posts/{Uri.EscapeDataString(postId)}/sensitive",
+            new SetSensitiveRequest(sensitive), AethernetJsonContext.Default.SetSensitiveRequest,
+            AethernetJsonContext.Default.PostDto, token, null, onFailure);
+    }
+
     public Task<FeedPage?> SavedAsync(string? cursor, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         var path = "/me/saved";

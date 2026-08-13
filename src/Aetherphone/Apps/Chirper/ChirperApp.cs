@@ -1190,7 +1190,9 @@ internal sealed partial class ChirperApp : IPhoneApp
         var anchorX = left + width - 12f * scale;
         var interactive = !actions.Closing;
         var mine = store.Me is { } me && me.Id == post.AuthorId;
-        var count = mine ? 2 : 4;
+        var canVeil = mine && !post.SensitiveLocked
+            && PostMedia.Photos(post.MediaUrls, post.MediaUrl).Length > 0;
+        var count = mine ? (canVeil ? 3 : 2) : 4;
         var slot = 0;
         var closeCenter = new Vector2(anchorX - slot * step, centerY);
         if (DrawRevealIcon(closeCenter, iconRadius, FontAwesomeIcon.Times.ToIconString(), AppPalettes.Chirper.MutedInk,
@@ -1203,6 +1205,21 @@ internal sealed partial class ChirperApp : IPhoneApp
         slot++;
         if (mine)
         {
+            if (canVeil)
+            {
+                var veilCenter = new Vector2(anchorX - slot * step, centerY);
+                if (DrawRevealIcon(veilCenter, iconRadius, FontAwesomeIcon.EyeSlash.ToIconString(),
+                        post.Sensitive ? Accent : AppPalettes.Chirper.MutedInk, AppPalettes.Chirper.FieldSurface, 0.95f,
+                        ChirperActionReveal.Stagger(actions.Progress, slot, count),
+                        Loc.T(post.Sensitive ? L.Moderation.SensitiveOn : L.Moderation.MarkSensitive), interactive))
+                {
+                    store.SetSensitive(post.Id, !post.Sensitive);
+                    actions.Dismiss();
+                }
+
+                slot++;
+            }
+
             var trashCenter = new Vector2(anchorX - slot * step, centerY);
             if (DrawRevealIcon(trashCenter, iconRadius, FontAwesomeIcon.Trash.ToIconString(), theme.Danger,
                     Palette.WithAlpha(theme.Danger, 0.16f), 0.95f,

@@ -728,6 +728,37 @@ internal abstract class SocialFeedStore : IDisposable
         });
     }
 
+    public void SetSensitive(string postId, bool sensitive, Action<AepFailure>? onFailure = null)
+    {
+        ApplySensitiveEverywhere(postId, sensitive);
+        work.Run("sensitive toggle", async token =>
+        {
+            var updated = await client.SetSensitiveAsync(postId, sensitive, token, onFailure).ConfigureAwait(false);
+            if (updated is null)
+            {
+                ApplySensitiveEverywhere(postId, !sensitive);
+            }
+        });
+    }
+
+    private void ApplySensitiveEverywhere(string postId, bool sensitive)
+    {
+        forYouLane.Items = MapSensitive(forYouLane.Items, postId, sensitive);
+        followingLane.Items = MapSensitive(followingLane.Items, postId, sensitive);
+        profileLane.Items = MapSensitive(profileLane.Items, postId, sensitive);
+        taggedLane.Items = MapSensitive(taggedLane.Items, postId, sensitive);
+        savedLane.Items = MapSensitive(savedLane.Items, postId, sensitive);
+        if (detailPost is { } current && current.Id == postId)
+        {
+            detailPost = current with { Sensitive = sensitive };
+        }
+    }
+
+    private static PostDto[] MapSensitive(PostDto[] source, string postId, bool sensitive) =>
+        CopyOnWrite.Map(source,
+            post => post.Id == postId && post.Sensitive != sensitive,
+            post => post with { Sensitive = sensitive });
+
     private void ApplySavedEverywhere(string postId, bool saved)
     {
         forYouLane.Items = MapSaved(forYouLane.Items, postId, saved);

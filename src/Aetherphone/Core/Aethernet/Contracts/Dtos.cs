@@ -214,7 +214,8 @@ internal sealed record PostDto(
     int AuthorBadges = 0,
     string[]? AuthorBadgeIds = null,
     string AuthorFrameId = "",
-    bool Sensitive = false) : IIdentified;
+    bool Sensitive = false,
+    bool SensitiveLocked = false) : IIdentified;
 
 internal sealed record FeedPage(PostDto[] Items, string? NextCursor);
 
