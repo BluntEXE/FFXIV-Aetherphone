@@ -1,7 +1,5 @@
 using Aetherphone.Core.Video;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Textures;
-using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Interface.Windowing;
 
 namespace Aetherphone.Windows;
@@ -11,7 +9,6 @@ internal sealed class VideoDebugWindow : Window, IDisposable
     private readonly VideoPlayer video;
     private readonly ScreenController screen;
     private string path = string.Empty;
-    private IDalamudTextureWrap? texture;
 
     public VideoDebugWindow(VideoPlayer video, ScreenController screen)
         : base("Aetherphone: Video Decode Debug (Stage 3/6)###AetherphoneVideoDebug")
@@ -64,22 +61,19 @@ internal sealed class VideoDebugWindow : Window, IDisposable
             ImGui.TextColored(new Vector4(1f, 0.4f, 0.4f, 1f), video.LastError);
         }
 
-        var (position, duration, paused) = video.GetProgress();
-        ImGui.Text($"Position: {position:F1}s / {duration:F1}s   Paused: {paused}");
+        var progress = video.Progress;
+        ImGui.Text($"Position: {progress.Position:F1}s / {progress.Duration:F1}s   Paused: {progress.Paused}");
+        ImGui.Text($"Frames: {video.FrameVersion}");
 
-        var frame = video.TryGetFrame(out var width, out var height);
-        if (frame is null)
+        var handle = screen.Engine.ScreenViewHandle;
+        if (handle == nint.Zero || !video.HasMedia)
         {
             ImGui.TextDisabled("No frame yet.");
             return;
         }
 
-        texture?.Dispose();
-        texture = Plugin.TextureProvider.CreateFromRaw(RawImageSpecification.Bgra32(width, height), frame,
-            "Aetherphone.VideoDebug.Frame");
-
         var avail = ImGui.GetContentRegionAvail();
-        var aspect = (float)width / height;
+        var aspect = (float)VideoEngine.ScreenWidth / VideoEngine.ScreenHeight;
         var drawWidth = avail.X;
         var drawHeight = drawWidth / aspect;
         if (drawHeight > avail.Y && avail.Y > 0f)
@@ -88,13 +82,11 @@ internal sealed class VideoDebugWindow : Window, IDisposable
             drawWidth = drawHeight * aspect;
         }
 
-        ImGui.Image(texture.Handle, new Vector2(drawWidth, drawHeight));
+        ImGui.Image(new ImTextureID(handle), new Vector2(drawWidth, drawHeight));
     }
 
     public void Dispose()
     {
         video.Stop();
-        texture?.Dispose();
-        texture = null;
     }
 }

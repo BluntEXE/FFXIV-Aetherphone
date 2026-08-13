@@ -35,6 +35,7 @@ using Aetherphone.Core.Wallpapers;
 using Aetherphone.Core.YellowPages;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Plugin.Services;
+using Aetherphone.Core.Video;
 using YoutubeExplode;
 
 namespace Aetherphone.Core;
@@ -115,6 +116,7 @@ internal sealed class PhoneServices : IDisposable
     public required RadioService Radio { get; init; }
     public required RadioPlayer RadioPlayer { get; init; }
     public required SongSearchService SongSearch { get; init; }
+    public required VideoUrlResolver VideoMetadata { get; init; }
     public required SongPlayer SongPlayer { get; init; }
     public required SongHistory SongHistory { get; init; }
     public required PlaylistStore Playlists { get; init; }
@@ -228,6 +230,7 @@ internal sealed class PhoneServices : IDisposable
         var radioPlayer = new RadioPlayer();
         var youtube = new YoutubeClient();
         var songSearch = new SongSearchService(youtube);
+        var videoMetadata = new VideoUrlResolver(youtube);
         var audioRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "audio"));
         var audioCache = new DiskCache(audioRoot, 256L * 1024 * 1024);
         var songPlayer = new SongPlayer(youtube, audioCache);
@@ -350,6 +353,7 @@ internal sealed class PhoneServices : IDisposable
             Radio = radio,
             RadioPlayer = radioPlayer,
             SongSearch = songSearch,
+            VideoMetadata = videoMetadata,
             SongPlayer = songPlayer,
             SongHistory = songHistory,
             Playlists = playlists,
@@ -407,6 +411,7 @@ internal sealed class PhoneServices : IDisposable
         AdInquiries.Dispose();
         SongPlayer.Dispose();
         SongSearch.Dispose();
+        VideoMetadata.Dispose();
         RadioPlayer.Dispose();
         Radio.Dispose();
         LinkshellBridge.Dispose();

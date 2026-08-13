@@ -110,12 +110,12 @@ public sealed class Plugin : IDalamudPlugin
             Wallpapers = services.Wallpapers;
             screenController = new ScreenController(() => Cfg.VideoHideNameplates);
             video = new VideoPlayer(screenController.Engine);
-            videoQueue = new AetherStreamQueue(video);
+            videoQueue = new AetherStreamQueue(video, services.VideoMetadata);
             watchAlong = new WatchAlongSession(services.AethernetSession, Cfg, services.Confirm, video,
                 videoQueue, services.StreamSignals, screenController);
             Framework.Update += OnVideoFrameworkUpdate;
             videoDebugWindow = new VideoDebugWindow(video, screenController);
-            screenWindow = new AetherStreamScreenWindow(video);
+            screenWindow = new AetherStreamScreenWindow(screenController, video);
             var bundle = AppRegistry.BuildDefault(services, video, screenController, videoQueue, watchAlong,
                 screenWindow);
             shell = new PhoneShell(services, bundle);
@@ -204,10 +204,10 @@ public sealed class Plugin : IDalamudPlugin
         dtrEntry?.Remove();
         windowSystem.RemoveAllWindows();
         videoDebugWindow?.Dispose();
-        screenWindow?.Dispose();
-        screenController?.Dispose();
         watchAlong?.Dispose();
+        videoQueue?.Dispose();
         video?.Dispose();
+        screenController?.Dispose();
         DxHandler.Dispose();
         phoneEmote?.Dispose();
         timerNotifier?.Dispose();
@@ -246,7 +246,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnVideoFrameworkUpdate(IFramework framework)
     {
-        videoQueue.OnFrameworkUpdate();
+        video.OnFrameworkUpdate();
         watchAlong.OnFrameworkUpdate((float)framework.UpdateDelta.TotalSeconds);
     }
 
@@ -299,10 +299,10 @@ public sealed class Plugin : IDalamudPlugin
         phoneWindow.PersistPositions();
         windowSystem.RemoveAllWindows();
         videoDebugWindow.Dispose();
-        screenWindow.Dispose();
-        screenController.Dispose();
         watchAlong.Dispose();
+        videoQueue.Dispose();
         video.Dispose();
+        screenController.Dispose();
         DxHandler.Dispose();
         phoneEmote.Dispose();
         timerNotifier.Dispose();

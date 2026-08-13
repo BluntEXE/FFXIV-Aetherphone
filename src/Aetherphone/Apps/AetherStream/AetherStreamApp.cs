@@ -85,7 +85,7 @@ internal sealed partial class AetherStreamApp : IPhoneApp
 
     public void OnOpened()
     {
-        screen.Engine.Resources.EnsureProvisioned();
+        _ = screen.Engine.Dependencies.EnsureReadyAsync(CancellationToken.None);
     }
 
     public void OnClosed()

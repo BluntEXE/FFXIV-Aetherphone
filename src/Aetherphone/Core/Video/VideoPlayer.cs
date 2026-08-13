@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+
 namespace Aetherphone.Core.Video;
 
 internal enum VideoPlaybackState : byte
@@ -9,87 +11,159 @@ internal enum VideoPlaybackState : byte
     Failed,
 }
 
+internal readonly record struct PlaybackProgress(float Position, float Duration, bool Paused)
+{
+    internal float Fraction => Duration > 0f ? Math.Clamp(Position / Duration, 0f, 1f) : 0f;
+}
+
 internal sealed class VideoPlayer : IDisposable
 {
     private readonly VideoEngine engine;
+    private readonly ConcurrentQueue<(MpvEndReason Reason, string? Detail)> pendingEndings = new();
+    private volatile bool pendingLoaded;
 
-    public VideoPlayer(VideoEngine engine)
+    internal VideoPlayer(VideoEngine engine)
     {
         this.engine = engine;
+        engine.PlaybackEnded += OnEngineEnded;
+        engine.PlaybackLoaded += OnEngineLoaded;
     }
 
-    public VideoPlaybackState State { get; private set; } = VideoPlaybackState.Idle;
-    public string? LastError { get; private set; }
+    internal event Action? Finished;
+    internal event Action<string?>? Failed;
 
-    public bool HardwareDecoding
+    internal VideoPlaybackState State { get; private set; } = VideoPlaybackState.Idle;
+    internal PlaybackProgress Progress { get; private set; }
+    internal string? LastError { get; private set; }
+
+    internal bool HasMedia => State is VideoPlaybackState.Loading or VideoPlaybackState.Playing
+        or VideoPlaybackState.Paused;
+
+    internal bool HardwareDecoding
     {
         get => engine.HardwareDecoding;
         set => engine.HardwareDecoding = value;
     }
 
-    public bool AllowInsecureDirectUrls
+    internal bool AllowInsecureDirectUrls
     {
         get => engine.AllowInsecureDirectUrls;
         set => engine.AllowInsecureDirectUrls = value;
     }
 
-    public int MaxQualityHeight
+    internal int MaxQualityHeight
     {
         get => engine.MaxQualityHeight;
         set => engine.MaxQualityHeight = value;
     }
 
-    public void SetVolume(int volumePercent) => engine.SetVolume(volumePercent);
+    internal void SetVolume(int volumePercent) => engine.SetVolume(volumePercent);
 
-    public bool IsIdle() => engine.GetIdle();
-
-    public void Play(string url)
+    internal void Play(string url, double startSeconds = 0d, bool playing = true)
     {
-        try
+        LastError = null;
+        State = VideoPlaybackState.Loading;
+        engine.ClearError();
+        engine.Play(url, startSeconds, playing);
+    }
+
+    internal void Pause(bool paused)
+    {
+        engine.Pause(paused);
+        if (State is VideoPlaybackState.Playing or VideoPlaybackState.Paused)
         {
-            LastError = null;
-            State = VideoPlaybackState.Loading;
-            engine.PlayVideo(url);
-            State = VideoPlaybackState.Playing;
-        }
-        catch (Exception exception)
-        {
-            State = VideoPlaybackState.Failed;
-            LastError = exception.Message;
-            AepLog.Warning($"[Video] Failed to start playback: {exception.Message}");
+            State = paused ? VideoPlaybackState.Paused : VideoPlaybackState.Playing;
         }
     }
 
-    public void Pause(bool pause)
-    {
-        engine.Pause(pause);
-        State = pause ? VideoPlaybackState.Paused : VideoPlaybackState.Playing;
-    }
+    internal void Seek(double seconds) => engine.Seek(seconds);
 
-    public void Seek(float seconds) => engine.Seek((int)MathF.Round(seconds));
-
-    public (float Position, float Duration, bool Paused) GetProgress()
-    {
-        if (State != VideoPlaybackState.Idle && engine.LastError is { } error && LastError != error)
-        {
-            State = VideoPlaybackState.Failed;
-            LastError = error;
-        }
-
-        var info = engine.GetInfo();
-        return ((float)info[0], (float)info[1], engine.GetPaused());
-    }
-
-    public byte[]? TryGetFrame(out int width, out int height) => engine.TryGetFrame(out width, out height);
-
-    public void Stop()
+    internal void Stop()
     {
         engine.StopVideo();
         State = VideoPlaybackState.Idle;
+        Progress = default;
+        while (pendingEndings.TryDequeue(out _))
+        {
+        }
     }
+
+    internal byte[]? TryGetFrame(out int width, out int height) => engine.TryGetFrame(out width, out height);
+
+    internal bool TryCopyLatestFrame(byte[] destination) => engine.TryCopyLatestFrame(destination);
+
+    internal int FrameVersion => engine.FrameVersion;
+
+    internal void OnFrameworkUpdate()
+    {
+        if (pendingLoaded)
+        {
+            pendingLoaded = false;
+            if (State == VideoPlaybackState.Loading)
+            {
+                State = VideoPlaybackState.Playing;
+            }
+        }
+
+        while (pendingEndings.TryDequeue(out var ending))
+        {
+            ApplyEnding(ending.Reason, ending.Detail);
+        }
+
+        if (!HasMedia)
+        {
+            Progress = default;
+            return;
+        }
+
+        var info = engine.ReadPlaybackInfo();
+        Progress = new PlaybackProgress((float)info.PositionSeconds, (float)info.DurationSeconds, info.Paused);
+
+        if (State == VideoPlaybackState.Playing && info.Paused)
+        {
+            State = VideoPlaybackState.Paused;
+            return;
+        }
+
+        if (State == VideoPlaybackState.Paused && !info.Paused)
+        {
+            State = VideoPlaybackState.Playing;
+        }
+    }
+
+    private void ApplyEnding(MpvEndReason reason, string? detail)
+    {
+        switch (reason)
+        {
+            case MpvEndReason.Finished:
+                State = VideoPlaybackState.Idle;
+                Progress = default;
+                Finished?.Invoke();
+                return;
+            case MpvEndReason.Failed:
+                State = VideoPlaybackState.Failed;
+                LastError = detail ?? engine.LastError ?? "This video could not be played.";
+                Progress = default;
+                Failed?.Invoke(LastError);
+                return;
+            case MpvEndReason.Redirect:
+                return;
+            default:
+                State = VideoPlaybackState.Idle;
+                Progress = default;
+                return;
+        }
+    }
+
+    private void OnEngineLoaded() => pendingLoaded = true;
+
+    private void OnEngineEnded(MpvEndReason reason, string? detail) => pendingEndings.Enqueue((reason, detail));
 
     public void Dispose()
     {
-        Stop();
+        engine.PlaybackEnded -= OnEngineEnded;
+        engine.PlaybackLoaded -= OnEngineLoaded;
+        engine.Shutdown();
+        State = VideoPlaybackState.Idle;
     }
 }

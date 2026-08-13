@@ -1,19 +1,20 @@
 using Aetherphone.Core.Video;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Textures;
-using Dalamud.Interface.Textures.TextureWraps;
 using Dalamud.Interface.Windowing;
 
 namespace Aetherphone.Windows;
 
-internal sealed class AetherStreamScreenWindow : Window, IDisposable
+internal sealed class AetherStreamScreenWindow : Window
 {
-    private readonly VideoPlayer video;
-    private IDalamudTextureWrap? texture;
+    private const float SourceAspect = (float)VideoEngine.ScreenWidth / VideoEngine.ScreenHeight;
 
-    public AetherStreamScreenWindow(VideoPlayer video)
+    private readonly ScreenController screen;
+    private readonly VideoPlayer video;
+
+    internal AetherStreamScreenWindow(ScreenController screen, VideoPlayer video)
         : base("AetherStream Screen###AetherStreamScreenWindow")
     {
+        this.screen = screen;
         this.video = video;
         Size = new Vector2(640f, 360f);
         SizeCondition = ImGuiCond.FirstUseEver;
@@ -26,39 +27,28 @@ internal sealed class AetherStreamScreenWindow : Window, IDisposable
 
     public override void Draw()
     {
-        var frame = video.TryGetFrame(out var width, out var height);
-        if (frame is null || width <= 0 || height <= 0)
+        var handle = screen.Engine.ScreenViewHandle;
+        if (handle == nint.Zero || !video.HasMedia)
         {
             ImGui.TextDisabled("Nothing playing.");
             return;
         }
 
-        texture?.Dispose();
-        texture = Plugin.TextureProvider.CreateFromRaw(RawImageSpecification.Bgra32(width, height), frame,
-            "Aetherphone.AetherStream.ScreenWindow");
-
-        var avail = ImGui.GetContentRegionAvail();
-        var aspect = (float)width / height;
-        var drawWidth = avail.X;
-        var drawHeight = drawWidth / aspect;
-        if (drawHeight > avail.Y && avail.Y > 0f)
+        var available = ImGui.GetContentRegionAvail();
+        var drawWidth = available.X;
+        var drawHeight = drawWidth / SourceAspect;
+        if (drawHeight > available.Y && available.Y > 0f)
         {
-            drawHeight = avail.Y;
-            drawWidth = drawHeight * aspect;
+            drawHeight = available.Y;
+            drawWidth = drawHeight * SourceAspect;
         }
 
-        var offsetX = (avail.X - drawWidth) * 0.5f;
+        var offsetX = (available.X - drawWidth) * 0.5f;
         if (offsetX > 0f)
         {
             ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offsetX);
         }
 
-        ImGui.Image(texture.Handle, new Vector2(drawWidth, drawHeight));
-    }
-
-    public void Dispose()
-    {
-        texture?.Dispose();
-        texture = null;
+        ImGui.Image(new ImTextureID(handle), new Vector2(drawWidth, drawHeight));
     }
 }

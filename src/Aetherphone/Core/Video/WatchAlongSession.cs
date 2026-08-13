@@ -326,7 +326,9 @@ internal sealed class WatchAlongSession : IDisposable
 
         tickCounter = 0;
 
-        var (position, _, paused) = video.GetProgress();
+        var progress = video.Progress;
+        var position = progress.Position;
+        var paused = progress.Paused;
         var url = queue.Current?.Url ?? string.Empty;
 
         Vector3? screenPosition = screen.Engine.IsActive ? screen.Engine.ScreenPosition : null;
@@ -592,7 +594,7 @@ internal sealed class WatchAlongSession : IDisposable
 
         if (message.PositionSeconds is { } position)
         {
-            var (localPosition, _, _) = video.GetProgress();
+            var localPosition = video.Progress.Position;
             if (Math.Abs(localPosition - position) > PositionDriftToleranceSeconds)
             {
                 video.Seek((float)position);

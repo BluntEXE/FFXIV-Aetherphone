@@ -26,59 +26,21 @@ internal sealed partial class AetherStreamApp
         var top = area.Min.Y + AppHeader.Height * scale + Metrics.Space.Sm * scale;
         var content = new Rect(new Vector2(area.Min.X + margin, top), new Vector2(area.Max.X - margin, area.Max.Y));
 
-        var resources = screen.Engine.Resources;
+        var dependencies = screen.Engine.Dependencies;
 
         using (AppSurface.Begin(content))
         {
             SettingsSection.Header(Loc.T(L.AetherStream.SettingsSectionStatus), accentedTheme);
             var statusCard = GroupCard.Begin(accentedTheme, 5);
             SettingsRow.Info(statusCard.NextRow(), Loc.T(L.AetherStream.SettingsDependencyStatus),
-                MpvStatusText(resources), accentedTheme);
-            var mpvLabel = mpvDownloading ? Loc.T(L.AetherStream.SettingsDownloading)
-                : resources.GetLocationMPV() is null ? Loc.T(L.AetherStream.SettingsDownloadMpv)
-                : Loc.T(L.AetherStream.SettingsUpdateMpv);
-            if (SettingsRow.Action(statusCard.NextRow(), mpvLabel,
-                    mpvDownloading ? accentedTheme.TextMuted : accentedTheme.Accent, accentedTheme) &&
-                !mpvDownloading)
-            {
-                mpvDownloading = true;
-                dependencyWork.Run("download mpv", async token =>
-                {
-                    if (resources.MpvCheckResult[0].Length == 0)
-                    {
-                        await resources.CheckMPVAsync().ConfigureAwait(false);
-                    }
-
-                    if (resources.MpvCheckResult[0].Length > 0)
-                    {
-                        await resources.DownloadMPVAsync().ConfigureAwait(false);
-                    }
-                }, () => mpvDownloading = false);
-            }
+                DependencyStatusText(dependencies, dependencies.VideoLibrary), accentedTheme);
+            DrawDependencyAction(statusCard.NextRow(), dependencies, dependencies.VideoLibrary,
+                L.AetherStream.SettingsDownloadMpv, L.AetherStream.SettingsUpdateMpv);
 
             SettingsRow.Info(statusCard.NextRow(), Loc.T(L.AetherStream.SettingsDependencyYtdlp),
-                YtdlpStatusText(resources), accentedTheme);
-            var ytdlpLabel = ytdlpDownloading ? Loc.T(L.AetherStream.SettingsDownloading)
-                : resources.GetLocationYTDLP() is null ? Loc.T(L.AetherStream.SettingsDownloadYtdlp)
-                : Loc.T(L.AetherStream.SettingsUpdateYtdlp);
-            if (SettingsRow.Action(statusCard.NextRow(), ytdlpLabel,
-                    ytdlpDownloading ? accentedTheme.TextMuted : accentedTheme.Accent, accentedTheme) &&
-                !ytdlpDownloading)
-            {
-                ytdlpDownloading = true;
-                dependencyWork.Run("download yt-dlp", async token =>
-                {
-                    if (resources.YtdlpCheckResult[0].Length == 0)
-                    {
-                        await resources.CheckYTDLPAsync().ConfigureAwait(false);
-                    }
-
-                    if (resources.YtdlpCheckResult[0].Length > 0)
-                    {
-                        await resources.DownloadYTDLPAsync().ConfigureAwait(false);
-                    }
-                }, () => ytdlpDownloading = false);
-            }
+                DependencyStatusText(dependencies, dependencies.LinkResolver), accentedTheme);
+            DrawDependencyAction(statusCard.NextRow(), dependencies, dependencies.LinkResolver,
+                L.AetherStream.SettingsDownloadYtdlp, L.AetherStream.SettingsUpdateYtdlp);
 
             if (SettingsRow.Disclosure(statusCard.NextRow(), Loc.T(L.AetherStream.SettingsScreen), ScreenStateText(),
                     accentedTheme))
@@ -226,29 +188,64 @@ internal sealed partial class AetherStreamApp
         };
     }
 
-    private static string MpvStatusText(Resources resources)
+    private void DrawDependencyAction(Rect row, MediaDependencies dependencies, MediaDependency dependency,
+        LocString installLabel, LocString updateLabel)
     {
-        if (resources.GetLocationMPV() is null)
+        var snapshot = dependency.Snapshot();
+        var busy = snapshot.State is DependencyState.Checking or DependencyState.Downloading
+            or DependencyState.Installing;
+        var label = busy
+            ? Loc.T(L.AetherStream.SettingsDownloading)
+            : snapshot.State == DependencyState.Ready ? Loc.T(updateLabel) : Loc.T(installLabel);
+
+        if (!SettingsRow.Action(row, label, busy ? accentedTheme.TextMuted : accentedTheme.Accent, accentedTheme)
+            || busy)
+        {
+            return;
+        }
+
+        dependencyWork.Run("install " + dependency.Id,
+            async token => await dependencies.ReinstallAsync(dependency, token).ConfigureAwait(false));
+    }
+
+    private static string DependencyStatusText(MediaDependencies dependencies, MediaDependency dependency)
+    {
+        var snapshot = dependency.Snapshot();
+        switch (snapshot.State)
+        {
+            case DependencyState.Checking:
+                return Loc.T(L.AetherStream.SetupChecking);
+            case DependencyState.Downloading:
+                return DependencySizeText(snapshot);
+            case DependencyState.Installing:
+                return Loc.T(L.AetherStream.SetupInstalling);
+            case DependencyState.Failed:
+                return snapshot.FailureReason ?? Loc.T(L.AetherStream.SetupFailed);
+        }
+
+        if (snapshot.State != DependencyState.Ready)
         {
             return Loc.T(L.AetherStream.SettingsDependencyNotInstalled);
         }
 
-        return resources.MpvCheckResult[0].Length > 0
+        return dependencies.HasUpdate(dependency)
             ? Loc.T(L.AetherStream.SettingsDependencyUpdateAvailable)
             : Loc.T(L.AetherStream.SettingsDependencyOk);
     }
 
-    private static string YtdlpStatusText(Resources resources)
+    private static string DependencySizeText(DependencyProgress snapshot)
     {
-        if (resources.GetLocationYTDLP() is null)
+        if (snapshot.TotalBytes <= 0)
         {
-            return Loc.T(L.AetherStream.SettingsDependencyNotInstalled);
+            return Loc.T(L.AetherStream.SetupDownloading);
         }
 
-        return resources.YtdlpCheckResult[0].Length > 0
-            ? Loc.T(L.AetherStream.SettingsDependencyUpdateAvailable)
-            : Loc.T(L.AetherStream.SettingsDependencyOk);
+        return string.Format(Loc.T(L.AetherStream.SetupProgress), FormatMegabytes(snapshot.ReceivedBytes),
+            FormatMegabytes(snapshot.TotalBytes));
     }
+
+    private static string FormatMegabytes(long bytes) =>
+        (bytes / (1024d * 1024d)).ToString("0.#", Loc.Culture);
 
     private string ScreenStateText() => screen.Engine.IsActive
         ? Loc.T(L.AetherStream.CastingStateReady)

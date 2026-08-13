@@ -166,7 +166,9 @@ internal sealed partial class AetherStreamApp
     {
         var origin = ImGui.GetCursorScreenPos();
         var interactive = !watchAlong.IsViewing;
-        var (position, duration, _) = video.GetProgress();
+        var progress = video.Progress;
+        var position = progress.Position;
+        var duration = progress.Duration;
         var normalized = duration > 0f ? Math.Clamp(position / duration, 0f, 1f) : 0f;
         var sliderRow = new Rect(origin, origin + new Vector2(width, 24f * scale));
         var shown = position;
@@ -212,7 +214,9 @@ internal sealed partial class AetherStreamApp
         var centerX = origin.X + width * 0.5f;
         var interactive = !watchAlong.IsViewing;
         var transportAlpha = interactive ? 1f : 0.4f;
-        var (position, _, paused) = video.GetProgress();
+        var progress = video.Progress;
+        var position = progress.Position;
+        var paused = progress.Paused;
 
         if (interactive && ui.IconButton(new Vector2(centerX - 132f * scale, centerY), 16f * scale,
                 FontAwesomeIcon.UndoAlt.ToIconString(), ui.TitleInk, AppSkin.Transparent, 0.6f))
