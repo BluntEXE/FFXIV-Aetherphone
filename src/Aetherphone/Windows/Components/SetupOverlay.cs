@@ -146,11 +146,18 @@ internal sealed partial class SetupOverlay : IDisposable
             if (slide < 1f && fromPage != page)
             {
                 var exitOffset = new Vector2(-slideDirection * screen.Width * 0.3f * slide, 0f);
-                DrawPage(fromPage, screen, theme, exitOffset, (1f - slide) * contentAlpha, false);
+                using (Typography.WrapOffset(exitOffset.X))
+                {
+                    DrawPage(fromPage, screen, theme, exitOffset, (1f - slide) * contentAlpha, false);
+                }
             }
 
             var enterOffset = new Vector2(slideDirection * screen.Width * (1f - slide), 0f);
-            DrawPage(page, screen, theme, enterOffset, MathF.Min(slide + 0.35f, 1f) * contentAlpha, live);
+            using (Typography.WrapOffset(enterOffset.X))
+            {
+                DrawPage(page, screen, theme, enterOffset, MathF.Min(slide + 0.35f, 1f) * contentAlpha, live);
+            }
+
             DrawBackButton(drawList, screen, theme, contentAlpha, live);
         }
     }

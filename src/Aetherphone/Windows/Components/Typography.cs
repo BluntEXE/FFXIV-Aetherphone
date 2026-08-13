@@ -41,6 +41,8 @@ internal static class Typography
 
     private static int cacheGeneration;
 
+    private static float autoWrapOffsetX;
+
     private static void InvalidateCachesOnFontChange()
     {
         var current = Plugin.Fonts.Generation;
@@ -79,6 +81,24 @@ internal static class Typography
         public void Dispose()
         {
             ImGui.PopTextWrapPos();
+        }
+    }
+
+    public static WrapOffsetScope WrapOffset(float offsetX) => new(offsetX);
+
+    public readonly struct WrapOffsetScope : IDisposable
+    {
+        private readonly float previous;
+
+        public WrapOffsetScope(float offsetX)
+        {
+            previous = autoWrapOffsetX;
+            autoWrapOffsetX = offsetX;
+        }
+
+        public void Dispose()
+        {
+            autoWrapOffsetX = previous;
         }
     }
 
@@ -546,7 +566,8 @@ internal static class Typography
         var margin = 8f * UiScale.Current;
         var left = windowLeft + ImGui.GetWindowContentRegionMin().X + margin;
         var right = windowLeft + ImGui.GetWindowContentRegionMax().X - margin;
-        var half = MathF.Min(centerX - left, right - centerX);
+        var restingCenterX = centerX - autoWrapOffsetX;
+        var half = MathF.Min(restingCenterX - left, right - restingCenterX);
         return half * 2f;
     }
 
