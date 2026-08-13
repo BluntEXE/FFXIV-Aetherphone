@@ -73,6 +73,9 @@ internal sealed class PhoneServices : IDisposable
     public required LinkpearlNotificationGate LinkpearlNotificationGate { get; init; }
     public required LinkshellStore Linkshells { get; init; }
     public required LinkshellBridge LinkshellBridge { get; init; }
+    public required GameChat.ChatLog ChatLog { get; init; }
+    public required GameChat.ChatSend ChatSend { get; init; }
+    public required GameChat.ChatCapture ChatCapture { get; init; }
     public required HttpService Http { get; init; }
     public required MediaCache Media { get; init; }
     public required RemoteImageCache RemoteImages { get; init; }
@@ -194,6 +197,9 @@ internal sealed class PhoneServices : IDisposable
         var linkshells = new LinkshellStore(linkshellMutes, characterWatch);
         var linkshellBridge = new LinkshellBridge(linkshells, linkshellMutes, notifications, linkpearlNotificationGate,
             chatGui, gameData, linkpearlGate);
+        var chatLog = new GameChat.ChatLog(characterWatch);
+        var chatSend = new GameChat.ChatSend();
+        var chatCapture = new GameChat.ChatCapture(chatLog, chatSend, chatGui, gameData, linkpearlGate);
         var cacheRoot = new DirectoryInfo(Path.Combine(configDirectory.FullName, "cache"));
         cacheRoot.Create();
         var mediaRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "media"));
@@ -323,6 +329,9 @@ internal sealed class PhoneServices : IDisposable
             LinkpearlNotificationGate = linkpearlNotificationGate,
             Linkshells = linkshells,
             LinkshellBridge = linkshellBridge,
+            ChatLog = chatLog,
+            ChatSend = chatSend,
+            ChatCapture = chatCapture,
             Http = http,
             Media = media,
             RemoteImages = remoteImages,
@@ -423,6 +432,7 @@ internal sealed class PhoneServices : IDisposable
         VideoMetadata.Dispose();
         RadioPlayer.Dispose();
         Radio.Dispose();
+        ChatCapture.Dispose();
         LinkshellBridge.Dispose();
         ChatBridge.Dispose();
         Lookup.Dispose();
