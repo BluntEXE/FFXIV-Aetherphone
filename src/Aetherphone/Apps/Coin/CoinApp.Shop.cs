@@ -23,6 +23,9 @@ internal sealed partial class CoinApp
     private const float BloomAlpha = 0.14f;
     private const float ButtonHeight = 44f;
     private const string FlairKind = "flair";
+    private const string FrameKind = "frame";
+    private const float FrameCardHeight = 232f;
+    private const float FrameStageHeight = 124f;
 
     private void DrawShop(Rect body)
     {
@@ -53,9 +56,11 @@ internal sealed partial class CoinApp
         {
             var sku = skus[index];
             var badge = BadgeFor(sku);
-            var cardHeight = (badge is null ? PlainCardHeight : FlairCardHeight) * scale;
+            var frame = FrameFor(sku);
+            var cardHeight = (frame is not null ? FrameCardHeight
+                : badge is null ? PlainCardHeight : FlairCardHeight) * scale;
             var origin = ImGui.GetCursorScreenPos();
-            DrawSkuCard(sku, badge, origin, width, cardHeight, scale);
+            DrawSkuCard(sku, badge, frame, origin, width, cardHeight, scale);
             ImGui.SetCursorScreenPos(origin);
             ImGui.Dummy(new Vector2(width, cardHeight + gap));
         }
@@ -70,8 +75,28 @@ internal sealed partial class CoinApp
             : null;
     }
 
-    private void DrawSkuCard(CoinSkuStyle sku, Core.Social.BadgeStyle? badge, Vector2 origin, float cardWidth,
-        float cardHeight, float scale)
+    private Core.Social.FrameStyle? FrameFor(CoinSkuStyle sku)
+    {
+        return string.Equals(sku.Kind, FrameKind, StringComparison.Ordinal)
+            ? frameCatalog.Find(sku.Payload)
+            : null;
+    }
+
+    private void DrawFrameStage(ImDrawListPtr drawList, Rect stage, Core.Social.FrameStyle frame, float scale)
+    {
+        var rounding = 16f * scale;
+        Squircle.Fill(drawList, stage.Min, stage.Max, rounding, ImGui.GetColorU32(ui.Palette.FieldSurface));
+        Material.EdgeSquircle(drawList, stage.Min, stage.Max, rounding, scale);
+
+        var outerRadius = MathF.Min(stage.Height * 0.42f, stage.Width * 0.30f);
+        var avatarRadius = outerRadius / frame.Scale;
+        var user = session.CurrentUser;
+        AvatarView.DrawRemote(drawList, stage.Center, avatarRadius, theme, user?.Name ?? string.Empty,
+            user?.World ?? string.Empty, user?.AvatarUrl, images, lodestone, 1.2f, 48, 1f, frame);
+    }
+
+    private void DrawSkuCard(CoinSkuStyle sku, Core.Social.BadgeStyle? badge, Core.Social.FrameStyle? frame,
+        Vector2 origin, float cardWidth, float cardHeight, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
         var min = origin;
@@ -83,7 +108,14 @@ internal sealed partial class CoinApp
         var textLeft = min.X + inset;
         var textRight = max.X - inset;
         var cursorY = min.Y + inset;
-        if (badge is not null)
+        if (frame is not null)
+        {
+            var stage = new Rect(new Vector2(textLeft, cursorY),
+                new Vector2(textRight, cursorY + FrameStageHeight * scale));
+            DrawFrameStage(drawList, stage, frame, scale);
+            cursorY = stage.Max.Y + 12f * scale;
+        }
+        else if (badge is not null)
         {
             var stage = new Rect(new Vector2(textLeft, cursorY),
                 new Vector2(textRight, cursorY + StageHeight * scale));

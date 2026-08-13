@@ -1,11 +1,11 @@
 # Aetherphone art asset specification
 
 Everything the art team needs to produce assets that drop into the plugin without engineering work.
-Two asset types are covered: **app icons** and **phone cases**.
+Three asset types are covered: **app icons**, **phone cases** and **avatar frames**.
 
 If a value here disagrees with the code, the code wins and this document is stale. The authoritative
-sources are `Windows/Components/AppIconTextures.cs` for icons, and `Core/Theme/ChassisMetrics.cs` plus
-`Windows/Components/CaseArt.cs` for cases.
+sources are `Windows/Components/AppIconTextures.cs` for icons, `Core/Theme/ChassisMetrics.cs` plus
+`Windows/Components/CaseArt.cs` for cases, and `Windows/Components/AvatarView.cs` for frames.
 
 ---
 
@@ -198,7 +198,73 @@ worked example of overflow art: a plain shell with a head above the top edge and
 
 ---
 
-# 3. Open decisions
+# 3. Avatar frames
+
+A frame is a ring that sits around a player's round profile picture. It is bought in the Aether Coin
+shop, worn one at a time, and drawn over the avatar everywhere that face appears.
+
+| | |
+|---|---|
+| Canvas | **512 x 512 px**, square. Anything from 128 to 1024 is accepted, square is enforced |
+| Format | **PNG-32 or WebP, RGBA.** JPEG is rejected: no alpha means a solid square over somebody's face |
+| File size | 2 MB hard cap |
+| Centre | **Fully transparent.** The avatar is drawn underneath and shows through |
+| Upload | Mod console, Frames page. Name it, drop the file, set the scale |
+
+## The scale number is the whole geometry
+
+There is one number to get right, and it is set per frame in the console rather than baked into the
+client, so it can be retuned without a plugin release.
+
+**Scale** is the frame's drawn width as a percentage of the avatar's diameter.
+
+- At **100** the frame exactly covers the avatar and cannot overhang.
+- At **138**, the default, the avatar hole occupies the centre 72% of your canvas and the outer 14%
+  on each side is free for decoration that breaks the circle.
+- The console clamps to **100 to 200**, and the client clamps again on the way in.
+
+So the rule for the artist: **decide how far your decoration sticks out, then tell the console.**
+
+At the 138 default on a 512 canvas:
+
+| | |
+|---|---|
+| Avatar hole | Centred circle, **371 px** diameter (72.5% of 512) |
+| Decoration margin | **70 px** on every side |
+| Hole edge | Keep the inner opening a clean circle. The avatar is a hard-edged circle and any gap shows |
+
+If your design needs a bigger flourish, raise the scale rather than shrinking the hole. Shrinking the
+hole crops the face; raising the scale gives you room.
+
+## Rules that come from how it renders
+
+**Centred, always.** Scale controls size, not position. There is no offset knob, so a decoration
+weighted to one side still has to sit in a centred canvas with its own margin. A bow on top means
+margin on all four sides, not just the top.
+
+**It has to read at 30 px.** The same art is drawn on a profile header and on a chat row. Below a
+radius of 15 px the client skips the frame rather than smear it, so fine filigree simply disappears
+on small rows. Silhouette and two or three strong colours survive; hairline detail does not. The
+console previews both sizes side by side while you tune, and the small preview is the one to trust.
+
+**Never cover the face.** The avatar exists so people recognise each other. Decoration belongs in the
+margin. Art that reaches into the hole, or that is loud enough to win attention from the person
+inside it, has failed no matter how good it looks alone.
+
+**Soft edges beat hard ones.** The frame is composited straight over the avatar with no blending
+tricks, so a hard alpha cutout against a busy photo reads as a sticker. Feather the outer edge by a
+pixel or two.
+
+---
+
+# 4. Open decisions
+
+**Animated frames.** Frames are static images. Motion is a field on the frame and a branch in the
+draw away, and is deliberately not built until static frames have shipped and their texture cost is
+measured.
+
+**Off-centre art.** Scale handles size, not position. If a design genuinely cannot sit centred, that
+is two more numbers on the frame, and worth asking for rather than working around.
 
 **Full-colour app icons.** Icons are stencils today. Moving to full-colour per-app illustrations is
 under discussion; it would replace section 1 entirely and is all-or-nothing, since stencils beside

@@ -100,7 +100,8 @@ internal static class AppRegistry
         var calendarEvents = new CalendarEvents(services.Http, services.AethernetSession);
         apps.Add(new CalendarApp(services.Configuration, calendarEvents, services.Confirm));
         apps.Add(new Aetherphone.Apps.Coin.CoinApp(services.AethernetSession, services.Coins, services.CoinCatalog,
-            services.Confirm, services.BadgeCatalog, services.RemoteImages, services.Casino));
+            services.Confirm, services.BadgeCatalog, services.RemoteImages, services.Casino, services.FrameCatalog,
+            services.Loadout, services.Lodestone));
         apps.Add(new CasinoApp(services.AethernetSession, services.Coins, services.Casino, services.CasinoPlay,
             services.CasinoHistory, services.CasinoRooms, services.CasinoTables, services.CasinoSpin,
             services.CasinoTurns, services.CasinoLauncher, services.GameStats, services.Confirm));
