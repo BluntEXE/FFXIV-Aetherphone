@@ -50,9 +50,35 @@ internal sealed class MpvRenderer : IDisposable
     private static extern int mpv_set_option_string(IntPtr ctx,
         [MarshalAs(UnmanagedType.LPUTF8Str)] string name, [MarshalAs(UnmanagedType.LPUTF8Str)] string data);
 
-    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int mpv_command(IntPtr ctx,
-        [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPUTF8Str)] string?[] args);
+    [DllImport(Library, EntryPoint = "mpv_command", CallingConvention = CallingConvention.Cdecl)]
+    private static extern int mpv_command_native(IntPtr ctx, IntPtr[] args);
+
+    private static int mpv_command(IntPtr ctx, string?[] args)
+    {
+        var pointers = new IntPtr[args.Length];
+        try
+        {
+            for (var index = 0; index < args.Length; index++)
+            {
+                if (args[index] is { } value)
+                {
+                    pointers[index] = Marshal.StringToCoTaskMemUTF8(value);
+                }
+            }
+
+            return mpv_command_native(ctx, pointers);
+        }
+        finally
+        {
+            for (var index = 0; index < pointers.Length; index++)
+            {
+                if (pointers[index] != IntPtr.Zero)
+                {
+                    Marshal.FreeCoTaskMem(pointers[index]);
+                }
+            }
+        }
+    }
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern int mpv_render_context_create(ref IntPtr result, IntPtr ctx, IntPtr parameters);
