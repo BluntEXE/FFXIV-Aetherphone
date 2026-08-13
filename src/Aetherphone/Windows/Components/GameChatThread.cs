@@ -54,6 +54,7 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
     private string trackedKey = string.Empty;
     private bool followBottom = true;
     private bool snapToBottom;
+    private string? revealId;
 
     public GameChatThread(ChatLog log, ChatSend send, GameData gameData)
     {
@@ -68,6 +69,12 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
 
     public void Gate() => composer.Gate();
 
+    public void Reveal(string entryId)
+    {
+        revealId = entryId;
+        snapToBottom = false;
+    }
+
     public void Open(in GameChatTarget next)
     {
         if (string.Equals(target.Key, next.Key, StringComparison.Ordinal))
@@ -80,7 +87,7 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
         activeChannel = next.SendChannelKey;
         composer.Reset();
         followBottom = true;
-        snapToBottom = true;
+        snapToBottom = revealId is null;
         mappedRevision = -1;
     }
 
@@ -239,6 +246,13 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
                 {
                     RaiseLink(entry, tapped);
                 }
+
+                if (revealId is not null && string.Equals(entry.Id, revealId, StringComparison.Ordinal))
+                {
+                    ImGui.SetScrollHereY(0.4f);
+                    revealId = null;
+                    followBottom = false;
+                }
             }
 
             for (var index = 0; index < ghostEntries.Count; index++)
@@ -276,6 +290,12 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
         {
             transcript.RequestSnapToBottom();
             snapToBottom = false;
+        }
+
+        if (revealId is not null)
+        {
+            transcript.RequestScrollTo(revealId);
+            revealId = null;
         }
 
         transcript.Draw(listRect, model);

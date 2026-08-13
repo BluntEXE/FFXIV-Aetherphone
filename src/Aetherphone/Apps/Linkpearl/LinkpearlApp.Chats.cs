@@ -24,6 +24,7 @@ internal sealed partial class LinkpearlApp
         TabPreset.Local,
     };
 
+    private readonly ChatSearch search = new();
     private readonly DropdownMenu rowMenu = new();
     private readonly DropdownMenu.Item[] rowMenuItems = new DropdownMenu.Item[4];
     private readonly byte[] rowMenuActions = new byte[4];
@@ -35,9 +36,22 @@ internal sealed partial class LinkpearlApp
         inbox.Sync();
         var scale = UiScale.Current;
         UiAnchors.Report("messages.list", content);
-        if (inbox.Rows.Count == 0 && inbox.Pinned.Count == 0)
+        if (inbox.Rows.Count == 0 && inbox.Pinned.Count == 0 && !search.Active)
         {
             DrawEmptyState(content);
+            return;
+        }
+
+        var pad = Metrics.Space.Lg * scale;
+        var searchBar = new Rect(new Vector2(content.Min.X + pad, content.Min.Y),
+            new Vector2(content.Max.X - pad, content.Min.Y + 40f * scale));
+        SearchField.Draw(searchBar, "##linkpearlSearch", Loc.T(L.Linkpearl.SearchHint), ref chatSearchQuery,
+            frameTheme);
+        search.Run(chatSearchQuery, inbox, chatLog);
+        content = new Rect(new Vector2(content.Min.X, searchBar.Max.Y + Metrics.Space.Xs * scale), content.Max);
+        if (search.Active)
+        {
+            DrawSearchResults(content);
             return;
         }
 
@@ -105,6 +119,73 @@ internal sealed partial class LinkpearlApp
         {
             CreateTab();
         }
+    }
+
+    private void DrawSearchResults(Rect body)
+    {
+        var scale = UiScale.Current;
+        var hits = search.Hits;
+        if (hits.Count == 0)
+        {
+            Typography.DrawCentered(new Vector2(body.Center.X, body.Min.Y + 60f * scale),
+                Loc.T(L.Linkpearl.NoMatches), frameTheme.TextMuted);
+            return;
+        }
+
+        using (AppSurface.Begin(body))
+        {
+            for (var index = 0; index < hits.Count; index++)
+            {
+                if (DrawHitRow(hits[index], scale))
+                {
+                    OpenHit(hits[index]);
+                }
+            }
+        }
+    }
+
+    private bool DrawHitRow(ChatHit hit, float scale)
+    {
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ScrollLayout.StableContentWidth();
+        var row = new Rect(origin, new Vector2(origin.X + width, origin.Y + 56f * scale));
+        ImGui.Dummy(new Vector2(width, 56f * scale));
+        var hovered = UiInteract.Hover(row.Min, row.Max);
+        var drawList = ImGui.GetWindowDrawList();
+        if (hovered)
+        {
+            Squircle.Fill(drawList, new Vector2(row.Min.X + Metrics.Space.Xs * scale, row.Min.Y + 2f * scale),
+                new Vector2(row.Max.X - Metrics.Space.Xs * scale, row.Max.Y - 2f * scale), Metrics.Radius.Md * scale,
+                ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.05f)));
+        }
+
+        var left = row.Min.X + Metrics.Space.Lg * scale;
+        var right = row.Max.X - Metrics.Space.Lg * scale;
+        var stamp = TimeText.Short(hit.Entry.At);
+        var stampSize = Typography.Measure(stamp, TextStyles.Caption2);
+        Typography.Draw(drawList, new Vector2(right - stampSize.X, row.Min.Y + 9f * scale), stamp,
+            frameTheme.TextMuted, TextStyles.Caption2);
+        var titleWidth = right - stampSize.X - Metrics.Space.Sm * scale - left;
+        Typography.Draw(drawList, new Vector2(left, row.Min.Y + 8f * scale),
+            Typography.FitText(hit.Title, titleWidth, TextStyles.SubheadlineEmphasized), frameTheme.TextStrong,
+            TextStyles.SubheadlineEmphasized);
+        var preview = hit.Entry.AuthorName.Length > 0
+            ? string.Concat(hit.Entry.AuthorName, ": ", hit.Entry.Text)
+            : hit.Entry.Text;
+        Typography.Draw(drawList, new Vector2(left, row.Min.Y + 29f * scale),
+            Typography.FitText(preview, right - left, TextStyles.Caption1), frameTheme.TextMuted, TextStyles.Caption1);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return UiInteract.Click(row.Min, row.Max, hovered);
+    }
+
+    private void OpenHit(ChatHit hit)
+    {
+        chatThread.Reveal(hit.Entry.Id);
+        OpenConversation(hit.ConversationKey);
     }
 
     private void DrawPinnedRail(Rect rail)

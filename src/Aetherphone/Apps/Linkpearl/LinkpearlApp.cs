@@ -40,6 +40,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
     private readonly ChatInbox inbox;
     private readonly TabStore tabs;
     private readonly ChatArchive archive;
+    private readonly ChatLog chatLog;
     private readonly LinkpearlNotificationGate notificationGate;
     private readonly LinkpearlLauncher launcher;
     private readonly LodestoneService lodestone;
@@ -56,6 +57,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
     private PhoneTheme frameTheme = PhoneTheme.Default;
     private INavigator frameNavigation = null!;
     private MessagesTab activeTab;
+    private string chatSearchQuery = string.Empty;
 
     public LinkpearlApp(ChatInbox inbox, TabStore tabs, ChatArchive archive,
         LinkpearlNotificationGate notificationGate,
@@ -66,6 +68,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         this.inbox = inbox;
         this.tabs = tabs;
         this.archive = archive;
+        this.chatLog = chatLog;
         this.notificationGate = notificationGate;
         this.launcher = launcher;
         this.lodestone = lodestone;
@@ -96,6 +99,8 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         router.Reset();
         activeTab = MessagesTab.Chats;
         threadKey = string.Empty;
+        chatSearchQuery = string.Empty;
+        search.Clear();
         inbox.Viewing = string.Empty;
         inbox.Invalidate();
         inbox.Sync();

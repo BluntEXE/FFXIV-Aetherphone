@@ -2746,6 +2746,7 @@ internal static class L
         public static readonly LocString ScopeFriends = new("linkpearl.scopeFriends", "Friends");
         public static readonly LocString ScopeEveryone = new("linkpearl.scopeEveryone", "Everyone");
         public static readonly LocString NoMatches = new("linkpearl.noMatches", "No one matches that name.");
+        public static readonly LocString SearchHint = new("linkpearl.searchHint", "Search messages and people");
     }
 
     internal static class Character
