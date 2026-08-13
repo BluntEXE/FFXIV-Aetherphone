@@ -53,6 +53,15 @@ internal sealed class MediaDependency
     internal string? DownloadUrl { get; set; }
     internal string? RemoteVersion { get; set; }
 
+    internal string? VerifiedPath { get; set; }
+    internal long LastMissAtTicks { get; set; } = long.MinValue;
+
+    internal void ForgetVerification()
+    {
+        VerifiedPath = null;
+        LastMissAtTicks = long.MinValue;
+    }
+
     internal DependencyProgress Snapshot() => new(state, Interlocked.Read(ref receivedBytes),
         Interlocked.Read(ref totalBytes), failureReason);
 
@@ -87,6 +96,7 @@ internal sealed class MediaDependencies : IDisposable
     private const string InstallFolder = "aetherstream";
     private const string VersionMarker = ".version";
     private const long MinimumLibraryBytes = 1 << 20;
+    private const long MissRecheckMilliseconds = 1000;
 
     private static readonly TimeSpan DownloadTimeout = TimeSpan.FromMinutes(10);
 
@@ -144,12 +154,25 @@ internal sealed class MediaDependencies : IDisposable
 
     private string? VerifiedPayload(MediaDependency dependency)
     {
+        if (dependency.VerifiedPath is { } cached)
+        {
+            return cached;
+        }
+
+        var now = Environment.TickCount64;
+        if (now - dependency.LastMissAtTicks < MissRecheckMilliseconds)
+        {
+            return null;
+        }
+
+        dependency.LastMissAtTicks = now;
         var path = PayloadPath(dependency);
         try
         {
             var file = new FileInfo(path);
             if (file.Exists && file.Length >= dependency.MinimumPayloadBytes)
             {
+                dependency.VerifiedPath = path;
                 return path;
             }
         }
@@ -196,6 +219,7 @@ internal sealed class MediaDependencies : IDisposable
                 var target = PayloadPath(dependency);
                 Directory.CreateDirectory(ComponentFolder(dependency));
                 File.Copy(source, target, overwrite: true);
+                dependency.ForgetVerification();
                 AepLog.Debug($"[Deps] Adopted an existing {dependency.Id} install from {candidates[index]}");
                 return;
             }
@@ -351,6 +375,7 @@ internal sealed class MediaDependencies : IDisposable
 
             dependency.SetState(DependencyState.Installing);
             Install(dependency, staging);
+            dependency.ForgetVerification();
 
             if (VerifiedPayload(dependency) is null)
             {

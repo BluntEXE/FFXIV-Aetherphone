@@ -47,10 +47,12 @@ internal sealed class MpvRenderer : IDisposable
     private static extern int mpv_initialize(IntPtr ctx);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int mpv_set_option_string(IntPtr ctx, string name, string data);
+    private static extern int mpv_set_option_string(IntPtr ctx,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string name, [MarshalAs(UnmanagedType.LPUTF8Str)] string data);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int mpv_command(IntPtr ctx, string?[] args);
+    private static extern int mpv_command(IntPtr ctx,
+        [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPUTF8Str)] string?[] args);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern int mpv_render_context_create(ref IntPtr result, IntPtr ctx, IntPtr parameters);
@@ -72,19 +74,23 @@ internal sealed class MpvRenderer : IDisposable
     private static extern IntPtr mpv_wait_event(IntPtr ctx, double timeout);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int mpv_request_log_messages(IntPtr ctx, string minimumLevel);
+    private static extern int mpv_request_log_messages(IntPtr ctx,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string minimumLevel);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void mpv_terminate_destroy(IntPtr ctx);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int mpv_get_property(IntPtr ctx, string name, int format, out double data);
+    private static extern int mpv_get_property(IntPtr ctx,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string name, int format, out double data);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int mpv_get_property(IntPtr ctx, string name, int format, out int data);
+    private static extern int mpv_get_property(IntPtr ctx,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string name, int format, out int data);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
-    private static extern IntPtr mpv_get_property_string(IntPtr ctx, string name);
+    private static extern IntPtr mpv_get_property_string(IntPtr ctx,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string name);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void mpv_free(IntPtr data);

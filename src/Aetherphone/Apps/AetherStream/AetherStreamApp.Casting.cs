@@ -15,19 +15,13 @@ internal sealed partial class AetherStreamApp
 
     private string screenPresetName = "";
 
-    private void DrawCastingTab(Rect body, float scale)
+    private void DrawScreenContent(Rect body, float scale)
     {
         using (AppSurface.Begin(body))
         {
             var width = ScrollLayout.StableContentWidth();
-            DrawCastingHero(width, scale);
+            DrawScreenStateRow(width, scale);
 
-            if (watchAlong.IsHosting && watchAlong.PendingRequests.Count > 0)
-            {
-                DrawPendingRequests(width, scale);
-            }
-
-            ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
             var windowCard = GroupCard.Begin(accentedTheme, 1);
             var windowOpen = SettingsRow.Bool(windowCard.NextRow(), Loc.T(L.AetherStream.OpenScreenWindow),
                 screenWindow.IsOpen, accentedTheme);
@@ -38,46 +32,25 @@ internal sealed partial class AetherStreamApp
             }
 
             DrawScreenPositionSection(width, scale);
-            DrawCastingStopButton(width, scale);
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
         }
     }
 
-    private void DrawCastingHero(float width, float scale)
+    private void DrawScreenStateRow(float width, float scale)
     {
         var origin = ImGui.GetCursorScreenPos();
-        var height = CastingHeroHeight * scale;
-        var max = origin + new Vector2(width, height);
+        var rowHeight = 26f * scale;
         var drawList = ImGui.GetWindowDrawList();
-        ui.Card(drawList, origin, max, Metrics.Radius.Card * scale, true);
-
-        var tileSize = 48f * scale;
-        var tileMin = new Vector2(origin.X + Metrics.Space.Lg * scale, origin.Y + (height - tileSize) * 0.5f);
-        var tileMax = tileMin + new Vector2(tileSize, tileSize);
-        IconTile.FillShaded(drawList, tileMin, tileMax, tileSize * Metrics.Radius.TileFactor,
-            IconTile.Surface(ui.Accent));
-        ProgressRing.CenterIcon(drawList, (tileMin + tileMax) * 0.5f, FontAwesomeIcon.Tv, AccentRing.Ink,
-            tileSize * 0.5f);
-
-        var textLeft = tileMax.X + Metrics.Space.Md * scale;
-        var textWidth = max.X - Metrics.Space.Lg * scale - textLeft;
-        var centerY = origin.Y + height * 0.5f;
-        Typography.Draw(drawList, new Vector2(textLeft, centerY - 30f * scale),
-            Typography.FitText(Loc.T(L.AetherStream.CastingTarget), textWidth, TextStyles.Caption1), ui.MutedInk,
-            TextStyles.Caption1);
-        Typography.Draw(drawList, new Vector2(textLeft, centerY - 12f * scale),
-            Typography.FitText(Loc.T(L.AetherStream.CastingThisScreen), textWidth, TextStyles.Title3), ui.TitleInk,
-            TextStyles.Title3);
-
         var stateColor = screen.Engine.IsActive ? theme.ToggleOn : ui.MutedInk;
-        var dotCenter = new Vector2(textLeft + 4f * scale, centerY + 22f * scale);
+        var dotCenter = new Vector2(origin.X + 4f * scale, origin.Y + rowHeight * 0.5f);
         drawList.AddCircleFilled(dotCenter, 3.5f * scale, ImGui.GetColorU32(stateColor), 16);
-        Typography.Draw(drawList, new Vector2(dotCenter.X + 9f * scale, centerY + 14f * scale),
-            Typography.FitText(StateLabel(), textWidth - 14f * scale, TextStyles.Subheadline), stateColor,
+        var labelHeight = Typography.LineHeight(TextStyles.Subheadline);
+        Typography.Draw(drawList, new Vector2(dotCenter.X + 9f * scale, origin.Y + rowHeight * 0.5f - labelHeight * 0.5f),
+            Typography.FitText(StateLabel(), width - 14f * scale, TextStyles.Subheadline), stateColor,
             TextStyles.Subheadline);
 
         ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, height));
+        ImGui.Dummy(new Vector2(width, rowHeight + Metrics.Space.Sm * scale));
     }
 
     private void DrawPendingRequests(float width, float scale)
@@ -308,31 +281,6 @@ internal sealed partial class AetherStreamApp
         }
 
         card.End();
-    }
-
-    private void DrawCastingStopButton(float width, float scale)
-    {
-        if (watchAlong.IsViewing)
-        {
-            return;
-        }
-
-        var canStop = queue.Current is not null || video.State != VideoPlaybackState.Idle;
-        if (!canStop)
-        {
-            return;
-        }
-
-        ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
-        var origin = ImGui.GetCursorScreenPos();
-        var stopRect = new Rect(origin, origin + new Vector2(width, 40f * scale));
-        if (ui.DangerGhostButton(stopRect, Loc.T(L.AetherStream.Stop)))
-        {
-            queue.Clear();
-        }
-
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, 40f * scale));
     }
 
     private string StateLabel() => screen.Engine.IsActive

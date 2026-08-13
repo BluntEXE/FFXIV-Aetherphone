@@ -45,8 +45,8 @@ internal sealed partial class AetherStreamApp
             if (SettingsRow.Disclosure(statusCard.NextRow(), Loc.T(L.AetherStream.SettingsScreen), ScreenStateText(),
                     accentedTheme))
             {
-                activeTab = AetherStreamTab.Casting;
                 router.Pop();
+                screenSheet.Open();
             }
 
             statusCard.End();

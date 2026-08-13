@@ -20,12 +20,18 @@ internal sealed partial class AetherStreamApp
     private float queueDragY;
     private bool queueDragActive;
 
-    private void DrawQueueTab(Rect body, float scale)
+    private void DrawUpNextContent(Rect body, float scale)
     {
         using (AppSurface.Begin(body))
         {
             var width = ScrollLayout.StableContentWidth();
-            DrawQueueComposer(width, scale);
+
+            if (watchAlong.IsViewing)
+            {
+                DrawHostQueueList(width, scale, body);
+                ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
+                return;
+            }
 
             if (watchAlong.IsHosting && watchAlong.PendingQueueSuggestions.Count > 0)
             {
@@ -38,10 +44,10 @@ internal sealed partial class AetherStreamApp
                 queueDragIndex = -1;
                 queueDragActive = false;
                 var origin = ImGui.GetCursorScreenPos();
-                var emptyHeight = MathF.Max(220f * scale, body.Max.Y - origin.Y - Metrics.Space.Lg * scale);
+                var emptyHeight = MathF.Max(200f * scale, body.Max.Y - origin.Y - Metrics.Space.Lg * scale);
                 EmptyState.Draw(new Rect(origin, origin + new Vector2(width, emptyHeight)), ui,
-                    FontAwesomeIcon.Film, Loc.T(L.AetherStream.QueueEmptyTitle),
-                    Loc.T(L.AetherStream.QueueEmptyHint));
+                    FontAwesomeIcon.Film, Loc.T(L.AetherStream.UpNextEmpty),
+                    Loc.T(L.AetherStream.UpNextEmptyHint));
                 ImGui.SetCursorScreenPos(origin);
                 ImGui.Dummy(new Vector2(width, emptyHeight));
                 return;
@@ -53,49 +59,61 @@ internal sealed partial class AetherStreamApp
         }
     }
 
-    private void DrawQueueComposer(float width, float scale)
+    private void DrawHostQueueList(float width, float scale, Rect body)
     {
-        var origin = ImGui.GetCursorScreenPos();
-        var fieldRect = new Rect(origin, origin + new Vector2(width, 44f * scale));
-        var submitted = SubmitField.Draw(fieldRect, "##aetherstreamQueueUrl", Loc.T(L.AetherStream.UrlHint),
-            ref urlInput, accentedTheme, 2000, FontAwesomeIcon.Link);
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, 44f * scale));
-        ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
-
-        var rowOrigin = ImGui.GetCursorScreenPos();
-        var buttonHeight = 34f * scale;
-        var gap = Metrics.Space.Sm * scale;
-        var half = (width - gap) * 0.5f;
-        var enabled = urlInput.Trim().Length > 0;
-        var addRect = new Rect(rowOrigin, rowOrigin + new Vector2(half, buttonHeight));
-        var nextRect = new Rect(new Vector2(rowOrigin.X + width - half, rowOrigin.Y),
-            new Vector2(rowOrigin.X + width, rowOrigin.Y + buttonHeight));
-
-        if (submitted && enabled)
+        var items = watchAlong.HostQueue;
+        if (items.Count == 0)
         {
-            queue.Add(MakeEntry(urlInput.Trim()));
-            urlInput = string.Empty;
-            enabled = false;
+            var origin = ImGui.GetCursorScreenPos();
+            var emptyHeight = MathF.Max(200f * scale, body.Max.Y - origin.Y - Metrics.Space.Lg * scale);
+            EmptyState.Draw(new Rect(origin, origin + new Vector2(width, emptyHeight)), ui, FontAwesomeIcon.Film,
+                Loc.T(L.AetherStream.UpNextEmpty), Loc.T(L.AetherStream.SuggestHint));
+            ImGui.SetCursorScreenPos(origin);
+            ImGui.Dummy(new Vector2(width, emptyHeight));
+            return;
         }
 
-        var addClicked = AppSkin.PillButton(addRect, Loc.T(L.AetherStream.AddToQueue), true, enabled,
-            accentedTheme);
-        var playNextClicked = AppSkin.PillButton(nextRect, Loc.T(L.AetherStream.PlayNext), false, enabled,
-            accentedTheme);
-        if (addClicked && enabled)
+        var labelOrigin = ImGui.GetCursorScreenPos();
+        Typography.Draw(ImGui.GetWindowDrawList(), labelOrigin,
+            Loc.Culture.TextInfo.ToUpper(Loc.T(L.AetherStream.UpNextHostQueue)), ui.Palette.HeaderInk,
+            TextStyles.FootnoteEmphasized);
+        ImGui.SetCursorScreenPos(labelOrigin);
+        ImGui.Dummy(new Vector2(width,
+            Typography.LineHeight(TextStyles.FootnoteEmphasized) + Metrics.Space.Xs * scale));
+
+        var rowHeight = QueueRowHeight * scale;
+        for (var index = 0; index < items.Count; index++)
         {
-            queue.Add(MakeEntry(urlInput.Trim()));
-            urlInput = string.Empty;
+            var origin = ImGui.GetCursorScreenPos();
+            var row = new Rect(origin, new Vector2(origin.X + width, origin.Y + rowHeight));
+            DrawHostQueueRow(row, items[index], index, scale);
+            ImGui.SetCursorScreenPos(origin);
+            ImGui.Dummy(new Vector2(width, rowHeight));
         }
-        else if (playNextClicked && enabled)
+    }
+
+    private void DrawHostQueueRow(Rect row, HostQueueItem item, int index, float scale)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var artSize = row.Height - 12f * scale;
+        var artMin = new Vector2(row.Min.X + Metrics.Space.Xs * scale, row.Min.Y + 6f * scale);
+        var artMax = artMin + new Vector2(artSize, artSize);
+        Squircle.Fill(drawList, artMin, artMax, Metrics.Radius.Sm * scale, ImGui.GetColorU32(ui.FieldSurface));
+        var thumbnail = VideoThumbnailResolver.Get(remoteImages, http, item.Url, null);
+        if (thumbnail is not null)
         {
-            queue.PlayNext(MakeEntry(urlInput.Trim()));
-            urlInput = string.Empty;
+            drawList.AddImageRounded(thumbnail.Handle, artMin, artMax, Vector2.Zero, Vector2.One, 0xFFFFFFFFu,
+                Metrics.Radius.Sm * scale, ImDrawFlags.RoundCornersAll);
+        }
+        else
+        {
+            AppSkin.Icon((artMin + artMax) * 0.5f, FontAwesomeIcon.Play.ToIconString(), ui.MutedInk, 0.7f);
         }
 
-        ImGui.SetCursorScreenPos(rowOrigin);
-        ImGui.Dummy(new Vector2(width, buttonHeight));
+        var textLeft = artMax.X + Metrics.Space.Md * scale;
+        var textWidth = row.Max.X - textLeft;
+        Typography.Draw(drawList, new Vector2(textLeft, row.Center.Y - Typography.LineHeight(TextStyles.Body) * 0.5f),
+            Typography.FitText(item.Title, textWidth, TextStyles.Body), ui.TitleInk, TextStyles.Body);
     }
 
     private void DrawQueueHeader(float width, float scale)
@@ -103,7 +121,7 @@ internal sealed partial class AetherStreamApp
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
         var origin = ImGui.GetCursorScreenPos();
         var rowHeight = 28f * scale;
-        var label = Loc.Culture.TextInfo.ToUpper(Loc.T(L.AetherStream.QueueUpNext));
+        var label = Loc.Culture.TextInfo.ToUpper(Loc.T(L.AetherStream.UpNext));
         var labelHeight = Typography.LineHeight(TextStyles.FootnoteEmphasized);
         Typography.Draw(ImGui.GetWindowDrawList(),
             new Vector2(origin.X, origin.Y + rowHeight * 0.5f - labelHeight * 0.5f), label, ui.Palette.HeaderInk,
@@ -186,8 +204,6 @@ internal sealed partial class AetherStreamApp
         ImGui.Dummy(new Vector2(width, SuggestionRowHeight * scale));
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
     }
-
-    private static VideoQueueEntry MakeEntry(string url) => new(url, url, string.Empty, null, null);
 
     private void DrawQueueList(float width, float scale, IReadOnlyList<VideoQueueEntry> entries)
     {

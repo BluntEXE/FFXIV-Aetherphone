@@ -3333,10 +3333,6 @@ internal static class L
         public static readonly LocString SetupProgress = new("aetherstream.setupProgress", "{0} of {1} MB");
         public static readonly LocString SetupSize = new("aetherstream.setupSize", "{0} MB");
         public static readonly LocString SetupNotNow = new("aetherstream.setupNotNow", "Not now");
-        public static readonly LocString SetupNeeded = new("aetherstream.setupNeeded", "Setup needed");
-        public static readonly LocString SetupNeededHint = new("aetherstream.setupNeededHint",
-            "AetherStream needs its video components before it can play anything.");
-
         public static readonly LocString UpNext = new("aetherstream.upNext", "Up Next");
         public static readonly LocString UpNextEmpty = new("aetherstream.upNextEmpty", "Nothing queued");
         public static readonly LocString UpNextEmptyHint = new("aetherstream.upNextEmptyHint",
@@ -3344,7 +3340,6 @@ internal static class L
         public static readonly LocString UpNextHostQueue = new("aetherstream.upNextHostQueue", "From the host");
         public static readonly LocString Party = new("aetherstream.party", "Party");
         public static readonly LocString Screen = new("aetherstream.screen", "Screen");
-        public static readonly LocString PlayingNow = new("aetherstream.playingNow", "Now Playing");
         public static readonly LocString WatchingCount = new("aetherstream.watchingCount", "{0} watching");
     }
 
