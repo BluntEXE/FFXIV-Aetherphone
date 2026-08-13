@@ -266,7 +266,7 @@ internal static class L
         public static readonly LocString Message = new("app.message", "Message");
         public static readonly LocString Jobs = new("app.jobs", "Jobs");
         public static readonly LocString AppStore = new("app.appstore", "App Store");
-        public static readonly LocString AetherStream = new("app.aetherstream", "AetherStream");
+        public static readonly LocString AetherStream = new("app.aetherstream", "MogCast");
         public static readonly LocString Shortcuts = new("app.shortcuts", "Shortcuts");
     }
 
@@ -3196,7 +3196,7 @@ internal static class L
 
     internal static class AetherStream
     {
-        public static readonly LocString SettingsTitle = new("aetherstream.settingsTitle", "AetherStream Settings");
+        public static readonly LocString SettingsTitle = new("aetherstream.settingsTitle", "MogCast Settings");
 
         public static readonly LocString NothingPlaying = new("aetherstream.nothingPlaying", "Nothing playing");
         public static readonly LocString NothingPlayingHint = new("aetherstream.nothingPlayingHint",
@@ -3347,7 +3347,7 @@ internal static class L
         public static readonly LocString WatchPartyHint = new("aetherstream.watchPartyHint",
             "Host a watch party for your zone, or join a friend's stream.");
 
-        public static readonly LocString SetupTitle = new("aetherstream.setupTitle", "Set up AetherStream");
+        public static readonly LocString SetupTitle = new("aetherstream.setupTitle", "Set up MogCast");
         public static readonly LocString SetupBody = new("aetherstream.setupBody",
             "Two components let your phone play video in game. They download once and stay on your machine.");
         public static readonly LocString SetupVideoEngine = new("aetherstream.setupVideoEngine", "Video engine");

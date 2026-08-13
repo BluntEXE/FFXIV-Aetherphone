@@ -12,7 +12,7 @@ internal sealed class AetherStreamScreenWindow : Window
     private readonly VideoPlayer video;
 
     internal AetherStreamScreenWindow(ScreenController screen, VideoPlayer video)
-        : base("AetherStream Screen###AetherStreamScreenWindow")
+        : base("MogCast Screen###AetherStreamScreenWindow")
     {
         this.screen = screen;
         this.video = video;
