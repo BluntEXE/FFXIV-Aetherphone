@@ -2660,21 +2660,14 @@ internal static class L
         public static readonly LocString Empty = new("messages.empty", "No messages yet");
         public static readonly LocString Placeholder = new("messages.placeholder", "Message");
         public static readonly LocString TabChats = new("messages.tabChats", "Chats");
-        public static readonly LocString TabDirect = new("messages.tabDirect", "Direct");
-        public static readonly LocString TabLinkshells = new("messages.tabLinkshells", "Linkshells");
-        public static readonly LocString LinkshellsEmpty = new("messages.linkshellsEmpty", "No linkshell chatter yet");
-        public static readonly LocString DeleteHistoryConfirm = new("messages.deleteHistoryConfirm", "Delete this conversation history? This can't be undone.");
         public static readonly LocString DeleteHistoryButton = new("messages.deleteHistoryButton", "Delete");
         public static readonly LocString DeleteHistoryCancel = new("messages.deleteHistoryCancel", "Cancel");
         public static readonly LocString Linkshell = new("messages.linkshell", "Linkshell {0}");
         public static readonly LocString CrossWorldLinkshell = new("messages.crossWorldLinkshell", "Crossworld Linkshell {0}");
-        public static readonly LocString Mute = new("messages.mute", "Mute");
-        public static readonly LocString Unmute = new("messages.unmute", "Unmute");
         public static readonly LocString PauseNotifications = new("messages.pauseNotifications", "Pause notifications");
         public static readonly LocString ResumeNotifications = new("messages.resumeNotifications", "Resume notifications");
         public static readonly LocString CopyMessage = new("messages.copyMessage", "Copy message");
         public static readonly LocString CopyName = new("messages.copyName", "Copy name");
-        public static readonly LocString SendFailed = new("messages.sendFailed", "Couldn't send that message. Check for unsupported characters.");
     }
 
     internal static class Linkpearl
@@ -2747,6 +2740,9 @@ internal static class L
         public static readonly LocString ScopeEveryone = new("linkpearl.scopeEveryone", "Everyone");
         public static readonly LocString NoMatches = new("linkpearl.noMatches", "No one matches that name.");
         public static readonly LocString SearchHint = new("linkpearl.searchHint", "Search messages and people");
+        public static readonly LocString NewMessages = new("linkpearl.newMessages", "New messages");
+        public static readonly LocString ClearHistory = new("linkpearl.clearHistory", "Clear history");
+        public static readonly LocString ClearHistoryConfirm = new("linkpearl.clearHistoryConfirm", "Clear the stored history for this conversation? This only affects your phone.");
     }
 
     internal static class Character

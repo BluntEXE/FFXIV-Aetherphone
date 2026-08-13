@@ -1,4 +1,4 @@
-using Aetherphone.Core.Linkpearl;
+using Aetherphone.Core.GameChat;
 using Aetherphone.Windows;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Plugin.Services;

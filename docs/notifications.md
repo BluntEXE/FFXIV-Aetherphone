@@ -36,7 +36,7 @@ Every notification travels the same path, no matter who produced it:
 5. Unless `Configuration.DoNotDisturb` is on, the `Presented` event fires and a sound may play. `NotificationBanner` and `MinimizedPhone` listen to `Presented`; the banner shows the drop-down card, the minimized phone shakes if `Configuration.Vibration` is enabled.
 6. The notification now sits in the notification center until the user taps it (routed by `NotificationRouter`), swipes it away, clears all, or it ages out.
 
-Producers are spread across the codebase. Local ones include `TimerNotifier`, `ClockAlarmService`, `ReminderService`, and `CalendarReminderService` in src/Aetherphone/Core/Notifications/, plus `LinkshellBridge` and `ChatBridge` in src/Aetherphone/Core/Linkpearl/ for in-game chat. Networked ones include `SocialNotificationService` (social activity, which also carries missed calls as type 20), `CallHub` (incoming calls), and the chat stores built on `ChatThreadStoreBase`.
+Producers are spread across the codebase. Local ones include `TimerNotifier`, `ClockAlarmService`, `ReminderService`, and `CalendarReminderService` in src/Aetherphone/Core/Notifications/, plus `ChatNotifier` in src/Aetherphone/Core/GameChat/ for in-game chat. Networked ones include `SocialNotificationService` (social activity, which also carries missed calls as type 20), `CallHub` (incoming calls), and the chat stores built on `ChatThreadStoreBase`.
 
 ## The notification model
 
@@ -72,7 +72,7 @@ private void Notify(string title, string body)
 }
 ```
 
-With no `GroupKey`, all "timers" notifications stack into a single group. Chat-style producers pass a group key so each conversation stacks separately; `LinkshellBridge` uses the linkshell channel key:
+With no `GroupKey`, all "timers" notifications stack into a single group. Chat-style producers pass a group key so each conversation stacks separately; `ChatNotifier` uses the conversation key, `tab:<id>` for a tab or the tell stream key for a person:
 
 ```csharp
 notifications.Notify(new PhoneNotification("messages", title, $"{name}: {text}", DateTime.Now, MessagesAccent,
@@ -149,7 +149,7 @@ Tapping a card or banner calls `NotificationRouter.Open(PhoneNotification)` (src
 
 1. For social notifications (`SocialType >= 0`), advances the read watermark via `SocialNotificationService.AcknowledgeUpTo`.
 2. Removes the whole stack from the center (`NotificationService.RemoveGroup`). If the app is unavailable it stops here.
-3. Parks the destination in the right launcher: linkshell or tell key into `LinkpearlLauncher`, conversation ids into `DmLauncher`, `VelvetLauncher`, or `GramDmLauncher`, post or profile links into `SocialLauncher` (via `SocialDeepLink` in src/Aetherphone/Core/Apps/SocialLauncher.cs), and so on for Muster, Yellow Pages, Announcements, and moderation notices.
+3. Parks the destination in the right launcher: the conversation key into `LinkpearlLauncher`, conversation ids into `DmLauncher`, `VelvetLauncher`, or `GramDmLauncher`, post or profile links into `SocialLauncher` (via `SocialDeepLink` in src/Aetherphone/Core/Apps/SocialLauncher.cs), and so on for Muster, Yellow Pages, Announcements, and moderation notices.
 4. Calls `INavigator.Open(appId)`.
 
 The contract that makes this land on the right screen: **`OnOpened` re-fires even when the app is already open.** `NavigationStack.OpenApp` (src/Aetherphone/Core/Apps/NavigationStack.cs) calls `NotifyOpened(app)`, and therefore `app.OnOpened()`, when the requested app is already the current one, instead of returning early. So an app never misses a deep link just because the user was already inside it.
@@ -243,14 +243,16 @@ Everything that can stop a notification, in pipeline order:
 | Sound throttle | `NotificationService.ShouldPlaySound` | Sound skipped within 3 s per stack |
 | Phone hidden | `NotificationBanner.OnPresented` | No banner; center still gets it |
 | App already on screen | `NotificationBanner.OnPresented` | No banner; center still gets it |
-| Linkshell mute | `LinkshellBridge.OnChatMessage` via `LinkshellMuteStore.IsMuted` | Message still appended to history, no notification at all |
+| Channel muted in a tab | `ChatNotifier.OnAppended` via `ChatTab.IsMuted` | Message still appended to history, no notification at all |
+| Tab alerts set to Mentions or Off | `ChatNotifier.Alerts` | Only mentions notify, or nothing does |
+| Conversation on screen | `ChatInbox.Viewing` | No notification for what you are already reading |
 | Linkpearl pause | `LinkpearlNotificationGate.Paused` | Same: history yes, notification no |
 | Thread being viewed | `ChatThreadStoreBase` viewing grace | No inbox notification for the open thread |
 | Moderation dedup | `ModerationNoticePresenter.presented` set | Each pending notice id presented once |
 
 Do not disturb is toggled three ways: the switch on the phone chassis (`PhoneShell` via `DeviceChrome.MuteButtonRect`), the Settings > Notifications toggle, and the `dnd` tile in the control center (`ControlRegistry` in src/Aetherphone/Core/ControlCenter/ControlRegistry.cs). While it is on, a moon shows in the status bar (`StatusBar` in src/Aetherphone/Core/Shell/StatusBar.cs).
 
-Linkshell mutes are per character (`Configuration.MutedLinkshellsByCharacter`, managed by `LinkshellMuteStore` in src/Aetherphone/Core/Linkpearl/LinkshellMuteStore.cs) and also exclude muted channels from the Linkpearl unread badge (`LinkshellStore`).
+Muting is per tab and per channel (`ChatTab.MutedChannels`), and a tab's `AlertPolicy` decides whether anything notifies at all. The same rule drives the unread badge in `ChatInbox`, so a channel that cannot notify you also cannot badge you. Legacy per-character linkshell mutes (`Configuration.MutedLinkshellsByCharacter`) are carried into any tab that later includes the channel.
 
 The viewing grace deserves detail because it protects a correctness invariant. `ChatThreadStoreBase` (src/Aetherphone/Core/Message/ChatThreadStoreBase.cs) records `NoteThreadViewed(threadKey)` while a thread view draws, with a 4 second `ViewingGrace`. Two things key off it:
 

@@ -2,7 +2,7 @@ using System.Text;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 using FFXIVClientStructs.FFXIV.Client.UI;
 
-namespace Aetherphone.Core.Linkpearl;
+namespace Aetherphone.Core.GameChat;
 
 internal static unsafe class ChatSender
 {

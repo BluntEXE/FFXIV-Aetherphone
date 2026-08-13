@@ -1,4 +1,4 @@
-using Aetherphone.Core.Linkpearl;
+using Aetherphone.Core.GameChat;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;

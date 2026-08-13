@@ -17,19 +17,26 @@ Two terms you will see throughout: Dalamud is the plugin framework that loads Ae
 | src/Aetherphone/Windows/Components/ChatEntranceTracker.cs | Detects newly appended messages and drives their entrance animation |
 | src/Aetherphone/Windows/Components/ChatText.cs | Message kind constants, preview text, and token-to-kind resolution |
 | src/Aetherphone/Windows/Components/ChatActions.cs | Copy-message-to-clipboard helper |
-| src/Aetherphone/Windows/Components/ChatBubble.cs | Lightweight standalone bubble used by Linkpearl |
+| src/Aetherphone/Windows/Components/ChatBubble.cs | Lightweight standalone bubble, now used only by Yellow Pages inquiries |
 | src/Aetherphone/Windows/Components/ChatHeaderControls.cs | Encryption lock, search toggle, and dismissible banners in thread headers |
 | src/Aetherphone/Core/Aethernet/Clients/ChatClient.cs | HTTP endpoints for Message app conversations |
 | src/Aetherphone/Core/Aethernet/Contracts/Dtos.cs | `ChatMessageDto`, `ConversationDto`, and their page records |
 | src/Aetherphone/Apps/Message/DirectMessagesStore.cs | The Message app's concrete store |
-| src/Aetherphone/Core/Linkpearl/ | In-game chat capture, tell and linkshell stores, disk archive |
+| src/Aetherphone/Core/GameChat/GameChannels.cs | The channel catalog: one row per game text channel |
+| src/Aetherphone/Core/GameChat/ChatCapture.cs | One IChatGui subscriber for every channel, payload preserving |
+| src/Aetherphone/Core/GameChat/ChatLog.cs | Capped buffers, one per conversation stream |
+| src/Aetherphone/Core/GameChat/ChatArchive.cs | Per-character history on disk with retention |
+| src/Aetherphone/Core/GameChat/ChatInbox.cs | The conversation list model, unread, read watermarks |
+| src/Aetherphone/Windows/Components/GameChatThread.cs | The whole in-game thread screen |
+| src/Aetherphone/Windows/Components/ChatLineView.cs | Compact one-line-per-message renderer |
+| src/Aetherphone/Windows/Components/RunText.cs | Styled run layout with wrapping and hit testing |
 
 ## Two stacks, one bubble language
 
 There are two chat stacks in the codebase:
 
 - The **server-backed stack**: `ChatThreadStoreBase` plus `ChatThreadView`. Messages live on the Aethernet backend, arrive as DTOs (data transfer objects, the wire-format records) over HTTP, and support replies, reactions, edits, media, and encryption. Three apps use it.
-- The **in-game stack**: the Linkpearl app renders real game chat (tells and linkshells) captured through Dalamud's `IChatGui`. It has no server, no message ids, and no reactions, so it uses the lightweight `ChatBubble` component directly instead of `ChatThreadView`.
+- The **in-game stack**: the Linkpearl app renders real game chat captured through Dalamud's `IChatGui`. It has no server and no reactions, so it does not use `ChatThreadStoreBase` or `ChatThreadView`. It has its own screen, `GameChatThread`, which reuses `ChatTranscript` for bubble density and its own `ChatLineView` for compact density.
 
 Both stacks share `ChatEntranceTracker` for the pop-in animation and the same visual language.
 
@@ -40,7 +47,7 @@ Both stacks share `ChatEntranceTracker` for the pop-in animation and the same vi
 | Message (id `message`) | "Message" (`L.Apps.Message`) | src/Aetherphone/Apps/Message/MessageApp.cs | `ThreadView : ChatThreadView<ChatMessageDto, ConversationDto>` in src/Aetherphone/Apps/Message/MessageApp.Thread.cs | `DirectMessagesStore` |
 | Velvet (id `velvet`) | "Velvet" | src/Aetherphone/Apps/Velvet/VelvetShell.cs | `ThreadView : ChatThreadView<VelvetMessageDto, VelvetThreadDto>` in src/Aetherphone/Apps/Velvet/VelvetShell.Thread.cs | `VelvetStore` in src/Aetherphone/Apps/Velvet/VelvetStore.cs |
 | Aethergram | "Aethergram" | src/Aetherphone/Apps/Aethergram/AethergramApp.cs | `ThreadView : ChatThreadView<GramMessageDto, GramThreadDto>` in src/Aetherphone/Apps/Aethergram/AethergramApp.Thread.cs | `GramDmStore` in src/Aetherphone/Apps/Aethergram/GramDmStore.cs |
-| Linkpearl (id `messages`) | "Linkpearl" (`L.Apps.Linkpearl`) | src/Aetherphone/Apps/Linkpearl/LinkpearlApp.cs | none; draws `ChatBubble` per line in LinkpearlApp.Chats.cs | `MessageStore` and `LinkshellStore` in src/Aetherphone/Core/Linkpearl/ |
+| Linkpearl (id `messages`) | "Linkpearl" (`L.Apps.Linkpearl`) | src/Aetherphone/Apps/Linkpearl/LinkpearlApp.cs | `GameChatThread` in src/Aetherphone/Windows/Components/ | `ChatLog`, `ChatInbox` and `TabStore` in src/Aetherphone/Core/GameChat/ |
 
 Naming note: the Message app is the one user-facing changelogs call "ChocoChat" (see `changelog.r0920.1` in src/Aetherphone/Localization/en.json). In code and localization keys it is always `message` / `MessageApp`.
 
@@ -135,14 +142,17 @@ The inbox itself polls every 60 seconds in the foreground and 120 in the backgro
 
 ## In-game chat: Linkpearl
 
-Linkpearl mirrors real game chat, so its data never touches Aethernet:
+Linkpearl mirrors real game chat, so its data never touches Aethernet. A conversation there is either a person you tell or a tab the player built out of channels; both are one row in one list and both open the same thread.
 
-- **Capture.** `ChatBridge` (src/Aetherphone/Core/Linkpearl/ChatBridge.cs) subscribes to Dalamud's `IChatGui.ChatMessage` and keeps only `XivChatType.TellIncoming` and `TellOutgoing`. It resolves the sender's `PlayerPayload` to a `Name@World` send target and appends a `ChatLine` (direction, text, timestamp) to `MessageStore`. `LinkshellBridge` does the same for `Ls1`..`Ls8` and `CrossLinkShell1`..`CrossLinkShell8` via `LinkshellChannels.TryResolve`, tagging incoming lines with a `MessageAuthor` so group bubbles can show avatar and name.
-- **Send.** Outgoing text goes through the real chat box: `ChatSender.TrySend("/tell Name@World ...")` for tells, and the channel's command (`LinkshellChannel.Command`, `/linkshell1`..`/cwlinkshell8`) for linkshells. The echoed game message is what lands in the store, so there is no optimistic append.
-- **History.** Tells persist per conversation: `MessageArchive` writes one JSON file per conversation (named by a SHA-256 hash of the lowercased send target) under a per-character folder keyed by ContentId, keeping the last `MaxStoredLines` (500) lines, gated on `Configuration.ArchiveTellsToDisk`. The trash button on a thread calls `MessageStore.Remove`, which also deletes the archive file. Linkshell history is memory only and clears on character switch.
-- **Mutes.** `LinkshellMuteStore` keeps a per-character muted set in `Configuration.MutedLinkshellsByCharacter`. Muting a channel suppresses its notifications and removes it from `LinkshellStore.TotalUnread`, but lines still append, so history keeps flowing. Separately, `LinkpearlNotificationGate` is a single bell toggle that pauses all tell and linkshell notifications at once.
-- **Rendering.** Threads draw `ChatBubble.Draw(line, theme, entrance, group)` per line with a `ChatEntranceTracker` and a simple follow-bottom loop; the composer is a plain `InputTextWithHint` pill (LinkpearlApp.Chats.cs). No pagination: the whole loaded history renders every frame.
-- **Read state.** `Conversation.MarkRead()` zeroes a local unread counter when a thread opens; there are no receipts because the game has none.
+- **The channel catalog.** `GameChannels` (src/Aetherphone/Core/GameChat/GameChannels.cs) is the single source of truth: one row per channel carrying its `XivChatType` values, send command, label, tint and category. Capture, the byte budget, the tints, the picker and localization all read that row, so adding a channel costs one entry. Battle and loot logs are deliberately absent, they are a log rather than a conversation.
+- **Capture.** `ChatCapture` subscribes once to `IChatGui.ChatMessage` and resolves the channel through the catalog. It reads `ITextProvider`, which covers plain text and auto-translate together, and keeps payload data as `ChatChunk` values for items, map links, players, statuses, quests, party finder listings and other plugins' Dalamud links. Mentions of the local player are flagged here.
+- **Streams.** `ChatLog` keys buffers by stream: a channel key for channels, or `tell:name@world` for one tell counterpart. That makes the `MaxLinesPerStream` cap and the history file per conversation rather than per channel. The log owns the sequence counter and has no Dalamud dependency.
+- **Views.** A tab reads several streams at once through `ChatStreamView`, which appends live lines in place and only rebuilds when the stream set changes or history is restored. `ChatInbox` builds the conversation list on the same principle, plus unread counts and read watermarks.
+- **Send.** `ChatSend` routes through the real chat box using the channel's command, measures the 500 byte cap against the actual prefix, and tracks pending sends. A sent line posts as a dimmed ghost and resolves when the game echoes it back; two seconds without an echo becomes "Not delivered" with a retry.
+- **History.** `ChatArchive` writes one file per conversation under `GameChat/<contentId>`, capped and flushed at most every 30 seconds. Retention is Off, Session, 30 days or Forever, resolved per channel with a global default, and `Configuration.ArchiveTellsToDisk` is the master switch that forces everything off. Legacy `MessageArchive` tell files import once per character.
+- **Alerts and unread.** `ChatNotifier` honors the tab's `AlertPolicy`, per channel mutes, the global bell and the conversation on screen. `ChatInbox` counts unread by the same rule, so a channel that cannot notify you cannot badge you either.
+- **Rendering.** `GameChatThread` is the whole screen below the header. Multi-channel tabs default to compact density (`ChatLineView`: one line per message, channel rail, collapsing sender rows); tells default to bubbles through the shared `ChatTranscript`. Both draw text through `RunText`, which lays out styled runs with wrapping and hit testing so every game link is tappable.
+- **Read state.** A watermark per conversation, persisted in `Configuration.LinkpearlSeen`, advanced only while the conversation is actually on screen. There are no receipts because the game has none.
 
 ## Adopting the stack for a new surface
 
@@ -174,7 +184,7 @@ That is a sketch of three of roughly thirty abstract members; `DirectMessagesSto
 
 Copy-on-write is the contract between the two: the store publishes messages as an immutable `TMessage[]` snapshot and replaces the whole array on any change (`CopyOnWrite.Append`, cloned arrays in `ReplaceMessage` and `ApplyLocalReaction`). `ChatThreadView.BuildTranscript` re-runs `MapTranscript` only when the array reference changes, which is what keeps a full remap off the per-frame path.
 
-If your surface is local-only like Linkpearl, skip both bases and compose `ChatBubble`, `ChatEntranceTracker`, and your own store instead.
+If your surface is local-only like Linkpearl, skip both bases and compose `ChatTranscript` or `ChatLineView`, `ChatEntranceTracker`, and your own store instead. Linkpearl is the worked example.
 
 ## Gotchas
 
@@ -185,7 +195,7 @@ If your surface is local-only like Linkpearl, skip both bases and compose `ChatB
 - **Short threads never auto-load older pages.** `MaybeLoadOlder` bails when `ImGui.GetScrollMaxY() <= 0f`, so a first page that does not fill the viewport has no scrollbar and therefore no trigger. Do not assume every thread eventually pulls its full history.
 - **Location, muster, and ad shares are kind 0.** They are plain text messages carrying a token; the transcript detects them per frame with `TryParse` and `ChatText.EffectiveKind` resolves them for menus and previews. If you add a token type, wire all three spots (bubble, `EffectiveKind`, `QuotePreview`/`ListPreview`) or it will render as raw text somewhere.
 - **The entrance tracker keys on the tail id.** `ChatEntranceTracker.Sync` animates only when the count grows and the tail id changed; prepended history is deliberately silent. Pass a stable tail id or older pages will pop like new messages.
-- **Linkshell history is volatile.** Only tells archive to disk, and only when `Configuration.ArchiveTellsToDisk` is on; linkshell threads clear on every character switch (`LinkshellStore` subscribes to `CharacterWatch.Changed`). Do not build features that assume linkshell scrollback survives.
+- **Game chat history is a per channel promise.** Retention is resolved per channel, so a channel shared by two tabs has one history and one policy; editing Keep history in a tab writes through to its channels and reads back as Mixed when they disagree. `ChatArchive` drives the character switch order (flush, clear, switch, load), so nothing else should clear `ChatLog`.
 
 ## Related docs
 

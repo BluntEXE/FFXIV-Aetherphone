@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
@@ -25,6 +26,10 @@ internal sealed partial class LinkpearlApp
     };
 
     private readonly ChatSearch search = new();
+    private readonly DropdownMenu threadMenu = new();
+    private readonly List<DropdownMenu.Item> threadMenuItems = new(5);
+    private readonly List<byte> threadMenuActions = new(5);
+    private string threadMenuKey = string.Empty;
     private readonly DropdownMenu rowMenu = new();
     private readonly DropdownMenu.Item[] rowMenuItems = new DropdownMenu.Item[4];
     private readonly byte[] rowMenuActions = new byte[4];
@@ -362,9 +367,121 @@ internal sealed partial class LinkpearlApp
         inbox.Viewing = key;
         var context = new PhoneContext(area, frameTheme, frameNavigation);
         AppHeader.Draw(context, Title(row), backToList);
+        DrawThreadControls(area, row);
         OpenThread(row);
         chatThread.Draw(ThreadBody(area), frameTheme);
+        DrawThreadMenu(area, row);
         DrawChatMenu(area);
+    }
+
+    private void DrawThreadControls(Rect area, InboxRow row)
+    {
+        var scale = UiScale.Current;
+        var centerY = area.Min.Y + AppHeader.Height * scale * 0.5f;
+        var overflow = new Vector2(area.Max.X - 20f * scale, centerY);
+        var searchCenter = new Vector2(overflow.X - 30f * scale, centerY);
+        var drawList = ImGui.GetWindowDrawList();
+        var searchHot = UiInteract.Hover(searchCenter - new Vector2(14f * scale, 14f * scale),
+            searchCenter + new Vector2(14f * scale, 14f * scale));
+        ProgressRing.CenterIcon(drawList, searchCenter, FontAwesomeIcon.Search,
+            chatThread.SearchOpen || searchHot ? frameTheme.Accent : frameTheme.TextMuted, 14f * scale);
+        if (UiInteract.HoverClickCircle(searchCenter, 14f * scale))
+        {
+            chatThread.ToggleSearch();
+        }
+
+        var overflowHot = UiInteract.Hover(overflow - new Vector2(14f * scale, 14f * scale),
+            overflow + new Vector2(14f * scale, 14f * scale));
+        ProgressRing.CenterIcon(drawList, overflow, FontAwesomeIcon.EllipsisH,
+            overflowHot ? frameTheme.TextStrong : frameTheme.TextMuted, 14f * scale);
+        if (UiInteract.HoverClickCircle(overflow, 14f * scale))
+        {
+            threadMenuKey = row.Key;
+            threadMenu.Toggle("linkpearl.thread.menu",
+                new Rect(overflow - new Vector2(14f * scale, 14f * scale),
+                    overflow + new Vector2(14f * scale, 14f * scale)));
+        }
+    }
+
+    private void DrawThreadMenu(Rect area, InboxRow row)
+    {
+        if (!threadMenu.IsOpenFor("linkpearl.thread.menu") ||
+            !string.Equals(threadMenuKey, row.Key, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        threadMenuItems.Clear();
+        threadMenuActions.Clear();
+        threadMenuItems.Add(new DropdownMenu.Item(Loc.T(L.Linkpearl.MarkRead),
+            FontAwesomeIcon.CheckDouble.ToIconString()));
+        threadMenuActions.Add(RowMenuMarkRead);
+        if (row.Tab is { } tab)
+        {
+            threadMenuItems.Add(new DropdownMenu.Item(Loc.T(L.Linkpearl.EditTab),
+                FontAwesomeIcon.SlidersH.ToIconString()));
+            threadMenuActions.Add(RowMenuEdit);
+            threadMenuItems.Add(new DropdownMenu.Item(Loc.T(tab.Pinned ? L.Linkpearl.Unpin : L.Linkpearl.Pin),
+                FontAwesomeIcon.Thumbtack.ToIconString()));
+            threadMenuActions.Add(RowMenuTogglePin);
+        }
+
+        threadMenuItems.Add(new DropdownMenu.Item(Loc.T(L.Linkpearl.ClearHistory),
+            FontAwesomeIcon.TrashAlt.ToIconString(), true));
+        threadMenuActions.Add(ThreadMenuClearHistory);
+        var clicked = threadMenu.Draw(area, frameTheme, CollectionsMarshal.AsSpan(threadMenuItems));
+        if (clicked < 0)
+        {
+            return;
+        }
+
+        switch (threadMenuActions[clicked])
+        {
+            case RowMenuMarkRead:
+                inbox.MarkRead(row);
+                inbox.FlushSeen();
+                break;
+            case RowMenuEdit when row.Tab is { } editTab:
+                OpenTabEditor(editTab);
+                break;
+            case RowMenuTogglePin when row.Tab is { } pinTab:
+                tabs.TogglePin(pinTab);
+                inbox.Invalidate();
+                break;
+            case ThreadMenuClearHistory:
+                AskClearHistory(row);
+                break;
+        }
+    }
+
+    private void AskClearHistory(InboxRow row) =>
+        confirm.Ask(new ConfirmRequest
+        {
+            Title = Title(row),
+            Message = Loc.T(L.Linkpearl.ClearHistoryConfirm),
+            ConfirmLabel = Loc.T(L.Linkpearl.ClearHistory),
+            CancelLabel = Loc.T(L.Messages.DeleteHistoryCancel),
+            Confirm = () => ClearHistory(row),
+        });
+
+    private void ClearHistory(InboxRow row)
+    {
+        if (row.Tab is { } tab)
+        {
+            for (var index = 0; index < tab.Channels.Count; index++)
+            {
+                archive.Delete(tab.Channels[index]);
+                chatLog.Clear(tab.Channels[index]);
+            }
+        }
+        else
+        {
+            archive.Delete(row.StreamKey);
+            chatLog.Clear(row.StreamKey);
+        }
+
+        inbox.Invalidate();
+        threadKey = string.Empty;
     }
 
     private void OpenThread(InboxRow row)

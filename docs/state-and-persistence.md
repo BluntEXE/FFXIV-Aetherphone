@@ -16,7 +16,8 @@ This page explains where Aetherphone keeps every kind of data: plugin settings, 
 | src/Aetherphone/Core/Aethernet/CharacterSession.cs | The serialized per-character token and key-cache snapshot |
 | src/Aetherphone/Core/Photos/PhotoLibrary.cs | Photo storage, `AEP_` naming, import and delete |
 | src/Aetherphone/Core/Photos/ScreenshotImportService.cs | Watches screenshot folders and copies new captures into the library |
-| src/Aetherphone/Core/Linkpearl/MessageArchive.cs | Per-character /tell history files on disk |
+| src/Aetherphone/Core/GameChat/ChatArchive.cs | Per-character game chat history on disk, one file per conversation |
+| src/Aetherphone/Core/Linkpearl/MessageArchive.cs | The legacy /tell archive, read once to migrate into ChatArchive |
 | src/Aetherphone/Core/Notifications/SoundLibrary.cs | Bundled plus user custom ringtone and notification sounds |
 | src/Aetherphone/Core/Wallpapers/WallpaperLibrary.cs | Built-in plus imported custom wallpapers |
 | src/Aetherphone/Core/Net/DiskCache.cs | Size-budgeted disk cache used for media, images, audio, and collections |
@@ -133,7 +134,7 @@ private void OnCharacterChanged(ulong id)
 }
 ```
 
-`MessageStore` plus `MessagesPerCharacterMigrated` follows the same shape for /tell history.
+`ChatArchive` plus `LinkpearlMigratedCharacters` follows the same shape for game chat history, and imports the legacy `MessageArchive` files once per character.
 
 ## Accounts, sessions, and the reset contract
 

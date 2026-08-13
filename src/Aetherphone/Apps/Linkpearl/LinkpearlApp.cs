@@ -28,6 +28,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
     private const byte RowMenuTogglePin = 1;
     private const byte RowMenuEdit = 2;
     private const byte RowMenuDelete = 3;
+    private const byte ThreadMenuClearHistory = 4;
 
     private static readonly Vector4 White = new(1f, 1f, 1f, 1f);
 
@@ -116,6 +117,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
     {
         chatMenu.Close();
         rowMenu.Close();
+        threadMenu.Close();
         editorMenu.Close();
         chatThread.Close();
         router.Reset();
@@ -134,6 +136,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         frameNavigation = context.Navigation;
         chatMenu.Gate();
         rowMenu.Gate();
+        threadMenu.Gate();
         editorMenu.Gate();
         chatThread.Gate();
         router.Draw(context.Content, context.Theme.AppBackground, delta, drawView);

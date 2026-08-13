@@ -1,4 +1,4 @@
-namespace Aetherphone.Core.Linkpearl;
+namespace Aetherphone.Core.GameChat;
 
 internal sealed class LinkpearlNotificationGate
 {

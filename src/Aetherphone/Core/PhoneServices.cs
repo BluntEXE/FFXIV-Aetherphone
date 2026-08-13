@@ -18,6 +18,7 @@ using Aetherphone.Core.Moderation;
 using Aetherphone.Core.Muster;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Linkpearl;
+using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Net;
 using Aetherphone.Core.News;
 using Aetherphone.Core.Notifications;
