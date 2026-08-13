@@ -15,7 +15,7 @@ internal sealed class PendingSend
 internal sealed class ChatSend
 {
     public const int MaxBytes = ChatSender.MaxBytes;
-    private const long ResolveWindowMilliseconds = 2000;
+    private const long ResolveWindowMilliseconds = 10000;
     private const int MaxFailed = 8;
 
     private readonly List<PendingSend> pending = new();
@@ -76,7 +76,7 @@ internal sealed class ChatSend
         for (var index = 0; index < pending.Count; index++)
         {
             var candidate = pending[index];
-            if (candidate.Failed || !string.Equals(candidate.ChannelKey, channelKey, StringComparison.Ordinal) ||
+            if (!string.Equals(candidate.ChannelKey, channelKey, StringComparison.Ordinal) ||
                 !string.Equals(candidate.Text, text, StringComparison.Ordinal))
             {
                 continue;
