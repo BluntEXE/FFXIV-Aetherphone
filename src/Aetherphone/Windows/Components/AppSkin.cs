@@ -18,6 +18,7 @@ internal sealed class AppSkin
     private static readonly Vector4 ChipInactive = new(1f, 1f, 1f, 0.08f);
     private static readonly Vector4 ChipActiveInk = new(0.99f, 0.85f, 0.91f, 1f);
     private static readonly TextStyle SectionLabelStyle = new(0.78f, FontWeight.SemiBold);
+    private static readonly TextStyle PillLabelStyle = new(0.90f, FontWeight.SemiBold);
 
     public AppPalette Palette { get; set; }
 
@@ -101,10 +102,9 @@ internal sealed class AppSkin
         var fill = Core.Theme.Palette.WithAlpha(filled ? theme.Accent : theme.GroupedCard, 0.45f);
         Squircle.Fill(drawList, rect.Min, rect.Max, rect.Height * 0.5f, ImGui.GetColorU32(fill));
         var maxLabelWidth = MathF.Max(1f, rect.Width - rect.Height);
-        var fittedLabel = Typography.FitText(label, maxLabelWidth, 0.9f, FontWeight.SemiBold);
-        var textSize = Typography.Measure(fittedLabel, 0.9f, FontWeight.SemiBold);
-        Typography.Draw(drawList, rect.Center - textSize * 0.5f, fittedLabel, theme.TextMuted, 0.9f,
-            FontWeight.SemiBold);
+        var fittedLabel = Typography.FitText(label, maxLabelWidth, PillLabelStyle);
+        var textSize = Typography.Measure(fittedLabel, PillLabelStyle);
+        Typography.Draw(drawList, rect.Center - textSize * 0.5f, fittedLabel, theme.TextMuted, PillLabelStyle);
         return false;
     }
 
@@ -173,16 +173,15 @@ internal sealed class AppSkin
         var maxLabelWidth = MathF.Max(1f, rect.Width - rect.Height);
         if (id is not null)
         {
-            var labelStyle = new TextStyle(0.9f, FontWeight.SemiBold);
-            var labelHeight = Typography.Measure(label, labelStyle).Y;
+            var labelHeight = Typography.Measure(label, PillLabelStyle).Y;
             Marquee.DrawCenteredAuto(id, label, rect.Center.X, rect.Center.Y - labelHeight * 0.5f, maxLabelWidth,
-                labelStyle, ink);
+                PillLabelStyle, ink);
         }
         else
         {
-            var fittedLabel = Typography.FitText(label, maxLabelWidth, 0.9f, FontWeight.SemiBold);
-            var textSize = Typography.Measure(fittedLabel, 0.9f, FontWeight.SemiBold);
-            Typography.Draw(drawList, rect.Center - textSize * 0.5f, fittedLabel, ink, 0.9f, FontWeight.SemiBold);
+            var fittedLabel = Typography.FitText(label, maxLabelWidth, PillLabelStyle);
+            var textSize = Typography.Measure(fittedLabel, PillLabelStyle);
+            Typography.Draw(drawList, rect.Center - textSize * 0.5f, fittedLabel, ink, PillLabelStyle);
         }
 
         if (hovered)
@@ -386,11 +385,13 @@ internal sealed class AppSkin
         ImGui.Dummy(new Vector2(width, height));
     }
 
+    public static float PillWidthFor(string label, float height) =>
+        Typography.Measure(label, PillLabelStyle).X + height;
+
     public static float HeaderActionWidth(string label)
     {
         var scale = UiScale.Current;
-        var height = 28f * scale;
-        return Typography.Measure(label, 0.9f, FontWeight.SemiBold).X + height + 6f * scale;
+        return PillWidthFor(label, 28f * scale) + 6f * scale;
     }
 
     public bool HeaderAction(Rect area, string label, bool enabled)

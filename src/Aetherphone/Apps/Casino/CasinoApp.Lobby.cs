@@ -8,7 +8,9 @@ namespace Aetherphone.Apps.Casino;
 
 internal sealed partial class CasinoApp
 {
-    private const float ChipBarHeight = 76f;
+    private const float ChipBarHeight = 100f;
+    private const float ChipBarPillHeight = 30f;
+    private const float ChipBarRateMinWidth = 56f;
     private const float LiveStripHeight = 92f;
     private const float LiveStripGap = 10f;
 
@@ -60,37 +62,65 @@ internal sealed partial class CasinoApp
         ui.Card(drawList, min, max, rounding);
 
         var inset = 16f * scale;
+        var left = min.X + inset;
+        var right = max.X - inset;
+        var columnWidth = (right - left - 12f * scale) * 0.5f;
         var stack = casino.State?.Sitting?.Stack ?? 0;
         var coinBalance = coins.Wallet?.Balance ?? 0;
 
-        Typography.Draw(drawList, new Vector2(min.X + inset, min.Y + 13f * scale),
-            Loc.T(L.Casino.ChipsRow), ui.MutedInk, TextStyles.Caption1);
-        Typography.Draw(drawList, new Vector2(min.X + inset, min.Y + 31f * scale),
-            stack.ToString("N0", Loc.Culture), stack > 0 ? ui.Accent : ui.MutedInk, TextStyles.Title3);
+        DrawBalanceColumn(drawList, left, min.Y, columnWidth, Loc.T(L.Casino.ChipsRow),
+            stack.ToString("N0", Loc.Culture), stack > 0 ? ui.Accent : ui.MutedInk, false, scale);
+        DrawBalanceColumn(drawList, right - columnWidth, min.Y, columnWidth, Loc.T(L.Casino.WalletRow),
+            coinBalance.ToString("N0", Loc.Culture), ui.TitleInk, true, scale);
 
-        var mid = min.X + width * 0.44f;
-        drawList.AddLine(new Vector2(mid, min.Y + 16f * scale), new Vector2(mid, max.Y - 16f * scale),
+        var dividerY = min.Y + 62f * scale;
+        drawList.AddLine(new Vector2(left, dividerY), new Vector2(right, dividerY),
             ImGui.GetColorU32(Palette.WithAlpha(ui.TitleInk, 0.10f)), 1f * scale);
 
-        Typography.Draw(drawList, new Vector2(mid + inset, min.Y + 13f * scale),
-            Loc.T(L.Casino.WalletRow), ui.MutedInk, TextStyles.Caption1);
-        Typography.Draw(drawList, new Vector2(mid + inset, min.Y + 31f * scale),
-            coinBalance.ToString("N0", Loc.Culture), ui.TitleInk, TextStyles.Title3);
-
-        var pillHeight = 28f * scale;
-        var pillMax = new Vector2(max.X - inset, max.Y - 12f * scale);
-        var pillMin = new Vector2(pillMax.X - 96f * scale, pillMax.Y - pillHeight);
         var label = stack > 0 ? Loc.T(L.Casino.TopUp) : Loc.T(L.Casino.BuyIn);
-        if (AppSkin.PillButton(new Rect(pillMin, pillMax), label, true, !casino.MovingMoney, theme))
+        var pillHeight = ChipBarPillHeight * scale;
+        var pillWidth = MathF.Min(AppSkin.PillWidthFor(label, pillHeight), right - left);
+        var rateWidth = right - left - pillWidth - 12f * scale;
+        if (rateWidth < ChipBarRateMinWidth * scale)
+        {
+            pillWidth = right - left;
+            rateWidth = 0f;
+        }
+
+        var pillCenterY = (dividerY + max.Y) * 0.5f;
+        var pill = new Rect(new Vector2(right - pillWidth, pillCenterY - pillHeight * 0.5f),
+            new Vector2(right, pillCenterY + pillHeight * 0.5f));
+        if (AppSkin.PillButton(pill, label, true, !casino.MovingMoney, theme))
         {
             cashier.Open();
         }
 
-        Typography.Draw(drawList, new Vector2(min.X + inset, max.Y - 22f * scale),
-            Loc.T(L.Casino.ChipRate), ui.MutedInk, TextStyles.Caption2);
+        if (rateWidth > 0f)
+        {
+            var rate = Typography.FitText(Loc.T(L.Casino.ChipRate), rateWidth, TextStyles.Caption2);
+            var rateSize = Typography.Measure(rate, TextStyles.Caption2);
+            Typography.Draw(drawList, new Vector2(left, pillCenterY - rateSize.Y * 0.5f), rate, ui.MutedInk,
+                TextStyles.Caption2);
+        }
 
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height + Metrics.Space.Sm * scale));
+    }
+
+    private void DrawBalanceColumn(ImDrawListPtr drawList, float left, float top, float columnWidth, string label,
+        string value, Vector4 valueInk, bool alignRight, float scale)
+    {
+        var fittedLabel = Typography.FitText(label, columnWidth, TextStyles.Caption1);
+        var fittedValue = Typography.FitText(value, columnWidth, TextStyles.Title3);
+        var labelX = alignRight
+            ? left + columnWidth - Typography.Measure(fittedLabel, TextStyles.Caption1).X
+            : left;
+        var valueX = alignRight
+            ? left + columnWidth - Typography.Measure(fittedValue, TextStyles.Title3).X
+            : left;
+        Typography.Draw(drawList, new Vector2(labelX, top + 13f * scale), fittedLabel, ui.MutedInk,
+            TextStyles.Caption1);
+        Typography.Draw(drawList, new Vector2(valueX, top + 30f * scale), fittedValue, valueInk, TextStyles.Title3);
     }
 
     private bool AnyRoomLive()
