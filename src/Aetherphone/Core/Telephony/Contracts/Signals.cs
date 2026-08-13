@@ -88,6 +88,8 @@ internal sealed record ParticipantInfo(
 
 internal sealed record NearbyStreamInfo(string HostId, string Name, string World, string DisplayName);
 
+internal sealed record StreamQueueEntry(string? Url, string? Title);
+
 internal sealed record CallControl
 {
     public string Type { get; init; } = string.Empty;
@@ -102,7 +104,9 @@ internal sealed record CallControl
     public string? HostId { get; init; }
     public string? Url { get; init; }
     public double? PositionSeconds { get; init; }
+    public long? StateAtUnixMs { get; init; }
     public bool? Paused { get; init; }
+    public StreamQueueEntry[]? UpcomingQueue { get; init; }
 
     public bool? ApprovalRequired { get; init; }
 

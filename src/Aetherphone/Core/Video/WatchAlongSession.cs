@@ -17,6 +17,8 @@ internal sealed record PendingJoinRequest(string UserId, string Name, string Wor
 internal sealed record QueueSuggestion(string SuggestionId, string UserId, string Name, string World,
     string DisplayName, string Url);
 
+internal sealed record HostQueueItem(string Url, string Title);
+
 internal readonly record struct PendingAlert(LocString Title, LocString Body);
 
 internal enum WatchAlongMode : byte
@@ -30,7 +32,10 @@ internal sealed class WatchAlongSession : IDisposable
 {
     private const int CheckEveryTicks = 30;
     private const float HeartbeatSeconds = 8f;
-    private const double PositionDriftToleranceSeconds = 3.0;
+    private const double PositionJumpTolerance = 2.0;
+    private const double HardSeekTolerance = 4.0;
+    private const double MaxProjectionSeconds = 5.0;
+    private const int MaxSharedQueueEntries = 32;
 
     private const float ScreenPositionDriftTolerance = 0.1f;
     private const float ScreenYawDriftTolerance = 0.02f;
@@ -48,11 +53,15 @@ internal sealed class WatchAlongSession : IDisposable
     private float heartbeatTimer;
     private string? lastPublishedUrl;
     private double lastPublishedPosition;
+    private DateTime lastPublishedAt = DateTime.UtcNow;
     private bool lastPublishedPaused;
     private Vector3? lastPublishedScreenPosition;
     private float lastPublishedScreenYaw;
     private float lastPublishedScreenScale;
     private bool lastPublishedApprovalRequired;
+    private int lastPublishedQueueCount = -1;
+    private bool publishRequested;
+
     private string? viewingUrl;
     private string? rejectedRemoteUrl;
     private CallControl? lastStateMessage;
@@ -64,10 +73,9 @@ internal sealed class WatchAlongSession : IDisposable
     private readonly ConcurrentQueue<PendingAlert> pendingAlerts = new();
 
     private bool awaitingHostAck;
-
     private bool partyOpen;
 
-    public WatchAlongSession(AethernetSession session, Configuration configuration, ConfirmService confirm,
+    internal WatchAlongSession(AethernetSession session, Configuration configuration, ConfirmService confirm,
         VideoPlayer video, AetherStreamQueue queue, StreamSignalRouter stream, ScreenController screen)
     {
         this.session = session;
@@ -77,6 +85,7 @@ internal sealed class WatchAlongSession : IDisposable
         this.queue = queue;
         this.stream = stream;
         this.screen = screen;
+        queue.Changed += RequestPublish;
         stream.Joined += OnJoined;
         stream.Declined += OnDeclined;
         stream.RosterReceived += OnRoster;
@@ -91,43 +100,47 @@ internal sealed class WatchAlongSession : IDisposable
         stream.Kicked += OnKicked;
     }
 
-    public WatchAlongMode Mode { get; private set; } = WatchAlongMode.None;
-    public bool IsHosting => Mode == WatchAlongMode.Hosting;
-    public bool IsViewing => Mode == WatchAlongMode.Viewing;
-    public IReadOnlyList<WatchAlongParticipant> Roster { get; private set; } = Array.Empty<WatchAlongParticipant>();
-    public IReadOnlyList<NearbyStream> Nearby { get; private set; } = Array.Empty<NearbyStream>();
+    internal WatchAlongMode Mode { get; private set; } = WatchAlongMode.None;
+    internal bool IsHosting => Mode == WatchAlongMode.Hosting;
+    internal bool IsViewing => Mode == WatchAlongMode.Viewing;
+    internal bool IsPartyOpen => partyOpen;
 
-    public VideoQueueEntry? ViewingEntry { get; private set; }
+    internal IReadOnlyList<WatchAlongParticipant> Roster { get; private set; } = [];
+    internal IReadOnlyList<NearbyStream> Nearby { get; private set; } = [];
+    internal IReadOnlyList<HostQueueItem> HostQueue { get; private set; } = [];
 
-    public bool IsAwaitingApproval { get; private set; }
-    public IReadOnlyList<PendingJoinRequest> PendingRequests { get; private set; } = Array.Empty<PendingJoinRequest>();
+    internal VideoQueueEntry? ViewingEntry { get; private set; }
 
-    public IReadOnlyList<QueueSuggestion> PendingQueueSuggestions { get; private set; } =
-        Array.Empty<QueueSuggestion>();
+    internal bool IsAwaitingApproval { get; private set; }
+    internal IReadOnlyList<PendingJoinRequest> PendingRequests { get; private set; } = [];
+    internal IReadOnlyList<QueueSuggestion> PendingQueueSuggestions { get; private set; } = [];
 
-    public IReadOnlyList<WatchAlongParticipant> Watching()
+    internal IReadOnlyList<WatchAlongParticipant> Watching()
     {
         if (!configuration.VideoShareWatchPresence || !session.IsSignedIn)
         {
-            return Array.Empty<WatchAlongParticipant>();
+            return [];
         }
 
         return Roster;
     }
 
-    public void RequestNearbyStreams() => stream.RequestNearby(Plugin.ClientState.TerritoryType);
+    internal void RequestNearbyStreams() => stream.RequestNearby(Plugin.ClientState.TerritoryType);
 
-    public void Join(string hostId)
+    private void RequestPublish() => publishRequested = true;
+
+    internal void Join(string hostId)
     {
         if (Mode == WatchAlongMode.Hosting)
         {
             StopHostingLocal();
         }
 
+        queue.Suspend();
         stream.Join(hostId);
     }
 
-    public void OpenParty()
+    internal void OpenParty()
     {
         if (Mode == WatchAlongMode.Viewing)
         {
@@ -135,17 +148,18 @@ internal sealed class WatchAlongSession : IDisposable
         }
 
         partyOpen = true;
+        RequestPublish();
     }
 
-    public void ResyncNow()
+    internal void ResyncNow()
     {
         if (Mode == WatchAlongMode.Viewing && lastStateMessage is { } message)
         {
-            ApplyStateSync(message);
+            ApplyStateSync(message, force: true);
         }
     }
 
-    public void Leave()
+    internal void Leave()
     {
         if (Mode == WatchAlongMode.None && !awaitingHostAck && !IsAwaitingApproval && !partyOpen)
         {
@@ -161,29 +175,28 @@ internal sealed class WatchAlongSession : IDisposable
             lastStateMessage = null;
         }
 
+        queue.Resume();
         Mode = WatchAlongMode.None;
         awaitingHostAck = false;
         IsAwaitingApproval = false;
         partyOpen = false;
-        Roster = Array.Empty<WatchAlongParticipant>();
-        PendingRequests = Array.Empty<PendingJoinRequest>();
-        PendingQueueSuggestions = Array.Empty<QueueSuggestion>();
+        Roster = [];
+        PendingRequests = [];
+        PendingQueueSuggestions = [];
+        HostQueue = [];
         Interlocked.Exchange(ref pendingJoinSync, null);
         Interlocked.Exchange(ref pendingStateSync, null);
     }
 
-    public void ApproveRequest(string userId)
+    internal void ApproveRequest(string userId)
     {
         stream.Approve(userId);
         RemovePendingRequest(userId);
     }
 
-    public void SuggestQueueItem(string url)
-    {
-        stream.SuggestQueueItem(url, Guid.NewGuid().ToString());
-    }
+    internal void SuggestQueueItem(string url) => stream.SuggestQueueItem(url, Guid.NewGuid().ToString());
 
-    public void ApproveQueueSuggestion(string suggestionId)
+    internal void ApproveQueueSuggestion(string suggestionId)
     {
         var suggestion = FindQueueSuggestion(suggestionId);
         if (suggestion is null)
@@ -191,21 +204,19 @@ internal sealed class WatchAlongSession : IDisposable
             return;
         }
 
-        queue.Add(new VideoQueueEntry(suggestion.Url, suggestion.Url, string.Empty, null, null));
+        queue.Add(queue.CreateDisplayEntry(suggestion.Url));
         stream.ApproveQueueSuggestion(suggestionId);
         RemoveQueueSuggestion(suggestionId);
+        RequestPublish();
     }
 
-    public void DenyQueueSuggestion(string suggestionId)
+    internal void DenyQueueSuggestion(string suggestionId)
     {
         stream.DenyQueueSuggestion(suggestionId);
         RemoveQueueSuggestion(suggestionId);
     }
 
-    public void KickParticipant(string userId)
-    {
-        stream.Kick(userId);
-    }
+    internal void KickParticipant(string userId) => stream.Kick(userId);
 
     private QueueSuggestion? FindQueueSuggestion(string suggestionId)
     {
@@ -258,13 +269,13 @@ internal sealed class WatchAlongSession : IDisposable
         PendingQueueSuggestions = updated;
     }
 
-    public void DenyRequest(string userId)
+    internal void DenyRequest(string userId)
     {
         stream.Deny(userId);
         RemovePendingRequest(userId);
     }
 
-    public void OnFrameworkUpdate(float deltaSeconds)
+    internal void OnFrameworkUpdate(float deltaSeconds)
     {
         if (Interlocked.Exchange(ref pendingJoinSync, null) is { } joinMessage)
         {
@@ -273,7 +284,7 @@ internal sealed class WatchAlongSession : IDisposable
 
         if (Interlocked.Exchange(ref pendingStateSync, null) is { } stateMessage)
         {
-            ApplyStateSync(stateMessage);
+            ApplyStateSync(stateMessage, force: false);
         }
 
         if (pendingViewerStop)
@@ -287,27 +298,12 @@ internal sealed class WatchAlongSession : IDisposable
             confirm.Alert(Loc.T(alert.Title), Loc.T(alert.Body), Loc.T(L.Phone.OutcomeDismiss));
         }
 
-        if (Mode == WatchAlongMode.Viewing)
+        if (Mode == WatchAlongMode.Viewing || IsAwaitingApproval)
         {
-            if (queue.Current is not null)
-            {
-                Leave();
-            }
-
             return;
         }
 
-        if (IsAwaitingApproval)
-        {
-            if (queue.Current is not null)
-            {
-                Leave();
-            }
-
-            return;
-        }
-
-        if (!partyOpen && queue.Current is null)
+        if (!partyOpen && queue.Current is null && !video.HasMedia)
         {
             if (Mode == WatchAlongMode.Hosting || awaitingHostAck)
             {
@@ -325,13 +321,17 @@ internal sealed class WatchAlongSession : IDisposable
         }
 
         tickCounter = 0;
+        PublishHostStateIfNeeded();
+    }
 
+    private void PublishHostStateIfNeeded()
+    {
         var progress = video.Progress;
-        var position = progress.Position;
+        var position = (double)progress.Position;
         var paused = progress.Paused;
         var url = queue.Current?.Url ?? string.Empty;
 
-        Vector3? screenPosition = screen.Engine.IsActive ? screen.Engine.ScreenPosition : null;
+        var screenPosition = screen.Engine.IsActive ? screen.Engine.ScreenPosition : (Vector3?)null;
         var screenYaw = screen.Engine.ScreenYaw;
         var screenScale = screen.Engine.ScreenScale;
         var screenChanged = screenPosition is { } currentScreenPosition
@@ -341,9 +341,15 @@ internal sealed class WatchAlongSession : IDisposable
                 || MathF.Abs(screenScale - lastPublishedScreenScale) > ScreenScaleDriftTolerance);
 
         var approvalRequired = configuration.VideoStreamApprovalRequired;
-        var changed = url != lastPublishedUrl || paused != lastPublishedPaused
-            || Math.Abs(position - lastPublishedPosition) > PositionDriftToleranceSeconds || screenChanged
-            || approvalRequired != lastPublishedApprovalRequired;
+        var sharedQueue = BuildSharedQueue();
+        var expected = lastPublishedPaused
+            ? lastPublishedPosition
+            : lastPublishedPosition + (DateTime.UtcNow - lastPublishedAt).TotalSeconds;
+        var jumped = url == lastPublishedUrl && Math.Abs(position - expected) > PositionJumpTolerance;
+
+        var changed = url != lastPublishedUrl || paused != lastPublishedPaused || jumped || screenChanged
+            || approvalRequired != lastPublishedApprovalRequired || sharedQueue.Length != lastPublishedQueueCount
+            || publishRequested;
         var heartbeatDue = heartbeatTimer >= HeartbeatSeconds;
         if (!changed && !heartbeatDue)
         {
@@ -351,13 +357,16 @@ internal sealed class WatchAlongSession : IDisposable
         }
 
         heartbeatTimer = 0f;
+        publishRequested = false;
         lastPublishedUrl = url;
         lastPublishedPosition = position;
+        lastPublishedAt = DateTime.UtcNow;
         lastPublishedPaused = paused;
         lastPublishedScreenPosition = screenPosition;
         lastPublishedScreenYaw = screenYaw;
         lastPublishedScreenScale = screenScale;
         lastPublishedApprovalRequired = approvalRequired;
+        lastPublishedQueueCount = sharedQueue.Length;
 
         if (Mode != WatchAlongMode.Hosting)
         {
@@ -365,9 +374,27 @@ internal sealed class WatchAlongSession : IDisposable
         }
 
         stream.PublishState(url, position, paused, Plugin.ClientState.TerritoryType, approvalRequired,
-            configuration.VideoStreamDiscoverable, screenPosition,
+            configuration.VideoStreamDiscoverable, sharedQueue, screenPosition,
             screenPosition is not null ? screenYaw : null,
             screenPosition is not null ? screenScale : null);
+    }
+
+    private StreamQueueEntry[] BuildSharedQueue()
+    {
+        var entries = queue.Entries;
+        if (entries.Count == 0)
+        {
+            return [];
+        }
+
+        var count = Math.Min(entries.Count, MaxSharedQueueEntries);
+        var shared = new StreamQueueEntry[count];
+        for (var index = 0; index < count; index++)
+        {
+            shared[index] = new StreamQueueEntry(entries[index].Url, entries[index].Title);
+        }
+
+        return shared;
     }
 
     private void StopHostingLocal()
@@ -375,10 +402,11 @@ internal sealed class WatchAlongSession : IDisposable
         Mode = WatchAlongMode.None;
         awaitingHostAck = false;
         partyOpen = false;
-        Roster = Array.Empty<WatchAlongParticipant>();
-        PendingRequests = Array.Empty<PendingJoinRequest>();
-        PendingQueueSuggestions = Array.Empty<QueueSuggestion>();
+        Roster = [];
+        PendingRequests = [];
+        PendingQueueSuggestions = [];
         lastPublishedUrl = null;
+        lastPublishedQueueCount = -1;
     }
 
     private void OnJoined(CallControl message)
@@ -386,6 +414,7 @@ internal sealed class WatchAlongSession : IDisposable
         Mode = WatchAlongMode.Viewing;
         IsAwaitingApproval = false;
         Roster = ToParticipants(message.Participants);
+        HostQueue = ToHostQueue(message.UpcomingQueue);
 
         if (message.Url is { Length: > 0 })
         {
@@ -418,20 +447,17 @@ internal sealed class WatchAlongSession : IDisposable
         rejectedRemoteUrl = null;
         viewingUrl = url;
         ViewingEntry = queue.CreateDisplayEntry(url);
-        video.Play(url);
         ApplyRemoteScreenTransform(message);
-        if (message.PositionSeconds is { } position)
-        {
-            video.Seek((float)position);
-        }
 
-        video.Pause(message.Paused ?? false);
+        var paused = message.Paused ?? false;
+        video.Play(url, ProjectRemotePosition(message), !paused);
     }
 
     private void OnDeclined(CallControl message)
     {
         Mode = WatchAlongMode.None;
         IsAwaitingApproval = false;
+        queue.Resume();
 
         if (message.Reason == "denied")
         {
@@ -562,11 +588,6 @@ internal sealed class WatchAlongSession : IDisposable
             return;
         }
 
-        if (Mode == WatchAlongMode.Hosting)
-        {
-            return;
-        }
-
         if (Mode != WatchAlongMode.Viewing)
         {
             return;
@@ -576,28 +597,61 @@ internal sealed class WatchAlongSession : IDisposable
         Interlocked.Exchange(ref pendingStateSync, message);
     }
 
-    private void ApplyStateSync(CallControl message)
+    private static double ProjectRemotePosition(CallControl message)
     {
-        if (message.Url is { Length: > 0 } url && url != viewingUrl)
+        if (message.PositionSeconds is not { } position)
         {
-            if (!IsPlayableRemoteUrl(url))
-            {
-                WarnOnceForRejectedUrl(url);
-                return;
-            }
-
-            rejectedRemoteUrl = null;
-            viewingUrl = url;
-            ViewingEntry = queue.CreateDisplayEntry(url);
-            video.Play(url);
+            return 0d;
         }
 
-        if (message.PositionSeconds is { } position)
+        if ((message.Paused ?? false) || message.StateAtUnixMs is not { } stamp)
         {
-            var localPosition = video.Progress.Position;
-            if (Math.Abs(localPosition - position) > PositionDriftToleranceSeconds)
+            return Math.Max(0d, position);
+        }
+
+        var age = (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - stamp) / 1000d;
+        return Math.Max(0d, position + Math.Clamp(age, 0d, MaxProjectionSeconds));
+    }
+
+    private void ApplyStateSync(CallControl message, bool force)
+    {
+        HostQueue = ToHostQueue(message.UpcomingQueue);
+
+        if (message.Url is { Length: > 0 } url)
+        {
+            if (url != viewingUrl || force)
             {
-                video.Seek((float)position);
+                if (!IsPlayableRemoteUrl(url))
+                {
+                    WarnOnceForRejectedUrl(url);
+                    return;
+                }
+
+                rejectedRemoteUrl = null;
+                viewingUrl = url;
+                ViewingEntry = queue.CreateDisplayEntry(url);
+                var startPaused = message.Paused ?? false;
+                video.Play(url, ProjectRemotePosition(message), !startPaused);
+                ApplyRemoteScreenTransform(message);
+                return;
+            }
+        }
+        else if (viewingUrl is not null)
+        {
+            viewingUrl = null;
+            ViewingEntry = null;
+            video.Stop();
+            ApplyRemoteScreenTransform(message);
+            return;
+        }
+
+        if (message.PositionSeconds is not null)
+        {
+            var target = ProjectRemotePosition(message);
+            var localPosition = video.Progress.Position;
+            if (Math.Abs(localPosition - target) > HardSeekTolerance)
+            {
+                video.Seek(target);
             }
         }
 
@@ -623,7 +677,7 @@ internal sealed class WatchAlongSession : IDisposable
         var streams = message.NearbyStreams;
         if (streams is null || streams.Length == 0)
         {
-            Nearby = Array.Empty<NearbyStream>();
+            Nearby = [];
             return;
         }
 
@@ -637,6 +691,28 @@ internal sealed class WatchAlongSession : IDisposable
         Nearby = result;
     }
 
+    private static HostQueueItem[] ToHostQueue(StreamQueueEntry[]? entries)
+    {
+        if (entries is null || entries.Length == 0)
+        {
+            return [];
+        }
+
+        var items = new List<HostQueueItem>(entries.Length);
+        for (var index = 0; index < entries.Length; index++)
+        {
+            var entry = entries[index];
+            if (entry.Url is not { Length: > 0 } url)
+            {
+                continue;
+            }
+
+            items.Add(new HostQueueItem(url, entry.Title is { Length: > 0 } title ? title : url));
+        }
+
+        return items.ToArray();
+    }
+
     private void OnEnded(CallControl message)
     {
         if (Mode == WatchAlongMode.Viewing)
@@ -647,12 +723,14 @@ internal sealed class WatchAlongSession : IDisposable
             pendingViewerStop = true;
         }
 
+        queue.Resume();
         Mode = WatchAlongMode.None;
         IsAwaitingApproval = false;
         partyOpen = false;
-        Roster = Array.Empty<WatchAlongParticipant>();
-        PendingRequests = Array.Empty<PendingJoinRequest>();
-        PendingQueueSuggestions = Array.Empty<QueueSuggestion>();
+        Roster = [];
+        PendingRequests = [];
+        PendingQueueSuggestions = [];
+        HostQueue = [];
         Interlocked.Exchange(ref pendingJoinSync, null);
         Interlocked.Exchange(ref pendingStateSync, null);
     }
@@ -667,9 +745,11 @@ internal sealed class WatchAlongSession : IDisposable
             pendingViewerStop = true;
         }
 
+        queue.Resume();
         Mode = WatchAlongMode.None;
         IsAwaitingApproval = false;
-        Roster = Array.Empty<WatchAlongParticipant>();
+        Roster = [];
+        HostQueue = [];
         Interlocked.Exchange(ref pendingJoinSync, null);
         Interlocked.Exchange(ref pendingStateSync, null);
 
@@ -682,7 +762,7 @@ internal sealed class WatchAlongSession : IDisposable
     {
         if (participants is null || participants.Length == 0)
         {
-            return Array.Empty<WatchAlongParticipant>();
+            return [];
         }
 
         var result = new WatchAlongParticipant[participants.Length];
@@ -698,6 +778,7 @@ internal sealed class WatchAlongSession : IDisposable
 
     public void Dispose()
     {
+        queue.Changed -= RequestPublish;
         stream.Joined -= OnJoined;
         stream.Declined -= OnDeclined;
         stream.RosterReceived -= OnRoster;
