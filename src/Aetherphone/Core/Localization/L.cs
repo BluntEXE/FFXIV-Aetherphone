@@ -4920,6 +4920,34 @@ internal static class L
         public static readonly LocString HousingWatchBody = new("onboarding.housingWatchBody", "Watch a plot and the phone reminds you before its phase ends, with however much warning you ask for.");
         public static readonly LocString HousingDataTitle = new("onboarding.housingDataTitle", "How fresh this is");
         public static readonly LocString HousingDataBody = new("onboarding.housingDataBody", "Listings come from community scans, so the chip in the footer tells you how recent they are. Refresh beside it pulls again.");
+        public static readonly LocString CasinoBody = new("onboarding.casinoBody", "The phone's own casino floor. You play with chips bought using Aether Coin, so nothing here costs real money and nothing here buys an advantage.");
+        public static readonly LocString CasinoChipsTitle = new("onboarding.casinoChipsTitle", "Chips and your wallet");
+        public static readonly LocString CasinoChipsBody = new("onboarding.casinoChipsBody", "Chips on the left, your coin on the right. Buy in at 100 chips per coin, and cash out whatever you're holding whenever you like.");
+        public static readonly LocString CasinoSpinTitle = new("onboarding.casinoSpinTitle", "A free spin every day");
+        public static readonly LocString CasinoSpinBody = new("onboarding.casinoSpinBody", "One spin on the house each day, no chips needed. Take it and come back tomorrow for the next one.");
+        public static readonly LocString CasinoFloorTitle = new("onboarding.casinoFloorTitle", "Pick your game");
+        public static readonly LocString CasinoFloorBody = new("onboarding.casinoFloorBody", "Blackjack, slots, scratch cards, bingo, the wheel and a round with the barkeep. Tap one to sit down, or open Games to read the rules and payouts first.");
+        public static readonly LocString CasinoRecordsTitle = new("onboarding.casinoRecordsTitle", "Nothing hidden");
+        public static readonly LocString CasinoRecordsBody = new("onboarding.casinoRecordsBody", "Every stake and payout goes on the record. Fair play goes further: each round is sealed before you tap, revealed when it settles, and re-checked right here on your phone.");
+        public static readonly LocString CasinoLimitsTitle = new("onboarding.casinoLimitsTitle", "Set your own ceiling");
+        public static readonly LocString CasinoLimitsBody = new("onboarding.casinoLimitsBody", "Cap what you can lose in a day and the floor holds you to it. Lowering it takes effect at once, raising it waits, so the choice is the one you made while calm.");
+        public static readonly LocString CasinoLiveTitle = new("onboarding.casinoLiveTitle", "See who's playing");
+        public static readonly LocString CasinoLiveBody = new("onboarding.casinoLiveBody", "Gamba is not a solo affair. Tap Live for the rooms and tables that have people in them right now.");
+        public static readonly LocString CasinoRoomsTitle = new("onboarding.casinoRoomsTitle", "Rooms on a clock");
+        public static readonly LocString CasinoRoomsBody = new("onboarding.casinoRoomsBody", "The wheel and the bingo hall run on a shared timer, so everyone plays the same round together. Blackjack seats you at a table with real players.");
+        public static readonly LocString AetherStreamBody = new("onboarding.aetherStreamBody", "Video inside the game. Paste a link and it plays here on your phone, or on a screen you place out in the world.");
+        public static readonly LocString AetherStreamPlayerTitle = new("onboarding.aetherStreamPlayerTitle", "Your screen");
+        public static readonly LocString AetherStreamPlayerBody = new("onboarding.aetherStreamPlayerBody", "Whatever is playing shows up here. Once you cast it into the world, a live badge appears in the corner along with everyone watching with you.");
+        public static readonly LocString AetherStreamAddTitle = new("onboarding.aetherStreamAddTitle", "Paste a link");
+        public static readonly LocString AetherStreamAddBody = new("onboarding.aetherStreamAddBody", "A YouTube link, a direct video URL, or a file from your own machine. Play Now starts it straight away, Add to Queue lines it up behind what's running.");
+        public static readonly LocString AetherStreamTransportTitle = new("onboarding.aetherStreamTransportTitle", "Playback in hand");
+        public static readonly LocString AetherStreamTransportBody = new("onboarding.aetherStreamTransportBody", "Play and pause, jump ten seconds either way, or skip to whatever is next. Drag the bar above to scrub, and the dial below sets the volume.");
+        public static readonly LocString AetherStreamActionsTitle = new("onboarding.aetherStreamActionsTitle", "Three ways to go");
+        public static readonly LocString AetherStreamActionsBody = new("onboarding.aetherStreamActionsBody", "Up Next holds your queue, Party is for watching with other people, and Screen puts the picture onto a surface in the world.");
+        public static readonly LocString AetherStreamPartyTitle = new("onboarding.aetherStreamPartyTitle", "Watch together");
+        public static readonly LocString AetherStreamPartyBody = new("onboarding.aetherStreamPartyBody", "Start a party and players nearby can ask to join. You decide who comes in, and everyone stays on the same second of the same video.");
+        public static readonly LocString AetherStreamSettingsTitle = new("onboarding.aetherStreamSettingsTitle", "Tune it to your machine");
+        public static readonly LocString AetherStreamSettingsBody = new("onboarding.aetherStreamSettingsBody", "Maximum quality, hardware decoding, whether others can find your stream, and the components the player needs, all behind this cog.");
     }
 
     internal static class Setup

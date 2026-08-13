@@ -1,5 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Platform;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Video;
@@ -52,6 +53,7 @@ internal sealed partial class AetherStreamApp
         var height = width * HeroAspect;
         var min = origin;
         var max = origin + new Vector2(width, height);
+        UiAnchors.Report("aetherstream.hero", new Rect(min, max));
         var rounding = Metrics.Radius.Card * scale;
         var drawList = ImGui.GetWindowDrawList();
         var current = CurrentEntry;
@@ -265,6 +267,8 @@ internal sealed partial class AetherStreamApp
     {
         var origin = ImGui.GetCursorScreenPos();
         var rowHeight = 60f * scale;
+        UiAnchors.Report("aetherstream.transport",
+            new Rect(origin, new Vector2(origin.X + width, origin.Y + rowHeight)));
         var centerY = origin.Y + rowHeight * 0.5f;
         var centerX = origin.X + width * 0.5f;
         var interactive = !watchAlong.IsViewing;
@@ -358,6 +362,8 @@ internal sealed partial class AetherStreamApp
         var radius = ActionButtonRadius * scale;
         var labelHeight = Typography.LineHeight(TextStyles.Caption2);
         var rowHeight = radius * 2f + labelHeight + Metrics.Space.Xs * scale;
+        UiAnchors.Report("aetherstream.actions",
+            new Rect(origin, new Vector2(origin.X + width, origin.Y + rowHeight)));
         var slot = width / 3f;
         var centerY = origin.Y + radius;
 
@@ -466,6 +472,8 @@ internal sealed partial class AetherStreamApp
 
         ImGui.SetCursorScreenPos(rowOrigin);
         ImGui.Dummy(new Vector2(width, rowHeight));
+        UiAnchors.Report("aetherstream.composer",
+            new Rect(origin, new Vector2(origin.X + width, rowOrigin.Y + rowHeight)));
 
         if (!submitted || !canSubmit)
         {

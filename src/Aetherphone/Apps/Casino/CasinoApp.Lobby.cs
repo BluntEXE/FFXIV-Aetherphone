@@ -1,5 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -58,6 +59,7 @@ internal sealed partial class CasinoApp
         var height = ChipBarHeight * scale;
         var min = origin;
         var max = new Vector2(origin.X + width, origin.Y + height);
+        UiAnchors.Report("casino.chipbar", new Rect(min, max));
         var rounding = Metrics.Radius.Card * scale;
         ui.Card(drawList, min, max, rounding);
 

@@ -8,6 +8,7 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Net;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Video;
 using Aetherphone.Windows;
@@ -121,10 +122,12 @@ internal sealed partial class AetherStreamApp : IPhoneApp
     {
         if (NeedsSetup)
         {
+            TourHolds.Hold(Id);
             DrawSetupGate(area, scale);
             return;
         }
 
+        TourHolds.Release(Id);
         ui.Body(area);
 
         using (InputShield.Engage(SheetsCapturePointer))
@@ -146,6 +149,8 @@ internal sealed partial class AetherStreamApp : IPhoneApp
         var radius = 13f * scale;
         var center = new Vector2(area.Max.X - Metrics.Space.Lg * scale - radius,
             area.Min.Y + AppHeader.Height * scale * 0.5f);
+        UiAnchors.Report("aetherstream.settings", new Rect(center - new Vector2(radius, radius),
+            center + new Vector2(radius, radius)));
         if (ui.IconButton(center, radius, FontAwesomeIcon.Cog.ToIconString(), ui.TitleInk,
                 Palette.WithAlpha(ui.TitleInk, 0.12f), 0.55f))
         {

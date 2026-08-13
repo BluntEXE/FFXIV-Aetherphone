@@ -401,6 +401,35 @@ internal static class TourRegistry
                 GuideStep.Point(L.Onboarding.HousingWatchTitle, L.Onboarding.HousingWatchBody, "housing.watchlist"),
                 GuideStep.Note(L.Onboarding.HousingDataTitle, L.Onboarding.HousingDataBody),
             });
+        Add(tours, "casino", 1,
+            new[]
+            {
+                GuideStep.Note(L.Apps.Casino, L.Onboarding.CasinoBody),
+                GuideStep.Point(L.Onboarding.CasinoChipsTitle, L.Onboarding.CasinoChipsBody, "casino.chipbar"),
+                GuideStep.Point(L.Onboarding.CasinoSpinTitle, L.Onboarding.CasinoSpinBody, "casino.spin"),
+                GuideStep.Point(L.Onboarding.CasinoFloorTitle, L.Onboarding.CasinoFloorBody, "casino.games"),
+                GuideStep.Point(L.Onboarding.CasinoRecordsTitle, L.Onboarding.CasinoRecordsBody, "casino.records"),
+                GuideStep.Point(L.Onboarding.CasinoLimitsTitle, L.Onboarding.CasinoLimitsBody, "casino.limits"),
+                GuideStep.Tap(L.Onboarding.CasinoLiveTitle, L.Onboarding.CasinoLiveBody, "casino.tabs",
+                    "casino.tab.live"),
+                GuideStep.Point(L.Onboarding.CasinoRoomsTitle, L.Onboarding.CasinoRoomsBody, "casino.live.rooms"),
+            });
+        Add(tours, "aetherstream", 1,
+            new[]
+            {
+                GuideStep.Note(L.Apps.AetherStream, L.Onboarding.AetherStreamBody),
+                GuideStep.Point(L.Onboarding.AetherStreamPlayerTitle, L.Onboarding.AetherStreamPlayerBody,
+                    "aetherstream.hero"),
+                GuideStep.Point(L.Onboarding.AetherStreamAddTitle, L.Onboarding.AetherStreamAddBody,
+                    "aetherstream.composer"),
+                GuideStep.Point(L.Onboarding.AetherStreamTransportTitle, L.Onboarding.AetherStreamTransportBody,
+                    "aetherstream.transport"),
+                GuideStep.Point(L.Onboarding.AetherStreamActionsTitle, L.Onboarding.AetherStreamActionsBody,
+                    "aetherstream.actions"),
+                GuideStep.Note(L.Onboarding.AetherStreamPartyTitle, L.Onboarding.AetherStreamPartyBody),
+                GuideStep.Point(L.Onboarding.AetherStreamSettingsTitle, L.Onboarding.AetherStreamSettingsBody,
+                    "aetherstream.settings"),
+            });
         return tours;
     }
 
