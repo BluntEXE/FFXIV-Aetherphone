@@ -24,7 +24,12 @@ internal sealed class ChatEntry
         Chunks = chunks;
         At = at;
         Flags = flags;
+        StreamKey = string.Equals(channelKey, GameChannels.TellKey, StringComparison.Ordinal)
+            ? ChatStreams.ForTell(SenderKey)
+            : ChatStreams.ForChannel(channelKey);
     }
+
+    public string StreamKey { get; }
 
     public long Sequence { get; }
 

@@ -11,8 +11,11 @@ internal static class GameChannels
     public const string SayKey = "say";
     public const string TellKey = "tell";
     public const string PartyKey = "party";
+    public const string AllianceKey = "alliance";
     public const string FreeCompanyKey = "fc";
+    public const string NoviceKey = "novice";
     public const string EchoKey = "echo";
+    public const string SystemKey = "system";
 
     private static readonly GameChannel[] Catalog = BuildCatalog();
     private static readonly FrozenDictionary<XivChatType, GameChannel> ByKind = BuildKindIndex();
@@ -58,13 +61,13 @@ internal static class GameChannels
             XivChatType.CustomEmote, XivChatType.StandardEmote);
         Add(catalog, PartyKey, "/party", L.Linkpearl.ChannelParty, ChannelTints.Party, ChannelCategory.Group,
             XivChatType.Party, XivChatType.CrossParty);
-        Add(catalog, "alliance", "/alliance", L.Linkpearl.ChannelAlliance, ChannelTints.Alliance,
+        Add(catalog, AllianceKey, "/alliance", L.Linkpearl.ChannelAlliance, ChannelTints.Alliance,
             ChannelCategory.Group, XivChatType.Alliance);
         Add(catalog, "pvpteam", "/pvpteam", L.Linkpearl.ChannelPvpTeam, ChannelTints.PvpTeam, ChannelCategory.Group,
             XivChatType.PvPTeam);
         Add(catalog, FreeCompanyKey, "/freecompany", L.Linkpearl.ChannelFreeCompany, ChannelTints.FreeCompany,
             ChannelCategory.Community, XivChatType.FreeCompany, XivChatType.FreeCompanyAnnouncement);
-        Add(catalog, "novice", "/novice", L.Linkpearl.ChannelNoviceNetwork, ChannelTints.NoviceNetwork,
+        Add(catalog, NoviceKey, "/novice", L.Linkpearl.ChannelNoviceNetwork, ChannelTints.NoviceNetwork,
             ChannelCategory.Community, XivChatType.NoviceNetwork);
         for (var slot = 0; slot < LinkshellSlots; slot++)
         {
@@ -82,7 +85,7 @@ internal static class GameChannels
             XivChatType.TellIncoming, XivChatType.TellOutgoing);
         Add(catalog, EchoKey, "/echo", L.Linkpearl.ChannelEcho, ChannelTints.Echo, ChannelCategory.System,
             XivChatType.Echo);
-        Add(catalog, "system", string.Empty, L.Linkpearl.ChannelSystem, ChannelTints.System, ChannelCategory.System,
+        Add(catalog, SystemKey, string.Empty, L.Linkpearl.ChannelSystem, ChannelTints.System, ChannelCategory.System,
             XivChatType.SystemMessage, XivChatType.GatheringSystemMessage, XivChatType.ErrorMessage,
             XivChatType.RetainerSale, XivChatType.Notice);
         return catalog.ToArray();

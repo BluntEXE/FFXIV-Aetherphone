@@ -8,6 +8,7 @@ using Aetherphone.Core.Notes;
 using Aetherphone.Core.Changelog;
 using Aetherphone.Core.ControlCenter;
 using Aetherphone.Core.Dailies;
+using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Games;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Housing;
@@ -229,6 +230,10 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public List<string> MutedLinkshells { get; set; } = new();
     public Dictionary<ulong, List<string>> MutedLinkshellsByCharacter { get; set; } = new();
     public bool LinkshellMutesPerCharacterMigrated { get; set; }
+    public List<ChatTab> LinkpearlTabs { get; set; } = new();
+    public int LinkpearlHistory { get; set; } = (int)HistoryPolicy.Days30;
+    public Dictionary<string, int> LinkpearlHistoryByChannel { get; set; } = new();
+    public List<ulong> LinkpearlMigratedCharacters { get; set; } = new();
     public long DevChatLastSeenUnix { get; set; }
     public long AnnouncementsSeenUnix { get; set; }
     public long AnnouncementsNotifiedUnix { get; set; }

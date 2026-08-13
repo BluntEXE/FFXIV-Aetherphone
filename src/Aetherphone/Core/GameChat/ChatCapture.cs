@@ -22,7 +22,6 @@ internal sealed class ChatCapture : IDisposable
     private readonly List<ChatChunk> chunks = new(8);
     private readonly StringBuilder pendingText = new(256);
     private readonly StringBuilder flatText = new(256);
-    private long sequence;
 
     public ChatCapture(ChatLog log, ChatSend send, IChatGui chatGui, GameData gameData, AppGate installed)
     {
@@ -60,8 +59,7 @@ internal sealed class ChatCapture : IDisposable
             flags |= ChatEntryFlags.Mention;
         }
 
-        sequence++;
-        log.Append(new ChatEntry(sequence, channel.Key, name, world, text, built, DateTime.Now, flags));
+        log.Append(new ChatEntry(log.NextSequence(), channel.Key, name, world, text, built, DateTime.Now, flags));
     }
 
     private void ResolveAuthor(IHandleableChatMessage message, GameChannel channel, out string name, out string world,

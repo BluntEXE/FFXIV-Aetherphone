@@ -76,6 +76,8 @@ internal sealed class PhoneServices : IDisposable
     public required GameChat.ChatLog ChatLog { get; init; }
     public required GameChat.ChatSend ChatSend { get; init; }
     public required GameChat.ChatCapture ChatCapture { get; init; }
+    public required GameChat.ChatArchive ChatArchive { get; init; }
+    public required GameChat.TabStore ChatTabs { get; init; }
     public required HttpService Http { get; init; }
     public required MediaCache Media { get; init; }
     public required RemoteImageCache RemoteImages { get; init; }
@@ -197,9 +199,13 @@ internal sealed class PhoneServices : IDisposable
         var linkshells = new LinkshellStore(linkshellMutes, characterWatch);
         var linkshellBridge = new LinkshellBridge(linkshells, linkshellMutes, notifications, linkpearlNotificationGate,
             chatGui, gameData, linkpearlGate);
-        var chatLog = new GameChat.ChatLog(characterWatch);
+        var chatLog = new GameChat.ChatLog();
         var chatSend = new GameChat.ChatSend();
         var chatCapture = new GameChat.ChatCapture(chatLog, chatSend, chatGui, gameData, linkpearlGate);
+        var chatArchive = new GameChat.ChatArchive(
+            new DirectoryInfo(Path.Combine(configDirectory.FullName, "GameChat")), configuration, chatLog,
+            messageArchive, characterWatch);
+        var chatTabs = new GameChat.TabStore(configuration, characterWatch);
         var cacheRoot = new DirectoryInfo(Path.Combine(configDirectory.FullName, "cache"));
         cacheRoot.Create();
         var mediaRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "media"));
@@ -332,6 +338,8 @@ internal sealed class PhoneServices : IDisposable
             ChatLog = chatLog,
             ChatSend = chatSend,
             ChatCapture = chatCapture,
+            ChatArchive = chatArchive,
+            ChatTabs = chatTabs,
             Http = http,
             Media = media,
             RemoteImages = remoteImages,
@@ -433,6 +441,7 @@ internal sealed class PhoneServices : IDisposable
         RadioPlayer.Dispose();
         Radio.Dispose();
         ChatCapture.Dispose();
+        ChatArchive.Dispose();
         LinkshellBridge.Dispose();
         ChatBridge.Dispose();
         Lookup.Dispose();
