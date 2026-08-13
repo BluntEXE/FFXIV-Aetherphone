@@ -125,6 +125,13 @@ internal sealed partial class HousingApp
 
             var buttonHeight = 34f * scale;
             var gap = 8f * scale;
+            var travelRect = new Rect(new Vector2(left, y), new Vector2(right, y + buttonHeight));
+            if (HousingChrome.PillButton(travelRect, Loc.T(L.Housing.TravelHere), true, ui))
+            {
+                TravelTo(key);
+            }
+
+            y += buttonHeight + gap;
             var watched = housing.Watch.IsWatched(key);
             var watchLabel = Loc.T(plot is null || watched ? L.Housing.Unwatch : L.Housing.Watch);
             var mapLabel = Loc.T(L.Housing.BackToMap);

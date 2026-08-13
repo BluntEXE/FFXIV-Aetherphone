@@ -1,3 +1,4 @@
+using Aetherphone.Core.Maps;
 using Lumina.Excel.Sheets;
 
 namespace Aetherphone.Core.Muster;
@@ -6,16 +7,7 @@ internal static class MusterWorlds
 {
     private static Dictionary<string, (ushort WorldId, int DataCenterId)>? byName;
 
-    public static uint CurrentWorldId()
-    {
-        if (!Plugin.ClientState.IsLoggedIn)
-        {
-            return 0;
-        }
-
-        var player = Plugin.ObjectTable.LocalPlayer;
-        return player?.CurrentWorld.RowId ?? 0;
-    }
+    public static uint CurrentWorldId() => LocationShare.CurrentWorldId();
 
     public static int DataCenterIdForWorld(uint worldId)
     {

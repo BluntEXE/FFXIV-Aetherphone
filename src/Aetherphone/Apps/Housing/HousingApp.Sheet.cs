@@ -22,7 +22,7 @@ internal sealed partial class HousingApp
         height += HousingChrome.StatRowHeight * scale * 3f + 10f * scale;
         height += reminderPicker
             ? Typography.LineHeight(TextStyles.Caption1) + 12f * scale + 30f * scale + 22f * scale + 32f * scale
-            : 32f * scale;
+            : 72f * scale;
         return height + 16f * scale;
     }
 
@@ -128,14 +128,20 @@ internal sealed partial class HousingApp
             return;
         }
 
-        DrawSheetActions(plot, contentLeft, contentRight, y + 32f * scale, scale);
+        DrawSheetActions(plot, contentLeft, contentRight, y, scale);
     }
 
-    private void DrawSheetActions(HousingPlot plot, float left, float right, float bottom, float scale)
+    private void DrawSheetActions(HousingPlot plot, float left, float right, float travelTop, float scale)
     {
         var height = 32f * scale;
         var gap = 8f * scale;
-        var top = bottom - height;
+        var travelRow = new Rect(new Vector2(left, travelTop), new Vector2(right, travelTop + height));
+        if (HousingChrome.PillButton(travelRow, Loc.T(L.Housing.TravelHere), true, ui, false))
+        {
+            TravelTo(plot.Key);
+        }
+
+        var top = travelRow.Max.Y + gap;
         var watched = housing.Watch.IsWatched(plot.Key);
         var reminder = housing.Watch.FindReminder(plot.Key);
         var hasDeadline = plot.PhaseEndsUtc is not null;

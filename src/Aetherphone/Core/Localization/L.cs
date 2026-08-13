@@ -801,13 +801,7 @@ internal static class L
         public static readonly LocString FilterAll = new("muster.filterAll", "All");
         public static readonly LocString MyDataCenter = new("muster.myDataCenter", "My data center");
         public static readonly LocString DataCenterHint = new("muster.dataCenterHint", "Pick which data center the directory reads from.");
-        public static readonly LocString TravelTo = new("muster.travelTo", "Travel to {0}");
         public static readonly LocString OnThisWorld = new("muster.onThisWorld", "You're on {0}");
-        public static readonly LocString TeleportTo = new("muster.teleportTo", "Teleport to {0}");
-        public static readonly LocString TravelBusy = new("muster.travelBusy", "Lifestream is busy right now");
-        public static readonly LocString TravelNotAttuned = new("muster.travelNotAttuned", "You haven't attuned to {0} yet");
-        public static readonly LocString TravelBlocked = new("muster.travelBlocked", "You can't teleport right now");
-        public static readonly LocString TravelNoWorld = new("muster.travelNoWorld", "You can't travel to {0} from here");
         public static readonly LocString YoureHere = new("muster.youreHere", "You're already here");
         public static readonly LocString ImGoing = new("muster.imGoing", "I'm going");
         public static readonly LocString StatGoing = new("muster.statGoing", "Going");
@@ -815,6 +809,18 @@ internal static class L
         public static readonly LocString StatStartsIn = new("muster.statStartsIn", "Starts in");
         public static readonly LocString StatSpots = new("muster.statSpots", "Spots left");
         public static readonly LocString YourStatus = new("muster.yourStatus", "Your status");
+    }
+
+    internal static class Travel
+    {
+        public static readonly LocString GoThere = new("travel.goThere", "Go there");
+        public static readonly LocString TravelTo = new("travel.travelTo", "Travel to {0}");
+        public static readonly LocString TeleportTo = new("travel.teleportTo", "Teleport to {0}");
+        public static readonly LocString TeleportToPlot = new("travel.teleportToPlot", "Teleport to {0}, Ward {1}, Plot {2}");
+        public static readonly LocString Busy = new("travel.busy", "Lifestream is busy right now");
+        public static readonly LocString NotAttuned = new("travel.notAttuned", "You haven't attuned to {0} yet");
+        public static readonly LocString Blocked = new("travel.blocked", "You can't teleport right now");
+        public static readonly LocString NoWorld = new("travel.noWorld", "You can't travel to {0} from here");
     }
 
     internal static class Venues
@@ -983,6 +989,16 @@ internal static class L
             "Reminder set for {0} before the {1} ends. {2}, plot {3}.");
         public static readonly LocString ReminderUnavailable = new("housing.reminderUnavailable",
             "No phase deadline was reported for this plot, so a reminder cannot be scheduled yet.");
+        public static readonly LocString TravelHere = new("housing.travelHere", "Travel Here");
+        public static readonly LocString TravelStarted =
+            new("housing.travelStarted", "Travelling to {0}, plot {1}.");
+        public static readonly LocString TravelBusy = new("housing.travelBusy", "Lifestream is busy right now.");
+        public static readonly LocString TravelNotAttuned = new("housing.travelNotAttuned",
+            "Attune to that city aetheryte before travelling.");
+        public static readonly LocString TravelUnavailable =
+            new("housing.travelUnavailable", "Travel is not possible right now.");
+        public static readonly LocString TravelNeedsLifestream = new("housing.travelNeedsLifestream",
+            "Lifestream is not installed. The travel command was copied instead.");
         public static readonly LocString Filters = new("housing.filters", "Filters");
         public static readonly LocString FiltersCount = new("housing.filtersCount", "Filters ({0})");
         public static readonly LocString ClearFilters = new("housing.clearFilters", "Clear Filters");

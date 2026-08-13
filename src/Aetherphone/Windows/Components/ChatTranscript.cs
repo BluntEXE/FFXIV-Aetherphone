@@ -5,6 +5,7 @@ using Aetherphone.Core.Maps;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Muster;
 using Aetherphone.Core.Theme;
+using Aetherphone.Core.Venues;
 using Aetherphone.Core.YellowPages;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -212,6 +213,8 @@ internal sealed class ChatTranscript
     private const float BubbleGap = 3f;
     private const float QuoteSenderScale = 0.75f;
     private const float QuotePreviewScale = 0.80f;
+    private const float TravelPillHeight = 26f;
+    private const float TravelIconSpace = 17f;
     private static readonly Vector4 SeenTickColor = new(0.45f, 0.83f, 1f, 1f);
 
     private const float FlashSeconds = 1.6f;
@@ -803,6 +806,13 @@ internal sealed class ChatTranscript
 
         var worldLine = LocationShare.WorldLine(location);
         var detailLine = location.Ward > 0 ? LocationShare.HousingLine(location) : LocationShare.CoordinateText(location);
+        var destination = TravelPlanner.Resolve(in location);
+        var canTravel = TravelPlanner.CanGo(in destination);
+        var travelLabel = canTravel ? Loc.T(L.Travel.GoThere) : string.Empty;
+        var travelLabelSize = canTravel
+            ? Typography.Measure(travelLabel, TextStyles.FootnoteEmphasized)
+            : Vector2.Zero;
+        var travelHeight = canTravel ? TravelPillHeight * scale : 0f;
         var stamp = MeasureStamp(message, mine, scale);
         var maxTextWidth = available * 0.74f - paddingX * 2f - badgeColumn;
         var eyebrowSize = Typography.Measure(eyebrow, TextStyles.FootnoteEmphasized);
@@ -818,12 +828,19 @@ internal sealed class ChatTranscript
             contentWidth = MathF.Max(contentWidth, forwardLabel.X);
         }
 
+        if (canTravel)
+        {
+            contentWidth = MathF.Max(contentWidth,
+                travelLabelSize.X + (TravelIconSpace + 24f) * scale);
+        }
+
         var textHeight = eyebrowSize.Y + 3f * scale + zoneSize.Y
                          + (worldSize.Y > 0f ? 2f * scale + worldSize.Y : 0f)
                          + (detailSize.Y > 0f ? 2f * scale + detailSize.Y : 0f);
         var forwardBlock = forwardLabel.Y > 0f ? forwardLabel.Y + 3f * scale : 0f;
+        var travelBlock = canTravel ? 7f * scale + travelHeight : 0f;
         var bubbleWidth = contentWidth + paddingX * 2f;
-        var bubbleHeight = paddingY + forwardBlock + textHeight + 4f * scale + stamp.Height + paddingY;
+        var bubbleHeight = paddingY + forwardBlock + textHeight + travelBlock + 4f * scale + stamp.Height + paddingY;
         var start = ImGui.GetCursorScreenPos();
         var bubbleMin = new Vector2(mine ? start.X + available - bubbleWidth : start.X, start.Y);
         var bubbleMax = bubbleMin + new Vector2(bubbleWidth, bubbleHeight);
@@ -889,11 +906,45 @@ internal sealed class ChatTranscript
                 TextStyles.Footnote.Scale * fx.Pop, TextStyles.Footnote.Weight);
         }
 
+        var travelHovered = false;
+        if (canTravel)
+        {
+            var travelTop = bubbleMin.Y + paddingY + forwardBlock + textHeight + 7f * scale;
+            var travelMin = new Vector2(bubbleMin.X + paddingX, travelTop);
+            var travelMax = new Vector2(bubbleMax.X - paddingX, travelTop + travelHeight);
+            travelHovered = entrance >= 1f && Hovering(travelMin, travelMax);
+            var travelFill = mine
+                ? new Vector4(1f, 1f, 1f, travelHovered ? 0.30f : 0.20f)
+                : Palette.WithAlpha(model.Accent, travelHovered ? 0.34f : 0.22f);
+            Squircle.Fill(drawList, fx.Apply(travelMin), fx.Apply(travelMax), travelHeight * 0.5f * fx.Pop,
+                ImGui.GetColorU32(Palette.WithAlpha(travelFill, travelFill.W * fx.Alpha)));
+            var travelCenterY = travelTop + travelHeight * 0.5f;
+            var iconSpace = TravelIconSpace * scale;
+            var contentLeft = (travelMin.X + travelMax.X) * 0.5f - (travelLabelSize.X + iconSpace) * 0.5f;
+            AppSkin.Icon(drawList, fx.Apply(new Vector2(contentLeft + iconSpace * 0.4f, travelCenterY)),
+                FontAwesomeIcon.LocationArrow.ToIconString(),
+                Palette.WithAlpha(accentInk, accentInk.W * fx.Alpha), 0.62f * fx.Pop);
+            Typography.Draw(drawList,
+                fx.Apply(new Vector2(contentLeft + iconSpace, travelCenterY - travelLabelSize.Y * 0.5f)),
+                travelLabel, Palette.WithAlpha(accentInk, accentInk.W * fx.Alpha),
+                TextStyles.FootnoteEmphasized.Scale * fx.Pop, TextStyles.FootnoteEmphasized.Weight);
+            if (travelHovered)
+            {
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                HoverTooltip.Show(new Rect(travelMin, travelMax), TravelPlanner.Label(in destination),
+                    HoverLabelSide.Above);
+                if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+                {
+                    StartTravel(in destination);
+                }
+            }
+        }
+
         var timeColor = mine ? new Vector4(1f, 1f, 1f, 0.72f) : Palette.WithAlpha(model.MutedInk, 0.95f);
         DrawStamp(drawList, stamp, new Vector2(bubbleMax.X - paddingX, bubbleMax.Y - paddingY), fx, timeColor);
         if (entrance >= 1f && Hovering(bubbleMin, bubbleMax))
         {
-            if (location.MapId != 0)
+            if (location.MapId != 0 && !travelHovered)
             {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                 HoverTooltip.Show(new Rect(bubbleMin, bubbleMax), Loc.T(L.DirectMessages.LocationOpenMap),
@@ -912,6 +963,24 @@ internal sealed class ChatTranscript
 
         var chipRow = DrawReactionChips(drawList, message, mine, bubbleMin, bubbleMax, fx.Alpha, model, scale);
         ImGui.SetCursorScreenPos(new Vector2(start.X, start.Y + bubbleHeight + chipRow + BubbleGap * scale));
+    }
+
+    private static void StartTravel(in TravelDestination destination)
+    {
+        var outcome = TravelPlanner.Go(in destination);
+        if (outcome == LifestreamOutcome.Started)
+        {
+            return;
+        }
+
+        if (outcome == LifestreamOutcome.NotInstalled)
+        {
+            ImGui.SetClipboardText(TravelPlanner.Command(in destination));
+            CopyToast.Show();
+            return;
+        }
+
+        CopyToast.Show(TravelPlanner.Notice(outcome, in destination));
     }
 
     private void DrawMusterBubble(TranscriptMessage message, int index, string musterId, in ChatTranscriptModel model)

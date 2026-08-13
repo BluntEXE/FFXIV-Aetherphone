@@ -332,9 +332,10 @@ internal sealed partial class MusterApp
         }
 
         var destination = includeTravel
-            ? MusterTravel.Resolve(muster, store.CurrentWorldId, store.CurrentTerritoryId)
+            ? TravelPlanner.Resolve((uint)muster.TerritoryId, (uint)muster.WorldId, (uint)store.CurrentWorldId,
+                store.CurrentTerritoryId)
             : default;
-        var alreadyThere = destination.Kind == MusterTravelKind.AlreadyThere;
+        var alreadyThere = destination.Kind == TravelKind.AlreadyThere;
         if (alreadyThere)
         {
             locationLines[lineCount++] = Loc.T(L.Muster.YoureHere);
@@ -395,16 +396,14 @@ internal sealed partial class MusterApp
             actionsHeight = actionHeight;
         }
 
-        if (MusterTravel.CanGo(in destination))
+        if (TravelPlanner.CanGo(in destination))
         {
             var travelTop = actionTop + (actionsHeight > 0f ? actionsHeight + gap : 0f);
             var travelRect = new Rect(new Vector2(origin.X, travelTop),
                 new Vector2(origin.X + width, travelTop + actionHeight));
             var travelLabel = JustCopied("travel")
                 ? Loc.T(L.Muster.Copied)
-                : destination.Kind == MusterTravelKind.World
-                    ? Loc.T(L.Muster.TravelTo, destination.Name)
-                    : Loc.T(L.Muster.TeleportTo, destination.Name);
+                : TravelPlanner.Label(in destination);
             if (ui.PillButton(travelRect, travelLabel, true, "muster.detail.travel"))
             {
                 TravelTo(in destination);
@@ -433,11 +432,11 @@ internal sealed partial class MusterApp
         return gap + Typography.MeasureWrappedBlock(travelNotice, TextStyles.Footnote, textWidth).Y;
     }
 
-    private void TravelTo(in MusterDestination destination)
+    private void TravelTo(in TravelDestination destination)
     {
         travelNotice = string.Empty;
         travelNoticeTimer = 0f;
-        var outcome = MusterTravel.Go(in destination);
+        var outcome = TravelPlanner.Go(in destination);
         lifestreamAvailable = outcome != LifestreamOutcome.NotInstalled;
         if (outcome == LifestreamOutcome.Started)
         {
@@ -446,22 +445,13 @@ internal sealed partial class MusterApp
 
         if (outcome == LifestreamOutcome.NotInstalled)
         {
-            Copy("travel", MusterTravel.Command(in destination));
+            Copy("travel", TravelPlanner.Command(in destination));
             return;
         }
 
-        travelNotice = TravelNotice(outcome, in destination);
+        travelNotice = TravelPlanner.Notice(outcome, in destination);
         travelNoticeTimer = NoticeSeconds;
     }
-
-    private static string TravelNotice(LifestreamOutcome outcome, in MusterDestination destination) =>
-        outcome switch
-        {
-            LifestreamOutcome.Busy => Loc.T(L.Muster.TravelBusy),
-            LifestreamOutcome.NotAttuned => Loc.T(L.Muster.TravelNotAttuned, destination.GatewayName),
-            LifestreamOutcome.WorldUnreachable => Loc.T(L.Muster.TravelNoWorld, destination.Name),
-            _ => Loc.T(L.Muster.TravelBlocked),
-        };
 
     private void DrawDetailActions(MusterDto muster, float scale)
     {

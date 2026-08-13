@@ -58,6 +58,18 @@ internal static class LocationShare
         return new SharedLocation(territoryId, mapId, mapX, mapY, player.CurrentWorld.RowId, ward, plot, room);
     }
 
+    public static uint CurrentWorldId()
+    {
+        if (!Plugin.ClientState.IsLoggedIn)
+        {
+            return 0;
+        }
+
+        return Plugin.ObjectTable.LocalPlayer?.CurrentWorld.RowId ?? 0;
+    }
+
+    public static (short Ward, short Plot, short Room) CurrentHousing() => ReadHousing();
+
     public static string Compose(in SharedLocation location)
     {
         return string.Create(CultureInfo.InvariantCulture,
@@ -263,13 +275,23 @@ internal static class LocationShare
                     return (0, 0, 0);
                 }
 
-                var wardIndex = housing->GetCurrentWard();
-                var plotIndex = housing->GetCurrentPlot();
-                var roomNumber = housing->GetCurrentRoom();
-                var ward = wardIndex >= 0 && wardIndex < MaxWardIndex ? (short)(wardIndex + 1) : (short)0;
-                var plot = plotIndex >= 0 && plotIndex < MaxPlotIndex ? (short)(plotIndex + 1) : (short)0;
-                var room = roomNumber > 0 ? roomNumber : (short)0;
-                return (ward, plot, room);
+                var ward = OneBased(housing->GetCurrentWard(), MaxWardIndex);
+                var plot = OneBased(housing->GetCurrentPlot(), MaxPlotIndex);
+                var room = PositiveRoom(housing->GetCurrentRoom());
+                if ((ward != 0 && plot != 0) || housing->IndoorTerritory == null)
+                {
+                    return (ward, plot, room);
+                }
+
+                var indoor = housing->GetCurrentIndoorHouseId();
+                var indoorWard = OneBased(indoor.WardIndex, MaxWardIndex);
+                if (indoorWard == 0)
+                {
+                    return (ward, plot, room);
+                }
+
+                return (indoorWard, plot != 0 ? plot : OneBased(indoor.PlotIndex, MaxPlotIndex),
+                    room != 0 ? room : PositiveRoom(indoor.RoomNumber));
             }
         }
         catch (Exception exception)
@@ -278,4 +300,9 @@ internal static class LocationShare
             return (0, 0, 0);
         }
     }
+
+    private static short OneBased(int index, int limit) =>
+        index >= 0 && index < limit ? (short)(index + 1) : (short)0;
+
+    private static short PositiveRoom(int roomNumber) => roomNumber > 0 ? (short)roomNumber : (short)0;
 }

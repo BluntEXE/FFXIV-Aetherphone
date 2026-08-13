@@ -99,7 +99,7 @@ Server-backed messages are `ChatMessageDto` records (src/Aetherphone/Core/Aether
 | Forwarding | `Forwarded` on the DTO, `ForwardOfId` on the send request; `DirectMessagesStore.ForwardMessage` | Bubbles show a "forwarded" label; encrypted text is decrypted and re-encrypted for the target thread, encrypted media cannot be forwarded |
 | Voice notes | kind 3, `DurationSecs` | Recorded as WAV, uploaded via `MediaClient`; playback downloads, optionally decrypts, and caches bytes in `ChatThreadView`, played by `VoiceNotePlayer` |
 | Images | kind 1, `MediaWidth/Height` | `SendImageMessage` re-encodes to JPEG capped at `DmImageMaxDimension` (1280), uploads, then creates the message with the media key |
-| Location | token in body | `LocationShare.Compose` produces `[aep.loc.v1:territory;map;x;y;world;ward;plot;room]` (8 semicolon-separated fields); the transcript renders a card and clicking it calls `LocationShare.OpenMap` |
+| Location | token in body | `LocationShare.Compose` produces `[aep.loc.v1:territory;map;x;y;world;ward;plot;room]` (8 semicolon-separated fields); the transcript renders a card and clicking it calls `LocationShare.OpenMap`, and a "Go there" pill inside the card travels through `TravelPlanner` when the share resolves to a reachable destination |
 | Starring | src/Aetherphone/Core/Message/StarredMessage.cs | Message app only; a local bookmark list in `Configuration.MessageStarredMessages`, not a server feature |
 
 Encryption is out of scope here (see [networking.md](networking.md)); the short version is that `EncVersion == EnvelopeCodec.VersionEnvelope` marks an end-to-end encrypted body, `DecorateMessages` swaps in decrypted text via `MessageCipher`, and the transcript shows placeholder styling until decryption succeeds.

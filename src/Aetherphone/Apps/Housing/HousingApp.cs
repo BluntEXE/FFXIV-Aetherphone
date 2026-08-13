@@ -5,6 +5,7 @@ using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Housing;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
+using Aetherphone.Core.Venues;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -377,6 +378,26 @@ internal sealed partial class HousingApp : IPhoneApp
     {
         toast = message;
         toastRemaining = ToastSeconds;
+    }
+
+    private void TravelTo(HousingPlotKey key)
+    {
+        var outcome = HousingTravel.Go(key);
+        if (outcome == LifestreamOutcome.Started)
+        {
+            ShowToast(Loc.T(L.Housing.TravelStarted,
+                HousingFormat.Place(HousingDistricts.DisplayName(key.DistrictId), key.Ward), key.Plot));
+            return;
+        }
+
+        if (outcome == LifestreamOutcome.NotInstalled)
+        {
+            ImGui.SetClipboardText(HousingTravel.Command(key, housing.WorldNameOf(key.WorldId)));
+            ShowToast(Loc.T(L.Housing.TravelNeedsLifestream));
+            return;
+        }
+
+        ShowToast(Loc.T(HousingTravel.Message(outcome)));
     }
 
     private void DrawToast(Rect area, float scale)
