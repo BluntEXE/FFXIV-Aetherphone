@@ -14,7 +14,9 @@ internal sealed class StoredChunk
 
     [JsonProperty("w")] public string World { get; set; } = string.Empty;
 
-    [JsonProperty("i")] public uint ItemId { get; set; }
+    [JsonProperty("i")] public uint Id { get; set; }
+
+    [JsonProperty("p")] public string Plugin { get; set; } = string.Empty;
 
     [JsonProperty("r")] public uint TerritoryId { get; set; }
 
@@ -390,17 +392,17 @@ internal sealed class ChatArchive : IDisposable
 
     private static List<StoredChunk>? StoreChunks(ChatChunk[] chunks)
     {
-        var hasLink = false;
+        var plain = true;
         for (var index = 0; index < chunks.Length; index++)
         {
-            if (chunks[index].IsLink)
+            if (!chunks[index].IsPlainText)
             {
-                hasLink = true;
+                plain = false;
                 break;
             }
         }
 
-        if (!hasLink)
+        if (plain)
         {
             return null;
         }
@@ -414,7 +416,8 @@ internal sealed class ChatArchive : IDisposable
                 Kind = (byte)chunk.Kind,
                 Text = chunk.Text,
                 World = chunk.World,
-                ItemId = chunk.ItemId,
+                Plugin = chunk.Plugin,
+                Id = chunk.Id,
                 TerritoryId = chunk.TerritoryId,
                 MapId = chunk.MapId,
                 RawX = chunk.RawX,
@@ -438,9 +441,14 @@ internal sealed class ChatArchive : IDisposable
             var chunk = chunks[index];
             restored[index] = (ChatChunkKind)chunk.Kind switch
             {
+                ChatChunkKind.AutoTranslate => ChatChunk.AutoTranslate(chunk.Text),
                 ChatChunkKind.Player => ChatChunk.Player(chunk.Text, chunk.World),
-                ChatChunkKind.Item => ChatChunk.Item(chunk.Text, chunk.ItemId),
+                ChatChunkKind.Item => ChatChunk.Item(chunk.Text, chunk.Id),
                 ChatChunkKind.Map => ChatChunk.Map(chunk.Text, chunk.TerritoryId, chunk.MapId, chunk.RawX, chunk.RawY),
+                ChatChunkKind.Status => ChatChunk.Status(chunk.Text, chunk.Id),
+                ChatChunkKind.Quest => ChatChunk.Quest(chunk.Text, chunk.Id),
+                ChatChunkKind.PartyFinder => ChatChunk.PartyFinder(chunk.Text, chunk.Id),
+                ChatChunkKind.PluginLink => ChatChunk.PluginLink(chunk.Text, chunk.Plugin, chunk.Id),
                 _ => ChatChunk.Plain(chunk.Text),
             };
         }

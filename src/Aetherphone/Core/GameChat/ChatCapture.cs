@@ -117,9 +117,6 @@ internal sealed class ChatCapture : IDisposable
         {
             switch (payloads[index])
             {
-                case TextPayload textPayload:
-                    AppendText(textPayload.Text, ref link);
-                    break;
                 case PlayerPayload player:
                     FlushText();
                     link = PendingLink.ForPlayer(player.PlayerName, gameData.WorldName(player.World.RowId));
@@ -132,6 +129,28 @@ internal sealed class ChatCapture : IDisposable
                     FlushText();
                     link = PendingLink.ForMap(map.TerritoryType.RowId, map.Map.RowId, map.RawX, map.RawY,
                         string.Concat(map.PlaceName, " ", map.CoordinateString));
+                    break;
+                case StatusPayload status:
+                    FlushText();
+                    link = PendingLink.ForId(ChatChunkKind.Status, status.Status.RowId);
+                    break;
+                case QuestPayload quest:
+                    FlushText();
+                    link = PendingLink.ForId(ChatChunkKind.Quest, quest.Quest.RowId);
+                    break;
+                case PartyFinderPayload partyFinder:
+                    FlushText();
+                    link = PendingLink.ForId(ChatChunkKind.PartyFinder, partyFinder.ListingId);
+                    break;
+                case DalamudLinkPayload pluginLink:
+                    FlushText();
+                    link = PendingLink.ForPlugin(pluginLink.Plugin, pluginLink.CommandId);
+                    break;
+                case AutoTranslatePayload autoTranslate:
+                    AppendAutoTranslate(autoTranslate.Text, ref link);
+                    break;
+                case ITextProvider provider:
+                    AppendText(provider.Text, ref link);
                     break;
             }
         }
@@ -162,6 +181,26 @@ internal sealed class ChatCapture : IDisposable
 
         AddLink(link, cleaned);
         link = PendingLink.None;
+    }
+
+    private void AppendAutoTranslate(string? value, ref PendingLink link)
+    {
+        var cleaned = Clean(value);
+        if (cleaned.Length == 0)
+        {
+            return;
+        }
+
+        if (link.Active)
+        {
+            AddLink(link, cleaned);
+            link = PendingLink.None;
+            return;
+        }
+
+        FlushText();
+        chunks.Add(ChatChunk.AutoTranslate(cleaned));
+        flatText.Append(cleaned);
     }
 
     private void AddLink(PendingLink link, string label)
@@ -320,11 +359,21 @@ internal sealed class ChatCapture : IDisposable
         public static PendingLink ForMap(uint territoryId, uint mapId, int rawX, int rawY, string label) =>
             new(ChatChunkKind.Map, string.Empty, 0u, territoryId, mapId, rawX, rawY, label);
 
+        public static PendingLink ForId(ChatChunkKind kind, uint id) =>
+            new(kind, string.Empty, id, 0u, 0u, 0, 0, string.Empty);
+
+        public static PendingLink ForPlugin(string plugin, uint commandId) =>
+            new(ChatChunkKind.PluginLink, plugin, commandId, 0u, 0u, 0, 0, string.Empty);
+
         public ChatChunk Resolve(string text) => kind switch
         {
             ChatChunkKind.Player => ChatChunk.Player(text, world),
             ChatChunkKind.Item => ChatChunk.Item(text, itemId),
             ChatChunkKind.Map => ChatChunk.Map(text, territoryId, mapId, rawX, rawY),
+            ChatChunkKind.Status => ChatChunk.Status(text, itemId),
+            ChatChunkKind.Quest => ChatChunk.Quest(text, itemId),
+            ChatChunkKind.PartyFinder => ChatChunk.PartyFinder(text, itemId),
+            ChatChunkKind.PluginLink => ChatChunk.PluginLink(text, world, itemId),
             _ => ChatChunk.Plain(text),
         };
     }
