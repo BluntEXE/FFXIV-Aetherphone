@@ -54,7 +54,7 @@ internal static class AppRegistry
         var contactBook = new ContactBook(services.Aethernet.Contacts, services.AethernetSession);
         var apps = new List<IPhoneApp>
         {
-            new LinkpearlApp(services.ChatInbox, services.ChatTabs, services.LinkpearlNotificationGate, services.LinkpearlLauncher, services.Lodestone, services.Notifications, services.GameData, services.Lookup, services.Confirm, services.ChatLog, services.ChatSend),
+            new LinkpearlApp(services.ChatInbox, services.ChatTabs, services.ChatArchive, services.LinkpearlNotificationGate, services.LinkpearlLauncher, services.Lodestone, services.Notifications, services.GameData, services.Lookup, services.Confirm, services.ChatLog, services.ChatSend),
             new ActivityApp(services.GameData, services.Activity, services.Configuration),
             new HealthApp(services.Health, services.GameData, services.Confirm),
         };

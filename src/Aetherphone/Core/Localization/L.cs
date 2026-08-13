@@ -2704,6 +2704,29 @@ internal static class L
         public static readonly LocString Unpin = new("linkpearl.unpin", "Unpin");
         public static readonly LocString DeleteTab = new("linkpearl.deleteTab", "Delete tab");
         public static readonly LocString DeleteTabConfirm = new("linkpearl.deleteTabConfirm", "Delete this tab? Your chat history stays.");
+        public static readonly LocString NewTab = new("linkpearl.newTab", "New tab");
+        public static readonly LocString EditTab = new("linkpearl.editTab", "Edit tab");
+        public static readonly LocString TabName = new("linkpearl.tabName", "Name");
+        public static readonly LocString TabTint = new("linkpearl.tabTint", "Color");
+        public static readonly LocString TabSettings = new("linkpearl.tabSettings", "Tab settings");
+        public static readonly LocString Channels = new("linkpearl.channels", "Channels");
+        public static readonly LocString NoChannels = new("linkpearl.noChannels", "Pick at least one channel.");
+        public static readonly LocString EmptySlot = new("linkpearl.emptySlot", "Empty slot");
+        public static readonly LocString RepliesGoTo = new("linkpearl.repliesGoTo", "Replies go to");
+        public static readonly LocString Layout = new("linkpearl.layout", "Layout");
+        public static readonly LocString LayoutCompact = new("linkpearl.layoutCompact", "Compact");
+        public static readonly LocString LayoutBubbles = new("linkpearl.layoutBubbles", "Bubbles");
+        public static readonly LocString KeepHistory = new("linkpearl.keepHistory", "Keep history");
+        public static readonly LocString HistoryOff = new("linkpearl.historyOff", "Off");
+        public static readonly LocString HistorySession = new("linkpearl.historySession", "This session");
+        public static readonly LocString HistoryDays30 = new("linkpearl.historyDays30", "30 days");
+        public static readonly LocString HistoryForever = new("linkpearl.historyForever", "Forever");
+        public static readonly LocString HistoryMixed = new("linkpearl.historyMixed", "Mixed");
+        public static readonly LocString Alerts = new("linkpearl.alerts", "Alerts");
+        public static readonly LocString AlertsAll = new("linkpearl.alertsAll", "All messages");
+        public static readonly LocString AlertsMentions = new("linkpearl.alertsMentions", "Mentions only");
+        public static readonly LocString AlertsOff = new("linkpearl.alertsOff", "Off");
+        public static readonly LocString StoredOnThisPc = new("linkpearl.storedOnThisPc", "History is kept on this PC only.");
     }
 
     internal static class Character
