@@ -5,6 +5,7 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
+using Aetherphone.Core.Social;
 
 namespace Aetherphone.Apps.Velvet.Kit;
 
@@ -43,6 +44,8 @@ internal struct VRowModel
     public int Badge;
     public int RoleBadges;
     public string[]? RoleBadgeIds;
+
+    public string? FrameId;
     public string? UserId;
     public string Time;
     public bool Chevron;
@@ -83,7 +86,7 @@ internal static class VRow
             var radius = (model.AvatarRadius <= 0f ? 20f : model.AvatarRadius) * scale;
             var avatarCenter = new Vector2(min.X + leftPad + radius, centerY);
             VAvatar.Draw(drawList, avatarCenter, radius, theme, nameText, worldText, model.AvatarUrl, images,
-                lodestone, model.Presence);
+                lodestone, model.Presence, null, Frames.Of(model.FrameId));
             textLeft = avatarCenter.X + radius + Metrics.Space.Md * scale;
         }
         else if (model.Leading == VRowLeading.IconTile)

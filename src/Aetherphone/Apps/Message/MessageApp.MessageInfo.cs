@@ -8,6 +8,7 @@ using Aetherphone.Core.YellowPages;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
+using Aetherphone.Core.Social;
 
 namespace Aetherphone.Apps.Message;
 
@@ -225,7 +226,7 @@ internal sealed partial class MessageApp
         var avatarCenter = new Vector2(origin.X + pad + radius, origin.Y + rowHeight * 0.5f);
         var label = member.DisplayName.Length > 0 ? member.DisplayName : member.Handle;
         AvatarView.DrawRemote(drawList, avatarCenter, radius, theme, label, string.Empty, member.AvatarUrl, images,
-            lodestone, 0.85f, 32);
+            lodestone, 0.85f, 32, 1f, Frames.Of(member.FrameId));
         var textLeft = avatarCenter.X + radius + 12f * scale;
         var stampWidth = stamp.Length > 0 ? Typography.Measure(stamp, 0.80f).X + 10f * scale : 0f;
         var labelMaxWidth = MathF.Max(1f, origin.X + width - pad - 26f * scale - stampWidth - textLeft);

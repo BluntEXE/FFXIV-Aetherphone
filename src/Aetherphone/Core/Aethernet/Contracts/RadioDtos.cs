@@ -25,7 +25,8 @@ internal sealed record CommunityStationDto(
     int Followers,
     long NextBroadcastAtUnix,
     bool RepeatsWeekly,
-    string[]? OwnerBadgeIds = null);
+    string[]? OwnerBadgeIds = null,
+    string OwnerFrameId = "");
 
 internal sealed record RadioFollowResultDto(bool Following, int Followers);
 

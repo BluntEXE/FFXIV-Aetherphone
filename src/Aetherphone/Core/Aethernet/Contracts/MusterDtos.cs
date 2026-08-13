@@ -51,7 +51,8 @@ internal sealed record MusterDto(
     string HostDisplayName = "",
     string HostHandle = "",
     int HostBadges = 0,
-    string[]? HostBadgeIds = null) : IIdentified;
+    string[]? HostBadgeIds = null,
+    string HostFrameId = "") : IIdentified;
 
 internal sealed record MusterPage(MusterDto[] Items, string? NextCursor);
 
@@ -81,7 +82,8 @@ internal sealed record MusterAttendeeDto(
     long StatusAtUnix,
     long CreatedAtUnix,
     int Badges = 0,
-    string[]? BadgeIds = null);
+    string[]? BadgeIds = null,
+    string FrameId = "");
 
 internal sealed record MusterSync(
     MusterDto? Mine,

@@ -557,7 +557,8 @@ internal sealed partial class AethergramApp : IPhoneApp
         var radius = 20f * scale;
         var avatarCenter = new Vector2(origin.X + radius, origin.Y + rowHeight * 0.5f);
         var displayName = SocialIdentity.Name(user.DisplayName, user.Handle);
-        DrawAvatar(avatarCenter, radius, displayName, string.Empty, user.AvatarUrl, 0.95f, 32);
+        DrawAvatar(avatarCenter, radius, displayName, string.Empty, user.AvatarUrl, 0.95f, 32,
+            Frames.Of(user.FrameId));
         var textLeft = avatarCenter.X + radius + 12f * scale;
         Typography.Draw(new Vector2(textLeft, origin.Y + 9f * scale), displayName, theme.TextStrong, 1f,
             FontWeight.SemiBold);
@@ -864,7 +865,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         }
 
         DrawAvatar(avatarCenter, avatarRadius - 1f * scale, SocialIdentity.Name(post.AuthorDisplayName, post.AuthorHandle),
-            string.Empty, post.AuthorAvatarUrl, 0.85f, 32);
+            string.Empty, post.AuthorAvatarUrl, 0.85f, 32, Frames.Of(post.AuthorFrameId));
         var nameLeft = avatarCenter.X + avatarRadius + PostCardMetrics.NameGap * scale;
         var headerTextRight = origin.X + width - pad - 34f * scale;
         var headerTextMaxWidth = MathF.Max(1f, headerTextRight - nameLeft);
@@ -1240,7 +1241,7 @@ internal sealed partial class AethergramApp : IPhoneApp
                 ImGui.GetColorU32(AppPalettes.Aethergram.TitleInk), 32, 1.6f * scale);
         }
 
-        DrawAvatar(center, radius, me.Name, me.World, me.AvatarUrl, 0.85f, 28);
+        DrawAvatar(center, radius, me.Name, me.World, me.AvatarUrl, 0.85f, 28, Frames.Of(me.FrameId));
         var hit = new Vector2(NavHitRadius * scale, NavHitRadius * scale);
         HoverTooltip.Show(new Rect(center - hit, center + hit), label, HoverLabelSide.Above);
         if (UiInteract.HoverClick(center - hit, center + hit))
@@ -1250,10 +1251,10 @@ internal sealed partial class AethergramApp : IPhoneApp
     }
 
     private void DrawAvatar(Vector2 center, float radius, string name, string world, string? avatarUrl,
-        float monogramScale, int segments)
+        float monogramScale, int segments, FrameStyle? frame = null)
     {
         AvatarView.DrawRemote(ImGui.GetWindowDrawList(), center, radius, theme, name, world, avatarUrl, images,
-            lodestone, monogramScale, segments);
+            lodestone, monogramScale, segments, 1f, frame);
     }
 
     private void OpenProfile(string userId)

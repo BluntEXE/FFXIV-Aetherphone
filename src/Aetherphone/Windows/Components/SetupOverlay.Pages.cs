@@ -7,6 +7,7 @@ using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
+using Aetherphone.Core.Social;
 
 namespace Aetherphone.Windows.Components;
 
@@ -150,7 +151,7 @@ internal sealed partial class SetupOverlay
         {
             var avatarCenter = new Vector2(screen.Center.X + offset.X, y + 24f * scale + avatarRadius);
             AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, user.Name, user.World, user.AvatarUrl,
-                images, lodestone, 1.6f, 48, alpha);
+                images, lodestone, 1.6f, 48, alpha, Frames.Of(user.FrameId));
         }
 
         if (Primary(drawList, ButtonRect(screen, offset, 0), Loc.T(L.Onboarding.Continue), theme.Accent, alpha, live))
@@ -317,7 +318,7 @@ internal sealed partial class SetupOverlay
         var centerX = screen.Center.X + offset.X;
         var avatarCenter = new Vector2(centerX, top + avatarRadius);
         AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, name, world, user?.AvatarUrl, images,
-            lodestone, 2.4f, 64, alpha);
+            lodestone, 2.4f, 64, alpha, Frames.Of(user?.FrameId));
         var titleCenter = new Vector2(centerX, top + avatarRadius * 2f + 30f * scale + titleHeight * 0.5f);
         Typography.DrawCentered(drawList, titleCenter, Loc.T(L.Setup.PhotoTitle), Fade(InkStrong, alpha),
             TextStyles.Title1);

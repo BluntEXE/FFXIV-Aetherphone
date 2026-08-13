@@ -149,7 +149,7 @@ internal sealed partial class MessageApp
         if (known is not null && !string.IsNullOrEmpty(known.AvatarUrl))
         {
             AvatarView.DrawRemote(drawList, avatarCenter, radius, theme, name, string.Empty, known.AvatarUrl, images,
-                lodestone, 1f, 32);
+                lodestone, 1f, 32, 1f, Frames.Of(known.FrameId));
         }
         else
         {
@@ -309,7 +309,7 @@ internal sealed partial class MessageApp
         var radius = 22f * scale;
         var avatarCenter = new Vector2(origin.X + pad + radius, origin.Y + rowHeight * 0.5f);
         AvatarView.DrawRemote(drawList, avatarCenter, radius, theme, label, string.Empty, contact.AvatarUrl, images,
-            lodestone, 1f, 32);
+            lodestone, 1f, 32, 1f, Frames.Of(contact.FrameId));
         var callCenter = new Vector2(rowMax.X - pad - 18f * scale, avatarCenter.Y);
         var actionLeft = callCenter.X - 24f * scale;
         var textLeft = avatarCenter.X + radius + 14f * scale;

@@ -7,6 +7,7 @@ using Aetherphone.Core.Media;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
+using Aetherphone.Core.Social;
 
 namespace Aetherphone.Windows.Components;
 
@@ -76,7 +77,7 @@ internal static class SettingsHero
         }
 
         AvatarView.DrawRemote(drawList, center, radius, theme, user.Name, user.World, user.AvatarUrl, images,
-            lodestone, 1.5f, 48);
+            lodestone, 1.5f, 48, 1f, Frames.Of(user.FrameId));
     }
 
     private static void DrawChevron(ImDrawListPtr drawList, Vector2 tip, float size, float thickness, Vector4 color)

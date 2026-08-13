@@ -7,6 +7,7 @@ using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
+using Aetherphone.Core.Social;
 
 namespace Aetherphone.Apps.Message;
 
@@ -140,7 +141,7 @@ internal sealed partial class MessageApp
         var avatarCenter = new Vector2(origin.X + pad + radius, origin.Y + rowHeight * 0.5f);
         var label = ContactBook.DisplayLabel(contact);
         AvatarView.DrawRemote(drawList, avatarCenter, radius, theme, label, string.Empty, contact.AvatarUrl, images,
-            lodestone, 0.85f, 32);
+            lodestone, 0.85f, 32, 1f, Frames.Of(contact.FrameId));
         var textLeft = avatarCenter.X + radius + 12f * scale;
         var labelWidth = origin.X + width - 44f * scale - textLeft;
         var labelY = origin.Y + rowHeight * 0.5f - 9f * scale;

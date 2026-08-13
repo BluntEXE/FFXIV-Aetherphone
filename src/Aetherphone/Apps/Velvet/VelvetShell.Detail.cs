@@ -67,7 +67,7 @@ internal sealed partial class VelvetShell
             var avatarCenter = new Vector2(origin.X + avatarRadius, origin.Y + headerHeight * 0.5f);
             var authorName = DisplayNameOf(post.OwnerDisplayName, post.OwnerHandle);
             VAvatar.Draw(drawList, avatarCenter, avatarRadius, theme, authorName, string.Empty, post.OwnerAvatarUrl,
-                images, lodestone, -1);
+                images, lodestone, -1, null, Frames.Of(post.OwnerFrameId));
             var nameLeft = avatarCenter.X + avatarRadius + 10f * scale;
             var ownerSub = post.OwnerHandle.Length > 0 ? "@" + post.OwnerHandle : string.Empty;
             var ownerTime = TimeText.Short(post.CreatedAtUnix);
@@ -266,7 +266,7 @@ internal sealed partial class VelvetShell
         var avatarCenter = new Vector2(origin.X + avatarRadius, origin.Y + avatarRadius);
         var authorName = DisplayNameOf(comment.AuthorDisplayName, comment.AuthorHandle);
         VAvatar.Draw(drawList, avatarCenter, avatarRadius, theme, authorName, string.Empty, comment.AuthorAvatarUrl,
-            images, lodestone, -1);
+            images, lodestone, -1, null, Frames.Of(comment.AuthorFrameId));
         var textLeft = avatarCenter.X + avatarRadius + 10f * scale;
         var wrapWidth = origin.X + width - 28f * scale - textLeft;
         var nameMaxWidth = wrapWidth * 0.55f;
@@ -433,6 +433,7 @@ internal sealed partial class VelvetShell
                     Name = DisplayNameOf(user.DisplayName, user.Handle),
                     World = string.Empty,
                     AvatarUrl = user.AvatarUrl,
+                    FrameId = user.FrameId,
                     RoleBadges = user.Badges,
                     RoleBadgeIds = user.ProfileBadges,
                     UserId = user.Id,

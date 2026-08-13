@@ -175,7 +175,7 @@ internal sealed partial class VelvetShell
         }
 
         VAvatar.Draw(drawList, avatarCenter, hasStory ? avatarRadius - 1f * scale : avatarRadius, theme, authorName,
-            string.Empty, entry.OwnerAvatarUrl, images, lodestone, -1);
+            string.Empty, entry.OwnerAvatarUrl, images, lodestone, -1, null, Frames.Of(entry.OwnerFrameId));
         var nameLeft = avatarCenter.X + avatarRadius + PostCardMetrics.NameGap * scale;
         var headerTextRight = origin.X + width - pad - 34f * scale;
         var headerTextMaxWidth = MathF.Max(1f, headerTextRight - nameLeft);

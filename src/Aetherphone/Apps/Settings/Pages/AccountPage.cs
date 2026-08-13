@@ -252,7 +252,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         var radius = 38f * scale;
         var avatarCenter = new Vector2(centerX, origin.Y + 10f * scale + radius);
         AvatarView.DrawRemote(drawList, avatarCenter, radius, theme, user.Name, user.World, user.AvatarUrl, images,
-            lodestone, 2.0f, 64);
+            lodestone, 2.0f, 64, 1f, Frames.Of(user.FrameId));
         var avatarExtent = new Vector2(radius, radius);
         var avatarMin = avatarCenter - avatarExtent;
         var avatarMax = avatarCenter + avatarExtent;

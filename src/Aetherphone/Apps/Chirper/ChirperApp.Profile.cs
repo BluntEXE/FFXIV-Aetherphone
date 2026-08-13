@@ -149,7 +149,8 @@ internal sealed partial class ChirperApp
         {
             var radius = 16f * scale;
             var center = new Vector2(area.Min.X + 16f * scale + radius, rowCenterY);
-            DrawAvatar(ImGui.GetWindowDrawList(), center, radius, me.Name, me.World, me.AvatarUrl, 0.9f, 28);
+            DrawAvatar(ImGui.GetWindowDrawList(), center, radius, me.Name, me.World, me.AvatarUrl, 0.9f, 28,
+                Frames.Of(me.FrameId));
             if (UiInteract.HoverClick(center - new Vector2(radius, radius), center + new Vector2(radius, radius)))
             {
                 OpenProfile(me.Id);

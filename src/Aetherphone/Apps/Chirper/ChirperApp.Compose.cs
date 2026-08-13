@@ -116,7 +116,7 @@ internal sealed partial class ChirperApp
             if (me is not null)
             {
                 DrawAvatar(drawList, new Vector2(cardMin.X + pad + radius, cardMin.Y + pad + radius), radius, me.Name,
-                    me.World, me.AvatarUrl, 0.95f, 48);
+                    me.World, me.AvatarUrl, 0.95f, 48, Frames.Of(me.FrameId));
             }
 
             if (displayName.Length > 0)
