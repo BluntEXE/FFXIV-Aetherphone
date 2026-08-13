@@ -26,16 +26,14 @@ internal sealed class CasinoTablesStore : IDisposable
     private volatile CasinoTableRowDto[] tables = Array.Empty<CasinoTableRowDto>();
     private volatile CasinoTableDoorDto? door;
     private volatile CasinoQuickSeatDto? quickSeat;
-    private volatile CasinoTableDto? hostedTable;
-    private volatile CasinoTableDto? resolvedTable;
+    private volatile CasinoTableRowDto? hostedTable;
+    private volatile CasinoTableRowDto? resolvedTable;
     private volatile bool loading;
     private volatile bool loaded;
     private volatile bool intentInFlight;
     private CasinoSeatOutcome? seatOutcome;
     private CasinoStakeOutcome? noticeOutcome;
     private string seatIntentId = string.Empty;
-    private string standIntentId = string.Empty;
-    private string claimIntentId = string.Empty;
     private string createIntentId = string.Empty;
     private string doorRoomId = string.Empty;
     private int seatIntentSeatIndex = -1;
@@ -114,14 +112,20 @@ internal sealed class CasinoTablesStore : IDisposable
         return Interlocked.Exchange(ref quickSeat, null);
     }
 
-    public CasinoTableDto? TakeHostedTable()
+    public CasinoTableRowDto? TakeHostedTable()
     {
         return Interlocked.Exchange(ref hostedTable, null);
     }
 
-    public CasinoTableDto? TakeResolvedTable()
+    public CasinoTableRowDto? TakeResolvedTable()
     {
         return Interlocked.Exchange(ref resolvedTable, null);
+    }
+
+    public bool Owns(CasinoTableRowDto table)
+    {
+        var me = session.CurrentUser?.Id ?? string.Empty;
+        return me.Length > 0 && string.Equals(table.OwnerUserId, me, StringComparison.Ordinal);
     }
 
     public void EnsureFresh()
@@ -194,7 +198,7 @@ internal sealed class CasinoTablesStore : IDisposable
 
         work.Run("create table", async token =>
         {
-            var answer = await casino.CreateTableAsync(clientTableId, CasinoWire.BlackjackKind, stakeTier, token)
+            var answer = await casino.CreateTableAsync(clientTableId, stakeTier, token)
                 .ConfigureAwait(false);
             if (answer is null)
             {
@@ -203,13 +207,13 @@ internal sealed class CasinoTablesStore : IDisposable
             }
 
             ForgetCreateIntent(clientTableId);
-            if (!answer.Granted)
+            if (!answer.Granted || answer.Table is null)
             {
                 Interlocked.Exchange(ref noticeOutcome, new CasinoStakeOutcome(false, Named(answer.Reason)));
                 return;
             }
 
-            Interlocked.Exchange(ref hostedTable, answer);
+            Interlocked.Exchange(ref hostedTable, answer.Table);
             RefreshNow();
         }, EndIntent);
     }
@@ -238,7 +242,7 @@ internal sealed class CasinoTablesStore : IDisposable
                 return;
             }
 
-            if (!answer.Granted)
+            if (!answer.Admitted && !Owns(answer))
             {
                 Interlocked.Exchange(ref noticeOutcome, new CasinoStakeOutcome(false, Named(answer.Reason)));
                 return;
@@ -264,8 +268,8 @@ internal sealed class CasinoTablesStore : IDisposable
                 return;
             }
 
-            Interlocked.Exchange(ref noticeOutcome, new CasinoStakeOutcome(answer.Granted,
-                answer.Granted && answer.Pending ? CasinoReasons.KnockPending : Named(answer.Reason)));
+            Interlocked.Exchange(ref noticeOutcome,
+                new CasinoStakeOutcome(answer.Granted, Named(answer.Reason)));
         }, EndIntent);
     }
 
@@ -350,7 +354,7 @@ internal sealed class CasinoTablesStore : IDisposable
 
             ForgetSeatIntent(clientSeatId);
             Interlocked.Exchange(ref seatOutcome,
-                new CasinoSeatOutcome(answer.Granted, Named(answer.Reason), answer.JoinsNextHand, false));
+                new CasinoSeatOutcome(answer.Granted, Named(answer.Reason), false, false));
             chips.RefreshNow();
         }, EndIntent);
     }
@@ -362,63 +366,18 @@ internal sealed class CasinoTablesStore : IDisposable
             return;
         }
 
-        string clientStandId;
-        lock (intentGate)
-        {
-            if (standIntentId.Length == 0)
-            {
-                standIntentId = Guid.NewGuid().ToString("N");
-            }
-
-            clientStandId = standIntentId;
-        }
-
         work.Run("stand", async token =>
         {
-            var answer = await casino.StandAsync(roomId, clientStandId, token).ConfigureAwait(false);
+            var answer = await casino.StandAsync(roomId, token).ConfigureAwait(false);
             if (answer is null)
             {
                 Interlocked.Exchange(ref intentFailed, 1);
                 return;
             }
 
-            ForgetStandIntent(clientStandId);
-            Interlocked.Exchange(ref seatOutcome,
-                new CasinoSeatOutcome(answer.Granted, Named(answer.Reason), false, answer.AtHandEnd));
-            chips.RefreshNow();
-        }, EndIntent);
-    }
-
-    public void Claim(string roomId)
-    {
-        if (roomId.Length == 0 || !Begin())
-        {
-            return;
-        }
-
-        string clientClaimId;
-        lock (intentGate)
-        {
-            if (claimIntentId.Length == 0)
-            {
-                claimIntentId = Guid.NewGuid().ToString("N");
-            }
-
-            clientClaimId = claimIntentId;
-        }
-
-        work.Run("claim seat", async token =>
-        {
-            var answer = await casino.ClaimSeatAsync(roomId, clientClaimId, token).ConfigureAwait(false);
-            if (answer is null)
-            {
-                Interlocked.Exchange(ref intentFailed, 1);
-                return;
-            }
-
-            ForgetClaimIntent(clientClaimId);
-            Interlocked.Exchange(ref seatOutcome,
-                new CasinoSeatOutcome(answer.Granted, Named(answer.Reason), answer.JoinsNextHand, false));
+            var atHandEnd = string.Equals(answer.Reason, CasinoReasons.AtHandEnd, StringComparison.Ordinal);
+            Interlocked.Exchange(ref seatOutcome, new CasinoSeatOutcome(answer.Granted,
+                atHandEnd ? string.Empty : Named(answer.Reason), false, atHandEnd));
             chips.RefreshNow();
         }, EndIntent);
     }
@@ -534,8 +493,6 @@ internal sealed class CasinoTablesStore : IDisposable
             seatIntentId = string.Empty;
             seatIntentSeatIndex = -1;
             seatIntentBuyIn = -1;
-            standIntentId = string.Empty;
-            claimIntentId = string.Empty;
             createIntentId = string.Empty;
             createIntentTier = int.MinValue;
         }
@@ -610,28 +567,6 @@ internal sealed class CasinoTablesStore : IDisposable
                 seatIntentId = string.Empty;
                 seatIntentSeatIndex = -1;
                 seatIntentBuyIn = -1;
-            }
-        }
-    }
-
-    private void ForgetStandIntent(string intentId)
-    {
-        lock (intentGate)
-        {
-            if (string.Equals(standIntentId, intentId, StringComparison.Ordinal))
-            {
-                standIntentId = string.Empty;
-            }
-        }
-    }
-
-    private void ForgetClaimIntent(string intentId)
-    {
-        lock (intentGate)
-        {
-            if (string.Equals(claimIntentId, intentId, StringComparison.Ordinal))
-            {
-                claimIntentId = string.Empty;
             }
         }
     }

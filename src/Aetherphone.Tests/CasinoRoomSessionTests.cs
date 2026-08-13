@@ -405,7 +405,7 @@ public sealed class CasinoRoomSessionTests
         session.Enter(Room);
         session.AbsorbHttpState(Room, Polled(epoch: 2, seq: 30, occupancy: 12), Now);
 
-        session.AbsorbHttpPrivate(Room, 2, 31, new CasinoBlackjackPrivateDto(7, 0, new[] { new[] { 40, 41 } }));
+        session.AbsorbHttpPrivate(Room, 2, 31, You("hand-7", 0, new[] { 40, 41 }));
 
         var personal = session.Private;
         Assert.NotNull(personal);
@@ -413,7 +413,7 @@ public sealed class CasinoRoomSessionTests
         Assert.Equal(31, personal.Seq);
         Assert.NotNull(personal.Blackjack);
         Assert.Equal(0, personal.Blackjack.SeatIndex);
-        Assert.Equal(new[] { 40, 41 }, personal.Blackjack.Hands![0]);
+        Assert.Equal(new[] { 40, 41 }, personal.Blackjack.Hands![0].Cards);
     }
 
     [Fact]
@@ -421,20 +421,26 @@ public sealed class CasinoRoomSessionTests
     {
         var session = Session(out _);
         session.Enter(Room);
-        session.AbsorbHttpPrivate(Room, 2, 31, new CasinoBlackjackPrivateDto(7, 0, new[] { new[] { 40, 41 } }));
+        session.AbsorbHttpPrivate(Room, 2, 31, You("hand-7", 0, new[] { 40, 41 }));
 
-        session.AbsorbHttpPrivate(Room, 2, 30, new CasinoBlackjackPrivateDto(6, 0, new[] { new[] { 2, 3 } }));
+        session.AbsorbHttpPrivate(Room, 2, 30, You("hand-6", 0, new[] { 2, 3 }));
         Assert.Equal(31, session.Private!.Seq);
 
-        session.AbsorbHttpPrivate(Room, 1, 900, new CasinoBlackjackPrivateDto(6, 0, new[] { new[] { 2, 3 } }));
+        session.AbsorbHttpPrivate(Room, 1, 900, You("hand-6", 0, new[] { 2, 3 }));
         Assert.Equal(31, session.Private!.Seq);
 
-        session.AbsorbHttpPrivate("bingo-hall", 3, 1, new CasinoBlackjackPrivateDto(8, 0, new[] { new[] { 4, 5 } }));
+        session.AbsorbHttpPrivate("bingo-hall", 3, 1, You("hand-8", 0, new[] { 4, 5 }));
         Assert.Equal(31, session.Private!.Seq);
 
-        session.AbsorbHttpPrivate(Room, 3, 1, new CasinoBlackjackPrivateDto(8, 0, new[] { new[] { 4, 5 } }));
+        session.AbsorbHttpPrivate(Room, 3, 1, You("hand-8", 0, new[] { 4, 5 }));
         Assert.Equal(3, session.Private!.Epoch);
-        Assert.Equal(8, session.Private!.Blackjack!.RoundIndex);
+        Assert.Equal("hand-8", session.Private!.Blackjack!.HandId);
+    }
+
+    private static CasinoBlackjackYouDto You(string handId, int seatIndex, int[] cards)
+    {
+        return new CasinoBlackjackYouDto(HandId: handId, SeatIndex: seatIndex,
+            Hands: new[] { new CasinoBlackjackHandDto(Cards: cards) });
     }
 
     [Fact]

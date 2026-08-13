@@ -192,7 +192,7 @@ internal sealed class TableDoor
         ImGui.Dummy(new Vector2(width, height + RowGap * scale));
     }
 
-    private void DrawKnockRow(AppSkin ui, CasinoKnockerDto knocker, float scale)
+    private void DrawKnockRow(AppSkin ui, CasinoTableKnockDto knocker, float scale)
     {
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
@@ -203,7 +203,7 @@ internal sealed class TableDoor
 
         var buttonWidth = 74f * scale;
         var textWidth = width - buttonWidth * 2f - 32f * scale;
-        DrawIdentity(drawList, ui, knocker, row, textWidth, scale);
+        DrawIdentity(drawList, ui, knocker.DisplayName, row, textWidth, scale);
 
         var approveRect = new Rect(
             new Vector2(row.Max.X - buttonWidth * 2f - 18f * scale, row.Center.Y - PillHeight * scale * 0.5f),
@@ -227,7 +227,7 @@ internal sealed class TableDoor
         ImGui.Dummy(new Vector2(width, height + RowGap * scale));
     }
 
-    private void DrawSeatedRow(AppSkin ui, CasinoKnockerDto occupant, float scale)
+    private void DrawSeatedRow(AppSkin ui, CasinoTableSeatedDto occupant, float scale)
     {
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
@@ -237,40 +237,33 @@ internal sealed class TableDoor
         ui.Card(drawList, row.Min, row.Max, Metrics.Radius.Card * scale);
 
         var buttonWidth = 84f * scale;
-        DrawIdentity(drawList, ui, occupant, row, width - buttonWidth - 32f * scale, scale);
+        DrawIdentity(drawList, ui, occupant.DisplayName, row, width - buttonWidth - 32f * scale, scale);
 
         var removeRect = new Rect(
             new Vector2(row.Max.X - buttonWidth - 10f * scale, row.Center.Y - PillHeight * scale * 0.5f),
             new Vector2(row.Max.X - 10f * scale, row.Center.Y + PillHeight * scale * 0.5f));
         if (ui.DangerGhostButton(removeRect, Loc.T(L.Casino.DoorRemove)) && !tables.IntentInFlight)
         {
-            AskRemove(occupant);
+            AskRemove(occupant.UserId, occupant.DisplayName);
         }
 
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height + RowGap * scale));
     }
 
-    private static void DrawIdentity(ImDrawListPtr drawList, AppSkin ui, CasinoKnockerDto person, in Rect row,
+    private static void DrawIdentity(ImDrawListPtr drawList, AppSkin ui, string name, in Rect row,
         float textWidth, float scale)
     {
         var left = row.Min.X + 14f * scale;
-        var name = person.DisplayName.Length > 0 ? person.DisplayName : person.Handle;
-        Typography.Draw(drawList, new Vector2(left, row.Min.Y + 10f * scale),
+        Typography.Draw(drawList, new Vector2(left, row.Center.Y - 8f * scale),
             Typography.FitText(name, textWidth, TextStyles.SubheadlineEmphasized), ui.TitleInk,
             TextStyles.SubheadlineEmphasized);
-        if (person.Handle.Length > 0)
-        {
-            Typography.Draw(drawList, new Vector2(left, row.Min.Y + 30f * scale),
-                Typography.FitText(person.Handle, textWidth, TextStyles.Caption1), ui.MutedInk, TextStyles.Caption1);
-        }
     }
 
-    private void AskRemove(CasinoKnockerDto occupant)
+    private void AskRemove(string userId, string name)
     {
-        var name = occupant.DisplayName.Length > 0 ? occupant.DisplayName : occupant.Handle;
         var targetRoom = roomId;
-        var targetUser = occupant.UserId;
+        var targetUser = userId;
         confirm.Ask(new ConfirmRequest
         {
             Title = Loc.T(L.Casino.DoorRemoveConfirmTitle, name),

@@ -60,13 +60,14 @@ internal sealed class CasinoTurnNotifier : IDisposable
         }
 
         var board = rooms.Room.State?.Blackjack;
-        if (board is null || board.HandId.Length == 0 || !BlackjackRules.IsSeat(board.MySeat)
-            || board.ActiveSeat != board.MySeat)
+        var mine = rooms.Room.Private?.Blackjack;
+        if (board is null || mine is null || board.HandId.Length == 0 || mine.ActiveHand < 0
+            || !string.Equals(mine.HandId, board.HandId, StringComparison.Ordinal))
         {
             return;
         }
 
-        var key = TurnKeyFor(board.HandId, board.MySeat, board.ActiveSplit);
+        var key = TurnKeyFor(board.HandId, mine.SeatIndex, mine.ActiveHand);
         if (string.Equals(spokenTurnKey, key, StringComparison.Ordinal))
         {
             return;

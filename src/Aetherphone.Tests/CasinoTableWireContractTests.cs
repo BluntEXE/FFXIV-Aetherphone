@@ -27,7 +27,7 @@ public sealed class CasinoTableWireContractTests
               "maxBet": 25,
               "minBuyIn": 100,
               "maxBuyIn": 2000,
-              "maxSeats": 5,
+              "maxSeats": 6,
               "seatedCount": 3,
               "occupancy": 7,
               "admitted": true,
@@ -44,7 +44,7 @@ public sealed class CasinoTableWireContractTests
         var row = Assert.Single(directory!.Tables!);
         Assert.Equal("blackjack-pit", row.TableId);
         Assert.Equal(CasinoWire.BlackjackKind, row.GameKind);
-        Assert.Equal(5, row.MaxSeats);
+        Assert.Equal(6, row.MaxSeats);
         Assert.Equal(3, row.SeatedCount);
         Assert.Equal(100, row.MinBuyIn);
         Assert.Equal(2000, row.MaxBuyIn);
@@ -59,8 +59,8 @@ public sealed class CasinoTableWireContractTests
     [Fact]
     public void AFullTableIsOnlyOneWhoseSeatsAreActuallyTaken()
     {
-        var open = new CasinoTableRowDto(TableId: "t", MaxSeats: 5, SeatedCount: 3);
-        var full = new CasinoTableRowDto(TableId: "t", MaxSeats: 5, SeatedCount: 5);
+        var open = new CasinoTableRowDto(TableId: "t", MaxSeats: 6, SeatedCount: 3);
+        var full = new CasinoTableRowDto(TableId: "t", MaxSeats: 6, SeatedCount: 6);
         var unseeded = new CasinoTableRowDto(TableId: "t");
 
         Assert.True(CasinoTableFilters.HasOpenSeat(open));
@@ -104,37 +104,72 @@ public sealed class CasinoTableWireContractTests
     }
 
     [Fact]
-    public void SittingAnswersWithTheWaitAndTheBinding()
+    public void SittingAnswersWithTheRackTheTableOpened()
     {
         const string json = """
         {
           "granted": true,
+          "reason": "",
           "roomId": "blackjack-pit",
           "seatIndex": 2,
-          "joinsNextHand": true,
-          "boundElsewhere": false,
-          "seatHeldUntilUnixMs": 1750000060000,
-          "stack": 480
+          "sitting": {
+            "id": "rack-1",
+            "tableId": "blackjack-pit",
+            "gameKind": "casino.blackjack",
+            "state": 1,
+            "stack": 480,
+            "chipsIn": 500,
+            "chipsOut": 0
+          },
+          "balance": 1480
         }
         """;
 
-        var answer = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoSeatDto);
+        var answer = JsonSerializer.Deserialize(json,
+            AethernetJsonContext.Default.CasinoBlackjackSeatResultDto);
         Assert.NotNull(answer);
-        Assert.True(answer!.JoinsNextHand);
+        Assert.True(answer!.Granted);
         Assert.Equal(2, answer.SeatIndex);
-        Assert.Equal(1750000060000, answer.SeatHeldUntilUnixMs);
-        Assert.Equal(480, answer.Stack);
+        Assert.Equal("rack-1", answer.Sitting!.Id);
+        Assert.Equal(480, answer.Sitting.Stack);
+        Assert.Equal(1480, answer.Balance);
     }
 
     [Fact]
     public void StandingMidHandComesBackQueuedRatherThanRefused()
     {
-        const string json = """{"granted":true,"roomId":"blackjack-pit","atHandEnd":true,"balance":1480}""";
-        var answer = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoStandDto);
+        const string json =
+            """{"granted":true,"reason":"at_hand_end","roomId":"blackjack-pit","seatIndex":2,"balance":0}""";
+        var answer = JsonSerializer.Deserialize(json,
+            AethernetJsonContext.Default.CasinoBlackjackSeatResultDto);
         Assert.NotNull(answer);
         Assert.True(answer!.Granted);
-        Assert.True(answer.AtHandEnd);
-        Assert.Equal(1480, answer.Balance);
+        Assert.Equal(CasinoReasons.AtHandEnd, answer.Reason);
+        Assert.True(CasinoReasons.TryMessage(answer.Reason, out _));
+    }
+
+    [Fact]
+    public void ABetAndAPlayComeBackWithTheCountTheNextMoveHasToQuote()
+    {
+        const string json = """
+        {
+          "granted": true,
+          "reason": "",
+          "roomId": "blackjack-pit",
+          "handId": "hand-12",
+          "seatIndex": 2,
+          "actionCount": 7,
+          "stack": 480
+        }
+        """;
+
+        var answer = JsonSerializer.Deserialize(json,
+            AethernetJsonContext.Default.CasinoBlackjackActionResultDto);
+        Assert.NotNull(answer);
+        Assert.True(answer!.Granted);
+        Assert.Equal("hand-12", answer.HandId);
+        Assert.Equal(7, answer.ActionCount);
+        Assert.Equal(480, answer.Stack);
     }
 
     [Fact]
@@ -144,9 +179,10 @@ public sealed class CasinoTableWireContractTests
         {
           "roomId": "private-4f2a",
           "owner": true,
-          "inviteToken": "private-4f2a",
-          "knocks": [{"userId":"u1","displayName":"Tataru","handle":"@tataru","knockedAtUnix":1750000000}],
-          "seated": [{"userId":"u2","displayName":"Hildibrand","handle":"@hildy"}]
+          "inviteToken": "[aep.casino.v1:private-4f2a]",
+          "knocks": [{"userId":"u1","displayName":"Tataru","createdAtUnixMs":1750000000000}],
+          "seated": [{"userId":"u2","displayName":"Hildibrand","seatIndex":4}],
+          "serverNowUnixMs": 1750000001000
         }
         """;
 
@@ -155,62 +191,125 @@ public sealed class CasinoTableWireContractTests
         Assert.True(door!.Owner);
         Assert.Single(door.Knocks!);
         Assert.Equal("Tataru", door.Knocks![0].DisplayName);
+        Assert.Equal(1750000000000, door.Knocks![0].CreatedAtUnixMs);
         Assert.Single(door.Seated!);
-        Assert.Equal("@hildy", door.Seated![0].Handle);
+        Assert.Equal("u2", door.Seated![0].UserId);
+        Assert.Equal(4, door.Seated![0].SeatIndex);
     }
 
     [Fact]
     public void CreatingATableComesBackWithSomethingShareable()
     {
         const string json = """
-        {"granted":true,"roomId":"private-4f2a","name":"Tataru's table","inviteToken":"private-4f2a","inviteOnly":true,"owner":true}
+        {
+          "granted": true,
+          "reason": "",
+          "table": {
+            "tableId": "private-4f2a",
+            "gameKind": "casino.blackjack",
+            "kind": 1,
+            "ownerUserId": "u1",
+            "ownerName": "Tataru",
+            "maxSeats": 6,
+            "inviteToken": "[aep.casino.v1:private-4f2a]"
+          }
+        }
         """;
 
-        var table = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoTableDto);
-        Assert.NotNull(table);
-        Assert.True(table!.InviteOnly);
-        Assert.True(CasinoShare.TryParse(CasinoShare.Compose(table.InviteToken), out var parsed));
+        var answer = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoTableResultDto);
+        Assert.NotNull(answer);
+        Assert.True(answer!.Granted);
+        Assert.Equal("private-4f2a", answer.Table!.TableId);
+        Assert.True(CasinoShare.TryParse(answer.Table.InviteToken, out var parsed));
         Assert.Equal("private-4f2a", parsed);
     }
 
     [Fact]
-    public void TheBlackjackBlobCarriesTheCareSurfaces()
+    public void TheBlackjackBlobReadsTheShapeTheTableActuallyWrites()
     {
         const string json = """
         {
-          "roundIndex": 12,
           "handId": "hand-12",
-          "mySeat": 1,
-          "tableName": "Emerald room",
-          "spectators": 4,
-          "boundElsewhere": true,
-          "seatHeldUntilUnixMs": 1750000060000,
-          "joinsNextHand": true,
-          "draining": true,
-          "inviteOnly": false,
-          "owner": false
+          "handIndex": 12,
+          "phase": 2,
+          "commit": "abc",
+          "nextCommit": "def",
+          "seed": "",
+          "dealerCards": [20, -1],
+          "dealerTotal": 10,
+          "dealerSoft": false,
+          "activeSeat": 1,
+          "activeHand": 0,
+          "actionCount": 7,
+          "deadlineUnixMs": 1750000060000,
+          "windowSeconds": 25,
+          "seats": [
+            {
+              "seatIndex": 1,
+              "userId": "u2",
+              "displayName": "Hildibrand",
+              "chips": 480,
+              "state": 1,
+              "connected": true,
+              "joinsNextHand": false,
+              "leaveAtHandEnd": false,
+              "committed": 20,
+              "heldUntilUnixMs": 0,
+              "hands": [
+                {
+                  "cards": [-1, -1],
+                  "bet": 20,
+                  "total": 0,
+                  "soft": false,
+                  "doubled": false,
+                  "stood": false,
+                  "busted": false,
+                  "natural": false,
+                  "outcome": 0,
+                  "delta": 0,
+                  "splitAces": false
+                }
+              ]
+            }
+          ],
+          "minBet": 10,
+          "maxBet": 500,
+          "minBuyIn": 100,
+          "maxBuyIn": 2000,
+          "maxWin": 500000
         }
         """;
 
         var board = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoBlackjackRoomStateDto);
         Assert.NotNull(board);
-        Assert.Equal(4, board!.Spectators);
-        Assert.True(board.BoundElsewhere);
-        Assert.True(board.JoinsNextHand);
-        Assert.True(board.Draining);
-        Assert.Equal(1750000060000, board.SeatHeldUntilUnixMs);
-        Assert.Equal("Emerald room", board.TableName);
+        Assert.Equal("hand-12", board!.HandId);
+        Assert.Equal(12, board.HandIndex);
+        Assert.Equal(BlackjackPhases.PlayerTurns, board.Phase);
+        Assert.Equal(1, board.ActiveSeat);
+        Assert.Equal(0, board.ActiveHand);
+        Assert.Equal(7, board.ActionCount);
+        Assert.Equal(25, board.WindowSeconds);
+        Assert.Equal(1750000060000, board.DeadlineUnixMs);
+
+        var seat = Assert.Single(board.Seats!);
+        Assert.Equal("u2", seat.UserId);
+        Assert.Equal(480, seat.Chips);
+        Assert.Equal(20, seat.Committed);
+        Assert.Equal(BlackjackSeatStates.Seated, seat.State);
+        Assert.True(seat.Connected);
+        Assert.Equal(new[] { -1, -1 }, Assert.Single(seat.Hands!).Cards);
     }
 
     [Fact]
-    public void ABlobWithoutTheCareBlockStillLoads()
+    public void ATableWithNoLiveHandStillLoads()
     {
-        const string json = """{"roundIndex":1,"handId":"hand-1","mySeat":-1}""";
+        const string json = """{"handId":"","handIndex":3,"phase":0,"seats":[]}""";
         var board = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoBlackjackRoomStateDto);
         Assert.NotNull(board);
-        Assert.Equal(0, board!.Spectators);
-        Assert.False(board.BoundElsewhere);
-        Assert.Equal(0, board.SeatHeldUntilUnixMs);
+        Assert.Equal(string.Empty, board!.HandId);
+        Assert.Equal(BlackjackPhases.Betting, board.Phase);
+        Assert.Equal(-1, board.ActiveSeat);
+        Assert.Empty(board.Seats!);
     }
 
     [Fact]
@@ -266,20 +365,28 @@ public sealed class CasinoTableWireContractTests
           "roomId": "blackjack-pit",
           "epoch": 3,
           "seq": 41,
-          "roundIndex": 7,
-          "seatIndex": 2,
-          "hands": [[40, 41], [12]]
+          "eventKind": "you.cards",
+          "payload": "{\"handId\":\"hand-7\",\"seatIndex\":2,\"activeHand\":0,\"actionCount\":5,\"actionsMask\":3,\"deadlineUnixMs\":1750000060000,\"chips\":480,\"hands\":[{\"cards\":[40,41],\"bet\":20,\"total\":19}]}",
+          "serverNowUnixMs": 1750000001000
         }
         """;
-        var hand = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoBlackjackHandReadDto);
-        Assert.NotNull(hand);
-        Assert.Equal("blackjack-pit", hand!.RoomId);
-        Assert.Equal(3, hand.Epoch);
-        Assert.Equal(41, hand.Seq);
-        Assert.Equal(7, hand.RoundIndex);
-        Assert.Equal(2, hand.SeatIndex);
-        Assert.Equal(new[] { 40, 41 }, hand.Hands![0]);
-        Assert.Equal(new[] { 12 }, hand.Hands![1]);
+        var read = JsonSerializer.Deserialize(json,
+            AethernetJsonContext.Default.CasinoBlackjackHandStateDto);
+        Assert.NotNull(read);
+        Assert.Equal("blackjack-pit", read!.RoomId);
+        Assert.Equal(3, read.Epoch);
+        Assert.Equal(41, read.Seq);
+        Assert.Equal(CasinoWire.BlackjackHandEvent, read.EventKind);
+
+        var mine = CasinoRoomSession.BuildPrivate(new CasinoPrivateDto(read.EventKind, read.Payload));
+        Assert.NotNull(mine);
+        Assert.Equal("hand-7", mine!.HandId);
+        Assert.Equal(2, mine.SeatIndex);
+        Assert.Equal(0, mine.ActiveHand);
+        Assert.Equal(5, mine.ActionCount);
+        Assert.Equal(BlackjackRules.ActionHit | BlackjackRules.ActionStand, mine.ActionsMask);
+        Assert.Equal(480, mine.Chips);
+        Assert.Equal(new[] { 40, 41 }, Assert.Single(mine.Hands!).Cards);
 
         Assert.Equal("/casino/blackjack/blackjack-pit/hand",
             Aetherphone.Core.Aethernet.Clients.CasinoClient.BlackjackMyHandPath(CasinoRoomIds.BlackjackPit));

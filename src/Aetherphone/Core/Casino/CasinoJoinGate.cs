@@ -4,12 +4,12 @@ internal static class CasinoJoinGate
 {
     public static bool ArmsWait(int phaseAtSit)
     {
-        return phaseAtSit != CasinoRoomPhases.Open;
+        return phaseAtSit != BlackjackPhases.Betting;
     }
 
     public static bool ClearsWait(int phase)
     {
-        return phase == CasinoRoomPhases.Open;
+        return phase == BlackjackPhases.Betting;
     }
 
     public static bool Waiting(bool seated, bool armed, bool serverSaysNextHand)
@@ -24,7 +24,7 @@ internal static class CasinoJoinGate
 
     public static bool CanPlaceBet(int phase, bool seated, bool waiting, bool draining, bool stakesPaused)
     {
-        return phase == CasinoRoomPhases.Open && DealtThisHand(seated, waiting) && !draining && !stakesPaused;
+        return phase == BlackjackPhases.Betting && DealtThisHand(seated, waiting) && !draining && !stakesPaused;
     }
 
     public static bool CanAct(bool seated, bool waiting, bool myTurn)

@@ -133,6 +133,9 @@ internal sealed record CasinoPayload
     public string RoomId { get; init; } = string.Empty;
     public int Epoch { get; init; }
     public long Seq { get; init; }
+
+    public long PairSeq { get; init; }
+
     public long ServerNowUnixMs { get; init; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]

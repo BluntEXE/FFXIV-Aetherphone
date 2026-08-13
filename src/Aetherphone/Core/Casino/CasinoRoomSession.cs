@@ -19,7 +19,7 @@ internal sealed record CasinoRoomPrivate(
     int Epoch,
     long Seq,
     CasinoPrivateDto Payload,
-    CasinoBlackjackPrivateDto? Blackjack);
+    CasinoBlackjackYouDto? Blackjack);
 
 internal enum CasinoRoomApply
 {
@@ -227,7 +227,7 @@ internal sealed class CasinoRoomSession
         Absorb(requestedRoomId, fresh.Epoch, fresh.Seq, fresh);
     }
 
-    public void AbsorbHttpPrivate(string requestedRoomId, int epoch, long seq, CasinoBlackjackPrivateDto hand)
+    public void AbsorbHttpPrivate(string requestedRoomId, int epoch, long seq, CasinoBlackjackYouDto hand)
     {
         lock (gate)
         {
@@ -448,24 +448,24 @@ internal sealed class CasinoRoomSession
         lock (gate)
         {
             if (!string.Equals(roomId, payload.RoomId, StringComparison.Ordinal)
-                || !AcceptsPrivate(privateState, payload.Epoch, payload.Seq))
+                || !AcceptsPrivate(privateState, payload.Epoch, payload.PairSeq))
             {
                 return;
             }
 
-            privateState = new CasinoRoomPrivate(payload.RoomId, payload.Epoch, payload.Seq, personal,
+            privateState = new CasinoRoomPrivate(payload.RoomId, payload.Epoch, payload.PairSeq, personal,
                 BuildPrivate(personal));
         }
     }
 
-    internal static CasinoBlackjackPrivateDto? BuildPrivate(CasinoPrivateDto personal)
+    internal static CasinoBlackjackYouDto? BuildPrivate(CasinoPrivateDto personal)
     {
         if (!string.Equals(personal.EventKind, CasinoWire.BlackjackHandEvent, StringComparison.Ordinal))
         {
             return null;
         }
 
-        return Parse(personal.Payload, AethernetJsonContext.Default.CasinoBlackjackPrivateDto);
+        return Parse(personal.Payload, AethernetJsonContext.Default.CasinoBlackjackYouDto);
     }
 
     private bool AsksForResync(long localNowUnixMs)

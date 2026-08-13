@@ -6,17 +6,67 @@ internal static class BlackjackSeatStates
 {
     public const int Empty = 0;
 
-    public const int Sitting = 1;
+    public const int Seated = 1;
 
-    public const int Betting = 2;
+    public const int SittingOut = 2;
+}
 
-    public const int Acting = 3;
+internal static class BlackjackPhases
+{
+    public const int Betting = 0;
 
-    public const int Waiting = 4;
+    public const int Dealing = 1;
 
-    public const int Away = 5;
+    public const int PlayerTurns = 2;
 
-    public const int Out = 6;
+    public const int DealerPlay = 3;
+
+    public const int Settlement = 4;
+
+    public const int Intermission = 5;
+
+    public const int Settled = 6;
+
+    public const int Voided = 7;
+
+    public static bool Live(int phase)
+    {
+        return phase < Settled;
+    }
+
+    public static bool Over(int phase)
+    {
+        return phase >= Settlement;
+    }
+}
+
+internal static class BlackjackActions
+{
+    public const string Hit = "hit";
+
+    public const string Stand = "stand";
+
+    public const string Double = "double";
+
+    public const string Split = "split";
+
+    public static bool IsWager(string action)
+    {
+        return string.Equals(action, Double, StringComparison.Ordinal)
+            || string.Equals(action, Split, StringComparison.Ordinal);
+    }
+
+    public static string VerbFor(int action)
+    {
+        return action switch
+        {
+            BlackjackRules.ActionHit => Hit,
+            BlackjackRules.ActionStand => Stand,
+            BlackjackRules.ActionDouble => Double,
+            BlackjackRules.ActionSplit => Split,
+            _ => string.Empty,
+        };
+    }
 }
 
 internal static class BlackjackOutcomes
@@ -32,13 +82,11 @@ internal static class BlackjackOutcomes
     public const int Blackjack = 4;
 
     public const int Bust = 5;
-
-    public const int DealerBlackjack = 6;
 }
 
 internal static class BlackjackRules
 {
-    public const int SeatCount = 5;
+    public const int SeatCount = 6;
 
     public const int Decks = 6;
 
@@ -145,17 +193,28 @@ internal static class BlackjackRules
         return bet <= 0 ? 0 : bet * 3 / 2;
     }
 
-    public static SeatPhase PhaseOf(int seatState)
+    public static SeatPhase PhaseOf(int seatState, bool connected, bool waiting, bool committed)
     {
-        return seatState switch
+        if (seatState == BlackjackSeatStates.Empty)
         {
-            BlackjackSeatStates.Sitting => SeatPhase.Sitting,
-            BlackjackSeatStates.Betting => SeatPhase.Betting,
-            BlackjackSeatStates.Acting => SeatPhase.Acting,
-            BlackjackSeatStates.Waiting => SeatPhase.Waiting,
-            BlackjackSeatStates.Away => SeatPhase.Away,
-            BlackjackSeatStates.Out => SeatPhase.Out,
-            _ => SeatPhase.Empty,
-        };
+            return SeatPhase.Empty;
+        }
+
+        if (seatState == BlackjackSeatStates.SittingOut)
+        {
+            return SeatPhase.Out;
+        }
+
+        if (!connected)
+        {
+            return SeatPhase.Away;
+        }
+
+        if (waiting)
+        {
+            return SeatPhase.Waiting;
+        }
+
+        return committed ? SeatPhase.Betting : SeatPhase.Sitting;
     }
 }

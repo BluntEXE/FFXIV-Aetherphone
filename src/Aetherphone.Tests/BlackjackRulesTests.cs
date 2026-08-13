@@ -118,15 +118,38 @@ public sealed class BlackjackRulesTests
     [Fact]
     public void SeatStatesMapOntoTheRingPhasesTheyPaint()
     {
-        Assert.Equal(SeatPhase.Empty, BlackjackRules.PhaseOf(BlackjackSeatStates.Empty));
-        Assert.Equal(SeatPhase.Betting, BlackjackRules.PhaseOf(BlackjackSeatStates.Betting));
-        Assert.Equal(SeatPhase.Acting, BlackjackRules.PhaseOf(BlackjackSeatStates.Acting));
-        Assert.Equal(SeatPhase.Away, BlackjackRules.PhaseOf(BlackjackSeatStates.Away));
-        Assert.Equal(SeatPhase.Empty, BlackjackRules.PhaseOf(99));
+        Assert.Equal(SeatPhase.Empty,
+            BlackjackRules.PhaseOf(BlackjackSeatStates.Empty, true, false, false));
+        Assert.Equal(SeatPhase.Sitting,
+            BlackjackRules.PhaseOf(BlackjackSeatStates.Seated, true, false, false));
+        Assert.Equal(SeatPhase.Betting,
+            BlackjackRules.PhaseOf(BlackjackSeatStates.Seated, true, false, true));
+        Assert.Equal(SeatPhase.Waiting,
+            BlackjackRules.PhaseOf(BlackjackSeatStates.Seated, true, true, true));
+        Assert.Equal(SeatPhase.Away,
+            BlackjackRules.PhaseOf(BlackjackSeatStates.Seated, false, false, true));
+        Assert.Equal(SeatPhase.Out,
+            BlackjackRules.PhaseOf(BlackjackSeatStates.SittingOut, false, false, false));
+        Assert.Equal(SeatPhase.Empty, BlackjackRules.PhaseOf(99, true, false, false));
     }
 
     [Fact]
-    public void OnlyTheFiveSeatsExist()
+    public void TheTableTakesTheVerbsTheApiNames()
+    {
+        Assert.Equal("hit", BlackjackActions.VerbFor(BlackjackRules.ActionHit));
+        Assert.Equal("stand", BlackjackActions.VerbFor(BlackjackRules.ActionStand));
+        Assert.Equal("double", BlackjackActions.VerbFor(BlackjackRules.ActionDouble));
+        Assert.Equal("split", BlackjackActions.VerbFor(BlackjackRules.ActionSplit));
+        Assert.Equal(string.Empty, BlackjackActions.VerbFor(0));
+
+        Assert.False(BlackjackActions.IsWager(BlackjackActions.Hit));
+        Assert.False(BlackjackActions.IsWager(BlackjackActions.Stand));
+        Assert.True(BlackjackActions.IsWager(BlackjackActions.Double));
+        Assert.True(BlackjackActions.IsWager(BlackjackActions.Split));
+    }
+
+    [Fact]
+    public void OnlyTheSixSeatsExist()
     {
         Assert.False(BlackjackRules.IsSeat(-1));
         Assert.True(BlackjackRules.IsSeat(0));

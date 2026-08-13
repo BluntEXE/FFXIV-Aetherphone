@@ -1,5 +1,14 @@
 namespace Aetherphone.Core.Casino;
 
+internal static class CasinoRoomStates
+{
+    public const int Live = 0;
+
+    public const int Draining = 1;
+
+    public const int Closed = 2;
+}
+
 internal static class CasinoRoomPhases
 {
     public const int Open = 0;

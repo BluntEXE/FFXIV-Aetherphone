@@ -27,7 +27,7 @@ internal sealed class BlackjackDealPlayback
         if (!string.Equals(handId, board.HandId, StringComparison.Ordinal))
         {
             handId = board.HandId;
-            elapsed = phase == CasinoRoomPhases.Locked
+            elapsed = phase <= BlackjackPhases.Dealing
                 ? 0f
                 : BlackjackDealChoreography.Duration(BlackjackProjection.CardCount(board));
             return;

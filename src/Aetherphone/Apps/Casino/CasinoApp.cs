@@ -449,19 +449,19 @@ internal sealed partial class CasinoApp : IPhoneApp
         var hosted = casinoTables.TakeHostedTable();
         if (hosted is not null)
         {
-            OpenDoor(hosted.RoomId, hosted.InviteToken);
+            OpenDoor(hosted.TableId, hosted.InviteToken);
         }
 
         var resolved = casinoTables.TakeResolvedTable();
         if (resolved is not null)
         {
-            if (resolved.Owner)
+            if (casinoTables.Owns(resolved))
             {
-                OpenDoor(resolved.RoomId, resolved.InviteToken);
+                OpenDoor(resolved.TableId, resolved.InviteToken);
             }
             else
             {
-                OpenTable(resolved.RoomId);
+                OpenTable(resolved.TableId);
             }
         }
 

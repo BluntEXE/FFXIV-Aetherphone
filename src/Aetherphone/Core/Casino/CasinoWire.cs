@@ -14,7 +14,7 @@ internal static class CasinoWire
 
     public const string BlackjackKind = "casino.blackjack";
 
-    public const string BlackjackHandEvent = "casino.blackjack.hand";
+    public const string BlackjackHandEvent = "you.cards";
 
     public const string DailySpinKind = "casino.dailyspin";
 

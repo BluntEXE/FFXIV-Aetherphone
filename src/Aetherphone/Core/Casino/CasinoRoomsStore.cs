@@ -85,6 +85,8 @@ internal sealed class CasinoRoomsStore : IDisposable
 
     public CasinoRoomSession Room => room;
 
+    public string AccountId => session.CurrentUser?.Id ?? string.Empty;
+
     public CasinoRoomListItemDto[] Rooms => rooms;
 
     public bool LoadingRooms => loadingRooms;
@@ -314,7 +316,9 @@ internal sealed class CasinoRoomsStore : IDisposable
     {
         var roomId = room.RoomId;
         var snapshot = room.State?.Snapshot;
-        if (stakeInFlight || !session.IsSignedIn || roomId.Length == 0 || snapshot is null || amount <= 0)
+        var board = room.State?.Blackjack;
+        if (stakeInFlight || !session.IsSignedIn || roomId.Length == 0 || snapshot is null || board is null
+            || amount <= 0)
         {
             return;
         }
@@ -324,8 +328,8 @@ internal sealed class CasinoRoomsStore : IDisposable
             return;
         }
 
-        var roundIndex = snapshot.RoundIndex;
-        var sittingId = chips.State?.Sitting?.Id ?? string.Empty;
+        var roundIndex = board.HandIndex;
+        var sittingId = chips.State?.TableSitting?.Id ?? string.Empty;
         string betId;
         string clientRoundId;
         lock (stakeGate)
@@ -347,7 +351,7 @@ internal sealed class CasinoRoomsStore : IDisposable
         work.Run("blackjack bet", async token =>
         {
             var result = await casino
-                .PlaceBlackjackBetAsync(roomId, roundIndex, clientRoundId, betId, amount, token)
+                .PlaceBlackjackBetAsync(roomId, clientRoundId, betId, amount, token)
                 .ConfigureAwait(false);
             if (result is null)
             {
@@ -378,21 +382,25 @@ internal sealed class CasinoRoomsStore : IDisposable
         var roomId = room.RoomId;
         var held = room.State;
         var board = held?.Blackjack;
-        if (stakeInFlight || !session.IsSignedIn || roomId.Length == 0 || board is null || action == 0)
+        var mine = room.Private?.Blackjack;
+        if (stakeInFlight || !session.IsSignedIn || roomId.Length == 0 || board is null || mine is null
+            || action == 0)
         {
             return;
         }
 
-        if (!BlackjackRules.Allows(board.ActionsMask, action) || board.HandId.Length == 0)
+        var verb = BlackjackActions.VerbFor(action);
+        if (verb.Length == 0
+            || board.HandId.Length == 0
+            || !string.Equals(mine.HandId, board.HandId, StringComparison.Ordinal)
+            || !BlackjackRules.Allows(mine.ActionsMask, action))
         {
             return;
         }
 
         var handId = board.HandId;
-        var roundIndex = board.RoundIndex;
-        var splitIndex = board.ActiveSplit;
-        var actionSeq = board.ActionCount;
-        var sittingId = chips.State?.Sitting?.Id ?? string.Empty;
+        var actionSeq = mine.ActionCount;
+        var sittingId = chips.State?.TableSitting?.Id ?? string.Empty;
         string actionId;
         lock (stakeGate)
         {
@@ -412,7 +420,7 @@ internal sealed class CasinoRoomsStore : IDisposable
         work.Run("blackjack action", async token =>
         {
             var result = await casino
-                .SendBlackjackActionAsync(roomId, handId, roundIndex, splitIndex, action, actionSeq, actionId, token)
+                .SendBlackjackActionAsync(roomId, handId, actionSeq, verb, actionId, token)
                 .ConfigureAwait(false);
             if (result is null)
             {
@@ -811,7 +819,7 @@ internal sealed class CasinoRoomsStore : IDisposable
         var roundIndex = snapshot.RoundIndex;
         var phase = snapshot.Phase;
         var generation = Volatile.Read(ref personalGeneration);
-        var handNeedsReading = !room.Attached;
+        var handNeedsReading = !room.Attached || HandUnread();
         Interlocked.Exchange(ref personalAttemptedAtTick, Environment.TickCount64);
         work.Run("room personal", async token =>
         {
@@ -894,10 +902,44 @@ internal sealed class CasinoRoomsStore : IDisposable
         bingoCards = fresh;
     }
 
-    private void AbsorbBlackjackHand(string requestedRoomId, CasinoBlackjackHandReadDto fresh)
+    private void AbsorbBlackjackHand(string requestedRoomId, CasinoBlackjackHandStateDto fresh)
     {
-        room.AbsorbHttpPrivate(requestedRoomId, fresh.Epoch, fresh.Seq,
-            new CasinoBlackjackPrivateDto(fresh.RoundIndex, fresh.SeatIndex, fresh.Hands));
+        var mine = CasinoRoomSession.BuildPrivate(new CasinoPrivateDto(fresh.EventKind, fresh.Payload));
+        if (mine is null)
+        {
+            return;
+        }
+
+        room.AbsorbHttpPrivate(requestedRoomId, fresh.Epoch, fresh.Seq, mine);
+    }
+
+    private bool HandUnread()
+    {
+        var board = room.State?.Blackjack;
+        var seats = board?.Seats;
+        var me = session.CurrentUser?.Id ?? string.Empty;
+        if (board is null || seats is null || board.HandId.Length == 0 || me.Length == 0)
+        {
+            return false;
+        }
+
+        var seated = false;
+        for (var index = 0; index < seats.Length; index++)
+        {
+            if (string.Equals(seats[index].UserId, me, StringComparison.Ordinal))
+            {
+                seated = true;
+                break;
+            }
+        }
+
+        if (!seated)
+        {
+            return false;
+        }
+
+        var mine = room.Private?.Blackjack;
+        return mine is null || !string.Equals(mine.HandId, board.HandId, StringComparison.Ordinal);
     }
 
     public void Dispose()

@@ -10,6 +10,38 @@ public sealed class BlackjackProjectionTests
 {
     private const string Room = CasinoRoomIds.BlackjackPit;
 
+    private const string Seated = "user-seated";
+
+    [Fact]
+    public void MySeatIsTheChairMyOwnAccountIsSittingIn()
+    {
+        var projection = new BlackjackProjection();
+        projection.Apply(State(1, 4, Board(7, new[] { 0, 1 })));
+        Assert.Equal(-1, projection.MySeat);
+
+        projection.Watch(Seated);
+        Assert.Equal(0, projection.MySeat);
+
+        projection.Watch("someone-else");
+        Assert.Equal(-1, projection.MySeat);
+    }
+
+    [Fact]
+    public void TheActionMaskComesFromTheHandTheBoardIsActuallyOn()
+    {
+        var projection = new BlackjackProjection();
+        projection.Apply(State(1, 4, Board(7, new[] { 0, 1 })));
+        Assert.Equal(0, projection.ActionsMask);
+
+        projection.ApplyPersonal(Offered(1, 4, 7, BlackjackRules.ActionHit | BlackjackRules.ActionStand));
+        Assert.Equal(BlackjackRules.ActionHit | BlackjackRules.ActionStand, projection.ActionsMask);
+        Assert.Equal(0, projection.ActiveHand);
+
+        Assert.True(projection.Apply(State(1, 5, Board(8, new[] { 2, 3 }))));
+        Assert.Equal(0, projection.ActionsMask);
+        Assert.Equal(-1, projection.ActiveHand);
+    }
+
     [Fact]
     public void TheFirstBoardIsAlwaysTaken()
     {
@@ -55,7 +87,7 @@ public sealed class BlackjackProjectionTests
         projection.Apply(State(1, 900, Board(7, new[] { 0, 1 })));
 
         Assert.True(projection.Apply(State(2, 1, Board(8, new[] { 44, 45 }))));
-        Assert.Equal(8, projection.Board!.RoundIndex);
+        Assert.Equal(8, projection.Board!.HandIndex);
         Assert.Equal(2, projection.Epoch);
         Assert.Equal(1, projection.Seq);
     }
@@ -167,17 +199,24 @@ public sealed class BlackjackProjectionTests
         Assert.Null(projection.Board);
     }
 
-    private static CasinoBlackjackRoomStateDto Board(long roundIndex, int[] seatCards)
+    private static CasinoRoomPrivate Offered(int epoch, long seq, long handIndex, int mask)
     {
-        var hand = new CasinoBlackjackHandDto(0, seatCards, 0, false, 10);
-        var seat = new CasinoBlackjackSeatDto(0, "Seat", "@seat", 500, 10, 2, true, true, false,
-            new[] { hand });
+        var payload = new CasinoBlackjackYouDto(HandId: "hand-" + handIndex, SeatIndex: 0, ActiveHand: 0,
+            ActionsMask: mask, Hands: new[] { new CasinoBlackjackHandDto(Cards: new[] { 0, 1 }) });
+        return new CasinoRoomPrivate(Room, epoch, seq,
+            new CasinoPrivateDto(CasinoWire.BlackjackHandEvent, string.Empty), payload);
+    }
+
+    private static CasinoBlackjackRoomStateDto Board(long handIndex, int[] seatCards)
+    {
+        var hand = new CasinoBlackjackHandDto(Cards: seatCards, Bet: 10);
+        var seat = new CasinoBlackjackSeatDto(0, Seated, "Seat", 500, BlackjackSeatStates.Seated, true, false,
+            false, 10, 0, new[] { hand });
         return new CasinoBlackjackRoomStateDto(
-            RoundIndex: roundIndex,
-            HandId: "hand-" + roundIndex,
+            HandId: "hand-" + handIndex,
+            HandIndex: handIndex,
             Seats: new[] { seat },
-            DealerCards: new[] { 20, PlayingCards.FaceDown },
-            MySeat: 0);
+            DealerCards: new[] { 20, PlayingCards.FaceDown });
     }
 
     private static CasinoRoomState State(int epoch, long seq, CasinoBlackjackRoomStateDto board)
@@ -187,13 +226,14 @@ public sealed class BlackjackProjectionTests
             GameKind: CasinoWire.BlackjackKind,
             Epoch: epoch,
             Seq: seq,
-            RoundIndex: board.RoundIndex);
+            RoundIndex: board.HandIndex);
         return new CasinoRoomState(Room, epoch, seq, snapshot, null, null, board);
     }
 
-    private static CasinoRoomPrivate Personal(int epoch, long seq, long roundIndex, int seatIndex, int[] cards)
+    private static CasinoRoomPrivate Personal(int epoch, long seq, long handIndex, int seatIndex, int[] cards)
     {
-        var payload = new CasinoBlackjackPrivateDto(roundIndex, seatIndex, new[] { cards });
+        var payload = new CasinoBlackjackYouDto(HandId: "hand-" + handIndex, SeatIndex: seatIndex,
+            Hands: new[] { new CasinoBlackjackHandDto(Cards: cards) });
         return new CasinoRoomPrivate(Room, epoch, seq,
             new CasinoPrivateDto(CasinoWire.BlackjackHandEvent, string.Empty), payload);
     }

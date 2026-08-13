@@ -10,10 +10,11 @@ internal sealed class BlackjackProjection
     private long seq = -1;
     private int personalEpoch = -1;
     private long personalSeq = -1;
+    private string accountId = string.Empty;
 
     public CasinoBlackjackRoomStateDto? Board { get; private set; }
 
-    public CasinoBlackjackPrivateDto? Personal { get; private set; }
+    public CasinoBlackjackYouDto? Personal { get; private set; }
 
     public int Epoch => epoch;
 
@@ -27,6 +28,11 @@ internal sealed class BlackjackProjection
         personalSeq = -1;
         Board = null;
         Personal = null;
+    }
+
+    public void Watch(string signedInAccountId)
+    {
+        accountId = signedInAccountId;
     }
 
     public bool Apply(CasinoRoomState? state)
@@ -54,7 +60,7 @@ internal sealed class BlackjackProjection
             return false;
         }
 
-        if (held.Epoch < personalEpoch || (held.Epoch == personalEpoch && held.Seq <= personalSeq))
+        if (held.Epoch < personalEpoch || (held.Epoch == personalEpoch && held.Seq < personalSeq))
         {
             return false;
         }
@@ -64,6 +70,34 @@ internal sealed class BlackjackProjection
         Personal = held.Blackjack;
         return true;
     }
+
+    public int MySeat
+    {
+        get
+        {
+            var seats = Board?.Seats;
+            if (seats is null || accountId.Length == 0)
+            {
+                return -1;
+            }
+
+            for (var index = 0; index < seats.Length; index++)
+            {
+                if (string.Equals(seats[index].UserId, accountId, StringComparison.Ordinal))
+                {
+                    return seats[index].SeatIndex;
+                }
+            }
+
+            return -1;
+        }
+    }
+
+    public int ActionsMask => Current?.ActionsMask ?? 0;
+
+    public int ActiveHand => Current?.ActiveHand ?? -1;
+
+    public int ActionCount => Current?.ActionCount ?? Board?.ActionCount ?? 0;
 
     public CasinoBlackjackSeatDto? SeatAt(int seatIndex)
     {
@@ -82,6 +116,17 @@ internal sealed class BlackjackProjection
         }
 
         return null;
+    }
+
+    public CasinoBlackjackHandDto[] HandsAt(int seatIndex)
+    {
+        var mine = Current;
+        if (mine is not null && mine.SeatIndex == seatIndex && mine.Hands is { Length: > 0 })
+        {
+            return mine.Hands;
+        }
+
+        return SeatAt(seatIndex)?.Hands ?? Array.Empty<CasinoBlackjackHandDto>();
     }
 
     public static int CardCount(CasinoBlackjackRoomStateDto? board)
@@ -122,26 +167,39 @@ internal sealed class BlackjackProjection
             return publicCard;
         }
 
-        var personal = Personal;
-        var board = Board;
-        if (personal is null || board is null || personalEpoch != epoch || personal.SeatIndex != seatIndex
-            || personal.RoundIndex != board.RoundIndex)
+        var mine = Current;
+        if (mine is null || mine.SeatIndex != seatIndex)
         {
             return PlayingCards.FaceDown;
         }
 
-        var hands = personal.Hands;
+        var hands = mine.Hands;
         if (hands is null || splitIndex < 0 || splitIndex >= hands.Length)
         {
             return PlayingCards.FaceDown;
         }
 
-        var cards = hands[splitIndex];
+        var cards = hands[splitIndex].Cards;
         if (cards is null || cardIndex < 0 || cardIndex >= cards.Length)
         {
             return PlayingCards.FaceDown;
         }
 
         return PlayingCards.IsCard(cards[cardIndex]) ? cards[cardIndex] : PlayingCards.FaceDown;
+    }
+
+    private CasinoBlackjackYouDto? Current
+    {
+        get
+        {
+            var mine = Personal;
+            var board = Board;
+            if (mine is null || board is null || board.HandId.Length == 0)
+            {
+                return null;
+            }
+
+            return string.Equals(mine.HandId, board.HandId, StringComparison.Ordinal) ? mine : null;
+        }
     }
 }

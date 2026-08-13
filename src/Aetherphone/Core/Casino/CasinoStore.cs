@@ -220,14 +220,24 @@ internal sealed class CasinoStore : IDisposable
 
     internal static CasinoStateDto? StackAbsorbedInto(CasinoStateDto? current, string sittingId, long stack)
     {
-        var sitting = current?.Sitting;
-        if (current is null || sitting is null || sittingId.Length == 0
-            || !string.Equals(sitting.Id, sittingId, StringComparison.Ordinal) || sitting.Stack == stack)
+        if (current is null || sittingId.Length == 0)
         {
             return null;
         }
 
-        return current with { Sitting = sitting with { Stack = stack } };
+        var bankroll = current.Sitting;
+        if (bankroll is not null && string.Equals(bankroll.Id, sittingId, StringComparison.Ordinal))
+        {
+            return bankroll.Stack == stack ? null : current with { Sitting = bankroll with { Stack = stack } };
+        }
+
+        var rack = current.TableSitting;
+        if (rack is not null && string.Equals(rack.Id, sittingId, StringComparison.Ordinal))
+        {
+            return rack.Stack == stack ? null : current with { TableSitting = rack with { Stack = stack } };
+        }
+
+        return null;
     }
 
     internal static CasinoStateDto MergeLimits(CasinoStateDto current, CasinoLimitsDto limits)

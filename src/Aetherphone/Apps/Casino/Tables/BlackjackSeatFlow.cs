@@ -44,7 +44,7 @@ internal sealed class BlackjackSeatFlow
         reason = string.Empty;
     }
 
-    public void Observe(CasinoBlackjackRoomStateDto? board, int phase, long nowTick)
+    public void Observe(CasinoBlackjackRoomStateDto? board, int mySeat, int phase, long nowTick)
     {
         ConsumeOutcomes(nowTick);
         if (board is null)
@@ -52,8 +52,8 @@ internal sealed class BlackjackSeatFlow
             return;
         }
 
-        var hasSeat = BlackjackRules.IsSeat(board.MySeat);
-        var signal = CasinoSeatMachine.SignalFor(hasSeat, board.BoundElsewhere);
+        var hasSeat = BlackjackRules.IsSeat(mySeat);
+        var signal = CasinoSeatMachine.SignalFor(hasSeat, false);
         if (!Settled(signal, nowTick))
         {
             return;
@@ -72,7 +72,27 @@ internal sealed class BlackjackSeatFlow
             waitArmed = false;
         }
 
-        waitArmed = CasinoJoinGate.Waiting(true, waitArmed, board.JoinsNextHand);
+        waitArmed = CasinoJoinGate.Waiting(true, waitArmed, SeatOf(board, mySeat)?.JoinsNextHand ?? false);
+        standQueued = standQueued || (SeatOf(board, mySeat)?.LeaveAtHandEnd ?? false);
+    }
+
+    private static CasinoBlackjackSeatDto? SeatOf(CasinoBlackjackRoomStateDto board, int seatIndex)
+    {
+        var seats = board.Seats;
+        if (seats is null)
+        {
+            return null;
+        }
+
+        for (var index = 0; index < seats.Length; index++)
+        {
+            if (seats[index].SeatIndex == seatIndex)
+            {
+                return seats[index];
+            }
+        }
+
+        return null;
     }
 
     public void Sit(string roomId, int seatIndex, long buyIn, int phase)
@@ -98,18 +118,6 @@ internal sealed class BlackjackSeatFlow
         reason = string.Empty;
         stage = CasinoSeatMachine.Next(stage, CasinoSeatSignal.StandRequested);
         tables.Stand(roomId);
-    }
-
-    public void TakeOver(string roomId)
-    {
-        if (Busy || roomId.Length == 0)
-        {
-            return;
-        }
-
-        reason = string.Empty;
-        stage = CasinoSeatMachine.Next(stage, CasinoSeatSignal.TakeOverRequested);
-        tables.Claim(roomId);
     }
 
     public void Left()
