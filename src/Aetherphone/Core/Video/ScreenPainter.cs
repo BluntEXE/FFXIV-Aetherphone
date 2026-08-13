@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
+using SharpDX.DXGI;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using GfxKernel = FFXIVClientStructs.FFXIV.Client.Graphics.Kernel;
 using GfxScene = FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
@@ -32,8 +33,8 @@ internal sealed unsafe class ScreenPainter : IDisposable
 	private Texture2D? _texture;
 	private ShaderResourceView? _srv;
 
-	private nint _cachedRtvPtr;
-	private nint _cachedDsvPtr;
+	private nint _cachedColorTexture;
+	private nint _cachedDepthTexture;
 	private RenderTargetView? _cachedRtv;
 	private DepthStencilView? _cachedDsv;
 
@@ -172,7 +173,7 @@ internal sealed unsafe class ScreenPainter : IDisposable
 
 	private void DrawIfReady()
 	{
-		if (!TryGetSceneTargets(out nint rtvPtr, out nint dsvPtr, out uint targetWidth, out uint targetHeight) || _srv == null)
+		if (!TryGetSceneTargets(out nint colorTexture, out nint depthTexture, out uint targetWidth, out uint targetHeight) || _srv == null)
 		{
 			return;
 		}
@@ -183,19 +184,22 @@ internal sealed unsafe class ScreenPainter : IDisposable
 			return;
 		}
 
-		if (rtvPtr != _cachedRtvPtr || _cachedRtv == null)
+		if (colorTexture != _cachedColorTexture || _cachedRtv == null)
 		{
 			_cachedRtv?.Dispose();
-			_cachedRtv = new RenderTargetView(rtvPtr);
-			Marshal.AddRef(rtvPtr);
-			_cachedRtvPtr = rtvPtr;
+			_cachedRtv = CreateRenderTargetView(colorTexture);
+			_cachedColorTexture = colorTexture;
 		}
-		if (dsvPtr != _cachedDsvPtr || _cachedDsv == null)
+		if (depthTexture != _cachedDepthTexture || _cachedDsv == null)
 		{
 			_cachedDsv?.Dispose();
-			_cachedDsv = new DepthStencilView(dsvPtr);
-			Marshal.AddRef(dsvPtr);
-			_cachedDsvPtr = dsvPtr;
+			_cachedDsv = CreateDepthStencilView(depthTexture);
+			_cachedDepthTexture = depthTexture;
+		}
+
+		if (_cachedRtv == null || _cachedDsv == null)
+		{
+			return;
 		}
 
 		RenderTargetView rtv = _cachedRtv;
@@ -298,10 +302,10 @@ internal sealed unsafe class ScreenPainter : IDisposable
 		return count;
 	}
 
-	private static bool TryGetSceneTargets(out nint rtvPtr, out nint dsvPtr, out uint width, out uint height)
+	private static bool TryGetSceneTargets(out nint colorTexture, out nint depthTexture, out uint width, out uint height)
 	{
-		rtvPtr = 0;
-		dsvPtr = 0;
+		colorTexture = 0;
+		depthTexture = 0;
 		width = 0;
 		height = 0;
 
@@ -312,14 +316,14 @@ internal sealed unsafe class ScreenPainter : IDisposable
 		}
 
 		GfxKernel.Texture* backBuffer = device->SwapChain->BackBuffer;
-		if (backBuffer == null || backBuffer->MipRenderTargets == null)
+		if (backBuffer == null)
 		{
 			return false;
 		}
 
 		FFXIVClientStructs.FFXIV.Client.Graphics.Render.RenderTargetManager* rtm = FFXIVClientStructs.FFXIV.Client.Graphics.Render.RenderTargetManager.Instance();
 		GfxKernel.Texture* sceneDepth = rtm != null ? rtm->DepthStencil : null;
-		if (rtm == null || sceneDepth == null || sceneDepth->MipRenderTargets == null)
+		if (rtm == null || sceneDepth == null)
 		{
 			return false;
 		}
@@ -328,12 +332,66 @@ internal sealed unsafe class ScreenPainter : IDisposable
 			return false;
 		}
 
-		rtvPtr = (nint)backBuffer->MipRenderTargets[0].D3D11RenderTargetViewOrDepthStencilView;
-		dsvPtr = (nint)sceneDepth->MipRenderTargets[0].D3D11RenderTargetViewOrDepthStencilView;
+		colorTexture = (nint)backBuffer->D3D11Texture2D;
+		depthTexture = (nint)sceneDepth->D3D11Texture2D;
 		width = device->SwapChain->Width;
 		height = device->SwapChain->Height;
-		return rtvPtr != 0 && dsvPtr != 0;
+		return colorTexture != 0 && depthTexture != 0;
 	}
+
+	private static RenderTargetView? CreateRenderTargetView(nint texturePtr)
+	{
+		if (texturePtr == 0 || DxHandler.Device == null)
+		{
+			return null;
+		}
+
+		try
+		{
+			Marshal.AddRef(texturePtr);
+			using var texture = new Texture2D(texturePtr);
+			return new RenderTargetView(DxHandler.Device, texture);
+		}
+		catch (Exception exception)
+		{
+			AepLog.Warning($"[ScreenPainter] Could not view the scene colour target: {exception.Message}");
+			return null;
+		}
+	}
+
+	private static DepthStencilView? CreateDepthStencilView(nint texturePtr)
+	{
+		if (texturePtr == 0 || DxHandler.Device == null)
+		{
+			return null;
+		}
+
+		try
+		{
+			Marshal.AddRef(texturePtr);
+			using var texture = new Texture2D(texturePtr);
+			return new DepthStencilView(DxHandler.Device, texture, new DepthStencilViewDescription
+			{
+				Dimension = DepthStencilViewDimension.Texture2D,
+				Format = DepthViewFormat(texture.Description.Format),
+				Texture2D = { MipSlice = 0 },
+			});
+		}
+		catch (Exception exception)
+		{
+			AepLog.Warning($"[ScreenPainter] Could not view the scene depth target: {exception.Message}");
+			return null;
+		}
+	}
+
+	private static Format DepthViewFormat(Format format) => format switch
+	{
+		Format.R32G8X24_Typeless or Format.D32_Float_S8X24_UInt => Format.D32_Float_S8X24_UInt,
+		Format.R32_Typeless or Format.D32_Float => Format.D32_Float,
+		Format.R24G8_Typeless or Format.D24_UNorm_S8_UInt => Format.D24_UNorm_S8_UInt,
+		Format.R16_Typeless or Format.D16_UNorm => Format.D16_UNorm,
+		_ => format,
+	};
 
 	private NumericsMatrix4x4? ComputeWorldViewProj()
 	{
