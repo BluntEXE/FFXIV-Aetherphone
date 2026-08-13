@@ -22,7 +22,7 @@ internal sealed class ChangelogPage : ISettingsPage
     private readonly List<int> highlightLineCounts = new();
     private readonly Configuration configuration;
     public string Title => Loc.T(L.Settings.Changelog);
-    public string Summary => Loc.T(L.Settings.ChangelogSummary);
+    public string Summary => string.Empty;
     public FontAwesomeIcon Icon => FontAwesomeIcon.Gift;
     public Vector4 Tint => new(0.62f, 0.42f, 0.90f, 1f);
     public bool ShowsBadge => configuration.HasUnseenChangelog;

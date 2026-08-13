@@ -125,6 +125,14 @@ Full detail with examples lives in [UI toolkit](ui-toolkit.md); this is the chec
 - **Critically damped motion, no bounce.** All UI motion runs through Spring (src/Aetherphone/Core/Animation/Spring.cs), whose Step clamps at the target so it cannot overshoot. Bouncy easing (Easing.EaseOutBack) is used only inside the mini-games under src/Aetherphone/Apps/Games/.
 - **All clock text goes through the single clock seam.** TimeText.Clock (src/Aetherphone/Core/Localization/TimeText.cs) formats every clock string and honors the user's 12/24-hour preference via TimeText.Use24Hour. There are dozens of call sites and zero hand-rolled `"HH:mm"` format strings outside TimeText itself. Keep it that way.
 
+### Grouped lists (settings and any list of rows)
+
+The settings tree is the reference implementation of these three rules; follow them anywhere you build a card of rows.
+
+- **A row shows a value only when it deviates.** The right-hand string in SettingsRow.Link, AppLink, and Disclosure is for state worth acting on: the chosen language, an unread count, a feature that is off. A row never restates its own purpose ("Slash commands", "What's new") or repeats what the page below it already shows. When there is nothing to report, pass `string.Empty`.
+- **One card per group of switches, never one card per switch.** Related switches share a GroupCard with hairlines between them. Reach for a SettingsSection.Header only where a page genuinely turns a corner, and never as a label for a single row.
+- **A footer has to earn its place.** Explaining what one control does is the hint icon's job: pass `hint` to SettingsRow.Bool or SettingsRow.Switch, or the optional third argument of SettingsSection.Header for a whole section. SettingsSection.Hint stays for destructive warnings, loading and empty states, and sign-in prompts.
+
 ## Copy rules
 
 These apply to UI strings, docs, changelogs, and commit messages alike.

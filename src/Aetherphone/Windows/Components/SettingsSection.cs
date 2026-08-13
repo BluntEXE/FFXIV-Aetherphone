@@ -7,17 +7,24 @@ namespace Aetherphone.Windows.Components;
 
 internal static class SettingsSection
 {
-    public static void Header(string title, PhoneTheme theme)
+    public static void Header(string title, PhoneTheme theme, string? hint = null)
     {
         var scale = UiScale.Current;
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
-        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Metrics.Space.Lg * scale);
-        using (Plugin.Fonts.Push(TextStyles.Footnote.Scale, TextStyles.FootnoteEmphasized.Weight))
-        using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
+        var label = Loc.Culture.TextInfo.ToUpper(title);
+        var origin = ImGui.GetCursorScreenPos();
+        var left = origin.X + Metrics.Space.Lg * scale;
+        var size = Typography.Measure(label, TextStyles.FootnoteEmphasized);
+        Typography.Draw(ImGui.GetWindowDrawList(), new Vector2(left, origin.Y), label, theme.TextMuted,
+            TextStyles.FootnoteEmphasized);
+        if (hint != null)
         {
-            Typography.Plain(Loc.Culture.TextInfo.ToUpper(title));
+            var iconCenter = new Vector2(left + size.X + Metrics.Size.HintIconHeight * 0.5f * scale
+                + Metrics.Space.Sm * scale, origin.Y + size.Y * 0.5f);
+            HintIcon.Draw(iconCenter, hint, theme, scale);
         }
 
+        ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().X, size.Y));
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
     }
 

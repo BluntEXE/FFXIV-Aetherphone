@@ -24,6 +24,8 @@ internal sealed class PrivacyPage : ISettingsPage, IDisposable
     private readonly AccountClient client;
     private readonly SafetyClient safety;
     private readonly ConfirmService confirm;
+    private readonly ISettingsNavigator navigator;
+    private readonly ISettingsPage tagsMentionsPage;
     private readonly CancellationTokenSource cancellation = new();
     private static readonly TimeSpan BlockedListMaxAge = TimeSpan.FromSeconds(30);
     private volatile bool chatPrivacyLoaded;
@@ -36,13 +38,15 @@ internal sealed class PrivacyPage : ISettingsPage, IDisposable
     private DateTime blockedLoadedAtUtc = DateTime.MinValue;
 
     public PrivacyPage(Configuration configuration, AethernetSession session, AccountClient client, SafetyClient safety,
-        ConfirmService confirm)
+        ConfirmService confirm, ISettingsNavigator navigator, ISettingsPage tagsMentionsPage)
     {
         this.configuration = configuration;
         this.session = session;
         this.client = client;
         this.safety = safety;
         this.confirm = confirm;
+        this.navigator = navigator;
+        this.tagsMentionsPage = tagsMentionsPage;
     }
 
     public void Draw(in PhoneContext context, Rect body)
@@ -51,7 +55,6 @@ internal sealed class PrivacyPage : ISettingsPage, IDisposable
         var theme = context.Theme;
         using (AppSurface.Begin(body))
         {
-            DrawTellArchive(theme, scale);
             DrawChatPrivacy(theme, scale);
             DrawBlockedUsers(theme, scale);
         }
@@ -65,8 +68,8 @@ internal sealed class PrivacyPage : ISettingsPage, IDisposable
         }
 
         EnsureBlockedLoaded();
-        ImGui.Dummy(new Vector2(0f, 12f * scale));
-        SettingsSection.Header(Loc.T(L.Social.BlockedUsers), theme);
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+        SettingsSection.Header(Loc.T(L.Social.BlockedUsers), theme, Loc.T(L.Social.BlockedHint));
         var snapshot = blockedUsers;
         if (!blockedLoaded)
         {
@@ -92,8 +95,6 @@ internal sealed class PrivacyPage : ISettingsPage, IDisposable
         }
 
         card.End();
-        ImGui.Dummy(new Vector2(0f, 8f * scale));
-        SettingsSection.Hint(Loc.T(L.Social.BlockedHint), theme);
     }
 
     private void EnsureBlockedLoaded()
@@ -159,43 +160,37 @@ internal sealed class PrivacyPage : ISettingsPage, IDisposable
         });
     }
 
-    private void DrawTellArchive(PhoneTheme theme, float scale)
+    private void DrawChatPrivacy(PhoneTheme theme, float scale)
     {
-        ImGui.Dummy(new Vector2(0f, 12f * scale));
-        SettingsSection.Header(Loc.T(L.Settings.TellArchiveTitle), theme);
-        var card = GroupCard.Begin(theme, 1);
-        var archive = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.TellArchive),
-            configuration.ArchiveTellsToDisk, theme);
-        card.End();
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
+        var archiveCard = GroupCard.Begin(theme, 1);
+        var archive = SettingsRow.Bool(archiveCard.NextRow(), Loc.T(L.Settings.TellArchive),
+            configuration.ArchiveTellsToDisk, theme, null, Loc.T(L.Settings.TellArchiveHint));
+        archiveCard.End();
         if (archive != configuration.ArchiveTellsToDisk)
         {
             configuration.ArchiveTellsToDisk = archive;
             configuration.Save();
         }
 
-        ImGui.Dummy(new Vector2(0f, 8f * scale));
-        SettingsSection.Hint(Loc.T(L.Settings.TellArchiveHint), theme);
-    }
-
-    private void DrawChatPrivacy(PhoneTheme theme, float scale)
-    {
         if (!session.IsSignedIn)
         {
             return;
         }
 
         EnsureLoaded();
-        ImGui.Dummy(new Vector2(0f, 12f * scale));
-        SettingsSection.Header(Loc.T(L.Apps.Message), theme);
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
         if (!chatPrivacyLoaded)
         {
             SettingsSection.Hint(Loc.T(L.Common.Loading), theme);
             return;
         }
 
-        var card = GroupCard.Begin(theme, 2);
-        var readReceipts = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.ReadReceipts), shareReadReceipts, theme);
+        var card = GroupCard.Begin(theme, 3);
+        var readReceipts = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.ReadReceipts), shareReadReceipts, theme,
+            null, Loc.T(L.Settings.ChatPrivacyHint));
         var lastSeen = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.LastSeenOnline), sharePresence, theme);
+        var tagsOpened = SettingsRow.Disclosure(card.NextRow(), Loc.T(L.PhotoTag.SettingsTitle), string.Empty, theme);
         card.End();
         if (readReceipts != shareReadReceipts || lastSeen != sharePresence)
         {
@@ -204,8 +199,10 @@ internal sealed class PrivacyPage : ISettingsPage, IDisposable
             Push(readReceipts, lastSeen);
         }
 
-        ImGui.Dummy(new Vector2(0f, 8f * scale));
-        SettingsSection.Hint(Loc.T(L.Settings.ChatPrivacyHint), theme);
+        if (tagsOpened)
+        {
+            navigator.Open(tagsMentionsPage);
+        }
     }
 
     private void EnsureLoaded()

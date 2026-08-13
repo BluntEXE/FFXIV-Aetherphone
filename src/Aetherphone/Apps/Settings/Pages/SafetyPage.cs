@@ -26,9 +26,8 @@ internal sealed class SafetyPage : ISettingsPage
 
     public string Title => Loc.T(L.Safety.Title);
 
-    public string Summary => archive.PendingCount > 0
-        ? Loc.T(L.Safety.UnreadSummary, archive.PendingCount)
-        : Loc.T(L.Safety.Summary);
+    public string Summary =>
+        archive.PendingCount > 0 ? Loc.T(L.Safety.UnreadSummary, archive.PendingCount) : string.Empty;
 
     public FontAwesomeIcon Icon => FontAwesomeIcon.ShieldAlt;
 
@@ -49,7 +48,7 @@ internal sealed class SafetyPage : ISettingsPage
             }
 
             archive.EnsureFresh();
-            SettingsSection.Header(Loc.T(L.Safety.Title), theme);
+            SettingsSection.Header(Loc.T(L.Safety.Title), theme, Loc.T(L.Safety.RetentionHint));
 
             var items = archive.Items;
             if (items.Length == 0)
@@ -72,10 +71,6 @@ internal sealed class SafetyPage : ISettingsPage
             }
 
             card.End();
-
-            ImGui.Dummy(new Vector2(0f, 10f * scale));
-            SettingsSection.Hint(Loc.T(L.Safety.RetentionHint), theme);
-
             if (archive.HasMore)
             {
                 ImGui.Dummy(new Vector2(0f, 6f * scale));

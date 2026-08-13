@@ -12,24 +12,20 @@ namespace Aetherphone.Apps.Settings.Pages;
 internal sealed class NotificationsPage : ISettingsPage
 {
     public string Title => Loc.T(L.Settings.Notifications);
-    public string Summary => configuration.DoNotDisturb ? Loc.T(L.Settings.DoNotDisturb) : string.Empty;
+    public string Summary => string.Empty;
     public FontAwesomeIcon Icon => FontAwesomeIcon.Bell;
     public Vector4 Tint => new(0.98f, 0.27f, 0.25f, 1f);
     private readonly Configuration configuration;
     private readonly ISettingsNavigator navigator;
     private readonly AppNotificationPage appPage;
-    private readonly SoundService sound;
-    private readonly ISettingsPage soundPage;
     private readonly AppInstaller installer;
 
     public NotificationsPage(Configuration configuration, ISettingsNavigator navigator, AppNotificationPage appPage,
-        SoundService sound, ISettingsPage soundPage, AppInstaller installer)
+        AppInstaller installer)
     {
         this.configuration = configuration;
         this.navigator = navigator;
         this.appPage = appPage;
-        this.sound = sound;
-        this.soundPage = soundPage;
         this.installer = installer;
     }
 
@@ -39,51 +35,28 @@ internal sealed class NotificationsPage : ISettingsPage
         var scale = UiScale.Current;
         using (AppSurface.Begin(body))
         {
-            SettingsSection.Header(Loc.T(L.Common.Alerts), theme);
-            var alerts = GroupCard.Begin(theme, 5);
-            var doNotDisturb = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Settings.DoNotDisturb),
-                configuration.DoNotDisturb, theme);
-            if (doNotDisturb != configuration.DoNotDisturb)
-            {
-                configuration.DoNotDisturb = doNotDisturb;
-                configuration.Save();
-            }
-
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
+            var doNotDisturb = configuration.DoNotDisturb;
+            var alerts = GroupCard.Begin(theme, 2);
             var quietWhileBusy = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Settings.QuietWhileBusy),
                 configuration.QuietWhileBusy, theme, null, Loc.T(L.Settings.QuietWhileBusyHint),
                 dimmed: doNotDisturb);
+            var showNotificationBanner = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Settings.ShowNotificationBanner),
+                configuration.ShowNotificationBanner, theme, null, Loc.T(L.Settings.ShowNotificationBannerHint),
+                dimmed: doNotDisturb);
+            alerts.End();
             if (quietWhileBusy != configuration.QuietWhileBusy)
             {
                 configuration.QuietWhileBusy = quietWhileBusy;
                 configuration.Save();
             }
 
-            var showNotificationBanner = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Settings.ShowNotificationBanner),
-                configuration.ShowNotificationBanner, theme, null, Loc.T(L.Settings.ShowNotificationBannerHint),
-                dimmed: doNotDisturb);
             if (showNotificationBanner != configuration.ShowNotificationBanner)
             {
                 configuration.ShowNotificationBanner = showNotificationBanner;
                 configuration.Save();
             }
 
-            var vibration = SettingsRow.Bool(alerts.NextRow(), Loc.T(L.Settings.Vibration),
-                configuration.Vibration, theme, null, Loc.T(L.Settings.VibrationHint), dimmed: doNotDisturb);
-            if (vibration != configuration.Vibration)
-            {
-                configuration.Vibration = vibration;
-                configuration.Save();
-            }
-
-            if (SettingsRow.Disclosure(alerts.NextRow(), Loc.T(L.Settings.NotificationSound),
-                    sound.Label(SoundKind.Notification, configuration.NotificationSound), theme, dimmed: doNotDisturb))
-            {
-                navigator.Open(soundPage);
-            }
-
-            alerts.End();
-
-            ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
             SettingsSection.Header(Loc.T(L.Settings.NotificationApps), theme);
             var channels = NotificationChannels.All;
             var apps = GroupCard.Begin(theme, CountInstalled(channels));
@@ -121,13 +94,6 @@ internal sealed class NotificationsPage : ISettingsPage
         return count;
     }
 
-    private string Summarize(string appId)
-    {
-        if (!configuration.IsAppNotificationEnabled(appId))
-        {
-            return Loc.T(L.Settings.NotificationsOff);
-        }
-
-        return sound.Label(SoundKind.Notification, configuration.ResolveNotificationToken(appId));
-    }
+    private string Summarize(string appId) =>
+        configuration.IsAppNotificationEnabled(appId) ? string.Empty : Loc.T(L.Settings.NotificationsOff);
 }

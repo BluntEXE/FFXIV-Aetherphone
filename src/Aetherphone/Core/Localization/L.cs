@@ -132,7 +132,6 @@ internal static class L
         public static readonly LocString AllowMentions = new("photoTag.allowMentions", "Allow mentions from");
         public static readonly LocString AllowTags = new("photoTag.allowTags", "Allow tags from");
         public static readonly LocString AudienceHint = new("photoTag.audienceHint", "Choose who can mention you in posts and comments, and who can tag you in photos.");
-        public static readonly LocString ApprovalHeader = new("photoTag.approvalHeader", "Approval");
         public static readonly LocString ApproveManually = new("photoTag.approveManually", "Manually approve tags");
         public static readonly LocString ApproveHint = new("photoTag.approveHint", "Tags stay hidden until you approve them, and never reach your Tagged tab without you.");
     }
@@ -151,7 +150,6 @@ internal static class L
     internal static class Safety
     {
         public static readonly LocString Title = new("safety.title", "Moderation and safety");
-        public static readonly LocString Summary = new("safety.summary", "Warnings");
         public static readonly LocString UnreadSummary = new("safety.unreadSummary", "{0} unread");
         public static readonly LocString Empty = new("safety.empty", "Nothing here. No moderator has acted on your account.");
         public static readonly LocString SignInPrompt = new("safety.signInPrompt", "Sign in to see moderation notices for your account.");
@@ -1141,7 +1139,6 @@ internal static class L
         public static readonly LocString ConnectionLost = new("phone.connectionLost", "Connection lost");
         public static readonly LocString ReturnToCall = new("phone.returnToCall", "Tap to return to call");
         public static readonly LocString SettingsTitle = new("phone.settingsTitle", "Phone Calls");
-        public static readonly LocString SummaryOn = new("phone.summaryOn", "On");
         public static readonly LocString SummaryOff = new("phone.summaryOff", "Off");
         public static readonly LocString Calls = new("phone.calls", "Calls");
         public static readonly LocString EnablePhoneCalls = new("phone.enablePhoneCalls", "Enable Phone Calls");
@@ -1236,6 +1233,7 @@ internal static class L
         public static readonly LocString CaseApply = new("settings.caseApply", "Apply");
         public static readonly LocString CaseApplied = new("settings.caseApplied", "Applied");
         public static readonly LocString Wallpaper = new("settings.wallpaper", "Wallpaper");
+        public static readonly LocString Display = new("settings.display", "Display");
         public static readonly LocString TextSize = new("settings.textSize", "Text Size");
         public static readonly LocString PhoneSize = new("settings.phoneSize", "Phone Size");
         public static readonly LocString ClockFormat = new("settings.clockFormat", "Clock");
@@ -1252,17 +1250,18 @@ internal static class L
         public static readonly LocString AllowNotifications = new("settings.allowNotifications", "Allow Notifications");
         public static readonly LocString NotificationsOff = new("settings.notificationsOff", "Off");
         public static readonly LocString SoundDefault = new("settings.soundDefault", "Default");
-        public static readonly LocString Immersion = new("settings.immersion", "Immersion");
-        public static readonly LocString Behavior = new("settings.behavior", "Behavior");
-        public static readonly LocString MarketContextMenu = new("settings.marketContextMenu", "Enable Market Search in Context Menu");
+        public static readonly LocString General = new("settings.general", "General");
+        public static readonly LocString Startup = new("settings.startup", "Startup");
+        public static readonly LocString LockPositionHint = new("settings.lockPositionHint", "The phone stays where you put it, and dragging inside it scrolls instead of moving the window.");
+        public static readonly LocString MarketContextMenu = new("settings.marketContextMenu", "Market search in menus");
         public static readonly LocString MarketContextMenuHint = new("settings.marketContextMenuHint", "Shows \"Search the Market\" option in the in-game context menu when right-clicking on an item.");
-        public static readonly LocString ScrollWhileIdle = new("settings.scrollWhileIdle", "Scroll while idle");
+        public static readonly LocString ScrollWhileIdle = new("settings.scrollWhileIdle", "Scroll While Idle");
         public static readonly LocString ScrollWhileIdleHint = new("settings.scrollWhileIdleHint", "Your character scrolls through their phone (Tomescroll emote) while standing still and out of combat. Does nothing if you haven't unlocked the emote.");
         public static readonly LocString ShowInGpose = new("settings.showInGpose", "Show in Group Pose");
         public static readonly LocString ShowInGposeHint = new("settings.showInGposeHint", "Keep the phone available while you're in Group Pose, so you can open it during photo shoots. Turn it off to keep your screen clear for screenshots.");
         public static readonly LocString ImportScreenshots = new("settings.importScreenshots", "Import screenshots");
         public static readonly LocString ImportScreenshotsHint = new("settings.importScreenshotsHint", "Copy screenshots you take into the Photos gallery, including ones from ReShade and GShade. Only shots taken while the phone is running are copied, and the originals stay where they are.");
-        public static readonly LocString NativeFileDialog = new("settings.nativeFileDialog", "Use the Windows file browser");
+        public static readonly LocString NativeFileDialog = new("settings.nativeFileDialog", "Windows file browser");
         public static readonly LocString NativeFileDialogHint = new("settings.nativeFileDialogHint", "Pick photos and sounds with the Windows file browser. Turn it off if importing a file crashes your game.");
         public static readonly LocString ChirperMediaPosts = new("settings.chirperMediaPosts", "Show photo and GIF chirps");
         public static readonly LocString ChirperMediaPostsHint = new("settings.chirperMediaPostsHint", "Chirps that carry photos or GIFs show up in your feeds. Turn this off to keep your Chirper feeds text only.");
@@ -1270,6 +1269,7 @@ internal static class L
         public static readonly LocString OpenMinimized = new("settings.openMinimized", "Open minimized");
         public static readonly LocString StartupHint = new("settings.startupHint", "Open the phone automatically when you log in. Open minimized shows it as a small dock that you tap to expand.");
         public static readonly LocString Ringtone = new("settings.ringtone", "Ringtone");
+        public static readonly LocString Sounds = new("settings.sounds", "Sounds");
         public static readonly LocString Sound = new("settings.sound", "Sound");
         public static readonly LocString NotificationSound = new("settings.notificationSound", "Notification Sound");
         public static readonly LocString Volume = new("settings.volume", "Volume");
@@ -1277,23 +1277,19 @@ internal static class L
         public static readonly LocString SoundImportHint = new("settings.soundImportHint", "Imported files appear in the list below and play at the volume set here, separate from the game's own sound settings.");
         public static readonly LocString Language = new("settings.language", "Language");
         public static readonly LocString About = new("settings.about", "About");
-        public static readonly LocString Information = new("settings.information", "Information");
         public static readonly LocString Plugin = new("settings.plugin", "Plugin");
         public static readonly LocString Version = new("settings.version", "Version");
         public static readonly LocString Command = new("settings.command", "Command");
         public static readonly LocString CopySupportInfo = new("settings.copySupportInfo", "Copy Support Info");
         public static readonly LocString SupportInfoCopied = new("settings.supportInfoCopied", "Copied to clipboard");
-        public static readonly LocString CreditsLinks = new("settings.creditsLinks", "Credits & links");
         public static readonly LocString SupportAetherphone = new("settings.supportAetherphone", "Support Aetherphone");
         public static readonly LocString SupportHint = new("settings.supportHint", "Aetherphone is free and made in my spare time. If you enjoy it, a pledge on Patreon helps me keep building and improving it. Thank you for being here.");
         public static readonly LocString JoinDiscord = new("settings.joinDiscord", "Join our Discord");
         public static readonly LocString VisitWebsite = new("settings.visitWebsite", "Visit our website");
         public static readonly LocString Changelog = new("settings.changelog", "Changelog");
-        public static readonly LocString ChangelogSummary = new("settings.changelogSummary", "What's new");
         public static readonly LocString ChangelogHero = new("settings.changelogHero", "What's New");
         public static readonly LocString ChangelogLatest = new("settings.changelogLatest", "Latest");
         public static readonly LocString Tutorials = new("settings.tutorials", "Tips & Tutorials");
-        public static readonly LocString TutorialsSummary = new("settings.tutorialsSummary", "On");
         public static readonly LocString TutorialsOff = new("settings.tutorialsOff", "Off");
         public static readonly LocString TutorialsShow = new("settings.tutorialsShow", "Show tutorials");
         public static readonly LocString TutorialsReplay = new("settings.tutorialsReplay", "Replay welcome");
@@ -1307,7 +1303,6 @@ internal static class L
         public static readonly LocString LastSeenOnline = new("settings.lastSeenOnline", "Last seen online");
         public static readonly LocString ChatPrivacyHint = new("settings.chatPrivacyHint", "These apply to the Message app. If you turn read receipts or last seen off, you will not send them and you will not see them from others either.");
         public static readonly LocString Commands = new("settings.commands", "Commands");
-        public static readonly LocString CommandsSummary = new("settings.commandsSummary", "Slash commands");
         public static readonly LocString CommandsHint = new("settings.commandsHint", "Type these into the chat box. Reset brings the phone back to the middle of your screen if you ever move it out of view.");
         public static readonly LocString CommandToggle = new("settings.commandToggle", "Show or hide the phone");
         public static readonly LocString CommandAlias = new("settings.commandAlias", "Alias for /phone");

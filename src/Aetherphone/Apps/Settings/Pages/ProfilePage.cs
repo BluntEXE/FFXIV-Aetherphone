@@ -46,11 +46,9 @@ internal sealed class ProfilePage : ISettingsPage, IDisposable
                 PushTimeZone(null);
             }
 
-            DrawRegionSection(theme, scale);
-            ImGui.Dummy(new Vector2(0f, 18f * scale));
-            SettingsSection.Header(Loc.T(L.Profile.TimeZoneSection), theme);
-            Hint(Loc.T(L.Profile.TimeZoneHelp), theme);
-            ImGui.Dummy(new Vector2(0f, 8f * scale));
+            DrawRegionSection(theme);
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
+            SettingsSection.Header(Loc.T(L.Profile.TimeZoneSection), theme, Loc.T(L.Profile.TimeZoneHelp));
             var share = session.CurrentUser?.ShareTimeZone ?? true;
             var shareCard = GroupCard.Begin(theme, 1);
             var nextShare = SettingsRow.Bool(shareCard.NextRow(), Loc.T(L.Profile.ShareTimeZoneLabel), share, theme);
@@ -62,8 +60,8 @@ internal sealed class ProfilePage : ISettingsPage, IDisposable
 
             if (!session.IsSignedIn)
             {
-                ImGui.Dummy(new Vector2(0f, 8f * scale));
-                Hint(Loc.T(L.Profile.SignInToShare), theme);
+                ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+                SettingsSection.Hint(Loc.T(L.Profile.SignInToShare), theme);
             }
 
             if (nextShare)
@@ -96,11 +94,9 @@ internal sealed class ProfilePage : ISettingsPage, IDisposable
         }
     }
 
-    private void DrawRegionSection(PhoneTheme theme, float scale)
+    private void DrawRegionSection(PhoneTheme theme)
     {
-        SettingsSection.Header(Loc.T(L.Profile.RegionSection), theme);
-        Hint(Loc.T(L.Profile.RegionHelp), theme);
-        ImGui.Dummy(new Vector2(0f, 8f * scale));
+        SettingsSection.Header(Loc.T(L.Profile.RegionSection), theme, Loc.T(L.Profile.RegionHelp));
         var card = GroupCard.Begin(theme, SocialRegion.Codes.Length + 1);
         var autoLabel = $"{Loc.T(L.Profile.RegionAutomatic)}  ({SocialRegion.AutoCode(gameData)})";
         if (SettingsRow.Selectable(card.NextRow(), autoLabel, !configuration.RegionManual, theme) &&
@@ -218,7 +214,6 @@ internal sealed class ProfilePage : ISettingsPage, IDisposable
         });
     }
 
-    private static void Hint(string text, PhoneTheme theme) => SettingsSection.Hint(text, theme);
 
     public void Dispose()
     {

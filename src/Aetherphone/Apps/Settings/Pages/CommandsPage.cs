@@ -23,7 +23,7 @@ internal sealed class CommandsPage : ISettingsPage
     };
 
     public string Title => Loc.T(L.Settings.Commands);
-    public string Summary => Loc.T(L.Settings.CommandsSummary);
+    public string Summary => string.Empty;
     public FontAwesomeIcon Icon => FontAwesomeIcon.Terminal;
     public Vector4 Tint => new(0.46f, 0.62f, 0.92f, 1f);
 
@@ -33,7 +33,7 @@ internal sealed class CommandsPage : ISettingsPage
         var theme = context.Theme;
         using (AppSurface.Begin(body))
         {
-            SettingsSection.Header(Loc.T(L.Settings.Commands), theme);
+            SettingsSection.Header(Loc.T(L.Settings.Commands), theme, Loc.T(L.Settings.CommandsHint));
             var card = GroupCard.Begin(theme, Entries.Length, RowHeight);
             for (var index = 0; index < Entries.Length; index++)
             {
@@ -41,8 +41,6 @@ internal sealed class CommandsPage : ISettingsPage
             }
 
             card.End();
-            ImGui.Dummy(new Vector2(0f, 8f * scale));
-            SettingsSection.Hint(Loc.T(L.Settings.CommandsHint), theme);
         }
     }
 

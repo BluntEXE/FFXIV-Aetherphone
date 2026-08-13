@@ -49,14 +49,14 @@ internal sealed class TagsMentionsPage : ISettingsPage, IDisposable
             }
 
             EnsureLoaded();
-            SettingsSection.Header(Loc.T(L.PhotoTag.SettingsTitle), theme);
             if (!loaded)
             {
                 SettingsSection.Hint(Loc.T(L.Common.Loading), theme);
                 return;
             }
 
-            var card = GroupCard.Begin(theme, 2);
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
+            var card = GroupCard.Begin(theme, 3);
             if (SettingsRow.Disclosure(card.NextRow(), Loc.T(L.PhotoTag.AllowMentions),
                     Loc.T(SocialAudience.Label(mentionPolicy)), theme))
             {
@@ -71,24 +71,14 @@ internal sealed class TagsMentionsPage : ISettingsPage, IDisposable
                 navigator.Open(audiencePage);
             }
 
+            var approve = SettingsRow.Bool(card.NextRow(), Loc.T(L.PhotoTag.ApproveManually), requireTagApproval,
+                theme, null, Loc.T(L.PhotoTag.ApproveHint));
             card.End();
-            ImGui.Dummy(new Vector2(0f, 8f * scale));
-            SettingsSection.Hint(Loc.T(L.PhotoTag.AudienceHint), theme);
-
-            ImGui.Dummy(new Vector2(0f, 12f * scale));
-            SettingsSection.Header(Loc.T(L.PhotoTag.ApprovalHeader), theme);
-            var approvalCard = GroupCard.Begin(theme, 1);
-            var approve = SettingsRow.Bool(approvalCard.NextRow(), Loc.T(L.PhotoTag.ApproveManually),
-                requireTagApproval, theme);
-            approvalCard.End();
             if (approve != requireTagApproval)
             {
                 requireTagApproval = approve;
                 PushTags();
             }
-
-            ImGui.Dummy(new Vector2(0f, 8f * scale));
-            SettingsSection.Hint(Loc.T(L.PhotoTag.ApproveHint), theme);
         }
     }
 

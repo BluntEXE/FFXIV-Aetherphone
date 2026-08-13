@@ -57,30 +57,46 @@ internal static class SettingsRow
             theme.TextMuted, valueHovered);
     }
 
+    public static bool Switch(Rect row, FontAwesomeIcon icon, Vector4 tint, string label, bool value, PhoneTheme theme,
+        string? hint = null, string? id = null)
+    {
+        var scale = UiScale.Current;
+        var tileMax = DrawIconTile(row, icon, tint, theme, false, false, scale);
+        var toggleWidth = Metrics.Size.ToggleWidth * scale;
+        var toggleHeight = Metrics.Size.ToggleHeight * scale;
+        var toggleMin = new Vector2(row.Max.X - toggleWidth, row.Center.Y - toggleHeight * 0.5f);
+
+        var labelStartX = tileMax.X + Metrics.Space.Md * scale;
+        var iconHeight = Metrics.Size.HintIconHeight * scale;
+        var iconGap = Metrics.Size.HintIconGap * scale;
+        var reservedSpace = hint != null ? iconHeight + iconGap : 0f;
+        var labelMaxWidth = MathF.Max(1f,
+            toggleMin.X - Metrics.Space.Md * scale - labelStartX - reservedSpace);
+        var labelSize = Typography.Measure(label, TextStyles.BodyEmphasized);
+        var rowId = id ?? label;
+        var labelWidth = Marquee.DrawLeftAuto(rowId, label, labelStartX, row.Center.Y - labelSize.Y * 0.5f,
+            labelMaxWidth, TextStyles.BodyEmphasized, theme.TextStrong);
+
+        if (hint != null)
+        {
+            HintIcon.Draw(new Vector2(labelStartX + labelWidth + iconGap, row.Center.Y), hint, theme, scale);
+        }
+
+        return Toggle.Draw(rowId, new Rect(toggleMin, toggleMin + new Vector2(toggleWidth, toggleHeight)), value,
+            theme);
+    }
+
     public static bool Link(Rect row, FontAwesomeIcon icon, Vector4 tint, string label, string value, PhoneTheme theme,
         bool badge = false, string? id = null)
     {
         var scale = UiScale.Current;
         var hovered = UiInteract.Hover(row.Min, row.Max);
-        var dl = ImGui.GetWindowDrawList();
         if (hovered)
         {
             DrawRowHighlight(row, theme);
         }
 
-        var tileSize = Metrics.Size.IconTile * scale;
-        var tileMin = new Vector2(row.Min.X, row.Center.Y - tileSize * 0.5f);
-        var tileMax = tileMin + new Vector2(tileSize, tileSize);
-        var normalized = IconTile.Surface(tint);
-        var surface = hovered ? Palette.Lighten(normalized, 0.08f) : normalized;
-        IconTile.FillShaded(dl, tileMin, tileMax, tileSize * Metrics.Radius.TileFactor, surface);
-        ProgressRing.CenterIcon(dl, new Vector2(tileMin.X + tileSize * 0.5f, row.Center.Y), icon,
-            AccentRing.Ink, tileSize * 0.5f);
-        if (badge)
-        {
-            AppBadge.DrawDot(new Vector2(tileMax.X, tileMin.Y), theme, scale);
-        }
-
+        var tileMax = DrawIconTile(row, icon, tint, theme, hovered, badge, scale);
         var labelStartX = tileMax.X + Metrics.Space.Md * scale;
         var chevronWidth = Metrics.Space.Xs * scale;
         var chevronTip = new Vector2(row.Max.X, row.Center.Y);
@@ -247,6 +263,26 @@ internal static class SettingsRow
         }
 
         return UiInteract.Click(row.Min, row.Max, hovered);
+    }
+
+    private static Vector2 DrawIconTile(Rect row, FontAwesomeIcon icon, Vector4 tint, PhoneTheme theme, bool hovered,
+        bool badge, float scale)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var tileSize = Metrics.Size.IconTile * scale;
+        var tileMin = new Vector2(row.Min.X, row.Center.Y - tileSize * 0.5f);
+        var tileMax = tileMin + new Vector2(tileSize, tileSize);
+        var normalized = IconTile.Surface(tint);
+        var surface = hovered ? Palette.Lighten(normalized, 0.08f) : normalized;
+        IconTile.FillShaded(drawList, tileMin, tileMax, tileSize * Metrics.Radius.TileFactor, surface);
+        ProgressRing.CenterIcon(drawList, new Vector2(tileMin.X + tileSize * 0.5f, row.Center.Y), icon, AccentRing.Ink,
+            tileSize * 0.5f);
+        if (badge)
+        {
+            AppBadge.DrawDot(new Vector2(tileMax.X, tileMin.Y), theme, scale);
+        }
+
+        return tileMax;
     }
 
     private static void DrawRowHighlight(Rect row, PhoneTheme theme)

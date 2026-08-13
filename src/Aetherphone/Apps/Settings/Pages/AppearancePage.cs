@@ -15,11 +15,12 @@ namespace Aetherphone.Apps.Settings.Pages;
 internal sealed class AppearancePage : ISettingsPage
 {
     public string Title => Loc.T(L.Settings.Appearance);
-    public string Summary => CatalogLabels.Accent(configuration.AccentName);
+    public string Summary => string.Empty;
     public FontAwesomeIcon Icon => FontAwesomeIcon.Palette;
     public Vector4 Tint => new(0.55f, 0.45f, 0.95f, 1f);
     public string? GuideAnchor => "settings.row.appearance";
     private const float SizeReadoutColumn = 46f;
+    private const float LabelColumnShare = 0.42f;
     private static readonly ThemeMode[] ModeOrder = { ThemeMode.Light, ThemeMode.Dark, ThemeMode.Auto };
     private readonly Configuration configuration;
     private readonly ThemeProvider themes;
@@ -92,21 +93,13 @@ internal sealed class AppearancePage : ISettingsPage
             }
 
             card.End();
-            SettingsSection.Header(Loc.T(L.Settings.TextSize), theme);
-            var zoomCard = GroupCard.Begin(theme, 1);
-            DrawTextSizeSlider(zoomCard.NextRow(), theme);
-            zoomCard.End();
-
-            SettingsSection.Header(Loc.T(L.Settings.PhoneSize), theme);
-            var sizeCard = GroupCard.Begin(theme, 1);
-            DrawPhoneSizeSlider(sizeCard.NextRow(), theme);
-            sizeCard.End();
-
-            SettingsSection.Header(Loc.T(L.Settings.ClockFormat), theme);
-            var clockCard = GroupCard.Begin(theme, 1);
-            var use24Hour = SettingsRow.Bool(clockCard.NextRow(), Loc.T(L.Settings.Use24HourClock),
+            SettingsSection.Header(Loc.T(L.Settings.Display), theme);
+            var displayCard = GroupCard.Begin(theme, 3);
+            DrawTextSizeSlider(displayCard.NextRow(), Loc.T(L.Settings.TextSize), theme);
+            DrawPhoneSizeSlider(displayCard.NextRow(), Loc.T(L.Settings.PhoneSize), theme);
+            var use24Hour = SettingsRow.Bool(displayCard.NextRow(), Loc.T(L.Settings.Use24HourClock),
                 TimeText.Use24Hour, theme, null, TimeText.Clock(DateTime.Now));
-            clockCard.End();
+            displayCard.End();
             if (use24Hour != TimeText.Use24Hour)
             {
                 configuration.Use24HourClock = use24Hour;
@@ -118,13 +111,14 @@ internal sealed class AppearancePage : ISettingsPage
         }
     }
 
-    private void DrawPhoneSizeSlider(Rect row, PhoneTheme theme)
+    private void DrawPhoneSizeSlider(Rect row, string label, PhoneTheme theme)
     {
+        var leading = DrawSliderLabel(row, label, theme);
         var smallest = PhoneSizeCatalog.MinimumWidth;
         var largest = MathF.Max(PhoneBounds.ClampWidth(PhoneSizeCatalog.MaximumWidth), smallest + 1f);
         var span = largest - smallest;
         var effective = PhoneBounds.ClampWidth(configuration.PhoneWidth);
-        var slider = DrawSettingSlider("settings.phoneSize", row, theme, (effective - smallest) / span);
+        var slider = DrawSettingSlider("settings.phoneSize", row, theme, leading, (effective - smallest) / span);
         var width = PhoneSizeCatalog.Snap(PhoneBounds.ClampWidth(smallest + slider.Value * span));
         if ((slider.Dragging || slider.Released) && MathF.Abs(width - configuration.PhoneWidth) > 0.01f)
         {
@@ -139,12 +133,13 @@ internal sealed class AppearancePage : ISettingsPage
         DrawPercentReadout(row, theme, PhoneSizeCatalog.ZoomFor(PhoneBounds.ClampWidth(configuration.PhoneWidth)));
     }
 
-    private void DrawTextSizeSlider(Rect row, PhoneTheme theme)
+    private void DrawTextSizeSlider(Rect row, string label, PhoneTheme theme)
     {
+        var leading = DrawSliderLabel(row, label, theme);
         const float smallest = TextZoomCatalog.MinimumZoom;
         const float span = TextZoomCatalog.MaximumZoom - TextZoomCatalog.MinimumZoom;
         var effective = TextZoomCatalog.Clamp(configuration.TextZoom);
-        var slider = DrawSettingSlider("settings.textZoom", row, theme, (effective - smallest) / span);
+        var slider = DrawSettingSlider("settings.textZoom", row, theme, leading, (effective - smallest) / span);
         var zoom = TextZoomCatalog.Snap(TextZoomCatalog.Clamp(smallest + slider.Value * span));
         if ((slider.Dragging || slider.Released) && MathF.Abs(zoom - configuration.TextZoom) > 0.001f)
         {
@@ -160,10 +155,21 @@ internal sealed class AppearancePage : ISettingsPage
         DrawPercentReadout(row, theme, TextZoomCatalog.Clamp(configuration.TextZoom));
     }
 
-    private static Slider.Result DrawSettingSlider(string id, Rect row, PhoneTheme theme, float normalized)
+    private static float DrawSliderLabel(Rect row, string label, PhoneTheme theme)
     {
         var scale = UiScale.Current;
-        return Slider.Draw(id, row, normalized, theme, 0f,
+        var fitted = Typography.FitText(label, row.Width * LabelColumnShare, TextStyles.BodyEmphasized);
+        var size = Typography.Measure(fitted, TextStyles.BodyEmphasized);
+        Typography.Draw(ImGui.GetWindowDrawList(), new Vector2(row.Min.X, row.Center.Y - size.Y * 0.5f), fitted,
+            theme.TextStrong, TextStyles.BodyEmphasized);
+        return size.X + Metrics.Space.Lg * scale;
+    }
+
+    private static Slider.Result DrawSettingSlider(string id, Rect row, PhoneTheme theme, float leadingInset,
+        float normalized)
+    {
+        var scale = UiScale.Current;
+        return Slider.Draw(id, row, normalized, theme, leadingInset,
             SizeReadoutColumn * scale + Metrics.Space.Md * scale);
     }
 

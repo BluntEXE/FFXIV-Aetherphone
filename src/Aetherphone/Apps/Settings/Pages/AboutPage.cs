@@ -1,7 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
-using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -19,18 +18,17 @@ internal sealed class AboutPage : ISettingsPage
     }
 
     public string Title => Loc.T(L.Settings.About);
-    public string Summary => AepConstants.Version;
+    public string Summary => string.Empty;
     public FontAwesomeIcon Icon => FontAwesomeIcon.InfoCircle;
     public Vector4 Tint => new(0.40f, 0.62f, 0.92f, 1f);
     private static readonly TimeSpan CopiedFlashWindow = TimeSpan.FromSeconds(3);
-    private static readonly Vector4 WebsiteTint = new(0.13f, 0.63f, 0.60f, 1f);
 
     public void Draw(in PhoneContext context, Rect body)
     {
         var theme = context.Theme;
         using (AppSurface.Begin(body))
         {
-            SettingsSection.Header(Loc.T(L.Settings.Information), theme);
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * UiScale.Current));
             var card = GroupCard.Begin(theme, 4);
             SettingsRow.Info(card.NextRow(), Loc.T(L.Settings.Plugin), AepConstants.Name, theme);
             SettingsRow.Info(card.NextRow(), Loc.T(L.Settings.Version), AepConstants.Version, theme);
@@ -44,15 +42,6 @@ internal sealed class AboutPage : ISettingsPage
             }
 
             card.End();
-            SettingsSection.Header(Loc.T(L.Settings.CreditsLinks), theme);
-            var links = GroupCard.Begin(theme, 1);
-            if (SettingsRow.Link(links.NextRow(), FontAwesomeIcon.Globe, WebsiteTint, Loc.T(L.Settings.VisitWebsite),
-                    string.Empty, theme))
-            {
-                UrlActions.OpenInBrowser(AepConstants.WebsiteUrl);
-            }
-
-            links.End();
         }
     }
 }

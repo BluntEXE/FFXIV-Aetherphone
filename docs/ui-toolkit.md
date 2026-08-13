@@ -229,6 +229,9 @@ A tap only registers if the pointer traveled less than the drag slop, so panning
 | `SearchField.Draw` / `SearchField.DrawSubmit` | Pill search input with search icon; `Draw` adds a clear button, `DrawSubmit` returns true on Enter (src/Aetherphone/Windows/Components/SearchField.cs) |
 | `Elevation.Card` / `Elevation.Floating` | Layered soft drop shadows behind cards and floating surfaces (src/Aetherphone/Windows/Components/Elevation.cs) |
 | `AppHeader.Draw(context, title, onBack)` | Standard app title bar with optional back button (src/Aetherphone/Windows/Components/AppHeader.cs) |
+| `GroupCard.Begin(theme, rowCount)` + `NextRow()` | The inset card that every list of rows sits in, hairlines drawn for you (src/Aetherphone/Windows/Components/GroupCard.cs) |
+| `SettingsRow.Link` / `AppLink` / `Disclosure` / `Bool` / `Switch` / `Info` / `Selectable` / `Action` | The row vocabulary for a GroupCard; `Switch` is the icon-tile row with an inline toggle, `Bool` the plain one, both taking an optional `hint` that becomes a question-mark icon (src/Aetherphone/Windows/Components/SettingsRow.cs) |
+| `SettingsSection.Header(title, theme, hint)` | Uppercase section label, with an optional hint icon for a whole section (src/Aetherphone/Windows/Components/SettingsSection.cs) |
 | `HoverButton.Circle` | Round icon button with hover ring (src/Aetherphone/Windows/Components/HoverButton.cs) |
 | `PopoverSurface.Draw` | The floating card background menus sit on (src/Aetherphone/Windows/Components/PopoverSurface.cs) |
 | `PullToRefresh` | Overscroll spinner fed by `AppSurface` `Pull` (src/Aetherphone/Windows/Components/PullToRefresh.cs) |

@@ -4,8 +4,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility.Raii;
-
 using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Settings.Pages;
@@ -14,8 +12,7 @@ internal sealed class TutorialsPage : ISettingsPage
 {
     public string Title => Loc.T(L.Settings.Tutorials);
 
-    public string Summary =>
-        configuration.TutorialsEnabled ? Loc.T(L.Settings.TutorialsSummary) : Loc.T(L.Settings.TutorialsOff);
+    public string Summary => configuration.TutorialsEnabled ? string.Empty : Loc.T(L.Settings.TutorialsOff);
 
     public FontAwesomeIcon Icon => FontAwesomeIcon.GraduationCap;
     public Vector4 Tint => new(0.62f, 0.42f, 0.96f, 1f);
@@ -33,10 +30,10 @@ internal sealed class TutorialsPage : ISettingsPage
         var theme = context.Theme;
         using (AppSurface.Begin(body))
         {
-            SettingsSection.Header(Loc.T(L.Settings.Tutorials), theme);
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
             var card = GroupCard.Begin(theme, 1);
             var enabled = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.TutorialsShow),
-                configuration.TutorialsEnabled, theme);
+                configuration.TutorialsEnabled, theme, null, Loc.T(L.Settings.TutorialsHint));
             card.End();
             if (enabled != configuration.TutorialsEnabled)
             {
@@ -60,14 +57,6 @@ internal sealed class TutorialsPage : ISettingsPage
             if (reset)
             {
                 OnboardingState.ResetAll();
-            }
-
-            ImGui.Dummy(new Vector2(0f, 8f * scale));
-            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 16f * scale);
-            using (Plugin.Fonts.Push(0.8f))
-            using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
-            {
-                Typography.Wrapped(Loc.T(L.Settings.TutorialsHint));
             }
         }
     }

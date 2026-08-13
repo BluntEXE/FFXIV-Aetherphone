@@ -434,14 +434,13 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
                 AddAccount();
             }
 
-            if (SettingsRow.Bool(actions.NextRow(), Loc.T(L.Account.FollowCharacter), session.FollowsCharacter, theme))
+            var followCharacter = SettingsRow.Bool(actions.NextRow(), Loc.T(L.Account.FollowCharacter),
+                session.FollowsCharacter, theme, null, Loc.T(L.Account.FollowCharacterHint));
+            actions.End();
+            if (followCharacter != session.FollowsCharacter)
             {
                 ToggleFollowCharacter();
             }
-
-            actions.End();
-            ImGui.Dummy(new Vector2(0f, 8f * scale));
-            SettingsSection.Hint(Loc.T(L.Account.FollowCharacterHint), theme);
         }
         else
         {

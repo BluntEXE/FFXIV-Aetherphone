@@ -54,7 +54,7 @@ internal sealed class SoundSettingsPage : ISettingsPage
 
         using (var surface = AppSurface.Begin(body))
         {
-            SettingsSection.Header(Loc.T(L.Settings.Sound), theme);
+            SettingsSection.Header(Loc.T(L.Settings.Sound), theme, Loc.T(L.Settings.SoundImportHint));
             SoundOptionList.Draw(theme, sound, kind, getToken(), false, Select);
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
             SettingsSection.Header(Loc.T(L.Settings.Volume), theme);
@@ -81,7 +81,6 @@ internal sealed class SoundSettingsPage : ISettingsPage
 
             importCard.End();
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
-            SettingsSection.Hint(Loc.T(L.Settings.SoundImportHint), theme);
         }
     }
 

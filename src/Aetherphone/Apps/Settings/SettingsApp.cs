@@ -72,8 +72,7 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
         var appearance = new AppearancePage(configuration, themes, this, photoLibrary, confirm, wallpapers,
             wallpaperImages);
         var language = new LanguagePage(configuration);
-        var immersion = new ImmersionPage(configuration);
-        var behavior = new BehaviorPage(configuration);
+        var general = new GeneralPage(configuration);
         var tutorials = new TutorialsPage(configuration);
         var callsPage = new CallsPage(calls, configuration);
         var appNotifications = new AppNotificationPage(configuration, sound);
@@ -88,8 +87,7 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
                 configuration.NotificationVolume = volume;
                 configuration.Save();
             });
-        var notifications = new NotificationsPage(configuration, this, appNotifications, sound, notificationSoundPage,
-            services.Installer);
+        var notifications = new NotificationsPage(configuration, this, appNotifications, services.Installer);
         var ringtonePage = new SoundSettingsPage(sound, SoundKind.Ringtone, L.Settings.Ringtone, FontAwesomeIcon.Music,
             new Vector4(0.95f, 0.40f, 0.65f, 1f), "settings.ringtoneVolume",
             () => configuration.RingtoneSound, token =>
@@ -101,23 +99,25 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
                 configuration.RingtoneVolume = volume;
                 configuration.Save();
             });
+        var sounds = new SoundsPage(configuration, sound, this, ringtonePage, notificationSoundPage);
         safetyPage = new SafetyPage(aethernetSession, services.ModerationArchive, this);
         safetyLauncher = services.SafetyLauncher;
         encryptionSetupLauncher = services.EncryptionSetup;
         var commands = new CommandsPage();
-        privacyPage = new PrivacyPage(configuration, aethernetSession, aethernet.Account, aethernet.Safety,
-            confirm);
         tagsMentionsPage = new TagsMentionsPage(aethernetSession, aethernet.Account, this);
+        privacyPage = new PrivacyPage(configuration, aethernetSession, aethernet.Account, aethernet.Safety,
+            confirm, this, tagsMentionsPage);
         var about = new AboutPage(configuration);
         changelogPage = new ChangelogPage(configuration);
         var groups = new[]
         {
-            new SettingsGroup(new ISettingsPage[] { appearance, language, immersion, behavior, tutorials }),
-            new SettingsGroup(new ISettingsPage[] { callsPage, notifications, ringtonePage }),
-            new SettingsGroup(new ISettingsPage[] { commands, privacyPage, tagsMentionsPage, safetyPage, changelogPage, about }),
+            new ISettingsPage[] { appearance, sounds, notifications, callsPage, general, language },
+            new ISettingsPage[] { privacyPage, safetyPage },
+            new ISettingsPage[] { tutorials, commands, changelogPage, about },
         };
         router = new ViewRouter<ISettingsPage>(
-            new RootSettingsPage(this, groups, aethernetSession, remoteImages, lodestone, accountPage));
+            new RootSettingsPage(this, groups, configuration, aethernetSession, remoteImages, lodestone,
+                accountPage));
         drawPage = DrawPage;
         popBack = PopBack;
         assignWallpaper = AssignWallpaper;
