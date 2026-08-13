@@ -35,8 +35,6 @@ internal sealed partial class LinkpearlApp : IPhoneApp
     private readonly LinkshellStore linkshells;
     private readonly LinkshellMuteStore mutes;
     private readonly LinkpearlNotificationGate notificationGate;
-    private readonly ChatBridge bridge;
-    private readonly LinkshellBridge linkshellBridge;
     private readonly LinkpearlLauncher launcher;
     private readonly LodestoneService lodestone;
     private readonly NotificationService notifications;
@@ -46,21 +44,24 @@ internal sealed partial class LinkpearlApp : IPhoneApp
     private readonly ViewRouter<LinkpearlRoute> router;
     private readonly RouterDraw<LinkpearlRoute> drawView;
     private readonly Action backToList;
+    private readonly GameChatThread chatThread;
     private PhoneTheme frameTheme = PhoneTheme.Default;
     private INavigator frameNavigation = null!;
     private MessagesTab activeTab;
 
     public LinkpearlApp(MessageStore store, LinkshellStore linkshells, LinkshellMuteStore mutes,
-        LinkpearlNotificationGate notificationGate, ChatBridge bridge,
-        LinkshellBridge linkshellBridge, LinkpearlLauncher launcher, LodestoneService lodestone,
-        NotificationService notifications, GameData gameData, LookupService lookup, ConfirmService confirm)
+        LinkpearlNotificationGate notificationGate, LinkpearlLauncher launcher, LodestoneService lodestone,
+        NotificationService notifications, GameData gameData, LookupService lookup, ConfirmService confirm,
+        Core.GameChat.ChatLog chatLog, Core.GameChat.ChatSend chatSend)
     {
+        chatThread = new GameChatThread(chatLog, chatSend, gameData)
+        {
+            Context = entry => OpenChatMenu(entry.Text, entry.IsSelf ? null : entry.AuthorName),
+        };
         this.store = store;
         this.linkshells = linkshells;
         this.mutes = mutes;
         this.notificationGate = notificationGate;
-        this.bridge = bridge;
-        this.linkshellBridge = linkshellBridge;
         this.launcher = launcher;
         this.lodestone = lodestone;
         this.notifications = notifications;
@@ -80,7 +81,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
     {
         router.Reset();
         activeTab = MessagesTab.Chats;
-        trackedThread = null;
+        threadKey = string.Empty;
         ResetContactsState();
         ResetFindState();
         ReadFriends();
@@ -107,10 +108,8 @@ internal sealed partial class LinkpearlApp : IPhoneApp
     public void OnClosed()
     {
         chatMenu.Close();
+        chatThread.Close();
         router.Reset();
-        draft = string.Empty;
-        sendFailedAtMilliseconds = 0;
-        trackedThread = null;
         ResetContactsState();
         ResetFindState();
     }
@@ -122,6 +121,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         frameTheme = context.Theme;
         frameNavigation = context.Navigation;
         chatMenu.Gate();
+        chatThread.Gate();
         router.Draw(context.Content, context.Theme.AppBackground, delta, drawView);
     }
 
@@ -271,7 +271,5 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         }
     }
 
-    public void Dispose()
-    {
-    }
+    public void Dispose() => chatThread.Dispose();
 }

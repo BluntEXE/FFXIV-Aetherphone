@@ -1,32 +1,22 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
+using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Linkpearl;
 using Aetherphone.Core.Onboarding;
-using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Linkpearl;
 
 internal sealed partial class LinkpearlApp
 {
-    private const long SendFailedNoticeMilliseconds = 4000;
-    private const float NoticeTextScale = 0.78f;
-
-    private readonly ChatEntranceTracker entrance = new();
     private readonly string[] chatSegmentLabels = new string[2];
     private readonly List<LinkshellEntry> roster = new();
-    private string draft = string.Empty;
-    private object? trackedThread;
+    private string threadKey = string.Empty;
     private int chatSegment;
-    private bool followBottom;
-    private bool snapToBottom;
-    private bool composerFocus;
-    private long sendFailedAtMilliseconds;
 
     private void DrawChatsTab(Rect content)
     {
@@ -40,7 +30,6 @@ internal sealed partial class LinkpearlApp
             chatSegment = 1;
         }
 
-        trackedThread = null;
         var scale = UiScale.Current;
         var segRowHeight = 40f * scale;
         var segRow = new Rect(new Vector2(content.Min.X + 14f * scale, content.Min.Y),
@@ -98,24 +87,24 @@ internal sealed partial class LinkpearlApp
             for (var index = 0; index < roster.Count; index++)
             {
                 var entry = roster[index];
-                var thread = linkshells.Find(entry.Channel);
+                var shell = linkshells.Find(entry.Channel);
                 var label = LinkshellLabel.Of(entry.Channel,
-                    thread?.Name is { Length: > 0 } stored ? stored : entry.Name);
-                var action = LinkshellRow.Draw(entry.Channel, label, thread, mutes.IsMuted(entry.Channel), frameTheme);
+                    shell?.Name is { Length: > 0 } stored ? stored : entry.Name);
+                var action = LinkshellRow.Draw(entry.Channel, label, shell, mutes.IsMuted(entry.Channel), frameTheme);
                 HandleLinkshellRow(action, entry.Channel, entry.Name);
             }
 
             for (var index = 0; index < threads.Count; index++)
             {
-                var thread = threads[index];
-                if (InRoster(thread.Channel))
+                var shell = threads[index];
+                if (InRoster(shell.Channel))
                 {
                     continue;
                 }
 
-                var label = LinkshellLabel.Of(thread.Channel, thread.Name);
-                var action = LinkshellRow.Draw(thread.Channel, label, thread, mutes.IsMuted(thread.Channel), frameTheme);
-                HandleLinkshellRow(action, thread.Channel, thread.Name);
+                var label = LinkshellLabel.Of(shell.Channel, shell.Name);
+                var action = LinkshellRow.Draw(shell.Channel, label, shell, mutes.IsMuted(shell.Channel), frameTheme);
+                HandleLinkshellRow(action, shell.Channel, shell.Name);
             }
         }
     }
@@ -136,9 +125,9 @@ internal sealed partial class LinkpearlApp
 
     private void OpenLinkshell(LinkshellChannel channel, string name)
     {
-        var thread = linkshells.GetOrCreate(channel, name);
-        thread.MarkRead();
-        router.Push(LinkpearlRoute.Shell(thread));
+        var shell = linkshells.GetOrCreate(channel, name);
+        shell.MarkRead();
+        router.Push(LinkpearlRoute.Shell(shell));
     }
 
     private bool InRoster(LinkshellChannel channel)
@@ -173,31 +162,22 @@ internal sealed partial class LinkpearlApp
             AskDeleteHistory(conversation);
         }
 
-        var bubbles = BubbleArea(area, out var composerBar);
-        entrance.Sync(conversation, conversation.Lines.Count, ImGui.GetIO().DeltaTime);
-        using (AppSurface.Begin(bubbles))
-        {
-            SyncFollow(conversation);
-            ImGui.Dummy(new Vector2(0f, 8f * UiScale.Current));
-            var lines = conversation.Lines;
-            for (var index = 0; index < lines.Count; index++)
-            {
-                if (ChatBubble.Draw(lines[index], frameTheme, entrance.Progress(index)))
-                {
-                    OpenChatMenu(lines[index], conversation.Contact);
-                }
-            }
+        OpenTellThread(conversation);
+        chatThread.Draw(ThreadBody(area), frameTheme);
+        DrawChatMenu(area);
+    }
 
-            ImGui.Dummy(new Vector2(0f, 8f * UiScale.Current));
-            if (followBottom)
-            {
-                ImGui.SetScrollHereY(1f);
-            }
+    private void OpenTellThread(Conversation conversation)
+    {
+        var key = ChatStreams.ForTell(conversation.SendTarget);
+        if (string.Equals(threadKey, key, StringComparison.Ordinal))
+        {
+            return;
         }
 
-        DrawComposer(composerBar, frameTheme, text => bridge.Send(conversation, text),
-            ChatBridge.ComposerBudget(conversation));
-        DrawChatMenu(area);
+        threadKey = key;
+        chatThread.Open(new GameChatTarget(key, new[] { key }, new[] { GameChannels.TellKey },
+            GameChannels.TellKey, conversation.SendTarget, ChatDensity.Bubbles, false));
     }
 
     private bool DrawDeleteHistoryButton(Rect area)
@@ -233,46 +213,37 @@ internal sealed partial class LinkpearlApp
     private void DeleteHistory(Conversation conversation)
     {
         store.Remove(conversation);
-        trackedThread = null;
+        threadKey = string.Empty;
         router.Pop();
     }
 
-    private void DrawLinkshellThread(Rect area, LinkshellThread thread)
+    private void DrawLinkshellThread(Rect area, LinkshellThread shell)
     {
-        thread.MarkRead();
-        notifications.RemoveGroup(thread.Channel.Key);
+        shell.MarkRead();
+        notifications.RemoveGroup(shell.Channel.Key);
         var context = new PhoneContext(area, frameTheme, frameNavigation);
-        AppHeader.Draw(context, LinkshellLabel.Of(thread.Channel, thread.Name), backToList);
-        if (DrawMuteButton(area, thread.Channel))
+        AppHeader.Draw(context, LinkshellLabel.Of(shell.Channel, shell.Name), backToList);
+        if (DrawMuteButton(area, shell.Channel))
         {
-            mutes.Toggle(thread.Channel);
+            mutes.Toggle(shell.Channel);
         }
 
-        var bubbles = BubbleArea(area, out var composerBar);
-        entrance.Sync(thread, thread.Lines.Count, ImGui.GetIO().DeltaTime);
-        using (AppSurface.Begin(bubbles))
-        {
-            SyncFollow(thread);
-            ImGui.Dummy(new Vector2(0f, 8f * UiScale.Current));
-            var lines = thread.Lines;
-            for (var index = 0; index < lines.Count; index++)
-            {
-                if (ChatBubble.Draw(lines[index], frameTheme, entrance.Progress(index), GroupContext(lines, index)))
-                {
-                    OpenChatMenu(lines[index], SenderName(lines[index]));
-                }
-            }
-
-            ImGui.Dummy(new Vector2(0f, 8f * UiScale.Current));
-            if (followBottom)
-            {
-                ImGui.SetScrollHereY(1f);
-            }
-        }
-
-        DrawComposer(composerBar, frameTheme, text => linkshellBridge.Send(thread, text),
-            LinkshellBridge.ComposerBudget(thread));
+        OpenLinkshellThread(shell.Channel);
+        chatThread.Draw(ThreadBody(area), frameTheme);
         DrawChatMenu(area);
+    }
+
+    private void OpenLinkshellThread(LinkshellChannel channel)
+    {
+        var key = channel.IsCrossWorld ? $"cwls{channel.Slot + 1}" : $"ls{channel.Slot + 1}";
+        if (string.Equals(threadKey, key, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        threadKey = key;
+        chatThread.Open(new GameChatTarget(key, new[] { key }, new[] { key }, key, string.Empty,
+            ChatDensity.Compact, false));
     }
 
     private bool DrawMuteButton(Rect area, LinkshellChannel channel)
@@ -296,144 +267,6 @@ internal sealed partial class LinkpearlApp
         return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
     }
 
-    private GroupBubble GroupContext(IReadOnlyList<ChatLine> lines, int index)
-    {
-        var line = lines[index];
-        if (line.Direction != MessageDirection.Incoming || line.Author is not { } author)
-        {
-            return default;
-        }
-
-        var showHeader = true;
-        if (index > 0)
-        {
-            var previous = lines[index - 1];
-            if (previous.Direction == MessageDirection.Incoming && previous.Author is { } previousAuthor &&
-                string.Equals(previousAuthor.Name, author.Name, StringComparison.Ordinal) &&
-                string.Equals(previousAuthor.World, author.World, StringComparison.Ordinal))
-            {
-                showHeader = false;
-            }
-        }
-
-        var tint = SenderTint.Of(author.Name);
-        return new GroupBubble(lodestone.Avatar(author.Name, author.World), FirstName(author.Name), tint, showHeader);
-    }
-
-    private Rect BubbleArea(Rect area, out Rect composerBar)
-    {
-        var scale = UiScale.Current;
-        var top = area.Min.Y + AppHeader.Height * scale;
-        var composerHeight = 52f * scale;
-        composerBar = new Rect(new Vector2(area.Min.X, area.Max.Y - composerHeight), area.Max);
-        return new Rect(new Vector2(area.Min.X, top), new Vector2(area.Max.X, area.Max.Y - composerHeight));
-    }
-
-    private void SyncFollow(object thread)
-    {
-        var scale = UiScale.Current;
-        if (ReferenceEquals(trackedThread, thread))
-        {
-            followBottom = ImGui.GetScrollY() >= ImGui.GetScrollMaxY() - 4f * scale;
-        }
-        else
-        {
-            trackedThread = thread;
-            followBottom = true;
-        }
-
-        if (snapToBottom)
-        {
-            followBottom = true;
-            snapToBottom = false;
-        }
-    }
-
-    private void DrawComposer(Rect bar, PhoneTheme theme, Func<string, bool> send, int budget)
-    {
-        var scale = UiScale.Current;
-        var dl = ImGui.GetWindowDrawList();
-        DrawSendFailure(bar, theme, scale);
-        var pillMin = new Vector2(bar.Min.X, bar.Min.Y + 7f * scale);
-        var pillMax = new Vector2(bar.Max.X, bar.Max.Y - 7f * scale);
-        dl.AddRectFilled(pillMin, pillMax, ImGui.GetColorU32(theme.GroupedCard), (pillMax.Y - pillMin.Y) * 0.5f);
-        var sendDiameter = pillMax.Y - pillMin.Y - 6f * scale;
-        var inputWidth = pillMax.X - pillMin.X - sendDiameter - 30f * scale;
-        ImGui.SetCursorScreenPos(new Vector2(pillMin.X + 16f * scale,
-            (pillMin.Y + pillMax.Y) * 0.5f - ImGui.GetFrameHeight() * 0.5f));
-        ImGui.SetNextItemWidth(inputWidth);
-        if (composerFocus)
-        {
-            ImGui.SetKeyboardFocusHere();
-            composerFocus = false;
-        }
-
-        var submitted = false;
-        using (ImRaii.PushColor(ImGuiCol.FrameBg, new Vector4(0f, 0f, 0f, 0f)))
-        using (ImRaii.PushColor(ImGuiCol.Text, theme.TextStrong))
-        {
-            if (ImGui.InputTextWithHint("##composer", Loc.T(L.Messages.Placeholder), ref draft, budget,
-                    ImGuiInputTextFlags.EnterReturnsTrue))
-            {
-                submitted = true;
-            }
-        }
-
-        var hasText = !string.IsNullOrWhiteSpace(draft);
-        var sendCenter = new Vector2(pillMax.X - sendDiameter * 0.5f - 6f * scale, (pillMin.Y + pillMax.Y) * 0.5f);
-        dl.AddCircleFilled(sendCenter, sendDiameter * 0.5f,
-            ImGui.GetColorU32(hasText ? theme.Accent : theme.SurfaceMuted), 24);
-        ProgressRing.CenterIcon(sendCenter, FontAwesomeIcon.ArrowUp, new Vector4(1f, 1f, 1f, 1f), sendDiameter * 0.46f);
-        var sendMin = sendCenter - new Vector2(sendDiameter * 0.5f, sendDiameter * 0.5f);
-        var sendMax = sendCenter + new Vector2(sendDiameter * 0.5f, sendDiameter * 0.5f);
-        if (hasText && UiInteract.Hover(sendMin, sendMax))
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-            if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
-            {
-                submitted = true;
-            }
-        }
-
-        if (submitted && hasText)
-        {
-            if (send(draft))
-            {
-                draft = string.Empty;
-                snapToBottom = true;
-                sendFailedAtMilliseconds = 0;
-            }
-            else
-            {
-                sendFailedAtMilliseconds = Environment.TickCount64;
-            }
-
-            composerFocus = true;
-        }
-    }
-
-    private void DrawSendFailure(Rect bar, PhoneTheme theme, float scale)
-    {
-        if (sendFailedAtMilliseconds == 0 ||
-            Environment.TickCount64 - sendFailedAtMilliseconds >= SendFailedNoticeMilliseconds)
-        {
-            return;
-        }
-
-        var drawList = ImGui.GetForegroundDrawList();
-        var text = Loc.T(L.Messages.SendFailed);
-        var size = Typography.Measure(text, NoticeTextScale);
-        var padding = new Vector2(10f * scale, 5f * scale);
-        var center = new Vector2((bar.Min.X + bar.Max.X) * 0.5f, bar.Min.Y - size.Y * 0.5f - padding.Y - 4f * scale);
-        var min = center - size * 0.5f - padding;
-        var max = center + size * 0.5f + padding;
-        drawList.AddRectFilled(min, max, ImGui.GetColorU32(theme.GroupedCard), (max.Y - min.Y) * 0.5f);
-        Typography.DrawCentered(drawList, center, text, theme.Danger, NoticeTextScale);
-    }
-
-    private static string FirstName(string name)
-    {
-        var space = name.IndexOf(' ');
-        return space > 0 ? name.Substring(0, space) : name;
-    }
+    private static Rect ThreadBody(Rect area) =>
+        new(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * UiScale.Current), area.Max);
 }

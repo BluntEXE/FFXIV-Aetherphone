@@ -2694,6 +2694,9 @@ internal static class L
         public static readonly LocString CategoryCrossWorld = new("linkpearl.categoryCrossWorld", "Cross-world");
         public static readonly LocString CategoryDirect = new("linkpearl.categoryDirect", "Direct");
         public static readonly LocString CategorySystem = new("linkpearl.categorySystem", "System");
+        public static readonly LocString ChannelReadOnly = new("linkpearl.channelReadOnly", "You can't send here");
+        public static readonly LocString NotDelivered = new("linkpearl.notDelivered", "Not delivered");
+        public static readonly LocString Retry = new("linkpearl.retry", "Retry");
     }
 
     internal static class Character

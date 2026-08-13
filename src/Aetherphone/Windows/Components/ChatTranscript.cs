@@ -90,13 +90,17 @@ internal readonly struct TranscriptMessage
     public readonly TranscriptReaction[] Reactions;
     public readonly int SenderBadges;
     public readonly string[]? SenderBadgeIds;
+    public readonly string ChannelTag;
+    public readonly Vector4 ChannelTint;
 
     public TranscriptMessage(string id, string senderId, string body, int kind, long createdAtUnix, int mediaWidth,
         int mediaHeight, long? readAtUnix, string senderName, Vector4 senderTint, byte flags = 0,
         string? replyToId = null, string replySenderName = "", string replyBody = "", int replyKind = 0,
         int durationSecs = 0, TranscriptReaction[]? reactions = null, int senderBadges = 0,
-        string[]? senderBadgeIds = null)
+        string[]? senderBadgeIds = null, string channelTag = "", Vector4 channelTint = default)
     {
+        ChannelTag = channelTag;
+        ChannelTint = channelTint;
         SenderBadges = senderBadges;
         SenderBadgeIds = senderBadgeIds;
         Id = id;
@@ -474,8 +478,15 @@ internal sealed class ChatTranscript
         var rect = new Vector2(textLeft, origin.Y);
         var hovering = UiInteract.Hover(rect, new Vector2(rect.X + maxWidth, rect.Y + 16f * scale));
         var name = FirstName(message.SenderName);
+        var nameStyle = new TextStyle(0.78f, FontWeight.SemiBold);
         UserName.Draw("chattranscript.sender." + message.Id, name, message.SenderBadges, message.SenderBadgeIds, textLeft, origin.Y, maxWidth,
-            new TextStyle(0.78f, FontWeight.SemiBold), message.SenderTint, hovering, theme);
+            nameStyle, message.SenderTint, hovering, theme);
+        if (message.ChannelTag.Length > 0)
+        {
+            var tagLeft = textLeft + MathF.Min(maxWidth, Typography.Measure(name, nameStyle).X) + 6f * scale;
+            DrawChannelTag(message, tagLeft, origin.Y, origin.X + maxWidth, scale);
+        }
+
         if (!string.Equals(name, message.SenderName, StringComparison.Ordinal))
         {
             var nameWidth = MathF.Min(maxWidth, Typography.Measure(name, new TextStyle(0.78f, FontWeight.SemiBold)).X);
@@ -485,6 +496,24 @@ internal sealed class ChatTranscript
         }
 
         ImGui.SetCursorScreenPos(new Vector2(origin.X, origin.Y + 16f * scale));
+    }
+
+    private static void DrawChannelTag(TranscriptMessage message, float left, float top, float limit, float scale)
+    {
+        var label = Typography.FitText(message.ChannelTag, MathF.Max(0f, limit - left) - 10f * scale,
+            TextStyles.Caption2);
+        if (label.Length == 0)
+        {
+            return;
+        }
+
+        var drawList = ImGui.GetWindowDrawList();
+        var size = Typography.Measure(label, TextStyles.Caption2);
+        var min = new Vector2(left, top + 1f * scale);
+        var max = min + size + new Vector2(10f * scale, 3f * scale);
+        Squircle.Fill(drawList, min, max, (max.Y - min.Y) * 0.5f,
+            ImGui.GetColorU32(Palette.WithAlpha(message.ChannelTint, 0.18f)));
+        Typography.DrawCentered(drawList, (min + max) * 0.5f, label, message.ChannelTint, TextStyles.Caption2);
     }
 
     private void DrawSystemMessage(TranscriptMessage message, in ChatTranscriptModel model)

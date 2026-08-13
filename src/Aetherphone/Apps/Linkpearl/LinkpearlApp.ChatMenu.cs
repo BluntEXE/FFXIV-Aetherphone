@@ -21,9 +21,9 @@ internal sealed partial class LinkpearlApp
     private bool chatMenuPending;
     private int chatMenuToken;
 
-    private void OpenChatMenu(ChatLine line, string? name)
+    private void OpenChatMenu(string text, string? name)
     {
-        chatMenuText = line.Text;
+        chatMenuText = text;
         chatMenuName = string.IsNullOrWhiteSpace(name) ? null : name;
         chatMenuAnchor = ImGui.GetMousePos();
         chatMenuPending = true;
@@ -70,15 +70,5 @@ internal sealed partial class LinkpearlApp
                 CopyToast.Show();
                 break;
         }
-    }
-
-    private static string? SenderName(ChatLine line)
-    {
-        if (line.Direction != MessageDirection.Incoming || line.Author is not { } author)
-        {
-            return null;
-        }
-
-        return author.Name;
     }
 }
