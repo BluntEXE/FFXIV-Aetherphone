@@ -307,6 +307,8 @@
   "social.delete": "Supprimer",
   "moderation.inReview": "En cours d'examen",
   "moderation.inReviewHint": "Vous seul pouvez le voir jusqu'à la fin de l'examen",
+  "moderation.sensitiveTitle": "Contenu sensible",
+  "moderation.sensitiveReveal": "Appuyez pour voir",
   "moderation.removedTitle": "Publication supprimée",
   "moderation.removedAdult": "Votre publication a été supprimée car elle semble contenir du contenu réservé aux adultes, qui n'est pas autorisé ici.",
   "moderation.removedViolence": "Votre publication a été supprimée car elle semble contenir du contenu violent ou choquant.",

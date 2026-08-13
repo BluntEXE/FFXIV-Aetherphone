@@ -311,15 +311,29 @@ internal sealed partial class VelvetShell
         float rounding)
     {
         var scanStatus = entry.ScanStatus;
-        return carousel.Draw(drawList, rect, entry.Id, photos, rounding,
+        var veiled = SensitiveReveals.ShouldVeil(entry.Sensitive, entry.Id, configuration.ShowSensitiveContent);
+        var result = carousel.Draw(drawList, rect, entry.Id, photos, rounding,
             (list, min, max, radius, url) => DrawMedia(list, min, max, url ?? string.Empty, radius, scanStatus,
-                contain: true));
+                contain: true, veiled));
+        if (!veiled || !result.Tapped)
+        {
+            return result;
+        }
+
+        SensitiveReveals.Reveal(entry.Id);
+        return result with { Tapped = false };
     }
 
     // The profile grid leaves contain false: it wants its forced square cover crop, like Instagram's.
     private void DrawMedia(ImDrawListPtr drawList, Vector2 min, Vector2 max, string url, float rounding,
-        string? scanStatus = null, bool contain = false)
+        string? scanStatus = null, bool contain = false, bool veiled = false)
     {
+        if (veiled)
+        {
+            SensitiveVeil.Draw(drawList, min, max, rounding);
+            return;
+        }
+
         var texture = images.Get(url);
         if (texture is null)
         {

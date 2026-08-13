@@ -3,6 +3,7 @@ using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Onboarding;
+using Aetherphone.Core.Social;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -69,19 +70,26 @@ internal sealed partial class AethergramApp
         var drawList = ImGui.GetWindowDrawList();
         var rounding = 8f * scale;
         var photos = PostMedia.Photos(post.MediaUrls, post.MediaUrl);
-        var texture = images.Get(photos.Length > 0 ? photos[0] : null);
-        if (texture is null)
+        if (SensitiveReveals.ShouldVeil(post.Sensitive, post.Id, configuration.ShowSensitiveContent))
         {
-            Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(AppPalettes.Aethergram.FieldSurface));
-            return;
+            SensitiveVeil.Draw(drawList, min, max, rounding);
         }
-
-        var (uv0, uv1) = ImageFit.CoverSquare(texture.Size);
-        drawList.AddImageRounded(texture.Handle, min, max, uv0, uv1, 0xFFFFFFFFu, rounding,
-            ImDrawFlags.RoundCornersAll);
-        if (photos.Length > 1)
+        else
         {
-            MultiPhotoBadge.Draw(drawList, new Vector2(max.X - 8f * scale, min.Y + 8f * scale), scale);
+            var texture = images.Get(photos.Length > 0 ? photos[0] : null);
+            if (texture is null)
+            {
+                Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(AppPalettes.Aethergram.FieldSurface));
+                return;
+            }
+
+            var (uv0, uv1) = ImageFit.CoverSquare(texture.Size);
+            drawList.AddImageRounded(texture.Handle, min, max, uv0, uv1, 0xFFFFFFFFu, rounding,
+                ImDrawFlags.RoundCornersAll);
+            if (photos.Length > 1)
+            {
+                MultiPhotoBadge.Draw(drawList, new Vector2(max.X - 8f * scale, min.Y + 8f * scale), scale);
+            }
         }
 
         if (ImGui.IsItemHovered())

@@ -307,6 +307,8 @@
   "social.delete": "Sil",
   "moderation.inReview": "İnceleniyor",
   "moderation.inReviewHint": "İnceleme tamamlanana kadar bunu yalnızca sen görebilirsin",
+  "moderation.sensitiveTitle": "Hassas içerik",
+  "moderation.sensitiveReveal": "Görmek için dokun",
   "moderation.removedTitle": "Gönderi kaldırıldı",
   "moderation.removedAdult": "Gönderin, burada izin verilmeyen yetişkin içerik barındırdığı görüldüğü için kaldırıldı.",
   "moderation.removedViolence": "Gönderin, şiddet içeren veya rahatsız edici içerik barındırdığı görüldüğü için kaldırıldı.",

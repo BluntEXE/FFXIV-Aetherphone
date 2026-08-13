@@ -70,6 +70,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool ImportScreenshots { get; set; } = true;
     public bool? UseNativeFileDialog { get; set; }
     public bool ChirperShowMediaPosts { get; set; } = true;
+    public bool ShowSensitiveContent { get; set; }
     public Dictionary<string, AppNotificationSetting> NotificationSettings { get; set; } = new();
     public bool NotifyDailyReset { get; set; }
     public bool NotifyWeeklyReset { get; set; }

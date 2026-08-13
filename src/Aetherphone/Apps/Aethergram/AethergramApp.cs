@@ -1016,11 +1016,21 @@ internal sealed partial class AethergramApp : IPhoneApp
     private int DrawGramCarousel(Rect imageRect, PostDto post, string[] photos, float rounding)
     {
         var scanStatus = post.ScanStatus;
+        var veiled = SensitiveReveals.ShouldVeil(post.Sensitive, post.Id, configuration.ShowSensitiveContent);
         var result = carousel.Draw(ImGui.GetWindowDrawList(), imageRect, post.Id, photos, rounding,
-            (list, min, max, radius, url) => DrawGramImage(list, new Rect(min, max), url, radius, scanStatus));
+            (list, min, max, radius, url) => DrawGramImage(list, new Rect(min, max), url, radius, scanStatus, veiled));
         if (result.InputConsumed)
         {
             pendingViewUrl = null;
+        }
+        else if (veiled)
+        {
+            if (UiInteract.HoverClick(imageRect.Min, imageRect.Max))
+            {
+                SensitiveReveals.Reveal(post.Id);
+            }
+
+            return result.Index;
         }
         else
         {
@@ -1122,8 +1132,14 @@ internal sealed partial class AethergramApp : IPhoneApp
         DrawGramImage(ImGui.GetWindowDrawList(), rect, url, rounding, scanStatus);
 
     private void DrawGramImage(ImDrawListPtr drawList, Rect rect, string? url, float rounding,
-        string? scanStatus = null)
+        string? scanStatus = null, bool veiled = false)
     {
+        if (veiled)
+        {
+            SensitiveVeil.Draw(drawList, rect.Min, rect.Max, rounding);
+            return;
+        }
+
         var scale = UiScale.Current;
         var texture = images.Get(url);
         if (texture is null)

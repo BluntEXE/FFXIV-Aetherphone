@@ -307,6 +307,8 @@
   "social.delete": "Löschen",
   "moderation.inReview": "In Prüfung",
   "moderation.inReviewHint": "Nur du kannst dies sehen, bis die Prüfung abgeschlossen ist",
+  "moderation.sensitiveTitle": "Sensibler Inhalt",
+  "moderation.sensitiveReveal": "Zum Ansehen tippen",
   "moderation.removedTitle": "Beitrag entfernt",
   "moderation.removedAdult": "Dein Beitrag wurde entfernt, da er nicht jugendfreie Inhalte zu enthalten scheint, die hier nicht erlaubt sind.",
   "moderation.removedViolence": "Dein Beitrag wurde entfernt, da er gewalttätige oder grafische Inhalte zu enthalten scheint.",

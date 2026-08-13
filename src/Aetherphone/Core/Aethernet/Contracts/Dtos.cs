@@ -151,7 +151,10 @@ internal sealed record CreatePostRequest(
     string? QuotedPostId = null,
     string[]? MediaKeys = null,
     int MediaWidth = 0,
-    int MediaHeight = 0);
+    int MediaHeight = 0,
+    bool Sensitive = false);
+
+internal sealed record SetSensitiveRequest(bool Sensitive);
 
 internal sealed record ReactRequest(int Kind);
 
@@ -210,7 +213,8 @@ internal sealed record PostDto(
     bool Saved = false,
     int AuthorBadges = 0,
     string[]? AuthorBadgeIds = null,
-    string AuthorFrameId = "") : IIdentified;
+    string AuthorFrameId = "",
+    bool Sensitive = false) : IIdentified;
 
 internal sealed record FeedPage(PostDto[] Items, string? NextCursor);
 
@@ -230,7 +234,8 @@ internal sealed record CreateGramRequest(
     int Width,
     int Height,
     string[]? MediaKeys = null,
-    PhotoTagInput[]? PhotoTags = null);
+    PhotoTagInput[]? PhotoTags = null,
+    bool Sensitive = false);
 
 internal sealed record CreateStoryRequest(string Caption, string MediaKey, int Width, int Height);
 
@@ -380,7 +385,8 @@ internal sealed record VelvetPostDto(
     int Audience = 0,
     int OwnerBadges = 0,
     string[]? OwnerBadgeIds = null,
-    string OwnerFrameId = "") : IIdentified;
+    string OwnerFrameId = "",
+    bool Sensitive = false) : IIdentified;
 
 internal sealed record VelvetFeedPage(VelvetPostDto[] Items, string? NextCursor);
 

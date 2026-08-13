@@ -1047,19 +1047,27 @@ internal sealed partial class ChirperApp : IPhoneApp
             var thumbMin = new Vector2(max.X - innerPad - thumbSize, min.Y + (height - thumbSize) * 0.5f);
             var thumbMax = thumbMin + new Vector2(thumbSize, thumbSize);
             var thumbRounding = 8f * scale;
-            var texture = MediaTexture(quotedPhotos[0]);
-            if (texture is null)
+            var quoteVeiled = SensitiveReveals.ShouldVeil(quoted.Sensitive, quoted.Id, configuration.ShowSensitiveContent);
+            if (quoteVeiled)
             {
-                Squircle.Fill(drawList, thumbMin, thumbMax, thumbRounding, ImGui.GetColorU32(theme.SurfaceMuted));
+                SensitiveVeil.Draw(drawList, thumbMin, thumbMax, thumbRounding);
             }
             else
             {
-                var (uv0, uv1) = ImageFit.CoverSquare(texture.Size);
-                drawList.AddImageRounded(texture.Handle, thumbMin, thumbMax, uv0, uv1, 0xFFFFFFFFu, thumbRounding,
-                    ImDrawFlags.RoundCornersAll);
+                var texture = MediaTexture(quotedPhotos[0]);
+                if (texture is null)
+                {
+                    Squircle.Fill(drawList, thumbMin, thumbMax, thumbRounding, ImGui.GetColorU32(theme.SurfaceMuted));
+                }
+                else
+                {
+                    var (uv0, uv1) = ImageFit.CoverSquare(texture.Size);
+                    drawList.AddImageRounded(texture.Handle, thumbMin, thumbMax, uv0, uv1, 0xFFFFFFFFu, thumbRounding,
+                        ImDrawFlags.RoundCornersAll);
+                }
             }
 
-            if (quotedPhotos.Length > 1)
+            if (quotedPhotos.Length > 1 && !quoteVeiled)
             {
                 MultiPhotoBadge.Draw(drawList, new Vector2(thumbMax.X - 4f * scale, thumbMin.Y + 4f * scale), scale);
             }
@@ -1086,14 +1094,23 @@ internal sealed partial class ChirperApp : IPhoneApp
     {
         var rounding = 12f * UiScale.Current;
         var scanStatus = post.ScanStatus;
+        var veiled = SensitiveReveals.ShouldVeil(post.Sensitive, post.Id, configuration.ShowSensitiveContent);
         var result = carousel.Draw(ImGui.GetWindowDrawList(), rect, post.Id, photos, rounding,
             (pageList, pageMin, pageMax, pageRounding, pageUrl) =>
-                DrawPostImage(pageList, new Rect(pageMin, pageMax), pageUrl, pageRounding, scanStatus));
-        if (result.Tapped && result.Index < photos.Length)
+                DrawPostImage(pageList, new Rect(pageMin, pageMax), pageUrl, pageRounding, scanStatus, veiled));
+        if (!result.Tapped || result.Index >= photos.Length)
         {
-            var url = photos[result.Index];
-            photoViewer.Open(this, () => MediaTexture(url));
+            return;
         }
+
+        if (veiled)
+        {
+            SensitiveReveals.Reveal(post.Id);
+            return;
+        }
+
+        var url = photos[result.Index];
+        photoViewer.Open(this, () => MediaTexture(url));
     }
 
     private IDalamudTextureWrap? MediaTexture(string? url)
@@ -1106,8 +1123,15 @@ internal sealed partial class ChirperApp : IPhoneApp
         return images.Get(url);
     }
 
-    private void DrawPostImage(ImDrawListPtr drawList, Rect rect, string? url, float rounding, string? scanStatus)
+    private void DrawPostImage(ImDrawListPtr drawList, Rect rect, string? url, float rounding, string? scanStatus,
+        bool veiled = false)
     {
+        if (veiled)
+        {
+            SensitiveVeil.Draw(drawList, rect.Min, rect.Max, rounding);
+            return;
+        }
+
         var texture = MediaTexture(url);
         if (texture is null)
         {

@@ -8,6 +8,7 @@ using Aetherphone.Core.Muster;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Shell.Home;
+using Aetherphone.Core.Social;
 using Aetherphone.Core.Telephony;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Wallpapers;
@@ -132,6 +133,7 @@ internal sealed class PhoneShell : IDisposable
     {
         loading.Cancel();
         director.Suspend();
+        SensitiveReveals.Clear();
     }
 
     public void OpenApp(string appId)
