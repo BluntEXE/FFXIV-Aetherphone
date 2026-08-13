@@ -160,7 +160,8 @@ internal sealed class MediaDependencies : IDisposable
         }
 
         var now = Environment.TickCount64;
-        if (now - dependency.LastMissAtTicks < MissRecheckMilliseconds)
+        var neverMissed = dependency.LastMissAtTicks == long.MinValue;
+        if (!neverMissed && now - dependency.LastMissAtTicks < MissRecheckMilliseconds)
         {
             return null;
         }

@@ -80,7 +80,6 @@ internal sealed partial class AetherStreamApp : IPhoneApp
 
     public void OnOpened()
     {
-        _ = screen.Engine.Dependencies.EnsureReadyAsync(CancellationToken.None);
         watchAlong.RequestNearbyStreams();
     }
 
