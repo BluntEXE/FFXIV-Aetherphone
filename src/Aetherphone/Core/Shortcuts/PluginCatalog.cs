@@ -362,13 +362,42 @@ internal sealed class PluginCatalog
                 continue;
             }
 
-            entry.Commands.Add(new PluginCommand(pair.Key, pair.Value.HelpMessage ?? string.Empty));
+            entry.Commands.Add(new PluginCommand(pair.Key, FirstHelpLine(pair.Value.HelpMessage)));
         }
 
         for (var index = 0; index < entries.Count; index++)
         {
             entries[index].Commands.Sort(CompareCommands);
         }
+    }
+
+    private static string FirstHelpLine(string? help)
+    {
+        if (help is null || help.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var remaining = help.AsSpan();
+        while (remaining.Length > 0)
+        {
+            var lineBreak = remaining.IndexOfAny('\r', '\n');
+            var line = lineBreak >= 0 ? remaining[..lineBreak] : remaining;
+            var trimmed = line.Trim();
+            if (trimmed.Length > 0)
+            {
+                return trimmed.Length == help.Length ? help : trimmed.ToString();
+            }
+
+            if (lineBreak < 0)
+            {
+                return string.Empty;
+            }
+
+            remaining = remaining[(lineBreak + 1)..];
+        }
+
+        return string.Empty;
     }
 
     private PluginEntry? ResolveOwner(string assemblyName)
