@@ -792,7 +792,7 @@ internal sealed class SocialProfilePages
             ConfirmLabel = Loc.T(L.Social.BlockAction),
             CancelLabel = Loc.T(L.Common.Cancel),
             Danger = true,
-            Confirm = () => store.Block(authorId, _ => { }),
+            ConfirmAsync = done => store.Block(authorId, done, confirm.ReportFailure),
         });
     }
 

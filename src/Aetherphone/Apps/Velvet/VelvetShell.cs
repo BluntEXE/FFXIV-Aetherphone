@@ -32,6 +32,9 @@ internal sealed partial class VelvetShell : IPhoneApp
     private const float HeartbeatSeconds = 45f;
 
     private readonly VelvetStore store;
+    private readonly FailureSlot discoverFailure = new();
+    private readonly FailureSlot commentFailure = new();
+    private string? commentRestore;
     private readonly HashSet<string> reportedTargets = new(StringComparer.Ordinal);
     private readonly StoryPresenter stories;
     private readonly VelvetLauncher launcher;

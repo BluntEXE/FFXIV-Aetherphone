@@ -86,6 +86,18 @@ internal sealed partial class AnnouncementsApp
             return;
         }
 
+        if (store.Failed)
+        {
+            listFailure.Set(store.Failure);
+            if (EmptyState.Draw(body, ui, FontAwesomeIcon.ExclamationTriangle, Loc.T(L.Failure.CouldNotLoad),
+                    listFailure.Text(), Loc.T(L.Common.Retry)))
+            {
+                store.Refresh();
+            }
+
+            return;
+        }
+
         EmptyState.Draw(body, ui, FontAwesomeIcon.Bullhorn, Loc.T(L.Announcements.EmptyTitle),
             Loc.T(L.Announcements.EmptyHint));
     }

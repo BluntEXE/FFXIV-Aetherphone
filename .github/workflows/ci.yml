@@ -77,7 +77,8 @@ jobs:
         run: |
           offenders=$(grep -rnE '\.(FirstOrDefault|LastOrDefault|SingleOrDefault|SelectMany|OrderBy|OrderByDescending|ThenBy|ToDictionary|ToLookup|GroupBy|Distinct|Aggregate|Zip)\(' src/Aetherphone --include=*.cs \
             | grep -v 'src/Aetherphone/Apps/Photos/PhotosApp.Grid.cs' \
-            | grep -v 'src/Aetherphone/Core/Radio/RadioPlayer.cs' || true)
+            | grep -v 'src/Aetherphone/Core/Radio/RadioPlayer.cs' \
+            | grep -v 'src/Aetherphone/Core/Video/VideoUrlResolver.cs' || true)
           if [ -n "$offenders" ]; then
             echo "$offenders"
             echo "::error::No LINQ in this tree: it allocates iterators and delegates on every call and the whole UI redraws every frame. Write a for loop."

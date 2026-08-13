@@ -1,4 +1,5 @@
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Aethernet.Clients;
 
@@ -11,7 +12,8 @@ internal sealed class AnnouncementsClient
         this.net = net;
     }
 
-    public Task<AnnouncementPage?> ListAsync(string? cursor, CancellationToken token)
+    public Task<AnnouncementPage?> ListAsync(string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         var path = "/announcements";
         if (cursor is not null)
@@ -19,6 +21,6 @@ internal sealed class AnnouncementsClient
             path += $"?cursor={Uri.EscapeDataString(cursor)}";
         }
 
-        return net.GetAsync(path, AethernetJsonContext.Default.AnnouncementPage, token);
+        return net.GetAsync(path, AethernetJsonContext.Default.AnnouncementPage, token, null, onFailure);
     }
 }

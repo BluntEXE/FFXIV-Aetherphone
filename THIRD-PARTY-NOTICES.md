@@ -26,6 +26,48 @@ The application icons under `src/Aetherphone/Icons/` are derived from
 - License: MIT (Copyright (c) 2020-2026 Paweł Kuna); full text reproduced in
   the MIT section below.
 
+## mpv
+
+libmpv provides video decoding and playback for the AetherStream app. No mpv
+binary is redistributed with this plugin: `Core/Video/Resources.cs` downloads
+an LGPL build (`mpv-dev-lgpl-x86_64-*`, from the
+[zhongfly/mpv-winbuild](https://github.com/zhongfly/mpv-winbuild) releases)
+into the plugin's own Dalamud config directory on first use, and keeps it
+updated from there.
+
+- Homepage: https://mpv.io
+- Source: https://github.com/mpv-player/mpv
+- License: GNU Lesser General Public License v2.1 or later (LGPL build
+  configuration); full text: https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+
+## yt-dlp
+
+yt-dlp is used by mpv's own `ytdl_hook` to resolve video URLs from sites other
+than YouTube (YouTube itself is resolved separately via YoutubeExplode, already
+a dependency). As with mpv above, no yt-dlp binary is redistributed: it is
+downloaded from the project's own GitHub releases into the plugin's Dalamud
+config directory on first use.
+
+- Homepage: https://github.com/yt-dlp/yt-dlp
+- License: The Unlicense (public domain)
+
+## AlphaChannel (Voudi)
+
+AetherStream's video/screen engine under `src/Aetherphone/Core/Video/`
+(mpv-backed playback and the world-anchored ScreenPainter D3D11 quad
+renderer) is ported from
+[AlphaChannel](https://github.com/Voudi/AlphaChannel) by Voudi, used with the
+author's permission. Two smaller pieces ported from the same source live
+outside that directory: the screen placement controls and presets in
+`src/Aetherphone/Apps/AetherStream/AetherStreamApp.Casting.cs` (from
+AlphaChannel's `ControlWindow.DrawScreenPositionSettings`) and the saved
+screen preset shape in `src/Aetherphone/Configuration.cs` (from its
+`Configuration`, with yaw added). Both are modified from the originals.
+
+- Source: https://github.com/Voudi/AlphaChannel
+- License: GNU General Public License v3.0 or later; full text reproduced in
+  `src/Aetherphone/Core/Video/AlphaChannel-LICENSE`.
+
 ## Concentus
 
 `Concentus.dll` (version 2.2.2, by Logan Stromberg) is a C# implementation of

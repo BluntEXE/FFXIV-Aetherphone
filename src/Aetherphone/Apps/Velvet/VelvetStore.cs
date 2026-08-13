@@ -40,6 +40,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     private volatile string[] notInterestedFromDiscover = Array.Empty<string>();
     private volatile bool loadingDiscover;
     private volatile bool discoverLoaded;
+    private volatile AepFailureBox? discoverFailureBox;
     private volatile string? discoverCursor;
     private volatile bool loadingMoreDiscover;
     private volatile VelvetDiscoverFilter discoverFilter = VelvetDiscoverFilter.Empty;
@@ -167,6 +168,10 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     public VelvetProfileDto[] DiscoverResults => discoverResults;
     public bool LoadingDiscover => loadingDiscover;
     public bool DiscoverLoaded => discoverLoaded;
+
+    public bool DiscoverFailed => discoverFailureBox is not null;
+
+    public AepFailure DiscoverFailure => discoverFailureBox?.Failure ?? AepFailure.None;
     public bool HasMoreDiscover => discoverCursor is not null;
     public bool LoadingMoreDiscover => loadingMoreDiscover;
     public VelvetConnectionDto[] Connections => connections;
@@ -255,6 +260,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         notInterested = Array.Empty<VelvetProfileDto>();
         discoverCursor = null;
         discoverLoaded = false;
+        discoverFailureBox = null;
         discoverFilter = VelvetDiscoverFilter.Empty;
         discoverTags = string.Empty;
         discoverRegion = string.Empty;
@@ -304,10 +310,11 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         await keys.HydrateVelvetAsync(token).ConfigureAwait(false);
     }
 
-    protected override async Task<ThreadListPage?> FetchThreadListAsync(string? cursor, CancellationToken token)
+    protected override async Task<ThreadListPage?> FetchThreadListAsync(string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         await EnsureVelvetHydratedAsync(token).ConfigureAwait(false);
-        var page = await client.ThreadsAsync(cursor, token).ConfigureAwait(false);
+        var page = await client.ThreadsAsync(cursor, token, onFailure).ConfigureAwait(false);
         return page is null ? null : new ThreadListPage(page.Items, page.NextCursor);
     }
 
@@ -641,12 +648,26 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         EnsureNotInterestedLoaded();
         work.Run("discover", async token =>
         {
-            var page = await client.DiscoverAsync(filter, tags, region, null, token).ConfigureAwait(false);
-            if (page is not null && epoch == discoverEpoch)
+            var reported = AepFailure.None;
+            var page = await client.DiscoverAsync(filter, tags, region, null, token, failure => reported = failure)
+                .ConfigureAwait(false);
+            if (epoch != discoverEpoch)
             {
-                discoverResults = WithoutNotInterested(page.Users);
-                discoverCursor = page.NextCursor;
+                return;
             }
+
+            if (page is null)
+            {
+                discoverFailureBox = new AepFailureBox(reported.Failed
+                    ? reported
+                    : AepFailure.Transport(AepFailureKind.Offline));
+                AepLog.Warning($"Velvet discover failed: {discoverFailureBox.Failure.Describe()}");
+                return;
+            }
+
+            discoverFailureBox = null;
+            discoverResults = WithoutNotInterested(page.Users);
+            discoverCursor = page.NextCursor;
         }, () =>
         {
             loadingDiscover = false;
@@ -1147,12 +1168,23 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         work.Run("disconnect", async token => await client.DisconnectAsync(userId, token).ConfigureAwait(false));
     }
 
-    public void Block(string userId, Action<bool> onComplete)
+    public void Block(string userId, Action<bool> onComplete, Action<AepFailure>? onFailure = null)
     {
         blockedLoaded = false;
         ForgetConnection(userId, VelvetConnectionState.Blocked);
         HideFromDiscover(userId);
-        work.Run("block", async token => await safety.BlockAsync(userId, token).ConfigureAwait(false), onComplete);
+        work.Run("block", async token =>
+        {
+            var blocked = await safety.BlockAsync(userId, token, onFailure).ConfigureAwait(false);
+            if (!blocked)
+            {
+                AepLog.Warning($"Velvet block of {userId} failed; the local hide is being undone");
+                RefreshConnections();
+                RefreshDiscover(discoverFilter, discoverTags, discoverRegion);
+            }
+
+            return blocked;
+        }, onComplete);
     }
 
     public void HideFromDiscover(string userId)
@@ -1501,7 +1533,8 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         }, () => commentsLoadingMore = false);
     }
 
-    public void AddComment(string postId, string text, Action<bool> onComplete)
+    public void AddComment(string postId, string text, Action<bool> onComplete,
+        Action<AepFailure>? onFailure = null)
     {
         var trimmed = text.Trim();
         if (trimmed.Length == 0 || commenting)
@@ -1512,9 +1545,10 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         commenting = true;
         work.Run("comment", async token =>
         {
-            var created = await client.AddCommentAsync(postId, trimmed, token).ConfigureAwait(false);
+            var created = await client.AddCommentAsync(postId, trimmed, token, onFailure).ConfigureAwait(false);
             if (created is null)
             {
+                AepLog.Warning($"Velvet comment on {postId} was not accepted");
                 return false;
             }
 

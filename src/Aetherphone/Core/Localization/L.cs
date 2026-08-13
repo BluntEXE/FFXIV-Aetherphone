@@ -42,6 +42,7 @@ internal static class L
         public static readonly LocString NoPhotos = new("common.noPhotos", "No photos in your gallery yet");
         public static readonly LocString FileKindImages = new("common.fileKindImages", "Images");
         public static readonly LocString FileKindAudio = new("common.fileKindAudio", "Audio");
+        public static readonly LocString FileKindVideo = new("common.fileKindVideo", "Video");
         public static readonly LocString FileKindAll = new("common.fileKindAll", "All files");
         public static readonly LocString RateLimited = new("common.rateLimited", "Too many requests. Retrying in {0}s");
         public static readonly LocString ChatOutOfDate = new("common.chatOutOfDate", "May be out of date. Retrying in {0}s");
@@ -170,7 +171,7 @@ internal static class L
         public static readonly LocString RemovedHate = new("moderation.removedHate", "Your post was removed because it appears to contain hateful content.");
         public static readonly LocString RemovedSelfHarm = new("moderation.removedSelfHarm", "Your post was removed because it appears to reference self-harm.");
         public static readonly LocString RemovedPolicy = new("moderation.removedPolicy", "Your post was removed for violating the community guidelines.");
-        public static readonly LocString RemovedFooter = new("moderation.removedFooter", "If you believe this is a mistake, let us know through the Feedback app.");
+        public static readonly LocString RemovedFooter = new("moderation.removedFooter", "If you believe this is a mistake, reach out to us on our Discord server.");
         public static readonly LocString RemovedDismiss = new("moderation.removedDismiss", "OK");
         public static readonly LocString RemovedCommentTitle = new("moderation.removedCommentTitle", "Comment removed");
         public static readonly LocString RemovedCommentAdult = new("moderation.removedCommentAdult", "Your comment was removed because it appears to contain adult content, which is not allowed here.");
@@ -263,6 +264,7 @@ internal static class L
         public static readonly LocString Message = new("app.message", "Message");
         public static readonly LocString Jobs = new("app.jobs", "Jobs");
         public static readonly LocString AppStore = new("app.appstore", "App Store");
+        public static readonly LocString AetherStream = new("app.aetherstream", "AetherStream");
         public static readonly LocString Shortcuts = new("app.shortcuts", "Shortcuts");
     }
 
@@ -2698,6 +2700,8 @@ internal static class L
         public static readonly LocString RingClosedBody = new("character.ringClosedBody", "You reached today's goal.");
         public static readonly LocString AllRingsTitle = new("character.allRingsTitle", "All rings closed");
         public static readonly LocString AllRingsBody = new("character.allRingsBody", "You hit all three goals today. Perfect day!");
+        public static readonly LocString ShowBadge = new("character.showBadge", "Show retainer ventures badge");
+        public static readonly LocString HideBadge = new("character.hideBadge", "Hide retainer ventures badge");
     }
 
     internal static class Camera
@@ -3140,6 +3144,173 @@ internal static class L
     internal static class Calculator
     {
         public static readonly LocString Error = new("calculator.error", "Error");
+    }
+
+    internal static class AetherStream
+    {
+        public static readonly LocString TabPlayer = new("aetherstream.tabPlayer", "Player");
+        public static readonly LocString TabQueue = new("aetherstream.tabQueue", "Queue");
+        public static readonly LocString TabCasting = new("aetherstream.tabCasting", "Casting");
+        public static readonly LocString SettingsTitle = new("aetherstream.settingsTitle", "AetherStream Settings");
+
+        public static readonly LocString NothingPlaying = new("aetherstream.nothingPlaying", "Nothing playing");
+        public static readonly LocString NothingPlayingHint = new("aetherstream.nothingPlayingHint",
+            "Paste a link below or pick a local file to start watching.");
+        public static readonly LocString UrlHint = new("aetherstream.urlHint", "Paste a video URL or YouTube link");
+        public static readonly LocString BrowseLocalFile = new("aetherstream.browseLocalFile", "Play a local file");
+        public static readonly LocString LocalFileSource = new("aetherstream.localFileSource", "Local file");
+        public static readonly LocString WatchingHostLabel = new("aetherstream.watchingHostLabel", "Host");
+        public static readonly LocString WatchingSectionLabel = new("aetherstream.watchingSectionLabel", "Watching");
+        public static readonly LocString PlayNow = new("aetherstream.playNow", "Play Now");
+        public static readonly LocString AddToQueue = new("aetherstream.addToQueue", "Add to Queue");
+        public static readonly LocString PlayNext = new("aetherstream.playNext", "Play Next");
+        public static readonly LocString ClearQueue = new("aetherstream.clearQueue", "Clear");
+        public static readonly LocString ClearQueueConfirm = new("aetherstream.clearQueueConfirm",
+            "Clear the whole queue and stop playback?");
+        public static readonly LocString Keep = new("aetherstream.keep", "Keep it");
+        public static readonly LocString Stop = new("aetherstream.stop", "Stop");
+        public static readonly LocString Resync = new("aetherstream.resync", "Resync");
+        public static readonly LocString Remove = new("aetherstream.remove", "Remove");
+        public static readonly LocString QueueUpNext = new("aetherstream.queueUpNext", "Up Next");
+        public static readonly LocString QueueEmptyTitle = new("aetherstream.queueEmptyTitle", "Nothing queued");
+        public static readonly LocString QueueEmptyHint = new("aetherstream.queueEmptyHint",
+            "Add a video link above and it will play after the current one.");
+
+        public static readonly LocString PlayerCastingStatus = new("aetherstream.playerCastingStatus",
+            "Casting to the in-game screen");
+        public static readonly LocString PlayerCastingWaiting = new("aetherstream.playerCastingWaiting",
+            "Waiting for the next video");
+        public static readonly LocString CastingTarget = new("aetherstream.castingTarget", "Playing to");
+        public static readonly LocString CastingThisScreen = new("aetherstream.castingThisScreen", "This TV");
+        public static readonly LocString CastingStateNotReady = new("aetherstream.castingStateNotReady",
+            "Not ready");
+        public static readonly LocString CastingStateReady = new("aetherstream.castingStateReady", "Ready");
+        public static readonly LocString OpenScreenWindow = new("aetherstream.openScreenWindow", "Open in a window");
+        public static readonly LocString CastingScreenPositionHeader = new(
+            "aetherstream.castingScreenPositionHeader", "Screen Position");
+        public static readonly LocString CastingScreenPositionHint = new(
+            "aetherstream.castingScreenPositionHint", "Start playback to move and resize the screen.");
+        public static readonly LocString CastingPresetNameHint = new("aetherstream.castingPresetNameHint",
+            "Preset name...");
+        public static readonly LocString CastingSavePreset = new("aetherstream.castingSavePreset", "Save Preset");
+        public static readonly LocString CastingSavedPresets = new("aetherstream.castingSavedPresets",
+            "Saved Presets");
+        public static readonly LocString CastingScale = new("aetherstream.castingScale", "Scale");
+        public static readonly LocString CastingRotate = new("aetherstream.castingRotate", "Rotate");
+        public static readonly LocString CastingRecenter = new("aetherstream.castingRecenter",
+            "Recenter in front of me");
+
+        public static readonly LocString SettingsSectionStatus = new("aetherstream.settingsSectionStatus", "Status");
+        public static readonly LocString SettingsSectionPlayback = new("aetherstream.settingsSectionPlayback",
+            "Playback");
+        public static readonly LocString SettingsSectionWatching = new("aetherstream.settingsSectionWatching",
+            "Watching");
+        public static readonly LocString SettingsSectionAdvanced = new("aetherstream.settingsSectionAdvanced",
+            "Advanced");
+        public static readonly LocString SettingsDependencyStatus = new("aetherstream.settingsDependencyStatus",
+            "mpv");
+        public static readonly LocString SettingsDependencyYtdlp = new("aetherstream.settingsDependencyYtdlp",
+            "yt-dlp");
+        public static readonly LocString SettingsDependencyOk = new("aetherstream.settingsDependencyOk", "Ready");
+        public static readonly LocString SettingsDependencyNotInstalled = new(
+            "aetherstream.settingsDependencyNotInstalled", "Not installed");
+        public static readonly LocString SettingsDependencyUpdateAvailable = new(
+            "aetherstream.settingsDependencyUpdateAvailable", "Update available");
+        public static readonly LocString SettingsDownloadMpv = new("aetherstream.settingsDownloadMpv",
+            "Download mpv");
+        public static readonly LocString SettingsDownloadYtdlp = new("aetherstream.settingsDownloadYtdlp",
+            "Download yt-dlp");
+        public static readonly LocString SettingsUpdateMpv = new("aetherstream.settingsUpdateMpv",
+            "Update mpv");
+        public static readonly LocString SettingsUpdateYtdlp = new("aetherstream.settingsUpdateYtdlp",
+            "Update yt-dlp");
+        public static readonly LocString SettingsDownloading = new("aetherstream.settingsDownloading",
+            "Downloading...");
+        public static readonly LocString SettingsScreen = new("aetherstream.settingsScreen", "Screen");
+        public static readonly LocString SettingsHideNameplates = new("aetherstream.settingsHideNameplates",
+            "Hide nameplates");
+        public static readonly LocString SettingsMaxQuality = new("aetherstream.settingsMaxQuality", "Max quality");
+        public static readonly LocString SettingsShareWatchPresence = new(
+            "aetherstream.settingsShareWatchPresence", "Show me as watching");
+        public static readonly LocString SettingsShareWatchPresenceHint = new(
+            "aetherstream.settingsShareWatchPresenceHint",
+            "Off keeps your name out of the watching list on this screen.");
+        public static readonly LocString SettingsApprovalRequired = new("aetherstream.settingsApprovalRequired",
+            "Require approval to join");
+        public static readonly LocString SettingsApprovalRequiredHint = new(
+            "aetherstream.settingsApprovalRequiredHint",
+            "New viewers must be approved by you before they can watch. Applies the next time you go live.");
+        public static readonly LocString SettingsDiscoverable = new("aetherstream.settingsDiscoverable",
+            "List me in this zone");
+        public static readonly LocString SettingsDiscoverableHint = new(
+            "aetherstream.settingsDiscoverableHint",
+            "Players in the same zone can find your stream under Nearby. Off keeps it to people you invite, though the screen itself stays visible.");
+        public static readonly LocString SettingsHardwareDecoding = new("aetherstream.settingsHardwareDecoding",
+            "Hardware decoding");
+        public static readonly LocString SettingsHardwareDecodingHint = new(
+            "aetherstream.settingsHardwareDecodingHint",
+            "Off is the safe default - there's no GPU render path under Wine either way.");
+        public static readonly LocString SettingsTls = new("aetherstream.settingsTls",
+            "Allow insecure direct video URLs (Wine only)");
+        public static readonly LocString SettingsTlsHint = new("aetherstream.settingsTlsHint",
+            "Unsafe: skips certificate checks for direct links. Leave off unless a link fails to load.");
+
+        public static readonly LocString JoinStream = new("aetherstream.joinStream", "Join a stream");
+        public static readonly LocString JoinSearchHint = new("aetherstream.joinSearchHint", "Search by name");
+        public static readonly LocString JoinSearchFailed = new("aetherstream.joinSearchFailed",
+            "Couldn't reach the server. Check your connection and try again.");
+        public static readonly LocString JoinNearbyHeader = new("aetherstream.joinNearbyHeader",
+            "Streaming nearby");
+        public static readonly LocString JoinEmptyTitle = new("aetherstream.joinEmptyTitle", "No streams nearby");
+        public static readonly LocString JoinEmptyHint = new("aetherstream.joinEmptyHint",
+            "When someone nearby goes live, their stream shows up here. You can also search by name.");
+        public static readonly LocString JoinSearchFailedTitle = new("aetherstream.joinSearchFailedTitle",
+            "Search unavailable");
+        public static readonly LocString StreamUnavailableTitle = new("aetherstream.streamUnavailableTitle",
+            "Stream unavailable");
+        public static readonly LocString StreamUnavailableBody = new("aetherstream.streamUnavailableBody",
+            "That stream can't be joined right now.");
+        public static readonly LocString LeaveStream = new("aetherstream.leaveStream", "Leave stream");
+        public static readonly LocString ViewingStream = new("aetherstream.viewingStream", "Watching with {0}");
+
+        public static readonly LocString JoinDeniedTitle = new("aetherstream.joinDeniedTitle", "Request declined");
+        public static readonly LocString JoinDeniedBody = new("aetherstream.joinDeniedBody",
+            "The host declined your request to join.");
+        public static readonly LocString JoinWaitingApproval = new("aetherstream.joinWaitingApproval",
+            "Waiting for approval...");
+        public static readonly LocString CancelRequest = new("aetherstream.cancelRequest", "Cancel request");
+        public static readonly LocString CastingPendingRequestsHeader = new(
+            "aetherstream.castingPendingRequestsHeader", "Waiting to join");
+        public static readonly LocString CastingApprove = new("aetherstream.castingApprove", "Approve");
+        public static readonly LocString CastingDeny = new("aetherstream.castingDeny", "Deny");
+
+        public static readonly LocString SuggestToHost = new("aetherstream.suggestToHost", "Suggest to Host");
+        public static readonly LocString SuggestHint = new("aetherstream.suggestHint",
+            "Suggest a video to the host");
+        public static readonly LocString QueueSuggestionsHeader = new("aetherstream.queueSuggestionsHeader",
+            "Suggestions from viewers");
+        public static readonly LocString QueueSuggestionAdd = new("aetherstream.queueSuggestionAdd", "Add");
+        public static readonly LocString QueueSuggestionDismiss = new("aetherstream.queueSuggestionDismiss",
+            "Dismiss");
+        public static readonly LocString QueueSuggestionAcceptedTitle = new(
+            "aetherstream.queueSuggestionAcceptedTitle", "Added to queue");
+        public static readonly LocString QueueSuggestionAcceptedBody = new(
+            "aetherstream.queueSuggestionAcceptedBody", "The host added your suggestion to the queue.");
+        public static readonly LocString QueueSuggestionDeniedTitle = new(
+            "aetherstream.queueSuggestionDeniedTitle", "Suggestion not added");
+        public static readonly LocString QueueSuggestionDeniedBody = new(
+            "aetherstream.queueSuggestionDeniedBody", "The host didn't add your suggestion.");
+
+        public static readonly LocString KickedTitle = new("aetherstream.kickedTitle", "Removed from stream");
+        public static readonly LocString KickedBody = new("aetherstream.kickedBody",
+            "The host removed you from the stream.");
+        public static readonly LocString WatchingKick = new("aetherstream.watchingKick", "Remove");
+
+        public static readonly LocString StartParty = new("aetherstream.startParty", "Start a Party");
+        public static readonly LocString EndParty = new("aetherstream.endParty", "End Party");
+        public static readonly LocString WatchPartyHeader = new("aetherstream.watchPartyHeader", "Watch Party");
+        public static readonly LocString WatchPartyHint = new("aetherstream.watchPartyHint",
+            "Host a watch party for your zone, or join a friend's stream.");
     }
 
     internal static class Clock
@@ -5532,5 +5703,102 @@ internal static class L
         public static readonly LocString HeightImperial = new("health.heightImperial", "{0}{1} {2}{3}");
         public static readonly LocString DurationHm = new("health.durationHm", "{0}h {1}m");
         public static readonly LocString DurationM = new("health.durationM", "{0}m");
+    }
+
+    internal static class Failure
+    {
+        public static readonly LocString Offline = new("failure.offline", "Couldn't reach Aethernet. Check your connection, then try again.");
+        public static readonly LocString Timeout = new("failure.timeout", "The server took too long to answer. Try again in a moment.");
+        public static readonly LocString RateLimitPaused = new("failure.rateLimitPaused", "Too many requests just now. Give it a few seconds, then try again.");
+        public static readonly LocString SignedOut = new("failure.signedOut", "You're signed out. Sign in from Settings, then try again.");
+        public static readonly LocString BadResponse = new("failure.badResponse", "The server sent something we couldn't read. This is a bug: please report it.");
+        public static readonly LocString Unknown = new("failure.unknown", "That didn't work, and the reason wasn't clear. Reference: {0}");
+        public static readonly LocString Unauthorized = new("failure.unauthorized", "Your session expired. Sign in again, then try again.");
+        public static readonly LocString Forbidden = new("failure.forbidden", "You're not allowed to do that.");
+        public static readonly LocString NotFound = new("failure.notFound", "That isn't there any more.");
+        public static readonly LocString RateLimited = new("failure.rateLimited", "You're going a bit fast. Wait a moment, then try again.");
+        public static readonly LocString ServerError = new("failure.serverError", "Aethernet hit a problem on its side. Reference: {0}");
+        public static readonly LocString Suspended = new("failure.suspended", "Your account is suspended, so this action is blocked.");
+        public static readonly LocString PostEmpty = new("failure.postEmpty", "Write something or attach an image before posting.");
+        public static readonly LocString PostTooLong = new("failure.postTooLong", "That's too long. Keep it to {0} characters.");
+        public static readonly LocString PostTooManyImages = new("failure.postTooManyImages", "You can attach at most {0} images.");
+        public static readonly LocString PostQuoteMissing = new("failure.postQuoteMissing", "The chirp you quoted is no longer available.");
+        public static readonly LocString PostQuoteNotChirp = new("failure.postQuoteNotChirp", "Only chirps can be quoted.");
+        public static readonly LocString PostQuoteBlocked = new("failure.postQuoteBlocked", "You can't quote that chirp.");
+        public static readonly LocString PostCooldown = new("failure.postCooldown", "You're posting quickly. Try again in {0} seconds.");
+        public static readonly LocString MediaInvalidImage = new("failure.mediaInvalidImage", "One of your images didn't upload. Remove it and attach it again.");
+        public static readonly LocString MediaInvalidAudio = new("failure.mediaInvalidAudio", "That voice clip didn't upload. Record it again.");
+        public static readonly LocString MediaInvalidReference = new("failure.mediaInvalidReference", "An attachment went missing before posting. Attach it again.");
+        public static readonly LocString PullToRetry = new("failure.pullToRetry", "Pull down to try again.");
+        public static readonly LocString CouldNotLoad = new("failure.couldNotLoad", "Couldn't load this");
+        public static readonly LocString TokenExpired = new("failure.tokenExpired", "Your session expired. Sign in again, then try again.");
+        public static readonly LocString SessionRevoked = new("failure.sessionRevoked", "You were signed out. Sign in again to continue.");
+        public static readonly LocString SocialDisabled = new("failure.socialDisabled", "The social apps are temporarily switched off. Try again later.");
+        public static readonly LocString AppDisabled = new("failure.appDisabled", "This app is temporarily switched off. Try again later.");
+        public static readonly LocString ValidationFailed = new("failure.validationFailed", "That didn't look right. Check what you entered, then try again.");
+        public static readonly LocString Conflict = new("failure.conflict", "Someone else changed this first. Reopen it and try again.");
+        public static readonly LocString PostNotChirp = new("failure.postNotChirp", "That only works on chirps.");
+        public static readonly LocString GramCaptionTooLong = new("failure.gramCaptionTooLong", "Keep the caption to {0} characters.");
+        public static readonly LocString GramImageCount = new("failure.gramImageCount", "A gram needs 1 to {0} images.");
+        public static readonly LocString GramTooManyTags = new("failure.gramTooManyTags", "You can tag at most {0} people.");
+        public static readonly LocString GramInvalidTag = new("failure.gramInvalidTag", "One of those tags isn't valid.");
+        public static readonly LocString MediaUnsupportedType = new("failure.mediaUnsupportedType", "That file type isn't supported.");
+        public static readonly LocString MediaTooLarge = new("failure.mediaTooLarge", "That file is too large to upload.");
+        public static readonly LocString ChatNotMember = new("failure.chatNotMember", "You're no longer in this conversation.");
+        public static readonly LocString ChatNotMutualContact = new("failure.chatNotMutualContact", "You both need to add each other as contacts first.");
+        public static readonly LocString ChatBlocked = new("failure.chatBlocked", "You can't message this person.");
+        public static readonly LocString ChatNotOwner = new("failure.chatNotOwner", "Only the group owner can do that.");
+        public static readonly LocString ChatGroupFull = new("failure.chatGroupFull", "This group is full at {0} people.");
+        public static readonly LocString ChatHistoryOrphaned = new("failure.chatHistoryOrphaned", "Older messages can't be opened after a key reset.");
+        public static readonly LocString ChatStoryUnavailable = new("failure.chatStoryUnavailable", "That story is no longer available.");
+        public static readonly LocString ChatMessagePolicy = new("failure.chatMessagePolicy", "This person isn't accepting messages from you.");
+        public static readonly LocString ChatRecipientUnavailable = new("failure.chatRecipientUnavailable", "That account is unavailable.");
+        public static readonly LocString ChatMessageExpired = new("failure.chatMessageExpired", "That message is too old to change.");
+        public static readonly LocString CommentLength = new("failure.commentLength", "Keep the comment to {0} characters.");
+        public static readonly LocString AdLimitReached = new("failure.adLimitReached", "You've reached your advert limit.");
+        public static readonly LocString AdCooldown = new("failure.adCooldown", "You posted an advert recently. Try again a bit later.");
+        public static readonly LocString AdNotLive = new("failure.adNotLive", "That advert isn't live.");
+        public static readonly LocString AdRenewTooEarly = new("failure.adRenewTooEarly", "It's too early to renew this advert.");
+        public static readonly LocString AdLinkInvalid = new("failure.adLinkInvalid", "That link isn't allowed.");
+        public static readonly LocString AdInquiriesClosed = new("failure.adInquiriesClosed", "This advertiser isn't taking inquiries.");
+        public static readonly LocString KeyGenerationConflict = new("failure.keyGenerationConflict", "The encryption keys changed. Reopen the conversation, then try again.");
+        public static readonly LocString KeyGenerationUnknown = new("failure.keyGenerationUnknown", "That encryption key is unknown. Reopen the conversation.");
+        public static readonly LocString MessageEnvelopeMalformed = new("failure.messageEnvelopeMalformed", "That message couldn't be read securely.");
+        public static readonly LocString MessageEmpty = new("failure.messageEmpty", "Write something before sending.");
+        public static readonly LocString MessageUnavailable = new("failure.messageUnavailable", "That message is no longer available.");
+        public static readonly LocString KeyVersionConflict = new("failure.keyVersionConflict", "Your keys changed on another device. Reopen the app.");
+        public static readonly LocString MusterDescriptionRequired = new("failure.musterDescriptionRequired", "Add a description before posting.");
+        public static readonly LocString MusterDescriptionTooLong = new("failure.musterDescriptionTooLong", "Keep the description to {0} characters.");
+        public static readonly LocString MusterSpotRequired = new("failure.musterSpotRequired", "Pick a meeting spot first.");
+        public static readonly LocString MusterAlreadyHosting = new("failure.musterAlreadyHosting", "You're already hosting a muster.");
+        public static readonly LocString MusterRsvpRequired = new("failure.musterRsvpRequired", "Mark yourself as going before setting a status.");
+        public static readonly LocString ReportTooManyMessages = new("failure.reportTooManyMessages", "You can attach at most {0} messages.");
+        public static readonly LocString ReportSystemMessage = new("failure.reportSystemMessage", "System messages can't be reported.");
+        public static readonly LocString ReportEvidenceInvalid = new("failure.reportEvidenceInvalid", "That evidence couldn't be attached.");
+        public static readonly LocString StoryUnsupportedApp = new("failure.storyUnsupportedApp", "Stories aren't available in this app.");
+        public static readonly LocString StoryCaptionTooLong = new("failure.storyCaptionTooLong", "Keep the caption to {0} characters.");
+        public static readonly LocString StoryLimitReached = new("failure.storyLimitReached", "You can post at most {0} stories a day.");
+        public static readonly LocString ProfileNameLength = new("failure.profileNameLength", "Your name must be 1 to {0} characters.");
+        public static readonly LocString ProfileBioTooLong = new("failure.profileBioTooLong", "Keep your bio to {0} characters.");
+        public static readonly LocString ProfileHandleInvalid = new("failure.profileHandleInvalid", "Handles can use letters, numbers and underscores, up to {0} characters.");
+        public static readonly LocString ProfileHandleTaken = new("failure.profileHandleTaken", "That handle is already taken.");
+        public static readonly LocString RadioNoStation = new("failure.radioNoStation", "No station is set.");
+        public static readonly LocString RadioStationSuspended = new("failure.radioStationSuspended", "This station is suspended.");
+        public static readonly LocString RadioNameRequired = new("failure.radioNameRequired", "Give the station a name.");
+        public static readonly LocString RadioNameTooLong = new("failure.radioNameTooLong", "That station name is too long.");
+        public static readonly LocString RadioLinkInvalid = new("failure.radioLinkInvalid", "That stream link isn't valid.");
+        public static readonly LocString RadioScheduleTooFar = new("failure.radioScheduleTooFar", "That schedule is too far ahead.");
+        public static readonly LocString ContactInvalidNumber = new("failure.contactInvalidNumber", "That number isn't valid.");
+        public static readonly LocString ContactOwnNumber = new("failure.contactOwnNumber", "That's your own number.");
+        public static readonly LocString CasinoLimitOutOfRange = new("failure.casinoLimitOutOfRange", "Pick a limit within {0}.");
+        public static readonly LocString PollClosed = new("failure.pollClosed", "This poll is closed.");
+        public static readonly LocString PhotoTagRejected = new("failure.photoTagRejected", "That person can't be tagged.");
+        public static readonly LocString VelvetRequestsClosed = new("failure.velvetRequestsClosed", "This person isn't taking new connections.");
+        public static readonly LocString VelvetRequestsMutualsOnly = new("failure.velvetRequestsMutualsOnly", "This person only accepts connections from mutual contacts.");
+        public static readonly LocString PatreonLinkExpired = new("failure.patreonLinkExpired", "That Patreon link expired. Start again.");
+        public static readonly LocString PatreonUnavailable = new("failure.patreonUnavailable", "Patreon is unavailable right now.");
+        public static readonly LocString PatreonAlreadyLinked = new("failure.patreonAlreadyLinked", "That Patreon account is already linked.");
+        public static readonly LocString FeedbackLength = new("failure.feedbackLength", "Keep your feedback to {0} characters.");
+        public static readonly LocString FeedbackTooManyImages = new("failure.feedbackTooManyImages", "You can attach at most {0} images.");
     }
 }

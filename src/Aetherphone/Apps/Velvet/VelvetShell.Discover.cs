@@ -75,8 +75,16 @@ internal sealed partial class VelvetShell
             {
                 var paging = store.LoadingDiscover || store.LoadingMoreDiscover
                     || (discoverInclude.Region.Length > 0 && store.HasMoreDiscover);
-                var message = paging ? Loc.T(L.Velvet.DiscoverLoading) : Loc.T(L.Velvet.DiscoverNone);
-                var hint = paging ? string.Empty : Loc.T(L.Velvet.DiscoverNoneHint);
+                var failed = !paging && store.DiscoverFailed;
+                if (failed)
+                {
+                    discoverFailure.Set(store.DiscoverFailure);
+                }
+
+                var message = paging ? Loc.T(L.Velvet.DiscoverLoading) :
+                    failed ? Loc.T(L.Failure.CouldNotLoad) : Loc.T(L.Velvet.DiscoverNone);
+                var hint = paging ? string.Empty :
+                    failed ? discoverFailure.Text() : Loc.T(L.Velvet.DiscoverNoneHint);
                 Typography.DrawCentered(new Vector2(width * 0.5f + listRect.Min.X, listRect.Min.Y + 90f * scale),
                     message, VelvetTheme.TitleInk, TextStyles.Headline);
                 if (hint.Length > 0)
@@ -85,7 +93,21 @@ internal sealed partial class VelvetShell
                         hint, VelvetTheme.MutedInk, TextStyles.Subheadline);
                 }
 
-                if (!paging && discoverInclude.Any)
+                if (failed)
+                {
+                    var retryWidth = 168f * scale;
+                    var retryTop = listRect.Min.Y + 150f * scale;
+                    var retryRect = new Rect(
+                        new Vector2(width * 0.5f + listRect.Min.X - retryWidth * 0.5f, retryTop),
+                        new Vector2(width * 0.5f + listRect.Min.X + retryWidth * 0.5f, retryTop + 38f * scale));
+                    if (ConfirmDialog.DrawPillButton(retryRect, Loc.T(L.Common.Retry), true, theme, 1f, 1f,
+                            ConfirmButtonTone.Primary, "velvet.discover.retry"))
+                    {
+                        ApplyDiscoverFilters();
+                    }
+                }
+
+                if (!paging && !failed && discoverInclude.Any)
                 {
                     var buttonWidth = 168f * scale;
                     var buttonTop = listRect.Min.Y + 150f * scale;

@@ -30,6 +30,7 @@ internal sealed class CommunityRadioService : IDisposable
     private volatile RadioTrackDto[] tracks = Array.Empty<RadioTrackDto>();
     private volatile bool tracksLoading;
     private volatile string tracksStationId = string.Empty;
+    private volatile bool tracksFailed;
     private volatile int liveCount;
     private volatile CommunityStationDto? viewed;
     private volatile string viewedId = string.Empty;
@@ -194,6 +195,8 @@ internal sealed class CommunityRadioService : IDisposable
     }
 
     public RadioTrackDto[] Tracks => tracks;
+
+    public bool TracksFailed => tracksFailed;
     public bool TracksLoading => tracksLoading;
 
     public void EnsureTracks(string stationId)
@@ -205,6 +208,7 @@ internal sealed class CommunityRadioService : IDisposable
 
         tracksStationId = stationId;
         tracks = Array.Empty<RadioTrackDto>();
+        tracksFailed = false;
         tracksLoading = true;
         _ = FetchTracksAsync(stationId, cancellation.Token);
     }
@@ -214,10 +218,21 @@ internal sealed class CommunityRadioService : IDisposable
         try
         {
             var page = await api.Radio.TracksAsync(stationId, token).ConfigureAwait(false);
-            if (string.Equals(tracksStationId, stationId, StringComparison.Ordinal))
+            if (!string.Equals(tracksStationId, stationId, StringComparison.Ordinal))
             {
-                tracks = page?.Items ?? Array.Empty<RadioTrackDto>();
+                return;
             }
+
+            if (page is null)
+            {
+                tracksFailed = true;
+                AepLog.Warning($"[Radio] tracklist for station {stationId} could not be read; "
+                    + "leaving the station without a track list rather than showing it as empty");
+                return;
+            }
+
+            tracks = page.Items;
+            tracksFailed = false;
         }
         catch (OperationCanceledException)
         {

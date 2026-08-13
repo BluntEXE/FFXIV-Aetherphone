@@ -84,6 +84,10 @@ internal sealed partial class ChirperApp : IPhoneApp
     private string draft = string.Empty;
     private bool composeFocus;
     private bool feedScrollTopPending;
+    private readonly FailureSlot composeFailure = new();
+    private readonly FailureSlot feedFailure = new();
+    private readonly FailureSlot commentFailure = new();
+    private string? commentRestore;
     private string composeStatus = string.Empty;
     private volatile int composeOutcome;
     private readonly ChirperActionReveal actions = new();
@@ -366,11 +370,24 @@ internal sealed partial class ChirperApp : IPhoneApp
 
             if (snapshot.Length == 0)
             {
+                var failed = !store.IsLoading(scope) && store.FeedFailed(scope);
+                if (failed)
+                {
+                    feedFailure.Set(store.FeedFailure(scope));
+                }
+
                 var message = store.IsLoading(scope) ? Loc.T(L.Common.Loading) :
+                    failed ? feedFailure.Text() :
                     scope == SocialFeedScope.Following ? Loc.T(L.Chirper.FollowingEmpty) :
                     Loc.T(L.Chirper.ExploreEmpty);
                 Typography.DrawCentered(new Vector2(listRect.Center.X, listRect.Min.Y + 90f * UiScale.Current),
                     message, AppPalettes.Chirper.MutedInk);
+                if (failed)
+                {
+                    Typography.DrawCentered(
+                        new Vector2(listRect.Center.X, listRect.Min.Y + 118f * UiScale.Current),
+                        Loc.T(L.Failure.PullToRetry), AppPalettes.Chirper.MutedInk, TextStyles.Footnote);
+                }
             }
             else
             {
@@ -1359,6 +1376,19 @@ internal sealed partial class ChirperApp : IPhoneApp
 
     private void DrawCommentComposer(Rect bar, Rect screen, string postId)
     {
+        var returned = Interlocked.Exchange(ref commentRestore, null);
+        if (returned is not null)
+        {
+            commentDraft = returned;
+        }
+
+        if (commentFailure.Failed)
+        {
+            Typography.DrawWrappedCentered(new Vector2(bar.Center.X, bar.Min.Y - 22f * UiScale.Current),
+                commentFailure.Text(), AppPalettes.Chirper.MutedInk, TextStyles.Footnote,
+                bar.Width - 28f * UiScale.Current);
+        }
+
         var style = new CommentComposerStyle(new Vector4(1f, 1f, 1f, 0.10f), AppPalettes.Chirper.FieldSurface,
             AppPalettes.Chirper.TitleInk, Accent, AppPalettes.Chirper.MutedInk, default, false, 8f, 56f, 0.95f);
         var focusPending = false;
@@ -1368,7 +1398,16 @@ internal sealed partial class ChirperApp : IPhoneApp
         {
             var text = commentDraft;
             commentDraft = string.Empty;
-            store.AddComment(postId, text, _ => { });
+            commentFailure.Clear();
+            store.AddComment(postId, text, accepted =>
+            {
+                if (accepted)
+                {
+                    return;
+                }
+
+                commentRestore = text;
+            }, commentFailure.Set);
         }
     }
 

@@ -44,6 +44,7 @@ internal sealed partial class MessageApp : IPhoneApp
     public int BadgeCount => store.UnreadTotal + calls.UnseenMissed;
 
     private readonly DirectMessagesStore store;
+    private readonly FailureSlot threadListFailure = new();
     private readonly ContactBook contacts;
     private readonly CallHub calls;
     private readonly AethernetSession session;

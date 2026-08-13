@@ -7,6 +7,7 @@ using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Media;
+using Aetherphone.Core.Net;
 using Aetherphone.Core.Message;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Windows.Components;
@@ -158,10 +159,11 @@ internal sealed class GramDmStore : ChatThreadStoreBase<GramMessageDto, GramThre
         await keys.HydrateGramAsync(token).ConfigureAwait(false);
     }
 
-    protected override async Task<ThreadListPage?> FetchThreadListAsync(string? cursor, CancellationToken token)
+    protected override async Task<ThreadListPage?> FetchThreadListAsync(string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         await EnsureGramHydratedAsync(token).ConfigureAwait(false);
-        var page = await client.ThreadsAsync(cursor, token).ConfigureAwait(false);
+        var page = await client.ThreadsAsync(cursor, token, onFailure).ConfigureAwait(false);
         return page is null ? null : new ThreadListPage(page.Items, page.NextCursor);
     }
 

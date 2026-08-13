@@ -91,7 +91,7 @@ internal sealed class WalletApp : IPhoneApp
         ui.Theme = theme;
         ui.Backdrop(SceneChrome.ScreenFrom(content, theme, scale));
         DrawHeader(content, scale);
-        if (DrawNotificationToggle(content, scale))
+        if (DrawBadgeToggle(content, scale))
         {
             configuration.ShowWalletBadge = !configuration.ShowWalletBadge;
             configuration.Save();
@@ -152,11 +152,12 @@ internal sealed class WalletApp : IPhoneApp
             1.15f, FontWeight.SemiBold);
     }
 
-    private bool DrawNotificationToggle(Rect content, float scale)
+    private bool DrawBadgeToggle(Rect content, float scale)
     {
         return NotificationToggleButton.Draw(content, scale, "wallet.notifications.toggle",
-            !configuration.ShowWalletBadge, AppPalettes.Wallet.Accent, AppPalettes.Wallet.TitleInk,
-            AppPalettes.Wallet.MutedInk, Loc.T(L.Wallet.ShowBadge), Loc.T(L.Wallet.HideBadge));
+            AlertSuppression.Badge, !configuration.ShowWalletBadge, AppPalettes.Wallet.Accent,
+            AppPalettes.Wallet.TitleInk, AppPalettes.Wallet.MutedInk, Loc.T(L.Wallet.ShowBadge),
+            Loc.T(L.Wallet.HideBadge));
     }
 
     private Rect DrawSectionCard(WalletSection section, float scale)

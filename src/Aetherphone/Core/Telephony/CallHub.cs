@@ -64,6 +64,8 @@ internal sealed class CallHub : IDisposable
     public bool Enabled => configuration.CallsEnabled;
     public bool SignedIn => session.IsSignedIn;
     public bool Connected => router.Connected;
+
+    public CallSignalRouter Router => router;
     public string LocalUserId => session.CurrentUser?.Id ?? string.Empty;
     public CallLogEntry[] CallLog => log.Entries;
     public int UnseenMissed => log.UnseenMissed;

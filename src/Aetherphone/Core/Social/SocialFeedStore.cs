@@ -144,6 +144,10 @@ internal abstract class SocialFeedStore : IDisposable
 
     public bool IsLoading(SocialFeedScope scope) => Lane(scope).Loading;
 
+    public bool FeedFailed(SocialFeedScope scope) => Lane(scope).Failed;
+
+    public AepFailure FeedFailure(SocialFeedScope scope) => Lane(scope).Failure;
+
     public bool HasMoreFeed(SocialFeedScope scope) => Lane(scope).HasMore;
 
     public bool LoadingMore(SocialFeedScope scope) => Lane(scope).LoadingMore;
@@ -199,7 +203,8 @@ internal abstract class SocialFeedStore : IDisposable
         : user.FollowRequested ? FollowState.Requested
         : FollowState.None;
 
-    protected abstract Task<FeedPage?> FetchFeedAsync(string feedKey, string? cursor, CancellationToken token);
+    protected abstract Task<FeedPage?> FetchFeedAsync(string feedKey, string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null);
 
     protected abstract Task<FeedPage?> FetchProfilePostsAsync(string userId, string? cursor, CancellationToken token);
 
@@ -305,11 +310,17 @@ internal abstract class SocialFeedStore : IDisposable
         lane.Loading = true;
         work.Run("feed refresh", async token =>
         {
-            var page = await FetchFeedAsync(FeedKey(scope), null, token).ConfigureAwait(false);
+            var reported = AepFailure.None;
+            var page = await FetchFeedAsync(FeedKey(scope), null, token, failure => reported = failure)
+                .ConfigureAwait(false);
             if (page is not null)
             {
                 lane.ApplyRefresh(page.Items, page.NextCursor);
+                return;
             }
+
+            lane.RecordFailure(reported.Failed ? reported : AepFailure.Transport(AepFailureKind.Offline));
+            AepLog.Warning($"Feed '{FeedKey(scope)}' failed to refresh: {lane.Failure.Describe()}");
         }, () => lane.Loading = false);
     }
 
@@ -330,11 +341,17 @@ internal abstract class SocialFeedStore : IDisposable
         lane.LoadingMore = true;
         work.Run("feed more", async token =>
         {
-            var page = await FetchFeedAsync(FeedKey(scope), cursor, token).ConfigureAwait(false);
+            var reported = AepFailure.None;
+            var page = await FetchFeedAsync(FeedKey(scope), cursor, token, failure => reported = failure)
+                .ConfigureAwait(false);
             if (page is not null)
             {
                 lane.ApplyMore(page.Items, page.NextCursor);
+                return;
             }
+
+            lane.RecordFailure(reported.Failed ? reported : AepFailure.Transport(AepFailureKind.Offline));
+            AepLog.Warning($"Feed '{FeedKey(scope)}' failed to load more: {lane.Failure.Describe()}");
         }, () => lane.LoadingMore = false);
     }
 
@@ -409,7 +426,8 @@ internal abstract class SocialFeedStore : IDisposable
         }, () => commentsLoadingMore = false);
     }
 
-    public void AddComment(string postId, string text, Action<bool> onComplete)
+    public void AddComment(string postId, string text, Action<bool> onComplete,
+        Action<AepFailure>? onFailure = null)
     {
         var trimmed = text.Trim();
         if (trimmed.Length == 0 || commenting)
@@ -420,9 +438,10 @@ internal abstract class SocialFeedStore : IDisposable
         commenting = true;
         work.Run("comment", async token =>
         {
-            var created = await client.AddCommentAsync(postId, trimmed, token).ConfigureAwait(false);
+            var created = await client.AddCommentAsync(postId, trimmed, token, onFailure).ConfigureAwait(false);
             if (created is null)
             {
+                AepLog.Warning($"Comment on {postId} was not accepted");
                 return false;
             }
 
@@ -749,10 +768,21 @@ internal abstract class SocialFeedStore : IDisposable
         work.Run("report", token => safety.ReportAsync(targetType, targetId, reason, token), onComplete);
     }
 
-    public void Block(string userId, Action<bool> onComplete)
+    public void Block(string userId, Action<bool> onComplete, Action<AepFailure>? onFailure = null)
     {
         RemoveAuthorEverywhere(userId);
-        work.Run("block", token => safety.BlockAsync(userId, token), onComplete);
+        work.Run("block", async token =>
+        {
+            var blocked = await safety.BlockAsync(userId, token, onFailure).ConfigureAwait(false);
+            if (!blocked)
+            {
+                AepLog.Warning($"Block of {userId} failed; restoring the feeds that were cleared optimistically");
+                RefreshFeed(SocialFeedScope.ForYou);
+                RefreshFeed(SocialFeedScope.Following);
+            }
+
+            return blocked;
+        }, onComplete);
     }
 
     private void RemoveAuthorEverywhere(string userId)

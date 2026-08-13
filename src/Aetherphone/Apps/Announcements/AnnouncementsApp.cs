@@ -28,6 +28,7 @@ internal sealed partial class AnnouncementsApp : IPhoneApp
     public int BadgeCount => store.UnreadCount;
 
     private readonly AnnouncementsStore store;
+    private readonly FailureSlot listFailure = new();
     private readonly AnnouncementsLauncher launcher;
     private readonly AppSkin ui = new(AppPalettes.Announcements);
     private readonly ViewRouter<AnnouncementsRoute> router;

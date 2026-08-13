@@ -21,61 +21,69 @@ internal sealed class AethernetTransport
     public AethernetSession Session { get; }
 
     public Task<T?> GetAsync<T>(string path, JsonTypeInfo<T> responseInfo, CancellationToken token,
-        Action<int>? onStatus = null)
+        Action<int>? onStatus = null, Action<AepFailure>? onFailure = null)
     {
         if (SignedOut(path))
         {
+            onFailure?.Invoke(AepFailure.Transport(AepFailureKind.SignedOut));
             return Task.FromResult<T?>(default);
         }
 
-        return http.GetJsonAsync(Url(path), responseInfo, Session.Token, token, Sink(onStatus), appScope);
+        return http.GetJsonAsync(Url(path), responseInfo, Session.Token, token, Sink(onStatus), appScope, onFailure);
     }
 
     public Task<TResponse?> PostAsync<TRequest, TResponse>(string path, TRequest body,
         JsonTypeInfo<TRequest> requestInfo, JsonTypeInfo<TResponse> responseInfo, CancellationToken token,
-        Action<int>? onStatus = null)
+        Action<int>? onStatus = null, Action<AepFailure>? onFailure = null)
     {
         if (SignedOut(path))
         {
+            onFailure?.Invoke(AepFailure.Transport(AepFailureKind.SignedOut));
             return Task.FromResult<TResponse?>(default);
         }
 
         return http.PostJsonAsync(Url(path), body, requestInfo, responseInfo, Session.Token, token, Sink(onStatus),
-            appScope);
+            appScope, onFailure);
     }
 
     public Task<TResponse?> SendJsonAsync<TRequest, TResponse>(HttpMethod method, string path, TRequest body,
         JsonTypeInfo<TRequest> requestInfo, JsonTypeInfo<TResponse> responseInfo, CancellationToken token,
-        Action<int>? onStatus = null)
+        Action<int>? onStatus = null, Action<AepFailure>? onFailure = null)
     {
         if (SignedOut(path))
         {
+            onFailure?.Invoke(AepFailure.Transport(AepFailureKind.SignedOut));
             return Task.FromResult<TResponse?>(default);
         }
 
         return http.SendJsonAsync(method, Url(path), body, requestInfo, responseInfo, Session.Token, token,
-            Sink(onStatus), appScope);
+            Sink(onStatus), appScope, onFailure);
     }
 
     public Task<TResponse?> RequestAsync<TResponse>(HttpMethod method, string path,
-        JsonTypeInfo<TResponse> responseInfo, CancellationToken token, Action<int>? onStatus = null)
+        JsonTypeInfo<TResponse> responseInfo, CancellationToken token, Action<int>? onStatus = null,
+        Action<AepFailure>? onFailure = null)
     {
         if (SignedOut(path))
         {
+            onFailure?.Invoke(AepFailure.Transport(AepFailureKind.SignedOut));
             return Task.FromResult<TResponse?>(default);
         }
 
-        return http.RequestJsonAsync(method, Url(path), responseInfo, Session.Token, token, Sink(onStatus), appScope);
+        return http.RequestJsonAsync(method, Url(path), responseInfo, Session.Token, token, Sink(onStatus), appScope,
+            onFailure);
     }
 
-    public Task<bool> SendAsync(HttpMethod method, string path, CancellationToken token, Action<int>? onStatus = null)
+    public Task<bool> SendAsync(HttpMethod method, string path, CancellationToken token, Action<int>? onStatus = null,
+        Action<AepFailure>? onFailure = null)
     {
         if (SignedOut(path))
         {
+            onFailure?.Invoke(AepFailure.Transport(AepFailureKind.SignedOut));
             return Task.FromResult(false);
         }
 
-        return http.SendAsync(method, Url(path), Session.Token, token, Sink(onStatus), appScope);
+        return http.SendAsync(method, Url(path), Session.Token, token, Sink(onStatus), appScope, onFailure);
     }
 
     public Task<bool> SendWithBearerAsync(HttpMethod method, string path, string? bearer, CancellationToken token)
@@ -84,15 +92,17 @@ internal sealed class AethernetTransport
     }
 
     public Task<bool> SendJsonForStatusAsync<TRequest>(HttpMethod method, string path, TRequest body,
-        JsonTypeInfo<TRequest> requestInfo, CancellationToken token, Action<int>? onStatus = null)
+        JsonTypeInfo<TRequest> requestInfo, CancellationToken token, Action<int>? onStatus = null,
+        Action<AepFailure>? onFailure = null)
     {
         if (SignedOut(path))
         {
+            onFailure?.Invoke(AepFailure.Transport(AepFailureKind.SignedOut));
             return Task.FromResult(false);
         }
 
         return http.SendJsonForStatusAsync(method, Url(path), body, requestInfo, Session.Token, token, Sink(onStatus),
-            appScope);
+            appScope, onFailure);
     }
 
     public Task<TResponse?> PostAnonymousAsync<TRequest, TResponse>(string path, TRequest body,
@@ -108,14 +118,15 @@ internal sealed class AethernetTransport
         return http.GetJsonAsync(Url(path), responseInfo, bearer, token, static _ => { }, appScope);
     }
 
-    public Task<bool> PutBytesAsync(Uri uri, byte[] content, string contentType, CancellationToken token)
+    public Task<bool> PutBytesAsync(Uri uri, byte[] content, string contentType, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return http.PutBytesAsync(uri, content, contentType, token, UploadBearerFor(uri));
+        return http.PutBytesAsync(uri, content, contentType, token, UploadBearerFor(uri), onFailure);
     }
 
-    public Task<byte[]?> GetBytesAsync(Uri uri, CancellationToken token)
+    public Task<byte[]?> GetBytesAsync(Uri uri, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return http.GetBytesAsync(uri, token);
+        return http.GetBytesAsync(uri, token, onFailure);
     }
 
     private string? UploadBearerFor(Uri uri)

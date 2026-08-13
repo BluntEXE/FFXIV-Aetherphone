@@ -42,6 +42,32 @@ internal static class SignalType
     public const string CasinoEnded = "casino.ended";
     public const string CasinoPing = "casino.ping";
     public const string Error = "error";
+
+    public const string StreamState = "stream.state";
+    public const string StreamJoin = "stream.join";
+    public const string StreamLeave = "stream.leave";
+    public const string StreamJoined = "stream.joined";
+    public const string StreamDeclined = "stream.declined";
+    public const string StreamRoster = "stream.roster";
+    public const string StreamLeft = "stream.left";
+    public const string StreamEnded = "stream.ended";
+
+    public const string StreamJoinRequest = "stream.joinRequest";
+    public const string StreamApprove = "stream.approve";
+    public const string StreamDeny = "stream.deny";
+    public const string StreamJoinPending = "stream.joinPending";
+
+    public const string StreamQueueSuggest = "stream.queueSuggest";
+    public const string StreamQueueSuggestion = "stream.queueSuggestion";
+    public const string StreamQueueApprove = "stream.queueApprove";
+    public const string StreamQueueDeny = "stream.queueDeny";
+    public const string StreamQueueSuggestionResult = "stream.queueSuggestionResult";
+
+    public const string StreamKick = "stream.kick";
+    public const string StreamKicked = "stream.kicked";
+
+    public const string StreamNearby = "stream.nearby";
+    public const string StreamNearbyRoster = "stream.nearby.roster";
 }
 
 internal static class ParticipantState
@@ -60,6 +86,8 @@ internal sealed record ParticipantInfo(
     string State,
     bool Muted);
 
+internal sealed record NearbyStreamInfo(string HostId, string Name, string World, string DisplayName);
+
 internal sealed record CallControl
 {
     public string Type { get; init; } = string.Empty;
@@ -70,6 +98,26 @@ internal sealed record CallControl
     public string? UserId { get; init; }
     public bool? Muted { get; init; }
     public string? Reason { get; init; }
+
+    public string? HostId { get; init; }
+    public string? Url { get; init; }
+    public double? PositionSeconds { get; init; }
+    public bool? Paused { get; init; }
+
+    public bool? ApprovalRequired { get; init; }
+
+    public string? SuggestionId { get; init; }
+
+    public float? ScreenX { get; init; }
+    public float? ScreenY { get; init; }
+    public float? ScreenZ { get; init; }
+    public float? ScreenYaw { get; init; }
+    public float? ScreenScale { get; init; }
+
+    public uint? TerritoryId { get; init; }
+    public bool? Discoverable { get; init; }
+    public NearbyStreamInfo[]? NearbyStreams { get; init; }
+
     public string? App { get; init; }
     public string? ContentKind { get; init; }
     public string? ContentId { get; init; }

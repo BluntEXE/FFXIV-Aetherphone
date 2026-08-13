@@ -353,13 +353,36 @@ internal sealed partial class VelvetShell
     {
         var style = new CommentComposerStyle(VelvetTheme.Hairline, VelvetTheme.PlumWell, VelvetTheme.TitleInk,
             VelvetTheme.Rose, VelvetTheme.PlumWell, VelvetTheme.OnAccent, true, 9f, 54f, 0.85f);
+        var returned = Interlocked.Exchange(ref commentRestore, null);
+        if (returned is not null)
+        {
+            commentDraft = returned;
+        }
+
+        if (commentFailure.Failed)
+        {
+            Typography.DrawWrappedCentered(new Vector2(bar.Center.X, bar.Min.Y - 22f * UiScale.Current),
+                commentFailure.Text(), VelvetTheme.MutedInk, TextStyles.Footnote,
+                bar.Width - 28f * UiScale.Current);
+        }
+
         var focusPending = false;
         if (CommentComposerBar.Draw(bar, screen, ui, theme, style, "##velvetComment", Loc.T(L.Velvet.AddComment),
                 ref commentDraft, 500, commentMentions, mentionPopup, images, lodestone, store.Commenting,
                 ref focusPending, commentEmoji))
         {
-            store.AddComment(postId, commentDraft, _ => { });
+            var text = commentDraft;
             commentDraft = string.Empty;
+            commentFailure.Clear();
+            store.AddComment(postId, text, accepted =>
+            {
+                if (accepted)
+                {
+                    return;
+                }
+
+                commentRestore = text;
+            }, commentFailure.Set);
         }
     }
 

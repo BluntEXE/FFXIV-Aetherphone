@@ -77,6 +77,7 @@ internal static class AppPalettes
     public static readonly AppPalette Shortcuts = For("shortcuts");
     public static readonly AppPalette Timers = For("timers");
     public static readonly AppPalette Fishing = For("fishing");
+    public static readonly AppPalette AetherStream = For("aetherstream");
 
     public static readonly AppPalette Casino = new()
     {

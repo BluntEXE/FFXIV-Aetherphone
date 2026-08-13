@@ -139,7 +139,7 @@ internal sealed partial class VelvetShell
             ConfirmLabel = Loc.T(L.Velvet.Block),
             CancelLabel = Loc.T(L.Velvet.DeleteCancel),
             Danger = true,
-            Confirm = () => store.Block(userId, _ => { }),
+            ConfirmAsync = done => store.Block(userId, done, confirm.ReportFailure),
         });
     }
 }

@@ -9,8 +9,10 @@ namespace Aetherphone.Core.Net;
 
 internal sealed class HttpService : IDisposable
 {
+    public const string RequestIdHeader = "X-Aep-Request-Id";
     private const int MaxAttempts = 3;
     private const int RateLimitedStatus = 429;
+    private const int MaxErrorParseChars = 4096;
     private const long MaxResponseBytes = 32 * 1024 * 1024;
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(20);
     private static readonly TimeSpan UploadTimeout = TimeSpan.FromSeconds(60);
@@ -41,11 +43,68 @@ internal sealed class HttpService : IDisposable
         return scope;
     }
 
-    public async Task<byte[]?> GetBytesAsync(Uri uri, CancellationToken token)
+    private static string ResponseRequestId(HttpResponseMessage response)
+    {
+        if (!response.Headers.TryGetValues(RequestIdHeader, out var values))
+        {
+            return string.Empty;
+        }
+
+        foreach (var value in values)
+        {
+            return value;
+        }
+
+        return string.Empty;
+    }
+
+    private static async Task<AepFailure> DescribeAsync(HttpResponseMessage response, CancellationToken token)
+    {
+        var status = (int)response.StatusCode;
+        var requestId = ResponseRequestId(response);
+        try
+        {
+            var body = await response.Content.ReadAsStringAsync(token).ConfigureAwait(false);
+            if (body.Length > 0 && body.Length <= MaxErrorParseChars && body[0] == '{')
+            {
+                var parsed = JsonSerializer.Deserialize(body, AepErrorJsonContext.Default.AepErrorBody);
+                if (parsed is not null)
+                {
+                    return new AepFailure(AepFailureKind.Server, status, parsed.Code, parsed.Error,
+                        string.IsNullOrEmpty(parsed.RequestId) ? requestId : parsed.RequestId, parsed.Value);
+                }
+            }
+        }
+        catch (Exception exception)
+        {
+            AepLog.Debug(exception, $"Could not read the error body of a {status} response");
+        }
+
+        return AepFailure.FromStatus(status, requestId);
+    }
+
+    private static AepFailure ClassifyException(Exception exception, CancellationToken token)
+    {
+        if (exception is OperationCanceledException)
+        {
+            return AepFailure.Transport(token.IsCancellationRequested ? AepFailureKind.Cancelled : AepFailureKind.Timeout);
+        }
+
+        return AepFailure.Transport(AepFailureKind.Offline);
+    }
+
+    private static void Report(Action<AepFailure>? onFailure, AepFailure failure)
+    {
+        onFailure?.Invoke(failure);
+    }
+
+    public async Task<byte[]?> GetBytesAsync(Uri uri, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         if (IsPaused(uri))
         {
             AepLog.Debug($"HTTP GET {uri} skipped; {uri.Host} is rate limit paused");
+            Report(onFailure, AepFailure.Transport(AepFailureKind.RateLimitPaused));
             return null;
         }
 
@@ -58,12 +117,15 @@ internal sealed class HttpService : IDisposable
                 if (response.StatusCode == HttpStatusCode.TooManyRequests)
                 {
                     PauseHost(uri, response);
+                    Report(onFailure, await DescribeAsync(response, scope.Token).ConfigureAwait(false));
                     return null;
                 }
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    AepLog.Warning($"HTTP GET {uri} returned {(int)response.StatusCode}");
+                    var failure = await DescribeAsync(response, scope.Token).ConfigureAwait(false);
+                    AepLog.Warning($"HTTP GET {uri} returned {failure.Describe()}");
+                    Report(onFailure, failure);
                     return null;
                 }
 
@@ -78,6 +140,7 @@ internal sealed class HttpService : IDisposable
                 if (attempt == MaxAttempts)
                 {
                     AepLog.Warning(exception, $"HTTP GET failed for {uri}");
+                    Report(onFailure, ClassifyException(exception, token));
                     return null;
                 }
 
@@ -89,39 +152,45 @@ internal sealed class HttpService : IDisposable
     }
 
     public async Task<T?> GetJsonAsync<T>(string url, JsonTypeInfo<T> typeInfo, string? bearer, CancellationToken token,
-        Action<int>? onStatus = null, string? appScope = null)
+        Action<int>? onStatus = null, string? appScope = null, Action<AepFailure>? onFailure = null)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        return await SendForJsonAsync(request, typeInfo, bearer, onStatus, appScope, token).ConfigureAwait(false);
+        return await SendForJsonAsync(request, typeInfo, bearer, onStatus, appScope, token, onFailure)
+            .ConfigureAwait(false);
     }
 
     public Task<TResponse?> PostJsonAsync<TRequest, TResponse>(string url, TRequest body,
         JsonTypeInfo<TRequest> requestInfo, JsonTypeInfo<TResponse> responseInfo, string? bearer,
-        CancellationToken token, Action<int>? onStatus = null, string? appScope = null)
+        CancellationToken token, Action<int>? onStatus = null, string? appScope = null,
+        Action<AepFailure>? onFailure = null)
     {
-        return SendJsonAsync(HttpMethod.Post, url, body, requestInfo, responseInfo, bearer, token, onStatus, appScope);
+        return SendJsonAsync(HttpMethod.Post, url, body, requestInfo, responseInfo, bearer, token, onStatus, appScope,
+            onFailure);
     }
 
     public async Task<TResponse?> SendJsonAsync<TRequest, TResponse>(HttpMethod method, string url, TRequest body,
         JsonTypeInfo<TRequest> requestInfo, JsonTypeInfo<TResponse> responseInfo, string? bearer,
-        CancellationToken token, Action<int>? onStatus = null, string? appScope = null)
+        CancellationToken token, Action<int>? onStatus = null, string? appScope = null,
+        Action<AepFailure>? onFailure = null)
     {
         using var request = new HttpRequestMessage(method, url);
         var payload = JsonSerializer.Serialize(body, requestInfo);
         request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
-        return await SendForJsonAsync(request, responseInfo, bearer, onStatus, appScope, token).ConfigureAwait(false);
+        return await SendForJsonAsync(request, responseInfo, bearer, onStatus, appScope, token, onFailure)
+            .ConfigureAwait(false);
     }
 
     public async Task<TResponse?> RequestJsonAsync<TResponse>(HttpMethod method, string url,
         JsonTypeInfo<TResponse> responseInfo, string? bearer, CancellationToken token, Action<int>? onStatus = null,
-        string? appScope = null)
+        string? appScope = null, Action<AepFailure>? onFailure = null)
     {
         using var request = new HttpRequestMessage(method, url);
-        return await SendForJsonAsync(request, responseInfo, bearer, onStatus, appScope, token).ConfigureAwait(false);
+        return await SendForJsonAsync(request, responseInfo, bearer, onStatus, appScope, token, onFailure)
+            .ConfigureAwait(false);
     }
 
     public async Task<bool> PutBytesAsync(Uri uri, byte[] content, string contentType, CancellationToken token,
-        string? bearer = null)
+        string? bearer = null, Action<AepFailure>? onFailure = null)
     {
         using var request = new HttpRequestMessage(HttpMethod.Put, uri) { Content = new ByteArrayContent(content), };
         request.Content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
@@ -133,10 +202,11 @@ internal sealed class HttpService : IDisposable
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 AepLog.Warning($"HTTP PUT {uri} was rate limited");
+                Report(onFailure, await DescribeAsync(response, scope.Token).ConfigureAwait(false));
                 return false;
             }
 
-            return SucceededOrLogged(request, response);
+            return await SucceededOrReportedAsync(request, response, onFailure, scope.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -145,19 +215,21 @@ internal sealed class HttpService : IDisposable
         catch (Exception exception)
         {
             AepLog.Warning(exception, $"HTTP PUT failed for {uri}");
+            Report(onFailure, ClassifyException(exception, token));
             return false;
         }
     }
 
     public async Task<bool> SendJsonForStatusAsync<TRequest>(HttpMethod method, string url, TRequest body,
         JsonTypeInfo<TRequest> requestInfo, string? bearer, CancellationToken token, Action<int>? onStatus = null,
-        string? appScope = null)
+        string? appScope = null, Action<AepFailure>? onFailure = null)
     {
         using var request = new HttpRequestMessage(method, url);
         if (IsPollingPaused(request))
         {
             AepLog.Debug($"HTTP {method} {url} skipped; host is rate limit paused");
             onStatus?.Invoke(RateLimitedStatus);
+            Report(onFailure, AepFailure.Transport(AepFailureKind.RateLimitPaused));
             return false;
         }
 
@@ -172,10 +244,11 @@ internal sealed class HttpService : IDisposable
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 PauseIfPolling(request, response);
+                Report(onFailure, await DescribeAsync(response, scope.Token).ConfigureAwait(false));
                 return false;
             }
 
-            return SucceededOrLogged(request, response);
+            return await SucceededOrReportedAsync(request, response, onFailure, scope.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -184,18 +257,20 @@ internal sealed class HttpService : IDisposable
         catch (Exception exception)
         {
             AepLog.Warning(exception, $"HTTP {method} failed for {url}");
+            Report(onFailure, ClassifyException(exception, token));
             return false;
         }
     }
 
     public async Task<bool> SendAsync(HttpMethod method, string url, string? bearer, CancellationToken token,
-        Action<int>? onStatus = null, string? appScope = null)
+        Action<int>? onStatus = null, string? appScope = null, Action<AepFailure>? onFailure = null)
     {
         using var request = new HttpRequestMessage(method, url);
         if (IsPollingPaused(request))
         {
             AepLog.Debug($"HTTP {method} {url} skipped; host is rate limit paused");
             onStatus?.Invoke(RateLimitedStatus);
+            Report(onFailure, AepFailure.Transport(AepFailureKind.RateLimitPaused));
             return false;
         }
 
@@ -208,10 +283,11 @@ internal sealed class HttpService : IDisposable
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 PauseIfPolling(request, response);
+                Report(onFailure, await DescribeAsync(response, scope.Token).ConfigureAwait(false));
                 return false;
             }
 
-            return SucceededOrLogged(request, response);
+            return await SucceededOrReportedAsync(request, response, onFailure, scope.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -220,17 +296,34 @@ internal sealed class HttpService : IDisposable
         catch (Exception exception)
         {
             AepLog.Warning(exception, $"HTTP {method} failed for {url}");
+            Report(onFailure, ClassifyException(exception, token));
             return false;
         }
     }
 
+    private const int MaxErrorBodyChars = 500;
+
+    private static async Task<string> ReadErrorBodyAsync(HttpResponseMessage response, CancellationToken token)
+    {
+        try
+        {
+            var body = await response.Content.ReadAsStringAsync(token).ConfigureAwait(false);
+            return body.Length > MaxErrorBodyChars ? body[..MaxErrorBodyChars] + "..." : body;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
     private async Task<T?> SendForJsonAsync<T>(HttpRequestMessage request, JsonTypeInfo<T> typeInfo, string? bearer,
-        Action<int>? onStatus, string? appScope, CancellationToken token)
+        Action<int>? onStatus, string? appScope, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         if (IsPollingPaused(request))
         {
             AepLog.Debug($"HTTP {request.Method} {request.RequestUri} skipped; host is rate limit paused");
             onStatus?.Invoke(RateLimitedStatus);
+            Report(onFailure, AepFailure.Transport(AepFailureKind.RateLimitPaused));
             return default;
         }
 
@@ -254,6 +347,7 @@ internal sealed class HttpService : IDisposable
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 PauseIfPolling(request, response);
+                Report(onFailure, await DescribeAsync(response, scope.Token).ConfigureAwait(false));
                 return default;
             }
 
@@ -264,7 +358,10 @@ internal sealed class HttpService : IDisposable
 
             if (!response.IsSuccessStatusCode)
             {
-                AepLog.Warning($"HTTP {request.Method} {request.RequestUri} returned {(int)response.StatusCode}");
+                var failure = await DescribeAsync(response, scope.Token).ConfigureAwait(false);
+                AepLog.Warning($"HTTP {request.Method} {request.RequestUri} returned {failure.Describe()}"
+                    + (string.IsNullOrEmpty(failure.ServerMessage) ? string.Empty : $": {failure.ServerMessage}"));
+                Report(onFailure, failure);
                 return default;
             }
 
@@ -280,21 +377,41 @@ internal sealed class HttpService : IDisposable
             }
 
             await using var stream = await response.Content.ReadAsStreamAsync(scope.Token).ConfigureAwait(false);
-            return await JsonSerializer.DeserializeAsync(stream, typeInfo, scope.Token).ConfigureAwait(false);
+            var bound = await JsonSerializer.DeserializeAsync(stream, typeInfo, scope.Token).ConfigureAwait(false);
+            if (bound is null)
+            {
+                AepLog.Warning($"HTTP {request.Method} {request.RequestUri} returned a body that bound to nothing");
+                Report(onFailure, AepFailure.Transport(AepFailureKind.BadResponse));
+            }
+
+            return bound;
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
             throw;
         }
+        catch (JsonException exception)
+        {
+            AepLog.Warning(exception, $"HTTP {request.Method} {request.RequestUri} returned an unreadable body");
+            Report(onFailure, AepFailure.Transport(AepFailureKind.BadResponse));
+            return default;
+        }
         catch (Exception exception)
         {
             AepLog.Warning(exception, $"HTTP {request.Method} failed for {request.RequestUri}");
+            Report(onFailure, ClassifyException(exception, token));
             return default;
         }
     }
 
+    public static string NewRequestId()
+    {
+        return Guid.NewGuid().ToString("N")[..12];
+    }
+
     private static void ApplyHeaders(HttpRequestMessage request, string? bearer, string? appScope)
     {
+        request.Headers.TryAddWithoutValidation(RequestIdHeader, NewRequestId());
         if (!string.IsNullOrEmpty(bearer))
         {
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearer);
@@ -347,6 +464,21 @@ internal sealed class HttpService : IDisposable
         }
 
         PauseHost(request.RequestUri, response);
+    }
+
+    private static async Task<bool> SucceededOrReportedAsync(HttpRequestMessage request, HttpResponseMessage response,
+        Action<AepFailure>? onFailure, CancellationToken token)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return true;
+        }
+
+        var failure = await DescribeAsync(response, token).ConfigureAwait(false);
+        AepLog.Warning($"HTTP {request.Method} {request.RequestUri} returned {failure.Describe()}"
+            + (string.IsNullOrEmpty(failure.ServerMessage) ? string.Empty : $": {failure.ServerMessage}"));
+        Report(onFailure, failure);
+        return false;
     }
 
     private static bool SucceededOrLogged(HttpRequestMessage request, HttpResponseMessage response)

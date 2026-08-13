@@ -1,3 +1,6 @@
+using Aetherphone.Core.Localization;
+using Aetherphone.Core.Net;
+
 namespace Aetherphone.Core.Confirm;
 
 internal sealed class ConfirmRequest
@@ -18,6 +21,7 @@ internal sealed class ConfirmRequest
 internal sealed class ConfirmService
 {
     private readonly Queue<ConfirmRequest> queued = new();
+    private readonly FailureSlot failure = new();
 
     public ConfirmRequest? Active { get; private set; }
     public volatile bool Busy;
@@ -34,6 +38,12 @@ internal sealed class ConfirmService
         Active = request;
         Busy = false;
         Status = null;
+        failure.Clear();
+    }
+
+    public void ReportFailure(AepFailure value)
+    {
+        failure.Set(value);
     }
 
     public void Alert(string? title, string message, string dismissLabel, Action? onDismiss = null)
@@ -71,7 +81,7 @@ internal sealed class ConfirmService
                 }
                 else
                 {
-                    Status = request.FailedMessage;
+                    Status = ExplainFailure(request);
                 }
             });
             return;
@@ -79,6 +89,16 @@ internal sealed class ConfirmService
 
         request.Confirm?.Invoke();
         Advance();
+    }
+
+    private string ExplainFailure(ConfirmRequest request)
+    {
+        if (failure.Failed)
+        {
+            return failure.Text();
+        }
+
+        return request.FailedMessage ?? Loc.T(L.Failure.Unknown, AepFailure.None.Reference());
     }
 
     public void CancelActive()
