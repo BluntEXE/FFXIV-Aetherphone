@@ -218,7 +218,8 @@ internal sealed class SocialProfilePages
             ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.14f)), 64);
         var portraitName = user.IsMe ? user.Name : displayName;
         var portraitWorld = user.IsMe ? user.World : string.Empty;
-        DrawAvatar(drawList, avatarCenter, avatarRadius, theme, portraitName, portraitWorld, user.AvatarUrl, 1.5f, 64);
+        DrawAvatar(drawList, avatarCenter, avatarRadius, theme, portraitName, portraitWorld, user.AvatarUrl, 1.5f, 64,
+            Frames.Of(user.FrameId));
         avatarLightbox.TryOpen(avatarCenter, avatarRadius, user.AvatarUrl, images);
         var textY = headTop + (headHeight - identityHeight) * 0.5f;
         UserName.DrawAuto(drawList, "socialprofile.name." + user.Id, displayName, user.Badges, user.ProfileBadges,
@@ -493,7 +494,7 @@ internal sealed class SocialProfilePages
             var avatarCenter = new Vector2(avatarOrigin.X + ImGui.GetContentRegionAvail().X * 0.5f,
                 avatarOrigin.Y + avatarRadius);
             DrawAvatar(ImGui.GetWindowDrawList(), avatarCenter, avatarRadius, theme, me.Name, me.World, me.AvatarUrl,
-                1.3f, 48);
+                1.3f, 48, Frames.Of(me.FrameId));
             ImGui.SetCursorScreenPos(new Vector2(avatarOrigin.X, avatarCenter.Y + avatarRadius + 8f * scale));
             var changeWidth = 150f * scale;
             var changeTop = ImGui.GetCursorScreenPos().Y;
@@ -696,7 +697,8 @@ internal sealed class SocialProfilePages
         var displayName = SocialIdentity.Name(user.DisplayName, user.Handle);
         var portraitName = user.IsMe ? user.Name : displayName;
         var portraitWorld = user.IsMe ? user.World : string.Empty;
-        DrawAvatar(drawList, avatarCenter, radius, theme, portraitName, portraitWorld, user.AvatarUrl, 0.95f, 32);
+        DrawAvatar(drawList, avatarCenter, radius, theme, portraitName, portraitWorld, user.AvatarUrl, 0.95f, 32,
+            Frames.Of(user.FrameId));
         var textLeft = avatarCenter.X + radius + 12f * scale;
         var nameTop = style.CardUserRows ? 12f : 9f;
         var subTop = style.CardUserRows ? 33f : 31f;
@@ -844,9 +846,9 @@ internal sealed class SocialProfilePages
     }
 
     private void DrawAvatar(ImDrawListPtr drawList, Vector2 center, float radius, PhoneTheme theme, string name,
-        string world, string? avatarUrl, float monogramScale, int segments)
+        string world, string? avatarUrl, float monogramScale, int segments, FrameStyle? frame = null)
     {
         AvatarView.DrawRemote(drawList, center, radius, theme, name, world, avatarUrl, images, lodestone,
-            monogramScale, segments);
+            monogramScale, segments, 1f, frame);
     }
 }

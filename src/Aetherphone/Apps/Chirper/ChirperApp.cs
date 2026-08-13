@@ -503,7 +503,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         }
 
         DrawAvatar(drawList, avatarCenter, radius, SocialIdentity.Name(post.AuthorDisplayName, post.AuthorHandle),
-            string.Empty, post.AuthorAvatarUrl, 0.95f, 48);
+            string.Empty, post.AuthorAvatarUrl, 0.95f, 48, Frames.Of(post.AuthorFrameId));
         if (UiInteract.HoverClick(avatarCenter - new Vector2(radius, radius), avatarCenter + new Vector2(radius, radius)))
         {
             OpenProfile(post.AuthorId);
@@ -1292,7 +1292,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         var radius = 15f * scale;
         var avatarCenter = new Vector2(origin.X + radius, origin.Y + radius);
         DrawAvatar(drawList, avatarCenter, radius, SocialIdentity.Name(comment.AuthorDisplayName, comment.AuthorHandle),
-            string.Empty, comment.AuthorAvatarUrl, 0.85f, 32);
+            string.Empty, comment.AuthorAvatarUrl, 0.85f, 32, Frames.Of(comment.AuthorFrameId));
         if (UiInteract.HoverClick(avatarCenter - new Vector2(radius, radius), avatarCenter + new Vector2(radius, radius)))
         {
             OpenProfile(comment.AuthorId);
@@ -1476,10 +1476,10 @@ internal sealed partial class ChirperApp : IPhoneApp
 
 
     private void DrawAvatar(ImDrawListPtr drawList, Vector2 center, float radius, string name, string world,
-        string? avatarUrl, float monogramScale, int segments)
+        string? avatarUrl, float monogramScale, int segments, FrameStyle? frame = null)
     {
         AvatarView.DrawRemote(drawList, center, radius, theme, name, world, avatarUrl, images, lodestone,
-            monogramScale, segments);
+            monogramScale, segments, 1f, frame);
     }
 
 

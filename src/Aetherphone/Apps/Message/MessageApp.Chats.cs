@@ -9,6 +9,7 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
+using Aetherphone.Core.Social;
 
 namespace Aetherphone.Apps.Message;
 
@@ -233,7 +234,7 @@ internal sealed partial class MessageApp
         else
         {
             AvatarView.DrawRemote(drawList, avatarCenter, radius, theme, title, string.Empty, item.OtherAvatarUrl,
-                images, lodestone, 0.95f, 32);
+                images, lodestone, 0.95f, 32, 1f, Frames.Of(item.FrameId));
         }
 
         var timeLabel = ChatTime(item.LastMessageAtUnix);

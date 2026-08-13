@@ -63,9 +63,6 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
     private readonly List<ulong> accountIds = new();
     private int accountIdsStamp = -1;
     private volatile bool avatarBusy;
-    private volatile BadgeStyle[]? communityBadges;
-    private bool communityBadgesRequested;
-    private UserDto? communityBadgesUser;
     private bool meRequested;
     private int lastDrawnFrame = -2;
 
@@ -103,14 +100,8 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         if (frame - lastDrawnFrame > 1)
         {
             accountState.RefreshNow();
-            communityBadgesRequested = false;
         }
 
-        if (!ReferenceEquals(communityBadgesUser, session.CurrentUser))
-        {
-            communityBadgesUser = session.CurrentUser;
-            communityBadgesRequested = false;
-        }
 
         lastDrawnFrame = frame;
         var theme = context.Theme;
@@ -252,7 +243,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         var radius = 38f * scale;
         var avatarCenter = new Vector2(centerX, origin.Y + 10f * scale + radius);
         AvatarView.DrawRemote(drawList, avatarCenter, radius, theme, user.Name, user.World, user.AvatarUrl, images,
-            lodestone, 2.0f, 64);
+            lodestone, 2.0f, 64, 1f, Frames.Of(user.FrameId));
         var avatarExtent = new Vector2(radius, radius);
         var avatarMin = avatarCenter - avatarExtent;
         var avatarMax = avatarCenter + avatarExtent;
@@ -296,126 +287,9 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
 
     private void DrawCommunityBadgesSection(PhoneTheme theme, float scale)
     {
-        RequestCommunityBadges();
-        var badges = communityBadges;
-        if (badges is null || badges.Length == 0)
-        {
-            return;
-        }
-
         ImGui.Dummy(new Vector2(0f, 14f * scale));
         SettingsSection.Header(Loc.T(L.Account.BadgesSection), theme);
-        var card = GroupCard.Begin(theme, badges.Length);
-        var light = RoleInk.IsLight(theme);
-        var toggledIndex = -1;
-        for (var index = 0; index < badges.Length; index++)
-        {
-            if (DrawCommunityBadgeRow(card.NextRow(), badges[index], index, light, theme, scale))
-            {
-                toggledIndex = index;
-            }
-        }
-
-        card.End();
-        ImGui.Dummy(new Vector2(0f, 8f * scale));
-        SettingsSection.Hint(Loc.T(L.Account.BadgesHint), theme);
-        if (toggledIndex >= 0)
-        {
-            ToggleCommunityBadge(toggledIndex);
-        }
-    }
-
-    private bool DrawCommunityBadgeRow(Rect row, BadgeStyle badge, int index, bool light, PhoneTheme theme, float scale)
-    {
-        var drawList = ImGui.GetWindowDrawList();
-        var glyphSize = 16f * scale;
-        BadgeStrip.DrawOne(drawList, new Vector2(row.Min.X + glyphSize * 0.5f, row.Center.Y), badge, images, light,
-            glyphSize);
-        var rowId = "account.communitybadge." + index;
-        var toggleWidth = Metrics.Size.ToggleWidth * scale;
-        var toggleHeight = Metrics.Size.ToggleHeight * scale;
-        var toggleMin = new Vector2(row.Max.X - toggleWidth, row.Center.Y - toggleHeight * 0.5f);
-        var labelLeft = row.Min.X + glyphSize + 10f * scale;
-        var labelMaxWidth = MathF.Max(1f, toggleMin.X - 10f * scale - labelLeft);
-        var labelSize = Typography.Measure(badge.Name, TextStyles.BodyEmphasized);
-        Marquee.DrawLeftAuto(rowId, badge.Name, labelLeft, row.Center.Y - labelSize.Y * 0.5f, labelMaxWidth,
-            TextStyles.BodyEmphasized, theme.TextStrong);
-        var shown = !badge.Hidden;
-        var next = Toggle.Draw(rowId + ".toggle",
-            new Rect(toggleMin, toggleMin + new Vector2(toggleWidth, toggleHeight)), shown, theme);
-        return next != shown;
-    }
-
-    private void RequestCommunityBadges()
-    {
-        if (communityBadgesRequested || !session.IsSignedIn)
-        {
-            return;
-        }
-
-        communityBadgesRequested = true;
-        var token = cancellation.Token;
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                var awarded = await account.AwardedBadgesAsync(token).ConfigureAwait(false);
-                if (awarded is null)
-                {
-                    communityBadgesRequested = false;
-                    return;
-                }
-
-                var parsed = new BadgeStyle[awarded.Badges.Length];
-                for (var index = 0; index < awarded.Badges.Length; index++)
-                {
-                    parsed[index] = BadgeStyle.From(awarded.Badges[index]);
-                }
-
-                communityBadges = parsed;
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception exception)
-            {
-                AepLog.Warning(exception, "Community badges load failed");
-                communityBadgesRequested = false;
-            }
-        });
-    }
-
-    private void ToggleCommunityBadge(int index)
-    {
-        var badges = communityBadges;
-        if (badges is null || index >= badges.Length)
-        {
-            return;
-        }
-
-        var badge = badges[index];
-        var hidden = !badge.Hidden;
-        badges[index] = badge with { Hidden = hidden };
-        var token = cancellation.Token;
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                var fresh = await account.SetBadgeVisibilityAsync(badge.Id, hidden, token).ConfigureAwait(false);
-                if (fresh is null)
-                {
-                    badges[index] = badge;
-                }
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception exception)
-            {
-                AepLog.Warning(exception, "Badge visibility update failed");
-                badges[index] = badge;
-            }
-        });
+        SettingsSection.Hint(Loc.T(L.Loadout.SettingsMoved), theme);
     }
 
     private void DrawPatreonSection(PhoneTheme theme, float scale)

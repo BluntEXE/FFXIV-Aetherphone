@@ -139,7 +139,7 @@ internal sealed class StoryTrayRow
         painter(drawList, center, radius, scale, ring.HasUnseen);
         var label = ring.IsMe ? Loc.T(L.Story.YourStory) : SocialIdentity.Name(ring.AuthorDisplayName, ring.AuthorHandle);
         AvatarView.DrawRemote(drawList, center, radius - 4f * scale, theme, label, string.Empty, ring.AuthorAvatarUrl,
-            images, lodestone, 0.8f, 32);
+            images, lodestone, 0.8f, 32, 1f, Frames.Of(ring.AuthorFrameId));
         DrawLabel(drawList, center, radius, label, palette, scale);
         if (ClickedTile(center, radius))
         {

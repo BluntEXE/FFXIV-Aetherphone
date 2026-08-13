@@ -45,7 +45,7 @@ internal sealed partial class AethergramApp
 
             DrawAvatar(avatarCenter, avatarRadius - 1f * scale,
                 SocialIdentity.Name(post.AuthorDisplayName, post.AuthorHandle), string.Empty, post.AuthorAvatarUrl,
-                0.85f, 32);
+                0.85f, 32, Frames.Of(post.AuthorFrameId));
             var nameLeft = avatarCenter.X + avatarRadius + 12f * scale;
             var displayName = SocialIdentity.Name(post.AuthorDisplayName, post.AuthorHandle);
             var headerMeta = SocialIdentity.FeedMeta(post.AuthorHandle, TimeText.Short(post.CreatedAtUnix));
@@ -321,7 +321,7 @@ internal sealed partial class AethergramApp
 
         var avatarCenter = new Vector2(avatarCenterX, bubbleTop + avatarRadius + 2f * scale);
         DrawAvatar(avatarCenter, avatarRadius, SocialIdentity.Name(comment.AuthorDisplayName, comment.AuthorHandle),
-            string.Empty, comment.AuthorAvatarUrl, 0.8f, 28);
+            string.Empty, comment.AuthorAvatarUrl, 0.8f, 28, Frames.Of(comment.AuthorFrameId));
 
         var nameTop = bubbleTop + padTop;
         var commentNameHovering = UiInteract.Hover(new Vector2(textLeft, nameTop),

@@ -53,6 +53,7 @@ internal sealed class StoryViewerOverlay
     private StoryDto[] stories = Array.Empty<StoryDto>();
     private string authorLabel = string.Empty;
     private string? authorAvatarUrl;
+    private string authorFrameId = string.Empty;
     private bool canDelete;
     private int index;
     private float elapsed;
@@ -97,6 +98,7 @@ internal sealed class StoryViewerOverlay
         stories = items;
         authorLabel = label;
         authorAvatarUrl = avatarUrl;
+        authorFrameId = items.Length > 0 ? items[0].AuthorFrameId : string.Empty;
         canDelete = mine;
         onSeen = seen;
         onDelete = delete;
@@ -518,7 +520,7 @@ internal sealed class StoryViewerOverlay
         var center = new Vector2(origin.X + radius + 4f * scale, origin.Y + height * 0.5f);
         var name = SocialIdentity.Name(viewer.DisplayName, viewer.Handle);
         AvatarView.DrawRemote(drawList, center, radius, theme, name, string.Empty, viewer.AvatarUrl, images, lodestone,
-            0.8f, 28);
+            0.8f, 28, 1f, Frames.Of(viewer.FrameId));
         var left = center.X + radius + 10f * scale;
         var stamp = TimeText.Short(viewer.ViewedAtUnix);
         var stampSize = Typography.Measure(stamp, TextStyles.Caption1);
@@ -713,7 +715,7 @@ internal sealed class StoryViewerOverlay
         var radius = 12f * scale;
         var center = new Vector2(row.Min.X + radius, row.Center.Y);
         AvatarView.DrawRemote(ImGui.GetWindowDrawList(), center, radius, theme, authorLabel, string.Empty,
-            authorAvatarUrl, images, lodestone, 0.8f, 24);
+            authorAvatarUrl, images, lodestone, 0.8f, 24, 1f, Frames.Of(authorFrameId));
         var left = center.X + radius + 9f * scale;
         var closeReserve = 34f * scale;
         var stamp = TimeText.Short(story.CreatedAtUnix);

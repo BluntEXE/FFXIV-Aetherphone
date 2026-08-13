@@ -85,7 +85,7 @@ internal static class SocialActivityList
         UiInteract.HoverHighlight(drawList, origin, rowMax, rowRounding);
         var avatarCenter = new Vector2(origin.X + pad + radius, origin.Y + rowHeight * 0.5f);
         AvatarView.DrawRemote(drawList, avatarCenter, radius, theme, item.ActorName, string.Empty,
-            item.ActorAvatarUrl, images, lodestone, 0.95f, 32);
+            item.ActorAvatarUrl, images, lodestone, 0.95f, 32, 1f, Frames.Of(item.ActorFrameId));
         DrawTypeBadge(drawList, avatarCenter + new Vector2(radius - 4f * scale, radius - 4f * scale), item.Type,
             theme, scale);
         var textTop = origin.Y + (rowHeight - contentHeight) * 0.5f;

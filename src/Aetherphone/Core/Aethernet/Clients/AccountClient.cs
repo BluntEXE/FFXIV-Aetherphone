@@ -99,6 +99,24 @@ internal sealed class AccountClient
         return net.GetAsync("/me/badges/awarded", AethernetJsonContext.Default.AwardedBadgesDto, token, null, onFailure);
     }
 
+    public Task<FrameCatalogDto?> FrameCatalogAsync(CancellationToken token, Action<AepFailure>? onFailure = null)
+    {
+        return net.GetAsync("/frames/catalog", AethernetJsonContext.Default.FrameCatalogDto, token, null, onFailure);
+    }
+
+    public Task<InventoryDto?> InventoryAsync(CancellationToken token, Action<AepFailure>? onFailure = null)
+    {
+        return net.GetAsync("/me/inventory", AethernetJsonContext.Default.InventoryDto, token, null, onFailure);
+    }
+
+    public Task<InventoryDto?> EquipAsync(string kind, string itemId, int? slot, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
+    {
+        return net.PostAsync("/me/inventory/equip", new InventoryEquipRequest(kind, itemId, slot),
+            AethernetJsonContext.Default.InventoryEquipRequest, AethernetJsonContext.Default.InventoryDto, token,
+            null, onFailure);
+    }
+
     public Task<BadgeDescriptorDto?> SetBadgeVisibilityAsync(string badgeId, bool hidden, CancellationToken token,
         Action<AepFailure>? onFailure = null)
     {

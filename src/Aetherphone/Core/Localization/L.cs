@@ -3874,11 +3874,27 @@ internal static class L
         public static readonly LocString UnavailableHint = new("announcements.unavailableHint", "This announcement was taken down.");
     }
 
+    internal static class Loadout
+    {
+        public static readonly LocString FramesTitle = new("loadout.framesTitle", "Frames");
+        public static readonly LocString BadgesTitle = new("loadout.badgesTitle", "Badges");
+        public static readonly LocString SlotsUsed = new("loadout.slotsUsed", "{0} of {1} worn");
+        public static readonly LocString NoneOption = new("loadout.none", "None");
+        public static readonly LocString FramesEmpty = new("loadout.framesEmpty", "No frames yet");
+        public static readonly LocString FramesEmptyHint = new("loadout.framesEmptyHint", "Frames you buy in the Shop show up here");
+        public static readonly LocString BadgesEmpty = new("loadout.badgesEmpty", "No badges yet");
+        public static readonly LocString BadgesEmptyHint = new("loadout.badgesEmptyHint", "Badges you earn or buy show up here");
+        public static readonly LocString Full = new("loadout.full", "Take one off first");
+        public static readonly LocString Wear = new("loadout.wear", "Wear");
+        public static readonly LocString SettingsMoved = new("loadout.settingsMoved", "Badges and frames moved to Aether Coin, Items");
+    }
+
     internal static class Coin
     {
         public static readonly LocString TabWallet = new("coin.tabWallet", "Wallet");
         public static readonly LocString TabShop = new("coin.tabShop", "Shop");
         public static readonly LocString TabHistory = new("coin.tabHistory", "History");
+        public static readonly LocString TabInventory = new("coin.tabInventory", "Items");
         public static readonly LocString SignInTitle = new("coin.signInTitle", "Sign in required");
         public static readonly LocString SignInHint = new("coin.signInHint", "Sign in to Aethernet in Settings to use Aether Coin");
         public static readonly LocString Balance = new("coin.balance", "Aether Coin");

@@ -756,7 +756,8 @@ internal sealed partial class YellowPagesApp
         var avatarRadius = 17f * scale;
         var avatarCenter = new Vector2(origin.X + pad + avatarRadius, origin.Y + height * 0.5f);
         AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, AdText.Identity(ad), string.Empty,
-            ad.OwnerAvatarUrl.Length > 0 ? ad.OwnerAvatarUrl : null, images, lodestone, 0.9f, 48);
+            ad.OwnerAvatarUrl.Length > 0 ? ad.OwnerAvatarUrl : null, images, lodestone, 0.9f, 48, 1f,
+            Frames.Of(ad.OwnerFrameId));
         drawList.AddCircle(avatarCenter, avatarRadius + 2.5f * scale,
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.55f)), 40, 1.4f * scale);
         var textLeft = avatarCenter.X + avatarRadius + 13f * scale;

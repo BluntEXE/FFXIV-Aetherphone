@@ -1,6 +1,7 @@
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
+using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 
@@ -12,17 +13,19 @@ internal static class AvatarView
     private const float PulsePeriodSeconds = 1.15f;
     private const float PulseFloor = 0.72f;
     private const float SettleOvershoot = 0.06f;
+    private const float MinFrameRadius = 15f;
     private static readonly Vector4 White = new(1f, 1f, 1f, 1f);
     private static readonly Dictionary<string, float> fadeByKey = new(StringComparer.Ordinal);
 
     public static void DrawRemote(ImDrawListPtr drawList, Vector2 center, float radius, PhoneTheme theme, string name,
         string world, string? avatarUrl, RemoteImageCache images, LodestoneService lodestone, float monogramScale,
-        int segments, float alpha = 1f)
+        int segments, float alpha = 1f, FrameStyle? frame = null)
     {
         if (string.IsNullOrEmpty(avatarUrl))
         {
             Draw(drawList, center, radius, theme.Accent, Initials.Of(name), monogramScale,
                 lodestone.Avatar(name, world), segments, alpha);
+            DrawFrame(drawList, center, radius, images, frame, alpha);
             return;
         }
 
@@ -36,10 +39,41 @@ internal static class AvatarView
             var tint = ((uint)(alpha * 255f) << 24) | 0x00FFFFFFu;
             drawList.AddImageRounded(texture.Handle, center - corner, center + corner, uv0, uv1, tint,
                 radius, ImDrawFlags.RoundCornersAll);
+            DrawFrame(drawList, center, radius, images, frame, alpha);
             return;
         }
 
         Draw(drawList, center, radius, theme.Accent, Initials.Of(name), monogramScale, handle, segments, alpha);
+        DrawFrame(drawList, center, radius, images, frame, alpha);
+    }
+
+    public static void DrawFrame(ImDrawListPtr drawList, Vector2 center, float radius, RemoteImageCache images,
+        FrameStyle? frame, float alpha = 1f)
+    {
+        if (frame is null || frame.AssetUrl.Length == 0 || radius < MinFrameRadius * UiScale.Current)
+        {
+            return;
+        }
+
+        if (images.Get(frame.AssetUrl) is not { } texture)
+        {
+            return;
+        }
+
+        var half = radius * frame.Scale;
+        var corner = new Vector2(half, half);
+        var tint = ((uint)(alpha * 255f) << 24) | 0x00FFFFFFu;
+        drawList.AddImage(texture.Handle, center - corner, center + corner, Vector2.Zero, Vector2.One, tint);
+    }
+
+    public static float Reserve(FrameStyle? frame, float radius)
+    {
+        if (frame is null || frame.AssetUrl.Length == 0 || radius < MinFrameRadius * UiScale.Current)
+        {
+            return 0f;
+        }
+
+        return radius * (frame.Scale - 1f);
     }
 
     public static void Draw(ImDrawListPtr drawList, Vector2 center, float radius, Vector4 baseColor, string monogram,

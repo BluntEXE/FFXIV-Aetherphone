@@ -78,6 +78,10 @@ internal sealed class PhoneServices : IDisposable
 
     public required Social.BadgeCatalogStore BadgeCatalog { get; init; }
 
+    public required Social.FrameCatalogStore FrameCatalog { get; init; }
+
+    public required Social.LoadoutStore Loadout { get; init; }
+
     public required Coins.CoinStore Coins { get; init; }
 
     public required Coins.CoinCatalogStore CoinCatalog { get; init; }
@@ -205,6 +209,9 @@ internal sealed class PhoneServices : IDisposable
         var aethernet = new AethernetApi(http, aethernetSession);
         var keyVault = new KeyVault(configuration, aethernetSession, aethernet.Keys);
         var badgeCatalog = new Social.BadgeCatalogStore(aethernetSession, aethernet.Account);
+        var frameCatalog = new Social.FrameCatalogStore(aethernetSession, aethernet.Account);
+        var loadoutStore = new Social.LoadoutStore(aethernetSession, aethernet.Account);
+        Social.Frames.Use(frameCatalog);
         Windows.Components.UserName.Configure(badgeCatalog, remoteImages);
         Moderation.ModerationNoticeText.Configure(badgeCatalog);
         var coinApi = new AethernetApi(http, aethernetSession, "coin");
@@ -317,6 +324,8 @@ internal sealed class PhoneServices : IDisposable
             Media = media,
             RemoteImages = remoteImages,
             BadgeCatalog = badgeCatalog,
+            FrameCatalog = frameCatalog,
+            Loadout = loadoutStore,
             Coins = coins,
             CoinCatalog = coinCatalog,
             CoinSessions = coinSessions,
@@ -435,6 +444,8 @@ internal sealed class PhoneServices : IDisposable
         CoinCatalog.Dispose();
         Coins.Dispose();
         BadgeCatalog.Dispose();
+        FrameCatalog.Dispose();
+        Loadout.Dispose();
         Availability.Dispose();
         Http.Dispose();
         Wallpapers.Dispose();

@@ -9,6 +9,7 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
+using Aetherphone.Core.Social;
 
 namespace Aetherphone.Apps.Muster;
 
@@ -205,7 +206,7 @@ internal sealed partial class MusterApp
         var avatarRadius = 16f * scale;
         var avatarCenter = new Vector2(origin.X + avatarRadius, centerY);
         AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, attendee.CharacterName, attendee.World,
-            null, images, lodestone, 0.9f, 32);
+            null, images, lodestone, 0.9f, 32, 1f, Frames.Of(attendee.FrameId));
         var rowRight = origin.X + width;
         var cursorRight = rowRight;
         var inviteRadius = 14f * scale;

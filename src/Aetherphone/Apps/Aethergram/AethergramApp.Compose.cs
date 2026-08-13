@@ -498,7 +498,7 @@ internal sealed partial class AethergramApp
         {
             var radius = 11f * scale;
             var avatarCenter = new Vector2(card.Min.X + padding + radius, card.Min.Y + padding + radius);
-            DrawAvatar(avatarCenter, radius, me.Name, me.World, me.AvatarUrl, 0.7f, 24);
+            DrawAvatar(avatarCenter, radius, me.Name, me.World, me.AvatarUrl, 0.7f, 24, Frames.Of(me.FrameId));
             var displayName = SocialIdentity.Name(me.DisplayName, me.Handle);
             var nameStyle = new TextStyle(0.88f, FontWeight.SemiBold);
             var nameLeft = avatarCenter.X + radius + 8f * scale;

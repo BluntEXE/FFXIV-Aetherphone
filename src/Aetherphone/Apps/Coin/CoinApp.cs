@@ -16,7 +16,8 @@ internal sealed partial class CoinApp : IPhoneApp
 {
     private const int TabWallet = 0;
     private const int TabShop = 1;
-    private const int TabHistory = 2;
+    private const int TabInventory = 2;
+    private const int TabHistory = 3;
 
     public string Id => "coin";
     public string DisplayName => Loc.T(L.Apps.Coin);
@@ -28,12 +29,15 @@ internal sealed partial class CoinApp : IPhoneApp
     private readonly CoinCatalogStore catalog;
     private readonly ConfirmService confirm;
     private readonly Core.Social.BadgeCatalogStore badgeCatalog;
+    private readonly Core.Social.FrameCatalogStore frameCatalog;
+    private readonly Core.Social.LoadoutStore inventory;
+    private readonly Core.Lodestone.LodestoneService lodestone;
     private readonly Core.Media.RemoteImageCache images;
     private readonly Core.Casino.CasinoStore casino;
     private readonly AppSkin ui = new(AppPalettes.Coin);
     private readonly ViewRouter<CoinRoute> router;
     private readonly RouterDraw<CoinRoute> drawView;
-    private readonly string[] tabOptions = new string[3];
+    private readonly string[] tabOptions = new string[4];
     private readonly string[] filterOptions = new string[3];
     private readonly PullToRefresh walletRefresh = new();
     private readonly PullToRefresh historyRefresh = new();
@@ -46,13 +50,17 @@ internal sealed partial class CoinApp : IPhoneApp
 
     public CoinApp(AethernetSession session, CoinStore store, CoinCatalogStore catalog, ConfirmService confirm,
         Core.Social.BadgeCatalogStore badgeCatalog, Core.Media.RemoteImageCache images,
-        Core.Casino.CasinoStore casino)
+        Core.Casino.CasinoStore casino, Core.Social.FrameCatalogStore frameCatalog,
+        Core.Social.LoadoutStore inventory, Core.Lodestone.LodestoneService lodestone)
     {
         this.session = session;
         this.store = store;
         this.catalog = catalog;
         this.confirm = confirm;
         this.badgeCatalog = badgeCatalog;
+        this.frameCatalog = frameCatalog;
+        this.inventory = inventory;
+        this.lodestone = lodestone;
         this.images = images;
         this.casino = casino;
         router = new ViewRouter<CoinRoute>(CoinRoute.Root);
@@ -124,6 +132,7 @@ internal sealed partial class CoinApp : IPhoneApp
         UiAnchors.Report("coin.tabs", segRow);
         tabOptions[TabWallet] = Loc.T(L.Coin.TabWallet);
         tabOptions[TabShop] = Loc.T(L.Coin.TabShop);
+        tabOptions[TabInventory] = Loc.T(L.Coin.TabInventory);
         tabOptions[TabHistory] = Loc.T(L.Coin.TabHistory);
         activeTab = SegmentStrip.Draw("coin.tabs", segRow, tabOptions, activeTab, ui.Palette);
 
@@ -132,6 +141,9 @@ internal sealed partial class CoinApp : IPhoneApp
         {
             case TabShop:
                 DrawShop(body);
+                break;
+            case TabInventory:
+                DrawInventory(body);
                 break;
             case TabHistory:
                 DrawHistory(body);

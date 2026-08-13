@@ -9,6 +9,7 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
+using Aetherphone.Core.Social;
 
 namespace Aetherphone.Apps.Muster;
 
@@ -51,7 +52,7 @@ internal static class MusterCard
         var avatarRadius = AvatarRadius * scale;
         var avatarCenter = new Vector2(left + avatarRadius, rowTop + IdentityRowHeight * scale * 0.5f);
         AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, MusterText.HostLabel(muster), muster.HostWorld,
-            null, images, lodestone, 1.05f, 32);
+            null, images, lodestone, 1.05f, 32, 1f, Frames.Of(muster.HostFrameId));
         drawList.AddCircle(avatarCenter, avatarRadius + 1.5f * scale,
             ImGui.GetColorU32(Palette.WithAlpha(palette.Accent, live ? 0.45f : 0.22f)), 32, 1.4f * scale);
 
