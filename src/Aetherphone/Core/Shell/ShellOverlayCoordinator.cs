@@ -144,7 +144,7 @@ internal sealed class ShellOverlayCoordinator
         var screen = chassis.Screen;
         if (state.SetupActive)
         {
-            setup.Draw(screen, theme, delta, !loading.IsActive && !state.Confirming && !banOverlay.IsActive);
+            setup.Draw(screen, delta, !loading.IsActive && !state.Confirming && !banOverlay.IsActive);
         }
 
         if (loading.IsActive)

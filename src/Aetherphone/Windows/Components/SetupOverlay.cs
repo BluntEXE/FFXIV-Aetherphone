@@ -13,7 +13,6 @@ using Aetherphone.Core.Photos;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Wallpapers;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Windows.Components;
@@ -27,26 +26,22 @@ internal sealed partial class SetupOverlay : IDisposable
     private const float ExitSeconds = 0.7f;
     private const int DisplayNameMax = 32;
     private const int HandleMax = 15;
-    private static readonly Vector4 InkStrong = new(1f, 1f, 1f, 0.98f);
-    private static readonly Vector4 InkMuted = new(0.74f, 0.77f, 0.85f, 1f);
-    private static readonly Vector4 CardFill = new(1f, 1f, 1f, 0.07f);
-    private static readonly Vector4 CardStroke = new(1f, 1f, 1f, 0.10f);
 
     private enum SetupPage
     {
         Welcome,
+        Language,
+        Appearance,
         Account,
-        Profile,
-        Photo,
+        Identity,
         Features,
-        Feedback,
         Ready,
     }
 
     private static readonly SetupPage[] Order =
     {
-        SetupPage.Welcome, SetupPage.Account, SetupPage.Profile, SetupPage.Photo,
-        SetupPage.Features, SetupPage.Feedback, SetupPage.Ready,
+        SetupPage.Welcome, SetupPage.Language, SetupPage.Appearance, SetupPage.Account, SetupPage.Identity,
+        SetupPage.Features, SetupPage.Ready,
     };
 
     private readonly AethernetSession session;
@@ -58,6 +53,7 @@ internal sealed partial class SetupOverlay : IDisposable
     private readonly RemoteImageCache images;
     private readonly LodestoneService lodestone;
     private readonly INavigator navigation;
+    private readonly ThemeProvider themes;
     private readonly SignInFlow flow;
     private readonly ImagePickCrop picker;
     private readonly CancellationTokenSource cancellation = new();
@@ -81,10 +77,13 @@ internal sealed partial class SetupOverlay : IDisposable
     private volatile int avatarOutcome;
     private volatile AvatarUploadOutcome avatarFailure;
 
+    private bool prefersDark;
+    private bool dynamicAppearance;
+
     public SetupOverlay(AethernetSession session, AethernetApi aethernet, GameData gameData,
         RemoteImageCache images, LodestoneService lodestone, PhotoLibrary photoLibrary,
         WallpaperImageCache wallpaperImages, INavigator navigation, Configuration configuration,
-        ConfirmService confirm)
+        ConfirmService confirm, ThemeProvider themes)
     {
         this.session = session;
         account = aethernet.Account;
@@ -95,14 +94,17 @@ internal sealed partial class SetupOverlay : IDisposable
         this.navigation = navigation;
         this.configuration = configuration;
         this.confirm = confirm;
+        this.themes = themes;
         flow = new SignInFlow(session, aethernet.Auth,
             () => RegionSync.Push(session, aethernet.Account, configuration, gameData, cancellation.Token));
         picker = new ImagePickCrop(photoLibrary, wallpaperImages);
+        prefersDark = configuration.ThemeMode != ThemeMode.Light;
+        dynamicAppearance = configuration.ThemeMode == ThemeMode.Auto;
     }
 
     public bool IsActive => !configuration.SetupCompleted || exiting;
 
-    public void Draw(Rect screen, PhoneTheme theme, float delta, bool interactive)
+    public void Draw(Rect screen, float delta, bool interactive)
     {
         if (!IsActive)
         {
@@ -129,6 +131,7 @@ internal sealed partial class SetupOverlay : IDisposable
             }
         }
 
+        var theme = themes.Current;
         var scale = UiScale.Current;
         var rounding = theme.ScreenRounding * scale;
         var backdropAlpha = 1f - Easing.EaseOutCubic(exitProgress);
@@ -137,7 +140,7 @@ internal sealed partial class SetupOverlay : IDisposable
         using (ImRaii.Child("##setupOverlay", screen.Size, false, OverlayFlags))
         {
             var drawList = ImGui.GetWindowDrawList();
-            BootScreen.DrawBackdrop(drawList, screen, theme, backdropAlpha, rounding);
+            DrawBackdrop(drawList, screen, theme, backdropAlpha, rounding);
             var slide = Easing.EaseOutQuint(Easing.Clamp01(slideClock / SlideSeconds));
             var live = interactive && !exiting && slide >= 0.99f;
             if (slide < 1f && fromPage != page)
@@ -159,20 +162,20 @@ internal sealed partial class SetupOverlay : IDisposable
             case SetupPage.Welcome:
                 DrawWelcome(screen, theme, offset, alpha, live);
                 break;
+            case SetupPage.Language:
+                DrawLanguage(screen, theme, offset, alpha, live);
+                break;
+            case SetupPage.Appearance:
+                DrawAppearance(screen, theme, offset, alpha, live);
+                break;
             case SetupPage.Account:
                 DrawAccount(screen, theme, offset, alpha, live);
                 break;
-            case SetupPage.Profile:
-                DrawProfile(screen, theme, offset, alpha, live);
-                break;
-            case SetupPage.Photo:
-                DrawPhoto(screen, theme, offset, alpha, live);
+            case SetupPage.Identity:
+                DrawIdentity(screen, theme, offset, alpha, live);
                 break;
             case SetupPage.Features:
                 DrawFeatures(screen, theme, offset, alpha, live);
-                break;
-            case SetupPage.Feedback:
-                DrawFeedback(screen, theme, offset, alpha, live);
                 break;
             case SetupPage.Ready:
                 DrawReady(screen, theme, offset, alpha, live);
@@ -211,8 +214,7 @@ internal sealed partial class SetupOverlay : IDisposable
         }
     }
 
-    private bool IsSkipped(SetupPage candidate) =>
-        candidate is SetupPage.Profile or SetupPage.Photo && !session.IsSignedIn;
+    private bool IsSkipped(SetupPage candidate) => candidate == SetupPage.Identity && !session.IsSignedIn;
 
     private void AdvancePage()
     {
@@ -264,36 +266,29 @@ internal sealed partial class SetupOverlay : IDisposable
         exitClock = 0f;
     }
 
-    private void DrawBackButton(ImDrawListPtr drawList, Rect screen, PhoneTheme theme, float alpha, bool live)
+    private void ApplyLanguage(LanguageInfo language)
     {
-        if (page == SetupPage.Welcome || pickingPhoto || exiting)
+        if (language.Code != configuration.Language)
         {
-            return;
+            configuration.Language = language.Code;
+            configuration.Save();
+            Loc.SetLanguage(language.Code);
+            Plugin.Fonts.OnLanguageChanged();
+            Plugin.OnLanguageChanged();
         }
 
-        if (page == SetupPage.Account && (flow.XivAuthActive || flow.LodestoneActive))
-        {
-            return;
-        }
+        AdvancePage();
+    }
 
-        var scale = UiScale.Current;
-        var center = new Vector2(screen.Min.X + 26f * scale, screen.Min.Y + 30f * scale);
-        var half = 16f * scale;
-        var hovered = live && UiInteract.Hover(center - new Vector2(half, half),
-            center + new Vector2(half, half));
-        var ink = hovered ? InkStrong : InkMuted;
-        AppSkin.Icon(drawList, center, FontAwesomeIcon.ChevronLeft.ToIconString(), ink with { W = ink.W * alpha },
-            0.95f);
-        if (!hovered)
-        {
-            return;
-        }
-
-        ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
-        {
-            BackPage();
-        }
+    private void ApplyAppearance()
+    {
+        configuration.ThemeMode = dynamicAppearance
+            ? ThemeMode.Auto
+            : prefersDark
+                ? ThemeMode.Dark
+                : ThemeMode.Light;
+        themes.Apply(configuration);
+        configuration.Save();
     }
 
     private static bool IsHandleValid(string handle)

@@ -12,17 +12,18 @@ internal static class Toggle
     private static readonly Vector4 KnobShadow = new(0f, 0f, 0f, 0.18f);
     private static readonly Dictionary<string, Spring> Knobs = new(StringComparer.Ordinal);
 
-    public static bool Draw(string id, Rect bounds, bool value, PhoneTheme theme)
+    public static bool Draw(string id, Rect bounds, bool value, PhoneTheme theme, float alpha = 1f,
+        bool interactive = true)
     {
         var scale = UiScale.Current;
         var result = value;
-        var hovered = UiInteract.Hover(bounds.Min, bounds.Max);
+        var hovered = interactive && UiInteract.Hover(bounds.Min, bounds.Max);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        if (UiInteract.Click(bounds.Min, bounds.Max, hovered))
+        if (interactive && UiInteract.Click(bounds.Min, bounds.Max, hovered))
         {
             result = !value;
         }
@@ -30,13 +31,15 @@ internal static class Toggle
         var progress = Animate(id, value ? 1f : 0f);
         var dl = ImGui.GetWindowDrawList();
         var track = Palette.Mix(theme.ToggleOff, theme.ToggleOn, progress);
-        dl.AddRectFilled(bounds.Min, bounds.Max, ImGui.GetColorU32(track), bounds.Height * 0.5f);
+        dl.AddRectFilled(bounds.Min, bounds.Max, ImGui.GetColorU32(track with { W = track.W * alpha }),
+            bounds.Height * 0.5f);
         var knobRadius = bounds.Height * 0.5f - 2f * scale;
         var inset = knobRadius + 2f * scale;
         var knobX = (bounds.Min.X + inset) + (bounds.Max.X - inset - (bounds.Min.X + inset)) * progress;
         var knobCenter = new Vector2(knobX, bounds.Center.Y);
-        dl.AddCircleFilled(knobCenter + new Vector2(0f, 1f * scale), knobRadius, ImGui.GetColorU32(KnobShadow), 32);
-        dl.AddCircleFilled(knobCenter, knobRadius, ImGui.GetColorU32(White), 32);
+        dl.AddCircleFilled(knobCenter + new Vector2(0f, 1f * scale), knobRadius,
+            ImGui.GetColorU32(KnobShadow with { W = KnobShadow.W * alpha }), 32);
+        dl.AddCircleFilled(knobCenter, knobRadius, ImGui.GetColorU32(White with { W = alpha }), 32);
         return result;
     }
 
