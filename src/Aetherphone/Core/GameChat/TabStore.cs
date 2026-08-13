@@ -54,7 +54,7 @@ internal sealed class TabStore
             Name = name,
             Channels = new List<string>(channels),
             Alerts = AlertPolicy.Mentions,
-            Density = ChatDensity.Compact,
+            Density = ChatDensity.Bubbles,
         };
         for (var index = 0; index < tab.Channels.Count; index++)
         {
