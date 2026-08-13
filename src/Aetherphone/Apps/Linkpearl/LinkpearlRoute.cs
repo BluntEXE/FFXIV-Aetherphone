@@ -6,6 +6,7 @@ internal enum LinkpearlScreen : byte
 {
     Root,
     Conversation,
+    TabEditor,
     FriendDetail,
     CharacterDetail,
     FreeCompanyDetail,
@@ -36,6 +37,9 @@ internal readonly struct LinkpearlRoute
 
     public static LinkpearlRoute Conversation(string key) =>
         new(LinkpearlScreen.Conversation, key, null, string.Empty, string.Empty, string.Empty);
+
+    public static LinkpearlRoute TabEditor(string tabId) =>
+        new(LinkpearlScreen.TabEditor, tabId, null, string.Empty, string.Empty, string.Empty);
 
     public static LinkpearlRoute Detail(FriendEntry friend) =>
         new(LinkpearlScreen.FriendDetail, string.Empty, friend, string.Empty, string.Empty, string.Empty);

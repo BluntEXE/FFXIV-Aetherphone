@@ -26,7 +26,8 @@ internal sealed partial class LinkpearlApp : IPhoneApp
 
     private const byte RowMenuMarkRead = 0;
     private const byte RowMenuTogglePin = 1;
-    private const byte RowMenuDelete = 2;
+    private const byte RowMenuEdit = 2;
+    private const byte RowMenuDelete = 3;
 
     private static readonly Vector4 White = new(1f, 1f, 1f, 1f);
 
@@ -38,6 +39,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
     public bool WantsSystemTheme => true;
     private readonly ChatInbox inbox;
     private readonly TabStore tabs;
+    private readonly ChatArchive archive;
     private readonly LinkpearlNotificationGate notificationGate;
     private readonly LinkpearlLauncher launcher;
     private readonly LodestoneService lodestone;
@@ -48,17 +50,20 @@ internal sealed partial class LinkpearlApp : IPhoneApp
     private readonly ViewRouter<LinkpearlRoute> router;
     private readonly RouterDraw<LinkpearlRoute> drawView;
     private readonly Action backToList;
+    private readonly Action leaveTabEditor;
     private readonly GameChatThread chatThread;
     private PhoneTheme frameTheme = PhoneTheme.Default;
     private INavigator frameNavigation = null!;
     private MessagesTab activeTab;
 
-    public LinkpearlApp(ChatInbox inbox, TabStore tabs, LinkpearlNotificationGate notificationGate,
+    public LinkpearlApp(ChatInbox inbox, TabStore tabs, ChatArchive archive,
+        LinkpearlNotificationGate notificationGate,
         LinkpearlLauncher launcher, LodestoneService lodestone, NotificationService notifications, GameData gameData,
         LookupService lookup, ConfirmService confirm, ChatLog chatLog, ChatSend chatSend)
     {
         this.inbox = inbox;
         this.tabs = tabs;
+        this.archive = archive;
         this.notificationGate = notificationGate;
         this.launcher = launcher;
         this.lodestone = lodestone;
@@ -79,6 +84,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
             threadKey = string.Empty;
             router.Pop();
         };
+        leaveTabEditor = LeaveTabEditor;
     }
 
     public void OnOpened()
@@ -102,6 +108,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
     {
         chatMenu.Close();
         rowMenu.Close();
+        editorMenu.Close();
         chatThread.Close();
         router.Reset();
         inbox.Viewing = string.Empty;
@@ -120,6 +127,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         frameNavigation = context.Navigation;
         chatMenu.Gate();
         rowMenu.Gate();
+        editorMenu.Gate();
         chatThread.Gate();
         router.Draw(context.Content, context.Theme.AppBackground, delta, drawView);
     }
@@ -130,6 +138,9 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         {
             case LinkpearlScreen.Conversation:
                 DrawConversation(area, route.ConversationKey);
+                break;
+            case LinkpearlScreen.TabEditor:
+                DrawTabEditor(area, route.ConversationKey);
                 break;
             case LinkpearlScreen.FriendDetail when route.Friend is { } friend:
                 DrawFriendDetail(area, friend);

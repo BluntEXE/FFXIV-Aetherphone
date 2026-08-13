@@ -25,8 +25,8 @@ internal sealed partial class LinkpearlApp
     };
 
     private readonly DropdownMenu rowMenu = new();
-    private readonly DropdownMenu.Item[] rowMenuItems = new DropdownMenu.Item[3];
-    private readonly byte[] rowMenuActions = new byte[3];
+    private readonly DropdownMenu.Item[] rowMenuItems = new DropdownMenu.Item[4];
+    private readonly byte[] rowMenuActions = new byte[4];
     private string rowMenuKey = string.Empty;
     private string threadKey = string.Empty;
 
@@ -65,6 +65,45 @@ internal sealed partial class LinkpearlApp
                         ImGui.GetMousePos() + new Vector2(1f, 1f)));
                 }
             }
+
+            DrawNewTabRow(scale);
+        }
+    }
+
+    private void DrawNewTabRow(float scale)
+    {
+        if (!tabs.CanAdd)
+        {
+            return;
+        }
+
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ScrollLayout.StableContentWidth();
+        var row = new Rect(origin, new Vector2(origin.X + width, origin.Y + 52f * scale));
+        ImGui.Dummy(new Vector2(width, 52f * scale));
+        var hovered = UiInteract.Hover(row.Min, row.Max);
+        var drawList = ImGui.GetWindowDrawList();
+        if (hovered)
+        {
+            Squircle.Fill(drawList, new Vector2(row.Min.X + Metrics.Space.Xs * scale, row.Min.Y + 3f * scale),
+                new Vector2(row.Max.X - Metrics.Space.Xs * scale, row.Max.Y - 3f * scale), Metrics.Radius.Md * scale,
+                ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.05f)));
+        }
+
+        var iconCenter = new Vector2(row.Min.X + 35f * scale, row.Center.Y);
+        AppSkin.Icon(drawList, iconCenter, FontAwesomeIcon.Plus.ToIconString(), frameTheme.Accent, 0.8f);
+        var label = Loc.T(L.Linkpearl.NewTab);
+        var labelSize = Typography.Measure(label, TextStyles.BodyEmphasized);
+        Typography.Draw(drawList, new Vector2(iconCenter.X + 22f * scale, row.Center.Y - labelSize.Y * 0.5f), label,
+            frameTheme.Accent, TextStyles.BodyEmphasized);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (UiInteract.Click(row.Min, row.Max, hovered))
+        {
+            CreateTab();
         }
     }
 
@@ -169,6 +208,9 @@ internal sealed partial class LinkpearlApp
             rowMenuItems[count] = new DropdownMenu.Item(Loc.T(tab.Pinned ? L.Linkpearl.Unpin : L.Linkpearl.Pin),
                 FontAwesomeIcon.Thumbtack.ToIconString());
             rowMenuActions[count++] = RowMenuTogglePin;
+            rowMenuItems[count] = new DropdownMenu.Item(Loc.T(L.Linkpearl.EditTab),
+                FontAwesomeIcon.SlidersH.ToIconString());
+            rowMenuActions[count++] = RowMenuEdit;
             rowMenuItems[count] = new DropdownMenu.Item(Loc.T(L.Linkpearl.DeleteTab),
                 FontAwesomeIcon.TrashAlt.ToIconString(), true);
             rowMenuActions[count++] = RowMenuDelete;
@@ -189,6 +231,9 @@ internal sealed partial class LinkpearlApp
             case RowMenuTogglePin when row.Tab is { } pinTab:
                 tabs.TogglePin(pinTab);
                 inbox.Invalidate();
+                break;
+            case RowMenuEdit when row.Tab is { } editTab:
+                OpenTabEditor(editTab);
                 break;
             case RowMenuDelete when row.Tab is { } deleteTab:
                 AskDeleteTab(deleteTab);
