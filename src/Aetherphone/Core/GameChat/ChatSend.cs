@@ -55,19 +55,21 @@ internal sealed class ChatSend
         var line = channel.NeedsTarget
             ? string.Concat(channel.Command, " ", target, " ", trimmed)
             : string.Concat(channel.Command, " ", trimmed);
-        if (!ChatSender.TrySend(line))
-        {
-            return false;
-        }
-
-        pending.Add(new PendingSend
+        var entry = new PendingSend
         {
             ChannelKey = channel.Key,
             Target = target,
             Text = trimmed,
             SentAtMilliseconds = Environment.TickCount64,
-        });
-        return true;
+        };
+        pending.Add(entry);
+        if (ChatSender.TrySend(line))
+        {
+            return true;
+        }
+
+        pending.Remove(entry);
+        return false;
     }
 
     public bool TryResolve(string channelKey, string text)
