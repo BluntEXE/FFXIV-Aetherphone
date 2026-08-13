@@ -2742,6 +2742,10 @@ internal static class L
         public static readonly LocString LinkInChat = new("linkpearl.linkInChat", "Link in chat");
         public static readonly LocString OpenInMarket = new("linkpearl.openInMarket", "Open in Market");
         public static readonly LocString OpenMap = new("linkpearl.openMap", "Open map");
+        public static readonly LocString People = new("linkpearl.people", "People");
+        public static readonly LocString ScopeFriends = new("linkpearl.scopeFriends", "Friends");
+        public static readonly LocString ScopeEveryone = new("linkpearl.scopeEveryone", "Everyone");
+        public static readonly LocString NoMatches = new("linkpearl.noMatches", "No one matches that name.");
     }
 
     internal static class Character

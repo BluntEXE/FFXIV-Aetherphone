@@ -21,8 +21,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
     private enum MessagesTab : byte
     {
         Chats,
-        Contacts,
-        Find,
+        People,
     }
 
     private const byte RowMenuMarkRead = 0;
@@ -100,8 +99,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         inbox.Viewing = string.Empty;
         inbox.Invalidate();
         inbox.Sync();
-        ResetContactsState();
-        ResetFindState();
+        ResetPeopleState();
         ReadFriends();
         if (launcher.TryConsume(out var conversationKey) && inbox.Find(conversationKey) is not null)
         {
@@ -120,8 +118,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         inbox.ClearTransient();
         inbox.FlushSeen();
         threadKey = string.Empty;
-        ResetContactsState();
-        ResetFindState();
+        ResetPeopleState();
     }
 
     public void Draw(in PhoneContext context)
@@ -165,19 +162,14 @@ internal sealed partial class LinkpearlApp : IPhoneApp
 
     private void DrawRoot(Rect area)
     {
-        if (GuideIntents.Consume("messages.tab.contacts"))
+        if (GuideIntents.Consume("messages.tab.people"))
         {
-            SelectTab(MessagesTab.Contacts);
-        }
-
-        if (GuideIntents.Consume("messages.tab.find"))
-        {
-            SelectTab(MessagesTab.Find);
+            SelectTab(MessagesTab.People);
         }
 
         var context = new PhoneContext(area, frameTheme, frameNavigation);
         AppHeader.Draw(context, HeaderTitle());
-        if (activeTab == MessagesTab.Contacts && DrawRefreshButton(in context))
+        if (activeTab == MessagesTab.People && DrawRefreshButton(in context))
         {
             RequestRefresh();
         }
@@ -192,17 +184,13 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         var navRect = new Rect(new Vector2(area.Min.X, area.Max.Y - navHeight), area.Max);
         var content = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale),
             new Vector2(area.Max.X, navRect.Min.Y));
-        switch (activeTab)
+        if (activeTab == MessagesTab.People)
         {
-            case MessagesTab.Contacts:
-                DrawContactsTab(content);
-                break;
-            case MessagesTab.Find:
-                DrawFindTab(content);
-                break;
-            default:
-                DrawChatsTab(content);
-                break;
+            DrawPeopleTab(content);
+        }
+        else
+        {
+            DrawChatsTab(content);
         }
 
         DrawBottomNav(navRect);
@@ -217,12 +205,8 @@ internal sealed partial class LinkpearlApp : IPhoneApp
             context.Theme.TextMuted, Loc.T(L.Messages.ResumeNotifications), Loc.T(L.Messages.PauseNotifications));
     }
 
-    private string HeaderTitle() => activeTab switch
-    {
-        MessagesTab.Contacts => Loc.T(L.Apps.Contacts),
-        MessagesTab.Find => Loc.T(L.Apps.FindPeople),
-        _ => DisplayName,
-    };
+    private string HeaderTitle() =>
+        activeTab == MessagesTab.People ? Loc.T(L.Linkpearl.People) : DisplayName;
 
     private void DrawBottomNav(Rect nav)
     {
@@ -230,17 +214,13 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddLine(nav.Min, new Vector2(nav.Max.X, nav.Min.Y),
             ImGui.GetColorU32(Palette.WithAlpha(frameTheme.TextMuted, 0.25f)), 1f);
-        var width = nav.Width / 3f;
+        var width = nav.Width * 0.5f;
         var chatsRect = new Rect(nav.Min, new Vector2(nav.Min.X + width, nav.Max.Y));
-        var contactsRect = new Rect(new Vector2(nav.Min.X + width, nav.Min.Y),
-            new Vector2(nav.Min.X + width * 2f, nav.Max.Y));
-        var findRect = new Rect(new Vector2(nav.Min.X + width * 2f, nav.Min.Y), nav.Max);
+        var peopleRect = new Rect(new Vector2(nav.Min.X + width, nav.Min.Y), nav.Max);
         UiAnchors.Report("messages.tab.chats", chatsRect);
-        UiAnchors.Report("messages.tab.contacts", contactsRect);
-        UiAnchors.Report("messages.tab.find", findRect);
+        UiAnchors.Report("messages.tab.people", peopleRect);
         DrawNavItem(chatsRect, FontAwesomeIcon.Comments, Loc.T(L.Messages.TabChats), MessagesTab.Chats, BadgeCount);
-        DrawNavItem(contactsRect, FontAwesomeIcon.AddressBook, Loc.T(L.Apps.Contacts), MessagesTab.Contacts, 0);
-        DrawNavItem(findRect, FontAwesomeIcon.Search, Loc.T(L.Apps.FindPeople), MessagesTab.Find, 0);
+        DrawNavItem(peopleRect, FontAwesomeIcon.UserFriends, Loc.T(L.Linkpearl.People), MessagesTab.People, 0);
     }
 
     private void DrawNavItem(Rect rect, FontAwesomeIcon icon, string label, MessagesTab tab, int badge)
@@ -275,7 +255,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         }
 
         activeTab = tab;
-        if (tab == MessagesTab.Contacts)
+        if (tab == MessagesTab.People)
         {
             RequestRefresh();
         }

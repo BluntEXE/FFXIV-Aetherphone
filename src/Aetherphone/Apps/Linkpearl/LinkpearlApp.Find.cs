@@ -39,59 +39,6 @@ internal sealed partial class LinkpearlApp
         forceDetail = false;
     }
 
-    private void DrawFindTab(Rect content)
-    {
-        var scale = UiScale.Current;
-        var theme = frameTheme;
-        var pad = 16f * scale;
-        var segmentRow = new Rect(new Vector2(content.Min.X + pad, content.Min.Y),
-            new Vector2(content.Max.X - pad, content.Min.Y + FindSegmentRowHeight * scale));
-        UiAnchors.Report("findpeople.kind", segmentRow);
-        findSegmentLabels[0] = Loc.T(L.FindPeople.Character);
-        findSegmentLabels[1] = Loc.T(L.FindPeople.FreeCompany);
-        var selected = SegmentStrip.Draw("findpeople.kind", segmentRow, findSegmentLabels, (int)findKind, theme);
-        if (selected != (int)findKind)
-        {
-            findKind = (LookupKind)selected;
-            if (hasQuery)
-            {
-                SubmitSearch();
-            }
-        }
-
-        var nameTop = segmentRow.Max.Y + 8f * scale;
-        var nameBar = new Rect(new Vector2(content.Min.X + pad, nameTop),
-            new Vector2(content.Max.X - pad, nameTop + FindFieldRowHeight * scale));
-        UiAnchors.Report("findpeople.name", nameBar);
-        var nameChanged =
-            SubmitField.Draw(nameBar, "##findNameField", Loc.T(L.FindPeople.NameHint), ref findNameInput, theme);
-        var worldTop = nameBar.Max.Y + 8f * scale;
-        var worldBar = new Rect(new Vector2(content.Min.X + pad, worldTop),
-            new Vector2(content.Max.X - pad, worldTop + FindFieldRowHeight * scale));
-        var worldChanged = SubmitField.Draw(worldBar, "##findWorldField", Loc.T(L.FindPeople.WorldHint),
-            ref findWorldInput, theme);
-        if (nameChanged || worldChanged)
-        {
-            SubmitSearch();
-        }
-
-        var body = new Rect(new Vector2(content.Min.X, worldBar.Max.Y + 4f * scale), content.Max);
-        if (!hasQuery)
-        {
-            DrawFindPrompt(body, theme, scale);
-            return;
-        }
-
-        if (findKind == LookupKind.Character)
-        {
-            DrawCharacterResults(body, theme, scale);
-        }
-        else
-        {
-            DrawFreeCompanyResults(body, theme, scale);
-        }
-    }
-
     private void SubmitSearch()
     {
         submittedName = findNameInput.Trim();

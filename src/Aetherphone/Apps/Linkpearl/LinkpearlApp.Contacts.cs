@@ -23,9 +23,6 @@ internal sealed partial class LinkpearlApp
     private float sinceRead;
     private float sinceRequest = RequestCooldownSeconds;
     private float pollWindowRemaining;
-    private string contactSearch = string.Empty;
-
-    private void ResetContactsState() => contactSearch = string.Empty;
 
     private void TickContacts(float delta)
     {
@@ -72,29 +69,6 @@ internal sealed partial class LinkpearlApp
         return string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase);
     }
 
-    private void DrawContactsTab(Rect content)
-    {
-        var scale = UiScale.Current;
-        if (friends.Count == 0)
-        {
-            Typography.DrawCentered(content.Center, Loc.T(L.Contacts.Empty), frameTheme.TextMuted);
-            return;
-        }
-
-        var pad = 16f * scale;
-        var searchBar = new Rect(new Vector2(content.Min.X + pad, content.Min.Y),
-            new Vector2(content.Max.X - pad, content.Min.Y + 44f * scale));
-        UiAnchors.Report("contacts.search", searchBar);
-        SearchField.Draw(searchBar, "##contactsSearch", Loc.T(L.Common.Search), ref contactSearch, frameTheme);
-        var body = new Rect(new Vector2(content.Min.X, searchBar.Max.Y), content.Max);
-        UiAnchors.Report("contacts.list", body);
-        using (AppSurface.Begin(body))
-        {
-            DrawFriendSection(Loc.T(L.Contacts.Online), true);
-            DrawFriendSection(Loc.T(L.Contacts.Offline), false);
-        }
-    }
-
     private void DrawFriendSection(string title, bool online)
     {
         var count = 0;
@@ -130,7 +104,7 @@ internal sealed partial class LinkpearlApp
     }
 
     private bool MatchesContact(FriendEntry friend) =>
-        contactSearch.Length == 0 || friend.Name.Contains(contactSearch, StringComparison.OrdinalIgnoreCase);
+        peopleSearch.Length == 0 || friend.Name.Contains(peopleSearch, StringComparison.OrdinalIgnoreCase);
 
     private void DrawFriendDetail(Rect area, FriendEntry friend)
     {
