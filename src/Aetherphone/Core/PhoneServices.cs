@@ -62,22 +62,19 @@ internal sealed class PhoneServices : IDisposable
     public required ModerationNoticeArchive ModerationArchive { get; init; }
     public required SafetyLauncher SafetyLauncher { get; init; }
     public required SoundService Sound { get; init; }
-    public required MessageStore Messages { get; init; }
-    public required ChatBridge ChatBridge { get; init; }
     public required LinkpearlLauncher LinkpearlLauncher { get; init; }
     public required VelvetLauncher VelvetLauncher { get; init; }
     public required DmLauncher DmLauncher { get; init; }
     public required GramDmLauncher GramDmLauncher { get; init; }
     public required SocialLauncher SocialLauncher { get; init; }
-    public required LinkshellMuteStore LinkshellMutes { get; init; }
     public required LinkpearlNotificationGate LinkpearlNotificationGate { get; init; }
-    public required LinkshellStore Linkshells { get; init; }
-    public required LinkshellBridge LinkshellBridge { get; init; }
     public required GameChat.ChatLog ChatLog { get; init; }
     public required GameChat.ChatSend ChatSend { get; init; }
     public required GameChat.ChatCapture ChatCapture { get; init; }
     public required GameChat.ChatArchive ChatArchive { get; init; }
     public required GameChat.TabStore ChatTabs { get; init; }
+    public required GameChat.ChatInbox ChatInbox { get; init; }
+    public required GameChat.ChatNotifier ChatNotifier { get; init; }
     public required HttpService Http { get; init; }
     public required MediaCache Media { get; init; }
     public required RemoteImageCache RemoteImages { get; init; }
@@ -185,20 +182,13 @@ internal sealed class PhoneServices : IDisposable
         var notifications = new NotificationService(sound, configuration, installer, framework);
         var characterWatch = new CharacterWatch(framework);
         var messageArchive = new MessageArchive(new DirectoryInfo(Path.Combine(configDirectory.FullName, "Messages")));
-        var messages = new MessageStore(messageArchive, configuration, characterWatch);
         var linkpearlNotificationGate = new LinkpearlNotificationGate(configuration);
         var linkpearlGate = installer.Gate("messages");
-        var chatBridge = new ChatBridge(messages, notifications, linkpearlNotificationGate, chatGui, gameData,
-            linkpearlGate);
         var linkpearlLauncher = new LinkpearlLauncher();
         var velvetLauncher = new VelvetLauncher();
         var dmLauncher = new DmLauncher();
         var gramDmLauncher = new GramDmLauncher();
         var socialLauncher = new SocialLauncher();
-        var linkshellMutes = new LinkshellMuteStore(configuration, characterWatch);
-        var linkshells = new LinkshellStore(linkshellMutes, characterWatch);
-        var linkshellBridge = new LinkshellBridge(linkshells, linkshellMutes, notifications, linkpearlNotificationGate,
-            chatGui, gameData, linkpearlGate);
         var chatLog = new GameChat.ChatLog();
         var chatSend = new GameChat.ChatSend();
         var chatCapture = new GameChat.ChatCapture(chatLog, chatSend, chatGui, gameData, linkpearlGate);
@@ -206,6 +196,9 @@ internal sealed class PhoneServices : IDisposable
             new DirectoryInfo(Path.Combine(configDirectory.FullName, "GameChat")), configuration, chatLog,
             messageArchive, characterWatch);
         var chatTabs = new GameChat.TabStore(configuration, characterWatch);
+        var chatInbox = new GameChat.ChatInbox(chatLog, chatTabs, configuration);
+        var chatNotifier = new GameChat.ChatNotifier(chatLog, chatTabs, chatInbox, linkpearlNotificationGate,
+            notifications, linkpearlGate);
         var cacheRoot = new DirectoryInfo(Path.Combine(configDirectory.FullName, "cache"));
         cacheRoot.Create();
         var mediaRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "media"));
@@ -324,22 +317,19 @@ internal sealed class PhoneServices : IDisposable
             ModerationArchive = moderationArchive,
             SafetyLauncher = safetyLauncher,
             Sound = sound,
-            Messages = messages,
-            ChatBridge = chatBridge,
             LinkpearlLauncher = linkpearlLauncher,
             VelvetLauncher = velvetLauncher,
             DmLauncher = dmLauncher,
             GramDmLauncher = gramDmLauncher,
             SocialLauncher = socialLauncher,
-            LinkshellMutes = linkshellMutes,
             LinkpearlNotificationGate = linkpearlNotificationGate,
-            Linkshells = linkshells,
-            LinkshellBridge = linkshellBridge,
             ChatLog = chatLog,
             ChatSend = chatSend,
             ChatCapture = chatCapture,
             ChatArchive = chatArchive,
             ChatTabs = chatTabs,
+            ChatInbox = chatInbox,
+            ChatNotifier = chatNotifier,
             Http = http,
             Media = media,
             RemoteImages = remoteImages,
@@ -440,10 +430,10 @@ internal sealed class PhoneServices : IDisposable
         VideoMetadata.Dispose();
         RadioPlayer.Dispose();
         Radio.Dispose();
+        ChatNotifier.Dispose();
         ChatCapture.Dispose();
+        ChatInbox.Dispose();
         ChatArchive.Dispose();
-        LinkshellBridge.Dispose();
-        ChatBridge.Dispose();
         Lookup.Dispose();
         Lodestone.Dispose();
         MarketAlerts.Dispose();

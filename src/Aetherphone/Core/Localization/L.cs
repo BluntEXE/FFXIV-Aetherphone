@@ -2697,6 +2697,13 @@ internal static class L
         public static readonly LocString ChannelReadOnly = new("linkpearl.channelReadOnly", "You can't send here");
         public static readonly LocString NotDelivered = new("linkpearl.notDelivered", "Not delivered");
         public static readonly LocString Retry = new("linkpearl.retry", "Retry");
+        public static readonly LocString EmptyTitle = new("linkpearl.emptyTitle", "No chats yet");
+        public static readonly LocString EmptyHint = new("linkpearl.emptyHint", "Make a tab from the channels you actually read. You can change it any time.");
+        public static readonly LocString MarkRead = new("linkpearl.markRead", "Mark as read");
+        public static readonly LocString Pin = new("linkpearl.pin", "Pin");
+        public static readonly LocString Unpin = new("linkpearl.unpin", "Unpin");
+        public static readonly LocString DeleteTab = new("linkpearl.deleteTab", "Delete tab");
+        public static readonly LocString DeleteTabConfirm = new("linkpearl.deleteTabConfirm", "Delete this tab? Your chat history stays.");
     }
 
     internal static class Character
@@ -4799,8 +4806,8 @@ internal static class L
         public static readonly LocString NotificationsHistoryBody = new("onboarding.notificationsHistoryBody", "Everything the phone pinged you about stacks up here. Tap one to jump to its app, or clear them all up top.");
         public static readonly LocString MessagesListTitle = new("onboarding.messagesListTitle", "Pick up the thread");
         public static readonly LocString MessagesListBody = new("onboarding.messagesListBody", "Every /tell becomes a conversation here. Tap one to read and reply without leaving the game.");
-        public static readonly LocString MessagesLinkshellsTitle = new("onboarding.messagesLinkshellsTitle", "Linkshells too");
-        public static readonly LocString MessagesLinkshellsBody = new("onboarding.messagesLinkshellsBody", "Tap the tabs to switch views. Linkshells mirrors your linkshell and cross-world channels.");
+        public static readonly LocString MessagesLinkshellsTitle = new("onboarding.messagesLinkshellsTitle", "Tabs are yours");
+        public static readonly LocString MessagesLinkshellsBody = new("onboarding.messagesLinkshellsBody", "Build a tab from the channels you actually read, like your free company or your linkshells, and only those land here.");
         public static readonly LocString FeedbackSendTitle = new("onboarding.feedbackSendTitle", "Send it off");
         public static readonly LocString FeedbackSendBody = new("onboarding.feedbackSendBody", "When you're happy with it, tap Send. It goes straight to the developer's dashboard.");
         public static readonly LocString PollsVoteTitle = new("onboarding.pollsVoteTitle", "Cast your vote");

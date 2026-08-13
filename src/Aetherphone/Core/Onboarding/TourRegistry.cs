@@ -40,8 +40,7 @@ internal static class TourRegistry
             {
                 GuideStep.Note(L.Onboarding.MessagesTitle, L.Onboarding.MessagesBody),
                 GuideStep.Point(L.Onboarding.MessagesListTitle, L.Onboarding.MessagesListBody, "messages.list"),
-                GuideStep.Tap(L.Onboarding.MessagesLinkshellsTitle, L.Onboarding.MessagesLinkshellsBody,
-                    "messages.tabs", "messages.tab.linkshells"),
+                GuideStep.Note(L.Onboarding.MessagesLinkshellsTitle, L.Onboarding.MessagesLinkshellsBody),
                 GuideStep.Tap(L.Apps.Contacts, L.Onboarding.ContactsBody, "messages.tab.contacts",
                     "messages.tab.contacts"),
                 GuideStep.Point(L.Onboarding.ContactsListTitle, L.Onboarding.ContactsListBody, "contacts.list"),

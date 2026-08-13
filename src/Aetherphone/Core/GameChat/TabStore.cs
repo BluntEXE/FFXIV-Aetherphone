@@ -224,7 +224,8 @@ internal sealed class TabStore
     {
         for (var index = tab.Channels.Count - 1; index >= 0; index--)
         {
-            if (!GameChannels.TryByKey(tab.Channels[index], out _))
+            if (!GameChannels.TryByKey(tab.Channels[index], out var channel) ||
+                channel.Category == ChannelCategory.Direct)
             {
                 tab.Channels.RemoveAt(index);
             }

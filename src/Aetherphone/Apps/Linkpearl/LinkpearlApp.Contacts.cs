@@ -250,10 +250,12 @@ internal sealed partial class LinkpearlApp
 
     private void OpenDirectThread(string display, string sendTarget)
     {
-        var conversation = store.GetOrCreate(display, sendTarget);
-        conversation.MarkRead();
-        chatSegment = 0;
-        router.Push(LinkpearlRoute.Direct(conversation));
+        var at = sendTarget.IndexOf('@');
+        var world = at >= 0 ? sendTarget[(at + 1)..] : string.Empty;
+        var row = inbox.EnsureTell(display, world);
+        inbox.MarkRead(row);
+        activeTab = MessagesTab.Chats;
+        router.Push(LinkpearlRoute.Conversation(row.Key));
     }
 
     private bool DrawRefreshButton(in PhoneContext context)

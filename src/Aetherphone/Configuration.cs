@@ -234,6 +234,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public int LinkpearlHistory { get; set; } = (int)HistoryPolicy.Days30;
     public Dictionary<string, int> LinkpearlHistoryByChannel { get; set; } = new();
     public List<ulong> LinkpearlMigratedCharacters { get; set; } = new();
+    public Dictionary<string, long> LinkpearlSeen { get; set; } = new();
     public long DevChatLastSeenUnix { get; set; }
     public long AnnouncementsSeenUnix { get; set; }
     public long AnnouncementsNotifiedUnix { get; set; }

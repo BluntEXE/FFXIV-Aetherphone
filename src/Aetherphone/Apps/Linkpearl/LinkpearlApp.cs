@@ -2,6 +2,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Game;
+using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Linkpearl;
@@ -23,17 +24,20 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         Find,
     }
 
+    private const byte RowMenuMarkRead = 0;
+    private const byte RowMenuTogglePin = 1;
+    private const byte RowMenuDelete = 2;
+
     private static readonly Vector4 White = new(1f, 1f, 1f, 1f);
 
     public string Id => "messages";
     public string DisplayName => Loc.T(L.Apps.Linkpearl);
     public string Glyph => "Lp";
     public Vector4 Accent => AppAccents.For(Id);
-    public int BadgeCount => store.TotalUnread() + linkshells.TotalUnread();
+    public int BadgeCount => inbox.TotalUnread;
     public bool WantsSystemTheme => true;
-    private readonly MessageStore store;
-    private readonly LinkshellStore linkshells;
-    private readonly LinkshellMuteStore mutes;
+    private readonly ChatInbox inbox;
+    private readonly TabStore tabs;
     private readonly LinkpearlNotificationGate notificationGate;
     private readonly LinkpearlLauncher launcher;
     private readonly LodestoneService lodestone;
@@ -49,18 +53,12 @@ internal sealed partial class LinkpearlApp : IPhoneApp
     private INavigator frameNavigation = null!;
     private MessagesTab activeTab;
 
-    public LinkpearlApp(MessageStore store, LinkshellStore linkshells, LinkshellMuteStore mutes,
-        LinkpearlNotificationGate notificationGate, LinkpearlLauncher launcher, LodestoneService lodestone,
-        NotificationService notifications, GameData gameData, LookupService lookup, ConfirmService confirm,
-        Core.GameChat.ChatLog chatLog, Core.GameChat.ChatSend chatSend)
+    public LinkpearlApp(ChatInbox inbox, TabStore tabs, LinkpearlNotificationGate notificationGate,
+        LinkpearlLauncher launcher, LodestoneService lodestone, NotificationService notifications, GameData gameData,
+        LookupService lookup, ConfirmService confirm, ChatLog chatLog, ChatSend chatSend)
     {
-        chatThread = new GameChatThread(chatLog, chatSend, gameData)
-        {
-            Context = entry => OpenChatMenu(entry.Text, entry.IsSelf ? null : entry.AuthorName),
-        };
-        this.store = store;
-        this.linkshells = linkshells;
-        this.mutes = mutes;
+        this.inbox = inbox;
+        this.tabs = tabs;
         this.notificationGate = notificationGate;
         this.launcher = launcher;
         this.lodestone = lodestone;
@@ -68,11 +66,17 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         this.gameData = gameData;
         this.lookup = lookup;
         this.confirm = confirm;
+        chatThread = new GameChatThread(chatLog, chatSend, gameData)
+        {
+            Context = entry => OpenChatMenu(entry.Text, entry.IsSelf ? null : entry.AuthorName),
+        };
         router = new ViewRouter<LinkpearlRoute>(LinkpearlRoute.Root);
         drawView = DrawView;
         backToList = () =>
         {
             chatMenu.Close();
+            inbox.Viewing = string.Empty;
+            threadKey = string.Empty;
             router.Pop();
         };
     }
@@ -82,34 +86,28 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         router.Reset();
         activeTab = MessagesTab.Chats;
         threadKey = string.Empty;
+        inbox.Viewing = string.Empty;
+        inbox.Invalidate();
+        inbox.Sync();
         ResetContactsState();
         ResetFindState();
         ReadFriends();
-        if (launcher.TryConsumeLinkshell(out var channel, out var linkshellName))
+        if (launcher.TryConsume(out var conversationKey) && inbox.Find(conversationKey) is not null)
         {
-            chatSegment = 1;
-            var existing = linkshells.Find(channel);
-            var name = existing?.Name is { Length: > 0 } current ? current : linkshellName;
-            var thread = linkshells.GetOrCreate(channel, name);
-            thread.MarkRead();
-            router.Push(LinkpearlRoute.Shell(thread), false);
-            return;
-        }
-
-        if (launcher.TryConsume(out var display, out var sendTarget))
-        {
-            chatSegment = 0;
-            var conversation = store.GetOrCreate(display, sendTarget);
-            conversation.MarkRead();
-            router.Push(LinkpearlRoute.Direct(conversation), false);
+            OpenConversation(conversationKey);
         }
     }
 
     public void OnClosed()
     {
         chatMenu.Close();
+        rowMenu.Close();
         chatThread.Close();
         router.Reset();
+        inbox.Viewing = string.Empty;
+        inbox.ClearTransient();
+        inbox.FlushSeen();
+        threadKey = string.Empty;
         ResetContactsState();
         ResetFindState();
     }
@@ -121,6 +119,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         frameTheme = context.Theme;
         frameNavigation = context.Navigation;
         chatMenu.Gate();
+        rowMenu.Gate();
         chatThread.Gate();
         router.Draw(context.Content, context.Theme.AppBackground, delta, drawView);
     }
@@ -129,23 +128,8 @@ internal sealed partial class LinkpearlApp : IPhoneApp
     {
         switch (route.Screen)
         {
-            case LinkpearlScreen.DirectThread when route.Conversation is { } conversation:
-                if (!store.Contains(conversation))
-                {
-                    router.Reset();
-                    break;
-                }
-
-                DrawDirectThread(area, conversation);
-                break;
-            case LinkpearlScreen.LinkshellThread when route.Linkshell is { } thread:
-                if (!linkshells.Contains(thread))
-                {
-                    router.Reset();
-                    break;
-                }
-
-                DrawLinkshellThread(area, thread);
+            case LinkpearlScreen.Conversation:
+                DrawConversation(area, route.ConversationKey);
                 break;
             case LinkpearlScreen.FriendDetail when route.Friend is { } friend:
                 DrawFriendDetail(area, friend);
@@ -157,6 +141,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
                 DrawFreeCompanyDetail(area, route);
                 break;
             default:
+                inbox.Viewing = string.Empty;
                 DrawRoot(area);
                 break;
         }
@@ -205,6 +190,15 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         }
 
         DrawBottomNav(navRect);
+        DrawRowMenu(area);
+    }
+
+    private bool DrawNotificationPauseButton(in PhoneContext context)
+    {
+        var scale = UiScale.Current;
+        return NotificationToggleButton.Draw(context.Content, scale, "messages.notifications.toggle",
+            AlertSuppression.Notifications, notificationGate.Paused, context.Theme.Accent, context.Theme.TextStrong,
+            context.Theme.TextMuted, Loc.T(L.Messages.ResumeNotifications), Loc.T(L.Messages.PauseNotifications));
     }
 
     private string HeaderTitle() => activeTab switch

@@ -2,56 +2,20 @@ namespace Aetherphone.Core.Linkpearl;
 
 internal sealed class LinkpearlLauncher
 {
-    private string? pendingDisplay;
-    private string? pendingTarget;
-    private string? pendingLinkshellName;
-    private LinkshellChannel? pendingLinkshell;
+    private string? pendingKey;
 
-    public void Request(string display, string sendTarget)
-    {
-        pendingDisplay = display;
-        pendingTarget = sendTarget;
-        pendingLinkshell = null;
-        pendingLinkshellName = null;
-    }
+    public void Request(string conversationKey) => pendingKey = conversationKey;
 
-    public void RequestLinkshell(LinkshellChannel channel, string name)
+    public bool TryConsume(out string conversationKey)
     {
-        pendingLinkshell = channel;
-        pendingLinkshellName = name;
-        pendingDisplay = null;
-        pendingTarget = null;
-    }
-
-    public bool TryConsume(out string display, out string sendTarget)
-    {
-        if (pendingTarget is null)
+        if (pendingKey is null)
         {
-            display = string.Empty;
-            sendTarget = string.Empty;
+            conversationKey = string.Empty;
             return false;
         }
 
-        display = pendingDisplay!;
-        sendTarget = pendingTarget;
-        pendingDisplay = null;
-        pendingTarget = null;
-        return true;
-    }
-
-    public bool TryConsumeLinkshell(out LinkshellChannel channel, out string name)
-    {
-        if (pendingLinkshell is not { } pending)
-        {
-            channel = default;
-            name = string.Empty;
-            return false;
-        }
-
-        channel = pending;
-        name = pendingLinkshellName ?? string.Empty;
-        pendingLinkshell = null;
-        pendingLinkshellName = null;
+        conversationKey = pendingKey;
+        pendingKey = null;
         return true;
     }
 }

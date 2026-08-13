@@ -107,14 +107,7 @@ internal sealed class NotificationRouter
 
         if (notification.AppId == MessagesAppId && !string.IsNullOrEmpty(notification.GroupKey))
         {
-            if (LinkshellChannel.TryParse(notification.GroupKey, out var channel))
-            {
-                linkpearlLauncher.RequestLinkshell(channel, notification.Title);
-            }
-            else
-            {
-                linkpearlLauncher.Request(notification.Title, notification.GroupKey);
-            }
+            linkpearlLauncher.Request(notification.GroupKey);
         }
         else if (notification.AppId == DmAppId && notification.GroupKey is { } dmKey
                  && dmKey.StartsWith(CallGroupPrefix, StringComparison.Ordinal))
