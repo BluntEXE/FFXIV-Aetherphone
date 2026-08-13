@@ -1027,7 +1027,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         }
         else if (veiled)
         {
-            if (UiInteract.HoverClick(imageRect.Min, imageRect.Max))
+            if (result.Tapped)
             {
                 SensitiveReveals.Reveal(post.Id);
             }

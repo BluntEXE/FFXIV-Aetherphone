@@ -12,7 +12,10 @@ internal static class SensitiveVeil
     private static readonly Vector4 StrongInk = new(1f, 1f, 1f, 0.94f);
     private static readonly Vector4 SoftInk = new(1f, 1f, 1f, 0.72f);
 
-    public static bool Draw(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding)
+    // Draw-only on purpose: the veil sits inside carousel pages, grid tiles and chat cards whose
+    // owners run their own tap handling, and a HoverClick here would spend the UiInteract claim
+    // before those handlers see it.
+    public static void Draw(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding)
     {
         var scale = UiScale.Current;
         Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(Ground));
@@ -24,7 +27,8 @@ internal static class SensitiveVeil
         if (compact)
         {
             AppSkin.Icon(drawList, center, FontAwesomeIcon.EyeSlash.ToIconString(), StrongInk, 1.15f);
-            return UiInteract.HoverClick(min, max);
+            HintHand(min, max);
+            return;
         }
 
         var textWidth = MathF.Max(1f, width - 24f * scale);
@@ -36,6 +40,14 @@ internal static class SensitiveVeil
         Typography.DrawCentered(drawList, center, title, StrongInk, TextStyles.Headline);
         Typography.DrawCentered(drawList, new Vector2(center.X, center.Y + 22f * scale), hint, SoftInk,
             TextStyles.Footnote);
-        return UiInteract.HoverClick(min, max);
+        HintHand(min, max);
+    }
+
+    private static void HintHand(Vector2 min, Vector2 max)
+    {
+        if (UiInteract.Hover(min, max))
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
     }
 }
