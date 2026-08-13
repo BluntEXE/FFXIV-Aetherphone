@@ -1168,12 +1168,23 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         work.Run("disconnect", async token => await client.DisconnectAsync(userId, token).ConfigureAwait(false));
     }
 
-    public void Block(string userId, Action<bool> onComplete)
+    public void Block(string userId, Action<bool> onComplete, Action<AepFailure>? onFailure = null)
     {
         blockedLoaded = false;
         ForgetConnection(userId, VelvetConnectionState.Blocked);
         HideFromDiscover(userId);
-        work.Run("block", async token => await safety.BlockAsync(userId, token).ConfigureAwait(false), onComplete);
+        work.Run("block", async token =>
+        {
+            var blocked = await safety.BlockAsync(userId, token, onFailure).ConfigureAwait(false);
+            if (!blocked)
+            {
+                AepLog.Warning($"Velvet block of {userId} failed; the local hide is being undone");
+                RefreshConnections();
+                RefreshDiscover(discoverFilter, discoverTags, discoverRegion);
+            }
+
+            return blocked;
+        }, onComplete);
     }
 
     public void HideFromDiscover(string userId)
@@ -1522,7 +1533,8 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         }, () => commentsLoadingMore = false);
     }
 
-    public void AddComment(string postId, string text, Action<bool> onComplete)
+    public void AddComment(string postId, string text, Action<bool> onComplete,
+        Action<AepFailure>? onFailure = null)
     {
         var trimmed = text.Trim();
         if (trimmed.Length == 0 || commenting)
@@ -1533,9 +1545,10 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         commenting = true;
         work.Run("comment", async token =>
         {
-            var created = await client.AddCommentAsync(postId, trimmed, token).ConfigureAwait(false);
+            var created = await client.AddCommentAsync(postId, trimmed, token, onFailure).ConfigureAwait(false);
             if (created is null)
             {
+                AepLog.Warning($"Velvet comment on {postId} was not accepted");
                 return false;
             }
 

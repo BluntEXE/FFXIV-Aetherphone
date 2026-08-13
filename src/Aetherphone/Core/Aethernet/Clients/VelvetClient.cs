@@ -231,9 +231,10 @@ internal sealed class VelvetClient
         return net.GetAsync(path, AethernetJsonContext.Default.VelvetCommentPage, token);
     }
 
-    public Task<VelvetCommentDto?> AddCommentAsync(string postId, string text, CancellationToken token)
+    public Task<VelvetCommentDto?> AddCommentAsync(string postId, string text, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync($"/velvet/posts/{Uri.EscapeDataString(postId)}/comments", new CreateVelvetCommentRequest(text), AethernetJsonContext.Default.CreateVelvetCommentRequest, AethernetJsonContext.Default.VelvetCommentDto, token);
+        return net.PostAsync($"/velvet/posts/{Uri.EscapeDataString(postId)}/comments", new CreateVelvetCommentRequest(text), AethernetJsonContext.Default.CreateVelvetCommentRequest, AethernetJsonContext.Default.VelvetCommentDto, token, null, onFailure);
     }
 
     public Task<bool> DeleteCommentAsync(string postId, string commentId, CancellationToken token)

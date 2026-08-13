@@ -127,6 +127,8 @@ internal sealed partial class AethergramApp : IPhoneApp
     private string caption = string.Empty;
     private bool captionFocus;
     private readonly FailureSlot feedFailure = new();
+    private readonly FailureSlot commentFailure = new();
+    private string? commentRestore;
     private string composeStatus = string.Empty;
     private volatile int composeOutcome;
     private string commentDraft = string.Empty;

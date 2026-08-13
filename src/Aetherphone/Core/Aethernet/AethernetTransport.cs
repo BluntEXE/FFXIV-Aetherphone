@@ -70,14 +70,16 @@ internal sealed class AethernetTransport
         return http.RequestJsonAsync(method, Url(path), responseInfo, Session.Token, token, Sink(onStatus), appScope);
     }
 
-    public Task<bool> SendAsync(HttpMethod method, string path, CancellationToken token, Action<int>? onStatus = null)
+    public Task<bool> SendAsync(HttpMethod method, string path, CancellationToken token, Action<int>? onStatus = null,
+        Action<AepFailure>? onFailure = null)
     {
         if (SignedOut(path))
         {
+            onFailure?.Invoke(AepFailure.Transport(AepFailureKind.SignedOut));
             return Task.FromResult(false);
         }
 
-        return http.SendAsync(method, Url(path), Session.Token, token, Sink(onStatus), appScope);
+        return http.SendAsync(method, Url(path), Session.Token, token, Sink(onStatus), appScope, onFailure);
     }
 
     public Task<bool> SendWithBearerAsync(HttpMethod method, string path, string? bearer, CancellationToken token)

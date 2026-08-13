@@ -403,13 +403,35 @@ internal sealed partial class AethergramApp
         var style = new CommentComposerStyle(new Vector4(1f, 1f, 1f, 0.10f), AppPalettes.Aethergram.FieldSurface,
             AppPalettes.Aethergram.TitleInk, Accent, theme.SurfaceMuted, new Vector4(1f, 1f, 1f, 1f), true, 9f, 54f,
             0.8f);
+        var returned = Interlocked.Exchange(ref commentRestore, null);
+        if (returned is not null)
+        {
+            commentDraft = returned;
+        }
+
+        if (commentFailure.Failed)
+        {
+            Typography.DrawWrappedCentered(new Vector2(bar.Center.X, bar.Min.Y - 22f * UiScale.Current),
+                commentFailure.Text(), AppPalettes.Aethergram.MutedInk, TextStyles.Footnote,
+                bar.Width - 28f * UiScale.Current);
+        }
+
         if (CommentComposerBar.Draw(bar, screen, ui, theme, style, "##gramComment", Loc.T(L.Aethergram.AddComment),
                 ref commentDraft, MaxCommentLength, commentMentions, mentionPopup, images, lodestone, store.Commenting,
                 ref commentFocusPending, commentEmoji))
         {
             var text = commentDraft;
             commentDraft = string.Empty;
-            store.AddComment(postId, text, _ => { });
+            commentFailure.Clear();
+            store.AddComment(postId, text, accepted =>
+            {
+                if (accepted)
+                {
+                    return;
+                }
+
+                commentRestore = text;
+            }, commentFailure.Set);
         }
     }
 

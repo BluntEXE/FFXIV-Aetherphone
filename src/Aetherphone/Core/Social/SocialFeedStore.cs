@@ -426,7 +426,8 @@ internal abstract class SocialFeedStore : IDisposable
         }, () => commentsLoadingMore = false);
     }
 
-    public void AddComment(string postId, string text, Action<bool> onComplete)
+    public void AddComment(string postId, string text, Action<bool> onComplete,
+        Action<AepFailure>? onFailure = null)
     {
         var trimmed = text.Trim();
         if (trimmed.Length == 0 || commenting)
@@ -437,9 +438,10 @@ internal abstract class SocialFeedStore : IDisposable
         commenting = true;
         work.Run("comment", async token =>
         {
-            var created = await client.AddCommentAsync(postId, trimmed, token).ConfigureAwait(false);
+            var created = await client.AddCommentAsync(postId, trimmed, token, onFailure).ConfigureAwait(false);
             if (created is null)
             {
+                AepLog.Warning($"Comment on {postId} was not accepted");
                 return false;
             }
 
@@ -766,10 +768,21 @@ internal abstract class SocialFeedStore : IDisposable
         work.Run("report", token => safety.ReportAsync(targetType, targetId, reason, token), onComplete);
     }
 
-    public void Block(string userId, Action<bool> onComplete)
+    public void Block(string userId, Action<bool> onComplete, Action<AepFailure>? onFailure = null)
     {
         RemoveAuthorEverywhere(userId);
-        work.Run("block", token => safety.BlockAsync(userId, token), onComplete);
+        work.Run("block", async token =>
+        {
+            var blocked = await safety.BlockAsync(userId, token, onFailure).ConfigureAwait(false);
+            if (!blocked)
+            {
+                AepLog.Warning($"Block of {userId} failed; restoring the feeds that were cleared optimistically");
+                RefreshFeed(SocialFeedScope.ForYou);
+                RefreshFeed(SocialFeedScope.Following);
+            }
+
+            return blocked;
+        }, onComplete);
     }
 
     private void RemoveAuthorEverywhere(string userId)

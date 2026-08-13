@@ -1,4 +1,5 @@
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Aethernet.Clients;
 
@@ -16,9 +17,9 @@ internal sealed class SafetyClient
         return net.SendJsonForStatusAsync(HttpMethod.Post, "/reports", new ReportRequest(targetType, targetId, reason, revealedMessages), AethernetJsonContext.Default.ReportRequest, token);
     }
 
-    public Task<bool> BlockAsync(string userId, CancellationToken token)
+    public Task<bool> BlockAsync(string userId, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return net.SendAsync(HttpMethod.Post, $"/blocks/{Uri.EscapeDataString(userId)}", token);
+        return net.SendAsync(HttpMethod.Post, $"/blocks/{Uri.EscapeDataString(userId)}", token, null, onFailure);
     }
 
     public Task<bool> UnblockAsync(string userId, CancellationToken token)
