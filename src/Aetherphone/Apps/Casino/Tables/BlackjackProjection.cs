@@ -194,7 +194,7 @@ internal sealed class BlackjackProjection
         {
             var mine = Personal;
             var board = Board;
-            if (mine is null || board is null || board.HandId.Length == 0)
+            if (mine is null || board is null || board.HandId.Length == 0 || personalEpoch != epoch)
             {
                 return null;
             }

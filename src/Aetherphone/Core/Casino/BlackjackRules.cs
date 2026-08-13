@@ -205,6 +205,11 @@ internal static class BlackjackRules
             return SeatPhase.Out;
         }
 
+        if (seatState != BlackjackSeatStates.Seated)
+        {
+            return SeatPhase.Empty;
+        }
+
         if (!connected)
         {
             return SeatPhase.Away;

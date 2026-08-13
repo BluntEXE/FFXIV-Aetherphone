@@ -107,7 +107,7 @@ public sealed class CasinoRoomWireContractTests
     {
         var payload = new CasinoPayload { RoomId = "wheel-floor" };
         var json = JsonSerializer.Serialize(payload, TelephonyJsonContext.Default.CasinoPayload);
-        Assert.Equal("{\"roomId\":\"wheel-floor\",\"epoch\":0,\"seq\":0,\"serverNowUnixMs\":0}", json);
+        Assert.Equal("{\"roomId\":\"wheel-floor\",\"epoch\":0,\"seq\":0,\"pairSeq\":0,\"serverNowUnixMs\":0}", json);
     }
 
     [Fact]
@@ -120,7 +120,8 @@ public sealed class CasinoRoomWireContractTests
         };
         var json = JsonSerializer.Serialize(control, TelephonyJsonContext.Default.CallControl);
         Assert.Contains("\"type\":\"casino.attach\"", json);
-        Assert.Contains("\"casino\":{\"roomId\":\"wheel-floor\",\"epoch\":0,\"seq\":0,\"serverNowUnixMs\":0}", json);
+        Assert.Contains("\"casino\":{\"roomId\":\"wheel-floor\",\"epoch\":0,\"seq\":0,\"pairSeq\":0,\"serverNowUnixMs\":0}",
+            json);
     }
 
     [Fact]
