@@ -309,6 +309,8 @@
   "moderation.inReviewHint": "在审核完成前，只有你能看到它",
   "moderation.sensitiveTitle": "敏感内容",
   "moderation.sensitiveReveal": "点按查看",
+  "moderation.markSensitive": "标记为敏感内容",
+  "moderation.sensitiveOn": "已标记为敏感内容",
   "moderation.removedTitle": "帖子已移除",
   "moderation.removedAdult": "你的帖子已被移除，因为其中似乎包含此处不允许的成人内容。",
   "moderation.removedViolence": "你的帖子已被移除，因为其中似乎包含暴力或血腥内容。",

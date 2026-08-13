@@ -12,10 +12,10 @@ internal sealed class GramClient
         this.net = net;
     }
 
-    public Task<PostDto?> CreateAsync(string caption, string[] mediaKeys, int width, int height, PhotoTagInput[]? photoTags, CancellationToken token,
+    public Task<PostDto?> CreateAsync(string caption, string[] mediaKeys, int width, int height, PhotoTagInput[]? photoTags, bool sensitive, CancellationToken token,
         Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync("/grams", new CreateGramRequest(caption, mediaKeys[0], width, height, mediaKeys, photoTags), AethernetJsonContext.Default.CreateGramRequest, AethernetJsonContext.Default.PostDto, token, null, onFailure);
+        return net.PostAsync("/grams", new CreateGramRequest(caption, mediaKeys[0], width, height, mediaKeys, photoTags, sensitive), AethernetJsonContext.Default.CreateGramRequest, AethernetJsonContext.Default.PostDto, token, null, onFailure);
     }
 
     public Task<FeedPage?> FeedAsync(string scope, string? cursor, CancellationToken token,

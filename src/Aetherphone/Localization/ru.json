@@ -309,6 +309,8 @@
   "moderation.inReviewHint": "Пока проверка не завершится, это видите только вы",
   "moderation.sensitiveTitle": "Деликатный контент",
   "moderation.sensitiveReveal": "Нажмите, чтобы посмотреть",
+  "moderation.markSensitive": "Отметить как деликатное",
+  "moderation.sensitiveOn": "Отмечено как деликатное",
   "moderation.removedTitle": "Пост удалён",
   "moderation.removedAdult": "Ваш пост удалён, так как, по всей видимости, содержит контент для взрослых, который здесь не допускается.",
   "moderation.removedViolence": "Ваш пост удалён, так как, по всей видимости, содержит сцены насилия или шокирующий контент.",

@@ -42,7 +42,7 @@ internal sealed class ChirperStore : SocialFeedStore
     protected override Task<FeedPage?> FetchProfilePostsAsync(string userId, string? cursor, CancellationToken token) =>
         client.UserPostsAsync(userId, cursor, token);
 
-    public void Compose(string text, IReadOnlyList<string> imagePaths, Action<bool> onComplete,
+    public void Compose(string text, IReadOnlyList<string> imagePaths, bool sensitive, Action<bool> onComplete,
         Action<AepFailure>? onFailure = null)
     {
         var trimmed = text.Trim();
@@ -61,8 +61,8 @@ internal sealed class ChirperStore : SocialFeedStore
             }
 
             var (keys, width, height) = uploaded.Value;
-            var created = await client.CreatePostAsync(trimmed, keys.Length > 0 ? keys : null, width, height, token,
-                    onFailure)
+            var created = await client.CreatePostAsync(trimmed, keys.Length > 0 ? keys : null, width, height,
+                    sensitive, token, onFailure)
                 .ConfigureAwait(false);
             if (created is null)
             {

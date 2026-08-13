@@ -25,6 +25,7 @@ internal sealed partial class ChirperApp
             quoteTargetId = null;
             composeAttachments.Clear();
             composePicking = false;
+            composeSensitive = false;
             store.RefreshFeed(SocialFeedScope.ForYou);
             store.RefreshFeed(SocialFeedScope.Following);
             feedScrollTopPending = true;
@@ -212,6 +213,17 @@ internal sealed partial class ChirperApp
                 }
             }
 
+            if (composeAttachments.Count > 0)
+            {
+                var sensitiveCenter = new Vector2(photoCenter.X + emojiRadius * 2f + 14f * scale, footerY);
+                if (ui.IconButton(sensitiveCenter, emojiRadius, FontAwesomeIcon.EyeSlash.ToIconString(),
+                        composeSensitive ? Accent : AppPalettes.Chirper.MutedInk, new Vector4(0f, 0f, 0f, 0f), 1.2f,
+                        Loc.T(composeSensitive ? L.Moderation.SensitiveOn : L.Moderation.MarkSensitive)))
+                {
+                    composeSensitive = !composeSensitive;
+                }
+            }
+
             var remaining = MaxPostLength - draft.Length;
             var counterColor = remaining < 40
                 ? (remaining < 0 ? theme.Danger : new Vector4(0.95f, 0.65f, 0.20f, 1f))
@@ -239,7 +251,8 @@ internal sealed partial class ChirperApp
         }
         else
         {
-            store.Compose(draft, attachments, ok => composeOutcome = ok ? 1 : 2, composeFailure.Set);
+            store.Compose(draft, attachments, composeSensitive && attachments.Length > 0,
+                ok => composeOutcome = ok ? 1 : 2, composeFailure.Set);
         }
     }
 

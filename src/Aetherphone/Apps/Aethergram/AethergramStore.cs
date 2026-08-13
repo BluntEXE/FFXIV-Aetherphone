@@ -37,7 +37,7 @@ internal sealed class AethergramStore : SocialFeedStore
     // aspect box, which frames the whole carousel; each photo is baked to fit inside its own box
     // and is contain-fit into that frame at draw time.
     public void CreateGram(string[] sourcePaths, WallpaperCrop[] crops, PostAspect[] aspects, string caption,
-        PhotoTagInput[]? photoTags, Action<bool> onComplete)
+        PhotoTagInput[]? photoTags, bool sensitive, Action<bool> onComplete)
     {
         if (posting || sourcePaths.Length == 0)
         {
@@ -71,7 +71,7 @@ internal sealed class AethergramStore : SocialFeedStore
             }
 
             var created = await grams.CreateAsync(caption.Trim(), keys, containerWidth, containerHeight, photoTags,
-                token).ConfigureAwait(false);
+                sensitive, token).ConfigureAwait(false);
             if (created is null)
             {
                 return false;

@@ -309,6 +309,8 @@
   "moderation.inReviewHint": "Solo tú puedes ver esto hasta que termine la revisión",
   "moderation.sensitiveTitle": "Contenido sensible",
   "moderation.sensitiveReveal": "Toca para ver",
+  "moderation.markSensitive": "Marcar como sensible",
+  "moderation.sensitiveOn": "Marcado como sensible",
   "moderation.removedTitle": "Publicación eliminada",
   "moderation.removedAdult": "Tu publicación se eliminó porque parece contener contenido para adultos, que no está permitido aquí.",
   "moderation.removedViolence": "Tu publicación se eliminó porque parece contener contenido violento o explícito.",

@@ -309,6 +309,8 @@
   "moderation.inReviewHint": "確認が完了するまで、この投稿はあなたにのみ表示されます",
   "moderation.sensitiveTitle": "センシティブな内容",
   "moderation.sensitiveReveal": "タップして表示",
+  "moderation.markSensitive": "センシティブに設定",
+  "moderation.sensitiveOn": "センシティブに設定済み",
   "moderation.removedTitle": "投稿を削除しました",
   "moderation.removedAdult": "この投稿にはアダルトコンテンツが含まれている可能性があるため、削除しました。ここではアダルトコンテンツは許可されていません。",
   "moderation.removedViolence": "この投稿には暴力的またはショッキングな内容が含まれている可能性があるため、削除しました。",

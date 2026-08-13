@@ -125,6 +125,7 @@ internal sealed partial class AethergramApp : IPhoneApp
     private readonly PhotoTagOverlay tagOverlay = new();
     private readonly PersonPicker personPicker;
     private string caption = string.Empty;
+    private bool composeSensitive;
     private bool captionFocus;
     private readonly FailureSlot feedFailure = new();
     private readonly FailureSlot commentFailure = new();
@@ -260,6 +261,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         router.Reset();
         avatarLightbox.Reset();
         caption = string.Empty;
+        composeSensitive = false;
         profile.SearchDraft = string.Empty;
         commentDraft = string.Empty;
         shareSearchDraft = string.Empty;

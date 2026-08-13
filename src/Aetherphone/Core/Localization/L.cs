@@ -164,6 +164,8 @@ internal static class L
         public static readonly LocString InReviewHint = new("moderation.inReviewHint", "Only you can see this until the review finishes");
         public static readonly LocString SensitiveTitle = new("moderation.sensitiveTitle", "Sensitive content");
         public static readonly LocString SensitiveReveal = new("moderation.sensitiveReveal", "Tap to view");
+        public static readonly LocString MarkSensitive = new("moderation.markSensitive", "Mark as sensitive");
+        public static readonly LocString SensitiveOn = new("moderation.sensitiveOn", "Marked sensitive");
         public static readonly LocString RemovedTitle = new("moderation.removedTitle", "Post removed");
         public static readonly LocString RemovedAdult = new("moderation.removedAdult", "Your post was removed because it appears to contain adult content, which is not allowed here.");
         public static readonly LocString RemovedViolence = new("moderation.removedViolence", "Your post was removed because it appears to contain violent or graphic content.");

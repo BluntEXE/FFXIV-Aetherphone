@@ -91,6 +91,7 @@ internal sealed partial class AethergramApp
         composeStoryMode = storyMode;
         caption = string.Empty;
         composeStatus = string.Empty;
+        composeSensitive = false;
         composeTags.Clear();
         composeTagMode = false;
         captionEmoji.Close();
@@ -108,6 +109,7 @@ internal sealed partial class AethergramApp
             if (!composeAvatarMode)
             {
                 caption = string.Empty;
+                composeSensitive = false;
                 store.RefreshFeed(SocialFeedScope.ForYou);
                 store.RefreshFeed(SocialFeedScope.Following);
                 feedScrollTopPending = true;
@@ -556,6 +558,17 @@ internal sealed partial class AethergramApp
         var emojiCenter = new Vector2(card.Min.X + padding + emojiRadius, counterPos.Y + counterSize.Y * 0.5f);
         captionEmoji.DrawToggle(ui, emojiCenter, emojiRadius, Accent, AppPalettes.Aethergram.MutedInk,
             Loc.T(L.Common.Emoji));
+        if (!composeAvatarMode && !composeStoryMode)
+        {
+            var sensitiveCenter = new Vector2(emojiCenter.X + emojiRadius * 2f + 12f * scale, emojiCenter.Y);
+            if (ui.IconButton(sensitiveCenter, emojiRadius, FontAwesomeIcon.EyeSlash.ToIconString(),
+                    composeSensitive ? Accent : AppPalettes.Aethergram.MutedInk, new Vector4(0f, 0f, 0f, 0f), 1.1f,
+                    Loc.T(composeSensitive ? L.Moderation.SensitiveOn : L.Moderation.MarkSensitive)))
+            {
+                composeSensitive = !composeSensitive;
+            }
+        }
+
         var panelHeight = captionEmoji.PanelHeight(scale);
         if (panelHeight > 0f)
         {
@@ -602,7 +615,7 @@ internal sealed partial class AethergramApp
 
         composeStatus = string.Empty;
         store.CreateGram(composeSession.SelectedArray(), composeSession.CropsArray(), composeSession.AspectsArray(),
-            caption, ComposeTagInputs(), ok => composeOutcome = ok ? 1 : 2);
+            caption, ComposeTagInputs(), composeSensitive, ok => composeOutcome = ok ? 1 : 2);
     }
 
     private void CommitStory()

@@ -24,10 +24,10 @@ internal sealed class SocialClient
         return net.GetAsync(path, AethernetJsonContext.Default.FeedPage, token, null, onFailure);
     }
 
-    public Task<PostDto?> CreatePostAsync(string text, string[]? mediaKeys, int mediaWidth, int mediaHeight, CancellationToken token,
+    public Task<PostDto?> CreatePostAsync(string text, string[]? mediaKeys, int mediaWidth, int mediaHeight, bool sensitive, CancellationToken token,
         Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync("/posts", new CreatePostRequest(text, null, mediaKeys, mediaWidth, mediaHeight), AethernetJsonContext.Default.CreatePostRequest, AethernetJsonContext.Default.PostDto, token, null, onFailure);
+        return net.PostAsync("/posts", new CreatePostRequest(text, null, mediaKeys, mediaWidth, mediaHeight, sensitive), AethernetJsonContext.Default.CreatePostRequest, AethernetJsonContext.Default.PostDto, token, null, onFailure);
     }
 
     public Task<FeedPage?> UserPostsAsync(string userId, string? cursor, CancellationToken token,

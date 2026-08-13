@@ -89,6 +89,7 @@ internal sealed partial class ChirperApp : IPhoneApp
     private readonly FailureSlot commentFailure = new();
     private string? commentRestore;
     private string composeStatus = string.Empty;
+    private bool composeSensitive;
     private volatile int composeOutcome;
     private readonly ChirperActionReveal actions = new();
     private string commentDraft = string.Empty;
@@ -202,6 +203,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         commentDraft = string.Empty;
         composeAttachments.Clear();
         composePicking = false;
+        composeSensitive = false;
         store.ClearDiscover();
     }
 
@@ -313,6 +315,7 @@ internal sealed partial class ChirperApp : IPhoneApp
             quoteTargetId = null;
             composeAttachments.Clear();
             composePicking = false;
+            composeSensitive = false;
             composeFocus = true;
             router.Push(ChirperRoute.Compose);
         }
@@ -1174,6 +1177,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         composeStatus = string.Empty;
         composeAttachments.Clear();
         composePicking = false;
+        composeSensitive = false;
         composeFocus = true;
         router.Push(ChirperRoute.Compose);
     }
@@ -1630,6 +1634,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         composeStatus = string.Empty;
         composeAttachments.Clear();
         composePicking = false;
+        composeSensitive = false;
         AddComposeAttachment(path);
         composeFocus = true;
         router.Push(ChirperRoute.Compose);
