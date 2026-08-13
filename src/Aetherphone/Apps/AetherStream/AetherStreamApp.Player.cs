@@ -1,4 +1,6 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Animation;
+using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Platform;
@@ -22,6 +24,7 @@ internal sealed partial class AetherStreamApp
     private bool queueOnAdd;
     private float composerModeAnimation;
     private string? pendingLocalFile;
+    private Spring heroActionsFade;
 
     private VideoQueueEntry? CurrentEntry => watchAlong.IsViewing ? watchAlong.ViewingEntry : queue.Current;
 
@@ -104,6 +107,16 @@ internal sealed partial class AetherStreamApp
     private void DrawHeroOverlay(ImDrawListPtr drawList, Vector2 min, Vector2 max, float scale,
         VideoQueueEntry? current)
     {
+        var delta = ImGui.GetIO().DeltaTime;
+        var presentable = video.HasMedia;
+        var heroHovered = presentable && UiInteract.Hover(min, max);
+        var eased = Math.Clamp(heroActionsFade.Step(heroHovered ? 1f : 0f, 0.12f, delta), 0f, 1f);
+        if (eased > 0.01f)
+        {
+            Squircle.Fill(drawList, min, max, Metrics.Radius.Card * scale,
+                ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.38f * eased)));
+        }
+
         if (screen.Engine.IsActive)
         {
             var pillLabel = current is not null
@@ -131,6 +144,44 @@ internal sealed partial class AetherStreamApp
         }
 
         DrawHeroFacepile(drawList, min, max, scale);
+        DrawHeroPresentActions(drawList, min, max, scale, eased, heroHovered, delta);
+    }
+
+    private void DrawHeroPresentActions(ImDrawListPtr drawList, Vector2 min, Vector2 max, float scale, float eased,
+        bool heroHovered, float delta)
+    {
+        if (eased <= 0.01f)
+        {
+            return;
+        }
+
+        var center = (min + max) * 0.5f;
+        var radius = 19f * scale;
+        var spacing = radius + 13f * scale;
+        var fullscreenCenter = new Vector2(center.X - spacing, center.Y);
+        var windowCenter = new Vector2(center.X + spacing, center.Y);
+
+        if (HoverButton.Circle(drawList, "aetherstream.hero.fullscreen", fullscreenCenter, radius,
+                FontAwesomeIcon.Expand, HeroPillBacking, WhiteInk, delta, eased, heroHovered,
+                Loc.T(L.AetherStream.Fullscreen)))
+        {
+            EnterTheater();
+        }
+
+        if (HoverButton.Circle(drawList, "aetherstream.hero.window", windowCenter, radius,
+                FontAwesomeIcon.WindowRestore, HeroPillBacking, WhiteInk, delta, eased, heroHovered,
+                Loc.T(L.AetherStream.OpenScreenWindow)))
+        {
+            screenWindow.IsOpen = true;
+        }
+    }
+
+    private void EnterTheater()
+    {
+        upNextSheet.Close();
+        partySheet.Close();
+        screenSheet.Close();
+        AppLandscape.Request(Id);
     }
 
     private void DrawHeroFacepile(ImDrawListPtr drawList, Vector2 min, Vector2 max, float scale)
@@ -277,8 +328,11 @@ internal sealed partial class AetherStreamApp
         var position = progress.Position;
         var paused = progress.Paused;
 
-        if (interactive && ui.IconButton(new Vector2(centerX - 132f * scale, centerY), 16f * scale,
-                FontAwesomeIcon.UndoAlt.ToIconString(), ui.TitleInk, AppSkin.Transparent, 0.6f))
+        var drawList = ImGui.GetWindowDrawList();
+        var delta = ImGui.GetIO().DeltaTime;
+        if (interactive && HoverButton.Circle(drawList, "aetherstream.seek.back",
+                new Vector2(centerX - 132f * scale, centerY), 16f * scale, FontAwesomeIcon.UndoAlt,
+                AppSkin.Transparent, ui.TitleInk, delta, 1f, true))
         {
             video.Seek(Math.Max(0f, position - 10f));
         }
@@ -292,7 +346,7 @@ internal sealed partial class AetherStreamApp
         var playAction = paused || !video.HasMedia ? TransportAction.Play : TransportAction.Pause;
         var centerRadius = 24f * scale;
         var centerPoint = new Vector2(centerX, centerY);
-        ImGui.GetWindowDrawList().AddCircleFilled(centerPoint, centerRadius,
+        drawList.AddCircleFilled(centerPoint, centerRadius,
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, transportAlpha)), 40);
         if (TransportButton.Draw(centerPoint, centerRadius, playAction, ui.Accent, WhiteInk, transportAlpha,
                 interactive) && interactive)
@@ -308,8 +362,9 @@ internal sealed partial class AetherStreamApp
             queue.Advance();
         }
 
-        if (interactive && ui.IconButton(new Vector2(centerX + 132f * scale, centerY), 16f * scale,
-                FontAwesomeIcon.RedoAlt.ToIconString(), ui.TitleInk, AppSkin.Transparent, 0.6f))
+        if (interactive && HoverButton.Circle(drawList, "aetherstream.seek.forward",
+                new Vector2(centerX + 132f * scale, centerY), 16f * scale, FontAwesomeIcon.RedoAlt,
+                AppSkin.Transparent, ui.TitleInk, delta, 1f, true))
         {
             video.Seek(position + 10f);
         }
@@ -367,12 +422,13 @@ internal sealed partial class AetherStreamApp
         var slot = width / 3f;
         var centerY = origin.Y + radius;
 
-        DrawActionButton(new Vector2(origin.X + slot * 0.5f, centerY), radius, FontAwesomeIcon.ListUl,
-            Loc.T(L.AetherStream.UpNext), QueueBadgeCount(), upNextSheet, scale, labelHeight);
-        DrawActionButton(new Vector2(origin.X + slot * 1.5f, centerY), radius, FontAwesomeIcon.UserFriends,
-            Loc.T(L.AetherStream.Party), watchAlong.PendingRequests.Count, partySheet, scale, labelHeight);
-        DrawActionButton(new Vector2(origin.X + slot * 2.5f, centerY), radius, FontAwesomeIcon.Tv,
-            Loc.T(L.AetherStream.Screen), 0, screenSheet, scale, labelHeight);
+        DrawActionButton("aetherstream.action.upNext", new Vector2(origin.X + slot * 0.5f, centerY), radius,
+            FontAwesomeIcon.ListUl, Loc.T(L.AetherStream.UpNext), QueueBadgeCount(), upNextSheet, scale, labelHeight);
+        DrawActionButton("aetherstream.action.party", new Vector2(origin.X + slot * 1.5f, centerY), radius,
+            FontAwesomeIcon.UserFriends, Loc.T(L.AetherStream.Party), watchAlong.PendingRequests.Count, partySheet,
+            scale, labelHeight);
+        DrawActionButton("aetherstream.action.screen", new Vector2(origin.X + slot * 2.5f, centerY), radius,
+            FontAwesomeIcon.Tv, Loc.T(L.AetherStream.Screen), 0, screenSheet, scale, labelHeight);
 
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, rowHeight));
@@ -380,15 +436,16 @@ internal sealed partial class AetherStreamApp
 
     private int QueueBadgeCount() => watchAlong.IsViewing ? watchAlong.HostQueue.Count : queue.Entries.Count;
 
-    private void DrawActionButton(Vector2 center, float radius, FontAwesomeIcon icon, string label, int badge,
-        SheetSurface sheet, float scale, float labelHeight)
+    private void DrawActionButton(string id, Vector2 center, float radius, FontAwesomeIcon icon, string label,
+        int badge, SheetSurface sheet, float scale, float labelHeight)
     {
         var drawList = ImGui.GetWindowDrawList();
         var active = sheet.IsOpen;
         var background = active ? Palette.WithAlpha(ui.Accent, 0.22f) : ui.FieldSurface;
         var ink = active ? ui.Accent : ui.TitleInk;
 
-        if (ui.IconButton(center, radius, icon.ToIconString(), ink, background, 0.5f))
+        if (HoverButton.Circle(drawList, id, center, radius, icon, background, ink, ImGui.GetIO().DeltaTime, 1f,
+                true))
         {
             upNextSheet.Close();
             partySheet.Close();
@@ -420,13 +477,15 @@ internal sealed partial class AetherStreamApp
         var submitted = SubmitField.Draw(fieldRect, "##aetherstreamUrl", hint, ref urlInput, accentedTheme, 2000,
             FontAwesomeIcon.Link);
 
+        var drawList = ImGui.GetWindowDrawList();
+        var delta = ImGui.GetIO().DeltaTime;
         var canSubmit = urlInput.Trim().Length > 0;
         var sendCenter = new Vector2(origin.X + width - sendRadius, origin.Y + fieldRowHeight * 0.5f);
         var sendIcon = suggesting ? FontAwesomeIcon.PaperPlane : FontAwesomeIcon.ArrowUp;
         var sendBackground = canSubmit ? ui.Accent : Palette.WithAlpha(ui.Accent, 0.35f);
         var sendInk = canSubmit ? WhiteInk : Palette.WithAlpha(WhiteInk, 0.6f);
-        if (ui.IconButton(sendCenter, sendRadius, sendIcon.ToIconString(), sendInk, sendBackground, 0.6f) &&
-            canSubmit)
+        if (HoverButton.Circle(drawList, "aetherstream.composer.send", sendCenter, sendRadius, sendIcon,
+                sendBackground, sendInk, delta, 1f, canSubmit) && canSubmit)
         {
             submitted = true;
         }
@@ -439,8 +498,9 @@ internal sealed partial class AetherStreamApp
         var rowHeight = 34f * scale;
         var circleRadius = rowHeight * 0.5f;
         var pasteCenter = new Vector2(rowOrigin.X + circleRadius, rowOrigin.Y + circleRadius);
-        if (ui.IconButton(pasteCenter, circleRadius, FontAwesomeIcon.Paste.ToIconString(), ui.TitleInk,
-                ui.FieldSurface, 0.5f))
+        if (HoverButton.Circle(drawList, "aetherstream.composer.paste", pasteCenter, circleRadius,
+                FontAwesomeIcon.Paste, ui.FieldSurface, ui.TitleInk, delta, 1f, true,
+                Loc.T(L.AetherStream.PasteClipboard), HoverLabelSide.Above))
         {
             var clipboard = ImGui.GetClipboardText();
             if (!string.IsNullOrWhiteSpace(clipboard))
@@ -453,8 +513,9 @@ internal sealed partial class AetherStreamApp
         {
             var folderCenter = new Vector2(pasteCenter.X + circleRadius * 2f + Metrics.Space.Sm * scale,
                 rowOrigin.Y + circleRadius);
-            if (ui.IconButton(folderCenter, circleRadius, FontAwesomeIcon.FolderOpen.ToIconString(), ui.TitleInk,
-                    ui.FieldSurface, 0.5f, Loc.T(L.AetherStream.BrowseLocalFile)))
+            if (HoverButton.Circle(drawList, "aetherstream.composer.browse", folderCenter, circleRadius,
+                    FontAwesomeIcon.FolderOpen, ui.FieldSurface, ui.TitleInk, delta, 1f, true,
+                    Loc.T(L.AetherStream.BrowseLocalFile), HoverLabelSide.Above))
             {
                 FilePicker.PickVideo(Loc.T(L.AetherStream.BrowseLocalFile),
                     path => Interlocked.Exchange(ref pendingLocalFile, path));

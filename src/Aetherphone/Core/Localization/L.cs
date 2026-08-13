@@ -3289,6 +3289,10 @@ internal static class L
         public static readonly LocString UrlHint = new("aetherstream.urlHint", "Paste a video URL or YouTube link");
         public static readonly LocString BrowseLocalFile = new("aetherstream.browseLocalFile", "Play a local file");
         public static readonly LocString LocalFileSource = new("aetherstream.localFileSource", "Local file");
+        public static readonly LocString PasteClipboard = new("aetherstream.pasteClipboard",
+            "Paste from clipboard");
+        public static readonly LocString Fullscreen = new("aetherstream.fullscreen", "Fullscreen");
+        public static readonly LocString ExitFullscreen = new("aetherstream.exitFullscreen", "Exit fullscreen");
         public static readonly LocString WatchingHostLabel = new("aetherstream.watchingHostLabel", "Host");
         public static readonly LocString WatchingSectionLabel = new("aetherstream.watchingSectionLabel", "Watching");
         public static readonly LocString PlayNow = new("aetherstream.playNow", "Play Now");

@@ -85,6 +85,7 @@ internal sealed partial class AetherStreamApp : IPhoneApp
 
     public void OnClosed()
     {
+        ExitTheater();
         router.Reset();
         upNextSheet.Close();
         partySheet.Close();
@@ -99,6 +100,17 @@ internal sealed partial class AetherStreamApp : IPhoneApp
         var scale = UiScale.Current;
         var screenRect = SceneChrome.ScreenFrom(context.Content, context.Theme, scale);
         ui.Backdrop(screenRect);
+        if (TheaterActive && !video.HasMedia && CurrentEntry is null)
+        {
+            ExitTheater();
+        }
+
+        if (TheaterActive && screenRect.IsLandscape())
+        {
+            DrawTheater(screenRect, scale);
+            return;
+        }
+
         var localContext = context;
         router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, (screenState, area, _) =>
         {
@@ -150,8 +162,9 @@ internal sealed partial class AetherStreamApp : IPhoneApp
             area.Min.Y + AppHeader.Height * scale * 0.5f);
         UiAnchors.Report("aetherstream.settings", new Rect(center - new Vector2(radius, radius),
             center + new Vector2(radius, radius)));
-        if (ui.IconButton(center, radius, FontAwesomeIcon.Cog.ToIconString(), ui.TitleInk,
-                Palette.WithAlpha(ui.TitleInk, 0.12f), 0.55f))
+        if (HoverButton.Circle(ImGui.GetWindowDrawList(), "aetherstream.header.settings", center, radius,
+                FontAwesomeIcon.Cog, Palette.WithAlpha(ui.TitleInk, 0.12f), ui.TitleInk, ImGui.GetIO().DeltaTime, 1f,
+                true))
         {
             router.Push(AetherStreamScreen.Settings);
         }

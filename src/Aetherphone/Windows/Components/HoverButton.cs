@@ -16,6 +16,7 @@ internal static class HoverButton
 {
     private const float HoverSmoothTime = 0.11f;
     private const float GrowAmount = 0.14f;
+    private const float GhostHoverFillAlpha = 0.12f;
     private static readonly Dictionary<string, Spring> springs = new();
 
     public static bool Circle(ImDrawListPtr dl, string id, Vector2 center, float radius, FontAwesomeIcon icon,
@@ -29,8 +30,11 @@ internal static class HoverButton
         var eased = Step(id, hovered, delta);
         var grow = 1f + GrowAmount * eased;
         var scaledRadius = radius * grow;
-        var fill = Palette.Lighten(tint, 0.10f * eased);
-        var circleAlpha = Math.Clamp(tint.W * (1f + 0.7f * eased), 0f, 1f) * alpha;
+        var ghost = tint.W <= 0f;
+        var fill = ghost ? ink : Palette.Lighten(tint, 0.10f * eased);
+        var circleAlpha = ghost
+            ? GhostHoverFillAlpha * eased * alpha
+            : Math.Clamp(tint.W * (1f + 0.7f * eased), 0f, 1f) * alpha;
         dl.AddCircleFilled(center, scaledRadius, ImGui.GetColorU32(Palette.WithAlpha(fill, circleAlpha)), 40);
         if (eased > 0.001f)
         {
