@@ -5731,6 +5731,10 @@ internal static class L
         public static readonly LocString MediaInvalidReference = new("failure.mediaInvalidReference", "An attachment went missing before posting. Attach it again.");
         public static readonly LocString PullToRetry = new("failure.pullToRetry", "Pull down to try again.");
         public static readonly LocString CouldNotLoad = new("failure.couldNotLoad", "Couldn't load this");
+        public static readonly LocString TokenExpired = new("failure.tokenExpired", "Your session expired. Sign in again, then try again.");
+        public static readonly LocString SessionRevoked = new("failure.sessionRevoked", "You were signed out. Sign in again to continue.");
+        public static readonly LocString SocialDisabled = new("failure.socialDisabled", "The social apps are temporarily switched off. Try again later.");
+        public static readonly LocString AppDisabled = new("failure.appDisabled", "This app is temporarily switched off. Try again later.");
         public static readonly LocString ValidationFailed = new("failure.validationFailed", "That didn't look right. Check what you entered, then try again.");
         public static readonly LocString Conflict = new("failure.conflict", "Someone else changed this first. Reopen it and try again.");
         public static readonly LocString PostNotChirp = new("failure.postNotChirp", "That only works on chirps.");

@@ -12,9 +12,10 @@ internal sealed class GramClient
         this.net = net;
     }
 
-    public Task<PostDto?> CreateAsync(string caption, string[] mediaKeys, int width, int height, PhotoTagInput[]? photoTags, CancellationToken token)
+    public Task<PostDto?> CreateAsync(string caption, string[] mediaKeys, int width, int height, PhotoTagInput[]? photoTags, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync("/grams", new CreateGramRequest(caption, mediaKeys[0], width, height, mediaKeys, photoTags), AethernetJsonContext.Default.CreateGramRequest, AethernetJsonContext.Default.PostDto, token);
+        return net.PostAsync("/grams", new CreateGramRequest(caption, mediaKeys[0], width, height, mediaKeys, photoTags), AethernetJsonContext.Default.CreateGramRequest, AethernetJsonContext.Default.PostDto, token, null, onFailure);
     }
 
     public Task<FeedPage?> FeedAsync(string scope, string? cursor, CancellationToken token,
@@ -29,7 +30,8 @@ internal sealed class GramClient
         return net.GetAsync(path, AethernetJsonContext.Default.FeedPage, token, null, onFailure);
     }
 
-    public Task<FeedPage?> UserGramsAsync(string userId, string? cursor, CancellationToken token)
+    public Task<FeedPage?> UserGramsAsync(string userId, string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         var path = $"/users/{Uri.EscapeDataString(userId)}/posts?kind=1";
         if (cursor is not null)
@@ -37,10 +39,11 @@ internal sealed class GramClient
             path += $"&cursor={Uri.EscapeDataString(cursor)}";
         }
 
-        return net.GetAsync(path, AethernetJsonContext.Default.FeedPage, token);
+        return net.GetAsync(path, AethernetJsonContext.Default.FeedPage, token, null, onFailure);
     }
 
-    public Task<FeedPage?> UserTaggedAsync(string userId, string? cursor, CancellationToken token)
+    public Task<FeedPage?> UserTaggedAsync(string userId, string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         var path = $"/users/{Uri.EscapeDataString(userId)}/tagged";
         if (cursor is not null)
@@ -48,25 +51,29 @@ internal sealed class GramClient
             path += $"?cursor={Uri.EscapeDataString(cursor)}";
         }
 
-        return net.GetAsync(path, AethernetJsonContext.Default.FeedPage, token);
+        return net.GetAsync(path, AethernetJsonContext.Default.FeedPage, token, null, onFailure);
     }
 
-    public Task<StoryDto?> CreateStoryAsync(string caption, string mediaKey, int width, int height, CancellationToken token)
+    public Task<StoryDto?> CreateStoryAsync(string caption, string mediaKey, int width, int height, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync("/stories", new CreateStoryRequest(caption, mediaKey, width, height), AethernetJsonContext.Default.CreateStoryRequest, AethernetJsonContext.Default.StoryDto, token);
+        return net.PostAsync("/stories", new CreateStoryRequest(caption, mediaKey, width, height), AethernetJsonContext.Default.CreateStoryRequest, AethernetJsonContext.Default.StoryDto, token, null, onFailure);
     }
 
-    public Task<StoryTray?> StoryTrayAsync(CancellationToken token)
+    public Task<StoryTray?> StoryTrayAsync(CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync("/stories", AethernetJsonContext.Default.StoryTray, token);
+        return net.GetAsync("/stories", AethernetJsonContext.Default.StoryTray, token, null, onFailure);
     }
 
-    public Task<StoryGroup?> UserStoriesAsync(string userId, CancellationToken token)
+    public Task<StoryGroup?> UserStoriesAsync(string userId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync($"/stories/{Uri.EscapeDataString(userId)}", AethernetJsonContext.Default.StoryGroup, token);
+        return net.GetAsync($"/stories/{Uri.EscapeDataString(userId)}", AethernetJsonContext.Default.StoryGroup, token, null, onFailure);
     }
 
-    public Task<StoryViewersPage?> StoryViewersAsync(string storyId, string? cursor, CancellationToken token)
+    public Task<StoryViewersPage?> StoryViewersAsync(string storyId, string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         var path = $"/stories/{Uri.EscapeDataString(storyId)}/views";
         if (cursor is not null)
@@ -74,16 +81,18 @@ internal sealed class GramClient
             path += $"?cursor={Uri.EscapeDataString(cursor)}";
         }
 
-        return net.GetAsync(path, AethernetJsonContext.Default.StoryViewersPage, token);
+        return net.GetAsync(path, AethernetJsonContext.Default.StoryViewersPage, token, null, onFailure);
     }
 
-    public Task<bool> MarkStoryViewedAsync(string storyId, CancellationToken token)
+    public Task<bool> MarkStoryViewedAsync(string storyId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.SendAsync(HttpMethod.Post, $"/stories/{Uri.EscapeDataString(storyId)}/view", token);
+        return net.SendAsync(HttpMethod.Post, $"/stories/{Uri.EscapeDataString(storyId)}/view", token, null, onFailure);
     }
 
-    public Task<bool> DeleteStoryAsync(string storyId, CancellationToken token)
+    public Task<bool> DeleteStoryAsync(string storyId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.SendAsync(HttpMethod.Delete, $"/stories/{Uri.EscapeDataString(storyId)}", token);
+        return net.SendAsync(HttpMethod.Delete, $"/stories/{Uri.EscapeDataString(storyId)}", token, null, onFailure);
     }
 }

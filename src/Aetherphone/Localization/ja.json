@@ -4888,5 +4888,9 @@
   "failure.patreonUnavailable": "現在Patreonを利用できません。",
   "failure.patreonAlreadyLinked": "このPatreonアカウントはすでに連携されています。",
   "failure.feedbackLength": "フィードバックは{0}文字以内にしてください。",
-  "failure.feedbackTooManyImages": "添付できる画像は最大{0}枚です。"
+  "failure.feedbackTooManyImages": "添付できる画像は最大{0}枚です。",
+  "failure.tokenExpired": "セッションの有効期限が切れました。もう一度サインインしてください。",
+  "failure.sessionRevoked": "サインアウトされました。続けるにはもう一度サインインしてください。",
+  "failure.socialDisabled": "ソーシャルアプリは一時的に停止しています。しばらくしてからお試しください。",
+  "failure.appDisabled": "このアプリは一時的に停止しています。しばらくしてからお試しください。"
 }

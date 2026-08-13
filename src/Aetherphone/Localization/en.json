@@ -4888,5 +4888,9 @@
   "failure.patreonUnavailable": "Patreon is unavailable right now.",
   "failure.patreonAlreadyLinked": "That Patreon account is already linked.",
   "failure.feedbackLength": "Keep your feedback to {0} characters.",
-  "failure.feedbackTooManyImages": "You can attach at most {0} images."
+  "failure.feedbackTooManyImages": "You can attach at most {0} images.",
+  "failure.tokenExpired": "Your session expired. Sign in again, then try again.",
+  "failure.sessionRevoked": "You were signed out. Sign in again to continue.",
+  "failure.socialDisabled": "The social apps are temporarily switched off. Try again later.",
+  "failure.appDisabled": "This app is temporarily switched off. Try again later."
 }

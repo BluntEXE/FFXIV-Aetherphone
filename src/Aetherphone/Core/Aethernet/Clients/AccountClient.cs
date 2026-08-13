@@ -1,4 +1,5 @@
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Aethernet.Clients;
 
@@ -11,9 +12,9 @@ internal sealed class AccountClient
         this.net = net;
     }
 
-    public Task<UserDto?> MeAsync(CancellationToken token)
+    public Task<UserDto?> MeAsync(CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync("/me", AethernetJsonContext.Default.UserDto, token);
+        return net.GetAsync("/me", AethernetJsonContext.Default.UserDto, token, null, onFailure);
     }
 
     public Task<UserDto?> MeWithBearerAsync(string bearer, CancellationToken token)
@@ -47,92 +48,104 @@ internal sealed class AccountClient
     }
 
     public Task<UserDto?> UpdateProfileAsync(UpdateProfileRequest request, CancellationToken token,
-        Action<int>? onStatus = null)
+        Action<int>? onStatus = null, Action<AepFailure>? onFailure = null)
     {
-        return net.SendJsonAsync(HttpMethod.Patch, "/me", request, AethernetJsonContext.Default.UpdateProfileRequest, AethernetJsonContext.Default.UserDto, token, onStatus);
+        return net.SendJsonAsync(HttpMethod.Patch, "/me", request, AethernetJsonContext.Default.UpdateProfileRequest, AethernetJsonContext.Default.UserDto, token, onStatus, onFailure);
     }
 
-    public Task<UserDto?> UpdateTimeZoneAsync(UpdateTimeZoneRequest request, CancellationToken token)
+    public Task<UserDto?> UpdateTimeZoneAsync(UpdateTimeZoneRequest request, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync("/me/timezone", request, AethernetJsonContext.Default.UpdateTimeZoneRequest, AethernetJsonContext.Default.UserDto, token);
+        return net.PostAsync("/me/timezone", request, AethernetJsonContext.Default.UpdateTimeZoneRequest, AethernetJsonContext.Default.UserDto, token, null, onFailure);
     }
 
-    public Task<UserDto?> UpdateRegionAsync(string region, CancellationToken token)
+    public Task<UserDto?> UpdateRegionAsync(string region, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync("/me/region", new UpdateRegionRequest(region), AethernetJsonContext.Default.UpdateRegionRequest, AethernetJsonContext.Default.UserDto, token);
+        return net.PostAsync("/me/region", new UpdateRegionRequest(region), AethernetJsonContext.Default.UpdateRegionRequest, AethernetJsonContext.Default.UserDto, token, null, onFailure);
     }
 
-    public Task<UserDto?> UpdateMentionPrivacyAsync(int policy, CancellationToken token)
+    public Task<UserDto?> UpdateMentionPrivacyAsync(int policy, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync("/me/mention-privacy", new UpdateMentionPrivacyRequest(policy), AethernetJsonContext.Default.UpdateMentionPrivacyRequest, AethernetJsonContext.Default.UserDto, token);
+        return net.PostAsync("/me/mention-privacy", new UpdateMentionPrivacyRequest(policy), AethernetJsonContext.Default.UpdateMentionPrivacyRequest, AethernetJsonContext.Default.UserDto, token, null, onFailure);
     }
 
-    public Task<UserDto?> UpdateMessagePrivacyAsync(int policy, CancellationToken token)
+    public Task<UserDto?> UpdateMessagePrivacyAsync(int policy, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync("/me/message-privacy", new UpdateMessagePrivacyRequest(policy), AethernetJsonContext.Default.UpdateMessagePrivacyRequest, AethernetJsonContext.Default.UserDto, token);
+        return net.PostAsync("/me/message-privacy", new UpdateMessagePrivacyRequest(policy), AethernetJsonContext.Default.UpdateMessagePrivacyRequest, AethernetJsonContext.Default.UserDto, token, null, onFailure);
     }
 
-    public Task<UserDto?> UpdateChatPrivacyAsync(UpdateChatPrivacyRequest request, CancellationToken token)
+    public Task<UserDto?> UpdateChatPrivacyAsync(UpdateChatPrivacyRequest request, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync("/me/chat-privacy", request, AethernetJsonContext.Default.UpdateChatPrivacyRequest, AethernetJsonContext.Default.UserDto, token);
+        return net.PostAsync("/me/chat-privacy", request, AethernetJsonContext.Default.UpdateChatPrivacyRequest, AethernetJsonContext.Default.UserDto, token, null, onFailure);
     }
 
-    public Task<UserDto?> UpdateBadgesAsync(int equipped, CancellationToken token)
+    public Task<UserDto?> UpdateBadgesAsync(int equipped, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync("/me/badges", new UpdateBadgeLoadoutRequest(equipped), AethernetJsonContext.Default.UpdateBadgeLoadoutRequest, AethernetJsonContext.Default.UserDto, token);
+        return net.PostAsync("/me/badges", new UpdateBadgeLoadoutRequest(equipped), AethernetJsonContext.Default.UpdateBadgeLoadoutRequest, AethernetJsonContext.Default.UserDto, token, null, onFailure);
     }
 
-    public Task<BadgeCatalogDto?> BadgeCatalogAsync(CancellationToken token)
+    public Task<BadgeCatalogDto?> BadgeCatalogAsync(CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync("/badges/catalog", AethernetJsonContext.Default.BadgeCatalogDto, token);
+        return net.GetAsync("/badges/catalog", AethernetJsonContext.Default.BadgeCatalogDto, token, null, onFailure);
     }
 
-    public Task<AwardedBadgesDto?> AwardedBadgesAsync(CancellationToken token)
+    public Task<AwardedBadgesDto?> AwardedBadgesAsync(CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync("/me/badges/awarded", AethernetJsonContext.Default.AwardedBadgesDto, token);
+        return net.GetAsync("/me/badges/awarded", AethernetJsonContext.Default.AwardedBadgesDto, token, null, onFailure);
     }
 
-    public Task<BadgeDescriptorDto?> SetBadgeVisibilityAsync(string badgeId, bool hidden, CancellationToken token)
+    public Task<BadgeDescriptorDto?> SetBadgeVisibilityAsync(string badgeId, bool hidden, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync("/me/badges/awarded/" + badgeId, new UpdateBadgeVisibilityRequest(hidden), AethernetJsonContext.Default.UpdateBadgeVisibilityRequest, AethernetJsonContext.Default.BadgeDescriptorDto, token);
+        return net.PostAsync("/me/badges/awarded/" + badgeId, new UpdateBadgeVisibilityRequest(hidden), AethernetJsonContext.Default.UpdateBadgeVisibilityRequest, AethernetJsonContext.Default.BadgeDescriptorDto, token, null, onFailure);
     }
 
-    public Task<UserDto?> UpdateAccountPrivacyAsync(bool isPrivate, CancellationToken token)
+    public Task<UserDto?> UpdateAccountPrivacyAsync(bool isPrivate, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync("/me/account-privacy", new UpdateAccountPrivacyRequest(isPrivate), AethernetJsonContext.Default.UpdateAccountPrivacyRequest, AethernetJsonContext.Default.UserDto, token);
+        return net.PostAsync("/me/account-privacy", new UpdateAccountPrivacyRequest(isPrivate), AethernetJsonContext.Default.UpdateAccountPrivacyRequest, AethernetJsonContext.Default.UserDto, token, null, onFailure);
     }
 
-    public Task<UserDto?> UpdateTagPrivacyAsync(int? tagPolicy, bool? requireApproval, CancellationToken token)
+    public Task<UserDto?> UpdateTagPrivacyAsync(int? tagPolicy, bool? requireApproval, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync("/me/tag-privacy", new UpdateTagPrivacyRequest(tagPolicy, requireApproval), AethernetJsonContext.Default.UpdateTagPrivacyRequest, AethernetJsonContext.Default.UserDto, token);
+        return net.PostAsync("/me/tag-privacy", new UpdateTagPrivacyRequest(tagPolicy, requireApproval), AethernetJsonContext.Default.UpdateTagPrivacyRequest, AethernetJsonContext.Default.UserDto, token, null, onFailure);
     }
 
-    public Task<bool> DeleteAsync(CancellationToken token)
+    public Task<bool> DeleteAsync(CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return net.SendAsync(HttpMethod.Delete, "/me", token);
+        return net.SendAsync(HttpMethod.Delete, "/me", token, null, onFailure);
     }
 
-    public Task<UserDto?> UserAsync(string userId, CancellationToken token)
+    public Task<UserDto?> UserAsync(string userId, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync($"/users/{Uri.EscapeDataString(userId)}", AethernetJsonContext.Default.UserDto, token);
+        return net.GetAsync($"/users/{Uri.EscapeDataString(userId)}", AethernetJsonContext.Default.UserDto, token, null, onFailure);
     }
 
-    public Task<UserSearchResult?> SearchAsync(string query, CancellationToken token)
+    public Task<UserSearchResult?> SearchAsync(string query, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync($"/users/search?q={Uri.EscapeDataString(query)}", AethernetJsonContext.Default.UserSearchResult, token);
+        return net.GetAsync($"/users/search?q={Uri.EscapeDataString(query)}", AethernetJsonContext.Default.UserSearchResult, token, null, onFailure);
     }
 
-    public Task<MentionSuggestResult?> MentionSuggestAsync(string query, CancellationToken token)
+    public Task<MentionSuggestResult?> MentionSuggestAsync(string query, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync($"/users/mention-suggest?q={Uri.EscapeDataString(query)}", AethernetJsonContext.Default.MentionSuggestResult, token);
+        return net.GetAsync($"/users/mention-suggest?q={Uri.EscapeDataString(query)}", AethernetJsonContext.Default.MentionSuggestResult, token, null, onFailure);
     }
 
-    public Task<NotificationPage?> NotificationsAsync(CancellationToken token)
+    public Task<NotificationPage?> NotificationsAsync(CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync("/notifications", AethernetJsonContext.Default.NotificationPage, token);
+        return net.GetAsync("/notifications", AethernetJsonContext.Default.NotificationPage, token, null, onFailure);
     }
 
-    public Task<NotificationPage?> NotificationsAsync(string app, string? cursor, CancellationToken token)
+    public Task<NotificationPage?> NotificationsAsync(string app, string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         var path = $"/notifications?app={Uri.EscapeDataString(app)}";
         if (cursor is not null)
@@ -140,40 +153,46 @@ internal sealed class AccountClient
             path += $"&cursor={Uri.EscapeDataString(cursor)}";
         }
 
-        return net.GetAsync(path, AethernetJsonContext.Default.NotificationPage, token);
+        return net.GetAsync(path, AethernetJsonContext.Default.NotificationPage, token, null, onFailure);
     }
 
-    public Task<NotificationReadResult?> MarkNotificationsReadAsync(long upToUnix, string? app, CancellationToken token)
+    public Task<NotificationReadResult?> MarkNotificationsReadAsync(long upToUnix, string? app, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync("/notifications/read", new NotificationReadRequest(upToUnix, app),
-            AethernetJsonContext.Default.NotificationReadRequest, AethernetJsonContext.Default.NotificationReadResult, token);
+            AethernetJsonContext.Default.NotificationReadRequest, AethernetJsonContext.Default.NotificationReadResult, token, null, onFailure);
     }
 
-    public Task<ModerationNoticePage?> NoticesAsync(string? cursor, CancellationToken token)
+    public Task<ModerationNoticePage?> NoticesAsync(string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         var path = cursor is null ? "/notices" : $"/notices?cursor={Uri.EscapeDataString(cursor)}";
-        return net.GetAsync(path, AethernetJsonContext.Default.ModerationNoticePage, token);
+        return net.GetAsync(path, AethernetJsonContext.Default.ModerationNoticePage, token, null, onFailure);
     }
 
-    public Task<bool> AcknowledgeNoticeAsync(string noticeId, CancellationToken token)
+    public Task<bool> AcknowledgeNoticeAsync(string noticeId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.SendAsync(HttpMethod.Post, $"/notices/{Uri.EscapeDataString(noticeId)}/ack", token);
+        return net.SendAsync(HttpMethod.Post, $"/notices/{Uri.EscapeDataString(noticeId)}/ack", token, null, onFailure);
     }
 
-    public Task<PatreonLinkStartResponse?> StartPatreonLinkAsync(CancellationToken token, Action<int>? onStatus = null)
+    public Task<PatreonLinkStartResponse?> StartPatreonLinkAsync(CancellationToken token, Action<int>? onStatus = null,
+        Action<AepFailure>? onFailure = null)
     {
         return net.RequestAsync(HttpMethod.Post, "/patreon/link/start",
-            AethernetJsonContext.Default.PatreonLinkStartResponse, token, onStatus);
+            AethernetJsonContext.Default.PatreonLinkStartResponse, token, onStatus, onFailure);
     }
 
-    public Task<PatreonLinkStatusResponse?> PatreonLinkStatusAsync(CancellationToken token, Action<int>? onStatus = null)
+    public Task<PatreonLinkStatusResponse?> PatreonLinkStatusAsync(CancellationToken token, Action<int>? onStatus = null,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync("/patreon/link", AethernetJsonContext.Default.PatreonLinkStatusResponse, token, onStatus);
+        return net.GetAsync("/patreon/link", AethernetJsonContext.Default.PatreonLinkStatusResponse, token, onStatus, onFailure);
     }
 
-    public Task<PatreonLinkStatusResponse?> UnlinkPatreonAsync(CancellationToken token)
+    public Task<PatreonLinkStatusResponse?> UnlinkPatreonAsync(CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         return net.RequestAsync(HttpMethod.Delete, "/patreon/link",
-            AethernetJsonContext.Default.PatreonLinkStatusResponse, token);
+            AethernetJsonContext.Default.PatreonLinkStatusResponse, token, null, onFailure);
     }
 }

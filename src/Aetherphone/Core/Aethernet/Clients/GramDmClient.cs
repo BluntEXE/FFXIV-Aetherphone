@@ -24,7 +24,8 @@ internal sealed class GramDmClient
         return net.GetAsync(path, AethernetJsonContext.Default.GramThreadPage, token, null, onFailure);
     }
 
-    public Task<GramMessagePage?> MessagesAsync(string threadId, string? cursor, CancellationToken token)
+    public Task<GramMessagePage?> MessagesAsync(string threadId, string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         var path = $"/gram/threads/{Uri.EscapeDataString(threadId)}/messages";
         if (cursor is not null)
@@ -32,56 +33,66 @@ internal sealed class GramDmClient
             path += $"?cursor={Uri.EscapeDataString(cursor)}";
         }
 
-        return net.GetAsync(path, AethernetJsonContext.Default.GramMessagePage, token);
+        return net.GetAsync(path, AethernetJsonContext.Default.GramMessagePage, token, null, onFailure);
     }
 
-    public Task<GramMessageDto?> SendMessageAsync(string threadId, string body, int kind, CancellationToken token, string? mediaKey = null, int mediaWidth = 0, int mediaHeight = 0, int encVersion = 0, string? commitmentTag = null, string? replyToId = null, int durationSecs = 0, string? storyId = null)
+    public Task<GramMessageDto?> SendMessageAsync(string threadId, string body, int kind, CancellationToken token, string? mediaKey = null, int mediaWidth = 0, int mediaHeight = 0, int encVersion = 0, string? commitmentTag = null, string? replyToId = null, int durationSecs = 0, string? storyId = null,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync($"/gram/threads/{Uri.EscapeDataString(threadId)}/messages", new SendGramMessageRequest(body, kind, mediaKey, mediaWidth, mediaHeight, encVersion, commitmentTag, replyToId, durationSecs, storyId), AethernetJsonContext.Default.SendGramMessageRequest, AethernetJsonContext.Default.GramMessageDto, token);
+        return net.PostAsync($"/gram/threads/{Uri.EscapeDataString(threadId)}/messages", new SendGramMessageRequest(body, kind, mediaKey, mediaWidth, mediaHeight, encVersion, commitmentTag, replyToId, durationSecs, storyId), AethernetJsonContext.Default.SendGramMessageRequest, AethernetJsonContext.Default.GramMessageDto, token, null, onFailure);
     }
 
-    public Task<bool> SetReactionAsync(string messageId, string reactionToken, CancellationToken token)
+    public Task<bool> SetReactionAsync(string messageId, string reactionToken, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.SendJsonForStatusAsync(HttpMethod.Post, $"/gram/messages/{Uri.EscapeDataString(messageId)}/reactions", new SetReactionRequest(reactionToken), AethernetJsonContext.Default.SetReactionRequest, token);
+        return net.SendJsonForStatusAsync(HttpMethod.Post, $"/gram/messages/{Uri.EscapeDataString(messageId)}/reactions", new SetReactionRequest(reactionToken), AethernetJsonContext.Default.SetReactionRequest, token, null, onFailure);
     }
 
-    public Task<ReactionListDto?> ReactionsAsync(string messageId, CancellationToken token)
+    public Task<ReactionListDto?> ReactionsAsync(string messageId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync($"/gram/messages/{Uri.EscapeDataString(messageId)}/reactions", AethernetJsonContext.Default.ReactionListDto, token);
+        return net.GetAsync($"/gram/messages/{Uri.EscapeDataString(messageId)}/reactions", AethernetJsonContext.Default.ReactionListDto, token, null, onFailure);
     }
 
-    public Task<GramMessageDto?> EditMessageAsync(string messageId, string body, CancellationToken token, int encVersion = 0, string? commitmentTag = null)
+    public Task<GramMessageDto?> EditMessageAsync(string messageId, string body, CancellationToken token, int encVersion = 0, string? commitmentTag = null,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.SendJsonAsync(HttpMethod.Patch, $"/gram/messages/{Uri.EscapeDataString(messageId)}", new EditChatMessageRequest(body, encVersion, commitmentTag), AethernetJsonContext.Default.EditChatMessageRequest, AethernetJsonContext.Default.GramMessageDto, token);
+        return net.SendJsonAsync(HttpMethod.Patch, $"/gram/messages/{Uri.EscapeDataString(messageId)}", new EditChatMessageRequest(body, encVersion, commitmentTag), AethernetJsonContext.Default.EditChatMessageRequest, AethernetJsonContext.Default.GramMessageDto, token, null, onFailure);
     }
 
-    public Task<bool> DeleteMessageAsync(string messageId, CancellationToken token)
+    public Task<bool> DeleteMessageAsync(string messageId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.SendAsync(HttpMethod.Delete, $"/gram/messages/{Uri.EscapeDataString(messageId)}", token);
+        return net.SendAsync(HttpMethod.Delete, $"/gram/messages/{Uri.EscapeDataString(messageId)}", token, null, onFailure);
     }
 
-    public Task<bool> AcceptThreadAsync(string otherId, CancellationToken token)
+    public Task<bool> AcceptThreadAsync(string otherId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.SendAsync(HttpMethod.Post, $"/gram/threads/{Uri.EscapeDataString(otherId)}/accept", token);
+        return net.SendAsync(HttpMethod.Post, $"/gram/threads/{Uri.EscapeDataString(otherId)}/accept", token, null, onFailure);
     }
 
-    public Task<bool> DeleteThreadAsync(string otherId, CancellationToken token)
+    public Task<bool> DeleteThreadAsync(string otherId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.SendAsync(HttpMethod.Delete, $"/gram/threads/{Uri.EscapeDataString(otherId)}", token);
+        return net.SendAsync(HttpMethod.Delete, $"/gram/threads/{Uri.EscapeDataString(otherId)}", token, null, onFailure);
     }
 
-    public Task<bool> SendTypingAsync(string userId, CancellationToken token)
+    public Task<bool> SendTypingAsync(string userId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.SendAsync(HttpMethod.Post, $"/gram/threads/{Uri.EscapeDataString(userId)}/typing", token);
+        return net.SendAsync(HttpMethod.Post, $"/gram/threads/{Uri.EscapeDataString(userId)}/typing", token, null, onFailure);
     }
 
-    public Task<GramTypingDto?> TypingAsync(string userId, CancellationToken token)
+    public Task<GramTypingDto?> TypingAsync(string userId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync($"/gram/threads/{Uri.EscapeDataString(userId)}/typing", AethernetJsonContext.Default.GramTypingDto, token);
+        return net.GetAsync($"/gram/threads/{Uri.EscapeDataString(userId)}/typing", AethernetJsonContext.Default.GramTypingDto, token, null, onFailure);
     }
 
-    public Task<GramMediaUrlDto?> DmMediaUrlAsync(string messageId, CancellationToken token)
+    public Task<GramMediaUrlDto?> DmMediaUrlAsync(string messageId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync($"/gram/media/dm/{Uri.EscapeDataString(messageId)}/url", AethernetJsonContext.Default.GramMediaUrlDto, token);
+        return net.GetAsync($"/gram/media/dm/{Uri.EscapeDataString(messageId)}/url", AethernetJsonContext.Default.GramMediaUrlDto, token, null, onFailure);
     }
 }

@@ -4888,5 +4888,9 @@
   "failure.patreonUnavailable": "O Patreon está indisponível agora.",
   "failure.patreonAlreadyLinked": "Essa conta do Patreon já está vinculada.",
   "failure.feedbackLength": "Use no máximo {0} caracteres nos comentários.",
-  "failure.feedbackTooManyImages": "Você pode anexar no máximo {0} imagens."
+  "failure.feedbackTooManyImages": "Você pode anexar no máximo {0} imagens.",
+  "failure.tokenExpired": "Sua sessão expirou. Entre novamente e tente de novo.",
+  "failure.sessionRevoked": "Você foi desconectado. Entre novamente para continuar.",
+  "failure.socialDisabled": "Os apps sociais estão desativados temporariamente. Tente mais tarde.",
+  "failure.appDisabled": "Este app está desativado temporariamente. Tente mais tarde."
 }

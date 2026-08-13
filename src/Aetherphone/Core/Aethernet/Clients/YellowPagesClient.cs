@@ -1,5 +1,6 @@
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Crypto;
+using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Aethernet.Clients;
 
@@ -12,44 +13,50 @@ internal sealed class YellowPagesClient
         this.net = net;
     }
 
-    public Task<AdDto?> CreateAsync(CreateAdRequest request, CancellationToken token, Action<int>? statusSink = null)
+    public Task<AdDto?> CreateAsync(CreateAdRequest request, CancellationToken token, Action<int>? statusSink = null,
+        Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync("/ads/", request, AethernetJsonContext.Default.CreateAdRequest,
-            AethernetJsonContext.Default.AdDto, token, statusSink);
+            AethernetJsonContext.Default.AdDto, token, statusSink, onFailure);
     }
 
     public Task<AdDto?> UpdateAsync(string adId, CreateAdRequest request, CancellationToken token,
-        Action<int>? statusSink = null)
+        Action<int>? statusSink = null, Action<AepFailure>? onFailure = null)
     {
         return net.SendJsonAsync(HttpMethod.Put, $"/ads/{Uri.EscapeDataString(adId)}", request,
-            AethernetJsonContext.Default.CreateAdRequest, AethernetJsonContext.Default.AdDto, token, statusSink);
+            AethernetJsonContext.Default.CreateAdRequest, AethernetJsonContext.Default.AdDto, token, statusSink,
+            onFailure);
     }
 
-    public Task<bool> DeleteAsync(string adId, CancellationToken token)
+    public Task<bool> DeleteAsync(string adId, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return net.SendAsync(HttpMethod.Delete, $"/ads/{Uri.EscapeDataString(adId)}", token);
+        return net.SendAsync(HttpMethod.Delete, $"/ads/{Uri.EscapeDataString(adId)}", token, null, onFailure);
     }
 
-    public Task<AdDto?> RenewAsync(string adId, CancellationToken token, Action<int>? statusSink = null)
+    public Task<AdDto?> RenewAsync(string adId, CancellationToken token, Action<int>? statusSink = null,
+        Action<AepFailure>? onFailure = null)
     {
         return net.RequestAsync(HttpMethod.Post, $"/ads/{Uri.EscapeDataString(adId)}/renew",
-            AethernetJsonContext.Default.AdDto, token, statusSink);
+            AethernetJsonContext.Default.AdDto, token, statusSink, onFailure);
     }
 
-    public Task<SetAdOpenResult?> OpenAsync(string adId, bool open, int minutes, CancellationToken token)
+    public Task<SetAdOpenResult?> OpenAsync(string adId, bool open, int minutes, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync($"/ads/{Uri.EscapeDataString(adId)}/open", new SetAdOpenRequest(open, minutes),
-            AethernetJsonContext.Default.SetAdOpenRequest, AethernetJsonContext.Default.SetAdOpenResult, token);
+            AethernetJsonContext.Default.SetAdOpenRequest, AethernetJsonContext.Default.SetAdOpenResult, token, null,
+            onFailure);
     }
 
-    public Task<bool> SaveAsync(string adId, bool saved, CancellationToken token)
+    public Task<bool> SaveAsync(string adId, bool saved, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         return net.SendJsonForStatusAsync(HttpMethod.Post, $"/ads/{Uri.EscapeDataString(adId)}/save",
-            new SetAdSavedRequest(saved), AethernetJsonContext.Default.SetAdSavedRequest, token);
+            new SetAdSavedRequest(saved), AethernetJsonContext.Default.SetAdSavedRequest, token, null, onFailure);
     }
 
     public Task<AdPage?> DirectoryAsync(int categories, int regions, int dataCenterId, bool openNow, bool afterDark,
-        string? search, string? cursor, CancellationToken token)
+        string? search, string? cursor, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         var path = $"/ads/?categories={categories}&regions={regions}&dc={dataCenterId}"
             + $"&openNow={(openNow ? "true" : "false")}&afterDark={(afterDark ? "true" : "false")}";
@@ -63,15 +70,15 @@ internal sealed class YellowPagesClient
             path += $"&cursor={Uri.EscapeDataString(cursor)}";
         }
 
-        return net.GetAsync(path, AethernetJsonContext.Default.AdPage, token);
+        return net.GetAsync(path, AethernetJsonContext.Default.AdPage, token, null, onFailure);
     }
 
-    public Task<AdPage?> MineAsync(CancellationToken token)
+    public Task<AdPage?> MineAsync(CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync("/ads/mine", AethernetJsonContext.Default.AdPage, token);
+        return net.GetAsync("/ads/mine", AethernetJsonContext.Default.AdPage, token, null, onFailure);
     }
 
-    public Task<AdPage?> SavedAsync(string? cursor, CancellationToken token)
+    public Task<AdPage?> SavedAsync(string? cursor, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         var path = "/ads/saved";
         if (cursor is not null)
@@ -79,24 +86,26 @@ internal sealed class YellowPagesClient
             path += $"?cursor={Uri.EscapeDataString(cursor)}";
         }
 
-        return net.GetAsync(path, AethernetJsonContext.Default.AdPage, token);
+        return net.GetAsync(path, AethernetJsonContext.Default.AdPage, token, null, onFailure);
     }
 
-    public Task<AdDto?> GetAsync(string adId, CancellationToken token)
+    public Task<AdDto?> GetAsync(string adId, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync($"/ads/{Uri.EscapeDataString(adId)}", AethernetJsonContext.Default.AdDto, token);
+        return net.GetAsync($"/ads/{Uri.EscapeDataString(adId)}", AethernetJsonContext.Default.AdDto, token, null,
+            onFailure);
     }
 
     public Task<AdInquiryDto?> OpenInquiryAsync(string adId, string envelope, string commitmentTag,
-        CancellationToken token, Action<int>? statusSink = null)
+        CancellationToken token, Action<int>? statusSink = null, Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync($"/ads/{Uri.EscapeDataString(adId)}/inquiries",
             new SendAdInquiryRequest(envelope, EnvelopeCodec.VersionEnvelope, commitmentTag),
             AethernetJsonContext.Default.SendAdInquiryRequest, AethernetJsonContext.Default.AdInquiryDto, token,
-            statusSink);
+            statusSink, onFailure);
     }
 
-    public Task<AdInquiryPage?> InquiriesAsync(string? cursor, CancellationToken token)
+    public Task<AdInquiryPage?> InquiriesAsync(string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         var path = "/ads/inquiries";
         if (cursor is not null)
@@ -104,10 +113,11 @@ internal sealed class YellowPagesClient
             path += $"?cursor={Uri.EscapeDataString(cursor)}";
         }
 
-        return net.GetAsync(path, AethernetJsonContext.Default.AdInquiryPage, token);
+        return net.GetAsync(path, AethernetJsonContext.Default.AdInquiryPage, token, null, onFailure);
     }
 
-    public Task<AdInquiryMessagePage?> InquiryMessagesAsync(string inquiryId, string? cursor, CancellationToken token)
+    public Task<AdInquiryMessagePage?> InquiryMessagesAsync(string inquiryId, string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         var path = $"/ads/inquiries/{Uri.EscapeDataString(inquiryId)}/messages";
         if (cursor is not null)
@@ -115,26 +125,30 @@ internal sealed class YellowPagesClient
             path += $"?cursor={Uri.EscapeDataString(cursor)}";
         }
 
-        return net.GetAsync(path, AethernetJsonContext.Default.AdInquiryMessagePage, token);
+        return net.GetAsync(path, AethernetJsonContext.Default.AdInquiryMessagePage, token, null, onFailure);
     }
 
     public Task<AdInquiryMessageDto?> SendInquiryAsync(string inquiryId, string envelope, string commitmentTag,
-        CancellationToken token)
+        CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync($"/ads/inquiries/{Uri.EscapeDataString(inquiryId)}/messages",
             new SendAdInquiryRequest(envelope, EnvelopeCodec.VersionEnvelope, commitmentTag),
             AethernetJsonContext.Default.SendAdInquiryRequest,
-            AethernetJsonContext.Default.AdInquiryMessageDto, token);
+            AethernetJsonContext.Default.AdInquiryMessageDto, token, null, onFailure);
     }
 
-    public Task<bool> DeleteInquiryMessageAsync(string inquiryId, string messageId, CancellationToken token)
+    public Task<bool> DeleteInquiryMessageAsync(string inquiryId, string messageId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         return net.SendAsync(HttpMethod.Delete,
-            $"/ads/inquiries/{Uri.EscapeDataString(inquiryId)}/messages/{Uri.EscapeDataString(messageId)}", token);
+            $"/ads/inquiries/{Uri.EscapeDataString(inquiryId)}/messages/{Uri.EscapeDataString(messageId)}", token,
+            null, onFailure);
     }
 
-    public Task<bool> MarkInquiryReadAsync(string inquiryId, CancellationToken token)
+    public Task<bool> MarkInquiryReadAsync(string inquiryId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.SendAsync(HttpMethod.Post, $"/ads/inquiries/{Uri.EscapeDataString(inquiryId)}/read", token);
+        return net.SendAsync(HttpMethod.Post, $"/ads/inquiries/{Uri.EscapeDataString(inquiryId)}/read", token, null,
+            onFailure);
     }
 }

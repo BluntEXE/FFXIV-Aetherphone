@@ -12,9 +12,10 @@ internal sealed class SafetyClient
         this.net = net;
     }
 
-    public Task<bool> ReportAsync(string targetType, string targetId, string? reason, CancellationToken token, RevealedMessageDto[]? revealedMessages = null)
+    public Task<bool> ReportAsync(string targetType, string targetId, string? reason, CancellationToken token,
+        RevealedMessageDto[]? revealedMessages = null, Action<AepFailure>? onFailure = null)
     {
-        return net.SendJsonForStatusAsync(HttpMethod.Post, "/reports", new ReportRequest(targetType, targetId, reason, revealedMessages), AethernetJsonContext.Default.ReportRequest, token);
+        return net.SendJsonForStatusAsync(HttpMethod.Post, "/reports", new ReportRequest(targetType, targetId, reason, revealedMessages), AethernetJsonContext.Default.ReportRequest, token, null, onFailure);
     }
 
     public Task<bool> BlockAsync(string userId, CancellationToken token, Action<AepFailure>? onFailure = null)
@@ -22,13 +23,13 @@ internal sealed class SafetyClient
         return net.SendAsync(HttpMethod.Post, $"/blocks/{Uri.EscapeDataString(userId)}", token, null, onFailure);
     }
 
-    public Task<bool> UnblockAsync(string userId, CancellationToken token)
+    public Task<bool> UnblockAsync(string userId, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return net.SendAsync(HttpMethod.Delete, $"/blocks/{Uri.EscapeDataString(userId)}", token);
+        return net.SendAsync(HttpMethod.Delete, $"/blocks/{Uri.EscapeDataString(userId)}", token, null, onFailure);
     }
 
-    public Task<UserSearchResult?> BlockedUsersAsync(CancellationToken token)
+    public Task<UserSearchResult?> BlockedUsersAsync(CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync("/blocks/", AethernetJsonContext.Default.UserSearchResult, token);
+        return net.GetAsync("/blocks/", AethernetJsonContext.Default.UserSearchResult, token, null, onFailure);
     }
 }

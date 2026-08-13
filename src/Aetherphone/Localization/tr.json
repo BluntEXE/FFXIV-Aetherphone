@@ -4888,5 +4888,9 @@
   "failure.patreonUnavailable": "Patreon şu anda kullanılamıyor.",
   "failure.patreonAlreadyLinked": "Bu Patreon hesabı zaten bağlı.",
   "failure.feedbackLength": "Geri bildirimin en fazla {0} karakter olabilir.",
-  "failure.feedbackTooManyImages": "En fazla {0} görsel ekleyebilirsin."
+  "failure.feedbackTooManyImages": "En fazla {0} görsel ekleyebilirsin.",
+  "failure.tokenExpired": "Oturumun sona erdi. Tekrar giriş yapıp dene.",
+  "failure.sessionRevoked": "Oturumun kapatıldı. Devam etmek için tekrar giriş yap.",
+  "failure.socialDisabled": "Sosyal uygulamalar geçici olarak kapalı. Daha sonra tekrar dene.",
+  "failure.appDisabled": "Bu uygulama geçici olarak kapalı. Daha sonra tekrar dene."
 }

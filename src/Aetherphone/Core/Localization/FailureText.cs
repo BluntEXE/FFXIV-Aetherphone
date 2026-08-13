@@ -20,6 +20,10 @@ internal static class FailureCodes
     public const string MediaInvalidReference = "media_invalid_reference";
     public const string MediaInvalidImage = "media_invalid_image";
     public const string MediaInvalidAudio = "media_invalid_audio";
+    public const string TokenExpired = "token_expired";
+    public const string SessionRevoked = "session_revoked";
+    public const string SocialDisabled = "social_disabled";
+    public const string AppDisabled = "app_disabled";
     public const string ValidationFailed = "validation_failed";
     public const string Conflict = "conflict";
     public const string PostNotChirp = "post_not_chirp";
@@ -186,6 +190,14 @@ internal static class FailureText
                 return Loc.T(L.Failure.NotFound);
             case FailureCodes.RateLimited:
                 return Loc.T(L.Failure.RateLimited);
+            case FailureCodes.TokenExpired:
+                return Loc.T(L.Failure.TokenExpired);
+            case FailureCodes.SessionRevoked:
+                return Loc.T(L.Failure.SessionRevoked);
+            case FailureCodes.SocialDisabled:
+                return Loc.T(L.Failure.SocialDisabled);
+            case FailureCodes.AppDisabled:
+                return Loc.T(L.Failure.AppDisabled);
             case FailureCodes.ValidationFailed:
                 return Loc.T(L.Failure.ValidationFailed);
             case FailureCodes.Conflict:

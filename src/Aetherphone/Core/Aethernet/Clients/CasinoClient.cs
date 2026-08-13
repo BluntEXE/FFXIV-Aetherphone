@@ -1,4 +1,5 @@
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Aethernet.Clients;
 
@@ -81,232 +82,256 @@ internal sealed class CasinoClient
         this.net = net;
     }
 
-    public Task<CasinoStateDto?> GetStateAsync(CancellationToken token)
+    public Task<CasinoStateDto?> GetStateAsync(CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync(StatePath, AethernetJsonContext.Default.CasinoStateDto, token);
+        return net.GetAsync(StatePath, AethernetJsonContext.Default.CasinoStateDto, token, null, onFailure);
     }
 
     public Task<CasinoSittingResultDto?> OpenSittingAsync(string clientSittingId, string clientActionId,
-        long amount, CancellationToken token)
+        long amount, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(OpenSittingPath,
             new CasinoOpenSittingRequest(clientSittingId, clientActionId, SoloTableKind, amount),
             AethernetJsonContext.Default.CasinoOpenSittingRequest,
-            AethernetJsonContext.Default.CasinoSittingResultDto, token);
+            AethernetJsonContext.Default.CasinoSittingResultDto, token, null, onFailure);
     }
 
     public Task<CasinoSittingResultDto?> TopUpAsync(string sittingId, string clientActionId, long amount,
-        CancellationToken token)
+        CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(TopUpPath, new CasinoTopUpRequest(sittingId, clientActionId, amount),
             AethernetJsonContext.Default.CasinoTopUpRequest,
-            AethernetJsonContext.Default.CasinoSittingResultDto, token);
+            AethernetJsonContext.Default.CasinoSittingResultDto, token, null, onFailure);
     }
 
-    public Task<CasinoSittingResultDto?> CloseSittingAsync(string sittingId, CancellationToken token)
+    public Task<CasinoSittingResultDto?> CloseSittingAsync(string sittingId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(CloseSittingPath, new CasinoCloseSittingRequest(sittingId),
             AethernetJsonContext.Default.CasinoCloseSittingRequest,
-            AethernetJsonContext.Default.CasinoSittingResultDto, token);
+            AethernetJsonContext.Default.CasinoSittingResultDto, token, null, onFailure);
     }
 
-    public Task<CasinoLimitsDto?> SetLimitsAsync(long? selfLossLimit, CancellationToken token)
+    public Task<CasinoLimitsDto?> SetLimitsAsync(long? selfLossLimit, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(LimitsPath, new CasinoLimitRequest(selfLossLimit),
             AethernetJsonContext.Default.CasinoLimitRequest,
-            AethernetJsonContext.Default.CasinoLimitsDto, token);
+            AethernetJsonContext.Default.CasinoLimitsDto, token, null, onFailure);
     }
 
     public Task<CasinoSlotsSpinDto?> SpinSlotsAsync(string sittingId, string clientRoundId, long stake,
-        CancellationToken token)
+        CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(SpinSlotsPath, new CasinoSlotsSpinRequest(sittingId, clientRoundId, stake),
             AethernetJsonContext.Default.CasinoSlotsSpinRequest,
-            AethernetJsonContext.Default.CasinoSlotsSpinDto, token);
+            AethernetJsonContext.Default.CasinoSlotsSpinDto, token, null, onFailure);
     }
 
     public Task<CasinoScratchCardDto?> BuyScratchAsync(string sittingId, string clientRoundId, int tier,
-        CancellationToken token)
+        CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(BuyScratchPath, new CasinoScratchBuyRequest(sittingId, clientRoundId, tier),
             AethernetJsonContext.Default.CasinoScratchBuyRequest,
-            AethernetJsonContext.Default.CasinoScratchCardDto, token);
+            AethernetJsonContext.Default.CasinoScratchCardDto, token, null, onFailure);
     }
 
     public Task<CasinoBarkeepStartDto?> StartBarkeepAsync(string sittingId, string clientRoundId,
-        CancellationToken token)
+        CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(StartBarkeepPath, new CasinoBarkeepStartRequest(sittingId, clientRoundId),
             AethernetJsonContext.Default.CasinoBarkeepStartRequest,
-            AethernetJsonContext.Default.CasinoBarkeepStartDto, token);
+            AethernetJsonContext.Default.CasinoBarkeepStartDto, token, null, onFailure);
     }
 
     public Task<CasinoBarkeepFinishDto?> FinishBarkeepAsync(string roundId, CasinoBarkeepOrderRequest[] orders,
-        CancellationToken token)
+        CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(FinishBarkeepPath, new CasinoBarkeepFinishRequest(roundId, orders),
             AethernetJsonContext.Default.CasinoBarkeepFinishRequest,
-            AethernetJsonContext.Default.CasinoBarkeepFinishDto, token);
+            AethernetJsonContext.Default.CasinoBarkeepFinishDto, token, null, onFailure);
     }
 
-    public Task<CasinoRoundVerifyDto?> VerifyRoundAsync(string roundId, CancellationToken token)
+    public Task<CasinoRoundVerifyDto?> VerifyRoundAsync(string roundId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync(VerifyRoundPath(roundId), AethernetJsonContext.Default.CasinoRoundVerifyDto, token);
+        return net.GetAsync(VerifyRoundPath(roundId), AethernetJsonContext.Default.CasinoRoundVerifyDto, token, null,
+            onFailure);
     }
 
-    public Task<CasinoRoundHistoryPage?> RoundsPageAsync(string? cursor, CancellationToken token)
+    public Task<CasinoRoundHistoryPage?> RoundsPageAsync(string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync(RoundsPagePath(cursor), AethernetJsonContext.Default.CasinoRoundHistoryPage, token);
+        return net.GetAsync(RoundsPagePath(cursor), AethernetJsonContext.Default.CasinoRoundHistoryPage, token, null,
+            onFailure);
     }
 
-    public Task<CasinoRoomListDto?> RoomsAsync(CancellationToken token)
+    public Task<CasinoRoomListDto?> RoomsAsync(CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync(RoomsPath, AethernetJsonContext.Default.CasinoRoomListDto, token);
+        return net.GetAsync(RoomsPath, AethernetJsonContext.Default.CasinoRoomListDto, token, null, onFailure);
     }
 
     public Task<CasinoRoomSnapshotDto?> RoomStateAsync(string roomId, Action<int> onStatus,
-        CancellationToken token)
+        CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         return net.GetAsync(RoomPath(roomId), AethernetJsonContext.Default.CasinoRoomSnapshotDto, token,
-            onStatus);
+            onStatus, onFailure);
     }
 
     public Task<CasinoWheelBetDto?> PlaceWheelBetAsync(string roomId, long roundIndex, string clientRoundId,
-        string clientBetId, int spot, long amount, CancellationToken token)
+        string clientBetId, int spot, long amount, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(WheelBetPath,
             new CasinoWheelBetRequest(roomId, roundIndex, clientRoundId, clientBetId, spot, amount),
             AethernetJsonContext.Default.CasinoWheelBetRequest,
-            AethernetJsonContext.Default.CasinoWheelBetDto, token);
+            AethernetJsonContext.Default.CasinoWheelBetDto, token, null, onFailure);
     }
 
-    public Task<CasinoWheelBetsDto?> MyWheelBetsAsync(string roomId, CancellationToken token)
+    public Task<CasinoWheelBetsDto?> MyWheelBetsAsync(string roomId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync(WheelBetsPath(roomId), AethernetJsonContext.Default.CasinoWheelBetsDto, token);
+        return net.GetAsync(WheelBetsPath(roomId), AethernetJsonContext.Default.CasinoWheelBetsDto, token, null,
+            onFailure);
     }
 
     public Task<CasinoBingoCardsDto?> BuyBingoCardsAsync(string roomId, long roundIndex, string clientRoundId,
-        int cardCount, CancellationToken token)
+        int cardCount, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(BingoCardsPath,
             new CasinoBingoCardsRequest(roomId, roundIndex, clientRoundId, cardCount),
             AethernetJsonContext.Default.CasinoBingoCardsRequest,
-            AethernetJsonContext.Default.CasinoBingoCardsDto, token);
+            AethernetJsonContext.Default.CasinoBingoCardsDto, token, null, onFailure);
     }
 
     public Task<CasinoBlackjackBetDto?> PlaceBlackjackBetAsync(string roomId, long roundIndex, string clientRoundId,
-        string clientBetId, long amount, CancellationToken token)
+        string clientBetId, long amount, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(BlackjackBetPath,
             new CasinoBlackjackBetRequest(roomId, roundIndex, clientRoundId, clientBetId, amount),
             AethernetJsonContext.Default.CasinoBlackjackBetRequest,
-            AethernetJsonContext.Default.CasinoBlackjackBetDto, token);
+            AethernetJsonContext.Default.CasinoBlackjackBetDto, token, null, onFailure);
     }
 
     public Task<CasinoBlackjackActionDto?> SendBlackjackActionAsync(string roomId, string handId, long roundIndex,
-        int splitIndex, int action, long actionSeq, string clientActionId, CancellationToken token)
+        int splitIndex, int action, long actionSeq, string clientActionId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(BlackjackActionPath,
             new CasinoBlackjackActionRequest(roomId, handId, roundIndex, splitIndex, action, actionSeq,
                 clientActionId),
             AethernetJsonContext.Default.CasinoBlackjackActionRequest,
-            AethernetJsonContext.Default.CasinoBlackjackActionDto, token);
+            AethernetJsonContext.Default.CasinoBlackjackActionDto, token, null, onFailure);
     }
 
-    public Task<CasinoTableListDto?> TablesAsync(string gameKind, CancellationToken token)
+    public Task<CasinoTableListDto?> TablesAsync(string gameKind, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync(TablesPagePath(gameKind), AethernetJsonContext.Default.CasinoTableListDto, token);
+        return net.GetAsync(TablesPagePath(gameKind), AethernetJsonContext.Default.CasinoTableListDto, token, null,
+            onFailure);
     }
 
-    public Task<CasinoQuickSeatDto?> QuickSeatAsync(string gameKind, int stakeTier, CancellationToken token)
+    public Task<CasinoQuickSeatDto?> QuickSeatAsync(string gameKind, int stakeTier, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(QuickSeatPath, new CasinoQuickSeatRequest(gameKind, stakeTier),
             AethernetJsonContext.Default.CasinoQuickSeatRequest,
-            AethernetJsonContext.Default.CasinoQuickSeatDto, token);
+            AethernetJsonContext.Default.CasinoQuickSeatDto, token, null, onFailure);
     }
 
     public Task<CasinoTableDto?> CreateTableAsync(string clientTableId, string gameKind, int stakeTier,
-        CancellationToken token)
+        CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(TablesPath, new CasinoCreateTableRequest(clientTableId, gameKind, stakeTier),
             AethernetJsonContext.Default.CasinoCreateTableRequest,
-            AethernetJsonContext.Default.CasinoTableDto, token);
+            AethernetJsonContext.Default.CasinoTableDto, token, null, onFailure);
     }
 
-    public Task<CasinoTableDto?> TableAsync(string roomId, Action<int> onStatus, CancellationToken token)
+    public Task<CasinoTableDto?> TableAsync(string roomId, Action<int> onStatus, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         return net.GetAsync(string.Concat(TablesPath, "/", Uri.EscapeDataString(roomId)),
-            AethernetJsonContext.Default.CasinoTableDto, token, onStatus);
+            AethernetJsonContext.Default.CasinoTableDto, token, onStatus, onFailure);
     }
 
-    public Task<CasinoTableDoorDto?> TableDoorAsync(string roomId, CancellationToken token)
+    public Task<CasinoTableDoorDto?> TableDoorAsync(string roomId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync(TablePath(roomId, "door"), AethernetJsonContext.Default.CasinoTableDoorDto, token);
+        return net.GetAsync(TablePath(roomId, "door"), AethernetJsonContext.Default.CasinoTableDoorDto, token, null,
+            onFailure);
     }
 
-    public Task<CasinoDoorResultDto?> KnockAsync(string roomId, CancellationToken token)
+    public Task<CasinoDoorResultDto?> KnockAsync(string roomId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         return net.RequestAsync(HttpMethod.Post, TablePath(roomId, "knock"),
-            AethernetJsonContext.Default.CasinoDoorResultDto, token);
+            AethernetJsonContext.Default.CasinoDoorResultDto, token, null, onFailure);
     }
 
     public Task<CasinoDoorResultDto?> AnswerKnockAsync(string roomId, string userId, bool approve,
-        CancellationToken token)
+        CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(TablePath(roomId, "door"), new CasinoDoorRequest(userId, approve),
             AethernetJsonContext.Default.CasinoDoorRequest,
-            AethernetJsonContext.Default.CasinoDoorResultDto, token);
+            AethernetJsonContext.Default.CasinoDoorResultDto, token, null, onFailure);
     }
 
-    public Task<CasinoDoorResultDto?> KickAsync(string roomId, string userId, CancellationToken token)
+    public Task<CasinoDoorResultDto?> KickAsync(string roomId, string userId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(TablePath(roomId, "kick"), new CasinoDoorRequest(userId, false),
             AethernetJsonContext.Default.CasinoDoorRequest,
-            AethernetJsonContext.Default.CasinoDoorResultDto, token);
+            AethernetJsonContext.Default.CasinoDoorResultDto, token, null, onFailure);
     }
 
     public Task<CasinoSeatDto?> SitAsync(string roomId, int seatIndex, string clientSittingId,
-        string clientActionId, long buyIn, CancellationToken token)
+        string clientActionId, long buyIn, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(BlackjackSitPath,
             new CasinoSitRequest(roomId, seatIndex, clientSittingId, clientActionId, buyIn),
             AethernetJsonContext.Default.CasinoSitRequest,
-            AethernetJsonContext.Default.CasinoSeatDto, token);
+            AethernetJsonContext.Default.CasinoSeatDto, token, null, onFailure);
     }
 
-    public Task<CasinoStandDto?> StandAsync(string roomId, string clientStandId, CancellationToken token)
+    public Task<CasinoStandDto?> StandAsync(string roomId, string clientStandId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(BlackjackLeavePath, new CasinoStandRequest(roomId),
             AethernetJsonContext.Default.CasinoStandRequest,
-            AethernetJsonContext.Default.CasinoStandDto, token);
+            AethernetJsonContext.Default.CasinoStandDto, token, null, onFailure);
     }
 
-    public Task<CasinoSeatDto?> ClaimSeatAsync(string roomId, string clientClaimId, CancellationToken token)
+    public Task<CasinoSeatDto?> ClaimSeatAsync(string roomId, string clientClaimId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         return net.PostAsync(TablePath(roomId, "claim"), new CasinoClaimRequest(clientClaimId),
             AethernetJsonContext.Default.CasinoClaimRequest,
-            AethernetJsonContext.Default.CasinoSeatDto, token);
+            AethernetJsonContext.Default.CasinoSeatDto, token, null, onFailure);
     }
 
-    public Task<CasinoBingoCardsDto?> MyBingoCardsAsync(string roomId, CancellationToken token)
+    public Task<CasinoBingoCardsDto?> MyBingoCardsAsync(string roomId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync(BingoMyCardsPath(roomId), AethernetJsonContext.Default.CasinoBingoCardsDto, token);
+        return net.GetAsync(BingoMyCardsPath(roomId), AethernetJsonContext.Default.CasinoBingoCardsDto, token, null,
+            onFailure);
     }
 
-    public Task<CasinoBlackjackHandReadDto?> MyBlackjackHandAsync(string roomId, CancellationToken token)
+    public Task<CasinoBlackjackHandReadDto?> MyBlackjackHandAsync(string roomId, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         return net.GetAsync(BlackjackMyHandPath(roomId), AethernetJsonContext.Default.CasinoBlackjackHandReadDto,
-            token);
+            token, null, onFailure);
     }
 
-    public Task<CasinoDailySpinDto?> DailySpinStatusAsync(CancellationToken token)
+    public Task<CasinoDailySpinDto?> DailySpinStatusAsync(CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.GetAsync(DailySpinPath, AethernetJsonContext.Default.CasinoDailySpinDto, token);
+        return net.GetAsync(DailySpinPath, AethernetJsonContext.Default.CasinoDailySpinDto, token, null, onFailure);
     }
 
-    public Task<CasinoDailySpinDto?> ClaimDailySpinAsync(CancellationToken token)
+    public Task<CasinoDailySpinDto?> ClaimDailySpinAsync(CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
         return net.RequestAsync(HttpMethod.Post, DailySpinPath,
-            AethernetJsonContext.Default.CasinoDailySpinDto, token);
+            AethernetJsonContext.Default.CasinoDailySpinDto, token, null, onFailure);
     }
 }
