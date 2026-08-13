@@ -128,7 +128,8 @@ internal readonly record struct ChatPostCard(
     string AuthorName,
     string Snippet,
     string? ThumbnailUrl,
-    bool Available);
+    bool Available,
+    bool Sensitive = false);
 
 internal interface IChatTranscriptPostCards
 {
@@ -750,8 +751,12 @@ internal sealed class ChatTranscript
             var thumbMin = fx.Apply(new Vector2(bubbleMin.X + paddingX, contentTop));
             var thumbMax = fx.Apply(new Vector2(bubbleMin.X + paddingX + innerWidth, contentTop + innerWidth));
             var rounding = 10f * scale * fx.Pop;
-            var texture = card.ThumbnailUrl is null ? null : cards.Thumbnail(card.ThumbnailUrl);
-            if (texture is null)
+            var texture = card.Sensitive || card.ThumbnailUrl is null ? null : cards.Thumbnail(card.ThumbnailUrl);
+            if (card.Sensitive)
+            {
+                SensitiveVeil.Draw(drawList, thumbMin, thumbMax, rounding);
+            }
+            else if (texture is null)
             {
                 Squircle.Fill(drawList, thumbMin, thumbMax, rounding,
                     ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.08f * fx.Alpha)));

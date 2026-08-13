@@ -392,7 +392,8 @@ internal sealed partial class VelvetShell
                 continue;
             }
 
-            if (coverUrl.Length == 0)
+            if (coverUrl.Length == 0
+                && !SensitiveReveals.ShouldVeil(feed[index].Sensitive, feed[index].Id, configuration.ShowSensitiveContent))
             {
                 coverUrl = feed[index].MediaUrl;
             }
