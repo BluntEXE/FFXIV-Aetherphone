@@ -2673,6 +2673,29 @@ internal static class L
         public static readonly LocString SendFailed = new("messages.sendFailed", "Couldn't send that message. Check for unsupported characters.");
     }
 
+    internal static class Linkpearl
+    {
+        public static readonly LocString ChannelSay = new("linkpearl.channelSay", "Say");
+        public static readonly LocString ChannelShout = new("linkpearl.channelShout", "Shout");
+        public static readonly LocString ChannelYell = new("linkpearl.channelYell", "Yell");
+        public static readonly LocString ChannelEmote = new("linkpearl.channelEmote", "Emotes");
+        public static readonly LocString ChannelTell = new("linkpearl.channelTell", "Tell");
+        public static readonly LocString ChannelParty = new("linkpearl.channelParty", "Party");
+        public static readonly LocString ChannelAlliance = new("linkpearl.channelAlliance", "Alliance");
+        public static readonly LocString ChannelPvpTeam = new("linkpearl.channelPvpTeam", "PvP Team");
+        public static readonly LocString ChannelFreeCompany = new("linkpearl.channelFreeCompany", "Free Company");
+        public static readonly LocString ChannelNoviceNetwork = new("linkpearl.channelNoviceNetwork", "Novice Network");
+        public static readonly LocString ChannelEcho = new("linkpearl.channelEcho", "Echo");
+        public static readonly LocString ChannelSystem = new("linkpearl.channelSystem", "System messages");
+        public static readonly LocString CategoryLocal = new("linkpearl.categoryLocal", "Local");
+        public static readonly LocString CategoryGroup = new("linkpearl.categoryGroup", "Group");
+        public static readonly LocString CategoryCommunity = new("linkpearl.categoryCommunity", "Community");
+        public static readonly LocString CategoryLinkshell = new("linkpearl.categoryLinkshell", "Linkshells");
+        public static readonly LocString CategoryCrossWorld = new("linkpearl.categoryCrossWorld", "Cross-world");
+        public static readonly LocString CategoryDirect = new("linkpearl.categoryDirect", "Direct");
+        public static readonly LocString CategorySystem = new("linkpearl.categorySystem", "System");
+    }
+
     internal static class Character
     {
         public static readonly LocString LogInToView = new("character.logInToView", "Log in to view your character");
