@@ -12,9 +12,6 @@ internal static class SensitiveVeil
     private static readonly Vector4 StrongInk = new(1f, 1f, 1f, 0.94f);
     private static readonly Vector4 SoftInk = new(1f, 1f, 1f, 0.72f);
 
-    // Draw-only on purpose: the veil sits inside carousel pages, grid tiles and chat cards whose
-    // owners run their own tap handling, and a HoverClick here would spend the UiInteract claim
-    // before those handlers see it.
     public static void Draw(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding)
     {
         var scale = UiScale.Current;
