@@ -64,6 +64,8 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
 
     public Action<ChatEntry>? Context { get; set; }
 
+    public Action<ChatEntry, ChatChunk>? Link { get; set; }
+
     public void Gate() => composer.Gate();
 
     public void Open(in GameChatTarget next)
@@ -159,6 +161,33 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
         }
     }
 
+    public void OnLinkClick(string messageId, int target)
+    {
+        var entries = view.Entries;
+        for (var index = 0; index < entries.Count; index++)
+        {
+            if (string.Equals(entries[index].Id, messageId, StringComparison.Ordinal))
+            {
+                RaiseLink(entries[index], target);
+                return;
+            }
+        }
+    }
+
+    private void RaiseLink(ChatEntry entry, int target)
+    {
+        if (Link is not { } handler)
+        {
+            return;
+        }
+
+        var targets = ChatRuns.For(entry).Targets;
+        if (target >= 0 && target < targets.Length)
+        {
+            handler(entry, targets[target]);
+        }
+    }
+
     public void OnQuoteClick(string messageId)
     {
     }
@@ -201,16 +230,21 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
 
                 var style = new ChatLineStyle(RailFor(entry), previous is null || !Grouped(previous, entry), false,
                     entrance.Progress(index));
-                if (ChatLineView.Draw(entry, theme, style, theme.Accent))
+                if (ChatLineView.Draw(entry, theme, style, theme.Accent, out var tapped))
                 {
                     Context?.Invoke(entry);
+                }
+
+                if (tapped >= 0)
+                {
+                    RaiseLink(entry, tapped);
                 }
             }
 
             for (var index = 0; index < ghostEntries.Count; index++)
             {
                 var ghost = ghostEntries[index];
-                ChatLineView.Draw(ghost, theme, new ChatLineStyle(RailFor(ghost), true, true), theme.Accent);
+                ChatLineView.Draw(ghost, theme, new ChatLineStyle(RailFor(ghost), true, true), theme.Accent, out _);
             }
 
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
@@ -285,9 +319,10 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
             tagTint = channel.Tint;
         }
 
+        var runs = ChatRuns.For(entry);
         return new TranscriptMessage(entry.Id, entry.IsSelf ? SelfId : entry.SenderKey, entry.Text, 0,
             Seconds(entry.At), 0, 0, null, entry.AuthorName, SenderTint.Of(entry.AuthorName), flags,
-            channelTag: tag, channelTint: tagTint);
+            channelTag: tag, channelTint: tagTint, runs: runs.HasLinks ? runs.Runs : null);
     }
 
     private void SyncGhosts()

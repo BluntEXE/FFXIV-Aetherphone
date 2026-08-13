@@ -30,8 +30,10 @@ internal static class ChatLineView
     private const float MentionTint = 0.10f;
     private const float GhostAlpha = 0.55f;
 
-    public static bool Draw(ChatEntry entry, PhoneTheme theme, in ChatLineStyle style, Vector4 accent)
+    public static bool Draw(ChatEntry entry, PhoneTheme theme, in ChatLineStyle style, Vector4 accent,
+        out int linkTarget)
     {
+        linkTarget = -1;
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
@@ -40,9 +42,16 @@ internal static class ChatLineView
         var wrap = MathF.Max(24f * scale, available - TextInset * scale - 4f * scale);
         var alpha = Math.Clamp(style.Entrance, 0f, 1f) * (style.Ghost ? GhostAlpha : 1f);
         var senderHeight = style.ShowSender ? Typography.LineHeight(TextStyles.FootnoteEmphasized) : 0f;
-        var bodyHeight = Typography.MeasureWrappedBlock(entry.Text, TextStyles.Callout, wrap).Y;
+        var runs = ChatRuns.For(entry);
+        float bodyHeight;
+        using (Plugin.Fonts.Push(TextStyles.Callout.Scale, TextStyles.Callout.Weight))
+        {
+            Plugin.Fonts.NoticeText(entry.Text);
+            bodyHeight = RunText.Layout(entry.Id, runs.Runs, wrap).Size.Y;
+        }
+
         var totalHeight = senderHeight + bodyHeight;
-        var lineMin = new Vector2(origin.X, origin.Y);
+        var lineMin = origin;
         var lineMax = new Vector2(origin.X + available, origin.Y + totalHeight);
         if (entry.IsMention)
         {
@@ -61,46 +70,39 @@ internal static class ChatLineView
 
         if (style.ShowSender)
         {
-            var tint = entry.IsSelf ? accent : SenderTint.Of(entry.AuthorName);
-            var name = FirstName(entry.AuthorName);
-            var nameWidth = MathF.Min(wrap * 0.62f, Typography.Measure(name, TextStyles.FootnoteEmphasized).X);
-            Typography.Draw(drawList, new Vector2(textLeft, origin.Y),
-                Typography.FitText(name, nameWidth, TextStyles.FootnoteEmphasized),
-                Palette.WithAlpha(tint, tint.W * alpha), TextStyles.FootnoteEmphasized);
-            var stamp = TimeText.Clock(entry.At);
-            Typography.Draw(drawList, new Vector2(textLeft + nameWidth + 6f * scale, origin.Y + 1f * scale), stamp,
-                Palette.WithAlpha(theme.TextMuted, theme.TextMuted.W * alpha), TextStyles.Caption2);
+            DrawSender(drawList, entry, theme, accent, origin, textLeft, wrap, alpha, scale);
         }
 
         var bodyTop = new Vector2(textLeft, origin.Y + senderHeight);
         var ink = Palette.WithAlpha(theme.TextStrong, theme.TextStrong.W * alpha);
+        var interactive = !style.Ghost && style.Entrance >= 1f;
         using (Plugin.Fonts.Push(TextStyles.Callout.Scale, TextStyles.Callout.Weight))
         {
-            var layout = LinkText.LayoutFor(entry.Text, wrap);
-            if (layout is null)
+            var layout = RunText.Layout(entry.Id, runs.Runs, wrap);
+            var clicked = RunText.Draw(drawList, layout, runs.Runs, bodyTop, ink, alpha, interactive);
+            if (clicked >= 0)
             {
-                Plugin.Fonts.NoticeText(entry.Text);
-                var lines = Typography.WrapCurrent(entry.Text, wrap);
-                var font = ImGui.GetFont();
-                var fontSize = ImGui.GetFontSize();
-                var lineHeight = ImGui.GetTextLineHeightWithSpacing();
-                var packed = ImGui.GetColorU32(ink);
-                for (var index = 0; index < lines.Length; index++)
-                {
-                    drawList.AddText(font, fontSize, new Vector2(bodyTop.X, bodyTop.Y + index * lineHeight), packed,
-                        lines[index]);
-                }
-            }
-            else
-            {
-                LinkText.Draw(drawList, layout, bodyTop, 1f, ink, Palette.WithAlpha(accent, accent.W * alpha), alpha,
-                    !style.Ghost && style.Entrance >= 1f);
+                linkTarget = clicked;
             }
         }
 
         ImGui.SetCursorScreenPos(new Vector2(origin.X, lineMax.Y + LineGap * scale));
-        return !style.Ghost && style.Entrance >= 1f && UiInteract.Hover(lineMin, lineMax) &&
+        return interactive && linkTarget < 0 && UiInteract.Hover(lineMin, lineMax) &&
                ImGui.IsMouseClicked(ImGuiMouseButton.Right);
+    }
+
+    private static void DrawSender(ImDrawListPtr drawList, ChatEntry entry, PhoneTheme theme, Vector4 accent,
+        Vector2 origin, float textLeft, float wrap, float alpha, float scale)
+    {
+        var tint = entry.IsSelf ? accent : SenderTint.Of(entry.AuthorName);
+        var name = FirstName(entry.AuthorName);
+        var nameWidth = MathF.Min(wrap * 0.62f, Typography.Measure(name, TextStyles.FootnoteEmphasized).X);
+        Typography.Draw(drawList, new Vector2(textLeft, origin.Y),
+            Typography.FitText(name, nameWidth, TextStyles.FootnoteEmphasized),
+            Palette.WithAlpha(tint, tint.W * alpha), TextStyles.FootnoteEmphasized);
+        var stamp = TimeText.Clock(entry.At);
+        Typography.Draw(drawList, new Vector2(textLeft + nameWidth + 6f * scale, origin.Y + 1f * scale), stamp,
+            Palette.WithAlpha(theme.TextMuted, theme.TextMuted.W * alpha), TextStyles.Caption2);
     }
 
     private static string FirstName(string name)

@@ -5,6 +5,7 @@ using Aetherphone.Core.Game;
 using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
+using Aetherphone.Core.Market;
 using Aetherphone.Core.Linkpearl;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Onboarding;
@@ -43,6 +44,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
     private readonly LinkpearlNotificationGate notificationGate;
     private readonly LinkpearlLauncher launcher;
     private readonly LodestoneService lodestone;
+    private readonly MarketLauncher marketLauncher;
     private readonly NotificationService notifications;
     private readonly GameData gameData;
     private readonly LookupService lookup;
@@ -58,7 +60,8 @@ internal sealed partial class LinkpearlApp : IPhoneApp
 
     public LinkpearlApp(ChatInbox inbox, TabStore tabs, ChatArchive archive,
         LinkpearlNotificationGate notificationGate,
-        LinkpearlLauncher launcher, LodestoneService lodestone, NotificationService notifications, GameData gameData,
+        LinkpearlLauncher launcher, LodestoneService lodestone, MarketLauncher marketLauncher,
+        NotificationService notifications, GameData gameData,
         LookupService lookup, ConfirmService confirm, ChatLog chatLog, ChatSend chatSend)
     {
         this.inbox = inbox;
@@ -67,6 +70,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         this.notificationGate = notificationGate;
         this.launcher = launcher;
         this.lodestone = lodestone;
+        this.marketLauncher = marketLauncher;
         this.notifications = notifications;
         this.gameData = gameData;
         this.lookup = lookup;
@@ -74,6 +78,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         chatThread = new GameChatThread(chatLog, chatSend, gameData)
         {
             Context = entry => OpenChatMenu(entry.Text, entry.IsSelf ? null : entry.AuthorName),
+            Link = OpenLinkMenu,
         };
         router = new ViewRouter<LinkpearlRoute>(LinkpearlRoute.Root);
         drawView = DrawView;

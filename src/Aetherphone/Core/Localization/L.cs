@@ -2731,6 +2731,17 @@ internal static class L
         public static readonly LocString AlertsMentions = new("linkpearl.alertsMentions", "Mentions only");
         public static readonly LocString AlertsOff = new("linkpearl.alertsOff", "Off");
         public static readonly LocString StoredOnThisPc = new("linkpearl.storedOnThisPc", "History is kept on this PC only.");
+        public static readonly LocString SendTell = new("linkpearl.sendTell", "Send a tell");
+        public static readonly LocString LookUp = new("linkpearl.lookUp", "Look up character");
+        public static readonly LocString InviteToParty = new("linkpearl.inviteToParty", "Invite to party");
+        public static readonly LocString CopyLink = new("linkpearl.copyLink", "Copy link");
+        public static readonly LocString TryOn = new("linkpearl.tryOn", "Try on");
+        public static readonly LocString CompareItem = new("linkpearl.compareItem", "Item comparison");
+        public static readonly LocString SearchRecipes = new("linkpearl.searchRecipes", "Search for recipes");
+        public static readonly LocString FindItem = new("linkpearl.findItem", "Search for item");
+        public static readonly LocString LinkInChat = new("linkpearl.linkInChat", "Link in chat");
+        public static readonly LocString OpenInMarket = new("linkpearl.openInMarket", "Open in Market");
+        public static readonly LocString OpenMap = new("linkpearl.openMap", "Open map");
     }
 
     internal static class Character

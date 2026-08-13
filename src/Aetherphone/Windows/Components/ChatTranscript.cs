@@ -92,15 +92,18 @@ internal readonly struct TranscriptMessage
     public readonly string[]? SenderBadgeIds;
     public readonly string ChannelTag;
     public readonly Vector4 ChannelTint;
+    public readonly TextRun[]? Runs;
 
     public TranscriptMessage(string id, string senderId, string body, int kind, long createdAtUnix, int mediaWidth,
         int mediaHeight, long? readAtUnix, string senderName, Vector4 senderTint, byte flags = 0,
         string? replyToId = null, string replySenderName = "", string replyBody = "", int replyKind = 0,
         int durationSecs = 0, TranscriptReaction[]? reactions = null, int senderBadges = 0,
-        string[]? senderBadgeIds = null, string channelTag = "", Vector4 channelTint = default)
+        string[]? senderBadgeIds = null, string channelTag = "", Vector4 channelTint = default,
+        TextRun[]? runs = null)
     {
         ChannelTag = channelTag;
         ChannelTint = channelTint;
+        Runs = runs;
         SenderBadges = senderBadges;
         SenderBadgeIds = senderBadgeIds;
         Id = id;
@@ -158,6 +161,10 @@ internal interface IChatTranscriptMedia
 internal interface IChatTranscriptInteractions
 {
     void OnMessageContext(string messageId);
+
+    void OnLinkClick(string messageId, int target)
+    {
+    }
 
     void OnQuoteClick(string messageId);
 
@@ -560,8 +567,12 @@ internal sealed class ChatTranscript
         var paddingX = 11f * scale;
         var paddingY = 7f * scale;
         var wrap = available * 0.74f - paddingX * 2f;
-        var linkLayout = deleted ? null : LinkText.LayoutFor(message.Body, wrap);
-        var textSize = linkLayout is null ? ImGui.CalcTextSize(message.Body, false, wrap) : linkLayout.Size;
+        var runs = deleted ? null : message.Runs;
+        var runLayout = runs is null ? null : RunText.Layout(message.Id, runs, wrap);
+        var linkLayout = deleted || runs is not null ? null : LinkText.LayoutFor(message.Body, wrap);
+        var textSize = runLayout is not null
+            ? runLayout.Size
+            : linkLayout is null ? ImGui.CalcTextSize(message.Body, false, wrap) : linkLayout.Size;
         var deletedIconWidth = deleted ? 17f * scale : 0f;
         var stamp = MeasureStamp(message, mine, scale);
         var stampGap = 7f * scale;
@@ -629,7 +640,16 @@ internal sealed class ChatTranscript
         }
 
         var textPos = fx.Apply(new Vector2(bubbleMin.X + paddingX + deletedIconWidth, contentTop));
-        if (linkLayout is null)
+        if (runLayout is not null && runs is not null)
+        {
+            var runInk = Palette.WithAlpha(ink, ink.W);
+            var tapped = RunText.Draw(drawList, runLayout, runs, textPos, runInk, fx.Alpha, entrance >= 1f);
+            if (tapped >= 0 && model.Interactions is { } linkTarget)
+            {
+                linkTarget.OnLinkClick(message.Id, tapped);
+            }
+        }
+        else if (linkLayout is null)
         {
             drawList.AddText(ImGui.GetFont(), ImGui.GetFontSize() * fx.Pop, textPos,
                 ImGui.GetColorU32(Palette.WithAlpha(ink, ink.W * fx.Alpha)), message.Body, wrap * fx.Pop);

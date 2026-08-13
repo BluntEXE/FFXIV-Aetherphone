@@ -11,6 +11,7 @@ internal enum ChatChunkKind : byte
     Quest,
     PartyFinder,
     PluginLink,
+    Url,
 }
 
 internal readonly struct ChatChunk
@@ -65,6 +66,9 @@ internal readonly struct ChatChunk
 
     public static ChatChunk PluginLink(string text, string plugin, uint commandId) =>
         new(ChatChunkKind.PluginLink, text, string.Empty, plugin, commandId, 0u, 0u, 0, 0);
+
+    public static ChatChunk Url(string text) =>
+        new(ChatChunkKind.Url, text, string.Empty, string.Empty, 0u, 0u, 0u, 0, 0);
 
     public bool IsPlainText => Kind == ChatChunkKind.Text;
 
