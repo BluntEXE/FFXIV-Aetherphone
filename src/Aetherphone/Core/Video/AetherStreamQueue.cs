@@ -67,7 +67,7 @@ internal sealed class AetherStreamQueue : IDisposable
         }
 
         var name = Path.GetFileName(parsed.LocalPath);
-        return name.Length > 0 ? name : parsed.Host;
+        return name.Length > 0 && Path.HasExtension(name) ? name : url;
     }
 
     internal void Suspend()
@@ -84,6 +84,8 @@ internal sealed class AetherStreamQueue : IDisposable
             Current = null;
             Persist();
         }
+
+        video.Stop();
     }
 
     internal void Resume() => suspended = false;
@@ -103,15 +105,6 @@ internal sealed class AetherStreamQueue : IDisposable
         Advance();
     }
 
-    internal void PlayNext(VideoQueueEntry entry)
-    {
-        entries.Remove(entry);
-        var insertAt = entries.Count > 0 ? 1 : 0;
-        entries.Insert(Math.Min(insertAt, entries.Count), entry);
-        EnrichIfYouTube(entry);
-        Persist();
-    }
-
     internal void Remove(VideoQueueEntry entry)
     {
         entries.Remove(entry);
@@ -128,7 +121,13 @@ internal sealed class AetherStreamQueue : IDisposable
 
     internal void StopPlayback()
     {
-        Current = null;
+        if (Current is { } stopped)
+        {
+            entries.Insert(0, stopped);
+            Current = null;
+            Persist();
+        }
+
         video.Stop();
         Changed?.Invoke();
     }

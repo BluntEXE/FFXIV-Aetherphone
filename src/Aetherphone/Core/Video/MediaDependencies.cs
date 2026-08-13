@@ -216,10 +216,7 @@ internal sealed class MediaDependencies : IDisposable
                     continue;
                 }
 
-                var target = PayloadPath(dependency);
-                Directory.CreateDirectory(ComponentFolder(dependency));
-                File.Copy(source, target, overwrite: true);
-                dependency.ForgetVerification();
+                dependency.VerifiedPath = source;
                 AepLog.Debug($"[Deps] Adopted an existing {dependency.Id} install from {candidates[index]}");
                 return;
             }

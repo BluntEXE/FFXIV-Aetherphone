@@ -645,10 +645,11 @@ internal sealed class MpvRenderer : IDisposable
         started = false;
         currentUrl = null;
         frameReady.Set();
-        DxHandler.CancelRenderThreadWork(RenderKey);
 
         renderThread?.Join(2000);
         eventThread?.Join(2000);
+
+        DxHandler.CancelRenderThreadWork(RenderKey);
 
         lock (snapshotLock)
         {

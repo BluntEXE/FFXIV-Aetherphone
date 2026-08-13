@@ -80,8 +80,16 @@ internal sealed class VideoEngine : IDisposable
 
     internal void ClearError() => LastError = null;
 
-    internal void Play(string url, double startSeconds = 0d, bool playing = true) =>
+    internal void Play(string url, double startSeconds = 0d, bool playing = true)
+    {
+        if (url.Length == 0)
+        {
+            return;
+        }
+
+        PrepareScreenForSession();
         _ = PlayAsync(url, startSeconds, playing);
+    }
 
     internal async Task<bool> PlayAsync(string url, double startSeconds, bool playing)
     {
@@ -111,7 +119,6 @@ internal sealed class VideoEngine : IDisposable
                     return false;
                 }
 
-                PrepareScreenForSession();
                 var player = EnsureRenderer();
                 if (player is null)
                 {

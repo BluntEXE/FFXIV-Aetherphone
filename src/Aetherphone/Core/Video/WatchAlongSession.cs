@@ -645,6 +645,12 @@ internal sealed class WatchAlongSession : IDisposable
             return;
         }
 
+        if (viewingUrl is null)
+        {
+            ApplyRemoteScreenTransform(message);
+            return;
+        }
+
         if (message.PositionSeconds is not null)
         {
             var target = ProjectRemotePosition(message);

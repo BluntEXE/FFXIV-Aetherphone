@@ -3148,9 +3148,6 @@ internal static class L
 
     internal static class AetherStream
     {
-        public static readonly LocString TabPlayer = new("aetherstream.tabPlayer", "Player");
-        public static readonly LocString TabQueue = new("aetherstream.tabQueue", "Queue");
-        public static readonly LocString TabCasting = new("aetherstream.tabCasting", "Casting");
         public static readonly LocString SettingsTitle = new("aetherstream.settingsTitle", "AetherStream Settings");
 
         public static readonly LocString NothingPlaying = new("aetherstream.nothingPlaying", "Nothing playing");
@@ -3163,7 +3160,6 @@ internal static class L
         public static readonly LocString WatchingSectionLabel = new("aetherstream.watchingSectionLabel", "Watching");
         public static readonly LocString PlayNow = new("aetherstream.playNow", "Play Now");
         public static readonly LocString AddToQueue = new("aetherstream.addToQueue", "Add to Queue");
-        public static readonly LocString PlayNext = new("aetherstream.playNext", "Play Next");
         public static readonly LocString ClearQueue = new("aetherstream.clearQueue", "Clear");
         public static readonly LocString ClearQueueConfirm = new("aetherstream.clearQueueConfirm",
             "Clear the whole queue and stop playback?");
@@ -3171,17 +3167,9 @@ internal static class L
         public static readonly LocString Stop = new("aetherstream.stop", "Stop");
         public static readonly LocString Resync = new("aetherstream.resync", "Resync");
         public static readonly LocString Remove = new("aetherstream.remove", "Remove");
-        public static readonly LocString QueueUpNext = new("aetherstream.queueUpNext", "Up Next");
-        public static readonly LocString QueueEmptyTitle = new("aetherstream.queueEmptyTitle", "Nothing queued");
-        public static readonly LocString QueueEmptyHint = new("aetherstream.queueEmptyHint",
-            "Add a video link above and it will play after the current one.");
 
-        public static readonly LocString PlayerCastingStatus = new("aetherstream.playerCastingStatus",
-            "Casting to the in-game screen");
         public static readonly LocString PlayerCastingWaiting = new("aetherstream.playerCastingWaiting",
             "Waiting for the next video");
-        public static readonly LocString CastingTarget = new("aetherstream.castingTarget", "Playing to");
-        public static readonly LocString CastingThisScreen = new("aetherstream.castingThisScreen", "This TV");
         public static readonly LocString CastingStateNotReady = new("aetherstream.castingStateNotReady",
             "Not ready");
         public static readonly LocString CastingStateReady = new("aetherstream.castingStateReady", "Ready");
@@ -3284,7 +3272,6 @@ internal static class L
         public static readonly LocString CastingApprove = new("aetherstream.castingApprove", "Approve");
         public static readonly LocString CastingDeny = new("aetherstream.castingDeny", "Deny");
 
-        public static readonly LocString SuggestToHost = new("aetherstream.suggestToHost", "Suggest to Host");
         public static readonly LocString SuggestHint = new("aetherstream.suggestHint",
             "Suggest a video to the host");
         public static readonly LocString QueueSuggestionsHeader = new("aetherstream.queueSuggestionsHeader",
