@@ -140,6 +140,7 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
         var scale = UiScale.Current;
         view.Target(target.Streams);
         view.Sync();
+        send.Tick();
         SyncGhosts();
         var composerBar = new Rect(new Vector2(area.Min.X, area.Max.Y - ComposerHeight * scale), area.Max);
         var failure = FirstFailure();
