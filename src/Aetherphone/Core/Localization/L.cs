@@ -166,6 +166,8 @@ internal static class L
         public static readonly LocString SensitiveReveal = new("moderation.sensitiveReveal", "Tap to view");
         public static readonly LocString MarkSensitive = new("moderation.markSensitive", "Mark as sensitive");
         public static readonly LocString SensitiveOn = new("moderation.sensitiveOn", "Marked sensitive");
+        public static readonly LocString NoticeSensitiveTitle = new("moderation.notice.sensitiveTitle", "Your post was marked sensitive");
+        public static readonly LocString NoticeSensitiveBody = new("moderation.notice.sensitiveBody", "A moderator covered the picture on one of your posts. The post is still up and keeps its reactions and comments, and anyone can tap to see it. You cannot clear this mark yourself.");
         public static readonly LocString RemovedTitle = new("moderation.removedTitle", "Post removed");
         public static readonly LocString RemovedAdult = new("moderation.removedAdult", "Your post was removed because it appears to contain adult content, which is not allowed here.");
         public static readonly LocString RemovedViolence = new("moderation.removedViolence", "Your post was removed because it appears to contain violent or graphic content.");
@@ -1269,6 +1271,8 @@ internal static class L
         public static readonly LocString NativeFileDialogHint = new("settings.nativeFileDialogHint", "Pick photos and sounds with the Windows file browser. Turn it off if importing a file crashes your game.");
         public static readonly LocString ChirperMediaPosts = new("settings.chirperMediaPosts", "Show photo and GIF chirps");
         public static readonly LocString ChirperMediaPostsHint = new("settings.chirperMediaPostsHint", "Chirps that carry photos or GIFs show up in your feeds. Turn this off to keep your Chirper feeds text only.");
+        public static readonly LocString ShowSensitive = new("settings.showSensitive", "Always show sensitive photos");
+        public static readonly LocString ShowSensitiveHint = new("settings.showSensitiveHint", "Photos marked sensitive stay covered until you tap them. Turn this on to see them straight away.");
         public static readonly LocString OpenOnStartup = new("settings.openOnStartup", "Open at startup");
         public static readonly LocString OpenMinimized = new("settings.openMinimized", "Open minimized");
         public static readonly LocString StartupHint = new("settings.startupHint", "Open the phone automatically when you log in. Open minimized shows it as a small dock that you tap to expand.");

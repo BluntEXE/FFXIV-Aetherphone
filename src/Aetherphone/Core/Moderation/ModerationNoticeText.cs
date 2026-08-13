@@ -17,6 +17,7 @@ internal static class ModerationNoticeKinds
     public const int BadgeGranted = 7;
     public const int BadgeRevoked = 8;
     public const int EconomyAction = 9;
+    public const int MarkedSensitive = 10;
 }
 
 internal static class ModerationNoticeText
@@ -38,7 +39,8 @@ internal static class ModerationNoticeText
         return notice.Kind != ModerationNoticeKinds.ReportOutcome
             && notice.Kind != ModerationNoticeKinds.BadgeGranted
             && notice.Kind != ModerationNoticeKinds.BadgeRevoked
-            && notice.Kind != ModerationNoticeKinds.EconomyAction;
+            && notice.Kind != ModerationNoticeKinds.EconomyAction
+            && notice.Kind != ModerationNoticeKinds.MarkedSensitive;
     }
 
     public static string Title(ModerationNoticeDto notice)
@@ -54,6 +56,7 @@ internal static class ModerationNoticeText
             ModerationNoticeKinds.BadgeGranted => Loc.T(L.Moderation.NoticeBadgeTitle),
             ModerationNoticeKinds.BadgeRevoked => Loc.T(L.Moderation.NoticeBadgeRevokedTitle),
             ModerationNoticeKinds.EconomyAction => Loc.T(L.Moderation.NoticeCoinTitle),
+            ModerationNoticeKinds.MarkedSensitive => Loc.T(L.Moderation.NoticeSensitiveTitle),
             _ => Loc.T(L.Moderation.NoticeThanksTitle),
         };
     }
@@ -78,6 +81,20 @@ internal static class ModerationNoticeText
         if (notice.Kind == ModerationNoticeKinds.EconomyAction)
         {
             return notice.Detail.Length > 0 ? notice.Detail : Loc.T(L.Moderation.NoticeCoinBody);
+        }
+
+        if (notice.Kind == ModerationNoticeKinds.MarkedSensitive)
+        {
+            var veiled = new StringBuilder();
+            Append(veiled, Loc.T(L.Moderation.NoticeSensitiveBody));
+            AppendQuote(veiled, notice);
+            if (notice.ModeratorNote.Length > 0)
+            {
+                Append(veiled, Loc.T(L.Moderation.NoticeModeratorNote, notice.ModeratorNote));
+            }
+
+            Append(veiled, Loc.T(L.Moderation.RemovedFooter));
+            return veiled.ToString();
         }
 
         var body = new StringBuilder();

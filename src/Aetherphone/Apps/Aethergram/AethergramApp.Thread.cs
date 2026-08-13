@@ -68,7 +68,8 @@ internal sealed partial class AethergramApp
 
             var photos = PostMedia.Photos(post.MediaUrls, post.MediaUrl);
             card = new ChatPostCard(post.Id, SocialIdentity.Name(post.AuthorDisplayName, post.AuthorHandle),
-                post.Text, photos.Length > 0 ? photos[0] : null, true);
+                post.Text, photos.Length > 0 ? photos[0] : null, true,
+                SensitiveReveals.ShouldVeil(post.Sensitive, post.Id, app.configuration.ShowSensitiveContent));
             return true;
         }
 
