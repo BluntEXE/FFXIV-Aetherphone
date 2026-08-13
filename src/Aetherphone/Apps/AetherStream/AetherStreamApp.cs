@@ -1,6 +1,7 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
+using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
@@ -13,7 +14,6 @@ using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.AetherStream;
 
@@ -24,21 +24,8 @@ internal enum AetherStreamScreen : byte
     Join,
 }
 
-internal enum AetherStreamTab : byte
-{
-    Player,
-    Queue,
-    Casting,
-}
-
 internal sealed partial class AetherStreamApp : IPhoneApp
 {
-    public string Id => "aetherstream";
-    public string DisplayName => Loc.T(L.Apps.AetherStream);
-    public string Glyph => "V";
-    public Vector4 Accent => AppAccents.For(Id);
-    public int BadgeCount => 0;
-
     private readonly VideoPlayer video;
     private readonly ScreenController screen;
     private readonly AetherStreamQueue queue;
@@ -52,16 +39,17 @@ internal sealed partial class AetherStreamApp : IPhoneApp
     private readonly AccountClient joinAccount;
     private readonly StoreWork joinWork = new("aetherstream.join");
     private readonly StoreWork dependencyWork = new("aetherstream.dependencies");
-    private bool mpvDownloading;
-    private bool ytdlpDownloading;
     private readonly AppSkin ui = new(AppPalettes.AetherStream);
     private readonly ViewRouter<AetherStreamScreen> router = new(AetherStreamScreen.Main);
-    private readonly string[] tabOptions = new string[3];
-    private AetherStreamTab activeTab;
+
+    private readonly SheetSurface upNextSheet = new("aetherstream.upNext");
+    private readonly SheetSurface partySheet = new("aetherstream.party");
+    private readonly SheetSurface screenSheet = new("aetherstream.screen");
+
     private PhoneTheme theme = PhoneTheme.Default;
     private PhoneTheme accentedTheme = PhoneTheme.Default;
 
-    public AetherStreamApp(VideoPlayer video, ScreenController screen, AetherStreamQueue queue,
+    internal AetherStreamApp(VideoPlayer video, ScreenController screen, AetherStreamQueue queue,
         Configuration configuration, ConfirmService confirm, RemoteImageCache remoteImages, HttpService http,
         AethernetSession aethernetSession, LodestoneService lodestone, WatchAlongSession watchAlong,
         AetherStreamScreenWindow screenWindow)
@@ -83,14 +71,24 @@ internal sealed partial class AetherStreamApp : IPhoneApp
         video.MaxQualityHeight = configuration.VideoMaxQualityHeight;
     }
 
+    public string Id => "aetherstream";
+    public string DisplayName => Loc.T(L.Apps.AetherStream);
+    public string Glyph => "V";
+    public Vector4 Accent => AppAccents.For(Id);
+    public int BadgeCount => watchAlong.PendingRequests.Count + watchAlong.PendingQueueSuggestions.Count;
+
     public void OnOpened()
     {
-        screen.Engine.Resources.EnsureProvisioned();
+        _ = screen.Engine.Dependencies.EnsureReadyAsync(CancellationToken.None);
+        watchAlong.RequestNearbyStreams();
     }
 
     public void OnClosed()
     {
         router.Reset();
+        upNextSheet.Close();
+        partySheet.Close();
+        screenSheet.Close();
     }
 
     public void Draw(in PhoneContext context)
@@ -121,32 +119,24 @@ internal sealed partial class AetherStreamApp : IPhoneApp
 
     private void DrawMain(PhoneContext context, Rect area, float scale)
     {
-        ui.Body(area);
-        DrawMainHeader(context, area, scale);
-
-        var tabTop = area.Min.Y + AppHeader.Height * scale + Metrics.Space.Sm * scale;
-        var tabMargin = Metrics.Space.Lg * scale;
-        var tabRow = new Rect(new Vector2(area.Min.X + tabMargin, tabTop),
-            new Vector2(area.Max.X - tabMargin, tabTop + 30f * scale));
-        tabOptions[0] = Loc.T(L.AetherStream.TabPlayer);
-        tabOptions[1] = Loc.T(L.AetherStream.TabQueue);
-        tabOptions[2] = Loc.T(L.AetherStream.TabCasting);
-        var selected = SegmentStrip.Draw("aetherstream.tabs", tabRow, tabOptions, (int)activeTab, accentedTheme);
-        activeTab = (AetherStreamTab)selected;
-
-        var body = new Rect(new Vector2(area.Min.X, tabRow.Max.Y + 10f * scale), area.Max);
-        switch (activeTab)
+        if (NeedsSetup)
         {
-            case AetherStreamTab.Queue:
-                DrawQueueTab(body, scale);
-                break;
-            case AetherStreamTab.Casting:
-                DrawCastingTab(body, scale);
-                break;
-            default:
-                DrawPlayerTab(body, scale);
-                break;
+            DrawSetupGate(area, scale);
+            return;
         }
+
+        ui.Body(area);
+
+        using (InputShield.Engage(SheetsCapturePointer))
+        {
+            DrawMainHeader(context, area, scale);
+            var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
+            DrawNowPlaying(body, scale);
+        }
+
+        DrawUpNextSheet(area, scale);
+        DrawPartySheet(area, scale);
+        DrawScreenSheet(area, scale);
     }
 
     private void DrawMainHeader(PhoneContext context, Rect area, float scale)
@@ -163,9 +153,11 @@ internal sealed partial class AetherStreamApp : IPhoneApp
         }
     }
 
+    private bool SheetsCapturePointer =>
+        upNextSheet.CapturesPointer || partySheet.CapturesPointer || screenSheet.CapturesPointer;
+
     public void Dispose()
     {
-        video.Stop();
         joinWork.Dispose();
         dependencyWork.Dispose();
     }

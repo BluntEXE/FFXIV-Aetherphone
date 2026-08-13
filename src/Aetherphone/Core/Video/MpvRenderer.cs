@@ -1,605 +1,706 @@
+using System.Globalization;
 using System.Runtime.InteropServices;
 using SharpDX.Direct3D11;
 
-namespace Aetherphone.Core.Video
+namespace Aetherphone.Core.Video;
+
+internal enum MpvEndReason : byte
 {
-	internal class MpvRenderer : IDisposable
-	{
-		private const string DLL = "libmpv-2";
-		private static Resources? _resources;
-		public static void Setup(Resources resources)
-		{
-			_resources = resources;
-		}
-		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern IntPtr mpv_create();
-		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern int mpv_initialize(IntPtr ctx);
-		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern int mpv_set_option_string(IntPtr ctx, string name, string data);
-		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern int mpv_command(IntPtr ctx, string[] args);
-		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern int mpv_render_context_create(ref IntPtr res, IntPtr ctx, IntPtr parms);
-		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern int mpv_render_context_render(IntPtr ctx, IntPtr parms);
-		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern void mpv_render_context_free(IntPtr ctx);
-		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern void mpv_render_context_set_update_callback(IntPtr ctx, MpvRenderUpdateFn callback, IntPtr callback_ctx);
-		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern ulong mpv_render_context_update(IntPtr ctx);
-		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern IntPtr mpv_wait_event(IntPtr ctx, double timeout);
-		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern int mpv_request_log_messages(IntPtr ctx, string min_level);
-		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern void mpv_terminate_destroy(IntPtr ctx);
-		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern int mpv_get_property(IntPtr ctx, string name, int format, out double data);
-		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern int mpv_get_property(IntPtr ctx, string name, int format, IntPtr data);
-		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern IntPtr mpv_get_property_string(IntPtr ctx, string name);
-		[DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] private static extern void mpv_free(IntPtr data);
+    Finished,
+    Stopped,
+    Quit,
+    Failed,
+    Redirect,
+}
 
-		[StructLayout(LayoutKind.Sequential)]
-		private struct MpvRenderParam { public int Type; public IntPtr Data; }
+internal sealed class MpvRenderer : IDisposable
+{
+    private const string Library = "libmpv-2";
+    private const string RenderKey = "mpv";
 
-		public delegate void MpvRenderUpdateFn(IntPtr callback_ctx);
+    private const int FormatFlag = 3;
+    private const int FormatDouble = 5;
 
-		private const string RenderKey = "mpv";
+    private const int EventShutdown = 1;
+    private const int EventLogMessage = 2;
+    private const int EventStartFile = 6;
+    private const int EventEndFile = 7;
+    private const int EventFileLoaded = 8;
+    private const int EventPlaybackRestart = 21;
 
-		private IntPtr _mpvCtx;
-		private IntPtr _mpvRenderCtx;
-		private IntPtr _bufferPtr;
-		private IntPtr _snapA, _snapB;
-		private bool _useSnapA = true;
-		private int _frameBytes;
-		private int _width, _height;
-		private CancellationTokenSource? _cancelToken;
-		private IntPtr _renderParamsPtr;
-		private IntPtr _sizePtr, _stridePtr, _formatPtr;
-		private Texture2D? _targetTexture;
-		private ManualResetEventSlim _frameReady = new ManualResetEventSlim(false);
-		private MpvRenderUpdateFn? _updateCallback;
-		private GCHandle _updateCallbackHandle;
-		private bool _closed = true;
-		private Thread? _eventThread;
-		private readonly Lock _snapshotLock = new();
-		private IntPtr _latestSnapshot;
+    private const int ParamInvalid = 0;
+    private const int ParamApiType = 1;
+    private const int ParamSoftwareSize = 17;
+    private const int ParamSoftwareFormat = 18;
+    private const int ParamSoftwareStride = 19;
+    private const int ParamSoftwarePointer = 20;
 
-		public void Initialize(int width, int height, Texture2D? targetTexture, CancellationTokenSource cancelToken,
-			bool hardwareDecoding = false, int maxQualityHeight = 1080, bool allowInsecureDirectUrls = false,
-			int initialVolume = 60)
-		{
-			_width = width;
-			_height = height;
-			_cancelToken = cancelToken;
-			_targetTexture = targetTexture;
+    private const int ParamStride = 16;
+    private const int MaxConsecutiveRenderFailures = 30;
+    private const int RenderWaitMilliseconds = 250;
+    private const double EventWaitSeconds = 0.1;
 
-			_frameBytes = width * height * 4;
-			_bufferPtr = Marshal.AllocHGlobal(_frameBytes);
-			_snapA = Marshal.AllocHGlobal(_frameBytes);
-			_snapB = Marshal.AllocHGlobal(_frameBytes);
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern IntPtr mpv_create();
 
-			_mpvCtx = mpv_create();
-			_ = mpv_set_option_string(_mpvCtx, "vo", "libmpv");
-			_ = mpv_set_option_string(_mpvCtx, "hwdec", hardwareDecoding ? "auto-safe" : "no");
-			_ = mpv_set_option_string(_mpvCtx, "profile", "sw-fast");
-			_ = mpv_set_option_string(_mpvCtx, "ytdl", "yes");
-			_ = mpv_set_option_string(_mpvCtx, "script-opts", $"ytdl_hook-ytdl_path={_resources?.GetLocationYTDLP()}");
-			_ = mpv_set_option_string(_mpvCtx, "ytdl-format", $"bestvideo[height<={maxQualityHeight}][ext=mp4]+bestaudio/best[height<={maxQualityHeight}]");
-			_ = mpv_set_option_string(_mpvCtx, "terminal", "yes");
-			_ = mpv_set_option_string(_mpvCtx, "volume", initialVolume.ToString(System.Globalization.CultureInfo.InvariantCulture));
-			_ = mpv_set_option_string(_mpvCtx, "msg-level", "all=warn,ffmpeg=error");
-			_ = mpv_set_option_string(_mpvCtx, "ytdl-raw-options", "force-ipv4=,hls-use-mpegts=");
-			_ = mpv_set_option_string(_mpvCtx, "idle", "yes");
-			_ = mpv_set_option_string(_mpvCtx, "keep-open", "yes");
-			if (WineEnvironment.IsWine && allowInsecureDirectUrls)
-			{
-				_ = mpv_set_option_string(_mpvCtx, "tls-verify", "no");
-			}
-			_ = mpv_request_log_messages(_mpvCtx, "warn");
-			_ = mpv_initialize(_mpvCtx);
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int mpv_initialize(IntPtr ctx);
 
-			nint apiTypePtr = Marshal.StringToHGlobalAnsi("sw");
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int mpv_set_option_string(IntPtr ctx,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string name, [MarshalAs(UnmanagedType.LPUTF8Str)] string data);
 
-			IntPtr paramsPtr = Marshal.AllocHGlobal(Marshal.SizeOf<MpvRenderParam>() * 2);
-			Marshal.StructureToPtr(new MpvRenderParam { Type = 1, Data = apiTypePtr }, paramsPtr, false);
-			Marshal.StructureToPtr(new MpvRenderParam { Type = 0, Data = IntPtr.Zero }, paramsPtr + 16, false);
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int mpv_command(IntPtr ctx,
+        [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPUTF8Str)] string?[] args);
 
-			int rc = mpv_render_context_create(ref _mpvRenderCtx, _mpvCtx, paramsPtr);
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int mpv_render_context_create(ref IntPtr result, IntPtr ctx, IntPtr parameters);
 
-			Marshal.FreeHGlobal(apiTypePtr);
-			Marshal.FreeHGlobal(paramsPtr);
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int mpv_render_context_render(IntPtr ctx, IntPtr parameters);
 
-			_sizePtr = Marshal.AllocHGlobal(8);
-			Marshal.WriteInt32(_sizePtr, _width);
-			Marshal.WriteInt32(_sizePtr + 4, _height);
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void mpv_render_context_free(IntPtr ctx);
 
-			_stridePtr = Marshal.AllocHGlobal(IntPtr.Size);
-			Marshal.WriteIntPtr(_stridePtr, new IntPtr(_width * 4));
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void mpv_render_context_set_update_callback(IntPtr ctx, MpvRenderUpdateFn callback,
+        IntPtr callbackContext);
 
-			_formatPtr = Marshal.StringToHGlobalAnsi("bgra");
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern ulong mpv_render_context_update(IntPtr ctx);
 
-			_renderParamsPtr = Marshal.AllocHGlobal(Marshal.SizeOf<MpvRenderParam>() * 5);
-			Marshal.StructureToPtr(new MpvRenderParam { Type = 17, Data = _sizePtr }, _renderParamsPtr, false);
-			Marshal.StructureToPtr(new MpvRenderParam { Type = 18, Data = _formatPtr }, _renderParamsPtr + 16, false);
-			Marshal.StructureToPtr(new MpvRenderParam { Type = 19, Data = _stridePtr }, _renderParamsPtr + 32, false);
-			Marshal.StructureToPtr(new MpvRenderParam { Type = 20, Data = _bufferPtr }, _renderParamsPtr + 48, false);
-			Marshal.StructureToPtr(new MpvRenderParam { Type = 0, Data = IntPtr.Zero }, _renderParamsPtr + 64, false);
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern IntPtr mpv_wait_event(IntPtr ctx, double timeout);
 
-			_updateCallback = (ctx) => _frameReady.Set();
-			_updateCallbackHandle = GCHandle.Alloc(_updateCallback);
-			mpv_render_context_set_update_callback(_mpvRenderCtx, _updateCallback, IntPtr.Zero);
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int mpv_request_log_messages(IntPtr ctx,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string minimumLevel);
 
-			_eventThread = new Thread(EventLoop)
-			{
-				IsBackground = true,
-				Name = "mpv-events"
-			};
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void mpv_terminate_destroy(IntPtr ctx);
 
-			_eventThread.Start();
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int mpv_get_property(IntPtr ctx,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string name, int format, out double data);
 
-			_closed = false;
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int mpv_get_property(IntPtr ctx,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string name, int format, out int data);
 
-			AepLog.Debug("[MPV] Video Player started");
-		}
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern IntPtr mpv_get_property_string(IntPtr ctx,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string name);
 
-		public bool RenderFrame()
-		{
-			try
-			{
-				_frameReady.Wait();
-				_frameReady.Reset();
-			}
-			catch
-			{
-				AepLog.Debug("[MPV] Video Player stopped");
-				return false;
-			}
-			if (_closed || _cancelToken!.Token.IsCancellationRequested)
-			{ AepLog.Debug("[MPV] Video Player stopped"); return false; }
-			ulong flags = mpv_render_context_update(_mpvRenderCtx);
-			if ((flags & 1) == 0)
-			{
-				return true;
-			}
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void mpv_free(IntPtr data);
 
-			try
-			{
-				int rc = mpv_render_context_render(_mpvRenderCtx, _renderParamsPtr);
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern IntPtr mpv_error_string(int error);
 
-				if (_closed || _cancelToken!.Token.IsCancellationRequested)
-				{
-					return false;
-				}
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MpvRenderParam
+    {
+        public int Type;
+        public IntPtr Data;
+    }
 
-				if (rc == 0 && _targetTexture != null)
-				{
-					IntPtr snapshot = _useSnapA ? _snapA : _snapB;
-					_useSnapA = !_useSnapA;
+    internal delegate void MpvRenderUpdateFn(IntPtr callbackContext);
 
-					unsafe
-					{
-						System.Buffer.MemoryCopy((void*)_bufferPtr, (void*)snapshot, _frameBytes, _frameBytes);
-					}
+    private readonly Lock commandLock = new();
+    private readonly Lock snapshotLock = new();
+    private readonly ManualResetEventSlim frameReady = new(false);
 
-					lock (_snapshotLock)
-					{
-						_latestSnapshot = snapshot;
-					}
+    private IntPtr mpvContext;
+    private IntPtr renderContext;
+    private IntPtr frameBuffer;
+    private IntPtr snapshotA;
+    private IntPtr snapshotB;
+    private IntPtr latestSnapshot;
+    private bool useSnapshotA = true;
 
-					Texture2D texture = _targetTexture;
-					int width = _width;
-					DxHandler.RunOnRenderThread(RenderKey, () =>
-					{
-						DxHandler.Device?.ImmediateContext.UpdateSubresource(texture, 0, null, snapshot, width * 4, 0);
-					});
-					return true;
-				}
-				else
-				{
-					AepLog.Warning($"[MPV] Error rendering frame: RC: {rc} Texture: {_targetTexture}");
-				}
-			}
-			catch (Exception e)
-			{
-				AepLog.Warning($"[MPV] Error rendering frame: {e.Message} {e.StackTrace}");
-			}
-			return false;
-		}
-		private readonly Lock _mpvLock = new();
-		public void StopRender()
-		{
-			_closed = true;
-			_cancelToken!.Cancel();
-			DxHandler.CancelRenderThreadWork(RenderKey);
-			lock (_snapshotLock)
-			{
-				_latestSnapshot = IntPtr.Zero;
-			}
+    private IntPtr renderParameters;
+    private IntPtr sizeParameter;
+    private IntPtr strideParameter;
+    private IntPtr formatParameter;
 
-			Task.Run(() =>
-			{
-				lock (_mpvLock)
-				{
-					if (_mpvRenderCtx != IntPtr.Zero)
-					{
-						mpv_render_context_free(_mpvRenderCtx);
-						_mpvRenderCtx = IntPtr.Zero;
-					}
-					if (_updateCallbackHandle.IsAllocated)
-					{
-						_updateCallbackHandle.Free();
-					}
+    private int frameBytes;
+    private int width;
+    private int height;
 
-					if (_mpvCtx != IntPtr.Zero)
-					{
-						mpv_terminate_destroy(_mpvCtx);
-						_mpvCtx = IntPtr.Zero;
-					}
+    private Texture2D? targetTexture;
+    private MpvRenderUpdateFn? updateCallback;
+    private GCHandle updateCallbackHandle;
 
-					if (_bufferPtr != IntPtr.Zero)
-					{
-						Marshal.FreeHGlobal(_bufferPtr);
-						_bufferPtr = IntPtr.Zero;
-					}
-					if (_snapA != IntPtr.Zero)
-					{
-						Marshal.FreeHGlobal(_snapA);
-						_snapA = IntPtr.Zero;
-					}
-					if (_snapB != IntPtr.Zero)
-					{
-						Marshal.FreeHGlobal(_snapB);
-						_snapB = IntPtr.Zero;
-					}
+    private Thread? eventThread;
+    private Thread? renderThread;
 
-					Marshal.FreeHGlobal(_sizePtr);
-					Marshal.FreeHGlobal(_stridePtr);
-					Marshal.FreeHGlobal(_formatPtr);
-					Marshal.FreeHGlobal(_renderParamsPtr);
+    private volatile bool disposed;
+    private volatile bool started;
+    private volatile string? currentUrl;
+    private int consecutiveRenderFailures;
 
-					_targetTexture = null;
-				}
-			});
+    internal event Action? FileLoaded;
+    internal event Action<MpvEndReason, string?>? FileEnded;
 
-			_eventThread?.Join(2000);
-		}
+    internal bool IsRunning => started && !disposed;
 
-		public void Play(string url, double playbackPosition, bool isPlaying)
-		{
-			if (!_closed)
-			{
-				AepLog.Debug("Playing New Video at " + playbackPosition + " | " + isPlaying);
-				lock (_mpvLock)
-				{
-					if(url == string.Empty)
-					{
-						Stop();
-					}
-					else
-					{
-						string startStr = ((int)playbackPosition).ToString(System.Globalization.CultureInfo.InvariantCulture);
-						string pauseStr = !isPlaying ? ",pause=yes" : string.Empty;
-						_ = mpv_command(_mpvCtx, ["loadfile", url, "replace", "0", $"start={startStr}{pauseStr}", null!]);	
-					}
-				}
-			}
-		}
+    internal void Initialize(int frameWidth, int frameHeight, Texture2D? texture, string? linkResolverPath,
+        bool hardwareDecoding, int maxQualityHeight, bool allowInsecureDirectUrls, int initialVolume)
+    {
+        width = frameWidth;
+        height = frameHeight;
+        targetTexture = texture;
+        frameBytes = frameWidth * frameHeight * 4;
 
-		public void Stop()
-		{
-			if (!_closed)
-			{
-				lock (_mpvLock)
-				{
-					_ = mpv_command(_mpvCtx, ["stop", null!]);
-					_closed = true;
-					_frameReady?.Set();
-				}
-			}
-		}
+        frameBuffer = Marshal.AllocHGlobal(frameBytes);
+        snapshotA = Marshal.AllocHGlobal(frameBytes);
+        snapshotB = Marshal.AllocHGlobal(frameBytes);
 
-		public bool GetPaused()
-		{
-			if (_closed)
-			{
-				return true;
-			}
+        mpvContext = mpv_create();
+        if (mpvContext == IntPtr.Zero)
+        {
+            throw new InvalidOperationException("mpv could not be created.");
+        }
 
-			lock (_mpvLock)
-			{
-				if (_mpvCtx == IntPtr.Zero)
-				{
-					return true;
-				}
+        SetOption("vo", "libmpv");
+        SetOption("hwdec", hardwareDecoding ? "auto-safe" : "no");
+        SetOption("profile", "sw-fast");
+        SetOption("ytdl", "yes");
+        if (linkResolverPath is { Length: > 0 })
+        {
+            SetOption("script-opts", $"ytdl_hook-ytdl_path={linkResolverPath}");
+        }
 
-				IntPtr ptr = Marshal.AllocHGlobal(4);
-				try
-				{
-					_ = mpv_get_property(_mpvCtx, "pause", 3, ptr);
-					return Marshal.ReadInt32(ptr) == 1;
-				}
-				finally
-				{
-					Marshal.FreeHGlobal(ptr);
-				}
-			}
-		}
-		public byte[]? TryGetFrame(out int width, out int height)
-		{
-			width = _width;
-			height = _height;
-			lock (_snapshotLock)
-			{
-				if (_latestSnapshot == IntPtr.Zero || _frameBytes == 0)
-				{
-					return null;
-				}
+        SetOption("ytdl-format",
+            $"bestvideo[height<={maxQualityHeight}][ext=mp4]+bestaudio/best[height<={maxQualityHeight}]");
+        SetOption("ytdl-raw-options", "force-ipv4=,hls-use-mpegts=");
+        SetOption("volume", initialVolume.ToString(CultureInfo.InvariantCulture));
+        SetOption("msg-level", "all=warn,ffmpeg=error");
+        SetOption("terminal", "yes");
+        SetOption("idle", "yes");
+        SetOption("keep-open", "yes");
+        if (WineEnvironment.IsWine && allowInsecureDirectUrls)
+        {
+            SetOption("tls-verify", "no");
+        }
 
-				var frame = new byte[_frameBytes];
-				Marshal.Copy(_latestSnapshot, frame, 0, _frameBytes);
-				return frame;
-			}
-		}
+        _ = mpv_request_log_messages(mpvContext, "warn");
 
-		public double[] GetProperties()
-		{
-			if (_closed)
-			{
-				return [0, 0, 100];
-			}
+        var initialized = mpv_initialize(mpvContext);
+        if (initialized < 0)
+        {
+            throw new InvalidOperationException($"mpv could not start: {ErrorText(initialized)}");
+        }
 
-			lock (_mpvLock)
-			{
-				if (_mpvCtx == IntPtr.Zero)
-				{
-					return [0, 0, 100];
-				}
+        CreateRenderContext();
+        BuildRenderParameters();
 
-				_ = mpv_get_property(_mpvCtx, "time-pos", 5, out double position);
-				_ = mpv_get_property(_mpvCtx, "duration", 5, out double duration);
-				_ = mpv_get_property(_mpvCtx, "volume", 5, out double volume);
-				return [position, duration, volume];
-			}
-		}
+        updateCallback = _ => frameReady.Set();
+        updateCallbackHandle = GCHandle.Alloc(updateCallback);
+        mpv_render_context_set_update_callback(renderContext, updateCallback, IntPtr.Zero);
 
-		public void Pause(bool pause)
-		{
-			if (!_closed)
-			{
-				lock (_mpvLock)
-				{
-					_ = mpv_command(_mpvCtx, ["set", "pause", pause ? "yes" : "no", null!]);
-				}
-			}
-		}
-		
-		public void SetVolume(int volume)
-		{
-			if (!_closed)
-			{
-				lock (_mpvLock)
-				{
-					_ = mpv_command(_mpvCtx, ["set", "volume", volume.ToString(System.Globalization.CultureInfo.InvariantCulture), null!]);
-				}
-			}
-		}
+        started = true;
 
-		public void Seek(int seconds)
-		{
-			if (_closed)
-			{
-				AepLog.Debug($"[MPV] Seek to {seconds}s ignored: player closed");
-				return;
-			}
+        eventThread = new Thread(EventLoop) { IsBackground = true, Name = "aetherstream-mpv-events" };
+        eventThread.Start();
 
-			lock (_mpvLock)
-			{
-				if (_mpvCtx == IntPtr.Zero)
-				{
-					AepLog.Debug($"[MPV] Seek to {seconds}s ignored: no mpv context");
-					return;
-				}
+        renderThread = new Thread(RenderLoop) { IsBackground = true, Name = "aetherstream-mpv-render" };
+        renderThread.Start();
+    }
 
-				int rc = mpv_command(_mpvCtx, ["seek", seconds.ToString(System.Globalization.CultureInfo.InvariantCulture), "absolute", null!]);
-				if (rc < 0)
-				{
-					AepLog.Warning($"[MPV] Seek to {seconds}s failed: rc={rc}");
-				}
-			}
-		}
+    private void SetOption(string name, string value)
+    {
+        var result = mpv_set_option_string(mpvContext, name, value);
+        if (result < 0)
+        {
+            AepLog.Warning($"[MPV] Option {name}={value} was refused: {ErrorText(result)}");
+        }
+    }
 
-		public string? GetMediaTitle()
-		{
-			if (_closed)
-			{
-				return null;
-			}
+    private void CreateRenderContext()
+    {
+        var apiType = Marshal.StringToHGlobalAnsi("sw");
+        var parameters = Marshal.AllocHGlobal(ParamStride * 2);
+        try
+        {
+            Marshal.StructureToPtr(new MpvRenderParam { Type = ParamApiType, Data = apiType }, parameters, false);
+            Marshal.StructureToPtr(new MpvRenderParam { Type = ParamInvalid, Data = IntPtr.Zero },
+                parameters + ParamStride, false);
 
-			lock (_mpvLock)
-			{
-				if (_mpvCtx == IntPtr.Zero)
-				{
-					return null;
-				}
+            var created = mpv_render_context_create(ref renderContext, mpvContext, parameters);
+            if (created < 0)
+            {
+                throw new InvalidOperationException($"mpv could not start rendering: {ErrorText(created)}");
+            }
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(apiType);
+            Marshal.FreeHGlobal(parameters);
+        }
+    }
 
-				IntPtr ptr = mpv_get_property_string(_mpvCtx, "media-title");
-				if (ptr != IntPtr.Zero)
-				{
-					try
-					{
-						return Marshal.PtrToStringUTF8(ptr);
-					}
-					finally
-					{
-						mpv_free(ptr);
-					}
-				}
-				return null;
-			}
-		}
+    private void BuildRenderParameters()
+    {
+        sizeParameter = Marshal.AllocHGlobal(8);
+        Marshal.WriteInt32(sizeParameter, width);
+        Marshal.WriteInt32(sizeParameter + 4, height);
 
-		public string? GetCurrentUrl()
-		{
-			if (_closed)
-			{
-				return null;
-			}
+        strideParameter = Marshal.AllocHGlobal(IntPtr.Size);
+        Marshal.WriteIntPtr(strideParameter, new IntPtr(width * 4));
 
-			lock (_mpvLock)
-			{
-				if (_mpvCtx == IntPtr.Zero)
-				{
-					return null;
-				}
+        formatParameter = Marshal.StringToHGlobalAnsi("bgra");
 
-				IntPtr ptr = mpv_get_property_string(_mpvCtx, "path");
-				if (ptr == IntPtr.Zero)
-				{
-					return null;
-				}
+        renderParameters = Marshal.AllocHGlobal(ParamStride * 5);
+        Marshal.StructureToPtr(new MpvRenderParam { Type = ParamSoftwareSize, Data = sizeParameter },
+            renderParameters, false);
+        Marshal.StructureToPtr(new MpvRenderParam { Type = ParamSoftwareFormat, Data = formatParameter },
+            renderParameters + ParamStride, false);
+        Marshal.StructureToPtr(new MpvRenderParam { Type = ParamSoftwareStride, Data = strideParameter },
+            renderParameters + ParamStride * 2, false);
+        Marshal.StructureToPtr(new MpvRenderParam { Type = ParamSoftwarePointer, Data = frameBuffer },
+            renderParameters + ParamStride * 3, false);
+        Marshal.StructureToPtr(new MpvRenderParam { Type = ParamInvalid, Data = IntPtr.Zero },
+            renderParameters + ParamStride * 4, false);
+    }
 
-				try
-				{
-					return Marshal.PtrToStringAnsi(ptr);
-				}
-				finally
-				{
-					mpv_free(ptr);
-				}
-			}
-		}
+    internal bool Play(string url, double startSeconds, bool playing)
+    {
+        if (!IsRunning || url.Length == 0)
+        {
+            return false;
+        }
 
-		public bool IsIdle()
-		{
-			if (_closed)
-			{
-				return true;
-			}
+        var start = ((int)Math.Max(0d, startSeconds)).ToString(CultureInfo.InvariantCulture);
+        var options = playing ? $"start={start}" : $"start={start},pause=yes";
 
-			lock (_mpvLock)
-			{
-				if (_mpvCtx == IntPtr.Zero)
-				{
-					return true;
-				}
+        lock (commandLock)
+        {
+            var result = mpv_command(mpvContext, ["loadfile", url, "replace", "0", options, null]);
+            if (result < 0)
+            {
+                AepLog.Warning($"[MPV] Could not load {url}: {ErrorText(result)}");
+                return false;
+            }
+        }
 
-				IntPtr ptr = Marshal.AllocHGlobal(4);
-				try
-				{
-					int rc = mpv_get_property(_mpvCtx, "idle-active", 3, ptr);
-					if (rc < 0)
-					{
-						return true;
-					}
+        currentUrl = url;
+        Interlocked.Exchange(ref consecutiveRenderFailures, 0);
+        return true;
+    }
 
-					return Marshal.ReadInt32(ptr) == 1;
-				}
-				finally
-				{
-					Marshal.FreeHGlobal(ptr);
-				}
-			}
-		}
+    internal void Stop()
+    {
+        if (!IsRunning)
+        {
+            return;
+        }
 
-		public bool IsEofReached()
-		{
-			if (_closed)
-			{
-				return true;
-			}
+        currentUrl = null;
+        lock (commandLock)
+        {
+            _ = mpv_command(mpvContext, ["stop", null]);
+        }
 
-			lock (_mpvLock)
-			{
-				if (_mpvCtx == IntPtr.Zero)
-				{
-					return true;
-				}
+        lock (snapshotLock)
+        {
+            latestSnapshot = IntPtr.Zero;
+        }
+    }
 
-				IntPtr ptr = Marshal.AllocHGlobal(4);
-				try
-				{
-					int rc = mpv_get_property(_mpvCtx, "eof-reached", 3, ptr);
-					if (rc < 0)
-					{
-						return false;
-					}
+    internal void Pause(bool paused) => SetProperty("pause", paused ? "yes" : "no");
 
-					return Marshal.ReadInt32(ptr) == 1;
-				}
-				finally
-				{
-					Marshal.FreeHGlobal(ptr);
-				}
-			}
-		}
-		
-		public void Dispose()
-		{
-			StopRender();
-			_frameReady.Dispose();
-			GC.SuppressFinalize(this);
-		}
+    internal void SetVolume(int volume) =>
+        SetProperty("volume", Math.Clamp(volume, 0, 100).ToString(CultureInfo.InvariantCulture));
 
-		private void EventLoop()
-		{
-            AepLog.Verbose("[MPV] event loop started");
+    internal void Seek(double seconds)
+    {
+        if (!IsRunning)
+        {
+            return;
+        }
+
+        var target = Math.Max(0d, seconds).ToString("F3", CultureInfo.InvariantCulture);
+        lock (commandLock)
+        {
+            var result = mpv_command(mpvContext, ["seek", target, "absolute", null]);
+            if (result < 0)
+            {
+                AepLog.Warning($"[MPV] Could not seek to {target}s: {ErrorText(result)}");
+            }
+        }
+    }
+
+    private void SetProperty(string name, string value)
+    {
+        if (!IsRunning)
+        {
+            return;
+        }
+
+        lock (commandLock)
+        {
+            _ = mpv_command(mpvContext, ["set", name, value, null]);
+        }
+    }
+
+    internal MpvPlaybackInfo ReadPlaybackInfo()
+    {
+        if (!IsRunning)
+        {
+            return default;
+        }
+
+        lock (commandLock)
+        {
+            if (mpvContext == IntPtr.Zero)
+            {
+                return default;
+            }
+
+            _ = mpv_get_property(mpvContext, "time-pos", FormatDouble, out double position);
+            _ = mpv_get_property(mpvContext, "duration", FormatDouble, out double duration);
+            _ = mpv_get_property(mpvContext, "pause", FormatFlag, out int paused);
+            _ = mpv_get_property(mpvContext, "core-idle", FormatFlag, out int coreIdle);
+            _ = mpv_get_property(mpvContext, "seeking", FormatFlag, out int seeking);
+            return new MpvPlaybackInfo(position, duration, paused == 1, coreIdle == 1, seeking == 1);
+        }
+    }
+
+    internal string? ReadMediaTitle() => ReadStringProperty("media-title");
+
+    internal string? CurrentUrl => currentUrl;
+
+    private string? ReadStringProperty(string name)
+    {
+        if (!IsRunning)
+        {
+            return null;
+        }
+
+        lock (commandLock)
+        {
+            if (mpvContext == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            var pointer = mpv_get_property_string(mpvContext, name);
+            if (pointer == IntPtr.Zero)
+            {
+                return null;
+            }
+
             try
             {
-                while (!_closed)
-                {
-                    IntPtr ev = mpv_wait_event(_mpvCtx, 1);
-                    if (ev == IntPtr.Zero) {continue;}
-
-                    int eventId = Marshal.ReadInt32(ev);
-
-                    switch (eventId)
-                    {
-                        case 0:
-                            continue;
-
-                        case 1:
-                            AepLog.Verbose("[MPV] SHUTDOWN");
-                            return;
-
-                        case 2:
-                            {
-                                IntPtr dataPtr2 = Marshal.ReadIntPtr(ev + 16);
-                                if (dataPtr2 != IntPtr.Zero && dataPtr2.ToInt64() > 65536)
-                                {
-									string? prefix = Marshal.PtrToStringAnsi(Marshal.ReadIntPtr(dataPtr2));
-									string? level  = Marshal.PtrToStringAnsi(Marshal.ReadIntPtr(dataPtr2 + 8));
-									string? text   = Marshal.PtrToStringAnsi(Marshal.ReadIntPtr(dataPtr2 + 16));
-									if(prefix != null && prefix.Contains("ytdl") && level == "error" && text != null && text.Contains("Unsupported URL"))
-									{
-										AepLog.Warning($"[MPV/{prefix}/{level}] {text?.Trim()}");
-										Stop();
-									}
-                                    AepLog.Verbose($"[MPV/{prefix}/{level}] {text?.Trim()}");
-                                }
-                                break;
-                            }
-
-                        case 3:  AepLog.Verbose("[MPV] GET_PROPERTY_REPLY"); break;
-                        case 4:  AepLog.Verbose("[MPV] SET_PROPERTY_REPLY"); break;
-                        case 5:  AepLog.Verbose("[MPV] COMMAND_REPLY");      break;
-                        case 6:  AepLog.Verbose("[MPV] START_FILE");         break;
-                        
-                        case 7:
-								break;
-                        
-                        case 8:  AepLog.Verbose("[MPV] FILE_LOADED");      break;
-                        case 14: AepLog.Verbose("[MPV] CLIENT_MESSAGE");   break;
-                        case 15: AepLog.Verbose("[MPV] VIDEO_RECONFIG");   break;
-                        case 16: AepLog.Verbose("[MPV] AUDIO_RECONFIG");   break;
-                        case 17: AepLog.Verbose("[MPV] SEEK");             break;
-                        case 18: AepLog.Verbose("[MPV] PLAYBACK_RESTART"); break;
-                        case 19: AepLog.Verbose("[MPV] PROPERTY_CHANGE");  break;
-                        case 22: AepLog.Verbose("[MPV] HOOK");             break;
-
-                        default:
-                            break;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                AepLog.Verbose($"[MPV] event loop crashed: {e.Message}\n{e.StackTrace}");
+                return Marshal.PtrToStringUTF8(pointer);
             }
             finally
             {
-                AepLog.Verbose("[MPV] event loop ended");
+                mpv_free(pointer);
             }
-            
-		}
-	}
+        }
+    }
+
+    internal byte[]? CopyLatestFrame(out int frameWidth, out int frameHeight)
+    {
+        frameWidth = width;
+        frameHeight = height;
+        lock (snapshotLock)
+        {
+            if (latestSnapshot == IntPtr.Zero || frameBytes == 0)
+            {
+                return null;
+            }
+
+            var frame = new byte[frameBytes];
+            Marshal.Copy(latestSnapshot, frame, 0, frameBytes);
+            return frame;
+        }
+    }
+
+    internal bool TryCopyLatestFrame(byte[] destination)
+    {
+        lock (snapshotLock)
+        {
+            if (latestSnapshot == IntPtr.Zero || frameBytes == 0 || destination.Length < frameBytes)
+            {
+                return false;
+            }
+
+            Marshal.Copy(latestSnapshot, destination, 0, frameBytes);
+            return true;
+        }
+    }
+
+    internal int FrameVersion => Volatile.Read(ref frameVersion);
+
+    private int frameVersion;
+
+    private void RenderLoop()
+    {
+        while (!disposed)
+        {
+            if (!frameReady.Wait(RenderWaitMilliseconds))
+            {
+                continue;
+            }
+
+            frameReady.Reset();
+            if (disposed)
+            {
+                return;
+            }
+
+            RenderPendingFrame();
+        }
+    }
+
+    private void RenderPendingFrame()
+    {
+        var flags = mpv_render_context_update(renderContext);
+        if ((flags & 1) == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            var result = mpv_render_context_render(renderContext, renderParameters);
+            if (disposed)
+            {
+                return;
+            }
+
+            if (result < 0)
+            {
+                NoteRenderFailure($"render failed: {ErrorText(result)}");
+                return;
+            }
+
+            var texture = targetTexture;
+            if (texture is null)
+            {
+                return;
+            }
+
+            var snapshot = useSnapshotA ? snapshotA : snapshotB;
+            useSnapshotA = !useSnapshotA;
+
+            unsafe
+            {
+                System.Buffer.MemoryCopy((void*)frameBuffer, (void*)snapshot, frameBytes, frameBytes);
+            }
+
+            lock (snapshotLock)
+            {
+                latestSnapshot = snapshot;
+            }
+
+            Interlocked.Increment(ref frameVersion);
+            Interlocked.Exchange(ref consecutiveRenderFailures, 0);
+
+            var rowPitch = width * 4;
+            DxHandler.RunOnRenderThread(RenderKey, () =>
+            {
+                DxHandler.Device?.ImmediateContext.UpdateSubresource(texture, 0, null, snapshot, rowPitch, 0);
+            });
+        }
+        catch (Exception exception)
+        {
+            NoteRenderFailure(exception.Message);
+        }
+    }
+
+    private void NoteRenderFailure(string reason)
+    {
+        var failures = Interlocked.Increment(ref consecutiveRenderFailures);
+        if (failures == 1 || failures % MaxConsecutiveRenderFailures == 0)
+        {
+            AepLog.Warning($"[MPV] Frame {reason} ({failures} in a row)");
+        }
+    }
+
+    private void EventLoop()
+    {
+        try
+        {
+            while (!disposed)
+            {
+                var handle = mpv_wait_event(mpvContext, EventWaitSeconds);
+                if (handle == IntPtr.Zero)
+                {
+                    continue;
+                }
+
+                var eventId = Marshal.ReadInt32(handle);
+                switch (eventId)
+                {
+                    case EventShutdown:
+                        return;
+                    case EventLogMessage:
+                        HandleLogMessage(handle);
+                        break;
+                    case EventStartFile:
+                        AepLog.Verbose("[MPV] Loading a file");
+                        break;
+                    case EventFileLoaded:
+                        FileLoaded?.Invoke();
+                        break;
+                    case EventPlaybackRestart:
+                        AepLog.Verbose("[MPV] Playback running");
+                        break;
+                    case EventEndFile:
+                        HandleEndFile(handle);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning($"[MPV] Event loop stopped: {exception.Message}");
+        }
+    }
+
+    private void HandleLogMessage(IntPtr handle)
+    {
+        var data = Marshal.ReadIntPtr(handle + 16);
+        if (data == IntPtr.Zero)
+        {
+            return;
+        }
+
+        var prefix = Marshal.PtrToStringAnsi(Marshal.ReadIntPtr(data));
+        var level = Marshal.PtrToStringAnsi(Marshal.ReadIntPtr(data + 8));
+        var text = Marshal.PtrToStringAnsi(Marshal.ReadIntPtr(data + 16))?.Trim();
+        if (text is null || text.Length == 0)
+        {
+            return;
+        }
+
+        if (level is "error" or "fatal")
+        {
+            AepLog.Warning($"[MPV/{prefix}] {text}");
+            return;
+        }
+
+        AepLog.Verbose($"[MPV/{prefix}/{level}] {text}");
+    }
+
+    private void HandleEndFile(IntPtr handle)
+    {
+        var data = Marshal.ReadIntPtr(handle + 16);
+        var reasonCode = 0;
+        var errorCode = 0;
+        if (data != IntPtr.Zero)
+        {
+            reasonCode = Marshal.ReadInt32(data);
+            errorCode = Marshal.ReadInt32(data + 4);
+        }
+
+        var reason = reasonCode switch
+        {
+            2 => MpvEndReason.Stopped,
+            3 => MpvEndReason.Quit,
+            4 => MpvEndReason.Failed,
+            5 => MpvEndReason.Redirect,
+            _ => MpvEndReason.Finished,
+        };
+
+        var detail = reason == MpvEndReason.Failed ? ErrorText(errorCode) : null;
+        if (reason == MpvEndReason.Failed)
+        {
+            AepLog.Warning($"[MPV] Playback failed: {detail}");
+        }
+
+        FileEnded?.Invoke(reason, detail);
+    }
+
+    private static string ErrorText(int error)
+    {
+        try
+        {
+            var pointer = mpv_error_string(error);
+            return pointer == IntPtr.Zero
+                ? error.ToString(CultureInfo.InvariantCulture)
+                : Marshal.PtrToStringAnsi(pointer) ?? error.ToString(CultureInfo.InvariantCulture);
+        }
+        catch (Exception)
+        {
+            return error.ToString(CultureInfo.InvariantCulture);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+        started = false;
+        currentUrl = null;
+        frameReady.Set();
+
+        renderThread?.Join(2000);
+        eventThread?.Join(2000);
+
+        DxHandler.CancelRenderThreadWork(RenderKey);
+
+        lock (snapshotLock)
+        {
+            latestSnapshot = IntPtr.Zero;
+        }
+
+        if (renderContext != IntPtr.Zero)
+        {
+            mpv_render_context_free(renderContext);
+            renderContext = IntPtr.Zero;
+        }
+
+        if (updateCallbackHandle.IsAllocated)
+        {
+            updateCallbackHandle.Free();
+        }
+
+        if (mpvContext != IntPtr.Zero)
+        {
+            mpv_terminate_destroy(mpvContext);
+            mpvContext = IntPtr.Zero;
+        }
+
+        FreeUnmanaged(ref frameBuffer);
+        FreeUnmanaged(ref snapshotA);
+        FreeUnmanaged(ref snapshotB);
+        FreeUnmanaged(ref sizeParameter);
+        FreeUnmanaged(ref strideParameter);
+        FreeUnmanaged(ref formatParameter);
+        FreeUnmanaged(ref renderParameters);
+
+        targetTexture = null;
+        frameReady.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    private static void FreeUnmanaged(ref IntPtr pointer)
+    {
+        if (pointer == IntPtr.Zero)
+        {
+            return;
+        }
+
+        Marshal.FreeHGlobal(pointer);
+        pointer = IntPtr.Zero;
+    }
 }
+
+internal readonly record struct MpvPlaybackInfo(
+    double PositionSeconds,
+    double DurationSeconds,
+    bool Paused,
+    bool CoreIdle,
+    bool Seeking);

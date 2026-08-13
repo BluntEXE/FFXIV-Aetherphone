@@ -1,71 +1,34 @@
+using Aetherphone.Core.Net;
 using YoutubeExplode;
 using YoutubeExplode.Videos;
-using YoutubeExplode.Videos.Streams;
+using YouTubeVideo = YoutubeExplode.Videos.Video;
 
 namespace Aetherphone.Core.Video;
 
 internal sealed record VideoMetadata(string Title, string Source, TimeSpan? Duration, string? ThumbnailUrl);
 
-internal sealed record ResolvedStream(string VideoUrl, string? AudioUrl, string QualityLabel);
-
-internal sealed class VideoUrlResolver
+internal sealed class VideoUrlResolver : IDisposable
 {
-    private const int MuxedCeiling = 720;
+    private readonly YoutubeClient youtube;
+    private readonly RequestThrottle throttle = new(1, TimeSpan.FromMilliseconds(400));
 
-    private readonly YoutubeClient youtube = new();
-
-    public static bool IsYouTubeUrl(string url) => VideoId.TryParse(url) is not null;
-
-    public async Task<(ResolvedStream? Stream, string? Error)> ResolveAsync(string url, int maxHeight,
-        CancellationToken token)
+    internal VideoUrlResolver(YoutubeClient youtube)
     {
-        try
-        {
-            var manifest = await youtube.Videos.Streams.GetManifestAsync(url, token).ConfigureAwait(false);
-
-            var video = manifest.GetVideoOnlyStreams()
-                .Where(stream => stream.VideoQuality.MaxHeight <= maxHeight)
-                .OrderByDescending(stream => stream.VideoQuality.MaxHeight)
-                .ThenByDescending(stream => stream.Bitrate)
-                .FirstOrDefault();
-            var audio = manifest.GetAudioOnlyStreams().OrderByDescending(stream => stream.Bitrate).FirstOrDefault();
-
-            var muxed = manifest.GetMuxedStreams().Where(stream => stream.VideoQuality.MaxHeight <= maxHeight)
-                .OrderByDescending(stream => stream.VideoQuality.MaxHeight).FirstOrDefault();
-
-            if (maxHeight > MuxedCeiling && video is not null && audio is not null)
-            {
-                var label = video.VideoQuality.Label;
-                AepLog.Debug($"[Video] Resolved {url} -> video={video.Url} audio={audio.Url} ({label}, adaptive)");
-                return (new ResolvedStream(video.Url, audio.Url, label), null);
-            }
-
-            muxed ??= manifest.GetMuxedStreams().OrderBy(stream => stream.VideoQuality.MaxHeight).FirstOrDefault();
-            if (muxed is not null)
-            {
-                AepLog.Debug($"[Video] Resolved {url} -> {muxed.Url} ({muxed.VideoQuality.Label}, muxed)");
-                return (new ResolvedStream(muxed.Url, null, muxed.VideoQuality.Label), null);
-            }
-
-            return (null, "No playable stream found for this video.");
-        }
-        catch (OperationCanceledException)
-        {
-            return (null, null);
-        }
-        catch (Exception exception)
-        {
-            return (null, $"Failed to resolve YouTube URL: {exception.Message}");
-        }
+        this.youtube = youtube;
     }
 
-    public async Task<VideoMetadata?> ResolveMetadataAsync(string url, CancellationToken token)
+    internal static bool IsYouTubeUrl(string url) => VideoId.TryParse(url) is not null;
+
+    internal async Task<VideoMetadata?> ResolveMetadataAsync(string url, CancellationToken token)
     {
         try
         {
-            var video = await youtube.Videos.GetAsync(url, token).ConfigureAwait(false);
-            var thumbnail = video.Thumbnails.OrderByDescending(t => t.Resolution.Area).FirstOrDefault();
-            return new VideoMetadata(video.Title, video.Author.ChannelTitle, video.Duration, thumbnail?.Url);
+            using (await throttle.EnterAsync(token).ConfigureAwait(false))
+            {
+                var video = await youtube.Videos.GetAsync(url, token).ConfigureAwait(false);
+                var thumbnail = BestThumbnail(video);
+                return new VideoMetadata(video.Title, video.Author.ChannelTitle, video.Duration, thumbnail);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -73,8 +36,30 @@ internal sealed class VideoUrlResolver
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[Video] Failed to fetch metadata for {url}: {exception.Message}");
+            AepLog.Warning($"[Video] Could not read details for {url}: {exception.Message}");
             return null;
         }
     }
+
+    private static string? BestThumbnail(YouTubeVideo video)
+    {
+        var thumbnails = video.Thumbnails;
+        string? best = null;
+        var bestArea = 0;
+        for (var index = 0; index < thumbnails.Count; index++)
+        {
+            var area = thumbnails[index].Resolution.Area;
+            if (area <= bestArea)
+            {
+                continue;
+            }
+
+            bestArea = area;
+            best = thumbnails[index].Url;
+        }
+
+        return best;
+    }
+
+    public void Dispose() => throttle.Dispose();
 }
