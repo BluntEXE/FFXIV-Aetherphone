@@ -19,7 +19,6 @@ internal sealed class BlackjackTable
     private const float CardWidth = 30f;
     private const float CardOverlap = 0.42f;
     private const float DealerCardWidth = 34f;
-    private const int ActionCount = 4;
 
     private static readonly Vector4 Gold = new(1f, 0.84f, 0.42f, 1f);
 
@@ -792,24 +791,43 @@ internal sealed class BlackjackTable
     private void DrawActionBar(AppSkin ui, CasinoBlackjackRoomStateDto board, long seatStack, float left,
         float y, float width, float scale)
     {
+        var mask = projection.ActionsMask;
+        var offered = 0;
+        for (var index = 0; index < ActionBits.Length; index++)
+        {
+            if (BlackjackRules.Allows(mask, ActionBits[index]))
+            {
+                offered++;
+            }
+        }
+
+        if (offered == 0)
+        {
+            return;
+        }
+
         var gap = Metrics.Space.Xs * scale;
-        var buttonWidth = (width - gap * (ActionCount - 1)) / ActionCount;
+        var buttonWidth = (width - gap * (offered - 1)) / offered;
         var height = ActionBarHeight * scale;
         var cost = ActiveBetOf(board);
         var affordable = seatStack >= cost;
-        for (var index = 0; index < ActionCount; index++)
+        var drawn = 0;
+        for (var index = 0; index < ActionBits.Length; index++)
         {
             var bit = ActionBits[index];
-            var min = new Vector2(left + index * (buttonWidth + gap), y);
-            var rect = new Rect(min, new Vector2(min.X + buttonWidth, min.Y + height));
-            var legal = BlackjackRules.Allows(projection.ActionsMask, bit) && !rooms.StakeInFlight;
-            if (bit == BlackjackRules.ActionDouble || bit == BlackjackRules.ActionSplit)
+            if (!BlackjackRules.Allows(mask, bit))
             {
-                legal = legal && affordable;
+                continue;
             }
 
-            if (AppSkin.PillButton(rect, LabelFor(bit, cost), bit == BlackjackRules.ActionStand, legal, ui.Theme)
-                && legal)
+            var min = new Vector2(left + drawn * (buttonWidth + gap), y);
+            var rect = new Rect(min, new Vector2(min.X + buttonWidth, min.Y + height));
+            drawn++;
+            var wagered = bit == BlackjackRules.ActionDouble || bit == BlackjackRules.ActionSplit;
+            var legal = !rooms.StakeInFlight && (!wagered || affordable);
+            var costLine = wagered ? cost.ToString("N0", Loc.Culture) : string.Empty;
+            if (AppSkin.StackedPillButton(rect, LabelFor(bit), costLine, bit == BlackjackRules.ActionStand,
+                    legal, ui.Theme) && legal)
             {
                 inlineReason = string.Empty;
                 rooms.SendBlackjackAction(bit);
@@ -824,14 +842,14 @@ internal sealed class BlackjackTable
         return active >= 0 && active < hands.Length ? hands[active].Bet : 0;
     }
 
-    private static string LabelFor(int action, long cost)
+    private static string LabelFor(int action)
     {
         return action switch
         {
             BlackjackRules.ActionHit => Loc.T(L.Casino.BlackjackActionHit),
             BlackjackRules.ActionStand => Loc.T(L.Casino.BlackjackActionStand),
-            BlackjackRules.ActionDouble => Loc.T(L.Casino.BlackjackActionDouble, cost.ToString("N0", Loc.Culture)),
-            _ => Loc.T(L.Casino.BlackjackActionSplit, cost.ToString("N0", Loc.Culture)),
+            BlackjackRules.ActionDouble => Loc.T(L.Casino.BlackjackActionDouble),
+            _ => Loc.T(L.Casino.BlackjackActionSplit),
         };
     }
 

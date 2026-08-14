@@ -19,6 +19,9 @@ internal sealed class AppSkin
     private static readonly Vector4 ChipActiveInk = new(0.99f, 0.85f, 0.91f, 1f);
     private static readonly TextStyle SectionLabelStyle = new(0.78f, FontWeight.SemiBold);
     private static readonly TextStyle PillLabelStyle = new(0.90f, FontWeight.SemiBold);
+    private static readonly TextStyle PillSubLabelStyle = new(0.70f, FontWeight.Medium);
+    private const float PillLabelMinScale = 0.70f;
+    private const float StackedPillInsetFraction = 0.5f;
 
     public AppPalette Palette { get; set; }
 
@@ -106,6 +109,49 @@ internal sealed class AppSkin
         var textSize = Typography.Measure(fittedLabel, PillLabelStyle);
         Typography.Draw(drawList, rect.Center - textSize * 0.5f, fittedLabel, theme.TextMuted, PillLabelStyle);
         return false;
+    }
+
+    public static bool StackedPillButton(Rect rect, string label, string subLabel, bool filled, bool enabled,
+        PhoneTheme theme)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
+        var accent = theme.Accent;
+        var fill = enabled
+            ? filled
+                ? hovered ? Core.Theme.Palette.Mix(accent, theme.TextStrong, 0.12f) : accent
+                : hovered ? HoverFill : theme.GroupedCard
+            : Core.Theme.Palette.WithAlpha(filled ? accent : theme.GroupedCard, 0.45f);
+        Squircle.Fill(drawList, rect.Min, rect.Max, rect.Height * 0.5f, ImGui.GetColorU32(fill));
+        var ink = enabled ? filled ? White : theme.TextStrong : theme.TextMuted;
+        var maxLabelWidth = MathF.Max(1f, rect.Width - rect.Height * StackedPillInsetFraction);
+        var labelScale = Typography.FitScale(label, maxLabelWidth, PillLabelStyle.Scale, PillLabelMinScale,
+            PillLabelStyle.Weight);
+        var fittedLabel = Typography.FitText(label, maxLabelWidth, labelScale, PillLabelStyle.Weight);
+        var labelSize = Typography.Measure(fittedLabel, labelScale, PillLabelStyle.Weight);
+        if (subLabel.Length == 0)
+        {
+            Typography.Draw(drawList, rect.Center - labelSize * 0.5f, fittedLabel, ink, labelScale,
+                PillLabelStyle.Weight);
+        }
+        else
+        {
+            var fittedSub = Typography.FitText(subLabel, maxLabelWidth, PillSubLabelStyle);
+            var subSize = Typography.Measure(fittedSub, PillSubLabelStyle);
+            var top = rect.Center.Y - (labelSize.Y + subSize.Y) * 0.5f;
+            Typography.Draw(drawList, new Vector2(rect.Center.X - labelSize.X * 0.5f, top), fittedLabel, ink,
+                labelScale, PillLabelStyle.Weight);
+            var subInk = enabled ? Core.Theme.Palette.WithAlpha(ink, 0.72f) : theme.TextMuted;
+            Typography.Draw(drawList, new Vector2(rect.Center.X - subSize.X * 0.5f, top + labelSize.Y),
+                fittedSub, subInk, PillSubLabelStyle);
+        }
+
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return enabled && UiInteract.Click(rect.Min, rect.Max, hovered);
     }
 
     public bool FlowChip(ref float cursorX, float centerY, float gap, string label, bool active)

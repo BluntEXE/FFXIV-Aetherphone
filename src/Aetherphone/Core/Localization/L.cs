@@ -4452,8 +4452,8 @@ internal static class L
         public static readonly LocString BlackjackDealerHas = new("casino.blackjack.dealerHas", "Dealer has {0}");
         public static readonly LocString BlackjackActionHit = new("casino.blackjack.actionHit", "Hit");
         public static readonly LocString BlackjackActionStand = new("casino.blackjack.actionStand", "Stand");
-        public static readonly LocString BlackjackActionDouble = new("casino.blackjack.actionDouble", "Double {0}");
-        public static readonly LocString BlackjackActionSplit = new("casino.blackjack.actionSplit", "Split {0}");
+        public static readonly LocString BlackjackActionDouble = new("casino.blackjack.actionDouble", "Double");
+        public static readonly LocString BlackjackActionSplit = new("casino.blackjack.actionSplit", "Split");
         public static readonly LocString BlackjackYouWon = new("casino.blackjack.youWon", "You won {0}");
         public static readonly LocString BlackjackHandOver = new("casino.blackjack.handOver", "Hand over");
         public static readonly LocString BlackjackTakeSeat = new("casino.blackjack.takeSeat", "Take a seat");
