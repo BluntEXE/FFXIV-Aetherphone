@@ -5,6 +5,13 @@ using SharpDX.DXGI;
 
 namespace Aetherphone.Core.Video;
 
+internal enum PlayStart : byte
+{
+    Started,
+    Superseded,
+    Failed,
+}
+
 internal sealed class VideoEngine : IDisposable
 {
     internal const int ScreenWidth = 1920;
@@ -21,6 +28,8 @@ internal sealed class VideoEngine : IDisposable
     private static readonly TimeSpan YouTubeLoadSpacing = TimeSpan.FromSeconds(3);
 
     private const long ResolverRecoveryCooldownMilliseconds = 10 * 60 * 1000;
+    private const long StallWatchdogMilliseconds = 10 * 1000;
+    private const double StallPositionTolerance = 0.05;
 
     private static readonly Regex YouTubeHost =
         new(@"^\w+://[^/]*youtube\.\w+/|^\w+://youtu\.be/", RegexOptions.Compiled);
@@ -50,11 +59,14 @@ internal sealed class VideoEngine : IDisposable
     private DateTime lastYouTubeLoad = DateTime.MinValue;
     private int pendingVolume = 60;
     private volatile bool active;
-    private volatile bool loading;
+    private int activeLoads;
+    private int loadGeneration;
     private long lastResolverRecoveryAtTicks = long.MinValue;
     private volatile bool resolverRecovering;
     private volatile string? recoveryNotice;
     private ResolverUpdateOutcome lastResolverOutcome = ResolverUpdateOutcome.Failed;
+    private long stallProgressAtTicks;
+    private double lastObservedPosition;
 
     internal VideoEngine()
     {
@@ -79,7 +91,7 @@ internal sealed class VideoEngine : IDisposable
     internal bool AllowInsecureDirectUrls { get; set; }
 
     internal bool IsActive => active;
-    internal bool IsLoading => loading;
+    internal bool IsLoading => Volatile.Read(ref activeLoads) > 0;
     internal string? LastError { get; private set; }
     internal string? RecoveryNotice => recoveryNotice;
 
@@ -92,26 +104,27 @@ internal sealed class VideoEngine : IDisposable
         recoveryNotice = null;
     }
 
-    internal void Play(string url, double startSeconds = 0d, bool playing = true)
+    internal Task<PlayStart> Play(string url, double startSeconds = 0d, bool playing = true)
     {
         if (url.Length == 0)
         {
-            return;
+            return Task.FromResult(PlayStart.Failed);
         }
 
         PrepareScreenForSession();
-        _ = PlayAsync(url, startSeconds, playing);
+        return PlayAsync(url, startSeconds, playing);
     }
 
-    internal async Task<bool> PlayAsync(string url, double startSeconds, bool playing)
+    internal async Task<PlayStart> PlayAsync(string url, double startSeconds, bool playing)
     {
         if (url.Length == 0)
         {
-            return false;
+            return PlayStart.Failed;
         }
 
+        var generation = Interlocked.Increment(ref loadGeneration);
         var token = lifetime.Token;
-        loading = true;
+        Interlocked.Increment(ref activeLoads);
         LastError = null;
 
         try
@@ -119,33 +132,35 @@ internal sealed class VideoEngine : IDisposable
             if (!await Dependencies.EnsureReadyAsync(token).ConfigureAwait(false))
             {
                 LastError = DependencyFailureText();
-                return false;
+                return PlayStart.Failed;
             }
 
             await SpaceOutYouTubeLoads(url, token).ConfigureAwait(false);
             await playGate.WaitAsync(token).ConfigureAwait(false);
             try
             {
-                if (token.IsCancellationRequested)
+                if (token.IsCancellationRequested || generation != Volatile.Read(ref loadGeneration))
                 {
-                    return false;
+                    return PlayStart.Superseded;
                 }
 
                 var player = EnsureRenderer();
                 if (player is null)
                 {
-                    return false;
+                    return PlayStart.Failed;
                 }
 
                 if (!player.Play(url, startSeconds, playing))
                 {
                     LastError = "This link could not be opened.";
-                    return false;
+                    return PlayStart.Failed;
                 }
 
+                lastObservedPosition = startSeconds;
+                stallProgressAtTicks = Environment.TickCount64;
                 active = true;
                 screenPainter.SetTransform(ScreenPosition, ScreenYaw, ScreenScale);
-                return true;
+                return PlayStart.Started;
             }
             finally
             {
@@ -154,17 +169,17 @@ internal sealed class VideoEngine : IDisposable
         }
         catch (OperationCanceledException)
         {
-            return false;
+            return PlayStart.Superseded;
         }
         catch (Exception exception)
         {
             AepLog.Error($"[Video] Could not start playback: {exception.Message}");
             LastError = exception.Message;
-            return false;
+            return PlayStart.Failed;
         }
         finally
         {
-            loading = false;
+            Interlocked.Decrement(ref activeLoads);
         }
     }
 
@@ -258,7 +273,7 @@ internal sealed class VideoEngine : IDisposable
                 if (TryBeginResolverRecovery())
                 {
                     recoveryNotice = Loc.T(L.AetherStream.ResolverRecovering);
-                    _ = RecoverResolverAsync(refusedUrl);
+                    _ = RecoverResolverAsync(refusedUrl, lastObservedPosition);
                     return;
                 }
 
@@ -269,6 +284,48 @@ internal sealed class VideoEngine : IDisposable
         }
 
         PlaybackEnded?.Invoke(reason, detail);
+    }
+
+    internal void ObserveForStall(in MpvPlaybackInfo info)
+    {
+        var now = Environment.TickCount64;
+        if (!active || IsLoading || resolverRecovering || info.Paused || info.Seeking
+            || renderer is not { SawHttpForbidden: true })
+        {
+            lastObservedPosition = info.PositionSeconds;
+            stallProgressAtTicks = now;
+            return;
+        }
+
+        if (Math.Abs(info.PositionSeconds - lastObservedPosition) > StallPositionTolerance)
+        {
+            lastObservedPosition = info.PositionSeconds;
+            stallProgressAtTicks = now;
+            return;
+        }
+
+        if (now - stallProgressAtTicks < StallWatchdogMilliseconds)
+        {
+            return;
+        }
+
+        stallProgressAtTicks = now;
+        if (RefusedStreamUrl() is not { } refusedUrl)
+        {
+            return;
+        }
+
+        if (TryBeginResolverRecovery())
+        {
+            AepLog.Warning(
+                $"[Video] Playback stalled after a refused stream; restarting the player at {lastObservedPosition:F1}s.");
+            recoveryNotice = Loc.T(L.AetherStream.ResolverRecovering);
+            _ = RecoverResolverAsync(refusedUrl, lastObservedPosition);
+            return;
+        }
+
+        StopVideo();
+        AbandonRecovery(RefusedStreamText());
     }
 
     private string? RefusedStreamUrl()
@@ -301,7 +358,7 @@ internal sealed class VideoEngine : IDisposable
         return true;
     }
 
-    private async Task RecoverResolverAsync(string refusedUrl)
+    private async Task RecoverResolverAsync(string refusedUrl, double resumeSeconds)
     {
         var token = lifetime.Token;
         try
@@ -309,14 +366,16 @@ internal sealed class VideoEngine : IDisposable
             var outcome = await Dependencies.UpdateIfNewerAsync(Dependencies.LinkResolver, token)
                 .ConfigureAwait(false);
             lastResolverOutcome = outcome;
-            if (outcome != ResolverUpdateOutcome.Updated)
+            if (outcome == ResolverUpdateOutcome.Updated)
             {
-                AbandonRecovery(RefusedStreamText());
-                return;
+                AepLog.Warning("[Video] The stream was refused with the old link resolver; updated to "
+                    + $"{Dependencies.LinkResolver.RemoteVersion} and retrying.");
             }
-
-            AepLog.Warning("[Video] The stream was refused with the old link resolver; updated to "
-                + $"{Dependencies.LinkResolver.RemoteVersion} and retrying.");
+            else
+            {
+                AepLog.Warning(
+                    "[Video] The stream was refused with a current link resolver; restarting the player to reset its connections.");
+            }
 
             if (renderer is { } current && !string.Equals(current.CurrentUrl, refusedUrl, StringComparison.Ordinal))
             {
@@ -324,23 +383,24 @@ internal sealed class VideoEngine : IDisposable
                 return;
             }
 
-            if (renderer is { } stale
-                && !string.Equals(stale.LinkResolverPath, Dependencies.LinkResolverPath, StringComparison.OrdinalIgnoreCase))
+            await playGate.WaitAsync(token).ConfigureAwait(false);
+            try
             {
-                await playGate.WaitAsync(token).ConfigureAwait(false);
-                try
-                {
-                    DetachRenderer();
-                }
-                finally
-                {
-                    playGate.Release();
-                }
+                DetachRenderer();
+            }
+            finally
+            {
+                playGate.Release();
             }
 
-            if (!await PlayAsync(refusedUrl, 0d, playing: true).ConfigureAwait(false))
+            var restart = await PlayAsync(refusedUrl, resumeSeconds, playing: true).ConfigureAwait(false);
+            if (restart == PlayStart.Failed)
             {
                 AbandonRecovery(RefusedStreamText());
+            }
+            else if (restart == PlayStart.Superseded)
+            {
+                recoveryNotice = null;
             }
         }
         catch (OperationCanceledException)
@@ -375,8 +435,8 @@ internal sealed class VideoEngine : IDisposable
 
     internal void StopVideo()
     {
+        Interlocked.Increment(ref loadGeneration);
         active = false;
-        loading = false;
         recoveryNotice = null;
         renderer?.Stop();
         screenPainter.SetTarget(null);
@@ -384,8 +444,8 @@ internal sealed class VideoEngine : IDisposable
 
     internal void Shutdown()
     {
+        Interlocked.Increment(ref loadGeneration);
         active = false;
-        loading = false;
         DetachRenderer();
         screenPainter.SetTarget(null);
     }

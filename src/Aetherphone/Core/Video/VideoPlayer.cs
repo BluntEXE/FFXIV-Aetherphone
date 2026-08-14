@@ -21,6 +21,7 @@ internal sealed class VideoPlayer : IDisposable
     private readonly VideoEngine engine;
     private readonly ConcurrentQueue<(MpvEndReason Reason, string? Detail)> pendingEndings = new();
     private volatile bool pendingLoaded;
+    private int startGeneration;
 
     internal VideoPlayer(VideoEngine engine)
     {
@@ -65,7 +66,17 @@ internal sealed class VideoPlayer : IDisposable
         LastError = null;
         State = VideoPlaybackState.Loading;
         engine.ClearError();
-        engine.Play(url, startSeconds, playing);
+        var generation = Interlocked.Increment(ref startGeneration);
+        _ = ObserveStartAsync(engine.Play(url, startSeconds, playing), generation);
+    }
+
+    private async Task ObserveStartAsync(Task<PlayStart> start, int generation)
+    {
+        var started = await start.ConfigureAwait(false);
+        if (started == PlayStart.Failed && generation == Volatile.Read(ref startGeneration))
+        {
+            pendingEndings.Enqueue((MpvEndReason.Failed, engine.LastError));
+        }
     }
 
     internal void Pause(bool paused)
@@ -97,6 +108,11 @@ internal sealed class VideoPlayer : IDisposable
 
     internal void OnFrameworkUpdate()
     {
+        while (pendingEndings.TryDequeue(out var ending))
+        {
+            ApplyEnding(ending.Reason, ending.Detail);
+        }
+
         if (pendingLoaded)
         {
             pendingLoaded = false;
@@ -104,11 +120,6 @@ internal sealed class VideoPlayer : IDisposable
             {
                 State = VideoPlaybackState.Playing;
             }
-        }
-
-        while (pendingEndings.TryDequeue(out var ending))
-        {
-            ApplyEnding(ending.Reason, ending.Detail);
         }
 
         if (!HasMedia)
@@ -119,6 +130,7 @@ internal sealed class VideoPlayer : IDisposable
 
         var info = engine.ReadPlaybackInfo();
         Progress = new PlaybackProgress((float)info.PositionSeconds, (float)info.DurationSeconds, info.Paused);
+        engine.ObserveForStall(info);
 
         if (State == VideoPlaybackState.Playing && info.Paused)
         {
@@ -137,6 +149,11 @@ internal sealed class VideoPlayer : IDisposable
         switch (reason)
         {
             case MpvEndReason.Finished:
+                if (State == VideoPlaybackState.Loading)
+                {
+                    return;
+                }
+
                 State = VideoPlaybackState.Idle;
                 Progress = default;
                 Finished?.Invoke();
@@ -147,6 +164,7 @@ internal sealed class VideoPlayer : IDisposable
                 Progress = default;
                 Failed?.Invoke(LastError);
                 return;
+            case MpvEndReason.Stopped:
             case MpvEndReason.Redirect:
                 return;
             default:

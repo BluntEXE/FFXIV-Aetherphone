@@ -211,7 +211,8 @@ internal sealed class MpvRenderer : IDisposable
         SetOption("msg-level", "all=warn,ffmpeg=error");
         SetOption("terminal", "yes");
         SetOption("idle", "yes");
-        SetOption("keep-open", "yes");
+        SetOption("keep-open", "no");
+        SetOption("reset-on-next-file", "pause");
         if (WineEnvironment.IsWine && allowInsecureDirectUrls)
         {
             SetOption("tls-verify", "no");
@@ -305,7 +306,7 @@ internal sealed class MpvRenderer : IDisposable
         }
 
         var start = ((int)Math.Max(0d, startSeconds)).ToString(CultureInfo.InvariantCulture);
-        var options = playing ? $"start={start}" : $"start={start},pause=yes";
+        var options = playing ? $"start={start},pause=no" : $"start={start},pause=yes";
 
         lock (commandLock)
         {

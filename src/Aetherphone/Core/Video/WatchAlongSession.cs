@@ -33,6 +33,8 @@ internal sealed class WatchAlongSession : IDisposable
     private const double PositionJumpTolerance = 2.0;
     private const double HardSeekTolerance = 4.0;
     private const double MaxProjectionSeconds = 5.0;
+    private const float EndSeekGuardSeconds = 0.5f;
+    private const int MaxAutoReplayAttempts = 2;
     private const int MaxSharedQueueEntries = 32;
 
     private const float ScreenPositionDriftTolerance = 0.1f;
@@ -62,6 +64,8 @@ internal sealed class WatchAlongSession : IDisposable
 
     private string? viewingUrl;
     private string? rejectedRemoteUrl;
+    private string? autoReplayUrl;
+    private int autoReplayAttempts;
     private CallControl? lastStateMessage;
 
     private CallControl? pendingJoinSync;
@@ -649,11 +653,30 @@ internal sealed class WatchAlongSession : IDisposable
             return;
         }
 
-        if (message.PositionSeconds is not null)
+        if (video.State == VideoPlaybackState.Failed && viewingUrl is { } failedUrl)
+        {
+            if (autoReplayUrl != failedUrl)
+            {
+                autoReplayUrl = failedUrl;
+                autoReplayAttempts = 0;
+            }
+
+            if (autoReplayAttempts < MaxAutoReplayAttempts)
+            {
+                autoReplayAttempts++;
+                video.Play(failedUrl, ProjectRemotePosition(message), !(message.Paused ?? false));
+            }
+
+            ApplyRemoteScreenTransform(message);
+            return;
+        }
+
+        if (message.PositionSeconds is not null && video.State != VideoPlaybackState.Loading && video.HasMedia)
         {
             var target = ProjectRemotePosition(message);
-            var localPosition = video.Progress.Position;
-            if (Math.Abs(localPosition - target) > HardSeekTolerance)
+            var progress = video.Progress;
+            var nearEnd = progress.Duration > 0f && target >= progress.Duration - EndSeekGuardSeconds;
+            if (!nearEnd && Math.Abs(progress.Position - target) > HardSeekTolerance)
             {
                 video.Seek(target);
             }
