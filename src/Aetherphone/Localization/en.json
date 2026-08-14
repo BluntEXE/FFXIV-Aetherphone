@@ -4937,6 +4937,7 @@
   "casino.fact.notOfferedValue": "Insurance and surrender",
   "casino.blackjack.seatNatural": "Blackjack",
   "casino.blackjack.seatPush": "Push",
+  "casino.blackjack.seatBust": "Bust",
   "conduct.casino.title": "Gamba House Rules",
   "conduct.casino.intro": "Before you sit down at a table, please read the house rules.",
   "conduct.casino.playMoney.title": "Play Money Only",

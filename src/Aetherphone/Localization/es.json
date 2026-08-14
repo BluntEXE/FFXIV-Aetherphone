@@ -4937,6 +4937,7 @@
   "casino.fact.notOfferedValue": "Seguro y rendición",
   "casino.blackjack.seatNatural": "Blackjack",
   "casino.blackjack.seatPush": "Empate",
+  "casino.blackjack.seatBust": "Se pasó",
   "conduct.casino.title": "Reglas de la casa de Gamba",
   "conduct.casino.intro": "Antes de sentarte a una mesa, lee las reglas de la casa.",
   "conduct.casino.playMoney.title": "Solo dinero de juego",

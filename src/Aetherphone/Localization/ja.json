@@ -4937,6 +4937,7 @@
   "casino.fact.notOfferedValue": "インシュランスとサレンダー",
   "casino.blackjack.seatNatural": "ブラックジャック",
   "casino.blackjack.seatPush": "プッシュ",
+  "casino.blackjack.seatBust": "バースト",
   "conduct.casino.title": "Gambaのハウスルール",
   "conduct.casino.intro": "テーブルに着く前に、ハウスルールをお読みください。",
   "conduct.casino.playMoney.title": "遊びのお金だけ",

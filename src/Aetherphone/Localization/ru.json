@@ -4937,6 +4937,7 @@
   "casino.fact.notOfferedValue": "Страховка и сдача",
   "casino.blackjack.seatNatural": "Блэкджек",
   "casino.blackjack.seatPush": "Ничья",
+  "casino.blackjack.seatBust": "Перебор",
   "conduct.casino.title": "Правила заведения Gamba",
   "conduct.casino.intro": "Прежде чем сесть за стол, прочитайте правила заведения.",
   "conduct.casino.playMoney.title": "Только игровые деньги",

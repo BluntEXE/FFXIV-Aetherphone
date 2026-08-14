@@ -4642,6 +4642,7 @@ internal static class L
         public static readonly LocString FactNotOfferedValue = new("casino.fact.notOfferedValue", "Insurance and surrender");
         public static readonly LocString BlackjackSeatNatural = new("casino.blackjack.seatNatural", "Blackjack");
         public static readonly LocString BlackjackSeatPush = new("casino.blackjack.seatPush", "Push");
+        public static readonly LocString BlackjackSeatBust = new("casino.blackjack.seatBust", "Bust");
     }
 
     internal static class Catalogs

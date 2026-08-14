@@ -12,6 +12,23 @@ internal static class BlackjackDealChoreography
 
     public const float ArcHeight = 26f;
 
+    public const float RevealSeconds = 0.28f;
+
+    public static bool RevealFaceUp(float progress)
+    {
+        return progress >= 0.5f;
+    }
+
+    public static float RevealScaleX(float progress)
+    {
+        if (progress <= 0f || progress >= 1f)
+        {
+            return 1f;
+        }
+
+        return progress < 0.5f ? 1f - progress * 2f : progress * 2f - 1f;
+    }
+
     public static float Travel(float elapsedSeconds, int cardIndex)
     {
         if (cardIndex < 0)

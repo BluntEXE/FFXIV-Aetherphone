@@ -4937,6 +4937,7 @@
   "casino.fact.notOfferedValue": "保险与投降",
   "casino.blackjack.seatNatural": "黑杰克",
   "casino.blackjack.seatPush": "和局",
+  "casino.blackjack.seatBust": "爆牌",
   "conduct.casino.title": "Gamba 场馆规则",
   "conduct.casino.intro": "入座之前，请先阅读场馆规则。",
   "conduct.casino.playMoney.title": "仅限游戏币",
