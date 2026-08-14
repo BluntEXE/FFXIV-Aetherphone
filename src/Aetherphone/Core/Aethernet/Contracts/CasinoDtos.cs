@@ -288,7 +288,9 @@ internal sealed record CasinoBlackjackSeatDto(
     bool LeaveAtHandEnd = false,
     long Committed = 0,
     long HeldUntilUnixMs = 0,
-    CasinoBlackjackHandDto[]? Hands = null);
+    CasinoBlackjackHandDto[]? Hands = null,
+    string AvatarUrl = "",
+    string FrameId = "");
 
 internal sealed record CasinoBlackjackRoomStateDto(
     string HandId = "",

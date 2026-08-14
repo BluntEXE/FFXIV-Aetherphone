@@ -4,6 +4,8 @@ using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Casino;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Lodestone;
+using Aetherphone.Core.Media;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -42,6 +44,8 @@ internal sealed class BlackjackTable
     private readonly CasinoRoomsStore rooms;
     private readonly CasinoTablesStore tables;
     private readonly CasinoTurnNotifier turns;
+    private readonly RemoteImageCache images;
+    private readonly LodestoneService lodestone;
     private readonly BlackjackSeatFlow seatFlow;
     private readonly Action openCashier;
     private readonly Action leaveRoom;
@@ -66,12 +70,15 @@ internal sealed class BlackjackTable
     private bool entered;
 
     public BlackjackTable(CasinoStore chips, CasinoRoomsStore rooms, CasinoTablesStore tables,
-        CasinoTurnNotifier turns, Action openCashier, Action leaveRoom)
+        CasinoTurnNotifier turns, RemoteImageCache images, LodestoneService lodestone, Action openCashier,
+        Action leaveRoom)
     {
         this.chips = chips;
         this.rooms = rooms;
         this.tables = tables;
         this.turns = turns;
+        this.images = images;
+        this.lodestone = lodestone;
         this.openCashier = openCashier;
         this.leaveRoom = leaveRoom;
         knock = Knock;
@@ -414,8 +421,8 @@ internal sealed class BlackjackTable
     {
         BuildSeatViews(board);
         var style = new SeatRingStyle(ui.Accent, ui.TitleInk, ui.BodyInk, ui.MutedInk, ui.FieldSurface, Gold);
-        var tapped = SeatRing.Draw(drawList, felt, seatViews, mySeat, scale, style, turnRemaining,
-            board.WindowSeconds);
+        var tapped = SeatRing.Draw(drawList, felt, seatViews, mySeat, scale, style, ui.Theme, images, lodestone,
+            turnRemaining, board.WindowSeconds);
         SeatRing.Layout(felt, BlackjackRules.SeatCount, mySeat, seatCenters);
         DrawHands(drawList, ui, board, felt, scale);
         return tapped;
@@ -428,15 +435,16 @@ internal sealed class BlackjackTable
             var seat = projection.SeatAt(seatIndex);
             if (seat is null || seat.State == BlackjackSeatStates.Empty)
             {
-                seatViews[seatIndex] = new SeatView(seatIndex, string.Empty, 0, 0, SeatPhase.Empty, false, true);
+                seatViews[seatIndex] = new SeatView(seatIndex, string.Empty, string.Empty, string.Empty, 0, 0,
+                    SeatPhase.Empty, false, true);
                 continue;
             }
 
             var phase = board.ActiveSeat == seatIndex
                 ? SeatPhase.Acting
                 : BlackjackRules.PhaseOf(seat.State, seat.Connected, seat.JoinsNextHand, seat.Committed > 0);
-            seatViews[seatIndex] = new SeatView(seatIndex, seat.DisplayName, seat.Chips, seat.Committed, phase,
-                seatIndex == mySeat, seat.Connected);
+            seatViews[seatIndex] = new SeatView(seatIndex, seat.DisplayName, seat.AvatarUrl, seat.FrameId,
+                seat.Chips, seat.Committed, phase, seatIndex == mySeat, seat.Connected);
         }
     }
 

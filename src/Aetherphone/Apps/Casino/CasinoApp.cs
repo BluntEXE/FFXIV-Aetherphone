@@ -61,7 +61,8 @@ internal sealed partial class CasinoApp : IPhoneApp
         Core.Casino.CasinoPlayStore casinoPlay, Core.Casino.CasinoHistoryStore history,
         Core.Casino.CasinoRoomsStore casinoRooms, Core.Casino.CasinoTablesStore casinoTables,
         Core.Casino.CasinoSpinStore casinoSpin, Core.Casino.CasinoTurnNotifier casinoTurns,
-        Core.Casino.CasinoLauncher launcher, Core.Games.GameStatsStore gameStats, ConfirmService confirm)
+        Core.Casino.CasinoLauncher launcher, Core.Games.GameStatsStore gameStats, ConfirmService confirm,
+        Core.Media.RemoteImageCache remoteImages, Core.Lodestone.LodestoneService lodestone)
     {
         this.session = session;
         this.coins = coins;
@@ -80,7 +81,8 @@ internal sealed partial class CasinoApp : IPhoneApp
         wheel = new Cabinets.WheelCabinet(casino, casinoRooms, OpenCashier, PopRoute);
         bingo = new Cabinets.BingoCabinet(casino, casinoRooms, OpenCashier, PopRoute);
         dailySpin = new Cabinets.DailySpinCabinet(casinoSpin);
-        blackjack = new Tables.BlackjackTable(casino, casinoRooms, casinoTables, casinoTurns, OpenCashier, PopRoute);
+        blackjack = new Tables.BlackjackTable(casino, casinoRooms, casinoTables, casinoTurns, remoteImages,
+            lodestone, OpenCashier, PopRoute);
         openTable = OpenTable;
         openDoorFromRow = OpenDoor;
         browser = new Tables.TableBrowser(casinoTables, openTable, openDoorFromRow);

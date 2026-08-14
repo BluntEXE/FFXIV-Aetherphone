@@ -1,6 +1,9 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Lodestone;
+using Aetherphone.Core.Media;
+using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 
@@ -20,6 +23,8 @@ internal enum SeatPhase
 internal readonly record struct SeatView(
     int SeatIndex,
     string DisplayName,
+    string AvatarUrl,
+    string FrameId,
     long Stack,
     long Bet,
     SeatPhase Phase,
@@ -141,7 +146,8 @@ internal static class SeatRing
     }
 
     public static int Draw(ImDrawListPtr drawList, in Rect arena, ReadOnlySpan<SeatView> seats, int mySeatIndex,
-        float scale, in SeatRingStyle style, long remainingMilliseconds, int windowSeconds)
+        float scale, in SeatRingStyle style, PhoneTheme theme, RemoteImageCache images, LodestoneService lodestone,
+        long remainingMilliseconds, int windowSeconds)
     {
         var radius = PuckRadius * scale;
         var tapped = -1;
@@ -150,8 +156,8 @@ internal static class SeatRing
         {
             ref readonly var seat = ref seats[index];
             var center = SlotCenter(arena, seats.Length, DisplaySlot(seat.SeatIndex, seats.Length, mySeatIndex));
-            if (DrawSeat(drawList, seat, center, ellipseCenter, radius, scale, style, remainingMilliseconds,
-                    windowSeconds))
+            if (DrawSeat(drawList, seat, center, ellipseCenter, radius, scale, style, theme, images, lodestone,
+                    remainingMilliseconds, windowSeconds))
             {
                 tapped = seat.SeatIndex;
             }
@@ -161,7 +167,8 @@ internal static class SeatRing
     }
 
     private static bool DrawSeat(ImDrawListPtr drawList, in SeatView seat, Vector2 center, Vector2 ellipseCenter,
-        float radius, float scale, in SeatRingStyle style, long remainingMilliseconds, int windowSeconds)
+        float radius, float scale, in SeatRingStyle style, PhoneTheme theme, RemoteImageCache images,
+        LodestoneService lodestone, long remainingMilliseconds, int windowSeconds)
     {
         var hovered = CircleHovered(center, radius);
         if (seat.Phase == SeatPhase.Empty)
@@ -172,8 +179,9 @@ internal static class SeatRing
         }
 
         var dimmed = seat.Phase == SeatPhase.Away || seat.Phase == SeatPhase.Out || !seat.Connected;
-        var surfaceAlpha = dimmed ? 0.45f : 1f;
-        drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(style.Surface, surfaceAlpha)), 32);
+        var alpha = dimmed ? 0.45f : 1f;
+        AvatarView.DrawRemote(drawList, center, radius, theme, seat.DisplayName, string.Empty, seat.AvatarUrl,
+            images, lodestone, 1f, 32, alpha, Frames.Of(seat.FrameId));
         if (seat.Phase == SeatPhase.Acting)
         {
             TurnTimerRing.Draw(drawList, center, radius + 4f * scale, remainingMilliseconds, windowSeconds,
@@ -184,11 +192,6 @@ internal static class SeatRing
             drawList.AddCircle(center, radius + 1.5f * scale,
                 ImGui.GetColorU32(Palette.WithAlpha(style.Accent, 0.75f)), 32, RingThickness * scale);
         }
-
-        var initial = Initials.Of(seat.DisplayName);
-        var ink = dimmed ? style.MutedInk : style.TitleInk;
-        Typography.DrawCentered(drawList, new Vector2(center.X, center.Y - radius * 0.16f), initial, ink,
-            TextStyles.Headline);
 
         var name = Typography.FitText(seat.DisplayName, radius * 2.6f, TextStyles.Caption2);
         Typography.DrawCentered(drawList, new Vector2(center.X, center.Y + radius + 8f * scale), name,

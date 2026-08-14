@@ -104,7 +104,8 @@ internal static class AppRegistry
             services.Loadout, services.Lodestone));
         apps.Add(new CasinoApp(services.AethernetSession, services.Coins, services.Casino, services.CasinoPlay,
             services.CasinoHistory, services.CasinoRooms, services.CasinoTables, services.CasinoSpin,
-            services.CasinoTurns, services.CasinoLauncher, services.GameStats, services.Confirm));
+            services.CasinoTurns, services.CasinoLauncher, services.GameStats, services.Confirm,
+            services.RemoteImages, services.Lodestone));
         apps.Add(new AppStoreApp(services.Installer, apps));
         apps.Add(new HousingApp(services.Housing, services.Configuration, services.Confirm));
 
