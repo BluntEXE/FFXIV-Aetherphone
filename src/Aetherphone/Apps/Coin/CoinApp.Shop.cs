@@ -27,8 +27,8 @@ internal sealed partial class CoinApp
     private const float ButtonHeight = 44f;
     private const string FlairKind = "flair";
     private const string FrameKind = "frame";
-    private const float FrameCellHeight = 226f;
-    private const float FrameCellStageHeight = 108f;
+    private const float FrameCellHeight = 260f;
+    private const float FrameCellStageHeight = 150f;
     private const float FrameCellButtonHeight = 34f;
     private const float ShopSectionGap = 20f;
     private const float ShopHeaderHeight = 30f;
@@ -211,7 +211,7 @@ internal sealed partial class CoinApp
         Material.EdgeSquircle(drawList, stage.Min, stage.Max, stageRounding, scale);
         DrawBloom(drawList, stage, stage.Center, stage.Width * 0.42f, stage.Height * 0.60f, ui.Palette.Accent);
 
-        var outerRadius = MathF.Min(stage.Height * 0.42f, stage.Width * 0.30f);
+        var outerRadius = MathF.Min(stage.Height * 0.48f, stage.Width * 0.45f);
         var avatarRadius = outerRadius / (frame?.Scale ?? 1f);
         var user = session.CurrentUser;
         AvatarView.DrawRemote(drawList, stage.Center, avatarRadius, theme, user?.Name ?? string.Empty,
