@@ -243,7 +243,7 @@ The chat stores that consume these clients are covered in [Messaging and chat](m
 - `EtagCache` keys include the bearer token and `X-Aep-App` scope, so two app-scoped `AethernetApi` instances requesting the same URL maintain separate cache entries. That is intentional; do not dedupe them.
 - `HttpService` caps response bodies at 32 MB (`MaxResponseBytes`). Anything larger fails the request rather than streaming.
 - Casino money endpoints never answer a denial with a non-2xx status. A refused buy-in, bet or top-up is HTTP 200 with `Granted: false` and a `Reason` string, because a typed client reads non-2xx as `null` and a 429 would pause the whole host. Treat `Granted` as the verdict and `Reason` as the message key; a `null` return is a transport problem, never a rule.
-- `LossLimit` and `LossHeadroom` of `0` on `/casino/` mean **no limit is set** — since 2026-08-14 the server ships with no house loss limit and sends zero unless the player set their own or an operator set one. Every gate must treat 0 as off (the existing gates do: they check `LossLimit > 0` or `LossHeadroom > 0` before blocking). Never render 0 as "0 coins of room left".
+- `LossLimit` and `LossHeadroom` of `0` on `/casino/` mean **no limit is set**: since 2026-08-14 the server ships with no house loss limit and sends zero unless the player set their own or an operator set one. Every gate must treat 0 as off (the existing gates do: they check `LossLimit > 0` or `LossHeadroom > 0` before blocking). Never render 0 as "0 coins of room left".
 
 ## Related docs
 
