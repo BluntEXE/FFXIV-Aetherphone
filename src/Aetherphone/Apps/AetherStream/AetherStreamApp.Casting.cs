@@ -81,8 +81,8 @@ internal sealed partial class AetherStreamApp
 
         var avatarRadius = 14f * scale;
         var avatarCenter = new Vector2(row.Min.X + Metrics.Space.Md * scale + avatarRadius, row.Center.Y);
-        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, request.Name, request.World, null,
-            remoteImages, lodestone, 0.7f, 20);
+        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, request.DisplayName, string.Empty,
+            request.AvatarUrl, remoteImages, lodestone, 0.7f, 20);
 
         var delta = ImGui.GetIO().DeltaTime;
         var circleRadius = 14f * scale;

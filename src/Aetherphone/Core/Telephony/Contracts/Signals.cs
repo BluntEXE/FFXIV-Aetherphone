@@ -84,9 +84,12 @@ internal sealed record ParticipantInfo(
     string DisplayName,
     int Slot,
     string State,
-    bool Muted);
+    bool Muted,
+    string Handle = "",
+    string? AvatarUrl = null);
 
-internal sealed record NearbyStreamInfo(string HostId, string Name, string World, string DisplayName);
+internal sealed record NearbyStreamInfo(string HostId, string Name, string World, string DisplayName,
+    string Handle = "", string? AvatarUrl = null);
 
 internal sealed record StreamQueueEntry(string? Url, string? Title);
 

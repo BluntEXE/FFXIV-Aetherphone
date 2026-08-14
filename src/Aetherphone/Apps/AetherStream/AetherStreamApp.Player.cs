@@ -203,7 +203,7 @@ internal sealed partial class AetherStreamApp
             var participant = watchers[watchers.Count - 1 - index];
             var center = new Vector2(right - step * index, centerY);
             drawList.AddCircleFilled(center, radius + 1.5f * scale, ImGui.GetColorU32(HeroPillBacking), 24);
-            AvatarView.DrawRemote(drawList, center, radius, theme, participant.Name, participant.World,
+            AvatarView.DrawRemote(drawList, center, radius, theme, participant.DisplayName, string.Empty,
                 participant.AvatarUrl, remoteImages, lodestone, 0.6f, 16);
         }
 

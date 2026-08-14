@@ -139,8 +139,8 @@ internal sealed partial class AetherStreamApp
 
         var avatarRadius = 18f * scale;
         var avatarCenter = new Vector2(rect.Min.X + Metrics.Space.Sm * scale + avatarRadius, rect.Center.Y);
-        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, row.Name, row.World, null, remoteImages,
-            lodestone, 0.8f, 28);
+        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, row.DisplayName, string.Empty,
+            row.AvatarUrl, remoteImages, lodestone, 0.8f, 28);
 
         var liveLabel = Loc.T(L.Common.Live);
         var pillWidth = LivePill.Width(liveLabel, scale);
@@ -152,8 +152,11 @@ internal sealed partial class AetherStreamApp
         var textWidth = pillOrigin.X - Metrics.Space.Md * scale - textLeft;
         Marquee.DrawLeft(drawList, "aetherstream.nearby.name." + row.HostId, row.DisplayName, textLeft,
             rect.Center.Y - 16f * scale, textWidth, TextStyles.BodyEmphasized, ui.TitleInk, hovered);
-        Marquee.DrawLeft(drawList, "aetherstream.nearby.world." + row.HostId, $"{row.Name}  ·  {row.World}",
-            textLeft, rect.Center.Y + 2f * scale, textWidth, TextStyles.Caption1, ui.MutedInk, hovered);
+        if (row.Handle.Length > 0)
+        {
+            Marquee.DrawLeft(drawList, "aetherstream.nearby.handle." + row.HostId, "@" + row.Handle,
+                textLeft, rect.Center.Y + 2f * scale, textWidth, TextStyles.Caption1, ui.MutedInk, hovered);
+        }
 
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, JoinRowHeight * scale));
@@ -189,16 +192,17 @@ internal sealed partial class AetherStreamApp
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
+        var title = row.DisplayName.Length > 0 ? row.DisplayName : "@" + row.Handle;
         var avatarRadius = 18f * scale;
         var avatarCenter = new Vector2(rect.Min.X + Metrics.Space.Sm * scale + avatarRadius, rect.Center.Y);
-        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, row.Name, row.World, row.AvatarUrl,
+        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, title, string.Empty, row.AvatarUrl,
             remoteImages, lodestone, 0.8f, 28);
 
         var textLeft = avatarCenter.X + avatarRadius + Metrics.Space.Md * scale;
         var textWidth = rect.Max.X - Metrics.Space.Sm * scale - textLeft;
-        Marquee.DrawLeft(drawList, "aetherstream.result.name." + row.Id, row.DisplayName, textLeft,
+        Marquee.DrawLeft(drawList, "aetherstream.result.name." + row.Id, title, textLeft,
             rect.Center.Y - 16f * scale, textWidth, TextStyles.BodyEmphasized, ui.TitleInk, hovered);
-        Marquee.DrawLeft(drawList, "aetherstream.result.world." + row.Id, $"{row.Name}  ·  {row.World}", textLeft,
+        Marquee.DrawLeft(drawList, "aetherstream.result.handle." + row.Id, "@" + row.Handle, textLeft,
             rect.Center.Y + 2f * scale, textWidth, TextStyles.Caption1, ui.MutedInk, hovered);
 
         ImGui.SetCursorScreenPos(origin);

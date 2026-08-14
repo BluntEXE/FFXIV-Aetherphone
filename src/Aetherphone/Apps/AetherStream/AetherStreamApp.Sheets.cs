@@ -226,7 +226,7 @@ internal sealed partial class AetherStreamApp
         var drawList = ImGui.GetWindowDrawList();
         var avatarRadius = 16f * scale;
         var avatarCenter = new Vector2(row.Min.X + avatarRadius, row.Center.Y);
-        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, participant.Name, participant.World,
+        AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, participant.DisplayName, string.Empty,
             participant.AvatarUrl, remoteImages, lodestone, 0.7f, 20);
 
         var textLeft = avatarCenter.X + avatarRadius + Metrics.Space.Md * scale;

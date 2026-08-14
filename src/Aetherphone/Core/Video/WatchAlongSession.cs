@@ -7,15 +7,13 @@ using Aetherphone.Core.Telephony.Contracts;
 
 namespace Aetherphone.Core.Video;
 
-internal sealed record WatchAlongParticipant(string UserId, string Name, string World, string DisplayName,
-    string? AvatarUrl, bool IsHost);
+internal sealed record WatchAlongParticipant(string UserId, string DisplayName, string? AvatarUrl, bool IsHost);
 
-internal sealed record NearbyStream(string HostId, string Name, string World, string DisplayName);
+internal sealed record NearbyStream(string HostId, string DisplayName, string Handle, string? AvatarUrl);
 
-internal sealed record PendingJoinRequest(string UserId, string Name, string World, string DisplayName);
+internal sealed record PendingJoinRequest(string UserId, string DisplayName, string? AvatarUrl);
 
-internal sealed record QueueSuggestion(string SuggestionId, string UserId, string Name, string World,
-    string DisplayName, string Url);
+internal sealed record QueueSuggestion(string SuggestionId, string UserId, string DisplayName, string Url);
 
 internal sealed record HostQueueItem(string Url, string Title);
 
@@ -508,7 +506,7 @@ internal sealed class WatchAlongSession : IDisposable
             }
         }
 
-        updated.Add(new PendingJoinRequest(from.UserId, from.Name, from.World, from.DisplayName));
+        updated.Add(new PendingJoinRequest(from.UserId, from.DisplayName, from.AvatarUrl));
         PendingRequests = updated;
     }
 
@@ -545,7 +543,7 @@ internal sealed class WatchAlongSession : IDisposable
             }
         }
 
-        updated.Add(new QueueSuggestion(suggestionId, from.UserId, from.Name, from.World, from.DisplayName, url));
+        updated.Add(new QueueSuggestion(suggestionId, from.UserId, from.DisplayName, url));
         PendingQueueSuggestions = updated;
     }
 
@@ -691,7 +689,7 @@ internal sealed class WatchAlongSession : IDisposable
         for (var index = 0; index < streams.Length; index++)
         {
             var entry = streams[index];
-            result[index] = new NearbyStream(entry.HostId, entry.Name, entry.World, entry.DisplayName);
+            result[index] = new NearbyStream(entry.HostId, entry.DisplayName, entry.Handle, entry.AvatarUrl);
         }
 
         Nearby = result;
@@ -775,8 +773,8 @@ internal sealed class WatchAlongSession : IDisposable
         for (var index = 0; index < participants.Length; index++)
         {
             var participant = participants[index];
-            result[index] = new WatchAlongParticipant(participant.UserId, participant.Name, participant.World,
-                participant.DisplayName, null, IsHost: participant.Slot == 0);
+            result[index] = new WatchAlongParticipant(participant.UserId, participant.DisplayName,
+                participant.AvatarUrl, IsHost: participant.Slot == 0);
         }
 
         return result;
