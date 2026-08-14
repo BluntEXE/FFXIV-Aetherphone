@@ -105,8 +105,14 @@ internal sealed class BlackjackTable
 
     public void Enter(string tableId)
     {
+        var nextRoomId = tableId.Length > 0 ? tableId : CasinoRoomIds.BlackjackPit;
+        if (entered && !string.Equals(roomId, nextRoomId, StringComparison.Ordinal))
+        {
+            AbandonSeatIfHeld();
+        }
+
         entered = true;
-        roomId = tableId.Length > 0 ? tableId : CasinoRoomIds.BlackjackPit;
+        roomId = nextRoomId;
         inlineReason = string.Empty;
         mySeat = -1;
         projection.Reset();
@@ -116,7 +122,30 @@ internal sealed class BlackjackTable
         composer.Reset(BlackjackRules.MinBet);
         motionsPrimed = false;
         Array.Clear(motions);
+        _ = tables.TakeSeatOutcome();
+        _ = tables.TakeIntentFailure();
         rooms.Enter(roomId);
+    }
+
+    public void Exit()
+    {
+        AbandonSeatIfHeld();
+        Reset();
+    }
+
+    private void AbandonSeatIfHeld()
+    {
+        if (!entered || seatFlow.StandQueued)
+        {
+            return;
+        }
+
+        if (!BlackjackRules.IsSeat(mySeat) && !CasinoSeatMachine.Holds(seatFlow.Stage))
+        {
+            return;
+        }
+
+        tables.Abandon(roomId);
     }
 
     public void Reset()

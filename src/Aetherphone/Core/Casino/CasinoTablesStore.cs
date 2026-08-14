@@ -382,6 +382,23 @@ internal sealed class CasinoTablesStore : IDisposable
         }, EndIntent);
     }
 
+    public void Abandon(string roomId)
+    {
+        if (roomId.Length == 0)
+        {
+            return;
+        }
+
+        work.Run("abandon", async token =>
+        {
+            var answer = await casino.StandAsync(roomId, token).ConfigureAwait(false);
+            if (answer is not null)
+            {
+                chips.RefreshNow();
+            }
+        });
+    }
+
     public void RefreshDoorNow(string roomId)
     {
         if (roomId.Length == 0)

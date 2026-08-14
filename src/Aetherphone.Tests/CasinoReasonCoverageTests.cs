@@ -49,6 +49,7 @@ public sealed class CasinoReasonCoverageTests
         Assert.Contains(CasinoReasons.KnockPending, CasinoReasons.All);
         Assert.Contains(CasinoReasons.SeatTaken, CasinoReasons.All);
         Assert.Contains(CasinoReasons.AlreadySeated, CasinoReasons.All);
+        Assert.Contains(CasinoReasons.SeatedElsewhere, CasinoReasons.All);
         Assert.Contains(CasinoReasons.BoundElsewhere, CasinoReasons.All);
         Assert.Contains(CasinoReasons.AtHandEnd, CasinoReasons.All);
         Assert.Contains(CasinoReasons.Kicked, CasinoReasons.All);

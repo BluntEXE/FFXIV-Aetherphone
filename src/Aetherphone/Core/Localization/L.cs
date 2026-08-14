@@ -3341,6 +3341,8 @@ internal static class L
             "aetherstream.settingsDependencyNotInstalled", "Not installed");
         public static readonly LocString SettingsDependencyUpdateAvailable = new(
             "aetherstream.settingsDependencyUpdateAvailable", "Update available");
+        public static readonly LocString SettingsDependencyRestartPending = new(
+            "aetherstream.settingsDependencyRestartPending", "Installed, applies after restarting the game");
         public static readonly LocString SettingsDownloadMpv = new("aetherstream.settingsDownloadMpv",
             "Download mpv");
         public static readonly LocString SettingsDownloadYtdlp = new("aetherstream.settingsDownloadYtdlp",
@@ -4533,6 +4535,7 @@ internal static class L
         public static readonly LocString ReasonBlocked = new("casino.reasonBlocked", "You cannot sit at that table right now. Another one will deal you in.");
         public static readonly LocString ReasonAlreadyHosting = new("casino.reasonAlreadyHosting", "You already have a table open. Close it before hosting another.");
         public static readonly LocString ReasonAlreadySeated = new("casino.reasonAlreadySeated", "You already have a seat at this table.");
+        public static readonly LocString ReasonSeatedElsewhere = new("casino.reasonSeatedElsewhere", "You still have a seat at another table. Stand up there or wait a few minutes for the floor to clear it.");
         public static readonly LocString ReasonSeatTaken = new("casino.reasonSeatTaken", "Somebody sat there first. Another seat is open.");
         public static readonly LocString ReasonNotSeated = new("casino.reasonNotSeated", "You are watching this one, not playing it. Take a seat first.");
         public static readonly LocString ReasonNotMember = new("casino.reasonNotMember", "You are not on the list for that table yet.");

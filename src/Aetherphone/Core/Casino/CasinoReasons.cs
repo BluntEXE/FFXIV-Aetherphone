@@ -43,6 +43,7 @@ internal static class CasinoReasons
     public const string Blocked = "blocked";
     public const string AlreadyHosting = "already_hosting";
     public const string AlreadySeated = "already_seated";
+    public const string SeatedElsewhere = "seated_elsewhere";
     public const string SeatTaken = "seat_taken";
     public const string NotSeated = "not_seated";
     public const string NotMember = "not_member";
@@ -98,6 +99,7 @@ internal static class CasinoReasons
         Blocked,
         AlreadyHosting,
         AlreadySeated,
+        SeatedElsewhere,
         SeatTaken,
         NotSeated,
         NotMember,
@@ -154,6 +156,7 @@ internal static class CasinoReasons
         [Blocked] = L.Casino.ReasonBlocked,
         [AlreadyHosting] = L.Casino.ReasonAlreadyHosting,
         [AlreadySeated] = L.Casino.ReasonAlreadySeated,
+        [SeatedElsewhere] = L.Casino.ReasonSeatedElsewhere,
         [SeatTaken] = L.Casino.ReasonSeatTaken,
         [NotSeated] = L.Casino.ReasonNotSeated,
         [NotMember] = L.Casino.ReasonNotMember,

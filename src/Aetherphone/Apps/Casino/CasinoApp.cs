@@ -342,7 +342,7 @@ internal sealed partial class CasinoApp : IPhoneApp
 
         if (route.Screen == CasinoScreen.Table)
         {
-            blackjack.Reset();
+            blackjack.Exit();
             return;
         }
 
