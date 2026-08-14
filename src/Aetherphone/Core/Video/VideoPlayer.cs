@@ -35,6 +35,7 @@ internal sealed class VideoPlayer : IDisposable
     internal VideoPlaybackState State { get; private set; } = VideoPlaybackState.Idle;
     internal PlaybackProgress Progress { get; private set; }
     internal string? LastError { get; private set; }
+    internal string? RecoveryNotice => engine.RecoveryNotice;
 
     internal bool HasMedia => State is VideoPlaybackState.Loading or VideoPlaybackState.Playing
         or VideoPlaybackState.Paused;

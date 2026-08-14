@@ -16,6 +16,13 @@ internal enum DependencyState : byte
     Failed,
 }
 
+internal enum ResolverUpdateOutcome : byte
+{
+    Updated,
+    AlreadyCurrent,
+    Failed,
+}
+
 internal readonly record struct DependencyProgress(
     DependencyState State,
     long ReceivedBytes,
@@ -472,6 +479,36 @@ internal sealed class MediaDependencies : IDisposable
 
         return InstalledVersion(dependency) is { Length: > 0 } installed
             && !installed.Equals(remote, StringComparison.Ordinal);
+    }
+
+    internal async Task<ResolverUpdateOutcome> UpdateIfNewerAsync(MediaDependency dependency,
+        CancellationToken token)
+    {
+        await installGate.WaitAsync(token).ConfigureAwait(false);
+        try
+        {
+            if (!await CheckAsync(dependency, token).ConfigureAwait(false))
+            {
+                return ResolverUpdateOutcome.Failed;
+            }
+
+            if (InstalledVersion(dependency) is { Length: > 0 } installed
+                && dependency.RemoteVersion is { Length: > 0 } remote
+                && installed.Equals(remote, StringComparison.Ordinal))
+            {
+                return ResolverUpdateOutcome.AlreadyCurrent;
+            }
+
+            await DownloadAsync(dependency, token).ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+            return dependency.Snapshot().State == DependencyState.Ready
+                ? ResolverUpdateOutcome.Updated
+                : ResolverUpdateOutcome.Failed;
+        }
+        finally
+        {
+            installGate.Release();
+        }
     }
 
     internal async Task<bool> ReinstallAsync(MediaDependency dependency, CancellationToken token)

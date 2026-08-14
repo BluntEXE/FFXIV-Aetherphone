@@ -3465,6 +3465,14 @@ internal static class L
         public static readonly LocString Party = new("aetherstream.party", "Party");
         public static readonly LocString Screen = new("aetherstream.screen", "Screen");
         public static readonly LocString WatchingCount = new("aetherstream.watchingCount", "{0} watching");
+        public static readonly LocString ResolverRecovering = new("aetherstream.resolverRecovering",
+            "The video service refused the stream. Updating the link resolver and retrying.");
+        public static readonly LocString ResolverStillRefused = new("aetherstream.resolverStillRefused",
+            "The video service refused this stream even after a link resolver update. Try again later.");
+        public static readonly LocString ResolverAlreadyCurrent = new("aetherstream.resolverAlreadyCurrent",
+            "The video service refused this stream and the link resolver is already the latest release. Try again later.");
+        public static readonly LocString ResolverUpdateFailed = new("aetherstream.resolverUpdateFailed",
+            "The video service refused this stream and the link resolver update did not go through. Check your connection and try again.");
     }
 
     internal static class Clock

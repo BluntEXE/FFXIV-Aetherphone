@@ -220,24 +220,33 @@ internal sealed partial class AetherStreamApp
 
     private void DrawPlaybackError(float width, float scale)
     {
-        if (video.LastError is not { } error)
+        if (video.LastError is { } error)
         {
+            DrawPlaybackNotice(width, scale, error, theme.Danger);
             return;
         }
 
+        if (video.RecoveryNotice is { } notice)
+        {
+            DrawPlaybackNotice(width, scale, notice, ui.MutedInk);
+        }
+    }
+
+    private void DrawPlaybackNotice(float width, float scale, string text, Vector4 ink)
+    {
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
         var origin = ImGui.GetCursorScreenPos();
         var pad = Metrics.Space.Md * scale;
         var textWidth = width - pad * 2f;
-        var textHeight = Typography.MeasureWrappedBlock(error, TextStyles.Footnote, textWidth).Y;
+        var textHeight = Typography.MeasureWrappedBlock(text, TextStyles.Footnote, textWidth).Y;
         var cardHeight = textHeight + pad * 2f;
         var drawList = ImGui.GetWindowDrawList();
         var max = origin + new Vector2(width, cardHeight);
         Squircle.Fill(drawList, origin, max, Metrics.Radius.Md * scale,
-            ImGui.GetColorU32(Palette.WithAlpha(theme.Danger, 0.10f)));
+            ImGui.GetColorU32(Palette.WithAlpha(ink, 0.10f)));
         Squircle.Stroke(drawList, origin, max, Metrics.Radius.Md * scale,
-            ImGui.GetColorU32(Palette.WithAlpha(theme.Danger, 0.35f)), 1f);
-        Typography.DrawWrappedLeft(origin + new Vector2(pad, pad), error, theme.Danger, TextStyles.Footnote,
+            ImGui.GetColorU32(Palette.WithAlpha(ink, 0.35f)), 1f);
+        Typography.DrawWrappedLeft(origin + new Vector2(pad, pad), text, ink, TextStyles.Footnote,
             textWidth);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, cardHeight));

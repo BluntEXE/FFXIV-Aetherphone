@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Aetherphone.Core.Localization;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 
@@ -18,6 +19,8 @@ internal sealed class VideoEngine : IDisposable
     internal const float ScreenPositionSliderRange = 10f;
 
     private static readonly TimeSpan YouTubeLoadSpacing = TimeSpan.FromSeconds(3);
+
+    private const long ResolverRecoveryCooldownMilliseconds = 10 * 60 * 1000;
 
     private static readonly Regex YouTubeHost =
         new(@"^\w+://[^/]*youtube\.\w+/|^\w+://youtu\.be/", RegexOptions.Compiled);
@@ -48,6 +51,10 @@ internal sealed class VideoEngine : IDisposable
     private int pendingVolume = 60;
     private volatile bool active;
     private volatile bool loading;
+    private long lastResolverRecoveryAtTicks = long.MinValue;
+    private volatile bool resolverRecovering;
+    private volatile string? recoveryNotice;
+    private ResolverUpdateOutcome lastResolverOutcome = ResolverUpdateOutcome.Failed;
 
     internal VideoEngine()
     {
@@ -74,11 +81,16 @@ internal sealed class VideoEngine : IDisposable
     internal bool IsActive => active;
     internal bool IsLoading => loading;
     internal string? LastError { get; private set; }
+    internal string? RecoveryNotice => recoveryNotice;
 
     internal event Action<MpvEndReason, string?>? PlaybackEnded;
     internal event Action? PlaybackLoaded;
 
-    internal void ClearError() => LastError = null;
+    internal void ClearError()
+    {
+        LastError = null;
+        recoveryNotice = null;
+    }
 
     internal void Play(string url, double startSeconds = 0d, bool playing = true)
     {
@@ -231,22 +243,141 @@ internal sealed class VideoEngine : IDisposable
         existing.Dispose();
     }
 
-    private void OnFileLoaded() => PlaybackLoaded?.Invoke();
+    private void OnFileLoaded()
+    {
+        recoveryNotice = null;
+        PlaybackLoaded?.Invoke();
+    }
 
     private void OnFileEnded(MpvEndReason reason, string? detail)
     {
         if (reason == MpvEndReason.Failed)
         {
+            if (RefusedStreamUrl() is { } refusedUrl)
+            {
+                if (TryBeginResolverRecovery())
+                {
+                    recoveryNotice = Loc.T(L.AetherStream.ResolverRecovering);
+                    _ = RecoverResolverAsync(refusedUrl);
+                    return;
+                }
+
+                detail = RefusedStreamText();
+            }
+
             LastError = detail ?? "This video could not be played.";
         }
 
         PlaybackEnded?.Invoke(reason, detail);
     }
 
+    private string? RefusedStreamUrl()
+    {
+        if (renderer is not { SawHttpForbidden: true } refusedRenderer)
+        {
+            return null;
+        }
+
+        var url = refusedRenderer.CurrentUrl;
+        return url is { Length: > 0 } && url.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? url : null;
+    }
+
+    private bool TryBeginResolverRecovery()
+    {
+        if (resolverRecovering)
+        {
+            return false;
+        }
+
+        var now = Environment.TickCount64;
+        if (lastResolverRecoveryAtTicks != long.MinValue
+            && now - lastResolverRecoveryAtTicks < ResolverRecoveryCooldownMilliseconds)
+        {
+            return false;
+        }
+
+        lastResolverRecoveryAtTicks = now;
+        resolverRecovering = true;
+        return true;
+    }
+
+    private async Task RecoverResolverAsync(string refusedUrl)
+    {
+        var token = lifetime.Token;
+        try
+        {
+            var outcome = await Dependencies.UpdateIfNewerAsync(Dependencies.LinkResolver, token)
+                .ConfigureAwait(false);
+            lastResolverOutcome = outcome;
+            if (outcome != ResolverUpdateOutcome.Updated)
+            {
+                AbandonRecovery(RefusedStreamText());
+                return;
+            }
+
+            AepLog.Warning("[Video] The stream was refused with the old link resolver; updated to "
+                + $"{Dependencies.LinkResolver.RemoteVersion} and retrying.");
+
+            if (renderer is { } current && !string.Equals(current.CurrentUrl, refusedUrl, StringComparison.Ordinal))
+            {
+                recoveryNotice = null;
+                return;
+            }
+
+            if (renderer is { } stale
+                && !string.Equals(stale.LinkResolverPath, Dependencies.LinkResolverPath, StringComparison.OrdinalIgnoreCase))
+            {
+                await playGate.WaitAsync(token).ConfigureAwait(false);
+                try
+                {
+                    DetachRenderer();
+                }
+                finally
+                {
+                    playGate.Release();
+                }
+            }
+
+            if (!await PlayAsync(refusedUrl, 0d, playing: true).ConfigureAwait(false))
+            {
+                AbandonRecovery(RefusedStreamText());
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            recoveryNotice = null;
+        }
+        catch (Exception exception)
+        {
+            AepLog.Error($"[Video] Link resolver recovery failed: {exception.Message}");
+            lastResolverOutcome = ResolverUpdateOutcome.Failed;
+            AbandonRecovery(RefusedStreamText());
+        }
+        finally
+        {
+            resolverRecovering = false;
+        }
+    }
+
+    private void AbandonRecovery(string message)
+    {
+        recoveryNotice = null;
+        LastError = message;
+        PlaybackEnded?.Invoke(MpvEndReason.Failed, message);
+    }
+
+    private string RefusedStreamText() => lastResolverOutcome switch
+    {
+        ResolverUpdateOutcome.Updated => Loc.T(L.AetherStream.ResolverStillRefused),
+        ResolverUpdateOutcome.AlreadyCurrent => Loc.T(L.AetherStream.ResolverAlreadyCurrent),
+        _ => Loc.T(L.AetherStream.ResolverUpdateFailed),
+    };
+
     internal void StopVideo()
     {
         active = false;
         loading = false;
+        recoveryNotice = null;
         renderer?.Stop();
         screenPainter.SetTarget(null);
     }

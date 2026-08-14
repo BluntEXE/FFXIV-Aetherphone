@@ -165,11 +165,16 @@ internal sealed class MpvRenderer : IDisposable
     private volatile bool started;
     private volatile string? currentUrl;
     private int consecutiveRenderFailures;
+    private int httpForbiddenHits;
 
     internal event Action? FileLoaded;
     internal event Action<MpvEndReason, string?>? FileEnded;
 
     internal bool IsRunning => started && !disposed;
+
+    internal bool SawHttpForbidden => Volatile.Read(ref httpForbiddenHits) > 0;
+
+    internal string? LinkResolverPath { get; private set; }
 
     internal void Initialize(int frameWidth, int frameHeight, Texture2D? texture, string? linkResolverPath,
         bool hardwareDecoding, int maxQualityHeight, bool allowInsecureDirectUrls, int initialVolume)
@@ -193,6 +198,7 @@ internal sealed class MpvRenderer : IDisposable
         SetOption("hwdec", hardwareDecoding ? "auto-safe" : "no");
         SetOption("profile", "sw-fast");
         SetOption("ytdl", "yes");
+        LinkResolverPath = linkResolverPath;
         if (linkResolverPath is { Length: > 0 })
         {
             SetOption("script-opts", $"ytdl_hook-ytdl_path={linkResolverPath}");
@@ -313,6 +319,7 @@ internal sealed class MpvRenderer : IDisposable
 
         currentUrl = url;
         Interlocked.Exchange(ref consecutiveRenderFailures, 0);
+        Interlocked.Exchange(ref httpForbiddenHits, 0);
         return true;
     }
 
@@ -609,12 +616,22 @@ internal sealed class MpvRenderer : IDisposable
 
         if (level is "error" or "fatal")
         {
+            if (IsHttpForbiddenText(text))
+            {
+                Interlocked.Increment(ref httpForbiddenHits);
+            }
+
             AepLog.Warning($"[MPV/{prefix}] {text}");
             return;
         }
 
         AepLog.Verbose($"[MPV/{prefix}/{level}] {text}");
     }
+
+    private static bool IsHttpForbiddenText(string text) =>
+        text.Contains("403", StringComparison.Ordinal)
+        && (text.Contains("http", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("forbidden", StringComparison.OrdinalIgnoreCase));
 
     private void HandleEndFile(IntPtr handle)
     {
