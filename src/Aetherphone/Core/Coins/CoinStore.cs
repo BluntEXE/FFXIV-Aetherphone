@@ -69,14 +69,31 @@ internal sealed class CoinStore : IDisposable
 
     public void AbsorbLocalAward(long balance)
     {
-        if (balance <= 0)
+        if (balance < 0)
         {
             return;
         }
 
         Interlocked.Exchange(ref lastSeenBalance, balance);
+        var next = BalanceAbsorbedInto(wallet, balance);
+        if (next is not null)
+        {
+            wallet = next;
+        }
+
         Interlocked.Exchange(ref walletLoadedAtTick, 0);
+        Interlocked.Exchange(ref walletAttemptedAtTick, 0);
         RefreshWallet(0);
+    }
+
+    internal static CoinWalletDto? BalanceAbsorbedInto(CoinWalletDto? current, long balance)
+    {
+        if (current is null || current.Balance == balance)
+        {
+            return null;
+        }
+
+        return current with { Balance = balance };
     }
 
     public CoinAwardDto? TakeCheckInResult()

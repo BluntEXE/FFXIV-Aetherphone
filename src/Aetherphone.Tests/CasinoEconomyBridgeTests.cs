@@ -110,6 +110,38 @@ public sealed class CasinoEconomyBridgeTests
         Assert.NotEqual(L.Coin.RuleGeneric.Key, CoinRuleLabels.For(CasinoLedgerRules.Daily).Key);
     }
 
+    [Fact]
+    public void AMoneyMoveBalanceLandsInTheWalletWithoutARoundTrip()
+    {
+        var before = Wallet(1_021_206);
+        var after = CoinStore.BalanceAbsorbedInto(before, 1_016_206);
+        Assert.NotNull(after);
+        Assert.Equal(1_016_206, after.Balance);
+        Assert.Equal(before.LifetimeEarned, after.LifetimeEarned);
+        Assert.Equal(before.EarnedToday, after.EarnedToday);
+    }
+
+    [Fact]
+    public void AnEmptyingBuyInStillLandsAtZero()
+    {
+        var after = CoinStore.BalanceAbsorbedInto(Wallet(5_000), 0);
+        Assert.NotNull(after);
+        Assert.Equal(0, after.Balance);
+    }
+
+    [Fact]
+    public void AnUnchangedBalanceLeavesTheWalletAlone()
+    {
+        Assert.Null(CoinStore.BalanceAbsorbedInto(Wallet(800), 800));
+        Assert.Null(CoinStore.BalanceAbsorbedInto(null, 800));
+    }
+
+    private static CoinWalletDto Wallet(long balance)
+    {
+        return new CoinWalletDto(balance, 2_000_000, 900_000, 40, 100, 0, 3, false, false,
+            string.Empty, 60, 300, Array.Empty<CoinRuleStatusDto>());
+    }
+
     private static CoinLedgerEntryDto Entry(string id, string ruleId, long amount)
     {
         return new CoinLedgerEntryDto(id, ruleId, amount, 0, "casino", id, string.Empty, 0);

@@ -261,7 +261,11 @@ internal sealed class CasinoStore : IDisposable
         }
 
         Interlocked.Exchange(ref slot, result);
-        coins.AbsorbLocalAward(result.Balance);
+        if (result.Granted)
+        {
+            coins.AbsorbLocalAward(result.Balance);
+        }
+
         RefreshNow();
     }
 
