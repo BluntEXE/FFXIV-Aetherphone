@@ -1,6 +1,7 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Social;
+using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Windows.Components;
@@ -79,8 +80,7 @@ internal static class BadgeStrip
             }
         }
 
-        ProgressRing.CenterIconRamp(drawList, center, badge.Glyph, badge.Colors, light, size,
-            NameEffects.GlyphPhase(badge));
+        ProgressRing.CenterIcon(drawList, center, badge.Glyph, RoleInk.For(badge.Colors[0], light), size);
     }
 
     private static int Shown(string[]? badgeIds, int maxBadges)

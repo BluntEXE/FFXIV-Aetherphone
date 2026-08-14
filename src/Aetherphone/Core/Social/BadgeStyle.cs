@@ -115,6 +115,8 @@ internal sealed record BadgeStyle(
             "starfall" => NameEffectKind.Starfall,
             "eclipse" => NameEffectKind.Eclipse,
             "heartbeat" => NameEffectKind.Heartbeat,
+            "pulse" => NameEffectKind.Pulse,
+            "glow" => NameEffectKind.Glow,
             _ => NameEffectKind.None,
         };
     }

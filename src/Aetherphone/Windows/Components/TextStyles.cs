@@ -23,6 +23,8 @@ internal enum NameEffectKind
     Starfall,
     Eclipse,
     Heartbeat,
+    Pulse,
+    Glow,
 }
 
 internal readonly record struct TextEffect(NameEffectKind Kind, Vector4 Crest, float Phase, WaveRamp Ramp = default);

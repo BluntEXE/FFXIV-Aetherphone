@@ -13,11 +13,18 @@ public sealed class NameEffectSyncTests
     {
         "none", "gradient", "breath", "ripple", "flow", "glint", "sweep", "wave",
         "ember", "frost", "aurora", "prism", "glitch", "starfall", "eclipse", "heartbeat",
+        "pulse", "glow",
     };
 
     private static readonly string[] SellableEffectKeys =
     {
-        "flow", "ember", "frost", "aurora", "prism", "glitch", "starfall", "eclipse", "heartbeat",
+        "gradient", "flow", "wave", "ember", "frost", "aurora", "prism", "glitch",
+        "starfall", "eclipse", "heartbeat", "pulse", "glow",
+    };
+
+    private static readonly string[] RoleSignatureKeys =
+    {
+        "breath", "ripple", "glint", "sweep",
     };
 
     private static BadgeStyle Badge(string effect, params string[] colors) =>
@@ -105,18 +112,91 @@ public sealed class NameEffectSyncTests
     }
 
     [Fact]
-    public void NoSellableEffectIsClaimedByARole()
+    public void RoleSignatureEffectsAreNeverSold()
+    {
+        for (var signatureIndex = 0; signatureIndex < RoleSignatureKeys.Length; signatureIndex++)
+        {
+            for (var sellableIndex = 0; sellableIndex < SellableEffectKeys.Length; sellableIndex++)
+            {
+                Assert.True(RoleSignatureKeys[signatureIndex] != SellableEffectKeys[sellableIndex],
+                    RoleSignatureKeys[signatureIndex] + " is a role signature but the shop sells it");
+            }
+        }
+    }
+
+    [Fact]
+    public void EveryRoleEffectIsEitherASignatureOrColourDifferentiated()
     {
         foreach (RoleKind role in Enum.GetValues<RoleKind>())
         {
             var roleEffect = NameEffects.KindFor(role);
-            for (var index = 0; index < SellableEffectKeys.Length; index++)
+            if (roleEffect == NameEffectKind.None)
             {
-                var sellable = Badge(SellableEffectKeys[index], "0xFF8A3D").Effect;
-                Assert.True(roleEffect != sellable,
-                    SellableEffectKeys[index] + " is sold but " + role + " already wears it");
+                continue;
             }
+
+            var signature = false;
+            for (var index = 0; index < RoleSignatureKeys.Length; index++)
+            {
+                if (Badge(RoleSignatureKeys[index], "0xFF8A3D").Effect == roleEffect)
+                {
+                    signature = true;
+                    break;
+                }
+            }
+
+            Assert.True(signature
+                    || roleEffect == NameEffectKind.Wave
+                    || roleEffect == NameEffectKind.Gradient,
+                role + " wears " + roleEffect + " which is neither a signature nor ramp-differentiated");
         }
+    }
+
+    [Fact]
+    public void AnEightColourBadgeCarriesAllEightStops()
+    {
+        var ramped = NameEffects.For(Badge("wave",
+            "0xE40303", "0xFC7B00", "0xFFE500", "0x35961E",
+            "0x006691", "0x024BFD", "0x3E39BC", "0x732982"), false);
+        Assert.Equal(8, ramped.Ramp.Count);
+        Assert.NotEqual(ramped.Ramp.Stop(0), ramped.Ramp.Stop(7));
+        Assert.Equal(ramped.Ramp.Stop(0), ramped.Ramp.Sample(0f));
+        Assert.Equal(ramped.Ramp.Sample(0f), ramped.Ramp.Sample(1f));
+    }
+
+    [Fact]
+    public void AStaticGradientSpansFirstToLastColourWithoutWrapping()
+    {
+        var ramped = NameEffects.For(Badge("gradient", "0xFF0000", "0x00FF00", "0x0000FF"), false);
+        Assert.Equal(3, ramped.Ramp.Count);
+        Assert.Equal(ramped.Ramp.Stop(0), ramped.Ramp.SampleAcross(0f));
+        Assert.Equal(ramped.Ramp.Stop(2), ramped.Ramp.SampleAcross(1f));
+    }
+
+    [Fact]
+    public void ATwoColourWaveKeepsItsDoubledCadence()
+    {
+        var ramped = NameEffects.For(Badge("wave", "0x000000", "0xFFD700"), false);
+        Assert.Equal(4, ramped.Ramp.Count);
+        Assert.Equal(ramped.Ramp.Start, ramped.Ramp.Half);
+        Assert.Equal(ramped.Ramp.Quarter, ramped.Ramp.ThreeQuarter);
+    }
+
+    [Fact]
+    public void PulseCyclesTheWholeNameThroughTheRamp()
+    {
+        var ramped = NameEffects.For(Badge("pulse", "0x5BCEFA", "0xF5AAB9", "0xFFFCFD"), false);
+        Assert.Equal(NameEffectKind.Pulse, ramped.Kind);
+        Assert.Equal(3, ramped.Ramp.Count);
+    }
+
+    [Fact]
+    public void GlowStaysStill()
+    {
+        var glow = NameEffects.For(Badge("glow", "0xFFFFFF", "0x00B8FF"), false);
+        Assert.Equal(NameEffectKind.Glow, glow.Kind);
+        Assert.Equal(0f, glow.Phase);
+        Assert.True(glow.Crest.W > 0f);
     }
 
     [Fact]

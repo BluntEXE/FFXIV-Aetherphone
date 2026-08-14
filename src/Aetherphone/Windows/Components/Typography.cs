@@ -243,7 +243,6 @@ internal static class Typography
     private const float FrostBandFraction = 0.52f;
     private const float RippleCrests = 2.5f;
     private const float WaveSpan = 1.0f;
-    private const int GradientSlices = 12;
     private const float EmberSlowCrests = 1.7f;
     private const float EmberFastCrests = 4.3f;
     private const float EmberFastWeight = 0.40f;
@@ -263,6 +262,7 @@ internal static class Typography
     private const float StarfallStagger = 0.19f;
     private const float StarfallRadiusScale = 0.065f;
     private const float RimAlpha = 0.26f;
+    private const float GlowRimAlpha = 0.55f;
     private const float RimOffset = 1f;
     private const float ThumpWidth = 0.12f;
     private const float ThumpEchoAt = 0.18f;
@@ -304,10 +304,32 @@ internal static class Typography
                 return;
             }
 
+            if (effect.Kind == NameEffectKind.Pulse)
+            {
+                var lit = effect.Ramp.Count > 0
+                    ? effect.Ramp.Sample(effect.Phase)
+                    : Vector4.Lerp(color, effect.Crest, Wave(effect.Phase));
+                drawList.AddText(font, fontSize, position, ImGui.GetColorU32(lit), text);
+                return;
+            }
+
+            if (effect.Kind == NameEffectKind.Glow)
+            {
+                DrawRim(drawList, font, fontSize, position, text, effect, GlowRimAlpha);
+                drawList.AddText(font, fontSize, position, ImGui.GetColorU32(color), text);
+                return;
+            }
+
             if (effect.Kind == NameEffectKind.Eclipse)
             {
                 DrawHalo(drawList, font, fontSize, position, text, effect);
                 drawList.AddText(font, fontSize, position, ImGui.GetColorU32(color), text);
+                return;
+            }
+
+            if (RunsOnGradient(effect.Kind))
+            {
+                DrawGradient(drawList, font, fontSize, position, text, size.X, color, effect);
                 return;
             }
 
@@ -316,7 +338,7 @@ internal static class Typography
             var bottom = position.Y + size.Y * 1.5f;
             if (effect.Kind == NameEffectKind.Frost)
             {
-                DrawRim(drawList, font, fontSize, position, text, effect);
+                DrawRim(drawList, font, fontSize, position, text, effect, RimAlpha);
                 DrawCrest(drawList, font, fontSize, position, text, size.X, effect, top, bottom);
                 return;
             }
@@ -336,11 +358,19 @@ internal static class Typography
             if (effect.Kind == NameEffectKind.Starfall)
             {
                 DrawSparks(drawList, position, size, fontSize, effect);
-                return;
             }
-
-            DrawSlices(drawList, font, fontSize, position, text, size.X, color, effect, top, bottom);
         }
+    }
+
+    private static bool RunsOnGradient(NameEffectKind kind)
+    {
+        return kind == NameEffectKind.Gradient
+            || kind == NameEffectKind.Ripple
+            || kind == NameEffectKind.Flow
+            || kind == NameEffectKind.Wave
+            || kind == NameEffectKind.Ember
+            || kind == NameEffectKind.Aurora
+            || kind == NameEffectKind.Prism;
     }
 
     private static void DrawCrest(ImDrawListPtr drawList, ImFontPtr font, float fontSize, Vector2 position,
@@ -380,9 +410,9 @@ internal static class Typography
     }
 
     private static void DrawRim(ImDrawListPtr drawList, ImFontPtr font, float fontSize, Vector2 position,
-        string text, in TextEffect effect)
+        string text, in TextEffect effect, float alpha)
     {
-        var rim = new Vector4(effect.Crest.X, effect.Crest.Y, effect.Crest.Z, effect.Crest.W * RimAlpha);
+        var rim = new Vector4(effect.Crest.X, effect.Crest.Y, effect.Crest.Z, effect.Crest.W * alpha);
         var packed = ImGui.GetColorU32(rim);
         drawList.AddText(font, fontSize, position + new Vector2(RimOffset, 0f), packed, text);
         drawList.AddText(font, fontSize, position + new Vector2(-RimOffset, 0f), packed, text);
@@ -459,46 +489,55 @@ internal static class Typography
         }
     }
 
-    private static void DrawSlices(ImDrawListPtr drawList, ImFontPtr font, float fontSize, Vector2 position,
-        string text, float width, Vector4 color, in TextEffect effect, float top, float bottom)
+    private static void DrawGradient(ImDrawListPtr drawList, ImFontPtr font, float fontSize, Vector2 position,
+        string text, float width, Vector4 color, in TextEffect effect)
     {
-        for (var sliceIndex = 0; sliceIndex < GradientSlices; sliceIndex++)
+        var firstVertex = drawList.VtxBuffer.Size;
+        drawList.AddText(font, fontSize, position, ImGui.GetColorU32(color), text);
+        if (width <= 0f)
         {
-            var left = position.X + width * sliceIndex / GradientSlices;
-            var right = position.X + width * (sliceIndex + 1) / GradientSlices;
-            var center = (sliceIndex + 0.5f) / GradientSlices;
-            var tint = effect.Kind switch
-            {
-                NameEffectKind.Wave => effect.Ramp.Sample(center * WaveSpan - effect.Phase),
-                NameEffectKind.Prism => effect.Ramp.Sample(center * PrismSpan - effect.Phase * PrismSpan),
-                NameEffectKind.Aurora => Vector4.Lerp(
-                    effect.Ramp.Sample(center - effect.Phase),
-                    effect.Ramp.Sample(center * AuroraCounterCrests + effect.Phase * AuroraCounterRate),
-                    0.5f),
-                _ => Vector4.Lerp(color, effect.Crest, SliceFactor(effect.Kind, center, effect.Phase)),
-            };
+            return;
+        }
 
-            drawList.PushClipRect(new Vector2(left, top), new Vector2(right, bottom), true);
-            drawList.AddText(font, fontSize, position, ImGui.GetColorU32(tint), text);
-            drawList.PopClipRect();
+        var vertices = drawList.VtxBuffer.AsSpan();
+        for (var vertexIndex = firstVertex; vertexIndex < vertices.Length; vertexIndex++)
+        {
+            ref var vertex = ref vertices[vertexIndex];
+            var progress = Math.Clamp((vertex.Pos.X - position.X) / width, 0f, 1f);
+            vertex.Col = ImGui.GetColorU32(GradientTint(progress, color, effect));
         }
     }
 
-    private static float SliceFactor(NameEffectKind kind, float center, float phase)
+    private static Vector4 GradientTint(float progress, Vector4 color, in TextEffect effect)
     {
-        return kind switch
+        return effect.Kind switch
         {
-            NameEffectKind.Flow => Triangle(center + phase),
-            NameEffectKind.Ripple => Wave(center * RippleCrests + phase),
-            NameEffectKind.Ember => Ember(center, phase),
-            _ => center,
+            NameEffectKind.Gradient when effect.Ramp.Count > 0 => effect.Ramp.SampleAcross(progress),
+            NameEffectKind.Wave => effect.Ramp.Sample(progress * WaveSpan - effect.Phase),
+            NameEffectKind.Prism => effect.Ramp.Sample(progress * PrismSpan - effect.Phase * PrismSpan),
+            NameEffectKind.Aurora => Vector4.Lerp(
+                effect.Ramp.Sample(progress - effect.Phase),
+                effect.Ramp.Sample(progress * AuroraCounterCrests + effect.Phase * AuroraCounterRate),
+                0.5f),
+            _ => Vector4.Lerp(color, effect.Crest, CrestFactor(effect.Kind, progress, effect.Phase)),
         };
     }
 
-    private static float Ember(float center, float phase)
+    private static float CrestFactor(NameEffectKind kind, float progress, float phase)
     {
-        var slow = Wave(center * EmberSlowCrests + phase);
-        var fast = Wave(center * EmberFastCrests - phase * EmberFastRate);
+        return kind switch
+        {
+            NameEffectKind.Flow => Triangle(progress + phase),
+            NameEffectKind.Ripple => Wave(progress * RippleCrests + phase),
+            NameEffectKind.Ember => Ember(progress, phase),
+            _ => progress,
+        };
+    }
+
+    private static float Ember(float progress, float phase)
+    {
+        var slow = Wave(progress * EmberSlowCrests + phase);
+        var fast = Wave(progress * EmberFastCrests - phase * EmberFastRate);
         return slow * (1f - EmberFastWeight) + fast * EmberFastWeight;
     }
 

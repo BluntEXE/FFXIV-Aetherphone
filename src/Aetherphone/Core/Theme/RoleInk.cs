@@ -14,27 +14,153 @@ internal enum RoleKind
     Aurelia,
 }
 
-internal readonly record struct WaveRamp(Vector4 Start, Vector4 Quarter, Vector4 Half, Vector4 ThreeQuarter)
+internal readonly struct WaveRamp : IEquatable<WaveRamp>
 {
+    public const int MaxStops = 8;
+
+    private readonly Vector4 stop0;
+    private readonly Vector4 stop1;
+    private readonly Vector4 stop2;
+    private readonly Vector4 stop3;
+    private readonly Vector4 stop4;
+    private readonly Vector4 stop5;
+    private readonly Vector4 stop6;
+    private readonly Vector4 stop7;
+
+    public int Count { get; }
+
+    public WaveRamp(Vector4 start, Vector4 quarter, Vector4 half, Vector4 threeQuarter)
+    {
+        stop0 = start;
+        stop1 = quarter;
+        stop2 = half;
+        stop3 = threeQuarter;
+        Count = 4;
+    }
+
+    public WaveRamp(ReadOnlySpan<Vector4> stops)
+    {
+        Count = Math.Min(stops.Length, MaxStops);
+        for (var stopIndex = 0; stopIndex < Count; stopIndex++)
+        {
+            switch (stopIndex)
+            {
+                case 0: stop0 = stops[0]; break;
+                case 1: stop1 = stops[1]; break;
+                case 2: stop2 = stops[2]; break;
+                case 3: stop3 = stops[3]; break;
+                case 4: stop4 = stops[4]; break;
+                case 5: stop5 = stops[5]; break;
+                case 6: stop6 = stops[6]; break;
+                case 7: stop7 = stops[7]; break;
+            }
+        }
+    }
+
+    public Vector4 Start => stop0;
+
+    public Vector4 Quarter => stop1;
+
+    public Vector4 Half => stop2;
+
+    public Vector4 ThreeQuarter => stop3;
+
+    public Vector4 Stop(int stopIndex)
+    {
+        return stopIndex switch
+        {
+            0 => stop0,
+            1 => stop1,
+            2 => stop2,
+            3 => stop3,
+            4 => stop4,
+            5 => stop5,
+            6 => stop6,
+            _ => stop7,
+        };
+    }
+
     public Vector4 Sample(float phase)
     {
+        if (Count == 0)
+        {
+            return default;
+        }
+
         var wrapped = phase - MathF.Floor(phase);
-        if (wrapped < 0.25f)
+        var scaled = wrapped * Count;
+        var segment = (int)scaled;
+        if (segment >= Count)
         {
-            return Vector4.Lerp(Start, Quarter, wrapped * 4f);
+            segment = Count - 1;
         }
 
-        if (wrapped < 0.50f)
+        var next = segment + 1 == Count ? 0 : segment + 1;
+        return Vector4.Lerp(Stop(segment), Stop(next), scaled - segment);
+    }
+
+    public Vector4 SampleAcross(float position)
+    {
+        if (Count == 0)
         {
-            return Vector4.Lerp(Quarter, Half, (wrapped - 0.25f) * 4f);
+            return default;
         }
 
-        if (wrapped < 0.75f)
+        if (Count == 1)
         {
-            return Vector4.Lerp(Half, ThreeQuarter, (wrapped - 0.50f) * 4f);
+            return stop0;
         }
 
-        return Vector4.Lerp(ThreeQuarter, Start, (wrapped - 0.75f) * 4f);
+        if (position <= 0f)
+        {
+            return stop0;
+        }
+
+        if (position >= 1f)
+        {
+            return Stop(Count - 1);
+        }
+
+        var scaled = position * (Count - 1);
+        var segment = (int)scaled;
+        if (segment >= Count - 1)
+        {
+            segment = Count - 2;
+        }
+
+        return Vector4.Lerp(Stop(segment), Stop(segment + 1), scaled - segment);
+    }
+
+    public bool Equals(WaveRamp other)
+    {
+        if (Count != other.Count)
+        {
+            return false;
+        }
+
+        for (var stopIndex = 0; stopIndex < Count; stopIndex++)
+        {
+            if (Stop(stopIndex) != other.Stop(stopIndex))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public override bool Equals(object? obj) => obj is WaveRamp other && Equals(other);
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(Count);
+        for (var stopIndex = 0; stopIndex < Count; stopIndex++)
+        {
+            hash.Add(Stop(stopIndex));
+        }
+
+        return hash.ToHashCode();
     }
 }
 

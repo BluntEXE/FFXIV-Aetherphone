@@ -20,6 +20,7 @@ internal static class NameEffects
     private const double StarfallPeriod = 2600.0;
     private const double EclipsePeriod = 3800.0;
     private const double HeartbeatPeriod = 2200.0;
+    private const double PulsePeriod = 4800.0;
 
     public static TextEffect For(RoleKind role, bool light)
     {
@@ -51,7 +52,7 @@ internal static class NameEffects
             phase = Fraction(phase + Seed(badge.Id));
         }
 
-        if (UsesRamp(badge.Effect))
+        if (UsesRamp(badge.Effect, badge.Colors.Length))
         {
             return new TextEffect(badge.Effect, crest, phase, RampFrom(badge.Colors, light));
         }
@@ -59,18 +60,13 @@ internal static class NameEffects
         return new TextEffect(badge.Effect, crest, phase);
     }
 
-    public static float GlyphPhase(BadgeStyle badge)
+    private static bool UsesRamp(NameEffectKind kind, int colorCount)
     {
-        if (badge.Effect == NameEffectKind.None || badge.Colors.Length <= 1)
+        if (kind == NameEffectKind.Gradient || kind == NameEffectKind.Pulse)
         {
-            return 0f;
+            return colorCount > 1;
         }
 
-        return Seed(badge.Id);
-    }
-
-    private static bool UsesRamp(NameEffectKind kind)
-    {
         return kind == NameEffectKind.Wave
             || kind == NameEffectKind.Aurora
             || kind == NameEffectKind.Prism
@@ -104,11 +100,21 @@ internal static class NameEffects
             return new WaveRamp(fill, crest, fill, crest);
         }
 
-        return new WaveRamp(
-            RoleInk.For(colors[0], light),
-            RoleInk.For(colors[1 % colors.Length], light),
-            RoleInk.For(colors[2 % colors.Length], light),
-            RoleInk.For(colors[3 % colors.Length], light));
+        if (colors.Length == 2)
+        {
+            var first = RoleInk.For(colors[0], light);
+            var second = RoleInk.For(colors[1], light);
+            return new WaveRamp(first, second, first, second);
+        }
+
+        Span<Vector4> stops = stackalloc Vector4[WaveRamp.MaxStops];
+        var count = Math.Min(colors.Length, WaveRamp.MaxStops);
+        for (var stopIndex = 0; stopIndex < count; stopIndex++)
+        {
+            stops[stopIndex] = RoleInk.For(colors[stopIndex], light);
+        }
+
+        return new WaveRamp(stops[..count]);
     }
 
     public static NameEffectKind KindFor(RoleKind role)
@@ -145,6 +151,7 @@ internal static class NameEffects
             NameEffectKind.Starfall => Pulse.Phase(StarfallPeriod),
             NameEffectKind.Eclipse => Pulse.Phase(EclipsePeriod),
             NameEffectKind.Heartbeat => Pulse.Phase(HeartbeatPeriod),
+            NameEffectKind.Pulse => Pulse.Phase(PulsePeriod),
             _ => 0f,
         };
     }
