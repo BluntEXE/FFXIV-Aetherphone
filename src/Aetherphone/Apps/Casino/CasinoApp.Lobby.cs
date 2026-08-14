@@ -28,13 +28,6 @@ internal sealed partial class CasinoApp
         }
 
         DrawStakeNotice(scale);
-
-        var sitting = casino.State?.Sitting;
-        if (sitting is not null)
-        {
-            DrawSittingResumeCard(sitting, scale);
-        }
-
         DrawDailySpinCard(scale);
 
         if (AnyRoomLive())
@@ -99,9 +92,11 @@ internal sealed partial class CasinoApp
 
         if (rateWidth > 0f)
         {
-            var rate = Typography.FitText(Loc.T(L.Casino.ChipRate), rateWidth, TextStyles.Caption2);
-            var rateSize = Typography.Measure(rate, TextStyles.Caption2);
-            Typography.Draw(drawList, new Vector2(left, pillCenterY - rateSize.Y * 0.5f), rate, ui.MutedInk,
+            var sessionLine = SessionElapsedLine();
+            var caption = sessionLine.Length > 0 ? sessionLine : Loc.T(L.Casino.ChipRate);
+            var fitted = Typography.FitText(caption, rateWidth, TextStyles.Caption2);
+            var captionSize = Typography.Measure(fitted, TextStyles.Caption2);
+            Typography.Draw(drawList, new Vector2(left, pillCenterY - captionSize.Y * 0.5f), fitted, ui.MutedInk,
                 TextStyles.Caption2);
         }
 

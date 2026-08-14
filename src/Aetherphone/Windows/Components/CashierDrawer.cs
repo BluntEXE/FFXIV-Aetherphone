@@ -49,8 +49,6 @@ internal sealed class CashierDrawer
         this.confirm = confirm;
     }
 
-    public bool IsOpen => open;
-
     public void Open()
     {
         if (open)

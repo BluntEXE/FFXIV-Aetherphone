@@ -268,26 +268,9 @@ internal sealed partial class CasinoApp : IPhoneApp
                 DrawRoundDetail(body, route.RoundId);
                 break;
             default:
-                DrawFloorHeader(context, area);
+                AppHeader.Draw(context, TabTitle(), navigation.Back);
                 DrawFloor(body);
                 break;
-        }
-    }
-
-    private void DrawFloorHeader(in PhoneContext context, Rect area)
-    {
-        if (tab == CasinoTab.Cashier)
-        {
-            AppHeader.Draw(context, Loc.T(L.Casino.Cashier), navigation.Back);
-            return;
-        }
-
-        var cashierLabel = Loc.T(L.Casino.Cashier);
-        var reserve = AppSkin.HeaderActionWidth(cashierLabel) + 18f * UiScale.Current;
-        AppHeader.Draw(context, "casino.header", TabTitle(), reserve, navigation.Back);
-        if (ui.HeaderAction(area, cashierLabel, !cashier.IsOpen))
-        {
-            cashier.Open();
         }
     }
 
@@ -295,6 +278,7 @@ internal sealed partial class CasinoApp : IPhoneApp
     {
         CasinoTab.Games => Loc.T(L.Casino.GamesHeading),
         CasinoTab.Live => Loc.T(L.Casino.TabLive),
+        CasinoTab.Cashier => Loc.T(L.Casino.Cashier),
         _ => DisplayName,
     };
 

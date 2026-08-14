@@ -735,9 +735,7 @@ internal sealed class SlotsCabinet
         var running = AutoRunning;
         var label = running
             ? Loc.T(L.Casino.SlotsAutoStop, GameNumber.Label(autoRemaining))
-            : canSpin
-                ? Loc.T(L.Casino.SlotsSpinFor, stake.ToString("N0", Loc.Culture))
-                : Loc.T(L.Casino.SlotsSpin);
+            : Loc.T(L.Casino.SlotsSpin);
         var sideWidth = (TurboWidth + AutoWidth + Metrics.Space.Xs) * scale;
         var pillRect = new Rect(new Vector2(left, y),
             new Vector2(left + width - sideWidth - Metrics.Space.Sm * scale, y + SpinPillHeight * scale));

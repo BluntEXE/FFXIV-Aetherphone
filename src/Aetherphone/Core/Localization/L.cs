@@ -4179,7 +4179,6 @@ internal static class L
         public static readonly LocString Cashier = new("casino.cashier", "Cashier");
         public static readonly LocString WalletRow = new("casino.walletRow", "Wallet");
         public static readonly LocString ChipsRow = new("casino.chipsRow", "Chips");
-        public static readonly LocString ChipsOnHand = new("casino.chipsOnHand", "{0} chips on hand");
         public static readonly LocString BuyIn = new("casino.buyIn", "Buy chips");
         public static readonly LocString TopUp = new("casino.topUp", "Top up");
         public static readonly LocString BuyInFor = new("casino.buyInFor", "Buy {0} in chips");
@@ -4242,7 +4241,6 @@ internal static class L
         public static readonly LocString SlotsChips = new("casino.slots.chips", "Chips");
         public static readonly LocString SlotsStake = new("casino.slots.stake", "Stake");
         public static readonly LocString SlotsSpin = new("casino.slots.spin", "Spin");
-        public static readonly LocString SlotsSpinFor = new("casino.slots.spinFor", "Spin for {0}");
         public static readonly LocString SlotsSkip = new("casino.slots.skip", "Skip");
         public static readonly LocString SlotsPays = new("casino.slots.pays", "Pays");
         public static readonly LocString SlotsBigWin = new("casino.slots.bigWin", "Big win");
