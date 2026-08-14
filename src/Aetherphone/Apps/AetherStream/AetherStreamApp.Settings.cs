@@ -228,6 +228,11 @@ internal sealed partial class AetherStreamApp
             return Loc.T(L.AetherStream.SettingsDependencyNotInstalled);
         }
 
+        if (dependency.RequiresRestart)
+        {
+            return Loc.T(L.AetherStream.SettingsDependencyRestartPending);
+        }
+
         return dependencies.HasUpdate(dependency)
             ? Loc.T(L.AetherStream.SettingsDependencyUpdateAvailable)
             : Loc.T(L.AetherStream.SettingsDependencyOk);

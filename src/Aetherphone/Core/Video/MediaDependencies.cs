@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 using Newtonsoft.Json.Linq;
 using SharpCompress.Archives;
-using SharpCompress.Common;
 
 namespace Aetherphone.Core.Video;
 
@@ -38,6 +37,7 @@ internal sealed class MediaDependency
     private long totalBytes;
     private volatile DependencyState state = DependencyState.Unknown;
     private volatile string? failureReason;
+    private volatile bool requiresRestart;
 
     internal MediaDependency(string id, string releaseUrl, string assetPrefix, string assetSuffix, string payloadName,
         long minimumPayloadBytes)
@@ -62,6 +62,12 @@ internal sealed class MediaDependency
 
     internal string? VerifiedPath { get; set; }
     internal long LastMissAtTicks { get; set; } = long.MinValue;
+
+    internal bool RequiresRestart
+    {
+        get => requiresRestart;
+        set => requiresRestart = value;
+    }
 
     internal void ForgetVerification()
     {
@@ -102,6 +108,8 @@ internal sealed class MediaDependencies : IDisposable
 {
     private const string InstallFolder = "aetherstream";
     private const string VersionMarker = ".version";
+    private const string StaleSuffix = ".stale";
+    private const string FreshSuffix = ".fresh";
     private const long MinimumLibraryBytes = 1 << 20;
     private const long MissRecheckMilliseconds = 1000;
 
@@ -122,6 +130,7 @@ internal sealed class MediaDependencies : IDisposable
         LinkResolver = new MediaDependency("yt-dlp", "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest",
             "yt-dlp.exe", ".exe", "yt-dlp.exe", MinimumLibraryBytes);
 
+        SweepReplacedPayloads();
         AdoptLegacyInstalls();
         RefreshInstalledState();
         NativeLoader.Register(this);
@@ -196,6 +205,47 @@ internal sealed class MediaDependencies : IDisposable
     {
         VideoLibrary.SetState(VideoLibraryPath is null ? DependencyState.Unknown : DependencyState.Ready);
         LinkResolver.SetState(LinkResolverPath is null ? DependencyState.Unknown : DependencyState.Ready);
+    }
+
+    private void SweepReplacedPayloads()
+    {
+        if (!Directory.Exists(installRoot))
+        {
+            return;
+        }
+
+        try
+        {
+            var staleFiles = Directory.GetFiles(installRoot, "*" + StaleSuffix + "*", SearchOption.AllDirectories);
+            for (var index = 0; index < staleFiles.Length; index++)
+            {
+                QuietDelete(staleFiles[index]);
+            }
+
+            var freshFiles = Directory.GetFiles(installRoot, "*" + FreshSuffix, SearchOption.AllDirectories);
+            for (var index = 0; index < freshFiles.Length; index++)
+            {
+                QuietDelete(freshFiles[index]);
+            }
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning($"[Deps] Could not sweep leftover payloads: {exception.Message}");
+        }
+    }
+
+    private static void QuietDelete(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
     }
 
     private void AdoptLegacyInstalls()
@@ -379,7 +429,8 @@ internal sealed class MediaDependencies : IDisposable
             }
 
             dependency.SetState(DependencyState.Installing);
-            Install(dependency, staging);
+            var replacedLoadedLibrary = Install(dependency, staging)
+                && dependency.PayloadName.EndsWith(".dll", StringComparison.Ordinal);
             dependency.ForgetVerification();
 
             if (VerifiedPayload(dependency) is null)
@@ -389,6 +440,11 @@ internal sealed class MediaDependencies : IDisposable
             }
 
             WriteVersionMarker(dependency);
+            if (replacedLoadedLibrary)
+            {
+                dependency.RequiresRestart = true;
+            }
+
             dependency.SetState(DependencyState.Ready);
             AepLog.Debug($"[Deps] {dependency.Id} is ready");
         }
@@ -407,19 +463,19 @@ internal sealed class MediaDependencies : IDisposable
         }
     }
 
-    private void Install(MediaDependency dependency, string staging)
+    private bool Install(MediaDependency dependency, string staging)
     {
         var folder = ComponentFolder(dependency);
         Directory.CreateDirectory(folder);
+        var target = PayloadPath(dependency);
 
         if (!dependency.AssetSuffix.Equals(".7z", StringComparison.Ordinal))
         {
-            File.Copy(staging, PayloadPath(dependency), overwrite: true);
-            return;
+            return ReplacePayload(dependency, target,
+                freshPath => File.Copy(staging, freshPath, overwrite: true));
         }
 
         using var archive = ArchiveFactory.OpenArchive(staging);
-        var options = new ExtractionOptions { ExtractFullPath = false, Overwrite = true };
         foreach (var entry in archive.Entries)
         {
             if (entry.IsDirectory || entry.Key is null)
@@ -432,11 +488,58 @@ internal sealed class MediaDependencies : IDisposable
                 continue;
             }
 
-            entry.WriteToDirectory(folder, options);
-            return;
+            return ReplacePayload(dependency, target, freshPath =>
+            {
+                using var source = entry.OpenEntryStream();
+                using var destination = new FileStream(freshPath, FileMode.Create, FileAccess.Write,
+                    FileShare.None);
+                source.CopyTo(destination);
+            });
         }
 
         throw new InvalidOperationException($"{dependency.PayloadName} was not in the downloaded archive.");
+    }
+
+    private static bool ReplacePayload(MediaDependency dependency, string target, Action<string> writeFresh)
+    {
+        var freshPath = target + FreshSuffix;
+        writeFresh(freshPath);
+
+        var movedAside = false;
+        if (File.Exists(target))
+        {
+            try
+            {
+                File.Delete(target);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                MoveAside(target);
+                movedAside = true;
+                AepLog.Debug($"[Deps] The old {dependency.Id} payload is in use; moved it aside until the next launch");
+            }
+        }
+
+        File.Move(freshPath, target);
+        return movedAside;
+    }
+
+    private static void MoveAside(string target)
+    {
+        const int maximumAttempts = 64;
+        for (var attempt = 0; attempt < maximumAttempts; attempt++)
+        {
+            var stalePath = attempt == 0 ? target + StaleSuffix : target + StaleSuffix + attempt;
+            if (File.Exists(stalePath))
+            {
+                continue;
+            }
+
+            File.Move(target, stalePath);
+            return;
+        }
+
+        throw new IOException($"Could not move the old file aside: {target}");
     }
 
     private void WriteVersionMarker(MediaDependency dependency)
