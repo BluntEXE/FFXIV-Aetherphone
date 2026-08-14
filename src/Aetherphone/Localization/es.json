@@ -4342,6 +4342,7 @@
   "coin.filterSpent": "Gastado",
   "coin.shopHeader": "Tienda",
   "coin.owned": "En propiedad",
+  "coin.sectionOwned": "{0} de {1} adquiridos",
   "coin.buy": "Comprar",
   "coin.price.one": "{0:N0} moneda",
   "coin.price.other": "{0:N0} monedas",

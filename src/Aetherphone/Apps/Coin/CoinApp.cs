@@ -74,6 +74,8 @@ internal sealed partial class CoinApp : IPhoneApp
         router.Reset();
         activeTab = TabWallet;
         historyFilter = CoinLedgerList.FilterAll;
+        shopFilter = ShopFilterAll;
+        shopRail.Reset();
         store.RefreshNow();
     }
 

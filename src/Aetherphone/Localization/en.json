@@ -4342,6 +4342,7 @@
   "coin.filterSpent": "Spent",
   "coin.shopHeader": "Shop",
   "coin.owned": "Owned",
+  "coin.sectionOwned": "{0} of {1} owned",
   "coin.buy": "Buy",
   "coin.price.one": "{0:N0} Coin",
   "coin.price.other": "{0:N0} Coins",

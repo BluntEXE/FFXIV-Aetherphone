@@ -4342,6 +4342,7 @@
   "coin.filterSpent": "Ausgegeben",
   "coin.shopHeader": "Shop",
   "coin.owned": "Im Besitz",
+  "coin.sectionOwned": "{0} von {1} im Besitz",
   "coin.buy": "Kaufen",
   "coin.price.one": "{0:N0} Münze",
   "coin.price.other": "{0:N0} Münzen",

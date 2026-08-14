@@ -4342,6 +4342,7 @@
   "coin.filterSpent": "Расход",
   "coin.shopHeader": "Магазин",
   "coin.owned": "Куплено",
+  "coin.sectionOwned": "{0} из {1} в коллекции",
   "coin.buy": "Купить",
   "coin.price.one": "{0:N0} монета",
   "coin.price.other": "{0:N0} монет",

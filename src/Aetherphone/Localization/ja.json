@@ -4342,6 +4342,7 @@
   "coin.filterSpent": "消費",
   "coin.shopHeader": "ショップ",
   "coin.owned": "所持済み",
+  "coin.sectionOwned": "{1}点中{0}点を所持",
   "coin.buy": "購入",
   "coin.price.one": "{0:N0} コイン",
   "coin.price.other": "{0:N0} コイン",

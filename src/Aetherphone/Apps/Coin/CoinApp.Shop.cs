@@ -11,6 +11,9 @@ namespace Aetherphone.Apps.Coin;
 
 internal sealed partial class CoinApp
 {
+    private const int ShopFilterAll = 0;
+    private const int ShopFilterFrames = 1;
+    private const int ShopFilterBadges = 2;
     private const float FlairCardHeight = 200f;
     private const float PlainCardHeight = 112f;
     private const float SkuCardGap = 12f;
@@ -24,8 +27,17 @@ internal sealed partial class CoinApp
     private const float ButtonHeight = 44f;
     private const string FlairKind = "flair";
     private const string FrameKind = "frame";
-    private const float FrameCardHeight = 232f;
-    private const float FrameStageHeight = 124f;
+    private const float FrameCellHeight = 226f;
+    private const float FrameCellStageHeight = 108f;
+    private const float FrameCellButtonHeight = 34f;
+    private const float ShopSectionGap = 20f;
+    private const float ShopHeaderHeight = 30f;
+
+    private readonly ChipRail shopRail = new();
+    private readonly string[] shopChipLabels = new string[3];
+    private readonly bool[] shopChipActive = new bool[3];
+
+    private int shopFilter;
 
     private void DrawShop(Rect body)
     {
@@ -52,52 +64,249 @@ internal sealed partial class CoinApp
         }
 
         var width = ScrollLayout.StableContentWidth();
-        var gap = SkuCardGap * scale;
-        for (var index = 0; index < skus.Length; index++)
+        CountShopSections(skus, out var frameTotal, out var frameOwned, out var badgeTotal, out var badgeOwned);
+        DrawShopFilterRail(frameTotal, badgeTotal, scale);
+
+        if (shopFilter != ShopFilterBadges && frameTotal > 0)
         {
-            var sku = skus[index];
-            var badge = BadgeFor(sku);
-            var frame = FrameFor(sku);
-            var cardHeight = (frame is not null ? FrameCardHeight
-                : badge is null ? PlainCardHeight : FlairCardHeight) * scale;
-            var origin = ImGui.GetCursorScreenPos();
-            DrawSkuCard(sku, badge, frame, origin, width, cardHeight, scale);
-            ImGui.SetCursorScreenPos(origin);
-            ImGui.Dummy(new Vector2(width, cardHeight + gap));
+            DrawShopSectionHeader(Loc.T(L.Loadout.FramesTitle), frameOwned, frameTotal, width, scale);
+            DrawFrameGrid(skus, width, scale);
+            if (shopFilter == ShopFilterAll && badgeTotal > 0)
+            {
+                ImGui.Dummy(new Vector2(0f, ShopSectionGap * scale));
+            }
+        }
+
+        if (shopFilter != ShopFilterFrames && badgeTotal > 0)
+        {
+            DrawShopSectionHeader(Loc.T(L.Loadout.BadgesTitle), badgeOwned, badgeTotal, width, scale);
+            DrawBadgeCards(skus, width, scale);
+        }
+
+        if (shopFilter == ShopFilterAll)
+        {
+            DrawPlainCards(skus, width, scale);
         }
 
         ImGui.Dummy(new Vector2(0f, 16f * scale));
     }
 
-    private Core.Social.BadgeStyle? BadgeFor(CoinSkuStyle sku)
+    private static void CountShopSections(CoinSkuStyle[] skus, out int frameTotal, out int frameOwned,
+        out int badgeTotal, out int badgeOwned)
     {
-        return string.Equals(sku.Kind, FlairKind, StringComparison.Ordinal)
-            ? badgeCatalog.Find(sku.Payload)
-            : null;
+        frameTotal = 0;
+        frameOwned = 0;
+        badgeTotal = 0;
+        badgeOwned = 0;
+        for (var index = 0; index < skus.Length; index++)
+        {
+            var sku = skus[index];
+            if (string.Equals(sku.Kind, FrameKind, StringComparison.Ordinal))
+            {
+                frameTotal++;
+                if (sku.Owned)
+                {
+                    frameOwned++;
+                }
+
+                continue;
+            }
+
+            if (string.Equals(sku.Kind, FlairKind, StringComparison.Ordinal))
+            {
+                badgeTotal++;
+                if (sku.Owned)
+                {
+                    badgeOwned++;
+                }
+            }
+        }
     }
 
-    private Core.Social.FrameStyle? FrameFor(CoinSkuStyle sku)
+    private void DrawShopFilterRail(int frameTotal, int badgeTotal, float scale)
     {
-        return string.Equals(sku.Kind, FrameKind, StringComparison.Ordinal)
-            ? frameCatalog.Find(sku.Payload)
-            : null;
+        if (frameTotal == 0 || badgeTotal == 0)
+        {
+            shopFilter = ShopFilterAll;
+            return;
+        }
+
+        shopChipLabels[ShopFilterAll] = Loc.T(L.Coin.FilterAll);
+        shopChipLabels[ShopFilterFrames] = Loc.T(L.Loadout.FramesTitle);
+        shopChipLabels[ShopFilterBadges] = Loc.T(L.Loadout.BadgesTitle);
+        shopChipActive[ShopFilterAll] = shopFilter == ShopFilterAll;
+        shopChipActive[ShopFilterFrames] = shopFilter == ShopFilterFrames;
+        shopChipActive[ShopFilterBadges] = shopFilter == ShopFilterBadges;
+        var tapped = shopRail.Draw(ui, shopChipLabels, shopChipActive, "coin.shop.categories");
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+        if (tapped >= 0)
+        {
+            shopFilter = tapped;
+        }
     }
 
-    private void DrawFrameStage(ImDrawListPtr drawList, Rect stage, Core.Social.FrameStyle frame, float scale)
+    private void DrawShopSectionHeader(string title, int owned, int total, float width, float scale)
     {
-        var rounding = 16f * scale;
-        Squircle.Fill(drawList, stage.Min, stage.Max, rounding, ImGui.GetColorU32(ui.Palette.FieldSurface));
-        Material.EdgeSquircle(drawList, stage.Min, stage.Max, rounding, scale);
+        var origin = ImGui.GetCursorScreenPos();
+        var drawList = ImGui.GetWindowDrawList();
+        var titleSize = Typography.Measure(title, TextStyles.Title3);
+        var barWidth = 4f * scale;
+        var bar = new Rect(
+            new Vector2(origin.X, origin.Y + 3f * scale),
+            new Vector2(origin.X + barWidth, origin.Y + titleSize.Y - 3f * scale));
+        Squircle.Fill(drawList, bar.Min, bar.Max, barWidth * 0.5f, ImGui.GetColorU32(ui.Palette.Accent));
+        Typography.Draw(drawList, new Vector2(bar.Max.X + 8f * scale, origin.Y), title, ui.Palette.TitleInk,
+            TextStyles.Title3);
+
+        var counter = Loc.T(L.Coin.SectionOwned, owned, total);
+        var counterSize = Typography.Measure(counter, TextStyles.Caption1);
+        Typography.Draw(drawList, new Vector2(origin.X + width - counterSize.X, origin.Y + 4f * scale), counter,
+            ui.MutedInk, TextStyles.Caption1);
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, ShopHeaderHeight * scale));
+    }
+
+    private void DrawFrameGrid(CoinSkuStyle[] skus, float width, float scale)
+    {
+        var gap = SkuCardGap * scale;
+        var cellWidth = (width - gap) * 0.5f;
+        var cellHeight = FrameCellHeight * scale;
+        var origin = ImGui.GetCursorScreenPos();
+        var cell = 0;
+        for (var index = 0; index < skus.Length; index++)
+        {
+            var sku = skus[index];
+            if (!string.Equals(sku.Kind, FrameKind, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var column = cell % 2;
+            var row = cell / 2;
+            var cellMin = new Vector2(origin.X + column * (cellWidth + gap), origin.Y + row * (cellHeight + gap));
+            DrawFrameCard(sku, frameCatalog.Find(sku.Payload), cellMin, cellWidth, cellHeight, scale);
+            cell++;
+        }
+
+        var rows = (cell + 1) / 2;
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, rows * (cellHeight + gap)));
+    }
+
+    private void DrawFrameCard(CoinSkuStyle sku, Core.Social.FrameStyle? frame, Vector2 origin, float cellWidth,
+        float cellHeight, float scale)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var min = origin;
+        var max = origin + new Vector2(cellWidth, cellHeight);
+        ui.Card(drawList, min, max, 18f * scale, false);
+
+        var inset = 10f * scale;
+        var stage = new Rect(
+            new Vector2(min.X + inset, min.Y + inset),
+            new Vector2(max.X - inset, min.Y + inset + FrameCellStageHeight * scale));
+        var stageRounding = 14f * scale;
+        Squircle.Fill(drawList, stage.Min, stage.Max, stageRounding, ImGui.GetColorU32(ui.Palette.FieldSurface));
+        Material.EdgeSquircle(drawList, stage.Min, stage.Max, stageRounding, scale);
+        DrawBloom(drawList, stage, stage.Center, stage.Width * 0.42f, stage.Height * 0.60f, ui.Palette.Accent);
 
         var outerRadius = MathF.Min(stage.Height * 0.42f, stage.Width * 0.30f);
-        var avatarRadius = outerRadius / frame.Scale;
+        var avatarRadius = outerRadius / (frame?.Scale ?? 1f);
         var user = session.CurrentUser;
         AvatarView.DrawRemote(drawList, stage.Center, avatarRadius, theme, user?.Name ?? string.Empty,
             user?.World ?? string.Empty, user?.AvatarUrl, images, lodestone, 1.2f, 48, 1f, frame);
+        DrawLeavingTag(drawList, stage, sku, scale);
+
+        var name = Typography.FitText(sku.Name, stage.Width, TextStyles.BodyEmphasized);
+        var nameSize = Typography.Measure(name, TextStyles.BodyEmphasized);
+        var nameY = stage.Max.Y + 8f * scale;
+        Typography.Draw(drawList, new Vector2(min.X + (cellWidth - nameSize.X) * 0.5f, nameY), name,
+            ui.Palette.TitleInk, TextStyles.BodyEmphasized);
+
+        var priceText = Loc.Plural(L.Coin.Price, (int)sku.Price);
+        var lineHeight = Typography.Measure(priceText, TextStyles.SubheadlineEmphasized).Y;
+        var coinGlyph = lineHeight * GlyphFraction;
+        var coinGap = lineHeight * GlyphGapFraction;
+        var priceFit = Typography.FitText(priceText, stage.Width - coinGlyph - coinGap,
+            TextStyles.SubheadlineEmphasized);
+        var priceSize = Typography.Measure(priceFit, TextStyles.SubheadlineEmphasized);
+        var blockLeft = min.X + (cellWidth - coinGlyph - coinGap - priceSize.X) * 0.5f;
+        var priceY = nameY + nameSize.Y + 4f * scale;
+        ProgressRing.CenterIcon(drawList, new Vector2(blockLeft + coinGlyph * 0.5f, priceY + priceSize.Y * 0.5f),
+            FontAwesomeIcon.Coins, ui.Palette.Accent, coinGlyph);
+        Typography.Draw(drawList, new Vector2(blockLeft + coinGlyph + coinGap, priceY), priceFit,
+            ui.Palette.Accent, TextStyles.SubheadlineEmphasized);
+
+        var buttonRect = new Rect(
+            new Vector2(stage.Min.X, max.Y - inset - FrameCellButtonHeight * scale),
+            new Vector2(stage.Max.X, max.Y - inset));
+        DrawBuyControl(sku, buttonRect);
     }
 
-    private void DrawSkuCard(CoinSkuStyle sku, Core.Social.BadgeStyle? badge, Core.Social.FrameStyle? frame,
-        Vector2 origin, float cardWidth, float cardHeight, float scale)
+    private void DrawLeavingTag(ImDrawListPtr drawList, Rect stage, CoinSkuStyle sku, float scale)
+    {
+        if (sku.AvailableUntilUnix is not { } leavingUnix)
+        {
+            return;
+        }
+
+        var label = Loc.T(L.Coin.LeavingSoon, TimeText.FutureDayLabel(leavingUnix));
+        var paddingX = 8f * scale;
+        var paddingY = 3f * scale;
+        var margin = 6f * scale;
+        var fitted = Typography.FitText(label, stage.Width - margin * 2f - paddingX * 2f, TextStyles.Caption2);
+        var size = Typography.Measure(fitted, TextStyles.Caption2);
+        var min = new Vector2(stage.Min.X + margin, stage.Min.Y + margin);
+        var max = min + new Vector2(size.X + paddingX * 2f, size.Y + paddingY * 2f);
+        Squircle.Fill(drawList, min, max, (max.Y - min.Y) * 0.5f,
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Palette.Accent, 0.22f)));
+        Typography.Draw(drawList, min + new Vector2(paddingX, paddingY), fitted, ui.Palette.TitleInk,
+            TextStyles.Caption2);
+    }
+
+    private void DrawBadgeCards(CoinSkuStyle[] skus, float width, float scale)
+    {
+        var gap = SkuCardGap * scale;
+        for (var index = 0; index < skus.Length; index++)
+        {
+            var sku = skus[index];
+            if (!string.Equals(sku.Kind, FlairKind, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var badge = badgeCatalog.Find(sku.Payload);
+            var cardHeight = (badge is null ? PlainCardHeight : FlairCardHeight) * scale;
+            var origin = ImGui.GetCursorScreenPos();
+            DrawSkuCard(sku, badge, origin, width, cardHeight, scale);
+            ImGui.SetCursorScreenPos(origin);
+            ImGui.Dummy(new Vector2(width, cardHeight + gap));
+        }
+    }
+
+    private void DrawPlainCards(CoinSkuStyle[] skus, float width, float scale)
+    {
+        var gap = SkuCardGap * scale;
+        for (var index = 0; index < skus.Length; index++)
+        {
+            var sku = skus[index];
+            if (string.Equals(sku.Kind, FlairKind, StringComparison.Ordinal)
+                || string.Equals(sku.Kind, FrameKind, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var cardHeight = PlainCardHeight * scale;
+            var origin = ImGui.GetCursorScreenPos();
+            DrawSkuCard(sku, null, origin, width, cardHeight, scale);
+            ImGui.SetCursorScreenPos(origin);
+            ImGui.Dummy(new Vector2(width, cardHeight + gap));
+        }
+    }
+
+    private void DrawSkuCard(CoinSkuStyle sku, Core.Social.BadgeStyle? badge, Vector2 origin, float cardWidth,
+        float cardHeight, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
         var min = origin;
@@ -109,14 +318,7 @@ internal sealed partial class CoinApp
         var textLeft = min.X + inset;
         var textRight = max.X - inset;
         var cursorY = min.Y + inset;
-        if (frame is not null)
-        {
-            var stage = new Rect(new Vector2(textLeft, cursorY),
-                new Vector2(textRight, cursorY + FrameStageHeight * scale));
-            DrawFrameStage(drawList, stage, frame, scale);
-            cursorY = stage.Max.Y + 12f * scale;
-        }
-        else if (badge is not null)
+        if (badge is not null)
         {
             var stage = new Rect(new Vector2(textLeft, cursorY),
                 new Vector2(textRight, cursorY + StageHeight * scale));
@@ -150,6 +352,11 @@ internal sealed partial class CoinApp
         var buttonRect = new Rect(
             new Vector2(textLeft, max.Y - inset - ButtonHeight * scale),
             new Vector2(textRight, max.Y - inset));
+        DrawBuyControl(sku, buttonRect);
+    }
+
+    private void DrawBuyControl(CoinSkuStyle sku, Rect buttonRect)
+    {
         if (sku.Owned)
         {
             AppSkin.Chip(buttonRect, Loc.T(L.Coin.Owned), true, theme);

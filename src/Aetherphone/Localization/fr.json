@@ -4342,6 +4342,7 @@
   "coin.filterSpent": "Dépensé",
   "coin.shopHeader": "Boutique",
   "coin.owned": "Possédé",
+  "coin.sectionOwned": "{0} sur {1} possédés",
   "coin.buy": "Acheter",
   "coin.price.one": "{0:N0} pièce",
   "coin.price.other": "{0:N0} pièces",

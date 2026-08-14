@@ -4342,6 +4342,7 @@
   "coin.filterSpent": "支出",
   "coin.shopHeader": "商店",
   "coin.owned": "已拥有",
+  "coin.sectionOwned": "已拥有 {0}/{1}",
   "coin.buy": "购买",
   "coin.price.one": "{0:N0} 硬币",
   "coin.price.other": "{0:N0} 硬币",

@@ -4342,6 +4342,7 @@
   "coin.filterSpent": "Harcanan",
   "coin.shopHeader": "Mağaza",
   "coin.owned": "Sahipsin",
+  "coin.sectionOwned": "{1} üründen {0} tanesi sende",
   "coin.buy": "Satın al",
   "coin.price.one": "{0:N0} Coin",
   "coin.price.other": "{0:N0} Coin",
