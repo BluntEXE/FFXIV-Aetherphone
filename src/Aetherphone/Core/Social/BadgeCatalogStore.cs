@@ -41,6 +41,13 @@ internal sealed class BadgeCatalogStore : IDisposable
         Refresh(RefreshAfterMilliseconds);
     }
 
+    public void RefreshNow()
+    {
+        Interlocked.Exchange(ref loadedAtTick, 0);
+        Interlocked.Exchange(ref attemptedAtTick, 0);
+        Refresh(0);
+    }
+
     private void Refresh(long refreshAfterMilliseconds)
     {
         if (!session.IsSignedIn)
@@ -84,6 +91,7 @@ internal sealed class BadgeCatalogStore : IDisposable
 
             stylesById = next;
             Interlocked.Exchange(ref loadedAtTick, Environment.TickCount64);
+            Interlocked.Exchange(ref attemptedAtTick, 0);
             AepLog.Debug($"[BadgeCatalog] loaded {next.Count} badges");
         }, () => Interlocked.Exchange(ref fetching, 0));
     }

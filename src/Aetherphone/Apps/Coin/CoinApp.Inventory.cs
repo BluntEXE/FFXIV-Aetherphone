@@ -26,6 +26,8 @@ internal sealed partial class CoinApp
 
         using var surface = AppSurface.Begin(body);
         var scale = UiScale.Current;
+        inventoryRefresh.Draw(body, surface.Pull, surface.Dragging, inventory.Fetching, ui.MutedInk,
+            RefreshInventory);
 
         if (!inventory.LoadedOnce)
         {

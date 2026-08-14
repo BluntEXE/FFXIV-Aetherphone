@@ -10,7 +10,8 @@ internal sealed class LoadoutStore : IDisposable
 
     public const string FrameKind = "frame";
 
-    private const long RefreshAfterMilliseconds = 300_000;
+    private const long RefreshAfterMilliseconds = 60_000;
+    private const long RefreshOnEnterMilliseconds = 5_000;
     private const long RetryAfterAttemptMilliseconds = 20_000;
 
     private readonly AethernetSession session;
@@ -38,6 +39,8 @@ internal sealed class LoadoutStore : IDisposable
 
     public bool Equipping => equipping;
 
+    public bool Fetching => Volatile.Read(ref fetching) != 0;
+
     public InventorySectionDto? Section(string kind)
     {
         var current = sections;
@@ -55,6 +58,11 @@ internal sealed class LoadoutStore : IDisposable
     public void EnsureFresh()
     {
         Refresh(RefreshAfterMilliseconds);
+    }
+
+    public void RefreshOnEnter()
+    {
+        Refresh(RefreshOnEnterMilliseconds);
     }
 
     public void RefreshNow()
@@ -80,6 +88,7 @@ internal sealed class LoadoutStore : IDisposable
                 sections = updated.Sections;
                 loadedOnce = true;
                 Interlocked.Exchange(ref loadedAtTick, Environment.TickCount64);
+                Interlocked.Exchange(ref attemptedAtTick, 0);
             }
         }, () => equipping = false);
     }
@@ -121,6 +130,7 @@ internal sealed class LoadoutStore : IDisposable
             sections = inventory.Sections;
             loadedOnce = true;
             Interlocked.Exchange(ref loadedAtTick, Environment.TickCount64);
+            Interlocked.Exchange(ref attemptedAtTick, 0);
         }, () => Interlocked.Exchange(ref fetching, 0));
     }
 

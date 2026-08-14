@@ -6,7 +6,8 @@ namespace Aetherphone.Core.Coins;
 
 internal sealed class CoinCatalogStore : IDisposable
 {
-    private const long RefreshAfterMilliseconds = 600_000;
+    private const long RefreshAfterMilliseconds = 60_000;
+    private const long RefreshOnEnterMilliseconds = 5_000;
     private const long RetryAfterAttemptMilliseconds = 30_000;
 
     private readonly AethernetSession session;
@@ -31,9 +32,16 @@ internal sealed class CoinCatalogStore : IDisposable
 
     public bool LoadedOnce => loadedOnce;
 
+    public bool Fetching => Volatile.Read(ref fetching) != 0;
+
     public void EnsureFresh()
     {
         Refresh(RefreshAfterMilliseconds);
+    }
+
+    public void RefreshOnEnter()
+    {
+        Refresh(RefreshOnEnterMilliseconds);
     }
 
     public void RefreshNow()
@@ -86,6 +94,7 @@ internal sealed class CoinCatalogStore : IDisposable
             skus = next;
             loadedOnce = true;
             Interlocked.Exchange(ref loadedAtTick, Environment.TickCount64);
+            Interlocked.Exchange(ref attemptedAtTick, 0);
         }, () => Interlocked.Exchange(ref fetching, 0));
     }
 

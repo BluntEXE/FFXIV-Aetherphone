@@ -32,6 +32,7 @@ internal sealed partial class CoinApp
         var scale = UiScale.Current;
         catalog.EnsureFresh();
         using var surface = AppSurface.Begin(body);
+        shopRefresh.Draw(body, surface.Pull, surface.Dragging, catalog.Fetching, ui.MutedInk, RefreshShop);
         ConsumePurchaseResult();
 
         var skus = catalog.Skus;
@@ -264,7 +265,8 @@ internal sealed partial class CoinApp
 
         if (result.Purchased)
         {
-            catalog.RefreshNow();
+            RefreshShop();
+            RefreshInventory();
             return;
         }
 

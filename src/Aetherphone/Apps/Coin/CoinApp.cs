@@ -41,6 +41,8 @@ internal sealed partial class CoinApp : IPhoneApp
     private readonly string[] filterOptions = new string[3];
     private readonly PullToRefresh walletRefresh = new();
     private readonly PullToRefresh historyRefresh = new();
+    private readonly PullToRefresh shopRefresh = new();
+    private readonly PullToRefresh inventoryRefresh = new();
     private readonly CoinFloat floats = new();
 
     private PhoneTheme theme = PhoneTheme.Default;
@@ -112,7 +114,7 @@ internal sealed partial class CoinApp : IPhoneApp
         ui.Body(area);
         if (GuideIntents.Consume("coin.tab.shop"))
         {
-            activeTab = TabShop;
+            EnterTab(TabShop);
         }
 
         var scale = UiScale.Current;
@@ -134,7 +136,11 @@ internal sealed partial class CoinApp : IPhoneApp
         tabOptions[TabShop] = Loc.T(L.Coin.TabShop);
         tabOptions[TabInventory] = Loc.T(L.Coin.TabInventory);
         tabOptions[TabHistory] = Loc.T(L.Coin.TabHistory);
-        activeTab = SegmentStrip.Draw("coin.tabs", segRow, tabOptions, activeTab, ui.Palette);
+        var pickedTab = SegmentStrip.Draw("coin.tabs", segRow, tabOptions, activeTab, ui.Palette);
+        if (pickedTab != activeTab)
+        {
+            EnterTab(pickedTab);
+        }
 
         var body = new Rect(new Vector2(area.Min.X, segRow.Max.Y + 10f * scale), area.Max);
         switch (activeTab)
@@ -154,6 +160,38 @@ internal sealed partial class CoinApp : IPhoneApp
         }
 
         floats.Draw(ImGui.GetWindowDrawList(), ui.Palette.Accent, ui.MutedInk, ImGui.GetIO().DeltaTime);
+    }
+
+    private void EnterTab(int tab)
+    {
+        activeTab = tab;
+        if (tab == TabShop)
+        {
+            catalog.RefreshOnEnter();
+            badgeCatalog.EnsureFresh();
+            frameCatalog.EnsureFresh();
+            return;
+        }
+
+        if (tab == TabInventory)
+        {
+            inventory.RefreshOnEnter();
+            frameCatalog.EnsureFresh();
+        }
+    }
+
+    private void RefreshShop()
+    {
+        catalog.RefreshNow();
+        badgeCatalog.RefreshNow();
+        frameCatalog.RefreshNow();
+    }
+
+    private void RefreshInventory()
+    {
+        inventory.RefreshNow();
+        badgeCatalog.RefreshNow();
+        frameCatalog.RefreshNow();
     }
 
     public void Dispose()
