@@ -205,11 +205,11 @@ shop, worn one at a time, and drawn over the avatar everywhere that face appears
 
 | | |
 |---|---|
-| Canvas | **512 x 512 px**, square. Anything from 128 to 1024 is accepted, square is enforced |
+| Canvas | **512 x 512 px**, square. Anything from 128 to 1024 is accepted, square is enforced within a 2% tolerance |
 | Format | **PNG-32 or WebP, RGBA.** JPEG is rejected: no alpha means a solid square over somebody's face |
 | File size | 2 MB hard cap |
 | Centre | **Fully transparent.** The avatar is drawn underneath and shows through |
-| Upload | Mod console, Frames page. Name it, drop the file, set the scale |
+| Upload | Mod console, Frames page. Name it, drop the file, set the scale. Any filename works; the server renames on store |
 
 ## The scale number is the whole geometry
 
