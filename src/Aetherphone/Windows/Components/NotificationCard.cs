@@ -58,7 +58,7 @@ internal static class NotificationCard
             titleY, titleMaxWidth, TextStyles.Headline, Palette.WithAlpha(theme.TextStrong, opacity));
         var bodyMaxWidth = textRight - textLeft;
         var bodyY = min.Y + 35f * scale;
-        Marquee.DrawLeftAuto(drawList, "notificationcard.body." + notification.Id, notification.Body, textLeft,
+        Marquee.DrawLeftAuto(drawList, "notificationcard.body." + notification.Id, notification.SingleLineBody, textLeft,
             bodyY, bodyMaxWidth, TextStyles.Subheadline, Palette.WithAlpha(theme.TextMuted, opacity));
     }
 
