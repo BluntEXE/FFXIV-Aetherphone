@@ -94,7 +94,11 @@ internal sealed class CallSignalRouter : IDisposable
 
         if (target is null)
         {
-            AepLog.Warning($"[calls] unhandled-signal type={message.Type} call={message.CallId} reason={message.Reason}");
+            if (!message.Type.StartsWith(SignalType.StreamPrefix, StringComparison.Ordinal))
+            {
+                AepLog.Warning($"[calls] unhandled-signal type={message.Type} call={message.CallId} reason={message.Reason}");
+            }
+
             return;
         }
 

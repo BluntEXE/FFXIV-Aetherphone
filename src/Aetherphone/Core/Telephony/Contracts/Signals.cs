@@ -43,6 +43,7 @@ internal static class SignalType
     public const string CasinoPing = "casino.ping";
     public const string Error = "error";
 
+    public const string StreamPrefix = "stream.";
     public const string StreamState = "stream.state";
     public const string StreamJoin = "stream.join";
     public const string StreamLeave = "stream.leave";
