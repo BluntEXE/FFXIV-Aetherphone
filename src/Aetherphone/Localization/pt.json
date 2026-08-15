@@ -1545,6 +1545,8 @@
   "report.sentTitle": "Denúncia enviada",
   "report.sent": "Obrigado pela sua denúncia. Nossa equipe de moderação vai analisá-la e poderemos tomar medidas se ela violar nossas Diretrizes da Comunidade.",
   "report.failed": "Não foi possível enviar a denúncia",
+  "music.setupTitle": "Configurar a reprodução de músicas",
+  "music.setupBody": "As músicas precisam de um pequeno auxiliar de download que busca o áudio de forma confiável. Instale uma vez e toda faixa simplesmente toca. O rádio e as estações ao vivo funcionam sem ele.",
   "music.radioStations": "Estações de rádio",
   "music.recentlyPlayed": "Reproduzido recentemente",
   "music.tabHome": "Início",

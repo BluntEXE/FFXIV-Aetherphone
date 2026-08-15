@@ -1545,6 +1545,8 @@
   "report.sentTitle": "Report submitted",
   "report.sent": "Thank you for your report. Our moderation team will review it, and we may take action if it violates our Community Guidelines.",
   "report.failed": "Couldn't submit the report",
+  "music.setupTitle": "Set up song playback",
+  "music.setupBody": "Songs need a small download helper that fetches audio reliably. Install it once and every track just plays. Radio and live stations work without it.",
   "music.radioStations": "Radio stations",
   "music.recentlyPlayed": "Recently played",
   "music.tabHome": "Home",

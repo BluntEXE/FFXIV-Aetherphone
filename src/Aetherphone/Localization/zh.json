@@ -1545,6 +1545,8 @@
   "report.sentTitle": "举报已提交",
   "report.sent": "感谢你的举报。我们的管理团队会进行审核，如内容违反社区准则，我们可能会采取相应措施。",
   "report.failed": "无法提交举报",
+  "music.setupTitle": "设置歌曲播放",
+  "music.setupBody": "播放歌曲需要一个能稳定获取音频的小型下载助手。安装一次后，每首曲目都能直接播放。电台和直播电台无需它也能使用。",
   "music.radioStations": "电台",
   "music.recentlyPlayed": "最近播放",
   "music.tabHome": "主页",

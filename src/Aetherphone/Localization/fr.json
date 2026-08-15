@@ -1545,6 +1545,8 @@
   "report.sentTitle": "Signalement envoyé",
   "report.sent": "Merci pour votre signalement. Notre équipe de modération va l'examiner et nous pourrons agir s'il enfreint nos règles de la communauté.",
   "report.failed": "Impossible d'envoyer le signalement",
+  "music.setupTitle": "Configurer la lecture des titres",
+  "music.setupBody": "Les titres ont besoin d'un petit assistant de téléchargement qui récupère l'audio de façon fiable. Installez-le une fois et chaque morceau se lit sans souci. La radio et les stations en direct fonctionnent sans lui.",
   "music.radioStations": "Stations de radio",
   "music.recentlyPlayed": "Écoutés récemment",
   "music.tabHome": "Accueil",

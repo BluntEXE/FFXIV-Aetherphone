@@ -83,7 +83,7 @@ internal static class AppRegistry
         apps.Add(new WalletApp(services.GameData, services.Textures, services.Configuration));
         apps.Add(new InventoryApp(services.InventoryCapture, services.GameData, services.Textures));
         apps.Add(new JobsApp(services.GameData, services.Textures, services.Configuration, services.Confirm, services.CharacterWatch));
-        apps.Add(new MusicApp(services.Radio, services.SongSearch, services.Playback, services.SongHistory, services.Playlists, services.Media, services.Http, services.Textures, services.Aethernet, services.AethernetSession, services.Report, photoLibrary, services.WallpaperImages, services.Confirm, services.Configuration, services.RadioLauncher));
+        apps.Add(new MusicApp(services.Radio, services.SongSearch, services.SongResolver, services.Playback, services.SongHistory, services.Playlists, services.Media, services.Http, services.Textures, services.Aethernet, services.AethernetSession, services.Report, photoLibrary, services.WallpaperImages, services.Confirm, services.Configuration, services.RadioLauncher));
         apps.Add(new ClockApp(services.Configuration, services.Confirm));
         apps.Add(new NotesApp(services.Configuration, services.Confirm));
         apps.Add(new CalculatorApp());

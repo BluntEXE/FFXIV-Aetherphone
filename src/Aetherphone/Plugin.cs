@@ -110,6 +110,7 @@ public sealed class Plugin : IDalamudPlugin
             EmojiCatalog.Load();
             Wallpapers = services.Wallpapers;
             screenController = new ScreenController(() => Cfg.VideoHideNameplates);
+            services.SongResolver.Attach(screenController.Engine.Dependencies);
             video = new VideoPlayer(screenController.Engine);
             videoQueue = new AetherStreamQueue(video, services.VideoMetadata);
             watchAlong = new WatchAlongSession(services.AethernetSession, Cfg, services.Confirm, video,

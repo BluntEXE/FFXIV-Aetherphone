@@ -3,6 +3,7 @@ using NAudio.MediaFoundation;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using YoutubeExplode;
+using YoutubeExplode.Exceptions;
 using YoutubeExplode.Videos.Streams;
 
 namespace Aetherphone.Core.Songs;
@@ -29,6 +30,7 @@ internal sealed class SongPlayer : IDisposable
     private static readonly TimeSpan CacheMaxAge = TimeSpan.FromDays(14);
     private readonly YoutubeClient youtube;
     private readonly DiskCache cache;
+    private readonly SongLinkResolver linkResolver;
     private readonly object gate = new();
     private CancellationTokenSource? cancellation;
     private Thread? worker;
@@ -47,10 +49,11 @@ internal sealed class SongPlayer : IDisposable
     private Song[] queue = Array.Empty<Song>();
     private int queueIndex = -1;
 
-    public SongPlayer(YoutubeClient youtube, DiskCache cache)
+    public SongPlayer(YoutubeClient youtube, DiskCache cache, SongLinkResolver linkResolver)
     {
         this.youtube = youtube;
         this.cache = cache;
+        this.linkResolver = linkResolver;
         MediaFoundationApi.Startup();
     }
 
@@ -212,9 +215,14 @@ internal sealed class SongPlayer : IDisposable
     private void Run(string videoId, int knownDurationSeconds, CancellationToken token, int workerSession)
     {
         var resumeSeconds = -1f;
-        for (var attempt = 0; attempt < StreamedAttempts; attempt++)
+        var resolverUsed = false;
+        var firstAttempt = true;
+        var attemptsRemaining = StreamedAttempts;
+        while (attemptsRemaining > 0)
         {
-            var allowStreaming = attempt == 0 || knownDurationSeconds > StreamedThresholdSeconds;
+            attemptsRemaining--;
+            var allowStreaming = firstAttempt || knownDurationSeconds > StreamedThresholdSeconds;
+            firstAttempt = false;
             try
             {
                 if (PlayOnce(videoId, knownDurationSeconds, allowStreaming, resumeSeconds, token, workerSession))
@@ -232,10 +240,25 @@ internal sealed class SongPlayer : IDisposable
             {
                 return;
             }
+            catch (YoutubeExplodeException exception) when (!resolverUsed && linkResolver.IsInstalled)
+            {
+                resolverUsed = true;
+                resumeSeconds = positionSeconds;
+                TrySetState(workerSession, SongPlaybackState.Buffering);
+                AepLog.Warning(exception, "Song stream refused by the source, fetching through the link resolver");
+                if (!FillCacheThroughResolver(videoId, token))
+                {
+                    TrySetState(workerSession, SongPlaybackState.Failed);
+                    AepLog.Warning("Song playback failed: the link resolver could not fetch the audio");
+                    return;
+                }
+
+                attemptsRemaining = StreamedAttempts;
+            }
             catch (Exception exception)
             {
                 resumeSeconds = positionSeconds;
-                if (attempt + 1 >= StreamedAttempts)
+                if (attemptsRemaining == 0)
                 {
                     TrySetState(workerSession, SongPlaybackState.Failed);
                     AepLog.Warning(exception, "Song playback failed");
@@ -246,6 +269,17 @@ internal sealed class SongPlayer : IDisposable
                 AepLog.Warning(exception, "Song stream interrupted, retrying");
             }
         }
+    }
+
+    private bool FillCacheThroughResolver(string videoId, CancellationToken token)
+    {
+        if (linkResolver.Fetch(videoId, token) is not { Bytes.Length: > 0 } audio)
+        {
+            return false;
+        }
+
+        cache.Set(audio.IsOpus ? OpusCacheKey(videoId) : videoId, audio.Bytes);
+        return true;
     }
 
     private bool PlayOnce(string videoId, int knownDurationSeconds, bool allowStreaming, float resumeSeconds,
@@ -263,33 +297,63 @@ internal sealed class SongPlayer : IDisposable
                 bytes = cache.Get(videoId, CacheMaxAge);
             }
 
-            if (bytes is null && !allowStreaming)
+            if (bytes is null && linkResolver.IsInstalled && !token.IsCancellationRequested)
+            {
+                TrySetState(workerSession, SongPlaybackState.Buffering);
+                try
+                {
+                    if (knownDurationSeconds > StreamedThresholdSeconds)
+                    {
+                        reader = OpenResolverStreamedReader(videoId, token, workerSession);
+                    }
+                    else if (linkResolver.Fetch(videoId, token) is { Bytes.Length: > 0 } fetched)
+                    {
+                        cache.Set(fetched.IsOpus ? OpusCacheKey(videoId) : videoId, fetched.Bytes);
+                        bytes = fetched.Bytes;
+                        bytesAreOpus = fetched.IsOpus;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception exception) when (!token.IsCancellationRequested)
+                {
+                    AepLog.Warning(exception, "Song link resolver failed, using the built-in resolver");
+                    reader = null;
+                }
+            }
+
+            if (bytes is null && reader is null && !allowStreaming)
             {
                 var downloaded = Download(videoId, token);
                 bytes = downloaded?.Bytes;
                 bytesAreOpus = downloaded?.IsOpus ?? false;
             }
 
-            if (bytes is not null && bytes.Length > 0)
+            if (reader is null)
             {
-                TrySetState(workerSession, SongPlaybackState.Buffering);
-                if (bytesAreOpus)
+                if (bytes is not null && bytes.Length > 0)
                 {
-                    reader = new OpusWebmSampleProvider(() => new MemoryStream(bytes, false));
+                    TrySetState(workerSession, SongPlaybackState.Buffering);
+                    if (bytesAreOpus)
+                    {
+                        reader = new OpusWebmSampleProvider(() => new MemoryStream(bytes, false));
+                    }
+                    else
+                    {
+                        audio = new MemoryStream(bytes, false);
+                        reader = new MediaFoundationSongReader(new StreamMediaFoundationReader(audio));
+                    }
                 }
-                else
+                else if (allowStreaming)
                 {
-                    audio = new MemoryStream(bytes, false);
-                    reader = new MediaFoundationSongReader(new StreamMediaFoundationReader(audio));
-                }
-            }
-            else if (allowStreaming)
-            {
-                reader = OpenStreamedReader(videoId, token, workerSession);
-                if (reader is not null && knownDurationSeconds > 0 &&
-                    knownDurationSeconds <= StreamedThresholdSeconds)
-                {
-                    BeginCacheFill(videoId, token);
+                    reader = OpenStreamedReader(videoId, token, workerSession);
+                    if (reader is not null && knownDurationSeconds > 0 &&
+                        knownDurationSeconds <= StreamedThresholdSeconds)
+                    {
+                        BeginCacheFill(videoId, token);
+                    }
                 }
             }
 
@@ -392,6 +456,24 @@ internal sealed class SongPlayer : IDisposable
                 AepLog.Warning(exception, "Song cache fill failed");
             }
         }, CancellationToken.None);
+    }
+
+    private ISongAudioReader? OpenResolverStreamedReader(string videoId, CancellationToken token, int workerSession)
+    {
+        if (linkResolver.ResolveStreamUrl(videoId, token) is not { } resolved || token.IsCancellationRequested)
+        {
+            return null;
+        }
+
+        TrySetState(workerSession, SongPlaybackState.Buffering);
+        if (resolved.IsOpus)
+        {
+            var streamUrl = resolved.Url;
+            return new OpusWebmSampleProvider(() =>
+                new ForwardSeekableStream(SongLinkResolver.OpenHttpStream(streamUrl, token)));
+        }
+
+        return new MediaFoundationSongReader(new MediaFoundationReader(resolved.Url));
     }
 
     private ISongAudioReader? OpenStreamedReader(string videoId, CancellationToken token, int workerSession)

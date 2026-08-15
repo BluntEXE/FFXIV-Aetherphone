@@ -156,37 +156,8 @@ internal sealed partial class AetherStreamApp
         }
     }
 
-    private static PhoneTheme AccentedTheme(PhoneTheme baseTheme)
-    {
-        var accent = AppAccents.For("aetherstream");
-        return new PhoneTheme
-        {
-            Case = baseTheme.Case,
-            CaseKind = baseTheme.CaseKind,
-            CaseTextureId = baseTheme.CaseTextureId,
-            ScreenBase = baseTheme.ScreenBase,
-            LightWallpaperId = baseTheme.LightWallpaperId,
-            DarkWallpaperId = baseTheme.DarkWallpaperId,
-            AppBackground = baseTheme.AppBackground,
-            GroupedCard = baseTheme.GroupedCard,
-            Separator = baseTheme.Separator,
-            ToggleOn = accent,
-            ToggleOff = baseTheme.ToggleOff,
-            Surface = baseTheme.Surface,
-            SurfaceMuted = baseTheme.SurfaceMuted,
-            TextStrong = baseTheme.TextStrong,
-            TextMuted = baseTheme.TextMuted,
-            Accent = accent,
-            Danger = baseTheme.Danger,
-            RailWidth = baseTheme.RailWidth,
-            MetalWidth = baseTheme.MetalWidth,
-            GlassWidth = baseTheme.GlassWidth,
-            DeviceRounding = baseTheme.DeviceRounding,
-            TopZoneHeight = baseTheme.TopZoneHeight,
-            BottomZoneHeight = baseTheme.BottomZoneHeight,
-            SidePadding = baseTheme.SidePadding,
-        };
-    }
+    private static PhoneTheme AccentedTheme(PhoneTheme baseTheme) =>
+        PhoneTheme.WithAccent(baseTheme, AppAccents.For("aetherstream"));
 
     private void DrawDependencyAction(Rect row, MediaDependencies dependencies, MediaDependency dependency,
         LocString installLabel, LocString updateLabel)
@@ -245,12 +216,10 @@ internal sealed partial class AetherStreamApp
             return Loc.T(L.AetherStream.SetupDownloading);
         }
 
-        return string.Format(Loc.T(L.AetherStream.SetupProgress), FormatMegabytes(snapshot.ReceivedBytes),
-            FormatMegabytes(snapshot.TotalBytes));
+        return string.Format(Loc.T(L.AetherStream.SetupProgress),
+            DependencySetup.FormatMegabytes(snapshot.ReceivedBytes),
+            DependencySetup.FormatMegabytes(snapshot.TotalBytes));
     }
-
-    private static string FormatMegabytes(long bytes) =>
-        (bytes / (1024d * 1024d)).ToString("0.#", Loc.Culture);
 
     private string ScreenStateText() => screen.Engine.IsActive
         ? Loc.T(L.AetherStream.CastingStateReady)

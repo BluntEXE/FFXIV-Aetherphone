@@ -92,6 +92,35 @@ internal sealed class PhoneTheme
             SidePadding = 16f,
         };
 
+    public static PhoneTheme WithAccent(PhoneTheme baseTheme, Vector4 accent) =>
+        new()
+        {
+            Case = baseTheme.Case,
+            CaseKind = baseTheme.CaseKind,
+            CaseTextureId = baseTheme.CaseTextureId,
+            ScreenBase = baseTheme.ScreenBase,
+            LightWallpaperId = baseTheme.LightWallpaperId,
+            DarkWallpaperId = baseTheme.DarkWallpaperId,
+            AppBackground = baseTheme.AppBackground,
+            GroupedCard = baseTheme.GroupedCard,
+            Separator = baseTheme.Separator,
+            ToggleOn = accent,
+            ToggleOff = baseTheme.ToggleOff,
+            Surface = baseTheme.Surface,
+            SurfaceMuted = baseTheme.SurfaceMuted,
+            TextStrong = baseTheme.TextStrong,
+            TextMuted = baseTheme.TextMuted,
+            Accent = accent,
+            Danger = baseTheme.Danger,
+            RailWidth = baseTheme.RailWidth,
+            MetalWidth = baseTheme.MetalWidth,
+            GlassWidth = baseTheme.GlassWidth,
+            DeviceRounding = baseTheme.DeviceRounding,
+            TopZoneHeight = baseTheme.TopZoneHeight,
+            BottomZoneHeight = baseTheme.BottomZoneHeight,
+            SidePadding = baseTheme.SidePadding,
+        };
+
     public static PhoneTheme Default { get; } = Dark(new Vector4(0.55f, 0.45f, 0.95f, 1f),
         ThemeCatalog.ResolveCase(ThemeCatalog.DefaultCaseName), ChassisMetrics.Default, "DuskLight", "DuskDark");
 

@@ -1545,6 +1545,8 @@
   "report.sentTitle": "Meldung gesendet",
   "report.sent": "Danke für deine Meldung. Unser Moderationsteam prüft sie, und wir können Maßnahmen ergreifen, wenn sie gegen unsere Community-Richtlinien verstößt.",
   "report.failed": "Meldung konnte nicht gesendet werden",
+  "music.setupTitle": "Songwiedergabe einrichten",
+  "music.setupBody": "Songs brauchen einen kleinen Download-Helfer, der Audio zuverlässig lädt. Einmal installieren, und jeder Titel spielt einfach. Radio und Live-Sender funktionieren auch ohne.",
   "music.radioStations": "Radiosender",
   "music.recentlyPlayed": "Zuletzt gespielt",
   "music.tabHome": "Start",

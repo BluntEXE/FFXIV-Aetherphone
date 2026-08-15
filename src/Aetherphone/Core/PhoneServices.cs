@@ -126,6 +126,7 @@ internal sealed class PhoneServices : IDisposable
     public required SongSearchService SongSearch { get; init; }
     public required VideoUrlResolver VideoMetadata { get; init; }
     public required SongPlayer SongPlayer { get; init; }
+    public required SongLinkResolver SongResolver { get; init; }
     public required SongHistory SongHistory { get; init; }
     public required PlaylistStore Playlists { get; init; }
     public required PlaybackHub Playback { get; init; }
@@ -243,11 +244,12 @@ internal sealed class PhoneServices : IDisposable
         var radio = new RadioService(http);
         var radioPlayer = new RadioPlayer();
         var youtube = new YoutubeClient();
-        var songSearch = new SongSearchService(youtube);
-        var videoMetadata = new VideoUrlResolver(youtube);
         var audioRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "audio"));
         var audioCache = new DiskCache(audioRoot, 256L * 1024 * 1024);
-        var songPlayer = new SongPlayer(youtube, audioCache);
+        var songResolver = new SongLinkResolver(Path.Combine(audioRoot.FullName, "resolver"));
+        var songSearch = new SongSearchService(youtube, songResolver);
+        var videoMetadata = new VideoUrlResolver(youtube);
+        var songPlayer = new SongPlayer(youtube, audioCache, songResolver);
         var songHistory = new SongHistory(configuration);
         var playlists = new PlaylistStore(configuration);
         var playback = new PlaybackHub(radioPlayer, songPlayer, configuration);
@@ -374,6 +376,7 @@ internal sealed class PhoneServices : IDisposable
             SongSearch = songSearch,
             VideoMetadata = videoMetadata,
             SongPlayer = songPlayer,
+            SongResolver = songResolver,
             SongHistory = songHistory,
             Playlists = playlists,
             Playback = playback,

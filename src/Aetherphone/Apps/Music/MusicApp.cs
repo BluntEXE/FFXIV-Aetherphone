@@ -5,6 +5,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Net;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Playback;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Photos;
@@ -80,6 +81,7 @@ internal sealed partial class MusicApp : IPhoneApp
     public bool BadgeAsDot => true;
     private readonly RadioService radio;
     private readonly SongSearchService songSearch;
+    private readonly SongLinkResolver songResolver;
     private readonly PlaybackHub playback;
     private readonly SongHistory history;
     private readonly PlaylistStore playlists;
@@ -145,7 +147,8 @@ internal sealed partial class MusicApp : IPhoneApp
     private Spring artBreath;
     private float clock;
 
-    public MusicApp(RadioService radio, SongSearchService songSearch, PlaybackHub playback, SongHistory history,
+    public MusicApp(RadioService radio, SongSearchService songSearch, SongLinkResolver songResolver,
+        PlaybackHub playback, SongHistory history,
         PlaylistStore playlists, MediaCache media, HttpService http, ITextureProvider textures,
         AethernetApi aethernet, AethernetSession session, ReportService report, PhotoLibrary photoLibrary,
         WallpaperImageCache wallpaperImages, ConfirmService confirm, Configuration configuration,
@@ -159,6 +162,7 @@ internal sealed partial class MusicApp : IPhoneApp
         community = new CommunityRadioService(aethernet, session);
         this.radio = radio;
         this.songSearch = songSearch;
+        this.songResolver = songResolver;
         this.playback = playback;
         this.history = history;
         this.playlists = playlists;
@@ -261,6 +265,14 @@ internal sealed partial class MusicApp : IPhoneApp
 
         var screen = SceneChrome.ScreenFrom(content, theme, scale);
         ui.Backdrop(screen);
+        if (NeedsSetup)
+        {
+            TourHolds.Hold(Id);
+            DrawSetupGate(screen, scale);
+            return;
+        }
+
+        TourHolds.Release(Id);
         var stage = StageFrom(content, scale);
         var chromeBlocked = sheetValue > 0.15f || overlayValue > 0.15f;
         using (InputShield.Engage(chromeBlocked))
@@ -885,6 +897,7 @@ internal sealed partial class MusicApp : IPhoneApp
         featuredFetch?.Dispose();
         facetFetch?.Cancel();
         facetFetch?.Dispose();
+        resolverWork.Dispose();
         community.Dispose();
         artwork.Dispose();
     }

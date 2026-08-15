@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Video;
@@ -6,28 +7,35 @@ using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 
-namespace Aetherphone.Apps.AetherStream;
+namespace Aetherphone.Apps.Music;
 
-internal sealed partial class AetherStreamApp
+internal sealed partial class MusicApp
 {
     private const float SetupCardHeight = 74f;
     private const float SetupButtonHeight = 46f;
 
+    private readonly StoreWork resolverWork = new("music.resolver");
     private bool setupDismissed;
     private bool setupChecked;
+    private PhoneTheme setupAccentedTheme = PhoneTheme.Default;
+    private PhoneTheme setupAccentSource = PhoneTheme.Default;
 
-    private bool NeedsSetup => !screen.Engine.Dependencies.IsReady && !setupDismissed;
+    private bool NeedsSetup => songResolver.Media is not null && !songResolver.IsInstalled && !setupDismissed;
 
     private void DrawSetupGate(Rect area, float scale)
     {
-        var dependencies = screen.Engine.Dependencies;
-        ui.Body(area);
+        var media = songResolver.Media;
+        if (media is null)
+        {
+            return;
+        }
 
+        ui.Body(area);
         if (!setupChecked)
         {
             setupChecked = true;
-            dependencyWork.Run("check components",
-                async token => await dependencies.CheckSizesAsync(token).ConfigureAwait(false));
+            resolverWork.Run("check resolver",
+                async token => await media.CheckAsync(media.LinkResolver, token).ConfigureAwait(false));
         }
 
         var margin = Metrics.Space.Xl * scale;
@@ -41,58 +49,56 @@ internal sealed partial class AetherStreamApp
         IconTile.FillShaded(drawList, tileMin, tileMin + new Vector2(tileSize, tileSize),
             tileSize * Metrics.Radius.TileFactor, IconTile.Surface(ui.Accent));
         ProgressRing.CenterIcon(drawList, tileMin + new Vector2(tileSize * 0.5f, tileSize * 0.5f),
-            FontAwesomeIcon.Tv, AccentRing.Ink, tileSize * 0.5f);
+            FontAwesomeIcon.Music, AccentRing.Ink, tileSize * 0.5f);
 
         var titleY = tileMin.Y + tileSize + Metrics.Space.Lg * scale;
-        var title = Loc.T(L.AetherStream.SetupTitle);
+        var title = Loc.T(L.Music.SetupTitle);
         var titleHeight = Typography.LineHeight(TextStyles.Title2);
         Typography.DrawCentered(drawList, new Vector2(content.Center.X, titleY + titleHeight * 0.5f), title,
             ui.TitleInk, TextStyles.Title2);
 
         var bodyY = titleY + titleHeight + Metrics.Space.Sm * scale;
         var bodyHeight = Typography.DrawWrappedCentered(new Vector2(content.Center.X, bodyY),
-            Loc.T(L.AetherStream.SetupBody), ui.MutedInk, TextStyles.Subheadline, width);
+            Loc.T(L.Music.SetupBody), ui.MutedInk, TextStyles.Subheadline, width);
 
-        var cardsTop = bodyY + bodyHeight + Metrics.Space.Xl * scale;
+        var cardTop = bodyY + bodyHeight + Metrics.Space.Xl * scale;
         var cardHeight = SetupCardHeight * scale;
-        var gap = Metrics.Space.Sm * scale;
-
-        DependencySetup.Card(ui, theme, new Rect(new Vector2(content.Min.X, cardsTop),
-                new Vector2(content.Max.X, cardsTop + cardHeight)), dependencies.VideoLibrary,
-            L.AetherStream.SetupVideoEngine, L.AetherStream.SetupVideoEngineDetail, scale);
-
-        var secondTop = cardsTop + cardHeight + gap;
-        DependencySetup.Card(ui, theme, new Rect(new Vector2(content.Min.X, secondTop),
-                new Vector2(content.Max.X, secondTop + cardHeight)), dependencies.LinkResolver,
+        DependencySetup.Card(ui, theme, new Rect(new Vector2(content.Min.X, cardTop),
+                new Vector2(content.Max.X, cardTop + cardHeight)), media.LinkResolver,
             L.AetherStream.SetupLinkResolver, L.AetherStream.SetupLinkResolverDetail, scale);
 
         var buttonHeight = SetupButtonHeight * scale;
         var buttonTop = content.Max.Y - buttonHeight - Typography.LineHeight(TextStyles.Subheadline)
             - Metrics.Space.Lg * scale;
         DrawSetupAction(new Rect(new Vector2(content.Min.X, buttonTop),
-            new Vector2(content.Max.X, buttonTop + buttonHeight)), dependencies, scale);
+            new Vector2(content.Max.X, buttonTop + buttonHeight)), media, scale);
     }
 
-    private void DrawSetupAction(Rect button, MediaDependencies dependencies, float scale)
+    private void DrawSetupAction(Rect button, MediaDependencies media, float scale)
     {
-        var library = dependencies.VideoLibrary.Snapshot();
-        var resolver = dependencies.LinkResolver.Snapshot();
-        var busy = DependencySetup.IsBusy(library) || DependencySetup.IsBusy(resolver);
-        var failed = library.State == DependencyState.Failed || resolver.State == DependencyState.Failed;
-
-        var pending = dependencies.PendingDownloadBytes;
+        var resolver = media.LinkResolver.Snapshot();
+        var busy = DependencySetup.IsBusy(resolver);
+        var failed = resolver.State == DependencyState.Failed;
+        var pending = songResolver.IsInstalled ? 0 : resolver.TotalBytes;
         var label = busy
             ? Loc.T(L.AetherStream.SetupInstalling)
             : failed
                 ? Loc.T(L.AetherStream.SetupRetry)
                 : pending > 0
-                    ? string.Format(Loc.T(L.AetherStream.SetupInstallSized), DependencySetup.FormatMegabytes(pending))
+                    ? string.Format(Loc.T(L.AetherStream.SetupInstallSized),
+                        DependencySetup.FormatMegabytes(pending))
                     : Loc.T(L.AetherStream.SetupInstall);
 
-        if (AppSkin.PillButton(button, label, true, !busy, accentedTheme) && !busy)
+        if (!ReferenceEquals(setupAccentSource, theme))
         {
-            dependencyWork.Run("install components",
-                async token => await dependencies.EnsureReadyAsync(token).ConfigureAwait(false));
+            setupAccentSource = theme;
+            setupAccentedTheme = PhoneTheme.WithAccent(theme, ui.Accent);
+        }
+
+        if (AppSkin.PillButton(button, label, true, !busy, setupAccentedTheme) && !busy)
+        {
+            resolverWork.Run("install resolver",
+                async token => await media.ReinstallAsync(media.LinkResolver, token).ConfigureAwait(false));
         }
 
         var linkTop = button.Max.Y + Metrics.Space.Sm * scale;

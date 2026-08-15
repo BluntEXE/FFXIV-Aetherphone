@@ -332,7 +332,7 @@ internal sealed class MediaDependencies : IDisposable
         await DownloadAsync(dependency, token).ConfigureAwait(false);
     }
 
-    private async Task<bool> CheckAsync(MediaDependency dependency, CancellationToken token)
+    internal async Task<bool> CheckAsync(MediaDependency dependency, CancellationToken token)
     {
         dependency.SetState(DependencyState.Checking);
         try

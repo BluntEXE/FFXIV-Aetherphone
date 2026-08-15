@@ -2562,6 +2562,9 @@ internal static class L
 
     internal static class Music
     {
+        public static readonly LocString SetupTitle = new("music.setupTitle", "Set up song playback");
+        public static readonly LocString SetupBody = new("music.setupBody",
+            "Songs need a small download helper that fetches audio reliably. Install it once and every track just plays. Radio and live stations work without it.");
         public static readonly LocString RadioStations = new("music.radioStations", "Radio stations");
         public static readonly LocString RecentlyPlayed = new("music.recentlyPlayed", "Recently played");
         public static readonly LocString TabHome = new("music.tabHome", "Home");

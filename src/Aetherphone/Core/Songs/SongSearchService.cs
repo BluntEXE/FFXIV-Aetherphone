@@ -9,13 +9,16 @@ internal sealed class SongSearchService : IDisposable
     private const int MaxResults = 25;
     private const int MinSongSeconds = 30;
     private const int MaxSongSeconds = 360;
+    private const int ResolverFetchCount = 40;
     private readonly YoutubeClient youtube;
+    private readonly SongLinkResolver linkResolver;
     private readonly RequestThrottle throttle;
     private readonly CancellationTokenSource cancellation = new();
 
-    public SongSearchService(YoutubeClient youtube)
+    public SongSearchService(YoutubeClient youtube, SongLinkResolver linkResolver)
     {
         this.youtube = youtube;
+        this.linkResolver = linkResolver;
         throttle = new RequestThrottle(1, TimeSpan.FromMilliseconds(400));
     }
 
@@ -63,9 +66,39 @@ internal sealed class SongSearchService : IDisposable
         }
         catch (Exception exception)
         {
+            if (linkResolver.IsInstalled)
+            {
+                AepLog.Warning(exception, $"Song search failed for '{query}', trying the link resolver");
+                return SearchThroughResolver(query, scope, token);
+            }
+
             AepLog.Warning(exception, $"Song search failed for '{query}'");
             return Array.Empty<Song>();
         }
+    }
+
+    private Song[] SearchThroughResolver(string query, SongSearchScope scope, CancellationToken token)
+    {
+        var entries = linkResolver.Search(query, ResolverFetchCount, token);
+        if (entries is null)
+        {
+            return Array.Empty<Song>();
+        }
+
+        var results = new List<Song>(MaxResults);
+        for (var index = 0; index < entries.Length && results.Count < MaxResults; index++)
+        {
+            var entry = entries[index];
+            if (!MatchesScope(scope, entry.DurationSeconds))
+            {
+                continue;
+            }
+
+            results.Add(new Song(entry.VideoId, entry.Title, entry.Author, entry.ThumbnailUrl,
+                entry.DurationSeconds));
+        }
+
+        return results.ToArray();
     }
 
     private static bool MatchesScope(SongSearchScope scope, int seconds)
