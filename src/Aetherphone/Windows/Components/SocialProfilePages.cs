@@ -583,7 +583,7 @@ internal sealed class SocialProfilePages
 
     public void DrawUserList(Rect area, PhoneTheme theme, INavigator navigation, string sourceId, UserListKind kind)
     {
-        store.OpenUserList(sourceId, kind);
+        store.EnsureUserList(sourceId, kind);
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, UserListTitle(kind), back);
         var scale = UiScale.Current;

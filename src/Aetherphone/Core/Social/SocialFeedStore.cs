@@ -65,6 +65,7 @@ internal abstract class SocialFeedStore : IDisposable
     private volatile bool userListFailed;
     private UserListKind userListKind;
     private volatile string? userListSourceId;
+    private int userListGeneration;
     private readonly FeedLane<PostDto> taggedLane = new(ByNewestFirst);
     private volatile string? taggedUserId;
     private string? lastAccountId;
@@ -126,9 +127,12 @@ internal abstract class SocialFeedStore : IDisposable
         detailComments = Array.Empty<CommentDto>();
         commentsCursor = null;
         discoverResults = Array.Empty<UserDto>();
+        Interlocked.Increment(ref userListGeneration);
         userListKey = null;
         userListResults = Array.Empty<UserDto>();
         userListCursor = null;
+        userListLoading = false;
+        userListFailed = false;
         savedLane.Clear();
         followRequests = Array.Empty<UserDto>();
         followRequestsCursor = null;
@@ -935,32 +939,50 @@ internal abstract class SocialFeedStore : IDisposable
         OpenProfile(current);
     }
 
-    public void OpenUserList(string sourceId, UserListKind kind)
+    public void EnsureUserList(string sourceId, UserListKind kind)
     {
-        var key = $"{(int)kind}:{sourceId}";
-        if (userListKey == key && (userListResults.Length > 0 || userListLoading))
+        if (userListKey == UserListKeyFor(sourceId, kind))
         {
             return;
         }
 
+        OpenUserList(sourceId, kind);
+    }
+
+    public void OpenUserList(string sourceId, UserListKind kind)
+    {
+        var key = UserListKeyFor(sourceId, kind);
+        if (userListKey == key && userListLoading)
+        {
+            return;
+        }
+
+        var generation = Interlocked.Increment(ref userListGeneration);
+        var keepStaleRows = userListKey == key && userListResults.Length > 0;
+        var staleCursor = userListCursor;
         userListKind = kind;
         userListSourceId = sourceId;
         userListKey = key;
-        userListResults = Array.Empty<UserDto>();
+        if (!keepStaleRows)
+        {
+            userListResults = Array.Empty<UserDto>();
+        }
+
         userListCursor = null;
         userListFailed = false;
         userListLoading = true;
         work.Run("user list", async token =>
         {
             var page = await FetchUserListPageAsync(kind, sourceId, null, token).ConfigureAwait(false);
-            if (userListKey != key)
+            if (Volatile.Read(ref userListGeneration) != generation)
             {
                 return;
             }
 
             if (page is null)
             {
-                userListFailed = true;
+                userListFailed = !keepStaleRows;
+                userListCursor = keepStaleRows ? staleCursor : null;
             }
             else
             {
@@ -969,7 +991,7 @@ internal abstract class SocialFeedStore : IDisposable
             }
         }, () =>
         {
-            if (userListKey == key)
+            if (Volatile.Read(ref userListGeneration) == generation)
             {
                 userListLoading = false;
             }
@@ -978,21 +1000,21 @@ internal abstract class SocialFeedStore : IDisposable
 
     public void LoadMoreUserList()
     {
-        var key = userListKey;
         var sourceId = userListSourceId;
         var cursor = userListCursor;
-        if (!session.IsSignedIn || key is null || sourceId is null || cursor is null
+        if (!session.IsSignedIn || userListKey is null || sourceId is null || cursor is null
             || userListLoadingMore || userListLoading)
         {
             return;
         }
 
         var kind = userListKind;
+        var generation = Volatile.Read(ref userListGeneration);
         userListLoadingMore = true;
         work.Run("user list more", async token =>
         {
             var page = await FetchUserListPageAsync(kind, sourceId, cursor, token).ConfigureAwait(false);
-            if (page is null || userListKey != key)
+            if (page is null || Volatile.Read(ref userListGeneration) != generation)
             {
                 return;
             }
@@ -1001,6 +1023,8 @@ internal abstract class SocialFeedStore : IDisposable
             userListCursor = page.NextCursor;
         }, () => userListLoadingMore = false);
     }
+
+    private static string UserListKeyFor(string sourceId, UserListKind kind) => $"{(int)kind}:{sourceId}";
 
     private async Task<UserListPage?> FetchUserListPageAsync(
         UserListKind kind, string sourceId, string? cursor, CancellationToken token) =>

@@ -90,6 +90,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     private volatile bool likersLoadingMore;
     private volatile bool likersLoading;
     private volatile bool likersFailed;
+    private int likersGeneration;
     private volatile UserDto[] blocked = Array.Empty<UserDto>();
     private volatile bool loadingBlocked;
     private volatile bool blockedLoaded;
@@ -291,9 +292,11 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         feedLoadedConnections = false;
         fetchedPost = null;
         fetchingPostId = null;
+        Interlocked.Increment(ref likersGeneration);
         likersPostId = null;
         likers = Array.Empty<UserDto>();
         likersCursor = null;
+        likersLoading = false;
         likersFailed = false;
         blocked = Array.Empty<UserDto>();
         blockedLoaded = false;
@@ -1428,27 +1431,35 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
 
     public void OpenLikers(string postId)
     {
-        if (likersPostId == postId && (likers.Length > 0 || likersLoading))
+        if (likersPostId == postId && likersLoading)
         {
             return;
         }
 
+        var generation = Interlocked.Increment(ref likersGeneration);
+        var keepStaleRows = likersPostId == postId && likers.Length > 0;
+        var staleCursor = likersCursor;
         likersPostId = postId;
-        likers = Array.Empty<UserDto>();
+        if (!keepStaleRows)
+        {
+            likers = Array.Empty<UserDto>();
+        }
+
         likersCursor = null;
         likersFailed = false;
-        likersLoading = true;
+        likersLoading = !keepStaleRows;
         work.Run("likers", async token =>
         {
             var page = await client.PostLikersAsync(postId, null, token).ConfigureAwait(false);
-            if (likersPostId != postId)
+            if (Volatile.Read(ref likersGeneration) != generation)
             {
                 return;
             }
 
             if (page is null)
             {
-                likersFailed = true;
+                likersFailed = !keepStaleRows;
+                likersCursor = keepStaleRows ? staleCursor : null;
             }
             else
             {
@@ -1457,7 +1468,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
             }
         }, () =>
         {
-            if (likersPostId == postId)
+            if (Volatile.Read(ref likersGeneration) == generation)
             {
                 likersLoading = false;
             }
@@ -1473,11 +1484,12 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
             return;
         }
 
+        var generation = Volatile.Read(ref likersGeneration);
         likersLoadingMore = true;
         work.Run("likers more", async token =>
         {
             var page = await client.PostLikersAsync(postId, cursor, token).ConfigureAwait(false);
-            if (page is null || likersPostId != postId)
+            if (page is null || Volatile.Read(ref likersGeneration) != generation)
             {
                 return;
             }
