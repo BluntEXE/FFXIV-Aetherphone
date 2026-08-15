@@ -3,6 +3,39 @@ using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Confirm;
 
+internal enum ConfirmSectionKind
+{
+    Paragraph,
+    Card,
+    Labeled,
+    Chip,
+    Divider,
+}
+
+internal readonly struct ConfirmSection
+{
+    public readonly ConfirmSectionKind Kind;
+    public readonly string Label;
+    public readonly string Text;
+
+    private ConfirmSection(ConfirmSectionKind kind, string label, string text)
+    {
+        Kind = kind;
+        Label = label;
+        Text = text;
+    }
+
+    public static ConfirmSection Paragraph(string text) => new(ConfirmSectionKind.Paragraph, string.Empty, text);
+
+    public static ConfirmSection Card(string label, string text) => new(ConfirmSectionKind.Card, label, text);
+
+    public static ConfirmSection Labeled(string label, string text) => new(ConfirmSectionKind.Labeled, label, text);
+
+    public static ConfirmSection Chip(string label, string text) => new(ConfirmSectionKind.Chip, label, text);
+
+    public static ConfirmSection Divider() => new(ConfirmSectionKind.Divider, string.Empty, string.Empty);
+}
+
 internal sealed class ConfirmRequest
 {
     public string? Title;
@@ -11,6 +44,7 @@ internal sealed class ConfirmRequest
     public required string CancelLabel;
     public string? BusyLabel;
     public string? FailedMessage;
+    public ConfirmSection[]? Sections;
     public bool Danger = true;
     public bool Acknowledge;
     public Action<Action<bool>>? ConfirmAsync;
@@ -52,6 +86,23 @@ internal sealed class ConfirmService
         {
             Title = title,
             Message = message,
+            ConfirmLabel = dismissLabel,
+            CancelLabel = dismissLabel,
+            Danger = false,
+            Acknowledge = true,
+            Confirm = onDismiss,
+            Cancel = onDismiss,
+        });
+    }
+
+    public void Alert(string? title, ConfirmSection[] sections, string message, string dismissLabel,
+        Action? onDismiss = null)
+    {
+        Ask(new ConfirmRequest
+        {
+            Title = title,
+            Message = message,
+            Sections = sections,
             ConfirmLabel = dismissLabel,
             CancelLabel = dismissLabel,
             Danger = false,

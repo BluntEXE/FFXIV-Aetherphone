@@ -100,45 +100,50 @@ internal sealed class BanOverlay
 
         var suspension = session.Suspension;
         var temporary = IsTemporary(suspension);
+        var left = centerX - maxWidth * 0.5f;
 
         var y = iconCenter.Y + iconRadius + 28f * scale;
         y += Typography.DrawWrappedCentered(new Vector2(centerX, y),
             Loc.T(temporary ? L.Account.BanScreenTimeoutTitle : L.Account.BanScreenTitle),
             Palette.WithAlpha(theme.TextStrong, alpha), new TextStyle(1.5f, FontWeight.SemiBold), maxWidth);
 
-        var bodyStyle = new TextStyle(1f, FontWeight.Regular);
         y += 14f * scale;
         y += Typography.DrawWrappedCentered(new Vector2(centerX, y),
             temporary
                 ? Loc.T(L.Account.BanScreenLifts, ModerationNoticeText.LiftMoment(suspension!.UntilUnix!.Value))
                 : Loc.T(L.Account.BanScreenBody),
-            Palette.WithAlpha(theme.TextMuted, alpha), bodyStyle, maxWidth);
+            Palette.WithAlpha(theme.TextMuted, alpha), new TextStyle(1f, FontWeight.Regular), maxWidth);
 
         var rule = suspension is null ? string.Empty : suspension.RuleTitle;
         var reason = rule.Length > 0 ? rule : session.BanReason;
         if (!string.IsNullOrWhiteSpace(reason))
         {
-            y += 12f * scale;
-            y += Typography.DrawWrappedCentered(new Vector2(centerX, y), Loc.T(L.Account.BanScreenReason, reason),
-                Palette.WithAlpha(theme.TextStrong, 0.85f * alpha), bodyStyle, maxWidth);
-        }
-
-        if (suspension is not null && suspension.RuleSummary.Length > 0)
-        {
-            y += 8f * scale;
-            y += Typography.DrawWrappedCentered(new Vector2(centerX, y), suspension.RuleSummary,
-                Palette.WithAlpha(theme.TextMuted, 0.85f * alpha), new TextStyle(0.9f, FontWeight.Regular), maxWidth);
+            y = DrawSeparator(dl, left, maxWidth, y, scale, alpha);
+            y += Typography.DrawWrappedLeft(new Vector2(left, y), Loc.T(L.Account.BanScreenReason),
+                Palette.WithAlpha(theme.TextStrong, alpha), new TextStyle(0.95f, FontWeight.SemiBold), maxWidth);
+            y += 4f * scale;
+            y += Typography.DrawWrappedLeft(new Vector2(left, y), reason,
+                Palette.WithAlpha(theme.TextStrong, 0.9f * alpha), new TextStyle(0.95f, FontWeight.Medium), maxWidth);
+            if (suspension is not null && suspension.RuleSummary.Length > 0)
+            {
+                y += 4f * scale;
+                y += Typography.DrawWrappedLeft(new Vector2(left, y), suspension.RuleSummary,
+                    Palette.WithAlpha(theme.TextMuted, 0.9f * alpha), new TextStyle(0.9f, FontWeight.Regular),
+                    maxWidth);
+            }
         }
 
         if (suspension is not null && suspension.Note.Length > 0)
         {
-            y += 10f * scale;
-            y += Typography.DrawWrappedCentered(new Vector2(centerX, y),
-                Loc.T(L.Moderation.NoticeModeratorNote, suspension.Note),
-                Palette.WithAlpha(theme.TextStrong, 0.8f * alpha), new TextStyle(0.9f, FontWeight.Regular), maxWidth);
+            y = DrawSeparator(dl, left, maxWidth, y, scale, alpha);
+            y += Typography.DrawWrappedLeft(new Vector2(left, y), Loc.T(L.Moderation.NoticeModeratorNoteLabel),
+                Palette.WithAlpha(theme.TextStrong, alpha), new TextStyle(0.95f, FontWeight.SemiBold), maxWidth);
+            y += 4f * scale;
+            y += Typography.DrawWrappedLeft(new Vector2(left, y), suspension.Note,
+                Palette.WithAlpha(theme.TextStrong, 0.85f * alpha), new TextStyle(0.9f, FontWeight.Regular), maxWidth);
         }
 
-        y += 14f * scale;
+        y = DrawSeparator(dl, left, maxWidth, y, scale, alpha);
         y += Typography.DrawWrappedCentered(new Vector2(centerX, y), Loc.T(L.Account.BanScreenSocialLocked),
             Palette.WithAlpha(theme.TextStrong, 0.9f * alpha), new TextStyle(0.95f, FontWeight.Medium), maxWidth);
 
@@ -147,6 +152,15 @@ internal sealed class BanOverlay
             Palette.WithAlpha(theme.TextMuted, 0.8f * alpha), new TextStyle(0.9f, FontWeight.Regular), maxWidth);
 
         DrawDismiss(screen, theme, alpha, interactive);
+    }
+
+    private static float DrawSeparator(ImDrawListPtr drawList, float left, float width, float y, float scale,
+        float alpha)
+    {
+        var lineY = y + 14f * scale;
+        drawList.AddRectFilled(new Vector2(left, lineY), new Vector2(left + width, lineY + Metrics.Stroke.Hairline),
+            ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.10f * alpha)));
+        return lineY + Metrics.Stroke.Hairline + 14f * scale;
     }
 
     private void DrawDismiss(Rect screen, PhoneTheme theme, float alpha, bool interactive)

@@ -90,7 +90,8 @@ internal sealed class ModerationNoticePresenter : IDisposable
             return;
         }
 
-        confirm.Alert(title, body, Loc.T(L.Moderation.RemovedDismiss), () => notices.Acknowledge(notice));
+        confirm.Alert(title, ModerationNoticeText.Sections(notice), body, Loc.T(L.Moderation.RemovedDismiss),
+            () => notices.Acknowledge(notice));
     }
 
     public void Dispose()

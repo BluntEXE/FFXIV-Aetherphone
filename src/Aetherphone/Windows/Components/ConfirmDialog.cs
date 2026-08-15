@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 
@@ -26,12 +27,18 @@ internal static class ConfirmDialog
     private const float TitleScale = 1.55f;
     private const float MessageScale = 0.92f;
     private const float ButtonScale = 0.9f;
+    private const float SectionGap = 14f;
+    private const float SectionCardPad = 12f;
+    private const float SectionCardRounding = 14f;
+    private const float SectionLabelGap = 5f;
+    private const float ChipPadX = 8f;
+    private const float ChipPadY = 4f;
 
     private static readonly List<string> LineBuffer = new();
 
-    public static void Draw(Rect area, PhoneTheme theme, string? title, string message, string confirmLabel,
-        string cancelLabel, string busyLabel, bool busy, string? status, bool danger, bool acknowledge, float opacity,
-        float cardScale, out Rect cardRect, out bool canceled, out bool confirmed)
+    public static void Draw(Rect area, PhoneTheme theme, string? title, string message, ConfirmSection[]? sections,
+        string confirmLabel, string cancelLabel, string busyLabel, bool busy, string? status, bool danger,
+        bool acknowledge, float opacity, float cardScale, out Rect cardRect, out bool canceled, out bool confirmed)
     {
         canceled = false;
         confirmed = false;
@@ -49,10 +56,20 @@ internal static class ConfirmDialog
 
         var titleStyle = new TextStyle(titleScale, FontWeight.Bold);
         var titleHeight = hasTitle ? Typography.MeasureWrappedBlock(title!, titleStyle, wrapWidth).Y : 0f;
-        var lineHeight = WrapMessage(message, wrapWidth, messageScale, FontWeight.Medium);
-        var lineStep = lineHeight + LineLeading * s;
-        var lineCount = LineBuffer.Count;
-        var messageBlockHeight = lineCount > 0 ? lineHeight + (lineCount - 1) * lineStep : 0f;
+        var hasSections = sections is { Length: > 0 };
+        float messageBlockHeight;
+        var lineStep = 0f;
+        if (hasSections)
+        {
+            messageBlockHeight = SectionsHeight(sections!, wrapWidth, cardScale, s);
+        }
+        else
+        {
+            var lineHeight = WrapMessage(message, wrapWidth, messageScale, FontWeight.Medium);
+            lineStep = lineHeight + LineLeading * s;
+            var lineCount = LineBuffer.Count;
+            messageBlockHeight = lineCount > 0 ? lineHeight + (lineCount - 1) * lineStep : 0f;
+        }
 
         var hasStatus = status is { Length: > 0 };
         var statusHeight = hasStatus ? Typography.Measure(status!, 0.78f * cardScale).Y : 0f;
@@ -81,7 +98,16 @@ internal static class ConfirmDialog
         }
 
         var messageColor = new Vector4(theme.TextStrong.X, theme.TextStrong.Y, theme.TextStrong.Z, 0.88f * opacity);
-        DrawMessage(drawList, centerX, cursorY, lineStep, messageColor, messageScale);
+        if (hasSections)
+        {
+            DrawSections(drawList, sections!, cardMin.X + pad, centerX, cursorY, wrapWidth, cardScale, s, theme,
+                opacity);
+        }
+        else
+        {
+            DrawMessage(drawList, centerX, cursorY, lineStep, messageColor, messageScale);
+        }
+
         cursorY += messageBlockHeight;
 
         if (hasStatus)
@@ -125,6 +151,155 @@ internal static class ConfirmDialog
                 "confirmdialog.confirm"))
         {
             confirmed = true;
+        }
+    }
+
+    private static TextStyle SectionParagraphStyle(float cardScale) => new(0.92f * cardScale, FontWeight.Medium);
+
+    private static TextStyle SectionLabelStyle(float cardScale) => new(0.95f * cardScale, FontWeight.SemiBold);
+
+    private static TextStyle SectionTextStyle(float cardScale) => new(0.88f * cardScale, FontWeight.Regular);
+
+    private static TextStyle SectionChipStyle(float cardScale) => new(0.85f * cardScale, FontWeight.Medium);
+
+    private static float SectionsHeight(ConfirmSection[] sections, float wrapWidth, float cardScale, float s)
+    {
+        var height = 0f;
+        for (var sectionIndex = 0; sectionIndex < sections.Length; sectionIndex++)
+        {
+            if (sectionIndex > 0)
+            {
+                height += SectionGap * s;
+            }
+
+            height += SectionHeight(sections[sectionIndex], wrapWidth, cardScale, s);
+        }
+
+        return height;
+    }
+
+    private static float SectionHeight(in ConfirmSection section, float wrapWidth, float cardScale, float s)
+    {
+        switch (section.Kind)
+        {
+            case ConfirmSectionKind.Divider:
+                return Metrics.Stroke.Hairline;
+            case ConfirmSectionKind.Card:
+            {
+                var innerWidth = wrapWidth - SectionCardPad * 2f * s;
+                var height = Typography.MeasureWrappedBlock(section.Label, SectionLabelStyle(cardScale), innerWidth).Y;
+                if (section.Text.Length > 0)
+                {
+                    height += SectionLabelGap * s
+                        + Typography.MeasureWrappedBlock(section.Text, SectionTextStyle(cardScale), innerWidth).Y;
+                }
+
+                return height + SectionCardPad * 2f * s;
+            }
+            case ConfirmSectionKind.Labeled:
+            {
+                var height = Typography.MeasureWrappedBlock(section.Label, SectionLabelStyle(cardScale), wrapWidth).Y;
+                if (section.Text.Length > 0)
+                {
+                    height += SectionLabelGap * s
+                        + Typography.MeasureWrappedBlock(section.Text, SectionTextStyle(cardScale), wrapWidth).Y;
+                }
+
+                return height;
+            }
+            case ConfirmSectionKind.Chip:
+            {
+                var labelHeight = Typography.MeasureWrappedBlock(section.Label, SectionLabelStyle(cardScale),
+                    wrapWidth).Y;
+                var chipInner = wrapWidth - ChipPadX * 2f * s;
+                var chipHeight = Typography.MeasureWrappedBlock(section.Text, SectionChipStyle(cardScale), chipInner).Y
+                    + ChipPadY * 2f * s;
+                return labelHeight + SectionLabelGap * s + chipHeight;
+            }
+            default:
+                return Typography.MeasureWrappedBlock(section.Text, SectionParagraphStyle(cardScale), wrapWidth).Y;
+        }
+    }
+
+    private static void DrawSections(ImDrawListPtr drawList, ConfirmSection[] sections, float left, float centerX,
+        float top, float wrapWidth, float cardScale, float s, PhoneTheme theme, float opacity)
+    {
+        var y = top;
+        var strongColor = Palette.WithAlpha(theme.TextStrong, opacity);
+        var bodyColor = Palette.WithAlpha(theme.TextStrong, 0.88f * opacity);
+        var mutedColor = Palette.WithAlpha(theme.TextMuted, opacity);
+        var hairline = ImGui.GetColorU32(Palette.WithAlpha(theme.TextStrong, 0.08f * opacity));
+        for (var sectionIndex = 0; sectionIndex < sections.Length; sectionIndex++)
+        {
+            if (sectionIndex > 0)
+            {
+                y += SectionGap * s;
+            }
+
+            var section = sections[sectionIndex];
+            switch (section.Kind)
+            {
+                case ConfirmSectionKind.Divider:
+                    drawList.AddRectFilled(new Vector2(left, y),
+                        new Vector2(left + wrapWidth, y + Metrics.Stroke.Hairline), hairline);
+                    y += Metrics.Stroke.Hairline;
+                    break;
+                case ConfirmSectionKind.Card:
+                {
+                    var height = SectionHeight(section, wrapWidth, cardScale, s);
+                    Squircle.Fill(drawList, new Vector2(left, y), new Vector2(left + wrapWidth, y + height),
+                        SectionCardRounding * s,
+                        ImGui.GetColorU32(Palette.WithAlpha(theme.SurfaceMuted, 0.7f * opacity)));
+                    var innerLeft = left + SectionCardPad * s;
+                    var innerWidth = wrapWidth - SectionCardPad * 2f * s;
+                    var innerY = y + SectionCardPad * s;
+                    innerY += Typography.DrawWrappedLeft(new Vector2(innerLeft, innerY), section.Label, strongColor,
+                        SectionLabelStyle(cardScale), innerWidth);
+                    if (section.Text.Length > 0)
+                    {
+                        innerY += SectionLabelGap * s;
+                        Typography.DrawWrappedLeft(new Vector2(innerLeft, innerY), section.Text, mutedColor,
+                            SectionTextStyle(cardScale), innerWidth);
+                    }
+
+                    y += height;
+                    break;
+                }
+                case ConfirmSectionKind.Labeled:
+                {
+                    y += Typography.DrawWrappedLeft(new Vector2(left, y), section.Label, strongColor,
+                        SectionLabelStyle(cardScale), wrapWidth);
+                    if (section.Text.Length > 0)
+                    {
+                        y += SectionLabelGap * s;
+                        y += Typography.DrawWrappedLeft(new Vector2(left, y), section.Text, bodyColor,
+                            SectionTextStyle(cardScale), wrapWidth);
+                    }
+
+                    break;
+                }
+                case ConfirmSectionKind.Chip:
+                {
+                    y += Typography.DrawWrappedLeft(new Vector2(left, y), section.Label, strongColor,
+                        SectionLabelStyle(cardScale), wrapWidth);
+                    y += SectionLabelGap * s;
+                    var chipInner = wrapWidth - ChipPadX * 2f * s;
+                    var chipStyle = SectionChipStyle(cardScale);
+                    var textBlock = Typography.MeasureWrappedBlock(section.Text, chipStyle, chipInner);
+                    var chipWidth = MathF.Min(wrapWidth, textBlock.X + ChipPadX * 2f * s);
+                    var chipHeight = textBlock.Y + ChipPadY * 2f * s;
+                    Squircle.Fill(drawList, new Vector2(left, y), new Vector2(left + chipWidth, y + chipHeight),
+                        6f * s, ImGui.GetColorU32(Palette.WithAlpha(theme.SurfaceMuted, 0.9f * opacity)));
+                    Typography.DrawWrappedLeft(new Vector2(left + ChipPadX * s, y + ChipPadY * s), section.Text,
+                        bodyColor, chipStyle, chipInner);
+                    y += chipHeight;
+                    break;
+                }
+                default:
+                    y += Typography.DrawWrappedCentered(new Vector2(centerX, y), section.Text, bodyColor,
+                        SectionParagraphStyle(cardScale), wrapWidth);
+                    break;
+            }
         }
     }
 
