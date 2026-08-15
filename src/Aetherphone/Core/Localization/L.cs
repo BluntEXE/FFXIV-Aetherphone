@@ -1377,6 +1377,8 @@ internal static class L
                 "The phone case picker is now a store: cases sit in Colors, Gradients, and Custom Artwork rails, and each one opens a page with a full size preview and its artist credit"),
             new("changelog.r1000.26",
                 "Added two phone cases: Garlean and Gurren Lagann, contributed by Zivyl and daitomata"),
+            new("changelog.r1000.67",
+                "Added the Allagan phone case, contributed by Zivyl"),
             new("changelog.r1000.44",
                 "Added MogCast, a video app that plays a link on a screen you place in the world: paste a URL or pick a file from your PC, queue what comes next, and drive it all from one Now Playing screen"),
             new("changelog.r1000.45",
@@ -4699,6 +4701,7 @@ internal static class L
         public static readonly LocString CaseRunic = new("catalog.case.runic", "Runic");
         public static readonly LocString CaseGarlean = new("catalog.case.garlean", "Garlean");
         public static readonly LocString CaseGurrenLagann = new("catalog.case.gurrenlagann", "Gurren Lagann");
+        public static readonly LocString CaseAllagan = new("catalog.case.allagan", "Allagan");
         public static readonly LocString RingtoneSilent = new("catalog.ringtone.silent", "Silent");
         public static readonly LocString RadioLofi = new("catalog.radio.lofi", "Lofi");
         public static readonly LocString RadioChillout = new("catalog.radio.chillout", "Chillout");

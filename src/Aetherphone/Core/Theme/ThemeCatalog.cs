@@ -58,6 +58,7 @@ internal static class ThemeCatalog
         PhoneCase.Art("Runic", PhoneCaseCategory.ArtistSeries, new Vector4(0.414f, 0.296f, 0.491f, 1f), "Silkie"),
         PhoneCase.Art("Garlean", PhoneCaseCategory.ArtistSeries, new Vector4(0.283f, 0.274f, 0.276f, 1f), "Zivyl"),
         PhoneCase.Art("GurrenLagann", PhoneCaseCategory.ArtistSeries, new Vector4(0.239f, 0.523f, 0.509f, 1f), "daitomata"),
+        PhoneCase.Art("Allagan", PhoneCaseCategory.ArtistSeries, new Vector4(0.149f, 0.115f, 0.111f, 1f), "Zivyl"),
     };
 
     public static IReadOnlyList<PhoneCase> Cases { get; } = BuiltInCases;
