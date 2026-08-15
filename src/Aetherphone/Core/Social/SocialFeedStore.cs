@@ -283,6 +283,16 @@ internal abstract class SocialFeedStore : IDisposable
     public bool HashtagLoadingMore => hashtagLane.LoadingMore;
     public bool HasMoreHashtagPosts => hashtagLane.HasMore;
 
+    public void OpenHashtagPosts(string tag)
+    {
+        if (!session.IsSignedIn || hashtagLane.Loading)
+        {
+            return;
+        }
+
+        RefreshHashtagLane(tag);
+    }
+
     public void EnsureHashtagPosts(string tag)
     {
         if (!session.IsSignedIn || hashtagLane.Loading || string.Equals(hashtagTag, tag, StringComparison.Ordinal))
@@ -290,6 +300,11 @@ internal abstract class SocialFeedStore : IDisposable
             return;
         }
 
+        RefreshHashtagLane(tag);
+    }
+
+    private void RefreshHashtagLane(string tag)
+    {
         hashtagTag = tag;
         hashtagLane.Clear();
         hashtagLane.Loading = true;

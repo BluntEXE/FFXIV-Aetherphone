@@ -610,7 +610,7 @@ internal sealed partial class AethergramApp : IPhoneApp
 
     private void OpenHashtag(string tag)
     {
-        store.EnsureHashtagPosts(tag);
+        store.OpenHashtagPosts(tag);
         router.Push(AethergramRoute.Hashtag(tag));
     }
 

@@ -115,7 +115,7 @@ internal sealed partial class ChirperApp
     private void OpenHashtag(string tag)
     {
         actions.Reset();
-        store.EnsureHashtagPosts(tag);
+        store.OpenHashtagPosts(tag);
         router.Push(ChirperRoute.Hashtag(tag));
     }
 
