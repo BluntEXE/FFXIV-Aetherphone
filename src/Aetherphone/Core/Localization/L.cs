@@ -3435,7 +3435,7 @@ internal static class L
             "Video sites change constantly. Updating yt-dlp under Settings fixes most refusals, and MogCast retries stubborn streams on its own. Direct video links are the most reliable.");
         public static readonly LocString InfoPartiesTitle = new("aetherstream.infoPartiesTitle", "Watch parties");
         public static readonly LocString InfoPartiesBody = new("aetherstream.infoPartiesBody",
-            "Everyone plays the same link on their own phone, so it has to be reachable for every viewer. Files from your own machine stay on your phone and can't be watched by others.");
+            "Everyone plays the same link on their own phone, so it has to be reachable for every viewer. Files from your own machine stay on your phone and can't be watched by others yet.");
 
         public static readonly LocString KickedTitle = new("aetherstream.kickedTitle", "Removed from stream");
         public static readonly LocString KickedBody = new("aetherstream.kickedBody",

@@ -3957,7 +3957,7 @@
   "aetherstream.infoFailuresTitle": "Ein Video spielt nicht ab?",
   "aetherstream.infoFailuresBody": "Videoseiten ändern sich ständig. Ein Update von yt-dlp in den Einstellungen behebt die meisten Ausfälle, und MogCast versucht störrische Streams von selbst erneut. Direkte Videolinks sind am zuverlässigsten.",
   "aetherstream.infoPartiesTitle": "Watch Partys",
-  "aetherstream.infoPartiesBody": "Alle spielen denselben Link auf dem eigenen Telefon ab, er muss also für jeden erreichbar sein. Dateien von deinem Rechner bleiben auf deinem Telefon und können von anderen nicht gesehen werden.",
+  "aetherstream.infoPartiesBody": "Alle spielen denselben Link auf dem eigenen Telefon ab, er muss also für jeden erreichbar sein. Dateien von deinem Rechner bleiben auf deinem Telefon und können von anderen noch nicht gesehen werden.",
   "aetherstream.kickedTitle": "Aus dem Stream entfernt",
   "aetherstream.kickedBody": "Der Gastgeber hat dich aus dem Stream entfernt.",
   "aetherstream.watchingKick": "Entfernen",

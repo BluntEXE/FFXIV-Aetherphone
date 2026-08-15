@@ -3957,7 +3957,7 @@
   "aetherstream.infoFailuresTitle": "動画が再生できない場合",
   "aetherstream.infoFailuresBody": "動画サイトは頻繁に変わります。設定からyt-dlpを更新するとほとんどの問題が解決するほか、MogCastは失敗したストリームを自動で再試行します。動画への直接リンクが最も安定します。",
   "aetherstream.infoPartiesTitle": "ウォッチパーティー",
-  "aetherstream.infoPartiesBody": "全員が同じリンクを自分の電話で再生するため、リンクはすべての視聴者から到達できる必要があります。自分のPCにあるファイルは自分の電話だけで再生され、他の人は視聴できません。",
+  "aetherstream.infoPartiesBody": "全員が同じリンクを自分の電話で再生するため、リンクはすべての視聴者から到達できる必要があります。自分のPCにあるファイルは自分の電話だけで再生され、今のところ他の人は視聴できません。",
   "aetherstream.kickedTitle": "配信から削除されました",
   "aetherstream.kickedBody": "ホストがあなたを配信から削除しました。",
   "aetherstream.watchingKick": "削除",

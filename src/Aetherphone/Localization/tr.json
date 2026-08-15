@@ -3957,7 +3957,7 @@
   "aetherstream.infoFailuresTitle": "Bir video oynamıyor mu?",
   "aetherstream.infoFailuresBody": "Video siteleri sürekli değişir. Ayarlardan yt-dlp'yi güncellemek sorunların çoğunu çözer; MogCast inatçı yayınları kendiliğinden yeniden dener. Doğrudan video bağlantıları en güvenilir olanlardır.",
   "aetherstream.infoPartiesTitle": "İzleme Partileri",
-  "aetherstream.infoPartiesBody": "Herkes aynı bağlantıyı kendi telefonunda oynatır, bu yüzden bağlantının her izleyici için erişilebilir olması gerekir. Kendi bilgisayarındaki dosyalar telefonunda kalır ve başkaları tarafından izlenemez.",
+  "aetherstream.infoPartiesBody": "Herkes aynı bağlantıyı kendi telefonunda oynatır, bu yüzden bağlantının her izleyici için erişilebilir olması gerekir. Kendi bilgisayarındaki dosyalar telefonunda kalır ve şimdilik başkaları tarafından izlenemez.",
   "aetherstream.kickedTitle": "Yayından çıkarıldın",
   "aetherstream.kickedBody": "Ev sahibi seni yayından çıkardı.",
   "aetherstream.watchingKick": "Çıkar",

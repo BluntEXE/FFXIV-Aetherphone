@@ -3957,7 +3957,7 @@
   "aetherstream.infoFailuresTitle": "¿Un vídeo no se reproduce?",
   "aetherstream.infoFailuresBody": "Los sitios de vídeo cambian constantemente. Actualizar yt-dlp en Ajustes corrige la mayoría de los fallos, y MogCast reintenta por su cuenta los streams rebeldes. Los enlaces directos de vídeo son los más fiables.",
   "aetherstream.infoPartiesTitle": "Watch Parties",
-  "aetherstream.infoPartiesBody": "Todos reproducen el mismo enlace en su propio teléfono, así que debe ser accesible para cada espectador. Los archivos de tu equipo se quedan en tu teléfono y los demás no pueden verlos.",
+  "aetherstream.infoPartiesBody": "Todos reproducen el mismo enlace en su propio teléfono, así que debe ser accesible para cada espectador. Los archivos de tu equipo se quedan en tu teléfono y los demás aún no pueden verlos.",
   "aetherstream.kickedTitle": "Expulsado de la transmisión",
   "aetherstream.kickedBody": "El anfitrión te expulsó de la transmisión.",
   "aetherstream.watchingKick": "Expulsar",

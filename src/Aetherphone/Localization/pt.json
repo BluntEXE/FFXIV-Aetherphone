@@ -3957,7 +3957,7 @@
   "aetherstream.infoFailuresTitle": "Um vídeo não toca?",
   "aetherstream.infoFailuresBody": "Sites de vídeo mudam o tempo todo. Atualizar o yt-dlp nos ajustes resolve a maioria das recusas, e o MogCast tenta de novo sozinho os streams teimosos. Links diretos de vídeo são os mais confiáveis.",
   "aetherstream.infoPartiesTitle": "Watch Parties",
-  "aetherstream.infoPartiesBody": "Todo mundo toca o mesmo link no próprio telefone, então ele precisa estar acessível para cada espectador. Arquivos da sua máquina ficam só no seu telefone e não podem ser assistidos pelos outros.",
+  "aetherstream.infoPartiesBody": "Todo mundo toca o mesmo link no próprio telefone, então ele precisa estar acessível para cada espectador. Arquivos da sua máquina ficam só no seu telefone e ainda não podem ser assistidos pelos outros.",
   "aetherstream.kickedTitle": "Removido da transmissão",
   "aetherstream.kickedBody": "O anfitrião removeu você da transmissão.",
   "aetherstream.watchingKick": "Remover",

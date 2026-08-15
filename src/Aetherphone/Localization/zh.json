@@ -3957,7 +3957,7 @@
   "aetherstream.infoFailuresTitle": "视频无法播放?",
   "aetherstream.infoFailuresBody": "视频网站经常变化。在设置中更新 yt-dlp 能解决大多数问题,MogCast 也会自动重试顽固的流。直接视频链接最为可靠。",
   "aetherstream.infoPartiesTitle": "一起看",
-  "aetherstream.infoPartiesBody": "所有人都在自己的手机上播放同一个链接,因此链接必须对每位观众可用。你电脑上的文件只会在你的手机上播放,其他人无法观看。",
+  "aetherstream.infoPartiesBody": "所有人都在自己的手机上播放同一个链接,因此链接必须对每位观众可用。你电脑上的文件只会在你的手机上播放,其他人暂时无法观看。",
   "aetherstream.kickedTitle": "已被移出直播",
   "aetherstream.kickedBody": "主持人已将你移出直播。",
   "aetherstream.watchingKick": "移除",

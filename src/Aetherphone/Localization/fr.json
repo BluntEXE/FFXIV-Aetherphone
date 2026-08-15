@@ -3957,7 +3957,7 @@
   "aetherstream.infoFailuresTitle": "Une vidéo ne se lance pas ?",
   "aetherstream.infoFailuresBody": "Les sites de vidéo changent constamment. Mettre à jour yt-dlp dans les réglages corrige la plupart des refus, et MogCast relance de lui-même les flux récalcitrants. Les liens vidéo directs restent les plus fiables.",
   "aetherstream.infoPartiesTitle": "Watch Parties",
-  "aetherstream.infoPartiesBody": "Tout le monde lit le même lien sur son propre téléphone, il doit donc être accessible à chaque spectateur. Les fichiers de votre machine restent sur votre téléphone et ne peuvent pas être vus par les autres.",
+  "aetherstream.infoPartiesBody": "Tout le monde lit le même lien sur son propre téléphone, il doit donc être accessible à chaque spectateur. Les fichiers de votre machine restent sur votre téléphone et ne peuvent pas encore être vus par les autres.",
   "aetherstream.kickedTitle": "Retiré de la diffusion",
   "aetherstream.kickedBody": "L'hôte vous a retiré de la diffusion.",
   "aetherstream.watchingKick": "Retirer",

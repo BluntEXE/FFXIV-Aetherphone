@@ -3957,7 +3957,7 @@
   "aetherstream.infoFailuresTitle": "A video won't play?",
   "aetherstream.infoFailuresBody": "Video sites change constantly. Updating yt-dlp under Settings fixes most refusals, and MogCast retries stubborn streams on its own. Direct video links are the most reliable.",
   "aetherstream.infoPartiesTitle": "Watch parties",
-  "aetherstream.infoPartiesBody": "Everyone plays the same link on their own phone, so it has to be reachable for every viewer. Files from your own machine stay on your phone and can't be watched by others.",
+  "aetherstream.infoPartiesBody": "Everyone plays the same link on their own phone, so it has to be reachable for every viewer. Files from your own machine stay on your phone and can't be watched by others yet.",
   "aetherstream.kickedTitle": "Removed from stream",
   "aetherstream.kickedBody": "The host removed you from the stream.",
   "aetherstream.watchingKick": "Remove",
