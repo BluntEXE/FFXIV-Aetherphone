@@ -142,19 +142,19 @@ internal sealed partial class MusicApp
 
     private void OpenLiveDjs()
     {
-        router.Push(View.LiveDjs);
+        Router.Push(View.LiveDjs);
     }
 
     private void OpenLiveDjDetail(LiveDjEntry dj)
     {
         selectedDj = dj;
-        router.Push(View.LiveDjDetail);
+        Router.Push(View.LiveDjDetail);
     }
 
     private void OpenVenueDetail(OpenVenueEntry venue)
     {
         selectedVenue = venue;
-        router.Push(View.VenueDetail);
+        Router.Push(View.VenueDetail);
     }
 
     private OpenVenueEntry? FindVenueForDj(LiveDjEntry dj)
@@ -389,7 +389,7 @@ internal sealed partial class MusicApp
     {
         var scale = UiScale.Current;
         var content = context.Content;
-        DrawTopBar(context, Loc.T(L.Music.LiveDjs), () => router.Pop());
+        DrawTopBar(context, Loc.T(L.Music.LiveDjs), () => Router.Pop());
 
         var chipH = (ChipRail.RowHeight + 8f) * scale;
         var chipRect = new Rect(
@@ -531,13 +531,13 @@ internal sealed partial class MusicApp
         var dj = selectedDj;
         if (dj == null)
         {
-            router.Pop();
+            Router.Pop();
             return;
         }
 
         var area = context.Content;
         var scale = UiScale.Current;
-        DrawTopBar(context, string.Empty, () => router.Pop());
+        DrawTopBar(context, string.Empty, () => Router.Pop());
 
         var body = new Rect(
             new Vector2(area.Min.X, area.Min.Y + TopBarHeight * scale),
@@ -589,8 +589,61 @@ internal sealed partial class MusicApp
             ImGui.SetCursorScreenPos(origin);
             ImGui.Dummy(new Vector2(width, djHeaderH));
 
+            var actionRadius = StationPlayRadius * scale;
+            var actionRowH = actionRadius * 2f;
+            var actionRowY = ImGui.GetCursorScreenPos().Y;
+
+            if (dj.CanTeleport)
+            {
+                var teleportLabel = Loc.T(L.Rolladeck.Teleport);
+                var teleportWidth = MathF.Min(
+                    Typography.Measure(teleportLabel, TextStyles.Callout).X + 34f * scale,
+                    contentWidth - actionRadius * 2f - padX);
+                var teleportMin = new Vector2(origin.X + padX, actionRowY + actionRadius - 18f * scale);
+                var teleportRect = new Rect(teleportMin, teleportMin + new Vector2(teleportWidth, 36f * scale));
+                if (ui.GhostButton(teleportRect, teleportLabel))
+                {
+                    if (liveDjLifestreamAvailable)
+                    {
+                        LifestreamBridge.Travel(dj.LifestreamArg!);
+                    }
+                    else
+                    {
+                        ImGui.SetClipboardText(LifestreamBridge.TravelCommand(dj.LifestreamArg!));
+                        CopyToast.Show();
+                    }
+                }
+
+                if (!liveDjLifestreamAvailable)
+                {
+                    HoverTooltip.Show(teleportRect, Loc.T(L.Rolladeck.LifestreamNotInstalled), HoverLabelSide.Above);
+                }
+            }
+
+            if (dj.TwitchUrl != null)
+            {
+                var watchCenter = new Vector2(origin.X + width - actionRadius - padX, actionRowY + actionRadius);
+                var watchMin = watchCenter - new Vector2(actionRadius, actionRadius);
+                var watchMax = watchCenter + new Vector2(actionRadius, actionRadius);
+                var watchHovered = UiInteract.Hover(watchMin, watchMax);
+                var watchFill = watchHovered ? ui.Accent : Palette.WithAlpha(ui.Accent, 0.92f);
+                drawList.AddCircleFilled(watchCenter, actionRadius, ImGui.GetColorU32(watchFill), 32);
+                AppSkin.Icon(drawList, watchCenter, FontAwesomeIcon.Play.ToIconString(), ui.Palette.BackdropBottom, 1f);
+                if (watchHovered)
+                {
+                    ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                }
+
+                if (watchHovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+                {
+                    Util.OpenLink(dj.RolladeckUrl ?? dj.TwitchUrl ?? "https://xivrolladeck.com");
+                }
+            }
+
+            ImGui.Dummy(new Vector2(width, actionRowH + padX));
+
             var cursorY = ImGui.GetCursorScreenPos().Y;
-            var infoCardH = (dj.FormattedAddress.Length > 0 ? 78f : 56f) * scale;
+            var infoCardH = OnAirCardHeight * scale;
             var infoMin = new Vector2(origin.X + padX, cursorY);
             var infoMax = new Vector2(origin.X + padX + contentWidth, cursorY + infoCardH);
             var infoHovered = venueEntry != null && UiInteract.Hover(infoMin, infoMax);
@@ -601,7 +654,7 @@ internal sealed partial class MusicApp
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             }
 
-            var logoRadius = 18f * scale;
+            var logoRadius = 14f * scale;
             var logoCenterX = infoMin.X + 14f * scale + logoRadius;
             var logoCenterY = infoMin.Y + infoCardH * 0.5f;
             var logoCenter = new Vector2(logoCenterX, logoCenterY);
@@ -618,24 +671,29 @@ internal sealed partial class MusicApp
             }
 
             var infoTextX = logoCenterX + logoRadius + 8f * scale;
-            var infoTextY = infoMin.Y + 12f * scale;
             var textMaxWidth = infoMax.X - infoTextX - 80f * scale;
 
-            var venueStr = dj.VenueName ?? Loc.T(L.Rolladeck.VenueUnknown);
-            var venueFit = Typography.FitText(venueStr, textMaxWidth, TextStyles.SubheadlineEmphasized);
-            var venueSize = Typography.Measure(venueFit, TextStyles.SubheadlineEmphasized);
-            Typography.Draw(drawList, new Vector2(infoTextX, infoTextY), venueFit, ui.Palette.TitleInk, TextStyles.SubheadlineEmphasized);
+            var detailAddress = dj.District != null && dj.Ward.HasValue && dj.Plot.HasValue
+                ? $"{dj.District}-W{dj.Ward}-P{dj.Plot}"
+                : dj.District ?? string.Empty;
 
-            if (dj.FormattedAddress.Length > 0)
+            var venueStr = dj.VenueName ?? Loc.T(L.Rolladeck.VenueUnknown);
+            var venueFit = Typography.FitText(venueStr, textMaxWidth, TextStyles.BodyEmphasized);
+
+            if (detailAddress.Length > 0)
             {
-                var addressY = infoTextY + venueSize.Y + 3f * scale;
-                Typography.Draw(drawList, new Vector2(infoTextX, addressY), dj.FormattedAddress, ui.Palette.BodyInk, TextStyles.Footnote);
+                Typography.Draw(drawList, new Vector2(infoTextX, infoMin.Y + 10f * scale), detailAddress, ui.MutedInk, TextStyles.Footnote);
+                Typography.Draw(drawList, new Vector2(infoTextX, infoMin.Y + 26f * scale), venueFit, ui.Palette.TitleInk, TextStyles.BodyEmphasized);
+            }
+            else
+            {
+                Typography.Draw(drawList, new Vector2(infoTextX, infoMin.Y + 16f * scale), venueFit, ui.Palette.TitleInk, TextStyles.BodyEmphasized);
             }
 
             var serverStr = dj.ServerLabel;
             var serverSize = Typography.Measure(serverStr, TextStyles.Footnote);
             Typography.Draw(drawList,
-                new Vector2(infoMax.X - 14f * scale - serverSize.X, infoMin.Y + 12f * scale),
+                new Vector2(infoMax.X - 14f * scale - serverSize.X, infoMin.Y + 10f * scale),
                 serverStr, ui.Palette.MutedInk, TextStyles.Footnote);
 
             if (infoHovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
@@ -644,7 +702,7 @@ internal sealed partial class MusicApp
             }
 
             ImGui.SetCursorScreenPos(origin);
-            ImGui.Dummy(new Vector2(width, djHeaderH + infoCardH + 12f * scale));
+            ImGui.Dummy(new Vector2(width, djHeaderH + actionRowH + padX + infoCardH + 12f * scale));
 
             if (!string.IsNullOrEmpty(dj.EventName))
             {
@@ -656,61 +714,6 @@ internal sealed partial class MusicApp
                 ImGui.Dummy(new Vector2(width, eventSize.Y + 12f * scale));
             }
 
-            var pillOrigin = ImGui.GetCursorScreenPos();
-            var pillY = pillOrigin.Y;
-            var pillWidth = (contentWidth - LiveDjPillGap * scale) / 2f;
-
-            if (dj.CanTeleport)
-            {
-                var teleportRect = new Rect(
-                    new Vector2(pillOrigin.X + padX, pillY),
-                    new Vector2(pillOrigin.X + padX + pillWidth, pillY + LiveDjPillH * scale));
-
-                if (ui.PillButton(teleportRect, Loc.T(L.Rolladeck.Teleport), filled: true))
-                {
-                    if (liveDjLifestreamAvailable)
-                    {
-                        LifestreamBridge.Travel(dj.LifestreamArg!);
-                    }
-                    else
-                    {
-                        ImGui.SetClipboardText(LifestreamBridge.TravelCommand(dj.LifestreamArg!));
-                        CopyToast.Show();
-                    }
-                }
-
-                if (!liveDjLifestreamAvailable)
-                {
-                    HoverTooltip.Show(new Rect(
-                        new Vector2(pillOrigin.X + padX, pillY),
-                        new Vector2(pillOrigin.X + padX + pillWidth, pillY + LiveDjPillH * scale)),
-                        Loc.T(L.Rolladeck.LifestreamNotInstalled), HoverLabelSide.Above);
-                }
-
-                var watchLeft = pillOrigin.X + padX + pillWidth + LiveDjPillGap * scale;
-                var watchRect = new Rect(
-                    new Vector2(watchLeft, pillY),
-                    new Vector2(watchLeft + pillWidth, pillY + LiveDjPillH * scale));
-
-                if (ui.PillButton(watchRect, Loc.T(L.Rolladeck.Watch), filled: false))
-                {
-                    Util.OpenLink(dj.RolladeckUrl ?? dj.TwitchUrl ?? "https://xivrolladeck.com");
-                }
-            }
-            else if (dj.TwitchUrl != null)
-            {
-                var watchRect = new Rect(
-                    new Vector2(pillOrigin.X + padX, pillY),
-                    new Vector2(pillOrigin.X + padX + contentWidth, pillY + LiveDjPillH * scale));
-
-                if (ui.PillButton(watchRect, Loc.T(L.Rolladeck.Watch), filled: true))
-                {
-                    Util.OpenLink(dj.RolladeckUrl ?? dj.TwitchUrl ?? "https://xivrolladeck.com");
-                }
-            }
-
-            ImGui.SetCursorScreenPos(pillOrigin);
-            ImGui.Dummy(new Vector2(width, LiveDjPillH * scale + 16f * scale));
 
             var statsOrigin = ImGui.GetCursorScreenPos();
             var viewers = string.Format(Loc.T(L.Rolladeck.Viewers), cachedDjViewerCount);
@@ -922,13 +925,13 @@ internal sealed partial class MusicApp
         var venue = selectedVenue;
         if (venue == null)
         {
-            router.Pop();
+            Router.Pop();
             return;
         }
 
         var scale = UiScale.Current;
         var area = context.Content;
-        DrawTopBar(context, string.Empty, () => router.Pop());
+        DrawTopBar(context, string.Empty, () => Router.Pop());
 
         var body = new Rect(
             new Vector2(area.Min.X, area.Min.Y + TopBarHeight * scale),
@@ -1027,9 +1030,8 @@ internal sealed partial class MusicApp
                 Typography.Draw(drawList, new Vector2(npMin.X + 14f * scale, npMin.Y + 10f * scale),
                     npLabel, ui.Palette.Accent, TextStyles.Caption1);
 
-                var watchPillWidth = venue.DjTwitch != null ? 72f * scale : 0f;
-                var djMaxWidth = npMax.X - (npMin.X + 14f * scale) - watchPillWidth -
-                                 (watchPillWidth > 0f ? 16f * scale : 4f * scale);
+                var watchRadius = venue.DjTwitch != null ? 20f * scale : 0f;
+                var djMaxWidth = npMax.X - (npMin.X + 14f * scale) - (watchRadius > 0f ? watchRadius * 2f + 24f * scale : 4f * scale);
                 var djNameY = npMin.Y + 10f * scale + npLabelSize.Y + 3f * scale;
                 var djFit = Typography.FitText(venue.DjName, djMaxWidth, TextStyles.SubheadlineEmphasized);
                 Typography.Draw(drawList, new Vector2(npMin.X + 14f * scale, djNameY),
@@ -1037,13 +1039,11 @@ internal sealed partial class MusicApp
 
                 if (venue.DjTwitch != null)
                 {
-                    var watchPillH = 28f * scale;
-                    var pillMinX = npMax.X - 10f * scale - watchPillWidth;
-                    var pillMinY = npMin.Y + (npCardH - watchPillH) * 0.5f;
-                    var pillRect = new Rect(
-                        new Vector2(pillMinX, pillMinY),
-                        new Vector2(pillMinX + watchPillWidth, pillMinY + watchPillH));
-                    if (ui.PillButton(pillRect, Loc.T(L.Rolladeck.Watch), filled: true))
+                    var watchCenter = new Vector2(npMax.X - 14f * scale - watchRadius, npMin.Y + npCardH * 0.5f);
+                    drawList.AddCircleFilled(watchCenter, watchRadius, ImGui.GetColorU32(ui.Palette.Accent), 32);
+                    AppSkin.Icon(drawList, watchCenter, FontAwesomeIcon.Play.ToIconString(), ui.Palette.BackdropBottom, 1f);
+                    ImGui.SetCursorScreenPos(new Vector2(watchCenter.X - watchRadius, watchCenter.Y - watchRadius));
+                    if (ImGui.InvisibleButton("##venueWatch", new Vector2(watchRadius * 2f, watchRadius * 2f)))
                     {
                         Util.OpenLink(venue.DjTwitch);
                     }
@@ -1079,76 +1079,64 @@ internal sealed partial class MusicApp
             }
 
             var pillOrigin = ImGui.GetCursorScreenPos();
-            var pillH = LiveDjPillH * scale;
-            var pillHalfWidth = (contentWidth - LiveDjPillGap * scale) / 2f;
+            var buttonHeight = 36f * scale;
+            var buttonGap = 8f * scale;
             var primaryUrl = venue.WebsiteUrl ?? venue.RolladeckUrl;
             var primaryLabel = venue.WebsiteUrl != null ? Loc.T(L.Rolladeck.Website) : Loc.T(L.Rolladeck.Visit);
 
-            if (venue.CanTeleport)
+            var buttonCount = (venue.CanTeleport ? 1 : 0) + (primaryUrl != null ? 1 : 0) + (venue.DiscordUrl != null ? 1 : 0);
+            if (buttonCount > 0)
             {
-                var teleRect = new Rect(
-                    new Vector2(pillOrigin.X + padX, pillOrigin.Y),
-                    new Vector2(pillOrigin.X + padX + pillHalfWidth, pillOrigin.Y + pillH));
+                var buttonWidth = (contentWidth - buttonGap * (buttonCount - 1)) / buttonCount;
+                var buttonX = pillOrigin.X + padX;
 
-                if (ui.PillButton(teleRect, Loc.T(L.Rolladeck.Teleport), filled: true))
+                if (venue.CanTeleport)
                 {
-                    if (liveDjLifestreamAvailable)
+                    var teleRect = new Rect(new Vector2(buttonX, pillOrigin.Y), new Vector2(buttonX + buttonWidth, pillOrigin.Y + buttonHeight));
+                    if (ui.GhostButton(teleRect, Loc.T(L.Rolladeck.Teleport)))
                     {
-                        LifestreamBridge.Travel(venue.Lifestream!);
+                        if (liveDjLifestreamAvailable)
+                        {
+                            LifestreamBridge.Travel(venue.Lifestream!);
+                        }
+                        else
+                        {
+                            ImGui.SetClipboardText(LifestreamBridge.TravelCommand(venue.Lifestream!));
+                            CopyToast.Show();
+                        }
                     }
-                    else
-                    {
-                        ImGui.SetClipboardText(LifestreamBridge.TravelCommand(venue.Lifestream!));
-                        CopyToast.Show();
-                    }
-                }
 
-                if (!liveDjLifestreamAvailable)
-                {
-                    HoverTooltip.Show(teleRect, Loc.T(L.Rolladeck.LifestreamNotInstalled), HoverLabelSide.Above);
+                    if (!liveDjLifestreamAvailable)
+                    {
+                        HoverTooltip.Show(teleRect, Loc.T(L.Rolladeck.LifestreamNotInstalled), HoverLabelSide.Above);
+                    }
+
+                    buttonX += buttonWidth + buttonGap;
                 }
 
                 if (primaryUrl != null)
                 {
-                    var visitLeft = pillOrigin.X + padX + pillHalfWidth + LiveDjPillGap * scale;
-                    var visitRect = new Rect(
-                        new Vector2(visitLeft, pillOrigin.Y),
-                        new Vector2(visitLeft + pillHalfWidth, pillOrigin.Y + pillH));
-                    if (ui.PillButton(visitRect, primaryLabel, filled: false))
+                    var visitRect = new Rect(new Vector2(buttonX, pillOrigin.Y), new Vector2(buttonX + buttonWidth, pillOrigin.Y + buttonHeight));
+                    if (ui.GhostButton(visitRect, primaryLabel))
                     {
                         Util.OpenLink(primaryUrl);
                     }
+
+                    buttonX += buttonWidth + buttonGap;
                 }
-            }
-            else if (primaryUrl != null)
-            {
-                var visitRect = new Rect(
-                    new Vector2(pillOrigin.X + padX, pillOrigin.Y),
-                    new Vector2(pillOrigin.X + padX + contentWidth, pillOrigin.Y + pillH));
-                if (ui.PillButton(visitRect, primaryLabel, filled: true))
+
+                if (venue.DiscordUrl != null)
                 {
-                    Util.OpenLink(primaryUrl);
+                    var discordRect = new Rect(new Vector2(buttonX, pillOrigin.Y), new Vector2(buttonX + buttonWidth, pillOrigin.Y + buttonHeight));
+                    if (ui.GhostButton(discordRect, Loc.T(L.Rolladeck.Discord)))
+                    {
+                        Util.OpenLink(venue.DiscordUrl);
+                    }
                 }
-            }
-
-            var pillRowH = pillH + 10f * scale;
-
-            if (venue.DiscordUrl != null)
-            {
-                var discordOrigin = new Vector2(pillOrigin.X, pillOrigin.Y + pillRowH);
-                var discordRect = new Rect(
-                    new Vector2(discordOrigin.X + padX, discordOrigin.Y),
-                    new Vector2(discordOrigin.X + padX + contentWidth, discordOrigin.Y + pillH));
-                if (ui.PillButton(discordRect, Loc.T(L.Rolladeck.Discord), filled: false))
-                {
-                    Util.OpenLink(venue.DiscordUrl);
-                }
-
-                pillRowH += pillH + 10f * scale;
             }
 
             ImGui.SetCursorScreenPos(pillOrigin);
-            ImGui.Dummy(new Vector2(width, pillRowH + 6f * scale));
+            ImGui.Dummy(new Vector2(width, buttonHeight + 16f * scale));
 
             if (venue.Amenities.Count > 0)
             {

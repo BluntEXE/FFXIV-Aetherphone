@@ -83,7 +83,7 @@ internal sealed partial class MusicApp : IPhoneApp
     public Vector4 Accent => AppAccents.For(Id);
     public string DisplayName => Loc.T(L.Apps.Music);
     public string Glyph => "M";
-    public int BadgeCount => community.LiveCount;
+    public int BadgeCount => community.LiveCount + rolladeck.LiveCountWithAddress;
     public bool BadgeAsDot => true;
     private readonly RadioService radio;
     private readonly SongSearchService songSearch;
@@ -320,7 +320,7 @@ internal sealed partial class MusicApp : IPhoneApp
     private void DrawTabBar(Rect bar, float scale)
     {
         navTabs[0] = new NavTab(FontAwesomeIcon.Home, Loc.T(L.Music.TabHome));
-        navTabs[1] = new NavTab(FontAwesomeIcon.BroadcastTower, Loc.T(L.Music.TabLive), community.LiveCount);
+        navTabs[1] = new NavTab(FontAwesomeIcon.BroadcastTower, Loc.T(L.Music.TabLive), community.LiveCount + rolladeck.LiveCountWithAddress);
         navTabs[2] = new NavTab(FontAwesomeIcon.Podcast, Loc.T(L.Music.TabRadio), AnchorKey: "music.categories");
         navTabs[3] = new NavTab(FontAwesomeIcon.LayerGroup, Loc.T(L.Music.TabLibrary));
         var tapped = bottomNav.Draw(bar, ui, theme, navTabs, (int)tab, true);

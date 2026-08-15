@@ -21,6 +21,29 @@ internal sealed class RolladeckService(HttpService http)
     public IReadOnlyList<ScheduleEntry>  Schedule  => scheduleData      ?? (IReadOnlyList<ScheduleEntry>)[];
 
     public int  LiveCount      => data?.LiveDJs.Count ?? 0;
+
+    public int LiveCountWithAddress
+    {
+        get
+        {
+            if (data == null)
+            {
+                return 0;
+            }
+
+            var count = 0;
+            for (var index = 0; index < data.LiveDJs.Count; index++)
+            {
+                var dj = data.LiveDJs[index];
+                if (dj.VenueName != null || dj.FormattedAddress.Length > 0)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+    }
     public bool Loading        => fetching;
     public bool ScheduleLoading => scheduleFetching;
     public bool HasData        => data != null;

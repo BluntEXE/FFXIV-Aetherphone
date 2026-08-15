@@ -99,7 +99,7 @@ internal sealed class ChipRail
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var height = RowHeight * scale;
-        ImGui.Dummy(new Vector2(width, height));
+        ImGui.InvisibleButton("##chipRailRow", new Vector2(width, height));
         return new Rect(new Vector2(ImGui.GetWindowPos().X, origin.Y),
             new Vector2(origin.X + width, origin.Y + height));
     }

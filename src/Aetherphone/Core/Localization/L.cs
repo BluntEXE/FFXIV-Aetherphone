@@ -2651,7 +2651,7 @@ internal static class L
         public static readonly LocString OnAirSection = new("music.onAirSection", "On air");
         public static readonly LocString UpNextSection = new("music.upNextSection", "Up next");
         public static readonly LocString FollowingSection = new("music.followingSection", "Following");
-        public static readonly LocString AllStationsSection = new("music.allStationsSection", "All stations");
+        public static readonly LocString AllStationsSection = new("music.allStationsSection", "Offline stations");
         public static readonly LocString OnAirNow = new("music.onAirNow", "On air now");
         public static readonly LocString LastPlayed = new("music.lastPlayed", "Last played");
         public static readonly LocString ShowAll = new("music.showAll", "Show all");

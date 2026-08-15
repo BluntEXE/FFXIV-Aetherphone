@@ -191,25 +191,28 @@ internal sealed partial class MusicApp
         var content = context.Content;
         community.EnsureFresh(true);
         community.EnsureMine();
-        DrawTopBar(context, Loc.T(L.Music.CommunityRadio), null);
+        DrawTopBar(context, Loc.T(L.Music.TabLive), null);
         DrawMyStationEntry(content, scale);
         var body = ScrollBody(content, scale);
         var stations = community.Stations;
-        if (stations.Length == 0)
-        {
-            DrawCommunityEmpty(body, scale);
-            return;
-        }
-
         ApplyTagFilter(stations);
         using (AppSurface.Begin(body))
         {
             ImGui.Dummy(new Vector2(0f, 6f * scale));
-            DrawTagFilterRail(scale, stations);
             DrawLiveGroup(scale, LiveGroup.OnAir, Loc.T(L.Music.OnAirSection));
-            DrawLiveGroup(scale, LiveGroup.Upcoming, Loc.T(L.Music.UpNextSection));
-            DrawLiveGroup(scale, LiveGroup.Followed, Loc.T(L.Music.FollowingSection));
-            DrawLiveGroup(scale, LiveGroup.Resting, Loc.T(L.Music.AllStationsSection));
+            DrawLiveDjsSection(scale);
+            DrawShelfHeading(Loc.T(L.Music.CommunityRadio), scale);
+            if (stations.Length == 0)
+            {
+                DrawCommunityShelfStatus(scale);
+            }
+            else
+            {
+                DrawTagFilterRail(scale, stations);
+                DrawLiveGroup(scale, LiveGroup.Upcoming, Loc.T(L.Music.UpNextSection));
+                DrawLiveGroup(scale, LiveGroup.Followed, Loc.T(L.Music.FollowingSection));
+                DrawLiveGroup(scale, LiveGroup.Resting, Loc.T(L.Music.AllStationsSection));
+            }
             ImGui.Dummy(new Vector2(0f, 10f * scale));
         }
     }
