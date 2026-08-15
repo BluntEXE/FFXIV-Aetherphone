@@ -4390,6 +4390,7 @@
   "changelog.r1000.74": "Linkpearl sohbetler etrafında yeniden kuruldu: Söyle ve Bağır'dan Takım, Free Company, Novice Network ve on altı linkshell'e kadar oyunun bütün metin kanalları tek bir listeye düşüyor, sekmeleri kendin kurup renklendirip sabitliyorsun, oyunun sohbet satırına koyduğu her bağlantı oyunun kendi işlemleriyle yine dokunulabilir, geçmiş her sohbet için saklanıyor ve aranabiliyor, Kişiler ile Kişi bul tek bir Kişiler sekmesinde birleşiyor",
   "changelog.r1000.75": "Bildirim afişleriyle kartlarının metni kısaltmak yerine ikinci satıra taşıması düzeltildi",
   "changelog.r1000.76": "Bir ekran kayarak çıkıp yenisi gelirken metnin tek harfli bir sütuna dönüşmesi düzeltildi",
+  "changelog.r1000.77": "Aethergram'da kendi kısa yorumlarınızdaki beğeni kalbinin ortada durmak yerine alt kenara yapışması düzeltildi",
   "changelog.r1000.15": "Aether Coin, Kısayollar ve Housing artık kendi karşılama turlarına sahip",
   "changelog.r1000.20": "Bir gönderinin sahibi artık gönderisine gelen her yorumu kaldırabiliyor, Aethergram, Chirper ve Velvet'te",
   "changelog.r1000.21": "Velvet ve Message artık bir sohbeti silebiliyor, bunu önceden yalnızca Aethergram yapabiliyordu: gelen kutusundaki satıra sağ tıkla, sohbet yalnızca senden siliniyor, karşı taraf kendisininkini koruyor",

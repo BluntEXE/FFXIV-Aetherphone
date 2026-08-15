@@ -1417,6 +1417,8 @@ internal static class L
                 "Fixed notification banners and cards wrapping their body text onto a second line instead of trimming it"),
             new("changelog.r1000.76",
                 "Fixed text collapsing into a column of single letters while one screen slides out and another slides in"),
+            new("changelog.r1000.77",
+                "Fixed the like heart on your own short comments in Aethergram crowding the bottom edge instead of sitting centered"),
             new("changelog.r1000.65",
                 "Fixed setting up a recovery code failing on some Wine builds"),
             new("changelog.r1000.66",

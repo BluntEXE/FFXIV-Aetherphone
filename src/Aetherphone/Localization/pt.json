@@ -4390,6 +4390,7 @@
   "changelog.r1000.74": "Linkpearl foi reconstruído em torno das conversas: todos os canais de texto do jogo, de Dizer e Gritar a Grupo, Free Company, Novice Network e os dezesseis linkshells, caem numa única lista, as abas você constrói, colore e fixa, todo link que o jogo coloca numa linha de chat volta a ser tocável com as ações do próprio jogo, o histórico fica guardado e pesquisável por conversa, e Contatos e Encontrar pessoas viram uma única aba de Pessoas",
   "changelog.r1000.75": "Corrigido: banners e cartões de notificação quebravam o texto numa segunda linha em vez de encurtá-lo",
   "changelog.r1000.76": "Corrigido: o texto desabava numa coluna de letras soltas enquanto uma tela deslizava para fora e outra entrava",
+  "changelog.r1000.77": "Corrigido: o coração de curtir nos seus próprios comentários curtos do Aethergram encostava na borda inferior em vez de ficar centralizado",
   "changelog.r1000.15": "Aether Coin, Atalhos e Housing agora têm seus próprios tours de boas-vindas",
   "changelog.r1000.20": "Quem publica um post agora pode remover qualquer comentário deixado nele, no Aethergram, no Chirper e no Velvet",
   "changelog.r1000.21": "Velvet e Message agora apagam uma conversa, o que só o Aethergram fazia antes: clique com o botão direito na linha da caixa de entrada e a conversa some só para você, a outra pessoa mantém a dela",
