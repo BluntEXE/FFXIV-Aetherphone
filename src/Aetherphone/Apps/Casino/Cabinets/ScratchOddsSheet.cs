@@ -109,15 +109,16 @@ internal sealed class ScratchOddsSheet
         ImGui.SetCursorScreenPos(contentMin);
         using (ImRaii.Child("##scratchOddsRows", contentSize, false, ImGuiWindowFlags.NoBackground))
         {
-            DrawRows(ui, contentSize.X, scale, tier);
+            DrawRows(ui, scale, tier);
         }
 
         return new Rect(panelMin, panelMax);
     }
 
-    private static void DrawRows(AppSkin ui, float width, float scale, int tier)
+    private static void DrawRows(AppSkin ui, float scale, int tier)
     {
         var drawList = ImGui.GetWindowDrawList();
+        var width = ScrollLayout.NativeScrollContentWidth();
         var intro = Loc.T(L.Casino.ScratchOddsIntro);
         var introOrigin = ImGui.GetCursorScreenPos();
         var introBlock = Typography.MeasureWrappedBlock(intro, TextStyles.Footnote, width);

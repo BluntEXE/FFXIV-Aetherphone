@@ -121,7 +121,7 @@ internal sealed class SlotsPayTableSheet
     private static void DrawRows(AppSkin ui, float scale, long stake)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var width = ScrollbarAwareWidth();
+        var width = ScrollLayout.NativeScrollContentWidth();
         var columnWidth = ColumnWidth(width, scale);
         var subtitle = Loc.T(L.Casino.SlotsPaysMatches);
         var subtitleOrigin = ImGui.GetCursorScreenPos();
@@ -210,12 +210,6 @@ internal sealed class SlotsPayTableSheet
             style.Weight);
         var textSize = Typography.Measure(text, fittedScale, style.Weight);
         Typography.Draw(drawList, center - textSize * 0.5f, text, ink, fittedScale, style.Weight);
-    }
-
-    private static float ScrollbarAwareWidth()
-    {
-        var available = ImGui.GetContentRegionAvail().X;
-        return ImGui.GetScrollMaxY() > 0f ? available : available - ImGui.GetStyle().ScrollbarSize;
     }
 
     private static float ColumnWidth(float width, float scale)

@@ -128,7 +128,7 @@ internal sealed class GameRulesSheet
         ImGui.SetCursorScreenPos(contentMin);
         using (ImRaii.Child("##casinoRulesBody", contentSize, false, ImGuiWindowFlags.NoBackground))
         {
-            DrawBody(ui, contentSize.X, scale);
+            DrawBody(ui, scale);
         }
 
         var pillRect = new Rect(new Vector2(panelMin.X + PadX * scale, pillTop),
@@ -142,9 +142,10 @@ internal sealed class GameRulesSheet
         return new Rect(panelMin, panelMax);
     }
 
-    private void DrawBody(AppSkin ui, float width, float scale)
+    private void DrawBody(AppSkin ui, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
+        var width = ScrollLayout.NativeScrollContentWidth();
 
         var pitch = Loc.T(CasinoRules.PitchOf(gameId));
         var pitchOrigin = ImGui.GetCursorScreenPos();

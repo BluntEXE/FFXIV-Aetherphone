@@ -14,4 +14,10 @@ internal static class ScrollLayout
 
         return ImGui.GetScrollMaxY() > 0f ? available : available - ImGui.GetStyle().ScrollbarSize;
     }
+
+    public static float NativeScrollContentWidth()
+    {
+        var available = ImGui.GetContentRegionAvail().X;
+        return ImGui.GetScrollMaxY() > 0f ? available : available - ImGui.GetStyle().ScrollbarSize;
+    }
 }
