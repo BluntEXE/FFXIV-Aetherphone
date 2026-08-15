@@ -20,6 +20,9 @@ internal sealed class GameRulesSheet
     private const float PanelHeightShare = 0.78f;
     private const float StepGap = 12f;
     private const float FactRowHeight = 34f;
+    private const float FactValueGap = 12f;
+    private const float FactStackPadY = 8f;
+    private const float FactStackGap = 2f;
     private const float BulletRadius = 11f;
     private const float PlayPillHeight = 46f;
 
@@ -186,20 +189,43 @@ internal sealed class GameRulesSheet
         for (var index = 0; CasinoRules.FactsOf(gameId, index, out var label, out var value); index++)
         {
             var rowOrigin = ImGui.GetCursorScreenPos();
-            var rowCenterY = rowOrigin.Y + FactRowHeight * scale * 0.5f;
             var labelText = Loc.T(label);
+            var labelSize = Typography.Measure(labelText, TextStyles.Footnote);
             var valueSize = Typography.Measure(value, TextStyles.SubheadlineEmphasized);
-            var labelFitted = Typography.FitText(labelText, width - valueSize.X - 12f * scale,
-                TextStyles.Footnote);
-            var labelSize = Typography.Measure(labelFitted, TextStyles.Footnote);
-            Typography.Draw(drawList, new Vector2(rowOrigin.X, rowCenterY - labelSize.Y * 0.5f), labelFitted,
-                ui.MutedInk, TextStyles.Footnote);
-            Typography.Draw(drawList, new Vector2(rowOrigin.X + width - valueSize.X, rowCenterY - valueSize.Y * 0.5f),
-                value, ui.TitleInk, TextStyles.SubheadlineEmphasized);
-            drawList.AddLine(new Vector2(rowOrigin.X, rowOrigin.Y + FactRowHeight * scale),
-                new Vector2(rowOrigin.X + width, rowOrigin.Y + FactRowHeight * scale),
+            var rowHeight = FactRowHeight * scale;
+            if (labelSize.X + FactValueGap * scale + valueSize.X <= width)
+            {
+                var rowCenterY = rowOrigin.Y + rowHeight * 0.5f;
+                Typography.Draw(drawList, new Vector2(rowOrigin.X, rowCenterY - labelSize.Y * 0.5f), labelText,
+                    ui.MutedInk, TextStyles.Footnote);
+                Typography.Draw(drawList,
+                    new Vector2(rowOrigin.X + width - valueSize.X, rowCenterY - valueSize.Y * 0.5f),
+                    value, ui.TitleInk, TextStyles.SubheadlineEmphasized);
+            }
+            else
+            {
+                var labelFitted = Typography.FitText(labelText, width, TextStyles.Footnote);
+                var valueLines = Typography.WrapText(value, TextStyles.SubheadlineEmphasized, width);
+                var valueLineHeight = Typography.LineHeight(TextStyles.SubheadlineEmphasized);
+                var labelTop = rowOrigin.Y + FactStackPadY * scale;
+                Typography.Draw(drawList, new Vector2(rowOrigin.X, labelTop), labelFitted, ui.MutedInk,
+                    TextStyles.Footnote);
+                var valueTop = labelTop + labelSize.Y + FactStackGap * scale;
+                for (var lineIndex = 0; lineIndex < valueLines.Length; lineIndex++)
+                {
+                    var lineSize = Typography.Measure(valueLines[lineIndex], TextStyles.SubheadlineEmphasized);
+                    Typography.Draw(drawList,
+                        new Vector2(rowOrigin.X + width - lineSize.X, valueTop + lineIndex * valueLineHeight),
+                        valueLines[lineIndex], ui.TitleInk, TextStyles.SubheadlineEmphasized);
+                }
+
+                rowHeight = valueTop + valueLines.Length * valueLineHeight + FactStackPadY * scale - rowOrigin.Y;
+            }
+
+            drawList.AddLine(new Vector2(rowOrigin.X, rowOrigin.Y + rowHeight),
+                new Vector2(rowOrigin.X + width, rowOrigin.Y + rowHeight),
                 ImGui.GetColorU32(Palette.WithAlpha(ui.TitleInk, 0.06f)), 1f);
-            ImGui.Dummy(new Vector2(width, FactRowHeight * scale));
+            ImGui.Dummy(new Vector2(width, rowHeight));
         }
 
         var fairness = Loc.T(L.Casino.RulesFairness);
