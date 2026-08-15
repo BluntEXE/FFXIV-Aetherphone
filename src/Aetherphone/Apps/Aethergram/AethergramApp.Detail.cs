@@ -307,6 +307,10 @@ internal sealed partial class AethergramApp
 
         var textHeight = commentLayout?.Size.Y ?? Typography.MeasureWrapped(comment.Text, textRight - textLeft, 0.9f);
         var bubbleHeight = padTop + nameHeight + 4f * scale + textHeight + padBottom;
+        if (canDelete)
+        {
+            bubbleHeight = MathF.Max(bubbleHeight, 72f * scale);
+        }
         var bubbleTop = origin.Y;
         var bubbleBottom = bubbleTop + bubbleHeight;
         var bubbleMin = new Vector2(bubbleLeft, bubbleTop);
@@ -383,11 +387,6 @@ internal sealed partial class AethergramApp
         }
 
         var heartCenter = new Vector2(bubbleRight - 16f * scale, (bubbleTop + bubbleBottom) * 0.5f);
-        if (canDelete)
-        {
-            heartCenter.Y = MathF.Max(heartCenter.Y, bubbleTop + 36f * scale);
-        }
-
         if (CommentHeart.Draw(ui, heartCenter, comment.Liked, comment.LikeCount, AppPalettes.Aethergram.MutedInk,
                 AppPalettes.Aethergram.MutedInk, Loc.T(L.Aethergram.Like), out _))
         {
