@@ -44,9 +44,10 @@ internal static class SceneCompositor
             return;
         }
 
-        ImGui.SetCursorScreenPos(clip.Min);
+        ImGui.PushClipRect(clip.Min, clip.Max, true);
+        ImGui.SetCursorScreenPos(paintTarget.Min);
 
-        using (ImRaii.Child("clip", clip.Size, false, LayerFlags | ImGuiWindowFlags.NoInputs))
+        using (ImRaii.Child("clip", paintTarget.Size, false, LayerFlags | ImGuiWindowFlags.NoInputs))
         using (InputShield.Engage(true))
         {
             paint(paintTarget);
@@ -57,13 +58,16 @@ internal static class SceneCompositor
                     ImGui.GetColorU32(new Vector4(0f, 0f, 0f, dim)));
             }
         }
+
+        ImGui.PopClipRect();
     }
 
     public static void DrawLayer(Rect clip, in Layer layer)
     {
         var offset = new Vector2(MathF.Round(layer.Offset.X), MathF.Round(layer.Offset.Y));
         var shifted = new Rect(clip.Min + offset, clip.Max + offset);
-        ImGui.SetCursorScreenPos(clip.Min);
+        ImGui.PushClipRect(clip.Min, clip.Max, true);
+        ImGui.SetCursorScreenPos(shifted.Min);
 
         using (ImRaii.PushId(layer.Id))
         using (ImRaii.Child("layer", clip.Size, false, LayerFlags))
@@ -79,17 +83,17 @@ internal static class SceneCompositor
                 layer.Paint(shifted);
             }
 
-            if (!(layer.Dim > 0f))
+            if (layer.Dim > 0f)
             {
-                return;
-            }
-            
-            ImGui.SetCursorScreenPos(clip.Min);
-            using (ImRaii.Child("dim", clip.Size, false, LayerFlags | ImGuiWindowFlags.NoInputs))
-            {
-                ImGui.GetWindowDrawList().AddRectFilled(shifted.Min, shifted.Max,
-                    ImGui.GetColorU32(new Vector4(0f, 0f, 0f, layer.Dim)));
+                ImGui.SetCursorScreenPos(shifted.Min);
+                using (ImRaii.Child("dim", clip.Size, false, LayerFlags | ImGuiWindowFlags.NoInputs))
+                {
+                    ImGui.GetWindowDrawList().AddRectFilled(shifted.Min, shifted.Max,
+                        ImGui.GetColorU32(new Vector4(0f, 0f, 0f, layer.Dim)));
+                }
             }
         }
+
+        ImGui.PopClipRect();
     }
 }
