@@ -102,6 +102,7 @@ internal sealed class PhoneServices : IDisposable
     public required Casino.CasinoSpinStore CasinoSpin { get; init; }
     public required Casino.CasinoTurnNotifier CasinoTurns { get; init; }
     public required Casino.CasinoLauncher CasinoLauncher { get; init; }
+    public required Video.AetherStreamLauncher AetherStreamLauncher { get; init; }
     public required PluginCatalog PluginCatalog { get; init; }
     public required ShortcutStore Shortcuts { get; init; }
     public required ShortcutRunner ShortcutRunner { get; init; }
@@ -349,6 +350,7 @@ internal sealed class PhoneServices : IDisposable
             CasinoSpin = casinoSpin,
             CasinoTurns = casinoTurns,
             CasinoLauncher = new Casino.CasinoLauncher(),
+            AetherStreamLauncher = new Video.AetherStreamLauncher(),
             PluginCatalog = pluginCatalog,
             Shortcuts = new ShortcutStore(configuration, pluginCatalog),
             ShortcutRunner = new ShortcutRunner(clientState, condition),

@@ -23,6 +23,7 @@ internal enum AetherStreamScreen : byte
     Main,
     Settings,
     Join,
+    Info,
 }
 
 internal sealed partial class AetherStreamApp : IPhoneApp
@@ -36,6 +37,8 @@ internal sealed partial class AetherStreamApp : IPhoneApp
     private readonly HttpService http;
     private readonly LodestoneService lodestone;
     private readonly WatchAlongSession watchAlong;
+    private readonly StreamSuggestionNotifier suggestionNotifier;
+    private readonly AetherStreamLauncher launcher;
     private readonly AetherStreamScreenWindow screenWindow;
     private readonly AccountClient joinAccount;
     private readonly StoreWork joinWork = new("aetherstream.join");
@@ -53,6 +56,7 @@ internal sealed partial class AetherStreamApp : IPhoneApp
     internal AetherStreamApp(VideoPlayer video, ScreenController screen, AetherStreamQueue queue,
         Configuration configuration, ConfirmService confirm, RemoteImageCache remoteImages, HttpService http,
         AethernetSession aethernetSession, LodestoneService lodestone, WatchAlongSession watchAlong,
+        StreamSuggestionNotifier suggestionNotifier, AetherStreamLauncher launcher,
         AetherStreamScreenWindow screenWindow)
     {
         this.video = video;
@@ -64,6 +68,8 @@ internal sealed partial class AetherStreamApp : IPhoneApp
         this.http = http;
         this.lodestone = lodestone;
         this.watchAlong = watchAlong;
+        this.suggestionNotifier = suggestionNotifier;
+        this.launcher = launcher;
         this.screenWindow = screenWindow;
         joinAccount = new AethernetApi(http, aethernetSession, "aetherstream").Account;
         video.SetVolume((int)(configuration.VideoVolume * 100));
@@ -81,6 +87,16 @@ internal sealed partial class AetherStreamApp : IPhoneApp
     public void OnOpened()
     {
         watchAlong.RequestNearbyStreams();
+        if (!launcher.TryConsumeUpNext())
+        {
+            return;
+        }
+
+        ExitTheater();
+        router.Reset();
+        partySheet.Close();
+        screenSheet.Close();
+        upNextSheet.Open();
     }
 
     public void OnClosed()
@@ -121,6 +137,9 @@ internal sealed partial class AetherStreamApp : IPhoneApp
                     return;
                 case AetherStreamScreen.Join:
                     DrawJoinScreen(localContext, area, scale);
+                    return;
+                case AetherStreamScreen.Info:
+                    DrawInfo(localContext, area, scale);
                     return;
                 default:
                     DrawMain(localContext, area, scale);
@@ -167,6 +186,14 @@ internal sealed partial class AetherStreamApp : IPhoneApp
                 true))
         {
             router.Push(AetherStreamScreen.Settings);
+        }
+
+        var infoCenter = new Vector2(center.X - radius * 2f - Metrics.Space.Md * scale, center.Y);
+        if (HoverButton.Circle(ImGui.GetWindowDrawList(), "aetherstream.header.info", infoCenter, radius,
+                FontAwesomeIcon.InfoCircle, Palette.WithAlpha(ui.TitleInk, 0.12f), ui.TitleInk,
+                ImGui.GetIO().DeltaTime, 1f, true))
+        {
+            router.Push(AetherStreamScreen.Info);
         }
     }
 

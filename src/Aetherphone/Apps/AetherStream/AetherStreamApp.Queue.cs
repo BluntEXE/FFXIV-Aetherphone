@@ -19,6 +19,7 @@ internal sealed partial class AetherStreamApp
     private Vector2 queueDragStart;
     private float queueDragY;
     private bool queueDragActive;
+    private bool suggestionNoticesCleared;
 
     private void DrawUpNextContent(Rect body, float scale)
     {
@@ -32,6 +33,18 @@ internal sealed partial class AetherStreamApp
                 ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
                 return;
             }
+
+            if (watchAlong.IsHosting)
+            {
+                suggestionNotifier.StampAttention();
+                if (!suggestionNoticesCleared)
+                {
+                    suggestionNotifier.ClearShellNotices();
+                    suggestionNoticesCleared = true;
+                }
+            }
+
+            DrawNowPlayingRow(width, scale);
 
             if (watchAlong.IsHosting && watchAlong.PendingQueueSuggestions.Count > 0)
             {
@@ -114,6 +127,69 @@ internal sealed partial class AetherStreamApp
         var textWidth = row.Max.X - textLeft;
         Typography.Draw(drawList, new Vector2(textLeft, row.Center.Y - Typography.LineHeight(TextStyles.Body) * 0.5f),
             Typography.FitText(item.Title, textWidth, TextStyles.Body), ui.TitleInk, TextStyles.Body);
+    }
+
+    private void DrawNowPlayingRow(float width, float scale)
+    {
+        if (queue.Current is not { } current)
+        {
+            return;
+        }
+
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
+        var labelOrigin = ImGui.GetCursorScreenPos();
+        Typography.Draw(ImGui.GetWindowDrawList(), labelOrigin,
+            Loc.Culture.TextInfo.ToUpper(Loc.T(L.AetherStream.NowPlayingHeader)), ui.Palette.HeaderInk,
+            TextStyles.FootnoteEmphasized);
+        ImGui.SetCursorScreenPos(labelOrigin);
+        ImGui.Dummy(new Vector2(width,
+            Typography.LineHeight(TextStyles.FootnoteEmphasized) + Metrics.Space.Xs * scale));
+
+        var origin = ImGui.GetCursorScreenPos();
+        var row = new Rect(origin, origin + new Vector2(width, QueueRowHeight * scale));
+        var drawList = ImGui.GetWindowDrawList();
+        var artSize = row.Height - 12f * scale;
+        var artMin = new Vector2(row.Min.X + Metrics.Space.Xs * scale, row.Min.Y + 6f * scale);
+        var artMax = artMin + new Vector2(artSize, artSize);
+        Squircle.Fill(drawList, artMin, artMax, Metrics.Radius.Sm * scale, ImGui.GetColorU32(ui.FieldSurface));
+        var thumbnail = VideoThumbnailResolver.Get(remoteImages, http, current.Url, current.ThumbnailUrl);
+        if (thumbnail is not null)
+        {
+            drawList.AddImageRounded(thumbnail.Handle, artMin, artMax, Vector2.Zero, Vector2.One, 0xFFFFFFFFu,
+                Metrics.Radius.Sm * scale, ImDrawFlags.RoundCornersAll);
+        }
+        else
+        {
+            AppSkin.Icon((artMin + artMax) * 0.5f, FontAwesomeIcon.Play.ToIconString(), ui.MutedInk, 0.7f);
+        }
+
+        var textLeft = artMax.X + Metrics.Space.Md * scale;
+        var textWidth = row.Max.X - textLeft;
+        Typography.Draw(drawList, new Vector2(textLeft, row.Min.Y + 8f * scale),
+            Typography.FitText(current.Title, textWidth, TextStyles.Body), ui.TitleInk, TextStyles.Body);
+
+        var secondLineY = row.Min.Y + 30f * scale;
+        if (video.State == VideoPlaybackState.Loading)
+        {
+            var loadingLabel = Loc.T(L.AetherStream.LoadingVideo);
+            Typography.Draw(drawList, new Vector2(textLeft, secondLineY),
+                Typography.FitText(loadingLabel, textWidth, TextStyles.Footnote), ui.Accent, TextStyles.Footnote);
+            var loadingLabelWidth = Typography.Measure(loadingLabel, TextStyles.Footnote).X;
+            LoadingPulse.Dots(new Vector2(textLeft + loadingLabelWidth + 9f * scale,
+                    secondLineY + Typography.LineHeight(TextStyles.Footnote) * 0.5f), 8f * scale, 2.3f * scale,
+                ui.Accent, 1f, drawList);
+        }
+        else
+        {
+            var secondLine = current.Duration is { } duration
+                ? $"{current.Source}  ·  {TimeText.MinutesSeconds((int)duration.TotalSeconds)}"
+                : current.Source;
+            Typography.Draw(drawList, new Vector2(textLeft, secondLineY),
+                Typography.FitText(secondLine, textWidth, TextStyles.Footnote), ui.MutedInk, TextStyles.Footnote);
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, QueueRowHeight * scale));
     }
 
     private void DrawQueueHeader(float width, float scale)

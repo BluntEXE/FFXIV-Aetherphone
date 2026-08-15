@@ -40,6 +40,15 @@ internal sealed partial class AetherStreamApp
         DrawTheaterFrame(drawList, TheaterFrameRect(area), scale);
 
         var delta = ImGui.GetIO().DeltaTime;
+        var loading = video.State == VideoPlaybackState.Loading;
+        if (loading)
+        {
+            LoadingPulse.Draw(area.Center - new Vector2(0f, 10f * scale), 16f * scale, ui.Accent, WhiteInk,
+                Loc.T(L.AetherStream.LoadingVideo), 1f, 0.8f, drawList);
+        }
+
+        DrawTheaterSuggestionsPill(drawList, area, scale, delta);
+
         var hovered = UiInteract.Hover(area.Min, area.Max);
         var eased = Math.Clamp(theaterFade.Step(hovered ? 1f : 0f, TheaterFadeTime, delta), 0f, 1f);
         if (eased <= 0.01f)
@@ -49,8 +58,34 @@ internal sealed partial class AetherStreamApp
 
         DrawTheaterScrims(drawList, area, scale, eased);
         DrawTheaterHeader(drawList, area, scale, eased, delta);
-        DrawTheaterTransport(drawList, area, scale, eased, delta);
+        if (!loading)
+        {
+            DrawTheaterTransport(drawList, area, scale, eased, delta);
+        }
+
         DrawTheaterProgress(drawList, area, scale, eased);
+    }
+
+    private void DrawTheaterSuggestionsPill(ImDrawListPtr drawList, Rect area, float scale, float delta)
+    {
+        if (!watchAlong.IsHosting || watchAlong.PendingQueueSuggestions.Count == 0)
+        {
+            return;
+        }
+
+        var radius = 16f * scale;
+        var center = new Vector2(area.Min.X + Metrics.Space.Lg * scale + radius,
+            area.Min.Y + TheaterHeaderY * scale);
+        if (HoverButton.Circle(drawList, "aetherstream.theater.suggestions", center, radius, FontAwesomeIcon.ListUl,
+                TheaterButtonBacking, WhiteInk, delta, 1f, true, Loc.T(L.AetherStream.QueueSuggestionsHeader)))
+        {
+            ExitTheater();
+            upNextSheet.Open();
+            return;
+        }
+
+        AppBadge.Draw(new Vector2(center.X + radius * 0.72f, center.Y - radius * 0.72f),
+            watchAlong.PendingQueueSuggestions.Count, theme, scale);
     }
 
     private static Rect TheaterFrameRect(Rect area)
@@ -127,6 +162,11 @@ internal sealed partial class AetherStreamApp
         }
 
         var titleLeft = area.Min.X + Metrics.Space.Lg * scale;
+        if (watchAlong.IsHosting && watchAlong.PendingQueueSuggestions.Count > 0)
+        {
+            titleLeft += 32f * scale + Metrics.Space.Md * scale;
+        }
+
         var titleWidth = windowCenter.X - radius - Metrics.Space.Md * scale - titleLeft;
         if (titleWidth <= 0f)
         {

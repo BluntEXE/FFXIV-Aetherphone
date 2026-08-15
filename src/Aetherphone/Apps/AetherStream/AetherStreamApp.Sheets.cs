@@ -15,6 +15,11 @@ internal sealed partial class AetherStreamApp
 
     private void DrawUpNextSheet(Rect area, float scale)
     {
+        if (!upNextSheet.IsOpen)
+        {
+            suggestionNoticesCleared = false;
+        }
+
         upNextSheet.Draw(area, accentedTheme, Loc.T(L.AetherStream.UpNext), SheetHeightFraction,
             content => DrawUpNextContent(content, scale));
     }

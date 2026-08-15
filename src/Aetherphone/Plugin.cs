@@ -66,6 +66,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly ScreenController screenController;
     private readonly AetherStreamQueue videoQueue;
     private readonly WatchAlongSession watchAlong;
+    private readonly StreamSuggestionNotifier streamSuggestions;
     private readonly VideoDebugWindow videoDebugWindow;
     private readonly AetherStreamScreenWindow screenWindow;
     private readonly UpdateChipWindow updateChipWindow;
@@ -113,11 +114,12 @@ public sealed class Plugin : IDalamudPlugin
             videoQueue = new AetherStreamQueue(video, services.VideoMetadata);
             watchAlong = new WatchAlongSession(services.AethernetSession, Cfg, services.Confirm, video,
                 videoQueue, services.StreamSignals, screenController);
+            streamSuggestions = new StreamSuggestionNotifier(watchAlong, services.Notifications);
             Framework.Update += OnVideoFrameworkUpdate;
             videoDebugWindow = new VideoDebugWindow(video, screenController);
             screenWindow = new AetherStreamScreenWindow(screenController, video);
             var bundle = AppRegistry.BuildDefault(services, video, screenController, videoQueue, watchAlong,
-                screenWindow);
+                streamSuggestions, screenWindow);
             shell = new PhoneShell(services, bundle);
             screenshotImport = new ScreenshotImportService(bundle.Photos, Cfg);
             phoneWindow = new PhoneWindow(shell, Cfg);
@@ -204,6 +206,7 @@ public sealed class Plugin : IDalamudPlugin
         dtrEntry?.Remove();
         windowSystem.RemoveAllWindows();
         videoDebugWindow?.Dispose();
+        streamSuggestions?.Dispose();
         watchAlong?.Dispose();
         videoQueue?.Dispose();
         video?.Dispose();
@@ -299,6 +302,7 @@ public sealed class Plugin : IDalamudPlugin
         phoneWindow.PersistPositions();
         windowSystem.RemoveAllWindows();
         videoDebugWindow.Dispose();
+        streamSuggestions.Dispose();
         watchAlong.Dispose();
         videoQueue.Dispose();
         video.Dispose();

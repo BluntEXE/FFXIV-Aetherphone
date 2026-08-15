@@ -120,6 +120,8 @@ internal sealed class WatchAlongSession : IDisposable
     internal IReadOnlyList<PendingJoinRequest> PendingRequests { get; private set; } = [];
     internal IReadOnlyList<QueueSuggestion> PendingQueueSuggestions { get; private set; } = [];
 
+    internal event Action<QueueSuggestion>? QueueSuggestionArrived;
+
     internal IReadOnlyList<WatchAlongParticipant> Watching()
     {
         if (!configuration.VideoShareWatchPresence || !session.IsSignedIn)
@@ -547,6 +549,7 @@ internal sealed class WatchAlongSession : IDisposable
             return;
         }
 
+        var replaced = false;
         var updated = new List<QueueSuggestion>(PendingQueueSuggestions.Count + 1);
         foreach (var existing in PendingQueueSuggestions)
         {
@@ -554,10 +557,19 @@ internal sealed class WatchAlongSession : IDisposable
             {
                 updated.Add(existing);
             }
+            else
+            {
+                replaced = true;
+            }
         }
 
-        updated.Add(new QueueSuggestion(suggestionId, from.UserId, from.DisplayName, url));
+        var suggestion = new QueueSuggestion(suggestionId, from.UserId, from.DisplayName, url);
+        updated.Add(suggestion);
         PendingQueueSuggestions = updated;
+        if (!replaced)
+        {
+            QueueSuggestionArrived?.Invoke(suggestion);
+        }
     }
 
     private void OnQueueSuggestionResult(CallControl message)

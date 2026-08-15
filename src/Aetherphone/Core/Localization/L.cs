@@ -3444,6 +3444,28 @@ internal static class L
             "aetherstream.queueSuggestionDeniedTitle", "Suggestion not added");
         public static readonly LocString QueueSuggestionDeniedBody = new(
             "aetherstream.queueSuggestionDeniedBody", "The host didn't add your suggestion.");
+        public static readonly LocString SuggestionNotifyTitle = new(
+            "aetherstream.suggestionNotifyTitle", "Queue suggestion");
+        public static readonly LocString SuggestionNotifyBody = new(
+            "aetherstream.suggestionNotifyBody", "{0} suggested a video for the queue.");
+        public static readonly LocString NowPlayingHeader = new("aetherstream.nowPlayingHeader", "Now Playing");
+        public static readonly LocString LoadingVideo = new("aetherstream.loadingVideo", "Loading video");
+
+        public static readonly LocString InfoTitle = new("aetherstream.infoTitle", "Good to know");
+        public static readonly LocString InfoVpnTitle = new("aetherstream.infoVpnTitle", "Using a VPN?");
+        public static readonly LocString InfoVpnBody = new("aetherstream.infoVpnBody",
+            "Video sites often block VPN and proxy connections. If videos refuse to load or keep failing, try again with the VPN off, or switch to another server.");
+        public static readonly LocString InfoStartupTitle = new("aetherstream.infoStartupTitle",
+            "Videos take a moment");
+        public static readonly LocString InfoStartupBody = new("aetherstream.infoStartupBody",
+            "Every link is resolved before it plays, so a new video needs a few seconds to start. The first video after installing also downloads the player components.");
+        public static readonly LocString InfoFailuresTitle = new("aetherstream.infoFailuresTitle",
+            "A video won't play?");
+        public static readonly LocString InfoFailuresBody = new("aetherstream.infoFailuresBody",
+            "Video sites change constantly. Updating yt-dlp under Settings fixes most refusals, and MogCast retries stubborn streams on its own. Direct video links are the most reliable.");
+        public static readonly LocString InfoPartiesTitle = new("aetherstream.infoPartiesTitle", "Watch parties");
+        public static readonly LocString InfoPartiesBody = new("aetherstream.infoPartiesBody",
+            "Everyone plays the same link on their own phone, so it has to be reachable for every viewer. Files from your own machine stay on your phone and can't be watched by others.");
 
         public static readonly LocString KickedTitle = new("aetherstream.kickedTitle", "Removed from stream");
         public static readonly LocString KickedBody = new("aetherstream.kickedBody",

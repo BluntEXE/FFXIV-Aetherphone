@@ -22,6 +22,7 @@ internal static class NotificationChannels
         new("yellowpages", L.Apps.YellowPages, AppAccents.For("yellowpages")),
         new("announcements", L.Apps.Announcements, AppAccents.For("announcements")),
         new("music", L.Apps.Music, AppAccents.For("music")),
+        new("aetherstream", L.Apps.AetherStream, AppAccents.For("aetherstream")),
         new("timers", L.Apps.Timers, AppAccents.For("timers")),
         new("character", L.Apps.Character, AppAccents.For("character")),
         new("health", L.Apps.Health, AppAccents.For("health")),

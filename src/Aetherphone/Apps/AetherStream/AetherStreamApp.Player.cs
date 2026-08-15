@@ -108,13 +108,22 @@ internal sealed partial class AetherStreamApp
         VideoQueueEntry? current)
     {
         var delta = ImGui.GetIO().DeltaTime;
-        var presentable = video.HasMedia;
+        var loading = video.State == VideoPlaybackState.Loading;
+        var presentable = video.HasMedia && !loading;
         var heroHovered = presentable && UiInteract.Hover(min, max);
         var eased = Math.Clamp(heroActionsFade.Step(heroHovered ? 1f : 0f, 0.12f, delta), 0f, 1f);
         if (eased > 0.01f)
         {
             Squircle.Fill(drawList, min, max, Metrics.Radius.Card * scale,
                 ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.38f * eased)));
+        }
+
+        if (loading)
+        {
+            Squircle.Fill(drawList, min, max, Metrics.Radius.Card * scale,
+                ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.45f)));
+            LoadingPulse.Draw(new Vector2((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f - 10f * scale),
+                14f * scale, ui.Accent, WhiteInk, Loc.T(L.AetherStream.LoadingVideo), 1f, 0.8f, drawList);
         }
 
         if (screen.Engine.IsActive)
@@ -443,7 +452,15 @@ internal sealed partial class AetherStreamApp
         ImGui.Dummy(new Vector2(width, rowHeight));
     }
 
-    private int QueueBadgeCount() => watchAlong.IsViewing ? watchAlong.HostQueue.Count : queue.Entries.Count;
+    private int QueueBadgeCount()
+    {
+        if (watchAlong.IsViewing)
+        {
+            return watchAlong.HostQueue.Count;
+        }
+
+        return queue.Entries.Count + watchAlong.PendingQueueSuggestions.Count;
+    }
 
     private void DrawActionButton(string id, Vector2 center, float radius, FontAwesomeIcon icon, string label,
         int badge, SheetSurface sheet, float scale, float labelHeight)
