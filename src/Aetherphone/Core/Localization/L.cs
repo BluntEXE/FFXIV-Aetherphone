@@ -4445,6 +4445,11 @@ internal static class L
         public static readonly LocString BingoRoomWrapped = new("casino.bingo.roomWrapped", "That is the room");
         public static readonly LocString BingoNextRoom = new("casino.bingo.nextRoom", "Next room in {0}");
         public static readonly LocString BingoWaitingRoom = new("casino.bingo.waitingRoom", "Waiting for the next room to open");
+        public static readonly LocString BingoNextRoomSale = new("casino.bingo.nextRoomSale", "Cards go on sale the moment it opens.");
+        public static readonly LocString BingoWatchedRoom = new("casino.bingo.watchedRoom", "You watched this one from the rail.");
+        public static readonly LocString BingoRoomRolling = new("casino.bingo.roomRolling", "This room is already rolling. Buy-ins for the next one open the moment it wraps.");
+        public static readonly LocString BingoLadderSeeds = new("casino.bingo.ladderSeeds", "Prizes start at these numbers with the first card and grow with every card sold.");
+        public static readonly LocString BingoLadderNextHeading = new("casino.bingo.ladderNextHeading", "Prizes next room");
         public static readonly LocString SpinCardTitle = new("casino.spin.cardTitle", "Daily spin");
         public static readonly LocString SpinCardHint = new("casino.spin.cardHint", "One free turn of the coin wheel, every day");
         public static readonly LocString SpinReadyBadge = new("casino.spin.readyBadge", "Free");

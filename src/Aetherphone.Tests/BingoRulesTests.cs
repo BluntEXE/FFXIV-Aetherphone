@@ -243,6 +243,39 @@ public sealed class BingoRulesTests
     }
 
     [Fact]
+    public void AnEmptyHallQuotesTheOneCardFloorInsteadOfZeros()
+    {
+        Span<long> ladder = stackalloc long[BingoRules.StageCount];
+        BingoCabinet.DisplayLadder(null, ladder);
+        for (var stage = 0; stage < BingoRules.StageCount; stage++)
+        {
+            Assert.Equal(BingoRules.PrizeFor(stage, 1), ladder[stage]);
+        }
+
+        BingoCabinet.DisplayLadder(Board(7, null, 0), ladder);
+        for (var stage = 0; stage < BingoRules.StageCount; stage++)
+        {
+            Assert.Equal(BingoRules.PrizeFor(stage, 1), ladder[stage]);
+        }
+
+        BingoCabinet.DisplayLadder(Board(7, null, 40), ladder);
+        for (var stage = 0; stage < BingoRules.StageCount; stage++)
+        {
+            Assert.Equal(BingoRules.PrizeFor(stage, 40), ladder[stage]);
+        }
+    }
+
+    [Fact]
+    public void TheNextRoomClockAddsTheResultWindowWhileBallsAreStillRolling()
+    {
+        Assert.Equal(132 + CasinoRoomCadence.BingoResultSeconds,
+            BingoCabinet.NextRoomSeconds(CasinoRoomPhases.Locked, 132_000));
+        Assert.Equal(132, BingoCabinet.NextRoomSeconds(CasinoRoomPhases.Result, 131_001));
+        Assert.Equal(0, BingoCabinet.NextRoomSeconds(CasinoRoomPhases.Open, 45_000));
+        Assert.Equal(0, BingoCabinet.NextRoomSeconds(CasinoRoomPhases.Result, 0));
+    }
+
+    [Fact]
     public void AnAwardedStageIsReadFromTheRoomRatherThanRederived()
     {
         var board = Board(7, new[] { 1, 2 }, 40) with
