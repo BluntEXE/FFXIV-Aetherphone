@@ -127,7 +127,7 @@ internal sealed class CommentAttachment
         var badgeCenter = new Vector2(max.X - badgeRadius - 2f * scale, min.Y + badgeRadius + 2f * scale);
         var badgeMin = badgeCenter - new Vector2(badgeRadius, badgeRadius);
         var badgeMax = badgeCenter + new Vector2(badgeRadius, badgeRadius);
-        var badgeHovered = UiInteract.Hover(badgeMin, badgeMax);
+        var badgeHovered = !UiInteract.InputBlocked && UiInteract.HoverWindowOnly(badgeMin, badgeMax);
         drawList.AddCircleFilled(badgeCenter, badgeRadius,
             ImGui.GetColorU32(new Vector4(0f, 0f, 0f, badgeHovered ? 0.9f : 0.62f)), 20);
         AppSkin.Icon(badgeCenter, FontAwesomeIcon.Times.ToIconString(), new Vector4(1f, 1f, 1f, 1f), 0.6f);
@@ -171,7 +171,7 @@ internal sealed class CommentAttachment
             var importHeight = 34f * scale;
             var importRect = new Rect(new Vector2(panel.Min.X + pad, panel.Min.Y + pad),
                 new Vector2(panel.Max.X - pad, panel.Min.Y + pad + importHeight));
-            if (ui.PillButton(importRect, Loc.T(L.Common.ImportFromPc), true))
+            if (DrawImportPill(drawList, importRect, ui, theme))
             {
                 FilePicker.PickImage(Loc.T(L.Common.AddPhoto),
                     picked => Interlocked.Exchange(ref pendingImport, picked));
@@ -220,7 +220,7 @@ internal sealed class CommentAttachment
 
                 var min = new Vector2(origin.X + column * (cell + gap), origin.Y + rowTop);
                 var max = new Vector2(min.X + cell, min.Y + cell);
-                var hovered = UiInteract.Hover(min, max);
+                var hovered = !UiInteract.InputBlocked && UiInteract.HoverWindowOnly(min, max);
                 DrawPickerThumb(gridDrawList, pickerPaths[index], min, max, scale, theme, hovered);
                 if (UiInteract.Click(min, max, hovered))
                 {
@@ -259,6 +259,24 @@ internal sealed class CommentAttachment
     public float PanelHeight(float scale)
     {
         return panelOpen ? PanelHeightUnits * scale : 0f;
+    }
+
+    private static bool DrawImportPill(ImDrawListPtr drawList, Rect rect, AppSkin ui, PhoneTheme theme)
+    {
+        var hovered = !UiInteract.InputBlocked && UiInteract.HoverWindowOnly(rect.Min, rect.Max);
+        var fill = hovered ? Palette.Mix(ui.Accent, theme.TextStrong, 0.12f) : ui.Accent;
+        Squircle.Fill(drawList, rect.Min, rect.Max, rect.Height * 0.5f, ImGui.GetColorU32(fill));
+        var label = Typography.FitText(Loc.T(L.Common.ImportFromPc), MathF.Max(1f, rect.Width - rect.Height), 0.95f,
+            FontWeight.SemiBold);
+        var labelSize = Typography.Measure(label, 0.95f, FontWeight.SemiBold);
+        Typography.Draw(drawList, rect.Center - labelSize * 0.5f, label, new Vector4(1f, 1f, 1f, 1f), 0.95f,
+            FontWeight.SemiBold);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return UiInteract.Click(rect.Min, rect.Max, hovered);
     }
 
     private void Take(string picked)
