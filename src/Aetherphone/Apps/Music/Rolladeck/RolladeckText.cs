@@ -57,7 +57,7 @@ internal static class RolladeckText
             {
                 var mapped = MapSupplementary(v);
                 if (mapped != '\0') sb.Append(mapped);
-                // else: emoji or other unmapped supplementary char — strip
+                // else: emoji or other unmapped supplementary char, skip it
             }
         }
         return sb.ToString().Trim();
