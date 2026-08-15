@@ -47,10 +47,12 @@ Gizlilik ve güvenlik her şeyden önce gelir: metin mesajları, ekler ve sesli 
 
 ## Öne çıkanlar
 
-- **Sosyal**: Chirper mikroblogu, Aethergram fotoğraf akışı, sesli notlar ve grup aramalarıyla özel mesajlaşma için ChocoChat ve isteğe bağlı bir 18+ yardımcı uygulama olan Velvet.
-- **Araçlar**: bir pazar takipçisi, mekan ve etkinlik rehberi, oyun içi müzik, hava durumu, bir cüzdan, zamanlayıcılar ve sıfırlamalar, bir fotoğraf kitaplığı ve kamera ve bir cep mini oyun salonu; 30'dan fazla uygulama arasında.
-- **Birlikte izleyin**: AetherStream, YouTube dahil videoları oyun içindeki bir ekrana yansıtır ve seninle birlikte izleyen herkes için oynatmayı eşitler.
-- **Kendine göre yap**: vurgu paletleri, duvar kağıtları, Lodestone karakter portreleri, özel zil sesleri ve yazı boyutu için bir erişilebilirlik yakınlaştırması.
+- **Sosyal**: bir mikroblog, bir fotoğraf akışı ve sesli notlar ile grup aramalarına sahip özel mesajlaşma, ayrıca isteğe bağlı bir 18+ yardımcı uygulama.
+- **Oyun sohbeti**: oyundaki tüm sohbet kanalları telefonda; sekmeleri kendin oluşturursun, tell mesajları ise ayrı konuşmalar olarak gelir.
+- **Araçlar**: bir pazar takipçisi, bir konut tarayıcısı, mekan ve etkinlik rehberi, müzik, hava durumu, bir cüzdan, zamanlayıcılar ve sıfırlamalar, bir fotoğraf kitaplığı ve kamera, kısayollar ve bir cep mini oyun salonu; 30'dan fazla uygulama arasında.
+- **Birlikte izleyin**: YouTube dahil videolar oyun içindeki bir ekranda, birlikte izleyen herkes için eşitlenmiş oynatmayla.
+- **Kumarhane**: oyun parasıyla blackjack, slotlar, kazı kazan kartları, ortak bir çark ve tombala. Gerçek para yoktur ve hiçbir şeyin nakit değeri yoktur.
+- **Kendine göre yap**: istediğin vurgu rengi, duvar kağıtları, Lodestone karakter portreleri, özel zil sesleri, yazı boyutu yakınlaştırması ve istediğin boyuta sürükleyebileceğin bir telefon.
 
 Tüm özellik turu, ekran görüntüleri ve ayrıntılar web sitesinde:
 

@@ -47,10 +47,12 @@ A privacidade e a segurança vêm em primeiro lugar: as mensagens de texto, os a
 
 ## Destaques
 
-- **Social**: o microblog Chirper, o feed de fotos Aethergram, o ChocoChat para mensagens privadas com mensagens de voz e chamadas em grupo, e o Velvet, um aplicativo complementar opcional para maiores de 18 anos.
-- **Utilidades**: um rastreador do mercado, um diretório de locais e eventos, música no jogo, o clima, uma carteira, cronômetros e resets, uma biblioteca de fotos e câmera, e um fliperama de bolso com minijogos, entre mais de 30 aplicativos.
-- **Assistir junto**: o AetherStream transmite vídeos, incluindo do YouTube, para uma tela dentro do jogo e mantém a reprodução sincronizada para quem estiver assistindo com você.
-- **Deixe do seu jeito**: paletas de destaque, papéis de parede, retratos de personagem do Lodestone, toques personalizados e um zoom de acessibilidade para o tamanho do texto.
+- **Social**: um microblog, um feed de fotos e mensagens privadas com mensagens de voz e chamadas em grupo, além de um aplicativo complementar opcional para maiores de 18 anos.
+- **Chat do jogo**: todos os canais de chat do jogo no telefone, em abas que você mesmo monta, com os tells como conversas próprias.
+- **Utilidades**: um rastreador do mercado, um navegador de moradias, um diretório de locais e eventos, música, o clima, uma carteira, cronômetros e resets, uma biblioteca de fotos e câmera, atalhos, e um fliperama de bolso com minijogos, entre mais de 30 aplicativos.
+- **Assistir junto**: vídeos, incluindo do YouTube, em uma tela dentro do jogo, com a reprodução sincronizada para quem estiver assistindo com você.
+- **Cassino**: blackjack, caça-níqueis, raspadinhas, uma roda comunitária e bingo, tudo com dinheiro fictício. Sem dinheiro real, e nada tem valor em dinheiro.
+- **Deixe do seu jeito**: qualquer cor de destaque, papéis de parede, retratos de personagem do Lodestone, toques personalizados, um zoom do tamanho do texto e um telefone que você arrasta para o tamanho que quiser.
 
 O tour completo pelos recursos, capturas de tela e detalhes estão no site:
 

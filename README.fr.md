@@ -47,10 +47,12 @@ La confidentialité et la sécurité passent avant tout : les messages texte, le
 
 ## Points forts
 
-- **Social** : le microblog Chirper, le fil de photos Aethergram, ChocoChat pour la messagerie privée avec notes vocales et appels de groupe, ainsi que Velvet, une application compagnon optionnelle réservée aux plus de 18 ans.
-- **Utilitaires** : un suivi du marché, un répertoire de lieux et d'événements, de la musique en jeu, la météo, un portefeuille, des minuteurs et réinitialisations, une photothèque et un appareil photo, et une salle d'arcade de poche de mini-jeux, parmi plus de 30 applications.
-- **Regarder ensemble** : AetherStream diffuse des vidéos, y compris YouTube, sur un écran en jeu et synchronise la lecture pour tous ceux qui regardent avec vous.
-- **Personnalisez** : palettes d'accentuation, fonds d'écran, portraits de personnage du Lodestone, sonneries personnalisées et un zoom d'accessibilité pour la taille du texte.
+- **Social** : un microblog, un fil de photos et une messagerie privée avec notes vocales et appels de groupe, plus une application compagnon optionnelle réservée aux plus de 18 ans.
+- **Chat du jeu** : tous les canaux de discussion du jeu sur le téléphone, dans des onglets que vous composez vous-même, avec les tells en conversations à part.
+- **Utilitaires** : un suivi du marché, un navigateur de terrains, un répertoire de lieux et d'événements, de la musique, la météo, un portefeuille, des minuteurs et réinitialisations, une photothèque et un appareil photo, des raccourcis, et une salle d'arcade de poche de mini-jeux, parmi plus de 30 applications.
+- **Regarder ensemble** : des vidéos, y compris YouTube, sur un écran en jeu, avec une lecture synchronisée pour tous ceux qui regardent avec vous.
+- **Casino** : blackjack, machines à sous, cartes à gratter, une roue commune et un bingo, le tout en argent fictif. Pas d'argent réel, et rien n'a de valeur monétaire.
+- **Personnalisez** : n'importe quelle couleur d'accent, des fonds d'écran, des portraits de personnage du Lodestone, des sonneries personnalisées, un zoom de la taille du texte et un téléphone redimensionnable à volonté.
 
 La présentation complète des fonctionnalités, les captures d'écran et les détails se trouvent sur le site :
 

@@ -47,12 +47,12 @@ Privacy and safety come first: text messages, attachments, and voice notes are e
 
 ## Highlights
 
-- **Social**: Chirper microblog, Aethergram photo feed, ChocoChat private messaging with voice notes and group calls, and Velvet, an optional 18+ companion app.
-- **Your game chat, on the phone**: Linkpearl covers every text channel the game has, and you decide what you actually read. Build a tab out of any mix of channels, free company plus novice network, all your linkshells, party and alliance, or the local hubbub, then pin the ones you live in. Tells arrive as their own conversations beside those tabs, sorted by whatever is talking. Each tab keeps its own layout, its own history retention, and its own alerts, so a busy shout channel can stay silent while your free company still rings. Items, map coordinates, players and links stay tappable, with try on, item comparison, recipes and map jumps, and search reaches back through everything you kept.
-- **Utilities**: a market board tracker, a housing browser that maps open plots and tracks lottery phases, venue and event directory, in-game music, weather, a wallet, timers and resets, a photo library and camera, Shortcuts that run command macros and open your other plugins in one tap, a pocket arcade of mini-games, and Aether Coin, a cosmetic currency you earn just by using the phone, among 30+ apps.
-- **Watch together**: MogCast casts video, including YouTube, onto an in-world screen and keeps playback synced for anyone watching along, who can see the queue and suggest what plays next; suggestions ring through as notifications so the host never misses one. It fetches the two components it needs on first open, showing the download size and progress, so there is nothing to install by hand, and when a video service starts refusing streams it updates its link resolver on its own and retries before bothering you.
-- **Gamba**: a play-money casino with blackjack tables, slots, scratch cards, a communal wheel, a bingo hall, a bar game, and a free daily spin. Change Aether Coin for chips once at the cashier and play them at anything on the floor: switching games never costs you a cash-out, and sitting down at a table just carries part of your chips to the felt and brings back whatever survives. Every shuffle and spin is decided by the server and published as a fingerprint before you stake, so you can check any round afterwards. No real money is involved and nothing here has cash value.
-- **Make it yours**: any accent color you like from a full picker, wallpapers, Lodestone character portraits, custom ringtones, an accessibility text-size zoom, and a phone you can drag to any size you like.
+- **Social**: a microblog, a photo feed, and private messaging with voice notes and group calls, plus an optional 18+ companion app.
+- **Game chat**: every game chat channel on the phone, in tabs you build yourself, with tells as their own conversations.
+- **Utilities**: a market board tracker, a housing browser, a venue and event directory, music, weather, a wallet, timers and resets, a photo library and camera, shortcuts, and a pocket arcade of mini-games, among 30+ apps.
+- **Watch together**: cast video, YouTube included, onto an in-world screen, with playback synced for everyone watching along.
+- **Casino**: play-money blackjack, slots, scratch cards, a communal wheel, and bingo. No real money, and nothing has cash value.
+- **Make it yours**: any accent color, wallpapers, Lodestone character portraits, custom ringtones, a text-size zoom, and a phone you can drag to any size.
 
 Full feature tour, screenshots, and details live on the website:
 

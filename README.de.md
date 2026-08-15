@@ -47,10 +47,12 @@ Privatsphäre und Sicherheit stehen an erster Stelle: Textnachrichten, Anhänge 
 
 ## Highlights
 
-- **Soziales**: der Chirper-Microblog, der Aethergram-Foto-Feed, ChocoChat für private Nachrichten mit Sprachnotizen und Gruppenanrufen sowie Velvet, eine optionale Companion-App ab 18.
-- **Werkzeuge**: ein Marktbrett-Tracker, ein Verzeichnis für Locations und Events, In-Game-Musik, Wetter, eine Geldbörse, Timer und Resets, eine Fotobibliothek und Kamera sowie eine Taschenspielhalle voller Minispiele, unter mehr als 30 Apps.
-- **Gemeinsam schauen**: AetherStream überträgt Videos, auch von YouTube, auf einen Bildschirm im Spiel und hält die Wiedergabe für alle synchron, die zuschauen.
-- **Mach es zu deinem**: Akzentpaletten, Hintergründe, Lodestone-Charakterporträts, eigene Klingeltöne und ein Barrierefreiheits-Zoom für die Textgröße.
+- **Soziales**: ein Microblog, ein Foto-Feed und private Nachrichten mit Sprachnotizen und Gruppenanrufen, dazu eine optionale Companion-App ab 18.
+- **Spielchat**: jeder Chat-Kanal des Spiels auf dem Telefon, in selbst zusammengestellten Tabs, mit Tells als eigenen Unterhaltungen.
+- **Werkzeuge**: ein Marktbrett-Tracker, ein Housing-Browser, ein Verzeichnis für Locations und Events, Musik, Wetter, eine Geldbörse, Timer und Resets, eine Fotobibliothek und Kamera, Kurzbefehle sowie eine Taschenspielhalle voller Minispiele, unter mehr als 30 Apps.
+- **Gemeinsam schauen**: Videos, auch von YouTube, auf einem Bildschirm im Spiel, mit synchroner Wiedergabe für alle, die zuschauen.
+- **Casino**: Spielgeld-Blackjack, Slots, Rubbellose, ein gemeinsames Rad und Bingo. Kein echtes Geld, und nichts hat einen Geldwert.
+- **Mach es zu deinem**: jede Akzentfarbe, Hintergründe, Lodestone-Charakterporträts, eigene Klingeltöne, ein Textgrößen-Zoom und ein Telefon, das du auf jede Größe ziehen kannst.
 
 Die vollständige Feature-Tour, Screenshots und Details findest du auf der Website:
 

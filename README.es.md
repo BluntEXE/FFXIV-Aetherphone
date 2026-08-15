@@ -47,10 +47,12 @@ La privacidad y la seguridad son lo primero: los mensajes de texto, los adjuntos
 
 ## Lo más destacado
 
-- **Social**: el microblog Chirper, el feed de fotos Aethergram, ChocoChat para mensajería privada con notas de voz y llamadas de grupo, y Velvet, una aplicación complementaria opcional para mayores de 18 años.
-- **Utilidades**: un rastreador del mercado, un directorio de locales y eventos, música en el juego, el clima, una cartera, temporizadores y reinicios, una fototeca y cámara, y un salón recreativo de bolsillo de minijuegos, entre más de 30 aplicaciones.
-- **Ver juntos**: AetherStream transmite vídeos, incluido YouTube, a una pantalla dentro del juego y mantiene la reproducción sincronizada para quienes la vean contigo.
-- **Hazlo tuyo**: paletas de acento, fondos de pantalla, retratos de personaje del Lodestone, tonos de llamada personalizados y un zoom de accesibilidad para el tamaño del texto.
+- **Social**: un microblog, un feed de fotos y mensajería privada con notas de voz y llamadas de grupo, más una aplicación complementaria opcional para mayores de 18 años.
+- **Chat del juego**: todos los canales de chat del juego en el teléfono, en pestañas que tú mismo compones, con los tells como conversaciones aparte.
+- **Utilidades**: un rastreador del mercado, un navegador de viviendas, un directorio de locales y eventos, música, el clima, una cartera, temporizadores y reinicios, una fototeca y cámara, atajos, y un salón recreativo de bolsillo de minijuegos, entre más de 30 aplicaciones.
+- **Ver juntos**: vídeos, incluido YouTube, en una pantalla dentro del juego, con la reproducción sincronizada para quienes los vean contigo.
+- **Casino**: blackjack, tragaperras, rascas, una rueda comunitaria y bingo, todo con dinero ficticio. Sin dinero real, y nada tiene valor en efectivo.
+- **Hazlo tuyo**: cualquier color de acento, fondos de pantalla, retratos de personaje del Lodestone, tonos de llamada personalizados, un zoom del tamaño del texto y un teléfono que puedes llevar al tamaño que quieras.
 
 El recorrido completo por las funciones, capturas de pantalla y detalles están en el sitio web:
 
