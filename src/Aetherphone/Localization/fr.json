@@ -4578,7 +4578,7 @@
   "casino.scratch.lowStack": "Pas assez de jetons pour ce ticket. Rechargez à la caisse.",
   "casino.barkeep.wagerTitle": "Service payé",
   "casino.barkeep.wagerHint": "Entrée {0}. Servez bien chaque client et l'échelle des pourboires paie.",
-  "casino.barkeep.startFor": "Commencer un service pour {0}",
+  "casino.barkeep.start": "Commencer un service",
   "casino.barkeep.practiceTitle": "Service d'entraînement",
   "casino.barkeep.practiceHint": "Aucun jeton en jeu. Servez pour l'amour du métier.",
   "casino.barkeep.practiceAgain": "S'entraîner encore",

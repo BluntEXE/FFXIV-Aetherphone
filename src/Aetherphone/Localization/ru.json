@@ -4578,7 +4578,7 @@
   "casino.scratch.lowStack": "Не хватает фишек на этот билет. Пополните в кассе.",
   "casino.barkeep.wagerTitle": "Оплачиваемая смена",
   "casino.barkeep.wagerHint": "Вход {0}. Обслужите гостей как следует, и лестница чаевых заплатит.",
-  "casino.barkeep.startFor": "Начать смену за {0}",
+  "casino.barkeep.start": "Начать смену",
   "casino.barkeep.practiceTitle": "Тренировочная смена",
   "casino.barkeep.practiceHint": "Фишки не на кону. Работайте из любви к ремеслу.",
   "casino.barkeep.practiceAgain": "Тренироваться ещё",

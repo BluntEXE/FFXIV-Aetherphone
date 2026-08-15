@@ -4578,7 +4578,7 @@
   "casino.scratch.lowStack": "Bu kart için yeterli fiş yok. Vezneden takviye yap.",
   "casino.barkeep.wagerTitle": "Ücretli vardiya",
   "casino.barkeep.wagerHint": "Giriş {0}. Her müşteriyi iyi ağırla, bahşiş merdiveni ödesin.",
-  "casino.barkeep.startFor": "{0} karşılığında vardiyaya başla",
+  "casino.barkeep.start": "Vardiyaya başla",
   "casino.barkeep.practiceTitle": "Antrenman vardiyası",
   "casino.barkeep.practiceHint": "Fiş riske girmez. Zanaat aşkına servis yap.",
   "casino.barkeep.practiceAgain": "Tekrar antrenman",

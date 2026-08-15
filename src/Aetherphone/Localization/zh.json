@@ -4578,7 +4578,7 @@
   "casino.scratch.lowStack": "筹码不足以购买这张卡。请到收银台补充。",
   "casino.barkeep.wagerTitle": "正式班次",
   "casino.barkeep.wagerHint": "入场费{0}。好好招待每位客人，小费阶梯就会付账。",
-  "casino.barkeep.startFor": "花{0}开始一班",
+  "casino.barkeep.start": "开始一班",
   "casino.barkeep.practiceTitle": "练习班次",
   "casino.barkeep.practiceHint": "不押筹码，纯为手艺而调。",
   "casino.barkeep.practiceAgain": "再练一次",

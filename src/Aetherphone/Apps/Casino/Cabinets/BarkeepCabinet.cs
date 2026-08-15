@@ -23,11 +23,12 @@ internal sealed class BarkeepCabinet
     private const string PracticeStatsId = "casino.barkeep";
     private const float PadX = 16f;
     private const float GradeFlashSecondsTotal = 0.8f;
+    private const float TapFlashSecondsTotal = 0.35f;
     private const double FinishRetryDelaySeconds = 3.0;
     private const double FinishFailureRetryDelaySeconds = 5.0;
     private const string MalformedReason = "malformed";
 
-    private static readonly Vector4 Gold = new(1f, 0.84f, 0.42f, 1f);
+    private static readonly Vector4 Gold = BarkeepArt.PerfectGold;
 
     private static readonly Vector4[] ConfettiPalette =
     {
@@ -59,6 +60,9 @@ internal sealed class BarkeepCabinet
     private double finishRetryAtElapsed;
     private int gradeFlash = -1;
     private float gradeFlashLeft;
+    private int tapFlashGrade = -1;
+    private float tapFlashLeft;
+    private Vector2 tapFlashCenter;
     private string inlineReason = string.Empty;
     private int clockSecond = -1;
     private string clockText = "0:00";
@@ -83,6 +87,7 @@ internal sealed class BarkeepCabinet
         {
             verbStage.Cancel();
             gradeFlashLeft = 0f;
+            tapFlashLeft = 0f;
             inlineReason = string.Empty;
             particles.Clear();
             return;
@@ -99,6 +104,7 @@ internal sealed class BarkeepCabinet
         finishRetryAtElapsed = 0;
         gradeFlash = -1;
         gradeFlashLeft = 0f;
+        tapFlashLeft = 0f;
         inlineReason = string.Empty;
         verbStage.Cancel();
         particles.Clear();
@@ -149,6 +155,7 @@ internal sealed class BarkeepCabinet
                     finishSent = false;
                     finishRetryAtElapsed = 0;
                     gradeFlashLeft = 0f;
+                    tapFlashLeft = 0f;
                     inlineReason = string.Empty;
                     verbStage.Cancel();
                     scoreRoll.Snap(fresh.Score);
@@ -282,6 +289,7 @@ internal sealed class BarkeepCabinet
         var canvas = new Rect(new Vector2(left, y), new Vector2(left + width, y + canvasHeight));
         ui.Card(drawList, canvas.Min, canvas.Max, Metrics.Radius.Card * scale);
         DrawOrderCanvas(drawList, ui, current, elapsed, canvas, scale, delta);
+        DrawTapFlash(drawList, ui, scale, delta);
         y = canvas.Max.Y + Metrics.Space.Md * scale;
 
         if (mode == BarkeepMode.Practice)
@@ -398,6 +406,11 @@ internal sealed class BarkeepCabinet
         verbStage.Update(delta, held, tapped);
         verbStage.Draw(drawList, ui, stage, scale);
 
+        if (verbStage.TryTakeTapGrade(out var tapGrade))
+        {
+            CelebrateTap(ui, tapGrade, stage, scale);
+        }
+
         if (!verbStage.TryTakeGrade(out var grade))
         {
             return;
@@ -406,10 +419,66 @@ internal sealed class BarkeepCabinet
         gradeFlash = grade;
         gradeFlashLeft = GradeFlashSecondsTotal;
         current.CommitStepGrade(grade);
-        if (grade == BarkeepGrading.PerfectGrade)
+        CelebrateGrade(ui, grade, stage.Center, scale);
+    }
+
+    private void CelebrateTap(AppSkin ui, int grade, Rect stage, float scale)
+    {
+        tapFlashGrade = grade;
+        tapFlashLeft = TapFlashSecondsTotal;
+        tapFlashCenter = Vector2.Clamp(ImGui.GetIO().MousePos, stage.Min, stage.Max);
+        var tint = BarkeepArt.GradeTint(grade, ui.Accent);
+        switch (grade)
         {
-            particles.Sparkle(stage.Center, 12, Gold, 140f * scale, 3f, 0.7f);
+            case BarkeepGrading.PerfectGrade:
+                particles.Sparkle(tapFlashCenter, 8, Gold, 110f * scale, 2.6f, 0.55f);
+                break;
+            case BarkeepGrading.GoodGrade:
+                particles.Burst(tapFlashCenter, 6, tint, 100f * scale, 2.2f, 0.45f);
+                break;
+            case BarkeepGrading.RoughGrade:
+                particles.Burst(tapFlashCenter, 4, tint, 70f * scale, 2f, 0.4f);
+                break;
+            default:
+                particles.Streaks(tapFlashCenter, 6, tint, 120f * scale, 2.2f, 0.45f, 0.9f, MathF.PI * 0.5f);
+                break;
         }
+    }
+
+    private void CelebrateGrade(AppSkin ui, int grade, Vector2 origin, float scale)
+    {
+        switch (grade)
+        {
+            case BarkeepGrading.PerfectGrade:
+                particles.Sparkle(origin, 16, Gold, 150f * scale, 3f, 0.75f);
+                break;
+            case BarkeepGrading.GoodGrade:
+                particles.Burst(origin, 12, ui.Accent, 130f * scale, 2.6f, 0.6f);
+                break;
+            case BarkeepGrading.RoughGrade:
+                particles.Burst(origin, 6, BarkeepArt.RoughAmber, 90f * scale, 2.2f, 0.5f);
+                break;
+            default:
+                particles.Streaks(origin, 10, BarkeepArt.MissRed, 150f * scale, 2.6f, 0.55f, 1.1f,
+                    MathF.PI * 0.5f);
+                break;
+        }
+    }
+
+    private void DrawTapFlash(ImDrawListPtr drawList, AppSkin ui, float scale, float delta)
+    {
+        if (tapFlashLeft <= 0f)
+        {
+            return;
+        }
+
+        tapFlashLeft -= delta;
+        var progress = 1f - MathF.Max(tapFlashLeft, 0f) / TapFlashSecondsTotal;
+        var tint = BarkeepArt.GradeTint(tapFlashGrade, ui.Accent);
+        var radius = (10f + 26f * Easing.EaseOutCubic(progress)) * scale;
+        drawList.AddCircle(tapFlashCenter, radius,
+            ImGui.GetColorU32(Palette.WithAlpha(tint, (1f - progress) * 0.85f)), 32,
+            MathF.Max(1f, 2.4f * scale * (1f - progress * 0.5f)));
     }
 
     private void DrawStepChips(ImDrawListPtr drawList, AppSkin ui, BarkeepShift current, float centerX, float y,
@@ -449,8 +518,23 @@ internal sealed class BarkeepCabinet
             _ => Loc.T(L.Casino.BarkeepGradeMiss),
         };
         var color = GradeColor(ui, gradeFlash);
-        Typography.DrawCentered(drawList, stage.Center with { Y = stage.Center.Y - 10f * scale }, label, color,
-            TextStyles.Title3);
+        var progress = 1f - Math.Clamp(gradeFlashLeft / GradeFlashSecondsTotal, 0f, 1f);
+        var fade = 1f - Easing.EaseOutCubic(progress);
+        var rounding = 14f * scale;
+        Squircle.Fill(drawList, stage.Min, stage.Max, rounding,
+            ImGui.GetColorU32(Palette.WithAlpha(color, fade * 0.14f)));
+        var inflate = Easing.EaseOutCubic(progress) * 6f * scale;
+        Squircle.Stroke(drawList, stage.Min - new Vector2(inflate, inflate),
+            stage.Max + new Vector2(inflate, inflate), rounding + inflate,
+            ImGui.GetColorU32(Palette.WithAlpha(color, fade * 0.6f)), MathF.Max(1f, 2f * scale));
+
+        var pop = GameJuice.PopIn(MathF.Min(1f, progress / 0.35f));
+        var shakeX = gradeFlash == BarkeepGrading.MissGrade
+            ? MathF.Sin(progress * 34f) * (1f - progress) * 5f * scale
+            : 0f;
+        Typography.DrawCentered(drawList,
+            new Vector2(stage.Center.X + shakeX, stage.Center.Y - 10f * scale), label, color,
+            TextStyles.Title3.Scale * (0.6f + 0.4f * pop), TextStyles.Title3.Weight);
         Typography.DrawCentered(drawList, stage.Center with { Y = stage.Center.Y + 14f * scale },
             "+" + GameNumber.Label(Math.Max(gradeFlash, 0)), Palette.WithAlpha(color, 0.8f),
             TextStyles.FootnoteEmphasized);
@@ -458,13 +542,7 @@ internal sealed class BarkeepCabinet
 
     private static Vector4 GradeColor(AppSkin ui, int grade)
     {
-        return grade switch
-        {
-            BarkeepGrading.PerfectGrade => Gold,
-            BarkeepGrading.GoodGrade => ui.Accent,
-            BarkeepGrading.RoughGrade => ui.BodyInk,
-            _ => Palette.WithAlpha(ui.MutedInk, 0.7f),
-        };
+        return BarkeepArt.GradeTint(grade, ui.Accent);
     }
 
     private void DrawSettle(ImDrawListPtr drawList, AppSkin ui, Rect body, float left, float width, float scale,
@@ -615,7 +693,7 @@ internal sealed class BarkeepCabinet
         var wagerHint = Loc.T(L.Casino.BarkeepWagerHint, entryText);
         var hintBlock = Typography.MeasureWrappedBlock(wagerHint, TextStyles.Footnote, width - pad * 2f);
         var ladderHeight = 20f * scale * BarkeepRules.LadderScoreFloors.Length + 30f * scale;
-        var wagerCardHeight = 24f * scale + hintBlock.Y + ladderHeight + 66f * scale + pad * 2f;
+        var wagerCardHeight = 24f * scale + hintBlock.Y + ladderHeight + 74f * scale + pad * 2f;
         var wagerMin = new Vector2(left, y);
         var wagerMax = new Vector2(left + width, y + wagerCardHeight);
         ui.Card(drawList, wagerMin, wagerMax, Metrics.Radius.Card * scale);
@@ -643,9 +721,10 @@ internal sealed class BarkeepCabinet
         {
             var lowStack = sitting!.Stack < BarkeepRules.EntryChips;
             var canStart = !blocked && !lowStack && !play.RoundInFlight && !startRequested;
-            var startRect = new Rect(new Vector2(left + width * 0.2f, actionY),
-                new Vector2(left + width * 0.8f, actionY + 44f * scale));
-            if (AppSkin.PillButton(startRect, Loc.T(L.Casino.BarkeepStartFor, entryText), true, canStart, ui.Theme))
+            var startRect = new Rect(new Vector2(left + width * 0.15f, actionY),
+                new Vector2(left + width * 0.85f, actionY + 52f * scale));
+            if (AppSkin.StackedPillButton(startRect, Loc.T(L.Casino.BarkeepStart), entryText, true, canStart,
+                    ui.Theme))
             {
                 inlineReason = string.Empty;
                 StartWager();
@@ -756,6 +835,7 @@ internal sealed class BarkeepCabinet
         practiceNewBest = false;
         settle = null;
         gradeFlashLeft = 0f;
+        tapFlashLeft = 0f;
         verbStage.Cancel();
         scoreRoll.Snap(0);
         payoutRoll.Snap(0);

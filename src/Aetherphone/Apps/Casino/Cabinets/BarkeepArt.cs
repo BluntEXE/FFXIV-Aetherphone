@@ -5,6 +5,23 @@ namespace Aetherphone.Apps.Casino.Cabinets;
 
 internal static class BarkeepArt
 {
+    public static readonly Vector4 PerfectGold = new(1f, 0.84f, 0.42f, 1f);
+
+    public static readonly Vector4 RoughAmber = new(0.96f, 0.62f, 0.30f, 1f);
+
+    public static readonly Vector4 MissRed = new(0.94f, 0.38f, 0.38f, 1f);
+
+    public static Vector4 GradeTint(int grade, Vector4 accent)
+    {
+        return grade switch
+        {
+            BarkeepGrading.PerfectGrade => PerfectGold,
+            BarkeepGrading.GoodGrade => accent,
+            BarkeepGrading.RoughGrade => RoughAmber,
+            _ => MissRed,
+        };
+    }
+
     public static void DrawVerbGlyph(ImDrawListPtr drawList, int stepKind, Vector2 center, float extent, uint ink)
     {
         switch (stepKind)

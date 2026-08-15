@@ -4578,7 +4578,7 @@
   "casino.scratch.lowStack": "No hay fichas suficientes para ese boleto. Recarga en la caja.",
   "casino.barkeep.wagerTitle": "Turno pagado",
   "casino.barkeep.wagerHint": "Entrada {0}. Atiende bien a cada cliente y la escalera de propinas paga.",
-  "casino.barkeep.startFor": "Empezar un turno por {0}",
+  "casino.barkeep.start": "Empezar un turno",
   "casino.barkeep.practiceTitle": "Turno de práctica",
   "casino.barkeep.practiceHint": "Sin fichas en juego. Sirve por amor al oficio.",
   "casino.barkeep.practiceAgain": "Practicar de nuevo",

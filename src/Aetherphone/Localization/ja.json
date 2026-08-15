@@ -4578,7 +4578,7 @@
   "casino.scratch.lowStack": "このカードにはチップが足りません。キャッシャーで補充してください。",
   "casino.barkeep.wagerTitle": "本番シフト",
   "casino.barkeep.wagerHint": "参加料{0}。お客を上手にもてなすほど報酬が上がります。",
-  "casino.barkeep.startFor": "{0}でシフトを始める",
+  "casino.barkeep.start": "シフトを始める",
   "casino.barkeep.practiceTitle": "練習シフト",
   "casino.barkeep.practiceHint": "チップは賭けません。腕を磨くための一杯を。",
   "casino.barkeep.practiceAgain": "もう一度練習",

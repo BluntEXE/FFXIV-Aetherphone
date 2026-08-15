@@ -4578,7 +4578,7 @@
   "casino.scratch.lowStack": "Not enough chips for that card. Top up at the cashier.",
   "casino.barkeep.wagerTitle": "Paid shift",
   "casino.barkeep.wagerHint": "Entry {0}. Serve every patron well and the tip ladder pays out.",
-  "casino.barkeep.startFor": "Start a shift for {0}",
+  "casino.barkeep.start": "Start a shift",
   "casino.barkeep.practiceTitle": "Practice shift",
   "casino.barkeep.practiceHint": "No chips at stake. Serve for the love of the craft.",
   "casino.barkeep.practiceAgain": "Practice again",

@@ -4578,7 +4578,7 @@
   "casino.scratch.lowStack": "Nicht genug Chips für diese Karte. Stock an der Kasse auf.",
   "casino.barkeep.wagerTitle": "Bezahlte Schicht",
   "casino.barkeep.wagerHint": "Einsatz {0}. Bedien jeden Gast gut und die Trinkgeldleiter zahlt aus.",
-  "casino.barkeep.startFor": "Schicht für {0} beginnen",
+  "casino.barkeep.start": "Schicht beginnen",
   "casino.barkeep.practiceTitle": "Übungsschicht",
   "casino.barkeep.practiceHint": "Keine Chips im Spiel. Serviere aus Liebe zum Handwerk.",
   "casino.barkeep.practiceAgain": "Nochmal üben",

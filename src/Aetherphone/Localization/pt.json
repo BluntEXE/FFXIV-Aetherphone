@@ -4578,7 +4578,7 @@
   "casino.scratch.lowStack": "Fichas insuficientes para essa raspadinha. Recarregue no caixa.",
   "casino.barkeep.wagerTitle": "Turno pago",
   "casino.barkeep.wagerHint": "Entrada {0}. Atenda bem cada cliente e a escada de gorjetas paga.",
-  "casino.barkeep.startFor": "Começar um turno por {0}",
+  "casino.barkeep.start": "Começar um turno",
   "casino.barkeep.practiceTitle": "Turno de treino",
   "casino.barkeep.practiceHint": "Sem fichas em jogo. Sirva pelo amor ao ofício.",
   "casino.barkeep.practiceAgain": "Treinar de novo",
