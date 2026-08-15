@@ -155,6 +155,8 @@ internal static class RichText
         var runs = layout.Runs;
         var hoveredKind = RichTextRunKind.Plain;
         var hoveredIndex = -1;
+        var hoveredMin = Vector2.Zero;
+        var hoveredMax = Vector2.Zero;
         if (ink.Interactive)
         {
             for (var index = 0; index < runs.Length; index++)
@@ -178,6 +180,8 @@ internal static class RichText
                 {
                     hoveredKind = run.Kind;
                     hoveredIndex = run.TargetIndex;
+                    hoveredMin = rectMin;
+                    hoveredMax = rectMax;
                 }
             }
         }
@@ -221,7 +225,7 @@ internal static class RichText
         }
 
         ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        hit = new RichTextHit(hoveredKind, hoveredIndex, ImGui.IsMouseClicked(ImGuiMouseButton.Left));
+        hit = new RichTextHit(hoveredKind, hoveredIndex, UiInteract.Click(hoveredMin, hoveredMax, true));
     }
 
     private static bool HasLinkCandidate(string text)
