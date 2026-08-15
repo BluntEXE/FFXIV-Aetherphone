@@ -341,17 +341,20 @@ internal sealed class BlackjackTable
 
         if (reachable)
         {
+            var rules = Loc.T(L.Casino.BlackjackRules);
+            var rulesWidth = Typography.Measure(rules, TextStyles.Caption2).X;
             var seatedWidth = Typography.Measure(seated, TextStyles.Caption1).X;
             var room = width - seatedWidth - Metrics.Space.Md * scale;
-            if (room > 0f)
+            if (rulesWidth <= room)
             {
-                var rules = Typography.FitText(Loc.T(L.Casino.BlackjackRules), room, TextStyles.Caption2);
-                var rulesWidth = Typography.Measure(rules, TextStyles.Caption2).X;
                 Typography.Draw(drawList, new Vector2(left + width - rulesWidth, y + 5f * scale), rules,
                     ui.MutedInk, TextStyles.Caption2);
+                return y + height;
             }
 
-            return y + height;
+            var rulesHeight = Typography.DrawWrappedLeft(new Vector2(left, y + height), rules, ui.MutedInk,
+                TextStyles.Caption2, width);
+            return y + height + rulesHeight;
         }
 
         var label = Loc.T(L.Casino.WheelReconnecting);
