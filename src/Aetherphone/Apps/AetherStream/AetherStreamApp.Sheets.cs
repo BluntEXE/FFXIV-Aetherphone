@@ -66,10 +66,9 @@ internal sealed partial class AetherStreamApp
     private void DrawPartyIdle(float width, float scale, Rect body)
     {
         var origin = ImGui.GetCursorScreenPos();
-        var emptyHeight = MathF.Max(150f * scale, body.Max.Y - origin.Y - PartyButtonHeight * scale * 2f
-            - Metrics.Space.Xl * scale);
-        EmptyState.Draw(new Rect(origin, origin + new Vector2(width, emptyHeight)), ui, FontAwesomeIcon.UserFriends,
-            Loc.T(L.AetherStream.WatchPartyHeader), Loc.T(L.AetherStream.WatchPartyHint));
+        var reserved = PartyButtonHeight * scale * 2f + (Metrics.Space.Sm + Metrics.Space.Lg) * scale;
+        var emptyHeight = MathF.Max(150f * scale, body.Max.Y - origin.Y - reserved);
+        DrawPartyIdleHero(origin, width, emptyHeight, scale);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, emptyHeight));
 
@@ -96,6 +95,18 @@ internal sealed partial class AetherStreamApp
 
         ImGui.SetCursorScreenPos(joinOrigin);
         ImGui.Dummy(new Vector2(width, buttonHeight));
+    }
+
+    private void DrawPartyIdleHero(Vector2 origin, float width, float height, float scale)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var centerX = origin.X + width * 0.5f;
+        var iconCenter = new Vector2(centerX, origin.Y + height * 0.5f - 30f * scale);
+        drawList.AddCircleFilled(iconCenter, 34f * scale, ImGui.GetColorU32(ui.FieldSurface), 32);
+        AppSkin.Icon(iconCenter, FontAwesomeIcon.UserFriends.ToIconString(), ui.MutedInk, 1.7f);
+        var maxWidth = MathF.Min(width - 24f * scale, 300f * scale);
+        Typography.DrawWrappedCentered(new Vector2(centerX, iconCenter.Y + 52f * scale),
+            Loc.T(L.AetherStream.WatchPartyHint), ui.MutedInk, TextStyles.Subheadline, maxWidth);
     }
 
     private void DrawPartyAwaiting(float width, float scale)
