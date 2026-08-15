@@ -112,12 +112,15 @@ internal sealed class ShellTransitionRenderer
                 var rise = (1f - reveal) * 8f * UiScale.Current;
                 var target = new Rect(screen.Min + offset + new Vector2(0f, rise),
                     screen.Max + offset + new Vector2(0f, rise));
+                var footprint = HostWindowFootprint.Capture();
                 ImGui.SetCursorScreenPos(target.Min);
                 using (ImRaii.PushId(over.Id))
                 using (ImRaii.Child("zoomstage", target.Size, false, cardFlags))
                 {
                     painter.PaintApp(target, screenRadius, theme, over);
                 }
+
+                footprint.Restore();
             }
 
             var cardDrawList = ImGui.GetWindowDrawList();

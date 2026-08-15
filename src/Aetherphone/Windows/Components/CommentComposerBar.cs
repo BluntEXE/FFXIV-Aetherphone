@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Animation;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
@@ -42,7 +43,7 @@ internal static class CommentComposerBar
         ImGui.SetCursorScreenPos(new Vector2(textLeft,
             (pillMin.Y + pillMax.Y) * 0.5f - ImGui.GetFrameHeight() * 0.5f));
         ImGui.SetNextItemWidth(pillMax.X - textLeft - 10f * scale);
-        if (focusPending)
+        if (focusPending && !InputShield.Active)
         {
             ImGui.SetKeyboardFocusHere();
             focusPending = false;

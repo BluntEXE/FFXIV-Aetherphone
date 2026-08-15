@@ -44,6 +44,7 @@ internal static class SceneCompositor
             return;
         }
 
+        var footprint = HostWindowFootprint.Capture();
         ImGui.PushClipRect(clip.Min, clip.Max, true);
         ImGui.SetCursorScreenPos(paintTarget.Min);
 
@@ -60,12 +61,14 @@ internal static class SceneCompositor
         }
 
         ImGui.PopClipRect();
+        footprint.Restore(clip.Max);
     }
 
     public static void DrawLayer(Rect clip, in Layer layer)
     {
         var offset = new Vector2(MathF.Round(layer.Offset.X), MathF.Round(layer.Offset.Y));
         var shifted = new Rect(clip.Min + offset, clip.Max + offset);
+        var footprint = HostWindowFootprint.Capture();
         ImGui.PushClipRect(clip.Min, clip.Max, true);
         ImGui.SetCursorScreenPos(shifted.Min);
 
@@ -95,5 +98,6 @@ internal static class SceneCompositor
         }
 
         ImGui.PopClipRect();
+        footprint.Restore(clip.Max);
     }
 }
