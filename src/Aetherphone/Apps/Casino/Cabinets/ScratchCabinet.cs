@@ -345,23 +345,25 @@ internal sealed class ScratchCabinet
         }
 
         var hint = Loc.T(L.Casino.ScratchHint);
-        Typography.DrawCentered(drawList, center with { Y = center.Y - 8f * scale }, hint, ui.MutedInk,
-            TextStyles.Footnote);
+        var hintTop = y + Metrics.Space.Xs * scale;
+        var hintHeight = Typography.DrawWrappedCentered(new Vector2(center.X, hintTop), hint, ui.MutedInk,
+            TextStyles.Footnote, width);
+        var bottom = hintTop + hintHeight;
         if (playback.Phase == ScratchPhase.Scratching)
         {
-            DrawRevealAll(drawList, ui, center, scale);
+            bottom = DrawRevealAll(drawList, ui, center.X, bottom + Metrics.Space.Xs * scale, scale);
         }
 
-        return y + height;
+        return MathF.Max(bottom, y + height);
     }
 
-    private void DrawRevealAll(ImDrawListPtr drawList, AppSkin ui, Vector2 center, float scale)
+    private float DrawRevealAll(ImDrawListPtr drawList, AppSkin ui, float centerX, float top, float scale)
     {
         var label = Loc.T(L.Casino.ScratchRevealAll);
         var labelSize = Typography.Measure(label, TextStyles.FootnoteEmphasized);
         var chipHeight = 26f * scale;
-        var chipMin = new Vector2(center.X - labelSize.X * 0.5f - 12f * scale, center.Y + 4f * scale);
-        var chipMax = new Vector2(center.X + labelSize.X * 0.5f + 12f * scale, center.Y + 4f * scale + chipHeight);
+        var chipMin = new Vector2(centerX - labelSize.X * 0.5f - 12f * scale, top);
+        var chipMax = new Vector2(centerX + labelSize.X * 0.5f + 12f * scale, top + chipHeight);
         var hovered = UiInteract.Hover(chipMin, chipMax);
         Squircle.Fill(drawList, chipMin, chipMax, chipHeight * 0.5f, ImGui.GetColorU32(ui.FieldSurface));
         Squircle.Stroke(drawList, chipMin, chipMax, chipHeight * 0.5f,
@@ -378,6 +380,8 @@ internal sealed class ScratchCabinet
         {
             playback.RevealAll();
         }
+
+        return chipMax.Y;
     }
 
     private float DrawTierRow(ImDrawListPtr drawList, AppSkin ui, float left, float y, float width, float scale)
