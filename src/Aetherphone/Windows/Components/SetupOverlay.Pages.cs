@@ -14,6 +14,7 @@ namespace Aetherphone.Windows.Components;
 internal sealed partial class SetupOverlay
 {
     private const string LodestoneProfileUrl = "https://na.finalfantasyxiv.com/lodestone/my/setting/profile/";
+    private const string RisingStonesProfileSettingsUrl = "https://ff14risingstones.web.sdo.com/pc/index.html#/me/settings/main";
     private const float TopMarginUnits = 56f;
     private const float ButtonsGapUnits = 24f;
     private const float FieldHeightUnits = 44f;
@@ -29,6 +30,8 @@ internal sealed partial class SetupOverlay
     private static readonly Vector4 LightPreviewFallback = new(0.86f, 0.88f, 0.93f, 1f);
     private static readonly Vector4 DarkPreviewFallback = new(0.07f, 0.07f, 0.11f, 1f);
     private static readonly Vector4 SignedInTint = new(0.30f, 0.78f, 0.42f, 1f);
+
+    private string risingStonesUuidDraft = string.Empty;
 
     private readonly record struct FeatureRow(FontAwesomeIcon Icon, Vector4 Tint, LocString Title, LocString Body);
 
@@ -283,6 +286,12 @@ internal sealed partial class SetupOverlay
             return;
         }
 
+        if (flow.RisingStonesActive)
+        {
+            DrawAccountRisingStones(screen, theme, offset, alpha, live);
+            return;
+        }
+
         if (flow.XivAuthActive)
         {
             DrawAccountXivAuth(screen, theme, offset, alpha, live);
@@ -302,7 +311,7 @@ internal sealed partial class SetupOverlay
     {
         if (gameData.IsChineseGameClient())
         {
-            DrawAccountChinaNotice(screen, theme, offset, alpha, live);
+            DrawAccountRisingStonesLanding(screen, theme, offset, alpha, live);
             return;
         }
 
@@ -352,18 +361,140 @@ internal sealed partial class SetupOverlay
         DrawStatusLine(drawList, screen, theme, offset, alpha, 3);
     }
 
-    private void DrawAccountChinaNotice(Rect screen, PhoneTheme theme, Vector2 offset, float alpha, bool live)
+    private void DrawAccountRisingStonesLanding(Rect screen, PhoneTheme theme, Vector2 offset, float alpha, bool live)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var body = Loc.T(L.Account.ChinaSignInPending);
-        var contentHeight = HeaderHeight(screen, body);
-        var top = CenteredTop(screen, contentHeight, 1) + offset.Y;
-        DrawHeader(drawList, screen, offset, alpha, FontAwesomeIcon.UserCircle, theme.Accent,
+        var scale = UiScale.Current;
+        var body = Loc.T(L.Account.RisingStonesIntro);
+        var hint = Loc.T(L.Account.RisingStonesUuidHint);
+        var player = gameData.LocalPlayer;
+        var hasPlayer = player is not null && player.Name.TextValue.Length > 0;
+        var logInFirst = Loc.T(L.Account.LogInFirst);
+        var labelBlock = LineBlock(TextStyles.Footnote) + Metrics.Space.Xs * scale;
+        var fieldHeight = FieldHeightUnits * scale;
+        var bodyWidth = BodyWidth(screen);
+        var extraHeight = hasPlayer
+            ? Metrics.Space.Xl * scale + labelBlock + fieldHeight + Metrics.Space.Md * scale +
+              WrappedHeight(hint, TextStyles.Footnote, bodyWidth)
+            : Metrics.Space.Xl * scale + WrappedHeight(logInFirst, TextStyles.Subheadline, bodyWidth);
+        var contentHeight = HeaderHeight(screen, body) + extraHeight;
+        var top = CenteredTop(screen, contentHeight, 2) + offset.Y;
+        var y = DrawHeader(drawList, screen, offset, alpha, FontAwesomeIcon.UserCircle, theme.Accent,
             Loc.T(L.Setup.AccountTitle), body, theme, top);
-        if (Primary(drawList, ButtonRect(screen, offset, 0), Loc.T(L.Onboarding.Continue), theme, alpha, live))
+        var ready = false;
+        if (hasPlayer)
         {
+            var fieldRect = CardRect(screen, offset, y + Metrics.Space.Xl * scale + labelBlock, fieldHeight);
+            DrawField(drawList, fieldRect, theme, "setupRisingStonesUuid", Loc.T(L.Account.RisingStonesUuidLabel),
+                ref risingStonesUuidDraft, SignInFlow.RisingStonesUuidMaxLength, alpha, live);
+            risingStonesUuidDraft = SanitizeDigits(risingStonesUuidDraft);
+            Typography.DrawWrappedCentered(drawList, hint, TextStyles.Footnote, Fade(theme.TextMuted, alpha),
+                new Vector2(screen.Center.X + offset.X, fieldRect.Max.Y + Metrics.Space.Md * scale), bodyWidth);
+            ready = live && !flow.Busy && risingStonesUuidDraft.Length > 0;
+        }
+        else
+        {
+            Typography.DrawWrappedCentered(drawList, logInFirst, TextStyles.Subheadline, Fade(theme.TextMuted, alpha),
+                new Vector2(screen.Center.X + offset.X, y + Metrics.Space.Xl * scale), bodyWidth);
+        }
+
+        if (Primary(drawList, ButtonRect(screen, offset, 1), Loc.T(L.Account.RisingStonesSignIn), theme, alpha, live,
+                ready))
+        {
+            flow.StartRisingStones(risingStonesUuidDraft);
+        }
+
+        if (TextAction(drawList, TextActionCenter(screen, offset, 0), Loc.T(L.Setup.SetUpLater), theme, alpha, live))
+        {
+            flow.Reset();
             AdvancePage();
         }
+
+        DrawStatusLine(drawList, screen, theme, offset, alpha, 2);
+    }
+
+    private void DrawAccountRisingStones(Rect screen, PhoneTheme theme, Vector2 offset, float alpha, bool live)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var scale = UiScale.Current;
+        var body = Loc.T(L.Account.RisingStonesVerifyIntro);
+        var stepsWidth = ContentWidth(screen);
+        var step1 = Loc.T(L.Account.Step1);
+        var step2 = Loc.T(L.Account.RisingStonesStep2);
+        var step3 = Loc.T(L.Account.RisingStonesStep3);
+        var step4 = Loc.T(L.Account.Step4);
+        var stepsHeight = StepLineHeight(step1, stepsWidth, scale) + StepLineHeight(step2, stepsWidth, scale) +
+                          StepLineHeight(step3, stepsWidth, scale) + StepLineHeight(step4, stepsWidth, scale);
+        var contentHeight = HeaderHeight(screen, body) + Metrics.Space.Lg * scale + 54f * scale +
+                            Metrics.Space.Lg * scale + stepsHeight;
+        var top = CenteredTop(screen, contentHeight, 3) + offset.Y;
+        var y = DrawHeader(drawList, screen, offset, alpha, FontAwesomeIcon.Key, theme.Accent,
+            Loc.T(L.Account.RisingStonesVerifyTitle), body, theme, top);
+        var codeRect = CardRect(screen, offset, y + Metrics.Space.Lg * scale, 54f * scale);
+        if (DrawCodeCard(drawList, codeRect, theme, flow.ChallengeCode, alpha, live))
+        {
+            ImGui.SetClipboardText(flow.ChallengeCode);
+        }
+
+        y = codeRect.Max.Y + Metrics.Space.Lg * scale;
+        var stepsLeft = codeRect.Min.X;
+        y = DrawStepLine(drawList, "1", step1, stepsLeft, y, stepsWidth, alpha, theme, scale);
+        y = DrawStepLine(drawList, "2", step2, stepsLeft, y, stepsWidth, alpha, theme, scale);
+        y = DrawStepLine(drawList, "3", step3, stepsLeft, y, stepsWidth, alpha, theme, scale);
+        DrawStepLine(drawList, "4", step4, stepsLeft, y, stepsWidth, alpha, theme, scale);
+        var (leftRect, rightRect) = HalfButtonRects(screen, offset, 2);
+        if (Secondary(drawList, leftRect, Loc.T(L.Account.CopyCode), theme, alpha, live))
+        {
+            ImGui.SetClipboardText(flow.ChallengeCode);
+        }
+
+        if (Secondary(drawList, rightRect, Loc.T(L.Account.RisingStonesOpen), theme, alpha, live))
+        {
+            UrlActions.OpenInBrowser(RisingStonesProfileSettingsUrl);
+        }
+
+        if (Primary(drawList, ButtonRect(screen, offset, 1), Loc.T(L.Account.VerifyAdded), theme, alpha, live,
+                !flow.Busy))
+        {
+            flow.VerifyChallenge();
+        }
+
+        if (TextAction(drawList, TextActionCenter(screen, offset, 0), Loc.T(L.Common.Cancel), theme, alpha, live))
+        {
+            flow.Reset();
+        }
+
+        DrawStatusLine(drawList, screen, theme, offset, alpha, 3);
+    }
+
+    private static string SanitizeDigits(string value)
+    {
+        var clean = true;
+        for (var index = 0; index < value.Length; index++)
+        {
+            if (value[index] < '0' || value[index] > '9')
+            {
+                clean = false;
+                break;
+            }
+        }
+
+        if (clean)
+        {
+            return value;
+        }
+
+        Span<char> digits = stackalloc char[value.Length];
+        var length = 0;
+        for (var index = 0; index < value.Length; index++)
+        {
+            if (value[index] >= '0' && value[index] <= '9')
+            {
+                digits[length++] = value[index];
+            }
+        }
+
+        return new string(digits[..length]);
     }
 
     private void DrawAccountSignedIn(Rect screen, PhoneTheme theme, Vector2 offset, float alpha, bool live)
@@ -449,9 +580,9 @@ internal sealed partial class SetupOverlay
         var y = DrawHeader(drawList, screen, offset, alpha, FontAwesomeIcon.Key, theme.Accent,
             Loc.T(L.Account.VerifyTitle), body, theme, top);
         var codeRect = CardRect(screen, offset, y + Metrics.Space.Lg * scale, 54f * scale);
-        if (DrawCodeCard(drawList, codeRect, theme, flow.LodestoneCode, alpha, live))
+        if (DrawCodeCard(drawList, codeRect, theme, flow.ChallengeCode, alpha, live))
         {
-            ImGui.SetClipboardText(flow.LodestoneCode);
+            ImGui.SetClipboardText(flow.ChallengeCode);
         }
 
         y = codeRect.Max.Y + Metrics.Space.Lg * scale;
@@ -463,7 +594,7 @@ internal sealed partial class SetupOverlay
         var (leftRect, rightRect) = HalfButtonRects(screen, offset, 2);
         if (Secondary(drawList, leftRect, Loc.T(L.Account.CopyCode), theme, alpha, live))
         {
-            ImGui.SetClipboardText(flow.LodestoneCode);
+            ImGui.SetClipboardText(flow.ChallengeCode);
         }
 
         if (Secondary(drawList, rightRect, Loc.T(L.Account.OpenProfile), theme, alpha, live))
@@ -474,7 +605,7 @@ internal sealed partial class SetupOverlay
         if (Primary(drawList, ButtonRect(screen, offset, 1), Loc.T(L.Account.VerifyAdded), theme, alpha, live,
                 !flow.Busy))
         {
-            flow.VerifyLodestone();
+            flow.VerifyChallenge();
         }
 
         if (TextAction(drawList, TextActionCenter(screen, offset, 0), Loc.T(L.Common.Cancel), theme, alpha, live))

@@ -5056,5 +5056,20 @@
   "failure.sessionRevoked": "Вы вышли из аккаунта. Войдите снова, чтобы продолжить.",
   "failure.socialDisabled": "Социальные приложения временно отключены. Повторите попытку позже.",
   "failure.appDisabled": "Это приложение временно отключено. Повторите попытку позже.",
-  "account.chinaSignInPending": "Вход в Aethernet пока недоступен в китайской версии игры. Подтверждение аккаунта через форум Rising Stones (石之家) в разработке. Приложения, которым не нужен аккаунт, продолжают работать."
+  "account.risingStonesIntro": "Один аккаунт открывает вход во все приложения Aethernet: Chirper, Aethergram и другие. В китайской версии игры подтверждение владения идёт через ваш профиль Rising Stones (石之家), пароль не нужен.",
+  "account.risingStonesSignIn": "Войти через Rising Stones",
+  "account.risingStonesUuidLabel": "UID Rising Stones",
+  "account.risingStonesUuidHint": "Ваш UID указан числом на странице вашего профиля Rising Stones.",
+  "account.risingStonesVerifyTitle": "Подтверждение через Rising Stones",
+  "account.risingStonesVerifyIntro": "Добавьте этот код в личную подпись на Rising Stones. Потом его можно удалить.",
+  "account.risingStonesStep2": "Откройте настройки профиля Rising Stones",
+  "account.risingStonesStep3": "Вставьте его в личную подпись и сохраните",
+  "account.risingStonesOpen": "Открыть Rising Stones",
+  "account.risingStonesVerifying": "Проверка через Rising Stones…",
+  "account.fail.risingStonesNotFound.title": "Профиль не найден",
+  "account.fail.risingStonesNotFound.body": "Мы не нашли этот профиль Rising Stones. Проверьте UID на странице профиля и попробуйте ещё раз.",
+  "account.fail.risingStonesCodeNotFound.title": "Код ещё не сохранён",
+  "account.fail.risingStonesCodeNotFound.body": "Профиль найден, но кода в личной подписи пока нет. После сохранения Rising Stones может обновиться не сразу. Немного подождите и проверьте снова.",
+  "account.fail.risingStonesUnavailable.title": "Rising Stones недоступен",
+  "account.fail.risingStonesUnavailable.body": "Сейчас не удалось прочитать Rising Stones. Оставьте код в подписи и повторите проверку через минуту-другую."
 }

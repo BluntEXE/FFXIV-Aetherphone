@@ -16,6 +16,9 @@ internal static class VerifyFailure
     public const string AccessDenied = "access_denied";
     public const string XivAuthUnavailable = "xivauth_unavailable";
     public const string XivCharacterNotVerified = "xiv_character_not_verified";
+    public const string RisingStonesProfileNotFound = "risingstones_profile_not_found";
+    public const string RisingStonesCodeNotFound = "risingstones_code_not_found";
+    public const string RisingStonesUnavailable = "risingstones_unavailable";
 }
 
 internal readonly record struct VerifyResult(

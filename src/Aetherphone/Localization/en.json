@@ -5056,5 +5056,20 @@
   "failure.sessionRevoked": "You were signed out. Sign in again to continue.",
   "failure.socialDisabled": "The social apps are temporarily switched off. Try again later.",
   "failure.appDisabled": "This app is temporarily switched off. Try again later.",
-  "account.chinaSignInPending": "Aethernet sign-in isn't available on the Chinese game version yet. Account verification through the Rising Stones forum (石之家) is in the works. Apps that don't need an account keep working."
+  "account.risingStonesIntro": "One account signs you in to every Aethernet app: Chirper, Aethergram and more. On the Chinese game version, ownership is verified through your Rising Stones (石之家) profile, so there's no password.",
+  "account.risingStonesSignIn": "Sign in with Rising Stones",
+  "account.risingStonesUuidLabel": "Rising Stones UID",
+  "account.risingStonesUuidHint": "Your UID is the number shown on your Rising Stones profile page.",
+  "account.risingStonesVerifyTitle": "Verify with Rising Stones",
+  "account.risingStonesVerifyIntro": "Add this code to your personal signature on Rising Stones. You can remove it afterwards.",
+  "account.risingStonesStep2": "Open your Rising Stones profile settings",
+  "account.risingStonesStep3": "Paste it into your personal signature, then save",
+  "account.risingStonesOpen": "Open Rising Stones",
+  "account.risingStonesVerifying": "Verifying via Rising Stones…",
+  "account.fail.risingStonesNotFound.title": "Profile not found",
+  "account.fail.risingStonesNotFound.body": "We couldn't find that Rising Stones profile. Check the UID shown on your profile page, then try again.",
+  "account.fail.risingStonesCodeNotFound.title": "Code not saved yet",
+  "account.fail.risingStonesCodeNotFound.body": "We found your profile, but the code isn't in your personal signature yet. Rising Stones can take a moment to update after you save. Wait a little, then Verify again.",
+  "account.fail.risingStonesUnavailable.title": "Rising Stones unavailable",
+  "account.fail.risingStonesUnavailable.body": "We couldn't read Rising Stones just now. Keep the code in your signature and Verify again in a minute or two."
 }

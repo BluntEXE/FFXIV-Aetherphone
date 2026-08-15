@@ -5056,5 +5056,20 @@
   "failure.sessionRevoked": "Oturumun kapatıldı. Devam etmek için tekrar giriş yap.",
   "failure.socialDisabled": "Sosyal uygulamalar geçici olarak kapalı. Daha sonra tekrar dene.",
   "failure.appDisabled": "Bu uygulama geçici olarak kapalı. Daha sonra tekrar dene.",
-  "account.chinaSignInPending": "Aethernet girişi oyunun Çin sürümünde henüz kullanılamıyor. Rising Stones forumu (石之家) üzerinden hesap doğrulama üzerinde çalışıyoruz. Hesap gerektirmeyen uygulamalar çalışmaya devam ediyor."
+  "account.risingStonesIntro": "Tek hesap seni tüm Aethernet uygulamalarına bağlar: Chirper, Aethergram ve daha fazlası. Oyunun Çin sürümünde sahiplik, Rising Stones (石之家) profilin üzerinden doğrulanır, parola gerekmez.",
+  "account.risingStonesSignIn": "Rising Stones ile giriş yap",
+  "account.risingStonesUuidLabel": "Rising Stones UID",
+  "account.risingStonesUuidHint": "UID, Rising Stones profil sayfanda görünen numaradır.",
+  "account.risingStonesVerifyTitle": "Rising Stones ile doğrula",
+  "account.risingStonesVerifyIntro": "Bu kodu Rising Stones'taki kişisel imzana ekle. Sonrasında silebilirsin.",
+  "account.risingStonesStep2": "Rising Stones profil ayarlarını aç",
+  "account.risingStonesStep3": "Kişisel imzana yapıştır ve kaydet",
+  "account.risingStonesOpen": "Rising Stones'u aç",
+  "account.risingStonesVerifying": "Rising Stones üzerinden doğrulanıyor…",
+  "account.fail.risingStonesNotFound.title": "Profil bulunamadı",
+  "account.fail.risingStonesNotFound.body": "Bu Rising Stones profilini bulamadık. Profil sayfanda görünen UID'yi kontrol edip tekrar dene.",
+  "account.fail.risingStonesCodeNotFound.title": "Kod henüz kaydedilmedi",
+  "account.fail.risingStonesCodeNotFound.body": "Profilini bulduk ama kod henüz kişisel imzanda değil. Kaydettikten sonra güncellenmesi biraz sürebilir. Biraz bekleyip tekrar doğrula.",
+  "account.fail.risingStonesUnavailable.title": "Rising Stones'a ulaşılamıyor",
+  "account.fail.risingStonesUnavailable.body": "Rising Stones şu anda okunamadı. Kodu imzanda bırak ve bir iki dakika sonra tekrar doğrula."
 }

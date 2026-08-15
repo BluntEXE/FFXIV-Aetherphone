@@ -5056,5 +5056,20 @@
   "failure.sessionRevoked": "サインアウトされました。続けるにはもう一度サインインしてください。",
   "failure.socialDisabled": "ソーシャルアプリは一時的に停止しています。しばらくしてからお試しください。",
   "failure.appDisabled": "このアプリは一時的に停止しています。しばらくしてからお試しください。",
-  "account.chinaSignInPending": "中国版クライアントではAethernetへのサインインはまだ利用できません。石之家フォーラムによるアカウント認証を準備中です。アカウント不要のアプリはそのまま使えます。"
+  "account.risingStonesIntro": "1つのアカウントでChirper、AethergramなどのすべてのAethernetアプリにサインインできます。中国版クライアントでは、所有権は石之家（Rising Stones）のプロフィールを通じて確認されるため、パスワードは不要です。",
+  "account.risingStonesSignIn": "石之家でサインイン",
+  "account.risingStonesUuidLabel": "石之家UID",
+  "account.risingStonesUuidHint": "UIDは石之家のプロフィールページに表示されている番号です。",
+  "account.risingStonesVerifyTitle": "石之家で認証",
+  "account.risingStonesVerifyIntro": "このコードを石之家のプロフィール署名（个性签名）に追加してください。認証後は削除できます。",
+  "account.risingStonesStep2": "石之家のプロフィール設定を開く",
+  "account.risingStonesStep3": "署名に貼り付けて保存する",
+  "account.risingStonesOpen": "石之家を開く",
+  "account.risingStonesVerifying": "石之家で認証中…",
+  "account.fail.risingStonesNotFound.title": "プロフィールが見つかりません",
+  "account.fail.risingStonesNotFound.body": "その石之家プロフィールが見つかりませんでした。プロフィールページに表示されているUIDを確認して、もう一度お試しください。",
+  "account.fail.risingStonesCodeNotFound.title": "コードが未保存です",
+  "account.fail.risingStonesCodeNotFound.body": "プロフィールは見つかりましたが、署名にコードがまだありません。保存後、反映まで少し時間がかかることがあります。少し待ってから、もう一度認証してください。",
+  "account.fail.risingStonesUnavailable.title": "石之家に接続できません",
+  "account.fail.risingStonesUnavailable.body": "石之家を読み取れませんでした。署名のコードはそのままにして、1〜2分後にもう一度認証してください。"
 }

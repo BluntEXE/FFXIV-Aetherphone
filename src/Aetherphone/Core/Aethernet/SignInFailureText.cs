@@ -31,6 +31,15 @@ internal static class SignInFailureText
                 return (Loc.T(L.Account.FailAccessDeniedTitle), Loc.T(L.Account.FailAccessDeniedBody));
             case VerifyFailure.XivAuthUnavailable:
                 return (Loc.T(L.Account.FailXivUnavailableTitle), Loc.T(L.Account.FailXivUnavailableBody));
+            case VerifyFailure.RisingStonesProfileNotFound:
+                return (Loc.T(L.Account.FailRisingStonesNotFoundTitle),
+                    Loc.T(L.Account.FailRisingStonesNotFoundBody));
+            case VerifyFailure.RisingStonesCodeNotFound:
+                return (Loc.T(L.Account.FailRisingStonesCodeNotFoundTitle),
+                    Loc.T(L.Account.FailRisingStonesCodeNotFoundBody));
+            case VerifyFailure.RisingStonesUnavailable:
+                return (Loc.T(L.Account.FailRisingStonesUnavailableTitle),
+                    Loc.T(L.Account.FailRisingStonesUnavailableBody));
             case VerifyFailure.XivCharacterNotVerified:
                 var xivPlayer = gameData.LocalPlayer;
                 var xivName = xivPlayer?.Name.TextValue ?? string.Empty;

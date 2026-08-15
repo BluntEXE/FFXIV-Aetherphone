@@ -2,6 +2,8 @@ namespace Aetherphone.Core.Aethernet.Contracts;
 
 internal sealed record ChallengeRequest(string Name, string World);
 
+internal sealed record RisingStonesChallengeRequest(string Uuid);
+
 internal sealed record ChallengeResponse(string ChallengeId, string Code, string Instructions);
 
 internal sealed record VerifyRequest(string ChallengeId);

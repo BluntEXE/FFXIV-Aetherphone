@@ -8,6 +8,7 @@ namespace Aetherphone.Core.Aethernet;
 [JsonSerializable(typeof(PatreonLinkStartResponse))]
 [JsonSerializable(typeof(PatreonLinkStatusResponse))]
 [JsonSerializable(typeof(ChallengeRequest))]
+[JsonSerializable(typeof(RisingStonesChallengeRequest))]
 [JsonSerializable(typeof(ChallengeResponse))]
 [JsonSerializable(typeof(VerifyRequest))]
 [JsonSerializable(typeof(AuthResponse))]

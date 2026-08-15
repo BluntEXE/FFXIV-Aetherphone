@@ -16,6 +16,11 @@ internal sealed class AuthClient
         return net.PostAnonymousAsync("/auth/challenge", new ChallengeRequest(name, world), AethernetJsonContext.Default.ChallengeRequest, AethernetJsonContext.Default.ChallengeResponse, token);
     }
 
+    public Task<ChallengeResponse?> RisingStonesChallengeAsync(string uuid, CancellationToken token)
+    {
+        return net.PostAnonymousAsync("/auth/risingstones/challenge", new RisingStonesChallengeRequest(uuid), AethernetJsonContext.Default.RisingStonesChallengeRequest, AethernetJsonContext.Default.ChallengeResponse, token);
+    }
+
     public async Task<VerifyResult> VerifyAsync(string challengeId, CancellationToken token)
     {
         var status = 0;

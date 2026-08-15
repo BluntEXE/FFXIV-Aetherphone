@@ -5056,5 +5056,20 @@
   "failure.sessionRevoked": "Tu as été déconnecté. Reconnecte-toi pour continuer.",
   "failure.socialDisabled": "Les applis sociales sont désactivées temporairement. Réessaie plus tard.",
   "failure.appDisabled": "Cette appli est désactivée temporairement. Réessaie plus tard.",
-  "account.chinaSignInPending": "La connexion à Aethernet n'est pas encore disponible sur la version chinoise du jeu. La vérification de compte via le forum Rising Stones (石之家) est en préparation. Les applis qui ne demandent pas de compte continuent de fonctionner."
+  "account.risingStonesIntro": "Un seul compte vous connecte à toutes les applis Aethernet : Chirper, Aethergram et plus encore. Sur la version chinoise du jeu, la propriété est vérifiée via votre profil Rising Stones (石之家), sans mot de passe.",
+  "account.risingStonesSignIn": "Se connecter avec Rising Stones",
+  "account.risingStonesUuidLabel": "UID Rising Stones",
+  "account.risingStonesUuidHint": "Votre UID est le numéro affiché sur votre page de profil Rising Stones.",
+  "account.risingStonesVerifyTitle": "Vérifier avec Rising Stones",
+  "account.risingStonesVerifyIntro": "Ajoutez ce code à votre signature personnelle sur Rising Stones. Vous pourrez le retirer ensuite.",
+  "account.risingStonesStep2": "Ouvrez les paramètres de votre profil Rising Stones",
+  "account.risingStonesStep3": "Collez-le dans votre signature personnelle, puis enregistrez",
+  "account.risingStonesOpen": "Ouvrir Rising Stones",
+  "account.risingStonesVerifying": "Vérification via Rising Stones…",
+  "account.fail.risingStonesNotFound.title": "Profil introuvable",
+  "account.fail.risingStonesNotFound.body": "Nous n'avons pas trouvé ce profil Rising Stones. Vérifiez l'UID affiché sur votre page de profil, puis réessayez.",
+  "account.fail.risingStonesCodeNotFound.title": "Code pas encore enregistré",
+  "account.fail.risingStonesCodeNotFound.body": "Nous avons trouvé votre profil, mais le code n'est pas encore dans votre signature personnelle. Rising Stones peut mettre un moment à se mettre à jour après l'enregistrement. Patientez un peu, puis vérifiez à nouveau.",
+  "account.fail.risingStonesUnavailable.title": "Rising Stones indisponible",
+  "account.fail.risingStonesUnavailable.body": "Impossible de lire Rising Stones pour le moment. Gardez le code dans votre signature et vérifiez à nouveau dans une minute ou deux."
 }

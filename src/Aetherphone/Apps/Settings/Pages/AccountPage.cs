@@ -30,6 +30,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
     }
 
     private const string LodestoneProfileUrl = "https://na.finalfantasyxiv.com/lodestone/my/setting/profile/";
+    private const string RisingStonesProfileSettingsUrl = "https://ff14risingstones.web.sdo.com/pc/index.html#/me/settings/main";
     public string Title => Loc.T(L.Account.Title);
 
     public string Summary =>
@@ -61,6 +62,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
     private readonly PatreonLinkFlow patreonFlow;
     private readonly CancellationTokenSource cancellation = new();
     private readonly List<ulong> accountIds = new();
+    private string risingStonesUuid = string.Empty;
     private int accountIdsStamp = -1;
     private volatile bool avatarBusy;
     private bool meRequested;
@@ -763,12 +765,13 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
 
         if (gameData.IsChineseGameClient())
         {
-            ImGui.Dummy(new Vector2(0f, 6f * UiScale.Current));
-            using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
+            if (flow.RisingStonesActive)
             {
-                Typography.Wrapped(Loc.T(L.Account.ChinaSignInPending));
+                DrawRisingStonesVerifyStep(theme);
+                return;
             }
 
+            DrawRisingStonesSignedOut(theme);
             return;
         }
 
@@ -813,6 +816,113 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
         {
             Typography.Wrapped(Loc.T(L.Account.LodestoneHint));
+        }
+
+        DrawStatus(theme);
+    }
+
+    private void DrawRisingStonesSignedOut(PhoneTheme theme)
+    {
+        var scale = UiScale.Current;
+        DrawAccountsSection(theme, scale, false);
+        ImGui.Dummy(new Vector2(0f, 6f * scale));
+        using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
+        {
+            Typography.Wrapped(Loc.T(L.Account.RisingStonesIntro));
+        }
+
+        ImGui.Dummy(new Vector2(0f, 12f * scale));
+        DrawRisingStonesUuidField(theme, scale);
+        ImGui.Dummy(new Vector2(0f, 6f * scale));
+        using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
+        {
+            Typography.Wrapped(Loc.T(L.Account.RisingStonesUuidHint));
+        }
+
+        ImGui.Dummy(new Vector2(0f, 14f * scale));
+        if (PrimaryButton(Loc.T(L.Account.RisingStonesSignIn), theme) && !flow.Busy && risingStonesUuid.Length > 0)
+        {
+            flow.StartRisingStones(risingStonesUuid);
+        }
+
+        DrawStatus(theme);
+    }
+
+    private void DrawRisingStonesUuidField(PhoneTheme theme, float scale)
+    {
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        var height = 44f * scale;
+        var drawList = ImGui.GetWindowDrawList();
+        Squircle.Fill(drawList, origin, new Vector2(origin.X + width, origin.Y + height), 9f * scale,
+            ImGui.GetColorU32(theme.GroupedCard));
+        ImGui.SetCursorScreenPos(new Vector2(origin.X + 12f * scale,
+            origin.Y + height * 0.5f - ImGui.GetFrameHeight() * 0.5f));
+        ImGui.SetNextItemWidth(width - 24f * scale);
+        using (ImRaii.PushColor(ImGuiCol.FrameBg, new Vector4(0f, 0f, 0f, 0f)).Push(ImGuiCol.Text, theme.TextStrong))
+        {
+            ImGui.InputTextWithHint("##risingStonesUuid", Loc.T(L.Account.RisingStonesUuidLabel),
+                ref risingStonesUuid, SignInFlow.RisingStonesUuidMaxLength, ImGuiInputTextFlags.CharsDecimal);
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, height));
+    }
+
+    private void DrawRisingStonesVerifyStep(PhoneTheme theme)
+    {
+        var scale = UiScale.Current;
+        ImGui.Dummy(new Vector2(0f, 4f * scale));
+        using (Plugin.Fonts.Push(1.3f, FontWeight.SemiBold))
+        {
+            using (ImRaii.PushColor(ImGuiCol.Text, theme.TextStrong))
+            {
+                Typography.Plain(Loc.T(L.Account.RisingStonesVerifyTitle));
+            }
+        }
+
+        ImGui.Dummy(new Vector2(0f, 4f * scale));
+        using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
+        {
+            Typography.Wrapped(Loc.T(L.Account.RisingStonesVerifyIntro));
+        }
+
+        var code = flow.ChallengeCode;
+        ImGui.Dummy(new Vector2(0f, 10f * scale));
+        if (DrawCodeCard(theme, code))
+        {
+            ImGui.SetClipboardText(code);
+        }
+
+        ImGui.Dummy(new Vector2(0f, 12f * scale));
+        DrawStepRow("1", Loc.T(L.Account.Step1), theme);
+        DrawStepRow("2", Loc.T(L.Account.RisingStonesStep2), theme);
+        DrawStepRow("3", Loc.T(L.Account.RisingStonesStep3), theme);
+        DrawStepRow("4", Loc.T(L.Account.Step4), theme);
+        ImGui.Dummy(new Vector2(0f, 12f * scale));
+        var spacing = 8f * scale;
+        var half = (ImGui.GetContentRegionAvail().X - spacing) * 0.5f;
+        if (Button(Loc.T(L.Account.CopyCode), theme, half))
+        {
+            ImGui.SetClipboardText(code);
+        }
+
+        ImGui.SameLine(0f, spacing);
+        if (Button(Loc.T(L.Account.RisingStonesOpen), theme, half))
+        {
+            UrlActions.OpenInBrowser(RisingStonesProfileSettingsUrl);
+        }
+
+        ImGui.Dummy(new Vector2(0f, 8f * scale));
+        if (PrimaryButton(Loc.T(L.Account.VerifyAdded), theme) && !flow.Busy)
+        {
+            flow.VerifyChallenge();
+        }
+
+        ImGui.Dummy(new Vector2(0f, 2f * scale));
+        if (GhostButton(Loc.T(L.Common.Cancel), theme))
+        {
+            ResetFlow();
         }
 
         DrawStatus(theme);
@@ -885,7 +995,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             Typography.Wrapped(Loc.T(L.Account.VerifyIntro));
         }
 
-        var code = flow.LodestoneCode;
+        var code = flow.ChallengeCode;
         ImGui.Dummy(new Vector2(0f, 10f * scale));
         if (DrawCodeCard(theme, code))
         {
@@ -914,7 +1024,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         ImGui.Dummy(new Vector2(0f, 8f * scale));
         if (PrimaryButton(Loc.T(L.Account.VerifyAdded), theme) && !flow.Busy)
         {
-            flow.VerifyLodestone();
+            flow.VerifyChallenge();
         }
 
         ImGui.Dummy(new Vector2(0f, 2f * scale));

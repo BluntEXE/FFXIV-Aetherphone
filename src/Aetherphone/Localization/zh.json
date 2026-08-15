@@ -5056,5 +5056,20 @@
   "failure.sessionRevoked": "你已退出登录。请重新登录以继续。",
   "failure.socialDisabled": "社交应用已临时关闭。请稍后再试。",
   "failure.appDisabled": "该应用已临时关闭。请稍后再试。",
-  "account.chinaSignInPending": "国服客户端暂时无法登录 Aethernet。我们正在开发通过石之家论坛验证账号的功能。无需账号的应用可以正常使用。"
+  "account.risingStonesIntro": "一个账号即可登录所有 Aethernet 应用：Chirper、Aethergram 等。国服客户端通过你的石之家资料验证所有权，无需密码。",
+  "account.risingStonesSignIn": "使用石之家登录",
+  "account.risingStonesUuidLabel": "石之家 UID",
+  "account.risingStonesUuidHint": "UID 是你石之家个人主页上显示的数字。",
+  "account.risingStonesVerifyTitle": "通过石之家验证",
+  "account.risingStonesVerifyIntro": "将此代码添加到你石之家的个性签名中，验证完成后即可删除。",
+  "account.risingStonesStep2": "打开石之家的个人资料设置",
+  "account.risingStonesStep3": "粘贴到个性签名中并保存",
+  "account.risingStonesOpen": "打开石之家",
+  "account.risingStonesVerifying": "正在通过石之家验证…",
+  "account.fail.risingStonesNotFound.title": "未找到该资料",
+  "account.fail.risingStonesNotFound.body": "没有找到对应的石之家资料。请核对个人主页上显示的 UID 后重试。",
+  "account.fail.risingStonesCodeNotFound.title": "代码尚未保存",
+  "account.fail.risingStonesCodeNotFound.body": "找到了你的石之家资料，但个性签名里还没有这个代码。保存后可能需要一点时间生效，请稍候再点击验证。",
+  "account.fail.risingStonesUnavailable.title": "石之家暂时无法访问",
+  "account.fail.risingStonesUnavailable.body": "暂时无法读取石之家。请保留签名中的代码，一两分钟后再点击验证。"
 }
