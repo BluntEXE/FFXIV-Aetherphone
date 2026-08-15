@@ -74,13 +74,19 @@ internal static class CoinHero
         var available = width - inset * 2f - height * 0.34f;
         balanceRoll.Update((int)wallet.Balance, delta);
         var amountText = balanceRoll.Display.ToString("N0", Loc.Culture);
-        var restScale = Typography.FitScale(amountText, available, BalanceMaxScale, BalanceMinScale, FontWeight.Bold);
+        var tallestHeight = Typography.Measure(amountText, BalanceMaxScale, FontWeight.Bold).Y;
+        var restScale = Typography.FitScale(amountText, available - CurrencyGlyph.Reserve(tallestHeight),
+            BalanceMaxScale, BalanceMinScale, FontWeight.Bold);
         var restHeight = Typography.Measure(amountText, restScale, FontWeight.Bold).Y;
+        var glyphSize = restHeight * CurrencyGlyph.GlyphFraction;
+        var reserve = CurrencyGlyph.Reserve(restHeight);
         var poppedScale = restScale * balanceRoll.PopScale;
         var poppedSize = Typography.Measure(amountText, poppedScale, FontWeight.Bold);
         var amountBottom = min.Y + 28f * scale + restHeight;
-        Typography.Draw(drawList, new Vector2(textLeft, amountBottom - poppedSize.Y), amountText, Ink, poppedScale,
-            FontWeight.Bold);
+        CurrencyGlyph.Draw(drawList, CurrencyKind.Coins,
+            new Vector2(textLeft + glyphSize * 0.5f, amountBottom - restHeight * 0.5f), glyphSize);
+        Typography.Draw(drawList, new Vector2(textLeft + reserve, amountBottom - poppedSize.Y), amountText, Ink,
+            poppedScale, FontWeight.Bold);
 
         Typography.Draw(drawList, new Vector2(textLeft, amountBottom + 2f * scale),
             Typography.FitText(Loc.T(L.Coin.Balance), width - inset * 2f, TextStyles.Headline),

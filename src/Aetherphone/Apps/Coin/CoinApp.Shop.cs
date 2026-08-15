@@ -233,8 +233,8 @@ internal sealed partial class CoinApp
         var priceSize = Typography.Measure(priceFit, TextStyles.SubheadlineEmphasized);
         var blockLeft = min.X + (cellWidth - coinGlyph - coinGap - priceSize.X) * 0.5f;
         var priceY = nameY + nameSize.Y + 4f * scale;
-        ProgressRing.CenterIcon(drawList, new Vector2(blockLeft + coinGlyph * 0.5f, priceY + priceSize.Y * 0.5f),
-            FontAwesomeIcon.Coins, ui.Palette.Accent, coinGlyph);
+        CurrencyGlyph.Draw(drawList, CurrencyKind.Coins,
+            new Vector2(blockLeft + coinGlyph * 0.5f, priceY + priceSize.Y * 0.5f), coinGlyph);
         Typography.Draw(drawList, new Vector2(blockLeft + coinGlyph + coinGap, priceY), priceFit,
             ui.Palette.Accent, TextStyles.SubheadlineEmphasized);
 
@@ -335,9 +335,8 @@ internal sealed partial class CoinApp
         var name = Typography.FitText(sku.Name, priceLeft - textLeft - 8f * scale, TextStyles.Title3);
         Typography.Draw(drawList, new Vector2(textLeft, cursorY), name, ui.Palette.TitleInk, TextStyles.Title3);
 
-        ProgressRing.CenterIcon(drawList,
-            new Vector2(priceLeft + coinGlyph * 0.5f, cursorY + priceSize.Y * 0.5f),
-            FontAwesomeIcon.Coins, ui.Palette.Accent, coinGlyph);
+        CurrencyGlyph.Draw(drawList, CurrencyKind.Coins,
+            new Vector2(priceLeft + coinGlyph * 0.5f, cursorY + priceSize.Y * 0.5f), coinGlyph);
         Typography.Draw(drawList, new Vector2(priceLeft + coinGlyph + coinGap, cursorY), priceText,
             ui.Palette.Accent, TextStyles.Title3);
         cursorY += 26f * scale;

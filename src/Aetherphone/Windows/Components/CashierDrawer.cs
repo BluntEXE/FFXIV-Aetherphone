@@ -288,15 +288,15 @@ internal sealed class CashierDrawer
 
         var rowY = min.Y + CardPad * scale;
         var balanceText = (wallet?.Balance ?? 0).ToString("N0", Loc.Culture);
-        DrawSummaryRow(drawList, ui, Loc.T(L.Casino.WalletRow), balanceText, left, rowY, innerWidth, scale,
-            ui.TitleInk);
+        DrawSummaryRow(drawList, ui, Loc.T(L.Casino.WalletRow), balanceText, CurrencyKind.Coins, left, rowY,
+            innerWidth, scale, ui.TitleInk);
         rowY += SummaryRowHeight * scale;
 
         if (sittingOpen)
         {
             var stackText = (state?.Sitting?.Stack ?? 0).ToString("N0", Loc.Culture);
-            DrawSummaryRow(drawList, ui, Loc.T(L.Casino.ChipsRow), stackText, left, rowY, innerWidth, scale,
-                ui.Accent);
+            DrawSummaryRow(drawList, ui, Loc.T(L.Casino.ChipsRow), stackText, CurrencyKind.Chips, left, rowY,
+                innerWidth, scale, ui.Accent);
             rowY += SummaryRowHeight * scale;
         }
 
@@ -312,14 +312,14 @@ internal sealed class CashierDrawer
         return max.Y;
     }
 
-    private static void DrawSummaryRow(ImDrawListPtr drawList, AppSkin ui, string label, string value, float left,
-        float rowY, float innerWidth, float scale, Vector4 valueInk)
+    private static void DrawSummaryRow(ImDrawListPtr drawList, AppSkin ui, string label, string value,
+        CurrencyKind kind, float left, float rowY, float innerWidth, float scale, Vector4 valueInk)
     {
         Typography.Draw(drawList, new Vector2(left + CardPad * scale, rowY), label, ui.BodyInk,
             TextStyles.Subheadline);
-        var valueSize = Typography.Measure(value, TextStyles.SubheadlineEmphasized);
-        Typography.Draw(drawList, new Vector2(left + innerWidth - CardPad * scale - valueSize.X, rowY), value,
-            valueInk, TextStyles.SubheadlineEmphasized);
+        var valueSize = CurrencyGlyph.MeasureAmount(value, TextStyles.SubheadlineEmphasized);
+        CurrencyGlyph.DrawAmount(drawList, new Vector2(left + innerWidth - CardPad * scale - valueSize.X, rowY),
+            value, kind, valueInk, TextStyles.SubheadlineEmphasized);
     }
 
     private static float DrawNotice(ImDrawListPtr drawList, AppSkin ui, string title, string hint, float left,
@@ -464,16 +464,17 @@ internal sealed class CashierDrawer
 
         var chipInk = affordable ? (selected ? ui.Accent : ui.TitleInk) : Palette.WithAlpha(ui.MutedInk, 0.6f);
         var costInk = Palette.WithAlpha(ui.MutedInk, affordable ? 1f : 0.6f);
+        var glyphAlpha = affordable ? 1f : 0.45f;
         var chipText = chips.ToString("N0", Loc.Culture);
         var costText = Loc.T(L.Casino.LotCost, CasinoChipLots.CoinsFor(chips).ToString("N0", Loc.Culture));
-        var chipSize = Typography.Measure(chipText, TextStyles.SubheadlineEmphasized);
-        var costSize = Typography.Measure(costText, TextStyles.Caption1);
+        var chipSize = CurrencyGlyph.MeasureAmount(chipText, TextStyles.SubheadlineEmphasized);
+        var costSize = CurrencyGlyph.MeasureAmount(costText, TextStyles.Caption1);
         var stackHeight = chipSize.Y + costSize.Y;
         var top = rect.Center.Y - stackHeight * 0.5f;
-        Typography.Draw(drawList, new Vector2(rect.Center.X - chipSize.X * 0.5f, top), chipText, chipInk,
-            TextStyles.SubheadlineEmphasized);
-        Typography.Draw(drawList, new Vector2(rect.Center.X - costSize.X * 0.5f, top + chipSize.Y), costText,
-            costInk, TextStyles.Caption1);
+        CurrencyGlyph.DrawAmount(drawList, new Vector2(rect.Center.X - chipSize.X * 0.5f, top), chipText,
+            CurrencyKind.Chips, chipInk, TextStyles.SubheadlineEmphasized, glyphAlpha);
+        CurrencyGlyph.DrawAmount(drawList, new Vector2(rect.Center.X - costSize.X * 0.5f, top + chipSize.Y),
+            costText, CurrencyKind.Coins, costInk, TextStyles.Caption1, glyphAlpha);
         return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
     }
 

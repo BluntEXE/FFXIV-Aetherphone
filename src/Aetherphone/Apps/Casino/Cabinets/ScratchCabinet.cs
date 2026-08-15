@@ -213,8 +213,8 @@ internal sealed class ScratchCabinet
         Typography.Draw(drawList, new Vector2(min.X + 16f * scale, y + 7f * scale), Loc.T(L.Casino.SlotsChips),
             ui.MutedInk, TextStyles.Caption1);
         var stackText = DisplayStack(state).ToString("N0", Loc.Culture);
-        Typography.Draw(drawList, new Vector2(min.X + 16f * scale, y + 21f * scale), stackText, ui.TitleInk,
-            TextStyles.SubheadlineEmphasized);
+        CurrencyGlyph.DrawAmount(drawList, new Vector2(min.X + 16f * scale, y + 21f * scale), stackText,
+            CurrencyKind.Chips, ui.TitleInk, TextStyles.SubheadlineEmphasized);
         return y + height;
     }
 

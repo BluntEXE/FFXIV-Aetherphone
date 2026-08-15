@@ -624,9 +624,9 @@ internal sealed class BingoCabinet
 
         var prize = awarded?.Prize ?? ladder[stage];
         var prizeText = prize.ToString("N0", Loc.Culture);
-        var prizeSize = Typography.Measure(prizeText, TextStyles.Title3);
-        Typography.Draw(drawList, new Vector2(left + width - prizeSize.X, rowCenter - prizeSize.Y * 0.5f),
-            prizeText, ink, TextStyles.Title3);
+        var prizeSize = CurrencyGlyph.MeasureAmount(prizeText, TextStyles.Title3);
+        CurrencyGlyph.DrawAmount(drawList, new Vector2(left + width - prizeSize.X, rowCenter - prizeSize.Y * 0.5f),
+            prizeText, CurrencyKind.Chips, ink, TextStyles.Title3);
 
         var nameSize = Typography.Measure(name, TextStyles.Subheadline);
         Typography.Draw(drawList, new Vector2(left, rowCenter - nameSize.Y * 0.5f), name, ink,

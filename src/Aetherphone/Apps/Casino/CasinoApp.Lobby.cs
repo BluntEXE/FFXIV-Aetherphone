@@ -64,9 +64,10 @@ internal sealed partial class CasinoApp
         var coinBalance = coins.Wallet?.Balance ?? 0;
 
         DrawBalanceColumn(drawList, left, min.Y, columnWidth, Loc.T(L.Casino.ChipsRow),
-            stack.ToString("N0", Loc.Culture), stack > 0 ? ui.Accent : ui.MutedInk, false, scale);
+            stack.ToString("N0", Loc.Culture), stack > 0 ? ui.Accent : ui.MutedInk, CurrencyKind.Chips, false,
+            scale);
         DrawBalanceColumn(drawList, right - columnWidth, min.Y, columnWidth, Loc.T(L.Casino.WalletRow),
-            coinBalance.ToString("N0", Loc.Culture), ui.TitleInk, true, scale);
+            coinBalance.ToString("N0", Loc.Culture), ui.TitleInk, CurrencyKind.Coins, true, scale);
 
         var dividerY = min.Y + 62f * scale;
         drawList.AddLine(new Vector2(left, dividerY), new Vector2(right, dividerY),
@@ -105,19 +106,21 @@ internal sealed partial class CasinoApp
     }
 
     private void DrawBalanceColumn(ImDrawListPtr drawList, float left, float top, float columnWidth, string label,
-        string value, Vector4 valueInk, bool alignRight, float scale)
+        string value, Vector4 valueInk, CurrencyKind kind, bool alignRight, float scale)
     {
         var fittedLabel = Typography.FitText(label, columnWidth, TextStyles.Caption1);
-        var fittedValue = Typography.FitText(value, columnWidth, TextStyles.Title3);
+        var valueHeight = Typography.Measure(value, TextStyles.Title3).Y;
+        var reserve = CurrencyGlyph.Reserve(valueHeight);
+        var fittedValue = Typography.FitText(value, columnWidth - reserve, TextStyles.Title3);
+        var valueWidth = reserve + Typography.Measure(fittedValue, TextStyles.Title3).X;
         var labelX = alignRight
             ? left + columnWidth - Typography.Measure(fittedLabel, TextStyles.Caption1).X
             : left;
-        var valueX = alignRight
-            ? left + columnWidth - Typography.Measure(fittedValue, TextStyles.Title3).X
-            : left;
+        var valueX = alignRight ? left + columnWidth - valueWidth : left;
         Typography.Draw(drawList, new Vector2(labelX, top + 13f * scale), fittedLabel, ui.MutedInk,
             TextStyles.Caption1);
-        Typography.Draw(drawList, new Vector2(valueX, top + 30f * scale), fittedValue, valueInk, TextStyles.Title3);
+        CurrencyGlyph.DrawAmount(drawList, new Vector2(valueX, top + 30f * scale), fittedValue, kind, valueInk,
+            TextStyles.Title3);
     }
 
     private bool AnyRoomLive()

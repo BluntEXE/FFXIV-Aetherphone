@@ -88,14 +88,14 @@ internal sealed partial class CoinApp
             Loc.T(L.Casino.PurseHint), ui.MutedInk, TextStyles.Caption1);
 
         var chipText = stack.ToString("N0", Loc.Culture);
-        var chipSize = Typography.Measure(chipText, TextStyles.SubheadlineEmphasized);
-        Typography.Draw(drawList, new Vector2(max.X - pad - chipSize.X, min.Y + 10f * scale), chipText,
-            ui.Accent, TextStyles.SubheadlineEmphasized);
+        var chipSize = CurrencyGlyph.MeasureAmount(chipText, TextStyles.SubheadlineEmphasized);
+        CurrencyGlyph.DrawAmount(drawList, new Vector2(max.X - pad - chipSize.X, min.Y + 10f * scale), chipText,
+            CurrencyKind.Chips, ui.Accent, TextStyles.SubheadlineEmphasized);
         var worth = Loc.T(L.Casino.LotCost,
             (stack / Core.Casino.CasinoChipLots.ChipPerCoin).ToString("N0", Loc.Culture));
-        var worthSize = Typography.Measure(worth, TextStyles.Caption1);
-        Typography.Draw(drawList, new Vector2(max.X - pad - worthSize.X, min.Y + 28f * scale), worth,
-            ui.MutedInk, TextStyles.Caption1);
+        var worthSize = CurrencyGlyph.MeasureAmount(worth, TextStyles.Caption1);
+        CurrencyGlyph.DrawAmount(drawList, new Vector2(max.X - pad - worthSize.X, min.Y + 28f * scale), worth,
+            CurrencyKind.Coins, ui.MutedInk, TextStyles.Caption1);
 
         ImGui.Dummy(new Vector2(0f, height));
     }

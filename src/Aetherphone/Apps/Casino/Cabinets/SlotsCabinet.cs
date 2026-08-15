@@ -250,8 +250,8 @@ internal sealed class SlotsCabinet
         Typography.Draw(drawList, new Vector2(min.X + 16f * scale, y + 7f * scale), label, ui.MutedInk,
             TextStyles.Caption1);
         var stackText = DisplayStack(state).ToString("N0", Loc.Culture);
-        Typography.Draw(drawList, new Vector2(min.X + 16f * scale, y + 21f * scale), stackText, ui.TitleInk,
-            TextStyles.SubheadlineEmphasized);
+        CurrencyGlyph.DrawAmount(drawList, new Vector2(min.X + 16f * scale, y + 21f * scale), stackText,
+            CurrencyKind.Chips, ui.TitleInk, TextStyles.SubheadlineEmphasized);
 
         if (playback.InBonus && playback.Phase != SlotsPlaybackPhase.Finished)
         {
@@ -297,9 +297,12 @@ internal sealed class SlotsCabinet
 
         jackpotRoll.Update((int)CasinoChipLots.CoinsFor(jackpot), delta);
         var amount = jackpotRoll.Display.ToString("N0", Loc.Culture);
-        var fitted = Typography.FitText(amount, pillWidth - 32f * scale, TextStyles.SubheadlineEmphasized);
-        Typography.Draw(drawList, new Vector2(min.X + 16f * scale, y + 21f * scale), fitted, Gold,
+        var amountHeight = Typography.Measure(amount, TextStyles.SubheadlineEmphasized).Y;
+        var reserve = CurrencyGlyph.Reserve(amountHeight);
+        var fitted = Typography.FitText(amount, pillWidth - 32f * scale - reserve,
             TextStyles.SubheadlineEmphasized);
+        CurrencyGlyph.DrawAmount(drawList, new Vector2(min.X + 16f * scale, y + 21f * scale), fitted,
+            CurrencyKind.Coins, Gold, TextStyles.SubheadlineEmphasized);
     }
 
     private long DisplayStack(CasinoStateDto state)

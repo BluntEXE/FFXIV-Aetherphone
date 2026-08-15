@@ -73,17 +73,24 @@ internal sealed class JackpotRail
         potRoll.Update((int)coins, delta);
         var amountText = potRoll.Display.ToString("N0", Loc.Culture);
         var available = width - inset * 2f;
-        var restScale = Typography.FitScale(amountText, available, AmountMaxScale, AmountMinScale, FontWeight.Bold);
+        var tallestHeight = Typography.Measure(amountText, AmountMaxScale, FontWeight.Bold).Y;
+        var restScale = Typography.FitScale(amountText, available - CurrencyGlyph.Reserve(tallestHeight),
+            AmountMaxScale, AmountMinScale, FontWeight.Bold);
         var restHeight = Typography.Measure(amountText, restScale, FontWeight.Bold).Y;
+        var glyphSize = restHeight * CurrencyGlyph.GlyphFraction;
+        var reserve = CurrencyGlyph.Reserve(restHeight);
         var poppedScale = restScale * potRoll.PopScale;
         var poppedSize = Typography.Measure(amountText, poppedScale, FontWeight.Bold);
         var amountBottom = min.Y + 34f * scale + restHeight;
-        Typography.Draw(drawList, new Vector2(left, amountBottom - poppedSize.Y), amountText, Gold, poppedScale,
-            FontWeight.Bold);
+        CurrencyGlyph.Draw(drawList, CurrencyKind.Coins,
+            new Vector2(left + glyphSize * 0.5f, amountBottom - restHeight * 0.5f), glyphSize);
+        Typography.Draw(drawList, new Vector2(left + reserve, amountBottom - poppedSize.Y), amountText, Gold,
+            poppedScale, FontWeight.Bold);
 
         var unit = Loc.T(L.Casino.JackpotUnit);
         var unitSize = Typography.Measure(unit, TextStyles.Subheadline);
-        Typography.Draw(drawList, new Vector2(left + poppedSize.X + 8f * scale, amountBottom - unitSize.Y), unit,
+        Typography.Draw(drawList,
+            new Vector2(left + reserve + poppedSize.X + 8f * scale, amountBottom - unitSize.Y), unit,
             Palette.WithAlpha(Gold, 0.75f), TextStyles.Subheadline);
 
         var hint = Typography.FitText(Loc.T(L.Casino.JackpotHint), available, TextStyles.Footnote);

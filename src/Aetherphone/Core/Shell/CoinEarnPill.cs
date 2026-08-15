@@ -6,7 +6,6 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
 
 namespace Aetherphone.Core.Shell;
 
@@ -115,8 +114,7 @@ internal sealed class CoinEarnPill : IDisposable
                 Metrics.Stroke.Thin * scale);
         }
 
-        ProgressRing.CenterIcon(drawList, iconCenter, FontAwesomeIcon.Coins,
-            Palette.WithAlpha(accent, alpha), iconSize);
+        CurrencyGlyph.Draw(drawList, CurrencyKind.Coins, iconCenter, iconSize, alpha);
         var titleLeft = iconCenter.X + iconSize * 0.5f + IconGap * scale;
         Typography.Draw(drawList, new Vector2(titleLeft, bounds.Center.Y - titleHeight * 0.5f), fitted,
             Palette.WithAlpha(ChromeInk.TextStrong, alpha), TextStyles.FootnoteEmphasized);

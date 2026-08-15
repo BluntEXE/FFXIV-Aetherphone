@@ -32,13 +32,8 @@ internal sealed partial class CasinoApp
         ImGui.Dummy(new Vector2(0f, 8f * scale));
         DrawConvertRow(false, scale);
 
-        var rate = Loc.T(L.Casino.ChipRate);
         ImGui.Dummy(new Vector2(0f, 6f * scale));
-        var rateOrigin = ImGui.GetCursorScreenPos();
-        var rateWidth = ScrollLayout.StableContentWidth();
-        var rateBlock = Typography.MeasureWrappedBlock(rate, TextStyles.Caption1, rateWidth);
-        Typography.DrawWrappedLeft(rateOrigin, rate, ui.MutedInk, TextStyles.Caption1, rateWidth);
-        ImGui.Dummy(new Vector2(rateWidth, rateBlock.Y + Metrics.Space.Md * scale));
+        DrawRateEquation(scale);
 
         if (wallet is not null)
         {
@@ -54,6 +49,28 @@ internal sealed partial class CasinoApp
 
         DrawRecordsRows(scale);
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
+    }
+
+    private void DrawRateEquation(float scale)
+    {
+        var width = ScrollLayout.StableContentWidth();
+        var origin = ImGui.GetCursorScreenPos();
+        var drawList = ImGui.GetWindowDrawList();
+        var chipsText = Core.Casino.CasinoChipLots.ChipPerCoin.ToString("N0", Loc.Culture);
+        var coinsText = 1L.ToString("N0", Loc.Culture);
+        var equalsText = " = ";
+        var chipsSize = CurrencyGlyph.MeasureAmount(chipsText, TextStyles.Caption1);
+        var equalsSize = Typography.Measure(equalsText, TextStyles.Caption1);
+        var coinsSize = CurrencyGlyph.MeasureAmount(coinsText, TextStyles.Caption1);
+        var x = origin.X + (width - chipsSize.X - equalsSize.X - coinsSize.X) * 0.5f;
+        x += CurrencyGlyph.DrawAmount(drawList, new Vector2(x, origin.Y), chipsText, CurrencyKind.Chips,
+            ui.MutedInk, TextStyles.Caption1).X;
+        Typography.Draw(drawList, new Vector2(x, origin.Y), equalsText, ui.MutedInk, TextStyles.Caption1);
+        x += equalsSize.X;
+        CurrencyGlyph.DrawAmount(drawList, new Vector2(x, origin.Y), coinsText, CurrencyKind.Coins, ui.MutedInk,
+            TextStyles.Caption1);
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, chipsSize.Y + Metrics.Space.Md * scale));
     }
 
     private void DrawConvertRow(bool buying, float scale)

@@ -863,7 +863,8 @@ internal sealed class BlackjackTable
         var name = Typography.FitText(view.DisplayName, 120f * scale, TextStyles.Caption1);
         var nameSize = Typography.Measure(name, TextStyles.Caption1);
         var stackSize = Typography.Measure(stackLabel, TextStyles.FootnoteEmphasized);
-        var textWidth = MathF.Max(nameSize.X, stackSize.X);
+        var stackReserve = CurrencyGlyph.Reserve(stackSize.Y);
+        var textWidth = MathF.Max(nameSize.X, stackReserve + stackSize.X);
         var pad = 10f * scale;
         var halfWidth = (puckRadius * 2f + pad * 2.75f + textWidth) * 0.5f;
         var min = new Vector2(center.X - halfWidth, center.Y - height * 0.5f);
@@ -882,7 +883,10 @@ internal sealed class BlackjackTable
         var textX = puck.X + puckRadius + pad * 0.75f;
         Typography.Draw(drawList, new Vector2(textX, center.Y - nameSize.Y - 1.5f * scale), name, ui.TitleInk,
             TextStyles.Caption1);
-        Typography.Draw(drawList, new Vector2(textX, center.Y + 1.5f * scale), stackLabel, Gold,
+        var glyphSize = stackSize.Y * CurrencyGlyph.GlyphFraction;
+        CurrencyGlyph.Draw(drawList, CurrencyKind.Chips,
+            new Vector2(textX + glyphSize * 0.5f, center.Y + 1.5f * scale + stackSize.Y * 0.5f), glyphSize);
+        Typography.Draw(drawList, new Vector2(textX + stackReserve, center.Y + 1.5f * scale), stackLabel, Gold,
             TextStyles.FootnoteEmphasized.Scale * stackRoll.PopScale, TextStyles.FootnoteEmphasized.Weight);
         return puck;
     }
