@@ -4389,6 +4389,7 @@
   "changelog.r1000.73": "Drei Telefonhüllen hinzugefügt: Allagan, Garlean und Gurren Lagann, beigetragen von Zivyl und daitomata",
   "changelog.r1000.74": "Linkpearl rund um Unterhaltungen neu gebaut: Jeder Textkanal des Spiels, von Sagen und Schreien über Gruppe, Freie Gesellschaft und Neulinge bis zu allen sechzehn Linkshells, landet in einer Liste, Tabs baust, färbst und heftest du selbst an, jeder Link in einer Chatzeile ist mit den Aktionen des Spiels wieder antippbar, der Verlauf bleibt pro Unterhaltung erhalten und durchsuchbar, und Kontakte und Leute finden werden ein einziger Personen-Tab",
   "changelog.r1000.75": "Behoben, dass Banner und Karten von Benachrichtigungen ihren Text in eine zweite Zeile umbrachen, statt ihn zu kürzen",
+  "changelog.r1000.76": "Behoben, dass Text zu einer Spalte einzelner Buchstaben zusammenfiel, während ein Bildschirm hinausglitt und der nächste hereinkam",
   "changelog.r1000.15": "Aether Coin, Kurzbefehle und Housing haben jetzt eigene Willkommenstouren",
   "changelog.r1000.20": "Wer einen Beitrag verfasst hat, kann jetzt jeden Kommentar darunter entfernen, in Aethergram, Chirper und Velvet",
   "changelog.r1000.21": "Velvet und Message können jetzt eine Unterhaltung löschen, was zuvor nur Aethergram konnte: ein Rechtsklick auf die Zeile im Posteingang löscht den Verlauf nur für dich, die andere Person behält ihren",

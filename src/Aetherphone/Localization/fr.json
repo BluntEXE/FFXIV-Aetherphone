@@ -4389,6 +4389,7 @@
   "changelog.r1000.73": "Ajout de trois coques : Allagan, Garlean et Gurren Lagann, contribué par Zivyl et daitomata",
   "changelog.r1000.74": "Linkpearl a été reconstruit autour des conversations : tous les canaux de texte du jeu, de Dire et Hurler à Équipe, Compagnie libre, Réseau des novices et les seize linkshells, arrivent dans une seule liste, les onglets se construisent, se teintent et s'épinglent, chaque lien que le jeu place dans une ligne de chat redevient cliquable avec les actions du jeu lui-même, l'historique est conservé et cherchable par conversation, et Contacts et Rechercher des joueurs ne font plus qu'un onglet Personnes",
   "changelog.r1000.75": "Correction des bannières et cartes de notification qui renvoyaient leur texte à la ligne au lieu de le tronquer",
+  "changelog.r1000.76": "Correction du texte qui s'effondrait en une colonne de lettres isolées pendant qu'un écran glissait vers la sortie et qu'un autre arrivait",
   "changelog.r1000.15": "Aether Coin, Raccourcis et Housing ont désormais leurs propres visites guidées",
   "changelog.r1000.20": "L'autrice ou l'auteur d'une publication peut désormais retirer n'importe quel commentaire laissé dessous, dans Aethergram, Chirper et Velvet",
   "changelog.r1000.21": "Velvet et Message peuvent désormais supprimer une conversation, ce que seul Aethergram savait faire : un clic droit sur la ligne dans la boîte de réception efface le fil pour vous seulement, l'autre personne garde le sien",

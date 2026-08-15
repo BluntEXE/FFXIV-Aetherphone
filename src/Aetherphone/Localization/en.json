@@ -4389,6 +4389,7 @@
   "changelog.r1000.73": "Added three phone cases: Allagan, Garlean, and Gurren Lagann, contributed by Zivyl and daitomata",
   "changelog.r1000.74": "Rebuilt Linkpearl around conversations: every game text channel from say and shout to party, free company, novice network, and all sixteen linkshells lands in one list, tabs are yours to build, tint, and pin, every link the game puts in a chat line is tappable again with the game's own actions, history is kept and searchable per conversation, and Contacts and Find People merge into one People tab",
   "changelog.r1000.75": "Fixed notification banners and cards wrapping their body text onto a second line instead of trimming it",
+  "changelog.r1000.76": "Fixed text collapsing into a column of single letters while one screen slides out and another slides in",
   "changelog.r1000.15": "Aether Coin, Shortcuts, and Housing now have their own welcome tours",
   "changelog.r1000.20": "The author of a post can now remove any comment left on it, in Aethergram, Chirper, and Velvet",
   "changelog.r1000.21": "Velvet and Message can now delete a conversation, which only Aethergram could before: right click the row in the inbox, and it clears the thread for you alone while the other person keeps theirs",
