@@ -32,6 +32,8 @@ public sealed class CasinoVerifierTests
         + "card:7;card:11;card:6;card:9;card:2;card:9;card:13;card:12;card:5;card:7;"
         + "card:10;card:1;card:7;card:9;card:2;card:13;card:5;card:11;card:0;card:3;card:10;card:1;card:7;"
         + "card:6;card:1;card:10;card:5;card:11;card:8;card:10;card:2;card:2;card:8;card:7";
+    private const string BlackjackRoundId = "cafe0000000000000000000000000007";
+    private const string BlackjackStreamBinding = "table-vector#4";
 
     [Fact]
     public void SlotsVectorReproducesTheCommitAndEveryDraw()
@@ -95,6 +97,69 @@ public sealed class CasinoVerifierTests
     {
         var reference = ReferenceLog(Seed, SlotsRoundId);
         Assert.Equal(SlotsLog, reference);
+    }
+
+    // The seated table deals every seat from one shoe, so its stream is keyed to the room and hand
+    // rather than to any seat's round id, and the verify answer carries that binding. These three
+    // pin the whole contract: the binding replays the shuffle, the round id alone does not, and an
+    // absent binding still means the round id, which is every solo game.
+    [Fact]
+    public void ABlackjackShoeReplaysThroughItsTableBinding()
+    {
+        var log = ReferenceShuffleLog(Seed, BlackjackStreamBinding);
+        Assert.Equal(CasinoRoundVerdict.Match,
+            CasinoVerifier.Verify(CasinoWire.BlackjackKind, Seed, SeedCommit, BlackjackRoundId, log,
+                BlackjackStreamBinding));
+    }
+
+    [Fact]
+    public void ABlackjackShoeKeyedToTheWrongInfoFails()
+    {
+        var log = ReferenceShuffleLog(Seed, BlackjackStreamBinding);
+        Assert.Equal(CasinoRoundVerdict.Mismatch,
+            CasinoVerifier.Verify(CasinoWire.BlackjackKind, Seed, SeedCommit, BlackjackRoundId, log));
+    }
+
+    [Fact]
+    public void AnEmptyBindingKeysTheStreamToTheRoundIdItself()
+    {
+        var log = ReferenceShuffleLog(Seed, BlackjackRoundId);
+        Assert.Equal(CasinoRoundVerdict.Match,
+            CasinoVerifier.Verify(CasinoWire.BlackjackKind, Seed, SeedCommit, BlackjackRoundId, log));
+    }
+
+    [Fact]
+    public void ASettledTableDtoCarriesItsBindingIntoTheVerdict()
+    {
+        var settled = new CasinoRoundVerifyDto(
+            Granted: true,
+            RoundId: BlackjackRoundId,
+            GameKind: "casino.blackjack",
+            State: CasinoRoundStates.Settled,
+            Stake: 250,
+            Payout: 500,
+            SeedCommitHash: SeedCommit,
+            SeedRevealed: Seed,
+            NextSeedHash: SeedCommit,
+            DrawLog: ReferenceShuffleLog(Seed, BlackjackStreamBinding),
+            StreamBinding: BlackjackStreamBinding);
+        Assert.Equal(CasinoRoundVerdict.Match, CasinoVerifier.Verify(settled));
+    }
+
+    [Fact]
+    public void ATamperedShuffleSwapFails()
+    {
+        var log = ReferenceShuffleLog(Seed, BlackjackStreamBinding);
+        var firstValueEnd = log.IndexOf(';');
+        var tampered = "shuffle:0" + log[firstValueEnd..];
+        if (string.Equals(tampered, log, StringComparison.Ordinal))
+        {
+            tampered = "shuffle:1" + log[firstValueEnd..];
+        }
+
+        Assert.Equal(CasinoRoundVerdict.Mismatch,
+            CasinoVerifier.Verify(CasinoWire.BlackjackKind, Seed, SeedCommit, BlackjackRoundId, tampered,
+                BlackjackStreamBinding));
     }
 
     [Fact]
@@ -277,6 +342,11 @@ public sealed class CasinoVerifierTests
         Assert.Equal(75u, firstBall);
         Assert.True(CasinoVerifier.TryBoundFor("ball", 73, 0u, out var lastBall));
         Assert.Equal(2u, lastBall);
+
+        Assert.True(CasinoVerifier.TryBoundFor("shuffle", 0, 0u, out var firstSwap));
+        Assert.Equal(312u, firstSwap);
+        Assert.True(CasinoVerifier.TryBoundFor("shuffle", 310, 0u, out var lastSwap));
+        Assert.Equal(2u, lastSwap);
     }
 
     [Fact]
@@ -299,6 +369,9 @@ public sealed class CasinoVerifierTests
         Assert.False(CasinoVerifier.TryBoundFor("ball", 74, 0u, out _));
         Assert.False(CasinoVerifier.TryBoundFor("ball", 900, 0u, out _));
         Assert.False(CasinoVerifier.TryBoundFor("card", -1, 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("shuffle", 311, 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("shuffle", -1, 0u, out _));
+        Assert.False(CasinoVerifier.TryBoundFor("shuffles", 0u, out _));
         Assert.False(CasinoVerifier.TryBoundFor("balls", 0u, out _));
         Assert.False(CasinoVerifier.TryBoundFor("cards", 0u, out _));
         Assert.False(CasinoVerifier.TryBoundFor("segments", 50u, out _));
@@ -309,6 +382,51 @@ public sealed class CasinoVerifierTests
             CasinoVerifier.Verify(CasinoWire.DailySpinKind, Seed, SeedCommit, SpinRoundId, "segment:16"));
         Assert.Equal(CasinoRoundVerdict.Mismatch,
             CasinoVerifier.Verify(CasinoWire.WheelKind, Seed, SeedCommit, WheelRoundId, "segment:50"));
+    }
+
+    // An independent re-derivation of the table shoe's shuffle log, mirroring the server's
+    // rejection-sampled Fisher-Yates over a six-deck shoe: three hundred eleven swaps whose bounds
+    // descend from three hundred twelve to two.
+    private static string ReferenceShuffleLog(string seedHex, string streamKeyInfo)
+    {
+        var seed = Convert.FromHexString(seedHex);
+        var streamKey = new HMACSHA256(seed).ComputeHash(Encoding.UTF8.GetBytes(streamKeyInfo));
+        using var blockHasher = new HMACSHA256(streamKey);
+        var words = new List<uint>();
+        var builder = new StringBuilder();
+        var readIndex = 0;
+        for (var cardIndex = BlackjackRules.ShoeCards - 1; cardIndex >= 1; cardIndex--)
+        {
+            var bound = (uint)(cardIndex + 1);
+            var limit = 0x1_0000_0000UL / bound * bound;
+            uint raw;
+            do
+            {
+                while (readIndex >= words.Count)
+                {
+                    var counterBytes = new byte[4];
+                    BinaryPrimitives.WriteUInt32BigEndian(counterBytes, (uint)(words.Count / 8));
+                    var block = blockHasher.ComputeHash(counterBytes);
+                    for (var wordIndex = 0; wordIndex < block.Length; wordIndex += 4)
+                    {
+                        words.Add(BinaryPrimitives.ReadUInt32BigEndian(block.AsSpan(wordIndex, 4)));
+                    }
+                }
+
+                raw = words[readIndex];
+                readIndex++;
+            }
+            while (raw >= limit);
+
+            if (builder.Length > 0)
+            {
+                builder.Append(';');
+            }
+
+            builder.Append("shuffle:").Append(raw % bound);
+        }
+
+        return builder.ToString();
     }
 
     private static string ReferenceLog(string seedHex, string roundId)

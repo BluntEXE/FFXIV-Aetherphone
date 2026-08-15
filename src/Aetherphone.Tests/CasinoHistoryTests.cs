@@ -144,13 +144,14 @@ public sealed class CasinoHistoryTests
             SeedCommitHash: "commit",
             SeedRevealed: "seed",
             NextSeedHash: "next",
-            DrawLog: "s0r0:1"), CasinoRoundVerdict.Match);
+            DrawLog: "s0r0:1",
+            StreamBinding: "room-7#4"), CasinoRoundVerdict.Match);
 
         var blob = Aetherphone.Apps.Casino.CasinoApp.BuildRoundDetailsBlob(verified);
 
         Assert.Equal("roundId=round1\ngameKind=casino.slots\nstate=1\nstake=5\npayout=10\n"
-            + "seedCommitHash=commit\nseedRevealed=seed\nnextSeedHash=next\ndrawLog=s0r0:1\n"
-            + "verdict=match", blob);
+            + "seedCommitHash=commit\nseedRevealed=seed\nnextSeedHash=next\nstreamBinding=room-7#4\n"
+            + "drawLog=s0r0:1\nverdict=match", blob);
     }
 
     [Fact]

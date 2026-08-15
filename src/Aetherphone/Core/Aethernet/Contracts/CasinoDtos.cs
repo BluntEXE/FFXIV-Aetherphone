@@ -128,7 +128,8 @@ internal sealed record CasinoRoundVerifyDto(
     string SeedCommitHash = "",
     string SeedRevealed = "",
     string NextSeedHash = "",
-    string DrawLog = "");
+    string DrawLog = "",
+    string StreamBinding = "");
 
 internal sealed record CasinoRoundHistoryDto(
     string RoundId = "",

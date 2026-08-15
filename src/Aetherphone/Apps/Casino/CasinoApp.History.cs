@@ -493,6 +493,7 @@ internal sealed partial class CasinoApp
         builder.Append("seedCommitHash=").Append(round.SeedCommitHash).Append('\n');
         builder.Append("seedRevealed=").Append(round.SeedRevealed).Append('\n');
         builder.Append("nextSeedHash=").Append(round.NextSeedHash).Append('\n');
+        builder.Append("streamBinding=").Append(round.StreamBinding).Append('\n');
         builder.Append("drawLog=").Append(round.DrawLog).Append('\n');
         builder.Append("verdict=").Append(verdict);
         return builder.ToString();

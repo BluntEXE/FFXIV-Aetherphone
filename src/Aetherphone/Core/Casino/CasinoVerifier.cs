@@ -20,6 +20,7 @@ internal static class CasinoVerifier
     private const string SegmentPurpose = "segment";
     private const string BingoCardPurpose = "card";
     private const string BingoBallPurpose = "ball";
+    private const string BlackjackShufflePurpose = "shuffle";
     private const uint BarkeepJitterBound = 3;
     private const uint BarkeepStepCountBound = 3;
 
@@ -42,11 +43,12 @@ internal static class CasinoVerifier
             return CasinoRoundVerdict.Unrevealed;
         }
 
-        return Verify(round.GameKind, round.SeedRevealed, round.SeedCommitHash, round.RoundId, round.DrawLog);
+        return Verify(round.GameKind, round.SeedRevealed, round.SeedCommitHash, round.RoundId, round.DrawLog,
+            round.StreamBinding);
     }
 
     public static CasinoRoundVerdict Verify(string gameKind, string seedHex, string seedCommitHash, string roundId,
-        string drawLog)
+        string drawLog, string streamBinding = "")
     {
         byte[] seed;
         try
@@ -64,7 +66,8 @@ internal static class CasinoVerifier
             return CasinoRoundVerdict.Mismatch;
         }
 
-        return ReplaysDrawLog(gameKind, seed, roundId, drawLog)
+        var streamKeyInfo = string.IsNullOrEmpty(streamBinding) ? roundId : streamBinding;
+        return ReplaysDrawLog(gameKind, seed, streamKeyInfo, drawLog)
             ? CasinoRoundVerdict.Match
             : CasinoRoundVerdict.Mismatch;
     }
@@ -87,7 +90,7 @@ internal static class CasinoVerifier
         return false;
     }
 
-    internal static bool ReplaysDrawLog(string gameKind, byte[] seed, string roundId, string drawLog)
+    internal static bool ReplaysDrawLog(string gameKind, byte[] seed, string streamKeyInfo, string drawLog)
     {
         if (drawLog.Length == 0)
         {
@@ -95,7 +98,7 @@ internal static class CasinoVerifier
         }
 
         TrySegmentBound(gameKind, out var segmentBound);
-        var stream = new DrawStream(seed, roundId);
+        var stream = new DrawStream(seed, streamKeyInfo);
         var shuffles = default(ShuffleRun);
         var cursor = 0;
         while (cursor < drawLog.Length)
@@ -178,6 +181,17 @@ internal static class CasinoVerifier
             }
 
             bound = (uint)(BingoRules.Balls - occurrence);
+            return true;
+        }
+
+        if (purpose.SequenceEqual(BlackjackShufflePurpose))
+        {
+            if (occurrence >= BlackjackRules.ShoeCards - 1)
+            {
+                return false;
+            }
+
+            bound = (uint)(BlackjackRules.ShoeCards - occurrence);
             return true;
         }
 
@@ -286,6 +300,8 @@ internal static class CasinoVerifier
 
         private int balls;
 
+        private int shoeSwaps;
+
         public int Next(ReadOnlySpan<char> purpose)
         {
             if (purpose.SequenceEqual(BingoCardPurpose))
@@ -299,6 +315,13 @@ internal static class CasinoVerifier
             {
                 var taken = balls;
                 balls++;
+                return taken;
+            }
+
+            if (purpose.SequenceEqual(BlackjackShufflePurpose))
+            {
+                var taken = shoeSwaps;
+                shoeSwaps++;
                 return taken;
             }
 
@@ -320,9 +343,9 @@ internal static class CasinoVerifier
 
         private int blockOffset = BlockBytes;
 
-        public DrawStream(byte[] seed, string roundId)
+        public DrawStream(byte[] seed, string streamKeyInfo)
         {
-            streamKey = HMACSHA256.HashData(seed, Encoding.UTF8.GetBytes(roundId));
+            streamKey = HMACSHA256.HashData(seed, Encoding.UTF8.GetBytes(streamKeyInfo));
         }
 
         public uint NextBelow(uint bound)

@@ -192,7 +192,7 @@ public sealed class CasinoGameWireContractTests
     {
         const string json = "{\"granted\":true,\"reason\":\"\",\"roundId\":\"r1\",\"gameKind\":\"casino.slots\","
             + "\"state\":2,\"stake\":2,\"payout\":4,\"seedCommitHash\":\"commit\",\"seedRevealed\":\"seed\","
-            + "\"nextSeedHash\":\"next\",\"drawLog\":\"s0r0:12;s0r1:3\"}";
+            + "\"nextSeedHash\":\"next\",\"drawLog\":\"s0r0:12;s0r1:3\",\"streamBinding\":\"room-7#4\"}";
         var verify = JsonSerializer.Deserialize(json, AethernetJsonContext.Default.CasinoRoundVerifyDto);
         Assert.NotNull(verify);
         Assert.True(verify.Granted);
@@ -204,6 +204,7 @@ public sealed class CasinoGameWireContractTests
         Assert.Equal("seed", verify.SeedRevealed);
         Assert.Equal("next", verify.NextSeedHash);
         Assert.Equal("s0r0:12;s0r1:3", verify.DrawLog);
+        Assert.Equal("room-7#4", verify.StreamBinding);
     }
 
     [Fact]
@@ -218,5 +219,6 @@ public sealed class CasinoGameWireContractTests
         Assert.Equal(CasinoReasons.RoundOpen, verify.Reason);
         Assert.Equal("commit", verify.SeedCommitHash);
         Assert.Equal(string.Empty, verify.SeedRevealed);
+        Assert.Equal(string.Empty, verify.StreamBinding);
     }
 }

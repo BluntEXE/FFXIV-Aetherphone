@@ -90,6 +90,8 @@ internal static class BlackjackRules
 
     public const int Decks = 6;
 
+    public const int ShoeCards = Decks * PlayingCards.DeckSize;
+
     public const int MaxHandsPerSeat = 4;
 
     public const int DealerStandsOn = 17;
