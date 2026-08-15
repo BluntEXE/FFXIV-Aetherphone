@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Maps;
 using Aetherphone.Core.Telephony;
 using Aetherphone.Core.Telephony.Contracts;
 
@@ -127,7 +128,8 @@ internal sealed class WatchAlongSession : IDisposable
         return Roster;
     }
 
-    internal void RequestNearbyStreams() => stream.RequestNearby(Plugin.ClientState.TerritoryType);
+    internal void RequestNearbyStreams() =>
+        stream.RequestNearby(Plugin.ClientState.TerritoryType, LocationShare.CurrentWorldId());
 
     private void RequestPublish() => publishRequested = true;
 
@@ -375,8 +377,8 @@ internal sealed class WatchAlongSession : IDisposable
             awaitingHostAck = true;
         }
 
-        stream.PublishState(url, position, paused, Plugin.ClientState.TerritoryType, approvalRequired,
-            configuration.VideoStreamDiscoverable, sharedQueue, screenPosition,
+        stream.PublishState(url, position, paused, Plugin.ClientState.TerritoryType, LocationShare.CurrentWorldId(),
+            approvalRequired, configuration.VideoStreamDiscoverable, sharedQueue, screenPosition,
             screenPosition is not null ? screenYaw : null,
             screenPosition is not null ? screenScale : null);
     }

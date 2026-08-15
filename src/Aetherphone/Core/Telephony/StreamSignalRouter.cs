@@ -31,14 +31,15 @@ internal sealed class StreamSignalRouter : IDisposable
 
     public bool Connected => calls.Connected;
 
-    public void PublishState(string url, double positionSeconds, bool paused, uint territoryId,
+    public void PublishState(string url, double positionSeconds, bool paused, uint territoryId, uint worldId,
         bool approvalRequired, bool discoverable, StreamQueueEntry[]? upcomingQueue = null,
         Vector3? screenPosition = null, float? screenYaw = null, float? screenScale = null)
     {
         calls.Send(new CallControl
         {
             Type = SignalType.StreamState, Url = url, PositionSeconds = positionSeconds, Paused = paused,
-            TerritoryId = territoryId, ApprovalRequired = approvalRequired, Discoverable = discoverable,
+            TerritoryId = territoryId, WorldId = worldId, ApprovalRequired = approvalRequired,
+            Discoverable = discoverable,
             UpcomingQueue = upcomingQueue,
             ScreenX = screenPosition?.X, ScreenY = screenPosition?.Y, ScreenZ = screenPosition?.Z,
             ScreenYaw = screenYaw, ScreenScale = screenScale,
@@ -80,9 +81,9 @@ internal sealed class StreamSignalRouter : IDisposable
         calls.Send(new CallControl { Type = SignalType.StreamJoin, HostId = hostId });
     }
 
-    public void RequestNearby(uint territoryId)
+    public void RequestNearby(uint territoryId, uint worldId)
     {
-        calls.Send(new CallControl { Type = SignalType.StreamNearby, TerritoryId = territoryId });
+        calls.Send(new CallControl { Type = SignalType.StreamNearby, TerritoryId = territoryId, WorldId = worldId });
     }
 
     public void Leave()

@@ -123,6 +123,7 @@ internal sealed record CallControl
     public float? ScreenScale { get; init; }
 
     public uint? TerritoryId { get; init; }
+    public uint? WorldId { get; init; }
     public bool? Discoverable { get; init; }
     public NearbyStreamInfo[]? NearbyStreams { get; init; }
 
