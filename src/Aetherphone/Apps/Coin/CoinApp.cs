@@ -135,7 +135,7 @@ internal sealed partial class CoinApp : IPhoneApp
         if (ui.IconButton(rulesCenter, 16f * scale, FontAwesomeIcon.QuestionCircle.ToIconString(), ui.MutedInk,
                 AppSkin.Transparent, 1.1f, Loc.T(L.Conduct.Eyebrow), HoverLabelSide.Below))
         {
-            conduct.ShowRules(ConductRules.Casino.AppId);
+            conduct.ShowRules(ConductRules.Coin.AppId);
         }
 
         var top = area.Min.Y + AppHeader.Height * scale;

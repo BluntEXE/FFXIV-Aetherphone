@@ -5705,6 +5705,35 @@ internal static class L
         };
         public static readonly LocString CasinoSelfCareTitle = new("conduct.casino.selfCare.title", "Look After Yourself");
         public static readonly LocString CasinoSelfCareBody = new("conduct.casino.selfCare.body", "Limits and the session timer exist for you. Take breaks, set your own pace, and remember the felt will be here tomorrow.");
+
+        public static readonly LocString CoinTitle = new("conduct.coin.title", "Aether Coin Rules");
+        public static readonly LocString CoinIntro = new("conduct.coin.intro", "Before you start earning and spending, please read the rules of the coin economy.");
+        public static readonly LocString CoinPlayMoneyTitle = new("conduct.coin.playMoney.title", "Play Money Only");
+        public static readonly LocString CoinPlayMoneyBody = new("conduct.coin.playMoney.body", "Aether Coins are a cosmetic currency with no real-world value. You earn them by playing, you spend them on looks, and nothing in this wallet can ever be cashed out.");
+        public static readonly LocString CoinRmtTitle = new("conduct.coin.rmt.title", "No Real-Money Trading");
+        public static readonly LocString CoinRmtLead = new("conduct.coin.rmt.lead", "Trading coins for anything real is enforced with clawbacks and bans. Do not:");
+        public static readonly LocString[] CoinRmtItems =
+        {
+            new("conduct.coin.rmt.1", "Buy or sell coins, cosmetics, or accounts for anything of value, gil included"),
+            new("conduct.coin.rmt.2", "Funnel coins to another player through staged games or thrown bets"),
+            new("conduct.coin.rmt.3", "Advertise or broker any trade of coins or cosmetics"),
+        };
+        public static readonly LocString CoinFairPlayTitle = new("conduct.coin.fairPlay.title", "Earn It Fairly");
+        public static readonly LocString CoinFairPlayLead = new("conduct.coin.fairPlay.lead", "Every coin should come from real play. Do not:");
+        public static readonly LocString[] CoinFairPlayItems =
+        {
+            new("conduct.coin.fairPlay.1", "Automate games or dailies with bots, macros, or scripts"),
+            new("conduct.coin.fairPlay.2", "Abuse bugs or exploits to mint coins; report them instead"),
+            new("conduct.coin.fairPlay.3", "Multiply rewards through alt or shared accounts"),
+        };
+        public static readonly LocString CoinScamsTitle = new("conduct.coin.scams.title", "Watch for Scams");
+        public static readonly LocString CoinScamsLead = new("conduct.coin.scams.lead", "Coins never leave your account, so any trade offer is a scam. Stay clear of:");
+        public static readonly LocString[] CoinScamsItems =
+        {
+            new("conduct.coin.scams.1", "Anyone selling coins, top-ups, or balance doubling services"),
+            new("conduct.coin.scams.2", "Links or tells asking you to sign in somewhere or share a code"),
+            new("conduct.coin.scams.3", "Giveaways that ask for gil or items up front"),
+        };
     }
 
     internal static class Health

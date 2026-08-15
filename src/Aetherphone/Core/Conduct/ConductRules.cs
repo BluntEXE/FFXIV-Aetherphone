@@ -203,7 +203,27 @@ internal static class ConductRules
         },
     };
 
-    private static readonly ConductGate[] All = { Chirper, Aethergram, Velvet, Muster, YellowPages, Casino };
+    public static readonly ConductGate Coin = new()
+    {
+        AppId = "coin",
+        Version = 1,
+        Icon = FontAwesomeIcon.Coins,
+        Title = L.Conduct.CoinTitle,
+        Intro = L.Conduct.CoinIntro,
+        Sections = new[]
+        {
+            new ConductSection(ConductTone.Neutral, L.Conduct.CoinPlayMoneyTitle, L.Conduct.CoinPlayMoneyBody,
+                Array.Empty<LocString>(), FontAwesomeIcon.Coins),
+            new ConductSection(ConductTone.Prohibited, L.Conduct.CoinRmtTitle, L.Conduct.CoinRmtLead,
+                L.Conduct.CoinRmtItems, FontAwesomeIcon.ExchangeAlt),
+            new ConductSection(ConductTone.Restricted, L.Conduct.CoinFairPlayTitle, L.Conduct.CoinFairPlayLead,
+                L.Conduct.CoinFairPlayItems, FontAwesomeIcon.Robot),
+            new ConductSection(ConductTone.Restricted, L.Conduct.CoinScamsTitle, L.Conduct.CoinScamsLead,
+                L.Conduct.CoinScamsItems, FontAwesomeIcon.ShieldAlt),
+        },
+    };
+
+    private static readonly ConductGate[] All = { Chirper, Aethergram, Velvet, Muster, YellowPages, Casino, Coin };
 
     public static ConductGate? For(string appId)
     {
