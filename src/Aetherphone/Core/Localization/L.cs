@@ -476,7 +476,7 @@ internal static class L
             "Every currency you carry, with caps and totals you can actually read.");
         public static readonly LocString CoinSub = new("storeCopy.coinSub", "Earn by living here");
         public static readonly LocString CoinBody = new("storeCopy.coinBody",
-            "Check in, play, and talk to earn Aether Coin, then spend it on phone cases and name flair. Never pay to win.");
+            "Check in, play, and talk to earn Aether Coin, then spend it on frames and badges. Never pay to win.");
         public static readonly LocString MarketSub = new("storeCopy.marketSub", "Prices, live");
         public static readonly LocString MarketBody = new("storeCopy.marketBody",
             "Universalis prices for any item, with alerts when something drops.");

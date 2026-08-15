@@ -4284,7 +4284,7 @@
   "housing.notifyResultsBody": "結果発表期間はあと{0}で終了します。取得と返還の期限が切れる前に、サインボードを確認してください。",
   "app.coin": "Aether Coin",
   "storeCopy.coinSub": "使うだけで貯まる",
-  "storeCopy.coinBody": "チェックイン、ゲーム、会話でAether Coinを獲得し、ケースや名前エフェクトと交換。Pay to Winなし。",
+  "storeCopy.coinBody": "チェックイン、ゲーム、会話でAether Coinを獲得し、フレームやバッジと交換。Pay to Winなし。",
   "coin.tabWallet": "ウォレット",
   "coin.tabShop": "ショップ",
   "coin.tabHistory": "履歴",
