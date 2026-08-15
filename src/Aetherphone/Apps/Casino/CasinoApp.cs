@@ -2,6 +2,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Coins;
+using Aetherphone.Core.Conduct;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Onboarding;
@@ -29,6 +30,7 @@ internal sealed partial class CasinoApp : IPhoneApp
     private readonly Core.Casino.CasinoSpinStore casinoSpin;
     private readonly Core.Casino.CasinoLauncher launcher;
     private readonly ConfirmService confirm;
+    private readonly ConductGateService conduct;
     private readonly CashierDrawer cashier;
     private readonly Cabinets.SlotsCabinet slots;
     private readonly Cabinets.ScratchCabinet scratch;
@@ -62,7 +64,8 @@ internal sealed partial class CasinoApp : IPhoneApp
         Core.Casino.CasinoRoomsStore casinoRooms, Core.Casino.CasinoTablesStore casinoTables,
         Core.Casino.CasinoSpinStore casinoSpin, Core.Casino.CasinoTurnNotifier casinoTurns,
         Core.Casino.CasinoLauncher launcher, Core.Games.GameStatsStore gameStats, ConfirmService confirm,
-        Core.Media.RemoteImageCache remoteImages, Core.Lodestone.LodestoneService lodestone)
+        ConductGateService conduct, Core.Media.RemoteImageCache remoteImages,
+        Core.Lodestone.LodestoneService lodestone)
     {
         this.session = session;
         this.coins = coins;
@@ -74,6 +77,7 @@ internal sealed partial class CasinoApp : IPhoneApp
         this.casinoSpin = casinoSpin;
         this.launcher = launcher;
         this.confirm = confirm;
+        this.conduct = conduct;
         cashier = new CashierDrawer(casino, coins, confirm);
         slots = new Cabinets.SlotsCabinet(casino, casinoPlay, OpenCashier);
         scratch = new Cabinets.ScratchCabinet(casino, casinoPlay, OpenCashier);
@@ -270,9 +274,21 @@ internal sealed partial class CasinoApp : IPhoneApp
                 DrawRoundDetail(body, route.RoundId);
                 break;
             default:
-                AppHeader.Draw(context, TabTitle(), navigation.Back);
+                DrawFloorHeader(context, area);
                 DrawFloor(body);
                 break;
+        }
+    }
+
+    private void DrawFloorHeader(in PhoneContext context, Rect area)
+    {
+        var scale = UiScale.Current;
+        AppHeader.Draw(context, "casino.header", TabTitle(), 44f * scale, navigation.Back);
+        var rulesCenter = new Vector2(area.Max.X - 22f * scale, area.Min.Y + AppHeader.Height * scale * 0.5f);
+        if (ui.IconButton(rulesCenter, 14f * scale, FontAwesomeIcon.QuestionCircle.ToIconString(), ui.MutedInk,
+                AppSkin.Transparent, 0.9f, Loc.T(L.Conduct.Eyebrow), HoverLabelSide.Below))
+        {
+            conduct.ShowRules(Id);
         }
     }
 

@@ -2,6 +2,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Coins;
+using Aetherphone.Core.Conduct;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Onboarding;
@@ -28,6 +29,7 @@ internal sealed partial class CoinApp : IPhoneApp
     private readonly CoinStore store;
     private readonly CoinCatalogStore catalog;
     private readonly ConfirmService confirm;
+    private readonly ConductGateService conduct;
     private readonly Core.Social.BadgeCatalogStore badgeCatalog;
     private readonly Core.Social.FrameCatalogStore frameCatalog;
     private readonly Core.Social.LoadoutStore inventory;
@@ -51,7 +53,7 @@ internal sealed partial class CoinApp : IPhoneApp
     private int historyFilter;
 
     public CoinApp(AethernetSession session, CoinStore store, CoinCatalogStore catalog, ConfirmService confirm,
-        Core.Social.BadgeCatalogStore badgeCatalog, Core.Media.RemoteImageCache images,
+        ConductGateService conduct, Core.Social.BadgeCatalogStore badgeCatalog, Core.Media.RemoteImageCache images,
         Core.Casino.CasinoStore casino, Core.Social.FrameCatalogStore frameCatalog,
         Core.Social.LoadoutStore inventory, Core.Lodestone.LodestoneService lodestone)
     {
@@ -59,6 +61,7 @@ internal sealed partial class CoinApp : IPhoneApp
         this.store = store;
         this.catalog = catalog;
         this.confirm = confirm;
+        this.conduct = conduct;
         this.badgeCatalog = badgeCatalog;
         this.frameCatalog = frameCatalog;
         this.inventory = inventory;
@@ -122,10 +125,17 @@ internal sealed partial class CoinApp : IPhoneApp
         var scale = UiScale.Current;
         AppHeader.Draw(new PhoneContext(area, theme, navigation), DisplayName, navigation.Back);
         var helpCenter = new Vector2(area.Max.X - 26f * scale, area.Min.Y + AppHeader.Height * scale * 0.5f);
-        if (ui.IconButton(helpCenter, 16f * scale, FontAwesomeIcon.QuestionCircle.ToIconString(), ui.MutedInk,
+        if (ui.IconButton(helpCenter, 16f * scale, FontAwesomeIcon.InfoCircle.ToIconString(), ui.MutedInk,
                 AppSkin.Transparent, 1.1f, Loc.T(L.Coin.HelpTitle), HoverLabelSide.Below))
         {
             confirm.Alert(Loc.T(L.Coin.HelpTitle), Loc.T(L.Coin.HelpBody), Loc.T(L.Onboarding.GotIt));
+        }
+
+        var rulesCenter = new Vector2(area.Max.X - 58f * scale, helpCenter.Y);
+        if (ui.IconButton(rulesCenter, 16f * scale, FontAwesomeIcon.QuestionCircle.ToIconString(), ui.MutedInk,
+                AppSkin.Transparent, 1.1f, Loc.T(L.Conduct.Eyebrow), HoverLabelSide.Below))
+        {
+            conduct.ShowRules(ConductRules.Casino.AppId);
         }
 
         var top = area.Min.Y + AppHeader.Height * scale;
