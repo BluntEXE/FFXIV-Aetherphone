@@ -291,6 +291,11 @@ internal sealed class WheelCabinet
             WheelRingArt.DrawCountdown(drawList, center, radius + 13f * scale, CountdownFraction(remainingMs),
                 ui.Accent, scale);
         }
+        else if (playback.Stage == WheelStage.Settling)
+        {
+            WheelRingArt.DrawCountdown(drawList, center, radius + 13f * scale,
+                SettleFraction(NextOpenMilliseconds(snapshot.Phase, remainingMs)), Gold, scale);
+        }
         else if (flash > 0f)
         {
             drawList.AddCircle(center, radius + 13f * scale,
@@ -336,6 +341,23 @@ internal sealed class WheelCabinet
         return seconds >= 60f ? 1f : seconds / 60f;
     }
 
+    private static long NextOpenMilliseconds(int phase, long remainingMs)
+    {
+        return phase == CasinoRoomPhases.Result
+            ? remainingMs
+            : remainingMs + CasinoRoomCadence.WheelResultSeconds * 1000L;
+    }
+
+    private static float SettleFraction(long nextOpenMs)
+    {
+        if (nextOpenMs <= 0)
+        {
+            return 0f;
+        }
+
+        return nextOpenMs / (CasinoRoomCadence.WheelResultSeconds * 1000f);
+    }
+
     private float DrawBanner(ImDrawListPtr drawList, AppSkin ui, CasinoRoomSnapshotDto snapshot, long remainingMs,
         float left, float y, float width, float scale, float delta)
     {
@@ -357,6 +379,9 @@ internal sealed class WheelCabinet
                     TextStyles.Subheadline);
             }
 
+            var nextSeconds = (int)((NextOpenMilliseconds(snapshot.Phase, remainingMs) + 999) / 1000);
+            Typography.DrawCentered(drawList, new Vector2(center.X, y + BannerHeight * scale * 0.82f),
+                Loc.T(L.Casino.RoomNextIn, TimeText.Duration(nextSeconds)), ui.MutedInk, TextStyles.Caption1);
             return y + BannerHeight * scale;
         }
 

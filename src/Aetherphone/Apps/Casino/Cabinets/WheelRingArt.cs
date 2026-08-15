@@ -1,6 +1,7 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
 using Aetherphone.Core.Casino;
+using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -25,8 +26,14 @@ internal static class WheelRingArt
     private static readonly Vector4 Brass = new(0.85f, 0.72f, 0.42f, 1f);
 
     private const int WedgeSegments = 6;
-    private const float LabelRadiusFactor = 0.80f;
+    private const float HubRadiusFactor = 0.34f;
     private const float LabelPadding = 3f;
+    private const float LabelRimInset = 7f;
+    private const float LabelChordFraction = 0.9f;
+
+    private static readonly string[] SpotLabels = new string[WheelRules.SpotCount];
+
+    private static LanguageInfo? spotLabelLanguage;
 
     public static Vector4 InkOn(Vector4 fill)
     {
@@ -44,12 +51,6 @@ internal static class WheelRingArt
         return angle - MathF.PI * 0.5f;
     }
 
-    public static bool LabelFits(string label, float labelRadius, float scale)
-    {
-        var chord = 2f * labelRadius * MathF.Sin(WheelChoreography.SegmentSpan * 0.5f);
-        return Typography.Measure(label, TextStyles.Caption2).X + LabelPadding * 2f * scale <= chord;
-    }
-
     public static void Draw(ImDrawListPtr drawList, Vector2 center, float radius, float rotation,
         int highlightSegment, float highlightGlow, float scale)
     {
@@ -57,7 +58,6 @@ internal static class WheelRingArt
         drawList.AddCircle(center, radius + 7f * scale, ImGui.GetColorU32(Palette.WithAlpha(Brass, 0.55f)), 64,
             1.5f * scale);
 
-        var labelRadius = radius * LabelRadiusFactor;
         for (var segment = 0; segment < WheelRules.SegmentCount; segment++)
         {
             var spot = WheelRules.Segments[segment];
@@ -77,9 +77,9 @@ internal static class WheelRingArt
         }
 
         DrawTicks(drawList, center, radius, rotation, scale);
-        DrawLabels(drawList, center, labelRadius, rotation, highlightSegment, highlightGlow, scale);
-        drawList.AddCircleFilled(center, radius * 0.34f, ImGui.GetColorU32(HubFill), 48);
-        drawList.AddCircle(center, radius * 0.34f, ImGui.GetColorU32(Palette.WithAlpha(Brass, 0.45f)), 48,
+        DrawLabels(drawList, center, radius, rotation, highlightSegment, highlightGlow, scale);
+        drawList.AddCircleFilled(center, radius * HubRadiusFactor, ImGui.GetColorU32(HubFill), 48);
+        drawList.AddCircle(center, radius * HubRadiusFactor, ImGui.GetColorU32(Palette.WithAlpha(Brass, 0.45f)), 48,
             1.2f * scale);
     }
 
@@ -95,14 +95,37 @@ internal static class WheelRingArt
         }
     }
 
-    private static void DrawLabels(ImDrawListPtr drawList, Vector2 center, float labelRadius, float rotation,
+    private static void RefreshSpotLabels()
+    {
+        if (ReferenceEquals(spotLabelLanguage, Loc.Current))
+        {
+            return;
+        }
+
+        spotLabelLanguage = Loc.Current;
+        for (var spot = 0; spot < WheelRules.SpotCount; spot++)
+        {
+            SpotLabels[spot] = Loc.T(L.Casino.WheelMultiplier, GameNumber.Label(WheelRules.Multipliers[spot]));
+        }
+    }
+
+    private static void DrawLabels(ImDrawListPtr drawList, Vector2 center, float radius, float rotation,
         int highlightSegment, float highlightGlow, float scale)
     {
+        RefreshSpotLabels();
+        var hubEdge = radius * HubRadiusFactor + LabelPadding * scale;
+        var rimEdge = radius - LabelRimInset * scale;
+        Span<Vector2> sizes = stackalloc Vector2[WheelRules.SpotCount];
+        Span<float> pivotRadii = stackalloc float[WheelRules.SpotCount];
         Span<bool> fits = stackalloc bool[WheelRules.SpotCount];
         var anyFits = false;
         for (var spot = 0; spot < WheelRules.SpotCount; spot++)
         {
-            fits[spot] = LabelFits(GameNumber.Label(WheelRules.Multipliers[spot]), labelRadius, scale);
+            sizes[spot] = Typography.Measure(SpotLabels[spot], TextStyles.Caption2);
+            pivotRadii[spot] = rimEdge - sizes[spot].X * 0.5f;
+            var chord = 2f * pivotRadii[spot] * MathF.Sin(WheelChoreography.SegmentSpan * 0.5f);
+            fits[spot] = pivotRadii[spot] - sizes[spot].X * 0.5f >= hubEdge
+                && chord >= sizes[spot].Y * LabelChordFraction;
             anyFits |= fits[spot];
         }
 
@@ -119,15 +142,33 @@ internal static class WheelRingArt
                 continue;
             }
 
-            var label = GameNumber.Label(WheelRules.Multipliers[spot]);
             var fill = SpotColors[spot];
             if (segment == highlightSegment && highlightGlow > 0f)
             {
                 fill = Vector4.Lerp(fill, LightInk, 0.42f * highlightGlow);
             }
 
-            var at = center + Direction(rotation + segment * WheelChoreography.SegmentSpan) * labelRadius;
-            Typography.DrawCentered(drawList, at, label, InkOn(fill), TextStyles.Caption2);
+            var centreAngle = rotation + segment * WheelChoreography.SegmentSpan;
+            var pivot = center + Direction(centreAngle) * pivotRadii[spot];
+            DrawRadialLabel(drawList, pivot, centreAngle - MathF.PI * 0.5f, SpotLabels[spot], sizes[spot],
+                InkOn(fill));
+        }
+    }
+
+    private static void DrawRadialLabel(ImDrawListPtr drawList, Vector2 pivot, float angle, string label,
+        Vector2 size, Vector4 ink)
+    {
+        var firstVertex = drawList.VtxBuffer.Size;
+        Typography.Draw(drawList, pivot - size * 0.5f, label, ink, TextStyles.Caption2);
+        var sine = MathF.Sin(angle);
+        var cosine = MathF.Cos(angle);
+        var vertices = drawList.VtxBuffer.AsSpan();
+        for (var vertexIndex = firstVertex; vertexIndex < vertices.Length; vertexIndex++)
+        {
+            ref var vertex = ref vertices[vertexIndex];
+            var offset = vertex.Pos - pivot;
+            vertex.Pos = new Vector2(pivot.X + offset.X * cosine - offset.Y * sine,
+                pivot.Y + offset.X * sine + offset.Y * cosine);
         }
     }
 
