@@ -111,7 +111,7 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
         changelogPage = new ChangelogPage(configuration);
         var groups = new[]
         {
-            new ISettingsPage[] { appearance, sounds, notifications, callsPage, general, language },
+            new ISettingsPage[] { general, appearance, sounds, notifications, callsPage, language },
             new ISettingsPage[] { privacyPage, safetyPage },
             new ISettingsPage[] { tutorials, commands, changelogPage, about },
         };
