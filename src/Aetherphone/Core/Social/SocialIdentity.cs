@@ -6,8 +6,15 @@ internal static class SocialIdentity
 
     public const int HandleMaxLength = 15;
 
+    public const int HashtagMinLength = 2;
+
+    public const int HashtagMaxLength = 30;
+
     public static bool IsHandleChar(char character) =>
         character is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or (>= '0' and <= '9') or '_';
+
+    public static bool IsHashtagChar(char character) =>
+        char.IsLetterOrDigit(character) || character == '_';
 
     public static bool IsHandleValid(string handle)
     {

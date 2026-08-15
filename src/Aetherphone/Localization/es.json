@@ -250,6 +250,8 @@
   "social.quotedChirp": "citó tu chirp",
   "social.quotedPhoto": "citó tu foto",
   "social.viewProfile": "Ver perfil",
+  "social.viewHashtag": "Ver etiqueta",
+  "social.hashtagEmpty": "Aún no hay publicaciones con esta etiqueta",
   "social.blockAction": "Bloquear",
   "social.blockConfirmTitle": "¿Bloquear a {0}?",
   "social.blockConfirm": "Dejaréis de ver vuestras publicaciones, comentarios y perfiles. Cualquier seguimiento entre vosotros se eliminará.",

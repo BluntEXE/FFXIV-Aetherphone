@@ -250,6 +250,8 @@
   "social.quotedChirp": "chirp'inden alıntı yaptı",
   "social.quotedPhoto": "fotoğrafından alıntı yaptı",
   "social.viewProfile": "Profili gör",
+  "social.viewHashtag": "Etiketi gör",
+  "social.hashtagEmpty": "Bu etiketle henüz gönderi yok",
   "social.blockAction": "Engelle",
   "social.blockConfirmTitle": "{0} engellensin mi?",
   "social.blockConfirm": "Birbirinizin gönderilerini, yorumlarını ve profillerini artık görmezsiniz. Aranızdaki takipler kaldırılır.",

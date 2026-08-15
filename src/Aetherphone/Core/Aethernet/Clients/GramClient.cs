@@ -54,6 +54,18 @@ internal sealed class GramClient
         return net.GetAsync(path, AethernetJsonContext.Default.FeedPage, token, null, onFailure);
     }
 
+    public Task<FeedPage?> TagPostsAsync(string tag, string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
+    {
+        var path = $"/tags/{Uri.EscapeDataString(tag)}/posts?kind=1";
+        if (cursor is not null)
+        {
+            path += $"&cursor={Uri.EscapeDataString(cursor)}";
+        }
+
+        return net.GetAsync(path, AethernetJsonContext.Default.FeedPage, token, null, onFailure);
+    }
+
     public Task<StoryDto?> CreateStoryAsync(string caption, string mediaKey, int width, int height, CancellationToken token,
         Action<AepFailure>? onFailure = null)
     {

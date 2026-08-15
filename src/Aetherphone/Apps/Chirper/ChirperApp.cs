@@ -55,8 +55,8 @@ internal sealed partial class ChirperApp : IPhoneApp
     private readonly AvatarComposer avatar;
     private readonly SocialProfilePages profile;
     private readonly AppSkin ui = new(AppPalettes.Chirper);
-    private readonly RichTextCache bodyLayouts = new();
-    private readonly RichTextCache commentLayouts = new();
+    private readonly RichTextCache bodyLayouts = new(scanHashtags: true);
+    private readonly RichTextCache commentLayouts = new(scanHashtags: true);
     private readonly FeedVirtualizer feedVirtualizer = new(400f);
     private readonly FeedVirtualizer profileVirtualizer = new(400f);
     private readonly MentionPopup mentionPopup = new();
@@ -105,6 +105,9 @@ internal sealed partial class ChirperApp : IPhoneApp
     private string[] composePickerPaths = Array.Empty<string>();
     private string? pendingComposePickedPath;
     private string? pendingSharedPhoto;
+    private readonly FeedVirtualizer hashtagVirtualizer = new(400f);
+    private string hashtagTitle = string.Empty;
+    private string hashtagTitleTag = string.Empty;
 
     public ChirperApp(AethernetSession session, AethernetApi net, LodestoneService lodestone,
         RemoteImageCache images, PhotoLibrary library, SocialLauncher launcher, GameData gameData,
@@ -261,6 +264,9 @@ internal sealed partial class ChirperApp : IPhoneApp
                 break;
             case ChirperScreen.Activity:
                 DrawActivity(area);
+                break;
+            case ChirperScreen.Hashtag:
+                DrawHashtag(area, route.Tag!);
                 break;
             default:
                 DrawHome(area);
@@ -1542,6 +1548,11 @@ internal sealed partial class ChirperApp : IPhoneApp
         if (hit.Kind == RichTextRunKind.Mention && hit.Clicked)
         {
             OpenProfile(layout.Mentions[hit.TargetIndex].UserId);
+        }
+
+        if (hit.Kind == RichTextRunKind.Hashtag && hit.Clicked)
+        {
+            OpenHashtag(layout.Tags[hit.TargetIndex]);
         }
     }
 

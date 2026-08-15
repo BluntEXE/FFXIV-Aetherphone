@@ -250,6 +250,8 @@
   "social.quotedChirp": "hat deinen Chirp zitiert",
   "social.quotedPhoto": "hat dein Foto zitiert",
   "social.viewProfile": "Profil ansehen",
+  "social.viewHashtag": "Tag ansehen",
+  "social.hashtagEmpty": "Noch keine Beiträge mit diesem Tag",
   "social.blockAction": "Blockieren",
   "social.blockConfirmTitle": "{0} blockieren?",
   "social.blockConfirm": "Ihr seht gegenseitig keine Beiträge, Kommentare oder Profile mehr. Alle Follows zwischen euch werden entfernt.",

@@ -13,13 +13,15 @@ internal enum ChirperScreen
     Thread,
     UserList,
     Activity,
+    Hashtag,
 }
 
 internal readonly record struct ChirperRoute(
     ChirperScreen Screen,
     string? UserId = null,
     string? PostId = null,
-    UserListKind Kind = UserListKind.Followers)
+    UserListKind Kind = UserListKind.Followers,
+    string? Tag = null)
 {
     public static readonly ChirperRoute Home = new(ChirperScreen.Home);
     public static readonly ChirperRoute Compose = new(ChirperScreen.Compose);
@@ -29,6 +31,7 @@ internal readonly record struct ChirperRoute(
     public static readonly ChirperRoute Activity = new(ChirperScreen.Activity);
     public static ChirperRoute Profile(string userId) => new(ChirperScreen.Profile, userId);
     public static ChirperRoute Thread(string postId) => new(ChirperScreen.Thread, PostId: postId);
+    public static ChirperRoute Hashtag(string tag) => new(ChirperScreen.Hashtag, Tag: tag);
 
     public static ChirperRoute UserList(string sourceId, UserListKind kind) =>
         new(ChirperScreen.UserList, UserId: sourceId, Kind: kind);

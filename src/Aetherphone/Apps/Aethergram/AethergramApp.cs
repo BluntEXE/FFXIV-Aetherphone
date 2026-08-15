@@ -91,10 +91,10 @@ internal sealed partial class AethergramApp : IPhoneApp
     private double pendingViewAt;
     private readonly AppSkin ui = new(AppPalettes.Aethergram);
     private readonly SocialProfilePages profile;
-    private readonly RichTextCache bodyLayouts = new();
+    private readonly RichTextCache bodyLayouts = new(scanHashtags: true);
     private readonly FeedVirtualizer feedVirtualizer = new(400f);
-    private readonly RichTextCache detailBodyLayouts = new();
-    private readonly RichTextCache commentLayouts = new();
+    private readonly RichTextCache detailBodyLayouts = new(scanHashtags: true);
+    private readonly RichTextCache commentLayouts = new(scanHashtags: true);
     private readonly MentionPopup mentionPopup = new();
     private readonly EmojiComposer commentEmoji = new();
     private readonly EmojiComposer captionEmoji = new();
@@ -135,6 +135,8 @@ internal sealed partial class AethergramApp : IPhoneApp
     private string commentDraft = string.Empty;
     private string likeBurstPostId = string.Empty;
     private double likeBurstStart;
+    private string hashtagTitle = string.Empty;
+    private string hashtagTitleTag = string.Empty;
 
     public AethergramApp(AethernetSession session, AethernetApi net, LodestoneService lodestone,
         RemoteImageCache images, PhotoLibrary library, SocialLauncher launcher, GramDmLauncher dmLauncher,
@@ -356,6 +358,9 @@ internal sealed partial class AethergramApp : IPhoneApp
                 break;
             case AethergramScreen.Encryption:
                 threadView.DrawEncryptionScreen(area);
+                break;
+            case AethergramScreen.Hashtag:
+                DrawHashtag(area, route.Id!);
                 break;
             default:
                 DrawRoot(area);
@@ -599,6 +604,47 @@ internal sealed partial class AethergramApp : IPhoneApp
     {
         store.RefreshSaved();
         router.Push(AethergramRoute.Saved);
+    }
+
+    private void OpenHashtag(string tag)
+    {
+        store.EnsureHashtagPosts(tag);
+        router.Push(AethergramRoute.Hashtag(tag));
+    }
+
+    private string HashtagTitle(string tag)
+    {
+        if (!string.Equals(hashtagTitleTag, tag, StringComparison.Ordinal))
+        {
+            hashtagTitleTag = tag;
+            hashtagTitle = "#" + tag;
+        }
+
+        return hashtagTitle;
+    }
+
+    private void DrawHashtag(Rect area, string tag)
+    {
+        store.EnsureHashtagPosts(tag);
+        var context = new PhoneContext(area, theme, navigation);
+        AppHeader.Draw(context, HashtagTitle(tag), back);
+        var scale = UiScale.Current;
+        var listRect = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
+        using (AppSurface.Begin(listRect))
+        {
+            var posts = store.HashtagPosts;
+            if (posts.Length == 0)
+            {
+                Typography.DrawCentered(new Vector2(listRect.Center.X, listRect.Min.Y + 60f * scale),
+                    store.HashtagLoading ? Loc.T(L.Common.Loading) : Loc.T(L.Social.HashtagEmpty),
+                    AppPalettes.Aethergram.MutedInk);
+                return;
+            }
+
+            ImGui.Dummy(new Vector2(0f, 8f * scale));
+            DrawProfileGrid(posts, L.Social.HashtagEmpty, store.HasMoreHashtagPosts, store.HashtagLoadingMore,
+                store.LoadMoreHashtagPosts);
+        }
     }
 
     private void DrawSaved(Rect area)
@@ -1290,6 +1336,11 @@ internal sealed partial class AethergramApp : IPhoneApp
         if (hit.Kind == RichTextRunKind.Mention && hit.Clicked)
         {
             OpenProfile(layout.Mentions[hit.TargetIndex].UserId);
+        }
+
+        if (hit.Kind == RichTextRunKind.Hashtag && hit.Clicked)
+        {
+            OpenHashtag(layout.Tags[hit.TargetIndex]);
         }
     }
 

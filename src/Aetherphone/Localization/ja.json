@@ -250,6 +250,8 @@
   "social.quotedChirp": "あなたのチャープを引用しました",
   "social.quotedPhoto": "あなたの写真を引用しました",
   "social.viewProfile": "プロフィールを見る",
+  "social.viewHashtag": "タグを見る",
+  "social.hashtagEmpty": "このタグの投稿はまだありません",
   "social.blockAction": "ブロック",
   "social.blockConfirmTitle": "{0}をブロックしますか？",
   "social.blockConfirm": "お互いの投稿・コメント・プロフィールが見えなくなり、フォロー関係も解除されます。",

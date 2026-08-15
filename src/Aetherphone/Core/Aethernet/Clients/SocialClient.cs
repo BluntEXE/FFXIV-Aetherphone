@@ -42,6 +42,18 @@ internal sealed class SocialClient
         return net.GetAsync(path, AethernetJsonContext.Default.FeedPage, token, null, onFailure);
     }
 
+    public Task<FeedPage?> TagPostsAsync(string tag, string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
+    {
+        var path = $"/tags/{Uri.EscapeDataString(tag)}/posts";
+        if (cursor is not null)
+        {
+            path += $"?cursor={Uri.EscapeDataString(cursor)}";
+        }
+
+        return net.GetAsync(path, AethernetJsonContext.Default.FeedPage, token, null, onFailure);
+    }
+
     public Task<PostDto?> PostAsync(string postId, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         return net.GetAsync($"/posts/{Uri.EscapeDataString(postId)}", AethernetJsonContext.Default.PostDto, token, null, onFailure);

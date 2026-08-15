@@ -28,6 +28,7 @@ internal enum AethergramScreen
     FollowRequests,
     Saved,
     Encryption,
+    Hashtag,
 }
 
 internal readonly record struct AethergramRoute(
@@ -50,6 +51,7 @@ internal readonly record struct AethergramRoute(
     public static AethergramRoute ImageView(string messageId) => new(AethergramScreen.ImageView, messageId);
     public static AethergramRoute Reactions(string messageId) => new(AethergramScreen.Reactions, messageId);
     public static AethergramRoute Share(string postId) => new(AethergramScreen.Share, postId);
+    public static AethergramRoute Hashtag(string tag) => new(AethergramScreen.Hashtag, tag);
 
     public static AethergramRoute UserList(string sourceId, UserListKind kind) =>
         new(AethergramScreen.UserList, sourceId, kind);

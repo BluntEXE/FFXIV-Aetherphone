@@ -75,6 +75,8 @@ internal static class L
         public static readonly LocString QuotedChirp = new("social.quotedChirp", "quoted your chirp");
         public static readonly LocString QuotedPhoto = new("social.quotedPhoto", "quoted your photo");
         public static readonly LocString ViewProfile = new("social.viewProfile", "View profile");
+        public static readonly LocString ViewHashtag = new("social.viewHashtag", "View tag");
+        public static readonly LocString HashtagEmpty = new("social.hashtagEmpty", "No posts with this tag yet");
         public static readonly LocString BlockAction = new("social.blockAction", "Block");
         public static readonly LocString BlockConfirmTitle = new("social.blockConfirmTitle", "Block {0}?");
         public static readonly LocString BlockConfirm = new("social.blockConfirm", "You won't see each other's posts, comments, or profiles anymore. Any follows between you will be removed.");

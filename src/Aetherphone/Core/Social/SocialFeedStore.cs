@@ -68,6 +68,8 @@ internal abstract class SocialFeedStore : IDisposable
     private int userListGeneration;
     private readonly FeedLane<PostDto> taggedLane = new(ByNewestFirst);
     private volatile string? taggedUserId;
+    private readonly FeedLane<PostDto> hashtagLane = new(ByNewestFirst);
+    private volatile string? hashtagTag;
     private string? lastAccountId;
 
     protected SocialFeedStore(
@@ -138,6 +140,7 @@ internal abstract class SocialFeedStore : IDisposable
         followRequestsCursor = null;
         followRequestsLoaded = false;
         ClearTagged();
+        ClearHashtag();
     }
 
     public MentionSuggestions NewMentionSuggestions() => new(account, work);
@@ -265,6 +268,61 @@ internal abstract class SocialFeedStore : IDisposable
     {
         taggedUserId = null;
         taggedLane.Clear();
+    }
+
+    protected virtual Task<FeedPage?> FetchHashtagPostsAsync(string tag, string? cursor, CancellationToken token) =>
+        Task.FromResult<FeedPage?>(null);
+
+    public PostDto[] HashtagPosts => hashtagLane.Items;
+
+    public bool HashtagLoading => hashtagLane.Loading;
+    public bool HashtagLoadingMore => hashtagLane.LoadingMore;
+    public bool HasMoreHashtagPosts => hashtagLane.HasMore;
+
+    public void EnsureHashtagPosts(string tag)
+    {
+        if (!session.IsSignedIn || hashtagLane.Loading || string.Equals(hashtagTag, tag, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        hashtagTag = tag;
+        hashtagLane.Clear();
+        hashtagLane.Loading = true;
+        work.Run("hashtag load", async token =>
+        {
+            var page = await FetchHashtagPostsAsync(tag, null, token).ConfigureAwait(false);
+            if (page is not null && string.Equals(hashtagTag, tag, StringComparison.Ordinal))
+            {
+                hashtagLane.ApplyRefresh(page.Items, page.NextCursor);
+            }
+        }, () => hashtagLane.Loading = false);
+    }
+
+    public void LoadMoreHashtagPosts()
+    {
+        var tag = hashtagTag;
+        var cursor = hashtagLane.Cursor;
+        if (!session.IsSignedIn || tag is null || cursor is null || hashtagLane.LoadingMore || hashtagLane.Loading)
+        {
+            return;
+        }
+
+        hashtagLane.LoadingMore = true;
+        work.Run("hashtag more", async token =>
+        {
+            var page = await FetchHashtagPostsAsync(tag, cursor, token).ConfigureAwait(false);
+            if (page is not null && string.Equals(hashtagTag, tag, StringComparison.Ordinal))
+            {
+                hashtagLane.ApplyMore(page.Items, page.NextCursor);
+            }
+        }, () => hashtagLane.LoadingMore = false);
+    }
+
+    protected void ClearHashtag()
+    {
+        hashtagTag = null;
+        hashtagLane.Clear();
     }
 
     public void EnsureMe()

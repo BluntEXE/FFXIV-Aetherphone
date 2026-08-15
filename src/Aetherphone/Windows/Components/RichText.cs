@@ -13,6 +13,7 @@ internal enum RichTextRunKind : byte
     Link,
     Mention,
     Emoji,
+    Hashtag,
 }
 
 internal readonly struct MentionSpan
@@ -53,18 +54,20 @@ internal sealed class RichTextLayout
     public readonly string[] Urls;
     public readonly string[] EmojiFiles;
     public readonly MentionSpan[] Mentions;
+    public readonly string[] Tags;
     public readonly Vector2 Size;
     public readonly float WrapWidth;
     public readonly float FontSize;
     public readonly int FontGeneration;
 
-    public RichTextLayout(RichTextRun[] runs, string[] urls, string[] emojiFiles, MentionSpan[] mentions, Vector2 size,
-        float wrapWidth, float fontSize, int fontGeneration)
+    public RichTextLayout(RichTextRun[] runs, string[] urls, string[] emojiFiles, MentionSpan[] mentions,
+        string[] tags, Vector2 size, float wrapWidth, float fontSize, int fontGeneration)
     {
         Runs = runs;
         Urls = urls;
         EmojiFiles = emojiFiles;
         Mentions = mentions;
+        Tags = tags;
         Size = size;
         WrapWidth = wrapWidth;
         FontSize = fontSize;
@@ -112,8 +115,10 @@ internal static class RichText
     private static readonly MentionSpan[] NoMentions = Array.Empty<MentionSpan>();
     private static readonly string[] NoUrls = Array.Empty<string>();
     private static readonly string[] NoEmoji = Array.Empty<string>();
+    private static readonly string[] NoTags = Array.Empty<string>();
 
-    public static RichTextLayout? Build(string text, ReadOnlySpan<MentionSpan> mentions, float wrapWidth)
+    public static RichTextLayout? Build(string text, ReadOnlySpan<MentionSpan> mentions, float wrapWidth,
+        bool scanHashtags = false)
     {
         if (wrapWidth <= 0f)
         {
@@ -123,19 +128,20 @@ internal static class RichText
         var hasMention = mentions.Length > 0 && text.IndexOf('@') >= 0;
         var hasLink = text.Length >= 7 && HasLinkCandidate(text);
         var hasEmoji = EmojiScanner.MightContain(text);
-        if (!hasMention && !hasLink && !hasEmoji)
+        var hasTag = scanHashtags && text.IndexOf('#') >= 0;
+        if (!hasMention && !hasLink && !hasEmoji && !hasTag)
         {
             return null;
         }
 
-        var spans = ParseSpans(text, mentions, out var urls, out var emojiFiles);
+        var spans = ParseSpans(text, mentions, scanHashtags, out var urls, out var emojiFiles, out var tags);
         if (spans is null)
         {
             return null;
         }
 
         Plugin.Fonts.NoticeText(text);
-        return BuildLayout(text, spans, urls, emojiFiles, mentions, wrapWidth, ImGui.GetFontSize(),
+        return BuildLayout(text, spans, urls, emojiFiles, mentions, tags, wrapWidth, ImGui.GetFontSize(),
             Plugin.Fonts.Generation);
     }
 
@@ -161,9 +167,12 @@ internal static class RichText
 
                 var rectMin = origin + run.Offset * pop;
                 var rectMax = rectMin + new Vector2(run.Width * pop, fontSize);
-                var tooltip = run.Kind == RichTextRunKind.Link
-                    ? Loc.T(L.Common.OpenInBrowser)
-                    : Loc.T(L.Social.ViewProfile);
+                var tooltip = run.Kind switch
+                {
+                    RichTextRunKind.Link => Loc.T(L.Common.OpenInBrowser),
+                    RichTextRunKind.Hashtag => Loc.T(L.Social.ViewHashtag),
+                    _ => Loc.T(L.Social.ViewProfile),
+                };
                 HoverTooltip.Show(new Rect(rectMin, rectMax), tooltip, HoverLabelSide.Above);
                 if (hoveredIndex < 0 && UiInteract.Hover(rectMin, rectMax))
                 {
@@ -237,11 +246,12 @@ internal static class RichText
         }
     }
 
-    private static List<RichSpan>? ParseSpans(string text, ReadOnlySpan<MentionSpan> mentions, out string[] urls,
-        out string[] emojiFiles)
+    private static List<RichSpan>? ParseSpans(string text, ReadOnlySpan<MentionSpan> mentions, bool scanHashtags,
+        out string[] urls, out string[] emojiFiles, out string[] tags)
     {
         var spans = ParseLinks(text, out urls);
         ScanMentions(text, mentions, ref spans);
+        tags = scanHashtags ? ScanHashtags(text, ref spans) : NoTags;
         emojiFiles = ScanEmoji(text, ref spans);
         if (spans is null || spans.Count == 0)
         {
@@ -250,6 +260,70 @@ internal static class RichText
 
         spans.Sort(static (first, second) => first.Start.CompareTo(second.Start));
         return spans;
+    }
+
+    private static string[] ScanHashtags(string text, ref List<RichSpan>? spans)
+    {
+        List<string>? tags = null;
+        var length = text.Length;
+        for (var position = 0; position < length; position++)
+        {
+            if (text[position] != '#')
+            {
+                continue;
+            }
+
+            if (position > 0 && SocialIdentity.IsHashtagChar(text[position - 1]))
+            {
+                continue;
+            }
+
+            if (InsideLink(spans, position))
+            {
+                continue;
+            }
+
+            var tokenStart = position + 1;
+            var tokenEnd = tokenStart;
+            while (tokenEnd < length && SocialIdentity.IsHashtagChar(text[tokenEnd]))
+            {
+                tokenEnd++;
+            }
+
+            var tokenLength = tokenEnd - tokenStart;
+            if (tokenLength == 0)
+            {
+                continue;
+            }
+
+            if (tokenLength < SocialIdentity.HashtagMinLength || tokenLength > SocialIdentity.HashtagMaxLength
+                || !HasTagLetter(text, tokenStart, tokenEnd))
+            {
+                position = tokenEnd - 1;
+                continue;
+            }
+
+            spans ??= new List<RichSpan>();
+            tags ??= new List<string>();
+            spans.Add(new RichSpan(position, tokenEnd - position, RichTextRunKind.Hashtag, tags.Count));
+            tags.Add(text.Substring(tokenStart, tokenLength).ToLowerInvariant());
+            position = tokenEnd - 1;
+        }
+
+        return tags is null ? NoTags : tags.ToArray();
+    }
+
+    private static bool HasTagLetter(string text, int start, int end)
+    {
+        for (var index = start; index < end; index++)
+        {
+            if (char.IsLetter(text[index]))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static string[] ScanEmoji(string text, ref List<RichSpan>? spans)
@@ -543,7 +617,7 @@ internal static class RichText
     }
 
     private static RichTextLayout BuildLayout(string text, List<RichSpan> spans, string[] urls, string[] emojiFiles,
-        ReadOnlySpan<MentionSpan> mentions, float wrapWidth, float fontSize, int fontGeneration)
+        ReadOnlySpan<MentionSpan> mentions, string[] tags, float wrapWidth, float fontSize, int fontGeneration)
     {
         var runs = new List<RichTextRun>();
         var lineHeight = emojiFiles.Length > 0
@@ -666,7 +740,7 @@ internal static class RichText
         Flush(length);
         var height = length == 0 ? lineHeight : y + lineHeight;
         var mentionCopy = mentions.Length == 0 ? NoMentions : mentions.ToArray();
-        return new RichTextLayout(runs.ToArray(), urls, emojiFiles, mentionCopy, new Vector2(maxWidth, height),
+        return new RichTextLayout(runs.ToArray(), urls, emojiFiles, mentionCopy, tags, new Vector2(maxWidth, height),
             wrapWidth, fontSize, fontGeneration);
     }
 

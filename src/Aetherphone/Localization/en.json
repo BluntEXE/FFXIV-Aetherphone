@@ -250,6 +250,8 @@
   "social.quotedChirp": "quoted your chirp",
   "social.quotedPhoto": "quoted your photo",
   "social.viewProfile": "View profile",
+  "social.viewHashtag": "View tag",
+  "social.hashtagEmpty": "No posts with this tag yet",
   "social.blockAction": "Block",
   "social.blockConfirmTitle": "Block {0}?",
   "social.blockConfirm": "You won't see each other's posts, comments, or profiles anymore. Any follows between you will be removed.",

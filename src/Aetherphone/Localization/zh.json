@@ -250,6 +250,8 @@
   "social.quotedChirp": "引用了你的叽叽",
   "social.quotedPhoto": "引用了你的照片",
   "social.viewProfile": "查看资料",
+  "social.viewHashtag": "查看标签",
+  "social.hashtagEmpty": "还没有带此标签的帖子",
   "social.blockAction": "屏蔽",
   "social.blockConfirmTitle": "要屏蔽 {0} 吗？",
   "social.blockConfirm": "你们将无法再看到彼此的帖子、评论和主页，双方的关注也会被移除。",

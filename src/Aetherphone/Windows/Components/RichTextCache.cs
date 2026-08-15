@@ -18,6 +18,12 @@ internal sealed class RichTextCache
     private static readonly MentionSpan[] NoMentions = Array.Empty<MentionSpan>();
 
     private readonly Dictionary<string, Entry> entries = new(StringComparer.Ordinal);
+    private readonly bool scanHashtags;
+
+    public RichTextCache(bool scanHashtags = false)
+    {
+        this.scanHashtags = scanHashtags;
+    }
 
     public RichTextLayout? LayoutFor(string key, string text, MentionDto[]? mentions, float wrapWidth)
     {
@@ -36,7 +42,7 @@ internal sealed class RichTextCache
         entry.Text = text;
         entry.Source = mentions;
         entry.Mentions = Convert(mentions);
-        entry.Layout = RichText.Build(text, entry.Mentions, wrapWidth);
+        entry.Layout = RichText.Build(text, entry.Mentions, wrapWidth, scanHashtags);
         entries[key] = entry;
         return entry.Layout;
     }

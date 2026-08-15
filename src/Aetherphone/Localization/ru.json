@@ -250,6 +250,8 @@
   "social.quotedChirp": "процитировал(а) вашу запись",
   "social.quotedPhoto": "процитировал(а) ваше фото",
   "social.viewProfile": "Открыть профиль",
+  "social.viewHashtag": "Посмотреть тег",
+  "social.hashtagEmpty": "Постов с этим тегом пока нет",
   "social.blockAction": "Заблокировать",
   "social.blockConfirmTitle": "Заблокировать {0}?",
   "social.blockConfirm": "Вы перестанете видеть публикации, комментарии и профили друг друга. Подписки между вами будут удалены.",

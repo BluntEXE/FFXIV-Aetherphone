@@ -33,6 +33,9 @@ internal sealed class AethergramStore : SocialFeedStore
     protected override Task<FeedPage?> FetchTaggedPostsAsync(string userId, string? cursor, CancellationToken token) =>
         grams.UserTaggedAsync(userId, cursor, token);
 
+    protected override Task<FeedPage?> FetchHashtagPostsAsync(string tag, string? cursor, CancellationToken token) =>
+        grams.TagPostsAsync(tag, cursor, token);
+
     // aspects holds one choice per photo. The post's MediaWidth/MediaHeight is the first photo's
     // aspect box, which frames the whole carousel; each photo is baked to fit inside its own box
     // and is contain-fit into that frame at draw time.

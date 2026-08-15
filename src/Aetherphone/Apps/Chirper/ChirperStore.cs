@@ -42,6 +42,9 @@ internal sealed class ChirperStore : SocialFeedStore
     protected override Task<FeedPage?> FetchProfilePostsAsync(string userId, string? cursor, CancellationToken token) =>
         client.UserPostsAsync(userId, cursor, token);
 
+    protected override Task<FeedPage?> FetchHashtagPostsAsync(string tag, string? cursor, CancellationToken token) =>
+        client.TagPostsAsync(tag, cursor, token);
+
     public void Compose(string text, IReadOnlyList<string> imagePaths, bool sensitive, Action<bool> onComplete,
         Action<AepFailure>? onFailure = null)
     {
