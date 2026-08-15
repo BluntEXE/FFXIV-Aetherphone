@@ -35,6 +35,8 @@ internal static class Slider
     private static string activeId = string.Empty;
     private static float activeValue;
     private static int activeFrame = -1;
+    private static float activeTrackLeft;
+    private static float activeTrackWidth;
 
     public static Result Draw(string id, Rect row, float value, PhoneTheme theme, float leadingInset,
         float trailingInset)
@@ -53,13 +55,15 @@ internal static class Slider
         {
             activeId = id;
             dragging = true;
+            activeTrackLeft = trackLeft;
+            activeTrackWidth = width;
         }
 
         if (dragging)
         {
             if (ImGui.IsMouseDown(ImGuiMouseButton.Left))
             {
-                activeValue = Math.Clamp((ImGui.GetMousePos().X - trackLeft) / width, 0f, 1f);
+                activeValue = Math.Clamp((ImGui.GetMousePos().X - activeTrackLeft) / activeTrackWidth, 0f, 1f);
                 activeFrame = ImGui.GetFrameCount();
             }
             else
