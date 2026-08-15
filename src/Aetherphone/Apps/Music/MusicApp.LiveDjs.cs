@@ -2,6 +2,7 @@ using Aetherphone.Apps.Music.Rolladeck;
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Housing;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
@@ -33,6 +34,11 @@ internal sealed partial class MusicApp
     private readonly List<string> sortedDjHomeKeys = new();
     private readonly List<string> sortedDjHomeTitleKeys = new();
     private readonly List<string> sortedDjViewerCounts = new();
+    private readonly List<string> sortedDjCardKeys = new();
+    private readonly List<string> sortedDjCardTitleKeys = new();
+    private readonly List<string> sortedDjsAtVenueCardKeys = new();
+    private readonly List<string> sortedDjsAtVenueCardTitleKeys = new();
+    private readonly List<string> sortedDjsAtVenueViewerCounts = new();
     private static readonly string[] LiveDjSocialButtonIds =
     [
         "music.liveDj.soc.0", "music.liveDj.soc.1", "music.liveDj.soc.2", "music.liveDj.soc.3",
@@ -82,12 +88,27 @@ internal sealed partial class MusicApp
         sortedDjHomeKeys.Clear();
         sortedDjHomeTitleKeys.Clear();
         sortedDjViewerCounts.Clear();
+        sortedDjCardKeys.Clear();
+        sortedDjCardTitleKeys.Clear();
         for (var keyIndex = 0; keyIndex < sortedDjs.Count; keyIndex++)
         {
             var slug = sortedDjs[keyIndex].DjSlug ?? sortedDjs[keyIndex].DjName;
             sortedDjHomeKeys.Add("music.liveDj.home." + slug);
             sortedDjHomeTitleKeys.Add("music.liveDj.home.title." + slug);
             sortedDjViewerCounts.Add(sortedDjs[keyIndex].ViewerCount.ToString("N0"));
+            sortedDjCardKeys.Add("music.djCard." + slug);
+            sortedDjCardTitleKeys.Add("music.djCard.title." + slug);
+        }
+
+        sortedDjsAtVenueCardKeys.Clear();
+        sortedDjsAtVenueCardTitleKeys.Clear();
+        sortedDjsAtVenueViewerCounts.Clear();
+        for (var keyIndex = 0; keyIndex < sortedDjsAtVenue.Count; keyIndex++)
+        {
+            var slug = sortedDjsAtVenue[keyIndex].DjSlug ?? sortedDjsAtVenue[keyIndex].DjName;
+            sortedDjsAtVenueCardKeys.Add("music.djCard." + slug);
+            sortedDjsAtVenueCardTitleKeys.Add("music.djCard.title." + slug);
+            sortedDjsAtVenueViewerCounts.Add(sortedDjsAtVenue[keyIndex].ViewerCount.ToString("N0"));
         }
     }
 
@@ -108,7 +129,6 @@ internal sealed partial class MusicApp
         var localId = gameData.LocalCurrentWorldId;
         var playerWorld = localId > 0 ? gameData.WorldName(localId) : null;
         var playerDc = localId > 0 ? gameData.DataCenterName(localId) : null;
-        var playerRegion = gameData.LocalRegionCode();
 
         if (!string.IsNullOrEmpty(server) && !string.IsNullOrEmpty(playerWorld) &&
             string.Equals(server, playerWorld, StringComparison.OrdinalIgnoreCase))
@@ -122,23 +142,18 @@ internal sealed partial class MusicApp
             return 1;
         }
 
-        if (!string.IsNullOrEmpty(datacenter) &&
-            string.Equals(DcToRegion(datacenter), playerRegion, StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrEmpty(datacenter) && !string.IsNullOrEmpty(playerDc))
         {
-            return 2;
+            var djRegion = HousingRegions.For(datacenter);
+            if (djRegion != HousingRegions.Unknown &&
+                string.Equals(djRegion, HousingRegions.For(playerDc), StringComparison.OrdinalIgnoreCase))
+            {
+                return 2;
+            }
         }
 
         return 3;
     }
-
-    private static string? DcToRegion(string? dc) => dc switch
-    {
-        "Aether" or "Primal" or "Crystal" or "Dynamis" => "NA",
-        "Chaos" or "Light"                              => "EU",
-        "Elemental" or "Gaia" or "Mana" or "Meteor"    => "JP",
-        "Materia"                                       => "OCE",
-        _                                               => null,
-    };
 
     private void OpenLiveDjs()
     {
@@ -248,7 +263,7 @@ internal sealed partial class MusicApp
 
         ImGui.Dummy(new Vector2(0f, 14f * scale));
         var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var iconBox = 30f * scale;
         var title = Typography.FitText(Loc.T(L.Music.LiveDjs), width - iconBox - 8f * scale, TextStyles.Title3);
         var titleSize = Typography.Measure(title, TextStyles.Title3);
@@ -411,6 +426,9 @@ internal sealed partial class MusicApp
         EnsureDjList();
 
         var djs = liveDjFilter == 0 ? sortedDjsAtVenue : sortedDjs;
+        var djCardKeys = liveDjFilter == 0 ? sortedDjsAtVenueCardKeys : sortedDjCardKeys;
+        var djCardTitleKeys = liveDjFilter == 0 ? sortedDjsAtVenueCardTitleKeys : sortedDjCardTitleKeys;
+        var djViewerCounts = liveDjFilter == 0 ? sortedDjsAtVenueViewerCounts : sortedDjViewerCounts;
 
         if (rolladeck.Loading && !rolladeck.HasData)
         {
@@ -440,7 +458,7 @@ internal sealed partial class MusicApp
 
                 if (ImGui.IsRectVisible(card.Min, card.Max))
                 {
-                    DrawLiveDjCard(drawList, card, djs[djIndex], scale);
+                    DrawLiveDjCard(drawList, card, djs[djIndex], djCardKeys[djIndex], djCardTitleKeys[djIndex], djViewerCounts[djIndex], scale);
                 }
 
                 var gap = djIndex < djs.Count - 1 ? LiveDjCardGap : LiveDjVPad;
@@ -456,7 +474,7 @@ internal sealed partial class MusicApp
         }
     }
 
-    private void DrawLiveDjCard(ImDrawListPtr drawList, Rect card, LiveDjEntry dj, float scale)
+    private void DrawLiveDjCard(ImDrawListPtr drawList, Rect card, LiveDjEntry dj, string cardKey, string titleKey, string viewerCount, float scale)
     {
         var hovered = UiInteract.Hover(card.Min, card.Max);
         var fill = hovered
@@ -482,7 +500,7 @@ internal sealed partial class MusicApp
         var topY = card.Min.Y + 9f * scale;
         var maxTextWidth = card.Max.X - textLeft - 80f * scale;
 
-        Marquee.DrawLeft("music.djCard." + (dj.DjSlug ?? dj.DjName),
+        Marquee.DrawLeft(cardKey,
             dj.NormalizedName, textLeft, topY, maxTextWidth,
             TextStyles.SubheadlineEmphasized, ui.Palette.TitleInk, hovered);
 
@@ -500,12 +518,12 @@ internal sealed partial class MusicApp
 
         if (!string.IsNullOrEmpty(dj.NormalizedTitle))
         {
-            Marquee.DrawLeft("music.djCard.title." + (dj.DjSlug ?? dj.DjName),
+            Marquee.DrawLeft(titleKey,
                 dj.NormalizedTitle, textLeft, currentY, maxTextWidth,
                 TextStyles.Caption1, ui.Palette.MutedInk, hovered);
         }
 
-        var viewersText = string.Format(Loc.T(L.Rolladeck.Viewers), dj.ViewerCount.ToString("N0"));
+        var viewersText = string.Format(Loc.T(L.Rolladeck.Viewers), viewerCount);
         var viewerSize = Typography.Measure(viewersText, TextStyles.Caption1);
         var viewersRightX = card.Max.X - 12f * scale - viewerSize.X;
         Typography.Draw(drawList,
@@ -1045,7 +1063,7 @@ internal sealed partial class MusicApp
                     ImGui.SetCursorScreenPos(new Vector2(watchCenter.X - watchRadius, watchCenter.Y - watchRadius));
                     if (ImGui.InvisibleButton("##venueWatch", new Vector2(watchRadius * 2f, watchRadius * 2f)))
                     {
-                        Util.OpenLink(venue.DjTwitch);
+                        Util.OpenLink(venue.DjRolladeckUrl ?? venue.DjTwitch!);
                     }
                 }
 

@@ -35,47 +35,71 @@ internal static class RolladeckText
 
     public static string Normalize(string? input)
     {
-        if (string.IsNullOrEmpty(input)) return string.Empty;
-
-        // Fast path: no surrogate pairs means no supplementary-plane chars.
-        var hasSurrogate = false;
-        foreach (var c in input)
+        if (string.IsNullOrEmpty(input))
         {
-            if (char.IsSurrogate(c)) { hasSurrogate = true; break; }
+            return string.Empty;
         }
-        if (!hasSurrogate) return input;
 
-        var sb = new System.Text.StringBuilder(input.Length);
+        var hasSurrogate = false;
+        for (var index = 0; index < input.Length; index++)
+        {
+            if (char.IsSurrogate(input[index]))
+            {
+                hasSurrogate = true;
+                break;
+            }
+        }
+
+        if (!hasSurrogate)
+        {
+            return input;
+        }
+
+        var builder = new System.Text.StringBuilder(input.Length);
         foreach (var rune in input.EnumerateRunes())
         {
-            var v = rune.Value;
-            if (v <= 0xFFFF)
+            var codepoint = rune.Value;
+            if (codepoint <= 0xFFFF)
             {
-                sb.Append((char)v);
+                builder.Append((char)codepoint);
             }
             else
             {
-                var mapped = MapSupplementary(v);
-                if (mapped != '\0') sb.Append(mapped);
-                // else: emoji or other unmapped supplementary char, skip it
+                var mapped = MapSupplementary(codepoint);
+                if (mapped != '\0')
+                {
+                    builder.Append(mapped);
+                }
             }
         }
-        return sb.ToString().Trim();
+
+        return builder.ToString().Trim();
     }
 
-    private static char MapSupplementary(int v)
+    private static char MapSupplementary(int codepoint)
     {
-        foreach (var b in StyleBases)
+        for (var styleIndex = 0; styleIndex < StyleBases.Length; styleIndex++)
         {
-            var off = v - b;
-            if (off >= 0 && off < 26) return (char)('A' + off);
-            if (off >= 26 && off < 52) return (char)('a' + off - 26);
+            var offset = codepoint - StyleBases[styleIndex];
+            if (offset >= 0 && offset < 26)
+            {
+                return (char)('A' + offset);
+            }
+            if (offset >= 26 && offset < 52)
+            {
+                return (char)('a' + offset - 26);
+            }
         }
-        foreach (var b in DigitBases)
+
+        for (var digitIndex = 0; digitIndex < DigitBases.Length; digitIndex++)
         {
-            var off = v - b;
-            if (off >= 0 && off < 10) return (char)('0' + off);
+            var offset = codepoint - DigitBases[digitIndex];
+            if (offset >= 0 && offset < 10)
+            {
+                return (char)('0' + offset);
+            }
         }
+
         return '\0';
     }
 }

@@ -265,7 +265,7 @@ internal sealed partial class MusicApp
         filteredStations.Clear();
         for (var index = 0; index < stations.Length; index++)
         {
-            if (tagFilter.Length == 0 || HasTag(stations[index], tagFilter))
+            if (GroupOf(stations[index]) == LiveGroup.OnAir || tagFilter.Length == 0 || HasTag(stations[index], tagFilter))
             {
                 filteredStations.Add(stations[index]);
             }
