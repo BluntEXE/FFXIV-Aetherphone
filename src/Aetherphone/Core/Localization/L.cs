@@ -1326,7 +1326,7 @@ internal static class L
             new("changelog.r1000.68",
                 "Added Gamba, a new play-money casino app: coins become chips at the cashier and the whole floor plays on them, from blackjack at shared tables to live bingo rooms, a communal wheel, slots, scratch cards, a bar shift, and a free daily spin; every round is provably fair, history keeps every stake and payout, loss limits come from both the house and you, and no real money is involved anywhere"),
             new("changelog.r1000.69",
-                "Added Aether Coin, the currency of the Aethernet: checking in daily, playing the arcade, holding real calls and conversations, and posting things that stay up all earn coins, the wallet tracks your goals, streaks, and every earning rule, the coin shop sells animated name effects, and your balance shows in Control Center and on a home screen widget"),
+                "Added Aether Coin, the currency of the Aethernet: checking in daily, playing the arcade, holding real calls and conversations, and posting things that stay up all earn coins, the wallet tracks your goals, streaks, and every earning rule, the coin shop sells frames and badges, and your balance shows in Control Center and on a home screen widget"),
             new("changelog.r1000.70",
                 "Added MogCast, a video app that plays a link on a screen you place in the world: paste a URL or pick a file from your PC, queue what comes next, and hold watch parties where the host approves who joins and everyone lands on the same moment"),
             new("changelog.r1000.71",
