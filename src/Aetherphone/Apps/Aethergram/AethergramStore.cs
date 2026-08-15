@@ -54,16 +54,41 @@ internal sealed class AethergramStore : SocialFeedStore
             var (containerWidth, containerHeight) = PostAspects.Size(aspects[0], GramSize);
             for (var index = 0; index < sourcePaths.Length; index++)
             {
-                var (bakedWidth, bakedHeight) = PostAspects.Size(aspects[index], GramSize);
-                var baked = ImageProcessor.BakeCroppedJpeg(sourcePaths[index], crops[index], bakedWidth, bakedHeight,
-                    PostAspects.RevealsWholeImage(aspects[index]));
-                var upload = await media.UploadUrlAsync("image/jpeg", "gram", token).ConfigureAwait(false);
+                byte[] bytes;
+                string contentType;
+                if (GifMedia.IsGif(sourcePaths[index]))
+                {
+                    bytes = await File.ReadAllBytesAsync(sourcePaths[index], token).ConfigureAwait(false);
+                    if (bytes.Length == 0 || bytes.Length > GifMedia.MaxBytes)
+                    {
+                        AepLog.Warning($"Gram upload rejected a GIF of {bytes.Length} bytes; the cap is {GifMedia.MaxBytes}");
+                        return false;
+                    }
+
+                    var (gifWidth, gifHeight) = ImageProcessor.IdentifyDimensions(bytes);
+                    contentType = "image/gif";
+                    if (index == 0 && gifWidth > 0 && gifHeight > 0)
+                    {
+                        containerWidth = gifWidth;
+                        containerHeight = gifHeight;
+                    }
+                }
+                else
+                {
+                    var (bakedWidth, bakedHeight) = PostAspects.Size(aspects[index], GramSize);
+                    var baked = ImageProcessor.BakeCroppedJpeg(sourcePaths[index], crops[index], bakedWidth,
+                        bakedHeight, PostAspects.RevealsWholeImage(aspects[index]));
+                    bytes = baked.Bytes;
+                    contentType = "image/jpeg";
+                }
+
+                var upload = await media.UploadUrlAsync(contentType, "gram", token).ConfigureAwait(false);
                 if (upload is null)
                 {
                     return false;
                 }
 
-                var uploaded = await media.UploadImageAsync(upload.UploadUrl, baked.Bytes, "image/jpeg", token)
+                var uploaded = await media.UploadImageAsync(upload.UploadUrl, bytes, contentType, token)
                     .ConfigureAwait(false);
                 if (!uploaded)
                 {

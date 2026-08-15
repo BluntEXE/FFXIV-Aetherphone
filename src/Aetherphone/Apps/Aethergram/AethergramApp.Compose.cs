@@ -28,19 +28,24 @@ internal sealed partial class AethergramApp
         ? (float)StoryStore.StoryWidth / StoryStore.StoryHeight
         : composeAvatarMode
             ? PostAspects.SquareRatio
-            : PostAspects.Ratio(composeSession.ContainerAspect);
+            : composeSession.GifSelected
+                ? composeSession.GifAspect
+                : PostAspects.Ratio(composeSession.ContainerAspect);
 
     private float ComposePreviewAspect => composeStoryMode || composeAvatarMode
         ? ComposeContainerAspect
-        : PostAspects.Ratio(composeSession.AspectAt(composeSession.ClampedPreviewIndex));
+        : composeSession.GifSelected
+            ? composeSession.GifAspect
+            : PostAspects.Ratio(composeSession.AspectAt(composeSession.ClampedPreviewIndex));
 
     private bool ComposeAllowsAspectChoice => !composeStoryMode && !composeAvatarMode;
 
     private bool ComposeCropAllowsReveal =>
         ComposeAllowsAspectChoice && PostAspects.RevealsWholeImage(composeSession.CurrentAspect);
 
-    private bool ComposePreviewAllowsReveal => ComposeAllowsAspectChoice
-        && PostAspects.RevealsWholeImage(composeSession.AspectAt(composeSession.ClampedPreviewIndex));
+    private bool ComposePreviewAllowsReveal => composeSession.GifSelected
+        || (ComposeAllowsAspectChoice
+            && PostAspects.RevealsWholeImage(composeSession.AspectAt(composeSession.ClampedPreviewIndex)));
 
     private string ComposeTitle => composeAvatarMode ? Loc.T(L.Aethergram.NewAvatar)
         : composeStoryMode ? Loc.T(L.Story.NewStory)
@@ -96,7 +101,7 @@ internal sealed partial class AethergramApp
         composeTagMode = false;
         captionEmoji.Close();
         personPicker.Close();
-        composeSession.Open(avatarMode || storyMode);
+        composeSession.Open(avatarMode || storyMode, !avatarMode && !storyMode);
         router.Push(AethergramRoute.Compose);
     }
 
@@ -157,6 +162,10 @@ internal sealed partial class AethergramApp
         if (showNext && ui.HeaderAction(area, nextLabel, composeSession.HasSelection))
         {
             composeSession.BeginCropSequence();
+            if (composeSession.Stage == PhotoComposeStage.Caption)
+            {
+                captionFocus = true;
+            }
         }
 
         var top = area.Min.Y + AppHeader.Height * scale;
@@ -271,7 +280,7 @@ internal sealed partial class AethergramApp
     {
         personPicker.Gate();
         var context = new PhoneContext(area, theme, navigation);
-        AppHeader.Draw(context, ComposeTitle, () => composeSession.LoadCropStage(composeSession.SelectedCount - 1));
+        AppHeader.Draw(context, ComposeTitle, composeSession.CaptionBack);
         var scale = UiScale.Current;
         var margin = 16f * scale;
         var top = area.Min.Y + AppHeader.Height * scale;
@@ -473,7 +482,11 @@ internal sealed partial class AethergramApp
 
         if (!composeTagMode || composeStoryMode)
         {
-            composeSession.LoadCropStage(index);
+            if (!composeSession.GifSelected)
+            {
+                composeSession.LoadCropStage(index);
+            }
+
             return;
         }
 

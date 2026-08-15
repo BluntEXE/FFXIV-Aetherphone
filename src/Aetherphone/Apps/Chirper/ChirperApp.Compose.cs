@@ -1,6 +1,7 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Media;
 using Aetherphone.Core.Platform;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
@@ -208,7 +209,7 @@ internal sealed partial class ChirperApp
                 else
                 {
                     composeStatus = ComposeHasGif()
-                        ? Loc.T(L.Chirper.GifRidesAlone)
+                        ? Loc.T(L.Common.GifRidesAlone)
                         : Loc.T(L.Chirper.MaxPhotos, ChirperStore.MaxImages);
                 }
             }
@@ -398,7 +399,7 @@ internal sealed partial class ChirperApp
 
     private bool ComposeHasGif()
     {
-        return composeAttachments.Count > 0 && ChirperStore.IsGifPath(composeAttachments[0]);
+        return composeAttachments.Count > 0 && GifMedia.IsGif(composeAttachments[0]);
     }
 
     private void AddComposeAttachment(string path)
@@ -409,10 +410,10 @@ internal sealed partial class ChirperApp
             return;
         }
 
-        var addingGif = ChirperStore.IsGifPath(path);
+        var addingGif = GifMedia.IsGif(path);
         if (ComposeHasGif() || (addingGif && composeAttachments.Count > 0))
         {
-            composeStatus = Loc.T(L.Chirper.GifRidesAlone);
+            composeStatus = Loc.T(L.Common.GifRidesAlone);
             return;
         }
 
@@ -422,14 +423,10 @@ internal sealed partial class ChirperApp
             return;
         }
 
-        if (addingGif)
+        if (addingGif && !GifMedia.FitsSizeCap(path))
         {
-            var info = new FileInfo(path);
-            if (!info.Exists || info.Length == 0 || info.Length > ChirperStore.MaxGifBytes)
-            {
-                composeStatus = Loc.T(L.Chirper.GifTooLarge);
-                return;
-            }
+            composeStatus = Loc.T(L.Common.GifTooLarge);
+            return;
         }
 
         for (var index = 0; index < composeAttachments.Count; index++)

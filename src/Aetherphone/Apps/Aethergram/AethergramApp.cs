@@ -130,6 +130,8 @@ internal sealed partial class AethergramApp : IPhoneApp
     private readonly FailureSlot feedFailure = new();
     private readonly FailureSlot commentFailure = new();
     private string? commentRestore;
+    private readonly CommentAttachment commentAttachment = new();
+    private string? commentAttachmentRestore;
     private string composeStatus = string.Empty;
     private volatile int composeOutcome;
     private string commentDraft = string.Empty;
@@ -1147,7 +1149,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         }
 
         pendingViewUrl = null;
-        photoViewer.Open(this, () => images.Get(url));
+        photoViewer.Open(this, () => GifMedia.Texture(images, url, ImGui.GetTime()));
     }
 
     private void DrawLikeBurst(Rect imageRect, string postId)
@@ -1189,7 +1191,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         }
 
         var scale = UiScale.Current;
-        var texture = images.Get(url);
+        var texture = GifMedia.Texture(images, url, ImGui.GetTime());
         if (texture is null)
         {
             Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(AppPalettes.Aethergram.FieldSurface));
@@ -1199,6 +1201,11 @@ internal sealed partial class AethergramApp : IPhoneApp
         else
         {
             ImageFit.DrawLetterboxed(drawList, texture, rect, Vector2.Zero, Vector2.One, rounding);
+        }
+
+        if (GifMedia.IsGif(url))
+        {
+            GifBadge.Draw(drawList, rect);
         }
 
         ModerationOverlay.Draw(drawList, rect.Min, rect.Max, rounding, scanStatus);

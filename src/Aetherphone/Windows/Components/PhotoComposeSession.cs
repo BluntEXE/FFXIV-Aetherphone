@@ -61,6 +61,14 @@ internal sealed class PhotoComposeSession
 
     public PhotoComposeStage Stage { get; set; }
     public bool SingleSelect { get; private set; }
+    public bool AllowGif { get; private set; }
+    public bool GifSelected => AllowGif && selected.Count == 1 && GifMedia.IsGif(selected[0]);
+
+    public float GifAspect =>
+        wallpaperImages.Get(FirstSelected) is { } gifTexture && gifTexture.Size.Y > 0f
+            ? gifTexture.Size.X / gifTexture.Size.Y
+            : 1f;
+
     public int CropIndex { get; private set; }
     public int PreviewIndex { get; set; }
     public string Notice { get; private set; } = string.Empty;
@@ -95,9 +103,10 @@ internal sealed class PhotoComposeSession
         }
     }
 
-    public void Open(bool singleSelect)
+    public void Open(bool singleSelect, bool allowGif = false)
     {
         SingleSelect = singleSelect;
+        AllowGif = allowGif && !singleSelect;
         Stage = PhotoComposeStage.Pick;
         selected.Clear();
         crops.Clear();
@@ -149,6 +158,29 @@ internal sealed class PhotoComposeSession
             return;
         }
 
+        if (AllowGif)
+        {
+            if (GifMedia.IsGif(path))
+            {
+                if (selected.Count > 0)
+                {
+                    Notice = Loc.T(L.Common.GifRidesAlone);
+                    return;
+                }
+
+                if (!GifMedia.FitsSizeCap(path))
+                {
+                    Notice = Loc.T(L.Common.GifTooLarge);
+                    return;
+                }
+            }
+            else if (GifSelected)
+            {
+                Notice = Loc.T(L.Common.GifRidesAlone);
+                return;
+            }
+        }
+
         if (selected.Count >= PostMedia.MaxPhotos)
         {
             Notice = Loc.T(L.Common.PhotoLimit, PostMedia.MaxPhotos);
@@ -172,8 +204,25 @@ internal sealed class PhotoComposeSession
         }
 
         PreviewIndex = 0;
+        if (GifSelected)
+        {
+            Stage = PhotoComposeStage.Caption;
+            return;
+        }
+
         Stage = PhotoComposeStage.Crop;
         LoadCrop(0);
+    }
+
+    public void CaptionBack()
+    {
+        if (GifSelected)
+        {
+            Stage = PhotoComposeStage.Pick;
+            return;
+        }
+
+        LoadCropStage(selected.Count - 1);
     }
 
     public void SaveCurrentCrop()

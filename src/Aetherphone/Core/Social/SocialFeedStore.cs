@@ -1,6 +1,7 @@
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Localization;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Net;
 using Aetherphone.Core.Wallpapers;
@@ -22,6 +23,9 @@ internal enum FollowState
 
 internal abstract class SocialFeedStore : IDisposable
 {
+    private const int CommentImageDimension = 1280;
+    private const string CommentUploadScope = "comment";
+
     protected readonly AethernetSession session;
     protected readonly AccountClient account;
     protected readonly SocialClient client;
@@ -488,11 +492,11 @@ internal abstract class SocialFeedStore : IDisposable
         }, () => commentsLoadingMore = false);
     }
 
-    public void AddComment(string postId, string text, Action<bool> onComplete,
+    public void AddComment(string postId, string text, string? attachmentPath, Action<bool> onComplete,
         Action<AepFailure>? onFailure = null)
     {
         var trimmed = text.Trim();
-        if (trimmed.Length == 0 || commenting)
+        if ((trimmed.Length == 0 && attachmentPath is null) || commenting)
         {
             return;
         }
@@ -500,7 +504,25 @@ internal abstract class SocialFeedStore : IDisposable
         commenting = true;
         work.Run("comment", async token =>
         {
-            var created = await client.AddCommentAsync(postId, trimmed, token, onFailure).ConfigureAwait(false);
+            string? mediaKey = null;
+            var mediaWidth = 0;
+            var mediaHeight = 0;
+            if (attachmentPath is not null)
+            {
+                var uploaded = await UploadImagesAsync(new[] { attachmentPath }, 1, CommentImageDimension,
+                    CommentUploadScope, token, onFailure).ConfigureAwait(false);
+                if (uploaded is null || uploaded.Value.Keys.Length == 0)
+                {
+                    return false;
+                }
+
+                mediaKey = uploaded.Value.Keys[0];
+                mediaWidth = uploaded.Value.Width;
+                mediaHeight = uploaded.Value.Height;
+            }
+
+            var created = await client.AddCommentAsync(postId, trimmed, mediaKey, mediaWidth, mediaHeight, token,
+                onFailure).ConfigureAwait(false);
             if (created is null)
             {
                 AepLog.Warning($"Comment on {postId} was not accepted");
@@ -515,6 +537,73 @@ internal abstract class SocialFeedStore : IDisposable
             BumpCommentCount(postId, 1);
             return true;
         }, onComplete, () => commenting = false);
+    }
+
+    protected async Task<(string[] Keys, int Width, int Height)?> UploadImagesAsync(
+        IReadOnlyList<string> imagePaths, int maxImages, int maxDimension, string uploadScope,
+        CancellationToken token, Action<AepFailure>? onFailure = null)
+    {
+        if (imagePaths.Count == 0)
+        {
+            return (Array.Empty<string>(), 0, 0);
+        }
+
+        var keys = new string[Math.Min(imagePaths.Count, maxImages)];
+        var firstWidth = 0;
+        var firstHeight = 0;
+        for (var index = 0; index < keys.Length; index++)
+        {
+            byte[] bytes;
+            string contentType;
+            int width;
+            int height;
+            if (GifMedia.IsGif(imagePaths[index]))
+            {
+                bytes = await File.ReadAllBytesAsync(imagePaths[index], token).ConfigureAwait(false);
+                if (bytes.Length == 0 || bytes.Length > GifMedia.MaxBytes)
+                {
+                    AepLog.Warning($"Upload to {uploadScope} rejected a GIF of {bytes.Length} bytes; the cap is {GifMedia.MaxBytes}");
+                    onFailure?.Invoke(new AepFailure(AepFailureKind.Server, 0, FailureCodes.MediaInvalidImage, null,
+                        null, null));
+                    return null;
+                }
+
+                (width, height) = ImageProcessor.IdentifyDimensions(bytes);
+                contentType = "image/gif";
+            }
+            else
+            {
+                var baked = ImageProcessor.BakeJpeg(imagePaths[index], maxDimension);
+                bytes = baked.Bytes;
+                width = baked.Width;
+                height = baked.Height;
+                contentType = "image/jpeg";
+            }
+
+            var upload = await media.UploadUrlAsync(contentType, uploadScope, token, onFailure).ConfigureAwait(false);
+            if (upload is null)
+            {
+                return null;
+            }
+
+            var sent = await media.UploadImageAsync(upload.UploadUrl, bytes, contentType, token)
+                .ConfigureAwait(false);
+            if (!sent)
+            {
+                AepLog.Warning($"Upload to {uploadScope} could not store image {index + 1} of {keys.Length}");
+                onFailure?.Invoke(AepFailure.Transport(AepFailureKind.Offline));
+                return null;
+            }
+
+            keys[index] = upload.Key;
+            if (index == 0)
+            {
+                firstWidth = width;
+                firstHeight = height;
+            }
+        }
+
+        return (keys, firstWidth, firstHeight);
     }
 
     public void DeleteComment(string postId, string commentId)

@@ -3,7 +3,9 @@ using Aetherphone.Core.Animation;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
+using Aetherphone.Core.Photos;
 using Aetherphone.Core.Theme;
+using Aetherphone.Core.Wallpapers;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
@@ -27,9 +29,29 @@ internal static class CommentComposerBar
     public static bool Draw(Rect bar, Rect screen, AppSkin ui, PhoneTheme theme, in CommentComposerStyle style,
         string inputId, string hint, ref string draft, int maxLength, MentionAutocomplete mentions,
         MentionPopup mentionPopup, RemoteImageCache images, LodestoneService lodestone, bool busy,
-        ref bool focusPending, EmojiComposer emoji)
+        ref bool focusPending, EmojiComposer emoji, CommentAttachment? attachment = null,
+        PhotoLibrary? library = null, WallpaperImageCache? wallpaperImages = null)
     {
         var scale = UiScale.Current;
+        var attachmentActive = attachment is not null && library is not null && wallpaperImages is not null;
+        var overlayTop = bar.Min.Y;
+        if (attachmentActive)
+        {
+            attachment!.ConsumePendingImport();
+            if (emoji.Open)
+            {
+                attachment.ClosePanel();
+            }
+
+            var stripHeight = attachment.StripHeight(scale);
+            if (stripHeight > 0f)
+            {
+                overlayTop = bar.Min.Y - stripHeight;
+                attachment.DrawStrip(new Rect(new Vector2(bar.Min.X, overlayTop), new Vector2(bar.Max.X, bar.Min.Y)),
+                    theme, wallpaperImages!);
+            }
+        }
+
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddLine(bar.Min, new Vector2(bar.Max.X, bar.Min.Y), ImGui.GetColorU32(style.Hairline), 1f);
         var pillMin = new Vector2(bar.Min.X + 12f * scale, bar.Min.Y + style.PillPadY * scale);
@@ -40,6 +62,14 @@ internal static class CommentComposerBar
         emoji.DrawToggle(ui, emojiCenter, emojiRadius, style.SendEnabled,
             Palette.WithAlpha(style.TextInk, 0.5f), Loc.T(L.Common.Emoji));
         var textLeft = emojiCenter.X + emojiRadius + 6f * scale;
+        if (attachmentActive)
+        {
+            var photoRadius = 13f * scale;
+            var photoCenter = new Vector2(emojiCenter.X + emojiRadius + 8f * scale + photoRadius, bar.Center.Y);
+            attachment!.DrawToggle(ui, photoCenter, photoRadius, style.SendEnabled,
+                Palette.WithAlpha(style.TextInk, 0.5f), Loc.T(L.Common.AddPhoto), library!, emoji);
+            textLeft = photoCenter.X + photoRadius + 6f * scale;
+        }
         ImGui.SetCursorScreenPos(new Vector2(textLeft,
             (pillMin.Y + pillMax.Y) * 0.5f - ImGui.GetFrameHeight() * 0.5f));
         ImGui.SetNextItemWidth(pillMax.X - textLeft - 10f * scale);
@@ -64,7 +94,7 @@ internal static class CommentComposerBar
 
         mentionPopup.Gate(mentions);
 
-        var canSend = draft.Trim().Length > 0 && !busy;
+        var canSend = (draft.Trim().Length > 0 || (attachmentActive && attachment!.Path is not null)) && !busy;
         if (style.CircleSend)
         {
             var sendRadius = 15f * scale;
@@ -93,8 +123,17 @@ internal static class CommentComposerBar
         var panelHeight = emoji.PanelHeight(scale);
         if (panelHeight > 0f)
         {
-            emoji.DrawPanel(new Rect(new Vector2(bar.Min.X, bar.Min.Y - panelHeight),
-                new Vector2(bar.Max.X, bar.Min.Y)), ui, ref draft, maxLength);
+            emoji.DrawPanel(new Rect(new Vector2(bar.Min.X, overlayTop - panelHeight),
+                new Vector2(bar.Max.X, overlayTop)), ui, ref draft, maxLength);
+        }
+        else if (attachmentActive)
+        {
+            var photoPanelHeight = attachment!.PanelHeight(scale);
+            if (photoPanelHeight > 0f)
+            {
+                attachment.DrawPanel(new Rect(new Vector2(bar.Min.X, overlayTop - photoPanelHeight),
+                    new Vector2(bar.Max.X, overlayTop)), ui, theme, wallpaperImages!);
+            }
         }
 
         return submitted && canSend;

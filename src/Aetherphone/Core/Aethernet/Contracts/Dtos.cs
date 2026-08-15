@@ -301,9 +301,16 @@ internal sealed record CommentDto(
     string ScanStatus = "clean",
     int AuthorBadges = 0,
     string[]? AuthorBadgeIds = null,
-    string AuthorFrameId = "") : IIdentified;
+    string AuthorFrameId = "",
+    string? MediaUrl = null,
+    int MediaWidth = 0,
+    int MediaHeight = 0) : IIdentified;
 
-internal sealed record CreateCommentRequest(string Text);
+internal sealed record CreateCommentRequest(
+    string Text,
+    string? MediaKey = null,
+    int MediaWidth = 0,
+    int MediaHeight = 0);
 
 internal sealed record CommentPage(CommentDto[] Items, string? NextCursor);
 

@@ -40,6 +40,9 @@ internal static class L
         public static readonly LocString SaveToGallery = new("common.saveToGallery", "Save to gallery");
         public static readonly LocString SavedToGallery = new("common.savedToGallery", "Saved to gallery");
         public static readonly LocString NoPhotos = new("common.noPhotos", "No photos in your gallery yet");
+        public static readonly LocString AddPhoto = new("common.addPhoto", "Add a photo");
+        public static readonly LocString GifTooLarge = new("common.gifTooLarge", "GIF is too large (max 4 MB)");
+        public static readonly LocString GifRidesAlone = new("common.gifRidesAlone", "A GIF has to be posted on its own, without other photos.");
         public static readonly LocString FileKindImages = new("common.fileKindImages", "Images");
         public static readonly LocString FileKindAudio = new("common.fileKindAudio", "Audio");
         public static readonly LocString FileKindVideo = new("common.fileKindVideo", "Video");
@@ -2866,8 +2869,6 @@ internal static class L
         public static readonly LocString ChangePhoto = new("chirper.changePhoto", "Change Photo");
         public static readonly LocString ImportFromPc = new("chirper.importFromPc", "Import from PC");
         public static readonly LocString AddPhotos = new("chirper.addPhotos", "Add photos");
-        public static readonly LocString GifTooLarge = new("chirper.gifTooLarge", "GIF is too large (max 4 MB)");
-        public static readonly LocString GifRidesAlone = new("chirper.gifRidesAlone", "A GIF has to be posted on its own, without other photos.");
         public static readonly LocString MaxPhotos = new("chirper.maxPhotos", "A chirp can carry up to {0} photos.");
         public static readonly LocString MoveAndScale = new("chirper.moveAndScale", "Move and Scale");
         public static readonly LocString GestureHint = new("chirper.gestureHint", "Drag to move · scroll to zoom");

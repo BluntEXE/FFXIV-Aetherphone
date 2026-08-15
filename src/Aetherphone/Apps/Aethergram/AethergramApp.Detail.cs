@@ -305,8 +305,12 @@ internal sealed partial class AethergramApp
             commentLayout = commentLayouts.LayoutFor(comment.Id, comment.Text, comment.Mentions, textRight - textLeft);
         }
 
-        var textHeight = commentLayout?.Size.Y ?? Typography.MeasureWrapped(comment.Text, textRight - textLeft, 0.9f);
-        var bubbleHeight = padTop + nameHeight + 4f * scale + textHeight + padBottom;
+        var textHeight = comment.Text.Length == 0
+            ? 0f
+            : commentLayout?.Size.Y ?? Typography.MeasureWrapped(comment.Text, textRight - textLeft, 0.9f);
+        var mediaHeight = CommentMedia.MeasureHeight(comment, textRight - textLeft, scale);
+        var mediaGap = mediaHeight > 0f && textHeight > 0f ? 6f * scale : 0f;
+        var bubbleHeight = padTop + nameHeight + 4f * scale + textHeight + mediaGap + mediaHeight + padBottom;
         if (canDelete)
         {
             bubbleHeight = MathF.Max(bubbleHeight, 72f * scale);
@@ -346,23 +350,38 @@ internal sealed partial class AethergramApp
         }
 
         var textTop = nameTop + nameHeight + 4f * scale;
-        ImGui.SetCursorScreenPos(new Vector2(textLeft, textTop));
-        if (commentLayout is null)
+        if (textHeight > 0f)
         {
-            using (Typography.WrapAt(textRight))
-            using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Aethergram.BodyInk))
-            using (Plugin.Fonts.Push(0.9f))
+            ImGui.SetCursorScreenPos(new Vector2(textLeft, textTop));
+            if (commentLayout is null)
             {
-                Typography.Wrapped(comment.Text);
+                using (Typography.WrapAt(textRight))
+                using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Aethergram.BodyInk))
+                using (Plugin.Fonts.Push(0.9f))
+                {
+                    Typography.Wrapped(comment.Text);
+                }
+            }
+            else
+            {
+                using (Plugin.Fonts.Push(0.9f))
+                {
+                    DrawRichBody(drawList, commentLayout, new Vector2(textLeft, textTop));
+                }
             }
         }
-        else
+
+        if (comment.MediaUrl is { } commentMediaUrl)
         {
-            using (Plugin.Fonts.Push(0.9f))
+            var mediaRect = CommentMedia.Draw(drawList, images, comment,
+                new Vector2(textLeft, textTop + textHeight + mediaGap), textRight - textLeft, scale,
+                AppPalettes.Aethergram.FieldSurface, AppPalettes.Aethergram.MutedInk);
+            if (UiInteract.HoverClick(mediaRect.Min, mediaRect.Max))
             {
-                DrawRichBody(drawList, commentLayout, new Vector2(textLeft, textTop));
+                photoViewer.Open(this, () => GifMedia.Texture(images, commentMediaUrl, ImGui.GetTime()));
             }
         }
+
         if (UiInteract.HoverClick(new Vector2(origin.X, bubbleTop), new Vector2(textLeft + nameWidth, textTop)))
         {
             OpenProfile(comment.AuthorId);
@@ -408,21 +427,30 @@ internal sealed partial class AethergramApp
             commentDraft = returned;
         }
 
+        var returnedAttachment = Interlocked.Exchange(ref commentAttachmentRestore, null);
+        if (returnedAttachment is not null)
+        {
+            commentAttachment.Restore(returnedAttachment);
+        }
+
         if (commentFailure.Failed)
         {
-            Typography.DrawWrappedCentered(new Vector2(bar.Center.X, bar.Min.Y - 22f * UiScale.Current),
+            Typography.DrawWrappedCentered(new Vector2(bar.Center.X,
+                    bar.Min.Y - 22f * UiScale.Current - commentAttachment.StripHeight(UiScale.Current)),
                 commentFailure.Text(), AppPalettes.Aethergram.MutedInk, TextStyles.Footnote,
                 bar.Width - 28f * UiScale.Current);
         }
 
         if (CommentComposerBar.Draw(bar, screen, ui, theme, style, "##gramComment", Loc.T(L.Aethergram.AddComment),
                 ref commentDraft, MaxCommentLength, commentMentions, mentionPopup, images, lodestone, store.Commenting,
-                ref commentFocusPending, commentEmoji))
+                ref commentFocusPending, commentEmoji, commentAttachment, library, wallpaperImages))
         {
             var text = commentDraft;
+            var attachmentPath = commentAttachment.Path;
             commentDraft = string.Empty;
+            commentAttachment.Clear();
             commentFailure.Clear();
-            store.AddComment(postId, text, accepted =>
+            store.AddComment(postId, text, attachmentPath, accepted =>
             {
                 if (accepted)
                 {
@@ -430,6 +458,7 @@ internal sealed partial class AethergramApp
                 }
 
                 commentRestore = text;
+                commentAttachmentRestore = attachmentPath;
             }, commentFailure.Set);
         }
     }

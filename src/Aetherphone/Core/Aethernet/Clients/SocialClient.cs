@@ -207,10 +207,10 @@ internal sealed class SocialClient
         return net.GetAsync(path, AethernetJsonContext.Default.CommentPage, token, null, onFailure);
     }
 
-    public Task<CommentDto?> AddCommentAsync(string postId, string text, CancellationToken token,
-        Action<AepFailure>? onFailure = null)
+    public Task<CommentDto?> AddCommentAsync(string postId, string text, string? mediaKey, int mediaWidth,
+        int mediaHeight, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync($"/posts/{postId}/comments", new CreateCommentRequest(text), AethernetJsonContext.Default.CreateCommentRequest, AethernetJsonContext.Default.CommentDto, token, null, onFailure);
+        return net.PostAsync($"/posts/{postId}/comments", new CreateCommentRequest(text, mediaKey, mediaWidth, mediaHeight), AethernetJsonContext.Default.CreateCommentRequest, AethernetJsonContext.Default.CommentDto, token, null, onFailure);
     }
 
     public Task<bool> DeleteCommentAsync(string postId, string commentId, CancellationToken token,
