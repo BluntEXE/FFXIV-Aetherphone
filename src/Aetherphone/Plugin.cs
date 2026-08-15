@@ -348,6 +348,11 @@ public sealed class Plugin : IDalamudPlugin
 
     private static string DetectLanguage()
     {
+        if ((int)ClientState.ClientLanguage == Core.Game.GameData.ChineseSimplifiedClientLanguage)
+        {
+            return "zh";
+        }
+
         switch (ClientState.ClientLanguage)
         {
             case Dalamud.Game.ClientLanguage.German:

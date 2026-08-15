@@ -210,10 +210,10 @@ internal sealed class PhoneServices : IDisposable
         var imageDisk = new DiskCache(imageRoot, 128L * 1024 * 1024);
         var remoteImages = new RemoteImageCache(http, imageDisk);
         var pluginCatalog = new PluginCatalog(remoteImages, http, imageDisk);
-        var lodestone = new LodestoneService(configuration, http, media, cacheRoot);
+        var lodestone = new LodestoneService(configuration, gameData, http, media, cacheRoot);
         var lookup = new LookupService(lodestone);
         var aethernetSession = new AethernetSession(configuration, framework);
-        var availability = new AppAvailability(http, aethernetSession, configuration);
+        var availability = new AppAvailability(http, aethernetSession, configuration, gameData);
         var aethernet = new AethernetApi(http, aethernetSession);
         var keyVault = new KeyVault(configuration, aethernetSession, aethernet.Keys);
         var badgeCatalog = new Social.BadgeCatalogStore(aethernetSession, aethernet.Account);

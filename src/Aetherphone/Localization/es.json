@@ -5053,5 +5053,6 @@
   "failure.tokenExpired": "Tu sesión ha caducado. Inicia sesión otra vez e inténtalo de nuevo.",
   "failure.sessionRevoked": "Se ha cerrado tu sesión. Inicia sesión para continuar.",
   "failure.socialDisabled": "Las apps sociales están apagadas temporalmente. Inténtalo más tarde.",
-  "failure.appDisabled": "Esta app está apagada temporalmente. Inténtalo más tarde."
+  "failure.appDisabled": "Esta app está apagada temporalmente. Inténtalo más tarde.",
+  "account.chinaSignInPending": "El inicio de sesión en Aethernet aún no está disponible en la versión china del juego. La verificación de cuenta a través del foro Rising Stones (石之家) está en desarrollo. Las apps que no necesitan cuenta siguen funcionando."
 }

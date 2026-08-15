@@ -300,6 +300,12 @@ internal sealed partial class SetupOverlay
 
     private void DrawAccountLanding(Rect screen, PhoneTheme theme, Vector2 offset, float alpha, bool live)
     {
+        if (gameData.IsChineseGameClient())
+        {
+            DrawAccountChinaNotice(screen, theme, offset, alpha, live);
+            return;
+        }
+
         var drawList = ImGui.GetWindowDrawList();
         var scale = UiScale.Current;
         var body = Loc.T(L.Setup.AccountBody);
@@ -344,6 +350,20 @@ internal sealed partial class SetupOverlay
         }
 
         DrawStatusLine(drawList, screen, theme, offset, alpha, 3);
+    }
+
+    private void DrawAccountChinaNotice(Rect screen, PhoneTheme theme, Vector2 offset, float alpha, bool live)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var body = Loc.T(L.Account.ChinaSignInPending);
+        var contentHeight = HeaderHeight(screen, body);
+        var top = CenteredTop(screen, contentHeight, 1) + offset.Y;
+        DrawHeader(drawList, screen, offset, alpha, FontAwesomeIcon.UserCircle, theme.Accent,
+            Loc.T(L.Setup.AccountTitle), body, theme, top);
+        if (Primary(drawList, ButtonRect(screen, offset, 0), Loc.T(L.Onboarding.Continue), theme, alpha, live))
+        {
+            AdvancePage();
+        }
     }
 
     private void DrawAccountSignedIn(Rect screen, PhoneTheme theme, Vector2 offset, float alpha, bool live)

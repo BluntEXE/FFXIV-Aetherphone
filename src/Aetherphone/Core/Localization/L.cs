@@ -2402,6 +2402,7 @@ internal static class L
         public static readonly LocString SignIn = new("account.signIn", "Sign in with Lodestone");
         public static readonly LocString XivSignIn = new("account.xivSignIn", "Sign in with XIVAuth");
         public static readonly LocString LodestoneHint = new("account.lodestoneHint", "No XIVAuth account? Verify with a Lodestone code instead.");
+        public static readonly LocString ChinaSignInPending = new("account.chinaSignInPending", "Aethernet sign-in isn't available on the Chinese game version yet. Account verification through the Rising Stones forum (石之家) is in the works. Apps that don't need an account keep working.");
         public static readonly LocString XivTitle = new("account.xivTitle", "Approve on XIVAuth");
         public static readonly LocString XivIntro = new("account.xivIntro", "We opened XIVAuth in your browser. Approve this device to finish signing in. If you're asked for a code, enter the one below.");
         public static readonly LocString XivWaiting = new("account.xivWaiting", "Waiting for approval…");

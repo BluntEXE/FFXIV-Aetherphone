@@ -1,3 +1,4 @@
+using Aetherphone.Core.Game;
 using Aetherphone.Core.Net;
 using NetStone;
 using NetStone.Model.Parseables.Search.Character;
@@ -13,6 +14,7 @@ internal sealed class LodestoneService : IDisposable
     private const int IdIndexVersion = 2;
     private const string ImageKeyVersion = "v2";
     private readonly Configuration configuration;
+    private readonly GameData gameData;
     private readonly HttpService http;
     private readonly MediaCache media;
     private readonly RequestThrottle throttle;
@@ -25,9 +27,11 @@ internal sealed class LodestoneService : IDisposable
     private LodestoneClient? client;
     private DateTime lastInitFailureUtc = DateTime.MinValue;
 
-    public LodestoneService(Configuration configuration, HttpService http, MediaCache media, DirectoryInfo cacheRoot)
+    public LodestoneService(Configuration configuration, GameData gameData, HttpService http, MediaCache media,
+        DirectoryInfo cacheRoot)
     {
         this.configuration = configuration;
+        this.gameData = gameData;
         this.http = http;
         this.media = media;
         throttle = new RequestThrottle(1, TimeSpan.FromMilliseconds(1200));
@@ -118,7 +122,8 @@ internal sealed class LodestoneService : IDisposable
 
     private AvatarHandle Image(string? name, string? world, bool fullBody)
     {
-        if (!configuration.ShowLodestonePortraits || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(world))
+        if (!configuration.ShowLodestonePortraits || gameData.IsChineseGameClient() || string.IsNullOrEmpty(name) ||
+            string.IsNullOrEmpty(world))
         {
             return AvatarHandle.Disabled;
         }

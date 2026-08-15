@@ -5053,5 +5053,6 @@
   "failure.tokenExpired": "登录状态已过期。请重新登录后重试。",
   "failure.sessionRevoked": "你已退出登录。请重新登录以继续。",
   "failure.socialDisabled": "社交应用已临时关闭。请稍后再试。",
-  "failure.appDisabled": "该应用已临时关闭。请稍后再试。"
+  "failure.appDisabled": "该应用已临时关闭。请稍后再试。",
+  "account.chinaSignInPending": "国服客户端暂时无法登录 Aethernet。我们正在开发通过石之家论坛验证账号的功能。无需账号的应用可以正常使用。"
 }

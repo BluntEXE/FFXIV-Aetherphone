@@ -5053,5 +5053,6 @@
   "failure.tokenExpired": "Oturumun sona erdi. Tekrar giriş yapıp dene.",
   "failure.sessionRevoked": "Oturumun kapatıldı. Devam etmek için tekrar giriş yap.",
   "failure.socialDisabled": "Sosyal uygulamalar geçici olarak kapalı. Daha sonra tekrar dene.",
-  "failure.appDisabled": "Bu uygulama geçici olarak kapalı. Daha sonra tekrar dene."
+  "failure.appDisabled": "Bu uygulama geçici olarak kapalı. Daha sonra tekrar dene.",
+  "account.chinaSignInPending": "Aethernet girişi oyunun Çin sürümünde henüz kullanılamıyor. Rising Stones forumu (石之家) üzerinden hesap doğrulama üzerinde çalışıyoruz. Hesap gerektirmeyen uygulamalar çalışmaya devam ediyor."
 }

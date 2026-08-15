@@ -761,6 +761,17 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             return;
         }
 
+        if (gameData.IsChineseGameClient())
+        {
+            ImGui.Dummy(new Vector2(0f, 6f * UiScale.Current));
+            using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
+            {
+                Typography.Wrapped(Loc.T(L.Account.ChinaSignInPending));
+            }
+
+            return;
+        }
+
         if (flow.XivAuthActive)
         {
             DrawXivAuthStep(theme);

@@ -1,5 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Game;
 using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -10,11 +11,13 @@ namespace Aetherphone.Apps.Settings.Pages;
 internal sealed class AboutPage : ISettingsPage
 {
     private readonly Configuration configuration;
+    private readonly GameData gameData;
     private DateTime copiedAt;
 
-    public AboutPage(Configuration configuration)
+    public AboutPage(Configuration configuration, GameData gameData)
     {
         this.configuration = configuration;
+        this.gameData = gameData;
     }
 
     public string Title => Loc.T(L.Settings.About);
@@ -37,7 +40,7 @@ internal sealed class AboutPage : ISettingsPage
             var copyLabel = copied ? Loc.T(L.Settings.SupportInfoCopied) : Loc.T(L.Settings.CopySupportInfo);
             if (SettingsRow.Action(card.NextRow(), copyLabel, theme.Accent, theme))
             {
-                ImGui.SetClipboardText(SupportInfo.Build(configuration));
+                ImGui.SetClipboardText(SupportInfo.Build(configuration, gameData));
                 copiedAt = DateTime.UtcNow;
             }
 

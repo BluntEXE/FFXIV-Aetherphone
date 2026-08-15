@@ -4,7 +4,7 @@ namespace Aetherphone.Core.Social;
 
 internal static class SocialRegion
 {
-    public static readonly string[] Codes = { "NA", "EU", "JP", "OCE" };
+    public static readonly string[] Codes = { "NA", "EU", "JP", "OCE", "CN" };
 
     public static bool IsValid(string code) => Array.IndexOf(Codes, code) >= 0;
 

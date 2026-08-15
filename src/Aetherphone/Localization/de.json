@@ -5053,5 +5053,6 @@
   "failure.tokenExpired": "Deine Sitzung ist abgelaufen. Melde dich erneut an und versuche es noch einmal.",
   "failure.sessionRevoked": "Du wurdest abgemeldet. Melde dich erneut an, um fortzufahren.",
   "failure.socialDisabled": "Die sozialen Apps sind vorübergehend abgeschaltet. Versuche es später erneut.",
-  "failure.appDisabled": "Diese App ist vorübergehend abgeschaltet. Versuche es später erneut."
+  "failure.appDisabled": "Diese App ist vorübergehend abgeschaltet. Versuche es später erneut.",
+  "account.chinaSignInPending": "Die Aethernet-Anmeldung ist in der chinesischen Spielversion noch nicht verfügbar. Die Kontobestätigung über das Rising-Stones-Forum (石之家) ist in Arbeit. Apps, die kein Konto brauchen, funktionieren weiterhin."
 }

@@ -5053,5 +5053,6 @@
   "failure.tokenExpired": "Ta session a expiré. Reconnecte-toi, puis réessaie.",
   "failure.sessionRevoked": "Tu as été déconnecté. Reconnecte-toi pour continuer.",
   "failure.socialDisabled": "Les applis sociales sont désactivées temporairement. Réessaie plus tard.",
-  "failure.appDisabled": "Cette appli est désactivée temporairement. Réessaie plus tard."
+  "failure.appDisabled": "Cette appli est désactivée temporairement. Réessaie plus tard.",
+  "account.chinaSignInPending": "La connexion à Aethernet n'est pas encore disponible sur la version chinoise du jeu. La vérification de compte via le forum Rising Stones (石之家) est en préparation. Les applis qui ne demandent pas de compte continuent de fonctionner."
 }

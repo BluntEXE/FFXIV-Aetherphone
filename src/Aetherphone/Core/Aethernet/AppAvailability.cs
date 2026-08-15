@@ -1,3 +1,4 @@
+using Aetherphone.Core.Game;
 using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Aethernet;
@@ -9,22 +10,26 @@ internal sealed class AppAvailability : IDisposable
 
     private static readonly string[] AlwaysAvailable = { "appstore", "settings", "announcements" };
     private static readonly string[] HiddenUntilLaunched = { "muster", "coin", "casino" };
+    private static readonly string[] UnavailableInChina = { "music", "aetherstream", "news" };
 
     private static AppAvailability? current;
 
     private readonly HttpService http;
     private readonly AethernetSession session;
     private readonly Configuration configuration;
+    private readonly GameData gameData;
     private readonly CancellationTokenSource cancellation = new();
     private volatile Dictionary<string, bool> flags;
     private long nextFetchTick;
     private int fetching;
 
-    public AppAvailability(HttpService http, AethernetSession session, Configuration configuration)
+    public AppAvailability(HttpService http, AethernetSession session, Configuration configuration,
+        GameData gameData)
     {
         this.http = http;
         this.session = session;
         this.configuration = configuration;
+        this.gameData = gameData;
         flags = new Dictionary<string, bool>(configuration.AppFlags, StringComparer.Ordinal);
         current = this;
     }
@@ -33,6 +38,11 @@ internal sealed class AppAvailability : IDisposable
 
     public bool Enabled(string appId)
     {
+        if (IsUnavailableInChina(appId) && gameData.IsChineseGameClient())
+        {
+            return false;
+        }
+
         EnsureFresh();
         if (IsAlwaysAvailable(appId))
         {
@@ -60,6 +70,19 @@ internal sealed class AppAvailability : IDisposable
         for (var index = 0; index < HiddenUntilLaunched.Length; index++)
         {
             if (string.Equals(appId, HiddenUntilLaunched[index], StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsUnavailableInChina(string appId)
+    {
+        for (var index = 0; index < UnavailableInChina.Length; index++)
+        {
+            if (string.Equals(appId, UnavailableInChina[index], StringComparison.Ordinal))
             {
                 return true;
             }

@@ -68,6 +68,8 @@ https://raw.githubusercontent.com/XeldarAlz/DalamudPlugins/main/repo.json
 
 Tick **Enabled**, click **+**, then **Save and Close**. Open `/xlplugins` → **All Plugins**, search for **Aetherphone**, and install.
 
+Playing the Chinese game version? The phone detects it and hides the apps that can't work there (Music, AetherStream, News). Aethernet sign-in for CN characters (via the Rising Stones forum, 石之家) is in development.
+
 ## Commands
 
 | Command | Action |
