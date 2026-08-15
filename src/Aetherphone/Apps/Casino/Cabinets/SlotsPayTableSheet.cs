@@ -21,6 +21,9 @@ internal sealed class SlotsPayTableSheet
     private const float PadX = 18f;
     private const float RowHeight = 40f;
     private const float PanelHeightShare = 0.78f;
+    private const float TableLeftInset = 44f;
+    private const float CellPadX = 8f;
+    private const float MinPayFontFraction = 0.7f;
 
     private Spring reveal;
     private bool open;
@@ -109,15 +112,17 @@ internal sealed class SlotsPayTableSheet
         ImGui.SetCursorScreenPos(contentMin);
         using (ImRaii.Child("##slotsPayRows", contentSize, false, ImGuiWindowFlags.NoBackground))
         {
-            DrawRows(ui, contentSize.X, scale, stake);
+            DrawRows(ui, scale, stake);
         }
 
         return new Rect(panelMin, panelMax);
     }
 
-    private static void DrawRows(AppSkin ui, float width, float scale, long stake)
+    private static void DrawRows(AppSkin ui, float scale, long stake)
     {
         var drawList = ImGui.GetWindowDrawList();
+        var width = ScrollbarAwareWidth();
+        var columnWidth = ColumnWidth(width, scale);
         var subtitle = Loc.T(L.Casino.SlotsPaysMatches);
         var subtitleOrigin = ImGui.GetCursorScreenPos();
         var subtitleBlock = Typography.MeasureWrappedBlock(subtitle, TextStyles.Footnote, width);
@@ -127,9 +132,9 @@ internal sealed class SlotsPayTableSheet
         var headerOrigin = ImGui.GetCursorScreenPos();
         for (var column = 0; column < 3; column++)
         {
-            Typography.DrawCentered(drawList, new Vector2(ColumnCenterX(headerOrigin.X, width, column, scale),
+            DrawPayCell(drawList, new Vector2(ColumnCenterX(headerOrigin.X, width, column, scale),
                 headerOrigin.Y + 8f * scale), GameNumber.Label(column + 3), ui.MutedInk,
-                TextStyles.FootnoteEmphasized);
+                TextStyles.FootnoteEmphasized, columnWidth);
         }
 
         ImGui.Dummy(new Vector2(width, 20f * scale));
@@ -144,8 +149,8 @@ internal sealed class SlotsPayTableSheet
                 var pay = SlotsRules.LinePays[symbol, column] * stake;
                 var text = pay > 0 ? pay.ToString("N0", Loc.Culture) : "-";
                 var ink = pay > 0 ? ui.TitleInk : ui.MutedInk;
-                Typography.DrawCentered(drawList, new Vector2(ColumnCenterX(rowOrigin.X, width, column, scale),
-                    rowCenterY), text, ink, TextStyles.SubheadlineEmphasized);
+                DrawPayCell(drawList, new Vector2(ColumnCenterX(rowOrigin.X, width, column, scale), rowCenterY),
+                    text, ink, TextStyles.SubheadlineEmphasized, columnWidth);
             }
 
             ImGui.Dummy(new Vector2(width, RowHeight * scale));
@@ -198,10 +203,30 @@ internal sealed class SlotsPayTableSheet
         ImGui.Dummy(new Vector2(width, block.Y + 8f * scale));
     }
 
+    private static void DrawPayCell(ImDrawListPtr drawList, Vector2 center, string text, Vector4 ink,
+        in TextStyle style, float maxWidth)
+    {
+        var fittedScale = Typography.FitScale(text, maxWidth, style.Scale, style.Scale * MinPayFontFraction,
+            style.Weight);
+        var textSize = Typography.Measure(text, fittedScale, style.Weight);
+        Typography.Draw(drawList, center - textSize * 0.5f, text, ink, fittedScale, style.Weight);
+    }
+
+    private static float ScrollbarAwareWidth()
+    {
+        var available = ImGui.GetContentRegionAvail().X;
+        return ImGui.GetScrollMaxY() > 0f ? available : available - ImGui.GetStyle().ScrollbarSize;
+    }
+
+    private static float ColumnWidth(float width, float scale)
+    {
+        return (width - TableLeftInset * scale) / 3f - CellPadX * scale;
+    }
+
     private static float ColumnCenterX(float left, float width, int column, float scale)
     {
-        var tableLeft = left + 44f * scale;
-        var tableWidth = width - 44f * scale;
+        var tableLeft = left + TableLeftInset * scale;
+        var tableWidth = width - TableLeftInset * scale;
         return tableLeft + tableWidth * (column + 0.5f) / 3f;
     }
 }
