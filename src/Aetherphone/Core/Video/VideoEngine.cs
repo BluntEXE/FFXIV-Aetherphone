@@ -27,7 +27,9 @@ internal sealed class VideoEngine : IDisposable
 
     private static readonly TimeSpan YouTubeLoadSpacing = TimeSpan.FromSeconds(3);
 
-    private const long ResolverRecoveryCooldownMilliseconds = 10 * 60 * 1000;
+    private const long ResolverUpdateCheckCooldownMilliseconds = 10 * 60 * 1000;
+    private const long RecoveryRestartBackoffMilliseconds = 15 * 1000;
+    private const int MaxRecoveryRestartsPerUrl = 2;
     private const long StallWatchdogMilliseconds = 10 * 1000;
     private const double StallPositionTolerance = 0.05;
 
@@ -61,11 +63,16 @@ internal sealed class VideoEngine : IDisposable
     private volatile bool active;
     private int activeLoads;
     private int loadGeneration;
-    private long lastResolverRecoveryAtTicks = long.MinValue;
+    private long lastResolverUpdateCheckAtTicks = long.MinValue;
+    private long lastRecoveryRestartAtTicks = long.MinValue;
+    private string? recoveryRestartUrl;
+    private int recoveryRestartsForUrl;
     private volatile bool resolverRecovering;
     private volatile string? recoveryNotice;
     private ResolverUpdateOutcome lastResolverOutcome = ResolverUpdateOutcome.Failed;
     private long stallProgressAtTicks;
+    private long framesProgressAtTicks;
+    private int lastObservedFrameVersion;
     private double lastObservedPosition;
 
     internal VideoEngine()
@@ -158,6 +165,8 @@ internal sealed class VideoEngine : IDisposable
 
                 lastObservedPosition = startSeconds;
                 stallProgressAtTicks = Environment.TickCount64;
+                framesProgressAtTicks = stallProgressAtTicks;
+                lastObservedFrameVersion = player.FrameVersion;
                 active = true;
                 screenPainter.SetTransform(ScreenPosition, ScreenYaw, ScreenScale);
                 return PlayStart.Started;
@@ -270,7 +279,7 @@ internal sealed class VideoEngine : IDisposable
         {
             if (RefusedStreamUrl() is { } refusedUrl)
             {
-                if (TryBeginResolverRecovery())
+                if (TryBeginResolverRecovery(refusedUrl))
                 {
                     recoveryNotice = Loc.T(L.AetherStream.ResolverRecovering);
                     _ = RecoverResolverAsync(refusedUrl, lastObservedPosition);
@@ -289,11 +298,14 @@ internal sealed class VideoEngine : IDisposable
     internal void ObserveForStall(in MpvPlaybackInfo info)
     {
         var now = Environment.TickCount64;
+        var frameVersion = renderer?.FrameVersion ?? 0;
         if (!active || IsLoading || resolverRecovering || info.Paused || info.Seeking
             || renderer is not { SawHttpForbidden: true })
         {
             lastObservedPosition = info.PositionSeconds;
+            lastObservedFrameVersion = frameVersion;
             stallProgressAtTicks = now;
+            framesProgressAtTicks = now;
             return;
         }
 
@@ -301,21 +313,28 @@ internal sealed class VideoEngine : IDisposable
         {
             lastObservedPosition = info.PositionSeconds;
             stallProgressAtTicks = now;
-            return;
         }
 
-        if (now - stallProgressAtTicks < StallWatchdogMilliseconds)
+        if (frameVersion != lastObservedFrameVersion)
+        {
+            lastObservedFrameVersion = frameVersion;
+            framesProgressAtTicks = now;
+        }
+
+        if (now - stallProgressAtTicks < StallWatchdogMilliseconds
+            && now - framesProgressAtTicks < StallWatchdogMilliseconds)
         {
             return;
         }
 
         stallProgressAtTicks = now;
+        framesProgressAtTicks = now;
         if (RefusedStreamUrl() is not { } refusedUrl)
         {
             return;
         }
 
-        if (TryBeginResolverRecovery())
+        if (TryBeginResolverRecovery(refusedUrl))
         {
             AepLog.Warning(
                 $"[Video] Playback stalled after a refused stream; restarting the player at {lastObservedPosition:F1}s.");
@@ -339,7 +358,7 @@ internal sealed class VideoEngine : IDisposable
         return url is { Length: > 0 } && url.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? url : null;
     }
 
-    private bool TryBeginResolverRecovery()
+    private bool TryBeginResolverRecovery(string refusedUrl)
     {
         if (resolverRecovering)
         {
@@ -347,13 +366,25 @@ internal sealed class VideoEngine : IDisposable
         }
 
         var now = Environment.TickCount64;
-        if (lastResolverRecoveryAtTicks != long.MinValue
-            && now - lastResolverRecoveryAtTicks < ResolverRecoveryCooldownMilliseconds)
+        if (lastRecoveryRestartAtTicks != long.MinValue
+            && now - lastRecoveryRestartAtTicks < RecoveryRestartBackoffMilliseconds)
         {
             return false;
         }
 
-        lastResolverRecoveryAtTicks = now;
+        if (recoveryRestartUrl != refusedUrl)
+        {
+            recoveryRestartUrl = refusedUrl;
+            recoveryRestartsForUrl = 0;
+        }
+
+        if (recoveryRestartsForUrl >= MaxRecoveryRestartsPerUrl)
+        {
+            return false;
+        }
+
+        recoveryRestartsForUrl++;
+        lastRecoveryRestartAtTicks = now;
         resolverRecovering = true;
         return true;
     }
@@ -363,18 +394,29 @@ internal sealed class VideoEngine : IDisposable
         var token = lifetime.Token;
         try
         {
-            var outcome = await Dependencies.UpdateIfNewerAsync(Dependencies.LinkResolver, token)
-                .ConfigureAwait(false);
-            lastResolverOutcome = outcome;
-            if (outcome == ResolverUpdateOutcome.Updated)
+            var now = Environment.TickCount64;
+            if (lastResolverUpdateCheckAtTicks == long.MinValue
+                || now - lastResolverUpdateCheckAtTicks >= ResolverUpdateCheckCooldownMilliseconds)
             {
-                AepLog.Warning("[Video] The stream was refused with the old link resolver; updated to "
-                    + $"{Dependencies.LinkResolver.RemoteVersion} and retrying.");
+                lastResolverUpdateCheckAtTicks = now;
+                var outcome = await Dependencies.UpdateIfNewerAsync(Dependencies.LinkResolver, token)
+                    .ConfigureAwait(false);
+                lastResolverOutcome = outcome;
+                if (outcome == ResolverUpdateOutcome.Updated)
+                {
+                    AepLog.Warning("[Video] The stream was refused with the old link resolver; updated to "
+                        + $"{Dependencies.LinkResolver.RemoteVersion} and retrying.");
+                }
+                else
+                {
+                    AepLog.Warning(
+                        "[Video] The stream was refused with a current link resolver; restarting the player to reset its connections.");
+                }
             }
             else
             {
                 AepLog.Warning(
-                    "[Video] The stream was refused with a current link resolver; restarting the player to reset its connections.");
+                    $"[Video] The stream was refused again; restarting the player at {resumeSeconds:F1}s without another resolver check.");
             }
 
             if (renderer is { } current && !string.Equals(current.CurrentUrl, refusedUrl, StringComparison.Ordinal))

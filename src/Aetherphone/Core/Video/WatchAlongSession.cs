@@ -35,7 +35,8 @@ internal sealed class WatchAlongSession : IDisposable
     private const double HardSeekTolerance = 4.0;
     private const double MaxProjectionSeconds = 5.0;
     private const float EndSeekGuardSeconds = 0.5f;
-    private const int MaxAutoReplayAttempts = 2;
+    private const long AutoReplayInitialDelayMilliseconds = 10 * 1000;
+    private const long AutoReplayMaxDelayMilliseconds = 60 * 1000;
     private const int MaxSharedQueueEntries = 32;
 
     private const float ScreenPositionDriftTolerance = 0.1f;
@@ -61,12 +62,13 @@ internal sealed class WatchAlongSession : IDisposable
     private float lastPublishedScreenScale;
     private bool lastPublishedApprovalRequired;
     private int lastPublishedQueueCount = -1;
-    private bool publishRequested;
+    private volatile bool publishRequested;
 
     private string? viewingUrl;
     private string? rejectedRemoteUrl;
     private string? autoReplayUrl;
-    private int autoReplayAttempts;
+    private long autoReplayDelayMilliseconds;
+    private long autoReplayNextAtTicks;
     private CallControl? lastStateMessage;
 
     private CallControl? pendingJoinSync;
@@ -476,6 +478,11 @@ internal sealed class WatchAlongSession : IDisposable
     {
         Roster = ToParticipants(message.Participants);
 
+        if (Mode == WatchAlongMode.Hosting)
+        {
+            RequestPublish();
+        }
+
         if (PendingRequests.Count > 0)
         {
             foreach (var participant in Roster)
@@ -655,17 +662,26 @@ internal sealed class WatchAlongSession : IDisposable
             return;
         }
 
+        if (autoReplayUrl is not null && video.State == VideoPlaybackState.Playing)
+        {
+            autoReplayUrl = null;
+        }
+
         if (video.State == VideoPlaybackState.Failed && viewingUrl is { } failedUrl)
         {
+            var now = Environment.TickCount64;
             if (autoReplayUrl != failedUrl)
             {
                 autoReplayUrl = failedUrl;
-                autoReplayAttempts = 0;
+                autoReplayDelayMilliseconds = AutoReplayInitialDelayMilliseconds;
+                autoReplayNextAtTicks = now;
             }
 
-            if (autoReplayAttempts < MaxAutoReplayAttempts)
+            if (now >= autoReplayNextAtTicks)
             {
-                autoReplayAttempts++;
+                autoReplayNextAtTicks = now + autoReplayDelayMilliseconds;
+                autoReplayDelayMilliseconds =
+                    Math.Min(autoReplayDelayMilliseconds * 2, AutoReplayMaxDelayMilliseconds);
                 video.Play(failedUrl, ProjectRemotePosition(message), !(message.Paused ?? false));
             }
 

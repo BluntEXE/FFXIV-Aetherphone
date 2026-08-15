@@ -205,7 +205,8 @@ internal sealed class MpvRenderer : IDisposable
         }
 
         SetOption("ytdl-format",
-            $"bestvideo[height<={maxQualityHeight}][ext=mp4]+bestaudio/best[height<={maxQualityHeight}]");
+            $"bestvideo[height<={maxQualityHeight}][vcodec^=avc1]+bestaudio/"
+            + $"bestvideo[height<={maxQualityHeight}][ext=mp4]+bestaudio/best[height<={maxQualityHeight}]");
         SetOption("ytdl-raw-options", "force-ipv4=,hls-use-mpegts=");
         SetOption("volume", initialVolume.ToString(CultureInfo.InvariantCulture));
         SetOption("msg-level", "all=warn,ffmpeg=error");

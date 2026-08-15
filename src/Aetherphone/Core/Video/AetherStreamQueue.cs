@@ -17,6 +17,7 @@ internal sealed class VideoQueueEntry
     internal string Source { get; set; }
     internal TimeSpan? Duration { get; set; }
     internal string? ThumbnailUrl { get; set; }
+    internal bool EnrichRequested { get; set; }
 }
 
 internal sealed class AetherStreamQueue : IDisposable
@@ -42,7 +43,10 @@ internal sealed class AetherStreamQueue : IDisposable
         {
             var record = persisted[recordIndex];
             entries.Add(new VideoQueueEntry(record.Url, record.Title, record.Source,
-                record.DurationSeconds is { } seconds ? TimeSpan.FromSeconds(seconds) : null, record.ThumbnailUrl));
+                record.DurationSeconds is { } seconds ? TimeSpan.FromSeconds(seconds) : null, record.ThumbnailUrl)
+            {
+                EnrichRequested = record.DurationSeconds is not null,
+            });
         }
     }
 
@@ -232,11 +236,12 @@ internal sealed class AetherStreamQueue : IDisposable
 
     private void EnrichIfYouTube(VideoQueueEntry entry)
     {
-        if (!VideoUrlResolver.IsYouTubeUrl(entry.Url))
+        if (!VideoUrlResolver.IsYouTubeUrl(entry.Url) || entry.EnrichRequested)
         {
             return;
         }
 
+        entry.EnrichRequested = true;
         _ = EnrichAsync(entry);
     }
 
@@ -245,6 +250,7 @@ internal sealed class AetherStreamQueue : IDisposable
         var resolved = await metadata.ResolveMetadataAsync(entry.Url, CancellationToken.None).ConfigureAwait(false);
         if (resolved is null)
         {
+            entry.EnrichRequested = false;
             return;
         }
 
