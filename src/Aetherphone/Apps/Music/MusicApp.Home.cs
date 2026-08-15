@@ -66,6 +66,7 @@ internal sealed partial class MusicApp
         {
             ImGui.Dummy(new Vector2(0f, 4f * scale));
             DrawFavoriteRadioStationsSection(Loc.T(L.Music.FavoriteStations), scale);
+            DrawLiveDjsSection(scale);
             DrawShelfHeading(Loc.T(L.Music.BrowseCategories), scale);
             DrawCategoryGrid(scale, gridWidth);
             ImGui.Dummy(new Vector2(0f, 10f * scale));

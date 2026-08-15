@@ -2773,6 +2773,9 @@ internal static class L
         public static readonly LocString NoPlaylistsYet = new("music.noPlaylistsYet", "No playlists yet");
         public static readonly LocString SongOne = new("music.songOne", "1 song");
         public static readonly LocString SongsMany = new("music.songsMany", "{0} songs");
+        public static readonly LocString LiveDjs          = new("music.live_djs",           "Live Twitch DJs");
+        public static readonly LocString LiveDjsEmpty     = new("music.live_djs_empty",     "No DJs are live right now. Check out Community Radio or Radio Stations.");
+        public static readonly LocString PoweredByRolladeck = new("music.poweredByRolladeck", "Powered by XIV Rolladeck");
     }
 
     internal static class Messages
@@ -6149,5 +6152,51 @@ internal static class L
         public static readonly LocString PatreonAlreadyLinked = new("failure.patreonAlreadyLinked", "That Patreon account is already linked.");
         public static readonly LocString FeedbackLength = new("failure.feedbackLength", "Keep your feedback to {0} characters.");
         public static readonly LocString FeedbackTooManyImages = new("failure.feedbackTooManyImages", "You can attach at most {0} images.");
+    }
+
+    internal static class Rolladeck
+    {
+        public static readonly LocString TabDjs              = new("rolladeck.tabDjs",              "DJs");
+        public static readonly LocString TabVenues           = new("rolladeck.tabVenues",           "Venues");
+        public static readonly LocString TabEvents           = new("rolladeck.tabEvents",           "Events");
+        public static readonly LocString FilterAtVenue       = new("rolladeck.filterAtVenue",       "At Venue");
+        public static readonly LocString FilterAllDjs        = new("rolladeck.filterAllDjs",        "All DJs");
+        public static readonly LocString FilterNow           = new("rolladeck.filterNow",           "Now");
+        public static readonly LocString FilterLaterToday    = new("rolladeck.filterLaterToday",    "Later Today");
+        public static readonly LocString FilterThisWeek      = new("rolladeck.filterThisWeek",      "This Week");
+        public static readonly LocString EmptyDjsHeading     = new("rolladeck.emptyDjsHeading",     "No DJs Live");
+        public static readonly LocString EmptyDjsBody        = new("rolladeck.emptyDjsBody",        "Check back later. DJs appear here when they go live.");
+        public static readonly LocString EmptyVenuesHeading  = new("rolladeck.emptyVenuesHeading",  "No Venues Open");
+        public static readonly LocString EmptyVenuesBody     = new("rolladeck.emptyVenuesBody",     "No Rolladeck venues are currently hosting events.");
+        public static readonly LocString EmptyScheduleHeading = new("rolladeck.emptyScheduleHeading", "Nothing Here");
+        public static readonly LocString EmptyScheduleNow    = new("rolladeck.emptyScheduleNow",    "Nothing is happening right now.");
+        public static readonly LocString EmptyScheduleLater  = new("rolladeck.emptyScheduleLater",  "Nothing scheduled in the next 24 hours.");
+        public static readonly LocString EmptyScheduleWeek   = new("rolladeck.emptyScheduleWeek",   "Nothing scheduled this week.");
+        public static readonly LocString OpenReasonDiscord   = new("rolladeck.openReasonDiscord",   "♦ Discord");
+        public static readonly LocString OpenReasonEvent     = new("rolladeck.openReasonEvent",     "♦ Event");
+        public static readonly LocString OpenReasonStream    = new("rolladeck.openReasonStream",    "♪ Live");
+        public static readonly LocString NotifyLiveBody      = new("rolladeck.notifyLiveBody",      "{0} is live, {1} viewers");
+        public static readonly LocString NotifyOpenNow       = new("rolladeck.notifyOpenNow",       "Open now");
+        public static readonly LocString Viewers             = new("rolladeck.viewers",             "♪  {0} viewers");
+        public static readonly LocString VenueUnknown        = new("rolladeck.venueUnknown",        "Venue Unknown");
+        public static readonly LocString Teleport            = new("rolladeck.teleport",            "Teleport");
+        public static readonly LocString Watch               = new("rolladeck.watch",               "Watch");
+        public static readonly LocString LifestreamNotInstalled = new("rolladeck.lifestreamNotInstalled", "Lifestream not installed, address copied to clipboard");
+        public static readonly LocString SectionGenres       = new("rolladeck.sectionGenres",       "GENRES");
+        public static readonly LocString SectionLinks        = new("rolladeck.sectionLinks",        "LINKS");
+        public static readonly LocString SectionAbout        = new("rolladeck.sectionAbout",        "ABOUT");
+        public static readonly LocString SectionAmenities    = new("rolladeck.sectionAmenities",    "AMENITIES");
+        public static readonly LocString YouAreHere          = new("rolladeck.youAreHere",          "♦ You're here");
+        public static readonly LocString LiveNow             = new("rolladeck.liveNow",             "♪ LIVE NOW");
+        public static readonly LocString EventLabel          = new("rolladeck.eventLabel",          "♦ EVENT");
+        public static readonly LocString DiscordEventLabel   = new("rolladeck.discordEventLabel",   "♦ DISCORD EVENT");
+        public static readonly LocString Website             = new("rolladeck.website",             "Website");
+        public static readonly LocString Visit               = new("rolladeck.visit",               "Visit");
+        public static readonly LocString Discord             = new("rolladeck.discord",             "Discord");
+        public static readonly LocString EventFallback       = new("rolladeck.eventFallback",       "Event");
+        public static readonly LocString DjPage              = new("rolladeck.djPage",              "DJ Page");
+        public static readonly LocString VenuePage           = new("rolladeck.venuePage",           "Venue Page");
+        public static readonly LocString ViewDjPage          = new("rolladeck.viewDjPage",          "View DJ Page");
+        public static readonly LocString ViewVenuePage       = new("rolladeck.viewVenuePage",       "View Venue Page");
     }
 }
