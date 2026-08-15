@@ -76,7 +76,8 @@ internal static class L
         public static readonly LocString QuotedPhoto = new("social.quotedPhoto", "quoted your photo");
         public static readonly LocString ViewProfile = new("social.viewProfile", "View profile");
         public static readonly LocString BlockAction = new("social.blockAction", "Block");
-        public static readonly LocString BlockConfirm = new("social.blockConfirm", "Block {0}? You won't see each other's posts, comments, or profile, and any follows between you are removed.");
+        public static readonly LocString BlockConfirmTitle = new("social.blockConfirmTitle", "Block {0}?");
+        public static readonly LocString BlockConfirm = new("social.blockConfirm", "You won't see each other's posts, comments, or profiles anymore. Any follows between you will be removed.");
         public static readonly LocString BlockedUsers = new("social.blockedUsers", "Blocked people");
         public static readonly LocString BlockedEmpty = new("social.blockedEmpty", "You haven't blocked anyone.");
         public static readonly LocString BlockedHint = new("social.blockedHint", "Blocking applies across Chirper, Aethergram, and calls. Tap someone to unblock them.");
@@ -151,7 +152,7 @@ internal static class L
     {
         public static readonly LocString Title = new("safety.title", "Moderation and safety");
         public static readonly LocString UnreadSummary = new("safety.unreadSummary", "{0} unread");
-        public static readonly LocString Empty = new("safety.empty", "Nothing here. No moderator has acted on your account.");
+        public static readonly LocString Empty = new("safety.empty", "Your account has no warnings, restrictions, suspensions, or other moderation actions.");
         public static readonly LocString SignInPrompt = new("safety.signInPrompt", "Sign in to see moderation notices for your account.");
         public static readonly LocString RetentionHint = new("safety.retentionHint", "Notices stay here for 180 days, whether or not you have read them.");
         public static readonly LocString LoadOlder = new("safety.loadOlder", "Load older notices");
@@ -175,7 +176,7 @@ internal static class L
         public static readonly LocString RemovedHate = new("moderation.removedHate", "Your post was removed because it appears to contain hateful content.");
         public static readonly LocString RemovedSelfHarm = new("moderation.removedSelfHarm", "Your post was removed because it appears to reference self-harm.");
         public static readonly LocString RemovedPolicy = new("moderation.removedPolicy", "Your post was removed for violating the community guidelines.");
-        public static readonly LocString RemovedFooter = new("moderation.removedFooter", "If you believe this is a mistake, reach out to us on our Discord server.");
+        public static readonly LocString RemovedFooter = new("moderation.removedFooter", "If you believe this was a mistake, you can appeal by contacting us through our Discord server.");
         public static readonly LocString RemovedDismiss = new("moderation.removedDismiss", "OK");
         public static readonly LocString RemovedCommentTitle = new("moderation.removedCommentTitle", "Comment removed");
         public static readonly LocString RemovedCommentAdult = new("moderation.removedCommentAdult", "Your comment was removed because it appears to contain adult content, which is not allowed here.");
@@ -200,10 +201,13 @@ internal static class L
         public static readonly LocString NoticeRemovedMessage = new("moderation.notice.removedMessage", "A message you sent was removed");
         public static readonly LocString NoticeRemovedContent = new("moderation.notice.removedContent", "Something you posted was removed");
         public static readonly LocString NoticeAvatarRemoved = new("moderation.notice.avatarRemoved", "Your profile picture was removed");
-        public static readonly LocString NoticeProfileCleared = new("moderation.notice.profileCleared", "Part of your profile was cleared");
+        public static readonly LocString NoticeProfileCleared = new("moderation.notice.profileCleared", "Part of your profile was removed");
+        public static readonly LocString NoticeProfileClearedIntro = new("moderation.notice.profileClearedIntro", "We removed part of your profile because it violated our {0} policy.");
         public static readonly LocString NoticeProfileClearedFields = new("moderation.notice.profileClearedFields", "Cleared: {0}");
+        public static readonly LocString NoticeRemovedContentLabel = new("moderation.notice.removedContentLabel", "Removed content");
         public static readonly LocString NoticeSuspendedTitle = new("moderation.notice.suspendedTitle", "Your account was suspended");
-        public static readonly LocString NoticeSuspendedFor = new("moderation.notice.suspendedFor", "You cannot sign in until {0}.");
+        public static readonly LocString NoticeSuspendedIntro = new("moderation.notice.suspendedIntro", "Your account has been temporarily suspended.");
+        public static readonly LocString NoticeSuspendedFor = new("moderation.notice.suspendedFor", "You can sign in again after {0}.");
         public static readonly LocString NoticeSuspendedPermanent = new("moderation.notice.suspendedPermanent", "This suspension does not expire on its own.");
         public static readonly LocString NoticeSignedOutTitle = new("moderation.notice.signedOutTitle", "A moderator signed you out");
         public static readonly LocString NoticeSignedOutBody = new("moderation.notice.signedOutBody", "Your sessions were ended on every device. Your account is fine and nothing was removed.");
@@ -211,11 +215,12 @@ internal static class L
         public static readonly LocString NoticeQuotedPhotos = new("moderation.notice.quotedPhotos", "{0} attached");
         public static readonly LocString NoticePhotoCount = new("moderation.notice.photoCount", "{0} photo(s)");
         public static readonly LocString NoticeModeratorNote = new("moderation.notice.moderatorNote", "From the moderator: {0}");
+        public static readonly LocString NoticeModeratorNoteLabel = new("moderation.notice.moderatorNoteLabel", "Moderator note");
         public static readonly LocString NoticeWarningConsequence = new("moderation.notice.warningConsequence", "Please follow the community guidelines. Repeated breaks of the same rule can lead to a temporary suspension.");
         public static readonly LocString NoticeCoinTitle = new("moderation.notice.coinTitle", "Your Aether Coin balance changed");
         public static readonly LocString NoticeCoinBody = new("moderation.notice.coinBody", "A staff member adjusted your Aether Coin balance.");
         public static readonly LocString NoticeThanksTitle = new("moderation.notice.thanksTitle", "Thanks for looking out for everyone");
-        public static readonly LocString NoticeThanksBody = new("moderation.notice.thanksBody", "Our moderators reviewed your report and it has been handled. Reports like yours are what keep Aethernet safe, and we read every single one. Thank you for taking the time.");
+        public static readonly LocString NoticeThanksBody = new("moderation.notice.thanksBody", "Your report was reviewed by our moderation team and appropriate action has been taken. Reports like yours help keep Aethernet safe, and we appreciate you taking the time to send one.");
         public static readonly LocString NoticeBadgeTitle = new("moderation.notice.badgeTitle", "New badge");
         public static readonly LocString NoticeBadgeBodyOne = new("moderation.notice.badgeBodyOne", "The Aetherphone team granted you the {0} badge. It now shows next to your name, and you can manage it in Settings under Account.");
         public static readonly LocString NoticeBadgeBodyMany = new("moderation.notice.badgeBodyMany", "The Aetherphone team granted you new badges: {0}. They now show next to your name, and you can manage them in Settings under Account.");
@@ -2438,11 +2443,11 @@ internal static class L
         public static readonly LocString FailBannedBody = new("account.fail.banned.body", "This character can't sign in to Aethernet. Reach out to support if you think this is a mistake.");
         public static readonly LocString BanScreenTitle = new("account.ban.title", "Account suspended");
         public static readonly LocString BanScreenBody = new("account.ban.body", "This character has been banned from Aethernet and can no longer sign in.");
-        public static readonly LocString BanScreenReason = new("account.ban.reason", "Reason: {0}");
-        public static readonly LocString BanScreenTimeoutTitle = new("account.ban.timeoutTitle", "Account suspended for now");
-        public static readonly LocString BanScreenLifts = new("account.ban.lifts", "You can sign in again after {0}. Nothing you posted was deleted by this suspension.");
+        public static readonly LocString BanScreenReason = new("account.ban.reason", "Reason");
+        public static readonly LocString BanScreenTimeoutTitle = new("account.ban.timeoutTitle", "Account suspended");
+        public static readonly LocString BanScreenLifts = new("account.ban.lifts", "Your social apps are temporarily locked. You can sign in again after {0}.");
         public static readonly LocString BanScreenContact = new("account.ban.contact", "If you believe this is a mistake, contact support.");
-        public static readonly LocString BanScreenSocialLocked = new("account.ban.socialLocked", "Social apps are locked, but the rest of the phone still works.");
+        public static readonly LocString BanScreenSocialLocked = new("account.ban.socialLocked", "Nothing you posted was deleted by this suspension, and the rest of Aetherphone remains available.");
         public static readonly LocString FailRateLimitedTitle = new("account.fail.rateLimited.title", "Too many attempts");
         public static readonly LocString FailRateLimitedBody = new("account.fail.rateLimited.body", "You've tried a few times in a row. Wait a minute, then try again.");
         public static readonly LocString FailNetworkTitle = new("account.fail.network.title", "Can't reach Aethernet");
@@ -2537,7 +2542,8 @@ internal static class L
         public static readonly LocString DetailsHint = new("report.detailsHint", "Add details (optional)");
         public static readonly LocString Submit = new("report.submit", "Report");
         public static readonly LocString Sending = new("report.sending", "Sending…");
-        public static readonly LocString Sent = new("report.sent", "Report submitted. Thank you.");
+        public static readonly LocString SentTitle = new("report.sentTitle", "Report submitted");
+        public static readonly LocString Sent = new("report.sent", "Thank you for your report. Our moderation team will review it, and we may take action if it violates our Community Guidelines.");
         public static readonly LocString Failed = new("report.failed", "Couldn't submit the report");
     }
 
@@ -3198,7 +3204,7 @@ internal static class L
         public static readonly LocString ViewPost = new("velvet.viewPost", "View post");
         public static readonly LocString BlockConfirm =
             new("velvet.blockConfirm",
-                "Block {0}? You won't see each other in Velvet, and any connection between you is removed.");
+                "You won't see each other in Velvet anymore. Any connection between you will be removed.");
         public static readonly LocString IntroduceYourself = new("velvet.introduceYourself", "Introduce yourself");
         public static readonly LocString CardIdentity = new("velvet.cardIdentity", "Identity");
         public static readonly LocString CardAbout = new("velvet.cardAbout", "About");
@@ -4144,18 +4150,20 @@ internal static class L
         public static readonly LocString Buy = new("coin.buy", "Buy");
         public static readonly LocPlural Price = new("coin.price", "{0:N0} Coin", "{0:N0} Coins");
         public static readonly LocString BuyConfirmTitle = new("coin.buyConfirmTitle", "Buy {0}?");
-        public static readonly LocString BuyConfirmBody = new("coin.buyConfirmBody", "{0} Aether Coin will leave your wallet.");
+        public static readonly LocPlural BuyConfirmBody = new("coin.buyConfirmBody", "This purchase will cost {0:N0} Aether Coin. The coin will be deducted from your wallet immediately.", "This purchase will cost {0:N0} Aether Coins. The coins will be deducted from your wallet immediately.");
         public static readonly LocString Insufficient = new("coin.insufficient", "Not enough Aether Coin yet");
         public static readonly LocString Purchased = new("coin.purchased", "It is yours");
         public static readonly LocString PriceChanged = new("coin.priceChanged", "The price changed; take another look");
         public static readonly LocString Unavailable = new("coin.unavailable", "Not for sale right now");
         public static readonly LocString ShopEmpty = new("coin.shopEmpty", "The shelves are being stocked");
         public static readonly LocString HelpTitle = new("coin.helpTitle", "About Aether Coin");
-        public static readonly LocString HelpBody = new("coin.helpBody", "Coins can take up to 30 minutes to arrive, so give it a little time if an earn does not show up right away.");
+        public static readonly LocString HelpBody = new("coin.helpBody", "Aether Coin rewards may take up to 30 minutes to appear. If your balance doesn't update immediately, please check again shortly.");
         public static readonly LocString ShopEmptyHint = new("coin.shopEmptyHint", "The shop is still in the works. It opens very soon.");
         public static readonly LocString LeavingSoon = new("coin.leavingSoon", "Leaving {0}");
         public static readonly LocString FrozenTitle = new("coin.frozenTitle", "Your wallet is frozen");
         public static readonly LocString FrozenHint = new("coin.frozenHint", "Earning and spending are on hold. Check the Safety page for the reason.");
+        public static readonly LocString FrozenAlertTitle = new("coin.frozenAlertTitle", "Wallet frozen");
+        public static readonly LocString FrozenAlertBody = new("coin.frozenAlertBody", "Your wallet has been temporarily frozen. Please contact support to restore access.");
         public static readonly LocString RollupTitle = new("coin.rollupTitle", "+{0} Aether Coin");
         public static readonly LocString RollupBody = new("coin.rollupBody", "Today: {0}");
         public static readonly LocString RollupMore = new("coin.rollupMore", "and {0} more");
@@ -4248,16 +4256,16 @@ internal static class L
         public static readonly LocString SlotsStake = new("casino.slots.stake", "Stake");
         public static readonly LocString SlotsSpin = new("casino.slots.spin", "Spin");
         public static readonly LocString SlotsSkip = new("casino.slots.skip", "Skip");
-        public static readonly LocString SlotsPays = new("casino.slots.pays", "Pays");
+        public static readonly LocString SlotsPays = new("casino.slots.pays", "Payouts");
         public static readonly LocString SlotsBigWin = new("casino.slots.bigWin", "Big win");
         public static readonly LocString SlotsFreeSpinsBanner = new("casino.slots.freeSpinsBanner", "{0} free spins");
         public static readonly LocString SlotsBonusSub = new("casino.slots.bonusSub", "Wins pay double");
         public static readonly LocString SlotsFreeSpinCounter = new("casino.slots.freeSpinCounter", "Free spin {0} of {1}");
         public static readonly LocString SlotsExtraSpins = new("casino.slots.extraSpins", "+{0} spins");
         public static readonly LocString SlotsCapNote = new("casino.slots.capNote", "Paid at the table ceiling of {0}x the stake");
-        public static readonly LocString SlotsPaysMatches = new("casino.slots.paysMatches", "Matches from the left, shown at your current stake");
+        public static readonly LocString SlotsPaysMatches = new("casino.slots.paysMatches", "Winning combinations pay from left to right based on your current stake.");
         public static readonly LocString SlotsWildName = new("casino.slots.wildName", "Wild");
-        public static readonly LocString SlotsWildNote = new("casino.slots.wildNote", "Stands in for any pay symbol on reels 2 to 4.");
+        public static readonly LocString SlotsWildNote = new("casino.slots.wildNote", "Substitutes for any paying symbol on reels 2 to 4.");
         public static readonly LocString SlotsScatterName = new("casino.slots.scatterName", "Disc scatter");
         public static readonly LocString SlotsScatterNote = new("casino.slots.scatterNote", "3, 4, or 5 discs anywhere pay {0}, {1}, or {2} and start {3}, {4}, or {5} free spins.");
         public static readonly LocString SlotsBonusNote = new("casino.slots.bonusNote", "Free spin wins pay double. More discs add {0} spins, up to {1} in one round.");
@@ -4273,11 +4281,10 @@ internal static class L
         public static readonly LocString ScratchNoWin = new("casino.scratch.noWin", "No win this time");
         public static readonly LocString ScratchWinBanner = new("casino.scratch.winBanner", "Three of a kind");
         public static readonly LocString ScratchOdds = new("casino.scratch.odds", "Odds");
-        public static readonly LocString ScratchOddsIntro = new("casino.scratch.oddsIntro", "Every card is settled the moment it is bought. The foil is just the fun part.");
+        public static readonly LocString ScratchOddsIntro = new("casino.scratch.oddsIntro", "Each card's result is determined when purchased.");
         public static readonly LocString ScratchOddsPrize = new("casino.scratch.oddsPrize", "Prize");
         public static readonly LocString ScratchOddsChance = new("casino.scratch.oddsChance", "Chance");
         public static readonly LocString ScratchOddsChanceValue = new("casino.scratch.oddsChanceValue", "{0}%");
-        public static readonly LocString ScratchOddsAnyWin = new("casino.scratch.oddsAnyWin", "{0}% of cards win a prize");
         public static readonly LocString ScratchLowStack = new("casino.scratch.lowStack", "Not enough chips for that card. Top up at the cashier.");
         public static readonly LocString BarkeepWagerTitle = new("casino.barkeep.wagerTitle", "Paid shift");
         public static readonly LocString BarkeepWagerHint = new("casino.barkeep.wagerHint", "Entry {0}. Serve every patron well and the tip ladder pays out.");
@@ -4579,7 +4586,7 @@ internal static class L
         public static readonly LocString ConvertHeading = new("casino.convertHeading", "Coins and chips");
         public static readonly LocString ConvertToChips = new("casino.convertToChips", "Coins to chips");
         public static readonly LocString ConvertToChipsHint = new("casino.convertToChipsHint", "Buy the chips you play the floor with");
-        public static readonly LocString ConvertToCoins = new("casino.convertToCoins", "Chips back to coins");
+        public static readonly LocString ConvertToCoins = new("casino.convertToCoins", "Chips to coins");
         public static readonly LocString ConvertToCoinsHint = new("casino.convertToCoinsHint", "Turn your {0} chips back into coins whenever you like");
         public static readonly LocString ConvertNoChips = new("casino.convertNoChips", "You have no chips on the floor right now");
         public static readonly LocString OpenWalletRow = new("casino.openWalletRow", "Open the wallet");

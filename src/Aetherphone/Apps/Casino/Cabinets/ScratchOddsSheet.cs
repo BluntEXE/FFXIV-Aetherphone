@@ -156,12 +156,7 @@ internal sealed class ScratchOddsSheet
             ImGui.Dummy(new Vector2(width, RowHeight * scale));
         }
 
-        ImGui.Dummy(new Vector2(width, 8f * scale));
-        var anyWin = Loc.T(L.Casino.ScratchOddsAnyWin, ChancePercent(ScratchRules.WinCountPerMillion(tier)));
-        var anyWinOrigin = ImGui.GetCursorScreenPos();
-        var anyWinBlock = Typography.MeasureWrappedBlock(anyWin, TextStyles.Footnote, width);
-        Typography.DrawWrappedLeft(anyWinOrigin, anyWin, ui.MutedInk, TextStyles.Footnote, width);
-        ImGui.Dummy(new Vector2(width, anyWinBlock.Y + Metrics.Space.Lg * scale));
+        ImGui.Dummy(new Vector2(width, Metrics.Space.Lg * scale));
     }
 
     private static string ChancePercent(long countPerMillion)

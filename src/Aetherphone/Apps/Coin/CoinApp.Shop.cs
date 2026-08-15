@@ -454,7 +454,7 @@ internal sealed partial class CoinApp
         confirm.Ask(new ConfirmRequest
         {
             Title = Loc.T(L.Coin.BuyConfirmTitle, sku.Name),
-            Message = Loc.T(L.Coin.BuyConfirmBody, price.ToString("N0", Loc.Culture)),
+            Message = Loc.Plural(L.Coin.BuyConfirmBody, (int)price),
             ConfirmLabel = Loc.T(L.Coin.Buy),
             CancelLabel = Loc.T(L.Common.Cancel),
             Danger = false,
@@ -477,11 +477,16 @@ internal sealed partial class CoinApp
             return;
         }
 
+        if (string.Equals(result.Reason, "frozen", StringComparison.Ordinal))
+        {
+            confirm.Alert(Loc.T(L.Coin.FrozenAlertTitle), Loc.T(L.Coin.FrozenAlertBody), Loc.T(L.Common.Close));
+            return;
+        }
+
         var message = result.Reason switch
         {
             "insufficient" => Loc.T(L.Coin.Insufficient),
             "price_changed" => Loc.T(L.Coin.PriceChanged),
-            "frozen" => Loc.T(L.Coin.FrozenTitle),
             _ => Loc.T(L.Coin.Unavailable),
         };
         confirm.Alert(null, message, Loc.T(L.Common.Close));

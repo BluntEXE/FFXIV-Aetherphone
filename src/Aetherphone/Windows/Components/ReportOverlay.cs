@@ -122,7 +122,8 @@ internal sealed class ReportOverlay
         var cardWidth = MathF.Min(CardMaxWidth * scale, available) * cardScale;
         var innerWidth = cardWidth - pad * 2f;
 
-        var titleHeight = Typography.Measure(prompt.Title, TitleScale * cardScale, FontWeight.Bold).Y;
+        var title = service.Sent ? Loc.T(L.Report.SentTitle) : prompt.Title;
+        var titleHeight = Typography.Measure(title, TitleScale * cardScale, FontWeight.Bold).Y;
         float bodyHeight;
         if (service.Sent)
         {
@@ -153,7 +154,7 @@ internal sealed class ReportOverlay
 
         var titleColor = Palette.WithAlpha(theme.TextStrong, opacity);
         Typography.DrawCentered(drawList, new Vector2(cardRect.Center.X, cardMin.Y + pad + titleHeight * 0.5f),
-            Typography.FitText(prompt.Title, innerWidth, TitleScale * cardScale, FontWeight.Bold), titleColor,
+            Typography.FitText(title, innerWidth, TitleScale * cardScale, FontWeight.Bold), titleColor,
             TitleScale * cardScale, FontWeight.Bold);
         var y = cardMin.Y + pad + titleHeight + TitleGap * s;
         var left = cardMin.X + pad;

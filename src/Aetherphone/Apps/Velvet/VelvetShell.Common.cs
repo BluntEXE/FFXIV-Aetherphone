@@ -135,7 +135,8 @@ internal sealed partial class VelvetShell
     {
         confirm.Ask(new ConfirmRequest
         {
-            Message = Loc.T(L.Velvet.BlockConfirm, displayName),
+            Title = Loc.T(L.Social.BlockConfirmTitle, displayName),
+            Message = Loc.T(L.Velvet.BlockConfirm),
             ConfirmLabel = Loc.T(L.Velvet.Block),
             CancelLabel = Loc.T(L.Velvet.DeleteCancel),
             Danger = true,

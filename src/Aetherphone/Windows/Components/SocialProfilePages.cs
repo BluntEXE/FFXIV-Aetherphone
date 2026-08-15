@@ -790,7 +790,8 @@ internal sealed class SocialProfilePages
         var name = SocialIdentity.Name(authorDisplayName, authorHandle);
         confirm.Ask(new ConfirmRequest
         {
-            Message = Loc.T(L.Social.BlockConfirm, name),
+            Title = Loc.T(L.Social.BlockConfirmTitle, name),
+            Message = Loc.T(L.Social.BlockConfirm),
             ConfirmLabel = Loc.T(L.Social.BlockAction),
             CancelLabel = Loc.T(L.Common.Cancel),
             Danger = true,
