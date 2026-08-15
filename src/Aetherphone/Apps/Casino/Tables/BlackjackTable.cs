@@ -672,7 +672,18 @@ internal sealed class BlackjackTable
             var fanCenter = new Vector2(puck.X + (handIndex - (count - 1) * 0.5f) * handWidth, fanY);
             DrawHandFan(drawList, seatIndex, handIndex, hand, fanCenter, cardWidth, handWidth - 3f * scale, shoe,
                 scale);
-            if (hand.Total > 0)
+            var outcomeText = OutcomeLabel(hand);
+            var badgeEntrance = BadgeEntrance(seatIndex);
+            var badgeShown = hand.Outcome != BlackjackOutcomes.Pending && outcomeText.Length > 0
+                && badgeEntrance > 0f;
+            if (badgeShown)
+            {
+                var won = hand.Delta > 0;
+                BlackjackTableArt.DrawOutcomeBadge(drawList,
+                    new Vector2(fanCenter.X, puck.Y - BlackjackTableLayout.RailBadgeLift * scale), outcomeText,
+                    won ? Gold : ui.TitleInk, won ? Gold : ui.BodyInk, badgeEntrance, scale);
+            }
+            else if (hand.Total > 0)
             {
                 var ink = hand.Outcome == BlackjackOutcomes.Bust
                     ? ui.MutedInk
@@ -680,14 +691,6 @@ internal sealed class BlackjackTable
                 BlackjackTableArt.DrawTotalPill(drawList,
                     new Vector2(fanCenter.X, puck.Y - BlackjackTableLayout.RailTotalLift * scale),
                     GameNumber.Label(hand.Total), PillFill, ink, scale);
-            }
-
-            var outcomeText = OutcomeLabel(hand);
-            if (hand.Outcome != BlackjackOutcomes.Pending && outcomeText.Length > 0)
-            {
-                var won = hand.Delta > 0;
-                BlackjackTableArt.DrawOutcomeBadge(drawList, fanCenter, outcomeText, won ? Gold : ui.TitleInk,
-                    won ? Gold : ui.BodyInk, BadgeEntrance(seatIndex), scale);
             }
         }
     }

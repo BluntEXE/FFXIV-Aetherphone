@@ -113,6 +113,20 @@ public sealed class BlackjackTableLayoutTests
     }
 
     [Fact]
+    public void TheRailOutcomeBadgeStaysBetweenTheFanTopAndTheBetPlate()
+    {
+        const float badgeHalfHeight = 11f;
+        var badgeBottom = -BlackjackTableLayout.RailBadgeLift + badgeHalfHeight;
+        var betPlateTop = -BlackjackTableLayout.RailBetLift - 8.5f;
+        Assert.True(badgeBottom < betPlateTop);
+
+        var badgeTop = -BlackjackTableLayout.RailBadgeLift - badgeHalfHeight;
+        var fanTop = -BlackjackTableLayout.RailCardsLift
+            - PlayingCards.HeightFor(BlackjackTableLayout.RailCardWidth) * 0.5f;
+        Assert.True(badgeTop > fanTop);
+    }
+
+    [Fact]
     public void SqueezedFansNeverExceedTheirColumn()
     {
         const float cardWidth = 18f;

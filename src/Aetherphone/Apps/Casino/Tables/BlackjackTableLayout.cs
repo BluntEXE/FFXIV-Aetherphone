@@ -29,6 +29,8 @@ internal static class BlackjackTableLayout
 
     public const float RailTotalLift = 45f;
 
+    public const float RailBadgeLift = 47f;
+
     public const float RailBetLift = 26f;
 
     public const float RailNameDrop = 24f;
