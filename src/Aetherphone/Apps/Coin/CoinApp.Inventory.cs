@@ -13,6 +13,7 @@ internal sealed partial class CoinApp
 {
     private const float SwatchDiameter = 78f;
     private const float SwatchGap = 12f;
+    private const float SwatchRingOverhang = 6f;
     private const float SwatchLabelHeight = 18f;
     private const float BadgeRowHeight = 52f;
     private const float SectionGap = 18f;
@@ -56,8 +57,9 @@ internal sealed partial class CoinApp
 
         var diameter = SwatchDiameter * scale;
         var gap = SwatchGap * scale;
+        var ringPad = SwatchRingOverhang * scale;
         var cellWidth = diameter + gap;
-        var perRow = MathF.Max(1f, MathF.Floor(width / cellWidth));
+        var perRow = MathF.Max(1f, MathF.Floor((width - ringPad) / cellWidth));
         var cellHeight = diameter + SwatchLabelHeight * scale + gap;
         var totalCells = items.Length + 1;
         var rows = MathF.Ceiling(totalCells / perRow);
@@ -68,7 +70,7 @@ internal sealed partial class CoinApp
         {
             var column = index % (int)perRow;
             var row = index / (int)perRow;
-            var cellMin = new Vector2(origin.X + column * cellWidth, origin.Y + row * cellHeight);
+            var cellMin = new Vector2(origin.X + ringPad + column * cellWidth, origin.Y + row * cellHeight);
             var center = new Vector2(cellMin.X + diameter * 0.5f, cellMin.Y + diameter * 0.5f);
 
             if (index == 0)
