@@ -94,6 +94,14 @@ internal sealed class CommentAttachment
 
         UiInteract.HoverOverlay(strip);
         var scale = UiScale.Current;
+        ImGui.SetCursorScreenPos(strip.Min);
+        using var host = ImRaii.Child("##commentAttachmentStrip", strip.Size, false,
+            ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoBackground);
+        if (!host)
+        {
+            return;
+        }
+
         var drawList = ImGui.GetWindowDrawList();
         var background = theme.AppBackground;
         drawList.AddRectFilled(strip.Min, strip.Max,
