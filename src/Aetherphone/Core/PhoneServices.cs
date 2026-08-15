@@ -167,7 +167,7 @@ internal sealed class PhoneServices : IDisposable
         var wallpapers = new WallpaperLibrary(textures, builtInWallpaperDirectory, customWallpaperDirectory,
             configuration);
         var themes = new ThemeProvider(configuration, wallpapers);
-        var gameData = new GameData(dataManager, objectTable);
+        var gameData = new GameData(dataManager, objectTable, framework);
         var maps = new MapData(dataManager, clientState);
         var weather = new WeatherService(dataManager, clientState);
         var weatherControl = new WeatherControl(weather, framework, clientState, condition,
