@@ -18,7 +18,7 @@ internal sealed class VenueSyncState : IDisposable
     private DateTime lastRefreshUtc;
     private volatile VenueSyncLoadState shiftsState = VenueSyncLoadState.Idle;
 
-    // Session-only counters, reset on plugin reload — intentionally not persisted to Configuration.
+    // Session-only counters, reset on plugin reload, intentionally not persisted to Configuration.
     private int sessionSalesCount;
     private decimal sessionSalesTotal;
 

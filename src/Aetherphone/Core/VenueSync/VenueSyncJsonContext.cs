@@ -12,6 +12,9 @@ namespace Aetherphone.Core.VenueSync;
 [JsonSerializable(typeof(VenueSyncVenuesResponse))]
 [JsonSerializable(typeof(VenueSyncLinkCharacterRequest))]
 [JsonSerializable(typeof(VenueSyncLinkCharacterResponse))]
+[JsonSerializable(typeof(VenueSyncPatronVisitRequest))]
+[JsonSerializable(typeof(VenueSyncActiveEventResponse))]
+[JsonSerializable(typeof(VenueSyncPatronVisitResult))]
 internal sealed partial class VenueSyncJsonContext : JsonSerializerContext
 {
 }

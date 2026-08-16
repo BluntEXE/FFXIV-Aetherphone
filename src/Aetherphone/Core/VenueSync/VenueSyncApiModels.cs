@@ -65,6 +65,8 @@ internal sealed class VenueSyncTransactionRequest
 
     [JsonPropertyName("amount")] public decimal Amount { get; set; }
 
+    [JsonPropertyName("type")] public string Type { get; set; } = "SALE";
+
     [JsonPropertyName("customerName")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? CustomerName { get; set; }
@@ -110,5 +112,26 @@ internal sealed class VenueSyncCharacter
 internal sealed class VenueSyncLinkCharacterResponse
 {
     [JsonPropertyName("character")] public VenueSyncCharacter? Character { get; set; }
+    [JsonPropertyName("error")] public string? Error { get; set; }
+}
+
+internal sealed class VenueSyncPatronVisitRequest
+{
+    [JsonPropertyName("venueId")] public string VenueId { get; set; } = "";
+    [JsonPropertyName("characterName")] public string CharacterName { get; set; } = "";
+    [JsonPropertyName("world")] public string World { get; set; } = "";
+    [JsonPropertyName("action")] public string Action { get; set; } = "";
+    [JsonPropertyName("timestamp")] public string Timestamp { get; set; } = "";
+}
+
+internal sealed class VenueSyncActiveEventResponse
+{
+    [JsonPropertyName("active")] public bool Active { get; set; }
+    [JsonPropertyName("eventId")] public string? EventId { get; set; }
+}
+
+internal sealed class VenueSyncPatronVisitResult
+{
+    [JsonPropertyName("success")] public bool Success { get; set; }
     [JsonPropertyName("error")] public string? Error { get; set; }
 }

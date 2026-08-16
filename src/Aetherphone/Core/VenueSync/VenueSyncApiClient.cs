@@ -60,4 +60,16 @@ internal sealed class VenueSyncApiClient
             new VenueSyncLinkCharacterRequest { CharacterName = characterName, World = world },
             VenueSyncJsonContext.Default.VenueSyncLinkCharacterRequest,
             VenueSyncJsonContext.Default.VenueSyncLinkCharacterResponse, null, token, appScope: "venue-sync", apiKey: ApiKey);
+
+    public Task<VenueSyncPatronVisitResult?> PostPatronVisitAsync(VenueSyncPatronVisitRequest request,
+        CancellationToken token) =>
+        http.PostJsonAsync($"{BaseUrl}/api/plugin/patron-visits", request,
+            VenueSyncJsonContext.Default.VenueSyncPatronVisitRequest,
+            VenueSyncJsonContext.Default.VenueSyncPatronVisitResult, null, token, appScope: "venue-sync",
+            apiKey: ApiKey);
+
+    public Task<VenueSyncActiveEventResponse?> GetActiveEventAsync(string venueId, CancellationToken token) =>
+        http.GetJsonAsync($"{BaseUrl}/api/plugin/events/active?venueId={Uri.EscapeDataString(venueId)}",
+            VenueSyncJsonContext.Default.VenueSyncActiveEventResponse, null, token, appScope: "venue-sync",
+            apiKey: ApiKey);
 }

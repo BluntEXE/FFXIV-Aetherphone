@@ -183,6 +183,9 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public string VenueSyncServerUrl { get; set; } = string.Empty;
     public string VenueSyncSelectedVenueId { get; set; } = string.Empty;
     public string VenueSyncSelectedVenueName { get; set; } = string.Empty;
+    public Dictionary<long, string> VenueSyncHouseLinks { get; set; } = new();
+    public bool VenueSyncPatronTrackingEnabled { get; set; }
+    public bool VenueSyncPatronTrackingOnlyDuringEvents { get; set; } = true;
     public int MusterCategoryFilter { get; set; }
     public int MusterScope { get; set; }
     public int MusterDataCenterId { get; set; }

@@ -5,22 +5,21 @@ using Aetherphone.Core.VenueSync;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.VenueSync;
 
 internal sealed partial class VenueSyncApp
 {
     private const float StatusCardHeight = 90f;
-    // Matches Jobs' RowHeight (Apps/Jobs/JobsApp.cs:23), content rows need the extra vertical
+    // Matches Jobs' RowHeight (Apps/Jobs/JobsApp.cs:23): content rows need the extra vertical
     // space for an icon tile plus a two-tier title/subtitle stack.
     private const float ActionRowHeight = 64f;
 
     private void DrawDashboard(Rect area)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var gearReserve = 44f * scale;
-        AppHeader.DrawTitleWithReserve(area, "venuesync.dashboard.title", DisplayName, gearReserve, theme.TextStrong,
+        AppHeader.DrawTitleWithReserve(area, "venuesync.dashboard.title", DisplayName, gearReserve, ui.TitleInk,
             scale);
         var gearCenter = new Vector2(area.Max.X - 22f * scale, area.Min.Y + AppHeader.Height * scale * 0.5f);
         if (AppSkin.IconButton(gearCenter, 14f * scale, FontAwesomeIcon.Cog.ToIconString(), theme.TextMuted,
@@ -46,8 +45,9 @@ internal sealed partial class VenueSyncApp
         var width = ImGui.GetContentRegionAvail().X;
         var height = StatusCardHeight * scale;
         var card = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
-        var dl = ImGui.GetWindowDrawList();
-        ui.Card(dl, card.Min, card.Max, Metrics.Radius.Lg * scale, elevated: true);
+        var drawList = ImGui.GetWindowDrawList();
+        ui.Card(drawList, card.Min, card.Max, Metrics.Radius.Lg * scale, elevated: true);
+        Material.TopGlow(drawList, card.Min, card.Max, Metrics.Radius.Lg * scale, ui.Accent, 0.55f, 0.10f);
 
         var pad = Metrics.Space.Lg * scale;
         var activeShift = FindActiveShift();
@@ -59,24 +59,24 @@ internal sealed partial class VenueSyncApp
             var buttonWidth = 100f * scale;
             var iconSize = 42f * scale;
             var iconCenter = new Vector2(card.Min.X + pad + iconSize * 0.5f, card.Center.Y);
-            IconTile.Draw(iconCenter, iconSize, IconTile.Surface(theme.Danger), FontAwesomeIcon.Clock);
+            IconTile.Draw(iconCenter, iconSize, IconTile.Surface(theme.ToggleOn), FontAwesomeIcon.Clock);
 
             var textLeft = iconCenter.X + iconSize * 0.5f + Metrics.Space.Md * scale;
             var textTop = card.Center.Y - 20f * scale;
             var textMaxWidth = MathF.Max(1f, card.Max.X - pad - buttonWidth - Metrics.Space.Md * scale - textLeft);
 
-            // Independent hover per line, per this codebase's stacked-Marquee bug class, each
+            // Independent hover per line, per this codebase's stacked-Marquee bug class: each
             // line calls its own *Auto variant instead of sharing one hover bool.
             Marquee.DrawLeftAuto("venuesync.dashboard.venue", venueLabel, textLeft, textTop, textMaxWidth,
                 TextStyles.Headline, theme.TextStrong);
-            Marquee.DrawLeftAuto("venuesync.dashboard.status", Loc.T(L.VenueSync.OnShift), textLeft,
-                textTop + 24f * scale, textMaxWidth, TextStyles.Caption1, theme.Accent);
+            DrawStatusPill(drawList, new Vector2(textLeft, textTop + 22f * scale), Loc.T(L.VenueSync.OnShift),
+                ui.Accent, scale);
 
             var buttonHeight = 32f * scale;
             var button = new Rect(new Vector2(card.Max.X - pad - buttonWidth, card.Center.Y - buttonHeight * 0.5f),
                 new Vector2(card.Max.X - pad, card.Center.Y + buttonHeight * 0.5f));
 
-            // Fire-and-forget convenience action only, Task 8's Shifts screen owns the
+            // Fire-and-forget convenience action only: the Shifts screen owns the
             // authoritative clock-in/out UI with full error handling, so no inline error
             // display is needed here.
             if (AppSkin.DangerPillButton(button, Loc.T(L.VenueSync.ClockOut), theme))
@@ -131,20 +131,21 @@ internal sealed partial class VenueSyncApp
     private void DrawActionsCard(float scale)
     {
         var openShiftsCount = state.Shifts?.OpenShifts.Count ?? 0;
-        var card = GroupCard.Begin(theme, 2, ActionRowHeight, showSeparators: false);
+        var card = GroupCard.Begin(theme, 2, ActionRowHeight, showSeparators: false, glowAccent: ui.Accent,
+            fillOverride: ui.Palette.CardFill);
 
         var logSaleRow = card.NextRow();
-        if (DrawActionRow(card, logSaleRow, FontAwesomeIcon.Coins, theme.Accent, Loc.T(L.VenueSync.LogSale),
-                Loc.T(L.VenueSync.LogSaleSubtitle), null, "venuesync.dashboard.logsale"))
+        if (DrawActionRow(card, logSaleRow, FontAwesomeIcon.Coins, ui.Accent, Loc.T(L.VenueSync.LogASale),
+                Loc.T(L.VenueSync.RecordATransaction), null, "venuesync.dashboard.logsale"))
         {
             router.Push(VenueSyncRoute.Sales);
         }
 
         var upcomingSubtitle = openShiftsCount == 0
-            ? Loc.T(L.VenueSync.NoOpenShifts)
-            : Loc.T(L.VenueSync.TapToViewClaim);
+            ? Loc.T(L.VenueSync.NoneOpenRightNow)
+            : Loc.T(L.VenueSync.TapToViewAndClaim);
         var upcomingRow = card.NextRow();
-        if (DrawActionRow(card, upcomingRow, FontAwesomeIcon.Clock, theme.Accent, Loc.T(L.VenueSync.UpcomingShiftsTitle),
+        if (DrawActionRow(card, upcomingRow, FontAwesomeIcon.Clock, ui.Accent, Loc.T(L.VenueSync.UpcomingShifts),
                 upcomingSubtitle, openShiftsCount.ToString(), "venuesync.dashboard.upcoming"))
         {
             router.Push(VenueSyncRoute.Shifts);
@@ -160,7 +161,7 @@ internal sealed partial class VenueSyncApp
         var count = state.SessionSalesCount;
         var sessionValue = count == 0
             ? Loc.T(L.VenueSync.NoSalesYet)
-            : $"{Loc.Plural(L.VenueSync.SessionSalesCount, count)} · {state.SessionSalesTotal:N0}g";
+            : $"{Loc.Plural(L.VenueSync.SaleCount, count)} · {state.SessionSalesTotal:N0}g";
         DrawActionRow(default, sessionRow, FontAwesomeIcon.Coins, theme.TextMuted, Loc.T(L.VenueSync.ThisSession),
             sessionValue, null, "venuesync.dashboard.session", clickable: false);
         ImGui.SetCursorScreenPos(origin);
@@ -176,7 +177,7 @@ internal sealed partial class VenueSyncApp
     private bool DrawActionRow(GroupCard card, Rect row, FontAwesomeIcon icon, Vector4 tint, string title,
         string subtitle, string? trailingCount, string idSuffix, bool clickable = true)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var hovered = clickable && UiInteract.Hover(row.Min, row.Max);
         if (hovered)
@@ -212,6 +213,23 @@ internal sealed partial class VenueSyncApp
         }
 
         return clickable && UiInteract.Click(row.Min, row.Max, hovered);
+    }
+
+    // Mirrors Muster's DrawStatusPill (Apps/Muster/MusterCard.cs:109-131), minus the live dot and
+    // pulse: on-shift is a steady state, not a live countdown, so no per-frame animation here.
+    private static void DrawStatusPill(ImDrawListPtr drawList, Vector2 topLeft, string label, Vector4 tint,
+        float scale)
+    {
+        var textSize = Typography.Measure(label, TextStyles.Caption1);
+        var padX = 8f * scale;
+        var height = textSize.Y + 6f * scale;
+        var width = textSize.X + padX * 2f;
+        var max = new Vector2(topLeft.X + width, topLeft.Y + height);
+        Squircle.Fill(drawList, topLeft, max, height * 0.5f, ImGui.GetColorU32(Palette.WithAlpha(tint, 0.15f)));
+        Squircle.Stroke(drawList, topLeft, max, height * 0.5f, ImGui.GetColorU32(Palette.WithAlpha(tint, 0.34f)),
+            1f * scale);
+        Typography.Draw(drawList, new Vector2(topLeft.X + padX, topLeft.Y + (height - textSize.Y) * 0.5f), label,
+            tint, TextStyles.Caption1);
     }
 
     // Mirrors Jobs' DrawActiveBadge (Apps/Jobs/JobsApp.cs:427-439): accent @ ~20% alpha pill with

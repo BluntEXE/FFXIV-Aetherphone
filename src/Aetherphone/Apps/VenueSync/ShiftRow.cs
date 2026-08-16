@@ -5,7 +5,6 @@ using Aetherphone.Core.VenueSync;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.VenueSync;
 
@@ -21,20 +20,19 @@ internal static class ShiftRow
     public const float Height = 64f;
 
     public static ShiftRowAction Draw(GroupCard card, Rect row, VenueSyncShift shift, bool isOpen, string? roleName,
-        PhoneTheme theme, string idSuffix)
+        PhoneTheme theme, Vector4 accent, string idSuffix)
     {
-        var scale = ImGuiHelpers.GlobalScale;
+        var scale = UiScale.Current;
 
-        var titleText = isOpen ? (roleName ?? Loc.T(L.VenueSync.OpenShiftTitle)) : shift.Status switch
+        var titleText = isOpen ? (roleName ?? Loc.T(L.VenueSync.OpenShift)) : shift.Status switch
         {
-            "ACTIVE" => Loc.T(L.VenueSync.ActiveShiftTitle),
-            "COMPLETED" => Loc.T(L.VenueSync.CompletedShiftTitle),
-            _ => Loc.T(L.VenueSync.UpcomingShiftTitle),
+            "ACTIVE" => Loc.T(L.VenueSync.ActiveShift),
+            "COMPLETED" => Loc.T(L.VenueSync.CompletedShift),
+            _ => Loc.T(L.VenueSync.UpcomingShift),
         };
         var timeText = FormatTimeRange(shift.ScheduledStart, shift.ScheduledEnd);
         var isActive = !isOpen && shift.Status == "ACTIVE";
-        var label = isOpen
-            ? Loc.T(L.VenueSync.Claim)
+        var label = isOpen ? Loc.T(L.VenueSync.Claim)
             : isActive ? Loc.T(L.VenueSync.ClockOut) : Loc.T(L.VenueSync.ClockIn);
 
         var buttonWidth = MathF.Max(72f * scale, Typography.Measure(label, TextStyles.BodyEmphasized).X + 32f * scale);
@@ -42,7 +40,7 @@ internal static class ShiftRow
         var actionRect = new Rect(new Vector2(row.Max.X - buttonWidth, row.Center.Y - buttonHeight * 0.5f),
             new Vector2(row.Max.X, row.Center.Y + buttonHeight * 0.5f));
 
-        // Independent hover per interactive region, this is the deliberate fix for a known bug
+        // Independent hover per interactive region: this is the deliberate fix for a known bug
         // class in this codebase where two stacked elements share one hover-bool. The row overlay
         // excludes the button's own hit-rect so the two hovers never fight each other.
         var overButton = UiInteract.Hover(actionRect.Min, actionRect.Max);
@@ -55,14 +53,14 @@ internal static class ShiftRow
 
         var iconSize = 42f * scale;
         var iconCenter = new Vector2(row.Min.X + iconSize * 0.5f, row.Center.Y);
-        var tileTint = isActive ? theme.Danger : theme.Accent;
+        var tileTint = isActive ? theme.ToggleOn : accent;
         IconTile.Draw(iconCenter, iconSize, IconTile.Surface(tileTint), FontAwesomeIcon.Clock);
 
         var textLeft = row.Min.X + iconSize + 14f * scale;
         var textRight = actionRect.Min.X - 12f * scale;
         var textWidth = MathF.Max(1f, textRight - textLeft);
 
-        // Independent hover per stacked line, per this codebase's known Marquee bug class, each
+        // Independent hover per stacked line, per this codebase's known Marquee bug class: each
         // line calls its own *Auto variant, which computes hover internally, instead of sharing
         // one hover bool across both lines.
         Marquee.DrawLeftAuto($"shiftrow-title-{idSuffix}", titleText, textLeft, row.Center.Y - 16f * scale, textWidth,
@@ -77,10 +75,18 @@ internal static class ShiftRow
 
         var clicked = isActive
             ? AppSkin.DangerPillButton(actionRect, label, theme)
-            : AppSkin.PillButton(actionRect, label, filled: true, theme);
+            : AppSkin.PillButton(actionRect, label, true, accent, theme);
 
-        if (!clicked) return ShiftRowAction.None;
-        if (isOpen) return ShiftRowAction.Claim;
+        if (!clicked)
+        {
+            return ShiftRowAction.None;
+        }
+
+        if (isOpen)
+        {
+            return ShiftRowAction.Claim;
+        }
+
         return isActive ? ShiftRowAction.ClockOut : ShiftRowAction.ClockIn;
     }
 
@@ -91,6 +97,6 @@ internal static class ShiftRow
             return Loc.T(L.VenueSync.UnknownTime);
         }
 
-        return $"{start.ToString("ddd", Loc.Culture)} {TimeText.Clock(start)} – {TimeText.Clock(end)}";
+        return $"{start:ddd} {TimeText.Clock(start)} – {TimeText.Clock(end)}";
     }
 }

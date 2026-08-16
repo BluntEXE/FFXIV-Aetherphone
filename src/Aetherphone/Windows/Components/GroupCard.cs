@@ -52,7 +52,7 @@ internal struct GroupCard
     }
 
     public static GroupCard Begin(PhoneTheme theme, int rowCount, float rowHeight = DefaultRowHeight,
-        bool showSeparators = true)
+        bool showSeparators = true, Vector4? glowAccent = null, Vector4? fillOverride = null)
     {
         var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
@@ -61,7 +61,13 @@ internal struct GroupCard
         var height = MathF.Round(rowCount * rowHeight * scale);
         var cardMax = new Vector2(right, origin.Y + height);
         var dl = ImGui.GetWindowDrawList();
-        Squircle.Fill(dl, origin, cardMax, Metrics.Radius.Md * scale, ImGui.GetColorU32(theme.GroupedCard));
+        Squircle.Fill(dl, origin, cardMax, Metrics.Radius.Md * scale,
+            ImGui.GetColorU32(fillOverride ?? theme.GroupedCard));
+        if (glowAccent is not null)
+        {
+            Material.TopGlow(dl, origin, cardMax, Metrics.Radius.Md * scale, glowAccent.Value, 0.55f, 0.10f);
+        }
+
         Material.EdgeSquircle(dl, origin, cardMax, Metrics.Radius.Md * scale, scale);
         return new GroupCard(theme, scale, rowHeight, origin.X, right, origin.Y, rowCount, showSeparators);
     }
