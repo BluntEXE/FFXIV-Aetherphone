@@ -70,6 +70,11 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool ImportScreenshots { get; set; } = true;
     public bool? UseNativeFileDialog { get; set; }
     public bool ChirperShowMediaPosts { get; set; } = true;
+    public bool ChirperShowPhotoPosts { get; set; } = true;
+    public bool ChirperShowGifPosts { get; set; } = true;
+    public bool ChirperShowCommentMedia { get; set; } = true;
+    public bool AethergramShowGifPosts { get; set; } = true;
+    public bool AethergramShowCommentMedia { get; set; } = true;
     public bool ShowSensitiveContent { get; set; }
     public Dictionary<string, AppNotificationSetting> NotificationSettings { get; set; } = new();
     public bool NotifyDailyReset { get; set; }
@@ -293,6 +298,20 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
         }
 
         SetupCompleted = true;
+        Save();
+    }
+
+    public void MigrateChirperMediaFilters()
+    {
+        if (ChirperShowMediaPosts)
+        {
+            return;
+        }
+
+        ChirperShowPhotoPosts = false;
+        ChirperShowGifPosts = false;
+        ChirperShowCommentMedia = false;
+        ChirperShowMediaPosts = true;
         Save();
     }
 

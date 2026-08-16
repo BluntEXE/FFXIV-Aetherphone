@@ -95,6 +95,7 @@ public sealed class Plugin : IDalamudPlugin
             Cfg.MigrateMessage();
             Cfg.MigrateMessagesMerge();
             Cfg.MigrateSetupCompleted();
+            Cfg.MigrateChirperMediaFilters();
             Cfg.MigratePhoneWidth();
             Cfg.MigrateControlPanelRepack();
             Cfg.MigrateCharacterSessions();

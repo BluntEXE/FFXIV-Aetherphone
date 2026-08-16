@@ -67,6 +67,8 @@ internal sealed class DropdownMenu
 
     public string Header { get; set; } = string.Empty;
 
+    public bool KeepOpen { get; set; }
+
     public int Draw(Rect screen, PhoneTheme theme, ReadOnlySpan<Item> items, out RowAction action)
     {
         action = RowAction.Select;
@@ -224,7 +226,11 @@ internal sealed class DropdownMenu
         if (clicked >= 0)
         {
             action = clickedAction;
-            Close();
+            if (!KeepOpen)
+            {
+                Close();
+            }
+
             return clicked;
         }
 

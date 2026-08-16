@@ -53,6 +53,7 @@ internal sealed partial class AethergramApp : IPhoneApp
     public int BadgeCount => dmStore.UnreadCount + social.UnseenCount(Id);
     public ShareKindSet AcceptedShares => store.IsSignedIn ? ShareKindSet.Photo : ShareKindSet.None;
     private const string ScopeMenuId = "scope";
+    private const string MediaFilterMenuId = "aethergram.mediaFilterMenu";
     private readonly Dictionary<SocialFeedScope, PullToRefresh> pullToRefresh = new()
     {
         { SocialFeedScope.ForYou, new() },
@@ -76,8 +77,10 @@ internal sealed partial class AethergramApp : IPhoneApp
     private readonly WallpaperImageCache wallpaperImages;
     private readonly DropdownMenu scopeMenu = new();
     private readonly DropdownMenu postMenu = new();
+    private readonly DropdownMenu mediaFilterMenu = new();
     private readonly DropdownMenu.Item[] scopeItems = new DropdownMenu.Item[2];
     private readonly DropdownMenu.Item[] postItems = new DropdownMenu.Item[4];
+    private readonly DropdownMenu.Item[] mediaFilterItems = new DropdownMenu.Item[2];
     private readonly Action<NotificationDto> openActivityActor;
     private readonly Action<NotificationDto> openActivityPost;
     private readonly SocialActivityFeed activityFeed;
@@ -281,6 +284,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         ui.Theme = theme;
         scopeMenu.Gate();
         postMenu.Gate();
+        mediaFilterMenu.Gate();
         inboxRowMenu.Gate();
         threadView.GateMenus();
         var screen = SceneChrome.ScreenFrom(context.Content, theme, UiScale.Current);
@@ -309,6 +313,8 @@ internal sealed partial class AethergramApp : IPhoneApp
         {
             avatarLightbox.Draw(screen, theme);
         }
+
+        DrawMediaFilterMenu(screen);
     }
 
     private void DrawView(AethergramRoute route, Rect area, int depth)
@@ -742,6 +748,56 @@ internal sealed partial class AethergramApp : IPhoneApp
         }
     }
 
+    private void DrawMediaFilterMenu(Rect screen)
+    {
+        if (!mediaFilterMenu.IsOpenFor(MediaFilterMenuId))
+        {
+            return;
+        }
+
+        mediaFilterItems[0] = new DropdownMenu.Item(Loc.T(L.Settings.AethergramShowGifs),
+            FontAwesomeIcon.Film.ToIconString(), Selected: configuration.AethergramShowGifPosts);
+        mediaFilterItems[1] = new DropdownMenu.Item(Loc.T(L.Settings.AethergramShowCommentMedia),
+            FontAwesomeIcon.Comment.ToIconString(), Selected: configuration.AethergramShowCommentMedia);
+        mediaFilterMenu.Header = Loc.T(L.Aethergram.MediaFilters);
+        mediaFilterMenu.KeepOpen = true;
+        var picked = mediaFilterMenu.Draw(screen, theme, mediaFilterItems);
+        switch (picked)
+        {
+            case 0:
+                configuration.AethergramShowGifPosts = !configuration.AethergramShowGifPosts;
+                break;
+            case 1:
+                configuration.AethergramShowCommentMedia = !configuration.AethergramShowCommentMedia;
+                break;
+            default:
+                return;
+        }
+
+        configuration.Save();
+    }
+
+    private bool HiddenByMediaPreference(PostDto post)
+    {
+        if (configuration.AethergramShowGifPosts)
+        {
+            return false;
+        }
+
+        var photos = PostMedia.Photos(post.MediaUrls, post.MediaUrl);
+        return photos.Length > 0 && GifMedia.IsGif(photos[0]);
+    }
+
+    private bool HiddenByMediaPreference(CommentDto comment)
+    {
+        return comment.Text.Length == 0 && CommentMediaHidden(comment.MediaUrl);
+    }
+
+    private bool CommentMediaHidden(string? mediaUrl)
+    {
+        return mediaUrl is not null && !configuration.AethergramShowCommentMedia;
+    }
+
     private void DrawPostMenu(Rect area, bool includeView)
     {
         if (menuPost is not { } post || !postMenu.IsOpenFor(post.Id))
@@ -849,6 +905,11 @@ internal sealed partial class AethergramApp : IPhoneApp
                 for (var index = 0; index < snapshot.Length; index++)
                 {
                     var post = snapshot[index];
+                    if (HiddenByMediaPreference(post))
+                    {
+                        continue;
+                    }
+
                     var revision = post.CommentCount > 0 ? 1 : 0;
                     if (feedVirtualizer.Skip(post.Id, revision))
                     {

@@ -1279,8 +1279,16 @@ internal static class L
         public static readonly LocString ImportScreenshotsHint = new("settings.importScreenshotsHint", "Copy screenshots you take into the Photos gallery, including ones from ReShade and GShade. Only shots taken while the phone is running are copied, and the originals stay where they are.");
         public static readonly LocString NativeFileDialog = new("settings.nativeFileDialog", "Windows file browser");
         public static readonly LocString NativeFileDialogHint = new("settings.nativeFileDialogHint", "Pick photos and sounds with the Windows file browser. Turn it off if importing a file crashes your game.");
-        public static readonly LocString ChirperMediaPosts = new("settings.chirperMediaPosts", "Show photo and GIF chirps");
-        public static readonly LocString ChirperMediaPostsHint = new("settings.chirperMediaPostsHint", "Chirps that carry photos or GIFs show up in your feeds. Turn this off to keep your Chirper feeds text only.");
+        public static readonly LocString ChirperShowPhotos = new("settings.chirperShowPhotos", "Show photo chirps");
+        public static readonly LocString ChirperShowPhotosHint = new("settings.chirperShowPhotosHint", "Chirps that carry photos show up in your feeds on Chirper. Turn this off to hide photo chirps from your feeds.");
+        public static readonly LocString ChirperShowGifs = new("settings.chirperShowGifs", "Show GIF chirps");
+        public static readonly LocString ChirperShowGifsHint = new("settings.chirperShowGifsHint", "Chirps that carry animated GIFs show up in your feeds on Chirper. Turn this off to hide GIF chirps from your feeds.");
+        public static readonly LocString ChirperShowReplyMedia = new("settings.chirperShowReplyMedia", "Show media in chirp replies");
+        public static readonly LocString ChirperShowReplyMediaHint = new("settings.chirperShowReplyMediaHint", "Photos and GIFs attached to replies show under the reply text on Chirper. Turn this off to keep replies text only.");
+        public static readonly LocString AethergramShowGifs = new("settings.aethergramShowGifs", "Show GIF grams");
+        public static readonly LocString AethergramShowGifsHint = new("settings.aethergramShowGifsHint", "Grams that carry an animated GIF show up in your feeds on Aethergram. Turn this off to keep your feeds photos only.");
+        public static readonly LocString AethergramShowCommentMedia = new("settings.aethergramShowCommentMedia", "Show media in gram comments");
+        public static readonly LocString AethergramShowCommentMediaHint = new("settings.aethergramShowCommentMediaHint", "Photos and GIFs attached to comments show under the comment text on Aethergram. Turn this off to keep comments text only.");
         public static readonly LocString ShowSensitive = new("settings.showSensitive", "Always show sensitive photos");
         public static readonly LocString ShowSensitiveHint = new("settings.showSensitiveHint", "Photos marked sensitive stay covered until you tap them. Turn this on to see them straight away.");
         public static readonly LocString OpenOnStartup = new("settings.openOnStartup", "Open at startup");
@@ -1343,6 +1351,8 @@ internal static class L
                 "Added support for the Chinese game client: the phone now detects it, adapts what it offers, and signs in with a Rising Stones code instead of the Lodestone"),
             new("changelog.r1000.72",
                 "Added photos and GIFs to Chirper: a chirp can carry up to four photos or one animated GIF that plays right in the feed, tapping a photo opens it full screen, sharing one from Photos opens the composer with it attached, and a switch beside the feed hides media chirps if you would rather read text"),
+            new("changelog.r1000.78",
+                "Added hashtags to Chirper and Aethergram: write #tags in a chirp, a caption, or a comment, and tapping one opens a feed of every post carrying that tag"),
             new("changelog.r1000.79",
                 "Added photos and GIFs to comments in Aethergram and Chirper: attach one from your gallery or your PC, it shows right in the thread with GIFs playing in place, and a comment can be just the picture with no words at all"),
             new("changelog.r1000.80",
@@ -2866,6 +2876,7 @@ internal static class L
         public static readonly LocString SearchByName = new("chirper.searchByName", "Search by name, @username, or world");
         public static readonly LocString ForYou = new("chirper.forYou", "For You");
         public static readonly LocString Following = new("chirper.following", "Following");
+        public static readonly LocString MediaFilters = new("chirper.mediaFilters", "Media filters");
         public static readonly LocString Follow = new("chirper.follow", "Follow");
         public static readonly LocString Unfollow = new("chirper.unfollow", "Unfollow");
         public static readonly LocString NameOrWorld = new("chirper.nameOrWorld", "Name, @username, or world");
@@ -2934,6 +2945,7 @@ internal static class L
         public static readonly LocString SetUpAccount = new("aethergram.setUpAccount", "Set up your account in Settings");
         public static readonly LocString ForYou = new("aethergram.forYou", "For You");
         public static readonly LocString Following = new("aethergram.following", "Following");
+        public static readonly LocString MediaFilters = new("aethergram.mediaFilters", "Media filters");
         public static readonly LocString Follow = new("aethergram.follow", "Follow");
         public static readonly LocString Unfollow = new("aethergram.unfollow", "Unfollow");
         public static readonly LocString ViewPost = new("aethergram.viewPost", "View post");

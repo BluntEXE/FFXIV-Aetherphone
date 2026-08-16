@@ -229,6 +229,11 @@ internal sealed partial class AethergramApp
                 DrawEarlierCommentsRow();
                 for (var index = 0; index < comments.Length; index++)
                 {
+                    if (HiddenByMediaPreference(comments[index]))
+                    {
+                        continue;
+                    }
+
                     DrawComment(comments[index]);
                 }
             }
@@ -308,7 +313,9 @@ internal sealed partial class AethergramApp
         var textHeight = comment.Text.Length == 0
             ? 0f
             : commentLayout?.Size.Y ?? Typography.MeasureWrapped(comment.Text, textRight - textLeft, 0.9f);
-        var mediaHeight = CommentMedia.MeasureHeight(comment, textRight - textLeft, scale);
+        var mediaHeight = CommentMediaHidden(comment.MediaUrl)
+            ? 0f
+            : CommentMedia.MeasureHeight(comment, textRight - textLeft, scale);
         var mediaGap = mediaHeight > 0f && textHeight > 0f ? 6f * scale : 0f;
         var bubbleHeight = padTop + nameHeight + 4f * scale + textHeight + mediaGap + mediaHeight + padBottom;
         if (canDelete)
@@ -371,7 +378,7 @@ internal sealed partial class AethergramApp
             }
         }
 
-        if (comment.MediaUrl is { } commentMediaUrl)
+        if (comment.MediaUrl is { } commentMediaUrl && !CommentMediaHidden(commentMediaUrl))
         {
             var mediaRect = CommentMedia.Draw(drawList, images, comment,
                 new Vector2(textLeft, textTop + textHeight + mediaGap), textRight - textLeft, scale,

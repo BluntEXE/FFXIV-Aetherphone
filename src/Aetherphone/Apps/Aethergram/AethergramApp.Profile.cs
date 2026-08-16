@@ -114,7 +114,7 @@ internal sealed partial class AethergramApp
         var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
         var logoLeft = area.Min.X + 16f * scale;
         var chevronReserve = store.IsSignedIn ? 32f * scale : 0f;
-        var trailingReserve = (store.IsSignedIn ? 148f * scale : 16f * scale) + chevronReserve;
+        var trailingReserve = (store.IsSignedIn ? 184f * scale : 16f * scale) + chevronReserve;
         var maxLogoWidth = MathF.Max(1f, area.Max.X - trailingReserve - logoLeft);
         var logoStyle = new TextStyle(1.3f, FontWeight.Bold);
         var logoHeight = Typography.Measure(DisplayName, logoStyle).Y;
@@ -135,6 +135,18 @@ internal sealed partial class AethergramApp
                 AppSkin.Transparent, 0.85f))
         {
             scopeMenu.Toggle(ScopeMenuId, anchor);
+        }
+
+        var mediaOn = configuration.AethergramShowGifPosts && configuration.AethergramShowCommentMedia;
+        var mediaRadius = 16f * scale;
+        var mediaCenter = new Vector2(area.Max.X - 132f * scale, rowCenterY);
+        if (ui.IconButton(mediaCenter, mediaRadius, FontAwesomeIcon.Image.ToIconString(),
+                mediaOn ? Accent : AppPalettes.Aethergram.MutedInk, AppPalettes.Aethergram.FieldSurface, 1.1f,
+                Loc.T(L.Aethergram.MediaFilters), HoverLabelSide.Below))
+        {
+            mediaFilterMenu.Toggle(MediaFilterMenuId, new Rect(
+                mediaCenter - new Vector2(mediaRadius, mediaRadius),
+                mediaCenter + new Vector2(mediaRadius, mediaRadius)));
         }
 
         var refreshCenter = new Vector2(area.Max.X - 96f * scale, rowCenterY);
