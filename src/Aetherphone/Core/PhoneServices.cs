@@ -32,6 +32,7 @@ using Aetherphone.Core.Songs;
 using Aetherphone.Core.Telephony;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Venues;
+using Aetherphone.Core.VenueSync;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Core.YellowPages;
 using Dalamud.Game.ClientState.Conditions;
@@ -132,6 +133,8 @@ internal sealed class PhoneServices : IDisposable
     public required PlaybackHub Playback { get; init; }
     public required GameStatsStore GameStats { get; init; }
     public required VenuesService Venues { get; init; }
+    public required VenueSyncApiClient VenueSync { get; init; }
+    public required VenueSyncState VenueSyncState { get; init; }
     public required MusterStore Musters { get; init; }
     public required MusterLauncher MusterLauncher { get; init; }
 
@@ -255,6 +258,8 @@ internal sealed class PhoneServices : IDisposable
         var playback = new PlaybackHub(radioPlayer, songPlayer, configuration);
         var gameStats = new GameStatsStore(configuration);
         var venues = new VenuesService(http, notifications, configuration, gameData);
+        var venueSyncClient = new VenueSyncApiClient(http, configuration);
+        var venueSyncState = new VenueSyncState(venueSyncClient, configuration);
         var collectionsRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "collections"));
         var collectionsDisk = new DiskCache(collectionsRoot, 32L * 1024 * 1024);
         var collections = new CollectionsCatalogService(http, collectionsDisk, dataManager, unlockState, framework);
@@ -382,6 +387,8 @@ internal sealed class PhoneServices : IDisposable
             Playback = playback,
             GameStats = gameStats,
             Venues = venues,
+            VenueSync = venueSyncClient,
+            VenueSyncState = venueSyncState,
             Musters = musters,
             MusterLauncher = new MusterLauncher(),
             RadioLauncher = new RadioLauncher(),
@@ -428,6 +435,7 @@ internal sealed class PhoneServices : IDisposable
         HousingReminders.Dispose();
         Housing.Dispose();
         Venues.Dispose();
+        VenueSyncState.Dispose();
         Musters.Dispose();
         YellowPages.Dispose();
         AdInquiries.Dispose();

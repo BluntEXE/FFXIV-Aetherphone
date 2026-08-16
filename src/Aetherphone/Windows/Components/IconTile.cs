@@ -12,7 +12,10 @@ internal static class IconTile
         var half = size * 0.5f;
         Squircle.Fill(drawList, center - new Vector2(half, half), center + new Vector2(half, half),
             size * Metrics.Radius.TileFactor, ImGui.GetColorU32(tint));
-        ProgressRing.CenterIcon(center, icon, AccentRing.Ink, size * 0.50f);
+        // Draw-list overload, not the cursor-based one: that variant calls SetCursorScreenPos +
+        // ImGui.TextUnformatted internally, silently moving ImGui's real layout cursor, a known
+        // bug class in this codebase when mixed with Rect-based manual row layout.
+        ProgressRing.CenterIcon(drawList, center, icon, AccentRing.Ink, size * 0.50f);
     }
 
     public static void DrawApp(ImDrawListPtr drawList, string appId, Vector2 center, float size, Vector4 surface)

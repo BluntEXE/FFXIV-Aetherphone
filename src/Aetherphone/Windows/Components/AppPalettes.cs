@@ -148,4 +148,22 @@ internal static class AppPalettes
         FieldSurface = GlassField,
         HoverTint = Palette.WithAlpha(theme.TextStrong, 0.06f),
     };
+
+    public static AppPalette VenueSync(PhoneTheme theme) => new()
+    {
+        Accent = theme.Accent,
+        TitleInk = theme.TextStrong,
+        BodyInk = theme.TextStrong,
+        MutedInk = theme.TextMuted,
+        HeaderInk = theme.TextMuted,
+        HeadingInk = theme.TextStrong,
+        BackdropTop = Palette.Mix(theme.AppBackground, theme.GroupedCard, 0.55f),
+        BackdropBottom = theme.AppBackground,
+        BloomTop = default,
+        BloomBottom = default,
+        CardFill = theme.GroupedCard,
+        CardStroke = theme.Separator,
+        FieldSurface = GlassField,
+        HoverTint = Palette.WithAlpha(theme.TextStrong, 0.06f),
+    };
 }
