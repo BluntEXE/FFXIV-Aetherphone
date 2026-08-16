@@ -586,7 +586,7 @@ internal sealed partial class MusicApp
         var rowLeft = left;
         var center = new Vector2(rowLeft + radius, top + radius);
 
-        if (station.OwnerAvatarUrl.Length > 0 && Thumb(station.OwnerAvatarUrl).Texture is { } avatar)
+        if (station.OwnerAvatarUrl.Length > 0 && Thumb(station.OwnerAvatarUrl, radius * 2f).Texture is { } avatar)
         {
             drawList.AddImageRounded(avatar.Handle, center - new Vector2(radius, radius),
                 center + new Vector2(radius, radius), Vector2.Zero, Vector2.One, 0xFFFFFFFFu, radius,

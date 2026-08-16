@@ -209,6 +209,7 @@ shop, worn one at a time, and drawn over the avatar everywhere that face appears
 | Format | **PNG-32 or WebP, RGBA.** JPEG is rejected: no alpha means a solid square over somebody's face |
 | File size | 2 MB hard cap |
 | Centre | **Fully transparent.** The avatar is drawn underneath and shows through |
+| Sizes | **One file.** Do not export a size ladder. The client resamples the master down to whatever it draws at |
 | Upload | Mod console, Frames page. Name it, drop the file, set the scale. Any filename works; the server renames on store |
 
 ## The scale number is the whole geometry
@@ -243,9 +244,16 @@ weighted to one side still has to sit in a centred canvas with its own margin. A
 margin on all four sides, not just the top.
 
 **It has to read at 30 px.** The same art is drawn on a profile header and on a chat row. Below a
-radius of 15 px the client skips the frame rather than smear it, so fine filigree simply disappears
-on small rows. Silhouette and two or three strong colours survive; hairline detail does not. The
+radius of 15 px the client skips the frame rather than draw it at all. Above that it resamples your
+master to the size it is about to draw, so a 512 canvas on a chat row is filtered down properly
+rather than point-sampled into a sparkling mess. Filtering is not free detail though: silhouette and
+two or three strong colours survive the trip to 30 px, hairline filigree averages into a smudge. The
 console previews both sizes side by side while you tune, and the small preview is the one to trust.
+
+**Send the master, not a ladder.** The client picks a power-of-two size that covers the drawn
+diameter and downsamples the 512 into it once, in the background. Exporting your own 30, 48, 64 and
+96 px versions gains nothing the resampler does not already do, and the extra files have nowhere to
+go: the catalog stores one asset per frame.
 
 **Never cover the face.** The avatar exists so people recognise each other. Decoration belongs in the
 margin. Art that reaches into the hole, or that is loud enough to win attention from the person

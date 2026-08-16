@@ -154,7 +154,7 @@ internal sealed partial class MessageApp
         else
         {
             AvatarView.Draw(drawList, avatarCenter, radius, theme.Accent, Initials.Of(name), 1f,
-                lodestone.Avatar(entry.Name, entry.World), 32);
+                lodestone.Avatar(entry.Name, entry.World, radius * 2f), 32);
         }
 
         var actionLeft = rowMax.X - pad;
@@ -392,7 +392,7 @@ internal sealed partial class MessageApp
                 }
 
                 AvatarView.Draw(drawList, avatarCenter, radius, screenTheme.Accent, Initial(view.PeerLabel), 2.6f,
-                    lodestone.Avatar(others[0].Name, others[0].World), 64);
+                    lodestone.Avatar(others[0].Name, others[0].World, radius * 2f), 64);
             }
             else
             {
@@ -478,7 +478,7 @@ internal sealed partial class MessageApp
             var center = new Vector2(cellCenterX, cellCenterY);
             DrawSpeakingHalo(drawList, center, radius, calls.LevelOf(others[index]), scale);
             AvatarView.Draw(drawList, center, radius, screenTheme.Accent, Initial(others[index].DisplayName), 1.2f,
-                lodestone.Avatar(others[index].Name, others[index].World), 48);
+                lodestone.Avatar(others[index].Name, others[index].World, radius * 2f), 48);
             Typography.DrawCentered(new Vector2(cellCenterX, cellCenterY + radius + 12f * scale),
                 Truncate(others[index].DisplayName, 10), screenTheme.TextStrong, 0.78f);
         }

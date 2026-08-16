@@ -155,7 +155,7 @@ internal sealed partial class LinkpearlApp
 
         var baseColor = friend.Online ? theme.Accent : theme.SurfaceMuted;
         AvatarView.Draw(dl, avatarCenter, avatarRadius, baseColor, Initials.Of(friend.Name), 2.0f,
-            lodestone.Avatar(friend.Name, friend.WorldName), 64);
+            lodestone.Avatar(friend.Name, friend.WorldName, avatarRadius * 2f), 64);
         Typography.DrawCentered(new Vector2(centerX, avatarCenter.Y + avatarRadius + 18f * scale), friend.Name,
             theme.TextStrong, TextStyles.Title2);
         var statusWord = friend.Online ? Loc.T(L.Contacts.Online) : Loc.T(L.Contacts.Offline);

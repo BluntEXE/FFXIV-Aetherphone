@@ -77,8 +77,11 @@ internal sealed class LodestoneService : IDisposable
         }
     }
 
-    public AvatarHandle Avatar(string? name, string? world) => Image(name, world, false);
-    public AvatarHandle Portrait(string? name, string? world) => Image(name, world, true);
+    public AvatarHandle Avatar(string? name, string? world, float drawnPixels) =>
+        Image(name, world, false, drawnPixels);
+
+    public AvatarHandle Portrait(string? name, string? world, float drawnPixels) =>
+        Image(name, world, true, drawnPixels);
 
     public bool TryGetCachedId(string? name, string? world, out string id)
     {
@@ -102,14 +105,14 @@ internal sealed class LodestoneService : IDisposable
         return false;
     }
 
-    public AvatarHandle Remote(string cacheKey, Uri? uri)
+    public AvatarHandle Remote(string cacheKey, Uri? uri, float drawnPixels)
     {
         if (!configuration.ShowLodestonePortraits || uri is null || cacheKey.Length == 0)
         {
             return AvatarHandle.Disabled;
         }
 
-        var result = media.GetOrRequest(cacheKey, token => http.GetBytesAsync(uri, token));
+        var result = media.GetOrRequest(cacheKey, token => http.GetBytesAsync(uri, token), drawnPixels);
         var state = result.Texture is not null ? AvatarLoadState.Ready :
             result.Loading ? AvatarLoadState.Loading : AvatarLoadState.Failed;
         return new AvatarHandle(result.Texture, state, cacheKey);
@@ -120,7 +123,7 @@ internal sealed class LodestoneService : IDisposable
 
     public Task<LodestoneClient?> ClientAsync(CancellationToken token) => EnsureClientAsync(token);
 
-    private AvatarHandle Image(string? name, string? world, bool fullBody)
+    private AvatarHandle Image(string? name, string? world, bool fullBody, float drawnPixels)
     {
         if (!configuration.ShowLodestonePortraits || gameData.IsChineseGameClient() || string.IsNullOrEmpty(name) ||
             string.IsNullOrEmpty(world))
@@ -129,7 +132,7 @@ internal sealed class LodestoneService : IDisposable
         }
 
         var key = $"lodestone:{ImageKeyVersion}:{(fullBody ? "portrait" : "avatar")}:{name}@{world}".ToLowerInvariant();
-        var result = media.GetOrRequest(key, token => FetchAsync(name, world, fullBody, token));
+        var result = media.GetOrRequest(key, token => FetchAsync(name, world, fullBody, token), drawnPixels);
         var state = result.Texture is not null ? AvatarLoadState.Ready :
             result.Loading ? AvatarLoadState.Loading : AvatarLoadState.Failed;
         return new AvatarHandle(result.Texture, state, key);

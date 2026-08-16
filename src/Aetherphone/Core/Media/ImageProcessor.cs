@@ -53,12 +53,26 @@ internal static class ImageProcessor
         }
     }
 
-    private static Image<Rgba32> LoadRgba32(Stream stream, long maxPixels, out int length)
+    private static Image<Rgba32> LoadRgba32(Stream stream, long maxPixels, int maxDimension, out int length)
     {
         EnsureDecodable(stream, maxPixels);
         var image = Image.Load<Rgba32>(SingleFrame, stream);
+        ScaleWithin(image, maxDimension);
         length = checked(image.Width * image.Height * 4);
         return image;
+    }
+
+    private static void ScaleWithin(Image image, int maxDimension)
+    {
+        if (maxDimension <= 0 || (image.Width <= maxDimension && image.Height <= maxDimension))
+        {
+            return;
+        }
+
+        var factor = MathF.Min((float)maxDimension / image.Width, (float)maxDimension / image.Height);
+        var width = Math.Max(1, (int)MathF.Round(image.Width * factor));
+        var height = Math.Max(1, (int)MathF.Round(image.Height * factor));
+        image.Mutate(context => context.Resize(width, height));
     }
 
     public static BakedImage BakeSquareJpeg(string sourcePath, WallpaperCrop crop, int target)
@@ -114,17 +128,8 @@ internal static class ImageProcessor
         using var sourceStream = File.OpenRead(sourcePath);
         EnsureDecodable(sourceStream, MaxLocalDecodePixels);
         using var image = Image.Load(SingleFrame, sourceStream);
-        var width = image.Width;
-        var height = image.Height;
-        if (width > maxDimension || height > maxDimension)
-        {
-            var factor = MathF.Min((float)maxDimension / width, (float)maxDimension / height);
-            width = Math.Max(1, (int)MathF.Round(width * factor));
-            height = Math.Max(1, (int)MathF.Round(height * factor));
-            image.Mutate(context => context.Resize(width, height));
-        }
-
-        return new BakedImage(EncodeJpegVerified(image), width, height);
+        ScaleWithin(image, maxDimension);
+        return new BakedImage(EncodeJpegVerified(image), image.Width, image.Height);
     }
 
     private static byte[] EncodeJpegVerified(Image image)
@@ -242,9 +247,10 @@ internal static class ImageProcessor
         return (0.5f * rgba[index]) - (0.418688f * rgba[index + 1]) - (0.081312f * rgba[index + 2]);
     }
 
-    private static (byte[] Pixels, int Length, int Width, int Height) DecodeRgba32Pooled(Stream stream, long maxPixels)
+    private static (byte[] Pixels, int Length, int Width, int Height) DecodeRgba32Pooled(Stream stream, long maxPixels,
+        int maxDimension)
     {
-        using var image = LoadRgba32(stream, maxPixels, out var length);
+        using var image = LoadRgba32(stream, maxPixels, maxDimension, out var length);
         var buffer = ArrayPool<byte>.Shared.Rent(length);
         image.CopyPixelDataTo(buffer.AsSpan(0, length));
         return (buffer, length, image.Width, image.Height);
@@ -252,8 +258,13 @@ internal static class ImageProcessor
 
     public static (byte[] Pixels, int Width, int Height) DecodeRgba32(byte[] bytes)
     {
+        return DecodeRgba32(bytes, 0);
+    }
+
+    public static (byte[] Pixels, int Width, int Height) DecodeRgba32(byte[] bytes, int maxDimension)
+    {
         using var stream = new MemoryStream(bytes);
-        using var image = LoadRgba32(stream, MaxDecodePixels, out var length);
+        using var image = LoadRgba32(stream, MaxDecodePixels, maxDimension, out var length);
         var pixels = new byte[length];
         image.CopyPixelDataTo(pixels);
         return (pixels, image.Width, image.Height);
@@ -316,15 +327,7 @@ internal static class ImageProcessor
             rawDelays[index] = image.Frames[index].Metadata.GetGifMetadata().FrameDelay / 100f;
         }
 
-        if (image.Width > MaxAnimationDimension || image.Height > MaxAnimationDimension)
-        {
-            var factor = MathF.Min((float)MaxAnimationDimension / image.Width,
-                (float)MaxAnimationDimension / image.Height);
-            var width = Math.Max(1, (int)MathF.Round(image.Width * factor));
-            var height = Math.Max(1, (int)MathF.Round(image.Height * factor));
-            image.Mutate(context => context.Resize(width, height));
-        }
-
+        ScaleWithin(image, MaxAnimationDimension);
         var (keptIndices, delays) = GifFramePlan.Plan(rawDelays, image.Width, image.Height, MaxAnimationPixels);
         var frameLength = checked(image.Width * image.Height * 4);
         var frames = new byte[keptIndices.Length][];
@@ -338,13 +341,19 @@ internal static class ImageProcessor
         return (frames, image.Width, image.Height, delays);
     }
 
-    public static async Task<IDalamudTextureWrap> DecodeToTextureAsync(ITextureProvider textures, byte[] bytes,
+    public static Task<IDalamudTextureWrap> DecodeToTextureAsync(ITextureProvider textures, byte[] bytes,
         string tag, long maxPixels, CancellationToken token)
+    {
+        return DecodeToTextureAsync(textures, bytes, tag, maxPixels, 0, token);
+    }
+
+    public static async Task<IDalamudTextureWrap> DecodeToTextureAsync(ITextureProvider textures, byte[] bytes,
+        string tag, long maxPixels, int maxDimension, CancellationToken token)
     {
         var (pixels, length, width, height) = await Task.Run(() =>
         {
             using var stream = new MemoryStream(bytes);
-            return DecodeRgba32Pooled(stream, maxPixels);
+            return DecodeRgba32Pooled(stream, maxPixels, maxDimension);
         }, token).ConfigureAwait(false);
 
         try

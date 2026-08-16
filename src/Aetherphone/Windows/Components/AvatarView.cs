@@ -24,12 +24,12 @@ internal static class AvatarView
         if (string.IsNullOrEmpty(avatarUrl))
         {
             Draw(drawList, center, radius, theme.Accent, Initials.Of(name), monogramScale,
-                lodestone.Avatar(name, world), segments, alpha);
+                lodestone.Avatar(name, world, radius * 2f), segments, alpha);
             DrawFrame(drawList, center, radius, images, frame, alpha);
             return;
         }
 
-        var handle = images.Avatar(avatarUrl);
+        var handle = images.Avatar(avatarUrl, radius * 2f);
         if (handle.Texture is { } texture)
         {
             var backdrop = theme.SurfaceMuted with { W = theme.SurfaceMuted.W * alpha };
@@ -55,12 +55,12 @@ internal static class AvatarView
             return;
         }
 
-        if (images.Get(frame.AssetUrl) is not { } texture)
+        var half = radius * frame.Scale;
+        if (images.Sized(frame.AssetUrl, half * 2f) is not { } texture)
         {
             return;
         }
 
-        var half = radius * frame.Scale;
         var corner = new Vector2(half, half);
         var tint = ((uint)(alpha * 255f) << 24) | 0x00FFFFFFu;
         drawList.AddImage(texture.Handle, center - corner, center + corner, Vector2.Zero, Vector2.One, tint);

@@ -394,6 +394,16 @@ internal sealed partial class MusicApp : IPhoneApp
         return media.GetOrRequest(url, token => http.GetBytesAsync(new Uri(url), token));
     }
 
+    private MediaResult Thumb(string url, float drawnPixels)
+    {
+        if (string.IsNullOrEmpty(url))
+        {
+            return default;
+        }
+
+        return media.GetOrRequest(url, token => http.GetBytesAsync(new Uri(url), token), drawnPixels);
+    }
+
     private void DrawCover(ImDrawListPtr drawList, Vector2 min, Vector2 max, string url, string fallbackName,
         float rounding)
     {

@@ -13,8 +13,8 @@ internal sealed class RemoteImageCache : IDisposable
     private readonly HttpService http;
     private readonly DiskCache disk;
     private readonly TextureLedger ready = new(TextureBudgetBytes);
-    private readonly ConcurrentDictionary<string, byte> loading = new();
-    private readonly ConcurrentDictionary<string, DateTime> failed = new();
+    private readonly ConcurrentDictionary<LedgerKey, byte> loading = new();
+    private readonly ConcurrentDictionary<string, DateTime> failed = new(StringComparer.Ordinal);
     private readonly CancellationTokenSource cancellation = new();
     private volatile bool disposed;
 
@@ -24,46 +24,54 @@ internal sealed class RemoteImageCache : IDisposable
         this.disk = disk;
     }
 
+    private static bool Fetchable(string? url)
+    {
+        return !string.IsNullOrEmpty(url) && url.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+    }
+
     public IDalamudTextureWrap? Get(string? url)
     {
-        if (string.IsNullOrEmpty(url) || !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        if (!Fetchable(url))
         {
             return null;
         }
 
-        var resolved = LegacyMediaHosts.Normalize(url);
+        var resolved = LegacyMediaHosts.Normalize(url!);
         if (ready.Get(resolved) is { } wrap)
         {
             return wrap;
         }
 
-        if (failed.TryGetValue(resolved, out var failedAtUtc))
-        {
-            if (DateTime.UtcNow - failedAtUtc < FailureRetryFor)
-            {
-                return null;
-            }
+        Request(resolved, TextureSizes.Native);
+        return null;
+    }
 
-            failed.TryRemove(resolved, out _);
-        }
-
-        if (!loading.TryAdd(resolved, 0))
+    public IDalamudTextureWrap? Sized(string? url, float drawnPixels)
+    {
+        if (!Fetchable(url))
         {
             return null;
         }
 
-        _ = LoadAsync(resolved, token => FetchThroughDiskAsync(resolved, token));
-        return null;
+        var resolved = LegacyMediaHosts.Normalize(url!);
+        var level = TextureSizes.LevelFor(drawnPixels);
+        if (ready.Get(resolved, level) is { } wrap)
+        {
+            return wrap;
+        }
+
+        Request(resolved, level);
+        return ready.Nearest(resolved, level);
     }
 
     public AnimatedImage? GetAnimated(string? url)
     {
-        if (string.IsNullOrEmpty(url) || !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        if (!Fetchable(url))
         {
             return null;
         }
 
-        var resolved = LegacyMediaHosts.Normalize(url);
+        var resolved = LegacyMediaHosts.Normalize(url!);
         if (ready.GetAnimated(resolved) is { } animation)
         {
             return animation;
@@ -74,23 +82,33 @@ internal sealed class RemoteImageCache : IDisposable
             return null;
         }
 
-        if (failed.TryGetValue(resolved, out var failedAtUtc))
+        Request(resolved, TextureSizes.Native);
+        return null;
+    }
+
+    private void Request(string resolved, int level)
+    {
+        Request(new LedgerKey(resolved, level), token => FetchThroughDiskAsync(resolved, token));
+    }
+
+    private void Request(LedgerKey key, Func<CancellationToken, Task<byte[]?>> fetch)
+    {
+        if (failed.TryGetValue(key.Name, out var failedAtUtc))
         {
             if (DateTime.UtcNow - failedAtUtc < FailureRetryFor)
             {
-                return null;
+                return;
             }
 
-            failed.TryRemove(resolved, out _);
+            failed.TryRemove(key.Name, out _);
         }
 
-        if (!loading.TryAdd(resolved, 0))
+        if (!loading.TryAdd(key, 0))
         {
-            return null;
+            return;
         }
 
-        _ = LoadAsync(resolved, token => FetchThroughDiskAsync(resolved, token));
-        return null;
+        _ = LoadAsync(key, fetch);
     }
 
     private async Task<byte[]?> FetchThroughDiskAsync(string url, CancellationToken token)
@@ -117,22 +135,7 @@ internal sealed class RemoteImageCache : IDisposable
             return wrap;
         }
 
-        if (failed.TryGetValue(key, out var failedAtUtc))
-        {
-            if (DateTime.UtcNow - failedAtUtc < FailureRetryFor)
-            {
-                return null;
-            }
-
-            failed.TryRemove(key, out _);
-        }
-
-        if (!loading.TryAdd(key, 0))
-        {
-            return null;
-        }
-
-        _ = LoadAsync(key, fetch);
+        Request(new LedgerKey(key, TextureSizes.Native), fetch);
         return null;
     }
 
@@ -141,22 +144,30 @@ internal sealed class RemoteImageCache : IDisposable
         return url is not null ? ready.SizeOf(LegacyMediaHosts.Normalize(url)) : Vector2.Zero;
     }
 
-    public bool Failed(string? url) => url is not null && failed.ContainsKey(LegacyMediaHosts.Normalize(url));
+    public bool Failed(string? url)
+    {
+        return url is not null && failed.ContainsKey(LegacyMediaHosts.Normalize(url));
+    }
 
-    public AvatarHandle Avatar(string? url)
+    public AvatarHandle Avatar(string? url, float drawnPixels)
     {
         if (string.IsNullOrEmpty(url))
         {
             return AvatarHandle.Disabled;
         }
 
-        var texture = Get(url);
-        var state = texture is not null ? AvatarLoadState.Ready :
-            Failed(url) ? AvatarLoadState.Failed : AvatarLoadState.Loading;
-        return new AvatarHandle(texture, state, LegacyMediaHosts.Normalize(url));
+        var resolved = LegacyMediaHosts.Normalize(url);
+        var texture = Sized(url, drawnPixels);
+        if (texture is not null)
+        {
+            return new AvatarHandle(texture, AvatarLoadState.Ready, resolved);
+        }
+
+        var stalled = failed.ContainsKey(resolved);
+        return new AvatarHandle(null, stalled ? AvatarLoadState.Failed : AvatarLoadState.Loading, resolved);
     }
 
-    private async Task LoadAsync(string key, Func<CancellationToken, Task<byte[]?>> fetch)
+    private async Task LoadAsync(LedgerKey key, Func<CancellationToken, Task<byte[]?>> fetch)
     {
         try
         {
@@ -164,14 +175,14 @@ internal sealed class RemoteImageCache : IDisposable
             var bytes = await fetch(token).ConfigureAwait(false);
             if (bytes is null)
             {
-                failed[key] = DateTime.UtcNow;
+                failed[key.Name] = DateTime.UtcNow;
                 return;
             }
 
             if (ImageProcessor.IsGif(bytes))
             {
                 var animation = await ImageProcessor.DecodeAnimationAsync(Plugin.TextureProvider, bytes,
-                    $"Aetherphone.Gif.{key}", token).ConfigureAwait(false);
+                    $"Aetherphone.Gif.{key.Name}", token).ConfigureAwait(false);
                 if (!ready.TryAddAnimated(key, animation))
                 {
                     animation.Dispose();
@@ -181,7 +192,9 @@ internal sealed class RemoteImageCache : IDisposable
             else
             {
                 var wrap = await ImageProcessor.DecodeToTextureAsync(Plugin.TextureProvider, bytes,
-                    $"Aetherphone.Img.{key}", ImageProcessor.MaxDecodePixels, token).ConfigureAwait(false);
+                        $"Aetherphone.Img.{key.Name}", ImageProcessor.MaxDecodePixels, TextureSizes.SizeOf(key.Level),
+                        token)
+                    .ConfigureAwait(false);
                 if (!ready.TryAdd(key, wrap))
                 {
                     wrap.Dispose();
@@ -199,8 +212,8 @@ internal sealed class RemoteImageCache : IDisposable
         }
         catch (Exception exception)
         {
-            failed[key] = DateTime.UtcNow;
-            AepLog.Warning(exception, $"[Media] failed to load image {key}");
+            failed[key.Name] = DateTime.UtcNow;
+            AepLog.Warning(exception, $"[Media] failed to load image {key.Name}");
         }
         finally
         {
