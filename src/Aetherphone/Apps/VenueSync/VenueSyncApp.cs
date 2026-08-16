@@ -1,6 +1,7 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Game;
+using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.VenueSync;
 using Aetherphone.Windows.Components;
@@ -11,7 +12,7 @@ namespace Aetherphone.Apps.VenueSync;
 internal sealed partial class VenueSyncApp : IPhoneApp
 {
     public string Id => "venue-sync";
-    public string DisplayName => "Venue Manager";
+    public string DisplayName => Loc.T(L.Apps.VenueSync);
     public string Glyph => "VM";
     public int BadgeCount => 0;
 
@@ -24,11 +25,11 @@ internal sealed partial class VenueSyncApp : IPhoneApp
     private readonly Action back;
 
     // Populated at the top of Draw() and reused by sub-screens so they don't need to
-    // reconstruct PhoneContext themselves — mirrors the pattern used by VenuesApp/FeedbackApp.
+    // reconstruct PhoneContext themselves, mirrors the pattern used by VenuesApp/FeedbackApp.
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
 
-    // AppSkin instance for content-app conventions (SectionHeading, EmptyState, hero Card) —
+    // AppSkin instance for content-app conventions (SectionHeading, EmptyState, hero Card),
     // mirrors the Notes/Calendar pattern of deriving a palette from the live PhoneTheme rather
     // than a hardcoded per-app palette.
     private readonly AppSkin ui = new(AppPalettes.VenueSync(PhoneTheme.Default));

@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 
@@ -10,7 +11,9 @@ internal static class SaleSummaryRow
 
     public static void Draw(Rect row, int count, decimal total, PhoneTheme theme)
     {
-        var text = count == 0 ? "No sales logged this session" : $"{count} sale{(count == 1 ? "" : "s")} · {total:N0}g";
+        var text = count == 0
+            ? Loc.T(L.VenueSync.NoSalesLoggedSession)
+            : $"{Loc.Plural(L.VenueSync.SessionSalesCount, count)} · {total:N0}g";
         Marquee.DrawLeftAuto("sale-summary", text, row.Min.X, row.Min.Y, row.Width, TextStyles.Body, theme.TextStrong);
     }
 }

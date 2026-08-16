@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.VenueSync;
 using Aetherphone.Windows.Components;
@@ -25,22 +26,24 @@ internal static class ShiftRow
         var scale = ImGuiHelpers.GlobalScale;
         var drawList = ImGui.GetWindowDrawList();
 
-        var titleText = isOpen ? (roleName ?? "Open Shift") : shift.Status switch
+        var titleText = isOpen ? (roleName ?? Loc.T(L.VenueSync.OpenShiftTitle)) : shift.Status switch
         {
-            "ACTIVE" => "Active Shift",
-            "COMPLETED" => "Completed Shift",
-            _ => "Upcoming Shift",
+            "ACTIVE" => Loc.T(L.VenueSync.ActiveShiftTitle),
+            "COMPLETED" => Loc.T(L.VenueSync.CompletedShiftTitle),
+            _ => Loc.T(L.VenueSync.UpcomingShiftTitle),
         };
         var timeText = FormatTimeRange(shift.ScheduledStart, shift.ScheduledEnd);
         var isActive = !isOpen && shift.Status == "ACTIVE";
-        var label = isOpen ? "Claim" : isActive ? "Clock Out" : "Clock In";
+        var label = isOpen
+            ? Loc.T(L.VenueSync.Claim)
+            : isActive ? Loc.T(L.VenueSync.ClockOut) : Loc.T(L.VenueSync.ClockIn);
 
         var buttonWidth = MathF.Max(72f * scale, Typography.Measure(label, TextStyles.BodyEmphasized).X + 32f * scale);
         var buttonHeight = 28f * scale;
         var actionRect = new Rect(new Vector2(row.Max.X - buttonWidth, row.Center.Y - buttonHeight * 0.5f),
             new Vector2(row.Max.X, row.Center.Y + buttonHeight * 0.5f));
 
-        // Independent hover per interactive region — this is the deliberate fix for a known bug
+        // Independent hover per interactive region, this is the deliberate fix for a known bug
         // class in this codebase where two stacked elements share one hover-bool. The row overlay
         // excludes the button's own hit-rect so the two hovers never fight each other.
         var overButton = UiInteract.Hover(actionRect.Min, actionRect.Max);
@@ -56,12 +59,15 @@ internal static class ShiftRow
         var tileTint = isActive ? theme.Danger : theme.Accent;
         IconTile.Draw(iconCenter, iconSize, IconTile.Surface(tileTint), FontAwesomeIcon.Clock);
 
+        var openBadgeText = Loc.T(L.VenueSync.OpenBadge);
         var textLeft = row.Min.X + iconSize + 14f * scale;
-        var badgeReserve = isOpen ? Typography.Measure("OPEN", TextStyles.Caption2).X + 16f * scale + 10f * scale : 0f;
+        var badgeReserve = isOpen
+            ? Typography.Measure(openBadgeText, TextStyles.Caption2).X + 16f * scale + 10f * scale
+            : 0f;
         var textRight = actionRect.Min.X - 12f * scale - badgeReserve;
         var textWidth = MathF.Max(1f, textRight - textLeft);
 
-        // Independent hover per stacked line, per this codebase's known Marquee bug class — each
+        // Independent hover per stacked line, per this codebase's known Marquee bug class, each
         // line calls its own *Auto variant, which computes hover internally, instead of sharing
         // one hover bool across both lines.
         Marquee.DrawLeftAuto($"shiftrow-title-{idSuffix}", titleText, textLeft, row.Center.Y - 16f * scale, textWidth,
@@ -71,7 +77,8 @@ internal static class ShiftRow
 
         if (isOpen)
         {
-            DrawOpenBadge(drawList, new Vector2(actionRect.Min.X - 12f * scale, row.Center.Y), theme, scale);
+            DrawOpenBadge(drawList, new Vector2(actionRect.Min.X - 12f * scale, row.Center.Y), openBadgeText, theme,
+                scale);
         }
 
         if (rowHovered)
@@ -91,9 +98,9 @@ internal static class ShiftRow
     // Mirrors Jobs' DrawActiveBadge (Apps/Jobs/JobsApp.cs:427-439): accent @ ~20% alpha pill with
     // accent-colored text, used here to call out claimable shifts the same way Jobs calls out the
     // active gearset.
-    private static void DrawOpenBadge(ImDrawListPtr drawList, Vector2 rightCenter, PhoneTheme theme, float scale)
+    private static void DrawOpenBadge(ImDrawListPtr drawList, Vector2 rightCenter, string text, PhoneTheme theme,
+        float scale)
     {
-        const string text = "OPEN";
         var textSize = Typography.Measure(text, TextStyles.Caption2);
         var padX = 8f * scale;
         var padY = 4f * scale;
@@ -109,7 +116,10 @@ internal static class ShiftRow
     private static string FormatTimeRange(string startIso, string endIso)
     {
         if (!DateTime.TryParse(startIso, out var start) || !DateTime.TryParse(endIso, out var end))
-            return "Unknown time";
-        return $"{start:ddd h:mm tt} – {end:h:mm tt}";
+        {
+            return Loc.T(L.VenueSync.UnknownTime);
+        }
+
+        return $"{start.ToString("ddd", Loc.Culture)} {TimeText.Clock(start)} – {TimeText.Clock(end)}";
     }
 }

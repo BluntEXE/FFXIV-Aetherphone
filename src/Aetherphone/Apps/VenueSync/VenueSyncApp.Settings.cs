@@ -1,5 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Localization;
 using Aetherphone.Core.VenueSync;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -19,7 +20,7 @@ internal sealed partial class VenueSyncApp
     private void DrawSettings(Rect area)
     {
         var scale = ImGuiHelpers.GlobalScale;
-        AppHeader.Draw(new PhoneContext(area, theme, navigation), "Sync Settings", back);
+        AppHeader.Draw(new PhoneContext(area, theme, navigation), Loc.T(L.VenueSync.SyncSettingsTitle), back);
 
         if (settingsKeyInput.Length == 0 && configuration.VenueSyncApiKey.Length > 0)
         {
@@ -29,7 +30,7 @@ internal sealed partial class VenueSyncApp
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         using (AppSurface.Begin(body))
         {
-            SettingsSection.Header("API KEY", theme);
+            SettingsSection.Header(Loc.T(L.VenueSync.ApiKeySectionHeader), theme);
 
             var apiKeyCard = GroupCard.Begin(theme, 1, Metrics.Size.Row);
             var keyRow = apiKeyCard.NextRow();
@@ -39,7 +40,8 @@ internal sealed partial class VenueSyncApp
             ImGui.SetCursorScreenPos(new Vector2(keyRow.Min.X, keyRow.Center.Y - ImGui.GetFrameHeight() * 0.5f));
             ImGui.SetNextItemWidth(fieldWidth);
             var flags = settingsKeyVisible ? ImGuiInputTextFlags.None : ImGuiInputTextFlags.Password;
-            if (ImGui.InputTextWithHint("##sync-api-key", "API key (vm_...)", ref settingsKeyInput, 128, flags))
+            if (ImGui.InputTextWithHint("##sync-api-key", Loc.T(L.VenueSync.ApiKeyHint), ref settingsKeyInput, 128,
+                    flags))
             {
                 configuration.VenueSyncApiKey = settingsKeyInput;
                 configuration.Save();
@@ -48,24 +50,24 @@ internal sealed partial class VenueSyncApp
             var eyeRow = new Rect(
                 new Vector2(keyRow.Min.X + fieldWidth + Metrics.Space.Sm * scale, keyRow.Center.Y - eyeHeight * 0.5f),
                 new Vector2(keyRow.Max.X, keyRow.Center.Y + eyeHeight * 0.5f));
-            if (AppSkin.PillButton(eyeRow, settingsKeyVisible ? "Hide" : "Show", filled: false, theme))
+            if (AppSkin.PillButton(eyeRow, settingsKeyVisible ? Loc.T(L.VenueSync.Hide) : Loc.T(L.VenueSync.Show),
+                    filled: false, theme))
             {
                 settingsKeyVisible = !settingsKeyVisible;
             }
 
             apiKeyCard.End();
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
-            SettingsSection.Hint("Get your API key from your venue's dashboard on the website, under Staff Access.",
-                theme);
+            SettingsSection.Hint(Loc.T(L.VenueSync.ApiKeyHelpText), theme);
 
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
 
             var venueLabel = string.IsNullOrEmpty(configuration.VenueSyncSelectedVenueName)
-                ? "Select venue"
+                ? Loc.T(L.VenueSync.SelectVenue)
                 : configuration.VenueSyncSelectedVenueName;
             var venueCard = GroupCard.Begin(theme, 1 + (settingsVenuePickerExpanded ? settingsVenues.Count : 0),
                 Metrics.Size.Row);
-            if (SettingsRow.Disclosure(venueCard.NextRow(), "Venue", venueLabel, theme))
+            if (SettingsRow.Disclosure(venueCard.NextRow(), Loc.T(L.VenueSync.VenueLabel), venueLabel, theme))
             {
                 if (settingsVenues.Count == 0)
                 {
@@ -113,17 +115,17 @@ internal sealed partial class VenueSyncApp
             {
                 var noCharOrigin = ImGui.GetCursorScreenPos();
                 var noCharWidth = ImGui.GetContentRegionAvail().X;
-                Marquee.DrawLeftAuto("venuesync.settings.no-character",
-                    "No character detected — enter the game world first", noCharOrigin.X, noCharOrigin.Y,
-                    noCharWidth, TextStyles.Body, theme.TextMuted);
+                Marquee.DrawLeftAuto("venuesync.settings.no-character", Loc.T(L.VenueSync.NoCharacterDetected),
+                    noCharOrigin.X, noCharOrigin.Y, noCharWidth, TextStyles.Body, theme.TextMuted);
                 return;
             }
 
-            SettingsSection.Header("CHARACTER", theme);
+            SettingsSection.Header(Loc.T(L.VenueSync.CharacterSectionHeader), theme);
 
             var characterCard = GroupCard.Begin(theme, 2, Metrics.Size.Row);
-            SettingsRow.Info(characterCard.NextRow(), "Character", $"{localName} @ {localWorld}", theme);
-            var linkLabel = settingsCharacterLinkStatus ?? "Link this character";
+            SettingsRow.Info(characterCard.NextRow(), Loc.T(L.VenueSync.CharacterLabel), $"{localName} @ {localWorld}",
+                theme);
+            var linkLabel = settingsCharacterLinkStatus ?? Loc.T(L.VenueSync.LinkCharacterDefault);
             var linkRow = characterCard.NextRow();
             var linkButtonHeight = Metrics.Size.FieldHeight * scale;
             var linkButtonRect = new Rect(new Vector2(linkRow.Min.X, linkRow.Center.Y - linkButtonHeight * 0.5f),
@@ -149,34 +151,34 @@ internal sealed partial class VenueSyncApp
             }
             else
             {
-                settingsError = "Failed to load venues — check your API key";
+                settingsError = Loc.T(L.VenueSync.FailedLoadVenues);
             }
         }
         catch (Exception)
         {
-            settingsError = "Failed to load venues — check your API key";
+            settingsError = Loc.T(L.VenueSync.FailedLoadVenues);
         }
     }
 
     private async Task LinkCharacterAsync(string characterName, string world)
     {
-        settingsCharacterLinkStatus = "Linking…";
+        settingsCharacterLinkStatus = Loc.T(L.VenueSync.LinkingStatus);
         try
         {
             var response = await client.LinkCharacterAsync(characterName, world, CancellationToken.None)
                 .ConfigureAwait(false);
             if (response?.Character is not null)
             {
-                settingsCharacterLinkStatus = "Linked ✓";
+                settingsCharacterLinkStatus = Loc.T(L.VenueSync.LinkedStatus);
             }
             else
             {
-                settingsCharacterLinkStatus = response?.Error ?? "Failed to link — tap to retry";
+                settingsCharacterLinkStatus = response?.Error ?? Loc.T(L.VenueSync.FailedLinkRetry);
             }
         }
         catch (Exception)
         {
-            settingsCharacterLinkStatus = "Failed to link — tap to retry";
+            settingsCharacterLinkStatus = Loc.T(L.VenueSync.FailedLinkRetry);
         }
     }
 }

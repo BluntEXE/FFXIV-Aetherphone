@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.VenueSync;
 using Aetherphone.Windows.Components;
@@ -11,7 +12,7 @@ namespace Aetherphone.Apps.VenueSync;
 internal sealed partial class VenueSyncApp
 {
     private const float StatusCardHeight = 90f;
-    // Matches Jobs' RowHeight (Apps/Jobs/JobsApp.cs:23) — content rows need the extra vertical
+    // Matches Jobs' RowHeight (Apps/Jobs/JobsApp.cs:23), content rows need the extra vertical
     // space for an icon tile plus a two-tier title/subtitle stack.
     private const float ActionRowHeight = 64f;
 
@@ -53,7 +54,7 @@ internal sealed partial class VenueSyncApp
         if (activeShift is not null)
         {
             var venueLabel = string.IsNullOrEmpty(configuration.VenueSyncSelectedVenueName)
-                ? "No venue selected"
+                ? Loc.T(L.VenueSync.NoVenueSelected)
                 : configuration.VenueSyncSelectedVenueName;
             var buttonWidth = 100f * scale;
             var iconSize = 42f * scale;
@@ -64,21 +65,21 @@ internal sealed partial class VenueSyncApp
             var textTop = card.Center.Y - 20f * scale;
             var textMaxWidth = MathF.Max(1f, card.Max.X - pad - buttonWidth - Metrics.Space.Md * scale - textLeft);
 
-            // Independent hover per line, per this codebase's stacked-Marquee bug class — each
+            // Independent hover per line, per this codebase's stacked-Marquee bug class, each
             // line calls its own *Auto variant instead of sharing one hover bool.
             Marquee.DrawLeftAuto("venuesync.dashboard.venue", venueLabel, textLeft, textTop, textMaxWidth,
                 TextStyles.Headline, theme.TextStrong);
-            Marquee.DrawLeftAuto("venuesync.dashboard.status", "ON SHIFT", textLeft, textTop + 24f * scale,
-                textMaxWidth, TextStyles.Caption1, theme.Accent);
+            Marquee.DrawLeftAuto("venuesync.dashboard.status", Loc.T(L.VenueSync.OnShift), textLeft,
+                textTop + 24f * scale, textMaxWidth, TextStyles.Caption1, theme.Accent);
 
             var buttonHeight = 32f * scale;
             var button = new Rect(new Vector2(card.Max.X - pad - buttonWidth, card.Center.Y - buttonHeight * 0.5f),
                 new Vector2(card.Max.X - pad, card.Center.Y + buttonHeight * 0.5f));
 
-            // Fire-and-forget convenience action only — Task 8's Shifts screen owns the
+            // Fire-and-forget convenience action only, Task 8's Shifts screen owns the
             // authoritative clock-in/out UI with full error handling, so no inline error
             // display is needed here.
-            if (AppSkin.DangerPillButton(button, "Clock Out", theme))
+            if (AppSkin.DangerPillButton(button, Loc.T(L.VenueSync.ClockOut), theme))
             {
                 var shiftId = activeShift.Id;
                 _ = ClockOutFireAndForget(shiftId);
@@ -91,7 +92,7 @@ internal sealed partial class VenueSyncApp
             IconTile.Draw(iconCenter, iconSize, IconTile.Surface(theme.TextMuted), FontAwesomeIcon.Clock);
             var textLeft = iconCenter.X + iconSize * 0.5f + Metrics.Space.Md * scale;
             var textMaxWidth = MathF.Max(1f, card.Max.X - pad - textLeft);
-            Marquee.DrawLeftAuto("venuesync.dashboard.offshift", "OFF SHIFT", textLeft,
+            Marquee.DrawLeftAuto("venuesync.dashboard.offshift", Loc.T(L.VenueSync.OffShift), textLeft,
                 card.Center.Y - 8f * scale, textMaxWidth, TextStyles.Headline, theme.TextMuted);
         }
 
@@ -133,15 +134,17 @@ internal sealed partial class VenueSyncApp
         var card = GroupCard.Begin(theme, 2, ActionRowHeight, showSeparators: false);
 
         var logSaleRow = card.NextRow();
-        if (DrawActionRow(card, logSaleRow, FontAwesomeIcon.Coins, theme.Accent, "Log a Sale",
-                "Record a transaction", null, "venuesync.dashboard.logsale"))
+        if (DrawActionRow(card, logSaleRow, FontAwesomeIcon.Coins, theme.Accent, Loc.T(L.VenueSync.LogSale),
+                Loc.T(L.VenueSync.LogSaleSubtitle), null, "venuesync.dashboard.logsale"))
         {
             router.Push(VenueSyncRoute.Sales);
         }
 
-        var upcomingSubtitle = openShiftsCount == 0 ? "None open right now" : "Tap to view and claim";
+        var upcomingSubtitle = openShiftsCount == 0
+            ? Loc.T(L.VenueSync.NoOpenShifts)
+            : Loc.T(L.VenueSync.TapToViewClaim);
         var upcomingRow = card.NextRow();
-        if (DrawActionRow(card, upcomingRow, FontAwesomeIcon.Clock, theme.Accent, "Upcoming Shifts",
+        if (DrawActionRow(card, upcomingRow, FontAwesomeIcon.Clock, theme.Accent, Loc.T(L.VenueSync.UpcomingShiftsTitle),
                 upcomingSubtitle, openShiftsCount.ToString(), "venuesync.dashboard.upcoming"))
         {
             router.Push(VenueSyncRoute.Shifts);
@@ -155,9 +158,11 @@ internal sealed partial class VenueSyncApp
         var width = ImGui.GetContentRegionAvail().X;
         var sessionRow = new Rect(origin, new Vector2(origin.X + width, origin.Y + ActionRowHeight * scale));
         var count = state.SessionSalesCount;
-        var sessionValue = count == 0 ? "No sales yet" : $"{count} sale{(count == 1 ? "" : "s")} · {state.SessionSalesTotal:N0}g";
-        DrawActionRow(default, sessionRow, FontAwesomeIcon.Coins, theme.TextMuted, "This Session", sessionValue,
-            null, "venuesync.dashboard.session", clickable: false);
+        var sessionValue = count == 0
+            ? Loc.T(L.VenueSync.NoSalesYet)
+            : $"{Loc.Plural(L.VenueSync.SessionSalesCount, count)} · {state.SessionSalesTotal:N0}g";
+        DrawActionRow(default, sessionRow, FontAwesomeIcon.Coins, theme.TextMuted, Loc.T(L.VenueSync.ThisSession),
+            sessionValue, null, "venuesync.dashboard.session", clickable: false);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, ActionRowHeight * scale));
     }

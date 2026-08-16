@@ -1,5 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Localization;
 using Aetherphone.Core.VenueSync;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -15,7 +16,7 @@ internal sealed partial class VenueSyncApp
     private void DrawShifts(Rect area)
     {
         var scale = ImGuiHelpers.GlobalScale;
-        AppHeader.Draw(new PhoneContext(area, theme, navigation), "Shifts", back);
+        AppHeader.Draw(new PhoneContext(area, theme, navigation), Loc.T(L.VenueSync.ShiftsTitle), back);
 
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         using (AppSurface.Begin(body))
@@ -24,8 +25,8 @@ internal sealed partial class VenueSyncApp
             {
                 var errorOrigin = ImGui.GetCursorScreenPos();
                 var errorWidth = ImGui.GetContentRegionAvail().X;
-                Marquee.DrawLeftAuto("venuesync.shifts.error", $"{shiftsActionError} — tap to retry", errorOrigin.X,
-                    errorOrigin.Y, errorWidth, TextStyles.Caption1, theme.Danger);
+                Marquee.DrawLeftAuto("venuesync.shifts.error", Loc.T(L.VenueSync.RetryHint, shiftsActionError),
+                    errorOrigin.X, errorOrigin.Y, errorWidth, TextStyles.Caption1, theme.Danger);
                 ImGui.Dummy(new Vector2(0f, 20f * scale + Metrics.Space.Sm * scale));
             }
 
@@ -33,7 +34,7 @@ internal sealed partial class VenueSyncApp
             {
                 var emptyOrigin = ImGui.GetCursorScreenPos();
                 var emptyWidth = ImGui.GetContentRegionAvail().X;
-                Marquee.DrawCenteredAuto("venuesync.shifts.empty", "No shift data",
+                Marquee.DrawCenteredAuto("venuesync.shifts.empty", Loc.T(L.VenueSync.NoShiftData),
                     emptyOrigin.X + emptyWidth * 0.5f, emptyOrigin.Y, emptyWidth, TextStyles.Body, theme.TextMuted);
                 return;
             }
@@ -42,7 +43,8 @@ internal sealed partial class VenueSyncApp
             var upcomingShifts = state.Shifts.Shifts.Where(s => s.Status == "SCHEDULED").ToList();
             if (activeShift is null && state.Shifts.OpenShifts.Count == 0 && upcomingShifts.Count == 0)
             {
-                EmptyState.Draw(body, ui, FontAwesomeIcon.Clock, "No Shifts", "Nothing scheduled right now.");
+                EmptyState.Draw(body, ui, FontAwesomeIcon.Clock, Loc.T(L.VenueSync.NoShiftsTitle),
+                    Loc.T(L.VenueSync.NoShiftsBody));
                 return;
             }
 
@@ -59,7 +61,7 @@ internal sealed partial class VenueSyncApp
 
             if (state.Shifts.OpenShifts.Count > 0)
             {
-                ui.SectionHeading("OPEN — CLAIM");
+                ui.SectionHeading(Loc.T(L.VenueSync.OpenToClaimHeading));
                 var openCard = GroupCard.Begin(theme, state.Shifts.OpenShifts.Count, ShiftRow.Height, showSeparators: false);
                 foreach (var open in state.Shifts.OpenShifts)
                 {
@@ -82,7 +84,7 @@ internal sealed partial class VenueSyncApp
 
             if (upcomingShifts.Count > 0)
             {
-                ui.SectionHeading("UPCOMING");
+                ui.SectionHeading(Loc.T(L.VenueSync.UpcomingHeading));
                 var upcomingCard = GroupCard.Begin(theme, upcomingShifts.Count, ShiftRow.Height, showSeparators: false);
                 foreach (var scheduled in upcomingShifts)
                 {
@@ -103,15 +105,15 @@ internal sealed partial class VenueSyncApp
         {
             case ShiftRowAction.ClockIn:
                 _ = RunShiftActionAsync(() => client.ClockInAsync(shiftId, CancellationToken.None),
-                    "Failed to clock in.");
+                    Loc.T(L.VenueSync.FailedClockIn));
                 break;
             case ShiftRowAction.ClockOut:
                 _ = RunShiftActionAsync(() => client.ClockOutAsync(shiftId, CancellationToken.None),
-                    "Failed to clock out.");
+                    Loc.T(L.VenueSync.FailedClockOut));
                 break;
             case ShiftRowAction.Claim:
                 _ = RunShiftActionAsync(() => client.ClaimShiftAsync(shiftId, CancellationToken.None),
-                    "Failed to claim shift.");
+                    Loc.T(L.VenueSync.FailedClaimShift));
                 break;
             case ShiftRowAction.None:
             default:

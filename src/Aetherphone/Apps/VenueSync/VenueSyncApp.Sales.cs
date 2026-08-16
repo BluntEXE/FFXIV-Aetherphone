@@ -1,5 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Localization;
 using Aetherphone.Core.VenueSync;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -21,7 +22,7 @@ internal sealed partial class VenueSyncApp
     private void DrawSales(Rect area)
     {
         var scale = ImGuiHelpers.GlobalScale;
-        AppHeader.Draw(new PhoneContext(area, theme, navigation), "Log a Sale", back);
+        AppHeader.Draw(new PhoneContext(area, theme, navigation), Loc.T(L.VenueSync.LogSale), back);
 
         if (salesServicesLoadedForVenueId != configuration.VenueSyncSelectedVenueId)
         {
@@ -46,8 +47,8 @@ internal sealed partial class VenueSyncApp
 
             var serviceLabel = salesSelectedServiceIndex >= 0 && salesSelectedServiceIndex < salesServices.Count
                 ? salesServices[salesSelectedServiceIndex].Name
-                : "Select a service";
-            if (SettingsRow.Disclosure(card.NextRow(), "Service", serviceLabel, theme))
+                : Loc.T(L.VenueSync.SelectService);
+            if (SettingsRow.Disclosure(card.NextRow(), Loc.T(L.VenueSync.ServiceLabel), serviceLabel, theme))
             {
                 if (salesServices.Count == 0)
                 {
@@ -79,12 +80,12 @@ internal sealed partial class VenueSyncApp
             ImGui.SetCursorScreenPos(new Vector2(customerRow.Min.X,
                 customerRow.Center.Y - Metrics.Size.FieldHeight * scale * 0.5f));
             ImGui.SetNextItemWidth(customerFieldWidth);
-            ImGui.InputTextWithHint("##sales-customer", "Customer (optional)", ref salesCustomerName, 64);
+            ImGui.InputTextWithHint("##sales-customer", Loc.T(L.VenueSync.CustomerHint), ref salesCustomerName, 64);
 
             var targetButtonCenter = new Vector2(customerRow.Max.X - targetButtonWidth * 0.5f, customerRow.Center.Y);
             if (AppSkin.IconButton(targetButtonCenter, targetButtonWidth * 0.5f,
                     FontAwesomeIcon.Crosshairs.ToIconString(), theme.TextMuted, theme.GroupedCard, 0.6f, theme,
-                    "Use current target"))
+                    Loc.T(L.VenueSync.UseCurrentTarget)))
             {
                 var name = Plugin.TargetManager.Target?.Name.TextValue;
                 if (!string.IsNullOrWhiteSpace(name))
@@ -97,21 +98,22 @@ internal sealed partial class VenueSyncApp
             ImGui.SetCursorScreenPos(new Vector2(amountRow.Min.X,
                 amountRow.Center.Y - Metrics.Size.FieldHeight * scale * 0.5f));
             ImGui.SetNextItemWidth(amountRow.Width);
-            ImGui.InputTextWithHint("##sales-amount", "Amount (gil)", ref salesAmountText, 12,
+            ImGui.InputTextWithHint("##sales-amount", Loc.T(L.VenueSync.AmountHint), ref salesAmountText, 12,
                 ImGuiInputTextFlags.CharsDecimal);
 
             if (salesError is not null)
             {
                 var errorRow = card.NextRow();
-                Marquee.DrawLeftAuto("venuesync.sales.error", $"{salesError} — tap Log Sale to retry", errorRow.Min.X,
-                    errorRow.Center.Y - 10f * scale, errorRow.Width, TextStyles.Caption1, theme.Danger);
+                Marquee.DrawLeftAuto("venuesync.sales.error", Loc.T(L.VenueSync.RetryLogSaleHint, salesError),
+                    errorRow.Min.X, errorRow.Center.Y - 10f * scale, errorRow.Width, TextStyles.Caption1,
+                    theme.Danger);
             }
 
             var submitRow = card.NextRow();
             var submitButtonHeight = Metrics.Size.FieldHeight * scale;
             var submitButtonRect = new Rect(new Vector2(submitRow.Min.X, submitRow.Center.Y - submitButtonHeight * 0.5f),
                 new Vector2(submitRow.Max.X, submitRow.Center.Y + submitButtonHeight * 0.5f));
-            if (AppSkin.PillButton(submitButtonRect, "Log Sale", filled: true, theme))
+            if (AppSkin.PillButton(submitButtonRect, Loc.T(L.VenueSync.LogSaleButton), filled: true, theme))
             {
                 _ = SubmitSaleAsync();
             }
@@ -142,7 +144,7 @@ internal sealed partial class VenueSyncApp
     {
         if (!decimal.TryParse(salesAmountText, out var amount) || amount <= 0)
         {
-            salesError = "Enter a valid amount";
+            salesError = Loc.T(L.VenueSync.EnterValidAmount);
             return;
         }
 
@@ -168,7 +170,7 @@ internal sealed partial class VenueSyncApp
             }
             else
             {
-                salesError = result?.Error ?? "Failed to log sale";
+                salesError = result?.Error ?? Loc.T(L.VenueSync.FailedLogSale);
             }
         }
         catch (Exception exception)
