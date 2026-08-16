@@ -140,7 +140,7 @@ internal static class TourRegistry
                 GuideStep.Tap(L.Onboarding.AethergramSearchTitle, L.Onboarding.AethergramSearchBody,
                     "aethergram.tab.search", "aethergram.tab.search"),
                 GuideStep.Point(L.Onboarding.AethergramActivityTitle, L.Onboarding.AethergramActivityBody,
-                    "aethergram.tab.activity"),
+                    "aethergram.activity"),
                 GuideStep.Tap(L.Onboarding.AethergramProfileTitle, L.Onboarding.AethergramProfileBody,
                     "aethergram.tab.profile", "aethergram.tab.profile"),
                 GuideStep.Note(L.Onboarding.AethergramSafeTitle, L.Onboarding.AethergramSafeBody),
