@@ -307,11 +307,17 @@ internal sealed class FontService : IDisposable
             e.OnPreBuild(tk =>
             {
                 var ranges = bucketRanges[bucket] ?? glyphRanges;
-                primary = tk.AddFontFromFile(path,
-                    new SafeFontConfig
-                    {
-                        SizePx = pixels, GlyphRanges = ranges, GlyphExtraSpacing = new Vector2(tracking, 0f),
-                    });
+                var config = new SafeFontConfig
+                {
+                    SizePx = pixels, GlyphRanges = ranges, GlyphExtraSpacing = new Vector2(tracking, 0f),
+                };
+                if (!File.Exists(path))
+                {
+                    primary = tk.AddDalamudAssetFont(Dalamud.DalamudAsset.NotoSansCjkRegular, config);
+                    return;
+                }
+
+                primary = tk.AddFontFromFile(path, config);
                 tk.AddDalamudAssetFont(Dalamud.DalamudAsset.NotoSansCjkRegular,
                     new SafeFontConfig { SizePx = pixels, GlyphRanges = ranges, MergeFont = primary, });
             });
