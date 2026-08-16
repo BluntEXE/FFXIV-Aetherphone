@@ -4458,6 +4458,7 @@
   "changelog.r1000.65": "Bazı Wine sürümlerinde kurtarma kodu kurulumunun başarısız olması düzeltildi",
   "changelog.r1000.66": "Diğer sekiz dilde İngilizce kalan birkaç metin düzeltildi, bunlara cüzdandaki rozet anahtarı ve dosya seçicideki video dosya türü de dahil",
   "changelog.r1000.81": "Pazar'ın aynı eşya için aynı hizmetkârı defalarca listelemesi ve bunun diğer dünyalardaki gerçek ilanları listeden çıkarması düzeltildi",
+  "changelog.r1000.82": "Chirper ve Aethergram'ın üst çubukları yenilendi: uygulama adı yine sığıyor, iki uygulama da aynı Senin İçin ve Takip şeridini kullanıyor, yeni gönderiler kayan bir düğmeden başlıyor ve Etkinlik, Daha fazla menüsünün yanındaki zilde duruyor",
   "coin.ruleCheckinHint": "Uygulamayı aç ve düğmeye dokun, günde bir kez",
   "coin.ruleStreakHint": "Günde 4 artarak 20'ye çıkar; haftada bir kaçırılan gün affedilir",
   "coin.ruleWelcomeHint": "İlk girişinde bir kerelik hediye",

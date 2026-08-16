@@ -1448,6 +1448,8 @@ internal static class L
                 "Fixed a handful of strings falling back to English in the other eight languages, including the wallet badge toggle and the video file type in the file picker"),
             new("changelog.r1000.81",
                 "Fixed Market repeating the same retainer several times for one item, which pushed real listings from other worlds out of the list"),
+            new("changelog.r1000.82",
+                "Revamped the Chirper and Aethergram headers: the app name fits again, both apps share one For You and Following strip, new posts start from a floating button, and Activity sits on a bell beside a More menu"),
         };
 
         public static readonly LocString[] Release0999 =

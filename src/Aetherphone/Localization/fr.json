@@ -4458,6 +4458,7 @@
   "changelog.r1000.65": "Correction de la création d'un code de récupération qui échouait sur certaines versions de Wine",
   "changelog.r1000.66": "Correction de quelques textes qui retombaient en anglais dans les huit autres langues, dont l'interrupteur de la pastille du portefeuille et le type de fichier vidéo dans le sélecteur de fichiers",
   "changelog.r1000.81": "Correction du Marché qui répétait le même servant plusieurs fois pour un même objet, ce qui chassait de la liste de véritables offres d'autres mondes",
+  "changelog.r1000.82": "Les en-têtes de Chirper et Aethergram ont été repensés : le nom de l'application tient de nouveau, les deux applications partagent une barre Pour vous et Abonnements, les nouvelles publications partent d'un bouton flottant et Activité se trouve sur une cloche à côté d'un menu Plus",
   "coin.ruleCheckinHint": "Ouvrez l'appli et touchez le bouton, une fois par jour",
   "coin.ruleStreakHint": "Augmente de 4 par jour jusqu'à 20 ; un jour manqué par semaine est pardonné",
   "coin.ruleWelcomeHint": "Un cadeau unique lors de votre premier pointage",
