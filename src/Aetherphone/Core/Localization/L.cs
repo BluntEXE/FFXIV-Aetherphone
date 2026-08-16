@@ -1338,6 +1338,14 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release1001 =
+        {
+            new("changelog.r1001.0",
+                "Fixed the phone failing to load for some people after updating: when AetherStream cannot attach to the game's display, the phone now starts normally instead of taking the whole plugin down with it"),
+            new("changelog.r1001.1",
+                "A missing font file no longer leaves the phone without any text: the phone falls back to the game's own font until the file is back"),
+        };
+
         public static readonly LocString[] Release1000 =
         {
             new("changelog.r1000.68",

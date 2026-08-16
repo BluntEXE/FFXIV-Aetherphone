@@ -4404,6 +4404,8 @@
   "coin.rollupMore": "ve {0} tane daha",
   "coin.settingsRow": "Aether Coin",
   "coin.aboutWhat": "Telefonu kullandığın için küçük bir teşekkür: giriş yap, oyna, konuş ve görünüşe harca.",
+  "changelog.r1001.0": "Bazı kişilerde güncellemeden sonra telefonun açılmaması düzeltildi: AetherStream oyunun görüntüsüne bağlanamadığında telefon artık her şeyi birlikte götürmek yerine normal şekilde başlıyor",
+  "changelog.r1001.1": "Eksik bir yazı tipi dosyası artık telefonu yazısız bırakmıyor: dosya geri gelene kadar telefon oyunun kendi yazı tipine düşüyor",
   "changelog.r1000.68": "Oyun parasıyla oynanan yeni bir kumarhane uygulaması olan Gamba eklendi: kasada coinler fişe dönüşüyor ve salondaki her şey onlarla oynanıyor, ortak masalarda blackjack'ten canlı tombala odalarına, ortak bir çarka, slotlara, kazı kazana, bir bar vardiyasına ve günde bir ücretsiz çevirmeye kadar; her el kanıtlanabilir biçimde adil, geçmiş her bahsi ve her ödemeyi saklıyor, kayıp limitlerini hem ev hem sen koyuyorsun ve gerçek para hiçbir yerde işin içinde değil",
   "changelog.r1000.69": "Aethernet'in para birimi Aether Coin eklendi: her gün giriş yapmak, oyun salonunda oynamak, gerçek aramalar ve sohbetler yapmak ve kalıcı gönderiler paylaşmak coin kazandırıyor, cüzdan hedeflerini, serilerini ve her kazanç kuralını izliyor, coin mağazası çerçeveler ve rozetler satıyor ve bakiye Kontrol Merkezi'nde ve ana ekran widget'ında görünüyor",
   "changelog.r1000.70": "Dünyaya yerleştirdiğin bir ekranda bağlantı oynatan video uygulaması MogCast eklendi: bir URL yapıştır ya da PC'den dosya seç, sıradakini kuyruğa al ve birlikte izleme odaları kur; sunucu katılmak isteyenleri onaylıyor ve herkes aynı ana düşüyor",
