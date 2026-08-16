@@ -1447,6 +1447,8 @@ internal static class L
                 "Fixed setting up a recovery code failing on some Wine builds"),
             new("changelog.r1000.66",
                 "Fixed a handful of strings falling back to English in the other eight languages, including the wallet badge toggle and the video file type in the file picker"),
+            new("changelog.r1000.81",
+                "Fixed Market repeating the same retainer several times for one item, which pushed real listings from other worlds out of the list"),
         };
 
         public static readonly LocString[] Release0999 =

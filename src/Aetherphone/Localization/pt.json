@@ -4458,6 +4458,7 @@
   "changelog.r1000.64": "Corrigido: uma carta com 10 quebrava em duas linhas nos jogos de cartas, contribuído por Farroness",
   "changelog.r1000.65": "Corrigido: a criação de um código de recuperação falhava em algumas builds do Wine",
   "changelog.r1000.66": "Corrigidos alguns textos que caíam para o inglês nos outros oito idiomas, incluindo o botão do contador da carteira e o tipo de arquivo de vídeo no seletor de arquivos",
+  "changelog.r1000.81": "Corrigido: o Mercado repetia o mesmo retainer várias vezes para um mesmo item, o que empurrava anúncios reais de outros mundos para fora da lista",
   "coin.ruleCheckinHint": "Abra o app e toque no botão, uma vez por dia",
   "coin.ruleStreakHint": "Cresce 4 por dia até 20; um dia perdido por semana é perdoado",
   "coin.ruleWelcomeHint": "Um presente único no seu primeiro check-in",

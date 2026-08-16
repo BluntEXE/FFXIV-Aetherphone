@@ -4458,6 +4458,7 @@
   "changelog.r1000.64": "Fixed a card reading 10 breaking across two lines in the card games, contributed by Farroness",
   "changelog.r1000.65": "Fixed setting up a recovery code failing on some Wine builds",
   "changelog.r1000.66": "Fixed a handful of strings falling back to English in the other eight languages, including the wallet badge toggle and the video file type in the file picker",
+  "changelog.r1000.81": "Fixed Market repeating the same retainer several times for one item, which pushed real listings from other worlds out of the list",
   "coin.ruleCheckinHint": "Open the app and tap the button, once a day",
   "coin.ruleStreakHint": "Grows 4 a day up to 20; one missed day a week is forgiven",
   "coin.ruleWelcomeHint": "A one-time gift on your first check-in",

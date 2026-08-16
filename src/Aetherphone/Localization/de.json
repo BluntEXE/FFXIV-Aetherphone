@@ -4458,6 +4458,7 @@
   "changelog.r1000.64": "Behoben, dass eine Karte mit einer 10 in den Kartenspielen über zwei Zeilen brach, beigetragen von Farroness",
   "changelog.r1000.65": "Behoben, dass das Einrichten eines Wiederherstellungscodes unter manchen Wine-Builds fehlschlug",
   "changelog.r1000.66": "Behoben, dass einige Texte in den anderen acht Sprachen auf Englisch zurückfielen, darunter der Schalter für das Wallet-Kennzeichen und der Videodateityp in der Dateiauswahl",
+  "changelog.r1000.81": "Behoben, dass der Markt denselben Gehilfen mehrfach für einen Gegenstand anzeigte und dadurch echte Angebote aus anderen Welten aus der Liste verdrängte",
   "coin.ruleCheckinHint": "Öffne die App und tippe auf den Knopf, einmal am Tag",
   "coin.ruleStreakHint": "Wächst um 4 pro Tag bis 20; ein verpasster Tag pro Woche wird verziehen",
   "coin.ruleWelcomeHint": "Ein einmaliges Geschenk beim ersten Check-in",
