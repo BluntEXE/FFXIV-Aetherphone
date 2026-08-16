@@ -37,8 +37,6 @@ internal struct GroupCard
         this.startY = startY;
         this.rowCount = rowCount;
         this.showSeparators = showSeparators;
-        // Sized to rowCount: worst case every NextRow() call has rowSpan == 1, so the number of
-        // calls (and thus boundaries to track) never exceeds rowCount.
         callTops = new float[rowCount];
         callBottoms = new float[rowCount];
         callHovered = new bool[rowCount];
@@ -77,13 +75,6 @@ internal struct GroupCard
         var rowTop = MathF.Round(startY + rowIndex * rowHeight * scale);
         var rowBottom = MathF.Round(rowTop + rowSpan * rowHeight * scale);
 
-        // Separators are no longer drawn here. A separator sitting between two rows can never be
-        // made to line up pixel-perfectly with whichever adjacent row's hover fill happens to be
-        // drawn (rounded-corner "cap" fills go through Squircle's AA convex-fill path, which feathers
-        // its edges by roughly half a pixel — enough for the hairline beneath/above it to peek
-        // through no matter the draw order). Instead we record this row's bounds and defer every
-        // boundary separator to End(), where we skip drawing it if either adjacent row was hovered
-        // this frame — so a separator and a hover fill can never visually coexist at a boundary.
         callTops[callCount] = rowTop;
         callBottoms[callCount] = rowBottom;
         lastCallIndex = callCount;
@@ -98,17 +89,6 @@ internal struct GroupCard
         return new Rect(new Vector2(left + padding, rowTop), new Vector2(right - padding, rowBottom));
     }
 
-    // Draws the hover/press overlay for the row most recently returned by NextRow, full-bleed to
-    // the card's own edges (not inset by row padding) so the highlight covers the entire row with
-    // no visible gap. Previously this branched on first/last row and used Squircle.FillCap, which
-    // draws the flat body and the rounded-corner cap as two separate overlapping fills (a 1.5px
-    // double-blend zone, intentional so no seam shows between them) — fine for opaque fills, but a
-    // low-alpha translucent hover color painted twice over that strip comes out visibly darker/
-    // lighter than the rest of the fill, a faint line at exactly the boundary between the flat body
-    // and the rounded cap. Instead, draw the CARD's own true shape once (same min/max/radius Begin
-    // used) and clip it to just this row's bounds — the visible slice is naturally correct at outer
-    // corners (it's the real card outline) and a perfectly clean cut at row boundaries (clipping
-    // hides pixels, it doesn't blend two fills together), so there's nothing left to double-paint.
     public void DrawHoverHighlight(Vector4 color)
     {
         callHovered[lastCallIndex] = true;
@@ -125,11 +105,6 @@ internal struct GroupCard
 
     public void End()
     {
-        // Draw every row-boundary separator now, skipping any boundary where either adjacent row
-        // was hover-highlighted this frame. For consumers that never call DrawHoverHighlight, no
-        // call index is ever marked hovered, so this draws exactly the same separators as before —
-        // just later in the frame's draw list, which is visually identical since nothing else
-        // renders in between that this reordering could affect.
         if (showSeparators)
         {
             var dl = ImGui.GetWindowDrawList();

@@ -11,8 +11,6 @@ namespace Aetherphone.Apps.VenueSync;
 internal sealed partial class VenueSyncApp
 {
     private const float StatusCardHeight = 90f;
-    // Matches Jobs' RowHeight (Apps/Jobs/JobsApp.cs:23): content rows need the extra vertical
-    // space for an icon tile plus a two-tier title/subtitle stack.
     private const float ActionRowHeight = 64f;
 
     private void DrawDashboard(Rect area)
@@ -65,8 +63,6 @@ internal sealed partial class VenueSyncApp
             var textTop = card.Center.Y - 20f * scale;
             var textMaxWidth = MathF.Max(1f, card.Max.X - pad - buttonWidth - Metrics.Space.Md * scale - textLeft);
 
-            // Independent hover per line, per this codebase's stacked-Marquee bug class: each
-            // line calls its own *Auto variant instead of sharing one hover bool.
             Marquee.DrawLeftAuto("venuesync.dashboard.venue", venueLabel, textLeft, textTop, textMaxWidth,
                 TextStyles.Headline, theme.TextStrong);
             DrawStatusPill(drawList, new Vector2(textLeft, textTop + 22f * scale), Loc.T(L.VenueSync.OnShift),
@@ -76,9 +72,6 @@ internal sealed partial class VenueSyncApp
             var button = new Rect(new Vector2(card.Max.X - pad - buttonWidth, card.Center.Y - buttonHeight * 0.5f),
                 new Vector2(card.Max.X - pad, card.Center.Y + buttonHeight * 0.5f));
 
-            // Fire-and-forget convenience action only: the Shifts screen owns the
-            // authoritative clock-in/out UI with full error handling, so no inline error
-            // display is needed here.
             if (AppSkin.DangerPillButton(button, Loc.T(L.VenueSync.ClockOut), theme))
             {
                 var shiftId = activeShift.Id;
@@ -168,12 +161,6 @@ internal sealed partial class VenueSyncApp
         ImGui.Dummy(new Vector2(width, ActionRowHeight * scale));
     }
 
-    // Content row matching Jobs' DrawJobRow (Apps/Jobs/JobsApp.cs:351-425): icon tile, a bold
-    // primary title, a muted secondary subtitle beneath it, an optional small trailing count, and
-    // a hover overlay over the whole row when it's clickable. The overlay is drawn via
-    // GroupCard.DrawHoverHighlight so it's full-bleed to the card edges and corner-rounded to
-    // match, rather than a plain square AddRectFilled inset by the row's own padding. `card` is
-    // unused (and may be `default`) when `clickable` is false, since the highlight never draws.
     private bool DrawActionRow(GroupCard card, Rect row, FontAwesomeIcon icon, Vector4 tint, string title,
         string subtitle, string? trailingCount, string idSuffix, bool clickable = true)
     {
@@ -215,8 +202,6 @@ internal sealed partial class VenueSyncApp
         return clickable && UiInteract.Click(row.Min, row.Max, hovered);
     }
 
-    // Mirrors Muster's DrawStatusPill (Apps/Muster/MusterCard.cs:109-131), minus the live dot and
-    // pulse: on-shift is a steady state, not a live countdown, so no per-frame animation here.
     private static void DrawStatusPill(ImDrawListPtr drawList, Vector2 topLeft, string label, Vector4 tint,
         float scale)
     {
@@ -232,8 +217,6 @@ internal sealed partial class VenueSyncApp
             tint, TextStyles.Caption1);
     }
 
-    // Mirrors Jobs' DrawActiveBadge (Apps/Jobs/JobsApp.cs:427-439): accent @ ~20% alpha pill with
-    // accent-colored text.
     private static void DrawCountBadge(ImDrawListPtr drawList, Vector2 rightCenter, string text, Vector4 accent,
         float scale)
     {

@@ -10,11 +10,6 @@ namespace Aetherphone.Apps.VenueSync;
 
 internal enum ShiftRowAction { None, ClockIn, ClockOut, Claim }
 
-// Mirrors Jobs' DrawJobRow (Apps/Jobs/JobsApp.cs:351-425): icon tile on the left, a two-tier
-// title/subtitle stack, a hover overlay over the row, and an accent-tinted status pill for state
-// that isn't already conveyed by the action button's color. The hover overlay itself is drawn via
-// GroupCard.DrawHoverHighlight so it's full-bleed to the card edges and corner-rounded to match,
-// instead of the plain square AddRectFilled Jobs uses over its own (non-GroupCard) row bounds.
 internal static class ShiftRow
 {
     public const float Height = 64f;
@@ -40,9 +35,6 @@ internal static class ShiftRow
         var actionRect = new Rect(new Vector2(row.Max.X - buttonWidth, row.Center.Y - buttonHeight * 0.5f),
             new Vector2(row.Max.X, row.Center.Y + buttonHeight * 0.5f));
 
-        // Independent hover per interactive region: this is the deliberate fix for a known bug
-        // class in this codebase where two stacked elements share one hover-bool. The row overlay
-        // excludes the button's own hit-rect so the two hovers never fight each other.
         var overButton = UiInteract.Hover(actionRect.Min, actionRect.Max);
         var rowHovered = !overButton && UiInteract.Hover(row.Min, row.Max);
         if (rowHovered)
@@ -60,9 +52,6 @@ internal static class ShiftRow
         var textRight = actionRect.Min.X - 12f * scale;
         var textWidth = MathF.Max(1f, textRight - textLeft);
 
-        // Independent hover per stacked line, per this codebase's known Marquee bug class: each
-        // line calls its own *Auto variant, which computes hover internally, instead of sharing
-        // one hover bool across both lines.
         Marquee.DrawLeftAuto($"shiftrow-title-{idSuffix}", titleText, textLeft, row.Center.Y - 16f * scale, textWidth,
             TextStyles.Headline, theme.TextStrong);
         Marquee.DrawLeftAuto($"shiftrow-time-{idSuffix}", timeText, textLeft, row.Center.Y + 4f * scale, textWidth,

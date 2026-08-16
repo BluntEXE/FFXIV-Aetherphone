@@ -24,14 +24,9 @@ internal sealed partial class VenueSyncApp : IPhoneApp
     private readonly RouterDraw<VenueSyncRoute> drawView;
     private readonly Action back;
 
-    // Populated at the top of Draw() and reused by sub-screens so they don't need to
-    // reconstruct PhoneContext themselves, mirroring the pattern used by VenuesApp/FeedbackApp.
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
 
-    // AppSkin instance for content-app conventions (SectionHeading, EmptyState, hero Card):
-    // mirrors the Notes/Calendar pattern of deriving a palette from the live PhoneTheme rather
-    // than a hardcoded per-app palette.
     private readonly AppSkin ui = new(AppPalettes.VenueSync(PhoneTheme.Default));
 
     public VenueSyncApp(VenueSyncApiClient client, VenueSyncState state, Configuration configuration,
@@ -59,9 +54,6 @@ internal sealed partial class VenueSyncApp : IPhoneApp
         ResetTransientState();
     }
 
-    // Per-visit status banners and error messages: clearing them here stops a stale
-    // "Clocked out. 3.2h worked." or "Failed to load venues" from reappearing next time
-    // the app is opened, long after the action that produced it.
     private void ResetTransientState()
     {
         shiftsActionError = null;
@@ -105,8 +97,6 @@ internal sealed partial class VenueSyncApp : IPhoneApp
         }
     }
 
-    // VenueSyncState/VenueSyncApiClient are constructed and owned by the app registry/services
-    // layer, not by this app, so there is nothing for this app to dispose.
     public void Dispose()
     {
     }
