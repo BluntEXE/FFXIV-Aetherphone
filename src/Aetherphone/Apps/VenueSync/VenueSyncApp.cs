@@ -49,12 +49,26 @@ internal sealed partial class VenueSyncApp : IPhoneApp
     public void OnOpened()
     {
         router.Reset();
+        ResetTransientState();
         state.EnsureShiftsFresh(false);
     }
 
     public void OnClosed()
     {
         router.Reset();
+        ResetTransientState();
+    }
+
+    // Per-visit status banners and error messages: clearing them here stops a stale
+    // "Clocked out. 3.2h worked." or "Failed to load venues" from reappearing next time
+    // the app is opened, long after the action that produced it.
+    private void ResetTransientState()
+    {
+        shiftsActionError = null;
+        shiftsActionNotice = null;
+        salesError = null;
+        settingsError = null;
+        settingsCharacterLinkStatus = null;
     }
 
     public void Draw(in PhoneContext context)
