@@ -24,7 +24,6 @@ internal static class ShiftRow
         PhoneTheme theme, string idSuffix)
     {
         var scale = ImGuiHelpers.GlobalScale;
-        var drawList = ImGui.GetWindowDrawList();
 
         var titleText = isOpen ? (roleName ?? Loc.T(L.VenueSync.OpenShiftTitle)) : shift.Status switch
         {
@@ -59,12 +58,8 @@ internal static class ShiftRow
         var tileTint = isActive ? theme.Danger : theme.Accent;
         IconTile.Draw(iconCenter, iconSize, IconTile.Surface(tileTint), FontAwesomeIcon.Clock);
 
-        var openBadgeText = Loc.T(L.VenueSync.OpenBadge);
         var textLeft = row.Min.X + iconSize + 14f * scale;
-        var badgeReserve = isOpen
-            ? Typography.Measure(openBadgeText, TextStyles.Caption2).X + 16f * scale + 10f * scale
-            : 0f;
-        var textRight = actionRect.Min.X - 12f * scale - badgeReserve;
+        var textRight = actionRect.Min.X - 12f * scale;
         var textWidth = MathF.Max(1f, textRight - textLeft);
 
         // Independent hover per stacked line, per this codebase's known Marquee bug class, each
@@ -74,12 +69,6 @@ internal static class ShiftRow
             TextStyles.Headline, theme.TextStrong);
         Marquee.DrawLeftAuto($"shiftrow-time-{idSuffix}", timeText, textLeft, row.Center.Y + 4f * scale, textWidth,
             TextStyles.Footnote, theme.TextMuted);
-
-        if (isOpen)
-        {
-            DrawOpenBadge(drawList, new Vector2(actionRect.Min.X - 12f * scale, row.Center.Y), openBadgeText, theme,
-                scale);
-        }
 
         if (rowHovered)
         {
@@ -93,24 +82,6 @@ internal static class ShiftRow
         if (!clicked) return ShiftRowAction.None;
         if (isOpen) return ShiftRowAction.Claim;
         return isActive ? ShiftRowAction.ClockOut : ShiftRowAction.ClockIn;
-    }
-
-    // Mirrors Jobs' DrawActiveBadge (Apps/Jobs/JobsApp.cs:427-439): accent @ ~20% alpha pill with
-    // accent-colored text, used here to call out claimable shifts the same way Jobs calls out the
-    // active gearset.
-    private static void DrawOpenBadge(ImDrawListPtr drawList, Vector2 rightCenter, string text, PhoneTheme theme,
-        float scale)
-    {
-        var textSize = Typography.Measure(text, TextStyles.Caption2);
-        var padX = 8f * scale;
-        var padY = 4f * scale;
-        var width = textSize.X + padX * 2f;
-        var height = textSize.Y + padY * 2f;
-        var max = new Vector2(rightCenter.X, rightCenter.Y + height * 0.5f);
-        var min = new Vector2(max.X - width, rightCenter.Y - height * 0.5f);
-        Squircle.Fill(drawList, min, max, height * 0.5f, ImGui.GetColorU32(Palette.WithAlpha(theme.Accent, 0.2f)));
-        Typography.Draw(drawList, new Vector2(min.X + padX, rightCenter.Y - textSize.Y * 0.5f), text, theme.Accent,
-            TextStyles.Caption2);
     }
 
     private static string FormatTimeRange(string startIso, string endIso)

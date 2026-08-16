@@ -6,6 +6,7 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Core.VenueSync;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.VenueSync;
 
@@ -92,5 +93,24 @@ internal sealed partial class VenueSyncApp : IPhoneApp
     // layer, not by this app, so there is nothing for this app to dispose.
     public void Dispose()
     {
+    }
+
+    // Shared field chrome for row-based InputText fields (Sales/Settings), matching AppSkin.Field's
+    // own painting: a Metrics.Radius.Field squircle in FieldSurface, transparent ImGui frame so the
+    // stock frame background doesn't show through, and TitleInk text.
+    private bool DrawStyledField(Rect rect, string imguiId, string hint, ref string value, int maxLength,
+        ImGuiInputTextFlags flags = ImGuiInputTextFlags.None)
+    {
+        var scale = UiScale.Current;
+        var drawList = ImGui.GetWindowDrawList();
+        Squircle.Fill(drawList, rect.Min, rect.Max, Metrics.Radius.Field * scale, ImGui.GetColorU32(ui.FieldSurface));
+        ImGui.SetCursorScreenPos(new Vector2(rect.Min.X + Metrics.Space.Md * scale,
+            rect.Center.Y - ImGui.GetFrameHeight() * 0.5f));
+        ImGui.SetNextItemWidth(rect.Width - Metrics.Space.Md * 2f * scale);
+        using (ImRaii.PushColor(ImGuiCol.FrameBg, AppSkin.Transparent))
+        using (ImRaii.PushColor(ImGuiCol.Text, ui.TitleInk))
+        {
+            return ImGui.InputTextWithHint(imguiId, hint, ref value, maxLength, flags);
+        }
     }
 }

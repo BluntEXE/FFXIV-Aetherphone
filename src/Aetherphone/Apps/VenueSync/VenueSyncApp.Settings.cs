@@ -37,11 +37,11 @@ internal sealed partial class VenueSyncApp
             var eyeWidth = 60f * scale;
             var eyeHeight = Metrics.Size.FieldHeight * scale;
             var fieldWidth = MathF.Max(1f, keyRow.Width - eyeWidth - Metrics.Space.Sm * scale);
-            ImGui.SetCursorScreenPos(new Vector2(keyRow.Min.X, keyRow.Center.Y - ImGui.GetFrameHeight() * 0.5f));
-            ImGui.SetNextItemWidth(fieldWidth);
+            var keyFieldRect = new Rect(new Vector2(keyRow.Min.X, keyRow.Center.Y - eyeHeight * 0.5f),
+                new Vector2(keyRow.Min.X + fieldWidth, keyRow.Center.Y + eyeHeight * 0.5f));
             var flags = settingsKeyVisible ? ImGuiInputTextFlags.None : ImGuiInputTextFlags.Password;
-            if (ImGui.InputTextWithHint("##sync-api-key", Loc.T(L.VenueSync.ApiKeyHint), ref settingsKeyInput, 128,
-                    flags))
+            if (DrawStyledField(keyFieldRect, "##sync-api-key", Loc.T(L.VenueSync.ApiKeyHint), ref settingsKeyInput,
+                    128, flags))
             {
                 configuration.VenueSyncApiKey = settingsKeyInput;
                 configuration.Save();

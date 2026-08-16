@@ -77,10 +77,12 @@ internal sealed partial class VenueSyncApp
             var targetButtonWidth = 36f * scale;
             var customerFieldWidth = MathF.Max(1f,
                 customerRow.Width - targetButtonWidth - Metrics.Space.Sm * scale);
-            ImGui.SetCursorScreenPos(new Vector2(customerRow.Min.X,
-                customerRow.Center.Y - Metrics.Size.FieldHeight * scale * 0.5f));
-            ImGui.SetNextItemWidth(customerFieldWidth);
-            ImGui.InputTextWithHint("##sales-customer", Loc.T(L.VenueSync.CustomerHint), ref salesCustomerName, 64);
+            var fieldHeight = Metrics.Size.FieldHeight * scale;
+            var customerFieldRect = new Rect(
+                new Vector2(customerRow.Min.X, customerRow.Center.Y - fieldHeight * 0.5f),
+                new Vector2(customerRow.Min.X + customerFieldWidth, customerRow.Center.Y + fieldHeight * 0.5f));
+            DrawStyledField(customerFieldRect, "##sales-customer", Loc.T(L.VenueSync.CustomerHint),
+                ref salesCustomerName, 64);
 
             var targetButtonCenter = new Vector2(customerRow.Max.X - targetButtonWidth * 0.5f, customerRow.Center.Y);
             if (AppSkin.IconButton(targetButtonCenter, targetButtonWidth * 0.5f,
@@ -95,10 +97,9 @@ internal sealed partial class VenueSyncApp
             }
 
             var amountRow = card.NextRow();
-            ImGui.SetCursorScreenPos(new Vector2(amountRow.Min.X,
-                amountRow.Center.Y - Metrics.Size.FieldHeight * scale * 0.5f));
-            ImGui.SetNextItemWidth(amountRow.Width);
-            ImGui.InputTextWithHint("##sales-amount", Loc.T(L.VenueSync.AmountHint), ref salesAmountText, 12,
+            var amountFieldRect = new Rect(new Vector2(amountRow.Min.X, amountRow.Center.Y - fieldHeight * 0.5f),
+                new Vector2(amountRow.Max.X, amountRow.Center.Y + fieldHeight * 0.5f));
+            DrawStyledField(amountFieldRect, "##sales-amount", Loc.T(L.VenueSync.AmountHint), ref salesAmountText, 12,
                 ImGuiInputTextFlags.CharsDecimal);
 
             if (salesError is not null)

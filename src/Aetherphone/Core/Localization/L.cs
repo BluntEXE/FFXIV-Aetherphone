@@ -945,7 +945,6 @@ internal static class L
             new("venuesync.completedShiftTitle", "Completed Shift");
         public static readonly LocString UpcomingShiftTitle =
             new("venuesync.upcomingShiftTitle", "Upcoming Shift");
-        public static readonly LocString OpenBadge = new("venuesync.openBadge", "OPEN");
         public static readonly LocString UnknownTime = new("venuesync.unknownTime", "Unknown time");
     }
 
