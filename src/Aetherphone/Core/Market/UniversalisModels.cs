@@ -28,6 +28,7 @@ internal sealed class UniversalisListing
     [JsonPropertyName("hq")] public bool Hq { get; set; }
     [JsonPropertyName("worldName")] public string? WorldName { get; set; }
     [JsonPropertyName("retainerName")] public string? RetainerName { get; set; }
+    [JsonPropertyName("listingID")] public string? ListingId { get; set; }
     [JsonPropertyName("lastReviewTime")] public long LastReviewTime { get; set; }
 }
 

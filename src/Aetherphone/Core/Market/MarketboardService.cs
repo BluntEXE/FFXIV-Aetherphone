@@ -23,6 +23,7 @@ internal sealed class MarketboardService : IDisposable
 {
     private const string ApiRoot = "https://universalis.app/api/v2";
     private const int ListingCount = 20;
+    private const int ListingFetchCount = 60;
     private const int HistoryCount = 25;
     private const int AggregatedBatch = 80;
     private static readonly TimeSpan FreshFor = TimeSpan.FromSeconds(45);
@@ -239,7 +240,7 @@ internal sealed class MarketboardService : IDisposable
             using (await throttle.EnterAsync(token).ConfigureAwait(false))
             {
                 var url =
-                    $"{ApiRoot}/{Uri.EscapeDataString(scope.ApiName)}/{itemId}?listings={ListingCount}&entries={HistoryCount}";
+                    $"{ApiRoot}/{Uri.EscapeDataString(scope.ApiName)}/{itemId}?listings={ListingFetchCount}&entries={HistoryCount}";
                 var data = await http
                     .GetJsonAsync(url, UniversalisJsonContext.Default.UniversalisCurrentData, null, token)
                     .ConfigureAwait(false);
@@ -325,15 +326,11 @@ internal sealed class MarketboardService : IDisposable
 
     private static MarketSnapshot BuildSnapshot(uint itemId, MarketScope scope, UniversalisCurrentData data)
     {
-        var rawListings = data.Listings ?? Array.Empty<UniversalisListing>();
-        var listings = new MarketListing[rawListings.Length];
+        var listings = DedupeListings(data.Listings, out var unitsForSale);
         var hasHq = false;
-        for (var index = 0; index < rawListings.Length; index++)
+        for (var index = 0; index < listings.Length; index++)
         {
-            var listing = rawListings[index];
-            hasHq |= listing.Hq;
-            listings[index] = new MarketListing(listing.PricePerUnit, listing.Quantity, listing.Total, listing.Hq,
-                listing.WorldName ?? string.Empty, listing.RetainerName ?? string.Empty);
+            hasHq |= listings[index].Hq;
         }
 
         var rawSales = data.RecentHistory ?? Array.Empty<UniversalisSale>();
@@ -349,8 +346,42 @@ internal sealed class MarketboardService : IDisposable
         hasHq |= data.MinPriceHq > 0 || data.MaxPriceHq > 0 || data.HqSaleVelocity > 0;
         return new MarketSnapshot(itemId, MarketFormat.FromUnix(data.LastUploadTime), scope.IsMultiWorld, hasHq,
             listings, sales, data.MinPriceNq, data.MinPriceHq, data.AveragePriceNq, data.AveragePriceHq,
-            data.MaxPriceNq, data.MaxPriceHq, data.NqSaleVelocity, data.HqSaleVelocity, data.UnitsForSale,
+            data.MaxPriceNq, data.MaxPriceHq, data.NqSaleVelocity, data.HqSaleVelocity, unitsForSale,
             data.UnitsSold);
+    }
+
+    private static MarketListing[] DedupeListings(UniversalisListing[]? rawListings, out int unitsForSale)
+    {
+        unitsForSale = 0;
+        if (rawListings is null || rawListings.Length == 0)
+        {
+            return Array.Empty<MarketListing>();
+        }
+
+        var listings = new MarketListing[Math.Min(rawListings.Length, ListingCount)];
+        var seen = new HashSet<string>(rawListings.Length, StringComparer.Ordinal);
+        var kept = 0;
+        for (var index = 0; index < rawListings.Length && kept < listings.Length; index++)
+        {
+            var listing = rawListings[index];
+            var listingId = listing.ListingId;
+            if (listingId is { Length: > 0 } && !seen.Add(listingId))
+            {
+                continue;
+            }
+
+            unitsForSale += listing.Quantity;
+            listings[kept] = new MarketListing(listing.PricePerUnit, listing.Quantity, listing.Total, listing.Hq,
+                listing.WorldName ?? string.Empty, listing.RetainerName ?? string.Empty);
+            kept++;
+        }
+
+        if (kept != listings.Length)
+        {
+            Array.Resize(ref listings, kept);
+        }
+
+        return listings;
     }
 
     private static long SelectAggregatedPrice(UniversalisAggregatedResult result, MarketScopeKind kind) =>
