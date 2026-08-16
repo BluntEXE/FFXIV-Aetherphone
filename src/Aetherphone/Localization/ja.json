@@ -5142,7 +5142,7 @@
   "venueSync.noShiftData": "シフトデータがありません",
   "venueSync.noShiftsTitle": "シフトなし",
   "venueSync.noShiftsSubtitle": "現在予定はありません。",
-  "venueSync.openToClaim": "募集中: 受注可能",
+  "venueSync.openToClaim": "募集中のシフト",
   "venueSync.upcoming": "予定",
   "venueSync.failedToClockIn": "出勤に失敗しました。",
   "venueSync.failedToClockOut": "退勤に失敗しました。",

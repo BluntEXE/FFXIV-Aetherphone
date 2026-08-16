@@ -901,7 +901,7 @@ internal static class L
         public static readonly LocString NoShiftsTitle = new("venueSync.noShiftsTitle", "No Shifts");
         public static readonly LocString NoShiftsSubtitle =
             new("venueSync.noShiftsSubtitle", "Nothing scheduled right now.");
-        public static readonly LocString OpenToClaim = new("venueSync.openToClaim", "OPEN: CLAIM");
+        public static readonly LocString OpenToClaim = new("venueSync.openToClaim", "OPEN SHIFTS");
         public static readonly LocString Upcoming = new("venueSync.upcoming", "UPCOMING");
         public static readonly LocString DayToday = new("venueSync.dayToday", "Today");
         public static readonly LocString DayTomorrow = new("venueSync.dayTomorrow", "Tomorrow");

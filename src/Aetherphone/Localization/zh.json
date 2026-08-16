@@ -5142,7 +5142,7 @@
   "venueSync.noShiftData": "没有班次数据",
   "venueSync.noShiftsTitle": "没有班次",
   "venueSync.noShiftsSubtitle": "目前没有安排。",
-  "venueSync.openToClaim": "开放认领",
+  "venueSync.openToClaim": "空缺班次",
   "venueSync.upcoming": "即将到来",
   "venueSync.failedToClockIn": "打卡上班失败。",
   "venueSync.failedToClockOut": "打卡下班失败。",

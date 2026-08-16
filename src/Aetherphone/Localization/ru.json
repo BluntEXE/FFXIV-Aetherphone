@@ -5142,7 +5142,7 @@
   "venueSync.noShiftData": "Нет данных о смене",
   "venueSync.noShiftsTitle": "Нет смен",
   "venueSync.noShiftsSubtitle": "Сейчас ничего не запланировано.",
-  "venueSync.openToClaim": "ОТКРЫТО: ЗАБРАТЬ",
+  "venueSync.openToClaim": "ОТКРЫТЫЕ СМЕНЫ",
   "venueSync.upcoming": "ПРЕДСТОЯЩИЕ",
   "venueSync.failedToClockIn": "Не удалось начать смену.",
   "venueSync.failedToClockOut": "Не удалось закончить смену.",

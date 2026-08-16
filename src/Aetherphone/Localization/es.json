@@ -5142,7 +5142,7 @@
   "venueSync.noShiftData": "Sin datos de turno",
   "venueSync.noShiftsTitle": "Sin turnos",
   "venueSync.noShiftsSubtitle": "Nada programado por ahora.",
-  "venueSync.openToClaim": "ABIERTO: RECLAMAR",
+  "venueSync.openToClaim": "TURNOS ABIERTOS",
   "venueSync.upcoming": "PRÓXIMOS",
   "venueSync.failedToClockIn": "No se pudo registrar la entrada.",
   "venueSync.failedToClockOut": "No se pudo registrar la salida.",
