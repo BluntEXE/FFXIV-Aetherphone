@@ -223,7 +223,7 @@ internal sealed class PhoneServices : IDisposable
         var loadoutStore = new Social.LoadoutStore(aethernetSession, aethernet.Account);
         Social.Frames.Use(frameCatalog);
         Windows.Components.UserName.Configure(badgeCatalog, remoteImages);
-        Moderation.ModerationNoticeText.Configure(badgeCatalog);
+        Moderation.ModerationNoticeText.Configure(badgeCatalog, frameCatalog);
         var coinApi = new AethernetApi(http, aethernetSession, "coin");
         var coins = new Coins.CoinStore(aethernetSession, coinApi.Coins);
         var coinCatalog = new Coins.CoinCatalogStore(aethernetSession, coinApi.Coins);

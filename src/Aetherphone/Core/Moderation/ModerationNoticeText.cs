@@ -19,20 +19,25 @@ internal static class ModerationNoticeKinds
     public const int BadgeRevoked = 8;
     public const int EconomyAction = 9;
     public const int MarkedSensitive = 10;
+    public const int FrameGranted = 11;
+    public const int FrameRevoked = 12;
 }
 
 internal static class ModerationNoticeText
 {
     private static BadgeCatalogStore? badgeCatalog;
+    private static FrameCatalogStore? frameCatalog;
 
-    public static void Configure(BadgeCatalogStore catalog)
+    public static void Configure(BadgeCatalogStore catalog, FrameCatalogStore frames)
     {
         badgeCatalog = catalog;
+        frameCatalog = frames;
     }
 
     public static void Reset()
     {
         badgeCatalog = null;
+        frameCatalog = null;
     }
 
     public static bool IsBlocking(ModerationNoticeDto notice)
@@ -40,8 +45,18 @@ internal static class ModerationNoticeText
         return notice.Kind != ModerationNoticeKinds.ReportOutcome
             && notice.Kind != ModerationNoticeKinds.BadgeGranted
             && notice.Kind != ModerationNoticeKinds.BadgeRevoked
+            && notice.Kind != ModerationNoticeKinds.FrameGranted
+            && notice.Kind != ModerationNoticeKinds.FrameRevoked
             && notice.Kind != ModerationNoticeKinds.EconomyAction
             && notice.Kind != ModerationNoticeKinds.MarkedSensitive;
+    }
+
+    public static bool IsCosmeticGrant(ModerationNoticeDto notice)
+    {
+        return notice.Kind == ModerationNoticeKinds.BadgeGranted
+            || notice.Kind == ModerationNoticeKinds.BadgeRevoked
+            || notice.Kind == ModerationNoticeKinds.FrameGranted
+            || notice.Kind == ModerationNoticeKinds.FrameRevoked;
     }
 
     public static string Title(ModerationNoticeDto notice)
@@ -56,6 +71,8 @@ internal static class ModerationNoticeText
             ModerationNoticeKinds.SignedOut => Loc.T(L.Moderation.NoticeSignedOutTitle),
             ModerationNoticeKinds.BadgeGranted => Loc.T(L.Moderation.NoticeBadgeTitle),
             ModerationNoticeKinds.BadgeRevoked => Loc.T(L.Moderation.NoticeBadgeRevokedTitle),
+            ModerationNoticeKinds.FrameGranted => Loc.T(L.Moderation.NoticeFrameTitle),
+            ModerationNoticeKinds.FrameRevoked => Loc.T(L.Moderation.NoticeFrameRevokedTitle),
             ModerationNoticeKinds.EconomyAction => Loc.T(L.Moderation.NoticeCoinTitle),
             ModerationNoticeKinds.MarkedSensitive => Loc.T(L.Moderation.NoticeSensitiveTitle),
             _ => Loc.T(L.Moderation.NoticeThanksTitle),
@@ -72,6 +89,11 @@ internal static class ModerationNoticeText
         if (notice.Kind == ModerationNoticeKinds.BadgeGranted || notice.Kind == ModerationNoticeKinds.BadgeRevoked)
         {
             return BadgeBody(notice);
+        }
+
+        if (notice.Kind == ModerationNoticeKinds.FrameGranted || notice.Kind == ModerationNoticeKinds.FrameRevoked)
+        {
+            return FrameBody(notice);
         }
 
         if (notice.Kind == ModerationNoticeKinds.SignedOut)
@@ -238,6 +260,40 @@ internal static class ModerationNoticeText
 
         return Loc.T(revoked ? L.Moderation.NoticeBadgeRevokedBodyMany : L.Moderation.NoticeBadgeBodyMany,
             string.Join(", ", names));
+    }
+
+    private static string FrameBody(ModerationNoticeDto notice)
+    {
+        var revoked = notice.Kind == ModerationNoticeKinds.FrameRevoked;
+        var names = FrameNames(notice.Detail);
+        if (names.Count == 0)
+        {
+            return Loc.T(revoked ? L.Moderation.NoticeFrameRevokedBodyFallback : L.Moderation.NoticeFrameBodyFallback);
+        }
+
+        if (names.Count == 1)
+        {
+            return Loc.T(revoked ? L.Moderation.NoticeFrameRevokedBodyOne : L.Moderation.NoticeFrameBodyOne, names[0]);
+        }
+
+        return revoked
+            ? Loc.T(L.Moderation.NoticeFrameRevokedBodyMany, string.Join(", ", names))
+            : Loc.T(L.Moderation.NoticeFrameBodyOne, names[0]);
+    }
+
+    private static List<string> FrameNames(string detail)
+    {
+        var ids = detail.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var names = new List<string>(ids.Length);
+        for (var index = 0; index < ids.Length; index++)
+        {
+            if (frameCatalog?.Find(ids[index]) is { } style)
+            {
+                names.Add(style.Name);
+            }
+        }
+
+        return names;
     }
 
     private static List<string> BadgeNames(string detail)
