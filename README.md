@@ -99,6 +99,12 @@ If you liked this plugin, take a look at my other Dalamud work. You might find s
 
 → [XeldarAlz Dalamud Plugins](https://github.com/XeldarAlz/DalamudPlugins)
 
+## Legal
+
+Using the online features means accepting the terms of service. The privacy policy covers what the Aethernet service does with your data; the offline half of the plugin sends nothing anywhere.
+
+→ [Terms of Service](TERMS.md) · [Privacy Policy](PRIVACY.md)
+
 ## License
 
 AGPL-3.0-or-later. See [LICENSE.md](LICENSE.md).
