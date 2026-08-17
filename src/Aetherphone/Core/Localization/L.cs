@@ -1352,6 +1352,8 @@ internal static class L
             new("changelog.r1003.1", "Two new frames in the Aether Coin shop"),
             new("changelog.r1003.2",
                 "Added a terms of service and a privacy policy, both linked from the project page"),
+            new("changelog.r1003.4",
+                "Fixed the artist credit on three phone cases: Cosmic EX and Caduceus are Zivyl's work, and Runic is Remi's"),
             new("changelog.r1003.3", "A few more changes specific to the Chinese game version"),
         };
 

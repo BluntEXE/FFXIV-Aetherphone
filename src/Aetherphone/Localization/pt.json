@@ -4415,6 +4415,7 @@
   "changelog.r1003.0": "O telefone agora avisa quando uma moldura de avatar é concedida ou removida, em vez de mudar o anel ao redor do seu avatar em silêncio",
   "changelog.r1003.1": "Duas novas molduras na loja do Aether Coin",
   "changelog.r1003.2": "Adicionados termos de serviço e política de privacidade, ambos com link na página do projeto",
+  "changelog.r1003.4": "Corrigido o crédito do artista em três capas: Cosmic EX e Caduceus são de Zivyl, e Runic é de Remi",
   "changelog.r1003.3": "Mais algumas mudanças específicas da versão chinesa do jogo",
   "changelog.r1002.0": "Algumas mudanças específicas para a versão chinesa do jogo",
   "changelog.r1001.0": "Corrigido o telefone não carregando para algumas pessoas depois de atualizar: quando o AetherStream não consegue se conectar à tela do jogo, o telefone agora inicia normalmente em vez de derrubar tudo junto",

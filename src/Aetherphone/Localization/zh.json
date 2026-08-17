@@ -4415,6 +4415,7 @@
   "changelog.r1003.0": "现在获得或失去头像框时手机会通知你，不再是头像外圈悄悄改变",
   "changelog.r1003.1": "Aether Coin 商店新增两款头像框",
   "changelog.r1003.2": "新增服务条款与隐私政策，均可从项目页面访问",
+  "changelog.r1003.4": "修正了三款手机壳的作者署名：Cosmic EX 和 Caduceus 出自 Zivyl，Runic 出自 Remi",
   "changelog.r1003.3": "针对国服的更多调整",
   "changelog.r1002.0": "针对国服的一些调整",
   "changelog.r1001.0": "修复了部分玩家更新后手机无法加载的问题：当 AetherStream 无法接入游戏画面时，手机现在会正常启动，而不是把整个插件一起拖垮",

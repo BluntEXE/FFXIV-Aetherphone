@@ -4415,6 +4415,7 @@
   "changelog.r1003.0": "El teléfono ahora te avisa cuando recibes o pierdes un marco de avatar, en lugar de cambiar el anillo alrededor de tu avatar en silencio",
   "changelog.r1003.1": "Dos marcos nuevos en la tienda de Aether Coin",
   "changelog.r1003.2": "Se añadieron unos términos de servicio y una política de privacidad, ambos enlazados desde la página del proyecto",
+  "changelog.r1003.4": "Se corrigió el crédito del artista en tres fundas: Cosmic EX y Caduceus son obra de Zivyl, y Runic de Remi",
   "changelog.r1003.3": "Algunos cambios más específicos de la versión china del juego",
   "changelog.r1002.0": "Algunos cambios específicos para la versión china del juego",
   "changelog.r1001.0": "Corregido que el teléfono no cargara para algunas personas tras actualizar: cuando AetherStream no puede engancharse a la pantalla del juego, el teléfono ahora arranca con normalidad en vez de arrastrarlo todo consigo",

@@ -4415,6 +4415,7 @@
   "changelog.r1003.0": "Das Telefon sagt dir jetzt Bescheid, wenn ein Avatar-Rahmen vergeben oder entzogen wird, statt den Ring um deinen Avatar stillschweigend zu ändern",
   "changelog.r1003.1": "Zwei neue Rahmen im Aether Coin Shop",
   "changelog.r1003.2": "Nutzungsbedingungen und Datenschutzerklärung hinzugefügt, beide von der Projektseite aus verlinkt",
+  "changelog.r1003.4": "Die Künstlerangabe auf drei Handyhüllen korrigiert: Cosmic EX und Caduceus stammen von Zivyl, Runic von Remi",
   "changelog.r1003.3": "Ein paar weitere Änderungen speziell für die chinesische Spielversion",
   "changelog.r1002.0": "Einige Änderungen speziell für die chinesische Spielversion",
   "changelog.r1001.0": "Behoben, dass das Telefon nach einem Update bei manchen nicht mehr lud: Wenn AetherStream sich nicht an die Anzeige des Spiels hängen kann, startet das Telefon jetzt normal, statt alles mit sich zu reißen",
