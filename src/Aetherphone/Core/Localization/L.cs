@@ -1338,6 +1338,11 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release1002 =
+        {
+            new("changelog.r1002.0", "A few changes specific to the Chinese game version"),
+        };
+
         public static readonly LocString[] Release1001 =
         {
             new("changelog.r1001.0",
@@ -3207,6 +3212,8 @@ internal static class L
         public static readonly LocString UnavailableTitle = new("velvet.unavailableTitle", "Velvet is unavailable");
         public static readonly LocString UnavailableBody = new("velvet.unavailableBody",
             "Velvet is an adults only space and is not available on Lalafell characters. If you recently changed your race, this clears once the Lodestone reflects it.");
+        public static readonly LocString UnavailableRegionBody = new("velvet.unavailableRegionBody",
+            "Velvet is not available on the Chinese game version. Everything else on your phone works as normal.");
         public static readonly LocString DiscoveryHeader = new("velvet.discoveryHeader", "Discovery");
         public static readonly LocString DiscoverableHelp =
             new("velvet.discoverableHelp", "When on, your profile can be found by others in Discover.");

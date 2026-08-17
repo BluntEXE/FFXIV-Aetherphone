@@ -84,6 +84,7 @@ internal static class FailureCodes
     public const string PhotoTagRejected = "photo_tag_rejected";
     public const string VelvetRequestsClosed = "velvet_requests_closed";
     public const string VelvetRequestsMutualsOnly = "velvet_requests_mutuals_only";
+    public const string VelvetRegionBlocked = "velvet_region_blocked";
     public const string PatreonLinkExpired = "patreon_link_expired";
     public const string PatreonUnavailable = "patreon_unavailable";
     public const string PatreonAlreadyLinked = "patreon_already_linked";
