@@ -222,8 +222,9 @@ internal sealed partial class VelvetShell : IPhoneApp
             TourHolds.Hold(Id);
             store.EnsureMe();
             TickHeartbeat();
+            var reason = store.RegionBlocked ? L.Velvet.UnavailableRegionBody : L.Velvet.UnavailableBody;
             EmptyState.Draw(context.Content, ui, FontAwesomeIcon.Ban, Loc.T(L.Velvet.UnavailableTitle),
-                Loc.T(L.Velvet.UnavailableBody));
+                Loc.T(reason));
             return;
         }
 

@@ -4,6 +4,7 @@ using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Home;
+using Aetherphone.Core.Localization;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Message;
 using Aetherphone.Core.Net;
@@ -33,6 +34,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
     private volatile VelvetProfileDto? me;
     private volatile bool loadingMe;
     private volatile bool accessBlocked;
+    private volatile bool regionBlocked;
     private volatile bool avatarBusy;
     private volatile AvatarUploadOutcome avatarFailure = AvatarUploadOutcome.Unreachable;
     private volatile bool introBusy;
@@ -161,6 +163,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
 
     public VelvetProfileDto? Me => me;
     public bool AccessBlocked => accessBlocked;
+    public bool RegionBlocked => regionBlocked;
     public bool HasProfile => me is not null;
     public bool AvatarBusy => avatarBusy;
 
@@ -252,6 +255,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         discoverEpoch++;
         me = null;
         accessBlocked = false;
+        regionBlocked = false;
         meGate.Reset();
         discoverResults = Array.Empty<VelvetProfileDto>();
 
@@ -526,7 +530,9 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         work.Run("profile load", async token =>
         {
             var status = 0;
-            var profile = await client.MeAsync(token, code => status = code).ConfigureAwait(false);
+            var refusal = AepFailure.None;
+            var profile = await client.MeAsync(token, code => status = code, failure => refusal = failure)
+                .ConfigureAwait(false);
             if (epoch != accountEpoch)
             {
                 return;
@@ -536,10 +542,12 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
             {
                 me = profile;
                 accessBlocked = false;
+                regionBlocked = false;
             }
             else if (status == 403)
             {
                 accessBlocked = true;
+                regionBlocked = refusal.Code == FailureCodes.VelvetRegionBlocked;
             }
         }, () => loadingMe = false);
     }
