@@ -1345,6 +1345,16 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release1003 =
+        {
+            new("changelog.r1003.0",
+                "The phone now tells you when an avatar frame is given to you or taken away, instead of the ring around your avatar changing in silence"),
+            new("changelog.r1003.1", "Two new frames in the Aether Coin shop"),
+            new("changelog.r1003.2",
+                "Added a terms of service and a privacy policy, both linked from the project page"),
+            new("changelog.r1003.3", "A few more changes specific to the Chinese game version"),
+        };
+
         public static readonly LocString[] Release1002 =
         {
             new("changelog.r1002.0", "A few changes specific to the Chinese game version"),
