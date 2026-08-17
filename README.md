@@ -89,9 +89,9 @@ Questions, ideas, or just want to hang out with other players? Come say hi on Di
 
 ## Contributing
 
-Aetherphone is open source and contributions are welcome. Start with the developer documentation, then read the contribution guide.
+Aetherphone is open source and contributions are welcome. Start with the developer documentation, then read the contribution guide. Want to improve one of the nine translations instead? That needs no code, no build, and no git: the translator guide walks through it in a browser.
 
-→ [Developer documentation](docs/README.md) · [Contributing guide](CONTRIBUTING.md)
+→ [Developer documentation](docs/README.md) · [Contributing guide](CONTRIBUTING.md) · [Translator guide](docs/translating.md)
 
 ## More from me
 

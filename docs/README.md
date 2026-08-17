@@ -41,7 +41,7 @@ Terms that recur across every doc, defined once here:
 
 Every doc opens with one paragraph saying what it covers and when to read it, then a "Key files" table mapping the paths you will open most. Docs end with "Gotchas" (real traps verified in code, worth skimming even if you skip the middle) and "Related docs" links. When any doc and the code disagree, the code wins.
 
-The one exception is [the art asset specification](ART-ASSET-SPEC.md), which is written for artists rather than engineers and keeps its own numbered, table-first format.
+Two exceptions are written for contributors who are not engineers and keep their own format: [the art asset specification](ART-ASSET-SPEC.md), numbered and table first, and [the translator guide](translating.md), a step-by-step walkthrough that assumes no tooling beyond a browser.
 
 ## All docs
 
@@ -86,6 +86,7 @@ The one exception is [the art asset specification](ART-ASSET-SPEC.md), which is 
 | Doc | What it covers |
 | --- | --- |
 | [Art asset specification](ART-ASSET-SPEC.md) | The spec artists follow to produce app icons and phone cases that drop in without engineering work |
+| [Translator guide](translating.md) | For translators with no code background: editing one language JSON and opening a pull request entirely in the browser |
 
 ## Find it fast
 
@@ -106,6 +107,7 @@ Common first questions, each with the doc and section that answers it:
 13. **How do I add a page to the Settings app?** [Creating your own app: add a Settings page](creating-an-app.md#add-a-settings-page). A common good first issue.
 14. **How do I add a home screen widget or a Control Center tile?** [App framework: home widgets](app-framework.md#home-widgets) and [Control Center tiles](app-framework.md#control-center-tiles).
 15. **How do voice calls work?** [Networking: calls](networking.md#calls) covers the lifecycle, audio pipeline, and UI entry points.
+16. **I want to fix a translation but I do not write code.** [Translator guide](translating.md): edit one JSON file and open the pull request from the browser.
 
 ## Contributing and questions
 
