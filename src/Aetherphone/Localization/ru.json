@@ -5110,6 +5110,7 @@
   "account.risingStonesSignIn": "Войти через Rising Stones",
   "account.risingStonesUuidLabel": "UID Rising Stones",
   "account.risingStonesUuidHint": "Ваш UID указан числом на странице вашего профиля Rising Stones.",
+  "account.risingStonesThirdPartyWarning": "Сторонние программы нарушают пользовательское соглашение FINAL FANTASY XIV. Использование Aetherphone может поставить вашу игровую учётную запись под угрозу, и мы не сможем обжаловать блокировку.",
   "account.risingStonesVerifyTitle": "Подтверждение через Rising Stones",
   "account.risingStonesVerifyIntro": "Добавьте этот код в личную подпись на Rising Stones. Потом его можно удалить.",
   "account.risingStonesStep2": "Откройте настройки профиля Rising Stones",

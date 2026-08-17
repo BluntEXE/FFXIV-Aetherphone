@@ -370,33 +370,45 @@ internal sealed partial class SetupOverlay
         var player = gameData.LocalPlayer;
         var hasPlayer = player is not null && player.Name.TextValue.Length > 0;
         var logInFirst = Loc.T(L.Account.LogInFirst);
+        var warning = Loc.T(L.Account.RisingStonesThirdPartyWarning);
         var labelBlock = LineBlock(TextStyles.Footnote) + Metrics.Space.Xs * scale;
         var fieldHeight = FieldHeightUnits * scale;
         var bodyWidth = BodyWidth(screen);
-        var extraHeight = hasPlayer
+        var warningHeight = WrappedHeight(warning, TextStyles.Footnote, bodyWidth);
+        var extraHeight = (hasPlayer
             ? Metrics.Space.Xl * scale + labelBlock + fieldHeight + Metrics.Space.Md * scale +
               WrappedHeight(hint, TextStyles.Footnote, bodyWidth)
-            : Metrics.Space.Xl * scale + WrappedHeight(logInFirst, TextStyles.Subheadline, bodyWidth);
+            : Metrics.Space.Xl * scale + WrappedHeight(logInFirst, TextStyles.Subheadline, bodyWidth)) +
+            Metrics.Space.Md * scale + warningHeight;
         var contentHeight = HeaderHeight(screen, body) + extraHeight;
         var top = CenteredTop(screen, contentHeight, 2) + offset.Y;
         var y = DrawHeader(drawList, screen, offset, alpha, FontAwesomeIcon.UserCircle, theme.Accent,
             Loc.T(L.Setup.AccountTitle), body, theme, top);
         var ready = false;
+        float warningTop;
         if (hasPlayer)
         {
             var fieldRect = CardRect(screen, offset, y + Metrics.Space.Xl * scale + labelBlock, fieldHeight);
             DrawField(drawList, fieldRect, theme, "setupRisingStonesUuid", Loc.T(L.Account.RisingStonesUuidLabel),
                 ref risingStonesUuidDraft, SignInFlow.RisingStonesUuidMaxLength, alpha, live);
             risingStonesUuidDraft = SanitizeDigits(risingStonesUuidDraft);
+            var hintTop = fieldRect.Max.Y + Metrics.Space.Md * scale;
             Typography.DrawWrappedCentered(drawList, hint, TextStyles.Footnote, Fade(theme.TextMuted, alpha),
-                new Vector2(screen.Center.X + offset.X, fieldRect.Max.Y + Metrics.Space.Md * scale), bodyWidth);
+                new Vector2(screen.Center.X + offset.X, hintTop), bodyWidth);
+            warningTop = hintTop + WrappedHeight(hint, TextStyles.Footnote, bodyWidth) + Metrics.Space.Md * scale;
             ready = live && !flow.Busy && risingStonesUuidDraft.Length > 0;
         }
         else
         {
+            var noticeTop = y + Metrics.Space.Xl * scale;
             Typography.DrawWrappedCentered(drawList, logInFirst, TextStyles.Subheadline, Fade(theme.TextMuted, alpha),
-                new Vector2(screen.Center.X + offset.X, y + Metrics.Space.Xl * scale), bodyWidth);
+                new Vector2(screen.Center.X + offset.X, noticeTop), bodyWidth);
+            warningTop = noticeTop + WrappedHeight(logInFirst, TextStyles.Subheadline, bodyWidth) +
+                         Metrics.Space.Md * scale;
         }
+
+        Typography.DrawWrappedCentered(drawList, warning, TextStyles.Footnote, Fade(theme.Danger, alpha),
+            new Vector2(screen.Center.X + offset.X, warningTop), bodyWidth);
 
         if (Primary(drawList, ButtonRect(screen, offset, 1), Loc.T(L.Account.RisingStonesSignIn), theme, alpha, live,
                 ready))

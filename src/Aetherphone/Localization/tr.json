@@ -5110,6 +5110,7 @@
   "account.risingStonesSignIn": "Rising Stones ile giriş yap",
   "account.risingStonesUuidLabel": "Rising Stones UID",
   "account.risingStonesUuidHint": "UID, Rising Stones profil sayfanda görünen numaradır.",
+  "account.risingStonesThirdPartyWarning": "Üçüncü taraf araçlar FINAL FANTASY XIV kullanıcı sözleşmesini ihlal eder. Aetherphone kullanmak oyun hesabını riske atabilir ve bir askıya alma işlemine itiraz edemeyiz.",
   "account.risingStonesVerifyTitle": "Rising Stones ile doğrula",
   "account.risingStonesVerifyIntro": "Bu kodu Rising Stones'taki kişisel imzana ekle. Sonrasında silebilirsin.",
   "account.risingStonesStep2": "Rising Stones profil ayarlarını aç",

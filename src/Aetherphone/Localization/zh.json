@@ -5110,6 +5110,7 @@
   "account.risingStonesSignIn": "使用石之家登录",
   "account.risingStonesUuidLabel": "石之家 UID",
   "account.risingStonesUuidHint": "UID 是你石之家个人主页上显示的数字。",
+  "account.risingStonesThirdPartyWarning": "第三方工具违反《最终幻想14》用户协议。使用 Aetherphone 可能会让你的游戏账号面临风险，我们无法对封禁提出申诉。",
   "account.risingStonesVerifyTitle": "通过石之家验证",
   "account.risingStonesVerifyIntro": "将此代码添加到你石之家的个性签名中，验证完成后即可删除。",
   "account.risingStonesStep2": "打开石之家的个人资料设置",

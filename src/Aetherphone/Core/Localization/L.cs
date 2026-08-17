@@ -2412,6 +2412,7 @@ internal static class L
         public static readonly LocString RisingStonesSignIn = new("account.risingStonesSignIn", "Sign in with Rising Stones");
         public static readonly LocString RisingStonesUuidLabel = new("account.risingStonesUuidLabel", "Rising Stones UID");
         public static readonly LocString RisingStonesUuidHint = new("account.risingStonesUuidHint", "Your UID is the number shown on your Rising Stones profile page.");
+        public static readonly LocString RisingStonesThirdPartyWarning = new("account.risingStonesThirdPartyWarning", "Third-party tools break the FINAL FANTASY XIV user agreement. Using Aetherphone can put your game account at risk, and we cannot appeal a suspension.");
         public static readonly LocString RisingStonesVerifyTitle = new("account.risingStonesVerifyTitle", "Verify with Rising Stones");
         public static readonly LocString RisingStonesVerifyIntro = new("account.risingStonesVerifyIntro", "Add this code to your personal signature on Rising Stones. You can remove it afterwards.");
         public static readonly LocString RisingStonesStep2 = new("account.risingStonesStep2", "Open your Rising Stones profile settings");

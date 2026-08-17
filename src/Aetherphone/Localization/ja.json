@@ -5110,6 +5110,7 @@
   "account.risingStonesSignIn": "石之家でサインイン",
   "account.risingStonesUuidLabel": "石之家UID",
   "account.risingStonesUuidHint": "UIDは石之家のプロフィールページに表示されている番号です。",
+  "account.risingStonesThirdPartyWarning": "サードパーティ製ツールはFINAL FANTASY XIVの利用規約に違反します。Aetherphoneの使用はゲームアカウントを危険にさらす可能性があり、アカウント停止に対して当方は異議を申し立てられません。",
   "account.risingStonesVerifyTitle": "石之家で認証",
   "account.risingStonesVerifyIntro": "このコードを石之家のプロフィール署名（个性签名）に追加してください。認証後は削除できます。",
   "account.risingStonesStep2": "石之家のプロフィール設定を開く",
