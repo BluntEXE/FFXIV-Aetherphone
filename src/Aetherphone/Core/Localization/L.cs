@@ -1345,6 +1345,12 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release1005 =
+        {
+            new("changelog.r1005.0",
+                "The Casino and Aether Coin are available again on the Chinese game version"),
+        };
+
         public static readonly LocString[] Release1004 =
         {
             new("changelog.r1004.0",
