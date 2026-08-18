@@ -81,7 +81,7 @@ You can support Aetherphone voluntarily through Patreon. Support is a donation t
 
 ## 11. Moderation, suspension, and termination
 
-We moderate content on Aethernet. Posts and images pass automated review, users can report content and accounts, and we act on reports. We may remove content, restrict features, suspend an account, or terminate it, with or without notice, where we consider it necessary to enforce these terms or to protect users.
+We moderate content on Aethernet. Posts and images are reviewed by our human moderation team, users can report content and accounts, and we act on reports. We may remove content, restrict features, suspend an account, or terminate it, with or without notice, where we consider it necessary to enforce these terms or to protect users.
 
 If your account is suspended you will be told, and where we can, why. You can appeal through the contact route in section 15.
 

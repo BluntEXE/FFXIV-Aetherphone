@@ -4,7 +4,7 @@
 
 This policy explains what Aethernet, the online service behind Aetherphone's social features, does with your personal data.
 
-Aetherphone's offline features do not send anything anywhere. Wallpapers, cases, games, the clock, timers, notes, and the game-data apps all run on your computer and store their data in your local Dalamud configuration. This policy is about the online half.
+Aetherphone's truly offline features do not send anything anywhere. Wallpapers, cases, the clock, timers, and notes run on your computer and store their data in your local Dalamud configuration. The mini-games keep their scores locally too, though while you are signed in your play sessions are reported to Aethernet as part of the Aether Coin history described below. The game-data apps are not offline: they fetch public game data directly from third-party services, from your machine, as described in the section on third-party services below. Everything else in this policy is about Aethernet.
 
 ## Who is responsible
 
@@ -34,7 +34,7 @@ Your personal data is handled the same way wherever you use the service from.
 
 **Technical data.** Your IP address, the plugin version, and timestamps, recorded when your client connects. Your operating system, game language, and similar diagnostics are included only when you choose to submit a support report.
 
-**Moderation data.** Reports you make or that are made about you, automated moderation results on content you post, and any enforcement action on your account.
+**Moderation data.** Reports you make or that are made about you, moderator review outcomes on content you post, and any enforcement action on your account.
 
 **Coin and cosmetics.** Your Aether Coin balance, the history of how it was earned and spent, and the cosmetic items (badges and avatar frames) you own and wear, including when one was granted to you or removed.
 
@@ -66,12 +66,25 @@ We use a small number of service providers, each processing data only on our ins
 
 - **Railway**, hosting the application and its database
 - **Cloudflare**, object storage for the images, video, and audio you upload, plus network delivery and abuse filtering
-- **An automated content moderation service**, reviewing posted text and images for material that breaks the rules
 - **Patreon**, only if you choose to link it
 
 A current list of named sub-processors is available on request at the address above.
 
 We may disclose data where we are legally required to, or where it is necessary to investigate a serious safety issue. We will tell you when we are permitted to.
+
+## Third-party services the plugin contacts directly
+
+Some apps fetch public game data straight from independent third-party services, from your machine, without going through Aethernet and without needing an account. These services are not our processors and we have no agreement with them: each one receives your IP address and the request itself (for example the item, region, or page you asked for), and each has its own privacy policy. We do not send them your Aethernet account data.
+
+- **Universalis** (universalis.app): market board prices
+- **Lodestone News** (lodestonenews.com): the News app's articles
+- **The housing data service** (housing-api.yozoracho.dev): housing plot listings
+- **FFXIV Collect** (ffxivcollect.com): the Collections app's catalogues
+- **FFXIV Venues and Partake** (api.ffxivvenues.com, api.partake.gg): venue and event listings
+- **Radio Browser** (all.api.radio-browser.info): the Music app's radio station directory
+- **GitHub** (raw.githubusercontent.com, api.github.com): the Shortcuts app's plugin catalogue, and the mpv and yt-dlp downloads AetherStream needs to play video
+- **YouTube** (youtube.com, i.ytimg.com): video streams and thumbnails when you play a YouTube link in AetherStream
+- **The Lodestone** (na.finalfantasyxiv.com): sign-in verification and character portraits
 
 ## International transfers
 
