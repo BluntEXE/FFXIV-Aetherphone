@@ -56,14 +56,47 @@ body:
       label: Which part of the phone?
       description: Where did the problem show up?
       options:
-        - Messages
-        - Contacts
-        - My Character
-        - Skywatcher (weather)
+        - Activity (character)
+        - Aether Coin
+        - Aethergram
+        - Announcements
+        - App Store
+        - Calculator
+        - Calendar
+        - Camera
+        - Chirper
         - Clock
-        - Notifications / ringtone (toasts, sounds)
-        - Settings
+        - Collections
+        - Dailies
+        - Feedback
+        - Fishing
+        - Gamba (casino)
+        - Games
+        - Health
         - Home screen / device shell
+        - Housing
+        - Inventory
+        - Jobs
+        - Linkpearl (game chat)
+        - Maps
+        - Market
+        - Message (direct messages)
+        - MogCast (video)
+        - Music
+        - Muster
+        - News
+        - Notes
+        - Notifications / ringtone (toasts, sounds)
+        - Photos
+        - Polls
+        - Settings
+        - Shortcuts
+        - Skywatcher (weather)
+        - Timers
+        - Velvet
+        - Venues
+        - Wallet
+        - Yellow Pages
         - Other / not sure
     validations:
       required: true
