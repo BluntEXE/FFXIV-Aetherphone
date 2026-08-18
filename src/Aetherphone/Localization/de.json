@@ -4419,6 +4419,8 @@
   "coin.aboutWhat": "Ein kleines Dankeschön fürs Benutzen des Handys: einchecken, spielen, reden und in Optik investieren.",
   "changelog.r1006.0": "Music und MogCast spielen wieder Titel ab, nachdem eine Änderung bei YouTube jeden Titel am Laden hinderte, während die Suche weiter funktionierte",
   "changelog.r1006.1": "In Velvet und den anderen Chat-Apps gesendete Fotos werden nach einer Weile nicht mehr zu einem grauen Kasten, und beim Zurückscrollen wird ein Foto nicht erneut heruntergeladen",
+  "changelog.r1006.2": "Chinesisch und Japanisch zeigen jetzt jedes Zeichen an, statt dort Lücken zu lassen, wo Text stehen sollte",
+  "changelog.r1006.3": "Der Sprachwechsel des Telefons ist jetzt nach einem kurzen Ladevorgang fertig, mit dem gesamten neuen Alphabet sofort bereit",
   "changelog.r1005.0": "Das Casino und Aether Coin sind in der chinesischen Spielversion wieder verfügbar",
   "changelog.r1004.0": "Velvet und verschleierte Beiträge sind in der chinesischen Spielversion wieder verfügbar",
   "changelog.r1003.0": "Das Telefon sagt dir jetzt Bescheid, wenn ein Avatar-Rahmen vergeben oder entzogen wird, statt den Ring um deinen Avatar stillschweigend zu ändern",

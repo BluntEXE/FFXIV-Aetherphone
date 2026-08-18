@@ -4419,6 +4419,8 @@
   "coin.aboutWhat": "Un petit merci pour votre usage du téléphone : pointez, jouez, discutez et dépensez en style.",
   "changelog.r1006.0": "Music et MogCast lisent de nouveau les morceaux, après un changement chez YouTube qui empêchait tout titre de se charger alors que la recherche fonctionnait encore",
   "changelog.r1006.1": "Les photos envoyées dans Velvet et les autres apps de discussion ne deviennent plus un carré gris au bout d'un moment, et y revenir ne les retélécharge plus",
+  "changelog.r1006.2": "Le chinois et le japonais affichent enfin tous leurs caractères, au lieu de laisser des espaces vides à la place du texte",
+  "changelog.r1006.3": "Changer la langue du téléphone se termine maintenant en un seul chargement court, avec tout le nouvel alphabet prêt immédiatement",
   "changelog.r1005.0": "Le Casino et Aether Coin sont de nouveau disponibles sur la version chinoise du jeu",
   "changelog.r1004.0": "Velvet et les publications voilées sont de nouveau disponibles sur la version chinoise du jeu",
   "changelog.r1003.0": "Le téléphone vous prévient désormais quand un cadre d'avatar vous est attribué ou retiré, au lieu de changer l'anneau autour de votre avatar en silence",

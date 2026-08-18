@@ -1351,6 +1351,10 @@ internal static class L
                 "Music and MogCast play songs again, after a change at YouTube left every track failing to load while search kept working"),
             new("changelog.r1006.1",
                 "Photos sent in Velvet and the other chat apps no longer turn into a grey box after a while, and scrolling back to one no longer downloads it again"),
+            new("changelog.r1006.2",
+                "Chinese and Japanese now show every character, instead of leaving blank gaps where the text should be"),
+            new("changelog.r1006.3",
+                "Switching the phone's language now finishes in one short load, with the whole new alphabet ready straight away"),
         };
 
         public static readonly LocString[] Release1005 =

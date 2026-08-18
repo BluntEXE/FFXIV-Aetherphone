@@ -4419,6 +4419,8 @@
   "coin.aboutWhat": "Um agradecimento por usar o celular: faça check-in, jogue, converse e gaste em estilo.",
   "changelog.r1006.0": "O Music e o MogCast tocam músicas de novo, depois de uma mudança no YouTube deixar toda faixa sem carregar enquanto a busca continuava funcionando",
   "changelog.r1006.1": "As fotos enviadas no Velvet e nos outros apps de conversa não viram mais um quadrado cinza depois de um tempo, e voltar até elas não baixa tudo de novo",
+  "changelog.r1006.2": "O chinês e o japonês agora exibem todos os caracteres, em vez de deixar espaços em branco onde o texto deveria estar",
+  "changelog.r1006.3": "Trocar o idioma do telefone agora termina em um único carregamento rápido, com todo o novo alfabeto pronto na hora",
   "changelog.r1005.0": "O Cassino e o Aether Coin estão disponíveis de novo na versão chinesa do jogo",
   "changelog.r1004.0": "O Velvet e as publicações veladas estão disponíveis de novo na versão chinesa do jogo",
   "changelog.r1003.0": "O telefone agora avisa quando uma moldura de avatar é concedida ou removida, em vez de mudar o anel ao redor do seu avatar em silêncio",
