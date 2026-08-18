@@ -43,13 +43,13 @@
 
 Aetherphone is a free, open-source Dalamud plugin that puts a real smartphone on screen in FINAL FANTASY XIV: a docked, always-on device with a home screen, notifications, ringtones, and themeable wallpapers. Behind the apps runs its own social network for Aetherphone users, so they work across characters and sessions, not just locally.
 
-Privacy and safety come first: text messages, attachments, and voice notes are end-to-end encrypted, calls are encrypted in transit, and posts and images pass AI moderation with clear content rules.
+Privacy and safety come first: text messages, attachments, and voice notes are end-to-end encrypted, calls are encrypted in transit, and posts and images are reviewed by a human moderation team under clear content rules.
 
 ## Highlights
 
 - **Social**: a microblog, a photo feed, and private messaging with voice notes and group calls, plus an optional 18+ companion app.
 - **Game chat**: every game chat channel on the phone, in tabs you build yourself, with tells as their own conversations.
-- **Utilities**: a market board tracker, a housing browser, a venue and event directory, music, weather, a wallet, timers and resets, a photo library and camera, shortcuts, and a pocket arcade of mini-games, among 30+ apps.
+- **Utilities**: a market board tracker, a housing browser, a venue and event directory, music, weather, a wallet, timers and resets, a photo library and camera, shortcuts, and a pocket arcade of mini-games, among 40 apps.
 - **Watch together**: cast video, YouTube included, onto an in-world screen, with playback synced for everyone watching along.
 - **Casino**: play-money blackjack, slots, scratch cards, a communal wheel, and bingo. No real money, and nothing has cash value.
 - **Make it yours**: any accent color, wallpapers, Lodestone character portraits, custom ringtones, a text-size zoom, and a phone you can drag to any size.
@@ -68,7 +68,7 @@ https://raw.githubusercontent.com/XeldarAlz/DalamudPlugins/main/repo.json
 
 Tick **Enabled**, click **+**, then **Save and Close**. Open `/xlplugins` → **All Plugins**, search for **Aetherphone**, and install.
 
-Playing the Chinese game version? The phone detects it, hides the apps that are unavailable there (Music, AetherStream, News, Velvet, Casino, Aether Coin), and signs you in through your Rising Stones (石之家) profile instead of the Lodestone.
+Playing the Chinese game version? The phone detects it, hides the apps that are unavailable there (Music, AetherStream, and News), and signs you in through your Rising Stones (石之家) profile instead of the Lodestone.
 
 ## Commands
 
@@ -89,7 +89,7 @@ Questions, ideas, or just want to hang out with other players? Come say hi on Di
 
 ## Contributing
 
-Aetherphone is open source and contributions are welcome. Start with the developer documentation, then read the contribution guide. Want to improve one of the nine translations instead? That needs no code, no build, and no git: the translator guide walks through it in a browser.
+Aetherphone is open source and contributions are welcome. Start with the developer documentation, then read the contribution guide. Want to improve one of the eight translations instead? That needs no code, no build, and no git: the translator guide walks through it in a browser.
 
 → [Developer documentation](docs/README.md) · [Contributing guide](CONTRIBUTING.md) · [Translator guide](docs/translating.md)
 
@@ -101,7 +101,7 @@ If you liked this plugin, take a look at my other Dalamud work. You might find s
 
 ## Legal
 
-Using the online features means accepting the terms of service. The privacy policy covers what the Aethernet service does with your data; the offline half of the plugin sends nothing anywhere.
+Using the online features means accepting the terms of service. The privacy policy covers what the Aethernet service does with your data; offline features stay on your machine, though some apps fetch public game data directly from third-party services, which the policy also covers.
 
 → [Terms of Service](TERMS.md) · [Privacy Policy](PRIVACY.md)
 

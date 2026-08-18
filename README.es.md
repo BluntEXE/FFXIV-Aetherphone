@@ -43,13 +43,13 @@
 
 Aetherphone es un plugin de Dalamud gratuito y de código abierto que pone un smartphone real en pantalla en FINAL FANTASY XIV: un dispositivo anclado y siempre visible, con pantalla de inicio, notificaciones, tonos de llamada y fondos de pantalla personalizables. Tras las aplicaciones funciona su propia red social para los usuarios de Aetherphone, de modo que operan entre personajes y sesiones, no solo de forma local.
 
-La privacidad y la seguridad son lo primero: los mensajes de texto, los adjuntos y las notas de voz están cifrados de extremo a extremo, las llamadas van cifradas en tránsito, y las publicaciones e imágenes pasan por una moderación con IA con reglas de contenido claras.
+La privacidad y la seguridad son lo primero: los mensajes de texto, los adjuntos y las notas de voz están cifrados de extremo a extremo, las llamadas van cifradas en tránsito, y las publicaciones e imágenes las revisa un equipo de moderación humano con reglas de contenido claras.
 
 ## Lo más destacado
 
 - **Social**: un microblog, un feed de fotos y mensajería privada con notas de voz y llamadas de grupo, más una aplicación complementaria opcional para mayores de 18 años.
 - **Chat del juego**: todos los canales de chat del juego en el teléfono, en pestañas que tú mismo compones, con los tells como conversaciones aparte.
-- **Utilidades**: un rastreador del mercado, un navegador de viviendas, un directorio de locales y eventos, música, el clima, una cartera, temporizadores y reinicios, una fototeca y cámara, atajos, y un salón recreativo de bolsillo de minijuegos, entre más de 30 aplicaciones.
+- **Utilidades**: un rastreador del mercado, un navegador de viviendas, un directorio de locales y eventos, música, el clima, una cartera, temporizadores y reinicios, una fototeca y cámara, atajos, y un salón recreativo de bolsillo de minijuegos, entre 40 aplicaciones.
 - **Ver juntos**: vídeos, incluido YouTube, en una pantalla dentro del juego, con la reproducción sincronizada para quienes los vean contigo.
 - **Casino**: blackjack, tragaperras, rascas, una rueda comunitaria y bingo, todo con dinero ficticio. Sin dinero real, y nada tiene valor en efectivo.
 - **Hazlo tuyo**: cualquier color de acento, fondos de pantalla, retratos de personaje del Lodestone, tonos de llamada personalizados, un zoom del tamaño del texto y un teléfono que puedes llevar al tamaño que quieras.
@@ -68,14 +68,18 @@ https://raw.githubusercontent.com/XeldarAlz/DalamudPlugins/main/repo.json
 
 Marca **Enabled**, haz clic en **+** y luego en **Save and Close**. Abre `/xlplugins` → **All Plugins**, busca **Aetherphone** e instálalo.
 
+¿Juegas a la versión china del juego? El teléfono la detecta, oculta las aplicaciones que no están disponibles allí (Music, AetherStream y News) y te conecta a través de tu perfil de Rising Stones (石之家) en lugar del Lodestone.
+
 ## Comandos
 
 | Comando | Acción |
 |---|---|
 | `/phone` | Mostrar/ocultar el teléfono |
 | `/aetherphone` | Alias de `/phone` |
-| `/phone about` | Abrir créditos / enlaces |
+| `/phone run <name>` | Ejecutar un atajo por su nombre, para poder asignarlo a una macro de la barra de acciones |
+| `/phone market [item]` | Abrir el mercado, buscando un objeto si nombras uno |
 | `/phone reset` | Volver a centrar el teléfono en pantalla |
+| `/phone test` | Enviar una notificación de ejemplo |
 
 ## Comunidad
 
@@ -85,15 +89,21 @@ Marca **Enabled**, haz clic en **+** y luego en **Save and Close**. Abre `/xlplu
 
 ## Contribuir
 
-Aetherphone es de código abierto y las contribuciones son bienvenidas. Empieza por la documentación para desarrolladores (en inglés) y luego lee la guía de contribución.
+Aetherphone es de código abierto y las contribuciones son bienvenidas. Empieza por la documentación para desarrolladores (en inglés) y luego lee la guía de contribución. ¿Prefieres mejorar una de las ocho traducciones? Para eso no hace falta código, ni compilar, ni git: la guía del traductor te acompaña paso a paso desde el navegador.
 
-→ [Documentación para desarrolladores](docs/README.md) · [Guía de contribución](CONTRIBUTING.md)
+→ [Documentación para desarrolladores](docs/README.md) · [Guía de contribución](CONTRIBUTING.md) · [Guía del traductor](docs/translating.md)
 
 ## Más cosas mías
 
 Si te ha gustado este plugin, echa un vistazo a mis otros trabajos para Dalamud. Puede que encuentres algo más para ti.
 
 → [XeldarAlz Dalamud Plugins](https://github.com/XeldarAlz/DalamudPlugins)
+
+## Aviso legal
+
+Usar las funciones en línea implica aceptar los términos del servicio. La política de privacidad cubre lo que el servicio Aethernet hace con tus datos; las funciones sin conexión se quedan en tu equipo, aunque algunas aplicaciones obtienen datos públicos del juego directamente de servicios de terceros, algo que la política también cubre.
+
+→ [Términos del servicio](TERMS.md) · [Política de privacidad](PRIVACY.md)
 
 ## Licencia
 
