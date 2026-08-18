@@ -31,7 +31,7 @@ internal sealed partial class AetherStreamApp
         using (AppSurface.Begin(content))
         {
             SettingsSection.Header(Loc.T(L.AetherStream.SettingsSectionStatus), accentedTheme);
-            var statusCard = GroupCard.Begin(accentedTheme, 5);
+            var statusCard = GroupCard.Begin(accentedTheme, 7);
             SettingsRow.Info(statusCard.NextRow(), Loc.T(L.AetherStream.SettingsDependencyStatus),
                 DependencyStatusText(dependencies, dependencies.VideoLibrary), accentedTheme);
             DrawDependencyAction(statusCard.NextRow(), dependencies, dependencies.VideoLibrary,
@@ -41,6 +41,11 @@ internal sealed partial class AetherStreamApp
                 DependencyStatusText(dependencies, dependencies.LinkResolver), accentedTheme);
             DrawDependencyAction(statusCard.NextRow(), dependencies, dependencies.LinkResolver,
                 L.AetherStream.SettingsDownloadYtdlp, L.AetherStream.SettingsUpdateYtdlp);
+
+            SettingsRow.Info(statusCard.NextRow(), Loc.T(L.AetherStream.SettingsDependencyDeno),
+                DependencyStatusText(dependencies, dependencies.JsRuntime), accentedTheme);
+            DrawDependencyAction(statusCard.NextRow(), dependencies, dependencies.JsRuntime,
+                L.AetherStream.SettingsDownloadDeno, L.AetherStream.SettingsUpdateDeno);
 
             if (SettingsRow.Disclosure(statusCard.NextRow(), Loc.T(L.AetherStream.SettingsScreen), ScreenStateText(),
                     accentedTheme))

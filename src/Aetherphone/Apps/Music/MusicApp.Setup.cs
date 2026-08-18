@@ -34,8 +34,8 @@ internal sealed partial class MusicApp
         if (!setupChecked)
         {
             setupChecked = true;
-            resolverWork.Run("check resolver",
-                async token => await media.CheckAsync(media.LinkResolver, token).ConfigureAwait(false));
+            resolverWork.Run("check song components",
+                async token => await media.CheckSongSizesAsync(token).ConfigureAwait(false));
         }
 
         var margin = Metrics.Space.Xl * scale;
@@ -63,9 +63,15 @@ internal sealed partial class MusicApp
 
         var cardTop = bodyY + bodyHeight + Metrics.Space.Xl * scale;
         var cardHeight = SetupCardHeight * scale;
+        var gap = Metrics.Space.Sm * scale;
         DependencySetup.Card(ui, theme, new Rect(new Vector2(content.Min.X, cardTop),
                 new Vector2(content.Max.X, cardTop + cardHeight)), media.LinkResolver,
             L.AetherStream.SetupLinkResolver, L.AetherStream.SetupLinkResolverDetail, scale);
+
+        var runtimeTop = cardTop + cardHeight + gap;
+        DependencySetup.Card(ui, theme, new Rect(new Vector2(content.Min.X, runtimeTop),
+                new Vector2(content.Max.X, runtimeTop + cardHeight)), media.JsRuntime,
+            L.AetherStream.SetupJsRuntime, L.AetherStream.SetupJsRuntimeDetail, scale);
 
         var buttonHeight = SetupButtonHeight * scale;
         var buttonTop = content.Max.Y - buttonHeight - Typography.LineHeight(TextStyles.Subheadline)
@@ -77,9 +83,10 @@ internal sealed partial class MusicApp
     private void DrawSetupAction(Rect button, MediaDependencies media, float scale)
     {
         var resolver = media.LinkResolver.Snapshot();
-        var busy = DependencySetup.IsBusy(resolver);
-        var failed = resolver.State == DependencyState.Failed;
-        var pending = songResolver.IsInstalled ? 0 : resolver.TotalBytes;
+        var runtime = media.JsRuntime.Snapshot();
+        var busy = DependencySetup.IsBusy(resolver) || DependencySetup.IsBusy(runtime);
+        var failed = resolver.State == DependencyState.Failed || runtime.State == DependencyState.Failed;
+        var pending = media.PendingSongBytes;
         var label = busy
             ? Loc.T(L.AetherStream.SetupInstalling)
             : failed
@@ -97,8 +104,8 @@ internal sealed partial class MusicApp
 
         if (AppSkin.PillButton(button, label, true, !busy, setupAccentedTheme) && !busy)
         {
-            resolverWork.Run("install resolver",
-                async token => await media.ReinstallAsync(media.LinkResolver, token).ConfigureAwait(false));
+            resolverWork.Run("install song components",
+                async token => await media.EnsureSongsReadyAsync(token).ConfigureAwait(false));
         }
 
         var linkTop = button.Max.Y + Metrics.Space.Sm * scale;

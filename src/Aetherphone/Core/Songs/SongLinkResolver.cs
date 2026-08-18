@@ -37,7 +37,7 @@ internal sealed class SongLinkResolver
 
     public MediaDependencies? Media => dependencies;
 
-    public bool IsInstalled => dependencies?.LinkResolverPath is not null;
+    public bool IsInstalled => dependencies is { LinkResolverPath: not null, JsRuntimePath: not null };
 
     public void Attach(MediaDependencies mediaDependencies)
     {

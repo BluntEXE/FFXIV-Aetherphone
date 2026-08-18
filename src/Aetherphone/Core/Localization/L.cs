@@ -2626,7 +2626,7 @@ internal static class L
     {
         public static readonly LocString SetupTitle = new("music.setupTitle", "Set up song playback");
         public static readonly LocString SetupBody = new("music.setupBody",
-            "Songs need a small download helper that fetches audio reliably. Install it once and every track just plays. Radio and live stations work without it.");
+            "Songs need two small helpers that fetch audio reliably. They download once and every track just plays. Radio and live stations work without them.");
         public static readonly LocString RadioStations = new("music.radioStations", "Radio stations");
         public static readonly LocString RecentlyPlayed = new("music.recentlyPlayed", "Recently played");
         public static readonly LocString TabHome = new("music.tabHome", "Home");
@@ -3396,6 +3396,8 @@ internal static class L
             "mpv");
         public static readonly LocString SettingsDependencyYtdlp = new("aetherstream.settingsDependencyYtdlp",
             "yt-dlp");
+        public static readonly LocString SettingsDependencyDeno = new("aetherstream.settingsDependencyDeno",
+            "deno");
         public static readonly LocString SettingsDependencyOk = new("aetherstream.settingsDependencyOk", "Ready");
         public static readonly LocString SettingsDependencyNotInstalled = new(
             "aetherstream.settingsDependencyNotInstalled", "Not installed");
@@ -3411,6 +3413,10 @@ internal static class L
             "Update mpv");
         public static readonly LocString SettingsUpdateYtdlp = new("aetherstream.settingsUpdateYtdlp",
             "Update yt-dlp");
+        public static readonly LocString SettingsDownloadDeno = new("aetherstream.settingsDownloadDeno",
+            "Download deno");
+        public static readonly LocString SettingsUpdateDeno = new("aetherstream.settingsUpdateDeno",
+            "Update deno");
         public static readonly LocString SettingsDownloading = new("aetherstream.settingsDownloading",
             "Downloading...");
         public static readonly LocString SettingsScreen = new("aetherstream.settingsScreen", "Screen");
@@ -3522,13 +3528,17 @@ internal static class L
 
         public static readonly LocString SetupTitle = new("aetherstream.setupTitle", "Set up MogCast");
         public static readonly LocString SetupBody = new("aetherstream.setupBody",
-            "Two components let your phone play video in game. They download once and stay on your machine.");
+            "Three components let your phone play video in game. They download once and stay on your machine.");
         public static readonly LocString SetupVideoEngine = new("aetherstream.setupVideoEngine", "Video engine");
         public static readonly LocString SetupVideoEngineDetail = new("aetherstream.setupVideoEngineDetail",
             "Plays the picture and sound.");
         public static readonly LocString SetupLinkResolver = new("aetherstream.setupLinkResolver", "Link resolver");
         public static readonly LocString SetupLinkResolverDetail = new("aetherstream.setupLinkResolverDetail",
             "Turns a page link into a playable video.");
+        public static readonly LocString SetupJsRuntime = new("aetherstream.setupJsRuntime",
+            "Script engine");
+        public static readonly LocString SetupJsRuntimeDetail = new("aetherstream.setupJsRuntimeDetail",
+            "Answers the checks the video service asks for.");
         public static readonly LocString SetupInstall = new("aetherstream.setupInstall", "Install");
         public static readonly LocString SetupInstallSized = new("aetherstream.setupInstallSized", "Install ({0} MB)");
         public static readonly LocString SetupRetry = new("aetherstream.setupRetry", "Try again");
