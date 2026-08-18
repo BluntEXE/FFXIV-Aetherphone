@@ -799,7 +799,7 @@ internal sealed class VelvetStore : ChatThreadStoreBase<VelvetMessageDto, Velvet
         });
     }
 
-    public void Heartbeat(string region, bool isLalafell)
+    public void Heartbeat(string region, bool? isLalafell)
     {
         if (!session.IsSignedIn)
         {
