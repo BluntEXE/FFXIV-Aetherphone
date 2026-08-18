@@ -128,6 +128,25 @@ internal sealed class RemoteImageCache : IDisposable
         return bytes;
     }
 
+    public IDalamudTextureWrap? Resident(string key) => ready.Get(key);
+
+    public IDalamudTextureWrap? GetSealed(string key, string url, Func<byte[], byte[]?> unseal)
+    {
+        if (ready.Get(key) is { } wrap)
+        {
+            return wrap;
+        }
+
+        // The disk cache holds the sealed bytes, never the opened ones: a thread photo survives a
+        // restart without a second download and without leaving readable pixels on disk.
+        Request(new LedgerKey(key, TextureSizes.Native), async token =>
+        {
+            var opaque = await FetchThroughDiskAsync(url, token).ConfigureAwait(false);
+            return opaque is null ? null : unseal(opaque);
+        });
+        return null;
+    }
+
     public IDalamudTextureWrap? GetKeyed(string key, Func<CancellationToken, Task<byte[]?>> fetch)
     {
         if (ready.Get(key) is { } wrap)

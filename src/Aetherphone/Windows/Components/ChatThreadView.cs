@@ -719,6 +719,11 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     protected IDalamudTextureWrap? ResolveThreadImage(string messageId)
     {
+        if (images.Resident(messageId) is { } resident)
+        {
+            return resident;
+        }
+
         var message = FindMessage(messageId);
         if (message is null)
         {
@@ -737,11 +742,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             return null;
         }
 
-        return images.GetKeyed(messageId, async token =>
-        {
-            var data = await http.GetBytesAsync(new Uri(url), token).ConfigureAwait(false);
-            return data is null ? null : DecryptSealed(message, threadId, data);
-        });
+        return images.GetSealed(messageId, url, sealedBytes => DecryptSealed(message, threadId, sealedBytes));
     }
 
     public void DrawImageViewer(Rect area, string messageId)
