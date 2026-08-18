@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Only the latest release published to the custom Dalamud repo is supported. If you're on an older `vX.Y.Z`, please update before reporting.
+Only the latest release published to the custom Dalamud repo is supported. If you're on an older `vX.Y.Z.W`, please update before reporting.
 
 ## Reporting a vulnerability
 

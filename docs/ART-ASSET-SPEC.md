@@ -15,16 +15,16 @@ sources are `Windows/Components/AppIconTextures.cs` for icons, `Core/Theme/Chass
 |---|---|
 | Canvas | **256 x 256 px** |
 | Format | PNG-32, RGBA, 8 bits per channel |
-| Colour | **Pure white (255,255,255) everywhere. The shape lives entirely in the alpha channel.** |
-| Safe area | Glyph fills the canvas edge to edge; the plugin insets it to **62%** |
+| Colour | **Pure white (255,255,255) on every visible pixel. The shape lives entirely in the alpha channel.** |
+| Safe area | Glyph bounding box roughly **84%** of the canvas (about a 20 px margin at 256); the plugin then draws the whole file at **62%** of the tile |
 | File name | `<appid>.png`, lowercase, no spaces |
 | Location | `src/Aetherphone/Icons/` |
-| Size budget | **<= 8 KB** (existing 39 icons run 2.4 - 6.4 KB, mean 4.2 KB) |
+| Size budget | **<= 8 KB** (existing 43 icons run 2.4 - 6.4 KB, mean 4.2 KB) |
 
 ## Icons are stencils, not artwork
 
-Every shipped icon contains exactly one RGB value -- white -- and all shape information is carried by
-alpha. At draw time the engine multiplies the whole image by a tint colour that follows the theme, so
+Every visible pixel in a shipped icon is one RGB value -- white -- and all shape information is carried
+by alpha. At draw time the engine multiplies the whole image by a tint colour that follows the theme, so
 white pixels come out as the tint and anything else is darkened by it. A full-colour icon therefore
 fights the theme instead of following it, and reads wrong on every background the tint is meant to
 adapt to.
@@ -38,15 +38,18 @@ Think of it the way an iOS template image or a font glyph works: you are authori
 
 ## Geometry
 
-The icon is drawn centred at **62% of the app tile**. The remaining 38% is breathing room the engine
-reserves, so **do not add your own padding** -- fill the 256 px canvas edge to edge with the glyph's
-bounding box. Padding the file as well makes the icon read noticeably smaller than the rest of the set.
+The icon is drawn centred at **62% of the app tile** on home tiles (small-tile contexts such as coin
+rows, the share sheet and the App Store draw a hair tighter, about 61%). On top of that, **match the
+shipped inset**: the whole set keeps Tabler's 2-in-24 margin, so the glyph's bounding box runs roughly
+**84% of the canvas** -- about a 20 px margin on each side at 256. Do not fill the canvas edge to edge;
+a full-bleed glyph ships about 18% larger than every icon around it and reads oversized next to the set.
 
 ## Style
 
 Tabler-derived line iconography: even stroke weight, geometric, functional over branded.
 
-- Stroke weight roughly **18-22 px** at 256 px, consistent within an icon and across the set.
+- Stroke weight **24 px** at 256 px (the shipped set measures 24 everywhere), consistent within an
+  icon and across the set.
 - Rounded caps and joins.
 - Optically balanced, not mathematically centred.
 - Nothing finer than **10 px**. Icons draw as small as ~30 px and there is no mipmapping.
@@ -54,8 +57,9 @@ Tabler-derived line iconography: even stroke weight, geometric, functional over 
 ## Export
 
 1. PNG-32 at 256 x 256, straight (non-premultiplied) alpha.
-2. Force RGB to pure white everywhere, including under transparent pixels. Exporters that leave black
-   there cause dark fringing when the image is filtered.
+2. Keep RGB pure white on every pixel that has any alpha, right through the anti-aliased edges. What
+   sits under fully transparent pixels does not matter: every shipped icon carries black there (the
+   exporter's default) and renders cleanly, so match the set rather than forcing white under alpha 0.
 3. Strip the ICC profile.
 4. Run `oxipng -o 4 -s`.
 
@@ -101,10 +105,10 @@ not the edge of your canvas.
 |---|---|
 | Canvas | **1500 x 2755 px** |
 | Phone body | **1000 x 2255**, inset 250 px from every edge |
-| Format | PNG-32, RGBA, 8 bits per channel, sRGB, ICC stripped |
+| Format | Author as PNG-32, RGBA, 8 bits per channel, sRGB, ICC stripped; after the `pngquant` step below, the shipped file usually ends up palette-indexed, which is expected |
 | Alpha | Straight (non-premultiplied) |
 | File names | `<CaseId>.png` and `<CaseId>.thumb.png` |
-| Thumb canvas | **375 x 689 px** (exactly quarter scale) |
+| Thumb canvas | **375 x 689 px** (quarter scale; 2755 / 4 = 688.75, rounded to 689) |
 | Size budget | **<= 650 KB** full, **<= 100 KB** thumb |
 | Location | `src/Aetherphone/Cases/` |
 | Template | `src/Aetherphone/Cases/_template/ArtCaseTemplate.svg` |
@@ -156,8 +160,8 @@ buttons, which bite ~4 px in at these positions (fractions of the long side):
 charm that hangs off the left in portrait hangs off the bottom in landscape. Design something that
 reads either way, or keep overflow near the corners.
 
-**Nothing narrower than 6 px.** No mipmaps, and the smallest phone samples this canvas down about
-3.7:1. Hairlines and fine noise will crawl.
+**Nothing narrower than 6 px.** No mipmaps, and the smallest phone preset samples this canvas down
+about 3.7:1; free resize goes smaller still, to about 4.3:1. Hairlines and fine noise will crawl.
 
 **Fine repeating texture does not fit the band.** It is 38 px; a carbon weave needs a cell finer than
 that to read as material, which is both under the aliasing floor and ruinous for file size. Broad,
@@ -165,9 +169,9 @@ low-frequency treatments work. The margin has no such limit -- it is as big as y
 
 ## File size
 
-Smooth shapes compress well; continuous-tone detail does not. The reference cases run 158-589 KB
-against the 650 KB budget, and the most textured one needed its pattern quantised to discrete steps to
-fit at all.
+Smooth shapes compress well; continuous-tone detail does not. The shipped cases run 30-403 KB
+against the 650 KB budget, and the most textured one needed its pattern quantised to discrete steps
+to fit.
 
 1. **Author within a limited palette** so `pngquant --quality 85-95` can index the result. Much the
    biggest lever, and an authoring decision rather than an export setting.

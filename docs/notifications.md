@@ -10,7 +10,7 @@ This doc walks the full notification pipeline on the client: how a notification 
 | src/Aetherphone/Core/Notifications/NotificationService.cs | Queue, filters, retention, unread count, sound trigger |
 | src/Aetherphone/Core/Notifications/NotificationRouter.cs | Turns a tapped notification into app navigation |
 | src/Aetherphone/Core/Notifications/NotificationChannels.cs | Catalog of per-app settings channels |
-| src/Aetherphone/Core/Notifications/AppNotificationSetting.cs | Per-channel enable flag and sound override |
+| src/Aetherphone/Core/Notifications/AppNotificationSetting.cs | Per-channel enable flag, banner flag, and sound override |
 | src/Aetherphone/Core/Notifications/SocialNotificationService.cs | Polls the backend, converts DTOs to phone notifications |
 | src/Aetherphone/Core/Notifications/SoundService.cs | Resolves and plays notification sounds and ringtones |
 | src/Aetherphone/Core/Notifications/SoundLibrary.cs | Bundled plus user sound files, token resolution |
@@ -21,8 +21,8 @@ This doc walks the full notification pipeline on the client: how a notification 
 | src/Aetherphone/Windows/Components/NotificationCard.cs | Single card rendering |
 | src/Aetherphone/Windows/Components/NotificationBanner.cs | Drop-down banner over the screen |
 | src/Aetherphone/Apps/Notifications/NotificationsApp.cs | The Notifications app that hosts the center |
-| src/Aetherphone/Apps/Settings/Pages/NotificationsPage.cs | Settings: do not disturb, sound, per-app list |
-| src/Aetherphone/Apps/Settings/Pages/AppNotificationPage.cs | Settings: one channel's enable and sound |
+| src/Aetherphone/Apps/Settings/Pages/NotificationsPage.cs | Settings: quiet while busy, global banner switch, per-app list |
+| src/Aetherphone/Apps/Settings/Pages/AppNotificationPage.cs | Settings: one channel's enable, banner, and sound |
 | src/Aetherphone/Core/Apps/NavigationStack.cs | `OnOpened` re-fire that deep links depend on |
 
 ## Pipeline overview
@@ -33,7 +33,7 @@ Every notification travels the same path, no matter who produced it:
 2. On the next framework tick (Dalamud's `IFramework.Update` event, which runs on the game's main thread once per frame), `NotificationService.OnFrameworkUpdate` drains the queue and calls `Present` for each item.
 3. `Present` drops the notification if the app is not installed, if the user disabled that channel in Settings, or if the app is unavailable (the server kill switch, wired as `notifications.AppAvailability = navigation.IsAvailable` in src/Aetherphone/Core/Shell/PhoneShell.cs).
 4. Survivors get a sequence `Id`, land in the `Recent` list (capped at `MaxRetained` = 50, oldest dropped), and bump `UnreadCount`. The `Added` event fires.
-5. Unless `Configuration.DoNotDisturb` is on, the `Presented` event fires and a sound may play. `NotificationBanner` and `MinimizedPhone` listen to `Presented`; the banner shows the drop-down card, the minimized phone shakes if `Configuration.Vibration` is enabled.
+5. Alerts (banner, shake, sound) then pass three shared gates: the player must be logged in, `Configuration.DoNotDisturb` must be off, and when `Configuration.QuietWhileBusy` is on (it defaults to true) `PlayerBusy.Now` must be false. `PlayerBusy.Now` (src/Aetherphone/Core/Game/PlayerBusy.cs) is true in combat, inside a duty, during a cutscene, and while zoning, so a fresh install is silent in all of those states by design. Behind the shared gates, three things happen independently: the `Presented` event fires only when the global `Configuration.ShowNotificationBanner` and the channel's `ShowNotificationBanner` setting are both on (`NotificationBanner` listens to it and shows the drop-down card); the `Vibration` event fires when `Configuration.Vibration` is on (`MinimizedPhone` and `PhoneShell` listen to it and shake the minimized puck or the open phone, even when banners are off); and a sound may play.
 6. The notification now sits in the notification center until the user taps it (routed by `NotificationRouter`), swipes it away, clears all, or it ages out.
 
 Producers are spread across the codebase. Local ones include `TimerNotifier`, `ClockAlarmService`, `ReminderService`, and `CalendarReminderService` in src/Aetherphone/Core/Notifications/, plus `ChatNotifier` in src/Aetherphone/Core/GameChat/ for in-game chat. Networked ones include `SocialNotificationService` (social activity, which also carries missed calls as type 20), `CallHub` (incoming calls), and the chat stores built on `ChatThreadStoreBase`.
@@ -46,6 +46,7 @@ Producers are spread across the codebase. Local ones include `TimerNotifier`, `C
 | --- | --- |
 | `AppId` | The app the notification belongs to and opens |
 | `Title`, `Body` | Text shown on the card and banner |
+| `SingleLineBody` | `Body` with line breaks flattened; the banner renders this |
 | `ReceivedAt` | Local timestamp shown on the card |
 | `Accent` | Tile color, normally `AppAccents.For(appId)` |
 | `GroupKey` | Optional stacking key (a conversation, a linkshell, a post) |
@@ -72,11 +73,11 @@ private void Notify(string title, string body)
 }
 ```
 
-With no `GroupKey`, all "timers" notifications stack into a single group. Chat-style producers pass a group key so each conversation stacks separately; `ChatNotifier` uses the conversation key, `tab:<id>` for a tab or the tell stream key for a person:
+With no `GroupKey`, all "timers" notifications stack into a single group. Chat-style producers pass a group key so each conversation stacks separately; `ChatNotifier` uses the conversation key, `tab:<id>` for a tab or the tell stream key for a person, and stamps the chat entry's own timestamp rather than `DateTime.Now`:
 
 ```csharp
-notifications.Notify(new PhoneNotification("messages", title, $"{name}: {text}", DateTime.Now, MessagesAccent,
-    channel.Key));
+private void Raise(string title, string body, string groupKey, DateTime at) =>
+    notifications.Notify(new PhoneNotification(AppId, title, body, at, AppAccents.For(AppId), groupKey));
 ```
 
 `CallHub` (src/Aetherphone/Core/Telephony/CallHub.cs) also sets `ChannelId` so call notifications resolve their settings under the `phone` channel instead of the messaging app:
@@ -122,14 +123,15 @@ Rules, all in `OnPresented` and the stage machine:
 
 ## Channels and per-app settings
 
-`NotificationChannels.All` (src/Aetherphone/Core/Notifications/NotificationChannels.cs) is the catalog of settings channels: 16 entries, each a `NotificationChannel(AppId, Name, Accent)`, covering the messaging and social apps plus market, venues, timers, character, health, calendar, clock, and notes. There is one extra constant, `NotificationChannels.PhoneChannel` (`"phone"`), used as a `ChannelId` by call notifications; it is not part of `All`.
+`NotificationChannels.All` (src/Aetherphone/Core/Notifications/NotificationChannels.cs) is the catalog of settings channels: 21 entries, each a `NotificationChannel(AppId, Name, Accent)`, covering the messaging and social apps plus market, venues, muster, yellow pages, announcements, music, AetherStream, timers, character, health, housing, calendar, clock, notes, coin, and casino. There is one extra constant, `NotificationChannels.PhoneChannel` (`"phone"`), used as a `ChannelId` by call notifications; it is not part of `All`.
 
-Settings storage is `Configuration.NotificationSettings`, a `Dictionary<string, AppNotificationSetting>` keyed by `SettingsKey`. `AppNotificationSetting` has exactly two knobs:
+Settings storage is `Configuration.NotificationSettings`, a `Dictionary<string, AppNotificationSetting>` keyed by `SettingsKey`. `AppNotificationSetting` has exactly three knobs:
 
 - `Enabled` (default true): `Configuration.IsAppNotificationEnabled` returns true when no entry exists, so every channel is on until the user turns it off. `NotificationService.Present` checks this and drops disabled notifications before they reach the center.
 - `Sound` (default null): a per-channel sound token. `Configuration.ResolveNotificationToken` falls back to the global `Configuration.NotificationSound` when no override is set.
+- `ShowNotificationBanner` (default true): the per-channel banner switch. The `Presented` event requires this and the global `Configuration.ShowNotificationBanner` together.
 
-The UI is Settings > Notifications (`NotificationsPage`), which lists only the installed channel apps and links each to `AppNotificationPage` for the enable toggle and sound picker.
+The UI is Settings > Notifications (`NotificationsPage`), which owns the `QuietWhileBusy` and global banner switches, lists only the installed channel apps, and links each to `AppNotificationPage` for the enable toggle, the banner toggle, and the sound picker.
 
 ## Sounds
 
@@ -141,7 +143,7 @@ There are two sound kinds (`SoundKind`): `Ringtone` for calls and `Notification`
 
 Sounds are identified by tokens (`SoundTokens`): `file:<name>` for a file, `silent` for none, and empty string for the library default. Legacy `game:` tokens from old versions are migrated by `Configuration.MigrateSoundSettings`. Defaults are `SoundLibrary.BundledRingtoneToken` (`file:Ringtone_1.mp3`) and `SoundLibrary.BundledNotificationToken` (`file:Notification_1.mp3`).
 
-Playback goes through `SoundService` on top of `SoundEffectPlayer`, which uses NAudio's `MediaFoundationReader` (Windows Media Foundation): `PlayNotification(settingsKey)` plays a one-shot at `Configuration.NotificationVolume`, and `StartCallRing`/`StopCallRing` loop the ringtone at `Configuration.RingtoneVolume`. Both volumes are set with the continuous slider in Settings > Notifications > Notification Sound and Settings > Ringtone (`VolumeSlider` in src/Aetherphone/Windows/Components/VolumeSlider.cs), which commits and previews on release so a drag does not save the config every frame. `NotificationService.ShouldPlaySound` throttles to one sound per `StackKey` per 3 seconds (`SoundRepeatSeconds`), so a burst in one conversation dings once.
+Playback goes through `SoundService` on top of `SoundEffectPlayer`, which dispatches NAudio readers by file extension (`SoundEffectPlayer.OpenReader`): `.mp3` plays through the managed `Mp3FileReaderBase` with an `Mp3FrameDecompressor`, `.wav` through `WaveFileReader`, and `MediaFoundationReader` (Windows Media Foundation) is only the fallback, for other extensions and for files the managed readers reject. The managed-first order is what keeps sounds Wine-safe; src/Aetherphone/Sounds/README.md documents the dispatch. `PlayNotification(settingsKey)` plays a one-shot at `Configuration.NotificationVolume`, and `StartCallRing`/`StopCallRing` loop the ringtone at `Configuration.RingtoneVolume`. Both volumes are set with the continuous slider in the sound pages under Settings > Sounds, which links to Ringtone and Notification Sound (`VolumeSlider` in src/Aetherphone/Windows/Components/VolumeSlider.cs); it commits and previews on release so a drag does not save the config every frame. `NotificationService.ShouldPlaySound` throttles to one sound per `StackKey` per 3 seconds (`SoundRepeatSeconds`), so a burst in one conversation dings once.
 
 ## Deep links: what happens on tap
 
@@ -149,7 +151,7 @@ Tapping a card or banner calls `NotificationRouter.Open(PhoneNotification)` (src
 
 1. For social notifications (`SocialType >= 0`), advances the read watermark via `SocialNotificationService.AcknowledgeUpTo`.
 2. Removes the whole stack from the center (`NotificationService.RemoveGroup`). If the app is unavailable it stops here.
-3. Parks the destination in the right launcher: the conversation key into `LinkpearlLauncher`, conversation ids into `DmLauncher`, `VelvetLauncher`, or `GramDmLauncher`, post or profile links into `SocialLauncher` (via `SocialDeepLink` in src/Aetherphone/Core/Apps/SocialLauncher.cs), and so on for Muster, Yellow Pages, Announcements, and moderation notices.
+3. Parks the destination in the right launcher: the conversation key into `LinkpearlLauncher`, conversation ids into `DmLauncher`, `VelvetLauncher`, or `GramDmLauncher`, post or profile links into `SocialLauncher` (via `SocialDeepLink` in src/Aetherphone/Core/Apps/SocialLauncher.cs), live station ids into `RadioLauncher.RequestStation` (music app, type 21), `casino:<tableId>` group keys into `CasinoLauncher.RequestTable`, the AetherStream up-next suggestion into `AetherStreamLauncher.RequestUpNext`, and so on for Muster, Yellow Pages, Announcements, and moderation notices.
 4. Calls `INavigator.Open(appId)`.
 
 The contract that makes this land on the right screen: **`OnOpened` re-fires even when the app is already open.** `NavigationStack.OpenApp` (src/Aetherphone/Core/Apps/NavigationStack.cs) calls `NotifyOpened(app)`, and therefore `app.OnOpened()`, when the requested app is already the current one, instead of returning early. So an app never misses a deep link just because the user was already inside it.
@@ -192,13 +194,13 @@ Badges are **not** driven by the notification center. Each app computes its own 
 | AethergramApp | `dmStore.UnreadCount + social.UnseenCount(Id)` |
 | AnnouncementsApp | `store.UnreadCount` |
 
-For social apps, `SocialNotificationService.UnseenCount` prefers the server's `UnreadByApp` counts from the notification poll and falls back to counting items newer than the per-account watermark stored in `Configuration.SocialActivitySeenUnix`. Opening an app's activity screen calls `MarkSeen(appId)`, which clears the local count, removes that app's social notifications from the center, and sends a read acknowledgement to the backend when the watermark actually advanced. Tapping a single notification acknowledges only up to that item (`AcknowledgeUpTo`).
+For social apps, `SocialNotificationService.UnseenCount` prefers the server's `UnreadByApp` counts from the notification poll, with one override: while an acknowledgement is still queued for flush, the pending ack watermark wins over the server count, so the badge does not bounce back up between the ack and the next poll. With no server counts at all it falls back to counting items newer than the per-account watermark stored in `Configuration.SocialActivitySeenUnix`. Opening an app's activity screen calls `MarkSeen(appId)`, which clears the local count, removes that app's social notifications from the center, and sends a read acknowledgement to the backend when the watermark actually advanced, or, when the server still reported unread for that app, an acknowledgement up to the current time even though the local watermark stayed put. Tapping a single notification acknowledges only up to that item (`AcknowledgeUpTo`).
 
 The minimized phone also shows `NotificationService.UnreadCount` as a badge (`MinimizedPhone.DrawBadge` in src/Aetherphone/Windows/Components/MinimizedPhone.cs).
 
 ## Social notification types
 
-Social notifications arrive as `NotificationDto` (src/Aetherphone/Core/Aethernet/Contracts/Dtos.cs) from the backend, polled by `SocialNotificationService` every 60 seconds in the foreground and 120 in the background, with realtime pings requesting an immediate poll. The `Type` field is a numbered catalog shared with the backend; the client-side source of truth is `SocialActivity` (src/Aetherphone/Core/Social/SocialActivity.cs). It currently runs 0 through 20:
+Social notifications arrive as `NotificationDto` (src/Aetherphone/Core/Aethernet/Contracts/Dtos.cs) from the backend, polled by `SocialNotificationService` every 60 seconds in the foreground and 120 in the background, with realtime pings requesting an immediate poll. The `Type` field is a numbered catalog shared with the backend; the client-side source of truth is `SocialActivity` (src/Aetherphone/Core/Social/SocialActivity.cs). It currently runs 0 through 21:
 
 | Type | Constant | Tap opens |
 | --- | --- | --- |
@@ -223,6 +225,7 @@ Social notifications arrive as `NotificationDto` (src/Aetherphone/Core/Aethernet
 | 18 | `TypeAdOpened` | Yellow Pages ad detail |
 | 19 | `TypeAdInquiry` | Yellow Pages inquiry thread |
 | 20 | `TypeMissedCall` | Calls tab, grouped under `call:<actorId>` |
+| 21 | `TypeRadioLive` | The live station in the music app (`RadioLauncher.RequestStation`) |
 
 `SocialActivity.IsModerationNotice` covers 5, 10, and 11; `SocialNotificationService.Ingest` skips those, because moderation content flows through `ModerationNoticeService` and `ModerationNoticePresenter` (src/Aetherphone/Core/Moderation/ModerationNoticePresenter.cs) instead, which posts non-blocking notices under the `settings` app id and shows blocking ones as alerts.
 
@@ -239,10 +242,15 @@ Everything that can stop a notification, in pipeline order:
 | App not installed | `NotificationService.Present` | Dropped, warning logged |
 | Channel disabled in Settings | `NotificationService.Present` | Dropped silently |
 | App unavailable (server kill switch) | `NotificationService.Present` via `AppAvailability` | Dropped, warning logged |
+| Logged out | `NotificationService.Present` | Added to center and unread count, but no banner, no shake, no sound |
 | Do not disturb | `NotificationService.Present` | Added to center and unread count, but no banner, no shake, no sound |
+| Quiet while busy (default on) | `NotificationService.Present` via `PlayerBusy.Now` | Same silencing while in combat, in a duty, in a cutscene, or zoning |
+| Banners off, globally or per channel | `NotificationService.Present` via `ShowNotificationBanner` | No banner (`Presented` never fires); shake and sound still happen |
 | Sound throttle | `NotificationService.ShouldPlaySound` | Sound skipped within 3 s per stack |
 | Phone hidden | `NotificationBanner.OnPresented` | No banner; center still gets it |
 | App already on screen | `NotificationBanner.OnPresented` | No banner; center still gets it |
+| Messages app uninstalled | `ChatNotifier.OnAppended` via its `AppGate` | No game chat notifications at all |
+| Your own chat line | `ChatNotifier.OnAppended` via `entry.IsSelf` | No notification for messages you sent |
 | Channel muted in a tab | `ChatNotifier.OnAppended` via `ChatTab.IsMuted` | Message still appended to history, no notification at all |
 | Tab alerts set to Mentions or Off | `ChatNotifier.Alerts` | Only mentions notify, or nothing does |
 | Conversation on screen | `ChatInbox.Viewing` | No notification for what you are already reading |
@@ -250,14 +258,16 @@ Everything that can stop a notification, in pipeline order:
 | Thread being viewed | `ChatThreadStoreBase` viewing grace | No inbox notification for the open thread |
 | Moderation dedup | `ModerationNoticePresenter.presented` set | Each pending notice id presented once |
 
-Do not disturb is toggled three ways: the switch on the phone chassis (`PhoneShell` via `DeviceChrome.MuteButtonRect`), the Settings > Notifications toggle, and the `dnd` tile in the control center (`ControlRegistry` in src/Aetherphone/Core/ControlCenter/ControlRegistry.cs). While it is on, a moon shows in the status bar (`StatusBar` in src/Aetherphone/Core/Shell/StatusBar.cs).
+The quiet-while-busy gate deserves emphasis because `Configuration.QuietWhileBusy` defaults to true: out of the box, alerts are silent in combat, duties, cutscenes, and while zoning (the `PlayerBusy.Now` states), with the notification still landing in the center and counting as unread. Users regularly report that silence as a bug; it is the shipped default, toggled in Settings > Notifications.
+
+Do not disturb is toggled three ways: the switch on the phone chassis (`PhoneShell` via `DeviceChrome.MuteButtonRect`), the switch on the root Settings page (`RootSettingsPage`; the Notifications page does not host it, it only dims its two alert rows while it is on), and the `dnd` tile in the control center (`ControlRegistry` in src/Aetherphone/Core/ControlCenter/ControlRegistry.cs). While it is on, a moon shows in the status bar (`StatusBar` in src/Aetherphone/Core/Shell/StatusBar.cs) and the coin earn pill holds its pending toasts (`CoinEarnPill` in src/Aetherphone/Core/Shell/CoinEarnPill.cs).
 
 Muting is per tab and per channel (`ChatTab.MutedChannels`), and a tab's `AlertPolicy` decides whether anything notifies at all. The same rule drives the unread badge in `ChatInbox`, so a channel that cannot notify you also cannot badge you. Legacy per-character linkshell mutes (`Configuration.MutedLinkshellsByCharacter`) are carried into any tab that later includes the channel.
 
 The viewing grace deserves detail because it protects a correctness invariant. `ChatThreadStoreBase` (src/Aetherphone/Core/Message/ChatThreadStoreBase.cs) records `NoteThreadViewed(threadKey)` while a thread view draws, with a 4 second `ViewingGrace`. Two things key off it:
 
 - The inbox scan skips notifying for the thread the user is looking at.
-- Realtime chat pings call `RefreshThreadIfVisible`, which refreshes the open thread only inside the grace window. Refreshing a thread makes the server mark it read, so an ungated background refresh would silently mark threads read, suppress the sender's notification, and break seen ticks. The chat stores (`DirectMessagesStore`, `GramDmStore`, `VelvetStore`) all route pings through `RefreshThreadIfVisible`; keep it that way for any new chat surface.
+- Realtime chat pings call `RequestThreadRefresh`, which flags a pending refresh; `ConsumePendingThreadRefresh` only executes it while the open thread is being viewed (`IsBeingViewed`, inside the grace window). Refreshing a thread makes the server mark it read, so an ungated background refresh would silently mark threads read, suppress the sender's notification, and break seen ticks. The chat stores (`DirectMessagesStore`, `GramDmStore`, `VelvetStore`) all route pings through `RequestThreadRefresh`; keep it that way for any new chat surface.
 
 ## Gotchas
 
@@ -268,11 +278,11 @@ The viewing grace deserves detail because it protects a correctness invariant. `
 - Opening the notification center or the control center marks everything read instantly (`MarkAllRead` in `NotificationsApp.OnOpened` and `ControlCenter.Open`). Do not rely on `UnreadCount` surviving a peek at the pull-down.
 - Only the newest 50 notifications are retained (`MaxRetained`); the oldest is silently dropped, unread or not.
 - The banner queue caps at 4 (`MaxQueued`); bursts beyond that never show a banner but still land in the center.
-- A background refresh of a chat thread marks it read on the server. Use `ChatThreadStoreBase.RefreshThreadIfVisible` for ping-driven refreshes, never `RefreshThread` directly, or you will suppress your own notifications (this was a real regression, fixed by gating on the viewing grace).
-- `SocialNotificationService.MarkSeen` clears the local count immediately but only sends the read acknowledgement when the newest item is beyond the stored watermark; the backend badge and the local badge converge on the next poll.
+- A background refresh of a chat thread marks it read on the server. Use `ChatThreadStoreBase.RequestThreadRefresh` for ping-driven refreshes, never `RefreshThread` directly, or you will suppress your own notifications (this was a real regression, fixed by gating on the viewing grace).
+- `SocialNotificationService.MarkSeen` clears the local count immediately and sends the read acknowledgement when the newest item advances the stored watermark, or, when the server still reported unread for that app, an acknowledgement up to the current time; the backend badge and the local badge converge on the next poll.
 - Social type numbers are a wire contract with the backend and are duplicated between `SocialActivity` and `NotificationRouter`; a new type added in only one place will render but route nowhere (`SocialLinkFor` returns null and the tap just opens the app root).
 - A user sound file with the same name as a bundled one shadows it for everyone selecting that token (`SoundLibrary.TryResolvePath` prefers the user directory).
-- The `Vibration` toggle does not vibrate anything; it enables the shake animation on the minimized phone when a notification is presented (`MinimizedPhone.OnPresented`).
+- The `Vibration` toggle does not vibrate anything; it enables the `NotificationService.Vibration` event, which shakes the minimized phone (`MinimizedPhone.OnVibration`) and the open phone (`PhoneShell.OnVibration`). `Vibration` is a separate event from `Presented` and fires even with banners off, so turning banners off does not stop the shake.
 
 ## Related docs
 

@@ -245,9 +245,10 @@ Real examples: `MessageApp` returns `store.UnreadTotal + calls.UnseenMissed`, `A
 
 `AppAvailability` (src/Aetherphone/Core/Aethernet/AppAvailability.cs) lets the Aethernet backend remotely disable apps (used to hide the server-backed social apps during incidents). Client behavior:
 
+- The region gate runs first: on a Chinese game client, `Enabled` returns false for `"music"`, `"aetherstream"`, and `"news"` before any flag lookup, and the check precedes even the `AlwaysAvailable` list.
 - The default `IsAvailable` calls `AppAvailability.IsEnabled(Id)`, which lazily refreshes a flag dictionary from the backend's `/flags` endpoint every 5 minutes (retrying after 60 seconds on failure) and persists the last answer in `Configuration.AppFlags` so it survives restarts and offline sessions.
-- `"appstore"`, `"settings"`, and `"announcements"` are `AlwaysAvailable` and cannot be switched off.
-- `"muster"` is `HiddenUntilLaunched`: absent until the server explicitly flags it on. Unknown ids default to enabled.
+- `"appstore"`, `"settings"`, and `"announcements"` are `AlwaysAvailable` and cannot be switched off by the server.
+- `"muster"`, `"coin"`, and `"casino"` are `HiddenUntilLaunched`: absent until the server explicitly flags them on. Other unknown ids default to enabled.
 - An unavailable app disappears from the home screen: `HomeLayoutService` skips tiles for unavailable apps at load, `HomeScreen.Draw` calls `EnsureCurrent` every frame to react to flag flips, and `NavigationStack.Open` refuses to open one. When a hidden app becomes available and was never seen before, `EnsureCurrent` auto-installs it onto the home screen; an app the user uninstalled stays uninstalled.
 
 ## Receiving shares
@@ -280,7 +281,7 @@ State persistence details live in [State and persistence](state-and-persistence.
 
 ## Home widgets
 
-Widgets are the large live tiles on the home screen: the clock faces, the calendar, the photos rotation, the Skywatcher forecast, daily resets, and the activity rings. A widget is a class implementing `IHomeWidget` (src/Aetherphone/Core/Home/IHomeWidget.cs):
+Widgets are the large live tiles on the home screen: the clock faces, the calendar, the photos rotation, the Skywatcher forecast, daily resets, the activity rings, and the coin balance. A widget is a class implementing `IHomeWidget` (src/Aetherphone/Core/Home/IHomeWidget.cs):
 
 ```csharp
 internal interface IHomeWidget : IDisposable
@@ -336,13 +337,13 @@ internal sealed class RecipeWidget : IHomeWidget
 
 The Control Center (opened with a tap on the band at the top of the screen) is a sibling system with its own contract: each tile is an `IControlModule` (src/Aetherphone/Core/ControlCenter/IControlModule.cs) with `Id`, `GalleryLabel`, `GalleryIcon`, a `Sizes` list of supported `ControlSpan` values, a `DefaultSpan`, and `Draw(in ControlModuleContext context)`. `ControlModuleContext` looks like `WidgetContext` with a few changes: the rectangle is named `Rect` instead of `Bounds`, `Span` replaces `Size`, there is no `Delta`, and it adds an `Interactive` flag you must check before reacting to input. Spans on the 4-column grid (`ControlSpans` in src/Aetherphone/Core/ControlCenter/ControlSpan.cs): `Small` 1x1, `Wide` 2x1, `Tall` 1x2, `Large` 2x2, `Bar` 4x1.
 
-You rarely implement the interface directly. src/Aetherphone/Core/ControlCenter/Modules/ has the reusable shapes: `ToggleModule` (id, icon, label, a `Func<bool>` for state and an `Action` on press; also used for one-shot launchers like the camera and settings tiles, whose state always reads false), `SliderModule` (brightness, volume), `MediaModule`, and `AccentModule`. Every module is constructed in the `ControlRegistry` constructor (src/Aetherphone/Core/ControlCenter/ControlRegistry.cs); adding a tile is usually one more `Add(new ToggleModule(...))` line there.
+You rarely implement the interface directly. src/Aetherphone/Core/ControlCenter/Modules/ has the reusable shapes: `ToggleModule` (id, icon, label, a `Func<bool>` for state and an `Action` on press; also used for one-shot launchers like the camera and settings tiles, whose state always reads false), `SliderModule` (brightness, volume), `MediaModule`, `AccentModule`, and `CoinModule` (the coin balance tile that opens the Coin app). Every module is constructed in the `ControlRegistry` constructor (src/Aetherphone/Core/ControlCenter/ControlRegistry.cs); adding a tile is usually one more `Add(new ToggleModule(...))` line there.
 
 `ControlLayoutService` (src/Aetherphone/Core/ControlCenter/ControlLayoutService.cs) owns which modules are on the grid, in what order and at what span, and solves placement with the same `HomeGridSolver` the home screen uses. Long-press a tile or press the customize button to edit: dragging reorders, the resize handle cycles through the module's `Sizes`, the remove badge takes a tile off, and the add button opens `ControlGallery`, which lists the modules currently off the grid and places an added one at its `DefaultSpan`. The layout persists in `Configuration.ControlPanel` as module ids, spans, and an `Enabled` list. Install semantics are pinned by tests (src/Aetherphone.Tests/ControlLayoutServiceInstallTests.cs): a fresh install puts every module on the grid, a module shipped in an update after the user's layout was saved stays off the grid until the user adds it, and adds and removes survive restarts.
 
 ## Cross-app launchers
 
-Apps never call into each other directly. To deep-link, one app writes an intent into a small launcher service, opens the target by id, and the target consumes the intent in `OnOpened`. The launchers live in src/Aetherphone/Core/Apps/ and are created in `PhoneServices`:
+Apps never call into each other directly. To deep-link, one app writes an intent into a small launcher service, opens the target by id, and the target consumes the intent in `OnOpened`. Every launcher is created in `PhoneServices`, but only the four below live in src/Aetherphone/Core/Apps/; the other ten sit beside the subsystem they open: `AnnouncementsLauncher` (Core/Announcements), `CasinoLauncher` (Core/Casino), `EncryptionSetupLauncher` (Core/Crypto), `LinkpearlLauncher` (Core/GameChat), `MarketLauncher` (Core/Market), `SafetyLauncher` (Core/Moderation), `MusterLauncher` (Core/Muster), `RadioLauncher` (Core/Radio), `AetherStreamLauncher` (Core/Video), and `YellowPagesLauncher` (Core/YellowPages). `NotificationsApp` and the shell's `NotificationRouter` consume nearly the full set to route notification taps.
 
 | Launcher | Intent |
 | --- | --- |

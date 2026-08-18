@@ -37,15 +37,15 @@ public void Save()
 {
     if (Plugin.Framework.IsInFrameworkUpdateThread)
     {
-        Plugin.PluginInterface.SavePluginConfig(this);
+        SaveNow();
         return;
     }
 
-    _ = Plugin.Framework.RunOnFrameworkThread(() => Plugin.PluginInterface.SavePluginConfig(this));
+    _ = Plugin.Framework.RunOnFrameworkThread(SaveNow);
 }
 ```
 
-The framework thread is the game's main update thread; the plugin funnels all config writes through it. If you call `Save()` from a background task it defers the write to the next framework tick instead of blocking. `SaveNow()` writes immediately on the current thread and is the exception, not the rule.
+The framework thread is the game's main update thread; the plugin funnels all config writes through it. If you call `Save()` from a background task it defers the write to the next framework tick instead of blocking. `SaveNow()` is the single actual writer: `Save()` calls it directly when already on the framework thread and defers it otherwise. It wraps `SavePluginConfig` in a try/catch and logs "Configuration save failed; settings changed this session may be lost" instead of throwing, so a failed write is swallowed and only visible in the log.
 
 What belongs in `Configuration`:
 
@@ -61,7 +61,7 @@ There are three tiers of migration, from cheapest to heaviest. Pick the lightest
 
 **1. Add a property with a default.** New properties deserialize to their initializer when missing from old JSON. `public bool ShowAppNames { get; set; } = true;` needs no migration at all. This is the normal case.
 
-**2. One-shot flag migrations.** When existing data must be transformed once (ids renamed, values moved, a layout repacked), add a `bool ...Migrated` (or `...Initialized`) property plus a `Migrate...()` method on `Configuration`, and call it from the `Plugin` constructor next to the existing calls (`MigrateSoundSettings`, `MigrateChangelogSeen`, `MigrateMessage`, `MigrateMessagesMerge`, `MigrateSetupCompleted`, `MigrateControlPanelRepack`, `MigrateCharacterSessions`). The pattern, verbatim from src/Aetherphone/Configuration.cs:
+**2. One-shot migrations.** When existing data must be transformed once (ids renamed, values moved, a layout repacked), add a `Migrate...()` method on `Configuration` with a guard that makes it run once, and call it from the `Plugin` constructor next to the ten existing calls (`MigrateSoundSettings`, `MigrateChangelogSeen`, `MigrateMessage`, `MigrateMessagesMerge`, `MigrateSetupCompleted`, `MigrateChirperMediaFilters`, `MigratePhoneWidth`, `MigrateControlPanelRepack`, `MigrateCharacterSessions`, `MigrateHousingRefreshFloor`), which run right after `Cfg.NormalizeAethernetBaseUrl()`. The usual guard is a `bool` property (`...Migrated`, `...Repacked`, `...Applied`), but a value sentinel works too when the pre-migration state is unmistakable: `MigrateChirperMediaFilters` and `MigratePhoneWidth` guard on the migrated property itself (`ChirperShowMediaPosts` still false, `PhoneWidth` still 0) with no separate flag. The flag-guarded pattern, verbatim from src/Aetherphone/Configuration.cs:
 
 ```csharp
 public void MigrateControlPanelRepack()
@@ -97,44 +97,51 @@ Per-character state comes in two shapes:
 **Dictionaries inside `Configuration`, keyed by `ulong` ContentId.** Used when the per-character payload is small:
 
 - `JobsCategoriesByCharacter` (custom gearset categories)
-- `MutedLinkshellsByCharacter` (per-character linkshell mutes, loaded by `LinkshellMuteStore` on every `CharacterWatch.Changed`)
+- `MutedLinkshellsByCharacter` (legacy per-character linkshell mutes; nothing writes it anymore, and its only reader is `TabStore.ReadLegacyMutes`, which seeds mute state for newly created Linkpearl tabs)
 - `CharacterSessions` (account session snapshots, see below)
 
 **Per-character files under `<config>`.** Used for anything that grows:
 
 | Location | Contents | Owner |
 | --- | --- | --- |
-| `<config>/Messages/<contentid>/` (lowercase hex, one SHA-256-named JSON per conversation) | /tell history, capped at 500 lines per conversation | `MessageArchive` |
+| `<config>/GameChat/<contentid>/` (lowercase hex, one SHA-256-named JSON per conversation stream) | Game chat history, capped at `ChatLog.MaxLinesPerStream` (2000) lines per stream | `ChatArchive` (src/Aetherphone/Core/GameChat/ChatArchive.cs) |
+| `<config>/Messages/<contentid>/` (lowercase hex, same SHA-256 naming) | Legacy /tell history (500-line cap); read once per character by `ChatArchive.MigrateLegacyTells`, never written anymore | `MessageArchive` (legacy) |
 | `<config>/Activity/<CONTENTID>.json` (uppercase hex) | Activity app tracking | `ActivityStore` (src/Aetherphone/Core/Activity/ActivityStore.cs) |
 | `<config>/Health/<CONTENTID>.json` (uppercase hex) | Health tracker samples | `HealthStore` (src/Aetherphone/Core/Health/HealthStore.cs) |
 | `<config>/cache/inventory/<contentid>.json` (lowercase hex) | Inventory snapshots | `InventoryStore` (src/Aetherphone/Core/Inventory/InventoryStore.cs) |
 
-Stores that hold per-character data subscribe to `CharacterWatch.Changed`, drop their in-memory state, and reload from the new character's slot. `LinkshellMuteStore.OnCharacterChanged` shows the full pattern, including a one-shot migration from the old global list to the per-character dictionary:
+Exactly two stores subscribe to `CharacterWatch.Changed` today: `ChatArchive` and `TabStore` (both in src/Aetherphone/Core/GameChat/). The others reach per-character state differently: `HealthTracker` polls `watch.CurrentContentId` on its own sample tick and swaps profiles when it changes, while `ActivityTracker` and the inventory capture path read the current ContentId straight from game state on their own ticks and receive no `CharacterWatch` at all. `ChatArchive.OnCharacterChanged` shows the reload pattern, verbatim from src/Aetherphone/Core/GameChat/ChatArchive.cs:
 
 ```csharp
-private void OnCharacterChanged(ulong id)
+private void OnCharacterChanged(ulong contentId)
 {
-    contentId = id;
-    if (id != 0 && !configuration.LinkshellMutesPerCharacterMigrated)
+    Flush();
+    log.Clear();
+    lock (sync)
     {
-        if (configuration.MutedLinkshells.Count > 0)
+        dirty.Clear();
+        activeRoot = null;
+        if (contentId == 0)
         {
-            configuration.MutedLinkshellsByCharacter[id] = new List<string>(configuration.MutedLinkshells);
-            configuration.MutedLinkshells = new List<string>();
+            return;
         }
 
-        configuration.LinkshellMutesPerCharacterMigrated = true;
-        configuration.Save();
+        var directory = new DirectoryInfo(Path.Combine(baseDir.FullName, contentId.ToString("x16")));
+        if (!directory.Exists)
+        {
+            directory.Create();
+        }
+
+        activeRoot = directory;
+        lastFlushMilliseconds = Environment.TickCount64;
     }
 
-    muted = configuration.MutedLinkshellsByCharacter.TryGetValue(id, out var list)
-        ? new HashSet<string>(list, StringComparer.Ordinal)
-        : new HashSet<string>(StringComparer.Ordinal);
-    Changed?.Invoke();
+    MigrateLegacyTells(contentId);
+    Load();
 }
 ```
 
-`ChatArchive` plus `LinkpearlMigratedCharacters` follows the same shape for game chat history, and imports the legacy `MessageArchive` files once per character.
+The shape to copy: flush the outgoing character's dirty state first, drop the in-memory state, treat 0 as logged out (no active root, nothing loaded), then point at the new character's folder and reload. `MigrateLegacyTells` is the one-shot import half of the handler: guarded by the `Configuration.LinkpearlMigratedCharacters` set, it reads the legacy `MessageArchive` files once per character and rewrites them as ChatArchive streams. `TabStore.ReadLegacyMutes` is the minimal version of the same event: it just re-reads `Configuration.MutedLinkshellsByCharacter` for the new character so newly created tabs inherit the old mutes.
 
 ## Accounts, sessions, and the reset contract
 
@@ -177,7 +184,7 @@ The Aethernet backend (a separate ASP.NET service in its own repository) is the 
 
 - New small setting or favorite list: add a property to `Configuration` with a sensible default, call `Save()` after mutating. No migration needed.
 - New per-character setting, small: a `Dictionary<ulong, ...>` on `Configuration` keyed by ContentId, reloaded from a `CharacterWatch.Changed` handler.
-- Growing or per-character bulky data: a JSON file per ContentId under a new `<config>` subfolder, following `ActivityStore` or `MessageArchive`. Write via a temp file and `File.Move(temp, path, true)` so a crash cannot truncate it.
+- Growing or per-character bulky data: a JSON file per ContentId under a new `<config>` subfolder, following `ActivityStore` or `ChatArchive`. Write via a temp file and `File.Move(temp, path, true)` so a crash cannot truncate it.
 - Binary media the user created: a `<config>` subfolder with a stable naming scheme, plus (if it needs settings) a small record list in `Configuration`, like wallpapers.
 - Downloaded, refetchable bytes: a `DiskCache` under `<config>/cache/`.
 - Shared or account-scoped data: it belongs on the server; the client store keeps it in memory and obeys the `AethernetSession.Changed` reset contract.
@@ -188,9 +195,9 @@ The Aethernet backend (a separate ASP.NET service in its own repository) is the 
 
 - The config JSON embeds assembly-qualified type names for serialized record types. Moving a `[Serializable]` type stored in `Configuration` to another namespace silently drops users' data unless you add a `ConfigMigrations.TypeRenames` pair. Every existing entry in that table is a scar from a real move.
 - `Configuration.Save()` called off the framework thread is fire-and-forget: the write happens on a later framework tick. Do not assume the file is on disk when the call returns.
-- ContentId hex casing is inconsistent across stores: `MessageArchive` and `InventoryStore` format with `"x16"` (lowercase), `ActivityStore` and `HealthStore` with `"X16"` (uppercase). Copy the exact store you are following, and do not expect folder names to match across features.
-- `MessageArchive` caps each conversation at 500 stored lines (`MaxStoredLines`) and names files with a SHA-256 hash of the send target, so you cannot map a file back to a conversation by eye.
-- The `AEP_` file name is load-bearing twice: `PhotoLibrary.List` sorts by name descending (newest first) and `PhotosApp.ResolveTaken` parses the date out of it. Renaming files in the Photos folder breaks both ordering and date grouping.
+- ContentId hex casing is inconsistent across stores: `ChatArchive`, `MessageArchive`, and `InventoryStore` format with `"x16"` (lowercase), `ActivityStore` and `HealthStore` with `"X16"` (uppercase). Copy the exact store you are following, and do not expect folder names to match across features.
+- `ChatArchive` names files with a SHA-256 hash of the stream key (the legacy `MessageArchive` did the same with the send target), so you cannot map a file back to a conversation by eye. Streams are capped at `ChatLog.MaxLinesPerStream` (2000) stored lines.
+- The `AEP_` file name is load-bearing through `PhotosApp.ResolveTaken`, which parses the taken date out of it; the Photos app then sorts every entry by that resolved time, so `PhotoLibrary.List`'s name-descending order is only a pre-sort. Renaming files in the Photos folder makes `ResolveTaken` fall back to the file's write time, which breaks date grouping and shifts the photo's position.
 - `PhotoLibrary.Save` encodes and writes the PNG on a background `Task.Run` with no completion signal; a screenshot taken immediately before quitting the game can be lost.
 - `ChatThreadStoreBase.OnSessionAccountChanged` returns early when the new account id is null, so a plain sign-out does not clear thread caches; only a *different* signed-in account does. `SocialFeedStore.OnSessionChanged` has no null guard and clears on sign-out too. Know which behavior you are copying.
 - `AethernetSession.StashActive` skips creating a snapshot when there is no token and no key cache, so an anonymous character leaves no `CharacterSessions` entry at all. Do not treat a missing dictionary entry as an error.

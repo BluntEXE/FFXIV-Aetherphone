@@ -33,7 +33,7 @@ Colors and surfaces come from `AppSkin` and `AppPalette` (per-app skin) or `Phon
 
 `TextStyle` (src/Aetherphone/Windows/Components/TextStyles.cs) is a record of a font scale and a `FontWeight` (Regular, Medium, SemiBold, Bold, defined in src/Aetherphone/Core/FontService.cs). `TextStyles` is the ladder of named styles: `LargeTitle`, `Title1`, `Title2`, `Title3`, `Headline`, `Body`, `BodyEmphasized`, `Callout`, `Subheadline`, `SubheadlineEmphasized`, `Footnote`, `FootnoteEmphasized`, `Caption1`, `Caption2`, `IconLabel`.
 
-The rule: all text goes through `Typography` with a `TextStyles` entry. Never invent a magic scale like `0.83f`. The ladder scales exist as size buckets in `FontService` (the `SizeMultipliers` array), so an off-ladder scale lands in the nearest bucket anyway and only makes the call site misleading.
+The rule: all text goes through `Typography` with a `TextStyles` entry. Never invent a magic scale like `0.83f`. `FontService` snaps every scale to the nearest of its size buckets (the `SizeMultipliers` array), so an off-ladder scale lands in a bucket anyway and only makes the call site misleading. One named style is off-bucket by design: `IconLabel` (0.85) rides the 0.88 bucket.
 
 ```csharp
 var drawList = ImGui.GetWindowDrawList();
@@ -68,7 +68,7 @@ Watch for the cursor landmine: `Typography.Draw` and `Typography.DrawCentered` h
 
 - `Metrics.Space`: `Xxs` 4, `Xs` 6, `Sm` 8, `Md` 12, `Lg` 16, `Xl` 22, `Xxl` 32
 - `Metrics.Radius`: `Field` 9, `Sm` 8, `Md` 12, `Card` 16, `Lg` 18, `TileFactor` 0.28
-- `Metrics.Size`: `Header` 42, `Row` 46, `FieldHeight` 34, `FieldMultiline` 88, `ToggleWidth` 46, `ToggleHeight` 28, `IconTile` 28, `HeroRing` 56, `HomeIndicatorInset` 34
+- `Metrics.Size`: `Header` 42, `Row` 46, `FieldHeight` 34, `FieldMultiline` 88, `ToggleWidth` 46, `ToggleHeight` 28, `HintIconHeight` 22, `HintIconGap` 16, `IconTile` 28, `HeroRing` 56, `HomeIndicatorInset` 34
 - `Metrics.Stroke`: `Hairline` 1, `Thin` 1.4, `Ring` 2
 
 The values are unscaled design units, authored against a 360 wide phone. Multiply by `UiScale.Current` (Dalamud's UI scale times the phone zoom) at the call site:

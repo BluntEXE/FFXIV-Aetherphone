@@ -24,7 +24,7 @@ Three principles decide most reviews:
 
 - **YAGNI** (you aren't gonna need it). Implement things when you actually need them, never because you foresee needing them. No configuration points nobody configures, no interfaces with one implementation "for later". CONTRIBUTING.md states it as: no heavy abstractions "for later".
 - **DRY** (don't repeat yourself), via small shared utilities. When the same drawing or string logic appears twice, it moves into src/Aetherphone/Windows/Components/ or a small static helper like UiText.Truncate or TimeText.Ago, not into a base class.
-- **Self-documenting code.** Names and structure carry the meaning. As of today the C# under src/Aetherphone contains zero comment lines; explanatory prose lives in build files and docs (Directory.Build.props and the CI workflows have comments, the code does not). The allowance, per CONTRIBUTING.md: a comment may explain *why* something is done when the code cannot, or the source of a magic constant. It never narrates *what* the code does.
+- **Self-documenting code.** Names and structure carry the meaning. The C# under src/Aetherphone is kept comment-free as a rule, though a handful of legacy comment lines survive, concentrated in the radio and media decoding code (src/Aetherphone/Core/Radio/RadioPlayer.cs and its neighbors). Explanatory prose lives in build files and docs; Directory.Build.props and the CI workflows carry comments freely. The allowance, per CONTRIBUTING.md: a comment may explain *why* something is done when the code cannot, or the source of a magic constant. It never narrates *what* the code does.
 
 ## Naming
 
@@ -37,7 +37,7 @@ No abbreviations, anywhere, including loop variables.
 | minuteOfDay, hourOfDay | min, hr |
 | conversationIndex, groupIndex | ci, gi |
 
-Real examples: src/Aetherphone/Core/Localization/LocAudit.cs iterates with groupIndex, fieldIndex, and entryIndex; src/Aetherphone/Core/Localization/TimeText.cs takes hourOfDay and minuteOfHour. Locals named drawList outnumber the older dl several times over, and a few legacy single-letter loops survive in src/Aetherphone/Windows/Components/ProgressRing.cs. Do not add to the legacy side.
+Real examples: src/Aetherphone/Core/Localization/LocAudit.cs iterates with groupIndex, fieldIndex, and entryIndex; src/Aetherphone/Core/Localization/TimeText.cs takes hourOfDay and minuteOfHour. Locals named drawList outnumber the older dl several times over, and a few legacy single-letter loops survive: src/Aetherphone/Windows/Components/ProgressRing.cs and src/Aetherphone/Core/Video/ScreenPainter.cs among them, plus x and y coordinate loops in a handful of renderers (SnakeRenderer.cs, WeatherSky.cs, ArtworkCache.cs). Do not add to the legacy side.
 
 Other naming norms you can see throughout the tree:
 
@@ -52,7 +52,7 @@ The repo has an .editorconfig and editors plus `dotnet format` respect it. What 
 | Setting | Value |
 | --- | --- |
 | Encoding and endings | UTF-8, LF line endings, final newline, trailing whitespace trimmed (kept in .md) |
-| Indentation | 4 spaces for code, 2 spaces for yml, yaml, and json |
+| Indentation | 4 spaces for code, 2 spaces for yml and yaml. On json the config contradicts itself: one section sets 2, a trailing catch-all re-matches json at 4, and the last match wins. The repo's JSON files are 2-space in practice |
 | Namespaces | File-scoped (`namespace Aetherphone.Core.Apps;`), enforced at warning level |
 | Braces | Opening brace on its own line, everywhere; `else`, `catch`, `finally` start a new line |
 | var | Preferred everywhere (built-in types, apparent types, and elsewhere) |
@@ -107,10 +107,10 @@ The codebase leans data-oriented: plain data in flat structures, transformed by 
 
 Aetherphone draws with Dear ImGui, an immediate mode UI library: nothing is retained between frames, the entire phone UI is rebuilt and redrawn every frame, up to your monitor's refresh rate, inside the game's render loop. Any code reachable from a `Draw` method is a hot path. That drives every rule here.
 
-- **No LINQ in per-frame or hot paths.** LINQ extension methods (Where, Select, Any, First and friends) allocate iterators and delegates every call. In practice only a couple of LINQ call sites survive, in rarely-run event paths: a FirstOrDefault in an album context-menu handler (src/Aetherphone/Apps/Photos/PhotosApp.Grid.cs) and a Select in a favorites load (src/Aetherphone/Apps/Music/MusicApp.cs). Write a `for` loop instead.
+- **No LINQ in per-frame or hot paths.** LINQ extension methods (Where, Select, Any, First and friends) allocate iterators and delegates every call. In practice only a few LINQ call sites survive, in rarely-run paths: a FirstOrDefault in an album context-menu handler (src/Aetherphone/Apps/Photos/PhotosApp.Grid.cs), a FirstOrDefault reading an ICY metadata header when a radio stream connects (src/Aetherphone/Core/Radio/RadioPlayer.cs), and a Select loading favorite radio stations (src/Aetherphone/Apps/Music/MusicApp.cs). The "Verify no new LINQ" guard in .github/workflows/ci.yml fails a pull request that adds a call to the heavier operators; its allowlist names PhotosApp.Grid.cs, RadioPlayer.cs, and src/Aetherphone/Core/Video/VideoUrlResolver.cs. Write a `for` loop instead.
 - **`for` over `foreach` on indexable collections.** `for` with a named index avoids enumerator allocation on non-array collections and is the dominant pattern. `foreach` remains where there is no indexer, mostly dictionary and set iteration (src/Aetherphone/Apps/Calendar/CalendarEventMerger.cs).
 - **Watch allocations in draw code.** Anything allocated per frame becomes garbage-collector pressure and eventually a visible stutter in-game. The pattern to copy: compute once, cache, invalidate on a real change. Typography.cs keeps FitCache and WrapCache and clears them only when the font atlas generation changes; ChipRail.Draw takes `ReadOnlySpan<string>` so callers can pass stack or pooled data without allocating.
-- **Reflection only in rarely-executed paths.** Reflection is slow and allocation-heavy. The entire plugin uses it exactly once: LocAudit.CollectKeys, which is compiled only in debug builds and runs once at plugin boot.
+- **Reflection only in rarely-executed paths.** Reflection is slow and allocation-heavy. The plugin uses it in a handful of cold paths: LocAudit.CollectKeys (compiled only in debug builds, runs once at plugin boot), the Activator.CreateInstance call that creates the Media Foundation transform when an AAC radio stream starts (src/Aetherphone/Core/Radio/AacStreamDecoder.cs), and the delegate inspection that maps a chat command to its owning plugin while the Shortcuts catalog is built (src/Aetherphone/Core/Shortcuts/PluginCatalog.cs). None of it is reachable from a Draw method; keep it that way.
 - **Always await awaitables in async contexts.** There are zero `async void` methods in the tree. ImGui draw code cannot await (a frame cannot pause), so work is pushed off the frame with an explicit discard, `_ = Task.Run(...)`, and inside those async bodies every awaitable is awaited.
 
 ## UI conventions in brief
@@ -122,7 +122,7 @@ Full detail with examples lives in [UI toolkit](ui-toolkit.md); this is the chec
 - **Text wraps, it never overflows.** Use Typography.Wrapped, Typography.DrawWrappedLeft, or Typography.FitText. Clipped or overlapping text is a bug, always.
 - **One pannable chip rail, never a chip wall.** A row of filter chips is a single horizontally draggable ChipRail. Chips never wrap to a second line.
 - **Free input over preset chips.** When the user enters a value, let them enter any value. TimeOfDayField (src/Aetherphone/Windows/Components/TimeOfDayField.cs) steps hours and minutes across the whole day rather than offering a handful of preset times.
-- **Critically damped motion, no bounce.** All UI motion runs through Spring (src/Aetherphone/Core/Animation/Spring.cs), whose Step clamps at the target so it cannot overshoot. Bouncy easing (Easing.EaseOutBack) is used only inside the mini-games under src/Aetherphone/Apps/Games/.
+- **Critically damped motion, no bounce.** All UI motion runs through Spring (src/Aetherphone/Core/Animation/Spring.cs), whose Step clamps at the target so it cannot overshoot. Bouncy easing (Easing.EaseOutBack) lives only in games: the mini-games under src/Aetherphone/Apps/Games/ and the casino cabinets under src/Aetherphone/Apps/Casino/Cabinets/.
 - **All clock text goes through the single clock seam.** TimeText.Clock (src/Aetherphone/Core/Localization/TimeText.cs) formats every clock string and honors the user's 12/24-hour preference via TimeText.Use24Hour. There are dozens of call sites and zero hand-rolled `"HH:mm"` format strings outside TimeText itself. Keep it that way.
 
 ### Grouped lists (settings and any list of rows)
@@ -137,7 +137,7 @@ The settings tree is the reference implementation of these three rules; follow t
 
 These apply to UI strings, docs, changelogs, and commit messages alike.
 
-- **No em dashes, anywhere.** Not in UI copy, not in the nine locale JSONs, not in docs, not in changelog bullets. Use a comma, colon, or parentheses. The Discord announce workflow (.github/workflows/announce-commits.yml) even replaces stray dashes in commit subjects before posting. One legacy file, src/Aetherphone/Cases/_template/README.md, predates the rule; do not use it as a copy reference.
+- **No em dashes, anywhere.** Not in UI copy, not in the nine locale JSONs, not in docs, not in changelog bullets. Use a comma, colon, or parentheses. CI enforces this repo-wide: the "Verify no em dashes" guard in .github/workflows/ci.yml fails any pull request whose tracked files contain one. The single exemption is .github/workflows/announce-commits.yml, which carries the character on purpose so it can substitute stray dashes out of commit subjects before posting to Discord.
 - **Changelog bullets carry one idea each.** The changelog ships inside the plugin: entries are LocString arrays in the Changelog section of src/Aetherphone/Core/Localization/L.cs, listed in src/Aetherphone/Core/Changelog/ChangelogData.cs, and translated in all nine locale JSONs.
 - **Credit contributors in the changelog.** The pattern is a trailing clause: "..., contributed by Ehno". See the 0.9.9.5 entries in L.cs.
 - **Use in-app names.** Copy refers to apps and features by their on-screen names (Photos, Jobs, Camera), not internal identifiers.
@@ -149,13 +149,13 @@ Every new, renamed, or deleted user-visible string changes src/Aetherphone/Core/
 
 ## Git conventions
 
-This repo uses conventional-commit style, confirmed in history: a type, a scope in parentheses, a colon, then a lowercase summary.
+This repo uses conventional-commit style for hand-written commits: a type, a scope in parentheses, a colon, then a lowercase summary. Workflow-generated commits are the exception and keep their own fixed subjects: the "Release vX.Y.Z.W: bump repo.json" and "Update issue template versions for vX.Y.Z.W" commits come from the release pipeline, and merge commits keep their default subjects.
 
 ```
 feat(account): link Patreon and wear the member badge automatically
 fix(net): cap the rate-limit pause at 30 seconds
-docs(changelog): add the 0.9.9.6 entry in all nine languages
-chore(release): prepare 0.9.9.6
+docs(changelog): note the 1.0.0.5 Casino and Coin reopen for the Chinese game version
+chore(release): bump version to 1.0.0.5
 refactor(sounds): make all ringtones and notification sounds file-based
 ci: stop pinging the role in commit announcements
 ```
@@ -163,7 +163,7 @@ ci: stop pinging the role in commit announcements
 - Types in active use: `feat`, `fix`, `docs`, `chore`, `refactor`, `ci`, plus the occasional `perf`, `style`, and `test`. Scope is the app or subsystem you touched (`velvet`, `settings`, `ui`, `net`, `release`).
 - The summary is a lowercase sentence fragment, no trailing period, and describes the user-visible outcome, not the diff.
 - **One concern per PR.** Keep the diff focused (CONTRIBUTING.md). A fix and a refactor are two PRs.
-- **No AI attribution.** Do not add co-author trailers or generated-with footers to commits or PR bodies. Commit messages carry substantive content only.
+- **No AI attribution.** Do not add co-author trailers or generated-with footers to commits or PR bodies. Commit messages carry substantive content only. This is the going-forward policy, not a description of history: a few dozen commits merged before mid-August 2026 still carry Co-authored-by trailers. Do not copy them.
 - **Update the README when user-visible behavior changes**: commands, layout, settings (CONTRIBUTING.md). The README has eight translated siblings (README.fr.md and friends); update at least README.md.
 - Release versioning is not part of a feature PR: the version lives in Directory.Build.props and CI fails if it drifts from repo.json (.github/workflows/ci.yml). See [Testing and release](testing-and-release.md).
 
@@ -173,7 +173,7 @@ ci: stop pinging the role in commit announcements
 - **Toggle.Draw returns the new value, not "was clicked"**; assign it back every frame instead of treating it as a click event. Full story: [UI toolkit](ui-toolkit.md).
 - **Fixing English text only in en.json changes nothing in-game.** English resolves from the source strings in L.cs (Loc gives English an empty catalog in src/Aetherphone/Core/Localization/Loc.cs). Fix the text in L.cs and mirror it in en.json.
 - **Text resolved at construction freezes its language**; store the LocString and call `Loc.T` in your Draw path. Full story: [Localization](localization.md).
-- **Missing-translation warnings only exist in debug builds.** LocAudit is wrapped in `#if DEBUG` and runs once at boot. A clean Release build proves nothing about lockstep; watch the Dalamud log on a debug build after touching L.cs.
+- **Lockstep is enforced by the test suite, not the compiler.** LocalizationParityTests (src/Aetherphone.Tests/LocalizationParityTests.cs) fails CI whenever a key declared in L.cs is missing from any of the nine catalogs, or a catalog carries a key L.cs no longer declares. For a faster local signal, LocAudit (wrapped in `#if DEBUG`, runs once at boot) reports missing keys in the Dalamud log on a debug build after you touch L.cs.
 
 ## Related docs
 

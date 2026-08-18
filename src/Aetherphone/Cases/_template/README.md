@@ -38,8 +38,9 @@ The phone body is **1000 x 2255**, inset 250 px from every edge. Hardware button
 body and are drawn by the plugin, so leave no gutter for them.
 
 1000 px of body is a little over 1:1 at the largest possible on-screen size. Higher gains nothing: the
-plugin generates no mipmaps, so extra pixels are only ever sampled down. Body aspect varies 0.21% across
-the six phone sizes, so the art stretches to fill: never letterbox, never anchor.
+plugin generates no mipmaps, so extra pixels are only ever sampled down. Body aspect varies about 0.1%
+across the six phone sizes (only height rounding separates them), so the art stretches to fill: never
+letterbox, never anchor.
 
 ## Guides, in canvas pixels
 

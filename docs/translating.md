@@ -17,7 +17,7 @@ The nine files are `de`, `en`, `es`, `fr`, `ja`, `pt`, `ru`, `tr`, `zh`. Pick th
 
 ```json
   "common.cancel": "取消",
-  "chirper.postCount.one": "{0} 条动态",
+  "chirper.posts.one": "{0} 篇帖子",
   "common.photoLimit": "最多可添加 {0} 张照片",
 ```
 
@@ -26,7 +26,7 @@ The part before the colon is the key. It is machine-readable, the code looks str
 ## The rules
 
 1. **Translate values, never keys.** Left of the colon stays byte for byte identical to en.json.
-2. **Do not add, delete, or reorder lines.** All nine files carry the same keys in the same order, so the same key sits on the same line number in every file. A missing key silently falls back to English at runtime, so deleting one hides text rather than erroring. Adding a brand new key is a code change and belongs in a developer pull request.
+2. **Do not add, delete, or reorder lines.** All nine files carry the same keys in the same order, so the same key sits on the same line number in every file, with one historical exception: nineteen keys in the `changelog.r0980.*` block sit on slightly different lines in en.json and pt.json than in the other seven files (`changelog.r0980.33` is line 1026 in en.json and pt.json but line 1044 in the rest). That block is correct as it is; leave its order alone. A missing key silently falls back to English at runtime, so deleting one hides text rather than erroring. Adding a brand new key is a code change and belongs in a developer pull request.
 3. **Keep every placeholder.** `{0}`, `{1}` and so on are filled in at runtime with a name, a number, or a count. They may move to wherever your language needs them, but every placeholder in the English source must appear in the translation, and you must not invent new ones. A translation that references `{1}` when the code only supplies one value crashes that screen on every frame.
 4. **Plurals come in pairs.** Keys ending in `.one` and `.other` are two forms of the same string. Only two forms exist. Do not add `.few` or `.many`; nothing reads them. For Chinese, both forms are usually the same text.
 5. **No em dashes, anywhere.** The em dash character (Unicode U+2014, the long horizontal dash) is banned repo wide, and CI fails the pull request if it appears in any file. This doc cannot even print it. The rule matters for Chinese in particular: the Chinese dash 破折号 is that same character written twice. Use a comma, a colon, parentheses, or `、` instead.
@@ -76,10 +76,12 @@ If a screen shows English while the phone is set to Chinese, that key is missing
 2. Note the key on that line, for example `settings.notifications.title`.
 3. Search zh.json for the same key. If it is there but still English, translate it. If it is genuinely absent, open an issue rather than adding it yourself: a missing key usually means a developer forgot the lockstep step, and the fix belongs with the code.
 
+If you cannot find the text in en.json at all, the string may still exist: the English players actually see comes from the code file `src/Aetherphone/Core/Localization/L.cs`, and en.json occasionally lags behind it (a handful of strings differ today). Search L.cs for the text instead; the key is the first quoted string on the same line. Do not edit en.json to match what you saw: bringing it back in sync is a code-side task for a developer, so mention the mismatch in an issue instead.
+
 ## Before you submit
 
 - The file still parses as JSON. Paste it into any online JSON validator if you are unsure.
-- The line count matches en.json (5138 lines today). If yours differs, you added or removed a line.
+- The line count matches en.json (5140 lines today: 5138 keys plus the opening and closing braces). If yours differs, you added or removed a line.
 - Search the file for the em dash (U+2014). There should be zero results, including the doubled Chinese 破折号.
 - Every `{0}` and `{1}` that the English source has is still present in your translation.
 - The diff contains only lines you meant to change.
@@ -107,7 +109,7 @@ GitHub is slow or unreachable from some networks. If the pull request flow is no
 - **Editing en.json changes nothing in game.** English text is resolved from `L.cs`, and en.json is only a reference copy. Report English typos as an issue.
 - **The Chinese 破折号 is two em dashes** and fails CI. So does a single one pasted in from a document.
 - **Placeholder mistakes crash a screen.** `{0}` is safe to move, never safe to delete or renumber past what the English source uses.
-- **The file is flat and ordered.** Keep every key on the line it is on today.
+- **The file is flat and ordered.** Keep every key on the line it is on today. The same key sits on the same line in every language file, except nineteen keys in the `changelog.r0980.*` block, which en.json and pt.json order differently from the other seven. Leave that block as you found it.
 
 ## Related docs
 

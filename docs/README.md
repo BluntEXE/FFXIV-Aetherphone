@@ -41,7 +41,7 @@ Terms that recur across every doc, defined once here:
 
 Every doc opens with one paragraph saying what it covers and when to read it, then a "Key files" table mapping the paths you will open most. Docs end with "Gotchas" (real traps verified in code, worth skimming even if you skip the middle) and "Related docs" links. When any doc and the code disagree, the code wins.
 
-Two exceptions are written for contributors who are not engineers and keep their own format: [the art asset specification](ART-ASSET-SPEC.md), numbered and table first, and [the translator guide](translating.md), a step-by-step walkthrough that assumes no tooling beyond a browser.
+Two exceptions keep their own format: [the art asset specification](ART-ASSET-SPEC.md), written for artists, numbered and table first, and [accent colors](design-accents.md), a short design rationale without the standard sections. Even [the translator guide](translating.md), a step-by-step walkthrough for contributors who are not engineers, follows the standard shape.
 
 ## All docs
 
@@ -85,7 +85,7 @@ Two exceptions are written for contributors who are not engineers and keep their
 
 | Doc | What it covers |
 | --- | --- |
-| [Art asset specification](ART-ASSET-SPEC.md) | The spec artists follow to produce app icons and phone cases that drop in without engineering work |
+| [Art asset specification](ART-ASSET-SPEC.md) | The spec artists follow to produce app icons, phone cases, and avatar frames that drop in without engineering work, plus the open art decisions still on the table |
 | [Translator guide](translating.md) | For translators with no code background: editing one language JSON and opening a pull request entirely in the browser |
 
 ## Find it fast
@@ -93,7 +93,7 @@ Two exceptions are written for contributors who are not engineers and keep their
 Common first questions, each with the doc and section that answers it:
 
 1. **How do I build the plugin and load it in game?** [Getting started: clone and build](getting-started.md#clone-and-build), then [load it in the game](getting-started.md#load-it-in-the-game).
-2. **Why does my change not show up in game?** Usually the Release versus Debug trap: [getting started: why Release, not Debug?](getting-started.md#why-release-not-debug)
+2. **Why does my change not show up in game?** Usually the Release versus Debug trap: [getting started: Release or Debug?](getting-started.md#release-or-debug)
 3. **How do I create a whole new app?** [Creating your own app](creating-an-app.md), start to finish.
 4. **How do I add a setting that survives restarts?** [State and persistence: the Dalamud config model](state-and-persistence.md#the-dalamud-config-model).
 5. **Where do notification sounds live?** Behavior in [notifications: sounds](notifications.md#sounds); the files and how to add one in [assets and media: sounds](assets-and-media.md#sounds).

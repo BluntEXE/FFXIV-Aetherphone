@@ -6,17 +6,17 @@ This doc covers the client side of everything online in Aetherphone: the HTTP la
 
 | Path | Role |
 | --- | --- |
-| src/Aetherphone/Core/Net/HttpService.cs | The one `HttpClient` wrapper: JSON calls, retries, 429 pauses, ETag cache |
+| src/Aetherphone/Core/Net/HttpService.cs | The one `HttpClient` wrapper: JSON calls, GET 429 pauses, ETag cache, retried byte downloads |
 | src/Aetherphone/Core/Net/EtagCache.cs | In-memory ETag store for conditional GETs |
 | src/Aetherphone/Core/Net/DiskCache.cs | Size-capped on-disk byte cache used by media caches |
 | src/Aetherphone/Core/Net/MediaCache.cs | Bytes to GPU texture cache with failure cooldowns |
 | src/Aetherphone/Core/Net/RequestThrottle.cs | Concurrency plus minimum-interval gate (used for Lodestone) |
 | src/Aetherphone/Core/Aethernet/AethernetSession.cs | Token, base URL, sign-in state, per-character session slots |
 | src/Aetherphone/Core/Aethernet/AethernetTransport.cs | Session-aware request builder over `HttpService` |
-| src/Aetherphone/Core/Aethernet/AethernetApi.cs | Facade that constructs the 16 typed domain clients |
+| src/Aetherphone/Core/Aethernet/AethernetApi.cs | Facade that constructs the 19 typed domain clients |
 | src/Aetherphone/Core/Aethernet/Clients/ | One typed client per API domain (auth, chats, media, keys, ...) |
 | src/Aetherphone/Core/Aethernet/Contracts/Dtos.cs | Request and response records for the wire contract |
-| src/Aetherphone/Core/Aethernet/SignInFlow.cs | Lodestone challenge and XIVAuth device-flow state machines |
+| src/Aetherphone/Core/Aethernet/SignInFlow.cs | Lodestone and Rising Stones challenge plus XIVAuth device-flow state machines |
 | src/Aetherphone/Core/RealtimeSignalBus.cs | In-process event bus fed by the websocket |
 | src/Aetherphone/Core/Telephony/RealtimeConnection.cs | The websocket itself: connect, receive loop, reconnect |
 | src/Aetherphone/Core/Telephony/CallSignalRouter.cs | Routes websocket messages to the bus and to `CallHub` |
@@ -33,7 +33,7 @@ This doc covers the client side of everything online in Aetherphone: the HTTP la
 
 Aethernet is the hosted service behind every social feature: accounts, chats, feeds, calls, media storage, and moderation. It is an ASP.NET application maintained in a separate repository, so nothing in this repo builds or runs it. The plugin talks to it two ways:
 
-- HTTPS requests against a base URL, `https://api.aetherphone.net` by default (`Configuration.DefaultAethernetBaseUrl` in src/Aetherphone/Configuration.cs).
+- HTTPS requests against a base URL (`Configuration.DefaultAethernetBaseUrl` in src/Aetherphone/Configuration.cs): `https://api.aetherphone.net` in Release builds, the development instance in Debug builds (see [Dev vs prod endpoints](#dev-vs-prod-endpoints)).
 - One websocket per signed-in session at the same host, path `/rt` (built in `RealtimeConnection.BuildUri`).
 
 Features that are purely local (notes, calculator, most mini-games) never touch the network. A few apps call third-party services directly (Universalis for market data, YouTube for songs, NetStone for Lodestone lookups); none of them attach the Aethernet session, and only some ride `HttpService` (Universalis and Lodestone image downloads do; NetStone page fetches and YoutubeExplode bring their own HTTP clients).
@@ -42,26 +42,28 @@ Features that are purely local (notes, calculator, most mini-games) never touch 
 
 `HttpService` (src/Aetherphone/Core/Net/HttpService.cs) owns a single pooled `HttpClient` for the whole plugin. It sets a `User-Agent` of `Aetherphone/{version} (+https://github.com/XeldarAlz/FFXIV-Aetherphone)`, uses a 20 second timeout per request (60 seconds for uploads), and caps response bodies at 32 MB. All JSON goes through source-generated `System.Text.Json` type infos (`AethernetJsonContext` in src/Aetherphone/Core/Aethernet/AethernetJsonContext.cs), so serialization never uses runtime reflection.
 
-Two headers matter:
+Three headers matter:
 
 - `Authorization: Bearer <token>` when a session token is available.
 - `X-Aep-App: <scope>` when the request comes from an app-scoped `AethernetApi` instance. `AppRegistry` (src/Aetherphone/Core/Apps/AppRegistry.cs) builds separate instances with scopes like `"chirper"`, `"dm"`, or `"yellowpages"` so the server can attribute traffic per app.
+- `X-Aep-Request-Id`: a fresh random id stamped on every request `ApplyHeaders` builds (all JSON calls and upload PUTs; the raw byte downloads of `GetBytesAsync` skip it). The server echoes it back, error responses carry it into `AepFailure.RequestId`, and it is the string to quote when matching a client failure to a server-side log line.
 
 `AethernetTransport` sits between typed clients and `HttpService`. It prefixes `AethernetSession.BaseUrl` onto relative paths, attaches the session token, and short-circuits to `default` when the user is not signed in. Every session request's status code is funneled into `AethernetSession.ReportAuthStatus` (anonymous calls skip that sink), which is how a 401 anywhere flips the session into the `TokenRejected` state.
 
 A typed client method looks like this (real code from src/Aetherphone/Core/Aethernet/Clients/KeysClient.cs):
 
 ```csharp
-public async Task<(MyKeysDto? Keys, int Status)> MyKeysAsync(CancellationToken token)
+public async Task<(MyKeysDto? Keys, int Status)> MyKeysAsync(CancellationToken token,
+    Action<AepFailure>? onFailure = null)
 {
     var status = 0;
     var keys = await net.GetAsync("/keys/me", AethernetJsonContext.Default.MyKeysDto, token,
-        statusCode => status = statusCode).ConfigureAwait(false);
+        statusCode => status = statusCode, onFailure).ConfigureAwait(false);
     return (keys, status);
 }
 ```
 
-Note the error model: typed clients do not throw on HTTP failures. A `null` result can mean a network error, a non-2xx status, a rate-limit pause, or simply "not signed in". When a caller needs to distinguish, it passes an `onStatus` callback as above.
+Note the error model: typed clients do not throw on HTTP failures. A `null` result can mean a network error, a non-2xx status, a rate-limit pause, or simply "not signed in". Two callbacks let a caller distinguish. The primary channel is `onFailure`: every session-token method on `AethernetTransport` threads an optional `Action<AepFailure>` down into `HttpService`, and nearly every typed client method exposes it, as above. `AepFailure` (src/Aetherphone/Core/Net/AepFailure.cs) names the failure with an `AepFailureKind` (`Offline`, `Timeout`, `RateLimitPaused`, `SignedOut`, `Server`, `BadResponse`, `Cancelled`) and, for server failures, carries the status code, the error body's `Code` and message, and the echoed `RequestId`. The older `onStatus` callback still reports the raw HTTP status code when that is all a caller needs.
 
 GET responses that carry an `ETag` header (a server-provided version stamp) are cached in `EtagCache`. The next identical GET sends `If-None-Match`, and a `304 Not Modified` answer is served from the cached body. Cache keys include the bearer token and the app scope, so different accounts and app scopes never share entries.
 
@@ -73,7 +75,11 @@ GET responses that carry an `ETag` header (a server-provided version stamp) are 
 
 ### Lodestone challenge flow
 
-Sign-in proves character ownership through the Lodestone, Square Enix's public character site. `SignInFlow.StartLodestone` posts the character name and world to `/auth/challenge` (anonymous, no token) and receives a `ChallengeResponse` with a short code. The Settings Account page then walks the user through the steps you can read in src/Aetherphone/Core/Localization/L.cs: copy the code, paste it into your Lodestone profile, then verify. `SignInFlow.VerifyLodestone` posts the challenge id to `/auth/verify`; on success the server returns a token plus a `UserDto`, and `AethernetSession.SignIn` persists both.
+Sign-in proves character ownership through the Lodestone, Square Enix's public character site. `SignInFlow.StartLodestone` posts the character name and world to `/auth/challenge` (anonymous, no token) and receives a `ChallengeResponse` with a short code. The Settings Account page then walks the user through the steps you can read in src/Aetherphone/Core/Localization/L.cs: copy the code, paste it into your Lodestone profile, then verify. `SignInFlow.VerifyChallenge` posts the challenge id to `/auth/verify`; on success the server returns a token plus a `UserDto`, and `AethernetSession.SignIn` persists both.
+
+### Rising Stones challenge flow
+
+The Chinese game version has no Lodestone, so ownership is proven through Rising Stones (石之家), its counterpart. `SignInFlow.StartRisingStones` posts the profile UID to `/auth/risingstones/challenge` (`AuthClient.RisingStonesChallengeAsync`, anonymous) and receives the same `ChallengeResponse` shape; the user pastes the code into their Rising Stones personal signature instead of a Lodestone profile. Verification is shared: the same `SignInFlow.VerifyChallenge` posts the challenge id to `/auth/verify`. The flow differs only in copy and in three dedicated failure reasons (`risingstones_profile_not_found`, `risingstones_code_not_found`, and `risingstones_unavailable` in `VerifyFailure`).
 
 ### XIVAuth device flow
 
@@ -91,12 +97,14 @@ The verify endpoints answer expected failures inside the body rather than with H
 
 ### What flows over it
 
-`CallSignalRouter` dispatches each `CallControl.Type` (constants in src/Aetherphone/Core/Telephony/Contracts/Signals.cs). Two families exist:
+`CallSignalRouter` dispatches each `CallControl.Type` (constants in src/Aetherphone/Core/Telephony/Contracts/Signals.cs). Four families exist:
 
 - Call signaling: `call.incoming`, `call.roster`, `call.declined`, `call.unavailable`, `call.ended`, `call.handled`, forwarded to `CallHub` (see [Calls](#calls) below).
-- Notification pings: `chat.ping`, `velvet.ping`, `gram.ping`, `social.ping`, `muster.ping`, `announce.ping`, and `content.removed`, published onto `RealtimeSignalBus`.
+- Notification pings: `chat.ping`, `velvet.ping`, `gram.ping`, `social.ping`, `muster.ping`, `announce.ping`, and `content.removed`, published onto `RealtimeSignalBus`. `chat.ping` carries the conversation id and, when the server includes it, the pushed message itself.
+- Casino traffic: every type under the `casino.` prefix (attach, snapshot, event, private, ended, ...) is published as one `CasinoSignal` through `RealtimeSignalBus.PublishCasino`; the casino stores (src/Aetherphone/Core/Casino/) subscribe and drive live tables from it.
+- Stream traffic: every type under the `stream.` prefix belongs to AetherStream watch-along sessions. `StreamSignalRouter` (src/Aetherphone/Core/Telephony/StreamSignalRouter.cs) subscribes to the same connection and dispatches the join, roster, state, queue, and kick messages to `WatchAlongSession` (src/Aetherphone/Core/Video/WatchAlongSession.cs); `CallSignalRouter` itself only suppresses its unhandled-signal warning for the prefix.
 
-`RealtimeSignalBus` is a plain in-process event hub. Stores subscribe to the ping that concerns them (`ChatPinged`, `SocialPinged`, ...) and react by refreshing immediately. `ContentRemoved` carries a `ContentRemovalSignal` so every phone purges moderated content without waiting for a poll.
+`RealtimeSignalBus` is a plain in-process event hub. Stores subscribe to the ping that concerns them (`ChatPinged`, `SocialPinged`, ...) and react by refreshing immediately. `ContentRemoved` carries a `ContentRemovalSignal` so every phone purges moderated content without waiting for a poll. The bus is not receive-only: `BindSender` and `TrySend` expose an outbound path onto the socket (bound to `CallSignalRouter.Send` while the router lives), which is how `CasinoRoomSession` sends its `casino.` attach, detach, and resync requests upstream.
 
 The socket runs whenever a session is signed in. `CallHub.Reconcile` (src/Aetherphone/Core/Telephony/CallHub.cs) re-evaluates that on every session change: it calls `router.Start()` while signed in, and `router.Stop()` when the session signs out or the account id changes (ending any active call first). Turning calls off is different: when `Configuration.CallsEnabled` is false `Reconcile` ends the active call but leaves the socket running, so notification pings keep flowing.
 
@@ -144,7 +152,7 @@ Capture: `AudioCapture` (src/Aetherphone/Core/Telephony/Audio/AudioCapture.cs) r
 
 Framing: `MediaFrame` (src/Aetherphone/Core/Telephony/MediaFrame.cs) prepends a 20-byte header made of a version byte, the 16-byte call id, the sender's slot byte, and a little-endian 16-bit sequence number, and the whole packet goes out as one binary websocket frame via `RealtimeConnection.SendMediaAsync`.
 
-Playback: binary frames arrive on `RealtimeConnection.MediaReceived`. `CallSession` drops frames from other calls and from its own slot, then hands the payload to `VoiceMixer` (src/Aetherphone/Core/Telephony/Audio/VoiceMixer.cs), which keeps one Opus decoder and a 600 ms overflow-discarding jitter buffer per remote slot, mixes all slots into one float stream, tracks a per-slot RMS level (`CallHub.LevelOf` feeds the speaking indicator from it), and plays through a `VolumeSampleProvider` on shared-mode WASAPI with 140 ms latency (`AudioOutputFactory.Create`, falling back to waveOut). The output device is always the system default: `AudioDevices.ResolveOutput` ignores `Configuration.CallOutputDevice` and returns -1, which is why the Settings Calls page only offers a microphone picker.
+Playback: binary frames arrive on `RealtimeConnection.MediaReceived`. `CallSession` drops frames from other calls and from its own slot, then hands the payload to `VoiceMixer` (src/Aetherphone/Core/Telephony/Audio/VoiceMixer.cs), which keeps one Opus decoder and a 600 ms overflow-discarding jitter buffer per remote slot, mixes all slots into one float stream, tracks a per-slot RMS level (`CallHub.LevelOf` feeds the speaking indicator from it), and plays through a `VolumeSampleProvider` on shared-mode WASAPI with 140 ms latency (`AudioOutputFactory.Create`, falling back to waveOut). The speaker choice is wired almost end to end: the Settings Calls page saves a device name into `Configuration.CallOutputDevice`, `AudioDevices.ResolveOutput` resolves it to a device index (-1, the system default, when unset or unmatched), and `CallAudioController` hands the index to the `CallSession`. The last hop drops it: `VoiceMixer.Start` discards its `deviceNumber` argument and always opens the default device, so call output currently plays on the system default whatever the picker says (a known limitation; see [Gotchas](#gotchas)).
 
 ### Surviving websocket drops
 
@@ -155,13 +163,13 @@ A mid-call socket drop does not end the call. `CallHub` starts a 20 second grace
 - The Message app owns the call surfaces: src/Aetherphone/Apps/Message/MessageApp.Calls.cs draws the Calls tab with the persisted log, the in-call screen (`MessageRoute.Call`), and the green return-to-call banner, and `MessageApp.SyncCallRoute` pushes and pops the call route as `CallState` changes.
 - The full-screen incoming-call overlay is shell chrome, not app UI: `IncomingCallOverlay` (src/Aetherphone/Windows/Components/IncomingCallOverlay.cs) draws over everything while the state is `Ringing`.
 - The Dynamic Island (src/Aetherphone/Core/Shell/DynamicIsland.cs) shows the live call outside the app with mute and hang-up buttons and jumps back into it via `CallHub.RequestCallScreen`; the Message app consumes the request with `ConsumeCallScreenRequest`.
-- Settings and Control Center: `CallsPage` (src/Aetherphone/Apps/Settings/Pages/CallsPage.cs) holds the enable toggle and the microphone picker, and `ControlRegistry` (src/Aetherphone/Core/ControlCenter/ControlRegistry.cs) exposes the same enable toggle as a Control Center tile.
+- Settings and Control Center: `CallsPage` (src/Aetherphone/Apps/Settings/Pages/CallsPage.cs) holds the enable toggle, the microphone picker, and the speaker picker, and `ControlRegistry` (src/Aetherphone/Core/ControlCenter/ControlRegistry.cs) exposes the same enable toggle as a Control Center tile.
 
 Every surface reads call state the same way: `CallHub.Snapshot()` returns an immutable `CallView` struct each frame, and nothing subscribes to per-field change events. The hub raises exactly one event, `IncomingCallPresented`, and it exists to open the phone window, not to push state.
 
 ## Rate limiting on the client
 
-The server answers abusive traffic with HTTP 429. `HttpService` reacts by pausing the entire host: `PauseHost` records a deadline from the `Retry-After` header (10 seconds if absent, capped at 30, plus jitter), and every request to that host short-circuits until the deadline passes, reporting status 429 to its `onStatus` callback without touching the network.
+The server answers abusive traffic with HTTP 429. `HttpService` reacts by pausing polling toward the host, and only polling: a 429 on a GET calls `PauseHost`, which records a deadline from the `Retry-After` header (10 seconds if absent, capped at 30, plus jitter), and until it passes every GET to that host short-circuits without touching the network, reporting status 429 to `onStatus` and `RateLimitPaused` to `onFailure` (`IsPollingPaused` checks the request method). Writes stay outside the scheme: a 429 on a POST, PATCH, or DELETE fails only that call and pauses nothing (`PauseIfPolling` just logs a warning for non-GETs), and `PutBytesAsync` uploads neither honor nor set pauses.
 
 The user sees this as the `RateLimitPill` (src/Aetherphone/Core/Shell/RateLimitPill.cs), a small pill under the status bar that reads "Too many requests. Retrying in {n}s" (`L.Common.RateLimited`). It polls `HttpService.PauseRemaining` for the API host every frame and animates in only while a pause is active. `PhoneShell` wires it into the shell overlay stack.
 
@@ -187,7 +195,7 @@ Scopes name a conversation across apps: `ConversationKeyStore.ChatScope`, `Velve
 
 ### Platform support
 
-`CryptoBox.TryGenerateIdentity` tries `ECDiffieHellman.Create(ECCurve.NamedCurves.nistP256)` first and, on Windows, falls back to a CNG named-curve key. If both fail (observed on some Wine setups whose bcrypt lacks P-256 support), the vault ends in `KeyVaultState.Unsupported` and encrypted conversations show placeholder text instead of bodies. As of this writing, master carries no third-party crypto library; a BouncyCastle-based fallback for those environments has been proposed in a pull request but is not merged (check `PackageReference` entries in src/Aetherphone/Aetherphone.csproj for current truth).
+The EC key math runs entirely in managed code through the BouncyCastle.Cryptography package (a `PackageReference` in src/Aetherphone/Aetherphone.csproj): `CryptoBox.TryGenerateIdentity` generates the P-256 pair with `ECKeyPairGenerator`, keys are exported and imported through `SubjectPublicKeyInfoFactory` and `PublicKeyFactory`, and the ECDH agreement uses `ECDHBasicAgreement`. That keeps the curve work off the OS bcrypt provider; the earlier `ECDiffieHellman.Create`-based implementation failed on some Wine setups whose bcrypt lacks P-256 support, and the managed library replaced it. The symmetric layer (AES-GCM seal and open, HKDF, random bytes) still uses `System.Security.Cryptography`. If key generation fails anyway, `TryGenerateIdentity` returns `null`, the vault ends in `KeyVaultState.Unsupported`, and encrypted conversations show placeholder text instead of bodies.
 
 ## Media upload and download
 
@@ -203,7 +211,9 @@ Downloads go through `HttpService.GetBytesAsync` (up to 3 attempts with backoff)
 
 ## Dev vs prod endpoints
 
-The base URL lives in `Configuration.AethernetBaseUrl`. There is no in-app editor for it; a developer edits the saved plugin configuration JSON (or sets the property from code) and reloads. That JSON is the file Dalamud hands the plugin as `PluginInterface.ConfigFile`: `Aetherphone.json` (named after the plugin's internal name in src/Aetherphone/Aetherphone.json) in the `pluginConfigs` folder of the XIVLauncher data directory under `%AppData%`. Edit it only while the plugin is unloaded, or set the value from code instead: the running plugin rewrites the entire file on every `Configuration.Save()`, so a hand edit made while the plugin is loaded is clobbered by the next save.
+The base URL lives in `Configuration.AethernetBaseUrl`, and its default is decided at compile time: `Configuration.DefaultAethernetBaseUrl` is the development Railway deployment under `#if DEBUG` and `https://api.aetherphone.net` otherwise (src/Aetherphone/Configuration.cs). A Debug build therefore already talks to the dev backend with no config editing, the workflow [Getting started](getting-started.md) describes.
+
+Pointing anywhere else (a local backend, say) still means editing the saved plugin configuration JSON; there is no in-app editor for it. That JSON is the file Dalamud hands the plugin as `PluginInterface.ConfigFile`, named after the plugin's internal name, in the `pluginConfigs` folder of the XIVLauncher data directory under `%AppData%`: `Aetherphone.json` for a Release build, `AetherphoneDev.json` for the Debug plugin (the Debug configuration renames the target to `AetherphoneDev` in src/Aetherphone/Aetherphone.csproj, and Dalamud treats it as a separate plugin with its own config). Edit it only while the plugin is unloaded, or set the value from code instead: the running plugin rewrites the entire file on every `Configuration.Save()`, so a hand edit made while the plugin is loaded is clobbered by the next save.
 
 Guard rails in `Configuration.NormalizeAethernetBaseUrl` (called at boot from src/Aetherphone/Plugin.cs):
 
@@ -211,7 +221,7 @@ Guard rails in `Configuration.NormalizeAethernetBaseUrl` (called at boot from sr
 - A known legacy production host is force-migrated to the current default.
 - In Release builds, loopback URLs (localhost) also reset to the default. Only Debug builds may target a local backend, which keeps a stray dev config from shipping to users.
 
-Because the backend is a separate repository, running against dev means running that service yourself or pointing at a dev deployment. Never test unreleased client changes against the production API; use a Debug build against a non-production base URL, and keep any tokens for it out of commits and screenshots.
+Because the backend is a separate repository, a local backend means running that service yourself; the shared dev deployment is what Debug builds target out of the box. Never test unreleased client changes against the production API; use a Debug build against a non-production base URL, and keep any tokens for it out of commits and screenshots.
 
 ## API client map
 
@@ -236,14 +246,15 @@ The chat stores that consume these clients are covered in [Messaging and chat](m
 
 - Typed clients never throw on HTTP failure. A `null` return can mean network error, non-2xx, an active rate-limit pause, or a signed-out session (`AethernetTransport` short-circuits to `default` when `Session.IsSignedIn` is false). Pass an `onStatus` callback when the difference matters.
 - One 401 from any endpoint marks the whole session `TokenRejected` (`AethernetSession.ReportAuthStatus`) and every subsequent request no-ops until the user signs in again. "The API stopped responding" is often just this.
-- One 429 pauses every request to that host process-wide via `HttpService.PauseHost`, not only the endpoint that tripped it. Unrelated features sharing the host go quiet until the pause expires.
+- A 429 on a GET pauses every GET to that host process-wide via `HttpService.PauseHost`, not only the endpoint that tripped it, so unrelated polling features sharing the host go quiet until the pause expires. Writes are outside the scheme in both directions: a 429 on a POST, PATCH, DELETE, or upload PUT fails just that call and sets no pause, and writes keep flowing while GETs are paused.
 - The realtime socket is not gated on `Configuration.CallsEnabled`. Do not "optimize" `CallHub.Reconcile` into skipping `router.Start()` when calls are off; notification pings ride the same socket.
 - Release builds reset loopback base URLs to production at boot (`Configuration.ShouldResetBaseUrl` compiles the loopback check only outside `#if DEBUG`). If your local backend config keeps disappearing, you are running a Release build.
 - Upload PUTs only carry the bearer token when the upload URL's host and port match the API base URL (`AethernetTransport.UploadBearerFor`). Expecting `Authorization` on an external storage host will fail silently.
 - `EtagCache` keys include the bearer token and `X-Aep-App` scope, so two app-scoped `AethernetApi` instances requesting the same URL maintain separate cache entries. That is intentional; do not dedupe them.
 - `HttpService` caps response bodies at 32 MB (`MaxResponseBytes`). Anything larger fails the request rather than streaming.
-- Casino money endpoints never answer a denial with a non-2xx status. A refused buy-in, bet or top-up is HTTP 200 with `Granted: false` and a `Reason` string, because a typed client reads non-2xx as `null` and a 429 would pause the whole host. Treat `Granted` as the verdict and `Reason` as the message key; a `null` return is a transport problem, never a rule.
-- `LossLimit` and `LossHeadroom` of `0` on `/casino/` mean **no limit is set**: since 2026-08-14 the server ships with no house loss limit and sends zero unless the player set their own or an operator set one. Every gate must treat 0 as off (the existing gates do: they check `LossLimit > 0` or `LossHeadroom > 0` before blocking). Never render 0 as "0 coins of room left".
+- The Calls speaker picker does not take effect yet. `Configuration.CallOutputDevice` is saved and resolved to a device index, but `VoiceMixer.Start` discards its `deviceNumber` argument (`_ = deviceNumber;`) and `AudioOutputFactory.Create` always opens the default device, so call audio plays on the system default regardless. The microphone picker works.
+- Casino money endpoints never answer a denial with a non-2xx status. A refused buy-in, bet or top-up is HTTP 200 with `Granted: false` and a `Reason` string, because a typed client reads non-2xx as `null`, which would make a rule denial indistinguishable from a transport failure. Treat `Granted` as the verdict and `Reason` as the message key; a `null` return is a transport problem, never a rule.
+- Loss limits are a known client-backend inconsistency awaiting a client fix. Since 2026-08-14 the backend ships with no house loss limit: a `LossLimit` of `0` on `/casino/` means **no limit is set**, and the server sends zero unless the player set their own or an operator set one. The client's blocking gates already treat 0 as off (`CasinoApp.Limits` shows the limit-reached card only when `LossLimit > 0`, and `SlotsCabinet` checks `LossHeadroom > 0` before blocking a stake), but its rendering has not absorbed the change: `CasinoLimits.HouseDailyLossLimit` still hardcodes 500, the Limits screen always draws the house-limit card with that number and falls back to it when `LossLimit` is 0, and `CasinoStore.MergeLimits` derives `LossHeadroom` straight from `LossLimit`, so a zero limit yields a headroom of 0 and the Tonight card renders "Room left tonight: 0". When touching these surfaces, treat 0 as "no limit", never as "0 coins of room left".
 
 ## Related docs
 

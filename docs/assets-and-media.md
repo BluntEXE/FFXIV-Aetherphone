@@ -50,7 +50,7 @@ using (Plugin.Fonts.Push(TextStyles.Body.Scale, TextStyles.Body.Weight))
 }
 ```
 
-Text zoom works without rebuilding the atlas: every handle is baked at `MaxZoom` (1.5x) and drawn scaled down by setting `ImFont.Scale` to `zoom / MaxZoom` in `SetZoom` and `ApplyRenderScale`.
+Text zoom works without rebuilding the atlas: every handle is baked at `MaxZoom` (1.5x) and drawn scaled down by setting `ImFont.Scale` to `renderScale = zoom * phoneZoom / MaxZoom` in `ApplyRenderScale`. Two inputs feed that product: `SetZoom` carries the text zoom setting, and `SetPhoneZoom` carries the phone size factor, `PhoneSizeCatalog.ZoomFor(Cfg.PhoneWidth)` (seeded in the `Plugin` constructor, refreshed each frame by `PhoneWindow.PreDraw`). Both route through `ApplyZoom`, which recomputes `renderScale` and calls `ApplyRenderScale`; neither touches `ImFont.Scale` directly.
 
 ### Per-language glyph ranges and lazy CJK
 
@@ -94,7 +94,7 @@ Follow the same pattern in any code that creates or disposes several handles: wi
 
 Emoji are not font glyphs. They are individual Twemoji PNG images (72x72, one file per emoji sequence, roughly 3,500 of them) in src/Aetherphone/Emoji/, plus a `catalog.json` describing them. The pieces:
 
-- **EmojiCatalog** (src/Aetherphone/Core/Emoji/EmojiCatalog.cs) loads catalog.json once at plugin boot (`EmojiCatalog.Load()` in src/Aetherphone/Plugin.cs). Each entry carries `file`, `short` (shortcode aliases), `group`, `order`, `label`, `tags`, and skin-tone variants under `tones`. `TryResolve` maps a shortcode like `smile` to its image file name.
+- **EmojiCatalog** (src/Aetherphone/Core/Emoji/EmojiCatalog.cs) loads catalog.json once at plugin boot (`EmojiCatalog.Load()` in src/Aetherphone/Plugin.cs). Each entry carries `file`, `short` (shortcode aliases), `group`, `order`, `label`, `tags`, and skin-tone variants under `tones`; the loader never reads `order`, so display ordering comes from each entry's position in the catalog array. `TryResolve` maps a shortcode like `smile` to its image file name.
 - **EmojiScanner** finds `:shortcode:` spans in a string. Messages store emoji as shortcode text, never as image references.
 - **RichText** (src/Aetherphone/Windows/Components/RichText.cs) turns those spans into `RichTextRunKind.Emoji` runs during layout, and **EmojiRender** draws each one inline at 1.2x the font size.
 - **EmojiImages** resolves `<file>.png` inside the Emoji folder and draws it through the texture provider. A missing file makes `TryDraw` return false and nothing is drawn.
@@ -121,10 +121,10 @@ Do not hand-add PNGs. Update `TWEMOJI_VERSION` in tools/emoji-generator/generate
 
 Home-screen and in-app icons live in src/Aetherphone/Icons/ as 256x256 PNGs named after the app's registered id (`messages.png`, `settings.png`, and one per remaining app). They are stencils: pure white shapes on transparency, tinted to the active theme at draw time.
 
-Resolution order when something asks for an app icon:
+Callers ask `AppIconArt.TryDraw` (src/Aetherphone/Windows/Components/AppIconArt.cs) for an app icon, and it resolves in order:
 
-1. `AppIconTextures.TryDraw` (src/Aetherphone/Windows/Components/AppIconTextures.cs) looks for `Icons/<id>.png`, caches the resolved path, and draws it tinted, inset to 62% of the tile (`GlyphFraction`).
-2. If no PNG exists, `AppIconArt.TryDraw` (src/Aetherphone/Windows/Components/AppIconArt.cs) draws procedural vector art, but only for the mini-game ids it lists (`minesweeper`, `tetris`, `chess`, and the rest of its switch).
+1. It first tries `AppIconTextures.TryDraw` (src/Aetherphone/Windows/Components/AppIconTextures.cs), which looks for `Icons/<id>.png`, caches the resolved path, and draws it tinted, inset to 62% of the tile (`GlyphFraction`).
+2. If no PNG exists, `AppIconArt` falls through to its own procedural vector art, but only for the mini-game ids its switch lists (`minesweeper`, `tetris`, `chess`, and the rest).
 3. If both fail, the caller draws a letter glyph fallback; see `HomeTileView` or `AppStoreApp.Rows` drawing `app.Glyph` with `Typography.DrawCentered`.
 
 The full authoring spec (canvas, stroke weight, alpha rules, export steps) is section 1 of [the art asset spec](ART-ASSET-SPEC.md). Do not restyle icons from memory; follow it.
@@ -154,9 +154,9 @@ Bundled audio lives in src/Aetherphone/Sounds/ in two kind-specific folders, and
 `SoundKind` (src/Aetherphone/Core/Notifications/SoundKind.cs) names the two kinds, and `PhoneServices` (src/Aetherphone/Core/PhoneServices.cs) builds one `SoundLibrary` per kind, each with two roots:
 
 - Bundled: `<plugin output>/Sounds/Ringtones` or `.../Notifications`.
-- User: `<Dalamud config dir>/Sounds/Ringtones` or `.../Notifications`, filled by the Settings "Import from PC" flow through `SoundService.AddUserFile`, which copies the picked file in. Imported files are per-user and never bundled.
+- User: `<Dalamud config dir>/Sounds/Ringtones` or `.../Notifications`, filled by the Settings "Import from PC" flow. `SoundService.AddUserFile` is a one-line forward to `SoundLibrary.AddUserFile`, which copies the picked file in. Imported files are per-user and never bundled.
 
-`SoundLibrary.Refresh` lists `*.mp3` and `*.wav` from both roots, each root sorted by file name with bundled files first; a user file that reuses a bundled name appears once in the list but shadows the bundled file at playback (`TryResolvePath` checks the user root first). A Silent option is appended. Saved choices are tokens from `SoundTokens`: `file:<name>.mp3` or `silent`. When a saved token no longer resolves, `Resolve` falls back to the first bundled file alphabetically. Fresh installs default to `SoundLibrary.BundledRingtoneToken` (`Ringtone_1.mp3`) and `SoundLibrary.BundledNotificationToken` (`Notification_1.mp3`), so those constants must be renamed together with the files. Display names are derived from file names by `SoundLibrary.PrettyFileName` (`soft_bell.mp3` shows as "soft bell"). Playback goes through `SoundEffectPlayer`, which uses NAudio's `MediaFoundationReader` (Windows Media Foundation), so stick to .mp3 and .wav.
+`SoundLibrary.Refresh` lists `*.mp3` and `*.wav` from both roots, each root sorted by file name with bundled files first; a user file that reuses a bundled name appears once in the list but shadows the bundled file at playback (`TryResolvePath` checks the user root first). A Silent option is appended. Saved choices are tokens from `SoundTokens`: `file:<name>.mp3` or `silent`. When a saved token no longer resolves, `Resolve` falls back to the first bundled file alphabetically. Fresh installs default to `SoundLibrary.BundledRingtoneToken` (`Ringtone_1.mp3`) and `SoundLibrary.BundledNotificationToken` (`Notification_1.mp3`), so those constants must be renamed together with the files. Display names are derived from file names by `SoundLibrary.PrettyFileName` (`soft_bell.mp3` shows as "soft bell"). Playback goes through `SoundEffectPlayer`, which dispatches by file extension: `.wav` opens with NAudio's `WaveFileReader` and `.mp3` with NLayer's managed decoder, both Wine-safe; any other extension (or a file the managed reader rejects) falls back to `MediaFoundationReader` (Windows Media Foundation). Stick to .mp3 and .wav so playback stays on the managed decoders; src/Aetherphone/Sounds/README.md covers the details.
 
 ### To add a bundled sound
 
@@ -192,17 +192,17 @@ Wallpaper luminance is a separate coupling, for legibility rather than theme cho
 
 A phone case is the chassis art around the screen. `PhoneCaseKind` (src/Aetherphone/Core/Theme/PhoneCase.cs) has two kinds:
 
-- `Color`: a flat tint, drawn procedurally (the default `Titanium`).
-- `Art`: a painted PNG skin, drawn under everything by `CaseArt` (src/Aetherphone/Windows/Components/CaseArt.cs), which stretches one quad and swaps UVs to rotate the artwork when the phone is in landscape camera mode. `Silkie` is the shipped example.
+- `Color`: a flat tint, drawn procedurally (the default `Titanium`, the only shipped one).
+- `Art`: a painted PNG skin, drawn under everything by `CaseArt` (src/Aetherphone/Windows/Components/CaseArt.cs), which stretches one quad and swaps UVs to rotate the artwork when the phone is in landscape camera mode. 43 art cases ship alongside `Titanium`.
 
-The catalog is `ThemeCatalog.BuiltInCases` (src/Aetherphone/Core/Theme/ThemeCatalog.cs); each entry is `PhoneCase.Color(id, tint)` or `PhoneCase.Art(id, tint)`. For art cases, `PhoneCaseTextures` (src/Aetherphone/Windows/Components/PhoneCaseTextures.cs) resolves `Cases/<CaseId>.png` for the skin and `Cases/<CaseId>.thumb.png` for the Settings picker, falling back to the skin when the thumb is missing.
+The catalog is `ThemeCatalog.BuiltInCases` (src/Aetherphone/Core/Theme/ThemeCatalog.cs), exposed as `ThemeCatalog.Cases`; each entry is `PhoneCase.Color(id, tint)` or `PhoneCase.Art(id, category, tint, artistName, artistUrl)`. Every case carries a `PhoneCaseCategory` (`Colors`, `Gradients`, or `ArtistSeries`), and art cases record artist attribution (`ArtistName`, optionally `ArtistUrl`). The `Art` factory sets `TextureId` to the case id, and `PhoneCaseTextures` (src/Aetherphone/Windows/Components/PhoneCaseTextures.cs) keys on `TextureId`, not `CaseId`: it resolves `Cases/<TextureId>.png` for the skin and `Cases/<TextureId>.thumb.png` for the Settings picker, falling back to the skin when the thumb is missing.
 
-The artwork itself (canvas size, the 38 px metal band, the 250 px overflow margin, superellipse corners, alpha bleed, size budgets) is specified in section 2 of [the art asset spec](ART-ASSET-SPEC.md). That document is authoritative; do not work from this page for case art. src/Aetherphone/Cases/_template/ carries the working materials: `ArtCaseTemplate.svg` (the guide template), `generate-template.ps1` (regenerates it from `Core/Theme/ChassisMetrics.cs`), `generate-case.ps1` (produces conforming reference cases), and a README mirror of the spec.
+The artwork itself (canvas size, the 38 px metal band, the 250 px overflow margin, superellipse corners, alpha bleed, size budgets) is specified in section 2 of [the art asset spec](ART-ASSET-SPEC.md). That document is authoritative; do not work from this page for case art. src/Aetherphone/Cases/_template/ carries the working materials: `ArtCaseTemplate.svg` (the guide template), `generate-template.ps1` (regenerates it from its own hardcoded copies of the `Core/Theme/ChassisMetrics.cs` fractions; the script reads no code, so the two agree only by hand and nothing enforces it), `generate-case.ps1` (produces conforming reference cases), and a README mirror of the spec.
 
 ### To add a case
 
 1. Author `<CaseId>.png` and `<CaseId>.thumb.png` to [the art asset spec](ART-ASSET-SPEC.md) and drop both into src/Aetherphone/Cases/. `CaseId` is PascalCase ASCII.
-2. Add one line to `ThemeCatalog.BuiltInCases`: `PhoneCase.Art("<CaseId>", <dominant metal colour>)`. The tint fills the minimized phone and the pre-load frame, and it colors the procedural hardware buttons, so pick the case's main body tone.
+2. Add one line to `ThemeCatalog.BuiltInCases`: `PhoneCase.Art("<CaseId>", <category>, <dominant metal colour>, "<artist name>")`, plus the artist URL when there is one. Pick the `PhoneCaseCategory` the case belongs to; every existing entry passes one. The tint fills the minimized phone and the pre-load frame, and it colors the procedural hardware buttons, so pick the case's main body tone.
 3. Add the display name: a `catalog.case.<caseid>` entry in `L.cs` (see `L.Catalogs.CaseSilkie`), a matching arm in `CatalogLabels.PhoneCase` (src/Aetherphone/Core/Localization/CatalogLabels.cs), and the key in all nine JSON files under src/Aetherphone/Localization/.
 4. Rebuild and check the Settings > Case picker, the minimize animation, and camera-mode landscape rotation.
 
