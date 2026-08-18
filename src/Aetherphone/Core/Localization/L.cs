@@ -1345,6 +1345,12 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release1004 =
+        {
+            new("changelog.r1004.0",
+                "Velvet and veiled posts are available again on the Chinese game version"),
+        };
+
         public static readonly LocString[] Release1003 =
         {
             new("changelog.r1003.0",
