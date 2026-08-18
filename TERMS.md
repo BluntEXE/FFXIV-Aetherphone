@@ -1,6 +1,6 @@
 # Aetherphone Terms of Service
 
-**Last updated:** 17 August 2026
+**Last updated:** 18 August 2026
 
 These terms govern your use of the Aetherphone plugin and of Aethernet, the online service behind its social features. By creating an Aethernet account you accept these terms. If you do not accept them, do not create an account; the plugin's offline features work without one.
 
@@ -26,7 +26,7 @@ Some features carry a higher minimum age. Velvet is restricted to users aged 18 
 
 Aetherphone is offered worldwide, but not every app is available everywhere.
 
-On the Chinese game client, you sign in through Rising Stones (石之家) rather than the Lodestone, and these apps are unavailable: **Music, AetherStream, News, Velvet, Casino, and Aether Coin**. Some of them depend on services that cannot be reached in that region. Others are withheld because we are not willing to offer them there. The phone hides them and the server refuses them; both halves are enforced, so an out-of-date client gains nothing.
+On the Chinese game client, you sign in through Rising Stones (石之家) rather than the Lodestone, and these apps are unavailable: **Music, AetherStream, and News**. They depend on services that cannot be reached from that region.
 
 We may add apps to or remove apps from that list at any time and without notice, including where local law makes it necessary.
 
@@ -67,7 +67,9 @@ Velvet is free. Access to it is not sold, is not bundled with any payment, and i
 
 ## 9. Aether Coin
 
-Aether Coin is a cosmetic in-plugin token. It has no monetary value. It cannot be bought, sold, transferred between accounts, exchanged for money or anything of value, or redeemed. It is not a currency, not a security, and not a stored-value instrument. We may adjust, reset, or discontinue it at any time, and doing so gives rise to no refund or claim, because nothing was ever paid for it.
+Aether Coin is a cosmetic in-plugin token. It has no monetary value. It cannot be bought, sold, transferred between accounts, exchanged for money or anything of value outside the plugin, or redeemed. It is not a currency, not a security, and not a stored-value instrument. We may adjust, reset, or discontinue it at any time, and doing so gives rise to no refund or claim, because nothing was ever paid for it.
+
+Aether Coin can be spent inside the plugin, in the coin shop, on cosmetic items such as avatar frames and badges. Those items are cosmetic only, have no monetary value, and follow the same rules as the coin itself. Cosmetic items can also be granted by us directly, and a granted item can lapse or be removed; the phone tells you when one arrives or leaves your account.
 
 Casino is a set of chance-based mini-games played with Aether Coin. Because Aether Coin cannot be bought or cashed out, no money is ever wagered, won, or lost. Casino is not gambling and must not be used as though it were. Trading Aether Coin, or Casino outcomes, for real money, gil, or anything else of value is prohibited and will result in a ban.
 
@@ -75,7 +77,7 @@ Casino is a set of chance-based mini-games played with Aether Coin. Because Aeth
 
 You can support Aetherphone voluntarily through Patreon. Support is a donation to the project, not a purchase.
 
-**Financial support unlocks no features.** It grants cosmetic recognition only: a badge and a name effect. It does not grant access to any app, any capability, any content, or any part of Velvet, and it never will. Everything in Aetherphone is available to every user at no cost.
+**Financial support unlocks no features.** It grants cosmetic recognition only: a badge, an avatar frame, and a name effect. Cosmetics tied to an active membership lapse when the membership ends. Support does not grant access to any app, any capability, any content, or any part of Velvet, and it never will. Everything in Aetherphone is available to every user at no cost.
 
 ## 11. Moderation, suspension, and termination
 

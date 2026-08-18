@@ -1,6 +1,6 @@
 # Aetherphone Privacy Policy
 
-**Last updated:** 17 August 2026
+**Last updated:** 18 August 2026
 
 This policy explains what Aethernet, the online service behind Aetherphone's social features, does with your personal data.
 
@@ -35,6 +35,8 @@ Your personal data is handled the same way wherever you use the service from.
 **Technical data.** Your IP address, the plugin version, and timestamps, recorded when your client connects. Your operating system, game language, and similar diagnostics are included only when you choose to submit a support report.
 
 **Moderation data.** Reports you make or that are made about you, automated moderation results on content you post, and any enforcement action on your account.
+
+**Coin and cosmetics.** Your Aether Coin balance, the history of how it was earned and spent, and the cosmetic items (badges and avatar frames) you own and wear, including when one was granted to you or removed.
 
 **Patreon.** If you link Patreon, we store the link and whether it is currently active. We do not receive or store your payment details; Patreon handles all payment.
 
@@ -81,7 +83,7 @@ Where that involves transferring personal data out of the UK or the EEA, we rely
 
 | Data | Retention |
 | --- | --- |
-| Account and profile | Until you delete your account |
+| Account, profile, coin, and cosmetics | Until you delete your account |
 | Posts and media | Until you delete them, or you delete your account |
 | Message ciphertext | Until you or the other participant deletes the conversation |
 | Call records | 90 days |
