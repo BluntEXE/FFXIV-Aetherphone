@@ -1345,6 +1345,14 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release1006 =
+        {
+            new("changelog.r1006.0",
+                "Music and MogCast play songs again, after a change at YouTube left every track failing to load while search kept working"),
+            new("changelog.r1006.1",
+                "Photos sent in Velvet and the other chat apps no longer turn into a grey box after a while, and scrolling back to one no longer downloads it again"),
+        };
+
         public static readonly LocString[] Release1005 =
         {
             new("changelog.r1005.0",

@@ -4417,6 +4417,8 @@
   "coin.rollupMore": "and {0} more",
   "coin.settingsRow": "Aether Coin",
   "coin.aboutWhat": "A little thank-you for using the phone: check in, play, talk, and spend it on looks.",
+  "changelog.r1006.0": "Music and MogCast play songs again, after a change at YouTube left every track failing to load while search kept working",
+  "changelog.r1006.1": "Photos sent in Velvet and the other chat apps no longer turn into a grey box after a while, and scrolling back to one no longer downloads it again",
   "changelog.r1005.0": "The Casino and Aether Coin are available again on the Chinese game version",
   "changelog.r1004.0": "Velvet and veiled posts are available again on the Chinese game version",
   "changelog.r1003.0": "The phone now tells you when an avatar frame is given to you or taken away, instead of the ring around your avatar changing in silence",
