@@ -2,11 +2,26 @@ name: Feature request
 description: Suggest an idea or improvement.
 title: "[Feature] "
 labels: ["enhancement"]
+assignees: ["XeldarAlz"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for the suggestion. If the idea isn't fully baked yet, kick it around in [Discussions](https://github.com/XeldarAlz/FFXIV-Aetherphone/discussions) first; fuzzy ideas tend to converge faster there than as tracked issues.
+        Thanks for the suggestion. If the idea isn't fully baked yet, kick it around in [Discussions](https://github.com/XeldarAlz/FFXIV-Aetherphone/discussions) or on [Discord](https://discord.gg/3HbJCscMyS) first; fuzzy ideas converge faster there than as tracked issues.
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: What kind of change is this?
+      options:
+        - Improve an existing app
+        - A new app
+        - Home screen, shell, or system UI
+        - Notifications, sounds, or settings
+        - Aethernet social features (Chirper, Aethergram, Velvet, Messages)
+        - Something else
+    validations:
+      required: true
 
   - type: textarea
     id: problem
@@ -21,7 +36,7 @@ body:
     id: idea
     attributes:
       label: What did you have in mind?
-      description: Rough sketch is fine. Bullet points, mockups, or just prose.
+      description: A rough sketch is fine. Bullet points, mockups, or just prose.
     validations:
       required: true
 
@@ -29,9 +44,30 @@ body:
     id: alternatives
     attributes:
       label: Alternatives you considered
-      description: Other ways to solve the same problem, and why they're worse.
+      description: Other ways to solve the same problem, and why they fall short. Including a workaround you use today counts.
+
+  - type: dropdown
+    id: contribution
+    attributes:
+      label: Would you want to build it?
+      description: No wrong answer. An idea with no code attached is still welcome.
+      options:
+        - I'd like to build it myself and open a PR
+        - I can help test it
+        - Just the idea
+    validations:
+      required: true
 
   - type: textarea
     id: extra
     attributes:
       label: Anything else?
+      description: Prior art in other plugins or apps, screenshots, constraints.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you file
+      options:
+        - label: I searched existing issues and discussions for this idea.
+          required: true

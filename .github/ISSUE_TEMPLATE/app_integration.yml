@@ -1,7 +1,7 @@
 name: App integration request
 description: Propose a new phone app that talks to your (or another) plugin over IPC or an API.
 title: "[App] "
-labels: ["enhancement", "integration"]
+labels: ["enhancement"]
 assignees: ["XeldarAlz"]
 body:
   - type: markdown
@@ -11,7 +11,9 @@ body:
 
         The phone can drive another plugin two ways: **Dalamud IPC** (a `CallGateSubscriber` surface your plugin exposes) or an **HTTP API** the app can call. Give us a stable surface to talk to and we can build the app around it.
 
-        If the idea is still fuzzy, float it in [Discussions](https://github.com/XeldarAlz/FFXIV-Aetherphone/discussions) first; the shape tends to firm up faster there than in a tracked issue.
+        If the idea is still fuzzy, float it in [Discussions](https://github.com/XeldarAlz/FFXIV-Aetherphone/discussions) or on [Discord](https://discord.gg/3HbJCscMyS) first; the shape tends to firm up faster there than in a tracked issue.
+
+        Building the app yourself? The step-by-step tutorial is [docs/creating-an-app.md](https://github.com/XeldarAlz/FFXIV-Aetherphone/blob/master/docs/creating-an-app.md).
 
   - type: dropdown
     id: role
