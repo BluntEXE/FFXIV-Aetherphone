@@ -26,11 +26,29 @@ The application icons under `src/Aetherphone/Icons/` are derived from
 - License: MIT (Copyright (c) 2020-2026 Paweł Kuna); full text reproduced in
   the MIT section below.
 
+## Twemoji
+
+The color emoji images under `src/Aetherphone/Emoji/` (3,512 PNGs, one per
+emoji sequence) are the 72x72 assets of
+[Twemoji](https://github.com/jdecked/twemoji) 15.1.0, redistributed
+unmodified.
+
+- Copyright Twitter, Inc and other contributors
+- Source: https://github.com/jdecked/twemoji
+- License (graphics): Creative Commons Attribution 4.0 International
+  (CC-BY 4.0), https://creativecommons.org/licenses/by/4.0/
+
+The emoji metadata in `src/Aetherphone/Emoji/catalog.json` (labels, groups,
+search tags, shortcodes and skin-tone variants) is built from
+[emojibase-data](https://github.com/milesj/emojibase) by Miles Johnson,
+MIT License; full text reproduced in the MIT section below.
+
 ## mpv
 
 libmpv provides video decoding and playback for the AetherStream app. No mpv
-binary is redistributed with this plugin: `Core/Video/Resources.cs` downloads
-an LGPL build (`mpv-dev-lgpl-x86_64-*`, from the
+binary is redistributed with this plugin:
+`src/Aetherphone/Core/Video/MediaDependencies.cs` downloads an LGPL build
+(`mpv-dev-lgpl-x86_64-*`, from the
 [zhongfly/mpv-winbuild](https://github.com/zhongfly/mpv-winbuild) releases)
 into the plugin's own Dalamud config directory on first use, and keeps it
 updated from there.
@@ -123,7 +141,7 @@ redistributed in binary form.
 
 ## Bouncy Castle
 
-`BouncyCastle.Cryptography.dll` (version 2.6.2, by The Legion of the
+`BouncyCastle.Cryptography.dll` (version 2.7.0, by The Legion of the
 Bouncy Castle Inc.) is redistributed in binary form.
 
 - Source: https://github.com/bcgit/bc-csharp
@@ -153,17 +171,18 @@ once at the end of this section:
 | Component | Version | Copyright / project |
 | --- | --- | --- |
 | Tabler Icons (rasterized) | n/a | 2020-2026 Paweł Kuna (https://github.com/tabler/tabler-icons) |
+| emojibase-data (catalog metadata) | 15.x | Miles Johnson (https://github.com/milesj/emojibase) |
 | NAudio.Core / NAudio.WinMM / NAudio.Wasapi | 2.3.0 | Mark Heath (https://github.com/naudio/NAudio) |
 | NetStone | 1.4.1 | 2024 goaaats, Koenari (https://github.com/xivapi/NetStone) |
-| Vortice.Direct3D11 / Vortice.DXGI / Vortice.DirectX | 3.8.3 | Amer Koleci (https://github.com/amerkoleci/Vortice.Windows) |
+| Vortice.Direct3D11 / Vortice.DXGI / Vortice.D3DCompiler / Vortice.DirectX | 3.8.3 | Amer Koleci (https://github.com/amerkoleci/Vortice.Windows) |
 | Vortice.Mathematics | 2.1.0 | Amer Koleci (https://github.com/amerkoleci/Vortice.Mathematics) |
 | SharpGen.Runtime / SharpGen.Runtime.COM | 2.4.2-beta | SharpGenTools contributors (https://github.com/SharpGenTools/SharpGenTools) |
-| YoutubeExplode | 6.6.0 | Oleksii Holub (https://github.com/Tyrrrz/YoutubeExplode) |
-| JsonExtensions | 1.2.0 | Oleksii Holub (https://github.com/Tyrrrz/JsonExtensions) |
-| AngleSharp | 1.4.0 | AngleSharp contributors (https://github.com/AngleSharp/AngleSharp) |
-| HtmlAgilityPack | 1.11.74 | ZZZ Projects and contributors (https://github.com/zzzprojects/html-agility-pack) |
-| System.Security.Cryptography.ProtectedData | 10.0.0 | Microsoft Corporation (https://github.com/dotnet/runtime) |
-| NEbml | 0.11.0 | Oleg Zee (https://github.com/Oleg-Zee/NEbml) |
+| SharpDX / SharpDX.Direct3D11 / SharpDX.DXGI / SharpDX.D3DCompiler | 4.2.0 | Alexandre Mutel (https://github.com/sharpdx/SharpDX) |
+| SharpCompress | 0.48.1 | Adam Hathcock (https://github.com/adamhathcock/sharpcompress) |
+| YoutubeExplode | 6.6.1 | Oleksii Holub (https://github.com/Tyrrrz/YoutubeExplode) |
+| HtmlAgilityPack | 1.11.46 | ZZZ Projects and contributors (https://github.com/zzzprojects/html-agility-pack) |
+| System.Security.Cryptography.ProtectedData | 10.0.11 | Microsoft Corporation (https://github.com/dotnet/runtime) |
+| NEbml | 1.1.0.5 | Oleg Zee (https://github.com/OlegZee/NEbml) |
 | NLayer / NLayer.NAudioSupport | 2.0.1 | Mark Heath, Andrew Ward (https://github.com/naudio/NLayer) |
 
 ```

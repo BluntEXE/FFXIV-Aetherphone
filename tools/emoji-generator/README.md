@@ -7,7 +7,7 @@ Downloads the full color-emoji image set and builds the catalog the plugin rende
   convention (FE0F stripped unless the sequence is a ZWJ join), e.g. `1f600.png`,
   `1f469-200d-1f680.png`.
 - **Catalog**: `src/Aetherphone/Emoji/catalog.json`, built from
-  [emojibase-data](https://github.com/milesj/emojibase) (CC0). Each entry carries the image `file`,
+  [emojibase-data](https://github.com/milesj/emojibase) (MIT). Each entry carries the image `file`,
   the canonical `char` to insert, `group`/`order` for the picker, `label`/`tags` for search, the
   `match` strings the renderer maps back to an image, and skin-tone variants under `tones`.
 
