@@ -8,8 +8,10 @@ internal static class Loc
     private static LanguageInfo current = Languages.English;
     private static CultureInfo culture = CultureInfo.InvariantCulture;
     private static StringCatalog catalog = StringCatalog.Empty;
+    private static ushort[] glyphs = Array.Empty<ushort>();
     public static LanguageInfo Current => current;
     public static CultureInfo Culture => culture;
+    public static ushort[] CatalogGlyphs => glyphs;
 
     public static void Initialize(string code, string localizationDirectory)
     {
@@ -58,9 +60,9 @@ internal static class Loc
     {
         current = language;
         culture = ResolveCulture(language.CultureName);
-        catalog = ReferenceEquals(language, Languages.English)
-            ? StringCatalog.Empty
-            : StringCatalog.Load(Path.Combine(directory, string.Concat(language.Code, ".json")));
+        var path = Path.Combine(directory, string.Concat(language.Code, ".json"));
+        catalog = ReferenceEquals(language, Languages.English) ? StringCatalog.Empty : StringCatalog.Load(path);
+        glyphs = StringCatalog.ScanGlyphs(path);
     }
 
     private static CultureInfo ResolveCulture(string name)

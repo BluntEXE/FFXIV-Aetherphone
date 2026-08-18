@@ -31,17 +31,9 @@ internal static class Languages
 {
     private static readonly ushort[] JapaneseGlyphRanges =
     {
-        0x3000, 0x303F,
         0x3040, 0x309F,
         0x30A0, 0x30FF,
         0x31F0, 0x31FF,
-        0xFF00, 0xFFEF,
-    };
-
-    private static readonly ushort[] ChineseGlyphRanges =
-    {
-        0x3000, 0x303F,
-        0xFF00, 0xFFEF,
     };
 
     public static readonly LanguageInfo
@@ -57,7 +49,7 @@ internal static class Languages
 
     public static readonly LanguageInfo Russian = new("ru", "Русский", "Russian", "ru-RU", PluralKind.EnglishLike, new ushort[] { 0x0400, 0x04FF });
     public static readonly LanguageInfo Japanese = new("ja", "日本語", "Japanese", "ja-JP", PluralKind.EnglishLike, JapaneseGlyphRanges);
-    public static readonly LanguageInfo Chinese = new("zh", "中文", "Chinese", "zh-CN", PluralKind.EnglishLike, ChineseGlyphRanges);
+    public static readonly LanguageInfo Chinese = new("zh", "中文", "Chinese", "zh-CN", PluralKind.EnglishLike, null);
 
     public static readonly LanguageInfo[] All =
     {

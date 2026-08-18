@@ -39,6 +39,51 @@ internal sealed class StringCatalog
         return new StringCatalog(entries);
     }
 
+    public static ushort[] ScanGlyphs(string path)
+    {
+        if (!File.Exists(path))
+        {
+            return Array.Empty<ushort>();
+        }
+
+        string text;
+        try
+        {
+            text = File.ReadAllText(path);
+        }
+        catch (Exception exception)
+        {
+            AepLog.Error(exception, $"Failed to scan glyphs from '{path}'");
+            return Array.Empty<ushort>();
+        }
+
+        var coverage = new GlyphCoverage();
+        for (var index = 0; index < text.Length; index++)
+        {
+            var codepoint = text[index];
+            if (codepoint < GlyphPlan.FirstSharedCodepoint || char.IsSurrogate(codepoint))
+            {
+                continue;
+            }
+
+            coverage.Add(codepoint);
+        }
+
+        var glyphs = new ushort[coverage.Count];
+        var offset = 0;
+        for (var codepoint = GlyphPlan.FirstSharedCodepoint; codepoint <= char.MaxValue; codepoint++)
+        {
+            if (!coverage.Contains(codepoint))
+            {
+                continue;
+            }
+
+            glyphs[offset++] = (ushort)codepoint;
+        }
+
+        return glyphs;
+    }
+
     private static void Flatten(JObject node, string? prefix, Dictionary<string, string> target)
     {
         foreach (var property in node.Properties())
