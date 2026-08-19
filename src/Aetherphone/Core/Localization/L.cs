@@ -1345,6 +1345,16 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release1007 =
+        {
+            new("changelog.r1007.0",
+                "The Aether Pot has been rebuilt: it now grows for days instead of hours, pays far bigger when it lands, and restarts from a funded reserve instead of zero. Every chip staked buys the same share of the draw, so small spins and big ones are priced alike"),
+            new("changelog.r1007.1",
+                "Bingo prizes are now sized to the hall: a quiet room pays the same fair return as a packed one, and a stage prize still always grows as more cards join"),
+            new("changelog.r1007.2",
+                "Round verification understands the pot's new draw, so fresh slots rounds check out end to end just like old ones"),
+        };
+
         public static readonly LocString[] Release1006 =
         {
             new("changelog.r1006.0",
@@ -4663,7 +4673,7 @@ internal static class L
         public static readonly LocString ReasonNoTables = new("casino.reasonNoTables", "No table has room right now. Try again in a moment.");
         public static readonly LocString JackpotEyebrow = new("casino.jackpot.eyebrow", "JACKPOT");
         public static readonly LocString JackpotUnit = new("casino.jackpot.unit", "coin");
-        public static readonly LocString JackpotHint = new("casino.jackpot.hint", "Five scatters on one spin takes the whole pot");
+        public static readonly LocString JackpotHint = new("casino.jackpot.hint", "Every chip you stake is a ticket for the whole pot");
         public static readonly LocString JackpotWon = new("casino.jackpot.won", "JACKPOT");
         public static readonly LocString JackpotWonAmount = new("casino.jackpot.wonAmount", "{0} coin, the whole pot");
         public static readonly LocString JackpotMeter = new("casino.jackpot.meter", "Every spin on the floor feeds it");
