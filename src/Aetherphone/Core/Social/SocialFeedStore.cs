@@ -1002,16 +1002,25 @@ internal abstract class SocialFeedStore : IDisposable
 
     private void RemoveAuthorEverywhere(string userId)
     {
-        forYouLane.Items = CopyOnWrite.RemoveWhere(forYouLane.Items, post => post.AuthorId == userId);
-        followingLane.Items = CopyOnWrite.RemoveWhere(followingLane.Items, post => post.AuthorId == userId);
-        profileLane.Items = CopyOnWrite.RemoveWhere(profileLane.Items, post => post.AuthorId == userId);
-        taggedLane.Items = CopyOnWrite.RemoveWhere(taggedLane.Items, post => post.AuthorId == userId);
+        forYouLane.Items = BlockedContent.Purge(forYouLane.Items, userId);
+        followingLane.Items = BlockedContent.Purge(followingLane.Items, userId);
+        profileLane.Items = BlockedContent.Purge(profileLane.Items, userId);
+        taggedLane.Items = BlockedContent.Purge(taggedLane.Items, userId);
         detailComments = CopyOnWrite.RemoveWhere(detailComments, comment => comment.AuthorId == userId);
         discoverResults = CopyOnWrite.RemoveWhere(discoverResults, user => user.Id == userId);
-        if (detailPost is { } current && current.AuthorId == userId)
+        if (detailPost is not { } current)
+        {
+            return;
+        }
+
+        if (BlockedContent.Hides(current, userId))
         {
             detailPost = null;
             detailPostId = null;
+        }
+        else if (current.ReferencedPost?.AuthorId == userId)
+        {
+            detailPost = current with { ReferencedPost = null };
         }
     }
 
