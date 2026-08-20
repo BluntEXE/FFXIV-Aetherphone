@@ -490,14 +490,16 @@ internal sealed class GameData
         }
 
         var ids = new List<uint>(1024);
+        var seenNames = new HashSet<string>(StringComparer.Ordinal);
         foreach (var row in data.GetExcelSheet<ActionSheet>())
         {
-            if (row.RowId == 0 || !row.IsPlayerAction || row.Icon == 0 || row.ClassJob.RowId == 0)
+            if (row.RowId == 0 || !row.IsPlayerAction || row.IsPvP || row.ClassJobLevel == 0 || row.Icon == 0)
             {
                 continue;
             }
 
-            if (row.Name.ExtractText().Length == 0)
+            var name = row.Name.ExtractText();
+            if (name.Length == 0 || !seenNames.Add(name))
             {
                 continue;
             }
@@ -519,7 +521,8 @@ internal sealed class GameData
         var ids = new List<uint>(256);
         foreach (var row in data.GetExcelSheet<EmoteSheet>())
         {
-            if (row.RowId == 0 || row.Icon == 0 || row.Name.ExtractText().Length == 0)
+            if (row.RowId == 0 || row.Icon == 0 || row.TextCommand.RowId == 0 ||
+                row.Name.ExtractText().Length == 0)
             {
                 continue;
             }
