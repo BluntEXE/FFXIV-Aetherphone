@@ -23,9 +23,9 @@ internal sealed class AethergramStore : SocialFeedStore
         this.grams = grams;
     }
 
-    protected override Task<FeedPage?> FetchFeedAsync(string feedKey, string? cursor, CancellationToken token,
-        Action<AepFailure>? onFailure = null) =>
-        grams.FeedAsync(feedKey, cursor, token, onFailure);
+    protected override Task<FeedPage?> FetchFeedAsync(string feedKey, string? cursor, string? regions,
+        CancellationToken token, Action<AepFailure>? onFailure = null) =>
+        grams.FeedAsync(feedKey, cursor, regions, token, onFailure);
 
     protected override Task<FeedPage?> FetchProfilePostsAsync(string userId, string? cursor, CancellationToken token) =>
         grams.UserGramsAsync(userId, cursor, token);

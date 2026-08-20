@@ -64,7 +64,7 @@ internal sealed partial class ChirperApp : IPhoneApp
     private readonly FeedVirtualizer profileVirtualizer = new(400f);
     private readonly MentionPopup mentionPopup = new();
     private readonly DropdownMenu mediaFilterMenu = new();
-    private readonly DropdownMenu.Item[] mediaFilterItems = new DropdownMenu.Item[3];
+    private readonly DropdownMenu.Item[] mediaFilterItems = new DropdownMenu.Item[3 + SocialRegion.Codes.Length];
     private readonly DropdownMenu overflowMenu = new();
     private readonly DropdownMenu.Item[] overflowItems = new DropdownMenu.Item[1];
     private readonly MentionAutocomplete composeMentions;
@@ -124,6 +124,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         ConfirmService confirm, ReportService report, ConductGateService conduct, RealtimeSignalBus realtimeSignals)
     {
         store = new ChirperStore(session, net.Account, net.Social, net.Safety, net.Media, realtimeSignals);
+        store.SetFeedRegions(SocialRegion.FilterCsv(configuration.ChirperFeedRegionMask));
         composeMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         commentMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         this.library = library;
@@ -306,10 +307,10 @@ internal sealed partial class ChirperApp : IPhoneApp
         var rowRect = new Rect(new Vector2(area.Min.X, rowTop),
             new Vector2(area.Max.X, rowTop + FeedControlRow.Height * scale));
         var mediaOn = configuration.ChirperShowPhotoPosts && configuration.ChirperShowGifPosts
-            && configuration.ChirperShowCommentMedia;
+            && configuration.ChirperShowCommentMedia && configuration.ChirperFeedRegionMask == 0;
         var controls = FeedControlRow.Draw(rowRect, ui, Accent, Loc.T(L.Chirper.ForYou), Loc.T(L.Chirper.Following),
             (int)activeScope, ref tabSegmentAnim, store.IsLoading(activeScope), mediaOn, Loc.T(L.Common.Refresh),
-            Loc.T(L.Chirper.MediaFilters), "chirper.tabs");
+            Loc.T(L.Chirper.FeedFilters), "chirper.tabs");
         if (controls.MediaToggled)
         {
             mediaFilterMenu.Toggle(MediaFilterMenuId, controls.MediaBounds);
@@ -371,7 +372,14 @@ internal sealed partial class ChirperApp : IPhoneApp
             FontAwesomeIcon.Film.ToIconString(), Selected: configuration.ChirperShowGifPosts);
         mediaFilterItems[2] = new DropdownMenu.Item(Loc.T(L.Settings.ChirperShowReplyMedia),
             FontAwesomeIcon.Comment.ToIconString(), Selected: configuration.ChirperShowCommentMedia);
-        mediaFilterMenu.Header = Loc.T(L.Chirper.MediaFilters);
+        for (var regionIndex = 0; regionIndex < SocialRegion.Codes.Length; regionIndex++)
+        {
+            mediaFilterItems[3 + regionIndex] = new DropdownMenu.Item(SocialRegion.Codes[regionIndex],
+                FontAwesomeIcon.Globe.ToIconString(),
+                Selected: SocialRegion.MaskShows(configuration.ChirperFeedRegionMask, regionIndex));
+        }
+
+        mediaFilterMenu.Header = Loc.T(L.Chirper.FeedFilters);
         mediaFilterMenu.KeepOpen = true;
         var picked = mediaFilterMenu.Draw(screen, theme, mediaFilterItems);
         switch (picked)
@@ -384,6 +392,11 @@ internal sealed partial class ChirperApp : IPhoneApp
                 break;
             case 2:
                 configuration.ChirperShowCommentMedia = !configuration.ChirperShowCommentMedia;
+                break;
+            case >= 3:
+                configuration.ChirperFeedRegionMask =
+                    SocialRegion.ToggleMask(configuration.ChirperFeedRegionMask, picked - 3);
+                store.SetFeedRegions(SocialRegion.FilterCsv(configuration.ChirperFeedRegionMask));
                 break;
             default:
                 return;

@@ -74,6 +74,7 @@ internal abstract class SocialFeedStore : IDisposable
     private volatile string? taggedUserId;
     private readonly FeedLane<PostDto> hashtagLane = new(ByNewestFirst);
     private volatile string? hashtagTag;
+    private volatile string? feedRegions;
     private string? lastAccountId;
 
     protected SocialFeedStore(
@@ -214,8 +215,8 @@ internal abstract class SocialFeedStore : IDisposable
         : user.FollowRequested ? FollowState.Requested
         : FollowState.None;
 
-    protected abstract Task<FeedPage?> FetchFeedAsync(string feedKey, string? cursor, CancellationToken token,
-        Action<AepFailure>? onFailure = null);
+    protected abstract Task<FeedPage?> FetchFeedAsync(string feedKey, string? cursor, string? regions,
+        CancellationToken token, Action<AepFailure>? onFailure = null);
 
     protected abstract Task<FeedPage?> FetchProfilePostsAsync(string userId, string? cursor, CancellationToken token);
 
@@ -380,6 +381,21 @@ internal abstract class SocialFeedStore : IDisposable
         me = current with { Badges = signedInUser.Badges };
     }
 
+    public void SetFeedRegions(string? regionsCsv)
+    {
+        if (string.Equals(feedRegions, regionsCsv, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        feedRegions = regionsCsv;
+        forYouLane.Clear();
+        RefreshFeed(SocialFeedScope.ForYou);
+    }
+
+    private string? RegionsFor(SocialFeedScope scope) =>
+        scope == SocialFeedScope.ForYou ? feedRegions : null;
+
     public void RefreshFeed(SocialFeedScope scope)
     {
         if (!session.IsSignedIn)
@@ -389,10 +405,11 @@ internal abstract class SocialFeedStore : IDisposable
 
         var lane = Lane(scope);
         lane.Loading = true;
+        var regions = RegionsFor(scope);
         work.Run("feed refresh", async token =>
         {
             var reported = AepFailure.None;
-            var page = await FetchFeedAsync(FeedKey(scope), null, token, failure => reported = failure)
+            var page = await FetchFeedAsync(FeedKey(scope), null, regions, token, failure => reported = failure)
                 .ConfigureAwait(false);
             if (page is not null)
             {
@@ -420,10 +437,11 @@ internal abstract class SocialFeedStore : IDisposable
         }
 
         lane.LoadingMore = true;
+        var regions = RegionsFor(scope);
         work.Run("feed more", async token =>
         {
             var reported = AepFailure.None;
-            var page = await FetchFeedAsync(FeedKey(scope), cursor, token, failure => reported = failure)
+            var page = await FetchFeedAsync(FeedKey(scope), cursor, regions, token, failure => reported = failure)
                 .ConfigureAwait(false);
             if (page is not null)
             {

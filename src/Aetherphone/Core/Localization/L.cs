@@ -2946,7 +2946,7 @@ internal static class L
         public static readonly LocString SearchByName = new("chirper.searchByName", "Search by name, @username, or world");
         public static readonly LocString ForYou = new("chirper.forYou", "For You");
         public static readonly LocString Following = new("chirper.following", "Following");
-        public static readonly LocString MediaFilters = new("chirper.mediaFilters", "Media filters");
+        public static readonly LocString FeedFilters = new("chirper.feedFilters", "Feed filters");
         public static readonly LocString Follow = new("chirper.follow", "Follow");
         public static readonly LocString Unfollow = new("chirper.unfollow", "Unfollow");
         public static readonly LocString NameOrWorld = new("chirper.nameOrWorld", "Name, @username, or world");
@@ -3015,7 +3015,7 @@ internal static class L
         public static readonly LocString SetUpAccount = new("aethergram.setUpAccount", "Set up your account in Settings");
         public static readonly LocString ForYou = new("aethergram.forYou", "For You");
         public static readonly LocString Following = new("aethergram.following", "Following");
-        public static readonly LocString MediaFilters = new("aethergram.mediaFilters", "Media filters");
+        public static readonly LocString FeedFilters = new("aethergram.feedFilters", "Feed filters");
         public static readonly LocString Follow = new("aethergram.follow", "Follow");
         public static readonly LocString Unfollow = new("aethergram.unfollow", "Unfollow");
         public static readonly LocString ViewPost = new("aethergram.viewPost", "View post");

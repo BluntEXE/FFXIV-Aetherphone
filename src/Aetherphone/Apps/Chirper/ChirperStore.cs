@@ -28,9 +28,9 @@ internal sealed class ChirperStore : SocialFeedStore
 
     public bool AvatarBusy => avatarBusy;
 
-    protected override Task<FeedPage?> FetchFeedAsync(string feedKey, string? cursor, CancellationToken token,
-        Action<AepFailure>? onFailure = null) =>
-        client.FeedAsync(feedKey, cursor, token, onFailure);
+    protected override Task<FeedPage?> FetchFeedAsync(string feedKey, string? cursor, string? regions,
+        CancellationToken token, Action<AepFailure>? onFailure = null) =>
+        client.FeedAsync(feedKey, cursor, regions, token, onFailure);
 
     protected override Task<FeedPage?> FetchProfilePostsAsync(string userId, string? cursor, CancellationToken token) =>
         client.UserPostsAsync(userId, cursor, token);

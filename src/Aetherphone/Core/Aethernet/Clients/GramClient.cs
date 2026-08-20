@@ -18,10 +18,15 @@ internal sealed class GramClient
         return net.PostAsync("/grams", new CreateGramRequest(caption, mediaKeys[0], width, height, mediaKeys, photoTags, sensitive), AethernetJsonContext.Default.CreateGramRequest, AethernetJsonContext.Default.PostDto, token, null, onFailure);
     }
 
-    public Task<FeedPage?> FeedAsync(string scope, string? cursor, CancellationToken token,
+    public Task<FeedPage?> FeedAsync(string scope, string? cursor, string? regions, CancellationToken token,
         Action<AepFailure>? onFailure = null)
     {
         var path = $"/feed?scope={scope}&kind=1";
+        if (regions is not null)
+        {
+            path += $"&regions={Uri.EscapeDataString(regions)}";
+        }
+
         if (cursor is not null)
         {
             path += $"&cursor={Uri.EscapeDataString(cursor)}";
