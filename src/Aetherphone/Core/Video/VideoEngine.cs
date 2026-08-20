@@ -635,6 +635,12 @@ internal sealed class VideoEngine : IDisposable
         }
     }
 
+    internal bool ScreenVisible
+    {
+        get => screenPainter.Visible;
+        set => screenPainter.Visible = value;
+    }
+
     public void Dispose()
     {
         lifetime.Cancel();

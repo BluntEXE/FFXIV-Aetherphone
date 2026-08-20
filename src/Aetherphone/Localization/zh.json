@@ -3908,6 +3908,7 @@
   "aetherstream.castingStateNotReady": "尚未就绪",
   "aetherstream.castingStateReady": "已就绪",
   "aetherstream.openScreenWindow": "在窗口中打开",
+  "aetherstream.inGameScreen": "切换游戏内屏幕",
   "aetherstream.castingScreenPositionHeader": "屏幕位置",
   "aetherstream.castingScreenPositionHint": "开始播放后即可移动和调整屏幕大小。",
   "aetherstream.castingPresetNameHint": "预设名称…",

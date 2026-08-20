@@ -11,6 +11,7 @@ using GfxScene = FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using GfxGui = FFXIVClientStructs.FFXIV.Component.GUI;
 using GameControl = FFXIVClientStructs.FFXIV.Client.Game.Control;
 using NumericsMatrix4x4 = System.Numerics.Matrix4x4;
+using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Core.Video;
 
@@ -43,6 +44,7 @@ internal sealed unsafe class ScreenPainter : IDisposable
 	private const int CurveSegments = 24;
 	private const float Curvature = 0.12f;
 	private const int VertexCount = (CurveSegments + 1) * 2;
+	internal bool Visible {get; set; } = true;
 
 	[StructLayout(LayoutKind.Sequential)]
 	private unsafe struct ScreenParams
@@ -173,6 +175,11 @@ internal sealed unsafe class ScreenPainter : IDisposable
 
 	private void DrawIfReady()
 	{
+		if (!Visible)
+		{
+			return;
+		}
+
 		if (!TryGetSceneTargets(out nint colorTexture, out nint depthTexture, out uint targetWidth, out uint targetHeight) || _srv == null)
 		{
 			return;

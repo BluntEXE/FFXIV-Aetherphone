@@ -22,9 +22,21 @@ internal sealed partial class AetherStreamApp
             var width = ScrollLayout.StableContentWidth();
             DrawScreenStateRow(width, scale);
 
-            var windowCard = GroupCard.Begin(accentedTheme, 1);
+            var windowCard = GroupCard.Begin(accentedTheme, 2);
             var windowOpen = SettingsRow.Bool(windowCard.NextRow(), Loc.T(L.AetherStream.OpenScreenWindow),
                 screenWindow.IsOpen, accentedTheme);
+            var screenVisible = SettingsRow.Bool(windowCard.NextRow(),
+                Loc.T(L.AetherStream.InGameScreen), configuration.VideoScreenVisible, accentedTheme);
+            if (screenVisible != configuration.VideoScreenVisible)
+            {
+                configuration.VideoScreenVisible = screenVisible;
+                configuration.Save();
+                screen.Engine.ScreenVisible = screenVisible;
+                if (screenVisible)
+                {
+                    screen.Engine.RecenterScreen();
+                }
+            }
             windowCard.End();
             if (windowOpen != screenWindow.IsOpen)
             {

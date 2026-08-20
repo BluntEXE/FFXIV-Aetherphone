@@ -3908,6 +3908,7 @@
   "aetherstream.castingStateNotReady": "Не готово",
   "aetherstream.castingStateReady": "Готово",
   "aetherstream.openScreenWindow": "Открыть в окне",
+  "aetherstream.inGameScreen": "Переключить экран в игре",
   "aetherstream.castingScreenPositionHeader": "Положение экрана",
   "aetherstream.castingScreenPositionHint": "Начните воспроизведение, чтобы перемещать и изменять размер экрана.",
   "aetherstream.castingPresetNameHint": "Название пресета…",

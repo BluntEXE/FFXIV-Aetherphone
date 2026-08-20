@@ -3908,6 +3908,7 @@
   "aetherstream.castingStateNotReady": "No listo",
   "aetherstream.castingStateReady": "Listo",
   "aetherstream.openScreenWindow": "Abrir en una ventana",
+  "aetherstream.inGameScreen": "Alternar pantalla en el juego",
   "aetherstream.castingScreenPositionHeader": "Posición de la pantalla",
   "aetherstream.castingScreenPositionHint": "Inicia la reproducción para mover y cambiar el tamaño de la pantalla.",
   "aetherstream.castingPresetNameHint": "Nombre del ajuste preestablecido…",
