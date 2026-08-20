@@ -4264,6 +4264,9 @@ internal static class L
         public static readonly LocString HelpBody = new("coin.helpBody", "Aether Coin rewards may take up to 30 minutes to appear. If your balance doesn't update immediately, please check again shortly.");
         public static readonly LocString ShopEmptyHint = new("coin.shopEmptyHint", "The shop is still in the works. It opens very soon.");
         public static readonly LocString LeavingSoon = new("coin.leavingSoon", "Leaving {0}");
+        public static readonly LocPlural ShopItemCount = new("coin.shopItemCount", "{0} item", "{0} items");
+        public static readonly LocString ShopUnfiled = new("coin.shopUnfiled", "Everything else");
+        public static readonly LocString ShopShelfEmpty = new("coin.shopShelfEmpty", "Nothing on this shelf yet");
         public static readonly LocString FrozenTitle = new("coin.frozenTitle", "Your wallet is frozen");
         public static readonly LocString FrozenHint = new("coin.frozenHint", "Earning and spending are on hold. Check the Safety page for the reason.");
         public static readonly LocString FrozenAlertTitle = new("coin.frozenAlertTitle", "Wallet frozen");

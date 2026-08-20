@@ -44,6 +44,7 @@ internal sealed partial class CoinApp : IPhoneApp
     private readonly PullToRefresh walletRefresh = new();
     private readonly PullToRefresh historyRefresh = new();
     private readonly PullToRefresh shopRefresh = new();
+    private readonly PullToRefresh browseRefresh = new();
     private readonly PullToRefresh inventoryRefresh = new();
     private readonly CoinFloat floats = new();
 
@@ -77,8 +78,6 @@ internal sealed partial class CoinApp : IPhoneApp
         router.Reset();
         activeTab = TabWallet;
         historyFilter = CoinLedgerList.FilterAll;
-        shopFilter = ShopFilterAll;
-        shopRail.Reset();
         store.RefreshNow();
     }
 
@@ -117,6 +116,12 @@ internal sealed partial class CoinApp : IPhoneApp
     private void DrawView(CoinRoute route, Rect area, int depth)
     {
         ui.Body(area);
+        if (route.Screen != CoinScreen.Root)
+        {
+            DrawShopBrowse(route, area);
+            return;
+        }
+
         if (GuideIntents.Consume("coin.tab.shop"))
         {
             EnterTab(TabShop);
