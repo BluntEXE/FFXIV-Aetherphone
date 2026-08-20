@@ -1,18 +1,23 @@
+using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Home;
+using Aetherphone.Core.Localization;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Apps.Polls;
 
 internal sealed class PollsStore : IDisposable
 {
-    private static readonly TimeSpan BackgroundRefreshInterval = TimeSpan.FromMinutes(5);
+    // poll.ping announces every create/close/reopen, so the timer is only the fallback
+    // for a dropped socket; anything shorter just re-downloads an unchanged page.
+    private static readonly TimeSpan BackgroundRefreshInterval = TimeSpan.FromMinutes(45);
 
     private readonly AethernetSession session;
     private readonly PollsClient client;
     private readonly AppGate gate;
+    private readonly RealtimeSignalBus signals;
     private readonly StoreWork work = new StoreWork("Polls");
 
     private volatile PollDto[] polls = Array.Empty<PollDto>();
@@ -21,14 +26,22 @@ internal sealed class PollsStore : IDisposable
     private volatile bool pagedDeeper;
     private volatile bool loading;
     private volatile bool loadedOnce;
+    private volatile bool pingRefreshRequested;
     private DateTime lastBackgroundRefreshUtc = DateTime.MinValue;
 
-    public PollsStore(AethernetSession session, PollsClient client, AppGate gate)
+    public PollsStore(AethernetSession session, PollsClient client, AppGate gate, RealtimeSignalBus signals)
     {
         this.session = session;
         this.client = client;
         this.gate = gate;
+        this.signals = signals;
+        signals.PollsPinged += OnPollsPinged;
         Plugin.Framework.Update += OnFrameworkUpdate;
+    }
+
+    private void OnPollsPinged()
+    {
+        pingRefreshRequested = true;
     }
 
     public bool IsSignedIn => session.IsSignedIn;
@@ -74,9 +87,10 @@ internal sealed class PollsStore : IDisposable
         }
 
         loading = true;
+        var lang = Loc.Current.Code;
         work.Run("polls refresh", async token =>
         {
-            var page = await client.ListAsync(null, token).ConfigureAwait(false);
+            var page = await client.ListAsync(null, lang, token).ConfigureAwait(false);
             if (page is not null)
             {
                 if (pagedDeeper)
@@ -104,9 +118,10 @@ internal sealed class PollsStore : IDisposable
 
         loadingMore = true;
         pagedDeeper = true;
+        var lang = Loc.Current.Code;
         work.Run("polls more", async token =>
         {
-            var page = await client.ListAsync(cursor, token).ConfigureAwait(false);
+            var page = await client.ListAsync(cursor, lang, token).ConfigureAwait(false);
             if (page is null)
             {
                 return;
@@ -132,11 +147,12 @@ internal sealed class PollsStore : IDisposable
 
         var target = poll.MyVote == optionIndex ? -1 : optionIndex;
         polls = CopyOnWrite.Replace(polls, ApplyVote(poll, target));
+        var lang = Loc.Current.Code;
         work.Run("vote", async token =>
         {
             var result = target < 0
-                ? await client.ClearVoteAsync(poll.Id, token).ConfigureAwait(false)
-                : await client.VoteAsync(poll.Id, target, token).ConfigureAwait(false);
+                ? await client.ClearVoteAsync(poll.Id, lang, token).ConfigureAwait(false)
+                : await client.VoteAsync(poll.Id, target, lang, token).ConfigureAwait(false);
             if (result is not null)
             {
                 polls = CopyOnWrite.Replace(polls, result);
@@ -152,11 +168,12 @@ internal sealed class PollsStore : IDisposable
         }
 
         var now = DateTime.UtcNow;
-        if (now - lastBackgroundRefreshUtc < BackgroundRefreshInterval)
+        if (!pingRefreshRequested && now - lastBackgroundRefreshUtc < BackgroundRefreshInterval)
         {
             return;
         }
 
+        pingRefreshRequested = false;
         lastBackgroundRefreshUtc = now;
         Refresh();
     }
@@ -185,6 +202,7 @@ internal sealed class PollsStore : IDisposable
 
     public void Dispose()
     {
+        signals.PollsPinged -= OnPollsPinged;
         Plugin.Framework.Update -= OnFrameworkUpdate;
         work.Dispose();
     }
