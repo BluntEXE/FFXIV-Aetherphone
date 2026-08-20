@@ -191,10 +191,15 @@ internal sealed class ShellOverlayCoordinator
             controlCenter.Dismiss();
         }
 
+        if (AppLandscape.Held(navigation.Current?.Id ?? string.Empty) && controlCenter.IsActive)
+        {
+            controlCenter.Dismiss();
+        }
+
         HandleEscape();
         controlCenter.Draw(screen, theme, delta,
             !navigation.IsTransitioning && !director.CapturesPointer && !state.IslandCaptures &&
-            !banOverlay.IsActive && navigation.Current?.Id != "camera",
+            !banOverlay.IsActive && navigation.Current?.Id != "camera" && !AppLandscape.Held(navigation.Current?.Id ?? string.Empty),
             !director.CapturesPointer);
         HoverTooltip.Flush();
         CopyToast.Flush();
