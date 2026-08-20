@@ -8,6 +8,7 @@ internal sealed record CoinShopCategoryStyle(
     string ParentId,
     string BaseName,
     long Icon,
+    string ImageUrl,
     int SortOrder,
     int ItemCount,
     int? OwnedCount,
@@ -46,6 +47,7 @@ internal sealed record CoinShopCategoryStyle(
             category.ParentId,
             category.Name,
             category.Icon,
+            category.ImageUrl,
             category.SortOrder,
             category.ItemCount,
             ownedCount,
@@ -55,7 +57,7 @@ internal sealed record CoinShopCategoryStyle(
 
     public static CoinShopCategoryStyle Unfiled(int itemCount, int? ownedCount, long? soonestLeavingUnix)
     {
-        return new CoinShopCategoryStyle(string.Empty, string.Empty, string.Empty, 0, int.MaxValue, itemCount,
-            ownedCount, soonestLeavingUnix, null);
+        return new CoinShopCategoryStyle(string.Empty, string.Empty, string.Empty, 0, string.Empty, int.MaxValue,
+            itemCount, ownedCount, soonestLeavingUnix, null);
     }
 }

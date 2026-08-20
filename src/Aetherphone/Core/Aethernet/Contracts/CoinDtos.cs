@@ -63,7 +63,8 @@ internal sealed record CoinShopCategoryDto(
     int SortOrder,
     int ItemCount,
     long? SoonestLeavingUnix = null,
-    CoinTranslationDto[]? Translations = null);
+    CoinTranslationDto[]? Translations = null,
+    string ImageUrl = "");
 
 internal sealed record CoinShopDto(
     CoinShopCategoryDto[] Categories,

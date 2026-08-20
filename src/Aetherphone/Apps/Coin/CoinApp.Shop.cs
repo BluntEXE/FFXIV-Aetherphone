@@ -19,6 +19,7 @@ internal sealed partial class CoinApp
     private const float TileHeight = 136f;
     private const float TileGap = 12f;
     private const float TileIconFraction = 0.34f;
+    private const float TileImageFraction = 0.52f;
     private const float SkuCardGap = 12f;
     private const float FlairCardHeight = 200f;
     private const float PlainCardHeight = 112f;
@@ -156,16 +157,12 @@ internal sealed partial class CoinApp
         var hovered = UiInteract.Hover(min, max);
         ui.Card(drawList, min, max, 18f * scale, hovered);
 
-        var iconSize = cellHeight * TileIconFraction;
-        var iconCenter = new Vector2(min.X + cellWidth * 0.5f, min.Y + iconSize * 0.5f + 18f * scale);
-        var icon = category.Icon == 0 ? FallbackCategoryIcon : category.Icon;
-        ProgressRing.CenterIcon(drawList, iconCenter, (FontAwesomeIcon)icon, ui.Palette.Accent, iconSize);
+        var titleY = DrawTileArt(drawList, category, min, cellWidth, cellHeight, scale);
 
         var title = category.IsUnfiled ? Loc.T(L.Coin.ShopUnfiled) : category.Name;
         var inset = 12f * scale;
         var titleFit = Typography.FitText(title, cellWidth - inset * 2f, TextStyles.BodyEmphasized);
         var titleSize = Typography.Measure(titleFit, TextStyles.BodyEmphasized);
-        var titleY = iconCenter.Y + iconSize * 0.5f + 12f * scale;
         Typography.Draw(drawList, new Vector2(min.X + (cellWidth - titleSize.X) * 0.5f, titleY), titleFit,
             ui.Palette.TitleInk, TextStyles.BodyEmphasized);
 
@@ -188,6 +185,26 @@ internal sealed partial class CoinApp
         {
             EnterCategory(category);
         }
+    }
+
+    private float DrawTileArt(ImDrawListPtr drawList, CoinShopCategoryStyle category, Vector2 min, float cellWidth,
+        float cellHeight, float scale)
+    {
+        var texture = category.ImageUrl.Length == 0 ? null : images.Get(category.ImageUrl);
+        if (texture is null)
+        {
+            var iconSize = cellHeight * TileIconFraction;
+            var iconCenter = new Vector2(min.X + cellWidth * 0.5f, min.Y + iconSize * 0.5f + 18f * scale);
+            var icon = category.Icon == 0 ? FallbackCategoryIcon : category.Icon;
+            ProgressRing.CenterIcon(drawList, iconCenter, (FontAwesomeIcon)icon, ui.Palette.Accent, iconSize);
+            return iconCenter.Y + iconSize * 0.5f + 12f * scale;
+        }
+
+        var heroMax = new Vector2(min.X + cellWidth, min.Y + cellHeight * TileImageFraction);
+        var (uv0, uv1) = ImageFit.Cover(texture.Size.X, texture.Size.Y, cellWidth, heroMax.Y - min.Y);
+        drawList.AddImageRounded(texture.Handle, min, heroMax, uv0, uv1, 0xFFFFFFFFu, 18f * scale,
+            ImDrawFlags.RoundCornersTop);
+        return heroMax.Y + 10f * scale;
     }
 
     private void EnterCategory(CoinShopCategoryStyle category)
