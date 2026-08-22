@@ -97,7 +97,7 @@ internal sealed class HousingWorldCacheEntry
     [JsonPropertyName("dcName")] public string? DataCenterName { get; set; }
 }
 
-internal sealed class CnSalesPlot
+internal sealed class ChinaSalesPlot
 {
     [JsonPropertyName("Server")] public uint Server { get; set; }
     [JsonPropertyName("Area")] public int Area { get; set; }
@@ -123,7 +123,7 @@ internal sealed class CnSalesPlot
 [JsonSerializable(typeof(PaissaProxyInfo))]
 [JsonSerializable(typeof(HousingCacheFile))]
 [JsonSerializable(typeof(HousingWorldCacheFile))]
-[JsonSerializable(typeof(CnSalesPlot[]))]
+[JsonSerializable(typeof(ChinaSalesPlot[]))]
 internal sealed partial class HousingJsonContext : JsonSerializerContext
 {
 }

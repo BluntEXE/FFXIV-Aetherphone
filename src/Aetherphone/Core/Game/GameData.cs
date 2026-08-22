@@ -221,6 +221,33 @@ internal sealed class GameData
             _ => string.Empty,
         };
 
+    public IReadOnlyList<(uint WorldId, string Name, uint DataCenterId, string DataCenterName)> ChinaWorlds()
+    {
+        var worlds = data.GetExcelSheet<World>();
+        var results = new List<(uint WorldId, string Name, uint DataCenterId, string DataCenterName)>();
+        foreach (var world in worlds)
+        {
+            if (world.RowId is > 1000 and < 2000 &&
+                world.DataCenter.RowId != 0 &&
+                world.Region == 2 &&
+                world.DataCenter.Value.Region.RowId == ChinaRegionId &&
+                world.UserType == 101 &&
+                world.RowId != 1200)
+            {
+                var dataCenter = world.DataCenter.Value;
+                var name = world.Name.ExtractText();
+                if (name.Length == 0)
+                {
+                    continue;
+                }
+
+                results.Add((world.RowId, name, dataCenter.RowId, dataCenter.Name.ExtractText()));
+            }
+        }
+
+        return results;
+    }
+
     public string LocalRegionCode() => RegionCodeFromId(RegionId());
 
     public bool IsChineseGameClient()

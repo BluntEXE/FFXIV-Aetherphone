@@ -36,7 +36,6 @@ internal sealed class HousingRestProvider
 
     public async Task<IReadOnlyList<HousingWorld>?> GetWorldsAsync(CancellationToken token)
     {
-        var worlds = new List<HousingWorld>();
         using (await throttle.EnterAsync(token).ConfigureAwait(false))
         {
             var status = 0;
@@ -44,25 +43,27 @@ internal sealed class HousingRestProvider
                 HousingJsonContext.Default.PaissaWorldSummaryArray, null, token, code => status = code)
                 .ConfigureAwait(false);
             LastStatusCode = status;
-            if (payload is not null)
+            if (payload is null)
             {
-                for (var index = 0; index < payload.Length; index++)
-                {
-                    var entry = payload[index];
-                    if (entry.Id == 0 || string.IsNullOrEmpty(entry.Name))
-                    {
-                        continue;
-                    }
-
-                    var dataCenter = entry.DataCenterName ?? string.Empty;
-                    worlds.Add(new HousingWorld(entry.Id, entry.Name, entry.DataCenterId, dataCenter,
-                        HousingRegions.For(dataCenter)));
-                }
+                return null;
             }
-        }
 
-        CnHousing.AppendWorlds(worlds);
-        return worlds.Count == 0 ? null : worlds;
+            var worlds = new List<HousingWorld>(payload.Length);
+            for (var index = 0; index < payload.Length; index++)
+            {
+                var entry = payload[index];
+                if (entry.Id == 0 || string.IsNullOrEmpty(entry.Name))
+                {
+                    continue;
+                }
+
+                var dataCenter = entry.DataCenterName ?? string.Empty;
+                worlds.Add(new HousingWorld(entry.Id, entry.Name, entry.DataCenterId, dataCenter,
+                    HousingRegions.For(dataCenter)));
+            }
+
+            return worlds;
+        }
     }
 
     public async Task<HousingDistrictSnapshot?> GetDistrictAsync(uint worldId, uint districtId,
@@ -73,10 +74,10 @@ internal sealed class HousingRestProvider
             return null;
         }
 
-        if (CnHousing.IsChinaWorld(worldId))
+        if (Kind == HousingProviderKind.China)
         {
             LastProxyCacheAge = null;
-            return await GetCnDistrictAsync(worldId, districtId, token).ConfigureAwait(false);
+            return await GetChinaDistrictAsync(worldId, districtId, token).ConfigureAwait(false);
         }
 
         using (await throttle.EnterAsync(token).ConfigureAwait(false))
@@ -97,10 +98,10 @@ internal sealed class HousingRestProvider
         }
     }
 
-    private async Task<HousingDistrictSnapshot?> GetCnDistrictAsync(uint worldId, uint districtId,
+    private async Task<HousingDistrictSnapshot?> GetChinaDistrictAsync(uint worldId, uint districtId,
         CancellationToken token)
     {
-        var area = CnHousing.AreaOf(districtId);
+        var area = AreaOf(districtId);
         if (area < 0)
         {
             LastStatusCode = 0;
@@ -110,8 +111,8 @@ internal sealed class HousingRestProvider
         using (await throttle.EnterAsync(token).ConfigureAwait(false))
         {
             var status = 0;
-            var payload = await http.GetJsonAsync(HousingEndpoints.CnSales(HousingEndpoints.CnBaseUrl, worldId),
-                    HousingJsonContext.Default.CnSalesPlotArray, null, token, code => status = code)
+            var payload = await http.GetJsonAsync(HousingEndpoints.ChinaSales(BaseUrl, worldId),
+                    HousingJsonContext.Default.ChinaSalesPlotArray, null, token, code => status = code)
                 .ConfigureAwait(false);
             LastStatusCode = status;
             if (payload is null)
@@ -128,7 +129,7 @@ internal sealed class HousingRestProvider
                     continue;
                 }
 
-                if (TryMapCnPlot(worldId, districtId, entry, out var plot))
+                if (TryMapChinaPlot(worldId, districtId, entry, out var plot))
                 {
                     plots.Add(plot);
                 }
@@ -219,7 +220,7 @@ internal sealed class HousingRestProvider
         return true;
     }
 
-    private static bool TryMapCnPlot(uint worldId, uint districtId, CnSalesPlot entry, out HousingPlot plot)
+    private static bool TryMapChinaPlot(uint worldId, uint districtId, ChinaSalesPlot entry, out HousingPlot plot)
     {
         plot = null!;
         var ward = entry.Slot + 1;
@@ -236,10 +237,12 @@ internal sealed class HousingRestProvider
             Key = new HousingPlotKey(worldId, districtId, ward, plotNumber),
             Size = MapSize(entry.Size),
             Price = entry.Price > 0 ? entry.Price : 0L,
+            // The CN source's RegionType (0/1/2) looks like FC-only / individual-only / unrestricted, but
+            // its exact semantics still need upstream confirmation before mapping to Eligibility.
             Eligibility = HousingPurchaseEligibility.Unknown,
             Mode = HousingPurchaseMode.Unknown,
-            Phase = HousingLotteryPhase.Unknown,
-            PhaseEndsUtc = null,
+            Phase = MapPhase(entry.State),
+            PhaseEndsUtc = FromUnixSeconds((long?)entry.EndTime),
             Entries = null,
             LastSeenUtc = lastSeen,
             FirstSeenUtc = FromUnixSeconds((long?)entry.FirstSeen) ?? lastSeen,
@@ -304,6 +307,16 @@ internal sealed class HousingRestProvider
     private static DateTime? FromUnixSeconds(long? seconds) =>
         seconds is null or <= 0L ? null : DateTimeOffset.FromUnixTimeSeconds(seconds.Value).UtcDateTime;
 
+    private static int AreaOf(uint districtId) => districtId switch
+    {
+        HousingDistricts.MistId => 0,
+        HousingDistricts.LavenderBedsId => 1,
+        HousingDistricts.GobletId => 2,
+        HousingDistricts.ShiroganeId => 3,
+        HousingDistricts.EmpyreumId => 4,
+        _ => -1,
+    };
+
     public void Dispose() => throttle.Dispose();
 }
 
@@ -313,73 +326,5 @@ internal static class HousingPlotOrder
     {
         var ward = first.Key.Ward.CompareTo(second.Key.Ward);
         return ward != 0 ? ward : first.Key.Plot.CompareTo(second.Key.Plot);
-    };
-}
-
-internal static class CnHousing
-{
-    private static readonly (string DataCenter, (uint Id, string Name)[] Worlds)[] DataCenters =
-    [
-        ("陆行鸟",
-        [
-            (1167u, "红玉海"), (1081u, "神意之地"), (1042u, "拉诺西亚"), (1044u, "幻影群岛"),
-            (1060u, "萌芽池"), (1173u, "宇宙和音"), (1174u, "沃仙曦染"), (1175u, "晨曦王座"),
-        ]),
-        ("莫古力",
-        [
-            (1172u, "白银乡"), (1076u, "白金幻象"), (1171u, "神拳痕"), (1170u, "潮风亭"),
-            (1113u, "旅人栈桥"), (1121u, "拂晓之间"), (1166u, "龙巢神殿"), (1176u, "梦羽宝境"),
-        ]),
-        ("猫小胖",
-        [
-            (1043u, "紫水栈桥"), (1169u, "延夏"), (1106u, "静语庄园"), (1045u, "摩杜纳"),
-            (1177u, "海猫茶屋"), (1178u, "柔风海湾"), (1179u, "琥珀原"),
-        ]),
-        ("豆豆柴",
-        [
-            (1192u, "水晶塔"), (1183u, "银泪湖"), (1180u, "太阳海岸"), (1186u, "伊修加德"),
-            (1201u, "红茶川"),
-        ]),
-    ];
-
-    private static readonly HashSet<uint> Ids = BuildIds();
-
-    private static HashSet<uint> BuildIds()
-    {
-        var ids = new HashSet<uint>();
-        foreach (var (_, worlds) in DataCenters)
-        {
-            foreach (var (id, _) in worlds)
-            {
-                ids.Add(id);
-            }
-        }
-
-        return ids;
-    }
-
-    public static bool IsChinaWorld(uint worldId) => Ids.Contains(worldId);
-
-    public static void AppendWorlds(List<HousingWorld> worlds)
-    {
-        for (var dcIndex = 0; dcIndex < DataCenters.Length; dcIndex++)
-        {
-            var (dataCenter, dcWorlds) = DataCenters[dcIndex];
-            for (var index = 0; index < dcWorlds.Length; index++)
-            {
-                var (id, name) = dcWorlds[index];
-                worlds.Add(new HousingWorld(id, name, dcIndex, dataCenter, HousingRegions.For(dataCenter)));
-            }
-        }
-    }
-
-    public static int AreaOf(uint districtId) => districtId switch
-    {
-        HousingDistricts.MistId => 0,
-        HousingDistricts.LavenderBedsId => 1,
-        HousingDistricts.GobletId => 2,
-        HousingDistricts.ShiroganeId => 3,
-        HousingDistricts.EmpyreumId => 4,
-        _ => -1,
     };
 }

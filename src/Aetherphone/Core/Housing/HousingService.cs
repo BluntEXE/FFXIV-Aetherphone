@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Net;
@@ -19,7 +20,10 @@ internal sealed class HousingService : IDisposable
     private readonly PhoneVisibility visibility;
     private readonly IFramework framework;
     private readonly HousingRestProvider api;
+    private readonly HousingRestProvider chinaApi;
     private readonly HousingCache cache;
+    private readonly IReadOnlyList<(uint WorldId, string Name, uint DataCenterId, string DataCenterName)> chinaWorldRows;
+    private readonly FrozenSet<uint> chinaWorldIds;
     private readonly SemaphoreSlim refreshGate = new(1, 1);
     private readonly CancellationTokenSource cancellation = new();
     private readonly ConcurrentDictionary<long, HousingDistrictSnapshot> snapshots = new();
@@ -45,6 +49,16 @@ internal sealed class HousingService : IDisposable
         GameMaps = gameMaps;
         api = new HousingRestProvider(http, HousingProviderKind.Service, HousingEndpoints.DisplayName,
             () => HousingEndpoints.BaseUrl);
+        chinaApi = new HousingRestProvider(http, HousingProviderKind.China, HousingEndpoints.ChinaDisplayName,
+            () => HousingEndpoints.ChinaBaseUrl);
+        chinaWorldRows = gameData.ChinaWorlds();
+        var chinaIds = new HashSet<uint>(chinaWorldRows.Count);
+        for (var index = 0; index < chinaWorldRows.Count; index++)
+        {
+            chinaIds.Add(chinaWorldRows[index].WorldId);
+        }
+
+        chinaWorldIds = chinaIds.ToFrozenSet();
         cache = new HousingCache(cacheRoot);
         Watch = new HousingWatchStore(configuration);
         Filters = new HousingFilterState
@@ -88,15 +102,15 @@ internal sealed class HousingService : IDisposable
 
     public string? LastError { get; private set; }
 
-    public int LastStatusCode => api.LastStatusCode;
+    private HousingRestProvider ActiveProvider => IsChinaWorld(WorldId) ? chinaApi : api;
 
-    public string ProviderName =>
-        CnHousing.IsChinaWorld(WorldId) ? HousingEndpoints.CnDisplayName : api.DisplayName;
+    public int LastStatusCode => ActiveProvider.LastStatusCode;
 
-    public string ApiBaseUrl =>
-        CnHousing.IsChinaWorld(WorldId) ? HousingEndpoints.CnBaseUrl : api.BaseUrl;
+    public string ProviderName => ActiveProvider.DisplayName;
 
-    public int? ProxyCacheAgeSeconds => api.LastProxyCacheAge;
+    public string ApiBaseUrl => ActiveProvider.BaseUrl;
+
+    public int? ProxyCacheAgeSeconds => ActiveProvider.LastProxyCacheAge;
 
     public HousingProviderStatus Status => new(ActiveSource, State, LastSuccessUtc, LastError);
 
@@ -312,7 +326,7 @@ internal sealed class HousingService : IDisposable
         var cached = cache.ReadWorlds();
         if (cached is { Count: > 0 })
         {
-            worlds = cached;
+            worlds = WithChinaWorlds(cached);
             Bump();
         }
 
@@ -343,6 +357,48 @@ internal sealed class HousingService : IDisposable
         TryFindWorld(worldId, out var world)
             ? world.RegionName
             : HousingRegions.For(gameData.DataCenterName(worldId));
+
+    private bool IsChinaWorld(uint worldId) => chinaWorldIds.Contains(worldId);
+
+    private IReadOnlyList<HousingWorld> WithChinaWorlds(IReadOnlyList<HousingWorld> source)
+    {
+        if (chinaWorldRows.Count == 0)
+        {
+            return source;
+        }
+
+        var merged = new List<HousingWorld>(source.Count + chinaWorldRows.Count);
+        merged.AddRange(source);
+        for (var index = 0; index < chinaWorldRows.Count; index++)
+        {
+            var entry = chinaWorldRows[index];
+            var duplicate = false;
+            for (var sourceIndex = 0; sourceIndex < source.Count; sourceIndex++)
+            {
+                if (source[sourceIndex].Id == entry.WorldId)
+                {
+                    duplicate = true;
+                    break;
+                }
+            }
+
+            if (duplicate)
+            {
+                continue;
+            }
+
+            var region = gameData.RegionName(entry.WorldId);
+            if (region.Length == 0)
+            {
+                region = HousingRegions.For(entry.DataCenterName);
+            }
+
+            merged.Add(new HousingWorld(entry.WorldId, entry.Name, (int)entry.DataCenterId, entry.DataCenterName,
+                region));
+        }
+
+        return merged;
+    }
 
     public void CollectWardOpenings(Span<int> counts)
     {
@@ -478,7 +534,7 @@ internal sealed class HousingService : IDisposable
             }
 
             var token = cancellation.Token;
-            var active = api;
+            var active = IsChinaWorld(worldId) ? chinaApi : api;
             var snapshot = await active.GetDistrictAsync(worldId, districtId, token).ConfigureAwait(false);
             if (snapshot is not null)
             {
@@ -628,8 +684,8 @@ internal sealed class HousingService : IDisposable
             var loaded = await api.GetWorldsAsync(token).ConfigureAwait(false);
             if (loaded is { Count: > 0 })
             {
-                worlds = loaded;
-                cache.WriteWorlds(loaded);
+                worlds = WithChinaWorlds(loaded);
+                cache.WriteWorlds(worlds);
             }
             else if (worlds.Count == 0)
             {
@@ -651,8 +707,8 @@ internal sealed class HousingService : IDisposable
     }
 
     private string LookupErrorText() =>
-        api.LastStatusCode > 0
-            ? string.Concat("HTTP ", api.LastStatusCode.ToString(CultureInfo.InvariantCulture))
+        ActiveProvider.LastStatusCode > 0
+            ? string.Concat("HTTP ", ActiveProvider.LastStatusCode.ToString(CultureInfo.InvariantCulture))
             : "unreachable";
 
     private static long CacheKey(uint worldId, uint districtId) => ((long)worldId << 32) | districtId;
@@ -664,6 +720,7 @@ internal sealed class HousingService : IDisposable
         ticker.Dispose();
         cancellation.Cancel();
         api.Dispose();
+        chinaApi.Dispose();
         refreshGate.Dispose();
         cancellation.Dispose();
     }
