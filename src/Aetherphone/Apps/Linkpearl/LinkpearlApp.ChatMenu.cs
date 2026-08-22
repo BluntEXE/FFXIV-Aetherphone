@@ -170,7 +170,7 @@ internal sealed partial class LinkpearlApp
                 GameLinkActions.InviteToParty(chatMenuName, chatMenuWorld);
                 break;
             case MenuOpenUrl:
-                UrlActions.OpenInBrowser(chatMenuText);
+                UrlActions.AskThenOpen(chatMenuText);
                 break;
             case MenuTryOn:
                 GameLinkActions.TryOn(chatMenuLink.Id);

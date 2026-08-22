@@ -149,6 +149,8 @@ The `openedFrame` guard is mandatory in any popup you build: the click that open
 
 For confirms, do not draw `ConfirmDialog` yourself. Apps receive a `ConfirmService` (src/Aetherphone/Core/Confirm/ConfirmService.cs) and call `confirm.Ask(new ConfirmRequest { ... })` or `confirm.Alert(...)`; the shell-level `ConfirmOverlay` dims the screen, animates the card in, and routes the buttons back to your `Confirm`/`Cancel` callbacks. `ConfirmDialog` (src/Aetherphone/Windows/Components/ConfirmDialog.cs) is the presentational card it renders, and its `DrawPillButton` is reusable for pill-shaped buttons.
 
+Web links that other users supplied (post bodies, chat bubbles, venue and ad buttons, chat-log URLs) go through `UrlActions.AskThenOpen` (src/Aetherphone/Windows/UrlActions.cs), which shows the open-link confirmation with a host-first destination chip before calling `OpenInBrowser`. `LinkText` already does this for clickable URLs inside text, so anything drawn through `LinkText`, `ChatBubble`, or `ChatTranscript` gets the gate for free. `PhoneServices.Build` binds the single `ConfirmService` with `UrlActions.Configure`. Reserve a direct `OpenInBrowser` for first-party destinations (Patreon, Discord, Lodestone, sign-in verification pages).
+
 ## Scrolling
 
 ### DragScrollHost
@@ -268,6 +270,7 @@ Animated components (the `Toggle` knob, `ConfirmOverlay` reveal) use `Spring` (s
 | Offer filters in a row | `ChipRail` |
 | Show "nothing here yet" | `EmptyState.Draw` |
 | Confirm a destructive action | `ConfirmService.Ask` (never draw `ConfirmDialog` yourself) |
+| Open a link someone else posted | `UrlActions.AskThenOpen` (confirms the destination first) |
 | Show a context menu | `DropdownMenu` |
 | Draw a person's picture | `AvatarView` |
 | Take multiline text input | `SoftWrapField.Multiline` |

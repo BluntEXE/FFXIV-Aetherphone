@@ -56,7 +56,6 @@ internal sealed partial class ChirperApp : IPhoneApp
     private readonly RemoteImageCache images;
     private readonly SocialNotificationService social;
     private readonly ConductGateService conduct;
-    private readonly ConfirmService confirmService;
     private readonly AvatarComposer avatar;
     private readonly SocialProfilePages profile;
     private readonly AppSkin ui = new(AppPalettes.Chirper);
@@ -146,7 +145,6 @@ internal sealed partial class ChirperApp : IPhoneApp
             wallpaperImages, confirm, () => store.AvatarFailure);
         router = new ViewRouter<ChirperRoute>(ChirperRoute.Home);
         drawView = DrawView;
-        confirmService = confirm;
         back = () => router.Pop();
         openActivityActor = item => OpenProfile(item.ActorId);
         openActivityPost = item => OpenThreadFromLink(item.PostId!);
@@ -1665,10 +1663,10 @@ internal sealed partial class ChirperApp : IPhoneApp
         {
             OpenHashtag(layout.Tags[hit.TargetIndex]);
         }
-        
+
         if (hit.Kind == RichTextRunKind.Link && hit.Clicked)
         {
-            UrlActions.AskThenOpen(confirmService, layout.Urls[hit.TargetIndex]);
+            UrlActions.AskThenOpen(layout.Urls[hit.TargetIndex]);
         }
     }
 

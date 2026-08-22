@@ -21,6 +21,7 @@ using Aetherphone.Core.Sharing;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Wallpapers;
+using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Objects.Enums;
@@ -531,6 +532,11 @@ internal sealed partial class VelvetShell : IPhoneApp
         if (hit.Kind == RichTextRunKind.Mention && hit.Clicked)
         {
             OpenProfile(layout.Mentions[hit.TargetIndex].UserId);
+        }
+
+        if (hit.Kind == RichTextRunKind.Link && hit.Clicked)
+        {
+            UrlActions.AskThenOpen(layout.Urls[hit.TargetIndex]);
         }
     }
 

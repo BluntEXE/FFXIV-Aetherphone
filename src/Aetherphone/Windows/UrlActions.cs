@@ -8,6 +8,16 @@ namespace Aetherphone.Windows;
 
 internal static class UrlActions
 {
+    private const int DestinationMaxLength = 72;
+    private const string Ellipsis = "…";
+    private static readonly char[] PathStarts = ['/', '?', '#'];
+    private static ConfirmService? confirm;
+
+    public static void Configure(ConfirmService service)
+    {
+        confirm = service;
+    }
+
     public static void OpenInBrowser(string url, Action<Exception>? onError = null)
     {
         if (!IsWebUrl(url))
@@ -30,8 +40,14 @@ internal static class UrlActions
         }
     }
 
-    public static void AskThenOpen(ConfirmService confirm, string url)
+    public static void AskThenOpen(string url, Action<Exception>? onError = null)
     {
+        if (confirm is null)
+        {
+            OpenInBrowser(url, onError);
+            return;
+        }
+
         confirm.Ask(new ConfirmRequest
         {
             Title = Loc.T(L.Common.OpenLinkTitle),
@@ -39,13 +55,37 @@ internal static class UrlActions
             Sections =
             [
                 ConfirmSection.Paragraph(Loc.T(L.Common.OpenLinkWarning)),
-                ConfirmSection.Chip(Loc.T(L.Common.OpenLinkDestination), url),
+                ConfirmSection.Chip(Loc.T(L.Common.OpenLinkDestination), DestinationLabel(url)),
             ],
             ConfirmLabel = Loc.T(L.Common.OpenLinkConfirm),
             CancelLabel = Loc.T(L.Common.Cancel),
             Danger = true,
-            Confirm = () => OpenInBrowser(url),
+            Confirm = () => OpenInBrowser(url, onError),
         });
+    }
+
+    public static string DestinationLabel(string url)
+    {
+        if (url.Length <= DestinationMaxLength)
+        {
+            return url;
+        }
+
+        var schemeEnd = url.IndexOf("://", StringComparison.Ordinal);
+        var authorityStart = schemeEnd < 0 ? 0 : schemeEnd + 3;
+        var authorityEnd = url.IndexOfAny(PathStarts, authorityStart);
+        if (authorityEnd < 0)
+        {
+            authorityEnd = url.Length;
+        }
+
+        var keep = Math.Max(authorityEnd, DestinationMaxLength - Ellipsis.Length);
+        if (keep >= url.Length)
+        {
+            return url;
+        }
+
+        return string.Concat(url.AsSpan(0, keep), Ellipsis);
     }
 
     public static void OpenFolder(string path)

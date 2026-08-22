@@ -1458,7 +1458,7 @@ internal sealed partial class AethergramApp : IPhoneApp
 
         if (hit.Kind == RichTextRunKind.Link && hit.Clicked)
         {
-            UrlActions.AskThenOpen(confirm, layout.Urls[hit.TargetIndex]);
+            UrlActions.AskThenOpen(layout.Urls[hit.TargetIndex]);
         }
     }
 

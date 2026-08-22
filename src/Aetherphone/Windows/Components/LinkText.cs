@@ -18,7 +18,7 @@ internal static class LinkText
         RichText.Draw(drawList, layout, origin, richInk, out var hit);
         if (hit.Kind == RichTextRunKind.Link && hit.Clicked)
         {
-            UrlActions.OpenInBrowser(layout.Urls[hit.TargetIndex]);
+            UrlActions.AskThenOpen(layout.Urls[hit.TargetIndex]);
         }
     }
 }

@@ -275,6 +275,7 @@ internal sealed class PhoneServices : IDisposable
         var housingReminders = new HousingReminderService(configuration, framework, notifications, housing.Watch,
             housingGate);
         var confirm = new ConfirmService();
+        Windows.UrlActions.Configure(confirm);
         var calls = new CallHub(configuration, aethernetSession, notifications, sound, playback, realtimeSignals,
             confirm, installer.Gate("message"));
         var streamSignals = new StreamSignalRouter(calls.Router);
