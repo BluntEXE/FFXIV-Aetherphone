@@ -522,14 +522,18 @@ internal sealed class AppSkin
 
     public static void Icon(ImDrawListPtr drawList, Vector2 center, string glyph, Vector4 color, float scale)
     {
-        float fontSize;
-        Vector2 size;
+        float targetSize;
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
-            fontSize = ImGui.GetFontSize() * scale;
-            size = ImGui.CalcTextSize(glyph) * scale;
+            targetSize = ImGui.GetFontSize() * scale;
         }
 
-        drawList.AddText(UiBuilder.IconFont, fontSize, center - size * 0.5f, ImGui.GetColorU32(color), glyph, 0f);
+        using (Plugin.Fonts.PushIcon(targetSize, glyph))
+        {
+            var font = ImGui.GetFont();
+            var ratio = targetSize / ImGui.GetFontSize();
+            var size = ImGui.CalcTextSize(glyph) * ratio;
+            drawList.AddText(font, targetSize, center - size * 0.5f, ImGui.GetColorU32(color), glyph, 0f);
+        }
     }
 }

@@ -30,6 +30,7 @@ internal static class SignalType
     public const string SocialPing = "social.ping";
     public const string MusterPing = "muster.ping";
     public const string AnnouncePing = "announce.ping";
+    public const string PollPing = "poll.ping";
     public const string CasinoPrefix = "casino.";
     public const string CasinoAttach = "casino.attach";
     public const string CasinoDetach = "casino.detach";

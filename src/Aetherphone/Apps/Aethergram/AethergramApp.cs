@@ -80,7 +80,7 @@ internal sealed partial class AethergramApp : IPhoneApp
     private readonly DropdownMenu mediaFilterMenu = new();
     private readonly DropdownMenu overflowMenu = new();
     private readonly DropdownMenu.Item[] postItems = new DropdownMenu.Item[4];
-    private readonly DropdownMenu.Item[] mediaFilterItems = new DropdownMenu.Item[2];
+    private readonly DropdownMenu.Item[] mediaFilterItems = new DropdownMenu.Item[2 + SocialRegion.Codes.Length];
     private readonly DropdownMenu.Item[] overflowItems = new DropdownMenu.Item[3];
     private readonly Action<NotificationDto> openActivityActor;
     private readonly Action<NotificationDto> openActivityPost;
@@ -154,6 +154,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         AppInstaller installer)
     {
         store = new AethergramStore(session, net.Account, net.Social, net.Grams, net.Safety, net.Media, realtimeSignals);
+        store.SetFeedRegions(SocialRegion.FilterCsv(configuration.AethergramFeedRegionMask));
         account = net.Account;
         dmStore = new GramDmStore(session, net.GramDm, net.Social, net.Safety, net.Media, notifications, keyVault,
             conversationKeys, visibility, realtimeSignals, installer);
@@ -458,10 +459,11 @@ internal sealed partial class AethergramApp : IPhoneApp
         var rowTop = area.Min.Y + 2f * scale;
         var rowRect = new Rect(new Vector2(area.Min.X, rowTop),
             new Vector2(area.Max.X, rowTop + FeedControlRow.Height * scale));
-        var mediaOn = configuration.AethergramShowGifPosts && configuration.AethergramShowCommentMedia;
+        var mediaOn = configuration.AethergramShowGifPosts && configuration.AethergramShowCommentMedia
+            && configuration.AethergramFeedRegionMask == 0;
         var controls = FeedControlRow.Draw(rowRect, ui, Accent, Loc.T(L.Aethergram.ForYou),
             Loc.T(L.Aethergram.Following), (int)activeScope, ref tabSegmentAnim, store.IsLoading(activeScope), mediaOn,
-            Loc.T(L.Common.Refresh), Loc.T(L.Aethergram.MediaFilters));
+            Loc.T(L.Common.Refresh), Loc.T(L.Aethergram.FeedFilters));
         if (controls.MediaToggled)
         {
             mediaFilterMenu.Toggle(MediaFilterMenuId, controls.MediaBounds);
@@ -794,7 +796,14 @@ internal sealed partial class AethergramApp : IPhoneApp
             FontAwesomeIcon.Film.ToIconString(), Selected: configuration.AethergramShowGifPosts);
         mediaFilterItems[1] = new DropdownMenu.Item(Loc.T(L.Settings.AethergramShowCommentMedia),
             FontAwesomeIcon.Comment.ToIconString(), Selected: configuration.AethergramShowCommentMedia);
-        mediaFilterMenu.Header = Loc.T(L.Aethergram.MediaFilters);
+        for (var regionIndex = 0; regionIndex < SocialRegion.Codes.Length; regionIndex++)
+        {
+            mediaFilterItems[2 + regionIndex] = new DropdownMenu.Item(SocialRegion.Codes[regionIndex],
+                FontAwesomeIcon.Globe.ToIconString(),
+                Selected: SocialRegion.MaskShows(configuration.AethergramFeedRegionMask, regionIndex));
+        }
+
+        mediaFilterMenu.Header = Loc.T(L.Aethergram.FeedFilters);
         mediaFilterMenu.KeepOpen = true;
         var picked = mediaFilterMenu.Draw(screen, theme, mediaFilterItems);
         switch (picked)
@@ -804,6 +813,11 @@ internal sealed partial class AethergramApp : IPhoneApp
                 break;
             case 1:
                 configuration.AethergramShowCommentMedia = !configuration.AethergramShowCommentMedia;
+                break;
+            case >= 2:
+                configuration.AethergramFeedRegionMask =
+                    SocialRegion.ToggleMask(configuration.AethergramFeedRegionMask, picked - 2);
+                store.SetFeedRegions(SocialRegion.FilterCsv(configuration.AethergramFeedRegionMask));
                 break;
             default:
                 return;

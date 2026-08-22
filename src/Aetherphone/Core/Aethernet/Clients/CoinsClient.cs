@@ -34,6 +34,37 @@ internal sealed class CoinsClient
         return net.GetAsync("/coins/catalog", AethernetJsonContext.Default.CoinCatalogDto, token, null, onFailure);
     }
 
+    public Task<CoinShopDto?> ShopAsync(CancellationToken token, Action<AepFailure>? onFailure = null)
+    {
+        return net.GetAsync("/coins/shop", AethernetJsonContext.Default.CoinShopDto, token, null, onFailure);
+    }
+
+    public Task<CoinShopShelfPage?> ShelfAsync(string categoryId, string? cursor, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
+    {
+        var path = "/coins/shop/items";
+        var separator = '?';
+        if (categoryId.Length > 0)
+        {
+            path += $"?category={Uri.EscapeDataString(categoryId)}";
+            separator = '&';
+        }
+
+        if (cursor is not null)
+        {
+            path += $"{separator}cursor={Uri.EscapeDataString(cursor)}";
+        }
+
+        return net.GetAsync(path, AethernetJsonContext.Default.CoinShopShelfPage, token, null, onFailure);
+    }
+
+    public Task<CoinEntitlementsDto?> EntitlementsAsync(CancellationToken token,
+        Action<AepFailure>? onFailure = null)
+    {
+        return net.GetAsync("/coins/entitlements", AethernetJsonContext.Default.CoinEntitlementsDto, token, null,
+            onFailure);
+    }
+
     public Task<CoinAwardDto?> CheckInAsync(CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         return net.RequestAsync(HttpMethod.Post, "/coins/checkin", AethernetJsonContext.Default.CoinAwardDto, token,

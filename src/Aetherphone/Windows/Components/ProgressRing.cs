@@ -92,7 +92,7 @@ internal static class ProgressRing
     public static void CenterIcon(ImDrawListPtr dl, Vector2 c, FontAwesomeIcon icon, Vector4 col, float targetHeight)
     {
         var glyph = icon.ToIconString();
-        using (ImRaii.PushFont(UiBuilder.IconFont))
+        using (Plugin.Fonts.PushIcon(targetHeight, glyph))
         {
             var font = ImGui.GetFont();
             var baseSize = ImGui.GetFontSize();
@@ -121,17 +121,20 @@ internal static class ProgressRing
     public static void CenterIcon(Vector2 c, FontAwesomeIcon icon, Vector4 col, float targetHeight)
     {
         var glyph = icon.ToIconString();
-        float baseH;
-        using (ImRaii.PushFont(UiBuilder.IconFont)) baseH = ImGui.CalcTextSize(glyph).Y;
-        var scale = baseH > 0 ? targetHeight / baseH : 1f;
-        ImGui.SetWindowFontScale(scale);
-        Vector2 sz;
-        using (ImRaii.PushFont(UiBuilder.IconFont)) sz = ImGui.CalcTextSize(glyph);
-        ImGui.SetCursorScreenPos(new Vector2(c.X - sz.X * 0.5f, c.Y - sz.Y * 0.5f));
-        using (ImRaii.PushFont(UiBuilder.IconFont))
-        using (ImRaii.PushColor(ImGuiCol.Text, col))
-            Typography.Plain(glyph);
-        ImGui.SetWindowFontScale(1f);
+        using (Plugin.Fonts.PushIcon(targetHeight, glyph))
+        {
+            var baseHeight = ImGui.CalcTextSize(glyph).Y;
+            var scale = baseHeight > 0f ? targetHeight / baseHeight : 1f;
+            ImGui.SetWindowFontScale(scale);
+            var size = ImGui.CalcTextSize(glyph);
+            ImGui.SetCursorScreenPos(new Vector2(c.X - size.X * 0.5f, c.Y - size.Y * 0.5f));
+            using (ImRaii.PushColor(ImGuiCol.Text, col))
+            {
+                Typography.Plain(glyph);
+            }
+
+            ImGui.SetWindowFontScale(1f);
+        }
     }
 
     public static bool PlayButton(Vector2 c, float radius, bool enabled)

@@ -16,8 +16,9 @@ internal static class ActivityBadge
             return;
         }
 
-        ImGui.GetWindowDrawList().AddCircleFilled(center, 7f * scale, ImGui.GetColorU32(theme.Danger), 16);
-        Typography.DrawCentered(center, count > 9 ? "9+" : count.ToString(Loc.Culture), Ink, 0.62f,
-            FontWeight.SemiBold);
+        var label = count > 9 ? "9+" : count.ToString(Loc.Culture);
+        var radius = count > 9 ? 9f * scale : 7f * scale;
+        ImGui.GetWindowDrawList().AddCircleFilled(center, radius, ImGui.GetColorU32(theme.Danger), 16);
+        Typography.DrawCentered(center, label, Ink, 0.62f, FontWeight.SemiBold);
     }
 }

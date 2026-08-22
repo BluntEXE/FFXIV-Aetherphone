@@ -12,10 +12,15 @@ internal sealed class SocialClient
         this.net = net;
     }
 
-    public Task<FeedPage?> FeedAsync(string scope, string? cursor, CancellationToken token,
+    public Task<FeedPage?> FeedAsync(string scope, string? cursor, string? regions, CancellationToken token,
         Action<AepFailure>? onFailure = null)
     {
         var path = $"/feed?scope={scope}";
+        if (regions is not null)
+        {
+            path += $"&regions={Uri.EscapeDataString(regions)}";
+        }
+
         if (cursor is not null)
         {
             path += $"&cursor={Uri.EscapeDataString(cursor)}";

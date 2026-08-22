@@ -2661,7 +2661,7 @@ internal static class L
         public static readonly LocString OnAirSection = new("music.onAirSection", "On air");
         public static readonly LocString UpNextSection = new("music.upNextSection", "Up next");
         public static readonly LocString FollowingSection = new("music.followingSection", "Following");
-        public static readonly LocString AllStationsSection = new("music.allStationsSection", "All stations");
+        public static readonly LocString AllStationsSection = new("music.allStationsSection", "Offline stations");
         public static readonly LocString OnAirNow = new("music.onAirNow", "On air now");
         public static readonly LocString LastPlayed = new("music.lastPlayed", "Last played");
         public static readonly LocString ShowAll = new("music.showAll", "Show all");
@@ -2783,6 +2783,9 @@ internal static class L
         public static readonly LocString NoPlaylistsYet = new("music.noPlaylistsYet", "No playlists yet");
         public static readonly LocString SongOne = new("music.songOne", "1 song");
         public static readonly LocString SongsMany = new("music.songsMany", "{0} songs");
+        public static readonly LocString LiveDjs          = new("music.liveDjs",           "Live Twitch DJs");
+        public static readonly LocString LiveDjsEmpty     = new("music.liveDjsEmpty",     "No DJs are live right now. Check out Community Radio or Radio Stations.");
+        public static readonly LocString PoweredByRolladeck = new("music.poweredByRolladeck", "Powered by XIV Rolladeck");
     }
 
     internal static class Messages
@@ -2946,7 +2949,7 @@ internal static class L
         public static readonly LocString SearchByName = new("chirper.searchByName", "Search by name, @username, or world");
         public static readonly LocString ForYou = new("chirper.forYou", "For You");
         public static readonly LocString Following = new("chirper.following", "Following");
-        public static readonly LocString MediaFilters = new("chirper.mediaFilters", "Media filters");
+        public static readonly LocString FeedFilters = new("chirper.feedFilters", "Feed filters");
         public static readonly LocString Follow = new("chirper.follow", "Follow");
         public static readonly LocString Unfollow = new("chirper.unfollow", "Unfollow");
         public static readonly LocString NameOrWorld = new("chirper.nameOrWorld", "Name, @username, or world");
@@ -3015,7 +3018,7 @@ internal static class L
         public static readonly LocString SetUpAccount = new("aethergram.setUpAccount", "Set up your account in Settings");
         public static readonly LocString ForYou = new("aethergram.forYou", "For You");
         public static readonly LocString Following = new("aethergram.following", "Following");
-        public static readonly LocString MediaFilters = new("aethergram.mediaFilters", "Media filters");
+        public static readonly LocString FeedFilters = new("aethergram.feedFilters", "Feed filters");
         public static readonly LocString Follow = new("aethergram.follow", "Follow");
         public static readonly LocString Unfollow = new("aethergram.unfollow", "Unfollow");
         public static readonly LocString ViewPost = new("aethergram.viewPost", "View post");
@@ -4264,6 +4267,9 @@ internal static class L
         public static readonly LocString HelpBody = new("coin.helpBody", "Aether Coin rewards may take up to 30 minutes to appear. If your balance doesn't update immediately, please check again shortly.");
         public static readonly LocString ShopEmptyHint = new("coin.shopEmptyHint", "The shop is still in the works. It opens very soon.");
         public static readonly LocString LeavingSoon = new("coin.leavingSoon", "Leaving {0}");
+        public static readonly LocPlural ShopItemCount = new("coin.shopItemCount", "{0} item", "{0} items");
+        public static readonly LocString ShopUnfiled = new("coin.shopUnfiled", "Everything else");
+        public static readonly LocString ShopShelfEmpty = new("coin.shopShelfEmpty", "Nothing on this shelf yet");
         public static readonly LocString FrozenTitle = new("coin.frozenTitle", "Your wallet is frozen");
         public static readonly LocString FrozenHint = new("coin.frozenHint", "Earning and spending are on hold. Check the Safety page for the reason.");
         public static readonly LocString FrozenAlertTitle = new("coin.frozenAlertTitle", "Wallet frozen");
@@ -6159,5 +6165,26 @@ internal static class L
         public static readonly LocString PatreonAlreadyLinked = new("failure.patreonAlreadyLinked", "That Patreon account is already linked.");
         public static readonly LocString FeedbackLength = new("failure.feedbackLength", "Keep your feedback to {0} characters.");
         public static readonly LocString FeedbackTooManyImages = new("failure.feedbackTooManyImages", "You can attach at most {0} images.");
+    }
+
+    internal static class Rolladeck
+    {
+        public static readonly LocString FilterAtVenue       = new("rolladeck.filterAtVenue",       "At Venue");
+        public static readonly LocString FilterAllDjs        = new("rolladeck.filterAllDjs",        "All DJs");
+        public static readonly LocString EmptyDjsHeading     = new("rolladeck.emptyDjsHeading",     "No DJs Live");
+        public static readonly LocString Viewers             = new("rolladeck.viewers",             "♪  {0} viewers");
+        public static readonly LocString VenueUnknown        = new("rolladeck.venueUnknown",        "Venue Unknown");
+        public static readonly LocString Teleport            = new("rolladeck.teleport",            "Teleport");
+        public static readonly LocString LifestreamNotInstalled = new("rolladeck.lifestreamNotInstalled", "Lifestream not installed, address copied to clipboard");
+        public static readonly LocString SectionGenres       = new("rolladeck.sectionGenres",       "GENRES");
+        public static readonly LocString SectionLinks        = new("rolladeck.sectionLinks",        "LINKS");
+        public static readonly LocString SectionAbout        = new("rolladeck.sectionAbout",        "ABOUT");
+        public static readonly LocString SectionAmenities    = new("rolladeck.sectionAmenities",    "AMENITIES");
+        public static readonly LocString LiveNow             = new("rolladeck.liveNow",             "♪ LIVE NOW");
+        public static readonly LocString EventLabel          = new("rolladeck.eventLabel",          "♦ EVENT");
+        public static readonly LocString DiscordEventLabel   = new("rolladeck.discordEventLabel",   "♦ DISCORD EVENT");
+        public static readonly LocString Website             = new("rolladeck.website",             "Website");
+        public static readonly LocString Visit               = new("rolladeck.visit",               "Visit");
+        public static readonly LocString Discord             = new("rolladeck.discord",             "Discord");
     }
 }

@@ -68,7 +68,7 @@ internal static class AppRegistry
         apps.Add(new VelvetShell(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "velvet"), services.Lodestone, services.Configuration, photoLibrary, services.Http, services.RemoteImages, services.Notifications, services.VelvetLauncher, services.SocialLauncher, services.GameData, services.SocialNotifications, services.KeyVault, services.ConversationKeys, services.Visibility, services.RealtimeSignals, services.WallpaperImages, services.Confirm, services.Report, services.Conduct, services.Installer));
         var feedbackNet = new AethernetApi(services.Http, services.AethernetSession, "feedback");
         apps.Add(new FeedbackApp(services.AethernetSession, feedbackNet.Feedback, feedbackNet.Media, photoLibrary, services.Configuration, services.Confirm, services.WallpaperImages));
-        apps.Add(new PollsApp(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "polls").Polls, services.Installer));
+        apps.Add(new PollsApp(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "polls").Polls, services.Installer, services.RealtimeSignals));
         apps.Add(new AnnouncementsApp(services.AethernetSession, new AethernetApi(services.Http, services.AethernetSession, "announcements").Announcements, services.Notifications, services.Configuration, services.AnnouncementsLauncher, services.RealtimeSignals));
         apps.Add(new CameraApp(new PhotoCaptureService(), photoLibrary, services.Configuration));
         apps.Add(new PhotosApp(photoLibrary, services.Confirm, services.Share, services.Configuration));
@@ -83,7 +83,7 @@ internal static class AppRegistry
         apps.Add(new WalletApp(services.GameData, services.Textures, services.Configuration));
         apps.Add(new InventoryApp(services.InventoryCapture, services.GameData, services.Textures));
         apps.Add(new JobsApp(services.GameData, services.Textures, services.Configuration, services.Confirm, services.CharacterWatch));
-        apps.Add(new MusicApp(services.Radio, services.SongSearch, services.SongResolver, services.Playback, services.SongHistory, services.Playlists, services.Media, services.Http, services.Textures, services.Aethernet, services.AethernetSession, services.Report, photoLibrary, services.WallpaperImages, services.Confirm, services.Configuration, services.RadioLauncher));
+        apps.Add(new MusicApp(services.Radio, services.SongSearch, services.SongResolver, services.Playback, services.SongHistory, services.Playlists, services.Media, services.Http, services.Textures, services.Aethernet, services.AethernetSession, services.Report, photoLibrary, services.WallpaperImages, services.Confirm, services.Configuration, services.RemoteImages, services.Lodestone, services.GameData, services.RadioLauncher));
         apps.Add(new ClockApp(services.Configuration, services.Confirm));
         apps.Add(new NotesApp(services.Configuration, services.Confirm));
         apps.Add(new CalculatorApp());

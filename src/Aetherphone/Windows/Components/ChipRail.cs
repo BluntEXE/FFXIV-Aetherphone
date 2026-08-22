@@ -20,7 +20,7 @@ internal sealed class ChipRail
     private float lastMouseX;
 
     public int Draw(AppSkin ui, ReadOnlySpan<string> labels, ReadOnlySpan<bool> active, string? anchorKey = null) =>
-        Draw(ReserveRow(UiScale.Current), ui, labels, active, false, anchorKey);
+        Draw(ReserveRow(this, UiScale.Current), ui, labels, active, false, anchorKey);
 
     public int Draw(Rect row, AppSkin ui, ReadOnlySpan<string> labels, ReadOnlySpan<bool> active, bool overlay = false,
         string? anchorKey = null)
@@ -94,12 +94,14 @@ internal sealed class ChipRail
         return dragTravel <= DragSlop * scale && UiInteract.Click(min, max, hovered);
     }
 
-    private static Rect ReserveRow(float scale)
+    private static Rect ReserveRow(ChipRail rail, float scale)
     {
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var height = RowHeight * scale;
-        ImGui.Dummy(new Vector2(width, height));
+        ImGui.PushID(System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(rail));
+        ImGui.InvisibleButton("##chipRailRow", new Vector2(width, height));
+        ImGui.PopID();
         return new Rect(new Vector2(ImGui.GetWindowPos().X, origin.Y),
             new Vector2(origin.X + width, origin.Y + height));
     }

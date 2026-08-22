@@ -38,6 +38,7 @@ internal sealed class PollsApp : IPhoneApp
 
     private readonly PollsStore store;
     private readonly AppSkin ui = new(AppPalettes.Polls);
+    private readonly PullToRefresh listRefresh = new();
     private readonly Dictionary<string, PollMotion> motions = new();
     private readonly Dictionary<string, LocalizedPoll> localized = new();
 
@@ -47,9 +48,9 @@ internal sealed class PollsApp : IPhoneApp
     private INavigator navigation = null!;
     private float sinceRefresh;
 
-    public PollsApp(AethernetSession session, PollsClient client, AppInstaller installer)
+    public PollsApp(AethernetSession session, PollsClient client, AppInstaller installer, RealtimeSignalBus signals)
     {
-        store = new PollsStore(session, client, installer.Gate("polls"));
+        store = new PollsStore(session, client, installer.Gate("polls"), signals);
     }
 
     public void OnOpened()
@@ -86,8 +87,9 @@ internal sealed class PollsApp : IPhoneApp
 
         TickRefresh();
 
-        using (AppSurface.Begin(body))
+        using (var surface = AppSurface.Begin(body))
         {
+            listRefresh.Draw(body, surface.Pull, surface.Dragging, store.Loading, ui.MutedInk, store.Refresh);
             var polls = store.Polls;
             if (polls.Length == 0)
             {

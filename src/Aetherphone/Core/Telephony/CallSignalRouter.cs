@@ -71,6 +71,9 @@ internal sealed class CallSignalRouter : IDisposable
             case SignalType.AnnouncePing:
                 signals.PublishAnnouncements();
                 return;
+            case SignalType.PollPing:
+                signals.PublishPolls();
+                return;
             case SignalType.ContentRemoved:
                 if (message.ContentId is { Length: > 0 } removedContentId)
                 {

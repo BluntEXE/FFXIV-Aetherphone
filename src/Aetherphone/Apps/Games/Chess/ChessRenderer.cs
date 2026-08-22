@@ -6,7 +6,6 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Games.Chess;
 
@@ -204,38 +203,33 @@ internal sealed class ChessRenderer
         in ChessRenderState state, float scale)
     {
         var pieceHeight = layout.CellSize * 0.66f;
-        using (ImRaii.PushFont(UiBuilder.IconFont))
+        for (var square = 0; square < ChessBoard.SquareCount; square++)
         {
-            var font = ImGui.GetFont();
-            var baseSize = ImGui.GetFontSize();
-            for (var square = 0; square < ChessBoard.SquareCount; square++)
+            var piece = board.PieceAt(square);
+            if (piece == 0 || (square == state.MovingTo && state.MovingPhase < 1f))
             {
-                var piece = board.PieceAt(square);
-                if (piece == 0 || (square == state.MovingTo && state.MovingPhase < 1f))
-                {
-                    continue;
-                }
-
-                DrawPiece(drawList, font, baseSize, layout.SquareCenter(square), piece, pieceHeight, scale, 1f);
+                continue;
             }
 
-            if (state.MovingTo < 0 || state.MovingPhase >= 1f)
-            {
-                return;
-            }
-
-            var moving = board.PieceAt(state.MovingTo);
-            if (moving == 0)
-            {
-                return;
-            }
-
-            var eased = Easing.EaseOutCubic(state.MovingPhase);
-            var from = layout.SquareCenter(state.MovingFrom);
-            var to = layout.SquareCenter(state.MovingTo);
-            var center = Vector2.Lerp(from, to, eased);
-            DrawPiece(drawList, font, baseSize, center, moving, pieceHeight * (1f + 0.10f * (1f - eased)), scale, 1f);
+            DrawPiece(drawList, layout.SquareCenter(square), piece, pieceHeight, scale, 1f);
         }
+
+        if (state.MovingTo < 0 || state.MovingPhase >= 1f)
+        {
+            return;
+        }
+
+        var moving = board.PieceAt(state.MovingTo);
+        if (moving == 0)
+        {
+            return;
+        }
+
+        var eased = Easing.EaseOutCubic(state.MovingPhase);
+        var from = layout.SquareCenter(state.MovingFrom);
+        var to = layout.SquareCenter(state.MovingTo);
+        var center = Vector2.Lerp(from, to, eased);
+        DrawPiece(drawList, center, moving, pieceHeight * (1f + 0.10f * (1f - eased)), scale, 1f);
     }
 
     public void DrawCaptured(ImDrawListPtr drawList, Rect row, ReadOnlySpan<byte> pieces, int count, int advantage,
@@ -244,16 +238,11 @@ internal sealed class ChessRenderer
         var glyphHeight = row.Height * 0.78f;
         var step = glyphHeight * 0.62f;
         var penX = row.Min.X;
-        using (ImRaii.PushFont(UiBuilder.IconFont))
+        for (var index = 0; index < count; index++)
         {
-            var font = ImGui.GetFont();
-            var baseSize = ImGui.GetFontSize();
-            for (var index = 0; index < count; index++)
-            {
-                DrawPiece(drawList, font, baseSize, new Vector2(penX + step * 0.5f, row.Center.Y), pieces[index],
-                    glyphHeight, scale, 0.75f);
-                penX += step;
-            }
+            DrawPiece(drawList, new Vector2(penX + step * 0.5f, row.Center.Y), pieces[index], glyphHeight, scale,
+                0.75f);
+            penX += step;
         }
 
         if (advantage <= 0)
@@ -265,10 +254,21 @@ internal sealed class ChessRenderer
             string.Concat("+", GameNumber.Label(advantage)), theme.TextMuted, TextStyles.Caption1);
     }
 
-    private static void DrawPiece(ImDrawListPtr drawList, ImFontPtr font, float baseSize, Vector2 center, byte piece,
-        float targetHeight, float scale, float alpha)
+    private static void DrawPiece(ImDrawListPtr drawList, Vector2 center, byte piece, float targetHeight, float scale,
+        float alpha)
     {
         var glyph = IconFor(ChessPiece.Type(piece)).ToIconString();
+        using (Plugin.Fonts.PushIcon(targetHeight, glyph))
+        {
+            DrawPieceGlyph(drawList, glyph, center, piece, targetHeight, scale, alpha);
+        }
+    }
+
+    private static void DrawPieceGlyph(ImDrawListPtr drawList, string glyph, Vector2 center, byte piece,
+        float targetHeight, float scale, float alpha)
+    {
+        var font = ImGui.GetFont();
+        var baseSize = ImGui.GetFontSize();
         var measured = ImGui.CalcTextSize(glyph);
         if (measured.Y <= 0f)
         {
@@ -332,28 +332,22 @@ internal sealed class ChessRenderer
         choices[3] = ChessPieceType.Knight;
         var slotWidth = cardWidth * grow / 4f;
         var result = ChessPieceType.None;
-        using (ImRaii.PushFont(UiBuilder.IconFont))
+        for (var index = 0; index < choices.Length; index++)
         {
-            var font = ImGui.GetFont();
-            var baseSize = ImGui.GetFontSize();
-            for (var index = 0; index < choices.Length; index++)
+            var slotCenter = new Vector2(min.X + (index + 0.5f) * slotWidth, center.Y + 14f * scale);
+            var slotHalf = new Vector2(slotWidth * 0.42f, 30f * scale);
+            var hovered = UiInteract.Hover(slotCenter - slotHalf, slotCenter + slotHalf);
+            if (hovered)
             {
-                var slotCenter = new Vector2(min.X + (index + 0.5f) * slotWidth, center.Y + 14f * scale);
-                var slotHalf = new Vector2(slotWidth * 0.42f, 30f * scale);
-                var hovered = UiInteract.Hover(slotCenter - slotHalf, slotCenter + slotHalf);
-                if (hovered)
-                {
-                    Squircle.Fill(drawList, slotCenter - slotHalf, slotCenter + slotHalf, Metrics.Radius.Sm * scale,
-                        ImGui.GetColorU32(accent with { W = 0.26f }));
-                    ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-                }
+                Squircle.Fill(drawList, slotCenter - slotHalf, slotCenter + slotHalf, Metrics.Radius.Sm * scale,
+                    ImGui.GetColorU32(accent with { W = 0.26f }));
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            }
 
-                DrawPiece(drawList, font, baseSize, slotCenter, ChessPiece.Make(choices[index], black), 40f * scale,
-                    scale, alpha);
-                if (UiInteract.Click(slotCenter - slotHalf, slotCenter + slotHalf, hovered))
-                {
-                    result = choices[index];
-                }
+            DrawPiece(drawList, slotCenter, ChessPiece.Make(choices[index], black), 40f * scale, scale, alpha);
+            if (UiInteract.Click(slotCenter - slotHalf, slotCenter + slotHalf, hovered))
+            {
+                result = choices[index];
             }
         }
 

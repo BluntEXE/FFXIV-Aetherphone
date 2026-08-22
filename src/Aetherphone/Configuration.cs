@@ -75,6 +75,8 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool ChirperShowCommentMedia { get; set; } = true;
     public bool AethergramShowGifPosts { get; set; } = true;
     public bool AethergramShowCommentMedia { get; set; } = true;
+    public int ChirperFeedRegionMask { get; set; }
+    public int AethergramFeedRegionMask { get; set; }
     public bool ShowSensitiveContent { get; set; }
     public Dictionary<string, AppNotificationSetting> NotificationSettings { get; set; } = new();
     public bool NotifyDailyReset { get; set; }
@@ -93,6 +95,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public int LodestoneIdIndexVersion { get; set; }
     public float TextZoom { get; set; } = 1.0f;
     public string FontGlyphCache { get; set; } = string.Empty;
+    public string IconGlyphCache { get; set; } = string.Empty;
     public float ScreenBrightness { get; set; } = 1f;
     public float PhoneScale { get; set; } = PhoneSizeCatalog.DefaultWidth / PhoneSizeCatalog.DesignWidth;
     public float PhoneWidth { get; set; }

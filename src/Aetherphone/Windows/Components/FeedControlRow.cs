@@ -34,7 +34,7 @@ internal static class FeedControlRow
             UiAnchors.Report(anchorId, tabsRect);
         }
 
-        var mediaToggled = ui.IconButton(mediaCenter, radius, FontAwesomeIcon.Image.ToIconString(),
+        var mediaToggled = ui.IconButton(mediaCenter, radius, FontAwesomeIcon.Filter.ToIconString(),
             mediaOn ? accent : ui.MutedInk, ui.FieldSurface, 1.1f, mediaTooltip, HoverLabelSide.Below);
         var refreshed = false;
         if (loading)
