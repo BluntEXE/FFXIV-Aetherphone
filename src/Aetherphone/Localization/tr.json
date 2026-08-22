@@ -3911,6 +3911,7 @@
   "aetherstream.castingStateNotReady": "Hazır değil",
   "aetherstream.castingStateReady": "Hazır",
   "aetherstream.openScreenWindow": "Bir pencerede aç",
+  "aetherstream.inGameScreen": "Oyun içi ekranı göster",
   "aetherstream.castingScreenPositionHeader": "Ekran Konumu",
   "aetherstream.castingScreenPositionHint": "Ekranı taşımak ve yeniden boyutlandırmak için oynatmayı başlat.",
   "aetherstream.castingPresetNameHint": "Ön ayar adı…",

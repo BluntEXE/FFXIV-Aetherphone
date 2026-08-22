@@ -22,6 +22,7 @@ internal sealed unsafe class ScreenPainter : IDisposable
 	internal Vector3 WorldPosition;
 	internal float WorldYaw;
 	internal float Scale = 1.0f;
+	internal bool Visible { get; set; } = true;
 
 	private readonly VertexShader _vs;
 	private readonly PixelShader _ps;
@@ -173,6 +174,11 @@ internal sealed unsafe class ScreenPainter : IDisposable
 
 	private void DrawIfReady()
 	{
+		if (!Visible)
+		{
+			return;
+		}
+
 		if (!TryGetSceneTargets(out nint colorTexture, out nint depthTexture, out uint targetWidth, out uint targetHeight) || _srv == null)
 		{
 			return;

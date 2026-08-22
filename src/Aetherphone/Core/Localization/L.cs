@@ -3396,6 +3396,7 @@ internal static class L
             "Not ready");
         public static readonly LocString CastingStateReady = new("aetherstream.castingStateReady", "Ready");
         public static readonly LocString OpenScreenWindow = new("aetherstream.openScreenWindow", "Open in a window");
+        public static readonly LocString InGameScreen = new("aetherstream.inGameScreen", "Show In-game Screen");
         public static readonly LocString CastingScreenPositionHeader = new(
             "aetherstream.castingScreenPositionHeader", "Screen Position");
         public static readonly LocString CastingScreenPositionHint = new(

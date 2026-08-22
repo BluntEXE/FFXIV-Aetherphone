@@ -3911,6 +3911,7 @@
   "aetherstream.castingStateNotReady": "Nicht bereit",
   "aetherstream.castingStateReady": "Bereit",
   "aetherstream.openScreenWindow": "In einem Fenster öffnen",
+  "aetherstream.inGameScreen": "Ingame-Bildschirm anzeigen",
   "aetherstream.castingScreenPositionHeader": "Bildschirmposition",
   "aetherstream.castingScreenPositionHint": "Starte die Wiedergabe, um den Bildschirm zu verschieben und die Größe zu ändern.",
   "aetherstream.castingPresetNameHint": "Name des Presets…",

@@ -3911,6 +3911,7 @@
   "aetherstream.castingStateNotReady": "Não pronto",
   "aetherstream.castingStateReady": "Pronto",
   "aetherstream.openScreenWindow": "Abrir em uma janela",
+  "aetherstream.inGameScreen": "Mostrar tela no jogo",
   "aetherstream.castingScreenPositionHeader": "Posição da tela",
   "aetherstream.castingScreenPositionHint": "Inicie a reprodução para mover e redimensionar a tela.",
   "aetherstream.castingPresetNameHint": "Nome do predefinido…",

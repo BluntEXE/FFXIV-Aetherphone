@@ -22,10 +22,24 @@ internal sealed partial class AetherStreamApp
             var width = ScrollLayout.StableContentWidth();
             DrawScreenStateRow(width, scale);
 
-            var windowCard = GroupCard.Begin(accentedTheme, 1);
+            var windowCard = GroupCard.Begin(accentedTheme, 2);
             var windowOpen = SettingsRow.Bool(windowCard.NextRow(), Loc.T(L.AetherStream.OpenScreenWindow),
                 screenWindow.IsOpen, accentedTheme);
             windowCard.End();
+            
+            var screenVisible = SettingsRow.Bool(windowCard.NextRow(),
+                Loc.T(L.AetherStream.InGameScreen), configuration.VideoScreenVisible, accentedTheme);
+            if (screenVisible != configuration.VideoScreenVisible)
+            {
+                configuration.VideoScreenVisible = screenVisible;
+                configuration.Save();
+                screen.Engine.ScreenVisible = screenVisible;
+                if (screenVisible)
+                {
+                    screen.Engine.RecenterScreen();
+                }
+            }
+
             if (windowOpen != screenWindow.IsOpen)
             {
                 screenWindow.IsOpen = windowOpen;
@@ -120,7 +134,7 @@ internal sealed partial class AetherStreamApp
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
         SettingsSection.Header(Loc.T(L.AetherStream.CastingScreenPositionHeader), accentedTheme);
 
-        if (!screen.Engine.IsActive)
+        if (!screen.Engine.IsActive || !screen.Engine.ScreenVisible)
         {
             SettingsSection.Hint(Loc.T(L.AetherStream.CastingScreenPositionHint), accentedTheme);
             return;

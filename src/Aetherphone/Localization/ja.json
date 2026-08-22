@@ -3911,6 +3911,7 @@
   "aetherstream.castingStateNotReady": "準備できていません",
   "aetherstream.castingStateReady": "準備完了",
   "aetherstream.openScreenWindow": "ウィンドウで開く",
+  "aetherstream.inGameScreen": "ゲーム内画面を表示",
   "aetherstream.castingScreenPositionHeader": "スクリーンの位置",
   "aetherstream.castingScreenPositionHint": "再生を開始すると、スクリーンの移動とサイズ変更ができます。",
   "aetherstream.castingPresetNameHint": "プリセット名…",
