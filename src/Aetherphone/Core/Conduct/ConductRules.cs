@@ -29,7 +29,7 @@ internal static class ConductRules
     public static readonly ConductGate Chirper = new()
     {
         AppId = "chirper",
-        Version = 2,
+        Version = 3,
         Icon = FontAwesomeIcon.Comments,
         Title = L.Conduct.ChirperTitle,
         Intro = L.Conduct.ChirperIntro,
@@ -57,7 +57,7 @@ internal static class ConductRules
     public static readonly ConductGate Aethergram = new()
     {
         AppId = "aethergram",
-        Version = 2,
+        Version = 3,
         Icon = FontAwesomeIcon.Camera,
         Title = L.Conduct.AethergramTitle,
         Intro = L.Conduct.AethergramIntro,
@@ -89,7 +89,7 @@ internal static class ConductRules
     public static readonly ConductGate Velvet = new()
     {
         AppId = "velvet",
-        Version = 2,
+        Version = 3,
         Icon = FontAwesomeIcon.Heart,
         Title = L.Conduct.VelvetTitle,
         Intro = L.Conduct.VelvetIntro,
@@ -99,6 +99,8 @@ internal static class ConductRules
                 Array.Empty<LocString>(), FontAwesomeIcon.IdCard),
             new ConductSection(ConductTone.Encouraged, L.Conduct.VelvetAllowedTitle, L.Conduct.VelvetAllowedLead,
                 L.Conduct.VelvetAllowedItems),
+            new ConductSection(ConductTone.Restricted, L.Conduct.VelvetLimitsTitle, L.Conduct.VelvetLimitsLead,
+                L.Conduct.VelvetLimitsItems, FontAwesomeIcon.Ban),
             new ConductSection(ConductTone.Restricted, L.Conduct.VelvetConsentTitle, L.Conduct.VelvetConsentLead,
                 L.Conduct.VelvetConsentItems, FontAwesomeIcon.HandPaper),
             new ConductSection(ConductTone.Restricted, L.Conduct.VelvetBoundariesTitle, L.Conduct.VelvetBoundariesLead,

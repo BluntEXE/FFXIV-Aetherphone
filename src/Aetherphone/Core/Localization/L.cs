@@ -5462,6 +5462,8 @@ internal static class L
             new("conduct.chirper.appropriate.2", "ERP advertisements or sexual solicitation"),
             new("conduct.chirper.appropriate.3", "Fetish content"),
             new("conduct.chirper.appropriate.4", "Graphic sexual language intended for arousal"),
+            new("conduct.chirper.appropriate.5", "Nano bikinis or similar micro-coverage outfits"),
+            new("conduct.chirper.appropriate.6", "See-through or sheer clothing that shows nipples or genitals"),
         };
         public static readonly LocString ChirperRespectTitle = new("conduct.chirper.respect.title", "Be Respectful");
         public static readonly LocString ChirperRespectLead = new("conduct.chirper.respect.lead", "Treat others with respect. Do not engage in:");
@@ -5509,6 +5511,8 @@ internal static class L
             new("conduct.aethergram.sfw.4", "Fetish content"),
             new("conduct.aethergram.sfw.5", "Explicit sexual language in posts, profiles, or comments"),
             new("conduct.aethergram.sfw.6", "Graphic violence or gore"),
+            new("conduct.aethergram.sfw.7", "Nano bikinis or similar micro-coverage outfits"),
+            new("conduct.aethergram.sfw.8", "See-through or sheer clothing that shows nipples or genitals"),
         };
         public static readonly LocString AethergramContextTitle = new("conduct.aethergram.context.title", "Context Matters");
         public static readonly LocString AethergramContextLead = new("conduct.aethergram.context.lead", "Some content may be reviewed based on presentation, including:");
@@ -5581,6 +5585,12 @@ internal static class L
             new("conduct.velvet.allowed.3", "Adult-oriented discussions"),
             new("conduct.velvet.allowed.4", "Relationship communities"),
             new("conduct.velvet.allowed.5", "Character storytelling"),
+        };
+        public static readonly LocString VelvetLimitsTitle = new("conduct.velvet.limits.title", "Content Limits");
+        public static readonly LocString VelvetLimitsLead = new("conduct.velvet.limits.lead", "Velvet is an adult space, but some content is still off-limits:");
+        public static readonly LocString[] VelvetLimitsItems =
+        {
+            new("conduct.velvet.limits.1", "Animal genitalia, including animal genitals on humanoid or beast-race characters"),
         };
         public static readonly LocString VelvetConsentTitle = new("conduct.velvet.consent.title", "Consent First");
         public static readonly LocString VelvetConsentLead = new("conduct.velvet.consent.lead", "Respect other users. Do not engage in:");
