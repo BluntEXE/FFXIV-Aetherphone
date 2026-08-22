@@ -11,7 +11,6 @@ using GfxScene = FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using GfxGui = FFXIVClientStructs.FFXIV.Component.GUI;
 using GameControl = FFXIVClientStructs.FFXIV.Client.Game.Control;
 using NumericsMatrix4x4 = System.Numerics.Matrix4x4;
-using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Core.Video;
 
@@ -23,6 +22,7 @@ internal sealed unsafe class ScreenPainter : IDisposable
 	internal Vector3 WorldPosition;
 	internal float WorldYaw;
 	internal float Scale = 1.0f;
+	internal bool Visible { get; set; } = true;
 
 	private readonly VertexShader _vs;
 	private readonly PixelShader _ps;
@@ -44,7 +44,6 @@ internal sealed unsafe class ScreenPainter : IDisposable
 	private const int CurveSegments = 24;
 	private const float Curvature = 0.12f;
 	private const int VertexCount = (CurveSegments + 1) * 2;
-	internal bool Visible {get; set; } = true;
 
 	[StructLayout(LayoutKind.Sequential)]
 	private unsafe struct ScreenParams

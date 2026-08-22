@@ -3908,7 +3908,7 @@
   "aetherstream.castingStateNotReady": "Not ready",
   "aetherstream.castingStateReady": "Ready",
   "aetherstream.openScreenWindow": "Open in a window",
-  "aetherstream.inGameScreen": "Toggle In-game Screen",
+  "aetherstream.inGameScreen": "Show In-game Screen",
   "aetherstream.castingScreenPositionHeader": "Screen Position",
   "aetherstream.castingScreenPositionHint": "Start playback to move and resize the screen.",
   "aetherstream.castingPresetNameHint": "Preset name...",
