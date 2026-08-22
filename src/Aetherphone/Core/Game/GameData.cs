@@ -1,9 +1,9 @@
-using System.Globalization;
 using Dalamud.Game;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Plugin.Services;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
+using System.Globalization;
 using ActionSheet = Lumina.Excel.Sheets.Action;
 using EmoteSheet = Lumina.Excel.Sheets.Emote;
 
@@ -223,8 +223,14 @@ internal sealed class GameData
 
     public IReadOnlyList<(uint WorldId, string Name, uint DataCenterId, string DataCenterName)> ChinaWorlds()
     {
-        var worlds = data.GetExcelSheet<World>();
         var results = new List<(uint WorldId, string Name, uint DataCenterId, string DataCenterName)>();
+
+        if (!IsChineseGameClient())
+        {
+            return results;
+        }
+
+        var worlds = data.GetExcelSheet<World>();
         foreach (var world in worlds)
         {
             if (world.RowId is > 1000 and < 2000 &&
@@ -588,7 +594,7 @@ internal sealed class GameData
             return default;
         }
 
-        return new NamedIcon(TitleCase(row.Singular.ExtractText()), (uint)row.Icon);
+        return new NamedIcon(TitleCase(row.Singular.ExtractText()), row.Icon);
     }
 
     public NamedIcon MinionEntry(uint rowId)

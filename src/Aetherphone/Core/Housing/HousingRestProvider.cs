@@ -11,6 +11,16 @@ internal sealed class HousingRestProvider
     private const int FlagFreeCompany = 2;
     private const int FlagIndividual = 4;
 
+    private const long ChinaLotteryCycleSeconds = 9 * 24 * 60 * 60;
+    private const long ChinaLotteryEntrySeconds = 5 * 24 * 60 * 60;
+    private const long ChinaLotteryResultsSeconds = 4 * 24 * 60 * 60;
+    private static readonly DateTime ChinaLotteryAnchorUtc = new(2022, 8, 8, 15, 0, 0, DateTimeKind.Utc);
+    private const int ChinaRegionTypeFreeCompany = 1;
+    private const int ChinaRegionTypePersonal = 2;
+    private const int ChinaRegionTypeUnrestricted = 0;
+    private const int ChinaPurchaseTypeFirstComeFirstServed = 1;
+    private const int ChinaPurchaseTypeLottery = 2;
+
     private readonly HttpService http;
     private readonly RequestThrottle throttle;
     private readonly Func<string> baseUrl;
@@ -232,23 +242,111 @@ internal sealed class HousingRestProvider
         }
 
         var lastSeen = FromUnixSeconds((long?)entry.LastSeen) ?? DateTime.UtcNow;
+        var (phase, phaseEnds) = InferChinaLotteryPhase(entry, DateTime.UtcNow);
         plot = new HousingPlot
         {
             Key = new HousingPlotKey(worldId, districtId, ward, plotNumber),
             Size = MapSize(entry.Size),
             Price = entry.Price > 0 ? entry.Price : 0L,
-            // The CN source's RegionType (0/1/2) looks like FC-only / individual-only / unrestricted, but
-            // its exact semantics still need upstream confirmation before mapping to Eligibility.
-            Eligibility = HousingPurchaseEligibility.Unknown,
-            Mode = HousingPurchaseMode.Unknown,
-            Phase = MapPhase(entry.State),
-            PhaseEndsUtc = FromUnixSeconds((long?)entry.EndTime),
+            Eligibility = MapChinaEligibility(entry.RegionType),
+            Mode = MapChinaMode(entry.PurchaseType),
+            Phase = phase,
+            PhaseEndsUtc = phaseEnds,
             Entries = null,
             LastSeenUtc = lastSeen,
             FirstSeenUtc = FromUnixSeconds((long?)entry.FirstSeen) ?? lastSeen,
         };
         return true;
     }
+
+    private static (HousingLotteryPhase Phase, DateTime? PhaseEndsUtc) InferChinaLotteryPhase(
+        ChinaSalesPlot entry, DateTime nowUtc)
+    {
+        if (entry.EndTime > 0 && entry.UpdateTime > 0 && entry.State > 0)
+        {
+            var end = FromUnixSeconds((long?)entry.EndTime);
+            if (end is not { } endUtc)
+            {
+                return (HousingLotteryPhase.Unknown, null);
+            }
+
+            if (nowUtc < endUtc)
+            {
+                return (MapPhase(entry.State), endUtc);
+            }
+
+            var phase = MapPhase(entry.State);
+            var deadline = endUtc;
+            while (nowUtc >= deadline)
+            {
+                if (phase == HousingLotteryPhase.Entry)
+                {
+                    deadline = deadline.AddSeconds(ChinaLotteryResultsSeconds);
+                    phase = HousingLotteryPhase.Results;
+                }
+                else
+                {
+                    deadline = deadline.AddSeconds(ChinaLotteryEntrySeconds);
+                    phase = HousingLotteryPhase.Entry;
+                }
+            }
+
+            return (phase, deadline);
+        }
+
+        if (entry.FirstSeen <= 0)
+        {
+            return (HousingLotteryPhase.Unknown, null);
+        }
+
+        var seen = FromUnixSeconds((long?)entry.FirstSeen);
+        if (seen is not { } firstSeen)
+        {
+            return (HousingLotteryPhase.Unknown, null);
+        }
+
+        var cycle = TimeSpan.FromSeconds(ChinaLotteryCycleSeconds);
+        var entryPeriod = TimeSpan.FromSeconds(ChinaLotteryEntrySeconds);
+        var anchor = ChinaLotteryAnchorUtc;
+        while (anchor > firstSeen + cycle)
+        {
+            anchor -= cycle;
+        }
+
+        while (anchor < firstSeen)
+        {
+            anchor += cycle;
+        }
+
+        if (nowUtc < anchor)
+        {
+            return (HousingLotteryPhase.Unavailable, anchor);
+        }
+
+        while (nowUtc > anchor + cycle)
+        {
+            anchor += cycle;
+        }
+
+        return nowUtc < anchor + entryPeriod
+            ? (HousingLotteryPhase.Entry, anchor + entryPeriod)
+            : (HousingLotteryPhase.Results, anchor + cycle);
+    }
+
+    private static HousingPurchaseEligibility MapChinaEligibility(int regionType) => regionType switch
+    {
+        ChinaRegionTypeFreeCompany => HousingPurchaseEligibility.FreeCompany,
+        ChinaRegionTypePersonal => HousingPurchaseEligibility.Private,
+        ChinaRegionTypeUnrestricted => HousingPurchaseEligibility.Both,
+        _ => HousingPurchaseEligibility.Unknown,
+    };
+
+    private static HousingPurchaseMode MapChinaMode(int purchaseType) => purchaseType switch
+    {
+        ChinaPurchaseTypeLottery => HousingPurchaseMode.Lottery,
+        ChinaPurchaseTypeFirstComeFirstServed => HousingPurchaseMode.FirstComeFirstServed,
+        _ => HousingPurchaseMode.Unknown,
+    };
 
     public static int NormalizeWard(int apiWardNumber) =>
         apiWardNumber is < 0 or >= HousingDistricts.DefaultWards ? 0 : apiWardNumber + 1;

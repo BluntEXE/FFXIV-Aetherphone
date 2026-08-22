@@ -1,9 +1,9 @@
-using System.Collections.Concurrent;
-using System.Collections.Frozen;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Net;
 using Dalamud.Plugin.Services;
+using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Globalization;
 
 namespace Aetherphone.Core.Housing;
@@ -23,7 +23,9 @@ internal sealed class HousingService : IDisposable
     private readonly HousingRestProvider chinaApi;
     private readonly HousingCache cache;
     private readonly IReadOnlyList<(uint WorldId, string Name, uint DataCenterId, string DataCenterName)> chinaWorldRows;
+    private readonly IReadOnlyList<HousingWorld> chinaWorlds;
     private readonly FrozenSet<uint> chinaWorldIds;
+    private readonly bool isChineseClient;
     private readonly SemaphoreSlim refreshGate = new(1, 1);
     private readonly CancellationTokenSource cancellation = new();
     private readonly ConcurrentDictionary<long, HousingDistrictSnapshot> snapshots = new();
@@ -51,6 +53,7 @@ internal sealed class HousingService : IDisposable
             () => HousingEndpoints.BaseUrl);
         chinaApi = new HousingRestProvider(http, HousingProviderKind.China, HousingEndpoints.ChinaDisplayName,
             () => HousingEndpoints.ChinaBaseUrl);
+        isChineseClient = gameData.IsChineseGameClient();
         chinaWorldRows = gameData.ChinaWorlds();
         var chinaIds = new HashSet<uint>(chinaWorldRows.Count);
         for (var index = 0; index < chinaWorldRows.Count; index++)
@@ -59,6 +62,7 @@ internal sealed class HousingService : IDisposable
         }
 
         chinaWorldIds = chinaIds.ToFrozenSet();
+        chinaWorlds = BuildChinaWorlds();
         cache = new HousingCache(cacheRoot);
         Watch = new HousingWatchStore(configuration);
         Filters = new HousingFilterState
@@ -326,7 +330,7 @@ internal sealed class HousingService : IDisposable
         var cached = cache.ReadWorlds();
         if (cached is { Count: > 0 })
         {
-            worlds = WithChinaWorlds(cached);
+            worlds = WorldsForClient(cached);
             Bump();
         }
 
@@ -360,44 +364,26 @@ internal sealed class HousingService : IDisposable
 
     private bool IsChinaWorld(uint worldId) => chinaWorldIds.Contains(worldId);
 
-    private IReadOnlyList<HousingWorld> WithChinaWorlds(IReadOnlyList<HousingWorld> source)
-    {
-        if (chinaWorldRows.Count == 0)
-        {
-            return source;
-        }
+    private IReadOnlyList<HousingWorld> WorldsForClient(IReadOnlyList<HousingWorld> globalFallback) =>
+        isChineseClient && chinaWorlds.Count > 0 ? chinaWorlds : globalFallback;
 
-        var merged = new List<HousingWorld>(source.Count + chinaWorldRows.Count);
-        merged.AddRange(source);
+    private IReadOnlyList<HousingWorld> BuildChinaWorlds()
+    {
+        var worlds = new List<HousingWorld>(chinaWorldRows.Count);
         for (var index = 0; index < chinaWorldRows.Count; index++)
         {
             var entry = chinaWorldRows[index];
-            var duplicate = false;
-            for (var sourceIndex = 0; sourceIndex < source.Count; sourceIndex++)
-            {
-                if (source[sourceIndex].Id == entry.WorldId)
-                {
-                    duplicate = true;
-                    break;
-                }
-            }
-
-            if (duplicate)
-            {
-                continue;
-            }
-
             var region = gameData.RegionName(entry.WorldId);
             if (region.Length == 0)
             {
                 region = HousingRegions.For(entry.DataCenterName);
             }
 
-            merged.Add(new HousingWorld(entry.WorldId, entry.Name, (int)entry.DataCenterId, entry.DataCenterName,
+            worlds.Add(new HousingWorld(entry.WorldId, entry.Name, (int)entry.DataCenterId, entry.DataCenterName,
                 region));
         }
 
-        return merged;
+        return worlds;
     }
 
     public void CollectWardOpenings(Span<int> counts)
@@ -684,8 +670,8 @@ internal sealed class HousingService : IDisposable
             var loaded = await api.GetWorldsAsync(token).ConfigureAwait(false);
             if (loaded is { Count: > 0 })
             {
-                worlds = WithChinaWorlds(loaded);
-                cache.WriteWorlds(worlds);
+                worlds = WorldsForClient(loaded);
+                cache.WriteWorlds(loaded);
             }
             else if (worlds.Count == 0)
             {
