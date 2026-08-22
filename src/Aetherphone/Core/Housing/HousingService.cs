@@ -90,9 +90,11 @@ internal sealed class HousingService : IDisposable
 
     public int LastStatusCode => api.LastStatusCode;
 
-    public string ProviderName => api.DisplayName;
+    public string ProviderName =>
+        CnHousing.IsChinaWorld(WorldId) ? HousingEndpoints.CnDisplayName : api.DisplayName;
 
-    public string ApiBaseUrl => api.BaseUrl;
+    public string ApiBaseUrl =>
+        CnHousing.IsChinaWorld(WorldId) ? HousingEndpoints.CnBaseUrl : api.BaseUrl;
 
     public int? ProxyCacheAgeSeconds => api.LastProxyCacheAge;
 

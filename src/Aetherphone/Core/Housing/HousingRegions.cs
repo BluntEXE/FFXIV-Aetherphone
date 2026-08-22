@@ -20,11 +20,15 @@ internal static class HousingRegions
         ["Mana"] = "Japan",
         ["Meteor"] = "Japan",
         ["Materia"] = "Oceania",
+        ["陆行鸟"] = "China",
+        ["莫古力"] = "China",
+        ["猫小胖"] = "China",
+        ["豆豆柴"] = "China",
     }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
     public static readonly IReadOnlyList<string> Order = new[]
     {
-        "North America", "Europe", "Japan", "Oceania", Unknown,
+        "North America", "Europe", "Japan", "Oceania", "China", Unknown,
     };
 
     public static string For(string dataCenterName) =>
