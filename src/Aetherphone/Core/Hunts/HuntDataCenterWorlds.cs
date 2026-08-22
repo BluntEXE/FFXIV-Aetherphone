@@ -25,6 +25,11 @@ internal static class HuntDataCenterWorlds
         var lookup = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         foreach (var world in Plugin.DataManager.GetExcelSheet<World>())
         {
+            if (!world.IsPublic)
+            {
+                continue;
+            }
+
             var name = world.Name.ExtractText();
             if (name.Length > 0)
             {
@@ -40,7 +45,7 @@ internal static class HuntDataCenterWorlds
         var grouped = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
         foreach (var world in Plugin.DataManager.GetExcelSheet<World>())
         {
-            if (world.DataCenter.RowId == 0)
+            if (world.DataCenter.RowId == 0 || !world.IsPublic)
             {
                 continue;
             }
