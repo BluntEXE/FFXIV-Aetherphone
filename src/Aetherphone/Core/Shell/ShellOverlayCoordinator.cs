@@ -191,16 +191,19 @@ internal sealed class ShellOverlayCoordinator
             controlCenter.Dismiss();
         }
 
-        if (AppLandscape.Held(navigation.Current?.Id ?? string.Empty) && controlCenter.IsActive)
+        var landscapeHeld = navigation.Current is { } landscapeApp && AppLandscape.Held(landscapeApp.Id);
+        if (landscapeHeld && controlCenter.IsActive)
         {
             controlCenter.Dismiss();
         }
 
         HandleEscape();
+
         controlCenter.Draw(screen, theme, delta,
             !navigation.IsTransitioning && !director.CapturesPointer && !state.IslandCaptures &&
-            !banOverlay.IsActive && navigation.Current?.Id != "camera" && !AppLandscape.Held(navigation.Current?.Id ?? string.Empty),
+            !banOverlay.IsActive && navigation.Current?.Id != "camera" && !landscapeHeld,
             !director.CapturesPointer);
+            
         HoverTooltip.Flush();
         CopyToast.Flush();
         shareSheet.Draw(screen, theme);
