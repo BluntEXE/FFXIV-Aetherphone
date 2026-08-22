@@ -1,4 +1,4 @@
-{
+﻿{
   "conduct.chirper.allowed.title": "Что разрешено",
   "conduct.chirper.allowed.lead": "Примеры допустимого контента:",
   "conduct.chirper.allowed.1": "Повседневные приключения и истории",
@@ -1566,7 +1566,7 @@
   "music.onAirSection": "В эфире",
   "music.upNextSection": "Далее",
   "music.followingSection": "Подписки",
-  "music.allStationsSection": "Все станции",
+  "music.allStationsSection": "Офлайн-станции",
   "music.onAirNow": "Сейчас в эфире",
   "music.lastPlayed": "Играли ранее",
   "music.showAll": "Показать все",
@@ -1678,6 +1678,9 @@
   "music.noPlaylistsYet": "Пока нет плейлистов",
   "music.songOne": "1 трек",
   "music.songsMany": "{0} треков",
+  "music.liveDjs": "Прямой эфир Twitch DJ",
+  "music.liveDjsEmpty": "Сейчас нет живых DJ. Загляните в Community Radio или Радиостанции.",
+  "music.poweredByRolladeck": "Предоставлено XIV Rolladeck",
   "messages.empty": "Пока нет сообщений",
   "messages.placeholder": "Сообщение",
   "messages.tabChats": "Чаты",
@@ -5136,7 +5139,8 @@
   "failure.sessionRevoked": "Вы вышли из аккаунта. Войдите снова, чтобы продолжить.",
   "failure.socialDisabled": "Социальные приложения временно отключены. Повторите попытку позже.",
   "failure.appDisabled": "Это приложение временно отключено. Повторите попытку позже.",
-  "account.risingStonesIntro": "Один аккаунт открывает вход во все приложения Aethernet: Chirper, Aethergram и другие. В китайской версии игры подтверждение владения идёт через ваш профиль Rising Stones (石之家), пароль не нужен.",
+
+"account.risingStonesIntro": "Один аккаунт открывает вход во все приложения Aethernet: Chirper, Aethergram и другие. В китайской версии игры подтверждение владения идёт через ваш профиль Rising Stones (石之家), пароль не нужен.",
   "account.risingStonesSignIn": "Войти через Rising Stones",
   "account.risingStonesUuidLabel": "UID Rising Stones",
   "account.risingStonesUuidHint": "Ваш UID указан числом на странице вашего профиля Rising Stones.",
@@ -5152,5 +5156,23 @@
   "account.fail.risingStonesCodeNotFound.title": "Код ещё не сохранён",
   "account.fail.risingStonesCodeNotFound.body": "Профиль найден, но кода в личной подписи пока нет. После сохранения Rising Stones может обновиться не сразу. Немного подождите и проверьте снова.",
   "account.fail.risingStonesUnavailable.title": "Rising Stones недоступен",
-  "account.fail.risingStonesUnavailable.body": "Сейчас не удалось прочитать Rising Stones. Оставьте код в подписи и повторите проверку через минуту-другую."
+  "account.fail.risingStonesUnavailable.body": "Сейчас не удалось прочитать Rising Stones. Оставьте код в подписи и повторите проверку через минуту-другую.",
+
+  "rolladeck.filterAtVenue": "На площадке",
+  "rolladeck.filterAllDjs": "Все DJs",
+  "rolladeck.emptyDjsHeading": "Нет активных DJs",
+  "rolladeck.viewers": "♪  {0} зрителей",
+  "rolladeck.venueUnknown": "Площадка неизвестна",
+  "rolladeck.teleport": "Телепорт",
+  "rolladeck.lifestreamNotInstalled": "Lifestream не установлен, адрес скопирован в буфер обмена",
+  "rolladeck.sectionGenres": "ЖАНРЫ",
+  "rolladeck.sectionLinks": "ССЫЛКИ",
+  "rolladeck.sectionAbout": "ОПИСАНИЕ",
+  "rolladeck.sectionAmenities": "УДОБСТВА",
+  "rolladeck.liveNow": "♪ В ЭФИРЕ",
+  "rolladeck.eventLabel": "♦ СОБЫТИЕ",
+  "rolladeck.discordEventLabel": "♦ СОБЫТИЕ DISCORD",
+  "rolladeck.website": "Сайт",
+  "rolladeck.visit": "Посетить",
+  "rolladeck.discord": "Discord"
 }

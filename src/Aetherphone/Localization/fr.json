@@ -1,4 +1,4 @@
-{
+﻿{
   "conduct.chirper.allowed.title": "Ce qui est autorisé",
   "conduct.chirper.allowed.lead": "Exemples de contenu acceptable :",
   "conduct.chirper.allowed.1": "Aventures quotidiennes et récits",
@@ -1566,7 +1566,7 @@
   "music.onAirSection": "À l'antenne",
   "music.upNextSection": "À venir",
   "music.followingSection": "Abonnements",
-  "music.allStationsSection": "Toutes les stations",
+  "music.allStationsSection": "Stations hors ligne",
   "music.onAirNow": "À l'antenne",
   "music.lastPlayed": "Derniers titres",
   "music.showAll": "Tout voir",
@@ -1678,6 +1678,9 @@
   "music.noPlaylistsYet": "Aucune playlist pour l'instant",
   "music.songOne": "1 titre",
   "music.songsMany": "{0} titres",
+  "music.liveDjs": "DJs Twitch en direct",
+  "music.liveDjsEmpty": "Aucun DJ n'est en direct. Consulte Community Radio ou les stations Radio.",
+  "music.poweredByRolladeck": "Fourni par XIV Rolladeck",
   "messages.empty": "Aucun message",
   "messages.placeholder": "Message",
   "messages.tabChats": "Discussions",
@@ -5136,7 +5139,8 @@
   "failure.sessionRevoked": "Tu as été déconnecté. Reconnecte-toi pour continuer.",
   "failure.socialDisabled": "Les applis sociales sont désactivées temporairement. Réessaie plus tard.",
   "failure.appDisabled": "Cette appli est désactivée temporairement. Réessaie plus tard.",
-  "account.risingStonesIntro": "Un seul compte vous connecte à toutes les applis Aethernet : Chirper, Aethergram et plus encore. Sur la version chinoise du jeu, la propriété est vérifiée via votre profil Rising Stones (石之家), sans mot de passe.",
+
+"account.risingStonesIntro": "Un seul compte vous connecte à toutes les applis Aethernet : Chirper, Aethergram et plus encore. Sur la version chinoise du jeu, la propriété est vérifiée via votre profil Rising Stones (石之家), sans mot de passe.",
   "account.risingStonesSignIn": "Se connecter avec Rising Stones",
   "account.risingStonesUuidLabel": "UID Rising Stones",
   "account.risingStonesUuidHint": "Votre UID est le numéro affiché sur votre page de profil Rising Stones.",
@@ -5152,5 +5156,23 @@
   "account.fail.risingStonesCodeNotFound.title": "Code pas encore enregistré",
   "account.fail.risingStonesCodeNotFound.body": "Nous avons trouvé votre profil, mais le code n'est pas encore dans votre signature personnelle. Rising Stones peut mettre un moment à se mettre à jour après l'enregistrement. Patientez un peu, puis vérifiez à nouveau.",
   "account.fail.risingStonesUnavailable.title": "Rising Stones indisponible",
-  "account.fail.risingStonesUnavailable.body": "Impossible de lire Rising Stones pour le moment. Gardez le code dans votre signature et vérifiez à nouveau dans une minute ou deux."
+  "account.fail.risingStonesUnavailable.body": "Impossible de lire Rising Stones pour le moment. Gardez le code dans votre signature et vérifiez à nouveau dans une minute ou deux.",
+
+  "rolladeck.filterAtVenue": "Au Venue",
+  "rolladeck.filterAllDjs": "Tous les DJs",
+  "rolladeck.emptyDjsHeading": "Aucun DJ en direct",
+  "rolladeck.viewers": "♪  {0} spectateurs",
+  "rolladeck.venueUnknown": "Venue inconnu",
+  "rolladeck.teleport": "Téléporter",
+  "rolladeck.lifestreamNotInstalled": "Lifestream non installé, adresse copiée dans le presse-papiers",
+  "rolladeck.sectionGenres": "GENRES",
+  "rolladeck.sectionLinks": "LIENS",
+  "rolladeck.sectionAbout": "À PROPOS",
+  "rolladeck.sectionAmenities": "ÉQUIPEMENTS",
+  "rolladeck.liveNow": "♪ EN DIRECT",
+  "rolladeck.eventLabel": "♦ ÉVÉNEMENT",
+  "rolladeck.discordEventLabel": "♦ ÉVÉNEMENT DISCORD",
+  "rolladeck.website": "Site web",
+  "rolladeck.visit": "Visiter",
+  "rolladeck.discord": "Discord"
 }
