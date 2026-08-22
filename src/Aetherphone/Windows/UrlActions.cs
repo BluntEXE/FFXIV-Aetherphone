@@ -34,12 +34,15 @@ internal static class UrlActions
     {
         confirm.Ask(new ConfirmRequest
         {
-            Title = Loc.T(L.Common.OpenInBrowser) + "?",
+            Title = Loc.T(L.Common.OpenLinkTitle),
             Message = string.Empty,
-            Sections = [ConfirmSection.Paragraph(Loc.T(L.Common.OpenLinkWarning)), 
-                        ConfirmSection.Chip(Loc.T(L.Common.OpenLinkLabel), url)],
-            ConfirmLabel = Loc.T(L.Collections.Yes),
-            CancelLabel = Loc.T(L.Collections.No),
+            Sections =
+            [
+                ConfirmSection.Paragraph(Loc.T(L.Common.OpenLinkWarning)),
+                ConfirmSection.Chip(Loc.T(L.Common.OpenLinkDestination), url),
+            ],
+            ConfirmLabel = Loc.T(L.Common.OpenLinkConfirm),
+            CancelLabel = Loc.T(L.Common.Cancel),
             Danger = true,
             Confirm = () => OpenInBrowser(url),
         });
