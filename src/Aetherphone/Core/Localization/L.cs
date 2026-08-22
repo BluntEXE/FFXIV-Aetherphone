@@ -25,6 +25,8 @@ internal static class L
         public static readonly LocString Hq = new("common.hq", "HQ");
         public static readonly LocString Nq = new("common.nq", "NQ");
         public static readonly LocString OpenInBrowser = new("common.openInBrowser", "Click to open in browser");
+        public static readonly LocString OpenLinkWarning = new("common.openLinkWarning", "This link will direct you outside of Aetherphone to a third party website. Never trust random links from strangers and use your best judgment before proceeding further.");
+        public static readonly LocString OpenLinkLabel = new("common.openLinkLabel", "Proceed at your own risk:");
         public static readonly LocString OpenInWindow = new("common.openInWindow", "Open in a window");
         public static readonly LocString Next = new("common.next", "Next");
         public static readonly LocString Previous = new("common.previous", "Previous");

@@ -215,6 +215,8 @@
   "common.hq": "HQ",
   "common.nq": "NQ",
   "common.openInBrowser": "Tarayıcıda açmak için tıklayın",
+  "common.openLinkWarning": "Bu bağlantı seni Aetherphone dışında üçüncü taraf bir web sitesine yönlendirecek. Yabancılardan gelen rastgele bağlantılara asla güvenme ve devam etmeden önce kendi sağduyunu kullan.",
+  "common.openLinkLabel": "Riski kabul ederek devam et:",
   "common.openInWindow": "Pencerede aç",
   "common.next": "İleri",
   "common.previous": "Önceki",

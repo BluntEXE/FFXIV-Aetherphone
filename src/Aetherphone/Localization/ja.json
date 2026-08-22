@@ -215,6 +215,8 @@
   "common.hq": "HQ",
   "common.nq": "NQ",
   "common.openInBrowser": "クリックしてブラウザで開く",
+  "common.openLinkWarning": "このリンクはAetherphoneの外部にあるサードパーティのウェブサイトに移動します。知らない人からのリンクを安易に信用せず、自己判断で進めてください。",
+  "common.openLinkLabel": "自己責任で続行:",
   "common.openInWindow": "ウィンドウで開く",
   "common.next": "次へ",
   "common.previous": "前へ",

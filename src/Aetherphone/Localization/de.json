@@ -215,6 +215,8 @@
   "common.hq": "HQ",
   "common.nq": "NQ",
   "common.openInBrowser": "Zum Öffnen im Browser klicken",
+  "common.openLinkWarning": "Dieser Link führt dich aus Aetherphone heraus zu einer Drittanbieter-Website. Vertraue niemals zufälligen Links von Fremden und nutze dein eigenes Urteilsvermögen, bevor du fortfährst.",
+  "common.openLinkLabel": "Weiter auf eigene Gefahr:",
   "common.openInWindow": "In einem Fenster öffnen",
   "common.next": "Weiter",
   "common.previous": "Zurück",
