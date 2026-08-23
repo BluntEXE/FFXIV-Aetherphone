@@ -254,11 +254,14 @@ internal sealed class AetherStreamQueue : IDisposable
             return;
         }
 
-        entry.Title = resolved.Title;
-        entry.Source = resolved.Source;
-        entry.Duration = resolved.Duration;
-        entry.ThumbnailUrl = resolved.ThumbnailUrl;
-        Persist();
+        await Plugin.Framework.RunOnFrameworkThread(() =>
+        {
+            entry.Title = resolved.Title;
+            entry.Source = resolved.Source;
+            entry.Duration = resolved.Duration;
+            entry.ThumbnailUrl = resolved.ThumbnailUrl;
+            Persist();
+        }).ConfigureAwait(false);
     }
 
     public void Dispose()
