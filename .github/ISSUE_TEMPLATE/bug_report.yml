@@ -46,6 +46,13 @@ body:
     validations:
       required: true
 
+  - type: textarea
+    id: workarounds
+    attributes:
+      label: What have you tried?
+      description: Restarting the plugin, reinstalling components, changing a setting, disabling other plugins. Say what helped and what did not.
+      placeholder: "Restarted the plugin (no change), switched the upscaler from DLSS to FSR (the screen came back)..."
+
   - type: dropdown
     id: plugin-version
     attributes:
@@ -135,9 +142,10 @@ body:
       description: |
         **If you can provide any of these, it turns guesswork into a fix.**
 
-        - **Dalamud log**: open `/xllog`, click the *Open log folder* button at the bottom-right, attach `dalamud.log`. Filter by `Aetherphone` if you want to trim it down.
+        - **Dalamud log**: open `/xllog`, click the *Open log folder* button at the bottom-right, attach `dalamud.log`. Filter by `Aetherphone` if you want to trim it down. The log contains file paths like `C:\Users\<your name>\...`; redact the user name if it is your real name.
         - **Screenshots or a short clip** if the issue is visual (a misaligned row, wrong colors, a frozen animation).
-        - **Other plugins active** that touch chat, the message log, or UI, to help rule out conflicts.
+        - **Other plugins active**, plus ReShade/GShade or other overlays, to help rule out conflicts.
+        - **MogCast only**: the exact link you tried, whether a VPN or proxy was on, the text of the red card under the player, and your graphics upscaling settings (DLSS or FSR, 3D resolution scaling, dynamic resolution on or off).
 
         Short log excerpts can go straight in the box below; attach full files instead of pasting them.
       render: text
