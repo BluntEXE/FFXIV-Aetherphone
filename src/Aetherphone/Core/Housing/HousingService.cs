@@ -25,7 +25,6 @@ internal sealed class HousingService : IDisposable
     private readonly IReadOnlyList<(uint WorldId, string Name, uint DataCenterId, string DataCenterName)> chinaWorldRows;
     private readonly IReadOnlyList<HousingWorld> chinaWorlds;
     private readonly FrozenSet<uint> chinaWorldIds;
-    private readonly bool isChineseClient;
     private readonly SemaphoreSlim refreshGate = new(1, 1);
     private readonly CancellationTokenSource cancellation = new();
     private readonly ConcurrentDictionary<long, HousingDistrictSnapshot> snapshots = new();
@@ -53,7 +52,6 @@ internal sealed class HousingService : IDisposable
             () => HousingEndpoints.BaseUrl);
         chinaApi = new HousingRestProvider(http, HousingProviderKind.China, HousingEndpoints.ChinaDisplayName,
             () => HousingEndpoints.ChinaBaseUrl);
-        isChineseClient = gameData.IsChineseGameClient();
         chinaWorldRows = gameData.ChinaWorlds();
         var chinaIds = new HashSet<uint>(chinaWorldRows.Count);
         for (var index = 0; index < chinaWorldRows.Count; index++)
@@ -327,6 +325,13 @@ internal sealed class HousingService : IDisposable
             return;
         }
 
+        if (IsChineseClient && chinaWorlds.Count > 0)
+        {
+            worlds = chinaWorlds;
+            Bump();
+            return;
+        }
+
         var cached = cache.ReadWorlds();
         if (cached is { Count: > 0 })
         {
@@ -362,10 +367,12 @@ internal sealed class HousingService : IDisposable
             ? world.RegionName
             : HousingRegions.For(gameData.DataCenterName(worldId));
 
+    private bool IsChineseClient => gameData.IsChineseGameClient();
+
     private bool IsChinaWorld(uint worldId) => chinaWorldIds.Contains(worldId);
 
     private IReadOnlyList<HousingWorld> WorldsForClient(IReadOnlyList<HousingWorld> globalFallback) =>
-        isChineseClient && chinaWorlds.Count > 0 ? chinaWorlds : globalFallback;
+        IsChineseClient && chinaWorlds.Count > 0 ? chinaWorlds : globalFallback;
 
     private IReadOnlyList<HousingWorld> BuildChinaWorlds()
     {
@@ -666,6 +673,12 @@ internal sealed class HousingService : IDisposable
     {
         try
         {
+            if (IsChineseClient && chinaWorlds.Count > 0)
+            {
+                worlds = chinaWorlds;
+                return;
+            }
+
             var token = cancellation.Token;
             var loaded = await api.GetWorldsAsync(token).ConfigureAwait(false);
             if (loaded is { Count: > 0 })
