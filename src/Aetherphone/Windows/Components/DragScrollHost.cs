@@ -109,6 +109,16 @@ internal static class DragScrollHost
             return new Surface(region, 0f, false);
         }
 
+        if (InputShield.Active)
+        {
+            if (region.Pressed)
+            {
+                region.CancelGesture();
+            }
+
+            return new Surface(region, scroller.PullDistance, false);
+        }
+
         var io = ImGui.GetIO();
         var deltaSeconds = io.DeltaTime;
         var pointerY = io.MousePos.Y;
