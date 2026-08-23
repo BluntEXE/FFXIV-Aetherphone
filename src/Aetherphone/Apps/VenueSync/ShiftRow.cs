@@ -1,3 +1,4 @@
+using System.Globalization;
 using Aetherphone.Core;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
@@ -15,7 +16,7 @@ internal static class ShiftRow
     public const float Height = 64f;
 
     public static ShiftRowAction Draw(GroupCard card, Rect row, VenueSyncShift shift, bool isOpen, string? roleName,
-        PhoneTheme theme, Vector4 accent, string idSuffix)
+        PhoneTheme theme, Vector4 accent, string idSuffix, bool enabled = true)
     {
         var scale = UiScale.Current;
 
@@ -63,8 +64,8 @@ internal static class ShiftRow
         }
 
         var clicked = isActive
-            ? AppSkin.DangerPillButton(actionRect, label, theme)
-            : AppSkin.PillButton(actionRect, label, true, accent, theme);
+            ? AppSkin.DangerPillButton(actionRect, label, theme) && enabled
+            : AppSkin.PillButton(actionRect, label, true, enabled, theme);
 
         if (!clicked)
         {
@@ -81,11 +82,12 @@ internal static class ShiftRow
 
     private static string FormatTimeRange(string startIso, string endIso)
     {
-        if (!DateTime.TryParse(startIso, out var start) || !DateTime.TryParse(endIso, out var end))
+        if (!DateTime.TryParse(startIso, CultureInfo.InvariantCulture, DateTimeStyles.None, out var start) ||
+            !DateTime.TryParse(endIso, CultureInfo.InvariantCulture, DateTimeStyles.None, out var end))
         {
             return Loc.T(L.VenueSync.UnknownTime);
         }
 
-        return $"{start:ddd} {TimeText.Clock(start)} – {TimeText.Clock(end)}";
+        return $"{start.ToString("ddd", Loc.Culture)} {TimeText.Clock(start)} – {TimeText.Clock(end)}";
     }
 }

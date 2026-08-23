@@ -897,7 +897,6 @@ internal static class L
             new("venueSync.noSalesLoggedThisSession", "No sales logged this session");
         public static readonly LocPlural SaleCount = new("venueSync.saleCount", "{0} sale", "{0} sales");
         public static readonly LocString Shifts = new("venueSync.shifts", "Shifts");
-        public static readonly LocString ErrorTapToRetry = new("venueSync.errorTapToRetry", "{0}, tap to retry");
         public static readonly LocString ErrorTapLogSaleToRetry =
             new("venueSync.errorTapLogSaleToRetry", "{0}, tap Log Sale to retry");
         public static readonly LocString NoShiftData = new("venueSync.noShiftData", "No shift data");
@@ -906,8 +905,6 @@ internal static class L
             new("venueSync.noShiftsSubtitle", "Nothing scheduled right now.");
         public static readonly LocString OpenToClaim = new("venueSync.openToClaim", "OPEN SHIFTS");
         public static readonly LocString Upcoming = new("venueSync.upcoming", "UPCOMING");
-        public static readonly LocString DayToday = new("venueSync.dayToday", "Today");
-        public static readonly LocString DayTomorrow = new("venueSync.dayTomorrow", "Tomorrow");
         public static readonly LocString FailedToClockIn = new("venueSync.failedToClockIn", "Failed to clock in.");
         public static readonly LocString FailedToClockOut = new("venueSync.failedToClockOut", "Failed to clock out.");
         public static readonly LocString ClockedOutHoursWorked =

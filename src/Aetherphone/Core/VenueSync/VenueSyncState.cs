@@ -27,9 +27,8 @@ internal sealed class VenueSyncState : IDisposable
         this.configuration = configuration;
     }
 
-    public VenueSyncLoadState ShiftsState => shiftsState;
     public VenueSyncShiftsResponse? Shifts { get; private set; }
-    public string? LastError { get; private set; }
+    public DateTime LastRefreshUtc => lastRefreshUtc;
     public int SessionSalesCount => sessionSalesCount;
     public decimal SessionSalesTotal => sessionSalesTotal;
 
@@ -77,12 +76,10 @@ internal sealed class VenueSyncState : IDisposable
                 Shifts = response;
                 lastRefreshUtc = DateTime.UtcNow;
                 shiftsState = VenueSyncLoadState.Ready;
-                LastError = null;
             }
             else if (shiftsState != VenueSyncLoadState.Ready)
             {
                 shiftsState = VenueSyncLoadState.Failed;
-                LastError = "Failed to load shifts.";
             }
         }
         catch (OperationCanceledException)
@@ -95,7 +92,6 @@ internal sealed class VenueSyncState : IDisposable
                 shiftsState = VenueSyncLoadState.Failed;
             }
 
-            LastError = exception.Message;
             AepLog.Warning($"VenueSync shifts refresh failed: {exception.Message}");
         }
         finally
