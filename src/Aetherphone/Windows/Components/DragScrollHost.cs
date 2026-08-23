@@ -111,12 +111,12 @@ internal static class DragScrollHost
 
         if (InputShield.Active)
         {
-            if (region.Pressed)
+            if (region.Pressed || scroller.IsControlling)
             {
                 region.CancelGesture();
             }
 
-            return new Surface(region, scroller.PullDistance, false);
+            return new Surface(region, 0f, false);
         }
 
         var io = ImGui.GetIO();
