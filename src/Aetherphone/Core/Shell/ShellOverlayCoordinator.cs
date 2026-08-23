@@ -84,7 +84,7 @@ internal sealed class ShellOverlayCoordinator
         var overlaysCapture = controlCenterCaptures && !director.WantsControlCenter;
         var ringing = !loading.IsActive && incomingOverlay.IsRinging;
         var islandCaptures = !loading.IsActive && !controlCenterCaptures && !ringing && !confirming &&
-                             !setupActive && !conductActive && !banNotice &&
+                             !setupActive && !conductActive && !banNotice && !DragScrollHost.AnyDragging &&
                              (island.CapturesPointer(screen) ||
                               (!director.CapturesPointer &&
                                (banner.CapturesPointer(screen) || shortcutPill.CapturesPointer())));
