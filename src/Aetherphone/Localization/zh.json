@@ -4461,6 +4461,7 @@
   "changelog.r1008.8": "知识问答不再出现已被游戏移除的技能、仅限 PvP 的技能或重复的技能，表情题也只会涉及真正可用的表情",
   "changelog.r1008.9": "当相机或 MogCast 将手机保持横屏时，控制中心不再打开（由 Farroness 提供）",
   "changelog.r1008.10": "Chirper、Aethergram 和 Velvet 的社区规则已更新，下次打开时需要重新接受",
+  "changelog.r1008.11": "新增七款手机壳：Junior Jinbei、Fox Kit、Namazu、Mad Hatter、Cheshire、Alice in Wonderland 和 Suzaku，由 Silkie、starpanda、kukkiineko 和 tatoz 贡献",
   "changelog.r1005.0": "国服重新开放赌场与 Aether Coin",
   "changelog.r1004.0": "国服重新开放 Velvet 与遮罩帖子",
   "changelog.r1003.0": "现在获得或失去头像框时手机会通知你，不再是头像外圈悄悄改变",

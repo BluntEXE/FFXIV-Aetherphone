@@ -4461,6 +4461,7 @@
   "changelog.r1008.8": "Trivia no longer asks about skills the game has removed, PvP-only actions, or the same skill twice, and its emote questions stick to emotes that can actually be used",
   "changelog.r1008.9": "Control Center no longer opens while Camera or MogCast hold the phone in landscape, contributed by Farroness",
   "changelog.r1008.10": "The community rules for Chirper, Aethergram, and Velvet have been updated, and they ask to be accepted again on the next open",
+  "changelog.r1008.11": "Added seven phone cases: Junior Jinbei, Fox Kit, Namazu, Mad Hatter, Cheshire, Alice in Wonderland, and Suzaku, contributed by Silkie, starpanda, kukkiineko, and tatoz",
   "changelog.r1005.0": "The Casino and Aether Coin are available again on the Chinese game version",
   "changelog.r1004.0": "Velvet and veiled posts are available again on the Chinese game version",
   "changelog.r1003.0": "The phone now tells you when an avatar frame is given to you or taken away, instead of the ring around your avatar changing in silence",

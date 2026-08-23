@@ -1373,6 +1373,8 @@ internal static class L
                 "Control Center no longer opens while Camera or MogCast hold the phone in landscape, contributed by Farroness"),
             new("changelog.r1008.10",
                 "The community rules for Chirper, Aethergram, and Velvet have been updated, and they ask to be accepted again on the next open"),
+            new("changelog.r1008.11",
+                "Added seven phone cases: Junior Jinbei, Fox Kit, Namazu, Mad Hatter, Cheshire, Alice in Wonderland, and Suzaku, contributed by Silkie, starpanda, kukkiineko, and tatoz"),
         };
 
         public static readonly LocString[] Release1007 =
