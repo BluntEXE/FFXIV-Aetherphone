@@ -6,6 +6,7 @@ using Aetherphone.Core.Notifications;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
+using System.Globalization;
 
 namespace Aetherphone.Apps.Settings.Pages;
 
@@ -19,6 +20,8 @@ internal sealed class NotificationsPage : ISettingsPage
     private readonly ISettingsNavigator navigator;
     private readonly AppNotificationPage appPage;
     private readonly AppInstaller installer;
+    private readonly NotificationChannel[] sortedChannels = BuildChannelsArray();
+    private LanguageInfo? sortedLanguage;
 
     public NotificationsPage(Configuration configuration, ISettingsNavigator navigator, AppNotificationPage appPage,
         AppInstaller installer)
@@ -57,12 +60,12 @@ internal sealed class NotificationsPage : ISettingsPage
                 configuration.Save();
             }
 
+            EnsureSortedChannels();
             SettingsSection.Header(Loc.T(L.Settings.NotificationApps), theme);
-            var channels = NotificationChannels.All;
-            var apps = GroupCard.Begin(theme, CountInstalled(channels));
-            for (var index = 0; index < channels.Count; index++)
+            var apps = GroupCard.Begin(theme, CountInstalled(NotificationChannels.All));
+            for (var index = 0; index < sortedChannels.Length; index++)
             {
-                var channel = channels[index];
+                var channel = sortedChannels[index];
                 if (!installer.IsInstalled(channel.AppId))
                 {
                     continue;
@@ -78,6 +81,34 @@ internal sealed class NotificationsPage : ISettingsPage
 
             apps.End();
         }
+    }
+
+    private void EnsureSortedChannels()
+    {
+        if (ReferenceEquals(sortedLanguage, Loc.Current))
+        {
+            return;
+        }
+
+        Array.Sort(sortedChannels, static (left, right) =>
+        {
+            var primary = Loc.Culture.CompareInfo.Compare(Loc.T(left.Name), Loc.T(right.Name),
+                CompareOptions.IgnoreCase);
+            return primary != 0 ? primary : string.CompareOrdinal(left.AppId, right.AppId);
+        });
+        sortedLanguage = Loc.Current;
+    }
+
+    private static NotificationChannel[] BuildChannelsArray()
+    {
+        var channels = NotificationChannels.All;
+        var array = new NotificationChannel[channels.Count];
+        for (var index = 0; index < channels.Count; index++)
+        {
+            array[index] = channels[index];
+        }
+
+        return array;
     }
 
     private int CountInstalled(IReadOnlyList<NotificationChannel> channels)

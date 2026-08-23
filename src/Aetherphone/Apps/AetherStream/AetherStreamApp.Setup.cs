@@ -66,6 +66,11 @@ internal sealed partial class AetherStreamApp
                 new Vector2(content.Max.X, secondTop + cardHeight)), dependencies.LinkResolver,
             L.AetherStream.SetupLinkResolver, L.AetherStream.SetupLinkResolverDetail, scale);
 
+        var thirdTop = secondTop + cardHeight + gap;
+        DependencySetup.Card(ui, theme, new Rect(new Vector2(content.Min.X, thirdTop),
+                new Vector2(content.Max.X, thirdTop + cardHeight)), dependencies.JsRuntime,
+            L.AetherStream.SetupJsRuntime, L.AetherStream.SetupJsRuntimeDetail, scale);
+
         var buttonHeight = SetupButtonHeight * scale;
         var buttonTop = content.Max.Y - buttonHeight - Typography.LineHeight(TextStyles.Subheadline)
             - Metrics.Space.Lg * scale;
@@ -77,8 +82,11 @@ internal sealed partial class AetherStreamApp
     {
         var library = dependencies.VideoLibrary.Snapshot();
         var resolver = dependencies.LinkResolver.Snapshot();
-        var busy = DependencySetup.IsBusy(library) || DependencySetup.IsBusy(resolver);
-        var failed = library.State == DependencyState.Failed || resolver.State == DependencyState.Failed;
+        var runtime = dependencies.JsRuntime.Snapshot();
+        var busy = DependencySetup.IsBusy(library) || DependencySetup.IsBusy(resolver)
+            || DependencySetup.IsBusy(runtime);
+        var failed = library.State == DependencyState.Failed || resolver.State == DependencyState.Failed
+            || runtime.State == DependencyState.Failed;
 
         var pending = dependencies.PendingDownloadBytes;
         var label = busy

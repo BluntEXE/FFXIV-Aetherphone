@@ -118,8 +118,8 @@ internal sealed partial class VelvetShell
                 () => OpenEncryptionInfo(threadId));
             ChatHeaderControls.DrawSearchToggle(ui, area, rowCenterY, searchController.Open, searchController.Toggle);
             var name = app.ThreadTitle(threadId);
-            var avatarHandle = app.ThreadAvatar(threadId, out var monogram, out var presence);
             var avatarRadius = 18f * scale;
+            var avatarHandle = app.ThreadAvatar(threadId, avatarRadius * 2f, out var monogram, out var presence);
             var leftLimit = area.Min.X + 48f * scale;
             var rightLimit = area.Max.X - ChatHeaderControls.ReservedRightWidth * scale;
             var gap = 9f * scale;
@@ -288,7 +288,7 @@ internal sealed partial class VelvetShell
         return string.Empty;
     }
 
-    private AvatarHandle ThreadAvatar(string threadId, out string monogram, out int presence)
+    private AvatarHandle ThreadAvatar(string threadId, float drawnPixels, out string monogram, out int presence)
     {
         var threads = store.Threads;
         for (var index = 0; index < threads.Length; index++)
@@ -298,7 +298,7 @@ internal sealed partial class VelvetShell
                 var thread = threads[index];
                 monogram = Monogram(thread.OtherDisplayName, thread.OtherHandle);
                 presence = thread.Presence;
-                return images.Avatar(thread.OtherAvatarUrl);
+                return images.Avatar(thread.OtherAvatarUrl, drawnPixels);
             }
         }
 
@@ -306,7 +306,7 @@ internal sealed partial class VelvetShell
         {
             monogram = Monogram(connection.DisplayName, connection.Handle);
             presence = connection.Presence;
-            return images.Avatar(connection.AvatarUrl);
+            return images.Avatar(connection.AvatarUrl, drawnPixels);
         }
 
         monogram = "?";

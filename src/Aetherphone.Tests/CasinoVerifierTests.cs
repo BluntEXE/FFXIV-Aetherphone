@@ -13,6 +13,7 @@ public sealed class CasinoVerifierTests
     private const string SeedCommit = "630dcd2966c4336691125448bbb25b4ff412a49c732db2c8abc1b8581bd710dd";
     private const string SlotsRoundId = "f00d4b1dfeedc0de1234567890abcdef";
     private const string SlotsLog = "s0r0:19;s0r1:22;s0r2:29;s0r3:33;s0r4:23";
+    private const string SlotsLogWithJackpotRoll = SlotsLog + ";jackpot:114522061";
     private const string ScratchRoundId = "cafe0000000000000000000000000002";
     private const string ScratchLog =
         "prize:757510;w0:4;w1:6;w2:2;w3:2;w4:7;w5:2;g8:1;g7:4;g6:4;g5:4;g4:4;g3:0;g2:0;g1:0";
@@ -40,6 +41,33 @@ public sealed class CasinoVerifierTests
     {
         Assert.Equal(CasinoRoundVerdict.Match,
             CasinoVerifier.Verify(CasinoWire.SlotsKind, Seed, SeedCommit, SlotsRoundId, SlotsLog));
+    }
+
+    // Rounds played since the per-chip jackpot carry one trailing roll under a hundred and fifty
+    // million; rounds from before it carry none. Both shapes have to verify, because history holds
+    // both and a mismatch verdict is an accusation.
+    [Fact]
+    public void SlotsVectorWithTheJackpotRollReplays()
+    {
+        Assert.Equal(CasinoRoundVerdict.Match,
+            CasinoVerifier.Verify(CasinoWire.SlotsKind, Seed, SeedCommit, SlotsRoundId,
+                SlotsLogWithJackpotRoll));
+    }
+
+    [Fact]
+    public void ATamperedJackpotRollRefuses()
+    {
+        const string tamperedLog = SlotsLog + ";jackpot:114522062";
+        Assert.Equal(CasinoRoundVerdict.Mismatch,
+            CasinoVerifier.Verify(CasinoWire.SlotsKind, Seed, SeedCommit, SlotsRoundId, tamperedLog));
+    }
+
+    [Fact]
+    public void AJackpotRollAtOrOverItsBoundRefuses()
+    {
+        const string overBoundLog = SlotsLog + ";jackpot:150000000";
+        Assert.Equal(CasinoRoundVerdict.Mismatch,
+            CasinoVerifier.Verify(CasinoWire.SlotsKind, Seed, SeedCommit, SlotsRoundId, overBoundLog));
     }
 
     [Fact]

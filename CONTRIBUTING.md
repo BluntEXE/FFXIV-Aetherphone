@@ -37,6 +37,10 @@ The full developer documentation lives in [`docs/`](docs/README.md): the archite
 4. Match the existing style; the rules are written down in [docs/conventions.md](docs/conventions.md). Code is self-documenting; comments explain *why* (or a hard-coded constant), never *what*. No heavy abstractions "for later."
 5. If your change affects what a user sees or types (commands, layout, settings), update the README.
 
+## Translations
+
+Improving one of the nine language files needs no C#, no build, and no git. You edit a single JSON file under `src/Aetherphone/Localization/` in the browser and open a pull request from there. [docs/translating.md](docs/translating.md) walks a non-developer through the whole flow, including the rules that keep the nine catalogs in lockstep. Adding a *new* string is a code change and follows [docs/localization.md](docs/localization.md) instead.
+
 ## Good first issues
 
 Check the tracker for anything labeled `good first issue`. Self-contained UI work is usually the lowest-friction way to help: a new `Components/` widget, a Settings page, or polishing an existing app's layout. Attach a screenshot of before/after and the change is easy to land.

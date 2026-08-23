@@ -52,21 +52,22 @@ The constructor runs, in order:
 3. `Device = new DeviceStatus(...)` starts the battery/latency/signal sampler used by the status bar.
 4. `PhoneServices.Build(...)` constructs every shared service (next section).
 5. `Fonts = new FontService(...)` builds the Inter font atlas at every weight and size bucket.
-6. `AppRegistry.BuildDefault(services)` constructs every app into an `AppBundle` (apps, home widgets, photo library).
-7. `new PhoneShell(services, bundle)` and `new PhoneWindow(shell, Cfg)` build the UI, and the three windows (`PhoneWindow`, `UpdateChipWindow`, `PhotoWindow`) are added to a Dalamud `WindowSystem`, the helper that tracks window open state and calls each window's draw methods.
-8. Background services start: `PhoneEmoteController`, `TimerNotifier`, `CalendarReminderService`, `ClockAlarmService`, `ReminderService`, `ScreenshotImportService`, character session watchers, and `CallHub`.
-9. Chat commands `/phone` and `/aetherphone` (see `AepConstants`), a server info bar entry (`IDtrBar`), and a context menu hook are registered.
-10. `PluginInterface.UiBuilder.Draw += windowSystem.Draw` wires the whole UI into Dalamud's ImGui frame.
+6. `EmojiCatalog.Load()` runs, then the video subsystem comes up: `ScreenController`, `VideoPlayer`, `AetherStreamQueue`, `WatchAlongSession`, and `StreamSuggestionNotifier` are constructed, `OnVideoFrameworkUpdate` subscribes to `Framework.Update`, and `VideoDebugWindow` and `AetherStreamScreenWindow` are built.
+7. `AppRegistry.BuildDefault(services, video, screenController, videoQueue, watchAlong, streamSuggestions, screenWindow)` constructs every app into an `AppBundle` (apps, home widgets, photo library).
+8. `new PhoneShell(services, bundle)` and `new PhoneWindow(shell, Cfg)` build the UI, and the five windows (`PhoneWindow`, `UpdateChipWindow`, `PhotoWindow`, `VideoDebugWindow`, `AetherStreamScreenWindow`) are added to a Dalamud `WindowSystem`, the helper that tracks window open state and calls each window's draw methods.
+9. Background services start: `PhoneEmoteController`, `TimerNotifier`, `CalendarReminderService`, `ClockAlarmService`, `ReminderService`, `ScreenshotImportService`, character session watchers, and `CallHub`.
+10. Chat commands `/phone` and `/aetherphone` (see `AepConstants`), a server info bar entry (`IDtrBar`), and a context menu hook are registered.
+11. `PluginInterface.UiBuilder.Draw += windowSystem.Draw` wires the whole UI into Dalamud's ImGui frame.
 
 If any step throws, the catch block calls `TearDownPartialConstruction()` so a half-built plugin never leaks event subscriptions, then rethrows so Dalamud reports the load failure.
 
-A handful of statics are exposed for hot paths that would otherwise thread a parameter through dozens of constructors: `Plugin.Cfg`, `Plugin.Fonts`, `Plugin.Wallpapers`, `Plugin.Device`, `Plugin.Updates`, `Plugin.Instance`. Everything else flows through constructor injection.
+A handful of statics are exposed for hot paths that would otherwise thread a parameter through dozens of constructors: `Plugin.Cfg`, `Plugin.Fonts`, `Plugin.Wallpapers`, `Plugin.Device`, `Plugin.Updates`, `Plugin.PhotoWindow`, `Plugin.Instance`. Everything else flows through constructor injection.
 
 ## Service composition (PhoneServices.cs)
 
 `PhoneServices` is not a service locator or DI container. It is a single composition root: one class with `required` init-only properties, built exactly once by the static `PhoneServices.Build(...)` factory inside the `Plugin` constructor. `Build` news up every service in dependency order (notification pipeline, HTTP and caches, Aethernet session and API, market, music, telephony, and so on) and returns the filled object.
 
-Consumers never "look up" services at runtime. `AppRegistry.BuildDefault(services)` passes each app exactly the services it needs through its constructor, and `PhoneShell` does the same for shell components. `PhoneServices.Dispose()` tears everything down in reverse dependency order when the plugin unloads.
+Consumers never "look up" services at runtime. `AppRegistry.BuildDefault(...)` passes each app exactly the services it needs through its constructor, and `PhoneShell` does the same for shell components. `PhoneServices.Dispose()` tears everything down in reverse dependency order when the plugin unloads.
 
 `PhoneVisibility` (src/Aetherphone/Core/PhoneVisibility.cs) deserves a note: it is a one-field indirection that services use to ask "is the phone on screen right now?". The `Plugin` constructor binds it to the window state:
 
@@ -124,14 +125,16 @@ Other things `PhoneWindow` handles:
 
 - The window size comes from `PhoneSizeCatalog.SizeFor(width)`, where `width` is `Configuration.PhoneWidth` run through `PhoneBounds.ClampWidth`. Width is continuous (240 to 900, clamped further to fit the game window), height is always `width * PhoneSizeCatalog.AspectRatio`, and the size is re-applied every frame with `SizeCondition = ImGuiCond.Always`. The clamp is applied for display only and never written back to config, so shrinking the game window does not destroy a saved size.
 - `PreDraw` publishes the zoom for the frame: `UiScale.SetPhone(zoom)` for layout and `Plugin.Fonts.SetPhoneZoom(zoom)` for text, where `zoom = width / 360`. It also pushes `FramePadding`, `ItemSpacing`, `ItemInnerSpacing`, `ScrollbarSize` and `GrabMinSize` scaled by the zoom so native ImGui widgets track the phone.
-- Minimized mode swaps the size to `MinimizeTransition.MinimizedSize * zoom` (a small puck) and lerps the position between the saved maximized and minimized spots while the morph runs.
-- Landscape (camera app only) animates a blend between the portrait size and its transpose in `OrientedSize()`; the content is transposed, never rotated.
+- Minimized mode swaps the size to `MinimizeTransition.MinimizedSize`, a fixed 78 by 152 puck that deliberately ignores the phone zoom, and lerps the position between the saved maximized and minimized spots while the morph runs.
+- Landscape (requested through `AppLandscape` by the camera app and the AetherStream theater mode) animates a blend between the portrait size and its transpose in `OrientedSize()`; the content is transposed, never rotated.
 - Separate maximized and minimized positions persist in `Configuration.MaximizedPosition` / `MinimizedPosition` via `PersistPositions()`.
-- `Draw()` pushes the base font, reserves the full content region with `ImGui.Dummy`, wraps the region in a `Rect`, and hands it to `shell.Draw(device)`. Apart from the two windows below, nothing else in the codebase talks to the `Window` API.
+- `Draw()` pushes the base font, reserves the full content region with `ImGui.Dummy`, wraps the region in a `Rect`, and hands it to `shell.Draw(device)`. Apart from the four other windows below, nothing else in the codebase talks to the `Window` API.
 
 `UpdateChipWindow` (src/Aetherphone/Windows/UpdateChipWindow.cs) is a small chip shown under the phone when a plugin update is available.
 
 `PhotoWindow` (src/Aetherphone/Windows/PhotoWindow.cs) is the photo pop-out: an ordinary resizable Dalamud window that shows one image fitted to its content region. `PhotoZoomView` draws the button that opens it (leftmost in the control row), every fullscreen photo viewer returns that click to its caller, and the caller hands `Plugin.PhotoWindow.Open` a `Func<IDalamudTextureWrap?>` plus the `IPhoneApp` it came from. The texture source means the window re-resolves from the cache every frame instead of holding a wrap that eviction could free; the app supplies the window title, read as `DisplayName` every frame so it follows a language switch. It sizes itself to the image aspect the first frame the texture resolves, then leaves the size alone.
+
+`VideoDebugWindow` (src/Aetherphone/Windows/VideoDebugWindow.cs) is the video subsystem's decode debug panel, and `AetherStreamScreenWindow` (src/Aetherphone/Windows/AetherStreamScreenWindow.cs) is a resizable pop-out that mirrors the in-world AetherStream screen while media is playing.
 
 ## The shell layer (Core/Shell)
 
@@ -153,6 +156,8 @@ The shell's cast, all in `src/Aetherphone/Core/Shell/`:
 | `MinimizeTransition` / `MinimizeMorphView` | Phone-to-puck collapse state and rendering |
 | `RateLimitPill` | Small pill shown when the backend rate limiter pushes back |
 | `ShortcutRunPill` | Progress and stop button for the running shortcut, plus its outcome |
+| `CoinEarnPill` | Pill under the island announcing coins just earned |
+| `CoinEarnFloats` | Floating coin bursts drawn over the screen when coins land |
 
 ### Loading screen
 
@@ -160,12 +165,13 @@ When the window opens full size, `PhoneShell.OnOpened` calls `loading.BeginSessi
 
 ### Overlays and z-order
 
-The overlay model is plain ImGui: **later draw calls appear on top**, so the call order in `ShellOverlayCoordinator.DrawOverlays` is the z-order. From bottom to top: notification banner, dynamic island, shortcut run pill, rate limit pill, incoming call overlay, control center, share sheet, report overlay, confirm overlay, onboarding director, conduct gate, ban overlay. Two special cases sit outside that list:
+The overlay model is plain ImGui: **later draw calls appear on top**, so the call order in `ShellOverlayCoordinator.DrawOverlays` is the z-order. From bottom to top: notification banner, dynamic island, shortcut run pill, coin earn pill, rate limit pill, incoming call overlay, control center, share sheet, report overlay, confirm overlay, onboarding director, conduct gate, ban overlay, coin earn floats. Three special cases sit outside that list:
 
 - While `LoadingScreen.IsActive`, `DrawOverlays` draws the boot screen and returns early, so nothing else can appear above it.
+- While the account setup flow is active, `SetupOverlay` draws first and, once past boot, the frame short-circuits to just the ban and confirm overlays above it; everything else is skipped.
 - `DeviceChrome.SealScreen` always runs last. It draws the screen corner mask and the brightness veil on `ImGui.GetForegroundDrawList()`, which renders above every ImGui window, so no content can ever poke outside the rounded screen.
 
-The banner and the two pills all sit in the same strip under the island, so they take turns rather than stack: the notification banner wins, then `ShortcutRunPill`, then `RateLimitPill`. `ShortcutRunPill` is the only one of the three that takes input (its stop button), so it joins the banner in the pointer-capture term that `Assess` folds into `IslandCaptures`.
+The banner and the three pills all sit in the same strip under the island, so they take turns rather than stack: the notification banner wins, then `ShortcutRunPill`, then `CoinEarnPill`, and `RateLimitPill` draws only when all three are hidden. `ShortcutRunPill` is the only one of the four that takes input (its stop button), so it joins the banner in the pointer-capture term that `Assess` folds into `IslandCaptures`.
 
 `Assess` runs before content each frame and returns a `ShellOverlayState` (`Busy`, `ShieldBase`, and friends). `PhoneShell` wraps content drawing in `InputShield.Engage(...)` (src/Aetherphone/Core/Animation/InputShield.cs) so that when any overlay owns the pointer, the layers underneath stop reacting to hover and clicks even though they still draw.
 
@@ -187,11 +193,14 @@ The full path from Dalamud to one app, every frame while that app is open:
 var contentRect = ContentRect(screen, theme);
 try
 {
-    app.Draw(new PhoneContext(contentRect, content, navigation));
+    using (AppVisits.Enter(app.Id))
+    {
+        app.Draw(new PhoneContext(contentRect, content, navigation));
+    }
 }
 catch (Exception exception)
 {
-    AepLog.Error($"[shell] app-draw {app.Id} threw: {exception.Message}");
+    AepLog.Error(exception, $"[shell] app-draw {app.Id} threw");
     DrawAppFailure(contentRect, content);
 }
 ```
@@ -221,7 +230,7 @@ Apps do not see any of this: they receive a ready-made content `Rect` already in
 
 ## Configuration
 
-`Configuration` (src/Aetherphone/Configuration.cs) implements Dalamud's `IPluginConfiguration`: one serializable class holding every persisted setting, from window positions to market favorites to notification preferences, saved as JSON in the Dalamud config directory. `Save()` is thread-safe (marshals to the framework thread); `SaveNow()` saves synchronously and is reserved for shutdown paths like `PhoneWindow.PersistPositions`.
+`Configuration` (src/Aetherphone/Configuration.cs) implements Dalamud's `IPluginConfiguration`: one serializable class holding every persisted setting, from window positions to market favorites to notification preferences, saved as JSON in the Dalamud config directory. `Save()` is thread-safe (marshals to the framework thread); `SaveNow()` writes synchronously on the spot, used on shutdown paths like `PhoneWindow.PersistPositions` and wherever losing the change would hurt (`PhotosApp` saves album edits with it).
 
 Migrations happen in two stages at boot:
 
@@ -232,7 +241,7 @@ See [State and persistence](state-and-persistence.md) for per-character data and
 
 ## Core directory map
 
-One line per subfolder of `src/Aetherphone/Core/`. Root-level files not listed here: `AepConstants.cs` (name, commands, URLs), `AepLog.cs` (logging wrapper), `PollCadence.cs` and `RealtimeSignalBus.cs` (refresh pacing and realtime fan-out), `AudioOutputFactory.cs`, `FontService.cs`, `FrameworkTicker.cs`, `PhoneServices.cs`, `PhoneVisibility.cs`, `Rect.cs`, `ConfigMigrations.cs`.
+One line per subfolder of `src/Aetherphone/Core/`. Root-level files not listed here: `AepConstants.cs` (name, commands, URLs), `AepLog.cs` (logging wrapper), `PollCadence.cs` and `RealtimeSignalBus.cs` (refresh pacing and realtime fan-out), `AudioOutputFactory.cs`, `FontService.cs`, `FrameworkTicker.cs`, `NamePlateStripper.cs`, `PhoneServices.cs`, `PhoneVisibility.cs`, `Rect.cs`, `SupportInfo.cs`, `ConfigMigrations.cs`.
 
 | Folder | What lives there |
 | --- | --- |
@@ -242,8 +251,10 @@ One line per subfolder of `src/Aetherphone/Core/`. Root-level files not listed h
 | Announcements | Deep-link launcher state for the admin Announcements app |
 | Apps | App contracts and plumbing: `IPhoneApp`, `AppRegistry`, `NavigationStack`, launchers |
 | Calendar | Custom calendar event records |
+| Casino | Casino game stores and rules: rooms, tables, rounds, spins, per-game rules, the verifier |
 | Changelog | In-app changelog entries and version data |
 | Clock | Alarm and world clock records |
+| Coins | Coin wallet: balance and ledger store, catalog, earn notifier, game session tracker |
 | Collections | Collectible catalog service and unlock models |
 | Conduct | Per-app conduct rules acknowledgement gate |
 | Confirm | `ConfirmService` behind the shell confirmation dialog |
@@ -255,13 +266,15 @@ One line per subfolder of `src/Aetherphone/Core/`. Root-level files not listed h
 | Emoji | Twemoji catalog, atlas images, and text scanner |
 | Emote | `PhoneEmoteController`: plays the in-game phone emote while the phone is up |
 | Game | Game data access: `GameData`, `CharacterWatch`, Eorzea time, retainers |
+| GameChat | Game chat bridge: capture, inbox, tabs, archive, channels, send |
 | Games | Mini-game statistics store |
 | Health | Wellness tracker models and store |
 | Home | Home layout model: `AppInstaller`, `AppGate`, grid solver, tiles |
+| Housing | Open housing plot listings via PaissaDB and the China region source (house.ffxiv.cyou): districts, watches, reminders |
 | Input | `DragTracker` pointer gesture helper |
 | Inventory | Inventory capture, model, and search |
 | Jobs | Gearset reading, job categories, custom colors |
-| Linkpearl | Game chat bridge: tells and linkshells into the phone |
+| Linkpearl | Legacy chat records: `ChatLine` and the on-disk `MessageArchive`; the chat bridge moved to GameChat |
 | Localization | `Loc`/`L` string catalog behind the nine language JSONs |
 | Lodestone | Lodestone character lookup and portrait service |
 | Maps | Map data and location sharing |
@@ -282,12 +295,14 @@ One line per subfolder of `src/Aetherphone/Core/`. Root-level files not listed h
 | Report | Central report popup service |
 | Sharing | `ShareService` and share item types |
 | Shell | The shell layer covered above |
+| Shortcuts | Shortcuts app data: entries, macros, share codes, the runner, plugin command catalog |
 | Social | Shared social app models: feeds, reactions, mentions, tagging |
 | Songs | Song search, audio streaming, playlists |
 | Telephony | `CallHub` voice calls and call audio |
 | Theme | `PhoneTheme`, accents, chassis metrics and geometry |
 | Updates | Plugin update check against the manifest |
 | Venues | Venue listing service and Lifestream bridge |
+| Video | mpv video engine, in-world screen, AetherStream queue, watch-along session |
 | Wallet | Currency reading |
 | Wallpapers | Wallpaper library, crops, image cache |
 | YellowPages | Ads app stores, categories, chat bridge |
@@ -298,7 +313,7 @@ One line per subfolder of `src/Aetherphone/Core/`. Root-level files not listed h
 - **`Window.Size` scales by `UiScale.Global`, `Window.Position` does not.** Use `Global` here, not `Current`: the size handed to `Window.Size` already carries the phone zoom, so `Current` would apply it twice. Mixing these up puts the window in the wrong place at any UI scale other than 100% or any phone size other than 360. See the centering math in `PhoneWindow.PreDraw`.
 - **An app that throws in `Draw` does not crash the plugin, but it logs every frame.** `ShellScreenPainter.PaintApp` catches per frame and paints a failure message, so a broken app looks "stuck" while flooding the log. Check the Dalamud log for `[shell] app-draw` lines.
 - **Nothing outdraws `DeviceChrome.SealScreen`.** It renders the corner mask and brightness veil on ImGui's foreground draw list, which sits above all windows. If your overlay must be visible, it has to be drawn inside `ShellOverlayCoordinator.DrawOverlays` before `SealScreen`, and content must stay inside the screen rect.
-- **`Configuration.Save()` is asynchronous from non-framework threads.** It fire-and-forgets onto the framework thread. In teardown paths where the plugin may be gone before that runs, use `SaveNow()` as `PhoneWindow.PersistPositions` does.
+- **`Configuration.Save()` is asynchronous from non-framework threads.** It fire-and-forgets onto the framework thread. When the plugin may be gone before that runs, or losing the change would hurt, use the synchronous `SaveNow()` as `PhoneWindow.PersistPositions` and `PhotosApp`'s album edits do.
 - **A `FrameworkTicker` with an `AppGate` silently does nothing while its app is uninstalled.** If your periodic service "never runs", check the gate id passed to `AppInstaller.Gate` before debugging the timer.
 - **The boot screen holds up to 60 seconds for fonts.** `BootSequence` waits at the emblem until `Plugin.Fonts.Ready`, capped by `BootTiming.FontWaitCapSeconds`. A long first boot usually means the font atlas is still building, not a hang.
 

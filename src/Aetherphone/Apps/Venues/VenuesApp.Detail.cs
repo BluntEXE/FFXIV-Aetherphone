@@ -217,7 +217,7 @@ internal sealed partial class VenuesApp
         var openRect = new Rect(new Vector2(cursor, origin.Y), new Vector2(cursor + slotWidth, origin.Y + height));
         if (ActionPill(openRect, FontAwesomeIcon.Globe, Loc.T(L.Venues.Open), !hasTeleport))
         {
-            UrlActions.OpenInBrowser(venue.Url);
+            UrlActions.AskThenOpen(venue.Url);
         }
 
         cursor += slotWidth + gap;
@@ -227,7 +227,7 @@ internal sealed partial class VenuesApp
                 new Vector2(cursor + slotWidth, origin.Y + height));
             if (ActionPill(discordRect, FontAwesomeIcon.Headset, Loc.T(L.Venues.Discord), false))
             {
-                UrlActions.OpenInBrowser(venue.DiscordUrl!);
+                UrlActions.AskThenOpen(venue.DiscordUrl!);
             }
         }
 

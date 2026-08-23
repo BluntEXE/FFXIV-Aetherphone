@@ -399,7 +399,8 @@ internal sealed class AppSkin
         Field(label, id, ref value, maxLength, multiline,
             multiline ? Metrics.Size.FieldMultiline : Metrics.Size.FieldHeight);
 
-    public void Field(string label, string id, ref string value, int maxLength, bool multiline, float heightUnscaled)
+    public void Field(string label, string id, ref string value, int maxLength, bool multiline, float heightUnscaled,
+        ImGuiInputTextFlags extraFlags = ImGuiInputTextFlags.None)
     {
         var scale = UiScale.Current;
         using (ImRaii.PushColor(ImGuiCol.Text, Palette.MutedInk))
@@ -426,7 +427,7 @@ internal sealed class AppSkin
             }
             else
             {
-                ImGui.InputText(id, ref value, maxLength, ImGuiInputTextFlags.None);
+                ImGui.InputText(id, ref value, maxLength, extraFlags);
             }
         }
 
@@ -525,14 +526,18 @@ internal sealed class AppSkin
 
     public static void Icon(ImDrawListPtr drawList, Vector2 center, string glyph, Vector4 color, float scale)
     {
-        float fontSize;
-        Vector2 size;
+        float targetSize;
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
-            fontSize = ImGui.GetFontSize() * scale;
-            size = ImGui.CalcTextSize(glyph) * scale;
+            targetSize = ImGui.GetFontSize() * scale;
         }
 
-        drawList.AddText(UiBuilder.IconFont, fontSize, center - size * 0.5f, ImGui.GetColorU32(color), glyph, 0f);
+        using (Plugin.Fonts.PushIcon(targetSize, glyph))
+        {
+            var font = ImGui.GetFont();
+            var ratio = targetSize / ImGui.GetFontSize();
+            var size = ImGui.CalcTextSize(glyph) * ratio;
+            drawList.AddText(font, targetSize, center - size * 0.5f, ImGui.GetColorU32(color), glyph, 0f);
+        }
     }
 }

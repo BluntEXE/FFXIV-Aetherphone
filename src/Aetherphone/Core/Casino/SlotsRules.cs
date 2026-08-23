@@ -20,6 +20,8 @@ internal static class SlotsRules
 
     public const long PayoutCapMultiple = 200;
 
+    public const long JackpotChipsPerHit = 150_000_000;
+
     public const int FreeSpinCap = 40;
 
     public const int RetriggerSpins = 5;

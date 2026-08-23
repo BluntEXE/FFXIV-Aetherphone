@@ -3,6 +3,12 @@ contact_links:
   - name: Questions & discussion
     url: https://github.com/XeldarAlz/FFXIV-Aetherphone/discussions
     about: Ask a question, share a setup, or kick around an idea before filing an issue.
+  - name: Discord
+    url: https://discord.gg/3HbJCscMyS
+    about: The fastest place to get help, report something small, or hang out.
+  - name: Translate Aetherphone
+    url: https://github.com/XeldarAlz/FFXIV-Aetherphone/blob/master/docs/translating.md
+    about: Improve one of the nine language files in the browser; no code, no build, no git.
   - name: Security disclosure
     url: https://github.com/XeldarAlz/FFXIV-Aetherphone/security/advisories/new
     about: Report a security issue privately.

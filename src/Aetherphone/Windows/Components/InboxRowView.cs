@@ -78,7 +78,7 @@ internal static class InboxRowView
         if (row.IsTell)
         {
             AvatarView.Draw(drawList, center, radius, theme.Accent, Initials.Of(row.Title), 1.2f,
-                lodestone.Avatar(row.Title, row.World), 32);
+                lodestone.Avatar(row.Title, row.World, radius * 2f), 32);
             return;
         }
 

@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Aetherphone.Core.Localization;
 
 namespace Aetherphone.Core.Video;
 
@@ -160,7 +161,7 @@ internal sealed class VideoPlayer : IDisposable
                 return;
             case MpvEndReason.Failed:
                 State = VideoPlaybackState.Failed;
-                LastError = detail ?? engine.LastError ?? "This video could not be played.";
+                LastError = detail ?? engine.LastError ?? Loc.T(L.AetherStream.PlaybackFailed);
                 Progress = default;
                 Failed?.Invoke(LastError);
                 return;

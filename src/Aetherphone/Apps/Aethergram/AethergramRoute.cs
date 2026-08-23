@@ -6,7 +6,6 @@ internal enum AethergramTab
 {
     Home,
     Search,
-    Activity,
     Profile,
 }
 
@@ -29,6 +28,7 @@ internal enum AethergramScreen
     Saved,
     Encryption,
     Hashtag,
+    Activity,
 }
 
 internal readonly record struct AethergramRoute(
@@ -44,6 +44,7 @@ internal readonly record struct AethergramRoute(
     public static readonly AethergramRoute FollowRequests = new(AethergramScreen.FollowRequests);
     public static readonly AethergramRoute Saved = new(AethergramScreen.Saved);
     public static readonly AethergramRoute Encryption = new(AethergramScreen.Encryption);
+    public static readonly AethergramRoute Activity = new(AethergramScreen.Activity);
     public static AethergramRoute Detail(string postId) => new(AethergramScreen.Detail, postId);
     public static AethergramRoute Profile(string userId) => new(AethergramScreen.Profile, userId);
     public static AethergramRoute Thread(string userId) => new(AethergramScreen.Thread, userId);

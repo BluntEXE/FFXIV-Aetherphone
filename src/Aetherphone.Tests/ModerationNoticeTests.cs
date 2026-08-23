@@ -102,6 +102,32 @@ public sealed class ModerationNoticeTests
     }
 
     [Fact]
+    public void CosmeticNoticesArriveWithoutBlockingThePhone()
+    {
+        Assert.False(ModerationNoticeText.IsBlocking(Notice(kind: ModerationNoticeKinds.FrameGranted)));
+        Assert.False(ModerationNoticeText.IsBlocking(Notice(kind: ModerationNoticeKinds.FrameRevoked)));
+        Assert.True(ModerationNoticeText.IsCosmeticGrant(Notice(kind: ModerationNoticeKinds.FrameGranted)));
+        Assert.True(ModerationNoticeText.IsCosmeticGrant(Notice(kind: ModerationNoticeKinds.BadgeRevoked)));
+        Assert.False(ModerationNoticeText.IsCosmeticGrant(Notice(kind: ModerationNoticeKinds.Warning)));
+    }
+
+    [Fact]
+    public void AFrameNoticeSaysItIsAFrameAndWhereToWearIt()
+    {
+        Assert.Equal("New avatar frame", ModerationNoticeText.Title(Notice(kind: ModerationNoticeKinds.FrameGranted)));
+        Assert.Equal("Avatar frame removed", ModerationNoticeText.Title(Notice(kind: ModerationNoticeKinds.FrameRevoked)));
+
+        var granted = ModerationNoticeText.Body(Notice(kind: ModerationNoticeKinds.FrameGranted, detail: "frame-1"));
+        Assert.Contains("Aether Coin", granted);
+        Assert.Contains("Items", granted);
+        Assert.DoesNotContain("badge", granted, StringComparison.OrdinalIgnoreCase);
+
+        var revoked = ModerationNoticeText.Body(Notice(kind: ModerationNoticeKinds.FrameRevoked, detail: "frame-1"));
+        Assert.Contains("Discord", revoked);
+        Assert.DoesNotContain("badge", revoked, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void TheReporterThankYouCreditsTheModerationTeam()
     {
         var body = ModerationNoticeText.Body(Notice(kind: ModerationNoticeKinds.ReportOutcome));

@@ -1,6 +1,6 @@
 # Mini-games framework
 
-This page explains how the Games app hosts its mini-games and how to build a new one with the shared framework: the `IMiniGame` contract, the juice helpers (screen shake, hit-stop, particles, animated numbers), the scoring and daily-streak plumbing, and the rules that only apply inside games. Read it after [app-framework.md](app-framework.md), when you want to add or change a mini-game. Everything here is client-side; the games never talk to the Aethernet backend.
+This page explains how the Games app hosts its mini-games and how to build a new one with the shared framework: the `IMiniGame` contract, the juice helpers (screen shake, hit-stop, particles, animated numbers), the scoring and daily-streak plumbing, and the rules that only apply inside games. Read it after [app-framework.md](app-framework.md), when you want to add or change a mini-game. The mini-games themselves are fully client-side and never talk to the Aethernet backend; the `GamesApp` hub around them does, for the coin economy (play-session reporting, the server-picked featured game, coin awards), as described below.
 
 ## Key files
 
@@ -13,7 +13,7 @@ This page explains how the Games app hosts its mini-games and how to build a new
 | src/Aetherphone/Apps/Games/Framework/GameJuice.cs | Entrance progress, stagger, and pop-in easing |
 | src/Aetherphone/Apps/Games/Framework/FeedbackFx.cs | Shake, hit-stop, flash, shockwave rings, floating text |
 | src/Aetherphone/Apps/Games/Framework/ParticleSystem.cs | Pooled particles: bursts, sparkles, streaks, confetti |
-| src/Aetherphone/Apps/Games/Framework/RollingValue.cs | Animated number that rolls toward a target and pops |
+| src/Aetherphone/Core/Animation/RollingValue.cs | Animated number that rolls toward a target and pops (shared animation infrastructure, not games-only) |
 | src/Aetherphone/Apps/Games/Framework/GameHud.cs | Score pills, restart button, accent buttons |
 | src/Aetherphone/Apps/Games/Framework/GameOverlay.cs | End-of-round result card with confetti on a new best |
 | src/Aetherphone/Apps/Games/Framework/GameGrid.cs | Centered cell-grid math for board games |
@@ -27,8 +27,11 @@ This page explains how the Games app hosts its mini-games and how to build a new
 The whole arcade is one phone app. `GamesApp` implements `IPhoneApp` (the contract every phone app fulfils, see [app-framework.md](app-framework.md)) and is registered once in `AppRegistry.BuildDefault` in src/Aetherphone/Core/Apps/AppRegistry.cs:
 
 ```csharp
-apps.Add(new GamesApp(services.GameStats, services.GameData, services.Textures));
+apps.Add(new GamesApp(services.GameStats, services.GameData, services.Textures, services.Coins,
+    services.CoinSessions));
 ```
+
+The last two arguments are the coin plumbing: `services.Coins` (the wallet store) and `services.CoinSessions` (the play-session tracker). What the hub does with them is described below.
 
 Inside, `GamesApp` owns a plain `IMiniGame[]` array built in its constructor. That array is the registry: a game exists because a line constructs it there. Most games have parameterless constructors; `TriviaApp` shows that a game can take services if `GamesApp` passes them through.
 
@@ -41,22 +44,30 @@ internal interface IMiniGame : IDisposable
     string Title { get; }
     string Genre { get; }
     Vector4 Accent => AppAccents.For(Id);
+    bool RunsOnAClock => false;
     void Open();
     void Close();
     void Draw(in GameContext context);
 }
 ```
 
-The launcher groups games into sections by `Genre`, draws a row per game with its accent tile, and shows a featured hero card. The featured game rotates daily: `RebuildLayout` computes `featuredIndex = GameStatsStore.TodayIndex * FeaturedStep % games.Length` and stores that game's id in `stats.DailyGameId`, which makes it the daily challenge.
+`RunsOnAClock` defaults to false. A game whose simulation advances on a timer overrides it to true so the hub can fade a Paused veil over it while the phone is unfocused (see the focus gate below); a turn-based game leaves the default and simply stands still.
+
+The launcher groups games into sections by `Genre`, draws a row per game with its accent tile, and shows a featured hero card. The server picks the featured game when it can: `RebuildLayout` first computes the daily-rotation fallback `featuredIndex = GameStatsStore.TodayIndex * FeaturedStep % games.Length`, then overrides it when `coins.Wallet?.FeaturedGameId` (a field on the coin wallet DTO in src/Aetherphone/Core/Aethernet/Contracts/CoinDtos.cs) names a game in the array. Whichever wins, its id lands in `stats.DailyGameId`, which makes it the daily challenge.
 
 Navigation uses a two-route `ViewRouter<GameRoute>` (`Launcher` and `Playing`). Tapping a row calls `OpenGame`, which sets `currentGame`, calls `game.Open()`, and pushes `Playing`. The back button pops the route, and `GamesApp.Draw` calls `CloseCurrentGame` (which calls `game.Close()`) once the transition lands back on the launcher.
 
-While a game is active, `GamesApp.DrawActiveGame` clamps the frame delta and hands the game everything it needs as a `GameContext`:
+The hub also owns the coin plumbing that wraps every game. `OpenGame` and `CloseCurrentGame` report the play session to the backend through `CoinGameSessionTracker` (`GameOpened` and `GameClosed`), a chip in the in-game header counts the open session toward the server's earning thresholds, and `GamesApp.Draw` polls `coinSessions.TakeAward` to spawn a floating coin reward when the server grants one. None of this reaches the games: an `IMiniGame` only ever sees its `GameContext`.
+
+While a game is active, `GamesApp.DrawActiveGame` clamps the frame delta, zeroes it when the game should not be simulating, and hands the game everything it needs as a `GameContext`:
 
 ```csharp
-var deltaSeconds = MathF.Min(ImGui.GetIO().DeltaTime, 0.1f);
-game.Draw(new GameContext(body, context.Theme, stats, deltaSeconds));
+var attentive = GameFocus.Active;
+var frameSeconds = MathF.Min(ImGui.GetIO().DeltaTime, 0.1f);
+game.Draw(new GameContext(body, context.Theme, stats, attentive ? frameSeconds : 0f));
 ```
+
+`GameFocus.Active` (src/Aetherphone/Apps/Games/Framework/GameFocus.cs) is false while the phone window is unfocused or the game's own text input is active, so an unattended game receives `DeltaSeconds` of zero and stands still. On top of that, a game whose `RunsOnAClock` is true gets the Paused veil faded in over its board so the frozen clock reads as a pause.
 
 `GameContext` carries four fields: `Body` (the `Rect` the game may draw in), `Theme` (the current `PhoneTheme`), `Stats` (the `GameStatsStore`), and `DeltaSeconds`. Because the phone UI is Dear ImGui (an immediate-mode UI where everything is redrawn from scratch every frame), `Draw` runs every frame and the game keeps its own state in fields between frames.
 
@@ -71,7 +82,7 @@ game.Draw(new GameContext(body, context.Theme, stats, deltaSeconds));
 
 ## The juice framework
 
-"Juice" is the game-feel layer: exaggerated visual feedback (shake, freeze-frames, particles, popping numbers) that makes inputs feel physical. All of it lives in src/Aetherphone/Apps/Games/Framework and is shared by every game.
+"Juice" is the game-feel layer: exaggerated visual feedback (shake, freeze-frames, particles, popping numbers) that makes inputs feel physical. It lives in src/Aetherphone/Apps/Games/Framework and is shared by every game, with one exception: `RollingValue` sits with the shared animation code in src/Aetherphone/Core/Animation because the rest of the phone uses it too.
 
 ### FeedbackFx: shake, hit-stop, flash, rings, floating text
 
@@ -138,11 +149,11 @@ GameHud.ScorePill(center, Loc.T(L.Games.Score), ref scoreRoll, board.Score, Acce
 
 ## The motion exception
 
-The rest of the phone uses critically damped motion: springs that settle without overshooting (see `Spring.Step` in src/Aetherphone/Core/Animation/Spring.cs). Mini-games are the one place allowed to bounce. `Easing.EaseOutBack` (an easing curve that overshoots its target and settles back) is defined in src/Aetherphone/Core/Animation/Easing.cs but is referenced only from files under src/Aetherphone/Apps/Games. Keep it that way: inside a game, reach for `GameJuice.PopIn`; outside the Games app, use springs.
+The rest of the phone uses critically damped motion: springs that settle without overshooting (see `Spring.Step` in src/Aetherphone/Core/Animation/Spring.cs). Games are the place allowed to bounce. `Easing.EaseOutBack` (an easing curve that overshoots its target and settles back) is defined in src/Aetherphone/Core/Animation/Easing.cs and is referenced only from files under src/Aetherphone/Apps/Games plus two Casino cabinet sites (BingoCabinet.cs and BingoCardArt.cs). Keep it that way: bouncy easing belongs to games and casino cabinets only. Inside a game, reach for `GameJuice.PopIn`; everywhere else, use springs.
 
 ## Scoring, streaks, and the daily challenge
 
-`GameStatsStore` (src/Aetherphone/Core/Games/GameStatsStore.cs) is the only persistence a game touches. It wraps `Configuration` (src/Aetherphone/Configuration.cs), which stores a `List<GameStatRecord>` plus `DailyChallengeStreak` and `DailyChallengeLastDay`. See [state-and-persistence.md](state-and-persistence.md) for how `Configuration` is saved.
+`GameStatsStore` (src/Aetherphone/Core/Games/GameStatsStore.cs) is the only persistence an individual game touches; the coin traffic described earlier belongs to the hub, never to a game. It wraps `Configuration` (src/Aetherphone/Configuration.cs), which stores a `List<GameStatRecord>` plus `DailyChallengeStreak` and `DailyChallengeLastDay`. See [state-and-persistence.md](state-and-persistence.md) for how `Configuration` is saved.
 
 | Member | Semantics |
 | --- | --- |
@@ -157,16 +168,16 @@ Stat ids may carry a difficulty suffix, for example `sudoku.easy` or `minesweepe
 
 ## Worked example: a minimal game
 
-A complete tap-the-arena game showing the standard frame shape. Real games split simulation into a `*Board` and drawing into a `*Renderer`; this one is small enough to skip that. The `Title` uses a literal here; a real game adds a `LocString` to L.cs instead.
+A complete tap-the-arena game showing the standard frame shape. Real games split simulation into a `*Board` and drawing into a `*Renderer`; this one is small enough to skip that. The `Title` uses a literal here; a real game adds a `LocString` to L.cs instead. Because the round runs on a 15 second countdown, the game overrides `RunsOnAClock` to true: the hub already zeroes its delta while the phone is unfocused, and this flag additionally fades the Paused veil over the board so the stalled timer reads as a pause rather than a hang.
 
 ```csharp
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Games.Tap;
 
@@ -186,6 +197,7 @@ internal sealed class TapApp : IMiniGame
     public string Title => "Tap";
     public string Genre => Loc.T(L.Games.GenreArcade);
     public Vector4 Accent => AppAccents.For(Id);
+    public bool RunsOnAClock => true;
 
     public void Open()
     {
@@ -297,7 +309,7 @@ Games are named for what they do: Whack, Snake, Stack, Water Sort, Crystal Drop,
 - **`GameOverlay` is a single static instance.** Its celebration and count-up state is static and resets when the overlay has not been drawn for 0.25 seconds or its progress moves backwards. One game at a time is fine (the router guarantees that); drawing it twice in one frame is not.
 - **Fixed pools drop silently.** `FeedbackFx` caps at 32 floating texts and 12 rings, `ParticleSystem` at its constructor capacity (512 default). Never build gameplay logic that depends on an emitted effect existing.
 - **Always submit through `GameStatsStore`, even for losing runs.** `SubmitScore` calls `RecordDailyPlay` before rejecting a non-positive or non-best score, so a zero-point run still completes the daily challenge. Bypassing the store (or only submitting on a new best) silently breaks the streak.
-- **Use `GameContext.DeltaSeconds`, not `ImGui.GetIO().DeltaTime`.** `GamesApp` clamps the delta to 0.1 seconds before building the context so a hitched frame cannot teleport the simulation. Reading the IO delta directly loses that protection.
+- **Use `GameContext.DeltaSeconds`, not `ImGui.GetIO().DeltaTime`.** `GamesApp` clamps the delta to 0.1 seconds before building the context so a hitched frame cannot teleport the simulation, and it zeroes the delta while `GameFocus.Active` is false. Reading the IO delta directly loses both protections: a hitch teleports the game and it keeps simulating while the phone is unfocused.
 - **Difficulty-suffixed stat ids need launcher support.** Stats keyed like `sudoku.easy` prefix-match for the daily via `GameStatsStore`, but `GamesApp.StatValue` picks one concrete record to display, so a new difficulty tier means updating that switch too.
 
 ## Related docs

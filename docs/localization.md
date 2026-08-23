@@ -61,7 +61,7 @@ The roster lives in the `Languages` class in src/Aetherphone/Core/Localization/L
 
 The JSON files are flat objects: one `"group.key": "value"` pair per line. `StringCatalog.Flatten` can walk nested objects, but the shipped files are flat and should stay that way. The files are copied next to the plugin binary by the `Localization\*.json` content entry in src/Aetherphone/Aetherphone.csproj, and `Plugin.InitializeLocalization` (src/Aetherphone/Plugin.cs) points `Loc` at that folder.
 
-About en.json: `Loc.Apply` (src/Aetherphone/Core/Localization/Loc.cs) gives English `StringCatalog.Empty` instead of loading en.json, so every English string resolves through the `Source` field in L.cs. The file still exists as the reference copy that translators and reviewers diff against, and it must stay in lockstep with L.cs like every other file. Note that `LocAudit` skips en.json entirely, so nothing warns you when it drifts.
+About en.json: `Loc.Apply` (src/Aetherphone/Core/Localization/Loc.cs) gives English `StringCatalog.Empty` instead of loading en.json, so every English string resolves through the `Source` field in L.cs. The file still exists as the reference copy that translators and reviewers diff against, and it must stay in lockstep with L.cs like every other file. `LocAudit` skips en.json entirely, so nothing warns you when it drifts, and it has drifted: nine values in en.json currently differ from their L.cs `Source` text (for example `velvet.handleLabel` is "Handle" in L.cs but "Username" in en.json, and `casino.jackpot.unit` is "coin" versus "coins"). When the two disagree, L.cs is authoritative: players see the L.cs text, and the fix is to bring en.json back in line, never the reverse.
 
 ## The sync rule
 
@@ -69,7 +69,7 @@ This is the iron rule of the pipeline:
 
 **Every new, renamed, or deleted key changes L.cs plus all nine JSON files in the same commit.**
 
-All nine files carry exactly the same keys, and almost everywhere in the same order: the same key generally sits on the same line number in every file (for example `"common.loading"` is line 198 in en.json, de.json, and ja.json alike). One historical wrinkle breaks perfect alignment inside the `changelog.r0980.*` block, where en.json and pt.json slot `changelog.r0980.33` after `changelog.r0980.12` while the other seven keep numeric order. Keep the property everywhere else: when you add a key, add it at the same position in all nine files.
+All nine files carry exactly the same keys, and almost everywhere in the same order: the same key generally sits on the same line number in every file (for example `"common.loading"` is line 199 in all nine files). One historical wrinkle breaks perfect alignment inside the `changelog.r0980.*` block, where en.json and pt.json slot `changelog.r0980.33` after `changelog.r0980.12` while the other seven keep numeric order. Keep the property everywhere else: when you add a key, add it at the same position in all nine files.
 
 Two safety nets exist, and neither replaces the rule:
 
@@ -94,7 +94,7 @@ Aetherphone draws with Dear ImGui, an immediate-mode UI library: nothing is reta
 
 ### Language selection and switching
 
-- First boot: `Plugin.DetectLanguage` (src/Aetherphone/Plugin.cs) maps the FFXIV client language (German, French, Japanese) to a code, then tries the OS UI language against `Languages.All`, then falls back to English. The result persists in `Configuration.Language`.
+- First boot: `Plugin.DetectLanguage` (src/Aetherphone/Plugin.cs) maps the FFXIV client language to a code: the Chinese Simplified client (matched via `GameData.ChineseSimplifiedClientLanguage`) maps to `zh` first, then German, French, and Japanese map to theirs. Failing that, it tries the OS UI language against `Languages.All`, then falls back to English. The result persists in `Configuration.Language`.
 - Manual switch: the Settings app's language page (src/Aetherphone/Apps/Settings/Pages/LanguagePage.cs) saves the new code, calls `Loc.SetLanguage`, then `Plugin.Fonts.OnLanguageChanged()` (font atlas rebuild, see below) and `Plugin.OnLanguageChanged()` (re-resolves the few strings that live outside the frame loop, such as chat command help messages).
 - `Languages.Resolve` returns English for any unknown code, so a stale or corrupt config value cannot crash localization.
 

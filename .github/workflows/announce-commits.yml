@@ -20,17 +20,21 @@ jobs:
             exit 0
           fi
 
-          count=$(jq '.commits | length' "$GITHUB_EVENT_PATH")
+          # release.yml and update-issue-template-versions.yml push their bumps
+          # with a PAT, and PAT pushes do cascade-trigger this workflow, so drop
+          # the bot's own commits instead of announcing them.
+          count=$(jq '[.commits[] | select(.author.name != "github-actions[bot]")] | length' "$GITHUB_EVENT_PATH")
           if [ "$count" -eq 0 ]; then
-            echo 'No new commits in this push (branch delete or force push); skipping.'
+            echo 'No human commits in this push (bot bump, branch delete, or force push); skipping.'
             exit 0
           fi
 
           jq -n --arg icon "$ICON" --slurpfile e "$GITHUB_EVENT_PATH" '
             $e[0] as $ev
+            | ($ev.commits | map(select(.author.name != "github-actions[bot]"))) as $human
             | ($ev.ref | sub("^refs/heads/"; "")) as $branch
-            | ($ev.commits | length) as $total
-            | ($ev.commits[:10] | map(
+            | ($human | length) as $total
+            | ($human[:10] | map(
                 "[`" + .id[:7] + "`](" + .url + ") "
                 + (.message | split("\n")[0] | gsub("—"; "-") | gsub("–"; "-") | .[:120])
                 + " - " + .author.name
@@ -45,11 +49,11 @@ jobs:
                 embeds: [{
                   author: { name: "Aetherphone", url: $ev.repository.html_url, icon_url: $icon },
                   title: ((if $total == 1 then "1 new commit" else (($total | tostring) + " new commits") end) + " on " + $branch),
-                  url: (if $total == 1 then $ev.head_commit.url else $ev.compare end),
+                  url: (if $total == 1 then ($human[0].url) else $ev.compare end),
                   description: ($lines | join("\n")),
                   color: 5814783,
                   footer: { text: "Aetherphone", icon_url: $icon },
-                  timestamp: $ev.head_commit.timestamp
+                  timestamp: ($human | last | .timestamp)
                 }]
               }
           ' > payload.json

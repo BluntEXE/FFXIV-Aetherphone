@@ -331,7 +331,7 @@ internal sealed class VelvetClient
         return net.GetAsync($"/velvet/threads/{Uri.EscapeDataString(userId)}/typing", AethernetJsonContext.Default.VelvetTypingDto, token, null, onFailure);
     }
 
-    public Task<bool> HeartbeatAsync(int? utcOffsetMinutes, string region, bool isLalafell, CancellationToken token,
+    public Task<bool> HeartbeatAsync(int? utcOffsetMinutes, string region, bool? isLalafell, CancellationToken token,
         Action<AepFailure>? onFailure = null)
     {
         var path = new System.Text.StringBuilder("/velvet/heartbeat?");
@@ -341,7 +341,11 @@ internal sealed class VelvetClient
         }
 
         path.Append("region=").Append(Uri.EscapeDataString(region));
-        path.Append("&lalafell=").Append(isLalafell ? "true" : "false");
+        if (isLalafell is { } reported)
+        {
+            path.Append("&lalafell=").Append(reported ? "true" : "false");
+        }
+
         return net.SendAsync(HttpMethod.Post, path.ToString(), token, null, onFailure);
     }
 

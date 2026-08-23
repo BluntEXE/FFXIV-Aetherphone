@@ -38,6 +38,7 @@ internal sealed class WatchAlongSession : IDisposable
     private const long AutoReplayInitialDelayMilliseconds = 10 * 1000;
     private const long AutoReplayMaxDelayMilliseconds = 60 * 1000;
     private const int MaxSharedQueueEntries = 32;
+    private const int MaxLocalFileMapEntries = 64;
 
     private const float ScreenPositionDriftTolerance = 0.1f;
     private const float ScreenYawDriftTolerance = 0.02f;
@@ -65,8 +66,11 @@ internal sealed class WatchAlongSession : IDisposable
     private volatile bool publishRequested;
 
     private string? viewingUrl;
+    private string? viewingPlaybackUrl;
     private string? rejectedRemoteUrl;
     private string? autoReplayUrl;
+    private string? mismatchCandidatePath;
+    private long mismatchCandidateSizeBytes;
     private long autoReplayDelayMilliseconds;
     private long autoReplayNextAtTicks;
     private CallControl? lastStateMessage;
@@ -115,6 +119,11 @@ internal sealed class WatchAlongSession : IDisposable
     internal IReadOnlyList<HostQueueItem> HostQueue { get; private set; } = [];
 
     internal VideoQueueEntry? ViewingEntry { get; private set; }
+
+    internal LocalMediaIdentity? PendingLocalMedia { get; private set; }
+    internal bool LocalMediaMismatch { get; private set; }
+    internal bool HasMismatchCandidate => mismatchCandidatePath is not null;
+    internal bool IsLocatingLocalMedia { get; private set; }
 
     internal bool IsAwaitingApproval { get; private set; }
     internal IReadOnlyList<PendingJoinRequest> PendingRequests { get; private set; } = [];
@@ -179,8 +188,10 @@ internal sealed class WatchAlongSession : IDisposable
         {
             video.Stop();
             viewingUrl = null;
+            viewingPlaybackUrl = null;
             ViewingEntry = null;
             lastStateMessage = null;
+            ClearLocalMediaPrompt();
         }
 
         queue.Resume();
@@ -337,7 +348,7 @@ internal sealed class WatchAlongSession : IDisposable
         var progress = video.Progress;
         var position = (double)progress.Position;
         var paused = progress.Paused;
-        var url = queue.Current?.Url ?? string.Empty;
+        var url = queue.Current is { } current ? ShareableUrl(current) : string.Empty;
 
         var screenPosition = screen.Engine.IsActive ? screen.Engine.ScreenPosition : (Vector3?)null;
         var screenYaw = screen.Engine.ScreenYaw;
@@ -399,10 +410,21 @@ internal sealed class WatchAlongSession : IDisposable
         var shared = new StreamQueueEntry[count];
         for (var index = 0; index < count; index++)
         {
-            shared[index] = new StreamQueueEntry(entries[index].Url, entries[index].Title);
+            var entry = entries[index];
+            shared[index] = new StreamQueueEntry(ShareableUrl(entry), entry.Title);
         }
 
         return shared;
+    }
+
+    private static string ShareableUrl(VideoQueueEntry entry)
+    {
+        if (entry.LocalMedia is { } identity)
+        {
+            return identity.Token;
+        }
+
+        return IsPlayableRemoteUrl(entry.Url) || LocalMediaToken.IsToken(entry.Url) ? entry.Url : string.Empty;
     }
 
     private void StopHostingLocal()
@@ -423,6 +445,7 @@ internal sealed class WatchAlongSession : IDisposable
         IsAwaitingApproval = false;
         Roster = ToParticipants(message.Participants);
         HostQueue = ToHostQueue(message.UpcomingQueue);
+        lastStateMessage = message;
 
         if (message.Url is { Length: > 0 })
         {
@@ -443,9 +466,34 @@ internal sealed class WatchAlongSession : IDisposable
         AepLog.Warning($"[WatchAlong] ignoring a stream url that is not a remote http(s) address: {url}");
     }
 
-    private void ApplyJoinSync(CallControl message)
+    private void ApplyJoinSync(CallControl message) => StartViewing(message.Url!, message);
+
+    private void StartViewing(string url, CallControl message)
     {
-        var url = message.Url!;
+        if (LocalMediaToken.TryParse(url, out var identity))
+        {
+            rejectedRemoteUrl = null;
+            viewingUrl = url;
+            ViewingEntry = queue.CreateDisplayEntry(url);
+            ApplyRemoteScreenTransform(message);
+
+            if (TryResolveLocalMedia(identity, out var localPath))
+            {
+                ClearLocalMediaPrompt();
+                viewingPlaybackUrl = localPath;
+                var pausedLocal = message.Paused ?? false;
+                video.Play(localPath, ProjectRemotePosition(message), !pausedLocal);
+                return;
+            }
+
+            viewingPlaybackUrl = null;
+            PendingLocalMedia = identity;
+            LocalMediaMismatch = false;
+            mismatchCandidatePath = null;
+            video.Stop();
+            return;
+        }
+
         if (!IsPlayableRemoteUrl(url))
         {
             WarnOnceForRejectedUrl(url);
@@ -453,12 +501,21 @@ internal sealed class WatchAlongSession : IDisposable
         }
 
         rejectedRemoteUrl = null;
+        ClearLocalMediaPrompt();
         viewingUrl = url;
+        viewingPlaybackUrl = url;
         ViewingEntry = queue.CreateDisplayEntry(url);
         ApplyRemoteScreenTransform(message);
 
         var paused = message.Paused ?? false;
         video.Play(url, ProjectRemotePosition(message), !paused);
+    }
+
+    private void ClearLocalMediaPrompt()
+    {
+        PendingLocalMedia = null;
+        LocalMediaMismatch = false;
+        mismatchCandidatePath = null;
     }
 
     private void OnDeclined(CallControl message)
@@ -644,25 +701,16 @@ internal sealed class WatchAlongSession : IDisposable
         {
             if (url != viewingUrl || force)
             {
-                if (!IsPlayableRemoteUrl(url))
-                {
-                    WarnOnceForRejectedUrl(url);
-                    return;
-                }
-
-                rejectedRemoteUrl = null;
-                viewingUrl = url;
-                ViewingEntry = queue.CreateDisplayEntry(url);
-                var startPaused = message.Paused ?? false;
-                video.Play(url, ProjectRemotePosition(message), !startPaused);
-                ApplyRemoteScreenTransform(message);
+                StartViewing(url, message);
                 return;
             }
         }
         else if (viewingUrl is not null)
         {
             viewingUrl = null;
+            viewingPlaybackUrl = null;
             ViewingEntry = null;
+            ClearLocalMediaPrompt();
             video.Stop();
             ApplyRemoteScreenTransform(message);
             return;
@@ -679,7 +727,7 @@ internal sealed class WatchAlongSession : IDisposable
             autoReplayUrl = null;
         }
 
-        if (video.State == VideoPlaybackState.Failed && viewingUrl is { } failedUrl)
+        if (video.State == VideoPlaybackState.Failed && viewingPlaybackUrl is { } failedUrl)
         {
             var now = Environment.TickCount64;
             if (autoReplayUrl != failedUrl)
@@ -712,12 +760,128 @@ internal sealed class WatchAlongSession : IDisposable
             }
         }
 
-        if (message.Paused is { } paused)
+        if (message.Paused is { } paused && video.HasMedia)
         {
             video.Pause(paused);
         }
 
         ApplyRemoteScreenTransform(message);
+    }
+
+    internal void LocateLocalMedia(string path)
+    {
+        if (PendingLocalMedia is not { } expected || IsLocatingLocalMedia)
+        {
+            return;
+        }
+
+        IsLocatingLocalMedia = true;
+        _ = MatchLocalMediaAsync(expected, path);
+    }
+
+    private async Task MatchLocalMediaAsync(LocalMediaIdentity expected, string path)
+    {
+        var picked = await Task.Run(() => LocalMediaToken.TryCompute(path)).ConfigureAwait(false);
+        await Plugin.Framework.RunOnFrameworkThread(() =>
+        {
+            IsLocatingLocalMedia = false;
+            if (PendingLocalMedia is not { } pending || pending.MapKey != expected.MapKey)
+            {
+                return;
+            }
+
+            if (picked is null)
+            {
+                LocalMediaMismatch = true;
+                mismatchCandidatePath = null;
+                return;
+            }
+
+            if (picked.Matches(expected))
+            {
+                StoreLocalMediaPath(expected, path, picked.SizeBytes);
+                ReapplyAfterLocalResolve();
+                return;
+            }
+
+            LocalMediaMismatch = true;
+            mismatchCandidatePath = path;
+            mismatchCandidateSizeBytes = picked.SizeBytes;
+        }).ConfigureAwait(false);
+    }
+
+    internal void AcceptMismatchedLocalMedia()
+    {
+        if (PendingLocalMedia is not { } expected || mismatchCandidatePath is not { } path)
+        {
+            return;
+        }
+
+        StoreLocalMediaPath(expected, path, mismatchCandidateSizeBytes);
+        ReapplyAfterLocalResolve();
+    }
+
+    private void ReapplyAfterLocalResolve()
+    {
+        ClearLocalMediaPrompt();
+        if (Mode == WatchAlongMode.Viewing && lastStateMessage is { } message)
+        {
+            ApplyStateSync(message, force: true);
+        }
+    }
+
+    private void StoreLocalMediaPath(LocalMediaIdentity identity, string path, long sizeBytes)
+    {
+        var records = configuration.VideoLocalFileMap;
+        for (var index = records.Count - 1; index >= 0; index--)
+        {
+            if (records[index].Key == identity.MapKey)
+            {
+                records.RemoveAt(index);
+            }
+        }
+
+        records.Add(new VideoLocalFileMapRecord { Key = identity.MapKey, Path = path, SizeBytes = sizeBytes });
+        while (records.Count > MaxLocalFileMapEntries)
+        {
+            records.RemoveAt(0);
+        }
+
+        configuration.Save();
+    }
+
+    private bool TryResolveLocalMedia(LocalMediaIdentity identity, out string path)
+    {
+        path = string.Empty;
+        var records = configuration.VideoLocalFileMap;
+        for (var index = 0; index < records.Count; index++)
+        {
+            var record = records[index];
+            if (record.Key != identity.MapKey)
+            {
+                continue;
+            }
+
+            try
+            {
+                var file = new FileInfo(record.Path);
+                if (file.Exists && file.Length == record.SizeBytes)
+                {
+                    path = record.Path;
+                    return true;
+                }
+            }
+            catch (Exception exception)
+            {
+                AepLog.Warning($"[WatchAlong] could not stat a mapped local file: {exception.Message}");
+            }
+
+            records.RemoveAt(index);
+            configuration.Save();
+            return false;
+        }
+
+        return false;
     }
 
     private void ApplyRemoteScreenTransform(CallControl message)
@@ -759,12 +923,14 @@ internal sealed class WatchAlongSession : IDisposable
         for (var index = 0; index < entries.Length; index++)
         {
             var entry = entries[index];
-            if (entry.Url is not { Length: > 0 } url)
+            var url = entry.Url ?? string.Empty;
+            var title = entry.Title ?? string.Empty;
+            if (url.Length == 0 && title.Length == 0)
             {
                 continue;
             }
 
-            items.Add(new HostQueueItem(url, entry.Title is { Length: > 0 } title ? title : url));
+            items.Add(new HostQueueItem(url, title.Length > 0 ? title : url));
         }
 
         return items.ToArray();
@@ -775,9 +941,11 @@ internal sealed class WatchAlongSession : IDisposable
         if (Mode == WatchAlongMode.Viewing)
         {
             viewingUrl = null;
+            viewingPlaybackUrl = null;
             ViewingEntry = null;
             lastStateMessage = null;
             pendingViewerStop = true;
+            ClearLocalMediaPrompt();
         }
 
         queue.Resume();
@@ -797,9 +965,11 @@ internal sealed class WatchAlongSession : IDisposable
         if (Mode == WatchAlongMode.Viewing)
         {
             viewingUrl = null;
+            viewingPlaybackUrl = null;
             ViewingEntry = null;
             lastStateMessage = null;
             pendingViewerStop = true;
+            ClearLocalMediaPrompt();
         }
 
         queue.Resume();

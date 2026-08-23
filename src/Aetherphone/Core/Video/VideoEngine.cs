@@ -31,7 +31,9 @@ internal sealed class VideoEngine : IDisposable
     private const long RecoveryRestartBackoffMilliseconds = 15 * 1000;
     private const int MaxRecoveryRestartsPerUrl = 2;
     private const long StallWatchdogMilliseconds = 10 * 1000;
+    private const long BufferingWatchdogMilliseconds = 30 * 1000;
     private const double StallPositionTolerance = 0.05;
+    private const double StallEndGuardSeconds = 5.0;
 
     private static readonly Regex YouTubeHost =
         new(@"^\w+://[^/]*youtube\.\w+/|^\w+://youtu\.be/", RegexOptions.Compiled);
@@ -67,13 +69,17 @@ internal sealed class VideoEngine : IDisposable
     private long lastRecoveryRestartAtTicks = long.MinValue;
     private string? recoveryRestartUrl;
     private int recoveryRestartsForUrl;
-    private volatile bool resolverRecovering;
+    private string? recoveryExhaustedUrl;
+    private volatile bool recovering;
     private volatile string? recoveryNotice;
     private ResolverUpdateOutcome lastResolverOutcome = ResolverUpdateOutcome.Failed;
     private long stallProgressAtTicks;
     private long framesProgressAtTicks;
+    private long audioProgressAtTicks;
     private int lastObservedFrameVersion;
     private double lastObservedPosition;
+    private double lastObservedAudioPosition;
+    private bool audioPositionSeen;
 
     internal VideoEngine()
     {
@@ -159,7 +165,7 @@ internal sealed class VideoEngine : IDisposable
 
                 if (!player.Play(url, startSeconds, playing))
                 {
-                    LastError = "This link could not be opened.";
+                    LastError = Loc.T(L.AetherStream.PlaybackFailed);
                     return PlayStart.Failed;
                 }
 
@@ -206,7 +212,7 @@ internal sealed class VideoEngine : IDisposable
             return resolverReason;
         }
 
-        return "The video components are not installed yet.";
+        return Loc.T(L.AetherStream.ComponentsMissing);
     }
 
     private async Task SpaceOutYouTubeLoads(string url, CancellationToken token)
@@ -279,7 +285,7 @@ internal sealed class VideoEngine : IDisposable
         {
             if (RefusedStreamUrl() is { } refusedUrl)
             {
-                if (TryBeginResolverRecovery(refusedUrl))
+                if (TryBeginRecovery(refusedUrl))
                 {
                     recoveryNotice = Loc.T(L.AetherStream.ResolverRecovering);
                     _ = RecoverResolverAsync(refusedUrl, lastObservedPosition);
@@ -288,24 +294,28 @@ internal sealed class VideoEngine : IDisposable
 
                 detail = RefusedStreamText();
             }
+            else
+            {
+                detail = FailureText(detail);
+            }
 
-            LastError = detail ?? "This video could not be played.";
+            LastError = detail;
         }
 
         PlaybackEnded?.Invoke(reason, detail);
     }
 
+    private static string FailureText(string? detail) => detail is { Length: > 0 }
+        ? string.Format(Loc.T(L.AetherStream.PlaybackFailedReason), detail)
+        : Loc.T(L.AetherStream.PlaybackFailed);
+
     internal void ObserveForStall(in MpvPlaybackInfo info)
     {
         var now = Environment.TickCount64;
         var frameVersion = renderer?.FrameVersion ?? 0;
-        if (!active || IsLoading || resolverRecovering || info.Paused || info.Seeking
-            || renderer is not { SawHttpForbidden: true })
+        if (!active || IsLoading || recovering || info.Paused || info.Seeking || renderer is not { } player)
         {
-            lastObservedPosition = info.PositionSeconds;
-            lastObservedFrameVersion = frameVersion;
-            stallProgressAtTicks = now;
-            framesProgressAtTicks = now;
+            ResetStallTrackers(info, frameVersion, now);
             return;
         }
 
@@ -315,36 +325,140 @@ internal sealed class VideoEngine : IDisposable
             stallProgressAtTicks = now;
         }
 
-        if (frameVersion != lastObservedFrameVersion)
+        if (info.CoreIdle || frameVersion != lastObservedFrameVersion)
         {
             lastObservedFrameVersion = frameVersion;
             framesProgressAtTicks = now;
         }
 
-        if (now - stallProgressAtTicks < StallWatchdogMilliseconds
-            && now - framesProgressAtTicks < StallWatchdogMilliseconds)
+        if (info.CoreIdle || !info.HasAudioPosition)
+        {
+            lastObservedAudioPosition = info.AudioPositionSeconds;
+            audioProgressAtTicks = now;
+        }
+        else if (!audioPositionSeen
+                 || Math.Abs(info.AudioPositionSeconds - lastObservedAudioPosition) > StallPositionTolerance)
+        {
+            audioPositionSeen = true;
+            lastObservedAudioPosition = info.AudioPositionSeconds;
+            audioProgressAtTicks = now;
+        }
+
+        var nearEnd = info.DurationSeconds > 0d
+            && info.PositionSeconds >= info.DurationSeconds - StallEndGuardSeconds;
+        var positionWindow = info.CoreIdle ? BufferingWatchdogMilliseconds : StallWatchdogMilliseconds;
+        var positionStalled = (player.SawHttpForbidden || player.SawStreamError)
+            && now - stallProgressAtTicks >= positionWindow;
+        var framesStalled = info.HasMovingVideo && now - framesProgressAtTicks >= StallWatchdogMilliseconds;
+        var audioStalled = audioPositionSeen && info.HasAudioPosition && !nearEnd
+            && now - audioProgressAtTicks >= StallWatchdogMilliseconds;
+        if (!positionStalled && !framesStalled && !audioStalled)
         {
             return;
         }
 
         stallProgressAtTicks = now;
         framesProgressAtTicks = now;
-        if (RefusedStreamUrl() is not { } refusedUrl)
+        audioProgressAtTicks = now;
+        var stall = positionStalled ? "position" : framesStalled ? "video frames" : "audio";
+
+        if (RefusedStreamUrl() is { } refusedUrl)
+        {
+            if (TryBeginRecovery(refusedUrl))
+            {
+                AepLog.Warning(
+                    $"[Video] Playback {stall} stalled after a refused stream; restarting the player at {lastObservedPosition:F1}s.");
+                recoveryNotice = Loc.T(L.AetherStream.ResolverRecovering);
+                _ = RecoverResolverAsync(refusedUrl, lastObservedPosition);
+                return;
+            }
+
+            if (RecoveryBudgetSpent(refusedUrl))
+            {
+                StopVideo();
+                AbandonRecovery(RefusedStreamText());
+            }
+
+            return;
+        }
+
+        if (player.CurrentUrl is not { Length: > 0 } stalledUrl)
         {
             return;
         }
 
-        if (TryBeginResolverRecovery(refusedUrl))
+        if (!TryBeginRecovery(stalledUrl))
         {
-            AepLog.Warning(
-                $"[Video] Playback stalled after a refused stream; restarting the player at {lastObservedPosition:F1}s.");
-            recoveryNotice = Loc.T(L.AetherStream.ResolverRecovering);
-            _ = RecoverResolverAsync(refusedUrl, lastObservedPosition);
+            if (recoveryExhaustedUrl != stalledUrl && RecoveryBudgetSpent(stalledUrl))
+            {
+                recoveryExhaustedUrl = stalledUrl;
+                AepLog.Warning(
+                    $"[Video] Playback {stall} stalled again but the restart budget for this link is spent; leaving it to play.");
+            }
+
             return;
         }
 
-        StopVideo();
-        AbandonRecovery(RefusedStreamText());
+        AepLog.Warning($"[Video] Playback {stall} stalled; restarting the player at {lastObservedPosition:F1}s.");
+        recoveryNotice = Loc.T(L.AetherStream.StreamStalledRecovering);
+        _ = RestartStalledAsync(stalledUrl, lastObservedPosition);
+    }
+
+    private void ResetStallTrackers(in MpvPlaybackInfo info, int frameVersion, long now)
+    {
+        lastObservedPosition = info.PositionSeconds;
+        lastObservedFrameVersion = frameVersion;
+        lastObservedAudioPosition = info.AudioPositionSeconds;
+        audioPositionSeen = false;
+        stallProgressAtTicks = now;
+        framesProgressAtTicks = now;
+        audioProgressAtTicks = now;
+    }
+
+    private async Task RestartStalledAsync(string stalledUrl, double resumeSeconds)
+    {
+        var token = lifetime.Token;
+        try
+        {
+            await playGate.WaitAsync(token).ConfigureAwait(false);
+            try
+            {
+                if (renderer is not { } current || !string.Equals(current.CurrentUrl, stalledUrl, StringComparison.Ordinal))
+                {
+                    recoveryNotice = null;
+                    return;
+                }
+
+                DetachRenderer();
+            }
+            finally
+            {
+                playGate.Release();
+            }
+
+            var restart = await PlayAsync(stalledUrl, resumeSeconds, playing: true).ConfigureAwait(false);
+            if (restart == PlayStart.Failed)
+            {
+                AbandonRecovery(LastError ?? Loc.T(L.AetherStream.PlaybackFailed));
+            }
+            else if (restart == PlayStart.Superseded)
+            {
+                recoveryNotice = null;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            recoveryNotice = null;
+        }
+        catch (Exception exception)
+        {
+            AepLog.Error($"[Video] Restarting a stalled stream failed: {exception.Message}");
+            AbandonRecovery(exception.Message);
+        }
+        finally
+        {
+            recovering = false;
+        }
     }
 
     private string? RefusedStreamUrl()
@@ -358,9 +472,12 @@ internal sealed class VideoEngine : IDisposable
         return url is { Length: > 0 } && url.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? url : null;
     }
 
-    private bool TryBeginResolverRecovery(string refusedUrl)
+    private bool RecoveryBudgetSpent(string url) =>
+        !recovering && recoveryRestartUrl == url && recoveryRestartsForUrl >= MaxRecoveryRestartsPerUrl;
+
+    private bool TryBeginRecovery(string url)
     {
-        if (resolverRecovering)
+        if (recovering)
         {
             return false;
         }
@@ -372,10 +489,11 @@ internal sealed class VideoEngine : IDisposable
             return false;
         }
 
-        if (recoveryRestartUrl != refusedUrl)
+        if (recoveryRestartUrl != url)
         {
-            recoveryRestartUrl = refusedUrl;
+            recoveryRestartUrl = url;
             recoveryRestartsForUrl = 0;
+            recoveryExhaustedUrl = null;
         }
 
         if (recoveryRestartsForUrl >= MaxRecoveryRestartsPerUrl)
@@ -385,7 +503,7 @@ internal sealed class VideoEngine : IDisposable
 
         recoveryRestartsForUrl++;
         lastRecoveryRestartAtTicks = now;
-        resolverRecovering = true;
+        recovering = true;
         return true;
     }
 
@@ -457,7 +575,7 @@ internal sealed class VideoEngine : IDisposable
         }
         finally
         {
-            resolverRecovering = false;
+            recovering = false;
         }
     }
 
@@ -633,6 +751,12 @@ internal sealed class VideoEngine : IDisposable
         {
             SpawnScreenInFrontOfLocalPlayer();
         }
+    }
+
+    internal bool ScreenVisible
+    {
+        get => screenPainter.Visible;
+        set => screenPainter.Visible = value;
     }
 
     public void Dispose()

@@ -50,7 +50,11 @@ jobs:
         with:
           ref: ${{ steps.tag.outputs.target }}
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # PAT so the repo.json bump below can land on the protected default
+          # branch: master requires the Guards and Build (Windows) checks, which
+          # a freshly pushed commit cannot have yet, and github-actions[bot] gets
+          # no bypass. The PAT owner is an admin and enforce_admins is off.
+          token: ${{ secrets.HUB_REPO_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v5

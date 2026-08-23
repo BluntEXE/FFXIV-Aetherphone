@@ -7,11 +7,12 @@ This page explains how Aetherphone code gets validated and shipped: the unit tes
 | Path | Role |
 | --- | --- |
 | src/Aetherphone.Tests/Aetherphone.Tests.csproj | xUnit test project, references the plugin and the Dalamud assembly |
-| .github/workflows/ci.yml | PR and master validation: version-sync guard, build, tests, artifact |
+| .github/workflows/ci.yml | Validation on master and dev: six guard checks, build, tests, artifacts |
 | .github/workflows/auto-tag.yml | Tags master automatically when Directory.Build.props gets a new version |
 | .github/workflows/release.yml | Builds latest.zip, publishes the GitHub release, announces it, updates repo.json |
 | .github/workflows/announce-commits.yml | Posts pushed commits to Discord, never pings anyone |
 | .github/workflows/update-issue-template-versions.yml | Refreshes the version dropdown in issue templates after each release |
+| .github/workflows/dependabot-lockfiles.yml | Regenerates packages.lock.json on Dependabot NuGet branches so the locked restore passes |
 | .github/workflows/uptime.yml | Polls the backend health endpoint every five minutes |
 | Directory.Build.props | Single source of truth for the plugin version |
 | repo.json | Dalamud repository manifest that users install the plugin from |
@@ -36,6 +37,10 @@ The suite targets deterministic logic that runs without the game process. Highli
 | Layout services | src/Aetherphone.Tests/HomeLayoutServicePlacementTests.cs, HomeLayoutServiceInstallTests.cs, ControlLayoutServiceInstallTests.cs, with shared fakes in HomeFakes.cs | Home screen and Control Center placement and install rules |
 | Physics and media | src/Aetherphone.Tests/KineticScrollerTests.cs, WebmOpusDemuxerTests.cs | Scroll momentum math, WebM/Opus demuxing for voice notes |
 | Networking logic | src/Aetherphone.Tests/IdentifiedMergeTests.cs, FeedLaneTests.cs, AccountSwitchTests.cs, SignOutAnnouncementTests.cs, ModerationNoticeTests.cs, LodestoneMatchTests.cs, MusterShareTests.cs, MessageArchiveTests.cs | Merge rules, feed lanes, account switching, moderation notices, /tell archives |
+| Localization lockstep | src/Aetherphone.Tests/LocalizationParityTests.cs | Every key declared in L.cs exists in all nine catalogs, and no catalog carries a key L.cs no longer declares |
+| Casino | src/Aetherphone.Tests/CasinoWireContractTests.cs, CasinoRoomWireContractTests.cs, CasinoTableWireContractTests.cs, and the rest of the Casino, Blackjack, Wheel, Bingo, Slots, and Scratch test files | Wire contracts against the backend casino endpoints, game rules, and round playback |
+| Chat | src/Aetherphone.Tests/ChatInboxTests.cs, ChatLogTests.cs, ChatSearchTests.cs, ChatChunkTests.cs, ChatRunsTests.cs, ChatStreamViewTests.cs, GameChannelsTests.cs | The game chat pipeline: log and inbox rules, chunking, search, stream views, channel handling |
+| Audio decoding | src/Aetherphone.Tests/AdtsReaderTests.cs, IcyMetadataStreamTests.cs, StreamDecoderSelectionTests.cs | ADTS header parsing, ICY metadata streams, decoder choice by content type |
 | Geometry | src/Aetherphone.Tests/ChassisGeometryTests.cs | The phone chassis squircle contract |
 
 There is no UI rendering test. The phone is drawn with Dear ImGui, an immediate mode UI library that redraws every frame inside the game process, so drawing code is exercised in-game, not in the test runner.
@@ -69,12 +74,12 @@ UI composition, ImGui drawing, and code that needs Dalamud services running in-g
 
 ## CI on pull requests
 
-.github/workflows/ci.yml runs on every pull request targeting master and on every push to master. Two jobs:
+.github/workflows/ci.yml runs on every pull request targeting master or dev and on every push to either branch. Two jobs:
 
-1. **Guards (version sync)**, on Ubuntu. Extracts `<Version>` from Directory.Build.props and compares it to `AssemblyVersion` and `TestingAssemblyVersion` in repo.json. Any mismatch fails the run before the expensive build starts.
-2. **Build (Windows)**, after guards pass. Downloads the latest Dalamud distribution to the standard dev-hooks path, then runs `dotnet restore Aetherphone.sln --locked-mode`, `dotnet build --configuration Release`, and the test suite. On master pushes it also uploads the SDK-built plugin zip (`src/Aetherphone/bin/Release/Aetherphone/latest.zip`) as a workflow artifact.
+1. **Guards**, on Ubuntu: six fail-fast checks that need no compiler. Version sync (`<Version>` in Directory.Build.props against `AssemblyVersion` and `TestingAssemblyVersion` in repo.json), the UI scale seam (only UiScale.cs may read `ImGuiHelpers.GlobalScale`), no em dashes in any tracked file (announce-commits.yml is the one exemption), no `async void`, no new LINQ beyond the allowlisted legacy sites, and the clock format seam (only TimeText.cs may hand-format a time pattern). Any failure stops the run before the expensive build starts.
+2. **Build (Windows)**, after guards pass. Downloads the latest Dalamud distribution to the standard dev-hooks path, then runs `dotnet restore Aetherphone.sln --locked-mode`, `dotnet build --configuration Release`, and the test suite. Every run uploads the SDK-built plugin zip (`src/Aetherphone/bin/Release/Aetherphone/latest.zip`) as a workflow artifact, so every pull request gets a loadable build for in-game review. When the test suite fails, the trx log (`TestResults/test-results.trx`) is uploaded as a `test-results` artifact too.
 
-Restore runs in locked mode because Directory.Build.props sets `RestorePackagesWithLockFile`. Both projects commit a packages.lock.json; if you add or bump a NuGet package, run `dotnet restore` locally and commit the updated lock files, or CI restore fails.
+Restore runs in locked mode because Directory.Build.props sets `RestorePackagesWithLockFile`. Both projects commit a packages.lock.json; if you add or bump a NuGet package, run `dotnet restore` locally and commit the updated lock files, or CI restore fails. Dependabot's own NuGet bumps are handled by .github/workflows/dependabot-lockfiles.yml, which regenerates the lock files on the Dependabot branch (it needs the `HUB_REPO_PAT` secret in the Dependabot scope; without it, it skips quietly).
 
 ## Versioning and the release pipeline
 
@@ -117,16 +122,19 @@ A release entry has three parts, and all three ship in the same pull request as 
 2. A `LocString[]` in the `Changelog` class of src/Aetherphone/Core/Localization/L.cs holding the English bullets, keyed `changelog.rXXXX.N`.
 3. Translations of every one of those keys in all nine JSON files under src/Aetherphone/Localization, because a key that exists in L.cs must exist in every JSON. Full story: [Localization](localization.md).
 
+A real example, the 1.0.0.3 entry (abridged; the full array holds five bullets):
+
 ```csharp
-public static readonly LocString[] Release0997 =
+public static readonly LocString[] Release1003 =
 {
-    new("changelog.r0997.0", "Fixed the Camera freezing when you rotate to landscape, contributed by Ehno"),
-    new("changelog.r0997.1", "Photos now remembers which album you had open"),
+    new("changelog.r1003.0",
+        "The phone now tells you when an avatar frame is given to you or taken away, instead of the ring around your avatar changing in silence"),
+    new("changelog.r1003.1", "Two new frames in the Aether Coin shop"),
 };
 ```
 
 ```csharp
-new ChangelogEntry("0.9.9.7", "2026-08-02", L.Changelog.Release0997),
+new ChangelogEntry("1.0.0.3", "2026-08-17", L.Changelog.Release1003),
 ```
 
 Copy rules for bullets (see [Localization](localization.md) for the full set):
@@ -173,7 +181,7 @@ A maintainer cutting version X.Y.Z.W:
 - **Locked restore bites package bumps.** CI restores with `--locked-mode`. Changing any `PackageReference` without committing regenerated packages.lock.json files fails restore, not build, so the error appears earlier than you expect.
 - **Tags pushed by GITHUB_TOKEN do not cascade.** If the `HUB_REPO_PAT` secret is missing, the tag is created but release.yml never fires. The recovery is the manual dispatch in the checklist, not deleting and re-pushing the tag.
 - **release.yml owns DownloadCount and LastUpdate.** Do not hand-edit those repo.json fields; the release run overwrites them (and resolves any concurrent-commit conflict in favor of its own values with `git rebase -X theirs`).
-- **A missed translation is invisible at runtime.** `Loc.T` falls back to the English source string, so a changelog key absent from de.json ships as English text in the German UI with no error anywhere.
+- **A missing key fails CI, an untranslated value does not.** LocalizationParityTests fails the pull request when a key declared in L.cs is absent from any of the nine catalogs, or a catalog carries an orphaned key. What still ships silently is a key that exists in a catalog with its text left in English: nothing checks translation quality, so proofread the values themselves.
 - **`[skip auto-tag]` in any commit message of a push** disables tagging for that entire push, including other commits in it.
 - **Tests need Dalamud on disk.** src/Aetherphone.Tests/Aetherphone.Tests.csproj references the Dalamud assembly from the XIVLauncher dev-hooks path or `DALAMUD_HOME`; a bare CI-less machine without either cannot build the test project.
 

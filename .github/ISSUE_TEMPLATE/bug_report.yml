@@ -7,17 +7,17 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to file a bug. Please fill out as much as you can; it makes a huge difference.
+        Thanks for taking the time to file a bug. A minute of detail here usually saves a week of back and forth.
 
-        If you're not sure whether it's a bug or expected behavior, prefer the [Q&A discussions](https://github.com/XeldarAlz/FFXIV-Aetherphone/discussions/new?category=q-a); triage is faster there.
+        Not sure it's a bug? Ask in [Q&A discussions](https://github.com/XeldarAlz/FFXIV-Aetherphone/discussions/new?category=q-a) or on [Discord](https://discord.gg/3HbJCscMyS); triage is faster there.
 
-        For security issues, please use [private vulnerability reporting](https://github.com/XeldarAlz/FFXIV-Aetherphone/security/advisories/new) instead.
+        **Security issues**: never file them publicly. Use [private vulnerability reporting](https://github.com/XeldarAlz/FFXIV-Aetherphone/security/advisories/new) instead.
 
   - type: textarea
     id: what-happened
     attributes:
       label: What happened?
-      description: What did you see? What did you expect to see instead?
+      description: What did you see, and what did you expect to see instead?
       placeholder: "I opened Messages and a tell I'd just received didn't show up as a notification..."
     validations:
       required: true
@@ -26,7 +26,7 @@ body:
     id: repro
     attributes:
       label: Steps to reproduce
-      description: Minimal steps to trigger the bug. If it's intermittent, say so.
+      description: The minimal steps that trigger it, starting from opening the phone.
       placeholder: |
         1. Open `/phone`
         2. Go to Messages
@@ -36,16 +36,34 @@ body:
       required: true
 
   - type: dropdown
+    id: frequency
+    attributes:
+      label: How often does it happen?
+      options:
+        - Every time
+        - Sometimes
+        - Happened once
+    validations:
+      required: true
+
+  - type: textarea
+    id: workarounds
+    attributes:
+      label: What have you tried?
+      description: Restarting the plugin, reinstalling components, changing a setting, disabling other plugins. Say what helped and what did not.
+      placeholder: "Restarted the plugin (no change), switched the upscaler from DLSS to FSR (the screen came back)..."
+
+  - type: dropdown
     id: plugin-version
     attributes:
       label: Plugin version
       description: Shown in `/xlplugins` next to "Aetherphone".
       options:
-        - 0.9.9.9
-        - 0.9.9.8
-        - 0.9.9.7
-        - 0.9.9.6
-        - 0.9.9.5
+        - 1.0.0.9
+        - 1.0.0.8
+        - 1.0.0.7
+        - 1.0.0.6
+        - 1.0.0.5
         - Older / not sure
     validations:
       required: true
@@ -56,17 +74,66 @@ body:
       label: Which part of the phone?
       description: Where did the problem show up?
       options:
-        - Messages
-        - Contacts
-        - My Character
-        - Skywatcher (weather)
+        - Activity (character)
+        - Aether Coin
+        - Aethergram
+        - Announcements
+        - App Store
+        - Calculator
+        - Calendar
+        - Camera
+        - Chirper
         - Clock
-        - Notifications / ringtone (toasts, sounds)
-        - Settings
+        - Collections
+        - Dailies
+        - Feedback
+        - Fishing
+        - Gamba (casino)
+        - Games
+        - Health
         - Home screen / device shell
+        - Housing
+        - Inventory
+        - Jobs
+        - Linkpearl (game chat)
+        - Maps
+        - Market
+        - Message (direct messages)
+        - MogCast (video)
+        - Music
+        - Muster
+        - News
+        - Notes
+        - Notifications / ringtone (toasts, sounds)
+        - Photos
+        - Polls
+        - Settings
+        - Shortcuts
+        - Skywatcher (weather)
+        - Timers
+        - Velvet
+        - Venues
+        - Wallet
+        - Yellow Pages
         - Other / not sure
     validations:
       required: true
+
+  - type: textarea
+    id: support-info
+    attributes:
+      label: Support info
+      description: |
+        In the phone, open **Settings > About > Copy support info** and paste the result here. It carries your plugin version, OS, Wine status, game region, and notification settings in one block, which answers most environment questions up front. If you can't open the phone at all, say so and note your OS and whether you play through XIVLauncher on Linux or Mac.
+      render: text
+      placeholder: |
+        Aetherphone 1.0.0.9
+        Game: English
+        Region: NA
+        Chinese client: False
+        OS: ...
+        Wine: False
+        ...
 
   - type: textarea
     id: attachments
@@ -75,20 +142,27 @@ body:
       description: |
         **If you can provide any of these, it turns guesswork into a fix.**
 
-        - **Dalamud log**: open `/xllog`, click the *Open log folder* button at the bottom-right, attach `dalamud.log`. Filter by `Aetherphone` if you want to trim it down.
-        - **Screenshots / short clip** if the issue is visual (a misaligned row, wrong colors, a frozen animation, etc.)
-        - **Other plugins active** that touch chat, the message log, or UI. This helps rule out conflicts.
+        - **Dalamud log**: open `/xllog`, click the *Open log folder* button at the bottom-right, attach `dalamud.log`. Filter by `Aetherphone` if you want to trim it down. The log contains file paths like `C:\Users\<your name>\...`; redact the user name if it is your real name.
+        - **Screenshots or a short clip** if the issue is visual (a misaligned row, wrong colors, a frozen animation).
+        - **Other plugins active**, plus ReShade/GShade or other overlays, to help rule out conflicts.
+        - **MogCast only**: the exact link you tried, whether a VPN or proxy was on, the text of the red card under the player, and your graphics upscaling settings (DLSS or FSR, 3D resolution scaling, dynamic resolution on or off).
 
-  - type: textarea
-    id: logs
-    attributes:
-      label: Inline log excerpt (optional)
-      description: |
-        Short snippets (chat-log tail, Dalamud error text) belong here. For full log files, use **Attachments** above; don't paste them inline.
+        Short log excerpts can go straight in the box below; attach full files instead of pasting them.
       render: text
 
   - type: textarea
     id: extra
     attributes:
       label: Anything else?
-      description: Character data center/world, UI scale, game language, hunches, anything that helps the bug land.
+      description: Data center and world, UI scale, hunches, when it started, anything that helps the bug land.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you file
+      options:
+        - label: I searched existing issues for this bug.
+          required: true
+        - label: I'm on the latest plugin version, or I picked my version above.
+          required: true
+        - label: I tried reproducing with other chat/UI plugins disabled (optional, but it rules out conflicts).

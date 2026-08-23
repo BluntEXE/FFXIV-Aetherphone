@@ -76,6 +76,7 @@ internal sealed partial class AetherStreamApp : IPhoneApp
         video.HardwareDecoding = configuration.VideoHardwareDecoding;
         video.AllowInsecureDirectUrls = configuration.VideoAllowInsecureDirectUrls;
         video.MaxQualityHeight = configuration.VideoMaxQualityHeight;
+        screen.Engine.ScreenVisible = configuration.VideoScreenVisible;
     }
 
     public string Id => "aetherstream";

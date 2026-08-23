@@ -112,12 +112,16 @@ internal sealed class MediaDependencies : IDisposable
     private const string FreshSuffix = ".fresh";
     private const long MinimumLibraryBytes = 1 << 20;
     private const long MissRecheckMilliseconds = 1000;
+    private const string ResolverConfigurationName = "yt-dlp.conf";
+    private const string ResolverPlayerClient = "web_embedded";
 
     private static readonly TimeSpan DownloadTimeout = TimeSpan.FromMinutes(10);
 
     private readonly HttpClient httpClient;
     private readonly string installRoot;
     private readonly SemaphoreSlim installGate = new(1, 1);
+    private readonly MediaDependency[] songComponents;
+    private readonly MediaDependency[] videoComponents;
 
     internal MediaDependencies()
     {
@@ -129,38 +133,57 @@ internal sealed class MediaDependencies : IDisposable
             "mpv-dev-lgpl-x86_64-", ".7z", "libmpv-2.dll", MinimumLibraryBytes);
         LinkResolver = new MediaDependency("yt-dlp", "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest",
             "yt-dlp.exe", ".exe", "yt-dlp.exe", MinimumLibraryBytes);
+        JsRuntime = new MediaDependency("deno", "https://api.github.com/repos/denoland/deno/releases/latest",
+            "deno-x86_64-pc-windows-msvc", ".zip", "deno.exe", MinimumLibraryBytes);
+        songComponents = new[] { LinkResolver, JsRuntime };
+        videoComponents = new[] { VideoLibrary, LinkResolver, JsRuntime };
 
         SweepReplacedPayloads();
         AdoptLegacyInstalls();
         RefreshInstalledState();
+        SyncResolverConfiguration();
         NativeLoader.Register(this);
     }
 
     internal MediaDependency VideoLibrary { get; }
     internal MediaDependency LinkResolver { get; }
+    internal MediaDependency JsRuntime { get; }
 
     internal string? VideoLibraryPath => VerifiedPayload(VideoLibrary);
     internal string? LinkResolverPath => VerifiedPayload(LinkResolver);
+    internal string? JsRuntimePath => VerifiedPayload(JsRuntime);
 
-    internal bool IsReady => VideoLibraryPath is not null && LinkResolverPath is not null;
+    internal bool IsReady => IsReadyFor(videoComponents);
 
-    internal long PendingDownloadBytes
+    internal long PendingDownloadBytes => PendingBytesFor(videoComponents);
+
+    internal long PendingSongBytes => PendingBytesFor(songComponents);
+
+    private bool IsReadyFor(MediaDependency[] components)
     {
-        get
+        for (var index = 0; index < components.Length; index++)
         {
-            var total = 0L;
-            if (VideoLibraryPath is null)
+            if (VerifiedPayload(components[index]) is null)
             {
-                total += VideoLibrary.Snapshot().TotalBytes;
+                return false;
             }
-
-            if (LinkResolverPath is null)
-            {
-                total += LinkResolver.Snapshot().TotalBytes;
-            }
-
-            return total;
         }
+
+        return true;
+    }
+
+    private long PendingBytesFor(MediaDependency[] components)
+    {
+        var total = 0L;
+        for (var index = 0; index < components.Length; index++)
+        {
+            if (VerifiedPayload(components[index]) is null)
+            {
+                total += components[index].Snapshot().TotalBytes;
+            }
+        }
+
+        return total;
     }
 
     private string ComponentFolder(MediaDependency dependency) => Path.Combine(installRoot, dependency.Id);
@@ -205,6 +228,7 @@ internal sealed class MediaDependencies : IDisposable
     {
         VideoLibrary.SetState(VideoLibraryPath is null ? DependencyState.Unknown : DependencyState.Ready);
         LinkResolver.SetState(LinkResolverPath is null ? DependencyState.Unknown : DependencyState.Ready);
+        JsRuntime.SetState(JsRuntimePath is null ? DependencyState.Unknown : DependencyState.Ready);
     }
 
     private void SweepReplacedPayloads()
@@ -285,9 +309,14 @@ internal sealed class MediaDependencies : IDisposable
         }
     }
 
-    internal async Task<bool> EnsureReadyAsync(CancellationToken token)
+    internal Task<bool> EnsureReadyAsync(CancellationToken token) => EnsureReadyAsync(videoComponents, token);
+
+    internal Task<bool> EnsureSongsReadyAsync(CancellationToken token) =>
+        EnsureReadyAsync(songComponents, token);
+
+    private async Task<bool> EnsureReadyAsync(MediaDependency[] components, CancellationToken token)
     {
-        if (IsReady)
+        if (IsReadyFor(components))
         {
             return true;
         }
@@ -295,14 +324,17 @@ internal sealed class MediaDependencies : IDisposable
         await installGate.WaitAsync(token).ConfigureAwait(false);
         try
         {
-            if (IsReady)
+            if (IsReadyFor(components))
             {
                 return true;
             }
 
-            await PrepareAsync(VideoLibrary, token).ConfigureAwait(false);
-            await PrepareAsync(LinkResolver, token).ConfigureAwait(false);
-            return IsReady;
+            for (var index = 0; index < components.Length; index++)
+            {
+                await PrepareAsync(components[index], token).ConfigureAwait(false);
+            }
+
+            return IsReadyFor(components);
         }
         finally
         {
@@ -310,10 +342,16 @@ internal sealed class MediaDependencies : IDisposable
         }
     }
 
-    internal async Task CheckSizesAsync(CancellationToken token)
+    internal Task CheckSizesAsync(CancellationToken token) => CheckSizesAsync(videoComponents, token);
+
+    internal Task CheckSongSizesAsync(CancellationToken token) => CheckSizesAsync(songComponents, token);
+
+    private async Task CheckSizesAsync(MediaDependency[] components, CancellationToken token)
     {
-        await CheckAsync(VideoLibrary, token).ConfigureAwait(false);
-        await CheckAsync(LinkResolver, token).ConfigureAwait(false);
+        for (var index = 0; index < components.Length; index++)
+        {
+            await CheckAsync(components[index], token).ConfigureAwait(false);
+        }
     }
 
     private async Task PrepareAsync(MediaDependency dependency, CancellationToken token)
@@ -446,6 +484,7 @@ internal sealed class MediaDependencies : IDisposable
             }
 
             dependency.SetState(DependencyState.Ready);
+            SyncResolverConfiguration();
             AepLog.Debug($"[Deps] {dependency.Id} is ready");
         }
         catch (OperationCanceledException)
@@ -469,7 +508,7 @@ internal sealed class MediaDependencies : IDisposable
         Directory.CreateDirectory(folder);
         var target = PayloadPath(dependency);
 
-        if (!dependency.AssetSuffix.Equals(".7z", StringComparison.Ordinal))
+        if (!IsArchive(dependency.AssetSuffix))
         {
             return ReplacePayload(dependency, target,
                 freshPath => File.Copy(staging, freshPath, overwrite: true));
@@ -498,6 +537,37 @@ internal sealed class MediaDependencies : IDisposable
         }
 
         throw new InvalidOperationException($"{dependency.PayloadName} was not in the downloaded archive.");
+    }
+
+    private static bool IsArchive(string assetSuffix) =>
+        assetSuffix.Equals(".7z", StringComparison.Ordinal)
+        || assetSuffix.Equals(".zip", StringComparison.Ordinal);
+
+    private void SyncResolverConfiguration()
+    {
+        if (LinkResolverPath is not { Length: > 0 } resolverPath
+            || Path.GetDirectoryName(resolverPath) is not { Length: > 0 } resolverFolder)
+        {
+            return;
+        }
+
+        var configurationPath = Path.Combine(resolverFolder, ResolverConfigurationName);
+        try
+        {
+            if (JsRuntimePath is not { Length: > 0 } runtimePath)
+            {
+                QuietDelete(configurationPath);
+                return;
+            }
+
+            File.WriteAllText(configurationPath,
+                $"--extractor-args \"youtube:player_client={ResolverPlayerClient}\"\n"
+                + $"--js-runtimes \"{JsRuntime.Id}:{runtimePath}\"\n");
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning($"[Deps] Could not write the link resolver configuration: {exception.Message}");
+        }
     }
 
     private static bool ReplacePayload(MediaDependency dependency, string target, Action<string> writeFresh)

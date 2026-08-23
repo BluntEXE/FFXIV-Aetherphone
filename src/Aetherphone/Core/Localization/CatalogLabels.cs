@@ -70,6 +70,13 @@ internal static class CatalogLabels
             "Garlean" => Loc.T(L.Catalogs.CaseGarlean),
             "GurrenLagann" => Loc.T(L.Catalogs.CaseGurrenLagann),
             "Allagan" => Loc.T(L.Catalogs.CaseAllagan),
+            "JuniorJinbei" => Loc.T(L.Catalogs.CaseJuniorJinbei),
+            "FoxKit" => Loc.T(L.Catalogs.CaseFoxKit),
+            "Namazu" => Loc.T(L.Catalogs.CaseNamazu),
+            "MadHatter" => Loc.T(L.Catalogs.CaseMadHatter),
+            "Cheshire" => Loc.T(L.Catalogs.CaseCheshire),
+            "AliceInWonderland" => Loc.T(L.Catalogs.CaseAliceInWonderland),
+            "Suzaku" => Loc.T(L.Catalogs.CaseSuzaku),
             _ => identifier,
         };
 

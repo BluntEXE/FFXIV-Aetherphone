@@ -168,6 +168,7 @@ internal sealed partial class AppStoreApp
     {
         "health" => "Yozora",
         "housing" => "Yozora",
+        "hunts" => "Deldee",
         "jobs" => "K.I.R.O",
         _ => Loc.T(L.Store.DeveloperName),
     };

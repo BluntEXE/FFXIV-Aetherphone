@@ -17,6 +17,7 @@ internal static class CasinoVerifier
 {
     private const string ScratchPrizePurpose = "prize";
     private const string BarkeepPatronsPurpose = "patrons";
+    private const string SlotsJackpotPurpose = "jackpot";
     private const string SegmentPurpose = "segment";
     private const string BingoCardPurpose = "card";
     private const string BingoBallPurpose = "ball";
@@ -158,6 +159,12 @@ internal static class CasinoVerifier
         if (purpose.SequenceEqual(BarkeepPatronsPurpose))
         {
             bound = (uint)BarkeepRules.PatronBuckets.Length;
+            return true;
+        }
+
+        if (purpose.SequenceEqual(SlotsJackpotPurpose))
+        {
+            bound = (uint)SlotsRules.JackpotChipsPerHit;
             return true;
         }
 

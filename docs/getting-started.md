@@ -13,7 +13,7 @@ This page takes you from `git clone` to a running development build of Aetherpho
 | `src/Aetherphone/Core/AepConstants.cs` | Plugin name and the command strings (`/phone`, `/aetherphone`) |
 | `src/Aetherphone/Core/AepLog.cs` | Thin logging wrapper over Dalamud's `IPluginLog` |
 | `src/Aetherphone/Windows/PhoneWindow.cs` | The ImGui window that renders the whole phone |
-| `.github/workflows/ci.yml` | CI: version-sync guard, Release build, tests |
+| `.github/workflows/ci.yml` | CI: six guard checks (version sync plus style seams), Release build, tests |
 | `CONTRIBUTING.md` | PR expectations and the short version of this page |
 
 ## Prerequisites
@@ -93,8 +93,10 @@ Both run the same `OnCommand` method, which dispatches on the argument:
 | `/phone reset` | Recenter the phone window on screen |
 | `/phone market [item]` | Open the Market app, optionally searching for the item |
 | `/phone test` | Fire a sample notification (useful when testing notification UI) |
+| `/phone run <name>` | Run the named shortcut from the Shortcuts app; without a name it prints usage in chat |
+| `/phone videodebug` | Open the video debug window, a developer tool |
 
-Any argument `OnCommand` does not recognize falls through to the plain toggle. The same list is shown in-game by the Settings app (`src/Aetherphone/Apps/Settings/Pages/CommandsPage.cs`); if you add a command, update that page too.
+Any argument `OnCommand` does not recognize falls through to the plain toggle. The Settings app shows the everyday commands in-game (`src/Aetherphone/Apps/Settings/Pages/CommandsPage.cs`); today its list covers the toggle, alias, market, reset, and test entries. If you add a command, update that page too.
 
 ## The dev loop
 
@@ -114,15 +116,19 @@ Reloading calls `Plugin.Dispose()`, which unhooks every event handler and comman
 ```csharp
 internal static class AepLog
 {
-    public static void Debug(string message) => Plugin.Log.Debug(message);
+    public static void Verbose(string message) => Plugin.Log?.Verbose(message);
 
-    public static void Info(string message) => Plugin.Log.Information(message);
+    public static void Debug(string message) => Plugin.Log?.Debug(message);
 
-    public static void Warning(string message) => Plugin.Log.Warning(message);
+    public static void Info(string message) => Plugin.Log?.Information(message);
 
-    public static void Error(string message) => Plugin.Log.Error(message);
+    public static void Warning(string message) => Plugin.Log?.Warning(message);
+
+    public static void Error(string message) => Plugin.Log?.Error(message);
 }
 ```
+
+Abridged: each level in the real file also has an `(Exception, string)` overload. Every method forwards through `Plugin.Log?.`, so a call made before Dalamud has filled `Plugin.Log` is a no-op instead of a crash.
 
 If the plugin fails to load at all, the cause is in `/xllog`: the `Plugin` constructor wraps its setup in a try/catch that tears down partial construction and rethrows, so Dalamud reports the original exception.
 
@@ -142,19 +148,19 @@ Prefer an existing `Components/` widget over hand-rolling one-off UI; that is th
 
 ## How CI relates to your local build
 
-`.github/workflows/ci.yml` runs on every push and pull request to `master`, in two jobs:
+`.github/workflows/ci.yml` runs on every push and pull request to `master` and `dev`, in two jobs:
 
-1. **Guards**: checks that `<Version>` in `Directory.Build.props` matches `AssemblyVersion` and `TestingAssemblyVersion` in `repo.json`. This fails fast, before any compilation.
+1. **Guards**: six fast checks that need no compiler. Version sync (`<Version>` in `Directory.Build.props` must match `AssemblyVersion` and `TestingAssemblyVersion` in `repo.json`), the UI scale seam (only `UiScale.cs` may read `ImGuiHelpers.GlobalScale`), no em dashes in any tracked file, no `async void`, no new LINQ beyond the allowlisted legacy sites, and the clock format seam (only `TimeText.cs` may hand-format a time pattern). Any of them fails fast, before any compilation.
 2. **Build (Windows)**: downloads the latest Dalamud dev build from `goatcorp.github.io/dalamud-distrib` into the standard `XIVLauncher\addon\Hooks\dev` path (recreating what XIVLauncher provides on your machine), then runs `dotnet restore Aetherphone.sln --locked-mode`, `dotnet build --configuration Release`, and `dotnet test`.
 
-So CI is your local build with the Dalamud dependency fetched explicitly. If `dotnet build -c Release` and `dotnet test` pass locally, the only extra ways CI can fail are the version-sync guard and the locked restore (see Gotchas). The release pipeline (`.github/workflows/release.yml`) is separate and covered in [Testing and release](testing-and-release.md).
+So CI is your local build with the Dalamud dependency fetched explicitly, plus the guard checks. If `dotnet build -c Release` and `dotnet test` pass locally, the extra ways CI can fail are the six guards above and the locked restore (see Gotchas). The release pipeline (`.github/workflows/release.yml`) is separate and covered in [Testing and release](testing-and-release.md).
 
 ## Gotchas
 
 - **Debug and Release are two different plugins.** Release writes `bin/Release/Aetherphone.dll`, Debug writes `bin/Debug/AetherphoneDev.dll`. Dalamud loads whichever path you registered, so building the other configuration leaves the game on your previous build with no error anywhere.
 - **NuGet restore is locked.** `Directory.Build.props` sets `RestorePackagesWithLockFile`, and CI restores with `--locked-mode`. If you add or bump a `PackageReference`, run `dotnet restore` locally so `packages.lock.json` updates and gets committed, or CI fails at the restore step.
 - **Version lives in three places.** Bumping `<Version>` in `Directory.Build.props` without updating `AssemblyVersion` and `TestingAssemblyVersion` in `repo.json` fails the CI guards job before the build even starts.
-- **Unknown command arguments are silent.** `OnCommand` in `Plugin.cs` treats anything that is not `test`, `reset`, or `market` as a plain toggle, so a typo like `/phone rset` opens or closes the phone instead of erroring.
+- **Unknown command arguments are silent.** `OnCommand` in `Plugin.cs` treats anything that is not `test`, `reset`, `videodebug`, `market`, or `run` as a plain toggle, so a typo like `/phone rset` opens or closes the phone instead of erroring.
 - **Every hook needs a matching unhook.** The dev loop reloads the plugin in-process; anything registered in the `Plugin` constructor (events, commands, windows, the DTR (server info bar) entry) must be released in `Dispose`, or the second load doubles it up.
 
 ## Related docs

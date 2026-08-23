@@ -21,6 +21,7 @@ using Aetherphone.Core.Sharing;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Wallpapers;
+using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -34,7 +35,7 @@ internal sealed partial class AethergramApp : IPhoneApp
     private const int MaxPhotoTags = 20;
     private const int MaxCommentLength = 500;
     private const float BottomNavHeight = 52f;
-    private const int NavSlotCount = 5;
+    private const int NavSlotCount = 4;
     private const int MessagesNavSlot = 2;
     private const float NavHitRadius = 17f;
     private const float NavHoverSmoothTime = 0.12f;
@@ -52,8 +53,9 @@ internal sealed partial class AethergramApp : IPhoneApp
     public string Glyph => "Ag";
     public int BadgeCount => dmStore.UnreadCount + social.UnseenCount(Id);
     public ShareKindSet AcceptedShares => store.IsSignedIn ? ShareKindSet.Photo : ShareKindSet.None;
-    private const string ScopeMenuId = "scope";
     private const string MediaFilterMenuId = "aethergram.mediaFilterMenu";
+    private const string OverflowMenuId = "aethergram.overflowMenu";
+    private const int HomeActionSlots = 2;
     private readonly Dictionary<SocialFeedScope, PullToRefresh> pullToRefresh = new()
     {
         { SocialFeedScope.ForYou, new() },
@@ -75,12 +77,12 @@ internal sealed partial class AethergramApp : IPhoneApp
     private readonly ConfirmService confirm;
     private readonly ReportService report;
     private readonly WallpaperImageCache wallpaperImages;
-    private readonly DropdownMenu scopeMenu = new();
     private readonly DropdownMenu postMenu = new();
     private readonly DropdownMenu mediaFilterMenu = new();
-    private readonly DropdownMenu.Item[] scopeItems = new DropdownMenu.Item[2];
+    private readonly DropdownMenu overflowMenu = new();
     private readonly DropdownMenu.Item[] postItems = new DropdownMenu.Item[4];
-    private readonly DropdownMenu.Item[] mediaFilterItems = new DropdownMenu.Item[2];
+    private readonly DropdownMenu.Item[] mediaFilterItems = new DropdownMenu.Item[2 + SocialRegion.Codes.Length];
+    private readonly DropdownMenu.Item[] overflowItems = new DropdownMenu.Item[3];
     private readonly Action<NotificationDto> openActivityActor;
     private readonly Action<NotificationDto> openActivityPost;
     private readonly SocialActivityFeed activityFeed;
@@ -111,6 +113,7 @@ internal sealed partial class AethergramApp : IPhoneApp
     private AethergramTab activeTab = AethergramTab.Home;
     private readonly Spring[] navHover = new Spring[NavSlotCount];
     private SocialFeedScope activeScope = SocialFeedScope.ForYou;
+    private float tabSegmentAnim;
     private bool feedScrollTopPending;
     private bool commentFocusPending;
     private readonly PhotoComposeSession composeSession;
@@ -152,6 +155,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         AppInstaller installer)
     {
         store = new AethergramStore(session, net.Account, net.Social, net.Grams, net.Safety, net.Media, realtimeSignals);
+        store.SetFeedRegions(SocialRegion.FilterCsv(configuration.AethergramFeedRegionMask));
         account = net.Account;
         dmStore = new GramDmStore(session, net.GramDm, net.Social, net.Safety, net.Media, notifications, keyVault,
             conversationKeys, visibility, realtimeSignals, installer);
@@ -251,7 +255,6 @@ internal sealed partial class AethergramApp : IPhoneApp
             }
             else if (link.Kind == SocialLinkKind.Requests)
             {
-                activeTab = AethergramTab.Activity;
                 social.MarkSeen(Id);
                 OpenFollowRequests();
             }
@@ -282,9 +285,9 @@ internal sealed partial class AethergramApp : IPhoneApp
         theme = context.Theme;
         navigation = context.Navigation;
         ui.Theme = theme;
-        scopeMenu.Gate();
         postMenu.Gate();
         mediaFilterMenu.Gate();
+        overflowMenu.Gate();
         inboxRowMenu.Gate();
         threadView.GateMenus();
         var screen = SceneChrome.ScreenFrom(context.Content, theme, UiScale.Current);
@@ -315,6 +318,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         }
 
         DrawMediaFilterMenu(screen);
+        DrawOverflowMenu(screen);
     }
 
     private void DrawView(AethergramRoute route, Rect area, int depth)
@@ -370,6 +374,9 @@ internal sealed partial class AethergramApp : IPhoneApp
             case AethergramScreen.Hashtag:
                 DrawHashtag(area, route.Id!);
                 break;
+            case AethergramScreen.Activity:
+                DrawActivity(area);
+                break;
             default:
                 DrawRoot(area);
                 break;
@@ -409,9 +416,6 @@ internal sealed partial class AethergramApp : IPhoneApp
                 case AethergramTab.Search:
                     DrawSearchTab(tabArea);
                     break;
-                case AethergramTab.Activity:
-                    DrawActivityTab(tabArea);
-                    break;
                 case AethergramTab.Profile:
                     DrawProfileTab(tabArea);
                     break;
@@ -422,7 +426,6 @@ internal sealed partial class AethergramApp : IPhoneApp
         }
 
         DrawBottomNav(navRect);
-        DrawScopeMenu(area);
         DrawPostMenu(area, true);
     }
 
@@ -432,9 +435,6 @@ internal sealed partial class AethergramApp : IPhoneApp
         {
             case AethergramTab.Search:
                 DrawTabTitle(area, Loc.T(L.Aethergram.FindPeople));
-                break;
-            case AethergramTab.Activity:
-                DrawTabTitle(area, Loc.T(L.Social.ActivityTitle));
                 break;
             case AethergramTab.Profile:
                 DrawTabTitle(area, store.Me is { } me ? SocialIdentity.Name(me.DisplayName, me.Handle)
@@ -456,7 +456,39 @@ internal sealed partial class AethergramApp : IPhoneApp
 
     private void DrawFeedTab(Rect area)
     {
-        DrawFeedList(area, activeScope);
+        var scale = UiScale.Current;
+        var rowTop = area.Min.Y + 2f * scale;
+        var rowRect = new Rect(new Vector2(area.Min.X, rowTop),
+            new Vector2(area.Max.X, rowTop + FeedControlRow.Height * scale));
+        var mediaOn = configuration.AethergramShowGifPosts && configuration.AethergramShowCommentMedia
+            && configuration.AethergramFeedRegionMask == 0;
+        var controls = FeedControlRow.Draw(rowRect, ui, Accent, Loc.T(L.Aethergram.ForYou),
+            Loc.T(L.Aethergram.Following), (int)activeScope, ref tabSegmentAnim, store.IsLoading(activeScope), mediaOn,
+            Loc.T(L.Common.Refresh), Loc.T(L.Aethergram.FeedFilters));
+        if (controls.MediaToggled)
+        {
+            mediaFilterMenu.Toggle(MediaFilterMenuId, controls.MediaBounds);
+        }
+
+        if (controls.Refreshed)
+        {
+            RefreshActiveFeed();
+        }
+
+        if (controls.Selected != (int)activeScope)
+        {
+            activeScope = (SocialFeedScope)controls.Selected;
+            feedScrollTopPending = true;
+            profile.EnsureLoaded(activeScope);
+        }
+
+        var listRect = new Rect(new Vector2(area.Min.X, rowRect.Max.Y + 6f * scale), area.Max);
+        DrawFeedList(listRect, activeScope);
+        if (ComposeFab.Draw(listRect, "##aethergramComposeFab", Accent, FontAwesomeIcon.Plus.ToIconString(),
+                Loc.T(L.Aethergram.NewPost), "aethergram.compose"))
+        {
+            StartCompose(false);
+        }
     }
 
     private void RefreshActiveFeed()
@@ -476,25 +508,37 @@ internal sealed partial class AethergramApp : IPhoneApp
         stories.RefreshTray();
     }
 
-    private void DrawActivityTab(Rect area)
+    private void DrawActivity(Rect area)
     {
+        var scale = UiScale.Current;
+        var context = new PhoneContext(area, theme, navigation);
+        AppHeader.Draw(context, Loc.T(L.Social.ActivityTitle), back);
+        var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         activityFeed.EnsureFresh(social.Latest);
         store.EnsureMe();
         store.EnsureFollowRequests();
-        var listArea = area;
+        var listArea = body;
         var requestCount = store.PendingFollowRequestCount;
         if (requestCount > 0)
         {
-            var scale = UiScale.Current;
             var pad = 12f * scale;
-            var rowRect = new Rect(new Vector2(area.Min.X + pad, area.Min.Y + 6f * scale),
-                new Vector2(area.Max.X - pad, area.Min.Y + 6f * scale + 54f * scale));
+            var rowRect = new Rect(new Vector2(body.Min.X + pad, body.Min.Y + 6f * scale),
+                new Vector2(body.Max.X - pad, body.Min.Y + 6f * scale + 54f * scale));
             DrawFollowRequestsRow(rowRect, requestCount);
-            listArea = new Rect(new Vector2(area.Min.X, rowRect.Max.Y + 6f * scale), area.Max);
+            listArea = new Rect(new Vector2(body.Min.X, rowRect.Max.Y + 6f * scale), body.Max);
         }
 
         SocialActivityList.Draw(listArea, ui, AppPalettes.Aethergram, theme, activityFeed.Items, Id, images, lodestone,
             openActivityActor, openActivityPost, loadOlderActivity);
+    }
+
+    private void OpenActivity()
+    {
+        social.MarkSeen(Id);
+        social.RefreshNow();
+        activityFeed.Invalidate();
+        store.RefreshFollowRequests();
+        router.Push(AethergramRoute.Activity);
     }
 
     private void DrawFollowRequestsRow(Rect row, int count)
@@ -699,8 +743,8 @@ internal sealed partial class AethergramApp : IPhoneApp
         }
 
         activeTab = tab;
-        scopeMenu.Close();
         postMenu.Close();
+        overflowMenu.Close();
         switch (tab)
         {
             case AethergramTab.Home:
@@ -710,41 +754,35 @@ internal sealed partial class AethergramApp : IPhoneApp
                 store.ClearDiscover();
                 profile.SearchDraft = string.Empty;
                 break;
-            case AethergramTab.Activity:
-                social.MarkSeen(Id);
-                social.RefreshNow();
-                activityFeed.Invalidate();
-                store.RefreshFollowRequests();
-                break;
             case AethergramTab.Profile:
                 store.EnsureMe();
                 break;
         }
     }
 
-    private void DrawScopeMenu(Rect area)
+    private void DrawOverflowMenu(Rect screen)
     {
-        if (!scopeMenu.IsOpenFor(ScopeMenuId))
+        if (!overflowMenu.IsOpenFor(OverflowMenuId))
         {
             return;
         }
 
-        scopeItems[0] = new DropdownMenu.Item(Loc.T(L.Aethergram.ForYou),
-            Selected: activeScope == SocialFeedScope.ForYou);
-        scopeItems[1] = new DropdownMenu.Item(Loc.T(L.Aethergram.Following),
-            Selected: activeScope == SocialFeedScope.Following);
-        var picked = scopeMenu.Draw(area, theme, scopeItems);
-        if (picked < 0)
+        overflowItems[0] = new DropdownMenu.Item(Loc.T(L.Aethergram.SavedTitle),
+            FontAwesomeIcon.Bookmark.ToIconString());
+        overflowItems[1] = new DropdownMenu.Item(Loc.T(L.Aethergram.Settings), FontAwesomeIcon.Cog.ToIconString());
+        overflowItems[2] = new DropdownMenu.Item(Loc.T(L.Conduct.Eyebrow),
+            FontAwesomeIcon.QuestionCircle.ToIconString());
+        switch (overflowMenu.Draw(screen, theme, overflowItems))
         {
-            return;
-        }
-
-        var scope = picked == 1 ? SocialFeedScope.Following : SocialFeedScope.ForYou;
-        if (scope != activeScope)
-        {
-            activeScope = scope;
-            feedScrollTopPending = true;
-            profile.EnsureLoaded(activeScope);
+            case 0:
+                OpenSaved();
+                break;
+            case 1:
+                router.Push(AethergramRoute.Settings);
+                break;
+            case 2:
+                conduct.ShowRules(Id);
+                break;
         }
     }
 
@@ -759,7 +797,14 @@ internal sealed partial class AethergramApp : IPhoneApp
             FontAwesomeIcon.Film.ToIconString(), Selected: configuration.AethergramShowGifPosts);
         mediaFilterItems[1] = new DropdownMenu.Item(Loc.T(L.Settings.AethergramShowCommentMedia),
             FontAwesomeIcon.Comment.ToIconString(), Selected: configuration.AethergramShowCommentMedia);
-        mediaFilterMenu.Header = Loc.T(L.Aethergram.MediaFilters);
+        for (var regionIndex = 0; regionIndex < SocialRegion.Codes.Length; regionIndex++)
+        {
+            mediaFilterItems[2 + regionIndex] = new DropdownMenu.Item(SocialRegion.Codes[regionIndex],
+                FontAwesomeIcon.Globe.ToIconString(),
+                Selected: SocialRegion.MaskShows(configuration.AethergramFeedRegionMask, regionIndex));
+        }
+
+        mediaFilterMenu.Header = Loc.T(L.Aethergram.FeedFilters);
         mediaFilterMenu.KeepOpen = true;
         var picked = mediaFilterMenu.Draw(screen, theme, mediaFilterItems);
         switch (picked)
@@ -769,6 +814,11 @@ internal sealed partial class AethergramApp : IPhoneApp
                 break;
             case 1:
                 configuration.AethergramShowCommentMedia = !configuration.AethergramShowCommentMedia;
+                break;
+            case >= 2:
+                configuration.AethergramFeedRegionMask =
+                    SocialRegion.ToggleMask(configuration.AethergramFeedRegionMask, picked - 2);
+                store.SetFeedRegions(SocialRegion.FilterCsv(configuration.AethergramFeedRegionMask));
                 break;
             default:
                 return;
@@ -1282,19 +1332,14 @@ internal sealed partial class AethergramApp : IPhoneApp
         var centerY = bar.Center.Y;
         var searchCenter = new Vector2(bar.Min.X + slot * 1.5f, centerY);
         var messagesCenter = new Vector2(bar.Min.X + slot * 2.5f, centerY);
-        var activityCenter = new Vector2(bar.Min.X + slot * 3.5f, centerY);
-        var profileCenter = new Vector2(bar.Min.X + slot * 4.5f, centerY);
+        var profileCenter = new Vector2(bar.Min.X + slot * 3.5f, centerY);
         var anchorHalf = new Vector2(20f * scale, 20f * scale);
         UiAnchors.Report("aethergram.tab.search", new Rect(searchCenter - anchorHalf, searchCenter + anchorHalf));
-        UiAnchors.Report("aethergram.tab.activity", new Rect(activityCenter - anchorHalf, activityCenter + anchorHalf));
         UiAnchors.Report("aethergram.tab.profile", new Rect(profileCenter - anchorHalf, profileCenter + anchorHalf));
         DrawNavIcon(new Vector2(bar.Min.X + slot * 0.5f, centerY), FontAwesomeIcon.Home, AethergramTab.Home, 0,
             Loc.T(L.Aethergram.Home));
         DrawNavIcon(searchCenter, FontAwesomeIcon.Search, AethergramTab.Search, 1, Loc.T(L.Aethergram.Search));
         DrawNavMessages(messagesCenter);
-        DrawNavIcon(activityCenter, FontAwesomeIcon.Heart, AethergramTab.Activity, 3, Loc.T(L.Social.ActivityTab));
-        ActivityBadge.Draw(activityCenter + new Vector2(11f * scale, -10f * scale), social.UnseenCount(Id), theme,
-            scale);
         DrawNavProfile(profileCenter);
     }
 
@@ -1409,6 +1454,11 @@ internal sealed partial class AethergramApp : IPhoneApp
         if (hit.Kind == RichTextRunKind.Hashtag && hit.Clicked)
         {
             OpenHashtag(layout.Tags[hit.TargetIndex]);
+        }
+
+        if (hit.Kind == RichTextRunKind.Link && hit.Clicked)
+        {
+            UrlActions.AskThenOpen(layout.Urls[hit.TargetIndex]);
         }
     }
 

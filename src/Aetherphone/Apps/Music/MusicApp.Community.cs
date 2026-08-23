@@ -191,25 +191,28 @@ internal sealed partial class MusicApp
         var content = context.Content;
         community.EnsureFresh(true);
         community.EnsureMine();
-        DrawTopBar(context, Loc.T(L.Music.CommunityRadio), null);
+        DrawTopBar(context, Loc.T(L.Music.TabLive), null);
         DrawMyStationEntry(content, scale);
         var body = ScrollBody(content, scale);
         var stations = community.Stations;
-        if (stations.Length == 0)
-        {
-            DrawCommunityEmpty(body, scale);
-            return;
-        }
-
         ApplyTagFilter(stations);
         using (AppSurface.Begin(body))
         {
             ImGui.Dummy(new Vector2(0f, 6f * scale));
-            DrawTagFilterRail(scale, stations);
             DrawLiveGroup(scale, LiveGroup.OnAir, Loc.T(L.Music.OnAirSection));
-            DrawLiveGroup(scale, LiveGroup.Upcoming, Loc.T(L.Music.UpNextSection));
-            DrawLiveGroup(scale, LiveGroup.Followed, Loc.T(L.Music.FollowingSection));
-            DrawLiveGroup(scale, LiveGroup.Resting, Loc.T(L.Music.AllStationsSection));
+            DrawLiveDjsSection(scale);
+            DrawShelfHeading(Loc.T(L.Music.CommunityRadio), scale);
+            if (stations.Length == 0)
+            {
+                DrawCommunityShelfStatus(scale);
+            }
+            else
+            {
+                DrawTagFilterRail(scale, stations);
+                DrawLiveGroup(scale, LiveGroup.Upcoming, Loc.T(L.Music.UpNextSection));
+                DrawLiveGroup(scale, LiveGroup.Followed, Loc.T(L.Music.FollowingSection));
+                DrawLiveGroup(scale, LiveGroup.Resting, Loc.T(L.Music.AllStationsSection));
+            }
             ImGui.Dummy(new Vector2(0f, 10f * scale));
         }
     }
@@ -262,7 +265,7 @@ internal sealed partial class MusicApp
         filteredStations.Clear();
         for (var index = 0; index < stations.Length; index++)
         {
-            if (tagFilter.Length == 0 || HasTag(stations[index], tagFilter))
+            if (GroupOf(stations[index]) == LiveGroup.OnAir || tagFilter.Length == 0 || HasTag(stations[index], tagFilter))
             {
                 filteredStations.Add(stations[index]);
             }
@@ -434,8 +437,8 @@ internal sealed partial class MusicApp
     {
         if (station.ArtworkUrl.Length > 0 && Thumb(station.ArtworkUrl).Texture is { } texture)
         {
-            drawList.AddImageRounded(texture.Handle, min, max, Vector2.Zero, Vector2.One, 0xFFFFFFFFu, rounding,
-                corners);
+            var (uv0, uv1) = ImageFit.Cover(texture.Size.X, texture.Size.Y, max.X - min.X, max.Y - min.Y);
+            drawList.AddImageRounded(texture.Handle, min, max, uv0, uv1, 0xFFFFFFFFu, rounding, corners);
             return;
         }
 
@@ -586,7 +589,7 @@ internal sealed partial class MusicApp
         var rowLeft = left;
         var center = new Vector2(rowLeft + radius, top + radius);
 
-        if (station.OwnerAvatarUrl.Length > 0 && Thumb(station.OwnerAvatarUrl).Texture is { } avatar)
+        if (station.OwnerAvatarUrl.Length > 0 && Thumb(station.OwnerAvatarUrl, radius * 2f).Texture is { } avatar)
         {
             drawList.AddImageRounded(avatar.Handle, center - new Vector2(radius, radius),
                 center + new Vector2(radius, radius), Vector2.Zero, Vector2.One, 0xFFFFFFFFu, radius,

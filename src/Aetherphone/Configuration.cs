@@ -12,6 +12,7 @@ using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Games;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Housing;
+using Aetherphone.Core.Hunts;
 using Aetherphone.Core.Jobs;
 using Aetherphone.Core.Market;
 using Aetherphone.Core.Notifications;
@@ -50,6 +51,14 @@ internal sealed class VideoQueueRecord
 }
 
 [Serializable]
+internal sealed class VideoLocalFileMapRecord
+{
+    public string Key { get; set; } = "";
+    public string Path { get; set; } = "";
+    public long SizeBytes { get; set; }
+}
+
+[Serializable]
 internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, IControlConfiguration
 {
     public int Version { get; set; } = 1;
@@ -75,6 +84,8 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool ChirperShowCommentMedia { get; set; } = true;
     public bool AethergramShowGifPosts { get; set; } = true;
     public bool AethergramShowCommentMedia { get; set; } = true;
+    public int ChirperFeedRegionMask { get; set; }
+    public int AethergramFeedRegionMask { get; set; }
     public bool ShowSensitiveContent { get; set; }
     public Dictionary<string, AppNotificationSetting> NotificationSettings { get; set; } = new();
     public bool NotifyDailyReset { get; set; }
@@ -92,7 +103,8 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool ShowLodestonePortraits { get; set; } = true;
     public int LodestoneIdIndexVersion { get; set; }
     public float TextZoom { get; set; } = 1.0f;
-    public List<string> FontGlyphLedger { get; set; } = new();
+    public string FontGlyphCache { get; set; } = string.Empty;
+    public string IconGlyphCache { get; set; } = string.Empty;
     public float ScreenBrightness { get; set; } = 1f;
     public float PhoneScale { get; set; } = PhoneSizeCatalog.DefaultWidth / PhoneSizeCatalog.DesignWidth;
     public float PhoneWidth { get; set; }
@@ -126,8 +138,10 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool VideoAllowInsecureDirectUrls { get; set; }
     public bool VideoStreamApprovalRequired { get; set; }
     public bool VideoStreamDiscoverable { get; set; } = true;
+    public bool VideoScreenVisible { get; set; } = true;
     public List<ScreenPositionPreset> ScreenPresets { get; set; } = new();
     public List<VideoQueueRecord> VideoQueue { get; set; } = new();
+    public List<VideoLocalFileMapRecord> VideoLocalFileMap { get; set; } = new();
     public bool GameSoundsCleared { get; set; }
     #if DEBUG
     public const string DefaultAethernetBaseUrl = "https://aethernet-dev-production.up.railway.app";
@@ -139,6 +153,11 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public string AethernetToken { get; set; } = string.Empty;
     public string EncryptionKeyCache { get; set; } = string.Empty;
     public string EncryptionKeyCacheUserId { get; set; } = string.Empty;
+    public string HuntsSessionCache { get; set; } = string.Empty;
+    public bool HuntsAuthenticated { get; set; }
+    public bool HuntsAppOpened { get; set; }
+    public HuntsFilterSnapshot? HuntsFilterSettings { get; set; }
+    public HuntsNotificationSnapshot? HuntsNotificationSettings { get; set; }
     public bool EncryptionRecoveryNudgeDismissed { get; set; }
     public Dictionary<string, int> KnownPeerKeyVersions { get; set; } = new();
     public Dictionary<ulong, CharacterSession> CharacterSessions { get; set; } = new();

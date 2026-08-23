@@ -181,7 +181,7 @@ async function main() {
     .filter((entry) => !missing.has(entry.file));
 
   const catalog = {
-    source: `Twemoji ${TWEMOJI_VERSION} (CC-BY 4.0), metadata from emojibase-data (CC0)`,
+    source: `Twemoji ${TWEMOJI_VERSION} (CC-BY 4.0), metadata from emojibase-data (MIT)`,
     groups: KEPT_GROUPS.map((group) => GROUP_NAMES[group]),
     emoji: usable,
   };

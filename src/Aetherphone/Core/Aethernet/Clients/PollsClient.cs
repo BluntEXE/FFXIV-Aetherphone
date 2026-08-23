@@ -12,26 +12,26 @@ internal sealed class PollsClient
         this.net = net;
     }
 
-    public Task<PollPage?> ListAsync(string? cursor, CancellationToken token, Action<AepFailure>? onFailure = null)
+    public Task<PollPage?> ListAsync(string? cursor, string lang, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        var path = "/polls";
+        var path = $"/polls?lang={Uri.EscapeDataString(lang)}";
         if (cursor is not null)
         {
-            path += $"?cursor={Uri.EscapeDataString(cursor)}";
+            path += $"&cursor={Uri.EscapeDataString(cursor)}";
         }
 
         return net.GetAsync(path, AethernetJsonContext.Default.PollPage, token, null, onFailure);
     }
 
-    public Task<PollDto?> VoteAsync(string pollId, int option, CancellationToken token,
+    public Task<PollDto?> VoteAsync(string pollId, int option, string lang, CancellationToken token,
         Action<AepFailure>? onFailure = null)
     {
-        return net.SendJsonAsync(HttpMethod.Put, $"/polls/{pollId}/vote", new PollVoteRequest(option), AethernetJsonContext.Default.PollVoteRequest, AethernetJsonContext.Default.PollDto, token, null, onFailure);
+        return net.SendJsonAsync(HttpMethod.Put, $"/polls/{pollId}/vote?lang={Uri.EscapeDataString(lang)}", new PollVoteRequest(option), AethernetJsonContext.Default.PollVoteRequest, AethernetJsonContext.Default.PollDto, token, null, onFailure);
     }
 
-    public Task<PollDto?> ClearVoteAsync(string pollId, CancellationToken token,
+    public Task<PollDto?> ClearVoteAsync(string pollId, string lang, CancellationToken token,
         Action<AepFailure>? onFailure = null)
     {
-        return net.RequestAsync(HttpMethod.Delete, $"/polls/{pollId}/vote", AethernetJsonContext.Default.PollDto, token, null, onFailure);
+        return net.RequestAsync(HttpMethod.Delete, $"/polls/{pollId}/vote?lang={Uri.EscapeDataString(lang)}", AethernetJsonContext.Default.PollDto, token, null, onFailure);
     }
 }

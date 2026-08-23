@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using SharpDX.Direct3D11;
 
 namespace Aetherphone.Core.Video;
@@ -19,6 +20,7 @@ internal sealed class MpvRenderer : IDisposable
     private const string RenderKey = "mpv";
 
     private const int FormatFlag = 3;
+    private const int FormatInt64 = 4;
     private const int FormatDouble = 5;
 
     private const int EventShutdown = 1;
@@ -39,6 +41,38 @@ internal sealed class MpvRenderer : IDisposable
     private const int MaxConsecutiveRenderFailures = 30;
     private const int RenderWaitMilliseconds = 250;
     private const double EventWaitSeconds = 0.1;
+    private const int MaxErrorDetailLength = 200;
+    private const string ResolverLogPrefix = "ytdl_hook";
+    private const string ResolverErrorPrefix = "ERROR: ";
+    private const string ResolverFailedPrefix = "youtube-dl failed: ";
+
+    private static readonly Regex ResolverSitePrefix = new(@"^\[[^\]]+\]\s+\S+:\s+", RegexOptions.Compiled);
+
+    private static readonly string[] ResolverAdviceMarkers =
+    [
+        " Use --",
+        " See https://",
+        "; please report",
+        ". Please report",
+        " (caused by",
+    ];
+
+    private const string StreamReconnectOptions =
+        "reconnect=1,reconnect_streamed=1,reconnect_on_network_error=1,reconnect_on_http_error=5xx,reconnect_delay_max=30";
+
+    private static readonly char[] LineBreaks = ['\r', '\n'];
+
+    private static readonly string[] StreamErrorMarkers =
+    [
+        "failed to load segment",
+        "Connection reset",
+        "timed out",
+        "Server returned 5",
+        "I/O error",
+        "Input/output error",
+        "End of file",
+        "Failed to open",
+    ];
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern IntPtr mpv_create();
@@ -115,6 +149,10 @@ internal sealed class MpvRenderer : IDisposable
         [MarshalAs(UnmanagedType.LPUTF8Str)] string name, int format, out int data);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int mpv_get_property(IntPtr ctx,
+        [MarshalAs(UnmanagedType.LPUTF8Str)] string name, int format, out long data);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern IntPtr mpv_get_property_string(IntPtr ctx,
         [MarshalAs(UnmanagedType.LPUTF8Str)] string name);
 
@@ -164,8 +202,11 @@ internal sealed class MpvRenderer : IDisposable
     private volatile bool disposed;
     private volatile bool started;
     private volatile string? currentUrl;
+    private volatile string? lastErrorDetail;
+    private volatile bool lastErrorFromResolver;
     private int consecutiveRenderFailures;
     private int httpForbiddenHits;
+    private int streamErrorHits;
 
     internal event Action? FileLoaded;
     internal event Action<MpvEndReason, string?>? FileEnded;
@@ -173,6 +214,10 @@ internal sealed class MpvRenderer : IDisposable
     internal bool IsRunning => started && !disposed;
 
     internal bool SawHttpForbidden => Volatile.Read(ref httpForbiddenHits) > 0;
+
+    internal bool SawStreamError => Volatile.Read(ref streamErrorHits) > 0;
+
+    internal string? LastErrorDetail => lastErrorDetail;
 
     internal string? LinkResolverPath { get; private set; }
 
@@ -208,9 +253,10 @@ internal sealed class MpvRenderer : IDisposable
             $"bestvideo[height<={maxQualityHeight}][vcodec^=avc1]+bestaudio/"
             + $"bestvideo[height<={maxQualityHeight}][ext=mp4]+bestaudio/best[height<={maxQualityHeight}]");
         SetOption("ytdl-raw-options", "force-ipv4=,hls-use-mpegts=");
+        SetOption("stream-lavf-o", StreamReconnectOptions);
         SetOption("volume", initialVolume.ToString(CultureInfo.InvariantCulture));
         SetOption("msg-level", "all=warn,ffmpeg=error");
-        SetOption("terminal", "yes");
+        SetOption("terminal", "no");
         SetOption("idle", "yes");
         SetOption("keep-open", "no");
         SetOption("reset-on-next-file", "pause");
@@ -311,6 +357,15 @@ internal sealed class MpvRenderer : IDisposable
 
         lock (commandLock)
         {
+            if (mpvContext == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            lastErrorDetail = null;
+            lastErrorFromResolver = false;
+            Interlocked.Exchange(ref httpForbiddenHits, 0);
+            Interlocked.Exchange(ref streamErrorHits, 0);
             var result = mpv_command(mpvContext, ["loadfile", url, "replace", "0", options, null]);
             if (result < 0)
             {
@@ -321,7 +376,6 @@ internal sealed class MpvRenderer : IDisposable
 
         currentUrl = url;
         Interlocked.Exchange(ref consecutiveRenderFailures, 0);
-        Interlocked.Exchange(ref httpForbiddenHits, 0);
         return true;
     }
 
@@ -335,7 +389,10 @@ internal sealed class MpvRenderer : IDisposable
         currentUrl = null;
         lock (commandLock)
         {
-            _ = mpv_command(mpvContext, ["stop", null]);
+            if (mpvContext != IntPtr.Zero)
+            {
+                _ = mpv_command(mpvContext, ["stop", null]);
+            }
         }
 
         lock (snapshotLock)
@@ -359,6 +416,11 @@ internal sealed class MpvRenderer : IDisposable
         var target = Math.Max(0d, seconds).ToString("F3", CultureInfo.InvariantCulture);
         lock (commandLock)
         {
+            if (mpvContext == IntPtr.Zero)
+            {
+                return;
+            }
+
             var result = mpv_command(mpvContext, ["seek", target, "absolute", null]);
             if (result < 0)
             {
@@ -376,7 +438,10 @@ internal sealed class MpvRenderer : IDisposable
 
         lock (commandLock)
         {
-            _ = mpv_command(mpvContext, ["set", name, value, null]);
+            if (mpvContext != IntPtr.Zero)
+            {
+                _ = mpv_command(mpvContext, ["set", name, value, null]);
+            }
         }
     }
 
@@ -399,7 +464,13 @@ internal sealed class MpvRenderer : IDisposable
             _ = mpv_get_property(mpvContext, "pause", FormatFlag, out int paused);
             _ = mpv_get_property(mpvContext, "core-idle", FormatFlag, out int coreIdle);
             _ = mpv_get_property(mpvContext, "seeking", FormatFlag, out int seeking);
-            return new MpvPlaybackInfo(position, duration, paused == 1, coreIdle == 1, seeking == 1);
+            var hasAudioPosition = mpv_get_property(mpvContext, "audio-pts", FormatDouble, out double audioPosition) >= 0;
+            var hasVideo = mpv_get_property(mpvContext, "vid", FormatInt64, out long _) >= 0;
+            var videoIsStill = hasVideo
+                && ((mpv_get_property(mpvContext, "current-tracks/video/albumart", FormatFlag, out int albumArt) >= 0 && albumArt == 1)
+                    || (mpv_get_property(mpvContext, "current-tracks/video/image", FormatFlag, out int image) >= 0 && image == 1));
+            return new MpvPlaybackInfo(position, duration, paused == 1, coreIdle == 1, seeking == 1,
+                hasVideo && !videoIsStill, hasAudioPosition, hasAudioPosition ? audioPosition : 0d);
         }
     }
 
@@ -475,20 +546,27 @@ internal sealed class MpvRenderer : IDisposable
 
     private void RenderLoop()
     {
-        while (!disposed)
+        try
         {
-            if (!frameReady.Wait(RenderWaitMilliseconds))
+            while (!disposed)
             {
-                continue;
-            }
+                if (!frameReady.Wait(RenderWaitMilliseconds))
+                {
+                    continue;
+                }
 
-            frameReady.Reset();
-            if (disposed)
-            {
-                return;
-            }
+                frameReady.Reset();
+                if (disposed)
+                {
+                    return;
+                }
 
-            RenderPendingFrame();
+                RenderPendingFrame();
+            }
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning($"[MPV] Render loop stopped: {exception.Message}");
         }
     }
 
@@ -623,6 +701,12 @@ internal sealed class MpvRenderer : IDisposable
                 Interlocked.Increment(ref httpForbiddenHits);
             }
 
+            if (IsStreamErrorText(text))
+            {
+                Interlocked.Increment(ref streamErrorHits);
+            }
+
+            RememberErrorDetail(prefix, text);
             AepLog.Warning($"[MPV/{prefix}] {text}");
             return;
         }
@@ -634,6 +718,89 @@ internal sealed class MpvRenderer : IDisposable
         text.Contains("403", StringComparison.Ordinal)
         && (text.Contains("http", StringComparison.OrdinalIgnoreCase)
             || text.Contains("forbidden", StringComparison.OrdinalIgnoreCase));
+
+    private static bool IsStreamErrorText(string text)
+    {
+        for (var index = 0; index < StreamErrorMarkers.Length; index++)
+        {
+            if (text.Contains(StreamErrorMarkers[index], StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void RememberErrorDetail(string? prefix, string text)
+    {
+        var fromResolver = prefix == ResolverLogPrefix;
+        var hasDetail = lastErrorDetail is { Length: > 0 };
+        if (fromResolver && hasDetail && text.StartsWith(ResolverFailedPrefix, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        if (!fromResolver && hasDetail && lastErrorFromResolver)
+        {
+            return;
+        }
+
+        var detail = text;
+        var lineBreak = detail.IndexOfAny(LineBreaks);
+        if (lineBreak >= 0)
+        {
+            detail = detail[..lineBreak];
+        }
+
+        if (fromResolver)
+        {
+            detail = CleanResolverError(detail);
+        }
+
+        if (detail.Length == 0)
+        {
+            return;
+        }
+
+        if (detail.Length > MaxErrorDetailLength)
+        {
+            detail = detail[..MaxErrorDetailLength].TrimEnd();
+        }
+
+        lastErrorDetail = detail;
+        lastErrorFromResolver = fromResolver;
+    }
+
+    internal static string CleanResolverError(string line)
+    {
+        if (line.StartsWith(ResolverErrorPrefix, StringComparison.Ordinal))
+        {
+            line = line[ResolverErrorPrefix.Length..];
+        }
+        else if (line.StartsWith(ResolverFailedPrefix, StringComparison.Ordinal))
+        {
+            line = line[ResolverFailedPrefix.Length..];
+        }
+
+        line = ResolverSitePrefix.Replace(line, string.Empty, 1);
+        for (var index = 0; index < ResolverAdviceMarkers.Length; index++)
+        {
+            var cut = line.IndexOf(ResolverAdviceMarkers[index], StringComparison.Ordinal);
+            if (cut > 0)
+            {
+                line = line[..cut];
+            }
+        }
+
+        line = line.Trim().TrimEnd('.');
+        if (line.Length > 0 && char.IsLower(line[0]))
+        {
+            line = char.ToUpperInvariant(line[0]) + line[1..];
+        }
+
+        return line;
+    }
 
     private void HandleEndFile(IntPtr handle)
     {
@@ -655,10 +822,12 @@ internal sealed class MpvRenderer : IDisposable
             _ => MpvEndReason.Finished,
         };
 
-        var detail = reason == MpvEndReason.Failed ? ErrorText(errorCode) : null;
+        string? detail = null;
         if (reason == MpvEndReason.Failed)
         {
-            AepLog.Warning($"[MPV] Playback failed: {detail}");
+            var errorText = ErrorText(errorCode);
+            detail = lastErrorDetail is { Length: > 0 } logged ? logged : errorText;
+            AepLog.Warning($"[MPV] Playback failed ({errorText}): {detail}");
         }
 
         FileEnded?.Invoke(reason, detail);
@@ -712,10 +881,13 @@ internal sealed class MpvRenderer : IDisposable
             updateCallbackHandle.Free();
         }
 
-        if (mpvContext != IntPtr.Zero)
+        lock (commandLock)
         {
-            mpv_terminate_destroy(mpvContext);
-            mpvContext = IntPtr.Zero;
+            if (mpvContext != IntPtr.Zero)
+            {
+                mpv_terminate_destroy(mpvContext);
+                mpvContext = IntPtr.Zero;
+            }
         }
 
         FreeUnmanaged(ref frameBuffer);
@@ -748,4 +920,7 @@ internal readonly record struct MpvPlaybackInfo(
     double DurationSeconds,
     bool Paused,
     bool CoreIdle,
-    bool Seeking);
+    bool Seeking,
+    bool HasMovingVideo,
+    bool HasAudioPosition,
+    double AudioPositionSeconds);

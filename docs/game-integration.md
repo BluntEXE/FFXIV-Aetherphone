@@ -17,7 +17,7 @@ This doc explains how Aetherphone reads from and acts on the live game without c
 | src/Aetherphone/Core/Jobs/JobsReader.cs | Builds the Jobs app model from gearsets, sheets, and player state |
 | src/Aetherphone/Core/Jobs/GearsetActions.cs | Equips gearsets (the only class-switching path) |
 | src/Aetherphone/Core/Emote/PhoneEmoteController.cs | Plays the phone-scrolling emote when safe |
-| src/Aetherphone/Core/Linkpearl/ChatSender.cs | Sends chat box entries (used for emote commands) |
+| src/Aetherphone/Core/GameChat/ChatSender.cs | Sends chat box entries (used for emote commands) |
 | src/Aetherphone/Core/Shortcuts/ShortcutRunner.cs | Runs a shortcut's steps, gating command steps on game state |
 | src/Aetherphone/Core/Contacts/FriendListReader.cs | Reads the in-game friend list into `FriendEntry` records |
 | src/Aetherphone/Core/Contacts/FriendActions.cs | Adventurer plates, party invites, estate teleports |
@@ -31,7 +31,7 @@ This doc explains how Aetherphone reads from and acts on the live game without c
 
 ## Dalamud services and how they are injected
 
-Dalamud is the plugin framework that loads Aetherphone inside FFXIV. It provides typed services for everything the game exposes. You never construct these: Dalamud injects them into static properties marked with `[PluginService]` before the plugin constructor runs. All of them live at the top of src/Aetherphone/Plugin.cs:
+Dalamud is the plugin framework that loads Aetherphone inside FFXIV. It provides typed services for everything the game exposes. You never construct these: Dalamud injects them into static properties marked with `[PluginService]` before the plugin constructor runs. All of them live at the top of src/Aetherphone/Plugin.cs. The table lists the services in active use; `IKeyState` and `IGamepadState` are also injected there but currently have no call sites:
 
 | Service | What Aetherphone uses it for |
 | --- | --- |
@@ -53,6 +53,7 @@ Dalamud is the plugin framework that loads Aetherphone inside FFXIV. It provides
 | `IPluginLog` | Logging |
 | `IGameConfig` | Game configuration values |
 | `IUnlockState` | Mount, minion, emote, orchestrion, and other unlock checks |
+| `IGameInteropProvider` | The plugin's only function hook: the DXGI Present hook in src/Aetherphone/Core/Video/DxHandler.cs that drives video playback (falls back to the UI render pump when the hook fails) |
 | `IAetheryteList` | Which aetherytes the character is attuned to |
 
 Core services get these handed to them once in `PhoneServices.Build` (src/Aetherphone/Core/PhoneServices.cs) instead of reaching for `Plugin.*` statics, which keeps them testable. Some leaf code (for example `LocationShare` and `HealthTracker`) does use the statics directly.
@@ -78,13 +79,15 @@ public void Save()
 {
     if (Plugin.Framework.IsInFrameworkUpdateThread)
     {
-        Plugin.PluginInterface.SavePluginConfig(this);
+        SaveNow();
         return;
     }
 
-    _ = Plugin.Framework.RunOnFrameworkThread(() => Plugin.PluginInterface.SavePluginConfig(this));
+    _ = Plugin.Framework.RunOnFrameworkThread(SaveNow);
 }
 ```
+
+Both branches route through `SaveNow`, which wraps `SavePluginConfig` in a try/catch so a failed disk write logs an error instead of throwing into the frame.
 
 `AethernetSession` (src/Aetherphone/Core/Aethernet/AethernetSession.cs) uses the same call so sign-in, sign-out, and auth-failure updates arriving from network callbacks mutate session state on the framework thread.
 
@@ -92,7 +95,7 @@ public void Save()
 
 ### The constructor is not the framework thread
 
-Dalamud may run the plugin constructor on a loader thread. Never read `IObjectTable.LocalPlayer` or any character data inside it. The `Plugin` constructor follows this rule: when `OpenOnStartup` is set it only flags `autoOpenPending` and subscribes `OnAutoOpenTick` to `Framework.Update`. The actual `ObjectTable.LocalPlayer` and `Condition[ConditionFlag.BetweenAreas]` checks happen inside that tick handler (src/Aetherphone/Plugin.cs, `QueueAutoOpen` and `OnAutoOpenTick`), which is guaranteed to be on the framework thread. Copy this deferral pattern for any startup logic that needs the character.
+Dalamud may run the plugin constructor on a loader thread. Never read `IObjectTable.LocalPlayer` or any character data inside it. The `Plugin` constructor follows this rule: when `OpenOnStartup` is set it only flags `autoOpenPending` and subscribes `OnAutoOpenTick` to `Framework.Update`. The actual `ObjectTable.LocalPlayer`, `Condition[ConditionFlag.BetweenAreas]`, and `Condition[ConditionFlag.BetweenAreas51]` checks happen inside that tick handler (src/Aetherphone/Plugin.cs, `QueueAutoOpen` and `OnAutoOpenTick`), which is guaranteed to be on the framework thread. Copy this deferral pattern for any startup logic that needs the character.
 
 ## Reading static game data: Lumina Excel sheets
 
@@ -194,7 +197,7 @@ public static bool Equip(int gearsetId)
 
 Note the return contract: `EquipGearset` returns 0 on success, so the comparison is `== 0`, not a truthiness check.
 
-**Emotes**: `PhoneEmoteController` plays the tomescroll-reading emote while the phone is open and the character stands still. It refuses to fire under any of its `BlockingConditions` (`InCombat`, `BetweenAreas`, `BetweenAreas51`, `OccupiedInCutSceneEvent`, `WatchingCutscene`, `WatchingCutscene78`, `OccupiedInQuestEvent`, `Casting`), checks the emote is unlocked, and then sends the emote's text command through `ChatSender.TrySend`. `ChatSender` (src/Aetherphone/Core/Linkpearl/ChatSender.cs) pushes the string into the game's own chat box via `UIModule.Instance()->ProcessChatBoxEntry`, capped at 500 UTF-8 bytes, and rejects any message whose length changes under the game's `SanitizeString` (it compares the length before and after sanitizing). Treat `ChatSender` as a loaded weapon: whatever you pass it executes as if the player typed it.
+**Emotes**: `PhoneEmoteController` plays a scroll-reading emote while the phone is open and the character stands still. The feature is gated on `Configuration.ScrollWhileIdle` (default true). It prefers the looping tomescroll emote (id 295) and falls back to the one-shot tomestone emote (id 191) when tomescroll is locked, checking each through `UIState`. It refuses to fire under any of its 37 `BlockingConditions` (including `InCombat`, `Gathering`, `Crafting`, `TradeOpen`, and `Performing`), and only while the character struct's mode is `CharacterModes.Normal`. It waits until the character has been still for 400 ms (`StillnessDelayMilliseconds`), recasts on a 2500 ms cooldown (`RecastCooldownMilliseconds`), and then sends the emote's text command plus `" motion"` through `ChatSender.TrySend`. `ChatSender` (src/Aetherphone/Core/GameChat/ChatSender.cs) pushes the string into the game's own chat box via `UIModule.Instance()->ProcessChatBoxEntry`, capped at 500 UTF-8 bytes, and rejects any message whose length changes under the game's `SanitizeString` (it compares the length before and after sanitizing). Treat `ChatSender` as a loaded weapon: whatever you pass it executes as if the player typed it.
 
 **Shortcut command steps** are the other gated caller. `ShortcutRunner` (src/Aetherphone/Core/Shortcuts/ShortcutRunner.cs) sends user-authored command steps through `ChatSender.TrySendSanitised`, the sibling that lets the game sanitize rather than refusing. Only `Command` steps touch the game, so `ShortcutRunner.NeedsGame` gates them alone and a shortcut that merely opens a plugin or a link still runs at the title screen. Before each command step the runner refuses outright when `IClientState.IsLoggedIn` is false, and otherwise holds while any of `BetweenAreas`, `BetweenAreas51`, `OccupiedInCutSceneEvent`, `WatchingCutscene`, or `WatchingCutscene78` is set, because the game silently swallows chat entries in those states. The hold is bounded by `ShortcutHold` (15 seconds) so a long cutscene abandons the run with a reported reason instead of hanging. Combat and casting are deliberately not blocked: combat macros are a legitimate use of a shortcut, unlike the idle phone emote above.
 
@@ -202,7 +205,9 @@ Shortcuts can also be imported from other players as a text code (`ShortcutCode`
 
 **Friend actions** (src/Aetherphone/Core/Contacts/FriendActions.cs) use game UI "agents" (the objects behind native windows): `AgentCharaCard.Instance()->OpenCharaCard` for adventurer plates, `InfoProxyPartyInvite.Instance()->InviteToPartyContentId` for party invites, `AgentFriendlist.Instance()->OpenFriendEstateTeleportation` for estate visits.
 
-**Teleports** are delegated to the Lifestream plugin over Dalamud IPC (inter-plugin communication: typed call gates registered by name). src/Aetherphone/Core/Venues/LifestreamBridge.cs subscribes with `Plugin.PluginInterface.GetIpcSubscriber` to `Lifestream.IsBusy`, `Lifestream.Teleport`, `Lifestream.ChangeWorldById`, `Lifestream.CanVisitSameDC`, and `Lifestream.CanVisitCrossDC`. `TeleportToAetheryte(uint aetheryteRowId)` layers its own checks before invoking anything: Lifestream installed and loaded, not busy, and the character actually attuned to that aetheryte (scanning `Plugin.AetheryteList` for a matching `AetheryteId` with `SubIndex` 0). The IPC teleport takes the `Aetheryte` sheet RowId directly. The `/li tp <name>` chat command is not used to teleport; `LifestreamBridge.AetheryteCommand` only builds that string as a clipboard fallback when Lifestream is missing (`MapsApp.Teleport` and the Muster app both copy it). Two travel paths still run a command through `ICommandManager.ProcessCommand`: `TravelToAethernet` sends `/li <shard>` for in-city aethernet shards, and `Travel` sends `/li <code>` for venue travel codes.
+**Teleports** are delegated to the Lifestream plugin over Dalamud IPC (inter-plugin communication: typed call gates registered by name). src/Aetherphone/Core/Venues/LifestreamBridge.cs subscribes with `Plugin.PluginInterface.GetIpcSubscriber` to `Lifestream.IsBusy`, `Lifestream.Teleport`, `Lifestream.ChangeWorldById`, `Lifestream.CanVisitSameDC`, `Lifestream.CanVisitCrossDC`, and `Lifestream.GoToHousingAddress` (the gate behind `TravelToHousingPlot` below). `TeleportToAetheryte(uint aetheryteRowId)` layers its own checks before invoking anything: Lifestream installed and loaded, not busy, and the character actually attuned to that aetheryte (scanning `Plugin.AetheryteList` for a matching `AetheryteId` with `SubIndex` 0). The IPC teleport takes the `Aetheryte` sheet RowId directly. The `/li tp <name>` chat command is not used to teleport; `LifestreamBridge.AetheryteCommand` only builds that string as a clipboard fallback when Lifestream is missing (`MapsApp.Teleport`, the Muster app, and the chat transcript's `StartTravel` fallback in src/Aetherphone/Windows/Components/ChatTranscript.cs all copy it). Two travel paths still run a command through `ICommandManager.ProcessCommand`: `TravelToAethernet` sends `/li <shard>` for in-city aethernet shards, and `Travel` sends `/li <code>` for venue travel codes.
+
+**Zone instance sync**: `LifestreamBridge` also subscribes to `Lifestream.GetCurrentInstance`, `Lifestream.CanChangeInstance`, and `Lifestream.ChangeInstance`. The hunts app's mark detail page (`HuntsApp.Detail.cs`) arms a pending watcher (`ArmPendingInstanceSync`, mirroring `ArmPendingWorldHop`) whenever a navigate action targets a mark with a known `ZoneInstance`, regardless of whether that navigation needs a world hop, an aetheryte teleport, or the player is already in the target territory. Each `Framework.Update` tick, once the player's territory and world match the target, it compares `GetCurrentInstance()` against the mark's tracked instance and calls `ChangeInstance` when they differ and `CanChangeInstance()` allows it, retrying until it succeeds or the same timeout used for pending flags and world hops elapses.
 
 **Choosing a destination** is `TravelPlanner` (src/Aetherphone/Core/Maps/TravelPlanner.cs), the one resolver every travel button shares. From a territory and world id (or a whole `SharedLocation`) it returns a `TravelDestination`: same world and territory means `AlreadyThere`, a foreign world means world travel, otherwise the best aetheryte or aethernet shard for that territory, taken from a lookup built once over the `Aetheryte` sheet. Housing shares resolve further: territories whose `TerritoryIntendedUse` is 13 (a ward) or 14 (any interior, so private houses, chambers, workshops, apartments, and venue rooms) map to their district through the district's `Aetheryte` column, so a share sent from inside a house travels to its ward and plot through `LifestreamBridge.TravelToHousingPlot` instead of stopping at the city aetheryte. Attunement for those is checked against the district's city aetheryte.
 
@@ -227,7 +232,7 @@ The Linkpearl app drives this on a cadence (src/Aetherphone/Apps/Linkpearl/Linkp
 
 **Reading**: `WeatherService` computes the natural forecast entirely from sheets (`TerritoryType` to `WeatherRate` to `Weather`) plus the deterministic forecast hash in `ForecastTarget`, so the natural forecast needs no game memory at all (the `Forecast` list only touches game memory to swap `LiveRenderedWeather` into the current window). `LiveRenderedWeather` reads what is actually on screen from `EnvManager.Instance()->ActiveWeather`. `EorzeaTime.CurrentSeconds` reads `Framework.Instance()->ClientTime`, honoring `EorzeaTimeOverride` when set, and falls back to a pure real-time formula if the framework pointer is null.
 
-**Overriding** (the Skywatcher app): `WeatherControl` (src/Aetherphone/Core/Game/WeatherControl.cs) is the only code allowed to write. It sets `EnvManager.Instance()->ActiveWeather` with a short `TransitionTime`, and Eorzea time via `ClientTime.IsEorzeaTimeOverridden` plus `EorzeaTimeOverride`. Because these are client-side visual overrides on shared engine state, `WeatherControl` is defensive in layers: `CanControl` requires logged in, not `InCombat`, and not `BetweenAreas`; the per-frame `OnUpdate` reverts everything if control is lost or the app is uninstalled (its `AppGate`); `TerritoryChanged` clears overrides; and `Dispose` calls `ClearAll` so unloading the plugin never leaves the world frozen at midnight. If you add any new game-state override, copy this revert-on-everything shape.
+**Overriding** (the Skywatcher app): `WeatherControl` (src/Aetherphone/Core/Game/WeatherControl.cs) is the only code allowed to write. It sets `EnvManager.Instance()->ActiveWeather` with a short `TransitionTime`, and Eorzea time via `ClientTime.IsEorzeaTimeOverridden` plus `EorzeaTimeOverride`. Because these are client-side visual overrides on shared engine state, `WeatherControl` is defensive in layers: `CanControl` requires logged in, not `InCombat`, not `BetweenAreas`, and not `BetweenAreas51`; the per-frame `OnUpdate` reverts everything if control is lost or the app is uninstalled (its `AppGate`); `TerritoryChanged` clears overrides; and `Dispose` calls `ClearAll` so unloading the plugin never leaves the world frozen at midnight. If you add any new game-state override, copy this revert-on-everything shape.
 
 ## Phone visibility and game states
 
@@ -239,8 +244,8 @@ Game-state awareness beyond window hiding is condition-driven per feature, alway
 
 | Feature | Gate |
 | --- | --- |
-| Auto-open on login (`Plugin.OnAutoOpenTick`) | Waits for `LocalPlayer` present and not `BetweenAreas` |
-| Phone emote (`PhoneEmoteController`) | Blocked in combat, cutscenes, quest events, casting, zone transitions |
+| Auto-open on login (`Plugin.OnAutoOpenTick`) | Waits for `LocalPlayer` present and neither `BetweenAreas` nor `BetweenAreas51` |
+| Phone emote (`PhoneEmoteController`) | Blocked by 37 condition flags: combat, cutscenes, crafting, gathering, trading, performing, zone transitions, and more |
 | Weather/time override (`WeatherControl.CanControl`) | Blocked in combat and zone transitions; auto-reverts |
 | Shortcut command steps (`ShortcutRunner`) | Refused when logged out; held while zoning or in a cutscene, then abandoned after 15 seconds |
 | Health reminders (`HealthTracker.RemindersSuppressed`) | Optionally muted in combat, duties (`BoundByDuty`), cutscenes |
@@ -269,7 +274,7 @@ Game-state awareness beyond window hiding is condition-driven per feature, alway
 - Base classes have `JobType` 0 in the `ClassJob` sheet. Bucketing by `JobType` alone drops every base class; `JobsReader.BucketFor` falls back to the `Role` column, where role 3 covers both physical and magical ranged base classes and the `WarCategoryId` check splits them.
 - `CollectionsCatalogService.EnsureLocalUnlocks` returns `null` off the framework thread by design. Callers must treat null as "try again next frame", not as "no unlocks".
 - `FriendListReader.RequestServerData` returns false inside duties and when proxies are null. The friend list you read afterward is only as fresh as the last successful request; the Linkpearl app polls, it never assumes.
-- Aetheryte teleports must pass the `Aetheryte` sheet RowId to the Lifestream IPC. Do not build `/li tp <name>` commands to teleport; in this codebase that string exists only as a clipboard fallback for users without the IPC available (`MapsApp.Teleport` and the Muster app's copy fallback).
+- Aetheryte teleports must pass the `Aetheryte` sheet RowId to the Lifestream IPC. Do not build `/li tp <name>` commands to teleport; in this codebase that string exists only as a clipboard fallback for users without the IPC available (`MapsApp.Teleport`, the Muster app's copy fallback, and `ChatTranscript.StartTravel`).
 - Weather and time overrides write shared engine state. Any new writer must revert on territory change, combat, gate close, and `Dispose`, exactly as `WeatherControl` does, or players get stuck weather after unloading the plugin.
 - `EorzeaTime.CurrentSeconds` silently switches to a real-time formula when `Framework.Instance()` is null (early boot). Do not treat two consecutive reads as monotonic across that boundary.
 - `ChatSender.TrySend` drops messages over 500 UTF-8 bytes and any message the game's sanitizer would shorten, returning false rather than sending an altered string. Check the return value.

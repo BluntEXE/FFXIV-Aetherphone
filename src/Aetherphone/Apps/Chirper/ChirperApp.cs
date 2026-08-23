@@ -18,6 +18,7 @@ using Aetherphone.Core.Sharing;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Wallpapers;
+using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -32,6 +33,8 @@ internal sealed partial class ChirperApp : IPhoneApp
     private const float FeedTopPadding = 8f;
     private const int MaxCommentLength = 500;
     private const string MediaFilterMenuId = "chirper.mediaFilterMenu";
+    private const string OverflowMenuId = "chirper.overflowMenu";
+    private const int HomeActionSlots = 3;
     private const float ReactionEmojiWidth = 18f;
     private const float ReactionEmojiFill = 0.62f;
     private const float ReactionSlotMin = 30f;
@@ -62,7 +65,9 @@ internal sealed partial class ChirperApp : IPhoneApp
     private readonly FeedVirtualizer profileVirtualizer = new(400f);
     private readonly MentionPopup mentionPopup = new();
     private readonly DropdownMenu mediaFilterMenu = new();
-    private readonly DropdownMenu.Item[] mediaFilterItems = new DropdownMenu.Item[3];
+    private readonly DropdownMenu.Item[] mediaFilterItems = new DropdownMenu.Item[3 + SocialRegion.Codes.Length];
+    private readonly DropdownMenu overflowMenu = new();
+    private readonly DropdownMenu.Item[] overflowItems = new DropdownMenu.Item[1];
     private readonly MentionAutocomplete composeMentions;
     private readonly MentionAutocomplete commentMentions;
     private readonly EmojiComposer composeEmoji = new();
@@ -120,6 +125,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         ConfirmService confirm, ReportService report, ConductGateService conduct, RealtimeSignalBus realtimeSignals)
     {
         store = new ChirperStore(session, net.Account, net.Social, net.Safety, net.Media, realtimeSignals);
+        store.SetFeedRegions(SocialRegion.FilterCsv(configuration.ChirperFeedRegionMask));
         composeMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         commentMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         this.library = library;
@@ -221,6 +227,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         navigation = context.Navigation;
         ui.Theme = theme;
         mediaFilterMenu.Gate();
+        overflowMenu.Gate();
         actions.Tick(MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds));
         var screen = SceneChrome.ScreenFrom(context.Content, theme, UiScale.Current);
         ui.Backdrop(screen);
@@ -242,6 +249,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         }
 
         DrawMediaFilterMenu(screen);
+        DrawOverflowMenu(screen);
     }
 
     private void DrawView(ChirperRoute route, Rect area, int depth)
@@ -296,34 +304,33 @@ internal sealed partial class ChirperApp : IPhoneApp
         }
 
         TourHolds.Release(Id);
-        var segmentHeight = 38f * scale;
-        var tabsRect = new Rect(new Vector2(area.Min.X + 16f * scale, top + 2f * scale),
-            new Vector2(area.Max.X - 16f * scale - segmentHeight - 8f * scale, top + 2f * scale + segmentHeight));
-        UiAnchors.Report("chirper.tabs", tabsRect);
+        var rowTop = top + 2f * scale;
+        var rowRect = new Rect(new Vector2(area.Min.X, rowTop),
+            new Vector2(area.Max.X, rowTop + FeedControlRow.Height * scale));
         var mediaOn = configuration.ChirperShowPhotoPosts && configuration.ChirperShowGifPosts
-            && configuration.ChirperShowCommentMedia;
-        var mediaRadius = segmentHeight * 0.5f;
-        var mediaCenter = new Vector2(area.Max.X - 16f * scale - mediaRadius, tabsRect.Center.Y);
-        if (ui.IconButton(mediaCenter, mediaRadius, FontAwesomeIcon.Image.ToIconString(),
-                mediaOn ? Accent : AppPalettes.Chirper.MutedInk, AppPalettes.Chirper.FieldSurface, 1.1f,
-                Loc.T(L.Chirper.MediaFilters), HoverLabelSide.Below))
+            && configuration.ChirperShowCommentMedia && configuration.ChirperFeedRegionMask == 0;
+        var controls = FeedControlRow.Draw(rowRect, ui, Accent, Loc.T(L.Chirper.ForYou), Loc.T(L.Chirper.Following),
+            (int)activeScope, ref tabSegmentAnim, store.IsLoading(activeScope), mediaOn, Loc.T(L.Common.Refresh),
+            Loc.T(L.Chirper.FeedFilters), "chirper.tabs");
+        if (controls.MediaToggled)
         {
-            mediaFilterMenu.Toggle(MediaFilterMenuId, new Rect(
-                mediaCenter - new Vector2(mediaRadius, mediaRadius),
-                mediaCenter + new Vector2(mediaRadius, mediaRadius)));
+            mediaFilterMenu.Toggle(MediaFilterMenuId, controls.MediaBounds);
         }
 
-        var selected = SegmentSlider.Draw(tabsRect, Loc.T(L.Chirper.ForYou), Loc.T(L.Chirper.Following),
-            (int)activeScope, ref tabSegmentAnim, Accent, AppPalettes.Chirper.MutedInk);
-        if (selected != (int)activeScope)
+        if (controls.Refreshed)
         {
-            activeScope = (SocialFeedScope)selected;
+            RefreshActiveFeed();
+        }
+
+        if (controls.Selected != (int)activeScope)
+        {
+            activeScope = (SocialFeedScope)controls.Selected;
             actions.Reset();
             feedScrollTopPending = true;
             profile.EnsureLoaded(activeScope);
         }
 
-        var listRect = new Rect(new Vector2(area.Min.X, tabsRect.Max.Y + 6f * scale), area.Max);
+        var listRect = new Rect(new Vector2(area.Min.X, rowRect.Max.Y + 6f * scale), area.Max);
         DrawFeedList(listRect, activeScope);
         if (ComposeFab.Draw(listRect, "##chirperComposeFab", Accent, FontAwesomeIcon.Feather.ToIconString(),
                 Loc.T(L.Chirper.NewChirp), "chirper.compose"))
@@ -335,6 +342,21 @@ internal sealed partial class ChirperApp : IPhoneApp
             composeSensitive = false;
             composeFocus = true;
             router.Push(ChirperRoute.Compose);
+        }
+    }
+
+    private void DrawOverflowMenu(Rect screen)
+    {
+        if (!overflowMenu.IsOpenFor(OverflowMenuId))
+        {
+            return;
+        }
+
+        overflowItems[0] = new DropdownMenu.Item(Loc.T(L.Conduct.Eyebrow),
+            FontAwesomeIcon.QuestionCircle.ToIconString());
+        if (overflowMenu.Draw(screen, theme, overflowItems) == 0)
+        {
+            conduct.ShowRules(Id);
         }
     }
 
@@ -351,7 +373,14 @@ internal sealed partial class ChirperApp : IPhoneApp
             FontAwesomeIcon.Film.ToIconString(), Selected: configuration.ChirperShowGifPosts);
         mediaFilterItems[2] = new DropdownMenu.Item(Loc.T(L.Settings.ChirperShowReplyMedia),
             FontAwesomeIcon.Comment.ToIconString(), Selected: configuration.ChirperShowCommentMedia);
-        mediaFilterMenu.Header = Loc.T(L.Chirper.MediaFilters);
+        for (var regionIndex = 0; regionIndex < SocialRegion.Codes.Length; regionIndex++)
+        {
+            mediaFilterItems[3 + regionIndex] = new DropdownMenu.Item(SocialRegion.Codes[regionIndex],
+                FontAwesomeIcon.Globe.ToIconString(),
+                Selected: SocialRegion.MaskShows(configuration.ChirperFeedRegionMask, regionIndex));
+        }
+
+        mediaFilterMenu.Header = Loc.T(L.Chirper.FeedFilters);
         mediaFilterMenu.KeepOpen = true;
         var picked = mediaFilterMenu.Draw(screen, theme, mediaFilterItems);
         switch (picked)
@@ -364,6 +393,11 @@ internal sealed partial class ChirperApp : IPhoneApp
                 break;
             case 2:
                 configuration.ChirperShowCommentMedia = !configuration.ChirperShowCommentMedia;
+                break;
+            case >= 3:
+                configuration.ChirperFeedRegionMask =
+                    SocialRegion.ToggleMask(configuration.ChirperFeedRegionMask, picked - 3);
+                store.SetFeedRegions(SocialRegion.FilterCsv(configuration.ChirperFeedRegionMask));
                 break;
             default:
                 return;
@@ -1628,6 +1662,11 @@ internal sealed partial class ChirperApp : IPhoneApp
         if (hit.Kind == RichTextRunKind.Hashtag && hit.Clicked)
         {
             OpenHashtag(layout.Tags[hit.TargetIndex]);
+        }
+
+        if (hit.Kind == RichTextRunKind.Link && hit.Clicked)
+        {
+            UrlActions.AskThenOpen(layout.Urls[hit.TargetIndex]);
         }
     }
 

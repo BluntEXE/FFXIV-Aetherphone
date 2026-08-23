@@ -8,6 +8,7 @@ using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Home;
+using Aetherphone.Core.Inventory;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
@@ -20,6 +21,7 @@ using Aetherphone.Core.Sharing;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Wallpapers;
+using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Objects.Enums;
@@ -30,6 +32,7 @@ namespace Aetherphone.Apps.Velvet;
 internal sealed partial class VelvetShell : IPhoneApp
 {
     private const float HeartbeatSeconds = 45f;
+    private const byte LalafellRaceId = 3;
 
     private readonly VelvetStore store;
     private readonly FailureSlot discoverFailure = new();
@@ -75,6 +78,8 @@ internal sealed partial class VelvetShell : IPhoneApp
     private VelvetPage activeTab = VelvetPage.Discover;
     private float sinceHeartbeat = HeartbeatSeconds;
     private bool cachedLalafell;
+    private bool raceKnown;
+    private ulong raceContentId;
 
     public VelvetShell(AethernetSession session, AethernetApi net, LodestoneService lodestone,
         Configuration configuration, PhotoLibrary library, HttpService http, RemoteImageCache images,
@@ -208,6 +213,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         theme = context.Theme;
         navigation = context.Navigation;
         ui.Theme = theme;
+        SyncLocalRace();
 
         if (!store.IsSignedIn)
         {
@@ -217,13 +223,14 @@ internal sealed partial class VelvetShell : IPhoneApp
             return;
         }
 
-        if (IsLalafellCharacter() || store.AccessBlocked)
+        if (LocalRaceIsLalafell is true || store.AccessBlocked)
         {
             TourHolds.Hold(Id);
             store.EnsureMe();
             TickHeartbeat();
+            var reason = store.RegionBlocked ? L.Velvet.UnavailableRegionBody : L.Velvet.UnavailableBody;
             EmptyState.Draw(context.Content, ui, FontAwesomeIcon.Ban, Loc.T(L.Velvet.UnavailableTitle),
-                Loc.T(L.Velvet.UnavailableBody));
+                Loc.T(reason));
             return;
         }
 
@@ -289,29 +296,48 @@ internal sealed partial class VelvetShell : IPhoneApp
         if (sinceHeartbeat >= HeartbeatSeconds)
         {
             sinceHeartbeat = 0f;
-            store.Heartbeat(SocialRegion.EffectiveCode(configuration, gameData), IsLalafellCharacter());
+            store.Heartbeat(SocialRegion.EffectiveCode(configuration, gameData), LocalRaceIsLalafell);
         }
     }
 
-    private bool IsLalafellCharacter()
+    private void SyncLocalRace()
     {
-        const byte lalafellRaceId = 3;
         if (!Plugin.Framework.IsInFrameworkUpdateThread)
         {
-            return cachedLalafell;
+            return;
+        }
+
+        var contentId = InventoryReader.ReadLocalContentId();
+        if (contentId != raceContentId)
+        {
+            raceContentId = contentId;
+            raceKnown = false;
+            cachedLalafell = false;
+        }
+
+        if (raceKnown || contentId == 0)
+        {
+            return;
         }
 
         var local = gameData.LocalPlayer;
         if (local is null)
         {
-            return cachedLalafell;
+            return;
         }
 
         var customize = local.Customize;
         var raceIndex = (int)CustomizeIndex.Race;
-        cachedLalafell = customize.Length > raceIndex && customize[raceIndex] == lalafellRaceId;
-        return cachedLalafell;
+        if (customize.Length <= raceIndex)
+        {
+            return;
+        }
+
+        cachedLalafell = customize[raceIndex] == LalafellRaceId;
+        raceKnown = true;
     }
+
+    private bool? LocalRaceIsLalafell => raceKnown ? cachedLalafell : null;
 
     private void DrawView(VelvetView view, Rect area, int depth)
     {
@@ -506,6 +532,11 @@ internal sealed partial class VelvetShell : IPhoneApp
         if (hit.Kind == RichTextRunKind.Mention && hit.Clicked)
         {
             OpenProfile(layout.Mentions[hit.TargetIndex].UserId);
+        }
+
+        if (hit.Kind == RichTextRunKind.Link && hit.Clicked)
+        {
+            UrlActions.AskThenOpen(layout.Urls[hit.TargetIndex]);
         }
     }
 

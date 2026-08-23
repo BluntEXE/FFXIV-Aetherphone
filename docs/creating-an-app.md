@@ -87,7 +87,6 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
 
 namespace Aetherphone.Apps.Counter;
 
@@ -154,7 +153,7 @@ The idioms, all copied from CalculatorApp and NotesApp:
 
 - `SceneChrome.ScreenFrom(content, theme, scale)` expands the content rect back to the full screen so `ui.Backdrop(screen)` can paint the gradient edge to edge.
 - `AppHeader.Draw(context, DisplayName)` renders the centered title and a back button that calls `context.Navigation.Back()` for you.
-- `Typography` draws all text; never call `ImGui.Text` for styled copy. Styles come from the `TextStyles` ladder (see [the UI toolkit](ui-toolkit.md)). The sample fetches `ImGui.GetWindowDrawList()` and passes it to `Typography.DrawCentered` because the overloads without an `ImDrawListPtr` move the ImGui cursor, which has no place in a hand-laid-out `Draw`; CalculatorApp passes the draw list the same way.
+- `Typography` draws all text; never call `ImGui.Text` for styled copy. Styles come from the `TextStyles` ladder (see [the UI toolkit](ui-toolkit.md)). The sample fetches `ImGui.GetWindowDrawList()` and passes it to `Typography.DrawCentered` because the overloads without an `ImDrawListPtr` move the ImGui cursor, which has no place in a hand-laid-out `Draw`; CalculatorApp passes the draw list the same way in its key art (`DrawKey` and `DrawZeroKey`), while its `DrawLive` text goes through the cursor-moving overloads.
 - `AppSkin.PillButton` draws the shape, handles hover, and returns `true` on click, all in one call.
 - Every layout constant is multiplied by `UiScale.Current`. `Metrics` tokens (`Metrics.Space`, `Metrics.Radius`, `Metrics.Size`) are unscaled values; scale them at the call site.
 
@@ -162,7 +161,7 @@ The example borrows `AppPalettes.Calculator` to stay short. A real app adds its 
 
 ## Step 4: register it
 
-Apps are constructed in exactly one place: `AppRegistry.BuildDefault(PhoneServices services)` in src/Aetherphone/Core/Apps/AppRegistry.cs. Add a using for your namespace and one line next to the other simple apps, before the `AppStoreApp` line:
+Apps are constructed in exactly one place: `AppRegistry.BuildDefault` in src/Aetherphone/Core/Apps/AppRegistry.cs. Its signature takes seven parameters (`PhoneServices` plus six video and streaming services the AetherStream app needs); you never touch those for a new app. Add a using for your namespace and one line next to the other simple apps, before the `AppStoreApp` line:
 
 ```csharp
 apps.Add(new CalculatorApp());
@@ -179,18 +178,20 @@ Who sees it after that:
 
 ## Step 5: accent color and icon
 
-**Accent.** Add your id to the dictionary in src/Aetherphone/Core/Apps/AppAccents.cs:
+**Accent.** Add your id to the dictionary in src/Aetherphone/Core/Apps/AppAccents.cs, picking a token from the accent ring:
 
 ```csharp
-["counter"] = new(0.36f, 0.62f, 0.96f, 1f),
+["counter"] = AccentRing.Azure,
 ```
+
+Do not write a raw color literal here. `AccentRing` (src/Aetherphone/Core/Theme/AccentRing.cs) is a ring of fourteen named hues tuned to a shared tile luminance (`TileLuminance`, 0.285) so a white glyph stays readable on every tile, and src/Aetherphone.Tests/AccentRingTests.cs runs every id in the dictionary through a 3.0:1 white-glyph contrast floor (plus checks that the ring hues stay apart and the default home layout never puts like colors side by side): an untuned literal fails `dotnet test`. Every existing entry uses an `AccentRing.*` token (or a `BrandAccents.*` token for the three brand-locked social apps), so a new app reuses whichever ring token fits it.
 
 Without an entry, `AppAccents.For` returns the grey fallback and your home tile looks unfinished.
 
 **Icon.** The home tile (`HomeTileView.DrawApp` in src/Aetherphone/Windows/Components/HomeTileView.cs) calls `AppIconArt.TryDraw`, which resolves art in three steps:
 
 1. `AppIconTextures.TryDraw` looks for `Icons/<Id>.png` next to the plugin assembly and draws it tinted. Source PNGs live in src/Aetherphone/Icons and are copied to the output by the csproj (`Icons\*.png`).
-2. If no PNG exists, `AppIconArt` checks its `switch` of procedural vector icons. Only the mini-games use this path.
+2. If no PNG exists, `AppIconArt` checks its `switch` of procedural vector icons. Only the mini-games and the Casino app use this path.
 3. If both miss, the tile falls back to your `Glyph` letter.
 
 So for a normal app: add a 256 px white-on-transparent PNG named `counter.png` to src/Aetherphone/Icons. The project generates these from Tabler Icons; add a `counter` entry mapping your id to a Tabler icon name in the `map` in tools/icon-generator/generate-app-icons.mjs and run `npm run build` there (see tools/icon-generator/README.md, and [assets and media](assets-and-media.md) for the wider asset story). Ship white art: the renderer tints it to the theme ink at draw time, so baked-in colors get multiplied away.
@@ -205,7 +206,7 @@ So for a normal app: add a 256 px white-on-transparent PNG named `counter.png` t
 public static readonly LocString Counter = new("app.counter", "Counter");
 ```
 
-2. Add the `"app.counter"` key with its translation to all nine JSON catalogs in src/Aetherphone/Localization. Every key change lands in L.cs plus all nine files in the same commit, and a DEBUG launch warns about missing keys via `LocAudit`; the full sync workflow, copy rules, and plural handling are in [localization](localization.md).
+2. Add the `"app.counter"` key with its translation to all nine JSON catalogs in src/Aetherphone/Localization. Every key change lands in L.cs plus all nine files in the same commit. Two nets catch drift: a DEBUG launch warns about missing keys via `LocAudit`, and `LocalizationParityTests` in src/Aetherphone.Tests fails `dotnet test` outright when any catalog is missing a key declared in L.cs or carries a key L.cs no longer declares. The full sync workflow, copy rules, and plural handling are in [localization](localization.md).
 
 Any other strings your screens show follow the same pattern: a `LocString` in the matching `L` group, `Loc.T(...)` at draw time.
 
@@ -241,8 +242,8 @@ internal interface ISettingsPage
 
 The steps:
 
-1. Create your page class in src/Aetherphone/Apps/Settings/Pages. ImmersionPage (src/Aetherphone/Apps/Settings/Pages/ImmersionPage.cs) is the closest real template: toggle cards plus hint text, backed by `Configuration`.
-2. Register it in the `SettingsApp` constructor (src/Aetherphone/Apps/Settings/SettingsApp.cs): construct the page and add it to one of the `ISettingsPage[]` arrays inside the `groups` array (each one becomes a `SettingsGroup`, optionally with a footer `LocString`). That is the only registration; `RootSettingsPage` draws one `SettingsRow.Link` row per page and calls `ISettingsNavigator.Open(page)` on tap, which pushes your page onto the Settings `ViewRouter`.
+1. Create your page class in src/Aetherphone/Apps/Settings/Pages. GeneralPage (src/Aetherphone/Apps/Settings/Pages/GeneralPage.cs) is the closest real template: toggle cards plus hint text, backed by `Configuration`.
+2. Register it in the `SettingsApp` constructor (src/Aetherphone/Apps/Settings/SettingsApp.cs): construct the page and add it to one of the bare `ISettingsPage[]` arrays inside the `groups` array. There is no group type and no footer text; each inner array simply renders as one grouped card on the root screen (`RootSettingsPage.DrawGroups`). That is the only registration; `RootSettingsPage` draws one `SettingsRow.Link` row per page and calls `ISettingsNavigator.Open(page)` on tap, which pushes your page onto the Settings `ViewRouter`.
 3. Fill in `Draw`. `SettingsApp.DrawPage` renders the `AppHeader` with your `Title` and a back button before calling you (unless you set `OwnsChrome => true`), so you only draw inside the `body` rect. The house style: wrap content in `using (AppSurface.Begin(body))` for a scrollable surface, then compose `SettingsSection.Header`, `GroupCard.Begin(theme, rowCount)` with one `card.NextRow()` per row and `card.End()` after, and `SettingsSection.Hint` for footer text.
 4. Localize `Title`, `Summary`, and every label exactly as in step 6, in the `Settings` group of L.cs.
 
@@ -302,7 +303,7 @@ Note that `SettingsRow.Bool` returns the new value, not "was it clicked": compar
 
 - `dotnet build Aetherphone.sln --configuration Release` succeeds (this is what CI builds).
 - `dotnet test Aetherphone.sln` passes; add tests under src/Aetherphone.Tests if your app has testable logic (see [testing and release](testing-and-release.md)).
-- Tested in game: load the dev plugin, run `/phone`, open the app, click through every screen. `/phone test` posts a sample notification (posted under the Linkpearl app id, "messages") to sanity-check the notification pipeline.
+- Tested in game: load the dev plugin and run its command. A Release build answers `/phone`; a Debug build is named AetherphoneDev and answers `/phonedev` (or `/aetherphonedev`) instead, per the DEBUG gate in src/Aetherphone/Core/AepConstants.cs. Open the app, click through every screen. Appending `test` to the command (`/phone test` or `/phonedev test`) posts a sample notification (posted under the Linkpearl app id, "messages") to sanity-check the notification pipeline.
 - Localization: `LocString` entries in L.cs, keys present in all nine JSONs, no `[Loc]` warnings in a DEBUG launch.
 - Accent entry in AppAccents.cs and an icon PNG named exactly after your `Id`.
 - Style matches [conventions](conventions.md): explicit accessibility keywords, braces on every branch, early returns, no LINQ in per-frame code, no em dash characters in any copy.

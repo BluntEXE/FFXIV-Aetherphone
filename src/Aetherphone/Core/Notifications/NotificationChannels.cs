@@ -24,7 +24,7 @@ internal static class NotificationChannels
         new("music", L.Apps.Music, AppAccents.For("music")),
         new("aetherstream", L.Apps.AetherStream, AppAccents.For("aetherstream")),
         new("timers", L.Apps.Timers, AppAccents.For("timers")),
-        new("character", L.Apps.Character, AppAccents.For("character")),
+        new("character", L.Character.Activity, AppAccents.For("character")),
         new("health", L.Apps.Health, AppAccents.For("health")),
         new("housing", L.Apps.Housing, AppAccents.For("housing")),
         new("calendar", L.Apps.Calendar, AppAccents.For("calendar")),
@@ -32,5 +32,6 @@ internal static class NotificationChannels
         new("notes", L.Apps.Notes, AppAccents.For("notes")),
         new("coin", L.Apps.Coin, AppAccents.For("coin")),
         new("casino", L.Apps.Casino, AppAccents.For("casino")),
+        new("hunts", L.Apps.Hunts, AppAccents.For("hunts")),
     };
 }

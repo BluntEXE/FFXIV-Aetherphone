@@ -140,7 +140,7 @@ internal static class TourRegistry
                 GuideStep.Tap(L.Onboarding.AethergramSearchTitle, L.Onboarding.AethergramSearchBody,
                     "aethergram.tab.search", "aethergram.tab.search"),
                 GuideStep.Point(L.Onboarding.AethergramActivityTitle, L.Onboarding.AethergramActivityBody,
-                    "aethergram.tab.activity"),
+                    "aethergram.activity"),
                 GuideStep.Tap(L.Onboarding.AethergramProfileTitle, L.Onboarding.AethergramProfileBody,
                     "aethergram.tab.profile", "aethergram.tab.profile"),
                 GuideStep.Note(L.Onboarding.AethergramSafeTitle, L.Onboarding.AethergramSafeBody),
@@ -424,6 +424,13 @@ internal static class TourRegistry
                 GuideStep.Note(L.Onboarding.AetherStreamPartyTitle, L.Onboarding.AetherStreamPartyBody),
                 GuideStep.Point(L.Onboarding.AetherStreamSettingsTitle, L.Onboarding.AetherStreamSettingsBody,
                     "aetherstream.settings"),
+            });
+        Add(tours, "hunts", 2,
+            new[]
+            {
+                GuideStep.Note(L.Apps.Hunts, L.Onboarding.HuntsBody),
+                GuideStep.Point(L.Onboarding.HuntsSignInTitle, L.Onboarding.HuntsSignInBody, "hunts.auth"),
+                GuideStep.Point(L.Onboarding.HuntsGuideTitle, L.Onboarding.HuntsGuideBody, "hunts.guide"),
             });
         return tours;
     }

@@ -3,6 +3,8 @@ using Dalamud.Interface.Textures.TextureWraps;
 
 namespace Aetherphone.Core.Media;
 
+internal readonly record struct LedgerKey(string Name, int Level);
+
 internal sealed class TextureLedger
 {
     private sealed class Entry : IDisposable
@@ -34,7 +36,7 @@ internal sealed class TextureLedger
     }
 
     private static readonly TimeSpan EvictionIdleFloor = TimeSpan.FromSeconds(5);
-    private readonly ConcurrentDictionary<string, Entry> entries = new();
+    private readonly ConcurrentDictionary<LedgerKey, Entry> entries = new();
     private readonly long budgetBytes;
     private long totalBytes;
 
@@ -43,7 +45,11 @@ internal sealed class TextureLedger
         this.budgetBytes = budgetBytes;
     }
 
-    public IDalamudTextureWrap? Get(string key)
+    public IDalamudTextureWrap? Get(string name) => Get(new LedgerKey(name, TextureSizes.Native));
+
+    public IDalamudTextureWrap? Get(string name, int level) => Get(new LedgerKey(name, level));
+
+    public IDalamudTextureWrap? Get(LedgerKey key)
     {
         if (!entries.TryGetValue(key, out var entry))
         {
@@ -54,9 +60,30 @@ internal sealed class TextureLedger
         return entry.Wrap ?? entry.Animation!.Frames[0];
     }
 
-    public AnimatedImage? GetAnimated(string key)
+    public IDalamudTextureWrap? Nearest(string name, int level)
     {
-        if (!entries.TryGetValue(key, out var entry) || entry.Animation is null)
+        for (var above = level + 1; above <= TextureSizes.LevelCount; above++)
+        {
+            if (Get(name, above) is { } larger)
+            {
+                return larger;
+            }
+        }
+
+        for (var below = level - 1; below > TextureSizes.Native; below--)
+        {
+            if (Get(name, below) is { } smaller)
+            {
+                return smaller;
+            }
+        }
+
+        return Get(name);
+    }
+
+    public AnimatedImage? GetAnimated(string name)
+    {
+        if (!entries.TryGetValue(new LedgerKey(name, TextureSizes.Native), out var entry) || entry.Animation is null)
         {
             return null;
         }
@@ -65,9 +92,9 @@ internal sealed class TextureLedger
         return entry.Animation;
     }
 
-    public Vector2 SizeOf(string key)
+    public Vector2 SizeOf(string name)
     {
-        if (!entries.TryGetValue(key, out var entry))
+        if (!entries.TryGetValue(new LedgerKey(name, TextureSizes.Native), out var entry))
         {
             return Vector2.Zero;
         }
@@ -75,17 +102,27 @@ internal sealed class TextureLedger
         return entry.Wrap?.Size ?? entry.Animation!.Frames[0].Size;
     }
 
-    public bool TryAdd(string key, IDalamudTextureWrap wrap)
+    public bool TryAdd(string name, IDalamudTextureWrap wrap)
+    {
+        return TryAddEntry(new LedgerKey(name, TextureSizes.Native), new Entry(wrap));
+    }
+
+    public bool TryAdd(LedgerKey key, IDalamudTextureWrap wrap)
     {
         return TryAddEntry(key, new Entry(wrap));
     }
 
-    public bool TryAddAnimated(string key, AnimatedImage animation)
+    public bool TryAddAnimated(string name, AnimatedImage animation)
+    {
+        return TryAddEntry(new LedgerKey(name, TextureSizes.Native), new Entry(animation));
+    }
+
+    public bool TryAddAnimated(LedgerKey key, AnimatedImage animation)
     {
         return TryAddEntry(key, new Entry(animation));
     }
 
-    private bool TryAddEntry(string key, Entry entry)
+    private bool TryAddEntry(LedgerKey key, Entry entry)
     {
         if (!entries.TryAdd(key, entry))
         {
@@ -97,9 +134,9 @@ internal sealed class TextureLedger
         return true;
     }
 
-    public bool TryRemove(string key, out IDisposable disposable)
+    public bool TryRemove(string name, out IDisposable disposable)
     {
-        if (entries.TryRemove(key, out var entry))
+        if (entries.TryRemove(new LedgerKey(name, TextureSizes.Native), out var entry))
         {
             Interlocked.Add(ref totalBytes, -entry.Bytes);
             disposable = entry;
@@ -110,7 +147,9 @@ internal sealed class TextureLedger
         return false;
     }
 
-    public void RemoveAndDispose(string key)
+    public void RemoveAndDispose(string name) => RemoveAndDispose(new LedgerKey(name, TextureSizes.Native));
+
+    public void RemoveAndDispose(LedgerKey key)
     {
         if (entries.TryRemove(key, out var entry))
         {
@@ -140,7 +179,7 @@ internal sealed class TextureLedger
 
         var now = Environment.TickCount64;
         var idleFloorMs = (long)EvictionIdleFloor.TotalMilliseconds;
-        var candidates = new List<KeyValuePair<string, Entry>>();
+        var candidates = new List<KeyValuePair<LedgerKey, Entry>>();
         foreach (var pair in entries)
         {
             if (now - Volatile.Read(ref pair.Value.LastAccessTicks) >= idleFloorMs)

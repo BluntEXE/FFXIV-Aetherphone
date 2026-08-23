@@ -48,11 +48,34 @@ internal sealed record CoinSkuDto(
     int SortOrder,
     bool Owned,
     long? AvailableUntilUnix = null,
-    CoinTranslationDto[]? Translations = null);
+    CoinTranslationDto[]? Translations = null,
+    string CategoryId = "");
 
 internal sealed record CoinTranslationDto(string Language, string Name);
 
 internal sealed record CoinCatalogDto(CoinSkuDto[] Skus, long Balance);
+
+internal sealed record CoinShopCategoryDto(
+    string Id,
+    string ParentId,
+    string Name,
+    long Icon,
+    int SortOrder,
+    int ItemCount,
+    long? SoonestLeavingUnix = null,
+    CoinTranslationDto[]? Translations = null,
+    string ImageUrl = "");
+
+internal sealed record CoinShopDto(
+    CoinShopCategoryDto[] Categories,
+    CoinSkuDto[] Items,
+    bool ItemsComplete,
+    int UnfiledCount = 0,
+    long? UnfiledSoonestLeavingUnix = null);
+
+internal sealed record CoinShopShelfPage(CoinSkuDto[] Items, string? NextCursor = null);
+
+internal sealed record CoinEntitlementsDto(string[] OwnedSkuIds, long Balance);
 
 internal sealed record CoinAwardDto(bool Granted, long Amount, long Balance, string Reason = "");
 
