@@ -1558,6 +1558,22 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release1009 =
+        {
+            new("changelog.r1009.0",
+                "Added Hunts, an app that tracks hunt marks across your data center: see at a glance which spawn windows are open, capped or closed, filter by rank, world, status and expansion, and open a mark for its zone map, spawn condition, lore and rewards. One tap travels you there and plants the flag, a notification calls out a spawn the moment it goes up, and a built-in guide explains how the windows work. Live spawn data comes from Faloop and needs a free account, contributed by Deldee"),
+            new("changelog.r1009.1",
+                "Housing now covers the Chinese worlds: all four data centers and their worlds appear in the world picker under China, contributed by NiGuangOwO"),
+            new("changelog.r1009.2",
+                "The MogCast screen in the world shows up for players running DLSS, FSR or a lowered 3D resolution, instead of staying invisible until upscaling was switched off"),
+            new("changelog.r1009.3",
+                "MogCast picks a long video back up when the picture freezes or the sound drops out, and when a link will not play it says why in a plain sentence instead of showing raw error text"),
+            new("changelog.r1009.4",
+                "Dragging to scroll no longer snaps a list to one end when the same tap opens a new screen, or stalls when the drag passes over the Dynamic Island or a notification banner, contributed by Deldee"),
+            new("changelog.r1009.5",
+                "The notifications list in Settings is sorted by app name in your language, contributed by Deldee"),
+        };
+
         public static readonly LocString[] Release1008 =
         {
             new("changelog.r1008.0",
