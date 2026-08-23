@@ -18,6 +18,7 @@ internal sealed partial class VenueSyncApp
     private bool settingsVenuePickerExpanded;
     private string? settingsError;
     private string? settingsCharacterLinkStatus;
+    private volatile bool settingsCharacterLinkBusy;
 
     private void DrawSettings(Rect area)
     {
@@ -49,12 +50,14 @@ internal sealed partial class VenueSyncApp
             using (ImRaii.PushColor(ImGuiCol.FrameBg, AppSkin.Transparent))
             using (ImRaii.PushColor(ImGuiCol.Text, ui.TitleInk))
             {
-                if (ImGui.InputTextWithHint("##sync-api-key", Loc.T(L.VenueSync.ApiKeyHint), ref settingsKeyInput,
-                        128, flags))
-                {
-                    configuration.VenueSyncApiKey = settingsKeyInput;
-                    configuration.Save();
-                }
+                ImGui.InputTextWithHint("##sync-api-key", Loc.T(L.VenueSync.ApiKeyHint), ref settingsKeyInput, 128,
+                    flags);
+            }
+
+            if (!ImGui.IsItemActive() && settingsKeyInput != configuration.VenueSyncApiKey)
+            {
+                configuration.VenueSyncApiKey = settingsKeyInput;
+                configuration.Save();
             }
 
             var eyeRow = new Rect(
@@ -162,8 +165,10 @@ internal sealed partial class VenueSyncApp
             var linkButtonHeight = Metrics.Size.FieldHeight * scale;
             var linkButtonRect = new Rect(new Vector2(linkRow.Min.X, linkRow.Center.Y - linkButtonHeight * 0.5f),
                 new Vector2(linkRow.Max.X, linkRow.Center.Y + linkButtonHeight * 0.5f));
-            if (ui.PillButton(linkButtonRect, linkLabel, true))
+            var linkEnabled = !settingsCharacterLinkBusy;
+            if (AppSkin.PillButton(linkButtonRect, linkLabel, true, linkEnabled, theme) && linkEnabled)
             {
+                settingsCharacterLinkBusy = true;
                 _ = LinkCharacterAsync(localName, localWorld);
             }
 
@@ -330,6 +335,10 @@ internal sealed partial class VenueSyncApp
         catch (Exception)
         {
             settingsCharacterLinkStatus = Loc.T(L.VenueSync.FailedToLink);
+        }
+        finally
+        {
+            settingsCharacterLinkBusy = false;
         }
     }
 }
