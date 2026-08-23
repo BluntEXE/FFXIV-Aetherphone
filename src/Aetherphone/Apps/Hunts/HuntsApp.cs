@@ -132,7 +132,6 @@ internal sealed partial class HuntsApp : IPhoneApp
                 DrawFiltersBody(filtersBody, scale);
                 return;
             case HuntsRoute.Detail:
-                DrawDetailBackground(area, scale, view.MobId);
                 DrawDetailHeader(area, scale, view.MobId, view.WorldId);
                 var detailBody = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
                 DrawDetailBody(detailBody, scale, view);

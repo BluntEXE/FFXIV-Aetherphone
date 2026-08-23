@@ -20,8 +20,6 @@ internal sealed partial class HuntsApp
     private const float MapMaxSize = 260f;
     private const float MapDotRadius = 3.6f;
     private const float MapDotRingRadius = 5.6f;
-    private const float BackgroundImageAlpha = 1f;
-    private const float BackgroundScrimAlpha = 0.5f;
     private const float WindowCardAlpha = 0.82f;
     private const float WindowCardTextInset = 12f;
     private const float LoreHeaderAlpha = WindowCardAlpha;
@@ -216,37 +214,6 @@ internal sealed partial class HuntsApp
     {
         router.Pop();
         menu.Close();
-    }
-
-    private void DrawDetailBackground(Rect area, float scale, string mobId)
-    {
-        var texture = HuntMobPortraitTextures.Resolve(mobId);
-        if (texture is null)
-        {
-            return;
-        }
-
-        var imageSize = texture.Size * scale;
-        if (imageSize.Y <= 0f)
-        {
-            return;
-        }
-
-        var heightScale = area.Height / imageSize.Y;
-        var widthScale = MathF.Max(heightScale, 1f);
-        var drawnWidth = imageSize.X * widthScale;
-
-        var min = new Vector2(area.Max.X - drawnWidth, area.Min.Y);
-        var max = new Vector2(area.Max.X, area.Max.Y);
-
-        var drawList = ImGui.GetWindowDrawList();
-        drawList.PushClipRect(area.Min, area.Max, true);
-        var imageTint = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, BackgroundImageAlpha));
-        drawList.AddImage(texture.Handle, min, max, Vector2.Zero, Vector2.One, imageTint);
-
-        var scrim = ImGui.GetColorU32(Palette.WithAlpha(ui.Palette.BackdropBottom, BackgroundScrimAlpha));
-        drawList.AddRectFilled(area.Min, area.Max, scrim);
-        drawList.PopClipRect();
     }
 
     private void DrawDetailHeader(Rect content, float scale, string mobId, string worldId)
