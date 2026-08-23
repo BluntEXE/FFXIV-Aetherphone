@@ -16,7 +16,9 @@ internal sealed class HousingRestProvider
     private const long ChinaLotteryResultsSeconds = 4 * 24 * 60 * 60;
     // Anchor source: CN housing lotteries run on a 9-day cycle since 2022-08-08 15:00 UTC
     // (5 days entry, 4 days results). Independently verified: every EndTime in the CN source
-    // lands on this grid (156 rows with EndTime > 0 across 14 CN servers all hit it).
+    // lands on this grid (156 rows with EndTime > 0 across 14 CN servers all hit it), with
+    // State 1 (entry) rows ending 5 days past a grid point and State 2 (results) rows ending on
+    // one, so a grid point is where results end and entry begins.
     private static readonly DateTime ChinaLotteryAnchorUtc = new(2022, 8, 8, 15, 0, 0, DateTimeKind.Utc);
     private const int ChinaRegionTypeFreeCompany = 1;
     private const int ChinaRegionTypePersonal = 2;
@@ -264,7 +266,7 @@ internal sealed class HousingRestProvider
         return true;
     }
 
-    private static (HousingLotteryPhase Phase, DateTime? PhaseEndsUtc) InferChinaLotteryPhase(
+    internal static (HousingLotteryPhase Phase, DateTime? PhaseEndsUtc) InferChinaLotteryPhase(
         ChinaSalesPlot entry, DateTime nowUtc)
     {
         // EndTime sits on the anchor grid (see ChinaLotteryAnchorUtc) and carries its own phase
@@ -293,7 +295,7 @@ internal sealed class HousingRestProvider
         var anchor = AlignToGrid(firstSeen);
         return nowUtc < anchor
             ? (HousingLotteryPhase.Unavailable, anchor)
-            : AdvanceOnGrid(anchor, HousingLotteryPhase.Entry, nowUtc);
+            : AdvanceOnGrid(anchor, HousingLotteryPhase.Results, nowUtc);
     }
 
     /// Aligns seed to the first anchor grid point at or after it (9-day cycle, see ChinaLotteryAnchorUtc).
@@ -314,12 +316,13 @@ internal sealed class HousingRestProvider
         return anchor;
     }
 
-    /// Advances from a grid point using the CN phase-alternation rule (entry 5 days -> results 4 days,
-    /// repeating) until a phase boundary after nowUtc is reached.
+    /// Advances from a boundary where endingPhase ends, alternating entry (5 days) and results
+    /// (4 days), until the first boundary after nowUtc.
     private static (HousingLotteryPhase Phase, DateTime? PhaseEndsUtc) AdvanceOnGrid(
-        DateTime gridPoint, HousingLotteryPhase phase, DateTime nowUtc)
+        DateTime boundary, HousingLotteryPhase endingPhase, DateTime nowUtc)
     {
-        var deadline = gridPoint;
+        var deadline = boundary;
+        var phase = endingPhase;
         while (nowUtc >= deadline)
         {
             if (phase == HousingLotteryPhase.Entry)
