@@ -233,6 +233,9 @@ internal sealed class GameData
         var worlds = data.GetExcelSheet<World>();
         foreach (var world in worlds)
         {
+            // Exclude RowId 1200 (亚马乌罗提): it matches every CN filter (data center 104 豆豆柴,
+            // Region=China, UserType=101) but that server is not open yet. Official CN server list:
+            // https://ff.web.sdo.com/web8/index.html#/servers — the roster is 28 worlds without it, 29 with it.
             if (world.RowId is > 1000 and < 2000 &&
                 world.DataCenter.RowId != 0 &&
                 world.Region == 2 &&
