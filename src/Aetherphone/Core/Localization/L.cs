@@ -3836,6 +3836,12 @@ internal static class L
             "The video service refused this stream and the link resolver update did not go through. Check your connection and try again.");
         public static readonly LocString StreamStalledRecovering = new("aetherstream.streamStalledRecovering",
             "The stream stalled. Restarting playback where it left off.");
+        public static readonly LocString PlaybackFailed = new("aetherstream.playbackFailed",
+            "This video could not be played.");
+        public static readonly LocString PlaybackFailedReason = new("aetherstream.playbackFailedReason",
+            "Could not play this link: {0}");
+        public static readonly LocString ComponentsMissing = new("aetherstream.componentsMissing",
+            "The video components are not installed yet.");
     }
 
     internal static class Clock

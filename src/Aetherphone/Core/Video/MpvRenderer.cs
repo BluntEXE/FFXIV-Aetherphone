@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using SharpDX.Direct3D11;
 
 namespace Aetherphone.Core.Video;
@@ -40,7 +41,21 @@ internal sealed class MpvRenderer : IDisposable
     private const int MaxConsecutiveRenderFailures = 30;
     private const int RenderWaitMilliseconds = 250;
     private const double EventWaitSeconds = 0.1;
-    private const int MaxErrorDetailLength = 240;
+    private const int MaxErrorDetailLength = 200;
+    private const string ResolverLogPrefix = "ytdl_hook";
+    private const string ResolverErrorPrefix = "ERROR: ";
+    private const string ResolverFailedPrefix = "youtube-dl failed: ";
+
+    private static readonly Regex ResolverSitePrefix = new(@"^\[[^\]]+\]\s+\S+:\s+", RegexOptions.Compiled);
+
+    private static readonly string[] ResolverAdviceMarkers =
+    [
+        " Use --",
+        " See https://",
+        "; please report",
+        ". Please report",
+        " (caused by",
+    ];
 
     private const string StreamReconnectOptions =
         "reconnect=1,reconnect_streamed=1,reconnect_on_network_error=1,reconnect_on_http_error=5xx,reconnect_delay_max=30";
@@ -188,6 +203,7 @@ internal sealed class MpvRenderer : IDisposable
     private volatile bool started;
     private volatile string? currentUrl;
     private volatile string? lastErrorDetail;
+    private volatile bool lastErrorFromResolver;
     private int consecutiveRenderFailures;
     private int httpForbiddenHits;
     private int streamErrorHits;
@@ -347,6 +363,7 @@ internal sealed class MpvRenderer : IDisposable
             }
 
             lastErrorDetail = null;
+            lastErrorFromResolver = false;
             Interlocked.Exchange(ref httpForbiddenHits, 0);
             Interlocked.Exchange(ref streamErrorHits, 0);
             var result = mpv_command(mpvContext, ["loadfile", url, "replace", "0", options, null]);
@@ -717,25 +734,72 @@ internal sealed class MpvRenderer : IDisposable
 
     private void RememberErrorDetail(string? prefix, string text)
     {
-        if (prefix == "ytdl_hook" && text.StartsWith("youtube-dl failed", StringComparison.Ordinal)
-            && lastErrorDetail is { Length: > 0 })
+        var fromResolver = prefix == ResolverLogPrefix;
+        var hasDetail = lastErrorDetail is { Length: > 0 };
+        if (fromResolver && hasDetail && text.StartsWith(ResolverFailedPrefix, StringComparison.Ordinal))
         {
             return;
         }
 
-        var firstLine = text;
-        var lineBreak = firstLine.IndexOfAny(LineBreaks);
+        if (!fromResolver && hasDetail && lastErrorFromResolver)
+        {
+            return;
+        }
+
+        var detail = text;
+        var lineBreak = detail.IndexOfAny(LineBreaks);
         if (lineBreak >= 0)
         {
-            firstLine = firstLine[..lineBreak];
+            detail = detail[..lineBreak];
         }
 
-        if (firstLine.Length > MaxErrorDetailLength)
+        if (fromResolver)
         {
-            firstLine = firstLine[..MaxErrorDetailLength];
+            detail = CleanResolverError(detail);
         }
 
-        lastErrorDetail = firstLine;
+        if (detail.Length == 0)
+        {
+            return;
+        }
+
+        if (detail.Length > MaxErrorDetailLength)
+        {
+            detail = detail[..MaxErrorDetailLength].TrimEnd();
+        }
+
+        lastErrorDetail = detail;
+        lastErrorFromResolver = fromResolver;
+    }
+
+    internal static string CleanResolverError(string line)
+    {
+        if (line.StartsWith(ResolverErrorPrefix, StringComparison.Ordinal))
+        {
+            line = line[ResolverErrorPrefix.Length..];
+        }
+        else if (line.StartsWith(ResolverFailedPrefix, StringComparison.Ordinal))
+        {
+            line = line[ResolverFailedPrefix.Length..];
+        }
+
+        line = ResolverSitePrefix.Replace(line, string.Empty, 1);
+        for (var index = 0; index < ResolverAdviceMarkers.Length; index++)
+        {
+            var cut = line.IndexOf(ResolverAdviceMarkers[index], StringComparison.Ordinal);
+            if (cut > 0)
+            {
+                line = line[..cut];
+            }
+        }
+
+        line = line.Trim().TrimEnd('.');
+        if (line.Length > 0 && char.IsLower(line[0]))
+        {
+            line = char.ToUpperInvariant(line[0]) + line[1..];
+        }
+
+        return line;
     }
 
     private void HandleEndFile(IntPtr handle)
@@ -762,8 +826,8 @@ internal sealed class MpvRenderer : IDisposable
         if (reason == MpvEndReason.Failed)
         {
             var errorText = ErrorText(errorCode);
-            detail = lastErrorDetail is { Length: > 0 } logged ? $"{errorText}: {logged}" : errorText;
-            AepLog.Warning($"[MPV] Playback failed: {detail}");
+            detail = lastErrorDetail is { Length: > 0 } logged ? logged : errorText;
+            AepLog.Warning($"[MPV] Playback failed ({errorText}): {detail}");
         }
 
         FileEnded?.Invoke(reason, detail);
