@@ -437,8 +437,8 @@ internal sealed partial class MusicApp
     {
         if (station.ArtworkUrl.Length > 0 && Thumb(station.ArtworkUrl).Texture is { } texture)
         {
-            drawList.AddImageRounded(texture.Handle, min, max, Vector2.Zero, Vector2.One, 0xFFFFFFFFu, rounding,
-                corners);
+            var (uv0, uv1) = ImageFit.Cover(texture.Size.X, texture.Size.Y, max.X - min.X, max.Y - min.Y);
+            drawList.AddImageRounded(texture.Handle, min, max, uv0, uv1, 0xFFFFFFFFu, rounding, corners);
             return;
         }
 
