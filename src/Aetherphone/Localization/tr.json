@@ -3305,6 +3305,8 @@
   "storeCopy.announcementsBody": "Sürüm notları, bakım duyuruları ve Aetherphone ekibinin sana iletmek istediği her şey, doğrudan telefonuna gelsin.",
   "storeCopy.venuesSub": "Gece hayatı, haritada",
   "storeCopy.venuesBody": "Oyuncu mekanlarını, açılış saatlerini ve yol tarifini oyundan çıkmadan bul.",
+  "storeCopy.venueSyncSub": "Oyundan çıkmadan mesaiye giriş yap",
+  "storeCopy.venueSyncBody": "Vardiyalara giriş çıkış yap, açık vardiyaları üstlen ve çalıştığın mekanın satışlarını kaydet, hepsi oyundan çıkmadan.",
   "storeCopy.housingSub": "Haritada boş plotlar",
   "storeCopy.housingBody": "Boş plotları ward ward gez, birini takibe al ve çekiliş kapanmadan önce hatırlatma al.",
   "storeCopy.musterSub": "Buluşma çağrısı yap, kimin geleceğini gör",

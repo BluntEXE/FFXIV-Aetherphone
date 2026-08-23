@@ -3305,6 +3305,8 @@
   "storeCopy.announcementsBody": "Release notes, downtime warnings and everything else the Aetherphone team wants you to know, delivered straight to your phone.",
   "storeCopy.venuesSub": "Nightlife, mapped",
   "storeCopy.venuesBody": "Find player-run venues, opening hours and directions without leaving the game.",
+  "storeCopy.venueSyncSub": "Clock in, right from the game",
+  "storeCopy.venueSyncBody": "Clock in and out of shifts, claim open ones, and log sales for the venue you work at, all without tabbing out.",
   "storeCopy.housingSub": "Plots on a map",
   "storeCopy.housingBody": "Browse reported openings ward by ward, watch a plot and get reminded before the lottery closes.",
   "storeCopy.musterSub": "Call a meetup, see who's coming",

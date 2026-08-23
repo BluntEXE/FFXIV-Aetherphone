@@ -3305,6 +3305,8 @@
   "storeCopy.announcementsBody": "Notas de versión, avisos de mantenimiento y todo lo demás que el equipo de Aetherphone quiere contarte, directo a tu teléfono.",
   "storeCopy.venuesSub": "La noche, en el mapa",
   "storeCopy.venuesBody": "Encuentra locales llevados por jugadores, sus horarios y cómo llegar, sin salir del juego.",
+  "storeCopy.venueSyncSub": "Ficha, sin salir del juego",
+  "storeCopy.venueSyncBody": "Ficha la entrada y salida de tus turnos, reclama turnos abiertos y registra ventas del local donde trabajas, todo sin salir del juego.",
   "storeCopy.housingSub": "Parcelas en el mapa",
   "storeCopy.housingBody": "Explora las parcelas libres ward por ward, sigue una y recibe un aviso antes de que cierre la lotería.",
   "storeCopy.musterSub": "Convoca una quedada y mira quién viene",

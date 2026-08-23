@@ -3305,6 +3305,8 @@
   "storeCopy.announcementsBody": "版本更新、维护通知，以及 Aetherphone 团队想让你知道的一切，直接送到你的手机上。",
   "storeCopy.venuesSub": "夜生活地图",
   "storeCopy.venuesBody": "不用离开游戏，就能找到玩家经营的场所、营业时间和路线。",
+  "storeCopy.venueSyncSub": "无需离开游戏即可打卡",
+  "storeCopy.venueSyncBody": "在游戏内为班次打卡上下班、认领空缺班次，并记录你工作场所的销售，全程无需切出游戏。",
   "storeCopy.housingSub": "地图上的空地",
   "storeCopy.housingBody": "逐区浏览上报的空地，关注心仪的地块，并在抽选截止前收到提醒。",
   "storeCopy.musterSub": "发起集结，看看谁会来",

@@ -3305,6 +3305,8 @@
   "storeCopy.announcementsBody": "アップデート情報やメンテナンスの案内など、Aetherphone開発チームからの連絡がスマホに直接届きます。",
   "storeCopy.venuesSub": "夜の店を地図で",
   "storeCopy.venuesBody": "プレイヤー運営の店や営業時間、行き方をゲームを離れずに探せます。",
+  "storeCopy.venueSyncSub": "ゲーム内でそのまま出退勤",
+  "storeCopy.venueSyncBody": "シフトの出退勤、空きシフトの確保、勤務先の売上記録が、ゲームを離れずにできます。",
   "storeCopy.housingSub": "空き地をマップで",
   "storeCopy.housingBody": "区ごとに空き地情報を確認し、気になる土地をウォッチして、抽選の締め切り前に通知を受け取れます。",
   "storeCopy.musterSub": "集会を呼びかけ、来る人をひと目で",

@@ -3305,6 +3305,8 @@
   "storeCopy.announcementsBody": "Notes de version, avis de maintenance et tout ce que l'équipe Aetherphone souhaite vous dire, directement sur votre téléphone.",
   "storeCopy.venuesSub": "La nuit, cartographiée",
   "storeCopy.venuesBody": "Trouvez les établissements tenus par des joueurs, leurs horaires et le chemin, sans quitter le jeu.",
+  "storeCopy.venueSyncSub": "Pointez, sans quitter le jeu",
+  "storeCopy.venueSyncBody": "Pointez l'arrivée et le départ de vos services, réclamez les services ouverts et enregistrez les ventes de l'établissement où vous travaillez, sans quitter le jeu.",
   "storeCopy.housingSub": "Les parcelles sur la carte",
   "storeCopy.housingBody": "Parcourez les parcelles libres secteur par secteur, suivez-en une et recevez un rappel avant la fin du tirage au sort.",
   "storeCopy.musterSub": "Lancez un rassemblement, voyez qui vient",

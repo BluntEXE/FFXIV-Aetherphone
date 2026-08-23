@@ -428,6 +428,9 @@ internal static class L
         public static readonly LocString VenuesSub = new("storeCopy.venuesSub", "Nightlife, mapped");
         public static readonly LocString VenuesBody = new("storeCopy.venuesBody",
             "Find player-run venues, opening hours and directions without leaving the game.");
+        public static readonly LocString VenueSyncSub = new("storeCopy.venueSyncSub", "Clock in, right from the game");
+        public static readonly LocString VenueSyncBody = new("storeCopy.venueSyncBody",
+            "Clock in and out of shifts, claim open ones, and log sales for the venue you work at, all without tabbing out.");
         public static readonly LocString MusterSub = new("storeCopy.musterSub", "Call a meetup, see who's coming");
         public static readonly LocString MusterBody = new("storeCopy.musterBody",
             "Announce a spontaneous meetup with a real map location and watch the RSVPs land with one tap. Your friends always see your musters, everyone else can find the public ones, and it all disappears when the muster ends.");
