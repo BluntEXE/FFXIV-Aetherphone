@@ -4856,6 +4856,14 @@ internal static class L
         public static readonly LocString CaseGarlean = new("catalog.case.garlean", "Garlean");
         public static readonly LocString CaseGurrenLagann = new("catalog.case.gurrenlagann", "Gurren Lagann");
         public static readonly LocString CaseAllagan = new("catalog.case.allagan", "Allagan");
+        public static readonly LocString CaseJuniorJinbei = new("catalog.case.juniorjinbei", "Junior Jinbei");
+        public static readonly LocString CaseFoxKit = new("catalog.case.foxkit", "Fox Kit");
+        public static readonly LocString CaseNamazu = new("catalog.case.namazu", "Namazu");
+        public static readonly LocString CaseMadHatter = new("catalog.case.madhatter", "Mad Hatter");
+        public static readonly LocString CaseCheshire = new("catalog.case.cheshire", "Cheshire");
+        public static readonly LocString CaseAliceInWonderland = new("catalog.case.aliceinwonderland", "Alice in Wonderland");
+        public static readonly LocString CaseBubbles = new("catalog.case.bubbles", "Bubbles");
+        public static readonly LocString CaseSuzaku = new("catalog.case.suzaku", "Suzaku");
         public static readonly LocString RingtoneSilent = new("catalog.ringtone.silent", "Silent");
         public static readonly LocString RadioLofi = new("catalog.radio.lofi", "Lofi");
         public static readonly LocString RadioChillout = new("catalog.radio.chillout", "Chillout");
