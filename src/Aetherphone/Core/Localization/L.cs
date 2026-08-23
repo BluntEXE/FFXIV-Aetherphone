@@ -1349,6 +1349,32 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release1008 =
+        {
+            new("changelog.r1008.0",
+                "Music now lists live Twitch DJs from XIV Rolladeck on the Live tab, each with the venue they play from and a Teleport button that takes you there through Lifestream, contributed by eggoless"),
+            new("changelog.r1008.1",
+                "Links from other people now open a confirmation first that shows where they lead, with the site name kept whole, before your browser opens: in Chirper, Aethergram, Velvet, ChocoChat, Linkpearl, Announcements, Venues, and Yellow Pages, contributed by Farroness"),
+            new("changelog.r1008.2",
+                "Chirper and Aethergram can narrow the For You feed by region: the filter menu gains NA, EU, JP, OCE, and CN toggles, each app remembers its own pick, and the funnel icon dims while any filter is on"),
+            new("changelog.r1008.3",
+                "The Aether Coin shop is browsed by category: the Shop tab opens on category tiles wearing their own artwork, a tile opens its shelf, and back returns to the tiles instead of leaving the app"),
+            new("changelog.r1008.4",
+                "Polls update on their own the moment one is created, closed, or reopened, and the list can be pulled down to refresh by hand"),
+            new("changelog.r1008.5",
+                "MogCast gains a Show In-game Screen switch in its settings, so the screen placed in the world can be hidden while playback carries on, contributed by Farroness"),
+            new("changelog.r1008.6",
+                "Icons stay sharp at every size: chess pieces, the icons inside apps, and the icons at the center of progress rings no longer look blurry when drawn large"),
+            new("changelog.r1008.7",
+                "Blocking someone in Chirper now also removes their chirps that others rechirped and hides their chirp inside quotes, right away instead of after the next full refresh"),
+            new("changelog.r1008.8",
+                "Trivia no longer asks about skills the game has removed, PvP-only actions, or the same skill twice, and its emote questions stick to emotes that can actually be used"),
+            new("changelog.r1008.9",
+                "Control Center no longer opens while Camera or MogCast hold the phone in landscape, contributed by Farroness"),
+            new("changelog.r1008.10",
+                "The community rules for Chirper, Aethergram, and Velvet have been updated, and they ask to be accepted again on the next open"),
+        };
+
         public static readonly LocString[] Release1007 =
         {
             new("changelog.r1007.0",
