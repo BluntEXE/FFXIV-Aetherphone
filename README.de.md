@@ -50,7 +50,7 @@ Privatsphäre und Sicherheit stehen an erster Stelle: Textnachrichten, Anhänge 
 - **Soziales**: ein Microblog, ein Foto-Feed und private Nachrichten mit Sprachnotizen und Gruppenanrufen, dazu eine optionale Companion-App ab 18.
 - **Spielchat**: jeder Chat-Kanal des Spiels auf dem Telefon, in selbst zusammengestellten Tabs, mit Tells als eigenen Unterhaltungen.
 - **Werkzeuge**: ein Marktbrett-Tracker, ein Housing-Browser, ein Verzeichnis für Locations und Events, In-Game-Musik mit Live-Community-Radiosendern und Rolladeck-DJ-Listings, Wetter, eine Geldbörse, Timer und Resets, eine Fotobibliothek und Kamera, Kurzbefehle sowie eine Taschenspielhalle voller Minispiele, unter 40 Apps.
-- **Gemeinsam schauen**: Videos, auch von YouTube, auf einem Bildschirm im Spiel, mit synchroner Wiedergabe für alle, die zuschauen.
+- **Gemeinsam schauen**: Videos, auch von YouTube, auf einem Bildschirm im Spiel, mit synchroner Wiedergabe für alle, die zuschauen. Auch lokale Dateien funktionieren: Jeder Zuschauer wählt seine eigene Kopie und bleibt synchron.
 - **Casino**: Spielgeld-Blackjack, Slots, Rubbellose, ein gemeinsames Rad und Bingo. Kein echtes Geld, und nichts hat einen Geldwert.
 - **Mach es zu deinem**: jede Akzentfarbe, Hintergründe, Lodestone-Charakterporträts, eigene Klingeltöne, ein Textgrößen-Zoom und ein Telefon, das du auf jede Größe ziehen kannst.
 

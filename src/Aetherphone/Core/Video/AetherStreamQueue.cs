@@ -1,3 +1,5 @@
+using Aetherphone.Core.Localization;
+
 namespace Aetherphone.Core.Video;
 
 internal sealed class VideoQueueEntry
@@ -18,6 +20,8 @@ internal sealed class VideoQueueEntry
     internal TimeSpan? Duration { get; set; }
     internal string? ThumbnailUrl { get; set; }
     internal bool EnrichRequested { get; set; }
+    internal LocalMediaIdentity? LocalMedia { get; set; }
+    internal bool FingerprintRequested { get; set; }
 }
 
 internal sealed class AetherStreamQueue : IDisposable
@@ -42,11 +46,13 @@ internal sealed class AetherStreamQueue : IDisposable
         for (var recordIndex = 0; recordIndex < persisted.Count; recordIndex++)
         {
             var record = persisted[recordIndex];
-            entries.Add(new VideoQueueEntry(record.Url, record.Title, record.Source,
+            var entry = new VideoQueueEntry(record.Url, record.Title, record.Source,
                 record.DurationSeconds is { } seconds ? TimeSpan.FromSeconds(seconds) : null, record.ThumbnailUrl)
             {
                 EnrichRequested = record.DurationSeconds is not null,
-            });
+            };
+            entries.Add(entry);
+            FingerprintIfLocalFile(entry);
         }
     }
 
@@ -58,6 +64,16 @@ internal sealed class AetherStreamQueue : IDisposable
 
     internal VideoQueueEntry CreateDisplayEntry(string url)
     {
+        if (LocalMediaToken.TryParse(url, out var identity))
+        {
+            return new VideoQueueEntry(url, Path.GetFileNameWithoutExtension(identity.FileName),
+                Loc.T(L.AetherStream.LocalFileSource), null, null)
+            {
+                LocalMedia = identity,
+                FingerprintRequested = true,
+            };
+        }
+
         var entry = new VideoQueueEntry(url, TitleFromUrl(url), string.Empty, null, null);
         EnrichIfYouTube(entry);
         return entry;
@@ -98,6 +114,7 @@ internal sealed class AetherStreamQueue : IDisposable
     {
         entries.Add(entry);
         EnrichIfYouTube(entry);
+        FingerprintIfLocalFile(entry);
         Persist();
     }
 
@@ -106,6 +123,7 @@ internal sealed class AetherStreamQueue : IDisposable
         entries.Remove(entry);
         entries.Insert(0, entry);
         EnrichIfYouTube(entry);
+        FingerprintIfLocalFile(entry);
         Advance();
     }
 
@@ -232,6 +250,35 @@ internal sealed class AetherStreamQueue : IDisposable
         Plugin.Cfg.VideoQueue = records;
         Plugin.Cfg.Save();
         Changed?.Invoke();
+    }
+
+    private void FingerprintIfLocalFile(VideoQueueEntry entry)
+    {
+        if (entry.LocalMedia is not null || entry.FingerprintRequested || !IsLocalFilePath(entry.Url))
+        {
+            return;
+        }
+
+        entry.FingerprintRequested = true;
+        _ = FingerprintAsync(entry);
+    }
+
+    private static bool IsLocalFilePath(string url) =>
+        !LocalMediaToken.IsToken(url) && !VideoEngine.ValidateURL(url, out _) && Path.IsPathRooted(url);
+
+    private async Task FingerprintAsync(VideoQueueEntry entry)
+    {
+        var identity = await Task.Run(() => LocalMediaToken.TryCompute(entry.Url)).ConfigureAwait(false);
+        if (identity is null)
+        {
+            return;
+        }
+
+        await Plugin.Framework.RunOnFrameworkThread(() =>
+        {
+            entry.LocalMedia = identity;
+            Changed?.Invoke();
+        }).ConfigureAwait(false);
     }
 
     private void EnrichIfYouTube(VideoQueueEntry entry)

@@ -50,7 +50,7 @@ La privacidad y la seguridad son lo primero: los mensajes de texto, los adjuntos
 - **Social**: un microblog, un feed de fotos y mensajería privada con notas de voz y llamadas de grupo, más una aplicación complementaria opcional para mayores de 18 años.
 - **Chat del juego**: todos los canales de chat del juego en el teléfono, en pestañas que tú mismo compones, con los tells como conversaciones aparte.
 - **Utilidades**: un rastreador del mercado, un navegador de viviendas, un directorio de locales y eventos, música en el juego con estaciones de radio comunitarias en vivo y listados de DJs de Rolladeck, el clima, una cartera, temporizadores y reinicios, una fototeca y cámara, atajos, y un salón recreativo de bolsillo de minijuegos, entre 40 aplicaciones.
-- **Ver juntos**: vídeos, incluido YouTube, en una pantalla dentro del juego, con la reproducción sincronizada para quienes los vean contigo.
+- **Ver juntos**: vídeos, incluido YouTube, en una pantalla dentro del juego, con la reproducción sincronizada para quienes los vean contigo. Los archivos locales también funcionan: cada espectador elige su propia copia y se mantiene sincronizado.
 - **Casino**: blackjack, tragaperras, rascas, una rueda comunitaria y bingo, todo con dinero ficticio. Sin dinero real, y nada tiene valor en efectivo.
 - **Hazlo tuyo**: cualquier color de acento, fondos de pantalla, retratos de personaje del Lodestone, tonos de llamada personalizados, un zoom del tamaño del texto y un teléfono que puedes llevar al tamaño que quieras.
 

@@ -3787,6 +3787,18 @@ internal static class L
             "The host removed you from the stream.");
         public static readonly LocString WatchingKick = new("aetherstream.watchingKick", "Remove");
 
+        public static readonly LocString LocalWatchTitle = new("aetherstream.localWatchTitle",
+            "The host is playing a local file");
+        public static readonly LocString LocalWatchHint = new("aetherstream.localWatchHint",
+            "Pick your own copy of this file to watch along in sync.");
+        public static readonly LocString LocalWatchNoFileHint = new("aetherstream.localWatchNoFileHint",
+            "Don't have the file? Ask the host to send it to you, then locate it here.");
+        public static readonly LocString LocalWatchLocate = new("aetherstream.localWatchLocate", "Locate file");
+        public static readonly LocString LocalWatchMismatch = new("aetherstream.localWatchMismatch",
+            "That file does not match the host's copy.");
+        public static readonly LocString LocalWatchUseAnyway = new("aetherstream.localWatchUseAnyway",
+            "Use it anyway");
+
         public static readonly LocString StartParty = new("aetherstream.startParty", "Start a Party");
         public static readonly LocString EndParty = new("aetherstream.endParty", "End Party");
         public static readonly LocString WatchPartyHeader = new("aetherstream.watchPartyHeader", "Watch Party");

@@ -51,6 +51,14 @@ internal sealed class VideoQueueRecord
 }
 
 [Serializable]
+internal sealed class VideoLocalFileMapRecord
+{
+    public string Key { get; set; } = "";
+    public string Path { get; set; } = "";
+    public long SizeBytes { get; set; }
+}
+
+[Serializable]
 internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, IControlConfiguration
 {
     public int Version { get; set; } = 1;
@@ -133,6 +141,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool VideoScreenVisible { get; set; } = true;
     public List<ScreenPositionPreset> ScreenPresets { get; set; } = new();
     public List<VideoQueueRecord> VideoQueue { get; set; } = new();
+    public List<VideoLocalFileMapRecord> VideoLocalFileMap { get; set; } = new();
     public bool GameSoundsCleared { get; set; }
     #if DEBUG
     public const string DefaultAethernetBaseUrl = "https://aethernet-dev-production.up.railway.app";
