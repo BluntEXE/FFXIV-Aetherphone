@@ -13,9 +13,7 @@ internal sealed class VenueSyncApiClient
         this.configuration = configuration;
     }
 
-    private string BaseUrl => string.IsNullOrEmpty(configuration.VenueSyncServerUrl)
-        ? "https://xivvenuemanager.com"
-        : configuration.VenueSyncServerUrl;
+    private const string BaseUrl = "https://xivvenuemanager.com";
 
     private string? ApiKey => string.IsNullOrEmpty(configuration.VenueSyncApiKey)
         ? null
