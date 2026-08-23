@@ -5170,6 +5170,7 @@
   "venueSync.customerOptional": "Kunde (optional)",
   "venueSync.useCurrentTarget": "Aktuelles Ziel verwenden",
   "venueSync.amountGil": "Betrag (Gil)",
+  "venueSync.priceGil": "{0} Gil",
   "venueSync.enterAValidAmount": "Gib einen gültigen Betrag ein",
   "venueSync.failedToLogSale": "Verkauf konnte nicht eingetragen werden",
   "venueSync.openShift": "Offene Schicht",

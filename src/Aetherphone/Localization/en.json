@@ -5170,6 +5170,7 @@
   "venueSync.customerOptional": "Customer (optional)",
   "venueSync.useCurrentTarget": "Use current target",
   "venueSync.amountGil": "Amount (gil)",
+  "venueSync.priceGil": "{0} gil",
   "venueSync.enterAValidAmount": "Enter a valid amount",
   "venueSync.failedToLogSale": "Failed to log sale",
   "venueSync.openShift": "Open Shift",

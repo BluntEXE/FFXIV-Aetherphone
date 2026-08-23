@@ -5170,6 +5170,7 @@
   "venueSync.customerOptional": "顧客(任意)",
   "venueSync.useCurrentTarget": "現在のターゲットを使用",
   "venueSync.amountGil": "金額 (ギル)",
+  "venueSync.priceGil": "{0}ギル",
   "venueSync.enterAValidAmount": "有効な金額を入力してください",
   "venueSync.failedToLogSale": "売上の記録に失敗しました",
   "venueSync.openShift": "募集中のシフト",

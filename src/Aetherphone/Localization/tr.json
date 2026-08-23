@@ -5170,6 +5170,7 @@
   "venueSync.customerOptional": "Müşteri (isteğe bağlı)",
   "venueSync.useCurrentTarget": "Mevcut hedefi kullan",
   "venueSync.amountGil": "Tutar (gil)",
+  "venueSync.priceGil": "{0} gil",
   "venueSync.enterAValidAmount": "Geçerli bir tutar girin",
   "venueSync.failedToLogSale": "Satış kaydedilemedi",
   "venueSync.openShift": "Açık Vardiya",

@@ -154,7 +154,8 @@ internal sealed partial class VenueSyncApp
         var count = state.SessionSalesCount;
         var sessionValue = count == 0
             ? Loc.T(L.VenueSync.NoSalesYet)
-            : $"{Loc.Plural(L.VenueSync.SaleCount, count)} · {state.SessionSalesTotal:N0}g";
+            : $"{Loc.Plural(L.VenueSync.SaleCount, count)} · " +
+              $"{Loc.T(L.VenueSync.PriceGil, state.SessionSalesTotal.ToString("N0", Loc.Culture))}";
         DrawActionRow(default, sessionRow, FontAwesomeIcon.Coins, theme.TextMuted, Loc.T(L.VenueSync.ThisSession),
             sessionValue, null, "venuesync.dashboard.session", clickable: false);
         ImGui.SetCursorScreenPos(origin);

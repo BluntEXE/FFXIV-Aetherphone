@@ -164,7 +164,8 @@ internal sealed class PhoneServices : IDisposable
 
     public static PhoneServices Build(Configuration configuration, IChatGui chatGui, IDataManager dataManager,
         IObjectTable objectTable, IClientState clientState, IFramework framework, IDutyState dutyState,
-        ITextureProvider textures, DirectoryInfo configDirectory, IUnlockState unlockState, ICondition condition)
+        ITextureProvider textures, DirectoryInfo configDirectory, IUnlockState unlockState, ICondition condition,
+        ITargetManager targetManager)
     {
         var installer = new Home.AppInstaller();
         var builtInWallpaperDirectory = new DirectoryInfo(
@@ -173,7 +174,7 @@ internal sealed class PhoneServices : IDisposable
         var wallpapers = new WallpaperLibrary(textures, builtInWallpaperDirectory, customWallpaperDirectory,
             configuration);
         var themes = new ThemeProvider(configuration, wallpapers);
-        var gameData = new GameData(dataManager, objectTable, framework);
+        var gameData = new GameData(dataManager, objectTable, framework, targetManager);
         var maps = new MapData(dataManager, clientState);
         var weather = new WeatherService(dataManager, clientState);
         var weatherControl = new WeatherControl(weather, framework, clientState, condition,

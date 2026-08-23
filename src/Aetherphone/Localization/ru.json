@@ -5170,6 +5170,7 @@
   "venueSync.customerOptional": "Клиент (необязательно)",
   "venueSync.useCurrentTarget": "Использовать текущую цель",
   "venueSync.amountGil": "Сумма (гил)",
+  "venueSync.priceGil": "{0} гил",
   "venueSync.enterAValidAmount": "Введите корректную сумму",
   "venueSync.failedToLogSale": "Не удалось записать продажу",
   "venueSync.openShift": "Открытая смена",

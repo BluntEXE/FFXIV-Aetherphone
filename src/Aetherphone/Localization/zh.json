@@ -5170,6 +5170,7 @@
   "venueSync.customerOptional": "顾客（可选）",
   "venueSync.useCurrentTarget": "使用当前目标",
   "venueSync.amountGil": "金额（金币）",
+  "venueSync.priceGil": "{0}金币",
   "venueSync.enterAValidAmount": "请输入有效金额",
   "venueSync.failedToLogSale": "记录销售失败",
   "venueSync.openShift": "开放班次",

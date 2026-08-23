@@ -962,6 +962,7 @@ internal static class L
         public static readonly LocString CustomerOptional = new("venueSync.customerOptional", "Customer (optional)");
         public static readonly LocString UseCurrentTarget = new("venueSync.useCurrentTarget", "Use current target");
         public static readonly LocString AmountGil = new("venueSync.amountGil", "Amount (gil)");
+        public static readonly LocString PriceGil = new("venueSync.priceGil", "{0} gil");
         public static readonly LocString EnterAValidAmount = new("venueSync.enterAValidAmount", "Enter a valid amount");
         public static readonly LocString FailedToLogSale = new("venueSync.failedToLogSale", "Failed to log sale");
         public static readonly LocString OpenShift = new("venueSync.openShift", "Open Shift");

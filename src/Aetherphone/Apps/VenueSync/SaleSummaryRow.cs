@@ -13,7 +13,7 @@ internal static class SaleSummaryRow
     {
         var text = count == 0
             ? Loc.T(L.VenueSync.NoSalesLoggedThisSession)
-            : $"{Loc.Plural(L.VenueSync.SaleCount, count)} · {total:N0}g";
+            : $"{Loc.Plural(L.VenueSync.SaleCount, count)} · {Loc.T(L.VenueSync.PriceGil, total.ToString("N0", Loc.Culture))}";
         var color = count == 0 ? theme.TextStrong : accent;
         Marquee.DrawLeftAuto("sale-summary", text, row.Min.X, row.Min.Y, row.Width, TextStyles.Body, color);
     }

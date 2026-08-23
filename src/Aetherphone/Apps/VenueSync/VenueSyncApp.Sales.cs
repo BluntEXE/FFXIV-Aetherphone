@@ -1,3 +1,4 @@
+using System.Globalization;
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -15,13 +16,14 @@ internal sealed partial class VenueSyncApp
 
     private string? salesServicesLoadedForVenueId;
     private List<VenueSyncService> salesServices = new();
-    private int salesSelectedServiceIndex = -1;
+    private string? salesSelectedServiceId;
     private bool salesServicePickerExpanded;
     private int salesSelectedTypeIndex;
     private bool salesTypePickerExpanded;
     private string salesCustomerName = string.Empty;
     private string salesAmountText = string.Empty;
     private string? salesError;
+    private volatile bool salesSubmitBusy;
 
     private void DrawSales(Rect area)
     {
@@ -31,7 +33,7 @@ internal sealed partial class VenueSyncApp
         if (salesServicesLoadedForVenueId != configuration.VenueSyncSelectedVenueId)
         {
             salesServicesLoadedForVenueId = configuration.VenueSyncSelectedVenueId;
-            salesSelectedServiceIndex = -1;
+            salesSelectedServiceId = null;
             salesServicePickerExpanded = false;
             if (string.IsNullOrEmpty(configuration.VenueSyncSelectedVenueId))
             {
@@ -43,22 +45,31 @@ internal sealed partial class VenueSyncApp
             }
         }
 
+        var services = salesServices;
+
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         using (AppSurface.Begin(body))
         {
             var serviceExpanded = salesServicePickerExpanded;
             var typeExpanded = salesTypePickerExpanded;
             var rowCount = (salesError is not null ? 6 : 5)
-                + (serviceExpanded ? salesServices.Count : 0)
+                + (serviceExpanded ? services.Count : 0)
                 + (typeExpanded ? SalesTransactionTypes.Length : 0);
             var card = GroupCard.Begin(theme, rowCount, Metrics.Size.Row, fillOverride: ui.Palette.CardFill);
 
-            var serviceLabel = salesSelectedServiceIndex >= 0 && salesSelectedServiceIndex < salesServices.Count
-                ? salesServices[salesSelectedServiceIndex].Name
-                : Loc.T(L.VenueSync.SelectAService);
+            var serviceLabel = Loc.T(L.VenueSync.SelectAService);
+            for (var serviceIndex = 0; serviceIndex < services.Count; serviceIndex++)
+            {
+                if (string.Equals(services[serviceIndex].Id, salesSelectedServiceId, StringComparison.Ordinal))
+                {
+                    serviceLabel = services[serviceIndex].Name;
+                    break;
+                }
+            }
+
             if (SettingsRow.Disclosure(card.NextRow(), Loc.T(L.VenueSync.Service), serviceLabel, theme))
             {
-                if (salesServices.Count == 0)
+                if (services.Count == 0)
                 {
                     _ = LoadSalesServicesAsync();
                 }
@@ -68,14 +79,14 @@ internal sealed partial class VenueSyncApp
 
             if (serviceExpanded)
             {
-                for (var serviceIndex = 0; serviceIndex < salesServices.Count; serviceIndex++)
+                for (var serviceIndex = 0; serviceIndex < services.Count; serviceIndex++)
                 {
-                    var service = salesServices[serviceIndex];
-                    var selected = serviceIndex == salesSelectedServiceIndex;
+                    var service = services[serviceIndex];
+                    var selected = string.Equals(service.Id, salesSelectedServiceId, StringComparison.Ordinal);
                     if (SettingsRow.Selectable(card.NextRow(), service.Name, selected, theme,
                             $"venuesync.sales.service-{service.Id}"))
                     {
-                        salesSelectedServiceIndex = serviceIndex;
+                        salesSelectedServiceId = service.Id;
                         salesServicePickerExpanded = false;
                     }
                 }
@@ -126,7 +137,7 @@ internal sealed partial class VenueSyncApp
                     FontAwesomeIcon.Crosshairs.ToIconString(), ui.MutedInk, ui.Palette.FieldSurface, 0.6f, theme,
                     Loc.T(L.VenueSync.UseCurrentTarget)))
             {
-                var name = Plugin.TargetManager.Target?.Name.TextValue;
+                var name = gameData.Target?.Name.TextValue;
                 if (!string.IsNullOrWhiteSpace(name))
                 {
                     salesCustomerName = name;
@@ -161,8 +172,11 @@ internal sealed partial class VenueSyncApp
             var submitButtonHeight = Metrics.Size.FieldHeight * scale;
             var submitButtonRect = new Rect(new Vector2(submitRow.Min.X, submitRow.Center.Y - submitButtonHeight * 0.5f),
                 new Vector2(submitRow.Max.X, submitRow.Center.Y + submitButtonHeight * 0.5f));
-            if (ui.PillButton(submitButtonRect, Loc.T(L.VenueSync.LogSale), true))
+            var submitEnabled = !salesSubmitBusy;
+            if (AppSkin.PillButton(submitButtonRect, Loc.T(L.VenueSync.LogSale), true, submitEnabled, theme) &&
+                submitEnabled)
             {
+                salesSubmitBusy = true;
                 _ = SubmitSaleAsync();
             }
 
@@ -198,26 +212,24 @@ internal sealed partial class VenueSyncApp
 
     private async Task SubmitSaleAsync()
     {
-        if (!decimal.TryParse(salesAmountText, out var amount) || amount <= 0)
-        {
-            salesError = Loc.T(L.VenueSync.EnterAValidAmount);
-            return;
-        }
-
-        var selectedService = salesSelectedServiceIndex >= 0 && salesSelectedServiceIndex < salesServices.Count
-            ? salesServices[salesSelectedServiceIndex]
-            : null;
-        var request = new VenueSyncTransactionRequest
-        {
-            VenueId = configuration.VenueSyncSelectedVenueId,
-            ServiceId = selectedService?.Id,
-            Amount = amount,
-            Type = SalesTransactionTypes[salesSelectedTypeIndex],
-            CustomerName = string.IsNullOrWhiteSpace(salesCustomerName) ? null : salesCustomerName,
-        };
-
         try
         {
+            if (!decimal.TryParse(salesAmountText, NumberStyles.Number, CultureInfo.InvariantCulture,
+                    out var amount) || amount <= 0)
+            {
+                salesError = Loc.T(L.VenueSync.EnterAValidAmount);
+                return;
+            }
+
+            var request = new VenueSyncTransactionRequest
+            {
+                VenueId = configuration.VenueSyncSelectedVenueId,
+                ServiceId = salesSelectedServiceId,
+                Amount = amount,
+                Type = SalesTransactionTypes[salesSelectedTypeIndex],
+                CustomerName = string.IsNullOrWhiteSpace(salesCustomerName) ? null : salesCustomerName,
+            };
+
             var result = await client.LogTransactionAsync(request, CancellationToken.None).ConfigureAwait(false);
             if (result is { Success: true })
             {
@@ -233,6 +245,10 @@ internal sealed partial class VenueSyncApp
         catch (Exception exception)
         {
             salesError = exception.Message;
+        }
+        finally
+        {
+            salesSubmitBusy = false;
         }
     }
 }
