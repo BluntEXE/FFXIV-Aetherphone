@@ -3625,6 +3625,8 @@ internal static class L
             "The video service refused this stream and the link resolver is already the latest release. Try again later.");
         public static readonly LocString ResolverUpdateFailed = new("aetherstream.resolverUpdateFailed",
             "The video service refused this stream and the link resolver update did not go through. Check your connection and try again.");
+        public static readonly LocString StreamStalledRecovering = new("aetherstream.streamStalledRecovering",
+            "The stream stalled. Restarting playback where it left off.");
     }
 
     internal static class Clock

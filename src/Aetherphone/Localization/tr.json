@@ -4041,6 +4041,7 @@
   "aetherstream.resolverStillRefused": "Bağlantı çözücü güncellendikten sonra bile video hizmeti bu yayını geri çevirdi. Daha sonra tekrar dene.",
   "aetherstream.resolverAlreadyCurrent": "Video hizmeti bu yayını geri çevirdi ve bağlantı çözücü zaten en son sürümde. Daha sonra tekrar dene.",
   "aetherstream.resolverUpdateFailed": "Video hizmeti bu yayını geri çevirdi ve bağlantı çözücü güncellenemedi. Bağlantını kontrol edip tekrar dene.",
+  "aetherstream.streamStalledRecovering": "Yayın takıldı. Oynatma kaldığı yerden yeniden başlatılıyor.",
   "aetherstream.settingsUpdateMpv": "mpv'yi güncelle",
   "aetherstream.settingsUpdateYtdlp": "yt-dlp'yi güncelle",
   "aetherstream.settingsDownloadDeno": "deno'yu indir",

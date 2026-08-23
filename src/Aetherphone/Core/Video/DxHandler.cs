@@ -15,6 +15,7 @@ internal static class DxHandler
 	private const int PrologueDumpBytes = 16;
 
 	private static readonly ConcurrentDictionary<string, Action> _pendingRenderWork = new();
+	private static readonly Lock _drainLock = new();
 
 	internal static event Action? OnPresent;
 
@@ -42,7 +43,10 @@ internal static class DxHandler
 
 	internal static void CancelRenderThreadWork(string key)
 	{
-		_pendingRenderWork.TryRemove(key, out _);
+		lock (_drainLock)
+		{
+			_pendingRenderWork.TryRemove(key, out _);
+		}
 	}
 
 	private static unsafe bool TryHookPresent()
@@ -123,17 +127,25 @@ internal static class DxHandler
 
 	private static void DrainRenderWork()
 	{
-		foreach (string key in _pendingRenderWork.Keys)
+		if (_pendingRenderWork.IsEmpty)
 		{
-			if (_pendingRenderWork.TryRemove(key, out Action? work))
+			return;
+		}
+
+		lock (_drainLock)
+		{
+			foreach (string key in _pendingRenderWork.Keys)
 			{
-				try
+				if (_pendingRenderWork.TryRemove(key, out Action? work))
 				{
-					work();
-				}
-				catch (Exception e)
-				{
-					AepLog.Error($"[DxHandler] Render-thread callback '{key}' failed: {e}");
+					try
+					{
+						work();
+					}
+					catch (Exception e)
+					{
+						AepLog.Error($"[DxHandler] Render-thread callback '{key}' failed: {e}");
+					}
 				}
 			}
 		}

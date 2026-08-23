@@ -4041,6 +4041,7 @@
   "aetherstream.resolverStillRefused": "Der Videodienst hat diesen Stream auch nach dem Update der Link-Auflösung abgewiesen. Versuche es später erneut.",
   "aetherstream.resolverAlreadyCurrent": "Der Videodienst hat diesen Stream abgewiesen, obwohl die Link-Auflösung schon aktuell ist. Versuche es später erneut.",
   "aetherstream.resolverUpdateFailed": "Der Videodienst hat diesen Stream abgewiesen und das Update der Link-Auflösung ist fehlgeschlagen. Prüfe deine Verbindung und versuche es erneut.",
+  "aetherstream.streamStalledRecovering": "Der Stream ist ins Stocken geraten. Die Wiedergabe wird an der letzten Stelle neu gestartet.",
   "aetherstream.settingsUpdateMpv": "mpv aktualisieren",
   "aetherstream.settingsUpdateYtdlp": "yt-dlp aktualisieren",
   "aetherstream.settingsDownloadDeno": "deno herunterladen",

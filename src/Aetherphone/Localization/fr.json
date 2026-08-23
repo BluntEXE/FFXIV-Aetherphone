@@ -4041,6 +4041,7 @@
   "aetherstream.resolverStillRefused": "Le service vidéo a encore refusé cette diffusion après la mise à jour du résolveur de liens. Réessayez plus tard.",
   "aetherstream.resolverAlreadyCurrent": "Le service vidéo a refusé cette diffusion alors que le résolveur de liens est déjà à jour. Réessayez plus tard.",
   "aetherstream.resolverUpdateFailed": "Le service vidéo a refusé cette diffusion et la mise à jour du résolveur de liens a échoué. Vérifiez votre connexion et réessayez.",
+  "aetherstream.streamStalledRecovering": "La diffusion s'est figée. La lecture redémarre là où elle s'était arrêtée.",
   "aetherstream.settingsUpdateMpv": "Mettre à jour mpv",
   "aetherstream.settingsUpdateYtdlp": "Mettre à jour yt-dlp",
   "aetherstream.settingsDownloadDeno": "Télécharger deno",

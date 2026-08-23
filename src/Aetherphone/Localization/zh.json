@@ -4041,6 +4041,7 @@
   "aetherstream.resolverStillRefused": "更新链接解析后，视频服务仍拒绝了此视频。请稍后再试。",
   "aetherstream.resolverAlreadyCurrent": "视频服务拒绝了此视频，且链接解析已是最新版本。请稍后再试。",
   "aetherstream.resolverUpdateFailed": "视频服务拒绝了此视频，且链接解析更新失败。请检查网络连接后再试。",
+  "aetherstream.streamStalledRecovering": "串流卡住了。正在从中断处重新开始播放。",
   "aetherstream.settingsUpdateMpv": "更新 mpv",
   "aetherstream.settingsUpdateYtdlp": "更新 yt-dlp",
   "aetherstream.settingsDownloadDeno": "下载 deno",

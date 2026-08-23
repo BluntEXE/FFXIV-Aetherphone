@@ -4041,6 +4041,7 @@
   "aetherstream.resolverStillRefused": "Видеосервис отклонил этот стрим даже после обновления обработки ссылок. Попробуйте позже.",
   "aetherstream.resolverAlreadyCurrent": "Видеосервис отклонил этот стрим, хотя обработка ссылок уже последней версии. Попробуйте позже.",
   "aetherstream.resolverUpdateFailed": "Видеосервис отклонил этот стрим, и обновить обработку ссылок не удалось. Проверьте подключение и попробуйте снова.",
+  "aetherstream.streamStalledRecovering": "Стрим завис. Воспроизведение перезапускается с места остановки.",
   "aetherstream.settingsUpdateMpv": "Обновить mpv",
   "aetherstream.settingsUpdateYtdlp": "Обновить yt-dlp",
   "aetherstream.settingsDownloadDeno": "Скачать deno",
