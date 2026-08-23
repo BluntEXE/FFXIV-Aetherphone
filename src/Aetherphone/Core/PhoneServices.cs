@@ -262,8 +262,6 @@ internal sealed class PhoneServices : IDisposable
         var venues = new VenuesService(http, notifications, configuration, gameData);
         var venueSyncClient = new VenueSyncApiClient(http, configuration);
         var venueSyncState = new VenueSyncState(venueSyncClient, configuration);
-        var venuePatronTracker = new VenuePatronTracker(framework, objectTable, configuration, gameData,
-            venueSyncClient, installer.Gate("venue-sync"));
         var collectionsRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "collections"));
         var collectionsDisk = new DiskCache(collectionsRoot, 32L * 1024 * 1024);
         var collections = new CollectionsCatalogService(http, collectionsDisk, dataManager, unlockState, framework);
@@ -276,6 +274,8 @@ internal sealed class PhoneServices : IDisposable
         var health = new HealthTracker(framework, characterWatch, notifications, configDirectory);
         var realtimeSignals = new RealtimeSignalBus();
         var visibility = new PhoneVisibility();
+        var venuePatronTracker = new VenuePatronTracker(framework, objectTable, configuration, gameData,
+            venueSyncClient, visibility, installer.Gate("venue-sync"));
         var housingCacheRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "housing"));
         var housingGate = installer.Gate(HousingService.AppId);
         var housingGameMaps = new HousingGameMaps(dataManager, textures);

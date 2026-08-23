@@ -1,3 +1,4 @@
+using System.Globalization;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Home;
 using Dalamud.Game.ClientState.Objects.SubKinds;
@@ -5,35 +6,49 @@ using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Core.VenueSync;
 
-internal readonly record struct VenueGuestState(string World, bool InVenue);
+internal readonly record struct VenueGuestKey(string Name, string World);
+
+internal readonly record struct VenueGuestState(bool InVenue, bool Synced, long LastSeenAtMs);
 
 internal sealed class VenuePatronTracker : IDisposable
 {
     private const long TickIntervalMilliseconds = 1000;
     private const long EventCacheTtlMilliseconds = 60_000;
+    private const long DepartureDebounceMilliseconds = TickIntervalMilliseconds * 3;
 
+    private readonly IFramework framework;
     private readonly IObjectTable objectTable;
     private readonly Configuration configuration;
     private readonly GameData gameData;
     private readonly VenueSyncApiClient client;
+    private readonly PhoneVisibility visibility;
     private readonly FrameworkTicker ticker;
-    private readonly Dictionary<string, VenueGuestState> guests = new();
+    private readonly Dictionary<VenueGuestKey, VenueGuestState> guests = new();
+    private readonly HashSet<VenueGuestKey> guestPostInFlight = new();
     private readonly Dictionary<string, (bool Active, long FetchedAtMs)> eventPresence = new();
     private readonly HashSet<string> eventPresenceInFlight = new();
     private long currentHouseId;
 
     public VenuePatronTracker(IFramework framework, IObjectTable objectTable, Configuration configuration,
-        GameData gameData, VenueSyncApiClient client, AppGate gate)
+        GameData gameData, VenueSyncApiClient client, PhoneVisibility visibility, AppGate gate)
     {
+        this.framework = framework;
         this.objectTable = objectTable;
         this.configuration = configuration;
         this.gameData = gameData;
         this.client = client;
+        this.visibility = visibility;
         ticker = new FrameworkTicker(framework, TickIntervalMilliseconds, OnTick, gate);
     }
 
     private void OnTick()
     {
+        if (!visibility.IsVisible)
+        {
+            ClearGuests();
+            return;
+        }
+
         if (!configuration.VenueSyncPatronTrackingEnabled || string.IsNullOrEmpty(configuration.VenueSyncApiKey))
         {
             return;
@@ -92,24 +107,31 @@ internal sealed class VenuePatronTracker : IDisposable
 
     private async Task RefreshEventPresenceAsync(string venueId)
     {
+        bool active;
         try
         {
             var response = await client.GetActiveEventAsync(venueId, CancellationToken.None).ConfigureAwait(false);
-            eventPresence[venueId] = (response?.Active ?? false, Environment.TickCount64);
+            active = response?.Active ?? false;
         }
         catch (Exception exception)
         {
             AepLog.Warning($"[VenueSync/Patron] Event presence check failed: {exception.Message}");
+            await framework.RunOnFrameworkThread(() => eventPresenceInFlight.Remove(venueId)).ConfigureAwait(false);
+            return;
         }
-        finally
+
+        var fetchedAtMs = Environment.TickCount64;
+        await framework.RunOnFrameworkThread(() =>
         {
+            eventPresence[venueId] = (active, fetchedAtMs);
             eventPresenceInFlight.Remove(venueId);
-        }
+        }).ConfigureAwait(false);
     }
 
     private void ScanGuests(string venueId)
     {
-        var seen = new HashSet<string>();
+        var nowMs = Environment.TickCount64;
+        var seen = new HashSet<VenueGuestKey>();
         foreach (var gameObject in objectTable)
         {
             if (gameObject is not IPlayerCharacter character)
@@ -129,55 +151,82 @@ internal sealed class VenuePatronTracker : IDisposable
                 world = gameData.WorldName(character.CurrentWorld.RowId);
             }
 
-            seen.Add(name);
-            if (!guests.TryGetValue(name, out var state) || !state.InVenue)
+            var key = new VenueGuestKey(name, world);
+            seen.Add(key);
+            if (!guests.TryGetValue(key, out var existing) || !existing.InVenue || !existing.Synced)
             {
-                guests[name] = new VenueGuestState(world, true);
-                _ = PostVisitAsync(venueId, name, world, "enter");
+                guests[key] = new VenueGuestState(true, false, nowMs);
+                if (guestPostInFlight.Add(key))
+                {
+                    _ = PostVisitAsync(venueId, key, true, nowMs);
+                }
+            }
+            else
+            {
+                guests[key] = existing with { LastSeenAtMs = nowMs };
             }
         }
 
-        var departedNames = new List<string>();
+        var departedKeys = new List<VenueGuestKey>();
         foreach (var pair in guests)
         {
-            if (pair.Value.InVenue && !seen.Contains(pair.Key))
+            if (pair.Value.InVenue && !seen.Contains(pair.Key) &&
+                nowMs - pair.Value.LastSeenAtMs >= DepartureDebounceMilliseconds)
             {
-                departedNames.Add(pair.Key);
+                departedKeys.Add(pair.Key);
             }
         }
 
-        for (var index = 0; index < departedNames.Count; index++)
+        for (var index = 0; index < departedKeys.Count; index++)
         {
-            var name = departedNames[index];
-            var world = guests[name].World;
-            guests[name] = new VenueGuestState(world, false);
-            _ = PostVisitAsync(venueId, name, world, "leave");
+            var key = departedKeys[index];
+            guests[key] = new VenueGuestState(false, false, nowMs);
+            if (guestPostInFlight.Add(key))
+            {
+                _ = PostVisitAsync(venueId, key, false, nowMs);
+            }
         }
     }
 
-    private async Task PostVisitAsync(string venueId, string characterName, string world, string action)
+    private async Task PostVisitAsync(string venueId, VenueGuestKey key, bool expectedInVenue, long stateStampMs)
     {
+        var action = expectedInVenue ? "enter" : "leave";
         try
         {
             var request = new VenueSyncPatronVisitRequest
             {
                 VenueId = venueId,
-                CharacterName = characterName,
-                World = world,
+                CharacterName = key.Name,
+                World = key.World,
                 Action = action,
-                Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                Timestamp = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture),
             };
             var result = await client.PostPatronVisitAsync(request, CancellationToken.None).ConfigureAwait(false);
             if (result is not { Success: true })
             {
-                AepLog.Warning($"[VenueSync/Patron] Server rejected {action} for {characterName}: " +
+                AepLog.Warning($"[VenueSync/Patron] Server rejected {action} for {key.Name}: " +
                     $"{result?.Error ?? "no response"}");
+                await framework.RunOnFrameworkThread(() => guestPostInFlight.Remove(key)).ConfigureAwait(false);
+                return;
             }
         }
         catch (Exception exception)
         {
-            AepLog.Warning($"[VenueSync/Patron] Failed to log {action} for {characterName}: {exception.Message}");
+            AepLog.Warning($"[VenueSync/Patron] Failed to log {action} for {key.Name}: {exception.Message}");
+            await framework.RunOnFrameworkThread(() => guestPostInFlight.Remove(key)).ConfigureAwait(false);
+            return;
         }
+
+        await framework.RunOnFrameworkThread(() =>
+        {
+            if (guests.TryGetValue(key, out var current) && current.InVenue == expectedInVenue &&
+                current.LastSeenAtMs == stateStampMs)
+            {
+                guests[key] = current with { Synced = true };
+            }
+
+            guestPostInFlight.Remove(key);
+        }).ConfigureAwait(false);
     }
 
     public void Dispose()
