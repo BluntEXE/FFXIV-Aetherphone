@@ -16,6 +16,7 @@ internal sealed partial class HuntsApp
         (L.Hunts.GuideRanksTitle, L.Hunts.GuideRanksBody, false),
         (L.Hunts.GuideWindowStatusTitle, L.Hunts.GuideWindowStatusBody, false),
         (L.Hunts.GuideSSMarksTitle, L.Hunts.GuideSSMarksBody, false),
+        (L.Hunts.GuideAffiliationTitle, L.Hunts.GuideAffiliationBody, false),
         (L.Hunts.GuideContributeTitle, L.Hunts.GuideContributeBody, false),
         (L.Hunts.GuideScheduledTitle, L.Hunts.GuideScheduledBody, false),
         (L.Hunts.GuideMaintenanceTitle, L.Hunts.GuideMaintenanceBody, false),

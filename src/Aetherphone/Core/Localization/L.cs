@@ -1229,7 +1229,7 @@ internal static class L
             new("hunts.spawnReleaseNotifyBody", "{0} is up on {1}");
         public static readonly LocString SignupTitle = new("hunts.signupTitle", "Sign Up");
         public static readonly LocString SignupIntro = new("hunts.signupIntro",
-            "A Faloop account is required to receive live spawn data. If you don't have one, create it with the button below.");
+            "Aetherphone is an independent client for Faloop's hunt data, it is not affiliated with, endorsed by, or supported by Faloop in any way. A Faloop account is still required to receive live spawn data, if you don't have one, create it with the button below.");
         public static readonly LocString SignupCreateAccount =
             new("hunts.signupCreateAccount", "Create a Faloop account");
         public static readonly LocString SignupLoginIntro = new("hunts.signupLoginIntro",
@@ -1259,10 +1259,14 @@ internal static class L
         public static readonly LocString GuideSSMarksTitle = new("hunts.guideSSMarksTitle", "What are SS marks?");
         public static readonly LocString GuideSSMarksBody = new("hunts.guideSSMarksBody",
             "Every time an S-rank mark dies on a post-Shadowbringers map, there's a chance for 4 minions to spawn. Killing those minions in time spawns a special SS-rank mark, which gives more drops.");
+        public static readonly LocString GuideAffiliationTitle =
+            new("hunts.guideAffiliationTitle", "Is this made by Faloop?");
+        public static readonly LocString GuideAffiliationBody = new("hunts.guideAffiliationBody",
+            "No. Aetherphone is an independent, unofficial client, it is not made, run, sponsored, or endorsed by Faloop in any way. It simply displays hunt data pulled from Faloop's public service. Please send feedback about this app to Aetherphone, not to Faloop.");
         public static readonly LocString GuideContributeTitle =
             new("hunts.guideContributeTitle", "How can I contribute?");
         public static readonly LocString GuideContributeBody = new("hunts.guideContributeBody",
-            "This app relies on data provided by Faloop. Join the Faloop Discord for more information:\n\nhttps://discord.gg/faloop");
+            "This app is an independent client that displays hunt data from Faloop's own tracking project. To contribute reports, or to learn more about Faloop itself, join their Discord:\n\nhttps://discord.gg/faloop");
         public static readonly LocString GuideScheduledTitle =
             new("hunts.guideScheduledTitle", "What is the Scheduled status?");
         public static readonly LocString GuideScheduledBody = new("hunts.guideScheduledBody",
@@ -1285,68 +1289,68 @@ internal static class L
 
     public static class HuntLore
     {
-        public static readonly LocString AglaopeSpawn = new("hunts.lore.aglaope.spawn", "Chance on travelling over spawn locations with the Scarlet Peacock minion out.");
-        public static readonly LocString AgrippaTheMightySpawn = new("hunts.lore.agrippa_the_mighty.spawn", "Chance on opening a chest from a treasure map.");
-        public static readonly LocString ArchAethereaterSpawn = new("hunts.lore.arch_aethereater.spawn", "Killing four Crystal Incarnation.");
-        public static readonly LocString ArmstrongSpawn = new("hunts.lore.armstrong.spawn", "Chance on player death on spawn locations while wearing Mended Imperial Pot Helm and Mended Imperial Short Robe.");
-        public static readonly LocString AtticusThePrimogenitorSpawn = new("hunts.lore.atticus_the_primogenitor.spawn", "Craft a high-quality Rroneek Steak.");
-        public static readonly LocString BirdOfParadiseSpawn = new("hunts.lore.bird_of_paradise.spawn", "Chance on when the zone's B-Rank mark Squonk uses the ability Chirp.");
-        public static readonly LocString BoneCrawlerSpawn = new("hunts.lore.bone_crawler.spawn", "Chance when crossing the middle of the zone during a Chocobo Porter journey.");
-        public static readonly LocString BonnaconSpawn = new("hunts.lore.bonnacon.spawn", "Chance on harvesting La Noscean Leeks.");
-        public static readonly LocString BrontesSpawn = new("hunts.lore.brontes.spawn", "Chance when consuming food or drink on spawn locations.");
-        public static readonly LocString BurfurlurTheCannySpawn = new("hunts.lore.burfurlur_the_canny.spawn", "Chance on travelling over spawn locations during the day in the sun with the Tiny Troll minion out.");
-        public static readonly LocString ChernobogSpawn = new("hunts.lore.chernobog.spawn", "Chance on player death.");
-        public static readonly LocString CroakadileSpawn = new("hunts.lore.croakadile.spawn", "Travel over spawn locations during nights of the full moon.");
-        public static readonly LocString CroqueMitaineSpawn = new("hunts.lore.croque_mitaine.spawn", "Chance on mining Grade 3 La Noscean Topsoil.");
-        public static readonly LocString ForgivenPedantrySpawn = new("hunts.lore.forgiven_pedantry.spawn", "Harvest Dwarven Cotton Boll 50 times.");
-        public static readonly LocString ForgivenRebellionSpawn = new("hunts.lore.forgiven_rebellion.spawn", "Killing four Forgiven Gossip.");
-        public static readonly LocString GammaSpawn = new("hunts.lore.gamma.spawn", "Chance on travelling over spawn locations at night with the Toy Alexander minion out.");
-        public static readonly LocString GandarewaSpawn = new("hunts.lore.gandarewa.spawn", "Mine Aurum Regis Ore 50 times and harvest Seventh Heaven 50 times.");
-        public static readonly LocString GunittSpawn = new("hunts.lore.gunitt.spawn", "Chance when a fully enlarged Clionid uses the ability Buccal Cones on the player.");
-        public static readonly LocString IhnuxokiySpawn = new("hunts.lore.ihnuxokiy.spawn", "Chance on travelling over spawn locations with the Morpho minion out.");
-        public static readonly LocString IxtabSpawn = new("hunts.lore.ixtab.spawn", "Killing 100 Cracked Ronkan Doll, 100 Cracked Ronkan Thorn and 100 Cracked Ronkan Vessel.");
-        public static readonly LocString KaiserBehemothSpawn = new("hunts.lore.kaiser_behemoth.spawn", "Chance on travelling over spawn locations with the Behemoth Heir minion out.");
-        public static readonly LocString KerSpawn = new("hunts.lore.ker.spawn", "Killing four Ker Shroud.");
-        public static readonly LocString KirlirgerTheAbhorrentSpawn = new("hunts.lore.kirlirger_the_abhorrent.spawn", "Chance when travelling over spawn locations during the new moon in foggy weather at night.");
-        public static readonly LocString LaideronnetteSpawn = new("hunts.lore.laideronnette.spawn", "After 30 (real-time) minutes of rain in the zone.");
-        public static readonly LocString LeucrottaSpawn = new("hunts.lore.leucrotta.spawn", "Killing 50 Allagan Chimera, 50 Lesser Hydra and 50 Meracydian Vouivre.");
-        public static readonly LocString MindflayerSpawn = new("hunts.lore.mindflayer.spawn", "Travel over spawn locations during nights of the new moon.");
-        public static readonly LocString MinhocaoSpawn = new("hunts.lore.minhocao.spawn", "Killing 100 Earth Sprites.");
-        public static readonly LocString NandiSpawn = new("hunts.lore.nandi.spawn", "Chance on travelling over spawn locations with a minion out.");
-        public static readonly LocString NarrowRiftSpawn = new("hunts.lore.narrow_rift.spawn", "Chance when 10 players travel over spawn locations with the wee Ea minion out.");
-        public static readonly LocString NeyoozoteelSpawn = new("hunts.lore.neyoozoteel.spawn", "Discard a stack of 50 Fish Meal from your inventory.");
-        public static readonly LocString NunyunuwiSpawn = new("hunts.lore.nunyunuwi.spawn", "Complete FATEs for one (real-time) hour without letting any fail.");
-        public static readonly LocString OkinaSpawn = new("hunts.lore.okina.spawn", "During the full moon, after killing 100 Yumemi and 100 Naked Yumemi.");
-        public static readonly LocString OphioneusSpawn = new("hunts.lore.ophioneus.spawn", "Discard a stack of 5 Eggs of Elpis from your inventory.");
-        public static readonly LocString OrghanaSpawn = new("hunts.lore.orghana.spawn", "Chance on travelling over spawn locations with the Not Just a Tribute FATE completed.");
-        public static readonly LocString RuminatorSpawn = new("hunts.lore.ruminator.spawn", "Killing 100 Thinkers, 100 Wanderers and 100 Weepers.");
-        public static readonly LocString SafatSpawn = new("hunts.lore.safat.spawn", "Drop to 1HP by taking falling damage.");
-        public static readonly LocString SaltAndLightSpawn = new("hunts.lore.salt_and_light.spawn", "Discard 50 items from your inventory.");
-        public static readonly LocString SansheyaSpawn = new("hunts.lore.sansheya.spawn", "Successfully complete the You Are What You Drink FATE three times in a row.");
-        public static readonly LocString SenmurvSpawn = new("hunts.lore.senmurv.spawn", "Successfully complete the Cerf's Up FATE five times in a row.");
-        public static readonly LocString SphatikaSpawn = new("hunts.lore.sphatika.spawn", "Killing 100 Asvattha, 100 Pisaca and 100 Vajralangula.");
-        public static readonly LocString TarchiaSpawn = new("hunts.lore.tarchia.spawn", "Chance when players Self Destruct on spawn locations.");
-        public static readonly LocString TheForecasterSpawn = new("hunts.lore.the_forecaster.spawn", "Chance when players cast Northerlies on spawn locations.");
-        public static readonly LocString TheGarlokSpawn = new("hunts.lore.the_garlok.spawn", "After 200 (real-time) minutes of no rain/showers in the zone.");
-        public static readonly LocString ThePaleRiderSpawn = new("hunts.lore.the_pale_rider.spawn", "Chance on opening a chest from a treasure map.");
-        public static readonly LocString ThousandCastThedaSpawn = new("hunts.lore.thousand_cast_theda.spawn", "Chance after successfully landing a Judgeray.");
-        public static readonly LocString TygerSpawn = new("hunts.lore.tyger.spawn", "Discard one Rail Tenderloin from your inventory.");
-        public static readonly LocString UdumbaraSpawn = new("hunts.lore.udumbara.spawn", "Killing 100 Leshy and 100 Diakka.");
-        public static readonly LocString ZonaSeekerSpawn = new("hunts.lore.zona_seeker.spawn", "Chance after successfully landing a Glimmerscale.");
+        public static readonly LocString AglaopeSpawn = new("hunts.lore.aglaope.spawn", "May trigger while flying or walking over its spawn locations with the Scarlet Peacock minion summoned.");
+        public static readonly LocString AgrippaTheMightySpawn = new("hunts.lore.agrippa_the_mighty.spawn", "May trigger when a treasure map chest is opened.");
+        public static readonly LocString ArchAethereaterSpawn = new("hunts.lore.arch_aethereater.spawn", "Requires defeating all four Crystal Incarnation.");
+        public static readonly LocString ArmstrongSpawn = new("hunts.lore.armstrong.spawn", "May trigger when a player dies on a spawn location while wearing the Mended Imperial Pot Helm and Mended Imperial Short Robe.");
+        public static readonly LocString AtticusThePrimogenitorSpawn = new("hunts.lore.atticus_the_primogenitor.spawn", "Requires crafting a Rroneek Steak at high quality.");
+        public static readonly LocString BirdOfParadiseSpawn = new("hunts.lore.bird_of_paradise.spawn", "May trigger whenever the zone's B-Rank mark, Squonk, uses its Chirp ability.");
+        public static readonly LocString BoneCrawlerSpawn = new("hunts.lore.bone_crawler.spawn", "May trigger while passing through the zone's midpoint during a Chocobo Porter journey.");
+        public static readonly LocString BonnaconSpawn = new("hunts.lore.bonnacon.spawn", "May trigger while gathering La Noscean Leeks.");
+        public static readonly LocString BrontesSpawn = new("hunts.lore.brontes.spawn", "May trigger when food or drink is consumed on a spawn location.");
+        public static readonly LocString BurfurlurTheCannySpawn = new("hunts.lore.burfurlur_the_canny.spawn", "May trigger while passing over its spawn locations in daylight with the Tiny Troll minion summoned.");
+        public static readonly LocString ChernobogSpawn = new("hunts.lore.chernobog.spawn", "May trigger whenever a player dies.");
+        public static readonly LocString CroakadileSpawn = new("hunts.lore.croakadile.spawn", "Appears when its spawn locations are crossed on nights of the full moon.");
+        public static readonly LocString CroqueMitaineSpawn = new("hunts.lore.croque_mitaine.spawn", "May trigger while mining Grade 3 La Noscean Topsoil.");
+        public static readonly LocString ForgivenPedantrySpawn = new("hunts.lore.forgiven_pedantry.spawn", "Requires 50 successful Dwarven Cotton Boll harvests.");
+        public static readonly LocString ForgivenRebellionSpawn = new("hunts.lore.forgiven_rebellion.spawn", "Requires defeating all four Forgiven Gossip.");
+        public static readonly LocString GammaSpawn = new("hunts.lore.gamma.spawn", "May trigger while passing over its spawn locations at night with the Toy Alexander minion summoned.");
+        public static readonly LocString GandarewaSpawn = new("hunts.lore.gandarewa.spawn", "Requires 50 successful Aurum Regis Ore mining attempts and 50 successful Seventh Heaven harvests.");
+        public static readonly LocString GunittSpawn = new("hunts.lore.gunitt.spawn", "May trigger when a fully grown Clionid uses Buccal Cones on a player.");
+        public static readonly LocString IhnuxokiySpawn = new("hunts.lore.ihnuxokiy.spawn", "May trigger while passing over its spawn locations with the Morpho minion summoned.");
+        public static readonly LocString IxtabSpawn = new("hunts.lore.ixtab.spawn", "Requires defeating 100 each of Cracked Ronkan Doll, Cracked Ronkan Thorn and Cracked Ronkan Vessel.");
+        public static readonly LocString KaiserBehemothSpawn = new("hunts.lore.kaiser_behemoth.spawn", "May trigger while passing over its spawn locations with the Behemoth Heir minion summoned.");
+        public static readonly LocString KerSpawn = new("hunts.lore.ker.spawn", "Requires defeating all four Ker Shroud.");
+        public static readonly LocString KirlirgerTheAbhorrentSpawn = new("hunts.lore.kirlirger_the_abhorrent.spawn", "May trigger while passing over its spawn locations at night during the new moon, in foggy weather.");
+        public static readonly LocString LaideronnetteSpawn = new("hunts.lore.laideronnette.spawn", "Requires 30 real-time minutes of continuous rain in the zone.");
+        public static readonly LocString LeucrottaSpawn = new("hunts.lore.leucrotta.spawn", "Requires defeating 50 each of Allagan Chimera, Lesser Hydra and Meracydian Vouivre.");
+        public static readonly LocString MindflayerSpawn = new("hunts.lore.mindflayer.spawn", "Appears when its spawn locations are crossed on nights of the new moon.");
+        public static readonly LocString MinhocaoSpawn = new("hunts.lore.minhocao.spawn", "Requires defeating 100 Earth Sprites.");
+        public static readonly LocString NandiSpawn = new("hunts.lore.nandi.spawn", "May trigger while passing over its spawn locations with any minion summoned.");
+        public static readonly LocString NarrowRiftSpawn = new("hunts.lore.narrow_rift.spawn", "May trigger when 10 players together cross its spawn locations, each with the wee Ea minion summoned.");
+        public static readonly LocString NeyoozoteelSpawn = new("hunts.lore.neyoozoteel.spawn", "Requires discarding a full stack of 50 Fish Meal.");
+        public static readonly LocString NunyunuwiSpawn = new("hunts.lore.nunyunuwi.spawn", "Requires an unbroken real-time hour of FATE completions, with none allowed to fail.");
+        public static readonly LocString OkinaSpawn = new("hunts.lore.okina.spawn", "Requires defeating 100 Yumemi and 100 Naked Yumemi while the full moon is active.");
+        public static readonly LocString OphioneusSpawn = new("hunts.lore.ophioneus.spawn", "Requires discarding a full stack of 5 Eggs of Elpis.");
+        public static readonly LocString OrghanaSpawn = new("hunts.lore.orghana.spawn", "May trigger while passing over its spawn locations while the Not Just a Tribute FATE is complete.");
+        public static readonly LocString RuminatorSpawn = new("hunts.lore.ruminator.spawn", "Requires defeating 100 each of Thinkers, Wanderers and Weepers.");
+        public static readonly LocString SafatSpawn = new("hunts.lore.safat.spawn", "Requires falling damage that brings a player down to 1 HP.");
+        public static readonly LocString SaltAndLightSpawn = new("hunts.lore.salt_and_light.spawn", "Requires 50 individual item discards.");
+        public static readonly LocString SansheyaSpawn = new("hunts.lore.sansheya.spawn", "Requires three consecutive successful clears of the You Are What You Drink FATE.");
+        public static readonly LocString SenmurvSpawn = new("hunts.lore.senmurv.spawn", "Requires five consecutive successful clears of the Cerf's Up FATE.");
+        public static readonly LocString SphatikaSpawn = new("hunts.lore.sphatika.spawn", "Requires defeating 100 each of Asvattha, Pisaca and Vajralangula.");
+        public static readonly LocString TarchiaSpawn = new("hunts.lore.tarchia.spawn", "May trigger when a player uses Self Destruct on a spawn location.");
+        public static readonly LocString TheForecasterSpawn = new("hunts.lore.the_forecaster.spawn", "May trigger when a player casts Northerlies on a spawn location.");
+        public static readonly LocString TheGarlokSpawn = new("hunts.lore.the_garlok.spawn", "Requires 200 real-time minutes without rain or showers in the zone.");
+        public static readonly LocString ThePaleRiderSpawn = new("hunts.lore.the_pale_rider.spawn", "May trigger when a treasure map chest is opened.");
+        public static readonly LocString ThousandCastThedaSpawn = new("hunts.lore.thousand_cast_theda.spawn", "May trigger after successfully landing a Judgeray.");
+        public static readonly LocString TygerSpawn = new("hunts.lore.tyger.spawn", "Requires discarding a single Rail Tenderloin.");
+        public static readonly LocString UdumbaraSpawn = new("hunts.lore.udumbara.spawn", "Requires defeating 100 Leshy and 100 Diakka.");
+        public static readonly LocString ZonaSeekerSpawn = new("hunts.lore.zona_seeker.spawn", "May trigger after successfully landing a Glimmerscale.");
 
         public static readonly LocString BattlecraftOrGcLevequestSpawn = new("hunts.lore.battlecraftOrGcLevequest.spawn",
-            "Chance on initiation of a Battlecraft or Grand Company levequest.");
+            "May trigger the moment a Battlecraft or Grand Company levequest is started.");
 
-        public static readonly LocString ArchaeotaniaSpawn = new("hunts.lore.archaeotania.spawn", "Completion of two FATE chains within The Tempest.");
-        public static readonly LocString ChiSpawn = new("hunts.lore.chi.spawn", "Completion of two FATEs within Ultima Thule.");
-        public static readonly LocString DaivadipaSpawn = new("hunts.lore.daivadipa.spawn", "Completion of two FATEs within Thavnair.");
-        public static readonly LocString FormidableSpawn = new("hunts.lore.formidable.spawn", "Completion of two FATEs within Kholusia.");
-        public static readonly LocString MicaTheMagicalMuSpawn = new("hunts.lore.mica_the_magical_mu.spawn", "Completion of two FATEs within Living Memory.");
-        public static readonly LocString TamamoGozenSpawn = new("hunts.lore.tamamo_gozen.spawn", "Completion of three FATEs within Yanxia.");
-        public static readonly LocString TtokrroneSpawn = new("hunts.lore.ttokrrone.spawn", "Completion of four FATEs within Shaaloani.");
+        public static readonly LocString ArchaeotaniaSpawn = new("hunts.lore.archaeotania.spawn", "Requires clearing two separate FATE chains in The Tempest.");
+        public static readonly LocString ChiSpawn = new("hunts.lore.chi.spawn", "Requires clearing two FATEs in Ultima Thule.");
+        public static readonly LocString DaivadipaSpawn = new("hunts.lore.daivadipa.spawn", "Requires clearing two FATEs in Thavnair.");
+        public static readonly LocString FormidableSpawn = new("hunts.lore.formidable.spawn", "Requires clearing two FATEs in Kholusia.");
+        public static readonly LocString MicaTheMagicalMuSpawn = new("hunts.lore.mica_the_magical_mu.spawn", "Requires clearing two FATEs in Living Memory.");
+        public static readonly LocString TamamoGozenSpawn = new("hunts.lore.tamamo_gozen.spawn", "Requires clearing three FATEs in Yanxia.");
+        public static readonly LocString TtokrroneSpawn = new("hunts.lore.ttokrrone.spawn", "Requires clearing four FATEs in Shaaloani.");
 
         public static readonly LocString NoSpecificSpawnTrigger = new("hunts.lore.noSpecificSpawnTrigger.spawn",
-            "No specific trigger, will spawn randomly at some point during the open window.");
+            "Has no distinct trigger, it spawns at a random point once its window opens.");
     }
 
     internal static class Phone
