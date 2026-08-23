@@ -61,7 +61,7 @@ internal static class ThemeCatalog
         PhoneCase.Art("Allagan", PhoneCaseCategory.ArtistSeries, new Vector4(0.149f, 0.115f, 0.111f, 1f), "Zivyl"),
         PhoneCase.Art("JuniorJinbei", PhoneCaseCategory.ArtistSeries, new Vector4(0.484f, 0.491f, 0.602f, 1f), "Silkie"),
         PhoneCase.Art("FoxKit", PhoneCaseCategory.ArtistSeries, new Vector4(1.000f, 0.817f, 0.559f, 1f), "Silkie"),
-        PhoneCase.Art("Namazu", PhoneCaseCategory.ArtistSeries, new Vector4(0.639f, 0.147f, 0.150f, 1f), "Silkie"),
+        PhoneCase.Art("Namazu", PhoneCaseCategory.ArtistSeries, new Vector4(0.639f, 0.147f, 0.150f, 1f), "starpanda"),
         PhoneCase.Art("MadHatter", PhoneCaseCategory.ArtistSeries, new Vector4(0.134f, 0.335f, 0.211f, 1f), "kukkiineko"),
         PhoneCase.Art("Cheshire", PhoneCaseCategory.ArtistSeries, new Vector4(0.807f, 0.395f, 0.594f, 1f), "kukkiineko"),
         PhoneCase.Art("AliceInWonderland", PhoneCaseCategory.ArtistSeries, new Vector4(0.702f, 0.762f, 0.820f, 1f), "kukkiineko"),
