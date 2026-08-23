@@ -1243,7 +1243,7 @@ internal static class L
         public static readonly LocString SignupAuthenticatedMessage =
             new("hunts.signupAuthenticatedMessage", "You're logged in to Faloop.");
         public static readonly LocString SignupLogoutButton = new("hunts.signupLogoutButton", "Log Out");
-        public static readonly LocString GuideTab = new("hunts.guideTab", "Guide");
+        public static readonly LocString GuideTab = new("hunts.guideTab", "Hunt Guides");
         public static readonly LocString GuideHowItWorksTitle =
             new("hunts.guideHowItWorksTitle", "How does this work?");
         public static readonly LocString GuideHowItWorksBody = new("hunts.guideHowItWorksBody",
@@ -1264,7 +1264,7 @@ internal static class L
         public static readonly LocString GuideAffiliationBody = new("hunts.guideAffiliationBody",
             "No. Aetherphone is an independent, unofficial client, it is not made, run, sponsored, or endorsed by Faloop in any way. It simply displays hunt data pulled from Faloop's public service. Please send feedback about this app to Aetherphone, not to Faloop.");
         public static readonly LocString GuideContributeTitle =
-            new("hunts.guideContributeTitle", "How can I contribute?");
+            new("hunts.guideContributeTitle", "How can I contribute to hunt tracking?");
         public static readonly LocString GuideContributeBody = new("hunts.guideContributeBody",
             "This app is an independent client that displays hunt data from Faloop's own tracking project. To contribute reports, or to learn more about Faloop itself, join their Discord:\n\nhttps://discord.gg/faloop");
         public static readonly LocString GuideScheduledTitle =
@@ -5434,7 +5434,7 @@ internal static class L
         public static readonly LocString AetherStreamPartyBody = new("onboarding.aetherStreamPartyBody", "Start a party and players nearby can ask to join. You decide who comes in, and everyone stays on the same second of the same video.");
         public static readonly LocString AetherStreamSettingsTitle = new("onboarding.aetherStreamSettingsTitle", "Tune it to your machine");
         public static readonly LocString AetherStreamSettingsBody = new("onboarding.aetherStreamSettingsBody", "Maximum quality, hardware decoding, whether others can find your stream, and the components the player needs, all behind this cog.");
-        public static readonly LocString HuntsBody = new("onboarding.huntsBody", "A Faloop account is required for live spawn data. Browsing marks and mob info works without one.");
+        public static readonly LocString HuntsBody = new("onboarding.huntsBody", "A Faloop account is required for live spawn data. Browsing marks and mob info works without one. Faloop is not affiliated with Aetherphone.");
         public static readonly LocString HuntsSignInTitle = new("onboarding.huntsSignInTitle", "Sign in to Faloop");
         public static readonly LocString HuntsSignInBody = new("onboarding.huntsSignInBody", "Tap here to sign in or create a Faloop account and start getting live spawns.");
         public static readonly LocString HuntsGuideTitle = new("onboarding.huntsGuideTitle", "Learn more");
