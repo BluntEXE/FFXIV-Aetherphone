@@ -278,32 +278,32 @@ internal sealed class TetrisApp : IMiniGame
             return;
         }
 
-        if (ImGui.IsKeyPressed(ImGuiKey.LeftArrow))
+        if (GameInput.Pressed(ImGuiKey.LeftArrow, ImGuiKey.A, true))
         {
             board.Move(-1);
         }
 
-        if (ImGui.IsKeyPressed(ImGuiKey.RightArrow))
+        if (GameInput.Pressed(ImGuiKey.RightArrow, ImGuiKey.D, true))
         {
             board.Move(1);
         }
 
-        if (ImGui.IsKeyPressed(ImGuiKey.UpArrow, false))
+        if (GameInput.Pressed(ImGuiKey.UpArrow, ImGuiKey.W))
         {
             board.Rotate(1);
         }
 
-        if (ImGui.IsKeyPressed(ImGuiKey.DownArrow))
+        if (GameInput.Pressed(ImGuiKey.DownArrow, ImGuiKey.S, true))
         {
             board.SoftDrop();
         }
 
-        if (ImGui.IsKeyPressed(ImGuiKey.Space, false))
+        if (GameInput.Pressed(ImGuiKey.Space))
         {
             HardDrop();
         }
 
-        if (ImGui.IsKeyPressed(ImGuiKey.C, false))
+        if (GameInput.Pressed(ImGuiKey.C))
         {
             board.HoldPiece();
         }
