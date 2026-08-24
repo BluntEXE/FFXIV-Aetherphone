@@ -81,6 +81,8 @@ internal sealed class GamesApp : IPhoneApp
     }
 
     private const float HeaderHeight = 42f;
+    private const float LandscapeBackRadius = 16f;
+    private const float LandscapeBackInset = 10f;
     private const float CoinChipRingRadius = 7f;
     private const float CoinChipGap = 5f;
     private const float CoinChipReserve = 72f;
@@ -289,18 +291,28 @@ internal sealed class GamesApp : IPhoneApp
         var game = currentGame!;
         var scale = UiScale.Current;
         var content = context.Content;
-        var chip = BuildCoinSessionChip();
-        if (chip.Visible)
+        var landscape = game.WantsLandscape && AppLandscape.Held(Id) && content.IsLandscape();
+        Rect body;
+        if (landscape)
         {
-            AppHeader.Draw(context, "games.header.title", game.Title, CoinChipReserve * scale, back);
-            DrawCoinSessionChip(chip, content, context.Theme, scale);
+            body = content;
         }
         else
         {
-            AppHeader.Draw(context, game.Title, back);
+            var chip = BuildCoinSessionChip();
+            if (chip.Visible)
+            {
+                AppHeader.Draw(context, "games.header.title", game.Title, CoinChipReserve * scale, back);
+                DrawCoinSessionChip(chip, content, context.Theme, scale);
+            }
+            else
+            {
+                AppHeader.Draw(context, game.Title, back);
+            }
+
+            body = new Rect(new Vector2(content.Min.X, content.Min.Y + HeaderHeight * scale), content.Max);
         }
 
-        var body = new Rect(new Vector2(content.Min.X, content.Min.Y + HeaderHeight * scale), content.Max);
         using (AppSurface.Begin(body))
         {
             var attentive = GameFocus.Active;
@@ -308,6 +320,26 @@ internal sealed class GamesApp : IPhoneApp
             game.Draw(new GameContext(body, context.Theme, stats, attentive ? frameSeconds : 0f));
             pausedVeil.Step(!attentive && game.RunsOnAClock ? 1f : 0f, PausedFadeSeconds, frameSeconds);
             DrawPausedVeil(body, context.Theme);
+            if (landscape)
+            {
+                DrawLandscapeBack(body, context.Theme, scale);
+            }
+        }
+    }
+
+    private void DrawLandscapeBack(Rect body, PhoneTheme theme, float scale)
+    {
+        var radius = LandscapeBackRadius * scale;
+        var center = body.Min + new Vector2(radius + LandscapeBackInset * scale, radius + LandscapeBackInset * scale);
+        var drawList = ImGui.GetWindowDrawList();
+        var hovered = UiInteract.Hover(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
+        Material.Frosted(drawList, center - new Vector2(radius, radius), center + new Vector2(radius, radius), radius, scale,
+            hovered ? 1f : 0.85f);
+        ProgressRing.CenterIcon(drawList, center, FontAwesomeIcon.ChevronLeft, hovered ? theme.TextStrong : theme.Accent,
+            radius * 0.9f);
+        if (UiInteract.HoverClickCircle(center, radius))
+        {
+            back();
         }
     }
 
@@ -763,11 +795,17 @@ internal sealed class GamesApp : IPhoneApp
         currentGame = game;
         game.Open();
         coinSessions.GameOpened(game.Id);
+        if (game.WantsLandscape)
+        {
+            AppLandscape.Request(Id);
+        }
+
         router.Push(GameRoute.Playing);
     }
 
     private void CloseCurrentGame()
     {
+        AppLandscape.Release(Id);
         if (currentGame is null)
         {
             return;

@@ -9,6 +9,7 @@ internal interface IMiniGame : IDisposable
     string Genre { get; }
     Vector4 Accent => AppAccents.For(Id);
     bool RunsOnAClock => false;
+    bool WantsLandscape => false;
     void Open();
     void Close();
     void Draw(in GameContext context);
