@@ -188,6 +188,24 @@ internal sealed class PhoneShell : IDisposable
 
     public void ForceMinimized() => minimize.SnapMinimized();
 
+    private void ApplyResize(float width, bool landscape)
+    {
+        if (landscape)
+        {
+            if (MathF.Abs(width - configuration.LandscapePhoneWidth) > 0.01f)
+            {
+                configuration.LandscapePhoneWidth = width;
+            }
+
+            return;
+        }
+
+        if (MathF.Abs(width - configuration.PhoneWidth) > 0.01f)
+        {
+            configuration.PhoneWidth = width;
+        }
+    }
+
     private void OnVibration(PhoneNotification notification)
     {
         if (minimize.Phase != MinimizePhase.None)
@@ -297,10 +315,14 @@ internal sealed class PhoneShell : IDisposable
                 configuration.Save();
             }
 
-            var resized = resizeGrip.Update(chassis, PhoneBounds.ClampWidth(configuration.PhoneWidth), delta);
-            if (resized.Adjusting && MathF.Abs(resized.Width - configuration.PhoneWidth) > 0.01f)
+            var landscape = LandscapeActive;
+            var gripWidth = landscape
+                ? PhoneBounds.LandscapeWidth(configuration)
+                : PhoneBounds.ClampWidth(configuration.PhoneWidth);
+            var resized = resizeGrip.Update(chassis, gripWidth, landscape, delta);
+            if (resized.Adjusting)
             {
-                configuration.PhoneWidth = resized.Width;
+                ApplyResize(resized.Width, landscape);
             }
 
             if (resized.Committed)

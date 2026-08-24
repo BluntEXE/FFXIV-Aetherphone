@@ -35,7 +35,7 @@ internal sealed class ResizeGrip
     private float startWidth;
     private float reveal;
 
-    public Result Update(in ChassisGeometry chassis, float width, float deltaSeconds)
+    public Result Update(in ChassisGeometry chassis, float width, bool landscape, float deltaSeconds)
     {
         var scale = UiScale.Current;
         var corner = chassis.Body.Max;
@@ -52,7 +52,7 @@ internal sealed class ResizeGrip
         {
             UiInteract.BlockThisFrame();
             UiInteract.CancelPendingTap();
-            next = WidthFromDrag(startWidth, drag.Delta);
+            next = WidthFromDrag(startWidth, drag.Delta, landscape);
         }
 
         var committed = drag.Released(out _, out _);
@@ -69,12 +69,15 @@ internal sealed class ResizeGrip
         return new Result(next, active, committed);
     }
 
-    private static float WidthFromDrag(float startWidth, Vector2 delta)
+    private static float WidthFromDrag(float startWidth, Vector2 delta, bool landscape)
     {
         const float aspect = PhoneSizeCatalog.AspectRatio;
-        var change = (delta.X + delta.Y * aspect) / (1f + aspect * aspect);
+        var along = landscape ? delta.X * aspect + delta.Y : delta.X + delta.Y * aspect;
+        var change = along / (1f + aspect * aspect);
         var units = startWidth + change / MathF.Max(UiScale.Global, 0.01f);
-        return PhoneSizeCatalog.Snap(PhoneBounds.ClampWidth(units));
+        return landscape
+            ? MathF.Round(PhoneBounds.ClampLandscapeWidth(units))
+            : PhoneSizeCatalog.Snap(PhoneBounds.ClampWidth(units));
     }
 
     private static float Approach(float value, float target, float deltaSeconds)

@@ -122,13 +122,17 @@ internal sealed class PhoneWindow : Window
 
     public override void PreDraw()
     {
-        var width = Components.PhoneBounds.ClampWidth(configuration.PhoneWidth);
-        var zoom = PhoneSizeCatalog.ZoomFor(width);
+        var portraitWidth = Components.PhoneBounds.ClampWidth(configuration.PhoneWidth);
+        var landscapeWidth = Components.PhoneBounds.LandscapeWidth(configuration);
+        var rotation = AdvanceRotation();
+        var zoom = PhoneSizeCatalog.ZoomFor(float.Lerp(portraitWidth, landscapeWidth, rotation));
         UiScale.SetPhone(zoom);
         Plugin.Fonts.SetPhoneZoom(zoom);
         var phase = shell.MinimizePhase;
         var minimized = phase == MinimizePhase.Minimized;
-        var size = minimized ? MinimizeTransition.MinimizedSize : OrientedSize(width);
+        var size = minimized
+            ? MinimizeTransition.MinimizedSize
+            : OrientedSize(portraitWidth, landscapeWidth, rotation);
         Size = size;
         SizeCondition = ImGuiCond.Always;
         var locked = !minimized && configuration.LockPosition;
@@ -186,27 +190,33 @@ internal sealed class PhoneWindow : Window
         ImGui.PushStyleVar(ImGuiStyleVar.GrabMinSize, style.GrabMinSize * zoom);
     }
 
-    private Vector2 OrientedSize(float width)
+    private float AdvanceRotation()
     {
-        var portrait = PhoneSizeCatalog.SizeFor(width);
         var target = shell.LandscapeActive ? 1f : 0f;
-        if (landscapeBlend != target)
+        if (landscapeBlend == target)
         {
-            var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
-            var step = delta / RotateSeconds;
-            landscapeBlend = target > landscapeBlend
-                ? MathF.Min(target, landscapeBlend + step)
-                : MathF.Max(target, landscapeBlend - step);
-            rotatePinFrames = RecenterFrameCount;
+            return Easing.SmootherStep(landscapeBlend);
         }
 
-        if (landscapeBlend <= 0f)
+        var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
+        var step = delta / RotateSeconds;
+        landscapeBlend = target > landscapeBlend
+            ? MathF.Min(target, landscapeBlend + step)
+            : MathF.Max(target, landscapeBlend - step);
+        rotatePinFrames = RecenterFrameCount;
+        return Easing.SmootherStep(landscapeBlend);
+    }
+
+    private static Vector2 OrientedSize(float portraitWidth, float landscapeWidth, float rotation)
+    {
+        var portrait = PhoneSizeCatalog.SizeFor(portraitWidth);
+        if (rotation <= 0f)
         {
             return portrait;
         }
 
-        var landscape = new Vector2(portrait.Y, portrait.X);
-        return Vector2.Lerp(portrait, landscape, Easing.SmootherStep(landscapeBlend));
+        var landscape = PhoneSizeCatalog.LandscapeSizeFor(landscapeWidth);
+        return Vector2.Lerp(portrait, landscape, rotation);
     }
 
     private Vector2 CenterPinnedPosition(Vector2 size)

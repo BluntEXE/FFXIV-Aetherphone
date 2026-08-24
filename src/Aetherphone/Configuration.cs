@@ -108,6 +108,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public float ScreenBrightness { get; set; } = 1f;
     public float PhoneScale { get; set; } = PhoneSizeCatalog.DefaultWidth / PhoneSizeCatalog.DesignWidth;
     public float PhoneWidth { get; set; }
+    public float LandscapePhoneWidth { get; set; }
     public bool CameraLandscape { get; set; }
     public bool CameraGrid { get; set; }
     public bool CameraFlash { get; set; } = true;
