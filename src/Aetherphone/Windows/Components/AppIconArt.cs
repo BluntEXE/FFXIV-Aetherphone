@@ -91,6 +91,9 @@ internal static class AppIconArt
             case "trivia":
                 DrawTrivia(dl, center, extent, inkColor, holeColor);
                 return true;
+            case "skyfall":
+                DrawSkyfall(dl, center, extent, inkColor, holeColor);
+                return true;
             default:
                 return false;
         }
@@ -550,6 +553,26 @@ internal static class AppIconArt
         var handleWidth = halfWidth * 0.7f;
         dl.AddRectFilled(new Vector2(tip.X - handleWidth, bladeBase.Y),
             new Vector2(tip.X + handleWidth, bladeBase.Y + extent * 0.46f), ink, extent * 0.06f);
+    }
+
+    private static void DrawSkyfall(ImDrawListPtr dl, Vector2 center, float extent, uint ink, uint hole)
+    {
+        var groundY = center.Y + extent * 0.78f;
+        dl.AddRectFilled(new Vector2(center.X - extent, groundY), new Vector2(center.X + extent, groundY + extent * 0.16f),
+            ink, extent * 0.06f);
+        var blast = At(center, extent, 0.18f, 0.04f);
+        var radius = extent * 0.46f;
+        dl.AddCircleFilled(blast, radius, ink, 32);
+        dl.AddCircleFilled(blast, radius * 0.5f, hole, 24);
+        var streakStart = At(center, extent, -0.92f, -0.96f);
+        var streakEnd = new Vector2(blast.X - radius * 0.78f, blast.Y - radius * 0.62f);
+        dl.AddLine(streakStart, streakEnd, ink, extent * 0.18f);
+        dl.AddCircleFilled(streakStart, extent * 0.09f, ink, 12);
+        var towerWidth = extent * 0.2f;
+        dl.AddRectFilled(new Vector2(center.X - extent * 0.86f, groundY - extent * 0.36f),
+            new Vector2(center.X - extent * 0.86f + towerWidth, groundY), ink, extent * 0.03f);
+        dl.AddRectFilled(new Vector2(center.X + extent * 0.66f, groundY - extent * 0.5f),
+            new Vector2(center.X + extent * 0.66f + towerWidth, groundY), ink, extent * 0.03f);
     }
 
     private static void DrawTrivia(ImDrawListPtr dl, Vector2 center, float extent, uint ink, uint hole)

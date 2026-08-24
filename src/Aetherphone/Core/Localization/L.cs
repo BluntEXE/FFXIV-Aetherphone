@@ -4398,6 +4398,10 @@ internal static class L
         public static readonly LocString CategoryMinions = new("games.categoryMinions", "Minions");
         public static readonly LocString CategoryActions = new("games.categoryActions", "Actions");
         public static readonly LocString CategoryEmotes = new("games.categoryEmotes", "Emotes");
+        public static readonly LocString Skyfall = new("games.skyfall", "Skyfall");
+        public static readonly LocString Wave = new("games.wave", "Wave");
+        public static readonly LocString Ammo = new("games.ammo", "Ammo");
+        public static readonly LocString WaveClear = new("games.waveClear", "Wave clear");
     }
 
     internal static class Time
