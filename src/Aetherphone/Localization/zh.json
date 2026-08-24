@@ -4549,6 +4549,8 @@
   "changelog.r1010.12": "在游戏里按下的按键现在只作用于游戏：俄罗斯方块和数独里的方向键，以及太空入侵者、CapMan、跳跃和中队里的 WASD 只控制游戏，不会让角色走动，这些游戏也都可以用屏幕上的方向键游玩",
   "changelog.r1010.13": "「翻译」链接也出现在个人简介和 Velvet 自我介绍、Yellow Pages 广告、Muster 说明、场馆说明以及快拍说明文字下方",
   "changelog.r1010.14": "设置 > 通用新增「自动翻译帖子和评论」：其他语言的帖子和评论会在出现时立即翻译，无需点按翻译，聊天仍保留各自的开关",
+  "changelog.r1010.15": "游戏新增 Doom：真正的引擎在手机上运行，以 4:3 画面呈现，带音效和 MIDI 配乐。WASD 移动，在屏幕上拖动或用方向键转向，空格开火，E 互动，1 到 7 切换武器，也可以用屏幕上的方向键；手机失去焦点时游戏会暂停并静音，从 Doom 自己的菜单退出则回到标题画面",
+  "changelog.r1010.16": "Doom 不附带游戏数据：首次打开时，设置卡片会下载共享版章节 Knee-Deep in the Dead，并可选下载用于音乐的音色库，两者都会按已知校验和验证后存入你的 Aetherphone 文件夹；把完整的 DOOM.WAD 或 DOOM2.WAD 放进该文件夹则会自动改用它们",
   "changelog.r1008.0": "音乐的“直播”标签页现在会列出 XIV Rolladeck 上正在直播的 Twitch DJ，每位都标有演出场馆，并附带“传送”按钮，可通过 Lifestream 直接前往（由 eggoless 提供）",
   "changelog.r1008.1": "来自他人的链接现在会先弹出确认框，在浏览器打开前显示链接去向，且站点名称完整可见：涵盖 Chirper、Aethergram、Velvet、ChocoChat、Linkpearl、公告、场馆和 Yellow Pages（由 Farroness 提供）",
   "changelog.r1008.2": "Chirper 和 Aethergram 可以按地区缩小“为你推荐”信息流：筛选菜单新增 NA、EU、JP、OCE 和 CN 开关，每个应用各自记住选择，任一筛选生效时漏斗图标会变暗",
