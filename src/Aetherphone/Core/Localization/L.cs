@@ -1616,7 +1616,7 @@ internal static class L
             new("changelog.r1010.17",
                 "Tetris gains a Modern ruleset beside Classic, picked by a strip under the pills and with its own best score: pieces rotate with guideline SRS kicks, a grounded piece waits half a second with up to fifteen move resets before it locks, T-spins count by the three-corner rule, scoring follows the guideline table with back-to-back at 1.5x and combos at 50 per link, spins, back-to-backs and combos are called out on the field, and Z and X rotate either way alongside Up"),
             new("changelog.r1010.11",
-                "Tetris now steers with WASD as well as the arrow keys: A and D move, W rotates, and S soft drops, alongside Space and C"),
+                "Tetris now steers with WASD as well as the arrow keys: A and D move, W rotates, and S soft drops, alongside Space and C, and the buttons under the board are labeled with those keys"),
             new("changelog.r1010.12",
                 "Keys pressed in a game now stay in the game: the arrows in Tetris and Sudoku, and WASD in Invaders, CapMan, Hop and Squadron, steer the game without walking your character, and each of those games also plays on an on-screen pad"),
         };

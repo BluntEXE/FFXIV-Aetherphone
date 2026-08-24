@@ -20,6 +20,11 @@ internal sealed class TetrisApp : IMiniGame
 
     private const string ModernStatId = "tetris.modern";
     private const float RulesetStripHeight = 26f;
+    private const string HoldKeyLabel = "C";
+    private const string LeftKeyLabel = "A";
+    private const string RotateKeyLabel = "W";
+    private const string RightKeyLabel = "D";
+    private const string DropKeyLabel = "Space";
     private readonly TetrisBoard board = new();
     private readonly TetrisRenderer renderer = new();
     private readonly ParticleSystem particles = new();
@@ -200,7 +205,7 @@ internal sealed class TetrisApp : IMiniGame
         hudBottom = stripRow.Max.Y - 12f * scale;
 
         var drawList = ImGui.GetWindowDrawList();
-        var iconColor = ImGui.GetColorU32(GamePalette.InkOn(Accent));
+        var iconColor = GamePalette.InkOn(Accent);
         var controlY = body.Max.Y - 26f * scale;
         var controlMargin = 12f * scale;
         var controlAvailableWidth = body.Width - controlMargin * 2f;
@@ -214,35 +219,35 @@ internal sealed class TetrisApp : IMiniGame
             board.HoldPiece();
         }
 
-        DrawSwapIcon(drawList, holdCenter, scale, iconColor);
+        DrawKeyLabel(drawList, holdCenter, HoldKeyLabel, controlWidth, iconColor);
         var leftCenter = new Vector2(centerX - controlWidth - controlSpacing, controlY);
         if (GameHud.Button(leftCenter, controlSize, string.Empty, Accent, theme))
         {
             board.Move(-1);
         }
 
-        DrawMoveIcon(drawList, leftCenter, -1, scale, iconColor);
+        DrawKeyLabel(drawList, leftCenter, LeftKeyLabel, controlWidth, iconColor);
         var rotateCenter = new Vector2(centerX, controlY);
         if (GameHud.Button(rotateCenter, controlSize, string.Empty, Accent, theme))
         {
             board.Rotate(1);
         }
 
-        DrawRotateIcon(drawList, rotateCenter, scale, iconColor);
+        DrawKeyLabel(drawList, rotateCenter, RotateKeyLabel, controlWidth, iconColor);
         var rightCenter = new Vector2(centerX + controlWidth + controlSpacing, controlY);
         if (GameHud.Button(rightCenter, controlSize, string.Empty, Accent, theme))
         {
             board.Move(1);
         }
 
-        DrawMoveIcon(drawList, rightCenter, 1, scale, iconColor);
+        DrawKeyLabel(drawList, rightCenter, RightKeyLabel, controlWidth, iconColor);
         var dropCenter = new Vector2(centerX + (controlWidth + controlSpacing) * 2f, controlY);
         if (GameHud.Button(dropCenter, controlSize, string.Empty, Accent, theme))
         {
             HardDrop();
         }
 
-        DrawDropIcon(drawList, dropCenter, scale, iconColor);
+        DrawKeyLabel(drawList, dropCenter, DropKeyLabel, controlWidth, iconColor);
         if (!board.GameOver)
         {
             HandleKeyboard();
@@ -380,56 +385,17 @@ internal sealed class TetrisApp : IMiniGame
         }
     }
 
-    private static void DrawMoveIcon(ImDrawListPtr drawList, Vector2 center, int direction, float scale, uint color)
+    private static void DrawKeyLabel(ImDrawListPtr drawList, Vector2 center, string label, float buttonWidth,
+        Vector4 color)
     {
-        var size = 5f * scale;
-        drawList.AddTriangleFilled(new Vector2(center.X - direction * size * 0.6f, center.Y - size),
-            new Vector2(center.X - direction * size * 0.6f, center.Y + size),
-            new Vector2(center.X + direction * size, center.Y), color);
-    }
+        var maxWidth = buttonWidth - 8f * UiScale.Current;
+        var style = TextStyles.FootnoteEmphasized;
+        if (Typography.Measure(label, style).X > maxWidth)
+        {
+            style = TextStyles.Caption2;
+        }
 
-    private static void DrawRotateIcon(ImDrawListPtr drawList, Vector2 center, float scale, uint color)
-    {
-        var radius = 5.5f * scale;
-        const float tipAngle = -MathF.PI * 0.35f;
-        drawList.PathClear();
-        drawList.PathArcTo(center, radius, tipAngle, MathF.PI * 1.15f, 24);
-        drawList.PathStroke(color, ImDrawFlags.None, 1.8f * scale);
-        var tip = center + new Vector2(MathF.Cos(tipAngle), MathF.Sin(tipAngle)) * radius;
-        var tangent = new Vector2(MathF.Sin(tipAngle), -MathF.Cos(tipAngle));
-        var normal = new Vector2(-tangent.Y, tangent.X);
-        var head = 4f * scale;
-        drawList.AddTriangleFilled(tip + tangent * head, tip - tangent * head * 0.2f + normal * head * 0.6f,
-            tip - tangent * head * 0.2f - normal * head * 0.6f, color);
-    }
-
-    private static void DrawSwapIcon(ImDrawListPtr drawList, Vector2 center, float scale, uint color)
-    {
-        var width = 6f * scale;
-        var offset = 3.2f * scale;
-        var head = 2.6f * scale;
-        var thickness = 1.8f * scale;
-        var topY = center.Y - offset;
-        drawList.AddLine(new Vector2(center.X - width, topY), new Vector2(center.X + width * 0.3f, topY), color,
-            thickness);
-        drawList.AddTriangleFilled(new Vector2(center.X + width * 0.2f, topY - head),
-            new Vector2(center.X + width * 0.2f, topY + head), new Vector2(center.X + width, topY), color);
-        var bottomY = center.Y + offset;
-        drawList.AddLine(new Vector2(center.X + width, bottomY), new Vector2(center.X - width * 0.3f, bottomY), color,
-            thickness);
-        drawList.AddTriangleFilled(new Vector2(center.X - width * 0.2f, bottomY - head),
-            new Vector2(center.X - width * 0.2f, bottomY + head), new Vector2(center.X - width, bottomY), color);
-    }
-
-    private static void DrawDropIcon(ImDrawListPtr drawList, Vector2 center, float scale, uint color)
-    {
-        drawList.AddLine(new Vector2(center.X, center.Y - 5.5f * scale), new Vector2(center.X, center.Y + 1f * scale),
-            color, 1.8f * scale);
-        drawList.AddTriangleFilled(new Vector2(center.X - 3.2f * scale, center.Y + 0.5f * scale),
-            new Vector2(center.X + 3.2f * scale, center.Y + 0.5f * scale),
-            new Vector2(center.X, center.Y + 4.5f * scale), color);
-        drawList.AddRectFilled(new Vector2(center.X - 4.5f * scale, center.Y + 5.4f * scale),
-            new Vector2(center.X + 4.5f * scale, center.Y + 6.8f * scale), color);
+        Typography.DrawCentered(drawList, center, label, color, style);
     }
 
     private void DrawResult(PhoneTheme theme, Rect body, float deltaSeconds)
