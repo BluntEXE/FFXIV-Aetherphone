@@ -1581,6 +1581,22 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release1010 =
+        {
+            new("changelog.r1010.0",
+                "Posts and comments written in another language now carry a Translate link in Chirper, Aethergram and Velvet: one tap swaps in the translation, a footer names the language it came from, and Show original brings the text back"),
+            new("changelog.r1010.1",
+                "Chats in ChocoChat and Velvet can translate a single message from its menu, and a Translate this chat switch in the thread header translates every new message as it arrives"),
+            new("changelog.r1010.2",
+                "Settings > Language picks the language you translate into, defaulting to your phone language. Translations are made by Aethernet, only the text you translate is sent, and private messages are never stored"),
+            new("changelog.r1010.3",
+                "A MogCast host can play a local file in a watch party without sharing its path: viewers are asked to locate their own copy, the phone checks it matches the host's, and playback runs in sync from there"),
+            new("changelog.r1010.4",
+                "Viewers in a MogCast watch party keep pace by speeding up or slowing down slightly instead of jumping on every host update, and only seek when they drift more than three seconds"),
+            new("changelog.r1010.5",
+                "When a MogCast video will not play, a card says so with Retry and, for the host, Skip: a stalled stream resumes from where it stopped, and the host sees how many viewers cannot play the current video"),
+        };
+
         public static readonly LocString[] Release1009 =
         {
             new("changelog.r1009.0",
