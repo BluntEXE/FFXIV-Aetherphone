@@ -780,7 +780,7 @@
   "translate.chatToggle": "翻译此聊天",
   "translate.chatOn": "此聊天中的新消息会为你自动翻译",
   "translate.disclosureTitle": "使用 Aethernet 翻译",
-  "translate.disclosureBody": "翻译由 Aethernet 通过 AI 服务完成。只会发送你要翻译的文字。私信绝不会被存储。",
+  "translate.disclosureBody": "翻译由 Aethernet 完成。只会发送你要翻译的文字。私信绝不会被存储。",
   "translate.disclosureContinue": "继续",
   "changelog.r0999.0": "新增七款手机壳：Atomos、Baby Bat、Dwarf Rabbit、Enkidu、Horror、Kupo 和 Runic，由 Remi 和 Silkie 贡献",
   "changelog.r0999.1": "所有手机壳都重新压缩过，即便多了七款新壳，插件的下载体积仍不到原来的一半",

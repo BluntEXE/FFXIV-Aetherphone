@@ -780,7 +780,7 @@
   "translate.chatToggle": "Translate this chat",
   "translate.chatOn": "New messages in this chat are translated for you",
   "translate.disclosureTitle": "Translate with Aethernet",
-  "translate.disclosureBody": "Translations are made by Aethernet with an AI provider. Only the text you translate is sent. Private messages are never stored.",
+  "translate.disclosureBody": "Translations are made by Aethernet. Only the text you translate is sent. Private messages are never stored.",
   "translate.disclosureContinue": "Continue",
   "changelog.r0999.0": "Added seven phone cases: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo, and Runic, contributed by Remi and Silkie",
   "changelog.r0999.1": "Every phone case was recompressed, so the plugin downloads at less than half its old size even with the seven new cases",

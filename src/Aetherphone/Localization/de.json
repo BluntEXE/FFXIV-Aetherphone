@@ -780,7 +780,7 @@
   "translate.chatToggle": "Diesen Chat übersetzen",
   "translate.chatOn": "Neue Nachrichten in diesem Chat werden für dich übersetzt",
   "translate.disclosureTitle": "Mit Aethernet übersetzen",
-  "translate.disclosureBody": "Übersetzungen erstellt Aethernet mit einem KI-Anbieter. Es wird nur der Text gesendet, den du übersetzt. Private Nachrichten werden nie gespeichert.",
+  "translate.disclosureBody": "Übersetzungen erstellt Aethernet. Es wird nur der Text gesendet, den du übersetzt. Private Nachrichten werden nie gespeichert.",
   "translate.disclosureContinue": "Weiter",
   "changelog.r0999.0": "Sieben Telefonhüllen hinzugefügt: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo und Runic, beigetragen von Remi und Silkie",
   "changelog.r0999.1": "Alle Telefonhüllen wurden neu komprimiert, sodass das Plugin trotz der sieben neuen Hüllen weniger als halb so groß heruntergeladen wird",

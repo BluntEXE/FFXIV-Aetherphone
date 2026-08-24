@@ -780,7 +780,7 @@
   "translate.chatToggle": "Traduzir esta conversa",
   "translate.chatOn": "As novas mensagens desta conversa são traduzidas para você",
   "translate.disclosureTitle": "Traduzir com o Aethernet",
-  "translate.disclosureBody": "As traduções são feitas pelo Aethernet com um provedor de IA. Apenas o texto que você traduz é enviado. Mensagens privadas nunca são armazenadas.",
+  "translate.disclosureBody": "As traduções são feitas pelo Aethernet. Apenas o texto que você traduz é enviado. Mensagens privadas nunca são armazenadas.",
   "translate.disclosureContinue": "Continuar",
   "changelog.r0999.0": "Adicionadas sete capas: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo e Runic, contribuído por Remi e Silkie",
   "changelog.r0999.1": "Todas as capas foram recomprimidas, então o plugin baixa com menos da metade do tamanho anterior mesmo com as sete capas novas",

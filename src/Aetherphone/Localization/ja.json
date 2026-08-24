@@ -780,7 +780,7 @@
   "translate.chatToggle": "このチャットを翻訳",
   "translate.chatOn": "このチャットの新しいメッセージは自動で翻訳されます",
   "translate.disclosureTitle": "Aethernetで翻訳",
-  "translate.disclosureBody": "翻訳はAethernetがAIプロバイダーを使って行います。送信されるのは翻訳するテキストだけです。プライベートメッセージが保存されることはありません。",
+  "translate.disclosureBody": "翻訳はAethernetが行います。送信されるのは翻訳するテキストだけです。プライベートメッセージが保存されることはありません。",
   "translate.disclosureContinue": "続ける",
   "changelog.r0999.0": "スマホケースを7種類追加しました。Atomos、Baby Bat、Dwarf Rabbit、Enkidu、Horror、Kupo、Runicです。RemiさんとSilkieさんの貢献です",
   "changelog.r0999.1": "すべてのスマホケースを圧縮し直したので、7種類増えてもプラグインのダウンロードサイズは以前の半分未満になりました",

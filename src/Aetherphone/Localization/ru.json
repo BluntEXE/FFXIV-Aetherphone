@@ -780,7 +780,7 @@
   "translate.chatToggle": "Переводить этот чат",
   "translate.chatOn": "Новые сообщения в этом чате переводятся для вас",
   "translate.disclosureTitle": "Перевод через Aethernet",
-  "translate.disclosureBody": "Переводы выполняет Aethernet с помощью ИИ-провайдера. Отправляется только тот текст, который вы переводите. Личные сообщения никогда не сохраняются.",
+  "translate.disclosureBody": "Переводы выполняет Aethernet. Отправляется только тот текст, который вы переводите. Личные сообщения никогда не сохраняются.",
   "translate.disclosureContinue": "Продолжить",
   "changelog.r0999.0": "Добавлено семь чехлов: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo и Runic. Вклад Remi и Silkie",
   "changelog.r0999.1": "Все чехлы пережаты заново, поэтому плагин скачивается меньше чем вполовину прежнего размера даже с семью новыми чехлами",

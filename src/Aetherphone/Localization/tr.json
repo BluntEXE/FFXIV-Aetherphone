@@ -780,7 +780,7 @@
   "translate.chatToggle": "Bu sohbeti çevir",
   "translate.chatOn": "Bu sohbetteki yeni mesajlar senin için çevrilir",
   "translate.disclosureTitle": "Aethernet ile çevir",
-  "translate.disclosureBody": "Çeviriler Aethernet tarafından bir yapay zeka sağlayıcısıyla yapılır. Yalnızca çevirdiğin metin gönderilir. Özel mesajlar asla saklanmaz.",
+  "translate.disclosureBody": "Çeviriler Aethernet tarafından yapılır. Yalnızca çevirdiğin metin gönderilir. Özel mesajlar asla saklanmaz.",
   "translate.disclosureContinue": "Devam",
   "changelog.r0999.0": "Yedi telefon kılıfı eklendi: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo ve Runic, Remi ve Silkie katkısıyla",
   "changelog.r0999.1": "Bütün kılıflar yeniden sıkıştırıldı, böylece yedi yeni kılıfa rağmen eklenti eski boyutunun yarısından azıyla iniyor",

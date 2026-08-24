@@ -780,7 +780,7 @@
   "translate.chatToggle": "Traduire cette discussion",
   "translate.chatOn": "Les nouveaux messages de cette discussion sont traduits pour toi",
   "translate.disclosureTitle": "Traduire avec Aethernet",
-  "translate.disclosureBody": "Les traductions sont réalisées par Aethernet avec un fournisseur d'IA. Seul le texte que tu traduis est envoyé. Les messages privés ne sont jamais conservés.",
+  "translate.disclosureBody": "Les traductions sont réalisées par Aethernet. Seul le texte que tu traduis est envoyé. Les messages privés ne sont jamais conservés.",
   "translate.disclosureContinue": "Continuer",
   "changelog.r0999.0": "Ajout de sept coques : Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo et Runic, contribué par Remi et Silkie",
   "changelog.r0999.1": "Toutes les coques ont été recompressées, si bien que le plugin se télécharge à moins de la moitié de son ancienne taille malgré les sept nouvelles coques",

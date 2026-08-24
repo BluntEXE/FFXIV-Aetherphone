@@ -1573,7 +1573,7 @@ internal static class L
         public static readonly LocString ChatToggle = new("translate.chatToggle", "Translate this chat");
         public static readonly LocString ChatOn = new("translate.chatOn", "New messages in this chat are translated for you");
         public static readonly LocString DisclosureTitle = new("translate.disclosureTitle", "Translate with Aethernet");
-        public static readonly LocString DisclosureBody = new("translate.disclosureBody", "Translations are made by Aethernet with an AI provider. Only the text you translate is sent. Private messages are never stored.");
+        public static readonly LocString DisclosureBody = new("translate.disclosureBody", "Translations are made by Aethernet. Only the text you translate is sent. Private messages are never stored.");
         public static readonly LocString DisclosureContinue = new("translate.disclosureContinue", "Continue");
     }
 

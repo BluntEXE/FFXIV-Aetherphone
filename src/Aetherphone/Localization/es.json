@@ -780,7 +780,7 @@
   "translate.chatToggle": "Traducir este chat",
   "translate.chatOn": "Los mensajes nuevos de este chat se traducen para ti",
   "translate.disclosureTitle": "Traducir con Aethernet",
-  "translate.disclosureBody": "Las traducciones las hace Aethernet con un proveedor de IA. Solo se envía el texto que traduces. Los mensajes privados nunca se guardan.",
+  "translate.disclosureBody": "Las traducciones las hace Aethernet. Solo se envía el texto que traduces. Los mensajes privados nunca se guardan.",
   "translate.disclosureContinue": "Continuar",
   "changelog.r0999.0": "Se añadieron siete fundas: Atomos, Baby Bat, Dwarf Rabbit, Enkidu, Horror, Kupo y Runic, contribuido por Remi y Silkie",
   "changelog.r0999.1": "Se recomprimieron todas las fundas, así que el plugin se descarga con menos de la mitad de su tamaño anterior pese a las siete fundas nuevas",
