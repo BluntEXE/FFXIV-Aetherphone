@@ -768,6 +768,8 @@
   "settings.translateInto": "Şu dile çevir",
   "settings.translateSameAsPhone": "Telefon diliyle aynı",
   "settings.translateIntoHint": "Başka dillerde yazılmış gönderiler, yorumlar ve mesajlar tek dokunuşla bu dilde gösteren bir Çevir bağlantısı alır.",
+  "settings.autoTranslate": "Gönderileri ve yorumları otomatik çevir",
+  "settings.autoTranslateHint": "Başka dillerde yazılmış gönderiler ve yorumlar, Çevir'e dokunmadan göründükleri anda çevrilir. Özel mesajlar sohbet başına kendi anahtarını korur.",
   "translate.action": "Çevir",
   "translate.pending": "Çevriliyor...",
   "translate.showOriginal": "Aslını göster",

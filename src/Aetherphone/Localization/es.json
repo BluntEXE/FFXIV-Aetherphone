@@ -768,6 +768,8 @@
   "settings.translateInto": "Traducir a",
   "settings.translateSameAsPhone": "Igual que el idioma del teléfono",
   "settings.translateIntoHint": "Las publicaciones, comentarios y mensajes escritos en otros idiomas reciben un enlace Traducir que los muestra en este idioma con un toque.",
+  "settings.autoTranslate": "Traducir automáticamente publicaciones y comentarios",
+  "settings.autoTranslateHint": "Las publicaciones y comentarios escritos en otros idiomas se traducen en cuanto aparecen, sin tocar Traducir. Los mensajes privados mantienen su propio interruptor por chat.",
   "translate.action": "Traducir",
   "translate.pending": "Traduciendo...",
   "translate.showOriginal": "Ver original",

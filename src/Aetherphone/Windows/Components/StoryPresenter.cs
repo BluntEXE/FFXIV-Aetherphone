@@ -4,6 +4,7 @@ using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Social;
@@ -28,6 +29,7 @@ internal sealed class StoryPresenter : IDisposable
     private readonly AppPalette palette;
     private readonly StoryConfirmLabels labels;
     private readonly ConfirmService confirm;
+    private readonly TranslationService translation;
     private readonly Action onCompose;
     private readonly Func<StoryDto, StoryViewers> viewersSource;
     private readonly Func<bool> nextGroup;
@@ -42,17 +44,19 @@ internal sealed class StoryPresenter : IDisposable
 
     public StoryPresenter(AethernetSession session, GramClient client, MediaClient media, RemoteImageCache images,
         LodestoneService lodestone, StoryRingPainter painter, AppPalette palette, StoryConfirmLabels labels,
-        ConfirmService confirm, RealtimeSignalBus signals, string logTag, Action onCompose,
+        ConfirmService confirm, TranslationService translation, RealtimeSignalBus signals, string logTag, Action onCompose,
         StoryReplyHooks? reply = null, Action<string>? openProfile = null)
     {
         stories = new StoryStore(session, client, media, signals, logTag);
         tray = new StoryTrayRow(images, lodestone);
         this.openProfile = openProfile;
-        viewer = new StoryViewerOverlay(images, lodestone, openProfile is null ? null : OpenAuthorProfile);
+        viewer = new StoryViewerOverlay(images, lodestone, translation, confirm,
+            openProfile is null ? null : OpenAuthorProfile);
         this.painter = painter;
         this.palette = palette;
         this.labels = labels;
         this.confirm = confirm;
+        this.translation = translation;
         this.onCompose = onCompose;
         viewersSource = ViewersFor;
         nextGroup = TryAdvanceGroup;

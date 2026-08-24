@@ -1557,6 +1557,8 @@ internal static class L
         public static readonly LocString TranslateInto = new("settings.translateInto", "Translate into");
         public static readonly LocString TranslateSameAsPhone = new("settings.translateSameAsPhone", "Same as phone language");
         public static readonly LocString TranslateIntoHint = new("settings.translateIntoHint", "Posts, comments, and messages written in other languages get a one-tap Translate link that renders them in this language.");
+        public static readonly LocString AutoTranslate = new("settings.autoTranslate", "Auto-translate posts and comments");
+        public static readonly LocString AutoTranslateHint = new("settings.autoTranslateHint", "Posts and comments written in other languages are translated as soon as they appear, without tapping Translate. Private messages keep their own per-chat switch.");
     }
 
     internal static class Translate

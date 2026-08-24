@@ -177,7 +177,7 @@ internal sealed partial class VelvetShell
             {
                 var captionOrigin = ImGui.GetCursorScreenPos();
                 var captionKey = new TranslationKey(TranslationSurface.Post, post.Id);
-                var captionView = translation.View(captionKey, post.Caption);
+                var captionView = translation.View(captionKey, post.Caption, post.Lang);
                 var captionText = captionView.Text;
                 var captionWidth = ImGui.GetContentRegionAvail().X;
                 RichTextLayout? captionLayout;
@@ -305,7 +305,7 @@ internal sealed partial class VelvetShell
         var textTop = origin.Y + 18f * scale;
         ImGui.SetCursorScreenPos(new Vector2(textLeft, textTop));
         var commentKey = new TranslationKey(TranslationSurface.Comment, comment.Id);
-        var commentView = translation.View(commentKey, comment.Text);
+        var commentView = translation.View(commentKey, comment.Text, comment.Lang);
         var commentText = commentView.Text;
         RichTextLayout? commentLayout;
         using (Plugin.Fonts.Push(0.9f))

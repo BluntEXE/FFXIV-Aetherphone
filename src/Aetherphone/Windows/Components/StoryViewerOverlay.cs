@@ -2,7 +2,9 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Emoji;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Social;
@@ -48,6 +50,8 @@ internal sealed class StoryViewerOverlay
 
     private readonly RemoteImageCache images;
     private readonly LodestoneService lodestone;
+    private readonly TranslationService translation;
+    private readonly ConfirmService confirm;
     private readonly Action<string>? openProfile;
     private Spring reveal;
     private StoryDto[] stories = Array.Empty<StoryDto>();
@@ -80,8 +84,11 @@ internal sealed class StoryViewerOverlay
     private Spring seenHover;
     private bool sheetOpen;
 
-    public StoryViewerOverlay(RemoteImageCache images, LodestoneService lodestone, Action<string>? openProfile = null)
+    public StoryViewerOverlay(RemoteImageCache images, LodestoneService lodestone, TranslationService translation,
+        ConfirmService confirm, Action<string>? openProfile = null)
     {
+        this.translation = translation;
+        this.confirm = confirm;
         this.images = images;
         this.lodestone = lodestone;
         this.openProfile = openProfile;
@@ -266,21 +273,30 @@ internal sealed class StoryViewerOverlay
 
         var inset = FooterInset * scale;
         var captionWidth = stage.Width - inset * 2f;
+        var storyKey = new TranslationKey(TranslationSurface.Story, story.Id);
+        var captionText = translation.View(storyKey, story.Caption, story.Lang).Text;
         var captionHeight = hasCaption
-            ? Typography.MeasureWrappedBlock(story.Caption, TextStyles.Body, captionWidth).Y
+            ? Typography.MeasureWrappedBlock(captionText, TextStyles.Body, captionWidth).Y
             : 0f;
+        var linkHeight = hasCaption ? TranslateLink.Height(translation, storyKey, story.Lang, scale) : 0f;
         var seenHeight = showSeen ? SeenPillHeight * scale : 0f;
         var gap = hasCaption && showSeen ? FooterGap * scale : 0f;
         var bottom = stage.Max.Y - inset - bottomInset;
-        var top = MathF.Max(stage.Min.Y + inset, bottom - captionHeight - gap - seenHeight);
+        var top = MathF.Max(stage.Min.Y + inset, bottom - captionHeight - linkHeight - gap - seenHeight);
         var scrimTop = MathF.Max(stage.Min.Y, top - ScrimFadeHeight * scale);
         Squircle.FillVerticalGradient(drawList, new Vector2(stage.Min.X, scrimTop), stage.Max,
             Metrics.Radius.Md * scale, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0f)),
             ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.78f)));
         if (hasCaption)
         {
-            Typography.DrawWrappedCentered(new Vector2(stage.Center.X, top), story.Caption,
+            Typography.DrawWrappedCentered(new Vector2(stage.Center.X, top), captionText,
                 new Vector4(1f, 1f, 1f, 0.96f), TextStyles.Body, captionWidth);
+            if (linkHeight > 0f)
+            {
+                TranslateLink.Draw(translation, confirm, storyKey, story.Lang, story.Caption,
+                    new Vector2(stage.Min.X + inset, top + captionHeight), captionWidth, new Vector4(1f, 1f, 1f, 0.7f),
+                    new Vector4(1f, 1f, 1f, 1f), scale);
+            }
         }
 
         if (showSeen)

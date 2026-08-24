@@ -2,7 +2,9 @@ using Aetherphone.Core;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Game;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Net;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
@@ -31,6 +33,9 @@ internal sealed partial class VenuesApp : IPhoneApp
     private readonly HttpService http;
     private readonly GameData gameData;
     private readonly Configuration configuration;
+    private readonly ConfirmService confirm;
+    private readonly TranslationService translation;
+    private readonly Dictionary<string, string> venueLanguages = new(StringComparer.Ordinal);
     private readonly ArtworkCache artwork;
     private readonly AppSkin ui = new(AppPalettes.Venues);
     private readonly ViewRouter<VenueRoute> router;
@@ -51,8 +56,11 @@ internal sealed partial class VenuesApp : IPhoneApp
     private INavigator navigation = null!;
 
     public VenuesApp(VenuesService venues, MediaCache media, HttpService http, ITextureProvider textures,
-        GameData gameData, Configuration configuration)
+        GameData gameData, Configuration configuration, ConfirmService confirm,
+        TranslationService translation)
     {
+        this.confirm = confirm;
+        this.translation = translation;
         this.venues = venues;
         this.media = media;
         this.http = http;

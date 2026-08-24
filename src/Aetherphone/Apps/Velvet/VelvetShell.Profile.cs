@@ -3,6 +3,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Social;
 using Aetherphone.Windows.Components;
@@ -151,7 +152,16 @@ internal sealed partial class VelvetShell
                 Gap(20f);
                 VSectionHeader.Bar(Loc.T(L.Velvet.CardAbout));
                 Gap(4f);
-                WrapText(user.Intro, VelvetTheme.BodyInk, TextStyles.Body);
+                var introKey = new TranslationKey(TranslationSurface.Bio, user.UserId);
+                WrapText(translation.View(introKey, user.Intro).Text, VelvetTheme.BodyInk, TextStyles.Body);
+                var introLinkHeight = TranslateLink.Height(translation, introKey, user.IntroLang, scale);
+                if (introLinkHeight > 0f)
+                {
+                    var linkTop = ImGui.GetCursorScreenPos();
+                    TranslateLink.Draw(translation, confirm, introKey, user.IntroLang, user.Intro, linkTop,
+                        ImGui.GetContentRegionAvail().X, VelvetTheme.MutedInk, VelvetTheme.RoseGlow, scale);
+                    ImGui.SetCursorScreenPos(new Vector2(linkTop.X, linkTop.Y + introLinkHeight));
+                }
             }
 
             Gap(20f);

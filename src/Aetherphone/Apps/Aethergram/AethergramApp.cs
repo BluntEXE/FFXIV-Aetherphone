@@ -168,7 +168,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         personPicker = new PersonPicker(store.NewMentionSuggestions());
         stories = new StoryPresenter(session, net.Grams, net.Media, images, lodestone, AethergramArt.StoryRing,
             AppPalettes.Aethergram, new StoryConfirmLabels(L.Aethergram.DeleteConfirm, L.Aethergram.DeleteCancel,
-                L.Aethergram.Saving), confirm, realtimeSignals, "Aethergram stories", StartStoryCompose,
+                L.Aethergram.Saving), confirm, translation, realtimeSignals, "Aethergram stories", StartStoryCompose,
             new StoryReplyHooks(L.Aethergram.ReplyToStory, dmStore.SendStoryReply, OpenThread), OpenProfile);
         this.launcher = launcher;
         this.dmLauncher = dmLauncher;
@@ -223,7 +223,7 @@ internal sealed partial class AethergramApp : IPhoneApp
             MessageLabel = L.Aethergram.MessageButton,
             SettingsLabel = L.Aethergram.Settings,
             SavedLabel = L.Aethergram.SavedTitle,
-        }, images, lodestone, avatarLightbox, configuration, gameData, confirm, report,
+        }, images, lodestone, avatarLightbox, configuration, gameData, confirm, report, translation,
             () => router.Push(AethergramRoute.EditProfile), () => StartCompose(true), OpenProfile, OpenUserList, back,
             null, OpenThread, () => router.Push(AethergramRoute.Settings), OpenSaved);
         threadView = new ThreadView(this);
@@ -1007,7 +1007,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         var textTop = actionsTop + actionsHeight + PostCardMetrics.TextGap * scale;
         RichTextLayout? captionLayout = null;
         var translateKey = new TranslationKey(TranslationSurface.Post, post.Id);
-        var captionView = translation.View(translateKey, post.Text);
+        var captionView = translation.View(translateKey, post.Text, post.Lang);
         var captionText = captionView.Text;
         if (captionText.Length > 0)
         {

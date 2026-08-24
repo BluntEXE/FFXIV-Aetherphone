@@ -768,6 +768,8 @@
   "settings.translateInto": "Übersetzen in",
   "settings.translateSameAsPhone": "Wie die Telefonsprache",
   "settings.translateIntoHint": "Beiträge, Kommentare und Nachrichten in anderen Sprachen bekommen einen Übersetzen-Link, der sie mit einem Tipp in dieser Sprache anzeigt.",
+  "settings.autoTranslate": "Beiträge und Kommentare automatisch übersetzen",
+  "settings.autoTranslateHint": "Beiträge und Kommentare in anderen Sprachen werden übersetzt, sobald sie erscheinen, ohne auf Übersetzen zu tippen. Private Nachrichten behalten ihren eigenen Schalter pro Chat.",
   "translate.action": "Übersetzen",
   "translate.pending": "Wird übersetzt...",
   "translate.showOriginal": "Original anzeigen",

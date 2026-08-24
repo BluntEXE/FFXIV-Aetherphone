@@ -553,7 +553,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             ref readonly var message = ref messages[index];
             if (message.Kind != 0 || message.SenderId == myId || message.Body.Length == 0
                 || (message.Flags & (TranscriptFlags.Deleted | TranscriptFlags.Placeholder)) != 0
-                || ChatText.EffectiveKind(message.Body, 0) != 0)
+                || ChatText.EffectiveKind(message.Body, 0) != 0 || translation.IsSameAsTarget(message.Body))
             {
                 continue;
             }

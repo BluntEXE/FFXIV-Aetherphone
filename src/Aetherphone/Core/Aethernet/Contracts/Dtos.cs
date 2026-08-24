@@ -76,7 +76,8 @@ internal sealed record UserDto(
     long Coins = 0,
     long CoinsEarnedToday = 0,
     long CoinsDailyCap = 0,
-    string FrameId = "") : IIdentified;
+    string FrameId = "",
+    string? BioLang = null) : IIdentified;
 
 internal sealed record UpdateProfileRequest(string? DisplayName, string? Handle, string? Bio, string? AvatarUrl = null);
 
@@ -257,7 +258,8 @@ internal sealed record StoryDto(
     string ScanStatus = "clean",
     int AuthorBadges = 0,
     string[]? AuthorBadgeIds = null,
-    string AuthorFrameId = "") : IIdentified;
+    string AuthorFrameId = "",
+    string? Lang = null) : IIdentified;
 
 internal sealed record StoryRingDto(
     string AuthorId,
@@ -355,7 +357,8 @@ internal sealed record VelvetProfileDto(
     string[]? Kinks = null,
     string Region = "",
     string[]? BadgeIds = null,
-    string FrameId = "");
+    string FrameId = "",
+    string? IntroLang = null);
 
 internal sealed record UpdateVelvetProfileRequest(
     string? Intro,

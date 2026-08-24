@@ -104,6 +104,26 @@ internal sealed class TranslationService : IDisposable
             : new TranslationView(original, key.Id, entry);
     }
 
+    public TranslationView View(in TranslationKey key, string original, string? lang)
+    {
+        var entry = Peek(key);
+        if (entry.State == TranslationState.Idle && configuration.AutoTranslatePosts && configuration.TranslationDisclosureSeen
+            && ShouldOffer(lang))
+        {
+            Request(key, original);
+            entry = Peek(key);
+        }
+
+        return entry.Showing
+            ? new TranslationView(entry.Translated, entry.LayoutKey, entry)
+            : new TranslationView(original, key.Id, entry);
+    }
+
+    public bool IsSameAsTarget(string text)
+    {
+        return string.Equals(LanguageGuess.Detect(text), TargetLanguage, StringComparison.OrdinalIgnoreCase);
+    }
+
     public void Request(in TranslationKey key, string text)
     {
         if (!Enabled || text.Length == 0)

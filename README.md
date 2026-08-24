@@ -48,7 +48,7 @@ Privacy and safety come first: text messages, attachments, and voice notes are e
 ## Highlights
 
 - **Social**: a microblog, a photo feed, and private messaging with voice notes and group calls, plus an optional 18+ companion app.
-- **Speaks your language**: posts, comments, and private messages written in another language get a one-tap Translate link, and any chat can be set to translate new messages as they arrive.
+- **Speaks your language**: posts, comments, profiles, ads, event and venue descriptions, stories, and private messages written in another language get a one-tap Translate link; feeds can translate automatically, and any chat can be set to translate new messages as they arrive.
 - **Game chat**: every game chat channel on the phone, in tabs you build yourself, with tells as their own conversations.
 - **Utilities**: a market board tracker, a housing browser, a hunt train tracker, a venue and event directory, in-game music with live community radio stations and Rolladeck DJ listings, weather, a wallet, timers and resets, a photo library and camera, shortcuts, and a pocket arcade of mini-games, among 41 apps.
 - **Watch together**: cast video, YouTube included, onto an in-world screen, with playback synced for everyone watching along. Local files work too: each viewer picks their own copy and stays in sync.

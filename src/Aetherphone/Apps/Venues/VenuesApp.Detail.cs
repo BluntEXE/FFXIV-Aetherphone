@@ -1,6 +1,7 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Venues;
 using Aetherphone.Windows;
@@ -393,6 +394,17 @@ internal sealed partial class VenuesApp
         ImGui.Dummy(new Vector2(width, totalHeight + Metrics.Space.Sm * scale));
     }
 
+    private string VenueLanguage(VenueEvent venue)
+    {
+        if (!venueLanguages.TryGetValue(venue.Id, out var lang))
+        {
+            lang = LanguageGuess.Detect(venue.Description);
+            venueLanguages[venue.Id] = lang;
+        }
+
+        return lang;
+    }
+
     private void DrawAbout(VenueEvent venue)
     {
         if (venue.Description.Length == 0)
@@ -402,12 +414,24 @@ internal sealed partial class VenuesApp
 
         ui.SectionHeading(Loc.T(L.Venues.About));
         var scale = UiScale.Current;
+        var venueKey = new TranslationKey(TranslationSurface.Venue, venue.Id);
+        var aboutText = translation.View(venueKey, venue.Description).Text;
         using (Plugin.Fonts.Push(1f))
         using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Venues.BodyInk))
         {
             ImGui.PushTextWrapPos(0f);
-            Typography.Plain(venue.Description);
+            Typography.Plain(aboutText);
             ImGui.PopTextWrapPos();
+        }
+
+        var venueLang = VenueLanguage(venue);
+        var linkHeight = TranslateLink.Height(translation, venueKey, venueLang, scale);
+        if (linkHeight > 0f)
+        {
+            var linkTop = ImGui.GetCursorScreenPos();
+            TranslateLink.Draw(translation, confirm, venueKey, venueLang, venue.Description, linkTop,
+                ImGui.GetContentRegionAvail().X, AppPalettes.Venues.MutedInk, AppPalettes.Venues.Accent, scale);
+            ImGui.SetCursorScreenPos(new Vector2(linkTop.X, linkTop.Y + linkHeight));
         }
 
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));

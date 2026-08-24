@@ -115,6 +115,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public string Language { get; set; } = string.Empty;
     public string TranslationTargetLanguage { get; set; } = string.Empty;
     public bool TranslationDisclosureSeen { get; set; }
+    public bool AutoTranslatePosts { get; set; }
     public List<string> TranslatedConversations { get; set; } = new();
     public ThemeMode ThemeMode { get; set; } = ThemeMode.Dark;
     public string AccentName { get; set; } = "Violet";

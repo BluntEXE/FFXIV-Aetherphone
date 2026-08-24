@@ -146,7 +146,7 @@ internal sealed partial class VelvetShell
         var textTop = actionsTop + actionsHeight + PostCardMetrics.TextGap * scale;
         RichTextLayout? captionLayout = null;
         var translateKey = new TranslationKey(TranslationSurface.Post, entry.Id);
-        var captionView = translation.View(translateKey, entry.Caption);
+        var captionView = translation.View(translateKey, entry.Caption, entry.Lang);
         var captionText = captionView.Text;
         if (captionText.Length > 0)
         {

@@ -4,6 +4,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Report;
@@ -68,6 +69,7 @@ internal sealed class SocialProfilePages
     private readonly Configuration configuration;
     private readonly GameData gameData;
     private readonly ConfirmService confirm;
+    private readonly TranslationService translation;
     private readonly ReportService report;
     private readonly Action openEditProfile;
     private readonly Action openAvatarComposer;
@@ -89,7 +91,8 @@ internal sealed class SocialProfilePages
 
     public SocialProfilePages(SocialFeedStore store, AppSkin ui, SocialProfileStyle style, RemoteImageCache images,
         LodestoneService lodestone, AvatarLightbox avatarLightbox, Configuration configuration, GameData gameData,
-        ConfirmService confirm, ReportService report, Action openEditProfile, Action openAvatarComposer,
+        ConfirmService confirm, ReportService report, TranslationService translation,
+        Action openEditProfile, Action openAvatarComposer,
         Action<string> openProfile, Action<string, UserListKind> openUserList, Action back,
         Action? openConductRules, Action<string>? openMessage = null, Action? openSettings = null,
         Action? openSaved = null)
@@ -103,6 +106,7 @@ internal sealed class SocialProfilePages
         this.configuration = configuration;
         this.gameData = gameData;
         this.confirm = confirm;
+        this.translation = translation;
         this.report = report;
         this.openEditProfile = openEditProfile;
         this.openAvatarComposer = openAvatarComposer;
@@ -189,9 +193,12 @@ internal sealed class SocialProfilePages
         var identityWidth = MathF.Max(1f, innerRight - identityLeft);
         var headTop = origin.Y + pad;
         var headHeight = MathF.Max(avatarRadius * 2f, identityHeight);
-        var bioHeight = user.Bio.Length > 0
-            ? Typography.MeasureWrappedBlock(user.Bio, TextStyles.Body, innerWidth).Y
+        var bioKey = new TranslationKey(TranslationSurface.Bio, user.Id);
+        var bioText = translation.View(bioKey, user.Bio).Text;
+        var bioHeight = bioText.Length > 0
+            ? Typography.MeasureWrappedBlock(bioText, TextStyles.Body, innerWidth).Y
             : 0f;
+        var bioLinkHeight = bioHeight > 0f ? TranslateLink.Height(translation, bioKey, user.BioLang, scale) : 0f;
         var followedByLine = FollowedByLine(user);
         var followedByHeight = followedByLine.Length > 0
             ? Typography.MeasureWrappedBlock(followedByLine, TextStyles.Subheadline, innerWidth).Y
@@ -200,7 +207,7 @@ internal sealed class SocialProfilePages
         var bioTop = contentBottom + Metrics.Space.Md * scale;
         if (bioHeight > 0f)
         {
-            contentBottom = bioTop + bioHeight;
+            contentBottom = bioTop + bioHeight + bioLinkHeight;
         }
 
         var followedByTop = contentBottom + (bioHeight > 0f ? Metrics.Space.Xs : Metrics.Space.Md) * scale;
@@ -250,8 +257,14 @@ internal sealed class SocialProfilePages
 
         if (bioHeight > 0f)
         {
-            Typography.DrawWrappedLeft(new Vector2(innerLeft, bioTop), user.Bio, style.Palette.BodyInk,
+            Typography.DrawWrappedLeft(new Vector2(innerLeft, bioTop), bioText, style.Palette.BodyInk,
                 TextStyles.Body, innerWidth);
+            if (bioLinkHeight > 0f)
+            {
+                TranslateLink.Draw(translation, confirm, bioKey, user.BioLang, user.Bio,
+                    new Vector2(innerLeft, bioTop + bioHeight), innerWidth, style.Palette.MutedInk,
+                    style.Palette.Accent, scale);
+            }
         }
 
         if (followedByHeight > 0f)

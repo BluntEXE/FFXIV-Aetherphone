@@ -69,7 +69,7 @@ internal sealed partial class MusterApp
                 store.SyncNow);
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
             DrawManageStatus(mine, nowUnix, scale);
-            DrawWrappedDescription(mine.Description, scale);
+            DrawWrappedDescription(mine, scale);
             DrawLocationBlock(mine, scale, includeTravel: false);
             DrawAttendees(scale);
             DrawNotices(mine, scale);

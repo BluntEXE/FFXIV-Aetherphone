@@ -180,7 +180,7 @@ internal sealed partial class AethergramApp
                 var captionLeft = captionPos.X + nameWidth + 6f * scale;
                 ImGui.SetCursorScreenPos(new Vector2(captionLeft, captionPos.Y));
                 var captionKey = new TranslationKey(TranslationSurface.Post, post.Id);
-                var captionView = translation.View(captionKey, post.Text);
+                var captionView = translation.View(captionKey, post.Text, post.Lang);
                 var captionText = captionView.Text;
                 RichTextLayout? captionLayout;
                 using (Plugin.Fonts.Push(0.9f))
@@ -319,7 +319,7 @@ internal sealed partial class AethergramApp
         var commentNameStyle = new TextStyle(0.9f, FontWeight.SemiBold);
         var nameHeight = Typography.Measure(displayName, commentNameStyle).Y;
         var commentKey = new TranslationKey(TranslationSurface.Comment, comment.Id);
-        var commentView = translation.View(commentKey, comment.Text);
+        var commentView = translation.View(commentKey, comment.Text, comment.Lang);
         var commentText = commentView.Text;
         RichTextLayout? commentLayout;
         using (Plugin.Fonts.Push(0.9f))

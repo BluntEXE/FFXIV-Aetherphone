@@ -4,6 +4,7 @@ using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Maps;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Muster;
@@ -85,7 +86,7 @@ internal sealed partial class YellowPagesApp
         {
             DrawDetailHero(ad, scale);
             DrawDetailHeadline(ad, nowUnix, scale);
-            DrawDetailBody(ad.Body, scale);
+            DrawDetailBody(ad, scale);
             DrawTagRow(ad, scale);
             if (ad.Archetype == AdArchetypes.Place)
             {
@@ -510,19 +511,28 @@ internal sealed partial class YellowPagesApp
         return world.Length > 0 ? $"{category} · {world}" : category;
     }
 
-    private void DrawDetailBody(string body, float scale)
+    private void DrawDetailBody(AdDto ad, float scale)
     {
-        if (body.Length == 0)
+        if (ad.Body.Length == 0)
         {
             return;
         }
 
+        var adKey = new TranslationKey(TranslationSurface.Ad, ad.Id);
+        var bodyText = translation.View(adKey, ad.Body).Text;
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
-        var height = Typography.DrawWrappedLeft(origin, body, AppPalettes.YellowPages.BodyInk, TextStyles.Body,
+        var height = Typography.DrawWrappedLeft(origin, bodyText, AppPalettes.YellowPages.BodyInk, TextStyles.Body,
             width);
+        var linkHeight = TranslateLink.Height(translation, adKey, ad.Lang, scale);
+        if (linkHeight > 0f)
+        {
+            TranslateLink.Draw(translation, confirm, adKey, ad.Lang, ad.Body, new Vector2(origin.X, origin.Y + height),
+                width, AppPalettes.YellowPages.MutedInk, AppPalettes.YellowPages.Accent, scale);
+        }
+
         ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, height + Metrics.Space.Md * scale));
+        ImGui.Dummy(new Vector2(width, height + linkHeight + Metrics.Space.Md * scale));
     }
 
     private void DrawTagRow(AdDto ad, float scale)

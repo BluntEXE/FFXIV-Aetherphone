@@ -184,7 +184,7 @@ internal sealed partial class ChirperApp : IPhoneApp
             DeleteCommentConfirmMessage = L.Chirper.DeleteCommentConfirmMessage,
             DeleteCommentFailed = L.Chirper.DeleteCommentFailed,
             RemoveCommentConfirmMessage = L.Chirper.RemoveCommentConfirmMessage,
-        }, images, lodestone, avatarLightbox, configuration, gameData, confirm, report,
+        }, images, lodestone, avatarLightbox, configuration, gameData, confirm, report, translation,
             () => router.Push(ChirperRoute.EditProfile), OpenAvatarComposer, OpenProfile, OpenUserList, back,
             null);
     }
@@ -561,7 +561,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         var textTop = contentTop + pad + nameSize.Y + 6f * scale;
         RichTextLayout? bodyLayout = null;
         var translateKey = new TranslationKey(TranslationSurface.Post, post.Id);
-        var bodyView = translation.View(translateKey, post.Text);
+        var bodyView = translation.View(translateKey, post.Text, post.Lang);
         var bodyText = bodyView.Text;
         if (bodyText.Length > 0)
         {
@@ -1477,7 +1477,7 @@ internal sealed partial class ChirperApp : IPhoneApp
         var bodyOrigin = new Vector2(textLeft, origin.Y + nameSize.Y + 6f * scale);
         ImGui.SetCursorScreenPos(bodyOrigin);
         var commentKey = new TranslationKey(TranslationSurface.Comment, comment.Id);
-        var commentView = translation.View(commentKey, comment.Text);
+        var commentView = translation.View(commentKey, comment.Text, comment.Lang);
         var commentText = commentView.Text;
         var commentLayout = commentText.Length > 0
             ? commentLayouts.LayoutFor(commentView.LayoutKey, commentText, comment.Mentions, commentRight - textLeft)
