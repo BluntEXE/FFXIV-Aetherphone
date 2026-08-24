@@ -390,6 +390,7 @@ internal sealed partial class ShortcutsApp
         if (draft is not null)
         {
             draft.IconPlugin = entry.InternalName;
+            draft.IconImage = string.Empty;
         }
 
         router.Pop();

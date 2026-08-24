@@ -295,7 +295,7 @@ One line per subfolder of `src/Aetherphone/Core/`. Root-level files not listed h
 | Report | Central report popup service |
 | Sharing | `ShareService` and share item types |
 | Shell | The shell layer covered above |
-| Shortcuts | Shortcuts app data: entries, macros, share codes, the runner, plugin command catalog |
+| Shortcuts | Shortcuts app data: entries, macros, share codes, the runner, plugin command catalog, the custom icon library |
 | Social | Shared social app models: feeds, reactions, mentions, tagging |
 | Songs | Song search, audio streaming, playlists |
 | Telephony | `CallHub` voice calls and call audio |

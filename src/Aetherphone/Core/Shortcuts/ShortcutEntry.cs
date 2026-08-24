@@ -31,6 +31,7 @@ internal sealed class ShortcutEntry
     public string Name { get; set; } = string.Empty;
     public int Glyph { get; set; }
     public string IconPlugin { get; set; } = string.Empty;
+    public string IconImage { get; set; } = string.Empty;
     public string Tint { get; set; } = string.Empty;
     public List<ShortcutStep> Steps { get; set; } = new();
 
@@ -41,6 +42,7 @@ internal sealed class ShortcutEntry
             Name = Name,
             Glyph = Glyph,
             IconPlugin = IconPlugin,
+            IconImage = IconImage,
             Tint = Tint,
         };
 
@@ -58,6 +60,7 @@ internal sealed class ShortcutEntry
         Name = source.Name;
         Glyph = source.Glyph;
         IconPlugin = source.IconPlugin;
+        IconImage = source.IconImage;
         Tint = source.Tint;
         Steps.Clear();
         for (var index = 0; index < source.Steps.Count; index++)

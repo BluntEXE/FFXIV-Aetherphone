@@ -375,6 +375,14 @@ internal static class L
         public static readonly LocString Symbol = new("shortcuts.symbol", "Symbol");
         public static readonly LocString PluginIcon = new("shortcuts.pluginIcon", "Plugin icon");
         public static readonly LocString PluginIconNone = new("shortcuts.pluginIconNone", "None");
+        public static readonly LocString CustomIcon = new("shortcuts.customIcon", "Custom image");
+        public static readonly LocString CustomIconNone = new("shortcuts.customIconNone", "None");
+        public static readonly LocString CustomIconTitle = new("shortcuts.customIconTitle", "Choose Image");
+        public static readonly LocString CustomIconMoveAndScale = new("shortcuts.customIconMoveAndScale", "Move and Scale");
+        public static readonly LocString CustomIconUse = new("shortcuts.customIconUse", "Use");
+        public static readonly LocString CustomIconSaving = new("shortcuts.customIconSaving", "Saving…");
+        public static readonly LocString CustomIconGestureHint = new("shortcuts.customIconGestureHint", "Drag to move · scroll to zoom");
+        public static readonly LocString CustomIconFailed = new("shortcuts.customIconFailed", "That image could not be used. Try a different one.");
         public static readonly LocString LimitReached = new("shortcuts.limitReached", "You can keep up to {0} shortcuts.");
         public static readonly LocString StepLimitReached = new("shortcuts.stepLimitReached", "A shortcut can hold up to {0} steps.");
         public static readonly LocString Ok = new("shortcuts.ok", "OK");

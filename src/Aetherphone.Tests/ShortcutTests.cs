@@ -187,6 +187,16 @@ public sealed class ShortcutCodeTests
         Assert.NotEqual(source.Id, decoded.Id);
     }
 
+    [Fact]
+    public void ACustomImageIcon_NeverLeavesTheDeviceInTheCode()
+    {
+        var source = new ShortcutEntry { Name = "Ride", IconImage = "abc123" };
+        source.Steps.Add(new ShortcutStep { Kind = ShortcutStepKind.Command, Text = "/mount" });
+
+        Assert.True(ShortcutCode.TryDecode(ShortcutCode.Encode(source), out var decoded, out _));
+        Assert.Equal(string.Empty, decoded.IconImage);
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
@@ -487,6 +497,14 @@ public sealed class ShortcutEntryCopyTests
     }
 
     [Fact]
+    public void Copy_CarriesTheCustomIconId()
+    {
+        var source = new ShortcutEntry { Name = "Ride", IconImage = "abc123" };
+
+        Assert.Equal("abc123", source.Copy().IconImage);
+    }
+
+    [Fact]
     public void CopyFrom_ReplacesStepsRatherThanAppending()
     {
         var target = new ShortcutEntry { Name = "Old" };
@@ -502,6 +520,17 @@ public sealed class ShortcutEntryCopyTests
         Assert.Equal("New", target.Name);
         Assert.Single(target.Steps);
         Assert.Equal("/three", target.Steps[0].Text);
+    }
+
+    [Fact]
+    public void CopyFrom_ReplacesTheCustomIconId()
+    {
+        var target = new ShortcutEntry { Name = "Old", IconImage = "old-icon" };
+        var source = new ShortcutEntry { Name = "New", IconImage = "new-icon" };
+
+        target.CopyFrom(source);
+
+        Assert.Equal("new-icon", target.IconImage);
     }
 }
 
