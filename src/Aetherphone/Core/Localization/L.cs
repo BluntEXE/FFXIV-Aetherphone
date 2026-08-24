@@ -4407,6 +4407,10 @@ internal static class L
         public static readonly LocString Ready = new("games.ready", "Ready!");
         public static readonly LocString Hop = new("games.hop", "Hop");
         public static readonly LocString Dens = new("games.dens", "Dens");
+        public static readonly LocString Squadron = new("games.squadron", "Squadron");
+        public static readonly LocString Stage = new("games.stage", "Stage");
+        public static readonly LocString ChallengeStage = new("games.challengeStage", "Challenge stage!");
+        public static readonly LocString HitsOf = new("games.hitsOf", "{0} of {1} hit");
     }
 
     internal static class Time

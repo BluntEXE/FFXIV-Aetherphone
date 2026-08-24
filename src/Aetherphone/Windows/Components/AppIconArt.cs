@@ -103,6 +103,9 @@ internal static class AppIconArt
             case "hop":
                 DrawHop(dl, center, extent, inkColor, holeColor);
                 return true;
+            case "squadron":
+                DrawSquadron(dl, center, extent, inkColor);
+                return true;
             default:
                 return false;
         }
@@ -655,6 +658,35 @@ internal static class AppIconArt
         FillConvex(dl, ink, rightEar);
         dl.AddRectFilled(new Vector2(critter.X - radius * 0.8f, critter.Y - radius * 0.25f),
             new Vector2(critter.X + radius * 0.8f, critter.Y + radius * 0.1f), hole, radius * 0.1f);
+    }
+
+    private static readonly string[] FighterRows = { "...#...", "...#...", "..###..", ".#####.", "###.###" };
+
+    private static void DrawSquadron(ImDrawListPtr dl, Vector2 center, float extent, uint ink)
+    {
+        DrawBitmap(dl, FighterRows, At(center, extent, 0f, 0.38f), extent * 0.24f, ink);
+        DrawBitmap(dl, FighterRows, At(center, extent, -0.58f, -0.5f), extent * 0.15f, ink);
+        DrawBitmap(dl, FighterRows, At(center, extent, 0.58f, -0.5f), extent * 0.15f, ink);
+    }
+
+    private static void DrawBitmap(ImDrawListPtr dl, string[] rows, Vector2 center, float unit, uint ink)
+    {
+        var columns = rows[0].Length;
+        var origin = new Vector2(center.X - columns * unit * 0.5f, center.Y - rows.Length * unit * 0.5f);
+        for (var row = 0; row < rows.Length; row++)
+        {
+            var line = rows[row];
+            for (var column = 0; column < columns; column++)
+            {
+                if (line[column] != '#')
+                {
+                    continue;
+                }
+
+                var min = new Vector2(origin.X + column * unit, origin.Y + row * unit);
+                dl.AddRectFilled(min, min + new Vector2(unit + 0.5f, unit + 0.5f), ink);
+            }
+        }
     }
 
     private static void DrawTrivia(ImDrawListPtr dl, Vector2 center, float extent, uint ink, uint hole)
