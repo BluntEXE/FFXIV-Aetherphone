@@ -19,6 +19,7 @@ using Aetherphone.Apps.Games.Sudoku;
 using Aetherphone.Apps.Games.Sweeper;
 using Aetherphone.Apps.Games.Tetris;
 using Aetherphone.Apps.Games.Invaders;
+using Aetherphone.Apps.Games.Maze;
 using Aetherphone.Apps.Games.Skyfall;
 using Aetherphone.Apps.Games.Trivia;
 using Aetherphone.Apps.Games.Twenty48;
@@ -119,7 +120,7 @@ internal sealed class GamesApp : IPhoneApp
             new WaterSortApp(), new BreakoutApp(), new BubbleShooterApp(), new NonogramApp(), new FlowApp(),
             new SolitaireApp(), new SimonApp(), new FlapApp(), new ReversiApp(), new WhackApp(), new SnakeApp(),
             new SudokuApp(), new ChessApp(), new StackApp(), new CrystalDropApp(), new BeatApp(), new BladeApp(),
-            new TriviaApp(gameData, textures), new SkyfallApp(), new InvadersApp(),
+            new TriviaApp(gameData, textures), new SkyfallApp(), new InvadersApp(), new MazeApp(),
         };
         tileOrder = new int[games.Length];
         RebuildLayout();
@@ -705,6 +706,7 @@ internal sealed class GamesApp : IPhoneApp
             case "trivia":
             case "skyfall":
             case "invaders":
+            case "maze":
             {
                 var best = stats.Get(gameId).BestScore;
                 return best > 0 ? GameNumber.Label(best) : string.Empty;

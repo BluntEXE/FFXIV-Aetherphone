@@ -2787,6 +2787,8 @@
   "games.ammo": "弹药",
   "games.waveClear": "波次完成",
   "games.invaders": "太空入侵者",
+  "games.maze": "迷宫",
+  "games.ready": "准备！",
   "time.now": "现在",
   "time.justNow": "刚刚",
   "time.minutesShort": "{0}分钟",

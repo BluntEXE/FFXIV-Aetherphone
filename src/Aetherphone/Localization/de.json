@@ -2787,6 +2787,8 @@
   "games.ammo": "Munition",
   "games.waveClear": "Welle geschafft",
   "games.invaders": "Invasoren",
+  "games.maze": "Labyrinth",
+  "games.ready": "Bereit!",
   "time.now": "gerade eben",
   "time.justNow": "gerade eben",
   "time.minutesShort": "{0} Min.",

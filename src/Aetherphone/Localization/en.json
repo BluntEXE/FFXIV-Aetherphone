@@ -2787,6 +2787,8 @@
   "games.ammo": "Ammo",
   "games.waveClear": "Wave clear",
   "games.invaders": "Invaders",
+  "games.maze": "Maze",
+  "games.ready": "Ready!",
   "time.now": "now",
   "time.justNow": "just now",
   "time.minutesShort": "{0}m",

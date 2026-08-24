@@ -2787,6 +2787,8 @@
   "games.ammo": "Cephane",
   "games.waveClear": "Dalga temizlendi",
   "games.invaders": "İstilacılar",
+  "games.maze": "Labirent",
+  "games.ready": "Hazır!",
   "time.now": "şimdi",
   "time.justNow": "az önce",
   "time.minutesShort": "{0} dk",

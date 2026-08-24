@@ -2787,6 +2787,8 @@
   "games.ammo": "Боезапас",
   "games.waveClear": "Волна пройдена",
   "games.invaders": "Захватчики",
+  "games.maze": "Лабиринт",
+  "games.ready": "Готов!",
   "time.now": "сейчас",
   "time.justNow": "только что",
   "time.minutesShort": "{0}мин",

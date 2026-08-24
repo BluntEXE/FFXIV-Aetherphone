@@ -2787,6 +2787,8 @@
   "games.ammo": "弾薬",
   "games.waveClear": "ウェーブクリア",
   "games.invaders": "インベーダー",
+  "games.maze": "メイズ",
+  "games.ready": "レディ！",
   "time.now": "たった今",
   "time.justNow": "たった今",
   "time.minutesShort": "{0}分",

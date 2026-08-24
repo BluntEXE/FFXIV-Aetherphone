@@ -97,6 +97,9 @@ internal static class AppIconArt
             case "invaders":
                 DrawInvaders(dl, center, extent, inkColor);
                 return true;
+            case "maze":
+                DrawMaze(dl, center, extent, inkColor);
+                return true;
             default:
                 return false;
         }
@@ -601,6 +604,22 @@ internal static class AppIconArt
                 var min = new Vector2(origin.X + column * unit, origin.Y + row * unit);
                 dl.AddRectFilled(min, min + new Vector2(unit + 0.5f, unit + 0.5f), ink);
             }
+        }
+    }
+
+    private static void DrawMaze(ImDrawListPtr dl, Vector2 center, float extent, uint ink)
+    {
+        var muncher = At(center, extent, -0.34f, 0f);
+        var radius = extent * 0.56f;
+        const float mouth = 0.55f;
+        dl.PathClear();
+        dl.PathLineTo(muncher);
+        dl.PathArcTo(muncher, radius, mouth, MathF.PI * 2f - mouth, 28);
+        dl.PathFillConvex(ink);
+        var dotRadius = extent * 0.11f;
+        for (var dot = 0; dot < 3; dot++)
+        {
+            dl.AddCircleFilled(At(center, extent, 0.38f + dot * 0.28f, 0f), dotRadius, ink, 12);
         }
     }
 
