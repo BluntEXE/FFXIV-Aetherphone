@@ -17,13 +17,14 @@ using Aetherphone.Core.Telephony.Audio;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Wallpapers;
 using Dalamud.Bindings.ImGui;
+using Aetherphone.Core.Translation;
 using Dalamud.Interface;
 using Dalamud.Interface.Textures.TextureWraps;
 
 namespace Aetherphone.Windows.Components;
 
 internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTranscriptMedia,
-    IChatTranscriptInteractions, IChatTranscriptVoice, IChatTranscriptPaging
+    IChatTranscriptInteractions, IChatTranscriptVoice, IChatTranscriptPaging, IChatTranscriptTranslation
     where TMessage : class, IIdentified
     where TThread : class, IIdentified
 {
@@ -38,6 +39,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     protected readonly Configuration configuration;
     private readonly ConfirmService confirm;
     private readonly ReportService report;
+    protected readonly TranslationService translation;
     private readonly WallpaperImageCache wallpaperImages;
     protected readonly ChatTranscript transcript = new();
     protected readonly ChatMenuController menuController = new();
@@ -68,6 +70,10 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     private volatile string? pendingVoicePlay;
     private TMessage[] transcriptSource = Array.Empty<TMessage>();
     private TranscriptMessage[] transcriptCache = Array.Empty<TranscriptMessage>();
+    private TMessage[] sweptSource = Array.Empty<TMessage>();
+    private bool sweptTranslated;
+    private string scopeThreadId = string.Empty;
+    private string conversationScope = string.Empty;
     private const float PushActivePollMultiplier = 3f;
     private const int ResumeFrameGap = 3;
 
@@ -87,8 +93,8 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
 
     protected ChatThreadView(ChatThreadStoreBase<TMessage, TThread> store, AppSkin ui, RemoteImageCache images,
         LodestoneService lodestone, HttpService http, PhotoLibrary library, Configuration configuration,
-        ConfirmService confirm, ReportService report, WallpaperImageCache wallpaperImages,
-        float threadPollSeconds, float typingSendSeconds)
+        ConfirmService confirm, ReportService report, TranslationService translation,
+        WallpaperImageCache wallpaperImages, float threadPollSeconds, float typingSendSeconds)
     {
         this.store = store;
         this.ui = ui;
@@ -99,6 +105,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         this.configuration = configuration;
         this.confirm = confirm;
         this.report = report;
+        this.translation = translation;
         this.wallpaperImages = wallpaperImages;
         this.threadPollSeconds = threadPollSeconds;
         this.typingSendSeconds = typingSendSeconds;
@@ -278,6 +285,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
         var composerHeight = 56f * scale;
         var accessoryHeight = composer.AccessoryHeight;
         var transcriptMessages = BuildTranscript(store.Messages);
+        SweepTranslations(threadId, transcriptMessages);
         if (searchController.Open)
         {
             var searchHeight = 44f * scale;
@@ -311,6 +319,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             Paging = this,
             PostCards = PostCards,
             StoryReplies = StoryReplies,
+            Translation = this,
         };
         transcript.Draw(listRect, model);
         composer.Draw(new Rect(new Vector2(area.Min.X, area.Max.Y - composerHeight), area.Max), new ChatComposerModel
@@ -454,6 +463,104 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
     bool IChatTranscriptPaging.LoadingOlder => store.LoadingOlder;
 
     void IChatTranscriptPaging.LoadOlder() => store.LoadOlder();
+
+    TranslationView IChatTranscriptTranslation.View(string messageId, string body) =>
+        translation.View(new TranslationKey(TranslationSurface.Dm, messageId), body);
+
+    void IChatTranscriptTranslation.Activate(string messageId, string body)
+    {
+        var key = new TranslationKey(TranslationSurface.Dm, messageId);
+        TranslateLink.Activate(translation, confirm, key, body, translation.Peek(key));
+    }
+
+    protected string ConversationScope(string threadId)
+    {
+        if (!string.Equals(threadId, scopeThreadId, StringComparison.Ordinal))
+        {
+            scopeThreadId = threadId;
+            conversationScope = LogTag + ":" + threadId;
+        }
+
+        return conversationScope;
+    }
+
+    protected void TranslateMessage(string messageId)
+    {
+        var messages = transcriptCache;
+        for (var index = 0; index < messages.Length; index++)
+        {
+            if (!string.Equals(messages[index].Id, messageId, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var body = messages[index].Body;
+            if (body.Length == 0 || !canRevealBody(messageId))
+            {
+                return;
+            }
+
+            var key = new TranslationKey(TranslationSurface.Dm, messageId);
+            TranslateLink.Activate(translation, confirm, key, body, translation.Peek(key));
+            return;
+        }
+    }
+
+    protected void DrawTranslateToggle(Rect area, float rowCenterY, string threadId)
+    {
+        if (!translation.Enabled)
+        {
+            return;
+        }
+
+        var scope = ConversationScope(threadId);
+        var translated = translation.IsConversationTranslated(scope);
+        if (ChatHeaderControls.DrawTranslateToggle(ui, area, rowCenterY, translated))
+        {
+            SetConversationTranslated(scope, !translated);
+        }
+    }
+
+    private void SetConversationTranslated(string scope, bool translated)
+    {
+        if (!translated)
+        {
+            translation.SetConversationTranslated(scope, false);
+            return;
+        }
+
+        TranslateLink.WithDisclosure(translation, confirm, () => translation.SetConversationTranslated(scope, true));
+    }
+
+    private void SweepTranslations(string threadId, ReadOnlySpan<TranscriptMessage> messages)
+    {
+        var translated = translation.Enabled && translation.IsConversationTranslated(ConversationScope(threadId));
+        if (ReferenceEquals(transcriptSource, sweptSource) && translated == sweptTranslated)
+        {
+            return;
+        }
+
+        sweptSource = transcriptSource;
+        sweptTranslated = translated;
+        if (!translated)
+        {
+            return;
+        }
+
+        var myId = MyUserId;
+        for (var index = 0; index < messages.Length; index++)
+        {
+            ref readonly var message = ref messages[index];
+            if (message.Kind != 0 || message.SenderId == myId || message.Body.Length == 0
+                || (message.Flags & (TranscriptFlags.Deleted | TranscriptFlags.Placeholder)) != 0
+                || ChatText.EffectiveKind(message.Body, 0) != 0)
+            {
+                continue;
+            }
+
+            translation.EnsureRequested(new TranslationKey(TranslationSurface.Dm, message.Id), message.Body);
+        }
+    }
 
     protected void OpenMessageMenu(string messageId)
     {

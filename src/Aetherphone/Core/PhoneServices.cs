@@ -20,6 +20,7 @@ using Aetherphone.Core.Market;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Moderation;
 using Aetherphone.Core.Muster;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Net;
 using Aetherphone.Core.News;
 using Aetherphone.Core.Notifications;
@@ -119,6 +120,7 @@ internal sealed class PhoneServices : IDisposable
     public required EncryptionSetupLauncher EncryptionSetup { get; init; }
     public required MarketItemIndex MarketIndex { get; init; }
     public required MarketboardService Market { get; init; }
+    public required TranslationService Translation { get; init; }
     public required MarketLauncher MarketLauncher { get; init; }
     public required MarketAlertService MarketAlerts { get; init; }
     public required NewsService News { get; init; }
@@ -242,6 +244,7 @@ internal sealed class PhoneServices : IDisposable
         var casinoSpin = new Casino.CasinoSpinStore(aethernetSession, casinoApi.Casino, coins);
         var peerKeys = new PeerKeyDirectory(configuration, aethernet.Keys);
         var conversationKeys = new ConversationKeyStore(aethernet.Keys, keyVault);
+        var translation = new TranslationService(aethernetSession, aethernet.Translation, configuration);
         var marketIndex = new MarketItemIndex(dataManager);
         var market = new MarketboardService(http);
         var marketLauncher = new MarketLauncher();
@@ -395,6 +398,7 @@ internal sealed class PhoneServices : IDisposable
             EncryptionSetup = new EncryptionSetupLauncher(),
             MarketIndex = marketIndex,
             Market = market,
+            Translation = translation,
             MarketLauncher = marketLauncher,
             MarketAlerts = marketAlerts,
             News = news,
@@ -476,6 +480,7 @@ internal sealed class PhoneServices : IDisposable
         Lodestone.Dispose();
         MarketAlerts.Dispose();
         Market.Dispose();
+        Translation.Dispose();
         News.Dispose();
         Notifications.Dispose();
         Sound.Dispose();

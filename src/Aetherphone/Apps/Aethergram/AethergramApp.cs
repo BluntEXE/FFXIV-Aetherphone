@@ -20,6 +20,7 @@ using Aetherphone.Core.Report;
 using Aetherphone.Core.Sharing;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
@@ -75,6 +76,7 @@ internal sealed partial class AethergramApp : IPhoneApp
     private readonly SocialNotificationService social;
     private readonly ConductGateService conduct;
     private readonly ConfirmService confirm;
+    private readonly TranslationService translation;
     private readonly ReportService report;
     private readonly WallpaperImageCache wallpaperImages;
     private readonly DropdownMenu postMenu = new();
@@ -151,9 +153,11 @@ internal sealed partial class AethergramApp : IPhoneApp
         GameData gameData, Configuration configuration, SocialNotificationService social,
         NotificationService notifications, HttpService http, KeyVault keyVault,
         ConversationKeyStore conversationKeys, PhoneVisibility visibility, RealtimeSignalBus realtimeSignals,
-        WallpaperImageCache wallpaperImages, ConfirmService confirm, ReportService report, ConductGateService conduct,
+        WallpaperImageCache wallpaperImages, ConfirmService confirm, TranslationService translation,
+        ReportService report, ConductGateService conduct,
         AppInstaller installer)
     {
+        this.translation = translation;
         store = new AethergramStore(session, net.Account, net.Social, net.Grams, net.Safety, net.Media, realtimeSignals);
         store.SetFeedRegions(SocialRegion.FilterCsv(configuration.AethergramFeedRegionMask));
         account = net.Account;
@@ -1002,18 +1006,24 @@ internal sealed partial class AethergramApp : IPhoneApp
         var actionsHeight = PostCardMetrics.ActionsHeight * scale;
         var textTop = actionsTop + actionsHeight + PostCardMetrics.TextGap * scale;
         RichTextLayout? captionLayout = null;
-        if (post.Text.Length > 0)
+        var translateKey = new TranslationKey(TranslationSurface.Post, post.Id);
+        var captionView = translation.View(translateKey, post.Text);
+        var captionText = captionView.Text;
+        if (captionText.Length > 0)
         {
             using (Plugin.Fonts.Push(0.95f))
             {
-                captionLayout = bodyLayouts.LayoutFor(post.Id, post.Text, post.Mentions, innerWidth);
+                captionLayout = bodyLayouts.LayoutFor(captionView.LayoutKey, captionText, post.Mentions, innerWidth);
             }
         }
 
-        var captionHeight = post.Text.Length == 0
+        var captionTextHeight = captionText.Length == 0
             ? 0f
-            : (captionLayout?.Size.Y ?? Typography.MeasureWrapped(post.Text, innerWidth, 0.95f)) +
-              PostCardMetrics.CaptionGap * scale;
+            : captionLayout?.Size.Y ?? Typography.MeasureWrapped(captionText, innerWidth, 0.95f);
+        var translateHeight = TranslateLink.Height(translation, translateKey, post.Lang, scale);
+        var captionHeight = captionText.Length == 0
+            ? 0f
+            : captionTextHeight + translateHeight + PostCardMetrics.CaptionGap * scale;
         var commentsHeight = post.CommentCount > 0 ? 20f * scale : 0f;
         var cardBottom = textTop + captionHeight + commentsHeight + pad;
         ui.Card(drawList, origin, new Vector2(origin.X + width, cardBottom), PostCardMetrics.Rounding * scale);
@@ -1135,7 +1145,7 @@ internal sealed partial class AethergramApp : IPhoneApp
         }
 
         var y = textTop;
-        if (post.Text.Length > 0)
+        if (captionText.Length > 0)
         {
             if (captionLayout is null)
             {
@@ -1144,7 +1154,7 @@ internal sealed partial class AethergramApp : IPhoneApp
                 using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Aethergram.BodyInk))
                 using (Plugin.Fonts.Push(0.95f))
                 {
-                    Typography.Wrapped(post.Text);
+                    Typography.Wrapped(captionText);
                 }
             }
             else
@@ -1153,6 +1163,13 @@ internal sealed partial class AethergramApp : IPhoneApp
                 {
                     DrawRichBody(drawList, captionLayout, new Vector2(innerX, y));
                 }
+            }
+
+            if (translateHeight > 0f)
+            {
+                TranslateLink.Draw(translation, confirm, translateKey, post.Lang, post.Text,
+                    new Vector2(innerX, y + captionTextHeight), innerWidth, AppPalettes.Aethergram.MutedInk,
+                    AppPalettes.Aethergram.Accent, scale);
             }
 
             y += captionHeight;

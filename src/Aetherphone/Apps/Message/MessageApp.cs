@@ -15,6 +15,7 @@ using Aetherphone.Core.Photos;
 using Aetherphone.Core.Report;
 using Aetherphone.Core.Telephony;
 using Aetherphone.Core.Theme;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -55,6 +56,7 @@ internal sealed partial class MessageApp : IPhoneApp
     private readonly HttpService http;
     private readonly Configuration configuration;
     private readonly ConfirmService confirm;
+    private readonly TranslationService translation;
     private readonly ReportService report;
     private readonly WallpaperImageCache wallpaperImages;
     private readonly MusterStore musters;
@@ -77,10 +79,12 @@ internal sealed partial class MessageApp : IPhoneApp
 
     public MessageApp(DirectMessagesStore store, ContactBook contacts, CallHub calls, AethernetSession session,
         RemoteImageCache images, LodestoneService lodestone, DmLauncher launcher, PhotoLibrary library,
-        HttpService http, Configuration configuration, ConfirmService confirm, ReportService report,
+        HttpService http, Configuration configuration, ConfirmService confirm, TranslationService translation,
+        ReportService report,
         WallpaperImageCache wallpaperImages, MusterStore musters, MusterLauncher musterLauncher,
         SocialNotificationService socialNotifications, EncryptionSetupLauncher encryptionSetup)
     {
+        this.translation = translation;
         this.socialNotifications = socialNotifications;
         this.musterLauncher = musterLauncher;
         this.encryptionSetup = encryptionSetup;

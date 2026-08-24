@@ -23,7 +23,8 @@ internal sealed partial class VelvetShell
 
         public ThreadView(VelvetShell app)
             : base(app.store, app.ui, app.images, app.lodestone, app.http, app.library, app.configuration,
-                app.confirm, app.report, app.wallpaperImages, ThreadPollSeconds, TypingSendSeconds)
+                app.confirm, app.report, app.translation, app.wallpaperImages, ThreadPollSeconds,
+                TypingSendSeconds)
         {
             this.app = app;
         }
@@ -93,6 +94,7 @@ internal sealed partial class VelvetShell
                 CanInfo = false,
                 CanDelete = true,
                 CanReport = true,
+                CanTranslate = true,
                 IsStarred = _ => false,
                 MyReactionTo = store.MyReactionTo,
                 OnReply = BeginReply,
@@ -103,6 +105,7 @@ internal sealed partial class VelvetShell
                 OnInfo = _ => { },
                 OnDelete = AskDeleteMessage,
                 OnReport = OpenReportMessage,
+                OnTranslate = TranslateMessage,
                 OnReact = store.SetReaction,
             };
         }
@@ -117,6 +120,7 @@ internal sealed partial class VelvetShell
             ChatHeaderControls.DrawLock(ui, area, rowCenterY, store.EncryptingCurrent, store.VaultState,
                 () => OpenEncryptionInfo(threadId));
             ChatHeaderControls.DrawSearchToggle(ui, area, rowCenterY, searchController.Open, searchController.Toggle);
+            DrawTranslateToggle(area, rowCenterY, threadId);
             var name = app.ThreadTitle(threadId);
             var avatarRadius = 18f * scale;
             var avatarHandle = app.ThreadAvatar(threadId, avatarRadius * 2f, out var monogram, out var presence);

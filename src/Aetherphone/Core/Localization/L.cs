@@ -1554,6 +1554,27 @@ internal static class L
         public static readonly LocString CommandMarket = new("settings.commandMarket", "Open the market board, optionally searching an item");
         public static readonly LocString CommandReset = new("settings.commandReset", "Move the phone back to the center of the screen");
         public static readonly LocString CommandTest = new("settings.commandTest", "Send a sample notification");
+        public static readonly LocString TranslateInto = new("settings.translateInto", "Translate into");
+        public static readonly LocString TranslateSameAsPhone = new("settings.translateSameAsPhone", "Same as phone language");
+        public static readonly LocString TranslateIntoHint = new("settings.translateIntoHint", "Posts, comments, and messages written in other languages get a one-tap Translate link that renders them in this language.");
+    }
+
+    internal static class Translate
+    {
+        public static readonly LocString Action = new("translate.action", "Translate");
+        public static readonly LocString Pending = new("translate.pending", "Translating...");
+        public static readonly LocString ShowOriginal = new("translate.showOriginal", "Show original");
+        public static readonly LocString ShowTranslation = new("translate.showTranslation", "Show translation");
+        public static readonly LocString TranslatedFrom = new("translate.translatedFrom", "Translated from {0}");
+        public static readonly LocString Translated = new("translate.translated", "Translated");
+        public static readonly LocString SameLanguage = new("translate.sameLanguage", "Already in your language");
+        public static readonly LocString Failed = new("translate.failed", "Could not translate, tap to retry");
+        public static readonly LocString Quota = new("translate.quota", "Translation limit reached for today");
+        public static readonly LocString ChatToggle = new("translate.chatToggle", "Translate this chat");
+        public static readonly LocString ChatOn = new("translate.chatOn", "New messages in this chat are translated for you");
+        public static readonly LocString DisclosureTitle = new("translate.disclosureTitle", "Translate with Aethernet");
+        public static readonly LocString DisclosureBody = new("translate.disclosureBody", "Translations are made by Aethernet with an AI provider. Only the text you translate is sent. Private messages are never stored.");
+        public static readonly LocString DisclosureContinue = new("translate.disclosureContinue", "Continue");
     }
 
     internal static class Changelog

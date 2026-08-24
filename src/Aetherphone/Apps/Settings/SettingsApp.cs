@@ -71,7 +71,7 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
             encryptionPage, coinPage, photoLibrary, confirm, wallpaperImages);
         var appearance = new AppearancePage(configuration, themes, this, photoLibrary, confirm, wallpapers,
             wallpaperImages);
-        var language = new LanguagePage(configuration);
+        var language = new LanguagePage(configuration, services.Translation);
         var general = new GeneralPage(configuration);
         var tutorials = new TutorialsPage(configuration);
         var callsPage = new CallsPage(calls, configuration);

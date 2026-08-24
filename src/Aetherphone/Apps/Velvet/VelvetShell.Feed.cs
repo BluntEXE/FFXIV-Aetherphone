@@ -5,6 +5,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Social;
+using Aetherphone.Core.Translation;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -144,19 +145,25 @@ internal sealed partial class VelvetShell
         var actionsHeight = PostCardMetrics.ActionsHeight * scale;
         var textTop = actionsTop + actionsHeight + PostCardMetrics.TextGap * scale;
         RichTextLayout? captionLayout = null;
-        if (entry.Caption.Length > 0)
+        var translateKey = new TranslationKey(TranslationSurface.Post, entry.Id);
+        var captionView = translation.View(translateKey, entry.Caption);
+        var captionText = captionView.Text;
+        if (captionText.Length > 0)
         {
             using (Plugin.Fonts.Push(TextStyles.Callout.Scale, TextStyles.Callout.Weight))
             {
-                captionLayout = feedCaptionLayouts.LayoutFor(entry.Id, entry.Caption, entry.Mentions, innerWidth);
+                captionLayout = feedCaptionLayouts.LayoutFor(captionView.LayoutKey, captionText, entry.Mentions,
+                    innerWidth);
             }
         }
 
-        var captionHeight = entry.Caption.Length == 0
+        var captionTextHeight = captionText.Length == 0
             ? 0f
-            : (captionLayout?.Size.Y ??
-                Typography.MeasureWrappedBlock(entry.Caption, TextStyles.Callout, innerWidth).Y) +
-              PostCardMetrics.CaptionGap * scale;
+            : captionLayout?.Size.Y ?? Typography.MeasureWrappedBlock(captionText, TextStyles.Callout, innerWidth).Y;
+        var translateHeight = TranslateLink.Height(translation, translateKey, entry.Lang, scale);
+        var captionHeight = captionText.Length == 0
+            ? 0f
+            : captionTextHeight + translateHeight + PostCardMetrics.CaptionGap * scale;
         var tagsLine = entry.Tags.Length > 0 ? "#" + string.Join("  #", entry.Tags) : string.Empty;
         var tagsHeight = tagsLine.Length == 0
             ? 0f
@@ -272,12 +279,12 @@ internal sealed partial class VelvetShell
         }
 
         var lineY = textTop;
-        if (entry.Caption.Length > 0)
+        if (captionText.Length > 0)
         {
             var captionOrigin = new Vector2(innerX, lineY);
             if (captionLayout is null)
             {
-                Typography.DrawWrappedLeft(captionOrigin, entry.Caption, VelvetTheme.BodyInk, TextStyles.Callout,
+                Typography.DrawWrappedLeft(captionOrigin, captionText, VelvetTheme.BodyInk, TextStyles.Callout,
                     innerWidth);
             }
             else
@@ -286,6 +293,13 @@ internal sealed partial class VelvetShell
                 {
                     DrawRichBody(drawList, captionLayout, captionOrigin);
                 }
+            }
+
+            if (translateHeight > 0f)
+            {
+                TranslateLink.Draw(translation, confirm, translateKey, entry.Lang, entry.Caption,
+                    new Vector2(innerX, lineY + captionTextHeight), innerWidth, VelvetTheme.MutedInk,
+                    VelvetTheme.RoseGlow, scale);
             }
 
             lineY += captionHeight;

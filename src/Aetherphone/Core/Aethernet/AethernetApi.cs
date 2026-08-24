@@ -21,6 +21,7 @@ internal sealed class AethernetApi
         Safety = new SafetyClient(net);
         Feedback = new FeedbackClient(net);
         Polls = new PollsClient(net);
+        Translation = new TranslationClient(net);
         Announcements = new AnnouncementsClient(net);
         Musters = new MusterClient(net);
         Ads = new YellowPagesClient(net);
@@ -42,6 +43,7 @@ internal sealed class AethernetApi
     public SafetyClient Safety { get; }
     public FeedbackClient Feedback { get; }
     public PollsClient Polls { get; }
+    public TranslationClient Translation { get; }
     public AnnouncementsClient Announcements { get; }
     public MusterClient Musters { get; }
     public YellowPagesClient Ads { get; }

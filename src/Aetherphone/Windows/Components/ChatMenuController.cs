@@ -18,6 +18,7 @@ internal struct ChatMenuModel
     public bool CanInfo;
     public bool CanDelete;
     public bool CanReport;
+    public bool CanTranslate;
     public Func<string, bool> IsStarred;
     public Func<string, string> MyReactionTo;
     public Action<string> OnReply;
@@ -28,6 +29,7 @@ internal struct ChatMenuModel
     public Action<string> OnInfo;
     public Action<string> OnDelete;
     public Action<string> OnReport;
+    public Action<string> OnTranslate;
     public Action<string, string> OnReact;
 }
 
@@ -42,10 +44,11 @@ internal sealed class ChatMenuController
     private const byte ActInfo = 5;
     private const byte ActDelete = 6;
     private const byte ActReport = 7;
+    private const byte ActTranslate = 8;
 
     private readonly DropdownMenu menu = new();
-    private readonly DropdownMenu.Item[] items = new DropdownMenu.Item[7];
-    private readonly byte[] actions = new byte[7];
+    private readonly DropdownMenu.Item[] items = new DropdownMenu.Item[8];
+    private readonly byte[] actions = new byte[8];
     private string? messageId;
     private bool mine;
     private int kind;
@@ -108,6 +111,12 @@ internal sealed class ChatMenuController
         {
             items[count] = new DropdownMenu.Item(Loc.T(L.Encryption.CopyTextAction), FontAwesomeIcon.Copy.ToIconString());
             actions[count++] = ActCopy;
+        }
+
+        if (model.CanTranslate && !mine && kind == TextKind)
+        {
+            items[count] = new DropdownMenu.Item(Loc.T(L.Translate.Action), FontAwesomeIcon.Language.ToIconString());
+            actions[count++] = ActTranslate;
         }
 
         if (model.CanStar)
@@ -175,6 +184,9 @@ internal sealed class ChatMenuController
                 break;
             case ActReport:
                 model.OnReport(id);
+                break;
+            case ActTranslate:
+                model.OnTranslate(id);
                 break;
         }
     }

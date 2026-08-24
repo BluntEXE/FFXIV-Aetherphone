@@ -21,7 +21,8 @@ internal sealed partial class MessageApp
 
         public ThreadView(MessageApp app)
             : base(app.store, app.ui, app.images, app.lodestone, app.http, app.library, app.configuration,
-                app.confirm, app.report, app.wallpaperImages, ThreadPollSeconds, TypingSendSeconds)
+                app.confirm, app.report, app.translation, app.wallpaperImages, ThreadPollSeconds,
+                TypingSendSeconds)
         {
             this.app = app;
         }
@@ -145,6 +146,7 @@ internal sealed partial class MessageApp
                 CanInfo = true,
                 CanDelete = true,
                 CanReport = true,
+                CanTranslate = true,
                 IsStarred = app.IsStarred,
                 MyReactionTo = store.MyReactionTo,
                 OnReply = BeginReply,
@@ -159,6 +161,7 @@ internal sealed partial class MessageApp
                 },
                 OnDelete = AskDeleteMessage,
                 OnReport = OpenReportMessage,
+                OnTranslate = TranslateMessage,
                 OnReact = store.SetReaction,
             };
         }
@@ -195,6 +198,7 @@ internal sealed partial class MessageApp
                     }
                 });
             ChatHeaderControls.DrawSearchToggle(ui, area, rowCenterY, searchController.Open, searchController.Toggle);
+            DrawTranslateToggle(area, rowCenterY, threadId);
             var name = conversation is null ? app.DisplayName : DirectMessagesStore.DisplayTitle(conversation);
             var avatarRadius = 18f * scale;
             var nameCap = MathF.Max(40f * scale, area.Width * 0.42f);

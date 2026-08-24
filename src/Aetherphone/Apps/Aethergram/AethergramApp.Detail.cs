@@ -5,6 +5,7 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
+using Aetherphone.Core.Translation;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -178,10 +179,13 @@ internal sealed partial class AethergramApp
                     new TextStyle(0.9f, FontWeight.SemiBold), theme.TextStrong, captionNameHovering, theme);
                 var captionLeft = captionPos.X + nameWidth + 6f * scale;
                 ImGui.SetCursorScreenPos(new Vector2(captionLeft, captionPos.Y));
+                var captionKey = new TranslationKey(TranslationSurface.Post, post.Id);
+                var captionView = translation.View(captionKey, post.Text);
+                var captionText = captionView.Text;
                 RichTextLayout? captionLayout;
                 using (Plugin.Fonts.Push(0.9f))
                 {
-                    captionLayout = detailBodyLayouts.LayoutFor(post.Id, post.Text, post.Mentions,
+                    captionLayout = detailBodyLayouts.LayoutFor(captionView.LayoutKey, captionText, post.Mentions,
                         origin.X + width - captionLeft);
                 }
 
@@ -191,7 +195,7 @@ internal sealed partial class AethergramApp
                     using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Aethergram.BodyInk))
                     using (Plugin.Fonts.Push(0.9f))
                     {
-                        Typography.Wrapped(post.Text);
+                        Typography.Wrapped(captionText);
                     }
                 }
                 else
@@ -204,6 +208,16 @@ internal sealed partial class AethergramApp
 
                     ImGui.SetCursorScreenPos(captionOrigin);
                     ImGui.Dummy(captionLayout.Size);
+                }
+
+                var captionLinkHeight = TranslateLink.Height(translation, captionKey, post.Lang, scale);
+                if (captionLinkHeight > 0f)
+                {
+                    var linkTop = ImGui.GetCursorScreenPos().Y;
+                    TranslateLink.Draw(translation, confirm, captionKey, post.Lang, post.Text,
+                        new Vector2(captionPos.X, linkTop), origin.X + width - captionPos.X,
+                        AppPalettes.Aethergram.MutedInk, AppPalettes.Aethergram.Accent, scale);
+                    ImGui.SetCursorScreenPos(new Vector2(captionPos.X, linkTop + captionLinkHeight));
                 }
 
                 ImGui.Dummy(new Vector2(0f, 4f * scale));
@@ -304,20 +318,26 @@ internal sealed partial class AethergramApp
         var displayName = SocialIdentity.Name(comment.AuthorDisplayName, comment.AuthorHandle);
         var commentNameStyle = new TextStyle(0.9f, FontWeight.SemiBold);
         var nameHeight = Typography.Measure(displayName, commentNameStyle).Y;
+        var commentKey = new TranslationKey(TranslationSurface.Comment, comment.Id);
+        var commentView = translation.View(commentKey, comment.Text);
+        var commentText = commentView.Text;
         RichTextLayout? commentLayout;
         using (Plugin.Fonts.Push(0.9f))
         {
-            commentLayout = commentLayouts.LayoutFor(comment.Id, comment.Text, comment.Mentions, textRight - textLeft);
+            commentLayout = commentLayouts.LayoutFor(commentView.LayoutKey, commentText, comment.Mentions,
+                textRight - textLeft);
         }
 
-        var textHeight = comment.Text.Length == 0
+        var textHeight = commentText.Length == 0
             ? 0f
-            : commentLayout?.Size.Y ?? Typography.MeasureWrapped(comment.Text, textRight - textLeft, 0.9f);
+            : commentLayout?.Size.Y ?? Typography.MeasureWrapped(commentText, textRight - textLeft, 0.9f);
+        var commentLinkHeight = TranslateLink.Height(translation, commentKey, comment.Lang, scale);
         var mediaHeight = CommentMediaHidden(comment.MediaUrl)
             ? 0f
             : CommentMedia.MeasureHeight(comment, textRight - textLeft, scale);
         var mediaGap = mediaHeight > 0f && textHeight > 0f ? 6f * scale : 0f;
-        var bubbleHeight = padTop + nameHeight + 4f * scale + textHeight + mediaGap + mediaHeight + padBottom;
+        var bubbleHeight = padTop + nameHeight + 4f * scale + textHeight + commentLinkHeight + mediaGap + mediaHeight
+            + padBottom;
         if (canDelete)
         {
             bubbleHeight = MathF.Max(bubbleHeight, 72f * scale);
@@ -366,7 +386,7 @@ internal sealed partial class AethergramApp
                 using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Aethergram.BodyInk))
                 using (Plugin.Fonts.Push(0.9f))
                 {
-                    Typography.Wrapped(comment.Text);
+                    Typography.Wrapped(commentText);
                 }
             }
             else
@@ -378,10 +398,17 @@ internal sealed partial class AethergramApp
             }
         }
 
+        if (commentLinkHeight > 0f)
+        {
+            TranslateLink.Draw(translation, confirm, commentKey, comment.Lang, comment.Text,
+                new Vector2(textLeft, textTop + textHeight), textRight - textLeft, AppPalettes.Aethergram.MutedInk,
+                AppPalettes.Aethergram.Accent, scale);
+        }
+
         if (comment.MediaUrl is { } commentMediaUrl && !CommentMediaHidden(commentMediaUrl))
         {
             var mediaRect = CommentMedia.Draw(drawList, images, comment,
-                new Vector2(textLeft, textTop + textHeight + mediaGap), textRight - textLeft, scale,
+                new Vector2(textLeft, textTop + textHeight + commentLinkHeight + mediaGap), textRight - textLeft, scale,
                 AppPalettes.Aethergram.FieldSurface, AppPalettes.Aethergram.MutedInk);
             if (UiInteract.HoverClick(mediaRect.Min, mediaRect.Max))
             {

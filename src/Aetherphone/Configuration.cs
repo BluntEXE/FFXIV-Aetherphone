@@ -113,6 +113,9 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool CameraFlash { get; set; } = true;
     public int PhotosSegment { get; set; }
     public string Language { get; set; } = string.Empty;
+    public string TranslationTargetLanguage { get; set; } = string.Empty;
+    public bool TranslationDisclosureSeen { get; set; }
+    public List<string> TranslatedConversations { get; set; } = new();
     public ThemeMode ThemeMode { get; set; } = ThemeMode.Dark;
     public string AccentName { get; set; } = "Violet";
     public string AccentCustomHex { get; set; } = string.Empty;

@@ -6,6 +6,7 @@ using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Social;
+using Aetherphone.Core.Translation;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -175,16 +176,20 @@ internal sealed partial class VelvetShell
             if (!string.IsNullOrWhiteSpace(post.Caption))
             {
                 var captionOrigin = ImGui.GetCursorScreenPos();
+                var captionKey = new TranslationKey(TranslationSurface.Post, post.Id);
+                var captionView = translation.View(captionKey, post.Caption);
+                var captionText = captionView.Text;
+                var captionWidth = ImGui.GetContentRegionAvail().X;
                 RichTextLayout? captionLayout;
                 using (Plugin.Fonts.Push(TextStyles.Callout.Scale, TextStyles.Callout.Weight))
                 {
-                    captionLayout = detailBodyLayouts.LayoutFor(post.Id, post.Caption, post.Mentions,
-                        ImGui.GetContentRegionAvail().X);
+                    captionLayout = detailBodyLayouts.LayoutFor(captionView.LayoutKey, captionText, post.Mentions,
+                        captionWidth);
                 }
 
                 if (captionLayout is null)
                 {
-                    WrapText(post.Caption, VelvetTheme.BodyInk, TextStyles.Callout);
+                    WrapText(captionText, VelvetTheme.BodyInk, TextStyles.Callout);
                 }
                 else
                 {
@@ -195,6 +200,16 @@ internal sealed partial class VelvetShell
 
                     ImGui.SetCursorScreenPos(captionOrigin);
                     ImGui.Dummy(captionLayout.Size);
+                }
+
+                var captionLinkHeight = TranslateLink.Height(translation, captionKey, post.Lang, scale);
+                if (captionLinkHeight > 0f)
+                {
+                    var linkTop = ImGui.GetCursorScreenPos().Y;
+                    TranslateLink.Draw(translation, confirm, captionKey, post.Lang, post.Caption,
+                        new Vector2(captionOrigin.X, linkTop), captionWidth, VelvetTheme.MutedInk, VelvetTheme.RoseGlow,
+                        scale);
+                    ImGui.SetCursorScreenPos(new Vector2(captionOrigin.X, linkTop + captionLinkHeight));
                 }
 
                 Gap(12f);
@@ -289,10 +304,13 @@ internal sealed partial class VelvetShell
 
         var textTop = origin.Y + 18f * scale;
         ImGui.SetCursorScreenPos(new Vector2(textLeft, textTop));
+        var commentKey = new TranslationKey(TranslationSurface.Comment, comment.Id);
+        var commentView = translation.View(commentKey, comment.Text);
+        var commentText = commentView.Text;
         RichTextLayout? commentLayout;
         using (Plugin.Fonts.Push(0.9f))
         {
-            commentLayout = commentLayouts.LayoutFor(comment.Id, comment.Text, comment.Mentions, wrapWidth);
+            commentLayout = commentLayouts.LayoutFor(commentView.LayoutKey, commentText, comment.Mentions, wrapWidth);
         }
 
         if (commentLayout is null)
@@ -301,7 +319,7 @@ internal sealed partial class VelvetShell
             using (ImRaii.PushColor(ImGuiCol.Text, VelvetTheme.BodyInk))
             using (Plugin.Fonts.Push(0.9f))
             {
-                Typography.Wrapped(comment.Text);
+                Typography.Wrapped(commentText);
             }
         }
         else
@@ -312,8 +330,16 @@ internal sealed partial class VelvetShell
             }
         }
 
-        var textHeight = commentLayout?.Size.Y ?? Typography.MeasureWrapped(comment.Text, wrapWidth, 0.9f);
-        var rowHeight = MathF.Max(avatarRadius * 2f, 18f * scale + textHeight);
+        var textHeight = commentLayout?.Size.Y ?? Typography.MeasureWrapped(commentText, wrapWidth, 0.9f);
+        var commentLinkHeight = TranslateLink.Height(translation, commentKey, comment.Lang, scale);
+        if (commentLinkHeight > 0f)
+        {
+            TranslateLink.Draw(translation, confirm, commentKey, comment.Lang, comment.Text,
+                new Vector2(textLeft, textTop + textHeight), wrapWidth, VelvetTheme.MutedInk, VelvetTheme.RoseGlow,
+                scale);
+        }
+
+        var rowHeight = MathF.Max(avatarRadius * 2f, 18f * scale + textHeight + commentLinkHeight);
         if (UiInteract.HoverClick(origin, new Vector2(textLeft + nameWidth, textTop)))
         {
             OpenProfile(comment.AuthorId);

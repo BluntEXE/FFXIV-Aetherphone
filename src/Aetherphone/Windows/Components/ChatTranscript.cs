@@ -7,6 +7,7 @@ using Aetherphone.Core.Muster;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Venues;
 using Aetherphone.Core.YellowPages;
+using Aetherphone.Core.Translation;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Textures.TextureWraps;
@@ -188,6 +189,13 @@ internal interface IChatTranscriptPaging
     void LoadOlder();
 }
 
+internal interface IChatTranscriptTranslation
+{
+    TranslationView View(string messageId, string body);
+
+    void Activate(string messageId, string body);
+}
+
 internal readonly ref struct ChatTranscriptModel
 {
     public required string ThreadId { get; init; }
@@ -208,6 +216,7 @@ internal readonly ref struct ChatTranscriptModel
     public IChatTranscriptPaging? Paging { get; init; }
     public IChatTranscriptPostCards? PostCards { get; init; }
     public IChatTranscriptStoryReplies? StoryReplies { get; init; }
+    public IChatTranscriptTranslation? Translation { get; init; }
 }
 
 internal sealed class ChatTranscript
@@ -568,20 +577,25 @@ internal sealed class ChatTranscript
         var paddingX = 11f * scale;
         var paddingY = 7f * scale;
         var wrap = available * 0.74f - paddingX * 2f;
+        var translation = model.Translation is { } lookup && !deleted && !mine
+            ? lookup.View(message.Id, message.Body)
+            : default;
+        var body = translation.Entry is null ? message.Body : translation.Text;
         var runs = deleted ? null : message.Runs;
         var runLayout = runs is null ? null : RunText.Layout(message.Id, runs, wrap);
-        var linkLayout = deleted || runs is not null ? null : LinkText.LayoutFor(message.Body, wrap);
+        var linkLayout = deleted || runs is not null ? null : LinkText.LayoutFor(body, wrap);
         var textSize = runLayout is not null
             ? runLayout.Size
-            : linkLayout is null ? ImGui.CalcTextSize(message.Body, false, wrap) : linkLayout.Size;
+            : linkLayout is null ? ImGui.CalcTextSize(body, false, wrap) : linkLayout.Size;
+        var footer = TranslationFooter.Measure(translation.Entry, wrap, scale);
         var deletedIconWidth = deleted ? 17f * scale : 0f;
         var stamp = MeasureStamp(message, mine, scale);
         var stampGap = 7f * scale;
-        var inline = textSize.Y <= ImGui.GetTextLineHeight() * 1.5f &&
+        var inline = footer.Height <= 0f && textSize.Y <= ImGui.GetTextLineHeight() * 1.5f &&
                      deletedIconWidth + textSize.X + stampGap + stamp.Width <= wrap;
         var contentWidth = inline
             ? deletedIconWidth + textSize.X + stampGap + stamp.Width
-            : MathF.Max(deletedIconWidth + textSize.X, stamp.Width);
+            : MathF.Max(MathF.Max(deletedIconWidth + textSize.X, stamp.Width), footer.Width);
         var quote = MeasureQuote(message, wrap, scale);
         if (quote.Height > 0f)
         {
@@ -596,7 +610,8 @@ internal sealed class ChatTranscript
 
         var quoteBlock = quote.Height > 0f ? quote.Height + 6f * scale : 0f;
         var forwardBlock = forwardLabel.Y > 0f ? forwardLabel.Y + 3f * scale : 0f;
-        var contentHeight = (inline ? textSize.Y : textSize.Y + stamp.Height + 2f * scale) + quoteBlock + forwardBlock;
+        var contentHeight = (inline ? textSize.Y : textSize.Y + footer.Height + stamp.Height + 2f * scale)
+            + quoteBlock + forwardBlock;
         var bubbleWidth = contentWidth + paddingX * 2f;
         var bubbleHeight = contentHeight + paddingY * 2f;
         var start = ImGui.GetCursorScreenPos();
@@ -653,13 +668,25 @@ internal sealed class ChatTranscript
         else if (linkLayout is null)
         {
             drawList.AddText(ImGui.GetFont(), ImGui.GetFontSize() * fx.Pop, textPos,
-                ImGui.GetColorU32(Palette.WithAlpha(ink, ink.W * fx.Alpha)), message.Body, wrap * fx.Pop);
+                ImGui.GetColorU32(Palette.WithAlpha(ink, ink.W * fx.Alpha)), body, wrap * fx.Pop);
         }
         else
         {
             var linkInk = mine || placeholder ? ink : model.Accent;
             LinkText.Draw(drawList, linkLayout, textPos, fx.Pop, ink, linkInk, fx.Alpha, entrance >= 1f);
         }
+
+        if (footer.Height > 0f && model.Translation is { } target)
+        {
+            var footerPos = fx.Apply(new Vector2(bubbleMin.X + paddingX, contentTop + textSize.Y));
+            var footerInk = mine ? new Vector4(1f, 1f, 1f, 0.72f) : Palette.WithAlpha(model.MutedInk, 0.95f);
+            var actionInk = mine ? new Vector4(1f, 1f, 1f, 1f) : model.Accent;
+            if (TranslationFooter.Draw(drawList, footer, footerPos, footerInk, actionInk, fx.Alpha, scale))
+            {
+                target.Activate(message.Id, message.Body);
+            }
+        }
+
         var timeColor = mine ? new Vector4(1f, 1f, 1f, 0.72f) : Palette.WithAlpha(model.MutedInk, 0.95f);
         DrawStamp(drawList, stamp, new Vector2(bubbleMax.X - paddingX, bubbleMax.Y - paddingY), fx, timeColor);
         if (entrance >= 1f && !deleted && model.Interactions is { } interactions && message.Kind != KindSystem

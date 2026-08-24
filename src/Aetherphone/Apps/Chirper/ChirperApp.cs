@@ -17,6 +17,7 @@ using Aetherphone.Core.Report;
 using Aetherphone.Core.Sharing;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
@@ -59,6 +60,8 @@ internal sealed partial class ChirperApp : IPhoneApp
     private readonly AvatarComposer avatar;
     private readonly SocialProfilePages profile;
     private readonly AppSkin ui = new(AppPalettes.Chirper);
+    private readonly ConfirmService confirm;
+    private readonly TranslationService translation;
     private readonly RichTextCache bodyLayouts = new(scanHashtags: true);
     private readonly RichTextCache commentLayouts = new(scanHashtags: true);
     private readonly FeedVirtualizer feedVirtualizer = new(400f);
@@ -122,8 +125,11 @@ internal sealed partial class ChirperApp : IPhoneApp
     public ChirperApp(AethernetSession session, AethernetApi net, LodestoneService lodestone,
         RemoteImageCache images, PhotoLibrary library, SocialLauncher launcher, GameData gameData,
         Configuration configuration, SocialNotificationService social, WallpaperImageCache wallpaperImages,
-        ConfirmService confirm, ReportService report, ConductGateService conduct, RealtimeSignalBus realtimeSignals)
+        ConfirmService confirm, TranslationService translation, ReportService report, ConductGateService conduct,
+        RealtimeSignalBus realtimeSignals)
     {
+        this.translation = translation;
+        this.confirm = confirm;
         store = new ChirperStore(session, net.Account, net.Social, net.Safety, net.Media, realtimeSignals);
         store.SetFeedRegions(SocialRegion.FilterCsv(configuration.ChirperFeedRegionMask));
         composeMentions = new MentionAutocomplete(store.NewMentionSuggestions());
@@ -554,23 +560,27 @@ internal sealed partial class ChirperApp : IPhoneApp
         var nameSize = Typography.Measure(displayName, 1.05f, FontWeight.SemiBold);
         var textTop = contentTop + pad + nameSize.Y + 6f * scale;
         RichTextLayout? bodyLayout = null;
-        if (post.Text.Length > 0)
+        var translateKey = new TranslationKey(TranslationSurface.Post, post.Id);
+        var bodyView = translation.View(translateKey, post.Text);
+        var bodyText = bodyView.Text;
+        if (bodyText.Length > 0)
         {
             using (Plugin.Fonts.Push(1.05f))
             {
-                bodyLayout = bodyLayouts.LayoutFor(post.Id, post.Text, post.Mentions, contentWidth);
+                bodyLayout = bodyLayouts.LayoutFor(bodyView.LayoutKey, bodyText, post.Mentions, contentWidth);
             }
         }
 
-        var textHeight = post.Text.Length == 0
+        var textHeight = bodyText.Length == 0
             ? 0f
-            : bodyLayout?.Size.Y ?? Typography.MeasureWrapped(post.Text, contentWidth, 1.05f);
+            : bodyLayout?.Size.Y ?? Typography.MeasureWrapped(bodyText, contentWidth, 1.05f);
+        var translateHeight = TranslateLink.Height(translation, translateKey, post.Lang, scale);
         var photos = PostMedia.Photos(post.MediaUrls, post.MediaUrl);
         var mediaGap = photos.Length > 0 ? 8f * scale : 0f;
         var mediaHeight = photos.Length > 0
             ? PostAspects.DisplayHeight(contentWidth, post.MediaWidth, post.MediaHeight)
             : 0f;
-        var mediaTop = textTop + textHeight + mediaGap;
+        var mediaTop = textTop + textHeight + translateHeight + mediaGap;
         var hasQuote = post.QuotedPostId is not null;
         var quoteGap = hasQuote ? 8f * scale : 0f;
         var quoteHeight = hasQuote ? QuotedCardHeight(post.ReferencedPost, contentWidth) : 0f;
@@ -622,14 +632,14 @@ internal sealed partial class ChirperApp : IPhoneApp
             OpenProfile(post.AuthorId);
         }
 
-        if (post.Text.Length > 0 && bodyLayout is null)
+        if (bodyText.Length > 0 && bodyLayout is null)
         {
             ImGui.SetCursorScreenPos(new Vector2(contentLeft, textTop));
             using (Typography.WrapAt(contentRight))
             using (Plugin.Fonts.Push(1.05f))
             using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Chirper.BodyInk))
             {
-                Typography.Wrapped(post.Text);
+                Typography.Wrapped(bodyText);
             }
         }
         else if (bodyLayout is not null)
@@ -638,6 +648,13 @@ internal sealed partial class ChirperApp : IPhoneApp
             {
                 DrawRichBody(drawList, bodyLayout, new Vector2(contentLeft, textTop));
             }
+        }
+
+        if (translateHeight > 0f)
+        {
+            TranslateLink.Draw(translation, confirm, translateKey, post.Lang, post.Text,
+                new Vector2(contentLeft, textTop + textHeight), contentWidth, AppPalettes.Chirper.MutedInk,
+                AppPalettes.Chirper.Accent, scale);
         }
 
         if (photos.Length > 0)
@@ -1459,17 +1476,20 @@ internal sealed partial class ChirperApp : IPhoneApp
             commentRight, comment.ScanStatus, 0.85f);
         var bodyOrigin = new Vector2(textLeft, origin.Y + nameSize.Y + 6f * scale);
         ImGui.SetCursorScreenPos(bodyOrigin);
-        var commentLayout = comment.Text.Length > 0
-            ? commentLayouts.LayoutFor(comment.Id, comment.Text, comment.Mentions, commentRight - textLeft)
+        var commentKey = new TranslationKey(TranslationSurface.Comment, comment.Id);
+        var commentView = translation.View(commentKey, comment.Text);
+        var commentText = commentView.Text;
+        var commentLayout = commentText.Length > 0
+            ? commentLayouts.LayoutFor(commentView.LayoutKey, commentText, comment.Mentions, commentRight - textLeft)
             : null;
-        if (comment.Text.Length > 0)
+        if (commentText.Length > 0)
         {
             if (commentLayout is null)
             {
                 using (Typography.WrapAt(commentRight))
                 using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Chirper.BodyInk))
                 {
-                    Typography.Wrapped(comment.Text);
+                    Typography.Wrapped(commentText);
                 }
             }
             else
@@ -1478,6 +1498,16 @@ internal sealed partial class ChirperApp : IPhoneApp
                 ImGui.SetCursorScreenPos(bodyOrigin);
                 ImGui.Dummy(commentLayout.Size);
             }
+        }
+
+        var commentTranslateHeight = TranslateLink.Height(translation, commentKey, comment.Lang, scale);
+        if (commentTranslateHeight > 0f)
+        {
+            var linkTop = ImGui.GetCursorScreenPos().Y;
+            TranslateLink.Draw(translation, confirm, commentKey, comment.Lang, comment.Text,
+                new Vector2(textLeft, linkTop), commentRight - textLeft, AppPalettes.Chirper.MutedInk,
+                AppPalettes.Chirper.Accent, scale);
+            ImGui.SetCursorScreenPos(new Vector2(textLeft, linkTop + commentTranslateHeight));
         }
 
         var textBottom = ImGui.GetCursorScreenPos().Y;

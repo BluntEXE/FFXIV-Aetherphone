@@ -12,8 +12,9 @@ internal static class ChatHeaderControls
     private const float IconRadius = 16f;
     private const float LockOffset = 24f;
     private const float SearchOffset = 52f;
+    private const float TranslateOffset = 80f;
     private const float BannerHeight = 26f;
-    public const float ReservedRightWidth = SearchOffset + IconRadius;
+    public const float ReservedRightWidth = TranslateOffset + IconRadius;
 
     public static void DrawLock(AppSkin ui, Rect area, float rowCenterY, bool encrypted, KeyVaultState vault,
         Action onOpen)
@@ -47,7 +48,17 @@ internal static class ChatHeaderControls
         }
     }
 
-    public static void DrawBanner(AppSkin ui, ref Rect listRect, string text, Vector4 mutedInk, Action onDismiss)
+    public static bool DrawTranslateToggle(AppSkin ui, Rect area, float rowCenterY, bool translated)
+    {
+        var scale = UiScale.Current;
+        var center = new Vector2(area.Max.X - TranslateOffset * scale, rowCenterY);
+        return ui.IconButton(center, IconRadius * scale, FontAwesomeIcon.Language.ToIconString(),
+            translated ? ui.Accent : ui.MutedInk, AppSkin.Transparent, 0.95f,
+            Loc.T(translated ? L.Translate.ChatOn : L.Translate.ChatToggle), HoverLabelSide.Below);
+    }
+
+    public static void DrawBanner(
+AppSkin ui, ref Rect listRect, string text, Vector4 mutedInk, Action onDismiss)
     {
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
