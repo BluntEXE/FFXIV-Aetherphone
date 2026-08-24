@@ -1,6 +1,8 @@
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Net;
+using Aetherphone.Windows.Components;
+using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Core.Aethernet;
 
@@ -15,9 +17,20 @@ internal static class InstallSourceNotice
         }
 
         var blocked = string.Equals(notice, AethernetClientIdentity.StatusBlocked, StringComparison.Ordinal);
-        var title = Loc.T(blocked ? L.Account.FailSourceBlockedTitle : L.Account.SourceWarnedTitle);
-        var body = Loc.T(blocked ? L.Account.FailSourceBlockedBody : L.Account.SourceWarnedBody,
-            AepConstants.OfficialRepositoryUrl);
-        confirm.Alert(title, body, Loc.T(L.Account.FailDismiss));
+        var url = AepConstants.OfficialRepositoryUrl;
+        confirm.Ask(new ConfirmRequest
+        {
+            Title = Loc.T(blocked ? L.Account.FailSourceBlockedTitle : L.Account.SourceWarnedTitle),
+            Message = Loc.T(blocked ? L.Account.FailSourceBlockedBody : L.Account.SourceWarnedBody),
+            Sections = new[] { ConfirmSection.Card(Loc.T(L.Account.SourceOfficialRepoLabel), url) },
+            ConfirmLabel = Loc.T(L.Account.SourceCopyLink),
+            CancelLabel = Loc.T(L.Account.FailDismiss),
+            Danger = false,
+            Confirm = () =>
+            {
+                ImGui.SetClipboardText(url);
+                CopyToast.Show();
+            },
+        });
     }
 }
