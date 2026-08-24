@@ -71,6 +71,7 @@ internal static class AppAccents
         ["blade"] = AccentRing.Red,
         ["trivia"] = AccentRing.Indigo,
         ["skyfall"] = AccentRing.Orange,
+        ["invaders"] = AccentRing.Violet,
         ["rolladeck"] = AccentRing.Violet,
         ["hunts"] = AccentRing.Indigo
     }.ToFrozenDictionary();

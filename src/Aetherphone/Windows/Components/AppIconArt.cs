@@ -94,6 +94,9 @@ internal static class AppIconArt
             case "skyfall":
                 DrawSkyfall(dl, center, extent, inkColor, holeColor);
                 return true;
+            case "invaders":
+                DrawInvaders(dl, center, extent, inkColor);
+                return true;
             default:
                 return false;
         }
@@ -573,6 +576,32 @@ internal static class AppIconArt
             new Vector2(center.X - extent * 0.86f + towerWidth, groundY), ink, extent * 0.03f);
         dl.AddRectFilled(new Vector2(center.X + extent * 0.66f, groundY - extent * 0.5f),
             new Vector2(center.X + extent * 0.66f + towerWidth, groundY), ink, extent * 0.03f);
+    }
+
+    private static readonly string[] InvaderRows =
+    {
+        "..#....#..", "...#..#...", "..######..", ".##.##.##.", "##########", "#.######.#", "#.#....#.#", "...##.##..",
+    };
+
+    private static void DrawInvaders(ImDrawListPtr dl, Vector2 center, float extent, uint ink)
+    {
+        var columns = InvaderRows[0].Length;
+        var unit = extent * 1.8f / columns;
+        var origin = new Vector2(center.X - columns * unit * 0.5f, center.Y - InvaderRows.Length * unit * 0.5f);
+        for (var row = 0; row < InvaderRows.Length; row++)
+        {
+            var line = InvaderRows[row];
+            for (var column = 0; column < columns; column++)
+            {
+                if (line[column] != '#')
+                {
+                    continue;
+                }
+
+                var min = new Vector2(origin.X + column * unit, origin.Y + row * unit);
+                dl.AddRectFilled(min, min + new Vector2(unit + 0.5f, unit + 0.5f), ink);
+            }
+        }
     }
 
     private static void DrawTrivia(ImDrawListPtr dl, Vector2 center, float extent, uint ink, uint hole)

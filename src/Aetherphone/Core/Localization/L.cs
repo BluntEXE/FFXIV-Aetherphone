@@ -4402,6 +4402,7 @@ internal static class L
         public static readonly LocString Wave = new("games.wave", "Wave");
         public static readonly LocString Ammo = new("games.ammo", "Ammo");
         public static readonly LocString WaveClear = new("games.waveClear", "Wave clear");
+        public static readonly LocString Invaders = new("games.invaders", "Invaders");
     }
 
     internal static class Time
