@@ -2789,6 +2789,8 @@
   "games.invaders": "Envahisseurs",
   "games.maze": "Labyrinthe",
   "games.ready": "Prêt !",
+  "games.hop": "Saut",
+  "games.dens": "Terriers",
   "time.now": "à l'instant",
   "time.justNow": "à l'instant",
   "time.minutesShort": "{0} min",

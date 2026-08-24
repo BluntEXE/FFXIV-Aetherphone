@@ -2789,6 +2789,8 @@
   "games.invaders": "太空入侵者",
   "games.maze": "迷宫",
   "games.ready": "准备！",
+  "games.hop": "跳跃",
+  "games.dens": "巢穴",
   "time.now": "现在",
   "time.justNow": "刚刚",
   "time.minutesShort": "{0}分钟",

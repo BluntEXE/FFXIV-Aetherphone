@@ -100,6 +100,9 @@ internal static class AppIconArt
             case "maze":
                 DrawMaze(dl, center, extent, inkColor);
                 return true;
+            case "hop":
+                DrawHop(dl, center, extent, inkColor, holeColor);
+                return true;
             default:
                 return false;
         }
@@ -621,6 +624,37 @@ internal static class AppIconArt
         {
             dl.AddCircleFilled(At(center, extent, 0.38f + dot * 0.28f, 0f), dotRadius, ink, 12);
         }
+    }
+
+    private static void DrawHop(ImDrawListPtr dl, Vector2 center, float extent, uint ink, uint hole)
+    {
+        var laneHeight = extent * 0.18f;
+        for (var lane = 0; lane < 3; lane++)
+        {
+            var y = center.Y + extent * (0.98f - lane * 0.34f);
+            dl.AddRectFilled(new Vector2(center.X - extent, y - laneHeight * 0.5f), new Vector2(center.X + extent, y + laneHeight * 0.5f),
+                ink, laneHeight * 0.3f);
+            var dashX = center.X - extent + extent * (0.2f + lane * 0.5f);
+            dl.AddRectFilled(new Vector2(dashX, y - laneHeight * 0.16f), new Vector2(dashX + extent * 0.5f, y + laneHeight * 0.16f), hole);
+        }
+
+        var critter = At(center, extent, 0f, -0.42f);
+        var radius = extent * 0.4f;
+        dl.AddCircleFilled(critter, radius, ink, 24);
+        Span<Vector2> leftEar = stackalloc Vector2[3]
+        {
+            new(critter.X - radius * 0.85f, critter.Y - radius * 0.35f), new(critter.X - radius * 0.7f, critter.Y - radius * 1.35f),
+            new(critter.X - radius * 0.15f, critter.Y - radius * 0.9f),
+        };
+        FillConvex(dl, ink, leftEar);
+        Span<Vector2> rightEar = stackalloc Vector2[3]
+        {
+            new(critter.X + radius * 0.15f, critter.Y - radius * 0.9f), new(critter.X + radius * 0.7f, critter.Y - radius * 1.35f),
+            new(critter.X + radius * 0.85f, critter.Y - radius * 0.35f),
+        };
+        FillConvex(dl, ink, rightEar);
+        dl.AddRectFilled(new Vector2(critter.X - radius * 0.8f, critter.Y - radius * 0.25f),
+            new Vector2(critter.X + radius * 0.8f, critter.Y + radius * 0.1f), hole, radius * 0.1f);
     }
 
     private static void DrawTrivia(ImDrawListPtr dl, Vector2 center, float extent, uint ink, uint hole)

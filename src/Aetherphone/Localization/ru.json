@@ -2789,6 +2789,8 @@
   "games.invaders": "Захватчики",
   "games.maze": "Лабиринт",
   "games.ready": "Готов!",
+  "games.hop": "Прыжок",
+  "games.dens": "Норы",
   "time.now": "сейчас",
   "time.justNow": "только что",
   "time.minutesShort": "{0}мин",

@@ -2789,6 +2789,8 @@
   "games.invaders": "Invasores",
   "games.maze": "Labirinto",
   "games.ready": "Pronto!",
+  "games.hop": "Pulo",
+  "games.dens": "Tocas",
   "time.now": "agora",
   "time.justNow": "agora mesmo",
   "time.minutesShort": "{0}min",

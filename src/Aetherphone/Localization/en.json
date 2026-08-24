@@ -2789,6 +2789,8 @@
   "games.invaders": "Invaders",
   "games.maze": "Maze",
   "games.ready": "Ready!",
+  "games.hop": "Hop",
+  "games.dens": "Dens",
   "time.now": "now",
   "time.justNow": "just now",
   "time.minutesShort": "{0}m",
