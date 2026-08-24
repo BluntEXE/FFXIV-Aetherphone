@@ -19,6 +19,12 @@ This page explains how the Games app hosts its mini-games and how to build a new
 | src/Aetherphone/Apps/Games/Framework/GameGrid.cs | Centered cell-grid math for board games |
 | src/Aetherphone/Apps/Games/Framework/GamePalette.cs | Shared board colors and ink-contrast picker |
 | src/Aetherphone/Apps/Games/Framework/GameNumber.cs | Cached integer-to-string labels (no per-frame allocation) |
+| src/Aetherphone/Apps/Games/Framework/GameInput.cs | Keyboard reads that keep the keys away from the game client |
+| src/Aetherphone/Apps/Games/Framework/GamePad.cs | On-screen d-pad and left/fire/right pad |
+| src/Aetherphone/Apps/Games/Framework/Substeps.cs | Splits a frame delta into capped simulation substeps |
+| src/Aetherphone/Apps/Games/Framework/FixedStepClock.cs | Fixed-timestep accumulator with a catch-up cap |
+| src/Aetherphone/Apps/Games/Framework/PixelSprite.cs | Bitmap sprites drawn as filled runs in one color |
+| src/Aetherphone/Apps/Games/Framework/GameBanner.cs | Pop-in, hold, fade banner for "Ready" and "Wave 3" |
 | src/Aetherphone/Core/Games/GameStatsStore.cs | Best scores, best times, win streaks, daily challenge |
 | src/Aetherphone.Tests/ChessRulesTests.cs | Perft tests that pin the chess rules engine |
 
@@ -146,6 +152,14 @@ GameHud.ScorePill(center, Loc.T(L.Games.Score), ref scoreRoll, board.Score, Acce
 - `GameHud` also has `Pill` (static value), `RestartButton`, and `Button`.
 - `GamePalette` holds the shared dark board colors plus `InkOn(fill)` to pick readable text ink, and `GameNumber.Label(int)` returns a cached string so score text does not allocate every frame.
 - `GameOverlay.Draw(area, theme, accent, progress, result)` renders the end-of-round card from a `GameResult` (title, primary stat, optional secondary line, `NewBest` flag). Drive `progress` from 0 to 1 yourself; the card scales in, counts the score up, fires confetti when `NewBest` is true, and returns true when the player clicks Play Again.
+
+### Input, clocks, sprites, banners
+
+- `GameInput` is the only way a game may read the physical keyboard. `GameInput.Claim()` returns false unless `GameFocus.Active`; when it returns true it has raised `io.WantTextInput` for this frame and cleared the game client's key state for every key a game consumes. Dalamud honours `WantTextInput` (it swallows the key messages and clears `KeyState` on its input frame); it does not honour `WantCaptureKeyboard` against the game at all, so a game that only calls `SetNextFrameWantCaptureKeyboard` still walks the character with WASD. The convenience readers `Held(key, alternate)` and `Pressed(key, alternate, repeat)` call `Claim` for you and pair WASD with the arrows. Call them only while the game actually wants keys (not under the result overlay), so the keyboard returns to the client the moment play stops.
+- `GamePad.DPad(area, accent, theme)` draws a W/A/S/D cross and returns the `PadDirection` pressed this frame (press-fired, one per frame). `GamePad.Shooter(area, accent, theme)` draws A, W, D and returns `ShooterPadInput` with `Left` and `Right` held and `Fire` pressed. `DPadHeight(scale)` and `ShooterHeight(scale)` size the band. Games combine pad and keyboard themselves: `var left = pad.Left || GameInput.Held(ImGuiKey.A, ImGuiKey.LeftArrow);`.
+- `new Substeps(deltaSeconds, maxStepSeconds)` gives `Count` and `Step` for a loop that advances fast projectiles without tunnelling; the count is capped at 16 so a stall never becomes a burst. `FixedStepClock(step, maxCatchUp)` is the alternative for sims that must run on an exact tick: `Advance(delta)` returns how many steps to run, `Alpha` is the render interpolation fraction, `Reset()` on restart.
+- `PixelSprite` takes bitmap rows (`#` lit) once, at static init, and `Draw(drawList, topLeft, unit, color)` emits one rect per lit run. It is the sprite path for Invaders-style games; draw it in the game's accent with a `ProgressRing.Glow` behind it, never in a flat ink.
+- `GameBanner.Draw(drawList, center, text, accent, theme, progress)` pops a frosted pill in over the first 18% of `progress`, holds, and fades over the last 25%. Drive `progress` with `GameBanner.Advance(progress, delta, lifetimeSeconds)`. Use it for stage and ready text that must hold; `FeedbackFx.AddText` rises and fades and is for score pops.
 
 ## The motion exception
 
@@ -310,6 +324,7 @@ Games are named for what they do: Whack, Snake, Stack, Water Sort, Crystal Drop,
 - **Fixed pools drop silently.** `FeedbackFx` caps at 32 floating texts and 12 rings, `ParticleSystem` at its constructor capacity (512 default). Never build gameplay logic that depends on an emitted effect existing.
 - **Always submit through `GameStatsStore`, even for losing runs.** `SubmitScore` calls `RecordDailyPlay` before rejecting a non-positive or non-best score, so a zero-point run still completes the daily challenge. Bypassing the store (or only submitting on a new best) silently breaks the streak.
 - **Use `GameContext.DeltaSeconds`, not `ImGui.GetIO().DeltaTime`.** `GamesApp` clamps the delta to 0.1 seconds before building the context so a hitched frame cannot teleport the simulation, and it zeroes the delta while `GameFocus.Active` is false. Reading the IO delta directly loses both protections: a hitch teleports the game and it keeps simulating while the phone is unfocused.
+- **`WantCaptureKeyboard` does nothing against the game client.** Only `io.WantTextInput` makes Dalamud withhold keys from FFXIV. Read keys through `GameInput`, never through a bare `ImGui.IsKeyDown` behind `SetNextFrameWantCaptureKeyboard`. While a game claims the keyboard, Escape is swallowed too, so the client's system menu opens only after the phone loses focus; that is the intended trade.
 - **Difficulty-suffixed stat ids need launcher support.** Stats keyed like `sudoku.easy` prefix-match for the daily via `GameStatsStore`, but `GamesApp.StatValue` picks one concrete record to display, so a new difficulty tier means updating that switch too.
 
 ## Related docs

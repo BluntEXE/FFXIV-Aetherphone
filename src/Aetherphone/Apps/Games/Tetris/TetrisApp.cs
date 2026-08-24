@@ -273,12 +273,11 @@ internal sealed class TetrisApp : IMiniGame
 
     private void HandleKeyboard()
     {
-        if (!GameFocus.Active)
+        if (!GameInput.Claim())
         {
             return;
         }
 
-        ImGui.SetNextFrameWantCaptureKeyboard(true);
         if (ImGui.IsKeyPressed(ImGuiKey.LeftArrow))
         {
             board.Move(-1);

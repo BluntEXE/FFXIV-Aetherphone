@@ -201,12 +201,11 @@ internal sealed class SudokuApp : IMiniGame
 
     private void HandleKeyboard(float scale)
     {
-        if (!GameFocus.Active)
+        if (!GameInput.Claim())
         {
             return;
         }
 
-        ImGui.SetNextFrameWantCaptureKeyboard(true);
         for (var digit = 1; digit <= SudokuBoard.Size; digit++)
         {
             var offset = digit - 1;
