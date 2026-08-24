@@ -2802,7 +2802,7 @@
   "games.doomGameDataDetail": "Knee-Deep in the Dead, l'épisode shareware",
   "games.doomMusic": "Musique",
   "games.doomMusicDetail": "Soundfont General MIDI pour la bande-son",
-  "games.doomControls": "WASD déplace, glisser ou flèches tournent, Espace tire, E utilise, 1-7 armes",
+  "games.doomControls": "WASD déplace, glisser ou flèches tournent, Espace tire, E utilise, 1-7 armes, Échap ouvre le menu",
   "games.doomMenu": "Menu",
   "games.doomFire": "Tirer",
   "games.doomUse": "Utiliser",

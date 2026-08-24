@@ -7,7 +7,6 @@ using Aetherphone.Core.Video;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using ManagedDoom;
 
 namespace Aetherphone.Apps.Games.Doom;
 
@@ -15,30 +14,10 @@ internal sealed class DoomApp : IMiniGame
 {
     private const string GameId = "doom";
     private const float ScreenAspect = 4f / 3f;
-    private const float KeySize = 46f;
-    private const float KeyGap = 8f;
-    private const float Pad = 8f;
     private const float TipToastSeconds = 6f;
+    private const float TipCaptionInset = 14f;
     private const float CardHeight = 66f;
-
-    private readonly struct Layout
-    {
-        public readonly Rect Screen;
-        public readonly Vector2 LeftCenter;
-        public readonly Vector2 RightCenter;
-        public readonly float Key;
-        public readonly Vector2 TipCenter;
-
-        public Layout(Rect screen, Vector2 leftCenter, Vector2 rightCenter, float key, Vector2 tipCenter)
-        {
-            Screen = screen;
-            LeftCenter = leftCenter;
-            RightCenter = rightCenter;
-            Key = key;
-            TipCenter = tipCenter;
-        }
-    }
-
+    private static readonly Vector4 TheaterBackdrop = new(0f, 0f, 0f, 1f);
     private readonly DoomAssets assets = new();
     private DoomRuntime? runtime;
     private string? failure;
@@ -81,17 +60,17 @@ internal sealed class DoomApp : IMiniGame
         var scale = UiScale.Current;
         var theme = context.Theme;
         var body = context.Body;
-        var drawList = ImGui.GetWindowDrawList();
-        GameScene.Ambient(drawList, body, Accent);
         var iwad = assets.IwadPath();
         if (iwad is null)
         {
+            GameScene.Ambient(ImGui.GetWindowDrawList(), body, Accent);
             DrawSetup(body, theme, scale);
             return;
         }
 
         if (failure is not null)
         {
+            GameScene.Ambient(ImGui.GetWindowDrawList(), body, Accent);
             DrawFailure(body, theme, scale);
             return;
         }
@@ -125,59 +104,29 @@ internal sealed class DoomApp : IMiniGame
         }
     }
 
-    private static Layout Measure(Rect body, float scale)
+    private static Rect FitScreen(Rect body)
     {
-        var pad = Pad * scale;
-        var gap = KeyGap * scale;
-        var tipHeight = Typography.LineHeight(TextStyles.Caption1) + pad;
-        if (body.IsLandscape())
+        var height = body.Height;
+        var width = height * ScreenAspect;
+        if (width > body.Width)
         {
-            var key = MathF.Min(KeySize * scale, (body.Height - pad * 2f - gap * 3f) / 4f);
-            var leftWidth = key * 3f + gap * 2f;
-            var rightWidth = key * 2f + gap;
-            var screenHeight = body.Height - pad * 2f - tipHeight;
-            var screenWidth = screenHeight * ScreenAspect;
-            var available = body.Width - leftWidth - rightWidth - pad * 6f;
-            if (screenWidth > available)
-            {
-                screenWidth = available;
-                screenHeight = screenWidth / ScreenAspect;
-            }
-
-            var middleLeft = body.Min.X + pad * 2f + leftWidth;
-            var middleRight = body.Max.X - pad * 2f - rightWidth;
-            var screenMin = new Vector2((middleLeft + middleRight) * 0.5f - screenWidth * 0.5f,
-                body.Min.Y + pad + (body.Height - pad * 2f - tipHeight - screenHeight) * 0.5f);
-            var screen = new Rect(screenMin, screenMin + new Vector2(screenWidth, screenHeight));
-            var leftCenter = new Vector2(body.Min.X + pad + leftWidth * 0.5f, body.Center.Y);
-            var rightCenter = new Vector2(body.Max.X - pad - rightWidth * 0.5f, body.Center.Y);
-            return new Layout(screen, leftCenter, rightCenter, key,
-                new Vector2(screen.Center.X, screen.Max.Y + tipHeight * 0.5f));
+            width = body.Width;
+            height = width / ScreenAspect;
         }
 
-        var portraitKey = MathF.Min(KeySize * scale, (body.Width - pad * 4f) / 5.5f);
-        var bandHeight = portraitKey * 4f + gap * 3f + pad * 2f;
-        var portraitScreenWidth = body.Width - pad * 2f;
-        var portraitScreenHeight = MathF.Min(portraitScreenWidth / ScreenAspect, body.Height - bandHeight - tipHeight - pad * 2f);
-        portraitScreenWidth = portraitScreenHeight * ScreenAspect;
-        var portraitScreenMin = new Vector2(body.Center.X - portraitScreenWidth * 0.5f, body.Min.Y + pad);
-        var portraitScreen = new Rect(portraitScreenMin, portraitScreenMin + new Vector2(portraitScreenWidth, portraitScreenHeight));
-        var bandTop = portraitScreen.Max.Y + tipHeight;
-        var bandCenterY = bandTop + (body.Max.Y - bandTop) * 0.5f;
-        return new Layout(portraitScreen,
-            new Vector2(body.Min.X + pad + (portraitKey * 3f + gap * 2f) * 0.5f, bandCenterY),
-            new Vector2(body.Max.X - pad - (portraitKey * 2f + gap) * 0.5f, bandCenterY), portraitKey,
-            new Vector2(portraitScreen.Center.X, portraitScreen.Max.Y + tipHeight * 0.5f));
+        var min = new Vector2(body.Center.X - width * 0.5f, body.Center.Y - height * 0.5f);
+        return new Rect(min, min + new Vector2(width, height));
     }
 
     private void DrawGame(in GameContext context, Rect body, PhoneTheme theme, float scale)
     {
         var active = runtime!;
-        var layout = Measure(body, scale);
+        var screen = FitScreen(body);
         var running = context.DeltaSeconds > 0f;
         active.Muted = !running;
         var keyboard = running && GameInput.Claim();
-        ReadControls(active, layout, theme, keyboard, scale);
+        ReadKeyboard(active.Input, keyboard);
+        ReadDrag(active.Input, screen);
         try
         {
             active.Tick(context.DeltaSeconds, keyboard);
@@ -192,78 +141,30 @@ internal sealed class DoomApp : IMiniGame
         }
 
         var drawList = ImGui.GetWindowDrawList();
-        var pad = Pad * scale * 0.75f;
-        var frame = new Rect(layout.Screen.Min - new Vector2(pad, pad), layout.Screen.Max + new Vector2(pad, pad));
-        GameScene.Arena(drawList, frame, 12f * scale, scale, Accent);
-        active.Present(drawList, layout.Screen);
-        Typography.DrawCentered(drawList, layout.TipCenter, Loc.T(L.Games.DoomControls), theme.TextMuted, TextStyles.Caption1);
+        drawList.AddRectFilled(body.Min, body.Max, ImGui.GetColorU32(TheaterBackdrop), theme.ScreenRounding * scale);
+        active.Present(drawList, screen);
         tipProgress = GameBanner.Advance(tipProgress, context.DeltaSeconds, TipToastSeconds);
-        GameBanner.Draw(drawList, new Vector2(layout.Screen.Center.X, layout.Screen.Min.Y + layout.Screen.Height * 0.18f),
-            Loc.T(L.Games.DoomControls), Accent, theme, tipProgress, TextStyles.Subheadline);
+        if (tipProgress < 1f)
+        {
+            GameBanner.Draw(drawList, new Vector2(screen.Center.X, screen.Max.Y - TipCaptionInset * scale * 3f),
+                Loc.T(L.Games.DoomControls), Accent, theme, tipProgress, TextStyles.Subheadline);
+        }
     }
 
-    private void ReadControls(DoomRuntime active, in Layout layout, PhoneTheme theme, bool keyboard, float scale)
+    private static void ReadKeyboard(DoomInput input, bool keyboard)
     {
-        var input = active.Input;
-        var key = layout.Key;
-        var gap = KeyGap * scale;
-        var half = key * 0.5f;
-        var size = new Vector2(key, key);
-        var left = layout.LeftCenter;
-        var forwardMin = new Vector2(left.X - half, left.Y - half - key - gap);
-        var backMin = new Vector2(left.X - half, left.Y + half + gap);
-        var strafeLeftMin = new Vector2(left.X - half - key - gap, left.Y - half);
-        var strafeRightMin = new Vector2(left.X + half + gap, left.Y - half);
-        var padForward = HeldKey(forwardMin, forwardMin + size, "W", theme, scale, out _);
-        var padBack = HeldKey(backMin, backMin + size, "S", theme, scale, out _);
-        var padStrafeLeft = HeldKey(strafeLeftMin, strafeLeftMin + size, "A", theme, scale, out _);
-        var padStrafeRight = HeldKey(strafeRightMin, strafeRightMin + size, "D", theme, scale, out _);
-        var right = layout.RightCenter;
-        var wide = new Vector2(key * 2f + gap, key);
-        var columnLeft = right.X - key - gap * 0.5f;
-        var rowTop = right.Y - key * 2f - gap * 1.5f;
-        var turnLeftMin = new Vector2(columnLeft, rowTop);
-        var turnRightMin = new Vector2(right.X + gap * 0.5f, rowTop);
-        var fireMin = new Vector2(columnLeft, rowTop + key + gap);
-        var useMin = new Vector2(columnLeft, rowTop + (key + gap) * 2f);
-        var menuMin = new Vector2(columnLeft, rowTop + (key + gap) * 3f);
-        var padTurnLeft = HeldKey(turnLeftMin, turnLeftMin + size, "<", theme, scale, out _);
-        var padTurnRight = HeldKey(turnRightMin, turnRightMin + size, ">", theme, scale, out _);
-        var padFire = HeldKey(fireMin, fireMin + wide, Loc.T(L.Games.DoomFire), theme, scale, out var firePressed);
-        var padUse = HeldKey(useMin, useMin + wide, Loc.T(L.Games.DoomUse), theme, scale, out var usePressed);
-        HeldKey(menuMin, menuMin + wide, Loc.T(L.Games.DoomMenu), theme, scale, out var menuPressed);
-        input.SetHeld(DoomAction.Forward, padForward || (keyboard && (ImGui.IsKeyDown(ImGuiKey.W) || ImGui.IsKeyDown(ImGuiKey.UpArrow))));
-        input.SetHeld(DoomAction.Backward, padBack || (keyboard && (ImGui.IsKeyDown(ImGuiKey.S) || ImGui.IsKeyDown(ImGuiKey.DownArrow))));
-        input.SetHeld(DoomAction.StrafeLeft, padStrafeLeft || (keyboard && ImGui.IsKeyDown(ImGuiKey.A)));
-        input.SetHeld(DoomAction.StrafeRight, padStrafeRight || (keyboard && ImGui.IsKeyDown(ImGuiKey.D)));
-        input.SetHeld(DoomAction.TurnLeft, padTurnLeft || (keyboard && ImGui.IsKeyDown(ImGuiKey.LeftArrow)));
-        input.SetHeld(DoomAction.TurnRight, padTurnRight || (keyboard && ImGui.IsKeyDown(ImGuiKey.RightArrow)));
-        input.SetHeld(DoomAction.Fire, padFire || (keyboard && (ImGui.IsKeyDown(ImGuiKey.Space) || ImGui.IsKeyDown(ImGuiKey.LeftCtrl))));
-        input.SetHeld(DoomAction.Use, padUse || (keyboard && (ImGui.IsKeyDown(ImGuiKey.E) || ImGui.IsKeyDown(ImGuiKey.LeftShift))));
+        input.SetHeld(DoomAction.Forward, keyboard && (ImGui.IsKeyDown(ImGuiKey.W) || ImGui.IsKeyDown(ImGuiKey.UpArrow)));
+        input.SetHeld(DoomAction.Backward, keyboard && (ImGui.IsKeyDown(ImGuiKey.S) || ImGui.IsKeyDown(ImGuiKey.DownArrow)));
+        input.SetHeld(DoomAction.StrafeLeft, keyboard && ImGui.IsKeyDown(ImGuiKey.A));
+        input.SetHeld(DoomAction.StrafeRight, keyboard && ImGui.IsKeyDown(ImGuiKey.D));
+        input.SetHeld(DoomAction.TurnLeft, keyboard && ImGui.IsKeyDown(ImGuiKey.LeftArrow));
+        input.SetHeld(DoomAction.TurnRight, keyboard && ImGui.IsKeyDown(ImGuiKey.RightArrow));
+        input.SetHeld(DoomAction.Fire, keyboard && (ImGui.IsKeyDown(ImGuiKey.Space) || ImGui.IsKeyDown(ImGuiKey.LeftCtrl)));
+        input.SetHeld(DoomAction.Use, keyboard && (ImGui.IsKeyDown(ImGuiKey.E) || ImGui.IsKeyDown(ImGuiKey.LeftShift)));
         for (var weapon = 0; weapon < 7; weapon++)
         {
             input.SetWeapon(weapon, keyboard && ImGui.IsKeyDown(ImGuiKey.Key1 + weapon));
         }
-
-        if (menuPressed)
-        {
-            input.Tap(active.Doom, DoomKey.Escape);
-        }
-
-        if (active.InMenu)
-        {
-            if (firePressed)
-            {
-                input.Tap(active.Doom, DoomKey.Enter);
-            }
-
-            if (usePressed)
-            {
-                input.Tap(active.Doom, DoomKey.Escape);
-            }
-        }
-
-        ReadDrag(input, layout.Screen);
     }
 
     private void ReadDrag(DoomInput input, Rect screen)
@@ -289,34 +190,6 @@ internal sealed class DoomApp : IMiniGame
 
         input.AddTurn(mouse.X - lastDragX);
         lastDragX = mouse.X;
-    }
-
-    private bool HeldKey(Vector2 min, Vector2 max, string glyph, PhoneTheme theme, float scale, out bool pressed)
-    {
-        var drawList = ImGui.GetWindowDrawList();
-        var hovered = UiInteract.Hover(min, max);
-        var held = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
-        pressed = hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
-        var radius = (max.Y - min.Y) * 0.28f;
-        Material.Frosted(drawList, min, max, radius, scale, held ? 1f : 0.85f);
-        if (held)
-        {
-            Squircle.Fill(drawList, min, max, radius, ImGui.GetColorU32(Accent with { W = 0.32f }));
-            Squircle.Stroke(drawList, min, max, radius, ImGui.GetColorU32(Accent with { W = 0.9f }), 1.5f * scale);
-        }
-        else if (hovered)
-        {
-            Squircle.Stroke(drawList, min, max, radius, ImGui.GetColorU32(Accent with { W = 0.45f }), 1f * scale);
-        }
-
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        Typography.DrawCentered(drawList, (min + max) * 0.5f, glyph, held ? Accent : theme.TextStrong,
-            TextStyles.Headline.Scale, TextStyles.Headline.Weight);
-        return held;
     }
 
     private void DrawSetup(Rect body, PhoneTheme theme, float scale)

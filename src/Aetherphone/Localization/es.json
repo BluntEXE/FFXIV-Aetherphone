@@ -2802,7 +2802,7 @@
   "games.doomGameDataDetail": "Knee-Deep in the Dead, el episodio shareware",
   "games.doomMusic": "Música",
   "games.doomMusicDetail": "Soundfont General MIDI para la banda sonora",
-  "games.doomControls": "WASD mueve, arrastrar o flechas giran, Espacio dispara, E usa, 1-7 armas",
+  "games.doomControls": "WASD mueve, arrastrar o flechas giran, Espacio dispara, E usa, 1-7 armas, Esc abre el menú",
   "games.doomMenu": "Menú",
   "games.doomFire": "Disparar",
   "games.doomUse": "Usar",

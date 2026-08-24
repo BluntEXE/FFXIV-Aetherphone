@@ -57,6 +57,8 @@ internal interface IMiniGame : IDisposable
 }
 ```
 
+`WantsLandscape` defaults to false. A game that overrides it to true (Doom) makes the hub hold the same landscape lock the camera and MogCast theater use, so the phone rotates while the game is open; in that orientation the hub draws no header, hands the game the whole content rect, and floats a small back chip at the top-left over whatever the game draws.
+
 `RunsOnAClock` defaults to false. A game whose simulation advances on a timer overrides it to true so the hub can fade a Paused veil over it while the phone is unfocused (see the focus gate below); a turn-based game leaves the default and simply stands still.
 
 The launcher groups games into sections by `Genre`, draws a row per game with its accent tile, and shows a featured hero card. The server picks the featured game when it can: `RebuildLayout` first computes the daily-rotation fallback `featuredIndex = GameStatsStore.TodayIndex * FeaturedStep % games.Length`, then overrides it when `coins.Wallet?.FeaturedGameId` (a field on the coin wallet DTO in src/Aetherphone/Core/Aethernet/Contracts/CoinDtos.cs) names a game in the array. Whichever wins, its id lands in `stats.DailyGameId`, which makes it the daily challenge.
@@ -160,6 +162,10 @@ GameHud.ScorePill(center, Loc.T(L.Games.Score), ref scoreRoll, board.Score, Acce
 - `new Substeps(deltaSeconds, maxStepSeconds)` gives `Count` and `Step` for a loop that advances fast projectiles without tunnelling; the count is capped at 16 so a stall never becomes a burst. `FixedStepClock(step, maxCatchUp)` is the alternative for sims that must run on an exact tick: `Advance(delta)` returns how many steps to run, `Alpha` is the render interpolation fraction, `Reset()` on restart.
 - `PixelSprite` takes bitmap rows (`#` lit) once, at static init, and `Draw(drawList, topLeft, unit, color)` emits one rect per lit run. It is the sprite path for Invaders-style games; draw it in the game's accent with a `ProgressRing.Glow` behind it, never in a flat ink.
 - `GameBanner.Draw(drawList, center, text, accent, theme, progress)` pops a frosted pill in over the first 18% of `progress`, holds, and fades over the last 25%. Drive `progress` with `GameBanner.Advance(progress, delta, lifetimeSeconds)`. Use it for stage and ready text that must hold; `FeedbackFx.AddText` rises and fades and is for score pops.
+
+### Games with data files
+
+Word Run reads its word banks from src/Aetherphone/Words (`<code>.answers.txt` and `<code>.valid.txt`, one word per line, shipped as content next to the plugin). They are generated, never hand-edited: `tools/build-word-banks.ps1` rebuilds them from SCOWL and the FrequencyWords lists, and THIRD-PARTY-NOTICES.md records both sources. Doom keeps no data in the repo at all; `DoomAssets` downloads the shareware episode and the soundfont into the plugin's config folder on first use and verifies them against pinned checksums.
 
 ## The motion exception
 

@@ -4455,7 +4455,7 @@ internal static class L
         public static readonly LocString DoomGameDataDetail = new("games.doomGameDataDetail", "Knee-Deep in the Dead, the shareware episode");
         public static readonly LocString DoomMusic = new("games.doomMusic", "Music");
         public static readonly LocString DoomMusicDetail = new("games.doomMusicDetail", "General MIDI soundfont for the soundtrack");
-        public static readonly LocString DoomControls = new("games.doomControls", "WASD move, drag or arrows turn, Space fires, E uses, 1-7 weapons");
+        public static readonly LocString DoomControls = new("games.doomControls", "WASD move, drag or arrows turn, Space fires, E uses, 1-7 weapons, Esc opens the menu");
         public static readonly LocString DoomMenu = new("games.doomMenu", "Menu");
         public static readonly LocString DoomFire = new("games.doomFire", "Fire");
         public static readonly LocString DoomUse = new("games.doomUse", "Use");

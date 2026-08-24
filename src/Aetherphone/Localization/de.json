@@ -2802,7 +2802,7 @@
   "games.doomGameDataDetail": "Knee-Deep in the Dead, die Shareware-Episode",
   "games.doomMusic": "Musik",
   "games.doomMusicDetail": "General-MIDI-Soundfont für den Soundtrack",
-  "games.doomControls": "WASD bewegen, Ziehen oder Pfeile drehen, Leertaste feuert, E benutzt, 1-7 Waffen",
+  "games.doomControls": "WASD bewegen, Ziehen oder Pfeile drehen, Leertaste feuert, E benutzt, 1-7 Waffen, Esc öffnet das Menü",
   "games.doomMenu": "Menü",
   "games.doomFire": "Feuer",
   "games.doomUse": "Benutzen",
