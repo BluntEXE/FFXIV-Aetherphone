@@ -46,6 +46,10 @@ internal sealed partial class AetherStreamApp
             LoadingPulse.Draw(area.Center - new Vector2(0f, 10f * scale), 16f * scale, ui.Accent, WhiteInk,
                 Loc.T(L.AetherStream.LoadingVideo), 1f, 0.8f, drawList);
         }
+        else if (TryDescribeFailure(out var failureTitle, out var failureBody))
+        {
+            DrawTheaterFailure(drawList, area, scale, failureTitle, failureBody);
+        }
 
         DrawTheaterSuggestionsPill(drawList, area, scale, delta);
 
@@ -64,6 +68,16 @@ internal sealed partial class AetherStreamApp
         }
 
         DrawTheaterProgress(drawList, area, scale, eased);
+    }
+
+    private void DrawTheaterFailure(ImDrawListPtr drawList, Rect area, float scale, string title, string body)
+    {
+        var maxWidth = Math.Min(area.Width * 0.7f, 420f * scale);
+        var titleStyle = TextStyles.BodyEmphasized;
+        var titleCenter = area.Center - new Vector2(0f, Typography.LineHeight(titleStyle));
+        Typography.DrawCentered(drawList, titleCenter, title, WhiteInk, titleStyle.Scale, titleStyle.Weight);
+        Typography.DrawWrappedCentered(drawList, body, TextStyles.Footnote, Palette.WithAlpha(WhiteInk, 0.8f),
+            area.Center, maxWidth);
     }
 
     private void DrawTheaterSuggestionsPill(ImDrawListPtr drawList, Rect area, float scale, float delta)

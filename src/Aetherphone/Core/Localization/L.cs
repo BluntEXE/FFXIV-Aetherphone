@@ -3895,6 +3895,20 @@ internal static class L
             "Could not play this link: {0}");
         public static readonly LocString ComponentsMissing = new("aetherstream.componentsMissing",
             "The video components are not installed yet.");
+        public static readonly LocString FailureTitle = new("aetherstream.failureTitle", "Can't play this");
+        public static readonly LocString FailureStalledTitle = new("aetherstream.failureStalledTitle",
+            "Playback stalled");
+        public static readonly LocString FailureStalledBody = new("aetherstream.failureStalledBody",
+            "The stream stopped twice in a row. Retry picks it up from where it stopped.");
+        public static readonly LocString FailureRetry = new("aetherstream.failureRetry", "Retry");
+        public static readonly LocString FailureSkip = new("aetherstream.failureSkip", "Skip");
+        public static readonly LocString FailureRetryingIn = new("aetherstream.failureRetryingIn",
+            "Retrying in {0}s");
+        public static readonly LocString FailureViewersTitle = new("aetherstream.failureViewersTitle",
+            "{0} of {1} watching can't play this");
+        public static readonly LocString FailureViewersHint = new("aetherstream.failureViewersHint",
+            "Skip to the next video, or queue a link that works for everyone.");
+        public static readonly LocString FailureDismiss = new("aetherstream.failureDismiss", "Dismiss");
     }
 
     internal static class Clock

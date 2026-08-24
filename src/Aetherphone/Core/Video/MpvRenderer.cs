@@ -42,6 +42,8 @@ internal sealed class MpvRenderer : IDisposable
     private const int RenderWaitMilliseconds = 250;
     private const double EventWaitSeconds = 0.1;
     private const int MaxErrorDetailLength = 200;
+    private const double MinSpeed = 0.5;
+    private const double MaxSpeed = 2.0;
     private const string ResolverLogPrefix = "ytdl_hook";
     private const string ResolverErrorPrefix = "ERROR: ";
     private const string ResolverFailedPrefix = "youtube-dl failed: ";
@@ -366,6 +368,7 @@ internal sealed class MpvRenderer : IDisposable
             lastErrorFromResolver = false;
             Interlocked.Exchange(ref httpForbiddenHits, 0);
             Interlocked.Exchange(ref streamErrorHits, 0);
+            _ = mpv_command(mpvContext, ["set", "speed", "1", null]);
             var result = mpv_command(mpvContext, ["loadfile", url, "replace", "0", options, null]);
             if (result < 0)
             {
@@ -405,6 +408,9 @@ internal sealed class MpvRenderer : IDisposable
 
     internal void SetVolume(int volume) =>
         SetProperty("volume", Math.Clamp(volume, 0, 100).ToString(CultureInfo.InvariantCulture));
+
+    internal void SetSpeed(double speed) =>
+        SetProperty("speed", Math.Clamp(speed, MinSpeed, MaxSpeed).ToString("F3", CultureInfo.InvariantCulture));
 
     internal void Seek(double seconds)
     {

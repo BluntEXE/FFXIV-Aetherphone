@@ -223,12 +223,23 @@ internal sealed class AetherStreamQueue : IDisposable
         consecutiveFailures++;
         if (consecutiveFailures >= MaxConsecutiveFailures || entries.Count == 0)
         {
-            Current = null;
             Changed?.Invoke();
             return;
         }
 
         Advance();
+    }
+
+    internal void Replay(double positionSeconds)
+    {
+        if (suspended || Current is not { } current)
+        {
+            return;
+        }
+
+        consecutiveFailures = 0;
+        video.Play(current.Url, positionSeconds);
+        Changed?.Invoke();
     }
 
     private void Persist()

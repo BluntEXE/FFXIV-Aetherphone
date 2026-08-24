@@ -108,6 +108,17 @@ internal sealed class VideoEngine : IDisposable
     internal string? LastError { get; private set; }
     internal string? RecoveryNotice => recoveryNotice;
 
+    internal bool RecoveryExhausted =>
+        recoveryExhaustedUrl is { } exhausted && string.Equals(renderer?.CurrentUrl, exhausted, StringComparison.Ordinal);
+
+    internal void ResetRecoveryBudget()
+    {
+        recoveryRestartUrl = null;
+        recoveryRestartsForUrl = 0;
+        recoveryExhaustedUrl = null;
+        lastRecoveryRestartAtTicks = long.MinValue;
+    }
+
     internal event Action<MpvEndReason, string?>? PlaybackEnded;
     internal event Action? PlaybackLoaded;
 
@@ -613,6 +624,8 @@ internal sealed class VideoEngine : IDisposable
     internal void Pause(bool paused) => renderer?.Pause(paused);
 
     internal void Seek(double seconds) => renderer?.Seek(seconds);
+
+    internal void SetSpeed(double speed) => renderer?.SetSpeed(speed);
 
     internal void SetVolume(int volume)
     {

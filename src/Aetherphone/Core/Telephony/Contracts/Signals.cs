@@ -65,6 +65,9 @@ internal static class SignalType
     public const string StreamQueueDeny = "stream.queueDeny";
     public const string StreamQueueSuggestionResult = "stream.queueSuggestionResult";
 
+    public const string StreamPlaybackFailed = "stream.playbackFailed";
+    public const string StreamViewerFailed = "stream.viewerFailed";
+
     public const string StreamKick = "stream.kick";
     public const string StreamKicked = "stream.kicked";
 

@@ -26,6 +26,8 @@ internal sealed partial class AetherStreamApp
     private string? pendingLocalFile;
     private string? pendingLocateFile;
     private Spring heroActionsFade;
+    private IReadOnlyList<ViewerFailure>? viewerFailureNamesSource;
+    private string viewerFailureNames = string.Empty;
 
     private VideoQueueEntry? CurrentEntry => watchAlong.IsViewing ? watchAlong.ViewingEntry : queue.Current;
 
@@ -236,9 +238,14 @@ internal sealed partial class AetherStreamApp
 
     private void DrawPlaybackError(float width, float scale)
     {
-        if (video.LastError is { } error)
+        if (watchAlong.IsHosting && watchAlong.ViewerFailures.Count > 0)
         {
-            DrawPlaybackNotice(width, scale, error, theme.Danger);
+            DrawViewerFailuresCard(width, scale);
+        }
+
+        if (TryDescribeFailure(out var title, out var body))
+        {
+            DrawFailureCard(width, scale, title, body, resumeFromPosition: video.State != VideoPlaybackState.Failed);
             return;
         }
 
@@ -246,6 +253,166 @@ internal sealed partial class AetherStreamApp
         {
             DrawPlaybackNotice(width, scale, notice, ui.MutedInk);
         }
+    }
+
+    private bool TryDescribeFailure(out string title, out string body)
+    {
+        if (video.State == VideoPlaybackState.Failed)
+        {
+            title = Loc.T(L.AetherStream.FailureTitle);
+            body = video.LastError ?? Loc.T(L.AetherStream.PlaybackFailed);
+            return true;
+        }
+
+        if (video.RecoveryExhausted)
+        {
+            title = Loc.T(L.AetherStream.FailureStalledTitle);
+            body = Loc.T(L.AetherStream.FailureStalledBody);
+            return true;
+        }
+
+        title = string.Empty;
+        body = string.Empty;
+        return false;
+    }
+
+    private void DrawFailureCard(float width, float scale, string title, string body, bool resumeFromPosition)
+    {
+        var viewing = watchAlong.IsViewing;
+        var countdown = viewing ? watchAlong.AutoReplayInSeconds : 0f;
+        var footnote = countdown > 0f
+            ? string.Format(Loc.Culture, Loc.T(L.AetherStream.FailureRetryingIn), (int)MathF.Ceiling(countdown))
+            : null;
+        var canSkip = !viewing && queue.HasNext;
+        DrawActionCard(width, scale, theme.Danger, title, theme.Danger, body, footnote,
+            Loc.T(L.AetherStream.FailureRetry), canSkip ? Loc.T(L.AetherStream.FailureSkip) : null,
+            "aetherstream.failure", out var retry, out var skip);
+        if (retry)
+        {
+            RetryPlayback(resumeFromPosition);
+        }
+
+        if (skip)
+        {
+            queue.Advance();
+        }
+    }
+
+    private void RetryPlayback(bool resumeFromPosition)
+    {
+        if (watchAlong.IsViewing)
+        {
+            watchAlong.RetryNow();
+            return;
+        }
+
+        var resume = resumeFromPosition ? (double)video.Progress.Position : 0d;
+        video.ResetRecoveryBudget();
+        queue.Replay(resume);
+    }
+
+    private void DrawViewerFailuresCard(float width, float scale)
+    {
+        var failures = watchAlong.ViewerFailures;
+        if (!ReferenceEquals(failures, viewerFailureNamesSource))
+        {
+            viewerFailureNamesSource = failures;
+            viewerFailureNames = JoinViewerNames(failures);
+        }
+
+        var watchers = Math.Max(failures.Count, watchAlong.Roster.Count - 1);
+        var title = string.Format(Loc.Culture, Loc.T(L.AetherStream.FailureViewersTitle), failures.Count, watchers);
+        var canSkip = queue.HasNext;
+        DrawActionCard(width, scale, ui.Accent, title, ui.TitleInk, viewerFailureNames,
+            Loc.T(L.AetherStream.FailureViewersHint),
+            canSkip ? Loc.T(L.AetherStream.FailureSkip) : Loc.T(L.AetherStream.FailureDismiss),
+            canSkip ? Loc.T(L.AetherStream.FailureDismiss) : null,
+            "aetherstream.viewerFailures", out var primary, out var secondary);
+        if (primary && canSkip)
+        {
+            watchAlong.DismissViewerFailures();
+            queue.Advance();
+            return;
+        }
+
+        if (primary || secondary)
+        {
+            watchAlong.DismissViewerFailures();
+        }
+    }
+
+    private static string JoinViewerNames(IReadOnlyList<ViewerFailure> failures)
+    {
+        var names = new string[failures.Count];
+        for (var index = 0; index < failures.Count; index++)
+        {
+            names[index] = failures[index].DisplayName;
+        }
+
+        return string.Join(", ", names);
+    }
+
+    private void DrawActionCard(float width, float scale, Vector4 tint, string title, Vector4 titleInk, string body,
+        string? footnote, string primaryLabel, string? secondaryLabel, string idPrefix, out bool primary,
+        out bool secondary)
+    {
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+        var origin = ImGui.GetCursorScreenPos();
+        var pad = Metrics.Space.Md * scale;
+        var textWidth = width - pad * 2f;
+        var titleHeight = Typography.LineHeight(TextStyles.BodyEmphasized);
+        var bodyHeight = Typography.MeasureWrappedBlock(body, TextStyles.Footnote, textWidth).Y;
+        var footnoteHeight = footnote is null
+            ? 0f
+            : Typography.MeasureWrappedBlock(footnote, TextStyles.Footnote, textWidth).Y + Metrics.Space.Xs * scale;
+        var buttonHeight = 34f * scale;
+        var cardHeight = pad + titleHeight + 3f * scale + bodyHeight + footnoteHeight + Metrics.Space.Sm * scale
+            + buttonHeight + pad;
+
+        var drawList = ImGui.GetWindowDrawList();
+        var max = origin + new Vector2(width, cardHeight);
+        Squircle.Fill(drawList, origin, max, Metrics.Radius.Md * scale,
+            ImGui.GetColorU32(Palette.WithAlpha(tint, 0.10f)));
+        Squircle.Stroke(drawList, origin, max, Metrics.Radius.Md * scale,
+            ImGui.GetColorU32(Palette.WithAlpha(tint, 0.35f)), 1f);
+
+        var textX = origin.X + pad;
+        var textY = origin.Y + pad;
+        Typography.Draw(drawList, new Vector2(textX, textY),
+            Typography.FitText(title, textWidth, TextStyles.BodyEmphasized), titleInk, TextStyles.BodyEmphasized);
+        textY += titleHeight + 3f * scale;
+
+        Typography.DrawWrappedLeft(new Vector2(textX, textY), body, ui.TitleInk, TextStyles.Footnote, textWidth);
+        textY += bodyHeight;
+
+        if (footnote is not null)
+        {
+            textY += Metrics.Space.Xs * scale;
+            Typography.DrawWrappedLeft(new Vector2(textX, textY), footnote, ui.MutedInk, TextStyles.Footnote,
+                textWidth);
+        }
+
+        var buttonsTop = max.Y - pad - buttonHeight;
+        secondary = false;
+        if (secondaryLabel is null)
+        {
+            var fullRect = new Rect(new Vector2(textX, buttonsTop),
+                new Vector2(textX + textWidth, buttonsTop + buttonHeight));
+            primary = ui.PillButton(fullRect, primaryLabel, true, idPrefix + ".primary");
+        }
+        else
+        {
+            var half = (textWidth - Metrics.Space.Sm * scale) * 0.5f;
+            var primaryRect = new Rect(new Vector2(textX, buttonsTop),
+                new Vector2(textX + half, buttonsTop + buttonHeight));
+            var secondaryRect = new Rect(new Vector2(primaryRect.Max.X + Metrics.Space.Sm * scale, buttonsTop),
+                new Vector2(textX + textWidth, buttonsTop + buttonHeight));
+            primary = ui.PillButton(primaryRect, primaryLabel, true, idPrefix + ".primary");
+            secondary = ui.PillButton(secondaryRect, secondaryLabel, false, idPrefix + ".secondary");
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, cardHeight));
     }
 
     private void DrawPlaybackNotice(float width, float scale, string text, Vector4 ink)
@@ -518,7 +685,11 @@ internal sealed partial class AetherStreamApp
     {
         if (!video.HasMedia)
         {
-            if (queue.Current is null && queue.HasNext)
+            if (video.State == VideoPlaybackState.Failed)
+            {
+                RetryPlayback(resumeFromPosition: false);
+            }
+            else if (queue.Current is null && queue.HasNext)
             {
                 queue.Advance();
             }
