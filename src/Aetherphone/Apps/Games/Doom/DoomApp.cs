@@ -17,6 +17,8 @@ internal sealed class DoomApp : IMiniGame
     private const float TipToastSeconds = 6f;
     private const float TipCaptionInset = 14f;
     private const float CardHeight = 66f;
+    private const float GameButtonHeight = 40f;
+    private const float InstallButtonWidth = 118f;
     private static readonly Vector4 TheaterBackdrop = new(0f, 0f, 0f, 1f);
     private readonly DoomAssets assets = new();
     private DoomRuntime? runtime;
@@ -60,47 +62,35 @@ internal sealed class DoomApp : IMiniGame
         var scale = UiScale.Current;
         var theme = context.Theme;
         var body = context.Body;
-        var iwad = assets.IwadPath();
-        if (iwad is null)
-        {
-            GameScene.Ambient(ImGui.GetWindowDrawList(), body, Accent);
-            DrawSetup(body, theme, scale);
-            return;
-        }
-
-        if (failure is not null)
-        {
-            GameScene.Ambient(ImGui.GetWindowDrawList(), body, Accent);
-            DrawFailure(body, theme, scale);
-            return;
-        }
-
-        if (runtime is null || runtime.Finished)
+        if (runtime is not null && runtime.Finished)
         {
             DisposeRuntime();
-            if (!TryStart(iwad))
-            {
-                return;
-            }
+            assets.RefreshStates();
+        }
+
+        if (runtime is null)
+        {
+            GameScene.Ambient(ImGui.GetWindowDrawList(), body, Accent);
+            DrawLobby(body, theme, scale);
+            return;
         }
 
         DrawGame(context, body, theme, scale);
     }
 
-    private bool TryStart(string iwad)
+    private void TryStart(string iwad)
     {
         try
         {
             runtime = new DoomRuntime(iwad, assets.SoundfontPath(), assets.Folder);
+            failure = null;
             tipProgress = 0f;
-            return true;
         }
         catch (Exception exception)
         {
             AepLog.Error(exception, "[Doom] The engine could not start.");
             failure = exception.Message;
             runtime = null;
-            return false;
         }
     }
 
@@ -192,76 +182,113 @@ internal sealed class DoomApp : IMiniGame
         lastDragX = mouse.X;
     }
 
-    private void DrawSetup(Rect body, PhoneTheme theme, float scale)
+    private void DrawLobby(Rect body, PhoneTheme theme, float scale)
     {
         assets.RefreshStates();
         var drawList = ImGui.GetWindowDrawList();
         var landscape = body.IsLandscape();
         var margin = 18f * scale;
-        var content = new Rect(body.Min + new Vector2(margin, margin), body.Max - new Vector2(margin, margin));
-        var cursorY = content.Min.Y;
-        if (!landscape)
+        var content = new Rect(body.Min + new Vector2(margin, margin + (landscape ? 22f * scale : 0f)),
+            body.Max - new Vector2(margin, margin));
+        var titleHeight = Typography.LineHeight(TextStyles.Title2);
+        Typography.DrawCentered(drawList, new Vector2(content.Center.X, content.Min.Y + titleHeight * 0.5f),
+            assets.AvailableIwadCount > 0 ? Loc.T(L.Games.DoomChooseGame) : Loc.T(L.Games.DoomSetupTitle), theme.TextStrong,
+            TextStyles.Title2);
+        var cursorY = content.Min.Y + titleHeight + 6f * scale;
+        if (failure is not null)
         {
-            var tileSize = 64f * scale;
-            var tileMin = new Vector2(content.Center.X - tileSize * 0.5f, cursorY + 12f * scale);
-            IconTile.FillShaded(drawList, tileMin, tileMin + new Vector2(tileSize, tileSize),
-                tileSize * Metrics.Radius.TileFactor, IconTile.Surface(Accent));
-            ProgressRing.CenterIcon(drawList, tileMin + new Vector2(tileSize * 0.5f, tileSize * 0.5f),
-                FontAwesomeIcon.Skull, AccentRing.Ink, tileSize * 0.5f);
-            cursorY = tileMin.Y + tileSize + 16f * scale;
+            cursorY += Typography.DrawWrappedCentered(new Vector2(content.Center.X, cursorY),
+                $"{Loc.T(L.Games.DoomFailed)}: {failure}", theme.Danger, TextStyles.Caption1, content.Width) + 6f * scale;
         }
 
-        var titleHeight = Typography.LineHeight(TextStyles.Title2);
-        Typography.DrawCentered(drawList, new Vector2(content.Center.X, cursorY + titleHeight * 0.5f),
-            Loc.T(L.Games.DoomSetupTitle), theme.TextStrong, TextStyles.Title2);
-        var bodyY = cursorY + titleHeight + 8f * scale;
-        var bodyHeight = Typography.DrawWrappedCentered(new Vector2(content.Center.X, bodyY), Loc.T(L.Games.DoomSetupBody),
-            theme.TextMuted, TextStyles.Subheadline, content.Width);
-        var cardTop = bodyY + bodyHeight + 14f * scale;
-        var cardHeight = CardHeight * scale;
-        var gap = 8f * scale;
-        Rect wadCard;
-        Rect musicCard;
+        Rect gamesColumn;
+        Rect cardsColumn;
         if (landscape)
         {
-            var cardWidth = (content.Width - gap) * 0.5f;
-            wadCard = new Rect(new Vector2(content.Min.X, cardTop), new Vector2(content.Min.X + cardWidth, cardTop + cardHeight));
-            musicCard = new Rect(new Vector2(content.Max.X - cardWidth, cardTop), new Vector2(content.Max.X, cardTop + cardHeight));
+            var gap = 16f * scale;
+            var columnWidth = (content.Width - gap) * 0.5f;
+            gamesColumn = new Rect(new Vector2(content.Min.X, cursorY), new Vector2(content.Min.X + columnWidth, content.Max.Y));
+            cardsColumn = new Rect(new Vector2(content.Max.X - columnWidth, cursorY), new Vector2(content.Max.X, content.Max.Y));
         }
         else
         {
-            wadCard = new Rect(new Vector2(content.Min.X, cardTop), new Vector2(content.Max.X, cardTop + cardHeight));
-            var secondTop = cardTop + cardHeight + gap;
-            musicCard = new Rect(new Vector2(content.Min.X, secondTop), new Vector2(content.Max.X, secondTop + cardHeight));
+            var gamesHeight = assets.AvailableIwadCount * (GameButtonHeight + 8f) * scale;
+            gamesColumn = new Rect(new Vector2(content.Min.X, cursorY), new Vector2(content.Max.X, cursorY + gamesHeight));
+            cardsColumn = new Rect(new Vector2(content.Min.X, gamesColumn.Max.Y + 10f * scale), new Vector2(content.Max.X, content.Max.Y));
         }
 
-        DrawCard(wadCard, Loc.T(L.Games.DoomGameData), Loc.T(L.Games.DoomGameDataDetail), assets.Wad.Snapshot(), theme, scale);
-        DrawCard(musicCard, Loc.T(L.Games.DoomMusic), Loc.T(L.Games.DoomMusicDetail), assets.Soundfont.Snapshot(), theme, scale);
-        var busy = assets.Installing;
-        var wadState = assets.Wad.Snapshot().State;
-        var pending = assets.PendingBytes();
-        var label = busy
-            ? Loc.T(L.AetherStream.SetupInstalling)
-            : wadState == DependencyState.Failed
-                ? Loc.T(L.AetherStream.SetupRetry)
-                : string.Format(Loc.T(L.AetherStream.SetupInstallSized), DependencySetup.FormatMegabytes(pending));
-        var buttonCenter = new Vector2(content.Center.X, MathF.Max(wadCard.Max.Y, musicCard.Max.Y) + 34f * scale);
-        var buttonWidth = landscape ? content.Width * 0.4f : content.Width * 0.7f;
-        if (GameHud.Button(buttonCenter, new Vector2(buttonWidth, 44f * scale), label, Accent, theme) && !busy)
+        DrawGameButtons(gamesColumn, theme, scale);
+        DrawInstallCards(cardsColumn, theme, scale);
+    }
+
+    private void DrawGameButtons(Rect column, PhoneTheme theme, float scale)
+    {
+        var buttonHeight = GameButtonHeight * scale;
+        var gap = 8f * scale;
+        var y = column.Min.Y;
+        for (var index = 0; index < assets.AvailableIwadCount; index++)
         {
-            assets.Install();
+            var iwad = assets.AvailableIwad(index);
+            var label = iwad.Title ?? Loc.T(L.Games.DoomShareware);
+            var center = new Vector2(column.Center.X, y + buttonHeight * 0.5f);
+            if (GameHud.Button(center, new Vector2(column.Width, buttonHeight), label, Accent, theme))
+            {
+                TryStart(assets.PathFor(in iwad));
+            }
+
+            y += buttonHeight + gap;
+        }
+
+        if (assets.AvailableIwadCount == 0)
+        {
+            Typography.DrawWrappedCentered(new Vector2(column.Center.X, column.Min.Y), Loc.T(L.Games.DoomSetupBody),
+                theme.TextMuted, TextStyles.Subheadline, column.Width);
         }
     }
 
-    private void DrawCard(Rect card, string title, string detail, DependencyProgress snapshot, PhoneTheme theme,
-        float scale)
+    private void DrawInstallCards(Rect column, PhoneTheme theme, float scale)
+    {
+        var cardHeight = CardHeight * scale;
+        var gap = 8f * scale;
+        var y = column.Min.Y;
+        var sharewareReady = assets.SharewareReady;
+        var freedoomReady = assets.FreedoomReady;
+        var soundfontReady = assets.SoundfontPath() is not null;
+        if (!sharewareReady)
+        {
+            DrawCard(new Rect(new Vector2(column.Min.X, y), new Vector2(column.Max.X, y + cardHeight)), Loc.T(L.Games.DoomGameData),
+                Loc.T(L.Games.DoomGameDataDetail), assets.Shareware, DoomAssets.SharewareDownloadBytes, theme, scale,
+                () => assets.Install(true, false, !soundfontReady));
+            y += cardHeight + gap;
+        }
+
+        if (!freedoomReady)
+        {
+            DrawCard(new Rect(new Vector2(column.Min.X, y), new Vector2(column.Max.X, y + cardHeight)), Loc.T(L.Games.DoomFreedoom),
+                Loc.T(L.Games.DoomFreedoomDetail), assets.Freedoom, DoomAssets.FreedoomDownloadBytes, theme, scale,
+                () => assets.Install(false, true, !soundfontReady));
+            y += cardHeight + gap;
+        }
+
+        if (!soundfontReady)
+        {
+            DrawCard(new Rect(new Vector2(column.Min.X, y), new Vector2(column.Max.X, y + cardHeight)), Loc.T(L.Games.DoomMusic),
+                Loc.T(L.Games.DoomMusicDetail), assets.Soundfont, DoomAssets.SoundfontDownloadBytes, theme, scale,
+                () => assets.Install(false, false, true));
+        }
+    }
+
+    private void DrawCard(Rect card, string title, string detail, MediaDependency dependency, long downloadBytes, PhoneTheme theme,
+        float scale, Action install)
     {
         var drawList = ImGui.GetWindowDrawList();
+        var snapshot = dependency.Snapshot();
         var radius = 14f * scale;
         Material.Frosted(drawList, card.Min, card.Max, radius, scale);
         var pad = 12f * scale;
+        var buttonWidth = InstallButtonWidth * scale;
         var left = card.Min.X + pad;
-        var right = card.Max.X - pad;
+        var right = card.Max.X - pad - buttonWidth - pad;
         var titleHeight = Typography.LineHeight(TextStyles.BodyEmphasized);
         Typography.Draw(drawList, new Vector2(left, card.Min.Y + pad * 0.7f),
             Typography.FitText(title, right - left, TextStyles.BodyEmphasized), theme.TextStrong, TextStyles.BodyEmphasized);
@@ -269,12 +296,22 @@ internal sealed class DoomApp : IMiniGame
         Typography.Draw(drawList, new Vector2(left, detailY), Typography.FitText(detail, right - left, TextStyles.Caption1),
             theme.TextMuted, TextStyles.Caption1);
         var statusY = detailY + Typography.LineHeight(TextStyles.Caption1) + 2f * scale;
-        var statusColor = snapshot.State == DependencyState.Failed
-            ? theme.Danger
-            : snapshot.State == DependencyState.Ready ? Accent : theme.TextMuted;
+        var statusColor = snapshot.State == DependencyState.Failed ? theme.Danger : theme.TextMuted;
         Typography.Draw(drawList, new Vector2(left, statusY),
             Typography.FitText(DependencySetup.StatusText(snapshot), right - left, TextStyles.Caption1), statusColor,
             TextStyles.Caption1);
+        var busy = DependencySetup.IsBusy(snapshot);
+        var label = busy
+            ? Loc.T(L.AetherStream.SetupInstalling)
+            : snapshot.State == DependencyState.Failed
+                ? Loc.T(L.AetherStream.SetupRetry)
+                : string.Format(Loc.T(L.AetherStream.SetupInstallSized), DependencySetup.FormatMegabytes(downloadBytes));
+        var buttonCenter = new Vector2(card.Max.X - pad - buttonWidth * 0.5f, card.Center.Y);
+        if (GameHud.Button(buttonCenter, new Vector2(buttonWidth, 34f * scale), label, Accent, theme) && !busy && !assets.Installing)
+        {
+            install();
+        }
+
         if (snapshot.State != DependencyState.Downloading)
         {
             return;
@@ -286,20 +323,5 @@ internal sealed class DoomApp : IMiniGame
         drawList.AddRectFilled(barMin, barMax, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.12f)), 1.5f * scale);
         drawList.AddRectFilled(barMin, new Vector2(left + (right - left) * snapshot.Fraction, barMax.Y),
             ImGui.GetColorU32(Accent), 1.5f * scale);
-    }
-
-    private void DrawFailure(Rect body, PhoneTheme theme, float scale)
-    {
-        var drawList = ImGui.GetWindowDrawList();
-        var center = body.Center;
-        Typography.DrawCentered(drawList, new Vector2(center.X, center.Y - 40f * scale), Loc.T(L.Games.DoomFailed),
-            theme.TextStrong, TextStyles.Title3);
-        Typography.DrawWrappedCentered(new Vector2(center.X, center.Y - 14f * scale), failure ?? string.Empty,
-            theme.TextMuted, TextStyles.Caption1, body.Width - 40f * scale);
-        if (GameHud.Button(new Vector2(center.X, center.Y + 60f * scale), new Vector2(MathF.Min(body.Width * 0.5f, 260f * scale), 44f * scale),
-                Loc.T(L.AetherStream.SetupRetry), Accent, theme))
-        {
-            failure = null;
-        }
     }
 }

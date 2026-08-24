@@ -4464,6 +4464,10 @@ internal static class L
         public static readonly LocString DoomFire = new("games.doomFire", "Fire");
         public static readonly LocString DoomUse = new("games.doomUse", "Use");
         public static readonly LocString DoomFailed = new("games.doomFailed", "Doom could not start");
+        public static readonly LocString DoomChooseGame = new("games.doomChooseGame", "Choose a game");
+        public static readonly LocString DoomShareware = new("games.doomShareware", "Doom (shareware episode)");
+        public static readonly LocString DoomFreedoom = new("games.doomFreedoom", "Freedoom");
+        public static readonly LocString DoomFreedoomDetail = new("games.doomFreedoomDetail", "Four free episodes and thirty-two more maps with their own levels and art");
         public static readonly LocString WordRun = new("games.wordRun", "Word Run");
         public static readonly LocString Words = new("games.words", "Words");
         public static readonly LocString NotInWordList = new("games.notInWordList", "Not in the word list");

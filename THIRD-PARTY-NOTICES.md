@@ -245,11 +245,14 @@ The Doom soundtrack is synthesized with [MeltySynth](https://github.com/sinshu/m
 ## Doom game data and soundfont (downloaded on demand)
 
 No Doom game data is bundled. When a player sets up the Doom mini-game, the plugin downloads two files
-into the player's own Aetherphone data folder:
+into the player's own Aetherphone data folder, each only when the player asks for it:
 
 - The Doom shareware episode (`doom1.wad`, version 1.9) from Debian's package archive
   (`doom-wad-shareware`). Copyright (C) 1993 id Software, Inc.; distributed under id Software's shareware
   terms, which permit free redistribution of the shareware episode.
+- Freedoom 0.13.0 (`freedoom1.wad`, `freedoom2.wad`) from the Freedoom project's GitHub release, a free
+  game that runs on the Doom engine. Copyright (c) 2001-2024 Contributors to the Freedoom project; License:
+  BSD 3-Clause (the release archive's COPYING.txt). Source: https://freedoom.github.io/
 - The TimGM6mb General MIDI soundfont (`TimGM6mb.sf2`) from Debian's `timgm6mb-soundfont` package.
   Copyright (C) 2004 Tim Brechbill; License: GNU General Public License, version 2.
 
