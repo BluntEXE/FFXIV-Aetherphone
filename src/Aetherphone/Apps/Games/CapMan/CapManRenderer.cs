@@ -3,9 +3,9 @@ using Aetherphone.Core;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 
-namespace Aetherphone.Apps.Games.Maze;
+namespace Aetherphone.Apps.Games.CapMan;
 
-internal sealed class MazeRenderer
+internal sealed class CapManRenderer
 {
     public static readonly Vector4 PlayerColor = new(1f, 0.85f, 0.30f, 1f);
     public static readonly Vector4 DotColor = new(1f, 0.95f, 0.85f, 1f);
@@ -24,15 +24,15 @@ internal sealed class MazeRenderer
 
     public static Rect BoardRect(Rect area, out float cell)
     {
-        cell = MathF.Max(3f, MathF.Min(area.Width / MazeBoard.Columns, area.Height / MazeBoard.Rows));
-        var size = new Vector2(MazeBoard.Columns * cell, MazeBoard.Rows * cell);
+        cell = MathF.Max(3f, MathF.Min(area.Width / CapManBoard.Columns, area.Height / CapManBoard.Rows));
+        var size = new Vector2(CapManBoard.Columns * cell, CapManBoard.Rows * cell);
         var min = area.Center - size * 0.5f;
         return new Rect(min, min + size);
     }
 
     public static Vector2 ToScreen(Rect board, float cell, Vector2 tile) => board.Min + (tile + new Vector2(0.5f, 0.5f)) * cell;
 
-    public void Draw(MazeBoard board, Rect boardRect, float cell, Vector4 accent, float scale)
+    public void Draw(CapManBoard board, Rect boardRect, float cell, Vector4 accent, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
         drawList.PushClipRect(boardRect.Min, boardRect.Max, true);
@@ -43,7 +43,7 @@ internal sealed class MazeRenderer
         drawList.PopClipRect();
     }
 
-    private static void DrawTiles(ImDrawListPtr drawList, MazeBoard board, Rect boardRect, float cell, Vector4 accent,
+    private static void DrawTiles(ImDrawListPtr drawList, CapManBoard board, Rect boardRect, float cell, Vector4 accent,
         float scale, float time)
     {
         var wallFill = ImGui.GetColorU32(GamePalette.Darken(accent, 0.4f) with { W = 0.92f });
@@ -54,29 +54,29 @@ internal sealed class MazeRenderer
         var rounding = cell * 0.22f;
         var dotRadius = MathF.Max(1.2f, cell * 0.09f);
         var pulse = 0.7f + MathF.Abs(MathF.Sin(time * PelletPulseRate)) * 0.5f;
-        for (var y = 0; y < MazeBoard.Rows; y++)
+        for (var y = 0; y < CapManBoard.Rows; y++)
         {
-            for (var x = 0; x < MazeBoard.Columns; x++)
+            for (var x = 0; x < CapManBoard.Columns; x++)
             {
                 var tile = board.Tile(x, y);
                 var min = boardRect.Min + new Vector2(x * cell, y * cell);
                 var center = min + new Vector2(cell * 0.5f, cell * 0.5f);
                 switch (tile)
                 {
-                    case MazeBoard.Wall:
+                    case CapManBoard.Wall:
                         drawList.AddRectFilled(min + new Vector2(inset, inset), min + new Vector2(cell - inset, cell - inset),
                             wallFill, rounding);
                         drawList.AddRect(min + new Vector2(inset, inset), min + new Vector2(cell - inset, cell - inset),
                             wallEdge, rounding, ImDrawFlags.None, MathF.Max(1f, scale));
                         break;
-                    case MazeBoard.Door:
+                    case CapManBoard.Door:
                         drawList.AddRectFilled(new Vector2(min.X + inset, min.Y + cell * 0.42f),
                             new Vector2(min.X + cell - inset, min.Y + cell * 0.58f), door);
                         break;
-                    case MazeBoard.Dot:
+                    case CapManBoard.Dot:
                         drawList.AddCircleFilled(center, dotRadius, dot, 8);
                         break;
-                    case MazeBoard.Pellet:
+                    case CapManBoard.Pellet:
                         ProgressRing.Glow(center, cell * 0.4f, PlayerColor, 0.5f * pulse);
                         drawList.AddCircleFilled(center, cell * 0.24f * pulse, ImGui.GetColorU32(PlayerColor), 14);
                         break;
@@ -85,7 +85,7 @@ internal sealed class MazeRenderer
         }
     }
 
-    private static void DrawPlayer(ImDrawListPtr drawList, MazeBoard board, Rect boardRect, float cell, float time)
+    private static void DrawPlayer(ImDrawListPtr drawList, CapManBoard board, Rect boardRect, float cell, float time)
     {
         var center = ToScreen(boardRect, cell, board.PlayerPosition);
         var radius = cell * 0.42f;
@@ -112,11 +112,11 @@ internal sealed class MazeRenderer
         drawList.PathFillConvex(color);
     }
 
-    private static void DrawGhosts(ImDrawListPtr drawList, MazeBoard board, Rect boardRect, float cell, float time)
+    private static void DrawGhosts(ImDrawListPtr drawList, CapManBoard board, Rect boardRect, float cell, float time)
     {
         var warning = board.FrightRemaining > 0f && board.FrightRemaining < FrightWarningSeconds &&
             MathF.Sin(time * 14f) > 0f;
-        for (var index = 0; index < MazeBoard.GhostCount; index++)
+        for (var index = 0; index < CapManBoard.GhostCount; index++)
         {
             var ghost = board.GetGhost(index);
             var center = ToScreen(boardRect, cell, ghost.Position);

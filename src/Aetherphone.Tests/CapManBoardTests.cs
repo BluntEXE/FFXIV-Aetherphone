@@ -1,17 +1,17 @@
 using System.Numerics;
-using Aetherphone.Apps.Games.Maze;
+using Aetherphone.Apps.Games.CapMan;
 using Xunit;
 
 namespace Aetherphone.Tests;
 
-public sealed class MazeBoardTests
+public sealed class CapManBoardTests
 {
     private const float Step = 1f / 60f;
 
     [Fact]
     public void TheLayoutHoldsOneHundredAndTwentySevenCollectables()
     {
-        var board = new MazeBoard();
+        var board = new CapManBoard();
         board.StartGame();
         Assert.Equal(127, board.DotsLeft);
         Assert.Equal(1, board.Level);
@@ -21,7 +21,7 @@ public sealed class MazeBoardTests
     [Fact]
     public void ThePenDoorOpensOnlyForGhostsLeavingOrReturning()
     {
-        var board = new MazeBoard();
+        var board = new CapManBoard();
         board.StartGame();
         Assert.False(board.Walkable(7, 8, false));
         Assert.False(board.Walkable(7, 8, true));
@@ -31,25 +31,25 @@ public sealed class MazeBoardTests
     [Fact]
     public void TheTunnelWrapsOnRowSevenOnly()
     {
-        var board = new MazeBoard();
+        var board = new CapManBoard();
         board.StartGame();
         Assert.True(board.Walkable(-1, 7, false));
-        Assert.True(board.Walkable(MazeBoard.Columns, 7, false));
+        Assert.True(board.Walkable(CapManBoard.Columns, 7, false));
         Assert.False(board.Walkable(-1, 3, false));
     }
 
     [Fact]
     public void AQueuedTurnMovesThePlayerAndEatsDotsAfterTheReadyBeat()
     {
-        var board = new MazeBoard();
+        var board = new CapManBoard();
         board.StartGame();
         Assert.True(board.Ready);
-        Advance(board, MazeBoard.ReadySeconds + 0.05f);
+        Advance(board, CapManBoard.ReadySeconds + 0.05f);
         Assert.False(board.Ready);
-        board.Turn(MazeBoard.Left);
+        board.Turn(CapManBoard.Left);
         Advance(board, 0.5f);
         Assert.True(board.PlayerPosition.X < 7f);
-        Assert.True(board.Score >= MazeBoard.DotPoints);
+        Assert.True(board.Score >= CapManBoard.DotPoints);
         Assert.True(board.DotsLeft < 127);
     }
 
@@ -59,7 +59,7 @@ public sealed class MazeBoardTests
     [InlineData(8, 6.076f)]
     public void GhostSpeedRampsAndCapsBelowThePlayer(int level, float expected)
     {
-        Assert.Equal(expected, MazeBoard.NormalGhostSpeed(level), 3);
+        Assert.Equal(expected, CapManBoard.NormalGhostSpeed(level), 3);
     }
 
     [Theory]
@@ -68,19 +68,19 @@ public sealed class MazeBoardTests
     [InlineData(20, 2f)]
     public void FrightDurationShrinksToAFloor(int level, float expected)
     {
-        Assert.Equal(expected, MazeBoard.FrightDuration(level), 3);
+        Assert.Equal(expected, CapManBoard.FrightDuration(level), 3);
     }
 
     [Fact]
     public void GhostChainDoublesToSixteenHundred()
     {
-        Assert.Equal(200, MazeBoard.ChainPoints(1));
-        Assert.Equal(400, MazeBoard.ChainPoints(2));
-        Assert.Equal(800, MazeBoard.ChainPoints(3));
-        Assert.Equal(1600, MazeBoard.ChainPoints(4));
+        Assert.Equal(200, CapManBoard.ChainPoints(1));
+        Assert.Equal(400, CapManBoard.ChainPoints(2));
+        Assert.Equal(800, CapManBoard.ChainPoints(3));
+        Assert.Equal(1600, CapManBoard.ChainPoints(4));
     }
 
-    private static void Advance(MazeBoard board, float seconds)
+    private static void Advance(CapManBoard board, float seconds)
     {
         var elapsed = 0f;
         while (elapsed < seconds)

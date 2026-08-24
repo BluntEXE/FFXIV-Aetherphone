@@ -97,8 +97,8 @@ internal static class AppIconArt
             case "invaders":
                 DrawInvaders(dl, center, extent, inkColor);
                 return true;
-            case "maze":
-                DrawMaze(dl, center, extent, inkColor);
+            case "capman":
+                DrawCapMan(dl, center, extent, inkColor);
                 return true;
             case "hop":
                 DrawHop(dl, center, extent, inkColor, holeColor);
@@ -613,7 +613,7 @@ internal static class AppIconArt
         }
     }
 
-    private static void DrawMaze(ImDrawListPtr dl, Vector2 center, float extent, uint ink)
+    private static void DrawCapMan(ImDrawListPtr dl, Vector2 center, float extent, uint ink)
     {
         var muncher = At(center, extent, -0.34f, 0f);
         var radius = extent * 0.56f;

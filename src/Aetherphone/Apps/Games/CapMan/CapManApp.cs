@@ -7,11 +7,11 @@ using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 
-namespace Aetherphone.Apps.Games.Maze;
+namespace Aetherphone.Apps.Games.CapMan;
 
-internal sealed class MazeApp : IMiniGame
+internal sealed class CapManApp : IMiniGame
 {
-    private const string GameId = "maze";
+    private const string GameId = "capman";
     private const float PadBandFraction = 0.26f;
     private static readonly Vector4[] CelebrationPalette =
     {
@@ -19,8 +19,8 @@ internal sealed class MazeApp : IMiniGame
         new(0.40f, 0.90f, 0.95f, 1f), new(1f, 0.70f, 0.35f, 1f), new(0.98f, 0.98f, 0.9f, 1f),
     };
 
-    private readonly MazeBoard board = new();
-    private readonly MazeRenderer renderer = new();
+    private readonly CapManBoard board = new();
+    private readonly CapManRenderer renderer = new();
     private readonly ParticleSystem particles = new();
     private readonly FeedbackFx fx = new();
     private RollingValue scoreRoll;
@@ -34,7 +34,7 @@ internal sealed class MazeApp : IMiniGame
     private string resultLevel = string.Empty;
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
-    public string Title => Loc.T(L.Games.Maze);
+    public string Title => Loc.T(L.Games.CapMan);
     public string Genre => Loc.T(L.Games.GenreArcade);
     public bool RunsOnAClock => true;
 
@@ -98,7 +98,7 @@ internal sealed class MazeApp : IMiniGame
         var padArea = new Rect(new Vector2(body.Min.X, body.Max.Y - padHeight), body.Max);
         var pad = 6f * scale;
         var area = new Rect(new Vector2(body.Min.X + pad, rowY + 26f * scale), new Vector2(body.Max.X - pad, padArea.Min.Y - pad));
-        var boardRect = MazeRenderer.BoardRect(area, out var cell);
+        var boardRect = CapManRenderer.BoardRect(area, out var cell);
         var drawList = ImGui.GetWindowDrawList();
         GameScene.Ambient(drawList, body, Accent);
         if (!finished)
@@ -112,7 +112,7 @@ internal sealed class MazeApp : IMiniGame
 
         particles.Update(deltaSeconds);
         fx.Update(deltaSeconds);
-        bannerProgress = GameBanner.Advance(bannerProgress, deltaSeconds, MazeBoard.ReadySeconds);
+        bannerProgress = GameBanner.Advance(bannerProgress, deltaSeconds, CapManBoard.ReadySeconds);
         if (board.GameOver && !finished)
         {
             finished = true;
@@ -131,7 +131,7 @@ internal sealed class MazeApp : IMiniGame
         particles.Draw(drawList, scale);
         fx.DrawRings(drawList, scale);
         fx.DrawText();
-        GameBanner.Draw(drawList, MazeRenderer.ToScreen(boardRect, cell, new Vector2(7f, 11f)), Loc.T(L.Games.Ready),
+        GameBanner.Draw(drawList, CapManRenderer.ToScreen(boardRect, cell, new Vector2(7f, 11f)), Loc.T(L.Games.Ready),
             Accent, theme, bannerProgress);
         if (finished)
         {
@@ -143,19 +143,19 @@ internal sealed class MazeApp : IMiniGame
     {
         if (pad == PadDirection.Up || GameInput.Pressed(ImGuiKey.W, ImGuiKey.UpArrow))
         {
-            board.Turn(MazeBoard.Up);
+            board.Turn(CapManBoard.Up);
         }
         else if (pad == PadDirection.Down || GameInput.Pressed(ImGuiKey.S, ImGuiKey.DownArrow))
         {
-            board.Turn(MazeBoard.Down);
+            board.Turn(CapManBoard.Down);
         }
         else if (pad == PadDirection.Left || GameInput.Pressed(ImGuiKey.A, ImGuiKey.LeftArrow))
         {
-            board.Turn(MazeBoard.Left);
+            board.Turn(CapManBoard.Left);
         }
         else if (pad == PadDirection.Right || GameInput.Pressed(ImGuiKey.D, ImGuiKey.RightArrow))
         {
-            board.Turn(MazeBoard.Right);
+            board.Turn(CapManBoard.Right);
         }
     }
 
@@ -163,33 +163,33 @@ internal sealed class MazeApp : IMiniGame
     {
         if (board.DotsEatenThisFrame > 0)
         {
-            var center = MazeRenderer.ToScreen(boardRect, cell, board.LastDotPosition);
-            particles.Burst(center, 2, MazeRenderer.DotColor with { W = 0.7f }, 40f * scale, 1.4f, 0.25f, 0f);
+            var center = CapManRenderer.ToScreen(boardRect, cell, board.LastDotPosition);
+            particles.Burst(center, 2, CapManRenderer.DotColor with { W = 0.7f }, 40f * scale, 1.4f, 0.25f, 0f);
         }
 
         if (board.PelletEatenThisFrame)
         {
-            var center = MazeRenderer.ToScreen(boardRect, cell, board.LastDotPosition);
-            particles.Sparkle(center, 10, MazeRenderer.PlayerColor, 120f * scale, 2.4f, 0.6f);
-            fx.Shockwave(center, cell * 4f, MazeRenderer.FrightColor with { W = 0.7f }, 0.5f, 3f);
-            fx.Flash(MazeRenderer.FrightColor, 0.14f);
+            var center = CapManRenderer.ToScreen(boardRect, cell, board.LastDotPosition);
+            particles.Sparkle(center, 10, CapManRenderer.PlayerColor, 120f * scale, 2.4f, 0.6f);
+            fx.Shockwave(center, cell * 4f, CapManRenderer.FrightColor with { W = 0.7f }, 0.5f, 3f);
+            fx.Flash(CapManRenderer.FrightColor, 0.14f);
             fx.AddTrauma(0.12f);
         }
 
         for (var index = 0; index < board.GhostsEatenThisFrame; index++)
         {
-            var center = MazeRenderer.ToScreen(boardRect, cell, board.GhostEatPosition(index));
-            particles.Burst(center, 12, MazeRenderer.FrightColor, 150f * scale, 2.6f, 0.5f, 220f);
-            fx.AddText(GameNumber.Label(board.GhostEatPoints(index)), center, MazeRenderer.DotColor, 1.1f);
-            fx.Shockwave(center, cell * 2.5f, MazeRenderer.DotColor with { W = 0.6f }, 0.35f, 2f);
+            var center = CapManRenderer.ToScreen(boardRect, cell, board.GhostEatPosition(index));
+            particles.Burst(center, 12, CapManRenderer.FrightColor, 150f * scale, 2.6f, 0.5f, 220f);
+            fx.AddText(GameNumber.Label(board.GhostEatPoints(index)), center, CapManRenderer.DotColor, 1.1f);
+            fx.Shockwave(center, cell * 2.5f, CapManRenderer.DotColor with { W = 0.6f }, 0.35f, 2f);
             fx.HitStop(0.06f);
             fx.AddTrauma(0.18f);
         }
 
         if (board.PlayerDiedThisFrame)
         {
-            var center = MazeRenderer.ToScreen(boardRect, cell, board.PlayerPosition);
-            particles.Burst(center, 18, MazeRenderer.PlayerColor, 160f * scale, 2.8f, 0.8f, 300f);
+            var center = CapManRenderer.ToScreen(boardRect, cell, board.PlayerPosition);
+            particles.Burst(center, 18, CapManRenderer.PlayerColor, 160f * scale, 2.8f, 0.8f, 300f);
             fx.AddTrauma(0.7f);
             fx.HitStop(0.1f);
             fx.Flash(new Vector4(0.95f, 0.3f, 0.3f, 1f), 0.35f);
@@ -237,7 +237,7 @@ internal sealed class MazeApp : IMiniGame
         var radius = 5f * scale;
         var origin = new Vector2(body.Min.X + 22f * scale, rowY);
         var lastLife = board.Lives == 1;
-        for (var life = 0; life < MazeBoard.StartLives; life++)
+        for (var life = 0; life < CapManBoard.StartLives; life++)
         {
             var center = new Vector2(origin.X, origin.Y + (life - 1) * radius * 2.8f);
             if (life >= board.Lives)
@@ -249,7 +249,7 @@ internal sealed class MazeApp : IMiniGame
 
             var color = lastLife
                 ? new Vector4(0.95f, 0.35f, 0.35f, 0.6f + 0.4f * Pulse.Wave(Pulse.Fast))
-                : MazeRenderer.PlayerColor;
+                : CapManRenderer.PlayerColor;
             drawList.PathClear();
             drawList.PathLineTo(center);
             drawList.PathArcTo(center, radius, 0.3f, MathF.PI * 2f - 0.3f, 16);

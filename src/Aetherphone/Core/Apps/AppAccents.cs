@@ -72,7 +72,7 @@ internal static class AppAccents
         ["trivia"] = AccentRing.Indigo,
         ["skyfall"] = AccentRing.Orange,
         ["invaders"] = AccentRing.Violet,
-        ["maze"] = AccentRing.Gold,
+        ["capman"] = AccentRing.Gold,
         ["hop"] = AccentRing.Green,
         ["squadron"] = AccentRing.Azure,
         ["rolladeck"] = AccentRing.Violet,

@@ -1,4 +1,4 @@
-namespace Aetherphone.Apps.Games.Maze;
+namespace Aetherphone.Apps.Games.CapMan;
 
 internal enum GhostState : byte
 {
@@ -19,7 +19,7 @@ internal struct Ghost
     public Vector2 DecidedAt;
 }
 
-internal sealed class MazeBoard
+internal sealed class CapManBoard
 {
     public const int Columns = 15;
     public const int Rows = 18;

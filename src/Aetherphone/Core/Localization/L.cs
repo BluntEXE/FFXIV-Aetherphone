@@ -4403,7 +4403,7 @@ internal static class L
         public static readonly LocString Ammo = new("games.ammo", "Ammo");
         public static readonly LocString WaveClear = new("games.waveClear", "Wave clear");
         public static readonly LocString Invaders = new("games.invaders", "Invaders");
-        public static readonly LocString Maze = new("games.maze", "Maze");
+        public static readonly LocString CapMan = new("games.capman", "CapMan");
         public static readonly LocString Ready = new("games.ready", "Ready!");
         public static readonly LocString Hop = new("games.hop", "Hop");
         public static readonly LocString Dens = new("games.dens", "Dens");

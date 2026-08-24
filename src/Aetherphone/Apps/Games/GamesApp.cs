@@ -20,7 +20,7 @@ using Aetherphone.Apps.Games.Sweeper;
 using Aetherphone.Apps.Games.Tetris;
 using Aetherphone.Apps.Games.Hop;
 using Aetherphone.Apps.Games.Invaders;
-using Aetherphone.Apps.Games.Maze;
+using Aetherphone.Apps.Games.CapMan;
 using Aetherphone.Apps.Games.Skyfall;
 using Aetherphone.Apps.Games.Squadron;
 using Aetherphone.Apps.Games.Trivia;
@@ -122,7 +122,7 @@ internal sealed class GamesApp : IPhoneApp
             new WaterSortApp(), new BreakoutApp(), new BubbleShooterApp(), new NonogramApp(), new FlowApp(),
             new SolitaireApp(), new SimonApp(), new FlapApp(), new ReversiApp(), new WhackApp(), new SnakeApp(),
             new SudokuApp(), new ChessApp(), new StackApp(), new CrystalDropApp(), new BeatApp(), new BladeApp(),
-            new TriviaApp(gameData, textures), new SkyfallApp(), new InvadersApp(), new MazeApp(), new HopApp(), new SquadronApp(),
+            new TriviaApp(gameData, textures), new SkyfallApp(), new InvadersApp(), new CapManApp(), new HopApp(), new SquadronApp(),
         };
         tileOrder = new int[games.Length];
         RebuildLayout();
@@ -708,7 +708,7 @@ internal sealed class GamesApp : IPhoneApp
             case "trivia":
             case "skyfall":
             case "invaders":
-            case "maze":
+            case "capman":
             case "hop":
             case "squadron":
             {
