@@ -109,6 +109,9 @@ internal static class AppIconArt
             case "doom":
                 DrawDoom(dl, center, extent, inkColor, holeColor);
                 return true;
+            case "wordrun":
+                DrawWordRun(dl, center, extent, inkColor, holeColor);
+                return true;
             default:
                 return false;
         }
@@ -699,6 +702,29 @@ internal static class AppIconArt
         dl.AddRectFilled(At(center, extent, -0.80f, 0.02f), At(center, extent, 0.80f, 0.08f), ink);
         dl.AddRectFilled(At(center, extent, -0.10f, -0.08f), At(center, extent, 0.10f, 0.58f), ink);
         dl.AddRectFilled(At(center, extent, -0.24f, 0.28f), At(center, extent, 0.24f, 0.58f), ink, extent * 0.04f);
+    }
+
+    private static void DrawWordRun(ImDrawListPtr dl, Vector2 center, float extent, uint ink, uint hole)
+    {
+        var tile = extent * 0.54f;
+        var gap = extent * 0.12f;
+        var rounding = tile * 0.22f;
+        for (var row = 0; row < 2; row++)
+        {
+            for (var column = 0; column < 3; column++)
+            {
+                var min = new Vector2(center.X - tile * 1.5f - gap + column * (tile + gap), center.Y - tile - gap * 0.5f + row * (tile + gap));
+                var max = min + new Vector2(tile, tile);
+                var filled = (row == 0 && column == 1) || (row == 1 && column != 1);
+                if (filled)
+                {
+                    dl.AddRectFilled(min, max, ink, rounding);
+                    continue;
+                }
+
+                dl.AddRect(min, max, ink, rounding, ImDrawFlags.None, extent * 0.1f);
+            }
+        }
     }
 
     private static void DrawTrivia(ImDrawListPtr dl, Vector2 center, float extent, uint ink, uint hole)

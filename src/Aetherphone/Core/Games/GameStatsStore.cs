@@ -10,6 +10,21 @@ internal sealed class GameStatsStore
     }
 
     public static int TodayIndex => (int)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerDay);
+
+    public string WordBank
+    {
+        get => configuration.WordRunBank;
+        set
+        {
+            if (string.Equals(configuration.WordRunBank, value, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            configuration.WordRunBank = value;
+            configuration.Save();
+        }
+    }
     public string DailyGameId { get; set; } = string.Empty;
     public bool DailyDone => configuration.DailyChallengeLastDay == TodayIndex;
     public int DailyStreak =>

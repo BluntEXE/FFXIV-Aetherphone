@@ -17,6 +17,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="Words\*.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Hunts\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

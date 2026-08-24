@@ -4460,6 +4460,15 @@ internal static class L
         public static readonly LocString DoomFire = new("games.doomFire", "Fire");
         public static readonly LocString DoomUse = new("games.doomUse", "Use");
         public static readonly LocString DoomFailed = new("games.doomFailed", "Doom could not start");
+        public static readonly LocString WordRun = new("games.wordRun", "Word Run");
+        public static readonly LocString Words = new("games.words", "Words");
+        public static readonly LocString NotInWordList = new("games.notInWordList", "Not in the word list");
+        public static readonly LocString NotEnoughLetters = new("games.notEnoughLetters", "Not enough letters");
+        public static readonly LocString SolvedWord = new("games.solvedWord", "Solved!");
+        public static readonly LocString WordWas = new("games.wordWas", "The word was {0}");
+        public static readonly LocString EndRun = new("games.endRun", "End run");
+        public static readonly LocString Sure = new("games.sure", "Sure?");
+        public static readonly LocString WordBank = new("games.wordBank", "Word list");
     }
 
     internal static class Time

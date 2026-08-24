@@ -27,6 +27,7 @@ using Aetherphone.Apps.Games.Squadron;
 using Aetherphone.Apps.Games.Trivia;
 using Aetherphone.Apps.Games.Twenty48;
 using Aetherphone.Apps.Games.WaterSort;
+using Aetherphone.Apps.Games.WordRun;
 using Aetherphone.Apps.Games.Whack;
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
@@ -125,7 +126,7 @@ internal sealed class GamesApp : IPhoneApp
             new WaterSortApp(), new BreakoutApp(), new BubbleShooterApp(), new NonogramApp(), new FlowApp(),
             new SolitaireApp(), new SimonApp(), new FlapApp(), new ReversiApp(), new WhackApp(), new SnakeApp(),
             new SudokuApp(), new ChessApp(), new StackApp(), new CrystalDropApp(), new BeatApp(), new BladeApp(),
-            new TriviaApp(gameData, textures), new SkyfallApp(), new InvadersApp(), new CapManApp(), new HopApp(), new SquadronApp(), new DoomApp(),
+            new TriviaApp(gameData, textures), new SkyfallApp(), new InvadersApp(), new CapManApp(), new HopApp(), new SquadronApp(), new DoomApp(), new WordRunApp(gameData),
         };
         tileOrder = new int[games.Length];
         RebuildLayout();
@@ -744,6 +745,7 @@ internal sealed class GamesApp : IPhoneApp
             case "capman":
             case "hop":
             case "squadron":
+            case "wordrun":
             {
                 var best = stats.Get(gameId).BestScore;
                 return best > 0 ? GameNumber.Label(best) : string.Empty;

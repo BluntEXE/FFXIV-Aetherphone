@@ -255,3 +255,28 @@ into the player's own Aetherphone data folder:
 
 Both downloads are verified against a known checksum before use. Players may place their own commercial
 IWAD (`DOOM.WAD`, `DOOM2.WAD`, `PLUTONIA.WAD`, `TNT.WAD`) or a Freedoom IWAD in the same folder instead.
+
+## SCOWL word lists
+
+The English word bank of the Word Run mini-game (`src/Aetherphone/Words/en.answers.txt` and
+`en.valid.txt`) is generated from SCOWL (Spell Checker Oriented Word Lists) 2020.12.07 by
+`tools/build-word-banks.ps1`.
+
+- Copyright 2000-2018 by Kevin Atkinson, with the additional copyrights listed in
+  `src/Aetherphone/Words/SCOWL-Copyright.txt`, shipped next to the word lists in every release archive.
+- Permission to use, copy, modify, distribute and sell these word lists, the associated scripts, the output
+  created from the scripts, and its documentation for any purpose is hereby granted without fee, provided
+  that the copyright notice appears in all copies.
+- Source: http://wordlist.aspell.net/
+
+## FrequencyWords
+
+The German, Spanish, French and Portuguese word banks of the Word Run mini-game
+(`src/Aetherphone/Words/de.*.txt`, `es.*.txt`, `fr.*.txt`, `pt.*.txt`) are derived from the OpenSubtitles
+2018 frequency lists published in the FrequencyWords project by Hermit Dave, filtered to five-letter words
+with accents normalized by `tools/build-word-banks.ps1`.
+
+- Source: https://github.com/hermitdave/FrequencyWords
+- License (content): Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0),
+  https://creativecommons.org/licenses/by-sa/4.0/. Those four derived word-bank files are likewise available
+  under CC BY-SA 4.0.

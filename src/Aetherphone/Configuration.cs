@@ -186,6 +186,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public List<GameStatRecord> GameStats { get; set; } = new();
     public int DailyChallengeStreak { get; set; }
     public int DailyChallengeLastDay { get; set; }
+    public string WordRunBank { get; set; } = string.Empty;
     public string PendingCoinGameSession { get; set; } = string.Empty;
     public Dictionary<ulong, string> PendingCasinoSittings { get; set; } = new();
     public Dictionary<ulong, long> CasinoSittingSeenAtUnix { get; set; } = new();
