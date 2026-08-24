@@ -23,6 +23,8 @@ internal static class LanguageGuess
             "could", "should", "want", "need", "know", "think", "thanks", "please", "again", "never", "always",
             "out", "up", "down", "over", "into", "back", "one", "first", "new", "good", "great", "well", "too",
             "guys", "friend", "friends", "last", "night", "evening", "morning", "week", "looking", "let's",
+            "hi", "hey", "yo", "lol", "lmao", "bro", "dude", "man", "boy", "girl", "nice", "cute", "love", "omg", "wow",
+            "cool", "thx", "ty", "pls", "handsome", "beautiful", "hello", "bye", "ok", "okay", "yeah", "yes", "haha",
         },
         new(StringComparer.Ordinal)
         {
@@ -36,6 +38,8 @@ internal static class LanguageGuess
             "bonjour", "salut", "oui", "non", "quand", "comme", "tout", "tous", "toute", "toutes", "rien",
             "quelque", "chose", "ici", "là", "déjà", "alors", "donc", "parce", "car", "cherche", "cherchons",
             "ami", "amie", "amis", "qu'", "d'", "chez", "vers", "depuis", "pendant", "sans", "entre",
+            "coucou", "bisous", "mec", "meuf", "trop", "ouais", "mdr", "ptdr", "bonsoir", "nuit", "ça", "voilà",
+            "mignon", "mignonne", "génial",
         },
         new(StringComparer.Ordinal)
         {
@@ -48,6 +52,8 @@ internal static class LanguageGuess
             "gestern", "abend", "jetzt", "immer", "nie", "wieder", "hier", "da", "dort", "dann", "also", "denn",
             "weil", "dass", "ob", "wie", "was", "wer", "wo", "ja", "nein", "gut", "danke", "bitte", "hallo",
             "jemand", "suche", "suchen", "gruppe", "freund", "freundin", "freunde", "gelangweilt",
+            "moin", "servus", "digga", "geil", "krass", "süß", "hübsch", "tschüss", "alter", "bruder", "schatz",
+            "liebe", "schön", "toll",
         },
         new(StringComparer.Ordinal)
         {
@@ -58,6 +64,8 @@ internal static class LanguageGuess
             "yarın", "dün", "akşam", "şimdi", "hep", "hiç", "yine", "burada", "orada", "çünkü", "nasıl",
             "neden", "kim", "nerede", "teşekkürler", "merhaba", "selam", "lütfen", "arıyorum", "arıyoruz",
             "kimse", "biri", "arkadaşım", "arkadaş", "gece", "bravo", "çevirdiniz", "yazıyı",
+            "selam", "canım", "abi", "abla", "kanka", "aşkım", "hoş", "güzel", "tamam", "sağol", "eyvallah", "hadi",
+            "kardeşim", "naber", "iyiyim", "nasılsın", "günaydın", "geceler",
         },
         new(StringComparer.Ordinal)
         {
@@ -69,6 +77,8 @@ internal static class LanguageGuess
             "todos", "algo", "alguien", "nada", "nadie", "cuando", "donde", "porque", "entonces", "ya", "aún",
             "bien", "gracias", "hola", "busco", "buscamos", "tiene", "tengo", "amigo", "amiga", "amigos",
             "noche", "aburrido", "aburría",
+            "guapo", "guapa", "amor", "vale", "jaja", "jajaja", "tío", "tía", "buenas", "buenos", "días", "noches",
+            "cariño", "lindo", "linda",
         },
         new(StringComparer.Ordinal)
         {
@@ -81,6 +91,8 @@ internal static class LanguageGuess
             "nada", "ninguém", "quando", "onde", "porque", "então", "já", "ainda", "bem", "obrigado", "obrigada",
             "olá", "oi", "procuro", "procuramos", "tem", "tenho", "amigo", "amiga", "amigos", "noite", "pela",
             "pelo", "entediado",
+            "kkk", "kkkk", "mano", "cara", "beleza", "valeu", "bom", "boa", "dia", "tarde", "querido", "querida",
+            "gato", "gata", "fofo", "fofa", "amor", "lindo", "linda",
         },
     };
 
@@ -219,11 +231,6 @@ internal static class LanguageGuess
             }
         }
 
-        if (words < MinimumWords)
-        {
-            return Undetermined;
-        }
-
         var best = 0;
         var bestScore = -1;
         var secondScore = -1;
@@ -241,7 +248,12 @@ internal static class LanguageGuess
             }
         }
 
-        return bestScore >= MinimumScore && bestScore > secondScore ? Codes[best] : Undetermined;
+        if (bestScore < MinimumScore || bestScore <= secondScore)
+        {
+            return Undetermined;
+        }
+
+        return words >= MinimumWords || secondScore <= 0 ? Codes[best] : Undetermined;
     }
 
     private static void ScoreWord(string word, Span<int> scores)
