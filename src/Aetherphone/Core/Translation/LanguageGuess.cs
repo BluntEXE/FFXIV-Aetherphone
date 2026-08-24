@@ -64,7 +64,7 @@ internal static class LanguageGuess
             "yarın", "dün", "akşam", "şimdi", "hep", "hiç", "yine", "burada", "orada", "çünkü", "nasıl",
             "neden", "kim", "nerede", "teşekkürler", "merhaba", "selam", "lütfen", "arıyorum", "arıyoruz",
             "kimse", "biri", "arkadaşım", "arkadaş", "gece", "bravo", "çevirdiniz", "yazıyı",
-            "selam", "canım", "abi", "abla", "kanka", "aşkım", "hoş", "güzel", "tamam", "sağol", "eyvallah", "hadi",
+            "canım", "abi", "abla", "kanka", "aşkım", "hoş", "güzel", "tamam", "sağol", "eyvallah", "hadi",
             "kardeşim", "naber", "iyiyim", "nasılsın", "günaydın", "geceler",
         },
         new(StringComparer.Ordinal)
