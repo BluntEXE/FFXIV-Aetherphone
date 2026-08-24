@@ -22,13 +22,19 @@ internal sealed class HttpService : IDisposable
     private readonly EtagCache etagCache = new();
     private readonly ConcurrentDictionary<string, long> pausedHostsUntilTicks = new(StringComparer.OrdinalIgnoreCase);
 
-    public HttpService()
+    public HttpService(AethernetClientIdentity? identity = null)
     {
-        client = new HttpClient(new SocketsHttpHandler
+        HttpMessageHandler handler = new SocketsHttpHandler
         {
             PooledConnectionLifetime = TimeSpan.FromMinutes(10),
             AutomaticDecompression = DecompressionMethods.All,
-        })
+        };
+        if (identity is not null)
+        {
+            handler = new AethernetIdentityHandler(identity, handler);
+        }
+
+        client = new HttpClient(handler)
         {
             Timeout = Timeout.InfiniteTimeSpan, MaxResponseContentBufferSize = MaxResponseBytes,
         };

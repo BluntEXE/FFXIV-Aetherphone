@@ -1,4 +1,5 @@
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Aethernet.Clients;
 
@@ -11,14 +12,16 @@ internal sealed class AuthClient
         this.net = net;
     }
 
-    public Task<ChallengeResponse?> ChallengeAsync(string name, string world, CancellationToken token)
+    public Task<ChallengeResponse?> ChallengeAsync(string name, string world, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.PostAnonymousAsync("/auth/challenge", new ChallengeRequest(name, world), AethernetJsonContext.Default.ChallengeRequest, AethernetJsonContext.Default.ChallengeResponse, token);
+        return net.PostAnonymousAsync("/auth/challenge", new ChallengeRequest(name, world), AethernetJsonContext.Default.ChallengeRequest, AethernetJsonContext.Default.ChallengeResponse, token, null, onFailure);
     }
 
-    public Task<ChallengeResponse?> RisingStonesChallengeAsync(string uuid, CancellationToken token)
+    public Task<ChallengeResponse?> RisingStonesChallengeAsync(string uuid, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
     {
-        return net.PostAnonymousAsync("/auth/risingstones/challenge", new RisingStonesChallengeRequest(uuid), AethernetJsonContext.Default.RisingStonesChallengeRequest, AethernetJsonContext.Default.ChallengeResponse, token);
+        return net.PostAnonymousAsync("/auth/risingstones/challenge", new RisingStonesChallengeRequest(uuid), AethernetJsonContext.Default.RisingStonesChallengeRequest, AethernetJsonContext.Default.ChallengeResponse, token, null, onFailure);
     }
 
     public async Task<VerifyResult> VerifyAsync(string challengeId, CancellationToken token)

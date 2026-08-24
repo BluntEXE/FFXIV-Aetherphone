@@ -1,3 +1,4 @@
+using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
@@ -55,6 +56,8 @@ internal sealed class PhoneShell : IDisposable
     private readonly ShellOverlayCoordinator overlays;
     private readonly HomeScreen home;
     private readonly SuspensionGate suspensions;
+    private readonly AethernetSession session;
+    private readonly ConfirmService confirm;
     private NotificationShake shake = new(ShakeDuration, ShakeFrequency, ShakeAmplitude);
     private bool closeRequested;
     private bool indicatorPressActive;
@@ -72,6 +75,8 @@ internal sealed class PhoneShell : IDisposable
         widgets = bundle.Widgets;
         calls = services.Calls;
         notifications = services.Notifications;
+        session = services.AethernetSession;
+        confirm = services.Confirm;
         suspensions = new SuspensionGate(services.AethernetSession);
         navigation = new NavigationStack(apps, services.Installer, suspensions);
         notifications.AppAvailability = navigation.IsAvailable;
@@ -259,6 +264,7 @@ internal sealed class PhoneShell : IDisposable
         }
 
         banner.Advance(delta);
+        InstallSourceNotice.Poll(session, confirm);
         calls.Advance(delta);
         if (!loading.IsActive)
         {

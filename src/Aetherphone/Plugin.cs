@@ -101,6 +101,7 @@ public sealed class Plugin : IDalamudPlugin
             Cfg.MigrateCharacterSessions();
             Cfg.MigrateHousingRefreshFloor();
             InitializeLocalization();
+            InstallSource.Initialize(PluginInterface);
             Device = new DeviceStatus(ClientState, ObjectTable, DataManager);
             services = PhoneServices.Build(Cfg, ChatGui, DataManager, ObjectTable, ClientState, Framework, DutyState,
                 TextureProvider, PluginInterface.ConfigDirectory, UnlockState, Condition);

@@ -211,7 +211,8 @@ internal sealed class PhoneServices : IDisposable
         var cacheRoot = new DirectoryInfo(Path.Combine(configDirectory.FullName, "cache"));
         cacheRoot.Create();
         var mediaRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "media"));
-        var http = new HttpService();
+        var aethernetSession = new AethernetSession(configuration, framework);
+        var http = new HttpService(new AethernetClientIdentity(aethernetSession.BaseUrl, aethernetSession.ReportSourceStatus));
         var disk = new DiskCache(mediaRoot, 64L * 1024 * 1024);
         var media = new MediaCache(textures, disk);
         var imageRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "images"));
@@ -220,7 +221,6 @@ internal sealed class PhoneServices : IDisposable
         var pluginCatalog = new PluginCatalog(remoteImages, http, imageDisk);
         var lodestone = new LodestoneService(configuration, gameData, http, media, cacheRoot);
         var lookup = new LookupService(lodestone);
-        var aethernetSession = new AethernetSession(configuration, framework);
         var availability = new AppAvailability(http, aethernetSession, configuration, gameData);
         var aethernet = new AethernetApi(http, aethernetSession);
         var keyVault = new KeyVault(configuration, aethernetSession, aethernet.Keys);

@@ -1,4 +1,5 @@
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Net;
 using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Core.Aethernet;
@@ -11,6 +12,9 @@ internal sealed class AethernetSession
     private volatile bool banned;
     private volatile string? banReason;
     private volatile SuspensionDto? suspension;
+    private volatile bool sourceBlocked;
+    private volatile bool sourceWarningShown;
+    private volatile string? pendingSourceNotice;
     private ulong activeContentId;
     private ulong playingContentId;
 
@@ -31,6 +35,7 @@ internal sealed class AethernetSession
     public bool IsBanned => banned;
     public string? BanReason => banReason;
     public SuspensionDto? Suspension => suspension;
+    public bool IsSourceBlocked => sourceBlocked;
     public UserDto? CurrentUser { get; private set; }
 
     public ulong ActiveContentId => activeContentId;
@@ -48,6 +53,7 @@ internal sealed class AethernetSession
             UseCharacterSlot();
             tokenRejected = false;
             banned = false;
+            sourceBlocked = false;
             banReason = null;
         suspension = null;
             LegacyClaimPending = false;
@@ -78,6 +84,7 @@ internal sealed class AethernetSession
         {
             tokenRejected = false;
             banned = false;
+            sourceBlocked = false;
             banReason = null;
         suspension = null;
             LegacyClaimPending = false;
@@ -112,6 +119,45 @@ internal sealed class AethernetSession
         });
     }
 
+    public void ReportSourceStatus(string status)
+    {
+        if (string.Equals(status, AethernetClientIdentity.StatusBlocked, StringComparison.Ordinal))
+        {
+            if (sourceBlocked)
+            {
+                return;
+            }
+
+            sourceBlocked = true;
+            tokenRejected = true;
+            pendingSourceNotice = status;
+            AepLog.Warning("Aethernet refused this install source; reinstall Aetherphone from the official repository to sign in again.");
+            _ = framework.RunOnFrameworkThread(() =>
+            {
+                CurrentUser = null;
+                Changed?.Invoke();
+            });
+            return;
+        }
+
+        if (string.Equals(status, AethernetClientIdentity.StatusWarned, StringComparison.Ordinal) && !sourceWarningShown)
+        {
+            sourceWarningShown = true;
+            pendingSourceNotice = status;
+        }
+    }
+
+    public string? ConsumeSourceNotice()
+    {
+        var notice = pendingSourceNotice;
+        if (notice is not null)
+        {
+            pendingSourceNotice = null;
+        }
+
+        return notice;
+    }
+
     public void ReportBanned(string? reason, SuspensionDto? details = null)
     {
         banned = true;
@@ -136,6 +182,7 @@ internal sealed class AethernetSession
         activeContentId = contentId;
         tokenRejected = false;
         banned = false;
+        sourceBlocked = false;
         banReason = null;
         suspension = null;
         CurrentUser = null;

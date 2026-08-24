@@ -1,6 +1,7 @@
 using System.Net.WebSockets;
 using System.Text.Json;
 using Aetherphone.Core.Aethernet;
+using Aetherphone.Core.Net;
 using Aetherphone.Core.Telephony.Contracts;
 
 namespace Aetherphone.Core.Telephony;
@@ -86,6 +87,8 @@ internal sealed class RealtimeConnection : IDisposable
                 {
                     ws.Options.SetRequestHeader("Authorization", $"Bearer {bearer}");
                 }
+
+                AethernetClientIdentity.Apply(ws.Options);
 
                 await ws.ConnectAsync(BuildUri(session.BaseUrl), token).ConfigureAwait(false);
                 lock (gate)

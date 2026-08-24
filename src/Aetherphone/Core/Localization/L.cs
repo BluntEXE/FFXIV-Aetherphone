@@ -2800,6 +2800,10 @@ internal static class L
         public static readonly LocString FailNetworkBody = new("account.fail.network.body", "We couldn't reach the Aethernet server. Check your connection, then try again.");
         public static readonly LocString FailAccessDeniedTitle = new("account.fail.accessDenied.title", "Sign-in cancelled");
         public static readonly LocString FailAccessDeniedBody = new("account.fail.accessDenied.body", "The request was declined on XIVAuth. Start again whenever you're ready.");
+        public static readonly LocString FailSourceBlockedTitle = new("account.fail.sourceBlocked.title", "Unofficial install blocked");
+        public static readonly LocString FailSourceBlockedBody = new("account.fail.sourceBlocked.body", "This copy of Aetherphone was installed from a repository that isn't allowed to use Aethernet. Reinstall it from the official repository to sign in again: {0}");
+        public static readonly LocString SourceWarnedTitle = new("account.sourceWarned.title", "Unofficial install");
+        public static readonly LocString SourceWarnedBody = new("account.sourceWarned.body", "This copy of Aetherphone came from a repository we don't support, and Aethernet access from it may end without notice. Reinstall it from the official repository to keep everything working: {0}");
         public static readonly LocString FailXivUnavailableTitle = new("account.fail.xivUnavailable.title", "XIVAuth unavailable");
         public static readonly LocString FailXivUnavailableBody = new("account.fail.xivUnavailable.body", "We couldn't reach XIVAuth. Wait a moment and try again, or verify with a Lodestone code instead.");
         public static readonly LocString FailXivCharacterTitle = new("account.fail.xivCharacter.title", "Character not verified");
