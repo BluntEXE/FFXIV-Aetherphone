@@ -99,7 +99,7 @@ internal sealed class TetrisRenderer
         float alpha, float scale)
     {
         var tint = GamePalette.Lighten(PieceColorOf((int)board.ActiveKind), 0.12f);
-        var cells = TetrisBoard.GetCells(board.ActiveKind, board.ActiveRotation);
+        var cells = board.ActiveCells();
         for (var index = 0; index < cells.Length; index++)
         {
             var cell = cells[index];

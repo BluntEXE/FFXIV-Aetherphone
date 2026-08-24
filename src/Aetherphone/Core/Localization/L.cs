@@ -4469,6 +4469,11 @@ internal static class L
         public static readonly LocString EndRun = new("games.endRun", "End run");
         public static readonly LocString Sure = new("games.sure", "Sure?");
         public static readonly LocString WordBank = new("games.wordBank", "Word list");
+        public static readonly LocString Classic = new("games.classic", "Classic");
+        public static readonly LocString Modern = new("games.modern", "Modern");
+        public static readonly LocString TSpin = new("games.tSpin", "T-Spin");
+        public static readonly LocString TSpinMini = new("games.tSpinMini", "T-Spin Mini");
+        public static readonly LocString BackToBack = new("games.backToBack", "Back-to-Back");
     }
 
     internal static class Time

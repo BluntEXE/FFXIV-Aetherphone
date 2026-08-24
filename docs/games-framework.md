@@ -184,7 +184,7 @@ The rest of the phone uses critically damped motion: springs that settle without
 | `ResetStreak(gameId)` | Clears the streak on a loss |
 | `DailyGameId`, `DailyDone`, `DailyStreak` | Daily challenge state; the launcher sets `DailyGameId` and its streak chip reads `DailyDone` and `DailyStreak` |
 
-Stat ids may carry a difficulty suffix, for example `sudoku.easy` or `minesweeper.easy`. Every submit path first calls the private `RecordDailyPlay`, which prefix-matches the stat id against `DailyGameId` (so `sudoku.easy` counts for a `sudoku` daily) and advances or resets the streak based on `TodayIndex`. This means finishing the featured game through any `Submit*` or `RecordWin` call completes the daily automatically; there is no separate daily API.
+Stat ids may carry a difficulty suffix, for example `sudoku.easy` or `minesweeper.easy`, or a ruleset suffix like `tetris.modern` (Tetris keeps separate bests for its Classic and Modern rulesets and remembers the last choice in `Configuration.TetrisModern`). Every submit path first calls the private `RecordDailyPlay`, which prefix-matches the stat id against `DailyGameId` (so `sudoku.easy` counts for a `sudoku` daily) and advances or resets the streak based on `TodayIndex`. This means finishing the featured game through any `Submit*` or `RecordWin` call completes the daily automatically; there is no separate daily API.
 
 ## Worked example: a minimal game
 

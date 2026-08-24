@@ -18,10 +18,14 @@ internal sealed class TetrisApp : IMiniGame
         new(0.96f, 0.62f, 0.32f, 1f), new(0.50f, 0.86f, 0.58f, 1f), new(0.95f, 0.48f, 0.52f, 1f),
     };
 
+    private const string ModernStatId = "tetris.modern";
+    private const float RulesetStripHeight = 26f;
     private readonly TetrisBoard board = new();
     private readonly TetrisRenderer renderer = new();
     private readonly ParticleSystem particles = new();
     private readonly FeedbackFx fx = new();
+    private readonly string[] rulesetLabels = new string[2];
+    private TetrisRuleset ruleset;
     private RollingValue scoreRoll;
     private int previousLevel;
     private bool started;
@@ -52,9 +56,11 @@ internal sealed class TetrisApp : IMiniGame
     {
     }
 
+    private string StatId => ruleset == TetrisRuleset.Modern ? ModernStatId : GameId;
+
     private void StartGame()
     {
-        board.Reset();
+        board.Reset(ruleset);
         particles.Clear();
         fx.Clear();
         scoreRoll.Snap(0);
@@ -74,7 +80,8 @@ internal sealed class TetrisApp : IMiniGame
         var body = context.Body;
         if (!statsLoaded)
         {
-            bestScore = context.Stats.Get(GameId).BestScore;
+            ruleset = context.Stats.TetrisModern ? TetrisRuleset.Modern : TetrisRuleset.Classic;
+            bestScore = context.Stats.Get(StatId).BestScore;
             statsLoaded = true;
         }
 
@@ -85,7 +92,7 @@ internal sealed class TetrisApp : IMiniGame
 
         if (pendingSubmit)
         {
-            newBest = context.Stats.SubmitScore(GameId, finalScore);
+            newBest = context.Stats.SubmitScore(StatId, finalScore);
             if (newBest)
             {
                 bestScore = finalScore;
@@ -175,6 +182,22 @@ internal sealed class TetrisApp : IMiniGame
             bestScore > 0 && board.Score < bestScore, pillScale);
 
         var hudBottom = rowY + GameHud.PillHeight * scale * pillScale * 0.5f;
+        rulesetLabels[0] = Loc.T(L.Games.Classic);
+        rulesetLabels[1] = Loc.T(L.Games.Modern);
+        var stripTop = hudBottom + 8f * scale;
+        var stripRow = new Rect(new Vector2(body.Min.X + 48f * scale, stripTop),
+            new Vector2(body.Max.X - 48f * scale, stripTop + RulesetStripHeight * scale));
+        var selectedRuleset = SegmentStrip.Draw("tetris.ruleset", stripRow, rulesetLabels, (int)ruleset, theme);
+        if (selectedRuleset != (int)ruleset)
+        {
+            ruleset = (TetrisRuleset)selectedRuleset;
+            context.Stats.TetrisModern = ruleset == TetrisRuleset.Modern;
+            bestScore = context.Stats.Get(StatId).BestScore;
+            StartGame();
+            return;
+        }
+
+        hudBottom = stripRow.Max.Y - 12f * scale;
 
         var drawList = ImGui.GetWindowDrawList();
         var iconColor = ImGui.GetColorU32(GamePalette.InkOn(Accent));
@@ -248,6 +271,11 @@ internal sealed class TetrisApp : IMiniGame
                 new Vector2(field.Center.X, field.Min.Y + field.Height * 0.3f), Accent, 1.2f);
         }
 
+        if (board.LockedThisFrame && ruleset == TetrisRuleset.Modern)
+        {
+            AnnounceModernLock(field, scale);
+        }
+
         if (board.Level > previousLevel && !board.GameOver)
         {
             previousLevel = board.Level;
@@ -298,6 +326,16 @@ internal sealed class TetrisApp : IMiniGame
             board.SoftDrop();
         }
 
+        if (GameInput.Pressed(ImGuiKey.Z))
+        {
+            board.Rotate(-1);
+        }
+
+        if (GameInput.Pressed(ImGuiKey.X))
+        {
+            board.Rotate(1);
+        }
+
         if (GameInput.Pressed(ImGuiKey.Space))
         {
             HardDrop();
@@ -313,6 +351,33 @@ internal sealed class TetrisApp : IMiniGame
     {
         board.HardDrop();
         fx.AddTrauma(0.14f);
+    }
+
+    private void AnnounceModernLock(Rect field, float scale)
+    {
+        var position = new Vector2(field.Center.X, field.Min.Y + field.Height * 0.42f);
+        var lines = board.ClearedLinesThisFrame;
+        if (board.LastSpin != TetrisSpin.None)
+        {
+            var spinLabel = board.LastSpin == TetrisSpin.Mini ? Loc.T(L.Games.TSpinMini) : Loc.T(L.Games.TSpin);
+            var text = board.LastBackToBack ? $"{Loc.T(L.Games.BackToBack)} {spinLabel}" : spinLabel;
+            fx.AddText(text, position, GamePalette.Lighten(Accent, 0.35f), 1.3f);
+            fx.Shockwave(position, field.Width * 0.5f, GamePalette.Lighten(Accent, 0.4f), 0.5f, 3f);
+            particles.Sparkle(position, 14, new Vector4(1f, 1f, 1f, 0.9f), 160f * scale, 2.6f, 0.7f);
+            return;
+        }
+
+        if (lines >= 4 && board.LastBackToBack)
+        {
+            fx.AddText(Loc.T(L.Games.BackToBack), position, GamePalette.Lighten(Accent, 0.35f), 1.3f);
+            return;
+        }
+
+        if (lines > 0 && board.LastCombo >= 1)
+        {
+            fx.AddText($"x{GameNumber.Label(board.LastCombo + 1)} {Loc.T(L.Games.Combo)}", position,
+                GamePalette.Lighten(Accent, 0.3f), 1.1f);
+        }
     }
 
     private static void DrawMoveIcon(ImDrawListPtr drawList, Vector2 center, int direction, float scale, uint color)

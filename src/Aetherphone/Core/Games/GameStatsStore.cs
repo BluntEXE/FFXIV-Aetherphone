@@ -11,6 +11,21 @@ internal sealed class GameStatsStore
 
     public static int TodayIndex => (int)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerDay);
 
+    public bool TetrisModern
+    {
+        get => configuration.TetrisModern;
+        set
+        {
+            if (configuration.TetrisModern == value)
+            {
+                return;
+            }
+
+            configuration.TetrisModern = value;
+            configuration.Save();
+        }
+    }
+
     public string WordBank
     {
         get => configuration.WordRunBank;
