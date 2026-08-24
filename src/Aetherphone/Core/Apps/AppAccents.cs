@@ -75,6 +75,7 @@ internal static class AppAccents
         ["capman"] = AccentRing.Gold,
         ["hop"] = AccentRing.Green,
         ["squadron"] = AccentRing.Azure,
+        ["doom"] = AccentRing.Red,
         ["rolladeck"] = AccentRing.Violet,
         ["hunts"] = AccentRing.Indigo
     }.ToFrozenDictionary();

@@ -220,3 +220,38 @@ HtmlAgilityPack.CssSelectors project is published under the MIT License
 The Calendar app shows in-game event dates served through the Aetherphone
 backend, which caches a community-maintained public events database. The data
 is fetched server-side; no third-party credentials ship with the plugin.
+
+## managed-doom (Doom engine)
+
+The Doom mini-game runs on [managed-doom](https://github.com/sinshu/managed-doom), a C# port of the
+Doom engine, compiled from the sources vendored under `src/ManagedDoom/` (upstream commit
+`9365696eb44326a3aab72c4bab217f7db8a87c96`, desktop host removed, one data-directory hook added; see
+`src/ManagedDoom/README.md`). The sound and music backends in `src/Aetherphone/Apps/Games/Doom/DoomSound.cs`
+and `DoomMusic.cs` are derived from the upstream `SilkSound.cs` and `SilkMusic.cs`.
+
+- Copyright (C) 1993-1996 Id Software, Inc.
+- Copyright (C) 2019-2020 Nobuaki Tanaka
+- License: GNU General Public License, version 2 or (at your option) any later version; full text in
+  `src/ManagedDoom/LICENSE_ManagedDoom.txt`, shipped in every release archive.
+
+## MeltySynth
+
+The Doom soundtrack is synthesized with [MeltySynth](https://github.com/sinshu/meltysynth) 2.4.1
+(NuGet, redistributed as a compiled assembly).
+
+- Copyright (c) 2021 Nobuaki Tanaka
+- License: MIT; full text reproduced in the MIT section below.
+
+## Doom game data and soundfont (downloaded on demand)
+
+No Doom game data is bundled. When a player sets up the Doom mini-game, the plugin downloads two files
+into the player's own Aetherphone data folder:
+
+- The Doom shareware episode (`doom1.wad`, version 1.9) from Debian's package archive
+  (`doom-wad-shareware`). Copyright (C) 1993 id Software, Inc.; distributed under id Software's shareware
+  terms, which permit free redistribution of the shareware episode.
+- The TimGM6mb General MIDI soundfont (`TimGM6mb.sf2`) from Debian's `timgm6mb-soundfont` package.
+  Copyright (C) 2004 Tim Brechbill; License: GNU General Public License, version 2.
+
+Both downloads are verified against a known checksum before use. Players may place their own commercial
+IWAD (`DOOM.WAD`, `DOOM2.WAD`, `PLUTONIA.WAD`, `TNT.WAD`) or a Freedoom IWAD in the same folder instead.

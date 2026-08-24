@@ -106,6 +106,9 @@ internal static class AppIconArt
             case "squadron":
                 DrawSquadron(dl, center, extent, inkColor);
                 return true;
+            case "doom":
+                DrawDoom(dl, center, extent, inkColor, holeColor);
+                return true;
             default:
                 return false;
         }
@@ -687,6 +690,15 @@ internal static class AppIconArt
                 dl.AddRectFilled(min, min + new Vector2(unit + 0.5f, unit + 0.5f), ink);
             }
         }
+    }
+
+    private static void DrawDoom(ImDrawListPtr dl, Vector2 center, float extent, uint ink, uint hole)
+    {
+        dl.AddRectFilled(At(center, extent, -0.96f, -0.74f), At(center, extent, 0.96f, 0.74f), ink, extent * 0.14f);
+        dl.AddRectFilled(At(center, extent, -0.80f, -0.58f), At(center, extent, 0.80f, 0.58f), hole, extent * 0.08f);
+        dl.AddRectFilled(At(center, extent, -0.80f, 0.02f), At(center, extent, 0.80f, 0.08f), ink);
+        dl.AddRectFilled(At(center, extent, -0.10f, -0.08f), At(center, extent, 0.10f, 0.58f), ink);
+        dl.AddRectFilled(At(center, extent, -0.24f, 0.28f), At(center, extent, 0.24f, 0.58f), ink, extent * 0.04f);
     }
 
     private static void DrawTrivia(ImDrawListPtr dl, Vector2 center, float extent, uint ink, uint hole)

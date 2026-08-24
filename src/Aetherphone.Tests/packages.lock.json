@@ -57,6 +57,11 @@
           "HtmlAgilityPack": "1.11.46"
         }
       },
+      "MeltySynth": {
+        "type": "Transitive",
+        "resolved": "2.4.1",
+        "contentHash": "5Rzqh2H8bSZ+bna5hMbsQwEdqdaCEIkBaWzCSyKa5VV5oDZ9Zfi53dkGrUqdkQGT45Ltmv1WSzFlgmI9cD1I1w=="
+      },
       "Microsoft.CodeCoverage": {
         "type": "Transitive",
         "resolved": "17.11.1",
@@ -301,6 +306,8 @@
           "BouncyCastle.Cryptography": "[2.7.0, )",
           "Concentus": "[2.2.2, )",
           "DalamudPackager": "[15.0.0, )",
+          "ManagedDoom": "[1.0.0.9, )",
+          "MeltySynth": "[2.4.1, )",
           "NAudio.Wasapi": "[2.3.0, )",
           "NAudio.WinMM": "[2.3.0, )",
           "NEbml": "[1.1.0.5, )",
@@ -316,6 +323,9 @@
           "Vortice.Direct3D11": "[3.8.3, )",
           "YoutubeExplode": "[6.6.1, )"
         }
+      },
+      "manageddoom": {
+        "type": "Project"
       }
     }
   }

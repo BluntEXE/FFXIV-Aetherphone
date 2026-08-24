@@ -8,8 +8,10 @@ internal static class GameInput
     private static readonly VirtualKey[] ConsumedKeys =
     {
         VirtualKey.W, VirtualKey.A, VirtualKey.S, VirtualKey.D, VirtualKey.Z, VirtualKey.X, VirtualKey.C,
+        VirtualKey.E, VirtualKey.Q, VirtualKey.Y, VirtualKey.N,
         VirtualKey.UP, VirtualKey.DOWN, VirtualKey.LEFT, VirtualKey.RIGHT, VirtualKey.SPACE,
-        VirtualKey.BACK, VirtualKey.DELETE, VirtualKey.RETURN,
+        VirtualKey.BACK, VirtualKey.DELETE, VirtualKey.RETURN, VirtualKey.TAB, VirtualKey.ESCAPE,
+        VirtualKey.SHIFT, VirtualKey.CONTROL,
         VirtualKey.KEY_1, VirtualKey.KEY_2, VirtualKey.KEY_3, VirtualKey.KEY_4, VirtualKey.KEY_5,
         VirtualKey.KEY_6, VirtualKey.KEY_7, VirtualKey.KEY_8, VirtualKey.KEY_9,
         VirtualKey.NUMPAD1, VirtualKey.NUMPAD2, VirtualKey.NUMPAD3, VirtualKey.NUMPAD4, VirtualKey.NUMPAD5,

@@ -4445,6 +4445,19 @@ internal static class L
         public static readonly LocString Stage = new("games.stage", "Stage");
         public static readonly LocString ChallengeStage = new("games.challengeStage", "Challenge stage!");
         public static readonly LocString HitsOf = new("games.hitsOf", "{0} of {1} hit");
+        public static readonly LocString Doom = new("games.doom", "Doom");
+        public static readonly LocString DoomSetupTitle = new("games.doomSetupTitle", "Set up Doom");
+        public static readonly LocString DoomSetupBody = new("games.doomSetupBody",
+            "Doom needs its game data. The shareware episode is fetched from Debian's package archive into your Aetherphone folder; drop a full DOOM.WAD or DOOM2.WAD there to play those instead.");
+        public static readonly LocString DoomGameData = new("games.doomGameData", "Game data");
+        public static readonly LocString DoomGameDataDetail = new("games.doomGameDataDetail", "Knee-Deep in the Dead, the shareware episode");
+        public static readonly LocString DoomMusic = new("games.doomMusic", "Music");
+        public static readonly LocString DoomMusicDetail = new("games.doomMusicDetail", "General MIDI soundfont for the soundtrack");
+        public static readonly LocString DoomControls = new("games.doomControls", "WASD move, drag or arrows turn, Space fires, E uses, 1-7 weapons");
+        public static readonly LocString DoomMenu = new("games.doomMenu", "Menu");
+        public static readonly LocString DoomFire = new("games.doomFire", "Fire");
+        public static readonly LocString DoomUse = new("games.doomUse", "Use");
+        public static readonly LocString DoomFailed = new("games.doomFailed", "Doom could not start");
     }
 
     internal static class Time
