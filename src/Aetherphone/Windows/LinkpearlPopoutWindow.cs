@@ -169,6 +169,8 @@ internal sealed class LinkpearlPopoutWindow : Window
 
     public void Focus() => BringToFront();
 
+    public void ReopenThread() => threadKey = string.Empty;
+
     public LinkpearlPopoutState Snapshot() => new()
     {
         Key = key,

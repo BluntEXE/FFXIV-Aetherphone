@@ -16,6 +16,7 @@ internal sealed class LinkpearlPopouts : IDisposable
     private readonly Configuration configuration;
     private readonly ChatInbox inbox;
     private readonly ChatLog log;
+    private readonly TabStore tabs;
     private readonly TellPreferences tellPreferences;
     private readonly LinkpearlNotificationGate gate;
     private readonly PhoneVisibility visibility;
@@ -30,6 +31,7 @@ internal sealed class LinkpearlPopouts : IDisposable
         this.configuration = configuration;
         this.inbox = inbox;
         this.log = log;
+        this.tabs = tabs;
         this.tellPreferences = tellPreferences;
         this.gate = gate;
         this.visibility = visibility;
@@ -51,6 +53,7 @@ internal sealed class LinkpearlPopouts : IDisposable
         }
 
         log.Appended += OnAppended;
+        tabs.Changed += ReopenThreads;
     }
 
     public IReadOnlyList<LinkpearlPopoutWindow> Windows => windows;
@@ -203,8 +206,20 @@ internal sealed class LinkpearlPopouts : IDisposable
     public void Dispose()
     {
         log.Appended -= OnAppended;
+        tabs.Changed -= ReopenThreads;
         Persist();
         configuration.SaveNow();
+    }
+
+    private void ReopenThreads()
+    {
+        for (var index = 0; index < windows.Length; index++)
+        {
+            if (windows[index].Bound)
+            {
+                windows[index].ReopenThread();
+            }
+        }
     }
 
     private LinkpearlPopoutWindow? Bound(string key)
