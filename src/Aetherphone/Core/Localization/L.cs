@@ -882,6 +882,11 @@ internal static class L
         public static readonly LocString ForYou = new("strats.forYou", "Your spot");
         public static readonly LocString OpenOnSite = new("strats.openOnSite", "View on wtfdig.info");
         public static readonly LocString Resources = new("strats.resources", "More resources");
+        public static readonly LocString Sources = new("strats.sources", "Sources");
+        public static readonly LocString RoleTank = new("strats.roleTank", "Tank");
+        public static readonly LocString RoleHealer = new("strats.roleHealer", "Healer");
+        public static readonly LocString RoleMelee = new("strats.roleMelee", "Melee");
+        public static readonly LocString RoleRanged = new("strats.roleRanged", "Ranged");
     }
 
     internal static class Venues

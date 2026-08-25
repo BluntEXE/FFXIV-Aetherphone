@@ -46,9 +46,8 @@ internal sealed class RichTextBlock
         public float Height;
     }
 
-    private readonly Dictionary<(GuideText Text, int Style), Layout> layouts = new();
+    private readonly Dictionary<(GuideText Text, int Style, int Width), Layout> layouts = new();
     private readonly List<string> words = new();
-    private float cachedWidth;
     private float cachedScale;
     private int cachedFontGeneration;
 
@@ -107,15 +106,14 @@ internal sealed class RichTextBlock
     private Layout Resolve(GuideText text, float width, in TextStyle style, float scale)
     {
         var fontGeneration = Plugin.Fonts.Generation;
-        if (MathF.Abs(width - cachedWidth) > 0.5f || cachedScale != scale || cachedFontGeneration != fontGeneration)
+        if (cachedScale != scale || cachedFontGeneration != fontGeneration)
         {
             layouts.Clear();
-            cachedWidth = width;
             cachedScale = scale;
             cachedFontGeneration = fontGeneration;
         }
 
-        var key = (text, style.GetHashCode());
+        var key = (text, style.GetHashCode(), (int)MathF.Round(width * 2f));
         if (layouts.TryGetValue(key, out var layout))
         {
             return layout;

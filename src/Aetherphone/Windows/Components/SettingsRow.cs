@@ -7,6 +7,8 @@ namespace Aetherphone.Windows.Components;
 
 internal static class SettingsRow
 {
+    public const float CheckWidth = 21f;
+
     public static bool Bool(Rect row, string label, bool value, PhoneTheme theme, string? id = null,
         string? hint = null, bool dimmed = false)
     {
@@ -214,17 +216,21 @@ internal static class SettingsRow
             theme.TextMuted, valueHovered);
     }
 
-    public static bool Selectable(Rect row, string label, bool selected, PhoneTheme theme, string? id = null)
+    public static bool Selectable(Rect row, string label, bool selected, PhoneTheme theme, string? id = null) =>
+        Selectable(row, label, selected, theme, id, 0f, true);
+
+    public static bool Selectable(Rect row, string label, bool selected, PhoneTheme theme, string? id,
+        float trailingReserve, bool interactive)
     {
         var scale = UiScale.Current;
-        var hovered = UiInteract.Hover(row.Min, row.Max);
+        var hovered = interactive && UiInteract.Hover(row.Min, row.Max);
         if (hovered)
         {
             DrawRowHighlight(row, theme);
         }
 
-        var checkWidth = 21f * scale;
-        var labelMaxWidth = MathF.Max(1f, row.Width - checkWidth);
+        var checkWidth = CheckWidth * scale;
+        var labelMaxWidth = MathF.Max(1f, row.Width - checkWidth - trailingReserve);
         var labelSize = Typography.Measure(label, TextStyles.BodyEmphasized);
         Marquee.DrawLeft(id ?? label, label, row.Min.X, row.Center.Y - labelSize.Y * 0.5f, labelMaxWidth,
             TextStyles.BodyEmphasized, theme.TextStrong, hovered);
@@ -243,7 +249,7 @@ internal static class SettingsRow
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        return UiInteract.Click(row.Min, row.Max, hovered);
+        return interactive && UiInteract.Click(row.Min, row.Max, hovered);
     }
 
     public static bool Action(Rect row, string label, Vector4 color, PhoneTheme theme)
@@ -285,7 +291,7 @@ internal static class SettingsRow
         return tileMax;
     }
 
-    private static void DrawRowHighlight(Rect row, PhoneTheme theme)
+    public static void DrawRowHighlight(Rect row, PhoneTheme theme)
     {
         var scale = UiScale.Current;
         var pressed = ImGui.IsMouseDown(ImGuiMouseButton.Left);

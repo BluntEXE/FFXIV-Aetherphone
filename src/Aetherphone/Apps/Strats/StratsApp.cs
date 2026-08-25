@@ -40,12 +40,12 @@ internal sealed partial class StratsApp : IPhoneApp
     private readonly Action back;
     private readonly RichTextBlock richText = new();
     private readonly PhotoZoomView zoom = new();
-    private readonly ChipRail stratRail = new();
     private readonly ChipRail tabRail = new();
     private readonly Dictionary<string, ChipRail> toggleRails = new(StringComparer.Ordinal);
     private ResolvedFight? resolved;
     private FightDoc? resolvedDoc;
     private bool timelineOpen;
+    private bool linksOpen;
     private bool selectionDirty;
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
@@ -118,6 +118,7 @@ internal sealed partial class StratsApp : IPhoneApp
         resolved = null;
         resolvedDoc = null;
         timelineOpen = false;
+        linksOpen = false;
         router.Push(new StratsView(StratsScreen.Fight, fight.Key));
     }
 

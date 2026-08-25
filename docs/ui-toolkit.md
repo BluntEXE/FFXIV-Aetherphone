@@ -207,7 +207,7 @@ if (enabled != alarm.Enabled)
 
 ### ChipRail
 
-`ChipRail` (src/Aetherphone/Windows/Components/ChipRail.cs) is the one way to show a row of filter chips: a single horizontal row that clips and pans by dragging. Chips never wrap into a second line; if they overflow, the user drags the rail sideways. It is stateful (pan offset), so keep one instance per rail:
+`ChipRail` (src/Aetherphone/Windows/Components/ChipRail.cs) is the one way to show a row of filter chips: a single horizontal row that clips and pans by dragging. Chips never wrap into a second line; if they overflow, the rail shows round paging arrows at the clipped edge (a tap springs the rail one page along) and the user can also drag it sideways. It is stateful (pan offset), so keep one instance per rail:
 
 ```csharp
 private readonly ChipRail filterRail = new();

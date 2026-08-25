@@ -14,14 +14,29 @@ namespace Aetherphone.Apps.Strats;
 internal sealed partial class StratsApp
 {
     private const float RoleChipHeight = 34f;
-    private const float TimelineRowHeight = 36f;
+    private const float RoleChipGap = 6f;
+    private const float RoleCaptionGap = 4f;
+    private const float SetupRowHeight = 42f;
     private const float LinkPillHeight = 30f;
     private const float MaxImageHeight = 420f;
-    private const int RoleChipsPerRow = 4;
+    private const float BadgeGap = 4f;
+    private const float BadgeLabelGap = 10f;
+    private const float SpotBarWidth = 3f;
+    private const float SpotFillAlpha = 0.10f;
+    private const string StratRowIdPrefix = "strats.strat:";
+    private const string LinkRowIdPrefix = "strats.link:";
+
+    private static readonly TextStyle RoleCaptionStyle = new(0.72f, FontWeight.Medium);
+    private static readonly string VideoGlyph = FontAwesomeIcon.Video.ToIconString();
+    private static readonly string BoardGlyph = FontAwesomeIcon.Map.ToIconString();
+    private static readonly string DocumentGlyph = FontAwesomeIcon.FileAlt.ToIconString();
+    private static readonly string LinkGlyph = FontAwesomeIcon.ExternalLinkAlt.ToIconString();
 
     private FightDoc? labelsDoc;
     private string[] stratLabels = Array.Empty<string>();
-    private bool[] stratActive = Array.Empty<bool>();
+    private string[] stratRowIds = Array.Empty<string>();
+    private string[][] stratBadgeTexts = Array.Empty<string[]>();
+    private Vector4[][] stratBadgeInks = Array.Empty<Vector4[]>();
     private string[] tabLabels = Array.Empty<string>();
     private bool[] tabActive = Array.Empty<bool>();
     private string[][] toggleLabels = Array.Empty<string[]>();
@@ -29,8 +44,16 @@ internal sealed partial class StratsApp
     private string[] alignmentLabels = Array.Empty<string>();
     private string[] roleLabels = Array.Empty<string>();
     private bool roleLabelsJapanese;
+    private string[] roleColumnRoles = Array.Empty<string>();
+    private int[][] roleColumnSlots = Array.Empty<int[]>();
+    private Vector4[] roleColumnInks = Array.Empty<Vector4>();
+    private int roleRows;
     private TimelineEntry[] timelineSource = Array.Empty<TimelineEntry>();
     private string[] timelineTimes = Array.Empty<string>();
+    private GuideLink[] linksSource = Array.Empty<GuideLink>();
+    private string[] linkGlyphs = Array.Empty<string>();
+    private string[] linkRowIds = Array.Empty<string>();
+    private string linksCountLabel = string.Empty;
 
     private void DrawFight(Rect area, StratsView view)
     {
@@ -71,11 +94,11 @@ internal sealed partial class StratsApp
         {
             DrawFightTitle(fight, scale);
             DrawStratPicker(doc, current, scale);
-            DrawRolePicker(doc, current, scale);
+            DrawRolePicker(scale);
             DrawTabs(doc, current, scale);
             DrawToggles(doc, current, scale);
             DrawAlignment(doc, current, scale);
-            DrawTimeline(current, scale);
+            DrawSetupCard(current, scale);
             DrawStratIntro(current, scale);
             DrawStratDifferences(current, scale);
             DrawPhases(current, scale);
@@ -106,13 +129,7 @@ internal sealed partial class StratsApp
         if (!ReferenceEquals(labelsDoc, doc))
         {
             labelsDoc = doc;
-            stratLabels = new string[doc.Strats.Length];
-            stratActive = new bool[doc.Strats.Length];
-            for (var index = 0; index < doc.Strats.Length; index++)
-            {
-                stratLabels[index] = StratLabel(doc.Strats[index]);
-            }
-
+            BuildStratLabels(doc);
             tabLabels = new string[doc.Tabs.Length];
             tabActive = new bool[doc.Tabs.Length];
             for (var index = 0; index < doc.Tabs.Length; index++)
@@ -142,7 +159,6 @@ internal sealed partial class StratsApp
             }
 
             roleLabels = Array.Empty<string>();
-            stratRail.Reset();
             tabRail.Reset();
             toggleRails.Clear();
         }
@@ -151,22 +167,7 @@ internal sealed partial class StratsApp
         if (roleLabels.Length == 0 || roleLabelsJapanese != japanese)
         {
             roleLabelsJapanese = japanese;
-            if (doc.RoleOptions.Length > 0)
-            {
-                roleLabels = new string[doc.RoleOptions.Length];
-                for (var index = 0; index < doc.RoleOptions.Length; index++)
-                {
-                    roleLabels[index] = doc.RoleOptions[index].Label;
-                }
-            }
-            else
-            {
-                roleLabels = new string[StratsRoles.SlotCount];
-                for (var index = 0; index < StratsRoles.SlotCount; index++)
-                {
-                    roleLabels[index] = StratsRoles.Label(index, japanese);
-                }
-            }
+            BuildRoleColumns(doc, japanese);
         }
 
         if (!ReferenceEquals(timelineSource, current.Timeline))
@@ -178,23 +179,173 @@ internal sealed partial class StratsApp
                 timelineTimes[index] = FormatDuration(current.Timeline[index].StartMs);
             }
         }
+
+        if (!ReferenceEquals(linksSource, current.Strat.Links))
+        {
+            linksSource = current.Strat.Links;
+            linkGlyphs = new string[linksSource.Length];
+            linkRowIds = new string[linksSource.Length];
+            for (var index = 0; index < linksSource.Length; index++)
+            {
+                linkGlyphs[index] = LinkGlyphFor(linksSource[index].Url);
+                linkRowIds[index] = string.Concat(LinkRowIdPrefix, index.ToString());
+            }
+
+            linksCountLabel = linksSource.Length.ToString();
+        }
     }
 
-    private static string StratLabel(StratVariant strat)
+    private void BuildStratLabels(FightDoc doc)
     {
-        if (strat.Badges.Length == 0)
+        var count = doc.Strats.Length;
+        stratLabels = new string[count];
+        stratRowIds = new string[count];
+        stratBadgeTexts = new string[count][];
+        stratBadgeInks = new Vector4[count][];
+        for (var index = 0; index < count; index++)
         {
-            return strat.Label;
+            var strat = doc.Strats[index];
+            stratLabels[index] = strat.Label;
+            stratRowIds[index] = string.Concat(StratRowIdPrefix, index.ToString());
+            var badges = strat.Badges;
+            var texts = new string[badges.Length];
+            var inks = new Vector4[badges.Length];
+            for (var badgeIndex = 0; badgeIndex < badges.Length; badgeIndex++)
+            {
+                texts[badgeIndex] = badges[badgeIndex].Text;
+                inks[badgeIndex] = BadgeInk(badges[badgeIndex].Kind);
+            }
+
+            stratBadgeTexts[index] = texts;
+            stratBadgeInks[index] = inks;
+        }
+    }
+
+    private Vector4 BadgeInk(string kind)
+    {
+        if (kind == "na" || kind.Contains("blue", StringComparison.Ordinal))
+        {
+            return StratsInk.Resolve("blue", ui.BodyInk, ui.MutedInk);
         }
 
-        var builder = new System.Text.StringBuilder(strat.Label);
-        builder.Append("  ·");
-        for (var index = 0; index < strat.Badges.Length; index++)
+        if (kind == "eu" || kind.Contains("yellow", StringComparison.Ordinal) ||
+            kind.Contains("amber", StringComparison.Ordinal))
         {
-            builder.Append(' ').Append(strat.Badges[index].Text);
+            return StratsInk.Resolve("yellow", ui.BodyInk, ui.MutedInk);
         }
 
-        return builder.ToString();
+        if (kind == "oce" || kind.Contains("green", StringComparison.Ordinal))
+        {
+            return StratsInk.Resolve("green", ui.BodyInk, ui.MutedInk);
+        }
+
+        if (kind == "jp" || kind.Contains("red", StringComparison.Ordinal))
+        {
+            return StratsInk.Resolve("red", ui.BodyInk, ui.MutedInk);
+        }
+
+        return ui.MutedInk;
+    }
+
+    private void BuildRoleColumns(FightDoc doc, bool japanese)
+    {
+        if (doc.RoleOptions.Length > 0)
+        {
+            roleLabels = new string[doc.RoleOptions.Length];
+            var roles = new List<string>();
+            var members = new List<List<int>>();
+            for (var index = 0; index < doc.RoleOptions.Length; index++)
+            {
+                var option = doc.RoleOptions[index];
+                roleLabels[index] = option.Label;
+                var column = roles.IndexOf(option.Role);
+                if (column < 0)
+                {
+                    roles.Add(option.Role);
+                    members.Add(new List<int>());
+                    column = roles.Count - 1;
+                }
+
+                members[column].Add(index);
+            }
+
+            roleColumnRoles = roles.ToArray();
+            roleColumnSlots = new int[roles.Count][];
+            for (var column = 0; column < roles.Count; column++)
+            {
+                roleColumnSlots[column] = members[column].ToArray();
+            }
+        }
+        else
+        {
+            roleLabels = new string[StratsRoles.SlotCount];
+            for (var slot = 0; slot < StratsRoles.SlotCount; slot++)
+            {
+                roleLabels[slot] = StratsRoles.Label(slot, japanese);
+            }
+
+            var columns = StratsRoles.SlotCount / 2;
+            roleColumnRoles = new string[columns];
+            roleColumnSlots = new int[columns][];
+            for (var column = 0; column < columns; column++)
+            {
+                roleColumnRoles[column] = StratsRoles.RoleName(column * 2);
+                roleColumnSlots[column] = new[] { column * 2, column * 2 + 1 };
+            }
+        }
+
+        roleColumnInks = new Vector4[roleColumnRoles.Length];
+        roleRows = 0;
+        for (var column = 0; column < roleColumnRoles.Length; column++)
+        {
+            roleColumnInks[column] = RoleInk(roleColumnRoles[column]);
+            roleRows = Math.Max(roleRows, roleColumnSlots[column].Length);
+        }
+    }
+
+    private Vector4 RoleInk(string role) =>
+        role switch
+        {
+            "Tank" => StratsInk.Resolve("blue", ui.BodyInk, ui.MutedInk),
+            "Healer" => StratsInk.Resolve("green", ui.BodyInk, ui.MutedInk),
+            "Melee" => StratsInk.Resolve("red", ui.BodyInk, ui.MutedInk),
+            "Ranged" => StratsInk.Resolve("red", ui.BodyInk, ui.MutedInk),
+            _ => ui.MutedInk,
+        };
+
+    private static string RoleCaption(string role) =>
+        role switch
+        {
+            "Tank" => Loc.T(L.Strats.RoleTank),
+            "Healer" => Loc.T(L.Strats.RoleHealer),
+            "Melee" => Loc.T(L.Strats.RoleMelee),
+            "Ranged" => Loc.T(L.Strats.RoleRanged),
+            _ => role,
+        };
+
+    private static string LinkGlyphFor(string url)
+    {
+        if (url.Contains("youtube.com", StringComparison.OrdinalIgnoreCase) ||
+            url.Contains("youtu.be", StringComparison.OrdinalIgnoreCase) ||
+            url.Contains("twitch.tv", StringComparison.OrdinalIgnoreCase))
+        {
+            return VideoGlyph;
+        }
+
+        if (url.Contains("raidplan.io", StringComparison.OrdinalIgnoreCase) ||
+            url.Contains("board.wtfdig", StringComparison.OrdinalIgnoreCase))
+        {
+            return BoardGlyph;
+        }
+
+        if (url.Contains("pastebin", StringComparison.OrdinalIgnoreCase) ||
+            url.Contains("docs.google", StringComparison.OrdinalIgnoreCase) ||
+            url.Contains("drive.google", StringComparison.OrdinalIgnoreCase))
+        {
+            return DocumentGlyph;
+        }
+
+        return LinkGlyph;
     }
 
     private static string FormatDuration(int milliseconds)
@@ -222,51 +373,96 @@ internal sealed partial class StratsApp
 
     private void DrawStratPicker(FightDoc doc, ResolvedFight current, float scale)
     {
-        if (doc.Strats.Length <= 1)
+        ui.SectionLabel(Loc.T(L.Strats.Strategy));
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        var rowCount = doc.Strats.Length;
+        UiAnchors.Report("strats.chips",
+            new Rect(origin, new Vector2(origin.X + width, origin.Y + rowCount * GroupCard.DefaultRowHeight * scale)));
+        var interactive = rowCount > 1;
+        var drawList = ImGui.GetWindowDrawList();
+        var card = GroupCard.Begin(theme, rowCount);
+        for (var index = 0; index < rowCount; index++)
+        {
+            var row = card.NextRow();
+            var badgesWidth = StratBadgesWidth(index, scale);
+            var reserve = badgesWidth > 0f ? badgesWidth + BadgeLabelGap * scale : 0f;
+            var tapped = SettingsRow.Selectable(row, stratLabels[index], index == current.StratIndex, theme,
+                stratRowIds[index], reserve, interactive);
+            DrawStratBadges(drawList, row, index, badgesWidth, scale);
+            if (tapped && index != current.StratIndex)
+            {
+                selection.StratId = doc.Strats[index].Id;
+                selection.Toggles.Clear();
+                TouchSelection();
+            }
+        }
+
+        card.End();
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
+    }
+
+    private float StratBadgesWidth(int stratIndex, float scale)
+    {
+        var texts = stratBadgeTexts[stratIndex];
+        var total = 0f;
+        for (var index = 0; index < texts.Length; index++)
+        {
+            total += InlineBadge.Width(texts[index], scale) + (index > 0 ? BadgeGap * scale : 0f);
+        }
+
+        return total;
+    }
+
+    private void DrawStratBadges(ImDrawListPtr drawList, Rect row, int stratIndex, float totalWidth, float scale)
+    {
+        var texts = stratBadgeTexts[stratIndex];
+        if (texts.Length == 0)
         {
             return;
         }
 
-        ui.SectionLabel(Loc.T(L.Strats.Strategy));
-        for (var index = 0; index < stratActive.Length; index++)
+        var inks = stratBadgeInks[stratIndex];
+        var left = row.Max.X - SettingsRow.CheckWidth * scale - totalWidth;
+        for (var index = 0; index < texts.Length; index++)
         {
-            stratActive[index] = index == current.StratIndex;
+            left += InlineBadge.Draw(drawList, left, row.Center.Y, texts[index], inks[index], scale) + BadgeGap * scale;
         }
-
-        var tapped = stratRail.Draw(ui, stratLabels, stratActive, "strats.chips");
-        if (tapped >= 0 && tapped != current.StratIndex)
-        {
-            selection.StratId = doc.Strats[tapped].Id;
-            selection.Toggles.Clear();
-            TouchSelection();
-        }
-
-        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
     }
 
-    private void DrawRolePicker(FightDoc doc, ResolvedFight current, float scale)
+    private void DrawRolePicker(float scale)
     {
         ui.SectionLabel(Loc.T(L.Strats.Role));
+        var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
-        var gap = Metrics.Space.Sm * scale;
-        var perRow = Math.Min(RoleChipsPerRow, roleLabels.Length);
-        var chipWidth = (width - gap * (perRow - 1)) / perRow;
+        var columnGap = Metrics.Space.Sm * scale;
+        var chipGap = RoleChipGap * scale;
+        var columns = roleColumnSlots.Length;
+        var columnWidth = (width - columnGap * (columns - 1)) / columns;
         var chipHeight = RoleChipHeight * scale;
-        var rows = (roleLabels.Length + perRow - 1) / perRow;
-        var gridHeight = rows * chipHeight + (rows - 1) * gap;
+        var captionLineHeight = Typography.LineHeight(RoleCaptionStyle);
+        var captionHeight = captionLineHeight + RoleCaptionGap * scale;
+        var gridHeight = captionHeight + roleRows * chipHeight + (roleRows - 1) * chipGap;
         UiAnchors.Report("strats.role", new Rect(origin, new Vector2(origin.X + width, origin.Y + gridHeight)));
         var activeSlot = Math.Clamp(selection.Slot, 0, roleLabels.Length - 1);
-        for (var index = 0; index < roleLabels.Length; index++)
+        for (var column = 0; column < columns; column++)
         {
-            var column = index % perRow;
-            var row = index / perRow;
-            var min = new Vector2(origin.X + column * (chipWidth + gap), origin.Y + row * (chipHeight + gap));
-            var rect = new Rect(min, new Vector2(min.X + chipWidth, min.Y + chipHeight));
-            if (ui.Chip(rect, roleLabels[index], index == activeSlot) && index != activeSlot)
+            var left = origin.X + column * (columnWidth + columnGap);
+            var caption = Typography.FitText(RoleCaption(roleColumnRoles[column]), columnWidth, RoleCaptionStyle);
+            Typography.DrawCentered(drawList, new Vector2(left + columnWidth * 0.5f, origin.Y + captionLineHeight * 0.5f),
+                caption, roleColumnInks[column], RoleCaptionStyle.Scale, RoleCaptionStyle.Weight);
+            var slots = roleColumnSlots[column];
+            for (var row = 0; row < slots.Length; row++)
             {
-                selection.Slot = index;
-                TouchSelection();
+                var top = origin.Y + captionHeight + row * (chipHeight + chipGap);
+                var rect = new Rect(new Vector2(left, top), new Vector2(left + columnWidth, top + chipHeight));
+                var slot = slots[row];
+                if (ui.Chip(rect, roleLabels[slot], slot == activeSlot) && slot != activeSlot)
+                {
+                    selection.Slot = slot;
+                    TouchSelection();
+                }
             }
         }
 
@@ -355,48 +551,105 @@ internal sealed partial class StratsApp
         ImGui.Dummy(new Vector2(width, 38f * scale + Metrics.Space.Md * scale));
     }
 
-    private void DrawTimeline(ResolvedFight current, float scale)
+    private void DrawSetupCard(ResolvedFight current, float scale)
     {
-        if (current.Timeline.Length == 0)
+        var timeline = current.Timeline;
+        var links = linksSource;
+        if (timeline.Length == 0 && links.Length == 0)
         {
             return;
         }
 
-        var header = GroupCard.Begin(theme, 1);
-        var label = timelineOpen ? Loc.T(L.Strats.HideTimeline) : Loc.T(L.Strats.ShowTimeline);
-        if (SettingsRow.Disclosure(header.NextRow(), Loc.T(L.Strats.Timeline), label, theme, "strats.timeline"))
+        var rowCount = 0;
+        if (timeline.Length > 0)
         {
-            timelineOpen = !timelineOpen;
+            rowCount += 1 + (timelineOpen ? timeline.Length : 0);
         }
 
-        header.End();
-        if (!timelineOpen)
+        if (links.Length > 0)
         {
-            ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
-            return;
+            rowCount += 1 + (linksOpen ? links.Length : 0);
         }
 
-        ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
         var drawList = ImGui.GetWindowDrawList();
-        var card = GroupCard.Begin(theme, current.Timeline.Length, TimelineRowHeight);
-        for (var index = 0; index < current.Timeline.Length; index++)
+        var card = GroupCard.Begin(theme, rowCount, SetupRowHeight);
+        if (timeline.Length > 0)
         {
-            var item = current.Timeline[index];
-            var row = card.NextRow();
-            var pad = Metrics.Space.Lg * scale;
-            var timeColor = ui.MutedInk;
-            Typography.Draw(drawList, new Vector2(row.Min.X + pad, row.Center.Y - Typography.LineHeight(TextStyles.Footnote) * 0.5f),
-                timelineTimes[index], timeColor, TextStyles.FootnoteEmphasized);
-            var dotCenter = new Vector2(row.Min.X + pad + 44f * scale, row.Center.Y);
-            drawList.AddCircleFilled(dotCenter, 4f * scale, ImGui.GetColorU32(TimelineColor(item.Type)), 12);
-            var nameX = dotCenter.X + 12f * scale;
-            var name = Typography.FitText(item.Name, row.Max.X - pad - nameX, TextStyles.Subheadline);
-            Typography.Draw(drawList, new Vector2(nameX, row.Center.Y - Typography.LineHeight(TextStyles.Subheadline) * 0.5f),
-                name, ui.BodyInk, TextStyles.Subheadline);
+            var value = timelineOpen ? Loc.T(L.Strats.HideTimeline) : Loc.T(L.Strats.ShowTimeline);
+            if (SettingsRow.Disclosure(card.NextRow(), Loc.T(L.Strats.Timeline), value, theme, "strats.timeline"))
+            {
+                timelineOpen = !timelineOpen;
+            }
+
+            if (timelineOpen)
+            {
+                for (var index = 0; index < timeline.Length; index++)
+                {
+                    DrawTimelineRow(drawList, card.NextRow(), timeline[index], index, scale);
+                }
+            }
+        }
+
+        if (links.Length > 0)
+        {
+            var value = linksOpen ? Loc.T(L.Strats.HideTimeline) : linksCountLabel;
+            if (SettingsRow.Disclosure(card.NextRow(), Loc.T(L.Strats.Sources), value, theme, "strats.sources"))
+            {
+                linksOpen = !linksOpen;
+            }
+
+            if (linksOpen)
+            {
+                for (var index = 0; index < links.Length; index++)
+                {
+                    DrawLinkRow(drawList, card.NextRow(), links[index], index, scale);
+                }
+            }
         }
 
         card.End();
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
+    }
+
+    private void DrawTimelineRow(ImDrawListPtr drawList, Rect row, TimelineEntry item, int index, float scale)
+    {
+        var timeX = row.Min.X + Metrics.Space.Md * scale;
+        Typography.Draw(drawList, new Vector2(timeX, row.Center.Y - Typography.LineHeight(TextStyles.FootnoteEmphasized) * 0.5f),
+            timelineTimes[index], ui.MutedInk, TextStyles.FootnoteEmphasized);
+        var dotCenter = new Vector2(timeX + 44f * scale, row.Center.Y);
+        drawList.AddCircleFilled(dotCenter, 4f * scale, ImGui.GetColorU32(TimelineColor(item.Type)), 12);
+        var nameX = dotCenter.X + 12f * scale;
+        var name = Typography.FitText(item.Name, row.Max.X - nameX, TextStyles.Subheadline);
+        Typography.Draw(drawList, new Vector2(nameX, row.Center.Y - Typography.LineHeight(TextStyles.Subheadline) * 0.5f),
+            name, ui.BodyInk, TextStyles.Subheadline);
+    }
+
+    private void DrawLinkRow(ImDrawListPtr drawList, Rect row, GuideLink link, int index, float scale)
+    {
+        var hovered = UiInteract.Hover(row.Min, row.Max);
+        if (hovered)
+        {
+            SettingsRow.DrawRowHighlight(row, theme);
+        }
+
+        var iconCenter = new Vector2(row.Min.X + Metrics.Space.Md * scale + 8f * scale, row.Center.Y);
+        AppSkin.Icon(drawList, iconCenter, linkGlyphs[index], ui.Accent, 0.75f);
+        var labelX = iconCenter.X + 18f * scale;
+        var trailingCenter = new Vector2(row.Max.X - 6f * scale, row.Center.Y);
+        var labelMaxWidth = MathF.Max(1f, trailingCenter.X - 14f * scale - labelX);
+        Marquee.DrawLeft(drawList, linkRowIds[index], link.Label, labelX,
+            row.Center.Y - Typography.LineHeight(TextStyles.Subheadline) * 0.5f, labelMaxWidth, TextStyles.Subheadline,
+            ui.BodyInk, hovered);
+        AppSkin.Icon(drawList, trailingCenter, LinkGlyph, ui.MutedInk, 0.6f);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        if (UiInteract.Click(row.Min, row.Max, hovered))
+        {
+            UrlActions.AskThenOpen(link.Url);
+        }
     }
 
     private Vector4 TimelineColor(string type) =>
@@ -412,8 +665,7 @@ internal sealed partial class StratsApp
     private void DrawStratIntro(ResolvedFight current, float scale)
     {
         var strat = current.Strat;
-        var hasText = !strat.Description.IsEmpty || !strat.Notes.IsEmpty;
-        if (!hasText && strat.Links.Length == 0)
+        if (strat.Description.IsEmpty && strat.Notes.IsEmpty)
         {
             return;
         }
@@ -427,9 +679,8 @@ internal sealed partial class StratsApp
             ? 0f
             : richText.Measure(strat.Description, innerWidth, TextStyles.Subheadline, scale);
         var notesHeight = strat.Notes.IsEmpty ? 0f : richText.Measure(strat.Notes, innerWidth, TextStyles.Footnote, scale);
-        var linksHeight = strat.Links.Length == 0 ? 0f : LinkPillHeight * scale + Metrics.Space.Sm * scale;
         var height = pad + descriptionHeight + (descriptionHeight > 0f && notesHeight > 0f ? Metrics.Space.Sm * scale : 0f) +
-            notesHeight + (hasText && linksHeight > 0f ? Metrics.Space.Sm * scale : 0f) + linksHeight + pad;
+            notesHeight + pad;
         var max = new Vector2(origin.X + width, origin.Y + height);
         ui.Card(drawList, origin, max, Metrics.Radius.Card * scale);
         var y = origin.Y + pad;
@@ -444,13 +695,6 @@ internal sealed partial class StratsApp
         {
             richText.Draw(drawList, new Vector2(origin.X + pad, y), strat.Notes, innerWidth, TextStyles.Footnote,
                 ui.MutedInk, ui.MutedInk, scale, images);
-            y += notesHeight;
-        }
-
-        if (linksHeight > 0f)
-        {
-            y += hasText ? Metrics.Space.Sm * scale : 0f;
-            DrawLinkPills(drawList, new Vector2(origin.X + pad, y), innerWidth, strat.Links, scale);
         }
 
         ImGui.SetCursorScreenPos(origin);
@@ -635,27 +879,33 @@ internal sealed partial class StratsApp
             ? 0f
             : richText.Measure(mech.Description, innerWidth, TextStyles.Subheadline, scale);
         var actionHeight = mech.Action is null ? 0f : richText.Measure(mech.Action, innerWidth, TextStyles.Subheadline, scale);
-        var playerTextHeight = mech.PlayerText is null
-            ? 0f
-            : richText.Measure(mech.PlayerText, innerWidth, TextStyles.SubheadlineEmphasized, scale);
         var mechImageHeight = mech.Image is null
             ? 0f
             : MathF.Min(MaxImageHeight * scale, SpotlightImage.HeightFor(mech.Image, mech.Transform, innerWidth));
-        var playerImageHeight = mech.PlayerImage is null
-            ? 0f
-            : MathF.Min(MaxImageHeight * scale, SpotlightImage.HeightFor(mech.PlayerImage, mech.PlayerTransform, innerWidth));
         var arenaHeight = mech.Arena is null ? 0f : innerWidth;
         var notesHeight = mech.Notes is null ? 0f : richText.Measure(mech.Notes, innerWidth, TextStyles.Footnote, scale);
         var labelHeight = Typography.LineHeight(TextStyles.Caption2);
         var linksHeight = mech.Links.Length == 0 ? 0f : LinkPillHeight * scale;
+
+        var spotPad = Metrics.Space.Sm * scale;
+        var spotInnerWidth = innerWidth - SpotBarWidth * scale - spotPad * 2f;
+        var playerTextHeight = mech.PlayerText is null
+            ? 0f
+            : richText.Measure(mech.PlayerText, spotInnerWidth, TextStyles.SubheadlineEmphasized, scale);
+        var playerImageHeight = mech.PlayerImage is null
+            ? 0f
+            : MathF.Min(MaxImageHeight * scale, SpotlightImage.HeightFor(mech.PlayerImage, mech.PlayerTransform, spotInnerWidth));
+        var spotHeight = playerTextHeight > 0f || playerImageHeight > 0f
+            ? spotPad + labelHeight + 2f * scale + playerTextHeight +
+              (playerTextHeight > 0f && playerImageHeight > 0f ? gap : 0f) + playerImageHeight + spotPad
+            : 0f;
 
         var height = pad + nameHeight;
         height += Block(descriptionHeight, separate ? labelHeight + 2f * scale : 0f, gap);
         height += Block(actionHeight, separate ? labelHeight + 2f * scale : 0f, gap);
         height += Block(mechImageHeight, 0f, gap);
         height += Block(arenaHeight, 0f, gap);
-        height += Block(playerTextHeight, labelHeight + 2f * scale, gap);
-        height += Block(playerImageHeight, 0f, gap);
+        height += Block(spotHeight, 0f, gap);
         height += Block(notesHeight, 0f, gap);
         height += Block(linksHeight, 0f, gap);
         height += pad;
@@ -720,23 +970,13 @@ internal sealed partial class StratsApp
                 y += arenaHeight;
             }
 
-            if (playerTextHeight > 0f)
+            if (spotHeight > 0f)
             {
                 y += gap;
-                Typography.Draw(drawList, new Vector2(x, y), Loc.T(L.Strats.ForYou), ui.Accent, TextStyles.Caption2);
-                y += labelHeight + 2f * scale;
-                richText.Draw(drawList, new Vector2(x, y), mech.PlayerText!, innerWidth, TextStyles.SubheadlineEmphasized,
-                    ui.TitleInk, ui.MutedInk, scale, images);
-                y += playerTextHeight;
-            }
-
-            if (playerImageHeight > 0f)
-            {
-                y += gap;
-                var frame = new Rect(new Vector2(x, y), new Vector2(x + innerWidth, y + playerImageHeight));
-                DrawImageFrame(drawList, frame, mech.PlayerImage!, mech.PlayerSpotlight, mech.PlayerTransform, scale,
-                    new StratsView(StratsScreen.Viewer, selection.FightKey, phaseIndex, mechIndex, true));
-                y += playerImageHeight;
+                var panel = new Rect(new Vector2(x, y), new Vector2(x + innerWidth, y + spotHeight));
+                DrawSpotPanel(drawList, panel, mech, spotPad, spotInnerWidth, labelHeight, playerTextHeight,
+                    playerImageHeight, gap, scale, phaseIndex, mechIndex);
+                y += spotHeight;
             }
 
             if (notesHeight > 0f)
@@ -756,6 +996,34 @@ internal sealed partial class StratsApp
 
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height + Metrics.Space.Md * scale));
+    }
+
+    private void DrawSpotPanel(ImDrawListPtr drawList, Rect panel, ResolvedMechanic mech, float spotPad,
+        float spotInnerWidth, float labelHeight, float playerTextHeight, float playerImageHeight, float gap, float scale,
+        int phaseIndex, int mechIndex)
+    {
+        Squircle.Fill(drawList, panel.Min, panel.Max, Metrics.Radius.Md * scale,
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, SpotFillAlpha)));
+        var barWidth = SpotBarWidth * scale;
+        Squircle.Fill(drawList, new Vector2(panel.Min.X, panel.Min.Y + spotPad),
+            new Vector2(panel.Min.X + barWidth, panel.Max.Y - spotPad), barWidth * 0.5f, ImGui.GetColorU32(ui.Accent));
+        var x = panel.Min.X + barWidth + spotPad;
+        var y = panel.Min.Y + spotPad;
+        Typography.Draw(drawList, new Vector2(x, y), Loc.T(L.Strats.ForYou), ui.Accent, TextStyles.Caption2);
+        y += labelHeight + 2f * scale;
+        if (playerTextHeight > 0f)
+        {
+            richText.Draw(drawList, new Vector2(x, y), mech.PlayerText!, spotInnerWidth, TextStyles.SubheadlineEmphasized,
+                ui.TitleInk, ui.MutedInk, scale, images);
+            y += playerTextHeight + (playerImageHeight > 0f ? gap : 0f);
+        }
+
+        if (playerImageHeight > 0f)
+        {
+            var frame = new Rect(new Vector2(x, y), new Vector2(x + spotInnerWidth, y + playerImageHeight));
+            DrawImageFrame(drawList, frame, mech.PlayerImage!, mech.PlayerSpotlight, mech.PlayerTransform, scale,
+                new StratsView(StratsScreen.Viewer, selection.FightKey, phaseIndex, mechIndex, true));
+        }
     }
 
     private static float Block(float contentHeight, float labelHeight, float gap) =>
