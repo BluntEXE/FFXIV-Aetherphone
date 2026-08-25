@@ -6,7 +6,7 @@ internal interface IMiniGame : IDisposable
 {
     string Id { get; }
     string Title { get; }
-    string Genre { get; }
+    GameGenre Genre { get; }
     Vector4 Accent => AppAccents.For(Id);
     bool RunsOnAClock => false;
     bool WantsLandscape => false;

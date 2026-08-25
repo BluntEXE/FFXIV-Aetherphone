@@ -73,7 +73,7 @@ internal sealed class ChessApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Chess);
-    public string Genre => Loc.T(L.Games.GenreStrategy);
+    public GameGenre Genre => GameGenre.Tabletop;
 
     public void Open()
     {

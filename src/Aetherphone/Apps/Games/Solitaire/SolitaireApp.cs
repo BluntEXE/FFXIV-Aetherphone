@@ -34,7 +34,7 @@ internal sealed class SolitaireApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Solitaire);
-    public string Genre => Loc.T(L.Games.GenreCards);
+    public GameGenre Genre => GameGenre.Tabletop;
     public void Open()
     {
         StartNewGame();

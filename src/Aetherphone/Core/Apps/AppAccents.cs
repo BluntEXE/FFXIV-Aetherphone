@@ -66,6 +66,8 @@ internal static class AppAccents
         ["minesweeper"] = AccentRing.Red,
         ["sudoku"] = AccentRing.Azure,
         ["chess"] = AccentRing.Gold,
+        ["uno"] = AccentRing.Rose,
+        ["pool"] = AccentRing.Green,
         ["stack"] = AccentRing.Indigo,
         ["crystaldrop"] = AccentRing.Violet,
         ["beat"] = AccentRing.Rose,

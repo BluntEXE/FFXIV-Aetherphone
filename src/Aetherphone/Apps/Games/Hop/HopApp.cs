@@ -39,7 +39,7 @@ internal sealed class HopApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Hop);
-    public string Genre => Loc.T(L.Games.GenreArcade);
+    public GameGenre Genre => GameGenre.Arcade;
     public bool RunsOnAClock => true;
 
     public void Open()

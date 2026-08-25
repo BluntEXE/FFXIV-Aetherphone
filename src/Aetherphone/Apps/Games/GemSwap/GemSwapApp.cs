@@ -41,7 +41,7 @@ internal sealed class GemSwapApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.GemSwap);
-    public string Genre => Loc.T(L.Games.GenreMatch);
+    public GameGenre Genre => GameGenre.Puzzle;
     public void Open()
     {
         loadedBest = 0;

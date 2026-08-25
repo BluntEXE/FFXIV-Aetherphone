@@ -35,7 +35,7 @@ internal sealed class StackApp : IMiniGame
     public string Title => Loc.T(L.Games.Stack);
     public bool RunsOnAClock => true;
 
-    public string Genre => Loc.T(L.Games.GenreArcade);
+    public GameGenre Genre => GameGenre.Arcade;
 
     public void Open()
     {

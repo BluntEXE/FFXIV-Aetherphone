@@ -45,7 +45,7 @@ internal sealed class Twenty48App : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => "2048";
-    public string Genre => Loc.T(L.Games.GenrePuzzle);
+    public GameGenre Genre => GameGenre.Puzzle;
     public void Open()
     {
         loadedBest = 0;

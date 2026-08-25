@@ -64,7 +64,7 @@ internal sealed class WordRunApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.WordRun);
-    public string Genre => Loc.T(L.Games.GenreLogic);
+    public GameGenre Genre => GameGenre.Brain;
     public bool RunsOnAClock => true;
 
     public WordRunApp(GameData gameData)

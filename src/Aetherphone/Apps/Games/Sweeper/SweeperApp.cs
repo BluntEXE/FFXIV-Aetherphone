@@ -29,7 +29,7 @@ internal sealed class SweeperApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Sweeper);
-    public string Genre => Loc.T(L.Games.GenreLogic);
+    public GameGenre Genre => GameGenre.Brain;
     public void Open()
     {
         StartNewGame(difficulty);

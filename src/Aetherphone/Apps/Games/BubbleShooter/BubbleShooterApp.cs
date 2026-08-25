@@ -29,7 +29,7 @@ internal sealed class BubbleShooterApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Bubbles);
-    public string Genre => Loc.T(L.Games.GenreArcade);
+    public GameGenre Genre => GameGenre.Puzzle;
 
     public void Open()
     {

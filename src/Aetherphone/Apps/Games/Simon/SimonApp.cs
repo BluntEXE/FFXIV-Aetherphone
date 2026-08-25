@@ -49,7 +49,7 @@ internal sealed class SimonApp : IMiniGame
     public string Title => Loc.T(L.Games.Simon);
     public bool RunsOnAClock => true;
 
-    public string Genre => Loc.T(L.Games.GenreMemory);
+    public GameGenre Genre => GameGenre.Brain;
     public void Open()
     {
         statsLoaded = false;

@@ -1,13 +1,13 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Apps.Games.Framework;
+using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.GameRooms;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Games.Online;
@@ -16,68 +16,96 @@ namespace Aetherphone.Apps.Games.Online;
 // code IS the door, so this screen owns exactly three verbs and the room screen owns the rest.
 internal sealed class OnlineHub
 {
-    private const float HeaderHeight = 42f;
-    private const float ActionRowHeight = 60f;
+    private const float HostCardHeight = 86f;
+    private const float MedallionRadius = 27f;
+    private const float RoomMedallionRadius = 18f;
     private const float FieldHeight = 40f;
     private const float RoomRowHeight = 64f;
+    private const float HostPillHeight = 32f;
+    private const float HostPillMinWidth = 70f;
+    private const float HeadingHeight = 32f;
     private const int CodeBufferLength = 16;
 
     private readonly GameRoomsStore store;
-    private readonly Action<string> openRoom;
+    private readonly Action<string, string> openRoom;
 
     private string codeBuffer = string.Empty;
     private string inlineReason = string.Empty;
+    private string preferredKind = string.Empty;
+    private string unoHint = string.Empty;
+    private GameRoomCardDto[] labeledRooms = Array.Empty<GameRoomCardDto>();
+    private string[] roomTitles = Array.Empty<string>();
+    private string[] roomSubtitles = Array.Empty<string>();
 
-    public OnlineHub(GameRoomsStore store, Action<string> openRoom)
+    public OnlineHub(GameRoomsStore store, Action<string, string> openRoom)
     {
         this.store = store;
         this.openRoom = openRoom;
     }
 
-    public void Enter()
+    public void Enter(string preferredKind)
     {
+        this.preferredKind = preferredKind;
         inlineReason = string.Empty;
         codeBuffer = string.Empty;
+        unoHint = Loc.T(L.Games.OnlineHostHint,
+            OnlineGameArt.MaxPlayers(GameRoomWire.UnoKind).ToString(Loc.Culture));
+        labeledRooms = Array.Empty<GameRoomCardDto>();
         store.RefreshNow();
     }
 
-    public void Draw(in PhoneContext context, Action back)
+    public void Draw(in PhoneContext context, Action back, AppSkin ui)
     {
-        AppHeader.Draw(context, Loc.T(L.Games.OnlineTitle), back);
         var scale = UiScale.Current;
         var content = context.Content;
-        var body = new Rect(new Vector2(content.Min.X, content.Min.Y + HeaderHeight * scale), content.Max);
+        DrawHeader(content, back, ui, scale);
+        var body = new Rect(new Vector2(content.Min.X, content.Min.Y + AppHeader.Height * scale), content.Max);
         Consume();
         store.EnsureFresh();
         using var surface = AppSurface.Begin(body);
-        var theme = context.Theme;
-
         if (store.AccountId.Length == 0)
         {
-            DrawNotice(theme, scale, Loc.T(L.Games.OnlineSignIn));
+            DrawNotice(ui, scale, Loc.T(L.Games.OnlineSignIn));
             return;
         }
 
-        DrawHostRow(theme, scale, GameRoomWire.UnoKind, Loc.T(L.Games.OnlineUno),
-            Loc.T(L.Games.OnlineHostHint, "6"));
+        var kinds = OnlineGameArt.Kinds;
+        for (var index = 0; index < kinds.Length; index++)
+        {
+            DrawHostCard(ui, scale, kinds[index]);
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+        }
+
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
-        DrawHostRow(theme, scale, GameRoomWire.ChessKind, Loc.T(L.Games.OnlineChess),
-            Loc.T(L.Games.OnlineChessHostHint));
-        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
-        DrawHostRow(theme, scale, GameRoomWire.PoolKind, Loc.T(L.Games.OnlinePool),
-            Loc.T(L.Games.OnlinePoolHostHint));
-        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
-        DrawJoinByCode(theme, scale);
+        DrawJoinByCode(ui, scale);
         if (inlineReason.Length > 0)
         {
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
-            DrawNotice(theme, scale, Loc.T(GamesOnlineText.ReasonMessage(inlineReason)));
+            DrawNotice(ui, scale, Loc.T(GamesOnlineText.ReasonMessage(inlineReason)));
         }
 
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
-        DrawRoomsHeading(theme, scale);
-        DrawRooms(theme, scale);
+        DrawHeading(ui, scale, Loc.T(L.Games.OnlineMyRooms));
+        DrawRooms(ui, scale);
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
+    }
+
+    private void DrawHeader(Rect content, Action back, AppSkin ui, float scale)
+    {
+        if (AppHeader.DrawBack(content, scale, "games.online.back", ui.HeaderInk))
+        {
+            back();
+        }
+
+        var rowCenterY = content.Min.Y + AppHeader.Height * scale * 0.5f;
+        var title = Typography.FitText(Loc.T(L.Games.OnlineTitle), MathF.Max(1f, content.Width - 112f * scale), 1.3f,
+            FontWeight.Bold);
+        Typography.DrawCentered(ImGui.GetWindowDrawList(), new Vector2(content.Center.X, rowCenterY), title,
+            ui.TitleInk, 1.3f, FontWeight.Bold);
+        if (store.LoadingRooms)
+        {
+            LoadingPulse.Spinner(new Vector2(content.Max.X - 22f * scale, rowCenterY), 8f * scale, ui.Accent);
+        }
     }
 
     private void Consume()
@@ -95,7 +123,7 @@ internal sealed class OnlineHub
                 inlineReason = string.Empty;
                 codeBuffer = string.Empty;
                 store.Enter(answer.Room.RoomId);
-                openRoom(answer.Room.RoomId);
+                openRoom(answer.Room.RoomId, answer.Room.GameKind);
                 return;
             }
 
@@ -103,147 +131,232 @@ internal sealed class OnlineHub
         }
     }
 
-    private void DrawHostRow(PhoneTheme theme, float scale, string gameKind, string gameName, string hint)
+    private string HostHint(string kind)
+    {
+        if (string.Equals(kind, GameRoomWire.ChessKind, StringComparison.Ordinal))
+        {
+            return Loc.T(L.Games.OnlineChessHostHint);
+        }
+
+        return string.Equals(kind, GameRoomWire.PoolKind, StringComparison.Ordinal)
+            ? Loc.T(L.Games.OnlinePoolHostHint)
+            : unoHint;
+    }
+
+    private void DrawHostCard(AppSkin ui, float scale, string kind)
     {
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
         var drawList = ImGui.GetWindowDrawList();
-        var row = new Rect(origin, new Vector2(origin.X + width, origin.Y + ActionRowHeight * scale));
+        var height = HostCardHeight * scale;
+        var row = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
         var rounding = Metrics.Radius.Card * scale;
-        var hovered = UiInteract.Hover(row.Min, row.Max);
-        Squircle.Fill(drawList, row.Min, row.Max, rounding, ImGui.GetColorU32(theme.GroupedCard));
+        var accent = OnlineGameArt.Accent(kind);
+        var pillLabel = Loc.T(L.Games.OnlineHostShort);
+        var pillHeight = HostPillHeight * scale;
+        var pillWidth = MathF.Max(AppSkin.PillWidthFor(pillLabel, pillHeight), HostPillMinWidth * scale);
+        var pillCenter = new Vector2(row.Max.X - 14f * scale - pillWidth * 0.5f, row.Center.Y);
+        var pillHalf = new Vector2(pillWidth, pillHeight) * 0.5f;
+        var pillHovered = UiInteract.Hover(pillCenter - pillHalf, pillCenter + pillHalf);
+        var hovered = !pillHovered && UiInteract.Hover(row.Min, row.Max);
+        ui.Card(drawList, row.Min, row.Max, rounding, hovered || pillHovered);
+        var radius = MedallionRadius * scale;
+        var medallion = new Vector2(row.Min.X + 16f * scale + radius, row.Center.Y);
+        drawList.PushClipRect(row.Min, row.Max, true);
+        drawList.AddCircleFilled(medallion, radius * 2.6f, ImGui.GetColorU32(Palette.WithAlpha(accent, 0.10f)), 48);
+        drawList.PopClipRect();
         if (hovered)
         {
-            Squircle.Fill(drawList, row.Min, row.Max, rounding,
-                ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.05f)));
+            Squircle.Fill(drawList, row.Min, row.Max, rounding, ImGui.GetColorU32(ui.HoverTint));
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        var accent = Core.Apps.AppAccents.For("games");
-        var iconCenter = new Vector2(row.Min.X + 26f * scale, row.Center.Y);
-        drawList.AddCircleFilled(iconCenter, 15f * scale,
-            ImGui.GetColorU32(Palette.WithAlpha(accent, 0.16f)), 32);
-        ProgressRing.CenterIcon(drawList, iconCenter, FontAwesomeIcon.UserFriends, accent, 13f * scale);
+        if (string.Equals(kind, preferredKind, StringComparison.Ordinal))
+        {
+            Squircle.Stroke(drawList, row.Min, row.Max, rounding,
+                ImGui.GetColorU32(Palette.WithAlpha(accent, 0.30f + 0.35f * Pulse.Wave())), 1.5f * scale);
+        }
 
-        var textLeft = row.Min.X + 48f * scale;
-        var textWidth = row.Width - 62f * scale;
-        Typography.Draw(drawList, new Vector2(textLeft, row.Min.Y + 12f * scale),
-            Typography.FitText(Loc.T(L.Games.OnlineHost) + " · " + gameName, textWidth,
-                TextStyles.SubheadlineEmphasized), theme.TextStrong, TextStyles.SubheadlineEmphasized);
-        Typography.Draw(drawList, new Vector2(textLeft, row.Min.Y + 32f * scale),
-            Typography.FitText(hint, textWidth, TextStyles.Footnote),
-            theme.TextMuted, TextStyles.Footnote);
+        if (hovered || pillHovered)
+        {
+            ProgressRing.Glow(medallion, radius * 1.1f, accent, 0.4f);
+        }
 
-        var clicked = UiInteract.Click(row.Min, row.Max, hovered);
+        drawList.AddCircleFilled(medallion, radius, ImGui.GetColorU32(GamePalette.Darken(accent, 0.32f)), 48);
+        drawList.AddCircle(medallion, radius, ImGui.GetColorU32(GamePalette.Lighten(accent, 0.35f) with { W = 0.55f }),
+            48, 1.2f * scale);
+        OnlineGameArt.Draw(drawList, kind, medallion, radius * 1.3f, scale);
+
+        var textLeft = medallion.X + radius + 14f * scale;
+        var textWidth = MathF.Max(1f, pillCenter.X - pillHalf.X - 10f * scale - textLeft);
+        Typography.Draw(drawList, new Vector2(textLeft, row.Min.Y + 18f * scale),
+            Typography.FitText(Loc.T(GamesOnlineText.GameName(kind)), textWidth, TextStyles.Headline), ui.TitleInk,
+            TextStyles.Headline);
+        Typography.Draw(drawList, new Vector2(textLeft, row.Min.Y + 42f * scale),
+            Typography.FitText(HostHint(kind), textWidth, TextStyles.Footnote), ui.MutedInk, TextStyles.Footnote);
+
+        var pillClicked = GameHud.Button(pillCenter, new Vector2(pillWidth, pillHeight), pillLabel,
+            store.IntentInFlight ? ui.MutedInk : accent, ui.Theme);
+        var clicked = pillClicked || UiInteract.Click(row.Min, row.Max, hovered);
         ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, ActionRowHeight * scale));
+        ImGui.Dummy(new Vector2(width, height));
         if (clicked && !store.IntentInFlight)
         {
             inlineReason = string.Empty;
-            store.CreateRoom(gameKind);
+            store.CreateRoom(kind);
         }
     }
 
-    private void DrawJoinByCode(PhoneTheme theme, float scale)
+    private void DrawJoinByCode(AppSkin ui, float scale)
     {
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
         var drawList = ImGui.GetWindowDrawList();
-        Typography.Draw(drawList, origin, Loc.T(L.Games.OnlineJoinHeading), theme.TextMuted,
+        Typography.Draw(drawList, origin, Loc.T(L.Games.OnlineJoinHeading), ui.MutedInk,
             TextStyles.FootnoteEmphasized);
         var fieldTop = origin.Y + 20f * scale;
         var pillWidth = 92f * scale;
         var fieldMin = new Vector2(origin.X, fieldTop);
         var fieldMax = new Vector2(origin.X + width - pillWidth - 8f * scale, fieldTop + FieldHeight * scale);
-        Squircle.Fill(drawList, fieldMin, fieldMax, Metrics.Radius.Field * scale,
-            ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.06f)));
+        Squircle.Fill(drawList, fieldMin, fieldMax, Metrics.Radius.Field * scale, ImGui.GetColorU32(ui.FieldSurface));
         ImGui.SetCursorScreenPos(new Vector2(fieldMin.X + 10f * scale,
             (fieldMin.Y + fieldMax.Y) * 0.5f - ImGui.GetFrameHeight() * 0.5f));
         ImGui.SetNextItemWidth(fieldMax.X - fieldMin.X - 20f * scale);
         using (ImRaii.PushColor(ImGuiCol.FrameBg, new Vector4(0f, 0f, 0f, 0f)))
-        using (ImRaii.PushColor(ImGuiCol.Text, theme.TextStrong))
+        using (ImRaii.PushColor(ImGuiCol.Text, ui.TitleInk))
         {
             ImGui.InputTextWithHint("##gameRoomCode", Loc.T(L.Games.OnlineJoinHint), ref codeBuffer,
                 CodeBufferLength);
         }
 
-        var trimmed = codeBuffer.Trim();
-        var pillCenter = new Vector2(origin.X + width - pillWidth * 0.5f,
-            fieldTop + FieldHeight * scale * 0.5f);
-        var accent = Core.Apps.AppAccents.For("games");
+        var trimmed = codeBuffer.AsSpan().Trim();
+        var ready = trimmed.Length > 0 && !store.IntentInFlight;
+        var pillCenter = new Vector2(origin.X + width - pillWidth * 0.5f, fieldTop + FieldHeight * scale * 0.5f);
         if (GameHud.Button(pillCenter, new Vector2(pillWidth, FieldHeight * scale), Loc.T(L.Games.OnlineJoin),
-                trimmed.Length > 0 && !store.IntentInFlight ? accent : theme.TextMuted, theme)
-            && trimmed.Length > 0 && !store.IntentInFlight)
+                ready ? ui.Accent : ui.MutedInk, ui.Theme) && ready)
         {
             inlineReason = string.Empty;
-            store.JoinByCode(trimmed);
+            store.JoinByCode(trimmed.ToString());
         }
 
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, 20f * scale + FieldHeight * scale));
     }
 
-    private void DrawRoomsHeading(PhoneTheme theme, float scale)
+    private static void DrawHeading(AppSkin ui, float scale, string label)
     {
         var origin = ImGui.GetCursorScreenPos();
-        Typography.Draw(ImGui.GetWindowDrawList(), origin, Loc.T(L.Games.OnlineMyRooms), theme.TextStrong,
+        Typography.Draw(ImGui.GetWindowDrawList(), origin,
+            Typography.FitText(label, ScrollLayout.StableContentWidth(), TextStyles.Title3), ui.TitleInk,
             TextStyles.Title3);
         ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(1f, 30f * scale));
+        ImGui.Dummy(new Vector2(1f, HeadingHeight * scale));
     }
 
-    private void DrawRooms(PhoneTheme theme, float scale)
+    private void DrawRooms(AppSkin ui, float scale)
     {
         var rooms = store.Rooms;
         if (rooms.Length == 0)
         {
-            DrawNotice(theme, scale,
-                Loc.T(store.LoadedRooms ? L.Games.OnlineNoRooms : L.Games.OnlineLoading));
+            DrawNotice(ui, scale, Loc.T(store.LoadedRooms ? L.Games.OnlineNoRooms : L.Games.OnlineLoading));
             return;
         }
 
-        var card = GroupCard.Begin(theme, rooms.Length, RoomRowHeight);
+        RefreshRoomLabels(rooms);
         for (var index = 0; index < rooms.Length; index++)
         {
-            if (DrawRoomRow(card.NextRow(), theme, scale, rooms[index]))
+            if (DrawRoomRow(ui, scale, rooms[index], roomTitles[index], roomSubtitles[index]))
             {
                 inlineReason = string.Empty;
                 store.Enter(rooms[index].RoomId);
-                openRoom(rooms[index].RoomId);
+                openRoom(rooms[index].RoomId, rooms[index].GameKind);
+            }
+
+            if (index + 1 < rooms.Length)
+            {
+                ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
             }
         }
-
-        card.End();
     }
 
-    private static bool DrawRoomRow(Rect row, PhoneTheme theme, float scale, GameRoomCardDto room)
+    private void RefreshRoomLabels(GameRoomCardDto[] rooms)
     {
+        if (ReferenceEquals(rooms, labeledRooms))
+        {
+            return;
+        }
+
+        labeledRooms = rooms;
+        if (roomTitles.Length < rooms.Length)
+        {
+            roomTitles = new string[rooms.Length];
+            roomSubtitles = new string[rooms.Length];
+        }
+
+        for (var index = 0; index < rooms.Length; index++)
+        {
+            var room = rooms[index];
+            roomTitles[index] = Loc.T(GamesOnlineText.GameName(room.GameKind)) + " · "
+                                + Loc.T(L.Games.OnlineHostedBy, room.OwnerName);
+            var phase = room.Phase switch
+            {
+                GameRoomWire.PhasePlaying => L.Games.OnlinePhasePlaying,
+                GameRoomWire.PhaseFinished => L.Games.OnlinePhaseFinished,
+                _ => L.Games.OnlinePhaseLobby,
+            };
+            roomSubtitles[index] = Loc.T(L.Games.OnlineSeats, room.SeatedCount.ToString(Loc.Culture),
+                room.MaxSeats.ToString(Loc.Culture)) + " · " + Loc.T(phase);
+        }
+    }
+
+    private static bool DrawRoomRow(AppSkin ui, float scale, GameRoomCardDto room, string title, string subtitle)
+    {
+        var width = ScrollLayout.StableContentWidth();
+        var origin = ImGui.GetCursorScreenPos();
         var drawList = ImGui.GetWindowDrawList();
+        var height = RoomRowHeight * scale;
+        var row = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
+        var rounding = Metrics.Radius.Card * scale;
         var hovered = UiInteract.Hover(row.Min, row.Max);
+        ui.Card(drawList, row.Min, row.Max, rounding, hovered);
         if (hovered)
         {
+            Squircle.Fill(drawList, row.Min, row.Max, rounding, ImGui.GetColorU32(ui.HoverTint));
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        var gameName = Loc.T(GamesOnlineText.GameName(room.GameKind));
-        var title = gameName + " · " + Loc.T(L.Games.OnlineHostedBy, room.OwnerName);
-        var phase = room.Phase switch
+        var accent = OnlineGameArt.Accent(room.GameKind);
+        var radius = RoomMedallionRadius * scale;
+        var medallion = new Vector2(row.Min.X + 14f * scale + radius, row.Center.Y);
+        drawList.AddCircleFilled(medallion, radius, ImGui.GetColorU32(GamePalette.Darken(accent, 0.32f)), 36);
+        drawList.AddCircle(medallion, radius, ImGui.GetColorU32(GamePalette.Lighten(accent, 0.35f) with { W = 0.5f }),
+            36, 1f * scale);
+        OnlineGameArt.Draw(drawList, room.GameKind, medallion, radius * 1.3f, scale);
+
+        var textLeft = medallion.X + radius + 12f * scale;
+        var textWidth = MathF.Max(1f, row.Max.X - 12f * scale - textLeft);
+        Typography.Draw(drawList, new Vector2(textLeft, row.Center.Y - 17f * scale),
+            Typography.FitText(title, textWidth, TextStyles.Headline), ui.TitleInk, TextStyles.Headline);
+        var subtitleLeft = textLeft;
+        var subtitleY = row.Center.Y + 2f * scale;
+        if (room.Phase == GameRoomWire.PhasePlaying)
         {
-            GameRoomWire.PhasePlaying => L.Games.OnlinePhasePlaying,
-            GameRoomWire.PhaseFinished => L.Games.OnlinePhaseFinished,
-            _ => L.Games.OnlinePhaseLobby,
-        };
-        var subtitle = Loc.T(L.Games.OnlineSeats, room.SeatedCount.ToString(Loc.Culture),
-            room.MaxSeats.ToString(Loc.Culture)) + " · " + Loc.T(phase);
-        var textWidth = row.Width - 8f * scale;
-        Typography.Draw(drawList, new Vector2(row.Min.X, row.Center.Y - 17f * scale),
-            Typography.FitText(title, textWidth, TextStyles.Headline), theme.TextStrong, TextStyles.Headline);
-        Typography.Draw(drawList, new Vector2(row.Min.X, row.Center.Y + 2f * scale),
-            Typography.FitText(subtitle, textWidth, TextStyles.Footnote), theme.TextMuted, TextStyles.Footnote);
-        return UiInteract.Click(row.Min, row.Max, hovered);
+            var lineHeight = Typography.LineHeight(TextStyles.Footnote);
+            LivePill.DrawLamp(drawList, new Vector2(textLeft + 5f * scale, subtitleY + lineHeight * 0.5f), accent,
+                (float)ImGui.GetTime(), scale);
+            subtitleLeft += 16f * scale;
+        }
+
+        Typography.Draw(drawList, new Vector2(subtitleLeft, subtitleY),
+            Typography.FitText(subtitle, MathF.Max(1f, textWidth - (subtitleLeft - textLeft)), TextStyles.Footnote),
+            ui.MutedInk, TextStyles.Footnote);
+        var clicked = UiInteract.Click(row.Min, row.Max, hovered);
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, height));
+        return clicked;
     }
 
-    private static void DrawNotice(PhoneTheme theme, float scale, string message)
+    private static void DrawNotice(AppSkin ui, float scale, string message)
     {
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
@@ -252,9 +365,8 @@ internal sealed class OnlineHub
         var block = Typography.MeasureWrappedBlock(message, TextStyles.Footnote, width - pad * 2f);
         var height = block.Y + pad * 2f;
         var max = new Vector2(origin.X + width, origin.Y + height);
-        Squircle.Fill(drawList, origin, max, Metrics.Radius.Card * scale,
-            ImGui.GetColorU32(theme.GroupedCard));
-        Typography.DrawWrappedLeft(new Vector2(origin.X + pad, origin.Y + pad), message, theme.TextMuted,
+        ui.Card(drawList, origin, max, Metrics.Radius.Card * scale);
+        Typography.DrawWrappedLeft(new Vector2(origin.X + pad, origin.Y + pad), message, ui.MutedInk,
             TextStyles.Footnote, width - pad * 2f);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height + Metrics.Space.Sm * scale));

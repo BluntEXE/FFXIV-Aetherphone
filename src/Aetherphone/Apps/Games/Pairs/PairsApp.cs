@@ -51,7 +51,7 @@ internal sealed class PairsApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Pairs);
-    public string Genre => Loc.T(L.Games.GenreMemory);
+    public GameGenre Genre => GameGenre.Brain;
     public void Open()
     {
         statsLoaded = false;

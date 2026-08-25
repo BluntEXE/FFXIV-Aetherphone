@@ -56,6 +56,19 @@ internal sealed class GameStatsStore
         return new GameStats(record.BestScore, record.BestTimeSeconds, record.Streak);
     }
 
+    public long LastPlayed(string gameId)
+    {
+        var record = Find(gameId);
+        return record?.LastPlayedUnixSeconds ?? 0L;
+    }
+
+    public void MarkPlayed(string gameId)
+    {
+        var record = GetOrCreate(gameId);
+        record.LastPlayedUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        configuration.Save();
+    }
+
     public bool SubmitScore(string gameId, int score)
     {
         RecordDailyPlay(gameId);

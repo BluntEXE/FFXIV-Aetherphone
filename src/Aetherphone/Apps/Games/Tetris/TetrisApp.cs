@@ -46,7 +46,7 @@ internal sealed class TetrisApp : IMiniGame
     public string Title => Loc.T(L.Games.Tetris);
     public bool RunsOnAClock => true;
 
-    public string Genre => Loc.T(L.Games.GenrePuzzle);
+    public GameGenre Genre => GameGenre.Puzzle;
     public void Open()
     {
         started = false;

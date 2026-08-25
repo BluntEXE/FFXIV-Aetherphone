@@ -30,7 +30,7 @@ internal sealed class CrystalDropApp : IMiniGame
     public string Title => Loc.T(L.Games.CrystalDrop);
     public bool RunsOnAClock => true;
 
-    public string Genre => Loc.T(L.Games.GenrePuzzle);
+    public GameGenre Genre => GameGenre.Puzzle;
 
     public void Open()
     {

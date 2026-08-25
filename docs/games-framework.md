@@ -6,7 +6,10 @@ This page explains how the Games app hosts its mini-games and how to build a new
 
 | Path | Role |
 | --- | --- |
-| src/Aetherphone/Apps/Games/GamesApp.cs | The Games hub: launcher UI, game list, routing into a running game |
+| src/Aetherphone/Apps/Games/GamesApp.cs | The Games hub: routing, the running game, the coin chip (launcher pages live in the .Launcher and .Tiles partials) |
+| src/Aetherphone/Apps/Games/GamesLibrary.cs | The catalog behind the launcher: release order, latest wave, recents, filters and search |
+| src/Aetherphone/Apps/Games/Framework/GameGenre.cs | The genre shelves a game can declare |
+| src/Aetherphone/Apps/Games/Online/OnlineHub.cs | The friends lobby: host cards, join by code, open rooms |
 | src/Aetherphone/Apps/Games/Framework/IMiniGame.cs | Contract every mini-game implements |
 | src/Aetherphone/Apps/Games/Framework/GameContext.cs | Per-frame data handed to the running game |
 | src/Aetherphone/Apps/Games/Framework/GameScene.cs | Ambient backdrop glow and arena panel drawing |
@@ -34,10 +37,10 @@ The whole arcade is one phone app. `GamesApp` implements `IPhoneApp` (the contra
 
 ```csharp
 apps.Add(new GamesApp(services.GameStats, services.GameData, services.Textures, services.Coins,
-    services.CoinSessions));
+    services.CoinSessions, services.GameRooms));
 ```
 
-The last two arguments are the coin plumbing: `services.Coins` (the wallet store) and `services.CoinSessions` (the play-session tracker). What the hub does with them is described below.
+The last three arguments are the coin plumbing and the friends lobby: `services.Coins` (the wallet store), `services.CoinSessions` (the play-session tracker), and `services.GameRooms` (the online room store). What the hub does with them is described below.
 
 Inside, `GamesApp` owns a plain `IMiniGame[]` array built in its constructor. That array is the registry: a game exists because a line constructs it there. Most games have parameterless constructors; `TriviaApp` shows that a game can take services if `GamesApp` passes them through.
 
@@ -48,22 +51,50 @@ internal interface IMiniGame : IDisposable
 {
     string Id { get; }
     string Title { get; }
-    string Genre { get; }
+    GameGenre Genre { get; }
     Vector4 Accent => AppAccents.For(Id);
     bool RunsOnAClock => false;
+    bool WantsLandscape => false;
     void Open();
     void Close();
     void Draw(in GameContext context);
 }
 ```
 
+`Genre` is a `GameGenre` value (src/Aetherphone/Apps/Games/Framework/GameGenre.cs), one of five shelves for local games: `Arcade` (reflex classics), `Action` (shooters and mazes), `Puzzle`, `Brain` (logic, words, memory, trivia) and `Tabletop` (board and card games). A sixth value, `Friends`, is reserved for the online games the hub adds itself; no `IMiniGame` declares it. `GameGenres.Label` maps each value to its `LocString`.
+
 `WantsLandscape` defaults to false. A game that overrides it to true (Doom) makes the hub hold the same landscape lock the camera and MogCast theater use, so the phone rotates while the game is open; in that orientation the hub draws no header, hands the game the whole content rect, and floats a small back chip at the top-left over whatever the game draws.
 
 `RunsOnAClock` defaults to false. A game whose simulation advances on a timer overrides it to true so the hub can fade a Paused veil over it while the phone is unfocused (see the focus gate below); a turn-based game leaves the default and simply stands still.
 
-The launcher groups games into sections by `Genre`, draws a row per game with its accent tile, and shows a featured hero card. The server picks the featured game when it can: `RebuildLayout` first computes the daily-rotation fallback `featuredIndex = GameStatsStore.TodayIndex * FeaturedStep % games.Length`, then overrides it when `coins.Wallet?.FeaturedGameId` (a field on the coin wallet DTO in src/Aetherphone/Core/Aethernet/Contracts/CoinDtos.cs) names a game in the array. Whichever wins, its id lands in `stats.DailyGameId`, which makes it the daily challenge.
+### The launcher
 
-Navigation uses a two-route `ViewRouter<GameRoute>` (`Launcher` and `Playing`). Tapping a row calls `OpenGame`, which sets `currentGame`, calls `game.Open()`, and pushes `Playing`. The back button pops the route, and `GamesApp.Draw` calls `CloseCurrentGame` (which calls `game.Close()`) once the transition lands back on the launcher.
+The launcher is split across three partials: `GamesApp.cs` (routing, the running game, the coin chip), `GamesApp.Launcher.cs` (page layout) and `GamesApp.Tiles.cs` (the hero, tiles, shelf headings and the friends card). It draws on the neutral `AppPalettes.Games` skin with the featured game's accent washed over it by `GameScene.Ambient`.
+
+`GamesLibrary` (src/Aetherphone/Apps/Games/GamesLibrary.cs) is the catalog behind the launcher. It wraps the `IMiniGame[]` plus one `GameEntry` per online game (Uno, Chess, 8-Ball Pool, ids `online.uno`, `online.chess`, `online.pool`) and keeps every list the pages draw from as reusable `int[]` index arrays, so the draw code never allocates:
+
+| List | What it holds |
+| --- | --- |
+| `Ordered` | Every entry, newest release first (the `Releases` table in the same file; add a row when you add a game) |
+| `Latest` | The newest wave: entries released within a week of the newest one, capped at ten |
+| `Recent` | Entries with a `LastPlayedUnixSeconds` on their `GameStatRecord`, most recent first, capped at eight |
+| `Filter(kind, query)` | One chip's view, or a title search across every shelf when the query is not blank |
+
+`IsNew` marks an entry for thirty days after its release; `Best` and `Subtitle` carry the cached best-score line ("Best · 1,240", "Best · 1:05", "Streak · 3") or fall back to the genre label. `Rebuild` refreshes the recents and best labels; the hub calls it when it opens, when a game closes, and when the player leaves an online room.
+
+The page itself is a pinned header (title plus a search toggle that slides a `SearchField` in under it), a pannable `ChipRail` of filters (`All`, `New`, the five genre shelves, `With friends`), and an `AppSurface` body:
+
+- `All` stacks the daily hero, a `Latest additions` shelf, a `Jump back in` shelf (only once something has been played), the `Play with friends` card, and an `All games` grid newest-first.
+- A genre chip shows that shelf's grid with a count; `New` shows the latest wave; `With friends` shows the friends card and the three online tiles.
+- A non-blank search shows matching tiles from every shelf, or an `EmptyState` when nothing matches.
+
+Shelves pan sideways through `TileRail` (drag with slop, clipped to the phone edge); grids pick three to six columns from the content width. Tiles are accent-gradient squircles with the game's `AppIconArt` (or `OnlineGameArt` for the online three), a `NEW` pill inside the thirty-day window, a people badge on online entries, and a hover lift on a per-entry `Spring`. Tapping a local tile opens the game; tapping an online tile opens the friends lobby with that game's card highlighted.
+
+The server picks the featured game when it can: `RebuildLayout` first computes the daily-rotation fallback `featuredIndex = GameStatsStore.TodayIndex * FeaturedStep % games.Length`, then overrides it when `coins.Wallet?.FeaturedGameId` (a field on the coin wallet DTO in src/Aetherphone/Core/Aethernet/Contracts/CoinDtos.cs) names a game in the array. Whichever wins, its id lands in `stats.DailyGameId`, which makes it the daily challenge.
+
+### Routes and the running game
+
+Navigation uses a four-route `ViewRouter<GameRoute>` (`Launcher`, `Playing`, `OnlineHub`, `OnlineRoom`). Tapping a tile calls `OpenGame`, which sets `currentGame`, calls `game.Open()`, stamps the game as played, and pushes `Playing`. The back button pops the route, and `GamesApp.Draw` calls `CloseCurrentGame` (which calls `game.Close()`) once the transition lands back on the launcher. `OnlineHub` (src/Aetherphone/Apps/Games/Online/OnlineHub.cs) is the friends lobby: one host card per online game, the join-by-code field, and the player's open rooms; `OnlineRoomView` is the room itself.
 
 The hub also owns the coin plumbing that wraps every game. `OpenGame` and `CloseCurrentGame` report the play session to the backend through `CoinGameSessionTracker` (`GameOpened` and `GameClosed`), a chip in the in-game header counts the open session toward the server's earning thresholds, and `GamesApp.Draw` polls `coinSessions.TakeAward` to spawn a floating coin reward when the server grants one. None of this reaches the games: an `IMiniGame` only ever sees its `GameContext`.
 
@@ -83,10 +114,11 @@ game.Draw(new GameContext(body, context.Theme, stats, attentive ? frameSeconds :
 
 1. Create a folder src/Aetherphone/Apps/Games/YourGame with a `YourGameApp : IMiniGame`. Most games split logic into a `*Board` class and drawing into a `*Renderer` class.
 2. Add `new YourGameApp()` to the `games` array in the `GamesApp` constructor.
-3. Add `Title` and, if new, `Genre` strings to the `Games` section of L.cs and the nine language JSONs (see [localization.md](localization.md)).
-4. Add an accent color keyed by your game id in src/Aetherphone/Core/Apps/AppAccents.cs; `IMiniGame.Accent` defaults to `AppAccents.For(Id)`.
-5. Optionally add icon art for your id in src/Aetherphone/Windows/Components/AppIconArt.cs; the launcher falls back to drawing your title text on the tile.
-6. If the launcher should show a best-score chip for your game, add a case to `GamesApp.StatValue`.
+3. Pick a `GameGenre` for `Genre` and add the `Title` string to the `Games` section of L.cs and the nine language JSONs (see [localization.md](localization.md)).
+4. Add a row for your id to `GamesLibrary.Releases` with the release date, so the game sorts newest-first, joins the `Latest additions` shelf and wears the `NEW` pill for its first month.
+5. Add an accent color keyed by your game id in src/Aetherphone/Core/Apps/AppAccents.cs; `IMiniGame.Accent` defaults to `AppAccents.For(Id)`.
+6. Optionally add icon art for your id in src/Aetherphone/Windows/Components/AppIconArt.cs; the launcher falls back to drawing your title text on the tile.
+7. If the launcher should show a best-score line for your game, add a case to `GamesLibrary.BestLabel`.
 
 ## The juice framework
 

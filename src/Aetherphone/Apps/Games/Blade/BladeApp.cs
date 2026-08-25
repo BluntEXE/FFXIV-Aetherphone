@@ -30,7 +30,7 @@ internal sealed class BladeApp : IMiniGame
     public string Title => Loc.T(L.Games.Blade);
     public bool RunsOnAClock => true;
 
-    public string Genre => Loc.T(L.Games.GenreArcade);
+    public GameGenre Genre => GameGenre.Arcade;
 
     public void Open()
     {

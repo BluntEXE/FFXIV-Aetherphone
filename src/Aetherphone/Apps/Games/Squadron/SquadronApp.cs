@@ -36,7 +36,7 @@ internal sealed class SquadronApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Squadron);
-    public string Genre => Loc.T(L.Games.GenreArcade);
+    public GameGenre Genre => GameGenre.Action;
     public bool RunsOnAClock => true;
 
     public void Open()

@@ -32,7 +32,7 @@ internal sealed class TriviaApp : IMiniGame
     public string Title => Loc.T(L.Games.Trivia);
     public bool RunsOnAClock => true;
 
-    public string Genre => Loc.T(L.Games.GenreMemory);
+    public GameGenre Genre => GameGenre.Brain;
 
     public TriviaApp(GameData gameData, ITextureProvider textures)
     {

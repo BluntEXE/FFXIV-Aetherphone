@@ -35,7 +35,7 @@ internal sealed class ReversiApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Reversi);
-    public string Genre => Loc.T(L.Games.GenreStrategy);
+    public GameGenre Genre => GameGenre.Tabletop;
     public void Open()
     {
         statsLoaded = false;

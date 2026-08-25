@@ -38,7 +38,7 @@ internal sealed class BreakoutApp : IMiniGame
     public string Title => Loc.T(L.Games.Breakout);
     public bool RunsOnAClock => true;
 
-    public string Genre => Loc.T(L.Games.GenreArcade);
+    public GameGenre Genre => GameGenre.Arcade;
     public void Open()
     {
         loadedBest = 0;
