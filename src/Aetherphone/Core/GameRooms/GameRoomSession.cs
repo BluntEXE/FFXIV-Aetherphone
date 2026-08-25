@@ -5,12 +5,30 @@ using Aetherphone.Core.Telephony.Contracts;
 
 namespace Aetherphone.Core.GameRooms;
 
+internal sealed record GameRoomMemberView(
+    string UserId,
+    string DisplayName,
+    int Seat,
+    bool Away,
+    int Wins);
+
+// The kind-agnostic slice every room screen needs: who is here, who hosts, how far the action
+// count has moved and who won. The lobby, the roster and the act guard read this; only the table
+// itself reaches into the kind-specific board.
+internal sealed record GameRoomRoster(
+    string HostUserId,
+    GameRoomMemberView[] Players,
+    int ActionCount,
+    int WinnerSeat);
+
 internal sealed record GameRoomState(
     string RoomId,
     int Epoch,
     long Seq,
     GameRoomSnapshotDto Snapshot,
-    UnoRoomStateDto? Uno);
+    UnoRoomStateDto? Uno,
+    ChessRoomStateDto? Chess,
+    GameRoomRoster? Roster);
 
 internal sealed record GameRoomPrivate(
     string RoomId,
@@ -313,11 +331,55 @@ internal sealed class GameRoomSession
     {
         if (string.Equals(snapshot.GameKind, GameRoomWire.UnoKind, StringComparison.Ordinal))
         {
-            return new GameRoomState(roomId, epoch, seq, snapshot,
-                Parse(snapshot.GameState, AethernetJsonContext.Default.UnoRoomStateDto));
+            var uno = Parse(snapshot.GameState, AethernetJsonContext.Default.UnoRoomStateDto);
+            return new GameRoomState(roomId, epoch, seq, snapshot, uno, null, RosterOf(uno));
         }
 
-        return new GameRoomState(roomId, epoch, seq, snapshot, null);
+        if (string.Equals(snapshot.GameKind, GameRoomWire.ChessKind, StringComparison.Ordinal))
+        {
+            var chess = Parse(snapshot.GameState, AethernetJsonContext.Default.ChessRoomStateDto);
+            return new GameRoomState(roomId, epoch, seq, snapshot, null, chess, RosterOf(chess));
+        }
+
+        return new GameRoomState(roomId, epoch, seq, snapshot, null, null, null);
+    }
+
+    private static GameRoomRoster? RosterOf(UnoRoomStateDto? uno)
+    {
+        if (uno is null)
+        {
+            return null;
+        }
+
+        var players = uno.Players ?? Array.Empty<UnoPlayerDto>();
+        var members = new GameRoomMemberView[players.Length];
+        for (var index = 0; index < players.Length; index++)
+        {
+            var player = players[index];
+            members[index] = new GameRoomMemberView(player.UserId, player.DisplayName, player.Seat,
+                player.Away, player.Wins);
+        }
+
+        return new GameRoomRoster(uno.HostUserId, members, uno.ActionCount, uno.WinnerSeat);
+    }
+
+    private static GameRoomRoster? RosterOf(ChessRoomStateDto? chess)
+    {
+        if (chess is null)
+        {
+            return null;
+        }
+
+        var players = chess.Players ?? Array.Empty<ChessPlayerDto>();
+        var members = new GameRoomMemberView[players.Length];
+        for (var index = 0; index < players.Length; index++)
+        {
+            var player = players[index];
+            members[index] = new GameRoomMemberView(player.UserId, player.DisplayName, player.Seat,
+                player.Away, player.Wins);
+        }
+
+        return new GameRoomRoster(chess.HostUserId, members, chess.ActionCount, chess.WinnerSeat);
     }
 
     internal static long SmoothedSkew(long held, long sample)

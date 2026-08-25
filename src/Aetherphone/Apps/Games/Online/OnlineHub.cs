@@ -58,7 +58,11 @@ internal sealed class OnlineHub
             return;
         }
 
-        DrawHostRow(theme, scale);
+        DrawHostRow(theme, scale, GameRoomWire.UnoKind, Loc.T(L.Games.OnlineUno),
+            Loc.T(L.Games.OnlineHostHint, "6"));
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+        DrawHostRow(theme, scale, GameRoomWire.ChessKind, Loc.T(L.Games.OnlineChess),
+            Loc.T(L.Games.OnlineChessHostHint));
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
         DrawJoinByCode(theme, scale);
         if (inlineReason.Length > 0)
@@ -96,7 +100,7 @@ internal sealed class OnlineHub
         }
     }
 
-    private void DrawHostRow(PhoneTheme theme, float scale)
+    private void DrawHostRow(PhoneTheme theme, float scale, string gameKind, string gameName, string hint)
     {
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
@@ -121,10 +125,10 @@ internal sealed class OnlineHub
         var textLeft = row.Min.X + 48f * scale;
         var textWidth = row.Width - 62f * scale;
         Typography.Draw(drawList, new Vector2(textLeft, row.Min.Y + 12f * scale),
-            Typography.FitText(Loc.T(L.Games.OnlineHost) + " · " + Loc.T(L.Games.OnlineUno), textWidth,
+            Typography.FitText(Loc.T(L.Games.OnlineHost) + " · " + gameName, textWidth,
                 TextStyles.SubheadlineEmphasized), theme.TextStrong, TextStyles.SubheadlineEmphasized);
         Typography.Draw(drawList, new Vector2(textLeft, row.Min.Y + 32f * scale),
-            Typography.FitText(Loc.T(L.Games.OnlineHostHint, "6"), textWidth, TextStyles.Footnote),
+            Typography.FitText(hint, textWidth, TextStyles.Footnote),
             theme.TextMuted, TextStyles.Footnote);
 
         var clicked = UiInteract.Click(row.Min, row.Max, hovered);
@@ -133,7 +137,7 @@ internal sealed class OnlineHub
         if (clicked && !store.IntentInFlight)
         {
             inlineReason = string.Empty;
-            store.CreateRoom(GameRoomWire.UnoKind);
+            store.CreateRoom(gameKind);
         }
     }
 
@@ -218,7 +222,10 @@ internal sealed class OnlineHub
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        var title = Loc.T(L.Games.OnlineUno) + " · " + Loc.T(L.Games.OnlineHostedBy, room.OwnerName);
+        var gameName = Loc.T(string.Equals(room.GameKind, GameRoomWire.ChessKind, StringComparison.Ordinal)
+            ? L.Games.OnlineChess
+            : L.Games.OnlineUno);
+        var title = gameName + " · " + Loc.T(L.Games.OnlineHostedBy, room.OwnerName);
         var phase = room.Phase switch
         {
             GameRoomWire.PhasePlaying => L.Games.OnlinePhasePlaying,

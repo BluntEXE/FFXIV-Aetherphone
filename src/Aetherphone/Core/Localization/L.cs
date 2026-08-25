@@ -4535,6 +4535,19 @@ internal static class L
         public static readonly LocString OnlineCooldown = new("games.onlineCooldown", "Give it a moment and try again");
         public static readonly LocString OnlineNotYourTurn = new("games.onlineNotYourTurn", "Not your turn");
         public static readonly LocString OnlineStale = new("games.onlineStale", "The table moved on, catching up…");
+        public static readonly LocString OnlineChess = new("games.onlineChess", "Chess");
+        public static readonly LocString OnlineChessHostHint = new("games.onlineChessHostHint", "Head-to-head, 10 minutes on each clock");
+        public static readonly LocString OnlineResign = new("games.onlineResign", "Resign");
+        public static readonly LocString OnlineCheck = new("games.onlineCheck", "Check!");
+        public static readonly LocString OnlineYouPlayWhite = new("games.onlineYouPlayWhite", "You play White");
+        public static readonly LocString OnlineYouPlayBlack = new("games.onlineYouPlayBlack", "You play Black");
+        public static readonly LocString OnlineCheckmateWin = new("games.onlineCheckmateWin", "{0} wins by checkmate!");
+        public static readonly LocString OnlineTimeoutWin = new("games.onlineTimeoutWin", "{0} wins on time!");
+        public static readonly LocString OnlineResignWin = new("games.onlineResignWin", "{0} wins by resignation!");
+        public static readonly LocString OnlineDesertWin = new("games.onlineDesertWin", "{0} wins, the opponent left");
+        public static readonly LocString OnlineStalemateDraw = new("games.onlineStalemateDraw", "Draw by stalemate");
+        public static readonly LocString OnlineFiftyDraw = new("games.onlineFiftyDraw", "Draw by the fifty-move rule");
+        public static readonly LocString OnlineMaterialDraw = new("games.onlineMaterialDraw", "Draw, not enough material to mate");
     }
 
     internal static class Time

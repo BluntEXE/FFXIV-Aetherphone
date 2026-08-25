@@ -4,6 +4,8 @@ internal static class GameRoomWire
 {
     public const string UnoKind = "games.uno";
 
+    public const string ChessKind = "games.chess";
+
     public const string UnoHandEvent = "uno.hand";
 
     public const string ActionStart = "start";
@@ -13,6 +15,24 @@ internal static class GameRoomWire
     public const string ActionDraw = "draw";
 
     public const string ActionPass = "pass";
+
+    public const string ActionMove = "move";
+
+    public const string ActionResign = "resign";
+
+    public const string ChessEndCheckmate = "checkmate";
+
+    public const string ChessEndStalemate = "stalemate";
+
+    public const string ChessEndFiftyMove = "fifty";
+
+    public const string ChessEndMaterial = "material";
+
+    public const string ChessEndTimeout = "timeout";
+
+    public const string ChessEndResign = "resign";
+
+    public const string ChessEndDesertion = "desertion";
 
     public const int PhaseLobby = 0;
 

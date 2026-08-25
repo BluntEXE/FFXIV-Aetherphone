@@ -251,25 +251,35 @@ internal sealed class GameRoomsStore : IDisposable
         SendAction(GameRoomWire.ActionPass, -1, -1);
     }
 
+    public void SendMove(int from, int to, int promotion)
+    {
+        SendAction(GameRoomWire.ActionMove, -1, promotion, from, to);
+    }
+
+    public void SendResign()
+    {
+        SendAction(GameRoomWire.ActionResign, -1, -1);
+    }
+
     // Every action names the action count it was decided against; the server refuses a mismatch as
     // stale rather than applying it twice, so a lost response costs one refresh and never a double
     // move.
-    private void SendAction(string action, int card, int color)
+    private void SendAction(string action, int card, int color, int from = -1, int to = -1)
     {
         var target = room.RoomId;
-        var board = room.State?.Uno;
-        if (actInFlight || !session.IsSignedIn || target.Length == 0 || board is null)
+        var roster = room.State?.Roster;
+        if (actInFlight || !session.IsSignedIn || target.Length == 0 || roster is null)
         {
             return;
         }
 
-        var actionCount = board.ActionCount;
+        var actionCount = roster.ActionCount;
         var clientActionId = Guid.NewGuid().ToString("N");
         actInFlight = true;
         work.Run("room action", async token =>
         {
             var result = await games
-                .ActAsync(target, action, actionCount, card, color, clientActionId, token)
+                .ActAsync(target, action, actionCount, card, color, clientActionId, token, from, to)
                 .ConfigureAwait(false);
             if (result is null)
             {

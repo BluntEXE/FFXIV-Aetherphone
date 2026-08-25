@@ -60,7 +60,9 @@ internal sealed record GameRoomActionRequest(
     int ActionCount,
     int Card,
     int Color,
-    string ClientActionId);
+    string ClientActionId,
+    int From = -1,
+    int To = -1);
 
 internal sealed record GameRoomActionResultDto(bool Granted = false, string Reason = "", int ActionCount = 0);
 
@@ -98,3 +100,32 @@ internal sealed record UnoYouDto(
     bool PendingDrawnPlayable = false,
     int PendingDrawnCard = -1,
     int ActionCount = 0);
+
+internal sealed record ChessPlayerDto(
+    string UserId = "",
+    string DisplayName = "",
+    int Seat = 0,
+    bool Away = false,
+    int Wins = 0);
+
+internal sealed record ChessRoomStateDto(
+    long RoundIndex = 0,
+    string HostUserId = "",
+    ChessPlayerDto[]? Players = null,
+    int[]? Squares = null,
+    bool BlackToMove = false,
+    int Castling = 0,
+    int EnPassant = -1,
+    int HalfmoveClock = 0,
+    int WhiteSeat = -1,
+    long WhiteMsRemaining = 0,
+    long BlackMsRemaining = 0,
+    long TurnStartedAtUnixMs = 0,
+    int LastFrom = -1,
+    int LastTo = -1,
+    bool InCheck = false,
+    int MoveCount = 0,
+    int ActionCount = 0,
+    string LastKind = "",
+    string EndKind = "",
+    int WinnerSeat = -1);

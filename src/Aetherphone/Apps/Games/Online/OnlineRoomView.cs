@@ -25,6 +25,7 @@ internal sealed class OnlineRoomView
     private const long NoticeMilliseconds = 4_000;
 
     private readonly GameRoomsStore store;
+    private readonly OnlineChessTable chessTable;
 
     private string inlineReason = string.Empty;
     private long noticeAtTick;
@@ -34,17 +35,20 @@ internal sealed class OnlineRoomView
     public OnlineRoomView(GameRoomsStore store)
     {
         this.store = store;
+        chessTable = new OnlineChessTable(store);
     }
 
     public void Enter()
     {
         inlineReason = string.Empty;
         wildPendingCard = -1;
+        chessTable.Reset();
     }
 
     public void Draw(in PhoneContext context, Action back)
     {
-        AppHeader.Draw(context, Loc.T(L.Games.OnlineUno), back);
+        var held = store.Room.State;
+        AppHeader.Draw(context, Loc.T(TitleFor(held?.Snapshot.GameKind)), back);
         var scale = UiScale.Current;
         var content = context.Content;
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + HeaderHeight * scale), content.Max);
@@ -58,9 +62,7 @@ internal sealed class OnlineRoomView
             return;
         }
 
-        var held = session.State;
-        var board = held?.Uno;
-        if (held is null || board is null)
+        if (held is null || held.Roster is null)
         {
             DrawCenteredNotice(body, theme, Loc.T(L.Games.OnlineLoading));
             return;
@@ -68,11 +70,37 @@ internal sealed class OnlineRoomView
 
         if (held.Snapshot.Phase == GameRoomWire.PhasePlaying)
         {
-            DrawTable(body, theme, scale, held.Snapshot, board);
-            return;
+            if (held.Uno is not null)
+            {
+                DrawTable(body, theme, scale, held.Snapshot, held.Uno);
+                return;
+            }
+
+            if (held.Chess is not null)
+            {
+                chessTable.Draw(body, theme, scale, held.Snapshot, held.Chess, FreshNotice());
+                return;
+            }
         }
 
-        DrawLobby(body, theme, scale, board, held.Snapshot.Phase);
+        DrawLobby(body, theme, scale, held);
+    }
+
+    private static LocString TitleFor(string? gameKind)
+    {
+        return string.Equals(gameKind, GameRoomWire.ChessKind, StringComparison.Ordinal)
+            ? L.Games.OnlineChess
+            : L.Games.OnlineUno;
+    }
+
+    private string FreshNotice()
+    {
+        if (inlineReason.Length > 0 && Environment.TickCount64 - noticeAtTick < NoticeMilliseconds)
+        {
+            return Loc.T(GamesOnlineText.ReasonMessage(inlineReason));
+        }
+
+        return string.Empty;
     }
 
     private void Consume(Action back)
@@ -128,16 +156,18 @@ internal sealed class OnlineRoomView
 
     // The lobby and the finished screen are the same room at rest: the roster, the code, and one
     // primary button whose label is the only thing the phase changes.
-    private void DrawLobby(Rect body, PhoneTheme theme, float scale, UnoRoomStateDto board, int phase)
+    private void DrawLobby(Rect body, PhoneTheme theme, float scale, GameRoomState held)
     {
         using var surface = AppSurface.Begin(body);
         var accent = Core.Apps.AppAccents.For("games");
-        var players = board.Players ?? Array.Empty<UnoPlayerDto>();
-        var isHost = string.Equals(board.HostUserId, store.AccountId, StringComparison.Ordinal);
+        var phase = held.Snapshot.Phase;
+        var roster = held.Roster!;
+        var players = roster.Players;
+        var isHost = string.Equals(roster.HostUserId, store.AccountId, StringComparison.Ordinal);
 
         if (phase == GameRoomWire.PhaseFinished)
         {
-            DrawWinnerBanner(theme, scale, board, players);
+            DrawFinishedBanner(theme, scale, held);
         }
 
         DrawCodeCard(theme, scale, accent);
@@ -150,7 +180,7 @@ internal sealed class OnlineRoomView
         var card = GroupCard.Begin(theme, players.Length == 0 ? 1 : players.Length, RosterRowHeight);
         for (var index = 0; index < players.Length; index++)
         {
-            DrawRosterRow(card.NextRow(), theme, scale, board, players[index], isHost);
+            DrawRosterRow(card.NextRow(), theme, scale, roster, players[index], isHost);
         }
 
         if (players.Length == 0)
@@ -214,8 +244,7 @@ internal sealed class OnlineRoomView
         ImGui.Dummy(new Vector2(width, 40f * scale + Metrics.Space.Lg * scale));
     }
 
-    private void DrawWinnerBanner(PhoneTheme theme, float scale, UnoRoomStateDto board,
-        UnoPlayerDto[] players)
+    private void DrawFinishedBanner(PhoneTheme theme, float scale, GameRoomState held)
     {
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
@@ -227,14 +256,39 @@ internal sealed class OnlineRoomView
             ImGui.GetColorU32(Palette.WithAlpha(accent, 0.14f)));
         Squircle.Stroke(drawList, origin, max, Metrics.Radius.Card * scale,
             ImGui.GetColorU32(Palette.WithAlpha(accent, 0.4f)), 1f * scale);
-        var message = board.WinnerSeat >= 0 && board.WinnerSeat < players.Length
-            ? Loc.T(L.Games.OnlineWinner, players[board.WinnerSeat].DisplayName)
-            : Loc.T(L.Games.OnlineRoundVoid);
         Typography.DrawCentered(drawList, new Vector2(origin.X + width * 0.5f, origin.Y + height * 0.5f),
-            Typography.FitText(message, width - 24f * scale, TextStyles.SubheadlineEmphasized),
+            Typography.FitText(FinishedText(held), width - 24f * scale, TextStyles.SubheadlineEmphasized),
             theme.TextStrong, TextStyles.SubheadlineEmphasized);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height + Metrics.Space.Md * scale));
+    }
+
+    private static string FinishedText(GameRoomState held)
+    {
+        var roster = held.Roster!;
+        var winnerName = roster.WinnerSeat >= 0 && roster.WinnerSeat < roster.Players.Length
+            ? roster.Players[roster.WinnerSeat].DisplayName
+            : string.Empty;
+        if (held.Chess is not null)
+        {
+            return held.Chess.EndKind switch
+            {
+                GameRoomWire.ChessEndCheckmate => Loc.T(L.Games.OnlineCheckmateWin, winnerName),
+                GameRoomWire.ChessEndTimeout => Loc.T(L.Games.OnlineTimeoutWin, winnerName),
+                GameRoomWire.ChessEndResign => Loc.T(L.Games.OnlineResignWin, winnerName),
+                GameRoomWire.ChessEndDesertion => Loc.T(L.Games.OnlineDesertWin, winnerName),
+                GameRoomWire.ChessEndStalemate => Loc.T(L.Games.OnlineStalemateDraw),
+                GameRoomWire.ChessEndFiftyMove => Loc.T(L.Games.OnlineFiftyDraw),
+                GameRoomWire.ChessEndMaterial => Loc.T(L.Games.OnlineMaterialDraw),
+                _ => winnerName.Length > 0
+                    ? Loc.T(L.Games.OnlineWinner, winnerName)
+                    : Loc.T(L.Games.OnlineRoundVoid),
+            };
+        }
+
+        return winnerName.Length > 0
+            ? Loc.T(L.Games.OnlineWinner, winnerName)
+            : Loc.T(L.Games.OnlineRoundVoid);
     }
 
     private void DrawCodeCard(PhoneTheme theme, float scale, Vector4 accent)
@@ -283,11 +337,11 @@ internal sealed class OnlineRoomView
         return string.Empty;
     }
 
-    private void DrawRosterRow(Rect row, PhoneTheme theme, float scale, UnoRoomStateDto board,
-        UnoPlayerDto player, bool viewerIsHost)
+    private void DrawRosterRow(Rect row, PhoneTheme theme, float scale, GameRoomRoster roster,
+        GameRoomMemberView player, bool viewerIsHost)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var isRoomHost = string.Equals(player.UserId, board.HostUserId, StringComparison.Ordinal);
+        var isRoomHost = string.Equals(player.UserId, roster.HostUserId, StringComparison.Ordinal);
         var name = player.DisplayName;
         if (isRoomHost)
         {
