@@ -57,9 +57,11 @@ internal static class InboxRowView
         var textRight = max.X - 14f * scale;
         var restAlpha = 1f - reveal;
         var action = InboxRowAction.None;
+        var overActions = false;
         if (reveal > 0.01f)
         {
-            action = DrawQuickActions(drawList, row, theme, max, min.Y + Height * scale * 0.5f, reveal, scale);
+            action = DrawQuickActions(drawList, row, theme, max, min.Y + Height * scale * 0.5f, reveal, scale,
+                out overActions);
         }
 
         var titleRight = textRight;
@@ -105,7 +107,7 @@ internal static class InboxRowView
             return InboxRowAction.Menu;
         }
 
-        return UiInteract.Click(min, max, hovered) ? InboxRowAction.Open : InboxRowAction.None;
+        return UiInteract.Click(min, max, hovered && !overActions) ? InboxRowAction.Open : InboxRowAction.None;
     }
 
     private static float StepReveal(string key, bool target)
@@ -121,7 +123,7 @@ internal static class InboxRowView
     }
 
     private static InboxRowAction DrawQuickActions(ImDrawListPtr drawList, InboxRow row, PhoneTheme theme,
-        Vector2 max, float centerY, float reveal, float scale)
+        Vector2 max, float centerY, float reveal, float scale, out bool overActions)
     {
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, MaxFrameSeconds);
         var interactive = reveal > 0.5f;
@@ -130,6 +132,9 @@ internal static class InboxRowView
         var moreCenter = new Vector2(right, centerY);
         var bellCenter = new Vector2(right - QuickPitch * scale, centerY);
         var pinCenter = new Vector2(right - QuickPitch * 2f * scale, centerY);
+        var bandMin = new Vector2(pinCenter.X - radius, centerY - radius);
+        var bandMax = new Vector2(moreCenter.X + radius, centerY + radius);
+        overActions = interactive && UiInteract.Hover(bandMin, bandMax);
         var action = InboxRowAction.None;
         if (HoverButton.Circle(drawList, "inbox.pin." + row.Key, pinCenter, radius, FontAwesomeIcon.Thumbtack,
                 AppSkin.Transparent, row.Pinned ? theme.Accent : theme.TextMuted, delta, reveal, interactive,

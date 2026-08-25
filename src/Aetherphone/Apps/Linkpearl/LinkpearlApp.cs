@@ -255,7 +255,7 @@ internal sealed partial class LinkpearlApp : IPhoneApp
 
         DrawConversationMenu(area);
         DrawMoreMenu(area);
-        newChatSheet.Draw(area, frameTheme, Loc.T(L.Linkpearl.NewChat), NewChatSheetHeight, drawNewChatSheet);
+        newChatSheet.Draw(area, frameTheme, Loc.T(L.Linkpearl.NewChat), NewChatSheetFraction(area), drawNewChatSheet);
     }
 
     private void DrawRootHeader(Rect header, float scale)

@@ -29,6 +29,13 @@ internal sealed class SheetSurface
 
     internal bool IsOpen => open;
 
+    internal static float ChromeHeight()
+    {
+        var scale = UiScale.Current;
+        return (Metrics.Space.Md + GrabberHeight + Metrics.Space.Md + Metrics.Space.Md + Metrics.Space.Lg) * scale +
+               Typography.LineHeight(TextStyles.Headline);
+    }
+
     internal bool CapturesPointer => open || !reveal.IsResting(0f, 0.001f, 0.005f);
 
     internal void Open()

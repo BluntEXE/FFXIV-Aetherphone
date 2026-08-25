@@ -13,12 +13,13 @@ internal sealed partial class LinkpearlApp
     private readonly record struct QuickTab(TabPreset Preset, FontAwesomeIcon Icon, Vector4 Tint, string ProbeChannel,
         LocString Hint);
 
-    private const float NewChatSheetHeight = 0.64f;
-    private const float QuickTileHeight = 76f;
     private const float QuickTileGap = 10f;
     private const float QuickIconRadius = 17f;
+    private const int QuickHintLines = 2;
     private const float SheetRowHeight = 50f;
     private const float SheetLabelHeight = 24f;
+    private const float SheetMinimumFraction = 0.5f;
+    private const float SheetMaximumFraction = 0.94f;
 
     private static readonly QuickTab[] QuickTabs =
     {
@@ -40,6 +41,20 @@ internal sealed partial class LinkpearlApp
         newChatSheet.Open();
     }
 
+    private static float QuickTileHeight(float scale) =>
+        (Metrics.Space.Md * 2f + QuickIconRadius * 2f + Metrics.Space.Xs) * scale +
+        Typography.LineHeight(TextStyles.BodyEmphasized) + QuickHintLines * Typography.LineHeight(TextStyles.Caption1);
+
+    private static float NewChatSheetFraction(Rect area)
+    {
+        var scale = UiScale.Current;
+        var rows = QuickTabs.Length / 2;
+        var content = SheetLabelHeight * scale + rows * QuickTileHeight(scale) + (rows - 1) * QuickTileGap * scale +
+                      Metrics.Space.Lg * scale + SheetLabelHeight * scale + SheetRowHeight * 2f * scale;
+        var fraction = (content + SheetSurface.ChromeHeight()) / MathF.Max(1f, area.Height);
+        return Math.Clamp(fraction, SheetMinimumFraction, SheetMaximumFraction);
+    }
+
     private void DrawNewChatSheet(Rect content)
     {
         var scale = UiScale.Current;
@@ -49,7 +64,8 @@ internal sealed partial class LinkpearlApp
         cursorY += SheetLabelHeight * scale;
         var gap = QuickTileGap * scale;
         var tileWidth = (content.Width - gap) * 0.5f;
-        var tileHeight = QuickTileHeight * scale;
+        var tileHeight = QuickTileHeight(scale);
+        var tileRows = QuickTabs.Length / 2;
         for (var index = 0; index < QuickTabs.Length; index++)
         {
             var column = index % 2;
@@ -59,7 +75,7 @@ internal sealed partial class LinkpearlApp
             DrawQuickTile(drawList, new Rect(min, max), QuickTabs[index], scale);
         }
 
-        cursorY += 2f * tileHeight + gap + Metrics.Space.Lg * scale;
+        cursorY += tileRows * tileHeight + (tileRows - 1) * gap + Metrics.Space.Lg * scale;
         DrawSheetLabel(drawList, Loc.T(L.Linkpearl.OrStartFresh), content.Min.X, cursorY, scale);
         cursorY += SheetLabelHeight * scale;
         var rowHeight = SheetRowHeight * scale;
@@ -104,23 +120,23 @@ internal sealed partial class LinkpearlApp
         Squircle.Fill(drawList, tile.Min, tile.Max, rounding, ImGui.GetColorU32(fill));
         Squircle.Stroke(drawList, tile.Min, tile.Max, rounding,
             ImGui.GetColorU32(Palette.WithAlpha(quick.Tint, hovered ? 0.5f : 0.28f)), Metrics.Stroke.Hairline);
+        var inset = Metrics.Space.Md * scale;
         var iconRadius = QuickIconRadius * scale;
-        var iconCenter = new Vector2(tile.Min.X + Metrics.Space.Md * scale + iconRadius, tile.Min.Y + Metrics.Space.Md * scale + iconRadius);
+        var iconCenter = new Vector2(tile.Min.X + inset + iconRadius, tile.Min.Y + inset + iconRadius);
         drawList.AddCircleFilled(iconCenter, iconRadius, ImGui.GetColorU32(Palette.WithAlpha(quick.Tint, 0.28f)), 28);
         AppSkin.Icon(drawList, iconCenter, quick.Icon.ToIconString(), quick.Tint, 0.95f);
-        var textLeft = tile.Min.X + Metrics.Space.Md * scale;
-        var textWidth = tile.Width - Metrics.Space.Md * scale * 2f;
+        var textLeft = tile.Min.X + inset;
+        var textWidth = tile.Width - inset * 2f;
         var name = Loc.T(TabStore.PresetLabel(quick.Preset));
         var nameTop = iconCenter.Y + iconRadius + Metrics.Space.Xs * scale;
         Typography.Draw(drawList, new Vector2(textLeft, nameTop), Typography.FitText(name, textWidth, TextStyles.BodyEmphasized),
             frameTheme.TextStrong, TextStyles.BodyEmphasized);
         var hint = added ? Loc.T(L.Linkpearl.PresetAdded) : Loc.T(quick.Hint);
-        Typography.Draw(drawList, new Vector2(textLeft, nameTop + Typography.LineHeight(TextStyles.BodyEmphasized)),
-            Typography.FitText(hint, textWidth, TextStyles.Caption1), added ? quick.Tint : frameTheme.TextMuted,
-            TextStyles.Caption1);
+        DrawTileHint(drawList, hint, new Vector2(textLeft, nameTop + Typography.LineHeight(TextStyles.BodyEmphasized)),
+            textWidth, added ? quick.Tint : frameTheme.TextMuted);
         if (added)
         {
-            AppSkin.Icon(drawList, new Vector2(tile.Max.X - Metrics.Space.Md * scale - 6f * scale, iconCenter.Y),
+            AppSkin.Icon(drawList, new Vector2(tile.Max.X - inset - 6f * scale, iconCenter.Y),
                 FontAwesomeIcon.Check.ToIconString(), quick.Tint, 0.7f);
         }
 
@@ -146,6 +162,25 @@ internal sealed partial class LinkpearlApp
         inbox.Invalidate();
         inbox.Sync();
         OpenConversation(ChatInbox.KeyForTab(created));
+    }
+
+    private static void DrawTileHint(ImDrawListPtr drawList, string hint, Vector2 topLeft, float width, Vector4 ink)
+    {
+        var lines = Typography.WrapText(hint, TextStyles.Caption1, width);
+        var lineHeight = Typography.LineHeight(TextStyles.Caption1);
+        var shown = Math.Min(lines.Length, QuickHintLines);
+        for (var index = 0; index < shown; index++)
+        {
+            var line = lines[index];
+            if (index == QuickHintLines - 1 && lines.Length > QuickHintLines)
+            {
+                line = Typography.FitText(string.Join(' ', lines, index, lines.Length - index), width,
+                    TextStyles.Caption1);
+            }
+
+            Typography.Draw(drawList, new Vector2(topLeft.X, topLeft.Y + index * lineHeight), line, ink,
+                TextStyles.Caption1);
+        }
     }
 
     private bool DrawSheetRow(ImDrawListPtr drawList, Rect row, FontAwesomeIcon icon, Vector4 tint, string title,
