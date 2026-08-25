@@ -51,6 +51,12 @@ internal sealed class CallSignalRouter : IDisposable
             return;
         }
 
+        if (message.Type.StartsWith(SignalType.GamePrefix, StringComparison.Ordinal))
+        {
+            signals.PublishGame(new GameSignal(message.Type, message.Reason, message.Game));
+            return;
+        }
+
         switch (message.Type)
         {
             case SignalType.ChatPing:

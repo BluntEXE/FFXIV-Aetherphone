@@ -42,6 +42,18 @@ internal static class SignalType
     public const string CasinoPrivate = "casino.private";
     public const string CasinoEnded = "casino.ended";
     public const string CasinoPing = "casino.ping";
+    public const string GamePrefix = "game.";
+    public const string GameAttach = "game.attach";
+    public const string GameDetach = "game.detach";
+    public const string GameResync = "game.resync";
+    public const string GameClaim = "game.claim";
+    public const string GameAttached = "game.attached";
+    public const string GameDeclined = "game.declined";
+    public const string GameSnapshot = "game.snapshot";
+    public const string GameEvent = "game.event";
+    public const string GamePrivate = "game.private";
+    public const string GameHandled = "game.handled";
+    public const string GameEnded = "game.ended";
     public const string Error = "error";
 
     public const string StreamPrefix = "stream.";
@@ -139,6 +151,9 @@ internal sealed record CallControl
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public CasinoPayload? Casino { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public GamePayload? Game { get; init; }
 }
 
 internal sealed record CasinoPayload
@@ -162,4 +177,27 @@ internal sealed record CasinoPayload
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public CasinoPrivateDto? Private { get; init; }
+}
+
+internal sealed record GamePayload
+{
+    public string RoomId { get; init; } = string.Empty;
+    public int Epoch { get; init; }
+    public long Seq { get; init; }
+
+    public long PairSeq { get; init; }
+
+    public long ServerNowUnixMs { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? EventKind { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public GameRoomSnapshotDto? Snapshot { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public GameRoomEventDto? Event { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public GamePrivateDto? Private { get; init; }
 }

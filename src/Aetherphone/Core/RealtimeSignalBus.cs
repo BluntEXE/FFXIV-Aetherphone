@@ -9,6 +9,8 @@ internal readonly record struct ChatSignal(string? ConversationId, ChatMessageDt
 
 internal readonly record struct CasinoSignal(string Type, string? Reason, CasinoPayload? Payload);
 
+internal readonly record struct GameSignal(string Type, string? Reason, GamePayload? Payload);
+
 internal static class ContentRemovalKinds
 {
     public const string Post = "post";
@@ -30,6 +32,7 @@ internal sealed class RealtimeSignalBus
     public event Action? PollsPinged;
     public event Action<ContentRemovalSignal>? ContentRemoved;
     public event Action<CasinoSignal>? CasinoReceived;
+    public event Action<GameSignal>? GameReceived;
     public event Action<bool>? ConnectedChanged;
 
     public bool RealtimeActive => realtimeActive;
@@ -88,6 +91,11 @@ internal sealed class RealtimeSignalBus
     public void PublishCasino(CasinoSignal signal)
     {
         CasinoReceived?.Invoke(signal);
+    }
+
+    public void PublishGame(GameSignal signal)
+    {
+        GameReceived?.Invoke(signal);
     }
 
     public void BindSender(Action<CallControl>? sender)

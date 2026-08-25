@@ -29,7 +29,9 @@ using Aetherphone.Apps.Games.Twenty48;
 using Aetherphone.Apps.Games.WaterSort;
 using Aetherphone.Apps.Games.WordRun;
 using Aetherphone.Apps.Games.Whack;
+using Aetherphone.Apps.Games.Online;
 using Aetherphone.Core;
+using Aetherphone.Core.GameRooms;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
@@ -51,6 +53,8 @@ internal sealed class GamesApp : IPhoneApp
     {
         Launcher,
         Playing,
+        OnlineHub,
+        OnlineRoom,
     }
 
     private readonly struct Section
@@ -92,10 +96,14 @@ internal sealed class GamesApp : IPhoneApp
     private const float GameRowHeight = 64f;
     private const float PausedFadeSeconds = 0.12f;
     private const int FeaturedStep = 5;
+    private const float OnlineRowHeight = 62f;
     private readonly GameStatsStore stats;
     private readonly Core.Coins.CoinStore coins;
     private readonly Core.Coins.CoinGameSessionTracker coinSessions;
     private readonly Windows.Components.CoinFloat coinFloats = new();
+    private readonly GameRoomsStore gameRooms;
+    private readonly OnlineHub onlineHub;
+    private readonly OnlineRoomView onlineRoom;
     private readonly IMiniGame[] games;
     private readonly int[] tileOrder;
     private readonly ViewRouter<GameRoute> router;
@@ -115,11 +123,15 @@ internal sealed class GamesApp : IPhoneApp
     public int BadgeCount => 0;
 
     public GamesApp(GameStatsStore stats, GameData gameData, ITextureProvider textures,
-        Core.Coins.CoinStore coins, Core.Coins.CoinGameSessionTracker coinSessions)
+        Core.Coins.CoinStore coins, Core.Coins.CoinGameSessionTracker coinSessions,
+        GameRoomsStore gameRooms)
     {
         this.stats = stats;
         this.coins = coins;
         this.coinSessions = coinSessions;
+        this.gameRooms = gameRooms;
+        onlineHub = new OnlineHub(gameRooms, OpenOnlineRoom);
+        onlineRoom = new OnlineRoomView(gameRooms);
         games = new IMiniGame[]
         {
             new SweeperApp(), new PairsApp(), new GemSwapApp(), new TetrisApp(), new Twenty48App(),
@@ -235,6 +247,7 @@ internal sealed class GamesApp : IPhoneApp
     public void OnClosed()
     {
         CloseCurrentGame();
+        gameRooms.Exit();
         router.Reset();
     }
 
@@ -284,7 +297,31 @@ internal sealed class GamesApp : IPhoneApp
             return;
         }
 
+        if (route == GameRoute.OnlineHub)
+        {
+            onlineHub.Draw(context, back);
+            return;
+        }
+
+        if (route == GameRoute.OnlineRoom)
+        {
+            onlineRoom.Draw(context, LeaveOnlineRoom);
+            return;
+        }
+
         DrawLauncher(context);
+    }
+
+    private void OpenOnlineRoom(string roomId)
+    {
+        onlineRoom.Enter();
+        router.Push(GameRoute.OnlineRoom);
+    }
+
+    private void LeaveOnlineRoom()
+    {
+        gameRooms.Exit();
+        router.Pop();
     }
 
     private void DrawActiveGame(in PhoneContext context)
@@ -459,7 +496,16 @@ internal sealed class GamesApp : IPhoneApp
                 OpenGame(featured);
             }
 
-            y = heroRect.Max.Y;
+            y = heroRect.Max.Y + Metrics.Space.Md * scale;
+            var onlineRect = new Rect(new Vector2(origin.X, y),
+                new Vector2(origin.X + availableWidth, y + OnlineRowHeight * scale));
+            if (DrawOnlineRow(drawList, onlineRect, scale))
+            {
+                onlineHub.Enter();
+                router.Push(GameRoute.OnlineHub);
+            }
+
+            y = onlineRect.Max.Y;
             for (var sectionIndex = 0; sectionIndex < sections.Length; sectionIndex++)
             {
                 var section = sections[sectionIndex];
@@ -494,6 +540,41 @@ internal sealed class GamesApp : IPhoneApp
             ImGui.SetCursorScreenPos(new Vector2(origin.X, y));
             ImGui.Dummy(new Vector2(availableWidth, Metrics.Space.Lg * scale));
         }
+    }
+
+    private bool DrawOnlineRow(ImDrawListPtr drawList, Rect rect, float scale)
+    {
+        var accent = AppAccents.For("games");
+        var rounding = Metrics.Radius.Card * scale;
+        var hovered = UiInteract.Hover(rect.Min, rect.Max);
+        Squircle.FillVerticalGradient(drawList, rect.Min, rect.Max, rounding,
+            ImGui.GetColorU32(GamePalette.Lighten(accent, hovered ? 0.10f : 0.04f) with { W = 0.32f }),
+            ImGui.GetColorU32(GamePalette.Darken(accent, 0.25f) with { W = 0.32f }));
+        Squircle.Stroke(drawList, rect.Min, rect.Max, rounding,
+            ImGui.GetColorU32(GamePalette.Lighten(accent, 0.4f) with { W = hovered ? 0.6f : 0.35f }),
+            1f * scale);
+
+        var iconCenter = new Vector2(rect.Min.X + 28f * scale, rect.Center.Y);
+        drawList.AddCircleFilled(iconCenter, 15f * scale,
+            ImGui.GetColorU32(Palette.WithAlpha(accent, 0.22f)), 32);
+        ProgressRing.CenterIcon(drawList, iconCenter, FontAwesomeIcon.UserFriends,
+            GamePalette.Lighten(accent, 0.35f), 13f * scale);
+
+        var textLeft = rect.Min.X + 50f * scale;
+        var textWidth = rect.Width - 64f * scale;
+        Typography.Draw(drawList, new Vector2(textLeft, rect.Center.Y - 17f * scale),
+            Typography.FitText(Loc.T(L.Games.OnlineTitle), textWidth, TextStyles.Headline),
+            theme.TextStrong, TextStyles.Headline);
+        Typography.Draw(drawList, new Vector2(textLeft, rect.Center.Y + 3f * scale),
+            Typography.FitText(Loc.T(L.Games.OnlineHint), textWidth, TextStyles.Footnote), theme.TextMuted,
+            TextStyles.Footnote);
+
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return UiInteract.Click(rect.Min, rect.Max, hovered);
     }
 
     private bool DrawGameRow(Rect row, IMiniGame game, float scale)

@@ -28,6 +28,7 @@ internal sealed class AethernetApi
         Radio = new RadioClient(net);
         Coins = new CoinsClient(net);
         Casino = new CasinoClient(net);
+        Games = new GamesClient(net);
     }
 
     public AuthClient Auth { get; }
@@ -50,4 +51,5 @@ internal sealed class AethernetApi
     public RadioClient Radio { get; }
     public CoinsClient Coins { get; }
     public CasinoClient Casino { get; }
+    public GamesClient Games { get; }
 }
