@@ -123,7 +123,7 @@ internal static class DeviceChrome
     }
 
     public static void DrawShell(ImDrawListPtr dl, in ChassisGeometry chassis, float scale, PhoneTheme theme,
-        float artAlpha)
+        float artAlpha, bool portraitArt = false)
     {
         CaseSwap.Step(ImGui.GetFrameCount(), MathF.Min(ImGui.GetIO().DeltaTime, 0.05f));
         if (CaseSwap.Active)
@@ -145,7 +145,7 @@ internal static class DeviceChrome
                 ImGui.GetColorU32(theme.FrameMetal));
         }
 
-        CaseArt.Quad(dl, texture, CaseArt.RectFor(chassis.Body), chassis.Body.IsLandscape(),
+        CaseArt.Quad(dl, texture, CaseArt.RectFor(chassis.Body), !portraitArt && chassis.Body.IsLandscape(),
             CaseArt.Tint(artAlpha));
         Squircle.Fill(dl, chassis.Glass.Min, chassis.Glass.Max, chassis.GlassRadius, ImGui.GetColorU32(theme.Glass));
         Squircle.Fill(dl, chassis.Screen.Min, chassis.Screen.Max, chassis.ScreenRadius,

@@ -127,6 +127,7 @@ internal sealed class PhoneWindow : Window
         var portraitWidth = Components.PhoneBounds.ClampWidth(configuration.PhoneWidth);
         var landscapeWidth = Components.PhoneBounds.LandscapeWidth(configuration);
         var rotation = AdvanceRotation();
+        shell.PrepareFrame(MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds));
         var phase = shell.MinimizePhase;
         var minimized = phase == MinimizePhase.Minimized;
         var zoom = minimized ? 1f : PhoneSizeCatalog.ZoomFor(float.Lerp(portraitWidth, landscapeWidth, rotation));

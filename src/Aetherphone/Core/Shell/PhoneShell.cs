@@ -118,7 +118,7 @@ internal sealed class PhoneShell : IDisposable
             configuration, services.Confirm, themes);
         painter = new ShellScreenPainter(themes, navigation, home);
         transition = new ShellTransitionRenderer(themes, navigation, home, painter);
-        morph = new MinimizeMorphView(themes, minimize, capsule, painter);
+        morph = new MinimizeMorphView(themes, minimize, capsule, painter, configuration);
         overlays = new ShellOverlayCoordinator(configuration, loading, navigation, controlCenter, banner, island,
             rateLimitPill, shortcutPill, coinPill, coinFloats, incomingOverlay, banOverlay, confirmOverlay,
             reportOverlay, shareSheet, conductOverlay, director, setup);
@@ -244,10 +244,11 @@ internal sealed class PhoneShell : IDisposable
         return navigation.Current?.Id;
     }
 
+    public void PrepareFrame(float delta) => minimize.Advance(delta);
+
     public void Draw(Rect device)
     {
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
-        minimize.Advance(delta);
         if (minimize.Phase != MinimizePhase.None)
         {
             if (loading.IsActive)
@@ -409,19 +410,16 @@ internal sealed class PhoneShell : IDisposable
     private void DrawHomeIndicator(Rect screen, PhoneTheme theme)
     {
         var scale = UiScale.Current;
-        var width = 112f * scale;
-        var height = 5f * scale;
-        var center = new Vector2(screen.Center.X, screen.Max.Y - 14f * scale);
-        var min = new Vector2(center.X - width * 0.5f, center.Y - height * 0.5f);
-        var max = new Vector2(center.X + width * 0.5f, center.Y + height * 0.5f);
-        UiAnchors.Report("chrome.home", new Rect(min, max));
+        var bounds = HomeIndicator.Bounds(screen, scale);
+        var min = bounds.Min;
+        var max = bounds.Max;
+        UiAnchors.Report("chrome.home", bounds);
         var hitMin = new Vector2(min.X - 24f * scale, min.Y - 16f * scale);
         var hitMax = new Vector2(max.X + 24f * scale, max.Y + 16f * scale);
         var hovered = UiInteract.Hover(hitMin, hitMax);
         var usable = !navigation.AtHome && !navigation.IsTransitioning;
         var actionable = usable && (hovered || indicatorPressActive);
-        var color = actionable ? theme.TextStrong : Palette.WithAlpha(theme.TextStrong, 0.55f);
-        ImGui.GetWindowDrawList().AddRectFilled(min, max, ImGui.GetColorU32(color), height * 0.5f);
+        HomeIndicator.Draw(ImGui.GetWindowDrawList(), bounds, theme, actionable);
         if (!usable)
         {
             indicatorPressActive = false;
