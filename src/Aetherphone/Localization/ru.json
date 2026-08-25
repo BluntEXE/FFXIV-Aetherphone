@@ -2884,7 +2884,7 @@
   "games.onlineCheck": "Шах!",
   "games.onlineYouPlayWhite": "Вы играете белыми",
   "games.onlineYouPlayBlack": "Вы играете чёрными",
-  "games.onlineCheckmateWin": "{0} выигрывает — мат!",
+  "games.onlineCheckmateWin": "{0} выигрывает: мат!",
   "games.onlineTimeoutWin": "{0} выигрывает по времени!",
   "games.onlineResignWin": "{0} выигрывает: соперник сдался!",
   "games.onlineDesertWin": "{0} выигрывает: соперник вышел",
