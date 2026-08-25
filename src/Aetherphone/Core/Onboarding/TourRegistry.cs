@@ -64,6 +64,14 @@ internal static class TourRegistry
                 GuideStep.Point(L.Onboarding.MarketScopeTitle, L.Onboarding.MarketScopeBody, "market.scope"),
                 GuideStep.Note(L.Onboarding.MarketStatsTitle, L.Onboarding.MarketStatsBody),
             });
+        Add(tours, "strats", 1,
+            new[]
+            {
+                GuideStep.Note(L.Onboarding.StratsTitle, L.Onboarding.StratsBody),
+                GuideStep.Point(L.Onboarding.StratsFightsTitle, L.Onboarding.StratsFightsBody, "strats.fights"),
+                GuideStep.Point(L.Onboarding.StratsRoleTitle, L.Onboarding.StratsRoleBody, "strats.role"),
+                GuideStep.Point(L.Onboarding.StratsChipsTitle, L.Onboarding.StratsChipsBody, "strats.chips"),
+            });
         Add(tours, "venues", 2,
             new[]
             {

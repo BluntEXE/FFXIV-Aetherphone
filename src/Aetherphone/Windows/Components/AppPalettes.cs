@@ -60,6 +60,7 @@ internal static class AppPalettes
     public static readonly AppPalette Velvet = For("velvet");
     public static readonly AppPalette Message = For("message");
     public static readonly AppPalette Venues = For("venues");
+    public static readonly AppPalette Strats = For("strats");
     public static readonly AppPalette Housing = For("housing");
     public static readonly AppPalette Muster = For("muster");
     public static readonly AppPalette YellowPages = For("yellowpages");

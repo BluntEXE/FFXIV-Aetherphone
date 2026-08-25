@@ -51,6 +51,7 @@ const map = {
   shortcuts: "bolt",
   aetherstream: "device-tv",
   hunts: "dragon",
+  strats: "swords",
 };
 
 function recolor(svg) {

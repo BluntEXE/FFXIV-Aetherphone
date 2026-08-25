@@ -260,6 +260,7 @@ internal static class L
         public static readonly LocString Photos = new("app.photos", "Photos");
         public static readonly LocString Skywatcher = new("app.skywatcher", "Skywatcher");
         public static readonly LocString Venues = new("app.venues", "Venues");
+        public static readonly LocString Strats = new("app.strats", "Strats");
         public static readonly LocString Market = new("app.market", "Market");
         public static readonly LocString Wallet = new("app.wallet", "Wallet");
         public static readonly LocString Coin = new("app.coin", "Aether Coin");
@@ -435,6 +436,9 @@ internal static class L
         public static readonly LocString AnnouncementsSub = new("storeCopy.announcementsSub", "Word from the team");
         public static readonly LocString AnnouncementsBody = new("storeCopy.announcementsBody",
             "Release notes, downtime warnings and everything else the Aetherphone team wants you to know, delivered straight to your phone.");
+        public static readonly LocString StratsSub = new("storeCopy.stratsSub", "Raid cheatsheets, your spot marked");
+        public static readonly LocString StratsBody = new("storeCopy.stratsBody",
+            "Savage, Ultimate and Extreme strategies from WTFDIG. Pick a fight, a strat and your role to see exactly where to stand for every mechanic.");
         public static readonly LocString VenuesSub = new("storeCopy.venuesSub", "Nightlife, mapped");
         public static readonly LocString VenuesBody = new("storeCopy.venuesBody",
             "Find player-run venues, opening hours and directions without leaving the game.");
@@ -846,6 +850,38 @@ internal static class L
         public static readonly LocString NotAttuned = new("travel.notAttuned", "You haven't attuned to {0} yet");
         public static readonly LocString Blocked = new("travel.blocked", "You can't teleport right now");
         public static readonly LocString NoWorld = new("travel.noWorld", "You can't travel to {0} from here");
+    }
+
+    internal static class Strats
+    {
+        public static readonly LocString About = new("strats.about", "About");
+        public static readonly LocString Loading = new("strats.loading", "Loading fights");
+        public static readonly LocString LoadFailed = new("strats.loadFailed", "The fight list did not load");
+        public static readonly LocString LoadFailedHint = new("strats.loadFailedHint", "Check your connection and try again.");
+        public static readonly LocString Retry = new("strats.retry", "Retry");
+        public static readonly LocString PoweredBy = new("strats.poweredBy", "Powered by {0}");
+        public static readonly LocString MadeBy = new("strats.madeBy", "Made by {0}");
+        public static readonly LocString GuideLoading = new("strats.guideLoading", "Loading the guide");
+        public static readonly LocString GuideFailed = new("strats.guideFailed", "This guide did not load");
+        public static readonly LocString GuideFailedHint = new("strats.guideFailedHint", "Check your connection and try again.");
+        public static readonly LocString SiteLinks = new("strats.siteLinks", "Links");
+        public static readonly LocString AboutBody = new("strats.aboutBody", "Every guide in this app comes from WTFDIG, a community raid resource. Strategies link back to their original authors and raidplans.");
+        public static readonly LocString License = new("strats.license", "Shared under the {0} license");
+        public static readonly LocString StratSources = new("strats.stratSources", "{0} · {1} sources");
+        public static readonly LocString Strategy = new("strats.strategy", "Strategy");
+        public static readonly LocString Role = new("strats.role", "Your role");
+        public static readonly LocString Section = new("strats.section", "Section");
+        public static readonly LocString Orientation = new("strats.orientation", "Orientation");
+        public static readonly LocString Timeline = new("strats.timeline", "Timeline");
+        public static readonly LocString ShowTimeline = new("strats.showTimeline", "Show");
+        public static readonly LocString HideTimeline = new("strats.hideTimeline", "Hide");
+        public static readonly LocString StratDifferences = new("strats.stratDifferences", "Strat differences");
+        public static readonly LocString Board = new("strats.board", "Strategy board");
+        public static readonly LocString WhatHappens = new("strats.whatHappens", "What happens");
+        public static readonly LocString WhatToDo = new("strats.whatToDo", "What to do");
+        public static readonly LocString ForYou = new("strats.forYou", "Your spot");
+        public static readonly LocString OpenOnSite = new("strats.openOnSite", "View on wtfdig.info");
+        public static readonly LocString Resources = new("strats.resources", "More resources");
     }
 
     internal static class Venues
@@ -5385,6 +5421,14 @@ internal static class L
         public static readonly LocString MarketBody = new("onboarding.marketBody", "Live market board prices from across your world, powered by Universalis. Search any item, or right-click one in game to look it up.");
         public static readonly LocString MarketStatsTitle = new("onboarding.marketStatsTitle", "Know before you sell");
         public static readonly LocString MarketStatsBody = new("onboarding.marketStatsBody", "See the cheapest listings, price history and sale trends, and set an alert to get pinged when a price drops.");
+        public static readonly LocString StratsTitle = new("onboarding.stratsTitle", "Strats");
+        public static readonly LocString StratsBody = new("onboarding.stratsBody", "Raid cheatsheets from WTFDIG, right in your pocket. Pick a fight to see every mechanic with your spot marked.");
+        public static readonly LocString StratsFightsTitle = new("onboarding.stratsFightsTitle", "Pick a fight");
+        public static readonly LocString StratsFightsBody = new("onboarding.stratsFightsBody", "Savage, Ultimate, Extreme and older tiers are grouped here.");
+        public static readonly LocString StratsRoleTitle = new("onboarding.stratsRoleTitle", "Your role");
+        public static readonly LocString StratsRoleBody = new("onboarding.stratsRoleBody", "Choose your role and party. Every diagram highlights where you stand.");
+        public static readonly LocString StratsChipsTitle = new("onboarding.stratsChipsTitle", "Strats and options");
+        public static readonly LocString StratsChipsBody = new("onboarding.stratsChipsBody", "Switch between community strats and their variants. Your choice is remembered per fight.");
         public static readonly LocString VenuesTitle = new("onboarding.venuesTitle", "Venues");
         public static readonly LocString VenuesBody = new("onboarding.venuesBody", "Discover live player-run venues and events, from clubs to photo spots. One tap travels you there with Lifestream.");
         public static readonly LocString MusicTitle = new("onboarding.musicTitle", "Music");
