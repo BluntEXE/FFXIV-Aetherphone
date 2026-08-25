@@ -28,6 +28,7 @@ internal sealed record GameRoomState(
     GameRoomSnapshotDto Snapshot,
     UnoRoomStateDto? Uno,
     ChessRoomStateDto? Chess,
+    PoolRoomStateDto? Pool,
     GameRoomRoster? Roster);
 
 internal sealed record GameRoomPrivate(
@@ -332,16 +333,41 @@ internal sealed class GameRoomSession
         if (string.Equals(snapshot.GameKind, GameRoomWire.UnoKind, StringComparison.Ordinal))
         {
             var uno = Parse(snapshot.GameState, AethernetJsonContext.Default.UnoRoomStateDto);
-            return new GameRoomState(roomId, epoch, seq, snapshot, uno, null, RosterOf(uno));
+            return new GameRoomState(roomId, epoch, seq, snapshot, uno, null, null, RosterOf(uno));
         }
 
         if (string.Equals(snapshot.GameKind, GameRoomWire.ChessKind, StringComparison.Ordinal))
         {
             var chess = Parse(snapshot.GameState, AethernetJsonContext.Default.ChessRoomStateDto);
-            return new GameRoomState(roomId, epoch, seq, snapshot, null, chess, RosterOf(chess));
+            return new GameRoomState(roomId, epoch, seq, snapshot, null, chess, null, RosterOf(chess));
         }
 
-        return new GameRoomState(roomId, epoch, seq, snapshot, null, null, null);
+        if (string.Equals(snapshot.GameKind, GameRoomWire.PoolKind, StringComparison.Ordinal))
+        {
+            var pool = Parse(snapshot.GameState, AethernetJsonContext.Default.PoolRoomStateDto);
+            return new GameRoomState(roomId, epoch, seq, snapshot, null, null, pool, RosterOf(pool));
+        }
+
+        return new GameRoomState(roomId, epoch, seq, snapshot, null, null, null, null);
+    }
+
+    private static GameRoomRoster? RosterOf(PoolRoomStateDto? pool)
+    {
+        if (pool is null)
+        {
+            return null;
+        }
+
+        var players = pool.Players ?? Array.Empty<PoolPlayerDto>();
+        var members = new GameRoomMemberView[players.Length];
+        for (var index = 0; index < players.Length; index++)
+        {
+            var player = players[index];
+            members[index] = new GameRoomMemberView(player.UserId, player.DisplayName, player.Seat,
+                player.Away, player.Wins);
+        }
+
+        return new GameRoomRoster(pool.HostUserId, members, pool.ActionCount, pool.WinnerSeat);
     }
 
     private static GameRoomRoster? RosterOf(UnoRoomStateDto? uno)

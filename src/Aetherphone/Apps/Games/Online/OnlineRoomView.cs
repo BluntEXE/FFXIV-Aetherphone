@@ -26,6 +26,7 @@ internal sealed class OnlineRoomView
 
     private readonly GameRoomsStore store;
     private readonly OnlineChessTable chessTable;
+    private readonly OnlinePoolTable poolTable;
 
     private string inlineReason = string.Empty;
     private long noticeAtTick;
@@ -36,6 +37,7 @@ internal sealed class OnlineRoomView
     {
         this.store = store;
         chessTable = new OnlineChessTable(store);
+        poolTable = new OnlinePoolTable(store);
     }
 
     public void Enter()
@@ -43,12 +45,13 @@ internal sealed class OnlineRoomView
         inlineReason = string.Empty;
         wildPendingCard = -1;
         chessTable.Reset();
+        poolTable.Reset();
     }
 
     public void Draw(in PhoneContext context, Action back)
     {
         var held = store.Room.State;
-        AppHeader.Draw(context, Loc.T(TitleFor(held?.Snapshot.GameKind)), back);
+        AppHeader.Draw(context, Loc.T(GamesOnlineText.GameName(held?.Snapshot.GameKind)), back);
         var scale = UiScale.Current;
         var content = context.Content;
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + HeaderHeight * scale), content.Max);
@@ -81,16 +84,15 @@ internal sealed class OnlineRoomView
                 chessTable.Draw(body, theme, scale, held.Snapshot, held.Chess, FreshNotice());
                 return;
             }
+
+            if (held.Pool is not null)
+            {
+                poolTable.Draw(body, theme, scale, held.Snapshot, held.Pool, FreshNotice());
+                return;
+            }
         }
 
         DrawLobby(body, theme, scale, held);
-    }
-
-    private static LocString TitleFor(string? gameKind)
-    {
-        return string.Equals(gameKind, GameRoomWire.ChessKind, StringComparison.Ordinal)
-            ? L.Games.OnlineChess
-            : L.Games.OnlineUno;
     }
 
     private string FreshNotice()
@@ -280,6 +282,22 @@ internal sealed class OnlineRoomView
                 GameRoomWire.ChessEndStalemate => Loc.T(L.Games.OnlineStalemateDraw),
                 GameRoomWire.ChessEndFiftyMove => Loc.T(L.Games.OnlineFiftyDraw),
                 GameRoomWire.ChessEndMaterial => Loc.T(L.Games.OnlineMaterialDraw),
+                _ => winnerName.Length > 0
+                    ? Loc.T(L.Games.OnlineWinner, winnerName)
+                    : Loc.T(L.Games.OnlineRoundVoid),
+            };
+        }
+
+        if (held.Pool is not null)
+        {
+            return held.Pool.EndKind switch
+            {
+                GameRoomWire.PoolEndEight => Loc.T(L.Games.OnlineEightWin, winnerName),
+                GameRoomWire.PoolEndEightEarly => Loc.T(L.Games.OnlineEightEarlyLoss, winnerName),
+                GameRoomWire.PoolEndEightScratch => Loc.T(L.Games.OnlineEightScratchLoss, winnerName),
+                GameRoomWire.PoolEndTimeout => Loc.T(L.Games.OnlineTimeoutWin, winnerName),
+                GameRoomWire.PoolEndResign => Loc.T(L.Games.OnlineResignWin, winnerName),
+                GameRoomWire.PoolEndDesertion => Loc.T(L.Games.OnlineDesertWin, winnerName),
                 _ => winnerName.Length > 0
                     ? Loc.T(L.Games.OnlineWinner, winnerName)
                     : Loc.T(L.Games.OnlineRoundVoid),

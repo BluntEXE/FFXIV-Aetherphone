@@ -64,12 +64,10 @@ internal sealed class GamesClient
             null, onFailure);
     }
 
-    public Task<GameRoomActionResultDto?> ActAsync(string roomId, string action, int actionCount, int card,
-        int color, string clientActionId, CancellationToken token, int from = -1, int to = -1,
-        Action<AepFailure>? onFailure = null)
+    public Task<GameRoomActionResultDto?> ActAsync(string roomId, GameRoomActionRequest request,
+        CancellationToken token, Action<AepFailure>? onFailure = null)
     {
-        return net.PostAsync(RoomPath(roomId, "act"),
-            new GameRoomActionRequest(action, actionCount, card, color, clientActionId, from, to),
+        return net.PostAsync(RoomPath(roomId, "act"), request,
             AethernetJsonContext.Default.GameRoomActionRequest,
             AethernetJsonContext.Default.GameRoomActionResultDto, token, null, onFailure);
     }

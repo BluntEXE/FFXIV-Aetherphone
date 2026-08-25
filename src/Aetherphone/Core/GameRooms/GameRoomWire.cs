@@ -6,7 +6,45 @@ internal static class GameRoomWire
 
     public const string ChessKind = "games.chess";
 
+    public const string PoolKind = "games.pool";
+
     public const string UnoHandEvent = "uno.hand";
+
+    public const string ActionShoot = "shoot";
+
+    public const string ActionPlace = "place";
+
+    public const string PoolEndEight = "eight";
+
+    public const string PoolEndEightEarly = "eight_early";
+
+    public const string PoolEndEightScratch = "eight_scratch";
+
+    public const string PoolEndResign = "resign";
+
+    public const string PoolEndDesertion = "desertion";
+
+    public const string PoolEndTimeout = "timeout";
+
+    public const string PoolFoulScratch = "scratch";
+
+    public const string PoolFoulWrongBall = "wrong_ball";
+
+    public const string PoolFoulNoContact = "no_contact";
+
+    public const string PoolFoulNoRail = "no_rail";
+
+    public const int PoolGroupSolids = 1;
+
+    public const int PoolGroupStripes = 2;
+
+    public const float PoolTableWidth = 2f;
+
+    public const float PoolTableHeight = 1f;
+
+    public const float PoolBallRadius = 0.028f;
+
+    public const float PoolPocketRadius = 0.055f;
 
     public const string ActionStart = "start";
 

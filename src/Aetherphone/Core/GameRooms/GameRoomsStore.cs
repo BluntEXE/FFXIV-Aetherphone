@@ -261,10 +261,21 @@ internal sealed class GameRoomsStore : IDisposable
         SendAction(GameRoomWire.ActionResign, -1, -1);
     }
 
+    public void SendShoot(float angle, float power)
+    {
+        SendAction(GameRoomWire.ActionShoot, -1, -1, -1, -1, angle, power);
+    }
+
+    public void SendPlace(float x, float y)
+    {
+        SendAction(GameRoomWire.ActionPlace, -1, -1, -1, -1, 0f, 0f, x, y);
+    }
+
     // Every action names the action count it was decided against; the server refuses a mismatch as
     // stale rather than applying it twice, so a lost response costs one refresh and never a double
     // move.
-    private void SendAction(string action, int card, int color, int from = -1, int to = -1)
+    private void SendAction(string action, int card, int color, int from = -1, int to = -1,
+        float angle = 0f, float power = 0f, float placeX = 0f, float placeY = 0f)
     {
         var target = room.RoomId;
         var roster = room.State?.Roster;
@@ -273,14 +284,12 @@ internal sealed class GameRoomsStore : IDisposable
             return;
         }
 
-        var actionCount = roster.ActionCount;
-        var clientActionId = Guid.NewGuid().ToString("N");
+        var request = new GameRoomActionRequest(action, roster.ActionCount, card, color,
+            Guid.NewGuid().ToString("N"), from, to, angle, power, placeX, placeY);
         actInFlight = true;
         work.Run("room action", async token =>
         {
-            var result = await games
-                .ActAsync(target, action, actionCount, card, color, clientActionId, token, from, to)
-                .ConfigureAwait(false);
+            var result = await games.ActAsync(target, request, token).ConfigureAwait(false);
             if (result is null)
             {
                 Interlocked.Exchange(ref actOutcome, new GameActOutcome(false, string.Empty));

@@ -4584,6 +4584,22 @@ internal static class L
         public static readonly LocString OnlineStalemateDraw = new("games.onlineStalemateDraw", "Draw by stalemate");
         public static readonly LocString OnlineFiftyDraw = new("games.onlineFiftyDraw", "Draw by the fifty-move rule");
         public static readonly LocString OnlineMaterialDraw = new("games.onlineMaterialDraw", "Draw, not enough material to mate");
+        public static readonly LocString OnlinePool = new("games.onlinePool", "8-Ball Pool");
+        public static readonly LocString OnlinePoolHostHint = new("games.onlinePoolHostHint", "Head-to-head, 45 seconds a shot");
+        public static readonly LocString OnlineShootHint = new("games.onlineShootHint", "Drag back from the cue ball and release to shoot");
+        public static readonly LocString OnlineBallInHand = new("games.onlineBallInHand", "Ball in hand: tap the table to place the cue ball");
+        public static readonly LocString OnlineBreakShot = new("games.onlineBreakShot", "Break!");
+        public static readonly LocString OnlineGroupSolids = new("games.onlineGroupSolids", "Solids");
+        public static readonly LocString OnlineGroupStripes = new("games.onlineGroupStripes", "Stripes");
+        public static readonly LocString OnlineGroupOpen = new("games.onlineGroupOpen", "Open table");
+        public static readonly LocString OnlineOnTheEight = new("games.onlineOnTheEight", "On the eight");
+        public static readonly LocString OnlineFoulScratch = new("games.onlineFoulScratch", "Foul: scratch");
+        public static readonly LocString OnlineFoulWrongBall = new("games.onlineFoulWrongBall", "Foul: wrong ball hit first");
+        public static readonly LocString OnlineFoulNoContact = new("games.onlineFoulNoContact", "Foul: nothing was hit");
+        public static readonly LocString OnlineFoulNoRail = new("games.onlineFoulNoRail", "Foul: no ball reached a rail");
+        public static readonly LocString OnlineEightWin = new("games.onlineEightWin", "{0} sinks the eight and wins!");
+        public static readonly LocString OnlineEightEarlyLoss = new("games.onlineEightEarlyLoss", "{0} wins, the eight went down too early");
+        public static readonly LocString OnlineEightScratchLoss = new("games.onlineEightScratchLoss", "{0} wins, the eight fell on a foul");
     }
 
     internal static class Time

@@ -280,6 +280,10 @@ namespace Aetherphone.Core.Aethernet;
 [JsonSerializable(typeof(UnoYouDto))]
 [JsonSerializable(typeof(ChessPlayerDto))]
 [JsonSerializable(typeof(ChessRoomStateDto))]
+[JsonSerializable(typeof(PoolPlayerDto))]
+[JsonSerializable(typeof(PoolBallDto))]
+[JsonSerializable(typeof(PoolTraceDto))]
+[JsonSerializable(typeof(PoolRoomStateDto))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
 internal sealed partial class AethernetJsonContext : JsonSerializerContext
 {

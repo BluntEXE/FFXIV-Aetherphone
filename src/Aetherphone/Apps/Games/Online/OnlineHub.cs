@@ -64,6 +64,9 @@ internal sealed class OnlineHub
         DrawHostRow(theme, scale, GameRoomWire.ChessKind, Loc.T(L.Games.OnlineChess),
             Loc.T(L.Games.OnlineChessHostHint));
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+        DrawHostRow(theme, scale, GameRoomWire.PoolKind, Loc.T(L.Games.OnlinePool),
+            Loc.T(L.Games.OnlinePoolHostHint));
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
         DrawJoinByCode(theme, scale);
         if (inlineReason.Length > 0)
         {
@@ -222,9 +225,7 @@ internal sealed class OnlineHub
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        var gameName = Loc.T(string.Equals(room.GameKind, GameRoomWire.ChessKind, StringComparison.Ordinal)
-            ? L.Games.OnlineChess
-            : L.Games.OnlineUno);
+        var gameName = Loc.T(GamesOnlineText.GameName(room.GameKind));
         var title = gameName + " · " + Loc.T(L.Games.OnlineHostedBy, room.OwnerName);
         var phase = room.Phase switch
         {

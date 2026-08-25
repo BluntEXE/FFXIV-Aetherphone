@@ -4,6 +4,32 @@ namespace Aetherphone.Apps.Games.Online;
 
 internal static class GamesOnlineText
 {
+    public static LocString GameName(string? gameKind)
+    {
+        if (string.Equals(gameKind, Core.GameRooms.GameRoomWire.ChessKind, StringComparison.Ordinal))
+        {
+            return L.Games.OnlineChess;
+        }
+
+        if (string.Equals(gameKind, Core.GameRooms.GameRoomWire.PoolKind, StringComparison.Ordinal))
+        {
+            return L.Games.OnlinePool;
+        }
+
+        return L.Games.OnlineUno;
+    }
+
+    public static LocString FoulMessage(string foul)
+    {
+        return foul switch
+        {
+            Core.GameRooms.GameRoomWire.PoolFoulScratch => L.Games.OnlineFoulScratch,
+            Core.GameRooms.GameRoomWire.PoolFoulWrongBall => L.Games.OnlineFoulWrongBall,
+            Core.GameRooms.GameRoomWire.PoolFoulNoContact => L.Games.OnlineFoulNoContact,
+            _ => L.Games.OnlineFoulNoRail,
+        };
+    }
+
     public static LocString ReasonMessage(string reason)
     {
         return reason switch
