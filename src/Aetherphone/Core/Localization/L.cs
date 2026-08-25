@@ -1720,6 +1720,20 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release1012 =
+        {
+            new("changelog.r1012.0",
+                "Added Mods, a Heliosphere browser: search the catalog by name or category, sort by trending, downloads or date, and read each mod's images, changelog and permissions without leaving the game"),
+            new("changelog.r1012.1",
+                "Installing and updating from Mods goes through the Heliosphere plugin, so creators keep their download counts and the phone never touches Penumbra's mod folder"),
+            new("changelog.r1012.2",
+                "The Installed tab in Mods lists your Heliosphere mods with their covers, flags the ones with an update, and switches them on or off in your collection"),
+            new("changelog.r1012.3",
+                "NSFW mods stay hidden until you turn them on in Mods settings and confirm you are 18 or older, and sensitive previews stay blurred until tapped"),
+            new("changelog.r1012.4",
+                "The minimized phone is a little phone again: a portrait puck with its case art, a big clock with the date, and music, calls and new notifications stacked underneath like a lock screen"),
+        };
+
         public static readonly LocString[] Release1011 =
         {
             new("changelog.r1011.0",
