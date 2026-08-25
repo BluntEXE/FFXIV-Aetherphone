@@ -39,9 +39,11 @@ internal static class DragScrollHost
 
         public bool Dragging { get; }
 
-        public void JumpToTop()
+        public void JumpToTop() => JumpTo(0f);
+
+        public void JumpTo(float scrollY)
         {
-            ImGui.SetScrollY(0f);
+            ImGui.SetScrollY(scrollY);
             region?.Reset();
         }
 

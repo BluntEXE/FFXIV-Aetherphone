@@ -71,6 +71,8 @@ internal static class AppSurface
 
         public readonly void JumpToTop() => surface.JumpToTop();
 
+        public readonly void JumpTo(float scrollY) => surface.JumpTo(scrollY);
+
         public readonly void CancelDrag() => surface.CancelDrag();
 
         public void Dispose()

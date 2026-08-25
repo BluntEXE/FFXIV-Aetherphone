@@ -16,7 +16,6 @@ internal sealed partial class StratsApp : IPhoneApp
         Index,
         Fight,
         Viewer,
-        About,
     }
 
     private readonly record struct StratsView(StratsScreen Screen, string FightKey = "", int PhaseIndex = -1,
@@ -38,6 +37,7 @@ internal sealed partial class StratsApp : IPhoneApp
     private readonly ViewRouter<StratsView> router;
     private readonly RouterDraw<StratsView> drawView;
     private readonly Action back;
+    private readonly Action closeViewer;
     private readonly RichTextBlock richText = new();
     private readonly PhotoZoomView zoom = new();
     private readonly ChipRail tabRail = new();
@@ -60,6 +60,7 @@ internal sealed partial class StratsApp : IPhoneApp
         router = new ViewRouter<StratsView>(new StratsView(StratsScreen.Index));
         drawView = DrawView;
         back = () => router.Pop();
+        closeViewer = CloseViewer;
         snapshotStore = new SettingsSnapshotStore<StratsSnapshot>(configuration,
             static config => config.StratsSettings,
             static (config, snapshot) => config.StratsSettings = snapshot);
@@ -75,6 +76,7 @@ internal sealed partial class StratsApp : IPhoneApp
     public void OnClosed()
     {
         PersistSelection();
+        AppLandscape.Release(Id);
         router.Reset();
         zoom.Reset();
     }
@@ -85,6 +87,11 @@ internal sealed partial class StratsApp : IPhoneApp
         navigation = context.Navigation;
         ui.Theme = theme;
         manifestStore.EnsureFresh(false);
+        if (router.Current.Screen != StratsScreen.Viewer)
+        {
+            AppLandscape.Release(Id);
+        }
+
         var screen = SceneChrome.ScreenFrom(context.Content, theme, UiScale.Current);
         ui.Backdrop(screen);
         router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
@@ -100,9 +107,6 @@ internal sealed partial class StratsApp : IPhoneApp
                 break;
             case StratsScreen.Viewer:
                 DrawViewer(area, view);
-                break;
-            case StratsScreen.About:
-                DrawAbout(area);
                 break;
             default:
                 DrawIndex(area);
@@ -120,6 +124,19 @@ internal sealed partial class StratsApp : IPhoneApp
         timelineOpen = false;
         linksOpen = false;
         router.Push(new StratsView(StratsScreen.Fight, fight.Key));
+    }
+
+    private void OpenViewer(StratsView view)
+    {
+        zoom.Reset();
+        router.Push(view);
+        AppLandscape.Request(Id);
+    }
+
+    private void CloseViewer()
+    {
+        AppLandscape.Release(Id);
+        router.Pop();
     }
 
     private void PersistSelection()

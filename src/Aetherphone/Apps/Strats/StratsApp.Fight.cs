@@ -17,6 +17,7 @@ internal sealed partial class StratsApp
     private const float RoleChipGap = 6f;
     private const float RoleCaptionGap = 4f;
     private const float SetupRowHeight = 42f;
+    private const float PagerPillHeight = 38f;
     private const float LinkPillHeight = 30f;
     private const float MaxImageHeight = 420f;
     private const float BadgeGap = 4f;
@@ -54,6 +55,7 @@ internal sealed partial class StratsApp
     private string[] linkGlyphs = Array.Empty<string>();
     private string[] linkRowIds = Array.Empty<string>();
     private string linksCountLabel = string.Empty;
+    private float sectionsScrollY;
 
     private void DrawFight(Rect area, StratsView view)
     {
@@ -66,13 +68,6 @@ internal sealed partial class StratsApp
 
         var context = new PhoneContext(area, theme, navigation);
         AppHeader.Draw(context, fight.Abbrev, back);
-        var actionCenter = new Vector2(area.Max.X - 22f * scale, area.Min.Y + AppHeader.Height * scale * 0.5f);
-        if (ui.IconButton(actionCenter, 14f * scale, FontAwesomeIcon.InfoCircle.ToIconString(),
-                AppPalettes.Strats.BodyInk, AppSkin.Transparent, 0.9f, Loc.T(L.Strats.About)))
-        {
-            router.Push(new StratsView(StratsScreen.About));
-        }
-
         var top = area.Min.Y + AppHeader.Height * scale;
         var body = new Rect(new Vector2(area.Min.X, top), area.Max);
         var entry = guideStore.Request(fight, false);
@@ -90,7 +85,7 @@ internal sealed partial class StratsApp
         }
 
         EnsureLabels(doc, current);
-        using (AppSurface.Begin(body))
+        using (var surface = AppSurface.Begin(body))
         {
             DrawFightTitle(fight, scale);
             DrawStratPicker(doc, current, scale);
@@ -102,7 +97,9 @@ internal sealed partial class StratsApp
             DrawStratIntro(current, scale);
             DrawStratDifferences(current, scale);
             DrawPhases(current, scale);
+            DrawSectionPager(doc, current, surface, scale);
             DrawResources(current, scale);
+            DrawBackToTop(surface, scale);
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Xl * scale));
         }
     }
@@ -477,6 +474,7 @@ internal sealed partial class StratsApp
             return;
         }
 
+        sectionsScrollY = ImGui.GetCursorPosY();
         ui.SectionLabel(Loc.T(L.Strats.Section));
         for (var index = 0; index < tabActive.Length; index++)
         {
@@ -783,6 +781,74 @@ internal sealed partial class StratsApp
         }
     }
 
+    private void DrawSectionPager(FightDoc doc, ResolvedFight current, in AppSurface.SurfaceScope surface, float scale)
+    {
+        if (doc.Tabs.Length <= 1)
+        {
+            return;
+        }
+
+        var drawList = ImGui.GetWindowDrawList();
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        var gap = Metrics.Space.Sm * scale;
+        var half = (width - gap) * 0.5f;
+        var captionHeight = Typography.LineHeight(TextStyles.Caption2) + 2f * scale;
+        var pillTop = origin.Y + captionHeight;
+        var pillHeight = PagerPillHeight * scale;
+        if (current.TabIndex > 0)
+        {
+            Typography.Draw(drawList, origin, Loc.T(L.Common.Previous), ui.MutedInk, TextStyles.Caption2);
+            var rect = new Rect(new Vector2(origin.X, pillTop), new Vector2(origin.X + half, pillTop + pillHeight));
+            if (ui.PillButton(rect, tabLabels[current.TabIndex - 1], false, "strats.pager.previous"))
+            {
+                SwitchSection(current.TabIndex - 1, surface, scale);
+            }
+        }
+
+        if (current.TabIndex < doc.Tabs.Length - 1)
+        {
+            var left = origin.X + half + gap;
+            var caption = Loc.T(L.Common.Next);
+            var captionWidth = Typography.Measure(caption, TextStyles.Caption2).X;
+            Typography.Draw(drawList, new Vector2(origin.X + width - captionWidth, origin.Y), caption, ui.MutedInk,
+                TextStyles.Caption2);
+            var rect = new Rect(new Vector2(left, pillTop), new Vector2(origin.X + width, pillTop + pillHeight));
+            if (ui.PillButton(rect, tabLabels[current.TabIndex + 1], true, "strats.pager.next"))
+            {
+                SwitchSection(current.TabIndex + 1, surface, scale);
+            }
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, captionHeight + pillHeight + Metrics.Space.Md * scale));
+    }
+
+    private void SwitchSection(int tabIndex, in AppSurface.SurfaceScope surface, float scale)
+    {
+        selection.Tab = tabIndex;
+        TouchSelection();
+        surface.JumpTo(MathF.Max(0f, sectionsScrollY - Metrics.Space.Sm * scale));
+    }
+
+    private void DrawBackToTop(in AppSurface.SurfaceScope surface, float scale)
+    {
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        var label = Loc.T(L.Strats.BackToTop);
+        var pillHeight = LinkPillHeight * scale;
+        var pillWidth = MathF.Min(width, AppSkin.PillWidthFor(label, pillHeight));
+        var left = origin.X + (width - pillWidth) * 0.5f;
+        var rect = new Rect(new Vector2(left, origin.Y), new Vector2(left + pillWidth, origin.Y + pillHeight));
+        if (ui.GhostButton(rect, label))
+        {
+            surface.JumpToTop();
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, pillHeight + Metrics.Space.Sm * scale));
+    }
+
     private void DrawPhaseIntro(ResolvedPhase phase, int phaseIndex, float scale)
     {
         var hasText = phase.Description is not null;
@@ -1044,8 +1110,7 @@ internal sealed partial class StratsApp
 
         if (texture is not null && UiInteract.Click(frame.Min, frame.Max, hovered))
         {
-            zoom.Reset();
-            router.Push(viewerRoute);
+            OpenViewer(viewerRoute);
         }
     }
 

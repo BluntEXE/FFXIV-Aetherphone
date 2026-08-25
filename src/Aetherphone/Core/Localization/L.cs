@@ -854,7 +854,6 @@ internal static class L
 
     internal static class Strats
     {
-        public static readonly LocString About = new("strats.about", "About");
         public static readonly LocString Loading = new("strats.loading", "Loading fights");
         public static readonly LocString LoadFailed = new("strats.loadFailed", "The fight list did not load");
         public static readonly LocString LoadFailedHint = new("strats.loadFailedHint", "Check your connection and try again.");
@@ -864,10 +863,6 @@ internal static class L
         public static readonly LocString GuideLoading = new("strats.guideLoading", "Loading the guide");
         public static readonly LocString GuideFailed = new("strats.guideFailed", "This guide did not load");
         public static readonly LocString GuideFailedHint = new("strats.guideFailedHint", "Check your connection and try again.");
-        public static readonly LocString SiteLinks = new("strats.siteLinks", "Links");
-        public static readonly LocString AboutBody = new("strats.aboutBody", "Every guide in this app comes from WTFDIG, a community raid resource. Strategies link back to their original authors and raidplans.");
-        public static readonly LocString License = new("strats.license", "Shared under the {0} license");
-        public static readonly LocString StratSources = new("strats.stratSources", "{0} · {1} sources");
         public static readonly LocString Strategy = new("strats.strategy", "Strategy");
         public static readonly LocString Role = new("strats.role", "Your role");
         public static readonly LocString Section = new("strats.section", "Section");
@@ -887,6 +882,7 @@ internal static class L
         public static readonly LocString RoleHealer = new("strats.roleHealer", "Healer");
         public static readonly LocString RoleMelee = new("strats.roleMelee", "Melee");
         public static readonly LocString RoleRanged = new("strats.roleRanged", "Ranged");
+        public static readonly LocString BackToTop = new("strats.backToTop", "Back to top");
     }
 
     internal static class Venues

@@ -19,6 +19,7 @@ internal sealed class PhotoWindow : Window
 
     private readonly ThemeProvider themes;
     private Func<IDalamudTextureWrap?>? source;
+    private Action<ImDrawListPtr, Rect, IDalamudTextureWrap>? overlay;
     private IPhoneApp? owner;
     private bool fitPending;
 
@@ -33,9 +34,11 @@ internal sealed class PhotoWindow : Window
         };
     }
 
-    public void Open(Func<IDalamudTextureWrap?> textureSource, IPhoneApp app)
+    public void Open(Func<IDalamudTextureWrap?> textureSource, IPhoneApp app,
+        Action<ImDrawListPtr, Rect, IDalamudTextureWrap>? frameOverlay = null)
     {
         source = textureSource;
+        overlay = frameOverlay;
         owner = app;
         fitPending = true;
         IsOpen = true;
@@ -45,6 +48,7 @@ internal sealed class PhotoWindow : Window
     public override void OnClose()
     {
         source = null;
+        overlay = null;
         owner = null;
     }
 
@@ -94,7 +98,9 @@ internal sealed class PhotoWindow : Window
         }
 
         var frame = ImageFit.CenteredRect(area, texture.Size.X / MathF.Max(texture.Size.Y, 1f));
-        ImGui.GetWindowDrawList().AddImage(texture.Handle, frame.Min, frame.Max);
+        var drawList = ImGui.GetWindowDrawList();
+        drawList.AddImage(texture.Handle, frame.Min, frame.Max);
+        overlay?.Invoke(drawList, frame, texture);
     }
 
     private static Vector2 InitialSize(Vector2 imageSize)

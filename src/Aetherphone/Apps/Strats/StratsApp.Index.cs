@@ -3,6 +3,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Strats;
+using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -63,17 +64,9 @@ internal sealed partial class StratsApp
         var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
         Typography.DrawCentered(new Vector2(area.Center.X, rowCenterY), DisplayName, AppPalettes.Strats.TitleInk, 1.3f,
             FontWeight.Bold);
-        var actionCenter = new Vector2(area.Max.X - 22f * scale, rowCenterY);
         if (manifestStore.State == StratsState.Loading && manifestStore.Manifest is null)
         {
-            LoadingPulse.Spinner(actionCenter, 8f * scale, ui.Accent);
-            return;
-        }
-
-        if (ui.IconButton(actionCenter, 14f * scale, FontAwesomeIcon.InfoCircle.ToIconString(),
-                AppPalettes.Strats.BodyInk, AppSkin.Transparent, 0.9f, Loc.T(L.Strats.About)))
-        {
-            router.Push(new StratsView(StratsScreen.About));
+            LoadingPulse.Spinner(new Vector2(area.Max.X - 22f * scale, rowCenterY), 8f * scale, ui.Accent);
         }
     }
 
@@ -110,9 +103,9 @@ internal sealed partial class StratsApp
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        if (UiInteract.Click(row.Min, row.Max, hovered))
+        if (UiInteract.Click(row.Min, row.Max, hovered) && manifest.Credits.SiteUrl.Length > 0)
         {
-            router.Push(new StratsView(StratsScreen.About));
+            UrlActions.AskThenOpen(manifest.Credits.SiteUrl);
         }
 
         ImGui.SetCursorScreenPos(origin);
