@@ -4,8 +4,9 @@ namespace Aetherphone.Core.Theme;
 
 internal readonly struct ChassisGeometry
 {
-    private const float CapsuleMetalWidth = 3f;
-    private const float CapsuleGlassWidth = 4f;
+    private const float PuckRoundingFraction = 0.300f;
+    private const float PuckMetalFraction = 0.030f;
+    private const float PuckGlassFraction = 0.060f;
 
     public readonly Rect Body;
     public readonly Rect Glass;
@@ -48,26 +49,24 @@ internal readonly struct ChassisGeometry
             new Vector2(window.Max.X - rail, window.Max.Y));
     }
 
-    public static ChassisGeometry Capsule(Rect body, float scale) =>
-        new(body, MathF.Min(body.Width, body.Height), CapsuleMetalWidth * scale, CapsuleGlassWidth * scale);
+    public static ChassisGeometry Puck(Rect body) =>
+        new(body, body.Width * PuckRoundingFraction, body.Width * PuckMetalFraction,
+            body.Width * PuckGlassFraction);
 
-    public static float CapsuleBand(float scale) =>
-        (MathF.Max(MathF.Round(CapsuleMetalWidth * scale), 1f) + MathF.Max(MathF.Round(CapsuleGlassWidth * scale), 1f)) *
+    public static float PuckBand(float width) =>
+        (MathF.Max(MathF.Round(width * PuckMetalFraction), 1f) + MathF.Max(MathF.Round(width * PuckGlassFraction), 1f)) *
         2f;
 
-    public static ChassisGeometry Morph(Rect body, PhoneTheme theme, float deviceScale, float capsuleScale,
-        float eased) =>
-        new(body, Easing.Lerp(theme.DeviceRounding * deviceScale, CapsuleRounding(body), eased),
-            Easing.Lerp(theme.MetalWidth * deviceScale, CapsuleMetalWidth * capsuleScale, eased),
-            Easing.Lerp(theme.GlassWidth * deviceScale, CapsuleGlassWidth * capsuleScale, eased));
+    public static ChassisGeometry Morph(Rect body, PhoneTheme theme, float scale, float eased) =>
+        new(body, Easing.Lerp(theme.DeviceRounding * scale, body.Width * PuckRoundingFraction, eased),
+            Easing.Lerp(theme.MetalWidth * scale, body.Width * PuckMetalFraction, eased),
+            Easing.Lerp(theme.GlassWidth * scale, body.Width * PuckGlassFraction, eased));
 
     public static ChassisGeometry Preview(Rect body, PhoneCaseKind kind)
     {
         var metrics = ChassisMetrics.ForBody(kind, body.Width);
         return new ChassisGeometry(body, metrics.DeviceRounding, metrics.MetalWidth, metrics.GlassWidth);
     }
-
-    private static float CapsuleRounding(Rect body) => MathF.Min(body.Width, body.Height) * 0.5f;
 
     private static float SnapBand(float width, float limit)
     {

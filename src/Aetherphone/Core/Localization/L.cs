@@ -4817,7 +4817,7 @@ internal static class L
         public static readonly LocString ShortcutNotFound = new("plugin.shortcutNotFound", "No shortcut named {0}.");
         public static readonly LocString SearchTheMarket = new("plugin.searchTheMarket", "Search the Market");
         public static readonly LocString SideButtonHint = new("plugin.sideButtonHint", "Tap to minimize · Hold to turn off");
-        public static readonly LocString CapsuleHint = new("plugin.capsuleHint", "Tap to open · Hold to turn off");
+        public static readonly LocString MinimizedHint = new("plugin.minimizedHint", "Tap to open · Hold to turn off");
         public static readonly LocString LockPositionHint = new("plugin.lockPositionHint", "Lock position");
         public static readonly LocString UnlockPositionHint = new("plugin.unlockPositionHint", "Unlock position");
         public static readonly LocString ResizeHint = new("plugin.resizeHint", "Drag to resize");
@@ -5610,7 +5610,7 @@ internal static class L
         public static readonly LocString BatteryTourTitle = new("onboarding.batteryTourTitle", "Real battery");
         public static readonly LocString BatteryTourBody = new("onboarding.batteryTourBody", "And this is your device's actual battery, read straight from your computer.");
         public static readonly LocString MinimizeTitle = new("onboarding.minimizeTitle", "Tuck it away");
-        public static readonly LocString MinimizeBody = new("onboarding.minimizeBody", "This side button tucks the phone into a small capsule that keeps showing the time, your music and new alerts. Tap the capsule to bring the phone back, or hold it to turn off.");
+        public static readonly LocString MinimizeBody = new("onboarding.minimizeBody", "This side button shrinks the phone into a small one in the corner that keeps showing the time, your music and new alerts. Tap it to bring the phone back, or hold it to turn off.");
         public static readonly LocString LockTitle = new("onboarding.lockTitle", "Lock it in place");
         public static readonly LocString LockBody = new("onboarding.lockBody", "This button locks the phone's position on your screen so it stays put while you play. That's the tour: enjoy your Aetherphone.");
         public static readonly LocString MessagesTitle = new("onboarding.messagesTitle", "Messages");

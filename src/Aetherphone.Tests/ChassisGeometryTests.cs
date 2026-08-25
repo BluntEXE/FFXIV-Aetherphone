@@ -88,22 +88,22 @@ public sealed class ChassisGeometryTests
     }
 
     [Fact]
-    public void MorphEndpointsMatchDeviceAndCapsule()
+    public void MorphEndpointsMatchDeviceAndPuck()
     {
         var theme = ThemeFor(360f);
         var body = new Rect(new Vector2(10f, 20f), new Vector2(356f, 800f));
-        var capsuleBody = new Rect(new Vector2(10f, 20f), new Vector2(270f, 74f));
-        var atStart = ChassisGeometry.Morph(body, theme, 1f, 1f, 0f);
+        var puckBody = new Rect(new Vector2(10f, 20f), new Vector2(92f, 176f));
+        var atStart = ChassisGeometry.Morph(body, theme, 1f, 0f);
         var device = ChassisGeometry.Device(Grow(body, theme.RailWidth), theme, 1f);
         Assert.Equal(device.BodyRadius, atStart.BodyRadius, Tolerance);
         Assert.Equal(device.ScreenRadius, atStart.ScreenRadius, Tolerance);
         Assert.Equal(device.Screen, atStart.Screen);
 
-        var atEnd = ChassisGeometry.Morph(capsuleBody, theme, 1f, 1f, 1f);
-        var capsule = ChassisGeometry.Capsule(capsuleBody, 1f);
-        Assert.Equal(capsule.BodyRadius, atEnd.BodyRadius, Tolerance);
-        Assert.Equal(capsule.ScreenRadius, atEnd.ScreenRadius, Tolerance);
-        Assert.Equal(capsule.Screen, atEnd.Screen);
+        var atEnd = ChassisGeometry.Morph(puckBody, theme, 1f, 1f);
+        var puck = ChassisGeometry.Puck(puckBody);
+        Assert.Equal(puck.BodyRadius, atEnd.BodyRadius, Tolerance);
+        Assert.Equal(puck.ScreenRadius, atEnd.ScreenRadius, Tolerance);
+        Assert.Equal(puck.Screen, atEnd.Screen);
     }
 
     [Theory]
@@ -111,20 +111,19 @@ public sealed class ChassisGeometryTests
     [InlineData(1.25f)]
     [InlineData(1.5f)]
     [InlineData(2f)]
-    public void CapsuleBandMatchesCapsuleGeometry(float scale)
+    public void PuckBandMatchesPuckGeometry(float scale)
     {
-        var body = new Rect(new Vector2(0f, 0f), new Vector2(200f * scale, 54f * scale));
-        var capsule = ChassisGeometry.Capsule(body, scale);
-        var band = ChassisGeometry.CapsuleBand(scale);
-        Assert.Equal(capsule.Body.Width - band, capsule.Screen.Width, Tolerance);
-        Assert.Equal(capsule.Body.Height - band, capsule.Screen.Height, Tolerance);
-        Assert.Equal(capsule.Body.Height * 0.5f, capsule.BodyRadius, Tolerance);
+        var body = new Rect(new Vector2(0f, 0f), new Vector2(82f * scale, 156f * scale));
+        var puck = ChassisGeometry.Puck(body);
+        var band = ChassisGeometry.PuckBand(body.Width);
+        Assert.Equal(puck.Body.Width - band, puck.Screen.Width, Tolerance);
+        Assert.Equal(puck.Body.Height - band, puck.Screen.Height, Tolerance);
     }
 
     [Fact]
     public void DegenerateBodyClampsWithoutNegatives()
     {
-        var chassis = ChassisGeometry.Capsule(new Rect(new Vector2(0f, 0f), new Vector2(6f, 6f)), 1f);
+        var chassis = ChassisGeometry.Puck(new Rect(new Vector2(0f, 0f), new Vector2(6f, 6f)));
         Assert.True(chassis.BodyRadius >= 0f);
         Assert.True(chassis.GlassRadius >= 0f);
         Assert.True(chassis.ScreenRadius >= 0f);

@@ -10,21 +10,20 @@ internal sealed class MinimizeMorphView
 {
     private const float FaceFadeStart = 0.55f;
     private const float FaceFadeEnd = 0.95f;
-    private const float ArtFadeEnd = 0.5f;
     private const float RailFadeEnd = 0.55f;
 
     private readonly ThemeProvider themes;
     private readonly MinimizeTransition minimize;
-    private readonly MinimizedCapsule capsule;
+    private readonly MinimizedPhone minimizedPhone;
     private readonly ShellScreenPainter painter;
     private readonly Configuration configuration;
 
-    public MinimizeMorphView(ThemeProvider themes, MinimizeTransition minimize, MinimizedCapsule capsule,
+    public MinimizeMorphView(ThemeProvider themes, MinimizeTransition minimize, MinimizedPhone minimizedPhone,
         ShellScreenPainter painter, Configuration configuration)
     {
         this.themes = themes;
         this.minimize = minimize;
-        this.capsule = capsule;
+        this.minimizedPhone = minimizedPhone;
         this.painter = painter;
         this.configuration = configuration;
     }
@@ -44,23 +43,22 @@ internal sealed class MinimizeMorphView
     {
         var scale = UiScale.Current;
         var theme = themes.Chrome;
-        var capsuleScale = UiScale.Global;
+        var puckScale = UiScale.Global;
         var startBody = DeviceChrome.BodyRect(device, theme);
-        var endBody = MinimizedRect(device, capsuleScale);
+        var endBody = MinimizedRect(device, puckScale);
         var eased = minimize.EasedProgress;
         var body = new Rect(Vector2.Lerp(startBody.Min, endBody.Min, eased),
             Vector2.Lerp(startBody.Max, endBody.Max, eased));
-        var geometry = ChassisGeometry.Morph(body, theme, scale, capsuleScale, eased);
+        var geometry = ChassisGeometry.Morph(body, theme, scale, eased);
 
         var shell = ImGui.GetWindowDrawList();
         Elevation.Squircle(shell, geometry.Body.Min, geometry.Body.Max, geometry.BodyRadius, scale, eased);
-        var artAlpha = 1f - Easing.Segment(eased, 0f, ArtFadeEnd);
-        DeviceChrome.DrawShell(shell, geometry, scale, theme, artAlpha, true);
+        DeviceChrome.DrawShell(shell, geometry, scale, theme, 1f, true);
         DrawRailButtons(shell, geometry, theme, scale, eased);
         RevealMorphContent(DeviceChrome.Chassis(device, theme), theme, geometry, eased, device.IsLandscape());
 
         var faceAlpha = Easing.SmoothStep(Easing.Segment(eased, FaceFadeStart, FaceFadeEnd));
-        capsule.DrawFace(ImGui.GetForegroundDrawList(), geometry, theme, delta, false, faceAlpha);
+        minimizedPhone.DrawFace(ImGui.GetForegroundDrawList(), geometry, theme, delta, false, faceAlpha);
     }
 
     private void DrawRailButtons(ImDrawListPtr dl, in ChassisGeometry geometry, PhoneTheme theme, float scale,
@@ -121,7 +119,7 @@ internal sealed class MinimizeMorphView
 
     private bool DrawResting(Rect device, float delta)
     {
-        switch (capsule.Draw(device, themes.Chrome, delta))
+        switch (minimizedPhone.Draw(device, themes.Chrome, delta))
         {
             case MinimizedAction.Expand:
                 minimize.BeginExpand();
@@ -133,5 +131,5 @@ internal sealed class MinimizeMorphView
         return false;
     }
 
-    private Rect MinimizedRect(Rect device, float scale) => new(device.Min, device.Min + capsule.Measure(scale));
+    private Rect MinimizedRect(Rect device, float scale) => new(device.Min, device.Min + minimizedPhone.Measure(scale));
 }
