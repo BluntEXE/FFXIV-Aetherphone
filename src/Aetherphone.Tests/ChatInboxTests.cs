@@ -23,7 +23,73 @@ public sealed class ChatInboxTests
         configuration.LinkpearlTabs.AddRange(tabs);
         var log = new ChatLog();
         var store = new TabStoreStub(configuration);
-        return (log, new ChatInbox(log, store.Store, configuration), configuration);
+        return (log, new ChatInbox(log, store.Store, new TellPreferences(configuration), configuration), configuration);
+    }
+
+    [Fact]
+    public void MutedTellsKeepTheirUnreadCountOutOfTheBadge()
+    {
+        var (log, inbox, configuration) = Build();
+        using var scope = inbox;
+        var tell = new ChatEntry(log.NextSequence(), GameChannels.TellKey, "Rin", "Siren", "psst",
+            new[] { ChatChunk.Plain("psst") }, DateTime.Now, ChatEntryFlags.None);
+        configuration.LinkpearlMutedTells.Add(tell.StreamKey);
+        var muted = new ChatInbox(log, new TabStoreStub(configuration).Store, new TellPreferences(configuration),
+            configuration);
+        using var mutedScope = muted;
+        log.Append(tell);
+        muted.Sync();
+
+        var row = muted.Find(tell.StreamKey);
+        Assert.NotNull(row);
+        Assert.True(row!.Muted);
+        Assert.Equal(1, row.Unread);
+        Assert.False(row.HasBadge);
+        Assert.Equal(0, muted.TotalUnread);
+    }
+
+    [Fact]
+    public void PinnedTellsLiveInThePinnedList()
+    {
+        var (log, inbox, configuration) = Build();
+        using var scope = inbox;
+        var tell = new ChatEntry(log.NextSequence(), GameChannels.TellKey, "Rin", "Siren", "hey",
+            new[] { ChatChunk.Plain("hey") }, DateTime.Now, ChatEntryFlags.None);
+        log.Append(tell);
+        inbox.Sync();
+        Assert.NotNull(inbox.Find(tell.StreamKey));
+        Assert.Empty(inbox.Pinned);
+        Assert.Single(inbox.Rows);
+
+        configuration.LinkpearlPinnedTells.Add(tell.StreamKey);
+        var pinned = new ChatInbox(log, new TabStoreStub(configuration).Store, new TellPreferences(configuration),
+            configuration);
+        using var pinnedScope = pinned;
+        pinned.Sync();
+        Assert.Single(pinned.Pinned);
+        Assert.Empty(pinned.Rows);
+        Assert.True(pinned.Find(tell.StreamKey)!.Pinned);
+        Assert.Equal(1, pinned.TotalUnread);
+    }
+
+    [Fact]
+    public void AttendedConversationsNeverAccumulateUnread()
+    {
+        var (log, inbox, _) = Build(Tab("FC", "fc"));
+        using var scope = inbox;
+        inbox.Sync();
+        inbox.SetAttended("tab:FC", true);
+        log.Append(Entry(log, "fc", "Rin", DateTime.Now));
+        Assert.Equal(0, inbox.Find("tab:FC")!.Unread);
+        Assert.Equal(0, inbox.TotalUnread);
+
+        inbox.SetAttended("tab:FC", false);
+        log.Append(Entry(log, "fc", "Mira", DateTime.Now.AddSeconds(1)));
+        Assert.Equal(1, inbox.Find("tab:FC")!.Unread);
+
+        inbox.MarkAllRead();
+        Assert.Equal(0, inbox.TotalUnread);
+        Assert.Equal(0, inbox.Find("tab:FC")!.Unread);
     }
 
     [Fact]
@@ -85,8 +151,12 @@ public sealed class ChatInboxTests
         log.Append(Entry(log, "party", "Nala", now.AddSeconds(2)));
         inbox.Sync();
 
-        Assert.Equal(0, inbox.Find("tab:Local")!.Unread);
+        var silenced = inbox.Find("tab:Local")!;
+        Assert.True(silenced.Muted);
+        Assert.Equal(1, silenced.Unread);
+        Assert.False(silenced.HasBadge);
         Assert.Equal(1, inbox.Find("tab:Group")!.Unread);
+        Assert.Equal(1, inbox.TotalUnread);
     }
 
     [Fact]

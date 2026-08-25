@@ -77,6 +77,7 @@ internal sealed class PhoneServices : IDisposable
     public required GameChat.ChatCapture ChatCapture { get; init; }
     public required GameChat.ChatArchive ChatArchive { get; init; }
     public required GameChat.TabStore ChatTabs { get; init; }
+    public required GameChat.TellPreferences TellPreferences { get; init; }
     public required GameChat.ChatInbox ChatInbox { get; init; }
     public required GameChat.ChatNotifier ChatNotifier { get; init; }
     public required HttpService Http { get; init; }
@@ -211,9 +212,10 @@ internal sealed class PhoneServices : IDisposable
             new DirectoryInfo(Path.Combine(configDirectory.FullName, "GameChat")), configuration, chatLog,
             messageArchive, characterWatch);
         var chatTabs = new GameChat.TabStore(configuration, characterWatch);
-        var chatInbox = new GameChat.ChatInbox(chatLog, chatTabs, configuration);
-        var chatNotifier = new GameChat.ChatNotifier(chatLog, chatTabs, chatInbox, linkpearlNotificationGate,
-            notifications, linkpearlGate);
+        var tellPreferences = new GameChat.TellPreferences(configuration);
+        var chatInbox = new GameChat.ChatInbox(chatLog, chatTabs, tellPreferences, configuration);
+        var chatNotifier = new GameChat.ChatNotifier(chatLog, chatTabs, chatInbox, tellPreferences,
+            linkpearlNotificationGate, notifications, linkpearlGate);
         var cacheRoot = new DirectoryInfo(Path.Combine(configDirectory.FullName, "cache"));
         cacheRoot.Create();
         var mediaRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "media"));
@@ -372,6 +374,7 @@ internal sealed class PhoneServices : IDisposable
             ChatCapture = chatCapture,
             ChatArchive = chatArchive,
             ChatTabs = chatTabs,
+            TellPreferences = tellPreferences,
             ChatInbox = chatInbox,
             ChatNotifier = chatNotifier,
             Http = http,

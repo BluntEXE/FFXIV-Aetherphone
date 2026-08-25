@@ -694,3 +694,45 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
 
     private static long Seconds(DateTime at) => new DateTimeOffset(at).ToUnixTimeSeconds();
 }
+
+internal static class GameChatTargets
+{
+    public static GameChatTarget For(InboxRow row)
+    {
+        if (row.Tab is { } tab)
+        {
+            var channels = tab.Channels.ToArray();
+            return new GameChatTarget(row.Key, channels, channels, tab.SendChannel, string.Empty, tab.Density,
+                channels.Length > 1);
+        }
+
+        var target = ChatStreams.IsTell(row.Key) ? SendTarget(row) : string.Empty;
+        return new GameChatTarget(row.Key, new[] { row.StreamKey }, new[] { GameChannels.TellKey },
+            GameChannels.TellKey, target, ChatDensity.Bubbles, false);
+    }
+
+    public static string SendTarget(InboxRow row) =>
+        row.World.Length > 0 ? string.Concat(row.Title, "@", row.World) : row.Title;
+
+    public static string Subtitle(InboxRow row)
+    {
+        if (row.Tab is not { } tab)
+        {
+            return row.World;
+        }
+
+        var joined = string.Empty;
+        for (var index = 0; index < tab.Channels.Count; index++)
+        {
+            if (!GameChannels.TryByKey(tab.Channels[index], out var channel))
+            {
+                continue;
+            }
+
+            var label = LinkshellNames.Label(channel);
+            joined = joined.Length == 0 ? label : string.Concat(joined, " · ", label);
+        }
+
+        return joined;
+    }
+}

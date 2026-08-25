@@ -268,6 +268,12 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public Dictionary<string, int> LinkpearlHistoryByChannel { get; set; } = new();
     public List<ulong> LinkpearlMigratedCharacters { get; set; } = new();
     public Dictionary<string, long> LinkpearlSeen { get; set; } = new();
+    public List<string> LinkpearlPinnedTells { get; set; } = new();
+    public List<string> LinkpearlMutedTells { get; set; } = new();
+    public bool LinkpearlPopoutTells { get; set; } = true;
+    public float LinkpearlPopoutOpacity { get; set; } = 0.96f;
+    public float LinkpearlPopoutTextScale { get; set; } = 1f;
+    public List<LinkpearlPopoutState> LinkpearlPopouts { get; set; } = new();
     public long DevChatLastSeenUnix { get; set; }
     public long AnnouncementsSeenUnix { get; set; }
     public long AnnouncementsNotifiedUnix { get; set; }

@@ -134,6 +134,24 @@ internal static class AppPalettes
         HoverTint = Palette.WithAlpha(theme.TextStrong, 0.06f),
     };
 
+    public static AppPalette Linkpearl(PhoneTheme theme) => new()
+    {
+        Accent = theme.Accent,
+        TitleInk = theme.TextStrong,
+        BodyInk = theme.TextStrong,
+        MutedInk = theme.TextMuted,
+        HeaderInk = theme.TextMuted,
+        HeadingInk = theme.TextStrong,
+        BackdropTop = theme.AppBackground,
+        BackdropBottom = theme.AppBackground,
+        BloomTop = default,
+        BloomBottom = default,
+        CardFill = theme.GroupedCard,
+        CardStroke = theme.Separator,
+        FieldSurface = theme.GroupedCard,
+        HoverTint = Palette.WithAlpha(theme.TextStrong, 0.06f),
+    };
+
     public static AppPalette Calendar(PhoneTheme theme) => new()
     {
         Accent = theme.Danger,

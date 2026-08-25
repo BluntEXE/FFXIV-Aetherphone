@@ -1,11 +1,11 @@
 using System.Runtime.InteropServices;
 using Aetherphone.Core;
-using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
+using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -14,116 +14,224 @@ namespace Aetherphone.Apps.Linkpearl;
 
 internal sealed partial class LinkpearlApp
 {
-    private const float RailHeight = 78f;
-    private const float PinDiameter = 48f;
-    private const float PinSpacing = 62f;
-
-    private static readonly TabPreset[] Presets =
+    private enum ChatFilter : byte
     {
-        TabPreset.FreeCompany,
-        TabPreset.Linkshells,
-        TabPreset.Local,
-    };
+        All,
+        Tells,
+        Tabs,
+        Unread,
+    }
+
+    private const float SearchRowHeight = 44f;
+    private const float PausedBannerHeight = 34f;
+    private const float SectionLabelHeight = 22f;
+    private const int FilterRailMinimumRows = 4;
+    private const byte MenuPopout = 0;
+    private const byte MenuMarkRead = 1;
+    private const byte MenuTogglePin = 2;
+    private const byte MenuToggleMute = 3;
+    private const byte MenuEditTab = 4;
+    private const byte MenuDeleteTab = 5;
+    private const byte MenuClearHistory = 6;
 
     private readonly ChatSearch search = new();
-    private readonly DropdownMenu threadMenu = new();
-    private readonly List<DropdownMenu.Item> threadMenuItems = new(5);
-    private readonly List<byte> threadMenuActions = new(5);
-    private string threadMenuKey = string.Empty;
-    private readonly DropdownMenu rowMenu = new();
-    private readonly DropdownMenu.Item[] rowMenuItems = new DropdownMenu.Item[4];
-    private readonly byte[] rowMenuActions = new byte[4];
-    private string rowMenuKey = string.Empty;
-    private string threadKey = string.Empty;
+    private readonly ChipRail filterRail = new();
+    private readonly string[] filterLabels = new string[4];
+    private readonly bool[] filterActive = new bool[4];
+    private readonly DropdownMenu conversationMenu = new();
+    private readonly List<DropdownMenu.Item> conversationItems = new(7);
+    private readonly List<byte> conversationActions = new(7);
+    private string conversationMenuKey = string.Empty;
+    private ChatFilter chatFilter;
 
     private void DrawChatsTab(Rect content)
     {
         inbox.Sync();
         var scale = UiScale.Current;
         UiAnchors.Report("messages.list", content);
-        if (inbox.Rows.Count == 0 && inbox.Pinned.Count == 0 && !search.Active)
+        if (inbox.Count == 0 && !search.Active)
         {
-            DrawEmptyState(content);
+            if (EmptyState.Draw(content, ui, FontAwesomeIcon.Comments, Loc.T(L.Linkpearl.EmptyTitle),
+                    Loc.T(L.Linkpearl.EmptyHint), Loc.T(L.Linkpearl.StartChat)))
+            {
+                OpenNewChat();
+            }
+
             return;
         }
 
         var pad = Metrics.Space.Lg * scale;
         var searchBar = new Rect(new Vector2(content.Min.X + pad, content.Min.Y),
-            new Vector2(content.Max.X - pad, content.Min.Y + 40f * scale));
+            new Vector2(content.Max.X - pad, content.Min.Y + SearchRowHeight * scale));
         SearchField.Draw(searchBar, "##linkpearlSearch", Loc.T(L.Linkpearl.SearchHint), ref chatSearchQuery,
             frameTheme);
         search.Run(chatSearchQuery, inbox, chatLog);
-        content = new Rect(new Vector2(content.Min.X, searchBar.Max.Y + Metrics.Space.Xs * scale), content.Max);
+        var top = searchBar.Max.Y;
         if (search.Active)
         {
-            DrawSearchResults(content);
+            DrawSearchResults(new Rect(new Vector2(content.Min.X, top + Metrics.Space.Xs * scale), content.Max));
             return;
         }
 
-        var railHeight = inbox.Pinned.Count > 0 ? RailHeight * scale : 0f;
-        if (railHeight > 0f)
+        if (notificationGate.Paused)
         {
-            DrawPinnedRail(new Rect(content.Min, new Vector2(content.Max.X, content.Min.Y + railHeight)));
+            top = DrawPausedBanner(new Rect(new Vector2(content.Min.X + pad, top + Metrics.Space.Xs * scale),
+                new Vector2(content.Max.X - pad, top + Metrics.Space.Xs * scale + PausedBannerHeight * scale)));
         }
 
-        var body = new Rect(new Vector2(content.Min.X, content.Min.Y + railHeight), content.Max);
-        using (AppSurface.Begin(body))
+        if (inbox.Count >= FilterRailMinimumRows)
         {
-            var rows = inbox.Rows;
-            for (var index = 0; index < rows.Count; index++)
-            {
-                var action = InboxRowView.Draw(rows[index], frameTheme, lodestone);
-                if (action == InboxRowAction.Open)
-                {
-                    OpenConversation(rows[index].Key);
-                }
-                else if (action == InboxRowAction.Menu)
-                {
-                    rowMenuKey = rows[index].Key;
-                    rowMenu.Toggle("linkpearl.row.menu", new Rect(ImGui.GetMousePos(),
-                        ImGui.GetMousePos() + new Vector2(1f, 1f)));
-                }
-            }
+            var rail = new Rect(new Vector2(content.Min.X + pad, top + Metrics.Space.Xs * scale),
+                new Vector2(content.Max.X - pad, top + Metrics.Space.Xs * scale + ChipRail.RowHeight * scale));
+            DrawFilterRail(rail);
+            top = rail.Max.Y;
+        }
 
-            DrawNewTabRow(scale);
+        var body = new Rect(new Vector2(content.Min.X, top + Metrics.Space.Xs * scale), content.Max);
+        DrawConversationList(body, scale);
+    }
+
+    private void DrawFilterRail(Rect rail)
+    {
+        filterLabels[0] = Loc.T(L.Linkpearl.FilterAll);
+        filterLabels[1] = Loc.T(L.Linkpearl.FilterTells);
+        filterLabels[2] = Loc.T(L.Linkpearl.FilterTabs);
+        filterLabels[3] = Loc.T(L.Linkpearl.FilterUnread);
+        for (var index = 0; index < filterActive.Length; index++)
+        {
+            filterActive[index] = (int)chatFilter == index;
+        }
+
+        var tapped = filterRail.Draw(rail, ui, filterLabels, filterActive, false, "messages.filters",
+            ChipRail.CompactLabelPadding);
+        if (tapped >= 0)
+        {
+            chatFilter = (ChatFilter)tapped;
         }
     }
 
-    private void DrawNewTabRow(float scale)
+    private float DrawPausedBanner(Rect banner)
     {
-        if (!tabs.CanAdd)
+        var scale = UiScale.Current;
+        var drawList = ImGui.GetWindowDrawList();
+        Squircle.Fill(drawList, banner.Min, banner.Max, banner.Height * 0.5f,
+            ImGui.GetColorU32(Palette.WithAlpha(frameTheme.Accent, 0.14f)));
+        var iconCenter = new Vector2(banner.Min.X + 18f * scale, banner.Center.Y);
+        AppSkin.Icon(drawList, iconCenter, FontAwesomeIcon.BellSlash.ToIconString(), frameTheme.Accent, 0.7f);
+        var resume = Loc.T(L.Linkpearl.Resume);
+        var resumeSize = Typography.Measure(resume, TextStyles.FootnoteEmphasized);
+        var resumeCenter = new Vector2(banner.Max.X - Metrics.Space.Lg * scale - resumeSize.X * 0.5f, banner.Center.Y);
+        var labelLeft = iconCenter.X + 14f * scale;
+        var labelWidth = resumeCenter.X - resumeSize.X * 0.5f - Metrics.Space.Md * scale - labelLeft;
+        var label = Typography.FitText(Loc.T(L.Linkpearl.NotificationsPaused), labelWidth, TextStyles.Footnote);
+        var labelSize = Typography.Measure(label, TextStyles.Footnote);
+        Typography.Draw(drawList, new Vector2(labelLeft, banner.Center.Y - labelSize.Y * 0.5f), label,
+            frameTheme.TextStrong, TextStyles.Footnote);
+        if (TextButton.Draw(resumeCenter, resume, frameTheme.Accent, scale))
         {
+            notificationGate.SetPaused(false);
+        }
+
+        return banner.Max.Y;
+    }
+
+    private void DrawConversationList(Rect body, float scale)
+    {
+        using (AppSurface.Begin(body))
+        {
+            var pinned = inbox.Pinned;
+            var drewPinned = false;
+            for (var index = 0; index < pinned.Count; index++)
+            {
+                if (!Passes(pinned[index]))
+                {
+                    continue;
+                }
+
+                if (!drewPinned)
+                {
+                    DrawSectionLabel(Loc.T(L.Linkpearl.PinnedSection), scale);
+                    drewPinned = true;
+                }
+
+                DrawRow(pinned[index]);
+            }
+
+            var rows = inbox.Rows;
+            var drewRows = false;
+            for (var index = 0; index < rows.Count; index++)
+            {
+                if (!Passes(rows[index]))
+                {
+                    continue;
+                }
+
+                if (!drewRows && drewPinned)
+                {
+                    DrawSectionLabel(Loc.T(L.Messages.TabChats), scale);
+                }
+
+                drewRows = true;
+                DrawRow(rows[index]);
+            }
+
+            if (!drewPinned && !drewRows)
+            {
+                Typography.DrawCentered(new Vector2(body.Center.X, body.Min.Y + 60f * scale),
+                    Loc.T(L.Linkpearl.NoFilterMatches), frameTheme.TextMuted);
+            }
+
+            ImGui.Dummy(new Vector2(0f, Metrics.Space.Xl * scale));
+        }
+    }
+
+    private void DrawSectionLabel(string text, float scale)
+    {
+        var origin = ImGui.GetCursorScreenPos();
+        var label = Loc.Culture.TextInfo.ToUpper(text);
+        var size = Typography.Measure(label, TextStyles.Caption2);
+        Typography.Draw(ImGui.GetWindowDrawList(),
+            new Vector2(origin.X + Metrics.Space.Lg * scale, origin.Y + SectionLabelHeight * scale - size.Y - 2f * scale),
+            label, frameTheme.TextMuted, TextStyles.Caption2);
+        ImGui.Dummy(new Vector2(0f, SectionLabelHeight * scale));
+    }
+
+    private void DrawRow(InboxRow row)
+    {
+        switch (InboxRowView.Draw(row, frameTheme, lodestone, true))
+        {
+            case InboxRowAction.Open:
+                OpenConversation(row.Key);
+                break;
+            case InboxRowAction.Menu:
+                OpenConversationMenu(row.Key, new Rect(ImGui.GetMousePos(), ImGui.GetMousePos() + new Vector2(1f, 1f)));
+                break;
+            case InboxRowAction.TogglePin:
+                TogglePin(row);
+                break;
+            case InboxRowAction.ToggleMute:
+                inbox.ToggleMuted(row);
+                break;
+        }
+    }
+
+    private bool Passes(InboxRow row) => chatFilter switch
+    {
+        ChatFilter.Tells => row.IsTell,
+        ChatFilter.Tabs => !row.IsTell,
+        ChatFilter.Unread => row.Unread > 0,
+        _ => true,
+    };
+
+    private void TogglePin(InboxRow row)
+    {
+        if (!row.Pinned && row.Tab is not null && tabs.PinnedCount() >= TabStore.MaxPinned)
+        {
+            CopyToast.Show(Loc.T(L.Linkpearl.PinLimit, TabStore.MaxPinned));
             return;
         }
 
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ScrollLayout.StableContentWidth();
-        var row = new Rect(origin, new Vector2(origin.X + width, origin.Y + 52f * scale));
-        ImGui.Dummy(new Vector2(width, 52f * scale));
-        var hovered = UiInteract.Hover(row.Min, row.Max);
-        var drawList = ImGui.GetWindowDrawList();
-        if (hovered)
-        {
-            Squircle.Fill(drawList, new Vector2(row.Min.X + Metrics.Space.Xs * scale, row.Min.Y + 3f * scale),
-                new Vector2(row.Max.X - Metrics.Space.Xs * scale, row.Max.Y - 3f * scale), Metrics.Radius.Md * scale,
-                ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.05f)));
-        }
-
-        var iconCenter = new Vector2(row.Min.X + 35f * scale, row.Center.Y);
-        AppSkin.Icon(drawList, iconCenter, FontAwesomeIcon.Plus.ToIconString(), frameTheme.Accent, 0.8f);
-        var label = Loc.T(L.Linkpearl.NewTab);
-        var labelSize = Typography.Measure(label, TextStyles.BodyEmphasized);
-        Typography.Draw(drawList, new Vector2(iconCenter.X + 22f * scale, row.Center.Y - labelSize.Y * 0.5f), label,
-            frameTheme.Accent, TextStyles.BodyEmphasized);
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        if (UiInteract.Click(row.Min, row.Max, hovered))
-        {
-            CreateTab();
-        }
+        inbox.TogglePinned(row);
     }
 
     private void DrawSearchResults(Rect body)
@@ -161,7 +269,7 @@ internal sealed partial class LinkpearlApp
         {
             Squircle.Fill(drawList, new Vector2(row.Min.X + Metrics.Space.Xs * scale, row.Min.Y + 2f * scale),
                 new Vector2(row.Max.X - Metrics.Space.Xs * scale, row.Max.Y - 2f * scale), Metrics.Radius.Md * scale,
-                ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.05f)));
+                ImGui.GetColorU32(Palette.WithAlpha(frameTheme.TextStrong, 0.05f)));
         }
 
         var left = row.Min.X + Metrics.Space.Lg * scale;
@@ -193,136 +301,97 @@ internal sealed partial class LinkpearlApp
         OpenConversation(hit.ConversationKey);
     }
 
-    private void DrawPinnedRail(Rect rail)
+    private void OpenConversationMenu(string key, Rect anchor)
     {
-        var scale = UiScale.Current;
-        var drawList = ImGui.GetWindowDrawList();
-        var pinned = inbox.Pinned;
-        var diameter = PinDiameter * scale;
-        var spacing = PinSpacing * scale;
-        var left = rail.Min.X + Metrics.Space.Lg * scale;
-        for (var index = 0; index < pinned.Count; index++)
-        {
-            var row = pinned[index];
-            var min = new Vector2(left + index * spacing, rail.Min.Y + Metrics.Space.Sm * scale);
-            var max = min + new Vector2(diameter, diameter);
-            if (max.X > rail.Max.X)
-            {
-                break;
-            }
-
-            var hovered = UiInteract.Hover(min, max);
-            Squircle.Fill(drawList, min, max, diameter * 0.34f,
-                ImGui.GetColorU32(Palette.WithAlpha(row.Tint, hovered ? 0.32f : 0.22f)));
-            Typography.DrawCentered(drawList, (min + max) * 0.5f, Initials.Of(row.Title), row.Tint,
-                TextStyles.Headline);
-            if (row.Unread > 0)
-            {
-                var badgeCenter = new Vector2(max.X - 3f * scale, min.Y + 3f * scale);
-                drawList.AddCircleFilled(badgeCenter, 8f * scale, ImGui.GetColorU32(frameTheme.Danger), 16);
-                Typography.DrawCentered(drawList, badgeCenter, row.Unread > 9 ? "9+" : row.Unread.ToString(Loc.Culture),
-                    White, TextStyles.Caption2);
-            }
-
-            var label = Typography.FitText(row.Title, diameter + 8f * scale, TextStyles.Caption2);
-            Typography.DrawCentered(drawList, new Vector2((min.X + max.X) * 0.5f, max.Y + 9f * scale), label,
-                frameTheme.TextMuted, TextStyles.Caption2);
-            if (UiInteract.Click(min, max, hovered))
-            {
-                OpenConversation(row.Key);
-            }
-
-            if (hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
-            {
-                rowMenuKey = row.Key;
-                rowMenu.Toggle("linkpearl.row.menu",
-                    new Rect(ImGui.GetMousePos(), ImGui.GetMousePos() + new Vector2(1f, 1f)));
-            }
-        }
+        conversationMenuKey = key;
+        var row = inbox.Find(key);
+        conversationMenu.Header = row is null ? string.Empty : Title(row);
+        conversationMenu.Toggle("linkpearl.conversation.menu", anchor);
     }
 
-    private void DrawEmptyState(Rect content)
+    private void DrawConversationMenu(Rect area)
     {
-        var scale = UiScale.Current;
-        var drawList = ImGui.GetWindowDrawList();
-        var center = content.Center;
-        ProgressRing.CenterIcon(drawList, new Vector2(center.X, center.Y - 74f * scale), FontAwesomeIcon.Comments,
-            frameTheme.TextMuted, 30f * scale);
-        Typography.DrawCentered(drawList, new Vector2(center.X, center.Y - 32f * scale),
-            Loc.T(L.Linkpearl.EmptyTitle), frameTheme.TextStrong, TextStyles.Title3);
-        Typography.DrawWrappedCentered(new Vector2(center.X, center.Y - 12f * scale), Loc.T(L.Linkpearl.EmptyHint),
-            frameTheme.TextMuted, TextStyles.Callout, content.Width - 72f * scale);
-        var buttonWidth = MathF.Min(200f * scale, content.Width - 96f * scale);
-        for (var index = 0; index < Presets.Length; index++)
-        {
-            var top = center.Y + (46f + index * 44f) * scale;
-            var min = new Vector2(center.X - buttonWidth * 0.5f, top);
-            var max = new Vector2(center.X + buttonWidth * 0.5f, top + 36f * scale);
-            var hovered = UiInteract.Hover(min, max);
-            Squircle.Fill(drawList, min, max, Metrics.Radius.Card * scale,
-                ImGui.GetColorU32(Palette.WithAlpha(frameTheme.Accent, hovered ? 0.28f : 0.18f)));
-            Typography.DrawCentered(drawList, (min + max) * 0.5f, Loc.T(TabStore.PresetLabel(Presets[index])),
-                frameTheme.Accent, TextStyles.BodyEmphasized);
-            if (UiInteract.Click(min, max, hovered))
-            {
-                tabs.AddPreset(Presets[index]);
-                inbox.Invalidate();
-            }
-        }
-    }
-
-    private void DrawRowMenu(Rect area)
-    {
-        if (!rowMenu.IsOpenFor("linkpearl.row.menu"))
+        if (!conversationMenu.IsOpenFor("linkpearl.conversation.menu"))
         {
             return;
         }
 
-        var row = inbox.Find(rowMenuKey);
+        var row = inbox.Find(conversationMenuKey);
         if (row is null)
         {
-            rowMenu.Close();
+            conversationMenu.Close();
             return;
         }
 
-        var count = 0;
-        rowMenuItems[count] = new DropdownMenu.Item(Loc.T(L.Linkpearl.MarkRead),
-            FontAwesomeIcon.CheckDouble.ToIconString());
-        rowMenuActions[count++] = RowMenuMarkRead;
-        if (row.Tab is { } tab)
+        conversationItems.Clear();
+        conversationActions.Clear();
+        var popped = popouts.IsOpen(row.Key);
+        AddMenuItem(popped ? L.Linkpearl.ClosePopout : L.Linkpearl.OpenPopout,
+            popped ? FontAwesomeIcon.WindowMinimize : FontAwesomeIcon.WindowRestore, MenuPopout);
+        if (row.Unread > 0)
         {
-            rowMenuItems[count] = new DropdownMenu.Item(Loc.T(tab.Pinned ? L.Linkpearl.Unpin : L.Linkpearl.Pin),
-                FontAwesomeIcon.Thumbtack.ToIconString());
-            rowMenuActions[count++] = RowMenuTogglePin;
-            rowMenuItems[count] = new DropdownMenu.Item(Loc.T(L.Linkpearl.EditTab),
-                FontAwesomeIcon.SlidersH.ToIconString());
-            rowMenuActions[count++] = RowMenuEdit;
-            rowMenuItems[count] = new DropdownMenu.Item(Loc.T(L.Linkpearl.DeleteTab),
-                FontAwesomeIcon.TrashAlt.ToIconString(), true);
-            rowMenuActions[count++] = RowMenuDelete;
+            AddMenuItem(L.Linkpearl.MarkRead, FontAwesomeIcon.CheckDouble, MenuMarkRead);
         }
 
-        var clicked = rowMenu.Draw(area, frameTheme, rowMenuItems.AsSpan(0, count));
+        AddMenuItem(row.Pinned ? L.Common.Unpin : L.Common.Pin, FontAwesomeIcon.Thumbtack, MenuTogglePin);
+        AddMenuItem(row.Muted ? L.Linkpearl.Unmute : L.Linkpearl.Mute,
+            row.Muted ? FontAwesomeIcon.Bell : FontAwesomeIcon.BellSlash, MenuToggleMute);
+        if (row.Tab is not null)
+        {
+            AddMenuItem(L.Linkpearl.EditTab, FontAwesomeIcon.SlidersH, MenuEditTab);
+        }
+
+        AddMenuItem(L.Linkpearl.ClearHistory, FontAwesomeIcon.Eraser, MenuClearHistory, true);
+        if (row.Tab is not null)
+        {
+            AddMenuItem(L.Linkpearl.DeleteTab, FontAwesomeIcon.TrashAlt, MenuDeleteTab, true);
+        }
+
+        var clicked = conversationMenu.Draw(area, frameTheme, CollectionsMarshal.AsSpan(conversationItems));
         if (clicked < 0)
         {
             return;
         }
 
-        switch (rowMenuActions[clicked])
+        RunConversationAction(row, conversationActions[clicked]);
+    }
+
+    private void AddMenuItem(LocString label, FontAwesomeIcon icon, byte action, bool danger = false)
+    {
+        conversationItems.Add(new DropdownMenu.Item(Loc.T(label), icon.ToIconString(), danger));
+        conversationActions.Add(action);
+    }
+
+    private void RunConversationAction(InboxRow row, byte action)
+    {
+        switch (action)
         {
-            case RowMenuMarkRead:
+            case MenuPopout:
+                if (!popouts.Toggle(row.Key))
+                {
+                    CopyToast.Show(Loc.T(L.Linkpearl.PopoutLimit, LinkpearlPopouts.MaxWindows));
+                }
+
+                break;
+            case MenuMarkRead:
                 inbox.MarkRead(row);
                 inbox.FlushSeen();
+                notifications.RemoveGroup(row.Key);
                 break;
-            case RowMenuTogglePin when row.Tab is { } pinTab:
-                tabs.TogglePin(pinTab);
-                inbox.Invalidate();
+            case MenuTogglePin:
+                TogglePin(row);
                 break;
-            case RowMenuEdit when row.Tab is { } editTab:
+            case MenuToggleMute:
+                inbox.ToggleMuted(row);
+                break;
+            case MenuEditTab when row.Tab is { } editTab:
                 OpenTabEditor(editTab);
                 break;
-            case RowMenuDelete when row.Tab is { } deleteTab:
+            case MenuDeleteTab when row.Tab is { } deleteTab:
                 AskDeleteTab(deleteTab);
+                break;
+            case MenuClearHistory:
+                AskClearHistory(row);
                 break;
         }
     }
@@ -336,123 +405,15 @@ internal sealed partial class LinkpearlApp
             CancelLabel = Loc.T(L.Messages.DeleteHistoryCancel),
             Confirm = () =>
             {
+                popouts.Close(ChatInbox.KeyForTab(tab));
                 tabs.Delete(tab);
                 inbox.Invalidate();
+                if (router.Current.Screen != LinkpearlScreen.Root)
+                {
+                    router.Reset();
+                }
             },
         });
-
-    private void OpenConversation(string key)
-    {
-        var row = inbox.Find(key);
-        if (row is null)
-        {
-            return;
-        }
-
-        inbox.MarkRead(row);
-        notifications.RemoveGroup(key);
-        router.Push(LinkpearlRoute.Conversation(key));
-    }
-
-    private void DrawConversation(Rect area, string key)
-    {
-        inbox.Sync();
-        var row = inbox.Find(key);
-        if (row is null)
-        {
-            router.Reset();
-            return;
-        }
-
-        inbox.Viewing = key;
-        var context = new PhoneContext(area, frameTheme, frameNavigation);
-        AppHeader.Draw(context, Title(row), backToList);
-        DrawThreadControls(area, row);
-        OpenThread(row);
-        chatThread.Draw(ThreadBody(area), frameTheme);
-        DrawThreadMenu(area, row);
-        DrawChatMenu(area);
-    }
-
-    private void DrawThreadControls(Rect area, InboxRow row)
-    {
-        var scale = UiScale.Current;
-        var centerY = area.Min.Y + AppHeader.Height * scale * 0.5f;
-        var overflow = new Vector2(area.Max.X - 20f * scale, centerY);
-        var searchCenter = new Vector2(overflow.X - 30f * scale, centerY);
-        var drawList = ImGui.GetWindowDrawList();
-        var searchHot = UiInteract.Hover(searchCenter - new Vector2(14f * scale, 14f * scale),
-            searchCenter + new Vector2(14f * scale, 14f * scale));
-        ProgressRing.CenterIcon(drawList, searchCenter, FontAwesomeIcon.Search,
-            chatThread.SearchOpen || searchHot ? frameTheme.Accent : frameTheme.TextMuted, 14f * scale);
-        if (UiInteract.HoverClickCircle(searchCenter, 14f * scale))
-        {
-            chatThread.ToggleSearch();
-        }
-
-        var overflowHot = UiInteract.Hover(overflow - new Vector2(14f * scale, 14f * scale),
-            overflow + new Vector2(14f * scale, 14f * scale));
-        ProgressRing.CenterIcon(drawList, overflow, FontAwesomeIcon.EllipsisH,
-            overflowHot ? frameTheme.TextStrong : frameTheme.TextMuted, 14f * scale);
-        if (UiInteract.HoverClickCircle(overflow, 14f * scale))
-        {
-            threadMenuKey = row.Key;
-            threadMenu.Toggle("linkpearl.thread.menu",
-                new Rect(overflow - new Vector2(14f * scale, 14f * scale),
-                    overflow + new Vector2(14f * scale, 14f * scale)));
-        }
-    }
-
-    private void DrawThreadMenu(Rect area, InboxRow row)
-    {
-        if (!threadMenu.IsOpenFor("linkpearl.thread.menu") ||
-            !string.Equals(threadMenuKey, row.Key, StringComparison.Ordinal))
-        {
-            return;
-        }
-
-        threadMenuItems.Clear();
-        threadMenuActions.Clear();
-        threadMenuItems.Add(new DropdownMenu.Item(Loc.T(L.Linkpearl.MarkRead),
-            FontAwesomeIcon.CheckDouble.ToIconString()));
-        threadMenuActions.Add(RowMenuMarkRead);
-        if (row.Tab is { } tab)
-        {
-            threadMenuItems.Add(new DropdownMenu.Item(Loc.T(L.Linkpearl.EditTab),
-                FontAwesomeIcon.SlidersH.ToIconString()));
-            threadMenuActions.Add(RowMenuEdit);
-            threadMenuItems.Add(new DropdownMenu.Item(Loc.T(tab.Pinned ? L.Linkpearl.Unpin : L.Linkpearl.Pin),
-                FontAwesomeIcon.Thumbtack.ToIconString()));
-            threadMenuActions.Add(RowMenuTogglePin);
-        }
-
-        threadMenuItems.Add(new DropdownMenu.Item(Loc.T(L.Linkpearl.ClearHistory),
-            FontAwesomeIcon.TrashAlt.ToIconString(), true));
-        threadMenuActions.Add(ThreadMenuClearHistory);
-        var clicked = threadMenu.Draw(area, frameTheme, CollectionsMarshal.AsSpan(threadMenuItems));
-        if (clicked < 0)
-        {
-            return;
-        }
-
-        switch (threadMenuActions[clicked])
-        {
-            case RowMenuMarkRead:
-                inbox.MarkRead(row);
-                inbox.FlushSeen();
-                break;
-            case RowMenuEdit when row.Tab is { } editTab:
-                OpenTabEditor(editTab);
-                break;
-            case RowMenuTogglePin when row.Tab is { } pinTab:
-                tabs.TogglePin(pinTab);
-                inbox.Invalidate();
-                break;
-            case ThreadMenuClearHistory:
-                AskClearHistory(row);
-                break;
-        }
-    }
 
     private void AskClearHistory(InboxRow row) =>
         confirm.Ask(new ConfirmRequest
@@ -484,32 +445,18 @@ internal sealed partial class LinkpearlApp
         threadKey = string.Empty;
     }
 
-    private void OpenThread(InboxRow row)
+    private void OpenConversation(string key)
     {
-        if (string.Equals(threadKey, row.Key, StringComparison.Ordinal))
+        var row = inbox.Find(key);
+        if (row is null)
         {
             return;
         }
 
-        threadKey = row.Key;
-        if (row.Tab is { } tab)
-        {
-            var channels = tab.Channels.ToArray();
-            chatThread.Open(new GameChatTarget(row.Key, channels, channels, tab.SendChannel, string.Empty,
-                tab.Density, channels.Length > 1));
-            return;
-        }
-
-        var target = ChatStreams.IsTell(row.Key) ? SendTarget(row) : string.Empty;
-        chatThread.Open(new GameChatTarget(row.Key, new[] { row.StreamKey }, new[] { GameChannels.TellKey },
-            GameChannels.TellKey, target, ChatDensity.Bubbles, false));
+        inbox.MarkRead(row);
+        notifications.RemoveGroup(key);
+        router.Push(LinkpearlRoute.Conversation(key));
     }
 
     private static string Title(InboxRow row) => row.Tab is { } tab ? tab.Name : row.Title;
-
-    private static string SendTarget(InboxRow row) =>
-        row.World.Length > 0 ? string.Concat(row.Title, "@", row.World) : row.Title;
-
-    private static Rect ThreadBody(Rect area) =>
-        new(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * UiScale.Current), area.Max);
 }

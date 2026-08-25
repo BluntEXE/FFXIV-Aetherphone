@@ -70,6 +70,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly VideoDebugWindow videoDebugWindow;
     private readonly AetherStreamScreenWindow screenWindow;
     private readonly UpdateChipWindow updateChipWindow;
+    private readonly LinkpearlPopouts linkpearlPopouts;
     private readonly PhoneEmoteController phoneEmote;
     private readonly TimerNotifier timerNotifier;
     private readonly CalendarReminderService calendarReminders;
@@ -121,8 +122,12 @@ public sealed class Plugin : IDalamudPlugin
             Framework.Update += OnVideoFrameworkUpdate;
             videoDebugWindow = new VideoDebugWindow(video, screenController);
             screenWindow = new AetherStreamScreenWindow(screenController, video);
+            linkpearlPopouts = new LinkpearlPopouts(Cfg, services.ChatInbox, services.ChatLog, services.ChatSend,
+                services.ChatTabs, services.TellPreferences, services.LinkpearlNotificationGate, services.Visibility,
+                services.Installer.Gate("messages"), services.GameData, services.Themes, services.Lodestone,
+                services.Notifications);
             var bundle = AppRegistry.BuildDefault(services, video, screenController, videoQueue, watchAlong,
-                streamSuggestions, screenWindow);
+                streamSuggestions, screenWindow, linkpearlPopouts);
             shell = new PhoneShell(services, bundle);
             screenshotImport = new ScreenshotImportService(bundle.Photos, Cfg);
             phoneWindow = new PhoneWindow(shell, Cfg);
@@ -134,6 +139,15 @@ public sealed class Plugin : IDalamudPlugin
             windowSystem.AddWindow(PhotoWindow);
             windowSystem.AddWindow(videoDebugWindow);
             windowSystem.AddWindow(screenWindow);
+            for (var index = 0; index < linkpearlPopouts.Windows.Count; index++)
+            {
+                windowSystem.AddWindow(linkpearlPopouts.Windows[index]);
+            }
+
+            linkpearlPopouts.OpenInPhone = OpenLinkpearlConversation;
+            linkpearlPopouts.LookUpInPhone = OpenLinkpearlLookup;
+            linkpearlPopouts.OpenMarketInPhone = OpenMarketItem;
+            linkpearlPopouts.Restore();
             services.Visibility.Bind(() => phoneWindow is { IsOpen: true, IsMinimized: false });
             phoneEmote = new PhoneEmoteController(Cfg, Framework, ObjectTable, Condition, DataManager,
                 () => services.Visibility.IsVisible);
@@ -250,6 +264,31 @@ public sealed class Plugin : IDalamudPlugin
         Framework.Update += OnAutoOpenTick;
     }
 
+    private void OpenLinkpearlConversation(string conversationKey)
+    {
+        services.LinkpearlLauncher.Request(conversationKey);
+        ShowPhoneApp("messages");
+    }
+
+    private void OpenLinkpearlLookup(string name, string world)
+    {
+        services.LinkpearlLauncher.RequestLookup(name, world);
+        ShowPhoneApp("messages");
+    }
+
+    private void OpenMarketItem(uint itemId)
+    {
+        services.MarketLauncher.RequestItem(itemId);
+        ShowPhoneApp("market");
+    }
+
+    private void ShowPhoneApp(string appId)
+    {
+        phoneWindow.Maximize();
+        phoneWindow.IsOpen = true;
+        shell.OpenApp(appId);
+    }
+
     private void OnVideoFrameworkUpdate(IFramework framework)
     {
         video.OnFrameworkUpdate();
@@ -303,6 +342,7 @@ public sealed class Plugin : IDalamudPlugin
         ContextMenu.OnMenuOpened -= OnMenuOpened;
         dtrEntry.Remove();
         phoneWindow.PersistPositions();
+        linkpearlPopouts.Dispose();
         windowSystem.RemoveAllWindows();
         videoDebugWindow.Dispose();
         streamSuggestions.Dispose();

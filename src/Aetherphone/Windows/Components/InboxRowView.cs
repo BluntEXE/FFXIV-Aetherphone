@@ -1,9 +1,11 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Animation;
 using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 
 namespace Aetherphone.Windows.Components;
 
@@ -12,14 +14,26 @@ internal enum InboxRowAction : byte
     None,
     Open,
     Menu,
+    TogglePin,
+    ToggleMute,
 }
 
 internal static class InboxRowView
 {
-    private const float Height = 64f;
-    private const float AvatarRadius = 21f;
+    public const float Height = 66f;
 
-    public static InboxRowAction Draw(InboxRow row, PhoneTheme theme, LodestoneService lodestone)
+    private const float AvatarRadius = 22f;
+    private const float QuickRadius = 15f;
+    private const float QuickPitch = 34f;
+    private const float RevealSmoothTime = 0.10f;
+    private const float MaxFrameSeconds = 0.1f;
+    private const float MarkGlyphScale = 0.58f;
+    private const float MarkGap = 16f;
+
+    private static readonly Dictionary<string, Spring> Reveals = new(StringComparer.Ordinal);
+    private static readonly Vector4 White = new(1f, 1f, 1f, 1f);
+
+    public static InboxRowAction Draw(InboxRow row, PhoneTheme theme, LodestoneService lodestone, bool quickActions)
     {
         var scale = UiScale.Current;
         var origin = ImGui.GetCursorScreenPos();
@@ -29,46 +43,149 @@ internal static class InboxRowView
         var hovered = UiInteract.Hover(min, max);
         var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
         var drawList = ImGui.GetWindowDrawList();
+        var reveal = StepReveal(row.Key, hovered && quickActions);
         if (hovered)
         {
             Squircle.Fill(drawList, new Vector2(min.X + Metrics.Space.Xs * scale, min.Y + 3f * scale),
                 new Vector2(max.X - Metrics.Space.Xs * scale, max.Y - 3f * scale), Metrics.Radius.Md * scale,
-                ImGui.GetColorU32(new Vector4(1f, 1f, 1f, pressed ? 0.10f : 0.05f)));
+                ImGui.GetColorU32(Palette.WithAlpha(theme.TextStrong, pressed ? 0.09f : 0.05f)));
         }
 
         var avatarCenter = new Vector2(min.X + 14f * scale + AvatarRadius * scale, min.Y + Height * scale * 0.5f);
         DrawAvatar(drawList, avatarCenter, row, theme, lodestone, scale);
         var textLeft = avatarCenter.X + AvatarRadius * scale + Metrics.Space.Md * scale;
         var textRight = max.X - 14f * scale;
-        var hasUnread = row.Unread > 0;
-        var time = row.LastActivity == default ? string.Empty : TimeText.Short(row.LastActivity);
-        var timeSize = time.Length > 0 ? Typography.Measure(time, TextStyles.Caption1) : Vector2.Zero;
-        if (time.Length > 0)
+        var restAlpha = 1f - reveal;
+        var action = InboxRowAction.None;
+        if (reveal > 0.01f)
         {
-            Typography.Draw(drawList, new Vector2(textRight - timeSize.X, min.Y + 13f * scale), time,
-                hasUnread ? theme.Accent : theme.TextMuted, TextStyles.Caption1);
+            action = DrawQuickActions(drawList, row, theme, max, min.Y + Height * scale * 0.5f, reveal, scale);
         }
 
-        var titleWidth = textRight - timeSize.X - Metrics.Space.Sm * scale - textLeft;
+        var titleRight = textRight;
+        if (restAlpha > 0.01f)
+        {
+            titleRight = DrawTrailing(drawList, row, theme, textRight, min.Y, restAlpha, scale);
+        }
+        else
+        {
+            titleRight = max.X - (QuickPitch * 3f + 8f) * scale;
+        }
+
+        var titleWidth = MathF.Max(1f, titleRight - Metrics.Space.Sm * scale - textLeft);
         var titleY = min.Y + 11f * scale;
         var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleY),
             new Vector2(textLeft + titleWidth, titleY + Typography.LineHeight(TextStyles.Headline)));
+        var titleInk = row.Muted ? Palette.WithAlpha(theme.TextStrong, 0.72f) : theme.TextStrong;
         Marquee.DrawLeft("linkpearl.row." + row.Key, row.Title, textLeft, titleY, titleWidth, TextStyles.Headline,
-            theme.TextStrong, titleHovering);
+            titleInk, titleHovering);
         var previewRight = textRight;
-        if (hasUnread)
+        if (row.HasBadge && restAlpha > 0.01f)
         {
-            previewRight = DrawBadge(drawList, row.Unread, textRight, min.Y + 42f * scale, theme, scale);
+            previewRight = DrawBadge(drawList, row.Unread, textRight, min.Y + 42f * scale, theme, restAlpha, scale);
+        }
+        else if (row.Muted && row.Unread > 0 && restAlpha > 0.01f)
+        {
+            previewRight = DrawDot(drawList, textRight, min.Y + 42f * scale, theme, restAlpha, scale);
+        }
+        else if (reveal > 0.5f)
+        {
+            previewRight = titleRight;
         }
 
         DrawPreview(drawList, row, theme, textLeft, min.Y + 34f * scale, previewRight - textLeft, scale);
+        ImGui.SetCursorScreenPos(new Vector2(origin.X, max.Y));
+        if (action != InboxRowAction.None)
+        {
+            return action;
+        }
+
         if (hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
         {
             return InboxRowAction.Menu;
         }
 
-        ImGui.SetCursorScreenPos(new Vector2(origin.X, max.Y));
         return UiInteract.Click(min, max, hovered) ? InboxRowAction.Open : InboxRowAction.None;
+    }
+
+    private static float StepReveal(string key, bool target)
+    {
+        if (!Reveals.TryGetValue(key, out var spring))
+        {
+            spring = default;
+        }
+
+        spring.Step(target ? 1f : 0f, RevealSmoothTime, MathF.Min(ImGui.GetIO().DeltaTime, MaxFrameSeconds));
+        Reveals[key] = spring;
+        return Math.Clamp(spring.Value, 0f, 1f);
+    }
+
+    private static InboxRowAction DrawQuickActions(ImDrawListPtr drawList, InboxRow row, PhoneTheme theme,
+        Vector2 max, float centerY, float reveal, float scale)
+    {
+        var delta = MathF.Min(ImGui.GetIO().DeltaTime, MaxFrameSeconds);
+        var interactive = reveal > 0.5f;
+        var radius = QuickRadius * scale;
+        var right = max.X - 12f * scale - radius;
+        var moreCenter = new Vector2(right, centerY);
+        var bellCenter = new Vector2(right - QuickPitch * scale, centerY);
+        var pinCenter = new Vector2(right - QuickPitch * 2f * scale, centerY);
+        var action = InboxRowAction.None;
+        if (HoverButton.Circle(drawList, "inbox.pin." + row.Key, pinCenter, radius, FontAwesomeIcon.Thumbtack,
+                AppSkin.Transparent, row.Pinned ? theme.Accent : theme.TextMuted, delta, reveal, interactive,
+                Loc.T(row.Pinned ? L.Common.Unpin : L.Common.Pin), HoverLabelSide.Above))
+        {
+            action = InboxRowAction.TogglePin;
+        }
+
+        if (HoverButton.Circle(drawList, "inbox.mute." + row.Key, bellCenter, radius,
+                row.Muted ? FontAwesomeIcon.BellSlash : FontAwesomeIcon.Bell, AppSkin.Transparent,
+                row.Muted ? theme.Accent : theme.TextMuted, delta, reveal, interactive,
+                Loc.T(row.Muted ? L.Linkpearl.Unmute : L.Linkpearl.Mute), HoverLabelSide.Above))
+        {
+            action = InboxRowAction.ToggleMute;
+        }
+
+        if (HoverButton.Circle(drawList, "inbox.more." + row.Key, moreCenter, radius, FontAwesomeIcon.EllipsisH,
+                AppSkin.Transparent, theme.TextMuted, delta, reveal, interactive, Loc.T(L.Linkpearl.More),
+                HoverLabelSide.Above))
+        {
+            action = InboxRowAction.Menu;
+        }
+
+        return action;
+    }
+
+    private static float DrawTrailing(ImDrawListPtr drawList, InboxRow row, PhoneTheme theme, float right,
+        float top, float alpha, float scale)
+    {
+        var cursor = right;
+        var time = row.LastActivity == default ? string.Empty : TimeText.Short(row.LastActivity);
+        if (time.Length > 0)
+        {
+            var timeSize = Typography.Measure(time, TextStyles.Caption1);
+            var timeInk = row.HasBadge ? theme.Accent : theme.TextMuted;
+            Typography.Draw(drawList, new Vector2(cursor - timeSize.X, top + 13f * scale), time,
+                Palette.WithAlpha(timeInk, timeInk.W * alpha), TextStyles.Caption1);
+            cursor -= timeSize.X + Metrics.Space.Xs * scale;
+        }
+
+        var markY = top + 19f * scale;
+        if (row.Muted)
+        {
+            AppSkin.Icon(drawList, new Vector2(cursor - 6f * scale, markY), FontAwesomeIcon.BellSlash.ToIconString(),
+                Palette.WithAlpha(theme.TextMuted, theme.TextMuted.W * alpha), MarkGlyphScale);
+            cursor -= MarkGap * scale;
+        }
+
+        if (row.Pinned)
+        {
+            AppSkin.Icon(drawList, new Vector2(cursor - 6f * scale, markY), FontAwesomeIcon.Thumbtack.ToIconString(),
+                Palette.WithAlpha(theme.TextMuted, theme.TextMuted.W * alpha), MarkGlyphScale);
+            cursor -= MarkGap * scale;
+        }
+
+        return cursor;
     }
 
     private static void DrawAvatar(ImDrawListPtr drawList, Vector2 center, InboxRow row, PhoneTheme theme,
@@ -85,11 +202,13 @@ internal static class InboxRowView
         var min = center - new Vector2(radius, radius);
         var max = center + new Vector2(radius, radius);
         Squircle.Fill(drawList, min, max, radius * 0.62f, ImGui.GetColorU32(Palette.WithAlpha(row.Tint, 0.22f)));
+        Squircle.Stroke(drawList, min, max, radius * 0.62f, ImGui.GetColorU32(Palette.WithAlpha(row.Tint, 0.35f)),
+            Metrics.Stroke.Hairline);
         Typography.DrawCentered(drawList, center, Initials.Of(row.Title), row.Tint, TextStyles.SubheadlineEmphasized);
     }
 
     private static float DrawBadge(ImDrawListPtr drawList, int unread, float right, float centerY, PhoneTheme theme,
-        float scale)
+        float alpha, float scale)
     {
         var label = unread > 99 ? "99+" : unread.ToString(Loc.Culture);
         var labelSize = Typography.Measure(label, TextStyles.Caption1);
@@ -97,10 +216,19 @@ internal static class InboxRowView
         var badgeWidth = MathF.Max(labelSize.X + 12f * scale, height);
         var min = new Vector2(right - badgeWidth, centerY - height * 0.5f);
         var max = new Vector2(right, centerY + height * 0.5f);
-        Squircle.Fill(drawList, min, max, height * 0.5f, ImGui.GetColorU32(theme.Accent));
-        Typography.DrawCentered(drawList, (min + max) * 0.5f, label, new Vector4(1f, 1f, 1f, 1f),
+        Squircle.Fill(drawList, min, max, height * 0.5f, ImGui.GetColorU32(Palette.WithAlpha(theme.Accent, alpha)));
+        Typography.DrawCentered(drawList, (min + max) * 0.5f, label, Palette.WithAlpha(White, alpha),
             TextStyles.Caption1);
         return min.X - Metrics.Space.Sm * scale;
+    }
+
+    private static float DrawDot(ImDrawListPtr drawList, float right, float centerY, PhoneTheme theme, float alpha,
+        float scale)
+    {
+        var radius = 4f * scale;
+        var center = new Vector2(right - radius, centerY);
+        drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(theme.Accent, 0.7f * alpha)), 12);
+        return center.X - radius - Metrics.Space.Sm * scale;
     }
 
     private static void DrawPreview(ImDrawListPtr drawList, InboxRow row, PhoneTheme theme, float left, float top,
@@ -146,7 +274,8 @@ internal static class InboxRowView
             return;
         }
 
-        Typography.Draw(drawList, new Vector2(cursor, top), Typography.FitText(row.PreviewText, remaining,
+        var preview = row.PreviewText.Length > 0 ? row.PreviewText : Loc.T(L.Linkpearl.NoMessagesYetPreview);
+        Typography.Draw(drawList, new Vector2(cursor, top), Typography.FitText(preview, remaining,
             TextStyles.Caption1), theme.TextMuted, TextStyles.Caption1);
     }
 

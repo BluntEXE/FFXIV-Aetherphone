@@ -52,12 +52,12 @@ internal static class AppRegistry
 {
     public static AppBundle BuildDefault(PhoneServices services, VideoPlayer video, ScreenController screen,
         AetherStreamQueue videoQueue, WatchAlongSession watchAlong, StreamSuggestionNotifier streamSuggestions,
-        AetherStreamScreenWindow screenWindow)
+        AetherStreamScreenWindow screenWindow, LinkpearlPopouts linkpearlPopouts)
     {
         var contactBook = new ContactBook(services.Aethernet.Contacts, services.AethernetSession);
         var apps = new List<IPhoneApp>
         {
-            new LinkpearlApp(services.ChatInbox, services.ChatTabs, services.ChatArchive, services.LinkpearlNotificationGate, services.LinkpearlLauncher, services.Lodestone, services.MarketLauncher, services.Notifications, services.GameData, services.Lookup, services.Confirm, services.ChatLog, services.ChatSend),
+            new LinkpearlApp(services.ChatInbox, services.ChatTabs, services.ChatArchive, services.LinkpearlNotificationGate, services.LinkpearlLauncher, services.Lodestone, services.MarketLauncher, services.Notifications, services.GameData, services.Lookup, services.Confirm, services.ChatLog, services.ChatSend, services.Configuration, linkpearlPopouts),
             new ActivityApp(services.GameData, services.Activity, services.Configuration),
             new HealthApp(services.Health, services.GameData, services.Confirm),
         };

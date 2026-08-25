@@ -12,16 +12,18 @@ internal sealed class ChatNotifier : IDisposable
     private readonly ChatLog log;
     private readonly TabStore tabs;
     private readonly ChatInbox inbox;
+    private readonly TellPreferences tellPreferences;
     private readonly LinkpearlNotificationGate gate;
     private readonly NotificationService notifications;
     private readonly AppGate installed;
 
-    public ChatNotifier(ChatLog log, TabStore tabs, ChatInbox inbox, LinkpearlNotificationGate gate,
-        NotificationService notifications, AppGate installed)
+    public ChatNotifier(ChatLog log, TabStore tabs, ChatInbox inbox, TellPreferences tellPreferences,
+        LinkpearlNotificationGate gate, NotificationService notifications, AppGate installed)
     {
         this.log = log;
         this.tabs = tabs;
         this.inbox = inbox;
+        this.tellPreferences = tellPreferences;
         this.gate = gate;
         this.notifications = notifications;
         this.installed = installed;
@@ -39,7 +41,7 @@ internal sealed class ChatNotifier : IDisposable
 
         if (ChatStreams.IsTell(entry.StreamKey))
         {
-            if (!Viewing(entry.StreamKey))
+            if (!inbox.IsViewing(entry.StreamKey) && !tellPreferences.IsMuted(entry.StreamKey))
             {
                 Raise(entry.AuthorName, entry.Text, entry.StreamKey, entry.At);
             }
@@ -57,7 +59,7 @@ internal sealed class ChatNotifier : IDisposable
             }
 
             var key = ChatInbox.KeyForTab(tab);
-            if (Viewing(key))
+            if (inbox.IsViewing(key))
             {
                 return;
             }
@@ -76,8 +78,6 @@ internal sealed class ChatNotifier : IDisposable
 
         return tab.Alerts == AlertPolicy.All || entry.IsMention;
     }
-
-    private bool Viewing(string key) => string.Equals(inbox.Viewing, key, StringComparison.Ordinal);
 
     private void Raise(string title, string body, string groupKey, DateTime at) =>
         notifications.Notify(new PhoneNotification(AppId, title, body, at, AppAccents.For(AppId), groupKey));

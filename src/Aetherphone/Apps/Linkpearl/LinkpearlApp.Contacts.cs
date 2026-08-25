@@ -232,34 +232,6 @@ internal sealed partial class LinkpearlApp
         router.Push(LinkpearlRoute.Conversation(row.Key));
     }
 
-    private bool DrawRefreshButton(in PhoneContext context)
-    {
-        var scale = UiScale.Current;
-        var content = context.Content;
-        var center = new Vector2(content.Max.X - 14f * scale, content.Min.Y + AppHeader.Height * scale * 0.5f);
-        UiAnchors.Report("contacts.refresh", new Rect(center - new Vector2(16f * scale, 16f * scale),
-            center + new Vector2(16f * scale, 16f * scale)));
-        var hovered = UiInteract.Hover(center - new Vector2(16f * scale, 16f * scale),
-            center + new Vector2(16f * scale, 16f * scale));
-        var glyph = FontAwesomeIcon.Sync.ToIconString();
-        using (ImRaii.PushFont(UiBuilder.IconFont))
-        {
-            var size = ImGui.CalcTextSize(glyph);
-            ImGui.SetCursorScreenPos(center - size * 0.5f);
-            using (ImRaii.PushColor(ImGuiCol.Text, hovered ? context.Theme.TextStrong : context.Theme.Accent))
-            {
-                Typography.Plain(glyph);
-            }
-        }
-
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
-    }
-
     private static string SendTarget(FriendEntry friend) =>
         friend.WorldName.Length > 0 ? $"{friend.Name}@{friend.WorldName}" : friend.Name;
 }
