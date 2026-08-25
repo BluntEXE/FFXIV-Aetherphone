@@ -19,6 +19,7 @@ internal sealed partial class StratsApp
     private const float SetupRowHeight = 42f;
     private const float PagerPillHeight = 38f;
     private const float LinkPillHeight = 30f;
+    private const float PillStrokeBleed = 2f;
     private const float MaxImageHeight = 420f;
     private const float BadgeGap = 4f;
     private const float BadgeLabelGap = 10f;
@@ -704,7 +705,9 @@ internal sealed partial class StratsApp
         var cursorX = origin.X;
         var gap = Metrics.Space.Sm * scale;
         var pillHeight = LinkPillHeight * scale;
-        drawList.PushClipRect(origin, new Vector2(origin.X + width, origin.Y + pillHeight), true);
+        var bleed = PillStrokeBleed * scale;
+        drawList.PushClipRect(new Vector2(origin.X - bleed, origin.Y - bleed),
+            new Vector2(origin.X + width + bleed, origin.Y + pillHeight + bleed), true);
         for (var index = 0; index < links.Length; index++)
         {
             var link = links[index];
@@ -907,7 +910,9 @@ internal sealed partial class StratsApp
             cursorX += boardWidth + gap;
         }
 
-        drawList.PushClipRect(new Vector2(cursorX, origin.Y), new Vector2(origin.X + width, origin.Y + pillHeight), true);
+        var bleed = PillStrokeBleed * scale;
+        drawList.PushClipRect(new Vector2(cursorX - bleed, origin.Y - bleed),
+            new Vector2(origin.X + width + bleed, origin.Y + pillHeight + bleed), true);
         for (var index = 0; index < phase.Links.Length; index++)
         {
             var link = phase.Links[index];
