@@ -21,7 +21,13 @@ internal sealed partial class GamesApp
     private const float TileEntranceLift = 14f;
     private const float BadgeHeight = 16f;
     private const float OnlineBadgeRadius = 9f;
-    private const float FriendsMedallionRadius = 19f;
+    private const float FriendsMedallionRadius = 18f;
+    private const float FriendsMedallionPitch = 1.15f;
+    private const float FriendsCardPadding = 14f;
+    private const float FriendsTextGap = 12f;
+    private const float FriendsChevronReserve = 28f;
+    private const float FriendsTitleTop = 15f;
+    private const float FriendsHintTop = 37f;
     private const float HeroRounding = 28f;
 
     private static readonly Vector4 BadgeFill = new(1f, 1f, 1f, 0.92f);
@@ -148,7 +154,43 @@ internal sealed partial class GamesApp
             TextStyles.Title3);
     }
 
-    private bool DrawFriendsCard(Rect rect, float scale)
+    private readonly struct FriendsLayout
+    {
+        public readonly float Height;
+        public readonly float TextOffset;
+        public readonly float TextWidth;
+        public readonly float PillWidth;
+        public readonly int Rooms;
+
+        public FriendsLayout(float height, float textOffset, float textWidth, float pillWidth, int rooms)
+        {
+            Height = height;
+            TextOffset = textOffset;
+            TextWidth = textWidth;
+            PillWidth = pillWidth;
+            Rooms = rooms;
+        }
+    }
+
+    private FriendsLayout MeasureFriendsCard(float width, float scale)
+    {
+        var radius = FriendsMedallionRadius * scale;
+        var pitch = radius * FriendsMedallionPitch;
+        var textOffset = FriendsCardPadding * scale + radius * 2f + (OnlineGameArt.Kinds.Length - 1) * pitch
+                         + FriendsTextGap * scale;
+        var rooms = gameRooms.AccountId.Length > 0 ? gameRooms.Rooms.Length : 0;
+        var pillWidth = rooms > 0 ? LivePill.Width(RoomsLabel(rooms), scale) : 0f;
+        var reserve = rooms > 0
+            ? pillWidth + (FriendsCardPadding + FriendsTextGap) * scale
+            : FriendsChevronReserve * scale;
+        var textWidth = MathF.Max(1f, width - textOffset - reserve);
+        var hintHeight = Typography.MeasureWrappedBlock(Loc.T(L.Games.OnlineCardHint), TextStyles.Footnote,
+            textWidth).Y;
+        var height = MathF.Max(FriendsCardHeight * scale, (FriendsHintTop + FriendsCardPadding) * scale + hintHeight);
+        return new FriendsLayout(height, textOffset, textWidth, pillWidth, rooms);
+    }
+
+    private bool DrawFriendsCard(Rect rect, in FriendsLayout layout, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
         var hovered = UiInteract.Hover(rect.Min, rect.Max);
@@ -162,8 +204,8 @@ internal sealed partial class GamesApp
 
         var kinds = OnlineGameArt.Kinds;
         var radius = FriendsMedallionRadius * scale;
-        var startX = rect.Min.X + 16f * scale + radius;
-        var pitch = radius * 1.35f;
+        var startX = rect.Min.X + FriendsCardPadding * scale + radius;
+        var pitch = radius * FriendsMedallionPitch;
         for (var index = 0; index < kinds.Length; index++)
         {
             var center = new Vector2(startX + index * pitch, rect.Center.Y);
@@ -175,32 +217,25 @@ internal sealed partial class GamesApp
             OnlineGameArt.Draw(drawList, kinds[index], center, radius * 1.25f, scale);
         }
 
-        var textLeft = startX + (kinds.Length - 1) * pitch + radius + 14f * scale;
-        var reserve = 34f * scale;
-        var rooms = gameRooms.AccountId.Length > 0 ? gameRooms.Rooms.Length : 0;
-        if (rooms > 0)
+        if (layout.Rooms > 0)
         {
-            var label = RoomsLabel(rooms);
-            var pillWidth = LivePill.Width(label, scale);
             LivePill.Draw(drawList,
-                new Vector2(rect.Max.X - 14f * scale - pillWidth, rect.Center.Y - LivePill.Height(scale) * 0.5f), label,
-                ui.Accent, (float)ImGui.GetTime(), scale);
-            reserve = pillWidth + 24f * scale;
+                new Vector2(rect.Max.X - FriendsCardPadding * scale - layout.PillWidth,
+                    rect.Center.Y - LivePill.Height(scale) * 0.5f), RoomsLabel(layout.Rooms), ui.Accent,
+                (float)ImGui.GetTime(), scale);
         }
         else
         {
-            ProgressRing.CenterIcon(drawList, new Vector2(rect.Max.X - 20f * scale, rect.Center.Y),
+            ProgressRing.CenterIcon(drawList,
+                new Vector2(rect.Max.X - FriendsChevronReserve * scale * 0.55f, rect.Center.Y),
                 FontAwesomeIcon.ChevronRight, ui.MutedInk, 12f * scale);
         }
 
-        var textWidth = MathF.Max(1f, rect.Max.X - reserve - textLeft);
-        Typography.Draw(drawList, new Vector2(textLeft, rect.Min.Y + 15f * scale),
-            Typography.FitText(Loc.T(L.Games.OnlineTitle), textWidth, TextStyles.Headline), ui.TitleInk,
-            TextStyles.Headline);
-        drawList.PushClipRect(rect.Min, rect.Max, true);
-        Typography.DrawWrappedLeft(new Vector2(textLeft, rect.Min.Y + 37f * scale), Loc.T(L.Games.OnlineCardHint),
-            ui.MutedInk, TextStyles.Footnote, textWidth);
-        drawList.PopClipRect();
+        var textLeft = rect.Min.X + layout.TextOffset;
+        Marquee.DrawLeftAuto(drawList, "games.friends.title", Loc.T(L.Games.OnlineTitle), textLeft,
+            rect.Min.Y + FriendsTitleTop * scale, layout.TextWidth, TextStyles.Headline, ui.TitleInk);
+        Typography.DrawWrappedLeft(new Vector2(textLeft, rect.Min.Y + FriendsHintTop * scale),
+            Loc.T(L.Games.OnlineCardHint), ui.MutedInk, TextStyles.Footnote, layout.TextWidth);
         return UiInteract.Click(rect.Min, rect.Max, hovered);
     }
 

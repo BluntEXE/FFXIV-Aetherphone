@@ -257,8 +257,9 @@ internal sealed partial class GamesApp
 
     private float DrawFriendsRow(float left, float y, float width, float scale)
     {
-        var rect = new Rect(new Vector2(left, y), new Vector2(left + width, y + FriendsCardHeight * scale));
-        if (DrawFriendsCard(rect, scale))
+        var layout = MeasureFriendsCard(width, scale);
+        var rect = new Rect(new Vector2(left, y), new Vector2(left + width, y + layout.Height));
+        if (DrawFriendsCard(rect, layout, scale))
         {
             OpenOnlineHub(GameRoomWire.UnoKind);
         }
