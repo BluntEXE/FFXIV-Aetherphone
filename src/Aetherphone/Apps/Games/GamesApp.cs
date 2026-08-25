@@ -228,7 +228,8 @@ internal sealed partial class GamesApp : IPhoneApp
         {
             ImGui.GetWindowDrawList().AddRectFilled(area.Min, area.Max, ImGui.GetColorU32(theme.AppBackground));
             SyncOnlineRoomLandscape();
-            onlineRoom.Draw(context, LeaveOnlineRoom, AppLandscape.Held(Id) && context.Content.IsLandscape());
+            onlineRoom.Draw(context, LeaveOnlineRoom, ui,
+                AppLandscape.Held(Id) && context.Content.IsLandscape());
             return;
         }
 

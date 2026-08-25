@@ -48,7 +48,7 @@ internal sealed class OnlineRoomView
 
     public bool WantsLandscape => LivePool(store.Room.State) && store.Room.RoomId.Length > 0;
 
-    public void Draw(in PhoneContext context, Action back, bool landscape)
+    public void Draw(in PhoneContext context, Action back, AppSkin ui, bool landscape)
     {
         var held = store.Room.State;
         var scale = UiScale.Current;
@@ -62,7 +62,7 @@ internal sealed class OnlineRoomView
         }
         else
         {
-            AppHeader.Draw(context, Loc.T(GamesOnlineText.GameName(held?.Snapshot.GameKind)), back);
+            DrawHeader(context, back, ui, held, scale);
             body = new Rect(new Vector2(content.Min.X, content.Min.Y + HeaderHeight * scale), content.Max);
         }
 
@@ -106,8 +106,49 @@ internal sealed class OnlineRoomView
         DrawLobby(body, theme, scale, held);
     }
 
+    private void DrawHeader(in PhoneContext context, Action back, AppSkin ui, GameRoomState? held, float scale)
+    {
+        var title = Loc.T(GamesOnlineText.GameName(held?.Snapshot.GameKind));
+        if (!LiveTable(held) || store.Room.RoomId.Length == 0)
+        {
+            AppHeader.Draw(context, title, back);
+            return;
+        }
+
+        var isHost = IsHost(held!.Roster!);
+        var leaveLabel = LeaveLabel(isHost);
+        AppHeader.Draw(context, "games.room.header", title, AppSkin.HeaderActionWidth(leaveLabel) + 18f * scale,
+            back);
+        if (ui.HeaderAction(context.Content, leaveLabel, !store.IntentInFlight))
+        {
+            LeaveOrClose(isHost);
+        }
+    }
+
     private static bool LivePool(GameRoomState? held) =>
         held is { Pool: not null, Roster: not null } && held.Snapshot.Phase == GameRoomWire.PhasePlaying;
+
+    private static bool LiveTable(GameRoomState? held) =>
+        held is { Roster: not null } && held.Snapshot.Phase == GameRoomWire.PhasePlaying
+        && (held.Uno is not null || held.Chess is not null || held.Pool is not null);
+
+    private bool IsHost(GameRoomRoster roster) =>
+        string.Equals(roster.HostUserId, store.AccountId, StringComparison.Ordinal);
+
+    private static string LeaveLabel(bool isHost) =>
+        isHost ? Loc.T(L.Games.OnlineCloseRoom) : Loc.T(L.Games.OnlineLeave);
+
+    private void LeaveOrClose(bool isHost)
+    {
+        var roomId = store.Room.RoomId;
+        if (isHost)
+        {
+            store.CloseRoom(roomId);
+            return;
+        }
+
+        store.LeaveRoom(roomId);
+    }
 
     private string FreshNotice()
     {
@@ -179,7 +220,7 @@ internal sealed class OnlineRoomView
         var phase = held.Snapshot.Phase;
         var roster = held.Roster!;
         var players = roster.Players;
-        var isHost = string.Equals(roster.HostUserId, store.AccountId, StringComparison.Ordinal);
+        var isHost = IsHost(roster);
 
         if (phase == GameRoomWire.PhaseFinished)
         {
@@ -241,19 +282,10 @@ internal sealed class OnlineRoomView
 
         var leaveOrigin = ImGui.GetCursorScreenPos();
         var leaveCenter = new Vector2(leaveOrigin.X + width * 0.5f, leaveOrigin.Y + 18f * scale);
-        var leaveLabel = isHost ? Loc.T(L.Games.OnlineCloseRoom) : Loc.T(L.Games.OnlineLeave);
-        if (GameHud.Button(leaveCenter, new Vector2(width * 0.5f, 34f * scale), leaveLabel,
+        if (GameHud.Button(leaveCenter, new Vector2(width * 0.5f, 34f * scale), LeaveLabel(isHost),
                 new Vector4(0.85f, 0.35f, 0.32f, 1f), theme) && !store.IntentInFlight)
         {
-            var roomId = store.Room.RoomId;
-            if (isHost)
-            {
-                store.CloseRoom(roomId);
-            }
-            else
-            {
-                store.LeaveRoom(roomId);
-            }
+            LeaveOrClose(isHost);
         }
 
         ImGui.SetCursorScreenPos(leaveOrigin);

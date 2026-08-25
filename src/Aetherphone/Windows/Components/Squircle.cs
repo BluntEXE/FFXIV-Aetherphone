@@ -11,6 +11,7 @@ internal static class Squircle
     private const float MinSegmentSquared = 0.01f;
     private const float CapOverlap = 1.5f;
     private const float DegenerateBox = 0.5f;
+    private const uint AlphaMask = 0xFF000000;
     private static readonly Vector2[][] UnitCorners = BuildUnitCorners();
     private static readonly Vector2[] PathScratch = new Vector2[(MaxCornerSegments + 1) * 4 + 4];
 
@@ -224,28 +225,38 @@ internal static class Squircle
             return;
         }
 
-        var capTop = min.Y + box;
-        var capBottom = max.Y - box;
-        var left = min.X - CapOverlap;
-        var right = max.X + CapOverlap;
+        var firstVertex = drawList.VtxBuffer.Size;
+        TracePath(drawList, min, max, box);
+        drawList.PathFillConvex(topColor | AlphaMask);
+        ShadeVertical(drawList, firstVertex, min.Y, max.Y, topColor, bottomColor);
+    }
 
-        drawList.PushClipRect(new Vector2(left, min.Y - CapOverlap), new Vector2(right, capTop), true);
-        TraceCapPath(drawList, min, max, box, true);
-        drawList.PathFillConvex(topColor);
-        drawList.PopClipRect();
-
-        if (capBottom > capTop)
+    private static void ShadeVertical(ImDrawListPtr drawList, int firstVertex, float top, float bottom,
+        uint topColor, uint bottomColor)
+    {
+        var height = MathF.Max(bottom - top, 1f);
+        var vertices = drawList.VtxBuffer.AsSpan();
+        for (var index = firstVertex; index < vertices.Length; index++)
         {
-            drawList.PushClipRect(new Vector2(left, capTop), new Vector2(right, capBottom), true);
-            drawList.AddRectFilledMultiColor(new Vector2(min.X, capTop - CapOverlap),
-                new Vector2(max.X, capBottom + CapOverlap), topColor, topColor, bottomColor, bottomColor);
-            drawList.PopClipRect();
+            ref var vertex = ref vertices[index];
+            var amount = Math.Clamp((vertex.Pos.Y - top) / height, 0f, 1f);
+            var mixed = MixColor(topColor, bottomColor, amount);
+            vertex.Col = (vertex.Col & AlphaMask) == 0 ? mixed & ~AlphaMask : mixed;
+        }
+    }
+
+    private static uint MixColor(uint from, uint to, float amount)
+    {
+        var mixed = 0u;
+        for (var shift = 0; shift < 32; shift += 8)
+        {
+            var start = (from >> shift) & 0xFF;
+            var end = (to >> shift) & 0xFF;
+            var channel = (uint)MathF.Round(start + (end - (float)start) * amount);
+            mixed |= channel << shift;
         }
 
-        drawList.PushClipRect(new Vector2(left, capBottom), new Vector2(right, max.Y + CapOverlap), true);
-        TraceCapPath(drawList, min, max, box, false);
-        drawList.PathFillConvex(bottomColor);
-        drawList.PopClipRect();
+        return mixed;
     }
 
     private static float CornerBox(Vector2 min, Vector2 max, float radius)

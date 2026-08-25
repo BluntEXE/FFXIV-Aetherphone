@@ -42,8 +42,6 @@ internal sealed class OnlineUnoTable
     private const int PileDepth = 4;
     private const int SeatFanLimit = 8;
     private const long DepartureGraceMilliseconds = 1_500;
-    private const float LeaveDrop = 164f;
-    private const float LeaveClearance = 92f;
 
     private static readonly Vector4 DangerTint = new(0.85f, 0.35f, 0.32f, 1f);
 
@@ -183,7 +181,6 @@ internal sealed class OnlineUnoTable
         DrawCenter(drawList, theme, scale, board, myTurn, ambient, accent, delta);
         DrawStatus(drawList, body, theme, scale, board, players, hand, myTurn, pending, remaining, accent, notice,
             delta);
-        DrawLeaveButton(body, theme, scale, board);
         DrawHand(drawList, body, theme, scale, board, mine, myTurn, pending, accent, delta);
         DrawFlights(drawList, scale);
         particles.Draw(drawList, scale);
@@ -875,32 +872,6 @@ internal sealed class OnlineUnoTable
             Typography.DrawCentered(drawList, new Vector2(centerX, baseY + 126f * scale),
                 Typography.FitText(Loc.T(L.Games.OnlineNoPlayable), body.Width - 32f * scale, TextStyles.Footnote),
                 theme.TextMuted, TextStyles.Footnote);
-        }
-    }
-
-    // Leaving mid-round marks the seat away on the server and the table plays on without it; the
-    // host closing the room ends it for everyone. The room view pops back once the server agrees.
-    private void DrawLeaveButton(Rect body, PhoneTheme theme, float scale, UnoRoomStateDto board)
-    {
-        var isHost = string.Equals(board.HostUserId, store.AccountId, StringComparison.Ordinal);
-        var handTop = origin.Y + handAnchor.Y - HandCardWidth * UnoCardArt.Aspect * 0.5f * scale;
-        var centerY = MathF.Min(origin.Y + discardAnchor.Y + LeaveDrop * scale, handTop - LeaveClearance * scale);
-        var label = isHost ? Loc.T(L.Games.OnlineCloseRoom) : Loc.T(L.Games.OnlineLeave);
-        var width = MathF.Max(110f * scale, Typography.Measure(label, TextStyles.Headline).X + 28f * scale);
-        if (!GameHud.Button(new Vector2(body.Center.X, centerY), new Vector2(width, 30f * scale), label,
-                DangerTint, theme) || store.IntentInFlight)
-        {
-            return;
-        }
-
-        var roomId = store.Room.RoomId;
-        if (isHost)
-        {
-            store.CloseRoom(roomId);
-        }
-        else
-        {
-            store.LeaveRoom(roomId);
         }
     }
 
