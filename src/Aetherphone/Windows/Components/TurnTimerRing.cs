@@ -58,6 +58,30 @@ internal static class TurnTimerRing
             ImGui.GetColorU32(Palette.WithAlpha(color, alpha)));
     }
 
+    public static void Bar(ImDrawListPtr drawList, Vector2 center, float width, float height,
+        long remainingMilliseconds, int windowSeconds, Vector4 accent)
+    {
+        var half = new Vector2(width * 0.5f, height * 0.5f);
+        var min = center - half;
+        var max = center + half;
+        var radius = height * 0.5f;
+        Squircle.Fill(drawList, min, max, radius, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, TrackAlpha)));
+        var fraction = Fraction(remainingMilliseconds, windowSeconds);
+        var filled = width * fraction;
+        if (filled < height)
+        {
+            return;
+        }
+
+        var urgent = IsUrgent(remainingMilliseconds, windowSeconds);
+        var color = urgent ? Warn : accent;
+        var alpha = urgent ? 0.55f + 0.45f * Pulse.Wave(Pulse.Fast) : 1f;
+        Squircle.Fill(drawList, min, new Vector2(min.X + filled, max.Y), radius,
+            ImGui.GetColorU32(Palette.WithAlpha(color, alpha)));
+        drawList.AddCircleFilled(new Vector2(min.X + filled - radius, center.Y), radius * 1.6f,
+            ImGui.GetColorU32(Palette.WithAlpha(color, 0.25f * alpha)), 16);
+    }
+
     private static void Arc(ImDrawListPtr drawList, Vector2 center, float radius, float thickness, float from,
         float to, uint color)
     {

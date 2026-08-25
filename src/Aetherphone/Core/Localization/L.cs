@@ -4559,6 +4559,11 @@ internal static class L
         public static readonly LocString OnlineWinner = new("games.onlineWinner", "{0} wins the round!");
         public static readonly LocString OnlineRoundVoid = new("games.onlineRoundVoid", "The round ended with nobody left");
         public static readonly LocString OnlineDeck = new("games.onlineDeck", "Deck");
+        public static readonly LocString OnlineUnoCall = new("games.onlineUnoCall", "Uno!");
+        public static readonly LocString OnlineSkipped = new("games.onlineSkipped", "Skipped!");
+        public static readonly LocString OnlineReversed = new("games.onlineReversed", "Reverse!");
+        public static readonly LocString OnlineTimedOut = new("games.onlineTimedOut", "Timed out");
+        public static readonly LocString OnlineNoPlayable = new("games.onlineNoPlayable", "No playable card, tap the deck to draw");
         public static readonly LocString OnlineReconnecting = new("games.onlineReconnecting", "Reconnecting…");
         public static readonly LocString OnlineRoomEnded = new("games.onlineRoomEnded", "This room has ended");
         public static readonly LocString OnlineKicked = new("games.onlineKicked", "The host removed you from this room");

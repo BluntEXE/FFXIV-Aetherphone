@@ -10,6 +10,14 @@ internal static class GameRoomWire
 
     public const string UnoHandEvent = "uno.hand";
 
+    public const string UnoPlayEvent = "uno.play";
+
+    public const string UnoDrawEvent = "uno.draw";
+
+    public const string UnoPassEvent = "uno.pass";
+
+    public const string UnoTimeoutEvent = "uno.timeout";
+
     public const string ActionShoot = "shoot";
 
     public const string ActionPlace = "place";

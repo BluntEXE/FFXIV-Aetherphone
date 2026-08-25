@@ -7,9 +7,14 @@ namespace Aetherphone.Apps.Games.Online;
 
 // One card, drawn from primitives: a colored squircle, a tilted white pool, and a rank glyph. The
 // same function paints the discard, the hand fan and the opponents' backs, so every card on the
-// table agrees on what a card looks like.
+// table agrees on what a card looks like. A card can be handed an angle; the vertices it emitted
+// are spun around its center afterwards, which is how the fan and the pile get their tilt.
 internal static class UnoCardArt
 {
+    public const float Aspect = 1.45f;
+
+    private const float CornerIndexMinimumHeight = 60f;
+
     private static readonly Vector4[] Colors =
     {
         new(0.85f, 0.22f, 0.20f, 1f),
@@ -49,9 +54,16 @@ internal static class UnoCardArt
         };
     }
 
-    public static void DrawFace(ImDrawListPtr drawList, Rect rect, int card, float scale,
-        bool highlight, float dimAlpha = 1f)
+    public static Rect RectAround(Vector2 center, float width)
     {
+        var half = new Vector2(width * 0.5f, width * Aspect * 0.5f);
+        return new Rect(center - half, center + half);
+    }
+
+    public static void DrawFace(ImDrawListPtr drawList, Rect rect, int card, float scale,
+        bool highlight, float dimAlpha = 1f, float angle = 0f)
+    {
+        var firstVertex = drawList.VtxBuffer.Size;
         var rounding = rect.Width * 0.18f;
         var color = GameRoomWire.IsWild(card) ? WildFace : ColorFor(GameRoomWire.ColorOf(card));
         var top = ImGui.GetColorU32(Lighten(color, 0.14f) with { W = dimAlpha });
@@ -62,7 +74,6 @@ internal static class UnoCardArt
             ImGui.GetColorU32(new Vector4(1f, 1f, 1f, (highlight ? 0.9f : 0.35f) * dimAlpha)),
             (highlight ? 2f : 1f) * scale);
 
-        drawList.PushClipRect(rect.Min, rect.Max, true);
         drawList.AddCircleFilled(rect.Center, rect.Width * 0.42f,
             ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.22f * dimAlpha)), 32);
         if (GameRoomWire.IsWild(card))
@@ -70,27 +81,55 @@ internal static class UnoCardArt
             DrawWildQuadrants(drawList, rect, dimAlpha);
         }
 
-        drawList.PopClipRect();
+        var label = Label(card);
         var style = rect.Height >= 64f ? TextStyles.Title2 : TextStyles.SubheadlineEmphasized;
-        Typography.DrawCentered(drawList, rect.Center + new Vector2(0f, 1f), Label(card),
+        Typography.DrawCentered(drawList, rect.Center + new Vector2(0f, 1f), label,
             new Vector4(0f, 0f, 0f, 0.35f * dimAlpha), style);
-        Typography.DrawCentered(drawList, rect.Center, Label(card), Ink with { W = dimAlpha }, style);
+        Typography.DrawCentered(drawList, rect.Center, label, Ink with { W = dimAlpha }, style);
+        if (rect.Height >= CornerIndexMinimumHeight * scale)
+        {
+            var corner = new Vector2(rect.Min.X + rect.Width * 0.17f, rect.Min.Y + rect.Height * 0.11f);
+            Typography.DrawCentered(drawList, corner, label, Ink with { W = 0.92f * dimAlpha },
+                TextStyles.Caption2);
+        }
+
+        Rotate(drawList, firstVertex, rect.Center, angle);
     }
 
-    public static void DrawBack(ImDrawListPtr drawList, Rect rect, float scale, float dimAlpha = 1f)
+    public static void DrawBack(ImDrawListPtr drawList, Rect rect, float scale, float dimAlpha = 1f,
+        float angle = 0f)
     {
+        var firstVertex = drawList.VtxBuffer.Size;
         var rounding = rect.Width * 0.18f;
         Squircle.FillVerticalGradient(drawList, rect.Min, rect.Max, rounding,
             ImGui.GetColorU32(Lighten(BackFace, 0.10f) with { W = dimAlpha }),
             ImGui.GetColorU32(Darken(BackFace, 0.16f) with { W = dimAlpha }));
         Squircle.Stroke(drawList, rect.Min, rect.Max, rounding,
             ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.22f * dimAlpha)), 1f * scale);
-        drawList.PushClipRect(rect.Min, rect.Max, true);
         drawList.AddCircleFilled(rect.Center, rect.Width * 0.34f,
             ImGui.GetColorU32(new Vector4(0.92f, 0.35f, 0.30f, 0.8f * dimAlpha)), 32);
         drawList.AddCircle(rect.Center, rect.Width * 0.34f,
             ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.5f * dimAlpha)), 32, 1.5f * scale);
-        drawList.PopClipRect();
+        Rotate(drawList, firstVertex, rect.Center, angle);
+    }
+
+    private static void Rotate(ImDrawListPtr drawList, int firstVertex, Vector2 pivot, float angle)
+    {
+        if (angle == 0f)
+        {
+            return;
+        }
+
+        var sine = MathF.Sin(angle);
+        var cosine = MathF.Cos(angle);
+        var vertices = drawList.VtxBuffer.AsSpan();
+        for (var vertexIndex = firstVertex; vertexIndex < vertices.Length; vertexIndex++)
+        {
+            ref var vertex = ref vertices[vertexIndex];
+            var offset = vertex.Pos - pivot;
+            vertex.Pos = new Vector2(pivot.X + offset.X * cosine - offset.Y * sine,
+                pivot.Y + offset.X * sine + offset.Y * cosine);
+        }
     }
 
     private static void DrawWildQuadrants(ImDrawListPtr drawList, Rect rect, float dimAlpha)
