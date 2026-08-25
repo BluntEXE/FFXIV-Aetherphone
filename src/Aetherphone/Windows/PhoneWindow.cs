@@ -22,6 +22,8 @@ internal sealed class PhoneWindow : Window
     private int pendingFrames;
     private float landscapeBlend;
     private int rotatePinFrames;
+    private bool dockGrowLeft;
+    private bool dockGrowUp;
     private Vector2? pendingPosition;
     private Vector2? maximizedPosition;
     private Vector2? minimizedPosition;
@@ -125,19 +127,20 @@ internal sealed class PhoneWindow : Window
         var portraitWidth = Components.PhoneBounds.ClampWidth(configuration.PhoneWidth);
         var landscapeWidth = Components.PhoneBounds.LandscapeWidth(configuration);
         var rotation = AdvanceRotation();
-        var zoom = PhoneSizeCatalog.ZoomFor(float.Lerp(portraitWidth, landscapeWidth, rotation));
-        UiScale.SetPhone(zoom);
-        Plugin.Fonts.SetPhoneZoom(zoom);
         var phase = shell.MinimizePhase;
         var minimized = phase == MinimizePhase.Minimized;
+        var zoom = minimized ? 1f : PhoneSizeCatalog.ZoomFor(float.Lerp(portraitWidth, landscapeWidth, rotation));
+        UiScale.SetPhone(zoom);
+        Plugin.Fonts.SetPhoneZoom(zoom);
+        var dockSize = shell.MinimizedSize;
         var size = minimized
-            ? MinimizeTransition.MinimizedSize
+            ? dockSize / UiScale.Global
             : OrientedSize(portraitWidth, landscapeWidth, rotation);
         Size = size;
         SizeCondition = ImGuiCond.Always;
         var locked = !minimized && configuration.LockPosition;
         var holdStill = !minimized && (shell.HomeEditing || Components.UiInteract.PointerOverGestureSurface);
-        Flags = locked || holdStill
+        Flags = minimized || locked || holdStill
             ? BaseFlags | ImGuiWindowFlags.NoMove
             : BaseFlags;
         Components.DragScrollHost.Enabled = locked;
@@ -156,10 +159,15 @@ internal sealed class PhoneWindow : Window
             PositionCondition = ImGuiCond.Always;
             pendingFrames--;
         }
-        else if (phase is MinimizePhase.Collapsing or MinimizePhase.Expanding &&
-                 maximizedPosition is { } homePosition && minimizedPosition is { } dockPosition)
+        else if (minimized)
         {
-            Position = Vector2.Lerp(homePosition, dockPosition, shell.MinimizeEased);
+            Position = DockedPosition(dockSize);
+            PositionCondition = ImGuiCond.Always;
+        }
+        else if (phase is MinimizePhase.Collapsing or MinimizePhase.Expanding &&
+                 maximizedPosition is { } homePosition)
+        {
+            Position = Vector2.Lerp(homePosition, DockedPosition(dockSize), shell.MinimizeEased);
             PositionCondition = ImGuiCond.Always;
         }
         else if (!minimized && rotatePinFrames > 0 && LastSize.Y > 0f)
@@ -219,16 +227,53 @@ internal sealed class PhoneWindow : Window
         return Vector2.Lerp(portrait, landscape, rotation);
     }
 
+    private Vector2 DockedPosition(Vector2 dockSize)
+    {
+        var viewport = ImGui.GetMainViewport();
+        var drag = shell.ConsumeMinimizedDrag();
+        var idle = shell.MinimizedIdleSize;
+        var extra = Vector2.Max(dockSize - idle, Vector2.Zero);
+        if (minimizedPosition is not { } anchor)
+        {
+            anchor = maximizedPosition ?? LastPosition;
+            dockGrowLeft = PastCenterX(anchor.X + idle.X * 0.5f, viewport);
+            dockGrowUp = PastCenterY(anchor.Y + idle.Y * 0.5f, viewport);
+        }
+
+        anchor += drag.Delta;
+        if (drag.Released)
+        {
+            var visual = LastPosition;
+            dockGrowLeft = PastCenterX(visual.X + dockSize.X * 0.5f, viewport);
+            dockGrowUp = PastCenterY(visual.Y + dockSize.Y * 0.5f, viewport);
+            anchor = new Vector2(visual.X + (dockGrowLeft ? extra.X : 0f), visual.Y + (dockGrowUp ? extra.Y : 0f));
+        }
+
+        anchor = ClampToViewport(anchor, idle, viewport);
+        minimizedPosition = anchor;
+        var position = new Vector2(dockGrowLeft ? anchor.X - extra.X : anchor.X,
+            dockGrowUp ? anchor.Y - extra.Y : anchor.Y);
+        return ClampToViewport(position, dockSize, viewport);
+    }
+
+    private static bool PastCenterX(float x, ImGuiViewportPtr viewport) =>
+        x > viewport.Pos.X + viewport.Size.X * 0.5f;
+
+    private static bool PastCenterY(float y, ImGuiViewportPtr viewport) =>
+        y > viewport.Pos.Y + viewport.Size.Y * 0.5f;
+
     private Vector2 CenterPinnedPosition(Vector2 size)
     {
         var scaledSize = size * UiScale.Global;
         var center = LastPosition + LastSize * 0.5f;
-        var viewport = ImGui.GetMainViewport();
-        var position = center - scaledSize * 0.5f;
-        var maxPosition = viewport.Pos + viewport.Size - scaledSize;
-        position.X = Math.Clamp(position.X, viewport.Pos.X, MathF.Max(viewport.Pos.X, maxPosition.X));
-        position.Y = Math.Clamp(position.Y, viewport.Pos.Y, MathF.Max(viewport.Pos.Y, maxPosition.Y));
-        return position;
+        return ClampToViewport(center - scaledSize * 0.5f, scaledSize, ImGui.GetMainViewport());
+    }
+
+    private static Vector2 ClampToViewport(Vector2 position, Vector2 size, ImGuiViewportPtr viewport)
+    {
+        var maxPosition = viewport.Pos + viewport.Size - size;
+        return new Vector2(Math.Clamp(position.X, viewport.Pos.X, MathF.Max(viewport.Pos.X, maxPosition.X)),
+            Math.Clamp(position.Y, viewport.Pos.Y, MathF.Max(viewport.Pos.Y, maxPosition.Y)));
     }
 
     public override void Draw()
@@ -248,14 +293,9 @@ internal sealed class PhoneWindow : Window
             shell.Draw(device);
         }
 
-        var phase = shell.MinimizePhase;
-        if (phase == MinimizePhase.None)
+        if (shell.MinimizePhase == MinimizePhase.None)
         {
             maximizedPosition = ImGui.GetWindowPos();
-        }
-        else if (phase == MinimizePhase.Minimized)
-        {
-            minimizedPosition = ImGui.GetWindowPos();
         }
 
         if (shell.ConsumeCloseRequest())

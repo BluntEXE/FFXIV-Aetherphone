@@ -14,7 +14,7 @@ internal static class StatusBar
     private const float EarGap = 10f;
     private const float MoonGap = 6f;
     private const float MoonHeight = 11f;
-    private static readonly Vector4 DndTone = new(0.58f, 0.55f, 0.96f, 1f);
+    internal static readonly Vector4 DndTone = new(0.58f, 0.55f, 0.96f, 1f);
     private const float IslandSidePadding = 14f;
     private const float MinIslandHalfWidth = 30f;
     private const float MaxIslandHalfWidth = 49f;
@@ -24,7 +24,7 @@ internal static class StatusBar
     private static int cachedTimeKey = -1;
     private static int cachedFormatVersion = -1;
 
-    private static string CurrentTime()
+    internal static string CurrentTime()
     {
         var now = DateTime.Now;
         var key = now.Hour * 60 + now.Minute;

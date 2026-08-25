@@ -125,7 +125,7 @@ Other things `PhoneWindow` handles:
 
 - The window size comes from `PhoneSizeCatalog.SizeFor(width)`, where `width` is `Configuration.PhoneWidth` run through `PhoneBounds.ClampWidth`. Width is continuous (240 to 900, clamped further to fit the game window), height is always `width * PhoneSizeCatalog.AspectRatio`, and the size is re-applied every frame with `SizeCondition = ImGuiCond.Always`. The clamp is applied for display only and never written back to config, so shrinking the game window does not destroy a saved size.
 - `PreDraw` publishes the zoom for the frame: `UiScale.SetPhone(zoom)` for layout and `Plugin.Fonts.SetPhoneZoom(zoom)` for text, where `zoom = width / 360`. It also pushes `FramePadding`, `ItemSpacing`, `ItemInnerSpacing`, `ScrollbarSize` and `GrabMinSize` scaled by the zoom so native ImGui widgets track the phone.
-- Minimized mode swaps the size to `MinimizeTransition.MinimizedSize`, a fixed 78 by 152 puck that deliberately ignores the phone zoom, and lerps the position between the saved maximized and minimized spots while the morph runs.
+- Minimized mode sizes the window to the capsule that `MinimizedCapsule` measures each frame (the clock plus whatever segments are present: DND moon, music or call activity, unread badge, hover expansion, notification card), measured at `UiScale.Global` so the capsule ignores the phone zoom (the window also forces the phone zoom to 1 while resting minimized). The window pins itself to a saved dock anchor that grows away from the nearest screen edge, and lerps the position between the saved maximized spot and that anchor while the morph runs. The capsule handles its own drag (`NoMove` is set), so the anchor moves by the drag delta the capsule reports.
 - Landscape (requested through `AppLandscape` by the camera app, the AetherStream theater mode and landscape games such as Doom) animates a blend between the portrait size and a larger transposed size in `OrientedSize()`; the content is transposed, never rotated. The landscape width is `Configuration.LandscapePhoneWidth` when the corner grip has set one in landscape, otherwise the clamped portrait width times `PhoneSizeCatalog.LandscapeGrowth` (1.5), run through `PhoneBounds.ClampLandscapeWidth`, whose ceiling fits the long side to the viewport width and the short side to its height. The zoom follows the same blend, so text and layout grow with the window during the rotate animation.
 - Separate maximized and minimized positions persist in `Configuration.MaximizedPosition` / `MinimizedPosition` via `PersistPositions()`.
 - `Draw()` pushes the base font, reserves the full content region with `ImGui.Dummy`, wraps the region in a `Rect`, and hands it to `shell.Draw(device)`. Apart from the four other windows below, nothing else in the codebase talks to the `Window` API.
@@ -138,7 +138,7 @@ Other things `PhoneWindow` handles:
 
 ## The shell layer (Core/Shell)
 
-`PhoneShell.Draw(Rect device)` is the per-frame orchestrator. In order it: advances the minimize morph (and short-circuits into `MinimizeMorphView` when the phone is a puck), applies the notification shake offset, steps day/night wallpaper blending, computes the chassis, draws the phone body, advances `LoadingScreen`/`NavigationStack`/banner/calls, handles the three physical side buttons (minimize/close, do-not-disturb, position lock), asks `ShellOverlayCoordinator.Assess` who owns the pointer, draws the screen content, then the chrome, then the overlays.
+`PhoneShell.Draw(Rect device)` is the per-frame orchestrator. In order it: advances the minimize morph (and short-circuits into `MinimizeMorphView` when the phone is a capsule), applies the notification shake offset, steps day/night wallpaper blending, computes the chassis, draws the phone body, advances `LoadingScreen`/`NavigationStack`/banner/calls, handles the three physical side buttons (minimize/close, do-not-disturb, position lock), asks `ShellOverlayCoordinator.Assess` who owns the pointer, draws the screen content, then the chrome, then the overlays.
 
 The shell's cast, all in `src/Aetherphone/Core/Shell/`:
 
@@ -153,7 +153,7 @@ The shell's cast, all in `src/Aetherphone/Core/Shell/`:
 | `ShellScreenPainter` | Paints home or one app into the screen rect |
 | `ShellTransitionRenderer` | Composites the app open/close motion |
 | `ShellOverlayCoordinator` | Decides overlay visibility, z-order, and pointer capture |
-| `MinimizeTransition` / `MinimizeMorphView` | Phone-to-puck collapse state and rendering |
+| `MinimizeTransition` / `MinimizeMorphView` | Phone-to-capsule collapse state and rendering |
 | `RateLimitPill` | Small pill shown when the backend rate limiter pushes back |
 | `ShortcutRunPill` | Progress and stop button for the running shortcut, plus its outcome |
 | `CoinEarnPill` | Pill under the island announcing coins just earned |
@@ -161,7 +161,7 @@ The shell's cast, all in `src/Aetherphone/Core/Shell/`:
 
 ### Loading screen
 
-When the window opens full size, `PhoneShell.OnOpened` calls `loading.BeginSession()` (reopening into the minimized puck skips the boot). `LoadingScreen` wraps `BootSequence` (src/Aetherphone/Core/Animation/BootSequence.cs), which plays the power-on animation and, at the emblem hold, waits until `Plugin.Fonts.Ready` reports every font handle built (capped at `BootTiming.FontWaitCapSeconds`, 60 seconds). The result: the UI never renders app content with placeholder glyphs on first open. `FontService.OnLanguageChanged` calls `loading.Show()` to replay the short variant while the atlas rebuilds for a new language.
+When the window opens full size, `PhoneShell.OnOpened` calls `loading.BeginSession()` (reopening into the minimized capsule skips the boot). `LoadingScreen` wraps `BootSequence` (src/Aetherphone/Core/Animation/BootSequence.cs), which plays the power-on animation and, at the emblem hold, waits until `Plugin.Fonts.Ready` reports every font handle built (capped at `BootTiming.FontWaitCapSeconds`, 60 seconds). The result: the UI never renders app content with placeholder glyphs on first open. `FontService.OnLanguageChanged` calls `loading.Show()` to replay the short variant while the atlas rebuilds for a new language.
 
 ### Overlays and z-order
 
@@ -177,7 +177,7 @@ The banner and the three pills all sit in the same strip under the island, so th
 
 ### Transitions
 
-`NavigationStack` owns app open/close motion: `BeginPresent`/`BeginDismiss` drive a spring toward a cover value, `IsTransitioning` flips true, and `PhoneShell.DrawContent` delegates to `ShellTransitionRenderer`, which paints the outgoing and incoming layers (home zoom for home-to-app, vertical slide-over for app-to-app) via `ShellScreenPainter`. When the spring settles, `FinalizeMotion` fires `OnClosed` on the app that left. The phone-to-puck minimize is a separate state machine (`MinimizeTransition`, phases `None`, `Collapsing`, `Minimized`, `Expanding`) rendered by `MinimizeMorphView`.
+`NavigationStack` owns app open/close motion: `BeginPresent`/`BeginDismiss` drive a spring toward a cover value, `IsTransitioning` flips true, and `PhoneShell.DrawContent` delegates to `ShellTransitionRenderer`, which paints the outgoing and incoming layers (home zoom for home-to-app, vertical slide-over for app-to-app) via `ShellScreenPainter`. When the spring settles, `FinalizeMotion` fires `OnClosed` on the app that left. The phone-to-capsule minimize is a separate state machine (`MinimizeTransition`, phases `None`, `Collapsing`, `Minimized`, `Expanding`) rendered by `MinimizeMorphView`.
 
 ## How an app gets drawn each frame
 

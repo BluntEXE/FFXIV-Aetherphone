@@ -1,5 +1,4 @@
 using Aetherphone.Core.Animation;
-using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Shell.Home;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
@@ -9,19 +8,20 @@ namespace Aetherphone.Core.Shell;
 
 internal sealed class MinimizeMorphView
 {
+    private const float FaceFadeStart = 0.55f;
+    private const float FaceFadeEnd = 0.95f;
+
     private readonly ThemeProvider themes;
     private readonly MinimizeTransition minimize;
-    private readonly MinimizedPhone minimizedView;
-    private readonly NotificationService notifications;
+    private readonly MinimizedCapsule capsule;
     private readonly ShellScreenPainter painter;
 
-    public MinimizeMorphView(ThemeProvider themes, MinimizeTransition minimize, MinimizedPhone minimizedView,
-        NotificationService notifications, ShellScreenPainter painter)
+    public MinimizeMorphView(ThemeProvider themes, MinimizeTransition minimize, MinimizedCapsule capsule,
+        ShellScreenPainter painter)
     {
         this.themes = themes;
         this.minimize = minimize;
-        this.minimizedView = minimizedView;
-        this.notifications = notifications;
+        this.capsule = capsule;
         this.painter = painter;
     }
 
@@ -29,35 +29,32 @@ internal sealed class MinimizeMorphView
     {
         if (minimize.MorphActive)
         {
-            DrawMorph(device);
+            DrawMorph(device, delta);
             return false;
         }
 
-        return DrawFace(device, delta);
+        return DrawResting(device, delta);
     }
 
-    private void DrawMorph(Rect device)
+    private void DrawMorph(Rect device, float delta)
     {
-        minimizedView.IsShowing = false;
         var scale = UiScale.Current;
         var theme = themes.Chrome;
-        var puckScale = UiScale.Global;
+        var capsuleScale = UiScale.Global;
         var startBody = DeviceChrome.BodyRect(device, theme);
-        var endBody = MinimizedRect(device, puckScale).Inset(puckScale);
+        var endBody = MinimizedRect(device, capsuleScale);
         var eased = minimize.EasedProgress;
         var body = new Rect(Vector2.Lerp(startBody.Min, endBody.Min, eased),
             Vector2.Lerp(startBody.Max, endBody.Max, eased));
-        var geometry = ChassisGeometry.Morph(body, theme, scale, eased);
+        var geometry = ChassisGeometry.Morph(body, theme, scale, capsuleScale, eased);
 
         var shell = ImGui.GetWindowDrawList();
         Elevation.Squircle(shell, geometry.Body.Min, geometry.Body.Max, geometry.BodyRadius, scale, eased);
         DeviceChrome.DrawShell(shell, geometry, scale, theme, 1f);
         RevealMorphContent(DeviceChrome.Chassis(device, theme), theme, geometry, eased);
 
-        var raw = Math.Clamp((eased - 0.5f) / 0.4f, 0f, 1f);
-        var glyphAlpha = raw * raw * (3f - 2f * raw);
-        MinimizedPhone.DrawFace(ImGui.GetForegroundDrawList(), geometry, theme, puckScale, glyphAlpha,
-            notifications.UnreadCount);
+        var faceAlpha = Easing.SmoothStep(Easing.Segment(eased, FaceFadeStart, FaceFadeEnd));
+        capsule.DrawFace(ImGui.GetForegroundDrawList(), geometry, theme, delta, false, faceAlpha);
     }
 
     private void RevealMorphContent(in ChassisGeometry device, PhoneTheme theme, in ChassisGeometry geometry,
@@ -94,11 +91,9 @@ internal sealed class MinimizeMorphView
         return new HomeMotion(zoom, pivot, 0f, false);
     }
 
-    private bool DrawFace(Rect device, float delta)
+    private bool DrawResting(Rect device, float delta)
     {
-        minimizedView.IsShowing = true;
-        var mini = MinimizedRect(device, UiScale.Global);
-        switch (minimizedView.Draw(mini, themes.Chrome, delta))
+        switch (capsule.Draw(device, themes.Chrome, delta))
         {
             case MinimizedAction.Expand:
                 minimize.BeginExpand();
@@ -110,6 +105,5 @@ internal sealed class MinimizeMorphView
         return false;
     }
 
-    private static Rect MinimizedRect(Rect device, float scale) =>
-        new(device.Min, device.Min + MinimizeTransition.MinimizedSize * scale);
+    private Rect MinimizedRect(Rect device, float scale) => new(device.Min, device.Min + capsule.Measure(scale));
 }

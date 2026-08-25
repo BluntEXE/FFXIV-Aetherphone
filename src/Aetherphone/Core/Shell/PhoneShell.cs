@@ -43,7 +43,7 @@ internal sealed class PhoneShell : IDisposable
     private readonly ShortcutRunPill shortcutPill;
     private readonly CoinEarnPill coinPill;
     private readonly CoinEarnFloats coinFloats;
-    private readonly MinimizedPhone minimizedView;
+    private readonly MinimizedCapsule capsule;
     private readonly MinimizeTransition minimize = new();
     private readonly SideButton sideButton = new();
     private readonly ResizeGrip resizeGrip = new();
@@ -99,7 +99,7 @@ internal sealed class PhoneShell : IDisposable
         coinFloats = new CoinEarnFloats(services.Coins);
         var controlCenter = new ControlCenter(configuration, themes, services.Playback, calls, navigation,
             notifications, router, services.Coins, services.AethernetSession);
-        minimizedView = new MinimizedPhone(notifications, configuration);
+        capsule = new MinimizedCapsule(services.Playback, calls, notifications, router, navigation, configuration);
         home = new HomeScreen(apps, bundle.Widgets, services.Shortcuts, services.ShortcutRunner, configuration,
             services.Confirm);
         services.Installer.Bind(home.Layout);
@@ -118,7 +118,7 @@ internal sealed class PhoneShell : IDisposable
             configuration, services.Confirm, themes);
         painter = new ShellScreenPainter(themes, navigation, home);
         transition = new ShellTransitionRenderer(themes, navigation, home, painter);
-        morph = new MinimizeMorphView(themes, minimize, minimizedView, notifications, painter);
+        morph = new MinimizeMorphView(themes, minimize, capsule, painter);
         overlays = new ShellOverlayCoordinator(configuration, loading, navigation, controlCenter, banner, island,
             rateLimitPill, shortcutPill, coinPill, coinFloats, incomingOverlay, banOverlay, confirmOverlay,
             reportOverlay, shareSheet, conductOverlay, director, setup);
@@ -183,6 +183,12 @@ internal sealed class PhoneShell : IDisposable
     public MinimizePhase MinimizePhase => minimize.Phase;
 
     public float MinimizeEased => minimize.EasedProgress;
+
+    public Vector2 MinimizedSize => capsule.Measure(UiScale.Global);
+
+    public Vector2 MinimizedIdleSize => capsule.IdleSize(UiScale.Global);
+
+    public CapsuleDrag ConsumeMinimizedDrag() => capsule.ConsumeDrag();
 
     public void ForceMaximize() => minimize.SnapFull();
 
@@ -259,7 +265,6 @@ internal sealed class PhoneShell : IDisposable
             return;
         }
 
-        minimizedView.IsShowing = false;
         lastVisibleDrawUtc = DateTime.UtcNow;
         device = device.Translate(new Vector2(shake.Advance(delta), 0f));
         wallpapers.StepDayNight(delta);
@@ -467,7 +472,7 @@ internal sealed class PhoneShell : IDisposable
         shortcutPill.Dispose();
         coinPill.Dispose();
         coinFloats.Dispose();
-        minimizedView.Dispose();
+        capsule.Dispose();
         setup.Dispose();
         for (var index = 0; index < apps.Count; index++)
         {

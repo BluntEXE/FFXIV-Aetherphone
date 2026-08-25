@@ -1,6 +1,5 @@
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
-using Aetherphone.Core.Localization;
 using Aetherphone.Core.Playback;
 using Aetherphone.Core.Telephony;
 using Aetherphone.Core.Theme;
@@ -222,7 +221,7 @@ internal sealed class DynamicIsland
         drawList.AddCircleFilled(dotCenter, (3.4f + 1.2f * pulse) * scale,
             ImGui.GetColorU32(Palette.WithAlpha(CallAccent, alpha)), 16);
         var maxWidth = MathF.Max(1f, bounds.Max.X - 11f * scale - (dotCenter.X + 8f * scale));
-        var label = Typography.FitText(CallLabel(view), maxWidth, 0.82f, FontWeight.Regular);
+        var label = Typography.FitText(CallStatusText.Label(view), maxWidth, 0.82f, FontWeight.Regular);
         var size = Typography.Measure(label, 0.82f);
         Typography.Draw(drawList, new Vector2(bounds.Max.X - size.X - 11f * scale, bounds.Center.Y - size.Y * 0.5f),
             label, Palette.WithAlpha(Ink, alpha), 0.82f);
@@ -308,7 +307,7 @@ internal sealed class DynamicIsland
         Typography.DrawCentered(new Vector2(centerX, top + 20f * scale),
             Typography.FitText(view.PeerLabel, bounds.Width - 32f * scale, 1.05f, FontWeight.Regular),
             Palette.WithAlpha(theme.TextStrong, alpha), 1.05f);
-        Typography.DrawCentered(new Vector2(centerX, top + 42f * scale), CallLabel(view),
+        Typography.DrawCentered(new Vector2(centerX, top + 42f * scale), CallStatusText.Label(view),
             Palette.WithAlpha(CallAccent, 0.9f * alpha), 0.82f);
         var active = alpha > ControlThreshold;
         var buttonY = top + 74f * scale;
@@ -369,22 +368,6 @@ internal sealed class DynamicIsland
         var centerX = screen.Center.X;
         var top = rest.Min.Y - 2f * scale;
         return new Rect(new Vector2(centerX - halfWidth, top), new Vector2(centerX + halfWidth, top + height));
-    }
-
-    private static string CallLabel(CallView view)
-    {
-        if (!view.Connected)
-        {
-            return Loc.T(L.Phone.Reconnecting);
-        }
-
-        return view.State switch
-        {
-            CallState.Dialing => Loc.T(L.Phone.StatusCalling),
-            CallState.Connecting => Loc.T(L.Phone.StatusConnecting),
-            CallState.Active => TimeText.Duration(view.Seconds),
-            _ => string.Empty,
-        };
     }
 
     private static Rect Expand(Rect rect, float padX, float padY) =>
