@@ -221,6 +221,19 @@ The Calendar app shows in-game event dates served through the Aetherphone
 backend, which caches a community-maintained public events database. The data
 is fetched server-side; no third-party credentials ship with the plugin.
 
+## Heliosphere (mod catalog and installs)
+
+The Mods app browses the Heliosphere mod platform (https://heliosphere.app/)
+through its public GraphQL endpoint and shows its preview images. Mods are
+downloaded and installed by the Heliosphere Dalamud plugin, not by
+Aetherphone: the Mods app only asks that plugin, on the same machine, to
+install a given package. Heliosphere is created and run by Anna and is not
+affiliated with Aetherphone. No Heliosphere code or assets ship with this
+plugin; the Heliosphere plugin (EUPL-1.2, https://github.com/heliosphere-xiv)
+was consulted only for the shape of its local install request. Mods listed
+there belong to their respective creators under the permissions each mod
+states.
+
 ## managed-doom (Doom engine)
 
 The Doom mini-game runs on [managed-doom](https://github.com/sinshu/managed-doom), a C# port of the
