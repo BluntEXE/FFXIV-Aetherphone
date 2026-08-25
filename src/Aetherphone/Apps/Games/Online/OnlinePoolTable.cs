@@ -837,16 +837,16 @@ internal sealed class OnlinePoolTable
         CueSegment(drawList, tip, direction, normal, length, 0.865f, 1f, 6.4f * scale, 7.2f * scale,
             ImGui.GetColorU32(CueButt), Vector2.Zero);
 
-        var highlightFrom = tip + direction * (length * 0.05f) - normal * (1.1f * scale);
-        var highlightTo = tip + direction * (length * 0.6f) - normal * (1.6f * scale);
+        var highlightFrom = tip - direction * (length * 0.05f) - normal * (1.1f * scale);
+        var highlightTo = tip - direction * (length * 0.6f) - normal * (1.6f * scale);
         drawList.AddLine(highlightFrom, highlightTo, ImGui.GetColorU32(White with { W = 0.28f }), 1f * scale);
     }
 
     private static void CueSegment(ImDrawListPtr drawList, Vector2 tip, Vector2 direction, Vector2 normal,
         float length, float fromFraction, float toFraction, float fromWidth, float toWidth, uint color, Vector2 offset)
     {
-        var from = tip + direction * (length * fromFraction) + offset;
-        var to = tip + direction * (length * toFraction) + offset;
+        var from = tip - direction * (length * fromFraction) + offset;
+        var to = tip - direction * (length * toFraction) + offset;
         drawList.AddQuadFilled(from + normal * (fromWidth * 0.5f), to + normal * (toWidth * 0.5f),
             to - normal * (toWidth * 0.5f), from - normal * (fromWidth * 0.5f), color);
     }
