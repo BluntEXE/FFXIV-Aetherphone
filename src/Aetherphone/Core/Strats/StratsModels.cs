@@ -554,9 +554,6 @@ internal sealed class ManifestCredits
     [JsonPropertyName("siteUrl")]
     public string SiteUrl { get; set; } = string.Empty;
 
-    [JsonPropertyName("author")]
-    public string Author { get; set; } = string.Empty;
-
     [JsonPropertyName("license")]
     public string License { get; set; } = string.Empty;
 

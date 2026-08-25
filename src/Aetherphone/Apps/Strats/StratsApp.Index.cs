@@ -12,7 +12,7 @@ namespace Aetherphone.Apps.Strats;
 
 internal sealed partial class StratsApp
 {
-    private const float CreditsRowHeight = 44f;
+    private const float CreditsRowHeight = 32f;
 
     private void DrawIndex(Rect area)
     {
@@ -94,10 +94,8 @@ internal sealed partial class StratsApp
         var row = new Rect(origin, new Vector2(origin.X + width, origin.Y + CreditsRowHeight * scale));
         var hovered = UiInteract.Hover(row.Min, row.Max);
         var ink = hovered ? AppPalettes.Strats.BodyInk : AppPalettes.Strats.MutedInk;
-        Typography.DrawCentered(new Vector2(row.Center.X, row.Center.Y - 7f * scale),
-            Loc.T(L.Strats.PoweredBy, manifest.Credits.SiteName), ink, TextStyles.FootnoteEmphasized);
-        Typography.DrawCentered(new Vector2(row.Center.X, row.Center.Y + 9f * scale),
-            Loc.T(L.Strats.MadeBy, manifest.Credits.Author), AppPalettes.Strats.MutedInk, TextStyles.Caption1);
+        Typography.DrawCentered(row.Center, Loc.T(L.Strats.PoweredBy, manifest.Credits.SiteName), ink,
+            TextStyles.FootnoteEmphasized);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

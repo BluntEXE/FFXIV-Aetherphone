@@ -859,7 +859,6 @@ internal static class L
         public static readonly LocString LoadFailedHint = new("strats.loadFailedHint", "Check your connection and try again.");
         public static readonly LocString Retry = new("strats.retry", "Retry");
         public static readonly LocString PoweredBy = new("strats.poweredBy", "Powered by {0}");
-        public static readonly LocString MadeBy = new("strats.madeBy", "Made by {0}");
         public static readonly LocString GuideLoading = new("strats.guideLoading", "Loading the guide");
         public static readonly LocString GuideFailed = new("strats.guideFailed", "This guide did not load");
         public static readonly LocString GuideFailedHint = new("strats.guideFailedHint", "Check your connection and try again.");
@@ -1618,6 +1617,28 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release1011 =
+        {
+            new("changelog.r1011.0",
+                "Added Strats, an app with raid cheatsheets: pick a fight and your role, and every mechanic comes with a diagram that marks your spot"),
+            new("changelog.r1011.1",
+                "Games has a new home: shelves by genre, Latest additions and Jump back in rails, a Play with friends card, and a search across every title"),
+            new("changelog.r1011.2",
+                "Added Uno to Games: an online room for up to six friends, joined with a six-character code"),
+            new("changelog.r1011.3",
+                "Added online Chess to Games: host or join a room by code, with Fischer clocks for both players"),
+            new("changelog.r1011.4",
+                "Added 8-Ball Pool to Games: the phone turns sideways for the table, and you shoot by dragging away from the cue ball"),
+            new("changelog.r1011.5",
+                "Linkpearl has been rebuilt around one chat list: search, filters, pinning and muting, and a new-chat sheet with Free Company, Linkshell, Party and Local presets"),
+            new("changelog.r1011.6",
+                "Linkpearl conversations can pop out into floating windows that keep chatting while the phone is closed or minimized, and new tells open one on their own when the phone is out of sight"),
+            new("changelog.r1011.7",
+                "The minimized phone is now a live capsule: it shows the clock, unread apps, the playing song and any active call, and swells into a card when a notification arrives"),
+            new("changelog.r1011.8",
+                "Chip rows that overflow the screen now show paging arrows on either end"),
+        };
+
         public static readonly LocString[] Release1010 =
         {
             new("changelog.r1010.0",
