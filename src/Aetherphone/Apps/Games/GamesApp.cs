@@ -305,7 +305,8 @@ internal sealed class GamesApp : IPhoneApp
 
         if (route == GameRoute.OnlineRoom)
         {
-            onlineRoom.Draw(context, LeaveOnlineRoom);
+            SyncOnlineRoomLandscape();
+            onlineRoom.Draw(context, LeaveOnlineRoom, AppLandscape.Held(Id) && context.Content.IsLandscape());
             return;
         }
 
@@ -320,8 +321,20 @@ internal sealed class GamesApp : IPhoneApp
 
     private void LeaveOnlineRoom()
     {
+        AppLandscape.Release(Id);
         gameRooms.Exit();
         router.Pop();
+    }
+
+    private void SyncOnlineRoomLandscape()
+    {
+        if (onlineRoom.WantsLandscape)
+        {
+            AppLandscape.Request(Id);
+            return;
+        }
+
+        AppLandscape.Release(Id);
     }
 
     private void DrawActiveGame(in PhoneContext context)
@@ -369,13 +382,7 @@ internal sealed class GamesApp : IPhoneApp
     {
         var radius = LandscapeBackRadius * scale;
         var center = body.Min + new Vector2(radius + LandscapeBackInset * scale, radius + LandscapeBackInset * scale);
-        var drawList = ImGui.GetWindowDrawList();
-        var hovered = UiInteract.Hover(center - new Vector2(radius, radius), center + new Vector2(radius, radius));
-        Material.Frosted(drawList, center - new Vector2(radius, radius), center + new Vector2(radius, radius), radius, scale,
-            hovered ? 1f : 0.85f);
-        ProgressRing.CenterIcon(drawList, center, FontAwesomeIcon.ChevronLeft, hovered ? theme.TextStrong : theme.Accent,
-            radius * 0.9f);
-        if (UiInteract.HoverClickCircle(center, radius))
+        if (GameHud.LandscapeBack(center, radius, theme))
         {
             back();
         }

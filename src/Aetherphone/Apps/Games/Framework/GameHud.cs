@@ -83,6 +83,18 @@ internal static class GameHud
         return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
     }
 
+    public static bool LandscapeBack(Vector2 center, float radius, PhoneTheme theme)
+    {
+        var scale = UiScale.Current;
+        var drawList = ImGui.GetWindowDrawList();
+        var corner = new Vector2(radius, radius);
+        var hovered = UiInteract.Hover(center - corner, center + corner);
+        Material.Frosted(drawList, center - corner, center + corner, radius, scale, hovered ? 1f : 0.85f);
+        ProgressRing.CenterIcon(drawList, center, FontAwesomeIcon.ChevronLeft,
+            hovered ? theme.TextStrong : theme.Accent, radius * 0.9f);
+        return UiInteract.HoverClickCircle(center, radius);
+    }
+
     public static bool Button(Vector2 center, Vector2 size, string label, Vector4 accent, PhoneTheme theme)
     {
         var scale = UiScale.Current;

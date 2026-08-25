@@ -46,14 +46,26 @@ internal sealed class OnlineRoomView
         poolTable.Reset();
     }
 
-    public void Draw(in PhoneContext context, Action back)
+    public bool WantsLandscape => LivePool(store.Room.State) && store.Room.RoomId.Length > 0;
+
+    public void Draw(in PhoneContext context, Action back, bool landscape)
     {
         var held = store.Room.State;
-        AppHeader.Draw(context, Loc.T(GamesOnlineText.GameName(held?.Snapshot.GameKind)), back);
         var scale = UiScale.Current;
         var content = context.Content;
-        var body = new Rect(new Vector2(content.Min.X, content.Min.Y + HeaderHeight * scale), content.Max);
         var theme = context.Theme;
+        var fullScreenTable = landscape && WantsLandscape;
+        Rect body;
+        if (fullScreenTable)
+        {
+            body = content;
+        }
+        else
+        {
+            AppHeader.Draw(context, Loc.T(GamesOnlineText.GameName(held?.Snapshot.GameKind)), back);
+            body = new Rect(new Vector2(content.Min.X, content.Min.Y + HeaderHeight * scale), content.Max);
+        }
+
         Consume(back);
 
         var session = store.Room;
@@ -85,13 +97,17 @@ internal sealed class OnlineRoomView
 
             if (held.Pool is not null)
             {
-                poolTable.Draw(body, theme, scale, held.Snapshot, held.Pool, FreshNotice());
+                poolTable.Draw(body, theme, scale, held.Snapshot, held.Pool, FreshNotice(),
+                    fullScreenTable ? back : null);
                 return;
             }
         }
 
         DrawLobby(body, theme, scale, held);
     }
+
+    private static bool LivePool(GameRoomState? held) =>
+        held is { Pool: not null, Roster: not null } && held.Snapshot.Phase == GameRoomWire.PhasePlaying;
 
     private string FreshNotice()
     {
