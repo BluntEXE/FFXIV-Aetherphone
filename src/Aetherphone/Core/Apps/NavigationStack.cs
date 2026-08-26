@@ -25,7 +25,9 @@ internal sealed class NavigationStack : INavigator
     private IPhoneApp? motionUnder;
     private ShellMotion motion = ShellMotion.None;
     private Rect? pendingOrigin;
+    private LaunchOrigin pendingOriginKind;
     private Rect? motionOrigin;
+    private LaunchOrigin motionOriginKind;
 
     public NavigationStack(IReadOnlyList<IPhoneApp> apps, AppInstaller installer, SuspensionGate suspensions)
     {
@@ -44,6 +46,7 @@ internal sealed class NavigationStack : INavigator
     public IPhoneApp MotionOver => motionOver!;
     public IPhoneApp? MotionUnder => motionUnder;
     public Rect? MotionOrigin => motionOrigin;
+    public LaunchOrigin MotionOriginKind => motionOriginKind;
 
     public void Advance(float deltaSeconds)
     {
@@ -52,7 +55,7 @@ internal sealed class NavigationStack : INavigator
             return;
         }
 
-        cover.Step(coverTarget, coverSmoothTime, deltaSeconds);
+        cover.Step(coverTarget, coverSmoothTime, MathF.Min(deltaSeconds, TransitionTiming.MotionFrameSeconds));
         if (MathF.Abs(cover.Value - coverTarget) <= TransitionTiming.MotionSettleEpsilon)
         {
             cover.SnapTo(coverTarget);
@@ -60,11 +63,13 @@ internal sealed class NavigationStack : INavigator
         }
     }
 
-    public void OpenAppFrom(IPhoneApp app, Rect origin)
+    public void OpenAppFrom(IPhoneApp app, Rect origin, LaunchOrigin kind)
     {
         pendingOrigin = origin;
+        pendingOriginKind = kind;
         OpenApp(app);
         pendingOrigin = null;
+        pendingOriginKind = LaunchOrigin.Icon;
     }
 
     public void OpenApp(IPhoneApp app)
@@ -186,9 +191,10 @@ internal sealed class NavigationStack : INavigator
         motionOver = over;
         motionUnder = under;
         motionOrigin = under is null ? pendingOrigin : null;
-        cover.SnapTo(0f);
+        motionOriginKind = under is null ? pendingOriginKind : LaunchOrigin.Icon;
         coverTarget = 1f;
         coverSmoothTime = under is null ? TransitionTiming.ZoomPresentSmoothTime : TransitionTiming.PresentSmoothTime;
+        cover.Launch(0f, TransitionTiming.LaunchVelocity(coverSmoothTime));
     }
 
     private void BeginDismiss(IPhoneApp over, IPhoneApp? under)
@@ -197,9 +203,10 @@ internal sealed class NavigationStack : INavigator
         motionOver = over;
         motionUnder = under;
         motionOrigin = null;
-        cover.SnapTo(1f);
+        motionOriginKind = LaunchOrigin.Icon;
         coverTarget = 0f;
         coverSmoothTime = under is null ? TransitionTiming.ZoomDismissSmoothTime : TransitionTiming.DismissSmoothTime;
+        cover.Launch(1f, -TransitionTiming.LaunchVelocity(coverSmoothTime));
     }
 
     private void ReverseToPresent()
@@ -256,5 +263,6 @@ internal sealed class NavigationStack : INavigator
         motionOver = null;
         motionUnder = null;
         motionOrigin = null;
+        motionOriginKind = LaunchOrigin.Icon;
     }
 }

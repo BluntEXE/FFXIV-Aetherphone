@@ -90,8 +90,9 @@ internal sealed class HomeScreen
         }
     }
 
-    public Rect? RevealRect(string appId, Rect content)
+    public Rect? RevealRect(string appId, Rect content, out LaunchOrigin kind)
     {
+        kind = LaunchOrigin.Icon;
         var metrics = HomeMetrics.Compute(content, HomeLayoutService.Columns, layout.Rows, UiScale.Current,
             HomeMotion.Rest);
         var dock = layout.Dock;
@@ -109,10 +110,14 @@ internal sealed class HomeScreen
             var cells = layout.Placements(page);
             for (var index = 0; index < tiles.Count && index < cells.Count; index++)
             {
-                if (TileTargets(tiles[index], appId))
+                var tile = tiles[index];
+                if (!TileTargets(tile, appId))
                 {
-                    return metrics.TileRect(page, pager.Value, cells[index], tiles[index]);
+                    continue;
                 }
+
+                kind = tile.App is not null ? LaunchOrigin.Icon : LaunchOrigin.Surface;
+                return metrics.TileRect(page, pager.Value, cells[index], tile);
             }
         }
 

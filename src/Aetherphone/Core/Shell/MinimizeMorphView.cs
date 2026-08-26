@@ -11,6 +11,7 @@ internal sealed class MinimizeMorphView
     private const float FaceFadeStart = 0.55f;
     private const float FaceFadeEnd = 0.95f;
     private const float RailFadeEnd = 0.55f;
+    private const string VeilLayerId = "morphveil";
 
     private readonly ThemeProvider themes;
     private readonly MinimizeTransition minimize;
@@ -84,37 +85,22 @@ internal sealed class MinimizeMorphView
         float eased, bool landscape)
     {
         var screen = geometry.Screen;
-        if (screen.Height <= 0.5f)
+        if (screen.Height <= 0.5f || screen.Width <= 0.5f)
         {
             return;
         }
 
         var fullScreen = device.Screen;
-        var fullRadius = device.ScreenRadius;
-        var rounding = geometry.ScreenRadius;
-        var veil = ImGui.GetColorU32(Palette.WithAlpha(theme.ScreenBase, eased));
-        var shrink = ShrinkMotion(fullScreen, screen);
-        SceneCompositor.DrawClipped(screen, fullScreen, 0f, target =>
+        var transform = LayerTransform.Cover(fullScreen, screen, screen);
+        painter.PaintCurrentTransformed(fullScreen, device.ScreenRadius, theme, HomeMotion.Still, landscape,
+            in transform);
+        using (ScreenLayer.BeginPassive(VeilLayerId, screen))
         {
-            painter.PaintCurrent(target, fullRadius, theme, shrink);
-            StatusBar.Draw(target, theme, landscape);
-            HomeIndicator.Draw(ImGui.GetWindowDrawList(), HomeIndicator.Bounds(target, UiScale.Current), theme,
-                false);
-            Squircle.Fill(ImGui.GetWindowDrawList(), screen.Min, screen.Max, rounding, veil);
-        });
-        DeviceChrome.MaskScreenCorners(ImGui.GetWindowDrawList(), geometry, theme, UiScale.Current);
-    }
-
-    private static HomeMotion ShrinkMotion(Rect fullScreen, Rect target)
-    {
-        var zoom = fullScreen.Width > 0f ? target.Width / fullScreen.Width : 1f;
-        if (zoom >= 0.999f)
-        {
-            return new HomeMotion(1f, default, 0f, false);
+            var drawList = ImGui.GetWindowDrawList();
+            Squircle.Fill(drawList, screen.Min, screen.Max, geometry.ScreenRadius,
+                ImGui.GetColorU32(Palette.WithAlpha(theme.ScreenBase, eased)));
+            DeviceChrome.MaskScreenCorners(drawList, geometry, theme, UiScale.Current);
         }
-
-        var pivot = (target.Min - fullScreen.Min * zoom) / (1f - zoom);
-        return new HomeMotion(zoom, pivot, 0f, false);
     }
 
     private bool DrawResting(Rect device, float delta)

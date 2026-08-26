@@ -260,7 +260,7 @@ internal sealed class HomeInteractionController
             }
             else if (widgets.AppFor(pressTile.Widget!) is { } app)
             {
-                navigation.OpenAppFrom(app, rect);
+                navigation.OpenAppFrom(app, rect, LaunchOrigin.Surface);
             }
 
             return;
@@ -284,8 +284,15 @@ internal sealed class HomeInteractionController
 
         if (!editing)
         {
-            navigation.OpenAppFrom(pressTile.App!, rect);
+            navigation.OpenAppFrom(pressTile.App!, DrawnRect(rect, pressTile, metrics), LaunchOrigin.Icon);
         }
+    }
+
+    private Rect DrawnRect(Rect rect, HomeTile tile, in HomeMetrics metrics)
+    {
+        var factor = TapScale(tile) * Magnify(rect.Center, metrics.CellWidth);
+        var half = rect.Size * 0.5f * factor;
+        return new Rect(rect.Center - half, rect.Center + half);
     }
 
     private HomeTile? TileAt(in HomeMetrics metrics, Vector2 mouse, out bool fromDock)

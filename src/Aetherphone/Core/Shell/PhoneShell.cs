@@ -348,8 +348,7 @@ internal sealed class PhoneShell : IDisposable
         using (InputShield.Engage(state.ShieldBase || director.CapturesPointer))
         {
             DrawContent(chassis, theme);
-            DeviceChrome.MaskScreenCorners(ImGui.GetWindowDrawList(), chassis, theme, UiScale.Current);
-            DrawChrome(screen, theme);
+            DrawChrome(chassis, theme);
         }
 
         overlays.DrawOverlays(chassis, theme, delta, state);
@@ -397,11 +396,13 @@ internal sealed class PhoneShell : IDisposable
         painter.PaintCurrent(chassis.Screen, chassis.ScreenRadius, theme, HomeMotion.Rest);
     }
 
-    private void DrawChrome(Rect screen, PhoneTheme theme)
+    private void DrawChrome(in ChassisGeometry chassis, PhoneTheme theme)
     {
+        var screen = chassis.Screen;
         ImGui.SetCursorScreenPos(screen.Min);
         using (ImRaii.Child("chrome", screen.Size, false, ChromeFlags))
         {
+            DeviceChrome.MaskScreenCorners(ImGui.GetWindowDrawList(), chassis, theme, UiScale.Current);
             StatusBar.Draw(screen, theme, LandscapeActive);
             DrawHomeIndicator(screen, theme);
         }

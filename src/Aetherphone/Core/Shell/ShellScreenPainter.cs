@@ -1,15 +1,17 @@
+using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Shell.Home;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Core.Shell;
 
 internal sealed class ShellScreenPainter
 {
+    public const string HomeLayerId = "home";
+
     private readonly ThemeProvider themes;
     private readonly NavigationStack navigation;
     private readonly HomeScreen home;
@@ -23,16 +25,36 @@ internal sealed class ShellScreenPainter
 
     public void PaintCurrent(Rect screen, float screenRadius, PhoneTheme theme, in HomeMotion motion)
     {
-        if (navigation.AtHome)
+        using var stage = ScreenLayer.Begin(CurrentLayerId, screen, false);
+        PaintCurrentInside(screen, screenRadius, theme, motion);
+    }
+
+    public void PaintCurrentTransformed(Rect screen, float screenRadius, PhoneTheme theme, in HomeMotion motion,
+        bool landscape, in LayerTransform transform)
+    {
+        using var stage = ScreenLayer.Begin(CurrentLayerId, screen, true);
+        PaintCurrentInside(screen, screenRadius, theme, motion);
+        using (ScreenLayer.BeginPassive("chrome", screen))
         {
-            PaintHome(screen, screenRadius, theme, motion);
+            StatusBar.Draw(screen, theme, landscape);
+            HomeIndicator.Draw(ImGui.GetWindowDrawList(), HomeIndicator.Bounds(screen, UiScale.Current), theme,
+                false);
+        }
+
+        stage.Transform(in transform);
+    }
+
+    private string CurrentLayerId => navigation.Current?.Id ?? HomeLayerId;
+
+    private void PaintCurrentInside(Rect screen, float screenRadius, PhoneTheme theme, in HomeMotion motion)
+    {
+        if (navigation.Current is { } app)
+        {
+            PaintApp(screen, screenRadius, theme, app);
             return;
         }
 
-        using (ImRaii.PushId(navigation.Current!.Id))
-        {
-            PaintApp(screen, screenRadius, theme, navigation.Current!);
-        }
+        PaintHome(screen, screenRadius, theme, motion);
     }
 
     public void PaintHome(Rect screen, float screenRadius, PhoneTheme theme, in HomeMotion motion)
