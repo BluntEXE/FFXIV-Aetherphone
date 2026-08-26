@@ -1,20 +1,6 @@
+using Dalamud.Bindings.ImGui;
+
 namespace Aetherphone.Apps.Chirper;
-
-internal readonly struct ReactionPickerLayout
-{
-    public readonly int Columns;
-    public readonly int Rows;
-    public readonly float Step;
-    public readonly float IconRadius;
-
-    public ReactionPickerLayout(int columns, int rows, float step, float iconRadius)
-    {
-        Columns = columns;
-        Rows = rows;
-        Step = step;
-        IconRadius = iconRadius;
-    }
-}
 
 internal sealed class ChirperActionReveal
 {
@@ -22,21 +8,21 @@ internal sealed class ChirperActionReveal
     {
         None,
         Picker,
-        Menu,
         Repost,
     }
 
     private const float OpenSeconds = 0.22f;
     private const float CloseSeconds = 0.14f;
-    private const float StaggerSpread = 0.45f;
     private string? postId;
     private Panel current;
     private bool closing;
     private float progress;
+    private int openedFrame;
     public string? PostId => postId;
     public Panel Current => current;
     public float Progress => progress;
     public bool Closing => closing;
+    public int OpenedFrame => openedFrame;
     public bool IsShowing(string id, Panel panel) => current == panel && postId == id;
 
     public void Open(string id, Panel panel)
@@ -49,6 +35,7 @@ internal sealed class ChirperActionReveal
         postId = id;
         current = panel;
         closing = false;
+        openedFrame = ImGui.GetFrameCount();
     }
 
     public void Dismiss()
@@ -89,17 +76,5 @@ internal sealed class ChirperActionReveal
         {
             progress = MathF.Min(1f, progress + deltaSeconds / OpenSeconds);
         }
-    }
-
-    public static float Stagger(float progress, int index, int count)
-    {
-        if (count <= 1)
-        {
-            return Math.Clamp(progress, 0f, 1f);
-        }
-
-        var delay = StaggerSpread * index / (count - 1);
-        var span = 1f - delay;
-        return Math.Clamp((progress - delay) / span, 0f, 1f);
     }
 }

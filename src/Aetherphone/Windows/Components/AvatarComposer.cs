@@ -29,14 +29,14 @@ internal sealed class AvatarComposer
 
     public AvatarComposer(Func<bool> busy, Action<string, WallpaperCrop, Action<bool>> update,
         AvatarComposerLabels labels, PhotoLibrary library, WallpaperImageCache images, ConfirmService confirm,
-        Func<AvatarUploadOutcome> failure)
+        Func<AvatarUploadOutcome> failure, float aspect = 1f)
     {
         this.busy = busy;
         this.update = update;
         this.labels = labels;
         this.confirm = confirm;
         this.failure = failure;
-        picker = new ImagePickCrop(library, images);
+        picker = new ImagePickCrop(library, images) { Aspect = aspect };
     }
 
     public void Open()

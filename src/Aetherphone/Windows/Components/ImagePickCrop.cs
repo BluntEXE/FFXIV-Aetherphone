@@ -68,6 +68,7 @@ internal sealed class ImagePickCrop
 
     public string SourcePath => sourcePath;
     public WallpaperCrop Crop => new(targetZoom, targetCenterX, targetCenterY);
+    public float Aspect { get; set; } = 1f;
 
     public void Open()
     {
@@ -199,10 +200,11 @@ internal sealed class ImagePickCrop
         var top = area.Min.Y + AppHeader.Height * scale;
         var stage = new Rect(new Vector2(area.Min.X + 16f * scale, top + 12f * scale),
             new Vector2(area.Max.X - 16f * scale, area.Max.Y - 96f * scale));
-        var side = MathF.Min(stage.Width, stage.Height);
-        var preview = new Rect(new Vector2(stage.Center.X - side * 0.5f, stage.Center.Y - side * 0.5f),
-            new Vector2(stage.Center.X + side * 0.5f, stage.Center.Y + side * 0.5f));
-        var rounding = side * 0.5f;
+        var previewWidth = MathF.Min(stage.Width, stage.Height * Aspect);
+        var previewHeight = previewWidth / Aspect;
+        var preview = new Rect(new Vector2(stage.Center.X - previewWidth * 0.5f, stage.Center.Y - previewHeight * 0.5f),
+            new Vector2(stage.Center.X + previewWidth * 0.5f, stage.Center.Y + previewHeight * 0.5f));
+        var rounding = Aspect == 1f ? previewWidth * 0.5f : 16f * scale;
         var texture = images.Get(sourcePath);
         if (texture is null)
         {
@@ -215,8 +217,8 @@ internal sealed class ImagePickCrop
         var zoom = zoomSpring.Step(targetZoom, CropSmoothTime, deltaSeconds);
         var centerX = centerXSpring.Step(targetCenterX, CropSmoothTime, deltaSeconds);
         var centerY = centerYSpring.Step(targetCenterY, CropSmoothTime, deltaSeconds);
-        var crop = new WallpaperCrop(zoom, centerX, centerY).Clamped(size, 1f);
-        var (uv0, uv1) = crop.ComputeUv(size, 1f);
+        var crop = new WallpaperCrop(zoom, centerX, centerY).Clamped(size, Aspect);
+        var (uv0, uv1) = crop.ComputeUv(size, Aspect);
         drawList.AddImageRounded(texture.Handle, preview.Min, preview.Max, uv0, uv1, 0xFFFFFFFFu, rounding,
             ImDrawFlags.RoundCornersAll);
         HandleGestures(preview, size, uv1 - uv0);
@@ -270,7 +272,7 @@ internal sealed class ImagePickCrop
             }
         }
 
-        var clamped = new WallpaperCrop(targetZoom, targetCenterX, targetCenterY).Clamped(size, 1f);
+        var clamped = new WallpaperCrop(targetZoom, targetCenterX, targetCenterY).Clamped(size, Aspect);
         targetZoom = clamped.Zoom;
         targetCenterX = clamped.CenterX;
         targetCenterY = clamped.CenterY;

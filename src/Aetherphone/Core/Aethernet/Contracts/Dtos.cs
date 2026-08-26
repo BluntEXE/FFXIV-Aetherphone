@@ -77,9 +77,11 @@ internal sealed record UserDto(
     long CoinsEarnedToday = 0,
     long CoinsDailyCap = 0,
     string FrameId = "",
-    string? BioLang = null) : IIdentified;
+    string? BioLang = null,
+    string? BannerUrl = null) : IIdentified;
 
-internal sealed record UpdateProfileRequest(string? DisplayName, string? Handle, string? Bio, string? AvatarUrl = null);
+internal sealed record UpdateProfileRequest(string? DisplayName, string? Handle, string? Bio, string? AvatarUrl = null,
+    string? BannerUrl = null);
 
 internal sealed record UpdateBadgeLoadoutRequest(int Equipped);
 
@@ -224,6 +226,10 @@ internal sealed record PostDto(
 internal sealed record FeedPage(PostDto[] Items, string? NextCursor);
 
 internal sealed record UserSearchResult(UserDto[] Users);
+
+internal sealed record TagSummaryDto(string Tag, int Posts, int PostsToday);
+
+internal sealed record TagSearchResult(TagSummaryDto[] Tags);
 
 internal sealed record FeatureFlagsDto(bool Music, Dictionary<string, bool>? Apps);
 

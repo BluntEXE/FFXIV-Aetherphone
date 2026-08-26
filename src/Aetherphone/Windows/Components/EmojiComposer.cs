@@ -14,6 +14,8 @@ internal sealed class EmojiComposer
 
     public bool Open => open;
 
+    public Action<ImDrawListPtr, Vector2, float, Vector4>? IconPainter { get; set; }
+
     public void Close()
     {
         open = false;
@@ -31,7 +33,15 @@ internal sealed class EmojiComposer
         var max = center + new Vector2(radius, radius);
         var hovered = UiInteract.Hover(min, max);
         var color = open ? activeColor : hovered ? ui.Theme.TextStrong : idleColor;
-        AppSkin.Icon(center, FontAwesomeIcon.Smile.ToIconString(), color, 0.95f);
+        if (IconPainter is { } painter)
+        {
+            painter(ImGui.GetWindowDrawList(), center, radius, color);
+        }
+        else
+        {
+            AppSkin.Icon(center, FontAwesomeIcon.Smile.ToIconString(), color, 0.95f);
+        }
+
         HoverTooltip.Show(new Rect(min, max), tooltip, side);
         if (!hovered)
         {

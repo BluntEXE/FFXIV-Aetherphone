@@ -50,17 +50,21 @@ internal static class HeaderTitle
 
     private static readonly TextStyle Style = new(1.3f, FontWeight.Bold);
 
-    public static bool Draw(string id, string text, float left, in HeaderActions actions, Vector4 ink, float scale)
+    public static bool Draw(string id, string text, float left, in HeaderActions actions, Vector4 ink, float scale) =>
+        Draw(id, text, left, actions, ink, scale, Style);
+
+    public static bool Draw(string id, string text, float left, in HeaderActions actions, Vector4 ink, float scale,
+        in TextStyle style)
     {
         var maxWidth = MathF.Max(1f, actions.TitleLimit - left);
-        var size = Typography.Measure(text, Style);
+        var size = Typography.Measure(text, style);
         var clampedWidth = MathF.Min(size.X, maxWidth);
         var padding = new Vector2(PaddingX * scale, PaddingY * scale);
         var top = actions.RowCenterY - size.Y * 0.5f;
         var min = new Vector2(left, top) - padding;
         var max = new Vector2(left + clampedWidth, top + size.Y) + padding;
         UiInteract.HoverHighlight(ImGui.GetWindowDrawList(), min, max, (max.Y - min.Y) * 0.5f);
-        Marquee.DrawLeftAuto(id, text, left, top, maxWidth, Style, ink);
+        Marquee.DrawLeftAuto(id, text, left, top, maxWidth, style, ink);
         return UiInteract.HoverClick(min, max);
     }
 }

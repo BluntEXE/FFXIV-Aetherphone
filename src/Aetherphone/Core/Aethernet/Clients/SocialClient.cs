@@ -151,6 +151,24 @@ internal sealed class SocialClient
             AethernetJsonContext.Default.PostDto, token, null, onFailure);
     }
 
+    public Task<TagSearchResult?> TagSearchAsync(string query, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
+    {
+        var path = query.Length > 0 ? $"/tags/search?q={Uri.EscapeDataString(query)}" : "/tags/search";
+        return net.GetAsync(path, AethernetJsonContext.Default.TagSearchResult, token, null, onFailure);
+    }
+
+    public Task<FeedPage?> LikedAsync(string? cursor, CancellationToken token, Action<AepFailure>? onFailure = null)
+    {
+        var path = "/me/liked";
+        if (cursor is not null)
+        {
+            path += $"?cursor={Uri.EscapeDataString(cursor)}";
+        }
+
+        return net.GetAsync(path, AethernetJsonContext.Default.FeedPage, token, null, onFailure);
+    }
+
     public Task<FeedPage?> SavedAsync(string? cursor, CancellationToken token, Action<AepFailure>? onFailure = null)
     {
         var path = "/me/saved";

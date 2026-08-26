@@ -22,7 +22,8 @@ internal readonly record struct CommentComposerStyle(
     bool CircleSend,
     float PillPadY,
     float PillRightInset,
-    float SendIconScale);
+    float SendIconScale,
+    float SendRadius = 15f);
 
 internal static class CommentComposerBar
 {
@@ -30,7 +31,7 @@ internal static class CommentComposerBar
         string inputId, string hint, ref string draft, int maxLength, MentionAutocomplete mentions,
         MentionPopup mentionPopup, RemoteImageCache images, LodestoneService lodestone, bool busy,
         ref bool focusPending, EmojiComposer emoji, CommentAttachment? attachment = null,
-        PhotoLibrary? library = null, WallpaperImageCache? wallpaperImages = null)
+        PhotoLibrary? library = null, WallpaperImageCache? wallpaperImages = null, float sendReveal = 1f)
     {
         var scale = UiScale.Current;
         var attachmentActive = attachment is not null && library is not null && wallpaperImages is not null;
@@ -55,7 +56,10 @@ internal static class CommentComposerBar
         var drawList = ImGui.GetWindowDrawList();
         drawList.AddLine(bar.Min, new Vector2(bar.Max.X, bar.Min.Y), ImGui.GetColorU32(style.Hairline), 1f);
         var pillMin = new Vector2(bar.Min.X + 12f * scale, bar.Min.Y + style.PillPadY * scale);
-        var pillMax = new Vector2(bar.Max.X - style.PillRightInset * scale, bar.Max.Y - style.PillPadY * scale);
+        var pillRightInset = style.CircleSend
+            ? Easing.Lerp(12f, style.PillRightInset, Math.Clamp(sendReveal, 0f, 1f))
+            : style.PillRightInset;
+        var pillMax = new Vector2(bar.Max.X - pillRightInset * scale, bar.Max.Y - style.PillPadY * scale);
         Squircle.Fill(drawList, pillMin, pillMax, (pillMax.Y - pillMin.Y) * 0.5f, ImGui.GetColorU32(style.FieldFill));
         var emojiRadius = 14f * scale;
         var emojiCenter = new Vector2(pillMin.X + 11f * scale + emojiRadius, bar.Center.Y);
@@ -95,15 +99,17 @@ internal static class CommentComposerBar
         mentionPopup.Gate(mentions);
 
         var canSend = (draft.Trim().Length > 0 || (attachmentActive && attachment!.Path is not null)) && !busy;
-        if (style.CircleSend)
+        if (style.CircleSend && sendReveal > 0.01f)
         {
-            var sendRadius = 15f * scale;
-            var sendCenter = new Vector2(pillMax.X + 6f * scale + sendRadius, bar.Center.Y);
+            var reveal = Math.Clamp(sendReveal, 0f, 1f);
+            var sendRadius = style.SendRadius * scale * (0.6f + 0.4f * reveal);
+            var sendCenter = new Vector2(pillMax.X + 6f * scale + style.SendRadius * scale, bar.Center.Y);
+            var sendFill = canSend ? style.SendEnabled : style.SendDisabled;
             drawList.AddCircleFilled(sendCenter, sendRadius,
-                ImGui.GetColorU32(canSend ? style.SendEnabled : style.SendDisabled), 24);
-            AppSkin.Icon(sendCenter, FontAwesomeIcon.PaperPlane.ToIconString(), style.SendIconInk,
-                style.SendIconScale);
-            if (UiInteract.HoverClick(sendCenter - new Vector2(sendRadius, sendRadius),
+                ImGui.GetColorU32(Palette.WithAlpha(sendFill, sendFill.W * reveal)), 24);
+            AppSkin.Icon(sendCenter, FontAwesomeIcon.PaperPlane.ToIconString(),
+                Palette.WithAlpha(style.SendIconInk, style.SendIconInk.W * reveal), style.SendIconScale * reveal);
+            if (reveal > 0.5f && UiInteract.HoverClick(sendCenter - new Vector2(sendRadius, sendRadius),
                     sendCenter + new Vector2(sendRadius, sendRadius)))
             {
                 submitted = true;

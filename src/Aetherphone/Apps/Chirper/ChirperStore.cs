@@ -189,6 +189,18 @@ internal sealed class ChirperStore : SocialFeedStore
         }, onComplete, () => posting = false);
     }
 
+    public void UpdateBanner(string sourcePath, WallpaperCrop crop, Action<bool> onComplete)
+    {
+        if (avatarBusy)
+        {
+            return;
+        }
+
+        avatarBusy = true;
+        work.Run("banner update", token => UploadBannerAsync(sourcePath, crop, token), onComplete,
+            () => avatarBusy = false);
+    }
+
     public void UpdateAvatar(string sourcePath, WallpaperCrop crop, Action<bool> onComplete)
     {
         if (avatarBusy)

@@ -25,6 +25,8 @@ internal sealed class CommentAttachment
 
     public string? Path => path;
 
+    public Action<ImDrawListPtr, Vector2, float, Vector4>? IconPainter { get; set; }
+
     public void Clear()
     {
         path = null;
@@ -63,7 +65,15 @@ internal sealed class CommentAttachment
         var max = center + new Vector2(radius, radius);
         var hovered = UiInteract.Hover(min, max);
         var color = panelOpen || path is not null ? activeColor : hovered ? ui.Theme.TextStrong : idleColor;
-        AppSkin.Icon(center, FontAwesomeIcon.Image.ToIconString(), color, 0.95f);
+        if (IconPainter is { } painter)
+        {
+            painter(ImGui.GetWindowDrawList(), center, radius, color);
+        }
+        else
+        {
+            AppSkin.Icon(center, FontAwesomeIcon.Image.ToIconString(), color, 0.95f);
+        }
+
         HoverTooltip.Show(new Rect(min, max), tooltip, HoverLabelSide.Above);
         if (!hovered)
         {

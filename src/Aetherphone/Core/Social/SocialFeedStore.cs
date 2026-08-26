@@ -39,6 +39,7 @@ internal abstract class SocialFeedStore : IDisposable
     protected readonly FeedLane<PostDto> forYouLane = new(ByNewestFirst, ByCreatedAtUnix);
     protected readonly FeedLane<PostDto> followingLane = new(ByNewestFirst, ByCreatedAtUnix);
     private readonly FeedLane<PostDto> savedLane = new(ByNewestFirst);
+    private readonly FeedLane<PostDto> likedLane = new(ByNewestFirst);
     private volatile UserDto[] followRequests = Array.Empty<UserDto>();
     private volatile string? followRequestsCursor;
     private volatile bool followRequestsLoadingMore;
@@ -59,6 +60,8 @@ internal abstract class SocialFeedStore : IDisposable
     private volatile bool detailLoading;
     private volatile bool commenting;
     private volatile UserDto[] discoverResults = Array.Empty<UserDto>();
+    private volatile TagSummaryDto[] discoverTags = Array.Empty<TagSummaryDto>();
+    private volatile bool tagsLoading;
     private volatile bool searching;
     private volatile bool loadingMe;
     private volatile string? userListKey;
@@ -141,6 +144,7 @@ internal abstract class SocialFeedStore : IDisposable
         userListLoading = false;
         userListFailed = false;
         savedLane.Clear();
+        likedLane.Clear();
         followRequests = Array.Empty<UserDto>();
         followRequestsCursor = null;
         followRequestsLoaded = false;
@@ -186,6 +190,8 @@ internal abstract class SocialFeedStore : IDisposable
     public bool DetailLoading => detailLoading;
     public bool Commenting => commenting;
     public UserDto[] DiscoverResults => discoverResults;
+    public TagSummaryDto[] DiscoverTags => discoverTags;
+    public bool TagsLoading => tagsLoading;
     public bool Searching => searching;
     public bool Posting => posting;
 
@@ -209,6 +215,10 @@ internal abstract class SocialFeedStore : IDisposable
     public bool SavedLoading => savedLane.Loading;
     public bool SavedLoadingMore => savedLane.LoadingMore;
     public bool HasMoreSaved => savedLane.HasMore;
+    public PostDto[] LikedPosts => likedLane.Items;
+    public bool LikedLoading => likedLane.Loading;
+    public bool LikedLoadingMore => likedLane.LoadingMore;
+    public bool HasMoreLiked => likedLane.HasMore;
 
     public static FollowState FollowStateOf(UserDto user) =>
         user.IsFollowing ? FollowState.Following
@@ -877,6 +887,43 @@ internal abstract class SocialFeedStore : IDisposable
         }, () => savedLane.Loading = false);
     }
 
+    public void RefreshLiked()
+    {
+        if (!session.IsSignedIn || likedLane.Loading)
+        {
+            return;
+        }
+
+        likedLane.Loading = true;
+        work.Run("liked refresh", async token =>
+        {
+            var page = await client.LikedAsync(null, token).ConfigureAwait(false);
+            if (page is not null)
+            {
+                likedLane.ApplyRefresh(page.Items, page.NextCursor);
+            }
+        }, () => likedLane.Loading = false);
+    }
+
+    public void LoadMoreLiked()
+    {
+        var cursor = likedLane.Cursor;
+        if (!session.IsSignedIn || cursor is null || likedLane.LoadingMore || likedLane.Loading)
+        {
+            return;
+        }
+
+        likedLane.LoadingMore = true;
+        work.Run("liked more", async token =>
+        {
+            var page = await client.LikedAsync(cursor, token).ConfigureAwait(false);
+            if (page is not null)
+            {
+                likedLane.ApplyMore(page.Items, page.NextCursor);
+            }
+        }, () => likedLane.LoadingMore = false);
+    }
+
     public void LoadMoreSaved()
     {
         var cursor = savedLane.Cursor;
@@ -1241,6 +1288,25 @@ internal abstract class SocialFeedStore : IDisposable
         }, succeeded => onResult(succeeded, string.Empty));
     }
 
+    public void SearchTags(string query)
+    {
+        if (!session.IsSignedIn || tagsLoading)
+        {
+            return;
+        }
+
+        var trimmed = query.Trim().TrimStart('#');
+        tagsLoading = true;
+        work.Run("tag search", async token =>
+        {
+            var result = await client.TagSearchAsync(trimmed, token).ConfigureAwait(false);
+            if (result is not null)
+            {
+                discoverTags = result.Tags;
+            }
+        }, () => tagsLoading = false);
+    }
+
     public void Search(string query)
     {
         var trimmed = query.Trim();
@@ -1261,7 +1327,24 @@ internal abstract class SocialFeedStore : IDisposable
         }, () => searching = false);
     }
 
-    public void ClearDiscover() => discoverResults = Array.Empty<UserDto>();
+    public void ClearDiscover()
+    {
+        discoverResults = Array.Empty<UserDto>();
+        discoverTags = Array.Empty<TagSummaryDto>();
+    }
+
+    protected async Task<bool> UploadBannerAsync(string sourcePath, WallpaperCrop crop, CancellationToken token)
+    {
+        var result = await BannerUpload.RunAsync(account, media, sourcePath, crop, token).ConfigureAwait(false);
+        avatarFailure = result.Outcome;
+        if (result.User is not { } updated)
+        {
+            return false;
+        }
+
+        AcceptMe(updated);
+        return true;
+    }
 
     protected async Task<bool> UploadAvatarAsync(string sourcePath, WallpaperCrop crop, CancellationToken token)
     {

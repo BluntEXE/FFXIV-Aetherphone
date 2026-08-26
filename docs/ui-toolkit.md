@@ -236,6 +236,8 @@ A tap only registers if the pointer traveled less than the drag slop, so panning
 | `SettingsSection.Header(title, theme, hint)` | Uppercase section label, with an optional hint icon for a whole section (src/Aetherphone/Windows/Components/SettingsSection.cs) |
 | `HoverButton.Circle` | Round icon button with hover ring (src/Aetherphone/Windows/Components/HoverButton.cs) |
 | `PopoverSurface.Draw` | The floating card background menus sit on (src/Aetherphone/Windows/Components/PopoverSurface.cs) |
+| `ActionSheet` | Bottom sheet of labeled rows over a dimmed scrim, danger rows in red, a separate Cancel card; `Gate()` each frame, `Draw` returns the picked index (src/Aetherphone/Windows/Components/ActionSheet.cs) |
+| `ScreenToast` | Bottom-centered glass pill that pops in and dismisses itself after 1.7 seconds; `Show(text)` then `Draw(screen, style)` every frame (src/Aetherphone/Windows/Components/ScreenToast.cs) |
 | `PullToRefresh` | Overscroll spinner fed by `AppSurface` `Pull` (src/Aetherphone/Windows/Components/PullToRefresh.cs) |
 | `Marquee.DrawCenteredAuto` | Auto-scrolls a label that is too wide for its slot (src/Aetherphone/Windows/Components/Marquee.cs) |
 
@@ -254,6 +256,10 @@ You rarely call these directly. `RichText.Build` (src/Aetherphone/Windows/Compon
 ## Motion
 
 Animated components (the `Toggle` knob, `ConfirmOverlay` reveal) use `Spring` (src/Aetherphone/Core/Animation/Spring.cs), a critically damped smoother that clamps on target crossing, so motion settles without bouncing. Follow that: no overshoot or bounce in phone UI. `Easing` (src/Aetherphone/Core/Animation) provides curves like `EaseOutQuint` for reveals.
+
+A spring started from rest spends its first frames barely moving, which reads as input lag. For anything the user just triggered (a screen push, an app launch), start it with `Spring.Launch(value, TransitionTiming.LaunchVelocity(smoothTime))`: the kick is half the spring's natural frequency, so the motion begins immediately and decelerates into place without ever overshooting (see `SpringLaunchTests`). Step transitions with a delta clamped to `TransitionTiming.MotionFrameSeconds`, not `MaxFrameSeconds`, so a dropped frame slows the motion instead of skipping a third of it.
+
+To move, scale or fade a whole screen, do not paint it at a shifted rect or a smaller size: paint it at rest inside a `ScreenLayer` stage and call `Transform` with a `LayerTransform` once the stage has ended (src/Aetherphone/Core/Animation/ScreenLayer.cs). The transform rewrites the vertices and clip rects of the stage window and every child it begun this frame, so the screen keeps its ImGui window identity (scroll, focus, state storage), its layout stays correct, and text scales as a bitmap instead of snapping between font sizes. Anything that must draw above a stage's own children (a dim, a veil, chrome) goes in a nested `ScreenLayer.BeginPassive` child, because a window's own draw list renders before its children. `SceneCompositor.DrawLayer` wraps this for the common translate case.
 
 ## Which widget do I reach for
 

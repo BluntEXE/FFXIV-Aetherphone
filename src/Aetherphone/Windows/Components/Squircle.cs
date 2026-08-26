@@ -231,6 +231,15 @@ internal static class Squircle
         ShadeVertical(drawList, firstVertex, min.Y, max.Y, topColor, bottomColor);
     }
 
+    public static void FillCircleVerticalGradient(ImDrawListPtr drawList, Vector2 center, float radius,
+        uint topColor, uint bottomColor, int segments = 48)
+    {
+        var firstVertex = drawList.VtxBuffer.Size;
+        drawList.PathArcTo(center, radius, 0f, MathF.PI * 2f, segments);
+        drawList.PathFillConvex(topColor | AlphaMask);
+        ShadeVertical(drawList, firstVertex, center.Y - radius, center.Y + radius, topColor, bottomColor);
+    }
+
     private static void ShadeVertical(ImDrawListPtr drawList, int firstVertex, float top, float bottom,
         uint topColor, uint bottomColor)
     {
