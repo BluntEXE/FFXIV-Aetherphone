@@ -948,8 +948,15 @@ internal sealed partial class AethergramApp : IResumableApp
                     feedFailure.Set(store.FeedFailure(scope));
                 }
 
-                var message = store.IsLoading(scope) ? Loc.T(L.Common.Loading) :
-                    failed ? feedFailure.Text() :
+                if (store.IsLoading(scope))
+                {
+                    var skeletonTop = ImGui.GetCursorScreenPos().Y + 12f * UiScale.Current;
+                    Skeleton.Feed(ImGui.GetWindowDrawList(),
+                        new Rect(new Vector2(listRect.Min.X, skeletonTop), listRect.Max), UiScale.Current);
+                    return;
+                }
+
+                var message = failed ? feedFailure.Text() :
                     scope == SocialFeedScope.Following ? Loc.T(L.Aethergram.FollowingEmpty) :
                     Loc.T(L.Aethergram.ExploreEmpty);
                 var messageY = ImGui.GetCursorScreenPos().Y + 60f * UiScale.Current;

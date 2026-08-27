@@ -830,8 +830,15 @@ internal sealed partial class ChirperApp : IResumableApp
                     feedFailure.Set(store.FeedFailure(scope));
                 }
 
-                var message = store.IsLoading(scope) ? Loc.T(L.Common.Loading) :
-                    failed ? feedFailure.Text() :
+                if (store.IsLoading(scope))
+                {
+                    var skeletonTop = ImGui.GetCursorScreenPos().Y + 12f * UiScale.Current;
+                    Skeleton.Feed(ImGui.GetWindowDrawList(),
+                        new Rect(new Vector2(listRect.Min.X, skeletonTop), listRect.Max), UiScale.Current);
+                    return;
+                }
+
+                var message = failed ? feedFailure.Text() :
                     scope == SocialFeedScope.Following ? Loc.T(L.Chirper.FollowingEmpty) :
                     Loc.T(L.Chirper.ExploreEmpty);
                 Typography.DrawCentered(new Vector2(listRect.Center.X, listRect.Min.Y + 90f * UiScale.Current),

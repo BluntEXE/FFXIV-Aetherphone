@@ -197,8 +197,7 @@ internal sealed partial class MusicApp
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var titleSize = Typography.Measure("Ag", TextStyles.Title3);
-        var pulse = 0.05f + 0.04f * Pulse.Wave(1600f);
-        var fill = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, pulse));
+        var fill = Skeleton.Fill();
         var drawList = ImGui.GetWindowDrawList();
 
         Squircle.Fill(drawList, origin, new Vector2(origin.X + width * 0.38f, origin.Y + titleSize.Y), 4f * scale, fill);

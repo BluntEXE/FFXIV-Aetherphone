@@ -83,8 +83,9 @@ internal sealed partial class StratsApp
             return;
         }
 
-        LoadingPulse.Draw(new Vector2(body.Center.X, body.Min.Y + 110f * scale), 13f * scale, ui.Accent,
-            AppPalettes.Strats.MutedInk, Loc.T(L.Strats.Loading));
+        Skeleton.Rows(ImGui.GetWindowDrawList(),
+            new Rect(new Vector2(body.Min.X + 14f * scale, body.Min.Y + 16f * scale),
+                new Vector2(body.Max.X - 14f * scale, body.Max.Y - 12f * scale)), 52f, 10f, scale);
     }
 
     private void DrawCreditsRow(StratsManifest manifest, float scale)

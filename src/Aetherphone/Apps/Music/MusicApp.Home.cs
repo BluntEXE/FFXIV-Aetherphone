@@ -287,8 +287,7 @@ internal sealed partial class MusicApp
         var cardHeight = artSize + 40f * scale;
         var origin = ImGui.GetCursorScreenPos();
         var drawList = ImGui.GetWindowDrawList();
-        var pulse = 0.05f + 0.04f * Pulse.Wave(1600f);
-        var fill = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, pulse));
+        var fill = Skeleton.Fill();
         for (var index = 0; index < FeaturedTiles; index++)
         {
             var column = index % 2;

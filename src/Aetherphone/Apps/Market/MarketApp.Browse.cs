@@ -241,7 +241,8 @@ internal sealed partial class MarketApp
     private void CenteredLoading(Rect body, string message)
     {
         var scale = UiScale.Current;
-        LoadingPulse.Draw(new Vector2(body.Center.X, body.Min.Y + 60f * scale), 13f * scale, AppPalettes.Market.Accent,
-            AppPalettes.Market.MutedInk, message);
+        Skeleton.Rows(ImGui.GetWindowDrawList(),
+            new Rect(new Vector2(body.Min.X + 14f * scale, body.Min.Y + 16f * scale),
+                new Vector2(body.Max.X - 14f * scale, body.Max.Y - 12f * scale)), 46f, 8f, scale);
     }
 }

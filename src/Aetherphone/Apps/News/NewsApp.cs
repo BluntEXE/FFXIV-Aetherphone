@@ -158,8 +158,9 @@ internal sealed class NewsApp : IPhoneApp
             return;
         }
 
-        LoadingPulse.Draw(new Vector2(center.X, center.Y - 14f * scale), 13f * scale, Accent, theme.TextMuted,
-            Loc.T(L.Common.Loading));
+        Skeleton.Feed(ImGui.GetWindowDrawList(),
+            new Rect(new Vector2(body.Min.X + 14f * scale, body.Min.Y + 16f * scale),
+                new Vector2(body.Max.X - 14f * scale, body.Max.Y - 12f * scale)), scale);
     }
 
     private void DrawFeed(LodestoneNewsItem[] items, int count, NewsCategory category, float scale)

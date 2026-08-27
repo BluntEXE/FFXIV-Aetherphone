@@ -366,8 +366,9 @@ internal sealed partial class VenuesApp : IPhoneApp
         var centerX = body.Center.X;
         if (venues.State == VenueState.Loading && venues.Events.Count == 0)
         {
-            LoadingPulse.Draw(new Vector2(centerX, body.Min.Y + 90f * scale), 13f * scale, ui.Accent,
-                AppPalettes.Venues.MutedInk, Loc.T(L.Common.Loading));
+            Skeleton.Feed(ImGui.GetWindowDrawList(),
+                new Rect(new Vector2(body.Min.X + 14f * scale, body.Min.Y + 16f * scale),
+                    new Vector2(body.Max.X - 14f * scale, body.Max.Y - 12f * scale)), scale);
             return;
         }
 
