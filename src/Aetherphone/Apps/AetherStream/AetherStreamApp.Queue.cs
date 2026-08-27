@@ -23,7 +23,7 @@ internal sealed partial class AetherStreamApp
 
     private void DrawUpNextContent(Rect body, float scale)
     {
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             var width = ScrollLayout.StableContentWidth();
 
@@ -67,7 +67,7 @@ internal sealed partial class AetherStreamApp
             }
 
             DrawQueueHeader(width, scale);
-            DrawQueueList(width, scale, entries);
+            DrawQueueList(scale, entries);
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
         }
     }
@@ -86,30 +86,23 @@ internal sealed partial class AetherStreamApp
             return;
         }
 
-        var labelOrigin = ImGui.GetCursorScreenPos();
-        Typography.Draw(ImGui.GetWindowDrawList(), labelOrigin,
-            Loc.Culture.TextInfo.ToUpper(Loc.T(L.AetherStream.UpNextHostQueue)), ui.Palette.HeaderInk,
-            TextStyles.FootnoteEmphasized);
-        ImGui.SetCursorScreenPos(labelOrigin);
-        ImGui.Dummy(new Vector2(width,
-            Typography.LineHeight(TextStyles.FootnoteEmphasized) + Metrics.Space.Xs * scale));
+        ListSection.Label(ui, Loc.T(L.AetherStream.UpNextHostQueue));
 
+        var drawList = ImGui.GetWindowDrawList();
         var rowHeight = QueueRowHeight * scale;
         for (var index = 0; index < items.Count; index++)
         {
-            var origin = ImGui.GetCursorScreenPos();
-            var row = new Rect(origin, new Vector2(origin.X + width, origin.Y + rowHeight));
-            DrawHostQueueRow(row, items[index], index, scale);
-            ImGui.SetCursorScreenPos(origin);
-            ImGui.Dummy(new Vector2(width, rowHeight));
+            var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash, interactive: false);
+            DrawHostQueueRow(cell.Bounds, items[index], scale);
+            FeedCell.End(drawList, cell, ui.Hairline);
         }
     }
 
-    private void DrawHostQueueRow(Rect row, HostQueueItem item, int index, float scale)
+    private void DrawHostQueueRow(Rect row, HostQueueItem item, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
         var artSize = row.Height - 12f * scale;
-        var artMin = new Vector2(row.Min.X + Metrics.Space.Xs * scale, row.Min.Y + 6f * scale);
+        var artMin = new Vector2(row.Min.X + FeedCell.PadX * scale, row.Min.Y + 6f * scale);
         var artMax = artMin + new Vector2(artSize, artSize);
         Squircle.Fill(drawList, artMin, artMax, Metrics.Radius.Sm * scale, ImGui.GetColorU32(ui.FieldSurface));
         var thumbnail = VideoThumbnailResolver.Get(remoteImages, http, item.Url, null);
@@ -124,7 +117,7 @@ internal sealed partial class AetherStreamApp
         }
 
         var textLeft = artMax.X + Metrics.Space.Md * scale;
-        var textWidth = row.Max.X - textLeft;
+        var textWidth = row.Max.X - FeedCell.PadX * scale - textLeft;
         Typography.Draw(drawList, new Vector2(textLeft, row.Center.Y - Typography.LineHeight(TextStyles.Body) * 0.5f),
             Typography.FitText(item.Title, textWidth, TextStyles.Body), ui.TitleInk, TextStyles.Body);
     }
@@ -137,19 +130,13 @@ internal sealed partial class AetherStreamApp
         }
 
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
-        var labelOrigin = ImGui.GetCursorScreenPos();
-        Typography.Draw(ImGui.GetWindowDrawList(), labelOrigin,
-            Loc.Culture.TextInfo.ToUpper(Loc.T(L.AetherStream.NowPlayingHeader)), ui.Palette.HeaderInk,
-            TextStyles.FootnoteEmphasized);
-        ImGui.SetCursorScreenPos(labelOrigin);
-        ImGui.Dummy(new Vector2(width,
-            Typography.LineHeight(TextStyles.FootnoteEmphasized) + Metrics.Space.Xs * scale));
+        ListSection.Label(ui, Loc.T(L.AetherStream.NowPlayingHeader));
 
-        var origin = ImGui.GetCursorScreenPos();
-        var row = new Rect(origin, origin + new Vector2(width, QueueRowHeight * scale));
         var drawList = ImGui.GetWindowDrawList();
+        var cell = FeedCell.Begin(drawList, QueueRowHeight * scale, ui.HoverWash, interactive: false);
+        var row = cell.Bounds;
         var artSize = row.Height - 12f * scale;
-        var artMin = new Vector2(row.Min.X + Metrics.Space.Xs * scale, row.Min.Y + 6f * scale);
+        var artMin = new Vector2(row.Min.X + FeedCell.PadX * scale, row.Min.Y + 6f * scale);
         var artMax = artMin + new Vector2(artSize, artSize);
         Squircle.Fill(drawList, artMin, artMax, Metrics.Radius.Sm * scale, ImGui.GetColorU32(ui.FieldSurface));
         var thumbnail = VideoThumbnailResolver.Get(remoteImages, http, current.Url, current.ThumbnailUrl);
@@ -164,7 +151,7 @@ internal sealed partial class AetherStreamApp
         }
 
         var textLeft = artMax.X + Metrics.Space.Md * scale;
-        var textWidth = row.Max.X - textLeft;
+        var textWidth = row.Max.X - FeedCell.PadX * scale - textLeft;
         Typography.Draw(drawList, new Vector2(textLeft, row.Min.Y + 8f * scale),
             Typography.FitText(current.Title, textWidth, TextStyles.Body), ui.TitleInk, TextStyles.Body);
 
@@ -188,24 +175,24 @@ internal sealed partial class AetherStreamApp
                 Typography.FitText(secondLine, textWidth, TextStyles.Footnote), ui.MutedInk, TextStyles.Footnote);
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, QueueRowHeight * scale));
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 
     private void DrawQueueHeader(float width, float scale)
     {
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
         var origin = ImGui.GetCursorScreenPos();
+        var inset = FeedCell.PadX * scale;
         var rowHeight = 28f * scale;
         var label = Loc.Culture.TextInfo.ToUpper(Loc.T(L.AetherStream.UpNext));
         var labelHeight = Typography.LineHeight(TextStyles.FootnoteEmphasized);
         Typography.Draw(ImGui.GetWindowDrawList(),
-            new Vector2(origin.X, origin.Y + rowHeight * 0.5f - labelHeight * 0.5f), label, ui.Palette.HeaderInk,
-            TextStyles.FootnoteEmphasized);
+            new Vector2(origin.X + inset, origin.Y + rowHeight * 0.5f - labelHeight * 0.5f), label,
+            ui.Palette.HeaderInk, TextStyles.FootnoteEmphasized);
 
         var clearLabel = Loc.T(L.AetherStream.ClearQueue);
         var clearHalfWidth = Typography.Measure(clearLabel, TextStyles.Subheadline).X * 0.5f + 12f * scale;
-        var clearCenter = new Vector2(origin.X + width - clearHalfWidth, origin.Y + rowHeight * 0.5f);
+        var clearCenter = new Vector2(origin.X + width - inset - clearHalfWidth, origin.Y + rowHeight * 0.5f);
         if (TextButton.Draw(clearCenter, clearLabel, theme.Danger, scale))
         {
             confirm.Ask(new ConfirmRequest
@@ -225,35 +212,28 @@ internal sealed partial class AetherStreamApp
     private void DrawQueueSuggestions(float width, float scale)
     {
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
-        var labelOrigin = ImGui.GetCursorScreenPos();
-        Typography.Draw(ImGui.GetWindowDrawList(), labelOrigin,
-            Loc.Culture.TextInfo.ToUpper(Loc.T(L.AetherStream.QueueSuggestionsHeader)), ui.Palette.HeaderInk,
-            TextStyles.FootnoteEmphasized);
-        ImGui.SetCursorScreenPos(labelOrigin);
-        ImGui.Dummy(new Vector2(width,
-            Typography.LineHeight(TextStyles.FootnoteEmphasized) + Metrics.Space.Xs * scale));
+        ListSection.Label(ui, Loc.T(L.AetherStream.QueueSuggestionsHeader));
 
         var suggestions = watchAlong.PendingQueueSuggestions;
         for (var index = 0; index < suggestions.Count; index++)
         {
-            DrawQueueSuggestionRow(width, scale, suggestions[index]);
+            DrawQueueSuggestionRow(scale, suggestions[index]);
         }
     }
 
-    private void DrawQueueSuggestionRow(float width, float scale, QueueSuggestion suggestion)
+    private void DrawQueueSuggestionRow(float scale, QueueSuggestion suggestion)
     {
-        var origin = ImGui.GetCursorScreenPos();
-        var row = new Rect(origin, origin + new Vector2(width, SuggestionRowHeight * scale));
         var drawList = ImGui.GetWindowDrawList();
-        Squircle.Fill(drawList, row.Min, row.Max, Metrics.Radius.Md * scale,
-            ImGui.GetColorU32(accentedTheme.GroupedCard));
+        var cell = FeedCell.Begin(drawList, SuggestionRowHeight * scale, ui.HoverWash, interactive: false);
+        var row = cell.Bounds;
+        var inset = FeedCell.PadX * scale;
 
         var delta = ImGui.GetIO().DeltaTime;
         var circleRadius = 14f * scale;
-        var denyCenter = new Vector2(row.Max.X - Metrics.Space.Md * scale - circleRadius, row.Center.Y);
+        var denyCenter = new Vector2(row.Max.X - inset - circleRadius, row.Center.Y);
         var approveCenter = new Vector2(denyCenter.X - circleRadius * 2f - Metrics.Space.Sm * scale, row.Center.Y);
 
-        var textLeft = row.Min.X + Metrics.Space.Md * scale;
+        var textLeft = row.Min.X + inset;
         var textRight = approveCenter.X - circleRadius - Metrics.Space.Md * scale;
         var textWidth = textRight - textLeft;
         var hovered = UiInteract.Hover(row.Min, row.Max);
@@ -277,37 +257,29 @@ internal sealed partial class AetherStreamApp
             watchAlong.DenyQueueSuggestion(suggestion.SuggestionId);
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, SuggestionRowHeight * scale));
-        ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 
-    private void DrawQueueList(float width, float scale, IReadOnlyList<VideoQueueEntry> entries)
+    private void DrawQueueList(float scale, IReadOnlyList<VideoQueueEntry> entries)
     {
         var rowHeight = QueueRowHeight * scale;
-        var listOrigin = ImGui.GetCursorScreenPos();
-        UpdateDrag(entries.Count, rowHeight);
+        var drawList = ImGui.GetWindowDrawList();
+        UpdateDrag(entries.Count, rowHeight + ImGui.GetStyle().ItemSpacing.Y);
 
         for (var index = 0; index < entries.Count; index++)
         {
-            var origin = ImGui.GetCursorScreenPos();
-            var rowMin = origin;
-            var rowMax = new Vector2(origin.X + width, origin.Y + rowHeight);
-            if (queueDragActive && index == queueDragIndex)
-            {
-                rowMin = new Vector2(rowMin.X, rowMin.Y + queueDragY);
-                rowMax = new Vector2(rowMax.X, rowMax.Y + queueDragY);
-            }
-
-            DrawQueueRow(new Rect(rowMin, rowMax), entries[index], index, scale);
-            ImGui.SetCursorScreenPos(origin);
-            ImGui.Dummy(new Vector2(width, rowHeight));
+            var dragging = queueDragActive && index == queueDragIndex;
+            var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash);
+            var row = dragging
+                ? new Rect(new Vector2(cell.Bounds.Min.X, cell.Bounds.Min.Y + queueDragY),
+                    new Vector2(cell.Bounds.Max.X, cell.Bounds.Max.Y + queueDragY))
+                : cell.Bounds;
+            DrawQueueRow(cell, row, entries[index], index, scale, dragging);
+            FeedCell.End(drawList, cell, ui.Hairline, !dragging);
         }
-
-        ImGui.SetCursorScreenPos(new Vector2(listOrigin.X, listOrigin.Y + entries.Count * rowHeight));
     }
 
-    private void UpdateDrag(int count, float rowHeight)
+    private void UpdateDrag(int count, float rowPitch)
     {
         if (!queueDragActive)
         {
@@ -316,7 +288,7 @@ internal sealed partial class AetherStreamApp
 
         if (!ImGui.IsMouseDown(ImGuiMouseButton.Left))
         {
-            var targetIndex = Math.Clamp(queueDragIndex + (int)MathF.Round(queueDragY / rowHeight), 0, count - 1);
+            var targetIndex = Math.Clamp(queueDragIndex + (int)MathF.Round(queueDragY / rowPitch), 0, count - 1);
             if (targetIndex != queueDragIndex)
             {
                 queue.Reorder(queueDragIndex, targetIndex);
@@ -330,19 +302,18 @@ internal sealed partial class AetherStreamApp
         queueDragY = ImGui.GetMousePos().Y - queueDragStart.Y;
     }
 
-    private void DrawQueueRow(Rect row, VideoQueueEntry entry, int index, float scale)
+    private void DrawQueueRow(in FeedCellScope cell, Rect row, VideoQueueEntry entry, int index, float scale,
+        bool dragging)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = UiInteract.Hover(row.Min, row.Max);
-        var dragging = queueDragActive && index == queueDragIndex;
-        if (hovered || dragging)
+        if (dragging)
         {
-            Squircle.Fill(drawList, row.Min, row.Max, Metrics.Radius.Sm * scale,
-                ImGui.GetColorU32(Palette.WithAlpha(ui.TitleInk, dragging ? 0.10f : 0.05f)));
+            drawList.AddRectFilled(row.Min, row.Max,
+                ImGui.GetColorU32(Palette.WithAlpha(ui.TitleInk, 0.10f)));
         }
 
         var artSize = row.Height - 12f * scale;
-        var artMin = new Vector2(row.Min.X + Metrics.Space.Xs * scale, row.Min.Y + 6f * scale);
+        var artMin = new Vector2(row.Min.X + FeedCell.PadX * scale, row.Min.Y + 6f * scale);
         var artMax = artMin + new Vector2(artSize, artSize);
         Squircle.Fill(drawList, artMin, artMax, Metrics.Radius.Sm * scale, ImGui.GetColorU32(ui.FieldSurface));
         var thumbnail = VideoThumbnailResolver.Get(remoteImages, http, entry.Url, entry.ThumbnailUrl);
@@ -357,7 +328,7 @@ internal sealed partial class AetherStreamApp
         }
 
         var textLeft = artMax.X + Metrics.Space.Md * scale;
-        var textRight = row.Max.X - 78f * scale;
+        var textRight = row.Max.X - 78f * scale - FeedCell.PadX * scale;
         var textWidth = textRight - textLeft;
         Typography.Draw(drawList, new Vector2(textLeft, row.Min.Y + 8f * scale),
             Typography.FitText(entry.Title, textWidth, TextStyles.Body), ui.TitleInk, TextStyles.Body);
@@ -367,7 +338,7 @@ internal sealed partial class AetherStreamApp
         Typography.Draw(drawList, new Vector2(textLeft, row.Min.Y + 30f * scale),
             Typography.FitText(secondLine, textWidth, TextStyles.Footnote), ui.MutedInk, TextStyles.Footnote);
 
-        var handleCenter = new Vector2(row.Max.X - 52f * scale, row.Center.Y);
+        var handleCenter = new Vector2(row.Max.X - (52f + FeedCell.PadX) * scale, row.Center.Y);
         AppSkin.Icon(handleCenter, FontAwesomeIcon.GripLines.ToIconString(), ui.MutedInk, 0.6f);
         var handleHit = UiInteract.Hover(handleCenter - new Vector2(14f * scale, 14f * scale),
             handleCenter + new Vector2(14f * scale, 14f * scale));
@@ -384,15 +355,14 @@ internal sealed partial class AetherStreamApp
             queueDragActive = true;
         }
 
-        var removeCenter = new Vector2(row.Max.X - 16f * scale, row.Center.Y);
+        var removeCenter = new Vector2(row.Max.X - (16f + FeedCell.PadX) * scale, row.Center.Y);
         if (ui.IconButton(removeCenter, 12f * scale, FontAwesomeIcon.Times.ToIconString(), ui.MutedInk,
                 AppSkin.Transparent, 0.55f, Loc.T(L.AetherStream.Remove)))
         {
             queue.Remove(entry);
         }
 
-        if (hovered && !queueDragActive && !handleHit && ImGui.GetMousePos().X < removeCenter.X - 16f * scale &&
-            UiInteract.Click(row.Min, row.Max, hovered))
+        if (cell.Tapped && !queueDragActive && !handleHit && ImGui.GetMousePos().X < removeCenter.X - 16f * scale)
         {
             queue.PlayNow(entry);
         }

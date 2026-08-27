@@ -77,7 +77,7 @@ internal sealed partial class LinkpearlApp
             return;
         }
 
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             DrawFriendSection(Loc.T(L.Contacts.Online), true);
             DrawFriendSection(Loc.T(L.Contacts.Offline), false);

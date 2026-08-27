@@ -15,8 +15,7 @@ namespace Aetherphone.Apps.Muster;
 
 internal static class MusterCard
 {
-    public const float Gap = 12f;
-    private const float Pad = 14f;
+    private const float PadY = 13f;
     private const float AvatarRadius = 19f;
     private const float IdentityRowHeight = 50f;
     private const float MetaRowHeight = 28f;
@@ -25,30 +24,27 @@ internal static class MusterCard
 
     public static readonly Vector4 LiveGreen = new(0.24f, 0.82f, 0.44f, 1f);
     private static readonly Vector4 CapacityAmber = new(0.98f, 0.72f, 0.30f, 1f);
-    private static readonly Vector4 CardWhite = new(1f, 1f, 1f, 1f);
 
     public static float Height(MusterDto muster, float width, float scale)
     {
-        var lines = DescriptionLines(muster, width, scale, out var lineHeight);
+        var lines = DescriptionLines(muster, InnerWidth(width, scale), out var lineHeight);
         var descriptionHeight = lines > 0 ? lines * lineHeight + DescriptionGap * scale : 0f;
-        return (Pad * 2f + IdentityRowHeight + MetaRowHeight) * scale + descriptionHeight;
+        return (PadY * 2f + IdentityRowHeight + MetaRowHeight) * scale + descriptionHeight;
     }
 
-    public static bool Draw(Rect card, MusterDto muster, RemoteImageCache images, LodestoneService lodestone,
-        PhoneTheme theme, AppSkin ui, long nowUnix, int currentDataCenterId)
+    public static bool Draw(in FeedCellScope cell, MusterDto muster, RemoteImageCache images,
+        LodestoneService lodestone, PhoneTheme theme, AppSkin ui, long nowUnix, int currentDataCenterId)
     {
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
-        var rounding = Metrics.Radius.Card * scale * 1.15f;
         var palette = ui.Palette;
-        var hovered = UiInteract.Hover(card.Min, card.Max);
+        var card = cell.Bounds;
         var live = muster.StartsAtUnix <= nowUnix;
-        DrawSurface(drawList, card, rounding, palette, hovered, live, scale);
 
-        var pad = Pad * scale;
+        var pad = FeedCell.PadX * scale;
         var left = card.Min.X + pad;
         var right = card.Max.X - pad;
-        var rowTop = card.Min.Y + pad;
+        var rowTop = card.Min.Y + PadY * scale;
         var avatarRadius = AvatarRadius * scale;
         var avatarCenter = new Vector2(left + avatarRadius, rowTop + IdentityRowHeight * scale * 0.5f);
         AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, MusterText.HostLabel(muster), muster.HostWorld,
@@ -78,33 +74,15 @@ internal static class MusterCard
         DrawCategoryChip(drawList, textLeft, chipCenterY, muster, chipRight - textLeft, palette.Accent, scale);
 
         var descriptionTop = rowTop + IdentityRowHeight * scale;
-        DrawDescription(drawList, muster, left, descriptionTop, card.Width, scale, palette.BodyInk);
+        DrawDescription(drawList, muster, left, descriptionTop, right - left, palette.BodyInk);
 
-        var metaTop = card.Max.Y - pad - MetaRowHeight * scale;
+        var metaTop = card.Max.Y - PadY * scale - MetaRowHeight * scale;
         DrawMetaRow(drawList, muster, left, right, metaTop + MetaRowHeight * scale * 0.5f, palette, scale);
 
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        return UiInteract.Click(card.Min, card.Max, hovered);
+        return cell.Tapped;
     }
 
-    private static void DrawSurface(ImDrawListPtr drawList, Rect card, float rounding, in AppPalette palette,
-        bool hovered, bool live, float scale)
-    {
-        Elevation.Card(drawList, card.Min, card.Max, rounding, scale, hovered ? 1f : 0.65f);
-        var breath = live ? 0.012f * Pulse.Wave(Pulse.Breath) : 0f;
-        var top = Palette.WithAlpha(Palette.Mix(CardWhite, palette.Accent, 0.5f),
-            (hovered ? 0.17f : 0.12f) + breath);
-        var bottom = Palette.WithAlpha(CardWhite, hovered ? 0.05f : 0.03f);
-        Squircle.FillVerticalGradient(drawList, card.Min, card.Max, rounding, ImGui.GetColorU32(top),
-            ImGui.GetColorU32(bottom));
-        var strokeAlpha = hovered ? 0.34f : live ? 0.18f + 0.14f * Pulse.Wave(Pulse.Calm) : 0.16f;
-        Squircle.Stroke(drawList, card.Min, card.Max, rounding,
-            ImGui.GetColorU32(Palette.WithAlpha(live ? LiveGreen : palette.Accent, strokeAlpha)), 1f * scale);
-    }
+    private static float InnerWidth(float width, float scale) => width - FeedCell.PadX * 2f * scale;
 
     private static float DrawStatusPill(ImDrawListPtr drawList, float right, float centerY, bool live, string label,
         Vector4 tint, float scale)
@@ -182,15 +160,14 @@ internal static class MusterCard
         return min.X;
     }
 
-    private static void DrawDescription(ImDrawListPtr drawList, MusterDto muster, float left, float top, float width,
-        float scale, Vector4 ink)
+    private static void DrawDescription(ImDrawListPtr drawList, MusterDto muster, float left, float top,
+        float textWidth, Vector4 ink)
     {
         if (muster.Description.Length == 0)
         {
             return;
         }
 
-        var textWidth = width - Pad * 2f * scale;
         using (Plugin.Fonts.Push(TextStyles.Callout.Scale, TextStyles.Callout.Weight))
         {
             Plugin.Fonts.NoticeText(muster.Description);
@@ -241,9 +218,8 @@ internal static class MusterCard
             centerY - placeSize.Y * 0.5f, metaRight - placeLeft, TextStyles.Subheadline, palette.MutedInk);
     }
 
-    private static int DescriptionLines(MusterDto muster, float width, float scale, out float lineHeight)
+    private static int DescriptionLines(MusterDto muster, float textWidth, out float lineHeight)
     {
-        var textWidth = width - Pad * 2f * scale;
         using (Plugin.Fonts.Push(TextStyles.Callout.Scale, TextStyles.Callout.Weight))
         {
             lineHeight = ImGui.GetTextLineHeightWithSpacing();

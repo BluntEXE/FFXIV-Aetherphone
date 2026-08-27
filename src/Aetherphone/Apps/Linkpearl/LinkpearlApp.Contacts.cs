@@ -18,7 +18,7 @@ internal sealed partial class LinkpearlApp
     private const float PostRequestReadIntervalSeconds = 0.5f;
     private const float PostRequestPollWindowSeconds = 6f;
     private const float RequestCooldownSeconds = 5f;
-    private const float FriendRowHeight = 60f;
+
     private readonly List<FriendEntry> friends = new();
     private float sinceRead;
     private float sinceRequest = RequestCooldownSeconds;
@@ -85,8 +85,9 @@ internal sealed partial class LinkpearlApp
             return;
         }
 
-        SettingsSection.Header($"{title} · {count}", frameTheme);
-        var card = GroupCard.Begin(frameTheme, count, FriendRowHeight);
+        ListSection.Header($"{title} · {count}", frameTheme.TextMuted);
+        var drawList = ImGui.GetWindowDrawList();
+        var rowHeight = ContactRow.Height * UiScale.Current;
         for (var index = 0; index < friends.Count; index++)
         {
             if (friends[index].Online != online || !MatchesContact(friends[index]))
@@ -94,13 +95,14 @@ internal sealed partial class LinkpearlApp
                 continue;
             }
 
-            if (ContactRow.Draw(card.NextRow(), friends[index], frameTheme, lodestone))
+            var cell = FeedCell.Begin(drawList, rowHeight, frameTheme.HoverWash);
+            if (ContactRow.Draw(cell, friends[index], frameTheme, lodestone))
             {
                 router.Push(LinkpearlRoute.Detail(friends[index]));
             }
-        }
 
-        card.End();
+            FeedCell.End(drawList, cell, frameTheme.Hairline);
+        }
     }
 
     private bool MatchesContact(FriendEntry friend) =>

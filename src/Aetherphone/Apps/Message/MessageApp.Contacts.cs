@@ -108,7 +108,7 @@ internal sealed partial class MessageApp
             {
                 if (favorites.Count > 0)
                 {
-                    DrawSectionLabelInset(Loc.T(L.Message.Favorites), scale);
+                    ListSection.Label(ui, Loc.T(L.Message.Favorites));
                     for (var index = 0; index < favorites.Count; index++)
                     {
                         DrawContactRow(favorites[index], scale);
@@ -119,7 +119,7 @@ internal sealed partial class MessageApp
                 {
                     if (favorites.Count > 0)
                     {
-                        DrawSectionLabelInset(Loc.T(L.Phone.ContactsSection), scale);
+                        ListSection.Label(ui, Loc.T(L.Phone.ContactsSection));
                     }
 
                     for (var index = 0; index < others.Count; index++)
@@ -174,13 +174,6 @@ internal sealed partial class MessageApp
 
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, cardHeight + 12f * scale));
-    }
-
-    private void DrawSectionLabelInset(string label, float scale)
-    {
-        var origin = ImGui.GetCursorScreenPos();
-        ImGui.SetCursorScreenPos(new Vector2(origin.X + FeedCell.PadX * scale, origin.Y));
-        ui.SectionLabel(label);
     }
 
     private void CollectContacts(List<ContactDto> favoritesTarget, List<ContactDto> othersTarget)

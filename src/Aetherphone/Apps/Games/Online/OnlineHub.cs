@@ -62,7 +62,7 @@ internal sealed class OnlineHub
         var body = new Rect(new Vector2(content.Min.X, content.Min.Y + AppHeader.Height * scale), content.Max);
         Consume();
         store.EnsureFresh();
-        using var surface = AppSurface.Begin(body);
+        using var surface = AppSurface.BeginEdgeToEdge(body);
         if (store.AccountId.Length == 0)
         {
             DrawNotice(ui, scale, Loc.T(L.Games.OnlineSignIn));
@@ -147,9 +147,11 @@ internal sealed class OnlineHub
     {
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
+        var inset = FeedCell.PadX * scale;
         var drawList = ImGui.GetWindowDrawList();
         var height = HostCardHeight * scale;
-        var row = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
+        var row = new Rect(new Vector2(origin.X + inset, origin.Y),
+            new Vector2(origin.X + width - inset, origin.Y + height));
         var rounding = Metrics.Radius.Card * scale;
         var accent = OnlineGameArt.Accent(kind);
         var pillLabel = Loc.T(L.Games.OnlineHostShort);
@@ -211,13 +213,15 @@ internal sealed class OnlineHub
     {
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
+        var inset = FeedCell.PadX * scale;
         var drawList = ImGui.GetWindowDrawList();
-        Typography.Draw(drawList, origin, Loc.T(L.Games.OnlineJoinHeading), ui.MutedInk,
-            TextStyles.FootnoteEmphasized);
+        Typography.Draw(drawList, new Vector2(origin.X + inset, origin.Y), Loc.T(L.Games.OnlineJoinHeading),
+            ui.MutedInk, TextStyles.FootnoteEmphasized);
         var fieldTop = origin.Y + 20f * scale;
         var pillWidth = 92f * scale;
-        var fieldMin = new Vector2(origin.X, fieldTop);
-        var fieldMax = new Vector2(origin.X + width - pillWidth - 8f * scale, fieldTop + FieldHeight * scale);
+        var fieldMin = new Vector2(origin.X + inset, fieldTop);
+        var fieldMax = new Vector2(origin.X + width - inset - pillWidth - 8f * scale,
+            fieldTop + FieldHeight * scale);
         Squircle.Fill(drawList, fieldMin, fieldMax, Metrics.Radius.Field * scale, ImGui.GetColorU32(ui.FieldSurface));
         ImGui.SetCursorScreenPos(new Vector2(fieldMin.X + 10f * scale,
             (fieldMin.Y + fieldMax.Y) * 0.5f - ImGui.GetFrameHeight() * 0.5f));
@@ -231,7 +235,8 @@ internal sealed class OnlineHub
 
         var trimmed = codeBuffer.AsSpan().Trim();
         var ready = trimmed.Length > 0 && !store.IntentInFlight;
-        var pillCenter = new Vector2(origin.X + width - pillWidth * 0.5f, fieldTop + FieldHeight * scale * 0.5f);
+        var pillCenter = new Vector2(origin.X + width - inset - pillWidth * 0.5f,
+            fieldTop + FieldHeight * scale * 0.5f);
         if (GameHud.Button(pillCenter, new Vector2(pillWidth, FieldHeight * scale), Loc.T(L.Games.OnlineJoin),
                 ready ? ui.Accent : ui.MutedInk, ui.Theme) && ready)
         {
@@ -246,9 +251,10 @@ internal sealed class OnlineHub
     private static void DrawHeading(AppSkin ui, float scale, string label)
     {
         var origin = ImGui.GetCursorScreenPos();
-        Typography.Draw(ImGui.GetWindowDrawList(), origin,
-            Typography.FitText(label, ScrollLayout.StableContentWidth(), TextStyles.Title3), ui.TitleInk,
-            TextStyles.Title3);
+        var inset = FeedCell.PadX * scale;
+        var width = ScrollLayout.StableContentWidth();
+        Typography.Draw(ImGui.GetWindowDrawList(), new Vector2(origin.X + inset, origin.Y),
+            Typography.FitText(label, width - inset * 2f, TextStyles.Title3), ui.TitleInk, TextStyles.Title3);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(1f, HeadingHeight * scale));
     }
@@ -270,11 +276,6 @@ internal sealed class OnlineHub
                 inlineReason = string.Empty;
                 store.Enter(rooms[index].RoomId);
                 openRoom(rooms[index].RoomId, rooms[index].GameKind);
-            }
-
-            if (index + 1 < rooms.Length)
-            {
-                ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
             }
         }
     }
@@ -311,30 +312,21 @@ internal sealed class OnlineHub
 
     private static bool DrawRoomRow(AppSkin ui, float scale, GameRoomCardDto room, string title, string subtitle)
     {
-        var width = ScrollLayout.StableContentWidth();
-        var origin = ImGui.GetCursorScreenPos();
         var drawList = ImGui.GetWindowDrawList();
-        var height = RoomRowHeight * scale;
-        var row = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
-        var rounding = Metrics.Radius.Card * scale;
-        var hovered = UiInteract.Hover(row.Min, row.Max);
-        ui.Card(drawList, row.Min, row.Max, rounding, hovered);
-        if (hovered)
-        {
-            Squircle.Fill(drawList, row.Min, row.Max, rounding, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
+        var cell = FeedCell.Begin(drawList, RoomRowHeight * scale, ui.HoverWash);
+        var row = cell.Bounds;
+        var inset = FeedCell.PadX * scale;
 
         var accent = OnlineGameArt.Accent(room.GameKind);
         var radius = RoomMedallionRadius * scale;
-        var medallion = new Vector2(row.Min.X + 14f * scale + radius, row.Center.Y);
+        var medallion = new Vector2(row.Min.X + inset + radius, row.Center.Y);
         drawList.AddCircleFilled(medallion, radius, ImGui.GetColorU32(GamePalette.Darken(accent, 0.32f)), 36);
         drawList.AddCircle(medallion, radius, ImGui.GetColorU32(GamePalette.Lighten(accent, 0.35f) with { W = 0.5f }),
             36, 1f * scale);
         OnlineGameArt.Draw(drawList, room.GameKind, medallion, radius * 1.3f, scale);
 
         var textLeft = medallion.X + radius + 12f * scale;
-        var textWidth = MathF.Max(1f, row.Max.X - 12f * scale - textLeft);
+        var textWidth = MathF.Max(1f, row.Max.X - inset - textLeft);
         Typography.Draw(drawList, new Vector2(textLeft, row.Center.Y - 17f * scale),
             Typography.FitText(title, textWidth, TextStyles.Headline), ui.TitleInk, TextStyles.Headline);
         var subtitleLeft = textLeft;
@@ -350,24 +342,25 @@ internal sealed class OnlineHub
         Typography.Draw(drawList, new Vector2(subtitleLeft, subtitleY),
             Typography.FitText(subtitle, MathF.Max(1f, textWidth - (subtitleLeft - textLeft)), TextStyles.Footnote),
             ui.MutedInk, TextStyles.Footnote);
-        var clicked = UiInteract.Click(row.Min, row.Max, hovered);
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, height));
-        return clicked;
+        FeedCell.End(drawList, cell, ui.Hairline);
+        return cell.Tapped;
     }
 
     private static void DrawNotice(AppSkin ui, float scale, string message)
     {
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
+        var inset = FeedCell.PadX * scale;
         var drawList = ImGui.GetWindowDrawList();
         var pad = 14f * scale;
-        var block = Typography.MeasureWrappedBlock(message, TextStyles.Footnote, width - pad * 2f);
+        var textWidth = width - inset * 2f - pad * 2f;
+        var block = Typography.MeasureWrappedBlock(message, TextStyles.Footnote, textWidth);
         var height = block.Y + pad * 2f;
-        var max = new Vector2(origin.X + width, origin.Y + height);
-        ui.Card(drawList, origin, max, Metrics.Radius.Card * scale);
-        Typography.DrawWrappedLeft(new Vector2(origin.X + pad, origin.Y + pad), message, ui.MutedInk,
-            TextStyles.Footnote, width - pad * 2f);
+        var min = new Vector2(origin.X + inset, origin.Y);
+        var max = new Vector2(origin.X + width - inset, origin.Y + height);
+        ui.Card(drawList, min, max, Metrics.Radius.Card * scale);
+        Typography.DrawWrappedLeft(new Vector2(min.X + pad, min.Y + pad), message, ui.MutedInk,
+            TextStyles.Footnote, textWidth);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height + Metrics.Space.Sm * scale));
     }

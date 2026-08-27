@@ -76,22 +76,23 @@ internal sealed partial class LinkpearlApp
         }
 
         var hintWorld = submittedRegionIsDataCenter ? string.Empty : submittedRegion;
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             ImGui.Dummy(new Vector2(0f, 4f * scale));
-            var card = GroupCard.Begin(theme, matches.Length, FindResultRowHeight);
+            var drawList = ImGui.GetWindowDrawList();
             for (var index = 0; index < matches.Length; index++)
             {
                 var match = matches[index];
                 var world = match.World.Length > 0 ? match.World : hintWorld;
-                if (DrawResultRow(card.NextRow(), theme, scale, match.Name, world,
+                var cell = FeedCell.Begin(drawList, FindResultRowHeight * scale, theme.HoverWash);
+                if (DrawResultCell(cell, theme, scale, match.Name, world,
                         lodestone.Avatar(match.Name, world, FindResultAvatarRadius * 2f * scale)))
                 {
                     router.Push(LinkpearlRoute.Character(match.Id, match.Name, world));
                 }
-            }
 
-            card.End();
+                FeedCell.End(drawList, cell, theme.Hairline);
+            }
         }
     }
 
@@ -111,28 +112,51 @@ internal sealed partial class LinkpearlApp
             return;
         }
 
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             ImGui.Dummy(new Vector2(0f, 4f * scale));
-            var card = GroupCard.Begin(theme, matches.Length, FindResultRowHeight);
+            var drawList = ImGui.GetWindowDrawList();
             for (var index = 0; index < matches.Length; index++)
             {
                 var match = matches[index];
-                if (DrawResultRow(card.NextRow(), theme, scale, match.Name, match.Subtitle,
+                var cell = FeedCell.Begin(drawList, FindResultRowHeight * scale, theme.HoverWash);
+                if (DrawResultCell(cell, theme, scale, match.Name, match.Subtitle,
                         lodestone.Remote(match.CrestKey, match.Crest, FindResultAvatarRadius * 2f * scale)))
                 {
                     router.Push(LinkpearlRoute.FreeCompany(match.Id, match.Name, match.World));
                 }
-            }
 
-            card.End();
+                FeedCell.End(drawList, cell, theme.Hairline);
+            }
         }
+    }
+
+    private static bool DrawResultCell(in FeedCellScope cell, PhoneTheme theme, float scale, string title,
+        string subtitle, AvatarHandle image)
+    {
+        var inset = FeedCell.PadX * scale;
+        var row = new Rect(new Vector2(cell.Bounds.Min.X + inset, cell.Bounds.Min.Y),
+            new Vector2(cell.Bounds.Max.X - inset, cell.Bounds.Max.Y));
+        DrawResultContent(row, theme, scale, title, subtitle, image, cell.Hovered);
+        return cell.Tapped;
     }
 
     private static bool DrawResultRow(Rect row, PhoneTheme theme, float scale, string title, string subtitle,
         AvatarHandle image)
     {
         var hovered = UiInteract.Hover(row.Min, row.Max);
+        DrawResultContent(row, theme, scale, title, subtitle, image, hovered);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return UiInteract.Click(row.Min, row.Max, hovered);
+    }
+
+    private static void DrawResultContent(Rect row, PhoneTheme theme, float scale, string title, string subtitle,
+        AvatarHandle image, bool hovered)
+    {
         var drawList = ImGui.GetWindowDrawList();
         var avatarRadius = FindResultAvatarRadius * scale;
         var avatarCenter = new Vector2(row.Min.X + avatarRadius, row.Center.Y);
@@ -159,12 +183,6 @@ internal sealed partial class LinkpearlApp
 
         DrawChevronRight(new Vector2(row.Max.X, row.Center.Y), 6f * scale, 2.2f * scale,
             hovered ? theme.TextStrong : theme.TextMuted);
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        return UiInteract.Click(row.Min, row.Max, hovered);
     }
 
     private void DrawCharacterDetail(Rect area, LinkpearlRoute route)

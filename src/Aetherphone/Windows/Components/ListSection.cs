@@ -6,6 +6,8 @@ namespace Aetherphone.Windows.Components;
 
 internal static class ListSection
 {
+    public static void Label(AppSkin ui, string label) => Header(label, ui.HeaderInk);
+
     public static void Header(string title, Vector4 ink) => Header(title, ink, null, null);
 
     public static void Header(string title, Vector4 ink, PhoneTheme? theme, string? hint)
