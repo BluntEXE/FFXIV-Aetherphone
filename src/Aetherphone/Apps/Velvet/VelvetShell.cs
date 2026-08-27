@@ -215,7 +215,8 @@ internal sealed partial class VelvetShell : IResumableApp
 
     public void OnClosed()
     {
-        postMenu.Close();
+        postSheet.Close();
+        threadSheet.Close();
         stories.Close();
     }
 
@@ -288,6 +289,9 @@ internal sealed partial class VelvetShell : IResumableApp
         {
             avatarLightbox.Draw(screen, theme);
         }
+
+        DrawPostSheet(screen);
+        DrawThreadSheet(screen);
     }
 
     public void Dispose()
@@ -526,14 +530,12 @@ internal sealed partial class VelvetShell : IResumableApp
 
             if (picked != (int)activeTab)
             {
-                postMenu.Close();
+                postSheet.Close();
+                threadSheet.Close();
             }
 
             activeTab = (VelvetPage)picked;
         }
-
-        DrawPostMenu(area, true);
-        DrawThreadMenu(area);
     }
 
     private void DrawRichBody(ImDrawListPtr drawList, RichTextLayout layout, Vector2 origin)

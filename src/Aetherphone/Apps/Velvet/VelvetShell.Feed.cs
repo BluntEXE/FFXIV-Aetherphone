@@ -216,9 +216,7 @@ internal sealed partial class VelvetShell
         if (ui.IconButton(moreCenter, moreRadius, FontAwesomeIcon.EllipsisH.ToIconString(), VelvetTheme.BodyInk,
                 AppSkin.Transparent, 1f, Loc.T(L.Velvet.More)))
         {
-            menuPost = entry;
-            postMenu.Toggle(entry.Id, new Rect(moreCenter - new Vector2(moreRadius, moreRadius),
-                moreCenter + new Vector2(moreRadius, moreRadius)));
+            OpenPostSheet(entry, true);
         }
 
         var photos = PostMedia.Photos(entry.MediaUrls, entry.MediaUrl);

@@ -38,10 +38,11 @@ internal sealed partial class LinkpearlApp
     private readonly ChipRail filterRail = new();
     private readonly string[] filterLabels = new string[4];
     private readonly bool[] filterActive = new bool[4];
-    private readonly DropdownMenu conversationMenu = new();
-    private readonly List<DropdownMenu.Item> conversationItems = new(7);
+    private readonly ActionSheet conversationSheet = new();
+    private readonly List<ActionSheet.Item> conversationItems = new(7);
     private readonly List<byte> conversationActions = new(7);
-    private string conversationMenuKey = string.Empty;
+    private string conversationSheetKey = string.Empty;
+    private string conversationSheetTitle = string.Empty;
     private ChatFilter chatFilter;
 
     private void DrawChatsTab(Rect content)
@@ -208,7 +209,7 @@ internal sealed partial class LinkpearlApp
                 OpenConversation(row.Key);
                 break;
             case InboxRowAction.Menu:
-                OpenConversationMenu(row.Key, new Rect(ImGui.GetMousePos(), ImGui.GetMousePos() + new Vector2(1f, 1f)));
+                OpenConversationSheet(row);
                 break;
             case InboxRowAction.TogglePin:
                 TogglePin(row);
@@ -305,64 +306,60 @@ internal sealed partial class LinkpearlApp
         OpenConversation(hit.ConversationKey);
     }
 
-    private void OpenConversationMenu(string key, Rect anchor)
+    private void OpenConversationSheet(InboxRow row)
     {
-        conversationMenuKey = key;
-        var row = inbox.Find(key);
-        conversationMenu.Header = row is null ? string.Empty : Title(row);
-        conversationMenu.Toggle("linkpearl.conversation.menu", anchor);
-    }
-
-    private void DrawConversationMenu(Rect area)
-    {
-        if (!conversationMenu.IsOpenFor("linkpearl.conversation.menu"))
-        {
-            return;
-        }
-
-        var row = inbox.Find(conversationMenuKey);
-        if (row is null)
-        {
-            conversationMenu.Close();
-            return;
-        }
-
+        conversationSheetKey = row.Key;
+        conversationSheetTitle = Title(row);
         conversationItems.Clear();
         conversationActions.Clear();
-        var popped = popouts.IsOpen(row.Key);
-        AddMenuItem(popped ? L.Linkpearl.ClosePopout : L.Linkpearl.OpenPopout,
-            popped ? FontAwesomeIcon.WindowMinimize : FontAwesomeIcon.WindowRestore, MenuPopout);
+        AddSheetItem(popouts.IsOpen(row.Key) ? L.Linkpearl.ClosePopout : L.Linkpearl.OpenPopout, MenuPopout);
         if (row.Unread > 0)
         {
-            AddMenuItem(L.Linkpearl.MarkRead, FontAwesomeIcon.CheckDouble, MenuMarkRead);
+            AddSheetItem(L.Linkpearl.MarkRead, MenuMarkRead);
         }
 
-        AddMenuItem(row.Pinned ? L.Common.Unpin : L.Common.Pin, FontAwesomeIcon.Thumbtack, MenuTogglePin);
-        AddMenuItem(row.Muted ? L.Linkpearl.Unmute : L.Linkpearl.Mute,
-            row.Muted ? FontAwesomeIcon.Bell : FontAwesomeIcon.BellSlash, MenuToggleMute);
+        AddSheetItem(row.Pinned ? L.Common.Unpin : L.Common.Pin, MenuTogglePin);
+        AddSheetItem(row.Muted ? L.Linkpearl.Unmute : L.Linkpearl.Mute, MenuToggleMute);
         if (row.Tab is not null)
         {
-            AddMenuItem(L.Linkpearl.EditTab, FontAwesomeIcon.SlidersH, MenuEditTab);
+            AddSheetItem(L.Linkpearl.EditTab, MenuEditTab);
         }
 
-        AddMenuItem(L.Linkpearl.ClearHistory, FontAwesomeIcon.Eraser, MenuClearHistory, true);
+        AddSheetItem(L.Linkpearl.ClearHistory, MenuClearHistory, true);
         if (row.Tab is not null)
         {
-            AddMenuItem(L.Linkpearl.DeleteTab, FontAwesomeIcon.TrashAlt, MenuDeleteTab, true);
+            AddSheetItem(L.Linkpearl.DeleteTab, MenuDeleteTab, true);
         }
 
-        var clicked = conversationMenu.Draw(area, frameTheme, CollectionsMarshal.AsSpan(conversationItems));
-        if (clicked < 0)
+        conversationSheet.Open();
+    }
+
+    private void DrawConversationSheet(Rect area)
+    {
+        if (!conversationSheet.CapturesPointer)
         {
             return;
         }
 
-        RunConversationAction(row, conversationActions[clicked]);
+        var row = inbox.Find(conversationSheetKey);
+        if (row is null)
+        {
+            conversationSheet.Close();
+        }
+
+        var picked = conversationSheet.Draw(area, ActionSheetStyle.From(ui),
+            CollectionsMarshal.AsSpan(conversationItems), Loc.T(L.Common.Cancel), false, conversationSheetTitle);
+        if (picked < 0 || row is null)
+        {
+            return;
+        }
+
+        RunConversationAction(row, conversationActions[picked]);
     }
 
-    private void AddMenuItem(LocString label, FontAwesomeIcon icon, byte action, bool danger = false)
+    private void AddSheetItem(LocString label, byte action, bool danger = false)
     {
-        conversationItems.Add(new DropdownMenu.Item(Loc.T(label), icon.ToIconString(), danger));
+        conversationItems.Add(new ActionSheet.Item(Loc.T(label), string.Empty, danger));
         conversationActions.Add(action);
     }
 

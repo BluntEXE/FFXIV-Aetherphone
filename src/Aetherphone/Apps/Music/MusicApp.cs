@@ -277,7 +277,7 @@ internal sealed partial class MusicApp : IResumableApp
         navigation = context.Navigation;
         ui.Theme = theme;
         radioSortMenu.Gate();
-        playlistMenu.Gate();
+        playlistSheet.Gate();
         rolladeck.EnsureFresh();
         CaptureRecent();
         if (!playback.IsActive)
@@ -324,6 +324,7 @@ internal sealed partial class MusicApp : IResumableApp
         }
 
         DrawPlaylistOverlay(content, scale, overlayValue, delta);
+        DrawPlaylistSheet(screen);
     }
 
     private static Rect StageFrom(Rect content, float scale)

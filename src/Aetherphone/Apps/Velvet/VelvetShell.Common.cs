@@ -1,10 +1,10 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Report;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Velvet;
@@ -63,72 +63,74 @@ internal sealed partial class VelvetShell
 
     private bool AlreadyReported(string targetId) => reportedTargets.Contains(targetId);
 
-    private void DrawPostMenu(Rect area, bool inFeed)
+    private void OpenPostSheet(VelvetPostDto post, bool inFeed)
     {
-        if (menuPost is not { } post || !postMenu.IsOpenFor(post.Id))
-        {
-            return;
-        }
-
-        var mine = store.Me is { } me && me.UserId == post.OwnerId;
-        var count = 0;
+        sheetPost = post;
+        sheetPostInFeed = inFeed;
+        postSheetTitle = DisplayNameOf(post.OwnerDisplayName, post.OwnerHandle);
+        postSheetCount = 0;
         if (inFeed)
         {
-            postItems[count++] = new DropdownMenu.Item(Loc.T(L.Velvet.ViewPost),
-                FontAwesomeIcon.Expand.ToIconString());
+            AddPostSheetItem(PostSheetAction.View, Loc.T(L.Velvet.ViewPost), false);
         }
 
-        if (mine)
+        if (store.Me is { } me && me.UserId == post.OwnerId)
         {
-            var isPublic = post.Audience == VelvetPostAudience.Public;
-            postItems[count++] = new DropdownMenu.Item(Loc.T(isPublic ? L.Velvet.MakeConnections : L.Velvet.MakePublic),
-                (isPublic ? FontAwesomeIcon.Lock : FontAwesomeIcon.Globe).ToIconString());
-            postItems[count++] = new DropdownMenu.Item(Loc.T(L.Velvet.DeleteConfirm),
-                FontAwesomeIcon.Trash.ToIconString(), true);
+            AddPostSheetItem(PostSheetAction.Audience,
+                Loc.T(post.Audience == VelvetPostAudience.Public ? L.Velvet.MakeConnections : L.Velvet.MakePublic),
+                false);
+            AddPostSheetItem(PostSheetAction.Delete, Loc.T(L.Velvet.DeleteConfirm), true);
         }
         else
         {
-            postItems[count++] = new DropdownMenu.Item(Loc.T(L.Velvet.Report),
-                FontAwesomeIcon.Flag.ToIconString(), true);
-            postItems[count++] = new DropdownMenu.Item(Loc.T(L.Velvet.Block),
-                FontAwesomeIcon.Ban.ToIconString(), true);
+            AddPostSheetItem(PostSheetAction.Report, Loc.T(L.Velvet.Report), true);
+            AddPostSheetItem(PostSheetAction.Block, Loc.T(L.Velvet.Block), true);
         }
 
-        var picked = postMenu.Draw(area, theme, postItems.AsSpan(0, count));
-        if (picked < 0)
+        postSheet.Open();
+    }
+
+    private void AddPostSheetItem(PostSheetAction action, string label, bool danger)
+    {
+        postSheetActions[postSheetCount] = action;
+        postSheetItems[postSheetCount] = new ActionSheet.Item(label, string.Empty, danger);
+        postSheetCount++;
+    }
+
+    private void DrawPostSheet(Rect screen)
+    {
+        if (!postSheet.CapturesPointer)
         {
             return;
         }
 
-        var viewOffset = inFeed ? 1 : 0;
-        if (inFeed && picked == 0)
+        var picked = postSheet.Draw(screen, ActionSheetStyle.From(ui), postSheetItems.AsSpan(0, postSheetCount),
+            Loc.T(L.Common.Cancel), false, postSheetTitle);
+        if (picked < 0 || sheetPost is not { } post)
         {
-            OpenPostDetail(post.Id);
             return;
         }
 
-        if (mine)
+        switch (postSheetActions[picked])
         {
-            if (picked == viewOffset)
-            {
-                var nextAudience = post.Audience == VelvetPostAudience.Public
+            case PostSheetAction.View:
+                OpenPostDetail(post.Id);
+                break;
+            case PostSheetAction.Audience:
+                store.SetPostAudience(post, post.Audience == VelvetPostAudience.Public
                     ? VelvetPostAudience.Connections
-                    : VelvetPostAudience.Public;
-                store.SetPostAudience(post, nextAudience);
-                return;
-            }
-
-            AskDeletePost(post.Id, inFeed ? null : back);
-            return;
+                    : VelvetPostAudience.Public);
+                break;
+            case PostSheetAction.Delete:
+                AskDeletePost(post.Id, sheetPostInFeed ? null : back);
+                break;
+            case PostSheetAction.Report:
+                OpenReport("velvet_post", post.Id, Loc.T(L.Velvet.ReportPost));
+                break;
+            case PostSheetAction.Block:
+                AskBlock(post.OwnerId, DisplayNameOf(post.OwnerDisplayName, post.OwnerHandle));
+                break;
         }
-
-        if (picked == viewOffset)
-        {
-            OpenReport("velvet_post", post.Id, Loc.T(L.Velvet.ReportPost));
-            return;
-        }
-
-        AskBlock(post.OwnerId, DisplayNameOf(post.OwnerDisplayName, post.OwnerHandle));
     }
 
     private void AskBlock(string userId, string displayName)

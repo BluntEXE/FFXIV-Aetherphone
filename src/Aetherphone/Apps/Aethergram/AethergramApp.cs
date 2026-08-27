@@ -32,6 +32,15 @@ namespace Aetherphone.Apps.Aethergram;
 
 internal sealed partial class AethergramApp : IResumableApp
 {
+    private enum PostSheetAction
+    {
+        View,
+        Delete,
+        Follow,
+        Report,
+        Block,
+    }
+
     private const int MaxCaptionLength = 500;
     private const int MaxPhotoTags = 20;
     private const int MaxCommentLength = 500;
@@ -45,6 +54,7 @@ internal sealed partial class AethergramApp : IResumableApp
     private const float NavPillHeight = 34f;
     private const float NavPillAlpha = 0.10f;
     private const int GridColumns = 3;
+    private const int PostSheetMaxItems = 4;
     private const float LikeBurstDuration = 0.9f;
     private const float TagModeBarHeight = 28f;
 
@@ -79,17 +89,20 @@ internal sealed partial class AethergramApp : IResumableApp
     private readonly TranslationService translation;
     private readonly ReportService report;
     private readonly WallpaperImageCache wallpaperImages;
-    private readonly DropdownMenu postMenu = new();
+    private readonly ActionSheet postSheet = new();
     private readonly DropdownMenu mediaFilterMenu = new();
     private readonly DropdownMenu overflowMenu = new();
-    private readonly DropdownMenu.Item[] postItems = new DropdownMenu.Item[4];
+    private readonly ActionSheet.Item[] postSheetItems = new ActionSheet.Item[PostSheetMaxItems];
+    private readonly PostSheetAction[] postSheetActions = new PostSheetAction[PostSheetMaxItems];
+    private int postSheetCount;
+    private string postSheetTitle = string.Empty;
     private readonly DropdownMenu.Item[] mediaFilterItems = new DropdownMenu.Item[2 + SocialRegion.Codes.Length];
     private readonly DropdownMenu.Item[] overflowItems = new DropdownMenu.Item[3];
     private readonly Action<NotificationDto> openActivityActor;
     private readonly Action<NotificationDto> openActivityPost;
     private readonly SocialActivityFeed activityFeed;
     private readonly Action loadOlderActivity;
-    private PostDto? menuPost;
+    private PostDto? sheetPost;
     private readonly StoryPresenter stories;
     private readonly PhotoViewerOverlay photoViewer = new();
     private readonly AvatarLightbox avatarLightbox = new();
@@ -298,10 +311,10 @@ internal sealed partial class AethergramApp : IResumableApp
         theme = context.Theme;
         navigation = context.Navigation;
         ui.Theme = theme;
-        postMenu.Gate();
+        postSheet.Gate();
         mediaFilterMenu.Gate();
         overflowMenu.Gate();
-        inboxRowMenu.Gate();
+        inboxRowSheet.Gate();
         threadView.GateMenus();
         var screen = SceneChrome.ScreenFrom(context.Content, theme, UiScale.Current);
         ui.Backdrop(screen);
@@ -332,6 +345,8 @@ internal sealed partial class AethergramApp : IResumableApp
 
         DrawMediaFilterMenu(screen);
         DrawOverflowMenu(screen);
+        DrawPostSheet(screen);
+        DrawInboxRowSheet(screen);
     }
 
     private void DrawView(AethergramRoute route, Rect area, int depth)
@@ -439,7 +454,6 @@ internal sealed partial class AethergramApp : IResumableApp
         }
 
         DrawBottomNav(navRect);
-        DrawPostMenu(area, true);
     }
 
     private void DrawRootHeader(Rect area)
@@ -756,7 +770,7 @@ internal sealed partial class AethergramApp : IResumableApp
         }
 
         activeTab = tab;
-        postMenu.Close();
+        postSheet.Close();
         overflowMenu.Close();
         switch (tab)
         {
@@ -861,69 +875,70 @@ internal sealed partial class AethergramApp : IResumableApp
         return mediaUrl is not null && !configuration.AethergramShowCommentMedia;
     }
 
-    private void DrawPostMenu(Rect area, bool includeView)
+    private void OpenPostSheet(PostDto post, bool includeView)
     {
-        if (menuPost is not { } post || !postMenu.IsOpenFor(post.Id))
-        {
-            return;
-        }
-
-        var mine = store.Me is { } me && me.Id == post.AuthorId;
-        var count = 0;
+        sheetPost = post;
+        postSheetTitle = SocialIdentity.Name(post.AuthorDisplayName, post.AuthorHandle);
+        postSheetCount = 0;
         if (includeView)
         {
-            postItems[count++] = new DropdownMenu.Item(Loc.T(L.Aethergram.ViewPost),
-                FontAwesomeIcon.Expand.ToIconString());
+            AddPostSheetItem(PostSheetAction.View, Loc.T(L.Aethergram.ViewPost), false);
         }
 
-        if (mine)
+        if (store.Me is { } me && me.Id == post.AuthorId)
         {
-            postItems[count++] = new DropdownMenu.Item(Loc.T(L.Aethergram.DeleteConfirm),
-                FontAwesomeIcon.Trash.ToIconString(), true);
+            AddPostSheetItem(PostSheetAction.Delete, Loc.T(L.Aethergram.DeleteConfirm), true);
         }
         else
         {
-            postItems[count++] = new DropdownMenu.Item(
-                Loc.T(post.IsFollowing ? L.Aethergram.Unfollow : L.Aethergram.Follow),
-                (post.IsFollowing ? FontAwesomeIcon.UserCheck : FontAwesomeIcon.UserPlus).ToIconString());
-            postItems[count++] = new DropdownMenu.Item(Loc.T(L.Report.Action),
-                FontAwesomeIcon.Flag.ToIconString(), true);
-            postItems[count++] = new DropdownMenu.Item(Loc.T(L.Social.BlockAction),
-                FontAwesomeIcon.Ban.ToIconString(), true);
+            AddPostSheetItem(PostSheetAction.Follow,
+                Loc.T(post.IsFollowing ? L.Aethergram.Unfollow : L.Aethergram.Follow), false);
+            AddPostSheetItem(PostSheetAction.Report, Loc.T(L.Report.Action), true);
+            AddPostSheetItem(PostSheetAction.Block, Loc.T(L.Social.BlockAction), true);
         }
 
-        var picked = postMenu.Draw(area, theme, postItems.AsSpan(0, count));
-        if (picked < 0)
+        postSheet.Open();
+    }
+
+    private void AddPostSheetItem(PostSheetAction action, string label, bool danger)
+    {
+        postSheetActions[postSheetCount] = action;
+        postSheetItems[postSheetCount] = new ActionSheet.Item(label, string.Empty, danger);
+        postSheetCount++;
+    }
+
+    private void DrawPostSheet(Rect screen)
+    {
+        if (!postSheet.CapturesPointer)
         {
             return;
         }
 
-        var viewOffset = includeView ? 1 : 0;
-        if (includeView && picked == 0)
+        var picked = postSheet.Draw(screen, ActionSheetStyle.From(ui), postSheetItems.AsSpan(0, postSheetCount),
+            Loc.T(L.Common.Cancel), false, postSheetTitle);
+        if (picked < 0 || sheetPost is not { } post)
         {
-            OpenDetail(post);
             return;
         }
 
-        if (mine)
+        switch (postSheetActions[picked])
         {
-            profile.AskDeletePost(post.Id, back);
-            return;
+            case PostSheetAction.View:
+                OpenDetail(post);
+                break;
+            case PostSheetAction.Delete:
+                profile.AskDeletePost(post.Id, back);
+                break;
+            case PostSheetAction.Follow:
+                store.SetFollow(post.AuthorId, !post.IsFollowing);
+                break;
+            case PostSheetAction.Report:
+                profile.OpenReport("post", post.Id, Loc.T(L.Report.PostTitle));
+                break;
+            case PostSheetAction.Block:
+                profile.AskBlock(post.AuthorDisplayName, post.AuthorHandle, post.AuthorId);
+                break;
         }
-
-        if (picked == viewOffset)
-        {
-            store.SetFollow(post.AuthorId, !post.IsFollowing);
-            return;
-        }
-
-        if (picked == viewOffset + 1)
-        {
-            profile.OpenReport("post", post.Id, Loc.T(L.Report.PostTitle));
-            return;
-        }
-
-        profile.AskBlock(post.AuthorDisplayName, post.AuthorHandle, post.AuthorId);
     }
 
     private void DrawFeedList(Rect listRect, SocialFeedScope scope)
@@ -1086,9 +1101,7 @@ internal sealed partial class AethergramApp : IResumableApp
         if (ui.IconButton(moreCenter, moreRadius, FontAwesomeIcon.EllipsisH.ToIconString(), AppPalettes.Aethergram.BodyInk,
                 AppSkin.Transparent, 1f, Loc.T(L.Aethergram.More)))
         {
-            menuPost = post;
-            postMenu.Toggle(post.Id, new Rect(moreCenter - new Vector2(moreRadius, moreRadius),
-                moreCenter + new Vector2(moreRadius, moreRadius)));
+            OpenPostSheet(post, true);
         }
 
         var imageRect = new Rect(new Vector2(innerX, imageTop), new Vector2(innerX + innerWidth, imageBottom));

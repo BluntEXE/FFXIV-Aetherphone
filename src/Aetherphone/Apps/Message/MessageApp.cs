@@ -172,7 +172,7 @@ internal sealed partial class MessageApp : IResumableApp
         ConsumeSharedPhoto();
         ProcessPending();
         threadView.GateMenus();
-        chatMenu.Gate();
+        chatSheet.Gate();
         var screen = SceneChrome.ScreenFrom(context.Content, theme, UiScale.Current);
         ui.Backdrop(screen);
         using (InputShield.Engage(avatarLightbox.Expanded))
@@ -184,6 +184,8 @@ internal sealed partial class MessageApp : IResumableApp
         {
             avatarLightbox.Draw(screen, theme);
         }
+
+        DrawChatSheet(screen);
     }
 
     private void SyncCallRoute()
@@ -371,7 +373,6 @@ internal sealed partial class MessageApp : IResumableApp
         }
 
         DrawBottomNav(navRect);
-        DrawChatMenu(area);
     }
 
     private void DrawRootHeader(Rect area)
@@ -468,7 +469,7 @@ internal sealed partial class MessageApp : IResumableApp
     private void SelectTab(MessageTab tab)
     {
         activeTab = tab;
-        chatMenu.Close();
+        chatSheet.Close();
         filter = string.Empty;
     }
 

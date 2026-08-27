@@ -5,7 +5,6 @@ using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -97,7 +96,7 @@ internal sealed partial class VelvetShell
             }
             else if (hit == VRowHit.Overflow)
             {
-                OpenThreadMenu(thread.OtherUserId);
+                OpenThreadSheet(thread.OtherUserId);
             }
         }
 
@@ -214,23 +213,23 @@ internal sealed partial class VelvetShell
         }
     }
 
-    private void OpenThreadMenu(string otherId)
+    private void OpenThreadSheet(string otherId)
     {
-        menuThreadId = otherId;
-        var position = ImGui.GetMousePos();
-        threadMenu.Toggle(otherId, new Rect(position, position + new Vector2(1f, 1f)));
+        sheetThreadId = otherId;
+        threadSheetItems[0] = new ActionSheet.Item(Loc.T(L.Velvet.DeleteConversation), string.Empty, true);
+        threadSheet.Open();
     }
 
-    private void DrawThreadMenu(Rect area)
+    private void DrawThreadSheet(Rect screen)
     {
-        if (menuThreadId is not { } otherId || !threadMenu.IsOpenFor(otherId))
+        if (!threadSheet.CapturesPointer)
         {
             return;
         }
 
-        threadItems[0] = new DropdownMenu.Item(Loc.T(L.Velvet.DeleteConversation),
-            FontAwesomeIcon.Trash.ToIconString(), true);
-        if (threadMenu.Draw(area, theme, threadItems) == 0)
+        var picked = threadSheet.Draw(screen, ActionSheetStyle.From(ui), threadSheetItems, Loc.T(L.Common.Cancel),
+            false);
+        if (picked == 0 && sheetThreadId is { } otherId)
         {
             AskDeleteConversation(otherId);
         }

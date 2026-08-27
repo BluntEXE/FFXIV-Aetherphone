@@ -8,16 +8,16 @@ using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Aethergram;
 
 internal sealed partial class AethergramApp
 {
 
-    private readonly DropdownMenu inboxRowMenu = new();
-    private readonly DropdownMenu.Item[] inboxRowItems = new DropdownMenu.Item[1];
-    private string? inboxMenuThreadId;
+    private readonly ActionSheet inboxRowSheet = new();
+    private readonly ActionSheet.Item[] inboxRowSheetItems = new ActionSheet.Item[1];
+    private string? inboxSheetThreadId;
+    private string inboxSheetTitle = string.Empty;
     private int inboxTab;
     private readonly string[] inboxSegmentLabels = new string[2];
 
@@ -84,8 +84,6 @@ internal sealed partial class AethergramApp
                 ImGui.Dummy(new Vector2(0f, 24f * scale));
             }
         }
-
-        DrawInboxRowMenu(area);
     }
 
     private void DrawInboxEmptyState(Rect listRect, bool showRequests, int totalThreads, float scale)
@@ -156,7 +154,7 @@ internal sealed partial class AethergramApp
 
         if (cell.Hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
         {
-            OpenInboxRowMenu(thread.OtherUserId);
+            OpenInboxRowSheet(thread);
         }
         else if (cell.Tapped)
         {
@@ -166,23 +164,29 @@ internal sealed partial class AethergramApp
         FeedCell.End(drawList, cell, ui.Hairline);
     }
 
-    private void OpenInboxRowMenu(string otherId)
+    private void OpenInboxRowSheet(GramThreadDto thread)
     {
-        inboxMenuThreadId = otherId;
-        var position = ImGui.GetMousePos();
-        inboxRowMenu.Toggle(otherId, new Rect(position, position + new Vector2(1f, 1f)));
+        inboxSheetThreadId = thread.OtherUserId;
+        inboxSheetTitle = SocialIdentity.Name(thread.OtherDisplayName, thread.OtherHandle);
+        inboxRowSheetItems[0] = new ActionSheet.Item(Loc.T(L.Aethergram.DeleteConversation), string.Empty, true);
+        inboxRowSheet.Open();
     }
 
-    private void DrawInboxRowMenu(Rect area)
+    private void DrawInboxRowSheet(Rect screen)
     {
-        if (inboxMenuThreadId is not { } otherId || !inboxRowMenu.IsOpenFor(otherId))
+        if (!inboxRowSheet.CapturesPointer)
         {
             return;
         }
 
-        inboxRowItems[0] = new DropdownMenu.Item(Loc.T(L.Aethergram.DeleteConversation),
-            FontAwesomeIcon.Trash.ToIconString(), true);
-        if (inboxRowMenu.Draw(area, theme, inboxRowItems) == 0)
+        if (inboxRowSheet.IsOpen && router.Current.Screen != AethergramScreen.Inbox)
+        {
+            inboxRowSheet.Close();
+        }
+
+        var picked = inboxRowSheet.Draw(screen, ActionSheetStyle.From(ui), inboxRowSheetItems,
+            Loc.T(L.Common.Cancel), false, inboxSheetTitle);
+        if (picked == 0 && inboxSheetThreadId is { } otherId)
         {
             AskDeleteConversation(otherId);
         }

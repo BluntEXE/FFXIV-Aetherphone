@@ -167,9 +167,7 @@ internal sealed partial class VelvetShell
             if (ui.IconButton(trailingCenter, trailingRadius, FontAwesomeIcon.EllipsisH.ToIconString(),
                     VelvetTheme.BodyInk, AppSkin.Transparent, 1f, Loc.T(L.Velvet.More)))
             {
-                menuPost = post;
-                postMenu.Toggle(post.Id, new Rect(trailingCenter - new Vector2(trailingRadius, trailingRadius),
-                    trailingCenter + new Vector2(trailingRadius, trailingRadius)));
+                OpenPostSheet(post, false);
             }
 
             ImGui.SetCursorScreenPos(new Vector2(origin.X, actionsY + 20f * scale));
@@ -226,7 +224,6 @@ internal sealed partial class VelvetShell
         }
 
         DrawCommentComposer(new Rect(new Vector2(area.Min.X, area.Max.Y - composerHeight), area.Max), area, postId);
-        DrawPostMenu(area, false);
     }
 
     private void DrawComments(int totalCount, float width, float scale, bool viewerOwnsPost)

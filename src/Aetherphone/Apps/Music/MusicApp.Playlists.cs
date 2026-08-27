@@ -40,8 +40,10 @@ internal sealed partial class MusicApp
     private string nameTargetId = string.Empty;
     private string nameDraft = string.Empty;
     private bool focusNameField;
-    private Rect playlistMenuAnchor;
-    private readonly DropdownMenu playlistMenu = new();
+    private readonly ActionSheet playlistSheet = new();
+    private readonly ActionSheet.Item[] playlistSheetItems = new ActionSheet.Item[2];
+    private string playlistSheetId = string.Empty;
+    private string playlistSheetTitle = string.Empty;
 
     private Song CurrentSong()
     {
@@ -69,7 +71,7 @@ internal sealed partial class MusicApp
         }
 
         pendingSong = song;
-        playlistMenu.Close();
+        playlistSheet.Close();
         ShowOverlay(OverlayMode.Pick);
     }
 
@@ -158,7 +160,7 @@ internal sealed partial class MusicApp
     {
         overlay = OverlayMode.None;
         nameDraft = string.Empty;
-        playlistMenu.Close();
+        playlistSheet.Close();
         if (snap)
         {
             overlayPresence.SnapTo(0f);
@@ -542,21 +544,38 @@ internal sealed partial class MusicApp
                 ImGui.Dummy(new Vector2(0f, 8f * scale));
             }
         }
+    }
 
-        var screen = SceneChrome.ScreenFrom(content, theme, scale);
-        var items = new[]
+    private void OpenPlaylistSheet(PlaylistRecord record)
+    {
+        playlistSheetId = record.Id;
+        playlistSheetTitle = record.Name;
+        playlistSheetItems[0] = new ActionSheet.Item(Loc.T(L.Music.RenamePlaylist));
+        playlistSheetItems[1] = new ActionSheet.Item(Loc.T(L.Music.DeletePlaylist), string.Empty, true);
+        playlistSheet.Open();
+    }
+
+    private void DrawPlaylistSheet(Rect screen)
+    {
+        if (!playlistSheet.CapturesPointer)
         {
-            new DropdownMenu.Item(Loc.T(L.Music.RenamePlaylist), FontAwesomeIcon.Pen.ToIconString()),
-            new DropdownMenu.Item(Loc.T(L.Music.DeletePlaylist), FontAwesomeIcon.TrashAlt.ToIconString(), true),
-        };
-        var picked = playlistMenu.Draw(screen, theme, items);
+            return;
+        }
+
+        if (playlists.Find(playlistSheetId) is null)
+        {
+            playlistSheet.Close();
+        }
+
+        var picked = playlistSheet.Draw(screen, ActionSheetStyle.From(ui), playlistSheetItems,
+            Loc.T(L.Common.Cancel), false, playlistSheetTitle);
         if (picked == 0)
         {
-            BeginRenamePlaylist(record.Id);
+            BeginRenamePlaylist(playlistSheetId);
         }
         else if (picked == 1)
         {
-            AskDeletePlaylist(record.Id);
+            AskDeletePlaylist(playlistSheetId);
         }
     }
 
@@ -581,9 +600,7 @@ internal sealed partial class MusicApp
         if (ui.IconButton(menuCenter, 15f * scale, FontAwesomeIcon.EllipsisV.ToIconString(), ui.TitleInk,
                 AppSkin.Transparent, 0.8f))
         {
-            playlistMenuAnchor = new Rect(menuCenter - new Vector2(16f * scale, 16f * scale),
-                menuCenter + new Vector2(16f * scale, 16f * scale));
-            playlistMenu.Toggle("music.playlistMenu", playlistMenuAnchor);
+            OpenPlaylistSheet(record);
         }
     }
 

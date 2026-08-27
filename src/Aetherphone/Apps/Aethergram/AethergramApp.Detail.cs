@@ -161,9 +161,7 @@ internal sealed partial class AethergramApp
             if (ui.IconButton(moreCenter, moreRadius, FontAwesomeIcon.EllipsisH.ToIconString(),
                     AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1f, Loc.T(L.Aethergram.More)))
             {
-                menuPost = post;
-                postMenu.Toggle(post.Id, new Rect(moreCenter - new Vector2(moreRadius, moreRadius),
-                    moreCenter + new Vector2(moreRadius, moreRadius)));
+                OpenPostSheet(post, false);
             }
 
             ImGui.SetCursorScreenPos(new Vector2(origin.X, actionsY + 20f * scale));
@@ -256,7 +254,6 @@ internal sealed partial class AethergramApp
         }
 
         DrawCommentComposer(new Rect(new Vector2(area.Min.X, area.Max.Y - composerHeight), area.Max), area, postId);
-        DrawPostMenu(area, false);
     }
 
     private void DrawEarlierCommentsRow()

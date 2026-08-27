@@ -32,7 +32,6 @@ internal sealed partial class LinkpearlApp
         DrawThreadHeader(header, row, scale);
         OpenThread(row);
         chatThread.Draw(new Rect(new Vector2(area.Min.X, header.Max.Y), area.Max), frameTheme);
-        DrawConversationMenu(area);
         chatMenu.Draw(area, frameTheme);
     }
 
@@ -75,7 +74,7 @@ internal sealed partial class LinkpearlApp
         if (ui.IconButton(actions.Slot(0), actions.Radius, FontAwesomeIcon.EllipsisH.ToIconString(),
                 frameTheme.TextStrong, AppSkin.Transparent, 1f, Loc.T(L.Linkpearl.More), HoverLabelSide.Below))
         {
-            OpenConversationMenu(row.Key, actions.Bounds(0));
+            OpenConversationSheet(row);
         }
 
         if (ui.IconButton(actions.Slot(1), actions.Radius, FontAwesomeIcon.Search.ToIconString(),

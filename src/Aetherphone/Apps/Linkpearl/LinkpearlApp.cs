@@ -179,7 +179,7 @@ internal sealed partial class LinkpearlApp : IResumableApp
     public void OnClosed()
     {
         chatMenu.Close();
-        conversationMenu.Close();
+        conversationSheet.Close();
         moreMenu.Close();
         editorMenu.Close();
         settingsMenu.Close();
@@ -199,13 +199,14 @@ internal sealed partial class LinkpearlApp : IResumableApp
         ui.Palette = AppPalettes.Linkpearl(frameTheme);
         ui.Theme = frameTheme;
         chatMenu.Gate();
-        conversationMenu.Gate();
+        conversationSheet.Gate();
         moreMenu.Gate();
         editorMenu.Gate();
         settingsMenu.Gate();
         chatThread.Gate();
         ConsumeLaunchRequests();
         router.Draw(context.Content, context.Theme.AppBackground, delta, drawView);
+        DrawConversationSheet(context.Content);
     }
 
     private void DrawView(LinkpearlRoute route, Rect area, int depth)
@@ -263,7 +264,6 @@ internal sealed partial class LinkpearlApp : IResumableApp
             DrawBottomNav(navRect);
         }
 
-        DrawConversationMenu(area);
         DrawMoreMenu(area);
         newChatSheet.Draw(area, frameTheme, Loc.T(L.Linkpearl.NewChat), NewChatSheetFraction(area), drawNewChatSheet);
     }
