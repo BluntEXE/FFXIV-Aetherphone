@@ -1630,6 +1630,36 @@ internal static class L
 
     internal static class Changelog
     {
+        public static readonly LocString[] Release1013 =
+        {
+            new("changelog.r1013.0",
+                "Redesigned Chirper around a new look: Home, Explore, Alerts and Profile tabs, edge to edge post cells with the same layout everywhere, threads with a reply line under each post, a new compose pill, and post actions in a bottom sheet"),
+            new("changelog.r1013.1",
+                "Added profile pictures next to every post, reply and quote in Chirper, and a banner behind a framed avatar on profiles that opens full size when tapped"),
+            new("changelog.r1013.2",
+                "Added sounds across the phone for taps, typing, app transitions, toggles, waking it, taking a photo, sending a message, connecting and ending a call and payouts, all of which can be turned off in Settings > Sounds"),
+            new("changelog.r1013.3",
+                "Added sound effects to the mini-games in Games, with their own volume under Game Sounds in Settings > Sounds"),
+            new("changelog.r1013.4",
+                "Added a Silent Mode switch to the main Settings page, so muting the ringtone, notifications and interface sounds is one tap away"),
+            new("changelog.r1013.5",
+                "Added keyboard controls to Beat: the four lanes bind to 1 to 4 with A, S, D and F as alternates, and each key is printed on a cap under its lane"),
+            new("changelog.r1013.6",
+                "Added search to the home screen: pull down on the app grid or tap the Search pill where the page dots sit to find apps, contacts, settings pages, notes, conversations and market items in one list"),
+            new("changelog.r1013.7",
+                "Added MogCast, Music, News and Hunts to the Chinese game version, so that client gets the same apps as everyone else"),
+            new("changelog.r1013.8",
+                "Added a Trademark document and updated the official Aetherphone documents, including the readme, terms, privacy notice and third-party notices, all readable in the GitHub repository"),
+            new("changelog.r1013.9",
+                "Moved Show in Group Pose off the main Settings page into General settings"),
+            new("changelog.r1013.10",
+                "Improved rendering performance: every screen paints into one transform stage, shared toolkit pieces replace hand rolled copies, and text is rasterised once per orientation instead of once per frame"),
+            new("changelog.r1013.11",
+                "Improved CPU and memory use while the phone is open: app icons, gradient artwork, call state and font checks are cached instead of being rebuilt every frame, and artwork is shared between apps instead of kept twice"),
+            new("changelog.r1013.12",
+                "Improved the animation when the phone turns into landscape mode: the whole device rotates over a short ramp with the screen fading across the halfway point, instead of stretching through a square shape"),
+        };
+
         public static readonly LocString[] Release1012 =
         {
             new("changelog.r1012.0",
