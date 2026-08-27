@@ -561,7 +561,9 @@ internal static class ConfirmDialog
             default:
                 if (enabled)
                 {
-                    fill = Palette.WithAlpha(hovered ? new Vector4(1f, 1f, 1f, 0.16f) : theme.SurfaceMuted, opacity);
+                    fill = Palette.WithAlpha(
+                        hovered ? Palette.Mix(theme.SurfaceMuted, theme.TextStrong, 0.16f) : theme.SurfaceMuted,
+                        opacity);
                     textColor = new Vector4(theme.TextStrong.X, theme.TextStrong.Y, theme.TextStrong.Z, opacity);
                 }
                 else
