@@ -1,4 +1,5 @@
 using Aetherphone.Core.Animation;
+using Aetherphone.Core.Notifications;
 
 namespace Aetherphone.Core.Shell;
 
@@ -30,6 +31,7 @@ internal sealed class MinimizeTransition
         if (phase is MinimizePhase.None or MinimizePhase.Expanding)
         {
             phase = MinimizePhase.Collapsing;
+            UiFeedback.Play(UiSound.Minimize);
         }
     }
 
@@ -38,6 +40,7 @@ internal sealed class MinimizeTransition
         if (phase is MinimizePhase.Minimized or MinimizePhase.Collapsing)
         {
             phase = MinimizePhase.Expanding;
+            UiFeedback.Play(UiSound.Maximize);
         }
     }
 

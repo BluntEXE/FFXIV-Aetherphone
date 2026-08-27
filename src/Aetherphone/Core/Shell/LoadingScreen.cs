@@ -1,4 +1,5 @@
 using Aetherphone.Core.Animation;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 
@@ -17,7 +18,7 @@ internal sealed class LoadingScreen
 
     public bool IsActive => sequence.IsActive;
 
-    public void BeginSession() => sequence.Begin(!configuration.WelcomeShown);
+    public void BeginSession() => Begin(!configuration.WelcomeShown);
 
     public void Show()
     {
@@ -26,7 +27,13 @@ internal sealed class LoadingScreen
             return;
         }
 
-        sequence.Begin(false);
+        Begin(false);
+    }
+
+    private void Begin(bool fullSequence)
+    {
+        sequence.Begin(fullSequence);
+        UiFeedback.Play(UiSound.Startup);
     }
 
     public void Advance(float deltaSeconds) => sequence.Advance(deltaSeconds);

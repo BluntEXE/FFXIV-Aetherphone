@@ -78,6 +78,10 @@ and level-matched:
 - [Interface Sounds](https://kenney.nl/assets/interface-sounds): clicks,
   ticks, errors
 
+The shell clips `startup.wav`, `minimize.wav` and `maximize.wav` are
+synthesized for this plugin by `tools/build-shell-sounds.py` (additive bells,
+swept tones and filtered noise) and carry no third-party rights.
+
 The four `simon_*.wav` tones are sine waves synthesized for this plugin with
 ffmpeg (E3, A3, C#4, E4) and carry no third-party rights.
 
