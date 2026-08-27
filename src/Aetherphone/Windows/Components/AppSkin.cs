@@ -98,11 +98,13 @@ internal sealed class AppSkin
     public static bool PillButton(Rect rect, string label, bool filled, PhoneTheme theme) =>
         PillButtonCore(rect, label, filled, theme.Accent, theme.SurfaceMuted, theme.TextStrong, theme);
 
-    public static bool PillButton(Rect rect, string label, bool filled, bool enabled, PhoneTheme theme)
+    public static bool PillButton(Rect rect, string label, bool filled, bool enabled, PhoneTheme theme,
+        bool overlay = false)
     {
         if (enabled)
         {
-            return PillButtonCore(rect, label, filled, theme.Accent, theme.GroupedCard, theme.TextStrong, theme);
+            return PillButtonCore(rect, label, filled, theme.Accent, theme.GroupedCard, theme.TextStrong, theme,
+                overlay: overlay);
         }
 
         var drawList = ImGui.GetWindowDrawList();
@@ -210,10 +212,12 @@ internal sealed class AppSkin
     }
 
     private static bool PillButtonCore(Rect rect, string label, bool filled, Vector4 accent, Vector4 surface,
-        Vector4 titleInk, PhoneTheme theme, string? id = null)
+        Vector4 titleInk, PhoneTheme theme, string? id = null, bool overlay = false)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = UiInteract.Hover(rect.Min, rect.Max);
+        var hovered = overlay
+            ? UiInteract.HoverWindowOnly(rect.Min, rect.Max)
+            : UiInteract.Hover(rect.Min, rect.Max);
         var radius = rect.Height * 0.5f;
         var fill = filled
             ? (hovered ? Core.Theme.Palette.Mix(accent, theme.TextStrong, 0.12f) : accent)

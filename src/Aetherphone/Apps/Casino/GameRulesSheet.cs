@@ -1,5 +1,4 @@
 using Aetherphone.Core;
-using Aetherphone.Core.Animation;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
@@ -10,13 +9,6 @@ namespace Aetherphone.Apps.Casino;
 
 internal sealed class GameRulesSheet
 {
-    private const ImGuiWindowFlags OverlayFlags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse |
-                                                  ImGuiWindowFlags.NoBackground;
-
-    private const float RevealSmoothTime = 0.16f;
-    private const float MaxDim = 0.45f;
-    private const float PanelRounding = 26f;
-    private const float PadX = 18f;
     private const float PanelHeightShare = 0.78f;
     private const float StepGap = 12f;
     private const float FactRowHeight = 34f;
@@ -25,38 +17,45 @@ internal sealed class GameRulesSheet
     private const float FactStackGap = 2f;
     private const float BulletRadius = 11f;
     private const float PlayPillHeight = 46f;
+    private const float PlayPillGap = 10f;
+    private const float BodyMinHeight = 24f;
 
-    private Spring reveal;
-    private bool open;
-    private int openedFrame;
+    private readonly SheetSurface sheet = new("casino.rules");
+    private readonly Action<Rect> drawSheetBody;
+
+    private AppSkin skin = null!;
     private bool playRequested;
     private string gameId = string.Empty;
 
-    public bool IsOpen => open;
+    public GameRulesSheet()
+    {
+        drawSheetBody = DrawSheetBody;
+    }
+
+    public bool IsOpen => sheet.IsOpen;
 
     public string GameId => gameId;
 
     public void Open(string game)
     {
         gameId = game;
-        if (open)
+        if (sheet.IsOpen)
         {
             return;
         }
 
-        open = true;
-        openedFrame = ImGui.GetFrameCount();
+        sheet.Open();
         playRequested = false;
     }
 
     public void Close()
     {
-        open = false;
+        sheet.Close();
     }
 
     public void Gate()
     {
-        if (open)
+        if (sheet.IsOpen)
         {
             UiInteract.BlockThisFrame();
         }
@@ -75,74 +74,30 @@ internal sealed class GameRulesSheet
 
     public void Draw(Rect screen, AppSkin ui)
     {
-        var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
-        reveal.Step(open ? 1f : 0f, RevealSmoothTime, delta);
-        if (!open && reveal.IsResting(0f, 0.001f, 0.005f))
+        skin = ui;
+        sheet.Draw(screen, ui.Theme, Loc.T(CasinoRules.TitleOf(gameId)), PanelHeightShare, drawSheetBody);
+    }
+
+    private void DrawSheetBody(Rect content)
+    {
+        var scale = UiScale.Current;
+        var pillTop = content.Max.Y - PlayPillHeight * scale;
+        var bodyHeight = MathF.Max(BodyMinHeight * scale, pillTop - PlayPillGap * scale - content.Min.Y);
+        ImGui.SetCursorScreenPos(content.Min);
+        using (ImRaii.Child("##casinoRulesBody", new Vector2(content.Width, bodyHeight), false,
+                   ImGuiWindowFlags.NoBackground))
         {
-            reveal.SnapTo(0f);
+            DrawBody(skin, scale);
+        }
+
+        var pillRect = new Rect(new Vector2(content.Min.X, pillTop), new Vector2(content.Max.X, content.Max.Y));
+        if (!AppSkin.PillButton(pillRect, Loc.T(L.Casino.RulesPlay), true, sheet.IsOpen, skin.Theme, overlay: true))
+        {
             return;
         }
 
-        var opacity = Math.Clamp(reveal.Value, 0f, 1f);
-        var slide = Easing.EaseOutQuint(opacity);
-        ImGui.SetCursorScreenPos(screen.Min);
-        using (ImRaii.Child("##casinoRules", screen.Size, false, OverlayFlags))
-        {
-            var drawList = ImGui.GetWindowDrawList();
-            drawList.AddRectFilled(screen.Min, screen.Max,
-                ImGui.GetColorU32(new Vector4(0f, 0f, 0f, MaxDim * opacity)));
-            var panel = DrawPanel(screen, ui, drawList, slide, open && opacity > 0.5f);
-            if (!open || opacity <= 0.5f)
-            {
-                return;
-            }
-
-            if (ImGui.GetFrameCount() != openedFrame && UiInteract.ClickedOutside(panel.Min, panel.Max))
-            {
-                Close();
-            }
-        }
-    }
-
-    private Rect DrawPanel(Rect screen, AppSkin ui, ImDrawListPtr drawList, float slide, bool interactive)
-    {
-        var scale = UiScale.Current;
-        var panelHeight = screen.Height * PanelHeightShare;
-        var panelBottom = screen.Max.Y + panelHeight * (1f - slide);
-        var panelTop = panelBottom - panelHeight;
-        var panelMin = new Vector2(screen.Min.X, panelTop);
-        var panelMax = new Vector2(screen.Max.X, panelBottom);
-        var rounding = PanelRounding * scale;
-        Squircle.Fill(drawList, panelMin, panelMax, rounding,
-            ImGui.GetColorU32(Palette.Lighten(ui.Palette.BackdropTop, 0.10f) with { W = 1f }));
-        Squircle.Stroke(drawList, panelMin, panelMax, rounding,
-            ImGui.GetColorU32(Palette.WithAlpha(ui.TitleInk, 0.08f)), Metrics.Stroke.Hairline);
-
-        var title = Loc.T(CasinoRules.TitleOf(gameId));
-        var titleHeight = Typography.Measure(title, TextStyles.Headline).Y;
-        Typography.DrawCentered(drawList, new Vector2(screen.Center.X, panelTop + 14f * scale + titleHeight * 0.5f),
-            title, ui.TitleInk, TextStyles.Headline);
-
-        var pillTop = panelBottom - 12f * scale - PlayPillHeight * scale;
-        var contentTop = panelTop + titleHeight + 24f * scale;
-        var contentMin = new Vector2(panelMin.X + PadX * scale, contentTop);
-        var contentSize = new Vector2(panelMax.X - PadX * scale - contentMin.X,
-            MathF.Max(24f * scale, pillTop - 10f * scale - contentTop));
-        ImGui.SetCursorScreenPos(contentMin);
-        using (ImRaii.Child("##casinoRulesBody", contentSize, false, ImGuiWindowFlags.NoBackground))
-        {
-            DrawBody(ui, scale);
-        }
-
-        var pillRect = new Rect(new Vector2(panelMin.X + PadX * scale, pillTop),
-            new Vector2(panelMax.X - PadX * scale, pillTop + PlayPillHeight * scale));
-        if (AppSkin.PillButton(pillRect, Loc.T(L.Casino.RulesPlay), true, interactive, ui.Theme))
-        {
-            playRequested = true;
-            Close();
-        }
-
-        return new Rect(panelMin, panelMax);
+        playRequested = true;
+        Close();
     }
 
     private void DrawBody(AppSkin ui, float scale)
