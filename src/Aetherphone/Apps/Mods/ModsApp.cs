@@ -242,16 +242,16 @@ internal sealed partial class ModsApp : IPhoneApp
         switch ((InstallOutcome)outcome)
         {
             case InstallOutcome.Sent:
-                CopyToast.Show(Loc.T(pendingInstallPrompt ? L.Mods.InstallPrompt : L.Mods.InstallSent));
+                ShellToast.Show(Loc.T(pendingInstallPrompt ? L.Mods.InstallPrompt : L.Mods.InstallSent));
                 hub.Library.Invalidate();
                 libraryRefreshAt = ImGui.GetTime() + LibraryRefreshDelaySeconds;
                 break;
             case InstallOutcome.PluginNotRunning:
                 pluginCheckedAt = -PluginCheckSeconds;
-                CopyToast.Show(Loc.T(L.Mods.InstallPluginMissing));
+                ShellToast.Show(Loc.T(L.Mods.InstallPluginMissing));
                 break;
             default:
-                CopyToast.Show(Loc.T(L.Mods.InstallFailed));
+                ShellToast.Show(Loc.T(L.Mods.InstallFailed));
                 break;
         }
     }

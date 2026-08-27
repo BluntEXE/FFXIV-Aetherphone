@@ -63,7 +63,7 @@ internal sealed partial class ModsApp
         if (ui.PillButton(copyRect, Loc.T(L.Mods.CopyRepository), true, "mods.copyrepo"))
         {
             ImGui.SetClipboardText(ModsContent.RepositoryUrl);
-            CopyToast.Show();
+            ShellToast.Show();
         }
 
         var installerTop = copyRect.Max.Y + gap;

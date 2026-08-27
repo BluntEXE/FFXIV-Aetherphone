@@ -231,7 +231,7 @@ internal sealed partial class LinkpearlApp
     {
         if (!row.Pinned && row.Tab is not null && tabs.PinnedCount() >= TabStore.MaxPinned)
         {
-            CopyToast.Show(Loc.T(L.Linkpearl.PinLimit, TabStore.MaxPinned));
+            ShellToast.Show(Loc.T(L.Linkpearl.PinLimit, TabStore.MaxPinned));
             return;
         }
 
@@ -373,7 +373,7 @@ internal sealed partial class LinkpearlApp
             case MenuPopout:
                 if (!popouts.Toggle(row.Key))
                 {
-                    CopyToast.Show(Loc.T(L.Linkpearl.PopoutLimit, LinkpearlPopouts.MaxWindows));
+                    ShellToast.Show(Loc.T(L.Linkpearl.PopoutLimit, LinkpearlPopouts.MaxWindows));
                 }
 
                 break;

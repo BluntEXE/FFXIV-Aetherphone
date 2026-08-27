@@ -718,7 +718,7 @@ internal sealed partial class HuntsApp
         if (outcome == LifestreamOutcome.NotInstalled)
         {
             ImGui.SetClipboardText(TravelPlanner.Command(in destination));
-            CopyToast.Show();
+            ShellToast.Show();
             return;
         }
 

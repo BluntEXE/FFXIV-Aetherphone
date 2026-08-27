@@ -29,7 +29,7 @@ internal static class InstallSourceNotice
             Confirm = () =>
             {
                 ImGui.SetClipboardText(url);
-                CopyToast.Show();
+                ShellToast.Show();
             },
         });
     }

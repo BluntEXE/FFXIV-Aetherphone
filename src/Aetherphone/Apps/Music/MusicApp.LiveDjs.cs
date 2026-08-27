@@ -627,7 +627,7 @@ internal sealed partial class MusicApp
                     else
                     {
                         ImGui.SetClipboardText(LifestreamBridge.TravelCommand(dj.LifestreamArg!));
-                        CopyToast.Show();
+                        ShellToast.Show();
                     }
                 }
 
@@ -1119,7 +1119,7 @@ internal sealed partial class MusicApp
                         else
                         {
                             ImGui.SetClipboardText(LifestreamBridge.TravelCommand(venue.Lifestream!));
-                            CopyToast.Show();
+                            ShellToast.Show();
                         }
                     }
 

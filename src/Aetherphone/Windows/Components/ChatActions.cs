@@ -23,7 +23,7 @@ internal static class ChatActions
             ImGui.SetClipboardText(LocationShare.TryParse(body, out var location)
                 ? LocationShare.Summary(location)
                 : body);
-            CopyToast.Show();
+            ShellToast.Show();
             return;
         }
     }

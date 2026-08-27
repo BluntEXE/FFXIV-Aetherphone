@@ -1057,11 +1057,11 @@ internal sealed class ChatTranscript
         if (outcome == LifestreamOutcome.NotInstalled)
         {
             ImGui.SetClipboardText(TravelPlanner.Command(in destination));
-            CopyToast.Show();
+            ShellToast.Show();
             return;
         }
 
-        CopyToast.Show(TravelPlanner.Notice(outcome, in destination));
+        ShellToast.Show(TravelPlanner.Notice(outcome, in destination));
     }
 
     private void DrawMusterBubble(TranscriptMessage message, int index, string musterId, in ChatTranscriptModel model)

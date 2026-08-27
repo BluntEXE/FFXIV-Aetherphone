@@ -136,7 +136,7 @@ internal sealed class TableDoor
             && token.Length > 0)
         {
             ImGui.SetClipboardText(CasinoShare.Compose(token));
-            CopyToast.Show();
+            ShellToast.Show();
         }
 
         ImGui.SetCursorScreenPos(origin);

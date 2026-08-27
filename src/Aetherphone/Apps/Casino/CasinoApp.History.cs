@@ -294,7 +294,7 @@ internal sealed partial class CasinoApp
             if (AppSkin.PillButton(copyRect, Loc.T(L.Casino.CopyDetails), false, true, theme))
             {
                 ImGui.SetClipboardText(BuildRoundDetailsBlob(verifiedRound));
-                CopyToast.Show();
+                ShellToast.Show();
             }
 
             ImGui.SetCursorScreenPos(copyOrigin);

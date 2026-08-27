@@ -267,7 +267,7 @@ internal sealed class PhoneShell : IDisposable
             }
 
             HoverTooltip.Flush();
-            CopyToast.Flush();
+            ShellToast.Draw(device, themes.Chrome);
             return;
         }
 

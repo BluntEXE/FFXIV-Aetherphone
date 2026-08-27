@@ -157,7 +157,6 @@ internal sealed class ShellOverlayCoordinator
         if (state.SetupActive)
         {
             HoverTooltip.Flush();
-            CopyToast.Flush();
             ShellToast.Draw(screen, theme);
             banOverlay.Draw(screen, theme);
             confirmOverlay.Draw(screen, theme);
@@ -206,7 +205,6 @@ internal sealed class ShellOverlayCoordinator
             !director.CapturesPointer);
             
         HoverTooltip.Flush();
-        CopyToast.Flush();
         ShellToast.Draw(screen, theme);
         shareSheet.Draw(screen, theme);
         reportOverlay.Draw(screen, theme);

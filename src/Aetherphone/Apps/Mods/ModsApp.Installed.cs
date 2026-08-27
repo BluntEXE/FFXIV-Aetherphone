@@ -140,7 +140,7 @@ internal sealed partial class ModsApp
                 case InstalledCardResult.Toggled:
                     if (mod.Enabled is { } enabled && !library.SetEnabled(mod, !enabled))
                     {
-                        CopyToast.Show(Loc.T(L.Mods.ToggleFailed));
+                        ShellToast.Show(Loc.T(L.Mods.ToggleFailed));
                     }
 
                     break;

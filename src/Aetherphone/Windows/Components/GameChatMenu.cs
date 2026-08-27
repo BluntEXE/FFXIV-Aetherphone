@@ -241,6 +241,6 @@ internal sealed class GameChatMenu
         }
 
         ImGui.SetClipboardText(value);
-        CopyToast.Show();
+        ShellToast.Show();
     }
 }

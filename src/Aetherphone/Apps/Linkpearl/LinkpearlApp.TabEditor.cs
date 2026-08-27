@@ -54,7 +54,7 @@ internal sealed partial class LinkpearlApp
     {
         if (!tabs.CanAdd)
         {
-            CopyToast.Show(Loc.T(L.Linkpearl.TabLimit, TabStore.MaxTabs));
+            ShellToast.Show(Loc.T(L.Linkpearl.TabLimit, TabStore.MaxTabs));
             return;
         }
 

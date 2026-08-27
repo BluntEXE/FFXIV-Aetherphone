@@ -203,7 +203,7 @@ internal sealed partial class VenuesApp
                 else
                 {
                     ImGui.SetClipboardText(LifestreamBridge.TravelCommand(venue.TeleportCode!));
-                    CopyToast.Show();
+                    ShellToast.Show();
                 }
             }
 

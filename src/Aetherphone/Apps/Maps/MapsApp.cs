@@ -356,7 +356,7 @@ internal sealed class MapsApp : IPhoneApp
         }
 
         ImGui.SetClipboardText(LifestreamBridge.AetheryteCommand(aetheryte.Name));
-        CopyToast.Show();
+        ShellToast.Show();
     }
 
     private void ToggleFavorite(uint rowId)
