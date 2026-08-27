@@ -811,7 +811,7 @@ internal sealed partial class ChirperApp : IResumableApp
     private void DrawFeedList(Rect listRect, SocialFeedScope scope)
     {
         var snapshot = store.Feed(scope);
-        using (var surface = AppSurface.Begin(listRect))
+        using (var surface = AppSurface.BeginEdgeToEdge(listRect))
         {
             if (feedScrollTopPending)
             {
@@ -964,21 +964,7 @@ internal sealed partial class ChirperApp : IResumableApp
         var actionsTop = MathF.Max(reactionsTop + reactionsHeight, avatarCenter.Y + avatarRadius) + 6f * scale;
         var actionsHeight = ActionRowHeight * scale;
         var cellBottom = actionsTop + actionsHeight + CellPadBottom * scale;
-        var cellMax = new Vector2(cellRight, cellBottom);
-
-        var cellHovered = !isThreadHead && UiInteract.Hover(origin, cellMax);
-        if (cellHovered)
-        {
-            drawList.AddRectFilled(origin, cellMax, ImGui.GetColorU32(ChirperInk.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        var cellTapped = !isThreadHead && UiInteract.Click(origin, cellMax, cellHovered);
-        if (!isThreadHead || !hasReactions)
-        {
-            DrawHairline(drawList, origin.X, cellRight, cellBottom);
-        }
-
+        var cell = FeedCell.Begin(drawList, cellBottom - origin.Y, ChirperInk.HoverTint, !isThreadHead);
         if (repostBy is not null)
         {
             DrawRepostBanner(origin, cellRight, repostBy);
@@ -1095,13 +1081,12 @@ internal sealed partial class ChirperApp : IResumableApp
         }
 
         DrawActionRow(post, contentLeft, contentWidth, actionsTop + actionsHeight * 0.5f, isThreadHead, cellRight);
-        if (cellTapped)
+        if (cell.Tapped)
         {
             OpenThread(post);
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, cellBottom - origin.Y));
+        FeedCell.End(drawList, cell, ChirperInk.Hairline, !isThreadHead || !hasReactions);
     }
 
     private void PaintBarBackdrop(ImDrawListPtr drawList, Rect bar)
@@ -1120,11 +1105,8 @@ internal sealed partial class ChirperApp : IResumableApp
         ChirperIcons.Image(drawList, center, radius * 1.12f, color);
     }
 
-    private static void DrawHairline(ImDrawListPtr drawList, float left, float right, float y)
-    {
-        drawList.AddLine(new Vector2(left, y - 0.5f), new Vector2(right, y - 0.5f),
-            ImGui.GetColorU32(ChirperInk.Hairline), 1f);
-    }
+    private static void DrawHairline(ImDrawListPtr drawList, float left, float right, float y) =>
+        FeedCell.Hairline(drawList, left, right, y, ChirperInk.Hairline);
 
     private static string FullTimestamp(long unixSeconds)
     {
@@ -1722,17 +1704,14 @@ internal sealed partial class ChirperApp : IResumableApp
     {
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var height = 48f * scale;
+        var cell = FeedCell.Begin(drawList, 48f * scale, ChirperInk.HoverTint, false);
         var padX = CellPadX * scale;
-        var text = Typography.FitText(Loc.T(L.Chirper.Unavailable), MathF.Max(1f, width - padX * 2f), MetaStyle);
+        var text = Typography.FitText(Loc.T(L.Chirper.Unavailable),
+            MathF.Max(1f, cell.Bounds.Width - padX * 2f), MetaStyle);
         var size = Typography.Measure(text, MetaStyle);
-        Typography.Draw(drawList, new Vector2(origin.X + padX, origin.Y + (height - size.Y) * 0.5f), text,
-            ChirperInk.MutedInk, MetaStyle);
-        DrawHairline(drawList, origin.X, origin.X + width, origin.Y + height);
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, height));
+        Typography.Draw(drawList, new Vector2(cell.Bounds.Min.X + padX,
+            cell.Bounds.Min.Y + (cell.Bounds.Height - size.Y) * 0.5f), text, ChirperInk.MutedInk, MetaStyle);
+        FeedCell.End(drawList, cell, ChirperInk.Hairline);
     }
 
     private float QuotedCardHeight(PostDto? quoted, float width)

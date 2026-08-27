@@ -15,7 +15,7 @@ internal static class ChirperInk
     public static readonly Vector4 AccentDeep = Palette.Darken(AppPalettes.Chirper.Accent, 0.22f);
     public static readonly Vector4 AccentLink = Palette.Lighten(AppPalettes.Chirper.Accent, 0.18f);
     public static readonly Vector4 AccentWash = Palette.WithAlpha(AppPalettes.Chirper.Accent, 0.14f);
-    public static readonly Vector4 Hairline = new(1f, 1f, 1f, 0.065f);
+    public static Vector4 Hairline => AppPalettes.Chirper.Hairline;
     public static readonly Vector4 ChipFill = new(1f, 1f, 1f, 0.055f);
     public static readonly Vector4 ChipStroke = new(1f, 1f, 1f, 0.08f);
     public static readonly Vector4 ChipHover = new(1f, 1f, 1f, 0.09f);
@@ -26,7 +26,7 @@ internal static class ChirperInk
     public static readonly Vector4 Danger = new(1f, 0.373f, 0.420f, 1f);
     public static readonly Vector4 Warning = new(1f, 0.690f, 0.180f, 1f);
     public static readonly Vector4 LikeRed = new(1f, 0.216f, 0.373f, 1f);
-    public static readonly Vector4 HoverTint = new(1f, 1f, 1f, 0.025f);
+    public static Vector4 HoverTint => AppPalettes.Chirper.HoverWash;
     public static readonly Vector4 QuoteFill = new(1f, 1f, 1f, 0.028f);
     public static readonly Vector4 QuoteHover = new(1f, 1f, 1f, 0.05f);
     public static readonly Vector4 QuoteBodyInk = Palette.WithAlpha(AppPalettes.Chirper.BodyInk, 0.85f);

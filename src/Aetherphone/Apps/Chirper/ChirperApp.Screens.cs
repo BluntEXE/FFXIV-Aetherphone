@@ -199,7 +199,7 @@ internal sealed partial class ChirperApp
         var listRect = new Rect(new Vector2(area.Min.X, top), area.Max);
         var results = searchingTags ? Array.Empty<UserDto>() : store.DiscoverResults;
         var tags = store.DiscoverTags;
-        using (AppSurface.Begin(listRect))
+        using (AppSurface.BeginEdgeToEdge(listRect))
         {
             if (results.Length == 0 && tags.Length == 0)
             {
@@ -382,7 +382,7 @@ internal sealed partial class ChirperApp
         var top = area.Min.Y + AppHeader.Height * scale;
         var listRect = new Rect(new Vector2(area.Min.X, top), area.Max);
         var snapshot = store.UserListResults;
-        using (AppSurface.Begin(listRect))
+        using (AppSurface.BeginEdgeToEdge(listRect))
         {
             if (snapshot.Length == 0)
             {
@@ -430,7 +430,7 @@ internal sealed partial class ChirperApp
         activityFeed.EnsureFresh(social.Latest);
         var items = activityFeed.Items;
         var shown = 0;
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             for (var index = 0; index < items.Length; index++)
             {

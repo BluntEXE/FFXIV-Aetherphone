@@ -53,7 +53,7 @@ internal sealed partial class ChirperApp
 
         var composerHeight = ReplyComposerHeight * scale;
         var body = new Rect(new Vector2(area.Min.X, top), new Vector2(area.Max.X, area.Max.Y - composerHeight));
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             ImGui.Dummy(new Vector2(0f, 6f * scale));
             DrawThreadHead(post);

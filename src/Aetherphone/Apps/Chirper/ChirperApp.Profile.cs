@@ -77,7 +77,7 @@ internal sealed partial class ChirperApp
             return;
         }
 
-        using (AppSurface.Begin(area))
+        using (AppSurface.BeginEdgeToEdge(area))
         {
             DrawProfileBanner(user, root);
             DrawProfileIdentity(user);
@@ -803,7 +803,7 @@ internal sealed partial class ChirperApp
         var scale = UiScale.Current;
         var top = area.Min.Y + AppHeader.Height * scale;
         var body = new Rect(new Vector2(area.Min.X, top), area.Max);
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             var posts = store.HashtagPosts;
             if (posts.Length == 0)
