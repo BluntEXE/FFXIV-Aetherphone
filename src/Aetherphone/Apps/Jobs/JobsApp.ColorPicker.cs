@@ -106,6 +106,7 @@ internal sealed partial class JobsApp
             Message = Loc.T(L.Jobs.DeleteColorConfirm, entry.Name),
             ConfirmLabel = Loc.T(L.Jobs.DeleteColor),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             Danger = true,
             Confirm = () =>
             {

@@ -199,6 +199,7 @@ internal sealed partial class LinkpearlApp
             Message = Loc.T(L.Linkpearl.ClearAllHistoryConfirm),
             ConfirmLabel = Loc.T(L.Linkpearl.ClearHistory),
             CancelLabel = Loc.T(L.Messages.DeleteHistoryCancel),
+            Sheet = true,
             Confirm = () =>
             {
                 popouts.CloseAll();

@@ -747,6 +747,7 @@ internal sealed partial class PhotosApp
                 Message = Loc.T(L.Photos.DeleteAlbumConfirm, found.Name) + "\n" + Loc.T(L.Photos.DeleteAlbumBody),
                 ConfirmLabel = Loc.T(L.Photos.DeleteAlbum),
                 CancelLabel = Loc.T(L.Common.Cancel),
+                Sheet = true,
                 Confirm = () => DeleteCustomAlbumInternal(key),
             });
         }
@@ -975,6 +976,7 @@ internal sealed partial class PhotosApp
                         Message = Loc.T(L.Photos.RemoveFromAlbum),
                         ConfirmLabel = Loc.T(L.Photos.RemoveFromAlbum),
                         CancelLabel = Loc.T(L.Common.Cancel),
+                        Sheet = true,
                         Confirm = () => RemovePhotoFromCustomAlbum(albumKey, targetPath),
                     });
                 }

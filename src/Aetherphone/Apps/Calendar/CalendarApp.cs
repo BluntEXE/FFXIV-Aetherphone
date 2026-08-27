@@ -273,6 +273,7 @@ internal sealed class CalendarApp : IPhoneApp
             Message = Loc.T(L.Calendar.DeleteConfirmMessage),
             ConfirmLabel = Loc.T(L.Calendar.DeleteConfirm),
             CancelLabel = Loc.T(L.Calendar.DeleteCancel),
+            Sheet = true,
             Confirm = () => DeleteCustomEvent(id),
         });
     }

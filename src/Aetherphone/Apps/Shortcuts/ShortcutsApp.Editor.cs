@@ -494,6 +494,7 @@ internal sealed partial class ShortcutsApp
             Message = Loc.T(L.Shortcuts.DeleteConfirm),
             ConfirmLabel = Loc.T(L.Shortcuts.Delete),
             CancelLabel = Loc.T(L.Shortcuts.KeepIt),
+            Sheet = true,
             Confirm = () => DeleteShortcut(id),
         });
     }

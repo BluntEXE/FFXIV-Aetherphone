@@ -213,6 +213,7 @@ internal sealed partial class AetherStreamApp
                 Message = Loc.T(L.AetherStream.ClearQueueConfirm),
                 ConfirmLabel = Loc.T(L.AetherStream.Stop),
                 CancelLabel = Loc.T(L.AetherStream.Keep),
+                Sheet = true,
                 Confirm = () => queue.Clear(),
             });
         }

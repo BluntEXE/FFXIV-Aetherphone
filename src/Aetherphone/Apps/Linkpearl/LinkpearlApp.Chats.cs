@@ -407,6 +407,7 @@ internal sealed partial class LinkpearlApp
             Message = Loc.T(L.Linkpearl.DeleteTabConfirm),
             ConfirmLabel = Loc.T(L.Messages.DeleteHistoryButton),
             CancelLabel = Loc.T(L.Messages.DeleteHistoryCancel),
+            Sheet = true,
             Confirm = () =>
             {
                 popouts.Close(ChatInbox.KeyForTab(tab));
@@ -426,6 +427,7 @@ internal sealed partial class LinkpearlApp
             Message = Loc.T(L.Linkpearl.ClearHistoryConfirm),
             ConfirmLabel = Loc.T(L.Linkpearl.ClearHistory),
             CancelLabel = Loc.T(L.Messages.DeleteHistoryCancel),
+            Sheet = true,
             Confirm = () => ClearHistory(row),
         });
 

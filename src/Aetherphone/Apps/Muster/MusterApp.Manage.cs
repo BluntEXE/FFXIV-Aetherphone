@@ -356,6 +356,7 @@ internal sealed partial class MusterApp
             Message = Loc.T(L.Muster.EndConfirm),
             ConfirmLabel = Loc.T(L.Muster.EndMuster),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             BusyLabel = Loc.T(L.Muster.Ending),
             FailedMessage = Loc.T(L.Muster.EndFailed),
             Danger = true,

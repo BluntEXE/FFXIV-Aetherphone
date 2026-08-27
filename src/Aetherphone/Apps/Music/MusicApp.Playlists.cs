@@ -172,6 +172,7 @@ internal sealed partial class MusicApp
             Message = Loc.T(L.Music.DeletePlaylistConfirm),
             ConfirmLabel = Loc.T(L.Music.DeletePlaylistButton),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             Confirm = () =>
             {
                 playlists.Delete(id);

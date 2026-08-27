@@ -382,6 +382,7 @@ internal sealed partial class MessageApp
             Message = Loc.T(L.Message.DeleteConversationMessage),
             ConfirmLabel = Loc.T(L.Common.Delete),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             Danger = true,
             Confirm = () => DeleteConversation(conversationId),
         });

@@ -624,6 +624,7 @@ internal abstract class ChatThreadView<TMessage, TThread> : IDisposable, IChatTr
             Message = Loc.T(L.Message.DeleteConfirm),
             ConfirmLabel = Loc.T(L.Message.DeleteAction),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             Danger = true,
             ConfirmAsync = done => store.DeleteMessage(messageId, done),
         });

@@ -232,6 +232,7 @@ internal sealed partial class ClockApp
             Message = Loc.T(L.Clock.DeleteAlarmConfirm),
             ConfirmLabel = Loc.T(L.Clock.Delete),
             CancelLabel = Loc.T(L.Clock.KeepIt),
+            Sheet = true,
             Confirm = () => DeleteAlarm(id),
         });
     }

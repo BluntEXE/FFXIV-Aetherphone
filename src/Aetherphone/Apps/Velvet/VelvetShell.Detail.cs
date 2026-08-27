@@ -490,6 +490,7 @@ internal sealed partial class VelvetShell
             Message = Loc.T(L.Velvet.DeleteConfirmMessage),
             ConfirmLabel = Loc.T(L.Velvet.DeleteConfirm),
             CancelLabel = Loc.T(L.Velvet.DeleteCancel),
+            Sheet = true,
             BusyLabel = Loc.T(L.Velvet.Saving),
             FailedMessage = Loc.T(L.Velvet.DeleteFailed),
             ConfirmAsync = done => store.DeletePost(postId, ok =>
@@ -511,6 +512,7 @@ internal sealed partial class VelvetShell
             Message = Loc.T(L.Velvet.DeleteCommentConfirmMessage),
             ConfirmLabel = Loc.T(L.Velvet.DeleteConfirm),
             CancelLabel = Loc.T(L.Velvet.DeleteCancel),
+            Sheet = true,
             BusyLabel = Loc.T(L.Velvet.Saving),
             FailedMessage = Loc.T(L.Velvet.DeleteCommentFailed),
             ConfirmAsync = done => store.DeleteComment(postId, commentId, done),
@@ -524,6 +526,7 @@ internal sealed partial class VelvetShell
             Message = Loc.T(L.Velvet.RemoveCommentConfirmMessage),
             ConfirmLabel = Loc.T(L.Velvet.DeleteConfirm),
             CancelLabel = Loc.T(L.Velvet.DeleteCancel),
+            Sheet = true,
             BusyLabel = Loc.T(L.Velvet.Saving),
             FailedMessage = Loc.T(L.Velvet.DeleteCommentFailed),
             ConfirmAsync = done => store.DeleteComment(postId, commentId, done),

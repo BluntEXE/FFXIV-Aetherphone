@@ -535,6 +535,7 @@ internal sealed partial class PhotosApp : IPhoneApp
             Message = Loc.T(L.Photos.DeleteConfirmMessage),
             ConfirmLabel = Loc.T(L.Photos.DeleteConfirm),
             CancelLabel = Loc.T(L.Photos.DeleteCancel),
+            Sheet = true,
             Confirm = () => DeletePhoto(path),
         });
     }

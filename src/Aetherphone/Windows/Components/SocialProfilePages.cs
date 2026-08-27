@@ -819,6 +819,7 @@ internal sealed class SocialProfilePages
             Message = Loc.T(style.DeleteConfirmMessage),
             ConfirmLabel = Loc.T(style.DeleteConfirm),
             CancelLabel = Loc.T(style.DeleteCancel),
+            Sheet = true,
             BusyLabel = Loc.T(style.Saving),
             FailedMessage = Loc.T(style.DeleteFailed),
             ConfirmAsync = done => store.DeletePost(postId, ok =>
@@ -840,6 +841,7 @@ internal sealed class SocialProfilePages
             Message = Loc.T(style.DeleteCommentConfirmMessage),
             ConfirmLabel = Loc.T(style.DeleteConfirm),
             CancelLabel = Loc.T(style.DeleteCancel),
+            Sheet = true,
             BusyLabel = Loc.T(style.Saving),
             FailedMessage = Loc.T(style.DeleteCommentFailed),
             ConfirmAsync = done => store.DeleteComment(postId, commentId, done),
@@ -853,6 +855,7 @@ internal sealed class SocialProfilePages
             Message = Loc.T(style.RemoveCommentConfirmMessage),
             ConfirmLabel = Loc.T(style.DeleteConfirm),
             CancelLabel = Loc.T(style.DeleteCancel),
+            Sheet = true,
             BusyLabel = Loc.T(style.Saving),
             FailedMessage = Loc.T(style.DeleteCommentFailed),
             ConfirmAsync = done => store.DeleteComment(postId, commentId, done),

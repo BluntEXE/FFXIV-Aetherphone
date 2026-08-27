@@ -196,6 +196,7 @@ internal sealed partial class AethergramApp
             Message = Loc.T(L.Aethergram.DeleteConversationMessage),
             ConfirmLabel = Loc.T(L.Aethergram.DeleteConfirm),
             CancelLabel = Loc.T(L.Aethergram.DeleteCancel),
+            Sheet = true,
             Danger = true,
             Confirm = () => DeleteConversation(otherId),
         });

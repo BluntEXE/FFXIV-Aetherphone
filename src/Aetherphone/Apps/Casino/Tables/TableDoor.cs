@@ -270,6 +270,7 @@ internal sealed class TableDoor
             Message = Loc.T(L.Casino.DoorRemoveConfirmBody),
             ConfirmLabel = Loc.T(L.Casino.DoorRemove),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             Danger = true,
             Confirm = () => tables.Kick(targetRoom, targetUser),
         });

@@ -672,6 +672,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             Message = Loc.T(L.Account.SignOutConfirmBody),
             ConfirmLabel = Loc.T(L.Account.SignOut),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             Confirm = () =>
             {
                 RevokeCurrentToken();

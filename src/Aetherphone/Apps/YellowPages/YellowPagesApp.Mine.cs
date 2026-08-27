@@ -259,6 +259,7 @@ internal sealed partial class YellowPagesApp
             Message = Loc.T(L.YellowPages.DeleteConfirm),
             ConfirmLabel = Loc.T(L.YellowPages.DeleteAd),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             BusyLabel = Loc.T(L.YellowPages.Deleting),
             FailedMessage = Loc.T(L.YellowPages.DeleteFailed),
             Danger = true,

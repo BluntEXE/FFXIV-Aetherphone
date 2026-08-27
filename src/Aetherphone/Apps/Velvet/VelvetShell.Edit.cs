@@ -92,6 +92,7 @@ internal sealed partial class VelvetShell
                 Message = Loc.T(L.Velvet.DiscardEdits),
                 ConfirmLabel = Loc.T(L.Velvet.DiscardEditsConfirm),
                 CancelLabel = Loc.T(L.Velvet.KeepEditing),
+                Sheet = true,
                 Confirm = () => router.Pop(),
             });
             return;

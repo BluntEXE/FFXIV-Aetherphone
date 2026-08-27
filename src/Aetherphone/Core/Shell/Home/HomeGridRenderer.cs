@@ -186,6 +186,7 @@ internal sealed class HomeGridRenderer
             Message = Loc.T(L.Home.RemoveConfirm, app.DisplayName),
             ConfirmLabel = Loc.T(L.Home.Remove),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             Confirm = () => layout.Uninstall(appId),
         });
     }

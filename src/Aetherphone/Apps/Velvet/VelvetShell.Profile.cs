@@ -266,6 +266,7 @@ internal sealed partial class VelvetShell
             Message = Loc.T(L.Velvet.DisconnectConfirmMessage),
             ConfirmLabel = Loc.T(L.Velvet.Disconnect),
             CancelLabel = Loc.T(L.Velvet.DeleteCancel),
+            Sheet = true,
             Confirm = () =>
             {
                 store.Disconnect(userId);

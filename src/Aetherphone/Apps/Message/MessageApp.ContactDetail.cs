@@ -366,6 +366,7 @@ internal sealed partial class MessageApp
             Message = Loc.T(L.Friends.ConfirmRemove, ContactBook.DisplayLabel(contact)),
             ConfirmLabel = Loc.T(L.Friends.Remove),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             BusyLabel = Loc.T(L.Friends.Sending),
             FailedMessage = Loc.T(L.Friends.RemoveFailed),
             Danger = true,

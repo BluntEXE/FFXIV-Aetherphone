@@ -583,6 +583,7 @@ internal sealed class NotesApp : IResumableApp
             Message = Loc.T(L.Notes.DeleteNoteConfirm),
             ConfirmLabel = Loc.T(L.Notes.Delete),
             CancelLabel = Loc.T(L.Notes.KeepIt),
+            Sheet = true,
             Confirm = () => DeleteNote(note),
         });
     }
@@ -603,6 +604,7 @@ internal sealed class NotesApp : IResumableApp
             Message = Loc.T(L.Notes.DeleteReminderConfirm),
             ConfirmLabel = Loc.T(L.Notes.Delete),
             CancelLabel = Loc.T(L.Notes.KeepIt),
+            Sheet = true,
             Confirm = () => DeleteReminder(id),
         });
     }

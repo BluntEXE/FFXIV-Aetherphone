@@ -234,6 +234,7 @@ internal sealed class StoryPresenter : IDisposable
             Message = Loc.T(L.Story.DeleteMessage),
             ConfirmLabel = Loc.T(labels.Confirm),
             CancelLabel = Loc.T(labels.Cancel),
+            Sheet = true,
             BusyLabel = Loc.T(labels.Busy),
             FailedMessage = Loc.T(L.Story.DeleteFailed),
             ConfirmAsync = done => stories.DeleteStory(story.Id, done),

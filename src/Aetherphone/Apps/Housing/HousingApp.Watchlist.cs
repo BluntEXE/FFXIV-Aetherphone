@@ -57,6 +57,7 @@ internal sealed partial class HousingApp
             Message = Loc.T(L.Housing.ClearWatchlistConfirm, count),
             ConfirmLabel = Loc.T(L.Housing.ClearWatchlist),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             Confirm = () =>
             {
                 var watched = housing.Watch.Watched;

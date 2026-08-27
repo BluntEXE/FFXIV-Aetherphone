@@ -169,6 +169,8 @@ internal static class ConfirmDialog
     private static readonly TextStyle SheetCancelStyle = new(1.07f, FontWeight.Bold);
     private static readonly TextStyle SheetHeaderStyle = new(0.82f, FontWeight.SemiBold);
     private static readonly TextStyle SheetMessageStyle = new(0.82f, FontWeight.Regular);
+    private const float SheetRowPressAlpha = 0.11f;
+
     private static readonly Vector4 SheetRowHover = new(1f, 1f, 1f, 0.06f);
 
     public static void DrawSheet(Rect area, PhoneTheme theme, string? title, string message, string confirmLabel,
@@ -245,40 +247,45 @@ internal static class ConfirmDialog
         drawList.AddLine(new Vector2(actionMin.X + padX, actionMin.Y), new Vector2(cardMax.X - padX, actionMin.Y),
             ImGui.GetColorU32(Palette.WithAlpha(style.Hairline, style.Hairline.W * opacity)), 1f);
         var interactive = !busy && opacity > 0.5f;
-        var actionHovered = interactive && UiInteract.HoverWindowOnly(actionMin, cardMax);
+        var actionHovered = interactive && UiInteract.Hover(actionMin, cardMax);
         if (actionHovered)
         {
-            drawList.AddRectFilled(actionMin, cardMax,
-                ImGui.GetColorU32(Palette.WithAlpha(SheetRowHover, SheetRowHover.W * opacity)), rounding,
+            DrawSheetRowHighlight(drawList, actionMin, cardMax, rounding, opacity,
                 ImDrawFlags.RoundCornersBottom);
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
         var actionInk = busy ? Palette.WithAlpha(style.Ink, style.Ink.W * 0.5f)
             : danger ? style.Danger : style.Accent;
         Typography.DrawCentered(drawList, new Vector2(centerX, (actionMin.Y + cardMax.Y) * 0.5f),
             busy ? busyLabel : confirmLabel, Palette.WithAlpha(actionInk, actionInk.W * opacity), SheetActionStyle);
-        if (actionHovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        if (UiInteract.Click(actionMin, cardMax, actionHovered))
         {
             confirmed = true;
         }
 
         DrawSheetPanel(drawList, cancelMin, cancelMax, rounding, style, opacity, scale);
-        var cancelHovered = interactive && UiInteract.HoverWindowOnly(cancelMin, cancelMax);
+        var cancelHovered = interactive && UiInteract.Hover(cancelMin, cancelMax);
         if (cancelHovered)
         {
-            drawList.AddRectFilled(cancelMin, cancelMax,
-                ImGui.GetColorU32(Palette.WithAlpha(SheetRowHover, SheetRowHover.W * opacity)), rounding);
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            DrawSheetRowHighlight(drawList, cancelMin, cancelMax, rounding, opacity, ImDrawFlags.RoundCornersAll);
         }
 
         Typography.DrawCentered(drawList, new Vector2((cancelMin.X + cancelMax.X) * 0.5f,
                 (cancelMin.Y + cancelMax.Y) * 0.5f), cancelLabel,
             Palette.WithAlpha(style.Ink, style.Ink.W * opacity), SheetCancelStyle);
-        if (cancelHovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        if (UiInteract.Click(cancelMin, cancelMax, cancelHovered))
         {
             canceled = true;
         }
+    }
+
+    private static void DrawSheetRowHighlight(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding,
+        float opacity, ImDrawFlags corners)
+    {
+        var alpha = ImGui.IsMouseDown(ImGuiMouseButton.Left) ? SheetRowPressAlpha : SheetRowHover.W;
+        drawList.AddRectFilled(min, max, ImGui.GetColorU32(Palette.WithAlpha(SheetRowHover, alpha * opacity)),
+            rounding, corners);
+        ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
     }
 
     private static void DrawSheetPanel(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding,

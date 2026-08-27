@@ -244,6 +244,7 @@ internal sealed partial class VelvetShell
             Message = Loc.T(L.Velvet.DeleteConversationMessage),
             ConfirmLabel = Loc.T(L.Velvet.DeleteConfirm),
             CancelLabel = Loc.T(L.Velvet.DeleteCancel),
+            Sheet = true,
             Danger = true,
             Confirm = () => DeleteConversation(otherId),
         });
