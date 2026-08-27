@@ -3,6 +3,7 @@ using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Telephony;
+using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -46,11 +47,13 @@ internal sealed partial class MessageApp
         using (AppSurface.Begin(listRect))
         {
             ImGui.Dummy(new Vector2(0f, 4f * scale));
+            var card = GroupCard.Begin(ui, mutual.Count, 56f);
             for (var index = 0; index < mutual.Count; index++)
             {
-                DrawPickRow(mutual[index], scale);
+                DrawPickRow(card.NextRow(), mutual[index], scale);
             }
 
+            card.End();
             ImGui.Dummy(new Vector2(0f, 16f * scale));
         }
 
@@ -128,28 +131,32 @@ internal sealed partial class MessageApp
         });
     }
 
-    private void DrawPickRow(ContactDto contact, float scale)
+    private void DrawPickRow(Rect row, ContactDto contact, float scale)
     {
-        var rowHeight = 56f * scale;
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
         var drawList = ImGui.GetWindowDrawList();
         var selected = selectedContacts.Contains(contact.UserId);
-        ui.Card(drawList, origin, new Vector2(origin.X + width, origin.Y + rowHeight), 16f * scale, elevated: selected);
-        var pad = 12f * scale;
+        var band = RowBand(row, scale);
+        if (selected)
+        {
+            Squircle.Fill(drawList, new Vector2(band.Min.X + 4f * scale, band.Min.Y + 3f * scale),
+                new Vector2(band.Max.X - 4f * scale, band.Max.Y - 3f * scale), 12f * scale,
+                ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.10f)));
+        }
+
         var radius = 18f * scale;
-        var avatarCenter = new Vector2(origin.X + pad + radius, origin.Y + rowHeight * 0.5f);
+        var avatarCenter = new Vector2(row.Min.X + radius, row.Center.Y);
         var label = ContactBook.DisplayLabel(contact);
         AvatarView.DrawRemote(drawList, avatarCenter, radius, theme, label, string.Empty, contact.AvatarUrl, images,
             lodestone, 0.85f, 32, 1f, Frames.Of(contact.FrameId));
         var textLeft = avatarCenter.X + radius + 12f * scale;
-        var labelWidth = origin.X + width - 44f * scale - textLeft;
-        var labelY = origin.Y + rowHeight * 0.5f - 9f * scale;
+        var checkCenter = new Vector2(row.Max.X - 11f * scale, row.Center.Y);
+        var labelRight = checkCenter.X - 22f * scale;
+        var labelWidth = labelRight - textLeft;
+        var labelY = row.Center.Y - 9f * scale;
         var labelHover = UiInteract.Hover(new Vector2(textLeft, labelY),
-            new Vector2(origin.X + width - 44f * scale, labelY + Typography.Measure(label, 1f, FontWeight.SemiBold).Y));
+            new Vector2(labelRight, labelY + Typography.Measure(label, 1f, FontWeight.SemiBold).Y));
         Marquee.DrawLeft("compose.pick." + contact.UserId, label, textLeft, labelY, labelWidth,
             new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, labelHover);
-        var checkCenter = new Vector2(origin.X + width - 22f * scale, origin.Y + rowHeight * 0.5f);
         if (selected)
         {
             drawList.AddCircleFilled(checkCenter, 11f * scale, ImGui.GetColorU32(ui.Accent), 24);
@@ -160,16 +167,13 @@ internal sealed partial class MessageApp
             drawList.AddCircle(checkCenter, 11f * scale, ImGui.GetColorU32(ui.MutedInk), 24, 1.5f);
         }
 
-        if (UiInteract.HoverClick(origin, new Vector2(origin.X + width, origin.Y + rowHeight)))
+        if (UiInteract.HoverClick(band.Min, band.Max))
         {
             if (!selectedContacts.Add(contact.UserId))
             {
                 selectedContacts.Remove(contact.UserId);
             }
         }
-
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight + 8f * scale));
     }
 
     private List<ContactDto> MutualContacts()

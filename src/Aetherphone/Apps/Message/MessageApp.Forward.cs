@@ -56,25 +56,35 @@ internal sealed partial class MessageApp
             var shown = 0;
             for (var index = 0; index < snapshot.Length; index++)
             {
-                var item = snapshot[index];
-                if (query.Length > 0 && !DirectMessagesStore.DisplayTitle(item).Contains(query,
-                        StringComparison.OrdinalIgnoreCase))
+                if (PickerMatches(snapshot[index], query))
                 {
-                    continue;
+                    shown++;
                 }
-
-                if (DrawPickerRow(item, scale))
-                {
-                    picked = item;
-                }
-
-                shown++;
             }
 
             if (shown == 0)
             {
                 Typography.DrawCentered(new Vector2(listRect.Center.X, listRect.Min.Y + 60f * scale),
                     Loc.T(L.Phone.NoOneFound), ui.MutedInk);
+            }
+            else
+            {
+                var card = GroupCard.Begin(ui, shown, 56f);
+                for (var index = 0; index < snapshot.Length; index++)
+                {
+                    var item = snapshot[index];
+                    if (!PickerMatches(item, query))
+                    {
+                        continue;
+                    }
+
+                    if (DrawPickerRow(card.NextRow(), item, scale))
+                    {
+                        picked = item;
+                    }
+                }
+
+                card.End();
             }
 
             ImGui.Dummy(new Vector2(0f, 24f * scale));
@@ -83,16 +93,15 @@ internal sealed partial class MessageApp
         return picked;
     }
 
-    private bool DrawPickerRow(ConversationDto item, float scale)
+    private static bool PickerMatches(ConversationDto item, string query) =>
+        query.Length == 0 ||
+        DirectMessagesStore.DisplayTitle(item).Contains(query, StringComparison.OrdinalIgnoreCase);
+
+    private bool DrawPickerRow(Rect row, ConversationDto item, float scale)
     {
-        var rowHeight = 56f * scale;
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
         var drawList = ImGui.GetWindowDrawList();
-        ui.Card(drawList, origin, new Vector2(origin.X + width, origin.Y + rowHeight), 16f * scale);
-        var pad = 12f * scale;
         var radius = 19f * scale;
-        var avatarCenter = new Vector2(origin.X + pad + radius, origin.Y + rowHeight * 0.5f);
+        var avatarCenter = new Vector2(row.Min.X + radius, row.Center.Y);
         var title = DirectMessagesStore.DisplayTitle(item);
         if (item.IsGroup)
         {
@@ -106,19 +115,17 @@ internal sealed partial class MessageApp
         }
 
         var textLeft = avatarCenter.X + radius + 12f * scale;
-        var iconCenterX = origin.X + width - pad - 8f * scale;
+        var iconCenterX = row.Max.X - 8f * scale;
         var textMaxWidth = MathF.Max(1f, iconCenterX - 12f * scale - textLeft);
-        var titleTop = origin.Y + rowHeight * 0.5f - 9f * scale;
+        var titleTop = row.Center.Y - 9f * scale;
         var titleSize = Typography.Measure(title, 1f, FontWeight.SemiBold);
         var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleTop),
             new Vector2(textLeft + textMaxWidth, titleTop + titleSize.Y));
         Marquee.DrawLeft("picker.row." + item.Id, title, textLeft, titleTop, textMaxWidth,
             new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, titleHovering);
-        AppSkin.Icon(new Vector2(iconCenterX, origin.Y + rowHeight * 0.5f),
+        AppSkin.Icon(new Vector2(iconCenterX, row.Center.Y),
             FontAwesomeIcon.Share.ToIconString(), ui.MutedInk, 0.85f);
-        var clicked = UiInteract.HoverClick(origin, new Vector2(origin.X + width, origin.Y + rowHeight));
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight + 8f * scale));
-        return clicked;
+        var band = RowBand(row, scale);
+        return UiInteract.HoverClick(band.Min, band.Max);
     }
 }

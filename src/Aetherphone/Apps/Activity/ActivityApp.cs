@@ -15,8 +15,6 @@ internal sealed partial class ActivityApp : IPhoneApp
 {
     private const float RowHeight = 58f;
     private const float CompactRowHeight = 46f;
-    private const float CardPadding = 8f;
-    private const float CardRounding = 18f;
     private const float CardGap = 14f;
     private const float TileSize = 30f;
     private const float StepperRadius = 13f;
@@ -214,48 +212,52 @@ internal sealed partial class ActivityApp : IPhoneApp
         var hasCollectibles = today.MountsGained + today.MinionsGained > 0;
         var rowCount = hasCollectibles ? 5 : 4;
         ui.SectionLabel(Loc.T(L.Character.Today), TextStyles.FootnoteEmphasized, 6f);
-        var card = BeginCard(rowCount, RowHeight, scale);
-        UiAnchors.Report("character.summary", card);
-        var rowIndex = 0;
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        UiAnchors.Report("character.summary",
+            new Rect(origin, origin + new Vector2(width, rowCount * RowHeight * scale)));
+        var card = GroupCard.Begin(ui, rowCount, RowHeight);
         var expDetail = today.LevelsGained > 0
             ? Loc.T(L.Character.LevelsGained, today.LevelsGained)
             : Loc.T(L.Character.PercentOfGoal, PercentValue(ProgressFraction));
-        ProgressRow(CardRow(card, rowIndex++, RowHeight, scale), ActivityRings.RingOneTint, FontAwesomeIcon.Bolt,
+        ProgressRow(card.NextRow(), ActivityRings.RingOneTint, FontAwesomeIcon.Bolt,
             Loc.T(L.Character.Experience), "+" + Compact(today.ExpGained), ProgressFraction, expDetail, scale);
-        ProgressRow(CardRow(card, rowIndex++, RowHeight, scale), ActivityRings.RingTwoTint, FontAwesomeIcon.Dungeon,
+        ProgressRow(card.NextRow(), ActivityRings.RingTwoTint, FontAwesomeIcon.Dungeon,
             Loc.T(L.Character.Duties), $"{today.DutiesCompleted} / {configuration.ActivityGoalDuties}",
             AdventureFraction, null, scale);
-        ProgressRow(CardRow(card, rowIndex++, RowHeight, scale), ActivityRings.RingThreeTint, FontAwesomeIcon.Coins,
+        ProgressRow(card.NextRow(), ActivityRings.RingThreeTint, FontAwesomeIcon.Coins,
             Loc.T(L.Character.GilEarned), "+" + Number(today.GilEarned), FortuneFraction, null, scale);
-        StatRow(CardRow(card, rowIndex++, RowHeight, scale), Accent.Blue, FontAwesomeIcon.Clock,
+        StatRow(card.NextRow(), Accent.Blue, FontAwesomeIcon.Clock,
             Loc.T(L.Character.TimePlayed), Duration(today.PlaySeconds), AppPalettes.Activity.TitleInk, null, scale);
         if (hasCollectibles)
         {
             var detail =
                 $"{Loc.T(L.Character.Mounts)} {Number(today.MountsGained)} · {Loc.T(L.Character.Minions)} {Number(today.MinionsGained)}";
-            StatRow(CardRow(card, rowIndex, RowHeight, scale), Accent.Violet, FontAwesomeIcon.Dragon,
+            StatRow(card.NextRow(), Accent.Violet, FontAwesomeIcon.Dragon,
                 Loc.T(L.Character.NewCollectibles), "+" + Number(today.MountsGained + today.MinionsGained),
                 AppPalettes.Activity.TitleInk, detail, scale);
         }
 
-        EndCard(card, scale);
+        card.End();
+        ImGui.Dummy(new Vector2(0f, CardGap * scale));
     }
 
     private void DrawSession(float scale)
     {
         var session = tracker.Session;
         ui.SectionLabel(Loc.T(L.Character.ThisSession), TextStyles.FootnoteEmphasized, 6f);
-        var card = BeginCard(4, CompactRowHeight, scale);
+        var card = GroupCard.Begin(ui, 4, CompactRowHeight);
         var titleInk = AppPalettes.Activity.TitleInk;
-        StatRow(CardRow(card, 0, CompactRowHeight, scale), ActivityRings.RingOneTint, FontAwesomeIcon.Bolt,
+        StatRow(card.NextRow(), ActivityRings.RingOneTint, FontAwesomeIcon.Bolt,
             Loc.T(L.Character.Experience), "+" + Compact(session.ExpGained), titleInk, null, scale);
-        StatRow(CardRow(card, 1, CompactRowHeight, scale), ActivityRings.RingTwoTint, FontAwesomeIcon.Dungeon,
+        StatRow(card.NextRow(), ActivityRings.RingTwoTint, FontAwesomeIcon.Dungeon,
             Loc.T(L.Character.Duties), Number(session.DutiesCompleted), titleInk, null, scale);
-        StatRow(CardRow(card, 2, CompactRowHeight, scale), ActivityRings.RingThreeTint, FontAwesomeIcon.Coins,
+        StatRow(card.NextRow(), ActivityRings.RingThreeTint, FontAwesomeIcon.Coins,
             Loc.T(L.Character.GilEarned), "+" + Number(session.GilEarned), titleInk, null, scale);
-        StatRow(CardRow(card, 3, CompactRowHeight, scale), Accent.Blue, FontAwesomeIcon.Clock,
+        StatRow(card.NextRow(), Accent.Blue, FontAwesomeIcon.Clock,
             Loc.T(L.Character.TimePlayed), Duration(session.PlaySeconds), titleInk, null, scale);
-        EndCard(card, scale);
+        card.End();
+        ImGui.Dummy(new Vector2(0f, CardGap * scale));
     }
 
     private void DrawRetainers(float scale)
@@ -265,7 +267,7 @@ internal sealed partial class ActivityApp : IPhoneApp
             return;
         }
 
-        var card = BeginCard(1, RowHeight, scale);
+        var card = GroupCard.Begin(ui, 1, RowHeight);
         string value;
         Vector4 valueInk;
         if (tracker.VenturesReady > 0)
@@ -284,18 +286,19 @@ internal sealed partial class ActivityApp : IPhoneApp
             valueInk = AppPalettes.Activity.TitleInk;
         }
 
-        StatRow(CardRow(card, 0, RowHeight, scale), Accent.Amber, FontAwesomeIcon.Briefcase,
+        StatRow(card.NextRow(), Accent.Amber, FontAwesomeIcon.Briefcase,
             Loc.T(L.Character.Retainers), value, valueInk, null, scale);
-        EndCard(card, scale);
+        card.End();
+        ImGui.Dummy(new Vector2(0f, CardGap * scale));
     }
 
     private void DrawGoals(float scale)
     {
         ui.SectionLabel(Loc.T(L.Character.GoalsSection), TextStyles.FootnoteEmphasized, 6f);
-        var card = BeginCard(3, CompactRowHeight, scale);
+        var card = GroupCard.Begin(ui, 3, CompactRowHeight);
         var levelsValue = Loc.T(L.Character.LevelsShort,
             configuration.ActivityGoalLevels.ToString("0.#", Loc.Culture));
-        var levelsDelta = GoalRow(CardRow(card, 0, CompactRowHeight, scale), Loc.T(L.Character.GoalLevels),
+        var levelsDelta = GoalRow(card.NextRow(), Loc.T(L.Character.GoalLevels),
             levelsValue, scale);
         if (levelsDelta != 0)
         {
@@ -304,7 +307,7 @@ internal sealed partial class ActivityApp : IPhoneApp
             configuration.Save();
         }
 
-        var dutiesDelta = GoalRow(CardRow(card, 1, CompactRowHeight, scale), Loc.T(L.Character.Duties),
+        var dutiesDelta = GoalRow(card.NextRow(), Loc.T(L.Character.Duties),
             Number(configuration.ActivityGoalDuties), scale);
         if (dutiesDelta != 0)
         {
@@ -313,7 +316,7 @@ internal sealed partial class ActivityApp : IPhoneApp
             configuration.Save();
         }
 
-        var gilDelta = GoalRow(CardRow(card, 2, CompactRowHeight, scale), Loc.T(L.Character.GilEarned),
+        var gilDelta = GoalRow(card.NextRow(), Loc.T(L.Character.GilEarned),
             Compact(configuration.ActivityGoalGil), scale);
         if (gilDelta != 0)
         {
@@ -321,7 +324,8 @@ internal sealed partial class ActivityApp : IPhoneApp
             configuration.Save();
         }
 
-        EndCard(card, scale);
+        card.End();
+        ImGui.Dummy(new Vector2(0f, CardGap * scale));
         ui.HelpText(Loc.T(L.Character.GoalsHint));
     }
 
@@ -338,31 +342,6 @@ internal sealed partial class ActivityApp : IPhoneApp
 
         index = Math.Clamp(index + delta, 0, GilGoalSteps.Length - 1);
         return GilGoalSteps[index];
-    }
-
-    private Rect BeginCard(int rowCount, float rowHeight, float scale)
-    {
-        var width = ImGui.GetContentRegionAvail().X;
-        var origin = ImGui.GetCursorScreenPos();
-        var height = (rowCount * rowHeight + 2f * CardPadding) * scale;
-        var rect = new Rect(origin, origin + new Vector2(width, height));
-        ui.Card(ImGui.GetWindowDrawList(), rect.Min, rect.Max, CardRounding * scale, elevated: true);
-        return rect;
-    }
-
-    private static Rect CardRow(Rect card, int rowIndex, float rowHeight, float scale)
-    {
-        var padding = 14f * scale;
-        var top = card.Min.Y + CardPadding * scale + rowIndex * rowHeight * scale;
-        return new Rect(new Vector2(card.Min.X + padding, top),
-            new Vector2(card.Max.X - padding, top + rowHeight * scale));
-    }
-
-    private static void EndCard(Rect card, float scale)
-    {
-        ImGui.SetCursorScreenPos(card.Min);
-        ImGui.Dummy(card.Size);
-        ImGui.Dummy(new Vector2(0f, CardGap * scale));
     }
 
     private static void StatRow(Rect row, Vector4 tint, FontAwesomeIcon icon, string label, string value,

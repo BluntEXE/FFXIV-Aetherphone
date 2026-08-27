@@ -226,11 +226,6 @@ internal sealed partial class MessageApp
 
     private void DrawContactInfoCard(ContactDto contact, float scale)
     {
-        var sideInset = 16f * scale;
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var rowHeight = 34f * scale;
-        var pad = 14f * scale;
         var rowCount = 3;
         var localTime = ContactLocalTime(contact.UserId);
         if (localTime.Length > 0)
@@ -238,38 +233,31 @@ internal sealed partial class MessageApp
             rowCount++;
         }
 
-        var cardMin = new Vector2(origin.X + sideInset, origin.Y);
-        var cardMax = new Vector2(origin.X + width - sideInset, origin.Y + pad * 2f + rowHeight * rowCount);
-        ui.Card(ImGui.GetWindowDrawList(), cardMin, cardMax, 16f * scale);
-        var rowY = cardMin.Y + pad;
-        DrawInfoRow(cardMin.X + pad, cardMax.X - pad, rowY, rowHeight, Loc.T(L.Message.Number),
-            ContactBook.Format(contact.PhoneNumber));
-        rowY += rowHeight;
-        DrawInfoRow(cardMin.X + pad, cardMax.X - pad, rowY, rowHeight, Loc.T(L.Message.Handle),
-            "@" + contact.Handle);
-        rowY += rowHeight;
+        var card = GroupCard.Begin(ui, rowCount, 40f);
+        DrawInfoRow(card.NextRow(), Loc.T(L.Message.Number), ContactBook.Format(contact.PhoneNumber));
+        DrawInfoRow(card.NextRow(), Loc.T(L.Message.Handle), "@" + contact.Handle);
         if (localTime.Length > 0)
         {
-            DrawInfoRow(cardMin.X + pad, cardMax.X - pad, rowY, rowHeight, Loc.T(L.Message.LocalTime), localTime);
-            rowY += rowHeight;
+            DrawInfoRow(card.NextRow(), Loc.T(L.Message.LocalTime), localTime);
         }
 
-        DrawInfoRow(cardMin.X + pad, cardMax.X - pad, rowY, rowHeight, Loc.T(L.Message.Added),
+        DrawInfoRow(card.NextRow(), Loc.T(L.Message.Added),
             DateTimeOffset.FromUnixTimeSeconds(contact.CreatedAtUnix).ToLocalTime().ToString("d", Loc.Culture));
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, cardMax.Y - cardMin.Y + 12f * scale));
+        card.End();
+        ImGui.Dummy(new Vector2(0f, 12f * scale));
     }
 
-    private void DrawInfoRow(float left, float right, float top, float rowHeight, string label, string value)
+    private void DrawInfoRow(Rect row, string label, string value)
     {
         var scale = UiScale.Current;
-        var centerY = top + rowHeight * 0.5f;
+        var centerY = row.Center.Y;
         var labelSize = Typography.Measure(label, TextStyles.Footnote);
-        Typography.Draw(new Vector2(left, centerY - 8f * scale), label, ui.MutedInk, TextStyles.Footnote);
-        var valueMaxWidth = MathF.Max(1f, right - left - labelSize.X - 10f * scale);
-        var valueHovering = UiInteract.Hover(new Vector2(right - valueMaxWidth, top),
-            new Vector2(right, top + rowHeight));
-        Marquee.DrawRight(label + ":value", value, right, centerY - Typography.Measure(value, TextStyles.Subheadline).Y * 0.5f,
+        Typography.Draw(new Vector2(row.Min.X, centerY - 8f * scale), label, ui.MutedInk, TextStyles.Footnote);
+        var valueMaxWidth = MathF.Max(1f, row.Width - labelSize.X - 10f * scale);
+        var valueHovering = UiInteract.Hover(new Vector2(row.Max.X - valueMaxWidth, row.Min.Y),
+            new Vector2(row.Max.X, row.Max.Y));
+        Marquee.DrawRight(label + ":value", value, row.Max.X,
+            centerY - Typography.Measure(value, TextStyles.Subheadline).Y * 0.5f,
             valueMaxWidth, TextStyles.Subheadline, ui.BodyInk, valueHovering);
     }
 

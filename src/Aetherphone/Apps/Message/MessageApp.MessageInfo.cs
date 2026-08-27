@@ -132,11 +132,14 @@ internal sealed partial class MessageApp
             }
         }
 
-        DrawReceiptStatusRow(FontAwesomeIcon.CheckDouble, readAt is not null ? ReadTickColor : ui.MutedInk,
-            Loc.T(L.Message.ReadSection), readAt is { } readUnix ? FormatStamp(readUnix)
-                : Loc.T(L.Message.NotReadYet), scale);
-        DrawReceiptStatusRow(FontAwesomeIcon.Check, ui.MutedInk, Loc.T(L.Message.SentSection),
+        var card = GroupCard.Begin(ui, 2, 52f);
+        DrawReceiptStatusRow(card.NextRow(), FontAwesomeIcon.CheckDouble,
+            readAt is not null ? ReadTickColor : ui.MutedInk, Loc.T(L.Message.ReadSection),
+            readAt is { } readUnix ? FormatStamp(readUnix) : Loc.T(L.Message.NotReadYet), scale);
+        DrawReceiptStatusRow(card.NextRow(), FontAwesomeIcon.Check, ui.MutedInk, Loc.T(L.Message.SentSection),
             FormatStamp(message.CreatedAtUnix), scale);
+        card.End();
+        ImGui.Dummy(new Vector2(0f, 8f * scale));
     }
 
     private void DrawGroupReceipts(ChatMessageDto message, float scale)
@@ -144,6 +147,7 @@ internal sealed partial class MessageApp
         var members = store.Members;
         DrawSectionLabel(Loc.T(L.Message.ReadBy), scale);
         var readCount = 0;
+        var pendingCount = 0;
         for (var index = 0; index < members.Length; index++)
         {
             var member = members[index];
@@ -154,8 +158,11 @@ internal sealed partial class MessageApp
 
             if (member.LastReadAtUnix is { } readAt && readAt >= message.CreatedAtUnix)
             {
-                DrawReceiptMemberRow(member, FormatStamp(readAt), FontAwesomeIcon.CheckDouble, ReadTickColor, scale);
                 readCount++;
+            }
+            else
+            {
+                pendingCount++;
             }
         }
 
@@ -163,8 +170,33 @@ internal sealed partial class MessageApp
         {
             DrawReceiptEmptyRow(Loc.T(L.Message.NotReadYet), scale);
         }
+        else
+        {
+            var readCard = GroupCard.Begin(ui, readCount, 52f);
+            for (var index = 0; index < members.Length; index++)
+            {
+                var member = members[index];
+                if (!IsReceiptMember(member) || member.LastReadAtUnix is not { } readAt
+                    || readAt < message.CreatedAtUnix)
+                {
+                    continue;
+                }
 
-        var pendingCount = 0;
+                DrawReceiptMemberRow(readCard.NextRow(), member, FormatStamp(readAt), FontAwesomeIcon.CheckDouble,
+                    ReadTickColor, scale);
+            }
+
+            readCard.End();
+            ImGui.Dummy(new Vector2(0f, 8f * scale));
+        }
+
+        if (pendingCount == 0)
+        {
+            return;
+        }
+
+        DrawSectionLabel(Loc.T(L.Message.SentTo), scale);
+        var pendingCard = GroupCard.Begin(ui, pendingCount, 52f);
         for (var index = 0; index < members.Length; index++)
         {
             var member = members[index];
@@ -175,15 +207,13 @@ internal sealed partial class MessageApp
 
             if (member.LastReadAtUnix is null || member.LastReadAtUnix.Value < message.CreatedAtUnix)
             {
-                if (pendingCount == 0)
-                {
-                    DrawSectionLabel(Loc.T(L.Message.SentTo), scale);
-                }
-
-                DrawReceiptMemberRow(member, string.Empty, FontAwesomeIcon.Check, ui.MutedInk, scale);
-                pendingCount++;
+                DrawReceiptMemberRow(pendingCard.NextRow(), member, string.Empty, FontAwesomeIcon.Check,
+                    ui.MutedInk, scale);
             }
         }
+
+        pendingCard.End();
+        ImGui.Dummy(new Vector2(0f, 8f * scale));
     }
 
     private bool IsReceiptMember(ConversationMemberDto member)
@@ -191,75 +221,57 @@ internal sealed partial class MessageApp
         return member.IsActive && member.UserId != store.MyUserId;
     }
 
-    private void DrawReceiptStatusRow(FontAwesomeIcon icon, Vector4 iconColor, string label, string value, float scale)
+    private void DrawReceiptStatusRow(Rect row, FontAwesomeIcon icon, Vector4 iconColor, string label, string value,
+        float scale)
     {
-        var rowHeight = 52f * scale;
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var drawList = ImGui.GetWindowDrawList();
-        ui.Card(drawList, origin, new Vector2(origin.X + width, origin.Y + rowHeight), 14f * scale);
-        var pad = 14f * scale;
-        AppSkin.Icon(new Vector2(origin.X + pad + 8f * scale, origin.Y + rowHeight * 0.5f), icon.ToIconString(),
-            iconColor, 0.95f);
+        AppSkin.Icon(new Vector2(row.Min.X + 8f * scale, row.Center.Y), icon.ToIconString(), iconColor, 0.95f);
         var valueSize = Typography.Measure(value, 0.85f);
-        var labelLeft = origin.X + pad + 28f * scale;
-        var labelMaxWidth = MathF.Max(1f, origin.X + width - pad - valueSize.X - 10f * scale - labelLeft);
+        var labelLeft = row.Min.X + 28f * scale;
+        var labelMaxWidth = MathF.Max(1f, row.Max.X - valueSize.X - 10f * scale - labelLeft);
         var clippedLabel = Typography.FitText(label, labelMaxWidth, 1f, FontWeight.SemiBold);
-        Typography.Draw(new Vector2(labelLeft, origin.Y + rowHeight * 0.5f - 9f * scale), clippedLabel,
+        Typography.Draw(new Vector2(labelLeft, row.Center.Y - 9f * scale), clippedLabel,
             theme.TextStrong, 1f, FontWeight.SemiBold);
-        Typography.Draw(new Vector2(origin.X + width - pad - valueSize.X, origin.Y + rowHeight * 0.5f
-            - valueSize.Y * 0.5f), value, ui.MutedInk, 0.85f);
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight + 8f * scale));
+        Typography.Draw(new Vector2(row.Max.X - valueSize.X, row.Center.Y - valueSize.Y * 0.5f), value,
+            ui.MutedInk, 0.85f);
     }
 
-    private void DrawReceiptMemberRow(ConversationMemberDto member, string stamp, FontAwesomeIcon icon,
+    private void DrawReceiptMemberRow(Rect row, ConversationMemberDto member, string stamp, FontAwesomeIcon icon,
         Vector4 iconColor, float scale)
     {
-        var rowHeight = 52f * scale;
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
         var drawList = ImGui.GetWindowDrawList();
-        ui.Card(drawList, origin, new Vector2(origin.X + width, origin.Y + rowHeight), 14f * scale);
-        var pad = 12f * scale;
         var radius = 17f * scale;
-        var avatarCenter = new Vector2(origin.X + pad + radius, origin.Y + rowHeight * 0.5f);
+        var avatarCenter = new Vector2(row.Min.X + radius, row.Center.Y);
         var label = member.DisplayName.Length > 0 ? member.DisplayName : member.Handle;
         AvatarView.DrawRemote(drawList, avatarCenter, radius, theme, label, string.Empty, member.AvatarUrl, images,
             lodestone, 0.85f, 32, 1f, Frames.Of(member.FrameId));
         var textLeft = avatarCenter.X + radius + 12f * scale;
         var stampWidth = stamp.Length > 0 ? Typography.Measure(stamp, 0.80f).X + 10f * scale : 0f;
-        var labelMaxWidth = MathF.Max(1f, origin.X + width - pad - 26f * scale - stampWidth - textLeft);
-        var rowHovering = UiInteract.Hover(origin, new Vector2(origin.X + width, origin.Y + rowHeight));
+        var labelMaxWidth = MathF.Max(1f, row.Max.X - 26f * scale - stampWidth - textLeft);
+        var band = RowBand(row, scale);
+        var rowHovering = UiInteract.Hover(band.Min, band.Max);
         Marquee.DrawLeft("messageapp.messageinfo.member." + member.UserId, label, textLeft,
-            origin.Y + rowHeight * 0.5f - 9f * scale, labelMaxWidth, new TextStyle(1f, FontWeight.SemiBold),
+            row.Center.Y - 9f * scale, labelMaxWidth, new TextStyle(1f, FontWeight.SemiBold),
             theme.TextStrong, rowHovering);
-        var right = origin.X + width - pad;
+        var right = row.Max.X;
         if (stamp.Length > 0)
         {
             var stampSize = Typography.Measure(stamp, 0.80f);
-            Typography.Draw(new Vector2(right - stampSize.X, origin.Y + rowHeight * 0.5f - stampSize.Y * 0.5f),
+            Typography.Draw(new Vector2(right - stampSize.X, row.Center.Y - stampSize.Y * 0.5f),
                 stamp, ui.MutedInk, 0.80f);
             right -= stampSize.X + 10f * scale;
         }
 
-        AppSkin.Icon(new Vector2(right - 6f * scale, origin.Y + rowHeight * 0.5f), icon.ToIconString(), iconColor,
+        AppSkin.Icon(new Vector2(right - 6f * scale, row.Center.Y), icon.ToIconString(), iconColor,
             0.80f);
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight + 8f * scale));
     }
 
     private void DrawReceiptEmptyRow(string label, float scale)
     {
-        var rowHeight = 44f * scale;
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var drawList = ImGui.GetWindowDrawList();
-        ui.Card(drawList, origin, new Vector2(origin.X + width, origin.Y + rowHeight), 14f * scale);
-        Typography.DrawCentered(new Vector2(origin.X + width * 0.5f, origin.Y + rowHeight * 0.5f), label,
-            ui.MutedInk, 0.9f);
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight + 8f * scale));
+        var card = GroupCard.Begin(ui, 1, 44f);
+        var row = card.NextRow();
+        Typography.DrawCentered(row.Center, label, ui.MutedInk, 0.9f);
+        card.End();
+        ImGui.Dummy(new Vector2(0f, 8f * scale));
     }
 
     private static string FormatStamp(long unixSeconds)

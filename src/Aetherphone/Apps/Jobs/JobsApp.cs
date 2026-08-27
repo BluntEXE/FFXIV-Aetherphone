@@ -19,7 +19,6 @@ internal sealed partial class JobsApp : IPhoneApp
     private const float PendingEquipIntervalSeconds = 0.1f;
     private const float PendingEquipTimeoutSeconds = 5f;
     private const float RowHeight = 64f;
-    private const float CardRounding = 18f;
     private const float SectionGap = 12f;
     private const string ColorMenuId = "jobs.color";
     private const string CategoryMenuId = "jobs.categories";
@@ -320,45 +319,28 @@ internal sealed partial class JobsApp : IPhoneApp
 
     private void DrawSectionCard(JobSection section, float scale)
     {
-        var width = ImGui.GetContentRegionAvail().X;
         var rowCount = Math.Max(1, section.Entries.Length);
-        var rowHeight = RowHeight * scale;
-        var origin = ImGui.GetCursorScreenPos();
-        var min = origin;
-        var max = new Vector2(origin.X + width, origin.Y + rowCount * rowHeight);
-        var drawList = ImGui.GetWindowDrawList();
-        ui.Card(drawList, min, max, CardRounding * scale, elevated: true);
-
-        var padding = 16f * scale;
+        var card = GroupCard.Begin(ui, rowCount, RowHeight);
         if (section.Entries.Length == 0)
         {
-            Typography.DrawWrappedCentered(new Vector2((min.X + max.X) * 0.5f, min.Y + rowHeight * 0.5f - 8f * scale),
-                Loc.T(L.Jobs.EmptyCategory), ui.MutedInk, TextStyles.Footnote, width - padding * 2f);
+            var row = card.NextRow();
+            Typography.DrawWrappedCentered(new Vector2(row.Center.X, row.Center.Y - 8f * scale),
+                Loc.T(L.Jobs.EmptyCategory), ui.MutedInk, TextStyles.Footnote, row.Width);
         }
 
-        var separator = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.06f));
+        var drawList = ImGui.GetWindowDrawList();
         for (var index = 0; index < section.Entries.Length; index++)
         {
-            DrawSectionRow(drawList, section, index, min, max, padding, rowHeight, scale);
-            if (index > 0)
-            {
-                var rowTop = min.Y + index * rowHeight;
-                drawList.AddLine(new Vector2(min.X + padding, rowTop), new Vector2(max.X - padding, rowTop), separator,
-                    Metrics.Stroke.Hairline);
-            }
+            DrawSectionRow(drawList, section, card.NextRow(), index, scale);
         }
 
-        ImGui.SetCursorScreenPos(min);
-        ImGui.Dummy(new Vector2(width, rowCount * rowHeight));
+        card.End();
     }
 
-    private void DrawSectionRow(ImDrawListPtr drawList, JobSection section, int index, Vector2 min, Vector2 max,
-        float padding, float rowHeight, float scale)
+    private void DrawSectionRow(ImDrawListPtr drawList, JobSection section, Rect contentRect, int index, float scale)
     {
-        var rowTop = min.Y + index * rowHeight;
-        var rowRect = new Rect(new Vector2(min.X, rowTop), new Vector2(max.X, rowTop + rowHeight));
-        var contentRect = new Rect(new Vector2(min.X + padding, rowTop),
-            new Vector2(max.X - padding, rowTop + rowHeight));
+        var rowRect = new Rect(new Vector2(contentRect.Min.X - Metrics.Space.Lg * scale, contentRect.Min.Y),
+            new Vector2(contentRect.Max.X + Metrics.Space.Lg * scale, contentRect.Max.Y));
         if (!rowAnchorTaken)
         {
             rowAnchorTaken = true;
