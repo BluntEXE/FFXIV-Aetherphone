@@ -55,7 +55,7 @@ internal sealed partial class AethergramApp
             }
         }
 
-        using (AppSurface.Begin(listRect))
+        using (AppSurface.BeginEdgeToEdge(listRect))
         {
             if (visibleCount == 0)
             {
@@ -114,12 +114,11 @@ internal sealed partial class AethergramApp
     {
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ScrollLayout.StableContentWidth();
         var rowHeight = 64f * scale;
-        var rowMax = new Vector2(origin.X + width, origin.Y + rowHeight);
-        ui.Card(drawList, origin, rowMax, 16f * scale);
-        var pad = 12f * scale;
+        var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash);
+        var origin = cell.Bounds.Min;
+        var width = cell.Bounds.Width;
+        var pad = FeedCell.PadX * scale;
         var avatarRadius = 22f * scale;
         var avatarCenter = new Vector2(origin.X + pad + avatarRadius, origin.Y + rowHeight * 0.5f);
         AvatarView.Draw(drawList, avatarCenter, avatarRadius, Accent,
@@ -155,17 +154,16 @@ internal sealed partial class AethergramApp
             ActivityBadge.Draw(new Vector2(textRight - 7f * scale, origin.Y + 42f * scale), unread, theme, scale);
         }
 
-        if (UiInteract.Hover(origin, rowMax) && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
+        if (cell.Hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
         {
             OpenInboxRowMenu(thread.OtherUserId);
         }
-        else if (UiInteract.HoverClick(origin, rowMax))
+        else if (cell.Tapped)
         {
             OpenThread(thread.OtherUserId);
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight + 8f * scale));
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 
     private void OpenInboxRowMenu(string otherId)

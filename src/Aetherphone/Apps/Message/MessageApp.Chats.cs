@@ -75,7 +75,7 @@ internal sealed partial class MessageApp
         }
         else
         {
-            using (AppSurface.Begin(listRect))
+            using (AppSurface.BeginEdgeToEdge(listRect))
             {
                 ImGui.Dummy(new Vector2(0f, 4f * scale));
                 for (var index = 0; index < pinned.Count; index++)
@@ -166,7 +166,7 @@ internal sealed partial class MessageApp
         }
         else
         {
-            using (AppSurface.Begin(listRect))
+            using (AppSurface.BeginEdgeToEdge(listRect))
             {
                 ImGui.Dummy(new Vector2(0f, 4f * scale));
                 for (var index = 0; index < archived.Count; index++)
@@ -218,11 +218,11 @@ internal sealed partial class MessageApp
     private void DrawConversationRow(ConversationDto item, float scale, bool pinned)
     {
         var rowHeight = 62f * scale;
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
         var drawList = ImGui.GetWindowDrawList();
-        ui.Card(drawList, origin, new Vector2(origin.X + width, origin.Y + rowHeight), 16f * scale);
-        var pad = 12f * scale;
+        var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash);
+        var origin = cell.Bounds.Min;
+        var width = cell.Bounds.Width;
+        var pad = FeedCell.PadX * scale;
         var radius = 22f * scale;
         var avatarCenter = new Vector2(origin.X + pad + radius, origin.Y + rowHeight * 0.5f);
         var title = DirectMessagesStore.DisplayTitle(item);
@@ -256,13 +256,12 @@ internal sealed partial class MessageApp
             markerRight -= 20f * scale;
         }
 
-        var overMuster = false;
         if (!item.IsGroup && musters.ContactMusterFor(item.OtherUserId) is { } hosted)
         {
             var musterCenter = new Vector2(markerRight - 12f * scale, origin.Y + 18f * scale);
             var musterExtent = new Vector2(12f * scale, 12f * scale);
             var musterRect = new Rect(musterCenter - musterExtent, musterCenter + musterExtent);
-            overMuster = UiInteract.Hover(musterRect.Min, musterRect.Max);
+            var overMuster = UiInteract.Hover(musterRect.Min, musterRect.Max);
             AppSkin.Icon(musterCenter, FontAwesomeIcon.Bullhorn.ToIconString(), AppAccents.For(MusterStore.AppId),
                 0.6f);
             HoverTooltip.Show(musterRect, Loc.T(L.Message.HostingMuster), HoverLabelSide.Above);
@@ -317,18 +316,16 @@ internal sealed partial class MessageApp
                 FontWeight.SemiBold);
         }
 
-        var rowMax = new Vector2(origin.X + width, origin.Y + rowHeight);
-        if (UiInteract.Hover(origin, rowMax) && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
+        if (cell.Hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
         {
             OpenChatMenu(item.Id);
         }
-        else if (!overMuster && UiInteract.HoverClick(origin, rowMax))
+        else if (cell.Tapped)
         {
             router.Push(MessageRoute.Thread(item.Id));
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight + 8f * scale));
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 
     private void OpenChatMenu(string conversationId)
