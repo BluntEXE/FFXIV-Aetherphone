@@ -103,7 +103,7 @@ Wenn dir dieses Plugin gefallen hat, wirf einen Blick auf meine anderen Dalamud-
 
 Wer die Online-Funktionen nutzt, akzeptiert damit die Nutzungsbedingungen. Die Datenschutzerklärung beschreibt, was der Aethernet-Dienst mit deinen Daten macht; Offline-Funktionen bleiben auf deinem Rechner, wobei einige Apps öffentliche Spieldaten direkt von Drittanbieterdiensten abrufen, was die Erklärung ebenfalls abdeckt.
 
-→ [Nutzungsbedingungen](TERMS.md) · [Datenschutzerklärung](PRIVACY.md)
+→ [Nutzungsbedingungen](TERMS.md) · [Datenschutzerklärung](PRIVACY.md) · [Marken- und Namensrichtlinie](TRADEMARK.md)
 
 ## Lizenz
 

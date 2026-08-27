@@ -103,7 +103,7 @@ Si te ha gustado este plugin, echa un vistazo a mis otros trabajos para Dalamud.
 
 Usar las funciones en línea implica aceptar los términos del servicio. La política de privacidad cubre lo que el servicio Aethernet hace con tus datos; las funciones sin conexión se quedan en tu equipo, aunque algunas aplicaciones obtienen datos públicos del juego directamente de servicios de terceros, algo que la política también cubre.
 
-→ [Términos del servicio](TERMS.md) · [Política de privacidad](PRIVACY.md)
+→ [Términos del servicio](TERMS.md) · [Política de privacidad](PRIVACY.md) · [Política de marca y nombre](TRADEMARK.md)
 
 ## Licencia
 

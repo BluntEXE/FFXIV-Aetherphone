@@ -104,7 +104,7 @@ If you liked this plugin, take a look at my other Dalamud work. You might find s
 
 Using the online features means accepting the terms of service. The privacy policy covers what the Aethernet service does with your data; offline features stay on your machine, though some apps fetch public game data directly from third-party services, which the policy also covers.
 
-→ [Terms of Service](TERMS.md) · [Privacy Policy](PRIVACY.md)
+→ [Terms of Service](TERMS.md) · [Privacy Policy](PRIVACY.md) · [Trademark and naming policy](TRADEMARK.md)
 
 ## License
 

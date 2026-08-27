@@ -7,5 +7,8 @@ See the LICENSE.md file for the full license text.
 Redistributions and derivative works must preserve existing copyright
 notices and license information as required by the AGPL.
 
-If you create modified versions, please clearly indicate that your
-version is derived from this project and document the changes made.
+The AGPL covers the source code. It does not license the project's name or
+its identity: "Aetherphone" and "Aethernet", the plugin icon and the app
+icons are not part of the grant. A modified version must carry its own name
+and its own icon, must state what it changed, and must not connect to the
+official Aethernet servers. See TRADEMARK.md and section 18 of TERMS.md.

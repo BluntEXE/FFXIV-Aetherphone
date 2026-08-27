@@ -103,7 +103,7 @@ Bu eklentiyi beğendiyseniz, diğer Dalamud çalışmalarıma bir göz atın. Or
 
 Çevrimiçi özellikleri kullanmak, hizmet şartlarını kabul etmek anlamına gelir. Gizlilik politikası, Aethernet hizmetinin verilerinizle ne yaptığını kapsar; çevrimdışı özellikler makinenizde kalır, ancak bazı uygulamalar herkese açık oyun verilerini doğrudan üçüncü taraf hizmetlerden alır ve politika bunu da kapsar.
 
-→ [Hizmet Şartları](TERMS.md) · [Gizlilik Politikası](PRIVACY.md)
+→ [Hizmet Şartları](TERMS.md) · [Gizlilik Politikası](PRIVACY.md) · [Marka ve İsim Politikası](TRADEMARK.md)
 
 ## Lisans
 

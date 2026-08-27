@@ -103,7 +103,7 @@ Si ce plugin vous a plu, jetez un œil à mes autres travaux Dalamud. Vous y tro
 
 Utiliser les fonctionnalités en ligne vaut acceptation des conditions d'utilisation. La politique de confidentialité couvre ce que le service Aethernet fait de vos données ; les fonctionnalités hors ligne restent sur votre machine, même si certaines applications récupèrent des données de jeu publiques directement auprès de services tiers, ce que la politique couvre également.
 
-→ [Conditions d'utilisation](TERMS.md) · [Politique de confidentialité](PRIVACY.md)
+→ [Conditions d'utilisation](TERMS.md) · [Politique de confidentialité](PRIVACY.md) · [Politique de marque et de nom](TRADEMARK.md)
 
 ## Licence
 

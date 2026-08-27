@@ -103,7 +103,7 @@ Se você gostou deste plugin, dê uma olhada nos meus outros trabalhos para Dala
 
 Usar os recursos online significa aceitar os termos de serviço. A política de privacidade cobre o que o serviço Aethernet faz com os seus dados; os recursos offline ficam na sua máquina, embora alguns aplicativos busquem dados públicos do jogo diretamente de serviços de terceiros, o que a política também cobre.
 
-→ [Termos de Serviço](TERMS.md) · [Política de Privacidade](PRIVACY.md)
+→ [Termos de Serviço](TERMS.md) · [Política de Privacidade](PRIVACY.md) · [Política de Marca e Nome](TRADEMARK.md)
 
 ## Licença
 
