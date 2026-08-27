@@ -147,7 +147,8 @@ Every list on the phone uses one of two shared anatomies; a floating card is res
 - **An irreversible, monetary, or consent confirm stays an alert.** Account deletion, purchases, vault wipes, NSFW and external-link gates keep the centered ConfirmDialog (`Sheet` unset). Every `Alert(...)` stays an alert.
 - **Pickers stay menus.** Sort, scope, quality, channel, and filter pickers, and any menu with inline edit or delete affordances, remain DropdownMenu.
 - **Transient feedback is a toast.** ShellToast.Show for anything raised from shared components or app code; it renders as the bottom pill in whichever host (phone, popout, minimized) the pointer was in. Per-app ScreenToast instances remain for app-styled toasts (Chirper).
-- **Sharing between apps is the ShareSheet; a titled content panel is a SheetSurface.**
+- **Sharing between apps is the ShareSheet; a titled content panel is a SheetSurface.** Sending something to a *person* is a different feature and does not belong in the ShareSheet: it needs the app's own recipient list, its own send state, and usually multiple sends in one visit. Aethergram's Send to screen is the reference. An app still declares `AcceptedShares` so the system sheet can route into it.
+- **A popover is not a menu.** PopoverSurface hosts editors and readouts that a label list cannot express: the Jobs color editor (preset swatches plus a hex field), the Jobs category name editor, the Housing map legend, and the Housing ward grid. Leave those bespoke. Reach for DropdownMenu only when the content really is a list of labeled choices.
 
 ## Copy rules
 
