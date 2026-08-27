@@ -26,7 +26,7 @@ internal static class FeedCell
     public static FeedCellScope Begin(ImDrawListPtr drawList, float height, Vector4 hoverWash, bool interactive = true)
     {
         var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
         var max = new Vector2(origin.X + width, origin.Y + height);
         var hovered = interactive && UiInteract.Hover(origin, max);
         if (hovered)
