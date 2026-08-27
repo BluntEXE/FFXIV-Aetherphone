@@ -10,7 +10,6 @@ using Aetherphone.Core.Venues;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Utility;
 
 namespace Aetherphone.Apps.Music;
 
@@ -629,7 +628,7 @@ internal sealed partial class MusicApp
 
                 if (watchHovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
                 {
-                    Util.OpenLink(dj.RolladeckUrl ?? dj.TwitchUrl ?? "https://xivrolladeck.com");
+                    Windows.UrlActions.AskThenOpen(dj.RolladeckUrl ?? dj.TwitchUrl ?? "https://xivrolladeck.com");
                 }
             }
 
@@ -826,7 +825,7 @@ internal sealed partial class MusicApp
 
                     if (clicked)
                     {
-                        Util.OpenLink(url);
+                        Windows.UrlActions.AskThenOpen(url);
                     }
 
                     socialX += iconButtonSize + iconGapX;
@@ -909,7 +908,7 @@ internal sealed partial class MusicApp
 
         if (UiInteract.Click(rowMin, rowMax, hovered))
         {
-            Util.OpenLink("https://xivrolladeck.com");
+            Windows.UrlActions.AskThenOpen("https://xivrolladeck.com");
         }
     }
 
@@ -1038,7 +1037,7 @@ internal sealed partial class MusicApp
                     ImGui.SetCursorScreenPos(new Vector2(watchCenter.X - watchRadius, watchCenter.Y - watchRadius));
                     if (ImGui.InvisibleButton("##venueWatch", new Vector2(watchRadius * 2f, watchRadius * 2f)))
                     {
-                        Util.OpenLink(venue.DjRolladeckUrl ?? venue.DjTwitch!);
+                        Windows.UrlActions.AskThenOpen(venue.DjRolladeckUrl ?? venue.DjTwitch!);
                     }
                 }
 
@@ -1112,7 +1111,7 @@ internal sealed partial class MusicApp
                     var visitRect = new Rect(new Vector2(buttonX, pillOrigin.Y), new Vector2(buttonX + buttonWidth, pillOrigin.Y + buttonHeight));
                     if (ui.GhostButton(visitRect, primaryLabel))
                     {
-                        Util.OpenLink(primaryUrl);
+                        Windows.UrlActions.AskThenOpen(primaryUrl);
                     }
 
                     buttonX += buttonWidth + buttonGap;
@@ -1123,7 +1122,7 @@ internal sealed partial class MusicApp
                     var discordRect = new Rect(new Vector2(buttonX, pillOrigin.Y), new Vector2(buttonX + buttonWidth, pillOrigin.Y + buttonHeight));
                     if (ui.GhostButton(discordRect, Loc.T(L.Rolladeck.Discord)))
                     {
-                        Util.OpenLink(venue.DiscordUrl);
+                        Windows.UrlActions.AskThenOpen(venue.DiscordUrl);
                     }
                 }
             }

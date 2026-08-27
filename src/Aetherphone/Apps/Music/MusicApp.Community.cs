@@ -710,7 +710,7 @@ internal sealed partial class MusicApp
         var buttonRect = new Rect(buttonMin, buttonMin + new Vector2(buttonWidth, 36f * scale));
         if (ui.GhostButton(buttonRect, Loc.T(L.Music.WatchOnTwitch)))
         {
-            Dalamud.Utility.Util.OpenLink(url);
+            Windows.UrlActions.AskThenOpen(url);
         }
 
         ImGui.SetCursorScreenPos(origin);
@@ -983,7 +983,7 @@ internal sealed partial class MusicApp
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
         if (tapped >= 0)
         {
-            Dalamud.Utility.Util.OpenLink(linkTargets[tapped]);
+            Windows.UrlActions.AskThenOpen(linkTargets[tapped]);
         }
     }
 
