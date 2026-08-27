@@ -587,6 +587,7 @@ internal sealed class NewsApp : IPhoneApp
             "fr" => Loc.T(L.News.RegionFrance),
             "de" => Loc.T(L.News.RegionGermany),
             "eu" => Loc.T(L.News.RegionEurope),
+            "cn" => Loc.T(L.News.RegionChina),
             _ => Loc.T(L.News.RegionNorthAmerica),
         };
 

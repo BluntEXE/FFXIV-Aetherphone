@@ -261,7 +261,7 @@ internal sealed class PhoneServices : IDisposable
         var market = new MarketboardService(http);
         var marketLauncher = new MarketLauncher();
         var marketAlerts = new MarketAlertService(market, notifications, configuration, installer.Gate("market"));
-        var news = new NewsService(http);
+        var news = new NewsService(http, aethernetSession);
         var radio = new RadioService(http);
         var radioPlayer = new RadioPlayer();
         var youtube = new YoutubeClient();

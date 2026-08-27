@@ -14,6 +14,7 @@ internal sealed class GameData
     private const uint FramedJobIconBaseId = 62100;
     public const int ChineseSimplifiedClientLanguage = 4;
     private const uint ChinaRegionId = 5;
+    public const string ChineseLocale = "cn";
 
     private readonly IDataManager data;
     private readonly IObjectTable objectTable;
@@ -342,6 +343,7 @@ internal sealed class GameData
         {
             1 => "jp",
             3 => EuropeanLocale(),
+            ChinaRegionId => ChineseLocale,
             _ => "na",
         };
 

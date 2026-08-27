@@ -1,4 +1,6 @@
 using System.Collections.Concurrent;
+using Aetherphone.Core.Aethernet;
+using Aetherphone.Core.Game;
 using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.News;
@@ -22,14 +24,17 @@ internal sealed class NewsEntry
 internal sealed class NewsService : IDisposable
 {
     private const string ApiRoot = "https://lodestonenews.com/news";
+    private const string ChinesePath = "/news/cn/";
     private static readonly TimeSpan FreshFor = TimeSpan.FromMinutes(5);
     private readonly HttpService http;
+    private readonly AethernetSession session;
     private readonly CancellationTokenSource cancellation = new();
     private readonly ConcurrentDictionary<string, NewsEntry> entries = new();
 
-    public NewsService(HttpService http)
+    public NewsService(HttpService http, AethernetSession session)
     {
         this.http = http;
+        this.session = session;
     }
 
     public NewsEntry Request(NewsCategory category, string locale, bool forceRefresh)
@@ -56,7 +61,7 @@ internal sealed class NewsService : IDisposable
         try
         {
             var token = cancellation.Token;
-            var url = string.Concat(ApiRoot, "/", NewsCategories.Path(category), "?locale=", locale);
+            var url = FeedUrl(category, locale);
             var items = await http.GetJsonAsync(url, LodestoneNewsJsonContext.Default.NewsItems, null, token)
                 .ConfigureAwait(false);
             if (items is null)
@@ -79,6 +84,19 @@ internal sealed class NewsService : IDisposable
             entry.State = NewsState.Failed;
             AepLog.Warning(exception, $"News fetch failed for {category}/{locale}");
         }
+    }
+
+    // The Lodestone feed carries the international game only. The Chinese one runs its own build on its
+    // own maintenance and patch schedule under a different publisher, so those notices would name dates
+    // and versions a player there never sees. Aethernet serves that publisher's own news instead.
+    private string FeedUrl(NewsCategory category, string locale)
+    {
+        if (string.Equals(locale, GameData.ChineseLocale, StringComparison.Ordinal))
+        {
+            return string.Concat(session.BaseUrl.TrimEnd('/'), ChinesePath, NewsCategories.Path(category));
+        }
+
+        return string.Concat(ApiRoot, "/", NewsCategories.Path(category), "?locale=", locale);
     }
 
     public void Dispose()

@@ -4396,6 +4396,7 @@ internal static class L
         public static readonly LocString RegionFrance = new("news.regionFrance", "France");
         public static readonly LocString RegionGermany = new("news.regionGermany", "Germany");
         public static readonly LocString RegionJapan = new("news.regionJapan", "Japan");
+        public static readonly LocString RegionChina = new("news.regionChina", "China");
     }
 
     internal static class Wallet
