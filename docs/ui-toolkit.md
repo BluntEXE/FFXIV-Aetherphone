@@ -24,7 +24,7 @@ Colors and surfaces come from `AppSkin` and `AppPalette` (per-app skin) or `Phon
 | src/Aetherphone/Windows/Components/FeedVirtualizer.cs | Skips offscreen rows in long feeds |
 | src/Aetherphone/Windows/Components/FeedCell.cs | Edge-to-edge list cell: flat hover wash, whole-cell tap, trailing hairline |
 | src/Aetherphone/Windows/Components/GroupCard.cs | Grouped inset list card (theme or AppSkin overload) with fixed rows |
-| src/Aetherphone/Windows/Components/ListSection.cs | Section header over cell lists (SettingsSection delegates here) |
+| src/Aetherphone/Windows/Components/ListSection.cs | Section header over cell lists (SettingsSection and ListSection.Label delegate here) |
 | src/Aetherphone/Windows/Components/ActionSheet.cs | iOS bottom action sheet with an optional header band |
 | src/Aetherphone/Windows/Components/ShellToast.cs | Shell-level bottom-pill toast (replaced the mouse-anchored CopyToast) |
 | src/Aetherphone/Windows/Components/Toggle.cs | iOS-style switch |
@@ -278,7 +278,8 @@ To move, scale or fade a whole screen, do not paint it at a shifted rect or a sm
 | Build a scrollable app body | `AppSurface.Begin(area)` |
 | Build a feed or conversation list | `AppSurface.BeginEdgeToEdge` + `FeedCell.Begin`/`End` |
 | Build a settings or detail row list | `GroupCard.Begin` + `NextRow` + a row painter |
-| Title a section above cells | `ListSection.Header` |
+| Title a section above cells | `ListSection.Header` (or `ListSection.Label` from an AppSkin) |
+| Inset a card inside an edge-to-edge surface | shift both edges by `FeedCell.PadX * scale` |
 | Size rows inside a scroll region | `ScrollLayout.StableContentWidth()` |
 | Render a long feed | `FeedVirtualizer` + `InfiniteScroll.ReachedBottom` |
 | Make a rect clickable | `UiInteract.HoverClick` (or `Hover` + `Click`) |
