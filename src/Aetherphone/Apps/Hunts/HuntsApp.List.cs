@@ -61,10 +61,10 @@ internal sealed partial class HuntsApp
                 return;
             }
 
-            var card = RowListCard.Begin(ui, filteredWindows.Count, RowHeight, scale);
+            var card = GroupCard.Begin(ui, filteredWindows.Count, RowHeight);
             for (var index = 0; index < filteredWindows.Count; index++)
             {
-                DrawRow(card.Row(index), filteredWindows[index], scale, now);
+                DrawRow(card.NextRow(), filteredWindows[index], scale, now);
             }
 
             card.End();

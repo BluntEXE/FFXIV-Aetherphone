@@ -7,7 +7,7 @@ namespace Aetherphone.Windows.Components;
 internal struct GroupCard
 {
     public const float DefaultRowHeight = Metrics.Size.Row;
-    private readonly PhoneTheme theme;
+    private readonly Vector4 separator;
     private readonly float scale;
     private readonly float rowHeight;
     private readonly float left;
@@ -16,10 +16,10 @@ internal struct GroupCard
     private readonly int rowCount;
     private int rowIndex;
 
-    private GroupCard(PhoneTheme theme, float scale, float rowHeight, float left, float right, float startY,
+    private GroupCard(Vector4 separator, float scale, float rowHeight, float left, float right, float startY,
         int rowCount)
     {
-        this.theme = theme;
+        this.separator = separator;
         this.scale = scale;
         this.rowHeight = rowHeight;
         this.left = left;
@@ -39,7 +39,18 @@ internal struct GroupCard
         var dl = ImGui.GetWindowDrawList();
         Squircle.Fill(dl, origin, cardMax, Metrics.Radius.Md * scale, ImGui.GetColorU32(theme.GroupedCard));
         Material.EdgeSquircle(dl, origin, cardMax, Metrics.Radius.Md * scale, scale);
-        return new GroupCard(theme, scale, rowHeight, origin.X, right, origin.Y, rowCount);
+        return new GroupCard(theme.Separator, scale, rowHeight, origin.X, right, origin.Y, rowCount);
+    }
+
+    public static GroupCard Begin(AppSkin ui, int rowCount, float rowHeight = DefaultRowHeight)
+    {
+        var scale = UiScale.Current;
+        var origin = ImGui.GetCursorScreenPos();
+        var right = origin.X + ImGui.GetContentRegionAvail().X;
+        var height = rowCount * rowHeight * scale;
+        var cardMax = new Vector2(right, origin.Y + height);
+        ui.Card(ImGui.GetWindowDrawList(), origin, cardMax, Metrics.Radius.Md * scale);
+        return new GroupCard(ui.Hairline, scale, rowHeight, origin.X, right, origin.Y, rowCount);
     }
 
     public Rect NextRow(int rowSpan = 1)
@@ -49,7 +60,7 @@ internal struct GroupCard
         {
             var separatorX = left + Metrics.Space.Lg * scale;
             ImGui.GetWindowDrawList().AddLine(new Vector2(separatorX, rowTop), new Vector2(right, rowTop),
-                ImGui.GetColorU32(theme.Separator), Metrics.Stroke.Hairline);
+                ImGui.GetColorU32(separator), Metrics.Stroke.Hairline);
         }
 
         rowIndex += rowSpan;

@@ -33,24 +33,15 @@ internal static class InboxRowView
     private static readonly Dictionary<string, Spring> Reveals = new(StringComparer.Ordinal);
     private static readonly Vector4 White = new(1f, 1f, 1f, 1f);
 
-    public static InboxRowAction Draw(InboxRow row, PhoneTheme theme, LodestoneService lodestone, bool quickActions)
+    public static InboxRowAction Draw(in FeedCellScope cell, InboxRow row, PhoneTheme theme,
+        LodestoneService lodestone, bool quickActions)
     {
         var scale = UiScale.Current;
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ScrollLayout.StableContentWidth();
-        var min = origin;
-        var max = new Vector2(origin.X + width, origin.Y + Height * scale);
-        var hovered = UiInteract.Hover(min, max);
-        var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
+        var min = cell.Bounds.Min;
+        var max = cell.Bounds.Max;
+        var hovered = cell.Hovered;
         var drawList = ImGui.GetWindowDrawList();
         var reveal = StepReveal(row.Key, hovered && quickActions);
-        if (hovered)
-        {
-            Squircle.Fill(drawList, new Vector2(min.X + Metrics.Space.Xs * scale, min.Y + 3f * scale),
-                new Vector2(max.X - Metrics.Space.Xs * scale, max.Y - 3f * scale), Metrics.Radius.Md * scale,
-                ImGui.GetColorU32(Palette.WithAlpha(theme.TextStrong, pressed ? 0.09f : 0.05f)));
-        }
-
         var avatarCenter = new Vector2(min.X + 14f * scale + AvatarRadius * scale, min.Y + Height * scale * 0.5f);
         DrawAvatar(drawList, avatarCenter, row, theme, lodestone, scale);
         var textLeft = avatarCenter.X + AvatarRadius * scale + Metrics.Space.Md * scale;
@@ -96,7 +87,6 @@ internal static class InboxRowView
         }
 
         DrawPreview(drawList, row, theme, textLeft, min.Y + 34f * scale, previewRight - textLeft, scale);
-        ImGui.SetCursorScreenPos(new Vector2(origin.X, max.Y));
         if (action != InboxRowAction.None)
         {
             return action;
@@ -107,7 +97,7 @@ internal static class InboxRowView
             return InboxRowAction.Menu;
         }
 
-        return UiInteract.Click(min, max, hovered && !overActions) ? InboxRowAction.Open : InboxRowAction.None;
+        return cell.Tapped && !overActions ? InboxRowAction.Open : InboxRowAction.None;
     }
 
     private static float StepReveal(string key, bool target)

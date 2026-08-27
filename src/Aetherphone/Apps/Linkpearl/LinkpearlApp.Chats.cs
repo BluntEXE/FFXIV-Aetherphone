@@ -198,7 +198,11 @@ internal sealed partial class LinkpearlApp
 
     private void DrawRow(InboxRow row)
     {
-        switch (InboxRowView.Draw(row, frameTheme, lodestone, true))
+        var drawList = ImGui.GetWindowDrawList();
+        var cell = FeedCell.Begin(drawList, InboxRowView.Height * UiScale.Current, frameTheme.HoverWash);
+        var action = InboxRowView.Draw(cell, row, frameTheme, lodestone, true);
+        FeedCell.End(drawList, cell, frameTheme.Hairline);
+        switch (action)
         {
             case InboxRowAction.Open:
                 OpenConversation(row.Key);
