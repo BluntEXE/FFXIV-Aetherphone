@@ -48,6 +48,7 @@ internal sealed class ConfirmRequest
     public ConfirmSection[]? Sections;
     public bool Danger = true;
     public bool Acknowledge;
+    public bool Sheet;
     public Action<Action<bool>>? ConfirmAsync;
     public Action? Confirm;
     public Action? Cancel;

@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Animation;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
@@ -152,6 +153,142 @@ internal static class ConfirmDialog
         {
             confirmed = true;
         }
+    }
+
+    private const float SheetMargin = 10f;
+    private const float SheetRounding = 20f;
+    private const float SheetActionHeight = 50f;
+    private const float SheetCancelHeight = 52f;
+    private const float SheetGap = 8f;
+    private const float SheetBottomInset = 12f;
+    private const float SheetPadX = 18f;
+    private const float SheetHeaderPadY = 13f;
+    private const float SheetHeaderLineGap = 4f;
+
+    private static readonly TextStyle SheetActionStyle = new(1.07f, FontWeight.SemiBold);
+    private static readonly TextStyle SheetCancelStyle = new(1.07f, FontWeight.Bold);
+    private static readonly TextStyle SheetHeaderStyle = new(0.82f, FontWeight.SemiBold);
+    private static readonly TextStyle SheetMessageStyle = new(0.82f, FontWeight.Regular);
+    private static readonly Vector4 SheetRowHover = new(1f, 1f, 1f, 0.06f);
+
+    public static void DrawSheet(Rect area, PhoneTheme theme, string? title, string message, string confirmLabel,
+        string cancelLabel, string busyLabel, bool busy, string? status, bool danger, float opacity,
+        out Rect sheetRect, out bool canceled, out bool confirmed)
+    {
+        canceled = false;
+        confirmed = false;
+        var scale = UiScale.Current;
+        var drawList = ImGui.GetWindowDrawList();
+        var style = ActionSheetStyle.From(theme);
+        var slide = Easing.EaseOutQuint(opacity);
+        var margin = SheetMargin * scale;
+        var padX = SheetPadX * scale;
+        var left = area.Min.X + margin;
+        var right = area.Max.X - margin;
+        var headerWidth = right - left - padX * 2f;
+        var hasTitle = title is { Length: > 0 };
+        var titleHeight = hasTitle
+            ? Typography.MeasureWrapped(title!, headerWidth, SheetHeaderStyle.Scale, SheetHeaderStyle.Weight)
+            : 0f;
+        var hasMessage = message.Length > 0;
+        var messageHeight = hasMessage
+            ? Typography.MeasureWrapped(message, headerWidth, SheetMessageStyle.Scale, SheetMessageStyle.Weight)
+            : 0f;
+        var hasStatus = status is { Length: > 0 };
+        var statusHeight = hasStatus
+            ? Typography.MeasureWrapped(status!, headerWidth, SheetMessageStyle.Scale, SheetMessageStyle.Weight)
+            : 0f;
+        var lineGap = SheetHeaderLineGap * scale;
+        var headerHeight = SheetHeaderPadY * 2f * scale + titleHeight
+            + (hasMessage ? lineGap + messageHeight : 0f)
+            + (hasStatus ? lineGap + statusHeight : 0f);
+        var actionHeight = SheetActionHeight * scale;
+        var cancelHeight = SheetCancelHeight * scale;
+        var gap = SheetGap * scale;
+        var cardHeight = headerHeight + actionHeight;
+        var total = cardHeight + gap + cancelHeight;
+        var bottom = area.Max.Y - SheetBottomInset * scale + total * (1f - slide);
+        var cancelMin = new Vector2(left, bottom - cancelHeight);
+        var cancelMax = new Vector2(right, bottom);
+        var cardMax = new Vector2(right, cancelMin.Y - gap);
+        var cardMin = new Vector2(left, cardMax.Y - cardHeight);
+        sheetRect = new Rect(cardMin, cancelMax);
+        var rounding = SheetRounding * scale;
+        DrawSheetPanel(drawList, cardMin, cardMax, rounding, style, opacity, scale);
+        var centerX = (cardMin.X + cardMax.X) * 0.5f;
+        var cursorY = cardMin.Y + SheetHeaderPadY * scale;
+        var headerInk = Palette.WithAlpha(style.Ink, style.Ink.W * 0.65f * opacity);
+        if (hasTitle)
+        {
+            Typography.DrawWrappedCentered(drawList, title!, SheetHeaderStyle, headerInk,
+                new Vector2(centerX, cursorY), headerWidth);
+            cursorY += titleHeight;
+        }
+
+        if (hasMessage)
+        {
+            cursorY += hasTitle ? lineGap : 0f;
+            Typography.DrawWrappedCentered(drawList, message, SheetMessageStyle, headerInk,
+                new Vector2(centerX, cursorY), headerWidth);
+            cursorY += messageHeight;
+        }
+
+        if (hasStatus)
+        {
+            cursorY += lineGap;
+            Typography.DrawWrappedCentered(drawList, status!, SheetMessageStyle,
+                Palette.WithAlpha(style.Danger, style.Danger.W * opacity), new Vector2(centerX, cursorY),
+                headerWidth);
+        }
+
+        var actionMin = new Vector2(cardMin.X, cardMax.Y - actionHeight);
+        drawList.AddLine(new Vector2(actionMin.X + padX, actionMin.Y), new Vector2(cardMax.X - padX, actionMin.Y),
+            ImGui.GetColorU32(Palette.WithAlpha(style.Hairline, style.Hairline.W * opacity)), 1f);
+        var interactive = !busy && opacity > 0.5f;
+        var actionHovered = interactive && UiInteract.HoverWindowOnly(actionMin, cardMax);
+        if (actionHovered)
+        {
+            drawList.AddRectFilled(actionMin, cardMax,
+                ImGui.GetColorU32(Palette.WithAlpha(SheetRowHover, SheetRowHover.W * opacity)), rounding,
+                ImDrawFlags.RoundCornersBottom);
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        var actionInk = busy ? Palette.WithAlpha(style.Ink, style.Ink.W * 0.5f)
+            : danger ? style.Danger : style.Accent;
+        Typography.DrawCentered(drawList, new Vector2(centerX, (actionMin.Y + cardMax.Y) * 0.5f),
+            busy ? busyLabel : confirmLabel, Palette.WithAlpha(actionInk, actionInk.W * opacity), SheetActionStyle);
+        if (actionHovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        {
+            confirmed = true;
+        }
+
+        DrawSheetPanel(drawList, cancelMin, cancelMax, rounding, style, opacity, scale);
+        var cancelHovered = interactive && UiInteract.HoverWindowOnly(cancelMin, cancelMax);
+        if (cancelHovered)
+        {
+            drawList.AddRectFilled(cancelMin, cancelMax,
+                ImGui.GetColorU32(Palette.WithAlpha(SheetRowHover, SheetRowHover.W * opacity)), rounding);
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        Typography.DrawCentered(drawList, new Vector2((cancelMin.X + cancelMax.X) * 0.5f,
+                (cancelMin.Y + cancelMax.Y) * 0.5f), cancelLabel,
+            Palette.WithAlpha(style.Ink, style.Ink.W * opacity), SheetCancelStyle);
+        if (cancelHovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        {
+            canceled = true;
+        }
+    }
+
+    private static void DrawSheetPanel(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding,
+        in ActionSheetStyle style, float opacity, float scale)
+    {
+        Elevation.Floating(drawList, min, max, rounding, scale, opacity);
+        Squircle.Fill(drawList, min, max, rounding,
+            ImGui.GetColorU32(Palette.WithAlpha(style.Panel, style.Panel.W * opacity)));
+        Squircle.Stroke(drawList, min, max, rounding,
+            ImGui.GetColorU32(Palette.WithAlpha(style.Stroke, style.Stroke.W * opacity)), Metrics.Stroke.Hairline);
     }
 
     private static TextStyle SectionParagraphStyle(float cardScale) => new(0.92f * cardScale, FontWeight.Medium);
