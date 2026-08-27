@@ -96,7 +96,7 @@ internal sealed class NamePage : ISettingsPage, IDisposable
             DrawHandleField(theme);
             ImGui.Dummy(new Vector2(0f, 18f * scale));
             var canSave = !busy && editDisplay.Trim().Length > 0 && SocialProfilePages.IsHandleValid(editHandle);
-            if (PrimaryButton(busy ? Loc.T(L.Account.Saving) : Loc.T(L.Account.Save), theme, canSave))
+            if (ThemeButton.Primary(busy ? Loc.T(L.Account.Saving) : Loc.T(L.Account.Save), theme, canSave))
             {
                 Save();
             }
@@ -222,19 +222,6 @@ internal sealed class NamePage : ISettingsPage, IDisposable
                 outcome = 3;
             }
         });
-    }
-
-    private static bool PrimaryButton(string label, PhoneTheme theme, bool enabled)
-    {
-        var accent = enabled ? theme.Accent : Palette.WithAlpha(theme.Accent, 0.4f);
-        using (ImRaii.PushColor(ImGuiCol.Button, accent)
-                   .Push(ImGuiCol.ButtonHovered, enabled ? Palette.Mix(theme.Accent, theme.TextStrong, 0.14f) : accent)
-                   .Push(ImGuiCol.ButtonActive, accent)
-                   .Push(ImGuiCol.Text, new Vector4(1f, 1f, 1f, enabled ? 1f : 0.72f)))
-        {
-            var clicked = ImGui.Button(label, new Vector2(-1f, 38f * UiScale.Current));
-            return clicked && enabled;
-        }
     }
 
     public void Dispose()

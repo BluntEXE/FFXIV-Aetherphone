@@ -480,7 +480,7 @@ internal sealed partial class MessageApp
             AvatarView.Draw(drawList, center, radius, screenTheme.Accent, Initial(others[index].DisplayName), 1.2f,
                 lodestone.Avatar(others[index].Name, others[index].World, radius * 2f), 48);
             Typography.DrawCentered(new Vector2(cellCenterX, cellCenterY + radius + 12f * scale),
-                Truncate(others[index].DisplayName, 10), screenTheme.TextStrong, 0.78f);
+                UiText.Truncate(others[index].DisplayName, 10), screenTheme.TextStrong, 0.78f);
         }
     }
 
@@ -604,13 +604,4 @@ internal sealed partial class MessageApp
 
     private static string Initial(string value) => value.Length > 0 ? value.Substring(0, 1).ToUpperInvariant() : "?";
 
-    private static string Truncate(string value, int max)
-    {
-        if (string.IsNullOrEmpty(value) || value.Length <= max)
-        {
-            return value ?? string.Empty;
-        }
-
-        return value.Substring(0, max - 1) + "…";
-    }
 }

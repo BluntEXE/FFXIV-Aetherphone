@@ -784,7 +784,7 @@ internal sealed class BingoCabinet
         var pillY = segmentY + SegmentHeight * scale + Metrics.Space.Sm * scale;
         var pillRect = new Rect(new Vector2(origin.X, pillY),
             new Vector2(origin.X + width, pillY + PillHeight * scale));
-        if (DrawBuyPill(drawList, ui, pillRect, label, canBuy, scale))
+        if (ui.ActionPill(pillRect, label, canBuy, TextStyles.Subheadline))
         {
             inlineReason = string.Empty;
             rooms.BuyBingoCards(requestedCards);
@@ -1074,23 +1074,4 @@ internal sealed class BingoCabinet
         }
     }
 
-    private static bool DrawBuyPill(ImDrawListPtr drawList, AppSkin ui, Rect rect, string label, bool enabled,
-        float scale)
-    {
-        var rounding = rect.Height * 0.5f;
-        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
-        Squircle.Fill(drawList, rect.Min, rect.Max, rounding,
-            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, enabled ? 1f : 0.4f)));
-        if (hovered)
-        {
-            Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        var ink = ui.Palette.HeaderInk;
-        var fitted = Typography.FitText(label, rect.Width - 16f * scale, TextStyles.Subheadline);
-        Typography.DrawCentered(drawList, rect.Center, fitted, enabled ? ink : Palette.WithAlpha(ink, 0.6f),
-            TextStyles.Subheadline);
-        return enabled && UiInteract.Click(rect.Min, rect.Max, hovered);
-    }
 }

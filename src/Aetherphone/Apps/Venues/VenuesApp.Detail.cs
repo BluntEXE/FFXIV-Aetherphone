@@ -52,7 +52,7 @@ internal sealed partial class VenuesApp
         var titleAlpha = Math.Clamp((detailScrollY - fadeStart) / (44f * scale), 0f, 1f);
         if (titleAlpha > 0f)
         {
-            var title = VenueText.Fit(venue.Title, area.Width * 0.6f, 1.15f, FontWeight.SemiBold);
+            var title = Typography.FitText(venue.Title, area.Width * 0.6f, 1.15f, FontWeight.SemiBold);
             Typography.DrawCentered(new Vector2(area.Center.X, rowCenterY), title,
                 Palette.WithAlpha(AppPalettes.Venues.TitleInk, titleAlpha), 1.15f, FontWeight.SemiBold);
         }

@@ -472,7 +472,7 @@ internal sealed class NotesApp : IResumableApp
         var saveRect = new Rect(new Vector2(content.Min.X + margin, saveTop),
             new Vector2(content.Max.X - margin, saveTop + fieldHeight));
         var enabled = reminderTitle.Trim().Length > 0;
-        if (DrawSaveButton(saveRect, Loc.T(L.Notes.Save), enabled) && enabled)
+        if (ui.AccentPill(saveRect, Loc.T(L.Notes.Save), enabled, TextStyles.Headline) && enabled)
         {
             CommitReminder();
         }
@@ -512,23 +512,6 @@ internal sealed class NotesApp : IResumableApp
         reminderHasDue = Toggle.Draw("notes.remind", toggleRect, reminderHasDue, theme);
     }
 
-    private bool DrawSaveButton(Rect rect, string label, bool enabled)
-    {
-        var drawList = ImGui.GetWindowDrawList();
-        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
-        var fill = !enabled ? Palette.WithAlpha(ui.Accent, 0.35f) :
-            hovered ? Palette.Mix(ui.Accent, new Vector4(0f, 0f, 0f, 1f), 0.12f) : ui.Accent;
-        Squircle.Fill(drawList, rect.Min, rect.Max, rect.Height * 0.5f, ImGui.GetColorU32(fill));
-        Typography.DrawCentered(drawList, rect.Center, label, new Vector4(1f, 1f, 1f, 1f), TextStyles.Headline.Scale,
-            TextStyles.Headline.Weight);
-        if (!hovered)
-        {
-            return false;
-        }
-
-        ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        return ImGui.IsMouseClicked(ImGuiMouseButton.Left);
-    }
 
     private void CommitReminder()
     {

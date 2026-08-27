@@ -238,6 +238,41 @@ internal sealed class AppSkin
         return UiInteract.Click(rect.Min, rect.Max, hovered);
     }
 
+    public bool ActionPill(Rect rect, string label, bool enabled, in TextStyle style)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var rounding = rect.Height * 0.5f;
+        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
+        Squircle.Fill(drawList, rect.Min, rect.Max, rounding,
+            ImGui.GetColorU32(Core.Theme.Palette.WithAlpha(Accent, enabled ? 1f : 0.4f)));
+        if (hovered)
+        {
+            Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(HoverTint));
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        var fitted = Typography.FitText(label, rect.Width - rect.Height, style);
+        Typography.DrawCentered(drawList, rect.Center, fitted,
+            enabled ? HeaderInk : Core.Theme.Palette.WithAlpha(HeaderInk, 0.6f), style);
+        return enabled && UiInteract.Click(rect.Min, rect.Max, hovered);
+    }
+
+    public bool AccentPill(Rect rect, string label, bool enabled, in TextStyle style)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
+        var fill = !enabled ? Core.Theme.Palette.WithAlpha(Accent, 0.35f) :
+            hovered ? Core.Theme.Palette.Mix(Accent, new Vector4(0f, 0f, 0f, 1f), 0.12f) : Accent;
+        Squircle.Fill(drawList, rect.Min, rect.Max, rect.Height * 0.5f, ImGui.GetColorU32(fill));
+        Typography.DrawCentered(drawList, rect.Center, label, White, style.Scale, style.Weight);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return enabled && UiInteract.Click(rect.Min, rect.Max, hovered);
+    }
+
     public bool DangerPillButton(Rect rect, string label) => DangerPillButton(rect, label, Theme);
 
     public static bool DangerPillButton(Rect rect, string label, PhoneTheme theme)

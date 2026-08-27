@@ -350,7 +350,7 @@ internal sealed class NewsApp : IPhoneApp
         var maxSubWidth = row.Width - rightPadding;
         if (subWidth > maxSubWidth)
         {
-            sub = PixelEllipsize(sub, maxSubWidth, MetaScale, FontWeight.Regular);
+            sub = Typography.FitText(sub, maxSubWidth, MetaScale, FontWeight.Regular);
         }
 
         Typography.Draw(new Vector2(row.Min.X, subY), sub, theme.TextMuted, MetaScale, FontWeight.Regular);
@@ -545,31 +545,6 @@ internal sealed class NewsApp : IPhoneApp
         }
 
         return string.Concat(trimmed, "…");
-    }
-
-    private string PixelEllipsize(string text, float maxWidth, float scale, FontWeight weight)
-    {
-        if (string.IsNullOrEmpty(text))
-        {
-            return string.Empty;
-        }
-
-        using (Plugin.Fonts.Push(scale, weight))
-        {
-            var size = ImGui.CalcTextSize(text);
-            if (size.X <= maxWidth)
-            {
-                return text;
-            }
-
-            var trimmed = text;
-            while (trimmed.Length > 1 && ImGui.CalcTextSize(string.Concat(trimmed, "…")).X > maxWidth)
-            {
-                trimmed = trimmed.Substring(0, trimmed.Length - 1).TrimEnd();
-            }
-
-            return string.Concat(trimmed, "…");
-        }
     }
 
     private static string Normalize(string text)

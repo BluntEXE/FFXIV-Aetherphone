@@ -14,13 +14,12 @@ namespace Aetherphone.Apps.Aethergram;
 
 internal sealed partial class AethergramApp
 {
-    private const float InboxSegmentSmoothTime = 0.14f;
 
     private readonly DropdownMenu inboxRowMenu = new();
     private readonly DropdownMenu.Item[] inboxRowItems = new DropdownMenu.Item[1];
     private string? inboxMenuThreadId;
     private int inboxTab;
-    private Spring inboxSegmentSpring;
+    private readonly string[] inboxSegmentLabels = new string[2];
 
     private void DrawInbox(Rect area)
     {
@@ -40,7 +39,10 @@ internal sealed partial class AethergramApp
         var requestsLabel = requestCount > 0
             ? Loc.T(L.Aethergram.RequestsCount, requestCount)
             : Loc.T(L.Aethergram.Requests);
-        DrawInboxSegments(segRect, Loc.T(L.Aethergram.ChatsTab), requestsLabel);
+        inboxSegmentLabels[0] = Loc.T(L.Aethergram.ChatsTab);
+        inboxSegmentLabels[1] = requestsLabel;
+        inboxTab = SegmentStrip.Draw("aethergram.inbox", segRect, inboxSegmentLabels, inboxTab,
+            AppPalettes.Aethergram);
         var listRect = new Rect(new Vector2(area.Min.X, segRect.Max.Y + 8f * scale), area.Max);
         var showRequests = inboxTab == 1;
         var threads = dmStore.Threads;
@@ -84,43 +86,6 @@ internal sealed partial class AethergramApp
         }
 
         DrawInboxRowMenu(area);
-    }
-
-    private void DrawInboxSegments(Rect rect, string chatsLabel, string requestsLabel)
-    {
-        var scale = UiScale.Current;
-        var drawList = ImGui.GetWindowDrawList();
-        ui.Card(drawList, rect.Min, rect.Max, rect.Height * 0.5f);
-        var segmentWidth = rect.Width * 0.5f;
-        var pad = 3f * scale;
-        var delta = MathF.Min(ImGui.GetIO().DeltaTime, NavHoverMaxFrameSeconds);
-        var thumb = Math.Clamp(inboxSegmentSpring.Step(inboxTab, InboxSegmentSmoothTime, delta), 0f, 1f);
-        var thumbMin = new Vector2(rect.Min.X + pad + thumb * segmentWidth, rect.Min.Y + pad);
-        var thumbMax = new Vector2(thumbMin.X + segmentWidth - pad * 2f, rect.Max.Y - pad);
-        Squircle.Fill(drawList, thumbMin, thumbMax, (rect.Height - pad * 2f) * 0.5f,
-            ImGui.GetColorU32(Palette.WithAlpha(Accent, 0.30f)));
-        DrawInboxSegment(rect, 0, chatsLabel, segmentWidth);
-        DrawInboxSegment(rect, 1, requestsLabel, segmentWidth);
-    }
-
-    private void DrawInboxSegment(Rect rect, int index, string label, float segmentWidth)
-    {
-        var min = new Vector2(rect.Min.X + index * segmentWidth, rect.Min.Y);
-        var max = new Vector2(min.X + segmentWidth, rect.Max.Y);
-        var active = inboxTab == index;
-        Typography.DrawCentered(new Vector2((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f), label,
-            active ? AppPalettes.Aethergram.TitleInk : AppPalettes.Aethergram.MutedInk,
-            TextStyles.FootnoteEmphasized);
-        var hovered = UiInteract.Hover(min, max);
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        if (UiInteract.Click(min, max, hovered))
-        {
-            inboxTab = index;
-        }
     }
 
     private void DrawInboxEmptyState(Rect listRect, bool showRequests, int totalThreads, float scale)

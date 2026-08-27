@@ -742,7 +742,7 @@ internal sealed class SlotsCabinet
         var sideWidth = (TurboWidth + AutoWidth + Metrics.Space.Xs) * scale;
         var pillRect = new Rect(new Vector2(left, y),
             new Vector2(left + width - sideWidth - Metrics.Space.Sm * scale, y + SpinPillHeight * scale));
-        if (DrawSpinPill(drawList, ui, pillRect, label, running || canSpin, scale))
+        if (ui.ActionPill(pillRect, label, running || canSpin, TextStyles.Headline))
         {
             if (running)
             {
@@ -918,26 +918,6 @@ internal sealed class SlotsCabinet
         Typography.DrawCentered(drawList, rect.Center, Loc.T(L.Casino.SlotsTurbo),
             turbo ? ui.Accent : ui.MutedInk, TextStyles.FootnoteEmphasized);
         return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
-    }
-
-    private bool DrawSpinPill(ImDrawListPtr drawList, AppSkin ui, Rect rect, string label, bool enabled,
-        float scale)
-    {
-        var rounding = rect.Height * 0.5f;
-        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
-        var fill = Palette.WithAlpha(ui.Accent, enabled ? 1f : 0.4f);
-        Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(fill));
-        if (hovered)
-        {
-            Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        var ink = ui.Palette.HeaderInk;
-        var fitted = Typography.FitText(label, rect.Width - rect.Height, TextStyles.Headline);
-        Typography.DrawCentered(drawList, rect.Center, fitted,
-            enabled ? ink : Palette.WithAlpha(ink, 0.6f), TextStyles.Headline);
-        return enabled && UiInteract.Click(rect.Min, rect.Max, hovered);
     }
 
     private static float DrawReasonCard(ImDrawListPtr drawList, AppSkin ui, string message, float left, float y,

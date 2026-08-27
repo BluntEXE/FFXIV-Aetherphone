@@ -638,7 +638,7 @@ internal sealed class WheelCabinet
             : Loc.T(L.Casino.WheelPlace);
         var pillMin = new Vector2(fieldMax.X + 8f * scale, y + (FieldHeight - PillHeight) * 0.5f * scale);
         var pillRect = new Rect(pillMin, new Vector2(left + width, pillMin.Y + PillHeight * scale));
-        if (DrawPlacePill(drawList, ui, pillRect, label, canPlace, scale))
+        if (ui.ActionPill(pillRect, label, canPlace, TextStyles.Subheadline))
         {
             inlineReason = string.Empty;
             rooms.PlaceWheelBet(selectedSpot, clamped);
@@ -709,26 +709,6 @@ internal sealed class WheelCabinet
         Typography.DrawWrappedLeft(new Vector2(min.X + pad, min.Y + pad), message, ui.TitleInk,
             TextStyles.Footnote, width - pad * 2f);
         return max.Y;
-    }
-
-    private static bool DrawPlacePill(ImDrawListPtr drawList, AppSkin ui, Rect rect, string label, bool enabled,
-        float scale)
-    {
-        var rounding = rect.Height * 0.5f;
-        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
-        Squircle.Fill(drawList, rect.Min, rect.Max, rounding,
-            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, enabled ? 1f : 0.4f)));
-        if (hovered)
-        {
-            Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        var ink = ui.Palette.HeaderInk;
-        var fitted = Typography.FitText(label, rect.Width - 16f * scale, TextStyles.Subheadline);
-        Typography.DrawCentered(drawList, rect.Center, fitted,
-            enabled ? ink : Palette.WithAlpha(ink, 0.6f), TextStyles.Subheadline);
-        return enabled && UiInteract.Click(rect.Min, rect.Max, hovered);
     }
 
     private void DrawClosed(ImDrawListPtr drawList, AppSkin ui, string reason, float left, float y, float width,

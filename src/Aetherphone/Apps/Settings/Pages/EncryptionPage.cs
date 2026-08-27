@@ -163,7 +163,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         }
 
         ImGui.Dummy(new Vector2(0f, 12f * scale));
-        if (Button(Loc.T(L.Encryption.NewKeyButton), theme) && !actions.Busy)
+        if (ThemeButton.Draw(Loc.T(L.Encryption.NewKeyButton), theme) && !actions.Busy)
         {
             actions.AskResetWithoutRecovery();
         }
@@ -181,14 +181,14 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         ImGui.Dummy(new Vector2(0f, 10f * scale));
         DrawCodeInput(theme);
         ImGui.Dummy(new Vector2(0f, 10f * scale));
-        if (Button(Loc.T(L.Encryption.RecoveryUnlockButton), theme)
+        if (ThemeButton.Draw(Loc.T(L.Encryption.RecoveryUnlockButton), theme)
             && !actions.Busy && RecoveryKey.Canonicalize(actions.CodeEntry).Length > 0)
         {
             actions.BeginRecover();
         }
 
         ImGui.Dummy(new Vector2(0f, 6f * scale));
-        if (Button(Loc.T(L.Encryption.NewKeyButton), theme) && !actions.Busy)
+        if (ThemeButton.Draw(Loc.T(L.Encryption.NewKeyButton), theme) && !actions.Busy)
         {
             actions.AskReset();
         }
@@ -242,7 +242,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         ImGui.Dummy(new Vector2(width, height));
 
         ImGui.Dummy(new Vector2(0f, 8f * scale));
-        if (Button(Loc.T(L.Encryption.RecoveryCopy), theme))
+        if (ThemeButton.Draw(Loc.T(L.Encryption.RecoveryCopy), theme))
         {
             ImGui.SetClipboardText(actions.GeneratedCode);
             actions.Status = Loc.T(L.Friends.Copied);
@@ -255,7 +255,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         }
 
         ImGui.Dummy(new Vector2(0f, 12f * scale));
-        if (Button(Loc.T(L.Encryption.RecoverySavedButton), theme))
+        if (ThemeButton.Draw(Loc.T(L.Encryption.RecoverySavedButton), theme))
         {
             actions.AcknowledgeGeneratedCode();
         }
@@ -282,7 +282,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         var label = vault.RecoveryConfigured
             ? Loc.T(L.Encryption.RecoveryRegenerateButton)
             : Loc.T(L.Encryption.RecoverySetupButton);
-        if (Button(label, theme) && !actions.Busy)
+        if (ThemeButton.Draw(label, theme) && !actions.Busy)
         {
             actions.BeginCreateRecoveryCode();
         }
@@ -316,7 +316,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         DrawRestoreOlderSection(theme);
 
         ImGui.Dummy(new Vector2(0f, 14f * scale));
-        if (Button(Loc.T(L.Encryption.ResetButton), theme) && !actions.Busy)
+        if (ThemeButton.Draw(Loc.T(L.Encryption.ResetButton), theme) && !actions.Busy)
         {
             actions.AskReset();
         }
@@ -345,7 +345,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         ImGui.Dummy(new Vector2(0f, 8f * scale));
         if (!restoreEntryOpen)
         {
-            if (Button(Loc.T(L.Encryption.RestoreOlderButton), theme) && !actions.Busy)
+            if (ThemeButton.Draw(Loc.T(L.Encryption.RestoreOlderButton), theme) && !actions.Busy)
             {
                 actions.CodeEntry = string.Empty;
                 restoreEntryOpen = true;
@@ -356,7 +356,7 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
 
         DrawCodeInput(theme);
         ImGui.Dummy(new Vector2(0f, 10f * scale));
-        if (Button(Loc.T(L.Encryption.RestoreOlderConfirm), theme)
+        if (ThemeButton.Draw(Loc.T(L.Encryption.RestoreOlderConfirm), theme)
             && !actions.Busy && RecoveryKey.Canonicalize(actions.CodeEntry).Length > 0)
         {
             actions.BeginRestorePreviousKeys();
@@ -375,16 +375,6 @@ internal sealed class EncryptionPage : ISettingsPage, IDisposable
         using (ImRaii.PushColor(ImGuiCol.Text, theme.TextMuted))
         {
             Typography.Wrapped(message);
-        }
-    }
-
-    private static bool Button(string label, PhoneTheme theme)
-    {
-        using (ImRaii.PushColor(ImGuiCol.Button, theme.GroupedCard)
-                   .Push(ImGuiCol.ButtonHovered, Palette.Mix(theme.GroupedCard, theme.Accent, 0.35f))
-                   .Push(ImGuiCol.ButtonActive, theme.Accent).Push(ImGuiCol.Text, theme.TextStrong))
-        {
-            return ImGui.Button(label, new Vector2(-1f, 34f * UiScale.Current));
         }
     }
 

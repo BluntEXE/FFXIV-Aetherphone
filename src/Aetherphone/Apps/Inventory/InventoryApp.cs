@@ -505,7 +505,7 @@ internal sealed class InventoryApp : IPhoneApp
             textRight -= labelSize.X + 10f * scale;
         }
 
-        var title = Fit(group.Title, textRight - textLeft, TextStyles.Headline);
+        var title = Typography.FitText(group.Title, textRight - textLeft, TextStyles.Headline);
         Typography.Draw(drawList,
             new Vector2(textLeft, tileCenter.Y - Typography.Measure(title, TextStyles.Headline).Y * 0.5f),
             title, ui.TitleInk, TextStyles.Headline);
@@ -684,39 +684,6 @@ internal sealed class InventoryApp : IPhoneApp
 
     private static string FormatCount(int value) => value.ToString("N0", Loc.Culture);
     private static string FormatGil() => InventoryGil.Read().ToString("N0", Loc.Culture);
-
-    private static string Fit(string text, float maxWidth, in TextStyle style)
-    {
-        if (text.Length == 0 || maxWidth <= 0f)
-        {
-            return text;
-        }
-
-        if (Typography.Measure(text, style).X <= maxWidth)
-        {
-            return text;
-        }
-
-        var low = 1;
-        var high = text.Length;
-        var best = "…";
-        while (low <= high)
-        {
-            var mid = (low + high) / 2;
-            var candidate = text.Substring(0, mid) + "…";
-            if (Typography.Measure(candidate, style).X <= maxWidth)
-            {
-                best = candidate;
-                low = mid + 1;
-            }
-            else
-            {
-                high = mid - 1;
-            }
-        }
-
-        return best;
-    }
 
     public void Dispose()
     {

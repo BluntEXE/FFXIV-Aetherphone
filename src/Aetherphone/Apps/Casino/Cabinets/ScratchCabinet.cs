@@ -438,7 +438,7 @@ internal sealed class ScratchCabinet
             ? Loc.T(L.Casino.ScratchAnotherFor, priceText)
             : Loc.T(L.Casino.ScratchBuyFor, priceText);
         var pillRect = new Rect(new Vector2(left, y), new Vector2(left + width, y + BuyPillHeight * scale));
-        if (DrawBuyPill(drawList, ui, pillRect, label, canBuy, scale))
+        if (ui.ActionPill(pillRect, label, canBuy, TextStyles.Headline))
         {
             inlineReason = string.Empty;
             celebrationPrize = 0;
@@ -470,26 +470,6 @@ internal sealed class ScratchCabinet
         {
             openCashier();
         }
-    }
-
-    private static bool DrawBuyPill(ImDrawListPtr drawList, AppSkin ui, Rect rect, string label, bool enabled,
-        float scale)
-    {
-        var rounding = rect.Height * 0.5f;
-        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
-        var fill = Palette.WithAlpha(ui.Accent, enabled ? 1f : 0.4f);
-        Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(fill));
-        if (hovered)
-        {
-            Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        var ink = ui.Palette.HeaderInk;
-        var fitted = Typography.FitText(label, rect.Width - rect.Height, TextStyles.Headline);
-        Typography.DrawCentered(drawList, rect.Center, fitted,
-            enabled ? ink : Palette.WithAlpha(ink, 0.6f), TextStyles.Headline);
-        return enabled && UiInteract.Click(rect.Min, rect.Max, hovered);
     }
 
     private static float DrawReasonCard(ImDrawListPtr drawList, AppSkin ui, string message, float left, float y,

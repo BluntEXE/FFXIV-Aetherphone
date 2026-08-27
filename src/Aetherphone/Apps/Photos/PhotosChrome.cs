@@ -23,7 +23,7 @@ internal static class PhotosChrome
             return;
         }
 
-        var (uv0, uv1) = CenterCrop(texture.Size, 1f);
+        var (uv0, uv1) = ImageFit.CoverSquare(texture.Size);
         drawList.AddImageRounded(texture.Handle, min, max, uv0, uv1, 0xFFFFFFFFu, rounding, ImDrawFlags.RoundCornersAll);
         Material.Edge(drawList, min, max, rounding, scale, 0.45f);
         if (hovered)
@@ -156,28 +156,5 @@ internal static class PhotosChrome
 
         ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         return ImGui.IsMouseClicked(ImGuiMouseButton.Left);
-    }
-
-    private static (Vector2 Uv0, Vector2 Uv1) CenterCrop(Vector2 size, float targetAspect)
-    {
-        if (size.X <= 0f || size.Y <= 0f)
-        {
-            return (Vector2.Zero, Vector2.One);
-        }
-
-        var aspect = size.X / size.Y / targetAspect;
-        if (aspect > 1f)
-        {
-            var inset = (1f - 1f / aspect) * 0.5f;
-            return (new Vector2(inset, 0f), new Vector2(1f - inset, 1f));
-        }
-
-        if (aspect < 1f)
-        {
-            var inset = (1f - aspect) * 0.5f;
-            return (new Vector2(0f, inset), new Vector2(1f, 1f - inset));
-        }
-
-        return (Vector2.Zero, Vector2.One);
     }
 }
