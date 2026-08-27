@@ -185,7 +185,7 @@ GameHud.ScorePill(center, Loc.T(L.Games.Score), ref scoreRoll, board.Score, Acce
 - `GameGrid.Centered(area, columns, rows, gapFraction)` computes a centered square-cell grid; `Cell(column, row)` and `CellCenter(column, row)` give you rects and centers, `Bounds` the whole board.
 - `GameHud` also has `Pill` (static value), `RestartButton`, and `Button`.
 - `GamePalette` holds the shared dark board colors plus `InkOn(fill)` to pick readable text ink, and `GameNumber.Label(int)` returns a cached string so score text does not allocate every frame.
-- `GameOverlay.Draw(area, theme, accent, progress, result)` renders the end-of-round card from a `GameResult` (title, primary stat, optional secondary line, `NewBest` flag). Drive `progress` from 0 to 1 yourself; the card scales in, counts the score up, fires confetti when `NewBest` is true, and returns true when the player clicks Play Again.
+- `GameOverlay.Draw(area, theme, accent, progress, result)` renders the end-of-round card from a `GameResult` (title, primary stat, optional secondary line, `NewBest` flag). Drive `progress` from 0 to 1 yourself; the card scales in, counts the score up, fires confetti when `NewBest` is true, and returns true when the player clicks Play Again. The card measures itself: the stack is title, new-best badge, uppercase stat label, stat value, secondary line, button, separated by Metrics.Space tokens, and both the card width and height follow the measured content. Long titles and long values shrink to fit rather than overflow, so a localized title needs no per-game tuning.
 
 ### Input, clocks, sprites, banners
 

@@ -59,9 +59,8 @@ internal static class GameHud
         Typography.DrawCentered(new Vector2(center.X, center.Y - 7f * scale * sizeScale), value,
             highlight ? accent : theme.TextStrong, TextStyles.Title3.Scale * sizeScale * valuePop,
             TextStyles.Title3.Weight);
-        Typography.DrawCentered(new Vector2(center.X, center.Y + 12f * scale * sizeScale),
-            Loc.Culture.TextInfo.ToUpper(label), theme.TextMuted, TextStyles.Caption2.Scale * sizeScale,
-            TextStyles.Caption2.Weight);
+        Typography.DrawCentered(new Vector2(center.X, center.Y + 12f * scale * sizeScale), Loc.Upper(label),
+            theme.TextMuted, TextStyles.Caption2.Scale * sizeScale, TextStyles.Caption2.Weight);
     }
 
     public static bool RestartButton(Vector2 center, float radius, PhoneTheme theme)

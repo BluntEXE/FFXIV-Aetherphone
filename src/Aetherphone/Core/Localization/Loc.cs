@@ -9,6 +9,7 @@ internal static class Loc
     private static CultureInfo culture = CultureInfo.InvariantCulture;
     private static StringCatalog catalog = StringCatalog.Empty;
     private static ushort[] glyphs = Array.Empty<ushort>();
+    private static readonly Dictionary<string, string> UpperCache = new(StringComparer.Ordinal);
     public static LanguageInfo Current => current;
     public static CultureInfo Culture => culture;
     public static ushort[] CatalogGlyphs => glyphs;
@@ -31,6 +32,18 @@ internal static class Loc
         }
 
         Apply(target);
+    }
+
+    public static string Upper(string text)
+    {
+        if (UpperCache.TryGetValue(text, out var cached))
+        {
+            return cached;
+        }
+
+        var upper = culture.TextInfo.ToUpper(text);
+        UpperCache[text] = upper;
+        return upper;
     }
 
     public static string T(LocString entry) => catalog.TryGet(entry.Key, out var value) ? value : entry.Source;
@@ -60,6 +73,7 @@ internal static class Loc
     {
         current = language;
         culture = ResolveCulture(language.CultureName);
+        UpperCache.Clear();
         var path = Path.Combine(directory, string.Concat(language.Code, ".json"));
         catalog = ReferenceEquals(language, Languages.English) ? StringCatalog.Empty : StringCatalog.Load(path);
         glyphs = StringCatalog.ScanGlyphs(path);
