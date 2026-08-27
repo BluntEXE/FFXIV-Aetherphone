@@ -94,6 +94,7 @@ internal sealed partial class GamesApp : IPhoneApp
     private readonly RouterDraw<GameRoute> drawView;
     private readonly Action back;
     private Spring pausedVeil = new(0f);
+    private Rect screenRect;
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
     private IMiniGame? currentGame;
@@ -177,12 +178,15 @@ internal sealed partial class GamesApp : IPhoneApp
         theme = context.Theme;
         navigation = context.Navigation;
         ui.Theme = theme;
+        screenRect = SceneChrome.ScreenFrom(context.Content, theme, UiScale.Current);
         if (router.IsTransitioning || router.Current != GameRoute.Playing)
         {
-            ui.Backdrop(SceneChrome.ScreenFrom(context.Content, theme, UiScale.Current));
+            ui.Backdrop(screenRect);
+            GameScene.Ambient(ImGui.GetWindowDrawList(), screenRect, games[featuredIndex].Accent);
         }
 
-        router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
+        var appArea = SceneChrome.AppAreaFrom(context.Content, theme, UiScale.Current);
+        router.Draw(appArea, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
         if (!router.IsTransitioning && router.Current == GameRoute.Launcher && currentGame is not null)
         {
             CloseCurrentGame();
@@ -219,7 +223,6 @@ internal sealed partial class GamesApp : IPhoneApp
 
         if (route == GameRoute.OnlineHub)
         {
-            ui.Body(area);
             onlineHub.Draw(context, back, ui);
             return;
         }

@@ -68,8 +68,6 @@ internal sealed partial class GamesApp
     {
         var scale = UiScale.Current;
         frameSeconds = MathF.Min(ImGui.GetIO().DeltaTime, 0.1f);
-        ui.Body(area);
-        GameScene.Ambient(ImGui.GetWindowDrawList(), area, games[featuredIndex].Accent);
         gameRooms.EnsureFresh();
         DrawLauncherHeader(area, scale);
         var y = area.Min.Y + AppHeader.Height * scale;

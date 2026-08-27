@@ -16,6 +16,12 @@ internal static class SceneChrome
         return new Rect(min, max);
     }
 
+    public static Rect AppAreaFrom(Rect content, PhoneTheme theme, float scale)
+    {
+        var screen = ScreenFrom(content, theme, scale);
+        return new Rect(new Vector2(screen.Min.X, content.Min.Y), new Vector2(screen.Max.X, content.Max.Y));
+    }
+
     public static void BackChevron(Rect content, INavigator navigation, Vector4 ink, float scale)
     {
         var rowCenterY = content.Min.Y + 20f * scale;
