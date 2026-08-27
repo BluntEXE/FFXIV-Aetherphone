@@ -181,12 +181,7 @@ internal sealed class ChirperFilterSheet
         var doneMax = new Vector2(right, cursorY + DoneHeight * scale);
         var doneHovered = interactive && UiInteract.HoverWindowOnly(doneMin, doneMax, false);
         var doneRounding = DoneHeight * scale * 0.5f;
-        Squircle.Fill(drawList, doneMin + new Vector2(4f * scale, 6f * scale), doneMax + new Vector2(-4f * scale, 6f * scale),
-            doneRounding, ImGui.GetColorU32(Palette.WithAlpha(ChirperInk.Accent, 0.28f * opacity)));
-        var topColor = doneHovered ? Palette.Mix(ChirperInk.Accent, ChirperInk.White, 0.08f) : ChirperInk.Accent;
-        Squircle.FillVerticalGradient(drawList, doneMin, doneMax, doneRounding,
-            ImGui.GetColorU32(Palette.WithAlpha(topColor, opacity)),
-            ImGui.GetColorU32(Palette.WithAlpha(ChirperInk.AccentDeep, opacity)));
+        ChirperPill.PaintAccent(drawList, doneMin, doneMax, doneRounding, doneHovered, opacity);
         Typography.DrawCentered(drawList, (doneMin + doneMax) * 0.5f, Loc.T(L.Chirper.Done),
             Palette.WithAlpha(ChirperInk.White, opacity), DoneStyle);
         if (doneHovered)

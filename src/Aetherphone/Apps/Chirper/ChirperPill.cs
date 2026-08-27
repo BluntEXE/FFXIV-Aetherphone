@@ -13,7 +13,11 @@ internal static class ChirperPill
 
     private static readonly Vector4 ShadowInk = Palette.Darken(AppPalettes.Chirper.Accent, 0.78f);
 
-    public static void PaintAccent(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding, bool hovered)
+    public static void PaintAccent(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding, bool hovered) =>
+        PaintAccent(drawList, min, max, rounding, hovered, 1f);
+
+    public static void PaintAccent(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding, bool hovered,
+        float opacity)
     {
         var scale = UiScale.Current;
         for (var layer = ShadowLayers - 1; layer >= 0; layer--)
@@ -21,7 +25,7 @@ internal static class ChirperPill
             var grow = layer * ShadowSpread * scale;
             var drop = (1f + layer * ShadowDrop) * scale;
             var falloff = 1f - layer / (float)ShadowLayers;
-            var alpha = ShadowAlpha * falloff * falloff;
+            var alpha = ShadowAlpha * falloff * falloff * opacity;
             Squircle.Fill(drawList, new Vector2(min.X - grow, min.Y - grow + drop),
                 new Vector2(max.X + grow, max.Y + grow + drop), rounding + grow,
                 ImGui.GetColorU32(Palette.WithAlpha(ShadowInk, alpha)));
@@ -29,7 +33,8 @@ internal static class ChirperPill
 
         var topColor = hovered ? Palette.Mix(ChirperInk.Accent, ChirperInk.White, 0.10f) : ChirperInk.Accent;
         var bottomColor = hovered ? Palette.Mix(ChirperInk.AccentDeep, ChirperInk.White, 0.06f) : ChirperInk.AccentDeep;
-        Squircle.FillVerticalGradient(drawList, min, max, rounding, ImGui.GetColorU32(topColor),
-            ImGui.GetColorU32(bottomColor));
+        Squircle.FillVerticalGradient(drawList, min, max, rounding,
+            ImGui.GetColorU32(Palette.WithAlpha(topColor, opacity)),
+            ImGui.GetColorU32(Palette.WithAlpha(bottomColor, opacity)));
     }
 }
