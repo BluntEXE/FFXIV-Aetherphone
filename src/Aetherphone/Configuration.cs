@@ -63,7 +63,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
 {
     public int Version { get; set; } = 1;
     public bool OpenOnStartup { get; set; } = true;
-    public bool OpenMinimizedOnStartup { get; set; }
+    public bool OpenMinimizedOnStartup { get; set; } = true;
     public bool WelcomeShown { get; set; }
     public bool SetupCompleted { get; set; }
     public bool TutorialsEnabled { get; set; } = true;
