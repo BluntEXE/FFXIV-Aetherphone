@@ -2,7 +2,6 @@ namespace Aetherphone.Core.Notifications;
 
 internal enum UiSound
 {
-    Wake,
     Sleep,
     AppOpen,
     AppClose,
@@ -155,7 +154,6 @@ internal static class UiSoundCatalog
 
     public static readonly UiSoundEntry[] Entries =
     {
-        new(TransitionUp, 0.9f, 120, UiSoundChannel.Event),
         new(TransitionDown, 0.9f, 120, UiSoundChannel.Event),
         new(TransitionUp, 0.55f, 90, UiSoundChannel.Transition),
         new(TransitionDown, 0.55f, 90, UiSoundChannel.Transition),

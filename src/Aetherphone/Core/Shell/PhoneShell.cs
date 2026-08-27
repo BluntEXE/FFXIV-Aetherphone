@@ -135,7 +135,6 @@ internal sealed class PhoneShell : IDisposable
         }
 
         director.OnPhoneOpened();
-        UiFeedback.Play(UiSound.Wake);
     }
 
     public void OnClosed()

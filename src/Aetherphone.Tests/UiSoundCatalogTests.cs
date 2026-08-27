@@ -42,7 +42,7 @@ public sealed class UiSoundCatalogTests
     [Fact]
     public void ChannelsMatchTheEventMap()
     {
-        Assert.Equal(UiSoundChannel.Event, UiSoundCatalog.Entries[(int)UiSound.Wake].Channel);
+        Assert.Equal(UiSoundChannel.Event, UiSoundCatalog.Entries[(int)UiSound.Sleep].Channel);
         Assert.Equal(UiSoundChannel.Event, UiSoundCatalog.Entries[(int)UiSound.Shutter].Channel);
         Assert.Equal(UiSoundChannel.Transition, UiSoundCatalog.Entries[(int)UiSound.AppOpen].Channel);
         Assert.Equal(UiSoundChannel.Transition, UiSoundCatalog.Entries[(int)UiSound.AppClose].Channel);
