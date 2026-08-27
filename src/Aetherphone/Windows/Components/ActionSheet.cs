@@ -11,7 +11,24 @@ internal readonly record struct ActionSheetStyle(
     Vector4 Ink,
     Vector4 Danger,
     Vector4 Accent,
-    Vector4 Hairline);
+    Vector4 Hairline)
+{
+    public static ActionSheetStyle From(PhoneTheme theme) => new(
+        Palette.WithAlpha(Palette.Lighten(theme.AppBackground, 0.10f), 0.92f),
+        Palette.WithAlpha(theme.TextStrong, 0.12f),
+        theme.TextStrong,
+        theme.Danger,
+        theme.Accent,
+        theme.Hairline);
+
+    public static ActionSheetStyle From(AppSkin ui) => new(
+        Palette.WithAlpha(Palette.Lighten(ui.Palette.BackdropTop, 0.10f), 0.92f),
+        Palette.WithAlpha(ui.TitleInk, 0.12f),
+        ui.TitleInk,
+        ui.Theme.Danger,
+        ui.Accent,
+        ui.Hairline);
+}
 
 internal sealed class ActionSheet
 {
@@ -29,9 +46,12 @@ internal sealed class ActionSheet
     private const float PadX = 18f;
     private const float GlyphReserve = 30f;
     private const float CheckReserve = 26f;
+    private const float HeaderPadY = 13f;
+    private const float HeaderInkAlpha = 0.65f;
 
     private static readonly TextStyle RowStyle = new(1.07f, FontWeight.SemiBold);
     private static readonly TextStyle CancelStyle = new(1.07f, FontWeight.Bold);
+    private static readonly TextStyle HeaderStyle = new(0.82f, FontWeight.SemiBold);
     private static readonly Vector4 RowHover = new(1f, 1f, 1f, 0.06f);
 
     private Spring reveal;
@@ -64,7 +84,7 @@ internal sealed class ActionSheet
     }
 
     public int Draw(Rect screen, in ActionSheetStyle style, ReadOnlySpan<Item> items, string cancelLabel,
-        bool keepOpen)
+        bool keepOpen, string title = "")
     {
         var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
         reveal.Step(open ? 1f : 0f, RevealSmoothTime, delta);
@@ -89,7 +109,13 @@ internal sealed class ActionSheet
         var rowHeight = RowHeight * scale;
         var cancelHeight = CancelHeight * scale;
         var gap = CardGap * scale;
-        var cardHeight = items.Length * rowHeight;
+        var padX = PadX * scale;
+        var headerWidth = screen.Width - margin * 2f - padX * 2f;
+        var headerHeight = title.Length > 0
+            ? Typography.MeasureWrapped(title, headerWidth, HeaderStyle.Scale, HeaderStyle.Weight)
+                + HeaderPadY * 2f * scale
+            : 0f;
+        var cardHeight = headerHeight + items.Length * rowHeight;
         var total = cardHeight + gap + cancelHeight;
         var bottom = screen.Max.Y - BottomInset * scale + total * (1f - slide);
         var left = screen.Min.X + margin;
@@ -101,6 +127,13 @@ internal sealed class ActionSheet
         var rounding = Rounding * scale;
         var interactive = open && opacity > 0.5f;
         DrawPanel(drawList, cardMin, cardMax, rounding, style, opacity, scale);
+        if (headerHeight > 0f)
+        {
+            var headerInk = Palette.WithAlpha(style.Ink, style.Ink.W * HeaderInkAlpha * opacity);
+            Typography.DrawWrappedCentered(drawList, title, HeaderStyle, headerInk,
+                new Vector2((cardMin.X + cardMax.X) * 0.5f, cardMin.Y + HeaderPadY * scale), headerWidth);
+        }
+
         var anyGlyph = false;
         var anyCheck = false;
         for (var index = 0; index < items.Length; index++)
@@ -110,16 +143,15 @@ internal sealed class ActionSheet
         }
 
         var picked = -1;
-        var padX = PadX * scale;
         for (var index = 0; index < items.Length; index++)
         {
             var item = items[index];
-            var rowMin = new Vector2(cardMin.X, cardMin.Y + index * rowHeight);
+            var rowMin = new Vector2(cardMin.X, cardMin.Y + headerHeight + index * rowHeight);
             var rowMax = new Vector2(cardMax.X, rowMin.Y + rowHeight);
             var hovered = interactive && UiInteract.HoverWindowOnly(rowMin, rowMax);
             if (hovered)
             {
-                var first = index == 0;
+                var first = index == 0 && headerHeight <= 0f;
                 var last = index == items.Length - 1;
                 var flags = first && last ? ImDrawFlags.RoundCornersAll
                     : first ? ImDrawFlags.RoundCornersTop
@@ -134,7 +166,7 @@ internal sealed class ActionSheet
                 }
             }
 
-            if (index > 0)
+            if (index > 0 || headerHeight > 0f)
             {
                 drawList.AddLine(new Vector2(rowMin.X + padX, rowMin.Y), new Vector2(rowMax.X - padX, rowMin.Y),
                     ImGui.GetColorU32(Palette.WithAlpha(style.Hairline, style.Hairline.W * opacity)), 1f);

@@ -158,6 +158,7 @@ internal sealed class ShellOverlayCoordinator
         {
             HoverTooltip.Flush();
             CopyToast.Flush();
+            ShellToast.Draw(screen, theme);
             banOverlay.Draw(screen, theme);
             confirmOverlay.Draw(screen, theme);
             DeviceChrome.SealScreen(chassis, theme, configuration.ScreenBrightness);
@@ -206,6 +207,7 @@ internal sealed class ShellOverlayCoordinator
             
         HoverTooltip.Flush();
         CopyToast.Flush();
+        ShellToast.Draw(screen, theme);
         shareSheet.Draw(screen, theme);
         reportOverlay.Draw(screen, theme);
         confirmOverlay.Draw(screen, theme);

@@ -5,7 +5,18 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Windows.Components;
 
-internal readonly record struct ScreenToastStyle(Vector4 Panel, Vector4 Stroke, Vector4 Ink);
+internal readonly record struct ScreenToastStyle(Vector4 Panel, Vector4 Stroke, Vector4 Ink)
+{
+    public static ScreenToastStyle From(PhoneTheme theme) => new(
+        Palette.WithAlpha(Palette.Lighten(theme.AppBackground, 0.10f), 0.92f),
+        Palette.WithAlpha(theme.TextStrong, 0.12f),
+        theme.TextStrong);
+
+    public static ScreenToastStyle From(AppSkin ui) => new(
+        Palette.WithAlpha(Palette.Lighten(ui.Palette.BackdropTop, 0.10f), 0.92f),
+        Palette.WithAlpha(ui.TitleInk, 0.12f),
+        ui.TitleInk);
+}
 
 internal sealed class ScreenToast
 {
