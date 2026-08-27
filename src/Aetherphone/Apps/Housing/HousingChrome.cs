@@ -421,7 +421,7 @@ internal static class HousingChrome
         drawList.AddLine(tip, new Vector2(center.X + size, center.Y - size * 0.35f), packed, thickness);
     }
 
-    public static void SheetSurface(ImDrawListPtr drawList, Rect sheet, Rect behind, float progress, AppSkin ui)
+    public static void SheetChrome(ImDrawListPtr drawList, Rect sheet, Rect behind, float progress, AppSkin ui)
     {
         var scale = UiScale.Current;
         Material.Veil(drawList, behind.Min, behind.Max, 0.30f * progress);
