@@ -1,17 +1,11 @@
-using Dalamud.Game.Config;
-
 namespace Aetherphone.Core.Notifications;
 
 internal sealed class UiSoundService : IDisposable
 {
-    private const long GameVolumeRefreshMilliseconds = 1000;
-
     private readonly Configuration configuration;
     private readonly UiSoundPlayer player;
     private readonly long[] lastPlayed;
     private readonly int[] variantCursor;
-    private float gameScale = 1f;
-    private long gameScaleRefreshed;
 
     public UiSoundService(Configuration configuration, UiSoundPlayer player)
     {
@@ -44,7 +38,7 @@ internal sealed class UiSoundService : IDisposable
         var baseVolume = entry.Channel == UiSoundChannel.Game
             ? configuration.GameSoundVolume
             : configuration.UiSoundVolume;
-        var volume = entry.Gain * baseVolume * gameScale;
+        var volume = entry.Gain * baseVolume;
         if (volume <= 0f)
         {
             return;
@@ -57,17 +51,7 @@ internal sealed class UiSoundService : IDisposable
         player.Play(files[cursor], volume);
     }
 
-    public void Maintain()
-    {
-        var now = Environment.TickCount64;
-        if (now - gameScaleRefreshed >= GameVolumeRefreshMilliseconds)
-        {
-            gameScaleRefreshed = now;
-            gameScale = ReadGameScale();
-        }
-
-        player.CloseIfIdle();
-    }
+    public void Maintain() => player.CloseIfIdle();
 
     private bool ChannelEnabled(UiSoundChannel channel) => channel switch
     {
@@ -78,41 +62,6 @@ internal sealed class UiSoundService : IDisposable
         UiSoundChannel.Game => configuration.GameSounds,
         _ => true,
     };
-
-    private static float ReadGameScale()
-    {
-        try
-        {
-            var gameConfig = Plugin.GameConfig;
-            if (gameConfig.TryGet(SystemConfigOption.IsSndMaster, out uint masterMuted) && masterMuted != 0)
-            {
-                return 0f;
-            }
-
-            if (gameConfig.TryGet(SystemConfigOption.IsSndSystem, out uint systemMuted) && systemMuted != 0)
-            {
-                return 0f;
-            }
-
-            var scale = 1f;
-            if (gameConfig.TryGet(SystemConfigOption.SoundMaster, out uint master))
-            {
-                scale *= master / 100f;
-            }
-
-            if (gameConfig.TryGet(SystemConfigOption.SoundSystem, out uint system))
-            {
-                scale *= system / 100f;
-            }
-
-            return Math.Clamp(scale, 0f, 1f);
-        }
-        catch (Exception exception)
-        {
-            AepLog.Debug(exception, "[UiSound] reading the game volume failed");
-            return 1f;
-        }
-    }
 
     public void Dispose() => player.Dispose();
 }
