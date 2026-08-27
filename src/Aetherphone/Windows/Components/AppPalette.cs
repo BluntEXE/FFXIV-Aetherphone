@@ -16,4 +16,6 @@ internal readonly struct AppPalette
     public Vector4 CardStroke { get; init; }
     public Vector4 FieldSurface { get; init; }
     public Vector4 HoverTint { get; init; }
+    public Vector4 Hairline { get; init; }
+    public Vector4 HoverWash { get; init; }
 }

@@ -12,6 +12,8 @@ internal static class AppPalettes
     private static readonly Vector4 GlassStroke = new(1f, 1f, 1f, 0.06f);
     private static readonly Vector4 GlassField = new(1f, 1f, 1f, 0.10f);
     private static readonly Vector4 DefaultHover = new(1f, 1f, 1f, 0.06f);
+    private static readonly Vector4 DefaultHairline = new(1f, 1f, 1f, 0.065f);
+    private static readonly Vector4 DefaultHoverWash = new(1f, 1f, 1f, 0.025f);
     private static readonly Vector4 White = new(1f, 1f, 1f, 1f);
     private static readonly Vector4 MutedBase = new(0.78f, 0.78f, 0.78f, 1f);
 
@@ -31,6 +33,8 @@ internal static class AppPalettes
         CardStroke = GlassStroke,
         FieldSurface = GlassField,
         HoverTint = DefaultHover,
+        Hairline = DefaultHairline,
+        HoverWash = DefaultHoverWash,
     };
 
     public static AppPalette Neutral(Vector4 accent) => new()
@@ -49,6 +53,8 @@ internal static class AppPalettes
         CardStroke = GlassStroke,
         FieldSurface = GlassField,
         HoverTint = DefaultHover,
+        Hairline = DefaultHairline,
+        HoverWash = DefaultHoverWash,
     };
 
     private static AppPalette For(string id) => Tinted(AppAccents.For(id));
@@ -99,6 +105,8 @@ internal static class AppPalettes
         CardStroke = GlassStroke,
         FieldSurface = new(0.051f, 0.090f, 0.075f, 1f),
         HoverTint = new(1f, 1f, 1f, 0.05f),
+        Hairline = DefaultHairline,
+        HoverWash = DefaultHoverWash,
     };
 
     public static readonly AppPalette News = Neutral(AppAccents.For("news"));
@@ -133,6 +141,8 @@ internal static class AppPalettes
         CardStroke = theme.Separator,
         FieldSurface = GlassField,
         HoverTint = Palette.WithAlpha(theme.TextStrong, 0.06f),
+        Hairline = theme.Hairline,
+        HoverWash = theme.HoverWash,
     };
 
     public static AppPalette Linkpearl(PhoneTheme theme) => new()
@@ -151,6 +161,8 @@ internal static class AppPalettes
         CardStroke = theme.Separator,
         FieldSurface = theme.GroupedCard,
         HoverTint = Palette.WithAlpha(theme.TextStrong, 0.06f),
+        Hairline = theme.Hairline,
+        HoverWash = theme.HoverWash,
     };
 
     public static AppPalette Calendar(PhoneTheme theme) => new()
@@ -169,5 +181,7 @@ internal static class AppPalettes
         CardStroke = theme.Separator,
         FieldSurface = GlassField,
         HoverTint = Palette.WithAlpha(theme.TextStrong, 0.06f),
+        Hairline = theme.Hairline,
+        HoverWash = theme.HoverWash,
     };
 }

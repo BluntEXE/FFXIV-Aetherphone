@@ -46,6 +46,10 @@ internal sealed class AppSkin
 
     public Vector4 HoverTint => Palette.HoverTint;
 
+    public Vector4 Hairline => Palette.Hairline;
+
+    public Vector4 HoverWash => Palette.HoverWash;
+
     public void Backdrop(Rect screen)
     {
         var scale = UiScale.Current;

@@ -9,12 +9,19 @@ internal static class AppSurface
 {
     public static bool ActiveFreshVisit { get; private set; }
 
-    public static SurfaceScope Begin(Rect area, bool disableMouseWheelScroll = false)
+    public static SurfaceScope Begin(Rect area, bool disableMouseWheelScroll = false) =>
+        BeginCore(area, 16f, disableMouseWheelScroll);
+
+    public static SurfaceScope BeginEdgeToEdge(Rect area, bool disableMouseWheelScroll = false) =>
+        BeginCore(area, 0f, disableMouseWheelScroll);
+
+    private static SurfaceScope BeginCore(Rect area, float horizontalPadding, bool disableMouseWheelScroll)
     {
         var scale = UiScale.Current;
         ImGui.SetCursorScreenPos(area.Min);
         var key = ImGui.GetID("##appSurface");
-        var padding = ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, new Vector2(16f * scale, 8f * scale));
+        var padding = ImRaii.PushStyle(ImGuiStyleVar.WindowPadding,
+            new Vector2(horizontalPadding * scale, 8f * scale));
         var flags = DragScrollHost.ScrollFlags(ImGuiWindowFlags.NoBackground);
         if (disableMouseWheelScroll)
         {
