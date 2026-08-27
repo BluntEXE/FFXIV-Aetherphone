@@ -27,7 +27,7 @@ internal sealed class HomeLayoutService
         "clock", "notes", "calculator", "timers", "shortcuts",
         "wallet", "dailies", "calendar", "news",
         "character", "notifications", "jobs", "strats",
-        "health", "mods",
+        "health",
     };
 
     private static readonly string[] MandatoryApps = { "appstore", "settings", "announcements" };

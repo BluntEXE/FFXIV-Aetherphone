@@ -261,7 +261,6 @@ internal static class L
         public static readonly LocString Skywatcher = new("app.skywatcher", "Skywatcher");
         public static readonly LocString Venues = new("app.venues", "Venues");
         public static readonly LocString Strats = new("app.strats", "Strats");
-        public static readonly LocString Mods = new("app.mods", "Mods");
         public static readonly LocString Market = new("app.market", "Market");
         public static readonly LocString Wallet = new("app.wallet", "Wallet");
         public static readonly LocString Coin = new("app.coin", "Aether Coin");
@@ -440,9 +439,6 @@ internal static class L
         public static readonly LocString StratsSub = new("storeCopy.stratsSub", "Raid cheatsheets, your spot marked");
         public static readonly LocString StratsBody = new("storeCopy.stratsBody",
             "Savage, Ultimate and Extreme strategies from WTFDIG. Pick a fight, a strat and your role to see exactly where to stand for every mechanic.");
-        public static readonly LocString ModsSub = new("storeCopy.modsSub", "Heliosphere mods, in your pocket");
-        public static readonly LocString ModsBody = new("storeCopy.modsBody",
-            "Browse the Heliosphere catalog, install and update mods through the Heliosphere plugin, and switch them on or off in Penumbra without leaving the game.");
         public static readonly LocString VenuesSub = new("storeCopy.venuesSub", "Nightlife, mapped");
         public static readonly LocString VenuesBody = new("storeCopy.venuesBody",
             "Find player-run venues, opening hours and directions without leaving the game.");
@@ -886,105 +882,6 @@ internal static class L
         public static readonly LocString RoleMelee = new("strats.roleMelee", "Melee");
         public static readonly LocString RoleRanged = new("strats.roleRanged", "Ranged");
         public static readonly LocString BackToTop = new("strats.backToTop", "Back to top");
-    }
-
-    internal static class Mods
-    {
-        public static readonly LocString TabDiscover = new("mods.tabDiscover", "Discover");
-        public static readonly LocString TabInstalled = new("mods.tabInstalled", "Installed");
-        public static readonly LocString TabSettings = new("mods.tabSettings", "Settings");
-        public static readonly LocString SearchHint = new("mods.searchHint", "Search mods");
-        public static readonly LocString AllCategories = new("mods.allCategories", "All");
-        public static readonly LocString Sort = new("mods.sort", "Sort");
-        public static readonly LocString SortTrending = new("mods.sortTrending", "Trending");
-        public static readonly LocString SortPopular = new("mods.sortPopular", "Most downloaded");
-        public static readonly LocString SortNewest = new("mods.sortNewest", "Newest");
-        public static readonly LocString SortUpdated = new("mods.sortUpdated", "Recently updated");
-        public static readonly LocString Loading = new("mods.loading", "Loading mods");
-        public static readonly LocString LoadFailed = new("mods.loadFailed", "Mods did not load");
-        public static readonly LocString LoadFailedHint = new("mods.loadFailedHint", "Check your connection and try again.");
-        public static readonly LocString Retry = new("mods.retry", "Retry");
-        public static readonly LocString NoResults = new("mods.noResults", "No mods found");
-        public static readonly LocString NoResultsHint = new("mods.noResultsHint", "Try another search or category.");
-        public static readonly LocPlural ResultCount = new("mods.resultCount", "{0} mod", "{0} mods");
-        public static readonly LocString PoweredBy = new("mods.poweredBy", "Powered by Heliosphere");
-        public static readonly LocString By = new("mods.by", "by {0}");
-        public static readonly LocString BadgeNsfw = new("mods.badgeNsfw", "18+");
-        public static readonly LocString BadgeNsfl = new("mods.badgeNsfl", "NSFL");
-        public static readonly LocString BadgeContentWarning = new("mods.badgeContentWarning", "Content warning");
-        public static readonly LocString BadgeInstalled = new("mods.badgeInstalled", "Installed");
-        public static readonly LocString BadgeUpdate = new("mods.badgeUpdate", "Update");
-        public static readonly LocString DetailLoading = new("mods.detailLoading", "Loading mod");
-        public static readonly LocString DetailFailed = new("mods.detailFailed", "This mod did not load");
-        public static readonly LocString Downloads = new("mods.downloads", "Downloads");
-        public static readonly LocString Updated = new("mods.updated", "Updated");
-        public static readonly LocString InstallSize = new("mods.installSize", "Install size");
-        public static readonly LocString Variants = new("mods.variants", "Variants");
-        public static readonly LocString Install = new("mods.install", "Install");
-        public static readonly LocString UpdateTo = new("mods.updateTo", "Update to {0}");
-        public static readonly LocString InstalledVersion = new("mods.installedVersion", "Installed ({0})");
-        public static readonly LocString OpenInPenumbra = new("mods.openInPenumbra", "Open in Penumbra");
-        public static readonly LocString ViewOnSite = new("mods.viewOnSite", "View on heliosphere.app");
-        public static readonly LocString SetUpHeliosphere = new("mods.setUpHeliosphere", "Set up Heliosphere");
-        public static readonly LocString Changelog = new("mods.changelog", "What's new in {0}");
-        public static readonly LocString About = new("mods.about", "About");
-        public static readonly LocString Permissions = new("mods.permissions", "Permissions");
-        public static readonly LocString ContentWarning = new("mods.contentWarning", "Content warning");
-        public static readonly LocString Affects = new("mods.affects", "Affects");
-        public static readonly LocString AffectsMore = new("mods.affectsMore", "and {0} more");
-        public static readonly LocString TapToReveal = new("mods.tapToReveal", "Sensitive preview, tap to reveal");
-        public static readonly LocString InstallSent = new("mods.installSent", "Sent to Heliosphere. Watch its notification for progress.");
-        public static readonly LocString InstallPrompt = new("mods.installPrompt", "Heliosphere is asking you to confirm in its own window.");
-        public static readonly LocString InstallPluginMissing = new("mods.installPluginMissing", "The Heliosphere plugin is not running.");
-        public static readonly LocString InstallFailed = new("mods.installFailed", "Heliosphere refused the install request.");
-        public static readonly LocString Updates = new("mods.updates", "Updates");
-        public static readonly LocString InstalledSection = new("mods.installedSection", "Installed");
-        public static readonly LocString CheckingUpdates = new("mods.checkingUpdates", "Checking for updates");
-        public static readonly LocString UpToDate = new("mods.upToDate", "Everything is up to date");
-        public static readonly LocString NoneInstalled = new("mods.noneInstalled", "Nothing installed yet");
-        public static readonly LocString NoneInstalledHint = new("mods.noneInstalledHint", "Mods installed through Heliosphere show up here.");
-        public static readonly LocString BrowseMods = new("mods.browseMods", "Browse mods");
-        public static readonly LocString PenumbraMissing = new("mods.penumbraMissing", "Penumbra is not running");
-        public static readonly LocString PenumbraMissingHint = new("mods.penumbraMissingHint", "Penumbra loads mods and Heliosphere downloads them. Set both up to manage mods from your phone.");
-        public static readonly LocString LibraryFailed = new("mods.libraryFailed", "The mod list did not load");
-        public static readonly LocString Scanning = new("mods.scanning", "Reading your mods");
-        public static readonly LocString Collection = new("mods.collection", "Collection: {0}");
-        public static readonly LocString VersionChange = new("mods.versionChange", "{0} to {1}");
-        public static readonly LocString ToggleFailed = new("mods.toggleFailed", "Penumbra did not accept the change.");
-        public static readonly LocString ContentSection = new("mods.contentSection", "Content");
-        public static readonly LocString ShowNsfw = new("mods.showNsfw", "Show NSFW mods");
-        public static readonly LocString ShowNsfl = new("mods.showNsfl", "Show NSFL mods");
-        public static readonly LocString ShowContentWarnings = new("mods.showContentWarnings", "Show mods with content warnings");
-        public static readonly LocString HidePaid = new("mods.hidePaid", "Hide mods behind paywalls");
-        public static readonly LocString BlurSensitive = new("mods.blurSensitive", "Blur sensitive previews");
-        public static readonly LocString ContentHint = new("mods.contentHint", "Hidden mods never leave Heliosphere's servers. NSFL covers extreme content and needs NSFW on.");
-        public static readonly LocString NsfwConfirmTitle = new("mods.nsfwConfirmTitle", "Adults only");
-        public static readonly LocString NsfwConfirmBody = new("mods.nsfwConfirmBody", "NSFW mods are for adults. By turning this on you confirm you are 18 or older and allowed to view adult content where you live.");
-        public static readonly LocString NsfwConfirmYes = new("mods.nsfwConfirmYes", "I am 18 or older");
-        public static readonly LocString HeliosphereSection = new("mods.heliosphereSection", "Heliosphere");
-        public static readonly LocString PluginStatus = new("mods.pluginStatus", "Plugin");
-        public static readonly LocString StatusRunning = new("mods.statusRunning", "Running");
-        public static readonly LocString StatusNotLoaded = new("mods.statusNotLoaded", "Installed, not loaded");
-        public static readonly LocString StatusMissing = new("mods.statusMissing", "Not installed");
-        public static readonly LocString OneClickPassword = new("mods.oneClickPassword", "One-click password");
-        public static readonly LocString OneClickHint = new("mods.oneClickHint", "Paste the one-click password from Heliosphere's settings to install without a confirmation prompt. Leave it empty to confirm each install in Heliosphere.");
-        public static readonly LocString OneClickLink = new("mods.oneClickLink", "Open one-click settings");
-        public static readonly LocString PenumbraSection = new("mods.penumbraSection", "Penumbra");
-        public static readonly LocString ApiVersion = new("mods.apiVersion", "API version");
-        public static readonly LocString ModDirectory = new("mods.modDirectory", "Mod directory");
-        public static readonly LocString AboutSection = new("mods.aboutSection", "About");
-        public static readonly LocString OpenSite = new("mods.openSite", "Open heliosphere.app");
-        public static readonly LocString Terms = new("mods.terms", "Terms of service");
-        public static readonly LocString Support = new("mods.support", "Support forum");
-        public static readonly LocString AboutBody = new("mods.aboutBody", "Mods are hosted and installed by Heliosphere. Aetherphone browses the catalog and asks the Heliosphere plugin to install, so creators keep their download counts.");
-        public static readonly LocString SetupTitle = new("mods.setupTitle", "Set up mods");
-        public static readonly LocString SetupBody = new("mods.setupBody", "Two plugins do the heavy lifting: Penumbra loads mods into the game and Heliosphere downloads and updates them.");
-        public static readonly LocString SetupPenumbraDetail = new("mods.setupPenumbraDetail", "Mod loader, available in the plugin installer");
-        public static readonly LocString SetupHeliosphereDetail = new("mods.setupHeliosphereDetail", "Downloads and updates, from its own repository");
-        public static readonly LocString CopyRepository = new("mods.copyRepository", "Copy repository URL");
-        public static readonly LocString CopyRepositoryHint = new("mods.copyRepositoryHint", "Add the URL under Dalamud Settings, Experimental, Custom Plugin Repositories, then install Heliosphere from the plugin installer.");
-        public static readonly LocString OpenInstaller = new("mods.openInstaller", "Open plugin installer");
-        public static readonly LocString Ready = new("mods.ready", "Ready");
     }
 
     internal static class Venues

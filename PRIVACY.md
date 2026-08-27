@@ -85,7 +85,6 @@ Some apps fetch public game data straight from independent third-party services,
 - **GitHub** (raw.githubusercontent.com, api.github.com): the Shortcuts app's plugin catalogue, and the mpv and yt-dlp downloads AetherStream needs to play video
 - **YouTube** (youtube.com, i.ytimg.com): video streams and thumbnails when you play a YouTube link in AetherStream
 - **The Lodestone** (na.finalfantasyxiv.com): sign-in verification and character portraits
-- **Heliosphere** (heliosphere.app, edge.heliosphere.app, data.heliosphere.app): the Mods app's catalog searches, mod pages, and preview images. Installing or updating a mod does not go to Heliosphere's servers from Aetherphone at all: the request is handed to the Heliosphere plugin running on your own machine, which downloads the mod under its own privacy policy. If you paste a Heliosphere one-click password into the Mods settings, it is stored in your local Dalamud configuration and sent only to that local plugin.
 
 ## International transfers
 

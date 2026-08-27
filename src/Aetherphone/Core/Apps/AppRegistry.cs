@@ -19,7 +19,6 @@ using Aetherphone.Apps.Calculator;
 using Aetherphone.Apps.Casino;
 using Aetherphone.Apps.Maps;
 using Aetherphone.Apps.Market;
-using Aetherphone.Apps.Mods;
 using Aetherphone.Apps.Linkpearl;
 using Aetherphone.Apps.Music;
 using Aetherphone.Apps.Muster;
@@ -78,7 +77,6 @@ internal static class AppRegistry
         apps.Add(new SkywatcherApp(services.Weather, services.WeatherControl));
         apps.Add(new VenuesApp(services.Venues, services.Media, services.Http, services.Artwork, services.GameData, services.Configuration, services.Confirm, services.Translation));
         apps.Add(new StratsApp(services.StratsManifest, services.StratsGuides, services.RemoteImages, services.Configuration));
-        apps.Add(new ModsApp(services.Mods, services.RemoteImages, services.Configuration, services.Confirm));
         apps.Add(new MusterApp(services.Musters, services.MusterLauncher, services.Aethernet, services.GameData, services.RemoteImages, services.Lodestone, services.Configuration, services.Confirm, services.Translation, services.Report, services.Conduct));
         apps.Add(new YellowPagesApp(services.YellowPages, services.AdInquiries, services.YellowPagesLauncher, services.SocialNotifications, services.GramDmLauncher, services.Musters, new AethernetApi(services.Http, services.AethernetSession, "yellowpages"), services.GameData, services.RemoteImages, services.Lodestone, photoLibrary, services.WallpaperImages, services.Configuration, services.Confirm, services.Translation, services.Report, services.Conduct));
         apps.Add(new MapsApp(services.Maps, services.Configuration));

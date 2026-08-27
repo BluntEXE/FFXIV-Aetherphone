@@ -52,7 +52,6 @@ const map = {
   aetherstream: "device-tv",
   hunts: "dragon",
   strats: "swords",
-  mods: "puzzle",
 };
 
 function recolor(svg) {

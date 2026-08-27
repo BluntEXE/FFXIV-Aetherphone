@@ -175,7 +175,6 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool HuntsAppOpened { get; set; }
     public HuntsFilterSnapshot? HuntsFilterSettings { get; set; }
     public Core.Strats.StratsSnapshot? StratsSettings { get; set; }
-    public Core.Mods.ModsSnapshot? ModsSettings { get; set; }
     public HuntsNotificationSnapshot? HuntsNotificationSettings { get; set; }
     public bool EncryptionRecoveryNudgeDismissed { get; set; }
     public Dictionary<string, int> KnownPeerKeyVersions { get; set; } = new();

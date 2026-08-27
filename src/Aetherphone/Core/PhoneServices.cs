@@ -33,7 +33,6 @@ using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Songs;
 using Aetherphone.Core.Telephony;
 using Aetherphone.Core.Theme;
-using Aetherphone.Core.Mods;
 using Aetherphone.Core.Strats;
 using Aetherphone.Core.Venues;
 using Aetherphone.Core.Video;
@@ -144,7 +143,6 @@ internal sealed class PhoneServices : IDisposable
     public required VenuesService Venues { get; init; }
     public required StratsManifestStore StratsManifest { get; init; }
     public required StratsGuideStore StratsGuides { get; init; }
-    public required ModsHub Mods { get; init; }
     public required MusterStore Musters { get; init; }
     public required MusterLauncher MusterLauncher { get; init; }
 
@@ -282,7 +280,6 @@ internal sealed class PhoneServices : IDisposable
         var stratsDisk = new DiskCache(stratsRoot, 24L * 1024 * 1024);
         var stratsManifest = new StratsManifestStore(http, stratsDisk);
         var stratsGuides = new StratsGuideStore(http, stratsDisk);
-        var mods = new ModsHub(http);
         var collectionsRoot = new DirectoryInfo(Path.Combine(cacheRoot.FullName, "collections"));
         var collectionsDisk = new DiskCache(collectionsRoot, 32L * 1024 * 1024);
         var collections = new CollectionsCatalogService(http, collectionsDisk, dataManager, unlockState, framework);
@@ -441,7 +438,6 @@ internal sealed class PhoneServices : IDisposable
             Venues = venues,
             StratsManifest = stratsManifest,
             StratsGuides = stratsGuides,
-            Mods = mods,
             Musters = musters,
             MusterLauncher = new MusterLauncher(),
             RadioLauncher = new RadioLauncher(),
@@ -495,7 +491,6 @@ internal sealed class PhoneServices : IDisposable
         Venues.Dispose();
         StratsManifest.Dispose();
         StratsGuides.Dispose();
-        Mods.Dispose();
         Musters.Dispose();
         YellowPages.Dispose();
         AdInquiries.Dispose();
