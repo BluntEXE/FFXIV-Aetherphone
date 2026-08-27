@@ -268,10 +268,27 @@ internal static class Squircle
         return mixed;
     }
 
-    private static float CornerBox(Vector2 min, Vector2 max, float radius)
+    public static float CornerBox(Vector2 min, Vector2 max, float radius)
     {
         var limit = MathF.Min(max.X - min.X, max.Y - min.Y) * 0.5f;
         return MathF.Max(0f, MathF.Min(radius, limit));
+    }
+
+    public static float EdgeInset(float box, float depth)
+    {
+        if (box <= 0f || depth <= 0f)
+        {
+            return MathF.Max(box, 0f);
+        }
+
+        if (depth >= box)
+        {
+            return 0f;
+        }
+
+        var vertical = MathF.Pow(1f - depth / box, Exponent * 0.5f);
+        var horizontal = MathF.Pow(MathF.Max(1f - vertical * vertical, 0f), 1f / Exponent);
+        return box * (1f - horizontal);
     }
 
     private static void TracePath(ImDrawListPtr drawList, Vector2 min, Vector2 max, float box)

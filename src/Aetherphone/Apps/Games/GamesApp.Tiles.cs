@@ -73,9 +73,8 @@ internal sealed partial class GamesApp
         drawList.PopClipRect();
         Squircle.Stroke(drawList, min, max, rounding,
             ImGui.GetColorU32(GamePalette.Lighten(accent, 0.45f) with { W = hovered ? 0.65f : 0.32f }), 1f * scale);
-        drawList.AddLine(new Vector2(min.X + rounding, min.Y + 1.5f * scale),
-            new Vector2(max.X - rounding, min.Y + 1.5f * scale), ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.22f)),
-            1f * scale);
+        Material.Sheen(drawList, min, max, rounding, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.22f)), 1f * scale,
+            1.5f * scale);
         if (hovered)
         {
             ProgressRing.Glow(artCenter, half.X * 0.6f, GamePalette.Lighten(accent, 0.5f), 0.45f);
@@ -300,9 +299,8 @@ internal sealed partial class GamesApp
             HeroInk, theme);
         Squircle.Stroke(drawList, min, max, rounding,
             ImGui.GetColorU32(GamePalette.Lighten(accent, 0.4f) with { W = 0.42f }), 1f * scale);
-        drawList.AddLine(new Vector2(min.X + rounding, min.Y + 1.5f * scale),
-            new Vector2(max.X - rounding, min.Y + 1.5f * scale), ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.25f)),
-            1f * scale);
+        Material.Sheen(drawList, min, max, rounding, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.25f)), 1f * scale,
+            1.5f * scale);
         var best = library.Best(featuredIndex);
         if (best.Length > 0)
         {

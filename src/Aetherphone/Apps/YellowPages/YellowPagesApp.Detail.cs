@@ -898,9 +898,8 @@ internal sealed partial class YellowPagesApp
         var bottom = Palette.Darken(accent, hovered ? 0.02f : 0.10f);
         Squircle.FillVerticalGradient(drawList, rect.Min, rect.Max, radius, ImGui.GetColorU32(top),
             ImGui.GetColorU32(bottom));
-        drawList.AddLine(new Vector2(rect.Min.X + radius, rect.Min.Y + 1.5f * scale),
-            new Vector2(rect.Max.X - radius, rect.Min.Y + 1.5f * scale),
-            ImGui.GetColorU32(new Vector4(1f, 1f, 1f, hovered ? 0.38f : 0.24f)), 1.4f * scale);
+        Material.Sheen(drawList, rect.Min, rect.Max, radius,
+            ImGui.GetColorU32(new Vector4(1f, 1f, 1f, hovered ? 0.38f : 0.24f)), 1.4f * scale, 1.5f * scale);
         var iconWidth = 15f * scale;
         var iconGap = 9f * scale;
         var labelMaxWidth = MathF.Max(1f, rect.Width - iconWidth - iconGap - rect.Height);

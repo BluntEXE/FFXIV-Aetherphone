@@ -140,9 +140,8 @@ internal sealed class BeatRenderer
             ImGui.GetColorU32(GamePalette.Lighten(color, 0.28f)), ImGui.GetColorU32(GamePalette.Darken(color, 0.30f)));
         Squircle.Stroke(drawList, min, max, rounding,
             ImGui.GetColorU32(GamePalette.Lighten(color, 0.5f) with { W = 0.45f }), MathF.Max(1f, scale));
-        drawList.AddLine(new Vector2(min.X + rounding, min.Y + 1.5f * scale),
-            new Vector2(max.X - rounding, min.Y + 1.5f * scale), ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.32f)),
-            MathF.Max(1f, scale));
+        Material.Sheen(drawList, min, max, rounding, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.32f)),
+            MathF.Max(1f, scale), 1.5f * scale);
         var barHeight = MathF.Max(2f * scale, (bottom - top) * 0.07f);
         var barMin = new Vector2(min.X + rounding * 0.6f, max.Y - barHeight * 2.4f);
         var barMax = new Vector2(max.X - rounding * 0.6f, max.Y - barHeight * 1.2f);

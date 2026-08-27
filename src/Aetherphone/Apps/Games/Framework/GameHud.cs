@@ -117,8 +117,8 @@ internal static class GameHud
         Squircle.FillVerticalGradient(drawList, min, max, radius, fillTop, fillBottom);
         Squircle.Stroke(drawList, min, max, radius,
             ImGui.GetColorU32(GamePalette.Lighten(accent, 0.35f) with { W = 0.55f }), 1f * scale);
-        drawList.AddLine(new Vector2(min.X + radius, min.Y + 1f * scale), new Vector2(max.X - radius, min.Y + 1f * scale),
-            ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.30f)), 1f * scale);
+        Material.Sheen(drawList, min, max, radius, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.30f)), 1f * scale,
+            1f * scale);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

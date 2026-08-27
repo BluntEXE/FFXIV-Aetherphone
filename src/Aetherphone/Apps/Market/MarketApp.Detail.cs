@@ -288,8 +288,7 @@ internal sealed partial class MarketApp
             hovered ? Palette.Mix(frameTheme.Accent, frameTheme.TextStrong, 0.10f) : frameTheme.Accent;
         Elevation.Card(drawList, min, max, 12f * scale, scale, 0.6f);
         Squircle.Fill(drawList, min, max, 12f * scale, ImGui.GetColorU32(fill));
-        drawList.AddLine(new Vector2(min.X + 12f * scale, min.Y + 1f * scale),
-            new Vector2(max.X - 12f * scale, min.Y + 1f * scale), ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.12f)),
+        Material.Sheen(drawList, min, max, 12f * scale, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.12f)), 1f * scale,
             1f * scale);
         Typography.DrawCentered((min + max) * 0.5f, label, new Vector4(0.99f, 0.99f, 1f, 1f), TextStyles.Headline);
         ImGui.SetCursorScreenPos(origin);

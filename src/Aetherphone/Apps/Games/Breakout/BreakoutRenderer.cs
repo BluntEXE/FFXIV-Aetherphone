@@ -48,9 +48,8 @@ internal sealed class BreakoutRenderer
                 Squircle.FillVerticalGradient(drawList, min, max, rounding,
                     ImGui.GetColorU32(GamePalette.Lighten(color, 0.18f)),
                     ImGui.GetColorU32(GamePalette.Darken(color, 0.22f)));
-                drawList.AddLine(new Vector2(min.X + rounding, min.Y + 1f * scale),
-                    new Vector2(max.X - rounding, min.Y + 1f * scale),
-                    ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.35f)), 1f * scale);
+                Material.Sheen(drawList, min, max, rounding, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.35f)),
+                    1f * scale, 1f * scale);
                 Squircle.Stroke(drawList, min, max, rounding,
                     ImGui.GetColorU32(GamePalette.Darken(color, 0.4f) with { W = 0.5f }), 1f * scale);
             }
