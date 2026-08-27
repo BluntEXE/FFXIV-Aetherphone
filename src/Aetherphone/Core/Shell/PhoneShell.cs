@@ -45,6 +45,7 @@ internal sealed class PhoneShell : IDisposable
     private readonly CoinEarnFloats coinFloats;
     private readonly MinimizedPhone minimizedPhone;
     private readonly MinimizeTransition minimize = new();
+    private readonly OrientationTurn turn = new();
     private readonly SideButton sideButton = new();
     private readonly ResizeGrip resizeGrip = new();
     private readonly CallHub calls;
@@ -248,7 +249,13 @@ internal sealed class PhoneShell : IDisposable
         return navigation.Current?.Id;
     }
 
-    public void PrepareFrame(float delta) => minimize.Advance(delta);
+    public void PrepareFrame(float delta)
+    {
+        minimize.Advance(delta);
+        turn.Advance(delta, LandscapeActive, minimize.Phase == MinimizePhase.None);
+    }
+
+    public OrientationTurn Turn => turn;
 
     public void Draw(Rect device)
     {
@@ -279,7 +286,7 @@ internal sealed class PhoneShell : IDisposable
         var sideButtonRect = DeviceChrome.SideButtonRect(device, chassis, out var sideButtonSide);
         var muteButtonRect = DeviceChrome.MuteButtonRect(device, chassis, out var muteButtonSide);
         var lockButtonRect = DeviceChrome.LockButtonRect(device, chassis, out var lockButtonSide);
-        DeviceChrome.DrawBody(chassis, theme, TransparentBand(screen));
+        DeviceChrome.DrawBody(chassis, theme, turn.Turning ? null : TransparentBand(screen));
         loading.Advance(delta);
         navigation.Advance(delta);
         if (!navigation.IsTransitioning)
@@ -325,7 +332,7 @@ internal sealed class PhoneShell : IDisposable
                 configuration.Save();
             }
 
-            var landscape = LandscapeActive;
+            var landscape = chassis.Body.IsLandscape();
             var gripWidth = landscape
                 ? PhoneBounds.LandscapeWidth(configuration)
                 : PhoneBounds.ClampWidth(configuration.PhoneWidth);
@@ -355,7 +362,7 @@ internal sealed class PhoneShell : IDisposable
             DrawChrome(chassis, theme);
         }
 
-        overlays.DrawOverlays(chassis, theme, delta, state);
+        overlays.DrawOverlays(chassis, theme, delta, state, !turn.Turning);
     }
 
     private Rect? TransparentBand(Rect screen)
@@ -407,8 +414,12 @@ internal sealed class PhoneShell : IDisposable
         using (ImRaii.Child("chrome", screen.Size, false, ChromeFlags))
         {
             DeviceChrome.MaskScreenCorners(ImGui.GetWindowDrawList(), chassis, theme, UiScale.Current);
-            StatusBar.Draw(screen, theme, LandscapeActive);
+            StatusBar.Draw(screen, theme, screen.IsLandscape());
             DrawHomeIndicator(screen, theme);
+            if (turn.Turning)
+            {
+                DeviceChrome.DrawBrightnessVeil(ImGui.GetWindowDrawList(), chassis, configuration.ScreenBrightness);
+            }
         }
     }
 

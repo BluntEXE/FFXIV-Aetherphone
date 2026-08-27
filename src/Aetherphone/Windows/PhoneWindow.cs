@@ -16,15 +16,18 @@ internal sealed class PhoneWindow : Window
 
     private const int RecenterFrameCount = 3;
     private const int ScaledStyleVarCount = 6;
-    private const float RotateSeconds = 0.26f;
     private readonly PhoneShell shell;
     private readonly Configuration configuration;
     private int recenterFrames;
     private int pendingFrames;
-    private float landscapeBlend;
     private int rotatePinFrames;
     private bool dockGrowLeft;
     private bool dockGrowUp;
+    private bool turning;
+    private float turnScale = 1f;
+    private Vector2 deviceSize;
+    private Vector2 turnFootprint;
+    private Vector2? turnCenter;
     private Vector2? pendingPosition;
     private Vector2? maximizedPosition;
     private Vector2? minimizedPosition;
@@ -125,23 +128,48 @@ internal sealed class PhoneWindow : Window
 
     public override void PreDraw()
     {
+        shell.PrepareFrame(MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds));
         var portraitWidth = Components.PhoneBounds.ClampWidth(configuration.PhoneWidth);
         var landscapeWidth = Components.PhoneBounds.LandscapeWidth(configuration);
-        var rotation = AdvanceRotation();
-        shell.PrepareFrame(MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds));
+        var turn = shell.Turn;
         var phase = shell.MinimizePhase;
         var minimized = phase == MinimizePhase.Minimized;
-        var zoom = minimized ? 1f : PhoneSizeCatalog.ZoomFor(float.Lerp(portraitWidth, landscapeWidth, rotation));
+        var landscape = turn.ShowsLandscape;
+        var zoom = minimized ? 1f : PhoneSizeCatalog.ZoomFor(landscape ? landscapeWidth : portraitWidth);
         UiScale.SetPhone(zoom);
         Plugin.Fonts.SetPhoneZoom(zoom);
         var dockSize = shell.MinimizedSize;
         var size = minimized
             ? dockSize / UiScale.Global
-            : OrientedSize(portraitWidth, landscapeWidth, rotation);
+            : landscape
+                ? PhoneSizeCatalog.LandscapeSizeFor(landscapeWidth)
+                : PhoneSizeCatalog.SizeFor(portraitWidth);
+        deviceSize = size;
+        turning = !minimized && turn.Turning && LastSize.Y > 0f;
+        turnFootprint = size;
+        turnScale = 1f;
+        if (turning)
+        {
+            turnCenter ??= LastPosition + LastSize * 0.5f;
+            turnScale = turn.ScaleFor(landscapeWidth / MathF.Max(portraitWidth, 1f));
+            turnFootprint = TurnFootprint(size, turn.Angle, turnScale);
+            var room = Components.PhoneBounds.ViewportRoom();
+            var fit = MathF.Min(1f, MathF.Min(room.X / turnFootprint.X, room.Y / turnFootprint.Y));
+            turnScale *= fit;
+            turnFootprint *= fit;
+            size = Vector2.Max(size, turnFootprint);
+            rotatePinFrames = RecenterFrameCount;
+        }
+        else
+        {
+            turnCenter = null;
+        }
+
         Size = size;
         SizeCondition = ImGuiCond.Always;
         var locked = !minimized && configuration.LockPosition;
-        var holdStill = !minimized && (shell.HomeEditing || Components.UiInteract.PointerOverGestureSurface);
+        var holdStill = !minimized &&
+                        (turning || shell.HomeEditing || Components.UiInteract.PointerOverGestureSurface);
         Flags = minimized || locked || holdStill
             ? BaseFlags | ImGuiWindowFlags.NoMove
             : BaseFlags;
@@ -175,7 +203,7 @@ internal sealed class PhoneWindow : Window
         else if (!minimized && rotatePinFrames > 0 && LastSize.Y > 0f)
         {
             rotatePinFrames--;
-            Position = CenterPinnedPosition(size);
+            Position = CenterPinnedPosition(size, turnFootprint);
             PositionCondition = ImGuiCond.Always;
         }
         else
@@ -189,6 +217,31 @@ internal sealed class PhoneWindow : Window
 
     public override void PostDraw() => ImGui.PopStyleVar(ScaledStyleVarCount);
 
+    private Rect DeviceRect()
+    {
+        var origin = ImGui.GetCursorScreenPos();
+        var available = ImGui.GetContentRegionAvail();
+        var scaled = deviceSize * UiScale.Global;
+        var offset = (available - scaled) * 0.5f;
+        var min = origin + new Vector2(MathF.Round(offset.X), MathF.Round(offset.Y));
+        return new Rect(min, min + scaled);
+    }
+
+    private void ApplyTurn(Rect device)
+    {
+        var window = ImGuiP.GetCurrentWindowRead();
+        var turn = shell.Turn;
+        var alpha = turn.ContentAlpha;
+        if (alpha < 1f)
+        {
+            LayerCompositor.TransformChildren(window, LayerTransform.Fade(alpha));
+        }
+
+        var viewport = ImGui.GetMainViewport();
+        var clip = new Rect(viewport.Pos, viewport.Pos + viewport.Size);
+        LayerCompositor.Transform(window, LayerTransform.Turn(device.Center, turn.Angle, turnScale, clip));
+    }
+
     private static void PushScaledStyle(float zoom)
     {
         var style = ImGui.GetStyle();
@@ -200,33 +253,11 @@ internal sealed class PhoneWindow : Window
         ImGui.PushStyleVar(ImGuiStyleVar.GrabMinSize, style.GrabMinSize * zoom);
     }
 
-    private float AdvanceRotation()
+    private static Vector2 TurnFootprint(Vector2 size, float angle, float scale)
     {
-        var target = shell.LandscapeActive ? 1f : 0f;
-        if (landscapeBlend == target)
-        {
-            return Easing.SmootherStep(landscapeBlend);
-        }
-
-        var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
-        var step = delta / RotateSeconds;
-        landscapeBlend = target > landscapeBlend
-            ? MathF.Min(target, landscapeBlend + step)
-            : MathF.Max(target, landscapeBlend - step);
-        rotatePinFrames = RecenterFrameCount;
-        return Easing.SmootherStep(landscapeBlend);
-    }
-
-    private static Vector2 OrientedSize(float portraitWidth, float landscapeWidth, float rotation)
-    {
-        var portrait = PhoneSizeCatalog.SizeFor(portraitWidth);
-        if (rotation <= 0f)
-        {
-            return portrait;
-        }
-
-        var landscape = PhoneSizeCatalog.LandscapeSizeFor(landscapeWidth);
-        return Vector2.Lerp(portrait, landscape, rotation);
+        var cosine = MathF.Abs(MathF.Cos(angle));
+        var sine = MathF.Abs(MathF.Sin(angle));
+        return new Vector2(size.X * cosine + size.Y * sine, size.X * sine + size.Y * cosine) * scale;
     }
 
     private Vector2 DockedPosition(Vector2 dockSize)
@@ -264,11 +295,15 @@ internal sealed class PhoneWindow : Window
     private static bool PastCenterY(float y, ImGuiViewportPtr viewport) =>
         y > viewport.Pos.Y + viewport.Size.Y * 0.5f;
 
-    private Vector2 CenterPinnedPosition(Vector2 size)
+    private Vector2 CenterPinnedPosition(Vector2 windowSize, Vector2 contentSize)
     {
-        var scaledSize = size * UiScale.Global;
-        var center = LastPosition + LastSize * 0.5f;
-        return ClampToViewport(center - scaledSize * 0.5f, scaledSize, ImGui.GetMainViewport());
+        var viewport = ImGui.GetMainViewport();
+        var scaledWindow = windowSize * UiScale.Global;
+        var scaledContent = contentSize * UiScale.Global;
+        var middle = viewport.Pos + viewport.Size * 0.5f;
+        var slack = Vector2.Max((viewport.Size - scaledContent) * 0.5f, Vector2.Zero);
+        var center = Vector2.Clamp(turnCenter ?? LastPosition + LastSize * 0.5f, middle - slack, middle + slack);
+        return center - scaledWindow * 0.5f;
     }
 
     private static Vector2 ClampToViewport(Vector2 position, Vector2 size, ImGuiViewportPtr viewport)
@@ -280,8 +315,9 @@ internal sealed class PhoneWindow : Window
 
     public override void Draw()
     {
-        LastPosition = ImGui.GetWindowPos();
-        LastSize = ImGui.GetWindowSize();
+        var device = DeviceRect();
+        LastPosition = device.Min;
+        LastSize = device.Size;
         Components.UiInteract.SetWindowHovered(ImGui.IsWindowHovered(
             ImGuiHoveredFlags.ChildWindows | ImGuiHoveredFlags.AllowWhenBlockedByActiveItem));
         Components.UiInteract.SetWindowFocused(ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows));
@@ -295,26 +331,31 @@ internal sealed class PhoneWindow : Window
         Plugin.Updates.Poll();
         using (Plugin.Fonts.Push(1f))
         {
-            var origin = ImGui.GetCursorScreenPos();
-            var available = ImGui.GetContentRegionAvail();
-            ImGui.Dummy(available);
-            var device = new Rect(origin, origin + available);
-            if (configuration.ShowPerfHud)
+            ImGui.Dummy(ImGui.GetContentRegionAvail());
+            using (InputShield.Engage(turning))
             {
-                Components.PerfHud.BeginShell();
-                shell.Draw(device);
-                Components.PerfHud.EndShell();
-                Components.PerfHud.Draw(device, UiScale.Current);
+                if (configuration.ShowPerfHud)
+                {
+                    Components.PerfHud.BeginShell();
+                    shell.Draw(device);
+                    Components.PerfHud.EndShell();
+                    Components.PerfHud.Draw(device, UiScale.Current);
+                }
+                else
+                {
+                    shell.Draw(device);
+                }
             }
-            else
+
+            if (turning)
             {
-                shell.Draw(device);
+                ApplyTurn(device);
             }
         }
 
         if (shell.MinimizePhase == MinimizePhase.None)
         {
-            maximizedPosition = ImGui.GetWindowPos();
+            maximizedPosition = device.Min;
         }
 
         if (shell.ConsumeCloseRequest())

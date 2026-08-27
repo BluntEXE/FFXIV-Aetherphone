@@ -29,7 +29,7 @@ internal static class PhoneBounds
         return ClampLandscapeWidth(PhoneSizeCatalog.LandscapeWidthFor(portrait, configuration.LandscapePhoneWidth));
     }
 
-    private static Vector2 ViewportRoom()
+    public static Vector2 ViewportRoom()
     {
         var viewport = ImGui.GetMainViewport();
         var scale = MathF.Max(UiScale.Global, 0.01f);

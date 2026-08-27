@@ -83,6 +83,16 @@ internal static class LayerCompositor
         }
 
         TransformDrawList(window.DrawList, in transform);
+        TransformChildren(window, in transform);
+    }
+
+    public static void TransformChildren(ImGuiWindowPtr window, in LayerTransform transform)
+    {
+        if (window.IsNull)
+        {
+            return;
+        }
+
         var children = window.DC.ChildWindows.AsSpan();
         for (var index = 0; index < children.Length; index++)
         {
