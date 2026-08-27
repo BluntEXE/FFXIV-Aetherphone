@@ -21,6 +21,9 @@ internal sealed partial class VelvetShell
         return rect;
     }
 
+    private static Rect Inset(Rect rect, float inset) =>
+        new(new Vector2(rect.Min.X + inset, rect.Min.Y), new Vector2(rect.Max.X - inset, rect.Max.Y));
+
     private static void Gap(float pixels)
     {
         ImGui.Dummy(new Vector2(0f, pixels * UiScale.Current));

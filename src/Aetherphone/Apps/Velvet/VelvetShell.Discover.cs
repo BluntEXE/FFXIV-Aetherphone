@@ -59,10 +59,11 @@ internal sealed partial class VelvetShell
         }
 
         var listRect = new Rect(new Vector2(area.Min.X, searchRect.Max.Y + 8f * scale), area.Max);
-        using (AppSurface.Begin(listRect))
+        using (AppSurface.BeginEdgeToEdge(listRect))
         {
+            var inset = FeedCell.PadX * scale;
             var width = ImGui.GetContentRegionAvail().X;
-            DrawActiveFilters(width, VelvetPage.Discover);
+            DrawActiveFilters(width - inset * 2f, VelvetPage.Discover, inset);
 
             var results = FilterDiscoverByRegion(store.DiscoverResults);
             if (discoverInclude.Region.Length > 0 && results.Length < RegionFilterFill && store.HasMoreDiscover
@@ -131,19 +132,15 @@ internal sealed partial class VelvetShell
             }
 
             var feed = store.Feed;
-            VSectionHeader.Overline(Loc.T(L.Velvet.PeopleToMeet), results.Length.ToString(Loc.Culture));
-            Gap(8f);
+            VSectionHeader.Overline(Loc.T(L.Velvet.PeopleToMeet), results.Length.ToString(Loc.Culture), inset);
+            Gap(4f);
             for (var index = 0; index < results.Length; index++)
             {
-                var cardTop = ImGui.GetCursorScreenPos();
-                DrawPersonCard(results[index], feed);
+                var card = DrawPersonCard(results[index], feed);
                 if (index == 0)
                 {
-                    UiAnchors.Report("velvet.discover.card",
-                        new Rect(cardTop, new Vector2(cardTop.X + width, ImGui.GetCursorScreenPos().Y)));
+                    UiAnchors.Report("velvet.discover.card", card);
                 }
-
-                Gap(26f);
             }
 
             if (store.LoadingMoreDiscover)
@@ -197,7 +194,7 @@ internal sealed partial class VelvetShell
         }
     }
 
-    private void DrawActiveFilters(float width, VelvetPage surface)
+    private void DrawActiveFilters(float width, VelvetPage surface, float inset = 0f)
     {
         var scale = UiScale.Current;
         var include = IncludeFor(surface);
@@ -271,6 +268,12 @@ internal sealed partial class VelvetShell
         }
 
         Gap(4f);
+        if (inset > 0f)
+        {
+            var flowOrigin = ImGui.GetCursorScreenPos();
+            ImGui.SetCursorScreenPos(new Vector2(flowOrigin.X + inset, flowOrigin.Y));
+        }
+
         var removed = VChipFlow.Draw(System.Runtime.InteropServices.CollectionsMarshal.AsSpan(activeFilterChips),
             width, scale);
         if (removed >= 0)
@@ -375,13 +378,13 @@ internal sealed partial class VelvetShell
         return excluded;
     }
 
-    private void DrawPersonCard(VelvetProfileDto profile, VelvetPostDto[] feed)
+    private Rect DrawPersonCard(VelvetProfileDto profile, VelvetPostDto[] feed)
     {
         var scale = UiScale.Current;
         var width = ScrollLayout.StableContentWidth();
         var name = DisplayNameOf(profile.DisplayName, profile.Handle);
         var region = RegionCodeOf(profile);
-        var pad = 14f * scale;
+        var pad = FeedCell.PadX * scale;
 
         var coverUrl = string.Empty;
         var photoCount = 0;
@@ -406,14 +409,12 @@ internal sealed partial class VelvetShell
             coverUrl = profile.AvatarUrl ?? string.Empty;
         }
 
-        var cardHeight = width * 0.82f;
-        var card = Reserve(cardHeight / scale);
         var drawList = ImGui.GetWindowDrawList();
-        var radius = Metrics.Radius.Card * scale;
-        DrawCoverImage(drawList, card.Min, card.Max, coverUrl, radius, name);
-        Squircle.Stroke(drawList, card.Min, card.Max, radius, VelvetTheme.CardStroke.Packed(), 1f * scale);
+        var cell = FeedCell.Begin(drawList, width * 0.82f, VelvetTheme.HoverWash, interactive: false);
+        var card = cell.Bounds;
+        DrawCoverImage(drawList, card.Min, card.Max, coverUrl, 0f, name);
         Squircle.FillVerticalGradient(drawList, new Vector2(card.Min.X, card.Max.Y - card.Height * 0.52f), card.Max,
-            radius, new Vector4(0.03f, 0.01f, 0.06f, 0f).Packed(), new Vector4(0.03f, 0.01f, 0.06f, 0.97f).Packed());
+            0f, new Vector4(0.03f, 0.01f, 0.06f, 0f).Packed(), new Vector4(0.03f, 0.01f, 0.06f, 0.97f).Packed());
 
         var mask = VelvetIntent.Sanitize(profile.LookingFor);
         var chipX = card.Max.X - pad;
@@ -512,6 +513,9 @@ internal sealed partial class VelvetShell
                     break;
             }
         }
+
+        FeedCell.End(drawList, cell, VelvetTheme.Hairline);
+        return card;
     }
 
     private void DrawCoverImage(ImDrawListPtr drawList, Vector2 min, Vector2 max, string url, float rounding,

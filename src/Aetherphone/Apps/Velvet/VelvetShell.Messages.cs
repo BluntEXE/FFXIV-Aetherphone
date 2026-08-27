@@ -32,7 +32,7 @@ internal sealed partial class VelvetShell
         }
 
         var listRect = new Rect(new Vector2(area.Min.X, segRect.Max.Y + 8f * scale), area.Max);
-        using (AppSurface.Begin(listRect))
+        using (AppSurface.BeginEdgeToEdge(listRect))
         {
             if (messagesTab == VelvetMessagesTab.Chats)
             {
@@ -89,7 +89,7 @@ internal sealed partial class VelvetShell
                 Time = TimeText.Short(thread.LastMessageAtUnix),
                 Badge = thread.UnreadCount,
             };
-            var hit = VRow.Draw(in model, ui, theme, images, lodestone);
+            var hit = VRow.Cell(in model, ui, theme, images, lodestone);
             if (hit == VRowHit.Body)
             {
                 OpenThread(thread.OtherUserId);
@@ -139,7 +139,8 @@ internal sealed partial class VelvetShell
         Gap(8f);
         if (requests.Length > 0)
         {
-            VSectionHeader.Overline(Loc.T(L.Velvet.Requests), requests.Length.ToString(Loc.Culture));
+            VSectionHeader.Overline(Loc.T(L.Velvet.Requests), requests.Length.ToString(Loc.Culture),
+                FeedCell.PadX * scale);
             for (var index = 0; index < requests.Length; index++)
             {
                 DrawRequestRow(requests[index]);
@@ -149,7 +150,8 @@ internal sealed partial class VelvetShell
         if (sent.Length > 0)
         {
             Gap(14f);
-            VSectionHeader.Overline(Loc.T(L.Velvet.SentRequests), sent.Length.ToString(Loc.Culture));
+            VSectionHeader.Overline(Loc.T(L.Velvet.SentRequests), sent.Length.ToString(Loc.Culture),
+                FeedCell.PadX * scale);
             for (var index = 0; index < sent.Length; index++)
             {
                 var request = sent[index];
@@ -166,7 +168,7 @@ internal sealed partial class VelvetShell
                     PillFilled = false,
                     PillEnabled = true,
                 };
-                var hit = VRow.Draw(in model, ui, theme, images, lodestone);
+                var hit = VRow.Cell(in model, ui, theme, images, lodestone);
                 if (hit == VRowHit.Pill)
                 {
                     store.CancelRequest(request.UserId);
@@ -197,7 +199,7 @@ internal sealed partial class VelvetShell
             PillEnabled = true,
             Decline = true,
         };
-        var hit = VRow.Draw(in model, ui, theme, images, lodestone);
+        var hit = VRow.Cell(in model, ui, theme, images, lodestone);
         switch (hit)
         {
             case VRowHit.Pill:

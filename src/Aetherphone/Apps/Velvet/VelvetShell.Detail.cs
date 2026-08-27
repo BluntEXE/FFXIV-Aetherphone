@@ -425,7 +425,7 @@ internal sealed partial class VelvetShell
         }
 
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + VHeader.Height * scale), area.Max);
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             if (store.LikersLoading)
             {
@@ -461,7 +461,7 @@ internal sealed partial class VelvetShell
                     RoleBadgeIds = user.ProfileBadges,
                     UserId = user.Id,
                 };
-                if (VRow.Draw(in model, ui, theme, images, lodestone) == VRowHit.Body)
+                if (VRow.Cell(in model, ui, theme, images, lodestone) == VRowHit.Body)
                 {
                     OpenProfile(user.Id);
                 }

@@ -944,7 +944,7 @@ internal sealed partial class AethergramApp : IResumableApp
     private void DrawFeedList(Rect listRect, SocialFeedScope scope)
     {
         var snapshot = store.Feed(scope);
-        using (var surface = AppSurface.Begin(listRect))
+        using (var surface = AppSurface.BeginEdgeToEdge(listRect))
         {
             if (feedScrollTopPending)
             {
@@ -1023,19 +1023,15 @@ internal sealed partial class AethergramApp : IResumableApp
     {
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
-        var origin = ImGui.GetCursorScreenPos();
         var width = ScrollLayout.StableContentWidth();
-        var pad = PostCardMetrics.Pad * scale;
-        var innerX = origin.X + pad;
-        var innerWidth = width - pad * 2f;
+        var padY = PostCardMetrics.PadY * scale;
+        var inset = FeedCell.PadX * scale;
+        var innerWidth = width - inset * 2f;
         var displayName = SocialIdentity.Name(post.AuthorDisplayName, post.AuthorHandle);
         var headerBlock = PostCardMetrics.HeaderBlock * scale;
         var avatarRadius = PostCardMetrics.AvatarRadius * scale;
-        var imageTop = origin.Y + pad + headerBlock + PostCardMetrics.MediaGap * scale;
-        var imageBottom = imageTop + PostAspects.DisplayHeight(innerWidth, post.MediaWidth, post.MediaHeight);
-        var actionsTop = imageBottom + PostCardMetrics.ActionsGap * scale;
+        var mediaHeight = PostAspects.DisplayHeight(width, post.MediaWidth, post.MediaHeight);
         var actionsHeight = PostCardMetrics.ActionsHeight * scale;
-        var textTop = actionsTop + actionsHeight + PostCardMetrics.TextGap * scale;
         RichTextLayout? captionLayout = null;
         var translateKey = new TranslationKey(TranslationSurface.Post, post.Id);
         var captionView = translation.View(translateKey, post.Text, post.Lang);
@@ -1056,9 +1052,17 @@ internal sealed partial class AethergramApp : IResumableApp
             ? 0f
             : captionTextHeight + translateHeight + PostCardMetrics.CaptionGap * scale;
         var commentsHeight = post.CommentCount > 0 ? 20f * scale : 0f;
-        var cardBottom = textTop + captionHeight + commentsHeight + pad;
-        ui.Card(drawList, origin, new Vector2(origin.X + width, cardBottom), PostCardMetrics.Rounding * scale);
-        var avatarCenter = new Vector2(innerX + avatarRadius, origin.Y + pad + avatarRadius);
+        var cellHeight = padY + headerBlock + PostCardMetrics.MediaGap * scale + mediaHeight
+            + PostCardMetrics.ActionsGap * scale + actionsHeight + PostCardMetrics.TextGap * scale
+            + captionHeight + commentsHeight + padY;
+        var cell = FeedCell.Begin(drawList, cellHeight, ui.HoverWash, interactive: false);
+        var origin = cell.Bounds.Min;
+        var innerX = origin.X + inset;
+        var imageTop = origin.Y + padY + headerBlock + PostCardMetrics.MediaGap * scale;
+        var imageBottom = imageTop + mediaHeight;
+        var actionsTop = imageBottom + PostCardMetrics.ActionsGap * scale;
+        var textTop = actionsTop + actionsHeight + PostCardMetrics.TextGap * scale;
+        var avatarCenter = new Vector2(innerX + avatarRadius, origin.Y + padY + avatarRadius);
         var ringRadius = avatarRadius + 3f * scale;
         var hasStory = stories.TryRing(post.AuthorId, out var authorRing);
         if (hasStory)
@@ -1069,16 +1073,16 @@ internal sealed partial class AethergramApp : IResumableApp
         DrawAvatar(avatarCenter, avatarRadius - 1f * scale, SocialIdentity.Name(post.AuthorDisplayName, post.AuthorHandle),
             string.Empty, post.AuthorAvatarUrl, 0.85f, 32, Frames.Of(post.AuthorFrameId));
         var nameLeft = avatarCenter.X + avatarRadius + PostCardMetrics.NameGap * scale;
-        var headerTextRight = origin.X + width - pad - 34f * scale;
+        var headerTextRight = origin.X + width - inset - 34f * scale;
         var headerTextMaxWidth = MathF.Max(1f, headerTextRight - nameLeft);
         var cardNameStyle = new TextStyle(1f, FontWeight.SemiBold);
         var cardNameHeight = Typography.Measure(displayName, cardNameStyle).Y;
-        var cardNameHovering = UiInteract.Hover(new Vector2(nameLeft, origin.Y + pad),
-            new Vector2(nameLeft + headerTextMaxWidth, origin.Y + pad + cardNameHeight));
-        UserName.Draw("aethergram.card." + post.Id, displayName, post.AuthorBadges, post.AuthorBadgeIds, nameLeft, origin.Y + pad,
-            headerTextMaxWidth, cardNameStyle, theme.TextStrong, cardNameHovering, theme);
+        var cardNameHovering = UiInteract.Hover(new Vector2(nameLeft, origin.Y + padY),
+            new Vector2(nameLeft + headerTextMaxWidth, origin.Y + padY + cardNameHeight));
+        UserName.Draw("aethergram.card." + post.Id, displayName, post.AuthorBadges, post.AuthorBadgeIds, nameLeft,
+            origin.Y + padY, headerTextMaxWidth, cardNameStyle, theme.TextStrong, cardNameHovering, theme);
         var subline = SocialIdentity.FeedMeta(post.AuthorHandle, TimeText.Short(post.CreatedAtUnix));
-        var sublineTop = origin.Y + pad + PostCardMetrics.SublineTop * scale;
+        var sublineTop = origin.Y + padY + PostCardMetrics.SublineTop * scale;
         var sublineSize = Typography.Measure(subline, 0.85f);
         var sublineHovering = UiInteract.Hover(new Vector2(nameLeft, sublineTop),
             new Vector2(nameLeft + headerTextMaxWidth, sublineTop + sublineSize.Y));
@@ -1090,13 +1094,13 @@ internal sealed partial class AethergramApp : IResumableApp
         {
             stories.OpenRing(authorRing);
         }
-        else if (!overRing && UiInteract.HoverClick(new Vector2(innerX, origin.Y + pad),
-                new Vector2(origin.X + width - pad - 30f * scale, origin.Y + pad + headerBlock)))
+        else if (!overRing && UiInteract.HoverClick(new Vector2(innerX, origin.Y + padY),
+                new Vector2(origin.X + width - inset - 30f * scale, origin.Y + padY + headerBlock)))
         {
             OpenProfile(post.AuthorId);
         }
 
-        var moreCenter = new Vector2(origin.X + width - pad - 6f * scale, avatarCenter.Y);
+        var moreCenter = new Vector2(origin.X + width - inset - 6f * scale, avatarCenter.Y);
         var moreRadius = 14f * scale;
         if (ui.IconButton(moreCenter, moreRadius, FontAwesomeIcon.EllipsisH.ToIconString(), AppPalettes.Aethergram.BodyInk,
                 AppSkin.Transparent, 1f, Loc.T(L.Aethergram.More)))
@@ -1104,9 +1108,9 @@ internal sealed partial class AethergramApp : IResumableApp
             OpenPostSheet(post, true);
         }
 
-        var imageRect = new Rect(new Vector2(innerX, imageTop), new Vector2(innerX + innerWidth, imageBottom));
+        var imageRect = new Rect(new Vector2(origin.X, imageTop), new Vector2(origin.X + width, imageBottom));
         var photos = PostMedia.Photos(post.MediaUrls, post.MediaUrl);
-        var page = DrawGramCarousel(imageRect, post, photos, PostCardMetrics.MediaRounding * scale);
+        var page = DrawGramCarousel(imageRect, post, photos, 0f);
         var liked = post.MyReaction >= 0;
         var actionCenterY = actionsTop + actionsHeight * 0.5f;
         var iconRadius = PostCardMetrics.ActionIconRadius * scale;
@@ -1155,7 +1159,7 @@ internal sealed partial class AethergramApp : IResumableApp
         }
 
         actionsRight = shareCenter.X + PostCardMetrics.ActionCountGap * scale;
-        var bookmarkCenter = new Vector2(origin.X + width - pad - 8f * scale, actionCenterY);
+        var bookmarkCenter = new Vector2(origin.X + width - inset - 8f * scale, actionCenterY);
         if (ui.IconButton(bookmarkCenter, iconRadius, FontAwesomeIcon.Bookmark.ToIconString(),
                 post.Saved ? ui.Accent : AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.15f,
                 Loc.T(L.Aethergram.SavedTitle)))
@@ -1216,8 +1220,7 @@ internal sealed partial class AethergramApp : IResumableApp
             }
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, cardBottom - origin.Y + PostCardMetrics.CardGap * scale));
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 
     private int DrawGramCarousel(Rect imageRect, PostDto post, string[] photos, float rounding)

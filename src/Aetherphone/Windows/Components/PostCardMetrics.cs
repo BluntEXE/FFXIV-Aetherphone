@@ -2,9 +2,7 @@ namespace Aetherphone.Windows.Components;
 
 internal static class PostCardMetrics
 {
-    public const float Pad = 14f;
-    public const float Rounding = 18f;
-    public const float MediaRounding = 14f;
+    public const float PadY = 14f;
     public const float HeaderBlock = 40f;
     public const float AvatarRadius = 18f;
     public const float NameGap = 12f;
@@ -17,5 +15,4 @@ internal static class PostCardMetrics
     public const float ActionCountGap = 20f;
     public const float TextGap = 10f;
     public const float CaptionGap = 6f;
-    public const float CardGap = 12f;
 }
