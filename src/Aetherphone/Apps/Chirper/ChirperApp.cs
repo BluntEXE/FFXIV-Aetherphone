@@ -28,7 +28,7 @@ using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Chirper;
 
-internal sealed partial class ChirperApp : IPhoneApp
+internal sealed partial class ChirperApp : IResumableApp
 {
     private enum SheetKind
     {
@@ -310,7 +310,31 @@ internal sealed partial class ChirperApp : IPhoneApp
     public void OnOpened()
     {
         router.Reset();
+        avatarLightbox.Reset();
+        draft = string.Empty;
+        profile.SearchDraft = string.Empty;
         actions.Reset();
+        sheet.Close();
+        filterSheet.Close();
+        homeTab = HomeTab.Feed;
+        sheetKind = SheetKind.None;
+        sheetPost = null;
+        sheetUser = null;
+        commentDraft = string.Empty;
+        composeAttachments.Clear();
+        composePicking = false;
+        composeSensitive = false;
+        store.ClearDiscover();
+        RefreshAndConsumeLaunch();
+    }
+
+    public void OnResumed()
+    {
+        RefreshAndConsumeLaunch();
+    }
+
+    private void RefreshAndConsumeLaunch()
+    {
         if (store.IsSignedIn)
         {
             store.EnsureMe();
@@ -333,22 +357,6 @@ internal sealed partial class ChirperApp : IPhoneApp
 
     public void OnClosed()
     {
-        router.Reset();
-        avatarLightbox.Reset();
-        draft = string.Empty;
-        profile.SearchDraft = string.Empty;
-        actions.Reset();
-        sheet.Close();
-        filterSheet.Close();
-        homeTab = HomeTab.Feed;
-        sheetKind = SheetKind.None;
-        sheetPost = null;
-        sheetUser = null;
-        commentDraft = string.Empty;
-        composeAttachments.Clear();
-        composePicking = false;
-        composeSensitive = false;
-        store.ClearDiscover();
     }
 
     public void Draw(in PhoneContext context)

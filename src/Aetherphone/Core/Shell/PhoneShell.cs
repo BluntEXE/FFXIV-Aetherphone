@@ -475,6 +475,7 @@ internal sealed class PhoneShell : IDisposable
         coinFloats.Dispose();
         minimizedPhone.Dispose();
         setup.Dispose();
+        navigation.Current?.OnClosed();
         for (var index = 0; index < apps.Count; index++)
         {
             apps[index].Dispose();

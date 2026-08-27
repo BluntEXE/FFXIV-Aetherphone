@@ -23,7 +23,7 @@ using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Message;
 
-internal sealed partial class MessageApp : IPhoneApp
+internal sealed partial class MessageApp : IResumableApp
 {
     private enum MessageTab : byte
     {
@@ -115,7 +115,20 @@ internal sealed partial class MessageApp : IPhoneApp
         filter = string.Empty;
         searchDraft = string.Empty;
         addError = string.Empty;
-        contacts.Refresh(force: true);
+        avatarLightbox.Reset();
+        selectedContacts.Clear();
+        groupTitleDraft = string.Empty;
+        RefreshAndConsumeLaunch(forceContacts: true);
+    }
+
+    public void OnResumed()
+    {
+        RefreshAndConsumeLaunch(forceContacts: false);
+    }
+
+    private void RefreshAndConsumeLaunch(bool forceContacts)
+    {
+        contacts.Refresh(force: forceContacts);
         store.RefreshConversations();
         if (launcher.TryConsumeCalls())
         {
@@ -141,12 +154,6 @@ internal sealed partial class MessageApp : IPhoneApp
     {
         FlushNotes();
         threadView.OnAppClosed();
-        router.Reset();
-        avatarLightbox.Reset();
-        filter = string.Empty;
-        searchDraft = string.Empty;
-        selectedContacts.Clear();
-        groupTitleDraft = string.Empty;
     }
 
     public void Draw(in PhoneContext context)

@@ -25,7 +25,7 @@ using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Apps.Music;
 
-internal sealed partial class MusicApp : IPhoneApp
+internal sealed partial class MusicApp : IResumableApp
 {
     private enum View : byte
     {
@@ -247,12 +247,26 @@ internal sealed partial class MusicApp : IPhoneApp
         community.EnsureFresh(false);
     }
 
+    public void OnResumed()
+    {
+        miniPresence.SnapTo(playback.IsActive ? 1f : 0f);
+        LoadFavoriteRadioStations();
+        rolladeck.EnsureFresh();
+        if (launcher.TryConsumeStation(out var stationId))
+        {
+            viewedStationId = stationId;
+            community.OpenStation(stationId, null);
+            community.EnsureFresh(true);
+            tab = MusicTab.Live;
+            Router.Push(View.Station, false);
+            return;
+        }
+
+        community.EnsureFresh(false);
+    }
+
     public void OnClosed()
     {
-        ResetTabs();
-        nowPlayingOpen = false;
-        sheetPresence.SnapTo(0f);
-        DismissOverlay(true);
     }
 
     public void Draw(in PhoneContext context)

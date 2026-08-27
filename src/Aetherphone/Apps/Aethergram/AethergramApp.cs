@@ -30,7 +30,7 @@ using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Aethergram;
 
-internal sealed partial class AethergramApp : IPhoneApp
+internal sealed partial class AethergramApp : IResumableApp
 {
     private const int MaxCaptionLength = 500;
     private const int MaxPhotoTags = 20;
@@ -233,6 +233,24 @@ internal sealed partial class AethergramApp : IPhoneApp
     {
         router.Reset();
         activeTab = AethergramTab.Home;
+        avatarLightbox.Reset();
+        caption = string.Empty;
+        composeSensitive = false;
+        profile.SearchDraft = string.Empty;
+        commentDraft = string.Empty;
+        shareSearchDraft = string.Empty;
+        shareSentUserIds.Clear();
+        store.ClearDiscover();
+        RefreshAndConsumeLaunch();
+    }
+
+    public void OnResumed()
+    {
+        RefreshAndConsumeLaunch();
+    }
+
+    private void RefreshAndConsumeLaunch()
+    {
         if (store.IsSignedIn)
         {
             store.RefreshFeed(SocialFeedScope.ForYou);
@@ -272,15 +290,6 @@ internal sealed partial class AethergramApp : IPhoneApp
     public void OnClosed()
     {
         threadView.OnAppClosed();
-        router.Reset();
-        avatarLightbox.Reset();
-        caption = string.Empty;
-        composeSensitive = false;
-        profile.SearchDraft = string.Empty;
-        commentDraft = string.Empty;
-        shareSearchDraft = string.Empty;
-        shareSentUserIds.Clear();
-        store.ClearDiscover();
         stories.Close();
     }
 

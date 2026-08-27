@@ -14,10 +14,14 @@ internal enum ShellMotion
 
 internal sealed class NavigationStack : INavigator
 {
+    private const long ResumeWindowMilliseconds = 10 * 60 * 1000;
+
     private readonly IReadOnlyList<IPhoneApp> apps;
     private readonly AppInstaller installer;
     private readonly SuspensionGate suspensions;
     private readonly Stack<IPhoneApp> history = new();
+    private readonly Dictionary<string, long> closedAtTicks = new(StringComparer.Ordinal);
+    private bool resumingOpen;
     private Spring cover;
     private float coverTarget;
     private float coverSmoothTime;
@@ -109,9 +113,34 @@ internal sealed class NavigationStack : INavigator
 
     private void NotifyOpened(IPhoneApp app)
     {
-        app.OnOpened();
+        resumingOpen = TryResume(app, requireRecentClose: true);
+        if (!resumingOpen)
+        {
+            app.OnOpened();
+        }
+
         AppOpened?.Invoke(app.Id);
         UiFeedback.Play(UiSound.AppOpen);
+    }
+
+    private bool TryResume(IPhoneApp app, bool requireRecentClose)
+    {
+        if (app is not IResumableApp resumable)
+        {
+            return false;
+        }
+
+        if (requireRecentClose)
+        {
+            if (!closedAtTicks.TryGetValue(app.Id, out var closedAt) ||
+                Environment.TickCount64 - closedAt > ResumeWindowMilliseconds)
+            {
+                return false;
+            }
+        }
+
+        resumable.OnResumed();
+        return true;
     }
 
     public bool IsAvailable(string appId)
@@ -161,7 +190,10 @@ internal sealed class NavigationStack : INavigator
         var leaving = current;
         var under = history.Count > 0 ? history.Pop() : null;
         current = under;
-        under?.OnOpened();
+        if (under is not null && !TryResume(under, requireRecentClose: false))
+        {
+            under.OnOpened();
+        }
         if (under is null)
         {
             ReturningHome?.Invoke(leaving.Id);
@@ -188,7 +220,12 @@ internal sealed class NavigationStack : INavigator
 
     private void BeginPresent(IPhoneApp over, IPhoneApp? under)
     {
-        AppVisits.NoteOpened(over.Id);
+        if (!resumingOpen)
+        {
+            AppVisits.NoteOpened(over.Id);
+        }
+
+        resumingOpen = false;
         motion = ShellMotion.Present;
         motionOver = over;
         motionUnder = under;
@@ -255,11 +292,11 @@ internal sealed class NavigationStack : INavigator
     {
         if (motion == ShellMotion.Present)
         {
-            motionUnder?.OnClosed();
+            NotifyClosed(motionUnder);
         }
         else if (motion == ShellMotion.Dismiss)
         {
-            motionOver?.OnClosed();
+            NotifyClosed(motionOver);
         }
 
         motion = ShellMotion.None;
@@ -267,5 +304,16 @@ internal sealed class NavigationStack : INavigator
         motionUnder = null;
         motionOrigin = null;
         motionOriginKind = LaunchOrigin.Icon;
+    }
+
+    private void NotifyClosed(IPhoneApp? app)
+    {
+        if (app is null)
+        {
+            return;
+        }
+
+        app.OnClosed();
+        closedAtTicks[app.Id] = Environment.TickCount64;
     }
 }

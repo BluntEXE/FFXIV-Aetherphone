@@ -17,7 +17,7 @@ using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Linkpearl;
 
-internal sealed partial class LinkpearlApp : IPhoneApp
+internal sealed partial class LinkpearlApp : IResumableApp
 {
     private enum MessagesTab : byte
     {
@@ -129,6 +129,19 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         ConsumeLaunchRequests();
     }
 
+    public void OnResumed()
+    {
+        inbox.Invalidate();
+        inbox.Sync();
+        if (threadKey.Length > 0)
+        {
+            inbox.Viewing = threadKey;
+        }
+
+        ReadFriends();
+        ConsumeLaunchRequests();
+    }
+
     private void ConsumeLaunchRequests()
     {
         if (launcher.TryConsume(out var conversationKey))
@@ -172,12 +185,9 @@ internal sealed partial class LinkpearlApp : IPhoneApp
         settingsMenu.Close();
         newChatSheet.Close();
         chatThread.Close();
-        router.Reset();
         inbox.Viewing = string.Empty;
         inbox.ClearTransient();
         inbox.FlushSeen();
-        threadKey = string.Empty;
-        ResetPeopleState();
     }
 
     public void Draw(in PhoneContext context)

@@ -30,7 +30,7 @@ using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Velvet;
 
-internal sealed partial class VelvetShell : IPhoneApp
+internal sealed partial class VelvetShell : IResumableApp
 {
     private const float HeartbeatSeconds = 45f;
     private const byte LalafellRaceId = 3;
@@ -169,6 +169,20 @@ internal sealed partial class VelvetShell : IPhoneApp
         router.Reset();
         activeTab = VelvetPage.Discover;
         messagesTab = VelvetMessagesTab.Chats;
+        avatarLightbox.Reset();
+        store.ClearDiscover();
+        discoverInclude.Clear();
+        feedInclude.Clear();
+        RefreshAndConsumeLaunch();
+    }
+
+    public void OnResumed()
+    {
+        RefreshAndConsumeLaunch();
+    }
+
+    private void RefreshAndConsumeLaunch()
+    {
         store.InvalidateLists();
         if (GateAccepted && store.IsSignedIn)
         {
@@ -201,13 +215,7 @@ internal sealed partial class VelvetShell : IPhoneApp
 
     public void OnClosed()
     {
-        router.Reset();
         postMenu.Close();
-        avatarLightbox.Reset();
-        store.ClearDiscover();
-        discoverInclude.Clear();
-        feedInclude.Clear();
-        activeTab = VelvetPage.Discover;
         stories.Close();
     }
 

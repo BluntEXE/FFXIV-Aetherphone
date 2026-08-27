@@ -12,7 +12,7 @@ using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Notes;
 
-internal sealed class NotesApp : IPhoneApp
+internal sealed class NotesApp : IResumableApp
 {
     private enum NotesScreen : byte
     {
@@ -70,11 +70,13 @@ internal sealed class NotesApp : IPhoneApp
         editingNote = null;
     }
 
+    public void OnResumed()
+    {
+    }
+
     public void OnClosed()
     {
         CommitNoteBuffer();
-        router.Reset();
-        editingNote = null;
     }
 
     public void Draw(in PhoneContext context)

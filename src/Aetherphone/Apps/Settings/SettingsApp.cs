@@ -15,7 +15,7 @@ using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Settings;
 
-internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
+internal sealed class SettingsApp : IResumableApp, ISettingsNavigator
 {
     public string Id => "settings";
     public string DisplayName => Loc.T(L.Apps.Settings);
@@ -182,12 +182,16 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
 
     public void OnOpened()
     {
+        router.Reset();
+    }
+
+    public void OnResumed()
+    {
     }
 
     public void OnClosed()
     {
         sound.StopPreview();
-        router.Reset();
     }
 
     public void Draw(in PhoneContext context)
