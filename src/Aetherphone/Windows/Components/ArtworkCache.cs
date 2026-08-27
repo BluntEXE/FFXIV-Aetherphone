@@ -1,3 +1,4 @@
+using Aetherphone.Core;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Textures.TextureWraps;
@@ -10,6 +11,9 @@ internal sealed class ArtworkCache : IDisposable
     private const int Size = 256;
     private readonly ITextureProvider textures;
     private readonly Dictionary<int, IDalamudTextureWrap> cache = new();
+    private readonly Dictionary<int, IDalamudTextureWrap> placeholders = new();
+    private readonly HashSet<int> pending = new();
+    private bool disposed;
 
     public ArtworkCache(ITextureProvider textures)
     {
@@ -18,17 +22,60 @@ internal sealed class ArtworkCache : IDisposable
 
     public ImTextureID Handle(int seed)
     {
-        if (!cache.TryGetValue(seed, out var wrap))
+        if (cache.TryGetValue(seed, out var wrap))
         {
-            var pixels = Rasterize(ArtGradient.From(seed), Size);
-            wrap = textures.CreateFromRaw(RawImageSpecification.Rgba32(Size, Size), pixels, $"Aetherphone.Art.{seed}");
-            cache[seed] = wrap;
+            return wrap.Handle;
         }
 
-        return wrap.Handle;
+        if (pending.Add(seed))
+        {
+            var swatch = ArtGradient.From(seed);
+            _ = Task.Run(() =>
+            {
+                var pixels = Rasterize(swatch, Size);
+                return Plugin.Framework.RunOnFrameworkThread(() => Store(seed, pixels));
+            });
+        }
+
+        return PlaceholderHandle(seed);
     }
 
     public ImTextureID HandleForName(string value) => Handle(ArtGradient.Seed(value));
+
+    private void Store(int seed, byte[] pixels)
+    {
+        pending.Remove(seed);
+        if (disposed || cache.ContainsKey(seed))
+        {
+            return;
+        }
+
+        try
+        {
+            cache[seed] = textures.CreateFromRaw(RawImageSpecification.Rgba32(Size, Size), pixels,
+                $"Aetherphone.Art.{seed}");
+        }
+        catch (Exception exception)
+        {
+            AepLog.Warning(exception, $"[Artwork] creating gradient texture {seed} failed");
+        }
+    }
+
+    private ImTextureID PlaceholderHandle(int seed)
+    {
+        if (placeholders.TryGetValue(seed, out var placeholder))
+        {
+            return placeholder.Handle;
+        }
+
+        var swatch = ArtGradient.From(seed);
+        var mid = Vector4.Lerp(swatch.Top, swatch.Bottom, 0.5f);
+        var pixel = new[] { ToByte(mid.X), ToByte(mid.Y), ToByte(mid.Z), (byte)255 };
+        var wrap = textures.CreateFromRaw(RawImageSpecification.Rgba32(1, 1), pixel,
+            $"Aetherphone.Art.Flat.{seed}");
+        placeholders[seed] = wrap;
+        return wrap.Handle;
+    }
 
     private static byte[] Rasterize(ArtGradient.Swatch swatch, int size)
     {
@@ -63,11 +110,18 @@ internal sealed class ArtworkCache : IDisposable
 
     public void Dispose()
     {
+        disposed = true;
         foreach (var wrap in cache.Values)
         {
             wrap.Dispose();
         }
 
+        foreach (var wrap in placeholders.Values)
+        {
+            wrap.Dispose();
+        }
+
         cache.Clear();
+        placeholders.Clear();
     }
 }

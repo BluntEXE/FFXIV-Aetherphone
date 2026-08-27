@@ -159,7 +159,7 @@ internal sealed partial class MusicApp : IPhoneApp
 
     public MusicApp(RadioService radio, SongSearchService songSearch, SongLinkResolver songResolver,
         PlaybackHub playback, SongHistory history,
-        PlaylistStore playlists, MediaCache media, HttpService http, ITextureProvider textures,
+        PlaylistStore playlists, MediaCache media, HttpService http, ArtworkCache artwork,
         AethernetApi aethernet, AethernetSession session, ReportService report, PhotoLibrary photoLibrary,
         WallpaperImageCache wallpaperImages, ConfirmService confirm, Configuration configuration,
         RemoteImageCache images, LodestoneService lodestone, GameData gameData, RadioLauncher launcher)
@@ -184,7 +184,7 @@ internal sealed partial class MusicApp : IPhoneApp
         this.lodestone = lodestone;
         this.gameData = gameData;
         rolladeck = new RolladeckService(http);
-        artwork = new ArtworkCache(textures);
+        this.artwork = artwork;
         routers =
         [
             new ViewRouter<View>(View.Home),
@@ -232,7 +232,7 @@ internal sealed partial class MusicApp : IPhoneApp
         featured = Array.Empty<Song>();
         featuredFetch?.Cancel();
         LoadFavoriteRadioStations();
-        rolladeck.EnsureFresh(force: true);
+        rolladeck.EnsureFresh();
         OnLiveDjsOpened();
         if (launcher.TryConsumeStation(out var stationId))
         {
@@ -935,6 +935,5 @@ internal sealed partial class MusicApp : IPhoneApp
         facetFetch?.Dispose();
         resolverWork.Dispose();
         community.Dispose();
-        artwork.Dispose();
     }
 }

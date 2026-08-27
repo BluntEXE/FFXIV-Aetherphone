@@ -55,7 +55,7 @@ internal sealed partial class VenuesApp : IPhoneApp
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
 
-    public VenuesApp(VenuesService venues, MediaCache media, HttpService http, ITextureProvider textures,
+    public VenuesApp(VenuesService venues, MediaCache media, HttpService http, ArtworkCache artwork,
         GameData gameData, Configuration configuration, ConfirmService confirm,
         TranslationService translation)
     {
@@ -66,7 +66,7 @@ internal sealed partial class VenuesApp : IPhoneApp
         this.http = http;
         this.gameData = gameData;
         this.configuration = configuration;
-        artwork = new ArtworkCache(textures);
+        this.artwork = artwork;
         router = new ViewRouter<VenueRoute>(VenueRoute.List);
         drawView = DrawView;
         back = () => router.Pop();
@@ -537,5 +537,7 @@ internal sealed partial class VenuesApp : IPhoneApp
         selectedTags.Add(tag);
     }
 
-    public void Dispose() => artwork.Dispose();
+    public void Dispose()
+    {
+    }
 }

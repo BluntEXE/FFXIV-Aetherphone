@@ -1,5 +1,6 @@
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Confirm;
+using Dalamud.Bindings.ImGui;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Notifications;
@@ -25,6 +26,8 @@ internal sealed class CallHub : IDisposable
     private readonly AppGate installed;
     private readonly object gate = new();
     private CallState state = CallState.Idle;
+    private CallView snapshotView;
+    private int snapshotFrame = -1;
     private const int MissedCallSocialType = 20;
 
     private Guid callId;
@@ -105,14 +108,22 @@ internal sealed class CallHub : IDisposable
 
     public CallView Snapshot()
     {
+        var frame = ImGui.GetFrameCount();
+        if (frame == snapshotFrame)
+        {
+            return snapshotView;
+        }
+
         lock (gate)
         {
             var localId = LocalUserId;
             var others = CountOthers(localId);
             var seconds = state == CallState.Active ? audio.ElapsedSecondsLocked : 0;
-            return new CallView(state, audio.MutedLocked, audio.VolumeLocked, audio.MicLevelLocked,
+            snapshotView = new CallView(state, audio.MutedLocked, audio.VolumeLocked, audio.MicLevelLocked,
                 audio.PeakMicLevelLocked, seconds, roster,
                 incomingFrom, router.Connected && connectionLostTicks == 0, localId, BuildPeerLabel(localId), others);
+            snapshotFrame = frame;
+            return snapshotView;
         }
     }
 

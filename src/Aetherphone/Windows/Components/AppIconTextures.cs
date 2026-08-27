@@ -48,6 +48,7 @@ internal static class AppIconTextures
         var candidate = Path.Combine(IconDirectory, id + ".png");
         if (!File.Exists(candidate))
         {
+            ResolvedPaths[id] = null;
             return null;
         }
 

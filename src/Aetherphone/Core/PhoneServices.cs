@@ -56,6 +56,7 @@ internal sealed class PhoneServices : IDisposable
     public required HousingService Housing { get; init; }
     public required HousingReminderService HousingReminders { get; init; }
     public required ITextureProvider Textures { get; init; }
+    public required Windows.Components.ArtworkCache Artwork { get; init; }
     public required WeatherService Weather { get; init; }
     public required WeatherControl WeatherControl { get; init; }
     public required NotificationService Notifications { get; init; }
@@ -361,6 +362,7 @@ internal sealed class PhoneServices : IDisposable
             Housing = housing,
             HousingReminders = housingReminders,
             Textures = textures,
+            Artwork = new Windows.Components.ArtworkCache(textures),
             Weather = weather,
             WeatherControl = weatherControl,
             Notifications = notifications,
@@ -518,6 +520,7 @@ internal sealed class PhoneServices : IDisposable
         UiSoundTicker.Dispose();
         UiSound.Dispose();
         Media.Dispose();
+        Artwork.Dispose();
         ShortcutRunner.Dispose();
         RemoteImages.Dispose();
         Windows.Components.UserName.Reset();

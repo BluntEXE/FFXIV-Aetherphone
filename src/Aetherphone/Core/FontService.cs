@@ -83,6 +83,7 @@ internal sealed class FontService : IDisposable
     private float renderScale;
     private long learnDirtySince;
     private volatile bool learnRebuildInFlight;
+    private int lastRebuildCheckFrame = -1;
     private int generation;
 
     public FontService(IDalamudPluginInterface pluginInterface, Configuration configuration, LoadingScreen loading,
@@ -330,6 +331,13 @@ internal sealed class FontService : IDisposable
             return;
         }
 
+        var frame = ImGui.GetFrameCount();
+        if (frame == lastRebuildCheckFrame)
+        {
+            return;
+        }
+
+        lastRebuildCheckFrame = frame;
         if (Environment.TickCount64 - learnDirtySince < LearnRebuildDebounceMs)
         {
             return;
