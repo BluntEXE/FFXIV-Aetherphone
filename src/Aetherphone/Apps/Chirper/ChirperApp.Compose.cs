@@ -226,13 +226,7 @@ internal sealed partial class ChirperApp
         var rounding = pillHeight * 0.5f;
         if (canPost)
         {
-            var glowInset = new Vector2(2f * scale, -2f * scale);
-            var glowDrop = new Vector2(0f, 5f * scale);
-            Squircle.Fill(drawList, pillMin + glowInset + glowDrop, pillMax - glowInset + glowDrop, rounding,
-                ImGui.GetColorU32(Palette.WithAlpha(ChirperInk.Accent, 0.30f)));
-            var topColor = pillHovered ? Palette.Mix(ChirperInk.Accent, ChirperInk.White, 0.08f) : ChirperInk.Accent;
-            Squircle.FillVerticalGradient(drawList, pillMin, pillMax, rounding, ImGui.GetColorU32(topColor),
-                ImGui.GetColorU32(ChirperInk.AccentDeep));
+            ChirperPill.PaintAccent(drawList, pillMin, pillMax, rounding, pillHovered);
         }
         else
         {

@@ -426,15 +426,8 @@ internal sealed partial class ChirperApp
 
     private static bool DrawGradientPill(ImDrawListPtr drawList, Rect rect, string label, float rounding)
     {
-        var scale = UiScale.Current;
         var hovered = UiInteract.Hover(rect.Min, rect.Max);
-        var glowInset = new Vector2(3f * scale, -2f * scale);
-        var glowDrop = new Vector2(0f, 6f * scale);
-        Squircle.Fill(drawList, rect.Min + glowInset + glowDrop, rect.Max - glowInset + glowDrop, rounding,
-            ImGui.GetColorU32(Palette.WithAlpha(ChirperInk.Accent, 0.30f)));
-        var topColor = hovered ? Palette.Mix(ChirperInk.Accent, ChirperInk.White, 0.08f) : ChirperInk.Accent;
-        Squircle.FillVerticalGradient(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(topColor),
-            ImGui.GetColorU32(ChirperInk.AccentDeep));
+        ChirperPill.PaintAccent(drawList, rect.Min, rect.Max, rounding, hovered);
         var fitted = Typography.FitText(label, MathF.Max(1f, rect.Width - rect.Height), FollowPillStyle);
         Typography.DrawCentered(drawList, rect.Center, fitted, ChirperInk.White, FollowPillStyle);
         if (hovered)
