@@ -8,4 +8,5 @@ internal sealed class AppBundle
     public required IReadOnlyList<IPhoneApp> Apps { get; init; }
     public required WidgetRegistry Widgets { get; init; }
     public required PhotoLibrary Photos { get; init; }
+    public required Telephony.ContactBook Contacts { get; init; }
 }

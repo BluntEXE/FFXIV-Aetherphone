@@ -122,6 +122,7 @@ internal static class AppRegistry
             Apps = apps,
             Widgets = WidgetCatalog.Build(services, photoLibrary, calendarEvents, apps),
             Photos = photoLibrary,
+            Contacts = contactBook,
         };
     }
 }

@@ -5648,6 +5648,19 @@ internal static class L
         public static readonly LocString DeleteCancel = new("calendar.deleteCancel", "Cancel");
     }
 
+    internal static class Spotlight
+    {
+        public static readonly LocString Search = new("home.search", "Search");
+        public static readonly LocString Hint = new("spotlight.hint", "Search your phone");
+        public static readonly LocString NoResults = new("spotlight.noResults", "No results");
+        public static readonly LocString Apps = new("spotlight.apps", "Apps");
+        public static readonly LocString Contacts = new("spotlight.contacts", "Contacts");
+        public static readonly LocString Settings = new("spotlight.settings", "Settings");
+        public static readonly LocString Conversations = new("spotlight.conversations", "Conversations");
+        public static readonly LocString Notes = new("spotlight.notes", "Notes");
+        public static readonly LocString Items = new("spotlight.items", "Market Items");
+    }
+
     internal static class Onboarding
     {
         public static readonly LocString Continue = new("onboarding.continue", "Continue");
@@ -5657,6 +5670,8 @@ internal static class L
         public static readonly LocString WelcomeTitle = new("onboarding.welcomeTitle", "Welcome to Aetherphone");
         public static readonly LocString AllInOneTitle = new("onboarding.allInOneTitle", "Everything in one place");
         public static readonly LocString AllInOneBody = new("onboarding.allInOneBody", "Chat, music, weather, the market board, mini-games and more, all in your pocket.");
+        public static readonly LocString SearchTourTitle = new("onboarding.searchTourTitle", "Search everything");
+        public static readonly LocString SearchTourBody = new("onboarding.searchTourBody", "Pull down on the Home Screen or tap Search to find apps, contacts, settings, notes, and market items in one place.");
         public static readonly LocString WidgetTourTitle = new("onboarding.widgetTourTitle", "Live at a glance");
         public static readonly LocString WidgetTourBody = new("onboarding.widgetTourBody", "Widgets live on your Home Screen and update on their own. This one shows the Eorzean weather wherever you're standing.");
         public static readonly LocString MyNumberTourTitle = new("onboarding.myNumberTourTitle", "Your very own number");

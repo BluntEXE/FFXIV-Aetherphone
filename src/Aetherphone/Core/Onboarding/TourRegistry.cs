@@ -15,6 +15,7 @@ internal static class TourRegistry
             GuideStep.Point(L.Onboarding.AppsTourTitle, L.Onboarding.AppsTourBody, "home.app.message"),
             GuideStep.Point(L.Onboarding.StoreTourTitle, L.Onboarding.StoreTourBody, "home.app.appstore"),
             GuideStep.Point(L.Onboarding.WidgetTourTitle, L.Onboarding.WidgetTourBody, "home.widget"),
+            GuideStep.Point(L.Onboarding.SearchTourTitle, L.Onboarding.SearchTourBody, "home.search"),
             GuideStep.Note(L.Onboarding.CustomizeTitle, L.Onboarding.CustomizeBody),
             GuideStep.Tap(L.Onboarding.ControlCenterTitle, L.Onboarding.ControlCenterTapBody, "chrome.controlcenter",
                 ControlCenterOpenIntent),

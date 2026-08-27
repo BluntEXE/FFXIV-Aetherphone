@@ -26,6 +26,8 @@ internal sealed class SettingsApp : IResumableApp, ISettingsNavigator
     public ShareKindSet AcceptedShares => ShareKindSet.Photo;
     private readonly Configuration configuration;
     private readonly ViewRouter<ISettingsPage> router;
+    private readonly ISettingsPage[] searchablePages;
+    private ISettingsPage? pendingPage;
     private readonly RouterDraw<ISettingsPage> drawPage;
     private readonly Action popBack;
     private readonly SoundService sound;
@@ -115,6 +117,22 @@ internal sealed class SettingsApp : IResumableApp, ISettingsNavigator
             new ISettingsPage[] { privacyPage, safetyPage },
             new ISettingsPage[] { tutorials, commands, changelogPage, about },
         };
+        var searchableCount = 0;
+        for (var groupIndex = 0; groupIndex < groups.Length; groupIndex++)
+        {
+            searchableCount += groups[groupIndex].Length;
+        }
+
+        searchablePages = new ISettingsPage[searchableCount];
+        var searchableIndex = 0;
+        for (var groupIndex = 0; groupIndex < groups.Length; groupIndex++)
+        {
+            for (var pageIndex = 0; pageIndex < groups[groupIndex].Length; pageIndex++)
+            {
+                searchablePages[searchableIndex++] = groups[groupIndex][pageIndex];
+            }
+        }
+
         router = new ViewRouter<ISettingsPage>(
             new RootSettingsPage(this, groups, configuration, aethernetSession, remoteImages, lodestone,
                 accountPage));
@@ -183,10 +201,27 @@ internal sealed class SettingsApp : IResumableApp, ISettingsNavigator
     public void OnOpened()
     {
         router.Reset();
+        ConsumePendingPage();
     }
 
     public void OnResumed()
     {
+        ConsumePendingPage();
+    }
+
+    public IReadOnlyList<ISettingsPage> SearchablePages => searchablePages;
+
+    public void RequestPage(ISettingsPage page) => pendingPage = page;
+
+    private void ConsumePendingPage()
+    {
+        if (pendingPage is not { } page)
+        {
+            return;
+        }
+
+        pendingPage = null;
+        Open(page);
     }
 
     public void OnClosed()

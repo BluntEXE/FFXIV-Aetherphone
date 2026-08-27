@@ -100,8 +100,11 @@ internal sealed class PhoneShell : IDisposable
         var controlCenter = new ControlCenter(configuration, themes, services.Playback, calls, navigation,
             notifications, router, services.Coins, services.AethernetSession);
         minimizedPhone = new MinimizedPhone(services.Playback, calls, notifications, router, navigation, configuration);
+        var spotlightIndex = new Spotlight.SpotlightIndex(apps, services.Installer, bundle.Contacts,
+            services.DmLauncher, services.ChatInbox, services.ChatLog, services.LinkpearlLauncher,
+            services.MarketIndex, services.MarketLauncher, configuration);
         home = new HomeScreen(apps, bundle.Widgets, services.Shortcuts, services.ShortcutRunner, configuration,
-            services.Confirm);
+            services.Confirm, spotlightIndex);
         services.Installer.Bind(home.Layout);
         services.Shortcuts.Bind(home.Layout);
         navigation.ReturningHome += home.PrepareReveal;

@@ -191,7 +191,7 @@ internal sealed partial class AppStoreApp
         }
     }
 
-    private static bool Matches(string appId, string displayName, string query)
+    internal static bool Matches(string appId, string displayName, string query)
     {
         if (query.Length == 0)
         {

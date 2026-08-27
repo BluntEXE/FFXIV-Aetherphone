@@ -1,4 +1,5 @@
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
@@ -8,25 +9,45 @@ namespace Aetherphone.Core.Shell.Home;
 
 internal sealed class HomeChrome
 {
+    private const float PillWidthUnits = 92f;
+    private const float PillHeightUnits = 23f;
+    private const float DotsPresenceSmoothTime = 0.16f;
+
     private readonly Pager pager;
     private readonly HomeInteractionController interaction;
+    private readonly Spotlight.SpotlightOverlay spotlight;
+    private Spring dotsPresence;
 
-    public HomeChrome(Pager pager, HomeInteractionController interaction)
+    public HomeChrome(Pager pager, HomeInteractionController interaction, Spotlight.SpotlightOverlay spotlight)
     {
         this.pager = pager;
         this.interaction = interaction;
+        this.spotlight = spotlight;
     }
 
     public void DrawPageControls(in HomeMetrics metrics, PhoneTheme theme, float alpha, bool interactive)
     {
-        var pageCount = interaction.DisplayPageCount();
-        if (pageCount <= 1 || alpha <= 0.01f)
+        if (alpha <= 0.01f)
         {
             return;
         }
 
-        var drawList = ImGui.GetWindowDrawList();
+        var pageCount = interaction.DisplayPageCount();
         var scale = metrics.Scale;
+        var paging = pager.Dragging || MathF.Abs(pager.Value - MathF.Round(pager.Value)) > 0.02f;
+        var dotsWanted = pageCount > 1 && (paging || interaction.Editing || interaction.DragTile is not null);
+        var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
+        dotsPresence.Step(dotsWanted ? 1f : 0f, DotsPresenceSmoothTime, delta);
+        var dots = Math.Clamp(dotsPresence.Value, 0f, 1f);
+        DrawSearchPill(metrics, theme, alpha * (1f - dots), interactive && dots < 0.5f, scale);
+        if (pageCount <= 1 || dots <= 0.01f)
+        {
+            DrawPageArrows(metrics, theme, alpha, interactive, pageCount);
+            return;
+        }
+
+        alpha *= dots;
+        var drawList = ImGui.GetWindowDrawList();
         var spacing = 14f * scale;
         var radius = 3f * scale;
         var totalWidth = (pageCount - 1) * spacing;
@@ -48,8 +69,53 @@ internal sealed class HomeChrome
             }
         }
 
+        DrawPageArrows(metrics, theme, alpha, interactive, pageCount);
+    }
+
+    private void DrawPageArrows(in HomeMetrics metrics, PhoneTheme theme, float alpha, bool interactive, int pageCount)
+    {
+        if (pageCount <= 1)
+        {
+            return;
+        }
+
         DrawPageArrow(metrics, theme, alpha, interactive, -1, pageCount);
         DrawPageArrow(metrics, theme, alpha, interactive, 1, pageCount);
+    }
+
+    private void DrawSearchPill(in HomeMetrics metrics, PhoneTheme theme, float alpha, bool interactive, float scale)
+    {
+        if (alpha <= 0.01f || interaction.Editing)
+        {
+            return;
+        }
+
+        var half = new Vector2(PillWidthUnits * 0.5f * scale, PillHeightUnits * 0.5f * scale);
+        var center = new Vector2(metrics.Content.Center.X, metrics.DotsCenterY);
+        var pill = new Rect(center - half, center + half);
+        UiAnchors.Report("home.search", pill);
+        var hovered = interactive && interaction.DragTile is null && UiInteract.Hover(pill.Min, pill.Max);
+        var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
+        var press = PressFx.Scale("home.searchpill", pressed);
+        var drawHalf = half * press;
+        var drawList = ImGui.GetWindowDrawList();
+        Squircle.Fill(drawList, center - drawHalf, center + drawHalf, drawHalf.Y,
+            ImGui.GetColorU32(Palette.WithAlpha(theme.TextStrong, (hovered ? 0.16f : 0.10f) * alpha)));
+        var label = Loc.T(L.Spotlight.Search);
+        var labelSize = Typography.Measure(label, TextStyles.FootnoteEmphasized);
+        var iconHeight = 10f * scale * press;
+        var gap = 5f * scale;
+        var contentWidth = iconHeight + gap + labelSize.X * press;
+        var left = center.X - contentWidth * 0.5f;
+        ProgressRing.CenterIcon(drawList, new Vector2(left + iconHeight * 0.5f, center.Y),
+            Dalamud.Interface.FontAwesomeIcon.Search, Palette.WithAlpha(theme.TextStrong, 0.85f * alpha), iconHeight);
+        Typography.Draw(drawList, new Vector2(left + iconHeight + gap, center.Y - labelSize.Y * 0.5f * press), label,
+            Palette.WithAlpha(theme.TextStrong, 0.85f * alpha), TextStyles.FootnoteEmphasized);
+        if (UiInteract.Click(pill.Min, pill.Max, hovered))
+        {
+            interaction.CancelPress();
+            spotlight.Open();
+        }
     }
 
     private void DrawPageArrow(in HomeMetrics metrics, PhoneTheme theme, float alpha, bool interactive, int direction,

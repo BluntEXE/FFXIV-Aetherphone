@@ -45,6 +45,7 @@ internal sealed class NotesApp : IResumableApp
     private int activeTab;
 
     private PhoneNote? editingNote;
+    private Guid? pendingNoteId;
     private string noteBuffer = string.Empty;
     private bool noteDirty;
 
@@ -68,10 +69,32 @@ internal sealed class NotesApp : IResumableApp
     {
         router.Reset();
         editingNote = null;
+        ConsumePendingNote();
     }
 
     public void OnResumed()
     {
+        ConsumePendingNote();
+    }
+
+    public void RequestNote(Guid noteId) => pendingNoteId = noteId;
+
+    private void ConsumePendingNote()
+    {
+        if (pendingNoteId is not { } id)
+        {
+            return;
+        }
+
+        pendingNoteId = null;
+        for (var index = 0; index < configuration.Notes.Count; index++)
+        {
+            if (configuration.Notes[index].Id == id)
+            {
+                StartEditNote(configuration.Notes[index]);
+                return;
+            }
+        }
     }
 
     public void OnClosed()

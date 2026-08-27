@@ -33,6 +33,7 @@ internal sealed class HomeInteractionController
     private readonly FolderOverlay folder;
     private readonly WidgetSizeMenu sizeMenu;
     private readonly WidgetGallery gallery;
+    private readonly Spotlight.SpotlightOverlay spotlight;
     private readonly TilePoseCache poses;
     private readonly ShortcutRunner runner;
 
@@ -73,8 +74,8 @@ internal sealed class HomeInteractionController
     private Spring settleY;
 
     public HomeInteractionController(HomeLayoutService layout, WidgetRegistry widgets, Pager pager,
-        FolderOverlay folder, WidgetSizeMenu sizeMenu, WidgetGallery gallery, TilePoseCache poses,
-        ShortcutRunner runner)
+        FolderOverlay folder, WidgetSizeMenu sizeMenu, WidgetGallery gallery,
+        Spotlight.SpotlightOverlay spotlight, TilePoseCache poses, ShortcutRunner runner)
     {
         this.layout = layout;
         this.widgets = widgets;
@@ -82,6 +83,7 @@ internal sealed class HomeInteractionController
         this.folder = folder;
         this.sizeMenu = sizeMenu;
         this.gallery = gallery;
+        this.spotlight = spotlight;
         this.poses = poses;
         this.runner = runner;
     }
@@ -122,7 +124,7 @@ internal sealed class HomeInteractionController
 
     public void HandleInput(Rect content, in HomeMetrics metrics, INavigator navigation, float delta)
     {
-        if (gallery.Active || folder.Active || sizeMenu.Active)
+        if (gallery.Active || folder.Active || sizeMenu.Active || spotlight.Active)
         {
             pressActive = false;
             return;
@@ -179,6 +181,15 @@ internal sealed class HomeInteractionController
                 pager.Begin(pressPos.X);
                 pressActive = false;
                 CancelTap();
+                return;
+            }
+
+            if (!editing && pressTile is null && move.Y > SwipeThreshold * metrics.Scale &&
+                move.Y > MathF.Abs(move.X) * 1.2f)
+            {
+                pressActive = false;
+                CancelTap();
+                spotlight.Open();
                 return;
             }
 
