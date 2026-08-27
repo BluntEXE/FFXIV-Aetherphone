@@ -1,5 +1,6 @@
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Localization;
 using Aetherphone.Core.Playback;
 using Aetherphone.Core.Telephony;
 using Aetherphone.Core.Theme;
@@ -20,6 +21,7 @@ internal sealed class DynamicIsland
         None,
         Call,
         Music,
+        Timer,
     }
 
     private const float PresenceSmoothTime = 0.14f;
@@ -32,14 +34,20 @@ internal sealed class DynamicIsland
     private const float CallExpandedHalfWidth = 138f;
     private const float MusicExpandedHeight = 120f;
     private const float MusicExpandedHalfWidth = 142f;
+    private const float TimerExpandedHeight = 92f;
+    private const float TimerExpandedHalfWidth = 118f;
     private const float ControlThreshold = 0.6f;
 
     private static readonly Vector4 MusicAccent = AppAccents.For("music");
     private static readonly Vector4 CallAccent = new(0.20f, 0.78f, 0.35f, 1f);
+    private static readonly Vector4 TimerAccent = new(1.00f, 0.62f, 0.18f, 1f);
     private static readonly Vector4 Ink = new(0.98f, 0.98f, 0.99f, 1f);
 
     private readonly PlaybackHub playback;
     private readonly CallHub calls;
+    private readonly Configuration configuration;
+    private int timerCachedSeconds = -1;
+    private string timerCachedText = string.Empty;
     private Spring presence;
     private Spring split;
     private Spring expand;
@@ -49,13 +57,14 @@ internal sealed class DynamicIsland
     private Rect lastBubble;
     private bool lastBubbleVisible;
 
-    public DynamicIsland(PlaybackHub playback, CallHub calls)
+    public DynamicIsland(PlaybackHub playback, CallHub calls, Configuration configuration)
     {
         this.playback = playback;
         this.calls = calls;
+        this.configuration = configuration;
     }
 
-    public bool CapturesPointer(Rect screen)
+    public bool CapturesPointer()
     {
         if (presence.Value < 0.05f)
         {
@@ -75,7 +84,10 @@ internal sealed class DynamicIsland
         var view = calls.Snapshot();
         var callActive = view.State is CallState.Dialing or CallState.Connecting or CallState.Active;
         var musicActive = playback.IsActive;
-        var primary = callActive ? ActivityKind.Call : musicActive ? ActivityKind.Music : ActivityKind.None;
+        var timerActive = TimerRemainingSeconds() > 0;
+        var primary = callActive ? ActivityKind.Call :
+            musicActive ? ActivityKind.Music :
+            timerActive ? ActivityKind.Timer : ActivityKind.None;
         if (primary != ActivityKind.None)
         {
             shownKind = primary;
@@ -117,7 +129,12 @@ internal sealed class DynamicIsland
         var expandEased = Easing.SmoothStep(Math.Clamp(expand.Value, 0f, 1f));
         var bounds = LerpRect(morphed, expanded, expandEased);
         lastBounds = bounds;
-        var accent = shownKind == ActivityKind.Call ? CallAccent : MusicAccent;
+        var accent = shownKind switch
+        {
+            ActivityKind.Call => CallAccent,
+            ActivityKind.Timer => TimerAccent,
+            _ => MusicAccent,
+        };
         var compactAlpha = Math.Clamp(presenceValue * 1.6f - 0.6f, 0f, 1f) * (1f - expandEased);
         var drawList = ImGui.GetWindowDrawList();
         DrawBubble(drawList, theme, navigation, bounds, rest, scale, expandEased);
@@ -136,14 +153,21 @@ internal sealed class DynamicIsland
         {
             DrawCallCompact(drawList, bounds, scale, view, compactAlpha);
         }
+        else if (shownKind == ActivityKind.Timer)
+        {
+            DrawTimerCompact(drawList, bounds, scale, compactAlpha);
+        }
         else
         {
             DrawMusicCompact(drawList, bounds, scale, compactAlpha);
         }
 
-        var consumed = shownKind == ActivityKind.Call
-            ? DrawCallExpanded(drawList, bounds, scale, theme, view, expandEased)
-            : DrawMusicExpanded(drawList, bounds, scale, theme, expandEased);
+        var consumed = shownKind switch
+        {
+            ActivityKind.Call => DrawCallExpanded(drawList, bounds, scale, theme, view, expandEased),
+            ActivityKind.Timer => DrawTimerExpanded(drawList, bounds, scale, theme, expandEased),
+            _ => DrawMusicExpanded(drawList, bounds, scale, theme, expandEased),
+        };
         if (consumed || !hovered)
         {
             return;
@@ -157,8 +181,87 @@ internal sealed class DynamicIsland
                 calls.RequestCallScreen();
             }
 
-            navigation.Open(shownKind == ActivityKind.Call ? "message" : "music");
+            navigation.Open(shownKind switch
+            {
+                ActivityKind.Call => "message",
+                ActivityKind.Timer => "clock",
+                _ => "music",
+            });
         }
+    }
+
+    private int TimerRemainingSeconds()
+    {
+        if (configuration.TimerEndsAtUtc is not { } endsAt)
+        {
+            return 0;
+        }
+
+        return (int)Math.Ceiling((endsAt - DateTime.UtcNow).TotalSeconds);
+    }
+
+    private string TimerText(int remaining)
+    {
+        if (remaining != timerCachedSeconds)
+        {
+            timerCachedSeconds = remaining;
+            timerCachedText = TimeText.MinutesSeconds(remaining);
+        }
+
+        return timerCachedText;
+    }
+
+    private float TimerFraction(int remaining) => configuration.TimerDurationSeconds > 0
+        ? Math.Clamp(remaining / (float)configuration.TimerDurationSeconds, 0f, 1f)
+        : 0f;
+
+    private void DrawTimerCompact(ImDrawListPtr drawList, Rect bounds, float scale, float alpha)
+    {
+        if (alpha <= 0.01f)
+        {
+            return;
+        }
+
+        var remaining = TimerRemainingSeconds();
+        var ringRadius = bounds.Height * 0.28f;
+        var ringCenter = new Vector2(bounds.Min.X + 10f * scale + ringRadius, bounds.Center.Y);
+        ProgressRing.Track(ringCenter, ringRadius, 2f * scale, Palette.WithAlpha(TimerAccent, 0.25f * alpha));
+        ProgressRing.Fill(ringCenter, ringRadius, 2f * scale, TimerFraction(remaining),
+            Palette.WithAlpha(TimerAccent, alpha));
+        var label = TimerText(remaining);
+        var size = Typography.Measure(label, 0.82f);
+        Typography.Draw(drawList, new Vector2(bounds.Max.X - size.X - 11f * scale, bounds.Center.Y - size.Y * 0.5f),
+            label, Palette.WithAlpha(TimerAccent, alpha), 0.82f);
+    }
+
+    private bool DrawTimerExpanded(ImDrawListPtr drawList, Rect bounds, float scale, PhoneTheme theme, float alpha)
+    {
+        if (alpha <= 0.05f)
+        {
+            return false;
+        }
+
+        var remaining = TimerRemainingSeconds();
+        var centerX = bounds.Center.X;
+        var top = bounds.Min.Y;
+        var ringRadius = 15f * scale;
+        var ringCenter = new Vector2(centerX - 52f * scale, top + 34f * scale);
+        ProgressRing.Track(ringCenter, ringRadius, 2.6f * scale, Palette.WithAlpha(TimerAccent, 0.25f * alpha));
+        ProgressRing.Fill(ringCenter, ringRadius, 2.6f * scale, TimerFraction(remaining),
+            Palette.WithAlpha(TimerAccent, alpha));
+        Typography.DrawCentered(new Vector2(centerX + 14f * scale, top + 34f * scale), TimerText(remaining),
+            Palette.WithAlpha(theme.TextStrong, alpha), 1.45f, FontWeight.SemiBold);
+        var active = alpha > ControlThreshold;
+        if (RoundButton(new Vector2(centerX, top + 68f * scale), 15f * scale, FontAwesomeIcon.Stop,
+                Palette.WithAlpha(theme.TextStrong, 0.18f), theme.TextStrong, alpha, active))
+        {
+            configuration.TimerEndsAtUtc = null;
+            configuration.TimerNotified = false;
+            configuration.Save();
+            return true;
+        }
+
+        return false;
     }
 
     private void DrawBubble(ImDrawListPtr drawList, PhoneTheme theme, INavigator navigation, Rect bounds, Rect rest,
@@ -361,10 +464,20 @@ internal sealed class DynamicIsland
 
     private Rect ExpandedBounds(Rect screen, Rect rest, float scale)
     {
-        var call = shownKind == ActivityKind.Call;
-        var halfWidth = MathF.Min(screen.Width * 0.5f - 14f * scale,
-            (call ? CallExpandedHalfWidth : MusicExpandedHalfWidth) * scale);
-        var height = (call ? CallExpandedHeight : MusicExpandedHeight) * scale;
+        var halfWidthUnits = shownKind switch
+        {
+            ActivityKind.Call => CallExpandedHalfWidth,
+            ActivityKind.Timer => TimerExpandedHalfWidth,
+            _ => MusicExpandedHalfWidth,
+        };
+        var heightUnits = shownKind switch
+        {
+            ActivityKind.Call => CallExpandedHeight,
+            ActivityKind.Timer => TimerExpandedHeight,
+            _ => MusicExpandedHeight,
+        };
+        var halfWidth = MathF.Min(screen.Width * 0.5f - 14f * scale, halfWidthUnits * scale);
+        var height = heightUnits * scale;
         var centerX = screen.Center.X;
         var top = rest.Min.Y - 2f * scale;
         return new Rect(new Vector2(centerX - halfWidth, top), new Vector2(centerX + halfWidth, top + height));

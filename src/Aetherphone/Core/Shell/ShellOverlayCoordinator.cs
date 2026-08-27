@@ -85,7 +85,7 @@ internal sealed class ShellOverlayCoordinator
         var ringing = !loading.IsActive && incomingOverlay.IsRinging;
         var islandCaptures = !loading.IsActive && !controlCenterCaptures && !ringing && !confirming &&
                              !setupActive && !conductActive && !banNotice && !DragScrollHost.AnyDragging &&
-                             (island.CapturesPointer(screen) ||
+                             (island.CapturesPointer() ||
                               (!director.CapturesPointer &&
                                (banner.CapturesPointer(screen) || shortcutPill.CapturesPointer())));
         var busy = loading.IsActive || overlaysCapture || ringing || confirming || navigation.IsTransitioning ||
