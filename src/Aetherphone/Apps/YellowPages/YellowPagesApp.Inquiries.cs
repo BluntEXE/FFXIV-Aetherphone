@@ -36,7 +36,7 @@ internal sealed partial class YellowPagesApp
         DrawTabTitle(area, Loc.T(L.YellowPages.InquiriesTitle), 0f, scale);
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         var threads = inquiries.Threads;
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
             if (inquiryAdFilter is { } adId)
@@ -122,13 +122,10 @@ internal sealed partial class YellowPagesApp
     private bool DrawInquiryRow(AdInquiryDto thread, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
         var height = InquiryRowHeight * scale;
-        var card = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
-        var rounding = Metrics.Radius.Card * scale;
-        ui.Card(drawList, card.Min, card.Max, rounding, elevated: true);
-        var pad = Metrics.Space.Md * scale;
+        var cell = FeedCell.Begin(drawList, height, ui.HoverWash);
+        var card = cell.Bounds;
+        var pad = FeedCell.PadX * scale;
         var thumbSide = 42f * scale;
         var thumbMin = new Vector2(card.Min.X + pad, card.Min.Y + (height - thumbSide) * 0.5f);
         var thumbMax = thumbMin + new Vector2(thumbSide, thumbSide);
@@ -170,16 +167,8 @@ internal sealed partial class YellowPagesApp
                 theme, scale);
         }
 
-        var hovered = UiInteract.Hover(card.Min, card.Max);
-        if (hovered)
-        {
-            UiInteract.HoverHighlight(drawList, card.Min, card.Max, rounding);
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, height + AdCard.Gap * scale));
-        return UiInteract.Click(card.Min, card.Max, hovered);
+        FeedCell.End(drawList, cell, ui.Hairline);
+        return cell.Tapped;
     }
 
     private void DrawInquiriesEmpty(Rect body, float scale)

@@ -139,7 +139,7 @@ internal sealed partial class MusicApp
         var shown = Math.Min(stations.Length, CommunityHomeRows);
         for (var index = 0; index < shown; index++)
         {
-            DrawCommunityRow(scale, stations[index]);
+            DrawCommunityRow(scale, stations[index], 6f);
         }
     }
 
@@ -256,7 +256,7 @@ internal sealed partial class MusicApp
                 DrawShelfHeading(heading, scale);
             }
 
-            DrawCommunityRow(scale, filteredStations[index]);
+            DrawCommunityRow(scale, filteredStations[index], 6f);
         }
     }
 
@@ -373,29 +373,22 @@ internal sealed partial class MusicApp
         }
     }
 
-    private void DrawCommunityRow(float scale, CommunityStationDto station)
+    private void DrawCommunityRow(float scale, CommunityStationDto station, float sideInset)
     {
         var rowHeight = CommunityRowHeight * scale;
-        var width = ScrollLayout.StableContentWidth();
-        var origin = ImGui.GetCursorScreenPos();
-        var min = origin;
-        var max = new Vector2(origin.X + width, origin.Y + rowHeight);
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = UiInteract.Hover(min, max);
-        if (hovered)
-        {
-            Squircle.Fill(drawList, min, max, 10f * scale, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
+        var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash);
+        var min = cell.Bounds.Min;
+        var max = cell.Bounds.Max;
+        var inset = sideInset * scale;
         var artSize = 50f * scale;
-        var artMin = new Vector2(min.X + 6f * scale, min.Y + (rowHeight - artSize) * 0.5f);
+        var artMin = new Vector2(min.X + inset, min.Y + (rowHeight - artSize) * 0.5f);
         var artMax = artMin + new Vector2(artSize, artSize);
         DrawStationArt(drawList, artMin, artMax, station, 10f * scale);
 
         var current = IsCurrentCommunityStation(station);
         var textLeft = artMax.X + 12f * scale;
-        var textWidth = max.X - (current ? 40f * scale : 14f * scale) - textLeft;
+        var textWidth = max.X - inset - (current ? 34f : 8f) * scale - textLeft;
         var nameY = min.Y + 12f * scale;
         var fittedName = Typography.FitText(station.Name, textWidth, TextStyles.BodyEmphasized);
         Typography.Draw(drawList, new Vector2(textLeft, nameY), fittedName, current ? ui.Accent : ui.TitleInk,
@@ -420,16 +413,16 @@ internal sealed partial class MusicApp
 
         if (current)
         {
-            Equalizer.Draw(drawList, new Vector2(max.X - 20f * scale, min.Y + rowHeight * 0.5f), scale, 17f * scale,
-                clock, ui.Accent, 1f, playback.IsPlaying);
+            Equalizer.Draw(drawList, new Vector2(max.X - inset - 14f * scale, min.Y + rowHeight * 0.5f), scale,
+                17f * scale, clock, ui.Accent, 1f, playback.IsPlaying);
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight));
-        if (UiInteract.Click(min, max, hovered))
+        if (cell.Tapped)
         {
             OpenStationPage(station);
         }
+
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 
     private void DrawStationArt(ImDrawListPtr drawList, Vector2 min, Vector2 max, CommunityStationDto station,
@@ -886,18 +879,10 @@ internal sealed partial class MusicApp
     private void DrawTrackRow(float scale, RadioTrackDto track, int index)
     {
         var rowHeight = TrackRowHeight * scale;
-        var width = ScrollLayout.StableContentWidth();
-        var origin = ImGui.GetCursorScreenPos();
-        var min = origin;
-        var max = new Vector2(origin.X + width, origin.Y + rowHeight);
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = UiInteract.Hover(min, max);
-        if (hovered)
-        {
-            Squircle.Fill(drawList, min, max, 8f * scale, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
+        var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash);
+        var min = cell.Bounds.Min;
+        var max = cell.Bounds.Max;
         var squareSize = TrackSquareSize * scale;
         var squareMin = new Vector2(min.X + Metrics.Space.Md * scale, min.Y + (rowHeight - squareSize) * 0.5f);
         drawList.AddImageRounded(artwork.HandleForName(track.Title), squareMin,
@@ -929,12 +914,12 @@ internal sealed partial class MusicApp
             min.Y + (rowHeight - Typography.Measure(stamp, TextStyles.Caption2).Y) * 0.5f), stamp, ui.MutedInk,
             TextStyles.Caption2);
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight));
-        if (UiInteract.Click(min, max, hovered))
+        if (cell.Tapped)
         {
             SearchForTrack(track.Title);
         }
+
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 
     private void SearchForTrack(string title)

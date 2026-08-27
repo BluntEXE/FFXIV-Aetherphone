@@ -58,7 +58,7 @@ internal sealed partial class MusicApp
             return;
         }
 
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             ImGui.Dummy(new Vector2(0f, 4f * scale));
             DrawCommunityMatches(scale);
@@ -116,12 +116,12 @@ internal sealed partial class MusicApp
         }
 
         Typography.Draw(ImGui.GetWindowDrawList(),
-            new Vector2(ImGui.GetCursorScreenPos().X + 6f * scale, ImGui.GetCursorScreenPos().Y),
+            new Vector2(ImGui.GetCursorScreenPos().X + FeedCell.PadX * scale, ImGui.GetCursorScreenPos().Y),
             Loc.T(L.Music.CommunityMatches), ui.MutedInk, TextStyles.Caption1);
         ImGui.Dummy(new Vector2(0f, 22f * scale));
         for (var index = 0; index < communityMatches.Count; index++)
         {
-            DrawCommunityRow(scale, communityMatches[index]);
+            DrawCommunityRow(scale, communityMatches[index], FeedCell.PadX);
         }
 
         ImGui.Dummy(new Vector2(0f, 10f * scale));
@@ -163,25 +163,18 @@ internal sealed partial class MusicApp
     private void DrawSongRow(float scale, Song song, int index)
     {
         var rowHeight = SongRowHeight * scale;
-        var width = ScrollLayout.StableContentWidth();
-        var origin = ImGui.GetCursorScreenPos();
-        var min = origin;
-        var max = new Vector2(origin.X + width, origin.Y + rowHeight);
         var drawList = ImGui.GetWindowDrawList();
+        var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash);
+        var min = cell.Bounds.Min;
+        var max = cell.Bounds.Max;
+        var pad = FeedCell.PadX * scale;
         var current = IsCurrentSong(song);
-        var hovered = UiInteract.Hover(min, max);
-        if (hovered)
-        {
-            Squircle.Fill(drawList, min, max, 10f * scale, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
         var artSize = 44f * scale;
-        var artMin = new Vector2(min.X + 6f * scale, min.Y + (rowHeight - artSize) * 0.5f);
+        var artMin = new Vector2(min.X + pad, min.Y + (rowHeight - artSize) * 0.5f);
         var artMax = artMin + new Vector2(artSize, artSize);
         DrawCover(drawList, artMin, artMax, song.ThumbnailUrl, song.Title, 6f * scale);
-        var showAdd = hovered && !current;
-        var trailing = current ? 32f * scale : showAdd ? 40f * scale : 10f * scale;
+        var showAdd = cell.Hovered && !current;
+        var trailing = pad + (current ? 26f : showAdd ? 34f : 4f) * scale;
         var textLeft = artMax.X + 12f * scale;
         var textWidth = max.X - trailing - textLeft;
         var searchTitleY = min.Y + 10f * scale;
@@ -198,42 +191,34 @@ internal sealed partial class MusicApp
         Marquee.DrawLeft("music.searchRow.subtitle." + song.VideoId, searchSub, textLeft,
             searchSubY, textWidth, TextStyles.Caption1, ui.MutedInk, searchSubHovering);
         var addClicked = false;
-        var overAdd = false;
         if (current)
         {
-            Equalizer.Draw(drawList, new Vector2(max.X - 18f * scale, min.Y + rowHeight * 0.5f), scale, 17f * scale,
-                clock, ui.Accent, 1f, playback.IsPlaying);
+            Equalizer.Draw(drawList, new Vector2(max.X - pad - 12f * scale, min.Y + rowHeight * 0.5f), scale,
+                17f * scale, clock, ui.Accent, 1f, playback.IsPlaying);
         }
         else if (showAdd)
         {
-            var addCenter = new Vector2(max.X - 22f * scale, min.Y + rowHeight * 0.5f);
-            var addRadius = 15f * scale;
-            var addHit = new Vector2(addRadius, addRadius);
-            overAdd = UiInteract.Hover(addCenter - addHit, addCenter + addHit);
-            addClicked = ui.IconButton(addCenter, addRadius,
+            var addCenter = new Vector2(max.X - pad - 16f * scale, min.Y + rowHeight * 0.5f);
+            addClicked = ui.IconButton(addCenter, 15f * scale,
                 FontAwesomeIcon.Plus.ToIconString(), ui.MutedInk, AppSkin.Transparent, 0.82f, Loc.T(L.Music.AddToPlaylist));
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight));
         if (addClicked)
         {
             OpenPicker(song);
-            return;
+        }
+        else if (cell.Tapped)
+        {
+            if (current)
+            {
+                playback.TogglePlayPause();
+            }
+            else
+            {
+                PlaySong(results, index, Loc.T(L.Music.SourceSearch));
+            }
         }
 
-        if (overAdd || !UiInteract.Click(min, max, hovered))
-        {
-            return;
-        }
-
-        if (current)
-        {
-            playback.TogglePlayPause();
-        }
-        else
-        {
-            PlaySong(results, index, Loc.T(L.Music.SourceSearch));
-        }
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 }

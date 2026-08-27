@@ -530,7 +530,7 @@ internal sealed partial class MusicApp
         }
         else
         {
-            using (AppSurface.Begin(body))
+            using (AppSurface.BeginEdgeToEdge(body))
             {
                 ImGui.Dummy(new Vector2(0f, 4f * scale));
                 for (var index = 0; index < songs.Length; index++)
@@ -606,25 +606,18 @@ internal sealed partial class MusicApp
     private void DrawPlaylistSongRow(float scale, Song song, int index, Song[] songs, PlaylistRecord record)
     {
         var rowHeight = DetailRowHeight * scale;
-        var width = ScrollLayout.StableContentWidth();
-        var origin = ImGui.GetCursorScreenPos();
-        var min = origin;
-        var max = new Vector2(origin.X + width, origin.Y + rowHeight);
         var drawList = ImGui.GetWindowDrawList();
+        var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash);
+        var min = cell.Bounds.Min;
+        var max = cell.Bounds.Max;
+        var pad = FeedCell.PadX * scale;
         var current = IsCurrentSong(song);
-        var hovered = UiInteract.Hover(min, max);
-        if (hovered)
-        {
-            Squircle.Fill(drawList, min, max, 10f * scale, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
         var artSize = 44f * scale;
-        var artMin = new Vector2(min.X + 6f * scale, min.Y + (rowHeight - artSize) * 0.5f);
+        var artMin = new Vector2(min.X + pad, min.Y + (rowHeight - artSize) * 0.5f);
         var artMax = artMin + new Vector2(artSize, artSize);
         DrawCover(drawList, artMin, artMax, song.ThumbnailUrl, song.Title, 6f * scale);
-        var showRemove = hovered && !current;
-        var trailing = current ? 32f * scale : showRemove ? 40f * scale : 10f * scale;
+        var showRemove = cell.Hovered && !current;
+        var trailing = pad + (current ? 26f : showRemove ? 34f : 4f) * scale;
         var textLeft = artMax.X + 12f * scale;
         var textWidth = max.X - trailing - textLeft;
         var songTitleY = min.Y + 10f * scale;
@@ -641,42 +634,34 @@ internal sealed partial class MusicApp
         Marquee.DrawLeft("music.playlistSongRow.subtitle." + song.VideoId + "." + index, songSub,
             textLeft, songSubY, textWidth, TextStyles.Caption1, ui.MutedInk, songSubHovering);
         var removeClicked = false;
-        var overRemove = false;
         if (current)
         {
-            Equalizer.Draw(drawList, new Vector2(max.X - 18f * scale, min.Y + rowHeight * 0.5f), scale, 17f * scale,
-                clock, ui.Accent, 1f, playback.IsPlaying);
+            Equalizer.Draw(drawList, new Vector2(max.X - pad - 12f * scale, min.Y + rowHeight * 0.5f), scale,
+                17f * scale, clock, ui.Accent, 1f, playback.IsPlaying);
         }
         else if (showRemove)
         {
-            var removeCenter = new Vector2(max.X - 22f * scale, min.Y + rowHeight * 0.5f);
-            var removeRadius = 15f * scale;
-            var removeHit = new Vector2(removeRadius, removeRadius);
-            overRemove = UiInteract.Hover(removeCenter - removeHit, removeCenter + removeHit);
-            removeClicked = ui.IconButton(removeCenter, removeRadius,
+            var removeCenter = new Vector2(max.X - pad - 16f * scale, min.Y + rowHeight * 0.5f);
+            removeClicked = ui.IconButton(removeCenter, 15f * scale,
                 FontAwesomeIcon.Minus.ToIconString(), ui.MutedInk, AppSkin.Transparent, 0.82f);
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight));
         if (removeClicked)
         {
             playlists.Remove(record.Id, song.VideoId);
-            return;
+        }
+        else if (cell.Tapped)
+        {
+            if (current)
+            {
+                playback.TogglePlayPause();
+            }
+            else
+            {
+                PlaySong(songs, index, record.Name);
+            }
         }
 
-        if (overRemove || !UiInteract.Click(min, max, hovered))
-        {
-            return;
-        }
-
-        if (current)
-        {
-            playback.TogglePlayPause();
-        }
-        else
-        {
-            PlaySong(songs, index, record.Name);
-        }
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 }

@@ -87,7 +87,7 @@ internal sealed class PollsApp : IPhoneApp
 
         TickRefresh();
 
-        using (var surface = AppSurface.Begin(body))
+        using (var surface = AppSurface.BeginEdgeToEdge(body))
         {
             listRefresh.Draw(body, surface.Pull, surface.Dragging, store.Loading, ui.MutedInk, store.Refresh);
             var polls = store.Polls;
@@ -101,7 +101,6 @@ internal sealed class PollsApp : IPhoneApp
             for (var index = 0; index < polls.Length; index++)
             {
                 DrawPollCard(polls[index], scale, index == 0);
-                ImGui.Dummy(new Vector2(0f, 12f * scale));
             }
 
             if (store.LoadingMore)
@@ -147,7 +146,7 @@ internal sealed class PollsApp : IPhoneApp
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
-        var pad = 16f * scale;
+        var pad = FeedCell.PadX * scale;
         var contentLeft = origin.X + pad;
         var contentRight = origin.X + width - pad;
         var contentWidth = contentRight - contentLeft;
@@ -173,10 +172,10 @@ internal sealed class PollsApp : IPhoneApp
         var footerTop = optionsTop + optionsHeight + 12f * scale;
         var cardBottom = footerTop + footerHeight + pad * 0.75f;
 
-        ui.Card(drawList, origin, new Vector2(origin.X + width, cardBottom), 18f * scale, true);
+        var cell = FeedCell.Begin(drawList, cardBottom - origin.Y, ui.HoverWash, false);
         if (isFirstCard)
         {
-            UiAnchors.Report("polls.card", new Rect(origin, new Vector2(origin.X + width, cardBottom)));
+            UiAnchors.Report("polls.card", cell.Bounds);
         }
 
         ImGui.SetCursorScreenPos(new Vector2(contentLeft, origin.Y + pad));
@@ -203,8 +202,7 @@ internal sealed class PollsApp : IPhoneApp
             : $"{votesLabel} · {TimeText.Short(poll.CreatedAtUnix)}";
         Typography.Draw(new Vector2(contentLeft, footerTop), footer, ui.MutedInk, 0.85f);
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, cardBottom - origin.Y));
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 
     private void DrawOption(ImDrawListPtr drawList, PollDto poll, string optionLabel, PollMotion motion,

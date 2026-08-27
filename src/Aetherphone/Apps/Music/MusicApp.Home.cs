@@ -386,12 +386,12 @@ internal sealed partial class MusicApp
             return;
         }
 
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             ImGui.Dummy(new Vector2(0f, 4f * scale));
             for (var index = 0; index < stations.Length; index++)
             {
-                DrawStationRow(scale, stations[index], index, PlayStation);
+                DrawStationRow(scale, stations[index], index, PlayStation, FeedCell.PadX);
             }
 
             if (loadingMore)
@@ -422,28 +422,21 @@ internal sealed partial class MusicApp
             ui.MutedInk, TextStyles.Subheadline, maxWidth);
     }
 
-    private void DrawStationRow(float scale, RadioStation station, int index, Action<int> onPlay)
+    private void DrawStationRow(float scale, RadioStation station, int index, Action<int> onPlay, float sideInset)
     {
         var rowHeight = StationRowHeight * scale;
-        var width = ScrollLayout.StableContentWidth();
-        var origin = ImGui.GetCursorScreenPos();
-        var min = origin;
-        var max = new Vector2(origin.X + width, origin.Y + rowHeight);
         var drawList = ImGui.GetWindowDrawList();
+        var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash);
+        var min = cell.Bounds.Min;
+        var max = cell.Bounds.Max;
+        var inset = sideInset * scale;
         var current = IsCurrentStation(station);
-        var hovered = UiInteract.Hover(min, max);
-        if (hovered)
-        {
-            Squircle.Fill(drawList, min, max, 10f * scale, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
         var artSize = 44f * scale;
-        var artMin = new Vector2(min.X + 6f * scale, min.Y + (rowHeight - artSize) * 0.5f);
+        var artMin = new Vector2(min.X + inset, min.Y + (rowHeight - artSize) * 0.5f);
         var artMax = artMin + new Vector2(artSize, artSize);
         drawList.AddImageRounded(artwork.HandleForName(station.Name), artMin, artMax, Vector2.Zero, Vector2.One,
             0xFFFFFFFFu, 8f * scale, ImDrawFlags.RoundCornersAll);
-        var trailing = current ? 50f * scale : 33f * scale;
+        var trailing = inset + (current ? 44f : 27f) * scale;
         var textLeft = artMax.X + 12f * scale;
         var textWidth = max.X - trailing - textLeft;
         var stationNameY = min.Y + 10f * scale;
@@ -461,47 +454,36 @@ internal sealed partial class MusicApp
             stationSubY, textWidth, TextStyles.Caption1, ui.MutedInk, stationSubHovering);
         if (current)
         {
-            Equalizer.Draw(drawList, new Vector2(max.X - 18f * scale, min.Y + rowHeight * 0.5f), scale, 17f * scale,
-                clock, ui.Accent, 1f, playback.IsPlaying);
+            Equalizer.Draw(drawList, new Vector2(max.X - inset - 12f * scale, min.Y + rowHeight * 0.5f), scale,
+                17f * scale, clock, ui.Accent, 1f, playback.IsPlaying);
         }
 
-        var favoriteStar = false;
-        var overStar = false;
         var isFavoriteStation = favoriteRadioStations.Contains(station);
-
-        if (isFavoriteStation || hovered)
+        if (isFavoriteStation || cell.Hovered)
         {
             var tooltip = Loc.T(isFavoriteStation ? L.Music.RemoveFavoriteStation : L.Music.AddFavoriteStation);
-
-            var starX = current ? max.X - 36f * scale : max.X - 18f * scale;
+            var starX = max.X - inset - (current ? 30f : 12f) * scale;
             var starCenter = new Vector2(starX, min.Y + rowHeight * 0.5f);
-            var starRadius = 14f * scale;
-            var starHit = new Vector2(starRadius, starRadius);
-            overStar = UiInteract.Hover(starCenter - starHit, starCenter + starHit);
-            favoriteStar = ui.IconButton(starCenter, starRadius,
-                FontAwesomeIcon.Star.ToIconString(), isFavoriteStation ? ui.Accent : ui.MutedInk, AppSkin.Transparent,
-                0.82f, tooltip);
-            if (favoriteStar)
+            if (ui.IconButton(starCenter, 14f * scale, FontAwesomeIcon.Star.ToIconString(),
+                    isFavoriteStation ? ui.Accent : ui.MutedInk, AppSkin.Transparent, 0.82f, tooltip))
             {
                 ToggleFavoriteStation(station);
             }
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight));
-        if (overStar || !UiInteract.Click(min, max, hovered))
+        if (cell.Tapped)
         {
-            return;
+            if (current)
+            {
+                playback.TogglePlayPause();
+            }
+            else
+            {
+                onPlay(index);
+            }
         }
 
-        if (current)
-        {
-            playback.TogglePlayPause();
-        }
-        else
-        {
-            onPlay(index);
-        }
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 
     private void DrawFavoriteRadioStationsSection(string header, float scale)
@@ -515,7 +497,7 @@ internal sealed partial class MusicApp
 
         for (var index = 0; index < favoriteRadioStations.Length; index++)
         {
-            DrawStationRow(scale, favoriteRadioStations[index], index, PlayStationFromFavorites);
+            DrawStationRow(scale, favoriteRadioStations[index], index, PlayStationFromFavorites, 6f);
         }
     }
 }
