@@ -752,7 +752,7 @@
   "settings.uiSoundTransitions": "Uygulama geçişleri",
   "settings.uiSoundToggles": "Aç/kapat düğmeleri",
   "settings.uiSoundKeyboard": "Klavye",
-  "settings.uiSoundExtrasHint": "Sık kullanılan etkileşimler için ek geri bildirim. Siz açana kadar sessiz kalırlar.",
+  "settings.uiSoundExtrasHint": "Sık kullanılan etkileşimler için ek geri bildirim. Gürültülü bulduklarınızı kapatabilirsiniz.",
   "settings.importSound": "PC'den içe aktar",
   "settings.soundImportHint": "İçe aktarılan dosyalar aşağıdaki listede görünür ve buradaki ses düzeyiyle çalınır; oyunun kendi ses ayarlarından bağımsızdır.",
   "settings.language": "Dil",

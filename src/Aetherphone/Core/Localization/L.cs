@@ -1667,7 +1667,7 @@ internal static class L
         public static readonly LocString UiSoundTransitions = new("settings.uiSoundTransitions", "App transitions");
         public static readonly LocString UiSoundToggles = new("settings.uiSoundToggles", "Toggles");
         public static readonly LocString UiSoundKeyboard = new("settings.uiSoundKeyboard", "Keyboard");
-        public static readonly LocString UiSoundExtrasHint = new("settings.uiSoundExtrasHint", "Extra feedback for frequent interactions. These stay quiet unless you turn them on.");
+        public static readonly LocString UiSoundExtrasHint = new("settings.uiSoundExtrasHint", "Extra feedback for frequent interactions. Turn off any that feel noisy.");
         public static readonly LocString GameSounds = new("settings.gameSounds", "Game Sounds");
         public static readonly LocString GameSoundsHint = new("settings.gameSoundsHint", "Sound effects in the arcade mini-games.");
         public static readonly LocString ImportSound = new("settings.importSound", "Import from PC");

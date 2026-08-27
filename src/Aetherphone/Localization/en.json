@@ -752,7 +752,7 @@
   "settings.uiSoundTransitions": "App transitions",
   "settings.uiSoundToggles": "Toggles",
   "settings.uiSoundKeyboard": "Keyboard",
-  "settings.uiSoundExtrasHint": "Extra feedback for frequent interactions. These stay quiet unless you turn them on.",
+  "settings.uiSoundExtrasHint": "Extra feedback for frequent interactions. Turn off any that feel noisy.",
   "settings.importSound": "Import from PC",
   "settings.soundImportHint": "Imported files appear in the list below and play at the volume set here, separate from the game's own sound settings.",
   "settings.language": "Language",

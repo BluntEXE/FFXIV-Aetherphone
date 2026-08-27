@@ -752,7 +752,7 @@
   "settings.uiSoundTransitions": "Переходы между приложениями",
   "settings.uiSoundToggles": "Переключатели",
   "settings.uiSoundKeyboard": "Клавиатура",
-  "settings.uiSoundExtrasHint": "Дополнительный отклик для частых действий. Эти звуки молчат, пока вы их не включите.",
+  "settings.uiSoundExtrasHint": "Дополнительный отклик для частых действий. Отключите те, что покажутся шумными.",
   "settings.importSound": "Импортировать с ПК",
   "settings.soundImportHint": "Импортированные файлы появляются в списке ниже и воспроизводятся с заданной здесь громкостью, независимо от настроек звука игры.",
   "settings.language": "Язык",

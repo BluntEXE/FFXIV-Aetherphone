@@ -752,7 +752,7 @@
   "settings.uiSoundTransitions": "App-Übergänge",
   "settings.uiSoundToggles": "Schalter",
   "settings.uiSoundKeyboard": "Tastatur",
-  "settings.uiSoundExtrasHint": "Zusätzliches Feedback für häufige Aktionen. Diese bleiben stumm, bis sie eingeschaltet werden.",
+  "settings.uiSoundExtrasHint": "Zusätzliches Feedback für häufige Aktionen. Was zu laut wirkt, kann einzeln abgeschaltet werden.",
   "settings.importSound": "Vom PC importieren",
   "settings.soundImportHint": "Importierte Dateien erscheinen in der Liste unten und werden mit der hier eingestellten Lautstärke abgespielt, unabhängig von den Toneinstellungen des Spiels.",
   "settings.language": "Sprache",

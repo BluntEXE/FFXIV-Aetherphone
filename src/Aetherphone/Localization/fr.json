@@ -752,7 +752,7 @@
   "settings.uiSoundTransitions": "Transitions d'apps",
   "settings.uiSoundToggles": "Interrupteurs",
   "settings.uiSoundKeyboard": "Clavier",
-  "settings.uiSoundExtrasHint": "Retour sonore supplémentaire pour les interactions fréquentes. Ils restent silencieux tant que vous ne les activez pas.",
+  "settings.uiSoundExtrasHint": "Retour sonore supplémentaire pour les interactions fréquentes. Désactivez ceux qui vous semblent trop bruyants.",
   "settings.importSound": "Importer depuis le PC",
   "settings.soundImportHint": "Les fichiers importés apparaissent dans la liste ci-dessous et sont lus au volume défini ici, indépendamment des réglages audio du jeu.",
   "settings.language": "Langue",

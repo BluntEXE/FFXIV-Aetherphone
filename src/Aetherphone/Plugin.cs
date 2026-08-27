@@ -92,6 +92,7 @@ public sealed class Plugin : IDalamudPlugin
             Cfg = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             Cfg.NormalizeAethernetBaseUrl();
             Cfg.MigrateSoundSettings();
+            Cfg.MigrateUiSoundChannels();
             Cfg.MigrateChangelogSeen();
             Cfg.MigrateMessage();
             Cfg.MigrateMessagesMerge();

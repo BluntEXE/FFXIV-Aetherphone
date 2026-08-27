@@ -752,7 +752,7 @@
   "settings.uiSoundTransitions": "Transições de apps",
   "settings.uiSoundToggles": "Interruptores",
   "settings.uiSoundKeyboard": "Teclado",
-  "settings.uiSoundExtrasHint": "Resposta extra para interações frequentes. Ficam em silêncio até você ativá-los.",
+  "settings.uiSoundExtrasHint": "Resposta extra para interações frequentes. Desative as que achar barulhentas.",
   "settings.importSound": "Importar do PC",
   "settings.soundImportHint": "Os arquivos importados aparecem na lista abaixo e tocam no volume definido aqui, separado das configurações de som do próprio jogo.",
   "settings.language": "Idioma",

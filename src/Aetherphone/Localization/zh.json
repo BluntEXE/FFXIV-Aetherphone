@@ -752,7 +752,7 @@
   "settings.uiSoundTransitions": "应用切换",
   "settings.uiSoundToggles": "开关",
   "settings.uiSoundKeyboard": "键盘",
-  "settings.uiSoundExtrasHint": "为常用操作提供额外反馈。默认保持静音，需手动开启。",
+  "settings.uiSoundExtrasHint": "为常用操作提供额外反馈。觉得吵可以随时关闭。",
   "settings.importSound": "从电脑导入",
   "settings.soundImportHint": "导入的文件会出现在下方列表中，并以此处设置的音量播放，与游戏本身的声音设置无关。",
   "settings.language": "语言",

@@ -137,16 +137,16 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool NotificationSoundsEnabled { get; set; } = true;
     public bool UiSounds { get; set; } = true;
     public float UiSoundVolume { get; set; } = 0.7f;
-    public bool UiSoundTaps { get; set; }
-    public bool UiSoundTransitions { get; set; }
-    public bool UiSoundToggles { get; set; }
-    public bool UiSoundKeyboard { get; set; }
+    public bool UiSoundTaps { get; set; } = true;
+    public bool UiSoundTransitions { get; set; } = true;
+    public bool UiSoundToggles { get; set; } = true;
+    public bool UiSoundKeyboard { get; set; } = true;
     public bool GameSounds { get; set; } = true;
     public bool ShowPerfHud { get; set; }
     public float GameSoundVolume { get; set; } = 0.7f;
+    public bool UiSoundChannelsDefaulted { get; set; }
     public float MusicVolume { get; set; } = 0.6f;
     public int MusicRepeat { get; set; }
-    public bool SoundSettingsMigrated { get; set; }
     public float VideoVolume { get; set; } = 0.6f;
     public int VideoMaxQualityHeight { get; set; } = 720;
     public bool VideoHideNameplates { get; set; } = true;
@@ -642,6 +642,21 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
         }
 
         GameSoundsCleared = true;
+        Save();
+    }
+
+    public void MigrateUiSoundChannels()
+    {
+        if (UiSoundChannelsDefaulted)
+        {
+            return;
+        }
+
+        UiSoundTaps = true;
+        UiSoundTransitions = true;
+        UiSoundToggles = true;
+        UiSoundKeyboard = true;
+        UiSoundChannelsDefaulted = true;
         Save();
     }
 
