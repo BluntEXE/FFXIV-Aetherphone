@@ -133,6 +133,22 @@ The settings tree is the reference implementation of these three rules; follow t
 - **One card per group of switches, never one card per switch.** Related switches share a GroupCard with hairlines between them. Reach for a SettingsSection.Header only where a page genuinely turns a corner, and never as a label for a single row.
 - **A footer has to earn its place.** Explaining what one control does is the hint icon's job: pass `hint` to SettingsRow.Bool or SettingsRow.Switch, or the optional third argument of SettingsSection.Header for a whole section. SettingsSection.Hint stays for destructive warnings, loading and empty states, and sign-in prompts.
 
+### List anatomy (which container a list of rows gets)
+
+Every list on the phone uses one of two shared anatomies; a floating card is reserved for content that is genuinely a card.
+
+- **Feed content gets edge-to-edge cells.** Posts, conversations, call logs, articles, activity, search results: FeedCell inside AppSurface.BeginEdgeToEdge. The cell and its trailing hairline span the full screen width, content sits a single 16px inset in (FeedCell.PadX), hover is the flat HoverWash, the whole cell taps. Chirper is the reference implementation. Section headers over cell lists come from ListSection.Header.
+- **Settings and detail lists get grouped inset cards.** GroupCard (theme or AppSkin overload) plus row painters (SettingsRow, MarketRowViews style). Fixed row heights, left-inset hairlines, the three grouped-list rules above.
+- **Floating cards are for card-shaped content only.** Sanctioned: Venues and YellowPages listings (hero imagery), the Notifications stack, Health metric cards, AppStore and Announcements hero content, the Calendar month grid, the Photos grid, Skywatcher, Games and Casino table art, Camera, Calculator, Velvet (until its redesign lands), and the Aethergram main feed (until its design handoff). Do not add new floating-card row lists.
+
+### Sheets, dialogs, menus, and toasts
+
+- **A destructive or choice flow is a bottom sheet.** Post and row overflow actions use an ActionSheet (style via ActionSheetStyle.From). A single destructive confirm goes through ConfirmService.Ask with `Sheet = true`, which the shell renders as an action sheet with the title and message in the header band.
+- **An irreversible, monetary, or consent confirm stays an alert.** Account deletion, purchases, vault wipes, NSFW and external-link gates keep the centered ConfirmDialog (`Sheet` unset). Every `Alert(...)` stays an alert.
+- **Pickers stay menus.** Sort, scope, quality, channel, and filter pickers, and any menu with inline edit or delete affordances, remain DropdownMenu.
+- **Transient feedback is a toast.** ShellToast.Show for anything raised from shared components or app code; it renders as the bottom pill in whichever host (phone, popout, minimized) the pointer was in. Per-app ScreenToast instances remain for app-styled toasts (Chirper).
+- **Sharing between apps is the ShareSheet; a titled content panel is a SheetSurface.**
+
 ## Copy rules
 
 These apply to UI strings, docs, changelogs, and commit messages alike.
