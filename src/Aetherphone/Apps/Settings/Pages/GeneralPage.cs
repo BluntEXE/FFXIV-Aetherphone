@@ -35,7 +35,9 @@ internal sealed class GeneralPage : ISettingsPage
         {
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
             var translationRow = translation.Enabled ? 1 : 0;
-            var card = GroupCard.Begin(theme, 9 + translationRow);
+            var card = GroupCard.Begin(theme, 10 + translationRow);
+            var showInGpose = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.ShowInGpose),
+                configuration.ShowInGpose, theme, null, Loc.T(L.Settings.ShowInGposeHint));
             var importScreenshots = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.ImportScreenshots),
                 configuration.ImportScreenshots, theme, null, Loc.T(L.Settings.ImportScreenshotsHint));
             var usesNativeFileDialog = configuration.UseNativeFileDialog ?? NativeFileDialog.IsSupported;
@@ -66,6 +68,13 @@ internal sealed class GeneralPage : ISettingsPage
             if (autoTranslate != configuration.AutoTranslatePosts)
             {
                 SetAutoTranslate(autoTranslate);
+            }
+
+            if (showInGpose != configuration.ShowInGpose)
+            {
+                configuration.ShowInGpose = showInGpose;
+                Plugin.PluginInterface.UiBuilder.DisableGposeUiHide = showInGpose;
+                configuration.Save();
             }
 
             if (importScreenshots != configuration.ImportScreenshots)

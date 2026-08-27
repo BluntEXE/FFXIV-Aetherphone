@@ -38,8 +38,6 @@ internal sealed class SoundsPage : ISettingsPage
         using (var surface = AppSurface.Begin(body))
         {
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
-            DrawSilentMode(theme);
-            ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
             DrawSoundCard(theme, surface, SoundKind.Ringtone);
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
             DrawSoundCard(theme, surface, SoundKind.Notification);
@@ -95,19 +93,6 @@ internal sealed class SoundsPage : ISettingsPage
         }
 
         card.End();
-    }
-
-    private void DrawSilentMode(PhoneTheme theme)
-    {
-        var card = GroupCard.Begin(theme, 1);
-        var silent = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.SilentMode), configuration.SilentMode,
-            theme, null, Loc.T(L.Settings.SilentModeHint));
-        card.End();
-        if (silent != configuration.SilentMode)
-        {
-            configuration.SilentMode = silent;
-            configuration.Save();
-        }
     }
 
     private void DrawSoundCard(PhoneTheme theme, in AppSurface.SurfaceScope surface, SoundKind kind)
