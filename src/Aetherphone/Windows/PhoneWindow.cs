@@ -299,7 +299,17 @@ internal sealed class PhoneWindow : Window
             var available = ImGui.GetContentRegionAvail();
             ImGui.Dummy(available);
             var device = new Rect(origin, origin + available);
-            shell.Draw(device);
+            if (configuration.ShowPerfHud)
+            {
+                Components.PerfHud.BeginShell();
+                shell.Draw(device);
+                Components.PerfHud.EndShell();
+                Components.PerfHud.Draw(device, UiScale.Current);
+            }
+            else
+            {
+                shell.Draw(device);
+            }
         }
 
         if (shell.MinimizePhase == MinimizePhase.None)

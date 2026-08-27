@@ -142,6 +142,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool UiSoundToggles { get; set; }
     public bool UiSoundKeyboard { get; set; }
     public bool GameSounds { get; set; } = true;
+    public bool ShowPerfHud { get; set; }
     public float GameSoundVolume { get; set; } = 0.7f;
     public float MusicVolume { get; set; } = 0.6f;
     public int MusicRepeat { get; set; }

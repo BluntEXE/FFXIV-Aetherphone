@@ -449,6 +449,13 @@ public sealed class Plugin : IDalamudPlugin
             return;
         }
 
+        if (argument.Equals("perfhud", StringComparison.OrdinalIgnoreCase))
+        {
+            Cfg.ShowPerfHud = !Cfg.ShowPerfHud;
+            Cfg.Save();
+            return;
+        }
+
         if (argument.StartsWith("market", StringComparison.OrdinalIgnoreCase))
         {
             var query = argument.Length > 6 ? argument.Substring(6).Trim() : string.Empty;
