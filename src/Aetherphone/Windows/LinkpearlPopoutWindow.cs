@@ -267,7 +267,7 @@ internal sealed class LinkpearlPopoutWindow : Window
             DrawGrip(scale);
             DrawSwitchMenu(theme);
             chatMenu.Draw(frame, theme);
-            ShellToast.Draw(frame, theme);
+            ShellToast.DrawSecondary(frame, theme);
         }
 
         HoverTooltip.Flush();

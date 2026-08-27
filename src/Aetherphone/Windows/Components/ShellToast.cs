@@ -9,6 +9,7 @@ internal static class ShellToast
 {
     private static readonly ScreenToast Toast = new();
     private static Vector2 anchor;
+    private static int secondaryClaimFrame = -1;
 
     public static void Show() => Show(Loc.T(L.Common.Copied));
 
@@ -20,11 +21,22 @@ internal static class ShellToast
 
     public static void Draw(Rect host, PhoneTheme theme)
     {
+        if (ImGui.GetFrameCount() - secondaryClaimFrame <= 1)
+        {
+            return;
+        }
+
+        Toast.Draw(host, ScreenToastStyle.From(theme));
+    }
+
+    public static void DrawSecondary(Rect host, PhoneTheme theme)
+    {
         if (!host.Contains(anchor))
         {
             return;
         }
 
+        secondaryClaimFrame = ImGui.GetFrameCount();
         Toast.Draw(host, ScreenToastStyle.From(theme));
     }
 }
