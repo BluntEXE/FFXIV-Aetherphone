@@ -189,16 +189,14 @@ internal static class ConfirmDialog
         var right = area.Max.X - margin;
         var headerWidth = right - left - padX * 2f;
         var hasTitle = title is { Length: > 0 };
-        var titleHeight = hasTitle
-            ? Typography.MeasureWrapped(title!, headerWidth, SheetHeaderStyle.Scale, SheetHeaderStyle.Weight)
-            : 0f;
+        var titleHeight = hasTitle ? Typography.MeasureWrappedBlock(title!, SheetHeaderStyle, headerWidth).Y : 0f;
         var hasMessage = message.Length > 0;
         var messageHeight = hasMessage
-            ? Typography.MeasureWrapped(message, headerWidth, SheetMessageStyle.Scale, SheetMessageStyle.Weight)
+            ? Typography.MeasureWrappedBlock(message, SheetMessageStyle, headerWidth).Y
             : 0f;
         var hasStatus = status is { Length: > 0 };
         var statusHeight = hasStatus
-            ? Typography.MeasureWrapped(status!, headerWidth, SheetMessageStyle.Scale, SheetMessageStyle.Weight)
+            ? Typography.MeasureWrappedBlock(status!, SheetMessageStyle, headerWidth).Y
             : 0f;
         var lineGap = SheetHeaderLineGap * scale;
         var headerHeight = SheetHeaderPadY * 2f * scale + titleHeight
@@ -222,25 +220,24 @@ internal static class ConfirmDialog
         var headerInk = Palette.WithAlpha(style.Ink, style.Ink.W * 0.65f * opacity);
         if (hasTitle)
         {
-            Typography.DrawWrappedCentered(drawList, title!, SheetHeaderStyle, headerInk,
-                new Vector2(centerX, cursorY), headerWidth);
+            Typography.DrawWrappedCentered(drawList, new Vector2(centerX, cursorY + titleHeight * 0.5f), title!,
+                headerInk, SheetHeaderStyle, headerWidth);
             cursorY += titleHeight;
         }
 
         if (hasMessage)
         {
             cursorY += hasTitle ? lineGap : 0f;
-            Typography.DrawWrappedCentered(drawList, message, SheetMessageStyle, headerInk,
-                new Vector2(centerX, cursorY), headerWidth);
+            Typography.DrawWrappedCentered(drawList, new Vector2(centerX, cursorY + messageHeight * 0.5f), message,
+                headerInk, SheetMessageStyle, headerWidth);
             cursorY += messageHeight;
         }
 
         if (hasStatus)
         {
             cursorY += lineGap;
-            Typography.DrawWrappedCentered(drawList, status!, SheetMessageStyle,
-                Palette.WithAlpha(style.Danger, style.Danger.W * opacity), new Vector2(centerX, cursorY),
-                headerWidth);
+            Typography.DrawWrappedCentered(drawList, new Vector2(centerX, cursorY + statusHeight * 0.5f), status!,
+                Palette.WithAlpha(style.Danger, style.Danger.W * opacity), SheetMessageStyle, headerWidth);
         }
 
         var actionMin = new Vector2(cardMin.X, cardMax.Y - actionHeight);

@@ -111,10 +111,8 @@ internal sealed class ActionSheet
         var gap = CardGap * scale;
         var padX = PadX * scale;
         var headerWidth = screen.Width - margin * 2f - padX * 2f;
-        var headerHeight = title.Length > 0
-            ? Typography.MeasureWrapped(title, headerWidth, HeaderStyle.Scale, HeaderStyle.Weight)
-                + HeaderPadY * 2f * scale
-            : 0f;
+        var titleHeight = title.Length > 0 ? Typography.MeasureWrappedBlock(title, HeaderStyle, headerWidth).Y : 0f;
+        var headerHeight = titleHeight > 0f ? titleHeight + HeaderPadY * 2f * scale : 0f;
         var cardHeight = headerHeight + items.Length * rowHeight;
         var total = cardHeight + gap + cancelHeight;
         var bottom = screen.Max.Y - BottomInset * scale + total * (1f - slide);
@@ -130,8 +128,9 @@ internal sealed class ActionSheet
         if (headerHeight > 0f)
         {
             var headerInk = Palette.WithAlpha(style.Ink, style.Ink.W * HeaderInkAlpha * opacity);
-            Typography.DrawWrappedCentered(drawList, title, HeaderStyle, headerInk,
-                new Vector2((cardMin.X + cardMax.X) * 0.5f, cardMin.Y + HeaderPadY * scale), headerWidth);
+            Typography.DrawWrappedCentered(drawList,
+                new Vector2((cardMin.X + cardMax.X) * 0.5f, cardMin.Y + HeaderPadY * scale + titleHeight * 0.5f),
+                title, headerInk, HeaderStyle, headerWidth);
         }
 
         var anyGlyph = false;
