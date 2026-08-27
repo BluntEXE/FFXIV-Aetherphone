@@ -1,25 +1,14 @@
-using Aetherphone.Core.Animation;
 using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Windows.Components;
 
 internal static class BackButton
 {
-    private const float PressSmoothTime = 0.08f;
-    private static readonly Dictionary<string, Spring> Scales = new(StringComparer.Ordinal);
-
     public static bool Draw(string id, Vector2 center, float radius, Vector4 chevronInk, bool hovered, float scale,
         bool shadow = false)
     {
         var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
-        var deltaSeconds = MathF.Min(ImGui.GetIO().DeltaTime, 0.1f);
-        if (!Scales.TryGetValue(id, out var spring))
-        {
-            spring = new Spring(1f);
-        }
-
-        var grow = spring.Step(pressed ? 0.82f : 1f, PressSmoothTime, deltaSeconds);
-        Scales[id] = spring;
+        var grow = PressFx.Scale(id, pressed, 0.82f);
         var drawList = ImGui.GetWindowDrawList();
         var reach = radius * 0.5f * grow;
         var thickness = 2.4f * scale;
@@ -46,6 +35,6 @@ internal static class BackButton
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+        return UiInteract.Click(center - new Vector2(radius, radius), center + new Vector2(radius, radius), hovered);
     }
 }

@@ -15,9 +15,12 @@ internal static class TextButton
         var min = new Vector2(center.X - size.X * 0.5f - PadX * scale, center.Y - size.Y * 0.5f - PadY * scale);
         var max = new Vector2(center.X + size.X * 0.5f + PadX * scale, center.Y + size.Y * 0.5f + PadY * scale);
         var hovered = UiInteract.Hover(min, max);
-        Squircle.Fill(ImGui.GetWindowDrawList(), min, max, (max.Y - min.Y) * 0.5f,
+        var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
+        var press = PressFx.Scale(label, pressed);
+        var half = (max - min) * 0.5f * press;
+        Squircle.Fill(ImGui.GetWindowDrawList(), center - half, center + half, half.Y,
             ImGui.GetColorU32(Palette.WithAlpha(color, hovered ? 0.22f : 0.14f)));
-        Typography.DrawCentered(center, label, color, 0.9f, FontWeight.SemiBold);
+        Typography.DrawCentered(center, label, color, 0.9f * press, FontWeight.SemiBold);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

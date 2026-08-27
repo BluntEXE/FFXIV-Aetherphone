@@ -432,8 +432,13 @@ internal static class ConfirmDialog
                 break;
         }
 
-        Squircle.Fill(drawList, rect.Min, rect.Max, radius, ImGui.GetColorU32(fill));
-        Squircle.Stroke(drawList, rect.Min, rect.Max, radius,
+        var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
+        var press = PressFx.Scale(id ?? label, pressed);
+        var pressHalf = new Vector2(rect.Width, rect.Height) * 0.5f * press;
+        var pressMin = rect.Center - pressHalf;
+        var pressMax = rect.Center + pressHalf;
+        Squircle.Fill(drawList, pressMin, pressMax, radius * press, ImGui.GetColorU32(fill));
+        Squircle.Stroke(drawList, pressMin, pressMax, radius * press,
             ImGui.GetColorU32(Palette.WithAlpha(theme.TextStrong, 0.12f * opacity)), 1f);
         var style = new TextStyle(ButtonScale * cardScale, FontWeight.SemiBold);
         var maxLabelWidth = MathF.Max(1f, rect.Width - rect.Height);

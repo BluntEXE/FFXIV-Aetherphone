@@ -28,7 +28,9 @@ internal static class HoverButton
         var max = new Vector2(center.X + radius, center.Y + radius);
         var hovered = interactive && UiInteract.Hover(min, max);
         var eased = Step(id, hovered, delta);
-        var grow = 1f + GrowAmount * eased;
+        var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
+        var press = PressFx.Scale(id, pressed, 0.92f);
+        var grow = (1f + GrowAmount * eased) * press;
         var scaledRadius = radius * grow;
         var ghost = tint.W <= 0f;
         var fill = ghost ? ink : Palette.Lighten(tint, 0.10f * eased);

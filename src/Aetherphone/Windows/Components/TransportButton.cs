@@ -18,17 +18,20 @@ internal static class TransportButton
         float alpha, bool active, ImDrawListPtr? drawListOverride = null)
     {
         var drawList = drawListOverride ?? ImGui.GetWindowDrawList();
-        var hovered = active &&
-                      UiInteract.Hover(center - new Vector2(radius, radius),
-                          center + new Vector2(radius, radius));
+        var min = center - new Vector2(radius, radius);
+        var max = center + new Vector2(radius, radius);
+        var hovered = active && UiInteract.Hover(min, max);
+        var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
+        var press = PressFx.Scale(PressId(action), pressed, 0.90f);
         if (hovered)
         {
-            drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(accent, 0.20f * alpha)), 32);
+            drawList.AddCircleFilled(center, radius * press,
+                ImGui.GetColorU32(Palette.WithAlpha(accent, 0.20f * alpha)), 32);
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
         var color = ImGui.GetColorU32(Palette.WithAlpha(hovered ? accent : ink, alpha));
-        var size = radius * 0.52f;
+        var size = radius * 0.52f * press;
         switch (action)
         {
             case TransportAction.Previous:
@@ -48,6 +51,16 @@ internal static class TransportButton
                 break;
         }
 
-        return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+        return UiInteract.Click(min, max, hovered);
     }
+
+    private static string PressId(TransportAction action) => action switch
+    {
+        TransportAction.Previous => "transport.previous",
+        TransportAction.Stop => "transport.stop",
+        TransportAction.Next => "transport.next",
+        TransportAction.Play => "transport.play",
+        TransportAction.Pause => "transport.pause",
+        _ => "transport",
+    };
 }

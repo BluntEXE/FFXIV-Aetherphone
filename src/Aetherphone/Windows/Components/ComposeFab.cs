@@ -40,18 +40,20 @@ internal static class ComposeFab
 
         var drawList = ImGui.GetWindowDrawList();
         var hovered = !InputShield.Active && UiInteract.HoverOverlay(fabRect);
+        var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
+        var press = PressFx.Toward(childId, pressed ? PressShrink :
+            hovered ? HoverGrow : 1f);
+        var drawRadius = radius * press;
         if (gradientBottom is { } deep)
         {
-            var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
-            var drawRadius = radius * (pressed ? PressShrink : hovered ? HoverGrow : 1f);
             DrawGradientBody(drawList, center, drawRadius, hovered ? Palette.Mix(accent, White, 0.08f) : accent, deep,
                 scale);
         }
         else
         {
-            drawList.AddCircleFilled(center + new Vector2(0f, 2f * scale), radius,
+            drawList.AddCircleFilled(center + new Vector2(0f, 2f * scale), drawRadius,
                 ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.30f)), 32);
-            drawList.AddCircleFilled(center, radius,
+            drawList.AddCircleFilled(center, drawRadius,
                 ImGui.GetColorU32(hovered ? Palette.Mix(accent, White, 0.12f) : accent), 32);
         }
 

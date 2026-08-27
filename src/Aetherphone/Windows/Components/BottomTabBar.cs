@@ -100,9 +100,11 @@ internal sealed class BottomTabBar
         var iconCenter = new Vector2((cellMin.X + cellMax.X) * 0.5f, cellMin.Y + LabelIconOffset * scale);
         DrawLabelPill(drawList, ui, iconCenter, Math.Clamp(hover[index].Value, 0f, 1f), scale);
 
+        var pressed = hovered && ImGui.IsMouseDown(ImGuiMouseButton.Left);
+        var press = PressFx.Scale(tab.Label, pressed, 0.90f);
         var ink = active ? ui.Accent : hovered ? ui.TitleInk : ui.MutedInk;
         AppSkin.Icon(drawList, iconCenter, tab.Icon.ToIconString(), ink,
-            active ? LabelActiveIconScale : LabelIconScale);
+            (active ? LabelActiveIconScale : LabelIconScale) * press);
         var style = active ? TextStyles.FootnoteEmphasized : TextStyles.Footnote;
         var label = Typography.FitText(tab.Label, slot - 6f * scale, style);
         Typography.DrawCentered(drawList, new Vector2(iconCenter.X, iconCenter.Y + LabelBaseline * scale), label, ink,
