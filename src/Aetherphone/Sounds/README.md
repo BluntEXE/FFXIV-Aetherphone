@@ -6,18 +6,13 @@ Settings only lists its own kind:
 - `Ringtones/` ships the **Ringtone** options (plays on incoming calls).
 - `Notifications/` ships the **Notification Sound** options (plays on
   notifications, including per-app overrides).
-- `Ui/` ships the **Interface Sounds** clips (startup, wake, shutter, send,
-  taps and friends). This folder is not a picker: the file names are wired to
-  events in `Core/Notifications/UiSound.cs` and never appear in Settings lists,
-  and `UiSoundCatalogTests` fails the build server if a wired name goes missing.
+- `Ui/` ships the **Interface Sounds** clips (wake, shutter, send, taps and
+  friends). This folder is not a picker: the file names are wired to events in
+  `Core/Notifications/UiSound.cs` and never appear in Settings lists, and
+  `UiSoundCatalogTests` fails the build server if a wired name goes missing.
   Clips are 48 kHz PCM WAV, level-matched at bake time; per-event gain lives in
   the catalog, not in the files. Sources and licenses are listed in
   `THIRD-PARTY-NOTICES.md`.
-- The three shell clips (`startup.wav` for the boot screen, `minimize.wav` and
-  `maximize.wav` for the collapse and expand morph) are synthesized for this
-  plugin by `tools/build-shell-sounds.py`, which needs nothing but Python 3 and
-  rewrites all three in place. Retune the voices in that script and rerun it
-  rather than editing the WAVs by hand.
 - `Games/` ships the **Game Sounds** palette for the mini-games (hits, pops,
   lasers, cards, Simon tones), mono 48 kHz PCM WAV, wired through the same
   catalog on the Game channel and gated by the Game Sounds toggle in Settings.

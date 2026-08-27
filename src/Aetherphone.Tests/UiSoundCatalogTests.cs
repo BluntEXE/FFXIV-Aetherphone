@@ -42,10 +42,7 @@ public sealed class UiSoundCatalogTests
     [Fact]
     public void ChannelsMatchTheEventMap()
     {
-        Assert.Equal(UiSoundChannel.Event, UiSoundCatalog.Entries[(int)UiSound.Startup].Channel);
         Assert.Equal(UiSoundChannel.Event, UiSoundCatalog.Entries[(int)UiSound.Wake].Channel);
-        Assert.Equal(UiSoundChannel.Event, UiSoundCatalog.Entries[(int)UiSound.Minimize].Channel);
-        Assert.Equal(UiSoundChannel.Event, UiSoundCatalog.Entries[(int)UiSound.Maximize].Channel);
         Assert.Equal(UiSoundChannel.Event, UiSoundCatalog.Entries[(int)UiSound.Shutter].Channel);
         Assert.Equal(UiSoundChannel.Transition, UiSoundCatalog.Entries[(int)UiSound.AppOpen].Channel);
         Assert.Equal(UiSoundChannel.Transition, UiSoundCatalog.Entries[(int)UiSound.AppClose].Channel);
@@ -56,17 +53,6 @@ public sealed class UiSoundCatalogTests
         Assert.Equal(UiSoundChannel.Event, UiSoundCatalog.Entries[(int)UiSound.GameWin].Channel);
         Assert.Equal(UiSoundChannel.Game, UiSoundCatalog.Entries[(int)UiSound.GameHitSoft].Channel);
         Assert.Equal(UiSoundChannel.Game, UiSoundCatalog.Entries[(int)UiSound.SimonTone4].Channel);
-    }
-
-    [Fact]
-    public void ShellSoundsHaveTheirOwnClips()
-    {
-        var startup = UiSoundCatalog.Entries[(int)UiSound.Startup].Files;
-        var minimize = UiSoundCatalog.Entries[(int)UiSound.Minimize].Files;
-        var maximize = UiSoundCatalog.Entries[(int)UiSound.Maximize].Files;
-        Assert.Equal("Ui/startup.wav", Assert.Single(startup));
-        Assert.Equal("Ui/minimize.wav", Assert.Single(minimize));
-        Assert.Equal("Ui/maximize.wav", Assert.Single(maximize));
     }
 
     [Fact]

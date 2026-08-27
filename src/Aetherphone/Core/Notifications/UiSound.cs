@@ -2,11 +2,8 @@ namespace Aetherphone.Core.Notifications;
 
 internal enum UiSound
 {
-    Startup,
     Wake,
     Sleep,
-    Minimize,
-    Maximize,
     AppOpen,
     AppClose,
     Shutter,
@@ -76,9 +73,6 @@ internal readonly struct UiSoundEntry
 
 internal static class UiSoundCatalog
 {
-    private static readonly string[] Startup = { "Ui/startup.wav" };
-    private static readonly string[] Minimize = { "Ui/minimize.wav" };
-    private static readonly string[] Maximize = { "Ui/maximize.wav" };
     private static readonly string[] TransitionUp = { "Ui/transition_up.wav" };
     private static readonly string[] TransitionDown = { "Ui/transition_down.wav" };
     private static readonly string[] Shutter = { "Ui/shutter.wav" };
@@ -161,11 +155,8 @@ internal static class UiSoundCatalog
 
     public static readonly UiSoundEntry[] Entries =
     {
-        new(Startup, 0.85f, 1500, UiSoundChannel.Event),
         new(TransitionUp, 0.9f, 120, UiSoundChannel.Event),
         new(TransitionDown, 0.9f, 120, UiSoundChannel.Event),
-        new(Minimize, 0.8f, 120, UiSoundChannel.Event),
-        new(Maximize, 0.8f, 120, UiSoundChannel.Event),
         new(TransitionUp, 0.55f, 90, UiSoundChannel.Transition),
         new(TransitionDown, 0.55f, 90, UiSoundChannel.Transition),
         new(Shutter, 1f, 150, UiSoundChannel.Event),

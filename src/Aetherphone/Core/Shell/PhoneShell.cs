@@ -129,17 +129,13 @@ internal sealed class PhoneShell : IDisposable
 
     public void OnOpened()
     {
-        var booting = minimize.Phase == MinimizePhase.None;
-        if (booting)
+        if (minimize.Phase == MinimizePhase.None)
         {
             loading.BeginSession();
         }
 
         director.OnPhoneOpened();
-        if (!booting)
-        {
-            UiFeedback.Play(UiSound.Wake);
-        }
+        UiFeedback.Play(UiSound.Wake);
     }
 
     public void OnClosed()
