@@ -40,13 +40,14 @@ internal sealed partial class ClockApp
                 return;
             }
 
-            var card = BeginRowCard(alarms.Count, AlarmRowHeight, scale);
+            var card = GroupCard.Begin(ui, alarms.Count, AlarmRowHeight);
             for (var index = 0; index < alarms.Count; index++)
             {
-                DrawAlarmRow(RowAt(card, index, AlarmRowHeight, scale), alarms[index]);
+                DrawAlarmRow(card.NextRow(), alarms[index]);
             }
 
-            EndRowCard(card, 10f, scale);
+            card.End();
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
         }
     }
 

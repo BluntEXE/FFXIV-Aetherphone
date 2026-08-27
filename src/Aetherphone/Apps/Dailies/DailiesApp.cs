@@ -257,8 +257,7 @@ internal sealed class DailiesApp : IPhoneApp
         ui.SectionLabel(Loc.T(autoGroup ? L.Dailies.AutoSection : L.Dailies.ManualSection),
             TextStyles.FootnoteEmphasized, 8f);
 
-        var card = BeginCard(count, scale);
-        var rowIndex = 0;
+        var card = GroupCard.Begin(ui, count, RowHeight);
         for (var index = 0; index < items.Length; index++)
         {
             if (!Matches(items[index], cadence, autoGroup))
@@ -266,25 +265,27 @@ internal sealed class DailiesApp : IPhoneApp
                 continue;
             }
 
-            DrawRow(CardBand(card, rowIndex, scale), items[index], index, utcNow, scale);
-            rowIndex++;
+            DrawRow(card.NextRow(), items[index], index, utcNow, scale);
         }
 
-        EndCard(card, scale);
+        card.End();
+        ImGui.Dummy(new Vector2(0f, CardGap * scale));
     }
 
     private static bool Matches(in DailyItem item, DailyCadence cadence, bool autoGroup) =>
         item.Cadence == cadence && (item.Tracking != DailyTracking.Manual) == autoGroup;
 
-    private void DrawRow(Rect band, in DailyItem item, int itemIndex, DateTime utcNow, float scale)
+    private void DrawRow(Rect row, in DailyItem item, int itemIndex, DateTime utcNow, float scale)
     {
         var status = autoStatuses[itemIndex];
         var isValue = IsValueTracking(item.Tracking);
         var tappable = item.Tracking == DailyTracking.Manual;
         var complete = tappable ? checkStore.IsChecked(item, utcNow) : status.Available && status.Complete;
 
-        var innerLeft = band.Min.X + RowPadding * scale;
-        var innerRight = band.Max.X - RowPadding * scale;
+        var band = new Rect(new Vector2(row.Min.X - Metrics.Space.Lg * scale, row.Min.Y),
+            new Vector2(row.Max.X + Metrics.Space.Lg * scale, row.Max.Y));
+        var innerLeft = row.Min.X;
+        var innerRight = row.Max.X;
 
         var hovered = tappable && UiInteract.Hover(band.Min, band.Max);
         if (hovered)
@@ -463,34 +464,6 @@ internal sealed class DailiesApp : IPhoneApp
 
         configuration.ShowDailiesBadge = showBadge;
         configuration.Save();
-    }
-
-    private Rect BeginCard(int rowCount, float scale)
-    {
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var card = new Rect(origin, origin + new Vector2(width, rowCount * RowHeight * scale));
-        ui.Card(ImGui.GetWindowDrawList(), card.Min, card.Max, CardRounding * scale, elevated: true);
-        return card;
-    }
-
-    private static Rect CardBand(Rect card, int index, float scale)
-    {
-        var top = card.Min.Y + index * RowHeight * scale;
-        if (index > 0)
-        {
-            var sepLeft = card.Min.X + (RowPadding * 2f + TileSize) * scale;
-            ImGui.GetWindowDrawList().AddLine(new Vector2(sepLeft, top), new Vector2(card.Max.X - RowPadding * scale, top),
-                ImGui.GetColorU32(AppPalettes.Dailies.CardStroke), 1f);
-        }
-
-        return new Rect(new Vector2(card.Min.X, top), new Vector2(card.Max.X, top + RowHeight * scale));
-    }
-
-    private static void EndCard(Rect card, float scale)
-    {
-        ImGui.SetCursorScreenPos(card.Min);
-        ImGui.Dummy(new Vector2(card.Width, card.Height + CardGap * scale));
     }
 
     public void Dispose()

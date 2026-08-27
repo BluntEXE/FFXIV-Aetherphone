@@ -109,30 +109,28 @@ internal sealed class MapsApp : IPhoneApp
         SettingsSection.Header(Loc.T(L.Maps.CurrentLocation), frameTheme);
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
-        var cardMin = origin;
-        var cardMax = new Vector2(origin.X + width, origin.Y + LocationCardHeight * scale);
-        UiAnchors.Report("maps.location", new Rect(cardMin, cardMax));
+        UiAnchors.Report("maps.location", new Rect(origin, origin + new Vector2(width, LocationCardHeight * scale)));
+        var card = GroupCard.Begin(frameTheme, 1, LocationCardHeight);
+        var row = card.NextRow();
         var drawList = ImGui.GetWindowDrawList();
-        Squircle.Fill(drawList, cardMin, cardMax, 14f * scale, ImGui.GetColorU32(frameTheme.GroupedCard));
-        Material.EdgeSquircle(drawList, cardMin, cardMax, 14f * scale, scale);
-        var pinCenter = new Vector2(cardMin.X + 28f * scale, cardMin.Y + LocationCardHeight * scale * 0.5f);
+        var pinCenter = new Vector2(row.Min.X + 12f * scale, row.Center.Y);
         MapGlyphs.Pin(drawList, pinCenter, 12f * scale, frameTheme.Accent);
         var textLeft = pinCenter.X + 24f * scale;
-        var textMaxWidth = MathF.Max(1f, cardMax.X - 14f * scale - textLeft);
-        var zoneY = cardMin.Y + 14f * scale;
+        var textMaxWidth = MathF.Max(1f, row.Max.X - textLeft);
+        var zoneY = row.Min.Y + 14f * scale;
         var zoneSize = Typography.Measure(zoneName, TextStyles.Headline);
         var zoneHovering = UiInteract.Hover(new Vector2(textLeft, zoneY),
             new Vector2(textLeft + textMaxWidth, zoneY + zoneSize.Y));
         Marquee.DrawLeft("maps.location.zone", zoneName, textLeft, zoneY, textMaxWidth,
             TextStyles.Headline, frameTheme.TextStrong, zoneHovering);
-        var regionY = cardMin.Y + 36f * scale;
+        var regionY = row.Min.Y + 36f * scale;
         var regionSize = Typography.Measure(regionName, TextStyles.Footnote);
         var regionHovering = UiInteract.Hover(new Vector2(textLeft, regionY),
             new Vector2(textLeft + textMaxWidth, regionY + regionSize.Y));
         Marquee.DrawLeft("maps.location.region", regionName, textLeft, regionY, textMaxWidth,
             TextStyles.Footnote, frameTheme.TextMuted, regionHovering);
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, LocationCardHeight * scale + 4f * scale));
+        card.End();
+        ImGui.Dummy(new Vector2(0f, 4f * scale));
     }
 
     private void DrawFavorites()

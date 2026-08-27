@@ -213,27 +213,22 @@ internal sealed class InventoryApp : IPhoneApp
     private void DrawLocalPanel()
     {
         var scale = UiScale.Current;
-        var drawList = ImGui.GetWindowDrawList();
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var rowHeight = StorageRowHeight * scale;
-        var panelMax = new Vector2(origin.X + width, origin.Y + localScratch.Count * rowHeight);
-        ui.Card(drawList, origin, panelMax, Metrics.Radius.Card * scale, elevated: true);
-        var separatorLeft = StorageSeparatorLeft(origin, scale);
+        var accentHover = Palette.WithAlpha(ui.Accent, 0.10f);
+        var card = GroupCard.Begin(ui, localScratch.Count, StorageRowHeight);
         for (var index = 0; index < localScratch.Count; index++)
         {
             var group = localScratch[index];
-            var row = PanelRow(drawList, origin, width, rowHeight, index, scale, separatorLeft,
-                Palette.WithAlpha(ui.Accent, 0.10f), true, out var hovered, out var hitMin, out var hitMax);
-            if (DrawStorageRow(row, group.Kind, group.Title, string.Empty, group.Rows.Count, true, hovered, hitMin,
-                    hitMax))
+            var row = card.NextRow();
+            var band = RowBand(row, scale);
+            var hovered = DrawRowHover(band, scale, accentHover);
+            if (DrawStorageRow(row, group.Kind, group.Title, string.Empty, group.Rows.Count, true, hovered, band.Min,
+                    band.Max))
             {
                 Open(group.Kind, group.Title);
             }
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, localScratch.Count * rowHeight));
+        card.End();
     }
 
     private void DrawCachedPanel()
@@ -248,23 +243,19 @@ internal sealed class InventoryApp : IPhoneApp
 
         SectionLabel(Loc.T(L.Inventory.CachedSources));
         var scale = UiScale.Current;
-        var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
-        var rowHeight = StorageRowHeight * scale;
-        var panelMax = new Vector2(origin.X + width, origin.Y + total * rowHeight);
-        ui.Card(drawList, origin, panelMax, Metrics.Radius.Card * scale, elevated: true);
-        var separatorLeft = StorageSeparatorLeft(origin, scale);
         var accentHover = Palette.WithAlpha(ui.Accent, 0.10f);
-        var rowIndex = 0;
+        var card = GroupCard.Begin(ui, total, StorageRowHeight);
         for (var index = 0; index < cachedScratch.Count; index++)
         {
             var group = cachedScratch[index];
             var subtitle = Loc.T(L.Inventory.Updated, TimeText.Ago(group.CapturedUtc));
-            var row = PanelRow(drawList, origin, width, rowHeight, rowIndex++, scale, separatorLeft, accentHover, true,
-                out var hovered, out var hitMin, out var hitMax);
-            if (DrawStorageRow(row, group.Kind, group.Title, subtitle, group.Rows.Count, true, hovered, hitMin,
-                    hitMax))
+            var row = card.NextRow();
+            var band = RowBand(row, scale);
+            var hovered = DrawRowHover(band, scale, accentHover);
+            if (DrawStorageRow(row, group.Kind, group.Title, subtitle, group.Rows.Count, true, hovered, band.Min,
+                    band.Max))
             {
                 Open(group.Kind, group.Title);
             }
@@ -272,53 +263,41 @@ internal sealed class InventoryApp : IPhoneApp
 
         if (showRetainer)
         {
-            var row = PanelRow(drawList, origin, width, rowHeight, rowIndex++, scale, separatorLeft, accentHover, false,
-                out _, out var hitMin, out var hitMax);
+            var row = card.NextRow();
+            var band = RowBand(row, scale);
             DrawStorageRow(row, InventorySourceKind.Retainer, Loc.T(L.Inventory.SourceRetainer),
-                Loc.T(L.Inventory.RetainerEmpty), -1, false, false, hitMin, hitMax);
+                Loc.T(L.Inventory.RetainerEmpty), -1, false, false, band.Min, band.Max);
         }
 
         if (showFreeCompany)
         {
-            var row = PanelRow(drawList, origin, width, rowHeight, rowIndex, scale, separatorLeft, accentHover, false,
-                out _, out var hitMin, out var hitMax);
+            var row = card.NextRow();
+            var band = RowBand(row, scale);
             DrawStorageRow(row, InventorySourceKind.FreeCompany, Loc.T(L.Inventory.SourceFreeCompany),
-                Loc.T(L.Inventory.FreeCompanyEmpty), -1, false, false, hitMin, hitMax);
+                Loc.T(L.Inventory.FreeCompanyEmpty), -1, false, false, band.Min, band.Max);
         }
 
-        UiAnchors.Report("inventory.sources", new Rect(origin, panelMax));
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, total * rowHeight));
+        UiAnchors.Report("inventory.sources",
+            new Rect(origin, origin + new Vector2(width, total * StorageRowHeight * scale)));
+        card.End();
     }
 
-    private static float StorageSeparatorLeft(Vector2 origin, float scale) =>
-        origin.X + 16f * scale + 44f * scale + 14f * scale;
+    private static Rect RowBand(Rect row, float scale) =>
+        new(new Vector2(row.Min.X - Metrics.Space.Lg * scale, row.Min.Y),
+            new Vector2(row.Max.X + Metrics.Space.Lg * scale, row.Max.Y));
 
-    private Rect PanelRow(ImDrawListPtr drawList, Vector2 origin, float width, float rowHeight, int index, float scale,
-        float separatorLeft, Vector4 hoverTint, bool interactive, out bool hovered, out Vector2 hitMin,
-        out Vector2 hitMax)
+    private static bool DrawRowHover(Rect band, float scale, Vector4 hoverTint)
     {
-        var pad = 16f * scale;
-        var rowTop = origin.Y + index * rowHeight;
-        var rowMin = new Vector2(origin.X, rowTop);
-        var rowMax = new Vector2(origin.X + width, rowTop + rowHeight);
-        hitMin = rowMin;
-        hitMax = rowMax;
-        hovered = interactive && UiInteract.Hover(rowMin, rowMax);
-        if (hovered)
+        if (!UiInteract.Hover(band.Min, band.Max))
         {
-            var pressed = ImGui.IsMouseDown(ImGuiMouseButton.Left);
-            var fill = pressed ? Palette.WithAlpha(hoverTint, MathF.Min(1f, hoverTint.W * 1.8f)) : hoverTint;
-            Squircle.Fill(drawList, new Vector2(rowMin.X + 4f * scale, rowMin.Y + 3f * scale),
-                new Vector2(rowMax.X - 4f * scale, rowMax.Y - 3f * scale), 12f * scale, ImGui.GetColorU32(fill));
-        }
-        else if (index > 0)
-        {
-            drawList.AddLine(new Vector2(separatorLeft, rowTop), new Vector2(rowMax.X - pad, rowTop),
-                ImGui.GetColorU32(Palette.WithAlpha(ui.TitleInk, 0.06f)), 1f);
+            return false;
         }
 
-        return new Rect(new Vector2(rowMin.X + pad, rowMin.Y), new Vector2(rowMax.X - pad, rowMax.Y));
+        var pressed = ImGui.IsMouseDown(ImGuiMouseButton.Left);
+        var fill = pressed ? Palette.WithAlpha(hoverTint, MathF.Min(1f, hoverTint.W * 1.8f)) : hoverTint;
+        Squircle.Fill(ImGui.GetWindowDrawList(), new Vector2(band.Min.X + 4f * scale, band.Min.Y + 3f * scale),
+            new Vector2(band.Max.X - 4f * scale, band.Max.Y - 3f * scale), 12f * scale, ImGui.GetColorU32(fill));
+        return true;
     }
 
     private bool DrawStorageRow(Rect row, InventorySourceKind kind, string title, string subtitle, int count,
@@ -517,22 +496,15 @@ internal sealed class InventoryApp : IPhoneApp
     private void DrawItemPanel(List<InventoryResultRow> rows)
     {
         var scale = UiScale.Current;
-        var drawList = ImGui.GetWindowDrawList();
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var rowHeight = ItemRowHeight * scale;
-        var panelMax = new Vector2(origin.X + width, origin.Y + rows.Count * rowHeight);
-        ui.Card(drawList, origin, panelMax, Metrics.Radius.Card * scale, elevated: true);
-        var separatorLeft = origin.X + 16f * scale + 38f * scale + 14f * scale;
+        var card = GroupCard.Begin(ui, rows.Count, ItemRowHeight);
         for (var index = 0; index < rows.Count; index++)
         {
-            var row = PanelRow(drawList, origin, width, rowHeight, index, scale, separatorLeft, ui.HoverTint, true,
-                out var hovered, out _, out _);
+            var row = card.NextRow();
+            var hovered = DrawRowHover(RowBand(row, scale), scale, ui.HoverTint);
             DrawItemRow(row, rows[index], index, hovered);
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rows.Count * rowHeight));
+        card.End();
     }
 
     private void DrawItemRow(Rect row, InventoryResultRow item, int index, bool hovered)

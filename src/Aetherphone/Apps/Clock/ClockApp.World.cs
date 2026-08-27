@@ -12,8 +12,6 @@ internal sealed partial class ClockApp
 {
     private const double EorzeaRate = 144.0 / 7.0;
     private const float WorldRowHeight = 74f;
-    private const float CardRounding = 18f;
-    private const float RowPadding = 14f;
 
     private void DrawWorld(Rect body, float scale)
     {
@@ -28,24 +26,25 @@ internal sealed partial class ClockApp
 
             var cities = configuration.WorldClocks;
             var rowCount = 2 + cities.Count;
-            var card = BeginRowCard(rowCount, WorldRowHeight, scale);
+            var card = GroupCard.Begin(ui, rowCount, WorldRowHeight);
 
             var eorzea = EorzeaTime.Now();
             var eorzeaSeconds = (float)(EorzeaSeconds() % 60.0);
-            DrawWorldRow(RowAt(card, 0, WorldRowHeight, scale), "Eorzea", Loc.T(L.Clock.InGame), eorzea.Formatted,
+            DrawWorldRow(card.NextRow(), "Eorzea", Loc.T(L.Clock.InGame), eorzea.Formatted,
                 eorzea.Hour, eorzea.Minute, eorzeaSeconds);
 
             var utc = DateTime.UtcNow;
             var utcSeconds = utc.Second + utc.Millisecond / 1000f;
-            DrawWorldRow(RowAt(card, 1, WorldRowHeight, scale), Loc.T(L.Clock.Server), "UTC", TimeText.Clock(utc),
+            DrawWorldRow(card.NextRow(), Loc.T(L.Clock.Server), "UTC", TimeText.Clock(utc),
                 utc.Hour, utc.Minute, utcSeconds);
 
             for (var index = 0; index < cities.Count; index++)
             {
-                DrawCityRow(RowAt(card, index + 2, WorldRowHeight, scale), cities[index]);
+                DrawCityRow(card.NextRow(), cities[index]);
             }
 
-            EndRowCard(card, 10f, scale);
+            card.End();
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
         }
     }
 
@@ -133,13 +132,14 @@ internal sealed partial class ClockApp
         using (AppSurface.Begin(body))
         {
             var catalog = WorldClockCatalog.All;
-            var card = BeginRowCard(catalog.Count, Metrics.Size.Row + 12f, scale);
+            var card = GroupCard.Begin(ui, catalog.Count, Metrics.Size.Row + 12f);
             for (var index = 0; index < catalog.Count; index++)
             {
-                DrawCityOption(RowAt(card, index, Metrics.Size.Row + 12f, scale), catalog[index]);
+                DrawCityOption(card.NextRow(), catalog[index]);
             }
 
-            EndRowCard(card, 10f, scale);
+            card.End();
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
         }
     }
 
@@ -194,35 +194,6 @@ internal sealed partial class ClockApp
         }
 
         configuration.Save();
-    }
-
-    private Rect BeginRowCard(int rowCount, float rowHeight, float scale)
-    {
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var card = new Rect(origin, origin + new Vector2(width, rowCount * rowHeight * scale));
-        ui.Card(ImGui.GetWindowDrawList(), card.Min, card.Max, CardRounding * scale, elevated: true);
-        return card;
-    }
-
-    private Rect RowAt(Rect card, int index, float rowHeight, float scale)
-    {
-        var top = card.Min.Y + index * rowHeight * scale;
-        if (index > 0)
-        {
-            var separatorX = card.Min.X + RowPadding * 2f * scale;
-            ImGui.GetWindowDrawList().AddLine(new Vector2(separatorX, top), new Vector2(card.Max.X - RowPadding * scale, top),
-                ImGui.GetColorU32(ui.Palette.CardStroke), 1f);
-        }
-
-        return new Rect(new Vector2(card.Min.X + RowPadding * scale, top),
-            new Vector2(card.Max.X - RowPadding * scale, top + rowHeight * scale));
-    }
-
-    private void EndRowCard(Rect card, float extraGap, float scale)
-    {
-        ImGui.SetCursorScreenPos(card.Min);
-        ImGui.Dummy(new Vector2(card.Width, card.Height + extraGap * scale));
     }
 
     private static string CityOffsetLabel(TimeZoneInfo zone, DateTime cityNow)

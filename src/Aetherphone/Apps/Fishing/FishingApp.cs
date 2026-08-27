@@ -224,16 +224,10 @@ internal sealed class FishingApp : IPhoneApp
     private void DrawUpcoming(DateTime utcNow, float scale)
     {
         ui.SectionLabel(Loc.T(L.Fishing.Upcoming), TextStyles.FootnoteEmphasized, 6f);
-        var width = ImGui.GetContentRegionAvail().X;
-        var rowCount = VoyageCount - 1;
-        var origin = ImGui.GetCursorScreenPos();
-        var min = origin;
-        var max = origin + new Vector2(width, rowCount * UpcomingRowHeight * scale);
-        ui.Card(ImGui.GetWindowDrawList(), min, max, CardRounding * scale, elevated: true);
-
+        var card = GroupCard.Begin(ui, VoyageCount - 1, UpcomingRowHeight);
         for (var index = 1; index < VoyageCount; index++)
         {
-            var row = UpcomingRow(min, max, index - 1, scale);
+            var row = card.NextRow();
             if (index == 1)
             {
                 UiAnchors.Report("fishing.upcoming", row);
@@ -242,23 +236,8 @@ internal sealed class FishingApp : IPhoneApp
             DrawVoyageRow(row, voyages[index], utcNow, scale);
         }
 
-        ImGui.SetCursorScreenPos(min);
-        ImGui.Dummy(new Vector2(width, max.Y - min.Y + 4f * scale));
-    }
-
-    private Rect UpcomingRow(Vector2 cardMin, Vector2 cardMax, int rowIndex, float scale)
-    {
-        var pad = CardPadding * scale;
-        var top = cardMin.Y + rowIndex * UpcomingRowHeight * scale;
-        if (rowIndex > 0)
-        {
-            ImGui.GetWindowDrawList().AddLine(
-                new Vector2(cardMin.X + pad + (UpcomingTileSize + 12f) * scale, top),
-                new Vector2(cardMax.X - pad, top), ImGui.GetColorU32(ui.Palette.CardStroke), 1f);
-        }
-
-        return new Rect(new Vector2(cardMin.X + pad, top),
-            new Vector2(cardMax.X - pad, top + UpcomingRowHeight * scale));
+        card.End();
+        ImGui.Dummy(new Vector2(0f, 4f * scale));
     }
 
     private void DrawVoyageRow(Rect row, in OceanVoyageSlot voyage, DateTime utcNow, float scale)
