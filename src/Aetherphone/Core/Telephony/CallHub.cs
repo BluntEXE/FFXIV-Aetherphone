@@ -420,6 +420,7 @@ internal sealed class CallHub : IDisposable
     {
         var participants = message.Participants ?? Array.Empty<ParticipantInfo>();
         CallSession? sessionToDispose = null;
+        var becameActive = false;
         var localId = LocalUserId;
         lock (gate)
         {
@@ -449,6 +450,7 @@ internal sealed class CallHub : IDisposable
             {
                 audio.EnsureStartedLocked(callId, localSlot);
                 audio.SyncRemotesLocked(participants, localId);
+                becameActive = state != CallState.Active;
                 state = CallState.Active;
             }
             else if (audio.HasSessionLocked)
@@ -458,6 +460,10 @@ internal sealed class CallHub : IDisposable
         }
 
         sessionToDispose?.Dispose();
+        if (becameActive)
+        {
+            UiFeedback.Play(UiSound.CallConnect);
+        }
     }
 
     private void HandleDeclined(Guid id, CallControl message)
@@ -629,6 +635,10 @@ internal sealed class CallHub : IDisposable
         AepLog.Info($"[calls] ended from={priorState} reason={reason} connected={wasConnected} duration_ms={durationMs:F0}");
 
         sound.StopCallRing();
+        if (wasConnected)
+        {
+            UiFeedback.Play(UiSound.CallEnd);
+        }
         toDispose?.Dispose();
         RaiseOutcome(reason, peerName);
     }

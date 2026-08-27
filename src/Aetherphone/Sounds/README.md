@@ -6,6 +6,17 @@ Settings only lists its own kind:
 - `Ringtones/` ships the **Ringtone** options (plays on incoming calls).
 - `Notifications/` ships the **Notification Sound** options (plays on
   notifications, including per-app overrides).
+- `Ui/` ships the **Interface Sounds** clips (wake, shutter, send, taps and
+  friends). This folder is not a picker: the file names are wired to events in
+  `Core/Notifications/UiSound.cs` and never appear in Settings lists, and
+  `UiSoundCatalogTests` fails the build server if a wired name goes missing.
+  Clips are 48 kHz PCM WAV, level-matched at bake time; per-event gain lives in
+  the catalog, not in the files. Sources and licenses are listed in
+  `THIRD-PARTY-NOTICES.md`.
+- `Games/` ships the **Game Sounds** palette for the mini-games (hits, pops,
+  lasers, cards, Simon tones), mono 48 kHz PCM WAV, wired through the same
+  catalog on the Game channel and gated by the Game Sounds toggle in Settings.
+  Everything in the Ui section above applies here too.
 
 Every `.mp3` and `.wav` file in these folders ships with the plugin. The phone
 plays its own audio only. Game system sounds are never used, so these folders

@@ -43,6 +43,44 @@ search tags, shortcodes and skin-tone variants) is built from
 [emojibase-data](https://github.com/milesj/emojibase) by Miles Johnson,
 MIT License; full text reproduced in the MIT section below.
 
+## Interface sounds
+
+The interface sound clips under `src/Aetherphone/Sounds/Ui/` come from two
+sources, re-encoded to 48 kHz PCM WAV and level-matched:
+
+Most clips (taps, toggles, transitions, send, caution, blocked, success,
+keystrokes) are from the SND01 "sine" kit of [SND](https://snd.dev),
+designed by Yasuhiro Tsuchiya.
+
+- Copyright DENTSU INC. and STARRYWORKS inc.; audio copyright remains with
+  the credited sound designer
+- Source: https://github.com/snd-lib/snd-lib
+- License: free for commercial and non-commercial use per the SND terms
+  (https://snd.dev); credit requested, provided here
+
+The remaining clips are public domain:
+
+- `shutter.wav`: "Trigger of camera 1" from
+  [BigSoundBank](https://bigsoundbank.com/trigger-of-camera-1-s2394.html),
+  by Joseph Sardin, CC0
+- `coin.wav`: "chips-stack-1" from
+  [Kenney Casino Audio](https://kenney.nl/assets/casino-audio), CC0
+
+The mini-game clips under `src/Aetherphone/Sounds/Games/` are Creative Commons
+Zero (CC0) by [Kenney](https://kenney.nl), re-encoded to mono 48 kHz PCM WAV
+and level-matched:
+
+- [Impact Sounds](https://kenney.nl/assets/impact-sounds): hits, breaks,
+  explosions
+- [Digital Audio](https://kenney.nl/assets/digital-audio): retro blips,
+  lasers, jumps, power-ups
+- [Casino Audio](https://kenney.nl/assets/casino-audio): card sounds
+- [Interface Sounds](https://kenney.nl/assets/interface-sounds): clicks,
+  ticks, errors
+
+The four `simon_*.wav` tones are sine waves synthesized for this plugin with
+ffmpeg (E3, A3, C#4, E4) and carry no third-party rights.
+
 ## mpv
 
 libmpv provides video decoding and playback for the AetherStream app. No mpv

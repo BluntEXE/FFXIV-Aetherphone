@@ -1,6 +1,7 @@
 using Aetherphone.Core.Animation;
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
@@ -258,6 +259,7 @@ internal sealed class TetrisApp : IMiniGame
         if (board.ClearedLinesThisFrame > 0)
         {
             var lines = board.ClearedLinesThisFrame;
+            UiFeedback.Play(lines >= 4 ? UiSound.GamePowerUp : UiSound.GameClear);
             fx.AddTrauma(MathF.Min(0.45f, 0.08f * lines));
             fx.HitStop(0.03f + 0.02f * lines);
             fx.Flash(new Vector4(0.95f, 0.92f, 1f, 1f), 0.16f);
@@ -355,6 +357,7 @@ internal sealed class TetrisApp : IMiniGame
     private void HardDrop()
     {
         board.HardDrop();
+        UiFeedback.Play(UiSound.GameHitWood);
         fx.AddTrauma(0.14f);
     }
 

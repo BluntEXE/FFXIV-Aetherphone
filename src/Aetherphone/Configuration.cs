@@ -132,6 +132,17 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public string NotificationSound { get; set; } = SoundLibrary.BundledNotificationToken;
     public float RingtoneVolume { get; set; } = 0.8f;
     public float NotificationVolume { get; set; } = 0.8f;
+    public bool SilentMode { get; set; }
+    public bool RingtoneEnabled { get; set; } = true;
+    public bool NotificationSoundsEnabled { get; set; } = true;
+    public bool UiSounds { get; set; } = true;
+    public float UiSoundVolume { get; set; } = 0.7f;
+    public bool UiSoundTaps { get; set; }
+    public bool UiSoundTransitions { get; set; }
+    public bool UiSoundToggles { get; set; }
+    public bool UiSoundKeyboard { get; set; }
+    public bool GameSounds { get; set; } = true;
+    public float GameSoundVolume { get; set; } = 0.7f;
     public float MusicVolume { get; set; } = 0.6f;
     public int MusicRepeat { get; set; }
     public bool SoundSettingsMigrated { get; set; }

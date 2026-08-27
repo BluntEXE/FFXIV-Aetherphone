@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -166,6 +167,7 @@ internal sealed class SkyfallApp : IMiniGame
     {
         if (board.ShotFiredThisFrame)
         {
+            UiFeedback.Play(UiSound.GameShoot);
             var barrel = field.Min + new Vector2(SkyfallBoard.BatteryX, SkyfallBoard.BarrelY) * factor;
             particles.Streaks(barrel, 4, GamePalette.Lighten(Accent, 0.4f), 120f * scale, 2f, 0.25f, 0.6f,
                 -MathF.PI * 0.5f);
@@ -194,6 +196,7 @@ internal sealed class SkyfallApp : IMiniGame
 
         if (board.DestroyedCount > 0)
         {
+            UiFeedback.Play(UiSound.GameExplosion);
             fx.AddTrauma(MathF.Min(0.25f, 0.04f * board.DestroyedCount));
             var last = field.Min + board.DestroyedPosition(board.DestroyedCount - 1) * factor;
             if (board.DestroyedCount >= 2)
@@ -209,6 +212,7 @@ internal sealed class SkyfallApp : IMiniGame
 
         if (board.CityLostThisFrame >= 0)
         {
+            UiFeedback.Play(UiSound.GameHitSoft);
             var city = field.Min + SkyfallBoard.CityCenter(board.CityLostThisFrame) * factor;
             particles.Burst(city, 18, new Vector4(0.6f, 0.55f, 0.6f, 1f), 140f * scale, 3f, 0.8f, 380f, MathF.PI, -MathF.PI * 0.5f,
                 ParticleShape.Square);
@@ -219,6 +223,7 @@ internal sealed class SkyfallApp : IMiniGame
 
         if (board.WaveClearedThisFrame)
         {
+            UiFeedback.Play(UiSound.GamePowerUp);
             var top = new Vector2(field.Center.X, field.Min.Y + field.Height * 0.2f);
             particles.Confetti(top, 60, CelebrationPalette, 260f * scale, 4f, 1.4f);
             fx.Flash(GamePalette.Lighten(Accent, 0.4f), 0.16f);

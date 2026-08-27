@@ -1,6 +1,7 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Media;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -276,6 +277,7 @@ internal sealed class ChatComposer : IDisposable
                 if (ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !model.Sending)
                 {
                     recorder.Start(model.ResolveVoiceInput());
+                    UiFeedback.Play(UiSound.RecordStart);
                 }
             }
         }
@@ -295,6 +297,7 @@ internal sealed class ChatComposer : IDisposable
             else
             {
                 model.OnSendText(model.ConversationId, draft, replyTargetId);
+                UiFeedback.Play(UiSound.MessageSent);
                 draft = string.Empty;
                 ClearReply();
             }
@@ -341,6 +344,7 @@ internal sealed class ChatComposer : IDisposable
                 AppSkin.Transparent, 1f, Loc.T(L.Common.Cancel), HoverLabelSide.Above))
         {
             recorder.Cancel();
+            UiFeedback.Play(UiSound.RecordCancel);
             return;
         }
 
@@ -377,6 +381,7 @@ internal sealed class ChatComposer : IDisposable
             if (recorder.Stop(out var wavBytes, out var durationSecs))
             {
                 model.OnSendVoice(model.ConversationId, wavBytes, durationSecs);
+                UiFeedback.Play(UiSound.MessageSent);
             }
         }
     }

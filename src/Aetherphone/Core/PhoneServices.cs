@@ -67,6 +67,8 @@ internal sealed class PhoneServices : IDisposable
     public required ModerationNoticeArchive ModerationArchive { get; init; }
     public required SafetyLauncher SafetyLauncher { get; init; }
     public required SoundService Sound { get; init; }
+    public required UiSoundService UiSound { get; init; }
+    public required FrameworkTicker UiSoundTicker { get; init; }
     public required LinkpearlLauncher LinkpearlLauncher { get; init; }
     public required VelvetLauncher VelvetLauncher { get; init; }
     public required DmLauncher DmLauncher { get; init; }
@@ -197,6 +199,9 @@ internal sealed class PhoneServices : IDisposable
         var notificationLibrary = new SoundLibrary(new DirectoryInfo(Path.Combine(soundBundledRoot, "Notifications")),
             new DirectoryInfo(Path.Combine(soundUserRoot, "Notifications")));
         var sound = new SoundService(configuration, ringtoneLibrary, notificationLibrary, new SoundEffectPlayer());
+        var uiSound = new UiSoundService(configuration, new UiSoundPlayer(new DirectoryInfo(soundBundledRoot)));
+        var uiSoundTicker = new FrameworkTicker(framework, 1000, uiSound.Maintain);
+        UiFeedback.Bind(uiSound);
         var notifications = new NotificationService(sound, configuration, installer, framework);
         var characterWatch = new CharacterWatch(framework);
         var messageArchive = new MessageArchive(new DirectoryInfo(Path.Combine(configDirectory.FullName, "Messages")));
@@ -366,6 +371,8 @@ internal sealed class PhoneServices : IDisposable
             ModerationArchive = moderationArchive,
             SafetyLauncher = safetyLauncher,
             Sound = sound,
+            UiSound = uiSound,
+            UiSoundTicker = uiSoundTicker,
             LinkpearlLauncher = linkpearlLauncher,
             VelvetLauncher = velvetLauncher,
             DmLauncher = dmLauncher,
@@ -507,6 +514,9 @@ internal sealed class PhoneServices : IDisposable
         News.Dispose();
         Notifications.Dispose();
         Sound.Dispose();
+        UiFeedback.Unbind();
+        UiSoundTicker.Dispose();
+        UiSound.Dispose();
         Media.Dispose();
         ShortcutRunner.Dispose();
         RemoteImages.Dispose();

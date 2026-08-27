@@ -1,6 +1,7 @@
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Moderation;
+using Aetherphone.Core.Notifications;
 
 namespace Aetherphone.Core.Apps;
 
@@ -110,6 +111,7 @@ internal sealed class NavigationStack : INavigator
     {
         app.OnOpened();
         AppOpened?.Invoke(app.Id);
+        UiFeedback.Play(UiSound.AppOpen);
     }
 
     public bool IsAvailable(string appId)
@@ -199,6 +201,7 @@ internal sealed class NavigationStack : INavigator
 
     private void BeginDismiss(IPhoneApp over, IPhoneApp? under)
     {
+        UiFeedback.Play(UiSound.AppClose);
         motion = ShellMotion.Dismiss;
         motionOver = over;
         motionUnder = under;

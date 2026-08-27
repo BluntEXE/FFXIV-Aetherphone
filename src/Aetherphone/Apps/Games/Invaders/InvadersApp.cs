@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -167,6 +168,7 @@ internal sealed class InvadersApp : IMiniGame
     {
         if (board.ShotFiredThisFrame)
         {
+            UiFeedback.Play(UiSound.GameShoot);
             var muzzle = field.Min + new Vector2(board.PlayerX, InvadersBoard.PlayerY - InvadersBoard.PlayerHeight) * factor;
             particles.Streaks(muzzle, 3, GamePalette.Lighten(Accent, 0.4f), 110f * scale, 2f, 0.2f, 0.5f, -MathF.PI * 0.5f);
         }
@@ -183,6 +185,7 @@ internal sealed class InvadersApp : IMiniGame
 
         if (board.KillCount > 0)
         {
+            UiFeedback.Play(UiSound.GameExplosion);
             fx.AddTrauma(0.06f);
             fx.HitStop(0.03f);
         }
@@ -206,6 +209,7 @@ internal sealed class InvadersApp : IMiniGame
 
         if (board.PlayerHitThisFrame)
         {
+            UiFeedback.Play(UiSound.GameHitSoft);
             var center = field.Min + new Vector2(board.PlayerX, InvadersBoard.PlayerY) * factor;
             particles.Burst(center, 16, Accent, 170f * scale, 2.6f, 0.7f, 300f);
             fx.AddTrauma(0.7f);
@@ -221,6 +225,7 @@ internal sealed class InvadersApp : IMiniGame
 
         if (board.WaveClearedThisFrame)
         {
+            UiFeedback.Play(UiSound.GamePowerUp);
             var top = new Vector2(field.Center.X, field.Min.Y + field.Height * 0.2f);
             particles.Confetti(top, 60, CelebrationPalette, 260f * scale, 4f, 1.4f);
             fx.Flash(GamePalette.Lighten(Accent, 0.4f), 0.16f);

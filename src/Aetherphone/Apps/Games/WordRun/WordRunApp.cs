@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Game;
@@ -355,6 +356,7 @@ internal sealed class WordRunApp : IMiniGame
         revealSeconds = 0f;
         if (board.Outcome == WordOutcome.Solved)
         {
+            UiFeedback.Play(UiSound.GamePowerUp);
             var grid = WordRunRenderer.Grid(boardArea);
             var center = grid.CellCenter(2, row);
             particles.Confetti(center, 50, CelebrationPalette, 240f * scale, 3.5f, 1.2f);
@@ -435,11 +437,13 @@ internal sealed class WordRunApp : IMiniGame
             case WordSubmit.NotAWord:
                 shakeRemaining = WordRunRenderer.ShakeSeconds;
                 ShowMessage(Loc.T(L.Games.NotInWordList), MessageSeconds);
+                UiFeedback.Play(UiSound.GameWrong);
                 fx.AddTrauma(0.08f);
                 break;
             default:
                 revealRow = board.RowCount - 1;
                 revealSeconds = 0f;
+                UiFeedback.Play(UiSound.GameCardFlip);
                 fx.AddTrauma(0.04f);
                 break;
         }

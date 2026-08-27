@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -167,6 +168,7 @@ internal sealed class SquadronApp : IMiniGame
     {
         if (board.ShotFiredThisFrame)
         {
+            UiFeedback.Play(UiSound.GameShoot);
             var muzzle = field.Min + new Vector2(board.PlayerX, SquadronBoard.PlayerRowY - SquadronBoard.PlayerHeight) * factor;
             particles.Streaks(muzzle, 3, GamePalette.Lighten(Accent, 0.4f), 110f * scale, 2f, 0.2f, 0.5f, -MathF.PI * 0.5f);
         }
@@ -187,6 +189,7 @@ internal sealed class SquadronApp : IMiniGame
 
         if (board.KillCount > 0)
         {
+            UiFeedback.Play(UiSound.GameExplosion);
             fx.AddTrauma(0.06f);
             fx.HitStop(0.03f);
         }
@@ -205,6 +208,7 @@ internal sealed class SquadronApp : IMiniGame
 
         if (board.RescueCompletedThisFrame)
         {
+            UiFeedback.Play(UiSound.GamePowerUp);
             var center = field.Min + board.PlayerCenter * factor;
             particles.Confetti(center, 40, CelebrationPalette, 220f * scale, 3.5f, 1.2f);
             fx.Shockwave(center, SquadronBoard.PlayerWidth * factor * 3f, GamePalette.Lighten(Accent, 0.4f) with { W = 0.7f }, 0.5f, 3f);
@@ -223,6 +227,7 @@ internal sealed class SquadronApp : IMiniGame
 
         if (board.PlayerHitThisFrame)
         {
+            UiFeedback.Play(UiSound.GameHitSoft);
             var center = field.Min + board.PlayerCenter * factor;
             particles.Burst(center, 16, Accent, 170f * scale, 2.6f, 0.7f, 300f);
             fx.AddTrauma(0.7f);
@@ -232,6 +237,7 @@ internal sealed class SquadronApp : IMiniGame
 
         if (board.StageClearedThisFrame)
         {
+            UiFeedback.Play(UiSound.GameClear);
             var top = new Vector2(field.Center.X, field.Min.Y + field.Height * 0.2f);
             particles.Confetti(top, 50, CelebrationPalette, 260f * scale, 4f, 1.4f);
             fx.Flash(GamePalette.Lighten(Accent, 0.4f), 0.14f);

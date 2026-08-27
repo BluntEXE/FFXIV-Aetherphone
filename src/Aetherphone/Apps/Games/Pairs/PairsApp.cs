@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Games;
 using Aetherphone.Core.Localization;
@@ -203,11 +204,13 @@ internal sealed class PairsApp : IMiniGame
         if (board.FirstCard < 0)
         {
             board.RevealFirst(index);
+            UiFeedback.Play(UiSound.GameCardFlip);
             flipTarget[index] = 1f;
             return;
         }
 
         board.RevealSecond(index);
+        UiFeedback.Play(UiSound.GameCardFlip);
         flipTarget[index] = 1f;
         phase = Phase.Revealing;
         phaseTimer = 0f;
@@ -299,6 +302,7 @@ internal sealed class PairsApp : IMiniGame
     {
         if (board.SelectionMatches)
         {
+            UiFeedback.Play(UiSound.GameMatch);
             matchGlow[board.FirstCard] = 1f;
             matchGlow[board.SecondCard] = 1f;
             matchBurstPending = true;
@@ -309,6 +313,7 @@ internal sealed class PairsApp : IMiniGame
 
         shakePhase[board.FirstCard] = 1f;
         shakePhase[board.SecondCard] = 1f;
+        UiFeedback.Play(UiSound.GameWrong);
         fx.AddTrauma(0.12f);
         phase = Phase.Shaking;
         phaseTimer = 0f;

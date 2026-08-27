@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -170,11 +171,13 @@ internal sealed class HopApp : IMiniGame
         var hopper = HopRenderer.CellCenter(boardRect, cell, board.X, board.Row);
         if (board.HoppedThisFrame && !board.Dying)
         {
+            UiFeedback.Play(UiSound.GameJump);
             particles.Burst(hopper + new Vector2(0f, cell * 0.4f), 3, new Vector4(1f, 1f, 1f, 0.5f), 50f * scale, 1.6f, 0.3f, 0f);
         }
 
         if (board.BankedBayThisFrame >= 0)
         {
+            UiFeedback.Play(UiSound.GameCollect);
             var den = HopRenderer.CellCenter(boardRect, cell, HopBoard.BayColumns[board.BankedBayThisFrame], HopBoard.BankRow);
             particles.Sparkle(den, 14, GamePalette.Lighten(Accent, 0.4f), 140f * scale, 2.6f, 0.7f);
             fx.Shockwave(den, cell * 2.4f, GamePalette.Lighten(Accent, 0.4f) with { W = 0.7f }, 0.4f, 2.5f);
@@ -190,6 +193,7 @@ internal sealed class HopApp : IMiniGame
 
         if (board.DiedThisFrame)
         {
+            UiFeedback.Play(UiSound.GameHitSoft);
             particles.Burst(hopper, 16, HopRenderer.HopperColor, 150f * scale, 2.6f, 0.7f, 300f);
             fx.AddTrauma(0.65f);
             fx.HitStop(0.1f);
@@ -198,6 +202,7 @@ internal sealed class HopApp : IMiniGame
 
         if (board.LevelClearedThisFrame)
         {
+            UiFeedback.Play(UiSound.GameClear);
             var top = new Vector2(boardRect.Center.X, boardRect.Min.Y + boardRect.Height * 0.15f);
             particles.Confetti(top, 70, CelebrationPalette, 280f * scale, 4f, 1.4f);
             fx.Flash(GamePalette.Lighten(Accent, 0.4f), 0.18f);

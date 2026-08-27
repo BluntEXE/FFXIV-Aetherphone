@@ -1,6 +1,7 @@
 using Aetherphone.Core.Animation;
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
@@ -31,6 +32,11 @@ internal sealed class SimonApp : IMiniGame
     private readonly ParticleSystem particles = new();
     private readonly FeedbackFx fx = new();
     private readonly float[] lit = new float[SimonBoard.PadCount];
+
+    private static readonly UiSound[] PadTones =
+    {
+        UiSound.SimonTone1, UiSound.SimonTone2, UiSound.SimonTone3, UiSound.SimonTone4,
+    };
     private RollingValue scoreRoll;
     private Phase phase;
     private int showStep;
@@ -200,6 +206,7 @@ internal sealed class SimonApp : IMiniGame
             showOn = true;
             phaseTimer = OnDuration;
             var pad = board.PadAt(showStep);
+            UiFeedback.Play(PadTones[pad]);
             lit[pad] = 1f;
             var center = SimonRenderer.PadRect(grid, pad).Center;
             fx.Shockwave(center, grid.Pitch * 0.42f, SimonRenderer.ColorOf(pad) with { W = 0.7f }, 0.42f, 2.4f);
@@ -226,6 +233,8 @@ internal sealed class SimonApp : IMiniGame
             return;
         }
 
+        UiFeedback.Play(PadTones[hovered]);
+
         BurstPad(grid, hovered, 10, scale);
         fx.Shockwave(SimonRenderer.PadRect(grid, hovered).Center, grid.Pitch * 0.5f,
             SimonRenderer.ColorOf(hovered) with { W = 0.8f }, 0.36f, 2.4f);
@@ -247,6 +256,7 @@ internal sealed class SimonApp : IMiniGame
 
     private void OnFail(GameGrid grid, float scale)
     {
+        UiFeedback.Play(UiSound.GameWrong);
         phase = Phase.Over;
         pendingSubmit = true;
         resultAppear = 0f;

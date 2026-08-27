@@ -2,6 +2,7 @@ using System.Globalization;
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -81,6 +82,7 @@ internal static class GameOverlay
             Celebration.Confetti(new Vector2(center.X, min.Y + 8f * scale), 110, ConfettiPalette, 300f * scale, 4.2f,
                 1.5f);
             Celebration.Sparkle(center, 18, GamePalette.Lighten(accent, 0.4f), 130f * scale, 2.6f, 0.9f);
+            UiFeedback.Play(UiSound.GameWin);
         }
 
         Celebration.Update(deltaSeconds);

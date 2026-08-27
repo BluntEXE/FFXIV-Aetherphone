@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 
@@ -41,6 +42,7 @@ internal sealed class PullToRefresh
             {
                 refreshing = true;
                 spinnerElapsed = 0f;
+                UiFeedback.Play(UiSound.Refresh);
                 onRefresh();
             }
 

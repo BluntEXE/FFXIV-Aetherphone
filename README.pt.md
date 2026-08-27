@@ -52,7 +52,7 @@ A privacidade e a segurança vêm em primeiro lugar: as mensagens de texto, os a
 - **Utilidades**: um rastreador do mercado, um navegador de moradias, um diretório de locais e eventos, música no jogo com estações de rádio comunitárias ao vivo e listagens de DJs do Rolladeck, o clima, uma carteira, cronômetros e resets, uma biblioteca de fotos e câmera, atalhos, e um fliperama de bolso com minijogos, entre 40 aplicativos.
 - **Assistir junto**: vídeos, incluindo do YouTube, em uma tela dentro do jogo, com a reprodução sincronizada para quem estiver assistindo com você. Arquivos locais também funcionam: cada espectador escolhe a própria cópia e permanece em sincronia.
 - **Cassino**: blackjack, caça-níqueis, raspadinhas, uma roda comunitária e bingo, tudo com dinheiro fictício. Sem dinheiro real, e nada tem valor em dinheiro.
-- **Deixe do seu jeito**: qualquer cor de destaque, papéis de parede, retratos de personagem do Lodestone, toques personalizados, um zoom do tamanho do texto e um telefone que você arrasta para o tamanho que quiser.
+- **Deixe do seu jeito**: qualquer cor de destaque, papéis de parede, retratos de personagem do Lodestone, toques personalizados, sons de interface discretos, um zoom do tamanho do texto e um telefone que você arrasta para o tamanho que quiser.
 
 O tour completo pelos recursos, capturas de tela e detalhes estão no site:
 

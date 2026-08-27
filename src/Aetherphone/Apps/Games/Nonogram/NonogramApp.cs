@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
@@ -171,6 +172,7 @@ internal sealed class NonogramApp : IMiniGame
         {
             painting = board.MarkAt(hoveredCell) == CellMark.Filled ? PaintMode.Erase : PaintMode.Fill;
             ApplyPaint(hoveredCell, true);
+            UiFeedback.Play(UiSound.GameTick);
         }
         else if (ImGui.IsMouseClicked(ImGuiMouseButton.Right) && hoveredCell >= 0)
         {
@@ -246,6 +248,7 @@ internal sealed class NonogramApp : IMiniGame
             return;
         }
 
+        UiFeedback.Play(UiSound.GameClear);
         wasSolved = true;
         painting = PaintMode.None;
         resultAppear = 0f;

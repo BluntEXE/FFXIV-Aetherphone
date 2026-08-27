@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -145,6 +146,7 @@ internal sealed class BladeApp : IMiniGame
 
         if (board.Throw())
         {
+            UiFeedback.Play(UiSound.GameShoot);
             fx.AddTrauma(0.05f);
         }
     }
@@ -156,6 +158,7 @@ internal sealed class BladeApp : IMiniGame
 
     private void OnStuck(Rect area, float scale)
     {
+        UiFeedback.Play(UiSound.GameHitWood);
         var impact = ImpactPoint(area);
         fx.AddTrauma(0.18f);
         fx.HitStop(0.03f);
@@ -166,6 +169,7 @@ internal sealed class BladeApp : IMiniGame
 
     private void OnLevelCleared(Rect area, float scale)
     {
+        UiFeedback.Play(UiSound.GameClear);
         var center = BladeRenderer.WheelCenterOf(area);
         var radius = BladeRenderer.WheelRadiusOf(area);
         fx.HitStop(0.06f);
@@ -185,6 +189,7 @@ internal sealed class BladeApp : IMiniGame
 
     private void OnBlocked(Rect area, float scale)
     {
+        UiFeedback.Play(UiSound.GameWrong);
         var impact = ImpactPoint(area);
         finalScore = board.Score;
         pendingSubmit = true;

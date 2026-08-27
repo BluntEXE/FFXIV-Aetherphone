@@ -1,6 +1,7 @@
 using Aetherphone.Core.Animation;
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
@@ -188,6 +189,7 @@ internal sealed class BubbleShooterApp : IMiniGame
         if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
             board.Fire(aim);
+            UiFeedback.Play(UiSound.GameShoot);
         }
     }
 
@@ -195,6 +197,7 @@ internal sealed class BubbleShooterApp : IMiniGame
     {
         if (board.BlastedThisShot)
         {
+            UiFeedback.Play(UiSound.GameExplosion);
             var blast = field.Min + board.BlastPosition * factor;
             fx.Shockwave(blast, board.Radius * factor * 6f, new Vector4(1f, 0.70f, 0.32f, 1f), 0.45f, 4f);
             fx.Flash(new Vector4(1f, 0.72f, 0.36f, 0.42f), 0.55f);
@@ -219,6 +222,7 @@ internal sealed class BubbleShooterApp : IMiniGame
         }
 
         var burstCenter = sum / board.PopCount;
+        UiFeedback.Play(UiSound.GamePop);
         fx.AddTrauma(MathF.Min(0.35f, 0.04f * board.PopCount));
         if (board.LastShotScore > 0)
         {

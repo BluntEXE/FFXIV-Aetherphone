@@ -1,5 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Shell;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
@@ -284,6 +285,13 @@ internal sealed class PhoneWindow : Window
         Components.UiInteract.SetWindowHovered(ImGui.IsWindowHovered(
             ImGuiHoveredFlags.ChildWindows | ImGuiHoveredFlags.AllowWhenBlockedByActiveItem));
         Components.UiInteract.SetWindowFocused(ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows));
+        var io = ImGui.GetIO();
+        if (ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows) && io.WantTextInput &&
+            io.InputQueueCharacters.Size > 0)
+        {
+            UiFeedback.Play(UiSound.Keystroke);
+        }
+
         Plugin.Updates.Poll();
         using (Plugin.Fonts.Push(1f))
         {

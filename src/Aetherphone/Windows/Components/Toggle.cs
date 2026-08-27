@@ -1,5 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
 
@@ -23,9 +24,10 @@ internal static class Toggle
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        if (interactive && UiInteract.Click(bounds.Min, bounds.Max, hovered))
+        if (interactive && UiInteract.Click(bounds.Min, bounds.Max, hovered, false))
         {
             result = !value;
+            UiFeedback.Play(result ? UiSound.ToggleOn : UiSound.ToggleOff);
         }
 
         var progress = Animate(id, value ? 1f : 0f);

@@ -2,6 +2,7 @@ using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Coins;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -37,6 +38,8 @@ internal sealed class CoinEarnFloats : IDisposable
                 queued.Add(delta);
             }
         }
+
+        UiFeedback.Play(UiSound.Payout);
     }
 
     public void Draw(Rect screen, PhoneTheme theme, float delta)

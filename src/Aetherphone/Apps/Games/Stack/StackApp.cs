@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -164,6 +165,7 @@ internal sealed class StackApp : IMiniGame
 
     private void OnPlaced(Rect area, float scale)
     {
+        UiFeedback.Play(UiSound.GameHitWood);
         comboShown = 0;
         var levelHeight = StackRenderer.LevelHeightOf(area);
         var slicePosition = StackRenderer.ScreenPosition(area, camera, board.LastSliceCenterX, board.Level - 1);
@@ -175,6 +177,7 @@ internal sealed class StackApp : IMiniGame
 
     private void OnPerfect(Rect area, float scale)
     {
+        UiFeedback.Play(UiSound.GameMatch);
         comboShown = board.Combo;
         comboLabel = "x" + GameNumber.Label(board.Combo);
         comboPulse = 1f;
@@ -192,6 +195,7 @@ internal sealed class StackApp : IMiniGame
 
     private void OnMissed(Rect area, float scale)
     {
+        UiFeedback.Play(UiSound.GameHitSoft);
         finalScore = board.Score;
         pendingSubmit = true;
         overSeconds = 0f;

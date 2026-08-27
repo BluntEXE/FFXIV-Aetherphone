@@ -132,6 +132,7 @@ internal sealed class PhoneShell : IDisposable
         }
 
         director.OnPhoneOpened();
+        UiFeedback.Play(UiSound.Wake);
     }
 
     public void OnClosed()
@@ -139,6 +140,7 @@ internal sealed class PhoneShell : IDisposable
         loading.Cancel();
         director.Suspend();
         SensitiveReveals.Clear();
+        UiFeedback.Play(UiSound.Sleep);
     }
 
     public void OpenApp(string appId)

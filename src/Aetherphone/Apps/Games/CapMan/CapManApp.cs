@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -169,11 +170,17 @@ internal sealed class CapManApp : IMiniGame
 
         if (board.PelletEatenThisFrame)
         {
+            UiFeedback.Play(UiSound.GamePowerUp);
             var center = CapManRenderer.ToScreen(boardRect, cell, board.LastDotPosition);
             particles.Sparkle(center, 10, CapManRenderer.PlayerColor, 120f * scale, 2.4f, 0.6f);
             fx.Shockwave(center, cell * 4f, CapManRenderer.FrightColor with { W = 0.7f }, 0.5f, 3f);
             fx.Flash(CapManRenderer.FrightColor, 0.14f);
             fx.AddTrauma(0.12f);
+        }
+
+        if (board.GhostsEatenThisFrame > 0)
+        {
+            UiFeedback.Play(UiSound.GameCollect);
         }
 
         for (var index = 0; index < board.GhostsEatenThisFrame; index++)
@@ -188,6 +195,7 @@ internal sealed class CapManApp : IMiniGame
 
         if (board.PlayerDiedThisFrame)
         {
+            UiFeedback.Play(UiSound.GameHitSoft);
             var center = CapManRenderer.ToScreen(boardRect, cell, board.PlayerPosition);
             particles.Burst(center, 18, CapManRenderer.PlayerColor, 160f * scale, 2.8f, 0.8f, 300f);
             fx.AddTrauma(0.7f);
@@ -197,6 +205,7 @@ internal sealed class CapManApp : IMiniGame
 
         if (board.LevelClearedThisFrame)
         {
+            UiFeedback.Play(UiSound.GameClear);
             var top = new Vector2(boardRect.Center.X, boardRect.Min.Y + boardRect.Height * 0.2f);
             particles.Confetti(top, 70, CelebrationPalette, 280f * scale, 4f, 1.4f);
             fx.Flash(GamePalette.Lighten(Accent, 0.4f), 0.18f);

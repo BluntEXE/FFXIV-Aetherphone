@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
@@ -182,6 +183,7 @@ internal sealed class SweeperApp : IMiniGame
 
             if (!wasRevealed && board.IsRevealed(hoveredIndex) && board.State == SweeperState.Playing)
             {
+                UiFeedback.Play(UiSound.GamePiece);
                 fx.Shockwave(cellCenter, grid.Pitch * 1.1f, GamePalette.Lighten(Accent, 0.3f) with { W = 0.6f }, 0.4f,
                     2.2f);
             }
@@ -193,6 +195,7 @@ internal sealed class SweeperApp : IMiniGame
             board.ToggleFlag(hoveredIndex);
             if (!wasFlagged && board.IsFlagged(hoveredIndex))
             {
+                UiFeedback.Play(UiSound.GameTick);
                 flagAnim[hoveredIndex] = 1f;
                 particles.Sparkle(cellCenter, 4, new Vector4(1f, 0.85f, 0.5f, 1f), 90f * UiScale.Current, 1.8f,
                     0.5f);
@@ -209,6 +212,7 @@ internal sealed class SweeperApp : IMiniGame
 
         if (board.State == SweeperState.Lost)
         {
+            UiFeedback.Play(UiSound.GameExplosion);
             resultAppear = 0f;
             pendingResultSubmit = false;
             BuildResultTime();
@@ -226,6 +230,7 @@ internal sealed class SweeperApp : IMiniGame
         }
         else if (board.State == SweeperState.Won)
         {
+            UiFeedback.Play(UiSound.GameClear);
             resultAppear = 0f;
             pendingResultSubmit = true;
             BuildResultTime();

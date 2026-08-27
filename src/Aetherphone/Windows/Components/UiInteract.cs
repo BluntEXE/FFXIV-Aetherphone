@@ -1,5 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
+using Aetherphone.Core.Notifications;
 using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Windows.Components;
@@ -89,7 +90,9 @@ internal static class UiInteract
     public static bool Hover(Vector2 min, Vector2 max, bool clip) =>
         !InputBlocked && !MouseOverOverlay && WindowHovered && ImGui.IsMouseHoveringRect(min, max, clip);
 
-    public static bool Click(Vector2 min, Vector2 max, bool hovered)
+    public static bool Click(Vector2 min, Vector2 max, bool hovered) => Click(min, max, hovered, true);
+
+    public static bool Click(Vector2 min, Vector2 max, bool hovered, bool tapSound)
     {
         hovered = hovered && WindowHovered;
         if (!ImGui.IsMouseDown(ImGuiMouseButton.Left) && !ImGui.IsMouseReleased(ImGuiMouseButton.Left))
@@ -118,6 +121,10 @@ internal static class UiInteract
         if (activated)
         {
             hasPendingTap = false;
+            if (tapSound)
+            {
+                UiFeedback.Play(UiSound.Tap);
+            }
         }
 
         return activated;

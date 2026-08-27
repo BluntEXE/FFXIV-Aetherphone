@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -164,6 +165,7 @@ internal sealed class WhackApp : IMiniGame
         var result = board.Whack(hole);
         if (result == WhackResult.Mole)
         {
+            UiFeedback.Play(UiSound.GameHitSoft);
             particles.Burst(moleCenter, 12, new Vector4(0.95f, 0.82f, 0.45f, 1f), 170f * scale, 3f, 0.5f, 320f);
             particles.Sparkle(moleCenter, 7, new Vector4(1f, 0.95f, 0.65f, 1f), 130f * scale, 2.4f, 0.6f);
             fx.Shockwave(moleCenter, 44f * scale, new Vector4(1f, 0.9f, 0.5f, 0.9f), 0.38f, 2.6f);
@@ -172,6 +174,7 @@ internal sealed class WhackApp : IMiniGame
         }
         else if (result == WhackResult.Bomb)
         {
+            UiFeedback.Play(UiSound.GameExplosion);
             particles.Burst(moleCenter, 24, new Vector4(0.95f, 0.4f, 0.32f, 1f), 280f * scale, 4f, 0.7f, 360f);
             particles.Streaks(moleCenter, 12, new Vector4(1f, 0.7f, 0.4f, 1f), 420f * scale, 2.6f, 0.5f);
             fx.Shockwave(moleCenter, 100f * scale, new Vector4(1f, 0.6f, 0.35f, 1f), 0.55f, 3.4f);

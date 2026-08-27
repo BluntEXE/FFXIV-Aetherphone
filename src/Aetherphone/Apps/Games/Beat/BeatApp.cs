@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -185,6 +186,7 @@ internal sealed class BeatApp : IMiniGame
 
     private void OnHit(Rect field, int lane, bool perfect, float scale)
     {
+        UiFeedback.Play(perfect ? UiSound.GameMatch : UiSound.GameTick);
         laneFlash[lane] = 1f;
         comboShown = board.Combo;
         comboLabel = "x" + GameNumber.Label(board.Combo);
@@ -207,6 +209,7 @@ internal sealed class BeatApp : IMiniGame
 
     private void OnWrong(Rect field, int lane, float scale)
     {
+        UiFeedback.Play(UiSound.GameWrong);
         comboShown = 0;
         var center = new Vector2(field.Min.X + (lane + 0.5f) * BeatRenderer.LaneWidthOf(field),
             BeatRenderer.HitLineOf(field));
@@ -217,6 +220,7 @@ internal sealed class BeatApp : IMiniGame
 
     private void OnMissed(Rect field, float scale)
     {
+        UiFeedback.Play(UiSound.GameHitSoft);
         comboShown = 0;
         var lane = board.MissedLane;
         if (lane < 0)

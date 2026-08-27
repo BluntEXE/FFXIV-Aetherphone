@@ -1,4 +1,5 @@
 using Aetherphone.Core.Aethernet;
+using Aetherphone.Core.Notifications;
 
 namespace Aetherphone.Core.Moderation;
 
@@ -40,5 +41,6 @@ internal sealed class SuspensionGate
     public void ReportBlocked()
     {
         Blocked?.Invoke();
+        UiFeedback.Play(UiSound.Blocked);
     }
 }

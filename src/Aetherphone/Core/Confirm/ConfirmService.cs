@@ -1,5 +1,6 @@
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Net;
+using Aetherphone.Core.Notifications;
 
 namespace Aetherphone.Core.Confirm;
 
@@ -73,6 +74,10 @@ internal sealed class ConfirmService
         Busy = false;
         Status = null;
         failure.Clear();
+        if (request.Danger)
+        {
+            UiFeedback.Play(UiSound.Caution);
+        }
     }
 
     public void ReportFailure(AepFailure value)
@@ -168,5 +173,9 @@ internal sealed class ConfirmService
         Busy = false;
         Status = null;
         Active = queued.Count > 0 ? queued.Dequeue() : null;
+        if (Active is { Danger: true })
+        {
+            UiFeedback.Play(UiSound.Caution);
+        }
     }
 }
