@@ -104,26 +104,8 @@ internal sealed class InventoryApp : IPhoneApp
         DrawRoot(area);
     }
 
-    private void DrawNavBar(Rect area, string title, Action? onBack)
-    {
-        var scale = UiScale.Current;
-        var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
-        var fitted = Typography.FitText(title, area.Width - 96f * scale, TextStyles.Title3);
-        Typography.DrawCentered(new Vector2(area.Center.X, rowCenterY), fitted, ui.TitleInk, TextStyles.Title3);
-        if (onBack is null)
-        {
-            return;
-        }
-
-        var hitMin = new Vector2(area.Min.X, area.Min.Y);
-        var hitMax = new Vector2(area.Min.X + 46f * scale, area.Min.Y + AppHeader.Height * scale);
-        var hovered = UiInteract.Hover(hitMin, hitMax);
-        var center = new Vector2(area.Min.X + 17f * scale, rowCenterY);
-        if (BackButton.Draw("inventory.back", center, 15f * scale, ui.TitleInk, hovered, scale))
-        {
-            onBack();
-        }
-    }
+    private void DrawNavBar(Rect area, string title, Action? onBack) =>
+        AppHeader.DrawNavBar(area, "inventory.back", title, ui.TitleInk, onBack);
 
     private void DrawRoot(Rect area)
     {

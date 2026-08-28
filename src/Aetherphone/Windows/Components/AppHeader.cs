@@ -59,6 +59,35 @@ internal static class AppHeader
         }
     }
 
+    public static void DrawNavBar(Rect area, string id, string title, Vector4 ink, Action? onBack,
+        float rightReserve = 0f)
+    {
+        var scale = UiScale.Current;
+        var rowCenterY = area.Min.Y + Height * scale * 0.5f;
+        if (rightReserve > 0f)
+        {
+            DrawTitleWithReserve(area, id + ".title", title, rightReserve, ink, scale, TextStyles.Title3);
+        }
+        else
+        {
+            var fitted = Typography.FitText(title, area.Width - 96f * scale, TextStyles.Title3);
+            Typography.DrawCentered(new Vector2(area.Center.X, rowCenterY), fitted, ink, TextStyles.Title3);
+        }
+
+        if (onBack is null)
+        {
+            return;
+        }
+
+        var hitMax = new Vector2(area.Min.X + 46f * scale, area.Min.Y + Height * scale);
+        var hovered = UiInteract.Hover(area.Min, hitMax);
+        var center = new Vector2(area.Min.X + 17f * scale, rowCenterY);
+        if (BackButton.Draw(id, center, 15f * scale, ink, hovered, scale))
+        {
+            onBack();
+        }
+    }
+
     public static void DrawTitleWithReserve(Rect area, string id, string title, float rightReserve, Vector4 color,
         float scale, TextStyle? style = null, float leftReserve = 44f)
     {

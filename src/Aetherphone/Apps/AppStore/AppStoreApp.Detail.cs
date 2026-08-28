@@ -40,20 +40,8 @@ internal sealed partial class AppStoreApp
         }
     }
 
-    private void DrawNavBar(Rect area, string title, float scale)
-    {
-        var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
-        var fitted = Typography.FitText(title, area.Width - 96f * scale, TextStyles.Title3);
-        Typography.DrawCentered(new Vector2(area.Center.X, rowCenterY), fitted, ui.TitleInk, TextStyles.Title3);
-        var hitMin = new Vector2(area.Min.X, area.Min.Y);
-        var hitMax = new Vector2(area.Min.X + 46f * scale, area.Min.Y + AppHeader.Height * scale);
-        var hovered = UiInteract.Hover(hitMin, hitMax);
-        var center = new Vector2(area.Min.X + 17f * scale, rowCenterY);
-        if (BackButton.Draw("appstore.back", center, 15f * scale, ui.TitleInk, hovered, scale))
-        {
-            router.Pop();
-        }
-    }
+    private void DrawNavBar(Rect area, string title, float scale) =>
+        AppHeader.DrawNavBar(area, "appstore.back", title, ui.TitleInk, () => router.Pop());
 
     private float DrawDetailHead(Vector2 origin, float width, IPhoneApp app, in StoreEntry entry, float scale)
     {
