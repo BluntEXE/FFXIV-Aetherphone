@@ -36,7 +36,7 @@ internal sealed partial class JobsApp
         public ColorPreset(string digits)
         {
             Digits = digits;
-            HexColor.TryParse(digits, out var color);
+            _ = HexColor.TryParse(digits, out var color);
             Color = color;
         }
 
