@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using Aetherphone.Core;
+using Aetherphone.Core.Animation;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Localization;
@@ -39,6 +40,7 @@ internal sealed class LinkpearlPopoutWindow : Window
     private const float StaggerStep = 28f;
     private const float ViewportMargin = 24f;
     private const float GripArm = 9f;
+    private const float MinBodyHeight = 96f;
     private const int SwitchMenuLimit = 14;
 
     private static readonly Vector4 White = new(1f, 1f, 1f, 1f);
@@ -61,13 +63,19 @@ internal sealed class LinkpearlPopoutWindow : Window
     private readonly string closeButtonId;
     private readonly string phoneButtonId;
     private readonly string bellButtonId;
+    private readonly string collapseButtonId;
     private string key = string.Empty;
     private string threadKey = string.Empty;
     private bool attended;
     private bool placePending;
+    private bool collapsed;
+    private bool anchorsBottomEdge;
+    private Spring collapseSpring;
     private LinkpearlPopoutState? savedPlacement;
     private Vector2 pendingPosition;
     private Vector2 pendingSize;
+    private Vector2 expandedSize;
+    private Rect anchorFrame;
     private Rect frame;
 
     public LinkpearlPopoutWindow(LinkpearlPopouts owner, int slot, Configuration configuration, ChatInbox inbox,
@@ -88,6 +96,7 @@ internal sealed class LinkpearlPopoutWindow : Window
         closeButtonId = "linkpearl.popout.close." + slotText;
         phoneButtonId = "linkpearl.popout.phone." + slotText;
         bellButtonId = "linkpearl.popout.bell." + slotText;
+        collapseButtonId = "linkpearl.popout.collapse." + slotText;
         chatMenu = new GameChatMenu("linkpearl.popout.menu." + slotText)
         {
             SendTell = owner.OpenTell,
@@ -100,16 +109,13 @@ internal sealed class LinkpearlPopoutWindow : Window
             Link = chatMenu.OpenLink,
         };
         RespectCloseHotkey = false;
-        SizeConstraints = new WindowSizeConstraints
-        {
-            MinimumSize = new Vector2(MinWidth, MinHeight),
-            MaximumSize = new Vector2(MaxSide, MaxSide),
-        };
     }
 
     public string Key => key;
 
     public bool Bound => key.Length > 0;
+
+    public bool IsCollapsed => collapsed;
 
     public void Bind(string conversationKey, LinkpearlPopoutState? saved)
     {
@@ -127,12 +133,91 @@ internal sealed class LinkpearlPopoutWindow : Window
         var zoom = OwnZoom();
         var saved = savedPlacement;
         savedPlacement = null;
-        pendingSize = saved is { Width: > 0f, Height: > 0f }
+        expandedSize = saved is { Width: > 0f, Height: > 0f }
             ? new Vector2(saved.Width, saved.Height)
             : new Vector2(DefaultWidth * zoom, DefaultHeight * zoom);
+        collapsed = saved?.Collapsed ?? false;
+        collapseSpring.SnapTo(collapsed ? 1f : 0f);
+        pendingSize = new Vector2(expandedSize.X, HeightFor(zoom));
         pendingPosition = saved is not null
             ? new Vector2(saved.X, saved.Y)
             : DefaultPosition(pendingSize * UiScale.Global);
+    }
+
+    private float HeightFor(float zoom)
+    {
+        var collapsedHeight = TitleHeight * zoom;
+        return expandedSize.Y + (collapsedHeight - expandedSize.Y) * collapseSpring.Value;
+    }
+
+    private void StepCollapse(float zoom, float delta)
+    {
+        var target = collapsed ? 1f : 0f;
+        if (collapseSpring.IsResting(target, TransitionTiming.RestPositionEpsilon,
+                TransitionTiming.RestVelocityEpsilon))
+        {
+            var settling = collapseSpring.Value != target;
+            collapseSpring.SnapTo(target);
+            Position = null;
+            if (collapsed)
+            {
+                Size = new Vector2(expandedSize.X, TitleHeight * zoom);
+                SizeCondition = ImGuiCond.Always;
+                return;
+            }
+
+            if (settling)
+            {
+                Size = expandedSize;
+                SizeCondition = ImGuiCond.Always;
+                return;
+            }
+
+            Size = null;
+            return;
+        }
+
+        collapseSpring.Step(target, TransitionTiming.PushSmoothTime, delta);
+        var height = HeightFor(zoom);
+        Size = new Vector2(expandedSize.X, height);
+        SizeCondition = ImGuiCond.Always;
+        Position = PopoutPlacement.AnchoredPosition(anchorFrame, anchorsBottomEdge, height * UiScale.Global);
+        PositionCondition = ImGuiCond.Always;
+    }
+
+    public bool SetCollapsed(bool value)
+    {
+        if (collapsed == value || !Bound)
+        {
+            return false;
+        }
+
+        collapsed = value;
+        anchorFrame = frame;
+        anchorsBottomEdge = PopoutPlacement.AnchorsBottomEdge(frame, ViewportRect());
+        if (!value)
+        {
+            return true;
+        }
+
+        switchMenu.Close();
+        chatMenu.Close();
+        thread.CloseMenus();
+        return true;
+    }
+
+    private void ToggleCollapsed(bool value)
+    {
+        if (SetCollapsed(value))
+        {
+            owner.OnCollapseChanged();
+        }
+    }
+
+    private static Rect ViewportRect()
+    {
+        var viewport = ImGui.GetMainViewport();
+        return new Rect(viewport.Pos, viewport.Pos + viewport.Size);
     }
 
     public void Rebind(string conversationKey)
@@ -167,7 +252,11 @@ internal sealed class LinkpearlPopoutWindow : Window
         IsOpen = false;
     }
 
-    public void Focus() => BringToFront();
+    public void Focus()
+    {
+        ToggleCollapsed(false);
+        BringToFront();
+    }
 
     public void ReopenThread() => threadKey = string.Empty;
 
@@ -176,8 +265,9 @@ internal sealed class LinkpearlPopoutWindow : Window
         Key = key,
         X = frame.Min.X,
         Y = frame.Min.Y,
-        Width = frame.Width / UiScale.Global,
-        Height = frame.Height / UiScale.Global,
+        Width = expandedSize.X,
+        Height = expandedSize.Y,
+        Collapsed = collapsed,
     };
 
     public override void OnClose() => owner.OnWindowClosed(this);
@@ -199,10 +289,16 @@ internal sealed class LinkpearlPopoutWindow : Window
         }
         else
         {
-            Position = null;
-            Size = null;
+            StepCollapse(zoom, MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds));
         }
 
+        var resizable = !collapsed && collapseSpring.Value <= 0f;
+        Flags = resizable ? PopoutFlags : PopoutFlags | ImGuiWindowFlags.NoResize;
+        SizeConstraints = new WindowSizeConstraints
+        {
+            MinimumSize = new Vector2(MinWidth, resizable ? MinHeight : MathF.Min(MinHeight, HeightFor(zoom))),
+            MaximumSize = new Vector2(MaxSide, MaxSide),
+        };
         var style = ImGui.GetStyle();
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, style.FramePadding * zoom);
@@ -238,7 +334,7 @@ internal sealed class LinkpearlPopoutWindow : Window
         UiInteract.SetWindowFocused(focusedWindow);
         inbox.Sync();
         var row = inbox.Find(key);
-        UpdateAttention(row, hoveredWindow || focusedWindow);
+        UpdateAttention(row, !collapsed && (hoveredWindow || focusedWindow));
         chatMenu.Gate();
         switchMenu.Gate();
         thread.Gate();
@@ -247,24 +343,35 @@ internal sealed class LinkpearlPopoutWindow : Window
         {
             var theme = themes.ForApp(true);
             var scale = UiScale.Current;
-            DrawSurface(theme, scale, hoveredWindow || focusedWindow);
-            var titleBar = new Rect(frame.Min, new Vector2(frame.Max.X, frame.Min.Y + TitleHeight * scale));
-            DrawTitleBar(titleBar, row, theme, scale, delta);
-            var inset = BodyInset * scale;
-            var body = new Rect(new Vector2(frame.Min.X + inset, titleBar.Max.Y),
-                new Vector2(frame.Max.X - inset, frame.Max.Y - inset));
-            if (row is null)
+            var barHeight = MathF.Min(TitleHeight * scale, frame.Height);
+            var bodyOpen = frame.Height - barHeight >= MinBodyHeight * scale;
+            if (!collapsed && collapseSpring.Value <= 0f)
             {
-                Typography.DrawCentered(ImGui.GetWindowDrawList(), body.Center, Loc.T(L.Messages.Empty),
-                    theme.TextMuted, TextStyles.Callout);
-            }
-            else
-            {
-                OpenThread(row);
-                thread.Draw(body, theme);
+                expandedSize = frame.Size / UiScale.Global;
             }
 
-            DrawGrip(scale);
+            DrawSurface(theme, scale, hoveredWindow || focusedWindow);
+            var titleBar = new Rect(frame.Min, new Vector2(frame.Max.X, frame.Min.Y + barHeight));
+            DrawTitleBar(titleBar, row, theme, scale, delta);
+            if (bodyOpen)
+            {
+                var inset = BodyInset * scale;
+                var body = new Rect(new Vector2(frame.Min.X + inset, titleBar.Max.Y),
+                    new Vector2(frame.Max.X - inset, frame.Max.Y - inset));
+                if (row is null)
+                {
+                    Typography.DrawCentered(ImGui.GetWindowDrawList(), body.Center, Loc.T(L.Messages.Empty),
+                        theme.TextMuted, TextStyles.Callout);
+                }
+                else
+                {
+                    OpenThread(row);
+                    thread.Draw(body, theme);
+                }
+
+                DrawGrip(scale);
+            }
+
             DrawSwitchMenu(theme);
             chatMenu.Draw(frame, theme);
             ShellToast.DrawSecondary(frame, theme);
@@ -337,13 +444,18 @@ internal sealed class LinkpearlPopoutWindow : Window
         Elevation.Floating(drawList, frame.Min, frame.Max, rounding, scale, lively ? 1f : 0.7f);
         var surface = ImGui.GetColorU32(Palette.WithAlpha(theme.AppBackground, opacity));
         Squircle.FillVerticalGradient(drawList, frame.Min, frame.Max, rounding, surface, surface);
-        var titleBottom = frame.Min.Y + TitleHeight * scale;
+        var titleBottom = MathF.Min(frame.Min.Y + TitleHeight * scale, frame.Max.Y);
         var strip = ImGui.GetColorU32(Palette.WithAlpha(theme.GroupedCard, opacity));
         drawList.PushClipRect(frame.Min, new Vector2(frame.Max.X, titleBottom), true);
         Squircle.FillVerticalGradient(drawList, frame.Min, frame.Max, rounding, strip, strip);
         drawList.PopClipRect();
-        drawList.AddLine(new Vector2(frame.Min.X, titleBottom), new Vector2(frame.Max.X, titleBottom),
-            ImGui.GetColorU32(Palette.WithAlpha(theme.Separator, theme.Separator.W * opacity)), Metrics.Stroke.Hairline);
+        if (titleBottom < frame.Max.Y)
+        {
+            drawList.AddLine(new Vector2(frame.Min.X, titleBottom), new Vector2(frame.Max.X, titleBottom),
+                ImGui.GetColorU32(Palette.WithAlpha(theme.Separator, theme.Separator.W * opacity)),
+                Metrics.Stroke.Hairline);
+        }
+
         Material.EdgeSquircle(drawList, frame.Min, frame.Max, rounding, scale, lively ? 1f : 0.6f);
     }
 
@@ -355,6 +467,7 @@ internal sealed class LinkpearlPopoutWindow : Window
         var closeCenter = new Vector2(bar.Max.X - EdgeInset * scale - radius * 0.5f, centerY);
         var phoneCenter = new Vector2(closeCenter.X - ButtonPitch * scale, centerY);
         var bellCenter = new Vector2(phoneCenter.X - ButtonPitch * scale, centerY);
+        var collapseCenter = new Vector2(bellCenter.X - ButtonPitch * scale, centerY);
         var muted = row?.Muted ?? false;
         if (HoverButton.Circle(drawList, closeButtonId, closeCenter, radius, FontAwesomeIcon.Times,
                 AppSkin.Transparent, theme.TextMuted, delta, 1f, true, Loc.T(L.Common.Close)))
@@ -377,13 +490,20 @@ internal sealed class LinkpearlPopoutWindow : Window
             inbox.ToggleMuted(row);
         }
 
+        if (HoverButton.Circle(drawList, collapseButtonId, collapseCenter, radius,
+                collapsed ? FontAwesomeIcon.ChevronDown : FontAwesomeIcon.ChevronUp, AppSkin.Transparent,
+                theme.TextMuted, delta, 1f, true, Loc.T(collapsed ? L.Linkpearl.Expand : L.Linkpearl.Collapse)))
+        {
+            ToggleCollapsed(!collapsed);
+        }
+
         var avatarRadius = AvatarRadius * scale;
         var avatarCenter = new Vector2(bar.Min.X + EdgeInset * scale + avatarRadius, centerY);
         DrawAvatar(drawList, avatarCenter, avatarRadius, row, theme);
         var textLeft = avatarCenter.X + avatarRadius + Metrics.Space.Sm * scale;
-        var textLimit = bellCenter.X - radius - Metrics.Space.Sm * scale;
+        var textLimit = collapseCenter.X - radius - Metrics.Space.Sm * scale;
         var title = row?.Title ?? FallbackTitle();
-        var unread = row is { HasBadge: true } && !attended ? row.Unread : 0;
+        var unread = row is { HasBadge: true } && (collapsed || !attended) ? row.Unread : 0;
         var badgeWidth = 0f;
         if (unread > 0)
         {
@@ -415,11 +535,36 @@ internal sealed class LinkpearlPopoutWindow : Window
                 theme, scale);
         }
 
-        HoverTooltip.Show(new Rect(hitMin, hitMax), Loc.T(L.Linkpearl.SwitchConversation), HoverLabelSide.Below);
+        var titleHit = new Rect(hitMin, hitMax);
+        HoverTooltip.Show(titleHit, Loc.T(collapsed ? L.Linkpearl.Expand : L.Linkpearl.SwitchConversation),
+            HoverLabelSide.Below);
         if (UiInteract.Click(hitMin, hitMax, titleHovered))
         {
-            OpenSwitchMenu(new Rect(hitMin, hitMax));
+            if (collapsed)
+            {
+                ToggleCollapsed(false);
+            }
+            else
+            {
+                OpenSwitchMenu(titleHit);
+            }
         }
+
+        if (BarDoubleClicked(bar, titleHit, collapseCenter.X - radius))
+        {
+            ToggleCollapsed(!collapsed);
+        }
+    }
+
+    private static bool BarDoubleClicked(in Rect bar, in Rect titleHit, float buttonsLeft)
+    {
+        if (!UiInteract.Hover(bar.Min, bar.Max) || !ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
+        {
+            return false;
+        }
+
+        var mouse = ImGui.GetMousePos();
+        return mouse.X < buttonsLeft && !titleHit.Contains(mouse);
     }
 
     private void DrawAvatar(ImDrawListPtr drawList, Vector2 center, float radius, InboxRow? row, PhoneTheme theme)

@@ -48,6 +48,8 @@ internal sealed class GameComposer
 
     public void Gate() => channelMenu.Gate();
 
+    public void CloseMenus() => channelMenu.Close();
+
     public void Reset()
     {
         Clear();

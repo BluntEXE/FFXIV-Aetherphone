@@ -79,6 +79,8 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
 
     public void Gate() => composer.Gate();
 
+    public void CloseMenus() => composer.CloseMenus();
+
     public bool SearchOpen => searchOpen;
 
     public void ToggleSearch()

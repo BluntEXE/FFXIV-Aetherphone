@@ -11,4 +11,6 @@ internal sealed class LinkpearlPopoutState
     public float Width { get; set; }
 
     public float Height { get; set; }
+
+    public bool Collapsed { get; set; }
 }

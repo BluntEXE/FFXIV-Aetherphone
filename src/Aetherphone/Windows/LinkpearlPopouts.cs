@@ -84,6 +84,22 @@ internal sealed class LinkpearlPopouts : IDisposable
         }
     }
 
+    public bool AnyExpanded
+    {
+        get
+        {
+            for (var index = 0; index < windows.Length; index++)
+            {
+                if (windows[index].Bound && !windows[index].IsCollapsed)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
     public void Restore()
     {
         for (var index = 0; index < restoreQueue.Count; index++)
@@ -159,6 +175,22 @@ internal sealed class LinkpearlPopouts : IDisposable
 
         Persist();
     }
+
+    public void SetAllCollapsed(bool collapsed)
+    {
+        var changed = false;
+        for (var index = 0; index < windows.Length; index++)
+        {
+            changed |= windows[index].SetCollapsed(collapsed);
+        }
+
+        if (changed)
+        {
+            Persist();
+        }
+    }
+
+    public void OnCollapseChanged() => Persist();
 
     public void OpenTell(string name, string world)
     {

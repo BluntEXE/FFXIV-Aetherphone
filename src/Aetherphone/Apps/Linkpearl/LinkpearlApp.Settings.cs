@@ -80,7 +80,15 @@ internal sealed partial class LinkpearlApp
         }
 
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
-        var closeCard = GroupCard.Begin(frameTheme, 1);
+        var closeCard = GroupCard.Begin(frameTheme, 2);
+        var anyExpanded = popouts.AnyExpanded;
+        if (SettingsRow.Action(closeCard.NextRow(),
+                Loc.T(anyExpanded ? L.Linkpearl.CollapseAllPopouts : L.Linkpearl.ExpandAllPopouts, popouts.OpenCount),
+                frameTheme.Accent, frameTheme))
+        {
+            popouts.SetAllCollapsed(anyExpanded);
+        }
+
         if (SettingsRow.Action(closeCard.NextRow(), Loc.T(L.Linkpearl.CloseAllPopouts, popouts.OpenCount),
                 frameTheme.Accent, frameTheme))
         {
