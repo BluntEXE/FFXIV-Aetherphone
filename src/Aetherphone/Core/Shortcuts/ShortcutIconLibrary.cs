@@ -8,9 +8,12 @@ internal sealed class ShortcutIconLibrary
 {
     public const int IconSize = 256;
 
+    private const string Extension = ".jpg";
+
     private readonly DirectoryInfo directory;
     private readonly Configuration configuration;
     private readonly WallpaperImageCache images;
+    private readonly Dictionary<string, string> pathsById = new();
 
     public ShortcutIconLibrary(DirectoryInfo directory, Configuration configuration, WallpaperImageCache images)
     {
@@ -18,6 +21,12 @@ internal sealed class ShortcutIconLibrary
         this.configuration = configuration;
         this.images = images;
         directory.Create();
+
+        var ids = configuration.CustomShortcutIconIds;
+        for (var index = 0; index < ids.Count; index++)
+        {
+            pathsById[ids[index]] = Path.Combine(directory.FullName, ids[index] + Extension);
+        }
     }
 
     public static byte[] Bake(string sourcePath, WallpaperCrop crop) =>
@@ -26,41 +35,40 @@ internal sealed class ShortcutIconLibrary
     public string Commit(byte[] bakedBytes)
     {
         var id = Guid.NewGuid().ToString("N");
-        var fileName = id + ".jpg";
-        File.WriteAllBytes(Path.Combine(directory.FullName, fileName), bakedBytes);
-        configuration.CustomShortcutIcons.Add(new CustomShortcutIcon { Id = id, FileName = fileName });
+        var path = Path.Combine(directory.FullName, id + Extension);
+        File.WriteAllBytes(path, bakedBytes);
+        configuration.CustomShortcutIconIds.Add(id);
         configuration.Save();
+        pathsById[id] = path;
         return id;
     }
 
     public string? Duplicate(string id)
     {
-        var record = Find(id);
-        if (record is null)
+        if (!pathsById.TryGetValue(id, out var sourcePath))
         {
             return null;
         }
 
         var newId = Guid.NewGuid().ToString("N");
-        var newFileName = newId + Path.GetExtension(record.FileName);
-        File.Copy(Path.Combine(directory.FullName, record.FileName), Path.Combine(directory.FullName, newFileName),
-            true);
-        configuration.CustomShortcutIcons.Add(new CustomShortcutIcon { Id = newId, FileName = newFileName });
+        var newPath = Path.Combine(directory.FullName, newId + Extension);
+        File.Copy(sourcePath, newPath, true);
+        configuration.CustomShortcutIconIds.Add(newId);
         configuration.Save();
+        pathsById[newId] = newPath;
         return newId;
     }
 
     public void Remove(string id)
     {
-        var record = Find(id);
-        if (record is null)
+        if (!pathsById.TryGetValue(id, out var path))
         {
             return;
         }
 
-        configuration.CustomShortcutIcons.Remove(record);
+        configuration.CustomShortcutIconIds.Remove(id);
         configuration.Save();
-        var path = Path.Combine(directory.FullName, record.FileName);
+        pathsById.Remove(id);
         try
         {
             if (File.Exists(path))
@@ -70,7 +78,7 @@ internal sealed class ShortcutIconLibrary
         }
         catch (Exception exception)
         {
-            AepLog.Warning(exception, $"[Shortcuts] failed to delete custom icon {record.FileName}");
+            AepLog.Warning(exception, $"[Shortcuts] failed to delete custom icon {id}");
         }
     }
 
@@ -81,21 +89,6 @@ internal sealed class ShortcutIconLibrary
             return null;
         }
 
-        var record = Find(id);
-        return record is null ? null : images.Get(Path.Combine(directory.FullName, record.FileName));
-    }
-
-    private CustomShortcutIcon? Find(string id)
-    {
-        var customs = configuration.CustomShortcutIcons;
-        for (var index = 0; index < customs.Count; index++)
-        {
-            if (customs[index].Id == id)
-            {
-                return customs[index];
-            }
-        }
-
-        return null;
+        return pathsById.TryGetValue(id, out var path) ? images.Get(path) : null;
     }
 }
