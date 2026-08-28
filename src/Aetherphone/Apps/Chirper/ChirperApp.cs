@@ -980,7 +980,7 @@ internal sealed partial class ChirperApp : IResumableApp
         }
 
         var rawDisplayName = SocialIdentity.Name(post.AuthorDisplayName, post.AuthorHandle);
-        var drawnNameWidth = UserName.DrawPlain(drawList, "chirper.post.author." + post.Id, rawDisplayName,
+        var drawnNameWidth = UserName.DrawAuto(drawList, "chirper.post.author." + post.Id, rawDisplayName,
             post.AuthorBadges, post.AuthorBadgeIds, contentLeft, headerTop, headerWidth * 0.45f, NameStyle,
             ChirperInk.TitleInk, theme);
         var nameMin = new Vector2(contentLeft, headerTop);
@@ -1780,7 +1780,7 @@ internal sealed partial class ChirperApp : IResumableApp
         var nameHeight = Typography.LineHeight(QuoteNameStyle);
         var nameTop = headerCenterY - nameHeight * 0.5f;
         var nameMaxWidth = MathF.Max(1f, (min.X + padX + innerWidth - nameLeft) * 0.6f);
-        var drawnNameWidth = UserName.DrawPlain(drawList, "chirper.quote.author." + hostId, rawName,
+        var drawnNameWidth = UserName.DrawAuto(drawList, "chirper.quote.author." + hostId, rawName,
             quoted.AuthorBadges, quoted.AuthorBadgeIds, nameLeft, nameTop, nameMaxWidth, QuoteNameStyle,
             ChirperInk.TitleInk, theme);
         var meta = SocialIdentity.FeedMeta(quoted.AuthorHandle, TimeText.Short(quoted.CreatedAtUnix));

@@ -76,26 +76,14 @@ internal static class UserName
 
     public static float Draw(ImDrawListPtr drawList, string id, string name, int badges, string[]? badgeIds,
         float boxLeft, float y, float maxWidth, in TextStyle style, Vector4 nameInk, bool hovering, bool light,
-        int maxBadges = 1) =>
-        DrawCore(drawList, id, name, badges, badgeIds, boxLeft, y, maxWidth, style, nameInk, hovering, light,
-            maxBadges, false);
-
-    public static float DrawPlain(ImDrawListPtr drawList, string id, string name, int badges, string[]? badgeIds,
-        float boxLeft, float y, float maxWidth, in TextStyle style, Vector4 nameInk, PhoneTheme theme,
-        int maxBadges = 1) =>
-        DrawCore(drawList, id, name, badges, badgeIds, boxLeft, y, maxWidth, style, nameInk, false,
-            RoleInk.IsLight(theme), maxBadges, true);
-
-    private static float DrawCore(ImDrawListPtr drawList, string id, string name, int badges, string[]? badgeIds,
-        float boxLeft, float y, float maxWidth, in TextStyle style, Vector4 nameInk, bool hovering, bool light,
-        int maxBadges, bool keepInk)
+        int maxBadges = 1)
     {
         var fromCatalog = CatalogServes(badgeIds);
         var shown = fromCatalog ? 0 : Math.Min(RoleBadges.Count(badges), maxBadges);
         var lineHeight = LineHeight(style);
         var ink = nameInk;
         var effect = default(TextEffect);
-        if (!keepInk && fromCatalog)
+        if (fromCatalog)
         {
             var community = communityCatalog!.Find(badgeIds![0]);
             if (community is not null)
@@ -104,7 +92,7 @@ internal static class UserName
                 effect = NameEffects.For(community, light);
             }
         }
-        else if (!keepInk && shown > 0)
+        else if (shown > 0)
         {
             var top = RoleBadges.Top(badges);
             if (top.HasValue)

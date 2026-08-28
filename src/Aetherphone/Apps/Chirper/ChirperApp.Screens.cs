@@ -331,7 +331,7 @@ internal sealed partial class ChirperApp
         var nameHeight = Typography.LineHeight(UserNameStyle);
         var subHeight = Typography.LineHeight(UserSubStyle);
         var textTop = origin.Y + (height - nameHeight - subHeight - 2f * scale) * 0.5f;
-        UserName.DrawPlain(drawList, "chirper.row.name." + user.Id, displayName, user.Badges, user.ProfileBadges,
+        UserName.DrawAuto(drawList, "chirper.row.name." + user.Id, displayName, user.Badges, user.ProfileBadges,
             textLeft, textTop, textWidth, UserNameStyle, ChirperInk.TitleInk, theme);
         var regionCode = user.IsMe
             ? SocialRegion.EffectiveCode(configuration, gameData)
