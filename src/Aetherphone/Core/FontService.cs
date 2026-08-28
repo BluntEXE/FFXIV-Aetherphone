@@ -59,6 +59,8 @@ internal sealed class FontService : IDisposable
     private const string TablerIconFile = "TablerIcons.ttf";
     private const int FirstIconCodepoint = 0xE000;
     private const int LastIconCodepoint = 0xF8FF;
+    private const int FirstTablerCodepoint = 0xE600;
+    private const int LastTablerCodepoint = 0xE61D;
     private const long LearnRebuildDebounceMs = 600;
     private readonly Configuration configuration;
     private readonly LoadingScreen loading;
@@ -396,10 +398,19 @@ internal sealed class FontService : IDisposable
         {
             var primary = tk.AddDalamudAssetFont(Dalamud.DalamudAsset.FontAwesomeFreeSolid,
                 new SafeFontConfig { SizePx = pixels, GlyphRanges = iconRanges, });
-            if (File.Exists(tablerPath))
+            if (!File.Exists(tablerPath))
+            {
+                return;
+            }
+
+            try
             {
                 tk.AddFontFromFile(tablerPath,
                     new SafeFontConfig { SizePx = pixels, GlyphRanges = iconRanges, MergeFont = primary, });
+            }
+            catch (Exception exception)
+            {
+                AepLog.Warning(exception, $"[Fonts] skipped merging '{TablerIconFile}' at {pixels}px.");
             }
         }));
     }
@@ -535,13 +546,12 @@ internal sealed class FontService : IDisposable
 
     private void ComposeIconRanges()
     {
-        if (learnedIcons.Count == 0)
+        iconCoverage.Clear();
+        for (var codepoint = FirstTablerCodepoint; codepoint <= LastTablerCodepoint; codepoint++)
         {
-            iconRanges = PlaceholderRanges;
-            return;
+            iconCoverage.Add(codepoint);
         }
 
-        iconCoverage.Clear();
         foreach (var codepoint in learnedIcons)
         {
             iconCoverage.Add(codepoint);
