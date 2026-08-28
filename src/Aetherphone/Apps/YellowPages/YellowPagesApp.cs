@@ -68,6 +68,9 @@ internal sealed partial class YellowPagesApp : IPhoneApp
     private float copiedTimer;
     private string copiedKey = string.Empty;
     private bool lifestreamAvailable;
+    private string? pendingPickedPath;
+    private readonly ActionSheet inquirySheet = new();
+    private string? inquiryAdFilter;
 
     public YellowPagesApp(YellowPagesStore store, AdInquiryStore inquiries, YellowPagesLauncher launcher,
         SocialNotificationService socialNotifications, GramDmLauncher gramDmLauncher, MusterStore musters,

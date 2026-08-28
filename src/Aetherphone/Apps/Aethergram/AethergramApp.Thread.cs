@@ -17,8 +17,6 @@ internal sealed partial class AethergramApp
     private const float ThreadPollSeconds = 2.5f;
     private const float TypingSendSeconds = 3f;
 
-    private readonly ThreadView threadView;
-
     private sealed class ThreadView : ChatThreadView<GramMessageDto, GramThreadDto>, IChatTranscriptPostCards,
         IChatTranscriptStoryReplies
     {

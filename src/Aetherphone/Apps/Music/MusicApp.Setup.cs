@@ -14,7 +14,6 @@ internal sealed partial class MusicApp
     private const float SetupCardHeight = 74f;
     private const float SetupButtonHeight = 46f;
 
-    private readonly StoreWork resolverWork = new("music.resolver");
     private bool setupDismissed;
     private bool setupChecked;
     private PhoneTheme setupAccentedTheme = PhoneTheme.Default;

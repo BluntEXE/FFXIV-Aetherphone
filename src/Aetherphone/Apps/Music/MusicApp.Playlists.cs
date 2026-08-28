@@ -31,16 +31,13 @@ internal sealed partial class MusicApp
     private const int NameLimit = 60;
 
     private string selectedPlaylistId = string.Empty;
-    private OverlayMode overlay = OverlayMode.None;
     private OverlayMode lastOverlay = OverlayMode.Pick;
-    private Spring overlayPresence;
     private int overlayOpenedFrame;
     private Song pendingSong;
     private bool nameIsRename;
     private string nameTargetId = string.Empty;
     private string nameDraft = string.Empty;
     private bool focusNameField;
-    private readonly ActionSheet playlistSheet = new();
     private readonly ActionSheet.Item[] playlistSheetItems = new ActionSheet.Item[2];
     private string playlistSheetId = string.Empty;
     private string playlistSheetTitle = string.Empty;

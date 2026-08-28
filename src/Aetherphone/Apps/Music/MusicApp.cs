@@ -157,6 +157,11 @@ internal sealed partial class MusicApp : IResumableApp
     private Spring sheetPresence;
     private Spring artBreath;
     private float clock;
+    private string viewedStationId = string.Empty;
+    private OverlayMode overlay = OverlayMode.None;
+    private Spring overlayPresence;
+    private readonly ActionSheet playlistSheet = new();
+    private readonly StoreWork resolverWork = new("music.resolver");
 
     public MusicApp(RadioService radio, SongSearchService songSearch, SongLinkResolver songResolver,
         PlaybackHub playback, SongHistory history,

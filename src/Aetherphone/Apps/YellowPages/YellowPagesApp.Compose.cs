@@ -39,7 +39,6 @@ internal sealed partial class YellowPagesApp
     private string? editingAdId;
     private bool picking;
     private string[] pickerPaths = Array.Empty<string>();
-    private string? pendingPickedPath;
     private int composeArchetype = -1;
     private int composeCategory;
     private string composeTitle = string.Empty;

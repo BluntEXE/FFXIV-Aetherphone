@@ -44,7 +44,6 @@ internal sealed partial class MusicApp
     private readonly bool[] tagFilterActive = new bool[MaxStationTags * 8 + 1];
     private readonly List<string> knownTags = new();
     private readonly List<CommunityStationDto> filteredStations = new();
-    private string viewedStationId = string.Empty;
     private string tagFilter = string.Empty;
     private RadioTrackDto[] splitTrackSource = Array.Empty<RadioTrackDto>();
     private string[] trackTitles = Array.Empty<string>();

@@ -235,6 +235,10 @@ internal sealed partial class ChirperApp : IResumableApp
     private string hashtagTitle = string.Empty;
     private int hashtagTodayCount;
     private string hashtagTitleTag = string.Empty;
+    private UserDto? sheetUser;
+    private string searchDraft = string.Empty;
+    private double searchDirtyAt = -1d;
+    private bool trendingRequested;
 
     public ChirperApp(AethernetSession session, AethernetApi net, LodestoneService lodestone,
         RemoteImageCache images, PhotoLibrary library, SocialLauncher launcher, GameData gameData,

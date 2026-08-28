@@ -14,7 +14,6 @@ namespace Aetherphone.Apps.Aethergram;
 internal sealed partial class AethergramApp
 {
 
-    private readonly ActionSheet inboxRowSheet = new();
     private readonly ActionSheet.Item[] inboxRowSheetItems = new ActionSheet.Item[1];
     private string? inboxSheetThreadId;
     private string inboxSheetTitle = string.Empty;

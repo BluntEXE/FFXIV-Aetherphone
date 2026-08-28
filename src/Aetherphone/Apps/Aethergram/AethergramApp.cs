@@ -161,6 +161,11 @@ internal sealed partial class AethergramApp : IResumableApp
     private double likeBurstStart;
     private string hashtagTitle = string.Empty;
     private string hashtagTitleTag = string.Empty;
+    private readonly ActionSheet inboxRowSheet = new();
+    private readonly CancellationTokenSource settingsCancellation = new();
+    private readonly HashSet<string> shareSentUserIds = new(StringComparer.Ordinal);
+    private string shareSearchDraft = string.Empty;
+    private readonly ThreadView threadView;
 
     public AethergramApp(AethernetSession session, AethernetApi net, LodestoneService lodestone,
         RemoteImageCache images, PhotoLibrary library, SocialLauncher launcher, GramDmLauncher dmLauncher,

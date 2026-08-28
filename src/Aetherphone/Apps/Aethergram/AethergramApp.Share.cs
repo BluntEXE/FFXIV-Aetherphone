@@ -11,9 +11,6 @@ internal sealed partial class AethergramApp
 {
     private const float ShareRowHeight = 56f;
 
-    private readonly HashSet<string> shareSentUserIds = new(StringComparer.Ordinal);
-    private string shareSearchDraft = string.Empty;
-
     private void OpenShare(string postId)
     {
         shareSentUserIds.Clear();

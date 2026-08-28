@@ -57,6 +57,11 @@ internal sealed partial class HuntsApp : IPhoneApp
     private Rect frameScreen;
     private string searchQuery = string.Empty;
     private INavigator navigation = null!;
+    private readonly PendingFrameworkAction pendingFlagAction;
+    private readonly PendingFrameworkAction pendingWorldHopAction;
+    private readonly PendingFrameworkAction pendingInstanceAction;
+    private readonly DropdownMenu menu = new();
+    private readonly Comparison<HuntWindowDto> compareByPercentageDescending;
 
     public HuntsApp(HuntsService hunts, HuntMobCatalog mobCatalog, HuntZoneCatalog zoneCatalog,
         HuntMobRewardCatalog rewardCatalog, Configuration configuration, ConfirmService confirm,

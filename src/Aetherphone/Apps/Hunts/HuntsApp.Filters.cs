@@ -20,7 +20,6 @@ internal sealed partial class HuntsApp
 
     private static readonly string[] RankChipLabels = { "SS", "S", "A", "B", "F" };
 
-    private readonly DropdownMenu menu = new();
     private readonly List<DropdownMenu.Item> menuItems = new();
     private readonly List<string> worldOptionsList = new();
     private readonly SortedSet<string> worldOptionsSet = new(StringComparer.OrdinalIgnoreCase);

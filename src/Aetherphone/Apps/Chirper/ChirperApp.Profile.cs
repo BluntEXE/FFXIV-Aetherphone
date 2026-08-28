@@ -51,7 +51,6 @@ internal sealed partial class ChirperApp
 
     private ProfileTab profileTab;
     private Spring profileTabSlide;
-    private UserDto? sheetUser;
 
     private void DrawProfile(Rect area, string userId, bool root = false)
     {

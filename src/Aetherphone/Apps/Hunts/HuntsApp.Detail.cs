@@ -60,20 +60,14 @@ internal sealed partial class HuntsApp
     private float pendingFlagMapX;
     private float pendingFlagMapY;
 
-    private readonly PendingFrameworkAction pendingFlagAction;
-
     private uint pendingWorldHopWorldId;
     private uint pendingWorldHopTerritoryId;
     private uint pendingWorldHopMapId;
     private (float X, float Y)? pendingWorldHopFlagCoordinate;
 
-    private readonly PendingFrameworkAction pendingWorldHopAction;
-
     private uint pendingInstanceWorldId;
     private uint pendingInstanceTerritoryId;
     private int pendingInstanceTarget;
-
-    private readonly PendingFrameworkAction pendingInstanceAction;
 
     private void OpenDetail(HuntWindowDto window) =>
         OpenDetailFor(window.MobId, window.WorldId, window.ZoneInstance);

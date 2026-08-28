@@ -58,9 +58,6 @@ internal sealed partial class ChirperApp
     private static readonly Vector4 SearchFieldFill = new(1f, 1f, 1f, 0.08f);
     private static readonly Vector4 SearchFieldStroke = new(1f, 1f, 1f, 0.07f);
 
-    private string searchDraft = string.Empty;
-    private double searchDirtyAt = -1d;
-    private bool trendingRequested;
     private bool mentionsOnly;
     private Spring activitySegment;
     private string editDisplay = string.Empty;

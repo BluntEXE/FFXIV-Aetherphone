@@ -21,11 +21,9 @@ internal sealed partial class YellowPagesApp
     private const float ComposerHeight = 52f;
     private const int InquiryBodyMax = 1000;
 
-    private readonly ActionSheet inquirySheet = new();
     private readonly ActionSheet.Item[] inquirySheetItems = new ActionSheet.Item[2];
 
     private string inquiryDraft = string.Empty;
-    private string? inquiryAdFilter;
     private string inquirySheetMessageId = string.Empty;
     private bool inquiryBusy;
     private bool inquirySendFailed;
