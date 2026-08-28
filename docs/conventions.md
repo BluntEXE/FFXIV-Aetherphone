@@ -61,7 +61,7 @@ The repo has an .editorconfig and editors plus `dotnet format` respect it. What 
 
 House rules the config cannot express, all confirmed against src/Aetherphone/Core and src/Aetherphone/Windows/Components:
 
-- **Attributes go on their own line** directly above what they decorate, never inline (`[Serializable]` above `internal sealed class Configuration` in src/Aetherphone/Configuration.cs).
+- **Attributes go on their own line** directly above the type, method, or multi-line member they decorate (`[Serializable]` above `internal sealed class Configuration` in src/Aetherphone/Configuration.cs). There are zero inline attributes on a type or a method in the tree. The exception, and it is the dominant style rather than a lapse, is a single short marker on a one-line auto-property or field: `[JsonPropertyName("id")] public uint Id { get; set; }` through the DTO model files, and `[PluginService]` through src/Aetherphone/Plugin.cs. Splitting those doubles the length of a serialization contract for nothing, so leave them inline.
 - **Braces on every body**, even a single-line `if`, `else`, or loop body.
 - **Early returns over nesting.** Guard clauses first, then the flat happy path. See Languages.Resolve in src/Aetherphone/Core/Localization/Language.cs.
 - **Explicit accessibility keywords on everything**, including private members: `private static`, `private const`, never a bare `static`.
