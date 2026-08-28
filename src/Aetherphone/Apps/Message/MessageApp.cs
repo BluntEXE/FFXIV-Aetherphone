@@ -24,7 +24,7 @@ using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Message;
 
-internal sealed partial class MessageApp : IResumableApp
+internal sealed partial class MessageApp : IResumableApp, ISpotlightConversations
 {
     private enum MessageTab : byte
     {
@@ -45,6 +45,8 @@ internal sealed partial class MessageApp : IResumableApp
     public string Glyph => "Me";
     public int BadgeCount => store.UnreadTotal + calls.UnseenMissed;
     public ConversationDto[] SearchableConversations => store.Conversations;
+
+    public ConversationDto[] SpotlightConversations => store.Conversations;
 
     private readonly DirectMessagesStore store;
     private readonly FailureSlot threadListFailure = new();

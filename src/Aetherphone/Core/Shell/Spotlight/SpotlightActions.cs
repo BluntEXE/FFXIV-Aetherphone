@@ -1,4 +1,3 @@
-using Aetherphone.Apps.Notes;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Telephony;
@@ -83,7 +82,7 @@ internal static class SpotlightActions
     };
 
     public static void Run(SpotlightActionKind kind, Configuration configuration, ThemeProvider themes, CallHub calls,
-        NotesApp? notes, INavigator navigation)
+        ISpotlightNotes? notes, INavigator navigation)
     {
         switch (kind)
         {

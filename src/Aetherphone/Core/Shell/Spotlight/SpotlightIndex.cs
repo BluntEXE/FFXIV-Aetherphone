@@ -1,11 +1,6 @@
-using Aetherphone.Apps.AppStore;
-using Aetherphone.Apps.Message;
-using Aetherphone.Apps.Notes;
-using Aetherphone.Apps.Settings;
-using Aetherphone.Apps.Strats;
-using Aetherphone.Apps.Venues;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Message;
 using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Localization;
@@ -120,12 +115,12 @@ internal sealed class SpotlightIndex
     private readonly ThemeProvider themes;
     private readonly CallHub calls;
     private readonly Configuration configuration;
-    private readonly SettingsApp? settingsApp;
-    private readonly NotesApp? notesApp;
-    private readonly MessageApp? messageApp;
-    private readonly AppStoreApp? storeApp;
-    private readonly StratsApp? stratsApp;
-    private readonly VenuesApp? venuesApp;
+    private readonly ISpotlightPages? settingsPages;
+    private readonly ISpotlightNotes? noteTarget;
+    private readonly ISpotlightConversations? conversationSource;
+    private readonly ISpotlightStoreApps? storeTarget;
+    private readonly ISpotlightFights? fightTarget;
+    private readonly ISpotlightVenues? venueTarget;
     private readonly List<SpotlightResult> results = new();
     private readonly List<MarketItemRef> marketScratch = new();
     private readonly int[] sectionBest = new int[KindCount];
@@ -158,12 +153,12 @@ internal sealed class SpotlightIndex
         comparer = new SectionComparer(sectionBest);
         for (var index = 0; index < apps.Count; index++)
         {
-            settingsApp ??= apps[index] as SettingsApp;
-            notesApp ??= apps[index] as NotesApp;
-            messageApp ??= apps[index] as MessageApp;
-            storeApp ??= apps[index] as AppStoreApp;
-            stratsApp ??= apps[index] as StratsApp;
-            venuesApp ??= apps[index] as VenuesApp;
+            settingsPages ??= apps[index] as ISpotlightPages;
+            noteTarget ??= apps[index] as ISpotlightNotes;
+            conversationSource ??= apps[index] as ISpotlightConversations;
+            storeTarget ??= apps[index] as ISpotlightStoreApps;
+            fightTarget ??= apps[index] as ISpotlightFights;
+            venueTarget ??= apps[index] as ISpotlightVenues;
         }
     }
 
@@ -221,7 +216,7 @@ internal sealed class SpotlightIndex
                 navigation.Open(result.Payload);
                 break;
             case SpotlightKind.Action:
-                SpotlightActions.Run((SpotlightActionKind)result.PageIndex, configuration, themes, calls, notesApp,
+                SpotlightActions.Run((SpotlightActionKind)result.PageIndex, configuration, themes, calls, noteTarget,
                     navigation);
                 break;
             case SpotlightKind.Contact:
@@ -233,9 +228,9 @@ internal sealed class SpotlightIndex
                 navigation.Open("message");
                 break;
             case SpotlightKind.SettingsPage:
-                if (settingsApp is not null && result.PageIndex < settingsApp.SearchablePages.Count)
+                if (settingsPages is not null && result.PageIndex < settingsPages.SpotlightPageCount)
                 {
-                    settingsApp.RequestPage(settingsApp.SearchablePages[result.PageIndex]);
+                    settingsPages.RequestSpotlightPage(result.PageIndex);
                 }
 
                 navigation.Open("settings");
@@ -251,15 +246,15 @@ internal sealed class SpotlightIndex
                 navigation.Open("messages");
                 break;
             case SpotlightKind.Note:
-                notesApp?.RequestNote(result.EntityId);
+                noteTarget?.RequestNote(result.EntityId);
                 navigation.Open("notes");
                 break;
             case SpotlightKind.Guide:
-                stratsApp?.RequestFight(result.Payload);
+                fightTarget?.RequestFight(result.Payload);
                 navigation.Open(StratsContent.AppId);
                 break;
             case SpotlightKind.Venue:
-                venuesApp?.RequestVenue(result.Payload);
+                venueTarget?.RequestVenue(result.Payload);
                 navigation.Open("venues");
                 break;
             case SpotlightKind.MarketItem:
@@ -267,7 +262,7 @@ internal sealed class SpotlightIndex
                 navigation.Open("market");
                 break;
             case SpotlightKind.StoreApp:
-                storeApp?.RequestApp(result.Payload);
+                storeTarget?.RequestStoreApp(result.Payload);
                 navigation.Open("appstore");
                 break;
         }
@@ -473,17 +468,17 @@ internal sealed class SpotlightIndex
 
     private void CollectDmThreads(string query)
     {
-        if (messageApp is null)
+        if (conversationSource is null)
         {
             return;
         }
 
         var added = 0;
-        var threads = messageApp.SearchableConversations;
+        var threads = conversationSource.SpotlightConversations;
         for (var index = 0; index < threads.Length && added < MaxDmThreads; index++)
         {
             var thread = threads[index];
-            var title = DirectMessagesStore.DisplayTitle(thread);
+            var title = ConversationTitle.Of(thread);
             var score = Math.Max(Match(title, query), Match(thread.OtherHandle, query));
             if (score == 0)
             {
@@ -503,22 +498,23 @@ internal sealed class SpotlightIndex
 
     private void CollectSettings(string query)
     {
-        if (settingsApp is null)
+        if (settingsPages is null)
         {
             return;
         }
 
         var added = 0;
-        var pages = settingsApp.SearchablePages;
-        for (var index = 0; index < pages.Count && added < MaxSettings; index++)
+        var pageCount = settingsPages.SpotlightPageCount;
+        for (var index = 0; index < pageCount && added < MaxSettings; index++)
         {
-            var score = Match(pages[index].Title, query);
+            var title = settingsPages.SpotlightPageTitle(index);
+            var score = Match(title, query);
             if (score == 0)
             {
                 continue;
             }
 
-            results.Add(new SpotlightResult(SpotlightKind.SettingsPage, pages[index].Title, string.Empty, string.Empty,
+            results.Add(new SpotlightResult(SpotlightKind.SettingsPage, title, string.Empty, string.Empty,
                 0, Guid.Empty, index, SettingsBias + score));
             added++;
         }

@@ -34,7 +34,7 @@ internal readonly record struct StoreView(StoreViewKind Kind, string AppId, Stor
         new(StoreViewKind.Category, string.Empty, category);
 }
 
-internal sealed partial class AppStoreApp : IPhoneApp
+internal sealed partial class AppStoreApp : IPhoneApp, ISpotlightStoreApps
 {
     private const float TabBarHeight = 62f;
     private const float HeaderHeight = 82f;
@@ -77,6 +77,8 @@ internal sealed partial class AppStoreApp : IPhoneApp
     public int BadgeCount => 0;
 
     public void RequestApp(string appId) => pendingAppId = appId;
+
+    public void RequestStoreApp(string appId) => RequestApp(appId);
 
     public void OnOpened()
     {

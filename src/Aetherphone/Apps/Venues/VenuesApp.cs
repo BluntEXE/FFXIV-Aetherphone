@@ -17,7 +17,7 @@ using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Apps.Venues;
 
-internal sealed partial class VenuesApp : IPhoneApp
+internal sealed partial class VenuesApp : IPhoneApp, ISpotlightVenues
 {
     private const float SearchHeight = 46f;
     private const float SegmentHeight = 44f;

@@ -241,15 +241,7 @@ internal sealed class DirectMessagesStore : ChatThreadStoreBase<ChatMessageDto, 
             || cipher.IsPreviewResolved(thread.Id, thread.LastMessageAtUnix);
     }
 
-    public static string DisplayTitle(ConversationDto item)
-    {
-        if (item.IsGroup)
-        {
-            return item.Title.Length > 0 ? item.Title : Loc.T(L.DirectMessages.GroupFallback);
-        }
-
-        return item.OtherDisplayName.Length > 0 ? item.OtherDisplayName : item.OtherHandle;
-    }
+    public static string DisplayTitle(ConversationDto item) => ConversationTitle.Of(item);
 
     private static string PreviewText(ConversationDto item)
     {

@@ -10,7 +10,7 @@ using Dalamud.Bindings.ImGui;
 
 namespace Aetherphone.Apps.Strats;
 
-internal sealed partial class StratsApp : IPhoneApp
+internal sealed partial class StratsApp : IPhoneApp, ISpotlightFights
 {
     private enum StratsScreen : byte
     {
