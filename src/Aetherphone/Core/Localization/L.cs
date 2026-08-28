@@ -1634,10 +1634,10 @@ internal static class L
     {
         public static readonly LocString[] Release1013 =
         {
-            new("changelog.r1013.0",
-                "Redesigned Chirper around a new look: Home, Explore, Alerts and Profile tabs, edge to edge post cells with the same layout everywhere, threads with a reply line under each post, a new compose pill, and post actions in a bottom sheet"),
             new("changelog.r1013.1",
                 "Added profile pictures next to every post, reply and quote in Chirper, and a banner behind a framed avatar on profiles that opens full size when tapped"),
+            new("changelog.r1013.28",
+                "The likers list in Chirper now stamps each person's reaction on their avatar, with a filter rail carrying one chip per reaction that was used"),
             new("changelog.r1013.2",
                 "Added sounds across the phone for taps, typing, app transitions, toggles, waking it, taking a photo, sending a message, connecting and ending a call and payouts, on by default on a new phone and off if you already had one, switchable in Settings > Sounds"),
             new("changelog.r1013.3",
@@ -1648,12 +1648,42 @@ internal static class L
                 "Added keyboard controls to Beat: the four lanes bind to 1 to 4 with A, S, D and F as alternates, and each key is printed on a cap under its lane"),
             new("changelog.r1013.6",
                 "Added search to the home screen: pull down on the app grid or tap the Search pill to find apps, settings, messages, notes, shortcuts and more in one place, run a shortcut or flip a setting on the spot, and do quick math right in the search field"),
+            new("changelog.r1013.21",
+                "A running Clock timer now shows in the Dynamic Island when no call or song is playing: a countdown ring, a stop button when you hover it, and a tap that opens Clock"),
+            new("changelog.r1013.24",
+                "Chirper, Aethergram, Market, News, Venues and Strats now draw placeholder rows while their first page loads, instead of a spinner"),
+            new("changelog.r1013.14",
+                "You can now unlock a new PC from one that already opens your chats: the new device asks, the working one approves once both show the same six digit number, and your key and full history follow, with no code to type"),
+            new("changelog.r1013.16",
+                "Messages you have already read are now kept on this PC, sealed the same way your key is, and shown when the key cannot open them. Nothing is kept for chats you never opened, media is not kept, and the store clears when you sign out"),
+            new("changelog.r1013.18",
+                "Added an encryption help panel, reachable from the encryption screen in every app that has one including Yellow Pages inquiries, with a card per thing a message can say, Decrypting, Locked on this device, Sent to an earlier key, This message is damaged, and what to do about each. Restore older chats now sits there too, not only in Settings"),
             new("changelog.r1013.7",
                 "Added MogCast, Music, News and Hunts to the Chinese game version, so that client gets the same apps as everyone else"),
             new("changelog.r1013.8",
                 "Added a Trademark document and updated the official Aetherphone documents, including the readme, terms, privacy notice and third-party notices, all readable in the GitHub repository"),
+            new("changelog.r1013.0",
+                "Redesigned Chirper around a new look: Home, Explore, Activity and Profile tabs, edge to edge post cells with the same layout everywhere, threads with a reply line under each post, a new compose pill, and post actions in a bottom sheet"),
+            new("changelog.r1013.17",
+                "Saving your recovery code is now two steps, copy or write it down and then type the last group back, a notification surfaces a code waiting to be saved or a locked device wherever you are on the phone, Settings says which state the account is in instead of reading Active, the prompt snoozes for three days rather than being dismissed for good, and copying the code confirms with a toast"),
+            new("changelog.r1013.20",
+                "Apps now come back where you left them: reopening one within ten minutes keeps its tab, draft, screen and scroll instead of resetting to the top"),
+            new("changelog.r1013.22",
+                "A fresh phone now starts with a curated Control Center, four toggles across the top row, the media tile beside the brightness and volume sliders, then settings and the accent row, with everything else waiting in Add a Control, and Reset returns to that layout rather than to every module at once. Layouts you already saved are untouched"),
+            new("changelog.r1013.23",
+                "A fresh install now opens the phone minimized at login instead of putting the full phone on screen. Phones already set up keep what they chose"),
+            new("changelog.r1013.25",
+                "Row and post menus in Aethergram, Message, Linkpearl, Music, Yellow Pages and Velvet, and destructive confirmations across the phone, now open as a bottom sheet instead of a small anchored dropdown"),
+            new("changelog.r1013.26",
+                "Lists and feeds now run edge to edge with hairline separators and one shared row layout, in Message, Aethergram, Calendar, Music, News, Yellow Pages, Collections, Polls, Announcements, Muster, MogCast and Linkpearl"),
+            new("changelog.r1013.27",
+                "Buttons across the phone now shrink slightly while held and fire when you release, so a press you drag away from no longer counts, and copy and result toasts always appear on the phone instead of following the pointer off screen"),
+            new("changelog.r1013.29",
+                "Every external link in Music now asks before it opens your browser and shows where it goes"),
             new("changelog.r1013.9",
                 "Moved Show in Group Pose off the main Settings page into General settings"),
+            new("changelog.r1013.30",
+                "Mods has been taken out of the phone, browsing and installing Heliosphere mods happens in the Heliosphere plugin as before"),
             new("changelog.r1013.10",
                 "Improved rendering performance: every screen paints into one transform stage, shared toolkit pieces replace hand rolled copies, and text is rasterised once per orientation instead of once per frame"),
             new("changelog.r1013.11",
@@ -1662,6 +1692,16 @@ internal static class L
                 "Improved performance in text heavy screens: wrapped text, formatted clocks and numbers and icon labels are measured once and reused instead of being rebuilt every frame, so long chats and feeds scroll more smoothly"),
             new("changelog.r1013.13",
                 "Improved the animation when the phone turns into landscape mode: the whole device rotates over a short ramp with the screen fading across the halfway point, instead of stretching through a square shape"),
+            new("changelog.r1013.15",
+                "Fixed the phone losing or replacing your encryption key, the cause behind whole conversations turning unreadable: the key is saved and read back before it is published, kept per account instead of being inherited by an alt, and a key you replace now stays on this PC, up to eight of them, and is tried automatically so older chats keep opening here"),
+            new("changelog.r1013.19",
+                "A chat this device cannot decrypt no longer sends in the clear: the send is held back with a line that opens the encryption screen, across text, pictures, voice notes, edits, forwarding, post shares, story replies and Velvet intros, and a chat sealed to a key this device cannot read moves itself to a new key instead of staying stuck"),
+            new("changelog.r1013.33",
+                "Chirper tabs now refresh when you come back to them instead of sitting on what they fetched the first time, Explore keeps its results when you leave the tab, and name effects play everywhere in the app rather than only on profiles"),
+            new("changelog.r1013.31",
+                "Gil figures and viewer counts now follow your language's number formatting everywhere"),
+            new("changelog.r1013.34",
+                "Fixed a fresh install holding on the boot screen for a minute before the phone appeared, and text resizing at random the first time an app drew an icon it had not seen"),
         };
 
         public static readonly LocString[] Release1012 =
@@ -3413,6 +3453,10 @@ internal static class L
         public static readonly LocString HistoryDefault = new("linkpearl.historyDefault", "Keep history by default");
         public static readonly LocString ClearAllHistory = new("linkpearl.clearAllHistory", "Clear all history");
         public static readonly LocString ClearAllHistoryConfirm = new("linkpearl.clearAllHistoryConfirm", "Delete every stored conversation on this PC? Your tabs and settings stay.");
+        public static readonly LocString Collapse = new("linkpearl.collapse", "Collapse");
+        public static readonly LocString Expand = new("linkpearl.expand", "Expand");
+        public static readonly LocString CollapseAllPopouts = new("linkpearl.collapseAllPopouts", "Collapse all pop-outs ({0})");
+        public static readonly LocString ExpandAllPopouts = new("linkpearl.expandAllPopouts", "Expand all pop-outs ({0})");
     }
 
     internal static class Character
