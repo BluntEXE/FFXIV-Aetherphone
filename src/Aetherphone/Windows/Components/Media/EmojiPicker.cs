@@ -10,6 +10,11 @@ namespace Aetherphone.Windows.Components;
 internal sealed class EmojiPicker
 {
     private const int Columns = 8;
+    private const int CompactColumns = 6;
+    private const float CellGap = 4f;
+    private const float CellInset = 0.14f;
+    private const float HoverTint = 0.10f;
+    private const float FavoriteCellMax = 34f;
 
     private static readonly Vector4[] ToneSwatches =
     {
@@ -29,6 +34,10 @@ internal sealed class EmojiPicker
     private int tone;
     private bool resetScroll;
     private int lastDrawnFrame = -1;
+
+    public bool Compact { get; set; }
+
+    private int ColumnCount => Compact ? CompactColumns : Columns;
 
     public string? Draw(Rect area, in AppSkin ui)
     {
@@ -57,10 +66,10 @@ internal sealed class EmojiPicker
                 ImGui.GetColorU32(new Vector4(background.X, background.Y, background.Z, 1f)));
             drawList.AddLine(area.Min, new Vector2(area.Max.X, area.Min.Y), ImGui.GetColorU32(theme.Separator), 1f);
 
-            var pad = 10f * scale;
+            var pad = (Compact ? 8f : 10f) * scale;
             var innerLeft = area.Min.X + pad;
             var innerRight = area.Max.X - pad;
-            var rowHeight = 30f * scale;
+            var rowHeight = (Compact ? 26f : 30f) * scale;
             var tabsTop = area.Min.Y + pad;
             DrawHeader(drawList, innerLeft, innerRight, tabsTop, rowHeight, ui);
 
@@ -73,11 +82,94 @@ internal sealed class EmojiPicker
 
             RebuildViewIfNeeded();
 
-            var gridRect = new Rect(new Vector2(area.Min.X, searchTop + rowHeight + 6f * scale), area.Max);
-            picked = DrawGrid(gridRect, ui);
+            var contentTop = searchTop + rowHeight + 6f * scale;
+            var favorites = EmojiFavorites.Codes;
+            if (search.Length == 0 && favorites.Count > 0)
+            {
+                var strip = new Rect(new Vector2(innerLeft, contentTop),
+                    new Vector2(innerRight, contentTop + FavoritesHeight(innerRight - innerLeft, scale)));
+                picked = DrawFavorites(drawList, strip, ui, favorites);
+                contentTop = strip.Max.Y + 6f * scale;
+            }
+
+            var gridRect = new Rect(new Vector2(area.Min.X, contentTop), area.Max);
+            var gridPicked = DrawGrid(gridRect, ui);
+            picked ??= gridPicked;
         }
 
         return picked;
+    }
+
+    private float FavoritesHeight(float width, float scale)
+    {
+        var label = Compact ? 0f : Typography.LineHeight(TextStyles.Caption2);
+        return label + FavoriteCellSize(width, scale);
+    }
+
+    private float FavoriteCellSize(float width, float scale) =>
+        MathF.Min(FavoriteCellMax * scale, CellSize(width, scale));
+
+    private float CellSize(float width, float scale)
+    {
+        var columns = ColumnCount;
+        return (width - CellGap * scale * (columns - 1)) / columns;
+    }
+
+    private string? DrawFavorites(ImDrawListPtr drawList, Rect strip, in AppSkin ui, List<string> codes)
+    {
+        var scale = UiScale.Current;
+        var cell = FavoriteCellSize(strip.Width, scale);
+        var stride = cell + CellGap * scale;
+        var top = strip.Max.Y - cell;
+        if (!Compact)
+        {
+            Typography.Draw(drawList, strip.Min, Loc.T(L.Linkpearl.EmojiRecent), ui.MutedInk, TextStyles.Caption2);
+        }
+
+        string? pickedCode = null;
+        var slots = Math.Max(1, (int)((strip.Width + CellGap * scale) / stride));
+        var slot = 0;
+        for (var index = 0; index < codes.Count && slot < slots; index++)
+        {
+            var code = codes[index];
+            if (!EmojiCatalog.TryResolve(code, out var file))
+            {
+                continue;
+            }
+
+            var min = new Vector2(strip.Min.X + slot * stride, top);
+            slot++;
+            var max = min + new Vector2(cell, cell);
+            if (DrawCell(drawList, min, max, file, ui, scale))
+            {
+                pickedCode = code;
+            }
+        }
+
+        if (pickedCode is null)
+        {
+            return null;
+        }
+
+        EmojiFavorites.Use(pickedCode);
+        return Wrap(pickedCode);
+    }
+
+    private static bool DrawCell(ImDrawListPtr drawList, Vector2 min, Vector2 max, string file, in AppSkin ui,
+        float scale)
+    {
+        var hovered = !UiInteract.InputBlocked && UiInteract.HoverWindowOnly(min, max);
+        if (hovered)
+        {
+            Squircle.Fill(drawList, min, max, 8f * scale,
+                ImGui.GetColorU32(Palette.WithAlpha(ui.Theme.TextStrong, HoverTint)));
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        var inset = (max.X - min.X) * CellInset;
+        EmojiImages.TryDraw(drawList, file, min + new Vector2(inset, inset), max - new Vector2(inset, inset),
+            0xFFFFFFFF);
+        return UiInteract.Click(min, max, hovered);
     }
 
     private void DrawHeader(ImDrawListPtr drawList, float left, float right, float top, float height, in AppSkin ui)
@@ -187,7 +279,7 @@ internal sealed class EmojiPicker
     private string? DrawGrid(Rect body, in AppSkin ui)
     {
         var scale = UiScale.Current;
-        string? picked = null;
+        string? pickedCode = null;
         var gridKey = ImGui.GetID("##emojiGrid");
         ImGui.SetCursorScreenPos(body.Min);
         using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, Vector2.Zero))
@@ -207,12 +299,13 @@ internal sealed class EmojiPicker
             }
 
             var origin = ImGui.GetCursorScreenPos();
-            var gap = 4f * scale;
+            var gap = CellGap * scale;
             var avail = ScrollLayout.StableContentWidth();
-            var cell = (avail - gap * (Columns - 1)) / Columns;
+            var columns = ColumnCount;
+            var cell = CellSize(avail, scale);
             var stride = cell + gap;
             var count = view.Count;
-            var rows = (count + Columns - 1) / Columns;
+            var rows = (count + columns - 1) / columns;
             var total = rows * stride;
             var scrollY = ImGui.GetScrollY();
             var viewHeight = ImGui.GetWindowSize().Y;
@@ -226,9 +319,9 @@ internal sealed class EmojiPicker
                     continue;
                 }
 
-                for (var column = 0; column < Columns; column++)
+                for (var column = 0; column < columns; column++)
                 {
-                    var slot = row * Columns + column;
+                    var slot = row * columns + column;
                     if (slot >= count)
                     {
                         break;
@@ -237,20 +330,9 @@ internal sealed class EmojiPicker
                     var glyph = glyphs[view[slot]];
                     var min = new Vector2(origin.X + column * stride, origin.Y + rowTop);
                     var max = min + new Vector2(cell, cell);
-                    var hovered = !UiInteract.InputBlocked && UiInteract.HoverWindowOnly(min, max);
-                    if (hovered)
+                    if (DrawCell(drawList, min, max, FileFor(glyph), ui, scale))
                     {
-                        Squircle.Fill(drawList, min, max, 8f * scale,
-                            ImGui.GetColorU32(Palette.WithAlpha(ui.Theme.TextStrong, 0.10f)));
-                        ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-                    }
-
-                    var inset = cell * 0.14f;
-                    EmojiImages.TryDraw(drawList, FileFor(glyph), min + new Vector2(inset, inset),
-                        max - new Vector2(inset, inset), 0xFFFFFFFF);
-                    if (UiInteract.Click(min, max, hovered))
-                    {
-                        picked = CharFor(glyph);
+                        pickedCode = ShortcodeFor(glyph);
                     }
                 }
             }
@@ -259,12 +341,20 @@ internal sealed class EmojiPicker
             ImGui.Dummy(new Vector2(avail, total));
         }
 
-        return picked;
+        if (pickedCode is null)
+        {
+            return null;
+        }
+
+        EmojiFavorites.Use(pickedCode);
+        return Wrap(pickedCode);
     }
 
     private string FileFor(in EmojiGlyph glyph) =>
         glyph.HasTones && tone > 0 ? glyph.Tones[tone - 1].File : glyph.File;
 
-    private string CharFor(in EmojiGlyph glyph) =>
-        string.Concat(":", glyph.HasTones && tone > 0 ? glyph.Tones[tone - 1].Shortcode : glyph.Shortcode, ":");
+    private string ShortcodeFor(in EmojiGlyph glyph) =>
+        glyph.HasTones && tone > 0 ? glyph.Tones[tone - 1].Shortcode : glyph.Shortcode;
+
+    private static string Wrap(string shortcode) => string.Concat(":", shortcode, ":");
 }

@@ -3430,6 +3430,7 @@ internal static class L
         public static readonly LocString ScopeEveryone = new("linkpearl.scopeEveryone", "Everyone");
         public static readonly LocString NoMatches = new("linkpearl.noMatches", "No one matches that name.");
         public static readonly LocString SearchHint = new("linkpearl.searchHint", "Search messages and people");
+        public static readonly LocString EmojiRecent = new("linkpearl.emojiRecent", "Recently used");
         public static readonly LocString NewMessages = new("linkpearl.newMessages", "New messages");
         public static readonly LocString ClearHistory = new("linkpearl.clearHistory", "Clear history");
         public static readonly LocString ClearHistoryConfirm = new("linkpearl.clearHistoryConfirm", "Clear the stored history for this conversation? This only affects your phone.");

@@ -38,7 +38,7 @@ internal static class EmojiScanner
             }
 
             if (end < length && end > index + 1 && text[end] == ':'
-                && EmojiCatalog.TryResolve(text.Substring(index + 1, end - index - 1), out var file))
+                && EmojiCatalog.TryResolve(text.AsSpan(index + 1, end - index - 1), out var file))
             {
                 target.Add(new EmojiSpan(index, end - index + 1, file));
                 index = end + 1;
@@ -49,6 +49,6 @@ internal static class EmojiScanner
         }
     }
 
-    private static bool IsShortcodeChar(char value) =>
+    public static bool IsShortcodeChar(char value) =>
         value is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or (>= '0' and <= '9') or '_' or '-';
 }
