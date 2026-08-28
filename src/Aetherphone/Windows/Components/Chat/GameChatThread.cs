@@ -34,7 +34,6 @@ internal readonly struct GameChatTarget
 internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
 {
     private const long GroupWindowSeconds = 240;
-    private const float ComposerHeight = 52f;
     private const float FailureHeight = 26f;
     private const float SearchBarHeight = 40f;
     private const float JumpPillHeight = 26f;
@@ -114,7 +113,7 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
 
         target = next;
         activeChannel = next.SendChannelKey;
-        composer.Reset();
+        composer.Bind(next.Key);
         followBottom = true;
         snapToBottom = revealId is null;
         mappedRevision = -1;
@@ -122,7 +121,7 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
 
     public void Close()
     {
-        composer.Reset();
+        composer.Unbind();
         if (searchOpen)
         {
             ToggleSearch();
@@ -143,8 +142,18 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
         view.Target(target.Streams);
         view.Sync();
         send.Tick();
+        ChatDrafts.Tick();
         SyncGhosts();
-        var composerBar = new Rect(new Vector2(area.Min.X, area.Max.Y - ComposerHeight * scale), area.Max);
+        var model = new GameComposerModel
+        {
+            Theme = theme,
+            Screen = area,
+            Channels = target.SendChannels,
+            ActiveChannel = activeChannel.Length > 0 ? activeChannel : target.SendChannelKey,
+            SendTarget = target.SendTarget,
+        };
+        var composerBar = new Rect(new Vector2(area.Min.X, area.Max.Y - composer.Measure(area.Width, model)),
+            area.Max);
         var failure = FirstFailure();
         var failureBlock = failure is null ? 0f : FailureHeight * scale;
         var searchHeight = searchOpen ? SearchBarHeight * scale : 0f;
@@ -171,26 +180,46 @@ internal sealed class GameChatThread : IChatTranscriptInteractions, IDisposable
                 new Vector2(area.Max.X, composerBar.Min.Y)), theme, failure);
         }
 
-        var model = new GameComposerModel
-        {
-            Theme = theme,
-            Screen = area,
-            Channels = target.SendChannels,
-            ActiveChannel = activeChannel.Length > 0 ? activeChannel : target.SendChannelKey,
-            SendTarget = target.SendTarget,
-        };
         var result = composer.Draw(composerBar, model);
         activeChannel = result.ChannelKey;
-        if (!result.Submitted || !GameChannels.TryByKey(activeChannel, out var channel))
+        if (!result.Submitted)
         {
             return;
         }
 
-        if (send.Send(channel, target.SendTarget, result.Text))
+        if (result.IsCommand)
         {
-            composer.Clear();
-            snapToBottom = true;
+            if (ChatSender.TrySend(result.Text))
+            {
+                composer.Clear();
+            }
+
+            return;
         }
+
+        if (!GameChannels.TryByKey(activeChannel, out var channel) || !Submit(channel, result.Text))
+        {
+            return;
+        }
+
+        composer.Clear();
+        snapToBottom = true;
+    }
+
+    private bool Submit(GameChannel channel, string text)
+    {
+        var configuration = Plugin.Cfg;
+        var sent = configuration is null || configuration.LinkpearlSplitLongMessages
+            ? send.SendSplit(channel, target.SendTarget, text,
+                configuration?.LinkpearlSplitIndicator ?? string.Empty,
+                configuration?.LinkpearlSplitIntervalMilliseconds ?? ChatSend.MinimumIntervalMilliseconds)
+            : send.Send(channel, target.SendTarget, text);
+        if (sent)
+        {
+            ChatDrafts.Record(channel.Key, target.SendTarget, text);
+        }
+
+        return sent;
     }
 
     public void OnMessageContext(string messageId)
