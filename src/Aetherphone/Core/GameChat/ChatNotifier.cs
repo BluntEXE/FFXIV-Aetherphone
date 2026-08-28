@@ -38,6 +38,11 @@ internal sealed class ChatNotifier : IDisposable
             return;
         }
 
+        if (ChannelStyles.Shared.NeverUnread(entry.ChannelKey))
+        {
+            return;
+        }
+
         if (ChatStreams.IsTell(entry.StreamKey))
         {
             if (!inbox.IsViewing(entry.StreamKey) && !tellPreferences.IsMuted(entry.StreamKey))
