@@ -16,6 +16,8 @@ internal sealed partial class ChirperApp
     private const float UserRowHeight = 62f;
     private const float FollowPillHeight = 31f;
     private const float ActivityIconRadius = 19f;
+    private const float ActivityBadgeRadius = 9f;
+    private const float ActivityBadgeRimFraction = 0.70711f;
     private const float SearchDebounceSeconds = 0.35f;
     private const float TagRowHeight = 60f;
     private const float TagGlyphSize = 38f;
@@ -47,10 +49,8 @@ internal sealed partial class ChirperApp
     private static readonly Vector4 GlassPillInk = new(0.875f, 0.902f, 0.941f, 1f);
     private static readonly Vector4 GlassPillStroke = new(1f, 1f, 1f, 0.12f);
     private static readonly Vector4 RowHover = new(1f, 1f, 1f, 0.03f);
-    private static readonly Vector4 LikeWash = new(1f, 0.216f, 0.373f, 0.14f);
-    private static readonly Vector4 RechirpWash = new(0.188f, 0.820f, 0.345f, 0.13f);
     private static readonly Vector4 MentionInk = new(0.718f, 0.612f, 1f, 1f);
-    private static readonly Vector4 MentionWash = new(0.655f, 0.545f, 0.980f, 0.15f);
+    private static readonly Vector4 ActivityBadgeRing = new(0f, 0f, 0f, 0.55f);
     private static readonly Vector4 UnreadTint = Palette.WithAlpha(ChirperInk.Accent, 0.045f);
     private static readonly Vector4 EditCardFill = new(1f, 1f, 1f, 0.045f);
     private static readonly Vector4 EditCardStroke = new(1f, 1f, 1f, 0.07f);
@@ -531,11 +531,14 @@ internal sealed partial class ChirperApp
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        var iconCenter = new Vector2(origin.X + padX + iconRadius, origin.Y + padY + iconRadius);
-        DrawActivityIcon(drawList, iconCenter, iconRadius, item.Type, scale);
+        var avatarCenter = new Vector2(origin.X + padX + iconRadius, origin.Y + padY + iconRadius);
+        DrawAvatar(drawList, avatarCenter, iconRadius, actor, string.Empty, item.ActorAvatarUrl, 0.95f, 32,
+            Frames.Of(item.ActorFrameId));
+        var badgeOffset = iconRadius * ActivityBadgeRimFraction;
+        DrawActivityBadge(drawList, avatarCenter + new Vector2(badgeOffset, badgeOffset), item.Type, scale);
         var textTop = origin.Y + padY;
-        Typography.Draw(drawList, new Vector2(textLeft, textTop), Typography.FitText(actor, textWidth, ActivityActorStyle),
-            ChirperInk.TitleInk, ActivityActorStyle);
+        UserName.DrawAuto(drawList, "chirper.activity.actor." + item.Id, actor, item.ActorBadges, item.ActorBadgeIds,
+            textLeft, textTop, textWidth, ActivityActorStyle, ChirperInk.TitleInk, theme);
         if (bodyHeight > 0f)
         {
             Typography.DrawWrappedLeft(new Vector2(textLeft, textTop + actorHeight + 2f * scale), body, ChirperInk.BodyInk,
@@ -551,7 +554,12 @@ internal sealed partial class ChirperApp
         }
 
         DrawHairline(drawList, origin.X, rowMax.X, rowMax.Y);
-        if (UiInteract.Click(origin, rowMax, hovered))
+        var avatarExtent = new Vector2(iconRadius, iconRadius);
+        if (UiInteract.HoverClick(avatarCenter - avatarExtent, avatarCenter + avatarExtent))
+        {
+            OpenProfile(item.ActorId);
+        }
+        else if (UiInteract.Click(origin, rowMax, hovered))
         {
             if (SocialActivity.OpensPost(item))
             {
@@ -567,41 +575,44 @@ internal sealed partial class ChirperApp
         ImGui.Dummy(new Vector2(width, rowHeight));
     }
 
-    private static void DrawActivityIcon(ImDrawListPtr drawList, Vector2 center, float radius, int type, float scale)
+    private static void DrawActivityBadge(ImDrawListPtr drawList, Vector2 center, int type, float scale)
     {
-        var iconSize = 17f * scale;
+        var radius = ActivityBadgeRadius * scale;
+        var iconSize = radius * 1.15f;
+        var ink = ImGui.GetColorU32(ChirperInk.White);
+        drawList.AddCircleFilled(center, radius + 1.6f * scale, ImGui.GetColorU32(ActivityBadgeRing), 20);
         switch (type)
         {
             case SocialActivity.TypeLike:
             case SocialActivity.TypeCommentLike:
-                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(LikeWash), 32);
-                ChirperIcons.HeartFilled(drawList, center, iconSize, ChirperInk.LikeRed);
+                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.LikeRed), 20);
+                ChirperIcons.HeartFilled(drawList, center, iconSize, ChirperInk.White);
                 break;
             case SocialActivity.TypeRepost:
             case SocialActivity.TypeQuote:
-                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(RechirpWash), 32);
-                ChirperIcons.Rechirp.Stroke(drawList, center, iconSize, ImGui.GetColorU32(ChirperInk.RechirpGreen), 2.1f);
+                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.RechirpGreen), 20);
+                ChirperIcons.Rechirp.Stroke(drawList, center, iconSize, ink, 2.8f);
                 break;
             case SocialActivity.TypeComment:
-                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.AccentWash), 32);
-                ChirperIcons.Reply.Stroke(drawList, center, iconSize, ImGui.GetColorU32(ChirperInk.AccentLink), 1.9f);
+                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.AccentLink), 20);
+                ChirperIcons.Reply.Stroke(drawList, center, iconSize, ink, 2.6f);
                 break;
             case SocialActivity.TypeMention:
             case SocialActivity.TypeCommentMention:
-                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(MentionWash), 32);
-                Typography.DrawCentered(drawList, center, "@", MentionInk, ActivityActorStyle);
+                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(MentionInk), 20);
+                Typography.DrawCentered(drawList, center, "@", ChirperInk.White, TextStyles.Caption2);
                 break;
             case SocialActivity.TypeFollow:
             case SocialActivity.TypeFollowRequest:
             case SocialActivity.TypeFollowAccept:
             case SocialActivity.TypeConnectRequest:
             case SocialActivity.TypeConnectAccept:
-                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.AccentWash), 32);
-                ChirperIcons.Plus.Stroke(drawList, center, iconSize, ImGui.GetColorU32(ChirperInk.AccentLink), 2.4f);
+                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.AccentLink), 20);
+                ChirperIcons.Plus.Stroke(drawList, center, iconSize, ink, 3.2f);
                 break;
             default:
-                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.ChipFill), 32);
-                ChirperIcons.Bell.Stroke(drawList, center, iconSize, ImGui.GetColorU32(ChirperInk.MutedInk), 2f);
+                drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(ChirperInk.MutedInk), 20);
+                ChirperIcons.Bell.Stroke(drawList, center, iconSize, ink, 2.6f);
                 break;
         }
     }
