@@ -1,6 +1,5 @@
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Home;
-using Aetherphone.Core.Linkpearl;
 using Aetherphone.Core.Notifications;
 
 namespace Aetherphone.Core.GameChat;

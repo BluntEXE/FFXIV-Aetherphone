@@ -1,5 +1,5 @@
 using Aetherphone.Core;
-using Aetherphone.Core.GameRooms;
+using Aetherphone.Core.Games;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 

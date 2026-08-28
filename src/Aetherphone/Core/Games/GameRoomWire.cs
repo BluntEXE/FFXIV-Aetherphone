@@ -1,4 +1,4 @@
-namespace Aetherphone.Core.GameRooms;
+namespace Aetherphone.Core.Games;
 
 internal static class GameRoomWire
 {

@@ -1,7 +1,6 @@
 using Aetherphone.Core.Announcements;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Casino;
-using Aetherphone.Core.Linkpearl;
 using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Hunts;
 using Aetherphone.Core.Moderation;

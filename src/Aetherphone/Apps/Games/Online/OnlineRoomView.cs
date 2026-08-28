@@ -1,8 +1,8 @@
+using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
-using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core.Apps;
-using Aetherphone.Core.GameRooms;
+using Aetherphone.Core.Games;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;

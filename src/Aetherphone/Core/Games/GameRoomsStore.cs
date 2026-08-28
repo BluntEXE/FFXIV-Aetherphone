@@ -5,7 +5,7 @@ using Aetherphone.Core.Runtime;
 using Aetherphone.Core.Telephony.Contracts;
 using Dalamud.Plugin.Services;
 
-namespace Aetherphone.Core.GameRooms;
+namespace Aetherphone.Core.Games;
 
 internal enum GameRoomIntent
 {

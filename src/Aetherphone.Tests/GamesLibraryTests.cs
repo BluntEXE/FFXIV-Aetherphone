@@ -1,6 +1,5 @@
 using Aetherphone.Apps.Games;
 using Aetherphone.Apps.Games.Framework;
-using Aetherphone.Core.GameRooms;
 using Aetherphone.Core.Games;
 using Xunit;
 

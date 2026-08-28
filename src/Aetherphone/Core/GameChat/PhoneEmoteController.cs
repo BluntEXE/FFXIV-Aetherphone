@@ -1,11 +1,10 @@
-using Aetherphone.Core.GameChat;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using CharacterStruct = FFXIVClientStructs.FFXIV.Client.Game.Character.Character;
 
-namespace Aetherphone.Core.Emote;
+namespace Aetherphone.Core.GameChat;
 
 internal sealed class PhoneEmoteController : IDisposable
 {

@@ -3,7 +3,7 @@ using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Telephony.Contracts;
 
-namespace Aetherphone.Core.GameRooms;
+namespace Aetherphone.Core.Games;
 
 internal sealed record GameRoomMemberView(
     string UserId,

@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using Aetherphone.Core.Game;
-using Aetherphone.Core.Linkpearl;
 using Newtonsoft.Json;
 
 namespace Aetherphone.Core.GameChat;

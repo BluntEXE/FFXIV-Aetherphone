@@ -13,7 +13,6 @@ using Aetherphone.Core.Health;
 using Aetherphone.Core.Housing;
 using Aetherphone.Core.Hunts;
 using Aetherphone.Core.Inventory;
-using Aetherphone.Core.Linkpearl;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Maps;
 using Aetherphone.Core.Market;
@@ -110,7 +109,7 @@ internal sealed class PhoneServices : IDisposable
     public required Casino.CasinoSpinStore CasinoSpin { get; init; }
     public required Casino.CasinoTurnNotifier CasinoTurns { get; init; }
     public required Casino.CasinoLauncher CasinoLauncher { get; init; }
-    public required GameRooms.GameRoomsStore GameRooms { get; init; }
+    public required Games.GameRoomsStore GameRooms { get; init; }
     public required Video.AetherStreamLauncher AetherStreamLauncher { get; init; }
     public required PluginCatalog PluginCatalog { get; init; }
     public required ShortcutStore Shortcuts { get; init; }
@@ -321,7 +320,7 @@ internal sealed class PhoneServices : IDisposable
             realtimeSignals);
         var casinoTurns = new Casino.CasinoTurnNotifier(aethernetSession, casinoRooms, notifications,
             Apps.AppAccents.For("casino"));
-        var gameRooms = new GameRooms.GameRoomsStore(aethernetSession, aethernet.Games, visibility,
+        var gameRooms = new Games.GameRoomsStore(aethernetSession, aethernet.Games, visibility,
             realtimeSignals);
         var musters = new MusterStore(aethernetSession, aethernet.Musters, notifications, configuration,
             visibility, realtimeSignals, installer.Gate(MusterStore.AppId));

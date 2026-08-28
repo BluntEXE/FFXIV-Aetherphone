@@ -1,6 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
-using Aetherphone.Core.GameRooms;
+using Aetherphone.Core.Games;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;

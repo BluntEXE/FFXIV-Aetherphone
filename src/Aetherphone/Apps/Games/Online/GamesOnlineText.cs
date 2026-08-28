@@ -6,12 +6,12 @@ internal static class GamesOnlineText
 {
     public static LocString GameName(string? gameKind)
     {
-        if (string.Equals(gameKind, Core.GameRooms.GameRoomWire.ChessKind, StringComparison.Ordinal))
+        if (string.Equals(gameKind, Core.Games.GameRoomWire.ChessKind, StringComparison.Ordinal))
         {
             return L.Games.OnlineChess;
         }
 
-        if (string.Equals(gameKind, Core.GameRooms.GameRoomWire.PoolKind, StringComparison.Ordinal))
+        if (string.Equals(gameKind, Core.Games.GameRoomWire.PoolKind, StringComparison.Ordinal))
         {
             return L.Games.OnlinePool;
         }
@@ -23,9 +23,9 @@ internal static class GamesOnlineText
     {
         return foul switch
         {
-            Core.GameRooms.GameRoomWire.PoolFoulScratch => L.Games.OnlineFoulScratch,
-            Core.GameRooms.GameRoomWire.PoolFoulWrongBall => L.Games.OnlineFoulWrongBall,
-            Core.GameRooms.GameRoomWire.PoolFoulNoContact => L.Games.OnlineFoulNoContact,
+            Core.Games.GameRoomWire.PoolFoulScratch => L.Games.OnlineFoulScratch,
+            Core.Games.GameRoomWire.PoolFoulWrongBall => L.Games.OnlineFoulWrongBall,
+            Core.Games.GameRoomWire.PoolFoulNoContact => L.Games.OnlineFoulNoContact,
             _ => L.Games.OnlineFoulNoRail,
         };
     }

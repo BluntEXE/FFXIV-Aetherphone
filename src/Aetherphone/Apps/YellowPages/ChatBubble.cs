@@ -1,5 +1,5 @@
 using Aetherphone.Core.Animation;
-using Aetherphone.Core.Linkpearl;
+using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Theme;
