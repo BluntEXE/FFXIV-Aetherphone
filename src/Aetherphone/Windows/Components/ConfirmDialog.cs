@@ -36,6 +36,9 @@ internal static class ConfirmDialog
     private const float ChipPadY = 4f;
 
     private static readonly List<string> LineBuffer = new();
+    private const int AdvanceCacheLimit = 512;
+    private static readonly Dictionary<(char Character, float FontSize), float> AdvanceCache = new();
+    private static int advanceCacheGeneration = -1;
 
     public static void Draw(Rect area, PhoneTheme theme, string? title, string message, ConfirmSection[]? sections,
         string confirmLabel, string cancelLabel, string busyLabel, bool busy, string? status, bool danger,
@@ -496,10 +499,11 @@ internal static class ConfirmDialog
         var lineWidth = 0f;
         var lastSpace = -1;
         var index = 0;
+        var fontSize = ImGui.GetFontSize();
         while (index < text.Length)
         {
             var character = text[index];
-            var advance = ImGui.CalcTextSize(character.ToString()).X;
+            var advance = AdvanceOf(character, fontSize);
             if (character == ' ')
             {
                 lastSpace = index;
@@ -532,6 +536,31 @@ internal static class ConfirmDialog
         {
             LineBuffer.Add(text.Substring(lineStart));
         }
+    }
+
+    private static float AdvanceOf(char character, float fontSize)
+    {
+        var generation = Plugin.Fonts.Generation;
+        if (generation != advanceCacheGeneration)
+        {
+            advanceCacheGeneration = generation;
+            AdvanceCache.Clear();
+        }
+
+        var key = (character, fontSize);
+        if (AdvanceCache.TryGetValue(key, out var cached))
+        {
+            return cached;
+        }
+
+        if (AdvanceCache.Count >= AdvanceCacheLimit)
+        {
+            AdvanceCache.Clear();
+        }
+
+        var advance = ImGui.CalcTextSize(character.ToString()).X;
+        AdvanceCache[key] = advance;
+        return advance;
     }
 
     public static bool DrawPillButton(Rect rect, string label, bool enabled, PhoneTheme theme, float cardScale,
