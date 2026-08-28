@@ -1,4 +1,4 @@
-﻿using Aetherphone.Core.Activity;
+using Aetherphone.Core.Activity;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Announcements;
 using Aetherphone.Core.Apps;

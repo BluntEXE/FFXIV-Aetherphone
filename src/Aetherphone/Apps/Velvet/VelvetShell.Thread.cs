@@ -1,4 +1,4 @@
-﻿using Aetherphone.Apps.Velvet.Kit;
+using Aetherphone.Apps.Velvet.Kit;
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;

@@ -1,4 +1,4 @@
-﻿using Aetherphone.Core;
+using Aetherphone.Core;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Crypto;
 using Aetherphone.Core.Localization;

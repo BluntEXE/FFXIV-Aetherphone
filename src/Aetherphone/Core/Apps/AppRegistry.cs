@@ -1,4 +1,4 @@
-﻿using Aetherphone.Apps.Aethergram;
+using Aetherphone.Apps.Aethergram;
 using Aetherphone.Apps.AetherStream;
 using Aetherphone.Apps.Announcements;
 using Aetherphone.Apps.Calendar;

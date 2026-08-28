@@ -1,4 +1,4 @@
-﻿using Aetherphone.Core.Apps;
+using Aetherphone.Core.Apps;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;

@@ -1,4 +1,4 @@
-﻿namespace Aetherphone.Core;
+namespace Aetherphone.Core;
 
 internal static class IconPlan
 {
