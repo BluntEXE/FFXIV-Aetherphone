@@ -531,7 +531,7 @@ internal sealed partial class ChirperApp
     private void SelectProfileTab(ProfileTab tab)
     {
         profileTab = tab;
-        if (tab == ProfileTab.Likes && store.LikedPosts.Length == 0)
+        if (tab == ProfileTab.Likes && likedRevalidateGate.TryPass())
         {
             store.RefreshLiked();
         }

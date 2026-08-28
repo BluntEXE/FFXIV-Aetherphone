@@ -1089,11 +1089,7 @@ internal abstract class SocialFeedStore : IDisposable
     {
         if (profileUserId == userId && (profileUser is not null || profileLoading))
         {
-            if (profileUser is not null && !profileLoading && !profileRevalidating)
-            {
-                RevalidateProfile(userId);
-            }
-
+            RevalidateProfile(userId);
             return;
         }
 
@@ -1133,8 +1129,14 @@ internal abstract class SocialFeedStore : IDisposable
         });
     }
 
-    private void RevalidateProfile(string userId)
+    public void RevalidateProfile(string userId)
     {
+        if (!session.IsSignedIn || profileUserId != userId || profileUser is null || profileLoading
+            || profileRevalidating)
+        {
+            return;
+        }
+
         profileRevalidating = true;
         work.Run("profile revalidate", async token =>
         {

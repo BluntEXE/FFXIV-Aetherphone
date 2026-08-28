@@ -10,6 +10,7 @@ using Aetherphone.Core.Game;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Media;
+using Aetherphone.Core.Net;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Photos;
@@ -80,6 +81,7 @@ internal sealed partial class ChirperApp : IResumableApp
     private const float FeedTabHoverPadX = 14f;
     private const float FeedTabHoverPadY = 6f;
     private const int TabCount = 4;
+    private const int TabRevalidateCooldownSeconds = 15;
     private const float FeedTopPadding = 2f;
     private const float CellPadX = 16f;
     private const float CellPadTop = 11f;
@@ -107,7 +109,6 @@ internal sealed partial class ChirperApp : IResumableApp
     private const float MoreButtonRadius = 14f;
     private const float FeedBottomSpacer = 110f;
     private const float ControlRowHeight = 36f;
-    private const float ThreadComposerHeight = 56f;
     private const float PickerEmojiMax = 21f;
     private const float PickerSlotMax = 31f;
     private const float PickerTwoRowThreshold = 24f;
@@ -136,9 +137,7 @@ internal sealed partial class ChirperApp : IResumableApp
     private static readonly TextStyle ReplyMetaStyle = new(0.87f, FontWeight.Regular);
     private static readonly TextStyle LikeCountStyle = new(0.77f, FontWeight.SemiBold);
     private static readonly TextStyle SectionStyle = new(1f, FontWeight.Bold);
-    private static readonly TextStyle TotalCountStyle = new(1f, FontWeight.Bold);
     private static readonly TextStyle DateStyle = new(0.9f, FontWeight.Regular);
-    private static readonly TextStyle TagStyle = new(0.67f, FontWeight.Bold);
     private static readonly TextStyle CapsuleStyle = new(0.87f, FontWeight.SemiBold);
     private static readonly TextStyle FeedTabStyle = new(1.07f, FontWeight.SemiBold);
     private static readonly TextStyle FeedTabIdleStyle = new(1.07f, FontWeight.Medium);
@@ -198,10 +197,7 @@ internal sealed partial class ChirperApp : IResumableApp
     private readonly ViewRouter<ChirperRoute> router;
     private readonly RouterDraw<ChirperRoute> drawView;
     private readonly Action back;
-    private readonly Action<NotificationDto> openActivityActor;
-    private readonly Action<NotificationDto> openActivityPost;
     private readonly SocialActivityFeed activityFeed;
-    private readonly Action loadOlderActivity;
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
     private SocialFeedScope activeScope = SocialFeedScope.ForYou;
@@ -243,6 +239,8 @@ internal sealed partial class ChirperApp : IResumableApp
     private string searchDraft = string.Empty;
     private double searchDirtyAt = -1d;
     private bool trendingRequested;
+    private readonly RetryGate[] tabRevalidateGates = BuildTabRevalidateGates();
+    private readonly RetryGate likedRevalidateGate = new(TimeSpan.FromSeconds(TabRevalidateCooldownSeconds));
 
     public ChirperApp(AethernetSession session, AethernetApi net, LodestoneService lodestone,
         RemoteImageCache images, PhotoLibrary library, SocialLauncher launcher, GameData gameData,
@@ -266,7 +264,6 @@ internal sealed partial class ChirperApp : IResumableApp
         this.social = social;
         this.conduct = conduct;
         activityFeed = new SocialActivityFeed(SocialActivity.ChirperApp, session, net.Account);
-        loadOlderActivity = activityFeed.LoadOlder;
         avatar = new AvatarComposer(() => store.AvatarBusy, store.UpdateAvatar,
             new AvatarComposerLabels(L.Chirper.ChangePhoto, L.Chirper.ImportFromPc, L.Photos.NoPhotos,
                 L.Chirper.MoveAndScale, L.Chirper.Use, L.Chirper.Saving, L.Chirper.GestureHint), library,
@@ -278,8 +275,6 @@ internal sealed partial class ChirperApp : IResumableApp
         router = new ViewRouter<ChirperRoute>(ChirperRoute.Home);
         drawView = DrawView;
         back = () => router.Pop();
-        openActivityActor = item => OpenProfile(item.ActorId);
-        openActivityPost = item => OpenThreadFromLink(item.PostId!);
         profile = new SocialProfilePages(store, ui, new SocialProfileStyle
         {
             Palette = AppPalettes.Chirper,
@@ -333,6 +328,7 @@ internal sealed partial class ChirperApp : IResumableApp
         composePicking = false;
         composeSensitive = false;
         store.ClearDiscover();
+        trendingRequested = false;
         RefreshAndConsumeLaunch();
     }
 
@@ -343,6 +339,13 @@ internal sealed partial class ChirperApp : IResumableApp
 
     private void RefreshAndConsumeLaunch()
     {
+        for (var index = 0; index < tabRevalidateGates.Length; index++)
+        {
+            tabRevalidateGates[index].Reset();
+        }
+
+        likedRevalidateGate.Reset();
+
         if (store.IsSignedIn)
         {
             store.EnsureMe();
@@ -638,6 +641,18 @@ internal sealed partial class ChirperApp : IResumableApp
             1.6f * scale);
     }
 
+    private static RetryGate[] BuildTabRevalidateGates()
+    {
+        var cooldown = TimeSpan.FromSeconds(TabRevalidateCooldownSeconds);
+        var gates = new RetryGate[TabCount];
+        for (var index = 0; index < TabCount; index++)
+        {
+            gates[index] = new RetryGate(cooldown);
+        }
+
+        return gates;
+    }
+
     private void SelectHomeTab(HomeTab tab)
     {
         actions.Reset();
@@ -650,15 +665,6 @@ internal sealed partial class ChirperApp : IResumableApp
         {
             social.MarkSeen(Id);
             social.RefreshNow();
-            activityFeed.Invalidate();
-        }
-
-        if (tab == HomeTab.Explore && homeTab != HomeTab.Explore)
-        {
-            store.ClearDiscover();
-            searchDraft = string.Empty;
-            searchDirtyAt = -1d;
-            trendingRequested = false;
         }
 
         if (tab == HomeTab.Profile)
@@ -666,7 +672,40 @@ internal sealed partial class ChirperApp : IResumableApp
             store.EnsureMe();
         }
 
+        RevalidateTab(tab);
         homeTab = tab;
+    }
+
+    private void RevalidateTab(HomeTab tab)
+    {
+        if (!store.IsSignedIn || !tabRevalidateGates[(int)tab].TryPass())
+        {
+            return;
+        }
+
+        switch (tab)
+        {
+            case HomeTab.Explore:
+                RunDiscoverQuery();
+                break;
+            case HomeTab.Alerts:
+                activityFeed.Invalidate();
+                break;
+            case HomeTab.Profile:
+                if (store.Me is { } me)
+                {
+                    store.RevalidateProfile(me.Id);
+                }
+
+                break;
+            default:
+                if (!store.IsLoading(activeScope))
+                {
+                    store.RefreshFeed(activeScope);
+                }
+
+                break;
+        }
     }
 
     private bool FeedFiltersActive()
@@ -826,7 +865,7 @@ internal sealed partial class ChirperApp : IResumableApp
     {
         social.MarkSeen(Id);
         social.RefreshNow();
-        activityFeed.Invalidate();
+        RevalidateTab(HomeTab.Alerts);
         router.Push(ChirperRoute.Activity);
     }
 

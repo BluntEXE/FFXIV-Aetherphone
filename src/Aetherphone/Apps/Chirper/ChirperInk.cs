@@ -31,12 +31,10 @@ internal static class ChirperInk
     public static readonly Vector4 QuoteHover = new(1f, 1f, 1f, 0.05f);
     public static readonly Vector4 QuoteBodyInk = Palette.WithAlpha(AppPalettes.Chirper.BodyInk, 0.85f);
     public static readonly Vector4 SegmentTrack = new(1f, 1f, 1f, 0.07f);
-    public static readonly Vector4 SegmentThumb = new(1f, 1f, 1f, 0.16f);
     public static readonly Vector4 SegmentIdleInk = Palette.WithAlpha(AppPalettes.Chirper.MutedInk, 0.95f);
     public static readonly Vector4 GlassPanel =
         Palette.WithAlpha(Palette.Lighten(AppPalettes.Chirper.BackdropTop, 0.10f), 0.92f);
     public static readonly Vector4 GlassStroke = new(1f, 1f, 1f, 0.12f);
-    public static readonly Vector4 ComposerGlass = Palette.WithAlpha(AppPalettes.Chirper.BackdropTop, 0.78f);
     public static readonly Vector4 FieldFill = new(1f, 1f, 1f, 0.08f);
     public static readonly Vector4 White = new(1f, 1f, 1f, 1f);
 }

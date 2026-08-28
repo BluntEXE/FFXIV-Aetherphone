@@ -174,29 +174,19 @@ internal sealed partial class ChirperApp
         }
 
         var searchingTags = searchDraft.TrimStart().StartsWith('#');
-        if (!trendingRequested && string.IsNullOrWhiteSpace(searchDraft))
+        if (!trendingRequested)
         {
-            trendingRequested = true;
-            store.SearchTags(string.Empty);
+            RunDiscoverQuery();
         }
 
         if (searchDirtyAt >= 0d && ImGui.GetTime() - searchDirtyAt >= SearchDebounceSeconds)
         {
-            searchDirtyAt = -1d;
             if (string.IsNullOrWhiteSpace(searchDraft))
             {
                 store.ClearDiscover();
-                trendingRequested = true;
-                store.SearchTags(string.Empty);
             }
-            else
-            {
-                store.SearchTags(searchDraft);
-                if (!searchingTags)
-                {
-                    store.Search(searchDraft);
-                }
-            }
+
+            RunDiscoverQuery();
         }
 
         var top = area.Min.Y + AppHeader.Height * scale + 6f * scale;
@@ -236,6 +226,23 @@ internal sealed partial class ChirperApp
             }
 
             ImGui.Dummy(new Vector2(0f, 40f * scale));
+        }
+    }
+
+    private void RunDiscoverQuery()
+    {
+        searchDirtyAt = -1d;
+        trendingRequested = true;
+        if (string.IsNullOrWhiteSpace(searchDraft))
+        {
+            store.SearchTags(string.Empty);
+            return;
+        }
+
+        store.SearchTags(searchDraft);
+        if (!searchDraft.TrimStart().StartsWith('#'))
+        {
+            store.Search(searchDraft);
         }
     }
 
@@ -677,14 +684,23 @@ internal sealed partial class ChirperApp
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
+        var rowTapped = UiInteract.Click(origin, rowMax, hovered);
         var avatarCenter = new Vector2(origin.X + padX + iconRadius, origin.Y + padY + iconRadius);
         DrawAvatar(drawList, avatarCenter, iconRadius, actor, string.Empty, item.ActorAvatarUrl, 0.95f, 32,
             Frames.Of(item.ActorFrameId));
         var badgeOffset = iconRadius * ActivityBadgeRimFraction;
         DrawActivityBadge(drawList, avatarCenter + new Vector2(badgeOffset, badgeOffset), item.Type, scale);
         var textTop = origin.Y + padY;
-        UserName.DrawAuto(drawList, "chirper.activity.actor." + item.Id, actor, item.ActorBadges, item.ActorBadgeIds,
-            textLeft, textTop, textWidth, ActivityActorStyle, ChirperInk.TitleInk, theme);
+        var actorWidth = UserName.DrawAuto(drawList, "chirper.activity.actor." + item.Id, actor, item.ActorBadges,
+            item.ActorBadgeIds, textLeft, textTop, textWidth, ActivityActorStyle, ChirperInk.TitleInk, theme);
+        var actorMin = new Vector2(textLeft, textTop);
+        var actorMax = new Vector2(textLeft + actorWidth, textTop + actorHeight);
+        if (UiInteract.Hover(actorMin, actorMax))
+        {
+            drawList.AddLine(new Vector2(actorMin.X, actorMax.Y - 1f * scale),
+                new Vector2(actorMax.X, actorMax.Y - 1f * scale), ImGui.GetColorU32(ChirperInk.TitleInk), 1f);
+        }
+
         if (bodyHeight > 0f)
         {
             Typography.DrawWrappedLeft(new Vector2(textLeft, textTop + actorHeight + 2f * scale), body, ChirperInk.BodyInk,
@@ -701,11 +717,13 @@ internal sealed partial class ChirperApp
 
         DrawHairline(drawList, origin.X, rowMax.X, rowMax.Y);
         var avatarExtent = new Vector2(iconRadius, iconRadius);
-        if (UiInteract.HoverClick(avatarCenter - avatarExtent, avatarCenter + avatarExtent))
+        var avatarTapped = UiInteract.HoverClick(avatarCenter - avatarExtent, avatarCenter + avatarExtent);
+        var actorTapped = UiInteract.HoverClick(actorMin, actorMax);
+        if (avatarTapped || actorTapped)
         {
             OpenProfile(item.ActorId);
         }
-        else if (UiInteract.Click(origin, rowMax, hovered))
+        else if (rowTapped)
         {
             if (SocialActivity.OpensPost(item))
             {
