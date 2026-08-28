@@ -34,6 +34,12 @@ internal static class ChatLineView
         out int linkTarget)
     {
         linkTarget = -1;
+        var overrides = ChannelStyles.Shared.For(entry.ChannelKey);
+        if (entry.IsSelf && overrides is { HideOutgoing: true })
+        {
+            return false;
+        }
+
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
@@ -70,11 +76,13 @@ internal static class ChatLineView
 
         if (style.ShowSender)
         {
-            DrawSender(drawList, entry, theme, accent, origin, textLeft, wrap, alpha, scale);
+            DrawSender(drawList, entry, theme, NameInk(overrides, entry, accent), origin, textLeft, wrap, alpha,
+                scale);
         }
 
         var bodyTop = new Vector2(textLeft, origin.Y + senderHeight);
-        var ink = Palette.WithAlpha(theme.TextStrong, theme.TextStrong.W * alpha);
+        var body = BodyInk(overrides, entry, theme);
+        var ink = Palette.WithAlpha(body, body.W * alpha);
         var interactive = !style.Ghost && style.Entrance >= 1f;
         using (Plugin.Fonts.Push(TextStyles.Callout.Scale, TextStyles.Callout.Weight))
         {
@@ -91,10 +99,30 @@ internal static class ChatLineView
                ImGui.IsMouseClicked(ImGuiMouseButton.Right);
     }
 
-    private static void DrawSender(ImDrawListPtr drawList, ChatEntry entry, PhoneTheme theme, Vector4 accent,
+    private static Vector4 NameInk(ChannelStyle? overrides, ChatEntry entry, Vector4 accent)
+    {
+        var packed = overrides is null
+            ? 0u
+            : entry.IsSelf ? overrides.OutgoingName : overrides.IncomingName;
+        if (packed != 0u)
+        {
+            return ChannelInk.Unpack(packed);
+        }
+
+        return entry.IsSelf ? accent : SenderTint.Of(entry.AuthorName);
+    }
+
+    private static Vector4 BodyInk(ChannelStyle? overrides, ChatEntry entry, PhoneTheme theme)
+    {
+        var packed = overrides is null
+            ? 0u
+            : entry.IsSelf ? overrides.OutgoingBody : overrides.IncomingBody;
+        return packed != 0u ? ChannelInk.Unpack(packed) : theme.TextStrong;
+    }
+
+    private static void DrawSender(ImDrawListPtr drawList, ChatEntry entry, PhoneTheme theme, Vector4 tint,
         Vector2 origin, float textLeft, float wrap, float alpha, float scale)
     {
-        var tint = entry.IsSelf ? accent : SenderTint.Of(entry.AuthorName);
         var name = FirstName(entry.AuthorName);
         var nameWidth = MathF.Min(wrap * 0.62f, Typography.Measure(name, TextStyles.FootnoteEmphasized).X);
         Typography.Draw(drawList, new Vector2(textLeft, origin.Y),

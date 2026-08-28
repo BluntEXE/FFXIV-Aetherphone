@@ -33,6 +33,7 @@ internal sealed class ChatInbox : IDisposable
     private readonly TabStore tabs;
     private readonly TellPreferences tellPreferences;
     private readonly Configuration configuration;
+    private readonly ChannelStyleStore styles;
     private readonly List<InboxRow> rows = new(16);
     private readonly List<InboxRow> pinned = new(6);
     private readonly List<string> streamScratch = new(32);
@@ -48,6 +49,7 @@ internal sealed class ChatInbox : IDisposable
         this.tabs = tabs;
         this.tellPreferences = tellPreferences;
         this.configuration = configuration;
+        styles = ChannelStyles.Bind(configuration);
         log.Appended += OnAppended;
         tabs.Changed += Invalidate;
         tellPreferences.Changed += Invalidate;
@@ -63,7 +65,11 @@ internal sealed class ChatInbox : IDisposable
 
     public int Count => rows.Count + pinned.Count;
 
-    public void Invalidate() => stale = true;
+    public void Invalidate()
+    {
+        styles.Invalidate();
+        stale = true;
+    }
 
     public bool IsViewing(string key) =>
         string.Equals(Viewing, key, StringComparison.Ordinal) || attended.Contains(key);
@@ -264,7 +270,7 @@ internal sealed class ChatInbox : IDisposable
                 return;
             }
 
-            Touch(row, entry, !entry.IsSelf);
+            Touch(row, entry, CountsForTell(entry));
             Resort();
             return;
         }
@@ -440,7 +446,7 @@ internal sealed class ChatInbox : IDisposable
                 row.PreviewText = entry.Text;
             }
 
-            if (!entry.IsSelf && UnixMilliseconds(entry.At) > watermark)
+            if (CountsForTell(entry) && UnixMilliseconds(entry.At) > watermark)
             {
                 row.Unread++;
             }
@@ -469,15 +475,17 @@ internal sealed class ChatInbox : IDisposable
         seenDirty = true;
     }
 
-    private static bool Counts(ChatTab tab, ChatEntry entry)
+    private bool Counts(ChatTab tab, ChatEntry entry)
     {
-        if (entry.IsSelf || tab.IsMuted(entry.ChannelKey))
+        if (entry.IsSelf || tab.IsMuted(entry.ChannelKey) || styles.NeverUnread(entry.ChannelKey))
         {
             return false;
         }
 
         return tab.Alerts != AlertPolicy.Mentions || entry.IsMention;
     }
+
+    private bool CountsForTell(ChatEntry entry) => !entry.IsSelf && !styles.NeverUnread(entry.ChannelKey);
 
     private static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 

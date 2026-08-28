@@ -160,6 +160,62 @@ public sealed class ChatInboxTests
     }
 
     [Fact]
+    public void NeverUnreadChannelsAreInvisibleToTheBadge()
+    {
+        var tab = Tab("Group", "party", "alliance");
+        var (log, inbox, configuration) = Build(tab);
+        using var scope = inbox;
+        configuration.LinkpearlChannelStyles["alliance"] = new ChannelStyle { NeverUnread = true };
+        var now = DateTime.Now;
+        log.Append(Entry(log, "alliance", "Someone", now));
+        log.Append(Entry(log, "party", "Nala", now.AddSeconds(1)));
+        inbox.Sync();
+
+        var row = inbox.Find("tab:Group")!;
+        Assert.Equal(1, row.Unread);
+        Assert.Equal(1, inbox.TotalUnread);
+        Assert.Equal("Nala", row.PreviewSender);
+    }
+
+    [Fact]
+    public void NeverUnreadAppliesToLiveLinesAndToTells()
+    {
+        var (log, inbox, configuration) = Build(Tab("FC", "fc"));
+        using var scope = inbox;
+        configuration.LinkpearlChannelStyles["fc"] = new ChannelStyle { NeverUnread = true };
+        configuration.LinkpearlChannelStyles[GameChannels.TellKey] = new ChannelStyle { NeverUnread = true };
+        inbox.Sync();
+
+        var now = DateTime.Now;
+        log.Append(Entry(log, "fc", "Rin", now));
+        log.Append(Entry(log, GameChannels.TellKey, "Aria", now.AddSeconds(1)));
+        inbox.Sync();
+        log.Append(Entry(log, GameChannels.TellKey, "Aria", now.AddSeconds(2)));
+
+        Assert.Equal(0, inbox.Find("tab:FC")!.Unread);
+        Assert.Equal(0, inbox.Rows[0].Unread);
+        Assert.Equal(0, inbox.TotalUnread);
+    }
+
+    [Fact]
+    public void ANeverUnreadChannelStillCountsWhenTheRuleIsLifted()
+    {
+        var (log, inbox, configuration) = Build(Tab("FC", "fc"));
+        using var scope = inbox;
+        configuration.LinkpearlChannelStyles["fc"] = new ChannelStyle { NeverUnread = true };
+        log.Append(Entry(log, "fc", "Rin", DateTime.Now));
+        inbox.Sync();
+        Assert.Equal(0, inbox.TotalUnread);
+
+        configuration.LinkpearlChannelStyles.Remove("fc");
+        inbox.Invalidate();
+        inbox.Sync();
+
+        Assert.Equal(1, inbox.Find("tab:FC")!.Unread);
+        Assert.Equal(1, inbox.TotalUnread);
+    }
+
+    [Fact]
     public void TellsBecomeTheirOwnRows()
     {
         var (log, inbox, _) = Build();

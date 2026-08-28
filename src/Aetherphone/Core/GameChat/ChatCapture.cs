@@ -60,6 +60,10 @@ internal sealed class ChatCapture : IDisposable
         }
 
         log.Append(new ChatEntry(log.NextSequence(), channel.Key, name, world, text, built, DateTime.Now, flags));
+        if (!message.IsHandled && ChannelStyles.Shared.HidesFromGameChat(channel))
+        {
+            message.PreventOriginal();
+        }
     }
 
     private void ResolveAuthor(IHandleableChatMessage message, GameChannel channel, out string name, out string world,
