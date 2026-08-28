@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
@@ -73,7 +74,7 @@ internal sealed class ChessApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Chess);
-    public string Genre => Loc.T(L.Games.GenreStrategy);
+    public GameGenre Genre => GameGenre.Tabletop;
 
     public void Open()
     {
@@ -343,6 +344,7 @@ internal sealed class ChessApp : IMiniGame
         {
             if ((move.Flags & ChessMoveFlags.Capture) != 0)
             {
+                UiFeedback.Play(UiSound.GameHitWood);
                 particles.Burst(center, 12, Accent, 150f * scale, 2.8f, 0.45f, 240f);
                 fx.Shockwave(center, layout.CellSize * 1.3f, GamePalette.Lighten(Accent, 0.3f) with { W = 0.7f },
                     0.4f, 2.4f);
@@ -350,6 +352,7 @@ internal sealed class ChessApp : IMiniGame
             }
             else
             {
+                UiFeedback.Play(UiSound.GamePiece);
                 particles.Sparkle(center, 5, GamePalette.Lighten(Accent, 0.3f), 80f * scale, 1.6f, 0.35f);
             }
         }

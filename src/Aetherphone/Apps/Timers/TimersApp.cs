@@ -14,9 +14,7 @@ internal sealed class TimersApp : IPhoneApp
 {
     private const float RowHeight = 62f;
     private const float TileSize = 30f;
-    private const float CardRounding = 18f;
     private const float CardGap = 10f;
-    private const float RowPadding = 14f;
     private const float RefreshIntervalSeconds = 2f;
     private const double DailyPeriodSeconds = 86400;
     private const double WeeklyPeriodSeconds = 604800;
@@ -95,38 +93,41 @@ internal sealed class TimersApp : IPhoneApp
     private void DrawResets(DateTime utcNow, float scale)
     {
         ui.SectionLabel(Loc.T(L.Timers.ServerResets), TextStyles.FootnoteEmphasized, 6f);
-        var card = BeginCard(3, scale);
-        UiAnchors.Report("timers.resets", card);
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        UiAnchors.Report("timers.resets", new Rect(origin, origin + new Vector2(width, 3 * RowHeight * scale)));
+        var card = GroupCard.Begin(ui, 3, RowHeight);
 
         var daily = GameSchedule.NextDailyReset(utcNow);
-        DrawTimerRow(CardRow(card, 0, scale), Accent.Amber, FontAwesomeIcon.Sun, Loc.T(L.Timers.DailyReset),
+        DrawTimerRow(card.NextRow(), Accent.Amber, FontAwesomeIcon.Sun, Loc.T(L.Timers.DailyReset),
             LocalTime(daily), TimeFormat.Relative(daily - utcNow), AppPalettes.Timers.TitleInk);
 
         var grandCompany = GameSchedule.NextGrandCompanyReset(utcNow);
-        DrawTimerRow(CardRow(card, 1, scale), Accent.Rose, FontAwesomeIcon.ShieldAlt,
+        DrawTimerRow(card.NextRow(), Accent.Rose, FontAwesomeIcon.ShieldAlt,
             Loc.T(L.Timers.GrandCompanyReset), LocalTime(grandCompany), TimeFormat.Relative(grandCompany - utcNow),
             AppPalettes.Timers.TitleInk);
 
         var weekly = GameSchedule.NextWeeklyReset(utcNow);
-        DrawTimerRow(CardRow(card, 2, scale), Accent.Blue, FontAwesomeIcon.CalendarAlt,
+        DrawTimerRow(card.NextRow(), Accent.Blue, FontAwesomeIcon.CalendarAlt,
             Loc.T(L.Timers.WeeklyReset), LocalTime(weekly), TimeFormat.Relative(weekly - utcNow), AppPalettes.Timers.TitleInk);
 
-        EndCard(card, scale);
+        card.End();
+        ImGui.Dummy(new Vector2(0f, CardGap * scale));
     }
 
     private void DrawActivities(DateTime utcNow, float scale)
     {
         ui.SectionLabel(Loc.T(L.Timers.Activities), TextStyles.FootnoteEmphasized, 6f);
-        var card = BeginCard(3, scale);
+        var card = GroupCard.Begin(ui, 3, RowHeight);
 
         var fashion = GameSchedule.FashionReport(utcNow);
         var fashionState = fashion.Active ? Loc.T(L.Timers.Open) : Loc.T(L.Timers.Closed);
-        DrawTimerRow(CardRow(card, 0, scale), Accent.Pink, FontAwesomeIcon.Tshirt,
+        DrawTimerRow(card.NextRow(), Accent.Pink, FontAwesomeIcon.Tshirt,
             Loc.T(L.Timers.FashionReport), fashionState, TimeFormat.Relative(fashion.NextChangeUtc - utcNow),
             AppPalettes.Timers.TitleInk);
 
         var cactpot = GameSchedule.NextJumboCactpot(utcNow);
-        DrawTimerRow(CardRow(card, 1, scale), Accent.AmberSoft, FontAwesomeIcon.Dice,
+        DrawTimerRow(card.NextRow(), Accent.AmberSoft, FontAwesomeIcon.Dice,
             Loc.T(L.Timers.JumboCactpot), LocalDay(cactpot), TimeFormat.Relative(cactpot - utcNow), AppPalettes.Timers.TitleInk);
 
         var indigo = GameSchedule.OceanFishing(utcNow, OceanRoute.Indigo);
@@ -137,10 +138,11 @@ internal sealed class TimersApp : IPhoneApp
             ? Loc.T(L.Timers.BoardingNow)
             : TimeFormat.Relative(indigo.NextBoardingUtc - utcNow);
         var oceanColor = indigo.BoardingNow ? AppPalettes.Timers.Accent : AppPalettes.Timers.TitleInk;
-        DrawTimerRow(CardRow(card, 2, scale), Accent.Mint, FontAwesomeIcon.Fish, Loc.T(L.Timers.OceanFishing),
+        DrawTimerRow(card.NextRow(), Accent.Mint, FontAwesomeIcon.Fish, Loc.T(L.Timers.OceanFishing),
             route, oceanValue, oceanColor);
 
-        EndCard(card, scale);
+        card.End();
+        ImGui.Dummy(new Vector2(0f, CardGap * scale));
     }
 
     private void DrawRetainers(DateTime utcNow, float scale)
@@ -152,31 +154,35 @@ internal sealed class TimersApp : IPhoneApp
             return;
         }
 
-        var card = BeginCard(retainers.Count, scale);
+        var card = GroupCard.Begin(ui, retainers.Count, RowHeight);
         for (var index = 0; index < retainers.Count; index++)
         {
-            DrawRetainerRow(CardRow(card, index, scale), retainers[index], index, utcNow);
+            DrawRetainerRow(card.NextRow(), retainers[index], index, utcNow);
         }
 
-        EndCard(card, scale);
+        card.End();
+        ImGui.Dummy(new Vector2(0f, CardGap * scale));
     }
 
     private void DrawReminders(float scale)
     {
         ui.SectionLabel(Loc.T(L.Timers.Reminders), TextStyles.FootnoteEmphasized, 6f);
-        var card = BeginCard(4, scale);
-        UiAnchors.Report("timers.reminders", card);
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        UiAnchors.Report("timers.reminders", new Rect(origin, origin + new Vector2(width, 4 * RowHeight * scale)));
+        var card = GroupCard.Begin(ui, 4, RowHeight);
 
-        ApplyDaily(DrawNotifyRow(CardRow(card, 0, scale), Loc.T(L.Timers.DailyReset), configuration.NotifyDailyReset,
+        ApplyDaily(DrawNotifyRow(card.NextRow(), Loc.T(L.Timers.DailyReset), configuration.NotifyDailyReset,
             scale));
-        ApplyGrandCompany(DrawNotifyRow(CardRow(card, 1, scale), Loc.T(L.Timers.GrandCompanyReset),
+        ApplyGrandCompany(DrawNotifyRow(card.NextRow(), Loc.T(L.Timers.GrandCompanyReset),
             configuration.NotifyGrandCompanyReset, scale));
-        ApplyWeekly(DrawNotifyRow(CardRow(card, 2, scale), Loc.T(L.Timers.WeeklyReset), configuration.NotifyWeeklyReset,
+        ApplyWeekly(DrawNotifyRow(card.NextRow(), Loc.T(L.Timers.WeeklyReset), configuration.NotifyWeeklyReset,
             scale));
-        ApplyVentures(DrawNotifyRow(CardRow(card, 3, scale), Loc.T(L.Timers.NotifyVentures),
+        ApplyVentures(DrawNotifyRow(card.NextRow(), Loc.T(L.Timers.NotifyVentures),
             configuration.NotifyRetainerVentures, scale));
 
-        EndCard(card, scale);
+        card.End();
+        ImGui.Dummy(new Vector2(0f, CardGap * scale));
     }
 
     private static void DrawRetainerRow(Rect row, RetainerVenture venture, int index, DateTime utcNow)
@@ -222,7 +228,7 @@ internal sealed class TimersApp : IPhoneApp
         {
             Marquee.DrawLeftAuto(id, name, textLeft, row.Center.Y - 16f * scale, textMaxWidth,
                 TextStyles.Headline, AppPalettes.Timers.TitleInk);
-            Marquee.DrawLeftAuto(id + ".sub", sublabel, textLeft, row.Center.Y + 5f * scale, textMaxWidth,
+            Marquee.DrawLeftAuto(new MarqueeId(id, ".sub"), sublabel, textLeft, row.Center.Y + 5f * scale, textMaxWidth,
                 TextStyles.Footnote, AppPalettes.Timers.MutedInk);
         }
         else
@@ -245,34 +251,6 @@ internal sealed class TimersApp : IPhoneApp
         Marquee.DrawLeft(label, label, row.Min.X, row.Center.Y - labelSize.Y * 0.5f, labelMaxWidth, TextStyles.Body,
             AppPalettes.Timers.BodyInk, labelHovering);
         return Toggle.Draw(label, new Rect(min, min + new Vector2(width, height)), value, PhoneTheme.Default);
-    }
-
-    private Rect BeginCard(int rowCount, float scale)
-    {
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var card = new Rect(origin, origin + new Vector2(width, rowCount * RowHeight * scale));
-        ui.Card(ImGui.GetWindowDrawList(), card.Min, card.Max, CardRounding * scale, elevated: true);
-        return card;
-    }
-
-    private static Rect CardRow(Rect card, int index, float scale)
-    {
-        var top = card.Min.Y + index * RowHeight * scale;
-        if (index > 0)
-        {
-            ImGui.GetWindowDrawList().AddLine(new Vector2(card.Min.X + RowPadding * 2f * scale + TileSize * scale, top),
-                new Vector2(card.Max.X - RowPadding * scale, top), ImGui.GetColorU32(AppPalettes.Timers.CardStroke), 1f);
-        }
-
-        return new Rect(new Vector2(card.Min.X + RowPadding * scale, top),
-            new Vector2(card.Max.X - RowPadding * scale, top + RowHeight * scale));
-    }
-
-    private static void EndCard(Rect card, float scale)
-    {
-        ImGui.SetCursorScreenPos(card.Min);
-        ImGui.Dummy(new Vector2(card.Width, card.Height + CardGap * scale));
     }
 
     private static void DrawHint(string text, float scale)

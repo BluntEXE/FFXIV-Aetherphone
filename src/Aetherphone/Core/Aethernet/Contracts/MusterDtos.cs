@@ -52,7 +52,8 @@ internal sealed record MusterDto(
     string HostHandle = "",
     int HostBadges = 0,
     string[]? HostBadgeIds = null,
-    string HostFrameId = "") : IIdentified;
+    string HostFrameId = "",
+    string? Lang = null) : IIdentified;
 
 internal sealed record MusterPage(MusterDto[] Items, string? NextCursor);
 

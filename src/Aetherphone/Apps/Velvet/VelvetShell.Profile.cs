@@ -3,6 +3,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Social;
 using Aetherphone.Windows.Components;
@@ -29,7 +30,7 @@ internal sealed partial class VelvetShell
         if (user != null && store.Me?.UserId != user.UserId && !AlreadyReported(user.UserId))
         {
             var flagCenter = new Vector2(area.Max.X - 22f * scale, area.Min.Y + VHeader.Height * scale * 0.5f);
-            if (ui.IconButton(flagCenter, 15f * scale, FontAwesomeIcon.Flag.ToIconString(), VelvetTheme.MutedInk,
+            if (ui.IconButton(flagCenter, 15f * scale, IconGlyph.Of(FontAwesomeIcon.Flag), VelvetTheme.MutedInk,
                     AppSkin.Transparent, 0.82f, Loc.T(L.Velvet.Report)))
             {
                 OpenReport("velvet_profile", user.UserId, Loc.T(L.Velvet.ReportProfile));
@@ -151,7 +152,16 @@ internal sealed partial class VelvetShell
                 Gap(20f);
                 VSectionHeader.Bar(Loc.T(L.Velvet.CardAbout));
                 Gap(4f);
-                WrapText(user.Intro, VelvetTheme.BodyInk, TextStyles.Body);
+                var introKey = new TranslationKey(TranslationSurface.Bio, user.UserId);
+                WrapText(translation.View(introKey, user.Intro).Text, VelvetTheme.BodyInk, TextStyles.Body);
+                var introLinkHeight = TranslateLink.Height(translation, introKey, user.IntroLang, scale);
+                if (introLinkHeight > 0f)
+                {
+                    var linkTop = ImGui.GetCursorScreenPos();
+                    TranslateLink.Draw(translation, confirm, introKey, user.IntroLang, user.Intro, linkTop,
+                        ImGui.GetContentRegionAvail().X, VelvetTheme.MutedInk, VelvetTheme.RoseGlow, scale);
+                    ImGui.SetCursorScreenPos(new Vector2(linkTop.X, linkTop.Y + introLinkHeight));
+                }
             }
 
             Gap(20f);
@@ -256,6 +266,7 @@ internal sealed partial class VelvetShell
             Message = Loc.T(L.Velvet.DisconnectConfirmMessage),
             ConfirmLabel = Loc.T(L.Velvet.Disconnect),
             CancelLabel = Loc.T(L.Velvet.DeleteCancel),
+            Sheet = true,
             Confirm = () =>
             {
                 store.Disconnect(userId);

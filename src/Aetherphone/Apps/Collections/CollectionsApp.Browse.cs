@@ -46,7 +46,7 @@ internal sealed partial class CollectionsApp
         Squircle.Stroke(drawList, min, max, 12f * scale, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.28f)),
             1f * scale);
         var iconCenter = new Vector2(min.X + 21f * scale, (min.Y + max.Y) * 0.5f);
-        AppSkin.Icon(iconCenter, FontAwesomeIcon.Link.ToIconString(), ui.Accent, 0.85f);
+        AppSkin.Icon(iconCenter, IconGlyph.Of(FontAwesomeIcon.Link), ui.Accent, 0.85f);
         var textLeft = iconCenter.X + 15f * scale;
         Typography.DrawWrappedCentered(new Vector2(textLeft + maxWidth * 0.5f, (min.Y + max.Y) * 0.5f - textHeight * 0.5f),
             text, ui.BodyInk, TextStyles.Footnote, maxWidth);
@@ -124,7 +124,7 @@ internal sealed partial class CollectionsApp
 
         var categoryLabel = CategoryLabel(category);
         var nameMaxWidth = rect.Width - pad * 2f;
-        Marquee.DrawLeft("collections.tile." + category, categoryLabel, rect.Min.X + pad, nameTop, nameMaxWidth,
+        Marquee.DrawLeft(new MarqueeId("collections.tile.", (int)category), categoryLabel, rect.Min.X + pad, nameTop, nameMaxWidth,
             TextStyles.Headline, ui.TitleInk, hovered);
         var countLabel = total > 0 ? total.ToString(Loc.Culture) : "-";
         Typography.Draw(new Vector2(rect.Min.X + pad, rect.Max.Y - pad - 15f * scale), countLabel, ui.MutedInk,
@@ -163,7 +163,7 @@ internal sealed partial class CollectionsApp
         if (!progress.HasPercent)
         {
             ProgressRing.Track(center, radius, thickness, Palette.WithAlpha(ui.TitleInk, 0.10f));
-            AppSkin.Icon(center, FontAwesomeIcon.Lock.ToIconString(), Palette.WithAlpha(ui.MutedInk, 0.9f), 0.6f);
+            AppSkin.Icon(center, IconGlyph.Of(FontAwesomeIcon.Lock), Palette.WithAlpha(ui.MutedInk, 0.9f), 0.6f);
             return;
         }
 
@@ -292,23 +292,22 @@ internal sealed partial class CollectionsApp
     private void DrawSummary(CatalogEntry entry, OwnedEntry? owned)
     {
         var scale = UiScale.Current;
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
         var drawList = ImGui.GetWindowDrawList();
         var ownedTotal = owned is { Total: > 0 } ? owned.Total : entry.Total;
         if (owned is { State: OwnedState.Ready } && ownedTotal > 0)
         {
             var fraction = Math.Clamp(owned.Count / (float)ownedTotal, 0f, 1f);
             var percent = (int)MathF.Round(fraction * 100f);
+            var card = GroupCard.Begin(ui, 1, 58f);
+            var row = card.NextRow();
             var label = $"{owned.Count} / {ownedTotal}";
-            Typography.Draw(new Vector2(origin.X + 2f * scale, origin.Y + 2f * scale), label, ui.TitleInk,
-                TextStyles.Title3);
+            Typography.Draw(new Vector2(row.Min.X, row.Min.Y + 8f * scale), label, ui.TitleInk, TextStyles.Title3);
             var pctLabel = Loc.T(L.Collections.CompletePercent, percent);
             var pctSize = Typography.Measure(pctLabel, TextStyles.SubheadlineEmphasized);
-            Typography.Draw(new Vector2(origin.X + width - pctSize.X - 2f * scale, origin.Y + 7f * scale), pctLabel,
+            Typography.Draw(new Vector2(row.Max.X - pctSize.X, row.Min.Y + 13f * scale), pctLabel,
                 ui.Accent, TextStyles.SubheadlineEmphasized);
-            var barMin = new Vector2(origin.X + 2f * scale, origin.Y + 32f * scale);
-            var barMax = new Vector2(origin.X + width - 2f * scale, barMin.Y + 7f * scale);
+            var barMin = new Vector2(row.Min.X, row.Max.Y - 17f * scale);
+            var barMax = new Vector2(row.Max.X, barMin.Y + 7f * scale);
             var barRadius = (barMax.Y - barMin.Y) * 0.5f;
             Squircle.Fill(drawList, barMin, barMax, barRadius, ImGui.GetColorU32(Palette.WithAlpha(ui.TitleInk, 0.10f)));
             if (fraction > 0f)
@@ -317,20 +316,25 @@ internal sealed partial class CollectionsApp
                 Squircle.Fill(drawList, barMin, fillMax, barRadius, ImGui.GetColorU32(ui.Accent));
             }
 
-            ImGui.SetCursorScreenPos(origin);
-            ImGui.Dummy(new Vector2(width, 48f * scale));
+            card.End();
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
             return;
         }
 
         var totalLabel = entry.Total > 0 ? entry.Total.ToString(Loc.Culture) : string.Empty;
-        if (totalLabel.Length > 0)
+        if (totalLabel.Length == 0)
         {
-            Typography.Draw(new Vector2(origin.X + 2f * scale, origin.Y + 2f * scale), totalLabel, ui.TitleInk,
-                TextStyles.Title3);
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
+            return;
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, 34f * scale));
+        var totalCard = GroupCard.Begin(ui, 1, 44f);
+        var totalRow = totalCard.NextRow();
+        var totalSize = Typography.Measure(totalLabel, TextStyles.Title3);
+        Typography.Draw(new Vector2(totalRow.Min.X, totalRow.Center.Y - totalSize.Y * 0.5f), totalLabel, ui.TitleInk,
+            TextStyles.Title3);
+        totalCard.End();
+        ImGui.Dummy(new Vector2(0f, 10f * scale));
     }
 
     private void DrawAccessNotice(CategoryProgress? progress, OwnedEntry? owned)
@@ -372,7 +376,7 @@ internal sealed partial class CollectionsApp
         ImGui.Dummy(new Vector2(width, 24f * scale));
         var origin = ImGui.GetCursorScreenPos();
         var centerX = origin.X + width * 0.5f;
-        AppSkin.Icon(new Vector2(centerX, origin.Y + 4f * scale), FontAwesomeIcon.SearchMinus.ToIconString(),
+        AppSkin.Icon(new Vector2(centerX, origin.Y + 4f * scale), IconGlyph.Of(FontAwesomeIcon.SearchMinus),
             ui.MutedInk, 1.5f);
         Typography.DrawCentered(new Vector2(centerX, origin.Y + 40f * scale), Loc.T(L.Collections.NoResults),
             ui.MutedInk, TextStyles.Subheadline);
@@ -383,49 +387,23 @@ internal sealed partial class CollectionsApp
     {
         var scale = UiScale.Current;
         var rowHeight = RowHeight * scale;
-        var count = end - start;
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var panelMax = new Vector2(origin.X + width, origin.Y + count * rowHeight);
         var drawList = ImGui.GetWindowDrawList();
-        ui.Card(drawList, origin, panelMax, Metrics.Radius.Card * scale, elevated: true);
         var hasOwned = owned is { State: OwnedState.Ready };
-        var padding = 14f * scale;
-        var separatorLeft = origin.X + padding + IconSize * scale + 12f * scale;
+        var padding = FeedCell.PadX * scale;
         for (var index = start; index < end; index++)
         {
             var item = filtered[index];
-            var rowTop = origin.Y + (index - start) * rowHeight;
-            var rowMin = new Vector2(origin.X, rowTop);
-            var rowMax = new Vector2(panelMax.X, rowTop + rowHeight);
-            var hovered = !sourceMenuOpen && UiInteract.Hover(rowMin, rowMax);
-            if (hovered)
-            {
-                Squircle.Fill(drawList, new Vector2(rowMin.X + 4f * scale, rowMin.Y + 3f * scale),
-                    new Vector2(rowMax.X - 4f * scale, rowMax.Y - 3f * scale), 12f * scale,
-                    ImGui.GetColorU32(ui.HoverTint));
-            }
-            else if (index > start)
-            {
-                drawList.AddLine(new Vector2(separatorLeft, rowTop), new Vector2(rowMax.X - padding, rowTop),
-                    ImGui.GetColorU32(Palette.WithAlpha(ui.TitleInk, 0.06f)), 1f);
-            }
-
-            var row = new Rect(new Vector2(rowMin.X + padding, rowMin.Y), new Vector2(rowMax.X - padding, rowMax.Y));
+            var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash, !sourceMenuOpen);
+            var row = new Rect(new Vector2(cell.Bounds.Min.X + padding, cell.Bounds.Min.Y),
+                new Vector2(cell.Bounds.Max.X - padding, cell.Bounds.Max.Y));
             DrawRow(row, item, hasOwned && owned!.Ids.Contains(item.Id), hasOwned, scale);
-            if (hovered)
-            {
-                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-            }
-
-            if (UiInteract.Click(rowMin, rowMax, hovered))
+            if (cell.Tapped)
             {
                 OpenItem(category, item);
             }
-        }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, count * rowHeight));
+            FeedCell.End(drawList, cell, ui.Hairline);
+        }
     }
 
     private void DrawRow(Rect row, CollectionItem item, bool isOwned, bool hasOwned, float scale)
@@ -445,13 +423,13 @@ internal sealed partial class CollectionsApp
             var nameSize = Typography.Measure(item.Name, TextStyles.BodyEmphasized);
             var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
                 new Vector2(textLeft + textWidth, nameY + nameSize.Y));
-            Marquee.DrawLeft("collections.item." + item.Id, item.Name, textLeft, nameY,
+            Marquee.DrawLeft(new MarqueeId("collections.item.", item.Id), item.Name, textLeft, nameY,
                 textWidth, TextStyles.BodyEmphasized, ui.TitleInk, nameHovering);
             var subY = row.Center.Y + 4f * scale;
             var subSize = Typography.Measure(subtitle, TextStyles.Footnote);
             var subHovering = UiInteract.Hover(new Vector2(textLeft, subY),
                 new Vector2(textLeft + textWidth, subY + subSize.Y));
-            Marquee.DrawLeft("collections.item.sub." + item.Id, subtitle, textLeft, subY, textWidth,
+            Marquee.DrawLeft(new MarqueeId("collections.item.sub.", item.Id), subtitle, textLeft, subY, textWidth,
                 TextStyles.Footnote, ui.MutedInk, subHovering);
         }
         else
@@ -460,7 +438,7 @@ internal sealed partial class CollectionsApp
             var nameY = row.Center.Y - nameSize.Y * 0.5f;
             var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
                 new Vector2(textLeft + textWidth, nameY + nameSize.Y));
-            Marquee.DrawLeft("collections.item." + item.Id, item.Name, textLeft, nameY,
+            Marquee.DrawLeft(new MarqueeId("collections.item.", item.Id), item.Name, textLeft, nameY,
                 textWidth, TextStyles.BodyEmphasized, ui.TitleInk, nameHovering);
         }
 

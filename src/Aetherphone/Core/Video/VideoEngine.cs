@@ -59,7 +59,7 @@ internal sealed class VideoEngine : IDisposable
 
     private MpvRenderer? renderer;
     private ShaderResourceView? screenView;
-    private CancellationTokenSource lifetime = new();
+    private readonly CancellationTokenSource lifetime = new();
     private DateTime lastYouTubeLoad = DateTime.MinValue;
     private int pendingVolume = 60;
     private volatile bool active;
@@ -107,6 +107,17 @@ internal sealed class VideoEngine : IDisposable
     internal bool IsLoading => Volatile.Read(ref activeLoads) > 0;
     internal string? LastError { get; private set; }
     internal string? RecoveryNotice => recoveryNotice;
+
+    internal bool RecoveryExhausted =>
+        recoveryExhaustedUrl is { } exhausted && string.Equals(renderer?.CurrentUrl, exhausted, StringComparison.Ordinal);
+
+    internal void ResetRecoveryBudget()
+    {
+        recoveryRestartUrl = null;
+        recoveryRestartsForUrl = 0;
+        recoveryExhaustedUrl = null;
+        lastRecoveryRestartAtTicks = long.MinValue;
+    }
 
     internal event Action<MpvEndReason, string?>? PlaybackEnded;
     internal event Action? PlaybackLoaded;
@@ -165,7 +176,7 @@ internal sealed class VideoEngine : IDisposable
 
                 if (!player.Play(url, startSeconds, playing))
                 {
-                    LastError = "This link could not be opened.";
+                    LastError = Loc.T(L.AetherStream.PlaybackFailed);
                     return PlayStart.Failed;
                 }
 
@@ -212,7 +223,7 @@ internal sealed class VideoEngine : IDisposable
             return resolverReason;
         }
 
-        return "The video components are not installed yet.";
+        return Loc.T(L.AetherStream.ComponentsMissing);
     }
 
     private async Task SpaceOutYouTubeLoads(string url, CancellationToken token)
@@ -294,12 +305,20 @@ internal sealed class VideoEngine : IDisposable
 
                 detail = RefusedStreamText();
             }
+            else
+            {
+                detail = FailureText(detail);
+            }
 
-            LastError = detail ?? "This video could not be played.";
+            LastError = detail;
         }
 
         PlaybackEnded?.Invoke(reason, detail);
     }
+
+    private static string FailureText(string? detail) => detail is { Length: > 0 }
+        ? string.Format(Loc.T(L.AetherStream.PlaybackFailedReason), detail)
+        : Loc.T(L.AetherStream.PlaybackFailed);
 
     internal void ObserveForStall(in MpvPlaybackInfo info)
     {
@@ -431,7 +450,7 @@ internal sealed class VideoEngine : IDisposable
             var restart = await PlayAsync(stalledUrl, resumeSeconds, playing: true).ConfigureAwait(false);
             if (restart == PlayStart.Failed)
             {
-                AbandonRecovery(LastError ?? "This video could not be played.");
+                AbandonRecovery(LastError ?? Loc.T(L.AetherStream.PlaybackFailed));
             }
             else if (restart == PlayStart.Superseded)
             {
@@ -605,6 +624,8 @@ internal sealed class VideoEngine : IDisposable
     internal void Pause(bool paused) => renderer?.Pause(paused);
 
     internal void Seek(double seconds) => renderer?.Seek(seconds);
+
+    internal void SetSpeed(double speed) => renderer?.SetSpeed(speed);
 
     internal void SetVolume(int volume)
     {

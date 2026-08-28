@@ -35,7 +35,10 @@ internal static class CryptoBox
     private const int NonceBytes = 12;
     private const int TagBytes = 16;
     private const string WrapPrefix = "EC1.";
+    private const string LinkPrefix = "EL1.";
+    private const int LinkSecretMaxBytes = 1024;
     private static readonly byte[] WrapInfo = Encoding.UTF8.GetBytes("aethernet-cek-v1");
+    private static readonly byte[] LinkInfo = Encoding.UTF8.GetBytes("aethernet-device-link-v1");
     private static readonly SecureRandom SecureRandomSource = new();
 
     private static readonly ECNamedDomainParameters P256 = CreateP256Domain();
@@ -268,6 +271,116 @@ internal static class CryptoBox
                                           or CryptographicException)
         {
             AepLog.Debug(exception, "[Crypto] unwrap failed; the wrap was not made for this key");
+            return null;
+        }
+    }
+
+    public static string? WrapSecret(byte[] secret, string recipientPublicKeyBase64)
+    {
+        if (secret.Length == 0 || secret.Length > LinkSecretMaxBytes)
+        {
+            AepLog.Error($"[Crypto] cannot wrap a {secret.Length} byte secret for device linking");
+            return null;
+        }
+
+        var recipient = ImportPublicKey(recipientPublicKeyBase64);
+        var ephemeral = TryGenerateIdentity();
+        if (recipient is null || ephemeral is null)
+        {
+            AepLog.Error(
+                $"[Crypto] cannot wrap for device linking (recipient key usable: {recipient is not null}, ephemeral key usable: {ephemeral is not null})");
+            return null;
+        }
+
+        var shared = DeriveRawSecret(ephemeral, recipient);
+        var nonce = RandomNumberGenerator.GetBytes(NonceBytes);
+        var wrapKey = HKDF.DeriveKey(HashAlgorithmName.SHA256, shared, CekBytes, nonce, LinkInfo);
+        CryptographicOperations.ZeroMemory(shared);
+
+        var ephemeralPublic = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(ephemeral.PublicKey)
+            .GetDerEncoded();
+        var payload = new byte[1 + ephemeralPublic.Length + NonceBytes + secret.Length + TagBytes];
+        payload[0] = (byte)ephemeralPublic.Length;
+        ephemeralPublic.CopyTo(payload.AsSpan(1));
+        nonce.CopyTo(payload.AsSpan(1 + ephemeralPublic.Length));
+        var cipherOffset = 1 + ephemeralPublic.Length + NonceBytes;
+        using (var aes = new AesGcm(wrapKey, TagBytes))
+        {
+            aes.Encrypt(nonce, secret, payload.AsSpan(cipherOffset, secret.Length),
+                payload.AsSpan(cipherOffset + secret.Length, TagBytes));
+        }
+
+        CryptographicOperations.ZeroMemory(wrapKey);
+        return LinkPrefix + Convert.ToBase64String(payload);
+    }
+
+    public static byte[]? UnwrapSecret(string wrapped, EcPrivateKey privateKey)
+    {
+        if (!wrapped.StartsWith(LinkPrefix, StringComparison.Ordinal))
+        {
+            AepLog.Debug($"[Crypto] link unwrap skipped; the payload does not start with {LinkPrefix}");
+            return null;
+        }
+
+        byte[] payload;
+        try
+        {
+            payload = Convert.FromBase64String(wrapped[LinkPrefix.Length..]);
+        }
+        catch (FormatException exception)
+        {
+            AepLog.Debug(exception, "[Crypto] link unwrap failed; the payload is not valid base64");
+            return null;
+        }
+
+        if (payload.Length < 2)
+        {
+            return null;
+        }
+
+        int ephemeralLength = payload[0];
+        var cipherOffset = 1 + ephemeralLength + NonceBytes;
+        var secretLength = payload.Length - cipherOffset - TagBytes;
+        if (ephemeralLength == 0 || secretLength <= 0 || secretLength > LinkSecretMaxBytes)
+        {
+            AepLog.Debug(
+                $"[Crypto] link unwrap failed; ephemeral key length {ephemeralLength}, secret length {secretLength}");
+            return null;
+        }
+
+        try
+        {
+            var parsed = PublicKeyFactory.CreateKey(payload.AsSpan(1, ephemeralLength).ToArray());
+            if (parsed is not ECPublicKeyParameters publicKey || !IsP256(publicKey.Parameters))
+            {
+                AepLog.Debug("[Crypto] link unwrap failed; the embedded ephemeral key is not a P-256 key");
+                return null;
+            }
+
+            var ephemeral = new EcPublicKey(publicKey);
+            var shared = DeriveRawSecret(privateKey, ephemeral);
+            var nonce = payload.AsSpan(1 + ephemeralLength, NonceBytes).ToArray();
+            var wrapKey = HKDF.DeriveKey(HashAlgorithmName.SHA256, shared, CekBytes, nonce, LinkInfo);
+            CryptographicOperations.ZeroMemory(shared);
+
+            var secret = new byte[secretLength];
+            try
+            {
+                using var aes = new AesGcm(wrapKey, TagBytes);
+                aes.Decrypt(nonce, payload.AsSpan(cipherOffset, secretLength),
+                    payload.AsSpan(cipherOffset + secretLength, TagBytes), secret);
+                return secret;
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(wrapKey);
+            }
+        }
+        catch (Exception exception) when (exception is ArgumentException or IOException or SecurityUtilityException
+                                          or InvalidOperationException or InvalidCastException or FormatException
+                                          or CryptographicException)
+        {
+            AepLog.Debug(exception, "[Crypto] link unwrap failed; the wrap was not made for this key");
             return null;
         }
     }

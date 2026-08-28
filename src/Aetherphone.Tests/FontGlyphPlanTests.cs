@@ -82,6 +82,56 @@ public sealed class FontGlyphPlanTests
     }
 
     [Fact]
+    public void TheSharedBaseCoversTheScriptsRemoteTextArrivesIn()
+    {
+        const string samples = "ПриветЎўΑΩθήναいろはにカタカナ、。「」０９ＡＺｦﾝ№←→ǍẞảỹЀ€₽̈";
+        for (var index = 0; index < samples.Length; index++)
+        {
+            int codepoint = samples[index];
+            Assert.True(GlyphPlan.IsSharedBase(codepoint),
+                $"U+{codepoint:X4} still has to be learned at runtime, which rebuilds the whole font atlas.");
+        }
+    }
+
+    [Fact]
+    public void SharedBaseMembershipMatchesItsRanges()
+    {
+        var coverage = new GlyphCoverage();
+        coverage.AddRanges(GlyphPlan.SharedBase);
+
+        for (var codepoint = 0; codepoint <= char.MaxValue; codepoint++)
+        {
+            Assert.Equal(coverage.Contains(codepoint), GlyphPlan.IsSharedBase(codepoint));
+        }
+    }
+
+    [Fact]
+    public void IdeographsStayOnTheLearnedLedgerInsteadOfTheSharedBase()
+    {
+        int[] ideographs = { 0x4E00, 0x5148, 0x751F, 0x9FFF, 0xAC00, 0xD7A3 };
+        for (var index = 0; index < ideographs.Length; index++)
+        {
+            Assert.False(GlyphPlan.IsSharedBase(ideographs[index]),
+                $"U+{ideographs[index]:X4} would rasterize a block far too large for the shared font.");
+        }
+    }
+
+    [Fact]
+    public void ExcludedRangesAreSkippedWhenComposingCoverage()
+    {
+        var excluded = new GlyphCoverage();
+        excluded.Add(0x0402);
+
+        var coverage = new GlyphCoverage();
+        coverage.AddRanges(new ushort[] { 0x0400, 0x0404 }, excluded);
+
+        Assert.Equal(4, coverage.Count);
+        Assert.True(coverage.Contains(0x0401));
+        Assert.False(coverage.Contains(0x0402));
+        Assert.True(coverage.Contains(0x0403));
+    }
+
+    [Fact]
     public void RunCompressionRoundTripsThroughRanges()
     {
         var coverage = new GlyphCoverage();

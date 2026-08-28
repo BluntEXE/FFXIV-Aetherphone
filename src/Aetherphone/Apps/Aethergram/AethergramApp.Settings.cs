@@ -10,7 +10,6 @@ namespace Aetherphone.Apps.Aethergram;
 
 internal sealed partial class AethergramApp
 {
-    private readonly CancellationTokenSource settingsCancellation = new();
     private volatile int messagePolicy;
     private volatile bool messagePolicyLoaded;
     private volatile bool messagePolicyLoading;

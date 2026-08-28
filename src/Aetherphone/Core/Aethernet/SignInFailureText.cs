@@ -23,6 +23,9 @@ internal static class SignInFailureText
                 return (Loc.T(L.Account.FailChallengeExpiredTitle), Loc.T(L.Account.FailChallengeExpiredBody));
             case VerifyFailure.Banned:
                 return (Loc.T(L.Account.FailBannedTitle), Loc.T(L.Account.FailBannedBody));
+            case VerifyFailure.SourceBlocked:
+                return (Loc.T(L.Account.FailSourceBlockedTitle),
+                    Loc.T(L.Account.FailSourceBlockedBody, AepConstants.OfficialRepositoryUrl));
             case VerifyFailure.RateLimited:
                 return (Loc.T(L.Account.FailRateLimitedTitle), Loc.T(L.Account.FailRateLimitedBody));
             case VerifyFailure.Network:

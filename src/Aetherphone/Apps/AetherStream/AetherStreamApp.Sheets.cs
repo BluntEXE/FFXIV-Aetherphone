@@ -103,7 +103,7 @@ internal sealed partial class AetherStreamApp
         var centerX = origin.X + width * 0.5f;
         var iconCenter = new Vector2(centerX, origin.Y + height * 0.5f - 30f * scale);
         drawList.AddCircleFilled(iconCenter, 34f * scale, ImGui.GetColorU32(ui.FieldSurface), 32);
-        AppSkin.Icon(iconCenter, FontAwesomeIcon.UserFriends.ToIconString(), ui.MutedInk, 1.7f);
+        AppSkin.Icon(iconCenter, IconGlyph.Of(FontAwesomeIcon.UserFriends), ui.MutedInk, 1.7f);
         var maxWidth = MathF.Min(width - 24f * scale, 300f * scale);
         Typography.DrawWrappedCentered(new Vector2(centerX, iconCenter.Y + 52f * scale),
             Loc.T(L.AetherStream.WatchPartyHint), ui.MutedInk, TextStyles.Subheadline, maxWidth);
@@ -250,7 +250,7 @@ internal sealed partial class AetherStreamApp
         if (kickable)
         {
             var kickCenter = new Vector2(row.Max.X - 14f * scale, row.Center.Y);
-            if (ui.IconButton(kickCenter, 12f * scale, FontAwesomeIcon.Times.ToIconString(), ui.MutedInk,
+            if (ui.IconButton(kickCenter, 12f * scale, IconGlyph.Of(FontAwesomeIcon.Times), ui.MutedInk,
                     AppSkin.Transparent, 0.55f, Loc.T(L.AetherStream.WatchingKick)))
             {
                 watchAlong.KickParticipant(participant.UserId);
@@ -260,7 +260,7 @@ internal sealed partial class AetherStreamApp
         }
 
         var nameHeight = Typography.LineHeight(TextStyles.Body);
-        Marquee.DrawLeft(drawList, "aetherstream.watcher." + participant.UserId, participant.DisplayName, textLeft,
+        Marquee.DrawLeft(drawList, new MarqueeId("aetherstream.watcher.", participant.UserId), participant.DisplayName, textLeft,
             row.Center.Y - nameHeight * 0.5f, textRight - textLeft, TextStyles.Body, ui.TitleInk,
             UiInteract.Hover(row.Min, row.Max));
 

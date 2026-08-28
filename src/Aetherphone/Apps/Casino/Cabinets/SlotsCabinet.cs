@@ -249,7 +249,7 @@ internal sealed class SlotsCabinet
         var label = Loc.T(L.Casino.SlotsChips);
         Typography.Draw(drawList, new Vector2(min.X + 16f * scale, y + 7f * scale), label, ui.MutedInk,
             TextStyles.Caption1);
-        var stackText = DisplayStack(state).ToString("N0", Loc.Culture);
+        var stackText = NumberText.Group(DisplayStack(state));
         CurrencyGlyph.DrawAmount(drawList, new Vector2(min.X + 16f * scale, y + 21f * scale), stackText,
             CurrencyKind.Chips, ui.TitleInk, TextStyles.SubheadlineEmphasized);
 
@@ -296,7 +296,7 @@ internal sealed class SlotsCabinet
             Palette.WithAlpha(Gold, 0.85f), TextStyles.Caption1);
 
         jackpotRoll.Update((int)CasinoChipLots.CoinsFor(jackpot), delta);
-        var amount = jackpotRoll.Display.ToString("N0", Loc.Culture);
+        var amount = NumberText.Group(jackpotRoll.Display);
         var amountHeight = Typography.Measure(amount, TextStyles.SubheadlineEmphasized).Y;
         var reserve = CurrencyGlyph.Reserve(amountHeight);
         var fitted = Typography.FitText(amount, pillWidth - 32f * scale - reserve,
@@ -577,7 +577,7 @@ internal sealed class SlotsCabinet
             var pulse = 0.78f + 0.22f * Pulse.Wave(Pulse.Fast);
             Typography.DrawCentered(drawList, center with { Y = center.Y - 16f * scale },
                 Loc.T(L.Casino.JackpotWon), Palette.WithAlpha(Gold, pulse), TextStyles.Title1);
-            var coins = CasinoChipLots.CoinsFor(playback.Jackpot).ToString("N0", Loc.Culture);
+            var coins = NumberText.Group(CasinoChipLots.CoinsFor(playback.Jackpot));
             Typography.DrawCentered(drawList, center with { Y = center.Y + 16f * scale },
                 Loc.T(L.Casino.JackpotWonAmount, coins), Gold, TextStyles.SubheadlineEmphasized);
             DrawSkip(drawList, ui, left, y, width, scale);
@@ -594,7 +594,7 @@ internal sealed class SlotsCabinet
                     Loc.T(L.Casino.SlotsBigWin), Gold, TextStyles.FootnoteEmphasized);
             }
 
-            var amount = "+" + ((long)winRoll.Display).ToString("N0", Loc.Culture);
+            var amount = "+" + NumberText.Group((long)winRoll.Display);
             Typography.DrawCentered(drawList, center with { Y = center.Y + (bigWin ? 4f : -4f) * scale }, amount,
                 Gold, TextStyles.Title1.Scale * winRoll.PopScale, TextStyles.Title1.Weight);
             if (playback.CapApplied && playback.Phase == SlotsPlaybackPhase.Finished)
@@ -742,7 +742,7 @@ internal sealed class SlotsCabinet
         var sideWidth = (TurboWidth + AutoWidth + Metrics.Space.Xs) * scale;
         var pillRect = new Rect(new Vector2(left, y),
             new Vector2(left + width - sideWidth - Metrics.Space.Sm * scale, y + SpinPillHeight * scale));
-        if (DrawSpinPill(drawList, ui, pillRect, label, running || canSpin, scale))
+        if (ui.ActionPill(pillRect, label, running || canSpin, TextStyles.Headline))
         {
             if (running)
             {
@@ -918,26 +918,6 @@ internal sealed class SlotsCabinet
         Typography.DrawCentered(drawList, rect.Center, Loc.T(L.Casino.SlotsTurbo),
             turbo ? ui.Accent : ui.MutedInk, TextStyles.FootnoteEmphasized);
         return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
-    }
-
-    private bool DrawSpinPill(ImDrawListPtr drawList, AppSkin ui, Rect rect, string label, bool enabled,
-        float scale)
-    {
-        var rounding = rect.Height * 0.5f;
-        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
-        var fill = Palette.WithAlpha(ui.Accent, enabled ? 1f : 0.4f);
-        Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(fill));
-        if (hovered)
-        {
-            Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        var ink = ui.Palette.HeaderInk;
-        var fitted = Typography.FitText(label, rect.Width - rect.Height, TextStyles.Headline);
-        Typography.DrawCentered(drawList, rect.Center, fitted,
-            enabled ? ink : Palette.WithAlpha(ink, 0.6f), TextStyles.Headline);
-        return enabled && UiInteract.Click(rect.Min, rect.Max, hovered);
     }
 
     private static float DrawReasonCard(ImDrawListPtr drawList, AppSkin ui, string message, float left, float y,

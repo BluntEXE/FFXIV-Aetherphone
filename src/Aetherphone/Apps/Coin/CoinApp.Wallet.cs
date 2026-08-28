@@ -23,7 +23,7 @@ internal sealed partial class CoinApp
         var checkInResult = store.TakeCheckInResult();
         if (checkInResult is { Granted: true, Amount: > 0 })
         {
-            floats.Spawn(Loc.T(L.Coin.CheckInReward, checkInResult.Amount.ToString("N0", Loc.Culture)),
+            floats.Spawn(Loc.T(L.Coin.CheckInReward, NumberText.Group(checkInResult.Amount)),
                 checkInAnchor);
         }
 
@@ -87,12 +87,12 @@ internal sealed partial class CoinApp
         Typography.Draw(drawList, new Vector2(min.X + pad, min.Y + 28f * scale),
             Loc.T(L.Casino.PurseHint), ui.MutedInk, TextStyles.Caption1);
 
-        var chipText = stack.ToString("N0", Loc.Culture);
+        var chipText = NumberText.Group(stack);
         var chipSize = CurrencyGlyph.MeasureAmount(chipText, TextStyles.SubheadlineEmphasized);
         CurrencyGlyph.DrawAmount(drawList, new Vector2(max.X - pad - chipSize.X, min.Y + 10f * scale), chipText,
             CurrencyKind.Chips, ui.Accent, TextStyles.SubheadlineEmphasized);
         var worth = Loc.T(L.Casino.LotCost,
-            (stack / Core.Casino.CasinoChipLots.ChipPerCoin).ToString("N0", Loc.Culture));
+            NumberText.Group(stack / Core.Casino.CasinoChipLots.ChipPerCoin));
         var worthSize = CurrencyGlyph.MeasureAmount(worth, TextStyles.Caption1);
         CurrencyGlyph.DrawAmount(drawList, new Vector2(max.X - pad - worthSize.X, min.Y + 28f * scale), worth,
             CurrencyKind.Coins, ui.MutedInk, TextStyles.Caption1);

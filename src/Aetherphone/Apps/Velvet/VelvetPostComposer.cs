@@ -347,7 +347,7 @@ internal sealed class VelvetPostComposer
         var hovered = UiInteract.Hover(rect.Min, rect.Max);
         Squircle.Fill(drawList, rect.Min, rect.Max, 9f * scale,
             ImGui.GetColorU32(new Vector4(1f, 1f, 1f, hovered ? 0.16f : 0.10f)));
-        AppSkin.Icon(new Vector2(rect.Min.X + 18f * scale, rect.Center.Y), FontAwesomeIcon.Hashtag.ToIconString(),
+        AppSkin.Icon(new Vector2(rect.Min.X + 18f * scale, rect.Center.Y), IconGlyph.Of(FontAwesomeIcon.Hashtag),
             tags.Count > 0 ? AppPalettes.Velvet.Accent : AppPalettes.Velvet.MutedInk, 0.78f);
 
         var textLeft = rect.Min.X + 34f * scale;

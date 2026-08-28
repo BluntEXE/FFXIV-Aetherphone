@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
@@ -35,7 +36,7 @@ internal sealed class ReversiApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Reversi);
-    public string Genre => Loc.T(L.Games.GenreStrategy);
+    public GameGenre Genre => GameGenre.Tabletop;
     public void Open()
     {
         statsLoaded = false;
@@ -173,6 +174,7 @@ internal sealed class ReversiApp : IMiniGame
             return;
         }
 
+        UiFeedback.Play(UiSound.GamePiece);
         placeTimer[cell] = PlaceDuration;
         var placedRow = cell / ReversiBoard.Size;
         var placedColumn = cell % ReversiBoard.Size;

@@ -202,7 +202,7 @@ public sealed class CasinoSeatMachineTests
 
     private static CasinoSeatSignal[] AllSignalsExcept(params CasinoSeatSignal[] excluded)
     {
-        var all = (CasinoSeatSignal[])System.Enum.GetValues(typeof(CasinoSeatSignal));
+        var all = System.Enum.GetValues<CasinoSeatSignal>();
         var kept = new System.Collections.Generic.List<CasinoSeatSignal>(all.Length);
         for (var index = 0; index < all.Length; index++)
         {

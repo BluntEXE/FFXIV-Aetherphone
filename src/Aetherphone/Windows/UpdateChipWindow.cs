@@ -94,7 +94,7 @@ internal sealed class UpdateChipWindow : Window
         var left = (min.X + max.X) * 0.5f - contentWidth * 0.5f;
         var centerY = (min.Y + max.Y) * 0.5f;
         AppSkin.Icon(drawList, new Vector2(left + IconWidth * 0.5f * scale, centerY),
-            FontAwesomeIcon.ArrowUp.ToIconString(), ink, IconScale);
+            IconGlyph.Of(FontAwesomeIcon.ArrowUp), ink, IconScale);
         Typography.Draw(drawList, new Vector2(left + (IconWidth + IconGap) * scale, centerY - textSize.Y * 0.5f), label,
             ink, TextScale, FontWeight.SemiBold);
     }

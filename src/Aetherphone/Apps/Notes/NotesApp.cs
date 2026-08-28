@@ -12,7 +12,7 @@ using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Notes;
 
-internal sealed class NotesApp : IPhoneApp
+internal sealed class NotesApp : IResumableApp, ISpotlightNotes
 {
     private enum NotesScreen : byte
     {
@@ -45,6 +45,8 @@ internal sealed class NotesApp : IPhoneApp
     private int activeTab;
 
     private PhoneNote? editingNote;
+    private Guid? pendingNoteId;
+    private bool pendingNewNote;
     private string noteBuffer = string.Empty;
     private bool noteDirty;
 
@@ -68,13 +70,46 @@ internal sealed class NotesApp : IPhoneApp
     {
         router.Reset();
         editingNote = null;
+        ConsumePendingNote();
+    }
+
+    public void OnResumed()
+    {
+        ConsumePendingNote();
+    }
+
+    public void RequestNote(Guid noteId) => pendingNoteId = noteId;
+
+    public void RequestNewNote() => pendingNewNote = true;
+
+    private void ConsumePendingNote()
+    {
+        if (pendingNewNote)
+        {
+            pendingNewNote = false;
+            StartNewNote();
+            return;
+        }
+
+        if (pendingNoteId is not { } id)
+        {
+            return;
+        }
+
+        pendingNoteId = null;
+        for (var index = 0; index < configuration.Notes.Count; index++)
+        {
+            if (configuration.Notes[index].Id == id)
+            {
+                StartEditNote(configuration.Notes[index]);
+                return;
+            }
+        }
     }
 
     public void OnClosed()
     {
         CommitNoteBuffer();
-        router.Reset();
-        editingNote = null;
     }
 
     public void Draw(in PhoneContext context)
@@ -154,7 +189,7 @@ internal sealed class NotesApp : IPhoneApp
         UiAnchors.Report("notes.new",
             new Rect(buttonCenter - new Vector2(radius, radius), buttonCenter + new Vector2(radius, radius)));
         var tooltip = activeTab == 0 ? Loc.T(L.Notes.NewNote) : Loc.T(L.Notes.NewReminder);
-        if (ui.IconButton(buttonCenter, radius, FontAwesomeIcon.Plus.ToIconString(), ui.TitleInk,
+        if (ui.IconButton(buttonCenter, radius, IconGlyph.Of(FontAwesomeIcon.Plus), ui.TitleInk,
                 Palette.WithAlpha(ui.TitleInk, 0.12f), 0.6f, tooltip))
         {
             if (activeTab == 0)
@@ -196,7 +231,7 @@ internal sealed class NotesApp : IPhoneApp
         var titleSize = Typography.Measure(titleText, TextStyles.Headline);
         var titleHovering = UiInteract.Hover(new Vector2(row.Min.X, titleY),
             new Vector2(row.Min.X + row.Width, titleY + titleSize.Y));
-        Marquee.DrawLeft("notes.noteRow.title." + note.Id, titleText, row.Min.X, titleY, row.Width,
+        Marquee.DrawLeft(new MarqueeId("notes.noteRow.title.", note.Id.ToString()), titleText, row.Min.X, titleY, row.Width,
             TextStyles.Headline, hasTitle ? ui.TitleInk : ui.MutedInk, titleHovering);
 
         var preview = note.Preview();
@@ -206,7 +241,7 @@ internal sealed class NotesApp : IPhoneApp
         var subSize = Typography.Measure(secondLine, TextStyles.Footnote);
         var subHovering = UiInteract.Hover(new Vector2(row.Min.X, subY),
             new Vector2(row.Min.X + row.Width, subY + subSize.Y));
-        Marquee.DrawLeft("notes.noteRow.sub." + note.Id, secondLine, row.Min.X, subY, row.Width,
+        Marquee.DrawLeft(new MarqueeId("notes.noteRow.sub.", note.Id.ToString()), secondLine, row.Min.X, subY, row.Width,
             TextStyles.Footnote, ui.MutedInk, subHovering);
 
         if (UiInteract.HoverClick(row.Min, row.Max))
@@ -265,14 +300,14 @@ internal sealed class NotesApp : IPhoneApp
         var hasDue = reminder.DueAt.HasValue;
         var titleY = hasDue ? row.Center.Y - 16f * scale : row.Center.Y - 9f * scale;
         var title = reminder.Title.Length > 0 ? reminder.Title : Loc.T(L.Notes.ReminderHint);
-        Marquee.DrawLeftAuto("notes.reminderRow.title." + reminder.Id, title, textLeft, titleY, textRect.Width,
+        Marquee.DrawLeftAuto(new MarqueeId("notes.reminderRow.title.", reminder.Id.ToString()), title, textLeft, titleY, textRect.Width,
             TextStyles.Body, titleInk);
         if (hasDue)
         {
             var due = reminder.DueAt!.Value;
             var overdue = !reminder.Done && due < DateTime.Now;
             var dueColor = overdue ? theme.Danger : ui.MutedInk;
-            Marquee.DrawLeftAuto("notes.reminderRow.due." + reminder.Id, DueLabel(due), textLeft,
+            Marquee.DrawLeftAuto(new MarqueeId("notes.reminderRow.due.", reminder.Id.ToString()), DueLabel(due), textLeft,
                 row.Center.Y + 4f * scale, textRect.Width, TextStyles.Footnote, dueColor);
         }
 
@@ -332,7 +367,7 @@ internal sealed class NotesApp : IPhoneApp
         var radius = 15f * scale;
         var trashCenter = new Vector2(content.Max.X - Metrics.Space.Lg * scale - radius,
             content.Min.Y + AppHeader.Height * scale * 0.5f);
-        if (ui.IconButton(trashCenter, radius, FontAwesomeIcon.TrashAlt.ToIconString(), theme.Danger,
+        if (ui.IconButton(trashCenter, radius, IconGlyph.Of(FontAwesomeIcon.TrashAlt), theme.Danger,
                 Palette.WithAlpha(theme.Danger, 0.14f), 0.55f, Loc.T(L.Notes.DeleteNote)))
         {
             AskDeleteNote(editingNote);
@@ -395,7 +430,7 @@ internal sealed class NotesApp : IPhoneApp
             var radius = 15f * scale;
             var trashCenter = new Vector2(content.Max.X - Metrics.Space.Lg * scale - radius,
                 content.Min.Y + AppHeader.Height * scale * 0.5f);
-            if (ui.IconButton(trashCenter, radius, FontAwesomeIcon.TrashAlt.ToIconString(), theme.Danger,
+            if (ui.IconButton(trashCenter, radius, IconGlyph.Of(FontAwesomeIcon.TrashAlt), theme.Danger,
                     Palette.WithAlpha(theme.Danger, 0.14f), 0.55f, Loc.T(L.Notes.DeleteReminder)))
             {
                 AskDeleteReminder(editingReminderId);
@@ -447,7 +482,7 @@ internal sealed class NotesApp : IPhoneApp
         var saveRect = new Rect(new Vector2(content.Min.X + margin, saveTop),
             new Vector2(content.Max.X - margin, saveTop + fieldHeight));
         var enabled = reminderTitle.Trim().Length > 0;
-        if (DrawSaveButton(saveRect, Loc.T(L.Notes.Save), enabled) && enabled)
+        if (ui.AccentPill(saveRect, Loc.T(L.Notes.Save), enabled, TextStyles.Headline) && enabled)
         {
             CommitReminder();
         }
@@ -487,23 +522,6 @@ internal sealed class NotesApp : IPhoneApp
         reminderHasDue = Toggle.Draw("notes.remind", toggleRect, reminderHasDue, theme);
     }
 
-    private bool DrawSaveButton(Rect rect, string label, bool enabled)
-    {
-        var drawList = ImGui.GetWindowDrawList();
-        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
-        var fill = !enabled ? Palette.WithAlpha(ui.Accent, 0.35f) :
-            hovered ? Palette.Mix(ui.Accent, new Vector4(0f, 0f, 0f, 1f), 0.12f) : ui.Accent;
-        Squircle.Fill(drawList, rect.Min, rect.Max, rect.Height * 0.5f, ImGui.GetColorU32(fill));
-        Typography.DrawCentered(drawList, rect.Center, label, new Vector4(1f, 1f, 1f, 1f), TextStyles.Headline.Scale,
-            TextStyles.Headline.Weight);
-        if (!hovered)
-        {
-            return false;
-        }
-
-        ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        return ImGui.IsMouseClicked(ImGuiMouseButton.Left);
-    }
 
     private void CommitReminder()
     {
@@ -575,6 +593,7 @@ internal sealed class NotesApp : IPhoneApp
             Message = Loc.T(L.Notes.DeleteNoteConfirm),
             ConfirmLabel = Loc.T(L.Notes.Delete),
             CancelLabel = Loc.T(L.Notes.KeepIt),
+            Sheet = true,
             Confirm = () => DeleteNote(note),
         });
     }
@@ -595,6 +614,7 @@ internal sealed class NotesApp : IPhoneApp
             Message = Loc.T(L.Notes.DeleteReminderConfirm),
             ConfirmLabel = Loc.T(L.Notes.Delete),
             CancelLabel = Loc.T(L.Notes.KeepIt),
+            Sheet = true,
             Confirm = () => DeleteReminder(id),
         });
     }

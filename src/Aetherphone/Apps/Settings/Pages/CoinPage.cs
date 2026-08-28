@@ -71,6 +71,6 @@ internal sealed class CoinPage : ISettingsPage
     private string SummaryText()
     {
         var wallet = store.Wallet;
-        return wallet is null ? string.Empty : wallet.Balance.ToString("N0", Loc.Culture);
+        return wallet is null ? string.Empty : NumberText.Group(wallet.Balance);
     }
 }

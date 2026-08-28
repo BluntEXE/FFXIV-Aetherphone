@@ -23,7 +23,7 @@ public sealed class ChatSearchTests
         configuration.LinkpearlTabs.AddRange(tabs);
         var log = new ChatLog();
         var store = new TabStore(configuration, new Aetherphone.Core.Game.CharacterWatch(null!));
-        return (log, new ChatInbox(log, store, configuration), new ChatSearch());
+        return (log, new ChatInbox(log, store, new TellPreferences(configuration), configuration), new ChatSearch());
     }
 
     [Fact]

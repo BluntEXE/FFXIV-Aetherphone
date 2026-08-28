@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -34,7 +35,7 @@ internal sealed class WaterSortApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.WaterSort);
-    public string Genre => Loc.T(L.Games.GenrePuzzle);
+    public GameGenre Genre => GameGenre.Puzzle;
     public void Open()
     {
         statsLoaded = false;
@@ -191,6 +192,7 @@ internal sealed class WaterSortApp : IMiniGame
 
     private void OnPoured(Rect area, float scale)
     {
+        UiFeedback.Play(UiSound.GameMatch);
         var pour = board.LastPour;
         pourFrom = WaterSortRenderer.TubeRect(area, pour.FromTube, board.TubeCount, scale);
         pourTo = WaterSortRenderer.TubeRect(area, pour.ToTube, board.TubeCount, scale);
@@ -208,6 +210,7 @@ internal sealed class WaterSortApp : IMiniGame
 
     private void OnSolved(Rect area, float scale)
     {
+        UiFeedback.Play(UiSound.GameClear);
         finished = true;
         resultAppear = 0f;
         clearedLevel = currentLevel;

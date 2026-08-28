@@ -2,6 +2,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Media;
 using Aetherphone.Core.Net;
 using Aetherphone.Core.News;
 using Aetherphone.Core.Onboarding;
@@ -115,7 +116,7 @@ internal sealed class NewsApp : IPhoneApp
         }
 
         ui.Body(body);
-        using (var surface = AppSurface.Begin(body))
+        using (var surface = AppSurface.BeginEdgeToEdge(body))
         {
             if (resetScroll)
             {
@@ -158,20 +159,23 @@ internal sealed class NewsApp : IPhoneApp
             return;
         }
 
-        LoadingPulse.Draw(new Vector2(center.X, center.Y - 14f * scale), 13f * scale, Accent, theme.TextMuted,
-            Loc.T(L.Common.Loading));
+        Skeleton.Feed(ImGui.GetWindowDrawList(),
+            new Rect(new Vector2(body.Min.X + 14f * scale, body.Min.Y + 16f * scale),
+                new Vector2(body.Max.X - 14f * scale, body.Max.Y - 12f * scale)), scale);
     }
 
     private void DrawFeed(LodestoneNewsItem[] items, int count, NewsCategory category, float scale)
     {
         ImGui.Dummy(new Vector2(0f, 4f * scale));
+        var inset = FeedCell.PadX * scale;
         if (category == NewsCategory.Topics)
         {
             for (var index = 0; index < count; index++)
             {
                 var origin = ImGui.GetCursorScreenPos();
                 var width = ScrollLayout.StableContentWidth();
-                var height = DrawTopicCard(items[index], origin, width, scale);
+                var height = DrawTopicCard(items[index], new Vector2(origin.X + inset, origin.Y),
+                    width - inset * 2f, scale);
                 ImGui.SetCursorScreenPos(origin);
                 ImGui.Dummy(new Vector2(width, height));
                 ImGui.Dummy(new Vector2(0f, CardGap * scale));
@@ -180,33 +184,29 @@ internal sealed class NewsApp : IPhoneApp
             return;
         }
 
-        var rowHeight = category == NewsCategory.Maintenance ? RowHeightMaintenance : RowHeightNotices;
-        var card = GroupCard.Begin(theme, count, rowHeight);
+        var rowHeight = (category == NewsCategory.Maintenance ? RowHeightMaintenance : RowHeightNotices) * scale;
+        var drawList = ImGui.GetWindowDrawList();
         for (var index = 0; index < count; index++)
         {
-            var row = card.NextRow();
-            var hovered = UiInteract.Hover(row.Min, row.Max);
+            var cell = FeedCell.Begin(drawList, rowHeight, theme.HoverWash);
+            var row = new Rect(new Vector2(cell.Bounds.Min.X + inset, cell.Bounds.Min.Y),
+                new Vector2(cell.Bounds.Max.X - inset, cell.Bounds.Max.Y));
             if (category == NewsCategory.Maintenance)
             {
-                DrawMaintenanceRow(row, items[index], scale, hovered);
+                DrawMaintenanceRow(row, items[index], scale, cell.Hovered);
             }
             else
             {
-                DrawSimpleRow(row, items[index], scale, hovered);
+                DrawSimpleRow(row, items[index], scale, cell.Hovered);
             }
 
-            if (hovered)
-            {
-                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-            }
-
-            if (UiInteract.Click(row.Min, row.Max, hovered))
+            if (cell.Tapped)
             {
                 UrlActions.OpenInBrowser(items[index].Url);
             }
-        }
 
-        card.End();
+            FeedCell.End(drawList, cell, theme.Hairline);
+        }
     }
 
     private float DrawTopicCard(LodestoneNewsItem item, Vector2 origin, float width, float scale)
@@ -321,7 +321,7 @@ internal sealed class NewsApp : IPhoneApp
     {
         var titleY = row.Min.Y + 10f * scale;
         var maxTitleWidth = row.Width - 24f * scale;
-        Marquee.DrawLeft("news.simpleRow." + item.Url, item.Title, row.Min.X, titleY, maxTitleWidth,
+        Marquee.DrawLeft(new MarqueeId("news.simpleRow.", item.Url), item.Title, row.Min.X, titleY, maxTitleWidth,
             new TextStyle(RowTitleScale, FontWeight.Medium), theme.TextStrong, hovered);
         Typography.Draw(new Vector2(row.Min.X, titleY + 23f * scale), TimeText.Ago(item.Time), theme.TextMuted,
             MetaScale, FontWeight.Regular);
@@ -340,7 +340,7 @@ internal sealed class NewsApp : IPhoneApp
         var rightPadding = 8f * scale;
         var pillReserved = pillInfo.hasPill ? pillInfo.width + 12f * scale + rightPadding : rightPadding + 4f * scale;
         var maxTitleWidth = row.Width - pillReserved;
-        Marquee.DrawLeft("news.maintenanceRow." + item.Url, item.Title, row.Min.X, titleY, maxTitleWidth,
+        Marquee.DrawLeft(new MarqueeId("news.maintenanceRow.", item.Url), item.Title, row.Min.X, titleY, maxTitleWidth,
             new TextStyle(RowTitleScale, FontWeight.Medium), theme.TextStrong, hovered);
         var sub = item.Start is { } start && item.End is { } end
             ? NewsFormat.Window(start, end)
@@ -349,7 +349,7 @@ internal sealed class NewsApp : IPhoneApp
         var maxSubWidth = row.Width - rightPadding;
         if (subWidth > maxSubWidth)
         {
-            sub = PixelEllipsize(sub, maxSubWidth, MetaScale, FontWeight.Regular);
+            sub = Typography.FitText(sub, maxSubWidth, MetaScale, FontWeight.Regular);
         }
 
         Typography.Draw(new Vector2(row.Min.X, subY), sub, theme.TextMuted, MetaScale, FontWeight.Regular);
@@ -408,7 +408,7 @@ internal sealed class NewsApp : IPhoneApp
         var box = 14f * scale;
         UiAnchors.Report("news.refresh", new Rect(center - new Vector2(box, box), center + new Vector2(box, box)));
         var hovered = UiInteract.Hover(center - new Vector2(box, box), center + new Vector2(box, box));
-        var glyph = FontAwesomeIcon.Sync.ToIconString();
+        var glyph = IconGlyph.Of(FontAwesomeIcon.Sync);
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
             var size = ImGui.CalcTextSize(glyph);
@@ -546,31 +546,6 @@ internal sealed class NewsApp : IPhoneApp
         return string.Concat(trimmed, "…");
     }
 
-    private string PixelEllipsize(string text, float maxWidth, float scale, FontWeight weight)
-    {
-        if (string.IsNullOrEmpty(text))
-        {
-            return string.Empty;
-        }
-
-        using (Plugin.Fonts.Push(scale, weight))
-        {
-            var size = ImGui.CalcTextSize(text);
-            if (size.X <= maxWidth)
-            {
-                return text;
-            }
-
-            var trimmed = text;
-            while (trimmed.Length > 1 && ImGui.CalcTextSize(string.Concat(trimmed, "…")).X > maxWidth)
-            {
-                trimmed = trimmed.Substring(0, trimmed.Length - 1).TrimEnd();
-            }
-
-            return string.Concat(trimmed, "…");
-        }
-    }
-
     private static string Normalize(string text)
     {
         if (string.IsNullOrEmpty(text))
@@ -613,6 +588,7 @@ internal sealed class NewsApp : IPhoneApp
             "fr" => Loc.T(L.News.RegionFrance),
             "de" => Loc.T(L.News.RegionGermany),
             "eu" => Loc.T(L.News.RegionEurope),
+            "cn" => Loc.T(L.News.RegionChina),
             _ => Loc.T(L.News.RegionNorthAmerica),
         };
 

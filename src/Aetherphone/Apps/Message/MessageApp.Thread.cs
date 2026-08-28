@@ -13,7 +13,6 @@ namespace Aetherphone.Apps.Message;
 
 internal sealed partial class MessageApp
 {
-    private readonly ThreadView threadView;
 
     private sealed class ThreadView : ChatThreadView<ChatMessageDto, ConversationDto>
     {
@@ -21,7 +20,8 @@ internal sealed partial class MessageApp
 
         public ThreadView(MessageApp app)
             : base(app.store, app.ui, app.images, app.lodestone, app.http, app.library, app.configuration,
-                app.confirm, app.report, app.wallpaperImages, ThreadPollSeconds, TypingSendSeconds)
+                app.confirm, app.report, app.translation, app.wallpaperImages, ThreadPollSeconds,
+                TypingSendSeconds)
         {
             this.app = app;
         }
@@ -145,6 +145,7 @@ internal sealed partial class MessageApp
                 CanInfo = true,
                 CanDelete = true,
                 CanReport = true,
+                CanTranslate = true,
                 IsStarred = app.IsStarred,
                 MyReactionTo = store.MyReactionTo,
                 OnReply = BeginReply,
@@ -159,6 +160,7 @@ internal sealed partial class MessageApp
                 },
                 OnDelete = AskDeleteMessage,
                 OnReport = OpenReportMessage,
+                OnTranslate = TranslateMessage,
                 OnReact = store.SetReaction,
             };
         }
@@ -195,6 +197,7 @@ internal sealed partial class MessageApp
                     }
                 });
             ChatHeaderControls.DrawSearchToggle(ui, area, rowCenterY, searchController.Open, searchController.Toggle);
+            DrawTranslateToggle(area, rowCenterY, threadId);
             var name = conversation is null ? app.DisplayName : DirectMessagesStore.DisplayTitle(conversation);
             var avatarRadius = 18f * scale;
             var nameCap = MathF.Max(40f * scale, area.Width * 0.42f);
@@ -208,7 +211,7 @@ internal sealed partial class MessageApp
             {
                 drawList.AddCircleFilled(avatarCenter, avatarRadius,
                     ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.85f)), 32);
-                AppSkin.Icon(avatarCenter, FontAwesomeIcon.Users.ToIconString(), White, 0.8f);
+                AppSkin.Icon(avatarCenter, IconGlyph.Of(FontAwesomeIcon.Users), White, 0.8f);
             }
             else
             {
@@ -235,7 +238,7 @@ internal sealed partial class MessageApp
                 var subTop = stackTop + nameSize.Y + gapY;
                 var subHovering = UiInteract.Hover(new Vector2(nameLeft, subTop),
                     new Vector2(nameLeft + nameCap, subTop + subSize.Y));
-                Marquee.DrawLeft(titleId + ".sub", sub, nameLeft, subTop, nameCap,
+                Marquee.DrawLeft(new MarqueeId(titleId, ".sub"), sub, nameLeft, subTop, nameCap,
                     new TextStyle(0.72f, FontWeight.Regular), AppPalettes.Message.MutedInk, subHovering);
                 var hitMin = new Vector2(avatarCenter.X - avatarRadius, area.Min.Y);
                 var hitMax = new Vector2(nameLeft + MathF.Max(nameSize.X, subSize.X),
@@ -261,7 +264,7 @@ internal sealed partial class MessageApp
                     var subTop = stackTop + nameSize.Y + gapY;
                     var subHovering = UiInteract.Hover(new Vector2(nameLeft, subTop),
                         new Vector2(nameLeft + nameCap, subTop + subSize.Y));
-                    Marquee.DrawLeft(titleId + ".sub", presence, nameLeft, subTop, nameCap,
+                    Marquee.DrawLeft(new MarqueeId(titleId, ".sub"), presence, nameLeft, subTop, nameCap,
                         new TextStyle(0.72f, FontWeight.Regular),
                         conversation!.Presence == 1 ? ui.Accent : AppPalettes.Message.MutedInk, subHovering);
                 }

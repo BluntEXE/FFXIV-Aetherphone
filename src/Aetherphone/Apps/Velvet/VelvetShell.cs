@@ -17,9 +17,11 @@ using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Photos;
 using Aetherphone.Core.Report;
+using Aetherphone.Core.Runtime;
 using Aetherphone.Core.Sharing;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows;
 using Aetherphone.Windows.Components;
@@ -29,7 +31,7 @@ using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Velvet;
 
-internal sealed partial class VelvetShell : IPhoneApp
+internal sealed partial class VelvetShell : IResumableApp
 {
     private const float HeartbeatSeconds = 45f;
     private const byte LalafellRaceId = 3;
@@ -52,6 +54,7 @@ internal sealed partial class VelvetShell : IPhoneApp
     private readonly SocialActivityFeed activityFeed;
     private readonly Action loadOlderActivity;
     private readonly ConfirmService confirm;
+    private readonly TranslationService translation;
     private readonly ReportService report;
     private readonly ConductGateService conduct;
     private readonly WallpaperImageCache wallpaperImages;
@@ -80,14 +83,21 @@ internal sealed partial class VelvetShell : IPhoneApp
     private bool cachedLalafell;
     private bool raceKnown;
     private ulong raceContentId;
+    private readonly VelvetFilterSelection discoverInclude = new();
+    private readonly VelvetFilterSelection feedInclude = new();
+    private readonly ActionSheet postSheet = new();
+    private readonly ActionSheet threadSheet = new();
+    private VelvetMessagesTab messagesTab = VelvetMessagesTab.Chats;
+    private readonly ThreadView threadView;
 
     public VelvetShell(AethernetSession session, AethernetApi net, LodestoneService lodestone,
         Configuration configuration, PhotoLibrary library, HttpService http, RemoteImageCache images,
         NotificationService notifications, VelvetLauncher launcher, SocialLauncher socialLauncher, GameData gameData,
         SocialNotificationService social, KeyVault keyVault, ConversationKeyStore conversationKeys,
         PhoneVisibility visibility, RealtimeSignalBus realtimeSignals, WallpaperImageCache wallpaperImages,
-        ConfirmService confirm, ReportService report, ConductGateService conduct, AppInstaller installer)
+        ConfirmService confirm, TranslationService translation, ReportService report, ConductGateService conduct, AppInstaller installer)
     {
+        this.translation = translation;
         var velvetArchiveDir = new DirectoryInfo(Path.Combine(Plugin.PluginInterface.ConfigDirectory.FullName, "Velvet"));
         var notInterestedArchive = new VelvetNotInterestedArchive(velvetArchiveDir);
         store = new VelvetStore(session, net.Velvet, net.Account, net.Safety, net.Media, notifications, configuration,
@@ -95,7 +105,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         commentMentions = new MentionAutocomplete(store.NewMentionSuggestions());
         stories = new StoryPresenter(session, net.Grams, net.Media, images, lodestone, VelvetArt.StoryRing, VelvetTheme.Palette,
             new StoryConfirmLabels(L.Velvet.DeleteConfirm, L.Velvet.DeleteCancel, L.Velvet.Saving), confirm,
-            realtimeSignals, "Velvet stories", StartStoryCompose, openProfile: OpenProfile);
+            translation, realtimeSignals, "Velvet stories", StartStoryCompose, openProfile: OpenProfile);
         this.launcher = launcher;
         this.socialLauncher = socialLauncher;
         this.lodestone = lodestone;
@@ -166,6 +176,20 @@ internal sealed partial class VelvetShell : IPhoneApp
         router.Reset();
         activeTab = VelvetPage.Discover;
         messagesTab = VelvetMessagesTab.Chats;
+        avatarLightbox.Reset();
+        store.ClearDiscover();
+        discoverInclude.Clear();
+        feedInclude.Clear();
+        RefreshAndConsumeLaunch();
+    }
+
+    public void OnResumed()
+    {
+        RefreshAndConsumeLaunch();
+    }
+
+    private void RefreshAndConsumeLaunch()
+    {
         store.InvalidateLists();
         if (GateAccepted && store.IsSignedIn)
         {
@@ -198,13 +222,8 @@ internal sealed partial class VelvetShell : IPhoneApp
 
     public void OnClosed()
     {
-        router.Reset();
-        postMenu.Close();
-        avatarLightbox.Reset();
-        store.ClearDiscover();
-        discoverInclude.Clear();
-        feedInclude.Clear();
-        activeTab = VelvetPage.Discover;
+        postSheet.Close();
+        threadSheet.Close();
         stories.Close();
     }
 
@@ -277,6 +296,9 @@ internal sealed partial class VelvetShell : IPhoneApp
         {
             avatarLightbox.Draw(screen, theme);
         }
+
+        DrawPostSheet(screen);
+        DrawThreadSheet(screen);
     }
 
     public void Dispose()
@@ -457,7 +479,7 @@ internal sealed partial class VelvetShell : IPhoneApp
             {
                 LoadingPulse.Spinner(refreshCenter, 8f * scale, ui.Accent);
             }
-            else if (ui.IconButton(refreshCenter, 16f * scale, FontAwesomeIcon.Sync.ToIconString(),
+            else if (ui.IconButton(refreshCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.Sync),
                          VelvetTheme.TitleInk, AppSkin.Transparent, 0.9f, Loc.T(L.Common.Refresh),
                          HoverLabelSide.Below))
             {
@@ -466,7 +488,7 @@ internal sealed partial class VelvetShell : IPhoneApp
         }
 
         var rulesCenter = new Vector2(headerRect.Max.X - 56f * scale, headerRect.Min.Y + headerHeight * 0.5f);
-        if (ui.IconButton(rulesCenter, 16f * scale, FontAwesomeIcon.QuestionCircle.ToIconString(),
+        if (ui.IconButton(rulesCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.QuestionCircle),
                 VelvetTheme.MutedInk, AppSkin.Transparent, 0.9f, Loc.T(L.Conduct.Eyebrow), HoverLabelSide.Below))
         {
             conduct.ShowRules(Id);
@@ -515,14 +537,12 @@ internal sealed partial class VelvetShell : IPhoneApp
 
             if (picked != (int)activeTab)
             {
-                postMenu.Close();
+                postSheet.Close();
+                threadSheet.Close();
             }
 
             activeTab = (VelvetPage)picked;
         }
-
-        DrawPostMenu(area, true);
-        DrawThreadMenu(area);
     }
 
     private void DrawRichBody(ImDrawListPtr drawList, RichTextLayout layout, Vector2 origin)

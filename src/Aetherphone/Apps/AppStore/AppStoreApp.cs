@@ -34,7 +34,7 @@ internal readonly record struct StoreView(StoreViewKind Kind, string AppId, Stor
         new(StoreViewKind.Category, string.Empty, category);
 }
 
-internal sealed partial class AppStoreApp : IPhoneApp
+internal sealed partial class AppStoreApp : IPhoneApp, ISpotlightStoreApps
 {
     private const float TabBarHeight = 62f;
     private const float HeaderHeight = 82f;
@@ -60,6 +60,7 @@ internal sealed partial class AppStoreApp : IPhoneApp
     private string lastSearch = string.Empty;
     private bool resetScroll;
     private bool rowAnchorTaken;
+    private string pendingAppId = string.Empty;
 
     public AppStoreApp(AppInstaller installer, IReadOnlyList<IPhoneApp> apps)
     {
@@ -74,6 +75,10 @@ internal sealed partial class AppStoreApp : IPhoneApp
     public string DisplayName => Loc.T(L.Apps.AppStore);
     public string Glyph => "A";
     public int BadgeCount => 0;
+
+    public void RequestApp(string appId) => pendingAppId = appId;
+
+    public void RequestStoreApp(string appId) => RequestApp(appId);
 
     public void OnOpened()
     {
@@ -105,6 +110,15 @@ internal sealed partial class AppStoreApp : IPhoneApp
             tab = StoreTab.Apps;
             resetScroll = true;
             router.Reset();
+        }
+
+        if (pendingAppId.Length > 0)
+        {
+            tab = StoreTab.Apps;
+            resetScroll = true;
+            router.Reset();
+            router.Push(StoreView.ForApp(pendingAppId), false);
+            pendingAppId = string.Empty;
         }
 
         var delta = ImGui.GetIO().DeltaTime;
@@ -162,7 +176,7 @@ internal sealed partial class AppStoreApp : IPhoneApp
             var hovered = UiInteract.Hover(cellMin, cellMax);
             var ink = active ? ui.Accent : hovered ? ui.TitleInk : ui.MutedInk;
             var center = new Vector2((cellMin.X + cellMax.X) * 0.5f, cellMin.Y + 22f * scale);
-            AppSkin.Icon(center, TabIcon(order[index]).ToIconString(), ink, active ? 1.02f : 0.94f);
+            AppSkin.Icon(center, IconGlyph.Of(TabIcon(order[index])), ink, active ? 1.02f : 0.94f);
             Typography.DrawCentered(new Vector2(center.X, center.Y + 20f * scale), Loc.T(TabLabel(order[index])), ink,
                 TextStyles.Caption1);
             if (hovered)

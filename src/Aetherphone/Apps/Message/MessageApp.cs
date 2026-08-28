@@ -1,5 +1,6 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Aethernet;
+using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
@@ -15,6 +16,7 @@ using Aetherphone.Core.Photos;
 using Aetherphone.Core.Report;
 using Aetherphone.Core.Telephony;
 using Aetherphone.Core.Theme;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Wallpapers;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -22,7 +24,7 @@ using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Message;
 
-internal sealed partial class MessageApp : IPhoneApp
+internal sealed partial class MessageApp : IResumableApp, ISpotlightConversations
 {
     private enum MessageTab : byte
     {
@@ -42,6 +44,9 @@ internal sealed partial class MessageApp : IPhoneApp
     public string DisplayName => Loc.T(L.Apps.Message);
     public string Glyph => "Me";
     public int BadgeCount => store.UnreadTotal + calls.UnseenMissed;
+    public ConversationDto[] SearchableConversations => store.Conversations;
+
+    public ConversationDto[] SpotlightConversations => store.Conversations;
 
     private readonly DirectMessagesStore store;
     private readonly FailureSlot threadListFailure = new();
@@ -55,6 +60,7 @@ internal sealed partial class MessageApp : IPhoneApp
     private readonly HttpService http;
     private readonly Configuration configuration;
     private readonly ConfirmService confirm;
+    private readonly TranslationService translation;
     private readonly ReportService report;
     private readonly WallpaperImageCache wallpaperImages;
     private readonly MusterStore musters;
@@ -74,13 +80,27 @@ internal sealed partial class MessageApp : IPhoneApp
     private CallState lastCallState;
     private string filter = string.Empty;
     private bool recoveryNudgeDismissed;
+    private string searchDraft = string.Empty;
+    private readonly ActionSheet chatSheet = new();
+    private readonly HashSet<string> selectedContacts = new();
+    private string groupTitleDraft = string.Empty;
+    private volatile string? composeResult;
+    private volatile bool backToListPending;
+    private volatile bool backToDetailPending;
+    private string addError = string.Empty;
+    private float copiedTimer;
+    private volatile bool removePending;
+    private string? forwardOpenPending;
+    private readonly ThreadView threadView;
 
     public MessageApp(DirectMessagesStore store, ContactBook contacts, CallHub calls, AethernetSession session,
         RemoteImageCache images, LodestoneService lodestone, DmLauncher launcher, PhotoLibrary library,
-        HttpService http, Configuration configuration, ConfirmService confirm, ReportService report,
+        HttpService http, Configuration configuration, ConfirmService confirm, TranslationService translation,
+        ReportService report,
         WallpaperImageCache wallpaperImages, MusterStore musters, MusterLauncher musterLauncher,
         SocialNotificationService socialNotifications, EncryptionSetupLauncher encryptionSetup)
     {
+        this.translation = translation;
         this.socialNotifications = socialNotifications;
         this.musterLauncher = musterLauncher;
         this.encryptionSetup = encryptionSetup;
@@ -111,7 +131,20 @@ internal sealed partial class MessageApp : IPhoneApp
         filter = string.Empty;
         searchDraft = string.Empty;
         addError = string.Empty;
-        contacts.Refresh(force: true);
+        avatarLightbox.Reset();
+        selectedContacts.Clear();
+        groupTitleDraft = string.Empty;
+        RefreshAndConsumeLaunch(forceContacts: true);
+    }
+
+    public void OnResumed()
+    {
+        RefreshAndConsumeLaunch(forceContacts: false);
+    }
+
+    private void RefreshAndConsumeLaunch(bool forceContacts)
+    {
+        contacts.Refresh(force: forceContacts);
         store.RefreshConversations();
         if (launcher.TryConsumeCalls())
         {
@@ -137,12 +170,6 @@ internal sealed partial class MessageApp : IPhoneApp
     {
         FlushNotes();
         threadView.OnAppClosed();
-        router.Reset();
-        avatarLightbox.Reset();
-        filter = string.Empty;
-        searchDraft = string.Empty;
-        selectedContacts.Clear();
-        groupTitleDraft = string.Empty;
     }
 
     public void Draw(in PhoneContext context)
@@ -161,7 +188,7 @@ internal sealed partial class MessageApp : IPhoneApp
         ConsumeSharedPhoto();
         ProcessPending();
         threadView.GateMenus();
-        chatMenu.Gate();
+        chatSheet.Gate();
         var screen = SceneChrome.ScreenFrom(context.Content, theme, UiScale.Current);
         ui.Backdrop(screen);
         using (InputShield.Engage(avatarLightbox.Expanded))
@@ -173,6 +200,8 @@ internal sealed partial class MessageApp : IPhoneApp
         {
             avatarLightbox.Draw(screen, theme);
         }
+
+        DrawChatSheet(screen);
     }
 
     private void SyncCallRoute()
@@ -360,7 +389,6 @@ internal sealed partial class MessageApp : IPhoneApp
         }
 
         DrawBottomNav(navRect);
-        DrawChatMenu(area);
     }
 
     private void DrawRootHeader(Rect area)
@@ -376,7 +404,7 @@ internal sealed partial class MessageApp : IPhoneApp
         if (activeTab == MessageTab.Chats && configuration.MessageArchivedChats.Count > 0)
         {
             var archiveCenter = new Vector2(area.Max.X - 24f * scale, area.Center.Y);
-            if (ui.IconButton(archiveCenter, 16f * scale, FontAwesomeIcon.BoxOpen.ToIconString(), ui.BodyInk,
+            if (ui.IconButton(archiveCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.BoxOpen), ui.BodyInk,
                     Transparent, 1.1f, Loc.T(L.Message.Archived), HoverLabelSide.Below))
             {
                 router.Push(MessageRoute.Archived);
@@ -386,7 +414,7 @@ internal sealed partial class MessageApp : IPhoneApp
         if (activeTab == MessageTab.Chats && configuration.MessageStarredMessages.Count > 0)
         {
             var starCenter = new Vector2(area.Min.X + 24f * scale, area.Center.Y);
-            if (ui.IconButton(starCenter, 16f * scale, FontAwesomeIcon.Star.ToIconString(), ui.BodyInk,
+            if (ui.IconButton(starCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.Star), ui.BodyInk,
                     Transparent, 1.05f, Loc.T(L.Message.StarredTitle), HoverLabelSide.Below))
             {
                 router.Push(MessageRoute.Starred);
@@ -396,7 +424,7 @@ internal sealed partial class MessageApp : IPhoneApp
         if (activeTab == MessageTab.Contacts)
         {
             var shieldCenter = new Vector2(area.Max.X - 24f * scale, area.Center.Y);
-            if (ui.IconButton(shieldCenter, 16f * scale, FontAwesomeIcon.ShieldAlt.ToIconString(), ui.BodyInk,
+            if (ui.IconButton(shieldCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.ShieldAlt), ui.BodyInk,
                     Transparent, 1.2f, Loc.T(L.Friends.NewNumberTitle), HoverLabelSide.Below) && session.IsSignedIn)
             {
                 router.Push(MessageRoute.Safety);
@@ -437,7 +465,7 @@ internal sealed partial class MessageApp : IPhoneApp
         var active = activeTab == tab;
         var color = active ? ui.Accent : ui.MutedInk;
         var iconCenter = new Vector2(rect.Center.X, rect.Min.Y + 20f * scale);
-        AppSkin.Icon(iconCenter, icon.ToIconString(), color, 1.2f);
+        AppSkin.Icon(iconCenter, IconGlyph.Of(icon), color, 1.2f);
         Typography.DrawCentered(new Vector2(rect.Center.X, rect.Min.Y + 42f * scale), label, color, 0.72f,
             active ? FontWeight.SemiBold : FontWeight.Regular);
         if (badge > 0)
@@ -457,7 +485,7 @@ internal sealed partial class MessageApp : IPhoneApp
     private void SelectTab(MessageTab tab)
     {
         activeTab = tab;
-        chatMenu.Close();
+        chatSheet.Close();
         filter = string.Empty;
     }
 

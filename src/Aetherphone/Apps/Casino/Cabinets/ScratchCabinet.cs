@@ -212,7 +212,7 @@ internal sealed class ScratchCabinet
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.25f)), Metrics.Stroke.Hairline);
         Typography.Draw(drawList, new Vector2(min.X + 16f * scale, y + 7f * scale), Loc.T(L.Casino.SlotsChips),
             ui.MutedInk, TextStyles.Caption1);
-        var stackText = DisplayStack(state).ToString("N0", Loc.Culture);
+        var stackText = NumberText.Group(DisplayStack(state));
         CurrencyGlyph.DrawAmount(drawList, new Vector2(min.X + 16f * scale, y + 21f * scale), stackText,
             CurrencyKind.Chips, ui.TitleInk, TextStyles.SubheadlineEmphasized);
         return y + height;
@@ -331,7 +331,7 @@ internal sealed class ScratchCabinet
             prizeRoll.Update((int)celebrationPrize, delta);
             Typography.DrawCentered(drawList, center with { Y = center.Y - 14f * scale },
                 Loc.T(L.Casino.ScratchWinBanner), Gold, TextStyles.FootnoteEmphasized);
-            var amount = "+" + ((long)prizeRoll.Display).ToString("N0", Loc.Culture);
+            var amount = "+" + NumberText.Group((long)prizeRoll.Display);
             Typography.DrawCentered(drawList, center with { Y = center.Y + 8f * scale }, amount, Gold,
                 TextStyles.Title2.Scale * prizeRoll.PopScale, TextStyles.Title2.Weight);
             return y + height;
@@ -433,12 +433,12 @@ internal sealed class ScratchCabinet
         var blocked = state.StakesPaused || state.Draining;
         var scratching = playback.Phase == ScratchPhase.Scratching;
         var canBuy = !play.RoundInFlight && !scratching && !blocked && !lowStack;
-        var priceText = price.ToString("N0", Loc.Culture);
+        var priceText = NumberText.Group(price);
         var label = playback.RevealComplete
             ? Loc.T(L.Casino.ScratchAnotherFor, priceText)
             : Loc.T(L.Casino.ScratchBuyFor, priceText);
         var pillRect = new Rect(new Vector2(left, y), new Vector2(left + width, y + BuyPillHeight * scale));
-        if (DrawBuyPill(drawList, ui, pillRect, label, canBuy, scale))
+        if (ui.ActionPill(pillRect, label, canBuy, TextStyles.Headline))
         {
             inlineReason = string.Empty;
             celebrationPrize = 0;
@@ -470,26 +470,6 @@ internal sealed class ScratchCabinet
         {
             openCashier();
         }
-    }
-
-    private static bool DrawBuyPill(ImDrawListPtr drawList, AppSkin ui, Rect rect, string label, bool enabled,
-        float scale)
-    {
-        var rounding = rect.Height * 0.5f;
-        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
-        var fill = Palette.WithAlpha(ui.Accent, enabled ? 1f : 0.4f);
-        Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(fill));
-        if (hovered)
-        {
-            Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        var ink = ui.Palette.HeaderInk;
-        var fitted = Typography.FitText(label, rect.Width - rect.Height, TextStyles.Headline);
-        Typography.DrawCentered(drawList, rect.Center, fitted,
-            enabled ? ink : Palette.WithAlpha(ink, 0.6f), TextStyles.Headline);
-        return enabled && UiInteract.Click(rect.Min, rect.Max, hovered);
     }
 
     private static float DrawReasonCard(ImDrawListPtr drawList, AppSkin ui, string message, float left, float y,

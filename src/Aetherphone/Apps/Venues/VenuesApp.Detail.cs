@@ -1,6 +1,7 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Venues;
 using Aetherphone.Windows;
@@ -51,7 +52,7 @@ internal sealed partial class VenuesApp
         var titleAlpha = Math.Clamp((detailScrollY - fadeStart) / (44f * scale), 0f, 1f);
         if (titleAlpha > 0f)
         {
-            var title = VenueText.Fit(venue.Title, area.Width * 0.6f, 1.15f, FontWeight.SemiBold);
+            var title = Typography.FitText(venue.Title, area.Width * 0.6f, 1.15f, FontWeight.SemiBold);
             Typography.DrawCentered(new Vector2(area.Center.X, rowCenterY), title,
                 Palette.WithAlpha(AppPalettes.Venues.TitleInk, titleAlpha), 1.15f, FontWeight.SemiBold);
         }
@@ -67,7 +68,7 @@ internal sealed partial class VenuesApp
 
         var favorite = IsFavorite(venue.Id);
         var starCenter = new Vector2(area.Max.X - 22f * scale, rowCenterY);
-        if (ui.IconButton(starCenter, 14f * scale, FontAwesomeIcon.Star.ToIconString(),
+        if (ui.IconButton(starCenter, 14f * scale, IconGlyph.Of(FontAwesomeIcon.Star),
                 favorite ? ui.Accent : AppPalettes.Venues.BodyInk, AppSkin.Transparent, 0.9f))
         {
             ToggleFavorite(venue.Id);
@@ -105,7 +106,7 @@ internal sealed partial class VenuesApp
         {
             var metaSize = Typography.Measure(meta, TextStyles.Subheadline);
             var metaY = baseY - metaSize.Y;
-            Marquee.DrawLeftAuto("venue.detail.meta." + venue.Id, meta, textLeft, metaY, textWidth,
+            Marquee.DrawLeftAuto(new MarqueeId("venue.detail.meta.", venue.Id), meta, textLeft, metaY, textWidth,
                 TextStyles.Subheadline, HeroMutedInk);
             baseY -= metaSize.Y + 6f * scale;
         }
@@ -113,7 +114,7 @@ internal sealed partial class VenuesApp
         var titleFull = venue.Title;
         var titleSize = Typography.Measure(titleFull, TextStyles.Title1);
         var titleY = baseY - titleSize.Y;
-        Marquee.DrawLeftAuto("venue.detail.title." + venue.Id, titleFull, textLeft, titleY, textWidth,
+        Marquee.DrawLeftAuto(new MarqueeId("venue.detail.title.", venue.Id), titleFull, textLeft, titleY, textWidth,
             TextStyles.Title1, HeroInk);
         ImGui.SetCursorScreenPos(cursor);
         ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().X, height - topPad + Metrics.Space.Lg * scale));
@@ -202,7 +203,7 @@ internal sealed partial class VenuesApp
                 else
                 {
                     ImGui.SetClipboardText(LifestreamBridge.TravelCommand(venue.TeleportCode!));
-                    CopyToast.Show();
+                    ShellToast.Show();
                 }
             }
 
@@ -251,8 +252,8 @@ internal sealed partial class VenuesApp
         var fullTextSize = Typography.Measure(label, 0.95f, FontWeight.SemiBold);
         var displayWidth = MathF.Min(fullTextSize.X, textMaxWidth);
         var left = rect.Center.X - (iconAdvance + displayWidth) * 0.5f;
-        AppSkin.Icon(drawList, new Vector2(left + 8f * scale, rect.Center.Y), icon.ToIconString(), ink, 0.85f);
-        Marquee.DrawLeft("venue.detail.action." + label, label, left + iconAdvance,
+        AppSkin.Icon(drawList, new Vector2(left + 8f * scale, rect.Center.Y), IconGlyph.Of(icon), ink, 0.85f);
+        Marquee.DrawLeft(new MarqueeId("venue.detail.action.", label), label, left + iconAdvance,
             rect.Center.Y - fullTextSize.Y * 0.5f, textMaxWidth, new TextStyle(0.95f, FontWeight.SemiBold), ink,
             hovered);
         if (hovered)
@@ -346,7 +347,7 @@ internal sealed partial class VenuesApp
         var valueWidth = MathF.Max(1f, valueRight - labelLeft - labelSize.X - 12f * scale);
         var valueFullSize = Typography.Measure(value, TextStyles.BodyEmphasized);
         var valueY = centerY - valueFullSize.Y * 0.5f;
-        Marquee.DrawRightAuto("venue.detail.row." + label, value, valueRight, valueY, valueWidth,
+        Marquee.DrawRightAuto(new MarqueeId("venue.detail.row.", label), value, valueRight, valueY, valueWidth,
             TextStyles.BodyEmphasized, AppPalettes.Venues.TitleInk);
         if (rowIndex >= rowCount - 1)
         {
@@ -393,6 +394,17 @@ internal sealed partial class VenuesApp
         ImGui.Dummy(new Vector2(width, totalHeight + Metrics.Space.Sm * scale));
     }
 
+    private string VenueLanguage(VenueEvent venue)
+    {
+        if (!venueLanguages.TryGetValue(venue.Id, out var lang))
+        {
+            lang = LanguageGuess.Detect(venue.Description);
+            venueLanguages[venue.Id] = lang;
+        }
+
+        return lang;
+    }
+
     private void DrawAbout(VenueEvent venue)
     {
         if (venue.Description.Length == 0)
@@ -402,12 +414,24 @@ internal sealed partial class VenuesApp
 
         ui.SectionHeading(Loc.T(L.Venues.About));
         var scale = UiScale.Current;
+        var venueKey = new TranslationKey(TranslationSurface.Venue, venue.Id);
+        var aboutText = translation.View(venueKey, venue.Description).Text;
         using (Plugin.Fonts.Push(1f))
         using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Venues.BodyInk))
         {
             ImGui.PushTextWrapPos(0f);
-            Typography.Plain(venue.Description);
+            Typography.Plain(aboutText);
             ImGui.PopTextWrapPos();
+        }
+
+        var venueLang = VenueLanguage(venue);
+        var linkHeight = TranslateLink.Height(translation, venueKey, venueLang, scale);
+        if (linkHeight > 0f)
+        {
+            var linkTop = ImGui.GetCursorScreenPos();
+            TranslateLink.Draw(translation, confirm, venueKey, venueLang, venue.Description, linkTop,
+                ImGui.GetContentRegionAvail().X, AppPalettes.Venues.MutedInk, AppPalettes.Venues.Accent, scale);
+            ImGui.SetCursorScreenPos(new Vector2(linkTop.X, linkTop.Y + linkHeight));
         }
 
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));

@@ -42,7 +42,7 @@ internal sealed class BreakoutBoard
     private readonly Vector2[] breakPositions = new Vector2[Columns * MaxRows];
     private readonly int[] breakColors = new int[Columns * MaxRows];
     private readonly Random random = new();
-    private float defaultPaddleHalf = 0.12f;
+    private readonly float defaultPaddleHalf = 0.12f;
     private float ballSpeed = BaseSpeed;
     public float FieldHeight { get; private set; } = 1.6f;
     public int Rows { get; private set; }

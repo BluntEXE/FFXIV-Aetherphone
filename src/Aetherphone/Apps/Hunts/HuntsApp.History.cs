@@ -37,10 +37,10 @@ internal sealed partial class HuntsApp
                 return;
             }
 
-            var card = RowListCard.Begin(ui, entries.Length, RowHeight, scale);
+            var card = GroupCard.Begin(ui, entries.Length, RowHeight);
             for (var index = 0; index < entries.Length; index++)
             {
-                DrawHistoryRow(card.Row(index), entries[index], scale);
+                DrawHistoryRow(card.NextRow(), entries[index], scale);
             }
 
             card.End();

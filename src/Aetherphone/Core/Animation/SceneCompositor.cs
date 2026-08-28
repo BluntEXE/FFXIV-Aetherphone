@@ -1,5 +1,4 @@
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Core.Animation;
 
@@ -7,9 +6,6 @@ internal delegate void LayerPainter(Rect target);
 
 internal static class SceneCompositor
 {
-    private const ImGuiWindowFlags LayerFlags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse |
-                                                ImGuiWindowFlags.NoBackground;
-
     internal readonly struct Layer
     {
         public readonly string Id;
@@ -37,67 +33,21 @@ internal static class SceneCompositor
         DrawLayer(clip, over);
     }
 
-    public static void DrawClipped(Rect clip, Rect paintTarget, float dim, LayerPainter paint)
-    {
-        if (clip.Height <= 0.5f)
-        {
-            return;
-        }
-
-        var footprint = HostWindowFootprint.Capture();
-        ImGui.PushClipRect(clip.Min, clip.Max, true);
-        ImGui.SetCursorScreenPos(paintTarget.Min);
-
-        using (ImRaii.Child("clip", paintTarget.Size, false, LayerFlags | ImGuiWindowFlags.NoInputs))
-        using (InputShield.Engage(true))
-        {
-            paint(paintTarget);
-
-            if (dim > 0f)
-            {
-                ImGui.GetWindowDrawList().AddRectFilled(paintTarget.Min, paintTarget.Max,
-                    ImGui.GetColorU32(new Vector4(0f, 0f, 0f, dim)));
-            }
-        }
-
-        ImGui.PopClipRect();
-        footprint.Restore(clip.Max);
-    }
-
     public static void DrawLayer(Rect clip, in Layer layer)
     {
         var offset = new Vector2(MathF.Round(layer.Offset.X), MathF.Round(layer.Offset.Y));
-        var shifted = new Rect(clip.Min + offset, clip.Max + offset);
-        var footprint = HostWindowFootprint.Capture();
-        ImGui.PushClipRect(clip.Min, clip.Max, true);
-        ImGui.SetCursorScreenPos(shifted.Min);
-
-        using (ImRaii.PushId(layer.Id))
-        using (ImRaii.Child("layer", clip.Size, false, LayerFlags))
+        using var stage = ScreenLayer.Begin(layer.Id, clip, layer.Shield);
+        if (layer.Background.W > 0f)
         {
-            using (InputShield.Engage(layer.Shield))
-            {
-                if (layer.Background.W > 0f)
-                {
-                    ImGui.GetWindowDrawList()
-                        .AddRectFilled(shifted.Min, shifted.Max, ImGui.GetColorU32(layer.Background));
-                }
-
-                layer.Paint(shifted);
-            }
-
-            if (layer.Dim > 0f)
-            {
-                ImGui.SetCursorScreenPos(shifted.Min);
-                using (ImRaii.Child("dim", clip.Size, false, LayerFlags | ImGuiWindowFlags.NoInputs))
-                {
-                    ImGui.GetWindowDrawList().AddRectFilled(shifted.Min, shifted.Max,
-                        ImGui.GetColorU32(new Vector4(0f, 0f, 0f, layer.Dim)));
-                }
-            }
+            ImGui.GetWindowDrawList().AddRectFilled(clip.Min, clip.Max, ImGui.GetColorU32(layer.Background));
         }
 
-        ImGui.PopClipRect();
-        footprint.Restore(clip.Max);
+        layer.Paint(clip);
+        if (layer.Dim > 0f)
+        {
+            stage.Veil(ImGui.GetColorU32(new Vector4(0f, 0f, 0f, layer.Dim)));
+        }
+
+        stage.Transform(LayerTransform.Translate(offset, clip));
     }
 }

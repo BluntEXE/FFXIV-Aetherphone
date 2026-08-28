@@ -1,11 +1,14 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Game;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Media;
 using Aetherphone.Core.Net;
 using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Theme;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Venues;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -14,7 +17,7 @@ using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Apps.Venues;
 
-internal sealed partial class VenuesApp : IPhoneApp
+internal sealed partial class VenuesApp : IPhoneApp, ISpotlightVenues
 {
     private const float SearchHeight = 46f;
     private const float SegmentHeight = 44f;
@@ -31,6 +34,9 @@ internal sealed partial class VenuesApp : IPhoneApp
     private readonly HttpService http;
     private readonly GameData gameData;
     private readonly Configuration configuration;
+    private readonly ConfirmService confirm;
+    private readonly TranslationService translation;
+    private readonly Dictionary<string, string> venueLanguages = new(StringComparer.Ordinal);
     private readonly ArtworkCache artwork;
     private readonly AppSkin ui = new(AppPalettes.Venues);
     private readonly ViewRouter<VenueRoute> router;
@@ -47,18 +53,22 @@ internal sealed partial class VenuesApp : IPhoneApp
     private bool chipsPressed;
     private bool lifestreamAvailable;
     private float detailScrollY;
+    private string pendingVenueId = string.Empty;
     private PhoneTheme theme = PhoneTheme.Default;
     private INavigator navigation = null!;
 
-    public VenuesApp(VenuesService venues, MediaCache media, HttpService http, ITextureProvider textures,
-        GameData gameData, Configuration configuration)
+    public VenuesApp(VenuesService venues, MediaCache media, HttpService http, ArtworkCache artwork,
+        GameData gameData, Configuration configuration, ConfirmService confirm,
+        TranslationService translation)
     {
+        this.confirm = confirm;
+        this.translation = translation;
         this.venues = venues;
         this.media = media;
         this.http = http;
         this.gameData = gameData;
         this.configuration = configuration;
-        artwork = new ArtworkCache(textures);
+        this.artwork = artwork;
         router = new ViewRouter<VenueRoute>(VenueRoute.List);
         drawView = DrawView;
         back = () => router.Pop();
@@ -78,15 +88,39 @@ internal sealed partial class VenuesApp : IPhoneApp
         search = string.Empty;
     }
 
+    public void RequestVenue(string venueId) => pendingVenueId = venueId;
+
     public void Draw(in PhoneContext context)
     {
         theme = context.Theme;
         navigation = context.Navigation;
         ui.Theme = theme;
         venues.EnsureFresh(false);
+        ConsumePendingVenue();
         var screen = SceneChrome.ScreenFrom(context.Content, theme, UiScale.Current);
         ui.Backdrop(screen);
         router.Draw(context.Content, AppSkin.Transparent, ImGui.GetIO().DeltaTime, drawView);
+    }
+
+    private void ConsumePendingVenue()
+    {
+        if (pendingVenueId.Length == 0)
+        {
+            return;
+        }
+
+        var wanted = pendingVenueId;
+        pendingVenueId = string.Empty;
+        var events = venues.Events;
+        for (var index = 0; index < events.Count; index++)
+        {
+            if (string.Equals(events[index].Id, wanted, StringComparison.Ordinal))
+            {
+                detailScrollY = 0f;
+                router.Push(VenueRoute.Detail(events[index]), false);
+                return;
+            }
+        }
     }
 
     private void DrawView(VenueRoute route, Rect area, int depth)
@@ -153,7 +187,7 @@ internal sealed partial class VenuesApp : IPhoneApp
             return;
         }
 
-        if (ui.IconButton(actionCenter, 14f * scale, FontAwesomeIcon.Sync.ToIconString(), AppPalettes.Venues.BodyInk,
+        if (ui.IconButton(actionCenter, 14f * scale, IconGlyph.Of(FontAwesomeIcon.Sync), AppPalettes.Venues.BodyInk,
                 AppSkin.Transparent, 0.9f))
         {
             venues.EnsureFresh(true);
@@ -358,8 +392,9 @@ internal sealed partial class VenuesApp : IPhoneApp
         var centerX = body.Center.X;
         if (venues.State == VenueState.Loading && venues.Events.Count == 0)
         {
-            LoadingPulse.Draw(new Vector2(centerX, body.Min.Y + 90f * scale), 13f * scale, ui.Accent,
-                AppPalettes.Venues.MutedInk, Loc.T(L.Common.Loading));
+            Skeleton.Feed(ImGui.GetWindowDrawList(),
+                new Rect(new Vector2(body.Min.X + 14f * scale, body.Min.Y + 16f * scale),
+                    new Vector2(body.Max.X - 14f * scale, body.Max.Y - 12f * scale)), scale);
             return;
         }
 
@@ -368,7 +403,7 @@ internal sealed partial class VenuesApp : IPhoneApp
         var iconCenter = new Vector2(centerX, body.Min.Y + 84f * scale);
         drawList.AddCircleFilled(iconCenter, 30f * scale, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.14f)), 40);
         var icon = failed ? FontAwesomeIcon.ExclamationTriangle : FontAwesomeIcon.MapMarkedAlt;
-        AppSkin.Icon(drawList, iconCenter, icon.ToIconString(), Palette.WithAlpha(ui.Accent, 0.95f), 1.15f);
+        AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(icon), Palette.WithAlpha(ui.Accent, 0.95f), 1.15f);
         var message = failed ? Loc.T(L.Venues.Failed) : Loc.T(L.Venues.NoVenues);
         Typography.DrawCentered(new Vector2(centerX, iconCenter.Y + 52f * scale), message,
             AppPalettes.Venues.TitleInk, TextStyles.Headline);
@@ -529,5 +564,7 @@ internal sealed partial class VenuesApp : IPhoneApp
         selectedTags.Add(tag);
     }
 
-    public void Dispose() => artwork.Dispose();
+    public void Dispose()
+    {
+    }
 }

@@ -1,6 +1,7 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
@@ -32,7 +33,7 @@ internal sealed class SnakeApp : IMiniGame
     public string Title => Loc.T(L.Games.Snake);
     public bool RunsOnAClock => true;
 
-    public string Genre => Loc.T(L.Games.GenreArcade);
+    public GameGenre Genre => GameGenre.Arcade;
     public void Open()
     {
         started = false;
@@ -130,6 +131,7 @@ internal sealed class SnakeApp : IMiniGame
 
     private void OnEat(float scale)
     {
+        UiFeedback.Play(UiSound.GameCollect);
         eatPulse = 1f;
         particles.Burst(board.Head, 12, GamePalette.Lighten(Accent, 0.2f), 190f * scale, 3f, 0.5f, 220f);
         particles.Sparkle(board.Head, 6, new Vector4(1f, 0.95f, 0.7f, 1f), 120f * scale, 2.2f, 0.6f);
@@ -158,6 +160,7 @@ internal sealed class SnakeApp : IMiniGame
 
     private void OnCrash(float scale)
     {
+        UiFeedback.Play(UiSound.GameHitSoft);
         finalScore = board.Score;
         pendingSubmit = true;
         resultAppear = 0f;

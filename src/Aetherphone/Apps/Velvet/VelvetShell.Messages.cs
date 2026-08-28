@@ -5,7 +5,6 @@ using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Velvet;
 
@@ -33,7 +32,7 @@ internal sealed partial class VelvetShell
         }
 
         var listRect = new Rect(new Vector2(area.Min.X, segRect.Max.Y + 8f * scale), area.Max);
-        using (AppSurface.Begin(listRect))
+        using (AppSurface.BeginEdgeToEdge(listRect))
         {
             if (messagesTab == VelvetMessagesTab.Chats)
             {
@@ -90,14 +89,14 @@ internal sealed partial class VelvetShell
                 Time = TimeText.Short(thread.LastMessageAtUnix),
                 Badge = thread.UnreadCount,
             };
-            var hit = VRow.Draw(in model, ui, theme, images, lodestone);
+            var hit = VRow.Cell(in model, ui, theme, images, lodestone);
             if (hit == VRowHit.Body)
             {
                 OpenThread(thread.OtherUserId);
             }
             else if (hit == VRowHit.Overflow)
             {
-                OpenThreadMenu(thread.OtherUserId);
+                OpenThreadSheet(thread.OtherUserId);
             }
         }
 
@@ -140,7 +139,8 @@ internal sealed partial class VelvetShell
         Gap(8f);
         if (requests.Length > 0)
         {
-            VSectionHeader.Overline(Loc.T(L.Velvet.Requests), requests.Length.ToString(Loc.Culture));
+            VSectionHeader.Overline(Loc.T(L.Velvet.Requests), requests.Length.ToString(Loc.Culture),
+                FeedCell.PadX * scale);
             for (var index = 0; index < requests.Length; index++)
             {
                 DrawRequestRow(requests[index]);
@@ -150,7 +150,8 @@ internal sealed partial class VelvetShell
         if (sent.Length > 0)
         {
             Gap(14f);
-            VSectionHeader.Overline(Loc.T(L.Velvet.SentRequests), sent.Length.ToString(Loc.Culture));
+            VSectionHeader.Overline(Loc.T(L.Velvet.SentRequests), sent.Length.ToString(Loc.Culture),
+                FeedCell.PadX * scale);
             for (var index = 0; index < sent.Length; index++)
             {
                 var request = sent[index];
@@ -167,7 +168,7 @@ internal sealed partial class VelvetShell
                     PillFilled = false,
                     PillEnabled = true,
                 };
-                var hit = VRow.Draw(in model, ui, theme, images, lodestone);
+                var hit = VRow.Cell(in model, ui, theme, images, lodestone);
                 if (hit == VRowHit.Pill)
                 {
                     store.CancelRequest(request.UserId);
@@ -198,7 +199,7 @@ internal sealed partial class VelvetShell
             PillEnabled = true,
             Decline = true,
         };
-        var hit = VRow.Draw(in model, ui, theme, images, lodestone);
+        var hit = VRow.Cell(in model, ui, theme, images, lodestone);
         switch (hit)
         {
             case VRowHit.Pill:
@@ -214,23 +215,23 @@ internal sealed partial class VelvetShell
         }
     }
 
-    private void OpenThreadMenu(string otherId)
+    private void OpenThreadSheet(string otherId)
     {
-        menuThreadId = otherId;
-        var position = ImGui.GetMousePos();
-        threadMenu.Toggle(otherId, new Rect(position, position + new Vector2(1f, 1f)));
+        sheetThreadId = otherId;
+        threadSheetItems[0] = new ActionSheet.Item(Loc.T(L.Velvet.DeleteConversation), string.Empty, true);
+        threadSheet.Open();
     }
 
-    private void DrawThreadMenu(Rect area)
+    private void DrawThreadSheet(Rect screen)
     {
-        if (menuThreadId is not { } otherId || !threadMenu.IsOpenFor(otherId))
+        if (!threadSheet.CapturesPointer)
         {
             return;
         }
 
-        threadItems[0] = new DropdownMenu.Item(Loc.T(L.Velvet.DeleteConversation),
-            FontAwesomeIcon.Trash.ToIconString(), true);
-        if (threadMenu.Draw(area, theme, threadItems) == 0)
+        var picked = threadSheet.Draw(screen, ActionSheetStyle.From(ui), threadSheetItems, Loc.T(L.Common.Cancel),
+            false);
+        if (picked == 0 && sheetThreadId is { } otherId)
         {
             AskDeleteConversation(otherId);
         }
@@ -244,6 +245,7 @@ internal sealed partial class VelvetShell
             Message = Loc.T(L.Velvet.DeleteConversationMessage),
             ConfirmLabel = Loc.T(L.Velvet.DeleteConfirm),
             CancelLabel = Loc.T(L.Velvet.DeleteCancel),
+            Sheet = true,
             Danger = true,
             Confirm = () => DeleteConversation(otherId),
         });

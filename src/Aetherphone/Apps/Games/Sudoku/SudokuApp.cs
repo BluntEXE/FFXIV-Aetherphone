@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
@@ -41,7 +42,7 @@ internal sealed class SudokuApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Sudoku);
-    public string Genre => Loc.T(L.Games.GenreLogic);
+    public GameGenre Genre => GameGenre.Brain;
 
     public void Open()
     {
@@ -201,12 +202,11 @@ internal sealed class SudokuApp : IMiniGame
 
     private void HandleKeyboard(float scale)
     {
-        if (!GameFocus.Active)
+        if (!GameInput.Claim())
         {
             return;
         }
 
-        ImGui.SetNextFrameWantCaptureKeyboard(true);
         for (var digit = 1; digit <= SudokuBoard.Size; digit++)
         {
             var offset = digit - 1;
@@ -344,11 +344,14 @@ internal sealed class SudokuApp : IMiniGame
             return;
         }
 
+        UiFeedback.Play(UiSound.GameTick);
+
         CelebratePlacement(scale);
     }
 
     private void RegisterMistake(float scale)
     {
+        UiFeedback.Play(UiSound.GameWrong);
         mistakes++;
         fx.AddTrauma(0.28f);
         fx.Flash(new Vector4(0.92f, 0.28f, 0.32f, 1f), 0.22f);
@@ -405,6 +408,7 @@ internal sealed class SudokuApp : IMiniGame
             return;
         }
 
+        UiFeedback.Play(UiSound.GameClear);
         finished = true;
         won = true;
         pendingSubmit = true;

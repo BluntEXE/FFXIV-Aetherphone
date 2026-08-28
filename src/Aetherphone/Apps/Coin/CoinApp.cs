@@ -130,14 +130,14 @@ internal sealed partial class CoinApp : IPhoneApp
         var scale = UiScale.Current;
         AppHeader.Draw(new PhoneContext(area, theme, navigation), DisplayName, navigation.Back);
         var helpCenter = new Vector2(area.Max.X - 26f * scale, area.Min.Y + AppHeader.Height * scale * 0.5f);
-        if (ui.IconButton(helpCenter, 16f * scale, FontAwesomeIcon.InfoCircle.ToIconString(), ui.MutedInk,
+        if (ui.IconButton(helpCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.InfoCircle), ui.MutedInk,
                 AppSkin.Transparent, 1.1f, Loc.T(L.Coin.HelpTitle), HoverLabelSide.Below))
         {
             confirm.Alert(Loc.T(L.Coin.HelpTitle), Loc.T(L.Coin.HelpBody), Loc.T(L.Onboarding.GotIt));
         }
 
         var rulesCenter = new Vector2(area.Max.X - 58f * scale, helpCenter.Y);
-        if (ui.IconButton(rulesCenter, 16f * scale, FontAwesomeIcon.QuestionCircle.ToIconString(), ui.MutedInk,
+        if (ui.IconButton(rulesCenter, 16f * scale, IconGlyph.Of(FontAwesomeIcon.QuestionCircle), ui.MutedInk,
                 AppSkin.Transparent, 1.1f, Loc.T(L.Conduct.Eyebrow), HoverLabelSide.Below))
         {
             conduct.ShowRules(ConductRules.Coin.AppId);

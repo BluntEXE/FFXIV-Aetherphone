@@ -50,9 +50,9 @@ Gizlilik ve güvenlik her şeyden önce gelir: metin mesajları, ekler ve sesli 
 - **Sosyal**: bir mikroblog, bir fotoğraf akışı ve sesli notlar ile grup aramalarına sahip özel mesajlaşma, ayrıca isteğe bağlı bir 18+ yardımcı uygulama.
 - **Oyun sohbeti**: oyundaki tüm sohbet kanalları telefonda; sekmeleri kendin oluşturursun, tell mesajları ise ayrı konuşmalar olarak gelir.
 - **Araçlar**: bir pazar takipçisi, bir konut tarayıcısı, mekan ve etkinlik rehberi, canlı topluluk radyo istasyonları ve Rolladeck DJ listeleriyle oyun içi müzik, hava durumu, bir cüzdan, zamanlayıcılar ve sıfırlamalar, bir fotoğraf kitaplığı ve kamera, kısayollar ve bir cep mini oyun salonu; 40 uygulama arasında.
-- **Birlikte izleyin**: YouTube dahil videolar oyun içindeki bir ekranda, birlikte izleyen herkes için eşitlenmiş oynatmayla.
+- **Birlikte izleyin**: YouTube dahil videolar oyun içindeki bir ekranda, birlikte izleyen herkes için eşitlenmiş oynatmayla. Yerel dosyalar da çalışır: her izleyici kendi kopyasını seçer ve eşitlenmiş kalır.
 - **Kumarhane**: oyun parasıyla blackjack, slotlar, kazı kazan kartları, ortak bir çark ve tombala. Gerçek para yoktur ve hiçbir şeyin nakit değeri yoktur.
-- **Kendine göre yap**: istediğin vurgu rengi, duvar kağıtları, Lodestone karakter portreleri, özel zil sesleri, yazı boyutu yakınlaştırması ve istediğin boyuta sürükleyebileceğin bir telefon.
+- **Kendine göre yap**: istediğin vurgu rengi, duvar kağıtları, Lodestone karakter portreleri, özel zil sesleri, göze batmayan arayüz sesleri, yazı boyutu yakınlaştırması ve istediğin boyuta sürükleyebileceğin bir telefon.
 
 Tüm özellik turu, ekran görüntüleri ve ayrıntılar web sitesinde:
 
@@ -103,7 +103,7 @@ Bu eklentiyi beğendiyseniz, diğer Dalamud çalışmalarıma bir göz atın. Or
 
 Çevrimiçi özellikleri kullanmak, hizmet şartlarını kabul etmek anlamına gelir. Gizlilik politikası, Aethernet hizmetinin verilerinizle ne yaptığını kapsar; çevrimdışı özellikler makinenizde kalır, ancak bazı uygulamalar herkese açık oyun verilerini doğrudan üçüncü taraf hizmetlerden alır ve politika bunu da kapsar.
 
-→ [Hizmet Şartları](TERMS.md) · [Gizlilik Politikası](PRIVACY.md)
+→ [Hizmet Şartları](TERMS.md) · [Gizlilik Politikası](PRIVACY.md) · [Marka ve İsim Politikası](TRADEMARK.md)
 
 ## Lisans
 

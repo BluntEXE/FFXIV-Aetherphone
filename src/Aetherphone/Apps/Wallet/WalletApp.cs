@@ -14,8 +14,6 @@ namespace Aetherphone.Apps.Wallet;
 internal sealed class WalletApp : IPhoneApp
 {
     private const float RefreshIntervalSeconds = 1.5f;
-    private const float CardRounding = 18f;
-    private const float RowPadding = 16f;
     private const float SectionGap = 12f;
     private const float BadgeRefreshMillis = 1500f;
 
@@ -164,33 +162,19 @@ internal sealed class WalletApp : IPhoneApp
     {
         var width = ImGui.GetContentRegionAvail().X;
         var rowCount = section.Entries.Length;
-        var rowHeight = CurrencyRow.Height * scale;
         var origin = ImGui.GetCursorScreenPos();
-        var min = origin;
-        var max = new Vector2(origin.X + width, origin.Y + rowCount * rowHeight);
-        var drawList = ImGui.GetWindowDrawList();
-        ui.Card(drawList, min, max, CardRounding * scale, elevated: true);
-
-        var padding = RowPadding * scale;
-        var separator = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.06f));
+        var card = GroupCard.Begin(ui, rowCount, CurrencyRow.Height);
         for (var entryIndex = 0; entryIndex < rowCount; entryIndex++)
         {
-            var rowTop = min.Y + entryIndex * rowHeight;
-            var band = new Rect(new Vector2(min.X, rowTop), new Vector2(max.X, rowTop + rowHeight));
-            var contentRect = new Rect(new Vector2(min.X + padding, rowTop),
-                new Vector2(max.X - padding, rowTop + rowHeight));
-            CurrencyRow.Draw(band, contentRect, section.Entries[entryIndex], textures, ui.Palette, CardRounding * scale,
-                entryIndex == 0, entryIndex == rowCount - 1);
-            if (entryIndex > 0)
-            {
-                drawList.AddLine(new Vector2(min.X + padding, rowTop), new Vector2(max.X - padding, rowTop), separator,
-                    Metrics.Stroke.Hairline);
-            }
+            var contentRect = card.NextRow();
+            var band = new Rect(new Vector2(origin.X, contentRect.Min.Y),
+                new Vector2(origin.X + width, contentRect.Max.Y));
+            CurrencyRow.Draw(band, contentRect, section.Entries[entryIndex], textures, ui.Palette,
+                Metrics.Radius.Md * scale, entryIndex == 0, entryIndex == rowCount - 1);
         }
 
-        ImGui.SetCursorScreenPos(min);
-        ImGui.Dummy(new Vector2(width, rowCount * rowHeight));
-        return new Rect(min, max);
+        card.End();
+        return new Rect(origin, origin + new Vector2(width, rowCount * CurrencyRow.Height * scale));
     }
 
     public void Dispose()

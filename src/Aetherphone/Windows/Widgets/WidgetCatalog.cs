@@ -1,4 +1,5 @@
 using Aetherphone.Apps.Calendar;
+using Aetherphone.Apps.Skywatcher;
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Home;

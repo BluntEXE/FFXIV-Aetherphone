@@ -1,4 +1,3 @@
-using System.Globalization;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Maps;
@@ -30,7 +29,7 @@ internal static class AdText
 
     public static string Gil(long value)
     {
-        return value.ToString("N0", CultureInfo.CurrentCulture);
+        return NumberText.Group(value);
     }
 
     public static string PriceLine(AdDto ad)

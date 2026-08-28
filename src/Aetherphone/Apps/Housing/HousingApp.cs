@@ -71,6 +71,7 @@ internal sealed partial class HousingApp : IPhoneApp
     private uint cachedDistrict;
     private bool cachedSubdivision;
     private bool cachedDivisionSplit;
+    private readonly ChipRail reminderRail = new();
 
     private enum MenuTarget : byte
     {

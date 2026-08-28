@@ -4,12 +4,26 @@ using Aetherphone.Core.Shell.Home;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Core.Shell;
 
 internal sealed class ShellTransitionRenderer
 {
+    private const string ShadowLayerId = "cardshadow";
+    private const string CardLayerId = "cardtop";
+    private const float MinimumCardSize = 2f;
+    private const float IconRadiusFactor = 0.26f;
+    private const float IconRadiusCapUnits = 24f;
+    private const float ShadowRise = 2.4f;
+    private const float SurfaceFadeEnd = 0.3f;
+    private const float VeilSettleEnd = 0.45f;
+    private const float VeilFadeStart = 0.22f;
+    private const float VeilFadeEnd = 0.62f;
+    private const float GlyphFadeStart = 0.06f;
+    private const float GlyphFadeEnd = 0.4f;
+    private const float EdgeFadeStart = 0.85f;
+    private const float CenterOriginHalfUnits = 30f;
+
     private readonly ThemeProvider themes;
     private readonly NavigationStack navigation;
     private readonly HomeScreen home;
@@ -29,124 +43,165 @@ internal sealed class ShellTransitionRenderer
 
     public void Draw(Rect screen, float screenRadius, PhoneTheme theme)
     {
-        var cover = navigation.MotionProgress;
-        var height = screen.Height;
         var over = navigation.MotionOver;
         var under = navigation.MotionUnder;
         if (under is null && !over.WantsTransparentScreen)
         {
-            DrawZoomTransition(screen, screenRadius, theme, over);
+            DrawZoom(screen, screenRadius, theme, over);
             return;
         }
 
-        var overOffset = new Vector2(0f, (1f - cover) * height);
-        var underDim = cover * TransitionTiming.ShellDimMax;
-        LayerPainter underPaint = under is null
-            ? target => painter.PaintHome(target, screenRadius, theme, new HomeMotion(1f, default, 0f, false))
-            : target => painter.PaintApp(target, screenRadius, theme, under);
-        LayerPainter overPaint = target => painter.PaintApp(target, screenRadius, theme, over);
-        if (over.WantsTransparentScreen || (under?.WantsTransparentScreen ?? false))
-        {
-            var band = new Rect(screen.Min, new Vector2(screen.Max.X, screen.Min.Y + overOffset.Y));
-            SceneCompositor.DrawClipped(band, screen, underDim, underPaint);
-            SceneCompositor.DrawLayer(screen,
-                new SceneCompositor.Layer(over.Id, overOffset, 0f, overPaint, default, true));
-            return;
-        }
-
-        var underLayer =
-            new SceneCompositor.Layer(under?.Id ?? "home", Vector2.Zero, underDim, underPaint, default, true);
-        var overLayer = new SceneCompositor.Layer(over.Id, overOffset, 0f, overPaint, default, true);
-        SceneCompositor.Composite(screen, underLayer, overLayer);
+        DrawSlide(screen, screenRadius, theme, over, under);
     }
 
-    private void DrawZoomTransition(Rect screen, float screenRadius, PhoneTheme theme, IPhoneApp over)
+    private void DrawSlide(Rect screen, float screenRadius, PhoneTheme theme, IPhoneApp over, IPhoneApp? under)
     {
-        var raw = Math.Clamp(navigation.MotionProgress, 0f, 1f);
+        var cover = Easing.Clamp01(navigation.MotionProgress);
+        var overOffset = new Vector2(0f, MathF.Round((1f - cover) * screen.Height));
+        var transparent = over.WantsTransparentScreen || (under?.WantsTransparentScreen ?? false);
+        var underClip = transparent
+            ? new Rect(screen.Min, new Vector2(screen.Max.X, screen.Min.Y + overOffset.Y))
+            : screen;
+        using (var underLayer = ScreenLayer.Begin(under?.Id ?? ShellScreenPainter.HomeLayerId, screen, true))
+        {
+            if (under is null)
+            {
+                painter.PaintHome(screen, screenRadius, theme, HomeMotion.Still);
+            }
+            else
+            {
+                painter.PaintApp(screen, screenRadius, theme, under);
+            }
+
+            underLayer.Veil(ImGui.GetColorU32(new Vector4(0f, 0f, 0f, cover * TransitionTiming.ShellDimMax)));
+            underLayer.Transform(LayerTransform.Identity(underClip));
+        }
+
+        using var overLayer = ScreenLayer.Begin(over.Id, screen, true);
+        painter.PaintApp(screen, screenRadius, theme, over);
+        overLayer.Transform(LayerTransform.Translate(overOffset, screen));
+    }
+
+    private void DrawZoom(Rect screen, float screenRadius, PhoneTheme theme, IPhoneApp over)
+    {
+        var raw = Easing.Clamp01(navigation.MotionProgress);
         var content = ShellScreenPainter.ContentRect(screen, theme);
-        if (navigation.Motion == ShellMotion.Present && navigation.MotionOrigin is null &&
-            !string.Equals(zoomPreparedFor, over.Id, StringComparison.Ordinal))
+        PrepareRevealOnce(over);
+        var kind = navigation.MotionOriginKind;
+        var rest = navigation.MotionOrigin ?? RestRect(over, content, out kind);
+        var recede = Easing.SmoothStep(raw);
+        var zoom = 1f + TransitionTiming.HomeZoomDepth * recede;
+        var homeTransform = LayerTransform.ScaleAbout(rest.Center, zoom, screen);
+        using (var homeLayer = ScreenLayer.Begin(ShellScreenPainter.HomeLayerId, screen, true))
         {
-            zoomPreparedFor = over.Id;
-            home.PrepareReveal(over.Id);
+            painter.PaintHome(screen, screenRadius, theme,
+                HomeMotion.Recede(recede, kind == LaunchOrigin.Icon ? over.Id : null));
+            homeLayer.Veil(ImGui.GetColorU32(new Vector4(0f, 0f, 0f, TransitionTiming.HomeRecedeDim * recede)));
+            homeLayer.Transform(in homeTransform);
         }
 
-        var recede = Easing.SmoothStep(raw);
-        var rest = navigation.MotionOrigin ?? home.RevealRect(over.Id, content) ?? CenterOrigin(content);
-        var motion = new HomeMotion(1f + TransitionTiming.HomeZoomDepth * recede, rest.Center, recede, false);
-        SceneCompositor.DrawLayer(screen, new SceneCompositor.Layer("home", Vector2.Zero,
-            TransitionTiming.HomeRecedeDim * recede,
-            target => painter.PaintHome(target, screenRadius, theme, motion), default, true));
-        var warped = motion.Warp(rest);
-        var card = new Rect(Vector2.Lerp(warped.Min, screen.Min, raw), Vector2.Lerp(warped.Max, screen.Max, raw));
-        if (card.Width < 4f || card.Height < 4f)
+        var warped = homeTransform.Map(rest);
+        var card = CardRect(warped, screen, raw);
+        var scale = UiScale.Current;
+        var iconRadius = MathF.Min(MathF.Min(rest.Width, rest.Height) * IconRadiusFactor, IconRadiusCapUnits * scale);
+        var rounding = iconRadius + (screenRadius - iconRadius) * raw;
+        var surfaceFade = kind == LaunchOrigin.Surface
+            ? Easing.SmootherStep(Easing.Segment(raw, 0f, SurfaceFadeEnd))
+            : 1f;
+        var elevation = Easing.Clamp01(raw * ShadowRise) * surfaceFade;
+        using (ScreenLayer.BeginPassive(ShadowLayerId, screen))
+        {
+            var shadowDrawList = ImGui.GetWindowDrawList();
+            if (kind == LaunchOrigin.Icon)
+            {
+                Elevation.IconRest(shadowDrawList, card.Min, card.Max, rounding, scale, 1f - elevation);
+            }
+
+            Elevation.Squircle(shadowDrawList, card.Min, card.Max, rounding, scale, elevation);
+        }
+
+        using (var appLayer = ScreenLayer.Begin(over.Id, screen, true))
+        {
+            painter.PaintApp(screen, screenRadius, theme, over);
+            appLayer.Transform(LayerTransform.Fit(screen, card, card, surfaceFade));
+        }
+
+        using (ScreenLayer.BeginPassive(CardLayerId, screen))
+        {
+            var cardDrawList = ImGui.GetWindowDrawList();
+            if (kind == LaunchOrigin.Icon)
+            {
+                DrawIconVeil(cardDrawList, over, card, rounding, raw);
+            }
+
+            Material.EdgeSquircle(cardDrawList, card.Min, card.Max, rounding, scale,
+                elevation * (1f - Easing.Segment(raw, EdgeFadeStart, 1f)));
+        }
+    }
+
+    private void PrepareRevealOnce(IPhoneApp over)
+    {
+        if (navigation.Motion != ShellMotion.Present || navigation.MotionOrigin is not null ||
+            string.Equals(zoomPreparedFor, over.Id, StringComparison.Ordinal))
         {
             return;
         }
 
-        var scale = UiScale.Current;
-        var iconRadius = MathF.Min(MathF.Min(rest.Width, rest.Height) * 0.26f, 24f * scale);
-        var rounding = iconRadius + (screenRadius - iconRadius) * raw;
-        var shellDrawList = ImGui.GetWindowDrawList();
-        var elevation = Easing.Clamp01(raw * 2.4f);
-        Elevation.Squircle(shellDrawList, card.Min, card.Max, rounding, scale, elevation);
-        DrawZoomCard(screen, screenRadius, theme, over, rest, card, rounding, raw);
-        Material.EdgeSquircle(ImGui.GetWindowDrawList(), card.Min, card.Max, rounding, scale, elevation);
+        zoomPreparedFor = over.Id;
+        home.PrepareReveal(over.Id);
     }
 
-    private void DrawZoomCard(Rect screen, float screenRadius, PhoneTheme theme, IPhoneApp over, Rect rest, Rect card,
-        float rounding, float raw)
+    private Rect RestRect(IPhoneApp over, Rect content, out LaunchOrigin kind)
     {
-        const ImGuiWindowFlags cardFlags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse |
-                                           ImGuiWindowFlags.NoBackground;
-        var appReady = navigation.Motion == ShellMotion.Present && raw >= TransitionTiming.AppInteractiveProgress;
-        ImGui.SetCursorScreenPos(card.Min);
-        using (ImRaii.PushId("zoomcard"))
-        using (ImRaii.Child("card", card.Size, false, cardFlags))
-        using (InputShield.Engage(!appReady))
+        if (home.RevealRect(over.Id, content, out kind) is { } rect)
         {
-            var reveal = Easing.SmootherStep(Easing.Segment(raw, 0.45f, 0.85f));
-            if (reveal > 0.001f)
-            {
-                var offset = card.Center - screen.Center;
-                var rise = (1f - reveal) * 8f * UiScale.Current;
-                var target = new Rect(screen.Min + offset + new Vector2(0f, rise),
-                    screen.Max + offset + new Vector2(0f, rise));
-                var footprint = HostWindowFootprint.Capture();
-                ImGui.SetCursorScreenPos(target.Min);
-                using (ImRaii.PushId(over.Id))
-                using (ImRaii.Child("zoomstage", target.Size, false, cardFlags))
-                {
-                    painter.PaintApp(target, screenRadius, theme, over);
-                }
+            return rect;
+        }
 
-                footprint.Restore();
-            }
+        kind = LaunchOrigin.Icon;
+        return CenterOrigin(content);
+    }
 
-            var cardDrawList = ImGui.GetWindowDrawList();
-            var veilAlpha = 1f - reveal;
-            if (veilAlpha > 0.001f)
-            {
-                var surface = IconTile.Surface(over.Accent);
-                var background = themes.ForApp(over.WantsSystemTheme).AppBackground;
-                var settle = Easing.SmootherStep(Easing.Segment(raw, 0f, 0.4f));
-                var veil = Vector4.Lerp(surface, background, settle);
-                Squircle.Fill(cardDrawList, card.Min, card.Max, rounding,
-                    ImGui.GetColorU32(veil with { W = veil.W * veilAlpha }));
-            }
+    private static Rect CardRect(Rect warped, Rect screen, float raw)
+    {
+        var min = Vector2.Lerp(warped.Min, screen.Min, raw);
+        var max = Vector2.Lerp(warped.Max, screen.Max, raw);
+        if (max.X - min.X < MinimumCardSize)
+        {
+            max.X = min.X + MinimumCardSize;
+        }
 
-            var glyphAlpha = 1f - Easing.Segment(raw, 0.12f, 0.5f);
-            if (glyphAlpha > 0.001f)
-            {
-                DrawZoomGlyph(cardDrawList, over, card, rest, raw, Easing.SmootherStep(glyphAlpha));
-            }
+        if (max.Y - min.Y < MinimumCardSize)
+        {
+            max.Y = min.Y + MinimumCardSize;
+        }
+
+        return new Rect(min, max);
+    }
+
+    private void DrawIconVeil(ImDrawListPtr drawList, IPhoneApp over, Rect card, float rounding, float raw)
+    {
+        var veilAlpha = 1f - Easing.SmootherStep(Easing.Segment(raw, VeilFadeStart, VeilFadeEnd));
+        if (veilAlpha > 0.001f)
+        {
+            var surface = IconTile.Surface(over.Accent);
+            var background = themes.ForApp(over.WantsSystemTheme).AppBackground;
+            var settle = Easing.SmootherStep(Easing.Segment(raw, 0f, VeilSettleEnd));
+            IconTile.FillShaded(drawList, card.Min, card.Max, rounding, surface, veilAlpha * (1f - settle));
+            Squircle.Fill(drawList, card.Min, card.Max, rounding,
+                ImGui.GetColorU32(background with { W = background.W * veilAlpha * settle }));
+        }
+
+        var glyphAlpha = 1f - Easing.SmootherStep(Easing.Segment(raw, GlyphFadeStart, GlyphFadeEnd));
+        if (glyphAlpha > 0.001f)
+        {
+            DrawZoomGlyph(drawList, over, card, glyphAlpha);
         }
     }
 
-    private static void DrawZoomGlyph(ImDrawListPtr drawList, IPhoneApp over, Rect card, Rect rest, float raw,
-        float alpha)
+    private static void DrawZoomGlyph(ImDrawListPtr drawList, IPhoneApp over, Rect card, float alpha)
     {
-        var size = rest.Width * (1f + 0.4f * raw);
+        var size = card.Width;
         var center = card.Center;
         var surface = IconTile.Surface(over.Accent);
         var ink = AppAccents.InkFor(over.Id) with { W = alpha };
@@ -161,7 +216,7 @@ internal sealed class ShellTransitionRenderer
 
     private static Rect CenterOrigin(Rect content)
     {
-        var half = 30f * UiScale.Current;
+        var half = CenterOriginHalfUnits * UiScale.Current;
         return new Rect(content.Center - new Vector2(half, half), content.Center + new Vector2(half, half));
     }
 }

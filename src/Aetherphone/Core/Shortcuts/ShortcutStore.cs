@@ -153,6 +153,6 @@ internal sealed class ShortcutStore : IShortcutSource
             return trimmed.Substring(0, 1).ToUpperInvariant();
         }
 
-        return string.Concat(trimmed.Substring(0, 1), trimmed.Substring(separator + 1, 1)).ToUpperInvariant();
+        return string.Concat(trimmed.AsSpan(0, 1), trimmed.AsSpan(separator + 1, 1)).ToUpperInvariant();
     }
 }

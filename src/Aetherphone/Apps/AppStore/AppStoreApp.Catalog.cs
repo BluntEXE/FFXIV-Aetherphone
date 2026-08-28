@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
@@ -80,9 +81,9 @@ internal sealed partial class AppStoreApp
         var labelSize = Typography.Measure(label, TextStyles.Headline);
         var labelHovering = UiInteract.Hover(new Vector2(labelLeft, labelTop),
             new Vector2(labelLeft + MathF.Min(labelSize.X, maxLabelWidth), labelTop + labelSize.Y));
-        Marquee.DrawLeft("appstore.category.label.shadow." + category, label, labelLeft, labelTop + 1f * scale,
+        Marquee.DrawLeft(new MarqueeId("appstore.category.label.shadow.", (int)category), label, labelLeft, labelTop + 1f * scale,
             maxLabelWidth, TextStyles.Headline, CardInkShadow, labelHovering);
-        Marquee.DrawLeft("appstore.category.label." + category, label, labelLeft, labelTop, maxLabelWidth,
+        Marquee.DrawLeft(new MarqueeId("appstore.category.label.", (int)category), label, labelLeft, labelTop, maxLabelWidth,
             TextStyles.Headline, CardInk, labelHovering);
         if (hovered)
         {
@@ -101,7 +102,7 @@ internal sealed partial class AppStoreApp
         if (front is null)
         {
             AppSkin.Icon(drawList, new Vector2(card.Max.X - 36f * scale, card.Min.Y + 42f * scale),
-                AppStoreCatalog.Icon(category).ToIconString(), Palette.WithAlpha(CardInk, 0.92f), 2f);
+                IconGlyph.Of(AppStoreCatalog.Icon(category)), Palette.WithAlpha(CardInk, 0.92f), 2f);
             return;
         }
 
@@ -175,7 +176,7 @@ internal sealed partial class AppStoreApp
                 return;
             }
 
-            var matches = Collect(app => Matches(app.Id, app.DisplayName, query));
+            var matches = Collect(app => AppStoreCatalog.Matches(app.Id, app.DisplayName, query));
             if (matches.Count == 0)
             {
                 Typography.DrawCentered(new Vector2(origin.X + width * 0.5f, origin.Y + 40f * scale),
@@ -191,21 +192,4 @@ internal sealed partial class AppStoreApp
         }
     }
 
-    private static bool Matches(string appId, string displayName, string query)
-    {
-        if (query.Length == 0)
-        {
-            return false;
-        }
-
-        if (displayName.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
-            appId.Contains(query, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        var entry = AppStoreCatalog.For(appId);
-        return Loc.T(entry.Subtitle).Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
-               Loc.T(AppStoreCatalog.Name(entry.Category)).Contains(query, StringComparison.CurrentCultureIgnoreCase);
-    }
 }

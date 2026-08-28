@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Localization;
@@ -34,7 +35,7 @@ internal sealed class FlapApp : IMiniGame
     public string Title => Loc.T(L.Games.Flap);
     public bool RunsOnAClock => true;
 
-    public string Genre => Loc.T(L.Games.GenreArcade);
+    public GameGenre Genre => GameGenre.Arcade;
     public void Open()
     {
         started = false;
@@ -152,6 +153,7 @@ internal sealed class FlapApp : IMiniGame
         }
 
         board.Flap(area);
+        UiFeedback.Play(UiSound.GameJump);
         flapPulse = 1f;
         var birdX = FlapBoard.BirdXOf(area);
         var radius = FlapBoard.RadiusOf(area);
@@ -161,6 +163,7 @@ internal sealed class FlapApp : IMiniGame
 
     private void OnScore(Rect area, float scale)
     {
+        UiFeedback.Play(UiSound.GameCollect);
         scorePulse = 1f;
         var bird = new Vector2(FlapBoard.BirdXOf(area), board.BirdY);
         fx.Shockwave(bird, 52f * scale, new Vector4(1f, 1f, 1f, 0.9f), 0.42f, 2.6f);
@@ -189,6 +192,7 @@ internal sealed class FlapApp : IMiniGame
 
     private void OnCrash(Rect area, float scale)
     {
+        UiFeedback.Play(UiSound.GameHitSoft);
         finalScore = board.Score;
         pendingSubmit = true;
         resultAppear = 0f;

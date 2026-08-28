@@ -66,10 +66,10 @@ internal sealed partial class YellowPagesApp
         IconTile.Draw(tileCenter, tileSide, IconTile.Surface(ui.Accent), AdCategories.Icon(ad.Category));
         var textLeft = tileCenter.X + tileSide * 0.5f + 10f * scale;
         var titleWidth = card.Max.X - pad - textLeft;
-        Marquee.DrawLeftAuto(drawList, "yellowpages.mine.title." + ad.Id, ad.Title, textLeft,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("yellowpages.mine.title.", ad.Id), ad.Title, textLeft,
             card.Min.Y + 10f * scale, titleWidth, TextStyles.Headline, AppPalettes.YellowPages.TitleInk);
         var status = MineStatusText(ad, nowUnix, out var statusColor);
-        Marquee.DrawLeftAuto(drawList, "yellowpages.mine.status." + ad.Id, status, textLeft,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("yellowpages.mine.status.", ad.Id), status, textLeft,
             card.Min.Y + 31f * scale, titleWidth, TextStyles.FootnoteEmphasized, statusColor);
 
         var inquiryCount = inquiries.CountForAd(ad.Id);
@@ -259,6 +259,7 @@ internal sealed partial class YellowPagesApp
             Message = Loc.T(L.YellowPages.DeleteConfirm),
             ConfirmLabel = Loc.T(L.YellowPages.DeleteAd),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             BusyLabel = Loc.T(L.YellowPages.Deleting),
             FailedMessage = Loc.T(L.YellowPages.DeleteFailed),
             Danger = true,

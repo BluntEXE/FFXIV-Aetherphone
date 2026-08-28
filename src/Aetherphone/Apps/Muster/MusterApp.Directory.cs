@@ -44,7 +44,7 @@ internal sealed partial class MusterApp
         DrawScopeRow(area, controlsTop, scale);
         var body = new Rect(new Vector2(area.Min.X, controlsTop + ControlRowHeight * scale), area.Max);
         EnsureSections(nowUnix);
-        using (var surface = AppSurface.Begin(body))
+        using (var surface = AppSurface.BeginEdgeToEdge(body))
         {
             directoryRefresh.Draw(body, surface.Pull, surface.Dragging, store.Syncing || store.DirectoryLoading,
                 AppPalettes.Muster.MutedInk, RefreshEverything);
@@ -65,25 +65,25 @@ internal sealed partial class MusterApp
             {
                 if (goingSection.Count > 0)
                 {
-                    ui.SectionHeading(Loc.T(L.Muster.GoingSection), 6f);
+                    ListSection.Label(ui, Loc.T(L.Muster.GoingSection));
                     DrawGoingRows(nowUnix, scale);
                 }
 
                 if (friendSection.Count > 0)
                 {
-                    ui.SectionHeading(Loc.T(L.Muster.FriendsSection), 6f);
+                    ListSection.Label(ui, Loc.T(L.Muster.FriendsSection));
                     DrawCards(friendSection, nowUnix, currentDataCenterId, scale);
                 }
 
                 if (liveSection.Count > 0)
                 {
-                    ui.SectionHeading(Loc.T(L.Muster.HappeningNow), 6f);
+                    ListSection.Label(ui, Loc.T(L.Muster.HappeningNow));
                     DrawCards(liveSection, nowUnix, currentDataCenterId, scale);
                 }
 
                 if (soonSection.Count > 0)
                 {
-                    ui.SectionHeading(Loc.T(L.Muster.StartingSoon), 6f);
+                    ListSection.Label(ui, Loc.T(L.Muster.StartingSoon));
                     DrawCards(soonSection, nowUnix, currentDataCenterId, scale);
                 }
 
@@ -94,7 +94,7 @@ internal sealed partial class MusterApp
         }
 
         if (store.Mine is null && ComposeFab.Draw(body, "##musterStartFab", ui.Accent,
-                FontAwesomeIcon.Bullhorn.ToIconString(), Loc.T(L.Muster.StartMuster), "muster.start"))
+                IconGlyph.Of(FontAwesomeIcon.Bullhorn), Loc.T(L.Muster.StartMuster), "muster.start"))
         {
             router.Push(MusterRoute.Create);
         }
@@ -110,7 +110,7 @@ internal sealed partial class MusterApp
         {
             LoadingPulse.Spinner(actionCenter, 8f * scale, ui.Accent);
         }
-        else if (ui.IconButton(actionCenter, 14f * scale, FontAwesomeIcon.Sync.ToIconString(),
+        else if (ui.IconButton(actionCenter, 14f * scale, IconGlyph.Of(FontAwesomeIcon.Sync),
                      AppPalettes.Muster.BodyInk, AppSkin.Transparent, 0.9f, Loc.T(L.Common.Refresh),
                      HoverLabelSide.Below))
         {
@@ -118,7 +118,7 @@ internal sealed partial class MusterApp
         }
 
         var rulesCenter = new Vector2(actionCenter.X - 28f * scale, rowCenterY);
-        if (ui.IconButton(rulesCenter, 14f * scale, FontAwesomeIcon.QuestionCircle.ToIconString(),
+        if (ui.IconButton(rulesCenter, 14f * scale, IconGlyph.Of(FontAwesomeIcon.QuestionCircle),
                 AppPalettes.Muster.MutedInk, AppSkin.Transparent, 0.9f, Loc.T(L.Conduct.Eyebrow),
                 HoverLabelSide.Below))
         {
@@ -168,7 +168,7 @@ internal sealed partial class MusterApp
             ? Palette.WithAlpha(ui.Accent, hovered ? 0.36f : 0.26f)
             : hovered ? ui.HoverTint : AppPalettes.Muster.FieldSurface;
         drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(fill), 32);
-        AppSkin.Icon(drawList, center, FontAwesomeIcon.GlobeAmericas.ToIconString(),
+        AppSkin.Icon(drawList, center, IconGlyph.Of(FontAwesomeIcon.GlobeAmericas),
             pinned ? ui.Accent : AppPalettes.Muster.BodyInk, 0.68f);
         if (hovered)
         {
@@ -213,9 +213,11 @@ internal sealed partial class MusterApp
     {
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
+        var width = ScrollLayout.StableContentWidth();
+        var inset = FeedCell.PadX * scale;
         var height = PinnedCardHeight * scale;
-        var card = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
+        var card = new Rect(new Vector2(origin.X + inset, origin.Y),
+            new Vector2(origin.X + width - inset, origin.Y + height));
         var rounding = Metrics.Radius.Card * scale * 1.15f;
         var hovered = UiInteract.Hover(card.Min, card.Max);
         Elevation.Card(drawList, card.Min, card.Max, rounding, scale, hovered ? 1f : 0.7f);
@@ -243,11 +245,11 @@ internal sealed partial class MusterApp
 
         var statusText = $"{status} · {Loc.T(L.Muster.GoingCount, mine.RsvpCount)}";
         var statusMaxWidth = card.Max.X - 32f * scale - statusLeft;
-        Marquee.DrawLeftAuto(drawList, "muster.pinned.status." + mine.Id, statusText, statusLeft,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("muster.pinned.status.", mine.Id), statusText, statusLeft,
             card.Min.Y + 38f * scale, statusMaxWidth, TextStyles.SubheadlineEmphasized,
             live ? MusterCard.LiveGreen : AppPalettes.Muster.BodyInk);
         AppSkin.Icon(drawList, new Vector2(card.Max.X - 20f * scale, card.Center.Y),
-            FontAwesomeIcon.ChevronRight.ToIconString(), AppPalettes.Muster.MutedInk, 0.7f);
+            IconGlyph.Of(FontAwesomeIcon.ChevronRight), AppPalettes.Muster.MutedInk, 0.7f);
         if (hovered)
         {
             UiInteract.HoverHighlight(drawList, card.Min, card.Max, rounding);
@@ -274,14 +276,9 @@ internal sealed partial class MusterApp
     private void DrawGoingRow(MusterDto muster, long nowUnix, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var height = GoingRowHeight * scale;
-        var card = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
-        var rounding = Metrics.Radius.Card * scale;
-        var hovered = UiInteract.Hover(card.Min, card.Max);
-        ui.Card(drawList, card.Min, card.Max, rounding, elevated: true);
-        var pad = 13f * scale;
+        var cell = FeedCell.Begin(drawList, GoingRowHeight * scale, ui.HoverWash);
+        var card = cell.Bounds;
+        var pad = FeedCell.PadX * scale;
         var avatarRadius = 16f * scale;
         var avatarCenter = new Vector2(card.Min.X + pad + avatarRadius, card.Center.Y);
         AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme, MusterText.HostLabel(muster), muster.HostWorld,
@@ -308,19 +305,12 @@ internal sealed partial class MusterApp
         var place = Typography.FitText(MusterText.Place(muster), textWidth, TextStyles.Subheadline);
         Typography.Draw(drawList, new Vector2(textLeft, card.Min.Y + 29f * scale), place,
             AppPalettes.Muster.MutedInk, TextStyles.Subheadline);
-        if (hovered)
-        {
-            UiInteract.HoverHighlight(drawList, card.Min, card.Max, rounding);
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        if (UiInteract.Click(card.Min, card.Max, hovered))
+        if (cell.Tapped)
         {
             OpenDetail(muster.Id);
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, height + Metrics.Space.Sm * scale));
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 
     private int DrawChipFlow(int count, float scale)
@@ -359,21 +349,19 @@ internal sealed partial class MusterApp
 
     private void DrawCards(List<MusterDto> items, long nowUnix, int currentDataCenterId, float scale)
     {
+        var drawList = ImGui.GetWindowDrawList();
+        var width = ScrollLayout.StableContentWidth();
         for (var index = 0; index < items.Count; index++)
         {
             var muster = items[index];
-            var origin = ImGui.GetCursorScreenPos();
-            var width = ImGui.GetContentRegionAvail().X;
-            var height = MusterCard.Height(muster, width, scale);
-            var card = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
-            if (ImGui.IsRectVisible(card.Min, card.Max) && MusterCard.Draw(card, muster, images, lodestone, theme,
-                    ui, nowUnix, currentDataCenterId))
+            var cell = FeedCell.Begin(drawList, MusterCard.Height(muster, width, scale), ui.HoverWash);
+            if (ImGui.IsRectVisible(cell.Bounds.Min, cell.Bounds.Max) && MusterCard.Draw(cell, muster, images,
+                    lodestone, theme, ui, nowUnix, currentDataCenterId))
             {
                 OpenDetail(muster.Id);
             }
 
-            ImGui.SetCursorScreenPos(origin);
-            ImGui.Dummy(new Vector2(width, height + MusterCard.Gap * scale));
+            FeedCell.End(drawList, cell, ui.Hairline);
         }
     }
 

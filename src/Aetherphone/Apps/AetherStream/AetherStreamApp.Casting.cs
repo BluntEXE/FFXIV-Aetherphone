@@ -106,7 +106,7 @@ internal sealed partial class AetherStreamApp
         var textLeft = avatarCenter.X + avatarRadius + Metrics.Space.Md * scale;
         var textWidth = approveCenter.X - circleRadius - Metrics.Space.Md * scale - textLeft;
         var nameHeight = Typography.LineHeight(TextStyles.Body);
-        Marquee.DrawLeft(drawList, "aetherstream.request." + request.UserId, request.DisplayName, textLeft,
+        Marquee.DrawLeft(drawList, new MarqueeId("aetherstream.request.", request.UserId), request.DisplayName, textLeft,
             row.Center.Y - nameHeight * 0.5f, textWidth, TextStyles.Body, ui.TitleInk,
             UiInteract.Hover(row.Min, row.Max));
 
@@ -236,7 +236,7 @@ internal sealed partial class AetherStreamApp
         var saveCenter = new Vector2(origin.X + width - saveRadius, origin.Y + 22f * scale);
         var saveBackground = canSave ? ui.Accent : Palette.WithAlpha(ui.Accent, 0.35f);
         var saveInk = canSave ? new Vector4(1f, 1f, 1f, 1f) : new Vector4(1f, 1f, 1f, 0.6f);
-        if (ui.IconButton(saveCenter, saveRadius, FontAwesomeIcon.Plus.ToIconString(), saveInk, saveBackground,
+        if (ui.IconButton(saveCenter, saveRadius, IconGlyph.Of(FontAwesomeIcon.Plus), saveInk, saveBackground,
                 0.55f, Loc.T(L.AetherStream.CastingSavePreset)) && canSave)
         {
             submitted = true;
@@ -276,11 +276,11 @@ internal sealed partial class AetherStreamApp
             }
 
             var nameHeight = Typography.LineHeight(TextStyles.BodyEmphasized);
-            Marquee.DrawLeft("aetherstream.preset." + preset.Name, preset.Name, row.Min.X,
+            Marquee.DrawLeft(new MarqueeId("aetherstream.preset.", preset.Name), preset.Name, row.Min.X,
                 row.Center.Y - nameHeight * 0.5f, applyMax.X - row.Min.X - Metrics.Space.Md * scale,
                 TextStyles.BodyEmphasized, accentedTheme.TextStrong, hovered);
 
-            if (ui.IconButton(removeCenter, 12f * scale, FontAwesomeIcon.TrashAlt.ToIconString(), theme.Danger,
+            if (ui.IconButton(removeCenter, 12f * scale, IconGlyph.Of(FontAwesomeIcon.TrashAlt), theme.Danger,
                     AppSkin.Transparent, 0.5f))
             {
                 screen.Engine.RemoveScreenPreset(preset.Name);

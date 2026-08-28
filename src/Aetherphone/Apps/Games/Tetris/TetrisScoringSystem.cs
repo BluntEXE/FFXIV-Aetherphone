@@ -2,17 +2,26 @@ namespace Aetherphone.Apps.Games.Tetris;
 
 internal sealed class TetrisScoringSystem
 {
+    public const int ComboPointsPerLink = 50;
+    public const float BackToBackMultiplier = 1.5f;
+    private static readonly int[] ModernLineScores = { 0, 100, 300, 500, 800 };
+    private static readonly int[] MiniTSpinScores = { 100, 200, 400 };
+    private static readonly int[] RegularTSpinScores = { 400, 800, 1200, 1600 };
     private int pendingDropPoints;
-    private bool backToBackTetris;
+    private bool backToBack;
     private int comboChain = -1;
     public int Score { get; private set; }
+    public bool LastBackToBack { get; private set; }
+    public int LastCombo { get; private set; } = -1;
 
     public void Reset()
     {
         Score = 0;
         pendingDropPoints = 0;
-        backToBackTetris = false;
+        backToBack = false;
         comboChain = -1;
+        LastBackToBack = false;
+        LastCombo = -1;
     }
 
     public void AddSoftDrop(int cellsDropped)
@@ -31,25 +40,46 @@ internal sealed class TetrisScoringSystem
         }
     }
 
-    public int CommitPiece(int clearedLines, int level)
+    public int CommitPiece(int clearedLines, int level) => CommitPiece(clearedLines, level, TetrisSpin.None, TetrisRuleset.Classic);
+
+    public int CommitPiece(int clearedLines, int level, TetrisSpin spin, TetrisRuleset ruleset)
     {
         var pieceScore = pendingDropPoints;
         pendingDropPoints = 0;
         if (clearedLines <= 0)
         {
             comboChain = -1;
+            LastCombo = -1;
+            LastBackToBack = false;
+            if (ruleset == TetrisRuleset.Modern && spin != TetrisSpin.None)
+            {
+                pieceScore += (spin == TetrisSpin.Mini ? MiniTSpinScores[0] : RegularTSpinScores[0]) * level;
+            }
+
             Score += pieceScore;
             return pieceScore;
         }
 
         comboChain = comboChain < 0 ? 0 : comboChain + 1;
-        pieceScore += GetLineClearScore(clearedLines, level, backToBackTetris);
+        LastCombo = comboChain;
+        var difficult = clearedLines == 4 || (ruleset == TetrisRuleset.Modern && spin != TetrisSpin.None);
+        var applied = difficult && backToBack;
+        LastBackToBack = applied;
+        if (ruleset == TetrisRuleset.Modern)
+        {
+            pieceScore += ModernClearScore(clearedLines, level, spin, applied);
+        }
+        else
+        {
+            pieceScore += GetLineClearScore(clearedLines, level, applied);
+        }
+
         if (comboChain > 0)
         {
             pieceScore += GetComboBonus(comboChain, level);
         }
 
-        backToBackTetris = clearedLines == 4;
+        backToBack = difficult;
         Score += pieceScore;
         return pieceScore;
     }
@@ -65,8 +95,20 @@ internal sealed class TetrisScoringSystem
         };
     }
 
+    public static int ModernClearScore(int clearedLines, int level, TetrisSpin spin, bool backToBack)
+    {
+        var baseScore = spin switch
+        {
+            TetrisSpin.Full => RegularTSpinScores[Math.Min(clearedLines, RegularTSpinScores.Length - 1)],
+            TetrisSpin.Mini => MiniTSpinScores[Math.Min(clearedLines, MiniTSpinScores.Length - 1)],
+            _ => ModernLineScores[Math.Min(clearedLines, ModernLineScores.Length - 1)],
+        };
+        var multiplier = backToBack ? BackToBackMultiplier : 1f;
+        return (int)(baseScore * level * multiplier);
+    }
+
     public static int GetComboBonus(int comboChain, int level)
     {
-        return 50 * comboChain * level;
+        return ComboPointsPerLink * comboChain * level;
     }
 }

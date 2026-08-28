@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Game;
@@ -32,7 +33,7 @@ internal sealed class TriviaApp : IMiniGame
     public string Title => Loc.T(L.Games.Trivia);
     public bool RunsOnAClock => true;
 
-    public string Genre => Loc.T(L.Games.GenreMemory);
+    public GameGenre Genre => GameGenre.Brain;
 
     public TriviaApp(GameData gameData, ITextureProvider textures)
     {
@@ -220,6 +221,7 @@ internal sealed class TriviaApp : IMiniGame
 
     private void OnCorrect(Rect cell, float scale)
     {
+        UiFeedback.Play(UiSound.GamePowerUp);
         fx.AddTrauma(0.10f);
         fx.Shockwave(cell.Center, cell.Width * 0.6f, new Vector4(0.42f, 0.88f, 0.56f, 0.9f), 0.45f, 2.6f);
         fx.AddText("+" + GameNumber.Label(board.LastPoints), new Vector2(cell.Center.X, cell.Min.Y + 6f * scale),
@@ -229,6 +231,7 @@ internal sealed class TriviaApp : IMiniGame
 
     private void OnWrong(Rect cell, float scale)
     {
+        UiFeedback.Play(UiSound.GameWrong);
         fx.AddTrauma(0.45f);
         fx.Flash(new Vector4(0.95f, 0.32f, 0.32f, 1f), 0.30f);
         particles.Burst(cell.Center, 12, new Vector4(0.95f, 0.40f, 0.42f, 1f), 190f * scale, 2.6f, 0.5f, 340f);

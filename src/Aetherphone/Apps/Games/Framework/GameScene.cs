@@ -87,9 +87,7 @@ internal static class GameScene
         Squircle.FillVerticalGradient(drawList, rect.Min, rect.Max, rounding, top, bottom);
         Squircle.Stroke(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.075f)),
             1f * scale);
-        var highlightInset = MathF.Max(rounding, 1f);
-        drawList.AddLine(new Vector2(rect.Min.X + highlightInset, rect.Min.Y + 1f * scale),
-            new Vector2(rect.Max.X - highlightInset, rect.Min.Y + 1f * scale),
-            ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.10f)), 1f * scale);
+        Material.Sheen(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.10f)),
+            1f * scale, 1f * scale);
     }
 }

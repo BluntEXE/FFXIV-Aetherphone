@@ -34,6 +34,7 @@ internal sealed partial class SkywatcherApp : IPhoneApp
     private string zone = string.Empty;
     private float sinceRefresh;
     private SkywatcherTab activeTab;
+    private bool scrubbing;
 
     public SkywatcherApp(WeatherService weather, WeatherControl control)
     {
@@ -223,7 +224,7 @@ internal sealed partial class SkywatcherApp : IPhoneApp
             }
 
             var columnMaxWidth = MathF.Max(1f, columnWidth - 4f * scale);
-            Marquee.DrawCentered("skywatcher.hourly." + index, ShortWhen(window), columnCenterX,
+            Marquee.DrawCentered(new MarqueeId("skywatcher.hourly.", index), ShortWhen(window), columnCenterX,
                 inner.Min.Y + 10f * scale, columnMaxWidth, TextStyles.Footnote, palette.InkSoft, false);
             var glyphCenter = new Vector2(columnCenterX, inner.Min.Y + inner.Height * 0.62f);
             var glyphRadius = MathF.Min(columnWidth * 0.30f, inner.Height * 0.24f);

@@ -3,6 +3,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Home;
 using Aetherphone.Core.Shell.Home;
+using Aetherphone.Core.Shell.Spotlight;
 using Aetherphone.Core.Shortcuts;
 using Aetherphone.Core.Theme;
 using Dalamud.Bindings.ImGui;
@@ -20,19 +21,22 @@ internal sealed class HomeScreen
     private readonly HomeInteractionController interaction;
     private readonly HomeGridRenderer renderer;
     private readonly HomeChrome chrome;
+    private readonly SpotlightOverlay spotlight;
     private readonly Configuration configuration;
 
     public HomeScreen(IReadOnlyList<IPhoneApp> apps, WidgetRegistry widgets, ShortcutStore shortcuts,
-        ShortcutRunner runner, Configuration configuration, ConfirmService confirm)
+        ShortcutRunner runner, Configuration configuration, ConfirmService confirm, SpotlightIndex spotlightIndex)
     {
         this.configuration = configuration;
         layout = new HomeLayoutService(apps, widgets, shortcuts, configuration);
         folder = new FolderOverlay(layout, shortcuts, runner);
         sizeMenu = new WidgetSizeMenu(layout);
         gallery = new WidgetGallery(layout, widgets);
-        interaction = new HomeInteractionController(layout, widgets, pager, folder, sizeMenu, gallery, poses, runner);
+        spotlight = new SpotlightOverlay(spotlightIndex);
+        interaction = new HomeInteractionController(layout, widgets, pager, folder, sizeMenu, gallery, spotlight,
+            poses, runner);
         renderer = new HomeGridRenderer(layout, pager, poses, interaction, shortcuts, confirm);
-        chrome = new HomeChrome(pager, interaction);
+        chrome = new HomeChrome(pager, interaction, spotlight);
     }
 
     public bool Editing => interaction.Editing;
@@ -77,11 +81,17 @@ internal sealed class HomeScreen
         folder.Draw(content, metrics, theme, navigation, interaction.Editing, pager.Page, delta);
         DrawSizeMenu(content, metrics, theme, delta);
         gallery.Draw(screen, theme, delta, metrics.Scale);
+        spotlight.Draw(screen, theme, navigation, delta, metrics.Scale);
+        if (!motion.Interactive)
+        {
+            spotlight.Close();
+        }
     }
 
     public void PrepareReveal(string appId)
     {
         gallery.CloseImmediate();
+        spotlight.CloseImmediate();
         interaction.ResetForReveal();
         var page = PageContaining(appId);
         if (page >= 0)
@@ -90,8 +100,9 @@ internal sealed class HomeScreen
         }
     }
 
-    public Rect? RevealRect(string appId, Rect content)
+    public Rect? RevealRect(string appId, Rect content, out LaunchOrigin kind)
     {
+        kind = LaunchOrigin.Icon;
         var metrics = HomeMetrics.Compute(content, HomeLayoutService.Columns, layout.Rows, UiScale.Current,
             HomeMotion.Rest);
         var dock = layout.Dock;
@@ -109,10 +120,14 @@ internal sealed class HomeScreen
             var cells = layout.Placements(page);
             for (var index = 0; index < tiles.Count && index < cells.Count; index++)
             {
-                if (TileTargets(tiles[index], appId))
+                var tile = tiles[index];
+                if (!TileTargets(tile, appId))
                 {
-                    return metrics.TileRect(page, pager.Value, cells[index], tiles[index]);
+                    continue;
                 }
+
+                kind = tile.App is not null ? LaunchOrigin.Icon : LaunchOrigin.Surface;
+                return metrics.TileRect(page, pager.Value, cells[index], tile);
             }
         }
 

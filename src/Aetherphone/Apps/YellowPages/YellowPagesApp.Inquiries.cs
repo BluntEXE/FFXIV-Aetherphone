@@ -3,7 +3,7 @@ using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Crypto;
-using Aetherphone.Core.Linkpearl;
+using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Report;
 using Aetherphone.Core.Social;
@@ -21,12 +21,10 @@ internal sealed partial class YellowPagesApp
     private const float ComposerHeight = 52f;
     private const int InquiryBodyMax = 1000;
 
-    private readonly DropdownMenu inquiryMenu = new();
-    private readonly DropdownMenu.Item[] inquiryMenuItems = new DropdownMenu.Item[2];
+    private readonly ActionSheet.Item[] inquirySheetItems = new ActionSheet.Item[2];
 
     private string inquiryDraft = string.Empty;
-    private string? inquiryAdFilter;
-    private string inquiryMenuMessageId = string.Empty;
+    private string inquirySheetMessageId = string.Empty;
     private bool inquiryBusy;
     private bool inquirySendFailed;
 
@@ -36,7 +34,7 @@ internal sealed partial class YellowPagesApp
         DrawTabTitle(area, Loc.T(L.YellowPages.InquiriesTitle), 0f, scale);
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         var threads = inquiries.Threads;
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
             if (inquiryAdFilter is { } adId)
@@ -122,13 +120,10 @@ internal sealed partial class YellowPagesApp
     private bool DrawInquiryRow(AdInquiryDto thread, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
         var height = InquiryRowHeight * scale;
-        var card = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
-        var rounding = Metrics.Radius.Card * scale;
-        ui.Card(drawList, card.Min, card.Max, rounding, elevated: true);
-        var pad = Metrics.Space.Md * scale;
+        var cell = FeedCell.Begin(drawList, height, ui.HoverWash);
+        var card = cell.Bounds;
+        var pad = FeedCell.PadX * scale;
         var thumbSide = 42f * scale;
         var thumbMin = new Vector2(card.Min.X + pad, card.Min.Y + (height - thumbSide) * 0.5f);
         var thumbMax = thumbMin + new Vector2(thumbSide, thumbSide);
@@ -170,16 +165,8 @@ internal sealed partial class YellowPagesApp
                 theme, scale);
         }
 
-        var hovered = UiInteract.Hover(card.Min, card.Max);
-        if (hovered)
-        {
-            UiInteract.HoverHighlight(drawList, card.Min, card.Max, rounding);
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, height + AdCard.Gap * scale));
-        return UiInteract.Click(card.Min, card.Max, hovered);
+        FeedCell.End(drawList, cell, ui.Hairline);
+        return cell.Tapped;
     }
 
     private void DrawInquiriesEmpty(Rect body, float scale)
@@ -252,7 +239,7 @@ internal sealed partial class YellowPagesApp
                     DateTimeOffset.FromUnixTimeSeconds(message.CreatedAtUnix).LocalDateTime), theme);
                 if (requested && !message.Deleted)
                 {
-                    OpenInquiryMenu(message.Id);
+                    OpenInquirySheet(message);
                 }
             }
 
@@ -327,7 +314,7 @@ internal sealed partial class YellowPagesApp
         }
 
         AppSkin.Icon(drawList, new Vector2(max.X - 18f * scale, (min.Y + max.Y) * 0.5f),
-            FontAwesomeIcon.ChevronRight.ToIconString(), AppPalettes.YellowPages.MutedInk, 0.7f);
+            IconGlyph.Of(FontAwesomeIcon.ChevronRight), AppPalettes.YellowPages.MutedInk, 0.7f);
         var hovered = UiInteract.Hover(min, max);
         if (hovered)
         {
@@ -368,7 +355,7 @@ internal sealed partial class YellowPagesApp
             return;
         }
 
-        var tapped = ui.IconButton(sendCenter, sendSide * 0.5f, FontAwesomeIcon.PaperPlane.ToIconString(),
+        var tapped = ui.IconButton(sendCenter, sendSide * 0.5f, IconGlyph.Of(FontAwesomeIcon.PaperPlane),
             canSend ? ui.Accent : AppPalettes.YellowPages.MutedInk, AppSkin.Transparent, 0.9f);
         if (!canSend || (!tapped && !submitted))
         {
@@ -453,7 +440,7 @@ internal sealed partial class YellowPagesApp
         }
 
         var canSend = TrimmedLength(inquiryDraft) > 0;
-        var tapped = ui.IconButton(sendCenter, sendSide * 0.5f, FontAwesomeIcon.PaperPlane.ToIconString(),
+        var tapped = ui.IconButton(sendCenter, sendSide * 0.5f, IconGlyph.Of(FontAwesomeIcon.PaperPlane),
             canSend ? ui.Accent : AppPalettes.YellowPages.MutedInk, AppSkin.Transparent, 0.9f);
         if (!canSend || (!tapped && !submitted))
         {
@@ -513,38 +500,32 @@ internal sealed partial class YellowPagesApp
         }
     }
 
-    private void OpenInquiryMenu(string messageId)
+    private void OpenInquirySheet(AdInquiryMessageDto message)
     {
-        inquiryMenuMessageId = messageId;
-        var mouse = ImGui.GetMousePos();
-        inquiryMenu.Toggle(messageId, new Rect(mouse, mouse));
+        inquirySheetMessageId = message.Id;
+        inquirySheetItems[0] = new ActionSheet.Item(Loc.T(L.Messages.CopyMessage));
+        inquirySheetItems[1] = message.SenderId == inquiries.MyUserId
+            ? new ActionSheet.Item(Loc.T(L.Message.DeleteAction), string.Empty, true)
+            : new ActionSheet.Item(Loc.T(L.Encryption.ReportMessageAction), string.Empty, true);
+        inquirySheet.Open();
     }
 
-    private void DrawInquiryMenu(Rect screen)
+    private void DrawInquirySheet(Rect screen)
     {
-        if (!inquiryMenu.IsOpenFor(inquiryMenuMessageId))
+        if (!inquirySheet.CapturesPointer)
         {
             return;
         }
 
-        var message = FindInquiryMessage(inquiryMenuMessageId);
+        var message = FindInquiryMessage(inquirySheetMessageId);
         if (message is null)
         {
-            inquiryMenu.Close();
-            return;
+            inquirySheet.Close();
         }
 
-        var mine = message.SenderId == inquiries.MyUserId;
-        inquiryMenuItems[0] = new DropdownMenu.Item(Loc.T(L.Messages.CopyMessage),
-            FontAwesomeIcon.Copy.ToIconString());
-        inquiryMenuItems[1] = mine
-            ? new DropdownMenu.Item(Loc.T(L.Message.DeleteAction),
-                FontAwesomeIcon.TrashAlt.ToIconString(), Danger: true)
-            : new DropdownMenu.Item(Loc.T(L.Encryption.ReportMessageAction),
-                FontAwesomeIcon.Flag.ToIconString(), Danger: true);
-
-        var picked = inquiryMenu.Draw(screen, theme, inquiryMenuItems.AsSpan(0, 2));
-        if (picked < 0)
+        var picked = inquirySheet.Draw(screen, ActionSheetStyle.From(ui), inquirySheetItems, Loc.T(L.Common.Cancel),
+            false);
+        if (picked < 0 || message is null)
         {
             return;
         }
@@ -556,7 +537,7 @@ internal sealed partial class YellowPagesApp
             return;
         }
 
-        if (mine)
+        if (message.SenderId == inquiries.MyUserId)
         {
             AskDeleteInquiryMessage(message);
             return;
@@ -587,6 +568,7 @@ internal sealed partial class YellowPagesApp
             Message = Loc.T(L.Message.DeleteConfirm),
             ConfirmLabel = Loc.T(L.Message.DeleteAction),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             Danger = true,
             ConfirmAsync = done => inquiries.Delete(message.InquiryId, message.Id, done),
         });

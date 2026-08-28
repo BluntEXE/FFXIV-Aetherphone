@@ -178,6 +178,11 @@ internal sealed class CoinGameSessionTracker : IDisposable
         work.Dispose();
         openSessionId = null;
         openGameId = null;
+        BankPendingAwardBeforeAssemblyUnloads();
+    }
+
+    private void BankPendingAwardBeforeAssemblyUnloads()
+    {
         var pending = configuration.PendingCoinGameSession;
         if (pending.Length == 0 || !session.IsSignedIn)
         {

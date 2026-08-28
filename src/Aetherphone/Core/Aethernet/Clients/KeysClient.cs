@@ -1,4 +1,4 @@
-using Aetherphone.Core.Aethernet.Contracts;
+﻿using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Net;
 
 namespace Aetherphone.Core.Aethernet.Clients;
@@ -32,6 +32,43 @@ internal sealed class KeysClient
         Action<AepFailure>? onFailure = null)
     {
         return net.GetAsync("/keys/me/escrows", AethernetJsonContext.Default.ArchivedEscrowsDto, token, null, onFailure);
+    }
+
+    public Task<DeviceLinkTicketDto?> StartDeviceLinkAsync(string ephemeralPublicKey, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
+    {
+        return net.PostAsync("/keys/link/requests", new StartDeviceLinkRequest(ephemeralPublicKey),
+            AethernetJsonContext.Default.StartDeviceLinkRequest, AethernetJsonContext.Default.DeviceLinkTicketDto,
+            token, null, onFailure);
+    }
+
+    public Task<PendingDeviceLinksDto?> PendingDeviceLinksAsync(CancellationToken token,
+        Action<AepFailure>? onFailure = null)
+    {
+        return net.GetAsync("/keys/link/requests", AethernetJsonContext.Default.PendingDeviceLinksDto, token, null,
+            onFailure);
+    }
+
+    public Task<DeviceLinkStatusDto?> DeviceLinkStatusAsync(string id, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
+    {
+        return net.GetAsync($"/keys/link/requests/{Uri.EscapeDataString(id)}",
+            AethernetJsonContext.Default.DeviceLinkStatusDto, token, null, onFailure);
+    }
+
+    public Task<bool> ApproveDeviceLinkAsync(string id, string wrappedIdentityKey, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
+    {
+        return net.SendJsonForStatusAsync(HttpMethod.Post,
+            $"/keys/link/requests/{Uri.EscapeDataString(id)}/approve", new ApproveDeviceLinkRequest(wrappedIdentityKey),
+            AethernetJsonContext.Default.ApproveDeviceLinkRequest, token, null, onFailure);
+    }
+
+    public Task<bool> CancelDeviceLinkAsync(string id, CancellationToken token,
+        Action<AepFailure>? onFailure = null)
+    {
+        return net.SendAsync(HttpMethod.Delete, $"/keys/link/requests/{Uri.EscapeDataString(id)}", token,
+            null, onFailure);
     }
 
     public Task<PublicKeysDto?> PublicKeysAsync(string[] userIds, CancellationToken token,

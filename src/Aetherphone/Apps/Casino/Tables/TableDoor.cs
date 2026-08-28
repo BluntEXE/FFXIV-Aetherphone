@@ -136,7 +136,7 @@ internal sealed class TableDoor
             && token.Length > 0)
         {
             ImGui.SetClipboardText(CasinoShare.Compose(token));
-            CopyToast.Show();
+            ShellToast.Show();
         }
 
         ImGui.SetCursorScreenPos(origin);
@@ -270,6 +270,7 @@ internal sealed class TableDoor
             Message = Loc.T(L.Casino.DoorRemoveConfirmBody),
             ConfirmLabel = Loc.T(L.Casino.DoorRemove),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             Danger = true,
             Confirm = () => tables.Kick(targetRoom, targetUser),
         });

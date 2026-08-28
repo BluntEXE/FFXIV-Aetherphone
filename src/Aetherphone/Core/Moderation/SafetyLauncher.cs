@@ -1,22 +1,12 @@
+using Aetherphone.Core.Apps;
+
 namespace Aetherphone.Core.Moderation;
 
 internal sealed class SafetyLauncher
 {
-    private volatile bool pending;
+    private readonly LaunchFlag pending = new();
 
-    public void Request()
-    {
-        pending = true;
-    }
+    public void Request() => pending.Request();
 
-    public bool TryConsume()
-    {
-        if (!pending)
-        {
-            return false;
-        }
-
-        pending = false;
-        return true;
-    }
+    public bool TryConsume() => pending.TryConsume();
 }

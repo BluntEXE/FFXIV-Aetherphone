@@ -67,7 +67,8 @@ internal sealed class HomeGridRenderer
         for (var index = 0; index < tiles.Count && index < cells.Count; index++)
         {
             var tile = tiles[index];
-            if (ReferenceEquals(tile, interaction.DragTile) || ReferenceEquals(tile, interaction.SettleTile))
+            if (ReferenceEquals(tile, interaction.DragTile) || ReferenceEquals(tile, interaction.SettleTile) ||
+                Revealing(tile, motion))
             {
                 continue;
             }
@@ -185,6 +186,7 @@ internal sealed class HomeGridRenderer
             Message = Loc.T(L.Home.RemoveConfirm, app.DisplayName),
             ConfirmLabel = Loc.T(L.Home.Remove),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             Confirm = () => layout.Uninstall(appId),
         });
     }
@@ -237,7 +239,7 @@ internal sealed class HomeGridRenderer
             var rect = poses.Resolve(string.Concat("dock:", tile.Key), -1, local,
                 metrics.DockBar.Min, delta, motion.Interactive);
             slot++;
-            if (ReferenceEquals(tile, interaction.SettleTile))
+            if (ReferenceEquals(tile, interaction.SettleTile) || Revealing(tile, motion))
             {
                 continue;
             }
@@ -320,6 +322,9 @@ internal sealed class HomeGridRenderer
     }
 
     private static float WidgetChromeRadius(float scale) => 22f * scale;
+
+    private static bool Revealing(HomeTile tile, in HomeMotion motion) =>
+        motion.RevealAppId is not null && tile.App is { } app && motion.Reveals(app.Id);
 
     private void ReportIconAnchor(HomeTile tile, Vector2 center, float size, in HomeMotion motion)
     {

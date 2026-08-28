@@ -13,9 +13,6 @@ internal sealed partial class ShortcutsApp
     private const float ImportRowHeight = 52f;
     private const float CopiedSeconds = 2f;
 
-    private ShortcutEntry? importEntry;
-    private float copiedClock;
-
     private void BeginImport()
     {
         if (WarnIfFull())
@@ -96,7 +93,7 @@ internal sealed partial class ShortcutsApp
             var step = steps[index];
             Typography.Draw(new Vector2(row.Min.X, row.Center.Y - 16f * scale), KindLabel(step.Kind), ui.HeaderInk,
                 TextStyles.Caption1);
-            Marquee.DrawLeftAuto("shortcuts.import.step." + index, StepDetail(step), row.Min.X,
+            Marquee.DrawLeftAuto(new MarqueeId("shortcuts.import.step.", index), StepDetail(step), row.Min.X,
                 row.Center.Y + 2f * scale, row.Width, TextStyles.Footnote, ui.TitleInk);
         }
 

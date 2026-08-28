@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Media;
 using Aetherphone.Core.Net;
 using Aetherphone.Core.Venues;
 using Aetherphone.Windows.Components;

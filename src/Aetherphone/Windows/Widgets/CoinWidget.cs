@@ -42,7 +42,7 @@ internal sealed class CoinWidget : IHomeWidget
         var target = wallet?.Balance ?? session.CurrentUser?.Coins ?? 0;
         balance.Update((int)Math.Clamp(target, 0, int.MaxValue), context.Delta);
 
-        var text = balance.Display.ToString("N0", Loc.Culture);
+        var text = NumberText.Group(balance.Display);
         var valueScale = (context.Size == WidgetSize.Small ? 1.45f : 1.85f) * balance.PopScale;
         var valueSize = Typography.Measure(text, valueScale, FontWeight.Bold);
         var fitted = Typography.FitScale(text, bounds.Width - pad * 2f, valueScale, 0.9f, FontWeight.Bold);
@@ -57,8 +57,8 @@ internal sealed class CoinWidget : IHomeWidget
         }
 
         var progress = Loc.T(L.Coin.CapProgress,
-            wallet.EarnedToday.ToString("N0", Loc.Culture),
-            wallet.DailyCap.ToString("N0", Loc.Culture));
+            NumberText.Group(wallet.EarnedToday),
+            NumberText.Group(wallet.DailyCap));
         var progressSize = Typography.Measure(progress, TextStyles.Footnote);
         Typography.Draw(context.DrawList,
             new Vector2(bounds.Center.X - progressSize.X * 0.5f, bounds.Max.Y - pad - progressSize.Y),

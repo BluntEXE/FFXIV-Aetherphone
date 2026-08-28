@@ -123,7 +123,7 @@ internal sealed partial class CasinoApp
         var iconCenter = new Vector2(min.X + width * 0.5f, min.Y + 16f * scale + iconArea * 0.5f);
         drawList.AddCircleFilled(iconCenter, 20f * scale,
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.16f)), 40);
-        AppSkin.Icon(drawList, iconCenter, FontAwesomeIcon.HandHoldingHeart.ToIconString(), ui.Accent, 1.1f);
+        AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(FontAwesomeIcon.HandHoldingHeart), ui.Accent, 1.1f);
 
         Typography.DrawCentered(drawList, new Vector2(min.X + width * 0.5f,
             min.Y + 22f * scale + iconArea + titleSize.Y * 0.5f), title, ui.TitleInk, TextStyles.Headline);
@@ -143,11 +143,11 @@ internal sealed partial class CasinoApp
         var heading = Loc.T(L.Casino.NetHeading);
         var tonight = state.NetLossToday switch
         {
-            > 0 => Loc.T(L.Casino.TonightDown, state.NetLossToday.ToString("N0", Loc.Culture)),
-            < 0 => Loc.T(L.Casino.TonightUp, (-state.NetLossToday).ToString("N0", Loc.Culture)),
+            > 0 => Loc.T(L.Casino.TonightDown, NumberText.Group(state.NetLossToday)),
+            < 0 => Loc.T(L.Casino.TonightUp, NumberText.Group(-state.NetLossToday)),
             _ => Loc.T(L.Casino.TonightEven),
         };
-        var room = Loc.T(L.Casino.RoomLeft, Math.Max(0, state.LossHeadroom).ToString("N0", Loc.Culture));
+        var room = Loc.T(L.Casino.RoomLeft, NumberText.Group(Math.Max(0, state.LossHeadroom)));
         var headingSize = Typography.Measure(heading, TextStyles.FootnoteEmphasized);
         var tonightSize = Typography.Measure(tonight, TextStyles.SubheadlineEmphasized);
         var roomSize = Typography.Measure(room, TextStyles.Footnote);
@@ -176,7 +176,7 @@ internal sealed partial class CasinoApp
         var inset = 14f * scale;
         var title = Loc.T(L.Casino.HouseLimitTitle);
         var line = Loc.T(L.Casino.HouseLimitLine,
-            CasinoLimits.HouseDailyLossLimit.ToString("N0", Loc.Culture));
+            NumberText.Group(CasinoLimits.HouseDailyLossLimit));
         var titleSize = Typography.Measure(title, TextStyles.FootnoteEmphasized);
         var lineBlock = Typography.MeasureWrappedBlock(line, TextStyles.Footnote, width - inset * 2f);
         var height = titleSize.Y + lineBlock.Y + 26f * scale;
@@ -200,7 +200,7 @@ internal sealed partial class CasinoApp
         ui.SectionHeading(Loc.T(L.Casino.SelfLimitHeading), 4f);
 
         var effective = state.LossLimit > 0 ? state.LossLimit : CasinoLimits.HouseDailyLossLimit;
-        var currentLine = Loc.T(L.Casino.SelfLimitCurrent, effective.ToString("N0", Loc.Culture));
+        var currentLine = Loc.T(L.Casino.SelfLimitCurrent, NumberText.Group(effective));
         var currentSize = Typography.Measure(currentLine, TextStyles.Subheadline);
         var currentOrigin = ImGui.GetCursorScreenPos();
         Typography.Draw(drawList, currentOrigin, currentLine, ui.TitleInk, TextStyles.Subheadline);
@@ -211,7 +211,7 @@ internal sealed partial class CasinoApp
             : 0;
         if (pendingRaise > 0)
         {
-            var pending = Loc.T(L.Casino.PendingRaise, pendingRaise.ToString("N0", Loc.Culture));
+            var pending = Loc.T(L.Casino.PendingRaise, NumberText.Group(pendingRaise));
             var pendingOrigin = ImGui.GetCursorScreenPos();
             var pendingSize = Typography.Measure(pending, TextStyles.Footnote);
             Typography.Draw(drawList, pendingOrigin, pending, ui.Accent, TextStyles.Footnote);
@@ -253,8 +253,8 @@ internal sealed partial class CasinoApp
         ImGui.Dummy(new Vector2(width, LimitFieldHeight * scale + 8f * scale));
 
         var hint = Loc.T(L.Casino.SelfLimitHint,
-            CasinoLimits.SelfLimitFloor.ToString("N0", Loc.Culture),
-            CasinoLimits.HouseDailyLossLimit.ToString("N0", Loc.Culture));
+            NumberText.Group(CasinoLimits.SelfLimitFloor),
+            NumberText.Group(CasinoLimits.HouseDailyLossLimit));
         var hintOrigin = ImGui.GetCursorScreenPos();
         var hintBlock = Typography.MeasureWrappedBlock(hint, TextStyles.Footnote, width);
         Typography.DrawWrappedLeft(hintOrigin, hint, ui.MutedInk, TextStyles.Footnote, width);

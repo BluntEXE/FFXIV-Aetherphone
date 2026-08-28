@@ -4,6 +4,7 @@ using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Lodestone;
+using Aetherphone.Core.Media;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -15,15 +16,14 @@ internal sealed partial class VelvetShell
     private const float ThreadPollSeconds = 2.5f;
     private const float TypingSendSeconds = 3f;
 
-    private readonly ThreadView threadView;
-
     private sealed class ThreadView : ChatThreadView<VelvetMessageDto, VelvetThreadDto>
     {
         private readonly VelvetShell app;
 
         public ThreadView(VelvetShell app)
             : base(app.store, app.ui, app.images, app.lodestone, app.http, app.library, app.configuration,
-                app.confirm, app.report, app.wallpaperImages, ThreadPollSeconds, TypingSendSeconds)
+                app.confirm, app.report, app.translation, app.wallpaperImages, ThreadPollSeconds,
+                TypingSendSeconds)
         {
             this.app = app;
         }
@@ -93,6 +93,7 @@ internal sealed partial class VelvetShell
                 CanInfo = false,
                 CanDelete = true,
                 CanReport = true,
+                CanTranslate = true,
                 IsStarred = _ => false,
                 MyReactionTo = store.MyReactionTo,
                 OnReply = BeginReply,
@@ -103,6 +104,7 @@ internal sealed partial class VelvetShell
                 OnInfo = _ => { },
                 OnDelete = AskDeleteMessage,
                 OnReport = OpenReportMessage,
+                OnTranslate = TranslateMessage,
                 OnReact = store.SetReaction,
             };
         }
@@ -117,6 +119,7 @@ internal sealed partial class VelvetShell
             ChatHeaderControls.DrawLock(ui, area, rowCenterY, store.EncryptingCurrent, store.VaultState,
                 () => OpenEncryptionInfo(threadId));
             ChatHeaderControls.DrawSearchToggle(ui, area, rowCenterY, searchController.Open, searchController.Toggle);
+            DrawTranslateToggle(area, rowCenterY, threadId);
             var name = app.ThreadTitle(threadId);
             var avatarRadius = 18f * scale;
             var avatarHandle = app.ThreadAvatar(threadId, avatarRadius * 2f, out var monogram, out var presence);
@@ -127,14 +130,22 @@ internal sealed partial class VelvetShell
                 MathF.Min(area.Width * 0.42f, rightLimit - leftLimit - avatarRadius * 2f - gap));
             var nameSize = Typography.Measure(name, 1f, FontWeight.SemiBold);
             nameSize.X = MathF.Min(nameSize.X, nameCap);
-            var groupWidth = avatarRadius * 2f + gap + nameSize.X;
+            var offset = app.ThreadOffset(threadId);
+            var subWidth = 0f;
+            if (offset is { } subMinutes)
+            {
+                var subText = Aetherphone.Core.Social.SocialTimeZone.Describe(subMinutes);
+                subWidth = MathF.Min(Typography.Measure(subText, 0.72f, FontWeight.Regular).X, nameCap);
+            }
+
+            var groupWidth = avatarRadius * 2f + gap + MathF.Max(nameSize.X, subWidth);
             var startX = MathF.Min(MathF.Max(area.Center.X - groupWidth * 0.5f, leftLimit), rightLimit - groupWidth);
             var avatarCenter = new Vector2(startX + avatarRadius, rowCenterY);
             AvatarView.Draw(drawList, avatarCenter, avatarRadius, Accent, monogram, 0.95f, avatarHandle, 32);
             app.PresenceDot(drawList, new Vector2(avatarCenter.X + avatarRadius - 3f * scale,
                 avatarCenter.Y + avatarRadius - 3f * scale), presence);
             var nameLeft = avatarCenter.X + avatarRadius + gap;
-            var offset = app.ThreadOffset(threadId);
+            nameCap = MathF.Max(1f, MathF.Min(nameCap, rightLimit - nameLeft));
             var textWidth = nameSize.X;
             if (offset is { } minutes)
             {
@@ -145,12 +156,12 @@ internal sealed partial class VelvetShell
                 var stackTop = rowCenterY - (nameSize.Y + gapY + subSize.Y) * 0.5f;
                 var titleHovering = UiInteract.Hover(new Vector2(nameLeft, stackTop),
                     new Vector2(nameLeft + nameCap, stackTop + nameSize.Y));
-                Marquee.DrawLeft("velvet.thread.title." + threadId, name, nameLeft, stackTop, nameCap,
+                Marquee.DrawLeft(new MarqueeId("velvet.thread.title.", threadId), name, nameLeft, stackTop, nameCap,
                     new TextStyle(1f, FontWeight.SemiBold), Theme.TextStrong, titleHovering);
                 var subTop = stackTop + nameSize.Y + gapY;
                 var subHovering = UiInteract.Hover(new Vector2(nameLeft, subTop),
                     new Vector2(nameLeft + nameCap, subTop + subSize.Y));
-                Marquee.DrawLeft("velvet.thread.subtitle." + threadId, timeText, nameLeft, subTop, nameCap,
+                Marquee.DrawLeft(new MarqueeId("velvet.thread.subtitle.", threadId), timeText, nameLeft, subTop, nameCap,
                     new TextStyle(0.72f, FontWeight.Regular), VelvetTheme.MutedInk, subHovering);
                 textWidth = MathF.Max(nameSize.X, subSize.X);
             }
@@ -159,7 +170,7 @@ internal sealed partial class VelvetShell
                 var soloTop = rowCenterY - nameSize.Y * 0.5f;
                 var titleHovering = UiInteract.Hover(new Vector2(nameLeft, soloTop),
                     new Vector2(nameLeft + nameCap, soloTop + nameSize.Y));
-                Marquee.DrawLeft("velvet.thread.title." + threadId, name, nameLeft, soloTop,
+                Marquee.DrawLeft(new MarqueeId("velvet.thread.title.", threadId), name, nameLeft, soloTop,
                     nameCap, new TextStyle(1f, FontWeight.SemiBold), Theme.TextStrong, titleHovering);
             }
 

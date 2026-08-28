@@ -19,8 +19,6 @@ internal readonly struct ChirperReaction
 
 internal static class ChirperReactions
 {
-    public const int DefaultKind = 1;
-
     private static readonly ChirperReaction[] Kinds =
     {
         new("+1", new Vector4(0.23f, 0.51f, 0.96f, 1f), L.Chirper.ReactLike),

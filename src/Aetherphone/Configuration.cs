@@ -51,11 +51,19 @@ internal sealed class VideoQueueRecord
 }
 
 [Serializable]
+internal sealed class VideoLocalFileMapRecord
+{
+    public string Key { get; set; } = "";
+    public string Path { get; set; } = "";
+    public long SizeBytes { get; set; }
+}
+
+[Serializable]
 internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, IControlConfiguration
 {
     public int Version { get; set; } = 1;
     public bool OpenOnStartup { get; set; } = true;
-    public bool OpenMinimizedOnStartup { get; set; }
+    public bool OpenMinimizedOnStartup { get; set; } = true;
     public bool WelcomeShown { get; set; }
     public bool SetupCompleted { get; set; }
     public bool TutorialsEnabled { get; set; } = true;
@@ -100,11 +108,16 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public float ScreenBrightness { get; set; } = 1f;
     public float PhoneScale { get; set; } = PhoneSizeCatalog.DefaultWidth / PhoneSizeCatalog.DesignWidth;
     public float PhoneWidth { get; set; }
+    public float LandscapePhoneWidth { get; set; }
     public bool CameraLandscape { get; set; }
     public bool CameraGrid { get; set; }
     public bool CameraFlash { get; set; } = true;
     public int PhotosSegment { get; set; }
     public string Language { get; set; } = string.Empty;
+    public string TranslationTargetLanguage { get; set; } = string.Empty;
+    public bool TranslationDisclosureSeen { get; set; }
+    public bool AutoTranslatePosts { get; set; }
+    public List<string> TranslatedConversations { get; set; } = new();
     public ThemeMode ThemeMode { get; set; } = ThemeMode.Dark;
     public string AccentName { get; set; } = "Violet";
     public string AccentCustomHex { get; set; } = string.Empty;
@@ -119,9 +132,21 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public string NotificationSound { get; set; } = SoundLibrary.BundledNotificationToken;
     public float RingtoneVolume { get; set; } = 0.8f;
     public float NotificationVolume { get; set; } = 0.8f;
+    public bool SilentMode { get; set; }
+    public bool RingtoneEnabled { get; set; } = true;
+    public bool NotificationSoundsEnabled { get; set; } = true;
+    public bool UiSounds { get; set; } = true;
+    public float UiSoundVolume { get; set; } = 0.7f;
+    public bool UiSoundTaps { get; set; } = true;
+    public bool UiSoundTransitions { get; set; } = true;
+    public bool UiSoundToggles { get; set; } = true;
+    public bool UiSoundKeyboard { get; set; } = true;
+    public bool GameSounds { get; set; } = true;
+    public bool ShowPerfHud { get; set; }
+    public float GameSoundVolume { get; set; } = 0.7f;
+    public bool UiSoundDefaultsApplied { get; set; }
     public float MusicVolume { get; set; } = 0.6f;
     public int MusicRepeat { get; set; }
-    public bool SoundSettingsMigrated { get; set; }
     public float VideoVolume { get; set; } = 0.6f;
     public int VideoMaxQualityHeight { get; set; } = 720;
     public bool VideoHideNameplates { get; set; } = true;
@@ -133,6 +158,7 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public bool VideoScreenVisible { get; set; } = true;
     public List<ScreenPositionPreset> ScreenPresets { get; set; } = new();
     public List<VideoQueueRecord> VideoQueue { get; set; } = new();
+    public List<VideoLocalFileMapRecord> VideoLocalFileMap { get; set; } = new();
     public bool GameSoundsCleared { get; set; }
     #if DEBUG
     public const string DefaultAethernetBaseUrl = "https://aethernet-dev-production.up.railway.app";
@@ -144,10 +170,20 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public string AethernetToken { get; set; } = string.Empty;
     public string EncryptionKeyCache { get; set; } = string.Empty;
     public string EncryptionKeyCacheUserId { get; set; } = string.Empty;
+    public string EncryptionKeyCachePending { get; set; } = string.Empty;
+    public string EncryptionKeyCachePendingUserId { get; set; } = string.Empty;
+    public string EncryptionKeyCachePrevious { get; set; } = string.Empty;
+    public string EncryptionKeyCachePreviousUserId { get; set; } = string.Empty;
+    public Dictionary<string, string> EncryptionKeysByUserId { get; set; } = new();
+    public bool EncryptionKeyStoreMigrated { get; set; }
+    public string PendingRecoveryCode { get; set; } = string.Empty;
+    public string PendingRecoveryCodeUserId { get; set; } = string.Empty;
+    public long EncryptionRecoveryNudgeSnoozedUntilUnix { get; set; }
     public string HuntsSessionCache { get; set; } = string.Empty;
     public bool HuntsAuthenticated { get; set; }
     public bool HuntsAppOpened { get; set; }
     public HuntsFilterSnapshot? HuntsFilterSettings { get; set; }
+    public Core.Strats.StratsSnapshot? StratsSettings { get; set; }
     public HuntsNotificationSnapshot? HuntsNotificationSettings { get; set; }
     public bool EncryptionRecoveryNudgeDismissed { get; set; }
     public Dictionary<string, int> KnownPeerKeyVersions { get; set; } = new();
@@ -173,6 +209,8 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public List<GameStatRecord> GameStats { get; set; } = new();
     public int DailyChallengeStreak { get; set; }
     public int DailyChallengeLastDay { get; set; }
+    public string WordRunBank { get; set; } = string.Empty;
+    public bool TetrisModern { get; set; }
     public string PendingCoinGameSession { get; set; } = string.Empty;
     public Dictionary<ulong, string> PendingCasinoSittings { get; set; } = new();
     public Dictionary<ulong, long> CasinoSittingSeenAtUnix { get; set; } = new();
@@ -251,6 +289,12 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
     public Dictionary<string, int> LinkpearlHistoryByChannel { get; set; } = new();
     public List<ulong> LinkpearlMigratedCharacters { get; set; } = new();
     public Dictionary<string, long> LinkpearlSeen { get; set; } = new();
+    public List<string> LinkpearlPinnedTells { get; set; } = new();
+    public List<string> LinkpearlMutedTells { get; set; } = new();
+    public bool LinkpearlPopoutTells { get; set; } = true;
+    public float LinkpearlPopoutOpacity { get; set; } = 0.96f;
+    public float LinkpearlPopoutTextScale { get; set; } = 1f;
+    public List<LinkpearlPopoutState> LinkpearlPopouts { get; set; } = new();
     public long DevChatLastSeenUnix { get; set; }
     public long AnnouncementsSeenUnix { get; set; }
     public long AnnouncementsNotifiedUnix { get; set; }
@@ -384,6 +428,69 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
         }
 
         Save();
+    }
+
+    public void MigrateEncryptionKeyStore()
+    {
+        if (!SeedEncryptionKeyStore())
+        {
+            return;
+        }
+
+        Save();
+    }
+
+    private const long RecoveryNudgeSnoozeSeconds = 3 * 24 * 60 * 60;
+
+    public bool RecoveryNudgeDue()
+    {
+        if (EncryptionRecoveryNudgeSnoozedUntilUnix > 0)
+        {
+            return DateTimeOffset.UtcNow.ToUnixTimeSeconds() >= EncryptionRecoveryNudgeSnoozedUntilUnix;
+        }
+
+        return !EncryptionRecoveryNudgeDismissed;
+    }
+
+    public void SnoozeRecoveryNudge()
+    {
+        MarkRecoveryNudgeSnoozed();
+        Save();
+    }
+
+    public void MarkRecoveryNudgeSnoozed()
+    {
+        EncryptionRecoveryNudgeDismissed = false;
+        EncryptionRecoveryNudgeSnoozedUntilUnix =
+            DateTimeOffset.UtcNow.ToUnixTimeSeconds() + RecoveryNudgeSnoozeSeconds;
+    }
+
+    public bool SeedEncryptionKeyStore()
+    {
+        if (EncryptionKeyStoreMigrated)
+        {
+            return false;
+        }
+
+        EncryptionKeyStoreMigrated = true;
+        AdoptEncryptionKey(EncryptionKeyCacheUserId, EncryptionKeyCache);
+        AdoptEncryptionKey(LegacyUnclaimedEncryptionUserId, LegacyUnclaimedEncryptionKey);
+        foreach (var entry in CharacterSessions)
+        {
+            AdoptEncryptionKey(entry.Value.EncryptionKeyCacheUserId, entry.Value.EncryptionKeyCache);
+        }
+
+        return true;
+    }
+
+    private void AdoptEncryptionKey(string userId, string protectedKey)
+    {
+        if (userId.Length == 0 || protectedKey.Length == 0 || EncryptionKeysByUserId.ContainsKey(userId))
+        {
+            return;
+        }
+
+        EncryptionKeysByUserId[userId] = protectedKey;
     }
 
     public void MigrateMessage()
@@ -610,6 +717,22 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
         Save();
     }
 
+    public void MigrateUiSoundDefaults(bool freshInstall)
+    {
+        if (UiSoundDefaultsApplied)
+        {
+            return;
+        }
+
+        UiSounds = freshInstall;
+        UiSoundTaps = true;
+        UiSoundTransitions = true;
+        UiSoundToggles = true;
+        UiSoundKeyboard = true;
+        UiSoundDefaultsApplied = true;
+        Save();
+    }
+
     public AppNotificationSetting NotificationSettingFor(string appId)
     {
         if (!NotificationSettings.TryGetValue(appId, out var setting))
@@ -665,6 +788,17 @@ internal sealed class Configuration : IPluginConfiguration, IHomeConfiguration, 
         }
 
         _ = Plugin.Framework.RunOnFrameworkThread(SaveNow);
+    }
+
+    public Task SaveNowAsync()
+    {
+        if (Plugin.Framework.IsInFrameworkUpdateThread)
+        {
+            SaveNow();
+            return Task.CompletedTask;
+        }
+
+        return Plugin.Framework.RunOnFrameworkThread(SaveNow);
     }
 
     public void SaveNow()

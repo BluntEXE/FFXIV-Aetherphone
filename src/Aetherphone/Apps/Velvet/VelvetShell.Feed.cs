@@ -5,6 +5,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Social;
+using Aetherphone.Core.Translation;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -24,7 +25,7 @@ internal sealed partial class VelvetShell
             store.RefreshFeed();
         }
 
-        using (var surface = AppSurface.Begin(area))
+        using (var surface = AppSurface.BeginEdgeToEdge(area))
         {
             if (feedScrollTopPending)
             {
@@ -37,8 +38,9 @@ internal sealed partial class VelvetShell
 
             stories.DrawTray(theme);
             var width = ScrollLayout.StableContentWidth();
+            var inset = FeedCell.PadX * scale;
             Gap(4f);
-            var scopeRow = Reserve(34f);
+            var scopeRow = Inset(Reserve(34f), inset);
             var filterSize = 34f * scale;
             var filterGap = 8f * scale;
             var scopeRect = new Rect(scopeRow.Min,
@@ -55,7 +57,7 @@ internal sealed partial class VelvetShell
 
             DrawFilterButton(filterRect, VelvetPage.Feed);
             Gap(6f);
-            DrawActiveFilters(width, VelvetPage.Feed);
+            DrawActiveFilters(width - inset * 2f, VelvetPage.Feed, inset);
 
             var feed = store.Feed;
             if (feed.Length == 0)
@@ -74,7 +76,7 @@ internal sealed partial class VelvetShell
             }
             else
             {
-                Gap(10f);
+                Gap(6f);
                 feedVirtualizer.BeginFrame(store.FeedSource);
                 for (var index = 0; index < feed.Length; index++)
                 {
@@ -97,7 +99,7 @@ internal sealed partial class VelvetShell
             }
         }
 
-        if (ComposeFab.Draw(area, "velvetCompose", VelvetTheme.Rose, FontAwesomeIcon.Plus.ToIconString(),
+        if (ComposeFab.Draw(area, "velvetCompose", VelvetTheme.Rose, IconGlyph.Of(FontAwesomeIcon.Plus),
                 Loc.T(L.Velvet.Share), "velvet.compose"))
         {
             post.Open();
@@ -132,41 +134,50 @@ internal sealed partial class VelvetShell
     {
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
-        var origin = ImGui.GetCursorScreenPos();
-        var pad = PostCardMetrics.Pad * scale;
-        var innerX = origin.X + pad;
-        var innerWidth = width - pad * 2f;
+        var padY = PostCardMetrics.PadY * scale;
+        var inset = FeedCell.PadX * scale;
+        var innerWidth = width - inset * 2f;
         var headerBlock = PostCardMetrics.HeaderBlock * scale;
         var avatarRadius = PostCardMetrics.AvatarRadius * scale;
-        var imageTop = origin.Y + pad + headerBlock + PostCardMetrics.MediaGap * scale;
-        var imageBottom = imageTop + PostAspects.DisplayHeight(innerWidth, entry.MediaWidth, entry.MediaHeight);
-        var actionsTop = imageBottom + PostCardMetrics.ActionsGap * scale;
+        var mediaHeight = PostAspects.DisplayHeight(width, entry.MediaWidth, entry.MediaHeight);
         var actionsHeight = PostCardMetrics.ActionsHeight * scale;
-        var textTop = actionsTop + actionsHeight + PostCardMetrics.TextGap * scale;
         RichTextLayout? captionLayout = null;
-        if (entry.Caption.Length > 0)
+        var translateKey = new TranslationKey(TranslationSurface.Post, entry.Id);
+        var captionView = translation.View(translateKey, entry.Caption, entry.Lang);
+        var captionText = captionView.Text;
+        if (captionText.Length > 0)
         {
             using (Plugin.Fonts.Push(TextStyles.Callout.Scale, TextStyles.Callout.Weight))
             {
-                captionLayout = feedCaptionLayouts.LayoutFor(entry.Id, entry.Caption, entry.Mentions, innerWidth);
+                captionLayout = feedCaptionLayouts.LayoutFor(captionView.LayoutKey, captionText, entry.Mentions,
+                    innerWidth);
             }
         }
 
-        var captionHeight = entry.Caption.Length == 0
+        var captionTextHeight = captionText.Length == 0
             ? 0f
-            : (captionLayout?.Size.Y ??
-                Typography.MeasureWrappedBlock(entry.Caption, TextStyles.Callout, innerWidth).Y) +
-              PostCardMetrics.CaptionGap * scale;
+            : captionLayout?.Size.Y ?? Typography.MeasureWrappedBlock(captionText, TextStyles.Callout, innerWidth).Y;
+        var translateHeight = TranslateLink.Height(translation, translateKey, entry.Lang, scale);
+        var captionHeight = captionText.Length == 0
+            ? 0f
+            : captionTextHeight + translateHeight + PostCardMetrics.CaptionGap * scale;
         var tagsLine = entry.Tags.Length > 0 ? "#" + string.Join("  #", entry.Tags) : string.Empty;
         var tagsHeight = tagsLine.Length == 0
             ? 0f
             : Typography.MeasureWrappedBlock(tagsLine, TextStyles.Footnote, innerWidth).Y;
-        var cardBottom = textTop + captionHeight + tagsHeight + pad;
-        VCard.Draw(drawList, origin, new Vector2(origin.X + width, cardBottom), PostCardMetrics.Rounding * scale,
-            VCardStyle.Plain);
+        var cellHeight = padY + headerBlock + PostCardMetrics.MediaGap * scale + mediaHeight
+            + PostCardMetrics.ActionsGap * scale + actionsHeight + PostCardMetrics.TextGap * scale
+            + captionHeight + tagsHeight + padY;
+        var cell = FeedCell.Begin(drawList, cellHeight, VelvetTheme.HoverWash, interactive: false);
+        var origin = cell.Bounds.Min;
+        var innerX = origin.X + inset;
+        var imageTop = origin.Y + padY + headerBlock + PostCardMetrics.MediaGap * scale;
+        var imageBottom = imageTop + mediaHeight;
+        var actionsTop = imageBottom + PostCardMetrics.ActionsGap * scale;
+        var textTop = actionsTop + actionsHeight + PostCardMetrics.TextGap * scale;
 
         var authorName = DisplayNameOf(entry.OwnerDisplayName, entry.OwnerHandle);
-        var avatarCenter = new Vector2(innerX + avatarRadius, origin.Y + pad + avatarRadius);
+        var avatarCenter = new Vector2(innerX + avatarRadius, origin.Y + padY + avatarRadius);
         var ringRadius = avatarRadius + 3f * scale;
         var hasStory = stories.TryRing(entry.OwnerId, out var authorRing);
         if (hasStory)
@@ -177,9 +188,9 @@ internal sealed partial class VelvetShell
         VAvatar.Draw(drawList, avatarCenter, hasStory ? avatarRadius - 1f * scale : avatarRadius, theme, authorName,
             string.Empty, entry.OwnerAvatarUrl, images, lodestone, -1, null, Frames.Of(entry.OwnerFrameId));
         var nameLeft = avatarCenter.X + avatarRadius + PostCardMetrics.NameGap * scale;
-        var headerTextRight = origin.X + width - pad - 34f * scale;
+        var headerTextRight = origin.X + width - inset - 34f * scale;
         var headerTextMaxWidth = MathF.Max(1f, headerTextRight - nameLeft);
-        var nameTop = origin.Y + pad;
+        var nameTop = origin.Y + padY;
         var nameSize = Typography.Measure(authorName, TextStyles.Headline);
         var nameHovering = UiInteract.Hover(new Vector2(nameLeft, nameTop),
             new Vector2(nameLeft + headerTextMaxWidth, nameTop + nameSize.Y));
@@ -190,7 +201,7 @@ internal sealed partial class VelvetShell
         var ownerSubSize = Typography.Measure(ownerSub, TextStyles.Subheadline);
         var ownerSubHovering = UiInteract.Hover(new Vector2(nameLeft, ownerSubY),
             new Vector2(nameLeft + headerTextMaxWidth, ownerSubY + ownerSubSize.Y));
-        Marquee.DrawLeft("velvet.feed.ownersub." + entry.Id, ownerSub, nameLeft, ownerSubY,
+        Marquee.DrawLeft(new MarqueeId("velvet.feed.ownersub.", entry.Id), ownerSub, nameLeft, ownerSubY,
             headerTextMaxWidth, TextStyles.Subheadline, VelvetTheme.MutedInk, ownerSubHovering);
         var overRing = hasStory &&
             (ImGui.GetMousePos() - avatarCenter).LengthSquared() <= ringRadius * ringRadius;
@@ -204,20 +215,18 @@ internal sealed partial class VelvetShell
             OpenProfile(entry.OwnerId);
         }
 
-        var moreCenter = new Vector2(origin.X + width - pad - 6f * scale, avatarCenter.Y);
+        var moreCenter = new Vector2(origin.X + width - inset - 6f * scale, avatarCenter.Y);
         var moreRadius = 14f * scale;
-        if (ui.IconButton(moreCenter, moreRadius, FontAwesomeIcon.EllipsisH.ToIconString(), VelvetTheme.BodyInk,
+        if (ui.IconButton(moreCenter, moreRadius, IconGlyph.Of(FontAwesomeIcon.EllipsisH), VelvetTheme.BodyInk,
                 AppSkin.Transparent, 1f, Loc.T(L.Velvet.More)))
         {
-            menuPost = entry;
-            postMenu.Toggle(entry.Id, new Rect(moreCenter - new Vector2(moreRadius, moreRadius),
-                moreCenter + new Vector2(moreRadius, moreRadius)));
+            OpenPostSheet(entry, true);
         }
 
         var photos = PostMedia.Photos(entry.MediaUrls, entry.MediaUrl);
         var result = DrawPostCarousel(drawList,
-            new Rect(new Vector2(innerX, imageTop), new Vector2(innerX + innerWidth, imageBottom)), entry, photos,
-            PostCardMetrics.MediaRounding * scale);
+            new Rect(new Vector2(origin.X, imageTop), new Vector2(origin.X + width, imageBottom)), entry, photos,
+            0f);
         if (result.Tapped && !UiInteract.InputBlocked)
         {
             OpenPostDetail(entry.Id);
@@ -228,7 +237,7 @@ internal sealed partial class VelvetShell
         var countTop = actionCenterY - 8f * scale;
         var liked = entry.MyReaction >= 0;
         var heartCenter = new Vector2(innerX + PostCardMetrics.ActionIconInset * scale, actionCenterY);
-        if (ui.IconButton(heartCenter, iconRadius, FontAwesomeIcon.Heart.ToIconString(),
+        if (ui.IconButton(heartCenter, iconRadius, IconGlyph.Of(FontAwesomeIcon.Heart),
                 liked ? VelvetTheme.Rose : VelvetTheme.BodyInk, AppSkin.Transparent, 1.25f))
         {
             store.ToggleReaction(entry, 0);
@@ -247,7 +256,7 @@ internal sealed partial class VelvetShell
         }
 
         var commentCenter = new Vector2(cursorX + 6f * scale, actionCenterY);
-        if (ui.IconButton(commentCenter, iconRadius, FontAwesomeIcon.Comment.ToIconString(), VelvetTheme.BodyInk,
+        if (ui.IconButton(commentCenter, iconRadius, IconGlyph.Of(FontAwesomeIcon.Comment), VelvetTheme.BodyInk,
                 AppSkin.Transparent, 1.2f))
         {
             OpenPostDetail(entry.Id);
@@ -265,19 +274,19 @@ internal sealed partial class VelvetShell
         if (photos.Length > 1)
         {
             var dotsLeft = actionsRight + 10f * scale;
-            var dotsRight = origin.X + width - pad;
+            var dotsRight = origin.X + width - inset;
             var dotsCenter = new Vector2((dotsLeft + dotsRight) * 0.5f, actionCenterY);
             PhotoCarousel.DrawDots(drawList, dotsCenter, photos.Length, result.Index,
                 MathF.Max(0f, dotsRight - dotsLeft), VelvetTheme.BodyInk);
         }
 
         var lineY = textTop;
-        if (entry.Caption.Length > 0)
+        if (captionText.Length > 0)
         {
             var captionOrigin = new Vector2(innerX, lineY);
             if (captionLayout is null)
             {
-                Typography.DrawWrappedLeft(captionOrigin, entry.Caption, VelvetTheme.BodyInk, TextStyles.Callout,
+                Typography.DrawWrappedLeft(captionOrigin, captionText, VelvetTheme.BodyInk, TextStyles.Callout,
                     innerWidth);
             }
             else
@@ -286,6 +295,13 @@ internal sealed partial class VelvetShell
                 {
                     DrawRichBody(drawList, captionLayout, captionOrigin);
                 }
+            }
+
+            if (translateHeight > 0f)
+            {
+                TranslateLink.Draw(translation, confirm, translateKey, entry.Lang, entry.Caption,
+                    new Vector2(innerX, lineY + captionTextHeight), innerWidth, VelvetTheme.MutedInk,
+                    VelvetTheme.RoseGlow, scale);
             }
 
             lineY += captionHeight;
@@ -297,8 +313,7 @@ internal sealed partial class VelvetShell
                 innerWidth);
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, cardBottom - origin.Y + PostCardMetrics.CardGap * scale));
+        FeedCell.End(drawList, cell, VelvetTheme.Hairline);
     }
 
     private void OpenPostDetail(string postId)

@@ -38,6 +38,6 @@ internal static class StreamDecoders
             return true;
         }
 
-        return (declaredCodec ?? string.Empty).ToLowerInvariant().Contains("aac");
+        return (declaredCodec ?? string.Empty).Contains("aac", StringComparison.OrdinalIgnoreCase);
     }
 }

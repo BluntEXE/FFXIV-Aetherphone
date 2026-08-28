@@ -19,21 +19,27 @@ internal sealed class HttpService : IDisposable
     private static readonly TimeSpan DefaultRateLimitPause = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan MaxRateLimitPause = TimeSpan.FromSeconds(30);
     private readonly HttpClient client;
+    private readonly AethernetClientIdentity? identity;
     private readonly EtagCache etagCache = new();
     private readonly ConcurrentDictionary<string, long> pausedHostsUntilTicks = new(StringComparer.OrdinalIgnoreCase);
 
-    public HttpService()
+    public HttpService(AethernetClientIdentity? identity = null)
     {
-        client = new HttpClient(new SocketsHttpHandler
+        this.identity = identity;
+        HttpMessageHandler handler = new SocketsHttpHandler
         {
             PooledConnectionLifetime = TimeSpan.FromMinutes(10),
             AutomaticDecompression = DecompressionMethods.All,
-        })
+        };
+        if (identity is not null)
+        {
+            handler = new AethernetIdentityHandler(identity, handler);
+        }
+
+        client = new HttpClient(handler)
         {
             Timeout = Timeout.InfiniteTimeSpan, MaxResponseContentBufferSize = MaxResponseBytes,
         };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd(
-            $"Aetherphone/{AepConstants.Version} (+https://github.com/XeldarAlz/FFXIV-Aetherphone)");
     }
 
     private static CancellationTokenSource TimeoutScope(CancellationToken token, TimeSpan timeout)
@@ -411,10 +417,14 @@ internal sealed class HttpService : IDisposable
         return Guid.NewGuid().ToString("N")[..12];
     }
 
-    private static void ApplyHeaders(HttpRequestMessage request, string? bearer, string? appScope,
+    private void ApplyHeaders(HttpRequestMessage request, string? bearer, string? appScope,
         bool rawAuthorization = false)
     {
-        request.Headers.TryAddWithoutValidation(RequestIdHeader, NewRequestId());
+        if (identity is not null && identity.Matches(request.RequestUri))
+        {
+            request.Headers.TryAddWithoutValidation(RequestIdHeader, NewRequestId());
+        }
+
         if (!string.IsNullOrEmpty(bearer))
         {
             if (rawAuthorization)

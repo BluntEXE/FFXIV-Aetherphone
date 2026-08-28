@@ -147,6 +147,28 @@ internal sealed class ChessBoard
         history.Add(hash);
     }
 
+    // Rebuilds this board from an online room's wire state, which shares the packed piece
+    // encoding. History restarts at the loaded position: the server owns the game's endings, this
+    // board only answers what is legal to tap right now.
+    public void LoadFrom(ReadOnlySpan<int> wireSquares, bool wireBlackToMove, int wireCastling,
+        int wireEnPassant, int wireHalfmoveClock)
+    {
+        Array.Clear(squares, 0, SquareCount);
+        var count = wireSquares.Length < SquareCount ? wireSquares.Length : SquareCount;
+        for (var index = 0; index < count; index++)
+        {
+            squares[index] = (byte)wireSquares[index];
+        }
+
+        castling = (byte)wireCastling;
+        enPassant = (sbyte)wireEnPassant;
+        halfmoveClock = (byte)Math.Clamp(wireHalfmoveClock, 0, 255);
+        blackToMove = wireBlackToMove;
+        hash = ComputeHash();
+        history.Clear();
+        history.Add(hash);
+    }
+
     public void CopyFrom(ChessBoard other)
     {
         Array.Copy(other.squares, squares, SquareCount);

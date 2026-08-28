@@ -1,0 +1,583 @@
+using Aetherphone.Core;
+using Aetherphone.Core.Localization;
+using Aetherphone.Core.Theme;
+using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
+using Dalamud.Interface.Utility.Raii;
+
+namespace Aetherphone.Windows.Components;
+
+internal sealed class AppSkin
+{
+    public static readonly Vector4 Transparent = new(0f, 0f, 0f, 0f);
+
+    private static readonly Vector4 White = new(1f, 1f, 1f, 1f);
+    private static readonly Vector4 HoverFill = new(1f, 1f, 1f, 0.16f);
+    private static readonly Vector4 GhostHover = new(1f, 1f, 1f, 0.08f);
+    private static readonly Vector4 GhostStroke = new(1f, 1f, 1f, 0.28f);
+    private static readonly Vector4 ChipInactive = new(1f, 1f, 1f, 0.08f);
+    private static readonly Vector4 ChipActiveInk = new(0.99f, 0.85f, 0.91f, 1f);
+    private static readonly TextStyle SectionLabelStyle = new(0.78f, FontWeight.SemiBold);
+    private static readonly TextStyle PillLabelStyle = new(0.90f, FontWeight.SemiBold);
+    private static readonly TextStyle PillSubLabelStyle = new(0.70f, FontWeight.Medium);
+    private const float PillLabelMinScale = 0.70f;
+    private const float StackedPillInsetFraction = 0.5f;
+
+    public AppPalette Palette { get; set; }
+
+    public PhoneTheme Theme { get; set; } = PhoneTheme.Default;
+
+    public AppSkin(AppPalette palette)
+    {
+        Palette = palette;
+    }
+
+    public Vector4 Accent => Palette.Accent;
+
+    public Vector4 TitleInk => Palette.TitleInk;
+
+    public Vector4 BodyInk => Palette.BodyInk;
+
+    public Vector4 MutedInk => Palette.MutedInk;
+
+    public Vector4 HeaderInk => Palette.HeaderInk;
+
+    public Vector4 FieldSurface => Palette.FieldSurface;
+
+    public Vector4 HoverTint => Palette.HoverTint;
+
+    public Vector4 Hairline => Palette.Hairline;
+
+    public Vector4 HoverWash => Palette.HoverWash;
+
+    public void Backdrop(Rect screen)
+    {
+        var scale = UiScale.Current;
+        PaintGradient(ImGui.GetWindowDrawList(), screen, screen, Theme.ScreenRounding * scale);
+    }
+
+    public void Body(Rect area)
+    {
+        var frame = SceneChrome.ScreenFrom(area, Theme, UiScale.Current);
+        PaintGradient(ImGui.GetWindowDrawList(), area, frame, 0f);
+    }
+
+    public void PaintGradient(ImDrawListPtr drawList, Rect target, Rect frame, float rounding)
+    {
+        var topFraction = frame.Height <= 0f ? 0f : (target.Min.Y - frame.Min.Y) / frame.Height;
+        var bottomFraction = frame.Height <= 0f ? 1f : (target.Max.Y - frame.Min.Y) / frame.Height;
+        Squircle.FillVerticalGradient(drawList, target.Min, target.Max, rounding,
+            ImGui.GetColorU32(Vector4.Lerp(Palette.BackdropTop, Palette.BackdropBottom, topFraction)),
+            ImGui.GetColorU32(Vector4.Lerp(Palette.BackdropTop, Palette.BackdropBottom, bottomFraction)));
+        Squircle.FillVerticalGradient(drawList, target.Min, target.Max, rounding,
+            ImGui.GetColorU32(Vector4.Lerp(Palette.BloomTop, Palette.BloomBottom, topFraction)),
+            ImGui.GetColorU32(Vector4.Lerp(Palette.BloomTop, Palette.BloomBottom, bottomFraction)));
+    }
+
+    public void Card(ImDrawListPtr drawList, Vector2 min, Vector2 max, float rounding, bool elevated = false)
+    {
+        if (elevated)
+        {
+            var scale = UiScale.Current;
+            var shadow = new Vector2(0f, 2f * scale);
+            drawList.AddRectFilled(min + shadow, max + shadow, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.24f)),
+                rounding);
+            Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(Palette.CardFill));
+            Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(Palette.CardStroke), 1f);
+            Material.EdgeSquircle(drawList, min, max, rounding, scale, 0.7f);
+            return;
+        }
+
+        Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(Palette.CardFill));
+        Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(Palette.CardStroke), 1f);
+    }
+
+    public bool PillButton(Rect rect, string label, bool filled, string? id = null) =>
+        PillButtonCore(rect, label, filled, Palette.Accent, Palette.FieldSurface, Palette.TitleInk, Theme, id);
+
+    public static bool PillButton(Rect rect, string label, bool filled, PhoneTheme theme) =>
+        PillButtonCore(rect, label, filled, theme.Accent, theme.SurfaceMuted, theme.TextStrong, theme);
+
+    public static bool PillButton(Rect rect, string label, bool filled, bool enabled, PhoneTheme theme,
+        bool overlay = false)
+    {
+        if (enabled)
+        {
+            return PillButtonCore(rect, label, filled, theme.Accent, theme.GroupedCard, theme.TextStrong, theme,
+                overlay: overlay);
+        }
+
+        var drawList = ImGui.GetWindowDrawList();
+        var fill = Core.Theme.Palette.WithAlpha(filled ? theme.Accent : theme.GroupedCard, 0.45f);
+        Squircle.Fill(drawList, rect.Min, rect.Max, rect.Height * 0.5f, ImGui.GetColorU32(fill));
+        var maxLabelWidth = MathF.Max(1f, rect.Width - rect.Height);
+        var fittedLabel = Typography.FitText(label, maxLabelWidth, PillLabelStyle);
+        var textSize = Typography.Measure(fittedLabel, PillLabelStyle);
+        Typography.Draw(drawList, rect.Center - textSize * 0.5f, fittedLabel, theme.TextMuted, PillLabelStyle);
+        return false;
+    }
+
+    public static bool StackedPillButton(Rect rect, string label, string subLabel, bool filled, bool enabled,
+        PhoneTheme theme)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
+        var accent = theme.Accent;
+        var fill = enabled
+            ? filled
+                ? hovered ? Core.Theme.Palette.Mix(accent, theme.TextStrong, 0.12f) : accent
+                : hovered ? HoverFill : theme.GroupedCard
+            : Core.Theme.Palette.WithAlpha(filled ? accent : theme.GroupedCard, 0.45f);
+        Squircle.Fill(drawList, rect.Min, rect.Max, rect.Height * 0.5f, ImGui.GetColorU32(fill));
+        var ink = enabled ? filled ? White : theme.TextStrong : theme.TextMuted;
+        var maxLabelWidth = MathF.Max(1f, rect.Width - rect.Height * StackedPillInsetFraction);
+        var labelScale = Typography.FitScale(label, maxLabelWidth, PillLabelStyle.Scale, PillLabelMinScale,
+            PillLabelStyle.Weight);
+        var fittedLabel = Typography.FitText(label, maxLabelWidth, labelScale, PillLabelStyle.Weight);
+        var labelSize = Typography.Measure(fittedLabel, labelScale, PillLabelStyle.Weight);
+        if (subLabel.Length == 0)
+        {
+            Typography.Draw(drawList, rect.Center - labelSize * 0.5f, fittedLabel, ink, labelScale,
+                PillLabelStyle.Weight);
+        }
+        else
+        {
+            var fittedSub = Typography.FitText(subLabel, maxLabelWidth, PillSubLabelStyle);
+            var subSize = Typography.Measure(fittedSub, PillSubLabelStyle);
+            var top = rect.Center.Y - (labelSize.Y + subSize.Y) * 0.5f;
+            Typography.Draw(drawList, new Vector2(rect.Center.X - labelSize.X * 0.5f, top), fittedLabel, ink,
+                labelScale, PillLabelStyle.Weight);
+            var subInk = enabled ? Core.Theme.Palette.WithAlpha(ink, 0.72f) : theme.TextMuted;
+            Typography.Draw(drawList, new Vector2(rect.Center.X - subSize.X * 0.5f, top + labelSize.Y),
+                fittedSub, subInk, PillSubLabelStyle);
+        }
+
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return enabled && UiInteract.Click(rect.Min, rect.Max, hovered);
+    }
+
+    public bool FlowChip(ref float cursorX, float centerY, float gap, string label, bool active)
+    {
+        var scale = UiScale.Current;
+        var drawList = ImGui.GetWindowDrawList();
+        var textSize = Typography.Measure(label, 0.85f, FontWeight.Medium);
+        var height = 32f * scale;
+        var width = textSize.X + 26f * scale;
+        var min = new Vector2(cursorX, centerY - height * 0.5f);
+        var max = new Vector2(cursorX + width, centerY + height * 0.5f);
+        var hovered = UiInteract.Hover(min, max);
+        var fill = active
+            ? (hovered ? Core.Theme.Palette.Mix(Palette.Accent, White, 0.10f) : Palette.Accent)
+            : (hovered ? HoverFill : Palette.FieldSurface);
+        Squircle.Fill(drawList, min, max, height * 0.5f, ImGui.GetColorU32(fill));
+        var ink = active ? White : hovered ? Palette.TitleInk : Palette.BodyInk;
+        Typography.Draw(drawList, new Vector2(min.X + (width - textSize.X) * 0.5f, centerY - textSize.Y * 0.5f),
+            label, ink, 0.85f, FontWeight.Medium);
+        cursorX = max.X + gap;
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return UiInteract.Click(min, max, hovered);
+    }
+
+    public static bool FlowChip(ref float cursorX, float centerY, float gap, string label, bool active,
+        PhoneTheme theme)
+    {
+        var scale = UiScale.Current;
+        var drawList = ImGui.GetWindowDrawList();
+        var textSize = Typography.Measure(label, 0.8f, FontWeight.Medium);
+        var height = 28f * scale;
+        var width = textSize.X + 22f * scale;
+        var min = new Vector2(cursorX, centerY - height * 0.5f);
+        var max = new Vector2(cursorX + width, centerY + height * 0.5f);
+        var hovered = UiInteract.Hover(min, max);
+        var fill = active ? Core.Theme.Palette.WithAlpha(theme.Accent, 0.92f) : theme.GroupedCard;
+        Squircle.Fill(drawList, min, max, height * 0.5f, ImGui.GetColorU32(fill));
+        var ink = active || hovered ? theme.TextStrong : theme.TextMuted;
+        Typography.Draw(drawList, new Vector2(min.X + (width - textSize.X) * 0.5f, centerY - textSize.Y * 0.5f),
+            label, ink, 0.8f, FontWeight.Medium);
+        cursorX = max.X + gap;
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return UiInteract.Click(min, max, hovered);
+    }
+
+    private static bool PillButtonCore(Rect rect, string label, bool filled, Vector4 accent, Vector4 surface,
+        Vector4 titleInk, PhoneTheme theme, string? id = null, bool overlay = false)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var hovered = overlay
+            ? UiInteract.HoverWindowOnly(rect.Min, rect.Max)
+            : UiInteract.Hover(rect.Min, rect.Max);
+        var radius = rect.Height * 0.5f;
+        var fill = filled
+            ? (hovered ? Core.Theme.Palette.Mix(accent, theme.TextStrong, 0.12f) : accent)
+            : (hovered ? HoverFill : surface);
+        var ink = filled ? White : titleInk;
+        Squircle.Fill(drawList, rect.Min, rect.Max, radius, ImGui.GetColorU32(fill));
+        var maxLabelWidth = MathF.Max(1f, rect.Width - rect.Height);
+        if (id is not null)
+        {
+            var labelHeight = Typography.Measure(label, PillLabelStyle).Y;
+            Marquee.DrawCenteredAuto(id, label, rect.Center.X, rect.Center.Y - labelHeight * 0.5f, maxLabelWidth,
+                PillLabelStyle, ink);
+        }
+        else
+        {
+            var fittedLabel = Typography.FitText(label, maxLabelWidth, PillLabelStyle);
+            var textSize = Typography.Measure(fittedLabel, PillLabelStyle);
+            Typography.Draw(drawList, rect.Center - textSize * 0.5f, fittedLabel, ink, PillLabelStyle);
+        }
+
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return UiInteract.Click(rect.Min, rect.Max, hovered);
+    }
+
+    public bool ActionPill(Rect rect, string label, bool enabled, in TextStyle style)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var rounding = rect.Height * 0.5f;
+        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
+        Squircle.Fill(drawList, rect.Min, rect.Max, rounding,
+            ImGui.GetColorU32(Core.Theme.Palette.WithAlpha(Accent, enabled ? 1f : 0.4f)));
+        if (hovered)
+        {
+            Squircle.Fill(drawList, rect.Min, rect.Max, rounding, ImGui.GetColorU32(HoverTint));
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        var fitted = Typography.FitText(label, rect.Width - rect.Height, style);
+        Typography.DrawCentered(drawList, rect.Center, fitted,
+            enabled ? HeaderInk : Core.Theme.Palette.WithAlpha(HeaderInk, 0.6f), style);
+        return enabled && UiInteract.Click(rect.Min, rect.Max, hovered);
+    }
+
+    public bool AccentPill(Rect rect, string label, bool enabled, in TextStyle style)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var hovered = enabled && UiInteract.Hover(rect.Min, rect.Max);
+        var fill = !enabled ? Core.Theme.Palette.WithAlpha(Accent, 0.35f) :
+            hovered ? Core.Theme.Palette.Mix(Accent, new Vector4(0f, 0f, 0f, 1f), 0.12f) : Accent;
+        Squircle.Fill(drawList, rect.Min, rect.Max, rect.Height * 0.5f, ImGui.GetColorU32(fill));
+        Typography.DrawCentered(drawList, rect.Center, label, White, style.Scale, style.Weight);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return enabled && UiInteract.Click(rect.Min, rect.Max, hovered);
+    }
+
+    public bool DangerPillButton(Rect rect, string label) => DangerPillButton(rect, label, Theme);
+
+    public static bool DangerPillButton(Rect rect, string label, PhoneTheme theme)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var hovered = UiInteract.Hover(rect.Min, rect.Max);
+        var radius = rect.Height * 0.5f;
+        var fill = hovered ? Core.Theme.Palette.Mix(theme.Danger, theme.TextStrong, 0.12f) : theme.Danger;
+        Squircle.Fill(drawList, rect.Min, rect.Max, radius, ImGui.GetColorU32(fill));
+        var textSize = Typography.Measure(label, 0.9f, FontWeight.SemiBold);
+        Typography.Draw(drawList, rect.Center - textSize * 0.5f, label, White, 0.9f, FontWeight.SemiBold);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return UiInteract.Click(rect.Min, rect.Max, hovered);
+    }
+
+    public bool DangerGhostButton(Rect rect, string label)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var hovered = UiInteract.Hover(rect.Min, rect.Max);
+        var radius = rect.Height * 0.5f;
+        var danger = Theme.Danger;
+        if (hovered)
+        {
+            Squircle.Fill(drawList, rect.Min, rect.Max, radius,
+                ImGui.GetColorU32(Core.Theme.Palette.WithAlpha(danger, 0.14f)));
+        }
+
+        Squircle.Stroke(drawList, rect.Min, rect.Max, radius,
+            ImGui.GetColorU32(Core.Theme.Palette.WithAlpha(danger, 0.55f)), 1.4f);
+        var ink = Core.Theme.Palette.Mix(danger, White, 0.18f);
+        var textSize = Typography.Measure(label, 0.9f, FontWeight.SemiBold);
+        Typography.Draw(drawList, rect.Center - textSize * 0.5f, label, ink, 0.9f, FontWeight.SemiBold);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return UiInteract.Click(rect.Min, rect.Max, hovered);
+    }
+
+    public bool GhostButton(Rect rect, string label) => GhostButtonCore(rect, label, Palette.TitleInk);
+
+    public static bool GhostButton(Rect rect, string label, PhoneTheme theme) =>
+        GhostButtonCore(rect, label, theme.TextStrong);
+
+    private static bool GhostButtonCore(Rect rect, string label, Vector4 titleInk)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var hovered = UiInteract.Hover(rect.Min, rect.Max);
+        var radius = rect.Height * 0.5f;
+        if (hovered)
+        {
+            Squircle.Fill(drawList, rect.Min, rect.Max, radius, ImGui.GetColorU32(GhostHover));
+        }
+
+        Squircle.Stroke(drawList, rect.Min, rect.Max, radius, ImGui.GetColorU32(GhostStroke), 1f);
+        var textSize = Typography.Measure(label, 0.9f, FontWeight.SemiBold);
+        Typography.Draw(drawList, rect.Center - textSize * 0.5f, label, titleInk, 0.9f, FontWeight.SemiBold);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return UiInteract.Click(rect.Min, rect.Max, hovered);
+    }
+
+    public bool IconButton(Vector2 center, float hitRadius, string glyph, Vector4 color, Vector4 background,
+        float glyphScale, string tooltip = "", HoverLabelSide tooltipSide = HoverLabelSide.Above) =>
+        IconButton(center, hitRadius, glyph, color, background, glyphScale, Theme, tooltip, tooltipSide);
+
+    public static bool IconButton(Vector2 center, float hitRadius, string glyph, Vector4 color, Vector4 background,
+        float glyphScale, PhoneTheme theme, string tooltip = "", HoverLabelSide tooltipSide = HoverLabelSide.Above)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var hit = new Vector2(hitRadius, hitRadius);
+        var hovered = UiInteract.Hover(center - hit, center + hit);
+        if (background.W > 0f)
+        {
+            drawList.AddCircleFilled(center, hitRadius,
+                ImGui.GetColorU32(hovered ? Core.Theme.Palette.Mix(background, theme.TextStrong, 0.08f) : background),
+                24);
+        }
+
+        Icon(center, glyph, hovered ? Core.Theme.Palette.Mix(color, theme.TextStrong, 0.2f) : color, glyphScale);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        HoverTooltip.Show(new Rect(center - hit, center + hit), tooltip, tooltipSide);
+        return UiInteract.Click(center - hit, center + hit, hovered);
+    }
+
+    public bool Chip(Rect rect, string label, bool active) =>
+        ChipCore(rect, label, active, Palette.Accent, ChipActiveInk, Palette.BodyInk);
+
+    public static bool Chip(Rect rect, string label, bool active, PhoneTheme theme) =>
+        ChipCore(rect, label, active, theme.Accent, theme.TextStrong, theme.TextStrong);
+
+    private static bool ChipCore(Rect rect, string label, bool active, Vector4 accent, Vector4 activeInk,
+        Vector4 bodyInk)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var hovered = UiInteract.Hover(rect.Min, rect.Max);
+        var radius = rect.Height * 0.5f;
+        var fill = active ? Core.Theme.Palette.WithAlpha(accent, 0.28f) : ChipInactive;
+        Squircle.Fill(drawList, rect.Min, rect.Max, radius, ImGui.GetColorU32(fill));
+        if (active)
+        {
+            Squircle.Stroke(drawList, rect.Min, rect.Max, radius, ImGui.GetColorU32(accent), 1.4f);
+        }
+
+        var ink = active ? activeInk : bodyInk;
+        Typography.DrawCentered(rect.Center, label, ink, 0.85f, FontWeight.Medium);
+        if (hovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
+        return UiInteract.Click(rect.Min, rect.Max, hovered);
+    }
+
+    public void ToggleRow(string label, ref bool value)
+    {
+        var scale = UiScale.Current;
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        var height = 34f * scale;
+        var trackWidth = 44f * scale;
+        var labelMaxWidth = width - trackWidth - 12f * scale;
+        Typography.Draw(new Vector2(origin.X, origin.Y + height * 0.5f - 8f * scale),
+            Typography.FitText(label, labelMaxWidth, 0.95f, FontWeight.Regular), Theme.TextStrong, 0.95f);
+        var trackHeight = 24f * scale;
+        var trackMin = new Vector2(origin.X + width - trackWidth, origin.Y + height * 0.5f - trackHeight * 0.5f);
+        var trackMax = new Vector2(trackMin.X + trackWidth, trackMin.Y + trackHeight);
+        var drawList = ImGui.GetWindowDrawList();
+        Squircle.Fill(drawList, trackMin, trackMax, trackHeight * 0.5f,
+            ImGui.GetColorU32(value ? Palette.Accent : new Vector4(1f, 1f, 1f, 0.16f)));
+        var knobX = value ? trackMax.X - trackHeight * 0.5f : trackMin.X + trackHeight * 0.5f;
+        drawList.AddCircleFilled(new Vector2(knobX, (trackMin.Y + trackMax.Y) * 0.5f), trackHeight * 0.5f - 3f * scale,
+            ImGui.GetColorU32(White), 24);
+        ImGui.SetCursorScreenPos(origin);
+        if (UiInteract.HoverClick(origin, new Vector2(origin.X + width, origin.Y + height)))
+        {
+            value = !value;
+        }
+
+        ImGui.Dummy(new Vector2(width, height));
+    }
+
+    public void Field(string label, string id, ref string value, int maxLength, bool multiline) =>
+        Field(label, id, ref value, maxLength, multiline,
+            multiline ? Metrics.Size.FieldMultiline : Metrics.Size.FieldHeight);
+
+    public void Field(string label, string id, ref string value, int maxLength, bool multiline, float heightUnscaled,
+        ImGuiInputTextFlags extraFlags = ImGuiInputTextFlags.None)
+    {
+        var scale = UiScale.Current;
+        using (ImRaii.PushColor(ImGuiCol.Text, Palette.MutedInk))
+        {
+            Typography.Plain(label);
+        }
+
+        var origin = ImGui.GetCursorScreenPos();
+        var width = ImGui.GetContentRegionAvail().X;
+        var height = heightUnscaled * scale;
+        Squircle.Fill(ImGui.GetWindowDrawList(), origin, new Vector2(origin.X + width, origin.Y + height),
+            Metrics.Radius.Field * scale, ImGui.GetColorU32(Palette.FieldSurface));
+        ImGui.SetCursorScreenPos(new Vector2(origin.X + Metrics.Space.Md * scale,
+            origin.Y + (multiline ? Metrics.Space.Sm * scale : height * 0.5f - ImGui.GetFrameHeight() * 0.5f)));
+        ImGui.SetNextItemWidth(width - Metrics.Space.Md * 2f * scale);
+        using (ImRaii.PushColor(ImGuiCol.FrameBg, Transparent))
+        using (ImRaii.PushColor(ImGuiCol.Text, Palette.TitleInk))
+        {
+            if (multiline)
+            {
+                var fieldSize = new Vector2(width - Metrics.Space.Md * 2f * scale, height - Metrics.Space.Lg * scale);
+                var wrapWidth = fieldSize.X - ImGui.GetStyle().FramePadding.X * 2f - 4f * scale;
+                SoftWrapField.Multiline(id, ref value, maxLength, fieldSize, wrapWidth);
+            }
+            else
+            {
+                ImGui.InputText(id, ref value, maxLength, extraFlags);
+            }
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, height));
+    }
+
+    public static float PillWidthFor(string label, float height) =>
+        Typography.Measure(label, PillLabelStyle).X + height;
+
+    public static float HeaderActionWidth(string label)
+    {
+        var scale = UiScale.Current;
+        return PillWidthFor(label, 28f * scale) + 6f * scale;
+    }
+
+    public bool HeaderAction(Rect area, string label, bool enabled)
+    {
+        var scale = UiScale.Current;
+        var height = 28f * scale;
+        var width = HeaderActionWidth(label);
+        var max = new Vector2(area.Max.X - 12f * scale, area.Min.Y + AppHeader.Height * scale * 0.5f + height * 0.5f);
+        var min = new Vector2(max.X - width, max.Y - height);
+        var rect = new Rect(min, max);
+        return PillButton(rect, label, enabled) && enabled;
+    }
+
+    public void LabelValue(string label, string value)
+    {
+        using (ImRaii.PushColor(ImGuiCol.Text, Palette.MutedInk))
+        {
+            Typography.Plain(label);
+        }
+
+        ImGui.PushTextWrapPos(0f);
+        using (ImRaii.PushColor(ImGuiCol.Text, Theme.TextStrong))
+        {
+            Typography.Wrapped(value);
+        }
+
+        ImGui.PopTextWrapPos();
+    }
+
+    public void SectionLabel(string label) => SectionLabel(label, SectionLabelStyle, 4f);
+
+    public void SectionLabel(string label, in TextStyle style, float gapPixels)
+    {
+        var scale = UiScale.Current;
+        using (Plugin.Fonts.Push(style.Scale, style.Weight))
+        using (ImRaii.PushColor(ImGuiCol.Text, Palette.HeaderInk))
+        {
+            Typography.Plain(Loc.Culture.TextInfo.ToUpper(label));
+        }
+
+        ImGui.Dummy(new Vector2(0f, gapPixels * scale));
+    }
+
+    public void SectionHeading(string label, float topPadPixels = 0f)
+    {
+        var scale = UiScale.Current;
+        var origin = ImGui.GetCursorScreenPos();
+        var drawList = ImGui.GetWindowDrawList();
+        var topPad = topPadPixels * scale;
+        if (topPad > 0f)
+        {
+            ImGui.SetCursorScreenPos(new Vector2(origin.X, origin.Y + topPad));
+        }
+
+        var barWidth = 3f * scale;
+        var barHeight = 14f * scale;
+        Squircle.Fill(drawList, new Vector2(origin.X, origin.Y + topPad + 2f * scale),
+            new Vector2(origin.X + barWidth, origin.Y + topPad + 2f * scale + barHeight), barWidth * 0.5f,
+            ImGui.GetColorU32(Palette.Accent));
+        var labelMaxWidth = ImGui.GetContentRegionAvail().X - barWidth - 9f * scale;
+        Typography.Draw(new Vector2(origin.X + barWidth + 9f * scale, origin.Y + topPad),
+            Typography.FitText(label, labelMaxWidth, 0.95f, FontWeight.SemiBold), Palette.HeadingInk,
+            0.95f, FontWeight.SemiBold);
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().X, topPad + barHeight + (topPad > 0f ? 8f : 10f) * scale));
+    }
+
+    public void HelpText(string text)
+    {
+        ImGui.PushTextWrapPos(0f);
+        using (ImRaii.PushColor(ImGuiCol.Text, Palette.MutedInk))
+        using (Plugin.Fonts.Push(0.82f))
+        {
+            Typography.Wrapped(text);
+        }
+
+        ImGui.PopTextWrapPos();
+    }
+
+    public static void Icon(Vector2 center, string glyph, Vector4 color, float scale) =>
+        Icon(ImGui.GetWindowDrawList(), center, glyph, color, scale);
+
+    public static void Icon(ImDrawListPtr drawList, Vector2 center, string glyph, Vector4 color, float scale)
+    {
+        float targetSize;
+        using (ImRaii.PushFont(UiBuilder.IconFont))
+        {
+            targetSize = ImGui.GetFontSize() * scale;
+        }
+
+        using (Plugin.Fonts.PushIcon(targetSize, glyph))
+        {
+            var font = ImGui.GetFont();
+            var ratio = targetSize / ImGui.GetFontSize();
+            var size = ImGui.CalcTextSize(glyph) * ratio;
+            drawList.AddText(font, targetSize, center - size * 0.5f, ImGui.GetColorU32(color), glyph, 0f);
+        }
+    }
+}

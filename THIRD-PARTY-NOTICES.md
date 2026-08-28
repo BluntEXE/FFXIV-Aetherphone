@@ -20,6 +20,9 @@ Bold) are redistributed unmodified.
 
 The application icons under `src/Aetherphone/Icons/` are derived from
 [Tabler Icons](https://tabler.io/icons) (recolored and rasterized to PNG).
+`src/Aetherphone/Fonts/TablerIcons.ttf` is a 30 glyph subset of the same
+project's webfont, remapped into a private codepoint range; see
+`tools/icon-font/` for the generator.
 
 - Homepage: https://tabler.io/icons
 - Source: https://github.com/tabler/tabler-icons
@@ -42,6 +45,44 @@ The emoji metadata in `src/Aetherphone/Emoji/catalog.json` (labels, groups,
 search tags, shortcodes and skin-tone variants) is built from
 [emojibase-data](https://github.com/milesj/emojibase) by Miles Johnson,
 MIT License; full text reproduced in the MIT section below.
+
+## Interface sounds
+
+The interface sound clips under `src/Aetherphone/Sounds/Ui/` come from two
+sources, re-encoded to 48 kHz PCM WAV and level-matched:
+
+Most clips (taps, toggles, transitions, send, caution, blocked, success,
+keystrokes) are from the SND01 "sine" kit of [SND](https://snd.dev),
+designed by Yasuhiro Tsuchiya.
+
+- Copyright DENTSU INC. and STARRYWORKS inc.; audio copyright remains with
+  the credited sound designer
+- Source: https://github.com/snd-lib/snd-lib
+- License: free for commercial and non-commercial use per the SND terms
+  (https://snd.dev); credit requested, provided here
+
+The remaining clips are public domain:
+
+- `shutter.wav`: "Trigger of camera 1" from
+  [BigSoundBank](https://bigsoundbank.com/trigger-of-camera-1-s2394.html),
+  by Joseph Sardin, CC0
+- `coin.wav`: "chips-stack-1" from
+  [Kenney Casino Audio](https://kenney.nl/assets/casino-audio), CC0
+
+The mini-game clips under `src/Aetherphone/Sounds/Games/` are Creative Commons
+Zero (CC0) by [Kenney](https://kenney.nl), re-encoded to mono 48 kHz PCM WAV
+and level-matched:
+
+- [Impact Sounds](https://kenney.nl/assets/impact-sounds): hits, breaks,
+  explosions
+- [Digital Audio](https://kenney.nl/assets/digital-audio): retro blips,
+  lasers, jumps, power-ups
+- [Casino Audio](https://kenney.nl/assets/casino-audio): card sounds
+- [Interface Sounds](https://kenney.nl/assets/interface-sounds): clicks,
+  ticks, errors
+
+The four `simon_*.wav` tones are sine waves synthesized for this plugin with
+ffmpeg (E3, A3, C#4, E4) and carry no third-party rights.
 
 ## mpv
 
@@ -171,6 +212,7 @@ once at the end of this section:
 | Component | Version | Copyright / project |
 | --- | --- | --- |
 | Tabler Icons (rasterized) | n/a | 2020-2026 Paweł Kuna (https://github.com/tabler/tabler-icons) |
+| Tabler Icons webfont (subset) | 3.46.0 | 2020-2026 Paweł Kuna (https://github.com/tabler/tabler-icons) |
 | emojibase-data (catalog metadata) | 15.x | Miles Johnson (https://github.com/milesj/emojibase) |
 | NAudio.Core / NAudio.WinMM / NAudio.Wasapi | 2.3.0 | Mark Heath (https://github.com/naudio/NAudio) |
 | NetStone | 1.4.1 | 2024 goaaats, Koenari (https://github.com/xivapi/NetStone) |
@@ -220,3 +262,66 @@ HtmlAgilityPack.CssSelectors project is published under the MIT License
 The Calendar app shows in-game event dates served through the Aetherphone
 backend, which caches a community-maintained public events database. The data
 is fetched server-side; no third-party credentials ship with the plugin.
+
+## managed-doom (Doom engine)
+
+The Doom mini-game runs on [managed-doom](https://github.com/sinshu/managed-doom), a C# port of the
+Doom engine, compiled from the sources vendored under `src/ManagedDoom/` (upstream commit
+`9365696eb44326a3aab72c4bab217f7db8a87c96`, desktop host removed, one data-directory hook added; see
+`src/ManagedDoom/README.md`). The sound and music backends in `src/Aetherphone/Apps/Games/Doom/DoomSound.cs`
+and `DoomMusic.cs` are derived from the upstream `SilkSound.cs` and `SilkMusic.cs`.
+
+- Copyright (C) 1993-1996 Id Software, Inc.
+- Copyright (C) 2019-2020 Nobuaki Tanaka
+- License: GNU General Public License, version 2 or (at your option) any later version; full text in
+  `src/ManagedDoom/LICENSE_ManagedDoom.txt`, shipped in every release archive.
+
+## MeltySynth
+
+The Doom soundtrack is synthesized with [MeltySynth](https://github.com/sinshu/meltysynth) 2.4.1
+(NuGet, redistributed as a compiled assembly).
+
+- Copyright (c) 2021 Nobuaki Tanaka
+- License: MIT; full text reproduced in the MIT section below.
+
+## Doom game data and soundfont (downloaded on demand)
+
+No Doom game data is bundled. When a player sets up the Doom mini-game, the plugin downloads two files
+into the player's own Aetherphone data folder, each only when the player asks for it:
+
+- The Doom shareware episode (`doom1.wad`, version 1.9) from Debian's package archive
+  (`doom-wad-shareware`). Copyright (C) 1993 id Software, Inc.; distributed under id Software's shareware
+  terms, which permit free redistribution of the shareware episode.
+- Freedoom 0.13.0 (`freedoom1.wad`, `freedoom2.wad`) from the Freedoom project's GitHub release, a free
+  game that runs on the Doom engine. Copyright (c) 2001-2024 Contributors to the Freedoom project; License:
+  BSD 3-Clause (the release archive's COPYING.txt). Source: https://freedoom.github.io/
+- The TimGM6mb General MIDI soundfont (`TimGM6mb.sf2`) from Debian's `timgm6mb-soundfont` package.
+  Copyright (C) 2004 Tim Brechbill; License: GNU General Public License, version 2.
+
+Both downloads are verified against a known checksum before use. Players may place their own commercial
+IWAD (`DOOM.WAD`, `DOOM2.WAD`, `PLUTONIA.WAD`, `TNT.WAD`) or a Freedoom IWAD in the same folder instead.
+
+## SCOWL word lists
+
+The English word bank of the Word Run mini-game (`src/Aetherphone/Words/en.answers.txt` and
+`en.valid.txt`) is generated from SCOWL (Spell Checker Oriented Word Lists) 2020.12.07 by
+`tools/build-word-banks.ps1`.
+
+- Copyright 2000-2018 by Kevin Atkinson, with the additional copyrights listed in
+  `src/Aetherphone/Words/SCOWL-Copyright.txt`, shipped next to the word lists in every release archive.
+- Permission to use, copy, modify, distribute and sell these word lists, the associated scripts, the output
+  created from the scripts, and its documentation for any purpose is hereby granted without fee, provided
+  that the copyright notice appears in all copies.
+- Source: http://wordlist.aspell.net/
+
+## FrequencyWords
+
+The German, Spanish, French and Portuguese word banks of the Word Run mini-game
+(`src/Aetherphone/Words/de.*.txt`, `es.*.txt`, `fr.*.txt`, `pt.*.txt`) are derived from the OpenSubtitles
+2018 frequency lists published in the FrequencyWords project by Hermit Dave, filtered to five-letter words
+with accents normalized by `tools/build-word-banks.ps1`.
+
+- Source: https://github.com/hermitdave/FrequencyWords
+- License (content): Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0),
+  https://creativecommons.org/licenses/by-sa/4.0/. Those four derived word-bank files are likewise available
+  under CC BY-SA 4.0.

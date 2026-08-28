@@ -59,9 +59,8 @@ internal static class GameHud
         Typography.DrawCentered(new Vector2(center.X, center.Y - 7f * scale * sizeScale), value,
             highlight ? accent : theme.TextStrong, TextStyles.Title3.Scale * sizeScale * valuePop,
             TextStyles.Title3.Weight);
-        Typography.DrawCentered(new Vector2(center.X, center.Y + 12f * scale * sizeScale),
-            Loc.Culture.TextInfo.ToUpper(label), theme.TextMuted, TextStyles.Caption2.Scale * sizeScale,
-            TextStyles.Caption2.Weight);
+        Typography.DrawCentered(new Vector2(center.X, center.Y + 12f * scale * sizeScale), Loc.Upper(label),
+            theme.TextMuted, TextStyles.Caption2.Scale * sizeScale, TextStyles.Caption2.Weight);
     }
 
     public static bool RestartButton(Vector2 center, float radius, PhoneTheme theme)
@@ -81,6 +80,18 @@ internal static class GameHud
         ProgressRing.CenterIcon(center, FontAwesomeIcon.Redo, hovered ? theme.TextStrong : theme.Accent,
             radius * 0.95f);
         return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+    }
+
+    public static bool LandscapeBack(Vector2 center, float radius, PhoneTheme theme)
+    {
+        var scale = UiScale.Current;
+        var drawList = ImGui.GetWindowDrawList();
+        var corner = new Vector2(radius, radius);
+        var hovered = UiInteract.Hover(center - corner, center + corner);
+        Material.Frosted(drawList, center - corner, center + corner, radius, scale, hovered ? 1f : 0.85f);
+        ProgressRing.CenterIcon(drawList, center, FontAwesomeIcon.ChevronLeft,
+            hovered ? theme.TextStrong : theme.Accent, radius * 0.9f);
+        return UiInteract.HoverClickCircle(center, radius);
     }
 
     public static bool Button(Vector2 center, Vector2 size, string label, Vector4 accent, PhoneTheme theme)
@@ -105,8 +116,8 @@ internal static class GameHud
         Squircle.FillVerticalGradient(drawList, min, max, radius, fillTop, fillBottom);
         Squircle.Stroke(drawList, min, max, radius,
             ImGui.GetColorU32(GamePalette.Lighten(accent, 0.35f) with { W = 0.55f }), 1f * scale);
-        drawList.AddLine(new Vector2(min.X + radius, min.Y + 1f * scale), new Vector2(max.X - radius, min.Y + 1f * scale),
-            ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.30f)), 1f * scale);
+        Material.Sheen(drawList, min, max, radius, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.30f)), 1f * scale,
+            1f * scale);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

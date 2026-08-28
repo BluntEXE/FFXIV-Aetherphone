@@ -57,6 +57,7 @@ internal sealed partial class HousingApp
             Message = Loc.T(L.Housing.ClearWatchlistConfirm, count),
             ConfirmLabel = Loc.T(L.Housing.ClearWatchlist),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             Confirm = () =>
             {
                 var watched = housing.Watch.Watched;
@@ -135,7 +136,7 @@ internal sealed partial class HousingApp
 
         var removeRadius = 11f * scale;
         var removeCenter = new Vector2(textRight - removeRadius, row.Min.Y + 20f * scale);
-        if (AppSkin.IconButton(removeCenter, removeRadius, FontAwesomeIcon.Times.ToIconString(), frameTheme.TextMuted,
+        if (AppSkin.IconButton(removeCenter, removeRadius, IconGlyph.Of(FontAwesomeIcon.Times), frameTheme.TextMuted,
                 frameTheme.SurfaceMuted, 0.64f, frameTheme, Loc.T(L.Housing.Unwatch)))
         {
             housing.Watch.CancelReminder(record.Key);

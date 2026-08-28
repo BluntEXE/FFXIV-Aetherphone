@@ -5,22 +5,9 @@ namespace Aetherphone.Core.Market;
 
 internal static class MarketFormat
 {
-    private static readonly ConcurrentDictionary<(string, long), string> GilCache = new();
     private static readonly ConcurrentDictionary<(string, int), string> ClipCache = new();
 
-    public static string Gil(long amount)
-    {
-        var culture = Loc.Culture;
-        var key = (culture.Name, amount);
-        if (GilCache.TryGetValue(key, out var cached))
-        {
-            return cached;
-        }
-
-        var formatted = amount.ToString("N0", culture);
-        GilCache.TryAdd(key, formatted);
-        return formatted;
-    }
+    public static string Gil(long amount) => NumberText.Group(amount);
 
     public static string Gil(double amount) => Gil((long)Math.Round(amount));
 
@@ -63,7 +50,7 @@ internal static class MarketFormat
             return cached;
         }
 
-        var clipped = value.Substring(0, maxLength - 1) + "…";
+        var clipped = string.Concat(value.AsSpan(0, maxLength - 1), "…");
         ClipCache.TryAdd(key, clipped);
         return clipped;
     }

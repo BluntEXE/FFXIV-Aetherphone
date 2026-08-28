@@ -40,13 +40,14 @@ internal sealed partial class ClockApp
                 return;
             }
 
-            var card = BeginRowCard(alarms.Count, AlarmRowHeight, scale);
+            var card = GroupCard.Begin(ui, alarms.Count, AlarmRowHeight);
             for (var index = 0; index < alarms.Count; index++)
             {
-                DrawAlarmRow(RowAt(card, index, AlarmRowHeight, scale), alarms[index]);
+                DrawAlarmRow(card.NextRow(), alarms[index]);
             }
 
-            EndRowCard(card, 10f, scale);
+            card.End();
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
         }
     }
 
@@ -66,7 +67,7 @@ internal sealed partial class ClockApp
 
         var subtitleLeft = row.Min.X + timeSize.X + 12f * scale;
         var subtitleMaxWidth = MathF.Max(1f, row.Max.X - Metrics.Size.ToggleWidth * scale - 8f * scale - subtitleLeft);
-        Marquee.DrawLeftAuto("clock.alarmrow.sub." + alarm.Id, subtitle, subtitleLeft, row.Center.Y - 8f * scale,
+        Marquee.DrawLeftAuto(new MarqueeId("clock.alarmrow.sub.", alarm.Id.ToString()), subtitle, subtitleLeft, row.Center.Y - 8f * scale,
             subtitleMaxWidth, TextStyles.Footnote, ui.MutedInk);
 
         var width = Metrics.Size.ToggleWidth * scale;
@@ -231,6 +232,7 @@ internal sealed partial class ClockApp
             Message = Loc.T(L.Clock.DeleteAlarmConfirm),
             ConfirmLabel = Loc.T(L.Clock.Delete),
             CancelLabel = Loc.T(L.Clock.KeepIt),
+            Sheet = true,
             Confirm = () => DeleteAlarm(id),
         });
     }

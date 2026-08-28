@@ -4,6 +4,7 @@ using Aetherphone.Core.Game;
 using Aetherphone.Core.Hunts;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Maps;
+using Aetherphone.Core.Runtime;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Venues;
 using Aetherphone.Windows.Components;
@@ -59,20 +60,14 @@ internal sealed partial class HuntsApp
     private float pendingFlagMapX;
     private float pendingFlagMapY;
 
-    private readonly PendingFrameworkAction pendingFlagAction;
-
     private uint pendingWorldHopWorldId;
     private uint pendingWorldHopTerritoryId;
     private uint pendingWorldHopMapId;
     private (float X, float Y)? pendingWorldHopFlagCoordinate;
 
-    private readonly PendingFrameworkAction pendingWorldHopAction;
-
     private uint pendingInstanceWorldId;
     private uint pendingInstanceTerritoryId;
     private int pendingInstanceTarget;
-
-    private readonly PendingFrameworkAction pendingInstanceAction;
 
     private void OpenDetail(HuntWindowDto window) =>
         OpenDetailFor(window.MobId, window.WorldId, window.ZoneInstance);
@@ -718,7 +713,7 @@ internal sealed partial class HuntsApp
         if (outcome == LifestreamOutcome.NotInstalled)
         {
             ImGui.SetClipboardText(TravelPlanner.Command(in destination));
-            CopyToast.Show();
+            ShellToast.Show();
             return;
         }
 
@@ -864,7 +859,7 @@ internal sealed partial class HuntsApp
             TextStyles.BodyEmphasized);
         var chevron = expanded ? FontAwesomeIcon.ChevronUp : FontAwesomeIcon.ChevronDown;
         AppSkin.Icon(drawList, new Vector2(headerMax.X - 14f * scale, origin.Y + headerHeight * 0.5f),
-            chevron.ToIconString(), ui.MutedInk, 0.55f);
+            IconGlyph.Of(chevron), ui.MutedInk, 0.55f);
 
         if (UiInteract.Click(origin, headerMax, hovered))
         {
@@ -1057,7 +1052,7 @@ internal sealed partial class HuntsApp
         var settings = hunts.NotificationSettings;
         var mode = settings.MobOverrideModeFor(mobId);
         var center = new Vector2(content.Max.X - 22f * scale, rowCenterY);
-        if (ui.IconButton(center, 16f * scale, NotificationIcon(mode).ToIconString(), NotificationTint(mode),
+        if (ui.IconButton(center, 16f * scale, IconGlyph.Of(NotificationIcon(mode)), NotificationTint(mode),
                 new Vector4(0f, 0f, 0f, 0f), 1.2f, MarkNotificationValueText(mobId, worldId, mode),
                 HoverLabelSide.Below))
         {

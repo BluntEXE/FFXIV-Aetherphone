@@ -17,6 +17,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="Words\*.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Hunts\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -57,10 +60,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Using Remove="System.Linq" />
     <Using Include="System" />
-    <Using Include="System.Collections" />
     <Using Include="System.Collections.Generic" />
-    <Using Include="System.Linq" />
     <Using Include="System.Numerics" />
   </ItemGroup>
 
@@ -71,6 +73,7 @@
     <PackageReference Include="NAudio.WinMM" Version="2.3.0" />
     <PackageReference Include="NLayer.NAudioSupport" Version="2.0.1" />
     <PackageReference Include="NAudio.Wasapi" Version="2.3.0" />
+    <PackageReference Include="MeltySynth" Version="2.4.1" />
     <PackageReference Include="NetStone" Version="1.4.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4">
       <ExcludeAssets>runtime</ExcludeAssets>
@@ -83,5 +86,9 @@
     <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
     <PackageReference Include="SharpDX.D3DCompiler" Version="4.2.0" />
     <PackageReference Include="SharpCompress" Version="0.48.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ManagedDoom\ManagedDoom.csproj" />
   </ItemGroup>
 </Project>

@@ -122,7 +122,7 @@ internal sealed class FishingApp : IPhoneApp
         var titleMaxWidth = innerRight - tile - 10f * scale - innerLeft;
         var titleHovering = UiInteract.Hover(new Vector2(innerLeft, min.Y + 30f * scale),
             new Vector2(innerLeft + titleMaxWidth, min.Y + 58f * scale));
-        Marquee.DrawLeft("fishing.hero." + plan.RouteName, plan.RouteName, innerLeft, min.Y + 34f * scale,
+        Marquee.DrawLeft(new MarqueeId("fishing.hero.", plan.RouteName), plan.RouteName, innerLeft, min.Y + 34f * scale,
             titleMaxWidth, TextStyles.Title2, ui.TitleInk, titleHovering);
 
         DrawHeroTimeLine(current, plan.TimeOfDay, tint, new Vector2(innerLeft, min.Y + 64f * scale), utcNow);
@@ -196,10 +196,10 @@ internal sealed class FishingApp : IPhoneApp
             var nameLeft = innerLeft + 22f * scale;
             var rowAvailableWidth = MathF.Max(1f, innerRight - nameLeft);
             var nameMaxWidth = rowAvailableWidth * 0.55f;
-            var nameWidth = Marquee.DrawLeftAuto("fishing.hero.bluefish." + index + ".name", fish.Name, nameLeft,
+            var nameWidth = Marquee.DrawLeftAuto(new MarqueeId("fishing.hero.bluefish.", index + ".name"), fish.Name, nameLeft,
                 rowCenterY - 8f * scale, nameMaxWidth, TextStyles.SubheadlineEmphasized, ui.BodyInk);
             var baitMaxWidth = MathF.Max(1f, innerRight - (nameLeft + nameWidth + 8f * scale));
-            Marquee.DrawLeftAuto("fishing.hero.bluefish." + index + ".bait", fish.Bait, nameLeft + nameWidth + 8f * scale,
+            Marquee.DrawLeftAuto(new MarqueeId("fishing.hero.bluefish.", index + ".bait"), fish.Bait, nameLeft + nameWidth + 8f * scale,
                 rowCenterY - 6f * scale, baitMaxWidth, TextStyles.Footnote, ui.MutedInk);
         }
     }
@@ -224,16 +224,10 @@ internal sealed class FishingApp : IPhoneApp
     private void DrawUpcoming(DateTime utcNow, float scale)
     {
         ui.SectionLabel(Loc.T(L.Fishing.Upcoming), TextStyles.FootnoteEmphasized, 6f);
-        var width = ImGui.GetContentRegionAvail().X;
-        var rowCount = VoyageCount - 1;
-        var origin = ImGui.GetCursorScreenPos();
-        var min = origin;
-        var max = origin + new Vector2(width, rowCount * UpcomingRowHeight * scale);
-        ui.Card(ImGui.GetWindowDrawList(), min, max, CardRounding * scale, elevated: true);
-
+        var card = GroupCard.Begin(ui, VoyageCount - 1, UpcomingRowHeight);
         for (var index = 1; index < VoyageCount; index++)
         {
-            var row = UpcomingRow(min, max, index - 1, scale);
+            var row = card.NextRow();
             if (index == 1)
             {
                 UiAnchors.Report("fishing.upcoming", row);
@@ -242,23 +236,8 @@ internal sealed class FishingApp : IPhoneApp
             DrawVoyageRow(row, voyages[index], utcNow, scale);
         }
 
-        ImGui.SetCursorScreenPos(min);
-        ImGui.Dummy(new Vector2(width, max.Y - min.Y + 4f * scale));
-    }
-
-    private Rect UpcomingRow(Vector2 cardMin, Vector2 cardMax, int rowIndex, float scale)
-    {
-        var pad = CardPadding * scale;
-        var top = cardMin.Y + rowIndex * UpcomingRowHeight * scale;
-        if (rowIndex > 0)
-        {
-            ImGui.GetWindowDrawList().AddLine(
-                new Vector2(cardMin.X + pad + (UpcomingTileSize + 12f) * scale, top),
-                new Vector2(cardMax.X - pad, top), ImGui.GetColorU32(ui.Palette.CardStroke), 1f);
-        }
-
-        return new Rect(new Vector2(cardMin.X + pad, top),
-            new Vector2(cardMax.X - pad, top + UpcomingRowHeight * scale));
+        card.End();
+        ImGui.Dummy(new Vector2(0f, 4f * scale));
     }
 
     private void DrawVoyageRow(Rect row, in OceanVoyageSlot voyage, DateTime utcNow, float scale)
@@ -307,7 +286,7 @@ internal sealed class FishingApp : IPhoneApp
             var blueFishSize = Typography.Measure(blueFishNames, TextStyles.Footnote);
             var blueFishHovering = UiInteract.Hover(new Vector2(blueFishLeft, blueFishY),
                 new Vector2(blueFishLeft + blueFishMaxWidth, blueFishY + blueFishSize.Y));
-            Marquee.DrawLeft(rowId + ".sub", blueFishNames, blueFishLeft, blueFishY, blueFishMaxWidth,
+            Marquee.DrawLeft(new MarqueeId(rowId, ".sub"), blueFishNames, blueFishLeft, blueFishY, blueFishMaxWidth,
                 TextStyles.Footnote, ui.MutedInk, blueFishHovering);
         }
     }

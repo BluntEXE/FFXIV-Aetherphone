@@ -3,6 +3,7 @@ using Aetherphone.Core.Apps;
 using Aetherphone.Core.Coins;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -555,6 +556,7 @@ internal sealed partial class CoinApp
 
         if (result.Purchased)
         {
+            UiFeedback.Play(UiSound.Success);
             RefreshShop();
             RefreshInventory();
             return;

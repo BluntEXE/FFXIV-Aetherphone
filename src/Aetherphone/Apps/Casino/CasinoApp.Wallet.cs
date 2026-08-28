@@ -56,8 +56,8 @@ internal sealed partial class CasinoApp
         var width = ScrollLayout.StableContentWidth();
         var origin = ImGui.GetCursorScreenPos();
         var drawList = ImGui.GetWindowDrawList();
-        var chipsText = Core.Casino.CasinoChipLots.ChipPerCoin.ToString("N0", Loc.Culture);
-        var coinsText = 1L.ToString("N0", Loc.Culture);
+        var chipsText = NumberText.Group(Core.Casino.CasinoChipLots.ChipPerCoin);
+        var coinsText = NumberText.Group(1L);
         var equalsText = " = ";
         var chipsSize = CurrencyGlyph.MeasureAmount(chipsText, TextStyles.Caption1);
         var equalsSize = Typography.Measure(equalsText, TextStyles.Caption1);
@@ -90,7 +90,7 @@ internal sealed partial class CasinoApp
         var iconCenter = new Vector2(row.Min.X + inset + 15f * scale, row.Center.Y);
         drawList.AddCircleFilled(iconCenter, 15f * scale,
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.16f)), 32);
-        AppSkin.Icon(drawList, iconCenter, icon.ToIconString(), ui.Accent, 0.8f);
+        AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(icon), ui.Accent, 0.8f);
 
         var pillHeight = 34f * scale;
         var pillMax = new Vector2(row.Max.X - inset, row.Center.Y + pillHeight * 0.5f);
@@ -106,7 +106,7 @@ internal sealed partial class CasinoApp
         var hint = buying
             ? Loc.T(L.Casino.ConvertToChipsHint)
             : (seated
-                ? Loc.T(L.Casino.ConvertToCoinsHint, stack.ToString("N0", Loc.Culture))
+                ? Loc.T(L.Casino.ConvertToCoinsHint, NumberText.Group(stack))
                 : Loc.T(L.Casino.ConvertNoChips));
         Typography.Draw(drawList, new Vector2(textLeft, row.Min.Y + 36f * scale),
             Typography.FitText(hint, textWidth, TextStyles.Footnote), ui.MutedInk, TextStyles.Footnote);

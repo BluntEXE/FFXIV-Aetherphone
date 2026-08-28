@@ -101,7 +101,7 @@ internal sealed partial class MusicApp
         var fill = hovered ? Palette.WithAlpha(ui.TitleInk, 0.16f) : ui.FieldSurface;
         Squircle.Fill(drawList, pillMin, pillMax, rounding, ImGui.GetColorU32(fill));
         var centerY = (pillMin.Y + pillMax.Y) * 0.5f;
-        AppSkin.Icon(new Vector2(pillMin.X + 18f * scale, centerY), FontAwesomeIcon.Search.ToIconString(),
+        AppSkin.Icon(new Vector2(pillMin.X + 18f * scale, centerY), IconGlyph.Of(FontAwesomeIcon.Search),
             ui.MutedInk, 0.85f);
         var fitted = Typography.FitText(hint, pillMax.X - pillMin.X - 48f * scale, TextStyles.Callout);
         var hintSize = Typography.Measure(fitted, TextStyles.Callout);
@@ -163,13 +163,13 @@ internal sealed partial class MusicApp
             var chipTitleSize = Typography.Measure(song.Title, TextStyles.FootnoteEmphasized);
             var chipTitleHovering = UiInteract.Hover(new Vector2(textLeft, chipTitleY),
                 new Vector2(textLeft + textWidth, chipTitleY + chipTitleSize.Y));
-            Marquee.DrawLeft("music.recentChip.title." + song.VideoId, song.Title, textLeft, chipTitleY,
+            Marquee.DrawLeft(new MarqueeId("music.recentChip.title.", song.VideoId), song.Title, textLeft, chipTitleY,
                 textWidth, TextStyles.FootnoteEmphasized, current ? ui.Accent : ui.TitleInk, chipTitleHovering);
             var chipAuthorY = min.Y + 28f * scale;
             var chipAuthorSize = Typography.Measure(song.Author, TextStyles.Caption1);
             var chipAuthorHovering = UiInteract.Hover(new Vector2(textLeft, chipAuthorY),
                 new Vector2(textLeft + textWidth, chipAuthorY + chipAuthorSize.Y));
-            Marquee.DrawLeft("music.recentChip.author." + song.VideoId, song.Author, textLeft, chipAuthorY,
+            Marquee.DrawLeft(new MarqueeId("music.recentChip.author.", song.VideoId), song.Author, textLeft, chipAuthorY,
                 textWidth, TextStyles.Caption1, ui.MutedInk, chipAuthorHovering);
 
             if (current)
@@ -249,13 +249,13 @@ internal sealed partial class MusicApp
             var featTitleSize = Typography.Measure(song.Title, TextStyles.FootnoteEmphasized);
             var featTitleHovering = UiInteract.Hover(new Vector2(artMin.X, featTitleY),
                 new Vector2(artMin.X + textWidth, featTitleY + featTitleSize.Y));
-            Marquee.DrawLeft("music.featured.title." + song.VideoId, song.Title, artMin.X, featTitleY,
+            Marquee.DrawLeft(new MarqueeId("music.featured.title.", song.VideoId), song.Title, artMin.X, featTitleY,
                 textWidth, TextStyles.FootnoteEmphasized, current ? ui.Accent : ui.TitleInk, featTitleHovering);
             var featAuthorY = artMax.Y + 24f * scale;
             var featAuthorSize = Typography.Measure(song.Author, TextStyles.Caption1);
             var featAuthorHovering = UiInteract.Hover(new Vector2(artMin.X, featAuthorY),
                 new Vector2(artMin.X + textWidth, featAuthorY + featAuthorSize.Y));
-            Marquee.DrawLeft("music.featured.author." + song.VideoId, song.Author, artMin.X, featAuthorY,
+            Marquee.DrawLeft(new MarqueeId("music.featured.author.", song.VideoId), song.Author, artMin.X, featAuthorY,
                 textWidth, TextStyles.Caption1, ui.MutedInk, featAuthorHovering);
             if (badgeClicked || UiInteract.Click(min, cardMax, hovered))
             {
@@ -287,8 +287,7 @@ internal sealed partial class MusicApp
         var cardHeight = artSize + 40f * scale;
         var origin = ImGui.GetCursorScreenPos();
         var drawList = ImGui.GetWindowDrawList();
-        var pulse = 0.05f + 0.04f * Pulse.Wave(1600f);
-        var fill = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, pulse));
+        var fill = Skeleton.Fill();
         for (var index = 0; index < FeaturedTiles; index++)
         {
             var column = index % 2;
@@ -338,7 +337,7 @@ internal sealed partial class MusicApp
             }
 
             var label = CatalogLabels.RadioCategory(categories[index].Display);
-            Marquee.DrawLeft("music.categoryTile." + categories[index].Tag, label, min.X + 12f * scale,
+            Marquee.DrawLeft(new MarqueeId("music.categoryTile.", categories[index].Tag), label, min.X + 12f * scale,
                 min.Y + 10f * scale, tileWidth - 24f * scale, TextStyles.SubheadlineEmphasized,
                 new Vector4(1f, 1f, 1f, 1f), hovered);
             if (UiInteract.Click(min, max, hovered))
@@ -387,12 +386,12 @@ internal sealed partial class MusicApp
             return;
         }
 
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             ImGui.Dummy(new Vector2(0f, 4f * scale));
             for (var index = 0; index < stations.Length; index++)
             {
-                DrawStationRow(scale, stations[index], index, PlayStation);
+                DrawStationRow(scale, stations[index], index, PlayStation, FeedCell.PadX);
             }
 
             if (loadingMore)
@@ -423,86 +422,68 @@ internal sealed partial class MusicApp
             ui.MutedInk, TextStyles.Subheadline, maxWidth);
     }
 
-    private void DrawStationRow(float scale, RadioStation station, int index, Action<int> onPlay)
+    private void DrawStationRow(float scale, RadioStation station, int index, Action<int> onPlay, float sideInset)
     {
         var rowHeight = StationRowHeight * scale;
-        var width = ScrollLayout.StableContentWidth();
-        var origin = ImGui.GetCursorScreenPos();
-        var min = origin;
-        var max = new Vector2(origin.X + width, origin.Y + rowHeight);
         var drawList = ImGui.GetWindowDrawList();
+        var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash);
+        var min = cell.Bounds.Min;
+        var max = cell.Bounds.Max;
+        var inset = sideInset * scale;
         var current = IsCurrentStation(station);
-        var hovered = UiInteract.Hover(min, max);
-        if (hovered)
-        {
-            Squircle.Fill(drawList, min, max, 10f * scale, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
         var artSize = 44f * scale;
-        var artMin = new Vector2(min.X + 6f * scale, min.Y + (rowHeight - artSize) * 0.5f);
+        var artMin = new Vector2(min.X + inset, min.Y + (rowHeight - artSize) * 0.5f);
         var artMax = artMin + new Vector2(artSize, artSize);
         drawList.AddImageRounded(artwork.HandleForName(station.Name), artMin, artMax, Vector2.Zero, Vector2.One,
             0xFFFFFFFFu, 8f * scale, ImDrawFlags.RoundCornersAll);
-        var trailing = current ? 50f * scale : 33f * scale;
+        var trailing = inset + (current ? 44f : 27f) * scale;
         var textLeft = artMax.X + 12f * scale;
         var textWidth = max.X - trailing - textLeft;
         var stationNameY = min.Y + 10f * scale;
         var stationNameSize = Typography.Measure(station.Name, TextStyles.BodyEmphasized);
         var stationNameHovering = UiInteract.Hover(new Vector2(textLeft, stationNameY),
             new Vector2(textLeft + textWidth, stationNameY + stationNameSize.Y));
-        Marquee.DrawLeft("music.stationRow.name." + station.StreamUrl, station.Name, textLeft, stationNameY,
+        Marquee.DrawLeft(new MarqueeId("music.stationRow.name.", station.StreamUrl), station.Name, textLeft, stationNameY,
             textWidth, TextStyles.BodyEmphasized, current ? ui.Accent : ui.TitleInk, stationNameHovering);
         var stationSub = StationSubtitle(station);
         var stationSubY = min.Y + 34f * scale;
         var stationSubSize = Typography.Measure(stationSub, TextStyles.Caption1);
         var stationSubHovering = UiInteract.Hover(new Vector2(textLeft, stationSubY),
             new Vector2(textLeft + textWidth, stationSubY + stationSubSize.Y));
-        Marquee.DrawLeft("music.stationRow.subtitle." + station.StreamUrl, stationSub, textLeft,
+        Marquee.DrawLeft(new MarqueeId("music.stationRow.subtitle.", station.StreamUrl), stationSub, textLeft,
             stationSubY, textWidth, TextStyles.Caption1, ui.MutedInk, stationSubHovering);
         if (current)
         {
-            Equalizer.Draw(drawList, new Vector2(max.X - 18f * scale, min.Y + rowHeight * 0.5f), scale, 17f * scale,
-                clock, ui.Accent, 1f, playback.IsPlaying);
+            Equalizer.Draw(drawList, new Vector2(max.X - inset - 12f * scale, min.Y + rowHeight * 0.5f), scale,
+                17f * scale, clock, ui.Accent, 1f, playback.IsPlaying);
         }
 
-        var favoriteStar = false;
-        var overStar = false;
         var isFavoriteStation = favoriteRadioStations.Contains(station);
-
-        if (isFavoriteStation || hovered)
+        if (isFavoriteStation || cell.Hovered)
         {
             var tooltip = Loc.T(isFavoriteStation ? L.Music.RemoveFavoriteStation : L.Music.AddFavoriteStation);
-
-            var starX = current ? max.X - 36f * scale : max.X - 18f * scale;
+            var starX = max.X - inset - (current ? 30f : 12f) * scale;
             var starCenter = new Vector2(starX, min.Y + rowHeight * 0.5f);
-            var starRadius = 14f * scale;
-            var starHit = new Vector2(starRadius, starRadius);
-            overStar = UiInteract.Hover(starCenter - starHit, starCenter + starHit);
-            favoriteStar = ui.IconButton(starCenter, starRadius,
-                FontAwesomeIcon.Star.ToIconString(), isFavoriteStation ? ui.Accent : ui.MutedInk, AppSkin.Transparent,
-                0.82f, tooltip);
-            if (favoriteStar)
+            if (ui.IconButton(starCenter, 14f * scale, IconGlyph.Of(FontAwesomeIcon.Star),
+                    isFavoriteStation ? ui.Accent : ui.MutedInk, AppSkin.Transparent, 0.82f, tooltip))
             {
                 ToggleFavoriteStation(station);
             }
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight));
-        if (overStar || !UiInteract.Click(min, max, hovered))
+        if (cell.Tapped)
         {
-            return;
+            if (current)
+            {
+                playback.TogglePlayPause();
+            }
+            else
+            {
+                onPlay(index);
+            }
         }
 
-        if (current)
-        {
-            playback.TogglePlayPause();
-        }
-        else
-        {
-            onPlay(index);
-        }
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 
     private void DrawFavoriteRadioStationsSection(string header, float scale)
@@ -516,7 +497,7 @@ internal sealed partial class MusicApp
 
         for (var index = 0; index < favoriteRadioStations.Length; index++)
         {
-            DrawStationRow(scale, favoriteRadioStations[index], index, PlayStationFromFavorites);
+            DrawStationRow(scale, favoriteRadioStations[index], index, PlayStationFromFavorites, 6f);
         }
     }
 }

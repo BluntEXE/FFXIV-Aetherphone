@@ -245,7 +245,7 @@ internal sealed class DailySpinCabinet
         if (landedAmount > 0)
         {
             coinRoll.Update((int)Math.Min(landedAmount, int.MaxValue), delta);
-            var amount = ((long)coinRoll.Display).ToString("N0", Loc.Culture);
+            var amount = NumberText.Group((long)coinRoll.Display);
             Typography.DrawCentered(drawList, center, Loc.T(L.Casino.SpinWonBanner, amount), Gold,
                 TextStyles.Title3.Scale * coinRoll.PopScale, TextStyles.Title3.Weight);
             return y + 44f * scale;

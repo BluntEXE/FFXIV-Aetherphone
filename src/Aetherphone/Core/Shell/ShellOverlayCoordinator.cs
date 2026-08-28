@@ -84,8 +84,8 @@ internal sealed class ShellOverlayCoordinator
         var overlaysCapture = controlCenterCaptures && !director.WantsControlCenter;
         var ringing = !loading.IsActive && incomingOverlay.IsRinging;
         var islandCaptures = !loading.IsActive && !controlCenterCaptures && !ringing && !confirming &&
-                             !setupActive && !conductActive && !banNotice &&
-                             (island.CapturesPointer(screen) ||
+                             !setupActive && !conductActive && !banNotice && !DragScrollHost.AnyDragging &&
+                             (island.CapturesPointer() ||
                               (!director.CapturesPointer &&
                                (banner.CapturesPointer(screen) || shortcutPill.CapturesPointer())));
         var busy = loading.IsActive || overlaysCapture || ringing || confirming || navigation.IsTransitioning ||
@@ -139,7 +139,8 @@ internal sealed class ShellOverlayCoordinator
         controlCenter.Dismiss();
     }
 
-    public void DrawOverlays(in ChassisGeometry chassis, PhoneTheme theme, float delta, in ShellOverlayState state)
+    public void DrawOverlays(in ChassisGeometry chassis, PhoneTheme theme, float delta, in ShellOverlayState state,
+        bool seals)
     {
         var screen = chassis.Screen;
         if (state.SetupActive)
@@ -150,17 +151,17 @@ internal sealed class ShellOverlayCoordinator
         if (loading.IsActive)
         {
             loading.Draw(screen, theme);
-            DeviceChrome.SealScreen(chassis, theme, configuration.ScreenBrightness);
+            SealScreen(chassis, theme, seals);
             return;
         }
 
         if (state.SetupActive)
         {
             HoverTooltip.Flush();
-            CopyToast.Flush();
+            ShellToast.Draw(screen, theme);
             banOverlay.Draw(screen, theme);
             confirmOverlay.Draw(screen, theme);
-            DeviceChrome.SealScreen(chassis, theme, configuration.ScreenBrightness);
+            SealScreen(chassis, theme, seals);
             return;
         }
 
@@ -205,7 +206,7 @@ internal sealed class ShellOverlayCoordinator
             !director.CapturesPointer);
             
         HoverTooltip.Flush();
-        CopyToast.Flush();
+        ShellToast.Draw(screen, theme);
         shareSheet.Draw(screen, theme);
         reportOverlay.Draw(screen, theme);
         confirmOverlay.Draw(screen, theme);
@@ -213,6 +214,16 @@ internal sealed class ShellOverlayCoordinator
         conductOverlay.Draw(screen, theme);
         banOverlay.Draw(screen, theme);
         coinFloats.Draw(screen, theme, delta);
+        SealScreen(chassis, theme, seals);
+    }
+
+    private void SealScreen(in ChassisGeometry chassis, PhoneTheme theme, bool seals)
+    {
+        if (!seals)
+        {
+            return;
+        }
+
         DeviceChrome.SealScreen(chassis, theme, configuration.ScreenBrightness);
     }
 }

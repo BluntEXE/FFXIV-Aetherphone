@@ -47,7 +47,7 @@ internal sealed partial class HousingApp
         var sheet = new Rect(new Vector2(area.Min.X, area.Max.Y - height + travel),
             new Vector2(area.Max.X, area.Max.Y + travel));
         drawList.PushClipRect(area.Min, area.Max, true);
-        HousingChrome.SheetSurface(drawList, sheet, viewport, progress, ui);
+        HousingChrome.SheetChrome(drawList, sheet, viewport, progress, ui);
         drawList.PopClipRect();
         if (progress < 0.35f)
         {

@@ -31,7 +31,6 @@ internal sealed partial class MusterApp
     private MusterAttendeeDto[] lastAttendees = Array.Empty<MusterAttendeeDto>();
     private string[] attendeeIdentities = Array.Empty<string>();
     private bool noticeBusy;
-    private float invitedTimer;
     private string invitedUserId = string.Empty;
 
     private void ResetManageState()
@@ -69,7 +68,7 @@ internal sealed partial class MusterApp
                 store.SyncNow);
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
             DrawManageStatus(mine, nowUnix, scale);
-            DrawWrappedDescription(mine.Description, scale);
+            DrawWrappedDescription(mine, scale);
             DrawLocationBlock(mine, scale, includeTravel: false);
             DrawAttendees(scale);
             DrawNotices(mine, scale);
@@ -87,7 +86,7 @@ internal sealed partial class MusterApp
             return;
         }
 
-        if (ui.IconButton(center, 14f * scale, FontAwesomeIcon.Sync.ToIconString(), AppPalettes.Muster.BodyInk,
+        if (ui.IconButton(center, 14f * scale, IconGlyph.Of(FontAwesomeIcon.Sync), AppPalettes.Muster.BodyInk,
                 AppSkin.Transparent, 0.9f))
         {
             store.SyncNow();
@@ -126,7 +125,7 @@ internal sealed partial class MusterApp
             statusLeft += 14f * scale;
         }
 
-        Marquee.DrawLeftAuto(drawList, "muster.manage.status." + mine.Id, status, statusLeft,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("muster.manage.status.", mine.Id), status, statusLeft,
             origin.Y + 40f * scale, max.X - 16f * scale - statusLeft, TextStyles.SubheadlineEmphasized,
             live ? MusterCard.LiveGreen : AppPalettes.Muster.BodyInk);
         var capacity = mine.MaxAttendees > 0
@@ -134,7 +133,7 @@ internal sealed partial class MusterApp
             : Loc.T(L.Muster.GoingCount, mine.RsvpCount);
         var listed = mine.IsPublic ? Loc.T(L.Muster.ListedPublicly) : Loc.T(L.Muster.ListedPrivately);
         var meta = $"{capacity} · {listed}";
-        Marquee.DrawLeftAuto(drawList, "muster.manage.meta." + mine.Id, meta, textLeft, origin.Y + 64f * scale,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("muster.manage.meta.", mine.Id), meta, textLeft, origin.Y + 64f * scale,
             max.X - 16f * scale - textLeft, TextStyles.Subheadline, AppPalettes.Muster.MutedInk);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height + Metrics.Space.Md * scale));
@@ -224,7 +223,7 @@ internal sealed partial class MusterApp
             var inviteCenter = new Vector2(rowRight - inviteRadius, centerY);
             if (MusterPartyInvite.CanInvite(attendee.World))
             {
-                if (ui.IconButton(inviteCenter, inviteRadius, FontAwesomeIcon.UserPlus.ToIconString(), ui.Accent,
+                if (ui.IconButton(inviteCenter, inviteRadius, IconGlyph.Of(FontAwesomeIcon.UserPlus), ui.Accent,
                         AppPalettes.Muster.FieldSurface, 0.6f, Loc.T(L.Muster.InviteToParty))
                     && MusterPartyInvite.Invite(attendee.CharacterName, attendee.World))
                 {
@@ -234,7 +233,7 @@ internal sealed partial class MusterApp
             }
             else
             {
-                AppSkin.Icon(drawList, inviteCenter, FontAwesomeIcon.UserPlus.ToIconString(),
+                AppSkin.Icon(drawList, inviteCenter, IconGlyph.Of(FontAwesomeIcon.UserPlus),
                     Palette.WithAlpha(AppPalettes.Muster.MutedInk, 0.55f), 0.6f);
                 var hit = new Vector2(inviteRadius, inviteRadius);
                 HoverTooltip.Show(new Rect(inviteCenter - hit, inviteCenter + hit),
@@ -356,6 +355,7 @@ internal sealed partial class MusterApp
             Message = Loc.T(L.Muster.EndConfirm),
             ConfirmLabel = Loc.T(L.Muster.EndMuster),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             BusyLabel = Loc.T(L.Muster.Ending),
             FailedMessage = Loc.T(L.Muster.EndFailed),
             Danger = true,

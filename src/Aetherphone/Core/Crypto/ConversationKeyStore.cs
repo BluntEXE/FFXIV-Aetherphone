@@ -22,12 +22,44 @@ internal sealed class ConversationKeyStore
     private readonly UnwrapFailureCache failedUnwraps = new();
     private readonly ConcurrentDictionary<(string ScopeId, int Generation), byte> scheduledSelfRepairs = new();
     private readonly ConcurrentDictionary<string, DateTime> previewHydrateRequests = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, byte> hydratedScopes = new(StringComparer.Ordinal);
     private static readonly TimeSpan PreviewHydrateCooldown = TimeSpan.FromSeconds(30);
+
+    private readonly KeySurface chatSurface;
+    private readonly KeySurface velvetSurface;
+    private readonly KeySurface gramSurface;
+    private readonly KeySurface adSurface;
+
+    private readonly record struct KeySurface(
+        Func<string, CancellationToken, Task<ConversationKeysDto?>> ThreadKeys,
+        Func<string, CreateGenerationRequest, CancellationToken, Task<(bool Ok, int Status)>> NewGeneration,
+        Func<string, AddWrapsRequest, CancellationToken, Task<bool>> AddWraps,
+        bool RotatesGenerations);
 
     public ConversationKeyStore(KeysClient client, KeyVault vault)
     {
         this.client = client;
         this.vault = vault;
+        chatSurface = new KeySurface(
+            (id, token) => client.ConversationKeysAsync(id, token),
+            (id, request, token) => client.CreateConversationGenerationAsync(id, request, token),
+            (id, request, token) => client.AddConversationWrapsAsync(id, request, token),
+            RotatesGenerations: true);
+        velvetSurface = new KeySurface(
+            (id, token) => client.VelvetThreadKeysAsync(id, token),
+            (id, request, token) => client.CreateVelvetGenerationAsync(id, request, token),
+            (id, request, token) => client.AddVelvetWrapsAsync(id, request, token),
+            RotatesGenerations: true);
+        gramSurface = new KeySurface(
+            (id, token) => client.GramThreadKeysAsync(id, token),
+            (id, request, token) => client.CreateGramGenerationAsync(id, request, token),
+            (id, request, token) => client.AddGramWrapsAsync(id, request, token),
+            RotatesGenerations: true);
+        adSurface = new KeySurface(
+            (id, token) => client.AdThreadKeysAsync(id, token),
+            (id, request, token) => client.CreateAdGenerationAsync(id, request, token),
+            (id, request, token) => client.AddAdWrapsAsync(id, request, token),
+            RotatesGenerations: false);
         vault.Changed += OnVaultChanged;
         vault.PreviousKeysRestored += OnPreviousKeysRestored;
     }
@@ -82,6 +114,12 @@ internal sealed class ConversationKeyStore
         currentGenerations.Clear();
         failedUnwraps.Clear();
         scheduledSelfRepairs.Clear();
+        hydratedScopes.Clear();
+    }
+
+    public bool IsScopeHydrated(string scopeId)
+    {
+        return hydratedScopes.ContainsKey(scopeId);
     }
 
     public async Task HydrateAsync(CancellationToken token)
@@ -124,9 +162,12 @@ internal sealed class ConversationKeyStore
         }
     }
 
-    public async Task<ChatKeyStatus> EnsureVelvetKeysAsync(string otherId, string myUserId, CancellationToken token)
+    public Task<ChatKeyStatus> EnsureVelvetKeysAsync(string otherId, string myUserId, CancellationToken token) =>
+        EnsureScopeKeysAsync(velvetSurface, otherId, VelvetScope(Pair(myUserId, otherId)), token);
+
+    private async Task<ChatKeyStatus> EnsureScopeKeysAsync(KeySurface surface, string remoteId, string scope,
+        CancellationToken token)
     {
-        var scope = VelvetScope(Pair(myUserId, otherId));
         if (vault.State != KeyVaultState.Unlocked)
         {
             return new ChatKeyStatus(false, false, CurrentGeneration(scope), Array.Empty<string>());
@@ -135,7 +176,7 @@ internal sealed class ConversationKeyStore
         ConversationKeysDto? keys = null;
         for (var attempt = 0; attempt < 2; attempt++)
         {
-            keys = await client.VelvetThreadKeysAsync(otherId, token).ConfigureAwait(false);
+            keys = await surface.ThreadKeys(remoteId, token).ConfigureAwait(false);
             if (keys is null)
             {
                 break;
@@ -150,7 +191,8 @@ internal sealed class ConversationKeyStore
                     break;
                 }
 
-                if (await CreateVelvetGenerationAsync(otherId, scope, 1, keys.MemberKeys, token).ConfigureAwait(false))
+                if (await CreateGenerationAsync(surface, remoteId, scope, 1, keys.MemberKeys, token)
+                        .ConfigureAwait(false))
                 {
                     keys = keys with { CurrentGeneration = 1 };
                     break;
@@ -159,10 +201,11 @@ internal sealed class ConversationKeyStore
                 continue;
             }
 
-            if (keys.NeedsNewGeneration && keys.MemberKeys.Length > 0)
+            if (surface.RotatesGenerations && keys.NeedsNewGeneration && keys.MemberKeys.Length > 0)
             {
                 var nextGeneration = keys.CurrentGeneration + 1;
-                if (await CreateVelvetGenerationAsync(otherId, scope, nextGeneration, keys.MemberKeys, token).ConfigureAwait(false))
+                if (await CreateGenerationAsync(surface, remoteId, scope, nextGeneration, keys.MemberKeys, token)
+                        .ConfigureAwait(false))
                 {
                     keys = keys with { CurrentGeneration = nextGeneration };
                     break;
@@ -171,7 +214,7 @@ internal sealed class ConversationKeyStore
                 continue;
             }
 
-            await FixVelvetWrapsAsync(otherId, scope, keys, token).ConfigureAwait(false);
+            await FixWrapsAsync(surface, remoteId, scope, keys, token).ConfigureAwait(false);
             break;
         }
 
@@ -184,7 +227,7 @@ internal sealed class ConversationKeyStore
         return new ChatKeyStatus(true, canEncrypt, keys.CurrentGeneration, keys.MembersWithoutKeys);
     }
 
-    private async Task<bool> CreateVelvetGenerationAsync(string otherId, string scope, int generation,
+    private async Task<bool> CreateGenerationAsync(KeySurface surface, string remoteId, string scope, int generation,
         UserPublicKeyDto[] memberKeys, CancellationToken token)
     {
         var cek = CryptoBox.GenerateCek();
@@ -194,8 +237,8 @@ internal sealed class ConversationKeyStore
             return false;
         }
 
-        var (ok, _) = await client.CreateVelvetGenerationAsync(
-            otherId, new CreateGenerationRequest(generation, wraps), token).ConfigureAwait(false);
+        var (ok, _) = await surface.NewGeneration(
+            remoteId, new CreateGenerationRequest(generation, wraps), token).ConfigureAwait(false);
         if (!ok)
         {
             return false;
@@ -205,7 +248,8 @@ internal sealed class ConversationKeyStore
         return true;
     }
 
-    private async Task FixVelvetWrapsAsync(string otherId, string scope, ConversationKeysDto keys, CancellationToken token)
+    private async Task FixWrapsAsync(KeySurface surface, string remoteId, string scope, ConversationKeysDto keys,
+        CancellationToken token)
     {
         if (keys.MissingWrapUserIds.Length == 0 && keys.StaleWrapUserIds.Length == 0)
         {
@@ -238,7 +282,7 @@ internal sealed class ConversationKeyStore
                 continue;
             }
 
-            await client.AddVelvetWrapsAsync(otherId, new AddWrapsRequest(generation, wraps), token).ConfigureAwait(false);
+            await surface.AddWraps(remoteId, new AddWrapsRequest(generation, wraps), token).ConfigureAwait(false);
         }
     }
 
@@ -282,288 +326,14 @@ internal sealed class ConversationKeyStore
         }
     }
 
-    public async Task<ChatKeyStatus> EnsureAdKeysAsync(string otherId, string myUserId, CancellationToken token)
-    {
-        var scope = AdScope(Pair(myUserId, otherId));
-        if (vault.State != KeyVaultState.Unlocked)
-        {
-            return new ChatKeyStatus(false, false, CurrentGeneration(scope), Array.Empty<string>());
-        }
+    public Task<ChatKeyStatus> EnsureAdKeysAsync(string otherId, string myUserId, CancellationToken token) =>
+        EnsureScopeKeysAsync(adSurface, otherId, AdScope(Pair(myUserId, otherId)), token);
 
-        ConversationKeysDto? keys = null;
-        for (var attempt = 0; attempt < 2; attempt++)
-        {
-            keys = await client.AdThreadKeysAsync(otherId, token).ConfigureAwait(false);
-            if (keys is null)
-            {
-                break;
-            }
+    public Task<ChatKeyStatus> EnsureGramKeysAsync(string otherId, string myUserId, CancellationToken token) =>
+        EnsureScopeKeysAsync(gramSurface, otherId, GramScope(Pair(myUserId, otherId)), token);
 
-            CacheWraps(scope, keys.CurrentGeneration, keys.MyWraps);
-            if (keys.CurrentGeneration == 0)
-            {
-                if (keys.MembersWithoutKeys.Length > 0 || keys.MemberKeys.Length == 0)
-                {
-                    break;
-                }
-
-                if (await CreateAdGenerationAsync(otherId, scope, 1, keys.MemberKeys, token).ConfigureAwait(false))
-                {
-                    keys = keys with { CurrentGeneration = 1 };
-                    break;
-                }
-
-                continue;
-            }
-
-            await FixAdWrapsAsync(otherId, scope, keys, token).ConfigureAwait(false);
-            break;
-        }
-
-        if (keys is null)
-        {
-            return new ChatKeyStatus(true, false, CurrentGeneration(scope), Array.Empty<string>());
-        }
-
-        var canEncrypt = keys.MembersWithoutKeys.Length == 0 && TryGetCek(scope, keys.CurrentGeneration, out _);
-        return new ChatKeyStatus(true, canEncrypt, keys.CurrentGeneration, keys.MembersWithoutKeys);
-    }
-
-    private async Task<bool> CreateAdGenerationAsync(string otherId, string scope, int generation,
-        UserPublicKeyDto[] memberKeys, CancellationToken token)
-    {
-        var cek = CryptoBox.GenerateCek();
-        var wraps = BuildWraps(cek, memberKeys);
-        if (wraps is null)
-        {
-            return false;
-        }
-
-        var (ok, _) = await client.CreateAdGenerationAsync(
-            otherId, new CreateGenerationRequest(generation, wraps), token).ConfigureAwait(false);
-        if (!ok)
-        {
-            return false;
-        }
-
-        Store(scope, generation, cek);
-        return true;
-    }
-
-    private async Task FixAdWrapsAsync(string otherId, string scope, ConversationKeysDto keys, CancellationToken token)
-    {
-        if (keys.MissingWrapUserIds.Length == 0 && keys.StaleWrapUserIds.Length == 0)
-        {
-            return;
-        }
-
-        var memberKeys = new Dictionary<string, UserPublicKeyDto>(StringComparer.Ordinal);
-        for (var index = 0; index < keys.MemberKeys.Length; index++)
-        {
-            memberKeys[keys.MemberKeys[index].UserId] = keys.MemberKeys[index];
-        }
-
-        if (!keysByScope.TryGetValue(scope, out var generations))
-        {
-            return;
-        }
-
-        foreach (var (generation, cek) in generations)
-        {
-            var recipients = CollectHealRecipients(keys, memberKeys, generation);
-
-            if (recipients.Count == 0)
-            {
-                continue;
-            }
-
-            var wraps = BuildWraps(cek, recipients);
-            if (wraps is null)
-            {
-                continue;
-            }
-
-            await client.AddAdWrapsAsync(otherId, new AddWrapsRequest(generation, wraps), token).ConfigureAwait(false);
-        }
-    }
-
-    public async Task<ChatKeyStatus> EnsureGramKeysAsync(string otherId, string myUserId, CancellationToken token)
-    {
-        var scope = GramScope(Pair(myUserId, otherId));
-        if (vault.State != KeyVaultState.Unlocked)
-        {
-            return new ChatKeyStatus(false, false, CurrentGeneration(scope), Array.Empty<string>());
-        }
-
-        ConversationKeysDto? keys = null;
-        for (var attempt = 0; attempt < 2; attempt++)
-        {
-            keys = await client.GramThreadKeysAsync(otherId, token).ConfigureAwait(false);
-            if (keys is null)
-            {
-                break;
-            }
-
-            CacheWraps(scope, keys.CurrentGeneration, keys.MyWraps);
-
-            if (keys.CurrentGeneration == 0)
-            {
-                if (keys.MembersWithoutKeys.Length > 0 || keys.MemberKeys.Length == 0)
-                {
-                    break;
-                }
-
-                if (await CreateGramGenerationAsync(otherId, scope, 1, keys.MemberKeys, token).ConfigureAwait(false))
-                {
-                    keys = keys with { CurrentGeneration = 1 };
-                    break;
-                }
-
-                continue;
-            }
-
-            if (keys.NeedsNewGeneration && keys.MemberKeys.Length > 0)
-            {
-                var nextGeneration = keys.CurrentGeneration + 1;
-                if (await CreateGramGenerationAsync(otherId, scope, nextGeneration, keys.MemberKeys, token).ConfigureAwait(false))
-                {
-                    keys = keys with { CurrentGeneration = nextGeneration };
-                    break;
-                }
-
-                continue;
-            }
-
-            await FixGramWrapsAsync(otherId, scope, keys, token).ConfigureAwait(false);
-            break;
-        }
-
-        if (keys is null)
-        {
-            return new ChatKeyStatus(true, false, CurrentGeneration(scope), Array.Empty<string>());
-        }
-
-        var canEncrypt = keys.MembersWithoutKeys.Length == 0 && TryGetCek(scope, keys.CurrentGeneration, out _);
-        return new ChatKeyStatus(true, canEncrypt, keys.CurrentGeneration, keys.MembersWithoutKeys);
-    }
-
-    private async Task<bool> CreateGramGenerationAsync(string otherId, string scope, int generation,
-        UserPublicKeyDto[] memberKeys, CancellationToken token)
-    {
-        var cek = CryptoBox.GenerateCek();
-        var wraps = BuildWraps(cek, memberKeys);
-        if (wraps is null)
-        {
-            return false;
-        }
-
-        var (ok, _) = await client.CreateGramGenerationAsync(
-            otherId, new CreateGenerationRequest(generation, wraps), token).ConfigureAwait(false);
-        if (!ok)
-        {
-            return false;
-        }
-
-        Store(scope, generation, cek);
-        return true;
-    }
-
-    private async Task FixGramWrapsAsync(string otherId, string scope, ConversationKeysDto keys, CancellationToken token)
-    {
-        if (keys.MissingWrapUserIds.Length == 0 && keys.StaleWrapUserIds.Length == 0)
-        {
-            return;
-        }
-
-        var memberKeys = new Dictionary<string, UserPublicKeyDto>(StringComparer.Ordinal);
-        for (var index = 0; index < keys.MemberKeys.Length; index++)
-        {
-            memberKeys[keys.MemberKeys[index].UserId] = keys.MemberKeys[index];
-        }
-
-        if (!keysByScope.TryGetValue(scope, out var generations))
-        {
-            return;
-        }
-
-        foreach (var (generation, cek) in generations)
-        {
-            var recipients = CollectHealRecipients(keys, memberKeys, generation);
-
-            if (recipients.Count == 0)
-            {
-                continue;
-            }
-
-            var wraps = BuildWraps(cek, recipients);
-            if (wraps is null)
-            {
-                continue;
-            }
-
-            await client.AddGramWrapsAsync(otherId, new AddWrapsRequest(generation, wraps), token).ConfigureAwait(false);
-        }
-    }
-
-    public async Task<ChatKeyStatus> EnsureChatKeysAsync(string conversationId, CancellationToken token)
-    {
-        var scope = ChatScope(conversationId);
-        if (vault.State != KeyVaultState.Unlocked)
-        {
-            return new ChatKeyStatus(false, false, CurrentGeneration(scope), Array.Empty<string>());
-        }
-
-        ConversationKeysDto? keys = null;
-        for (var attempt = 0; attempt < 2; attempt++)
-        {
-            keys = await client.ConversationKeysAsync(conversationId, token).ConfigureAwait(false);
-            if (keys is null)
-            {
-                break;
-            }
-
-            CacheWraps(scope, keys.CurrentGeneration, keys.MyWraps);
-
-            if (keys.CurrentGeneration == 0)
-            {
-                if (keys.MembersWithoutKeys.Length > 0 || keys.MemberKeys.Length == 0)
-                {
-                    break;
-                }
-
-                if (await CreateGenerationAsync(conversationId, scope, 1, keys.MemberKeys, token).ConfigureAwait(false))
-                {
-                    keys = keys with { CurrentGeneration = 1 };
-                    break;
-                }
-
-                continue;
-            }
-
-            if (keys.NeedsNewGeneration && keys.MemberKeys.Length > 0)
-            {
-                var nextGeneration = keys.CurrentGeneration + 1;
-                if (await CreateGenerationAsync(conversationId, scope, nextGeneration, keys.MemberKeys, token).ConfigureAwait(false))
-                {
-                    keys = keys with { CurrentGeneration = nextGeneration };
-                    break;
-                }
-
-                continue;
-            }
-
-            await FixWrapsAsync(conversationId, scope, keys, token).ConfigureAwait(false);
-            break;
-        }
-
-        if (keys is null)
-        {
-            return new ChatKeyStatus(true, false, CurrentGeneration(scope), Array.Empty<string>());
-        }
-
-        var canEncrypt = keys.MembersWithoutKeys.Length == 0 && TryGetCek(scope, keys.CurrentGeneration, out _);
-        return new ChatKeyStatus(true, canEncrypt, keys.CurrentGeneration, keys.MembersWithoutKeys);
-    }
+    public Task<ChatKeyStatus> EnsureChatKeysAsync(string conversationId, CancellationToken token) =>
+        EnsureScopeKeysAsync(chatSurface, conversationId, ChatScope(conversationId), token);
 
     public async Task WrapForMembersAsync(string conversationId, IReadOnlyList<UserPublicKeyDto> recipients, CancellationToken token)
     {
@@ -581,64 +351,6 @@ internal sealed class ConversationKeyStore
         }
 
         await client.AddConversationWrapsAsync(conversationId, new AddWrapsRequest(generation, wraps), token).ConfigureAwait(false);
-    }
-
-    private async Task<bool> CreateGenerationAsync(string conversationId, string scope, int generation,
-        UserPublicKeyDto[] memberKeys, CancellationToken token)
-    {
-        var cek = CryptoBox.GenerateCek();
-        var wraps = BuildWraps(cek, memberKeys);
-        if (wraps is null)
-        {
-            return false;
-        }
-
-        var (ok, _) = await client.CreateConversationGenerationAsync(
-            conversationId, new CreateGenerationRequest(generation, wraps), token).ConfigureAwait(false);
-        if (!ok)
-        {
-            return false;
-        }
-
-        Store(scope, generation, cek);
-        return true;
-    }
-
-    private async Task FixWrapsAsync(string conversationId, string scope, ConversationKeysDto keys, CancellationToken token)
-    {
-        if (keys.MissingWrapUserIds.Length == 0 && keys.StaleWrapUserIds.Length == 0)
-        {
-            return;
-        }
-
-        var memberKeys = new Dictionary<string, UserPublicKeyDto>(StringComparer.Ordinal);
-        for (var index = 0; index < keys.MemberKeys.Length; index++)
-        {
-            memberKeys[keys.MemberKeys[index].UserId] = keys.MemberKeys[index];
-        }
-
-        if (!keysByScope.TryGetValue(scope, out var generations))
-        {
-            return;
-        }
-
-        foreach (var (generation, cek) in generations)
-        {
-            var recipients = CollectHealRecipients(keys, memberKeys, generation);
-
-            if (recipients.Count == 0)
-            {
-                continue;
-            }
-
-            var wraps = BuildWraps(cek, recipients);
-            if (wraps is null)
-            {
-                continue;
-            }
-
-            await client.AddConversationWrapsAsync(conversationId, new AddWrapsRequest(generation, wraps), token).ConfigureAwait(false);
-        }
     }
 
     private static List<UserPublicKeyDto> CollectHealRecipients(
@@ -692,6 +404,7 @@ internal sealed class ConversationKeyStore
 
     private void CacheWraps(string scopeId, int currentGeneration, KeyWrapDto[] wraps)
     {
+        hydratedScopes[scopeId] = 1;
         if (currentGeneration > 0)
         {
             currentGenerations[scopeId] = currentGeneration;

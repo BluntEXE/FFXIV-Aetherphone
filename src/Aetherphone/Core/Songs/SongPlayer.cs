@@ -1,3 +1,5 @@
+using System.Linq;
+using Aetherphone.Core.Audio;
 using Aetherphone.Core.Net;
 using NAudio.MediaFoundation;
 using NAudio.Wave;
@@ -478,7 +480,7 @@ internal sealed class SongPlayer : IDisposable
 
     private ISongAudioReader? OpenStreamedReader(string videoId, CancellationToken token, int workerSession)
     {
-        var manifest = youtube.Videos.Streams.GetManifestAsync(videoId, token).GetAwaiter().GetResult();
+        var manifest = youtube.Videos.Streams.GetManifestAsync(videoId, token).AsTask().GetAwaiter().GetResult();
         var best = SelectAudioStream(manifest);
         if (best is null || token.IsCancellationRequested)
         {
@@ -489,7 +491,7 @@ internal sealed class SongPlayer : IDisposable
         if (IsOpus(best))
         {
             return new OpusWebmSampleProvider(() =>
-                new ForwardSeekableStream(youtube.Videos.Streams.GetAsync(best, token).GetAwaiter().GetResult()));
+                new ForwardSeekableStream(youtube.Videos.Streams.GetAsync(best, token).AsTask().GetAwaiter().GetResult()));
         }
 
         return new MediaFoundationSongReader(new MediaFoundationReader(best.Url));
@@ -499,7 +501,7 @@ internal sealed class SongPlayer : IDisposable
 
     private DownloadedAudio? Download(string videoId, CancellationToken token)
     {
-        var manifest = youtube.Videos.Streams.GetManifestAsync(videoId, token).GetAwaiter().GetResult();
+        var manifest = youtube.Videos.Streams.GetManifestAsync(videoId, token).AsTask().GetAwaiter().GetResult();
         var best = SelectAudioStream(manifest);
         if (best is null)
         {
@@ -507,7 +509,7 @@ internal sealed class SongPlayer : IDisposable
         }
 
         var isOpus = IsOpus(best);
-        using var source = youtube.Videos.Streams.GetAsync(best, token).GetAwaiter().GetResult();
+        using var source = youtube.Videos.Streams.GetAsync(best, token).AsTask().GetAwaiter().GetResult();
         using var memory = new MemoryStream();
         source.CopyToAsync(memory, token).GetAwaiter().GetResult();
         var bytes = memory.ToArray();

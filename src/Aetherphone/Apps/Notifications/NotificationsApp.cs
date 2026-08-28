@@ -1,15 +1,14 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Announcements;
 using Aetherphone.Core.Apps;
-using Aetherphone.Core.Localization;
-using Aetherphone.Core.Linkpearl;
 using Aetherphone.Core.GameChat;
+using Aetherphone.Core.Localization;
 using Aetherphone.Core.Moderation;
 using Aetherphone.Core.Muster;
 using Aetherphone.Core.Notifications;
+using Aetherphone.Core.Onboarding;
 using Aetherphone.Core.Radio;
 using Aetherphone.Core.YellowPages;
-using Aetherphone.Core.Onboarding;
 using Aetherphone.Windows.Components;
 
 namespace Aetherphone.Apps.Notifications;

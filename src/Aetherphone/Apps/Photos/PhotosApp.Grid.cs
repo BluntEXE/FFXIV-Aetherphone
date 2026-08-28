@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using Aetherphone.Core;
 using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
@@ -220,7 +221,9 @@ internal sealed partial class PhotosApp
         using (ImRaii.Child("##modifyAlbumSheet", body.Size, false, ImGuiWindowFlags.NoBackground))
         {
             using (ImRaii.PushColor(ImGuiCol.Text, ui.MutedInk))
+            {
                 Typography.Plain(label);
+            }
 
             var origin = ImGui.GetCursorScreenPos();
             var width = ImGui.GetContentRegionAvail().X;
@@ -270,7 +273,9 @@ internal sealed partial class PhotosApp
             {
                 ImGui.Dummy(new Vector2(0f, 10f * scale));
                 using (ImRaii.PushColor(ImGuiCol.Text, ui.Palette.Accent))
+                {
                     Typography.Wrapped(Loc.T(L.Photos.AlbumExists));
+                }
             }
         }
     }
@@ -547,7 +552,7 @@ internal sealed partial class PhotosApp
 
     private void DrawOpenFolder(Rect rect)
     {
-        if (ComposeFab.Draw(rect, "##openFolderFab", Accent, FontAwesomeIcon.Folder.ToIconString(),
+        if (ComposeFab.Draw(rect, "##openFolderFab", Accent, IconGlyph.Of(FontAwesomeIcon.Folder),
                              Loc.T(L.Photos.OpenFolder), "photos.openFolder"))
         {
             UrlActions.OpenFolder(library.DirectoryPath);
@@ -575,7 +580,7 @@ internal sealed partial class PhotosApp
             drawList.AddRectFilled(rect.Min, coverMax, ImGui.GetColorU32(ui.FieldSurface), rounding,
                 ImDrawFlags.RoundCornersAll);
             AppSkin.Icon(drawList, new Vector2(rect.Center.X, rect.Min.Y + coverHeight * 0.5f),
-                         FontAwesomeIcon.Images.ToIconString(), ui.MutedInk, 1.2f);
+                         IconGlyph.Of(FontAwesomeIcon.Images), ui.MutedInk, 1.2f);
         }
 
         Material.Edge(drawList, rect.Min, coverMax, rounding, scale, hovered ? 1f : 0.7f);
@@ -587,7 +592,7 @@ internal sealed partial class PhotosApp
         }
 
         var textTop = coverMax.Y + 7f * scale;
-        Marquee.DrawLeft("photos.albumCard." + title, title, rect.Min.X + 2f * scale, textTop,
+        Marquee.DrawLeft(new MarqueeId("photos.albumCard.", title), title, rect.Min.X + 2f * scale, textTop,
             rect.Width - 4f * scale, TextStyles.SubheadlineEmphasized, ui.TitleInk, hovered);
         var countLabel = Loc.Plural(L.Photos.Count, coverCount);
         Typography.Draw(drawList, new Vector2(rect.Min.X + 2f * scale, textTop + 19f * scale), countLabel, ui.MutedInk,
@@ -606,7 +611,7 @@ internal sealed partial class PhotosApp
     
     private void DrawNewAlbumFab(Rect rect)
     {
-        if (ComposeFab.Draw(rect, "##newAlbumFab", Accent, FontAwesomeIcon.Plus.ToIconString(),
+        if (ComposeFab.Draw(rect, "##newAlbumFab", Accent, IconGlyph.Of(FontAwesomeIcon.Plus),
                              Loc.T(L.Photos.CreateAlbum), "photos.newAlbum"))
         {
             newAlbumDraft = string.Empty;
@@ -641,7 +646,7 @@ internal sealed partial class PhotosApp
             drawList.AddRectFilled(rect.Min, coverCoverMax, ImGui.GetColorU32(ui.FieldSurface), rounding,
                 ImDrawFlags.RoundCornersAll);
             AppSkin.Icon(drawList, new Vector2(rect.Center.X, rect.Min.Y + coverHeight * 0.5f),
-                FontAwesomeIcon.Images.ToIconString(), ui.MutedInk, 1.2f);
+                IconGlyph.Of(FontAwesomeIcon.Images), ui.MutedInk, 1.2f);
         }
 
         Material.Edge(drawList, rect.Min, coverCoverMax, rounding, scale, 0.7f);
@@ -654,7 +659,7 @@ internal sealed partial class PhotosApp
         }
 
         var textTop = coverCoverMax.Y + 7f * scale;
-        Marquee.DrawLeft("photos.customAlbumCard." + album.Key, album.Name, rect.Min.X + 2f * scale, textTop,
+        Marquee.DrawLeft(new MarqueeId("photos.customAlbumCard.", album.Key), album.Name, rect.Min.X + 2f * scale, textTop,
             rect.Width - 4f * scale, TextStyles.SubheadlineEmphasized, ui.TitleInk, hovered);
         var countLabel = Loc.Plural(L.Photos.Count, album.Count);
         Typography.Draw(drawList, new Vector2(rect.Min.X + 2f * scale, textTop + 19f * scale), countLabel, ui.MutedInk,
@@ -668,7 +673,7 @@ internal sealed partial class PhotosApp
         {
             overBadge = UiInteract.Hover(badgeCenter - new Vector2(badgeRadius, badgeRadius),
                 badgeCenter + new Vector2(badgeRadius, badgeRadius));
-            if (ui.IconButton(badgeCenter, badgeRadius, FontAwesomeIcon.EllipsisH.ToIconString(), ui.TitleInk,
+            if (ui.IconButton(badgeCenter, badgeRadius, IconGlyph.Of(FontAwesomeIcon.EllipsisH), ui.TitleInk,
                     Palette.WithAlpha(new Vector4(0f, 0f, 0f, 1f), 0.45f), 0.8f))
             {
                 var badgeRect = new Rect(badgeCenter - new Vector2(badgeRadius, badgeRadius),
@@ -703,8 +708,8 @@ internal sealed partial class PhotosApp
         {
             customAlbumMenuItemsCache =
             [
-                new(Loc.T(L.Photos.Rename), FontAwesomeIcon.Pen.ToIconString()),
-                new(Loc.T(L.Photos.DeleteAlbum), FontAwesomeIcon.Trash.ToIconString(), Danger: true),
+                new(Loc.T(L.Photos.Rename), IconGlyph.Of(FontAwesomeIcon.Pen)),
+                new(Loc.T(L.Photos.DeleteAlbum), IconGlyph.Of(FontAwesomeIcon.Trash), Danger: true),
             ];
             customAlbumMenuItemsLocale = currentLocale;
         }
@@ -719,7 +724,7 @@ internal sealed partial class PhotosApp
         {
             photoMenuItemsCache =
             [
-                new(Loc.T(L.Photos.RemoveFromAlbum), FontAwesomeIcon.Trash.ToIconString(), Danger: true),
+                new(Loc.T(L.Photos.RemoveFromAlbum), IconGlyph.Of(FontAwesomeIcon.Trash), Danger: true),
             ];
             photoMenuItemsLocale = currentLocale;
         }
@@ -747,6 +752,7 @@ internal sealed partial class PhotosApp
                 Message = Loc.T(L.Photos.DeleteAlbumConfirm, found.Name) + "\n" + Loc.T(L.Photos.DeleteAlbumBody),
                 ConfirmLabel = Loc.T(L.Photos.DeleteAlbum),
                 CancelLabel = Loc.T(L.Common.Cancel),
+                Sheet = true,
                 Confirm = () => DeleteCustomAlbumInternal(key),
             });
         }
@@ -853,7 +859,7 @@ internal sealed partial class PhotosApp
                 {
                     drawList.AddRectFilled(min, max, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.35f)), 7f * scale);
                     var checkCenter = new Vector2(max.X - 14f * scale, min.Y + 14f * scale);
-                    AppSkin.Icon(drawList, checkCenter, FontAwesomeIcon.Check.ToIconString(),
+                    AppSkin.Icon(drawList, checkCenter, IconGlyph.Of(FontAwesomeIcon.Check),
                         new Vector4(0.4f, 0.8f, 0.4f, 0.8f), 0.8f);
                 }
                 else if (isSelected)
@@ -945,7 +951,7 @@ internal sealed partial class PhotosApp
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                     var iconCenter = new Vector2(max.X - 14f * scale, min.Y + 14f * scale);
                     drawList.AddCircleFilled(iconCenter, 11f * scale, ImGui.GetColorU32(new Vector4(0f, 0f, 0f, 0.45f)), 16);
-                    AppSkin.Icon(drawList, iconCenter, FontAwesomeIcon.EllipsisH.ToIconString(),
+                    AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(FontAwesomeIcon.EllipsisH),
                                  new Vector4(1f, 1f, 1f, 0.9f), 0.55f);
                 }
 
@@ -975,6 +981,7 @@ internal sealed partial class PhotosApp
                         Message = Loc.T(L.Photos.RemoveFromAlbum),
                         ConfirmLabel = Loc.T(L.Photos.RemoveFromAlbum),
                         CancelLabel = Loc.T(L.Common.Cancel),
+                        Sheet = true,
                         Confirm = () => RemovePhotoFromCustomAlbum(albumKey, targetPath),
                     });
                 }

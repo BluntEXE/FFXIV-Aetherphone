@@ -55,13 +55,13 @@ internal sealed partial class AppStoreApp
         var nameY = row.Center.Y - 18f * scale;
         var nameHovering = UiInteract.Hover(new Vector2(textLeft, nameY),
             new Vector2(textLeft + textWidth, nameY + Typography.Measure(app.DisplayName, TextStyles.Headline).Y));
-        Marquee.DrawLeft("appstore.row.name." + app.Id, app.DisplayName, textLeft, nameY, textWidth,
+        Marquee.DrawLeft(new MarqueeId("appstore.row.name.", app.Id), app.DisplayName, textLeft, nameY, textWidth,
             TextStyles.Headline, ui.TitleInk, nameHovering);
         var subtitle = Loc.T(entry.Subtitle);
         var subtitleY = row.Center.Y + 2f * scale;
         var subtitleHovering = UiInteract.Hover(new Vector2(textLeft, subtitleY),
             new Vector2(textLeft + textWidth, subtitleY + Typography.Measure(subtitle, TextStyles.Footnote).Y));
-        Marquee.DrawLeft("appstore.row.subtitle." + app.Id, subtitle, textLeft, subtitleY, textWidth,
+        Marquee.DrawLeft(new MarqueeId("appstore.row.subtitle.", app.Id), subtitle, textLeft, subtitleY, textWidth,
             TextStyles.Footnote, ui.MutedInk, subtitleHovering);
         DrawStatePill(pill, app, overPill, scale);
         return UiInteract.Click(row.Min, row.Max, hovered);

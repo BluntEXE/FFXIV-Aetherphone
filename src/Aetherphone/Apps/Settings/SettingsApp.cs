@@ -15,7 +15,7 @@ using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Settings;
 
-internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
+internal sealed class SettingsApp : IResumableApp, ISettingsNavigator, ISpotlightPages
 {
     public string Id => "settings";
     public string DisplayName => Loc.T(L.Apps.Settings);
@@ -26,6 +26,8 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
     public ShareKindSet AcceptedShares => ShareKindSet.Photo;
     private readonly Configuration configuration;
     private readonly ViewRouter<ISettingsPage> router;
+    private readonly ISettingsPage[] searchablePages;
+    private ISettingsPage? pendingPage;
     private readonly RouterDraw<ISettingsPage> drawPage;
     private readonly Action popBack;
     private readonly SoundService sound;
@@ -71,8 +73,8 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
             encryptionPage, coinPage, photoLibrary, confirm, wallpaperImages);
         var appearance = new AppearancePage(configuration, themes, this, photoLibrary, confirm, wallpapers,
             wallpaperImages);
-        var language = new LanguagePage(configuration);
-        var general = new GeneralPage(configuration);
+        var language = new LanguagePage(configuration, services.Translation);
+        var general = new GeneralPage(configuration, services.Translation, confirm);
         var tutorials = new TutorialsPage(configuration);
         var callsPage = new CallsPage(calls, configuration);
         var appNotifications = new AppNotificationPage(configuration, sound);
@@ -115,6 +117,22 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
             new ISettingsPage[] { privacyPage, safetyPage },
             new ISettingsPage[] { tutorials, commands, changelogPage, about },
         };
+        var searchableCount = 0;
+        for (var groupIndex = 0; groupIndex < groups.Length; groupIndex++)
+        {
+            searchableCount += groups[groupIndex].Length;
+        }
+
+        searchablePages = new ISettingsPage[searchableCount];
+        var searchableIndex = 0;
+        for (var groupIndex = 0; groupIndex < groups.Length; groupIndex++)
+        {
+            for (var pageIndex = 0; pageIndex < groups[groupIndex].Length; pageIndex++)
+            {
+                searchablePages[searchableIndex++] = groups[groupIndex][pageIndex];
+            }
+        }
+
         router = new ViewRouter<ISettingsPage>(
             new RootSettingsPage(this, groups, configuration, aethernetSession, remoteImages, lodestone,
                 accountPage));
@@ -182,12 +200,39 @@ internal sealed class SettingsApp : IPhoneApp, ISettingsNavigator
 
     public void OnOpened()
     {
+        router.Reset();
+        ConsumePendingPage();
+    }
+
+    public void OnResumed()
+    {
+        ConsumePendingPage();
+    }
+
+    public IReadOnlyList<ISettingsPage> SearchablePages => searchablePages;
+
+    public void RequestPage(ISettingsPage page) => pendingPage = page;
+
+    public int SpotlightPageCount => searchablePages.Length;
+
+    public string SpotlightPageTitle(int pageIndex) => searchablePages[pageIndex].Title;
+
+    public void RequestSpotlightPage(int pageIndex) => pendingPage = searchablePages[pageIndex];
+
+    private void ConsumePendingPage()
+    {
+        if (pendingPage is not { } page)
+        {
+            return;
+        }
+
+        pendingPage = null;
+        Open(page);
     }
 
     public void OnClosed()
     {
         sound.StopPreview();
-        router.Reset();
     }
 
     public void Draw(in PhoneContext context)

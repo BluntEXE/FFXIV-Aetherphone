@@ -1,3 +1,4 @@
+using Aetherphone.Apps.Casino;
 using Aetherphone.Windows.Components;
 using Xunit;
 

@@ -1,6 +1,8 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Platform;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -15,10 +17,14 @@ internal sealed class GeneralPage : ISettingsPage
     public FontAwesomeIcon Icon => FontAwesomeIcon.SlidersH;
     public Vector4 Tint => new(0.52f, 0.54f, 0.60f, 1f);
     private readonly Configuration configuration;
+    private readonly TranslationService translation;
+    private readonly ConfirmService confirm;
 
-    public GeneralPage(Configuration configuration)
+    public GeneralPage(Configuration configuration, TranslationService translation, ConfirmService confirm)
     {
         this.configuration = configuration;
+        this.translation = translation;
+        this.confirm = confirm;
     }
 
     public void Draw(in PhoneContext context, Rect body)
@@ -28,7 +34,10 @@ internal sealed class GeneralPage : ISettingsPage
         using (AppSurface.Begin(body))
         {
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Md * scale));
-            var card = GroupCard.Begin(theme, 9);
+            var translationRow = translation.Enabled ? 1 : 0;
+            var card = GroupCard.Begin(theme, 10 + translationRow);
+            var showInGpose = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.ShowInGpose),
+                configuration.ShowInGpose, theme, null, Loc.T(L.Settings.ShowInGposeHint));
             var importScreenshots = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.ImportScreenshots),
                 configuration.ImportScreenshots, theme, null, Loc.T(L.Settings.ImportScreenshotsHint));
             var usesNativeFileDialog = configuration.UseNativeFileDialog ?? NativeFileDialog.IsSupported;
@@ -48,7 +57,26 @@ internal sealed class GeneralPage : ISettingsPage
                 configuration.ShowSensitiveContent, theme, null, Loc.T(L.Settings.ShowSensitiveHint));
             var marketContextMenu = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.MarketContextMenu),
                 configuration.MarketContextMenu, theme, null, Loc.T(L.Settings.MarketContextMenuHint));
+            var autoTranslate = configuration.AutoTranslatePosts;
+            if (translationRow > 0)
+            {
+                autoTranslate = SettingsRow.Bool(card.NextRow(), Loc.T(L.Settings.AutoTranslate),
+                    configuration.AutoTranslatePosts, theme, null, Loc.T(L.Settings.AutoTranslateHint));
+            }
+
             card.End();
+            if (autoTranslate != configuration.AutoTranslatePosts)
+            {
+                SetAutoTranslate(autoTranslate);
+            }
+
+            if (showInGpose != configuration.ShowInGpose)
+            {
+                configuration.ShowInGpose = showInGpose;
+                Plugin.PluginInterface.UiBuilder.DisableGposeUiHide = showInGpose;
+                configuration.Save();
+            }
+
             if (importScreenshots != configuration.ImportScreenshots)
             {
                 configuration.ImportScreenshots = importScreenshots;
@@ -122,5 +150,20 @@ internal sealed class GeneralPage : ISettingsPage
                 configuration.Save();
             }
         }
+    }
+    private void SetAutoTranslate(bool enabled)
+    {
+        if (!enabled)
+        {
+            configuration.AutoTranslatePosts = false;
+            configuration.Save();
+            return;
+        }
+
+        TranslateLink.WithDisclosure(translation, confirm, () =>
+        {
+            configuration.AutoTranslatePosts = true;
+            configuration.Save();
+        });
     }
 }

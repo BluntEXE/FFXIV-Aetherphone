@@ -1,3 +1,4 @@
+using System.Linq;
 using Aetherphone.Apps.Velvet.Kit;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Social;

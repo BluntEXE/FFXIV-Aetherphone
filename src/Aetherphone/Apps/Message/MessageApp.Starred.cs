@@ -27,34 +27,29 @@ internal sealed partial class MessageApp
         using (AppSurface.Begin(body))
         {
             ImGui.Dummy(new Vector2(0f, 4f * scale));
+            var card = GroupCard.Begin(ui, starred.Count, 58f);
             for (var index = starred.Count - 1; index >= 0; index--)
             {
-                DrawStarredRow(starred[index], scale);
+                DrawStarredRow(card.NextRow(), starred[index], scale);
             }
 
+            card.End();
             ImGui.Dummy(new Vector2(0f, 24f * scale));
         }
     }
 
-    private void DrawStarredRow(StarredMessage entry, float scale)
+    private void DrawStarredRow(Rect row, StarredMessage entry, float scale)
     {
-        var rowHeight = 58f * scale;
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var drawList = ImGui.GetWindowDrawList();
-        var rowMax = new Vector2(origin.X + width, origin.Y + rowHeight);
-        ui.Card(drawList, origin, rowMax, 14f * scale);
-        var pad = 14f * scale;
         var title = string.Concat(entry.SenderName, "  ·  ", entry.ConversationTitle);
         var timeLabel = TimeText.DayLabel(entry.CreatedAtUnix);
         var timeSize = Typography.Measure(timeLabel, TextStyles.Caption1);
-        Typography.Draw(new Vector2(origin.X + width - pad - timeSize.X, origin.Y + 11f * scale), timeLabel,
+        Typography.Draw(new Vector2(row.Max.X - timeSize.X, row.Min.Y + 11f * scale), timeLabel,
             ui.MutedInk, TextStyles.Caption1);
-        var textWidth = width - pad * 2f - timeSize.X - 10f * scale;
-        Typography.Draw(new Vector2(origin.X + pad, origin.Y + 10f * scale),
+        var textWidth = row.Width - timeSize.X - 10f * scale;
+        Typography.Draw(new Vector2(row.Min.X, row.Min.Y + 10f * scale),
             Typography.FitText(title, textWidth, 0.88f, FontWeight.SemiBold), theme.TextStrong, 0.88f,
             FontWeight.SemiBold);
-        var previewLeft = origin.X + pad;
+        var previewLeft = row.Min.X;
         if (entry.Kind is 1 or 3 or ChatText.LocationKind or ChatText.MusterKind)
         {
             var glyph = entry.Kind switch
@@ -64,33 +59,30 @@ internal sealed partial class MessageApp
                 ChatText.MusterKind => FontAwesomeIcon.Bullhorn,
                 _ => FontAwesomeIcon.Camera,
             };
-            AppSkin.Icon(new Vector2(previewLeft + 6f * scale, origin.Y + 38f * scale), glyph.ToIconString(),
+            AppSkin.Icon(new Vector2(previewLeft + 6f * scale, row.Min.Y + 38f * scale), IconGlyph.Of(glyph),
                 ui.MutedInk, 0.62f);
             previewLeft += 16f * scale;
         }
 
         var unstarRadius = 12f * scale;
-        var unstarCenter = new Vector2(origin.X + width - pad - unstarRadius + 4f * scale,
-            origin.Y + rowHeight - 16f * scale);
-        Typography.Draw(new Vector2(previewLeft, origin.Y + 31f * scale),
+        var unstarCenter = new Vector2(row.Max.X - unstarRadius + 4f * scale, row.Max.Y - 16f * scale);
+        Typography.Draw(new Vector2(previewLeft, row.Min.Y + 31f * scale),
             Typography.FitText(entry.Preview, unstarCenter.X - unstarRadius - 8f * scale - previewLeft, 0.82f,
                 FontWeight.Regular), ui.MutedInk, 0.82f);
         var unstarHit = new Vector2(unstarRadius, unstarRadius);
         var overUnstar = UiInteract.Hover(unstarCenter - unstarHit, unstarCenter + unstarHit);
-        var unstarClicked = ui.IconButton(unstarCenter, unstarRadius, FontAwesomeIcon.Star.ToIconString(),
+        var unstarClicked = ui.IconButton(unstarCenter, unstarRadius, IconGlyph.Of(FontAwesomeIcon.Star),
             ui.Accent, AppSkin.Transparent, 0.8f, Loc.T(L.Message.UnstarAction));
+        var band = RowBand(row, scale);
         if (unstarClicked)
         {
             configuration.MessageStarredMessages.Remove(entry);
             configuration.Save();
         }
-        else if (!overUnstar && UiInteract.HoverClick(origin, rowMax))
+        else if (!overUnstar && UiInteract.HoverClick(band.Min, band.Max))
         {
             router.Push(MessageRoute.Thread(entry.ConversationId));
             threadView.RequestScrollTo(entry.MessageId);
         }
-
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight + 8f * scale));
     }
 }

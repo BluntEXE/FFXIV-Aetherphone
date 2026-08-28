@@ -76,7 +76,8 @@ internal sealed record AdDto(
     bool AllowInquiries = true,
     int OwnerBadges = 0,
     string[]? OwnerBadgeIds = null,
-    string OwnerFrameId = "") : IIdentified;
+    string OwnerFrameId = "",
+    string? Lang = null) : IIdentified;
 
 internal sealed record AdPage(AdDto[] Items, string? NextCursor);
 

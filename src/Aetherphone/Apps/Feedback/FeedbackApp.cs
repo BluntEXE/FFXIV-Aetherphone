@@ -268,7 +268,7 @@ internal sealed class FeedbackApp : IPhoneApp
             badgeCenter + new Vector2(badgeRadius, badgeRadius));
         drawList.AddCircleFilled(badgeCenter, badgeRadius,
             ImGui.GetColorU32(new Vector4(0f, 0f, 0f, badgeHovered ? 0.9f : 0.62f)), 20);
-        AppSkin.Icon(badgeCenter, FontAwesomeIcon.Times.ToIconString(), White, 0.6f);
+        AppSkin.Icon(badgeCenter, IconGlyph.Of(FontAwesomeIcon.Times), White, 0.6f);
         if (badgeHovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -284,7 +284,7 @@ internal sealed class FeedbackApp : IPhoneApp
         Squircle.Fill(drawList, min, max, rounding,
             ImGui.GetColorU32(hovered ? ui.HoverTint : AppPalettes.Feedback.FieldSurface));
         Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(AddTileStroke), 1f);
-        AppSkin.Icon((min + max) * 0.5f, FontAwesomeIcon.Plus.ToIconString(), AppPalettes.Feedback.BodyInk, 0.9f);
+        AppSkin.Icon((min + max) * 0.5f, IconGlyph.Of(FontAwesomeIcon.Plus), AppPalettes.Feedback.BodyInk, 0.9f);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

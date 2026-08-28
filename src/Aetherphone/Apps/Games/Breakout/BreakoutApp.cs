@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -38,7 +39,7 @@ internal sealed class BreakoutApp : IMiniGame
     public string Title => Loc.T(L.Games.Breakout);
     public bool RunsOnAClock => true;
 
-    public string Genre => Loc.T(L.Games.GenreArcade);
+    public GameGenre Genre => GameGenre.Arcade;
     public void Open()
     {
         loadedBest = 0;
@@ -185,6 +186,7 @@ internal sealed class BreakoutApp : IMiniGame
 
         if (board.BreakCount > 0)
         {
+            UiFeedback.Play(UiSound.GameBreak);
             fx.AddTrauma(MathF.Min(0.3f, 0.03f * board.BreakCount));
             var last = field.Min + board.BreakPosition(board.BreakCount - 1) * factor;
             fx.Shockwave(last, 34f * scale, new Vector4(1f, 1f, 1f, 0.55f), 0.32f, 2.2f);
@@ -205,6 +207,7 @@ internal sealed class BreakoutApp : IMiniGame
             var paddle = field.Min + new Vector2(board.PaddleX, board.PaddleY) * factor;
             particles.Sparkle(paddle, 12, new Vector4(1f, 0.95f, 0.6f, 1f), 150f * scale, 2.6f, 0.8f);
             fx.Shockwave(paddle, 56f * scale, GamePalette.Lighten(Accent, 0.4f), 0.45f, 2.6f);
+            UiFeedback.Play(UiSound.GamePowerUp);
         }
 
         if (board.LevelCleared)
@@ -212,10 +215,12 @@ internal sealed class BreakoutApp : IMiniGame
             var top = new Vector2(field.Center.X, field.Min.Y + field.Height * 0.2f);
             particles.Confetti(top, 70, CelebrationPalette, 280f * scale, 4f, 1.4f);
             fx.Flash(GamePalette.Lighten(Accent, 0.4f), 0.18f);
+            UiFeedback.Play(UiSound.GameClear);
         }
 
         if (board.LostLifeThisFrame)
         {
+            UiFeedback.Play(UiSound.GameHitSoft);
             fx.AddTrauma(0.7f);
             fx.HitStop(0.1f);
             fx.Flash(new Vector4(0.95f, 0.3f, 0.3f, 1f), 0.35f);

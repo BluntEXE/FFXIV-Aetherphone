@@ -66,7 +66,7 @@ internal sealed partial class MessageApp
         var radius = 34f * scale;
         var center = new Vector2(origin.X + width * 0.5f, origin.Y + 16f * scale + radius);
         drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.16f)), 48);
-        AppSkin.Icon(center, (encrypted ? FontAwesomeIcon.Lock : FontAwesomeIcon.LockOpen).ToIconString(),
+        AppSkin.Icon(center, IconGlyph.Of((encrypted ? FontAwesomeIcon.Lock : FontAwesomeIcon.LockOpen)),
             encrypted ? ui.Accent : ui.MutedInk, 1.7f);
         var headline = encrypted ? Loc.T(L.Encryption.EncryptedIndicator) : Loc.T(L.Encryption.PlaintextIndicator);
         Typography.DrawCentered(new Vector2(center.X, center.Y + radius + 20f * scale), headline,
@@ -259,6 +259,21 @@ internal sealed partial class MessageApp
         DrawSectionLabel(Loc.T(L.DirectMessages.Members), scale);
         var members = store.Members;
         var waiting = store.CurrentKeyStatus.MembersWithoutKeys;
+        var rowCount = 0;
+        for (var index = 0; index < members.Length; index++)
+        {
+            if (members[index].IsActive && members[index].UserId != store.MyUserId)
+            {
+                rowCount++;
+            }
+        }
+
+        if (rowCount == 0)
+        {
+            return;
+        }
+
+        var card = GroupCard.Begin(ui, rowCount, 56f);
         for (var index = 0; index < members.Length; index++)
         {
             var member = members[index];
@@ -277,35 +292,32 @@ internal sealed partial class MessageApp
                 }
             }
 
-            DrawEncryptionMemberRow(member, hasKey, scale);
+            DrawEncryptionMemberRow(card.NextRow(), member, hasKey, scale);
         }
+
+        card.End();
+        ImGui.Dummy(new Vector2(0f, 8f * scale));
     }
 
-    private void DrawEncryptionMemberRow(ConversationMemberDto member, bool hasKey, float scale)
+    private void DrawEncryptionMemberRow(Rect row, ConversationMemberDto member, bool hasKey, float scale)
     {
-        var rowHeight = 56f * scale;
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
         var drawList = ImGui.GetWindowDrawList();
-        ui.Card(drawList, origin, new Vector2(origin.X + width, origin.Y + rowHeight), 14f * scale);
-        var pad = 12f * scale;
         var radius = 17f * scale;
-        var avatarCenter = new Vector2(origin.X + pad + radius, origin.Y + rowHeight * 0.5f);
+        var avatarCenter = new Vector2(row.Min.X + radius, row.Center.Y);
         var label = member.DisplayName.Length > 0 ? member.DisplayName : member.Handle;
         AvatarView.DrawRemote(drawList, avatarCenter, radius, theme, label, string.Empty, member.AvatarUrl, images,
             lodestone, 0.85f, 32, 1f, Frames.Of(member.FrameId));
         var textLeft = avatarCenter.X + radius + 12f * scale;
-        var textMaxWidth = MathF.Max(1f, origin.X + width - pad - 28f * scale - textLeft);
-        var rowHovering = UiInteract.Hover(origin, new Vector2(origin.X + width, origin.Y + rowHeight));
+        var textMaxWidth = MathF.Max(1f, row.Max.X - 28f * scale - textLeft);
+        var band = RowBand(row, scale);
+        var rowHovering = UiInteract.Hover(band.Min, band.Max);
         UserName.Draw(drawList, "messageapp.encryption.member." + member.UserId, label, member.Badges, member.BadgeIds, textLeft,
-            origin.Y + 10f * scale, textMaxWidth, new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong,
+            row.Min.Y + 10f * scale, textMaxWidth, new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong,
             rowHovering, theme);
-        Typography.Draw(new Vector2(textLeft, origin.Y + 31f * scale),
+        Typography.Draw(new Vector2(textLeft, row.Min.Y + 31f * scale),
             Loc.T(hasKey ? L.Encryption.MemberReady : L.Encryption.MemberNoKey), ui.MutedInk, TextStyles.Footnote);
-        AppSkin.Icon(new Vector2(origin.X + width - pad - 8f * scale, origin.Y + rowHeight * 0.5f),
-            (hasKey ? FontAwesomeIcon.Lock : FontAwesomeIcon.LockOpen).ToIconString(),
+        AppSkin.Icon(new Vector2(row.Max.X - 8f * scale, row.Center.Y),
+            IconGlyph.Of((hasKey ? FontAwesomeIcon.Lock : FontAwesomeIcon.LockOpen)),
             hasKey ? ui.Accent : ui.MutedInk, 0.95f);
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight + 8f * scale));
     }
 }

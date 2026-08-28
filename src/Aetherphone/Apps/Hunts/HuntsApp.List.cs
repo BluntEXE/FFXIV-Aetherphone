@@ -24,7 +24,6 @@ internal sealed partial class HuntsApp
     private static readonly TimeSpan FilteredWindowsResortInterval = TimeSpan.FromSeconds(5);
 
     private readonly List<HuntWindowDto> filteredWindows = new();
-    private readonly Comparison<HuntWindowDto> compareByPercentageDescending;
     private readonly Dictionary<string, string> worldLabelCache = new();
     private readonly Dictionary<(string MobId, string WorldId, int ZoneInstance), string> rowIdCache = new();
     private readonly Dictionary<(string MobId, string WorldId, int ZoneInstance, int CurrentPhase, int OwnPhaseCount), string> phaseLabelCache = new();
@@ -61,10 +60,10 @@ internal sealed partial class HuntsApp
                 return;
             }
 
-            var card = RowListCard.Begin(ui, filteredWindows.Count, RowHeight, scale);
+            var card = GroupCard.Begin(ui, filteredWindows.Count, RowHeight);
             for (var index = 0; index < filteredWindows.Count; index++)
             {
-                DrawRow(card.Row(index), filteredWindows[index], scale, now);
+                DrawRow(card.NextRow(), filteredWindows[index], scale, now);
             }
 
             card.End();

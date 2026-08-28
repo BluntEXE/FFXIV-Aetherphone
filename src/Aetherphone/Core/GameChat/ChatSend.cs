@@ -1,5 +1,4 @@
 using System.Text;
-using Aetherphone.Core.Linkpearl;
 
 namespace Aetherphone.Core.GameChat;
 

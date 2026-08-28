@@ -15,6 +15,13 @@ internal enum KeyVaultState
     Locked = 4,
 }
 
+internal enum LocalKeyStatus
+{
+    Missing = 0,
+    Opened = 1,
+    Unreadable = 2,
+}
+
 internal enum RecoveryCodeCreationStatus
 {
     Failed = 0,
@@ -45,6 +52,11 @@ internal sealed class KeyVault : IDisposable
     private EcPrivateKey[] recoveredPreviousKeys = Array.Empty<EcPrivateKey>();
     private MyKeysDto? serverBundle;
     private volatile bool refreshing;
+    private int missingServerKeyStreak;
+    private string? lastAccountId;
+    private EcPrivateKey? linkEphemeral;
+
+    private const int MissingServerKeyConfirmations = 2;
 
     public KeyVault(Configuration configuration, AethernetSession session, KeysClient client)
     {
@@ -56,6 +68,17 @@ internal sealed class KeyVault : IDisposable
 
     private void OnSessionChanged()
     {
+        var accountId = session.CurrentUser?.Id;
+        if (!string.Equals(accountId, lastAccountId, StringComparison.Ordinal))
+        {
+            lastAccountId = accountId;
+            missingServerKeyStreak = 0;
+            LocalKeyUnreadable = false;
+            ClearKey();
+            serverBundle = null;
+            SetState(KeyVaultState.Unavailable);
+        }
+
         if (session.IsSignedIn)
         {
             return;
@@ -67,6 +90,8 @@ internal sealed class KeyVault : IDisposable
     public KeyVaultState State { get; private set; } = KeyVaultState.Unavailable;
 
     public bool LocalCacheUnavailable { get; private set; }
+
+    public bool LocalKeyUnreadable { get; private set; }
 
     public int KeyVersion => serverBundle?.KeyVersion ?? 0;
 
@@ -110,23 +135,22 @@ internal sealed class KeyVault : IDisposable
         await gate.WaitAsync(token).ConfigureAwait(false);
         try
         {
+            var accountId = MyUserId;
             var (bundle, status) = await client.MyKeysAsync(token).ConfigureAwait(false);
-            if (status == 404)
+            if (!string.Equals(MyUserId, accountId, StringComparison.Ordinal))
             {
-                serverBundle = null;
-                var existingKey = privateKey ?? ImportStoredKeyForCurrentUser();
-                if (existingKey is not null)
-                {
-                    AepLog.Warning(
-                        "[Encryption] server reported no key for this account but this device already has one; re-uploading it instead of creating a new key.");
-                    await ReuploadExistingIdentityAsync(existingKey, token).ConfigureAwait(false);
-                    return;
-                }
-
-                await ProvisionAsync(0, token).ConfigureAwait(false);
+                AepLog.Debug("[Encryption] vault refresh abandoned: the account changed while the keys were being fetched.");
                 return;
             }
 
+            if (status == 404)
+            {
+                serverBundle = null;
+                await HandleMissingServerKeyAsync(accountId, token).ConfigureAwait(false);
+                return;
+            }
+
+            missingServerKeyStreak = 0;
             if (bundle is null)
             {
                 AepLog.Debug("[Encryption] vault refresh skipped: the keys endpoint was unreachable; it will be retried.");
@@ -137,7 +161,15 @@ internal sealed class KeyVault : IDisposable
             if (privateKey is not null
                 && string.Equals(CryptoBox.ExportPublicKey(privateKey), bundle.PublicKey, StringComparison.Ordinal))
             {
+                LocalKeyUnreadable = false;
                 EnsureLocalCachePersisted();
+                SetState(KeyVaultState.Unlocked);
+                return;
+            }
+
+            if (await TryAdoptPendingKeyAsync(bundle, accountId).ConfigureAwait(false))
+            {
+                LocalKeyUnreadable = false;
                 SetState(KeyVaultState.Unlocked);
                 return;
             }
@@ -145,17 +177,22 @@ internal sealed class KeyVault : IDisposable
             ClearKey();
             if (TryLoadLocalCache(bundle))
             {
+                LocalKeyUnreadable = false;
                 SetState(KeyVaultState.Unlocked);
                 return;
             }
 
-            if (MyUserId is null)
+            if (accountId is null)
             {
+                AepLog.Debug("[Encryption] vault refresh stopped: the account has not resolved yet.");
+                SetState(KeyVaultState.Unavailable);
                 return;
             }
 
+            ImportStoredKey(accountId, out var localStatus);
+            LocalKeyUnreadable = localStatus == LocalKeyStatus.Unreadable;
             AepLog.Warning(
-                $"[Encryption] no usable local key for this account; locking this device instead of creating a new key (recovery available: {bundle.PrivateKey is not null}).");
+                $"[Encryption] no usable local key for this account; locking this device instead of creating a new key (stored key: {localStatus}, recovery available: {bundle.PrivateKey is not null}).");
             SetState(KeyVaultState.Locked);
         }
         finally
@@ -170,6 +207,8 @@ internal sealed class KeyVault : IDisposable
         await gate.WaitAsync(token).ConfigureAwait(false);
         try
         {
+            AepLog.Warning(
+                $"[Encryption] a key reset was requested on this device (recovery configured: {RecoveryConfigured}, current key version: {KeyVersion}); the previous key is being replaced.");
             return await ProvisionAsync(serverBundle?.KeyVersion ?? 0, token).ConfigureAwait(false);
         }
         finally
@@ -257,10 +296,17 @@ internal sealed class KeyVault : IDisposable
         await gate.WaitAsync(token).ConfigureAwait(false);
         try
         {
+            var accountId = MyUserId;
             var (bundle, _) = await client.MyKeysAsync(token).ConfigureAwait(false);
             if (bundle is null)
             {
                 AepLog.Warning("[Encryption] recovery failed: the keys endpoint was unreachable.");
+                return false;
+            }
+
+            if (accountId is null || !string.Equals(MyUserId, accountId, StringComparison.Ordinal))
+            {
+                AepLog.Warning("[Encryption] recovery stopped: the account changed while the escrow was being fetched.");
                 return false;
             }
 
@@ -295,8 +341,10 @@ internal sealed class KeyVault : IDisposable
 
             ClearKey();
             privateKey = imported;
-            StoreLocalCache(pkcs8);
+            StoreLocalCache(pkcs8, accountId);
             CryptographicOperations.ZeroMemory(pkcs8);
+            LocalKeyUnreadable = false;
+            AepLog.Info("[Encryption] a recovery code restored this account's key on this device.");
             SetState(KeyVaultState.Unlocked);
             return true;
         }
@@ -304,6 +352,123 @@ internal sealed class KeyVault : IDisposable
         {
             gate.Release();
         }
+    }
+
+    public async Task<DeviceLinkTicketDto?> StartDeviceLinkAsync(CancellationToken token)
+    {
+        var ephemeral = CryptoBox.TryGenerateIdentity();
+        var ephemeralPublicKey = ephemeral is null ? null : CryptoBox.TryExportPublicKey(ephemeral);
+        if (ephemeral is null || ephemeralPublicKey is null)
+        {
+            AepLog.Warning("[Encryption] this device cannot create the key needed to link with another PC.");
+            return null;
+        }
+
+        var ticket = await client.StartDeviceLinkAsync(ephemeralPublicKey, token).ConfigureAwait(false);
+        if (ticket is null)
+        {
+            return null;
+        }
+
+        linkEphemeral = ephemeral;
+        AepLog.Info("[Encryption] waiting for another PC to approve this device.");
+        return ticket;
+    }
+
+    public async Task<bool> TryCompleteDeviceLinkAsync(string requestId, CancellationToken token)
+    {
+        var ephemeral = linkEphemeral;
+        if (ephemeral is null)
+        {
+            return false;
+        }
+
+        await gate.WaitAsync(token).ConfigureAwait(false);
+        try
+        {
+            var accountId = MyUserId;
+            var status = await client.DeviceLinkStatusAsync(requestId, token).ConfigureAwait(false);
+            if (status is null || status.WrappedIdentityKey is null || accountId is null)
+            {
+                return false;
+            }
+
+            if (!string.Equals(MyUserId, accountId, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            var pkcs8 = CryptoBox.UnwrapSecret(status.WrappedIdentityKey, ephemeral);
+            if (pkcs8 is null)
+            {
+                AepLog.Warning("[Encryption] the approving PC sent a key this device could not open.");
+                return false;
+            }
+
+            var imported = CryptoBox.ImportPrivateKey(pkcs8);
+            var bundle = serverBundle;
+            if (imported is null || bundle is null
+                || !string.Equals(CryptoBox.TryExportPublicKey(imported), bundle.PublicKey, StringComparison.Ordinal))
+            {
+                CryptographicOperations.ZeroMemory(pkcs8);
+                AepLog.Warning("[Encryption] the linked key does not match the account's current key.");
+                return false;
+            }
+
+            ClearKey();
+            privateKey = imported;
+            StoreLocalCache(pkcs8, accountId);
+            CryptographicOperations.ZeroMemory(pkcs8);
+            linkEphemeral = null;
+            LocalKeyUnreadable = false;
+            AepLog.Info("[Encryption] another PC approved this device and its chats are unlocked.");
+            SetState(KeyVaultState.Unlocked);
+            return true;
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    public void CancelDeviceLink(string requestId)
+    {
+        linkEphemeral = null;
+        _ = client.CancelDeviceLinkAsync(requestId, CancellationToken.None);
+    }
+
+    public Task<PendingDeviceLinksDto?> PendingDeviceLinksAsync(CancellationToken token)
+    {
+        return client.PendingDeviceLinksAsync(token);
+    }
+
+    public async Task<bool> ApproveDeviceLinkAsync(string requestId, string ephemeralPublicKey,
+        CancellationToken token)
+    {
+        var key = privateKey;
+        if (key is null || State != KeyVaultState.Unlocked)
+        {
+            return false;
+        }
+
+        var pkcs8 = CryptoBox.TryExportPrivateKey(key);
+        if (pkcs8 is null)
+        {
+            AepLog.Warning("[Encryption] approving the new PC failed: the key could not be exported.");
+            return false;
+        }
+
+        var wrapped = CryptoBox.WrapSecret(pkcs8, ephemeralPublicKey);
+        CryptographicOperations.ZeroMemory(pkcs8);
+        if (wrapped is null)
+        {
+            AepLog.Warning("[Encryption] approving the new PC failed: the key could not be wrapped for it.");
+            return false;
+        }
+
+        var approved = await client.ApproveDeviceLinkAsync(requestId, wrapped, token).ConfigureAwait(false);
+        AepLog.Info($"[Encryption] approving another PC returned {approved}.");
+        return approved;
     }
 
     public byte[]? UnwrapCek(string wrappedKey)
@@ -491,12 +656,14 @@ internal sealed class KeyVault : IDisposable
 
     private async Task<bool> ProvisionAsync(int expectedKeyVersion, CancellationToken token)
     {
-        if (MyUserId is null)
+        var accountId = MyUserId;
+        if (accountId is null)
         {
             AepLog.Warning("[Encryption] skipped creating a key because the account has not resolved yet.");
             return false;
         }
 
+        var previousState = State;
         SetState(KeyVaultState.Provisioning);
         var identity = CryptoBox.TryGenerateIdentity();
         var publicKey = identity is null ? null : CryptoBox.TryExportPublicKey(identity);
@@ -507,34 +674,68 @@ internal sealed class KeyVault : IDisposable
             return false;
         }
 
+        var pkcs8 = CryptoBox.TryExportPrivateKey(identity);
+        if (pkcs8 is null)
+        {
+            AepLog.Error("[Encryption] the new key could not be exported for storage, so it was not published.");
+            SetState(previousState);
+            return false;
+        }
+
+        var staged = await StoreAndVerifyAsync(pkcs8, accountId, publicKey).ConfigureAwait(false);
+        if (!staged)
+        {
+            CryptographicOperations.ZeroMemory(pkcs8);
+            SetState(previousState);
+            return false;
+        }
+
+        var code = RecoveryKey.GenerateCode();
+        var escrow = RecoveryKey.Wrap(pkcs8, code);
+        CryptographicOperations.ZeroMemory(pkcs8);
+        if (escrow is null)
+        {
+            AepLog.Warning("[Encryption] the recovery escrow could not be prepared; this key is published without one.");
+        }
+
         var (stored, status) = await client.PutMyKeysAsync(
-            new PutMyKeysRequest(publicKey, null, expectedKeyVersion), token).ConfigureAwait(false);
+            new PutMyKeysRequest(publicKey, escrow, expectedKeyVersion), token).ConfigureAwait(false);
         if (status == 409)
         {
             AepLog.Warning("[Encryption] the account key changed on another device while creating a new key; keeping the newer key.");
+            ClearPendingKey();
+            await configuration.SaveNowAsync().ConfigureAwait(false);
+            SetState(previousState);
             return false;
         }
 
         if (stored is null)
         {
             AepLog.Warning("[Encryption] creating a key failed: the server did not accept the upload; it will be retried.");
+            ClearPendingKey();
+            await configuration.SaveNowAsync().ConfigureAwait(false);
+            SetState(previousState);
             return false;
         }
 
+        if (!string.Equals(MyUserId, accountId, StringComparison.Ordinal))
+        {
+            AepLog.Warning(
+                "[Encryption] the account changed while the new key was being published; it stays staged until that account refreshes.");
+            SetState(KeyVaultState.Unavailable);
+            return false;
+        }
+
+        await PromotePendingKeyAsync(accountId).ConfigureAwait(false);
         serverBundle = stored;
         ClearKey();
         privateKey = identity;
-        var pkcs8 = CryptoBox.TryExportPrivateKey(identity);
-        if (pkcs8 is not null)
+        if (escrow is not null)
         {
-            StoreLocalCache(pkcs8);
-            CryptographicOperations.ZeroMemory(pkcs8);
-        }
-        else
-        {
-            AepLog.Warning("[Encryption] the new key could not be exported for local storage; it will only last this session.");
+            HoldRecoveryCode(accountId, code);
         }
 
+        AepLog.Info($"[Encryption] a new key is active for this account at version {stored.KeyVersion}.");
         SetState(KeyVaultState.Unlocked);
         return true;
     }
@@ -556,17 +757,84 @@ internal sealed class KeyVault : IDisposable
         return true;
     }
 
+    private async Task HandleMissingServerKeyAsync(string? accountId, CancellationToken token)
+    {
+        var existingKey = privateKey ?? ImportStoredKey(accountId, out _);
+        if (existingKey is not null)
+        {
+            AepLog.Warning(
+                "[Encryption] server reported no key for this account but this device already has one; re-uploading it instead of creating a new key.");
+            await ReuploadExistingIdentityAsync(existingKey, accountId, token).ConfigureAwait(false);
+            return;
+        }
+
+        if (accountId is not null)
+        {
+            ImportStoredKey(accountId, out var localStatus);
+            if (localStatus == LocalKeyStatus.Unreadable)
+            {
+                LocalKeyUnreadable = true;
+                AepLog.Warning(
+                    "[Encryption] this device holds a key for the account that could not be opened; it is left in place instead of being replaced by a new one.");
+                SetState(KeyVaultState.Locked);
+                return;
+            }
+        }
+
+        missingServerKeyStreak++;
+        if (missingServerKeyStreak < MissingServerKeyConfirmations)
+        {
+            AepLog.Warning(
+                "[Encryption] the server reported no key for this account; confirming that on the next refresh before creating one.");
+            return;
+        }
+
+        await ProvisionAsync(0, token).ConfigureAwait(false);
+    }
+
+    private async Task<bool> TryAdoptPendingKeyAsync(MyKeysDto bundle, string? accountId)
+    {
+        if (accountId is null
+            || configuration.EncryptionKeyCachePending.Length == 0
+            || !string.Equals(configuration.EncryptionKeyCachePendingUserId, accountId, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var pending = ImportBlob(configuration.EncryptionKeyCachePending, accountId, out _);
+        if (pending is null
+            || !string.Equals(CryptoBox.TryExportPublicKey(pending), bundle.PublicKey, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        AepLog.Warning(
+            "[Encryption] a key that reached the server but had not finished saving locally was recovered on this device.");
+        await PromotePendingKeyAsync(accountId).ConfigureAwait(false);
+        ClearKey();
+        privateKey = pending;
+        return true;
+    }
+
     private EcPrivateKey? ImportStoredKeyForCurrentUser()
     {
-        var userId = MyUserId;
-        if (userId is null
-            || configuration.EncryptionKeyCache.Length == 0
-            || !string.Equals(configuration.EncryptionKeyCacheUserId, userId, StringComparison.Ordinal))
+        return ImportStoredKey(MyUserId, out _);
+    }
+
+    private EcPrivateKey? ImportStoredKey(string? userId, out LocalKeyStatus status)
+    {
+        status = LocalKeyStatus.Missing;
+        if (userId is null)
         {
             return null;
         }
 
-        var pkcs8 = LocalKeyProtector.Unprotect(configuration.EncryptionKeyCache, userId);
+        return ImportBlob(ReadStoredBlob(userId), userId, out status);
+    }
+
+    private static EcPrivateKey? ImportBlob(string blob, string userId, out LocalKeyStatus status)
+    {
+        status = LocalKeyProtector.TryUnprotect(blob, userId, out var pkcs8);
         if (pkcs8 is null)
         {
             return null;
@@ -574,10 +842,30 @@ internal sealed class KeyVault : IDisposable
 
         var imported = CryptoBox.ImportPrivateKey(pkcs8);
         CryptographicOperations.ZeroMemory(pkcs8);
+        if (imported is null)
+        {
+            status = LocalKeyStatus.Unreadable;
+        }
+
         return imported;
     }
 
-    private async Task ReuploadExistingIdentityAsync(EcPrivateKey existingKey, CancellationToken token)
+    private string ReadStoredBlob(string userId)
+    {
+        if (configuration.EncryptionKeysByUserId.TryGetValue(userId, out var stored) && stored.Length > 0)
+        {
+            return stored;
+        }
+
+        if (string.Equals(configuration.EncryptionKeyCacheUserId, userId, StringComparison.Ordinal))
+        {
+            return configuration.EncryptionKeyCache;
+        }
+
+        return string.Empty;
+    }
+
+    private async Task ReuploadExistingIdentityAsync(EcPrivateKey existingKey, string? accountId, CancellationToken token)
     {
         var publicKey = CryptoBox.TryExportPublicKey(existingKey);
         if (publicKey is null)
@@ -586,30 +874,59 @@ internal sealed class KeyVault : IDisposable
             return;
         }
 
+        var pkcs8 = CryptoBox.TryExportPrivateKey(existingKey);
+        var code = RecoveryKey.GenerateCode();
+        var escrow = pkcs8 is null ? null : RecoveryKey.Wrap(pkcs8, code);
         var (stored, status) = await client.PutMyKeysAsync(
-            new PutMyKeysRequest(publicKey, null, 0), token).ConfigureAwait(false);
+            new PutMyKeysRequest(publicKey, escrow, 0), token).ConfigureAwait(false);
         if (status == 409)
         {
             AepLog.Warning("[Encryption] the server reported a missing key but one exists after all; keeping the server's key.");
+            ZeroIfPresent(pkcs8);
             return;
         }
 
         if (stored is null)
         {
             AepLog.Warning("[Encryption] re-uploading the existing key failed: the server did not accept it; it will be retried.");
+            ZeroIfPresent(pkcs8);
+            return;
+        }
+
+        if (!string.Equals(MyUserId, accountId, StringComparison.Ordinal))
+        {
+            AepLog.Warning("[Encryption] the account changed while the existing key was being re-uploaded; stopping here.");
+            ZeroIfPresent(pkcs8);
+            SetState(KeyVaultState.Unavailable);
             return;
         }
 
         serverBundle = stored;
         privateKey = existingKey;
-        var pkcs8 = CryptoBox.TryExportPrivateKey(existingKey);
         if (pkcs8 is not null)
         {
-            StoreLocalCache(pkcs8);
+            if (accountId is not null)
+            {
+                StoreLocalCache(pkcs8, accountId);
+            }
+
             CryptographicOperations.ZeroMemory(pkcs8);
         }
 
+        if (escrow is not null && accountId is not null)
+        {
+            HoldRecoveryCode(accountId, code);
+        }
+
         SetState(KeyVaultState.Unlocked);
+    }
+
+    private static void ZeroIfPresent(byte[]? buffer)
+    {
+        if (buffer is not null)
+        {
+            CryptographicOperations.ZeroMemory(buffer);
+        }
     }
 
     private void StoreLocalCache(byte[] pkcs8)
@@ -617,15 +934,114 @@ internal sealed class KeyVault : IDisposable
         var userId = MyUserId;
         if (userId is null)
         {
+            AepLog.Warning("[Encryption] the key could not be stored because the account is no longer resolved.");
             return;
         }
 
+        StoreLocalCache(pkcs8, userId);
+    }
+
+    private void StoreLocalCache(byte[] pkcs8, string userId)
+    {
         var protectedBlob = LocalKeyProtector.Protect(pkcs8, userId);
         LocalCacheUnavailable = LocalKeyProtector.IsUnprotected(protectedBlob);
-        configuration.EncryptionKeyCache = protectedBlob;
-        configuration.EncryptionKeyCacheUserId = userId;
+        WriteStoredBlob(protectedBlob, userId);
         configuration.Save();
         session.PersistActiveKeyCache();
+    }
+
+    private async Task<bool> StoreAndVerifyAsync(byte[] pkcs8, string userId, string expectedPublicKey)
+    {
+        var protectedBlob = LocalKeyProtector.Protect(pkcs8, userId);
+        LocalCacheUnavailable = LocalKeyProtector.IsUnprotected(protectedBlob);
+        configuration.EncryptionKeyCachePending = protectedBlob;
+        configuration.EncryptionKeyCachePendingUserId = userId;
+        await configuration.SaveNowAsync().ConfigureAwait(false);
+
+        var readBack = ImportBlob(configuration.EncryptionKeyCachePending, userId, out _);
+        if (readBack is null
+            || !string.Equals(CryptoBox.TryExportPublicKey(readBack), expectedPublicKey, StringComparison.Ordinal))
+        {
+            AepLog.Error(
+                "[Encryption] the new key did not survive a write and read back, so it was not published; the account keeps its current key.");
+            ClearPendingKey();
+            await configuration.SaveNowAsync().ConfigureAwait(false);
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task PromotePendingKeyAsync(string userId)
+    {
+        var pending = configuration.EncryptionKeyCachePending;
+        if (pending.Length == 0)
+        {
+            return;
+        }
+
+        var displaced = ReadStoredBlob(userId);
+        if (displaced.Length > 0 && !string.Equals(displaced, pending, StringComparison.Ordinal))
+        {
+            configuration.EncryptionKeyCachePrevious = displaced;
+            configuration.EncryptionKeyCachePreviousUserId = userId;
+        }
+
+        WriteStoredBlob(pending, userId);
+        ClearPendingKey();
+        await configuration.SaveNowAsync().ConfigureAwait(false);
+        await session.PersistActiveKeyCacheAsync().ConfigureAwait(false);
+    }
+
+    private void WriteStoredBlob(string protectedBlob, string userId)
+    {
+        configuration.EncryptionKeysByUserId[userId] = protectedBlob;
+        configuration.EncryptionKeyCache = protectedBlob;
+        configuration.EncryptionKeyCacheUserId = userId;
+    }
+
+    private void ClearPendingKey()
+    {
+        configuration.EncryptionKeyCachePending = string.Empty;
+        configuration.EncryptionKeyCachePendingUserId = string.Empty;
+    }
+
+    private void HoldRecoveryCode(string userId, string code)
+    {
+        configuration.PendingRecoveryCode = code;
+        configuration.PendingRecoveryCodeUserId = userId;
+        configuration.EncryptionRecoveryNudgeDismissed = false;
+        configuration.EncryptionRecoveryNudgeSnoozedUntilUnix = 0;
+        configuration.Save();
+    }
+
+    public string? UnsavedRecoveryCode
+    {
+        get
+        {
+            var userId = MyUserId;
+            if (userId is null
+                || configuration.PendingRecoveryCode.Length == 0
+                || !string.Equals(configuration.PendingRecoveryCodeUserId, userId, StringComparison.Ordinal))
+            {
+                return null;
+            }
+
+            return configuration.PendingRecoveryCode;
+        }
+    }
+
+    public void AcknowledgeRecoveryCode()
+    {
+        if (configuration.PendingRecoveryCode.Length == 0)
+        {
+            return;
+        }
+
+        configuration.PendingRecoveryCode = string.Empty;
+        configuration.PendingRecoveryCodeUserId = string.Empty;
+        configuration.Save();
+        Changed?.Invoke();
     }
 
     private void EnsureLocalCachePersisted()
@@ -675,6 +1091,7 @@ internal sealed class KeyVault : IDisposable
             return;
         }
 
+        AepLog.Info($"[Encryption] vault state {State} to {next}.");
         State = next;
         Changed?.Invoke();
     }
@@ -702,6 +1119,18 @@ internal static class LocalKeyProtector
     public static bool IsUnprotected(string stored)
     {
         return stored.StartsWith(RawPrefix, StringComparison.Ordinal);
+    }
+
+    public static LocalKeyStatus TryUnprotect(string stored, string userId, out byte[]? secret)
+    {
+        if (stored.Length == 0)
+        {
+            secret = null;
+            return LocalKeyStatus.Missing;
+        }
+
+        secret = Unprotect(stored, userId);
+        return secret is null ? LocalKeyStatus.Unreadable : LocalKeyStatus.Opened;
     }
 
     public static byte[]? Unprotect(string stored, string userId)

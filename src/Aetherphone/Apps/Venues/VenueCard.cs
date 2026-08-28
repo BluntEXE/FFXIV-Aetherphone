@@ -1,6 +1,7 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Media;
 using Aetherphone.Core.Net;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Venues;
@@ -48,7 +49,7 @@ internal static class VenueCard
         var starMin = starCenter - starHit;
         var starMax = starCenter + starHit;
         var starHovered = UiInteract.Hover(starMin, starMax);
-        AppSkin.Icon(starCenter, FontAwesomeIcon.Star.ToIconString(),
+        AppSkin.Icon(starCenter, IconGlyph.Of(FontAwesomeIcon.Star),
             favorite ? palette.Accent : starHovered ? palette.TitleInk : Palette.WithAlpha(palette.MutedInk, 0.75f),
             0.85f);
         var textLeft = thumb.Max.X + 12f * scale;
@@ -58,14 +59,14 @@ internal static class VenueCard
         var titleY = card.Min.Y + 13f * scale;
         var titleHeight = Typography.Measure(venue.Title, TextStyles.Headline).Y;
         var titleHovered = UiInteract.Hover(new Vector2(textLeft, titleY), new Vector2(textRight, titleY + titleHeight));
-        Marquee.DrawLeft("venuecard.title." + venue.Id, venue.Title, textLeft, titleY,
+        Marquee.DrawLeft(new MarqueeId("venuecard.title.", venue.Id), venue.Title, textLeft, titleY,
             textWidth, TextStyles.Headline, palette.TitleInk, titleHovered);
         var subtitleY = card.Min.Y + 34f * scale;
         var subtitle = BuildSubtitle(venue);
         var subtitleHeight = Typography.Measure(subtitle, TextStyles.Footnote).Y;
         var subtitleHovered = UiInteract.Hover(new Vector2(textLeft, subtitleY),
             new Vector2(textRight, subtitleY + subtitleHeight));
-        Marquee.DrawLeft("venuecard.subtitle." + venue.Id, subtitle, textLeft,
+        Marquee.DrawLeft(new MarqueeId("venuecard.subtitle.", venue.Id), subtitle, textLeft,
             subtitleY, textWidth, TextStyles.Footnote, palette.MutedInk, subtitleHovered);
         DrawTimeRow(drawList, venue, live, textLeft, card.Min.Y + 53f * scale, card.Max.X - pad, palette, scale);
         DrawTags(drawList, venue, textLeft, card.Max.Y - pad - VenueChips.Height(scale), textRight);
@@ -117,7 +118,7 @@ internal static class VenueCard
                 var offset = Typography.Measure(liveLabel, TextStyles.FootnoteEmphasized).X + 7f * scale;
                 var endsMaxWidth = MathF.Max(1f, leftMaxWidth - offset);
                 var untilText = Loc.T(L.Venues.UntilTime, ends);
-                Marquee.DrawLeftAuto("venuecard.until." + venue.Id, untilText, left + offset, top, endsMaxWidth,
+                Marquee.DrawLeftAuto(new MarqueeId("venuecard.until.", venue.Id), untilText, left + offset, top, endsMaxWidth,
                     TextStyles.Footnote, palette.MutedInk);
             }
         }
@@ -125,7 +126,7 @@ internal static class VenueCard
         {
             var rangeStyle = new TextStyle(TextStyles.Footnote.Scale, FontWeight.Medium);
             var rangeText = VenueFormat.Range(venue);
-            Marquee.DrawLeftAuto("venuecard.range." + venue.Id, rangeText, left, top, leftMaxWidth, rangeStyle,
+            Marquee.DrawLeftAuto(new MarqueeId("venuecard.range.", venue.Id), rangeText, left, top, leftMaxWidth, rangeStyle,
                 palette.Accent);
         }
 
@@ -137,7 +138,7 @@ internal static class VenueCard
         var countLeft = right - countSize.X;
         Typography.Draw(new Vector2(countLeft, top), count, palette.MutedInk, TextStyles.Footnote);
         AppSkin.Icon(drawList, new Vector2(countLeft - 10f * scale, top + countSize.Y * 0.5f),
-            FontAwesomeIcon.Users.ToIconString(), Palette.WithAlpha(palette.MutedInk, 0.8f), 0.58f);
+            IconGlyph.Of(FontAwesomeIcon.Users), Palette.WithAlpha(palette.MutedInk, 0.8f), 0.58f);
     }
 
     private static string BuildSubtitle(VenueEvent venue)

@@ -1,3 +1,5 @@
+using Aetherphone.Core.Audio;
+using System.Linq;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
@@ -38,8 +40,6 @@ internal sealed class RadioPlayer : IDisposable
     public RadioPlayer()
     {
         client = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd(
-            $"Aetherphone/{AepConstants.Version} (+https://github.com/XeldarAlz/FFXIV-Aetherphone)");
     }
 
     public RadioPlaybackState State => state;

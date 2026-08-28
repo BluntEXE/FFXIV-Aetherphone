@@ -315,13 +315,13 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             ImGui.Dummy(new Vector2(0f, 10f * scale));
             var spacing = 8f * scale;
             var half = (ImGui.GetContentRegionAvail().X - spacing) * 0.5f;
-            if (Button(Loc.T(L.Account.PatreonOpen), theme, half))
+            if (ThemeButton.Draw(Loc.T(L.Account.PatreonOpen), theme, half))
             {
                 patreonFlow.OpenAgain();
             }
 
             ImGui.SameLine(0f, spacing);
-            if (Button(Loc.T(L.Common.Cancel), theme, half))
+            if (ThemeButton.Draw(Loc.T(L.Common.Cancel), theme, half))
             {
                 patreonFlow.Cancel();
             }
@@ -672,6 +672,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
             Message = Loc.T(L.Account.SignOutConfirmBody),
             ConfirmLabel = Loc.T(L.Account.SignOut),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             Confirm = () =>
             {
                 RevokeCurrentToken();
@@ -801,13 +802,13 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         ImGui.Dummy(new Vector2(0f, 12f * scale));
         DrawIdentityCard(name, world, theme);
         ImGui.Dummy(new Vector2(0f, 14f * scale));
-        if (PrimaryButton(Loc.T(L.Account.XivSignIn), theme) && ready)
+        if (ThemeButton.Primary(Loc.T(L.Account.XivSignIn), theme) && ready)
         {
             flow.StartXivAuth(name, world);
         }
 
         ImGui.Dummy(new Vector2(0f, 6f * scale));
-        if (Button(Loc.T(L.Account.SignIn), theme) && ready)
+        if (ThemeButton.Draw(Loc.T(L.Account.SignIn), theme) && ready)
         {
             flow.StartLodestone(name, world);
         }
@@ -840,7 +841,7 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         }
 
         ImGui.Dummy(new Vector2(0f, 14f * scale));
-        if (PrimaryButton(Loc.T(L.Account.RisingStonesSignIn), theme) && !flow.Busy && risingStonesUuid.Length > 0)
+        if (ThemeButton.Primary(Loc.T(L.Account.RisingStonesSignIn), theme) && !flow.Busy && risingStonesUuid.Length > 0)
         {
             flow.StartRisingStones(risingStonesUuid);
         }
@@ -902,25 +903,25 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         ImGui.Dummy(new Vector2(0f, 12f * scale));
         var spacing = 8f * scale;
         var half = (ImGui.GetContentRegionAvail().X - spacing) * 0.5f;
-        if (Button(Loc.T(L.Account.CopyCode), theme, half))
+        if (ThemeButton.Draw(Loc.T(L.Account.CopyCode), theme, half))
         {
             ImGui.SetClipboardText(code);
         }
 
         ImGui.SameLine(0f, spacing);
-        if (Button(Loc.T(L.Account.RisingStonesOpen), theme, half))
+        if (ThemeButton.Draw(Loc.T(L.Account.RisingStonesOpen), theme, half))
         {
             UrlActions.OpenInBrowser(RisingStonesProfileSettingsUrl);
         }
 
         ImGui.Dummy(new Vector2(0f, 8f * scale));
-        if (PrimaryButton(Loc.T(L.Account.VerifyAdded), theme) && !flow.Busy)
+        if (ThemeButton.Primary(Loc.T(L.Account.VerifyAdded), theme) && !flow.Busy)
         {
             flow.VerifyChallenge();
         }
 
         ImGui.Dummy(new Vector2(0f, 2f * scale));
-        if (GhostButton(Loc.T(L.Common.Cancel), theme))
+        if (ThemeButton.Ghost(Loc.T(L.Common.Cancel), theme))
         {
             ResetFlow();
         }
@@ -965,13 +966,13 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         ImGui.Dummy(new Vector2(0f, 12f * scale));
         var spacing = 8f * scale;
         var half = (ImGui.GetContentRegionAvail().X - spacing) * 0.5f;
-        if (Button(Loc.T(L.Account.XivOpen), theme, half) && flow.XivVerificationUri is { } verificationUri)
+        if (ThemeButton.Draw(Loc.T(L.Account.XivOpen), theme, half) && flow.XivVerificationUri is { } verificationUri)
         {
             UrlActions.OpenInBrowser(verificationUri);
         }
 
         ImGui.SameLine(0f, spacing);
-        if (Button(Loc.T(L.Common.Cancel), theme, half))
+        if (ThemeButton.Draw(Loc.T(L.Common.Cancel), theme, half))
         {
             flow.CancelXivAuth();
         }
@@ -1010,25 +1011,25 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
         ImGui.Dummy(new Vector2(0f, 12f * scale));
         var spacing = 8f * scale;
         var half = (ImGui.GetContentRegionAvail().X - spacing) * 0.5f;
-        if (Button(Loc.T(L.Account.CopyCode), theme, half))
+        if (ThemeButton.Draw(Loc.T(L.Account.CopyCode), theme, half))
         {
             ImGui.SetClipboardText(code);
         }
 
         ImGui.SameLine(0f, spacing);
-        if (Button(Loc.T(L.Account.OpenProfile), theme, half))
+        if (ThemeButton.Draw(Loc.T(L.Account.OpenProfile), theme, half))
         {
             UrlActions.OpenInBrowser(LodestoneProfileUrl);
         }
 
         ImGui.Dummy(new Vector2(0f, 8f * scale));
-        if (PrimaryButton(Loc.T(L.Account.VerifyAdded), theme) && !flow.Busy)
+        if (ThemeButton.Primary(Loc.T(L.Account.VerifyAdded), theme) && !flow.Busy)
         {
             flow.VerifyChallenge();
         }
 
         ImGui.Dummy(new Vector2(0f, 2f * scale));
-        if (GhostButton(Loc.T(L.Common.Cancel), theme))
+        if (ThemeButton.Ghost(Loc.T(L.Common.Cancel), theme))
         {
             ResetFlow();
         }
@@ -1160,38 +1161,6 @@ internal sealed class AccountPage : ISettingsPage, IDisposable
     {
         flow.Reset();
         meRequested = false;
-    }
-
-    private static bool Button(string label, PhoneTheme theme, float width = -1f)
-    {
-        using (ImRaii.PushColor(ImGuiCol.Button, theme.GroupedCard)
-                   .Push(ImGuiCol.ButtonHovered, Palette.Mix(theme.GroupedCard, theme.Accent, 0.35f))
-                   .Push(ImGuiCol.ButtonActive, theme.Accent).Push(ImGuiCol.Text, theme.TextStrong))
-        {
-            return ImGui.Button(label, new Vector2(width, 34f * UiScale.Current));
-        }
-    }
-
-    private static bool PrimaryButton(string label, PhoneTheme theme)
-    {
-        using (ImRaii.PushColor(ImGuiCol.Button, theme.Accent)
-                   .Push(ImGuiCol.ButtonHovered, Palette.Mix(theme.Accent, theme.TextStrong, 0.14f))
-                   .Push(ImGuiCol.ButtonActive, Palette.Mix(theme.Accent, new Vector4(0f, 0f, 0f, 1f), 0.18f))
-                   .Push(ImGuiCol.Text, new Vector4(1f, 1f, 1f, 1f)))
-        {
-            return ImGui.Button(label, new Vector2(-1f, 38f * UiScale.Current));
-        }
-    }
-
-    private static bool GhostButton(string label, PhoneTheme theme)
-    {
-        using (ImRaii.PushColor(ImGuiCol.Button, Palette.WithAlpha(theme.TextStrong, 0f))
-                   .Push(ImGuiCol.ButtonHovered, Palette.WithAlpha(theme.TextStrong, 0.08f))
-                   .Push(ImGuiCol.ButtonActive, Palette.WithAlpha(theme.TextStrong, 0.14f))
-                   .Push(ImGuiCol.Text, theme.TextMuted))
-        {
-            return ImGui.Button(label, new Vector2(-1f, 32f * UiScale.Current));
-        }
     }
 
     public void Dispose()

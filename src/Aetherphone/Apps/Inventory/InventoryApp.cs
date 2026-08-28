@@ -104,26 +104,8 @@ internal sealed class InventoryApp : IPhoneApp
         DrawRoot(area);
     }
 
-    private void DrawNavBar(Rect area, string title, Action? onBack)
-    {
-        var scale = UiScale.Current;
-        var rowCenterY = area.Min.Y + AppHeader.Height * scale * 0.5f;
-        var fitted = Typography.FitText(title, area.Width - 96f * scale, TextStyles.Title3);
-        Typography.DrawCentered(new Vector2(area.Center.X, rowCenterY), fitted, ui.TitleInk, TextStyles.Title3);
-        if (onBack is null)
-        {
-            return;
-        }
-
-        var hitMin = new Vector2(area.Min.X, area.Min.Y);
-        var hitMax = new Vector2(area.Min.X + 46f * scale, area.Min.Y + AppHeader.Height * scale);
-        var hovered = UiInteract.Hover(hitMin, hitMax);
-        var center = new Vector2(area.Min.X + 17f * scale, rowCenterY);
-        if (BackButton.Draw("inventory.back", center, 15f * scale, ui.TitleInk, hovered, scale))
-        {
-            onBack();
-        }
-    }
+    private void DrawNavBar(Rect area, string title, Action? onBack) =>
+        AppHeader.DrawNavBar(area, "inventory.back", title, ui.TitleInk, onBack);
 
     private void DrawRoot(Rect area)
     {
@@ -213,27 +195,22 @@ internal sealed class InventoryApp : IPhoneApp
     private void DrawLocalPanel()
     {
         var scale = UiScale.Current;
-        var drawList = ImGui.GetWindowDrawList();
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var rowHeight = StorageRowHeight * scale;
-        var panelMax = new Vector2(origin.X + width, origin.Y + localScratch.Count * rowHeight);
-        ui.Card(drawList, origin, panelMax, Metrics.Radius.Card * scale, elevated: true);
-        var separatorLeft = StorageSeparatorLeft(origin, scale);
+        var accentHover = Palette.WithAlpha(ui.Accent, 0.10f);
+        var card = GroupCard.Begin(ui, localScratch.Count, StorageRowHeight);
         for (var index = 0; index < localScratch.Count; index++)
         {
             var group = localScratch[index];
-            var row = PanelRow(drawList, origin, width, rowHeight, index, scale, separatorLeft,
-                Palette.WithAlpha(ui.Accent, 0.10f), true, out var hovered, out var hitMin, out var hitMax);
-            if (DrawStorageRow(row, group.Kind, group.Title, string.Empty, group.Rows.Count, true, hovered, hitMin,
-                    hitMax))
+            var row = card.NextRow();
+            var band = RowBand(row, scale);
+            var hovered = DrawRowHover(band, scale, accentHover);
+            if (DrawStorageRow(row, group.Kind, group.Title, string.Empty, group.Rows.Count, true, hovered, band.Min,
+                    band.Max))
             {
                 Open(group.Kind, group.Title);
             }
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, localScratch.Count * rowHeight));
+        card.End();
     }
 
     private void DrawCachedPanel()
@@ -248,23 +225,19 @@ internal sealed class InventoryApp : IPhoneApp
 
         SectionLabel(Loc.T(L.Inventory.CachedSources));
         var scale = UiScale.Current;
-        var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
-        var rowHeight = StorageRowHeight * scale;
-        var panelMax = new Vector2(origin.X + width, origin.Y + total * rowHeight);
-        ui.Card(drawList, origin, panelMax, Metrics.Radius.Card * scale, elevated: true);
-        var separatorLeft = StorageSeparatorLeft(origin, scale);
         var accentHover = Palette.WithAlpha(ui.Accent, 0.10f);
-        var rowIndex = 0;
+        var card = GroupCard.Begin(ui, total, StorageRowHeight);
         for (var index = 0; index < cachedScratch.Count; index++)
         {
             var group = cachedScratch[index];
             var subtitle = Loc.T(L.Inventory.Updated, TimeText.Ago(group.CapturedUtc));
-            var row = PanelRow(drawList, origin, width, rowHeight, rowIndex++, scale, separatorLeft, accentHover, true,
-                out var hovered, out var hitMin, out var hitMax);
-            if (DrawStorageRow(row, group.Kind, group.Title, subtitle, group.Rows.Count, true, hovered, hitMin,
-                    hitMax))
+            var row = card.NextRow();
+            var band = RowBand(row, scale);
+            var hovered = DrawRowHover(band, scale, accentHover);
+            if (DrawStorageRow(row, group.Kind, group.Title, subtitle, group.Rows.Count, true, hovered, band.Min,
+                    band.Max))
             {
                 Open(group.Kind, group.Title);
             }
@@ -272,53 +245,41 @@ internal sealed class InventoryApp : IPhoneApp
 
         if (showRetainer)
         {
-            var row = PanelRow(drawList, origin, width, rowHeight, rowIndex++, scale, separatorLeft, accentHover, false,
-                out _, out var hitMin, out var hitMax);
+            var row = card.NextRow();
+            var band = RowBand(row, scale);
             DrawStorageRow(row, InventorySourceKind.Retainer, Loc.T(L.Inventory.SourceRetainer),
-                Loc.T(L.Inventory.RetainerEmpty), -1, false, false, hitMin, hitMax);
+                Loc.T(L.Inventory.RetainerEmpty), -1, false, false, band.Min, band.Max);
         }
 
         if (showFreeCompany)
         {
-            var row = PanelRow(drawList, origin, width, rowHeight, rowIndex, scale, separatorLeft, accentHover, false,
-                out _, out var hitMin, out var hitMax);
+            var row = card.NextRow();
+            var band = RowBand(row, scale);
             DrawStorageRow(row, InventorySourceKind.FreeCompany, Loc.T(L.Inventory.SourceFreeCompany),
-                Loc.T(L.Inventory.FreeCompanyEmpty), -1, false, false, hitMin, hitMax);
+                Loc.T(L.Inventory.FreeCompanyEmpty), -1, false, false, band.Min, band.Max);
         }
 
-        UiAnchors.Report("inventory.sources", new Rect(origin, panelMax));
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, total * rowHeight));
+        UiAnchors.Report("inventory.sources",
+            new Rect(origin, origin + new Vector2(width, total * StorageRowHeight * scale)));
+        card.End();
     }
 
-    private static float StorageSeparatorLeft(Vector2 origin, float scale) =>
-        origin.X + 16f * scale + 44f * scale + 14f * scale;
+    private static Rect RowBand(Rect row, float scale) =>
+        new(new Vector2(row.Min.X - Metrics.Space.Lg * scale, row.Min.Y),
+            new Vector2(row.Max.X + Metrics.Space.Lg * scale, row.Max.Y));
 
-    private Rect PanelRow(ImDrawListPtr drawList, Vector2 origin, float width, float rowHeight, int index, float scale,
-        float separatorLeft, Vector4 hoverTint, bool interactive, out bool hovered, out Vector2 hitMin,
-        out Vector2 hitMax)
+    private static bool DrawRowHover(Rect band, float scale, Vector4 hoverTint)
     {
-        var pad = 16f * scale;
-        var rowTop = origin.Y + index * rowHeight;
-        var rowMin = new Vector2(origin.X, rowTop);
-        var rowMax = new Vector2(origin.X + width, rowTop + rowHeight);
-        hitMin = rowMin;
-        hitMax = rowMax;
-        hovered = interactive && UiInteract.Hover(rowMin, rowMax);
-        if (hovered)
+        if (!UiInteract.Hover(band.Min, band.Max))
         {
-            var pressed = ImGui.IsMouseDown(ImGuiMouseButton.Left);
-            var fill = pressed ? Palette.WithAlpha(hoverTint, MathF.Min(1f, hoverTint.W * 1.8f)) : hoverTint;
-            Squircle.Fill(drawList, new Vector2(rowMin.X + 4f * scale, rowMin.Y + 3f * scale),
-                new Vector2(rowMax.X - 4f * scale, rowMax.Y - 3f * scale), 12f * scale, ImGui.GetColorU32(fill));
-        }
-        else if (index > 0)
-        {
-            drawList.AddLine(new Vector2(separatorLeft, rowTop), new Vector2(rowMax.X - pad, rowTop),
-                ImGui.GetColorU32(Palette.WithAlpha(ui.TitleInk, 0.06f)), 1f);
+            return false;
         }
 
-        return new Rect(new Vector2(rowMin.X + pad, rowMin.Y), new Vector2(rowMax.X - pad, rowMax.Y));
+        var pressed = ImGui.IsMouseDown(ImGuiMouseButton.Left);
+        var fill = pressed ? Palette.WithAlpha(hoverTint, MathF.Min(1f, hoverTint.W * 1.8f)) : hoverTint;
+        Squircle.Fill(ImGui.GetWindowDrawList(), new Vector2(band.Min.X + 4f * scale, band.Min.Y + 3f * scale),
+            new Vector2(band.Max.X - 4f * scale, band.Max.Y - 3f * scale), 12f * scale, ImGui.GetColorU32(fill));
+        return true;
     }
 
     private bool DrawStorageRow(Rect row, InventorySourceKind kind, string title, string subtitle, int count,
@@ -352,19 +313,19 @@ internal sealed class InventoryApp : IPhoneApp
             var titleSize = Typography.Measure(title, TextStyles.Headline);
             var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleY),
                 new Vector2(textLeft + textMaxWidth, titleY + titleSize.Y));
-            Marquee.DrawLeft("inventory.storage.title." + kind, title, textLeft, titleY,
+            Marquee.DrawLeft(new MarqueeId("inventory.storage.title.", (int)kind), title, textLeft, titleY,
                 textMaxWidth, TextStyles.Headline, ui.TitleInk, titleHovering);
             var subtitleY = row.Min.Y + 38f * scale;
             var subtitleSize = Typography.Measure(subtitle, TextStyles.Footnote);
             var subtitleHovering = UiInteract.Hover(new Vector2(textLeft, subtitleY),
                 new Vector2(textLeft + textMaxWidth, subtitleY + subtitleSize.Y));
-            Marquee.DrawLeft("inventory.storage.subtitle." + kind, subtitle, textLeft, subtitleY,
+            Marquee.DrawLeft(new MarqueeId("inventory.storage.subtitle.", (int)kind), subtitle, textLeft, subtitleY,
                 textMaxWidth, TextStyles.Footnote, ui.MutedInk, subtitleHovering);
         }
         else
         {
             var nameSize = Typography.Measure(title, TextStyles.Headline);
-            Marquee.DrawLeft("inventory.storage.title." + kind, title, textLeft, row.Center.Y - nameSize.Y * 0.5f,
+            Marquee.DrawLeft(new MarqueeId("inventory.storage.title.", (int)kind), title, textLeft, row.Center.Y - nameSize.Y * 0.5f,
                 textMaxWidth, TextStyles.Headline, ui.TitleInk, hovered);
         }
 
@@ -431,7 +392,7 @@ internal sealed class InventoryApp : IPhoneApp
         var valueHovering = UiInteract.Hover(
             new Vector2(columnTop.X - valueMaxWidth * 0.5f, valueY - valueSize.Y * 0.5f),
             new Vector2(columnTop.X + valueMaxWidth * 0.5f, valueY + valueSize.Y * 0.5f));
-        Marquee.DrawCentered("inventory.herostat." + label, value, columnTop.X, valueY - valueSize.Y * 0.5f,
+        Marquee.DrawCentered(new MarqueeId("inventory.herostat.", label), value, columnTop.X, valueY - valueSize.Y * 0.5f,
             valueMaxWidth, TextStyles.Title2, ui.TitleInk, valueHovering);
         Typography.DrawCentered(drawList, new Vector2(columnTop.X, columnTop.Y + 94f * scale),
             Loc.Culture.TextInfo.ToUpper(label), ui.MutedInk, TextStyles.Caption1);
@@ -505,7 +466,7 @@ internal sealed class InventoryApp : IPhoneApp
             textRight -= labelSize.X + 10f * scale;
         }
 
-        var title = Fit(group.Title, textRight - textLeft, TextStyles.Headline);
+        var title = Typography.FitText(group.Title, textRight - textLeft, TextStyles.Headline);
         Typography.Draw(drawList,
             new Vector2(textLeft, tileCenter.Y - Typography.Measure(title, TextStyles.Headline).Y * 0.5f),
             title, ui.TitleInk, TextStyles.Headline);
@@ -517,22 +478,15 @@ internal sealed class InventoryApp : IPhoneApp
     private void DrawItemPanel(List<InventoryResultRow> rows)
     {
         var scale = UiScale.Current;
-        var drawList = ImGui.GetWindowDrawList();
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
-        var rowHeight = ItemRowHeight * scale;
-        var panelMax = new Vector2(origin.X + width, origin.Y + rows.Count * rowHeight);
-        ui.Card(drawList, origin, panelMax, Metrics.Radius.Card * scale, elevated: true);
-        var separatorLeft = origin.X + 16f * scale + 38f * scale + 14f * scale;
+        var card = GroupCard.Begin(ui, rows.Count, ItemRowHeight);
         for (var index = 0; index < rows.Count; index++)
         {
-            var row = PanelRow(drawList, origin, width, rowHeight, index, scale, separatorLeft, ui.HoverTint, true,
-                out var hovered, out _, out _);
+            var row = card.NextRow();
+            var hovered = DrawRowHover(RowBand(row, scale), scale, ui.HoverTint);
             DrawItemRow(row, rows[index], index, hovered);
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rows.Count * rowHeight));
+        card.End();
     }
 
     private void DrawItemRow(Rect row, InventoryResultRow item, int index, bool hovered)
@@ -558,7 +512,7 @@ internal sealed class InventoryApp : IPhoneApp
         }
 
         var nameSize = Typography.Measure(item.Name, TextStyles.Body);
-        Marquee.DrawLeft("inventory.item." + index, item.Name, textLeft, row.Center.Y - nameSize.Y * 0.5f,
+        Marquee.DrawLeft(new MarqueeId("inventory.item.", index), item.Name, textLeft, row.Center.Y - nameSize.Y * 0.5f,
             MathF.Max(1f, textRight - textLeft), TextStyles.Body, hovered ? ui.TitleInk : ui.BodyInk, hovered);
     }
 
@@ -619,7 +573,7 @@ internal sealed class InventoryApp : IPhoneApp
         var width = ImGui.GetContentRegionAvail().X;
         var origin = ImGui.GetCursorScreenPos();
         var centerX = origin.X + width * 0.5f;
-        AppSkin.Icon(new Vector2(centerX, origin.Y + 4f * scale), FontAwesomeIcon.BoxOpen.ToIconString(), ui.MutedInk,
+        AppSkin.Icon(new Vector2(centerX, origin.Y + 4f * scale), IconGlyph.Of(FontAwesomeIcon.BoxOpen), ui.MutedInk,
             1.5f);
         Typography.DrawCentered(new Vector2(centerX, origin.Y + 42f * scale), message, ui.MutedInk,
             TextStyles.Subheadline);
@@ -682,41 +636,8 @@ internal sealed class InventoryApp : IPhoneApp
         drawList.AddLine(tip, new Vector2(tip.X - size, tip.Y + size), packed, thickness);
     }
 
-    private static string FormatCount(int value) => value.ToString("N0", Loc.Culture);
-    private static string FormatGil() => InventoryGil.Read().ToString("N0", Loc.Culture);
-
-    private static string Fit(string text, float maxWidth, in TextStyle style)
-    {
-        if (text.Length == 0 || maxWidth <= 0f)
-        {
-            return text;
-        }
-
-        if (Typography.Measure(text, style).X <= maxWidth)
-        {
-            return text;
-        }
-
-        var low = 1;
-        var high = text.Length;
-        var best = "…";
-        while (low <= high)
-        {
-            var mid = (low + high) / 2;
-            var candidate = text.Substring(0, mid) + "…";
-            if (Typography.Measure(candidate, style).X <= maxWidth)
-            {
-                best = candidate;
-                low = mid + 1;
-            }
-            else
-            {
-                high = mid - 1;
-            }
-        }
-
-        return best;
-    }
+    private static string FormatCount(int value) => NumberText.Group(value);
+    private static string FormatGil() => NumberText.Group(InventoryGil.Read());
 
     public void Dispose()
     {

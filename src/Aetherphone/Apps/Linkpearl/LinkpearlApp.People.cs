@@ -30,6 +30,12 @@ internal sealed partial class LinkpearlApp
         var searchBar = new Rect(new Vector2(content.Min.X + pad, content.Min.Y),
             new Vector2(content.Max.X - pad, content.Min.Y + PeopleSearchHeight * scale));
         UiAnchors.Report("people.search", searchBar);
+        if (peopleFocusPending)
+        {
+            ImGui.SetKeyboardFocusHere();
+            peopleFocusPending = false;
+        }
+
         if (SearchField.DrawSubmit(searchBar, "##peopleSearch", Loc.T(L.Common.Search), ref peopleSearch, frameTheme)
             && peopleScope == 1)
         {
@@ -71,7 +77,7 @@ internal sealed partial class LinkpearlApp
             return;
         }
 
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             DrawFriendSection(Loc.T(L.Contacts.Online), true);
             DrawFriendSection(Loc.T(L.Contacts.Offline), false);

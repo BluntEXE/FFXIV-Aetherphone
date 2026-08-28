@@ -644,7 +644,7 @@ internal sealed class BlackjackTable
                 dimmed ? ui.MutedInk : ui.BodyInk, TextStyles.Caption2);
             Typography.DrawCentered(drawList,
                 new Vector2(puck.X, puck.Y + BlackjackTableLayout.RailStackDrop * scale),
-                view.Stack.ToString("N0", Loc.Culture), dimmed ? ui.MutedInk : Gold, TextStyles.Caption2);
+                NumberText.Group(view.Stack), dimmed ? ui.MutedInk : Gold, TextStyles.Caption2);
 
             DrawBetDisplay(drawList, ui, seatIndex, puck,
                 new Vector2(puck.X, puck.Y - BlackjackTableLayout.RailBetLift * scale), dealerAnchor, false, scale);
@@ -859,7 +859,7 @@ internal sealed class BlackjackTable
         var height = BlackjackTableLayout.CapsuleHeight * scale;
         var puckRadius = BlackjackTableLayout.CapsulePuckRadius * scale;
         stackRoll.Update((int)Math.Clamp(view.Stack, 0, int.MaxValue), delta);
-        var stackLabel = stackRoll.Display.ToString("N0", Loc.Culture);
+        var stackLabel = NumberText.Group(stackRoll.Display);
         var name = Typography.FitText(view.DisplayName, 120f * scale, TextStyles.Caption1);
         var nameSize = Typography.Measure(name, TextStyles.Caption1);
         var stackSize = Typography.Measure(stackLabel, TextStyles.FootnoteEmphasized);
@@ -935,7 +935,7 @@ internal sealed class BlackjackTable
         }
 
         return hand.Delta > 0
-            ? string.Concat("+", hand.Delta.ToString("N0", Loc.Culture))
+            ? string.Concat("+", NumberText.Group(hand.Delta))
             : string.Empty;
     }
 
@@ -1090,7 +1090,7 @@ internal sealed class BlackjackTable
         if (BlackjackPhases.Over(board.Phase) && settledDelta > 0)
         {
             winRoll.Update((int)Math.Min(settledDelta, int.MaxValue), delta);
-            var amount = "+" + ((long)winRoll.Display).ToString("N0", Loc.Culture);
+            var amount = "+" + NumberText.Group((long)winRoll.Display);
             Typography.DrawCentered(drawList, center, Loc.T(L.Casino.BlackjackYouWon, amount), Gold,
                 TextStyles.Title3.Scale * winRoll.PopScale, TextStyles.Title3.Weight);
             return y + BannerHeight * scale;
@@ -1158,8 +1158,8 @@ internal sealed class BlackjackTable
         var blocked = veiled || state.StakesPaused || state.Draining || rooms.StakeInFlight;
         var bounds = new Rect(new Vector2(left, y),
             new Vector2(left + width, y + BetComposer.HeightFor(scale)));
-        var label = Loc.T(L.Casino.BlackjackBetConfirm, composer.Amount.ToString("N0", Loc.Culture),
-            BlackjackRules.BlackjackPayout(composer.Amount).ToString("N0", Loc.Culture));
+        var label = Loc.T(L.Casino.BlackjackBetConfirm, NumberText.Group(composer.Amount),
+            NumberText.Group(BlackjackRules.BlackjackPayout(composer.Amount)));
         if (composer.Draw(ui, bounds, minimum, maximum, seatStack, BlackjackRules.BetStep, !blocked, label,
                 delta))
         {
@@ -1205,7 +1205,7 @@ internal sealed class BlackjackTable
             drawn++;
             var wagered = bit == BlackjackRules.ActionDouble || bit == BlackjackRules.ActionSplit;
             var legal = !rooms.StakeInFlight && (!wagered || affordable);
-            var costLine = wagered ? cost.ToString("N0", Loc.Culture) : string.Empty;
+            var costLine = wagered ? NumberText.Group(cost) : string.Empty;
             if (AppSkin.StackedPillButton(rect, LabelFor(bit), costLine, bit == BlackjackRules.ActionStand,
                     legal, ui.Theme) && legal)
             {

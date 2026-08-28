@@ -3,14 +3,14 @@ using Aetherphone.Core;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Housing;
-using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Lodestone;
+using Aetherphone.Core.Media;
 using Aetherphone.Core.Theme;
 using Aetherphone.Core.Venues;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Utility;
 
 namespace Aetherphone.Apps.Music;
 
@@ -19,8 +19,6 @@ internal sealed partial class MusicApp
     private const int LiveDjHomeRows = 3;
     private const float LiveDjHomeRowH = 68f;
     private const float LiveDjCardH = 72f;
-    private const float LiveDjCardGap = 8f;
-    private const float LiveDjHPad = 12f;
     private const float LiveDjVPad = 8f;
     private const float LiveDjAvatarR = 18f;
     private const float LiveDjDetailAvatarR = 40f;
@@ -95,7 +93,7 @@ internal sealed partial class MusicApp
             var slug = sortedDjs[keyIndex].DjSlug ?? sortedDjs[keyIndex].DjName;
             sortedDjHomeKeys.Add("music.liveDj.home." + slug);
             sortedDjHomeTitleKeys.Add("music.liveDj.home.title." + slug);
-            sortedDjViewerCounts.Add(sortedDjs[keyIndex].ViewerCount.ToString("N0"));
+            sortedDjViewerCounts.Add(NumberText.Group(sortedDjs[keyIndex].ViewerCount));
             sortedDjCardKeys.Add("music.djCard." + slug);
             sortedDjCardTitleKeys.Add("music.djCard.title." + slug);
         }
@@ -108,7 +106,7 @@ internal sealed partial class MusicApp
             var slug = sortedDjsAtVenue[keyIndex].DjSlug ?? sortedDjsAtVenue[keyIndex].DjName;
             sortedDjsAtVenueCardKeys.Add("music.djCard." + slug);
             sortedDjsAtVenueCardTitleKeys.Add("music.djCard.title." + slug);
-            sortedDjsAtVenueViewerCounts.Add(sortedDjsAtVenue[keyIndex].ViewerCount.ToString("N0"));
+            sortedDjsAtVenueViewerCounts.Add(NumberText.Group(sortedDjsAtVenue[keyIndex].ViewerCount));
         }
     }
 
@@ -197,8 +195,7 @@ internal sealed partial class MusicApp
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var titleSize = Typography.Measure("Ag", TextStyles.Title3);
-        var pulse = 0.05f + 0.04f * Pulse.Wave(1600f);
-        var fill = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, pulse));
+        var fill = Skeleton.Fill();
         var drawList = ImGui.GetWindowDrawList();
 
         Squircle.Fill(drawList, origin, new Vector2(origin.X + width * 0.38f, origin.Y + titleSize.Y), 4f * scale, fill);
@@ -272,7 +269,7 @@ internal sealed partial class MusicApp
         var hovered = UiInteract.Hover(headingMin, headingMax);
         Typography.Draw(origin, title, ui.Palette.HeadingInk, TextStyles.Title3);
         var iconCenter = new Vector2(origin.X + width - iconBox * 0.5f, origin.Y + titleSize.Y * 0.5f);
-        AppSkin.Icon(iconCenter, FontAwesomeIcon.ChevronRight.ToIconString(), ui.MutedInk, 0.8f);
+        AppSkin.Icon(iconCenter, IconGlyph.Of(FontAwesomeIcon.ChevronRight), ui.MutedInk, 0.8f);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -285,7 +282,6 @@ internal sealed partial class MusicApp
 
         ImGui.Dummy(new Vector2(0f, 8f * scale));
 
-        var rowWidth = ImGui.GetContentRegionAvail().X;
         var drawList = ImGui.GetWindowDrawList();
 
         var withVenueCount = 0;
@@ -309,7 +305,8 @@ internal sealed partial class MusicApp
             var dj = sortedDjs[djIndex];
             if (dj.VenueName != null || dj.FormattedAddress.Length > 0)
             {
-                DrawLiveDjHomeRow(drawList, scale, rowWidth, dj, sortedDjHomeKeys[djIndex], sortedDjHomeTitleKeys[djIndex], sortedDjViewerCounts[djIndex]);
+                DrawLiveDjHomeRow(drawList, scale, dj, sortedDjHomeKeys[djIndex], sortedDjHomeTitleKeys[djIndex],
+                    sortedDjViewerCounts[djIndex]);
                 drawn++;
             }
         }
@@ -326,26 +323,22 @@ internal sealed partial class MusicApp
                 var dj = sortedDjs[djIndex];
                 if (dj.VenueName == null && dj.FormattedAddress.Length == 0)
                 {
-                    DrawLiveDjHomeRow(drawList, scale, rowWidth, dj, sortedDjHomeKeys[djIndex], sortedDjHomeTitleKeys[djIndex], sortedDjViewerCounts[djIndex]);
+                    DrawLiveDjHomeRow(drawList, scale, dj, sortedDjHomeKeys[djIndex], sortedDjHomeTitleKeys[djIndex],
+                        sortedDjViewerCounts[djIndex]);
                     drawn++;
                 }
             }
         }
     }
 
-    private void DrawLiveDjHomeRow(ImDrawListPtr drawList, float scale, float width, LiveDjEntry dj, string rowKey, string titleKey, string viewerCount)
+    private void DrawLiveDjHomeRow(ImDrawListPtr drawList, float scale, LiveDjEntry dj, string rowKey, string titleKey,
+        string viewerCount)
     {
         var rowHeight = LiveDjHomeRowH * scale;
-        var origin = ImGui.GetCursorScreenPos();
-        var min = origin;
-        var max = new Vector2(origin.X + width, origin.Y + rowHeight);
-        var hovered = UiInteract.Hover(min, max);
-        if (hovered)
-        {
-            Squircle.Fill(drawList, min, max, 10f * scale, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
+        var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash);
+        var min = cell.Bounds.Min;
+        var max = cell.Bounds.Max;
+        var hovered = cell.Hovered;
         var avatarRadius = 22f * scale;
         var avatarCenter = new Vector2(min.X + 6f * scale + avatarRadius, (min.Y + max.Y) * 0.5f);
         AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme,
@@ -391,13 +384,12 @@ internal sealed partial class MusicApp
                 TextStyles.Caption1, ui.MutedInk, hovered);
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight));
-
-        if (UiInteract.Click(min, max, hovered))
+        if (cell.Tapped)
         {
             OpenLiveDjDetail(dj);
         }
+
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 
     private void DrawLiveDjs(in PhoneContext context)
@@ -443,27 +435,26 @@ internal sealed partial class MusicApp
             return;
         }
 
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             var drawList = ImGui.GetWindowDrawList();
             ImGui.Dummy(new Vector2(1f, LiveDjVPad * scale));
 
             for (var djIndex = 0; djIndex < djs.Count; djIndex++)
             {
-                var origin = ImGui.GetCursorScreenPos();
-                var fullWidth = ImGui.GetContentRegionAvail().X;
-                var cardMin = new Vector2(origin.X + LiveDjHPad * scale, origin.Y);
-                var cardMax = new Vector2(origin.X + fullWidth - LiveDjHPad * scale, origin.Y + LiveDjCardH * scale);
-                var card = new Rect(cardMin, cardMax);
-
-                if (ImGui.IsRectVisible(card.Min, card.Max))
+                var cell = FeedCell.Begin(drawList, LiveDjCardH * scale, ui.HoverWash);
+                if (ImGui.IsRectVisible(cell.Bounds.Min, cell.Bounds.Max))
                 {
-                    DrawLiveDjCard(drawList, card, djs[djIndex], djCardKeys[djIndex], djCardTitleKeys[djIndex], djViewerCounts[djIndex], scale);
+                    DrawLiveDjCard(drawList, cell.Bounds, cell.Hovered, djs[djIndex], djCardKeys[djIndex],
+                        djCardTitleKeys[djIndex], djViewerCounts[djIndex], scale);
                 }
 
-                var gap = djIndex < djs.Count - 1 ? LiveDjCardGap : LiveDjVPad;
-                ImGui.SetCursorScreenPos(origin);
-                ImGui.Dummy(new Vector2(fullWidth, (LiveDjCardH + gap) * scale));
+                if (cell.Tapped)
+                {
+                    OpenLiveDjDetail(djs[djIndex]);
+                }
+
+                FeedCell.End(drawList, cell, ui.Hairline);
             }
 
             ImGui.Dummy(new Vector2(1f, 10f * scale));
@@ -474,23 +465,12 @@ internal sealed partial class MusicApp
         }
     }
 
-    private void DrawLiveDjCard(ImDrawListPtr drawList, Rect card, LiveDjEntry dj, string cardKey, string titleKey, string viewerCount, float scale)
+    private void DrawLiveDjCard(ImDrawListPtr drawList, Rect card, bool hovered, LiveDjEntry dj, string cardKey,
+        string titleKey, string viewerCount, float scale)
     {
-        var hovered = UiInteract.Hover(card.Min, card.Max);
-        var fill = hovered
-            ? Palette.Mix(ui.Palette.CardFill, Vector4.One, 0.09f)
-            : ui.Palette.CardFill;
-
-        Squircle.Fill(drawList, card.Min, card.Max, 10f * scale, ImGui.GetColorU32(fill));
-        Squircle.Stroke(drawList, card.Min, card.Max, 10f * scale, ImGui.GetColorU32(ui.Palette.CardStroke), 1f);
-
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
+        var pad = FeedCell.PadX * scale;
         var avatarRadius = LiveDjAvatarR * scale;
-        var avatarCenter = new Vector2(card.Min.X + LiveDjHPad * scale + avatarRadius,
+        var avatarCenter = new Vector2(card.Min.X + pad + avatarRadius,
                                        card.Min.Y + card.Height * 0.5f);
 
         AvatarView.DrawRemote(drawList, avatarCenter, avatarRadius, theme,
@@ -525,7 +505,7 @@ internal sealed partial class MusicApp
 
         var viewersText = string.Format(Loc.T(L.Rolladeck.Viewers), viewerCount);
         var viewerSize = Typography.Measure(viewersText, TextStyles.Caption1);
-        var viewersRightX = card.Max.X - 12f * scale - viewerSize.X;
+        var viewersRightX = card.Max.X - pad - viewerSize.X;
         Typography.Draw(drawList,
             new Vector2(viewersRightX, card.Min.Y + 9f * scale),
             viewersText, ui.Palette.Accent, TextStyles.Caption1);
@@ -534,13 +514,8 @@ internal sealed partial class MusicApp
         {
             var serverSize = Typography.Measure(dj.ServerLabel, TextStyles.Caption1);
             Typography.Draw(drawList,
-                new Vector2(card.Max.X - 12f * scale - serverSize.X, card.Min.Y + 9f * scale + viewerSize.Y + 3f * scale),
+                new Vector2(card.Max.X - pad - serverSize.X, card.Min.Y + 9f * scale + viewerSize.Y + 3f * scale),
                 dj.ServerLabel, ui.Palette.MutedInk, TextStyles.Caption1);
-        }
-
-        if (hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
-        {
-            OpenLiveDjDetail(dj);
         }
     }
 
@@ -570,7 +545,7 @@ internal sealed partial class MusicApp
         {
             lastDjDetailKey = djKey;
             cachedDjEventLabel = string.IsNullOrEmpty(dj.EventName) ? string.Empty : "♦ " + dj.EventName;
-            cachedDjViewerCount = dj.ViewerCount.ToString("N0");
+            cachedDjViewerCount = NumberText.Group(dj.ViewerCount);
         }
 
         using (AppSurface.Begin(body))
@@ -628,7 +603,7 @@ internal sealed partial class MusicApp
                     else
                     {
                         ImGui.SetClipboardText(LifestreamBridge.TravelCommand(dj.LifestreamArg!));
-                        CopyToast.Show();
+                        ShellToast.Show();
                     }
                 }
 
@@ -646,7 +621,7 @@ internal sealed partial class MusicApp
                 var watchHovered = UiInteract.Hover(watchMin, watchMax);
                 var watchFill = watchHovered ? ui.Accent : Palette.WithAlpha(ui.Accent, 0.92f);
                 drawList.AddCircleFilled(watchCenter, actionRadius, ImGui.GetColorU32(watchFill), 32);
-                AppSkin.Icon(drawList, watchCenter, FontAwesomeIcon.Play.ToIconString(), ui.Palette.BackdropBottom, 1f);
+                AppSkin.Icon(drawList, watchCenter, IconGlyph.Of(FontAwesomeIcon.Play), ui.Palette.BackdropBottom, 1f);
                 if (watchHovered)
                 {
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -654,7 +629,7 @@ internal sealed partial class MusicApp
 
                 if (watchHovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
                 {
-                    Util.OpenLink(dj.RolladeckUrl ?? dj.TwitchUrl ?? "https://xivrolladeck.com");
+                    Windows.UrlActions.AskThenOpen(dj.RolladeckUrl ?? dj.TwitchUrl ?? "https://xivrolladeck.com");
                 }
             }
 
@@ -798,14 +773,45 @@ internal sealed partial class MusicApp
             }
 
             liveDjSocialLinks.Clear();
-            if (!string.IsNullOrEmpty(dj.TwitchUrl))     liveDjSocialLinks.Add(("Twitch",    FontAwesomeIcon.Tv,        dj.TwitchUrl!));
-            if (!string.IsNullOrEmpty(dj.Twitter))       liveDjSocialLinks.Add(("Twitter",   FontAwesomeIcon.Feather,   dj.Twitter!));
-            if (!string.IsNullOrEmpty(dj.Bluesky))       liveDjSocialLinks.Add(("Bluesky",   FontAwesomeIcon.Cloud,     dj.Bluesky!));
-            if (!string.IsNullOrEmpty(dj.Instagram))     liveDjSocialLinks.Add(("Instagram", FontAwesomeIcon.Camera,    dj.Instagram!));
-            if (!string.IsNullOrEmpty(dj.Youtube))       liveDjSocialLinks.Add(("YouTube",   FontAwesomeIcon.Play,      dj.Youtube!));
-            if (!string.IsNullOrEmpty(dj.Tiktok))        liveDjSocialLinks.Add(("TikTok",    FontAwesomeIcon.Music,     dj.Tiktok!));
-            if (!string.IsNullOrEmpty(dj.Website))       liveDjSocialLinks.Add(("Website",   FontAwesomeIcon.Globe,     dj.Website!));
-            if (!string.IsNullOrEmpty(dj.MusicPlatform)) liveDjSocialLinks.Add(("Music",     FontAwesomeIcon.Headphones, dj.MusicPlatform!));
+            if (!string.IsNullOrEmpty(dj.TwitchUrl))
+            {
+                liveDjSocialLinks.Add(("Twitch",    FontAwesomeIcon.Tv,        dj.TwitchUrl!));
+            }
+
+            if (!string.IsNullOrEmpty(dj.Twitter))
+            {
+                liveDjSocialLinks.Add(("Twitter",   FontAwesomeIcon.Feather,   dj.Twitter!));
+            }
+
+            if (!string.IsNullOrEmpty(dj.Bluesky))
+            {
+                liveDjSocialLinks.Add(("Bluesky",   FontAwesomeIcon.Cloud,     dj.Bluesky!));
+            }
+
+            if (!string.IsNullOrEmpty(dj.Instagram))
+            {
+                liveDjSocialLinks.Add(("Instagram", FontAwesomeIcon.Camera,    dj.Instagram!));
+            }
+
+            if (!string.IsNullOrEmpty(dj.Youtube))
+            {
+                liveDjSocialLinks.Add(("YouTube",   FontAwesomeIcon.Play,      dj.Youtube!));
+            }
+
+            if (!string.IsNullOrEmpty(dj.Tiktok))
+            {
+                liveDjSocialLinks.Add(("TikTok",    FontAwesomeIcon.Music,     dj.Tiktok!));
+            }
+
+            if (!string.IsNullOrEmpty(dj.Website))
+            {
+                liveDjSocialLinks.Add(("Website",   FontAwesomeIcon.Globe,     dj.Website!));
+            }
+
+            if (!string.IsNullOrEmpty(dj.MusicPlatform))
+            {
+                liveDjSocialLinks.Add(("Music",     FontAwesomeIcon.Headphones, dj.MusicPlatform!));
+            }
 
             if (liveDjSocialLinks.Count > 0)
             {
@@ -842,7 +848,7 @@ internal sealed partial class MusicApp
                     Squircle.Stroke(drawList, buttonMin, buttonMax, 8f * scale,
                         ImGui.GetColorU32(buttonHovered ? ui.Palette.Accent : ui.Palette.CardStroke), 1f);
                     AppSkin.Icon(drawList, new Vector2(buttonMin.X + iconButtonSize * 0.5f, buttonMin.Y + iconButtonSize * 0.5f),
-                        icon.ToIconString(), buttonHovered ? ui.Palette.Accent : ui.Palette.MutedInk, 0.88f);
+                        IconGlyph.Of(icon), buttonHovered ? ui.Palette.Accent : ui.Palette.MutedInk, 0.88f);
 
                     if (buttonHovered)
                     {
@@ -851,7 +857,7 @@ internal sealed partial class MusicApp
 
                     if (clicked)
                     {
-                        Util.OpenLink(url);
+                        Windows.UrlActions.AskThenOpen(url);
                     }
 
                     socialX += iconButtonSize + iconGapX;
@@ -922,7 +928,7 @@ internal sealed partial class MusicApp
 
         AppSkin.Icon(drawList,
             new Vector2(textX + labelSize.X + gap + externalIconW * 0.5f, rowCenterY),
-            FontAwesomeIcon.Globe.ToIconString(), accent, 0.65f);
+            IconGlyph.Of(FontAwesomeIcon.Globe), accent, 0.65f);
 
         var rowMin = new Vector2(rowLeft, rowOrigin.Y);
         var rowMax = new Vector2(rowLeft + totalWidth, rowOrigin.Y + radius * 2f);
@@ -934,7 +940,7 @@ internal sealed partial class MusicApp
 
         if (UiInteract.Click(rowMin, rowMax, hovered))
         {
-            Util.OpenLink("https://xivrolladeck.com");
+            Windows.UrlActions.AskThenOpen("https://xivrolladeck.com");
         }
     }
 
@@ -1059,11 +1065,11 @@ internal sealed partial class MusicApp
                 {
                     var watchCenter = new Vector2(npMax.X - 14f * scale - watchRadius, npMin.Y + npCardH * 0.5f);
                     drawList.AddCircleFilled(watchCenter, watchRadius, ImGui.GetColorU32(ui.Palette.Accent), 32);
-                    AppSkin.Icon(drawList, watchCenter, FontAwesomeIcon.Play.ToIconString(), ui.Palette.BackdropBottom, 1f);
+                    AppSkin.Icon(drawList, watchCenter, IconGlyph.Of(FontAwesomeIcon.Play), ui.Palette.BackdropBottom, 1f);
                     ImGui.SetCursorScreenPos(new Vector2(watchCenter.X - watchRadius, watchCenter.Y - watchRadius));
                     if (ImGui.InvisibleButton("##venueWatch", new Vector2(watchRadius * 2f, watchRadius * 2f)))
                     {
-                        Util.OpenLink(venue.DjRolladeckUrl ?? venue.DjTwitch!);
+                        Windows.UrlActions.AskThenOpen(venue.DjRolladeckUrl ?? venue.DjTwitch!);
                     }
                 }
 
@@ -1120,7 +1126,7 @@ internal sealed partial class MusicApp
                         else
                         {
                             ImGui.SetClipboardText(LifestreamBridge.TravelCommand(venue.Lifestream!));
-                            CopyToast.Show();
+                            ShellToast.Show();
                         }
                     }
 
@@ -1137,7 +1143,7 @@ internal sealed partial class MusicApp
                     var visitRect = new Rect(new Vector2(buttonX, pillOrigin.Y), new Vector2(buttonX + buttonWidth, pillOrigin.Y + buttonHeight));
                     if (ui.GhostButton(visitRect, primaryLabel))
                     {
-                        Util.OpenLink(primaryUrl);
+                        Windows.UrlActions.AskThenOpen(primaryUrl);
                     }
 
                     buttonX += buttonWidth + buttonGap;
@@ -1148,7 +1154,7 @@ internal sealed partial class MusicApp
                     var discordRect = new Rect(new Vector2(buttonX, pillOrigin.Y), new Vector2(buttonX + buttonWidth, pillOrigin.Y + buttonHeight));
                     if (ui.GhostButton(discordRect, Loc.T(L.Rolladeck.Discord)))
                     {
-                        Util.OpenLink(venue.DiscordUrl);
+                        Windows.UrlActions.AskThenOpen(venue.DiscordUrl);
                     }
                 }
             }

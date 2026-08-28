@@ -188,7 +188,7 @@ internal sealed class FolderOverlay
                     }
                     else
                     {
-                        navigation.OpenAppFrom(member.App!, iconRect);
+                        navigation.OpenAppFrom(member.App!, iconRect, LaunchOrigin.Icon);
                     }
 
                     drawList.PopClipRect();

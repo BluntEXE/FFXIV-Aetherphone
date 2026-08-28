@@ -2,23 +2,9 @@ namespace Aetherphone.Core.Apps;
 
 internal sealed class VelvetLauncher
 {
-    private string? pendingUserId;
+    private readonly LaunchIntent profile = new();
 
-    public void Request(string userId)
-    {
-        pendingUserId = userId;
-    }
+    public void Request(string userId) => profile.Request(userId);
 
-    public bool TryConsume(out string userId)
-    {
-        if (pendingUserId is null)
-        {
-            userId = string.Empty;
-            return false;
-        }
-
-        userId = pendingUserId;
-        pendingUserId = null;
-        return true;
-    }
+    public bool TryConsume(out string userId) => profile.TryConsume(out userId);
 }

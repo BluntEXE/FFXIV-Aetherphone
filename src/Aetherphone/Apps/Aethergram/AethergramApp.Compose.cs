@@ -438,7 +438,7 @@ internal sealed partial class AethergramApp
             Typography.Draw(drawList, new Vector2(min.X + 8f * scale, min.Y + 4f * scale), text,
                 new Vector4(1f, 1f, 1f, 1f), TextStyles.FootnoteEmphasized);
             var closeCenter = new Vector2(max.X - 9f * scale, (min.Y + max.Y) * 0.5f);
-            AppSkin.Icon(closeCenter, FontAwesomeIcon.Times.ToIconString(), new Vector4(1f, 1f, 1f, 0.75f), 0.6f);
+            AppSkin.Icon(closeCenter, IconGlyph.Of(FontAwesomeIcon.Times), new Vector4(1f, 1f, 1f, 0.75f), 0.6f);
             if (UiInteract.HoverClick(closeCenter - new Vector2(8f * scale, 8f * scale),
                     closeCenter + new Vector2(8f * scale, 8f * scale)))
             {
@@ -522,7 +522,7 @@ internal sealed partial class AethergramApp
             var nameHeight = Typography.Measure(displayName, nameStyle).Y;
             var nameHovering = UiInteract.Hover(new Vector2(nameLeft, nameTop),
                 new Vector2(nameLeft + nameMaxWidth, nameTop + nameHeight));
-            Marquee.DrawLeft("aethergram.compose.author." + me.Handle, displayName, nameLeft, nameTop, nameMaxWidth,
+            Marquee.DrawLeft(new MarqueeId("aethergram.compose.author.", me.Handle), displayName, nameLeft, nameTop, nameMaxWidth,
                 nameStyle, theme.TextStrong, nameHovering);
             inputTop = avatarCenter.Y + radius + 6f * scale;
         }
@@ -574,7 +574,7 @@ internal sealed partial class AethergramApp
         if (!composeAvatarMode && !composeStoryMode)
         {
             var sensitiveCenter = new Vector2(emojiCenter.X + emojiRadius * 2f + 12f * scale, emojiCenter.Y);
-            if (ui.IconButton(sensitiveCenter, emojiRadius, FontAwesomeIcon.EyeSlash.ToIconString(),
+            if (ui.IconButton(sensitiveCenter, emojiRadius, IconGlyph.Of(FontAwesomeIcon.EyeSlash),
                     composeSensitive ? Accent : AppPalettes.Aethergram.MutedInk, new Vector4(0f, 0f, 0f, 0f), 1.1f,
                     Loc.T(composeSensitive ? L.Moderation.SensitiveOn : L.Moderation.MarkSensitive)))
             {
@@ -606,7 +606,7 @@ internal sealed partial class AethergramApp
         var iconWidth = 14f * scale;
         var iconGap = 8f * scale;
         var left = rect.Center.X - (iconWidth + iconGap + textSize.X) * 0.5f;
-        AppSkin.Icon(new Vector2(left + iconWidth * 0.5f, rect.Center.Y), FontAwesomeIcon.PaperPlane.ToIconString(), ink,
+        AppSkin.Icon(new Vector2(left + iconWidth * 0.5f, rect.Center.Y), IconGlyph.Of(FontAwesomeIcon.PaperPlane), ink,
             0.9f);
         Typography.Draw(new Vector2(left + iconWidth + iconGap, rect.Center.Y - textSize.Y * 0.5f), label, ink, 1f,
             FontWeight.SemiBold);

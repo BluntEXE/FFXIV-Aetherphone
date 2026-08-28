@@ -17,8 +17,6 @@ internal sealed partial class AethergramApp
     private const float ThreadPollSeconds = 2.5f;
     private const float TypingSendSeconds = 3f;
 
-    private readonly ThreadView threadView;
-
     private sealed class ThreadView : ChatThreadView<GramMessageDto, GramThreadDto>, IChatTranscriptPostCards,
         IChatTranscriptStoryReplies
     {
@@ -26,7 +24,8 @@ internal sealed partial class AethergramApp
 
         public ThreadView(AethergramApp app)
             : base(app.dmStore, app.ui, app.images, app.lodestone, app.http, app.library, app.configuration,
-                app.confirm, app.report, app.wallpaperImages, ThreadPollSeconds, TypingSendSeconds)
+                app.confirm, app.report, app.translation, app.wallpaperImages, ThreadPollSeconds,
+                TypingSendSeconds)
         {
             this.app = app;
         }
@@ -150,6 +149,7 @@ internal sealed partial class AethergramApp
                 CanInfo = false,
                 CanDelete = true,
                 CanReport = true,
+                CanTranslate = true,
                 IsStarred = _ => false,
                 MyReactionTo = store.MyReactionTo,
                 OnReply = BeginReply,
@@ -160,6 +160,7 @@ internal sealed partial class AethergramApp
                 OnInfo = _ => { },
                 OnDelete = AskDeleteMessage,
                 OnReport = OpenReportMessage,
+                OnTranslate = TranslateMessage,
                 OnReact = store.SetReaction,
             };
         }
@@ -215,6 +216,7 @@ internal sealed partial class AethergramApp
             ChatHeaderControls.DrawLock(ui, area, rowCenterY, store.EncryptingCurrent, store.VaultState,
                 () => OpenEncryptionInfo(threadId));
             ChatHeaderControls.DrawSearchToggle(ui, area, rowCenterY, searchController.Open, searchController.Toggle);
+            DrawTranslateToggle(area, rowCenterY, threadId);
             var name = app.ThreadTitle(threadId);
             var avatarRadius = 18f * scale;
             var avatarHandle = app.ThreadAvatar(threadId, avatarRadius * 2f, out var monogram, out var presence);
@@ -248,7 +250,7 @@ internal sealed partial class AethergramApp
                 var subTop = stackTop + nameSize.Y + gapY;
                 var subHovering = UiInteract.Hover(new Vector2(nameLeft, subTop),
                     new Vector2(nameLeft + nameCap, subTop + subSize.Y));
-                Marquee.DrawLeft(titleId + ".sub", timeText, nameLeft, subTop, nameCap,
+                Marquee.DrawLeft(new MarqueeId(titleId, ".sub"), timeText, nameLeft, subTop, nameCap,
                     new TextStyle(0.72f, FontWeight.Regular), AppPalettes.Aethergram.MutedInk, subHovering);
                 textWidth = MathF.Max(nameSize.X, subSize.X);
             }

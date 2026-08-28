@@ -36,7 +36,7 @@ internal sealed partial class JobsApp
         public ColorPreset(string digits)
         {
             Digits = digits;
-            HexColor.TryParse(digits, out var color);
+            _ = HexColor.TryParse(digits, out var color);
             Color = color;
         }
 
@@ -51,8 +51,6 @@ internal sealed partial class JobsApp
         new("5E5CE6"), new("BF5AF2"), new("FF2D92"), new("A2845E"), new("8E8E93"), new("E5E9F0"),
     };
 
-    private Rect colorButtonRect;
-    private bool pickerOpen;
     private int pickerOpenedFrame;
     private int pickerSavedIndex = -1;
     private string pickerDigits = string.Empty;
@@ -106,6 +104,7 @@ internal sealed partial class JobsApp
             Message = Loc.T(L.Jobs.DeleteColorConfirm, entry.Name),
             ConfirmLabel = Loc.T(L.Jobs.DeleteColor),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             Danger = true,
             Confirm = () =>
             {

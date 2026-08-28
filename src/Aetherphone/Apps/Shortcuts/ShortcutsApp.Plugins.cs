@@ -14,11 +14,6 @@ internal sealed partial class ShortcutsApp
     private const float PluginRowHeight = 60f;
     private const float CommandRowHeight = 54f;
 
-    private readonly Action<PluginEntry> openPluginDetail;
-    private readonly Action<PluginEntry> pickStepPlugin;
-    private readonly Action<PluginEntry> pickIconPlugin;
-
-    private string pluginQuery = string.Empty;
     private string detailPlugin = string.Empty;
     private bool pickingIcon;
 
@@ -135,12 +130,12 @@ internal sealed partial class ShortcutsApp
         var textLeft = row.Min.X + tile + Metrics.Space.Md * scale;
         var textWidth = MathF.Max(1f, chevronX - 14f * scale - textLeft);
         var ink = entry.Loaded ? ui.TitleInk : ui.MutedInk;
-        Marquee.DrawLeftAuto("shortcuts.plugin." + entry.InternalName, entry.Name, textLeft,
+        Marquee.DrawLeftAuto(new MarqueeId("shortcuts.plugin.", entry.InternalName), entry.Name, textLeft,
             row.Center.Y - 15f * scale, textWidth, TextStyles.Headline, ink);
-        Marquee.DrawLeftAuto("shortcuts.plugin.sub." + entry.InternalName, Subtitle(entry), textLeft,
+        Marquee.DrawLeftAuto(new MarqueeId("shortcuts.plugin.sub.", entry.InternalName), Subtitle(entry), textLeft,
             row.Center.Y + 4f * scale, textWidth, TextStyles.Footnote, ui.MutedInk);
 
-        AppSkin.Icon(new Vector2(chevronX, row.Center.Y), FontAwesomeIcon.ChevronRight.ToIconString(),
+        AppSkin.Icon(new Vector2(chevronX, row.Center.Y), IconGlyph.Of(FontAwesomeIcon.ChevronRight),
             Palette.WithAlpha(ui.MutedInk, 0.7f), 0.6f);
         if (UiInteract.HoverClick(row.Min, row.Max))
         {
@@ -325,15 +320,15 @@ internal sealed partial class ShortcutsApp
         var textWidth = MathF.Max(1f, plusCenter.X - plusRadius - 8f * scale - row.Min.X);
         var hasHelp = command.Help.Length > 0;
         var titleY = hasHelp ? row.Center.Y - 15f * scale : row.Center.Y - 9f * scale;
-        Marquee.DrawLeftAuto("shortcuts.cmd." + command.Command, command.Command, row.Min.X, titleY, textWidth,
+        Marquee.DrawLeftAuto(new MarqueeId("shortcuts.cmd.", command.Command), command.Command, row.Min.X, titleY, textWidth,
             TextStyles.BodyEmphasized, ui.TitleInk);
         if (hasHelp)
         {
-            Marquee.DrawLeftAuto("shortcuts.cmd.help." + command.Command, command.Help, row.Min.X,
+            Marquee.DrawLeftAuto(new MarqueeId("shortcuts.cmd.help.", command.Command), command.Help, row.Min.X,
                 row.Center.Y + 4f * scale, textWidth, TextStyles.Footnote, ui.MutedInk);
         }
 
-        if (ui.IconButton(plusCenter, plusRadius, FontAwesomeIcon.Plus.ToIconString(), ui.Accent,
+        if (ui.IconButton(plusCenter, plusRadius, IconGlyph.Of(FontAwesomeIcon.Plus), ui.Accent,
                 Palette.WithAlpha(ui.Accent, 0.16f), 0.58f, Loc.T(L.Shortcuts.NewFromCommand)))
         {
             CreateCommandShortcut(command);

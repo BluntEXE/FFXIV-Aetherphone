@@ -159,40 +159,50 @@ internal sealed class ControlLayoutService
     {
         slots.Clear();
         var saved = configuration.ControlPanel;
-        var placed = new HashSet<string>();
-        if (saved is not null)
+        if (saved is null)
         {
-            for (var index = 0; index < saved.Items.Count; index++)
+            LoadDefaults();
+            placementsDirty = true;
+            Save();
+            return;
+        }
+
+        var placed = new HashSet<string>();
+        for (var index = 0; index < saved.Items.Count; index++)
+        {
+            var item = saved.Items[index];
+            if (!registry.TryGet(item.ModuleId, out var module) || !placed.Add(module.Id))
             {
-                var item = saved.Items[index];
-                if (!registry.TryGet(item.ModuleId, out var module) || !placed.Add(module.Id))
-                {
-                    continue;
-                }
-
-                var span = ControlSpans.Parse(item.Span);
-                if (!ControlSpans.Contains(module.Sizes, span))
-                {
-                    span = module.DefaultSpan;
-                }
-
-                slots.Add(ControlSlot.For(module, span));
+                continue;
             }
+
+            slots.Add(ControlSlot.For(module, SpanFor(module, ControlSpans.Parse(item.Span))));
         }
 
         LoadEnabled(saved, placed);
-
         placementsDirty = true;
-        if (saved is null)
+    }
+
+    private void LoadDefaults()
+    {
+        enabled.Clear();
+        var defaults = ControlDefaults.Layout;
+        for (var index = 0; index < defaults.Length; index++)
         {
-            Save();
+            var entry = defaults[index];
+            if (!registry.TryGet(entry.ModuleId, out var module) || !enabled.Add(module.Id))
+            {
+                continue;
+            }
+
+            slots.Add(ControlSlot.For(module, SpanFor(module, entry.Span)));
         }
     }
 
-    private void LoadEnabled(ControlLayout? saved, HashSet<string> placed)
+    private void LoadEnabled(ControlLayout saved, HashSet<string> placed)
     {
         enabled.Clear();
-        if (saved?.Enabled is { Count: > 0 } stored)
+        if (saved.Enabled is { Count: > 0 } stored)
         {
             for (var index = 0; index < stored.Count; index++)
             {
@@ -216,24 +226,16 @@ internal sealed class ControlLayoutService
         }
     }
 
-    private void SeedEnabled(ControlLayout? saved)
+    private void SeedEnabled(ControlLayout saved)
     {
-        if (saved is null)
-        {
-            var all = registry.Modules;
-            for (var index = 0; index < all.Count; index++)
-            {
-                enabled.Add(all[index].Id);
-            }
-
-            return;
-        }
-
         for (var index = 0; index < saved.Items.Count; index++)
         {
             enabled.Add(saved.Items[index].ModuleId);
         }
     }
+
+    private static ControlSpan SpanFor(IControlModule module, ControlSpan span) =>
+        ControlSpans.Contains(module.Sizes, span) ? span : module.DefaultSpan;
 
     private void Commit()
     {

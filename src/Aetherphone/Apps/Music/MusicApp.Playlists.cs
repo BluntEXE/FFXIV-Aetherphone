@@ -31,17 +31,16 @@ internal sealed partial class MusicApp
     private const int NameLimit = 60;
 
     private string selectedPlaylistId = string.Empty;
-    private OverlayMode overlay = OverlayMode.None;
     private OverlayMode lastOverlay = OverlayMode.Pick;
-    private Spring overlayPresence;
     private int overlayOpenedFrame;
     private Song pendingSong;
     private bool nameIsRename;
     private string nameTargetId = string.Empty;
     private string nameDraft = string.Empty;
     private bool focusNameField;
-    private Rect playlistMenuAnchor;
-    private readonly DropdownMenu playlistMenu = new();
+    private readonly ActionSheet.Item[] playlistSheetItems = new ActionSheet.Item[2];
+    private string playlistSheetId = string.Empty;
+    private string playlistSheetTitle = string.Empty;
 
     private Song CurrentSong()
     {
@@ -69,7 +68,7 @@ internal sealed partial class MusicApp
         }
 
         pendingSong = song;
-        playlistMenu.Close();
+        playlistSheet.Close();
         ShowOverlay(OverlayMode.Pick);
     }
 
@@ -158,7 +157,7 @@ internal sealed partial class MusicApp
     {
         overlay = OverlayMode.None;
         nameDraft = string.Empty;
-        playlistMenu.Close();
+        playlistSheet.Close();
         if (snap)
         {
             overlayPresence.SnapTo(0f);
@@ -172,6 +171,7 @@ internal sealed partial class MusicApp
             Message = Loc.T(L.Music.DeletePlaylistConfirm),
             ConfirmLabel = Loc.T(L.Music.DeletePlaylistButton),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             Confirm = () =>
             {
                 playlists.Delete(id);
@@ -221,7 +221,7 @@ internal sealed partial class MusicApp
             }
 
             var textWidth = tileWidth - 24f * scale;
-            Marquee.DrawLeft("music.playlistShelf.name." + playlist.Id, playlist.Name, min.X + 12f * scale,
+            Marquee.DrawLeft(new MarqueeId("music.playlistShelf.name.", playlist.Id), playlist.Name, min.X + 12f * scale,
                 max.Y - 34f * scale, textWidth, TextStyles.SubheadlineEmphasized, White, hovered);
             var count = Typography.FitText(SongCountLabel(playlist.Songs.Count), textWidth, TextStyles.Caption1);
             Typography.Draw(new Vector2(min.X + 12f * scale, max.Y - 18f * scale), count,
@@ -243,7 +243,7 @@ internal sealed partial class MusicApp
         Squircle.Fill(drawList, min, max, rounding, ImGui.GetColorU32(fill));
         Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.55f)), 1.2f);
         var center = new Vector2(min.X + (max.X - min.X) * 0.5f, min.Y + (max.Y - min.Y) * 0.5f);
-        AppSkin.Icon(new Vector2(center.X, center.Y - 10f * scale), FontAwesomeIcon.Plus.ToIconString(), ui.Accent, 0.95f);
+        AppSkin.Icon(new Vector2(center.X, center.Y - 10f * scale), IconGlyph.Of(FontAwesomeIcon.Plus), ui.Accent, 0.95f);
         var label = Loc.T(L.Music.NewPlaylist);
         Typography.DrawCentered(new Vector2(center.X, center.Y + 14f * scale), label, ui.TitleInk,
             TextStyles.Caption1);
@@ -384,7 +384,7 @@ internal sealed partial class MusicApp
         var newCenterY = (newMin.Y + newMax.Y) * 0.5f;
         var iconCenter = new Vector2(newMin.X + 26f * scale, newCenterY);
         drawList.AddCircleFilled(iconCenter, 16f * scale, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.18f)), 24);
-        AppSkin.Icon(iconCenter, FontAwesomeIcon.Plus.ToIconString(), ui.Accent, 0.9f);
+        AppSkin.Icon(iconCenter, IconGlyph.Of(FontAwesomeIcon.Plus), ui.Accent, 0.9f);
         var newLabelSize = Typography.Measure(Loc.T(L.Music.NewPlaylist), TextStyles.BodyEmphasized);
         Typography.Draw(new Vector2(iconCenter.X + 26f * scale, newCenterY - newLabelSize.Y * 0.5f),
             Loc.T(L.Music.NewPlaylist), ui.Accent, TextStyles.BodyEmphasized);
@@ -417,7 +417,7 @@ internal sealed partial class MusicApp
             0xFFFFFFFFu, 8f * scale, ImDrawFlags.RoundCornersAll);
         var textLeft = artMax.X + 12f * scale;
         var textWidth = max.X - 44f * scale - textLeft;
-        Marquee.DrawLeft("music.pickRow.name." + playlist.Id, playlist.Name, textLeft, min.Y + 9f * scale,
+        Marquee.DrawLeft(new MarqueeId("music.pickRow.name.", playlist.Id), playlist.Name, textLeft, min.Y + 9f * scale,
             textWidth, TextStyles.BodyEmphasized, ui.TitleInk, hovered);
         var count = Typography.FitText(SongCountLabel(playlist.Songs.Count), textWidth, TextStyles.Caption1);
         Typography.Draw(new Vector2(textLeft, min.Y + 30f * scale), count, ui.MutedInk, TextStyles.Caption1);
@@ -425,13 +425,13 @@ internal sealed partial class MusicApp
         if (contains)
         {
             drawList.AddCircleFilled(indicatorCenter, 12f * scale, ImGui.GetColorU32(ui.Accent), 24);
-            AppSkin.Icon(indicatorCenter, FontAwesomeIcon.Check.ToIconString(), White, 0.72f);
+            AppSkin.Icon(indicatorCenter, IconGlyph.Of(FontAwesomeIcon.Check), White, 0.72f);
         }
         else
         {
             drawList.AddCircle(indicatorCenter, 12f * scale,
                 ImGui.GetColorU32(Palette.WithAlpha(ui.TitleInk, 0.35f)), 24, 1.4f * scale);
-            AppSkin.Icon(indicatorCenter, FontAwesomeIcon.Plus.ToIconString(), ui.MutedInk, 0.7f);
+            AppSkin.Icon(indicatorCenter, IconGlyph.Of(FontAwesomeIcon.Plus), ui.MutedInk, 0.7f);
         }
 
         ImGui.SetCursorScreenPos(origin);
@@ -530,7 +530,7 @@ internal sealed partial class MusicApp
         }
         else
         {
-            using (AppSurface.Begin(body))
+            using (AppSurface.BeginEdgeToEdge(body))
             {
                 ImGui.Dummy(new Vector2(0f, 4f * scale));
                 for (var index = 0; index < songs.Length; index++)
@@ -541,21 +541,38 @@ internal sealed partial class MusicApp
                 ImGui.Dummy(new Vector2(0f, 8f * scale));
             }
         }
+    }
 
-        var screen = SceneChrome.ScreenFrom(content, theme, scale);
-        var items = new[]
+    private void OpenPlaylistSheet(PlaylistRecord record)
+    {
+        playlistSheetId = record.Id;
+        playlistSheetTitle = record.Name;
+        playlistSheetItems[0] = new ActionSheet.Item(Loc.T(L.Music.RenamePlaylist));
+        playlistSheetItems[1] = new ActionSheet.Item(Loc.T(L.Music.DeletePlaylist), string.Empty, true);
+        playlistSheet.Open();
+    }
+
+    private void DrawPlaylistSheet(Rect screen)
+    {
+        if (!playlistSheet.CapturesPointer)
         {
-            new DropdownMenu.Item(Loc.T(L.Music.RenamePlaylist), FontAwesomeIcon.Pen.ToIconString()),
-            new DropdownMenu.Item(Loc.T(L.Music.DeletePlaylist), FontAwesomeIcon.TrashAlt.ToIconString(), true),
-        };
-        var picked = playlistMenu.Draw(screen, theme, items);
+            return;
+        }
+
+        if (playlists.Find(playlistSheetId) is null)
+        {
+            playlistSheet.Close();
+        }
+
+        var picked = playlistSheet.Draw(screen, ActionSheetStyle.From(ui), playlistSheetItems,
+            Loc.T(L.Common.Cancel), false, playlistSheetTitle);
         if (picked == 0)
         {
-            BeginRenamePlaylist(record.Id);
+            BeginRenamePlaylist(playlistSheetId);
         }
         else if (picked == 1)
         {
-            AskDeletePlaylist(record.Id);
+            AskDeletePlaylist(playlistSheetId);
         }
     }
 
@@ -577,12 +594,10 @@ internal sealed partial class MusicApp
         Typography.Draw(new Vector2(titleLeft, rowCenterY - titleSize.Y * 0.5f), fitted, ui.TitleInk,
             TextStyles.Title2);
         var menuCenter = new Vector2(content.Max.X - 22f * scale, rowCenterY);
-        if (ui.IconButton(menuCenter, 15f * scale, FontAwesomeIcon.EllipsisV.ToIconString(), ui.TitleInk,
+        if (ui.IconButton(menuCenter, 15f * scale, IconGlyph.Of(FontAwesomeIcon.EllipsisV), ui.TitleInk,
                 AppSkin.Transparent, 0.8f))
         {
-            playlistMenuAnchor = new Rect(menuCenter - new Vector2(16f * scale, 16f * scale),
-                menuCenter + new Vector2(16f * scale, 16f * scale));
-            playlistMenu.Toggle("music.playlistMenu", playlistMenuAnchor);
+            OpenPlaylistSheet(record);
         }
     }
 
@@ -606,77 +621,62 @@ internal sealed partial class MusicApp
     private void DrawPlaylistSongRow(float scale, Song song, int index, Song[] songs, PlaylistRecord record)
     {
         var rowHeight = DetailRowHeight * scale;
-        var width = ScrollLayout.StableContentWidth();
-        var origin = ImGui.GetCursorScreenPos();
-        var min = origin;
-        var max = new Vector2(origin.X + width, origin.Y + rowHeight);
         var drawList = ImGui.GetWindowDrawList();
+        var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash);
+        var min = cell.Bounds.Min;
+        var max = cell.Bounds.Max;
+        var pad = FeedCell.PadX * scale;
         var current = IsCurrentSong(song);
-        var hovered = UiInteract.Hover(min, max);
-        if (hovered)
-        {
-            Squircle.Fill(drawList, min, max, 10f * scale, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
         var artSize = 44f * scale;
-        var artMin = new Vector2(min.X + 6f * scale, min.Y + (rowHeight - artSize) * 0.5f);
+        var artMin = new Vector2(min.X + pad, min.Y + (rowHeight - artSize) * 0.5f);
         var artMax = artMin + new Vector2(artSize, artSize);
         DrawCover(drawList, artMin, artMax, song.ThumbnailUrl, song.Title, 6f * scale);
-        var showRemove = hovered && !current;
-        var trailing = current ? 32f * scale : showRemove ? 40f * scale : 10f * scale;
+        var showRemove = cell.Hovered && !current;
+        var trailing = pad + (current ? 26f : showRemove ? 34f : 4f) * scale;
         var textLeft = artMax.X + 12f * scale;
         var textWidth = max.X - trailing - textLeft;
         var songTitleY = min.Y + 10f * scale;
         var songTitleSize = Typography.Measure(song.Title, TextStyles.BodyEmphasized);
         var songTitleHovering = UiInteract.Hover(new Vector2(textLeft, songTitleY),
             new Vector2(textLeft + textWidth, songTitleY + songTitleSize.Y));
-        Marquee.DrawLeft("music.playlistSongRow.title." + song.VideoId + "." + index, song.Title, textLeft,
+        Marquee.DrawLeft(new MarqueeId("music.playlistSongRow.title.", song.VideoId + "." + index), song.Title, textLeft,
             songTitleY, textWidth, TextStyles.BodyEmphasized, current ? ui.Accent : ui.TitleInk, songTitleHovering);
         var songSub = SongRowSubtitle(song);
         var songSubY = min.Y + 34f * scale;
         var songSubSize = Typography.Measure(songSub, TextStyles.Caption1);
         var songSubHovering = UiInteract.Hover(new Vector2(textLeft, songSubY),
             new Vector2(textLeft + textWidth, songSubY + songSubSize.Y));
-        Marquee.DrawLeft("music.playlistSongRow.subtitle." + song.VideoId + "." + index, songSub,
+        Marquee.DrawLeft(new MarqueeId("music.playlistSongRow.subtitle.", song.VideoId + "." + index), songSub,
             textLeft, songSubY, textWidth, TextStyles.Caption1, ui.MutedInk, songSubHovering);
         var removeClicked = false;
-        var overRemove = false;
         if (current)
         {
-            Equalizer.Draw(drawList, new Vector2(max.X - 18f * scale, min.Y + rowHeight * 0.5f), scale, 17f * scale,
-                clock, ui.Accent, 1f, playback.IsPlaying);
+            Equalizer.Draw(drawList, new Vector2(max.X - pad - 12f * scale, min.Y + rowHeight * 0.5f), scale,
+                17f * scale, clock, ui.Accent, 1f, playback.IsPlaying);
         }
         else if (showRemove)
         {
-            var removeCenter = new Vector2(max.X - 22f * scale, min.Y + rowHeight * 0.5f);
-            var removeRadius = 15f * scale;
-            var removeHit = new Vector2(removeRadius, removeRadius);
-            overRemove = UiInteract.Hover(removeCenter - removeHit, removeCenter + removeHit);
-            removeClicked = ui.IconButton(removeCenter, removeRadius,
-                FontAwesomeIcon.Minus.ToIconString(), ui.MutedInk, AppSkin.Transparent, 0.82f);
+            var removeCenter = new Vector2(max.X - pad - 16f * scale, min.Y + rowHeight * 0.5f);
+            removeClicked = ui.IconButton(removeCenter, 15f * scale,
+                IconGlyph.Of(FontAwesomeIcon.Minus), ui.MutedInk, AppSkin.Transparent, 0.82f);
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight));
         if (removeClicked)
         {
             playlists.Remove(record.Id, song.VideoId);
-            return;
+        }
+        else if (cell.Tapped)
+        {
+            if (current)
+            {
+                playback.TogglePlayPause();
+            }
+            else
+            {
+                PlaySong(songs, index, record.Name);
+            }
         }
 
-        if (overRemove || !UiInteract.Click(min, max, hovered))
-        {
-            return;
-        }
-
-        if (current)
-        {
-            playback.TogglePlayPause();
-        }
-        else
-        {
-            PlaySong(songs, index, record.Name);
-        }
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 }

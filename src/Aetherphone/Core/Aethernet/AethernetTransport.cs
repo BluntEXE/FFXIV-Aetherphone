@@ -107,9 +107,10 @@ internal sealed class AethernetTransport
 
     public Task<TResponse?> PostAnonymousAsync<TRequest, TResponse>(string path, TRequest body,
         JsonTypeInfo<TRequest> requestInfo, JsonTypeInfo<TResponse> responseInfo, CancellationToken token,
-        Action<int>? onStatus = null)
+        Action<int>? onStatus = null, Action<AepFailure>? onFailure = null)
     {
-        return http.PostJsonAsync(Url(path), body, requestInfo, responseInfo, null, token, onStatus, appScope);
+        return http.PostJsonAsync(Url(path), body, requestInfo, responseInfo, null, token, onStatus, appScope,
+            onFailure);
     }
 
     public Task<T?> GetWithBearerAsync<T>(string path, string bearer, JsonTypeInfo<T> responseInfo,

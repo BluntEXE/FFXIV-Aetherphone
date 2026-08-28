@@ -10,6 +10,7 @@ internal static class VerifyFailure
     public const string Timeout = "timeout";
     public const string ChallengeExpired = "challenge_expired";
     public const string Banned = "banned";
+    public const string SourceBlocked = "source_blocked";
     public const string RateLimited = "rate_limited";
     public const string Network = "network";
     public const string Pending = "authorization_pending";

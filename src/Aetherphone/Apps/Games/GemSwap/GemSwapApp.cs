@@ -1,6 +1,7 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Games;
 using Aetherphone.Core.Localization;
@@ -41,7 +42,7 @@ internal sealed class GemSwapApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.GemSwap);
-    public string Genre => Loc.T(L.Games.GenreMatch);
+    public GameGenre Genre => GameGenre.Puzzle;
     public void Open()
     {
         loadedBest = 0;
@@ -235,6 +236,7 @@ internal sealed class GemSwapApp : IMiniGame
 
     private void OnCleared(GameGrid grid)
     {
+        UiFeedback.Play(UiSound.GameMatch);
         phase = GemPhase.Clearing;
         clearTimer = 0f;
         var scale = UiScale.Current;

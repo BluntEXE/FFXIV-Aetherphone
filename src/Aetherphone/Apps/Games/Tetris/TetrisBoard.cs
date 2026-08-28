@@ -11,10 +11,28 @@ internal enum TetrisPieceKind
     Z,
 }
 
+internal enum TetrisRuleset : byte
+{
+    Classic,
+    Modern,
+}
+
+internal enum TetrisSpin : byte
+{
+    None,
+    Mini,
+    Full,
+}
+
 internal sealed class TetrisBoard
 {
     public const int Columns = 10;
     public const int Rows = 20;
+    public const float LockDelaySeconds = 0.5f;
+    public const int MaxLockResets = 15;
+    public const float HardDropLockoutSeconds = 0.15f;
+    private const int SpawnX = 3;
+    private const int SpawnY = 0;
     private static readonly (int X, int Y)[] WallKicks = { (0, 0), (-1, 0), (1, 0), (-2, 0), (2, 0), (0, -1) };
 
     private static readonly (int X, int Y)[][][] Shapes =
@@ -56,6 +74,37 @@ internal sealed class TetrisBoard
         },
     };
 
+    private static readonly (int X, int Y)[][] ModernIShapes =
+    {
+        new[] { (0, 2), (1, 2), (2, 2), (3, 2) }, new[] { (1, 0), (1, 1), (1, 2), (1, 3) },
+    };
+
+    private static readonly (int X, int Y)[][] SrsKicksClockwise =
+    {
+        new[] { (0, 0), (-1, 0), (-1, 1), (0, -2), (-1, -2) },
+        new[] { (0, 0), (1, 0), (1, -1), (0, 2), (1, 2) },
+        new[] { (0, 0), (1, 0), (1, 1), (0, -2), (1, -2) },
+        new[] { (0, 0), (-1, 0), (-1, -1), (0, 2), (-1, 2) },
+    };
+
+    private static readonly (int X, int Y)[][] SrsIKicksClockwise =
+    {
+        new[] { (0, 0), (-2, 0), (1, 0), (-2, -1), (1, 2) },
+        new[] { (0, 0), (-1, 0), (2, 0), (-1, 2), (2, -1) },
+        new[] { (0, 0), (2, 0), (-1, 0), (2, 1), (-1, -2) },
+        new[] { (0, 0), (1, 0), (-2, 0), (1, -2), (-2, 1) },
+    };
+
+    private static readonly (int X, int Y)[][] TFrontCorners =
+    {
+        new[] { (0, 1), (2, 1) }, new[] { (2, 1), (2, 3) }, new[] { (0, 3), (2, 3) }, new[] { (0, 1), (0, 3) },
+    };
+
+    private static readonly (int X, int Y)[][] TBackCorners =
+    {
+        new[] { (0, 3), (2, 3) }, new[] { (0, 1), (0, 3) }, new[] { (0, 1), (2, 1) }, new[] { (2, 1), (2, 3) },
+    };
+
     private readonly int[] cells = new int[Columns * Rows];
     private readonly TetrisPieceKind[] bag = new TetrisPieceKind[7];
     private readonly TetrisLevelSystem levelSystem = new();
@@ -65,15 +114,25 @@ internal sealed class TetrisBoard
     private TetrisPieceKind? heldKind;
     private bool holdUsedThisTurn;
     private float dropTimer;
+    private float lockTimer;
+    private int lockResets;
+    private int lowestY;
+    private float hardDropLockout;
+    private bool lastMoveWasRotation;
     private TetrisPieceKind activeKind;
     private int activeRotation;
     private int activeX;
     private int activeY;
+    public TetrisRuleset Ruleset { get; private set; }
     public int Score => scoring.Score;
     public int Lines => levelSystem.TotalLinesCleared;
     public int Level => levelSystem.Level;
     public int ClearedLinesThisFrame { get; private set; }
+    public bool LockedThisFrame { get; private set; }
     public int LastLockScore { get; private set; }
+    public TetrisSpin LastSpin { get; private set; }
+    public bool LastBackToBack => scoring.LastBackToBack;
+    public int LastCombo => scoring.LastCombo;
     public bool GameOver { get; private set; }
     public bool HasActivePiece { get; private set; }
     public TetrisPieceKind? HeldKind => heldKind;
@@ -84,18 +143,24 @@ internal sealed class TetrisBoard
     public int ActiveY => activeY;
     public int CellColor(int column, int row) => cells[row * Columns + column];
 
-    public void Reset()
+    public void Reset() => Reset(TetrisRuleset.Classic);
+
+    public void Reset(TetrisRuleset ruleset)
     {
+        Ruleset = ruleset;
         Array.Clear(cells, 0, cells.Length);
         scoring.Reset();
-        levelSystem.Reset();
+        levelSystem.Reset(ruleset);
         ClearedLinesThisFrame = 0;
+        LockedThisFrame = false;
         LastLockScore = 0;
+        LastSpin = TetrisSpin.None;
         GameOver = false;
         HasActivePiece = false;
         heldKind = null;
         holdUsedThisTurn = false;
         dropTimer = 0f;
+        hardDropLockout = 0f;
         RefillBag();
         SpawnNextPiece();
     }
@@ -103,8 +168,21 @@ internal sealed class TetrisBoard
     public void Update(float deltaSeconds)
     {
         ClearedLinesThisFrame = 0;
+        LockedThisFrame = false;
+        hardDropLockout = MathF.Max(0f, hardDropLockout - deltaSeconds);
         if (GameOver || !HasActivePiece)
         {
+            return;
+        }
+
+        if (Ruleset == TetrisRuleset.Modern && Grounded)
+        {
+            lockTimer += deltaSeconds;
+            if (lockTimer >= LockDelaySeconds)
+            {
+                LockPiece();
+            }
+
             return;
         }
 
@@ -132,6 +210,8 @@ internal sealed class TetrisBoard
         }
 
         activeX += direction;
+        lastMoveWasRotation = false;
+        ResetLock();
         return true;
     }
 
@@ -142,22 +222,42 @@ internal sealed class TetrisBoard
             return false;
         }
 
-        var nextRotation = (activeRotation + (direction >= 0 ? 1 : 3)) & 3;
-        for (var index = 0; index < WallKicks.Length; index++)
+        var clockwise = direction >= 0;
+        var nextRotation = (activeRotation + (clockwise ? 1 : 3)) & 3;
+        if (Ruleset == TetrisRuleset.Modern && activeKind == TetrisPieceKind.O)
         {
-            var kick = WallKicks[index];
-            if (!CanPlace(activeX + kick.X, activeY + kick.Y, nextRotation))
+            return false;
+        }
+
+        var kicks = Ruleset == TetrisRuleset.Modern ? SrsKicks(activeKind, activeRotation, clockwise) : WallKicks;
+        var flip = Ruleset == TetrisRuleset.Modern && !clockwise ? -1 : 1;
+        var srs = Ruleset == TetrisRuleset.Modern;
+        for (var index = 0; index < kicks.Length; index++)
+        {
+            var kick = kicks[index];
+            var offsetX = kick.X * flip;
+            var offsetY = srs ? -kick.Y * flip : kick.Y;
+            if (!CanPlace(activeX + offsetX, activeY + offsetY, nextRotation))
             {
                 continue;
             }
 
-            activeX += kick.X;
-            activeY += kick.Y;
+            activeX += offsetX;
+            activeY += offsetY;
             activeRotation = nextRotation;
+            lastMoveWasRotation = true;
+            ResetLock();
             return true;
         }
 
         return false;
+    }
+
+    private static (int X, int Y)[] SrsKicks(TetrisPieceKind kind, int fromRotation, bool clockwise)
+    {
+        var table = kind == TetrisPieceKind.I ? SrsIKicksClockwise : SrsKicksClockwise;
+        var transitionFrom = clockwise ? fromRotation : (fromRotation + 3) & 3;
+        return table[transitionFrom];
     }
 
     public bool SoftDrop()
@@ -170,17 +270,23 @@ internal sealed class TetrisBoard
         if (CanPlace(activeX, activeY + 1, activeRotation))
         {
             activeY += 1;
+            lastMoveWasRotation = false;
+            TrackDescent();
             scoring.AddSoftDrop(1);
             return true;
         }
 
-        LockPiece();
+        if (Ruleset == TetrisRuleset.Classic)
+        {
+            LockPiece();
+        }
+
         return false;
     }
 
     public void HardDrop()
     {
-        if (GameOver || !HasActivePiece)
+        if (GameOver || !HasActivePiece || hardDropLockout > 0f)
         {
             return;
         }
@@ -190,6 +296,11 @@ internal sealed class TetrisBoard
         {
             activeY += 1;
             distance++;
+        }
+
+        if (distance > 0)
+        {
+            lastMoveWasRotation = false;
         }
 
         scoring.AddHardDrop(distance);
@@ -228,16 +339,72 @@ internal sealed class TetrisBoard
         return y;
     }
 
-    public static (int X, int Y)[] GetCells(TetrisPieceKind kind, int rotation)
+    public (int X, int Y)[] ActiveCells() => GetCells(activeKind, activeRotation, Ruleset);
+
+    public void Paint(int column, int row, int color)
     {
+        cells[row * Columns + column] = color;
+    }
+
+    public bool PlaceActive(TetrisPieceKind kind, int x, int y, int rotation)
+    {
+        activeKind = kind;
+        activeRotation = rotation & 3;
+        activeX = x;
+        activeY = y;
+        lockTimer = 0f;
+        lockResets = 0;
+        lowestY = y;
+        lastMoveWasRotation = false;
+        HasActivePiece = CanPlace(activeX, activeY, activeRotation);
+        return HasActivePiece;
+    }
+
+    public static (int X, int Y)[] GetCells(TetrisPieceKind kind, int rotation) => GetCells(kind, rotation, TetrisRuleset.Classic);
+
+    public static (int X, int Y)[] GetCells(TetrisPieceKind kind, int rotation, TetrisRuleset ruleset)
+    {
+        if (ruleset == TetrisRuleset.Modern && kind == TetrisPieceKind.I && rotation >= 2)
+        {
+            return ModernIShapes[rotation - 2];
+        }
+
         return Shapes[(int)kind][rotation];
     }
 
+    private bool Grounded => !CanPlace(activeX, activeY + 1, activeRotation);
+
     private float DropInterval => levelSystem.DropInterval;
+
+    private void ResetLock()
+    {
+        if (Ruleset != TetrisRuleset.Modern || !Grounded || lockResets >= MaxLockResets)
+        {
+            return;
+        }
+
+        lockTimer = 0f;
+        lockResets++;
+    }
+
+    private void TrackDescent()
+    {
+        if (activeY <= lowestY)
+        {
+            return;
+        }
+
+        lowestY = activeY;
+        lockResets = 0;
+        lockTimer = 0f;
+    }
 
     private void LockPiece()
     {
-        var cellsForPiece = Shapes[(int)activeKind][activeRotation];
+        var spin = Ruleset == TetrisRuleset.Modern && activeKind == TetrisPieceKind.T && lastMoveWasRotation
+            ? DetectTSpin()
+            : TetrisSpin.None;
+        var cellsForPiece = ActiveCells();
         for (var index = 0; index < cellsForPiece.Length; index++)
         {
             var cell = cellsForPiece[index];
@@ -254,10 +421,17 @@ internal sealed class TetrisBoard
         HasActivePiece = false;
         var clearedLines = ClearLines();
         ClearedLinesThisFrame = clearedLines;
-        LastLockScore = scoring.CommitPiece(clearedLines, levelSystem.Level);
+        LockedThisFrame = true;
+        LastSpin = spin;
+        LastLockScore = scoring.CommitPiece(clearedLines, levelSystem.Level, spin, Ruleset);
         if (clearedLines > 0)
         {
             levelSystem.RegisterClearedLines(clearedLines);
+        }
+
+        if (Ruleset == TetrisRuleset.Modern)
+        {
+            hardDropLockout = HardDropLockoutSeconds;
         }
 
         if (!GameOver)
@@ -266,15 +440,54 @@ internal sealed class TetrisBoard
         }
     }
 
+    private TetrisSpin DetectTSpin()
+    {
+        var front = CountFilled(TFrontCorners[activeRotation]);
+        var back = CountFilled(TBackCorners[activeRotation]);
+        if (front + back < 3)
+        {
+            return TetrisSpin.None;
+        }
+
+        return front < 2 ? TetrisSpin.Mini : TetrisSpin.Full;
+    }
+
+    private int CountFilled((int X, int Y)[] corners)
+    {
+        var count = 0;
+        for (var index = 0; index < corners.Length; index++)
+        {
+            var column = activeX + corners[index].X;
+            var row = activeY + corners[index].Y;
+            if (row < 0)
+            {
+                continue;
+            }
+
+            if (column < 0 || column >= Columns || row >= Rows || cells[row * Columns + column] != 0)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
     private bool StepDown()
     {
         if (CanPlace(activeX, activeY + 1, activeRotation))
         {
             activeY += 1;
+            lastMoveWasRotation = false;
+            TrackDescent();
             return true;
         }
 
-        LockPiece();
+        if (Ruleset == TetrisRuleset.Classic)
+        {
+            LockPiece();
+        }
+
         return false;
     }
 
@@ -334,8 +547,12 @@ internal sealed class TetrisBoard
     {
         activeKind = kind;
         activeRotation = 0;
-        activeX = 3;
-        activeY = 0;
+        activeX = SpawnX;
+        activeY = SpawnY;
+        lockTimer = 0f;
+        lockResets = 0;
+        lowestY = SpawnY;
+        lastMoveWasRotation = false;
         HasActivePiece = CanPlace(activeX, activeY, activeRotation);
         holdUsedThisTurn = !resetHoldLock;
         if (!HasActivePiece)
@@ -346,7 +563,7 @@ internal sealed class TetrisBoard
 
     private bool CanPlace(int x, int y, int rotation)
     {
-        var cellsForPiece = Shapes[(int)activeKind][rotation];
+        var cellsForPiece = GetCells(activeKind, rotation, Ruleset);
         for (var index = 0; index < cellsForPiece.Length; index++)
         {
             var cell = cellsForPiece[index];

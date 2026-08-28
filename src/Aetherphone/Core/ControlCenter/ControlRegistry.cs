@@ -22,6 +22,12 @@ internal sealed class ControlRegistry : IControlRegistry
                 configuration.DoNotDisturb = !configuration.DoNotDisturb;
                 configuration.Save();
             }));
+        Add(new ToggleModule("silent", FontAwesomeIcon.BellSlash, L.Settings.SilentMode,
+            () => configuration.SilentMode, () =>
+            {
+                configuration.SilentMode = !configuration.SilentMode;
+                configuration.Save();
+            }));
         Add(new ToggleModule("calls", FontAwesomeIcon.Phone, L.Phone.Calls,
             () => configuration.CallsEnabled, () => calls.SetEnabled(!configuration.CallsEnabled)));
         Add(new ToggleModule("lock", FontAwesomeIcon.Thumbtack, L.ControlCenter.LockPosition,

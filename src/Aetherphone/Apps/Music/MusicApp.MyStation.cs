@@ -500,7 +500,7 @@ internal sealed partial class MusicApp
         Typography.Draw(drawList, new Vector2(valueLeft, origin.Y + 7f * scale), fitted,
             justCopied ? ui.Accent : ui.TitleInk, TextStyles.Callout);
 
-        if (value.Length > 0 && ui.IconButton(copyCenter, copyRadius, FontAwesomeIcon.Copy.ToIconString(),
+        if (value.Length > 0 && ui.IconButton(copyCenter, copyRadius, IconGlyph.Of(FontAwesomeIcon.Copy),
                 ui.MutedInk, AppSkin.Transparent, 0.75f, label))
         {
             ImGui.SetClipboardText(value);

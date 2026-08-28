@@ -18,7 +18,6 @@ internal sealed partial class HousingApp
     private readonly ChipRail divisionRail = new();
     private readonly ChipRail dataRail = new();
     private readonly ChipRail entriesRail = new();
-    private readonly ChipRail reminderRail = new();
 
     private static readonly int[] EntryCaps = [0, 3, 10, 25];
 
@@ -53,7 +52,7 @@ internal sealed partial class HousingApp
         var sheet = new Rect(new Vector2(area.Min.X, area.Max.Y - height + travel),
             new Vector2(area.Max.X, area.Max.Y + travel));
         drawList.PushClipRect(area.Min, area.Max, true);
-        HousingChrome.SheetSurface(drawList, sheet, area, progress, ui);
+        HousingChrome.SheetChrome(drawList, sheet, area, progress, ui);
         drawList.PopClipRect();
         if (progress < 0.35f)
         {

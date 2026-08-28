@@ -44,7 +44,6 @@ internal sealed partial class MusicApp
     private readonly bool[] tagFilterActive = new bool[MaxStationTags * 8 + 1];
     private readonly List<string> knownTags = new();
     private readonly List<CommunityStationDto> filteredStations = new();
-    private string viewedStationId = string.Empty;
     private string tagFilter = string.Empty;
     private RadioTrackDto[] splitTrackSource = Array.Empty<RadioTrackDto>();
     private string[] trackTitles = Array.Empty<string>();
@@ -118,7 +117,7 @@ internal sealed partial class MusicApp
         var hovered = UiInteract.Hover(headingMin, headingMax);
         Typography.Draw(origin, title, ui.Palette.HeadingInk, TextStyles.Title3);
         var iconCenter = new Vector2(origin.X + width - iconBox * 0.5f, origin.Y + titleSize.Y * 0.5f);
-        AppSkin.Icon(iconCenter, FontAwesomeIcon.ChevronRight.ToIconString(), ui.MutedInk, 0.8f);
+        AppSkin.Icon(iconCenter, IconGlyph.Of(FontAwesomeIcon.ChevronRight), ui.MutedInk, 0.8f);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -139,7 +138,7 @@ internal sealed partial class MusicApp
         var shown = Math.Min(stations.Length, CommunityHomeRows);
         for (var index = 0; index < shown; index++)
         {
-            DrawCommunityRow(scale, stations[index]);
+            DrawCommunityRow(scale, stations[index], 6f);
         }
     }
 
@@ -256,7 +255,7 @@ internal sealed partial class MusicApp
                 DrawShelfHeading(heading, scale);
             }
 
-            DrawCommunityRow(scale, filteredStations[index]);
+            DrawCommunityRow(scale, filteredStations[index], 6f);
         }
     }
 
@@ -332,7 +331,7 @@ internal sealed partial class MusicApp
         }
 
         var center = new Vector2(content.Max.X - 26f * scale, content.Min.Y + TopBarHeight * scale * 0.5f);
-        if (ui.IconButton(center, 16f * scale, FontAwesomeIcon.BroadcastTower.ToIconString(), ui.TitleInk,
+        if (ui.IconButton(center, 16f * scale, IconGlyph.Of(FontAwesomeIcon.BroadcastTower), ui.TitleInk,
                 AppSkin.Transparent, 0.8f, Loc.T(L.Music.MyStation)))
         {
             OpenMyStation();
@@ -373,29 +372,22 @@ internal sealed partial class MusicApp
         }
     }
 
-    private void DrawCommunityRow(float scale, CommunityStationDto station)
+    private void DrawCommunityRow(float scale, CommunityStationDto station, float sideInset)
     {
         var rowHeight = CommunityRowHeight * scale;
-        var width = ScrollLayout.StableContentWidth();
-        var origin = ImGui.GetCursorScreenPos();
-        var min = origin;
-        var max = new Vector2(origin.X + width, origin.Y + rowHeight);
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = UiInteract.Hover(min, max);
-        if (hovered)
-        {
-            Squircle.Fill(drawList, min, max, 10f * scale, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
+        var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash);
+        var min = cell.Bounds.Min;
+        var max = cell.Bounds.Max;
+        var inset = sideInset * scale;
         var artSize = 50f * scale;
-        var artMin = new Vector2(min.X + 6f * scale, min.Y + (rowHeight - artSize) * 0.5f);
+        var artMin = new Vector2(min.X + inset, min.Y + (rowHeight - artSize) * 0.5f);
         var artMax = artMin + new Vector2(artSize, artSize);
         DrawStationArt(drawList, artMin, artMax, station, 10f * scale);
 
         var current = IsCurrentCommunityStation(station);
         var textLeft = artMax.X + 12f * scale;
-        var textWidth = max.X - (current ? 40f * scale : 14f * scale) - textLeft;
+        var textWidth = max.X - inset - (current ? 34f : 8f) * scale - textLeft;
         var nameY = min.Y + 12f * scale;
         var fittedName = Typography.FitText(station.Name, textWidth, TextStyles.BodyEmphasized);
         Typography.Draw(drawList, new Vector2(textLeft, nameY), fittedName, current ? ui.Accent : ui.TitleInk,
@@ -420,16 +412,16 @@ internal sealed partial class MusicApp
 
         if (current)
         {
-            Equalizer.Draw(drawList, new Vector2(max.X - 20f * scale, min.Y + rowHeight * 0.5f), scale, 17f * scale,
-                clock, ui.Accent, 1f, playback.IsPlaying);
+            Equalizer.Draw(drawList, new Vector2(max.X - inset - 14f * scale, min.Y + rowHeight * 0.5f), scale,
+                17f * scale, clock, ui.Accent, 1f, playback.IsPlaying);
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight));
-        if (UiInteract.Click(min, max, hovered))
+        if (cell.Tapped)
         {
             OpenStationPage(station);
         }
+
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 
     private void DrawStationArt(ImDrawListPtr drawList, Vector2 min, Vector2 max, CommunityStationDto station,
@@ -437,8 +429,8 @@ internal sealed partial class MusicApp
     {
         if (station.ArtworkUrl.Length > 0 && Thumb(station.ArtworkUrl).Texture is { } texture)
         {
-            drawList.AddImageRounded(texture.Handle, min, max, Vector2.Zero, Vector2.One, 0xFFFFFFFFu, rounding,
-                corners);
+            var (uv0, uv1) = ImageFit.Cover(texture.Size.X, texture.Size.Y, max.X - min.X, max.Y - min.Y);
+            drawList.AddImageRounded(texture.Handle, min, max, uv0, uv1, 0xFFFFFFFFu, rounding, corners);
             return;
         }
 
@@ -678,7 +670,7 @@ internal sealed partial class MusicApp
         {
             var drawList = ImGui.GetWindowDrawList();
             drawList.AddCircleFilled(playCenter, radius, ImGui.GetColorU32(ui.FieldSurface), 32);
-            AppSkin.Icon(drawList, playCenter, FontAwesomeIcon.Bell.ToIconString(), ui.MutedInk, 1f);
+            AppSkin.Icon(drawList, playCenter, IconGlyph.Of(FontAwesomeIcon.Bell), ui.MutedInk, 1f);
         }
 
         ImGui.SetCursorScreenPos(origin);
@@ -717,7 +709,7 @@ internal sealed partial class MusicApp
         var buttonRect = new Rect(buttonMin, buttonMin + new Vector2(buttonWidth, 36f * scale));
         if (ui.GhostButton(buttonRect, Loc.T(L.Music.WatchOnTwitch)))
         {
-            Dalamud.Utility.Util.OpenLink(url);
+            Windows.UrlActions.AskThenOpen(url);
         }
 
         ImGui.SetCursorScreenPos(origin);
@@ -886,18 +878,10 @@ internal sealed partial class MusicApp
     private void DrawTrackRow(float scale, RadioTrackDto track, int index)
     {
         var rowHeight = TrackRowHeight * scale;
-        var width = ScrollLayout.StableContentWidth();
-        var origin = ImGui.GetCursorScreenPos();
-        var min = origin;
-        var max = new Vector2(origin.X + width, origin.Y + rowHeight);
         var drawList = ImGui.GetWindowDrawList();
-        var hovered = UiInteract.Hover(min, max);
-        if (hovered)
-        {
-            Squircle.Fill(drawList, min, max, 8f * scale, ImGui.GetColorU32(ui.HoverTint));
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
+        var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash);
+        var min = cell.Bounds.Min;
+        var max = cell.Bounds.Max;
         var squareSize = TrackSquareSize * scale;
         var squareMin = new Vector2(min.X + Metrics.Space.Md * scale, min.Y + (rowHeight - squareSize) * 0.5f);
         drawList.AddImageRounded(artwork.HandleForName(track.Title), squareMin,
@@ -929,12 +913,12 @@ internal sealed partial class MusicApp
             min.Y + (rowHeight - Typography.Measure(stamp, TextStyles.Caption2).Y) * 0.5f), stamp, ui.MutedInk,
             TextStyles.Caption2);
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight));
-        if (UiInteract.Click(min, max, hovered))
+        if (cell.Tapped)
         {
             SearchForTrack(track.Title);
         }
+
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 
     private void SearchForTrack(string title)
@@ -998,7 +982,7 @@ internal sealed partial class MusicApp
         ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
         if (tapped >= 0)
         {
-            Dalamud.Utility.Util.OpenLink(linkTargets[tapped]);
+            Windows.UrlActions.AskThenOpen(linkTargets[tapped]);
         }
     }
 

@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
@@ -33,7 +34,7 @@ internal sealed class FlowApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Flow);
-    public string Genre => Loc.T(L.Games.GenrePuzzle);
+    public GameGenre Genre => GameGenre.Puzzle;
 
     public void Open()
     {
@@ -248,6 +249,7 @@ internal sealed class FlowApp : IMiniGame
 
     private void OnConnected(GameGrid grid, float scale)
     {
+        UiFeedback.Play(UiSound.GameMatch);
         var color = board.ActiveColor;
         if (color < 0)
         {
@@ -268,6 +270,7 @@ internal sealed class FlowApp : IMiniGame
 
     private void OnSolved(GameGrid grid, float scale)
     {
+        UiFeedback.Play(UiSound.GameClear);
         finished = true;
         resultAppear = 0f;
         clearedLevel = currentLevel;

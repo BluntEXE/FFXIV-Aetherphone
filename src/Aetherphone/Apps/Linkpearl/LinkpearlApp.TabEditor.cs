@@ -1,13 +1,11 @@
 using System.Runtime.InteropServices;
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
-using Aetherphone.Core.Confirm;
 using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 
 namespace Aetherphone.Apps.Linkpearl;
@@ -15,7 +13,10 @@ namespace Aetherphone.Apps.Linkpearl;
 internal sealed partial class LinkpearlApp
 {
     private const int TabNameMaxLength = 24;
-    private const float EditorRowHeight = 46f;
+    private const float EditorNameRowHeight = 50f;
+    private const float EditorTintRowHeight = 44f;
+    private const float EditorChannelRowHeight = 44f;
+    private const float EditorSwatchRadius = 11f;
 
     private static readonly ChannelCategory[] PickerOrder =
     {
@@ -35,11 +36,11 @@ internal sealed partial class LinkpearlApp
         HistoryPolicy.Forever,
     };
 
-    private readonly DropdownMenu editorMenu = new();
     private readonly List<DropdownMenu.Item> editorItems = new(24);
     private readonly List<string> editorKeys = new(24);
     private string editorName = string.Empty;
     private string editorTabId = string.Empty;
+    private bool editorNameFocus;
 
     private void OpenTabEditor(ChatTab tab)
     {
@@ -52,11 +53,14 @@ internal sealed partial class LinkpearlApp
     {
         if (!tabs.CanAdd)
         {
+            ShellToast.Show(Loc.T(L.Linkpearl.TabLimit, TabStore.MaxTabs));
             return;
         }
 
-        OpenTabEditor(tabs.Create(Loc.T(L.Linkpearl.NewTab), Array.Empty<string>()));
+        var tab = tabs.Create(Loc.T(L.Linkpearl.NewTab), Array.Empty<string>());
         inbox.Invalidate();
+        editorNameFocus = true;
+        OpenTabEditor(tab);
     }
 
     private void DrawTabEditor(Rect area, string tabId)
@@ -74,47 +78,68 @@ internal sealed partial class LinkpearlApp
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + AppHeader.Height * scale), area.Max);
         using (AppSurface.Begin(body))
         {
-            var width = ScrollLayout.StableContentWidth();
-            DrawNameField(tab, width, scale);
-            DrawTintSwatches(tab, width, scale);
+            DrawIdentityCard(tab, scale);
             SettingsSection.Header(Loc.T(L.Linkpearl.Channels), frameTheme,
                 tab.Channels.Count == 0 ? Loc.T(L.Linkpearl.NoChannels) : null);
             for (var index = 0; index < PickerOrder.Length; index++)
             {
-                DrawCategory(tab, PickerOrder[index], width, scale);
+                DrawCategory(tab, PickerOrder[index], scale);
             }
 
             SettingsSection.Header(Loc.T(L.Linkpearl.TabSettings), frameTheme);
-            DrawTabSettings(tab, width, scale);
+            DrawTabSettings(tab);
+            SettingsSection.Hint(Loc.T(L.Linkpearl.StoredOnThisPc), frameTheme);
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
-            if (SettingsRow.Action(NextRow(width, scale), Loc.T(L.Linkpearl.DeleteTab), frameTheme.Danger, frameTheme))
+            var dangerCard = GroupCard.Begin(frameTheme, 1);
+            if (SettingsRow.Action(dangerCard.NextRow(), Loc.T(L.Linkpearl.DeleteTab), frameTheme.Danger, frameTheme))
             {
                 AskDeleteTab(tab);
             }
 
+            dangerCard.End();
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Xxl * scale));
         }
 
         DrawEditorMenu(area, tab);
     }
 
-    private void DrawNameField(ChatTab tab, float width, float scale)
+    private void DrawIdentityCard(ChatTab tab, float scale)
     {
         SettingsSection.Header(Loc.T(L.Linkpearl.TabName), frameTheme);
-        var row = NextRow(width, scale);
+        var card = GroupCard.Begin(frameTheme, 2, EditorNameRowHeight);
+        DrawNameRow(tab, card.NextRow(), scale);
+        DrawTintRow(tab, card.NextRow(), scale);
+        card.End();
+    }
+
+    private void DrawNameRow(ChatTab tab, Rect row, float scale)
+    {
         var drawList = ImGui.GetWindowDrawList();
-        var inset = Metrics.Space.Lg * scale;
-        var fieldMin = new Vector2(row.Min.X + inset, row.Min.Y + 4f * scale);
-        var fieldMax = new Vector2(row.Max.X - inset, row.Max.Y - 4f * scale);
-        Squircle.Fill(drawList, fieldMin, fieldMax, Metrics.Radius.Field * scale,
-            ImGui.GetColorU32(frameTheme.GroupedCard));
-        ImGui.SetCursorScreenPos(new Vector2(fieldMin.X + Metrics.Space.Md * scale,
-            (fieldMin.Y + fieldMax.Y) * 0.5f - ImGui.GetFrameHeight() * 0.5f));
-        ImGui.SetNextItemWidth(fieldMax.X - fieldMin.X - Metrics.Space.Md * scale * 2f);
+        var palette = ChannelTints.TabPalette;
+        var tint = palette[Math.Clamp(tab.Tint, 0, palette.Length - 1)];
+        var badgeRadius = 15f * scale;
+        var badgeCenter = new Vector2(row.Min.X + badgeRadius, row.Center.Y);
+        var badgeMin = badgeCenter - new Vector2(badgeRadius, badgeRadius);
+        var badgeMax = badgeCenter + new Vector2(badgeRadius, badgeRadius);
+        Squircle.Fill(drawList, badgeMin, badgeMax, badgeRadius * 0.62f,
+            ImGui.GetColorU32(Palette.WithAlpha(tint, 0.22f)));
+        Typography.DrawCentered(drawList, badgeCenter, Initials.Of(editorName.Length > 0 ? editorName : tab.Name),
+            tint, TextStyles.Caption1);
+        var fieldLeft = badgeMax.X + Metrics.Space.Md * scale;
+        ImGui.SetCursorScreenPos(new Vector2(fieldLeft, row.Center.Y - ImGui.GetFrameHeight() * 0.5f));
+        ImGui.SetNextItemWidth(row.Max.X - fieldLeft);
+        if (editorNameFocus)
+        {
+            ImGui.SetKeyboardFocusHere();
+            editorNameFocus = false;
+        }
+
+        Plugin.Fonts.NoticeText(editorName);
         using (ImRaii.PushColor(ImGuiCol.FrameBg, AppSkin.Transparent))
         using (ImRaii.PushColor(ImGuiCol.Text, frameTheme.TextStrong))
         {
-            ImGui.InputText("##linkpearl.tabname", ref editorName, TabNameMaxLength);
+            ImGui.InputTextWithHint("##linkpearl.tabname", Loc.T(L.Linkpearl.TabName), ref editorName,
+                TabNameMaxLength);
         }
 
         var trimmed = editorName.Trim();
@@ -126,26 +151,24 @@ internal sealed partial class LinkpearlApp
         }
     }
 
-    private void DrawTintSwatches(ChatTab tab, float width, float scale)
+    private void DrawTintRow(ChatTab tab, Rect row, float scale)
     {
-        SettingsSection.Header(Loc.T(L.Linkpearl.TabTint), frameTheme);
-        var row = NextRow(width, scale);
         var drawList = ImGui.GetWindowDrawList();
         var palette = ChannelTints.TabPalette;
-        var radius = 12f * scale;
-        var spacing = (row.Width - Metrics.Space.Lg * scale * 2f) / palette.Length;
+        var radius = EditorSwatchRadius * scale;
+        var spacing = row.Width / palette.Length;
         for (var index = 0; index < palette.Length; index++)
         {
-            var center = new Vector2(row.Min.X + Metrics.Space.Lg * scale + spacing * (index + 0.5f), row.Center.Y);
+            var center = new Vector2(row.Min.X + spacing * (index + 0.5f), row.Center.Y);
             var selected = tab.Tint == index;
             drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(palette[index]), 24);
             if (selected)
             {
-                drawList.AddCircle(center, radius + 4f * scale, ImGui.GetColorU32(frameTheme.TextStrong), 24,
+                drawList.AddCircle(center, radius + 3.5f * scale, ImGui.GetColorU32(frameTheme.TextStrong), 24,
                     1.6f * scale);
             }
 
-            if (!UiInteract.HoverClickCircle(center, radius + 3f * scale) || selected)
+            if (!UiInteract.HoverClickCircle(center, radius + 4f * scale) || selected)
             {
                 continue;
             }
@@ -156,26 +179,36 @@ internal sealed partial class LinkpearlApp
         }
     }
 
-    private void DrawCategory(ChatTab tab, ChannelCategory category, float width, float scale)
+    private void DrawCategory(ChatTab tab, ChannelCategory category, float scale)
     {
         var all = GameChannels.All;
-        var drew = false;
+        var count = 0;
         for (var index = 0; index < all.Length; index++)
         {
-            var channel = all[index];
-            if (channel.Category != category)
+            if (all[index].Category == category)
             {
-                continue;
+                count++;
             }
-
-            if (!drew)
-            {
-                SettingsSection.Hint(Loc.T(CategoryLabel(category)), frameTheme);
-                drew = true;
-            }
-
-            DrawChannelRow(tab, channel, NextRow(width, scale), scale);
         }
+
+        if (count == 0)
+        {
+            return;
+        }
+
+        SettingsSection.Hint(Loc.T(CategoryLabel(category)), frameTheme);
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
+        var card = GroupCard.Begin(frameTheme, count, EditorChannelRowHeight);
+        for (var index = 0; index < all.Length; index++)
+        {
+            if (all[index].Category == category)
+            {
+                DrawChannelRow(tab, all[index], card.NextRow(), scale);
+            }
+        }
+
+        card.End();
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
     }
 
     private void DrawChannelRow(ChatTab tab, GameChannel channel, Rect row, float scale)
@@ -184,38 +217,30 @@ internal sealed partial class LinkpearlApp
         var hovered = UiInteract.Hover(row.Min, row.Max);
         if (hovered)
         {
-            Squircle.Fill(drawList, new Vector2(row.Min.X + Metrics.Space.Sm * scale, row.Min.Y),
-                new Vector2(row.Max.X - Metrics.Space.Sm * scale, row.Max.Y), Metrics.Radius.Sm * scale,
-                ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.05f)));
+            SettingsRow.DrawRowHighlight(row, frameTheme);
         }
 
-        var left = row.Min.X + Metrics.Space.Lg * scale;
-        var dotCenter = new Vector2(left + 4f * scale, row.Center.Y);
-        drawList.AddCircleFilled(dotCenter, 4f * scale, ImGui.GetColorU32(channel.Tint), 12);
+        var dotCenter = new Vector2(row.Min.X + 5f * scale, row.Center.Y);
+        drawList.AddCircleFilled(dotCenter, 4.5f * scale, ImGui.GetColorU32(channel.Tint), 12);
         var joined = LinkshellNames.Joined(channel);
         var label = LinkshellNames.Label(channel);
-        var textLeft = dotCenter.X + 12f * scale;
+        var textLeft = dotCenter.X + 14f * scale;
         var selected = tab.Includes(channel.Key);
         var ink = joined ? frameTheme.TextStrong : frameTheme.TextMuted;
-        var labelWidth = row.Max.X - Metrics.Space.Xxl * scale - textLeft;
+        var labelWidth = row.Max.X - Metrics.Space.Xl * scale - textLeft;
         var labelSize = Typography.Measure(label, TextStyles.BodyEmphasized);
-        Typography.Draw(drawList, new Vector2(textLeft, row.Center.Y - labelSize.Y * 0.5f),
-            Typography.FitText(label, labelWidth, TextStyles.BodyEmphasized), ink, TextStyles.BodyEmphasized);
+        var fitted = Typography.FitText(label, labelWidth, TextStyles.BodyEmphasized);
+        Typography.Draw(drawList, new Vector2(textLeft, row.Center.Y - labelSize.Y * 0.5f), fitted, ink,
+            TextStyles.BodyEmphasized);
         if (channel.IsSlotted && !joined)
         {
+            var fittedWidth = Typography.Measure(fitted, TextStyles.BodyEmphasized).X;
             var hint = Loc.T(L.Linkpearl.EmptySlot);
-            Typography.Draw(drawList, new Vector2(textLeft + labelSize.X + Metrics.Space.Sm * scale,
+            Typography.Draw(drawList, new Vector2(textLeft + fittedWidth + Metrics.Space.Sm * scale,
                 row.Center.Y - labelSize.Y * 0.5f + 1f * scale), hint, frameTheme.TextMuted, TextStyles.Caption1);
         }
 
-        if (selected)
-        {
-            var tip = new Vector2(row.Max.X - Metrics.Space.Xl * scale, row.Center.Y + 4f * scale);
-            var color = ImGui.GetColorU32(frameTheme.Accent);
-            drawList.AddLine(tip - new Vector2(5f * scale, 5f * scale), tip, color, 2f * scale);
-            drawList.AddLine(tip, new Vector2(tip.X + 9f * scale, tip.Y - 11f * scale), color, 2f * scale);
-        }
-
+        DrawCheck(drawList, new Vector2(row.Max.X - 10f * scale, row.Center.Y), selected, scale);
         if (hovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -237,36 +262,56 @@ internal sealed partial class LinkpearlApp
 
         tabs.Update(tab);
         inbox.Invalidate();
+        threadKey = string.Empty;
     }
 
-    private void DrawTabSettings(ChatTab tab, float width, float scale)
+    private void DrawCheck(ImDrawListPtr drawList, Vector2 center, bool selected, float scale)
     {
-        if (SettingsRow.Disclosure(NextRow(width, scale), Loc.T(L.Linkpearl.RepliesGoTo), SendChannelLabel(tab),
-                frameTheme))
+        var radius = 10f * scale;
+        if (!selected)
         {
-            editorMenu.Toggle("linkpearl.editor.send", LastRow(width, scale));
+            drawList.AddCircle(center, radius, ImGui.GetColorU32(Palette.WithAlpha(frameTheme.TextMuted, 0.5f)), 20,
+                1.4f * scale);
+            return;
         }
 
-        if (SettingsRow.Disclosure(NextRow(width, scale), Loc.T(L.Linkpearl.Layout), Loc.T(
+        drawList.AddCircleFilled(center, radius, ImGui.GetColorU32(frameTheme.Accent), 20);
+        var color = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 1f));
+        var tip = new Vector2(center.X - 1.5f * scale, center.Y + 3.5f * scale);
+        drawList.AddLine(tip - new Vector2(4f * scale, 4f * scale), tip, color, 2f * scale);
+        drawList.AddLine(tip, new Vector2(tip.X + 7f * scale, tip.Y - 8f * scale), color, 2f * scale);
+    }
+
+    private void DrawTabSettings(ChatTab tab)
+    {
+        var card = GroupCard.Begin(frameTheme, 4);
+        var sendRow = card.NextRow();
+        if (SettingsRow.Disclosure(sendRow, Loc.T(L.Linkpearl.RepliesGoTo), SendChannelLabel(tab), frameTheme))
+        {
+            editorMenu.Toggle("linkpearl.editor.send", sendRow);
+        }
+
+        var layoutRow = card.NextRow();
+        if (SettingsRow.Disclosure(layoutRow, Loc.T(L.Linkpearl.Layout), Loc.T(
                 tab.Density == ChatDensity.Bubbles ? L.Linkpearl.LayoutBubbles : L.Linkpearl.LayoutCompact),
                 frameTheme))
         {
-            editorMenu.Toggle("linkpearl.editor.layout", LastRow(width, scale));
+            editorMenu.Toggle("linkpearl.editor.layout", layoutRow);
         }
 
-        if (SettingsRow.Disclosure(NextRow(width, scale), Loc.T(L.Linkpearl.KeepHistory), HistoryLabel(tab),
-                frameTheme))
+        var alertsRow = card.NextRow();
+        if (SettingsRow.Disclosure(alertsRow, Loc.T(L.Linkpearl.Alerts), Loc.T(AlertLabel(tab.Alerts)), frameTheme))
         {
-            editorMenu.Toggle("linkpearl.editor.history", LastRow(width, scale));
+            editorMenu.Toggle("linkpearl.editor.alerts", alertsRow);
         }
 
-        if (SettingsRow.Disclosure(NextRow(width, scale), Loc.T(L.Linkpearl.Alerts), Loc.T(AlertLabel(tab.Alerts)),
-                frameTheme))
+        var historyRow = card.NextRow();
+        if (SettingsRow.Disclosure(historyRow, Loc.T(L.Linkpearl.KeepHistory), HistoryLabel(tab), frameTheme))
         {
-            editorMenu.Toggle("linkpearl.editor.alerts", LastRow(width, scale));
+            editorMenu.Toggle("linkpearl.editor.history", historyRow);
         }
 
-        SettingsSection.Hint(Loc.T(L.Linkpearl.StoredOnThisPc), frameTheme);
+        card.End();
     }
 
     private void DrawEditorMenu(Rect area, ChatTab tab)
@@ -292,6 +337,7 @@ internal sealed partial class LinkpearlApp
             {
                 tab.SendChannel = editorKeys[picked];
                 tabs.Update(tab);
+                threadKey = string.Empty;
             }
 
             return;
@@ -371,6 +417,7 @@ internal sealed partial class LinkpearlApp
         var tab = tabs.Find(editorTabId);
         if (tab is { Channels.Count: 0 })
         {
+            popouts.Close(ChatInbox.KeyForTab(tab));
             tabs.Delete(tab);
             inbox.Invalidate();
         }
@@ -443,19 +490,4 @@ internal sealed partial class LinkpearlApp
         ChannelCategory.CrossWorld => L.Linkpearl.CategoryCrossWorld,
         _ => L.Linkpearl.CategorySystem,
     };
-
-    private static Rect NextRow(float width, float scale)
-    {
-        var origin = ImGui.GetCursorScreenPos();
-        var row = new Rect(origin, new Vector2(origin.X + width, origin.Y + EditorRowHeight * scale));
-        ImGui.Dummy(new Vector2(width, EditorRowHeight * scale));
-        return row;
-    }
-
-    private static Rect LastRow(float width, float scale)
-    {
-        var origin = ImGui.GetCursorScreenPos();
-        return new Rect(new Vector2(origin.X, origin.Y - EditorRowHeight * scale),
-            new Vector2(origin.X + width, origin.Y));
-    }
 }

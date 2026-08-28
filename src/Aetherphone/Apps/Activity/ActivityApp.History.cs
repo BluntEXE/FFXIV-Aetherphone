@@ -166,13 +166,14 @@ internal sealed partial class ActivityApp
     private void DrawWeek(float scale)
     {
         ui.SectionLabel(Loc.T(L.Character.ThisWeek), TextStyles.FootnoteEmphasized, 6f);
-        var card = BeginCard(WeekLength, CompactRowHeight, scale);
+        var card = GroupCard.Begin(ui, WeekLength, CompactRowHeight);
         for (var slot = 0; slot < WeekLength; slot++)
         {
-            DrawWeekRow(CardRow(card, slot, CompactRowHeight, scale), weekDays[slot], weekLabels[slot], scale);
+            DrawWeekRow(card.NextRow(), weekDays[slot], weekLabels[slot], scale);
         }
 
-        EndCard(card, scale);
+        card.End();
+        ImGui.Dummy(new Vector2(0f, CardGap * scale));
     }
 
     private void DrawWeekRow(Rect row, ActivityDay? day, string label, float scale)
@@ -223,15 +224,16 @@ internal sealed partial class ActivityApp
     private void DrawStreaks(float scale)
     {
         ui.SectionLabel(Loc.T(L.Character.Streaks), TextStyles.FootnoteEmphasized, 6f);
-        var card = BeginCard(2, CompactRowHeight, scale);
+        var card = GroupCard.Begin(ui, 2, CompactRowHeight);
         var currentInk = currentStreak > 0 ? AppPalettes.Activity.Accent : AppPalettes.Activity.MutedInk;
-        StatRow(CardRow(card, 0, CompactRowHeight, scale), Accent.Amber, FontAwesomeIcon.Fire,
+        StatRow(card.NextRow(), Accent.Amber, FontAwesomeIcon.Fire,
             Loc.T(L.Character.CurrentStreak), Loc.Plural(L.Character.StreakDays, currentStreak), currentInk, null,
             scale);
-        StatRow(CardRow(card, 1, CompactRowHeight, scale), Accent.Violet, FontAwesomeIcon.Trophy,
+        StatRow(card.NextRow(), Accent.Violet, FontAwesomeIcon.Trophy,
             Loc.T(L.Character.BestStreak), Loc.Plural(L.Character.StreakDays, bestStreak),
             AppPalettes.Activity.TitleInk, null, scale);
-        EndCard(card, scale);
+        card.End();
+        ImGui.Dummy(new Vector2(0f, CardGap * scale));
         ui.HelpText(Loc.T(L.Character.StreaksHint));
         ImGui.Dummy(new Vector2(0f, 8f * scale));
     }
@@ -249,37 +251,37 @@ internal sealed partial class ActivityApp
         }
 
         ui.SectionLabel(Loc.T(L.Character.PersonalBests), TextStyles.FootnoteEmphasized, 6f);
-        var card = BeginCard(rowCount, RowHeight, scale);
-        var rowIndex = 0;
+        var card = GroupCard.Begin(ui, rowCount, RowHeight);
         if (bestExpDay is { } expDay)
         {
-            StatRow(CardRow(card, rowIndex++, RowHeight, scale), ActivityRings.RingOneTint, FontAwesomeIcon.Bolt,
+            StatRow(card.NextRow(), ActivityRings.RingOneTint, FontAwesomeIcon.Bolt,
                 Loc.T(L.Character.Experience), "+" + Compact(expDay.ExpGained), ActivityRings.RingOneTint,
                 BestDateLabel(expDay), scale);
         }
 
         if (bestDutiesDay is { } dutiesDay)
         {
-            StatRow(CardRow(card, rowIndex++, RowHeight, scale), ActivityRings.RingTwoTint, FontAwesomeIcon.Dungeon,
+            StatRow(card.NextRow(), ActivityRings.RingTwoTint, FontAwesomeIcon.Dungeon,
                 Loc.T(L.Character.Duties), Number(dutiesDay.DutiesCompleted), ActivityRings.RingTwoTint,
                 BestDateLabel(dutiesDay), scale);
         }
 
         if (bestGilDay is { } gilDay)
         {
-            StatRow(CardRow(card, rowIndex++, RowHeight, scale), ActivityRings.RingThreeTint, FontAwesomeIcon.Coins,
+            StatRow(card.NextRow(), ActivityRings.RingThreeTint, FontAwesomeIcon.Coins,
                 Loc.T(L.Character.GilEarned), "+" + Compact(gilDay.GilEarned), ActivityRings.RingThreeTint,
                 BestDateLabel(gilDay), scale);
         }
 
         if (bestPlayDay is { } playDay)
         {
-            StatRow(CardRow(card, rowIndex, RowHeight, scale), Accent.Blue, FontAwesomeIcon.Clock,
+            StatRow(card.NextRow(), Accent.Blue, FontAwesomeIcon.Clock,
                 Loc.T(L.Character.TimePlayed), Duration(playDay.PlaySeconds), AppPalettes.Activity.TitleInk,
                 BestDateLabel(playDay), scale);
         }
 
-        EndCard(card, scale);
+        card.End();
+        ImGui.Dummy(new Vector2(0f, CardGap * scale));
     }
 
     private static string BestDateLabel(ActivityDay day) =>

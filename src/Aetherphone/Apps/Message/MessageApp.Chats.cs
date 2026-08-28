@@ -1,4 +1,4 @@
-using Aetherphone.Core;
+﻿using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Confirm;
@@ -19,9 +19,9 @@ internal sealed partial class MessageApp
     private const byte ChatFilterDirect = 1;
     private const byte ChatFilterGroups = 2;
 
-    private readonly DropdownMenu chatMenu = new();
-    private readonly DropdownMenu.Item[] chatMenuItems = new DropdownMenu.Item[4];
-    private string? menuConversationId;
+    private readonly ActionSheet.Item[] chatSheetItems = new ActionSheet.Item[4];
+    private string? sheetConversationId;
+    private string chatSheetTitle = string.Empty;
     private byte chatFilter = ChatFilterAll;
 
     private void DrawChatsTab(Rect area)
@@ -75,7 +75,7 @@ internal sealed partial class MessageApp
         }
         else
         {
-            using (AppSurface.Begin(listRect))
+            using (AppSurface.BeginEdgeToEdge(listRect))
             {
                 ImGui.Dummy(new Vector2(0f, 4f * scale));
                 for (var index = 0; index < pinned.Count; index++)
@@ -101,7 +101,7 @@ internal sealed partial class MessageApp
             }
         }
 
-        if (ComposeFab.Draw(listRect, "##messageNewFab", ui.Accent, FontAwesomeIcon.Pen.ToIconString(),
+        if (ComposeFab.Draw(listRect, "##messageNewFab", ui.Accent, IconGlyph.Of(FontAwesomeIcon.Pen),
                 Loc.T(L.DirectMessages.NewMessage)))
         {
             selectedContacts.Clear();
@@ -113,8 +113,24 @@ internal sealed partial class MessageApp
 
     private void DrawRecoveryNudge(ref Rect listRect)
     {
-        if (recoveryNudgeDismissed || configuration.EncryptionRecoveryNudgeDismissed
-            || store.VaultState != KeyVaultState.Unlocked || store.Vault.RecoveryConfigured)
+        if (store.VaultState != KeyVaultState.Unlocked)
+        {
+            return;
+        }
+
+        if (store.Vault.UnsavedRecoveryCode is not null)
+        {
+            ChatHeaderControls.DrawBanner(ui, ref listRect, Loc.T(L.Encryption.SaveCodeBanner), ui.Accent,
+                () =>
+                {
+                    encryptionSetup.Request();
+                    navigation.Open("settings");
+                });
+            return;
+        }
+
+        if (recoveryNudgeDismissed || store.Vault.RecoveryConfigured
+            || !configuration.RecoveryNudgeDue())
         {
             return;
         }
@@ -126,7 +142,11 @@ internal sealed partial class MessageApp
                 encryptionSetup.Request();
                 navigation.Open("settings");
             },
-            () => recoveryNudgeDismissed = true);
+            () =>
+            {
+                recoveryNudgeDismissed = true;
+                configuration.SnoozeRecoveryNudge();
+            });
     }
 
     private void DrawChatFilterChips(Rect area, float scale)
@@ -166,7 +186,7 @@ internal sealed partial class MessageApp
         }
         else
         {
-            using (AppSurface.Begin(listRect))
+            using (AppSurface.BeginEdgeToEdge(listRect))
             {
                 ImGui.Dummy(new Vector2(0f, 4f * scale));
                 for (var index = 0; index < archived.Count; index++)
@@ -177,8 +197,6 @@ internal sealed partial class MessageApp
                 ImGui.Dummy(new Vector2(0f, 24f * scale));
             }
         }
-
-        DrawChatMenu(area);
     }
 
     private void CollectChats(List<ConversationDto> pinnedTarget, List<ConversationDto> regularTarget, bool archived)
@@ -218,18 +236,18 @@ internal sealed partial class MessageApp
     private void DrawConversationRow(ConversationDto item, float scale, bool pinned)
     {
         var rowHeight = 62f * scale;
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
         var drawList = ImGui.GetWindowDrawList();
-        ui.Card(drawList, origin, new Vector2(origin.X + width, origin.Y + rowHeight), 16f * scale);
-        var pad = 12f * scale;
+        var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash);
+        var origin = cell.Bounds.Min;
+        var width = cell.Bounds.Width;
+        var pad = FeedCell.PadX * scale;
         var radius = 22f * scale;
         var avatarCenter = new Vector2(origin.X + pad + radius, origin.Y + rowHeight * 0.5f);
         var title = DirectMessagesStore.DisplayTitle(item);
         if (item.IsGroup)
         {
             drawList.AddCircleFilled(avatarCenter, radius, ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.85f)), 32);
-            AppSkin.Icon(avatarCenter, FontAwesomeIcon.Users.ToIconString(), White, 1f);
+            AppSkin.Icon(avatarCenter, IconGlyph.Of(FontAwesomeIcon.Users), White, 1f);
         }
         else
         {
@@ -245,25 +263,24 @@ internal sealed partial class MessageApp
         if (pinned)
         {
             AppSkin.Icon(new Vector2(markerRight - 12f * scale, origin.Y + 18f * scale),
-                FontAwesomeIcon.Thumbtack.ToIconString(), ui.MutedInk, 0.6f);
+                IconGlyph.Of(FontAwesomeIcon.Thumbtack), ui.MutedInk, 0.6f);
             markerRight -= 20f * scale;
         }
 
         if (item.Muted)
         {
             AppSkin.Icon(new Vector2(markerRight - 12f * scale, origin.Y + 18f * scale),
-                FontAwesomeIcon.BellSlash.ToIconString(), ui.MutedInk, 0.6f);
+                IconGlyph.Of(FontAwesomeIcon.BellSlash), ui.MutedInk, 0.6f);
             markerRight -= 20f * scale;
         }
 
-        var overMuster = false;
         if (!item.IsGroup && musters.ContactMusterFor(item.OtherUserId) is { } hosted)
         {
             var musterCenter = new Vector2(markerRight - 12f * scale, origin.Y + 18f * scale);
             var musterExtent = new Vector2(12f * scale, 12f * scale);
             var musterRect = new Rect(musterCenter - musterExtent, musterCenter + musterExtent);
-            overMuster = UiInteract.Hover(musterRect.Min, musterRect.Max);
-            AppSkin.Icon(musterCenter, FontAwesomeIcon.Bullhorn.ToIconString(), AppAccents.For(MusterStore.AppId),
+            var overMuster = UiInteract.Hover(musterRect.Min, musterRect.Max);
+            AppSkin.Icon(musterCenter, IconGlyph.Of(FontAwesomeIcon.Bullhorn), AppAccents.For(MusterStore.AppId),
                 0.6f);
             HoverTooltip.Show(musterRect, Loc.T(L.Message.HostingMuster), HoverLabelSide.Above);
             if (UiInteract.Click(musterRect.Min, musterRect.Max, overMuster))
@@ -281,7 +298,7 @@ internal sealed partial class MessageApp
         var titleSize = Typography.Measure(title, 1f, FontWeight.SemiBold);
         var titleHovering = UiInteract.Hover(new Vector2(textLeft, titleTop),
             new Vector2(textLeft + textWidth, titleTop + titleSize.Y));
-        Marquee.DrawLeft("messageapp.chats.title." + item.Id, title, textLeft, titleTop, textWidth,
+        Marquee.DrawLeft(new MarqueeId("messageapp.chats.title.", item.Id), title, textLeft, titleTop, textWidth,
             new TextStyle(1f, FontWeight.SemiBold), theme.TextStrong, titleHovering);
         var previewColor = item.UnreadCount > 0 ? theme.TextStrong : ui.MutedInk;
         var previewRight = origin.X + width - (item.UnreadCount > 0 ? 40f * scale : pad);
@@ -317,63 +334,68 @@ internal sealed partial class MessageApp
                 FontWeight.SemiBold);
         }
 
-        var rowMax = new Vector2(origin.X + width, origin.Y + rowHeight);
-        if (UiInteract.Hover(origin, rowMax) && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
+        if (cell.Hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
         {
-            OpenChatMenu(item.Id);
+            OpenChatSheet(item);
         }
-        else if (!overMuster && UiInteract.HoverClick(origin, rowMax))
+        else if (cell.Tapped)
         {
             router.Push(MessageRoute.Thread(item.Id));
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight + 8f * scale));
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 
-    private void OpenChatMenu(string conversationId)
+    private void OpenChatSheet(ConversationDto conversation)
     {
-        menuConversationId = conversationId;
-        var pos = ImGui.GetMousePos();
-        chatMenu.Toggle(conversationId, new Rect(pos, pos + new Vector2(1f, 1f)));
+        var id = conversation.Id;
+        sheetConversationId = id;
+        chatSheetTitle = DirectMessagesStore.DisplayTitle(conversation);
+        var isPinned = configuration.MessagePinnedChats.Contains(id);
+        var isArchived = configuration.MessageArchivedChats.Contains(id);
+        chatSheetItems[0] = new ActionSheet.Item(Loc.T(isPinned ? L.Common.Unpin : L.Common.Pin));
+        chatSheetItems[1] = new ActionSheet.Item(Loc.T(isArchived ? L.Message.Unarchive : L.Message.Archive));
+        chatSheetItems[2] = new ActionSheet.Item(Loc.T(conversation.Muted
+            ? L.Message.UnmuteAction
+            : L.Message.MuteAction));
+        chatSheetItems[3] = new ActionSheet.Item(Loc.T(L.Message.DeleteConversation), string.Empty, true);
+        chatSheet.Open();
     }
 
-    private void DrawChatMenu(Rect area)
+    private void DrawChatSheet(Rect screen)
     {
-        if (menuConversationId is not { } id || !chatMenu.IsOpenFor(id))
+        if (!chatSheet.CapturesPointer)
         {
             return;
         }
 
-        var conversation = FindConversationDto(id);
-        var isPinned = configuration.MessagePinnedChats.Contains(id);
-        var isArchived = configuration.MessageArchivedChats.Contains(id);
-        var isMuted = conversation?.Muted ?? false;
-        chatMenu.Header = conversation is null ? string.Empty : DirectMessagesStore.DisplayTitle(conversation);
-        chatMenuItems[0] = new DropdownMenu.Item(Loc.T(isPinned ? L.Common.Unpin : L.Common.Pin),
-            FontAwesomeIcon.Thumbtack.ToIconString());
-        chatMenuItems[1] = new DropdownMenu.Item(Loc.T(isArchived ? L.Message.Unarchive : L.Message.Archive),
-            FontAwesomeIcon.BoxOpen.ToIconString());
-        chatMenuItems[2] = new DropdownMenu.Item(Loc.T(isMuted ? L.Message.UnmuteAction : L.Message.MuteAction),
-            (isMuted ? FontAwesomeIcon.Bell : FontAwesomeIcon.BellSlash).ToIconString());
-        chatMenuItems[3] = new DropdownMenu.Item(Loc.T(L.Message.DeleteConversation),
-            FontAwesomeIcon.Trash.ToIconString(), true);
-        var clicked = chatMenu.Draw(area, theme, chatMenuItems);
-        if (clicked == 0)
+        if (sheetConversationId is not { } id || FindConversationDto(id) is null)
         {
-            TogglePinned(id);
+            chatSheet.Close();
         }
-        else if (clicked == 1)
+
+        var picked = chatSheet.Draw(screen, ActionSheetStyle.From(ui), chatSheetItems, Loc.T(L.Common.Cancel), false,
+            chatSheetTitle);
+        if (picked < 0 || sheetConversationId is not { } conversationId)
         {
-            ToggleArchived(id);
+            return;
         }
-        else if (clicked == 2)
+
+        if (picked == 0)
         {
-            store.SetMuted(id, !isMuted, _ => { });
+            TogglePinned(conversationId);
         }
-        else if (clicked == 3)
+        else if (picked == 1)
         {
-            AskDeleteConversation(id);
+            ToggleArchived(conversationId);
+        }
+        else if (picked == 2)
+        {
+            store.SetMuted(conversationId, !(FindConversationDto(conversationId)?.Muted ?? false), _ => { });
+        }
+        else if (picked == 3)
+        {
+            AskDeleteConversation(conversationId);
         }
     }
 
@@ -385,6 +407,7 @@ internal sealed partial class MessageApp
             Message = Loc.T(L.Message.DeleteConversationMessage),
             ConfirmLabel = Loc.T(L.Common.Delete),
             CancelLabel = Loc.T(L.Common.Cancel),
+            Sheet = true,
             Danger = true,
             Confirm = () => DeleteConversation(conversationId),
         });

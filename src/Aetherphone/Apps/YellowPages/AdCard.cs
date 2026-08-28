@@ -83,9 +83,9 @@ internal static class AdCard
         }
 
         var titleWidth = (status.Length > 0 ? statusLeft - (live ? 20f : 8f) * scale : right) - textLeft;
-        Marquee.DrawLeftAuto(drawList, "yellowpages.card.title." + ad.Id, ad.Title, textLeft, body.Min.Y + pad,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("yellowpages.card.title.", ad.Id), ad.Title, textLeft, body.Min.Y + pad,
             titleWidth, TextStyles.Headline, palette.TitleInk);
-        Marquee.DrawLeftAuto(drawList, "yellowpages.card.identity." + ad.Id, AdText.Identity(ad), textLeft,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("yellowpages.card.identity.", ad.Id), AdText.Identity(ad), textLeft,
             body.Min.Y + pad + 21f * scale, right - textLeft, TextStyles.Footnote, palette.MutedInk);
 
         var descriptionTop = body.Min.Y + (Pad + IdentityRowHeight) * scale;
@@ -113,7 +113,7 @@ internal static class AdCard
             Squircle.FillVerticalGradient(drawList, card.Min, max, rounding,
                 ImGui.GetColorU32(Palette.WithAlpha(palette.Accent, 0.22f)),
                 ImGui.GetColorU32(Palette.WithAlpha(palette.Accent, 0.08f)));
-            AppSkin.Icon(drawList, (card.Min + max) * 0.5f, AdCategories.Icon(ad.Category).ToIconString(),
+            AppSkin.Icon(drawList, (card.Min + max) * 0.5f, IconGlyph.Of(AdCategories.Icon(ad.Category)),
                 Palette.WithAlpha(palette.Accent, 0.75f), 1.4f);
             return;
         }
@@ -223,14 +223,14 @@ internal static class AdCard
             metaRight -= photosSize.X;
             Typography.Draw(drawList, new Vector2(metaRight, top), photos, palette.MutedInk, TextStyles.Footnote);
             AppSkin.Icon(drawList, new Vector2(metaRight - 10f * scale, top + photosSize.Y * 0.5f),
-                FontAwesomeIcon.Camera.ToIconString(), Palette.WithAlpha(palette.MutedInk, 0.8f), 0.55f);
+                IconGlyph.Of(FontAwesomeIcon.Camera), Palette.WithAlpha(palette.MutedInk, 0.8f), 0.55f);
             metaRight -= 26f * scale;
         }
 
         var category = Loc.T(AdCategories.Label(ad.Category));
         var world = ad.WorldId > 0 ? LocationShare.WorldName((uint)ad.WorldId) : string.Empty;
         var meta = world.Length > 0 ? $"{category} · {world}" : category;
-        Marquee.DrawLeftAuto(drawList, "yellowpages.card.meta." + ad.Id, meta, left, top,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("yellowpages.card.meta.", ad.Id), meta, left, top,
             MathF.Max(1f, metaRight - left - 8f * scale), TextStyles.Footnote, palette.MutedInk);
     }
 

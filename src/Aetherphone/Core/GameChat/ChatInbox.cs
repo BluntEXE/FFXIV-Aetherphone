@@ -16,8 +16,12 @@ internal sealed class InboxRow
     public DateTime LastActivity { get; set; }
     public int Unread { get; set; }
     public Vector4 Tint { get; set; }
+    public bool Pinned { get; set; }
+    public bool Muted { get; set; }
 
     public bool IsTell => Tab is null;
+
+    public bool HasBadge => Unread > 0 && !Muted;
 }
 
 internal sealed class ChatInbox : IDisposable
@@ -27,22 +31,26 @@ internal sealed class ChatInbox : IDisposable
 
     private readonly ChatLog log;
     private readonly TabStore tabs;
+    private readonly TellPreferences tellPreferences;
     private readonly Configuration configuration;
     private readonly List<InboxRow> rows = new(16);
     private readonly List<InboxRow> pinned = new(6);
     private readonly List<string> streamScratch = new(32);
+    private readonly HashSet<string> attended = new(StringComparer.Ordinal);
     private InboxRow? transient;
     private long expectedRevision = -1;
     private bool stale = true;
     private bool seenDirty;
 
-    public ChatInbox(ChatLog log, TabStore tabs, Configuration configuration)
+    public ChatInbox(ChatLog log, TabStore tabs, TellPreferences tellPreferences, Configuration configuration)
     {
         this.log = log;
         this.tabs = tabs;
+        this.tellPreferences = tellPreferences;
         this.configuration = configuration;
         log.Appended += OnAppended;
         tabs.Changed += Invalidate;
+        tellPreferences.Changed += Invalidate;
     }
 
     public IReadOnlyList<InboxRow> Rows => rows;
@@ -53,7 +61,23 @@ internal sealed class ChatInbox : IDisposable
 
     public string Viewing { get; set; } = string.Empty;
 
+    public int Count => rows.Count + pinned.Count;
+
     public void Invalidate() => stale = true;
+
+    public bool IsViewing(string key) =>
+        string.Equals(Viewing, key, StringComparison.Ordinal) || attended.Contains(key);
+
+    public void SetAttended(string key, bool attending)
+    {
+        if (attending)
+        {
+            attended.Add(key);
+            return;
+        }
+
+        attended.Remove(key);
+    }
 
     public InboxRow EnsureTell(string display, string world)
     {
@@ -71,6 +95,8 @@ internal sealed class ChatInbox : IDisposable
             Title = display,
             World = world,
             Tint = ChannelTints.Tell,
+            Pinned = tellPreferences.IsPinned(key),
+            Muted = tellPreferences.IsMuted(key),
         };
         rows.Insert(0, transient);
         return transient;
@@ -118,6 +144,22 @@ internal sealed class ChatInbox : IDisposable
         return null;
     }
 
+    public InboxRow? MostRecent()
+    {
+        InboxRow? best = null;
+        for (var index = 0; index < pinned.Count; index++)
+        {
+            best = Newer(best, pinned[index]);
+        }
+
+        for (var index = 0; index < rows.Count; index++)
+        {
+            best = Newer(best, rows[index]);
+        }
+
+        return best;
+    }
+
     public void MarkRead(InboxRow row)
     {
         Stamp(row.Key);
@@ -126,12 +168,60 @@ internal sealed class ChatInbox : IDisposable
             return;
         }
 
-        TotalUnread -= row.Unread;
+        if (!row.Muted)
+        {
+            TotalUnread -= row.Unread;
+        }
+
         row.Unread = 0;
         if (TotalUnread < 0)
         {
             TotalUnread = 0;
         }
+    }
+
+    public void MarkAllRead()
+    {
+        for (var index = 0; index < pinned.Count; index++)
+        {
+            MarkRead(pinned[index]);
+        }
+
+        for (var index = 0; index < rows.Count; index++)
+        {
+            MarkRead(rows[index]);
+        }
+
+        TotalUnread = 0;
+    }
+
+    public bool TogglePinned(InboxRow row)
+    {
+        if (row.Tab is { } tab)
+        {
+            var pinnedNow = tabs.TogglePin(tab);
+            stale = true;
+            return pinnedNow;
+        }
+
+        tellPreferences.TogglePinned(row.Key);
+        stale = true;
+        return true;
+    }
+
+    public void ToggleMuted(InboxRow row)
+    {
+        if (row.Tab is { } tab)
+        {
+            tab.Alerts = tab.Alerts == AlertPolicy.Off ? AlertPolicy.Mentions : AlertPolicy.Off;
+            tabs.Update(tab);
+        }
+        else
+        {
+            tellPreferences.ToggleMuted(row.Key);
+        }
+
+        stale = true;
     }
 
     public void FlushSeen()
@@ -149,9 +239,13 @@ internal sealed class ChatInbox : IDisposable
     {
         log.Appended -= OnAppended;
         tabs.Changed -= Invalidate;
+        tellPreferences.Changed -= Invalidate;
     }
 
     public static string KeyForTab(ChatTab tab) => string.Concat("tab:", tab.Id);
+
+    private static InboxRow? Newer(InboxRow? best, InboxRow candidate) =>
+        best is null || candidate.LastActivity > best.LastActivity ? candidate : best;
 
     private void OnAppended(ChatEntry entry)
     {
@@ -209,7 +303,7 @@ internal sealed class ChatInbox : IDisposable
         row.PreviewSender = entry.IsSelf ? string.Empty : entry.AuthorName;
         row.PreviewText = entry.Text;
         row.PreviewChannel = row.Tab is { Channels.Count: > 1 } ? entry.ChannelKey : string.Empty;
-        if (string.Equals(row.Key, Viewing, StringComparison.Ordinal))
+        if (IsViewing(row.Key))
         {
             Stamp(row.Key);
             return;
@@ -221,7 +315,10 @@ internal sealed class ChatInbox : IDisposable
         }
 
         row.Unread++;
-        TotalUnread++;
+        if (!row.Muted)
+        {
+            TotalUnread++;
+        }
     }
 
     private void Rebuild()
@@ -232,15 +329,7 @@ internal sealed class ChatInbox : IDisposable
         var all = tabs.Tabs;
         for (var index = 0; index < all.Count; index++)
         {
-            var row = BuildTab(all[index]);
-            if (all[index].Pinned)
-            {
-                pinned.Add(row);
-            }
-            else
-            {
-                rows.Add(row);
-            }
+            Place(BuildTab(all[index]));
         }
 
         log.CollectStreams(streamScratch);
@@ -249,7 +338,7 @@ internal sealed class ChatInbox : IDisposable
             var streamKey = streamScratch[index];
             if (ChatStreams.IsTell(streamKey))
             {
-                rows.Add(BuildTell(streamKey));
+                Place(BuildTell(streamKey));
             }
         }
 
@@ -261,13 +350,27 @@ internal sealed class ChatInbox : IDisposable
             }
             else
             {
-                rows.Add(transient);
+                transient.Pinned = tellPreferences.IsPinned(transient.Key);
+                transient.Muted = tellPreferences.IsMuted(transient.Key);
+                Place(transient);
             }
         }
 
         Resort();
         expectedRevision = log.Revision;
         stale = false;
+    }
+
+    private void Place(InboxRow row)
+    {
+        if (row.Pinned)
+        {
+            pinned.Add(row);
+        }
+        else
+        {
+            rows.Add(row);
+        }
     }
 
     private InboxRow BuildTab(ChatTab tab)
@@ -279,6 +382,8 @@ internal sealed class ChatInbox : IDisposable
             Tab = tab,
             Title = tab.Name,
             Tint = palette[Math.Clamp(tab.Tint, 0, palette.Length - 1)],
+            Pinned = tab.Pinned,
+            Muted = tab.Alerts == AlertPolicy.Off,
         };
         var watermark = Watermark(row.Key);
         var multi = tab.Channels.Count > 1;
@@ -303,7 +408,11 @@ internal sealed class ChatInbox : IDisposable
             }
         }
 
-        TotalUnread += row.Unread;
+        if (!row.Muted)
+        {
+            TotalUnread += row.Unread;
+        }
+
         return row;
     }
 
@@ -315,6 +424,8 @@ internal sealed class ChatInbox : IDisposable
             Key = streamKey,
             StreamKey = streamKey,
             Tint = ChannelTints.Tell,
+            Pinned = tellPreferences.IsPinned(streamKey),
+            Muted = tellPreferences.IsMuted(streamKey),
         };
         var watermark = Watermark(streamKey);
         for (var index = 0; index < lines.Count; index++)
@@ -335,11 +446,19 @@ internal sealed class ChatInbox : IDisposable
             }
         }
 
-        TotalUnread += row.Unread;
+        if (!row.Muted)
+        {
+            TotalUnread += row.Unread;
+        }
+
         return row;
     }
 
-    private void Resort() => rows.Sort(ByActivity);
+    private void Resort()
+    {
+        rows.Sort(ByActivity);
+        pinned.Sort(ByActivity);
+    }
 
     private long Watermark(string key) =>
         configuration.LinkpearlSeen.TryGetValue(key, out var value) ? value : 0L;
@@ -352,12 +471,12 @@ internal sealed class ChatInbox : IDisposable
 
     private static bool Counts(ChatTab tab, ChatEntry entry)
     {
-        if (entry.IsSelf || tab.Alerts == AlertPolicy.Off || tab.IsMuted(entry.ChannelKey))
+        if (entry.IsSelf || tab.IsMuted(entry.ChannelKey))
         {
             return false;
         }
 
-        return tab.Alerts == AlertPolicy.All || entry.IsMention;
+        return tab.Alerts != AlertPolicy.Mentions || entry.IsMention;
     }
 
     private static long Now() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();

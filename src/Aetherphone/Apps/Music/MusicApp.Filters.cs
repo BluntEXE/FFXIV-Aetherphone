@@ -190,7 +190,7 @@ internal sealed partial class MusicApp
 
         var labelWidth = MathF.Max(1f, max.X - textLeft - countWidth - 16f * scale);
         var labelSize = Typography.Measure(label, TextStyles.Body);
-        Marquee.DrawLeft("music.facetRow." + label, label, textLeft, centerY - labelSize.Y * 0.5f, labelWidth,
+        Marquee.DrawLeft(new MarqueeId("music.facetRow.", label), label, textLeft, centerY - labelSize.Y * 0.5f, labelWidth,
             TextStyles.Body, selected ? ui.Accent : ui.TitleInk, hovered);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, rowHeight));

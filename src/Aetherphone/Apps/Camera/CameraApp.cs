@@ -1,6 +1,8 @@
 using Aetherphone.Core;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Game;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Photos;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
@@ -343,6 +345,7 @@ internal sealed class CameraApp : IPhoneApp
             lastShot = Plugin.TextureProvider.CreateFromRaw(RawImageSpecification.Rgba32(width, height), pixels,
                 "Aetherphone.Photo.Last");
             library.Save(pixels, width, height);
+            UiFeedback.Play(UiSound.Shutter);
         }
         finally
         {

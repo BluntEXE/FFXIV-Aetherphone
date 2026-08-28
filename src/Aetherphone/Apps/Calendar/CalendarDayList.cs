@@ -10,10 +10,8 @@ namespace Aetherphone.Apps.Calendar;
 
 internal static class CalendarDayList
 {
-    private const float CardPaddingX = 12f;
-    private const float CardPaddingY = 8f;
-    private const float CardRounding = 14f;
-    private const float CardSpacing = 6f;
+    private const float TextGapX = 12f;
+    private const float CellPaddingY = 8f;
     private const float AccentBarWidth = 3f;
     private const float AccentBarInset = 8f;
 
@@ -24,7 +22,8 @@ internal static class CalendarDayList
         var cursorY = area.Min.Y;
 
         var dateLabel = selectedDate.ToString("dddd, MMMM d", Loc.Culture);
-        Typography.Draw(new Vector2(area.Min.X + 4f * scale, cursorY), dateLabel, ui.TitleInk, TextStyles.Headline);
+        Typography.Draw(new Vector2(area.Min.X + FeedCell.PadX * scale, cursorY), dateLabel, ui.TitleInk,
+            TextStyles.Headline);
         var labelHeight = Typography.Measure(dateLabel, TextStyles.Headline).Y;
         cursorY += labelHeight + 8f * scale;
 
@@ -33,8 +32,8 @@ internal static class CalendarDayList
 
         if (dayEvents.Length == 0)
         {
-            Typography.Draw(new Vector2(area.Min.X + 4f * scale, cursorY), Loc.T(L.Calendar.NoEvents), ui.MutedInk,
-                TextStyles.Subheadline);
+            Typography.Draw(new Vector2(area.Min.X + FeedCell.PadX * scale, cursorY), Loc.T(L.Calendar.NoEvents),
+                ui.MutedInk, TextStyles.Subheadline);
             return cursorY + Typography.Measure(Loc.T(L.Calendar.NoEvents), TextStyles.Subheadline).Y + 8f * scale;
         }
 
@@ -47,58 +46,59 @@ internal static class CalendarDayList
         for (var index = 0; index < dayEvents.Length; index++)
         {
             var dayEvent = dayEvents[index];
-            var cardMin = new Vector2(area.Min.X, cursorY);
+            var cellMin = new Vector2(area.Min.X, cursorY);
             var nameSize = Typography.Measure(dayEvent.Name, hlScale, hlWeight);
             var dateSize = Typography.Measure(FormatDateRange(dayEvent), fnScale, fnWeight);
             var textHeight = nameSize.Y + 3f * scale + dateSize.Y;
-            var cardHeight = Math.Max(textHeight + CardPaddingY * 2f * scale, 40f * scale);
-            var cardMax = new Vector2(cardMin.X + contentWidth, cardMin.Y + cardHeight);
+            var cellHeight = Math.Max(textHeight + CellPaddingY * 2f * scale, 40f * scale);
+            var cellMax = new Vector2(cellMin.X + contentWidth, cellMin.Y + cellHeight);
             var clickable = !string.IsNullOrEmpty(dayEvent.Url);
-            var cardHovered = UiInteract.Hover(cardMin, cardMax);
-            var hovered = clickable && cardHovered;
-
-            ui.Card(drawList, cardMin, cardMax, CardRounding * scale);
+            var cellHovered = UiInteract.Hover(cellMin, cellMax);
+            var hovered = clickable && cellHovered;
             if (hovered)
             {
-                Squircle.Fill(drawList, cardMin, cardMax, CardRounding * scale, ImGui.GetColorU32(ui.HoverTint));
+                drawList.AddRectFilled(cellMin, cellMax, ImGui.GetColorU32(ui.HoverWash));
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             }
 
-            var accentMin = new Vector2(cardMin.X + AccentBarInset * scale, cardMin.Y + AccentBarInset * scale);
-            var accentMax = new Vector2(accentMin.X + AccentBarWidth * scale, cardMax.Y - AccentBarInset * scale);
+            var accentMin = new Vector2(cellMin.X + FeedCell.PadX * scale, cellMin.Y + AccentBarInset * scale);
+            var accentMax = new Vector2(accentMin.X + AccentBarWidth * scale, cellMax.Y - AccentBarInset * scale);
             var accentRounding = AccentBarWidth * 0.5f * scale;
             Squircle.Fill(drawList, accentMin, accentMax, accentRounding, ImGui.GetColorU32(dayEvent.Color));
 
-            var textStartX = accentMax.X + CardPaddingX * scale;
-            var textStartY = cardMin.Y + (cardHeight - textHeight) * 0.5f;
-            var trailing = (dayEvent.IsCustom ? 32f * scale : 0f) + CardPaddingX * scale;
-            var textMaxWidth = MathF.Max(1f, cardMax.X - textStartX - trailing);
-            Marquee.DrawLeft("calendar.day." + dayEvent.Name + "." + index, dayEvent.Name, textStartX, textStartY,
-                textMaxWidth, new TextStyle(hlScale, hlWeight), ui.TitleInk, cardHovered);
+            var textStartX = accentMax.X + TextGapX * scale;
+            var textStartY = cellMin.Y + (cellHeight - textHeight) * 0.5f;
+            var trailing = (dayEvent.IsCustom ? 32f * scale : 0f) + FeedCell.PadX * scale;
+            var textMaxWidth = MathF.Max(1f, cellMax.X - textStartX - trailing);
+            Marquee.DrawLeft(new MarqueeId("calendar.day.", dayEvent.Name + "." + index), dayEvent.Name, textStartX, textStartY,
+                textMaxWidth, new TextStyle(hlScale, hlWeight), ui.TitleInk, cellHovered);
             var dateFitted = Typography.FitText(FormatDateRange(dayEvent), textMaxWidth, fnScale, fnWeight);
             Typography.Draw(drawList, new Vector2(textStartX, textStartY + nameSize.Y + 3f * scale),
                 dateFitted, ui.MutedInk, fnScale, fnWeight);
 
             if (dayEvent.IsCustom)
             {
-                DrawDeleteButton(drawList, cardMax, scale, ui, dayEvent.CustomId, onDeleteCustom);
+                DrawDeleteButton(drawList, cellMax, scale, ui, dayEvent.CustomId, onDeleteCustom);
             }
-            else if (clickable && UiInteract.HoverClick(cardMin, cardMax))
+            else if (clickable && UiInteract.HoverClick(cellMin, cellMax))
             {
                 Dalamud.Utility.Util.OpenLink(dayEvent.Url);
             }
 
-            cursorY = cardMax.Y + CardSpacing * scale;
+            FeedCell.Hairline(drawList, cellMin.X, cellMax.X, cellMax.Y, ui.Hairline);
+            cursorY = cellMax.Y;
         }
 
         cursorY += 8f * scale;
         return cursorY;
     }
 
-    private static void DrawDeleteButton(ImDrawListPtr drawList, Vector2 cardMax, float scale, AppSkin ui,
+    private static void DrawDeleteButton(ImDrawListPtr drawList, Vector2 cellMax, float scale, AppSkin ui,
         Guid customId, Action<Guid> onDeleteCustom)
     {
         var radius = 12f * scale;
-        var center = new Vector2(cardMax.X - AccentBarInset * scale - radius, cardMax.Y - AccentBarInset * scale - radius + 2f * scale);
+        var center = new Vector2(cellMax.X - FeedCell.PadX * scale - radius,
+            cellMax.Y - AccentBarInset * scale - radius + 2f * scale);
         var min = center - new Vector2(radius, radius);
         var max = center + new Vector2(radius, radius);
         var hovered = UiInteract.Hover(min, max);
@@ -110,7 +110,7 @@ internal static class CalendarDayList
 
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
-            var glyph = FontAwesomeIcon.Trash.ToIconString();
+            var glyph = IconGlyph.Of(FontAwesomeIcon.Trash);
             var fontSize = ImGui.GetFontSize() * 0.72f;
             var size = ImGui.CalcTextSize(glyph) * 0.72f;
             drawList.AddText(UiBuilder.IconFont, fontSize, center - size * 0.5f, ImGui.GetColorU32(ui.MutedInk), glyph);

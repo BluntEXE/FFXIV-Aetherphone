@@ -1,4 +1,4 @@
-namespace Aetherphone.Core.Aethernet.Contracts;
+﻿namespace Aetherphone.Core.Aethernet.Contracts;
 
 internal sealed record ChallengeRequest(string Name, string World);
 
@@ -76,9 +76,12 @@ internal sealed record UserDto(
     long Coins = 0,
     long CoinsEarnedToday = 0,
     long CoinsDailyCap = 0,
-    string FrameId = "") : IIdentified;
+    string FrameId = "",
+    string? BioLang = null,
+    string? BannerUrl = null) : IIdentified;
 
-internal sealed record UpdateProfileRequest(string? DisplayName, string? Handle, string? Bio, string? AvatarUrl = null);
+internal sealed record UpdateProfileRequest(string? DisplayName, string? Handle, string? Bio, string? AvatarUrl = null,
+    string? BannerUrl = null);
 
 internal sealed record UpdateBadgeLoadoutRequest(int Equipped);
 
@@ -217,15 +220,24 @@ internal sealed record PostDto(
     string[]? AuthorBadgeIds = null,
     string AuthorFrameId = "",
     bool Sensitive = false,
-    bool SensitiveLocked = false) : IIdentified;
+    bool SensitiveLocked = false,
+    string? Lang = null) : IIdentified;
 
 internal sealed record FeedPage(PostDto[] Items, string? NextCursor);
 
 internal sealed record UserSearchResult(UserDto[] Users);
 
+internal sealed record TagSummaryDto(string Tag, int Posts, int PostsToday);
+
+internal sealed record TagSearchResult(TagSummaryDto[] Tags);
+
 internal sealed record FeatureFlagsDto(bool Music, Dictionary<string, bool>? Apps);
 
-internal sealed record UserListPage(UserDto[] Items, string? NextCursor);
+internal sealed record UserListPage(
+    UserDto[] Items,
+    string? NextCursor,
+    Dictionary<string, int>? ReactionKinds = null,
+    int[]? ReactionCounts = null);
 
 internal sealed record UploadUrlRequest(string ContentType, string Scope);
 
@@ -256,7 +268,8 @@ internal sealed record StoryDto(
     string ScanStatus = "clean",
     int AuthorBadges = 0,
     string[]? AuthorBadgeIds = null,
-    string AuthorFrameId = "") : IIdentified;
+    string AuthorFrameId = "",
+    string? Lang = null) : IIdentified;
 
 internal sealed record StoryRingDto(
     string AuthorId,
@@ -304,7 +317,8 @@ internal sealed record CommentDto(
     string AuthorFrameId = "",
     string? MediaUrl = null,
     int MediaWidth = 0,
-    int MediaHeight = 0) : IIdentified;
+    int MediaHeight = 0,
+    string? Lang = null) : IIdentified;
 
 internal sealed record CreateCommentRequest(
     string Text,
@@ -353,7 +367,8 @@ internal sealed record VelvetProfileDto(
     string[]? Kinks = null,
     string Region = "",
     string[]? BadgeIds = null,
-    string FrameId = "");
+    string FrameId = "",
+    string? IntroLang = null);
 
 internal sealed record UpdateVelvetProfileRequest(
     string? Intro,
@@ -396,7 +411,8 @@ internal sealed record VelvetPostDto(
     int OwnerBadges = 0,
     string[]? OwnerBadgeIds = null,
     string OwnerFrameId = "",
-    bool Sensitive = false) : IIdentified;
+    bool Sensitive = false,
+    string? Lang = null) : IIdentified;
 
 internal sealed record VelvetFeedPage(VelvetPostDto[] Items, string? NextCursor);
 
@@ -428,7 +444,8 @@ internal sealed record VelvetCommentDto(
     string ScanStatus = "clean",
     int AuthorBadges = 0,
     string[]? AuthorBadgeIds = null,
-    string AuthorFrameId = "") : IIdentified;
+    string AuthorFrameId = "",
+    string? Lang = null) : IIdentified;
 
 internal sealed record VelvetCommentPage(VelvetCommentDto[] Items, string? NextCursor);
 
@@ -781,3 +798,15 @@ internal sealed record MyConversationKeysDto(ConversationWrapsDto[] Items);
 internal sealed record ArchivedKeyEscrowDto(int KeyVersion, string PublicKey, WrappedPrivateKeyDto Escrow, long CreatedAtUnix);
 
 internal sealed record ArchivedEscrowsDto(ArchivedKeyEscrowDto[] Items);
+
+internal sealed record StartDeviceLinkRequest(string EphemeralPublicKey);
+
+internal sealed record DeviceLinkTicketDto(string Id, string VerificationCode, long ExpiresAtUnix);
+
+internal sealed record PendingDeviceLinkDto(string Id, string VerificationCode, string EphemeralPublicKey, long CreatedAtUnix, long ExpiresAtUnix);
+
+internal sealed record PendingDeviceLinksDto(PendingDeviceLinkDto[] Items);
+
+internal sealed record DeviceLinkStatusDto(string Status, string? WrappedIdentityKey);
+
+internal sealed record ApproveDeviceLinkRequest(string WrappedIdentityKey);

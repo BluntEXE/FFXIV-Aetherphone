@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Aetherphone.Core.Localization;
 
 namespace Aetherphone.Core.Video;
 
@@ -11,7 +12,7 @@ internal enum VideoPlaybackState : byte
     Failed,
 }
 
-internal readonly record struct PlaybackProgress(float Position, float Duration, bool Paused)
+internal readonly record struct PlaybackProgress(float Position, float Duration, bool Paused, bool Seeking)
 {
     internal float Fraction => Duration > 0f ? Math.Clamp(Position / Duration, 0f, 1f) : 0f;
 }
@@ -37,6 +38,9 @@ internal sealed class VideoPlayer : IDisposable
     internal PlaybackProgress Progress { get; private set; }
     internal string? LastError { get; private set; }
     internal string? RecoveryNotice => engine.RecoveryNotice;
+    internal bool RecoveryExhausted => HasMedia && engine.RecoveryExhausted;
+
+    internal void ResetRecoveryBudget() => engine.ResetRecoveryBudget();
 
     internal bool HasMedia => State is VideoPlaybackState.Loading or VideoPlaybackState.Playing
         or VideoPlaybackState.Paused;
@@ -90,6 +94,8 @@ internal sealed class VideoPlayer : IDisposable
 
     internal void Seek(double seconds) => engine.Seek(seconds);
 
+    internal void SetSpeed(double speed) => engine.SetSpeed(speed);
+
     internal void Stop()
     {
         engine.StopVideo();
@@ -129,7 +135,8 @@ internal sealed class VideoPlayer : IDisposable
         }
 
         var info = engine.ReadPlaybackInfo();
-        Progress = new PlaybackProgress((float)info.PositionSeconds, (float)info.DurationSeconds, info.Paused);
+        Progress = new PlaybackProgress((float)info.PositionSeconds, (float)info.DurationSeconds, info.Paused,
+            info.Seeking);
         engine.ObserveForStall(info);
 
         if (State == VideoPlaybackState.Playing && info.Paused)
@@ -160,7 +167,7 @@ internal sealed class VideoPlayer : IDisposable
                 return;
             case MpvEndReason.Failed:
                 State = VideoPlaybackState.Failed;
-                LastError = detail ?? engine.LastError ?? "This video could not be played.";
+                LastError = detail ?? engine.LastError ?? Loc.T(L.AetherStream.PlaybackFailed);
                 Progress = default;
                 Failed?.Invoke(LastError);
                 return;

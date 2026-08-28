@@ -1,6 +1,7 @@
 using Aetherphone.Core.Animation;
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
@@ -45,7 +46,7 @@ internal sealed class Twenty48App : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => "2048";
-    public string Genre => Loc.T(L.Games.GenrePuzzle);
+    public GameGenre Genre => GameGenre.Puzzle;
     public void Open()
     {
         loadedBest = 0;
@@ -192,6 +193,7 @@ internal sealed class Twenty48App : IMiniGame
         var scoreDelta = board.Score - previousScore;
         if (scoreDelta > 0)
         {
+            UiFeedback.Play(UiSound.GameMatch);
             fx.AddText($"+{GameNumber.Label(scoreDelta)}",
                 new Vector2(grid.Center.X, grid.Bounds.Min.Y - 16f * scale), Accent, 1.15f);
         }
@@ -206,6 +208,7 @@ internal sealed class Twenty48App : IMiniGame
 
     private void CelebrateMilestone(GameGrid grid, int value)
     {
+        UiFeedback.Play(UiSound.GamePowerUp);
         var color = Twenty48Renderer.ColorFor(value);
         var center = grid.Center;
         fx.AddTrauma(value >= Twenty48Board.WinValue ? 0.7f : 0.4f);

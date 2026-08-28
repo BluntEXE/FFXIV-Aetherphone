@@ -8,6 +8,14 @@ The whole phone is one Dalamud window (src/Aetherphone/Windows/PhoneWindow.cs) r
 
 Colors and surfaces come from `AppSkin` and `AppPalette` (per-app skin) or `PhoneTheme` (system chrome); see [App framework](app-framework.md) for how an app receives them.
 
+## How the folder is laid out
+
+The 182 files are grouped by kind: `Primitives` (drawing, text, tokens, motion), `Layout` (surfaces, headers, scrolling, lists), `Fields` (inputs and buttons), `Sheets` (sheets, dialogs, overlays), `Chrome` (device body, tiles, badges), `Media` (photos, emoji, stories, card art), `Chat`, `Notify`, and `Skin`.
+
+**Every file in every one of those folders declares the same flat namespace, `Aetherphone.Windows.Components`**, so consuming the toolkit stays a single `using` no matter how many components a screen draws. This is the one place in the tree where a namespace deliberately does not follow its folder, and the "Verify namespace matches folder" CI guard checks that subtree against the flat namespace instead. Sub-namespacing was measured before it was rejected: it would have added 792 `using` lines across 424 files, and the busiest drawing files would have needed five to nine imports each. The folders are for finding things; the namespace is the contract.
+
+A component used by exactly one app does not belong here. It lives in that app, and 25 of them were moved out for that reason.
+
 ## Key files
 
 | Path | Role |
@@ -22,6 +30,11 @@ Colors and surfaces come from `AppSkin` and `AppPalette` (per-app skin) or `Phon
 | src/Aetherphone/Windows/Components/AppSurface.cs | Standard scrollable app body (child window + DragScrollHost) |
 | src/Aetherphone/Windows/Components/ScrollLayout.cs | `StableContentWidth()`, the scrollbar feedback-loop fix |
 | src/Aetherphone/Windows/Components/FeedVirtualizer.cs | Skips offscreen rows in long feeds |
+| src/Aetherphone/Windows/Components/FeedCell.cs | Edge-to-edge list cell: flat hover wash, whole-cell tap, trailing hairline |
+| src/Aetherphone/Windows/Components/GroupCard.cs | Grouped inset list card (theme or AppSkin overload) with fixed rows |
+| src/Aetherphone/Windows/Components/ListSection.cs | Section header over cell lists (SettingsSection and ListSection.Label delegate here) |
+| src/Aetherphone/Windows/Components/ActionSheet.cs | iOS bottom action sheet with an optional header band |
+| src/Aetherphone/Windows/Components/ShellToast.cs | Shell-level bottom-pill toast (replaced the mouse-anchored CopyToast) |
 | src/Aetherphone/Windows/Components/Toggle.cs | iOS-style switch |
 | src/Aetherphone/Windows/Components/ChipRail.cs | Single pannable row of filter chips |
 | src/Aetherphone/Windows/Components/SoftWrapField.cs | Multiline input with soft wrapping and mention support |
@@ -147,7 +160,9 @@ public void Draw(in PhoneContext context)
 
 The `openedFrame` guard is mandatory in any popup you build: the click that opened the popup is, by definition, outside the popup rect, so without the guard the open click immediately dismisses it on the same frame. `ConfirmOverlay` applies the same pattern before honoring `UiInteract.ClickedOutside` on its card. Menu rows use `HoverWindowOnly` because `Gate()` has blocked normal hover.
 
-For confirms, do not draw `ConfirmDialog` yourself. Apps receive a `ConfirmService` (src/Aetherphone/Core/Confirm/ConfirmService.cs) and call `confirm.Ask(new ConfirmRequest { ... })` or `confirm.Alert(...)`; the shell-level `ConfirmOverlay` dims the screen, animates the card in, and routes the buttons back to your `Confirm`/`Cancel` callbacks. `ConfirmDialog` (src/Aetherphone/Windows/Components/ConfirmDialog.cs) is the presentational card it renders, and its `DrawPillButton` is reusable for pill-shaped buttons.
+For confirms, do not draw `ConfirmDialog` yourself. Apps receive a `ConfirmService` (src/Aetherphone/Core/Confirm/ConfirmService.cs) and call `confirm.Ask(new ConfirmRequest { ... })` or `confirm.Alert(...)`; the shell-level `ConfirmOverlay` dims the screen, animates the card in, and routes the buttons back to your `Confirm`/`Cancel` callbacks. Set `Sheet = true` on the request for a destructive confirm and the overlay presents it as an iOS bottom action sheet (title and message in a muted header band, the confirm label as the action row) instead of the centered alert; leave it unset for money, consent, and irreversible-account flows. `ConfirmDialog` (src/Aetherphone/Windows/Components/ConfirmDialog.cs) is the presentational layer for both, and its `DrawPillButton` is reusable for pill-shaped buttons.
+
+`ActionSheet` (src/Aetherphone/Windows/Components/ActionSheet.cs) is the multi-action bottom sheet for post and row overflow menus: per-app instance, `Gate()` early in the frame, `Open()`/`Close()`, `Draw(screen, style, items, cancelLabel, keepOpen, title)` returns the picked index. Build the style with `ActionSheetStyle.From(theme)` or `From(ui)` rather than hand-picking colors; Chirper remains the reference host (sheet picks the action, `ConfirmService` still owns anything irreversible, a toast reports the result). For transient feedback anywhere, `ShellToast.Show(text)` raises the shell-level bottom pill; it renders in whichever host (phone screen, Linkpearl popout, minimized phone) the pointer was in when it was raised. Per-app `ScreenToast` instances stay for app-styled toasts.
 
 Web links that other users supplied (post bodies, chat bubbles, venue and ad buttons, chat-log URLs) go through `UrlActions.AskThenOpen` (src/Aetherphone/Windows/UrlActions.cs), which shows the open-link confirmation with a host-first destination chip before calling `OpenInBrowser`. `LinkText` already does this for clickable URLs inside text, so anything drawn through `LinkText`, `ChatBubble`, or `ChatTranscript` gets the gate for free. `PhoneServices.Build` binds the single `ConfirmService` with `UrlActions.Configure`. Reserve a direct `OpenInBrowser` for first-party destinations (Patreon, Discord, Lodestone, sign-in verification pages).
 
@@ -207,7 +222,7 @@ if (enabled != alarm.Enabled)
 
 ### ChipRail
 
-`ChipRail` (src/Aetherphone/Windows/Components/ChipRail.cs) is the one way to show a row of filter chips: a single horizontal row that clips and pans by dragging. Chips never wrap into a second line; if they overflow, the user drags the rail sideways. It is stateful (pan offset), so keep one instance per rail:
+`ChipRail` (src/Aetherphone/Windows/Components/ChipRail.cs) is the one way to show a row of filter chips: a single horizontal row that clips and pans by dragging. Chips never wrap into a second line; if they overflow, the rail shows round paging arrows at the clipped edge (a tap springs the rail one page along) and the user can also drag it sideways. It is stateful (pan offset), so keep one instance per rail:
 
 ```csharp
 private readonly ChipRail filterRail = new();
@@ -236,6 +251,8 @@ A tap only registers if the pointer traveled less than the drag slop, so panning
 | `SettingsSection.Header(title, theme, hint)` | Uppercase section label, with an optional hint icon for a whole section (src/Aetherphone/Windows/Components/SettingsSection.cs) |
 | `HoverButton.Circle` | Round icon button with hover ring (src/Aetherphone/Windows/Components/HoverButton.cs) |
 | `PopoverSurface.Draw` | The floating card background menus sit on (src/Aetherphone/Windows/Components/PopoverSurface.cs) |
+| `ActionSheet` | Bottom sheet of labeled rows over a dimmed scrim, danger rows in red, a separate Cancel card; `Gate()` each frame, `Draw` returns the picked index (src/Aetherphone/Windows/Components/ActionSheet.cs) |
+| `ScreenToast` | Bottom-centered glass pill that pops in and dismisses itself after 1.7 seconds; `Show(text)` then `Draw(screen, style)` every frame (src/Aetherphone/Windows/Components/ScreenToast.cs) |
 | `PullToRefresh` | Overscroll spinner fed by `AppSurface` `Pull` (src/Aetherphone/Windows/Components/PullToRefresh.cs) |
 | `Marquee.DrawCenteredAuto` | Auto-scrolls a label that is too wide for its slot (src/Aetherphone/Windows/Components/Marquee.cs) |
 
@@ -255,6 +272,10 @@ You rarely call these directly. `RichText.Build` (src/Aetherphone/Windows/Compon
 
 Animated components (the `Toggle` knob, `ConfirmOverlay` reveal) use `Spring` (src/Aetherphone/Core/Animation/Spring.cs), a critically damped smoother that clamps on target crossing, so motion settles without bouncing. Follow that: no overshoot or bounce in phone UI. `Easing` (src/Aetherphone/Core/Animation) provides curves like `EaseOutQuint` for reveals.
 
+A spring started from rest spends its first frames barely moving, which reads as input lag. For anything the user just triggered (a screen push, an app launch), start it with `Spring.Launch(value, TransitionTiming.LaunchVelocity(smoothTime))`: the kick is half the spring's natural frequency, so the motion begins immediately and decelerates into place without ever overshooting (see `SpringLaunchTests`). Step transitions with a delta clamped to `TransitionTiming.MotionFrameSeconds`, not `MaxFrameSeconds`, so a dropped frame slows the motion instead of skipping a third of it.
+
+To move, scale or fade a whole screen, do not paint it at a shifted rect or a smaller size: paint it at rest inside a `ScreenLayer` stage and call `Transform` with a `LayerTransform` once the stage has ended (src/Aetherphone/Core/Animation/ScreenLayer.cs). The transform rewrites the vertices and clip rects of the stage window and every child it begun this frame, so the screen keeps its ImGui window identity (scroll, focus, state storage), its layout stays correct, and text scales as a bitmap instead of snapping between font sizes. Anything that must draw above a stage's own children (a dim, a veil, chrome) goes in a nested `ScreenLayer.BeginPassive` child, because a window's own draw list renders before its children. `SceneCompositor.DrawLayer` wraps this for the common translate case.
+
 ## Which widget do I reach for
 
 | I need to... | Reach for |
@@ -263,15 +284,22 @@ Animated components (the `Toggle` knob, `ConfirmOverlay` reveal) use `Spring` (s
 | Show a paragraph that must not overflow | `Typography.DrawWrappedLeft` / `DrawWrappedCentered` |
 | Keep a one-line label inside a slot | `Typography.FitText` or `Marquee.DrawCenteredAuto` |
 | Build a scrollable app body | `AppSurface.Begin(area)` |
+| Build a feed or conversation list | `AppSurface.BeginEdgeToEdge` + `FeedCell.Begin`/`End` |
+| Build a settings or detail row list | `GroupCard.Begin` + `NextRow` + a row painter |
+| Title a section above cells | `ListSection.Header` (or `ListSection.Label` from an AppSkin) |
+| Inset a card inside an edge-to-edge surface | shift both edges by `FeedCell.PadX * scale` |
 | Size rows inside a scroll region | `ScrollLayout.StableContentWidth()` |
 | Render a long feed | `FeedVirtualizer` + `InfiniteScroll.ReachedBottom` |
 | Make a rect clickable | `UiInteract.HoverClick` (or `Hover` + `Click`) |
 | Flip a boolean setting | `Toggle.Draw` |
 | Offer filters in a row | `ChipRail` |
 | Show "nothing here yet" | `EmptyState.Draw` |
-| Confirm a destructive action | `ConfirmService.Ask` (never draw `ConfirmDialog` yourself) |
+| Confirm a destructive action | `ConfirmService.Ask` with `Sheet = true` (never draw `ConfirmDialog` yourself) |
+| Confirm money, consent, or the irreversible | `ConfirmService.Ask` (alert presentation) or `Alert` |
+| Offer post or row overflow actions | `ActionSheet` (style via `ActionSheetStyle.From`) |
+| Report a transient result | `ShellToast.Show` |
 | Open a link someone else posted | `UrlActions.AskThenOpen` (confirms the destination first) |
-| Show a context menu | `DropdownMenu` |
+| Show a picker or context menu | `DropdownMenu` |
 | Draw a person's picture | `AvatarView` |
 | Take multiline text input | `SoftWrapField.Multiline` |
 | Add a search box | `SearchField` |
@@ -290,6 +318,8 @@ Animated components (the `Toggle` knob, `ConfirmOverlay` reveal) use `Spring` (s
 - `FeedVirtualizer.Skip`/`Record` cache row heights per id and revision. If a row can change height (comments appear, text expands), change its revision or the feed will draw with stale heights.
 - Text drawn without `Typography` skips `Plugin.Fonts.NoticeText`, so characters outside the base glyph ranges (CJK in particular) may render as placeholder boxes until something else notices them.
 - `DropdownMenu` rows and other blocked-frame overlays must hit-test with `UiInteract.HoverWindowOnly`, because `Gate()` makes plain `Hover` return false while they are open.
+- That trap extends to shared widgets you draw *inside* a gated overlay: `AppSkin.PillButton` and friends hit-test with `UiInteract.Hover`, so a button placed in a sheet whose owner called `Gate()` is dead on arrival. Pass `overlay: true` to `AppSkin.PillButton` (it switches to `HoverWindowOnly`) or hand-roll the hit test, as `CashierDrawer` does.
+- Measuring wrapped text with one helper and drawing it with another silently mis-sizes the block: `Typography.MeasureWrapped` uses ImGui's own line height, while `DrawWrappedCentered(drawList, text, style, color, topCenter, maxWidth)` multiplies by a 1.25 line spacing. The exact pairs are `MeasureWrappedBlock` with the center-anchored `DrawWrappedCentered(drawList, center, ...)` overload, or `DrawWrappedCentered(topCenter, ...)`, which returns the height it drew.
 
 ## Related docs
 

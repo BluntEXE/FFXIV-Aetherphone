@@ -9,6 +9,9 @@ namespace Aetherphone.Apps.Games.Beat;
 internal sealed class BeatRenderer
 {
     private const float HitLineFactor = 0.84f;
+    private const float KeyCapWidth = 24f;
+    private const float KeyCapHeight = 18f;
+    private const float KeyCapGap = 12f;
     private static readonly Vector4[] LaneColors =
     {
         new(0.42f, 0.74f, 0.98f, 1f), new(0.54f, 0.86f, 0.64f, 1f), new(0.98f, 0.74f, 0.38f, 1f),
@@ -31,7 +34,8 @@ internal sealed class BeatRenderer
             field.Min.Y + (y - BeatBoard.TileHeight * 0.5f) * unit);
     }
 
-    public void Draw(BeatBoard board, Rect field, ReadOnlySpan<float> laneFlash, Vector4 accent, float scale)
+    public void Draw(BeatBoard board, Rect field, ReadOnlySpan<float> laneFlash, ReadOnlySpan<string> laneKeys,
+        Vector4 accent, float scale)
     {
         var drawList = ImGui.GetWindowDrawList();
         var laneWidth = LaneWidthOf(field);
@@ -39,6 +43,7 @@ internal sealed class BeatRenderer
         var hitLine = HitLineOf(field);
         drawList.PushClipRect(field.Min, field.Max, true);
         DrawLanes(drawList, field, laneFlash, laneWidth, hitLine, scale);
+        DrawLaneKeys(drawList, field, laneFlash, laneKeys, laneWidth, hitLine, scale);
         DrawHitLine(drawList, field, hitLine, accent, scale);
         for (var index = 0; index < board.Count; index++)
         {
@@ -78,6 +83,35 @@ internal sealed class BeatRenderer
         }
     }
 
+    private static void DrawLaneKeys(ImDrawListPtr drawList, Rect field, ReadOnlySpan<float> laneFlash,
+        ReadOnlySpan<string> laneKeys, float laneWidth, float hitLine, float scale)
+    {
+        var width = KeyCapWidth * scale;
+        var height = KeyCapHeight * scale;
+        var top = hitLine + KeyCapGap * scale;
+        if (top + height > field.Max.Y || width > laneWidth)
+        {
+            return;
+        }
+
+        var rounding = 5f * scale;
+        for (var lane = 0; lane < BeatBoard.Lanes; lane++)
+        {
+            var flash = laneFlash[lane];
+            var color = LaneColors[lane];
+            var centerX = field.Min.X + (lane + 0.5f) * laneWidth;
+            var min = new Vector2(centerX - width * 0.5f, top);
+            var max = new Vector2(centerX + width * 0.5f, top + height);
+            Squircle.Fill(drawList, min, max, rounding,
+                ImGui.GetColorU32(color with { W = 0.10f + 0.30f * flash }));
+            Squircle.Stroke(drawList, min, max, rounding,
+                ImGui.GetColorU32(GamePalette.Lighten(color, 0.45f) with { W = 0.28f + 0.52f * flash }),
+                MathF.Max(1f, scale));
+            Typography.DrawCentered(drawList, new Vector2(centerX, (top + max.Y) * 0.5f), laneKeys[lane],
+                new Vector4(1f, 1f, 1f, 0.50f + 0.45f * flash), TextStyles.Caption2);
+        }
+    }
+
     private static void DrawHitLine(ImDrawListPtr drawList, Rect field, float hitLine, Vector4 accent, float scale)
     {
         var glow = 0.55f + 0.25f * Pulse.Wave(Pulse.Calm);
@@ -106,9 +140,8 @@ internal sealed class BeatRenderer
             ImGui.GetColorU32(GamePalette.Lighten(color, 0.28f)), ImGui.GetColorU32(GamePalette.Darken(color, 0.30f)));
         Squircle.Stroke(drawList, min, max, rounding,
             ImGui.GetColorU32(GamePalette.Lighten(color, 0.5f) with { W = 0.45f }), MathF.Max(1f, scale));
-        drawList.AddLine(new Vector2(min.X + rounding, min.Y + 1.5f * scale),
-            new Vector2(max.X - rounding, min.Y + 1.5f * scale), ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.32f)),
-            MathF.Max(1f, scale));
+        Material.Sheen(drawList, min, max, rounding, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.32f)),
+            MathF.Max(1f, scale), 1.5f * scale);
         var barHeight = MathF.Max(2f * scale, (bottom - top) * 0.07f);
         var barMin = new Vector2(min.X + rounding * 0.6f, max.Y - barHeight * 2.4f);
         var barMax = new Vector2(max.X - rounding * 0.6f, max.Y - barHeight * 1.2f);

@@ -9,4 +9,7 @@ TestResults/
 
 # Node tooling (tools/icon-generator)
 node_modules/
+
+# Icon font generator scratch (tools/icon-font)
+tools/icon-font/build/
 /docs/plans

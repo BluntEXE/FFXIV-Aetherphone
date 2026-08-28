@@ -40,11 +40,23 @@ internal sealed class SoundService : IDisposable
 
     public string AddUserFile(SoundKind kind, string sourcePath) => For(kind).AddUserFile(sourcePath);
 
-    public void PlayNotification(string appId) =>
+    public void PlayNotification(string appId)
+    {
+        if (configuration.SilentMode || !configuration.NotificationSoundsEnabled)
+        {
+            return;
+        }
+
         Play(SoundKind.Notification, configuration.ResolveNotificationToken(appId), configuration.NotificationVolume);
+    }
 
     public void StartCallRing()
     {
+        if (configuration.SilentMode || !configuration.RingtoneEnabled)
+        {
+            return;
+        }
+
         if (TryResolvePath(SoundKind.Ringtone, configuration.RingtoneSound, out var path))
         {
             player.PlayLoop(path, configuration.RingtoneVolume);

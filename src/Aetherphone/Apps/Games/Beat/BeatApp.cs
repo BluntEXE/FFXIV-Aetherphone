@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -13,6 +14,9 @@ internal sealed class BeatApp : IMiniGame
 {
     private const string GameId = "beat";
     private const float FlashDecay = 3.6f;
+    private static readonly ImGuiKey[] LaneKeys = { ImGuiKey.Key1, ImGuiKey.Key2, ImGuiKey.Key3, ImGuiKey.Key4 };
+    private static readonly ImGuiKey[] LaneAlternateKeys = { ImGuiKey.A, ImGuiKey.S, ImGuiKey.D, ImGuiKey.F };
+    private static readonly string[] LaneKeyLabels = { "1", "2", "3", "4" };
     private readonly BeatBoard board = new();
     private readonly BeatRenderer renderer = new();
     private readonly ParticleSystem particles = new(256);
@@ -34,7 +38,7 @@ internal sealed class BeatApp : IMiniGame
     public string Title => Loc.T(L.Games.Beat);
     public bool RunsOnAClock => true;
 
-    public string Genre => Loc.T(L.Games.GenreArcade);
+    public GameGenre Genre => GameGenre.Arcade;
 
     public void Open()
     {
@@ -118,7 +122,7 @@ internal sealed class BeatApp : IMiniGame
         GameScene.Ambient(drawList, body, Accent);
         HandleInput(body, field, theme, scale);
         DrawCombo(field, scale);
-        renderer.Draw(board, field, laneFlash, Accent, scale);
+        renderer.Draw(board, field, laneFlash, LaneKeyLabels, Accent, scale);
         particles.Draw(drawList, scale);
         fx.DrawRings(drawList, scale);
         fx.DrawText();
@@ -143,6 +147,7 @@ internal sealed class BeatApp : IMiniGame
             return;
         }
 
+        HandleKeyboard(field, scale);
         if (board.State == BeatState.Over || !ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
             return;
@@ -170,6 +175,52 @@ internal sealed class BeatApp : IMiniGame
             lane = BeatBoard.Lanes - 1;
         }
 
+        TapLane(field, lane, scale);
+    }
+
+    private void HandleKeyboard(Rect field, float scale)
+    {
+        if (board.State == BeatState.Over || !GameInput.Claim())
+        {
+            return;
+        }
+
+        if (board.State == BeatState.Ready)
+        {
+            if (GameInput.Pressed(ImGuiKey.Space, ImGuiKey.Enter) || AnyLanePressed())
+            {
+                board.Begin();
+            }
+
+            return;
+        }
+
+        for (var lane = 0; lane < BeatBoard.Lanes; lane++)
+        {
+            if (!GameInput.Pressed(LaneKeys[lane], LaneAlternateKeys[lane]))
+            {
+                continue;
+            }
+
+            TapLane(field, lane, scale);
+        }
+    }
+
+    private static bool AnyLanePressed()
+    {
+        for (var lane = 0; lane < BeatBoard.Lanes; lane++)
+        {
+            if (GameInput.Pressed(LaneKeys[lane], LaneAlternateKeys[lane]))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void TapLane(Rect field, int lane, float scale)
+    {
         var judgement = board.Tap(lane);
         if (judgement == BeatJudgement.Wrong)
         {
@@ -177,14 +228,17 @@ internal sealed class BeatApp : IMiniGame
             return;
         }
 
-        if (judgement != BeatJudgement.None)
+        if (judgement == BeatJudgement.None)
         {
-            OnHit(field, lane, judgement == BeatJudgement.Perfect, scale);
+            return;
         }
+
+        OnHit(field, lane, judgement == BeatJudgement.Perfect, scale);
     }
 
     private void OnHit(Rect field, int lane, bool perfect, float scale)
     {
+        UiFeedback.Play(perfect ? UiSound.GameMatch : UiSound.GameTick);
         laneFlash[lane] = 1f;
         comboShown = board.Combo;
         comboLabel = "x" + GameNumber.Label(board.Combo);
@@ -207,6 +261,7 @@ internal sealed class BeatApp : IMiniGame
 
     private void OnWrong(Rect field, int lane, float scale)
     {
+        UiFeedback.Play(UiSound.GameWrong);
         comboShown = 0;
         var center = new Vector2(field.Min.X + (lane + 0.5f) * BeatRenderer.LaneWidthOf(field),
             BeatRenderer.HitLineOf(field));
@@ -217,6 +272,7 @@ internal sealed class BeatApp : IMiniGame
 
     private void OnMissed(Rect field, float scale)
     {
+        UiFeedback.Play(UiSound.GameHitSoft);
         comboShown = 0;
         var lane = board.MissedLane;
         if (lane < 0)

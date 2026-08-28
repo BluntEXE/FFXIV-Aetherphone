@@ -1,6 +1,7 @@
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Clients;
 using Aetherphone.Core.Aethernet.Contracts;
+using Aetherphone.Core.Runtime;
 using Aetherphone.Core.Telephony.Contracts;
 using Dalamud.Plugin.Services;
 
@@ -420,7 +421,7 @@ internal sealed class CasinoRoomsStore : IDisposable
         work.Run("blackjack action", async token =>
         {
             var result = await casino
-                .SendBlackjackActionAsync(roomId, handId, actionSeq, verb, actionId, token)
+                .SendBlackjackActionAsync(roomId, handId, actionSeq, verb, actionId, BlackjackActions.IsWager(verb), token)
                 .ConfigureAwait(false);
             if (result is null)
             {

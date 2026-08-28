@@ -2,6 +2,7 @@ using Aetherphone.Core;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Translation;
 using Aetherphone.Core.Maps;
 using Aetherphone.Core.Muster;
 using Aetherphone.Core.Report;
@@ -80,7 +81,7 @@ internal sealed partial class MusterApp
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Xs * scale));
             DrawDetailHero(muster, nowUnix, scale);
             DrawNoticeBanner(muster, nowUnix, scale);
-            DrawWrappedDescription(muster.Description, scale);
+            DrawWrappedDescription(muster, scale);
             DrawLocationBlock(muster, scale, includeTravel: true);
             DrawDetailActions(muster, scale);
             ImGui.Dummy(new Vector2(0f, Metrics.Space.Lg * scale));
@@ -172,7 +173,7 @@ internal sealed partial class MusterApp
         UserName.DrawAuto(drawList, "muster.detail.hero.name." + muster.Id, MusterText.HostLabel(muster),
             muster.HostBadges, muster.HostBadgeIds, textLeft, card.Min.Y + pad + 1f * scale, textRight - textLeft,
             TextStyles.Title2, AppPalettes.Muster.TitleInk, theme);
-        Marquee.DrawLeftAuto(drawList, "muster.detail.hero.world." + muster.Id, muster.HostWorld, textLeft,
+        Marquee.DrawLeftAuto(drawList, new MarqueeId("muster.detail.hero.world.", muster.Id), muster.HostWorld, textLeft,
             card.Min.Y + pad + 28f * scale, textRight - textLeft, TextStyles.Subheadline,
             AppPalettes.Muster.BodyInk);
 
@@ -258,7 +259,7 @@ internal sealed partial class MusterApp
             1f * scale);
         var centerY = origin.Y + height * 0.5f;
         AppSkin.Icon(drawList, new Vector2(origin.X + 22f * scale, centerY),
-            FontAwesomeIcon.Bullhorn.ToIconString(), ui.Accent, 0.8f);
+            IconGlyph.Of(FontAwesomeIcon.Bullhorn), ui.Accent, 0.8f);
         var ago = Loc.T(L.Muster.NoticeAgo, MusterText.Span(nowUnix - muster.HostNoticeAtUnix));
         var agoSize = Typography.Measure(ago, TextStyles.Footnote);
         Typography.Draw(drawList, new Vector2(max.X - 16f * scale - agoSize.X, centerY - agoSize.Y * 0.5f), ago,
@@ -282,24 +283,34 @@ internal sealed partial class MusterApp
             _ => Loc.T(L.Muster.NoticeWrappingUp),
         };
 
-    private void DrawWrappedDescription(string description, float scale)
+    private void DrawWrappedDescription(MusterDto muster, float scale)
     {
-        if (description.Length == 0)
+        if (muster.Description.Length == 0)
         {
             return;
         }
 
+        var musterKey = new TranslationKey(TranslationSurface.Muster, muster.Id);
+        var description = translation.View(musterKey, muster.Description).Text;
         var drawList = ImGui.GetWindowDrawList();
         var origin = ImGui.GetCursorScreenPos();
         var width = ImGui.GetContentRegionAvail().X;
         var pad = Metrics.Space.Md * scale;
         var textWidth = width - pad * 2f;
         var textHeight = Typography.MeasureWrappedBlock(description, TextStyles.Callout, textWidth).Y;
-        var height = textHeight + pad * 2f;
+        var linkHeight = TranslateLink.Height(translation, musterKey, muster.Lang, scale);
+        var height = textHeight + linkHeight + pad * 2f;
         var rounding = Metrics.Radius.Card * scale;
         ui.Card(drawList, origin, new Vector2(origin.X + width, origin.Y + height), rounding, elevated: true);
         Typography.DrawWrappedLeft(new Vector2(origin.X + pad, origin.Y + pad), description,
             AppPalettes.Muster.BodyInk, TextStyles.Callout, textWidth);
+        if (linkHeight > 0f)
+        {
+            TranslateLink.Draw(translation, confirm, musterKey, muster.Lang, muster.Description,
+                new Vector2(origin.X + pad, origin.Y + pad + textHeight), textWidth, AppPalettes.Muster.MutedInk,
+                AppPalettes.Muster.Accent, scale);
+        }
+
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, height + Metrics.Space.Md * scale));
     }
@@ -355,7 +366,7 @@ internal sealed partial class MusterApp
             ui.Card(drawList, origin, new Vector2(origin.X + width, origin.Y + cardHeight), rounding,
                 elevated: true);
             AppSkin.Icon(drawList, new Vector2(iconLeft, origin.Y + pad + 9f * scale),
-                FontAwesomeIcon.MapMarkerAlt.ToIconString(), ui.Accent, 0.78f);
+                IconGlyph.Of(FontAwesomeIcon.MapMarkerAlt), ui.Accent, 0.78f);
             for (var index = 0; index < lineCount; index++)
             {
                 var lineTop = origin.Y + pad + index * LocationRowHeight * scale;
@@ -372,7 +383,7 @@ internal sealed partial class MusterApp
                     ink = MusterCard.LiveGreen;
                 }
 
-                Marquee.DrawLeftAuto(drawList, "muster.detail.location." + muster.Id + "." + index,
+                Marquee.DrawLeftAuto(drawList, new MarqueeId("muster.detail.location.", muster.Id + "." + index),
                     locationLines[index], textLeft, lineTop, origin.X + width - pad - textLeft, style, ink);
             }
 

@@ -39,7 +39,6 @@ internal sealed partial class YellowPagesApp
     private string? editingAdId;
     private bool picking;
     private string[] pickerPaths = Array.Empty<string>();
-    private string? pendingPickedPath;
     private int composeArchetype = -1;
     private int composeCategory;
     private string composeTitle = string.Empty;
@@ -258,7 +257,7 @@ internal sealed partial class YellowPagesApp
             Squircle.Fill(drawList, min, max, rounding,
                 ImGui.GetColorU32(hovered ? ui.HoverTint : AppPalettes.YellowPages.FieldSurface));
             Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(AddTileStroke), 1f);
-            AppSkin.Icon(drawList, (min + max) * 0.5f, FontAwesomeIcon.Plus.ToIconString(),
+            AppSkin.Icon(drawList, (min + max) * 0.5f, IconGlyph.Of(FontAwesomeIcon.Plus),
                 AppPalettes.YellowPages.BodyInk, 0.9f);
             if (hovered)
             {
@@ -311,7 +310,7 @@ internal sealed partial class YellowPagesApp
             badgeCenter + new Vector2(badgeRadius, badgeRadius));
         drawList.AddCircleFilled(badgeCenter, badgeRadius,
             ImGui.GetColorU32(new Vector4(0f, 0f, 0f, badgeHovered ? 0.9f : 0.62f)), 20);
-        AppSkin.Icon(drawList, badgeCenter, FontAwesomeIcon.Times.ToIconString(), PhotoWhite, 0.6f);
+        AppSkin.Icon(drawList, badgeCenter, IconGlyph.Of(FontAwesomeIcon.Times), PhotoWhite, 0.6f);
         if (badgeHovered)
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

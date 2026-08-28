@@ -53,6 +53,10 @@ internal readonly struct ChassisGeometry
         new(body, body.Width * PuckRoundingFraction, body.Width * PuckMetalFraction,
             body.Width * PuckGlassFraction);
 
+    public static float PuckBand(float width) =>
+        (MathF.Max(MathF.Round(width * PuckMetalFraction), 1f) + MathF.Max(MathF.Round(width * PuckGlassFraction), 1f)) *
+        2f;
+
     public static ChassisGeometry Morph(Rect body, PhoneTheme theme, float scale, float eased) =>
         new(body, Easing.Lerp(theme.DeviceRounding * scale, body.Width * PuckRoundingFraction, eased),
             Easing.Lerp(theme.MetalWidth * scale, body.Width * PuckMetalFraction, eased),

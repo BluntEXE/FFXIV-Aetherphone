@@ -2,6 +2,7 @@ using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Coins;
 using Aetherphone.Core.Localization;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
@@ -37,6 +38,8 @@ internal sealed class CoinEarnFloats : IDisposable
                 queued.Add(delta);
             }
         }
+
+        UiFeedback.Play(UiSound.Payout);
     }
 
     public void Draw(Rect screen, PhoneTheme theme, float delta)
@@ -47,7 +50,7 @@ internal sealed class CoinEarnFloats : IDisposable
             for (var index = 0; index < queued.Count; index++)
             {
                 var anchor = new Vector2(screen.Center.X, screen.Min.Y + (108f + index * 24f) * scale);
-                floats.Spawn(Loc.T(L.Coin.CheckInReward, queued[index].ToString("N0", Loc.Culture)), anchor);
+                floats.Spawn(Loc.T(L.Coin.CheckInReward, NumberText.Group(queued[index])), anchor);
             }
 
             queued.Clear();

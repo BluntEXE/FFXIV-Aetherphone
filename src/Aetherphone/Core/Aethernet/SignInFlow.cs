@@ -60,10 +60,12 @@ internal sealed class SignInFlow : IDisposable
         {
             try
             {
-                var response = await client.ChallengeAsync(name, world, token).ConfigureAwait(false);
+                var refusal = string.Empty;
+                var response = await client.ChallengeAsync(name, world, token,
+                    failure => refusal = failure.Code ?? string.Empty).ConfigureAwait(false);
                 if (response is null)
                 {
-                    status = Loc.T(L.Account.CannotReach);
+                    ReportChallengeRefusal(refusal);
                     return;
                 }
 
@@ -96,10 +98,12 @@ internal sealed class SignInFlow : IDisposable
         {
             try
             {
-                var response = await client.RisingStonesChallengeAsync(uuid, token).ConfigureAwait(false);
+                var refusal = string.Empty;
+                var response = await client.RisingStonesChallengeAsync(uuid, token,
+                    failure => refusal = failure.Code ?? string.Empty).ConfigureAwait(false);
                 if (response is null)
                 {
-                    status = Loc.T(L.Account.CannotReach);
+                    ReportChallengeRefusal(refusal);
                     return;
                 }
 
@@ -121,6 +125,18 @@ internal sealed class SignInFlow : IDisposable
                 busy = false;
             }
         });
+    }
+
+    private void ReportChallengeRefusal(string refusal)
+    {
+        if (string.Equals(refusal, VerifyFailure.SourceBlocked, StringComparison.Ordinal))
+        {
+            status = string.Empty;
+            failureReason = VerifyFailure.SourceBlocked;
+            return;
+        }
+
+        status = Loc.T(L.Account.CannotReach);
     }
 
     public void VerifyChallenge()

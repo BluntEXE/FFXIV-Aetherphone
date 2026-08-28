@@ -91,10 +91,10 @@ internal sealed partial class HuntsApp
                 return;
             }
 
-            var card = RowListCard.Begin(ui, markNotificationEntries.Count, MarkNotificationRowHeight, scale);
+            var card = GroupCard.Begin(ui, markNotificationEntries.Count, MarkNotificationRowHeight);
             for (var index = 0; index < markNotificationEntries.Count; index++)
             {
-                DrawMarkNotificationRow(card.Row(index), markNotificationEntries[index], scale);
+                DrawMarkNotificationRow(card.NextRow(), markNotificationEntries[index], scale);
             }
 
             card.End();
@@ -107,12 +107,12 @@ internal sealed partial class HuntsApp
 
         var textLeft = row.Min.X;
         var nameY = row.Center.Y - 16f * scale;
-        Marquee.DrawLeftAuto("hunts.markNotifications.row." + entry.MobId, entry.Label, textLeft, nameY,
+        Marquee.DrawLeftAuto(new MarqueeId("hunts.markNotifications.row.", entry.MobId), entry.Label, textLeft, nameY,
             row.Width * 0.75f, TextStyles.BodyEmphasized, ui.TitleInk);
         Typography.Draw(new Vector2(textLeft, row.Center.Y + 4f * scale), valueText, ui.MutedInk, TextStyles.Footnote);
 
         var center = new Vector2(row.Max.X - 18f * scale, row.Center.Y);
-        if (ui.IconButton(center, 16f * scale, NotificationIcon(entry.Mode).ToIconString(),
+        if (ui.IconButton(center, 16f * scale, IconGlyph.Of(NotificationIcon(entry.Mode)),
                 NotificationTint(entry.Mode), new Vector4(0f, 0f, 0f, 0f), 1.2f, valueText, HoverLabelSide.Above))
         {
             entry.Mode = NextNotificationMode(entry.Mode);

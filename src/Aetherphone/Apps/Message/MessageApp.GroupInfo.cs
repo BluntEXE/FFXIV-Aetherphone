@@ -47,9 +47,16 @@ internal sealed partial class MessageApp
 
             DrawSectionLabel(Loc.T(L.DirectMessages.Members), scale);
             var members = store.Members;
-            for (var index = 0; index < members.Length; index++)
+            if (members.Length > 0)
             {
-                DrawMemberRow(conversationId, members[index], owner, scale);
+                var card = GroupCard.Begin(ui, members.Length, 52f);
+                for (var index = 0; index < members.Length; index++)
+                {
+                    DrawMemberRow(card.NextRow(), conversationId, members[index], owner, scale);
+                }
+
+                card.End();
+                ImGui.Dummy(new Vector2(0f, 8f * scale));
             }
 
             ImGui.Dummy(new Vector2(0f, 10f * scale));
@@ -103,16 +110,16 @@ internal sealed partial class MessageApp
         ImGui.Dummy(new Vector2(ImGui.GetContentRegionAvail().X, 24f * scale));
     }
 
-    private void DrawMemberRow(string conversationId, ConversationMemberDto member, bool viewerIsOwner, float scale)
+    private static Rect RowBand(Rect row, float scale) =>
+        new(new Vector2(row.Min.X - Metrics.Space.Lg * scale, row.Min.Y),
+            new Vector2(row.Max.X + Metrics.Space.Lg * scale, row.Max.Y));
+
+    private void DrawMemberRow(Rect row, string conversationId, ConversationMemberDto member, bool viewerIsOwner,
+        float scale)
     {
-        var rowHeight = 52f * scale;
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ImGui.GetContentRegionAvail().X;
         var drawList = ImGui.GetWindowDrawList();
-        ui.Card(drawList, origin, new Vector2(origin.X + width, origin.Y + rowHeight), 14f * scale);
-        var pad = 12f * scale;
         var radius = 17f * scale;
-        var avatarCenter = new Vector2(origin.X + pad + radius, origin.Y + rowHeight * 0.5f);
+        var avatarCenter = new Vector2(row.Min.X + radius, row.Center.Y);
         var label = member.DisplayName.Length > 0 ? member.DisplayName : member.Handle;
         AvatarView.DrawRemote(drawList, avatarCenter, radius, theme, label, string.Empty, member.AvatarUrl, images,
             lodestone, 0.85f, 32, 1f, Frames.Of(member.FrameId));
@@ -120,23 +127,24 @@ internal sealed partial class MessageApp
         var isOwner = member.Role == 1;
         var canRemove = !isOwner && viewerIsOwner && member.UserId != store.MyUserId;
         var ownerLabel = isOwner ? Loc.T(L.DirectMessages.Owner) : string.Empty;
-        var rightReserve = isOwner ? Typography.Measure(ownerLabel, TextStyles.Footnote).X + pad
+        var rightReserve = isOwner ? Typography.Measure(ownerLabel, TextStyles.Footnote).X + 12f * scale
             : canRemove ? 28f * scale : 0f;
-        var labelMaxWidth = MathF.Max(1f, origin.X + width - pad - rightReserve - textLeft);
-        var rowHovering = UiInteract.Hover(origin, new Vector2(origin.X + width, origin.Y + rowHeight));
-        Marquee.DrawLeft("messageapp.groupinfo.member." + member.UserId, label, textLeft,
-            origin.Y + rowHeight * 0.5f - 9f * scale, labelMaxWidth, new TextStyle(1f, FontWeight.SemiBold),
+        var labelMaxWidth = MathF.Max(1f, row.Max.X - rightReserve - textLeft);
+        var band = RowBand(row, scale);
+        var rowHovering = UiInteract.Hover(band.Min, band.Max);
+        Marquee.DrawLeft(new MarqueeId("messageapp.groupinfo.member.", member.UserId), label, textLeft,
+            row.Center.Y - 9f * scale, labelMaxWidth, new TextStyle(1f, FontWeight.SemiBold),
             theme.TextStrong, rowHovering);
         if (isOwner)
         {
-            Typography.Draw(new Vector2(origin.X + width - pad - Typography.Measure(ownerLabel,
-                TextStyles.Footnote).X, origin.Y + rowHeight * 0.5f - 7f * scale), ownerLabel,
+            Typography.Draw(new Vector2(row.Max.X - Typography.Measure(ownerLabel,
+                TextStyles.Footnote).X, row.Center.Y - 7f * scale), ownerLabel,
                 ui.MutedInk, TextStyles.Footnote);
         }
         else if (canRemove)
         {
-            var removeCenter = new Vector2(origin.X + width - pad - 6f * scale, origin.Y + rowHeight * 0.5f);
-            if (ui.IconButton(removeCenter, 14f * scale, FontAwesomeIcon.Times.ToIconString(),
+            var removeCenter = new Vector2(row.Max.X - 6f * scale, row.Center.Y);
+            if (ui.IconButton(removeCenter, 14f * scale, IconGlyph.Of(FontAwesomeIcon.Times),
                     ui.MutedInk, AppSkin.Transparent, 0.9f, Loc.T(L.Common.Close)))
             {
                 store.RemoveMember(conversationId, member.UserId, ok =>
@@ -148,9 +156,6 @@ internal sealed partial class MessageApp
                 });
             }
         }
-
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight + 8f * scale));
     }
 
     private void DrawAddMembers(Rect area, string conversationId)
@@ -178,11 +183,13 @@ internal sealed partial class MessageApp
         using (AppSurface.Begin(listRect))
         {
             ImGui.Dummy(new Vector2(0f, 4f * scale));
+            var card = GroupCard.Begin(ui, candidates.Count, 56f);
             for (var index = 0; index < candidates.Count; index++)
             {
-                DrawPickRow(candidates[index], scale);
+                DrawPickRow(card.NextRow(), candidates[index], scale);
             }
 
+            card.End();
             ImGui.Dummy(new Vector2(0f, 16f * scale));
         }
 

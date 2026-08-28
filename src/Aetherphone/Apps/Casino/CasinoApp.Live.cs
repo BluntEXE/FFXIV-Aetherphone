@@ -90,7 +90,7 @@ internal sealed partial class CasinoApp
             occupancy > 0 ? ui.Accent : ui.MutedInk, TextStyles.Caption1);
 
         AppSkin.Icon(drawList, new Vector2(row.Max.X - inset - 4f * scale, row.Center.Y + 12f * scale),
-            FontAwesomeIcon.ChevronRight.ToIconString(), ui.MutedInk, 0.8f);
+            IconGlyph.Of(FontAwesomeIcon.ChevronRight), ui.MutedInk, 0.8f);
 
         var clicked = UiInteract.Click(row.Min, row.Max, hovered);
         ImGui.SetCursorScreenPos(origin);
@@ -163,8 +163,8 @@ internal sealed partial class CasinoApp
         Typography.Draw(drawList, new Vector2(row.Min.X + inset, row.Min.Y + 13f * scale), tierName, ui.TitleInk,
             TextStyles.SubheadlineEmphasized);
 
-        var bets = Loc.T(L.Casino.TableStakes, table.MinBet.ToString("N0", Loc.Culture),
-            table.MaxBet.ToString("N0", Loc.Culture));
+        var bets = Loc.T(L.Casino.TableStakes, NumberText.Group(table.MinBet),
+            NumberText.Group(table.MaxBet));
         Typography.Draw(drawList, new Vector2(row.Min.X + inset, row.Min.Y + 34f * scale),
             Typography.FitText(bets, width * 0.6f, TextStyles.Footnote), ui.MutedInk, TextStyles.Footnote);
 

@@ -1,6 +1,7 @@
 using Aetherphone.Core.Animation;
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
@@ -18,10 +19,19 @@ internal sealed class TetrisApp : IMiniGame
         new(0.96f, 0.62f, 0.32f, 1f), new(0.50f, 0.86f, 0.58f, 1f), new(0.95f, 0.48f, 0.52f, 1f),
     };
 
+    private const string ModernStatId = "tetris.modern";
+    private const float RulesetStripHeight = 26f;
+    private const string HoldKeyLabel = "C";
+    private const string LeftKeyLabel = "A";
+    private const string RotateKeyLabel = "W";
+    private const string RightKeyLabel = "D";
+    private const string DropKeyLabel = "Space";
     private readonly TetrisBoard board = new();
     private readonly TetrisRenderer renderer = new();
     private readonly ParticleSystem particles = new();
     private readonly FeedbackFx fx = new();
+    private readonly string[] rulesetLabels = new string[2];
+    private TetrisRuleset ruleset;
     private RollingValue scoreRoll;
     private int previousLevel;
     private bool started;
@@ -37,7 +47,7 @@ internal sealed class TetrisApp : IMiniGame
     public string Title => Loc.T(L.Games.Tetris);
     public bool RunsOnAClock => true;
 
-    public string Genre => Loc.T(L.Games.GenrePuzzle);
+    public GameGenre Genre => GameGenre.Puzzle;
     public void Open()
     {
         started = false;
@@ -52,9 +62,11 @@ internal sealed class TetrisApp : IMiniGame
     {
     }
 
+    private string StatId => ruleset == TetrisRuleset.Modern ? ModernStatId : GameId;
+
     private void StartGame()
     {
-        board.Reset();
+        board.Reset(ruleset);
         particles.Clear();
         fx.Clear();
         scoreRoll.Snap(0);
@@ -74,7 +86,8 @@ internal sealed class TetrisApp : IMiniGame
         var body = context.Body;
         if (!statsLoaded)
         {
-            bestScore = context.Stats.Get(GameId).BestScore;
+            ruleset = context.Stats.TetrisModern ? TetrisRuleset.Modern : TetrisRuleset.Classic;
+            bestScore = context.Stats.Get(StatId).BestScore;
             statsLoaded = true;
         }
 
@@ -85,7 +98,7 @@ internal sealed class TetrisApp : IMiniGame
 
         if (pendingSubmit)
         {
-            newBest = context.Stats.SubmitScore(GameId, finalScore);
+            newBest = context.Stats.SubmitScore(StatId, finalScore);
             if (newBest)
             {
                 bestScore = finalScore;
@@ -175,9 +188,25 @@ internal sealed class TetrisApp : IMiniGame
             bestScore > 0 && board.Score < bestScore, pillScale);
 
         var hudBottom = rowY + GameHud.PillHeight * scale * pillScale * 0.5f;
+        rulesetLabels[0] = Loc.T(L.Games.Classic);
+        rulesetLabels[1] = Loc.T(L.Games.Modern);
+        var stripTop = hudBottom + 8f * scale;
+        var stripRow = new Rect(new Vector2(body.Min.X + 48f * scale, stripTop),
+            new Vector2(body.Max.X - 48f * scale, stripTop + RulesetStripHeight * scale));
+        var selectedRuleset = SegmentStrip.Draw("tetris.ruleset", stripRow, rulesetLabels, (int)ruleset, theme);
+        if (selectedRuleset != (int)ruleset)
+        {
+            ruleset = (TetrisRuleset)selectedRuleset;
+            context.Stats.TetrisModern = ruleset == TetrisRuleset.Modern;
+            bestScore = context.Stats.Get(StatId).BestScore;
+            StartGame();
+            return;
+        }
+
+        hudBottom = stripRow.Max.Y - 12f * scale;
 
         var drawList = ImGui.GetWindowDrawList();
-        var iconColor = ImGui.GetColorU32(GamePalette.InkOn(Accent));
+        var iconColor = GamePalette.InkOn(Accent);
         var controlY = body.Max.Y - 26f * scale;
         var controlMargin = 12f * scale;
         var controlAvailableWidth = body.Width - controlMargin * 2f;
@@ -191,35 +220,35 @@ internal sealed class TetrisApp : IMiniGame
             board.HoldPiece();
         }
 
-        DrawSwapIcon(drawList, holdCenter, scale, iconColor);
+        DrawKeyLabel(drawList, holdCenter, HoldKeyLabel, controlWidth, iconColor);
         var leftCenter = new Vector2(centerX - controlWidth - controlSpacing, controlY);
         if (GameHud.Button(leftCenter, controlSize, string.Empty, Accent, theme))
         {
             board.Move(-1);
         }
 
-        DrawMoveIcon(drawList, leftCenter, -1, scale, iconColor);
+        DrawKeyLabel(drawList, leftCenter, LeftKeyLabel, controlWidth, iconColor);
         var rotateCenter = new Vector2(centerX, controlY);
         if (GameHud.Button(rotateCenter, controlSize, string.Empty, Accent, theme))
         {
             board.Rotate(1);
         }
 
-        DrawRotateIcon(drawList, rotateCenter, scale, iconColor);
+        DrawKeyLabel(drawList, rotateCenter, RotateKeyLabel, controlWidth, iconColor);
         var rightCenter = new Vector2(centerX + controlWidth + controlSpacing, controlY);
         if (GameHud.Button(rightCenter, controlSize, string.Empty, Accent, theme))
         {
             board.Move(1);
         }
 
-        DrawMoveIcon(drawList, rightCenter, 1, scale, iconColor);
+        DrawKeyLabel(drawList, rightCenter, RightKeyLabel, controlWidth, iconColor);
         var dropCenter = new Vector2(centerX + (controlWidth + controlSpacing) * 2f, controlY);
         if (GameHud.Button(dropCenter, controlSize, string.Empty, Accent, theme))
         {
             HardDrop();
         }
 
-        DrawDropIcon(drawList, dropCenter, scale, iconColor);
+        DrawKeyLabel(drawList, dropCenter, DropKeyLabel, controlWidth, iconColor);
         if (!board.GameOver)
         {
             HandleKeyboard();
@@ -230,6 +259,7 @@ internal sealed class TetrisApp : IMiniGame
         if (board.ClearedLinesThisFrame > 0)
         {
             var lines = board.ClearedLinesThisFrame;
+            UiFeedback.Play(lines >= 4 ? UiSound.GamePowerUp : UiSound.GameClear);
             fx.AddTrauma(MathF.Min(0.45f, 0.08f * lines));
             fx.HitStop(0.03f + 0.02f * lines);
             fx.Flash(new Vector4(0.95f, 0.92f, 1f, 1f), 0.16f);
@@ -246,6 +276,11 @@ internal sealed class TetrisApp : IMiniGame
 
             fx.AddText($"+{GameNumber.Label(board.LastLockScore)}",
                 new Vector2(field.Center.X, field.Min.Y + field.Height * 0.3f), Accent, 1.2f);
+        }
+
+        if (board.LockedThisFrame && ruleset == TetrisRuleset.Modern)
+        {
+            AnnounceModernLock(field, scale);
         }
 
         if (board.Level > previousLevel && !board.GameOver)
@@ -273,38 +308,47 @@ internal sealed class TetrisApp : IMiniGame
 
     private void HandleKeyboard()
     {
-        if (!GameFocus.Active)
+        if (!GameInput.Claim())
         {
             return;
         }
 
-        ImGui.SetNextFrameWantCaptureKeyboard(true);
-        if (ImGui.IsKeyPressed(ImGuiKey.LeftArrow))
+        if (GameInput.Pressed(ImGuiKey.LeftArrow, ImGuiKey.A, true))
         {
             board.Move(-1);
         }
 
-        if (ImGui.IsKeyPressed(ImGuiKey.RightArrow))
+        if (GameInput.Pressed(ImGuiKey.RightArrow, ImGuiKey.D, true))
         {
             board.Move(1);
         }
 
-        if (ImGui.IsKeyPressed(ImGuiKey.UpArrow, false))
+        if (GameInput.Pressed(ImGuiKey.UpArrow, ImGuiKey.W))
         {
             board.Rotate(1);
         }
 
-        if (ImGui.IsKeyPressed(ImGuiKey.DownArrow))
+        if (GameInput.Pressed(ImGuiKey.DownArrow, ImGuiKey.S, true))
         {
             board.SoftDrop();
         }
 
-        if (ImGui.IsKeyPressed(ImGuiKey.Space, false))
+        if (GameInput.Pressed(ImGuiKey.Z))
+        {
+            board.Rotate(-1);
+        }
+
+        if (GameInput.Pressed(ImGuiKey.X))
+        {
+            board.Rotate(1);
+        }
+
+        if (GameInput.Pressed(ImGuiKey.Space))
         {
             HardDrop();
         }
 
-        if (ImGui.IsKeyPressed(ImGuiKey.C, false))
+        if (GameInput.Pressed(ImGuiKey.C))
         {
             board.HoldPiece();
         }
@@ -313,59 +357,48 @@ internal sealed class TetrisApp : IMiniGame
     private void HardDrop()
     {
         board.HardDrop();
+        UiFeedback.Play(UiSound.GameHitWood);
         fx.AddTrauma(0.14f);
     }
 
-    private static void DrawMoveIcon(ImDrawListPtr drawList, Vector2 center, int direction, float scale, uint color)
+    private void AnnounceModernLock(Rect field, float scale)
     {
-        var size = 5f * scale;
-        drawList.AddTriangleFilled(new Vector2(center.X - direction * size * 0.6f, center.Y - size),
-            new Vector2(center.X - direction * size * 0.6f, center.Y + size),
-            new Vector2(center.X + direction * size, center.Y), color);
+        var position = new Vector2(field.Center.X, field.Min.Y + field.Height * 0.42f);
+        var lines = board.ClearedLinesThisFrame;
+        if (board.LastSpin != TetrisSpin.None)
+        {
+            var spinLabel = board.LastSpin == TetrisSpin.Mini ? Loc.T(L.Games.TSpinMini) : Loc.T(L.Games.TSpin);
+            var text = board.LastBackToBack ? $"{Loc.T(L.Games.BackToBack)} {spinLabel}" : spinLabel;
+            fx.AddText(text, position, GamePalette.Lighten(Accent, 0.35f), 1.3f);
+            fx.Shockwave(position, field.Width * 0.5f, GamePalette.Lighten(Accent, 0.4f), 0.5f, 3f);
+            particles.Sparkle(position, 14, new Vector4(1f, 1f, 1f, 0.9f), 160f * scale, 2.6f, 0.7f);
+            return;
+        }
+
+        if (lines >= 4 && board.LastBackToBack)
+        {
+            fx.AddText(Loc.T(L.Games.BackToBack), position, GamePalette.Lighten(Accent, 0.35f), 1.3f);
+            return;
+        }
+
+        if (lines > 0 && board.LastCombo >= 1)
+        {
+            fx.AddText($"x{GameNumber.Label(board.LastCombo + 1)} {Loc.T(L.Games.Combo)}", position,
+                GamePalette.Lighten(Accent, 0.3f), 1.1f);
+        }
     }
 
-    private static void DrawRotateIcon(ImDrawListPtr drawList, Vector2 center, float scale, uint color)
+    private static void DrawKeyLabel(ImDrawListPtr drawList, Vector2 center, string label, float buttonWidth,
+        Vector4 color)
     {
-        var radius = 5.5f * scale;
-        const float tipAngle = -MathF.PI * 0.35f;
-        drawList.PathClear();
-        drawList.PathArcTo(center, radius, tipAngle, MathF.PI * 1.15f, 24);
-        drawList.PathStroke(color, ImDrawFlags.None, 1.8f * scale);
-        var tip = center + new Vector2(MathF.Cos(tipAngle), MathF.Sin(tipAngle)) * radius;
-        var tangent = new Vector2(MathF.Sin(tipAngle), -MathF.Cos(tipAngle));
-        var normal = new Vector2(-tangent.Y, tangent.X);
-        var head = 4f * scale;
-        drawList.AddTriangleFilled(tip + tangent * head, tip - tangent * head * 0.2f + normal * head * 0.6f,
-            tip - tangent * head * 0.2f - normal * head * 0.6f, color);
-    }
+        var maxWidth = buttonWidth - 8f * UiScale.Current;
+        var style = TextStyles.FootnoteEmphasized;
+        if (Typography.Measure(label, style).X > maxWidth)
+        {
+            style = TextStyles.Caption2;
+        }
 
-    private static void DrawSwapIcon(ImDrawListPtr drawList, Vector2 center, float scale, uint color)
-    {
-        var width = 6f * scale;
-        var offset = 3.2f * scale;
-        var head = 2.6f * scale;
-        var thickness = 1.8f * scale;
-        var topY = center.Y - offset;
-        drawList.AddLine(new Vector2(center.X - width, topY), new Vector2(center.X + width * 0.3f, topY), color,
-            thickness);
-        drawList.AddTriangleFilled(new Vector2(center.X + width * 0.2f, topY - head),
-            new Vector2(center.X + width * 0.2f, topY + head), new Vector2(center.X + width, topY), color);
-        var bottomY = center.Y + offset;
-        drawList.AddLine(new Vector2(center.X + width, bottomY), new Vector2(center.X - width * 0.3f, bottomY), color,
-            thickness);
-        drawList.AddTriangleFilled(new Vector2(center.X - width * 0.2f, bottomY - head),
-            new Vector2(center.X - width * 0.2f, bottomY + head), new Vector2(center.X - width, bottomY), color);
-    }
-
-    private static void DrawDropIcon(ImDrawListPtr drawList, Vector2 center, float scale, uint color)
-    {
-        drawList.AddLine(new Vector2(center.X, center.Y - 5.5f * scale), new Vector2(center.X, center.Y + 1f * scale),
-            color, 1.8f * scale);
-        drawList.AddTriangleFilled(new Vector2(center.X - 3.2f * scale, center.Y + 0.5f * scale),
-            new Vector2(center.X + 3.2f * scale, center.Y + 0.5f * scale),
-            new Vector2(center.X, center.Y + 4.5f * scale), color);
-        drawList.AddRectFilled(new Vector2(center.X - 4.5f * scale, center.Y + 5.4f * scale),
-            new Vector2(center.X + 4.5f * scale, center.Y + 6.8f * scale), color);
+        Typography.DrawCentered(drawList, center, label, color, style);
     }
 
     private void DrawResult(PhoneTheme theme, Rect body, float deltaSeconds)

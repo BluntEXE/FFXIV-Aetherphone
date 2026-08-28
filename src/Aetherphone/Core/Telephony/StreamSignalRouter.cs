@@ -29,7 +29,14 @@ internal sealed class StreamSignalRouter : IDisposable
 
     public event Action<CallControl>? Kicked;
 
+    public event Action<CallControl>? ViewerFailed;
+
     public bool Connected => calls.Connected;
+
+    public void ReportPlaybackFailure(string url, string? reason)
+    {
+        calls.Send(new CallControl { Type = SignalType.StreamPlaybackFailed, Url = url, Reason = reason });
+    }
 
     public void PublishState(string url, double positionSeconds, bool paused, uint territoryId, uint worldId,
         bool approvalRequired, bool discoverable, StreamQueueEntry[]? upcomingQueue = null,
@@ -130,6 +137,9 @@ internal sealed class StreamSignalRouter : IDisposable
                 return;
             case SignalType.StreamKicked:
                 Kicked?.Invoke(message);
+                return;
+            case SignalType.StreamViewerFailed:
+                ViewerFailed?.Invoke(message);
                 return;
         }
     }

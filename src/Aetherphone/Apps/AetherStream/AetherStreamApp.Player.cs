@@ -24,7 +24,10 @@ internal sealed partial class AetherStreamApp
     private bool queueOnAdd;
     private float composerModeAnimation;
     private string? pendingLocalFile;
+    private string? pendingLocateFile;
     private Spring heroActionsFade;
+    private IReadOnlyList<ViewerFailure>? viewerFailureNamesSource;
+    private string viewerFailureNames = string.Empty;
 
     private VideoQueueEntry? CurrentEntry => watchAlong.IsViewing ? watchAlong.ViewingEntry : queue.Current;
 
@@ -35,11 +38,17 @@ internal sealed partial class AetherStreamApp
             SubmitLocalFile(localPath);
         }
 
+        if (Interlocked.Exchange(ref pendingLocateFile, null) is { } locatedPath)
+        {
+            watchAlong.LocateLocalMedia(locatedPath);
+        }
+
         using (AppSurface.Begin(body))
         {
             var width = ScrollLayout.StableContentWidth();
             DrawHero(width, scale);
             DrawPlaybackError(width, scale);
+            DrawLocalMediaPrompt(width, scale);
             DrawNowPlayingTitle(width, scale);
             DrawProgressBlock(width, scale);
             DrawTransportBlock(width, scale);
@@ -96,7 +105,7 @@ internal sealed partial class AetherStreamApp
 
         if (current is not null)
         {
-            AppSkin.Icon((min + max) * 0.5f, FontAwesomeIcon.Tv.ToIconString(), ui.MutedInk, 1.8f);
+            AppSkin.Icon((min + max) * 0.5f, IconGlyph.Of(FontAwesomeIcon.Tv), ui.MutedInk, 1.8f);
             return;
         }
 
@@ -229,9 +238,14 @@ internal sealed partial class AetherStreamApp
 
     private void DrawPlaybackError(float width, float scale)
     {
-        if (video.LastError is { } error)
+        if (watchAlong.IsHosting && watchAlong.ViewerFailures.Count > 0)
         {
-            DrawPlaybackNotice(width, scale, error, theme.Danger);
+            DrawViewerFailuresCard(width, scale);
+        }
+
+        if (TryDescribeFailure(out var title, out var body))
+        {
+            DrawFailureCard(width, scale, title, body, resumeFromPosition: video.State != VideoPlaybackState.Failed);
             return;
         }
 
@@ -239,6 +253,166 @@ internal sealed partial class AetherStreamApp
         {
             DrawPlaybackNotice(width, scale, notice, ui.MutedInk);
         }
+    }
+
+    private bool TryDescribeFailure(out string title, out string body)
+    {
+        if (video.State == VideoPlaybackState.Failed)
+        {
+            title = Loc.T(L.AetherStream.FailureTitle);
+            body = video.LastError ?? Loc.T(L.AetherStream.PlaybackFailed);
+            return true;
+        }
+
+        if (video.RecoveryExhausted)
+        {
+            title = Loc.T(L.AetherStream.FailureStalledTitle);
+            body = Loc.T(L.AetherStream.FailureStalledBody);
+            return true;
+        }
+
+        title = string.Empty;
+        body = string.Empty;
+        return false;
+    }
+
+    private void DrawFailureCard(float width, float scale, string title, string body, bool resumeFromPosition)
+    {
+        var viewing = watchAlong.IsViewing;
+        var countdown = viewing ? watchAlong.AutoReplayInSeconds : 0f;
+        var footnote = countdown > 0f
+            ? string.Format(Loc.Culture, Loc.T(L.AetherStream.FailureRetryingIn), (int)MathF.Ceiling(countdown))
+            : null;
+        var canSkip = !viewing && queue.HasNext;
+        DrawActionCard(width, scale, theme.Danger, title, theme.Danger, body, footnote,
+            Loc.T(L.AetherStream.FailureRetry), canSkip ? Loc.T(L.AetherStream.FailureSkip) : null,
+            "aetherstream.failure", out var retry, out var skip);
+        if (retry)
+        {
+            RetryPlayback(resumeFromPosition);
+        }
+
+        if (skip)
+        {
+            queue.Advance();
+        }
+    }
+
+    private void RetryPlayback(bool resumeFromPosition)
+    {
+        if (watchAlong.IsViewing)
+        {
+            watchAlong.RetryNow();
+            return;
+        }
+
+        var resume = resumeFromPosition ? (double)video.Progress.Position : 0d;
+        video.ResetRecoveryBudget();
+        queue.Replay(resume);
+    }
+
+    private void DrawViewerFailuresCard(float width, float scale)
+    {
+        var failures = watchAlong.ViewerFailures;
+        if (!ReferenceEquals(failures, viewerFailureNamesSource))
+        {
+            viewerFailureNamesSource = failures;
+            viewerFailureNames = JoinViewerNames(failures);
+        }
+
+        var watchers = Math.Max(failures.Count, watchAlong.Roster.Count - 1);
+        var title = string.Format(Loc.Culture, Loc.T(L.AetherStream.FailureViewersTitle), failures.Count, watchers);
+        var canSkip = queue.HasNext;
+        DrawActionCard(width, scale, ui.Accent, title, ui.TitleInk, viewerFailureNames,
+            Loc.T(L.AetherStream.FailureViewersHint),
+            canSkip ? Loc.T(L.AetherStream.FailureSkip) : Loc.T(L.AetherStream.FailureDismiss),
+            canSkip ? Loc.T(L.AetherStream.FailureDismiss) : null,
+            "aetherstream.viewerFailures", out var primary, out var secondary);
+        if (primary && canSkip)
+        {
+            watchAlong.DismissViewerFailures();
+            queue.Advance();
+            return;
+        }
+
+        if (primary || secondary)
+        {
+            watchAlong.DismissViewerFailures();
+        }
+    }
+
+    private static string JoinViewerNames(IReadOnlyList<ViewerFailure> failures)
+    {
+        var names = new string[failures.Count];
+        for (var index = 0; index < failures.Count; index++)
+        {
+            names[index] = failures[index].DisplayName;
+        }
+
+        return string.Join(", ", names);
+    }
+
+    private void DrawActionCard(float width, float scale, Vector4 tint, string title, Vector4 titleInk, string body,
+        string? footnote, string primaryLabel, string? secondaryLabel, string idPrefix, out bool primary,
+        out bool secondary)
+    {
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+        var origin = ImGui.GetCursorScreenPos();
+        var pad = Metrics.Space.Md * scale;
+        var textWidth = width - pad * 2f;
+        var titleHeight = Typography.LineHeight(TextStyles.BodyEmphasized);
+        var bodyHeight = Typography.MeasureWrappedBlock(body, TextStyles.Footnote, textWidth).Y;
+        var footnoteHeight = footnote is null
+            ? 0f
+            : Typography.MeasureWrappedBlock(footnote, TextStyles.Footnote, textWidth).Y + Metrics.Space.Xs * scale;
+        var buttonHeight = 34f * scale;
+        var cardHeight = pad + titleHeight + 3f * scale + bodyHeight + footnoteHeight + Metrics.Space.Sm * scale
+            + buttonHeight + pad;
+
+        var drawList = ImGui.GetWindowDrawList();
+        var max = origin + new Vector2(width, cardHeight);
+        Squircle.Fill(drawList, origin, max, Metrics.Radius.Md * scale,
+            ImGui.GetColorU32(Palette.WithAlpha(tint, 0.10f)));
+        Squircle.Stroke(drawList, origin, max, Metrics.Radius.Md * scale,
+            ImGui.GetColorU32(Palette.WithAlpha(tint, 0.35f)), 1f);
+
+        var textX = origin.X + pad;
+        var textY = origin.Y + pad;
+        Typography.Draw(drawList, new Vector2(textX, textY),
+            Typography.FitText(title, textWidth, TextStyles.BodyEmphasized), titleInk, TextStyles.BodyEmphasized);
+        textY += titleHeight + 3f * scale;
+
+        Typography.DrawWrappedLeft(new Vector2(textX, textY), body, ui.TitleInk, TextStyles.Footnote, textWidth);
+        textY += bodyHeight;
+
+        if (footnote is not null)
+        {
+            textY += Metrics.Space.Xs * scale;
+            Typography.DrawWrappedLeft(new Vector2(textX, textY), footnote, ui.MutedInk, TextStyles.Footnote,
+                textWidth);
+        }
+
+        var buttonsTop = max.Y - pad - buttonHeight;
+        secondary = false;
+        if (secondaryLabel is null)
+        {
+            var fullRect = new Rect(new Vector2(textX, buttonsTop),
+                new Vector2(textX + textWidth, buttonsTop + buttonHeight));
+            primary = ui.PillButton(fullRect, primaryLabel, true, idPrefix + ".primary");
+        }
+        else
+        {
+            var half = (textWidth - Metrics.Space.Sm * scale) * 0.5f;
+            var primaryRect = new Rect(new Vector2(textX, buttonsTop),
+                new Vector2(textX + half, buttonsTop + buttonHeight));
+            var secondaryRect = new Rect(new Vector2(primaryRect.Max.X + Metrics.Space.Sm * scale, buttonsTop),
+                new Vector2(textX + textWidth, buttonsTop + buttonHeight));
+            primary = ui.PillButton(primaryRect, primaryLabel, true, idPrefix + ".primary");
+            secondary = ui.PillButton(secondaryRect, secondaryLabel, false, idPrefix + ".secondary");
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, cardHeight));
     }
 
     private void DrawPlaybackNotice(float width, float scale, string text, Vector4 ink)
@@ -259,6 +433,122 @@ internal sealed partial class AetherStreamApp
             textWidth);
         ImGui.SetCursorScreenPos(origin);
         ImGui.Dummy(new Vector2(width, cardHeight));
+    }
+
+    private void DrawLocalMediaPrompt(float width, float scale)
+    {
+        if (!watchAlong.IsViewing || watchAlong.PendingLocalMedia is not { } pending)
+        {
+            return;
+        }
+
+        ImGui.Dummy(new Vector2(0f, Metrics.Space.Sm * scale));
+        var origin = ImGui.GetCursorScreenPos();
+        var pad = Metrics.Space.Md * scale;
+        var textWidth = width - pad * 2f;
+        var titleHeight = Typography.LineHeight(TextStyles.BodyEmphasized);
+        var fileLineHeight = Typography.LineHeight(TextStyles.Footnote);
+        var hint = Loc.T(L.AetherStream.LocalWatchHint);
+        var hintHeight = Typography.MeasureWrappedBlock(hint, TextStyles.Footnote, textWidth).Y;
+        var noFileHint = Loc.T(L.AetherStream.LocalWatchNoFileHint);
+        var noFileHintHeight = Typography.MeasureWrappedBlock(noFileHint, TextStyles.Footnote, textWidth).Y
+            + Metrics.Space.Xs * scale;
+        var mismatch = watchAlong.LocalMediaMismatch;
+        var mismatchText = mismatch ? Loc.T(L.AetherStream.LocalWatchMismatch) : string.Empty;
+        var mismatchHeight = mismatch
+            ? Typography.MeasureWrappedBlock(mismatchText, TextStyles.Footnote, textWidth).Y
+                + Metrics.Space.Xs * scale
+            : 0f;
+        var buttonHeight = 34f * scale;
+        var cardHeight = pad + titleHeight + 3f * scale + fileLineHeight + Metrics.Space.Xs * scale + hintHeight
+            + noFileHintHeight + mismatchHeight + Metrics.Space.Sm * scale + buttonHeight + pad;
+
+        var drawList = ImGui.GetWindowDrawList();
+        var max = origin + new Vector2(width, cardHeight);
+        Squircle.Fill(drawList, origin, max, Metrics.Radius.Md * scale,
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.10f)));
+        Squircle.Stroke(drawList, origin, max, Metrics.Radius.Md * scale,
+            ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.35f)), 1f);
+
+        var textX = origin.X + pad;
+        var textY = origin.Y + pad;
+        Typography.Draw(drawList, new Vector2(textX, textY),
+            Typography.FitText(Loc.T(L.AetherStream.LocalWatchTitle), textWidth, TextStyles.BodyEmphasized),
+            ui.TitleInk, TextStyles.BodyEmphasized);
+        textY += titleHeight + 3f * scale;
+
+        var fileLine = $"{pending.FileName}  ·  {FormatFileSize(pending.SizeBytes)}";
+        Typography.Draw(drawList, new Vector2(textX, textY),
+            Typography.FitText(fileLine, textWidth, TextStyles.Footnote), ui.TitleInk, TextStyles.Footnote);
+        textY += fileLineHeight + Metrics.Space.Xs * scale;
+
+        Typography.DrawWrappedLeft(new Vector2(textX, textY), hint, ui.MutedInk, TextStyles.Footnote, textWidth);
+        textY += hintHeight + Metrics.Space.Xs * scale;
+
+        Typography.DrawWrappedLeft(new Vector2(textX, textY), noFileHint, ui.MutedInk, TextStyles.Footnote,
+            textWidth);
+        textY += noFileHintHeight - Metrics.Space.Xs * scale;
+
+        if (mismatch)
+        {
+            textY += Metrics.Space.Xs * scale;
+            Typography.DrawWrappedLeft(new Vector2(textX, textY), mismatchText, theme.Danger, TextStyles.Footnote,
+                textWidth);
+        }
+
+        var buttonsTop = max.Y - pad - buttonHeight;
+        var showUseAnyway = mismatch && watchAlong.HasMismatchCandidate;
+        var locating = watchAlong.IsLocatingLocalMedia;
+        if (showUseAnyway)
+        {
+            var half = (textWidth - Metrics.Space.Sm * scale) * 0.5f;
+            var locateRect = new Rect(new Vector2(textX, buttonsTop),
+                new Vector2(textX + half, buttonsTop + buttonHeight));
+            var useAnywayRect = new Rect(new Vector2(locateRect.Max.X + Metrics.Space.Sm * scale, buttonsTop),
+                new Vector2(textX + textWidth, buttonsTop + buttonHeight));
+            if (ui.PillButton(locateRect, Loc.T(L.AetherStream.LocalWatchLocate), true,
+                    "aetherstream.localwatch.locate") && !locating)
+            {
+                OpenLocateFilePicker();
+            }
+
+            if (ui.PillButton(useAnywayRect, Loc.T(L.AetherStream.LocalWatchUseAnyway), false,
+                    "aetherstream.localwatch.useAnyway") && !locating)
+            {
+                watchAlong.AcceptMismatchedLocalMedia();
+            }
+        }
+        else
+        {
+            var locateRect = new Rect(new Vector2(textX, buttonsTop),
+                new Vector2(textX + textWidth, buttonsTop + buttonHeight));
+            if (ui.PillButton(locateRect, Loc.T(L.AetherStream.LocalWatchLocate), true,
+                    "aetherstream.localwatch.locate") && !locating)
+            {
+                OpenLocateFilePicker();
+            }
+        }
+
+        ImGui.SetCursorScreenPos(origin);
+        ImGui.Dummy(new Vector2(width, cardHeight));
+    }
+
+    private void OpenLocateFilePicker()
+    {
+        FilePicker.PickVideo(Loc.T(L.AetherStream.LocalWatchLocate),
+            path => Interlocked.Exchange(ref pendingLocateFile, path));
+    }
+
+    private static string FormatFileSize(long bytes)
+    {
+        const double gigabyte = 1024d * 1024d * 1024d;
+        const double megabyte = 1024d * 1024d;
+        if (bytes >= gigabyte)
+        {
+            return (bytes / gigabyte).ToString("0.0", Loc.Culture) + " GB";
+        }
+
+        return Math.Max(1d, Math.Round(bytes / megabyte)).ToString("0", Loc.Culture) + " MB";
     }
 
     private void DrawNowPlayingTitle(float width, float scale)
@@ -395,7 +685,11 @@ internal sealed partial class AetherStreamApp
     {
         if (!video.HasMedia)
         {
-            if (queue.Current is null && queue.HasNext)
+            if (video.State == VideoPlaybackState.Failed)
+            {
+                RetryPlayback(resumeFromPosition: false);
+            }
+            else if (queue.Current is null && queue.HasNext)
             {
                 queue.Advance();
             }

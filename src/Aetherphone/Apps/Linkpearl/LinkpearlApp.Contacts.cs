@@ -18,7 +18,7 @@ internal sealed partial class LinkpearlApp
     private const float PostRequestReadIntervalSeconds = 0.5f;
     private const float PostRequestPollWindowSeconds = 6f;
     private const float RequestCooldownSeconds = 5f;
-    private const float FriendRowHeight = 60f;
+
     private readonly List<FriendEntry> friends = new();
     private float sinceRead;
     private float sinceRequest = RequestCooldownSeconds;
@@ -85,8 +85,9 @@ internal sealed partial class LinkpearlApp
             return;
         }
 
-        SettingsSection.Header($"{title} · {count}", frameTheme);
-        var card = GroupCard.Begin(frameTheme, count, FriendRowHeight);
+        ListSection.Header($"{title} · {count}", frameTheme.TextMuted);
+        var drawList = ImGui.GetWindowDrawList();
+        var rowHeight = ContactRow.Height * UiScale.Current;
         for (var index = 0; index < friends.Count; index++)
         {
             if (friends[index].Online != online || !MatchesContact(friends[index]))
@@ -94,13 +95,14 @@ internal sealed partial class LinkpearlApp
                 continue;
             }
 
-            if (ContactRow.Draw(card.NextRow(), friends[index], frameTheme, lodestone))
+            var cell = FeedCell.Begin(drawList, rowHeight, frameTheme.HoverWash);
+            if (ContactRow.Draw(cell, friends[index], frameTheme, lodestone))
             {
                 router.Push(LinkpearlRoute.Detail(friends[index]));
             }
-        }
 
-        card.End();
+            FeedCell.End(drawList, cell, frameTheme.Hairline);
+        }
     }
 
     private bool MatchesContact(FriendEntry friend) =>
@@ -230,34 +232,6 @@ internal sealed partial class LinkpearlApp
         inbox.MarkRead(row);
         activeTab = MessagesTab.Chats;
         router.Push(LinkpearlRoute.Conversation(row.Key));
-    }
-
-    private bool DrawRefreshButton(in PhoneContext context)
-    {
-        var scale = UiScale.Current;
-        var content = context.Content;
-        var center = new Vector2(content.Max.X - 14f * scale, content.Min.Y + AppHeader.Height * scale * 0.5f);
-        UiAnchors.Report("contacts.refresh", new Rect(center - new Vector2(16f * scale, 16f * scale),
-            center + new Vector2(16f * scale, 16f * scale)));
-        var hovered = UiInteract.Hover(center - new Vector2(16f * scale, 16f * scale),
-            center + new Vector2(16f * scale, 16f * scale));
-        var glyph = FontAwesomeIcon.Sync.ToIconString();
-        using (ImRaii.PushFont(UiBuilder.IconFont))
-        {
-            var size = ImGui.CalcTextSize(glyph);
-            ImGui.SetCursorScreenPos(center - size * 0.5f);
-            using (ImRaii.PushColor(ImGuiCol.Text, hovered ? context.Theme.TextStrong : context.Theme.Accent))
-            {
-                Typography.Plain(glyph);
-            }
-        }
-
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        return hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left);
     }
 
     private static string SendTarget(FriendEntry friend) =>

@@ -131,7 +131,7 @@ internal sealed partial class VelvetShell
         }
 
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + VHeader.Height * scale), area.Max);
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             var blocked = store.Blocked;
             if (blocked.Length == 0)
@@ -163,7 +163,7 @@ internal sealed partial class VelvetShell
                     PillFilled = false,
                     PillEnabled = true,
                 };
-                var hit = VRow.Draw(in model, ui, theme, images, lodestone);
+                var hit = VRow.Cell(in model, ui, theme, images, lodestone);
                 if (hit == VRowHit.Pill)
                 {
                     store.Unblock(user.Id);
@@ -193,7 +193,7 @@ internal sealed partial class VelvetShell
         }
 
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + VHeader.Height * scale), area.Max);
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             var notInterested = store.NotInterested;
             if (notInterested.Length == 0)
@@ -225,7 +225,7 @@ internal sealed partial class VelvetShell
                     PillFilled = false,
                     PillEnabled = true,
                 };
-                var hit = VRow.Draw(in model, ui, theme, images, lodestone);
+                var hit = VRow.Cell(in model, ui, theme, images, lodestone);
                 if (hit == VRowHit.Pill)
                 {
                     store.RemoveFromNotInterested(user.UserId);

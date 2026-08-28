@@ -1,6 +1,6 @@
 # Aetherphone Privacy Policy
 
-**Last updated:** 18 August 2026
+**Last updated:** 26 August 2026
 
 This policy explains what Aethernet, the online service behind Aetherphone's social features, does with your personal data.
 

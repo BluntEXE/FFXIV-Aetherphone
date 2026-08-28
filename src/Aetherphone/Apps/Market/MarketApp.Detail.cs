@@ -110,10 +110,10 @@ internal sealed partial class MarketApp
                 view.Name);
         }
         var priceMaxWidth = MathF.Max(1f, origin.X + width - 16f * scale - textX);
-        Marquee.DrawLeftAuto("market.detail.price." + view.ItemId, priceText, textX, priceY,
+        Marquee.DrawLeftAuto(new MarqueeId("market.detail.price.", view.ItemId), priceText, textX, priceY,
             priceMaxWidth, new TextStyle(1.4f, FontWeight.SemiBold), AppPalettes.Market.Accent);
         var labelMaxWidth = MathF.Max(1f, origin.X + width - 16f * scale - textX);
-        Marquee.DrawLeftAuto("market.detail.cheapest." + view.ItemId, cheapestLabel, textX, labelY, labelMaxWidth,
+        Marquee.DrawLeftAuto(new MarqueeId("market.detail.cheapest.", view.ItemId), cheapestLabel, textX, labelY, labelMaxWidth,
             new TextStyle(0.78f, FontWeight.Regular), frameTheme.TextMuted);
         if (hasHq)
         {
@@ -288,8 +288,7 @@ internal sealed partial class MarketApp
             hovered ? Palette.Mix(frameTheme.Accent, frameTheme.TextStrong, 0.10f) : frameTheme.Accent;
         Elevation.Card(drawList, min, max, 12f * scale, scale, 0.6f);
         Squircle.Fill(drawList, min, max, 12f * scale, ImGui.GetColorU32(fill));
-        drawList.AddLine(new Vector2(min.X + 12f * scale, min.Y + 1f * scale),
-            new Vector2(max.X - 12f * scale, min.Y + 1f * scale), ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.12f)),
+        Material.Sheen(drawList, min, max, 12f * scale, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.12f)), 1f * scale,
             1f * scale);
         Typography.DrawCentered((min + max) * 0.5f, label, new Vector4(0.99f, 0.99f, 1f, 1f), TextStyles.Headline);
         ImGui.SetCursorScreenPos(origin);
@@ -317,7 +316,7 @@ internal sealed partial class MarketApp
         var origin = ImGui.GetCursorScreenPos();
         var height = 60f * scale;
         var graph = new Rect(origin, new Vector2(origin.X + width, origin.Y + height));
-        Span<float> values = count <= 64 ? stackalloc float[count] : new float[count];
+        var values = count <= 64 ? stackalloc float[count] : new float[count];
         var cursor = 0;
         for (var saleIndex = sales.Length - 1; saleIndex >= 0; saleIndex--)
         {
@@ -425,7 +424,7 @@ internal sealed partial class MarketApp
         var scale = UiScale.Current;
         var box = 14f * scale;
         var hovered = UiInteract.Hover(center - new Vector2(box, box), center + new Vector2(box, box));
-        var glyph = icon.ToIconString();
+        var glyph = IconGlyph.Of(icon);
         using (ImRaii.PushFont(UiBuilder.IconFont))
         {
             var size = ImGui.CalcTextSize(glyph);

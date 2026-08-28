@@ -26,7 +26,7 @@ internal sealed class HomeLayoutService
         "skywatcher", "collections", "inventory", "fishing",
         "clock", "notes", "calculator", "timers", "shortcuts",
         "wallet", "dailies", "calendar", "news",
-        "character", "notifications", "jobs",
+        "character", "notifications", "jobs", "strats",
         "health",
     };
 

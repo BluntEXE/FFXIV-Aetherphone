@@ -249,7 +249,7 @@ internal sealed class TableBrowser
         var iconCenter = new Vector2(row.Min.X + 26f * scale, row.Center.Y);
         drawList.AddCircleFilled(iconCenter, 15f * scale,
             ImGui.GetColorU32(Palette.WithAlpha(ui.Accent, 0.16f)), 32);
-        AppSkin.Icon(drawList, iconCenter, FontAwesomeIcon.UserFriends.ToIconString(), ui.Accent, 0.85f);
+        AppSkin.Icon(drawList, iconCenter, IconGlyph.Of(FontAwesomeIcon.UserFriends), ui.Accent, 0.85f);
 
         var textLeft = row.Min.X + 48f * scale;
         var textWidth = row.Width - 62f * scale;
@@ -313,8 +313,8 @@ internal sealed class TableBrowser
         var name = isPrivate && row.OwnerName.Length > 0
             ? Loc.T(L.Casino.TableHostedBy, row.OwnerName)
             : Loc.T(L.Casino.TableUnnamed);
-        var stakes = Loc.T(L.Casino.TableStakes, row.MinBet.ToString("N0", Loc.Culture),
-            row.MaxBet.ToString("N0", Loc.Culture));
+        var stakes = Loc.T(L.Casino.TableStakes, NumberText.Group(row.MinBet),
+            NumberText.Group(row.MaxBet));
         var seats = Loc.T(L.Casino.TableSeats, row.SeatedCount.ToString(Loc.Culture),
             row.MaxSeats.ToString(Loc.Culture));
         var watching = CasinoTableFilters.SpectatorsOf(row);

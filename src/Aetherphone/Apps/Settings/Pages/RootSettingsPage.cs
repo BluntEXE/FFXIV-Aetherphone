@@ -28,7 +28,7 @@ internal sealed class RootSettingsPage : ISettingsPage
     private static readonly Vector4 DoNotDisturbTint = new(0.36f, 0.40f, 0.92f, 1f);
     private static readonly Vector4 LockTint = new(0.52f, 0.54f, 0.60f, 1f);
     private static readonly Vector4 IdleScrollTint = new(0.20f, 0.70f, 0.62f, 1f);
-    private static readonly Vector4 GroupPoseTint = new(0.93f, 0.36f, 0.58f, 1f);
+    private static readonly Vector4 SilentTint = new(0.95f, 0.40f, 0.65f, 1f);
     private readonly ISettingsNavigator navigator;
     private readonly IReadOnlyList<ISettingsPage[]> groups;
     private readonly Configuration configuration;
@@ -120,12 +120,11 @@ internal sealed class RootSettingsPage : ISettingsPage
             configuration.Save();
         }
 
-        var showInGpose = SettingsRow.Switch(card.NextRow(), FontAwesomeIcon.Camera, GroupPoseTint,
-            Loc.T(L.Settings.ShowInGpose), configuration.ShowInGpose, theme, Loc.T(L.Settings.ShowInGposeHint));
-        if (showInGpose != configuration.ShowInGpose)
+        var silentMode = SettingsRow.Switch(card.NextRow(), FontAwesomeIcon.BellSlash, SilentTint,
+            Loc.T(L.Settings.SilentMode), configuration.SilentMode, theme, Loc.T(L.Settings.SilentModeHint));
+        if (silentMode != configuration.SilentMode)
         {
-            configuration.ShowInGpose = showInGpose;
-            Plugin.PluginInterface.UiBuilder.DisableGposeUiHide = showInGpose;
+            configuration.SilentMode = silentMode;
             configuration.Save();
         }
 

@@ -73,7 +73,7 @@ internal sealed partial class MusterApp
 
         var iconCenter = new Vector2(card.Min.X + 24f * scale, card.Center.Y);
         AppSkin.Icon(drawList, iconCenter,
-            home ? FontAwesomeIcon.Home.ToIconString() : FontAwesomeIcon.Server.ToIconString(),
+            home ? IconGlyph.Of(FontAwesomeIcon.Home) : IconGlyph.Of(FontAwesomeIcon.Server),
             selected ? ui.Accent : Palette.WithAlpha(AppPalettes.Muster.MutedInk, 0.9f), 0.7f);
         var textLeft = card.Min.X + 44f * scale;
         var hasDetail = detail.Length > 0;

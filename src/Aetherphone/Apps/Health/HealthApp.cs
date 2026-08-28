@@ -292,7 +292,7 @@ internal sealed partial class HealthApp : IPhoneApp
             1.02f, FontWeight.SemiBold);
         var labelRoom = MathF.Max(1f, row.Max.X - valueSize.X - textLeft - 10f * scale);
         var labelSize = Typography.Measure(label, TextStyles.Headline);
-        Marquee.DrawLeftAuto("health.statrow." + label, label, textLeft, row.Center.Y - labelSize.Y * 0.5f,
+        Marquee.DrawLeftAuto(new MarqueeId("health.statrow.", label), label, textLeft, row.Center.Y - labelSize.Y * 0.5f,
             labelRoom, TextStyles.Headline, Pal.TitleInk);
     }
 

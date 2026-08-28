@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using Aetherphone.Core.Lodestone;
 using Aetherphone.Core.Net;
 using Dalamud.Interface.Textures.TextureWraps;
 

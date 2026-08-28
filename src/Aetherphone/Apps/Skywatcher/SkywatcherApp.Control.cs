@@ -18,8 +18,6 @@ internal sealed partial class SkywatcherApp
         (0, L.Skywatcher.Midnight),
     };
 
-    private bool scrubbing;
-
     private void DrawControl(in SkyPalette palette, float scale)
     {
         var zoneWeathers = weather.ZoneWeathers();

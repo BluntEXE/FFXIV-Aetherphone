@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Theme;
@@ -34,7 +35,7 @@ internal sealed class SolitaireApp : IMiniGame
     public string Id => GameId;
     public Vector4 Accent => AppAccents.For(Id);
     public string Title => Loc.T(L.Games.Solitaire);
-    public string Genre => Loc.T(L.Games.GenreCards);
+    public GameGenre Genre => GameGenre.Tabletop;
     public void Open()
     {
         StartNewGame();
@@ -144,8 +145,10 @@ internal sealed class SolitaireApp : IMiniGame
             var hit = layout.Hit(mouse);
             if (hit.Kind == SolitairePileKind.Stock)
             {
+                var recycling = board.StockCount == 0;
                 if (board.DrawStock())
                 {
+                    UiFeedback.Play(recycling ? UiSound.GameShuffle : UiSound.GameCardFlip);
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                 }
             }
@@ -337,6 +340,7 @@ internal sealed class SolitaireApp : IMiniGame
 
     private void AfterMove(in SolitaireLayout layout)
     {
+        UiFeedback.Play(UiSound.GameCardPlace);
         var card = grabbed[0];
         var suit = SolitaireBoard.Suit(card);
         if (board.FoundationTop(suit) == card)
@@ -351,6 +355,7 @@ internal sealed class SolitaireApp : IMiniGame
 
         if (board.LastFlippedPile >= 0)
         {
+            UiFeedback.Play(UiSound.GameCardFlip);
             var pile = board.LastFlippedPile;
             var top = board.TableauCount(pile) - 1;
             if (top >= 0)

@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Config;
 using Xunit;
 
 namespace Aetherphone.Tests;

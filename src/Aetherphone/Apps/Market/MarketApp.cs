@@ -10,7 +10,7 @@ using Dalamud.Plugin.Services;
 
 namespace Aetherphone.Apps.Market;
 
-internal sealed partial class MarketApp : IPhoneApp
+internal sealed partial class MarketApp : IResumableApp
 {
     private const float ScopeBarHeight = 38f;
     private const float SearchHeight = 46f;
@@ -82,10 +82,14 @@ internal sealed partial class MarketApp : IPhoneApp
         RebuildScopes();
     }
 
+    public void OnResumed()
+    {
+        alerts.Acknowledge();
+        index.EnsureBuilt();
+    }
+
     public void OnClosed()
     {
-        router.Reset();
-        search = string.Empty;
     }
 
     private void RebuildScopes()

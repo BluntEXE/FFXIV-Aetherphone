@@ -1,6 +1,6 @@
 # Aetherphone Terms of Service
 
-**Last updated:** 18 August 2026
+**Last updated:** 28 August 2026
 
 These terms govern your use of the Aetherphone plugin and of Aethernet, the online service behind its social features. By creating an Aethernet account you accept these terms. If you do not accept them, do not create an account; the plugin's offline features work without one.
 
@@ -24,11 +24,9 @@ Some features carry a higher minimum age. Velvet is restricted to users aged 18 
 
 ## 4. Regional availability
 
-Aetherphone is offered worldwide, but not every app is available everywhere.
+Aetherphone is offered worldwide. On the Chinese game client, you sign in through Rising Stones (石之家) rather than the Lodestone.
 
-On the Chinese game client, you sign in through Rising Stones (石之家) rather than the Lodestone, and these apps are unavailable: **Music, AetherStream, and News**. They depend on services that cannot be reached from that region.
-
-We may add apps to or remove apps from that list at any time and without notice, including where local law makes it necessary.
+Every app is currently open in every region. An app that depends on a service unreachable from a region can be closed there, and we may restrict any app in any region at any time and without notice, including where local law makes it necessary. An app that is unavailable to you does not appear on your phone.
 
 ## 5. Your account
 
@@ -56,7 +54,9 @@ Each social app shows its own conduct rules before you can use it, and those rul
 - Post someone else's copyrighted work as your own
 - Spam, advertise commercially, or run scams
 - Attack, overload, reverse engineer, or circumvent access controls on the service
-- Automate the service or use it through anything other than the official plugin
+- Connect to Aethernet with anything other than an official, unmodified build of the plugin, installed from the official repository (see section 18)
+- Alter or forge the install source and build information the plugin sends, or otherwise present a modified client as an official one
+- Automate the service, script it, or drive it with a bot or a client you wrote yourself
 - Evade a suspension or ban
 
 ## 8. Adult content
@@ -119,6 +119,20 @@ Aetherphone is a non-commercial project offered worldwide, and we do not designa
 
 We may update these terms. When we make a material change we will announce it in the plugin and update the date at the top. Continuing to use Aethernet after a change means you accept the updated terms.
 
-## 18. The plugin's source code
+## 18. The plugin's source code, and forks
 
-The Aetherphone client is open source. Its source code is licensed separately under the terms in [LICENSE.md](LICENSE.md); these terms govern the hosted service, not your rights to the code.
+The Aetherphone client is free software, licensed under the GNU Affero General Public License v3.0 ([LICENSE.md](LICENSE.md)). That licence governs the code. These terms govern Aethernet, the service we host. The two are separate: nothing here adds a condition to the licence or removes a freedom it grants, and nothing in the licence grants access to our servers.
+
+You are free to fork Aetherphone, change it, and distribute your version on the terms the AGPL sets out. What no licence can give you is a right to use infrastructure we pay for, run, and moderate.
+
+**Aethernet serves the official client only.** An official build is one we published, unmodified, installed from the official repository at `https://raw.githubusercontent.com/XeldarAlz/DalamudPlugins/main/repo.json`. Connecting to Aethernet from a fork, from a patched or recompiled build, from a rehosted or repackaged copy, or from a client written independently against our endpoints is a breach of these terms, whatever the change was made for and however small it is. We may allow particular builds at our discretion, such as our own development builds and those of contributors we are working with.
+
+The plugin tells the server which repository it was installed from and which build it is running. The server answers a source it does not recognise with a warning, and then by refusing it. Removing, altering, or forging that signal, or otherwise disguising a modified client as an official one, is a separate breach, and a more serious one than the modification itself.
+
+Aethernet's API is private. It is undocumented, it is offered to the official client and to nothing else, it carries no stability promise, and it can change or close without notice. Do not build against it, script it, or put it behind anything of your own.
+
+The licence covers the code, not the name. "Aetherphone" and "Aethernet", the plugin icon and the app icons are not licensed with the source, and a fork must carry its own name and its own identity: the [trademark and naming policy](TRADEMARK.md) sets out what that means and what you can do without asking.
+
+If you want to run a modified Aetherphone, run a back end for it. That is precisely what the AGPL leaves you free to do, and running your own service is the supported way to take the client somewhere we will not. We will not serve a fork, we will not support one, and we owe it no access, no capacity, and no continuity.
+
+Accounts and builds that ignore this are warned, then blocked, and then terminated under section 11.

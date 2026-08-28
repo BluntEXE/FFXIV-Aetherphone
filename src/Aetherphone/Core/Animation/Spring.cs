@@ -43,4 +43,10 @@ internal struct Spring
         Value = value;
         Velocity = 0f;
     }
+
+    public void Launch(float value, float velocity)
+    {
+        Value = value;
+        Velocity = velocity;
+    }
 }

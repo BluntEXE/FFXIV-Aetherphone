@@ -6,6 +6,7 @@ using Aetherphone.Core.Confirm;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Social;
+using Aetherphone.Core.Translation;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -88,7 +89,7 @@ internal sealed partial class VelvetShell
             var ownerSubSize = Typography.Measure(ownerSub, TextStyles.Subheadline);
             var ownerSubHovering = UiInteract.Hover(new Vector2(nameLeft, ownerSubY),
                 new Vector2(nameLeft + nameMaxWidth, ownerSubY + ownerSubSize.Y));
-            Marquee.DrawLeft("velvet.detail.ownersub." + post.Id, ownerSub, nameLeft, ownerSubY,
+            Marquee.DrawLeft(new MarqueeId("velvet.detail.ownersub.", post.Id), ownerSub, nameLeft, ownerSubY,
                 nameMaxWidth, TextStyles.Subheadline, VelvetTheme.MutedInk, ownerSubHovering);
             if (UiInteract.HoverClick(headerRect.Min, headerRect.Max))
             {
@@ -109,7 +110,7 @@ internal sealed partial class VelvetShell
             var actionsY = imageRect.Max.Y + 22f * scale;
             var liked = post.MyReaction >= 0;
             var heartCenter = new Vector2(origin.X + 13f * scale, actionsY);
-            if (ui.IconButton(heartCenter, 15f * scale, FontAwesomeIcon.Heart.ToIconString(),
+            if (ui.IconButton(heartCenter, 15f * scale, IconGlyph.Of(FontAwesomeIcon.Heart),
                     liked ? VelvetTheme.Rose : VelvetTheme.BodyInk, AppSkin.Transparent, 1.2f, Loc.T(L.Velvet.Like)))
             {
                 store.ToggleReaction(post, 0);
@@ -142,7 +143,7 @@ internal sealed partial class VelvetShell
             }
 
             var commentCenter = new Vector2(actionCursorX + 13f * scale, actionsY);
-            AppSkin.Icon(commentCenter, FontAwesomeIcon.Comment.ToIconString(), VelvetTheme.BodyInk, 1.1f);
+            AppSkin.Icon(commentCenter, IconGlyph.Of(FontAwesomeIcon.Comment), VelvetTheme.BodyInk, 1.1f);
             var actionsRight = commentCenter.X + 20f * scale;
             if (post.CommentCount > 0)
             {
@@ -163,28 +164,30 @@ internal sealed partial class VelvetShell
             }
 
             var trailingRadius = 14f * scale;
-            if (ui.IconButton(trailingCenter, trailingRadius, FontAwesomeIcon.EllipsisH.ToIconString(),
+            if (ui.IconButton(trailingCenter, trailingRadius, IconGlyph.Of(FontAwesomeIcon.EllipsisH),
                     VelvetTheme.BodyInk, AppSkin.Transparent, 1f, Loc.T(L.Velvet.More)))
             {
-                menuPost = post;
-                postMenu.Toggle(post.Id, new Rect(trailingCenter - new Vector2(trailingRadius, trailingRadius),
-                    trailingCenter + new Vector2(trailingRadius, trailingRadius)));
+                OpenPostSheet(post, false);
             }
 
             ImGui.SetCursorScreenPos(new Vector2(origin.X, actionsY + 20f * scale));
             if (!string.IsNullOrWhiteSpace(post.Caption))
             {
                 var captionOrigin = ImGui.GetCursorScreenPos();
+                var captionKey = new TranslationKey(TranslationSurface.Post, post.Id);
+                var captionView = translation.View(captionKey, post.Caption, post.Lang);
+                var captionText = captionView.Text;
+                var captionWidth = ImGui.GetContentRegionAvail().X;
                 RichTextLayout? captionLayout;
                 using (Plugin.Fonts.Push(TextStyles.Callout.Scale, TextStyles.Callout.Weight))
                 {
-                    captionLayout = detailBodyLayouts.LayoutFor(post.Id, post.Caption, post.Mentions,
-                        ImGui.GetContentRegionAvail().X);
+                    captionLayout = detailBodyLayouts.LayoutFor(captionView.LayoutKey, captionText, post.Mentions,
+                        captionWidth);
                 }
 
                 if (captionLayout is null)
                 {
-                    WrapText(post.Caption, VelvetTheme.BodyInk, TextStyles.Callout);
+                    WrapText(captionText, VelvetTheme.BodyInk, TextStyles.Callout);
                 }
                 else
                 {
@@ -195,6 +198,16 @@ internal sealed partial class VelvetShell
 
                     ImGui.SetCursorScreenPos(captionOrigin);
                     ImGui.Dummy(captionLayout.Size);
+                }
+
+                var captionLinkHeight = TranslateLink.Height(translation, captionKey, post.Lang, scale);
+                if (captionLinkHeight > 0f)
+                {
+                    var linkTop = ImGui.GetCursorScreenPos().Y;
+                    TranslateLink.Draw(translation, confirm, captionKey, post.Lang, post.Caption,
+                        new Vector2(captionOrigin.X, linkTop), captionWidth, VelvetTheme.MutedInk, VelvetTheme.RoseGlow,
+                        scale);
+                    ImGui.SetCursorScreenPos(new Vector2(captionOrigin.X, linkTop + captionLinkHeight));
                 }
 
                 Gap(12f);
@@ -211,7 +224,6 @@ internal sealed partial class VelvetShell
         }
 
         DrawCommentComposer(new Rect(new Vector2(area.Min.X, area.Max.Y - composerHeight), area.Max), area, postId);
-        DrawPostMenu(area, false);
     }
 
     private void DrawComments(int totalCount, float width, float scale, bool viewerOwnsPost)
@@ -279,7 +291,7 @@ internal sealed partial class VelvetShell
         if (time.Length > 0)
         {
             var timeMaxWidth = MathF.Max(1f, wrapWidth - nameWidth - 40f * scale);
-            var timeWidth = Marquee.DrawLeftAuto("velvet.comment.time." + comment.Id, time,
+            var timeWidth = Marquee.DrawLeftAuto(new MarqueeId("velvet.comment.time.", comment.Id), time,
                 textLeft + nameWidth + 8f * scale, origin.Y + 1f * scale, timeMaxWidth, TextStyles.Footnote,
                 VelvetTheme.MutedInk);
             CommentReviewTag.Draw(
@@ -289,10 +301,13 @@ internal sealed partial class VelvetShell
 
         var textTop = origin.Y + 18f * scale;
         ImGui.SetCursorScreenPos(new Vector2(textLeft, textTop));
+        var commentKey = new TranslationKey(TranslationSurface.Comment, comment.Id);
+        var commentView = translation.View(commentKey, comment.Text, comment.Lang);
+        var commentText = commentView.Text;
         RichTextLayout? commentLayout;
         using (Plugin.Fonts.Push(0.9f))
         {
-            commentLayout = commentLayouts.LayoutFor(comment.Id, comment.Text, comment.Mentions, wrapWidth);
+            commentLayout = commentLayouts.LayoutFor(commentView.LayoutKey, commentText, comment.Mentions, wrapWidth);
         }
 
         if (commentLayout is null)
@@ -301,7 +316,7 @@ internal sealed partial class VelvetShell
             using (ImRaii.PushColor(ImGuiCol.Text, VelvetTheme.BodyInk))
             using (Plugin.Fonts.Push(0.9f))
             {
-                Typography.Wrapped(comment.Text);
+                Typography.Wrapped(commentText);
             }
         }
         else
@@ -312,8 +327,16 @@ internal sealed partial class VelvetShell
             }
         }
 
-        var textHeight = commentLayout?.Size.Y ?? Typography.MeasureWrapped(comment.Text, wrapWidth, 0.9f);
-        var rowHeight = MathF.Max(avatarRadius * 2f, 18f * scale + textHeight);
+        var textHeight = commentLayout?.Size.Y ?? Typography.MeasureWrapped(commentText, wrapWidth, 0.9f);
+        var commentLinkHeight = TranslateLink.Height(translation, commentKey, comment.Lang, scale);
+        if (commentLinkHeight > 0f)
+        {
+            TranslateLink.Draw(translation, confirm, commentKey, comment.Lang, comment.Text,
+                new Vector2(textLeft, textTop + textHeight), wrapWidth, VelvetTheme.MutedInk, VelvetTheme.RoseGlow,
+                scale);
+        }
+
+        var rowHeight = MathF.Max(avatarRadius * 2f, 18f * scale + textHeight + commentLinkHeight);
         if (UiInteract.HoverClick(origin, new Vector2(textLeft + nameWidth, textTop)))
         {
             OpenProfile(comment.AuthorId);
@@ -323,7 +346,7 @@ internal sealed partial class VelvetShell
         if (mine || viewerOwnsPost)
         {
             var trashCenter = new Vector2(origin.X + width - 8f * scale, origin.Y + 8f * scale);
-            if (ui.IconButton(trashCenter, 10f * scale, FontAwesomeIcon.Times.ToIconString(), VelvetTheme.MutedInk,
+            if (ui.IconButton(trashCenter, 10f * scale, IconGlyph.Of(FontAwesomeIcon.Times), VelvetTheme.MutedInk,
                     AppSkin.Transparent, 0.7f))
             {
                 if (mine)
@@ -402,7 +425,7 @@ internal sealed partial class VelvetShell
         }
 
         var body = new Rect(new Vector2(area.Min.X, area.Min.Y + VHeader.Height * scale), area.Max);
-        using (AppSurface.Begin(body))
+        using (AppSurface.BeginEdgeToEdge(body))
         {
             if (store.LikersLoading)
             {
@@ -438,7 +461,7 @@ internal sealed partial class VelvetShell
                     RoleBadgeIds = user.ProfileBadges,
                     UserId = user.Id,
                 };
-                if (VRow.Draw(in model, ui, theme, images, lodestone) == VRowHit.Body)
+                if (VRow.Cell(in model, ui, theme, images, lodestone) == VRowHit.Body)
                 {
                     OpenProfile(user.Id);
                 }
@@ -464,6 +487,7 @@ internal sealed partial class VelvetShell
             Message = Loc.T(L.Velvet.DeleteConfirmMessage),
             ConfirmLabel = Loc.T(L.Velvet.DeleteConfirm),
             CancelLabel = Loc.T(L.Velvet.DeleteCancel),
+            Sheet = true,
             BusyLabel = Loc.T(L.Velvet.Saving),
             FailedMessage = Loc.T(L.Velvet.DeleteFailed),
             ConfirmAsync = done => store.DeletePost(postId, ok =>
@@ -485,6 +509,7 @@ internal sealed partial class VelvetShell
             Message = Loc.T(L.Velvet.DeleteCommentConfirmMessage),
             ConfirmLabel = Loc.T(L.Velvet.DeleteConfirm),
             CancelLabel = Loc.T(L.Velvet.DeleteCancel),
+            Sheet = true,
             BusyLabel = Loc.T(L.Velvet.Saving),
             FailedMessage = Loc.T(L.Velvet.DeleteCommentFailed),
             ConfirmAsync = done => store.DeleteComment(postId, commentId, done),
@@ -498,6 +523,7 @@ internal sealed partial class VelvetShell
             Message = Loc.T(L.Velvet.RemoveCommentConfirmMessage),
             ConfirmLabel = Loc.T(L.Velvet.DeleteConfirm),
             CancelLabel = Loc.T(L.Velvet.DeleteCancel),
+            Sheet = true,
             BusyLabel = Loc.T(L.Velvet.Saving),
             FailedMessage = Loc.T(L.Velvet.DeleteCommentFailed),
             ConfirmAsync = done => store.DeleteComment(postId, commentId, done),

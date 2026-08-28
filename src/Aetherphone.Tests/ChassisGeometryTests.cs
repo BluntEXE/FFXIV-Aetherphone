@@ -92,7 +92,7 @@ public sealed class ChassisGeometryTests
     {
         var theme = ThemeFor(360f);
         var body = new Rect(new Vector2(10f, 20f), new Vector2(356f, 800f));
-        var puckBody = new Rect(new Vector2(10f, 20f), new Vector2(88f, 172f));
+        var puckBody = new Rect(new Vector2(10f, 20f), new Vector2(92f, 176f));
         var atStart = ChassisGeometry.Morph(body, theme, 1f, 0f);
         var device = ChassisGeometry.Device(Grow(body, theme.RailWidth), theme, 1f);
         Assert.Equal(device.BodyRadius, atStart.BodyRadius, Tolerance);
@@ -104,6 +104,20 @@ public sealed class ChassisGeometryTests
         Assert.Equal(puck.BodyRadius, atEnd.BodyRadius, Tolerance);
         Assert.Equal(puck.ScreenRadius, atEnd.ScreenRadius, Tolerance);
         Assert.Equal(puck.Screen, atEnd.Screen);
+    }
+
+    [Theory]
+    [InlineData(1f)]
+    [InlineData(1.25f)]
+    [InlineData(1.5f)]
+    [InlineData(2f)]
+    public void PuckBandMatchesPuckGeometry(float scale)
+    {
+        var body = new Rect(new Vector2(0f, 0f), new Vector2(82f * scale, 156f * scale));
+        var puck = ChassisGeometry.Puck(body);
+        var band = ChassisGeometry.PuckBand(body.Width);
+        Assert.Equal(puck.Body.Width - band, puck.Screen.Width, Tolerance);
+        Assert.Equal(puck.Body.Height - band, puck.Screen.Height, Tolerance);
     }
 
     [Fact]

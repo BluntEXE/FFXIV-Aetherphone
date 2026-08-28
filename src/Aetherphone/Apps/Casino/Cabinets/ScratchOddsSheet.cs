@@ -1,8 +1,6 @@
 using Aetherphone.Core;
-using Aetherphone.Core.Animation;
 using Aetherphone.Core.Casino;
 using Aetherphone.Core.Localization;
-using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
@@ -11,41 +9,35 @@ namespace Aetherphone.Apps.Casino.Cabinets;
 
 internal sealed class ScratchOddsSheet
 {
-    private const ImGuiWindowFlags OverlayFlags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse |
-                                                  ImGuiWindowFlags.NoBackground;
-
-    private const float RevealSmoothTime = 0.16f;
-    private const float MaxDim = 0.45f;
-    private const float PanelRounding = 26f;
-    private const float PadX = 18f;
     private const float RowHeight = 40f;
     private const float PanelHeightShare = 0.72f;
 
-    private Spring reveal;
-    private bool open;
-    private int openedFrame;
+    private readonly SheetSurface sheet = new("casino.scratchOdds");
+    private readonly Action<Rect> drawSheetBody;
 
-    public bool IsOpen => open;
+    private AppSkin skin = null!;
+    private int tier;
+
+    public ScratchOddsSheet()
+    {
+        drawSheetBody = DrawSheetBody;
+    }
+
+    public bool IsOpen => sheet.IsOpen;
 
     public void Open()
     {
-        if (open)
-        {
-            return;
-        }
-
-        open = true;
-        openedFrame = ImGui.GetFrameCount();
+        sheet.Open();
     }
 
     public void Close()
     {
-        open = false;
+        sheet.Close();
     }
 
     public void Gate()
     {
-        if (open)
+        if (sheet.IsOpen)
         {
             UiInteract.BlockThisFrame();
         }
@@ -53,66 +45,18 @@ internal sealed class ScratchOddsSheet
 
     public void Draw(Rect screen, AppSkin ui, int tier)
     {
-        var delta = MathF.Min(ImGui.GetIO().DeltaTime, TransitionTiming.MaxFrameSeconds);
-        reveal.Step(open ? 1f : 0f, RevealSmoothTime, delta);
-        if (!open && reveal.IsResting(0f, 0.001f, 0.005f))
-        {
-            reveal.SnapTo(0f);
-            return;
-        }
-
-        var opacity = Math.Clamp(reveal.Value, 0f, 1f);
-        var slide = Easing.EaseOutQuint(opacity);
-        ImGui.SetCursorScreenPos(screen.Min);
-        using (ImRaii.Child("##scratchOdds", screen.Size, false, OverlayFlags))
-        {
-            var drawList = ImGui.GetWindowDrawList();
-            drawList.AddRectFilled(screen.Min, screen.Max,
-                ImGui.GetColorU32(new Vector4(0f, 0f, 0f, MaxDim * opacity)));
-            var panel = DrawPanel(screen, ui, drawList, slide, tier);
-            var interactive = open && opacity > 0.5f;
-            if (!interactive)
-            {
-                return;
-            }
-
-            if (ImGui.GetFrameCount() != openedFrame && UiInteract.ClickedOutside(panel.Min, panel.Max))
-            {
-                Close();
-            }
-        }
+        skin = ui;
+        this.tier = tier;
+        sheet.Draw(screen, ui.Theme, Loc.T(L.Casino.ScratchOdds), PanelHeightShare, drawSheetBody);
     }
 
-    private Rect DrawPanel(Rect screen, AppSkin ui, ImDrawListPtr drawList, float slide, int tier)
+    private void DrawSheetBody(Rect content)
     {
-        var scale = UiScale.Current;
-        var panelHeight = screen.Height * PanelHeightShare;
-        var panelBottom = screen.Max.Y + panelHeight * (1f - slide);
-        var panelTop = panelBottom - panelHeight;
-        var panelMin = new Vector2(screen.Min.X, panelTop);
-        var panelMax = new Vector2(screen.Max.X, panelBottom);
-        var rounding = PanelRounding * scale;
-        Squircle.Fill(drawList, panelMin, panelMax, rounding,
-            ImGui.GetColorU32(Palette.Lighten(ui.Palette.BackdropTop, 0.10f) with { W = 1f }));
-        Squircle.Stroke(drawList, panelMin, panelMax, rounding,
-            ImGui.GetColorU32(Palette.WithAlpha(ui.TitleInk, 0.08f)), Metrics.Stroke.Hairline);
-
-        var title = Loc.T(L.Casino.ScratchOdds);
-        var titleHeight = Typography.Measure(title, TextStyles.Headline).Y;
-        Typography.DrawCentered(drawList, new Vector2(screen.Center.X, panelTop + 14f * scale + titleHeight * 0.5f),
-            title, ui.TitleInk, TextStyles.Headline);
-
-        var contentTop = panelTop + titleHeight + 24f * scale;
-        var contentMin = new Vector2(panelMin.X + PadX * scale, contentTop);
-        var contentSize = new Vector2(panelMax.X - PadX * scale - contentMin.X,
-            panelBottom - 12f * scale - contentTop);
-        ImGui.SetCursorScreenPos(contentMin);
-        using (ImRaii.Child("##scratchOddsRows", contentSize, false, ImGuiWindowFlags.NoBackground))
+        ImGui.SetCursorScreenPos(content.Min);
+        using (ImRaii.Child("##scratchOddsRows", content.Size, false, ImGuiWindowFlags.NoBackground))
         {
-            DrawRows(ui, scale, tier);
+            DrawRows(skin, UiScale.Current, tier);
         }
-
-        return new Rect(panelMin, panelMax);
     }
 
     private static void DrawRows(AppSkin ui, float scale, int tier)
@@ -126,7 +70,7 @@ internal sealed class ScratchOddsSheet
         ImGui.Dummy(new Vector2(width, introBlock.Y + 10f * scale));
 
         var priceLine = Loc.T(L.Casino.ScratchPrice) + ": "
-            + ScratchRules.Prices[tier].ToString("N0", Loc.Culture);
+            + NumberText.Group(ScratchRules.Prices[tier]);
         var priceOrigin = ImGui.GetCursorScreenPos();
         Typography.Draw(drawList, priceOrigin, priceLine, ui.TitleInk, TextStyles.SubheadlineEmphasized);
         ImGui.Dummy(new Vector2(width, 26f * scale));
@@ -148,7 +92,7 @@ internal sealed class ScratchOddsSheet
             ScratchSymbolArt.Draw(drawList, prizeIndex, new Vector2(rowOrigin.X + 18f * scale, rowCenterY),
                 13f * scale);
             Typography.Draw(drawList, new Vector2(rowOrigin.X + 44f * scale, rowCenterY - 9f * scale),
-                table[prizeIndex].Chips.ToString("N0", Loc.Culture), ui.TitleInk, TextStyles.SubheadlineEmphasized);
+                NumberText.Group(table[prizeIndex].Chips), ui.TitleInk, TextStyles.SubheadlineEmphasized);
             var chance = Loc.T(L.Casino.ScratchOddsChanceValue, ChancePercent(table[prizeIndex].CountPerMillion));
             var chanceSize = Typography.Measure(chance, TextStyles.Subheadline);
             Typography.Draw(drawList, new Vector2(rowOrigin.X + width - chanceSize.X, rowCenterY - 9f * scale),

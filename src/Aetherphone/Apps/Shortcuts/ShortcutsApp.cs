@@ -49,6 +49,17 @@ internal sealed partial class ShortcutsApp : IPhoneApp
     private int activeTab;
     private string libraryQuery = string.Empty;
 
+    private readonly Action<PluginEntry> openPluginDetail;
+    private readonly Action<PluginEntry> pickStepPlugin;
+    private readonly Action<PluginEntry> pickIconPlugin;
+
+    private ShortcutEntry? draft;
+    private Guid draftId = Guid.Empty;
+    private bool draftPinned;
+    private ShortcutEntry? importEntry;
+    private float copiedClock;
+    private string pluginQuery = string.Empty;
+
     public ShortcutsApp(ShortcutStore store, ShortcutRunner runner, ConfirmService confirm, PhotoLibrary photoLibrary,
         WallpaperImageCache wallpaperImages)
     {
@@ -190,7 +201,7 @@ internal sealed partial class ShortcutsApp : IPhoneApp
         var buttonCenter = new Vector2(content.Max.X - Metrics.Space.Lg * scale - radius, centerY);
         var buttonExtent = new Vector2(radius, radius);
         UiAnchors.Report("shortcuts.new", new Rect(buttonCenter - buttonExtent, buttonCenter + buttonExtent));
-        if (ui.IconButton(buttonCenter, radius, FontAwesomeIcon.Plus.ToIconString(), ui.TitleInk,
+        if (ui.IconButton(buttonCenter, radius, IconGlyph.Of(FontAwesomeIcon.Plus), ui.TitleInk,
                 Palette.WithAlpha(ui.TitleInk, 0.12f), 0.6f, Loc.T(L.Shortcuts.NewShortcut)))
         {
             StartNewShortcut();
@@ -198,7 +209,7 @@ internal sealed partial class ShortcutsApp : IPhoneApp
 
         var importCenter = new Vector2(buttonCenter.X - radius * 2.6f, centerY);
         UiAnchors.Report("shortcuts.import", new Rect(importCenter - buttonExtent, importCenter + buttonExtent));
-        if (ui.IconButton(importCenter, radius, FontAwesomeIcon.FileImport.ToIconString(), ui.TitleInk,
+        if (ui.IconButton(importCenter, radius, IconGlyph.Of(FontAwesomeIcon.FileImport), ui.TitleInk,
                 Palette.WithAlpha(ui.TitleInk, 0.12f), 0.6f, Loc.T(L.Shortcuts.ImportShortcut)))
         {
             BeginImport();
@@ -273,7 +284,7 @@ internal sealed partial class ShortcutsApp : IPhoneApp
     private void DrawEmptyLibrary(Rect body, float scale)
     {
         var center = new Vector2(body.Center.X, body.Min.Y + 76f * scale);
-        AppSkin.Icon(new Vector2(center.X, center.Y - 22f * scale), FontAwesomeIcon.Bolt.ToIconString(),
+        AppSkin.Icon(new Vector2(center.X, center.Y - 22f * scale), IconGlyph.Of(FontAwesomeIcon.Bolt),
             Palette.WithAlpha(ui.MutedInk, 0.7f), 1.6f);
         Typography.DrawCentered(new Vector2(center.X, center.Y + 12f * scale), Loc.T(L.Shortcuts.LibraryEmpty),
             ui.TitleInk, TextStyles.Headline);
@@ -294,13 +305,13 @@ internal sealed partial class ShortcutsApp : IPhoneApp
 
         var running = run.IsRunning && run.Id == entry.Id;
         var name = ShortcutRunText.Name(entry.Name);
-        Marquee.DrawLeftAuto("shortcuts.row." + entry.Id, name, textLeft, row.Center.Y - 16f * scale, textWidth,
+        Marquee.DrawLeftAuto(new MarqueeId("shortcuts.row.", entry.Id.ToString()), name, textLeft, row.Center.Y - 16f * scale, textWidth,
             TextStyles.Headline, ui.TitleInk);
         var subtitle = running ? ShortcutRunText.Status(run) : Summarise(entry);
-        Marquee.DrawLeftAuto("shortcuts.row.sub." + entry.Id, subtitle, textLeft, row.Center.Y + 5f * scale, textWidth,
+        Marquee.DrawLeftAuto(new MarqueeId("shortcuts.row.sub.", entry.Id.ToString()), subtitle, textLeft, row.Center.Y + 5f * scale, textWidth,
             TextStyles.Footnote, running ? ui.Accent : ui.MutedInk);
 
-        if (ui.IconButton(editCenter, editRadius, FontAwesomeIcon.SlidersH.ToIconString(), ui.MutedInk,
+        if (ui.IconButton(editCenter, editRadius, IconGlyph.Of(FontAwesomeIcon.SlidersH), ui.MutedInk,
                 AppSkin.Transparent, 0.62f, Loc.T(L.Shortcuts.Edit)))
         {
             StartEditShortcut(entry);

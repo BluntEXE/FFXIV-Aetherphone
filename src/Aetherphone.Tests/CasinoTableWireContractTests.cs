@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Aetherphone.Apps.Casino;
 using Aetherphone.Core.Aethernet;
 using Aetherphone.Core.Aethernet.Contracts;
 using Aetherphone.Core.Casino;

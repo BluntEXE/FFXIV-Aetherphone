@@ -156,7 +156,7 @@ buttons, which bite ~4 px in at these positions (fractions of the long side):
 | Side | 0.250 - 0.358 | right | top |
 | Lock | 0.315 - 0.397 | left | bottom |
 
-**In camera mode the whole image rotates 90 degrees clockwise.** Overflow art rotates with it, so a
+**In camera mode the whole image rotates 90 degrees counter-clockwise.** Overflow art rotates with it, so a
 charm that hangs off the left in portrait hangs off the bottom in landscape. Design something that
 reads either way, or keep overflow near the corners.
 

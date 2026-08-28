@@ -1,5 +1,6 @@
 using Aetherphone.Apps.Games.Framework;
 using Aetherphone.Core;
+using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Animation;
 using Aetherphone.Core.Apps;
 using Aetherphone.Core.Localization;
@@ -30,7 +31,7 @@ internal sealed class CrystalDropApp : IMiniGame
     public string Title => Loc.T(L.Games.CrystalDrop);
     public bool RunsOnAClock => true;
 
-    public string Genre => Loc.T(L.Games.GenrePuzzle);
+    public GameGenre Genre => GameGenre.Puzzle;
 
     public void Open()
     {
@@ -156,6 +157,11 @@ internal sealed class CrystalDropApp : IMiniGame
 
     private void ConsumeMerges(Rect jar, float scale)
     {
+        if (board.MergeCount > 0)
+        {
+            UiFeedback.Play(UiSound.GameMatch);
+        }
+
         for (var index = 0; index < board.MergeCount; index++)
         {
             var merge = board.Merge(index);
@@ -176,6 +182,7 @@ internal sealed class CrystalDropApp : IMiniGame
 
             if (merge.Cleared)
             {
+                UiFeedback.Play(UiSound.GameBreak);
                 fx.Flash(GamePalette.Lighten(color, 0.4f), 0.4f);
                 fx.HitStop(0.06f);
                 particles.Streaks(center, 16, GamePalette.Lighten(color, 0.5f), 420f * scale, 2.8f, 0.6f);
@@ -187,6 +194,7 @@ internal sealed class CrystalDropApp : IMiniGame
 
     private void OnGameOver(Rect jar, float scale)
     {
+        UiFeedback.Play(UiSound.GameHitSoft);
         wasOver = true;
         finalScore = board.Score;
         pendingSubmit = true;

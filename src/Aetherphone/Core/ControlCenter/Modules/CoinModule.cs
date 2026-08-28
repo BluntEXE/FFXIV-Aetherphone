@@ -35,7 +35,7 @@ internal sealed class CoinModule : IControlModule
     public void Draw(in ControlModuleContext context)
     {
         var balance = coins.Wallet?.Balance ?? session.CurrentUser?.Coins ?? 0;
-        var label = balance.ToString("N0", Loc.Culture);
+        var label = NumberText.Group(balance);
         if (ControlTile.Toggle(context.DrawList, context.Rect, FontAwesomeIcon.Coins, label, false,
                 AppAccents.For("coin"), context.Theme, context.Opacity, context.Interactive,
                 context.Span != ControlSpan.Small))

@@ -1,4 +1,5 @@
 using Aetherphone.Core;
+using Aetherphone.Core.Config;
 using Aetherphone.Core.Hunts;
 using Xunit;
 

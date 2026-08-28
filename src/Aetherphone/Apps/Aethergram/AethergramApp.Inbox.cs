@@ -8,19 +8,17 @@ using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
 
 namespace Aetherphone.Apps.Aethergram;
 
 internal sealed partial class AethergramApp
 {
-    private const float InboxSegmentSmoothTime = 0.14f;
 
-    private readonly DropdownMenu inboxRowMenu = new();
-    private readonly DropdownMenu.Item[] inboxRowItems = new DropdownMenu.Item[1];
-    private string? inboxMenuThreadId;
+    private readonly ActionSheet.Item[] inboxRowSheetItems = new ActionSheet.Item[1];
+    private string? inboxSheetThreadId;
+    private string inboxSheetTitle = string.Empty;
     private int inboxTab;
-    private Spring inboxSegmentSpring;
+    private readonly string[] inboxSegmentLabels = new string[2];
 
     private void DrawInbox(Rect area)
     {
@@ -40,7 +38,10 @@ internal sealed partial class AethergramApp
         var requestsLabel = requestCount > 0
             ? Loc.T(L.Aethergram.RequestsCount, requestCount)
             : Loc.T(L.Aethergram.Requests);
-        DrawInboxSegments(segRect, Loc.T(L.Aethergram.ChatsTab), requestsLabel);
+        inboxSegmentLabels[0] = Loc.T(L.Aethergram.ChatsTab);
+        inboxSegmentLabels[1] = requestsLabel;
+        inboxTab = SegmentStrip.Draw("aethergram.inbox", segRect, inboxSegmentLabels, inboxTab,
+            AppPalettes.Aethergram);
         var listRect = new Rect(new Vector2(area.Min.X, segRect.Max.Y + 8f * scale), area.Max);
         var showRequests = inboxTab == 1;
         var threads = dmStore.Threads;
@@ -53,7 +54,7 @@ internal sealed partial class AethergramApp
             }
         }
 
-        using (AppSurface.Begin(listRect))
+        using (AppSurface.BeginEdgeToEdge(listRect))
         {
             if (visibleCount == 0)
             {
@@ -81,45 +82,6 @@ internal sealed partial class AethergramApp
 
                 ImGui.Dummy(new Vector2(0f, 24f * scale));
             }
-        }
-
-        DrawInboxRowMenu(area);
-    }
-
-    private void DrawInboxSegments(Rect rect, string chatsLabel, string requestsLabel)
-    {
-        var scale = UiScale.Current;
-        var drawList = ImGui.GetWindowDrawList();
-        ui.Card(drawList, rect.Min, rect.Max, rect.Height * 0.5f);
-        var segmentWidth = rect.Width * 0.5f;
-        var pad = 3f * scale;
-        var delta = MathF.Min(ImGui.GetIO().DeltaTime, NavHoverMaxFrameSeconds);
-        var thumb = Math.Clamp(inboxSegmentSpring.Step(inboxTab, InboxSegmentSmoothTime, delta), 0f, 1f);
-        var thumbMin = new Vector2(rect.Min.X + pad + thumb * segmentWidth, rect.Min.Y + pad);
-        var thumbMax = new Vector2(thumbMin.X + segmentWidth - pad * 2f, rect.Max.Y - pad);
-        Squircle.Fill(drawList, thumbMin, thumbMax, (rect.Height - pad * 2f) * 0.5f,
-            ImGui.GetColorU32(Palette.WithAlpha(Accent, 0.30f)));
-        DrawInboxSegment(rect, 0, chatsLabel, segmentWidth);
-        DrawInboxSegment(rect, 1, requestsLabel, segmentWidth);
-    }
-
-    private void DrawInboxSegment(Rect rect, int index, string label, float segmentWidth)
-    {
-        var min = new Vector2(rect.Min.X + index * segmentWidth, rect.Min.Y);
-        var max = new Vector2(min.X + segmentWidth, rect.Max.Y);
-        var active = inboxTab == index;
-        Typography.DrawCentered(new Vector2((min.X + max.X) * 0.5f, (min.Y + max.Y) * 0.5f), label,
-            active ? AppPalettes.Aethergram.TitleInk : AppPalettes.Aethergram.MutedInk,
-            TextStyles.FootnoteEmphasized);
-        var hovered = UiInteract.Hover(min, max);
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        if (UiInteract.Click(min, max, hovered))
-        {
-            inboxTab = index;
         }
     }
 
@@ -149,12 +111,11 @@ internal sealed partial class AethergramApp
     {
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ScrollLayout.StableContentWidth();
         var rowHeight = 64f * scale;
-        var rowMax = new Vector2(origin.X + width, origin.Y + rowHeight);
-        ui.Card(drawList, origin, rowMax, 16f * scale);
-        var pad = 12f * scale;
+        var cell = FeedCell.Begin(drawList, rowHeight, ui.HoverWash);
+        var origin = cell.Bounds.Min;
+        var width = cell.Bounds.Width;
+        var pad = FeedCell.PadX * scale;
         var avatarRadius = 22f * scale;
         var avatarCenter = new Vector2(origin.X + pad + avatarRadius, origin.Y + rowHeight * 0.5f);
         AvatarView.Draw(drawList, avatarCenter, avatarRadius, Accent,
@@ -190,36 +151,41 @@ internal sealed partial class AethergramApp
             ActivityBadge.Draw(new Vector2(textRight - 7f * scale, origin.Y + 42f * scale), unread, theme, scale);
         }
 
-        if (UiInteract.Hover(origin, rowMax) && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
+        if (cell.Hovered && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
         {
-            OpenInboxRowMenu(thread.OtherUserId);
+            OpenInboxRowSheet(thread);
         }
-        else if (UiInteract.HoverClick(origin, rowMax))
+        else if (cell.Tapped)
         {
             OpenThread(thread.OtherUserId);
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight + 8f * scale));
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 
-    private void OpenInboxRowMenu(string otherId)
+    private void OpenInboxRowSheet(GramThreadDto thread)
     {
-        inboxMenuThreadId = otherId;
-        var position = ImGui.GetMousePos();
-        inboxRowMenu.Toggle(otherId, new Rect(position, position + new Vector2(1f, 1f)));
+        inboxSheetThreadId = thread.OtherUserId;
+        inboxSheetTitle = SocialIdentity.Name(thread.OtherDisplayName, thread.OtherHandle);
+        inboxRowSheetItems[0] = new ActionSheet.Item(Loc.T(L.Aethergram.DeleteConversation), string.Empty, true);
+        inboxRowSheet.Open();
     }
 
-    private void DrawInboxRowMenu(Rect area)
+    private void DrawInboxRowSheet(Rect screen)
     {
-        if (inboxMenuThreadId is not { } otherId || !inboxRowMenu.IsOpenFor(otherId))
+        if (!inboxRowSheet.CapturesPointer)
         {
             return;
         }
 
-        inboxRowItems[0] = new DropdownMenu.Item(Loc.T(L.Aethergram.DeleteConversation),
-            FontAwesomeIcon.Trash.ToIconString(), true);
-        if (inboxRowMenu.Draw(area, theme, inboxRowItems) == 0)
+        if (inboxRowSheet.IsOpen && router.Current.Screen != AethergramScreen.Inbox)
+        {
+            inboxRowSheet.Close();
+        }
+
+        var picked = inboxRowSheet.Draw(screen, ActionSheetStyle.From(ui), inboxRowSheetItems,
+            Loc.T(L.Common.Cancel), false, inboxSheetTitle);
+        if (picked == 0 && inboxSheetThreadId is { } otherId)
         {
             AskDeleteConversation(otherId);
         }
@@ -233,6 +199,7 @@ internal sealed partial class AethergramApp
             Message = Loc.T(L.Aethergram.DeleteConversationMessage),
             ConfirmLabel = Loc.T(L.Aethergram.DeleteConfirm),
             CancelLabel = Loc.T(L.Aethergram.DeleteCancel),
+            Sheet = true,
             Danger = true,
             Confirm = () => DeleteConversation(otherId),
         });

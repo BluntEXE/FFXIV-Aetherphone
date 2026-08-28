@@ -102,9 +102,8 @@ internal sealed class StackRenderer
             ImGui.GetColorU32(GamePalette.Lighten(color, 0.22f)), ImGui.GetColorU32(GamePalette.Darken(color, 0.26f)));
         Squircle.Stroke(drawList, min, max, rounding, ImGui.GetColorU32(GamePalette.Darken(color, 0.45f) with { W = 0.6f }),
             MathF.Max(1f, scale));
-        var inset = MathF.Min(rounding, halfWidth);
-        drawList.AddLine(new Vector2(min.X + inset, min.Y + 1.5f * scale), new Vector2(max.X - inset, min.Y + 1.5f * scale),
-            ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.34f)), MathF.Max(1f, scale));
+        Material.Sheen(drawList, min, max, rounding, ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 0.34f)),
+            MathF.Max(1f, scale), 1.5f * scale);
     }
 
     private static void DrawSlices(ImDrawListPtr drawList, StackBoard board, Rect area, float camera, float baseline,

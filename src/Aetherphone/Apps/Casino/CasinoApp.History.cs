@@ -16,8 +16,6 @@ internal sealed partial class CasinoApp
     private const float ActionPillHeight = 44f;
     private const int FairnessRecentRoundLimit = 8;
 
-    private bool historyLoadFailed;
-
     private void DrawHistory(Rect body)
     {
         var scale = UiScale.Current;
@@ -109,7 +107,7 @@ internal sealed partial class CasinoApp
 
         var outcome = OutcomeText(round, out var outcomeInk, out var outcomeStyle);
         var outcomeSize = Typography.Measure(outcome, outcomeStyle);
-        var stakeLine = Loc.T(L.Casino.HistoryStakeLine, round.Stake.ToString("N0", Loc.Culture));
+        var stakeLine = Loc.T(L.Casino.HistoryStakeLine, NumberText.Group(round.Stake));
         var stakeSize = Typography.Measure(stakeLine, TextStyles.Caption1);
         var rightEdge = row.Max.X - 4f * scale;
         Typography.Draw(drawList, new Vector2(rightEdge - outcomeSize.X, row.Center.Y - outcomeSize.Y + 2f * scale),
@@ -153,14 +151,14 @@ internal sealed partial class CasinoApp
         {
             ink = ui.Accent;
             style = TextStyles.SubheadlineEmphasized;
-            return "+" + net.ToString("N0", Loc.Culture);
+            return "+" + NumberText.Group(net);
         }
 
         if (net < 0)
         {
             ink = ui.MutedInk;
             style = TextStyles.Subheadline;
-            return net.ToString("N0", Loc.Culture);
+            return NumberText.Group(net);
         }
 
         ink = ui.BodyInk;
@@ -294,7 +292,7 @@ internal sealed partial class CasinoApp
             if (AppSkin.PillButton(copyRect, Loc.T(L.Casino.CopyDetails), false, true, theme))
             {
                 ImGui.SetClipboardText(BuildRoundDetailsBlob(verifiedRound));
-                CopyToast.Show();
+                ShellToast.Show();
             }
 
             ImGui.SetCursorScreenPos(copyOrigin);
@@ -367,12 +365,12 @@ internal sealed partial class CasinoApp
         DrawFactRow(card.NextRow(), Loc.T(L.Casino.RoundGame), Loc.T(GameName(ClientGameId(round.GameKind))),
             ui.TitleInk, scale);
         DrawFactRow(card.NextRow(), Loc.T(L.Casino.RoundState), StateText(round.State), ui.TitleInk, scale);
-        DrawFactRow(card.NextRow(), Loc.T(L.Casino.RoundStake), round.Stake.ToString("N0", Loc.Culture),
+        DrawFactRow(card.NextRow(), Loc.T(L.Casino.RoundStake), NumberText.Group(round.Stake),
             ui.TitleInk, scale);
         var payoutInk = round.State == CasinoRoundStates.Settled && round.Payout > round.Stake
             ? ui.Accent
             : ui.TitleInk;
-        DrawFactRow(card.NextRow(), Loc.T(L.Casino.RoundPayout), round.Payout.ToString("N0", Loc.Culture),
+        DrawFactRow(card.NextRow(), Loc.T(L.Casino.RoundPayout), NumberText.Group(round.Payout),
             payoutInk, scale);
         if (round.SettledAtUnix is long settledAtUnix)
         {

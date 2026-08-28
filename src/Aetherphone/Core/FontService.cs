@@ -56,8 +56,7 @@ internal sealed class FontService : IDisposable
     private const float MaxZoom = 1.5f;
     private const int LearnedGlyphCap = 2000;
     private const int LearnedIconCap = 512;
-    private const int FirstIconCodepoint = 0xE000;
-    private const int LastIconCodepoint = 0xF8FF;
+    private const string TablerIconFile = "TablerIcons.ttf";
     private const long LearnRebuildDebounceMs = 600;
     private readonly Configuration configuration;
     private readonly LoadingScreen loading;
@@ -83,6 +82,7 @@ internal sealed class FontService : IDisposable
     private float renderScale;
     private long learnDirtySince;
     private volatile bool learnRebuildInFlight;
+    private int lastRebuildCheckFrame = -1;
     private int generation;
 
     public FontService(IDalamudPluginInterface pluginInterface, Configuration configuration, LoadingScreen loading,
@@ -259,7 +259,12 @@ internal sealed class FontService : IDisposable
 
     private void NoticeIcon(char codepoint)
     {
-        if (codepoint < FirstIconCodepoint || codepoint > LastIconCodepoint)
+        if (codepoint < IconPlan.FirstIconCodepoint || codepoint > IconPlan.LastIconCodepoint)
+        {
+            return;
+        }
+
+        if (iconCoverage.Contains(codepoint))
         {
             return;
         }
@@ -330,6 +335,13 @@ internal sealed class FontService : IDisposable
             return;
         }
 
+        var frame = ImGui.GetFrameCount();
+        if (frame == lastRebuildCheckFrame)
+        {
+            return;
+        }
+
+        lastRebuildCheckFrame = frame;
         if (Environment.TickCount64 - learnDirtySince < LearnRebuildDebounceMs)
         {
             return;
@@ -382,9 +394,26 @@ internal sealed class FontService : IDisposable
     private IFontHandle BuildIconHandle(int sizeIndex)
     {
         var pixels = UiBuilder.DefaultFontSizePx * IconSizeMultipliers[sizeIndex];
+        var tablerPath = Path.Combine(fontDirectory, TablerIconFile);
         return atlas.NewDelegateFontHandle(e => e.OnPreBuild(tk =>
-            tk.AddDalamudAssetFont(Dalamud.DalamudAsset.FontAwesomeFreeSolid,
-                new SafeFontConfig { SizePx = pixels, GlyphRanges = iconRanges, })));
+        {
+            var primary = tk.AddDalamudAssetFont(Dalamud.DalamudAsset.FontAwesomeFreeSolid,
+                new SafeFontConfig { SizePx = pixels, GlyphRanges = iconRanges, });
+            if (!File.Exists(tablerPath))
+            {
+                return;
+            }
+
+            try
+            {
+                tk.AddFontFromFile(tablerPath,
+                    new SafeFontConfig { SizePx = pixels, GlyphRanges = iconRanges, MergeFont = primary, });
+            }
+            catch (Exception exception)
+            {
+                AepLog.Warning(exception, $"[Fonts] skipped merging '{TablerIconFile}' at {pixels}px.");
+            }
+        }));
     }
 
     private IFontHandle BuildTextHandle(string path, int weightIndex, int sizeIndex)
@@ -489,6 +518,7 @@ internal sealed class FontService : IDisposable
     private void ComposeSharedRanges()
     {
         sharedCoverage.Clear();
+        sharedCoverage.AddRanges(GlyphPlan.SharedBase, nativeCoverage);
         var catalogGlyphs = Loc.CatalogGlyphs;
         for (var index = 0; index < catalogGlyphs.Length; index++)
         {
@@ -518,19 +548,24 @@ internal sealed class FontService : IDisposable
 
     private void ComposeIconRanges()
     {
-        if (learnedIcons.Count == 0)
+        iconCoverage.Clear();
+        for (var codepoint = IconPlan.FirstTablerCodepoint; codepoint <= IconPlan.LastTablerCodepoint; codepoint++)
         {
-            iconRanges = PlaceholderRanges;
-            return;
+            iconCoverage.Add(codepoint);
         }
 
-        iconCoverage.Clear();
+        var fontAwesome = IconPlan.FontAwesome;
+        for (var index = 0; index < fontAwesome.Length; index++)
+        {
+            iconCoverage.Add(fontAwesome[index]);
+        }
+
         foreach (var codepoint in learnedIcons)
         {
             iconCoverage.Add(codepoint);
         }
 
-        iconRanges = iconCoverage.ToRanges(FirstIconCodepoint);
+        iconRanges = iconCoverage.ToRanges(IconPlan.FirstIconCodepoint);
     }
 
     private void SeedLearned()
@@ -549,6 +584,11 @@ internal sealed class FontService : IDisposable
                 continue;
             }
 
+            if (GlyphPlan.IsSharedBase(codepoint))
+            {
+                continue;
+            }
+
             learned.Add(codepoint);
         }
     }
@@ -559,7 +599,12 @@ internal sealed class FontService : IDisposable
         for (var index = 0; index < stored.Length && learnedIcons.Count < LearnedIconCap; index++)
         {
             var codepoint = stored[index];
-            if (codepoint < FirstIconCodepoint || codepoint > LastIconCodepoint)
+            if (codepoint < IconPlan.FirstIconCodepoint || codepoint > IconPlan.LastIconCodepoint)
+            {
+                continue;
+            }
+
+            if (IconPlan.IsDeclared(codepoint))
             {
                 continue;
             }

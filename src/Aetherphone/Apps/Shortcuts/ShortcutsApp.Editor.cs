@@ -16,9 +16,6 @@ internal sealed partial class ShortcutsApp
     private const float StepCardHeight = 78f;
     private const float SwatchColumns = 6f;
 
-    private ShortcutEntry? draft;
-    private Guid draftId = Guid.Empty;
-    private bool draftPinned;
     private string hexBuffer = string.Empty;
     private int pendingStepRemoval = -1;
 
@@ -202,20 +199,20 @@ internal sealed partial class ShortcutsApp
         var deleteCenter = new Vector2(card.Max.X - padding - buttonRadius, headerY);
         var downCenter = new Vector2(deleteCenter.X - buttonRadius * 2.4f, headerY);
         var upCenter = new Vector2(downCenter.X - buttonRadius * 2.4f, headerY);
-        if (index > 0 && ui.IconButton(upCenter, buttonRadius, FontAwesomeIcon.ChevronUp.ToIconString(), ui.MutedInk,
+        if (index > 0 && ui.IconButton(upCenter, buttonRadius, IconGlyph.Of(FontAwesomeIcon.ChevronUp), ui.MutedInk,
                 AppSkin.Transparent, 0.5f, Loc.T(L.Shortcuts.MoveUp)))
         {
             Swap(steps, index, index - 1);
         }
 
         if (index < steps.Count - 1 && ui.IconButton(downCenter, buttonRadius,
-                FontAwesomeIcon.ChevronDown.ToIconString(), ui.MutedInk, AppSkin.Transparent, 0.5f,
+                IconGlyph.Of(FontAwesomeIcon.ChevronDown), ui.MutedInk, AppSkin.Transparent, 0.5f,
                 Loc.T(L.Shortcuts.MoveDown)))
         {
             Swap(steps, index, index + 1);
         }
 
-        if (ui.IconButton(deleteCenter, buttonRadius, FontAwesomeIcon.TrashAlt.ToIconString(), theme.Danger,
+        if (ui.IconButton(deleteCenter, buttonRadius, IconGlyph.Of(FontAwesomeIcon.TrashAlt), theme.Danger,
                 AppSkin.Transparent, 0.5f, Loc.T(L.Shortcuts.RemoveStep)))
         {
             pendingStepRemoval = index;
@@ -239,7 +236,7 @@ internal sealed partial class ShortcutsApp
                 ImGui.GetColorU32(ui.FieldSurface));
             var loaded = catalog.IsLoaded(step.Text);
             var label = catalog.DisplayName(step.Text);
-            Marquee.DrawLeftAuto("shortcuts.step.plugin." + index, label, rect.Min.X + Metrics.Space.Md * scale,
+            Marquee.DrawLeftAuto(new MarqueeId("shortcuts.step.plugin.", index), label, rect.Min.X + Metrics.Space.Md * scale,
                 rect.Center.Y - 9f * scale, rect.Width - Metrics.Space.Md * 2f * scale, TextStyles.Body,
                 loaded ? ui.TitleInk : theme.Danger);
             return;
@@ -506,6 +503,7 @@ internal sealed partial class ShortcutsApp
             Message = Loc.T(L.Shortcuts.DeleteConfirm),
             ConfirmLabel = Loc.T(L.Shortcuts.Delete),
             CancelLabel = Loc.T(L.Shortcuts.KeepIt),
+            Sheet = true,
             Confirm = () => DeleteShortcut(id),
         });
     }

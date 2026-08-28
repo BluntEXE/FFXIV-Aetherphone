@@ -322,11 +322,11 @@ internal sealed partial class HealthApp
         var valueNaturalSize = Typography.Measure(value, TextStyles.Headline);
         var valueMaxWidth = MathF.Max(1f,
             MathF.Min(valueNaturalSize.X, row.Width - minLabelWidth - 10f * scale));
-        Marquee.DrawRightAuto("health.keyrow.value." + label, value, row.Max.X,
+        Marquee.DrawRightAuto(new MarqueeId("health.keyrow.value.", label), value, row.Max.X,
             row.Center.Y - valueNaturalSize.Y * 0.5f, valueMaxWidth, TextStyles.Headline, Pal.TitleInk);
         var labelMaxWidth = MathF.Max(1f, row.Width - valueMaxWidth - 10f * scale);
         var labelSize = Typography.Measure(label, TextStyles.Subheadline);
-        Marquee.DrawLeftAuto("health.keyrow.label." + label, label, row.Min.X, row.Center.Y - labelSize.Y * 0.5f,
+        Marquee.DrawLeftAuto(new MarqueeId("health.keyrow.label.", label), label, row.Min.X, row.Center.Y - labelSize.Y * 0.5f,
             labelMaxWidth, TextStyles.Subheadline, Pal.MutedInk);
     }
 
@@ -987,12 +987,12 @@ internal sealed partial class HealthApp
         var valueCenter = new Vector2((plus.X + minus.X) * 0.5f, row.Center.Y);
         Typography.DrawCentered(valueCenter, value, Pal.TitleInk, 0.95f, FontWeight.SemiBold);
         var delta = 0;
-        if (ui.IconButton(minus, radius, FontAwesomeIcon.Minus.ToIconString(), Pal.TitleInk, Pal.FieldSurface, 0.5f))
+        if (ui.IconButton(minus, radius, IconGlyph.Of(FontAwesomeIcon.Minus), Pal.TitleInk, Pal.FieldSurface, 0.5f))
         {
             delta--;
         }
 
-        if (ui.IconButton(plus, radius, FontAwesomeIcon.Plus.ToIconString(), Pal.TitleInk, Pal.FieldSurface, 0.5f))
+        if (ui.IconButton(plus, radius, IconGlyph.Of(FontAwesomeIcon.Plus), Pal.TitleInk, Pal.FieldSurface, 0.5f))
         {
             delta++;
         }
@@ -1093,12 +1093,12 @@ internal sealed partial class HealthApp
 
         var labelMaxWidth = MathF.Max(1f, minusCenter.X - radius - gap - origin.X);
         var labelSize = Typography.Measure(label, TextStyles.Subheadline);
-        Marquee.DrawLeftAuto("health.numberfield.label." + label, label, origin.X, centerY - labelSize.Y * 0.5f,
+        Marquee.DrawLeftAuto(new MarqueeId("health.numberfield.label.", label), label, origin.X, centerY - labelSize.Y * 0.5f,
             labelMaxWidth, TextStyles.Subheadline, Pal.BodyInk);
 
-        dec = ui.IconButton(minusCenter, radius, FontAwesomeIcon.Minus.ToIconString(), Pal.TitleInk,
+        dec = ui.IconButton(minusCenter, radius, IconGlyph.Of(FontAwesomeIcon.Minus), Pal.TitleInk,
             Pal.FieldSurface, 0.5f);
-        inc = ui.IconButton(plusCenter, radius, FontAwesomeIcon.Plus.ToIconString(), Pal.TitleInk,
+        inc = ui.IconButton(plusCenter, radius, IconGlyph.Of(FontAwesomeIcon.Plus), Pal.TitleInk,
             Pal.FieldSurface, 0.5f);
 
         var boxMin = new Vector2(inputLeft, centerY - frameHeight * 0.5f);

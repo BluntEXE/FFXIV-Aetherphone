@@ -12,10 +12,9 @@ internal enum MinimizePhase : byte
 
 internal sealed class MinimizeTransition
 {
-    public static readonly Vector2 MinimizedSize = new(78f, 152f);
-
-    private const float CollapseSmoothTime = 0.26f;
-    private const float ExpandSmoothTime = 0.23f;
+    private const float CollapseSmoothTime = 0.19f;
+    private const float ExpandSmoothTime = 0.16f;
+    private const float SettleProgress = 0.98f;
 
     private Spring progress;
     private MinimizePhase phase = MinimizePhase.None;
@@ -23,7 +22,8 @@ internal sealed class MinimizeTransition
     public MinimizePhase Phase => phase;
     public bool MorphActive => phase is MinimizePhase.Collapsing or MinimizePhase.Expanding;
     public bool MinimizedResting => phase == MinimizePhase.Minimized;
-    public float EasedProgress => Easing.EaseInOutCubic(Math.Clamp(progress.Value, 0f, 1f));
+    public float EasedProgress =>
+        Easing.SmoothStep(Easing.Segment(progress.Value, 1f - SettleProgress, SettleProgress));
 
     public void BeginCollapse()
     {
@@ -65,7 +65,7 @@ internal sealed class MinimizeTransition
                 break;
             case MinimizePhase.Collapsing:
                 progress.Step(1f, CollapseSmoothTime, delta);
-                if (progress.IsResting(1f, TransitionTiming.RestPositionEpsilon, TransitionTiming.RestVelocityEpsilon))
+                if (progress.Value >= SettleProgress)
                 {
                     progress.SnapTo(1f);
                     phase = MinimizePhase.Minimized;
@@ -74,7 +74,7 @@ internal sealed class MinimizeTransition
                 break;
             case MinimizePhase.Expanding:
                 progress.Step(0f, ExpandSmoothTime, delta);
-                if (progress.IsResting(0f, TransitionTiming.RestPositionEpsilon, TransitionTiming.RestVelocityEpsilon))
+                if (progress.Value <= 1f - SettleProgress)
                 {
                     progress.SnapTo(0f);
                     phase = MinimizePhase.None;
@@ -83,5 +83,4 @@ internal sealed class MinimizeTransition
                 break;
         }
     }
-
 }

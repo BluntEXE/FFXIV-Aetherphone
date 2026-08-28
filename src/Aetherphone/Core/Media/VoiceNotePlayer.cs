@@ -1,3 +1,5 @@
+using Aetherphone.Core.Audio;
+using Aetherphone.Core.Playback;
 using NAudio.Wave;
 
 namespace Aetherphone.Core.Media;

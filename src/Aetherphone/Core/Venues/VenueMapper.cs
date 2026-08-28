@@ -100,7 +100,7 @@ internal static class VenueMapper
                 }
 
                 var startValue = start.UtcDateTime;
-                DateTime? endValue = resolution.End?.UtcDateTime;
+                var endValue = resolution.End?.UtcDateTime;
                 if (!IsRelevant(startValue, endValue, resolution.IsNow, nowUtc))
                 {
                     continue;
@@ -126,7 +126,7 @@ internal static class VenueMapper
                 }
 
                 var startValue = start.UtcDateTime;
-                DateTime? endValue = entry.End?.UtcDateTime;
+                var endValue = entry.End?.UtcDateTime;
                 if (!IsRelevant(startValue, endValue, false, nowUtc))
                 {
                     continue;

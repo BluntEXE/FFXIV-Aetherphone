@@ -1,8 +1,10 @@
-using Aetherphone.Core;
+﻿using Aetherphone.Core;
 using Aetherphone.Core.Apps;
+using Aetherphone.Core.Config;
 using Aetherphone.Core.Device;
 using Aetherphone.Core.Emoji;
-using Aetherphone.Core.Emote;
+using Aetherphone.Core.Game;
+using Aetherphone.Core.GameChat;
 using Aetherphone.Core.Localization;
 using Aetherphone.Core.Notifications;
 using Aetherphone.Core.Photos;
@@ -70,6 +72,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly VideoDebugWindow videoDebugWindow;
     private readonly AetherStreamScreenWindow screenWindow;
     private readonly UpdateChipWindow updateChipWindow;
+    private readonly LinkpearlPopouts linkpearlPopouts;
     private readonly PhoneEmoteController phoneEmote;
     private readonly TimerNotifier timerNotifier;
     private readonly CalendarReminderService calendarReminders;
@@ -87,10 +90,12 @@ public sealed class Plugin : IDalamudPlugin
         try
         {
             Instance = this;
+            var freshInstall = !PluginInterface.ConfigFile.Exists;
             ConfigMigrations.Run(PluginInterface.ConfigFile);
             Cfg = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             Cfg.NormalizeAethernetBaseUrl();
             Cfg.MigrateSoundSettings();
+            Cfg.MigrateUiSoundDefaults(freshInstall);
             Cfg.MigrateChangelogSeen();
             Cfg.MigrateMessage();
             Cfg.MigrateMessagesMerge();
@@ -99,8 +104,10 @@ public sealed class Plugin : IDalamudPlugin
             Cfg.MigratePhoneWidth();
             Cfg.MigrateControlPanelRepack();
             Cfg.MigrateCharacterSessions();
+            Cfg.MigrateEncryptionKeyStore();
             Cfg.MigrateHousingRefreshFloor();
             InitializeLocalization();
+            InstallSource.Initialize(PluginInterface);
             Device = new DeviceStatus(ClientState, ObjectTable, DataManager);
             services = PhoneServices.Build(Cfg, ChatGui, DataManager, ObjectTable, ClientState, Framework, DutyState,
                 TextureProvider, PluginInterface.ConfigDirectory, UnlockState, Condition);
@@ -118,10 +125,15 @@ public sealed class Plugin : IDalamudPlugin
                 videoQueue, services.StreamSignals, screenController);
             streamSuggestions = new StreamSuggestionNotifier(watchAlong, services.Notifications);
             Framework.Update += OnVideoFrameworkUpdate;
+            Framework.Update += OnDeviceLinkTick;
             videoDebugWindow = new VideoDebugWindow(video, screenController);
             screenWindow = new AetherStreamScreenWindow(screenController, video);
+            linkpearlPopouts = new LinkpearlPopouts(Cfg, services.ChatInbox, services.ChatLog, services.ChatSend,
+                services.ChatTabs, services.TellPreferences, services.LinkpearlNotificationGate, services.Visibility,
+                services.Installer.Gate("messages"), services.GameData, services.Themes, services.Lodestone,
+                services.Notifications);
             var bundle = AppRegistry.BuildDefault(services, video, screenController, videoQueue, watchAlong,
-                streamSuggestions, screenWindow);
+                streamSuggestions, screenWindow, linkpearlPopouts);
             shell = new PhoneShell(services, bundle);
             screenshotImport = new ScreenshotImportService(bundle.Photos, Cfg);
             phoneWindow = new PhoneWindow(shell, Cfg);
@@ -133,6 +145,15 @@ public sealed class Plugin : IDalamudPlugin
             windowSystem.AddWindow(PhotoWindow);
             windowSystem.AddWindow(videoDebugWindow);
             windowSystem.AddWindow(screenWindow);
+            for (var index = 0; index < linkpearlPopouts.Windows.Count; index++)
+            {
+                windowSystem.AddWindow(linkpearlPopouts.Windows[index]);
+            }
+
+            linkpearlPopouts.OpenInPhone = OpenLinkpearlConversation;
+            linkpearlPopouts.LookUpInPhone = OpenLinkpearlLookup;
+            linkpearlPopouts.OpenMarketInPhone = OpenMarketItem;
+            linkpearlPopouts.Restore();
             services.Visibility.Bind(() => phoneWindow is { IsOpen: true, IsMinimized: false });
             phoneEmote = new PhoneEmoteController(Cfg, Framework, ObjectTable, Condition, DataManager,
                 () => services.Visibility.IsVisible);
@@ -196,6 +217,7 @@ public sealed class Plugin : IDalamudPlugin
         ClientState.Login -= OnLogin;
         Framework.Update -= OnAutoOpenTick;
         Framework.Update -= OnVideoFrameworkUpdate;
+        Framework.Update -= OnDeviceLinkTick;
         ContextMenu.OnMenuOpened -= OnMenuOpened;
         CommandManager.RemoveHandler(AepConstants.PrimaryCommand);
         CommandManager.RemoveHandler(AepConstants.AliasCommand);
@@ -249,10 +271,41 @@ public sealed class Plugin : IDalamudPlugin
         Framework.Update += OnAutoOpenTick;
     }
 
+    private void OpenLinkpearlConversation(string conversationKey)
+    {
+        services.LinkpearlLauncher.Request(conversationKey);
+        ShowPhoneApp("messages");
+    }
+
+    private void OpenLinkpearlLookup(string name, string world)
+    {
+        services.LinkpearlLauncher.RequestLookup(name, world);
+        ShowPhoneApp("messages");
+    }
+
+    private void OpenMarketItem(uint itemId)
+    {
+        services.MarketLauncher.RequestItem(itemId);
+        ShowPhoneApp("market");
+    }
+
+    private void ShowPhoneApp(string appId)
+    {
+        phoneWindow.Maximize();
+        phoneWindow.IsOpen = true;
+        shell.OpenApp(appId);
+    }
+
     private void OnVideoFrameworkUpdate(IFramework framework)
     {
         video.OnFrameworkUpdate();
         watchAlong.OnFrameworkUpdate((float)framework.UpdateDelta.TotalSeconds);
+    }
+
+    private void OnDeviceLinkTick(IFramework framework)
+    {
+        services.DeviceLinks.Tick((float)framework.UpdateDelta.TotalSeconds);
+        services.EncryptionGuide.Tick((float)framework.UpdateDelta.TotalSeconds);
     }
 
     private void OnAutoOpenTick(IFramework framework)
@@ -302,6 +355,7 @@ public sealed class Plugin : IDalamudPlugin
         ContextMenu.OnMenuOpened -= OnMenuOpened;
         dtrEntry.Remove();
         phoneWindow.PersistPositions();
+        linkpearlPopouts.Dispose();
         windowSystem.RemoveAllWindows();
         videoDebugWindow.Dispose();
         streamSuggestions.Dispose();
@@ -323,6 +377,7 @@ public sealed class Plugin : IDalamudPlugin
         Fonts.Dispose();
         CommandManager.RemoveHandler(AepConstants.PrimaryCommand);
         CommandManager.RemoveHandler(AepConstants.AliasCommand);
+        Cfg.SaveNow();
     }
 
     public static void OnLanguageChanged()
@@ -405,6 +460,13 @@ public sealed class Plugin : IDalamudPlugin
         if (argument.Equals("videodebug", StringComparison.OrdinalIgnoreCase))
         {
             videoDebugWindow.IsOpen = true;
+            return;
+        }
+
+        if (argument.Equals("perfhud", StringComparison.OrdinalIgnoreCase))
+        {
+            Cfg.ShowPerfHud = !Cfg.ShowPerfHud;
+            Cfg.Save();
             return;
         }
 

@@ -10,6 +10,36 @@ internal sealed class GameStatsStore
     }
 
     public static int TodayIndex => (int)(DateTime.UtcNow.Ticks / TimeSpan.TicksPerDay);
+
+    public bool TetrisModern
+    {
+        get => configuration.TetrisModern;
+        set
+        {
+            if (configuration.TetrisModern == value)
+            {
+                return;
+            }
+
+            configuration.TetrisModern = value;
+            configuration.Save();
+        }
+    }
+
+    public string WordBank
+    {
+        get => configuration.WordRunBank;
+        set
+        {
+            if (string.Equals(configuration.WordRunBank, value, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            configuration.WordRunBank = value;
+            configuration.Save();
+        }
+    }
     public string DailyGameId { get; set; } = string.Empty;
     public bool DailyDone => configuration.DailyChallengeLastDay == TodayIndex;
     public int DailyStreak =>
@@ -24,6 +54,19 @@ internal sealed class GameStatsStore
         }
 
         return new GameStats(record.BestScore, record.BestTimeSeconds, record.Streak);
+    }
+
+    public long LastPlayed(string gameId)
+    {
+        var record = Find(gameId);
+        return record?.LastPlayedUnixSeconds ?? 0L;
+    }
+
+    public void MarkPlayed(string gameId)
+    {
+        var record = GetOrCreate(gameId);
+        record.LastPlayedUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        configuration.Save();
     }
 
     public bool SubmitScore(string gameId, int score)

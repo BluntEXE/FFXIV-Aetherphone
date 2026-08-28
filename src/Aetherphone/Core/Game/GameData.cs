@@ -1,9 +1,9 @@
-using System.Globalization;
 using Dalamud.Game;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Plugin.Services;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
+using System.Globalization;
 using ActionSheet = Lumina.Excel.Sheets.Action;
 using EmoteSheet = Lumina.Excel.Sheets.Emote;
 
@@ -14,6 +14,7 @@ internal sealed class GameData
     private const uint FramedJobIconBaseId = 62100;
     public const int ChineseSimplifiedClientLanguage = 4;
     private const uint ChinaRegionId = 5;
+    public const string ChineseLocale = "cn";
 
     private readonly IDataManager data;
     private readonly IObjectTable objectTable;
@@ -221,6 +222,42 @@ internal sealed class GameData
             _ => string.Empty,
         };
 
+    public IReadOnlyList<(uint WorldId, string Name, uint DataCenterId, string DataCenterName)> ChinaWorlds()
+    {
+        var results = new List<(uint WorldId, string Name, uint DataCenterId, string DataCenterName)>();
+
+        if (!IsChineseGameClient())
+        {
+            return results;
+        }
+
+        var worlds = data.GetExcelSheet<World>();
+        foreach (var world in worlds)
+        {
+            // Exclude RowId 1200 (亚马乌罗提): it matches every CN filter (data center 104 豆豆柴,
+            // Region=China, UserType=101) but that server is not open yet. The official list at
+            // https://ff.web.sdo.com/web8/index.html#/servers has 28 worlds, the sheet has 29.
+            if (world.RowId is > 1000 and < 2000 &&
+                world.DataCenter.RowId != 0 &&
+                world.Region == 2 &&
+                world.DataCenter.Value.Region.RowId == ChinaRegionId &&
+                world.UserType == 101 &&
+                world.RowId != 1200)
+            {
+                var dataCenter = world.DataCenter.Value;
+                var name = world.Name.ExtractText();
+                if (name.Length == 0)
+                {
+                    continue;
+                }
+
+                results.Add((world.RowId, name, dataCenter.RowId, dataCenter.Name.ExtractText()));
+            }
+        }
+
+        return results;
+    }
+
     public string LocalRegionCode() => RegionCodeFromId(RegionId());
 
     public bool IsChineseGameClient()
@@ -306,6 +343,7 @@ internal sealed class GameData
         {
             1 => "jp",
             3 => EuropeanLocale(),
+            ChinaRegionId => ChineseLocale,
             _ => "na",
         };
 
@@ -561,7 +599,7 @@ internal sealed class GameData
             return default;
         }
 
-        return new NamedIcon(TitleCase(row.Singular.ExtractText()), (uint)row.Icon);
+        return new NamedIcon(TitleCase(row.Singular.ExtractText()), row.Icon);
     }
 
     public NamedIcon MinionEntry(uint rowId)

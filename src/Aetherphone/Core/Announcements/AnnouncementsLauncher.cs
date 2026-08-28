@@ -1,24 +1,12 @@
+using Aetherphone.Core.Apps;
+
 namespace Aetherphone.Core.Announcements;
 
 internal sealed class AnnouncementsLauncher
 {
-    private string? pendingAnnouncementId;
+    private readonly LaunchIntent detail = new();
 
-    public void RequestDetail(string announcementId)
-    {
-        pendingAnnouncementId = announcementId;
-    }
+    public void RequestDetail(string announcementId) => detail.Request(announcementId);
 
-    public bool TryConsumeDetail(out string announcementId)
-    {
-        if (pendingAnnouncementId is null)
-        {
-            announcementId = string.Empty;
-            return false;
-        }
-
-        announcementId = pendingAnnouncementId;
-        pendingAnnouncementId = null;
-        return true;
-    }
+    public bool TryConsumeDetail(out string announcementId) => detail.TryConsume(out announcementId);
 }

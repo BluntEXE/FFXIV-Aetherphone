@@ -9,8 +9,7 @@ namespace Aetherphone.Apps.Aethergram;
 
 internal sealed partial class AethergramApp
 {
-    private readonly HashSet<string> shareSentUserIds = new(StringComparer.Ordinal);
-    private string shareSearchDraft = string.Empty;
+    private const float ShareRowHeight = 56f;
 
     private void OpenShare(string postId)
     {
@@ -40,7 +39,7 @@ internal sealed partial class AethergramApp
         }
 
         var listRect = new Rect(new Vector2(area.Min.X, searchRect.Max.Y + 4f * scale), area.Max);
-        using (AppSurface.Begin(listRect))
+        using (AppSurface.BeginEdgeToEdge(listRect))
         {
             if (shareSearchDraft.Trim().Length > 0)
             {
@@ -123,26 +122,22 @@ internal sealed partial class AethergramApp
     {
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
-        var origin = ImGui.GetCursorScreenPos();
-        var width = ScrollLayout.StableContentWidth();
-        var rowHeight = 56f * scale;
-        var rowMax = new Vector2(origin.X + width, origin.Y + rowHeight);
-        ui.Card(drawList, origin, rowMax, 16f * scale);
-        var pad = 12f * scale;
+        var cell = FeedCell.Begin(drawList, ShareRowHeight * scale, ui.HoverWash, false);
+        var pad = FeedCell.PadX * scale;
         var avatarRadius = 19f * scale;
-        var avatarCenter = new Vector2(origin.X + pad + avatarRadius, origin.Y + rowHeight * 0.5f);
+        var avatarCenter = new Vector2(cell.Bounds.Min.X + pad + avatarRadius, cell.Bounds.Center.Y);
         AvatarView.Draw(drawList, avatarCenter, avatarRadius, Accent, monogram, 0.95f,
             images.Avatar(avatarUrl, avatarRadius * 2f), 32);
         var buttonWidth = 76f * scale;
         var buttonHeight = 30f * scale;
         var buttonRect = new Rect(
-            new Vector2(rowMax.X - pad - buttonWidth, origin.Y + (rowHeight - buttonHeight) * 0.5f),
-            new Vector2(rowMax.X - pad, origin.Y + (rowHeight + buttonHeight) * 0.5f));
+            new Vector2(cell.Bounds.Max.X - pad - buttonWidth, cell.Bounds.Center.Y - buttonHeight * 0.5f),
+            new Vector2(cell.Bounds.Max.X - pad, cell.Bounds.Center.Y + buttonHeight * 0.5f));
         var textLeft = avatarCenter.X + avatarRadius + 12f * scale;
         var titleWidth = buttonRect.Min.X - 10f * scale - textLeft;
-        Typography.Draw(new Vector2(textLeft, origin.Y + rowHeight * 0.5f - 9f * scale),
-            Typography.FitText(title, titleWidth, TextStyles.Headline), theme.TextStrong,
-            TextStyles.Headline.Scale, TextStyles.Headline.Weight);
+        var titleSize = Typography.Measure(title, TextStyles.Headline);
+        Typography.Draw(drawList, new Vector2(textLeft, cell.Bounds.Center.Y - titleSize.Y * 0.5f),
+            Typography.FitText(title, titleWidth, TextStyles.Headline), theme.TextStrong, TextStyles.Headline);
         var sent = shareSentUserIds.Contains(userId);
         if (sent || !canMessage)
         {
@@ -154,7 +149,6 @@ internal sealed partial class AethergramApp
             shareSentUserIds.Add(userId);
         }
 
-        ImGui.SetCursorScreenPos(origin);
-        ImGui.Dummy(new Vector2(width, rowHeight + 8f * scale));
+        FeedCell.End(drawList, cell, ui.Hairline);
     }
 }

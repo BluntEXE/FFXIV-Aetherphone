@@ -7,4 +7,5 @@ internal sealed class GameStatRecord
     public int BestScore { get; set; }
     public int BestTimeSeconds { get; set; }
     public int Streak { get; set; }
+    public long LastPlayedUnixSeconds { get; set; }
 }

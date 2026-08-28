@@ -14,6 +14,8 @@ internal sealed class PhoneTheme
     public required Vector4 AppBackground { get; init; }
     public required Vector4 GroupedCard { get; init; }
     public required Vector4 Separator { get; init; }
+    public required Vector4 Hairline { get; init; }
+    public required Vector4 HoverWash { get; init; }
     public required Vector4 ToggleOn { get; init; }
     public required Vector4 ToggleOff { get; init; }
     public required Vector4 Surface { get; init; }
@@ -45,6 +47,8 @@ internal sealed class PhoneTheme
             AppBackground = new Vector4(0.055f, 0.055f, 0.075f, 1f),
             GroupedCard = new Vector4(0.110f, 0.110f, 0.125f, 1f),
             Separator = new Vector4(0.34f, 0.34f, 0.37f, 0.5f),
+            Hairline = new Vector4(1f, 1f, 1f, 0.065f),
+            HoverWash = new Vector4(1f, 1f, 1f, 0.025f),
             ToggleOn = new Vector4(0.204f, 0.780f, 0.349f, 1f),
             ToggleOff = new Vector4(0.24f, 0.24f, 0.26f, 1f),
             Surface = new Vector4(0.13f, 0.13f, 0.18f, 0.92f),
@@ -75,6 +79,8 @@ internal sealed class PhoneTheme
             AppBackground = new Vector4(0.949f, 0.949f, 0.969f, 1f),
             GroupedCard = new Vector4(1f, 1f, 1f, 1f),
             Separator = new Vector4(0.235f, 0.235f, 0.262f, 0.29f),
+            Hairline = new Vector4(0.235f, 0.235f, 0.262f, 0.22f),
+            HoverWash = new Vector4(0.05f, 0.05f, 0.08f, 0.045f),
             ToggleOn = new Vector4(0.204f, 0.780f, 0.349f, 1f),
             ToggleOff = new Vector4(0.902f, 0.902f, 0.922f, 1f),
             Surface = new Vector4(0.97f, 0.97f, 0.98f, 0.92f),
@@ -104,6 +110,8 @@ internal sealed class PhoneTheme
             AppBackground = baseTheme.AppBackground,
             GroupedCard = baseTheme.GroupedCard,
             Separator = baseTheme.Separator,
+            Hairline = baseTheme.Hairline,
+            HoverWash = baseTheme.HoverWash,
             ToggleOn = accent,
             ToggleOff = baseTheme.ToggleOff,
             Surface = baseTheme.Surface,

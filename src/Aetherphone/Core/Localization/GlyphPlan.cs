@@ -29,7 +29,9 @@ internal sealed class GlyphCoverage
         return true;
     }
 
-    public void AddRanges(ushort[] ranges)
+    public void AddRanges(ushort[] ranges) => AddRanges(ranges, null);
+
+    public void AddRanges(ushort[] ranges, GlyphCoverage? excluded)
     {
         for (var index = 0; index + 1 < ranges.Length; index += 2)
         {
@@ -42,6 +44,11 @@ internal sealed class GlyphCoverage
             var last = ranges[index + 1];
             for (int codepoint = first; codepoint <= last; codepoint++)
             {
+                if (excluded is not null && excluded.Contains(codepoint))
+                {
+                    continue;
+                }
+
                 Add(codepoint);
             }
         }
@@ -112,7 +119,43 @@ internal static class GlyphPlan
         0x25A0, 0x27BF,
     };
 
+    // Scripts other players write in that no UI language bakes natively: Latin Extended-B, combining marks,
+    // Greek, Cyrillic, Latin Extended Additional, currency, letterlike, arrows, CJK punctuation, kana,
+    // halfwidth and fullwidth forms. Rasterized once in the shared font, never per weight and size.
+    private static readonly ushort[] SharedBaseRanges =
+    {
+        0x0180, 0x024F,
+        0x0300, 0x036F,
+        0x0370, 0x03FF,
+        0x0400, 0x04FF,
+        0x0500, 0x052F,
+        0x1E00, 0x1EFF,
+        0x20A0, 0x20BF,
+        0x2100, 0x214F,
+        0x2190, 0x21FF,
+        0x3000, 0x303F,
+        0x3040, 0x309F,
+        0x30A0, 0x30FF,
+        0x31F0, 0x31FF,
+        0xFF00, 0xFFEF,
+    };
+
     private static readonly ushort[] NativeNameRanges = ComposeNativeNameRanges();
+
+    public static ushort[] SharedBase => SharedBaseRanges;
+
+    public static bool IsSharedBase(int codepoint)
+    {
+        for (var index = 0; index + 1 < SharedBaseRanges.Length; index += 2)
+        {
+            if (codepoint >= SharedBaseRanges[index] && codepoint <= SharedBaseRanges[index + 1])
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     public static ushort[] Native(LanguageInfo language)
     {

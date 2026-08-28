@@ -13,7 +13,6 @@ internal sealed partial class ClockApp
     private static readonly Vector4 GrayControl = new(0.55f, 0.56f, 0.60f, 1f);
     private static readonly float[] ReadoutScales = { 2.9f, 2.5f, 2.1f, 1.8f, 1.5f };
 
-    private readonly List<double> swLaps;
     private bool swRunning;
     private double swAccumulatedMs;
     private long swStartTick;
@@ -76,21 +75,21 @@ internal sealed partial class ClockApp
         using (AppSurface.Begin(area))
         {
             var count = swLaps.Count + (swRunning ? 1 : 0);
-            var card = BeginRowCard(count, 40f, scale);
-            var rowIndex = 0;
+            var card = GroupCard.Begin(ui, count, 40f);
             if (swRunning)
             {
                 var lastCumulative = swLaps.Count > 0 ? swLaps[swLaps.Count - 1] : 0.0;
-                DrawLapRow(RowAt(card, rowIndex++, 40f, scale), swLaps.Count + 1, elapsed - lastCumulative, ui.Accent);
+                DrawLapRow(card.NextRow(), swLaps.Count + 1, elapsed - lastCumulative, ui.Accent);
             }
 
             for (var index = swLaps.Count - 1; index >= 0; index--)
             {
                 var previous = index > 0 ? swLaps[index - 1] : 0.0;
-                DrawLapRow(RowAt(card, rowIndex++, 40f, scale), index + 1, swLaps[index] - previous, ui.MutedInk);
+                DrawLapRow(card.NextRow(), index + 1, swLaps[index] - previous, ui.MutedInk);
             }
 
-            EndRowCard(card, 10f, scale);
+            card.End();
+            ImGui.Dummy(new Vector2(0f, 10f * scale));
         }
     }
 

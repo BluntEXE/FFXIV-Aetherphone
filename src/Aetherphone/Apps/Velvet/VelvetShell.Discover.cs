@@ -59,10 +59,11 @@ internal sealed partial class VelvetShell
         }
 
         var listRect = new Rect(new Vector2(area.Min.X, searchRect.Max.Y + 8f * scale), area.Max);
-        using (AppSurface.Begin(listRect))
+        using (AppSurface.BeginEdgeToEdge(listRect))
         {
+            var inset = FeedCell.PadX * scale;
             var width = ImGui.GetContentRegionAvail().X;
-            DrawActiveFilters(width, VelvetPage.Discover);
+            DrawActiveFilters(width - inset * 2f, VelvetPage.Discover, inset);
 
             var results = FilterDiscoverByRegion(store.DiscoverResults);
             if (discoverInclude.Region.Length > 0 && results.Length < RegionFilterFill && store.HasMoreDiscover
@@ -131,19 +132,15 @@ internal sealed partial class VelvetShell
             }
 
             var feed = store.Feed;
-            VSectionHeader.Overline(Loc.T(L.Velvet.PeopleToMeet), results.Length.ToString(Loc.Culture));
-            Gap(8f);
+            VSectionHeader.Overline(Loc.T(L.Velvet.PeopleToMeet), results.Length.ToString(Loc.Culture), inset);
+            Gap(4f);
             for (var index = 0; index < results.Length; index++)
             {
-                var cardTop = ImGui.GetCursorScreenPos();
-                DrawPersonCard(results[index], feed);
+                var card = DrawPersonCard(results[index], feed);
                 if (index == 0)
                 {
-                    UiAnchors.Report("velvet.discover.card",
-                        new Rect(cardTop, new Vector2(cardTop.X + width, ImGui.GetCursorScreenPos().Y)));
+                    UiAnchors.Report("velvet.discover.card", card);
                 }
-
-                Gap(26f);
             }
 
             if (store.LoadingMoreDiscover)
@@ -177,7 +174,7 @@ internal sealed partial class VelvetShell
                 1f * scale);
         }
 
-        AppSkin.Icon(rect.Center, FontAwesomeIcon.SlidersH.ToIconString(),
+        AppSkin.Icon(rect.Center, IconGlyph.Of(FontAwesomeIcon.SlidersH),
             active ? VelvetTheme.RoseInk : VelvetTheme.MutedInk, 0.86f);
 
         if (active)
@@ -197,7 +194,7 @@ internal sealed partial class VelvetShell
         }
     }
 
-    private void DrawActiveFilters(float width, VelvetPage surface)
+    private void DrawActiveFilters(float width, VelvetPage surface, float inset = 0f)
     {
         var scale = UiScale.Current;
         var include = IncludeFor(surface);
@@ -271,6 +268,12 @@ internal sealed partial class VelvetShell
         }
 
         Gap(4f);
+        if (inset > 0f)
+        {
+            var flowOrigin = ImGui.GetCursorScreenPos();
+            ImGui.SetCursorScreenPos(new Vector2(flowOrigin.X + inset, flowOrigin.Y));
+        }
+
         var removed = VChipFlow.Draw(System.Runtime.InteropServices.CollectionsMarshal.AsSpan(activeFilterChips),
             width, scale);
         if (removed >= 0)
@@ -375,13 +378,13 @@ internal sealed partial class VelvetShell
         return excluded;
     }
 
-    private void DrawPersonCard(VelvetProfileDto profile, VelvetPostDto[] feed)
+    private Rect DrawPersonCard(VelvetProfileDto profile, VelvetPostDto[] feed)
     {
         var scale = UiScale.Current;
         var width = ScrollLayout.StableContentWidth();
         var name = DisplayNameOf(profile.DisplayName, profile.Handle);
         var region = RegionCodeOf(profile);
-        var pad = 14f * scale;
+        var pad = FeedCell.PadX * scale;
 
         var coverUrl = string.Empty;
         var photoCount = 0;
@@ -406,14 +409,12 @@ internal sealed partial class VelvetShell
             coverUrl = profile.AvatarUrl ?? string.Empty;
         }
 
-        var cardHeight = width * 0.82f;
-        var card = Reserve(cardHeight / scale);
         var drawList = ImGui.GetWindowDrawList();
-        var radius = Metrics.Radius.Card * scale;
-        DrawCoverImage(drawList, card.Min, card.Max, coverUrl, radius, name);
-        Squircle.Stroke(drawList, card.Min, card.Max, radius, VelvetTheme.CardStroke.Packed(), 1f * scale);
+        var cell = FeedCell.Begin(drawList, width * 0.82f, VelvetTheme.HoverWash, interactive: false);
+        var card = cell.Bounds;
+        DrawCoverImage(drawList, card.Min, card.Max, coverUrl, 0f, name);
         Squircle.FillVerticalGradient(drawList, new Vector2(card.Min.X, card.Max.Y - card.Height * 0.52f), card.Max,
-            radius, new Vector4(0.03f, 0.01f, 0.06f, 0f).Packed(), new Vector4(0.03f, 0.01f, 0.06f, 0.97f).Packed());
+            0f, new Vector4(0.03f, 0.01f, 0.06f, 0f).Packed(), new Vector4(0.03f, 0.01f, 0.06f, 0.97f).Packed());
 
         var mask = VelvetIntent.Sanitize(profile.LookingFor);
         var chipX = card.Max.X - pad;
@@ -443,7 +444,7 @@ internal sealed partial class VelvetShell
             var badgeMax = new Vector2(badgeMin.X + badgeWidth, badgeMin.Y + 24f * scale);
             Squircle.Fill(drawList, badgeMin, badgeMax, 12f * scale, new Vector4(0.03f, 0.01f, 0.06f, 0.55f).Packed());
             AppSkin.Icon(new Vector2(badgeMin.X + 13f * scale, (badgeMin.Y + badgeMax.Y) * 0.5f),
-                FontAwesomeIcon.Lock.ToIconString(), VelvetTheme.RoseInk, 0.52f);
+                IconGlyph.Of(FontAwesomeIcon.Lock), VelvetTheme.RoseInk, 0.52f);
             Typography.Draw(drawList, new Vector2(badgeMin.X + 23f * scale, badgeMin.Y + 5f * scale), badgeText,
                 VelvetTheme.OnAccent, TextStyles.Footnote);
         }
@@ -480,7 +481,7 @@ internal sealed partial class VelvetShell
         var metaSize = Typography.Measure(SocialIdentity.ProfileMeta(profile.Handle, region), TextStyles.Subheadline);
         var metaHovered = UiInteract.Hover(new Vector2(textLeft, metaY),
             new Vector2(textLeft + textWidth, metaY + metaSize.Y));
-        Marquee.DrawLeft("velvet.discover.meta." + profile.UserId, SocialIdentity.ProfileMeta(profile.Handle, region),
+        Marquee.DrawLeft(new MarqueeId("velvet.discover.meta.", profile.UserId), SocialIdentity.ProfileMeta(profile.Handle, region),
             textLeft, metaY, textWidth, TextStyles.Subheadline, VelvetTheme.BodyInk,
             metaHovered);
 
@@ -488,7 +489,7 @@ internal sealed partial class VelvetShell
         var summarySize = Typography.Measure(VelvetIntent.Summary(mask), TextStyles.SubheadlineEmphasized);
         var summaryHovered = UiInteract.Hover(new Vector2(textLeft, summaryY),
             new Vector2(textLeft + textWidth, summaryY + summarySize.Y));
-        Marquee.DrawLeft("velvet.discover.summary." + profile.UserId, VelvetIntent.Summary(mask), textLeft,
+        Marquee.DrawLeft(new MarqueeId("velvet.discover.summary.", profile.UserId), VelvetIntent.Summary(mask), textLeft,
             summaryY, textWidth, TextStyles.SubheadlineEmphasized, VelvetTheme.RoseInk,
             summaryHovered);
 
@@ -512,6 +513,9 @@ internal sealed partial class VelvetShell
                     break;
             }
         }
+
+        FeedCell.End(drawList, cell, VelvetTheme.Hairline);
+        return card;
     }
 
     private void DrawCoverImage(ImDrawListPtr drawList, Vector2 min, Vector2 max, string url, float rounding,
@@ -586,7 +590,7 @@ internal sealed partial class VelvetShell
         var scale = UiScale.Current;
         var drawList = ImGui.GetWindowDrawList();
         Squircle.Fill(drawList, rect.Min, rect.Max, Metrics.Radius.Field * scale, VelvetTheme.PlumWell.Packed());
-        AppSkin.Icon(new Vector2(rect.Min.X + 16f * scale, rect.Center.Y), FontAwesomeIcon.Search.ToIconString(),
+        AppSkin.Icon(new Vector2(rect.Min.X + 16f * scale, rect.Center.Y), IconGlyph.Of(FontAwesomeIcon.Search),
             VelvetTheme.MutedInk, 0.8f);
         if (value.Length == 0)
         {
@@ -605,7 +609,7 @@ internal sealed partial class VelvetShell
 
         if (value.Length > 0 &&
             ui.IconButton(new Vector2(rect.Max.X - 16f * scale, rect.Center.Y), 12f * scale,
-                FontAwesomeIcon.Times.ToIconString(), VelvetTheme.MutedInk, AppSkin.Transparent, 0.8f))
+                IconGlyph.Of(FontAwesomeIcon.Times), VelvetTheme.MutedInk, AppSkin.Transparent, 0.8f))
         {
             value = string.Empty;
         }

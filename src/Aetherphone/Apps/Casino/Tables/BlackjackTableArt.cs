@@ -69,7 +69,7 @@ internal static class BlackjackTableArt
             return;
         }
 
-        var label = amount.ToString("N0", Loc.Culture);
+        var label = NumberText.Group(amount);
         var size = Typography.Measure(label, TextStyles.Caption2);
         var discRadius = PlateDiscRadius * scale;
         var pad = 5f * scale;

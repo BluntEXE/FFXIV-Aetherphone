@@ -5,6 +5,7 @@ using Aetherphone.Core.Localization;
 using Aetherphone.Core.Media;
 using Aetherphone.Core.Social;
 using Aetherphone.Core.Theme;
+using Aetherphone.Core.Translation;
 using Aetherphone.Windows.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -62,7 +63,7 @@ internal sealed partial class AethergramApp
             var headerMetaTop = headerNameY + headerNameSize.Y + headerTextGap;
             var headerMetaHovering = UiInteract.Hover(new Vector2(nameLeft, headerMetaTop),
                 new Vector2(nameLeft + headerTextMaxWidth, headerMetaTop + headerMetaSize.Y));
-            Marquee.DrawLeft("aethergram.detail.headermeta." + post.Id, headerMeta, nameLeft, headerMetaTop,
+            Marquee.DrawLeft(new MarqueeId("aethergram.detail.headermeta.", post.Id), headerMeta, nameLeft, headerMetaTop,
                 headerTextMaxWidth, new TextStyle(0.78f, FontWeight.Regular), AppPalettes.Aethergram.MutedInk,
                 headerMetaHovering);
             if (UiInteract.HoverClick(new Vector2(origin.X, origin.Y),
@@ -80,7 +81,7 @@ internal sealed partial class AethergramApp
             var liked = post.MyReaction >= 0;
             var actionsY = imageRect.Max.Y + 22f * scale;
             var heartCenter = new Vector2(origin.X + 13f * scale, actionsY);
-            if (ui.IconButton(heartCenter, 15f * scale, FontAwesomeIcon.Heart.ToIconString(),
+            if (ui.IconButton(heartCenter, 15f * scale, IconGlyph.Of(FontAwesomeIcon.Heart),
                     liked ? CommentHeart.LikeRed : AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.25f, Loc.T(L.Aethergram.Like)))
             {
                 store.ToggleLike(post);
@@ -113,7 +114,7 @@ internal sealed partial class AethergramApp
             }
 
             var commentCenter = new Vector2(actionCursorX + 13f * scale, actionsY);
-            if (ui.IconButton(commentCenter, 15f * scale, FontAwesomeIcon.Comment.ToIconString(), AppPalettes.Aethergram.BodyInk,
+            if (ui.IconButton(commentCenter, 15f * scale, IconGlyph.Of(FontAwesomeIcon.Comment), AppPalettes.Aethergram.BodyInk,
                     AppSkin.Transparent, 1.2f, Loc.T(L.Aethergram.Comment)))
             {
                 commentFocusPending = true;
@@ -130,7 +131,7 @@ internal sealed partial class AethergramApp
 
             var shareCenter = new Vector2(actionsRight + (post.CommentCount > 0 ? 14f : 6f) * scale + 13f * scale,
                 actionsY);
-            if (ui.IconButton(shareCenter, 15f * scale, FontAwesomeIcon.PaperPlane.ToIconString(),
+            if (ui.IconButton(shareCenter, 15f * scale, IconGlyph.Of(FontAwesomeIcon.PaperPlane),
                     AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.15f, Loc.T(L.Aethergram.SendTo)))
             {
                 OpenShare(post.Id);
@@ -139,7 +140,7 @@ internal sealed partial class AethergramApp
             actionsRight = shareCenter.X + 20f * scale;
             var moreCenter = new Vector2(origin.X + width - 14f * scale, actionsY);
             var bookmarkCenter = new Vector2(moreCenter.X - 32f * scale, actionsY);
-            if (ui.IconButton(bookmarkCenter, 15f * scale, FontAwesomeIcon.Bookmark.ToIconString(),
+            if (ui.IconButton(bookmarkCenter, 15f * scale, IconGlyph.Of(FontAwesomeIcon.Bookmark),
                     post.Saved ? ui.Accent : AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1.15f,
                     Loc.T(L.Aethergram.SavedTitle)))
             {
@@ -157,12 +158,10 @@ internal sealed partial class AethergramApp
             }
 
             var moreRadius = 14f * scale;
-            if (ui.IconButton(moreCenter, moreRadius, FontAwesomeIcon.EllipsisH.ToIconString(),
+            if (ui.IconButton(moreCenter, moreRadius, IconGlyph.Of(FontAwesomeIcon.EllipsisH),
                     AppPalettes.Aethergram.BodyInk, AppSkin.Transparent, 1f, Loc.T(L.Aethergram.More)))
             {
-                menuPost = post;
-                postMenu.Toggle(post.Id, new Rect(moreCenter - new Vector2(moreRadius, moreRadius),
-                    moreCenter + new Vector2(moreRadius, moreRadius)));
+                OpenPostSheet(post, false);
             }
 
             ImGui.SetCursorScreenPos(new Vector2(origin.X, actionsY + 20f * scale));
@@ -178,10 +177,13 @@ internal sealed partial class AethergramApp
                     new TextStyle(0.9f, FontWeight.SemiBold), theme.TextStrong, captionNameHovering, theme);
                 var captionLeft = captionPos.X + nameWidth + 6f * scale;
                 ImGui.SetCursorScreenPos(new Vector2(captionLeft, captionPos.Y));
+                var captionKey = new TranslationKey(TranslationSurface.Post, post.Id);
+                var captionView = translation.View(captionKey, post.Text, post.Lang);
+                var captionText = captionView.Text;
                 RichTextLayout? captionLayout;
                 using (Plugin.Fonts.Push(0.9f))
                 {
-                    captionLayout = detailBodyLayouts.LayoutFor(post.Id, post.Text, post.Mentions,
+                    captionLayout = detailBodyLayouts.LayoutFor(captionView.LayoutKey, captionText, post.Mentions,
                         origin.X + width - captionLeft);
                 }
 
@@ -191,7 +193,7 @@ internal sealed partial class AethergramApp
                     using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Aethergram.BodyInk))
                     using (Plugin.Fonts.Push(0.9f))
                     {
-                        Typography.Wrapped(post.Text);
+                        Typography.Wrapped(captionText);
                     }
                 }
                 else
@@ -204,6 +206,16 @@ internal sealed partial class AethergramApp
 
                     ImGui.SetCursorScreenPos(captionOrigin);
                     ImGui.Dummy(captionLayout.Size);
+                }
+
+                var captionLinkHeight = TranslateLink.Height(translation, captionKey, post.Lang, scale);
+                if (captionLinkHeight > 0f)
+                {
+                    var linkTop = ImGui.GetCursorScreenPos().Y;
+                    TranslateLink.Draw(translation, confirm, captionKey, post.Lang, post.Text,
+                        new Vector2(captionPos.X, linkTop), origin.X + width - captionPos.X,
+                        AppPalettes.Aethergram.MutedInk, AppPalettes.Aethergram.Accent, scale);
+                    ImGui.SetCursorScreenPos(new Vector2(captionPos.X, linkTop + captionLinkHeight));
                 }
 
                 ImGui.Dummy(new Vector2(0f, 4f * scale));
@@ -242,7 +254,6 @@ internal sealed partial class AethergramApp
         }
 
         DrawCommentComposer(new Rect(new Vector2(area.Min.X, area.Max.Y - composerHeight), area.Max), area, postId);
-        DrawPostMenu(area, false);
     }
 
     private void DrawEarlierCommentsRow()
@@ -304,20 +315,26 @@ internal sealed partial class AethergramApp
         var displayName = SocialIdentity.Name(comment.AuthorDisplayName, comment.AuthorHandle);
         var commentNameStyle = new TextStyle(0.9f, FontWeight.SemiBold);
         var nameHeight = Typography.Measure(displayName, commentNameStyle).Y;
+        var commentKey = new TranslationKey(TranslationSurface.Comment, comment.Id);
+        var commentView = translation.View(commentKey, comment.Text, comment.Lang);
+        var commentText = commentView.Text;
         RichTextLayout? commentLayout;
         using (Plugin.Fonts.Push(0.9f))
         {
-            commentLayout = commentLayouts.LayoutFor(comment.Id, comment.Text, comment.Mentions, textRight - textLeft);
+            commentLayout = commentLayouts.LayoutFor(commentView.LayoutKey, commentText, comment.Mentions,
+                textRight - textLeft);
         }
 
-        var textHeight = comment.Text.Length == 0
+        var textHeight = commentText.Length == 0
             ? 0f
-            : commentLayout?.Size.Y ?? Typography.MeasureWrapped(comment.Text, textRight - textLeft, 0.9f);
+            : commentLayout?.Size.Y ?? Typography.MeasureWrapped(commentText, textRight - textLeft, 0.9f);
+        var commentLinkHeight = TranslateLink.Height(translation, commentKey, comment.Lang, scale);
         var mediaHeight = CommentMediaHidden(comment.MediaUrl)
             ? 0f
             : CommentMedia.MeasureHeight(comment, textRight - textLeft, scale);
         var mediaGap = mediaHeight > 0f && textHeight > 0f ? 6f * scale : 0f;
-        var bubbleHeight = padTop + nameHeight + 4f * scale + textHeight + mediaGap + mediaHeight + padBottom;
+        var bubbleHeight = padTop + nameHeight + 4f * scale + textHeight + commentLinkHeight + mediaGap + mediaHeight
+            + padBottom;
         if (canDelete)
         {
             bubbleHeight = MathF.Max(bubbleHeight, 72f * scale);
@@ -366,7 +383,7 @@ internal sealed partial class AethergramApp
                 using (ImRaii.PushColor(ImGuiCol.Text, AppPalettes.Aethergram.BodyInk))
                 using (Plugin.Fonts.Push(0.9f))
                 {
-                    Typography.Wrapped(comment.Text);
+                    Typography.Wrapped(commentText);
                 }
             }
             else
@@ -378,10 +395,17 @@ internal sealed partial class AethergramApp
             }
         }
 
+        if (commentLinkHeight > 0f)
+        {
+            TranslateLink.Draw(translation, confirm, commentKey, comment.Lang, comment.Text,
+                new Vector2(textLeft, textTop + textHeight), textRight - textLeft, AppPalettes.Aethergram.MutedInk,
+                AppPalettes.Aethergram.Accent, scale);
+        }
+
         if (comment.MediaUrl is { } commentMediaUrl && !CommentMediaHidden(commentMediaUrl))
         {
             var mediaRect = CommentMedia.Draw(drawList, images, comment,
-                new Vector2(textLeft, textTop + textHeight + mediaGap), textRight - textLeft, scale,
+                new Vector2(textLeft, textTop + textHeight + commentLinkHeight + mediaGap), textRight - textLeft, scale,
                 AppPalettes.Aethergram.FieldSurface, AppPalettes.Aethergram.MutedInk);
             if (UiInteract.HoverClick(mediaRect.Min, mediaRect.Max))
             {
@@ -397,7 +421,7 @@ internal sealed partial class AethergramApp
         if (canDelete)
         {
             var trashCenter = new Vector2(bubbleRight - 13f * scale, bubbleTop + 13f * scale);
-            if (ui.IconButton(trashCenter, 11f * scale, FontAwesomeIcon.Times.ToIconString(), AppPalettes.Aethergram.MutedInk,
+            if (ui.IconButton(trashCenter, 11f * scale, IconGlyph.Of(FontAwesomeIcon.Times), AppPalettes.Aethergram.MutedInk,
                     AppSkin.Transparent, 0.85f,
                     Loc.T(mine ? L.Aethergram.DeleteComment : L.Aethergram.RemoveComment)) && store.DetailPost is { } post)
             {
@@ -553,7 +577,7 @@ internal sealed partial class AethergramApp
         var lockCenter = new Vector2(centerX, origin.Y + 52f * scale);
         drawList.AddCircle(lockCenter, 26f * scale,
             ImGui.GetColorU32(Palette.WithAlpha(AppPalettes.Aethergram.MutedInk, 0.5f)), 48, 1.6f * scale);
-        AppSkin.Icon(drawList, lockCenter, FontAwesomeIcon.Lock.ToIconString(), AppPalettes.Aethergram.TitleInk,
+        AppSkin.Icon(drawList, lockCenter, IconGlyph.Of(FontAwesomeIcon.Lock), AppPalettes.Aethergram.TitleInk,
             1.3f);
         var titleTop = lockCenter.Y + 40f * scale;
         var titleHeight = Typography.DrawWrappedCentered(new Vector2(centerX, titleTop),

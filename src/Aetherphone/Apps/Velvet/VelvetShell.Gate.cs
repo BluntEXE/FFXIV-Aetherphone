@@ -12,8 +12,8 @@ internal sealed partial class VelvetShell
 
     private void GateMenus()
     {
-        postMenu.Gate();
-        threadMenu.Gate();
+        postSheet.Gate();
+        threadSheet.Gate();
         threadView.GateMenus();
     }
 
